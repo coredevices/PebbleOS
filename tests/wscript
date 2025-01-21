@@ -16,7 +16,7 @@ def remove_old_coverage_files(bld):
 
 def update_lcov(bld):
     """ Update lcov-related files based on the results of `./waf test`"""
-    print "Generating code coverage information using lcov..."
+    print("Generating code coverage information using lcov...")
     lcov_version_cmd = ['lcov', '--version']
     # Send stdout of checking for lcov to /dev/null to hide it; stderr will still be visible
     with open(os.devnull, 'w') as devnull_fp:
@@ -37,7 +37,7 @@ def update_lcov(bld):
         cmd += platform_specific_lcov_args
         bld.cmd_and_log(cmd, quiet=waflib.Context.BOTH)
     except waflib.Errors.WafError as e:
-        print e.stdout, '\n', e.stderr
+        print(e.stdout, '\n', e.stderr)
         bld.fatal("Error running `lcov`")
     if bld.options.coverage:
         lcov_html_directory = os.path.join(tests_path, 'lcov-html')
@@ -45,10 +45,10 @@ def update_lcov(bld):
         try:
             bld.cmd_and_log(genhtml_cmd, quiet=waflib.Context.BOTH)
         except waflib.Errors.WafError as e:
-            print e.stdout, '\n', e.stderr
+            print(e.stdout, '\n', e.stderr)
             bld.fatal("Error running `genhtml`")
         index_html = os.path.join(lcov_html_directory, 'index.html')
-        print "Updated coverage report at %s" % index_html
+        print("Updated coverage report at %s" % index_html)
 
 def convert_png_to_pbi(task):
     src_png = task.inputs[0].srcpath()
@@ -61,7 +61,7 @@ def convert_png_to_pbi(task):
         img_fmt = 'bw'
     else:
         img_fmt = 'color'  # raw and palettized color images
-        bit_suffix = re.search('(\d)bitpalette\.png', dest_pbi)
+        bit_suffix = re.search(r'(\d)bitpalette\.png', dest_pbi)
         if bit_suffix:
             bitdepth = int(bit_suffix.group(1))
 
@@ -79,7 +79,7 @@ def convert_png_to_pblpng(task):
     else:
         palette_name = 'pebble64'
         bitdepth = None
-        bit_suffix = re.search('(\d)bit(palette)?\.png', dest_png)
+        bit_suffix = re.search(r'(\d)bit(palette)?\.png', dest_png)
 
         if bit_suffix:
             bitdepth = int(bit_suffix.group(1))

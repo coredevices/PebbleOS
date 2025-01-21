@@ -94,7 +94,7 @@ def inject_metadata(target_binary, target_elf, resources_file, timestamp, allow_
     def get_nm_output(elf_file):
         nm_process = Popen(['arm-none-eabi-nm', elf_file], stdout=PIPE)
         # Popen.communicate returns a tuple of (stdout, stderr)
-        nm_output = nm_process.communicate()[0]
+        nm_output = nm_process.communicate()[0].decode("utf8")
 
         if not nm_output:
             raise InvalidBinaryError()
@@ -125,7 +125,7 @@ def inject_metadata(target_binary, target_elf, resources_file, timestamp, allow_
 
         readelf_bss_process = Popen("arm-none-eabi-readelf -S '%s'" % elf_file, 
                                     shell=True, stdout=PIPE)
-        readelf_bss_output = readelf_bss_process.communicate()[0]
+        readelf_bss_output = readelf_bss_process.communicate()[0].decode("utf8")
 
         # readelf -S output looks like the following...
         #
@@ -176,7 +176,7 @@ def inject_metadata(target_binary, target_elf, resources_file, timestamp, allow_
 
         # get the .data locations
         readelf_relocs_process = Popen(['arm-none-eabi-readelf', '-r', elf_file], stdout=PIPE)
-        readelf_relocs_output = readelf_relocs_process.communicate()[0]
+        readelf_relocs_output = readelf_relocs_process.communicate()[0].decode("utf8")
         lines = readelf_relocs_output.splitlines()
 
         i = 0
@@ -198,7 +198,7 @@ def inject_metadata(target_binary, target_elf, resources_file, timestamp, allow_
         # get any Global Offset Table (.got) entries
         readelf_relocs_process = Popen(['arm-none-eabi-readelf', '--sections', elf_file],
                                        stdout=PIPE)
-        readelf_relocs_output = readelf_relocs_process.communicate()[0]
+        readelf_relocs_output = readelf_relocs_process.communicate()[0].decode("utf8")
         lines = readelf_relocs_output.splitlines()
         for line in lines:
             # We shouldn't need to do anything with the Procedure Linkage Table since we don't

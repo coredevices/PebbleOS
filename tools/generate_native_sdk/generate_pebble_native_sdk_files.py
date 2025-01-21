@@ -21,6 +21,7 @@ import os
 import os.path as path
 import shutil
 import argparse
+from functools import cmp_to_key
 
 from generate_app_header import make_app_header
 from generate_app_shim import make_app_shim_lib
@@ -36,7 +37,7 @@ import exports
 # need to append the parent directory to the system PATH because relative imports won't work
 try:
     from ..pebble_sdk_platform import pebble_platforms, maybe_import_internal
-except ValueError:
+except ImportError:
     os.sys.path.append(path.dirname(path.dirname(__file__)))
     from pebble_sdk_platform import pebble_platforms, maybe_import_internal
 
@@ -117,12 +118,16 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
 
 
     def function_export_compare_func(x, y):
+        def cmp(a, b):
+            return (a > b) - (a < b)
+
         if (x.added_revision != y.added_revision):
             return cmp(x.added_revision, y.added_revision)
 
         return cmp(x.sort_name, y.sort_name)
 
-    sorted_functions = sorted(functions, cmp=function_export_compare_func)
+    sorted_functions = sorted(functions,
+                              key=cmp_to_key(function_export_compare_func))
 
     # Build libpebble.a for our apps to compile against
     make_app_shim_lib(sorted_functions, sdk_lib_dir)

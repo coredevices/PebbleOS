@@ -28,7 +28,7 @@ setup(
 
     install_requires=[
         'intelhex>=2.1,<3',
-        'pyftdi==0.10.5'
+        'pyftdi'
     ],
 
     package_data={

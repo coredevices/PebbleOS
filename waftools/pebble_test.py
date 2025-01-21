@@ -77,8 +77,8 @@ class run_test(Task.Task):
             return
 
         if self.generator.bld.options.show_output:
-            print stdout
-            print stderr
+            print(stdout)
+            print(stderr)
         tup = (test_runme_node, proc.returncode, stdout, stderr, str(timer))
         self.generator.utest_result = tup
 

@@ -25,6 +25,7 @@ intelhex>=2.1,<3
 protobuf==3.6
 certifi
 libclang
+packaging
 
 # pypi.getpebble.com provided modules
 #pebble.loghash>=2.6

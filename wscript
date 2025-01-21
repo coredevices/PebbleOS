@@ -40,21 +40,6 @@ def truncate(msg):
     return msg
 
 
-def get_comma_separated_args(option, opt, value, parser):
-    setattr(parser.values, option.dest, value.split(','))
-
-
-old_display = waflib.Task.TaskBase.display
-def wrap_display(self):
-    return truncate(old_display(self))
-waflib.Task.TaskBase.display = wrap_display
-
-old_format_error = waflib.Task.TaskBase.format_error
-def wrap_format_error(self):
-    return truncate(old_format_error(self))
-waflib.Task.TaskBase.format_error = wrap_format_error
-
-
 def run_arm_gdb(ctx, elf_node, cmd_str="", target_server_port=3333):
     from tools.gdb_driver import find_gdb_path
     arm_none_eabi_path = find_gdb_path()
@@ -119,7 +104,7 @@ def options(opt):
                    help='Disable automatic reboots when watchdog fires')
     opt.add_option('--test_apps', action='store_true',
                    help='Enables test apps (off by default)')
-    opt.add_option('--test_apps_list', action='callback', type='string', callback=get_comma_separated_args,
+    opt.add_option('--test_apps_list', type=str,
                    help='Specify AppInstallId\'s of the test apps to be compiled with the firmware')
     opt.add_option('--performance_tests', action='store_true',
                    help='Enables instrumentation + apps for performance testing (off by default)')
@@ -197,15 +182,15 @@ def handle_configure_options(conf):
 
     if conf.options.malloc_instrumentation:
         conf.env.append_value('DEFINES', 'MALLOC_INSTRUMENTATION')
-        print "Enabling malloc instrumentation"
+        print("Enabling malloc instrumentation")
 
     if conf.options.qemu:
         conf.env.append_value('DEFINES', 'TARGET_QEMU')
 
     if conf.options.test_apps_list:
         conf.options.test_apps = True
-        conf.env.test_apps_list = conf.options.test_apps_list
-        print "Enabling test apps: " + str(conf.options.test_apps_list)
+        conf.env.test_apps_list = conf.options.test_apps_list.split(",")
+        print("Enabling test apps: " + str(conf.options.test_apps_list))
 
     if conf.options.build_test_apps or conf.options.test_apps:
         conf.env.BUILD_TEST_APPS = True
@@ -232,53 +217,53 @@ def handle_configure_options(conf):
 
     if conf.options.nosleep:
         conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
-        print "Sleep/stop mode disabled"
+        print("Sleep/stop mode disabled")
 
     if conf.options.nostop:
         conf.env.append_value('DEFINES', 'PBL_NOSTOP')
-        print "Stop mode disabled"
+        print("Stop mode disabled")
 
     if conf.options.lowpowerdebug:
         conf.env.append_value('DEFINES', 'LOW_POWER_DEBUG')
-        print "Sleep and Stop mode debugging enabled"
+        print("Sleep and Stop mode debugging enabled")
 
     if conf.options.nowatch:
         conf.env.append_value('DEFINES', 'NO_WATCH_TIMEOUT')
-        print "Watch watchdog disabled"
+        print("Watch watchdog disabled")
 
     if conf.options.nowatchdog:
         conf.env.append_value('DEFINES', 'NO_WATCHDOG')
         conf.env.NO_WATCHDOG = True
-        print "Watchdog reboot disabled"
+        print("Watchdog reboot disabled")
 
     if conf.options.reboot_on_bt_crash:
         conf.env.append_value('DEFINES', 'REBOOT_ON_BT_CRASH=1')
-        print "BT now crash will trigger an MCU reboot"
+        print("BT now crash will trigger an MCU reboot")
 
     if conf.options.test_apps:
         conf.env.append_value('DEFINES', 'ENABLE_TEST_APPS')
-        print "Im in ur firmware, bloatin ur binz! (Test apps enabled)"
+        print("Im in ur firmware, bloatin ur binz! (Test apps enabled)")
 
     if conf.options.performance_tests:
         conf.env.append_value('DEFINES', 'PERFORMANCE_TESTS')
         conf.options.profiler = True
-        print "Instrumentation and apps for performance measurement enabled (enables profiler)"
+        print("Instrumentation and apps for performance measurement enabled (enables profiler)")
 
     if conf.options.verbose_logs:
         conf.env.append_value('DEFINES', 'VERBOSE_LOGGING')
-        print "Verbose logging enabled"
+        print("Verbose logging enabled")
 
     if conf.options.ui_debug:
         conf.env.append_value('DEFINES', 'UI_DEBUG')
 
     if conf.options.no_sandbox or conf.options.qemu:
-        print "Sandbox disabled"
+        print("Sandbox disabled")
     else:
         conf.env.append_value('DEFINES', 'APP_SANDBOX')
 
     if conf.options.bb_large_spi:
         conf.env.append_value('DEFINES', 'LARGE_SPI_FLASH')
-        print "Enabling 8MB BigBoard flash"
+        print("Enabling 8MB BigBoard flash")
 
     if not conf.options.nolog:
         conf.env.append_value('DEFINES', 'PBL_LOG_ENABLED')
@@ -289,13 +274,13 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'PROFILE_INTERRUPTS')
         if not conf.options.profiler:
             # Can't profile interrupts without the profiler enabled
-            print "Enabling profiler"
+            print("Enabling profiler")
             conf.options.profiler = True
 
     if conf.options.profiler:
         conf.env.append_value('DEFINES', 'PROFILER')
         if not conf.options.nostop:
-            print "Enable --nostop for accurate profiling."
+            print("Enable --nostop for accurate profiling.")
             conf.env.append_value('DEFINES', 'PBL_NOSTOP')
 
     if conf.options.voice_debug:
@@ -303,34 +288,34 @@ def handle_configure_options(conf):
 
     if conf.options.battery_debug:
         conf.env.append_value('DEFINES', 'BATTERY_DEBUG')
-        print "Enabling higher battery charge voltage."
+        print("Enabling higher battery charge voltage.")
 
     if conf.options.future_ux and not conf.is_tintin():
-        print "Future UX features enabled."
+        print("Future UX features enabled.")
         conf.env.FUTURE_UX = True
 
     conf.env.INTERNAL_SDK_BUILD = bool(conf.options.internal_sdk_build)
     if conf.env.INTERNAL_SDK_BUILD:
-        print "Internal SDK enabled"
+        print("Internal SDK enabled")
 
     if conf.options.force_fit_tintin:
         conf.env.append_value('DEFINES', 'TINTIN_FORCE_FIT')
-        print "Functionality is secondary to usability"
+        print("Functionality is secondary to usability")
 
     if (conf.is_snowy_compatible() and not conf.options.no_lto) or conf.options.lto:
         conf.options.lto = True
-        print "Turning on LTO."
+        print("Turning on LTO.")
 
     if conf.options.no_link:
         conf.env.NO_LINK = True
-        print "Not linking firmware"
+        print("Not linking firmware")
 
     if conf.options.infinite_backlight and 'bb' in conf.options.board:
         conf.env.append_value('DEFINES', 'INFINITE_BACKLIGHT')
-        print "Enabling infinite backlight."
+        print("Enabling infinite backlight.")
 
     if conf.options.bootloader_test in ['stage1', 'stage2']:
-        print "Forcing MFG on for bootloader test build."
+        print("Forcing MFG on for bootloader test build.")
         conf.options.mfg = True
 
     if conf.options.bootloader_test == 'stage1':
@@ -544,9 +529,9 @@ def configure(conf):
     Logs.pprint('CYAN', 'Configuring unit test environment')
     conf.setenv('local', unit_test_env)
 
-    if sys.platform.startswith('linux'):
-        libclang_path = subprocess.check_output(['llvm-config', '--libdir']).strip()
-        conf.env.append_value('INCLUDES', [os.path.join(libclang_path, 'clang/3.2/include/'),])
+    # if sys.platform.startswith('linux'):
+        # libclang_path = subprocess.check_output(['llvm-config', '--libdir']).strip()
+        # conf.env.append_value('INCLUDES', [os.path.join(libclang_path, 'clang/3.2/include/'),])
 
     # The waf clang tool likes to use llvm-ar as it's ar tool, but that doesn't work on our build
     # servers. Fall back to boring old ar. This will populate the 'AR' env variable so future
@@ -1479,10 +1464,10 @@ def ble_send_hci(ctx):
     from waflib import Options
 
     def _dump_hex_array(prefix, hex_array):
-        print prefix + " [",
+        print(prefix + " [")
         for i in range(0, len(hex_array)):
-            print "0x%02x " % hex_array[i],
-        print "]"
+            print("0x%02x " % hex_array[i])
+        print("]")
 
     hci_bytes = [int(i, 16) for i in Options.commands]
     _dump_hex_array("Sent HCI CMD:", hci_bytes)

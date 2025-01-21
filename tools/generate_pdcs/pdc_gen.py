@@ -23,9 +23,9 @@ Size (4 bytes) - size of PDC image or sequence following the header in bytes
 import os
 import argparse
 
-import pebble_commands
-import svg2commands
-import json2commands
+from . import pebble_commands
+from . import svg2commands
+from . import json2commands
 
 
 def create_pdc_data_from_path(path, viewbox_size, verbose, duration, play_count,
@@ -37,7 +37,7 @@ def create_pdc_data_from_path(path, viewbox_size, verbose, duration, play_count,
         raise Exception("Invalid path")
 
     if verbose:
-        print path + ":"
+        print(path + ":")
     if os.path.isfile(path):
         dir_name = os.path.dirname(path)
     frames = []
@@ -108,9 +108,9 @@ def main(args):
     errors = create_pdc_from_path(path, args.output, viewbox_size, args.verbose, args.duration,
                                   args.play_count, args.precise)
     if errors:
-        print "Errors in the following files or frames:"
+        print("Errors in the following files or frames:")
         for ef in errors:
-            print "\t" + str(ef)
+            print("\t" + str(ef))
 
 
 if __name__ == '__main__':

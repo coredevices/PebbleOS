@@ -179,7 +179,7 @@ def build(bld):
         def _collect_check_templates_tasks(dct):
             for key in dct:
                 val = dct[key]
-                if isinstance(val, basestring):
+                if isinstance(val, str):
                     # avoid unicode, it will trip up waf's Node3 and make it 💩 all over the place
                     val = str(val)
                     template_node = defaults_node.find_node(val.split(os.path.sep))

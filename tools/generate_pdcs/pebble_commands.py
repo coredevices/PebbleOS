@@ -79,8 +79,9 @@ def convert_to_pebble_coordinates(point, verbose=False, precise=False):
 
     valid = compare_points(point, nearest)
     if not valid and verbose:
-        print "Invalid point: ({}, {}). Closest supported coordinate: ({}, {})".format(point[0], point[1],
-                                                                                       nearest[0], nearest[1])
+        print("Invalid point: ({}, {}). Closest supported coordinate: ({}, {})".format(point[0], point[1],
+                                                                                       nearest[0],
+                                                                                       nearest[1]))
 
     translated = sum_points(point, (-0.5, -0.5))   # translate point by (-0.5, -0.5)
     if precise:
@@ -103,7 +104,7 @@ def convert_color(r, g, b, a, truncate=True):
 
     valid = valid_color(r, g, b, a)
     if not valid:
-        print "Invalid color: ({}, {}, {}, {})".format(r, g, b, a)
+        print("Invalid color: ({}, {}, {}, {})".format(r, g, b, a))
         return 0
 
     if truncate:
@@ -243,12 +244,12 @@ def serialize(commands):
 
 def print_commands(commands):
     for c in commands:
-        print str(c)
+        print(str(c))
 
 
 def print_frames(frames):
     for i in range(len(frames)):
-        print 'Frame {}:'.format(i + 1)
+        print('Frame {}:'.format(i + 1))
         print_commands(frames[i])
 
 
@@ -265,7 +266,7 @@ def serialize_sequence(frames, size, duration, play_count):
     for f in frames:
         s += serialize_frame(f, duration)
 
-    output = "PDCS"
+    output = b"PDCS"
     output += pack('I', len(s))
     output += s
     return output
@@ -275,7 +276,7 @@ def serialize_image(commands, size):
     s = pack_header(size)
     s += serialize(commands)
 
-    output = "PDCI"
+    output = b"PDCI"
     output += pack('I', len(s))
     output += s
     return output

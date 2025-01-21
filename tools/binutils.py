@@ -57,11 +57,11 @@ class FileInfo(object):
         return result
 
     def pprint(self, verbose):
-        print '  %s: size %u' % (self.filename, self.size)
+        print('  %s: size %u' % (self.filename, self.size))
         if verbose:
             l = sorted(self.symbols.itervalues(), key=lambda x: -x.size)
             for s in l:
-                print '    %6u %-36s' % (s.size, s.name)
+                print('    %6u %-36s' % (s.size, s.name))
 
     def __str__(self):
         return '<FileInfo %s: %u>' % (self.filename, self.size)
@@ -95,7 +95,7 @@ class SectionInfo(object):
         return self.files.values()
 
     def pprint(self, summary, verbose):
-        print '%s: count %u size %u' % (self.name, self.count, self.size)
+        print('%s: count %u size %u' % (self.name, self.count, self.size))
 
         if not summary:
             l = self.files.values()
@@ -205,15 +205,14 @@ def _get_symbols_table(f):
 
     addr2line.kill()
 
-    print
     return symbols
 
 
 # This method is quite slow, but works around a bug in nm.
 def _nm_generator_slow(f):
-    print "Getting list of symbols..."
+    print("Getting list of symbols...")
     symbols = _get_symbols_table(f)
-    print "Aggregating..."
+    print("Aggregating...")
     infile = sh.arm_none_eabi_nm('-S', f)
 
     line_pattern = re.compile(r"""([0-9a-f]+)\s+ # address
@@ -285,10 +284,10 @@ def size(elf_path):
     """
     output = subprocess.check_output(["arm-none-eabi-size", elf_path])
 
-    lines = output.splitlines()
+    lines = output.decode("utf8").splitlines()
     if len(lines) < 2:
         return 0
-    match = re.match("^\s*([0-9]+)\s+([0-9]+)\s+([0-9]+)", lines[1])
+    match = re.match(r"^\s*([0-9]+)\s+([0-9]+)\s+([0-9]+)", lines[1])
     if not match:
         return 0
     # text, data, bss
@@ -322,5 +321,5 @@ def section_bytes(elf_path, section_name):
     with tempfile.NamedTemporaryFile() as temp:
         sh.arm_none_eabi_objcopy(['-j', section_name, '-O', 'binary',
                                   elf_path, temp.name])
-        with open(temp.name) as f:
+        with open(temp.name, "rb") as f:
             return f.read()

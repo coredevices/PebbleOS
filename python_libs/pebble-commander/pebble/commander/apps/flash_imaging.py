@@ -43,7 +43,7 @@ class EraseCommand(object):
                 self.command_type, self.address, self.length)
 
     def parse_response(self, response):
-        if ord(response[0]) != self.response_type:
+        if response[0] != self.response_type:
             raise exceptions.ResponseParseError(
                     'Unexpected response: %r' % response)
         unpacked = self.Response._make(self.response_struct.unpack(response))
@@ -81,7 +81,7 @@ class WriteResponse(object):
 
     @classmethod
     def parse(cls, response):
-        if ord(response[0]) != cls.response_type:
+        if response[0] != cls.response_type:
             raise exceptions.ResponseParseError(
                     'Unexpected response: %r' % response)
         return cls.Response._make(cls.response_struct.unpack(response))
@@ -106,7 +106,7 @@ class CrcCommand(object):
                                         self.length)
 
     def parse_response(self, response):
-        if ord(response[0]) != self.response_type:
+        if response[0] != self.response_type:
             raise exceptions.ResponseParseError(
                     'Unexpected response: %r' % response)
         unpacked = self.Response._make(self.response_struct.unpack(response))
@@ -140,7 +140,7 @@ class QueryFlashRegionCommand(object):
         return self.command_struct.pack(self.command_type, self.region)
 
     def parse_response(self, response):
-        if ord(response[0]) != self.response_type:
+        if response[0] != self.response_type:
             raise exceptions.ResponseParseError(
                     'Unexpected response: %r' % response)
         unpacked = self.Response._make(self.response_struct.unpack(response))
@@ -165,7 +165,7 @@ class FinalizeFlashRegionCommand(object):
         return self.command_struct.pack(self.command_type, self.region)
 
     def parse_response(self, response):
-        if ord(response[0]) != self.response_type:
+        if response[0] != self.response_type:
             raise exceptions.ResponseParseError(
                     'Unexpected response: %r' % response)
         region, = self.response_struct.unpack(response)
@@ -216,7 +216,7 @@ class FlashImaging(object):
         mtu = self.socket.mtu - WriteCommand.header_len
         assert(mtu > 0)
         unsent = collections.deque()
-        for offset in xrange(0, len(data), mtu):
+        for offset in range(0, len(data), mtu):
             segment = data[offset:offset+mtu]
             assert(len(segment))
             seg_address = address + offset
@@ -266,7 +266,7 @@ class FlashImaging(object):
             to_retry = []
             timeout_time = time.time() - 0.5
             for (seg_address,
-                    (cmd, send_time, retry_count)) in in_flight.iteritems():
+                    (cmd, send_time, retry_count)) in in_flight.copy().items():
                 if send_time > timeout_time:
                     # in_flight is an OrderedDict so iteration is in
                     # chronological order.
@@ -296,7 +296,7 @@ class FlashImaging(object):
         return retries
 
     def _command_and_response(self, cmd, timeout=0.5):
-        for attempt in xrange(5):
+        for attempt in range(5):
             self.socket.send(cmd.packet)
             try:
                 packet = self.socket.receive(timeout=timeout)

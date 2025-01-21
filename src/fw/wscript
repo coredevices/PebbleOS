@@ -144,7 +144,7 @@ def _generate_memory_layout(bld):
         with open(bld.path.find_node('bootloader_symbols.json').abspath(), 'r') as f:
             bootloader_symbols_json = json.load(f)
 
-        bootloader_symbols = bootloader_symbols_json['bootloader_symbols'].iteritems()
+        bootloader_symbols = bootloader_symbols_json['bootloader_symbols'].items()
         bootloader_symbol_strings = ("%s = %s;" % (n, v) for n, v in bootloader_symbols)
         bootloader_symbol_definitions = "\n    ".join(bootloader_symbol_strings)
     else:
@@ -171,7 +171,7 @@ def _generate_memory_layout(bld):
     # configuring a segment with a size that is not a multiple of eight will
     # result in segments being smaller than expected. The runtime_reserved
     # size is not checked as its value isn't currently used anywhere.
-    for platform, sizes in APP_RAM_SIZES.iteritems():
+    for platform, sizes in APP_RAM_SIZES.items():
         if sizes.app_segment % 8 != 0:
             bld.fatal("The app_segment size for APP_RAM_SIZES[%r] is not a "
                       "multiple of eight bytes. You're gonna have a bad "

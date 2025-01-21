@@ -23,7 +23,7 @@ from datetime import datetime
 import unicodedata as ud
 
 from pebble.loghashing import newlogging
-from newlogging import get_log_dict_from_file
+from .newlogging import get_log_dict_from_file
 
 LOG_DICT_KEY_CORE_ID = 'core_'
 
@@ -105,10 +105,10 @@ class LogDehash(object):
         if not self.loghash_dict:
             return
 
-        print 'Supported Cores:'
+        print('Supported Cores:')
         for key in sorted(self.loghash_dict, key=self.loghash_dict.get):
             if key.startswith(LOG_DICT_KEY_CORE_ID):
-                print '    {}: {}'.format(key, self.loghash_dict[key])
+                print('    {}: {}'.format(key, self.loghash_dict[key]))
 
     def update_log_string_metrics(self):
         if not self.loghash_dict:

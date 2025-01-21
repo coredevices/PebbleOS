@@ -23,12 +23,12 @@ def process_ldscript(self):
         return
 
     def convert_to_node(node_or_path_str):
-        if isinstance(node_or_path_str, basestring):
+        if isinstance(node_or_path_str, str):
             return self.path.make_node(node_or_path_str)
         else:
             return node_or_path_str
 
-    if isinstance(self.ldscript, basestring) or \
+    if isinstance(self.ldscript, str) or \
        isinstance(self.ldscript, list):
         ldscripts = Utils.to_list(self.ldscript)
     else:  # Assume Nod3

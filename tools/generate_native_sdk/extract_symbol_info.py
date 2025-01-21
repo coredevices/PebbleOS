@@ -16,9 +16,11 @@ import functools
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-import parse_c_decl
-from parse_c_decl import clang
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from generate_native_sdk import parse_c_decl
+import clang
 
 def extract_exported_functions(node, functions=[], types=[], defines=[]):
     def update_matching_export(exports, node):

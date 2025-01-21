@@ -29,9 +29,9 @@ The fill color is currently defaulted to solid white.
 
 import os
 import argparse
-import pebble_commands
+from . import pebble_commands
 import json
-import graph
+from . import graph
 from itertools import groupby
 
 INVISIBLE_POINT_THRESHOLD = 500

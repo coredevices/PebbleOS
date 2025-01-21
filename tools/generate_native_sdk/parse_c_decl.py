@@ -41,12 +41,12 @@ def get_homebrew_llvm_lib_path():
         return None
 
     # Brittleness alert! Grepping output of `brew info llvm` for llvm bin path:
-    m = re.search('.*/llvm-config', o)
+    m = re.search('.*/llvm-config', o.decode("utf8"))
     if m:
         llvm_config_path = m.group(0)
 
         o = subprocess.check_output([llvm_config_path, '--libdir'])
-        llvm_lib_path = o.strip()
+        llvm_lib_path = o.decode("utf8").strip()
 
         # Make sure --enable-clang and --enable-python options were used:
         if os.path.exists(os.path.join(llvm_lib_path, 'libclang.dylib')) and \
@@ -75,14 +75,14 @@ def load_library():
             logging.info("llvm from homebrew not found,"
                          " trying Xcode's instead")
             xcode_path = subprocess.check_output(['xcode-select',
-                                                  '--print-path']).strip()
+                                                  '--print-path']).decode("utf8").strip()
             libclang_path = \
                 os.path.join(xcode_path,
                              'Toolchains/XcodeDefault.xctoolchain/usr/lib')
         clang.cindex.conf.set_library_path(libclang_path)
     elif sys.platform == 'linux2':
         libclang_path = subprocess.check_output(['llvm-config',
-                                                 '--libdir']).strip()
+                                                 '--libdir']).decode("utf8").strip()
         clang.cindex.conf.set_library_path(libclang_path)
 
     libclang_lib = clang.cindex.conf.lib
@@ -145,18 +145,19 @@ def get_string_from_file(source_range):
     if source_range_file is None:
         return None
 
-    with open(source_range_file.name) as f:
+    with open(source_range_file.name, "rb") as f:
         f.seek(source_range.start.offset)
-        return f.read(source_range.end.offset - source_range.start.offset)
+        return f.read(source_range.end.offset -
+                      source_range.start.offset).decode("utf8")
 
 def dump_node(node, indent_level=0):
     spelling = node.spelling
     if node.kind == clang.cindex.CursorKind.MACRO_DEFINITION:
         spelling = get_node_spelling(node)
 
-    print "%*s%s> %s" % (indent_level * 2, "", node.kind, spelling)
-    print "%*sRange:   %s" % (4 + (indent_level * 2), "", str(node.extent))
-    print "%*sComment: %s" % (4 + (indent_level * 2), "", str(get_comment_range_for_decl(node)))
+    print("%*s%s> %s" % (indent_level * 2, "", node.kind, spelling))
+    print("%*sRange:   %s" % (4 + (indent_level * 2), "", str(node.extent)))
+    print("%*sComment: %s" % (4 + (indent_level * 2), "", str(get_comment_range_for_decl(node))))
 
 def return_true(node):
     return True
@@ -194,7 +195,7 @@ def extract_declarations(tu, filenames, func):
 
 
 def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_flags=None):
-    src_dir = os.path.join(os.path.dirname(__file__), "../src")
+    src_dir = os.path.join(os.path.dirname(__file__), "../../src")
 
     args = [ "-I%s/core" % src_dir,
              "-I%s/include" % src_dir,
@@ -228,7 +229,7 @@ def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_fla
     # this workaround should be removed when fixed in newlib
     cmd = ['clang'] + ['-dM', '-E', '-']
     try:
-        out = subprocess.check_output(cmd, stdin=open('/dev/null')).strip()
+        out = subprocess.check_output(cmd, stdin=open('/dev/null')).decode("utf8").strip()
         if not isinstance(out, str):
             out = out.decode(sys.stdout.encoding or 'iso8859-1')
     except Exception as err:
@@ -247,14 +248,14 @@ def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_fla
     args.insert(0, r"-D_TIME_H_")
 
     # Try and find our arm toolchain and use the headers from that.
-    gcc_path = subprocess.check_output(['which', 'arm-none-eabi-gcc']).strip()
+    gcc_path = subprocess.check_output(['which', 'arm-none-eabi-gcc']).decode("utf8").strip()
     include_path = os.path.join(os.path.dirname(gcc_path), '../arm-none-eabi/include')
     args.append("-I%s" % include_path)
 
     # Find the arm-none-eabi-gcc libgcc path including stdbool.h
     cmd = ['arm-none-eabi-gcc'] + ['-E', '-v', '-xc', '-']
     try:
-        out = subprocess.check_output(cmd, stdin=open('/dev/null'), stderr=subprocess.STDOUT).strip().splitlines()
+        out = subprocess.check_output(cmd, stdin=open('/dev/null'), stderr=subprocess.STDOUT).decode("utf8").strip().splitlines()
         if '#include <...> search starts here:' in out:
             libgcc_include_path = out[out.index('#include <...> search starts here:') + 1].strip()
             args.append("-I%s" % libgcc_include_path)

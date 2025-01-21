@@ -52,4 +52,4 @@ if __name__ == '__main__':
     rb = ResourceBall.load(args.resball)
 
     for i, o in enumerate(rb.resource_objects, start=1):
-        print "%4u: %-50s %-10s %6u" % (i, o.definition.name, o.definition.type, len(o.data))
+        print("%4u: %-50s %-10s %6u" % (i, o.definition.name, o.definition.type, len(o.data)))

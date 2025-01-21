@@ -28,8 +28,8 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 requires = [
         'cobs',
         'construct>=2.5.3,<2.8',
-        'pyserial>=2.7,<3',
-        'transitions>=0.4.0',
+        'pyserial',
+        'transitions==0.4.1',
 ]
 
 test_requires = []

@@ -38,7 +38,7 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
         app_uuid = uuid.UUID(app_info['uuid'])
     except KeyError:
         raise Exception('Could not find $.uuid in appinfo.json')
-    uuid_initializer_string = '{ %s }' % ", ".join(["0x%02X" % ord(b) for b in app_uuid.bytes])
+    uuid_initializer_string = '{ %s }' % ", ".join(["0x%02X" % b for b in app_uuid.bytes])
 
     try:
         name = app_info['shortName']
@@ -138,7 +138,7 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
             company=company_name,
             icon_resource_id=icon_resource_id,
             flags=flags_string,
-            uuid=uuid_initializer_string).encode('utf-8'))
+            uuid=uuid_initializer_string))
 
 PEBBLE_APP_INFO_TEMPLATE = string.Template("""
 const PebbleProcessInfo __pbl_app_info __attribute__ ((section (".pbl_header"))) = {

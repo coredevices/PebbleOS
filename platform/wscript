@@ -202,7 +202,7 @@ def add_platform_defines(ctx, env):
     if 'NRF5' in env.MICRO_FAMILY:
         env.append_value('DEFINES', 'MICRO_FAMILY_NRF5=1')
 
-    for cap, val in ctx.capabilities_dict().iteritems():
+    for cap, val in ctx.capabilities_dict().items():
         env.append_value('DEFINES', "CAPABILITY_%s=%s" % (cap, int(val)))
 
 # Build

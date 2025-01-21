@@ -32,7 +32,7 @@ class Prompt(object):
 
     def command_and_response(self, command_string, timeout=20):
         log = []
-        self.socket.send(bytes(command_string))
+        self.socket.send(command_string.encode())
 
         is_done = False
         while not is_done:
@@ -42,7 +42,7 @@ class Prompt(object):
                 if response.is_done_response:
                     is_done = True
                 elif response.is_message_response:
-                    log.append(response.message)
+                    log.append(response.message.decode())
             except pebble.pulse2.exceptions.ReceiveQueueEmpty:
                 raise exceptions.CommandTimedOut
         return log

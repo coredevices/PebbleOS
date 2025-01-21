@@ -17,6 +17,7 @@
 from binascii import crc32
 import os
 import struct
+from functools import reduce
 
 import stm32_crc
 
@@ -103,7 +104,7 @@ class PebbleFirmwareBinaryInfo(object):
 
         # Trim leading NULLS on the strings:
         for k in ["version_tag", "version_short"]:
-            self.info[k] = self.info[k].rstrip("\x00")
+            self.info[k] = self.info[k].rstrip(b"\x00")
 
     def __str__(self):
         return str(self.info)

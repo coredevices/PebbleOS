@@ -16,7 +16,7 @@ import re
 import sh
 import subprocess
 import sys
-from pkg_resources import parse_version
+from packaging import version
 
 from waflib import Logs
 
@@ -50,7 +50,7 @@ def tool_check():
         brew_req_list = text_to_req_list(brew_req_text)
 
     brew_installed_text = subprocess.check_output(['brew', 'list'])
-    brew_installed_dict = installed_list_to_dict(text_to_req_list(brew_installed_text))
+    brew_installed_dict = installed_list_to_dict(text_to_req_list(brew_installed_text.decode("utf8")))
 
     for req in brew_req_list:
         check_requirement(req, brew_installed_dict)
@@ -111,19 +111,19 @@ def check_requirement(req, installed):
         # No version/comparison
         return
 
-    version = parse_version(installed[req[0]])
+    ver = version.parse(installed[req[0]])
     success = True
 
     if req[1] == '==':
-        success = version == parse_version(req[2])
+        success = ver == version.parse(req[2])
     elif req[1] == '<=':
-        success = version <= parse_version(req[2])
+        success = ver <= version.parse(req[2])
     elif req[1] == '>=':
-        success = version >= parse_version(req[2])
+        success = ver >= version.parse(req[2])
     elif req[1] == '<':
-        success = version < parse_version(req[2])
+        success = ver < version.parse(req[2])
     elif req[1] == '>':
-        success = version > parse_version(req[2])
+        success = ver > version.parse(req[2])
     else:
         Logs.pprint('RED', 'Don\'t understand comparison \'%s\'' % req[1])
 

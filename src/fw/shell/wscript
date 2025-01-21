@@ -44,7 +44,7 @@ def generate_apps_table(task):
         f_out.write('#include "resource/resource_ids.auto.h"\n\n')
 
         # zeroed app id's indicate disabled apps
-        enabled_system_apps = filter(lambda e: e['id'] != 0, system_apps)
+        enabled_system_apps = list(filter(lambda e: e['id'] != 0, system_apps))
 
         # write out function declarations for system apps
         for entry in enabled_system_apps:

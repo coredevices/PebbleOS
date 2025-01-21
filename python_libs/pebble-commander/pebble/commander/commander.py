@@ -111,7 +111,7 @@ class PebbleCommander(object):
                 raise ValueError('function name %s clashes with existing attribute' % funcname)
             fn.is_command = True
             fn.name = cmdname
-            method = types.MethodType(fn, None, cls)
+            method = types.MethodType(fn, cls)
             setattr(cls, funcname, method)
 
             return fn

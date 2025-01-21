@@ -46,7 +46,7 @@ class ApplibType(object):
         self.total_3x_padding = self.size_3x_direct_padding
 
         for d in self.dependencies:
-            parent = filter(lambda t: d == t.name, all_types)[0]
+            parent = next(filter(lambda t: d == t.name, all_types))
             self.total_3x_padding += parent.get_total_3x_padding(all_types)
 
         return self.total_3x_padding
@@ -143,8 +143,9 @@ def dump_sizes(json_filename, elf_filename):
     all_types = get_types(data)
     fmt_str = "%30s %10s %10s %10s %16s %16s %16s  %s"
 
-    print fmt_str % ("Type", "sizeof()", "Size 2.x", "Size 3.x",
-                     "direct padding", "total padding", "calculated size", "dependencies")
+    print(fmt_str % ("Type", "sizeof()", "Size 2.x", "Size 3.x",
+                     "direct padding", "total padding", "calculated size",
+                     "dependencies"))
 
     for t in all_types:
         type_sizeof = _get_sizeof_type(elf_filename, t.name)
@@ -155,9 +156,9 @@ def dump_sizes(json_filename, elf_filename):
         else:
             calculated_size_str = "%u <%u>" % (calculated_size, (calculated_size - t.size_3x))
 
-        print fmt_str % (t.name, type_sizeof, t.size_2x, t.size_3x,
+        print(fmt_str % (t.name, type_sizeof, t.size_2x, t.size_3x,
                          t.size_3x_direct_padding, t.get_total_3x_padding(all_types),
-                         calculated_size_str, t.dependencies)
+                         calculated_size_str, t.dependencies))
 
 
 if __name__ == "__main__":

@@ -103,7 +103,7 @@ MAX_GLYPHS = 256
 def grouper(n, iterable, fillvalue=None):
     """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
     args = [iter(iterable)] * n
-    return itertools.izip_longest(fillvalue=fillvalue, *args)
+    return itertools.zip_longest(fillvalue=fillvalue, *args)
 
 def hasher(codepoint, num_glyphs):
     return (codepoint % num_glyphs)
@@ -123,7 +123,7 @@ class Font:
         self.legacy = legacy
         self.face = freetype.Face(self.ttf_path)
         self.face.set_pixel_sizes(0, self.max_height)
-        self.name = self.face.family_name + "_" + self.face.style_name
+        self.name = self.face.family_name + b"_" + self.face.style_name
         self.wildcard_codepoint = WILDCARD_CODEPOINT
         self.number_of_glyphs = 0
         self.table_size = HASH_TABLE_SIZE
@@ -166,8 +166,8 @@ class Font:
     def set_regex_filter(self, regex_string):
         if regex_string != ".*":
             try:
-                self.regex = re.compile(unicode(regex_string, 'utf8'), re.UNICODE)
-            except Exception, e:
+                self.regex = re.compile(regex_string)
+            except Exception as e:
                 raise Exception("Supplied filter argument was not a valid regular expression."
                                 "Font: {}".format(self.ttf_path))
         else:
@@ -296,7 +296,7 @@ class Font:
         self.face.load_glyph(gindex, flags)
         # Font metrics
         bitmap = self.face.glyph.bitmap
-        advance = self.face.glyph.advance.x / 64     # Convert 26.6 fixed float format to px
+        advance = self.face.glyph.advance.x // 64     # Convert 26.6 fixed float format to px
         advance += self.tracking_adjust
         width = bitmap.width
         height = bitmap.rows
@@ -337,14 +337,14 @@ class Font:
                     glyph_packed.append(struct.pack('<I', w))
 
                 # Confirm that we're smaller than the cache size
-                size = ((width * height) + (8 - 1)) / 8
+                size = ((width * height) + (8 - 1)) // 8
                 if size > self.max_glyph_size:
                     raise Exception("Glyph too large! codepoint {}: {} > {}. Font {}".
                                     format(codepoint, size, self.max_glyph_size, self.ttf_path))
 
         glyph_header = struct.pack(self.glyph_header, width, height, left, bottom, advance)
 
-        return glyph_header + ''.join(glyph_packed)
+        return glyph_header + b''.join(glyph_packed)
 
     def fontinfo_bits(self):
         if self.version == FONT_VERSION_2:
@@ -388,7 +388,7 @@ class Font:
                         struct.pack(offset_table_format, codepoint, offset))
                 bucket_sizes[glyph_hash] = bucket_sizes[glyph_hash] + 1
                 if bucket_sizes[glyph_hash] > OFFSET_TABLE_MAX_SIZE:
-                    print "error: %d > 127" % bucket_sizes[glyph_hash]
+                    print("error: %d > 127" % bucket_sizes[glyph_hash])
             return bucket_sizes
 
         def add_glyph(codepoint, next_offset, gindex, glyph_indices_lookup):
@@ -410,7 +410,7 @@ class Font:
         def codepoint_is_in_subset(codepoint):
            if (codepoint not in (WILDCARD_CODEPOINT, ELLIPSIS_CODEPOINT)):
               if self.regex is not None:
-                  if self.regex.match(unichr(codepoint)) is None:
+                  if self.regex.match(codepoint.to_bytes(2)) is None:
                       return False
               if codepoint not in self.codepoints:
                  return False
@@ -439,7 +439,7 @@ class Font:
                 raise Exception('Wildcard codepoint is used for something else in this font.'
                                 'Font {}'.format(self.ttf_path))
 
-            if (gindex is 0):
+            if (gindex == 0):
                 raise Exception('0 index is reused by a non wildcard glyph. Font {}'.
                                 format(self.ttf_path))
 
@@ -463,9 +463,9 @@ class Font:
 
     def bitstring(self):
         btstr = self.fontinfo_bits()
-        btstr += ''.join(self.hash_table)
+        btstr += b''.join(self.hash_table)
         for table in self.offset_tables:
-            btstr += ''.join(table)
-        btstr += ''.join(self.glyph_table)
+            btstr += b''.join(table)
+        btstr += b''.join(self.glyph_table)
 
         return btstr

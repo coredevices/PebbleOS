@@ -163,7 +163,7 @@ def configure(conf):
       c_warnings.append('-Wno-expansion-to-defined')
       c_warnings.append('-Wno-enum-conversion')
 
-      if not ('13', '0') <= conf.env.CC_VERSION <= ('14', '0', '0'):
+      if not ('13', '0') <= conf.env.CC_VERSION <= ('14', '2', '0'):
         # Verify the toolchain we're using is allowed. This is to prevent us from accidentally
         # building and releasing firmwares that are built in ways we haven't tested.
 
@@ -267,20 +267,20 @@ Or re-configure with the --relax_toolchain_restrictions option. """
     # Set optimization level
     if conf.options.beta:
         optimize_flags = '-Os'
-        print "Beta mode"
+        print("Beta mode")
     elif conf.options.release:
         optimize_flags = '-Os'
-        print "Release mode"
+        print("Release mode")
     elif conf.options.fat_firmware:
         optimize_flags = '-O0'
         conf.env.IS_FAT_FIRMWARE = True
-        print 'Building Fat Firmware (no optimizations, logging enabled)'
+        print('Building Fat Firmware (no optimizations, logging enabled)')
     elif conf.options.gdb:
         optimize_flags = '-Og'
-        print "GDB mode"
+        print("GDB mode")
     else:
         optimize_flags = '-Os'
-        print 'Debug Mode'
+        print('Debug Mode')
 
     conf.env.append_value('CFLAGS', optimize_flags)
     conf.env.append_value('LINKFLAGS', optimize_flags)

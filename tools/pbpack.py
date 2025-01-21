@@ -79,12 +79,12 @@ class ResourcePack(object):
     def serialize_table(self):
         # Serialize these entries into table_data
         cur_file_id = 1
-        table_data = ''
+        table_data = b''
         for cur_file_id, table_entry in enumerate(self.table_entries, start=1):
             table_data += table_entry.serialize(cur_file_id)
 
         # Pad the rest of the table_data up to table_size
-        for i in xrange(cur_file_id, self.table_size):
+        for i in range(cur_file_id, self.table_size):
             table_data += ResourcePackTableEntry(0, 0, 0, 0).serialize(0)
 
         return table_data
@@ -119,7 +119,7 @@ class ResourcePack(object):
 
         # Parse table entries:
         resource_pack.table_entries = []
-        for n in xrange(num_files):
+        for n in range(num_files):
             table_entry = f_in.read(cls.TABLE_ENTRY_SIZE_BYTES)
             file_id, entry = ResourcePackTableEntry.deserialize(table_entry)
 
@@ -214,8 +214,7 @@ class ResourcePack(object):
 
         f_out.write(self.serialize_manifest(self.crc))
         f_out.write(self.serialize_table())
-        for c in self.serialize_content():
-            f_out.write(c)
+        f_out.write(self.serialize_content())
 
         return self.crc
 
@@ -244,11 +243,11 @@ class ResourcePack(object):
         Dump a bunch of information about this pbpack to stdout
         """
 
-        print 'Manifest CRC: 0x%x' % self.crc
-        print 'Calculated CRC: 0x%x' % self.get_content_crc()
-        print 'Num Items: %u' % len(self.table_entries)
+        print('Manifest CRC: 0x%x' % self.crc)
+        print('Calculated CRC: 0x%x' % self.get_content_crc())
+        print('Num Items: %u' % len(self.table_entries))
         for i, entry in enumerate(self.table_entries, start=1):
-            print '  %u: Offset %u Length %u CRC 0x%x' % (i, entry.offset, entry.length, entry.crc)
+            print('  %u: Offset %u Length %u CRC 0x%x' % (i, entry.offset, entry.length, entry.crc))
 
     def __init__(self, is_system):
         self.table_size = 512 if is_system else 256

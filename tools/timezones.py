@@ -23,6 +23,7 @@ import string
 import struct
 import sys
 from collections import namedtuple
+from functools import cmp_to_key
 
 # dst-rules are formatted in 2 forms
 # Jordan Oct lastFri 0:00 -
@@ -143,13 +144,13 @@ def dstrules_parse(tzfile):
     wday_dict = {'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6,
                  'Any': 255}
 
-    with open(tzfile, 'rb') as infile:
+    with open(tzfile, 'r') as infile:
         lines = infile.readlines()
         for line_num, line in enumerate(lines):
-            match_list = re.finditer("^Rule\s+(?P<dstzone>[-A-Za-z]+)\s+[0-9]+\s+max\s+-\s+"
-                                     "(?P<month>[A-Za-z]+)\s+(?P<wday_stuff>[>=A-Za-z0-9]+)\s+"
-                                     "(?P<time>[:0-9]+)(?P<timemode>[swugz]*)\s+[:0-9su]+\s+"
-                                     "(?P<DS>[DS-])", line)
+            match_list = re.finditer(r"^Rule\s+(?P<dstzone>[-A-Za-z]+)\s+[0-9]+\s+max\s+-\s+"
+                                     r"(?P<month>[A-Za-z]+)\s+(?P<wday_stuff>[>=A-Za-z0-9]+)\s+"
+                                     r"(?P<time>[:0-9]+)(?P<timemode>[swugz]*)\s+[:0-9su]+\s+"
+                                     r"(?P<DS>[DS-])", line)
             if match_list:
                 for match in match_list:
                     try:
@@ -195,7 +196,7 @@ def dstrules_parse(tzfile):
                                        int(mday), int(hour), int(minute))
                     dstrule_list.append(new_rule)
 
-    dstrule_list.sort(cmp=dstrule_cmp)
+    dstrule_list.sort(key=cmp_to_key(dstrule_cmp))
 
     return dstrule_list
 
@@ -210,7 +211,7 @@ def build_zoneinfo_list(tzfile):
 
     zoneinfo_list = []
 
-    with open(tzfile, 'rb') as infile:
+    with open(tzfile, 'r') as infile:
         lines = infile.readlines()
         region = ""
         continent = ""
@@ -229,8 +230,8 @@ def build_zoneinfo_list(tzfile):
             # information.
 
             if line.startswith("Zone"):
-                match = re.match("^Zone\s+"
-                                 "(?P<continent>[A-Za-z]+)\/(?P<region>[-_\/A-Za-z]+)", line)
+                match = re.match(r"^Zone\s+"
+                                 r"(?P<continent>[A-Za-z]+)\/(?P<region>[-_\/A-Za-z]+)", line)
                 if match:
                     continent = match.group("continent")
                     region = match.group("region")
@@ -257,16 +258,16 @@ def build_zoneinfo_list(tzfile):
                         region = ""
 
             # Now look to see if we've found the final line of the block
-            match = re.match("^(Zone\s+[-_\/A-Za-z]+\s+|\s+)"  # Leading spaces or zone name
+            match = re.match(r"^(Zone\s+[-_\/A-Za-z]+\s+|\s+)"  # Leading spaces or zone name
                              # The gmt offset (like 4:00 or -3:30)
-                             "(?P<offset>[-0-9:]+)\s+"
+                             r"(?P<offset>[-0-9:]+)\s+"
                              # The name of the dstrule, such as US, or - if no DST
-                             "(?P<dst_name>[-A-Za-z]+)\s+"
+                             r"(?P<dst_name>[-A-Za-z]+)\s+"
                              # The short name of the timezone, like E%sT (EST or EDT) or VET
                              # Or a GMT offset like +06
-                             "(?P<tz_abbr>([A-Z%s\/]+)|\+\d+)"
+                             r"(?P<tz_abbr>([A-Z%s\/]+)|\+\d+)"
                              # Trailing spaces and comments, no year or dates allowed
-                             "(\s+\#.*)?$",
+                             r"(\s+\#.*)?$",
                              line, re.VERBOSE)
 
             if match and region:
@@ -293,7 +294,7 @@ def zonelink_parse(tzfile):
 
     zonelink_list = []
 
-    with open(tzfile, 'rb') as infile:
+    with open(tzfile, 'r') as infile:
         lines = infile.readlines()
         for line in lines:
             # Parse blocks that look like this
@@ -301,8 +302,8 @@ def zonelink_parse(tzfile):
 
             # It's a link!
             if line.startswith("Link"):
-                match = re.match("^Link\s+(?P<target>[-_\/A-Za-z]+)\s+"
-                                 "(?P<linkname>[-_\/A-Za-z]+)\s*", line)
+                match = re.match(r"^Link\s+(?P<target>[-_\/A-Za-z]+)\s+"
+                                 r"(?P<linkname>[-_\/A-Za-z]+)\s*", line)
                 if match:
                     target = match.group("target")
                     linkname = match.group("linkname")
@@ -346,7 +347,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         region_id_list.append(continent+"/"+region)
 
         # fixup and output the timezone region name
-        output_bin.write(region.ljust(15, '\0'))  # 15-character region zero padded
+        output_bin.write(region.ljust(15, '\0').encode("utf8"))  # 15-character region zero padded
 
         # fixup the gmt offset to be integer minutes
         if ':' in gmt_offset_minutes:
@@ -365,7 +366,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         # fix timezone abbreviations that no longer have a DST mode
         if dst_zone not in dstzone_dict:
             tz_abbr.replace('*', 'S')  # remove
-        output_bin.write(tz_abbr.ljust(5, '\0'))  # 5-character region zero padded
+        output_bin.write(tz_abbr.ljust(5, '\0').encode("utf8"))  # 5-character region zero padded
 
         # dst table entry, 0 for NONE (ie. dash '-')
         if dst_zone in dstzone_dict:
@@ -389,7 +390,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
             output_bin.write(bytearray(16))
         else:
             for dstrule in dstrules:
-                output_bin.write(struct.pack('c', dstrule.ds))
+                output_bin.write(struct.pack('c', dstrule.ds.encode("utf8")))
                 output_bin.write(struct.pack('B', dstrule.wday))
                 output_bin.write(struct.pack('B', dstrule.flag))
                 output_bin.write(struct.pack('B', dstrule.month))
@@ -407,7 +408,7 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
             print("Couldn't find region, skipping:", e)
             continue
         output_bin.write(struct.pack('H', region_id))
-        output_bin.write(linkname.ljust(TIMEZONE_LINK_NAME_LENGTH, '\0'))
+        output_bin.write(linkname.ljust(TIMEZONE_LINK_NAME_LENGTH, '\0').encode("utf8"))
 
 
 def build_zoneinfo_dict(olson_database):

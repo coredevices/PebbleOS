@@ -158,7 +158,7 @@ def build(bld):
         try:
             return bld.cmd_and_log(cmd, quiet=Context.BOTH).strip()
         except Errors.WafError as e:
-            print e
+            print(e)
             return "unknown"
 
     # Build jerry_common_config.
@@ -177,7 +177,7 @@ def build(bld):
       'JERRY_ENABLE_ERROR_MESSAGES': '1',
     }
     jerry_common_defines = [
-      '{}={}'.format(k, v) for k, v in jerry_common_defines_dict.iteritems()]
+      '{}={}'.format(k, v) for k, v in jerry_common_defines_dict.items()]
     bld(export_defines=jerry_common_defines, name='jerry_common_config')
 
     # Build jerry_runtime_config.
@@ -188,7 +188,7 @@ def build(bld):
         'JMEM_STATS': '1',
     }
     jerry_common_runtime_defines = [
-        '{}={}'.format(k, v) for k, v in jerry_common_runtime_defines_dict.iteritems()]
+        '{}={}'.format(k, v) for k, v in jerry_common_runtime_defines_dict.items()]
     bld(export_defines=jerry_common_runtime_defines, name='jerry_runtime_config')
 
 

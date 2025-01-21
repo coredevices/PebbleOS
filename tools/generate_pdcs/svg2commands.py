@@ -24,7 +24,7 @@ g, layer, path, rect, polyline, polygon, line, circle,
 import xml.etree.ElementTree as ET
 import svg.path
 import glob
-import pebble_commands
+from . import pebble_commands
 
 xmlns = '{http://www.w3.org/2000/svg}'
 
@@ -42,14 +42,14 @@ def get_translate(group):
     if trans is not None:
         pos = trans.find('translate')
         if pos < 0:
-            print "No translation in translate"
+            print("No translation in translate")
             return 0, 0
 
         import ast
         try:
             return ast.literal_eval(trans[pos + len('translate'):])
         except (ValueError, TypeError):
-            print "translate contains unsupported elements in addition to translation"
+            print("translate contains unsupported elements in addition to translation")
 
     return 0, 0
 
@@ -97,7 +97,7 @@ def parse_path(element, translate, stroke_width, stroke_color, fill_color, verbo
         path = svg.path.parse_path(d)
         points = [(lambda l: (l.real, l.imag))(line.start) for line in path]
         if not points:
-            print "No points in parsed path"
+            print("No points in parsed path")
             return None
 
         path_open = path[-1].end != path[0].start
@@ -112,7 +112,7 @@ def parse_path(element, translate, stroke_width, stroke_color, fill_color, verbo
         return pebble_commands.PathCommand(points, path_open, translate, stroke_width, stroke_color,
                                            fill_color, verbose, precise, raise_error)
     else:
-        print "Path element does not have path attribute"
+        print("Path element does not have path attribute")
 
 
 def parse_circle(element, translate, stroke_width, stroke_color, fill_color, verbose, precise,
@@ -129,9 +129,9 @@ def parse_circle(element, translate, stroke_width, stroke_color, fill_color, ver
             return pebble_commands.CircleCommand(center, radius, translate, stroke_width,
                                                  stroke_color, fill_color, verbose)
         except ValueError:
-            print "Unrecognized circle format"
+            print("Unrecognized circle format")
     else:
-        print "Unrecognized circle format"
+        print("Unrecognized circle format")
 
 
 def parse_polyline(element, translate, stroke_width, stroke_color, fill_color, verbose, precise,
@@ -220,7 +220,7 @@ def create_command(translate, element, verbose=False, precise=False, raise_error
                                        verbose, precise, raise_error)
     except KeyError:
         if tag != 'g' and tag != 'layer':
-            print "Unsupported element: " + tag
+            print("Unsupported element: " + tag)
 
     return None
 
@@ -229,7 +229,7 @@ def get_commands(translate, group, verbose=False, precise=False, raise_error=Fal
                  truncate_color=True):
     commands = []
     error = False
-    for child in group.getchildren():
+    for child in list(group):
         # ignore elements that are marked display="none"
         display = child.get('display')
         if display is not None and display == 'none':

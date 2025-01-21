@@ -35,12 +35,12 @@ class LogMessage(collections.namedtuple('LogMessage',
     @classmethod
     def parse(cls, packet):
         result = cls.response_struct.unpack(packet[:cls.response_struct.size])
-        msg = packet[cls.response_struct.size:]
+        msg = packet[cls.response_struct.size:].decode("utf8")
 
-        log_level = result[2]
-        task = result[3]
+        log_level = result[2].decode("utf8")
+        task = result[3].decode("utf8")
         timestamp = datetime.fromtimestamp(result[4] / 1000.0)
-        file_name = result[1].split('\x00', 1)[0]  # NUL terminated
+        file_name = result[1].split(b'\x00', 1)[0].decode("utf8")  # NUL terminated
         line_number = result[5]
 
         return cls(log_level, task, timestamp, file_name, line_number, msg)

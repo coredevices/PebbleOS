@@ -621,11 +621,10 @@ class BaseEnumeration(object):
     """
 
     def __init__(self, value):
-        if value >= len(self.__class__._kinds):
-            self.__class__._kinds += [None] * (value - len(self.__class__._kinds) + 1)
-        if self.__class__._kinds[value] is not None:
-            raise ValueError('{0} value {1} already loaded'.format(
-                str(self.__class__), value))
+        if value >= len(CursorKind._kinds):
+            CursorKind._kinds += [None] * (value - len(CursorKind._kinds) + 1)
+        if CursorKind._kinds[value] is not None:
+            raise ValueError('CursorKind already loaded')
         self.value = value
         self.__class__._kinds[value] = self
         self.__class__._name_map = None
@@ -644,24 +643,11 @@ class BaseEnumeration(object):
                     self._name_map[value] = key
         return self._name_map[self]
 
-    @classmethod
-    def from_id(cls, id):
-        if id >= len(cls._kinds) or cls._kinds[id] is None:
-            raise ValueError('Unknown template argument kind %d' % id)
-        return cls._kinds[id]
-
-    def __repr__(self):
-        return '%s.%s' % (self.__class__, self.name,)
-
-
-class CursorKind(BaseEnumeration):
-    """
-    A CursorKind describes the kind of entity that a cursor points to.
-    """
-
-    # The required BaseEnumeration declarations.
-    _kinds = []
-    _name_map = None
+    @staticmethod
+    def from_id(id):
+        if id >= len(CursorKind._kinds) or CursorKind._kinds[id] is None:
+            raise ValueError('Unknown cursor kind %d' % id)
+        return CursorKind._kinds[id]
 
     @staticmethod
     def get_all_kinds():
@@ -2019,10 +2005,33 @@ class TypeKind(BaseEnumeration):
     _kinds = []
     _name_map = None
 
+    def __init__(self, value):
+        if value >= len(TypeKind._kinds):
+            TypeKind._kinds += [None] * (value - len(TypeKind._kinds) + 1)
+        if TypeKind._kinds[value] is not None:
+            raise ValueError('TypeKind already loaded')
+        self.value = value
+        TypeKind._kinds[value] = self
+        TypeKind._name_map = None
+
+    def from_param(self):
+        return self.value
+
     @property
-    def spelling(self):
-        """Retrieve the spelling of this TypeKind."""
-        return conf.lib.clang_getTypeKindSpelling(self.value)
+    def name(self):
+        """Get the enumeration name of this cursor kind."""
+        if self._name_map is None:
+            self._name_map = {}
+            for key,value in TypeKind.__dict__.items():
+                if isinstance(value,TypeKind):
+                    self._name_map[value] = key
+        return self._name_map[self]
+
+    @staticmethod
+    def from_id(id):
+        if id >= len(TypeKind._kinds) or TypeKind._kinds[id] is None:
+            raise ValueError('Unknown type kind %d' % id)
+        return TypeKind._kinds[id]
 
     def __repr__(self):
         return 'TypeKind.%s' % (self.name,)
@@ -2999,13 +3008,17 @@ class TranslationUnit(ClangObject):
         unsaved_files_array = 0
         if len(unsaved_files):
             unsaved_files_array = (_CXUnsavedFile * len(unsaved_files))()
-            for i,(name,contents) in enumerate(unsaved_files):
-                if hasattr(contents, "read"):
-                    contents = contents.read()
-                contents = b(contents)
-                unsaved_files_array[i].name = b(fspath(name))
-                unsaved_files_array[i].contents = contents
-                unsaved_files_array[i].length = len(contents)
+            for i,(name,value) in enumerate(unsaved_files):
+                if not isinstance(value, str):
+                    # FIXME: It would be great to support an efficient version
+                    # of this, one day.
+                    value = value.read()
+                    print(value)
+                if not isinstance(value, str):
+                    raise TypeError('Unexpected unsaved file contents.')
+                unsaved_files_array[i].name = name
+                unsaved_files_array[i].contents = value
+                unsaved_files_array[i].length = len(value)
         ptr = conf.lib.clang_reparseTranslationUnit(self, len(unsaved_files),
                 unsaved_files_array, options)
 
@@ -3059,14 +3072,18 @@ class TranslationUnit(ClangObject):
         unsaved_files_array = 0
         if len(unsaved_files):
             unsaved_files_array = (_CXUnsavedFile * len(unsaved_files))()
-            for i,(name,contents) in enumerate(unsaved_files):
-                if hasattr(contents, "read"):
-                    contents = contents.read()
-                contents = b(contents)
-                unsaved_files_array[i].name = b(fspath(name))
-                unsaved_files_array[i].contents = contents
-                unsaved_files_array[i].length = len(contents)
-        ptr = conf.lib.clang_codeCompleteAt(self, fspath(path), line, column,
+            for i,(name,value) in enumerate(unsaved_files):
+                if not isinstance(value, str):
+                    # FIXME: It would be great to support an efficient version
+                    # of this, one day.
+                    value = value.read()
+                    print(value)
+                if not isinstance(value, str):
+                    raise TypeError('Unexpected unsaved file contents.')
+                unsaved_files_array[i].name = name
+                unsaved_files_array[i].contents = value
+                unsaved_files_array[i].length = len(value)
+        ptr = conf.lib.clang_codeCompleteAt(self, path, line, column,
                 unsaved_files_array, len(unsaved_files), options)
         if ptr:
             return CodeCompletionResults(ptr)

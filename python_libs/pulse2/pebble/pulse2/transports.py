@@ -557,7 +557,7 @@ class ReliableTransport(object):
             return
 
         # Information packets have the LSBit of the first byte cleared.
-        is_info = (bytearray(packet[0])[0] & 0b1) == 0
+        is_info = (bytearray(packet[0:1])[0] & 0b1) == 0
         try:
             if is_info:
                 fields = ReliableInfoPacket.parse(packet)

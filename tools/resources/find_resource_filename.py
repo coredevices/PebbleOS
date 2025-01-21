@@ -58,8 +58,8 @@ def find_most_specific_filename(bld, env, root_node, general_filename):
     if len(specificities) == 0:
         return general_filename
 
-    top_score = max(specificities.itervalues())
-    top_candidates = [k for k, v in specificities.iteritems() if v == top_score]
+    top_score = max(specificities.values())
+    top_candidates = [k for k, v in specificities.items() if v == top_score]
     if len(top_candidates) > 1:
         bld.fatal("The correct file for {general} on {platform} is ambiguous: {count} files have "
                   "specificity {score}:\n\t{files}".format(general=general_filename,

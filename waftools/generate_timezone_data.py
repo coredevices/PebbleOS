@@ -19,7 +19,7 @@ import tools.timezones
 from resources.types.resource_definition import ResourceDefinition
 from resources.types.resource_object import ResourceObject
 
-import StringIO
+from io import BytesIO
 
 
 def wafrule(task):
@@ -34,11 +34,11 @@ def generate_resource_object(olson_database):
     dstrule_list = tools.timezones.dstrules_parse(olson_database)
     zonelink_list = tools.timezones.zonelink_parse(olson_database)
 
-    print "{} {} {}".format(len(zoneinfo_list),
+    print("{} {} {}".format(len(zoneinfo_list),
                             len(dstrule_list),
-                            len(zonelink_list))
+                            len(zonelink_list)))
 
-    data_file = StringIO.StringIO()
+    data_file = BytesIO()
     tools.timezones.zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, data_file)
 
     reso = ResourceObject(

@@ -147,5 +147,5 @@ if __name__ == '__main__':
     output = check_elf_log_strings(args.elf_path)
 
     if output:
-        print output
+        print(output)
         sys.exit(1)

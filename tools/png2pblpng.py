@@ -16,7 +16,7 @@
 
 import png
 import itertools
-import StringIO
+from io import BytesIO
 
 import pebble_image_routines
 
@@ -52,7 +52,7 @@ def convert_png_to_pebble_png_bytes(input_filename, palette_name,
     output_png, image_data = _convert_png_to_pebble_png_writer(
         input_filename, palette_name, color_reduction_method, force_bitdepth=bitdepth)
 
-    output_str = StringIO.StringIO()
+    output_str = BytesIO()
     output_png.write_array(output_str, image_data)
 
     return output_str.getvalue()
@@ -211,10 +211,10 @@ def get_palette_for_png(input_filename, palette_name, color_reduction_method):
 
 
 def grouper(iterable, n, fillvalue=None):
-    from itertools import izip_longest
+    from itertools import zip_longest
 
     args = [iter(iterable)] * n
-    return izip_longest(fillvalue=fillvalue, *args)
+    return zip_longest(fillvalue=fillvalue, *args)
 
 
 def get_ideal_palette(is_color=False):

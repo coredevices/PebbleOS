@@ -28,7 +28,7 @@ def get_git_revision(ctx):
     # Validate that git tag follows the required form:
     # See https://github.com/pebble/tintin/wiki/Firmware,-PRF-&-Bootloader-Versions
     # Note: version_regex.groups() returns sequence ('0', '0', '0', 'suffix'):
-    version_regex = re.search("^v(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:(?:-)(.+))?$", tag)
+    version_regex = re.search(r"^v(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:(?:-)(.+))?$", tag)
     if version_regex:
         # Get version numbers from version_regex.groups() sequence and replace None values with 0
         # e.g. v2-beta11 => ('2', None, None, 'beta11') => ('2', '0', '0')

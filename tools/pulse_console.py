@@ -33,7 +33,7 @@ def erase_current_line():
 
 
 def handle_prompt_command(interface):
-    cmd = raw_input(PROMPT_STRING)
+    cmd = input(PROMPT_STRING)
     if not cmd:
         return
 

@@ -19,7 +19,7 @@ from pebble_sdk_platform import pebble_platforms
 
 import json2vibe
 
-import StringIO
+from io import BytesIO
 
 
 class VibeResourceGenerator(ResourceGenerator):
@@ -27,7 +27,7 @@ class VibeResourceGenerator(ResourceGenerator):
 
     @staticmethod
     def generate_object(task, definition):
-        out = StringIO.StringIO()
+        out = BytesIO()
         json2vibe.convert_to_file(task.inputs[0].abspath(), out)
 
         return ResourceObject(definition, out.getvalue())

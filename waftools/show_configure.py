@@ -15,7 +15,7 @@
 from __future__ import print_function
 
 import os
-import pipes
+from shlex import quote
 
 from waflib import ConfigSet, Options
 from waflib.Build import BuildContext
@@ -62,12 +62,12 @@ class show_configure(BuildContext):
         # Configure time environment vars
         for var in ['CFLAGS']:
             if var in env.environ:
-                argv = ['{}={}'.format(var, pipes.quote(env.environ[var]))] + argv
+                argv = ['{}={}'.format(var, quote(env.environ[var]))] + argv
 
         # Persistent environment vars
         for var in ['WAFLOCK']:
             if var in env.environ:
-                argv = ['export {}={};'.format(var, pipes.quote(env.environ[var]))] + argv
+                argv = ['export {}={};'.format(var, quote(env.environ[var]))] + argv
 
         # Print and force waf to complete without further output
         print(' '.join(argv))

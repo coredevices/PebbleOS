@@ -80,8 +80,8 @@ def find_subregions_for_region(address, size):
 
             block_start_addresss = address - start_in_block
 
-            start_enabled_subregion = start_in_block / subregion_size
-            end_enabled_subregion = end_in_block / subregion_size
+            start_enabled_subregion = start_in_block // subregion_size
+            end_enabled_subregion = end_in_block // subregion_size
 
             disabled_subregions = bitarray(8, endian='little')
             disabled_subregions.setall(True)

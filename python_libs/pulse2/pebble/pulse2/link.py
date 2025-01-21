@@ -295,7 +295,7 @@ class Link(object):
         self.mtu = mtu
 
         self.transports = {}
-        for name, factory in self.TRANSPORTS.iteritems():
+        for name, factory in self.TRANSPORTS.items():
             transport = factory(interface, mtu)
             self.transports[name] = transport
 
@@ -310,5 +310,5 @@ class Link(object):
         self.closed = True
         if self.on_close:
             self.on_close()
-        for transport in self.transports.itervalues():
+        for _, transport in self.transports.items():
             transport.down()
