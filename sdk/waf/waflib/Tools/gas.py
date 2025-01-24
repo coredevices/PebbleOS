@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Thomas Nagy, 2008-2010 (ita)
+# Thomas Nagy, 2008-2018 (ita)
 
 "Detect as/gas/gcc for compiling assembly files"
 
@@ -16,3 +16,4 @@ def configure(conf):
 	conf.env.ASLNK_TGT_F = ['-o']
 	conf.find_ar()
 	conf.load('asm')
+	conf.env.ASM_NAME = 'gas'

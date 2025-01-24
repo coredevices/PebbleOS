@@ -1,24 +1,38 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Thomas Nagy, 2005-2010 (ita)
+# Thomas Nagy, 2005-2018 (ita)
 
 """
 Utilities and platform-specific fixes
 
 The portability fixes try to provide a consistent behavior of the Waf API
-through Python versions 2.3 to 3.X and across different platforms (win32, linux, etc)
+through Python versions 2.5 to 3.X and across different platforms (win32, linux, etc)
 """
 
-import os, sys, errno, traceback, inspect, re, shutil, datetime, gc
-import subprocess # <- leave this!
+import atexit, os, sys, errno, inspect, re, datetime, platform, base64, signal, functools, time, shlex
 
 try:
-	from collections import deque
+	import cPickle
 except ImportError:
-	class deque(list):
-		"""A deque for Python 2.3 which does not have one"""
-		def popleft(self):
-			return self.pop(0)
+	import pickle as cPickle
+
+# leave this
+if os.name == 'posix' and sys.version_info[0] < 3:
+	try:
+		import subprocess32 as subprocess
+	except ImportError:
+		import subprocess
+else:
+	import subprocess
+
+try:
+	TimeoutExpired = subprocess.TimeoutExpired
+except AttributeError:
+	class TimeoutExpired(Exception):
+		pass
+
+from collections import deque, defaultdict
+
 try:
 	import _winreg as winreg
 except ImportError:
@@ -30,26 +44,31 @@ except ImportError:
 from waflib import Errors
 
 try:
-	from collections import UserDict
-except ImportError:
-	from UserDict import UserDict
-
-try:
 	from hashlib import md5
 except ImportError:
 	try:
-		from md5 import md5
+		from hashlib import sha1 as md5
 	except ImportError:
-		# never fail to enable fixes from another module
+		# never fail to enable potential fixes from another module
 		pass
+else:
+	try:
+		md5().digest()
+	except ValueError:
+		# Fips? #2213
+		from hashlib import sha1 as md5
 
 try:
 	import threading
 except ImportError:
+	if not 'JOBS' in os.environ:
+		# no threading :-(
+		os.environ['JOBS'] = '1'
+
 	class threading(object):
 		"""
-			A fake threading class for platforms lacking the threading module.
-			Use ``waf -j1`` on those platforms
+		A fake threading class for platforms lacking the threading module.
+		Use ``waf -j1`` on those platforms
 		"""
 		pass
 	class Lock(object):
@@ -59,19 +78,9 @@ except ImportError:
 		def release(self):
 			pass
 	threading.Lock = threading.Thread = Lock
-else:
-	run_old = threading.Thread.run
-	def run(*args, **kwargs):
-		try:
-			run_old(*args, **kwargs)
-		except (KeyboardInterrupt, SystemExit):
-			raise
-		except Exception:
-			sys.excepthook(*sys.exc_info())
-	threading.Thread.run = run
 
-SIG_NIL = 'iluvcuteoverload'.encode()
-"""Arbitrary null value for a md5 hash. This value must be changed when the hash value is replaced (size)"""
+SIG_NIL = 'SIG_NIL_SIG_NIL_'.encode()
+"""Arbitrary null value for hashes. Modify this value according to the hash function in use"""
 
 O644 = 420
 """Constant representing the permissions for regular files (0644 raises a syntax error on python 3)"""
@@ -85,36 +94,126 @@ rot_chr = ['\\', '|', '/', '-']
 rot_idx = 0
 "Index of the current throbber character (progress bar)"
 
-try:
-	from collections import defaultdict
-except ImportError:
-	class defaultdict(dict):
-		"""
-		defaultdict was introduced in python 2.5, so we leave it for python 2.4 and 2.3
-		"""
-		def __init__(self, default_factory):
-			super(defaultdict, self).__init__()
-			self.default_factory = default_factory
-		def __getitem__(self, key):
-			try:
-				return super(defaultdict, self).__getitem__(key)
-			except KeyError:
-				value = self.default_factory()
-				self[key] = value
-				return value
+class ordered_iter_dict(dict):
+	"""Ordered dictionary that provides iteration from the most recently inserted keys first"""
+	def __init__(self, *k, **kw):
+		self.lst = deque()
+		dict.__init__(self, *k, **kw)
+	def clear(self):
+		dict.clear(self)
+		self.lst = deque()
+	def __setitem__(self, key, value):
+		if key in dict.keys(self):
+			self.lst.remove(key)
+		dict.__setitem__(self, key, value)
+		self.lst.append(key)
+	def __delitem__(self, key):
+		dict.__delitem__(self, key)
+		try:
+			self.lst.remove(key)
+		except ValueError:
+			pass
+	def __iter__(self):
+		return reversed(self.lst)
+	def keys(self):
+		return reversed(self.lst)
 
-is_win32 = sys.platform in ('win32', 'cli')
-
-# we should have put this in the Logs.py file instead :-/
-indicator = '\x1b[K%s%s%s\r'
-if is_win32 and 'NOCOLOR' in os.environ:
-	indicator = '%s%s%s\r'
-
-def readf(fname, m='r', encoding='ISO8859-1'):
+class lru_node(object):
 	"""
-	Read an entire file into a string, use this function instead of os.open() whenever possible.
+	Used by :py:class:`waflib.Utils.lru_cache`
+	"""
+	__slots__ = ('next', 'prev', 'key', 'val')
+	def __init__(self):
+		self.next = self
+		self.prev = self
+		self.key = None
+		self.val = None
 
-	In practice the wrapper node.read(..) should be preferred to this function::
+class lru_cache(object):
+	"""
+	A simple least-recently used cache with lazy allocation
+	"""
+	__slots__ = ('maxlen', 'table', 'head')
+	def __init__(self, maxlen=100):
+		self.maxlen = maxlen
+		"""
+		Maximum amount of elements in the cache
+		"""
+		self.table = {}
+		"""
+		Mapping key-value
+		"""
+		self.head = lru_node()
+		self.head.next = self.head
+		self.head.prev = self.head
+
+	def __getitem__(self, key):
+		node = self.table[key]
+		# assert(key==node.key)
+		if node is self.head:
+			return node.val
+
+		# detach the node found
+		node.prev.next = node.next
+		node.next.prev = node.prev
+
+		# replace the head
+		node.next = self.head.next
+		node.prev = self.head
+		self.head = node.next.prev = node.prev.next = node
+
+		return node.val
+
+	def __setitem__(self, key, val):
+		if key in self.table:
+			# update the value for an existing key
+			node = self.table[key]
+			node.val = val
+			self.__getitem__(key)
+		else:
+			if len(self.table) < self.maxlen:
+				# the very first item is unused until the maximum is reached
+				node = lru_node()
+				node.prev = self.head
+				node.next = self.head.next
+				node.prev.next = node.next.prev = node
+			else:
+				node = self.head = self.head.next
+				try:
+					# that's another key
+					del self.table[node.key]
+				except KeyError:
+					pass
+
+			node.key = key
+			node.val = val
+			self.table[key] = node
+
+class lazy_generator(object):
+	def __init__(self, fun, params):
+		self.fun = fun
+		self.params = params
+
+	def __iter__(self):
+		return self
+
+	def __next__(self):
+		try:
+			it = self.it
+		except AttributeError:
+			it = self.it = self.fun(*self.params)
+		return next(it)
+
+	next = __next__
+
+is_win32 = os.sep == '\\' or sys.platform == 'win32' or os.name == 'nt' # msys2
+"""
+Whether this system is a Windows series
+"""
+
+def readf(fname, m='r', encoding='latin-1'):
+	"""
+	Reads an entire file into a string. See also :py:meth:`waflib.Node.Node.readf`::
 
 		def build(ctx):
 			from waflib import Utils
@@ -133,25 +232,21 @@ def readf(fname, m='r', encoding='ISO8859-1'):
 
 	if sys.hexversion > 0x3000000 and not 'b' in m:
 		m += 'b'
-		f = open(fname, m)
-		try:
+		with open(fname, m) as f:
 			txt = f.read()
-		finally:
-			f.close()
-		txt = txt.decode(encoding)
+		if encoding:
+			txt = txt.decode(encoding)
+		else:
+			txt = txt.decode()
 	else:
-		f = open(fname, m)
-		try:
+		with open(fname, m) as f:
 			txt = f.read()
-		finally:
-			f.close()
 	return txt
 
-def writef(fname, data, m='w', encoding='ISO8859-1'):
+def writef(fname, data, m='w', encoding='latin-1'):
 	"""
-	Write an entire file from a string, use this function instead of os.open() whenever possible.
-
-	In practice the wrapper node.write(..) should be preferred to this function::
+	Writes an entire file from a string.
+	See also :py:meth:`waflib.Node.Node.writef`::
 
 		def build(ctx):
 			from waflib import Utils
@@ -170,109 +265,84 @@ def writef(fname, data, m='w', encoding='ISO8859-1'):
 	if sys.hexversion > 0x3000000 and not 'b' in m:
 		data = data.encode(encoding)
 		m += 'b'
-	f = open(fname, m)
-	try:
+	with open(fname, m) as f:
 		f.write(data)
-	finally:
-		f.close()
 
 def h_file(fname):
 	"""
-	Compute a hash value for a file by using md5. This method may be replaced by
-	a faster version if necessary. The following uses the file size and the timestamp value::
-
-		import stat
-		from waflib import Utils
-		def h_file(fname):
-			st = os.stat(fname)
-			if stat.S_ISDIR(st[stat.ST_MODE]): raise IOError('not a file')
-			m = Utils.md5()
-			m.update(str(st.st_mtime))
-			m.update(str(st.st_size))
-			m.update(fname)
-			return m.digest()
-		Utils.h_file = h_file
+	Computes a hash value for a file by using md5. Use the md5_tstamp
+	extension to get faster build hashes if necessary.
 
 	:type fname: string
 	:param fname: path to the file to hash
 	:return: hash of the file contents
+	:rtype: string or bytes
 	"""
-	f = open(fname, 'rb')
 	m = md5()
-	try:
+	with open(fname, 'rb') as f:
 		while fname:
 			fname = f.read(200000)
 			m.update(fname)
-	finally:
-		f.close()
 	return m.digest()
 
-if hasattr(os, 'O_NOINHERIT'):
-	def readf_win32(f, m='r', encoding='ISO8859-1'):
-		flags = os.O_NOINHERIT | os.O_RDONLY
-		if 'b' in m:
-			flags |= os.O_BINARY
-		if '+' in m:
-			flags |= os.O_RDWR
-		try:
-			fd = os.open(f, flags)
-		except OSError:
-			raise IOError('Cannot read from %r' % f)
+def readf_win32(f, m='r', encoding='latin-1'):
+	flags = os.O_NOINHERIT | os.O_RDONLY
+	if 'b' in m:
+		flags |= os.O_BINARY
+	if '+' in m:
+		flags |= os.O_RDWR
+	try:
+		fd = os.open(f, flags)
+	except OSError:
+		raise IOError('Cannot read from %r' % f)
 
-		if sys.hexversion > 0x3000000 and not 'b' in m:
-			m += 'b'
-			f = os.fdopen(fd, m)
-			try:
-				txt = f.read()
-			finally:
-				f.close()
+	if sys.hexversion > 0x3000000 and not 'b' in m:
+		m += 'b'
+		with os.fdopen(fd, m) as f:
+			txt = f.read()
+		if encoding:
 			txt = txt.decode(encoding)
 		else:
-			f = os.fdopen(fd, m)
-			try:
-				txt = f.read()
-			finally:
-				f.close()
-		return txt
+			txt = txt.decode()
+	else:
+		with os.fdopen(fd, m) as f:
+			txt = f.read()
+	return txt
 
-	def writef_win32(f, data, m='w', encoding='ISO8859-1'):
-		if sys.hexversion > 0x3000000 and not 'b' in m:
-			data = data.encode(encoding)
-			m += 'b'
-		flags = os.O_CREAT | os.O_TRUNC | os.O_WRONLY | os.O_NOINHERIT
-		if 'b' in m:
-			flags |= os.O_BINARY
-		if '+' in m:
-			flags |= os.O_RDWR
-		try:
-			fd = os.open(f, flags)
-		except OSError:
-			raise IOError('Cannot write to %r' % f)
-		f = os.fdopen(fd, m)
-		try:
-			f.write(data)
-		finally:
-			f.close()
+def writef_win32(f, data, m='w', encoding='latin-1'):
+	if sys.hexversion > 0x3000000 and not 'b' in m:
+		data = data.encode(encoding)
+		m += 'b'
+	flags = os.O_CREAT | os.O_TRUNC | os.O_WRONLY | os.O_NOINHERIT
+	if 'b' in m:
+		flags |= os.O_BINARY
+	if '+' in m:
+		flags |= os.O_RDWR
+	try:
+		fd = os.open(f, flags)
+	except OSError:
+		raise OSError('Cannot write to %r' % f)
+	with os.fdopen(fd, m) as f:
+		f.write(data)
 
-	def h_file_win32(fname):
-		try:
-			fd = os.open(fname, os.O_BINARY | os.O_RDONLY | os.O_NOINHERIT)
-		except OSError:
-			raise IOError('Cannot read from %r' % fname)
-		f = os.fdopen(fd, 'rb')
-		m = md5()
-		try:
-			while fname:
-				fname = f.read(200000)
-				m.update(fname)
-		finally:
-			f.close()
-		return m.digest()
+def h_file_win32(fname):
+	try:
+		fd = os.open(fname, os.O_BINARY | os.O_RDONLY | os.O_NOINHERIT)
+	except OSError:
+		raise OSError('Cannot read from %r' % fname)
+	m = md5()
+	with os.fdopen(fd, 'rb') as f:
+		while fname:
+			fname = f.read(200000)
+			m.update(fname)
+	return m.digest()
 
+# always save these
+readf_unix = readf
+writef_unix = writef
+h_file_unix = h_file
+if hasattr(os, 'O_NOINHERIT') and sys.hexversion < 0x3040000:
 	# replace the default functions
-	readf_old = readf
-	writef_old = writef
-	h_file_old = h_file
 	readf = readf_win32
 	writef = writef_win32
 	h_file = h_file_win32
@@ -297,42 +367,43 @@ Return the hexadecimal representation of a string
 :type s: string
 """
 
+def listdir_win32(s):
+	"""
+	Lists the contents of a folder in a portable manner.
+	On Win32, returns the list of drive letters: ['C:', 'X:', 'Z:'] when an empty string is given.
+
+	:type s: string
+	:param s: a string, which can be empty on Windows
+	"""
+	if not s:
+		try:
+			import ctypes
+		except ImportError:
+			# there is nothing much we can do
+			return [x + ':\\' for x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
+		else:
+			dlen = 4 # length of "?:\\x00"
+			maxdrives = 26
+			buf = ctypes.create_string_buffer(maxdrives * dlen)
+			ndrives = ctypes.windll.kernel32.GetLogicalDriveStringsA(maxdrives*dlen, ctypes.byref(buf))
+			return [ str(buf.raw[4*i:4*i+2].decode('ascii')) for i in range(int(ndrives/dlen)) ]
+
+	if len(s) == 2 and s[1] == ":":
+		s += os.sep
+
+	if not os.path.isdir(s):
+		e = OSError('%s is not a directory' % s)
+		e.errno = errno.ENOENT
+		raise e
+	return os.listdir(s)
+
 listdir = os.listdir
 if is_win32:
-	def listdir_win32(s):
-		"""
-		List the contents of a folder in a portable manner.
-		On Win32, return the list of drive letters: ['C:', 'X:', 'Z:']
-
-		:type s: string
-		:param s: a string, which can be empty on Windows
-		"""
-		if not s:
-			try:
-				import ctypes
-			except ImportError:
-				# there is nothing much we can do
-				return [x + ':\\' for x in list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')]
-			else:
-				dlen = 4 # length of "?:\\x00"
-				maxdrives = 26
-				buf = ctypes.create_string_buffer(maxdrives * dlen)
-				ndrives = ctypes.windll.kernel32.GetLogicalDriveStringsA(maxdrives*dlen, ctypes.byref(buf))
-				return [ str(buf.raw[4*i:4*i+2].decode('ascii')) for i in range(int(ndrives/dlen)) ]
-
-		if len(s) == 2 and s[1] == ":":
-			s += os.sep
-
-		if not os.path.isdir(s):
-			e = OSError('%s is not a directory' % s)
-			e.errno = errno.ENOENT
-			raise e
-		return os.listdir(s)
 	listdir = listdir_win32
 
 def num2ver(ver):
 	"""
-	Convert a string, tuple or version number into an integer. The number is supposed to have at most 4 digits::
+	Converts a string, tuple or version number into an integer. The number is supposed to have at most 4 digits::
 
 		from waflib.Utils import num2ver
 		num2ver('1.3.2') == num2ver((1,3,2)) == num2ver((1,3,2,0))
@@ -350,62 +421,41 @@ def num2ver(ver):
 		return ret
 	return ver
 
-def ex_stack():
+def to_list(val):
 	"""
-	Extract the stack to display exceptions
-
-	:return: a string represening the last exception
-	"""
-	exc_type, exc_value, tb = sys.exc_info()
-	exc_lines = traceback.format_exception(exc_type, exc_value, tb)
-	return ''.join(exc_lines)
-
-def to_list(sth):
-	"""
-	Convert a string argument to a list by splitting on spaces, and pass
-	through a list argument unchanged::
+	Converts a string argument to a list by splitting it by spaces.
+	Returns the object if not a string::
 
 		from waflib.Utils import to_list
-		lst = to_list("a b c d")
+		lst = to_list('a b c d')
 
-	:param sth: List or a string of items separated by spaces
+	:param val: list of string or space-separated string
 	:rtype: list
 	:return: Argument converted to list
-
 	"""
-	if isinstance(sth, str):
-		return sth.split()
+	if isinstance(val, str):
+		return val.split()
 	else:
-		return sth
+		return val
 
-re_nl = re.compile('\r*\n', re.M)
-def str_to_dict(txt):
-	"""
-	Parse a string with key = value pairs into a dictionary::
+def console_encoding():
+	try:
+		import ctypes
+	except ImportError:
+		pass
+	else:
+		try:
+			codepage = ctypes.windll.kernel32.GetConsoleCP()
+		except AttributeError:
+			pass
+		else:
+			if codepage:
+				if 65001 == codepage and sys.version_info < (3, 3):
+					return 'utf-8'
+				return 'cp%d' % codepage
+	return sys.stdout.encoding or ('cp1252' if is_win32 else 'latin-1')
 
-		from waflib import Utils
-		x = Utils.str_to_dict('''
-			a = 1
-			b = test
-		''')
-
-	:type  s: string
-	:param s: String to parse
-	:rtype: dict
-	:return: Dictionary containing parsed key-value pairs
-	"""
-	tbl = {}
-
-	lines = re_nl.split(txt)
-	for x in lines:
-		x = x.strip()
-		if not x or x.startswith('#') or x.find('=') < 0:
-			continue
-		tmp = x.split('=')
-		tbl[tmp[0].strip()] = '='.join(tmp[1:]).strip()
-	return tbl
-
-def split_path(path):
+def split_path_unix(path):
 	return path.split('/')
 
 def split_path_cygwin(path):
@@ -415,33 +465,55 @@ def split_path_cygwin(path):
 		return ret
 	return path.split('/')
 
-re_sp = re.compile('[/\\\\]')
+re_sp = re.compile('[/\\\\]+')
 def split_path_win32(path):
 	if path.startswith('\\\\'):
-		ret = re.split(re_sp, path)[2:]
-		ret[0] = '\\' + ret[0]
+		ret = re_sp.split(path)[1:]
+		ret[0] = '\\\\' + ret[0]
+		if ret[0] == '\\\\?':
+			return ret[1:]
 		return ret
-	return re.split(re_sp, path)
+	return re_sp.split(path)
+
+msysroot = None
+def split_path_msys(path):
+	if path.startswith(('/', '\\')) and not path.startswith(('//', '\\\\')):
+		# msys paths can be in the form /usr/bin
+		global msysroot
+		if not msysroot:
+			# msys has python 2.7 or 3, so we can use this
+			msysroot = subprocess.check_output(['cygpath', '-w', '/']).decode(sys.stdout.encoding or 'latin-1')
+			msysroot = msysroot.strip()
+		path = os.path.normpath(msysroot + os.sep + path)
+	return split_path_win32(path)
 
 if sys.platform == 'cygwin':
 	split_path = split_path_cygwin
 elif is_win32:
-	split_path = split_path_win32
+	# Consider this an MSYSTEM environment if $MSYSTEM is set and python
+	# reports is executable from a unix like path on a windows host.
+	if os.environ.get('MSYSTEM') and sys.executable.startswith('/'):
+		split_path = split_path_msys
+	else:
+		split_path = split_path_win32
+else:
+	split_path = split_path_unix
 
 split_path.__doc__ = """
-Split a path by / or \\. This function is not like os.path.split
+Splits a path by / or \\; do not confuse this function with with ``os.path.split``
 
 :type  path: string
 :param path: path to split
-:return:     list of strings
+:return:     list of string
 """
 
 def check_dir(path):
 	"""
-	Ensure that a directory exists (similar to ``mkdir -p``).
+	Ensures that a directory exists (similar to ``mkdir -p``).
 
-	:type  dir: string
-	:param dir: Path to directory
+	:type  path: string
+	:param path: Path to directory
+	:raises: :py:class:`waflib.Errors.WafError` if the folder cannot be added.
 	"""
 	if not os.path.isdir(path):
 		try:
@@ -450,9 +522,37 @@ def check_dir(path):
 			if not os.path.isdir(path):
 				raise Errors.WafError('Cannot create the folder %r' % path, ex=e)
 
+def check_exe(name, env=None):
+	"""
+	Ensures that a program exists
+
+	:type name: string
+	:param name: path to the program
+	:param env: configuration object
+	:type env: :py:class:`waflib.ConfigSet.ConfigSet`
+	:return: path of the program or None
+	:raises: :py:class:`waflib.Errors.WafError` if the folder cannot be added.
+	"""
+	if not name:
+		raise ValueError('Cannot execute an empty string!')
+	def is_exe(fpath):
+		return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+	fpath, fname = os.path.split(name)
+	if fpath and is_exe(name):
+		return os.path.abspath(name)
+	else:
+		env = env or os.environ
+		for path in env['PATH'].split(os.pathsep):
+			path = path.strip('"')
+			exe_file = os.path.join(path, name)
+			if is_exe(exe_file):
+				return os.path.abspath(exe_file)
+	return None
+
 def def_attrs(cls, **kw):
 	"""
-	Set default attributes on a class instance
+	Sets default attributes on a class instance
 
 	:type cls: class
 	:param cls: the class to update the given attributes in.
@@ -465,28 +565,53 @@ def def_attrs(cls, **kw):
 
 def quote_define_name(s):
 	"""
-	Convert a string to an identifier suitable for C defines.
+	Converts a string into an identifier suitable for C defines.
 
 	:type  s: string
 	:param s: String to convert
 	:rtype: string
 	:return: Identifier suitable for C defines
 	"""
-	fu = re.compile("[^a-zA-Z0-9]").sub("_", s)
+	fu = re.sub('[^a-zA-Z0-9]', '_', s)
+	fu = re.sub('_+', '_', fu)
 	fu = fu.upper()
 	return fu
 
+# shlex.quote didn't exist until python 3.3. Prior to that it was a non-documented
+# function in pipes.
+try:
+	shell_quote = shlex.quote
+except AttributeError:
+	import pipes
+	shell_quote = pipes.quote
+
+def shell_escape(cmd):
+	"""
+	Escapes a command:
+	['ls', '-l', 'arg space'] -> ls -l 'arg space'
+	"""
+	if isinstance(cmd, str):
+		return cmd
+	return ' '.join(shell_quote(x) for x in cmd)
+
 def h_list(lst):
 	"""
-	Hash lists. For tuples, using hash(tup) is much more efficient
+	Hashes lists of ordered data.
+
+	Using hash(tup) for tuples would be much more efficient,
+	but Python now enforces hash randomization
 
 	:param lst: list to hash
 	:type lst: list of strings
 	:return: hash of the list
 	"""
-	m = md5()
-	m.update(str(lst).encode())
-	return m.digest()
+	return md5(repr(lst).encode()).digest()
+
+if sys.hexversion < 0x3000000:
+	def h_list_python2(lst):
+		return md5(repr(lst)).digest()
+	h_list_python2.__doc__ = h_list.__doc__
+	h_list = h_list_python2
 
 def h_fun(fun):
 	"""
@@ -495,24 +620,59 @@ def h_fun(fun):
 	:param fun: function to hash
 	:type  fun: function
 	:return: hash of the function
+	:rtype: string or bytes
 	"""
 	try:
 		return fun.code
 	except AttributeError:
+		if isinstance(fun, functools.partial):
+			code = list(fun.args)
+			# The method items() provides a sequence of tuples where the first element
+			# represents an optional argument of the partial function application
+			#
+			# The sorting result outcome will be consistent because:
+			# 1. tuples are compared in order of their elements
+			# 2. optional argument namess are unique
+			code.extend(sorted(fun.keywords.items()))
+			code.append(h_fun(fun.func))
+			fun.code = h_list(code)
+			return fun.code
 		try:
 			h = inspect.getsource(fun)
-		except IOError:
-			h = "nocode"
+		except EnvironmentError:
+			h = 'nocode'
 		try:
 			fun.code = h
 		except AttributeError:
 			pass
 		return h
 
+def h_cmd(ins):
+	"""
+	Hashes objects recursively
+
+	:param ins: input object
+	:type ins: string or list or tuple or function
+	:rtype: string or bytes
+	"""
+	# this function is not meant to be particularly fast
+	if isinstance(ins, str):
+		# a command is either a string
+		ret = ins
+	elif isinstance(ins, list) or isinstance(ins, tuple):
+		# or a list of functions/strings
+		ret = str([h_cmd(x) for x in ins])
+	else:
+		# or just a python function
+		ret = str(h_fun(ins))
+	if sys.hexversion > 0x3000000:
+		ret = ret.encode('latin-1', 'xmlcharrefreplace')
+	return ret
+
 reg_subst = re.compile(r"(\\\\)|(\$\$)|\$\{([^}]+)\}")
 def subst_vars(expr, params):
 	"""
-	Replace ${VAR} with the value of VAR taken from a dict or a config set::
+	Replaces ${VAR} with the value of VAR taken from a dict or a config set::
 
 		from waflib import Utils
 		s = Utils.subst_vars('${PREFIX}/bin', env)
@@ -531,11 +691,14 @@ def subst_vars(expr, params):
 			return params.get_flat(m.group(3))
 		except AttributeError:
 			return params[m.group(3)]
+		# if you get a TypeError, it means that 'expr' is not a string...
+		# Utils.subst_vars(None, env)  will not work
 	return reg_subst.sub(repl_var, expr)
 
 def destos_to_binfmt(key):
 	"""
-	Return the binary format based on the unversioned platform name.
+	Returns the binary format based on the unversioned platform name,
+	and defaults to ``elf`` if nothing is found.
 
 	:param key: platform name
 	:type  key: string
@@ -549,7 +712,7 @@ def destos_to_binfmt(key):
 
 def unversioned_sys_platform():
 	"""
-	Return the unversioned platform name.
+	Returns the unversioned platform name.
 	Some Python platform names contain versions, that depend on
 	the build environment, e.g. linux2, freebsd6, etc.
 	This returns the name without the version number. Exceptions are
@@ -559,7 +722,7 @@ def unversioned_sys_platform():
 	:return: Unversioned platform name
 	"""
 	s = sys.platform
-	if s == 'java':
+	if s.startswith('java'):
 		# The real OS is hidden under the JVM.
 		from java.lang import System
 		s = System.getProperty('os.name')
@@ -571,20 +734,24 @@ def unversioned_sys_platform():
 		elif s == 'OS/2':
 			return 'os2'
 		elif s == 'HP-UX':
-			return 'hpux'
+			return 'hp-ux'
 		elif s in ('SunOS', 'Solaris'):
 			return 'sunos'
 		else: s = s.lower()
-	
+
 	# powerpc == darwin for our purposes
 	if s == 'powerpc':
 		return 'darwin'
-	if s == 'win32' or s.endswith('os2') and s != 'sunos2': return s
-	return re.split('\d+$', s)[0]
+	if s == 'win32' or s == 'os2':
+		return s
+	if s == 'cli' and os.name == 'nt':
+		# ironpython is only on windows as far as we know
+		return 'win32'
+	return re.split(r'\d+$', s)[0]
 
 def nada(*k, **kw):
 	"""
-	A function that does nothing
+	Does nothing
 
 	:return: None
 	"""
@@ -593,7 +760,7 @@ def nada(*k, **kw):
 class Timer(object):
 	"""
 	Simple object for timing the execution of commands.
-	Its string representation is the current time::
+	Its string representation is the duration::
 
 		from waflib.Utils import Timer
 		timer = Timer()
@@ -601,14 +768,16 @@ class Timer(object):
 		s = str(timer)
 	"""
 	def __init__(self):
-		self.start_time = datetime.datetime.utcnow()
+		self.start_time = self.now()
 
 	def __str__(self):
-		delta = datetime.datetime.utcnow() - self.start_time
-		days = int(delta.days)
-		hours = delta.seconds // 3600
-		minutes = (delta.seconds - hours * 3600) // 60
-		seconds = delta.seconds - hours * 3600 - minutes * 60 + float(delta.microseconds) / 1000 / 1000
+		delta = self.now() - self.start_time
+		if not isinstance(delta, datetime.timedelta):
+			delta = datetime.timedelta(seconds=delta)
+		days = delta.days
+		hours, rem = divmod(delta.seconds, 3600)
+		minutes, seconds = divmod(rem, 60)
+		seconds += delta.microseconds * 1e-6
 		result = ''
 		if days:
 			result += '%dd' % days
@@ -618,28 +787,16 @@ class Timer(object):
 			result += '%dm' % minutes
 		return '%s%.3fs' % (result, seconds)
 
-if is_win32:
-	old = shutil.copy2
-	def copy2(src, dst):
-		"""
-		shutil.copy2 does not copy the file attributes on windows, so we
-		hack into the shutil module to fix the problem
-		"""
-		old(src, dst)
-		shutil.copystat(src, dst)
-	setattr(shutil, 'copy2', copy2)
+	def now(self):
+		return datetime.datetime.utcnow()
 
-if os.name == 'java':
-	# Jython cannot disable the gc but they can enable it ... wtf?
-	try:
-		gc.disable()
-		gc.enable()
-	except NotImplementedError:
-		gc.disable = gc.enable
+	if hasattr(time, 'perf_counter'):
+		def now(self):
+			return time.perf_counter()
 
 def read_la_file(path):
 	"""
-	Read property files, used by msvc.py
+	Reads property files, used by msvc.py
 
 	:param path: file to read
 	:type path: string
@@ -654,25 +811,6 @@ def read_la_file(path):
 			pass
 	return dc
 
-def nogc(fun):
-	"""
-	Decorator: let a function disable the garbage collector during its execution.
-	It is used in the build context when storing/loading the build cache file (pickle)
-
-	:param fun: function to execute
-	:type fun: function
-	:return: the return value of the function executed
-	"""
-	def f(*k, **kw):
-		try:
-			gc.disable()
-			ret = fun(*k, **kw)
-		finally:
-			gc.enable()
-		return ret
-	f.__doc__ = fun.__doc__
-	return f
-
 def run_once(fun):
 	"""
 	Decorator: let a function cache its results, use like this::
@@ -681,29 +819,241 @@ def run_once(fun):
 		def foo(k):
 			return 345*2343
 
+	.. note:: in practice this can cause memory leaks, prefer a :py:class:`waflib.Utils.lru_cache`
+
 	:param fun: function to execute
 	:type fun: function
 	:return: the return value of the function executed
 	"""
 	cache = {}
-	def wrap(k):
+	def wrap(*k):
 		try:
 			return cache[k]
 		except KeyError:
-			ret = fun(k)
+			ret = fun(*k)
 			cache[k] = ret
 			return ret
 	wrap.__cache__ = cache
+	wrap.__name__ = fun.__name__
 	return wrap
 
 def get_registry_app_path(key, filename):
+	"""
+	Returns the value of a registry key for an executable
+
+	:type key: string
+	:type filename: list of string
+	"""
 	if not winreg:
 		return None
 	try:
 		result = winreg.QueryValue(key, "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\%s.exe" % filename[0])
-	except WindowsError:
+	except OSError:
 		pass
 	else:
 		if os.path.isfile(result):
 			return result
 
+def lib64():
+	"""
+	Guess the default ``/usr/lib`` extension for 64-bit applications
+
+	:return: '64' or ''
+	:rtype: string
+	"""
+	# default settings for /usr/lib
+	if os.sep == '/':
+		if platform.architecture()[0] == '64bit':
+			if os.path.exists('/usr/lib64') and not os.path.exists('/usr/lib32'):
+				return '64'
+	return ''
+
+def loose_version(ver_str):
+	# private for the time being!
+	# see #2402
+	lst = re.split(r'([.]|\\d+|[a-zA-Z])', ver_str)
+	ver = []
+	for i, val in enumerate(lst):
+		try:
+			ver.append(int(val))
+		except ValueError:
+			if val != '.':
+				ver.append(val)
+	return ver
+
+def sane_path(p):
+	# private function for the time being!
+	return os.path.abspath(os.path.expanduser(p))
+
+process_pool = []
+"""
+List of processes started to execute sub-process commands
+"""
+
+def get_process():
+	"""
+	Returns a process object that can execute commands as sub-processes
+
+	:rtype: subprocess.Popen
+	"""
+	try:
+		return process_pool.pop()
+	except IndexError:
+		filepath = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'processor.py'
+		cmd = [sys.executable, '-c', readf(filepath)]
+		return subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+
+def run_prefork_process(cmd, kwargs, cargs):
+	"""
+	Delegates process execution to a pre-forked process instance.
+	"""
+	if not kwargs.get('env'):
+		kwargs['env'] = dict(os.environ)
+
+	if hasattr(subprocess, 'DEVNULL') and 'stdin' not in kwargs:
+		# prevent accidental communication errors
+		kwargs['stdin'] = subprocess.DEVNULL
+
+	try:
+		obj = base64.b64encode(cPickle.dumps([cmd, kwargs, cargs]))
+	except (TypeError, AttributeError):
+		return run_regular_process(cmd, kwargs, cargs)
+
+	proc = get_process()
+	if not proc:
+		return run_regular_process(cmd, kwargs, cargs)
+
+	try:
+		proc.stdin.write(obj)
+		proc.stdin.write('\n'.encode())
+	except OSError:
+		proc.poll()
+		raise OSError('Preforked sub-process:%r is not receiving, status: %r' % (proc.pid, proc.returncode))
+	proc.stdin.flush()
+	obj = proc.stdout.readline()
+	if not obj:
+		proc.poll()
+		raise OSError('Preforked sub-process:%r is not responding, status: %r' % (proc.pid, proc.returncode))
+
+	process_pool.append(proc)
+	lst = cPickle.loads(base64.b64decode(obj))
+	# Jython wrapper failures (bash/execvp)
+	assert len(lst) == 5
+	ret, out, err, ex, trace = lst
+	if ex:
+		if ex == 'OSError':
+			raise OSError(trace)
+		elif ex == 'ValueError':
+			raise ValueError(trace)
+		elif ex == 'TimeoutExpired':
+			exc = TimeoutExpired(cmd, timeout=cargs['timeout'], output=out)
+			exc.stderr = err
+			raise exc
+		else:
+			raise Exception(trace)
+	return ret, out, err
+
+def lchown(path, user=-1, group=-1):
+	"""
+	Change the owner/group of a path, raises an OSError if the
+	ownership change fails.
+
+	:param user: user to change
+	:type user: int or str
+	:param group: group to change
+	:type group: int or str
+	"""
+	if isinstance(user, str):
+		import pwd
+		entry = pwd.getpwnam(user)
+		if not entry:
+			raise OSError('Unknown user %r' % user)
+		user = entry[2]
+	if isinstance(group, str):
+		import grp
+		entry = grp.getgrnam(group)
+		if not entry:
+			raise OSError('Unknown group %r' % group)
+		group = entry[2]
+	return os.lchown(path, user, group)
+
+def run_regular_process(cmd, kwargs, cargs={}):
+	"""
+	Executes a subprocess command by using subprocess.Popen
+	"""
+	proc = subprocess.Popen(cmd, **kwargs)
+	if kwargs.get('stdout') or kwargs.get('stderr'):
+		try:
+			out, err = proc.communicate(**cargs)
+		except TimeoutExpired:
+			if kwargs.get('start_new_session') and hasattr(os, 'killpg'):
+				os.killpg(proc.pid, signal.SIGKILL)
+			else:
+				proc.kill()
+			out, err = proc.communicate()
+			exc = TimeoutExpired(proc.args, timeout=cargs['timeout'], output=out)
+			exc.stderr = err
+			raise exc
+		status = proc.returncode
+	else:
+		out, err = (None, None)
+		try:
+			status = proc.wait(**cargs)
+		except TimeoutExpired as e:
+			if kwargs.get('start_new_session') and hasattr(os, 'killpg'):
+				os.killpg(proc.pid, signal.SIGKILL)
+			else:
+				proc.kill()
+			proc.wait()
+			raise e
+	return status, out, err
+
+def run_process(cmd, kwargs, cargs={}):
+	"""
+	Executes a subprocess by using a pre-forked process when possible
+	or falling back to subprocess.Popen. See :py:func:`waflib.Utils.run_prefork_process`
+	and :py:func:`waflib.Utils.run_regular_process`
+	"""
+	if kwargs.get('stdout') and kwargs.get('stderr') and 'stdin' not in kwargs:
+		return run_prefork_process(cmd, kwargs, cargs)
+	else:
+		return run_regular_process(cmd, kwargs, cargs)
+
+def alloc_process_pool(n, force=False):
+	"""
+	Allocates an amount of processes to the default pool so its size is at least *n*.
+	It is useful to call this function early so that the pre-forked
+	processes use as little memory as possible.
+
+	:param n: pool size
+	:type n: integer
+	:param force: if True then *n* more processes are added to the existing pool
+	:type force: bool
+	"""
+	# mandatory on python2, unnecessary on python >= 3.2
+	global run_process, get_process, alloc_process_pool
+	if not force:
+		n = max(n - len(process_pool), 0)
+	try:
+		lst = [get_process() for x in range(n)]
+	except OSError:
+		run_process = run_regular_process
+		get_process = alloc_process_pool = nada
+	else:
+		for x in lst:
+			process_pool.append(x)
+
+def atexit_pool():
+	for k in process_pool:
+		try:
+			k.kill()
+		except OSError:
+			pass
+
+# see #1889
+if (sys.hexversion<0x207000f and not is_win32) or sys.hexversion>=0x306000f:
+	atexit.register(atexit_pool)
+
+if os.environ.get('WAF_NO_PREFORK') or sys.platform == 'cli' or not sys.executable or not hasattr(subprocess, 'DEVNULL'):
+	run_process = run_regular_process
+	get_process = alloc_process_pool = nada

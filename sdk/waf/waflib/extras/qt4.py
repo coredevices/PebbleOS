@@ -52,7 +52,7 @@ You also need to edit your sources accordingly:
         incs = set(self.to_list(getattr(self, 'includes', '')))
         for x in self.compiled_tasks:
             incs.add(x.inputs[0].parent.path_from(self.path))
-        self.includes = list(incs)
+        self.includes = sorted(incs)
 
 Note: another tool provides Qt processing that does not require
 .moc includes, see 'playground/slow_qt/'.
@@ -73,8 +73,8 @@ else:
 	has_xml = True
 
 import os, sys
-from waflib.Tools import c_preproc, cxx
-from waflib import Task, Utils, Options, Errors
+from waflib.Tools import cxx
+from waflib import Task, Utils, Options, Errors, Context
 from waflib.TaskGen import feature, after_method, extension
 from waflib.Configure import conf
 from waflib import Logs
@@ -114,23 +114,6 @@ class qxx(Task.classes['cxx']):
 		Task.Task.__init__(self, *k, **kw)
 		self.moc_done = 0
 
-	def scan(self):
-		"""
-		Re-use the C/C++ scanner, but remove the moc files from the dependencies
-		since the .cpp file already depends on all the headers
-		"""
-		(nodes, names) = c_preproc.scan(self)
-		lst = []
-		for x in nodes:
-			# short lists, no need to use sets
-			if x.name.endswith('.moc'):
-				s = x.path_from(self.inputs[0].parent.get_bld())
-				if s not in names:
-					names.append(s)
-			else:
-				lst.append(x)
-		return (lst, names)
-
 	def runnable_status(self):
 		"""
 		Compute the task signature to make sure the scanner was executed. Create the
@@ -167,12 +150,25 @@ class qxx(Task.classes['cxx']):
 			tsk.set_inputs(h_node)
 			tsk.set_outputs(m_node)
 
+			if self.generator:
+				self.generator.tasks.append(tsk)
+
 			# direct injection in the build phase (safe because called from the main thread)
 			gen = self.generator.bld.producer
-			gen.outstanding.insert(0, tsk)
+			gen.outstanding.append(tsk)
 			gen.total += 1
 
 			return tsk
+
+	def moc_h_ext(self):
+		ext = []
+		try:
+			ext = Options.options.qt_header_ext.split()
+		except AttributeError:
+			pass
+		if not ext:
+			ext = MOC_H
+		return ext
 
 	def add_moc_tasks(self):
 		"""
@@ -191,33 +187,25 @@ class qxx(Task.classes['cxx']):
 			# remove the signature, it must be recomputed with the moc task
 			delattr(self, 'cache_sig')
 
-		moctasks=[]
-		mocfiles=[]
-		try:
-			tmp_lst = bld.raw_deps[self.uid()]
-			bld.raw_deps[self.uid()] = []
-		except KeyError:
-			tmp_lst = []
-		for d in tmp_lst:
+		include_nodes = [node.parent] + self.generator.includes_nodes
+
+		moctasks = []
+		mocfiles = set()
+		for d in bld.raw_deps.get(self.uid(), []):
 			if not d.endswith('.moc'):
 				continue
-			# paranoid check
-			if d in mocfiles:
-				Logs.error("paranoia owns")
-				continue
+
 			# process that base.moc only once
-			mocfiles.append(d)
+			if d in mocfiles:
+				continue
+			mocfiles.add(d)
 
-			# find the extension - this search is done only once
-
+			# find the source associated with the moc file
 			h_node = None
-			try: ext = Options.options.qt_header_ext.split()
-			except AttributeError: pass
-			if not ext: ext = MOC_H
 
 			base2 = d[:-4]
-			for x in [node.parent] + self.generator.includes_nodes:
-				for e in ext:
+			for x in include_nodes:
+				for e in self.moc_h_ext():
 					h_node = x.find_node(base2 + e)
 					if h_node:
 						break
@@ -225,47 +213,32 @@ class qxx(Task.classes['cxx']):
 					m_node = h_node.change_ext('.moc')
 					break
 			else:
+				# foo.cpp -> foo.cpp.moc
 				for k in EXT_QT4:
 					if base2.endswith(k):
-						for x in [node.parent] + self.generator.includes_nodes:
+						for x in include_nodes:
 							h_node = x.find_node(base2)
 							if h_node:
 								break
-					if h_node:
-						m_node = h_node.change_ext(k + '.moc')
-						break
+						if h_node:
+							m_node = h_node.change_ext(k + '.moc')
+							break
+
 			if not h_node:
-				raise Errors.WafError('no header found for %r which is a moc file' % d)
+				raise Errors.WafError('No source found for %r which is a moc file' % d)
 
-			# next time we will not search for the extension (look at the 'for' loop below)
-			bld.node_deps[(self.inputs[0].parent.abspath(), m_node.name)] = h_node
-
-			# create the task
+			# create the moc task
 			task = self.create_moc_task(h_node, m_node)
 			moctasks.append(task)
-
-		# remove raw deps except the moc files to save space (optimization)
-		tmp_lst = bld.raw_deps[self.uid()] = mocfiles
-
-		# look at the file inputs, it is set right above
-		lst = bld.node_deps.get(self.uid(), ())
-		for d in lst:
-			name = d.name
-			if name.endswith('.moc'):
-				task = self.create_moc_task(bld.node_deps[(self.inputs[0].parent.abspath(), name)], d)
-				moctasks.append(task)
 
 		# simple scheduler dependency: run the moc task before others
 		self.run_after.update(set(moctasks))
 		self.moc_done = 1
 
-	run = Task.classes['cxx'].__dict__['run']
-
 class trans_update(Task.Task):
 	"""Update a .ts files from a list of C++ files"""
 	run_str = '${QT_LUPDATE} ${SRC} -ts ${TGT}'
 	color   = 'BLUE'
-Task.update_outputs(trans_update)
 
 class XMLHandler(ContentHandler):
 	"""
@@ -287,7 +260,7 @@ class XMLHandler(ContentHandler):
 def create_rcc_task(self, node):
 	"Create rcc and cxx tasks for *.qrc* files"
 	rcnode = node.change_ext('_rc.cpp')
-	rcctask = self.create_task('rcc', node, rcnode)
+	self.create_task('rcc', node, rcnode)
 	cpptask = self.create_task('cxx', rcnode, rcnode.change_ext('.o'))
 	try:
 		self.compiled_tasks.append(cpptask)
@@ -317,11 +290,11 @@ def apply_qt4(self):
 
 	The additional parameters are:
 
-	:param lang: list of translation files (\*.ts) to process
+	:param lang: list of translation files (\\*.ts) to process
 	:type lang: list of :py:class:`waflib.Node.Node` or string without the .ts extension
-	:param update: whether to process the C++ files to update the \*.ts files (use **waf --translate**)
+	:param update: whether to process the C++ files to update the \\*.ts files (use **waf --translate**)
 	:type update: bool
-	:param langname: if given, transform the \*.ts files into a .qrc files to include in the binary file
+	:param langname: if given, transform the \\*.ts files into a .qrc files to include in the binary file
 	:type langname: :py:class:`waflib.Node.Node` or string without the .qrc extension
 	"""
 	if getattr(self, 'lang', None):
@@ -348,9 +321,10 @@ def apply_qt4(self):
 
 	lst = []
 	for flag in self.to_list(self.env['CXXFLAGS']):
-		if len(flag) < 2: continue
+		if len(flag) < 2:
+			continue
 		f = flag[0:2]
-		if f in ['-D', '-I', '/D', '/I']:
+		if f in ('-D', '-I', '/D', '/I'):
 			if (f[0] == '/'):
 				lst.append('-' + flag[1:])
 			else:
@@ -369,13 +343,14 @@ class rcc(Task.Task):
 	Process *.qrc* files
 	"""
 	color   = 'BLUE'
-	run_str = '${QT_RCC} -name ${SRC[0].name} ${SRC[0].abspath()} ${RCC_ST} -o ${TGT}'
+	run_str = '${QT_RCC} -name ${tsk.rcname()} ${SRC[0].abspath()} ${RCC_ST} -o ${TGT}'
 	ext_out = ['.h']
+
+	def rcname(self):
+		return os.path.splitext(self.inputs[0].name)[0]
 
 	def scan(self):
 		"""Parse the *.qrc* files"""
-		node = self.inputs[0]
-
 		if not has_xml:
 			Logs.error('no xml support was found, the rcc dependencies will be incomplete!')
 			return ([], [])
@@ -394,8 +369,10 @@ class rcc(Task.Task):
 		root = self.inputs[0].parent
 		for x in curHandler.files:
 			nd = root.find_resource(x)
-			if nd: nodes.append(nd)
-			else: names.append(x)
+			if nd:
+				nodes.append(nd)
+			else:
+				names.append(x)
 		return (nodes, names)
 
 class moc(Task.Task):
@@ -404,6 +381,10 @@ class moc(Task.Task):
 	"""
 	color   = 'BLUE'
 	run_str = '${QT_MOC} ${MOC_FLAGS} ${MOCCPPPATH_ST:INCPATHS} ${MOCDEFINES_ST:DEFINES} ${SRC} ${MOC_ST} ${TGT}'
+	def keyword(self):
+		return "Creating"
+	def __str__(self):
+		return self.outputs[0].path_from(self.generator.bld.launch_node())
 
 class ui4(Task.Task):
 	"""
@@ -463,7 +444,7 @@ def find_qt4_binaries(self):
 	# the qt directory has been given from QT4_ROOT - deduce the qt binary path
 	if not qtdir:
 		qtdir = os.environ.get('QT4_ROOT', '')
-		qtbin = os.environ.get('QT4_BIN', None) or os.path.join(qtdir, 'bin')
+		qtbin = os.environ.get('QT4_BIN') or os.path.join(qtdir, 'bin')
 
 	if qtbin:
 		paths = [qtbin]
@@ -490,14 +471,14 @@ def find_qt4_binaries(self):
 	# keep the one with the highest version
 	cand = None
 	prev_ver = ['4', '0', '0']
-	for qmk in ['qmake-qt4', 'qmake4', 'qmake']:
+	for qmk in ('qmake-qt4', 'qmake4', 'qmake'):
 		try:
 			qmake = self.find_program(qmk, path_list=paths)
 		except self.errors.ConfigurationError:
 			pass
 		else:
 			try:
-				version = self.cmd_and_log([qmake, '-query', 'QT_VERSION']).strip()
+				version = self.cmd_and_log(qmake + ['-query', 'QT_VERSION']).strip()
 			except self.errors.WafError:
 				pass
 			else:
@@ -511,7 +492,7 @@ def find_qt4_binaries(self):
 	else:
 		self.fatal('Could not find qmake for qt4')
 
-	qtbin = self.cmd_and_log([self.env.QMAKE, '-query', 'QT_INSTALL_BINS']).strip() + os.sep
+	qtbin = self.cmd_and_log(self.env.QMAKE + ['-query', 'QT_INSTALL_BINS']).strip() + os.sep
 
 	def find_bin(lst, var):
 		if var in env:
@@ -527,20 +508,19 @@ def find_qt4_binaries(self):
 
 	find_bin(['uic-qt3', 'uic3'], 'QT_UIC3')
 	find_bin(['uic-qt4', 'uic'], 'QT_UIC')
-	if not env['QT_UIC']:
+	if not env.QT_UIC:
 		self.fatal('cannot find the uic compiler for qt4')
 
-	try:
-		uicver = self.cmd_and_log(env['QT_UIC'] + " -version 2>&1").strip()
-	except self.errors.ConfigurationError:
-		self.fatal('this uic compiler is for qt3, add uic for qt4 to your path')
+	self.start_msg('Checking for uic version')
+	uicver = self.cmd_and_log(env.QT_UIC + ["-version"], output=Context.BOTH)
+	uicver = ''.join(uicver).strip()
 	uicver = uicver.replace('Qt User Interface Compiler ','').replace('User Interface Compiler for Qt', '')
-	self.msg('Checking for uic version', '%s' % uicver)
+	self.end_msg(uicver)
 	if uicver.find(' 3.') != -1:
 		self.fatal('this uic compiler is for qt3, add uic for qt4 to your path')
 
 	find_bin(['moc-qt4', 'moc'], 'QT_MOC')
-	find_bin(['rcc'], 'QT_RCC')
+	find_bin(['rcc-qt4', 'rcc'], 'QT_RCC')
 	find_bin(['lrelease-qt4', 'lrelease'], 'QT_LRELEASE')
 	find_bin(['lupdate-qt4', 'lupdate'], 'QT_LUPDATE')
 
@@ -554,22 +534,22 @@ def find_qt4_binaries(self):
 
 @conf
 def find_qt4_libraries(self):
-	qtlibs = getattr(Options.options, 'qtlibs', None) or os.environ.get("QT4_LIBDIR", None)
+	qtlibs = getattr(Options.options, 'qtlibs', None) or os.environ.get("QT4_LIBDIR")
 	if not qtlibs:
 		try:
-			qtlibs = self.cmd_and_log([self.env.QMAKE, '-query', 'QT_INSTALL_LIBS']).strip()
+			qtlibs = self.cmd_and_log(self.env.QMAKE + ['-query', 'QT_INSTALL_LIBS']).strip()
 		except Errors.WafError:
-			qtdir = self.cmd_and_log([self.env.QMAKE, '-query', 'QT_INSTALL_PREFIX']).strip() + os.sep
+			qtdir = self.cmd_and_log(self.env.QMAKE + ['-query', 'QT_INSTALL_PREFIX']).strip() + os.sep
 			qtlibs = os.path.join(qtdir, 'lib')
 	self.msg('Found the Qt4 libraries in', qtlibs)
 
-	qtincludes =  os.environ.get("QT4_INCLUDES", None) or self.cmd_and_log([self.env.QMAKE, '-query', 'QT_INSTALL_HEADERS']).strip()
+	qtincludes =  os.environ.get("QT4_INCLUDES") or self.cmd_and_log(self.env.QMAKE + ['-query', 'QT_INSTALL_HEADERS']).strip()
 	env = self.env
 	if not 'PKG_CONFIG_PATH' in os.environ:
 		os.environ['PKG_CONFIG_PATH'] = '%s:%s/pkgconfig:/usr/lib/qt4/lib/pkgconfig:/opt/qt4/lib/pkgconfig:/usr/lib/qt4/lib:/opt/qt4/lib' % (qtlibs, qtlibs)
 
 	try:
-		if os.environ.get("QT4_XCOMPILE", None):
+		if os.environ.get("QT4_XCOMPILE"):
 			raise self.errors.ConfigurationError()
 		self.check_cfg(atleast_pkgconfig_version='0.1')
 	except self.errors.ConfigurationError:
@@ -703,13 +683,13 @@ def options(opt):
 	opt.add_option('--want-rpath', action='store_true', default=False, dest='want_rpath', help='enable the rpath for qt libraries')
 
 	opt.add_option('--header-ext',
-		type='string',
+		type=str,
 		default='',
 		help='header extension for moc files',
 		dest='qt_header_ext')
 
 	for i in 'qtdir qtbin qtlibs'.split():
-		opt.add_option('--'+i, type='string', default='', dest=i)
+		opt.add_option('--'+i, type=str, default='', dest=i)
 
 	opt.add_option('--translate', action="store_true", help="collect translation strings", dest="trans_qt4", default=False)
 

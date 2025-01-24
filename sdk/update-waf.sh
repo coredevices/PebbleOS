@@ -19,8 +19,8 @@
 
 set -x
 
-VERSION=1.7.11
-DOWNLOAD="http://waf.googlecode.com/files/waf-$VERSION.tar.bz2"
+VERSION=2.1.4
+DOWNLOAD="https://waf.io/waf-$VERSION.tar.bz2"
 
 TMPFILE=`mktemp -t waf-tar-bz`
 

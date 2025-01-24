@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # John O'Meara, 2006
-# Thomas Nagy 2009-2010 (ita)
+# Thomas Nagy 2009-2018 (ita)
 
 """
 The **bison** program is a code generator which creates C or C++ files.
@@ -12,7 +12,7 @@ from waflib import Task
 from waflib.TaskGen import extension
 
 class bison(Task.Task):
-	"""Compile bison files"""
+	"""Compiles bison files"""
 	color   = 'BLUE'
 	run_str = '${BISON} ${BISONFLAGS} ${SRC[0].abspath()} -o ${TGT[0].name}'
 	ext_out = ['.h'] # just to make sure
@@ -20,9 +20,9 @@ class bison(Task.Task):
 @extension('.y', '.yc', '.yy')
 def big_bison(self, node):
 	"""
-	Create a bison task, which must be executed from the directory of the output file.
+	Creates a bison task, which must be executed from the directory of the output file.
 	"""
-	has_h = '-d' in self.env['BISONFLAGS']
+	has_h = '-d' in self.env.BISONFLAGS
 
 	outs = []
 	if node.name.endswith('.yc'):
@@ -35,14 +35,14 @@ def big_bison(self, node):
 			outs.append(node.change_ext('.tab.h'))
 
 	tsk = self.create_task('bison', node, outs)
-	tsk.cwd = node.parent.get_bld().abspath()
+	tsk.cwd = node.parent.get_bld()
 
 	# and the c/cxx file must be compiled too
 	self.source.append(outs[0])
 
 def configure(conf):
 	"""
-	Detect the *bison* program
+	Detects the *bison* program
 	"""
 	conf.find_program('bison', var='BISON')
 	conf.env.BISONFLAGS = ['-d']

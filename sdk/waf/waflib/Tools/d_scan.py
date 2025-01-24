@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Thomas Nagy, 2010 (ita)
+# Thomas Nagy, 2016-2018 (ita)
 
 """
 Provide a scanner for finding dependencies on d files
 """
 
 import re
-from waflib import Utils, Logs
+from waflib import Utils
 
 def filter_comments(filename):
 	"""
@@ -29,7 +29,8 @@ def filter_comments(filename):
 			i += 1
 			while i < max:
 				c = txt[i]
-				if c == delim: break
+				if c == delim:
+					break
 				elif c == '\\':  # skip the character following backslash
 					i += 1
 				i += 1
@@ -38,7 +39,8 @@ def filter_comments(filename):
 		elif c == '/':  # try to replace a comment with whitespace
 			buf.append(txt[begin:i])
 			i += 1
-			if i == max: break
+			if i == max:
+				break
 			c = txt[i]
 			if c == '+':  # eat nesting /+ +/ comment
 				i += 1
@@ -52,7 +54,8 @@ def filter_comments(filename):
 						c = None
 					elif prev == '+' and c == '/':
 						nesting -= 1
-						if nesting == 0: break
+						if nesting == 0:
+							break
 						c = None
 					i += 1
 			elif c == '*':  # eat /* */ comment
@@ -61,7 +64,8 @@ def filter_comments(filename):
 				while i < max:
 					prev = c
 					c = txt[i]
-					if prev == '*' and c == '/': break
+					if prev == '*' and c == '/':
+						break
 					i += 1
 			elif c == '/':  # eat // comment
 				i += 1
@@ -89,8 +93,8 @@ class d_parser(object):
 
 		self.allnames = []
 
-		self.re_module = re.compile("module\s+([^;]+)")
-		self.re_import = re.compile("import\s+([^;]+)")
+		self.re_module = re.compile(r"module\s+([^;]+)")
+		self.re_import = re.compile(r"import\s+([^;]+)")
 		self.re_import_bindings = re.compile("([^:]+):(.*)")
 		self.re_import_alias = re.compile("[^=]+=(.+)")
 
@@ -134,7 +138,7 @@ class d_parser(object):
 
 		mod_name = self.re_module.search(code)
 		if mod_name:
-			self.module = re.sub('\s+', '', mod_name.group(1)) # strip all whitespaces
+			self.module = re.sub(r'\s+', '', mod_name.group(1)) # strip all whitespaces
 
 		# go through the code, have a look at all import occurrences
 
@@ -142,7 +146,7 @@ class d_parser(object):
 		import_iterator = self.re_import.finditer(code)
 		if import_iterator:
 			for import_match in import_iterator:
-				import_match_str = re.sub('\s+', '', import_match.group(1)) # strip all whitespaces
+				import_match_str = re.sub(r'\s+', '', import_match.group(1)) # strip all whitespaces
 
 				# does this end with an import bindings declaration?
 				# (import bindings always terminate the list of imports)
@@ -188,7 +192,8 @@ class d_parser(object):
 		names = self.get_strings(code) # obtain the import strings
 		for x in names:
 			# optimization
-			if x in self.allnames: continue
+			if x in self.allnames:
+				continue
 			self.allnames.append(x)
 
 			# for each name, see if it is like a node or not
@@ -202,8 +207,5 @@ def scan(self):
 	gruik.start(node)
 	nodes = gruik.nodes
 	names = gruik.names
-
-	if Logs.verbose:
-		Logs.debug('deps: deps for %s: %r; unresolved %r' % (str(node), nodes, names))
 	return (nodes, names)
 

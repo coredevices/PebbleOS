@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Thomas Nagy, 2006-2010 (ita)
+# Thomas Nagy, 2006-2018 (ita)
 
 """
 C# support. A simple example::
@@ -21,11 +21,10 @@ Note that the configuration may compile C# snippets::
 			bintype='exe', csflags=['-pkg:gtk-sharp-2.0'], msg='Checking for Gtksharp support')
 """
 
-from waflib import Utils, Task, Options, Logs, Errors
+from waflib import Utils, Task, Options, Errors
 from waflib.TaskGen import before_method, after_method, feature
 from waflib.Tools import ccroot
 from waflib.Configure import conf
-import os, tempfile
 
 ccroot.USELIB_VARS['cs'] = set(['CSFLAGS', 'ASSEMBLIES', 'RESOURCES'])
 ccroot.lib_patterns['csshlib'] = ['%s']
@@ -55,7 +54,7 @@ def apply_cs(self):
 	if inst_to:
 		# note: we are making a copy, so the files added to cs_task.outputs won't be installed automatically
 		mod = getattr(self, 'chmod', bintype=='exe' and Utils.O755 or Utils.O644)
-		self.install_task = self.bld.install_files(inst_to, self.cs_task.outputs[:], env=self.env, chmod=mod)
+		self.install_task = self.add_install_files(install_to=inst_to, install_from=self.cs_task.outputs[:], chmod=mod)
 
 @feature('cs')
 @after_method('apply_cs')
@@ -81,7 +80,7 @@ def use_cs(self):
 		if not tsk:
 			self.bld.fatal('cs task has no link task for use %r' % self)
 		self.cs_task.dep_nodes.extend(tsk.outputs) # dependency
-		self.cs_task.set_run_after(tsk) # order (redundant, the order is infered from the nodes inputs/outputs)
+		self.cs_task.set_run_after(tsk) # order (redundant, the order is inferred from the nodes inputs/outputs)
 		self.env.append_value('CSFLAGS', '/reference:%s' % tsk.outputs[0].abspath())
 
 @feature('cs')
@@ -92,7 +91,7 @@ def debug_cs(self):
 
 		def build(bld):
 			bld(features='cs', source='My.cs', bintype='library', gen='my.dll', csdebug='full')
-			# csdebug is a value in [True, 'full', 'pdbonly']
+			# csdebug is a value in (True, 'full', 'pdbonly')
 	"""
 	csdebug = getattr(self, 'csdebug', self.env.CSDEBUG)
 	if not csdebug:
@@ -104,10 +103,10 @@ def debug_cs(self):
 	else:
 		out = node.change_ext('.pdb')
 	self.cs_task.outputs.append(out)
-	try:
-		self.install_task.source.append(out)
-	except AttributeError:
-		pass
+
+	if getattr(self, 'install_task', None):
+		self.pdb_install_task = self.add_install_files(
+			install_to=self.install_task.install_to, install_from=out)
 
 	if csdebug == 'pdbonly':
 		val = ['/debug+', '/debug:pdbonly']
@@ -117,6 +116,29 @@ def debug_cs(self):
 		val = ['/debug-']
 	self.env.append_value('CSFLAGS', val)
 
+@feature('cs')
+@after_method('debug_cs')
+def doc_cs(self):
+	"""
+	The C# targets may create .xml documentation files::
+
+		def build(bld):
+			bld(features='cs', source='My.cs', bintype='library', gen='my.dll', csdoc=True)
+			# csdoc is a boolean value
+	"""
+	csdoc = getattr(self, 'csdoc', self.env.CSDOC)
+	if not csdoc:
+		return
+
+	node = self.cs_task.outputs[0]
+	out = node.change_ext('.xml')
+	self.cs_task.outputs.append(out)
+
+	if getattr(self, 'install_task', None):
+		self.doc_install_task = self.add_install_files(
+			install_to=self.install_task.install_to, install_from=out)
+
+	self.env.append_value('CSFLAGS', '/doc:%s' % out.abspath())
 
 class mcs(Task.Task):
 	"""
@@ -125,47 +147,16 @@ class mcs(Task.Task):
 	color   = 'YELLOW'
 	run_str = '${MCS} ${CSTYPE} ${CSFLAGS} ${ASS_ST:ASSEMBLIES} ${RES_ST:RESOURCES} ${OUT} ${SRC}'
 
-	def exec_command(self, cmd, **kw):
-		bld = self.generator.bld
-
-		try:
-			if not kw.get('cwd', None):
-				kw['cwd'] = bld.cwd
-		except AttributeError:
-			bld.cwd = kw['cwd'] = bld.variant_dir
-
-		try:
-			tmp = None
-			if isinstance(cmd, list) and len(' '.join(cmd)) >= 8192:
-				program = cmd[0] #unquoted program name, otherwise exec_command will fail
-				cmd = [self.quote_response_command(x) for x in cmd]
-				(fd, tmp) = tempfile.mkstemp()
-				os.write(fd, '\r\n'.join(i.replace('\\', '\\\\') for i in cmd[1:]).encode())
-				os.close(fd)
-				cmd = [program, '@' + tmp]
-			# no return here, that's on purpose
-			ret = self.generator.bld.exec_command(cmd, **kw)
-		finally:
-			if tmp:
-				try:
-					os.remove(tmp)
-				except OSError:
-					pass # anti-virus and indexers can keep the files open -_-
-		return ret
-
-	def quote_response_command(self, flag):
-		# /noconfig is not allowed when using response files
-		if flag.lower() == '/noconfig':
-			return ''
-
-		if flag.find(' ') > -1:
-			for x in ('/r:', '/reference:', '/resource:', '/lib:', '/out:'):
-				if flag.startswith(x):
-					flag = '%s"%s"' % (x, flag[len(x):])
-					break
+	def split_argfile(self, cmd):
+		inline = [cmd[0]]
+		infile = []
+		for x in cmd[1:]:
+			# csc doesn't want /noconfig in @file
+			if x.lower() == '/noconfig':
+				inline.append(x)
 			else:
-				flag = '"%s"' % flag
-		return flag
+				infile.append(self.quote_flag(x))
+		return (inline, infile)
 
 def configure(conf):
 	"""
@@ -188,7 +179,7 @@ def options(opt):
 
 		$ waf configure --with-csc-binary=/foo/bar/mcs
 	"""
-	opt.add_option('--with-csc-binary', type='string', dest='cscbinary')
+	opt.add_option('--with-csc-binary', type=str, dest='cscbinary')
 
 class fake_csshlib(Task.Task):
 	"""
@@ -198,8 +189,6 @@ class fake_csshlib(Task.Task):
 	inst_to = None
 
 	def runnable_status(self):
-		for x in self.outputs:
-			x.sig = Utils.h_file(x.abspath())
 		return Task.SKIP_ME
 
 @conf

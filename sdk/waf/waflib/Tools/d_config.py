@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Thomas Nagy, 2010 (ita)
+# Thomas Nagy, 2016-2018 (ita)
 
 from waflib import Utils
 from waflib.Configure import conf
@@ -8,24 +8,24 @@ from waflib.Configure import conf
 @conf
 def d_platform_flags(self):
 	"""
-	Set the extensions dll/so for d programs and libraries
+	Sets the extensions dll/so for d programs and libraries
 	"""
 	v = self.env
 	if not v.DEST_OS:
 		v.DEST_OS = Utils.unversioned_sys_platform()
 	binfmt = Utils.destos_to_binfmt(self.env.DEST_OS)
 	if binfmt == 'pe':
-		v['dprogram_PATTERN'] = '%s.exe'
-		v['dshlib_PATTERN']   = 'lib%s.dll'
-		v['dstlib_PATTERN']   = 'lib%s.a'
+		v.dprogram_PATTERN = '%s.exe'
+		v.dshlib_PATTERN   = 'lib%s.dll'
+		v.dstlib_PATTERN   = 'lib%s.a'
 	elif binfmt == 'mac-o':
-		v['dprogram_PATTERN'] = '%s'
-		v['dshlib_PATTERN']   = 'lib%s.dylib'
-		v['dstlib_PATTERN']   = 'lib%s.a'
+		v.dprogram_PATTERN = '%s'
+		v.dshlib_PATTERN   = 'lib%s.dylib'
+		v.dstlib_PATTERN   = 'lib%s.a'
 	else:
-		v['dprogram_PATTERN'] = '%s'
-		v['dshlib_PATTERN']   = 'lib%s.so'
-		v['dstlib_PATTERN']   = 'lib%s.a'
+		v.dprogram_PATTERN = '%s'
+		v.dshlib_PATTERN   = 'lib%s.so'
+		v.dstlib_PATTERN   = 'lib%s.a'
 
 DLIB = '''
 version(D_Version2) {
@@ -55,7 +55,8 @@ version(D_Version2) {
 @conf
 def check_dlibrary(self, execute=True):
 	"""
-	Detect the kind of standard library that comes with the compiler, will set conf.env.DLIBRARY to tango, phobos1 or phobos2.
+	Detects the kind of standard library that comes with the compiler,
+	and sets conf.env.DLIBRARY to tango, phobos1 or phobos2
 	"""
 	ret = self.check_cc(features='d dprogram', fragment=DLIB, compile_filename='test.d', execute=execute, define_ret=True)
 	if execute:

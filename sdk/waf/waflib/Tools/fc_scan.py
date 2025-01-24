@@ -1,31 +1,28 @@
 #! /usr/bin/env python
 # encoding: utf-8
 # DC 2008
-# Thomas Nagy 2010 (ita)
+# Thomas Nagy 2016-2018 (ita)
 
 import re
 
-from waflib import Utils, Task, TaskGen, Logs
-from waflib.TaskGen import feature, before_method, after_method, extension
-from waflib.Configure import conf
-
-INC_REGEX = """(?:^|['">]\s*;)\s*INCLUDE\s+(?:\w+_)?[<"'](.+?)(?=["'>])"""
-USE_REGEX = """(?:^|;)\s*USE(?:\s+|(?:(?:\s*,\s*(?:NON_)?INTRINSIC)?\s*::))\s*(\w+)"""
-MOD_REGEX = """(?:^|;)\s*MODULE(?!\s*PROCEDURE)(?:\s+|(?:(?:\s*,\s*(?:NON_)?INTRINSIC)?\s*::))\s*(\w+)"""
+INC_REGEX = r"""(?:^|['">]\s*;)\s*(?:|#\s*)INCLUDE\s+(?:\w+_)?[<"'](.+?)(?=["'>])"""
+USE_REGEX = r"""(?:^|;)\s*USE(?:\s+|(?:(?:\s*,\s*(?:NON_)?INTRINSIC)?\s*::))\s*(\w+)"""
+MOD_REGEX = r"""(?:^|;)\s*MODULE(?!\s+(?:PROCEDURE|SUBROUTINE|FUNCTION))\s+(\w+)"""
+SMD_REGEX = r"""(?:^|;)\s*SUBMODULE\s*\(([\w:]+)\)\s*(\w+)"""
 
 re_inc = re.compile(INC_REGEX, re.I)
 re_use = re.compile(USE_REGEX, re.I)
 re_mod = re.compile(MOD_REGEX, re.I)
+re_smd = re.compile(SMD_REGEX, re.I)
 
 class fortran_parser(object):
 	"""
-	This parser will return:
+	This parser returns:
 
-	* the nodes corresponding to the module names that will be produced
+	* the nodes corresponding to the module names to produce
 	* the nodes corresponding to the include files used
-	* the module names used by the fortran file
+	* the module names used by the fortran files
 	"""
-
 	def __init__(self, incpaths):
 		self.seen = []
 		"""Files already parsed"""
@@ -41,7 +38,7 @@ class fortran_parser(object):
 
 	def find_deps(self, node):
 		"""
-		Parse a fortran file to read the dependencies used and provided
+		Parses a Fortran file to obtain the dependencies used/provided
 
 		:param node: fortran file to read
 		:type node: :py:class:`waflib.Node.Node`
@@ -63,11 +60,15 @@ class fortran_parser(object):
 			m = re_mod.search(line)
 			if m:
 				mods.append(m.group(1))
+			m = re_smd.search(line)
+			if m:
+				uses.append(m.group(1))
+				mods.append('{0}:{1}'.format(m.group(1),m.group(2)))
 		return (incs, uses, mods)
 
 	def start(self, node):
 		"""
-		Start the parsing. Use the stack self.waiting to hold the nodes to iterate on
+		Start parsing. Use the stack ``self.waiting`` to hold nodes to iterate on
 
 		:param node: fortran file
 		:type node: :py:class:`waflib.Node.Node`
@@ -79,10 +80,9 @@ class fortran_parser(object):
 
 	def iter(self, node):
 		"""
-		Process a single file in the search for dependencies, extract the files used
-		the modules used, and the modules provided.
+		Processes a single file during dependency parsing. Extracts files used
+		modules used and modules provided.
 		"""
-		path = node.abspath()
 		incs, uses, mods = self.find_deps(node)
 		for x in incs:
 			if x in self.seen:
@@ -102,7 +102,7 @@ class fortran_parser(object):
 
 	def tryfind_header(self, filename):
 		"""
-		Try to find an include and add it the nodes to process
+		Adds an include file to the list of nodes to process
 
 		:param filename: file name
 		:type filename: string
@@ -117,5 +117,4 @@ class fortran_parser(object):
 		if not found:
 			if not filename in self.names:
 				self.names.append(filename)
-
 

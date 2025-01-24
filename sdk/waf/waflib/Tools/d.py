@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # Carlos Rafael Giani, 2007 (dv)
-# Thomas Nagy, 2007-2010 (ita)
+# Thomas Nagy, 2007-2018 (ita)
 
 from waflib import Utils, Task, Errors
 from waflib.TaskGen import taskgen_method, feature, extension
@@ -57,7 +57,7 @@ def d_hook(self, node):
 
 	if getattr(self, 'generate_headers', None):
 		tsk = create_compiled_task(self, 'd_with_header', node)
-		tsk.outputs.append(node.change_ext(self.env['DHEADER_ext']))
+		tsk.outputs.append(node.change_ext(self.env.DHEADER_ext))
 	else:
 		tsk = create_compiled_task(self, 'd', node)
 	return tsk

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 # Sebastian Schlingmann, 2008
-# Thomas Nagy, 2008-2010 (ita)
+# Thomas Nagy, 2008-2018 (ita)
 
 """
 Lua support.
@@ -16,14 +16,14 @@ Compile *.lua* files into *.luac*::
 """
 
 from waflib.TaskGen import extension
-from waflib import Task, Utils
+from waflib import Task
 
 @extension('.lua')
 def add_lua(self, node):
 	tsk = self.create_task('luac', node, node.change_ext('.luac'))
 	inst_to = getattr(self, 'install_path', self.env.LUADIR and '${LUADIR}' or None)
 	if inst_to:
-		self.bld.install_files(inst_to, tsk.outputs)
+		self.add_install_files(install_to=inst_to, install_from=tsk.outputs)
 	return tsk
 
 class luac(Task.Task):

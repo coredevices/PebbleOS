@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Thomas Nagy, 2010 (ita)
+# Thomas Nagy, 2016-2018 (ita)
 
 """
 Various configuration tests.
@@ -9,7 +9,6 @@ Various configuration tests.
 from waflib import Task
 from waflib.Configure import conf
 from waflib.TaskGen import feature, before_method, after_method
-import sys
 
 LIB_CODE = '''
 #ifdef _MSC_VER
@@ -37,7 +36,7 @@ int main(int argc, char **argv) {
 @before_method('process_source')
 def link_lib_test_fun(self):
 	"""
-	The configuration test :py:func:`waflib.Tools.ccroot.run_c_code` declares a unique task generator,
+	The configuration test :py:func:`waflib.Configure.run_build` declares a unique task generator,
 	so we need to create other task generators from here to check if the linker is able to link libraries.
 	"""
 	def write_test_file(task):
@@ -59,7 +58,7 @@ def link_lib_test_fun(self):
 @conf
 def check_library(self, mode=None, test_exec=True):
 	"""
-	Check if libraries can be linked with the current linker. Uses :py:func:`waflib.Tools.c_tests.link_lib_test_fun`.
+	Checks if libraries can be linked with the current linker. Uses :py:func:`waflib.Tools.c_tests.link_lib_test_fun`.
 
 	:param mode: c or cxx or d
 	:type mode: string
@@ -73,8 +72,7 @@ def check_library(self, mode=None, test_exec=True):
 		features = 'link_lib_test',
 		msg = 'Checking for libraries',
 		mode = mode,
-		test_exec = test_exec,
-		)
+		test_exec = test_exec)
 
 ########################################################################################
 
@@ -90,7 +88,7 @@ INLINE_VALUES = ['inline', '__inline__', '__inline']
 @conf
 def check_inline(self, **kw):
 	"""
-	Check for the right value for inline macro.
+	Checks for the right value for inline macro.
 	Define INLINE_MACRO to 1 if the define is found.
 	If the inline macro is not 'inline', add a define to the ``config.h`` (#define inline __inline__)
 
@@ -99,7 +97,6 @@ def check_inline(self, **kw):
 	:param features: by default *c* or *cxx* depending on the compiler present
 	:type features: list of string
 	"""
-
 	self.start_msg('Checking for inline')
 
 	if not 'define_name' in kw:
@@ -136,7 +133,7 @@ int main(int argc, char **argv) {
 @conf
 def check_large_file(self, **kw):
 	"""
-	Check for large file support and define the macro HAVE_LARGEFILE
+	Checks for large file support and define the macro HAVE_LARGEFILE
 	The test is skipped on win32 systems (DEST_BINFMT == pe).
 
 	:param define_name: define to set, by default *HAVE_LARGEFILE*
@@ -144,7 +141,6 @@ def check_large_file(self, **kw):
 	:param execute: execute the test (yes by default)
 	:type execute: bool
 	"""
-
 	if not 'define_name' in kw:
 		kw['define_name'] = 'HAVE_LARGEFILE'
 	if not 'execute' in kw:
@@ -184,9 +180,15 @@ def check_large_file(self, **kw):
 ########################################################################################
 
 ENDIAN_FRAGMENT = '''
+#ifdef _MSC_VER
+#define testshlib_EXPORT __declspec(dllexport)
+#else
+#define testshlib_EXPORT
+#endif
+
 short int ascii_mm[] = { 0x4249, 0x4765, 0x6E44, 0x6961, 0x6E53, 0x7953, 0 };
 short int ascii_ii[] = { 0x694C, 0x5454, 0x656C, 0x6E45, 0x6944, 0x6E61, 0 };
-int use_ascii (int i) {
+int testshlib_EXPORT use_ascii (int i) {
 	return ascii_mm[i] + ascii_ii[i];
 }
 short int ebcdic_ii[] = { 0x89D3, 0xE3E3, 0x8593, 0x95C5, 0x89C4, 0x9581, 0 };
@@ -198,9 +200,12 @@ extern int foo;
 '''
 
 class grep_for_endianness(Task.Task):
+	"""
+	Task that reads a binary and tries to determine the endianness
+	"""
 	color = 'PINK'
 	def run(self):
-		txt = self.inputs[0].read(flags='rb').decode('iso8859-1')
+		txt = self.inputs[0].read(flags='rb').decode('latin-1')
 		if txt.find('LiTTleEnDian') > -1:
 			self.generator.tmp.append('little')
 		elif txt.find('BIGenDianSyS') > -1:
@@ -209,18 +214,24 @@ class grep_for_endianness(Task.Task):
 			return -1
 
 @feature('grep_for_endianness')
-@after_method('process_source')
+@after_method('apply_link')
 def grep_for_endianness_fun(self):
-	self.create_task('grep_for_endianness', self.compiled_tasks[0].outputs[0])
+	"""
+	Used by the endianness configuration test
+	"""
+	self.create_task('grep_for_endianness', self.link_task.outputs[0])
 
 @conf
 def check_endianness(self):
 	"""
-	Execute a configuration test to determine the endianness
+	Executes a configuration test to determine the endianness
 	"""
 	tmp = []
 	def check_msg(self):
 		return tmp[0]
-	self.check(fragment=ENDIAN_FRAGMENT, features='c grep_for_endianness', msg="Checking for endianness", define='ENDIANNESS', tmp=tmp, okmsg=check_msg)
+
+	self.check(fragment=ENDIAN_FRAGMENT, features='c cstlib grep_for_endianness',
+		msg='Checking for endianness', define='ENDIANNESS', tmp=tmp,
+		okmsg=check_msg, confcache=None)
 	return tmp[0]
 

@@ -16,60 +16,62 @@ found in autotools, and will update the environment with the following
 installation variables:
 
 ============== ========================================= =======================
-Variable       Description                               Value
+Variable       Description                               Default Value
 ============== ========================================= =======================
-PREFIX         architecture-independent files            /usr/local
-EXEC_PREFIX    architecture-dependent files              PREFIX
-BINDIR         user executables                          EXEC_PREFIX/bin
-SBINDIR        user executables                          EXEC_PREFIX/sbin
-LIBEXECDIR     program executables                       EXEC_PREFIX/libexec
-SYSCONFDIR     read-only single-machine data             PREFIX/etc
-SHAREDSTATEDIR modifiable architecture-independent data  PREFIX/com
-LOCALSTATEDIR  modifiable single-machine data            PREFIX/var
+PREFIX         installation prefix                       /usr/local
+EXEC_PREFIX    installation prefix for binaries          PREFIX
+BINDIR         user commands                             EXEC_PREFIX/bin
+SBINDIR        system binaries                           EXEC_PREFIX/sbin
+LIBEXECDIR     program-specific binaries                 EXEC_PREFIX/libexec
+SYSCONFDIR     host-specific configuration               PREFIX/etc
+SHAREDSTATEDIR architecture-independent variable data    PREFIX/com
+LOCALSTATEDIR  variable data                             PREFIX/var
 LIBDIR         object code libraries                     EXEC_PREFIX/lib
-INCLUDEDIR     C header files                            PREFIX/include
-OLDINCLUDEDIR  C header files for non-gcc                /usr/include
-DATAROOTDIR    read-only arch.-independent data root     PREFIX/share
-DATADIR        read-only architecture-independent data   DATAROOTDIR
-INFODIR        info documentation                        DATAROOTDIR/info
+INCLUDEDIR     header files                              PREFIX/include
+OLDINCLUDEDIR  header files for non-GCC compilers        /usr/include
+DATAROOTDIR    architecture-independent data root        PREFIX/share
+DATADIR        architecture-independent data             DATAROOTDIR
+INFODIR        GNU "info" documentation                  DATAROOTDIR/info
 LOCALEDIR      locale-dependent data                     DATAROOTDIR/locale
-MANDIR         man documentation                         DATAROOTDIR/man
+MANDIR         manual pages                              DATAROOTDIR/man
 DOCDIR         documentation root                        DATAROOTDIR/doc/APPNAME
-HTMLDIR        html documentation                        DOCDIR
-DVIDIR         dvi documentation                         DOCDIR
-PDFDIR         pdf documentation                         DOCDIR
-PSDIR          ps documentation                          DOCDIR
+HTMLDIR        HTML documentation                        DOCDIR
+DVIDIR         DVI documentation                         DOCDIR
+PDFDIR         PDF documentation                         DOCDIR
+PSDIR          PostScript documentation                  DOCDIR
 ============== ========================================= =======================
 """
 
-import os
+import os, re
 from waflib import Utils, Options, Context
 
-_options = [x.split(', ') for x in '''
-bindir, user executables, ${EXEC_PREFIX}/bin
-sbindir, system admin executables, ${EXEC_PREFIX}/sbin
-libexecdir, program executables, ${EXEC_PREFIX}/libexec
-sysconfdir, read-only single-machine data, ${PREFIX}/etc
-sharedstatedir, modifiable architecture-independent data, ${PREFIX}/com
-localstatedir, modifiable single-machine data, ${PREFIX}/var
-libdir, object code libraries, ${EXEC_PREFIX}/lib
-includedir, C header files, ${PREFIX}/include
-oldincludedir, C header files for non-gcc, /usr/include
-datarootdir, read-only arch.-independent data root, ${PREFIX}/share
-datadir, read-only architecture-independent data, ${DATAROOTDIR}
-infodir, info documentation, ${DATAROOTDIR}/info
+gnuopts = '''
+bindir, user commands, ${EXEC_PREFIX}/bin
+sbindir, system binaries, ${EXEC_PREFIX}/sbin
+libexecdir, program-specific binaries, ${EXEC_PREFIX}/libexec
+sysconfdir, host-specific configuration, ${PREFIX}/etc
+sharedstatedir, architecture-independent variable data, ${PREFIX}/com
+localstatedir, variable data, ${PREFIX}/var
+libdir, object code libraries, ${EXEC_PREFIX}/lib%s
+includedir, header files, ${PREFIX}/include
+oldincludedir, header files for non-GCC compilers, /usr/include
+datarootdir, architecture-independent data root, ${PREFIX}/share
+datadir, architecture-independent data, ${DATAROOTDIR}
+infodir, GNU "info" documentation, ${DATAROOTDIR}/info
 localedir, locale-dependent data, ${DATAROOTDIR}/locale
-mandir, man documentation, ${DATAROOTDIR}/man
+mandir, manual pages, ${DATAROOTDIR}/man
 docdir, documentation root, ${DATAROOTDIR}/doc/${PACKAGE}
-htmldir, html documentation, ${DOCDIR}
-dvidir, dvi documentation, ${DOCDIR}
-pdfdir, pdf documentation, ${DOCDIR}
-psdir, ps documentation, ${DOCDIR}
-'''.split('\n') if x]
+htmldir, HTML documentation, ${DOCDIR}
+dvidir, DVI documentation, ${DOCDIR}
+pdfdir, PDF documentation, ${DOCDIR}
+psdir, PostScript documentation, ${DOCDIR}
+''' % Utils.lib64()
+
+_options = [x.split(', ') for x in gnuopts.splitlines() if x]
 
 def configure(conf):
 	"""
-	Read the command-line options to set lots of variables in *conf.env*. The variables
+	Reads the command-line options to set lots of variables in *conf.env*. The variables
 	BINDIR and LIBDIR will be overwritten.
 	"""
 	def get_param(varname, default):
@@ -94,16 +96,16 @@ def configure(conf):
 					complete = False
 
 	if not complete:
-		lst = [name for name, _, _ in _options if not env[name.upper()]]
+		lst = [x for x, _, _ in _options if not env[x.upper()]]
 		raise conf.errors.WafError('Variable substitution failure %r' % lst)
 
 def options(opt):
 	"""
-	Add lots of command-line options, for example::
+	Adds lots of command-line options, for example::
 
 		--exec-prefix: EXEC_PREFIX
 	"""
-	inst_dir = opt.add_option_group('Installation directories',
+	inst_dir = opt.add_option_group('Installation prefix',
 'By default, "waf install" will put the files in\
  "/usr/local/bin", "/usr/local/lib" etc. An installation prefix other\
  than "/usr/local" can be given using "--prefix", for example "--prefix=$HOME"')
@@ -112,18 +114,21 @@ def options(opt):
 		option = opt.parser.get_option(k)
 		if option:
 			opt.parser.remove_option(k)
-			inst_dir.add_option(option)
+			inst_dir.add_argument(k, dest=option.dest, help=option.help, default=option.default)
 
 	inst_dir.add_option('--exec-prefix',
-		help = 'installation prefix [Default: ${PREFIX}]',
+		help = 'installation prefix for binaries [PREFIX]',
 		default = '',
 		dest = 'EXEC_PREFIX')
 
-	dirs_options = opt.add_option_group('Pre-defined installation directories', '')
+	dirs_options = opt.add_option_group('Installation directories')
 
 	for name, help, default in _options:
 		option_name = '--' + name
+
+		opt.parser.remove_option(option_name)
+
 		str_default = default
-		str_help = '%s [Default: %s]' % (help, str_default)
-		dirs_options.add_option(option_name, help=str_help, default='', dest=name.upper())
+		str_help = '%s [%s]' % (help, re.sub(r'\$\{([^}]+)\}', r'\1', str_default))
+		dirs_options.add_option(option_name, help=str_help, default='', dest=name)
 
