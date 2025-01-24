@@ -566,7 +566,7 @@ int32_t sin_lookup(int32_t angle) {
 
   // if I can interpolate linearly
   int32_t lookup_angle =  angle * 4 / 0xff;
-  if ((uint32_t)(lookup_angle + 1) < sizeof(SIN_LOOKUP) / sizeof(int32_t)) {
+  if ((uint32_t)(lookup_angle + 1) < (sizeof(SIN_LOOKUP) / sizeof(SIN_LOOKUP[0]))) {
     return  mult * (SIN_LOOKUP[lookup_angle] + ((angle * 4) % 0xff) * (SIN_LOOKUP[lookup_angle + 1] - SIN_LOOKUP[lookup_angle]) / 0xff);
   }
 
