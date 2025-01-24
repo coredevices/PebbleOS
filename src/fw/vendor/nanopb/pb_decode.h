@@ -37,10 +37,21 @@ struct pb_istream_s
     bool (*callback)(pb_istream_t *stream, pb_byte_t *buf, size_t count);
 #endif
 
-    void *state; /* Free field for use by callback implementation */
+    /* state is a free field for use of the callback function defined above.
+     * Note that when pb_istream_from_buffer() is used, it reserves this field
+     * for its own use.
+     */
+    void *state;
+
+    /* Maximum number of bytes left in this stream. Callback can report
+     * EOF before this limit is reached. Setting a limit is recommended
+     * when decoding directly from file or network streams to avoid
+     * denial-of-service by excessively long messages.
+     */
     size_t bytes_left;
     
 #ifndef PB_NO_ERRMSG
+    /* Pointer to constant (ROM) string when decoding function returns error */
     const char *errmsg;
 #endif
 };
@@ -107,17 +118,11 @@ bool pb_decode_ex(pb_istream_t *stream, const pb_msgdesc_t *fields, void *dest_s
 #define pb_decode_delimited_noinit(s,f,d) pb_decode_ex(s,f,d, PB_DECODE_DELIMITED | PB_DECODE_NOINIT)
 #define pb_decode_nullterminated(s,f,d) pb_decode_ex(s,f,d, PB_DECODE_NULLTERMINATED)
 
-#ifdef PB_ENABLE_MALLOC
 /* Release any allocated pointer fields. If you use dynamic allocation, you should
  * call this for any successfully decoded message when you are done with it. If
  * pb_decode() returns with an error, the message is already released.
  */
 void pb_release(const pb_msgdesc_t *fields, void *dest_struct);
-#else
-/* Allocation is not supported, so release is no-op */
-#define pb_release(fields, dest_struct) PB_UNUSED(fields); PB_UNUSED(dest_struct);
-#endif
-
 
 /**************************************
  * Functions for manipulating streams *

@@ -4,13 +4,14 @@
  */
 
 /* Use the GCC warn_unused_result attribute to check that all return values
- * are propagated correctly. On other compilers and gcc before 3.4.0 just
- * ignore the annotation.
+ * are propagated correctly. On other compilers, gcc before 3.4.0 and iar
+ * before 9.40.1 just ignore the annotation.
  */
-#if !defined(__GNUC__) || ( __GNUC__ < 3) || (__GNUC__ == 3 && __GNUC_MINOR__ < 4)
-    #define checkreturn
-#else
+#if (defined(__GNUC__) && ((__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))) || \
+    (defined(__IAR_SYSTEMS_ICC__) && (__VER__ >= 9040001))
     #define checkreturn __attribute__((warn_unused_result))
+#else
+    #define checkreturn
 #endif
 
 #include "pb.h"
@@ -111,7 +112,11 @@ bool checkreturn pb_read(pb_istream_t *stream, pb_byte_t *buf, size_t count)
         return false;
 #endif
     
-    stream->bytes_left -= count;
+    if (stream->bytes_left < count)
+        stream->bytes_left = 0;
+    else
+        stream->bytes_left -= count;
+
     return true;
 }
 
@@ -1163,7 +1168,7 @@ bool checkreturn pb_decode_ex(pb_istream_t *stream, const pb_msgdesc_t *fields, 
       status = pb_decode_inner(&substream, fields, dest_struct, flags);
 
       if (!pb_close_string_substream(stream, &substream))
-        return false;
+        status = false;
     }
     
 #ifdef PB_ENABLE_MALLOC
@@ -1326,6 +1331,13 @@ void pb_release(const pb_msgdesc_t *fields, void *dest_struct)
     {
         pb_release_single_field(&iter);
     } while (pb_field_iter_next(&iter));
+}
+#else
+void pb_release(const pb_msgdesc_t *fields, void *dest_struct)
+{
+    /* Nothing to release without PB_ENABLE_MALLOC. */
+    PB_UNUSED(fields);
+    PB_UNUSED(dest_struct);
 }
 #endif
 

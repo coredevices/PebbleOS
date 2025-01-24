@@ -22,7 +22,9 @@ bitarray
 pep8
 polib
 intelhex>=2.1,<3
-protobuf==3.6
+protobuf
+grpcio-tools
+nanopb
 certifi
 libclang
 packaging

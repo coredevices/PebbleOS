@@ -50,7 +50,7 @@ Notes when using this tool:
 
 class protoc(Task):
     # protoc expects the input proto file to be an absolute path.
-    run_str = '${PROTOC} ${PROTOC_FLAGS} ${PROTOC_ST:INCPATHS} ${SRC[0].abspath()}'
+    run_str = '${NANOPB_GENERATOR} -I ${SRC[0].parent.abspath()} -D ${TGT[0].parent.abspath()} ${SRC[0].abspath()}'
     color   = 'BLUE'
     ext_out = ['.h', 'pb.c']
     def scan(self):
@@ -92,19 +92,6 @@ def process_protoc(self, node):
     self.create_task('protoc', node, [c_node, h_node])
     self.source.append(c_node)
 
-    if 'c' in self.features and not self.env.PROTOC_FLAGS:
-        # Each piece wrapped in [] explained.
-        # ~ [--nanopb_out=]-I%s:%s
-        #   How we push arguments through protoc into nanopb_generator.py
-        # ~ --nanopb_out=[-I%s]:%s
-        #   Pass in a path where nanopb_generator should search for .options files
-        # ~ --nanopb_out=-I%s[:]%s
-        #   Separates the option args for nanopb_generator from the actual output folder
-        # ~ --nanopb_out=-I%s:[%s]
-        #   Specifies the output folder
-        self.env.PROTOC_FLAGS = '--nanopb_out=-I%s:%s' % (node.parent.abspath(),
-                                                          node.parent.get_bld().bldpath())
-
     use = getattr(self, 'use', '')
     if not 'PROTOBUF' in use:
         self.use = self.to_list(use) + ['PROTOBUF']
@@ -115,6 +102,4 @@ def configure(conf):
 
     Follow the instructions on the wiki for installing it: https://pebbletechnology.atlassian.net/wiki/display/DEV/Getting+Started+with+Firmware
     """
-    conf.find_program('protoc-gen-nanopb', errmsg=missing_nanopb)
-    conf.find_program('protoc', var='PROTOC', errmsg=missing_nanopb)
-    conf.env.PROTOC_ST = '-I%s'
+    conf.find_program('nanopb_generator', var='NANOPB_GENERATOR', errmsg=missing_nanopb)
