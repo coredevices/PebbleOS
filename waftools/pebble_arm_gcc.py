@@ -163,7 +163,7 @@ def configure(conf):
       c_warnings.append('-Wno-expansion-to-defined')
       c_warnings.append('-Wno-enum-conversion')
 
-      if not ('13', '0') <= conf.env.CC_VERSION <= ('14', '2', '0'):
+      if not ('13', '0') <= conf.env.CC_VERSION <= ('14', '2', '1'):
         # Verify the toolchain we're using is allowed. This is to prevent us from accidentally
         # building and releasing firmwares that are built in ways we haven't tested.
 
