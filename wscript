@@ -749,7 +749,8 @@ def build(bld):
     bld.recurse('src/libutil')
     bld.recurse('src/fw')
 
-    bld.recurse('tools/qemu_spi_cooker')
+    if sys.platform != 'darwin':
+        bld.recurse('tools/qemu_spi_cooker')
 
     # Generate resources. Leave this until the end so we collect all the env['DYNAMIC_RESOURCES']
     # values that the other build steps added.
