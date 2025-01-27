@@ -774,6 +774,25 @@ static uint8_t s_test_buffer[TEST_BUFFER_SIZE];
 static const uint32_t s_test_addr = FLASH_REGION_FIRMWARE_SCRATCH_END - SECTOR_SIZE_BYTES;
 static bool s_signal_test_initialized;
 
+static void prv_get_fast_read_params(QSPIFlash *dev, uint8_t *instruction, uint8_t *dummy_cycles,
+                                     bool *is_ddr) {
+  if (dev->state->fast_read_ddr_enabled) {
+    *instruction = dev->state->part->instructions.fast_read_ddr;
+    *dummy_cycles = dev->state->part->dummy_cycles.fast_read_ddr;
+    *is_ddr = true;
+  } else {
+    *instruction = dev->state->part->instructions.fast_read;
+    *dummy_cycles = dev->state->part->dummy_cycles.fast_read;
+    *is_ddr = false;
+  }
+}
+
+static void prv_set_fast_read_ddr_enabled(QSPIFlash *dev, bool enabled) {
+  // If we're supposed to use DDR for fast read, make sure the part can support it
+  PBL_ASSERTN(!enabled || dev->state->part->supports_fast_read_ddr);
+  dev->state->fast_read_ddr_enabled = enabled;
+}
+
 void command_flash_signal_test_init(void) {
   // just test one sector, which is probably less than the size of the region
 
