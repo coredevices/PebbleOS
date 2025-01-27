@@ -178,7 +178,7 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
       break;
   }
 
-  bool success = pb_encode(stream, pebble_pipeline_Payload_fields, &payload);
+  bool success = pb_encode(stream, &pebble_pipeline_Payload_msg, &payload);
   if (!success) {
     PBL_LOG(LOG_LEVEL_ERROR, "Error encoding payload");
   }
@@ -251,7 +251,7 @@ static bool prv_session_measurement_encode_start(PLogSession *session) {
     },
   };
 
-  return pb_encode(&session->data_stream, pebble_pipeline_MeasurementSet_fields, &msg);
+  return pb_encode(&session->data_stream, &pebble_pipeline_MeasurementSet_msg, &msg);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -426,7 +426,7 @@ bool protobuf_log_session_add_measurements(ProtobufLogRef session_ref, time_t sa
 
   bool success = prv_log_struct(session,
                                 pebble_pipeline_MeasurementSet_measurements_tag,
-                                pebble_pipeline_Measurement_fields,
+                                &pebble_pipeline_Measurement_msg,
                                 &msg);
   return success;
 }
@@ -455,7 +455,7 @@ bool protobuf_log_session_add_event(ProtobufLogRef session_ref, pebble_pipeline_
 
   bool success = prv_log_struct(session,
                                 pebble_pipeline_Payload_events_tag,
-                                pebble_pipeline_Event_fields,
+                                &pebble_pipeline_Event_msg,
                                 event);
   return success;
 }
