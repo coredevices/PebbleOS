@@ -336,7 +336,7 @@ def _link_firmware(bld, sources):
     else:
         # ..and actually build and link the firmware ELF
         elf_node = bld.path.get_bld().make_node('tintin_fw.elf')
-        bld.program(source=sources,
+        x = bld.program(source=sources,
                     use=uses,
                     link_group=True,
                     lib=['gcc'],
@@ -344,6 +344,8 @@ def _link_firmware(bld, sources):
                     includes='fonts',
                     ldscript=[ldscript, 'fw_common.ld'],
                     linkflags=fw_linkflags)
+
+        x.env.append_value('LINKFLAGS', fw_linkflags)
 
         if bld.env.FLASH_ITCM:
             # 0x07E00000 is the difference between the flash memory address and the flash ITCM
