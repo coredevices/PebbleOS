@@ -201,7 +201,7 @@ static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
   if (first_use_is_complete) {
 #if PBL_BW && !PLATFORM_TINTIN
     // Override the icon to use the fullscreen version
-    icon_res_id = RESOURCE_ID_RECOVERY_LAUNCH_APP;
+    icon_res_id = RESOURCE_ID_LAUNCH_APP;
     icon_x_offset = 0;
     icon_y_offset = 0;
 
@@ -241,7 +241,9 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
 
   // Set the name text
   if (data->is_showing_version) {
-    strncpy(data->name_text_buffer, GIT_TAG, sizeof(data->name_text_buffer));
+    size_t len = MIN(strlen(GIT_TAG), sizeof(data->name_text_buffer) - 1);
+    memcpy(data->name_text_buffer, GIT_TAG, len);
+    data->name_text_buffer[len] = '\0';
   } else if (bt_driver_classic_is_connected()) {
     // If BT Classic connected, show the name of the connected device
     bt_driver_classic_copy_connected_device_name(data->name_text_buffer);

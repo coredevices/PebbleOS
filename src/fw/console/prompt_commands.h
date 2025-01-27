@@ -92,8 +92,8 @@ extern void command_flash_stress(void);
 extern void command_flash_validate(void);
 extern void command_flash_apicheck(const char *len);
 extern void command_flash_unprotect(void);
-extern void command_flash_signal_test_init(void);
-extern void command_flash_signal_test_run(void);
+//extern void command_flash_signal_test_init(void);
+//extern void command_flash_signal_test_run(void);
 extern void command_flash_show_erased_sectors(const char *arg);
 
 extern void command_get_time(void);
@@ -225,7 +225,7 @@ extern void command_smartstrap_status(void);
 extern void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
                               char *volume_str);
 extern void command_mic_read(void);
-extern void command_pmic_rails(void);
+// extern void command_pmic_rails(void);
 
 extern void dump_current_runtime_stats(void);
 
@@ -451,11 +451,11 @@ static const Command s_prompt_commands[] = {
   { "flash erased_sectors", command_flash_show_erased_sectors, 1},
 #if !RELEASE && (PLATFORM_SILK || PLATFORM_ROBERT || PLATFORM_CALCULUS)
   { "flash apicheck", command_flash_apicheck, 1},
-  { "flash signal test init", command_flash_signal_test_init, 0 },
-  { "flash signal test run", command_flash_signal_test_run, 0 },
+  //{ "flash signal test init", command_flash_signal_test_init, 0 },
+  //{ "flash signal test run", command_flash_signal_test_run, 0 },
 #endif
 
-  { "pmic rails", command_pmic_rails, 0},
+  //{ "pmic rails", command_pmic_rails, 0},
 
 
   { "disp", command_display_set, 1},
