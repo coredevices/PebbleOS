@@ -1,0 +1,3 @@
+[submodule "src/fw/vendor/nrf5-sdk"]
+	path = src/fw/vendor/nrf5-sdk
+	url = https://github.com/greenlsi/nrf5-sdk
