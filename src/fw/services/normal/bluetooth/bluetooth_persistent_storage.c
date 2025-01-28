@@ -52,7 +52,7 @@
 #else
 #  if BT_CONTROLLER_CC2564X
 #    include "services/normal/bluetooth/bluetooth_persistent_storage_v1_impl.h"
-#  elif BT_CONTROLLER_DA14681 || BT_CONTROLLER_QEMU
+#  elif BT_CONTROLLER_DA14681 || BT_CONTROLLER_QEMU || BT_CONTROLLER_NRF52
 #    include "services/normal/bluetooth/bluetooth_persistent_storage_v2_impl.h"
 #  else
 #    error "Unknown BT_CONTROLLER_... define?"
