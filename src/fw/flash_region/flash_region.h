@@ -35,7 +35,7 @@
   #endif
 
   #include "flash_region_n25q.h"
-#elif PLATFORM_SILK
+#elif PLATFORM_SILK || PLATFORM_ASTERIX
   #include "flash_region_mx25u.h"
 #elif PLATFORM_CALCULUS || PLATFORM_ROBERT
   #include "flash_region_mt25q.h"

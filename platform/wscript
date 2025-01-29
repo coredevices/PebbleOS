@@ -39,6 +39,9 @@ def is_cutts(ctx):
 def is_robert(ctx):
     return ctx.get_board().startswith('robert')
 
+@conf
+def is_asterix(ctx):
+    return ctx.get_board().startswith('asterix')
 
 @conf
 def get_platform_name(ctx):
@@ -54,6 +57,8 @@ def get_platform_name(ctx):
         return "calculus"
     elif is_robert(ctx):
         return "robert"
+    elif is_asterix(ctx):
+        return "asterix"
     else:
         return "unknown"
 
@@ -98,6 +103,8 @@ def get_qemu_cpu(ctx):
         return 'cortex-m4'
     elif is_robert(ctx):
         return 'cortex-m4'
+    elif is_asterix(ctx):
+        return 'cortex-m4'
     else:
         return 'unknown'
 
@@ -133,6 +140,8 @@ def has_touch(ctx):
     elif is_cutts(ctx):
         return True
     elif is_robert(ctx):
+        return False
+    elif is_asterix(ctx):
         return False
     else:
         return None
@@ -177,6 +186,9 @@ def add_platform_defines(ctx, env):
     elif ctx.is_robert():
         bit_depth = 8
         platform = 'ROBERT'
+    elif ctx.is_asterix():
+        bit_depth = 1
+        platform = 'SILK' # For now, Asterix-likes are actually Silk-like.
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 

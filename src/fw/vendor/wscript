@@ -9,6 +9,8 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
         conf.env.append_unique('DEFINES', 'S140')
         conf.env.append_unique('DEFINES', 'SOFTDEVICE_PRESENT')
+    if conf.is_asterix():
+        conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
     conf.recurse('FreeRTOS')
     if conf.capability('HAS_JAVASCRIPT'):
         conf.recurse('jerryscript')
@@ -93,6 +95,11 @@ def build(bld):
             'nrf5-sdk/components/libraries/strerror',
         ]
 
+        if bld.is_asterix():
+            # is there a better way to do this?
+            micro_includes += ['../board/boards/board_asterix']
+        else:
+            bld.fatal("no board for nRF5 includes")
     else:
         bld.fatal("No microcontroller family set for this build")
 

@@ -28,7 +28,7 @@
 // TODO: Do we have an equate for the total size of RAM somewhere else?
 #if PLATFORM_CALCULUS || PLATFORM_ROBERT
 #define COREDUMP_RAM_SIZE (384 * 1024)
-#elif PLATFORM_SILK
+#elif PLATFORM_SILK || PLATFORM_ASTERIX
 #define COREDUMP_RAM_SIZE (256 * 1024)
 #elif PLATFORM_SNOWY || PLATFORM_SPALDING
 #define COREDUMP_RAM_SIZE (192 * 1024)

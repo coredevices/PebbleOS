@@ -87,6 +87,18 @@ elif board in ('cutts_bb','robert_bb','robert_bb2','robert_evt'):
             'drivers',
         ],
     )
+elif board in ('asterix_vla_dvb1'):
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_asterix.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'drivers',
+        ],
+    )
 else:
     bld.fatal('src/fw/board/wscript_build: '
               'Unknown board {}'.format(board))
