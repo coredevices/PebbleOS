@@ -29,7 +29,11 @@
 #include <stdbool.h>
 
 #ifndef __FILE_NAME__
+#ifdef __FILE_NAME_LEGACY__
+#define __FILE_NAME__ __FILE_NAME_LEGACY__
+#else
 #define __FILE_NAME__ __FILE__
+#endif
 #endif
 
 #define SPLIT_64_BIT_ARG(x) (uint32_t)((x >> 32) & 0xFFFFFFFF), (uint32_t)(x & 0xFFFFFFFF)
