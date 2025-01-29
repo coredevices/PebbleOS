@@ -19,9 +19,26 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define STM32F2_COMPATIBLE
+#define STM32F4_COMPATIBLE
+#define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
+#include <mcu.h>
+
 #include "board/board.h"
 
 #define NUM_CONVERSIONS 40
+
+#ifdef MICRO_FAMILY_NRF5
+# include <hal/nrf_saadc.h>
+
+typedef const struct VoltageMonitorDevice {
+  NRF_SAADC_Type *const adc; ///< One of ADCX. For example ADC1.
+  const uint8_t adc_channel; ///< One of ADC_Channel_*
+  const nrf_saadc_input_t input;
+} VoltageMonitorDevice;
+
+#else
 
 typedef const struct VoltageMonitorDevice {
   ADC_TypeDef *const adc; ///< One of ADCX. For example ADC1.
@@ -29,6 +46,8 @@ typedef const struct VoltageMonitorDevice {
   uint32_t clock_ctrl;  ///< Peripheral clock control flag
   const InputConfig input;
 } VoltageMonitorDevice;
+
+#endif
 
 //! The current voltage numbers from the given ADC, read using adc_read().
 //! Each _total value is a sum of \ref NUM_CONVERSIONS samples where each sample

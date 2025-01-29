@@ -27,18 +27,27 @@
 
 typedef struct QSPIPortState {
   SemaphoreHandle_t dma_semaphore;
+#if MICRO_FAMILY_NRF5
+  volatile int waiting;
+#endif
   int use_count;
 } QSPIPortState;
 
 typedef const struct QSPIPort {
   QSPIPortState *state;
-  uint32_t clock_speed_hz;
   uint16_t auto_polling_interval;
+#if MICRO_FAMILY_NRF5
+  uint32_t cs_gpio;
+  uint32_t clk_gpio;
+  uint32_t data_gpio[QSPI_NUM_DATA_PINS];
+#else
+  uint32_t clock_speed_hz;
   uint32_t clock_ctrl;
   AfConfig cs_gpio;
   AfConfig clk_gpio;
   AfConfig data_gpio[QSPI_NUM_DATA_PINS];
   DMARequest *dma;
+#endif
 } QSPIPort;
 
 //! Initialize the QSPI peripheral, the pins, and the DMA

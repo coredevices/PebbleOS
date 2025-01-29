@@ -43,6 +43,7 @@
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 #define I2C_ERROR_TIMEOUT_MS  (1000)
@@ -126,6 +127,10 @@ static void prv_bus_rail_power_down(I2CBus *bus) {
   }
   prv_rail_ctl(bus, false);
 
+#if MICRO_FAMILY_NRF5
+  i2c_hal_pins_set_gpio(bus);
+#endif
+
   // Drain through pull-ups
   OutputConfig out_scl = {
     .gpio = bus->scl_gpio.gpio,
@@ -149,11 +154,19 @@ static void prv_bus_rail_power_down(I2CBus *bus) {
 //! Configure bus pins for use by I2C peripheral
 //! Lock bus and peripheral config access before configuring pins
 static void prv_bus_pins_cfg_i2c(I2CBus *bus) {
+#if MICRO_FAMILY_NRF5
+  i2c_hal_pins_set_i2c(bus);
+#else
   gpio_af_init(&bus->scl_gpio, GPIO_OType_OD, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
   gpio_af_init(&bus->sda_gpio, GPIO_OType_OD, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
+#endif
 }
 
 static void prv_bus_pins_cfg_input(I2CBus *bus) {
+#if MICRO_FAMILY_NRF5
+  i2c_hal_pins_set_gpio(bus);
+#endif
+
   InputConfig in_scl = {
     .gpio = bus->scl_gpio.gpio,
     .gpio_pin = bus->scl_gpio.gpio_pin,
@@ -321,6 +334,10 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
     mutex_unlock(slave->bus->state->bus_mutex);
     return false;
   }
+
+#if MICRO_FAMILY_NRF5
+  i2c_hal_pins_set_gpio(slave->bus);
+#endif
 
   InputConfig in_sda = {
     .gpio = slave->bus->sda_gpio.gpio,

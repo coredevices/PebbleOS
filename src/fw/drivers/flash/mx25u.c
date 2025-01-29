@@ -75,6 +75,7 @@ static QSPIFlashPart QSPI_FLASH_PART = {
   .standby_to_low_power_latency_us = 10,
   .low_power_to_standby_latency_us = 30,
   .supports_fast_read_ddr = false,
+  .supports_block_lock = true,
   .qspi_id_value = 0x3725c2,
   .name = "MX25U64",
 };

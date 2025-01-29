@@ -77,6 +77,7 @@ typedef struct I2CBusState {
   RtcTicks last_rail_stop_ticks;
   SemaphoreHandle_t event_semaphore;
   PebbleMutex *bus_mutex;
+  int should_be_init; //! for pin connect/disconnect recovery on nRF5
 } I2CBusState;
 
 struct I2CBus {

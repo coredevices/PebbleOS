@@ -42,8 +42,13 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
 //! Configures the given EXTI and NVIC for the given configuration.
 void exti_configure_other(ExtiLineOther exti_line, ExtiTrigger trigger);
 
+#ifndef MICRO_FAMILY_NRF5
 static inline void exti_enable(ExtiConfig config);
 static inline void exti_disable(ExtiConfig config);
+#else
+void exti_enable(ExtiConfig config);
+void exti_disable(ExtiConfig config);
+#endif
 
 void exti_enable_other(ExtiLineOther exti_line);
 void exti_disable_other(ExtiLineOther exti_line);

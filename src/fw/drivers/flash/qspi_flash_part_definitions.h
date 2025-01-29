@@ -67,6 +67,7 @@ typedef const struct QSPIFlashPart {
   uint32_t standby_to_low_power_latency_us;
   uint32_t low_power_to_standby_latency_us;
   bool supports_fast_read_ddr;
+  bool supports_block_lock;
   uint32_t qspi_id_value;
   const char *name;
 } QSPIFlashPart;

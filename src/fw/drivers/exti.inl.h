@@ -18,6 +18,7 @@
 //!
 //! Helper functions intended to be inlined into the calling code.
 
+#ifndef MICRO_FAMILY_NRF5
 static inline void exti_enable(ExtiConfig config) {
   exti_enable_other(config.exti_line);
 }
@@ -25,4 +26,5 @@ static inline void exti_enable(ExtiConfig config) {
 static inline void exti_disable(ExtiConfig config) {
   exti_disable_other(config.exti_line);
 }
+#endif
 

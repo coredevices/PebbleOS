@@ -95,8 +95,12 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   qspi_use(dev->qspi);
 
   if (dev->reset_gpio.gpio) {
+#if MICRO_FAMILY_NRF5
+    WTF;
+#else
     gpio_output_init(&dev->reset_gpio, GPIO_OType_PP, GPIO_Speed_2MHz);
     gpio_output_set(&dev->reset_gpio, false);
+#endif
   }
 
   // Must call quad_enable first, all commands are QSPI
@@ -158,7 +162,7 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
   const bool result = qspi_poll_bit(dev->qspi, dev->state->part->instructions.read_status,
                                     dev->state->part->status_bit_masks.busy, true /* set */,
                                     busy_timeout_us);
-  qspi_release(QSPI);
+  qspi_release(dev->qspi);
 
   return result ? S_SUCCESS : E_ERROR;
 }
@@ -170,13 +174,13 @@ status_t qspi_flash_erase_suspend(QSPIFlash *dev, uint32_t addr) {
   prv_read_register(dev, dev->state->part->instructions.read_status, &status_reg, 1);
   if (!(status_reg & dev->state->part->status_bit_masks.busy)) {
     // no erase in progress
-    qspi_release(QSPI);
+    qspi_release(dev->qspi);
     return S_NO_ACTION_REQUIRED;
   }
 
   prv_write_cmd_no_addr(dev, dev->state->part->instructions.erase_suspend);
 
-  qspi_release(QSPI);
+  qspi_release(dev->qspi);
 
   if (dev->state->part->suspend_to_read_latency_us) {
     delay_us(dev->state->part->suspend_to_read_latency_us);
@@ -342,7 +346,7 @@ static bool prv_blank_check_mmap(QSPIFlash *dev, uint32_t addr, bool is_subsecto
   }
 
   // stop memory mapped mode
-  qspi_mmap_stop(QSPI);
+  qspi_mmap_stop(dev->qspi);
   return result;
 }
 status_t qspi_flash_blank_check(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
@@ -563,7 +567,7 @@ void command_flash_apicheck(const char *len_str) {
   flash_impl_exit_low_power_mode();
 
   prompt_send_response("Start flash_read_verify test");
-  qspi_use(QSPI);
+  qspi_use(dev->qspi);
 
   const int final_size = atoi(len_str);
 
@@ -588,7 +592,7 @@ void command_flash_apicheck(const char *len_str) {
     }
   }
 
-  qspi_release(QSPI);
+  qspi_release(dev->qspi);
 
   bool was_busy = false;
 
@@ -626,10 +630,10 @@ void command_flash_apicheck(const char *len_str) {
 
   // must call blank_check_poll by hand, otherwise we'll get the dma version
   profiler_start();
-  qspi_use(QSPI);
+  qspi_use(dev->qspi);
   bool is_blank = qspi_flash_blank_check(QSPI_FLASH, FLASH_REGION_FIRMWARE_SCRATCH_BEGIN,
                                        SUBSECTOR_SIZE_BYTES);
-  qspi_release(QSPI);
+  qspi_release(dev->qspi);
   profiler_stop();
 
   uint32_t blank = profiler_get_total_duration(true);
@@ -696,12 +700,12 @@ void command_flash_signal_test_init(void) {
   prv_get_fast_read_params(dev, &instruction, &dummy_cycles, &is_ddr);
   PBL_ASSERTN(!is_ddr);
 
-  qspi_use(QSPI);
+  qspi_use(dev->qspi);
   qspi_indirect_read(dev->qspi, instruction, s_test_addr, dummy_cycles, s_test_buffer,
                      sizeof(s_test_buffer), is_ddr);
 
   prv_set_fast_read_ddr_enabled(dev, dev->default_fast_read_ddr_enabled);
-  qspi_release(QSPI);
+  qspi_release(dev->qspi);
 
   bool success = true;
   for (uint32_t i = 0; i < sizeof(s_test_buffer); ++i) {
@@ -726,7 +730,7 @@ void command_flash_signal_test_run(void) {
   }
 
   QSPIFlash *dev = QSPI_FLASH;
-  qspi_use(QSPI);
+  qspi_use(dev->qspi);
 
   // set to DDR
   prv_set_fast_read_ddr_enabled(dev, true);
@@ -750,7 +754,7 @@ void command_flash_signal_test_run(void) {
 
   // set back to default mode
   prv_set_fast_read_ddr_enabled(dev, dev->default_fast_read_ddr_enabled);
-  qspi_release(QSPI);
+  qspi_release(dev->qspi);
 
   if (success) {
     prompt_send_response("Ok");

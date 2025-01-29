@@ -72,6 +72,7 @@ static QSPIFlashPart QSPI_FLASH_PART = {
   .standby_to_low_power_latency_us = 3,
   .low_power_to_standby_latency_us = 30,
   .supports_fast_read_ddr = true,
+  .supports_block_lock = true,
 #if BOARD_ROBERT_BB || BOARD_ROBERT_BB2 || BOARD_CUTTS_BB
   .qspi_id_value = 0x19BB20,
   .name = "MT25Q256",

@@ -21,12 +21,44 @@
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 #include "board/board.h"
 
+#ifdef MICRO_FAMILY_NRF5
+#include <hal/nrf_gpio.h>
+
+typedef enum {
+  GPIO_OType_PP,
+  GPIO_OType_OD,
+} GPIOOType_TypeDef;
+
+typedef enum {
+  GPIO_PuPd_NOPULL,
+  GPIO_PuPd_UP,
+  GPIO_PuPd_DOWN,
+} GPIOPuPd_TypeDef;
+
+typedef enum {
+  GPIO_Speed_2MHz,
+  GPIO_Speed_50MHz,
+  GPIO_Speed_200MHz
+} GPIOSpeed_TypeDef;
+
+#endif
+
+#ifdef MICRO_FAMILY_NRF5
+
+void gpio_use(uint32_t pin);
+void gpio_release(uint32_t pin);
+
+#else
+
 void gpio_use(GPIO_TypeDef* GPIOx);
 void gpio_release(GPIO_TypeDef* GPIOx);
+
+#endif
 
 //! Initialize a GPIO as an output.
 //!
@@ -43,6 +75,8 @@ void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype,
 //! Asserting the output drives the pin high if pin_config.active_high
 //! is true, and drives it low if pin_config.active_high is false.
 void gpio_output_set(const OutputConfig *pin_config, bool asserted);
+
+#ifndef MICRO_FAMILY_NRF5
 
 //! Configure a GPIO alternate function.
 //!
@@ -70,6 +104,8 @@ void gpio_af_configure_low_power(const AfConfig *af_config);
 //! be called again on the pin in order to configure it in alternate
 //! function mode again.
 void gpio_af_configure_fixed_output(const AfConfig *af_config, bool asserted);
+
+#endif
 
 //! Configure all GPIOs in the system to optimize for power consumption.
 //! At poweron most GPIOs can be configured as analog inputs instead of the
