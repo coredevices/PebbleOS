@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include "order.h"
 
-typedef struct ListNode {
+typedef struct __attribute__((packed)) ListNode {
   struct ListNode* next;
   struct ListNode* prev;
 } ListNode;
