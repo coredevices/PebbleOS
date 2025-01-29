@@ -41,6 +41,19 @@
       "type": "png",
       "name": "SPINNER_BACKGROUND",
       "file": "common/base/images/spinner_background.png"
+    },
+    {
+      "type": "font",
+      "name": "FONT_FALLBACK_INTERNAL",
+      "file": "common/base/pbf/GOTHIC_14.pbf",
+      "builtin": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_18_BOLD",
+      "file": "common/base/pbf/GOTHIC_18_BOLD.pbf",
+      "compatibility": "2.7",
+      "extended": true
     }
   ]
 }

@@ -38,9 +38,26 @@
     },
     {
       "type": "font",
+      "name": "GOTHIC_24_BOLD",
+      "file": "normal/base/pbf/GOTHIC_24_BOLD.pbf"
+    },
+    {
+      "type": "font",
       "name": "MINCHO_20_PAIR",
       "file": "prf/base/ttf/sazanami-mincho.ttf",
       "characterRegex": "[ペアリング]"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_14",
+      "file": "common/base/pbf/GOTHIC_14.pbf",
+      "characterList": "prf/base/ttf/codepoints_including_right_single_quote.json"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_24",
+      "file": "common/base/pbf/GOTHIC_24.pbf",
+      "characterList": "prf/base/ttf/codepoints_including_right_single_quote.json"
     },
     {
       "name": "FONT_FALLBACK_INTERNAL",

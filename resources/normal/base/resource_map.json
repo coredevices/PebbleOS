@@ -127,31 +127,117 @@
     },
     {
       "type": "font",
+      "name": "GOTHIC_09",
+      "file": "normal/base/pbf/GOTHIC_09.pbf",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_14",
+      "file": "common/base/pbf/GOTHIC_14.pbf",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_14_EMOJI",
+      "file": "normal/base/pbf/EMOJI_14.pbf"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_14_BOLD",
+      "file": "normal/base/pbf/GOTHIC_14_BOLD.pbf",
+      "compatibility": "2.7",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_18",
+      "file": "normal/base/pbf/GOTHIC_18.pbf",
+      "compatibility": "2.7",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_18_EMOJI",
+      "file": "normal/base/pbf/EMOJI_18.pbf"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_24",
+      "file": "common/base/pbf/GOTHIC_24.pbf",
+      "compatibility": "2.7",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_24_BOLD",
+      "file": "normal/base/pbf/GOTHIC_24_BOLD.pbf",
+      "compatibility": "2.7",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_24_EMOJI",
+      "file": "normal/base/pbf/EMOJI_24.pbf"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_28",
+      "file": "normal/base/pbf/GOTHIC_28.pbf",
+      "compatibility": "2.7",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_28_BOLD",
+      "file": "normal/base/pbf/GOTHIC_28_BOLD.pbf",
+      "compatibility": "2.7",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_28_EMOJI",
+      "file": "normal/base/pbf/EMOJI_28.pbf"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_36",
+      "file": "normal/base/pbf/GOTHIC_36.pbf",
+      "extended": true
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_36_BOLD",
+      "file": "common/base/pbf/GOTHIC_36_BOLD.pbf",
+      "extended": true
+    },
+    {
+      "type": "font",
       "name": "BITHAM_30_BLACK",
-      "file": "normal/base/ttf/GothamBlack30.ttf",
+      "file": "normal/base/pbf/BITHAM_30_BLACK.pbf",
       "characterList": "normal/base/ttf/basic_latin_codepoints.json",
       "compatibility": "2.7"
     },
     {
       "type": "font",
       "name": "BITHAM_42_BOLD",
-      "file": "normal/base/ttf/Gotham-Bold.otf",
-      "characterList": "normal/base/ttf/basic_latin_codepoints.json",
+      "file": "normal/base/pbf/BITHAM_42_BOLD.pbf",
+      "characterList": "normal/base/pbf/basic_latin_codepoints.json",
       "trackingAdjust": -2,
       "compatibility": "2.7"
     },
     {
       "type": "font",
       "name": "BITHAM_42_LIGHT",
-      "file": "normal/base/ttf/Gotham-Light.otf",
-      "characterList": "normal/base/ttf/basic_latin_codepoints.json",
+      "file": "normal/base/pbf/BITHAM_42_LIGHT.pbf",
+      "characterList": "normal/base/pbf/basic_latin_codepoints.json",
       "trackingAdjust": -3,
       "compatibility": "2.7"
     },
     {
       "type": "font",
       "name": "BITHAM_42_MEDIUM_NUMBERS",
-      "file": "normal/base/ttf/Gotham-Medium.otf",
+      "file": "normal/base/pbf/BITHAM_42_MEDIUM_NUMBERS.pbf",
       "trackingAdjust": -3,
       "characterRegex": "[0-9:-]",
       "compatibility": "2.7"
@@ -159,7 +245,7 @@
     {
       "type": "font",
       "name": "BITHAM_34_MEDIUM_NUMBERS",
-      "file": "normal/base/ttf/Gotham-Medium.otf",
+      "file": "normal/base/pbf/BITHAM_34_MEDIUM_NUMBERS.pbf",
       "trackingAdjust": -2,
       "characterRegex": "[0-9:\\.,-]",
       "compatibility": "2.7"
@@ -167,7 +253,7 @@
     {
       "type": "font",
       "name": "BITHAM_34_LIGHT_SUBSET",
-      "file": "normal/base/ttf/Gotham-Light.otf",
+      "file": "normal/base/pbf/BITHAM_34_LIGHT_SUBSET.pbf",
       "trackingAdjust": -2,
       "characterRegex": "[mikm-]",
       "compatibility": "2.7"
@@ -175,7 +261,7 @@
     {
       "type": "font",
       "name": "BITHAM_18_LIGHT_SUBSET",
-      "file": "normal/base/ttf/Gotham-Light.otf",
+      "file": "normal/base/pbf/BITHAM_18_LIGHT_SUBSET.pbf",
       "trackingAdjust": -1,
       "characterRegex": "[minhkm/-]",
       "compatibility": "2.7"
@@ -197,50 +283,50 @@
     {
       "type": "font",
       "name": "DROID_SERIF_28_BOLD",
-      "file": "normal/base/ttf/DroidSerif28Bold.ttf",
+      "file": "normal/base/ttf/DroidSerif-Bold.ttf",
       "characterList": "normal/base/ttf/basic_latin_codepoints.json",
       "compatibility": "2.7"
     },
     {
       "type": "font",
       "name": "LECO_20_BOLD_NUMBERS",
-      "file": "normal/base/ttf/LECO1976Regular.otf",
+      "file": "normal/base/pbf/LECO_20_BOLD_NUMBERS.pbf",
       "characterRegex": "[ 0-9:/.,°APMHBLTIN-]"
     },
     {
       "type": "font",
       "name": "LECO_26_BOLD_NUMBERS_AM_PM",
-      "file": "normal/base/ttf/LECO1976Regular.otf",
+      "file": "normal/base/pbf/LECO_26_BOLD_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
       "type": "font",
       "name": "LECO_32_BOLD_NUMBERS",
-      "file": "normal/base/ttf/LECO1976Regular.otf",
+      "file": "normal/base/pbf/LECO_32_BOLD_NUMBERS.pbf",
       "characterRegex": "[ 0-9:/.,°-]"
     },
     {
       "type": "font",
       "name": "LECO_36_BOLD_NUMBERS",
-      "file": "normal/base/ttf/LECO1976Regular.otf",
+      "file": "normal/base/pbf/LECO_36_BOLD_NUMBERS.pbf",
       "characterRegex": "[ 0-9:/.,°-]"
     },
     {
       "type": "font",
       "name": "LECO_38_BOLD_NUMBERS",
-      "file": "normal/base/ttf/LECO1976Regular.otf",
+      "file": "normal/base/pbf/LECO_38_BOLD_NUMBERS.pbf",
       "characterRegex": "[ 0-9:/.,°?-]"
     },
     {
       "type": "font",
       "name": "LECO_42_NUMBERS",
-      "file": "normal/base/ttf/LECO1976Regular.otf",
+      "file": "normal/base/pbf/LECO_42_NUMBERS.pbf",
       "characterRegex" : "[ 0-9:/.,°-]"
     },
     {
       "type": "font",
       "name": "LECO_28_LIGHT_NUMBERS",
-      "file": "normal/base/ttf/LECO1976Light.otf",
+      "file": "normal/base/pbf/LECO_28_LIGHT_NUMBERS.pbf",
       "characterRegex": "[ 0-9:/.,°-]"
     },
     {
