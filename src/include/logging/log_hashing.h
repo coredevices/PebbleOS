@@ -132,7 +132,9 @@ void PBL_LOG_x_printf_arg_check(const char *fmt, ...) FORMAT_PRINTF(1, 2);
 { \
   static const char str[] __attribute__((nocommon, section(".log_strings"))) = \
     __FILE__ ":" STRINGIFY(__LINE__) ":" STRINGIFY(level) ":" color ":" fmt; \
+  _Pragma("GCC diagnostic push"); _Pragma("GCC diagnostic ignored \"-Warray-bounds\""); \
   logfunc((uint32_t)&str[LOG_SECTION_OFFSET(level, fmt)], ##__VA_ARGS__); \
+  _Pragma("GCC diagnostic pop"); \
   if (0) PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__); \
 }
 
