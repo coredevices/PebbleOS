@@ -24,5 +24,5 @@ def file_name_c_define(self):
     for task in self.tasks:
         if len(task.inputs) > 0:
             task.env.append_value(
-                    'DEFINES', '__FILE_NAME__="%s"' % task.inputs[0].name)
+                    'DEFINES', '__FILE_NAME_LEGACY__="%s"' % task.inputs[0].name)
 
