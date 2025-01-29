@@ -113,6 +113,7 @@ WordState word_state_update(WordState state, Codepoint codepoint) {
       } else {
         new_state = WordStateEnd;
       }
+      break;
     case WordStateGrowing:
       if (codepoint == WORD_JOINER_CODEPOINT) {
         new_state = WordStateJoining;
@@ -418,7 +419,7 @@ bool word_trim_preceeding_codepoint(GContext* ctx, Word* word, const Codepoint c
 
   if (word->end == char_iter_state.utf8_iter_state.current) {
     // Word has been completely trimmed; init a new word
-    bool is_end_of_text = (word->end == NULL_CODEPOINT ||
+    bool is_end_of_text = (*word->end == NULL_CODEPOINT ||
         char_iter_state.utf8_iter_state.current >= text_box_params->utf8_bounds->end);
 
     if (!is_end_of_text) {

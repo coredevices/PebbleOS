@@ -48,7 +48,10 @@ GFont fonts_get_system_font(const char *font_key) {
   // maybe they wanted a renamed font
   if (NULL == res && 0 == strncmp(font_key, bitham_alias, bitham_alias_len)) {
     char new_font_key[bitham_prefix_len - bitham_alias_len + strlen(font_key) + 1];
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
     strncpy(new_font_key, bitham_prefix, bitham_prefix_len);
+#pragma GCC diagnostic pop
     strcpy(new_font_key+bitham_prefix_len, font_key+bitham_alias_len);
     // let's try again
     res = sys_font_get_system_font(new_font_key);

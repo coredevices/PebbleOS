@@ -208,7 +208,7 @@ void property_animation_update_gtransform(PropertyAnimation *property_animation_
 
   // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
   // must be typecast
-  GTransformSetter setter = (GTransformSetter)((PropertyAnimationImplementation*)
+  GTransformSetter setter = (GTransformSetter)(void *)((PropertyAnimationImplementation*)
                               property_animation->animation.implementation)
                                 ->accessors.setter.int16;
 
@@ -267,7 +267,7 @@ void property_animation_update_fixed_s32_16(PropertyAnimation *property_animatio
 
   // NOTE: We are not exposing the Fixed_S32_16 in the public SDK, so the setter and getter
   // must be typecast
-  Fixed_S32_16Setter setter = (Fixed_S32_16Setter)((PropertyAnimationImplementation*)
+  Fixed_S32_16Setter setter = (Fixed_S32_16Setter)(void *)((PropertyAnimationImplementation*)
                               property_animation->animation.implementation)
                                 ->accessors.setter.int16;
 
@@ -317,7 +317,7 @@ static void prv_init(PropertyAnimationPrivate *property_animation,
                == (AnimationUpdateImplementation)property_animation_update_gtransform) {
       // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
       // must be typecast
-      GTransformGetter getter = (GTransformGetter)((PropertyAnimationImplementation*)
+      GTransformGetter getter = (GTransformGetter)(void *)((PropertyAnimationImplementation*)
                                   property_animation->animation.implementation)
                                     ->accessors.getter.int16;
       property_animation->values.to.gtransform = to_value ? *((GTransform*)to_value)
@@ -337,7 +337,7 @@ static void prv_init(PropertyAnimationPrivate *property_animation,
                == (AnimationUpdateImplementation)property_animation_update_fixed_s32_16) {
       // NOTE: We are not exposing the Fixed_S32_16 in the public SDK, so the setter and getter
       // must be typecast
-      Fixed_S32_16Getter getter = (Fixed_S32_16Getter)((PropertyAnimationImplementation*)
+      Fixed_S32_16Getter getter = (Fixed_S32_16Getter)(void *)((PropertyAnimationImplementation*)
                                   property_animation->animation.implementation)
                                     ->accessors.getter.int16;
       property_animation->values.to.fixed_s32_16 = to_value ? *((Fixed_S32_16*)to_value)

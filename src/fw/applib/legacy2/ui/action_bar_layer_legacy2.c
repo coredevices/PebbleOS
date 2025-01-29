@@ -95,7 +95,7 @@ void action_bar_layer_legacy2_init(ActionBarLayerLegacy2 *action_bar) {
   layer_init(&action_bar->layer, &GRectZero);
   action_bar->layer.update_proc = (LayerUpdateProc) action_bar_legacy2_update_proc;
   action_bar->layer.property_changed_proc =
-      (PropertyChangedProc) action_bar_legacy2_changed_proc;
+      (PropertyChangedProc) (void *) action_bar_legacy2_changed_proc;
   action_bar->background_color = GColor2Black;
 }
 

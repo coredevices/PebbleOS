@@ -188,8 +188,8 @@ static bool prv_metric_aggregation_implemented(HealthMetric metric, time_t time_
           if (version_compare(app_version, legacy_version) < 0) {
             return true;
           }
-          // Fallthrough
         }
+        /* FALLTHRU */
         case HealthAggregationMax:
         case HealthAggregationMin: {
           // Only supported using minute data (short time range, no scope) because

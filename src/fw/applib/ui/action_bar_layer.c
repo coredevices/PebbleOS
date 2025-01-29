@@ -240,7 +240,7 @@ void action_bar_layer_init(ActionBarLayer *action_bar) {
   layer_set_clips(&action_bar->layer, true);
   action_bar->layer.update_proc = (LayerUpdateProc) action_bar_update_proc;
   action_bar->layer.property_changed_proc =
-      (PropertyChangedProc) action_bar_changed_proc;
+      (PropertyChangedProc) (void *) action_bar_changed_proc;
   action_bar->background_color = GColorBlack;
   for (unsigned int i = 0; i < NUM_ACTION_BAR_ITEMS; ++i) {
     action_bar->animation[i] = ActionBarLayerIconPressAnimationMoveLeft;

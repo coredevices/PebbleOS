@@ -213,8 +213,8 @@ void scroll_layer_set_content_offset(ScrollLayer *scroll_layer, GPoint offset, b
         .update = (AnimationUpdateImplementation) property_animation_update_gpoint,
       },
       .accessors = {
-        .setter = { .grect = (const GRectSetter) prv_scroll_layer_set_content_offset_internal, },
-        .getter = { .grect = (const GRectGetter) scroll_layer_get_content_offset, },
+        .setter = { .grect = (const GRectSetter) (void *) prv_scroll_layer_set_content_offset_internal, },
+        .getter = { .grect = (const GRectGetter) (void *) scroll_layer_get_content_offset, },
       },
     };
     if (animation) {

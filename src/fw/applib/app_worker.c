@@ -42,7 +42,7 @@ AppWorkerResult app_worker_kill(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // Subscribe to the app_message service
 bool app_worker_message_subscribe(AppWorkerMessageHandler handler) {
-  return plugin_service_subscribe(NULL, (PluginServiceHandler)handler);
+  return plugin_service_subscribe(NULL, (PluginServiceHandler)(void *)handler);
 }
 
 

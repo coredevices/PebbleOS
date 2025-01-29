@@ -23,6 +23,8 @@
 
 #include <stdio.h>
 
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+
 static const int MIN_SELECTABLE_YEAR = 2010;
 static const int MAX_SELECTABLE_YEAR = 2037;  // Work around Y2038 problem
 
