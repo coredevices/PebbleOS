@@ -32,7 +32,7 @@ def get_git_revision(ctx):
     if version_regex:
         # Get version numbers from version_regex.groups() sequence and replace None values with 0
         # e.g. v2-beta11 => ('2', None, None, 'beta11') => ('2', '0', '0')
-        version = [x if x else '0' for x in version_regex.groups()[:3]]
+        version = [x if x else '0' for x in version_regex.groups()]
     else:
         waflib.Logs.warn('get_git_revision: Invalid git tag! '
                          'Must follow this form: `v0[.0[.0]][-suffix]`')
@@ -41,7 +41,7 @@ def get_git_revision(ctx):
     # Used for pebble_pipeline payload, generate a string that contains everything after minor.
     # Force include patch as 0 if it doesn't exist.
     patch_verbose = str(version[2])
-    str_after_patch = version_regex.groups()[3]
+    str_after_patch = version[3]
     if (str_after_patch):
         patch_verbose += '-' + str_after_patch
 
