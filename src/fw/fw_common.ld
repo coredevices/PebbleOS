@@ -101,6 +101,7 @@ SECTIONS {
     {
         . = ALIGN(4);
         *(.ARM.exidx)
+        *(.ARM.exidx*)
         . = ALIGN(4);
     } >FLASH
 
