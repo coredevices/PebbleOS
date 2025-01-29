@@ -13,7 +13,7 @@ def build(bld):
                   target=target,
                   includes=['include', '.'],
                   export_includes='include',
-                  cflags=['-fno-lto'],
+                  cflags=['-fno-lto', '-fno-builtin'],
                   use='',
                   env=env.derive())
 
