@@ -70,7 +70,6 @@ definitions_file = (
 """)
 
 
-@Task.update_outputs
 class generate_resource_id_header(Task.Task):
     def run(self):
         use_extern = getattr(self, 'use_extern', False)
@@ -134,7 +133,6 @@ class generate_resource_id_header(Task.Task):
                 output_file.write('} ResourceId;')
 
 
-@Task.update_outputs
 class generate_resource_id_definitions(Task.Task):
     def run(self):
         RESOURCE_ID_DEFINITION = "uint32_t RESOURCE_ID_{} = {};"

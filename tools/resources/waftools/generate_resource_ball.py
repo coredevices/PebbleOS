@@ -27,7 +27,6 @@ class reso(Task.Task):
         reso.dump(self.outputs[0])
 
 
-@Task.update_outputs
 class resource_ball(Task.Task):
     def run(self):
         resos = [ResourceObject.load(r.abspath()) for r in self.inputs]

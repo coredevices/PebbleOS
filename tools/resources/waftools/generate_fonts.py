@@ -30,7 +30,6 @@ def get_font_keys_from_resource_ball(resource_ball_node):
     return font_keys
 
 
-@Task.update_outputs
 class generate_font_header(Task.Task):
     def run(self):
         font_keys = get_font_keys_from_resource_ball(self.inputs[0])
