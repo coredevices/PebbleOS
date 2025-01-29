@@ -72,6 +72,7 @@ static void prv_convert_seconds_to_time(uint32_t secs_after_midnight, char *text
   uint32_t minutes_after_midnight = secs_after_midnight / SECONDS_PER_MINUTE;
   uint32_t hour = minutes_after_midnight / MINUTES_PER_HOUR;
   uint32_t minute = minutes_after_midnight % MINUTES_PER_HOUR;
+#pragma GCC diagnostic ignored "-Wformat-truncation"
   snprintf(text, text_len, "%d:%02d", (int)hour, (int)minute);
 }
 

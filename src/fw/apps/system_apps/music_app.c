@@ -766,6 +766,7 @@ static void prv_copy_time_period(char *buffer, size_t n, uint32_t period_s) {
   uint32_t hours = period_s / SECONDS_PER_HOUR;
   uint32_t minutes = (period_s % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
   uint32_t seconds = period_s % SECONDS_PER_MINUTE;
+#pragma GCC diagnostic ignored "-Wformat-truncation"
   if (hours > 0) {
     snprintf(buffer, n, "%"PRIu32":%02"PRIu32":%02"PRIu32, hours, minutes, seconds);
   } else {
