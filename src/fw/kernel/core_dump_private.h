@@ -46,6 +46,8 @@
 #define CORE_DUMP_MAX_IMAGES 2
 #elif defined(MICRO_FAMILY_STM32F7)
 #define CORE_DUMP_MAX_IMAGES 3
+#elif defined(MICRO_FAMILY_NRF52840)
+#define CORE_DUMP_MAX_IMAGES 2
 #else
 #error "Unsupported micro family"
 #endif

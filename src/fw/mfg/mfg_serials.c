@@ -211,6 +211,7 @@ static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t inde
 #include "drivers/rtc.h"
 #include "system/logging.h"
 
+#if !MICRO_FAMILY_NRF5
 static void prv_get_not_so_unique_serial(char *serial_number) {
   // Contains 96 bits (12 bytes) that uniquely identify the STM32F2/F4 MCUs:
   const uint8_t *DEVICE_ID_REGISTER = (const uint8_t *) 0x1FFF7A10;
@@ -221,6 +222,7 @@ static void prv_get_not_so_unique_serial(char *serial_number) {
   }
   serial_number[MFG_SERIAL_NUMBER_SIZE] = 0;
 }
+#endif
 
 static bool prv_get_more_unique_serial(char *serial_number) {
   for (int i = 2; i < MFG_SERIAL_NUMBER_SIZE; i += 2) {
@@ -235,10 +237,14 @@ void mfg_write_bigboard_serial_number(void) {
   // Start with underscore, so it's easy to filter out from analytics:
   serial_number[0] = '_';
   serial_number[1] = 'B';
+  serial_number[2] = 0;
 
   // Check whether the previous not-so-unique SN or the no SN ("XXXXXXXXXXXX") has been written:
+#if !MICRO_FAMILY_NRF5
   prv_get_not_so_unique_serial(serial_number);
+#endif
   const char *current_serial_number = mfg_get_serial_number();
+  
   if (strcmp(current_serial_number, serial_number) &&
       strcmp(current_serial_number, DUMMY_SERIAL)) {
     return;

@@ -31,6 +31,7 @@
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 #include "FreeRTOS.h"

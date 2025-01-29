@@ -45,7 +45,11 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 
 // External Interrupts
 #define IRQ_DEF(idx, irq) ALIAS("Default_Handler") void irq##_IRQHandler(void);
-#include "irq_stm32.def"
+#if defined(MICRO_FAMILY_NRF52840)
+# include "irq_nrf52840.def"
+#else
+# include "irq_stm32.def"
+#endif
 #undef IRQ_DEF
 
 
@@ -57,7 +61,11 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
   irq##_IRQHandler();\
   profiler_node_stop(&g_profiler_node_##irq##_IRQ, DWT->CYCCNT); \
 }
-#include "irq_stm32.def"
+#if defined(MICRO_FAMILY_NRF52840)
+# include "irq_nrf52.def"
+#else
+# include "irq_stm32.def"
+#endif
 #undef IRQ_DEF
 #endif // PROFILE_INTERRUPTS
 
@@ -86,6 +94,10 @@ EXTERNALLY_VISIBLE SECTION(".isr_vector") const void * const vector_table[] = {
 #else
 #define IRQ_DEF(idx, irq) [idx + 16] = irq##_IRQHandler,
 #endif
-#include "irq_stm32.def"
+#if defined(MICRO_FAMILY_NRF52840)
+# include "irq_nrf52840.def"
+#else
+# include "irq_stm32.def"
+#endif
 #undef IRQ_DEF
 };

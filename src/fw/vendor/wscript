@@ -5,6 +5,10 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'STM32F429_439xx')
     elif conf.env.MICRO_FAMILY == 'STM32F7':
         conf.env.append_unique('DEFINES', 'STM32F779xx')
+    elif conf.env.MICRO_FAMILY == 'NRF52840':
+        conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
+        conf.env.append_unique('DEFINES', 'S140')
+        conf.env.append_unique('DEFINES', 'SOFTDEVICE_PRESENT')
     conf.recurse('FreeRTOS')
     if conf.capability('HAS_JAVASCRIPT'):
         conf.recurse('jerryscript')
@@ -20,34 +24,86 @@ def build(bld):
         else:
             excludes = ['**/stm32f4xx_fsmc.c']
 
-        stm32_sources = bld.path.ant_glob('STM32F4xx_StdPeriph_Driver/src/*.c',
+        micro_sources = bld.path.ant_glob('STM32F4xx_StdPeriph_Driver/src/*.c',
                                           excl=excludes)
 
-        stm32_includes = ['CMSIS/Include',
+        micro_includes = ['CMSIS/Include',
                           'CMSIS/Device/ST/STM32F4xx/Include',
                           'STM32F4xx_StdPeriph_Driver/inc']
 
     elif bld.env.MICRO_FAMILY == 'STM32F2':
-        stm32_sources = bld.path.ant_glob('STM32F2xx_StdPeriph_Driver/src/*.c')
+        micro_sources = bld.path.ant_glob('STM32F2xx_StdPeriph_Driver/src/*.c')
 
-        stm32_includes = ['CMSIS/Include',
+        micro_includes = ['CMSIS/Include',
                           'CMSIS/Device/ST/STM32F2xx/Include',
                           'STM32F2xx_StdPeriph_Driver/inc']
 
     elif bld.env.MICRO_FAMILY == 'STM32F7':
-        stm32_sources = bld.path.ant_glob('stm32f7haxx_stdperiph/*.c')
+        micro_sources = bld.path.ant_glob('stm32f7haxx_stdperiph/*.c')
 
-        stm32_includes = ['CMSIS/Include',
+        micro_includes = ['CMSIS/Include',
                           'CMSIS/Device/ST/STM32F7xx/Include',
                           'stm32f7haxx_stdperiph']
+    elif bld.env.MICRO_FAMILY == 'NRF52840':
+    	# nRF52 uses nrf5-sdk
+        micro_sources = bld.path.ant_glob('nrf5-sdk/modules/nrfx/**/*.c', excl = ['**/system_nrf*.c', '**/startup_nrf_common.c', '**/nrfx_twi_twim.c', '**/nrfx_uarte.c'])
+        micro_sources.append('nrf5-sdk-uarte-backport/nrfx_uarte.c')
+        
+        nrf52_bluetooth_sources = [
+            'components/libraries/util/app_util_platform.c',
+            'components/libraries/experimental_section_vars/nrf_section_iter.c',
+            'components/softdevice/common/nrf_sdh.c',
+            'components/softdevice/common/nrf_sdh_ble.c',
+            'components/ble/nrf_ble_gatt/nrf_ble_gatt.c',
+            'components/ble/common/ble_advdata.c',
+            'components/ble/common/ble_srv_common.c',
+            'components/ble/nrf_ble_qwr/nrf_ble_qwr.c',
+            'components/ble/nrf_ble_gq/nrf_ble_gq.c',
+            'components/libraries/memobj/nrf_memobj.c',
+            'components/libraries/queue/nrf_queue.c',
+            'components/libraries/balloc/nrf_balloc.c',
+            'components/libraries/atomic/nrf_atomic.c',
+            'components/ble/ble_db_discovery/ble_db_discovery.c',
+            'components/libraries/util/app_util_platform.c',
+        ]
+        micro_sources += [ "nrf5-sdk/" + f for f in nrf52_bluetooth_sources ]
+ 
+        micro_includes = [
+            'CMSIS/Include',
+            'nrf5-sdk-uarte-backport/',
+            'nrf5-sdk/modules/nrfx/',
+            'nrf5-sdk/modules/nrfx/mdk',
+            'nrf5-sdk/modules/nrfx/drivers/include',
+            'nrf5-sdk/components/softdevice/mbr/headers',
+            'nrf5-sdk/components/ble/common',
+            'nrf5-sdk/components/ble/nrf_ble_gatt',
+            'nrf5-sdk/components/ble/nrf_ble_qwr',
+            'nrf5-sdk/components/ble/nrf_ble_gq',
+            'nrf5-sdk/components/ble/ble_db_discovery',
+            'nrf5-sdk/components/softdevice/s140/headers',
+            'nrf5-sdk/components/softdevice/common',
+            'nrf5-sdk/components/libraries/util',
+            'nrf5-sdk/components/libraries/log',
+            'nrf5-sdk/components/libraries/log/src',
+            'nrf5-sdk/components/libraries/experimental_section_vars',
+            'nrf5-sdk/components/libraries/memobj',
+            'nrf5-sdk/components/libraries/queue',
+            'nrf5-sdk/components/libraries/balloc',
+            'nrf5-sdk/components/libraries/atomic',
+            'nrf5-sdk/components/libraries/strerror',
+        ]
+
     else:
         bld.fatal("No microcontroller family set for this build")
 
-    bld.stlib(source=stm32_sources,
+    # this is used everywhere else named 'stm32_stdlib', so for now, we'll
+    # keep it this way, even though it actually refers to many other kinds
+    # of micros
+    bld.stlib(source=micro_sources,
               target='stm32_stdlib',
               use='pblibc',
               # Parent dir is included for stm32fxxx_conf.h
-              includes=stm32_includes + ['..'],
-              export_includes=stm32_includes)
+              includes=micro_includes + ['..'],
+              export_includes=micro_includes)
 
 # vim:filetype=python

@@ -1,5 +1,5 @@
 mcu_family = bld.env.MICRO_FAMILY
-if mcu_family not in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family not in ('STM32F2', 'STM32F4', 'STM32F7', 'NRF52840'):
     bld.fatal('src/fw/drivers/wscript: '
               'Unknown MICRO_FAMILY {}'.format(mcu_family))
 
@@ -559,7 +559,7 @@ elif mcu_family == 'STM32F4':
             'root_includes',
         ],
     )
-else:
+elif mcu_family == 'STM32F2':
     bld.objects(
         name='driver_pwr',
         source=[
@@ -782,7 +782,7 @@ if bld.capability('HAS_MICROPHONE'):
 
 
 # FIXME: make generic to Cortex-M
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7', 'NRF52840'):
     bld.objects(
         name='driver_mpu',
         source=[
@@ -1147,6 +1147,57 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'stm32f2/watchdog.c',
         ],
         use=[
+            'fw_includes',
+            'root_includes',
+            'stm32_stdlib',
+        ],
+    )
+
+if mcu_family == 'NRF52840':
+    # XXX: factor this into... drivers
+    bld.objects(
+        name='driver_nrf52',
+        source=[
+            'nrf5/stubs/rtc.c',
+            'nrf5/stubs/rng.c',
+            'flash/flash_api.c',
+            'flash/flash_crc.c',
+            'flash/flash_erase.c',
+            'flash/cd_flash_driver.c',
+            'battery/battery_common.c',
+            'nrf5/stubs/battery.c',
+            'flash/xt25f64b.c',
+            'nrf5/qspi.c',
+            'task_watchdog.c',
+            'nrf5/stubs/watchdog.c',
+            'display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c',
+            'nrf5/stubs/accel.c',
+            'nrf5/stubs/ambient_light.c',
+            'nrf5/stubs/vibe.c',
+            'i2c.c',
+            'nrf5/stubs/otp.c',
+            'nrf5/stubs/mcu.c',
+            'backlight.c',
+            'nrf5/button.c',
+            'nrf5/debounced_button.c',
+            'nrf5/stubs/voltage_monitor.c',
+            'imu/imu_asterix.c',
+            'nrf5/stubs/temperature.c',
+            'nrf5/stubs/periph_config.c',
+            'nrf5/stubs/gpio_defaults.c',
+            'nrf5/exti_nrf52.c',
+            'nrf5/uart.c',
+            'nrf5/gpio.c',
+            'nrf5/i2c_hal.c',
+            'nrf5/spi.c',
+            'nrf5/pwm.c',
+        ],
+        use=[
+            'driver_clocksource',
+            'driver_gpio',
+            'driver_pwr',
+            'driver_periph_config',
+            'freertos',
             'fw_includes',
             'root_includes',
             'stm32_stdlib',

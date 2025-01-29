@@ -187,6 +187,8 @@ def add_platform_defines(ctx, env):
                     'MICRO_FAMILY_{}=1'.format(env.MICRO_FAMILY),
                     'SCREEN_COLOR_DEPTH_BITS={}'.format(bit_depth),
                     'MIN_SDK_VERSION={}'.format(env.MIN_SDK_VERSION)])
+    if 'NRF5' in env.MICRO_FAMILY:
+        env.append_value('DEFINES', 'MICRO_FAMILY_NRF5=1')
 
     for cap, val in ctx.capabilities_dict().iteritems():
         env.append_value('DEFINES', "CAPABILITY_%s=%s" % (cap, int(val)))

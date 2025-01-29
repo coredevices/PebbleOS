@@ -36,6 +36,7 @@
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 #define VALID_CORR_MARKER            0x5644
@@ -83,11 +84,14 @@ static AccelRawData s_accel_data = { 0 };
 // Private calibration handlers
 
 static void prv_reset_saved_sample(void) {
+#if !MICRO_FAMILY_NRF5
   RTC_WriteBackupRegister(MAG_Z_CORRECTION_VAL, 0x0);
+#endif
   s_saved_corr_present = false;
 }
 
 static void prv_save_calibration_values(int16_t *corr) {
+#if !MICRO_FAMILY_NRF5
   // first zero out the valid marker
   prv_reset_saved_sample();
 
@@ -103,11 +107,15 @@ static void prv_save_calibration_values(int16_t *corr) {
     s_saved_corr[i] = corr[i];
   }
   s_saved_corr_present = true;
+#endif
 }
 
 // Loads the calibration values.  Returns true if loads successfully,
 // otherwise false.
 static bool prv_load_calibration_values(void) {
+#if MICRO_FAMILY_NRF5
+  return false;
+#else
   uint32_t valxy = RTC_ReadBackupRegister(MAG_XY_CORRECTION_VALS);
   uint32_t valz = RTC_ReadBackupRegister(MAG_Z_CORRECTION_VAL);
 
@@ -121,6 +129,7 @@ static bool prv_load_calibration_values(void) {
   }
 
   return (is_valid);
+#endif
 }
 
 static void prv_get_roll_and_pitch(AccelRawData *d, int32_t *rollp,

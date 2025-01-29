@@ -41,7 +41,7 @@ static bool s_stop_mode_inhibited = false;
 
 //! We DMA into this buffer as a circular buffer
 #define DMA_BUFFER_LENGTH (200)
-static uint8_t DMA_BSS s_dma_buffer[DMA_BUFFER_LENGTH];
+static uint8_t DMA_BSS s_dma_buffer[DMA_BUFFER_LENGTH] __attribute__((aligned(4)));
 static bool s_dma_enabled = false;
 
 

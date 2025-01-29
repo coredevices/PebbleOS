@@ -837,6 +837,8 @@ def size_resources(ctx):
         max_size = 512 * 1024
     elif ctx.env.MICRO_FAMILY == 'STM32F7':
         max_size = 1024 * 1024
+    elif ctx.env.MICRO_FAMILY == 'NRF52840':
+        max_size = 512 * 1024
     else:
         max_size = 256 * 1024
 
@@ -1583,6 +1585,8 @@ def _check_firmware_image_size(ctx, path):
         else:
             # 2048k of flash and 32k bootloader
             max_firmware_size = (2048 - 32) * BYTES_PER_K
+    elif ctx.env.MICRO_FAMILY == 'NRF52840':
+        max_firmware_size = (1024 - 128) * BYTES_PER_K
     else:
         ctx.fatal('Cannot check firmware size against unknown micro family "{}"'
                   .format(ctx.env.MICRO_FAMILY))

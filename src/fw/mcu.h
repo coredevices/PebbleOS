@@ -48,6 +48,23 @@
 #  error "Source is incompatible with the target MCU"
 # endif
 # include <stm32f7xx.h>
+#elif defined(MICRO_FAMILY_NRF52840)
+# if !defined(NRF52840_COMPATIBLE) && !defined(CMSIS_COMPATIBLE) && !defined(NRF5_COMPATIBLE)
+#  error "Source is incompatible with the target MCU"
+# endif
+# pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wmissing-declarations"
+#  ifdef UNUSED
+/* bleh */
+#   define HAD_UNUSED
+#   undef UNUSED
+#  endif
+#  include <nrf52840.h>
+#  ifdef HAD_UNUSED
+#   define UNUSED __attribute__((__unused__))
+#   undef HAD_UNUSED
+#  endif
+# pragma GCC diagnostic pop
 #elif !defined(SDK) && !defined(UNITTEST)
 # error "Unknown or missing MICRO_FAMILY_* define"
 #endif
@@ -56,3 +73,5 @@
 #undef STM32F2_COMPATIBLE
 #undef STM32F4_COMPATIBLE
 #undef STM32F7_COMPATIBLE
+#undef NRF52840_COMPATIBLE
+#undef NRF5_COMPATIBLE

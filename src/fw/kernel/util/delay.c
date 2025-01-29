@@ -21,9 +21,24 @@
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 #include <inttypes.h>
+
+#if MICRO_FAMILY_NRF5
+
+#include <drivers/nrfx_common.h>
+#include <soc/nrfx_coredep.h>
+
+void NOINLINE delay_us(uint32_t us) {
+  nrfx_coredep_delay_us(us);
+}
+
+void delay_init(void) {
+}
+
+#else
 
 #if MICRO_FAMILY_STM32F7
 # define INSTRUCTIONS_PER_LOOP   (1)
@@ -86,3 +101,5 @@ void delay_init(void) {
     s_loops_per_us += 1;
   }
 }
+
+#endif

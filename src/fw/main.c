@@ -102,6 +102,7 @@
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 #include "FreeRTOS.h"
@@ -115,6 +116,13 @@
 #include <bluetooth/init.h>
 
 #include <string.h>
+
+#if MICRO_FAMILY_NRF52840
+#include "nrf_sdm.h"
+#endif
+
+/* here is as good as anywhere else ... */
+const int __attribute__((used)) uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
 static TimerID s_lowpower_timer = TIMER_INVALID_ID;
 static TimerID s_uptime_timer = TIMER_INVALID_ID;
@@ -183,9 +191,13 @@ int main(void) {
 #endif
 
   extern void * __ISR_VECTOR_TABLE__;  // Defined in linker script
+#if MICRO_FAMILY_NRF52840
+  sd_softdevice_vector_table_base_set((uint32_t)&__ISR_VECTOR_TABLE__);
+#else
   SCB->VTOR = (uint32_t)&__ISR_VECTOR_TABLE__;
 
   NVIC_SetPriorityGrouping(3); // 4 bits for group priority; 0 bits for subpriority
+#endif
 
   enable_fault_handlers();
 
@@ -245,9 +257,13 @@ int main(void) {
   stop_mode_disable(InhibitorMain);
 
   // Turn off power to internal flash when in stop mode
+#if !MICRO_FAMILY_NRF5
   periph_config_enable(PWR, RCC_APB1Periph_PWR);
+#endif
   pwr_flash_power_down_stop_mode(true /* power_down */);
+#if !MICRO_FAMILY_NRF5
   periph_config_disable(PWR, RCC_APB1Periph_PWR);
+#endif
 
   vTaskStartScheduler();
   for(;;);

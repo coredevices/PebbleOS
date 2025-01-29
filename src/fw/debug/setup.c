@@ -23,22 +23,31 @@
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 void enable_mcu_debugging(void) {
 #ifndef RELEASE
+#if defined(MICRO_FAMILY_NRF52840)
+//  NRF_APPROTECT->APPROTECT.DISABLE = 1;
+#else
   DBGMCU_Config(DBGMCU_SLEEP | DBGMCU_STOP, ENABLE);
   // Stop RTC, IWDG & TIM2 during debugging
   // Note: TIM2 is used by the task watchdog
   DBGMCU_APB1PeriphConfig(DBGMCU_RTC_STOP | DBGMCU_TIM2_STOP | DBGMCU_IWDG_STOP,
                           ENABLE);
 #endif
+#endif
 }
 
 void disable_mcu_debugging(void) {
+#if defined(MICRO_FAMILY_NRF52840)
+//  NRF_APPROTECT->APPROTECT.DISABLE = 0;
+#else
   DBGMCU->CR = 0;
   DBGMCU->APB1FZ = 0;
   DBGMCU->APB2FZ = 0;
+#endif
 }
 
 void command_low_power_debug(char *cmd) {

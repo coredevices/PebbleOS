@@ -30,6 +30,7 @@
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
+#define NRF5_COMPATIBLE
 #include <mcu.h>
 
 #include <stdbool.h>
@@ -53,6 +54,22 @@ typedef struct {
 // they are read and modified by multiple threads
 static InhibitorTickProfile s_inhibitor_profile[InhibitorNumItems];
 
+#if MICRO_FAMILY_NRF5
+void enter_stop_mode(void) {
+  dbgserial_enable_rx_exti();
+
+  flash_power_down_for_stop_mode();
+
+  /* XXX(nrf5): LATER: have MPSL turn off HFCLK */
+
+  __DSB(); // Drain any pending memory writes before entering sleep.
+  do_wfi(); // Wait for Interrupt (enter sleep mode). Work around F2/F4 errata.
+  __ISB(); // Let the pipeline catch up (force the WFI to activate before moving on).
+
+  flash_power_up_after_stop_mode();
+
+}
+#else /* STM32 */
 void enter_stop_mode(void) {
   // enable the interrupt on the debug RX line so that we can use the serial
   // console even when we are in stop mode.
@@ -126,6 +143,7 @@ void enter_stop_mode(void) {
 
   flash_power_up_after_stop_mode();
 }
+#endif
 
 void stop_mode_disable( StopModeInhibitor inhibitor ) {
   portENTER_CRITICAL();
