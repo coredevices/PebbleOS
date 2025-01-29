@@ -379,7 +379,12 @@ def _create_cm0_env(conf):
                '-Wall', '-Wextra', '-Werror', '-Wpointer-arith',
                '-Wno-unused-parameter', '-Wno-missing-field-initializers',
                '-Wno-error=unused-parameter',
-               '-Wno-packed-bitfield-compat']
+               '-Wno-error=unused-const-variable',
+               '-Wno-packed-bitfield-compat',
+               '-Wno-address-of-packed-member',
+               '-Wno-expansion-to-defined',
+               '-Wno-enum-int-mismatch',
+               '-Wno-enum-conversion']
 
     conf.find_program('arm-none-eabi-gcc', var='CC', mandatory=True)
     conf.env.AS = conf.env.CC
@@ -553,12 +558,14 @@ def configure(conf):
 
     conf.env.CLAR_DIR = conf.path.make_node('tools/clar/').abspath()
     conf.env.CFLAGS = [ '-std=c11',
-
                         '-Wall',
                         '-Werror',
                         '-Wno-error=unused-variable',
                         '-Wno-error=unused-function',
                         '-Wno-error=missing-braces',
+                        '-Wno-error=unused-const-variable',
+                        '-Wno-error=address-of-packed-member',
+                        '-Wno-enum-conversion',
 
                         '-g3',
                         '-gdwarf-4',

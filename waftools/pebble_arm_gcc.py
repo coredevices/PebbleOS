@@ -130,7 +130,8 @@ def configure(conf):
                    '-Wno-missing-field-initializers',
                    '-Wno-error=unused-function',
                    '-Wno-error=unused-variable',
-                   '-Wno-error=unused-parameter' ]
+                   '-Wno-error=unused-parameter',
+                   '-Wno-error=unused-const-variable', ]
 
     if conf.using_clang_compiler():
       sysroot_path = find_sysroot_path(conf)
@@ -155,8 +156,14 @@ def configure(conf):
       # These warnings only exist in GCC
       c_warnings.append('-Wno-error=unused-but-set-variable')
       c_warnings.append('-Wno-packed-bitfield-compat')
+      
+      # compatibility with the future; at some point we should take this out
+      c_warnings.append('-Wno-address-of-packed-member')
+      c_warnings.append('-Wno-enum-int-mismatch')
+      c_warnings.append('-Wno-expansion-to-defined')
+      c_warnings.append('-Wno-enum-conversion')
 
-      if not ('4', '8') <= conf.env.CC_VERSION <= ('4', '9', '3'):
+      if not ('13', '0') <= conf.env.CC_VERSION <= ('14', '0', '0'):
         # Verify the toolchain we're using is allowed. This is to prevent us from accidentally
         # building and releasing firmwares that are built in ways we haven't tested.
 
