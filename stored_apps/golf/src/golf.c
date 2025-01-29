@@ -15,6 +15,8 @@
  */
 
 //! The app is driven by pebble protocol app_messages, used indirectly through app_sync.
+#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
+#include <sys/types.h>
 #include <pebble.h>
 
 #include "golf_resources.h"
