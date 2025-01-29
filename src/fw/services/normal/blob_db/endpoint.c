@@ -60,7 +60,7 @@
 //! BlobDB Endpoint ID
 static const uint16_t BLOB_DB_ENDPOINT_ID = 0xb1db;
 
-static const uint8_t KEY_DATA_LENGTH = (sizeof(uint8_t) + sizeof(uint8_t));
+static const uint8_t KEY_DATA_LENGTH __attribute__((unused)) = (sizeof(uint8_t) + sizeof(uint8_t));
 static const uint8_t VALUE_DATA_LENGTH = (sizeof(uint16_t) + sizeof(uint8_t));
 
 //! Message Length Constants

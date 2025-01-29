@@ -177,6 +177,7 @@ void compositor_render_app(void) {
     bitblt_bitmap_into_bitmap(&dest_bitmap, &src_bitmap, GPointZero, GCompOpAssign, GColorWhite);
 #endif
   } else {
+#if PBL_COLOR
     // On Robert, we support running older apps which have a smaller framebuffer in "bezel mode"
     // where we center them and draw a black bezel around them. Using memset to set the bezel to
     // black and using memcpy to copy the app framebuffer into the center is the fastest method
@@ -227,6 +228,7 @@ void compositor_render_app(void) {
     const int bottom_bezel_length = (uintptr_t)&s_framebuffer.buffer[DISP_ROWS * DISP_COLS] -
                                     (uintptr_t)dst;
     memset(dst, GColorBlack.argb, bottom_bezel_length);
+#endif
   }
 
   if (s_state == CompositorState_AppAndModal) {

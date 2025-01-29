@@ -71,7 +71,7 @@ void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID);
 bool bt_persistent_storage_get_ble_pairing_by_id(BTBondingID bonding,
                                                  SMIdentityResolvingKey *IRK_out,
                                                  BTDeviceInternal *device_out,
-                                                 char name[BT_DEVICE_NAME_BUFFER_SIZE]);
+                                                 char *name_out);
 
 bool bt_persistent_storage_get_ble_pairing_by_addr(const BTDeviceInternal *device,
                                                    SMIdentityResolvingKey *IRK_out,

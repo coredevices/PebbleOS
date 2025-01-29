@@ -154,5 +154,5 @@ void bt_local_id_generate_address_from_serial(BTDeviceAddress *addr_out) {
     *addr_out = fallback_addr;
   }
 
-  memcpy(addr_out, (uint8_t *)addr_out, sizeof(*addr_out));
+  /* memcpy(addr_out, (uint8_t *)addr_out, sizeof(*addr_out)); */
 }

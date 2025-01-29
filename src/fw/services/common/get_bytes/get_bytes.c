@@ -220,6 +220,7 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state,
   switch (cmd) {
     case GET_BYTES_CMD_GET_NEW_COREDUMP:
       info.only_get_new_coredump = true;
+      /* FALLTHRU */
     case GET_BYTES_CMD_GET_COREDUMP:
       state->object_type = GetBytesObjectCoredump;
       return gb_storage_setup(&state->storage, state->object_type, &info);
