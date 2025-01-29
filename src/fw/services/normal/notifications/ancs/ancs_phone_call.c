@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-﻿#include "ancs_phone_call.h"
+#include "ancs_phone_call.h"
 
 #include "applib/graphics/utf8.h"
 #include "kernel/events.h"

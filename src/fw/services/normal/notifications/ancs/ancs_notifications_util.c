@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-﻿#include "ancs_notifications_util.h"
+#include "ancs_notifications_util.h"
 
 #include "drivers/rtc.h"
 #include "resource/timeline_resource_ids.auto.h"

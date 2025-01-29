@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-﻿#pragma once
+#pragma once
 
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 

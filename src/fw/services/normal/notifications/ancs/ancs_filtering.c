@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-﻿#include "ancs_filtering.h"
+#include "ancs_filtering.h"
 
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
