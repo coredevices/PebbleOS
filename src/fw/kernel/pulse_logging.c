@@ -259,7 +259,7 @@ void *pulse_logging_log_sync_begin(
 
 void pulse_logging_log_sync_append(void *ctx, const char *message) {
   MessageContents *contents = ctx;
-  strncat(contents->message, message, sizeof(contents->message));
+  strncat(contents->message, message, sizeof(contents->message) - strlen(contents->message) - 1);
 }
 
 void pulse_logging_log_sync_send(void *ctx) {

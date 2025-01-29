@@ -39,7 +39,7 @@ void fw_reset_into_prf(void) {
   prv_reset_into_prf();
 }
 
-static const uint8_t s_prf_reset_cmd = 0xff;
+static const uint8_t s_prf_reset_cmd __attribute__((unused)) = 0xff;
 
 typedef enum {
   ResetCmdNormal = 0x00,
