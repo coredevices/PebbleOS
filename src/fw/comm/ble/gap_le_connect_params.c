@@ -115,8 +115,8 @@ static const GAPLEConnectRequestParams s_default_connection_params_table[NumResp
   },
   [ResponseTimeMin] = {
     .slave_latency_events = 0, // Not using Slave Latency
-    .connection_interval_min_1_25ms = 9,  // Min. allowed by iOS
-    .connection_interval_max_1_25ms = 17,
+    .connection_interval_min_1_25ms = 15,  // Min. allowed by iOS
+    .connection_interval_max_1_25ms = 30,
     .supervision_timeout_10ms = 600,
   },
 };
