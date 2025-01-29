@@ -182,7 +182,7 @@ interrupt count respectively. */
     configASSERT(!vPortInCritical() && !mcu_state_is_isr())
 
   #define configASSERT_SAFE_TO_CALL_FREERTOS_FROMISR_API()            \
-    configASSERT(!mcu_state_is_isr() || mcu_state_get_isr_priority() >= (configMAX_SYSCALL_INTERRUPT_PRIORITY >> 4))
+    configASSERT(!mcu_state_is_isr() || mcu_state_get_isr_priority() >= (configMAX_SYSCALL_INTERRUPT_PRIORITY >> (8U - __NVIC_PRIO_BITS)))
 
 #else
   #define configASSERT_SAFE_TO_CALL_FREERTOS_API()           
