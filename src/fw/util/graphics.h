@@ -36,7 +36,7 @@ static ALWAYS_INLINE uint8_t raw_image_get_value_for_bitdepth(const uint8_t *raw
   uint32_t pixel_index =  y * (row_stride_bytes * 8 / bitdepth) + x;
   // Shift and mask the requested pixel data from the byte containing it and return
   return (uint8_t)((pixel_in_byte >> ((((8 / bitdepth) - 1) - (pixel_index % (8 / bitdepth)))
-          * bitdepth)) & ~(~0 << bitdepth));
+          * bitdepth)) & ~(~0U << bitdepth));
 }
 
 //! This function sets a pixel value for a specific bits-per-pixel depth in an image buffer
@@ -62,7 +62,7 @@ static ALWAYS_INLINE void raw_image_set_value_for_bitdepth(uint8_t *raw_image_bu
   const uint32_t pixel_index =  (y * (row_stride_bytes * pixels_per_byte) + x) % pixels_per_byte;
 
   // For example, bitdepth=1 -> bitdepth_mask=0b1, bitdepth=2 -> bitdepth_mask=0b11, etc.
-  const uint8_t bitdepth_mask = (uint8_t)~(~0 << bitdepth);
+  const uint8_t bitdepth_mask = (uint8_t)~(~0U << bitdepth);
 
   const uint32_t bits_to_shift = (pixels_per_byte - 1 - pixel_index) * bitdepth;
 

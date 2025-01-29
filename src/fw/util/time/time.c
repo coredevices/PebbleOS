@@ -226,7 +226,7 @@ int time_util_get_seconds_until_daily_time(struct tm *time, int hour, int minute
 }
 
 void time_util_update_timezone(const TimezoneInfo *tz_info) {
-  strncpy(s_timezone_abbr, tz_info->tm_zone, sizeof(tz_info->tm_zone));
+  strncpy(s_timezone_abbr, tz_info->tm_zone, sizeof(tz_info->tm_zone) + 0);
   s_timezone_abbr[TZ_LEN - 1] = '\0';
   s_timezone_gmtoffset = tz_info->tm_gmtoff;
   s_dst_start = tz_info->dst_start;
