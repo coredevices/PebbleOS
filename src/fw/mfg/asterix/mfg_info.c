@@ -1,19 +1,3 @@
-/*
- * Copyright 2024 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #include "mfg/mfg_info.h"
 
 #include "drivers/flash.h"
@@ -23,7 +7,7 @@
 #include "system/logging.h"
 
 //! Used to version this struct if we have to add additional fields in the future.
-#define CURRENT_DATA_VERSION 2
+#define CURRENT_DATA_VERSION 3
 
 typedef struct {
   uint32_t data_version;
@@ -31,12 +15,14 @@ typedef struct {
   uint32_t color;
   uint32_t rtc_freq;
   char model[MFG_INFO_MODEL_STRING_LENGTH]; //!< Null terminated model string
+
+  bool test_results[MfgTestCount]; //!< UI Test Results
+  uint32_t als_result; //!< Result for ALS reading
 } MfgData;
 
 static void prv_update_struct(const MfgData *data) {
   flash_erase_subsector_blocking(FLASH_REGION_MFG_INFO_BEGIN);
   flash_write_bytes((const uint8_t*) data, FLASH_REGION_MFG_INFO_BEGIN, sizeof(*data));
-  mfg_info_write_boot_fpga_bitstream();
 }
 
 static MfgData prv_fetch_struct(void) {
@@ -52,6 +38,11 @@ static MfgData prv_fetch_struct(void) {
       // Our data is out of date. We need to do a conversion to populate the new model field.
       result.data_version = CURRENT_DATA_VERSION;
       result.model[0] = '\0';
+      break;
+    case 2:
+      result.data_version = CURRENT_DATA_VERSION;
+      memset(result.test_results, 0, sizeof(result.test_results));
+      result.als_result = 0;
       break;
     default:
       // No data present, just return an initialized struct with default values.
@@ -104,10 +95,57 @@ void mfg_info_set_disp_offsets(GPoint p) {
 }
 
 void mfg_info_update_constant_data(void) {
-  if (mfg_info_is_boot_fpga_bitstream_written()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Boot FPGA bitstream already in flash.");
-  } else {
-    PBL_LOG(LOG_LEVEL_INFO, "Writing boot FPGA bitstream to flash...");
-    mfg_info_write_boot_fpga_bitstream();
-  }
+  // Not implemented
 }
+
+#if CAPABILITY_HAS_BUILTIN_HRM
+bool mfg_info_is_hrm_present(void) {
+#if defined(TARGET_QEMU) || defined(IS_BIGBOARD)
+  return true;
+#else
+  char model[MFG_INFO_MODEL_STRING_LENGTH];
+  mfg_info_get_model(model);
+  if (!strcmp(model, "1002")) { // SilkHR
+    return true;
+  }
+  return false;
+#endif
+}
+#endif
+
+#if MFG_INFO_RECORDS_TEST_RESULTS
+void mfg_info_write_test_result(MfgTest test, bool pass) {
+  MfgData data = prv_fetch_struct();
+  data.test_results[test] = pass;
+  prv_update_struct(&data);
+}
+
+bool mfg_info_get_test_result(MfgTest test) {
+  MfgData data = prv_fetch_struct();
+  return data.test_results[test];
+}
+
+#include "console/prompt.h"
+#define TEST_RESULT_TO_STR(test) ((data.test_results[(test)]) ? "PASS" : "FAIL")
+void command_mfg_info_test_results(void) {
+  MfgData data = prv_fetch_struct();
+  char buf[32];
+  prompt_send_response_fmt(buf, 32, "Vibe: %s", TEST_RESULT_TO_STR(MfgTest_Vibe));
+  prompt_send_response_fmt(buf, 32, "LCM: %s", TEST_RESULT_TO_STR(MfgTest_Display));
+  prompt_send_response_fmt(buf, 32, "ALS: %s", TEST_RESULT_TO_STR(MfgTest_ALS));
+  prompt_send_response_fmt(buf, 32, "Buttons: %s", TEST_RESULT_TO_STR(MfgTest_Buttons));
+
+  prompt_send_response_fmt(buf, 32, "ALS Reading: %"PRIu32, data.als_result);
+}
+
+void mfg_info_write_als_result(uint32_t reading) {
+  MfgData data = prv_fetch_struct();
+  data.als_result = reading;
+  prv_update_struct(&data);
+}
+
+uint32_t mfg_info_get_als_result(void) {
+  MfgData data = prv_fetch_struct();
+  return data.als_result;
+}
+#endif
