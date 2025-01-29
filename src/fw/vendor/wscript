@@ -71,7 +71,7 @@ def build(bld):
         micro_sources += [ "nrf5-sdk/" + f for f in nrf52_bluetooth_sources ]
  
         micro_includes = [
-            'CMSIS/Include',
+            'CMSIS/CMSIS/Core/Include',
             'nrf5-sdk-uarte-backport/',
             'nrf5-sdk/modules/nrfx/',
             'nrf5-sdk/modules/nrfx/mdk',
