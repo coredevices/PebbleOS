@@ -110,7 +110,6 @@ void bt_local_id_copy_address_mac_string(char addr_mac_str_out[BT_DEVICE_ADDRESS
 T_STATIC void prv_generate_address(BTDeviceAddress *addr_out) {
   const char *serial = mfg_get_serial_number();
   const uint32_t full_len = strlen(serial);
-  const uint32_t half_len = (full_len / 2);
 
   // Hash of the normal serial
   const uint32_t serial_hash = hash((uint8_t *)serial, full_len);

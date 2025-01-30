@@ -67,9 +67,6 @@
 static void prv_card_render(NotificationLayout *layout, GContext *ctx, bool render);
 static const LayoutColors *prv_layout_get_colors(const LayoutLayer *layout);
 
-static const GTextAlignment prv_alignment =
-  PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentCenter);
-
 static time_t prv_get_parent_timestamp(TimelineItem *reminder) {
   TimelineItem pin;
   if (S_SUCCESS != pin_db_get(&reminder->header.parent_id, &pin)) {
@@ -411,6 +408,7 @@ static void NOINLINE prv_init_view(NotificationLayout *layout) {
 #endif
 }
 
+#if PBL_ROUND
 static void prv_hide_or_show_banner_icon(KinoLayer *icon_layer,
                                          const GRect *notification_layout_frame) {
   const int32_t frame_too_high_for_icon_threshold = -2;
@@ -420,7 +418,9 @@ static void prv_hide_or_show_banner_icon(KinoLayer *icon_layer,
       (notification_layout_frame->origin.y > top_banner_not_visible_threshold);
   layer_set_hidden(&icon_layer->layer, icon_hidden);
 }
+#endif
 
+#if PBL_ROUND
 static CONST_FUNC int32_t prv_interpolate_linear(int32_t out_min, int32_t out_max, int32_t in_min,
                                                  int32_t in_max, int32_t progress) {
   return out_min + (out_max - out_min) * (progress - in_min) / (in_max - in_min);
@@ -458,6 +458,7 @@ static void prv_draw_banner_round(NotificationLayout *notification_layout, GCont
   ctx->draw_state.clip_box.origin.y = saved_clip_box_origin_y;
   ctx->draw_state.clip_box.size.h = saved_clip_box_size_h;
 }
+#endif
 
 static NOINLINE void prv_card_render_internal(NotificationLayout *layout, GContext *ctx,
                                               bool render) {

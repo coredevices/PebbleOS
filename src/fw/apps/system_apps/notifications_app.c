@@ -337,9 +337,6 @@ static void prv_draw_pdc_bw_inverted(GContext *ctx, GDrawCommandImage *image, GP
 //////////////
 // MenuLayer callbacks
 
-static const uint8_t BAR_PX = 9;
-static const uint8_t BAR_SELECTED_PX = 12;
-
 static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_layer,
                                             const char *title, const char *subtitle,
                                             GDrawCommandImage *icon) {
@@ -437,6 +434,7 @@ void prv_draw_notification_cell_round(GContext *ctx, const Layer *cell_layer, GR
   }
 }
 
+#if PBL_ROUND
 static void prv_draw_notification_cell_round_selected(GContext *ctx, const Layer *cell_layer,
                                                       const char *title, const char *subtitle,
                                                       GDrawCommandImage *icon) {
@@ -473,6 +471,7 @@ static void prv_draw_notification_cell_round_unselected(GContext *ctx, const Lay
   const GFont font = system_theme_get_font_for_default_size(TextStyleFont_Header);
   prv_draw_notification_cell_round(ctx, cell_layer, &frame, font, title, NULL, NULL, NULL);
 }
+#endif
 
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
                                 void *data) {

@@ -756,9 +756,6 @@ static inline void prv_walk_lines_down(Iterator* const line_iter, TextLayout* co
       }
     }
 
-    // PBL-23045 Eventually remove perimeter debugging
-    GRangeHorizontal debug_perimeter_horizontal_range = {};
-
     // If we are restricting the perimeter of the draw box, restrict per line region here
     if (uses_perimeter) {
       GRangeHorizontal text_horizontal_range = {.origin_x = line_in_perimeter_space.x,

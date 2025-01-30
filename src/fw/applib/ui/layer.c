@@ -61,12 +61,14 @@ Layer* layer_create_with_data(GRect frame, size_t data_size) {
   return layer;
 }
 
+#if CAPABILITY_HAS_TOUCHSCREEN
 static bool prv_destroy_recognizer(Recognizer *recognizer, void *context) {
   Layer *layer = context;
   layer_detach_recognizer(layer, recognizer);
   recognizer_destroy(recognizer);
   return true;
 }
+#endif
 
 void layer_deinit(Layer *layer) {
   if (!layer) {

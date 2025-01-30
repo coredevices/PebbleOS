@@ -1237,23 +1237,6 @@ static void prv_push_nap_session(time_t now_utc, ActivitySession *session) {
   }
 }
 
-
-// -----------------------------------------------------------------------------------------
-static void prv_do_nap_session(time_t now_utc, ActivitySession *session) {
-  if (s_nap_pin_state.last_triggered_utc >= session->start_utc) {
-    INSIGHTS_LOG_DEBUG("Not adding nap pin - already added");
-    return;
-  }
-
-  s_nap_pin_state.last_triggered_utc = session->start_utc;
-
-  prv_save_state(ActivitySettingsKeyInsightNapSessionTime,
-                 &s_nap_pin_state.last_triggered_utc,
-                 sizeof(s_nap_pin_state.last_triggered_utc));
-
-  prv_push_nap_session(now_utc, session);
-}
-
 // -----------------------------------------------------------------------------------------
 static void prv_do_sleep_notification(time_t now_utc, time_t sleep_exit_utc,
                                       int32_t sleep_total_seconds) {

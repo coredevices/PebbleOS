@@ -182,6 +182,7 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
 #endif // UNITTEST
 };
 
+#if 0  // TODO: PBL-21864 - Disconnect BT Classic when PPoGATT is used
 // Disconnect BT Classic (for iAP) if connected and make this LE device the active gateway,
 // to prevent that iAP gets reconnected in the future:
 static void prv_set_active_gateway_and_disconn_bt_classic(const BTDeviceInternal *gateway_device) {
@@ -206,6 +207,7 @@ static void prv_set_active_gateway_and_disconn_bt_classic(const BTDeviceInternal
   bt_driver_classic_disconnect(NULL);
   bt_unlock();
 }
+#endif
 
 static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *services_removed) {
   PebbleBLEGATTClientServiceHandles *service_remove_info = &services_removed->handles[0];

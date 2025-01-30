@@ -31,6 +31,7 @@
 
 #define VOICE_CONTROL_ENDPOINT (11000)
 
+#if CAPABILITY_HAS_MICROPHONE
 static bool prv_handle_result_common(VoiceEndpointResult result,
                                      bool app_initiated,
                                      AudioEndpointSessionId session_id,
@@ -137,6 +138,7 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
   voice_handle_nlp_result(msg->result, msg->session_id, reminder_str, timestamp);
   kernel_free(reminder_str);
 }
+#endif
 
 #if CAPABILITY_HAS_MICROPHONE
 void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t size) {

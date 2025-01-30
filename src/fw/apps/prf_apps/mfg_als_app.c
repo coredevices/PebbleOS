@@ -56,10 +56,12 @@ static void prv_timer_callback(void *cb_data) {
   app_timer_register(500, prv_timer_callback, NULL);
 }
 
+#if MFG_INFO_RECORDS_TEST_RESULTS
 static void prv_record_als_reading(void) {
   AmbientLightAppData *data = app_state_get_user_data();
   mfg_info_write_als_result(data->latest_als_value);
 }
+#endif
 
 static void prv_handle_init(void) {
   AmbientLightAppData *data = task_zalloc_check(sizeof(AmbientLightAppData));

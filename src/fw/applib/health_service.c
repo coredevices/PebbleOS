@@ -750,6 +750,7 @@ static void prv_init_metric_alert(HealthServiceState *state, HealthMetric metric
   info->threshold = threshold;
 }
 
+#if !defined(RECOVERY_FW)
 // ---------------------------------------------------------------------------------------------
 // Determine if we should generate a health metric alert event
 static void prv_check_and_generate_metric_alert(HealthServiceState *state, HealthMetric metric,
@@ -770,6 +771,7 @@ static void prv_check_and_generate_metric_alert(HealthServiceState *state, Healt
     info->prior_reading = value;
   }
 }
+#endif
 
 // ----------------------------------------------------------------------------------------------
 T_STATIC void prv_health_event_handler(PebbleEvent *e, void *context) {

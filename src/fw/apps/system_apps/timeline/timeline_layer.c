@@ -208,12 +208,14 @@ static void prv_get_icon_frame_exact(TimelineLayer *layer, int index, GRect *ico
   timeline_layout_get_icon_frame(&frame, layer->scroll_direction, icon_frame);
 }
 
+#if PBL_ROUND
 static void prv_get_icon_frame_centered(TimelineLayer *layer, int index, GRect *icon_frame) {
   const int center_index = 1;
   const GRect *bounds = &((Layer *)layer)->bounds;
   prv_get_icon_frame_exact(layer, center_index, icon_frame);
   icon_frame->origin.y += prv_get_scroll_delta(layer) * (index - center_index) * bounds->size.h / 2;
 }
+#endif
 
 void timeline_layer_get_icon_frame(TimelineLayer *layer, int index, GRect *icon_frame) {
   return PBL_IF_RECT_ELSE(prv_get_icon_frame_exact,
@@ -592,6 +594,7 @@ Animation *timeline_layer_create_up_down_animation(TimelineLayer *layer, uint32_
   return animation_spawn_create(animation, mode_change, NULL);
 }
 
+#if PBL_ROUND
 static void prv_draw_round_flip(GContext *ctx, const GRect *layer_bounds, const int sidebar_x) {
   // Use a radius larger than the screen's radius so we don't see the top/bottom of the circle
   int16_t circle_radius = DISP_COLS * 3 / 4;
@@ -616,6 +619,7 @@ static void prv_draw_round_flip(GContext *ctx, const GRect *layer_bounds, const 
                                   0, TRIG_MAX_ANGLE);
   }
 }
+#endif
 
 static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   TimelineLayer *timeline_layer = (TimelineLayer *)layer;

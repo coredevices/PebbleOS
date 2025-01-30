@@ -316,6 +316,7 @@ void workout_service_frontend_closed(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();
   {
+#if CAPABILITY_HAS_BUILTIN_HRM
     int32_t hr_time_left;
 
     if (workout_service_is_workout_ongoing()) {
@@ -337,7 +338,6 @@ void workout_service_frontend_closed(void) {
       hr_time_left = WORKOUT_ENDED_HR_SUBSCRIPTION_TS_EXPIRE - time_since_workout;
     }
 
-#if CAPABILITY_HAS_BUILTIN_HRM
     if (hr_time_left > 0) {
       // Still some time left. Set a subscription with an expiration
       s_workout_data.hrm_session =

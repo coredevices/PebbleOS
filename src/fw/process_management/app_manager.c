@@ -714,6 +714,7 @@ void app_manager_handle_app_fetch_request_event(const PebbleAppFetchRequestEvent
 }
 
 // -----------------------------------------------------------------------------------------
+#if !RECOVERY_FW
 static AppInstallId prv_get_app_exit_reason_destination_install_id_override(void) {
   switch (s_app_task_context.exit_reason) {
     case APP_EXIT_NOT_SPECIFIED:
@@ -729,6 +730,7 @@ static AppInstallId prv_get_app_exit_reason_destination_install_id_override(void
   }
   WTF;
 }
+#endif
 
 // -----------------------------------------------------------------------------------------
 void app_manager_close_current_app(bool gracefully) {

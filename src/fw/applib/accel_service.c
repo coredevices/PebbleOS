@@ -342,10 +342,6 @@ AccelServiceState * accel_session_create(void) {
 
 
 // -----------------------------------------------------------------------------------------------
-static void prv_cleanup_accel_session_cb(void *session) {
-  kernel_free(session);
-}
-
 void accel_session_delete(AccelServiceState * session) {
   prv_assert_session_task();
 

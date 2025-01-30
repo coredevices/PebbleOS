@@ -253,30 +253,6 @@ unlock:
   mutex_unlock_recursive(state->mutex);
 }
 
-
-
-// --------------------------------------------------------------------------------------------
-// Compute the total number of restful sleep seconds within a range of time
-static uint32_t prv_sleep_restful_seconds(uint32_t num_sessions, ActivitySession *sessions,
-                                          time_t start_utc, time_t end_utc) {
-  // Iterate through the sleep sessions, accumulating the total restful seconds seen between
-  // start_utc and end_utc
-  ActivitySession *session = sessions;
-  uint32_t restful_sec = 0;
-  for (uint32_t i = 0; i < num_sessions; i++, session++) {
-    if ((session->type != ActivitySessionType_RestfulSleep)
-        && (session->type != ActivitySessionType_RestfulNap)) {
-      continue;
-    }
-    if ((session->start_utc >= start_utc)
-        && ((time_t)(session->start_utc + (session->length_min * SECONDS_PER_MINUTE)) <= end_utc)) {
-      restful_sec += session->length_min * SECONDS_PER_MINUTE;
-    }
-  }
-  return restful_sec;
-}
-
-
 // --------------------------------------------------------------------------------------------
 // Send an activity session (including sleep sessions) to data logging
 void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession *session) {

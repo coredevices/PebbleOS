@@ -19,6 +19,7 @@
 #include "system/passert.h"
 #include "util/math.h"
 
+#if PBL_ROUND
 static uint16_t prv_triangle_side(uint16_t hypotenuse, uint16_t side) {
   // third side of triangle based on pythagorean theorem
   return integer_sqrt(ABS(((uint32_t)hypotenuse * hypotenuse) - ((uint32_t)side * side)));
@@ -67,6 +68,7 @@ T_STATIC GRangeHorizontal perimeter_for_display_round(const GPerimeter *perimete
   const int32_t radius = grect_shortest_side(frame) / 2 - inset;
   return perimeter_for_circle(vertical_range, center, radius);
 }
+#endif
 
 T_STATIC GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perimeter,
                                                      const GSize *ctx_size,

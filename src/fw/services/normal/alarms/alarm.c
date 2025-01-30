@@ -166,17 +166,6 @@ static ActivitySleepState prv_get_sleep_state(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static int prv_get_sleep_seconds(void) {
-#if CAPABILITY_HAS_HEALTH_TRACKING
-  int32_t sleep_seconds;
-  const bool rv = activity_get_metric(ActivityMetricSleepStateSeconds, 1, &sleep_seconds);
-  return rv ? sleep_seconds : 0;
-#else
-  return 0;
-#endif
-}
-
-// ----------------------------------------------------------------------------------------------
 static int32_t prv_get_vmc(void) {
 #if CAPABILITY_HAS_HEALTH_TRACKING
   int32_t vmc;
@@ -193,7 +182,6 @@ static bool prv_should_smart_alarm_trigger(const AlarmConfig *config) {
     // The smart alarm has reached the end of its time range
     return true;
   }
-  const int sleep_seconds = prv_get_sleep_seconds();
   switch (prv_get_sleep_state()) {
     case ActivitySleepStateUnknown:
     case ActivitySleepStateAwake:

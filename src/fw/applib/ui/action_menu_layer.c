@@ -40,16 +40,20 @@ static const int VERTICAL_PADDING = PBL_IF_COLOR_ELSE(2, 4);
 static const int EXTRA_PADDING_1_BIT = 2;
 static const int SHORT_COL_COUNT = 3;
 static const int MAX_NUM_VISIBLE_LINES = 2;
+#if PBL_ROUND
 static const int SHORT_ITEM_MAX_ROWS_SPALDING = 3;
+#endif
 
 static GFont prv_get_item_font(void) {
   return system_theme_get_font(TextStyleFont_MenuCellTitle);
 }
 
+#if PBL_ROUND
 //! Only used on round displays to achieve a fish-eye effect
 static GFont prv_get_unfocused_item_font(void) {
   return system_theme_get_font(TextStyleFont_Header);
 }
+#endif
 
 static uint16_t prv_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {
@@ -331,6 +335,7 @@ static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_lay
   mutable_cell_layer->bounds = saved_bounds;
 }
 
+#if PBL_ROUND
 static void prv_cell_item_content_draw_round(GContext *ctx, const Layer *cell_layer,
                                              const ActionMenuLayer *aml, const ActionMenuItem *item,
                                              bool selected, GRect *content_box) {
@@ -379,6 +384,7 @@ static void prv_draw_indicator_round(GContext *ctx, const ActionMenuLayer *aml,
   graphics_draw_text(ctx, INDICATOR, aml->layout_cache.font, indicator_frame,
                      GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
+#endif
 
 static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
                                ActionMenuLayer *aml, const ActionMenuItem *item,

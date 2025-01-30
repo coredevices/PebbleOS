@@ -140,8 +140,8 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 
 // ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new data arrives
-T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
 #if CAPABILITY_HAS_BUILTIN_HRM
+T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   if (!s_hrm_present) {
     return;
   }
@@ -198,8 +198,8 @@ T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) 
     //   `activity_metrics_prv_add_median_hr_sample`
     prv_heart_rate_subscription_update(now_uptime_ts);
   }
-#endif // CAPABILITY_HAS_BUILTIN_HRM
 }
+#endif // CAPABILITY_HAS_BUILTIN_HRM
 
 
 // ---------------------------------------------------------------------------------------

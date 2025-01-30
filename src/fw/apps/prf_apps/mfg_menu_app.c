@@ -96,21 +96,27 @@ static void prv_select_als(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_als_app_get_info());
 }
 
+#if !PLATFORM_SILK
 static void prv_select_bt_sig_rf(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_sig_rf_app_get_info());
 }
+#endif
 
+#if CAPABILITY_HAS_BUILTIN_HRM
 static void prv_select_hrm(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_hrm_app_get_info());
 }
+#endif
 
 static void prv_select_certification(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_certification_app_get_info());
 }
 
+#if BT_CONTROLLER_DA14681
 static void prv_select_btle(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_btle_app_get_info());
 }
+#endif
 
 static void prv_select_reset(int index, void *context) {
   system_reset();

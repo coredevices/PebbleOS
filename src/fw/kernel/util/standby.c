@@ -59,6 +59,7 @@ static NORETURN prv_enter_standby_non_pmic(BootBitValue boot_bit) {
   system_hard_reset();
 }
 
+#if CAPABILITY_HAS_PMIC
 static NORETURN prv_enter_standby_pmic(void) {
   reboot_reason_set_restarted_safely();
 
@@ -80,6 +81,7 @@ static NORETURN prv_enter_standby_pmic(void) {
   pmic_power_off();
   PBL_CROAK("PMIC didn't shut us down!");
 }
+#endif
 
 NORETURN enter_standby(RebootReasonCode reason) {
   PBL_LOG(LOG_LEVEL_ALWAYS, "Preparing to enter standby mode.");

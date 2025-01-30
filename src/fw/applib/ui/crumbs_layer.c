@@ -113,6 +113,7 @@ static void prv_crumbs_layer_update_proc_rect(Layer *layer, GContext *ctx) {
   }
 }
 
+#if PBL_ROUND
 static void prv_crumbs_layer_update_proc_round(Layer *layer, GContext *ctx) {
   CrumbsLayer *cl = (CrumbsLayer *)layer;
 
@@ -127,6 +128,7 @@ static void prv_crumbs_layer_update_proc_round(Layer *layer, GContext *ctx) {
   graphics_fill_radial(ctx, grect_inset(layer->bounds, GEdgeInsets(-overdraw)),
                        GOvalScaleModeFillCircle, crumbs_layer_width(), 0, TRIG_MAX_ANGLE);
 }
+#endif
 
 void crumbs_layer_set_level(CrumbsLayer *crumbs_layer, int level) {
   const int max_crumbs = prv_crumb_maximum_count();

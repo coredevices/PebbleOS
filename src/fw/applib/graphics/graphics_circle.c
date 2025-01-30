@@ -24,6 +24,7 @@
 #include "util/size.h"
 #include "util/trig.h"
 
+#if PBL_COLOR
 static Fixed_S16_3 prv_get_circle_border(int16_t y, uint16_t radius) {
   // Match to the precision we need here
   y *= FIXED_S16_3_ONE.raw_value;
@@ -31,6 +32,7 @@ static Fixed_S16_3 prv_get_circle_border(int16_t y, uint16_t radius) {
 
   return (Fixed_S16_3){.raw_value = radius - integer_sqrt(radius * radius - y * y)};
 }
+#endif
 
 static Fixed_S16_3 prv_get_ellipsis_border(Fixed_S16_3 offset, uint32_t offset_radius_sq,
                                            uint32_t opposite_radius_sq) {
@@ -164,6 +166,7 @@ T_STATIC void graphics_circle_quadrant_draw_1px_non_aa(GContext* ctx, GPoint p, 
   }
 }
 
+#if PBL_COLOR
 static void prv_plot4(GBitmap *fb, GRect *clip_box, GPoint center, GPoint offset, int8_t brightness,
                       GColor stroke_color, GCornerMask quadrant) {
   /*
@@ -223,7 +226,6 @@ static void prv_plot8(GBitmap *fb, GRect *clip_box, GPoint center, GPoint offset
   prv_plot4(fb, clip_box, center, GPoint(offset.y, offset.x), brightness, stroke_color, quadrant);
 }
 
-#if PBL_COLOR
 T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext* ctx, GPoint p, uint16_t radius,
                                                    GCornerMask quadrant) {
   /* This will draw antialiased circle with width of 1px, can be drawn in quadrants
@@ -348,6 +350,7 @@ T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext* ctx, GPoint p, uint
 }
 #endif // PBL_COLOR
 
+/*
 static void prv_circle_arc_draw_1px(GContext* ctx, GPoint center, uint16_t radius,
                                     int32_t angle_start, int32_t angle_end) {
   // TODO: PBL-23119 Write non-aa function
@@ -362,6 +365,7 @@ static void prv_circle_arc_draw_1px(GContext* ctx, GPoint center, uint16_t radiu
 //    graphics_circle_quadrant_draw_1px_aa(ctx, center, radius, config.full_quadrants);
 //  }
 }
+*/
 
 inline void prv_vline_quadrant(GCornerMask quadrant, GCornerMask desired, GContext *ctx, int16_t x,
                                Fixed_S16_3 start, Fixed_S16_3 end) {

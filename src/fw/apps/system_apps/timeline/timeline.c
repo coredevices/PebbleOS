@@ -86,7 +86,6 @@ static const TimelineAppStyle * const s_styles[NumPreferredContentSizes] = {
 static TimelineAppData *s_app_data;
 
 static const uint32_t TIMELINE_SLIDE_ANIMATION_MS = 150;
-static const uint32_t PEEK_SLIDE_ANIMATION_MS = 300;
 static const uint32_t PEEK_SHOW_TIME_MS = 660;
 
 
@@ -193,22 +192,26 @@ static void prv_cleanup_timer(EventedTimerID *timer) {
   }
 }
 
+#if ANIMATION_DOT
 static void prv_exit_timer_callback(void *context) {
   TimelineAppData *data = context;
   data->timeline_layer.animating_intro_or_exit = false;
   launcher_task_add_callback(prv_launch_watchface, data);
 }
+#endif
 
 static void prv_intro_or_exit_anim_started(Animation *anim, void *context) {
   TimelineAppData *data = context;
   data->timeline_layer.animating_intro_or_exit = true;
 }
 
+#if ANIMATION_DOT
 static void prv_exit_anim_stopped(Animation *animation, bool finished, void *context) {
   // we must use a timer to allow the last frame to render
   const int exit_timeout_ms = 2 * ANIMATION_TARGET_FRAME_INTERVAL_MS;
   evented_timer_register(exit_timeout_ms, false, prv_exit_timer_callback, context);
 }
+#endif
 
 //! Used for setting the animation frame source and/or destination of the peek layer.
 //! If use_pin is true, the animation frame size and position will be that of the first pin icon.
@@ -249,6 +252,7 @@ static void prv_get_icon_animation_frame(TimelineAppData *data, GRect *icon_fram
 #endif
 }
 
+#if ANIMATION_DOT
 static Animation *prv_create_peek_exit_anim(TimelineAppData *data, TimelineAppState prev_state,
                                             uint32_t duration) {
   PeekLayer *peek_layer = &data->peek_layer;
@@ -291,6 +295,7 @@ static Animation *prv_create_peek_exit_anim(TimelineAppData *data, TimelineAppSt
   return (Animation *)peek_layer_create_play_section_animation(&data->peek_layer, 0, duration);
 #endif
 }
+#endif
 
 static Animation *prv_create_sidebar_animation(TimelineAppData *data, bool open) {
   int16_t to_sidebar_width;
@@ -997,6 +1002,7 @@ static void NOINLINE prv_setup_peek(TimelineAppData *data) {
   event_service_client_subscribe(&s_app_data->focus_event_info);
 }
 
+#if PBL_COLOR
 static GColor prv_get_sidebar_color(TimelineAppData *data) {
   if (s_app_data->timeline_model.direction == TimelineIterDirectionPast) {
     return TIMELINE_PAST_COLOR;
@@ -1004,6 +1010,7 @@ static GColor prv_get_sidebar_color(TimelineAppData *data) {
     return TIMELINE_FUTURE_COLOR;
   }
 }
+#endif
 
 T_STATIC void prv_init_peek_layer(TimelineAppData *data) {
   Window *window = &data->timeline_window;

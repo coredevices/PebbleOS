@@ -83,6 +83,7 @@ static void sort16(int16_t *values, size_t length) {
   }
 }
 
+#if PBL_COLOR
 static void swapIntersections(Intersection *a, Intersection *b) {
   Intersection t = *a;
   *a = *b;
@@ -98,6 +99,7 @@ static void sortIntersections(Intersection *values, size_t length) {
     }
   }
 }
+#endif
 
 static inline bool prv_is_in_range(int16_t min_a, int16_t max_a, int16_t min_b, int16_t max_b) {
   return (max_a >= min_b) && (min_a <= max_b);

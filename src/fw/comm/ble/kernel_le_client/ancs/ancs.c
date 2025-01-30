@@ -162,9 +162,11 @@ static void prv_set_state(ANCSClientState new_state) {
   s_ancs_client->state = new_state;
 }
 
+#if UNITTEST
 T_STATIC ANCSClientState prv_get_state(void) {
   return s_ancs_client->state;
 }
+#endif
 
 // -----------------------------------------------------------------------------
 // Notification Queue Logic

@@ -245,11 +245,13 @@ static uint16_t prv_contact_list_get_num_rows_callback(MenuLayer *menu_layer,
   return (uint16_t)list_count((ListNode *)data->contact_list_head);
 }
 
+#if PBL_ROUND
 static int16_t prv_contact_list_get_header_height_callback(MenuLayer *menu_layer,
                                                            uint16_t section_index,
                                                            void *callback_context) {
   return MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT;
 }
+#endif
 
 static int16_t prv_contact_list_get_cell_height_callback(MenuLayer *menu_layer,
                                                          MenuIndex *cell_index,
@@ -260,10 +262,10 @@ static int16_t prv_contact_list_get_cell_height_callback(MenuLayer *menu_layer,
                            MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT));
 }
 
+#if PBL_ROUND
 static void prv_contact_list_draw_header_callback(GContext *ctx, const Layer *cell_layer,
                                                   uint16_t section_index, void *callback_context) {
   SendTextAppData *data = callback_context;
-  const MenuIndex menu_index = menu_layer_get_selected_index(&data->menu_layer);
   const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
   GRect box = cell_layer->bounds;
   box.origin.y -= 2;
@@ -271,6 +273,7 @@ static void prv_contact_list_draw_header_callback(GContext *ctx, const Layer *ce
   graphics_draw_text(ctx, i18n_get("Select Contact", data), font, box, GTextOverflowModeFill,
                      GTextAlignmentCenter, NULL);
 }
+#endif
 
 static void prv_contact_list_draw_row_callback(GContext *ctx, const Layer *cell_layer,
                                                MenuIndex *cell_index, void *callback_context) {

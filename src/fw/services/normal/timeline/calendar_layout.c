@@ -158,6 +158,7 @@ static void prv_format_glance_end_time(const TimelineLayout *layout, char *buffe
   }
 }
 
+#if PBL_ROUND
 static void prv_set_glance_time_line_round(const TimelineLayout *layout, char *buffer,
                                            size_t buffer_size) {
   prv_format_glance_start_time(layout, buffer, buffer_size);
@@ -172,6 +173,7 @@ static void prv_set_glance_time_line_round(const TimelineLayout *layout, char *b
   }
   prv_format_glance_end_time(layout, buffer + pos, buffer_size - pos);
 }
+#endif
 
 static void prv_image_node_callback(GContext *ctx, const GRect *box,
                                     const GTextNodeDrawConfig *config, bool render,

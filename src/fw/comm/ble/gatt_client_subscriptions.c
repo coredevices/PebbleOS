@@ -809,10 +809,12 @@ void gatt_client_subscription_boot(void) {
   PBL_ASSERTN(s_gatt_client_subscriptions_semphr);
 }
 
+#if UNITTEST
 //! Only for unit tests
 T_STATIC bool gatt_client_get_event_pending_state(GAPLEClient client) {
   return s_is_notification_event_pending[client];
 }
+#endif
 
 //! Only for unit tests
 SemaphoreHandle_t gatt_client_subscription_get_semaphore(void) {

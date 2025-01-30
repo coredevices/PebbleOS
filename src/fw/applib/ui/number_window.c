@@ -37,15 +37,6 @@ static void update_output_value(NumberWindow *nf) {
   layer_mark_dirty(&nf->window.layer);
 }
 
-// implemented from: http://stackoverflow.com/questions/707370/clean-efficient-algorithm-for-wrapping-integers-in-c
-// answered by: Eddie Parker, <http://stackoverflow.com/users/56349/eddie-parker>
-static int wrap(int num, int const lower_bound, int const upper_bound) {
-  int range_size = upper_bound - lower_bound + 1;
-  if (num < lower_bound)
-    num += range_size * ((lower_bound - num) / range_size + 1);
-  return lower_bound + (num - lower_bound) % range_size;
-}
-
 static void up_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
   bool is_increased = false;
   int32_t new_val = nf->value + nf->step_size;

@@ -286,7 +286,9 @@ static void window_load(Window *window) {
   const int16_t disconnected_text_y_offset = mid_value_y_offset + PBL_IF_ROUND_ELSE(-5, 8);
 
   const int16_t stroke_box_width = PBL_IF_ROUND_ELSE(54, background_width / 2);
+#if PBL_ROUND
   const int16_t stroke_box_height = PBL_IF_ROUND_ELSE(53, 50);
+#endif
   const int16_t hole_box_x_offset = PBL_IF_ROUND_ELSE(73, 0);
   const int16_t hole_label_y_offset = STATUS_BAR_LAYER_HEIGHT + PBL_IF_ROUND_ELSE(18, 104);
   const int16_t hole_value_y_offset = hole_label_y_offset + PBL_IF_ROUND_ELSE(5, 2);

@@ -88,8 +88,6 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
     return 0;
   }
 
-  SerializedContact *serialized_contact = (SerializedContact *)*contact_out;
-
   return (contact_len - sizeof(SerializedContact));
 }
 
@@ -110,9 +108,6 @@ status_t contacts_db_insert(const uint8_t *key, int key_len, const uint8_t *val,
   if (key_len != UUID_SIZE || val_len < (int) sizeof(SerializedContact)) {
     return E_INVALID_ARGUMENT;
   }
-
-  // TODO: Verify the serialized_contact data before storing it
-  SerializedContact *serialized_contact = (SerializedContact *)val;
 
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv != S_SUCCESS) {
@@ -153,8 +148,6 @@ status_t contacts_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int
 
   rv = settings_file_get(&s_contacts_db.settings_file, key, key_len, val_out, val_out_len);
   prv_close_file_and_unlock_mutex();
-
-  SerializedContact *serialized_contact = (SerializedContact *)val_out;
 
   return rv;
 }

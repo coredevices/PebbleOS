@@ -695,6 +695,7 @@ uint32_t __nrfy_internal_uarte_events_process(NRF_UARTE_Type *            p_reg,
     else if (mask & NRFY_EVENT_TO_INT_BITMASK(NRF_UARTE_EVENT_RXTO))
     {
         size_t size = nrf_uarte_rx_amount_get(p_reg);
+	(void)size;
         nrf_barrier_rw();
         NRFY_CACHE_INV(p_xfer->p_buffer, size);
     }

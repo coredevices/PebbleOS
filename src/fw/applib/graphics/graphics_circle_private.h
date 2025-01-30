@@ -41,12 +41,14 @@ typedef struct {
   int8_t y_mul;
 } GCornerMultiplier;
 
+#if PBL_COLOR
 static GCornerMultiplier quadrant_mask_mul[] = {
   {GCornerTopRight,     1, -1},
   {GCornerBottomRight,  1,  1},
   {GCornerBottomLeft,  -1,  1},
   {GCornerTopLeft,     -1, -1}
 };
+#endif
 
 T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start, int32_t angle_end);
 

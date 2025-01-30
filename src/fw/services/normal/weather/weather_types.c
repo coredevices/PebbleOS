@@ -27,10 +27,12 @@ static const char *s_weather_type_names[] = {
 #include "services/normal/weather/weather_type_tuples.def"
 };
 
+#if PBL_COLOR
 static uint8_t s_weather_type_bg_colors[] = {
 #define WEATHER_TYPE_TUPLE(id, numeric_id, bg_color, text_color, timeline_resource_id) bg_color,
 #include "services/normal/weather/weather_type_tuples.def"
 };
+#endif
 
 static uint8_t s_weather_type_text_colors[] = {
 #define WEATHER_TYPE_TUPLE(id, numeric_id, bg_color, text_color, timeline_resource_id) text_color,
@@ -54,7 +56,9 @@ const char *weather_type_get_name(WeatherType weather_type) {
 };
 
 GColor weather_type_get_bg_color(WeatherType weather_type) {
+#if PBL_COLOR
   const size_t index = prv_get_array_index_of_type(weather_type);
+#endif
   return PBL_IF_COLOR_ELSE((GColor) {.argb = s_weather_type_bg_colors[index]}, GColorClear);
 };
 

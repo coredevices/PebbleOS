@@ -56,21 +56,6 @@ T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current,
   }
 }
 
-static void prv_mitsuta_mean_loop_itr(int64_t new_value, int64_t *sum, int64_t *D) {
-  int64_t delta = new_value - *D;
-
-  if (delta < SECONDS_PER_DAY * -1 / 2) {
-    *D = *D + delta + SECONDS_PER_DAY;
-  } else if (delta < SECONDS_PER_DAY / 2) {
-    *D = *D + delta;
-  } else {
-    *D = *D + delta - SECONDS_PER_DAY;
-  }
-
-  *sum = *sum + *D;
-}
-
-
 // API Functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

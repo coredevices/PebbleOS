@@ -40,16 +40,6 @@ static bool prv_decode_uuid(pb_istream_t *stream, const pb_field_t *field, void 
   return pb_read(stream, (uint8_t *)ret_uuid, uuid_len);
 }
 
-
-// -----------------------------------------------------------------------------------------
-// Callback used to decode ActivitySession
-static bool prv_decode_activity_session(pb_istream_t *stream, const pb_field_t *field, void **arg) {
-  ActivitySession *ret_uuid = *(ActivitySession **)arg;
-  // TODO: Do something here
-  return true;
-}
-
-
 // -----------------------------------------------------------------------------------------
 // Callback used to decode types
 typedef struct PLogTypesDecoderArg {

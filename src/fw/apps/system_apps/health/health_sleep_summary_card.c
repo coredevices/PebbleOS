@@ -94,17 +94,18 @@ static void prv_render_sleep_sessions(GContext *ctx, HealthSleepSummaryCardData 
 static void prv_render_typical_markers(GContext *ctx, HealthSleepSummaryCardData *data) {
   // Some time fuzz is applied to a couple values to ensure that typical fill touches the sleep
   // sessions (needed because of how our fill algorithms work)
-  const int time_fuzz = (2 * SECONDS_PER_MINUTE);
-
   const int sleep_start_24h = health_data_sleep_get_start_time(data->health_data);
-  const int sleep_start_12h = (sleep_start_24h) % TWELVE_HOURS;
 
   const int sleep_end_24h = health_data_sleep_get_end_time(data->health_data);
-  const int sleep_end_12h = (sleep_end_24h - time_fuzz) % TWELVE_HOURS;
 
   if (sleep_start_24h || sleep_end_24h) {
+#if PBL_COLOR
+    const int time_fuzz = (2 * SECONDS_PER_MINUTE);
+    const int sleep_start_12h = (sleep_start_24h) % TWELVE_HOURS;
+    const int sleep_end_12h = (sleep_end_24h - time_fuzz) % TWELVE_HOURS;
     const int sleep_start = (sleep_start_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
     const int sleep_end = (sleep_end_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
+#endif
 
     const int typical_sleep_start_24h = health_data_sleep_get_typical_start_time(data->health_data);
     const int typical_sleep_start_12h = typical_sleep_start_24h % TWELVE_HOURS;

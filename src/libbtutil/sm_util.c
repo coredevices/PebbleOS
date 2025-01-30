@@ -23,12 +23,15 @@
 #include <string.h>
 
 // -------------------------------------------------------------------------------------------------
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 bool sm_is_pairing_info_equal_identity(const SMPairingInfo *a, const SMPairingInfo *b) {
   return (a->is_remote_identity_info_valid &&
           b->is_remote_identity_info_valid &&
           bt_device_equal(&a->identity.opaque, &b->identity.opaque) &&
           memcmp(&a->irk, &b->irk, sizeof(SMIdentityResolvingKey)) == 0);
 }
+#pragma GCC diagnostic pop
 
 // -------------------------------------------------------------------------------------------------
 bool sm_is_pairing_info_empty(const SMPairingInfo *p) {

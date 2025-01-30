@@ -39,6 +39,7 @@ typedef struct PACKED PFSOpenOptions {
   char filename[0];
 } PFSOpenOptions;
 
+#if !RECOVERY_FW
 static int prv_open_file(void *packet_data, size_t length) {
   PFSOpenOptions *options = packet_data;
 
@@ -105,7 +106,6 @@ static status_t pfs_domain_close(void *context) {
   return pfs_close(fd);
 }
 
-#if !RECOVERY_FW
 PulseBulkIODomainHandler pulse_bulkio_domain_pfs = {
   .id = PulseBulkIODomainType_PFS,
   .open_proc = pfs_domain_open,

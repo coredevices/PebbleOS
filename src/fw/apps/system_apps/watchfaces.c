@@ -85,11 +85,13 @@ static void select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, Settin
   });
 }
 
+#if PBL_ROUND
 static int16_t get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index,
                                         SettingsWatchfacesData *data) {
   return menu_layer_is_index_selected(menu_layer, cell_index) ?
          MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT : MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT;
 }
+#endif
 
 static uint16_t get_num_rows_callback(struct MenuLayer *menu_layer, uint16_t section_index, SettingsWatchfacesData *data) {
   return app_menu_data_source_get_count(&data->data_source);

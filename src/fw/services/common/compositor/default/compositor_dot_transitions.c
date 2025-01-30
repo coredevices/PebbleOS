@@ -244,6 +244,7 @@ void compositor_dot_transitions_collapsing_ring_animation_update(GContext *ctx,
                                 TRIG_MAX_ANGLE);
 }
 
+#if PBL_ROUND
 static void prv_collapse_animation_update_round(GContext *ctx,
                                                 DotTransitionAnimationConfiguration config,
                                                 uint32_t distance_normalized) {
@@ -258,6 +259,7 @@ static void prv_collapse_animation_update_round(GContext *ctx,
                                                               config.background_color,
                                                               config.collapse_dot_color);
 }
+#endif
 
 static void prv_collapse_animation_update(GContext *ctx,
                                           DotTransitionAnimationConfiguration config,

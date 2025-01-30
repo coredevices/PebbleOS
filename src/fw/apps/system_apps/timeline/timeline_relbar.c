@@ -27,8 +27,6 @@
 #define TIMELINE_FAT_PIN_SIZE (timeline_layer_get_fat_pin_height())
 #define SIDEBAR_WIDTH (timeline_layer_get_ideal_sidebar_width())
 
-static const int TOP_MARGIN = TIMELINE_TOP_MARGIN;
-
 ///////////////////////////////////////////////////////////
 // Private functions
 ///////////////////////////////////////////////////////////

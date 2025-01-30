@@ -57,6 +57,7 @@ static ActivitySessionType prv_proto_type_to_activity_type(ProtobufLogActivityTy
 
 // -----------------------------------------------------------------------------------------
 // Convert ActivitySessionType to the internal protobuf representation.
+/*
 static ProtobufLogActivityType prv_activity_type_to_proto_type(ActivitySessionType type) {
   switch (type) {
     case ActivitySessionType_None:
@@ -80,11 +81,12 @@ static ProtobufLogActivityType prv_activity_type_to_proto_type(ActivitySessionTy
   }
   WTF;
 }
-
+*/
 
 // -----------------------------------------------------------------------------------------
 // Callback used to stuff in the sender.type field of a payload
 // TODO: Don't force it to be one interval
+/*
 static bool prv_encode_intervals(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
   if (!pb_encode_tag(stream, PB_WT_STRING, pebble_pipeline_ActivitySession_intervals_tag)) {
     return false;
@@ -97,6 +99,7 @@ static bool prv_encode_intervals(pb_ostream_t *stream, const pb_field_t *field, 
   };
   return pb_encode_submessage(stream, pebble_pipeline_ActivityInterval_fields, &msg);
 }
+*/
 
 ProtobufLogRef protobuf_log_activity_sessions_create(void) {
   ProtobufLogConfig log_config = {
@@ -110,6 +113,7 @@ ProtobufLogRef protobuf_log_activity_sessions_create(void) {
 // TODO: Actually make sense of this. It is completely wrong.
 bool protobuf_log_activity_sessions_add(ProtobufLogRef ref, time_t sample_utc,
                                         ActivitySession *session) {
+  /*
   pebble_pipeline_Event event = {
     .type = pebble_pipeline_Event_Type_ActivitySessionEvent,
     .created_time_utc = sample_utc,
@@ -131,6 +135,7 @@ bool protobuf_log_activity_sessions_add(ProtobufLogRef ref, time_t sample_utc,
       }
     }
   };
+  */
 
   return true;
 }

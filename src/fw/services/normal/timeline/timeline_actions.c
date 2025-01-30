@@ -776,6 +776,7 @@ static void prv_action_menu_cb(ActionMenu *action_menu, const ActionMenuItem *it
   prv_invoke_action(action_menu, action, pin, item->label);
 }
 
+#if CAPABILITY_HAS_MICROPHONE
 static void prv_invoke_voice_response(VoiceResponseData *voice_data, char *transcription) {
   // This is a bit of a hack, but we need all the behaviour of timeline_actions_invoke_action and
   // this allows voice responses to be used for other types of responses (i.e. ANCS in the future)
@@ -796,6 +797,7 @@ static void prv_invoke_voice_response(VoiceResponseData *voice_data, char *trans
     prv_cleanup_voice_data(voice_data);
   }
 }
+#endif
 
 static ActionMenuLevel *prv_create_level(uint16_t num_items, ActionMenuLevel *parent_level) {
   ActionMenuLevel *level = action_menu_level_create(num_items);
@@ -859,6 +861,7 @@ static ActionMenuLevel *prv_create_emoji_level_from_action(ActionMenuLevel *pare
   return emoji_level;
 }
 
+#if CAPABILITY_HAS_MICROPHONE
 static void prv_handle_voice_transcription_result(PebbleEvent *e, void *context) {
   DictationSessionStatus status = e->dictation.result;
   char *transcription = e->dictation.text;
@@ -872,11 +875,12 @@ static void prv_handle_voice_transcription_result(PebbleEvent *e, void *context)
     prv_cleanup_voice_data(data);
   }
 }
+#endif
 
+#if CAPABILITY_HAS_MICROPHONE
 static void prv_start_voice_reply(ActionMenu *action_menu,
                                   const ActionMenuItem *item,
                                   void *context) {
-#if CAPABILITY_HAS_MICROPHONE
   TimelineActionMenu *timeline_action_menu = context;
   action_menu_freeze(action_menu);
 
@@ -899,8 +903,8 @@ static void prv_start_voice_reply(ActionMenu *action_menu,
   voice_window_transcription_dialog_keep_alive_on_select(data->voice_window, true);
 
   voice_window_push(data->voice_window);
-#endif
 }
+#endif
 
 typedef enum ReplyOption {
   ReplyOption_Voice,

@@ -1312,6 +1312,8 @@ uint32_t put_bytes_get_index(void) {
   return s_pb_state.index;
 }
 
+#ifdef UNITTEST
 T_STATIC uint8_t prv_put_bytes_get_max_batched_pb_ops(void) {
   return MAX_BATCHED_PB_PUT_OPS;
 }
+#endif

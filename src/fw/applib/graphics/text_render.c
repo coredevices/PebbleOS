@@ -39,6 +39,7 @@ static GRect get_glyph_rect(const GlyphData* glyph) {
   return r;
 }
 
+#if SCREEN_COLOR_DEPTH_BITS == 8
 /// This function returns the x coordinate of where to write the contents of a given word (32-bits)
 /// of data from the 1-bit frame buffer into the 8-bit framebuffer
 /// @param dest_bitmap 8-bit destination frame buffer bitmap
@@ -58,6 +59,7 @@ T_STATIC int32_t prv_convert_1bit_addr_to_8bit_x(GBitmap *dest_bitmap, uint32_t 
   // Calculate just the offset from the start of the target row in the 8-bit bitmap (i.e. "x")
   return bitmap_offset_8bit - (dest_bitmap->bounds.size.w * y_offset);
 }
+#endif
 
 // PRO TIP: if you have to modify this function, expect to waste the rest of your day on it
 void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const font,

@@ -74,17 +74,6 @@ static void prv_draw_solid(Layer *layer, GContext *ctx, GColor color) {
   graphics_fill_rect(ctx, &layer->bounds);
 }
 
-static void prv_fill_cols(GContext *ctx, uint8_t color, int16_t *row, int16_t column,
-                          uint8_t num_pixels) {
-  const GRect rect = { { column, *row }, { 1, num_pixels } };
-
-  // Set alpha bits to make it opaque
-  graphics_context_set_fill_color(ctx, (GColor) { .argb = (0b11000000 | color) });
-  graphics_fill_rect(ctx, &rect);
-
-  *row += num_pixels;
-}
-
 #if PBL_ROUND
 
 static void prv_draw_round_border(Layer *layer, GContext *ctx, uint8_t radial_padding_size) {
@@ -152,11 +141,13 @@ static void prv_draw_crosshair_screen(Layer *layer, GContext *ctx, uint8_t radia
   prv_draw_border(layer, ctx, radial_padding_size);
 }
 
+#if PBL_COLOR
 static void prv_draw_bitmap(struct Layer *layer, GContext *ctx, uint32_t res) {
   GBitmap *bitmap = gbitmap_create_with_resource(res);
   graphics_draw_bitmap_in_rect(ctx, bitmap, &layer->bounds);
   gbitmap_destroy(bitmap);
 }
+#endif
 
 static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   AppData *app_data = app_state_get_user_data();

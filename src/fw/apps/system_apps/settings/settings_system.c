@@ -439,6 +439,7 @@ static void prv_draw_rt_cell_rect(GContext *ctx, const Layer *cell_layer, GBitma
   graphics_draw_text(ctx, text, font, box, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
 
+#if PBL_ROUND
 static void prv_draw_rt_cell_round(GContext *ctx, const Layer *cell_layer, GBitmap *mark,
                                    const char *text, bool is_selected) {
   GRect rt_rect = cell_layer->bounds;
@@ -467,6 +468,7 @@ static void prv_draw_rt_cell_round(GContext *ctx, const Layer *cell_layer, GBitm
                        NULL);
   }
 }
+#endif
 
 static void prv_draw_rt_cell(
     GContext *ctx, const Layer *cell_layer, SystemCertificationData *cd,
@@ -477,6 +479,7 @@ static void prv_draw_rt_cell(
                    prv_draw_rt_cell_round)(ctx, cell_layer, mark, text, is_selected);
 }
 
+#if PBL_ROUND
 static void prv_draw_fcc_cell_round(
     GContext *ctx, const GRect *cell_layer_bounds, const char *fcc_title,
     const char *fcc_number_subtitle, GBitmap *fcc_mark_icon,
@@ -526,6 +529,7 @@ static void prv_draw_fcc_cell_round(
   grect_align(&box, &container_rect, GAlignTopRight, true /* clip */);
   prv_draw_mark_with_inversion(ctx, fcc_mark_icon, &box, cell_is_highlighted);
 }
+#endif
 
 static void prv_draw_fcc_cell(
     GContext *ctx, const Layer *cell_layer, SystemCertificationData *cd,

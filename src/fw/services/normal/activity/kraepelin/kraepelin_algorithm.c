@@ -416,21 +416,6 @@ static int32_t prv_integral_abs(int16_t *d, int16_t start, int16_t end) {
   return int_abs;
 }
 
-
-// -------------------------------------------------------------------------------------------
-// Integrate the d^2 between given start and end index
-static int32_t prv_integral_l2(int16_t *d, int16_t start, int16_t end) {
-  /* Integrate the absolute values between given srti and endi index*/
-  int32_t int_l2 = 0;
-
-  for (int16_t i = start; i <= end; i++) {
-    int_l2 += d[i] * d[i];
-  }
-  // to prevent nasty divide by 0 problems
-  return int_l2;
-}
-
-
 // -----------------------------------------------------------------------------------------
 // Return the sum(abs(x-mean)) for each x in the array
 static uint32_t prv_pim_filter(KAlgState *state, int16_t *d, int16_t dlen, int16_t axis) {
@@ -611,10 +596,10 @@ static void prv_fft_mag(int16_t *d, int16_t width) {
 }
 
 
+#if LOG_DOMAIN_ACTIVITY && KALG_LOG_AXIS_MAGNITUDES
 // -------------------------------------------------------------------------------------------
 // Print a text graph of the values in the d array
 static void prv_text_graph(const char *type_str, int16_t *d, int16_t start, int16_t end) {
-#if LOG_DOMAIN_ACTIVITY
 #ifdef UNITTEST
   // Log the values to facilitate plotting
   printf("\nRaw values for plotting: [");
@@ -649,8 +634,8 @@ static void prv_text_graph(const char *type_str, int16_t *d, int16_t start, int1
     KALG_LOG_DEBUG("%s: %3"PRIi16": mag: %+3"PRIi16": %s", type_str, i, d[i], stars_str);
     stars_str[num_stars] = '*';
   }
-#endif
 }
+#endif
 
 
 // -------------------------------------------------------------------------------------------
@@ -1950,11 +1935,13 @@ static const KAlgActivityAttributes *prv_get_step_activity_attributes(KAlgActivi
   return &k_attributes[activity];
 }
 
+#if CAPABILITY_HAS_BUILTIN_HRM
 // ------------------------------------------------------------------------------------------
 static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   // The algorithm doesn't care about these events. It only subscribed so the activity service
   // gets events.
 }
+#endif
 
 // ------------------------------------------------------------------------------------------
 // Process the minute data for walk or run activity detection

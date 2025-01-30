@@ -107,7 +107,6 @@ static const int16_t DURATION_ANIMATION_START_OFFSET = 30;
 static const int16_t SINGLE_LINE_BOUND_OFFSET = 5;
 static const int16_t SINGLE_LINE_BOUND_HEIGHT = 30;
 static const int16_t DOUBLE_LINE_BOUND_OFFSET = 0;
-static const int16_t DOUBLE_LINE_BOUND_HEIGHT = 40;
 
 //! Enumeration for the various action bar items in the phone ui
 typedef enum {

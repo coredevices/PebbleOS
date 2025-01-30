@@ -61,10 +61,6 @@ static void prv_handle_quick_launch_confirm(ClickRecognizerRef recognizer, void 
   prv_push_settings_menu();
 }
 
-static void prv_quick_launch_app_set_select_handler(ClickRecognizerRef recognizer, void *context) {
-  expandable_dialog_pop(context);
-}
-
 static void prv_push_first_use_dialog(void) {
   const void *i18n_owner = prv_push_first_use_dialog; // Use this function as the i18n owner
   /// Title for the Quick Launch first use dialog.

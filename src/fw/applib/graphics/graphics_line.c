@@ -23,26 +23,6 @@
 
 #define MINIMUM_PRECISE_STROKE_WIDTH 2
 
-// Precomputed lookup table with quadrant of the circle for the caps on stroked lines
-// table of y-coordinates expressed as Fixed_S16_3.raw_value
-// for each x-coordinate (array index) of first quadrant of unit circle
-// see prv_calc_quadrant_lookup()
-static const uint16_t s_circle_table[] = {
-  8,
-  16, 3,
-  24, 7, 2,
-  32, 11, 5, 2,
-  40, 16, 8, 4, 1,
-  48, 22, 13, 7, 3, 1,
-  56, 28, 17, 11, 6, 3, 1,
-  64, 34, 22, 15, 9, 5, 3, 1,
-  72, 40, 27, 19, 13, 8, 5, 2, 1,
-  80, 46, 32, 23, 16, 11, 7, 4, 2, 1,
-  88, 52, 38, 28, 21, 15, 10, 7, 4, 2, 1,
-  96, 58, 43, 33, 25, 19, 13, 9, 6, 4, 2, 1,
-  104, 64, 49, 38, 29, 23, 17, 12, 8, 6, 3, 2, 1
-};
-
 MOCKABLE void graphics_line_draw_1px_non_aa(GContext* ctx, GPoint p0, GPoint p1) {
   p0.x += ctx->draw_state.drawing_box.origin.x;
   p1.x += ctx->draw_state.drawing_box.origin.x;
@@ -278,15 +258,6 @@ static void prv_calc_cap_vert(GPointPrecise *line_end_point, Fixed_S16_3 cap_rad
 
   prv_calc_cap_prepared(line_end_point->x, line_end_point->y,
                         cap_radius, progress, top_margin, bottom_margin);
-}
-
-// TODO: test me
-static void prv_calc_quadrant_lookup(Fixed_S16_3 lookup[], uint8_t radius) {
-  int n = ((radius - 1) * radius) / 2;
-
-  for (int i=0; i < radius; i++) {
-    lookup[i].raw_value = s_circle_table[n + i];
-  }
 }
 
 // Finds edge points of the rectangle and returns true if line is vertically dominant

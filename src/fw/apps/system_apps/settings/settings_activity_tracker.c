@@ -153,10 +153,12 @@ static void prv_draw_no_activities_cell_rect(GContext *ctx, const Layer *cell_la
   graphics_draw_text(ctx, no_activities_string, font, box, overflow, alignment, NULL);
 }
 
+#if PBL_ROUND
 static void prv_draw_no_activities_cell_round(GContext *ctx, const Layer *cell_layer,
                                               const char *no_activities_string) {
   menu_cell_basic_draw(ctx, cell_layer, no_activities_string, NULL, NULL);
 }
+#endif
 
 static uint16_t prv_get_num_rows_cb(OptionMenu *option_menu, void *context) {
   SettingsActivityTrackerData *data = context;
