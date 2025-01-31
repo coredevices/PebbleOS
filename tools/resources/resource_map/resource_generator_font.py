@@ -21,6 +21,7 @@ from pebble_sdk_platform import pebble_platforms, maybe_import_internal
 
 from threading import Lock
 
+import os
 import re
 
 
@@ -53,7 +54,15 @@ class FontResourceGenerator(ResourceGenerator):
 
     @classmethod
     def generate_object(cls, task, definition):
-        font_data = cls.build_font_data(task.inputs[0].abspath(), definition)
+        font_path = task.inputs[0].abspath()
+        font_ext = os.path.splitext(font_path)[-1]
+        if font_ext in (".ttf", ".otf"):
+            font_data = cls.build_font_data(font_path, definition)
+        elif font_ext == ".pbf":
+            font_data = open(font_path, "rb").read()
+        else:
+            raise Exception(f"Unsupported font format: {font_ext}")
+
         return ResourceObject(definition, font_data)
 
     @classmethod
