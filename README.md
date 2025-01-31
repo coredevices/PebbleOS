@@ -1,35 +1,92 @@
 # PebbleOS
 
-This is the latest version of the internal repository from Pebble Technology
-providing the software to run on Pebble watches. Proprietary source code has
-been removed from this repository and it will not compile as-is. This is for
-information only.
+This repository contains the source code of PebbleOS.
 
-This is not an officially supported Google product. This project is not
-eligible for the [Google Open Source Software Vulnerability Rewards
-Program](https://bughunters.google.com/open-source-security).
+**WARNING**: Codebase is being refactored/modernized, so only certain features
+may work right now.
 
-## Restoring the Directory Structure
+## Getting Started
 
-To clarify the licensing of third party code, all non-Pebble code has been
-moved into the `third_party/` directory. A python script is provided to
-restore the expected structure. It may be helpful to run this script first:
+- Use Linux (tested: Ubuntu 24.04, Fedora 41) or macOS (tested: Sequoia 15.2)
+- Clone the submodules:
+  ```shell
+  git submodule init
+  git submodule update
+  ```
+- Install GNU ARM Embedded toolchain from
+  https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads. Make
+  sure it is available on your `PATH` by checking `arm-none-eabi-gcc --version`
+  returns the expected version.
+- If using Ubuntu, install `gcc-multilib` and `gettext`
+- Install `nrfjprog` from
+  https://www.nordicsemi.com/Products/Development-tools/nRF-Command-Line-Tools.
+- Create a Python venv:
 
+  ```shell
+  python -m venv .venv
+  ```
+- Activate the Python venv (also every time you start working):
+  ```shell
+  source .venv/bin/activate
+  ```
+- Install dependencies:
+  ```shell
+  pip install -r requirements-linux.txt
+  ```
+- Install local dependencies:
+  ```shell
+  pip install -e \
+    python_libs/pblprog \
+    python_libs/pebble-commander \
+    python_libs/pulse2 \
+    python_libs/pebble-loghash
+  ```
+
+## Building
+
+First, configure the project like this:
+
+```shell
+./waf configure --board asterix_vla_dvb1 --nojs --nohash
 ```
-./third_party/restore_tree.py
+
+At this moment, only `asterix_vla_dvb1` board target may compile and boot.
+
+Then build:
+
+```shell
+./waf build
 ```
 
-## Missing Components
+PRF can be also be built:
 
-Some parts of the firmware have been removed for licensing reasons,
-including:
+```shell
+./waf build_prf
+```
 
-- All of the system fonts
-- The Bluetooth stack, except for a stub that will function in an emulator
-- The STM peripheral library
-- The voice codec
-- ARM CMSIS
-- For the Pebble 2 HR, the heart rate monitor driver
+## Flashing
 
-Replacements will be needed for these components if you wish to use the
-corresponding functionality.
+First make sure Nordic S140 Softdevice is flashed (only do this once):
+
+```shell
+nrfjprog --program src/fw/vendor/nrf5-sdk/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --sectoranduicrerase --reset
+```
+
+Flash the firmware:
+
+```shell
+nrfjprog --program build/src/fw/tintin_fw.elf --sectorerase --reset
+```
+
+First time you should see a "sad watch" screen because resources are not
+flashed. To flash resources, run:
+
+```shell
+python tools/pulse_flash_imaging.py -t /dev/$PORT -p resources build/system_resources.pbpack
+```
+
+## Viewing logs
+
+```shell
+python tools/pulse_console.py -t /dev/$PORT
+```
