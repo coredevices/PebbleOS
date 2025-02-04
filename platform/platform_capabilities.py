@@ -274,6 +274,7 @@ board_capability_dicts = [
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
             # 'HAS_MAGNETOMETER',
+            'HAS_PMIC',
         },
     },
 ]

@@ -71,17 +71,16 @@ bool pmic_init(void) {
   }
   PBL_LOG(LOG_LEVEL_DEBUG, "found the nPM1300, BUCK1NORMVOUT = 0x%x", buck_out);
   
-  /* XXX: LATER: only turn this on when the audio codec is being accessed */
   prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &buck_out);
-  PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 LDSW status before enabling LDSW1 0x%x", buck_out);
+  PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 LDSW status before enabling LDSW2 0x%x", buck_out);
   
-  prv_write_register(PmicRegisters_LDSW_TASKLDSW1CLR, 0x01);
-  prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8 /* 1.8V */);
-  prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1 /* LDO */);
-  prv_write_register(PmicRegisters_LDSW_TASKLDSW1SET, 0x01);
+  prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 0x01);
+  prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, 8 /* 1.8V */);
+  prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, 1 /* LDO */);
+  prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 0x01);
 
   prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &buck_out);
-  PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 LDSW status after enabling LDSW1 0x%x", buck_out);
+  PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 LDSW status after enabling LDSW2 0x%x", buck_out);
 
   return true;
 }

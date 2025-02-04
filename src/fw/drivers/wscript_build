@@ -1200,6 +1200,7 @@ if mcu_family == 'NRF52840':
             'nrf5/i2c_hal.c',
             'nrf5/spi.c',
             'nrf5/pwm.c',
+            'pmic/npm1300.c',
         ],
         use=[
             'driver_clocksource',

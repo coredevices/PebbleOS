@@ -32,11 +32,11 @@ static QSPIPortState s_qspi_port_state;
 static QSPIPort QSPI_PORT = {
   .state = &s_qspi_port_state,
   .auto_polling_interval = 16,
-  .cs_gpio = NRF_GPIO_PIN_MAP(0, 14),
-  .clk_gpio = NRF_GPIO_PIN_MAP(0, 17),
+  .cs_gpio = NRF_GPIO_PIN_MAP(0, 17),
+  .clk_gpio = NRF_GPIO_PIN_MAP(0, 19),
   .data_gpio = {
     NRF_GPIO_PIN_MAP(0, 20),
-    NRF_GPIO_PIN_MAP(0, 24),
+    NRF_GPIO_PIN_MAP(0, 21),
     NRF_QSPI_PIN_NOT_CONNECTED,
     NRF_QSPI_PIN_NOT_CONNECTED,
   },
@@ -57,8 +57,8 @@ IRQ_MAP_NRFX(QSPI, nrfx_qspi_irq_handler);
 static UARTDeviceState s_dbg_uart_state;
 static UARTDevice DBG_UART_DEVICE = {
   .state = &s_dbg_uart_state,
-  .tx_gpio = NRF_GPIO_PIN_MAP(0, 29),
-  .rx_gpio = NRF_GPIO_PIN_MAP(0, 28),
+  .tx_gpio = NRF_GPIO_PIN_MAP(0, 27),
+  .rx_gpio = NRF_GPIO_PIN_MAP(0, 5),
   .rts_gpio = NRF_UARTE_PSEL_DISCONNECTED,
   .cts_gpio = NRF_UARTE_PSEL_DISCONNECTED,
   .periph = NRFX_UARTE_INSTANCE(0),
@@ -80,11 +80,42 @@ IRQ_MAP_NRFX(SPIM3, nrfx_spim_3_irq_handler);
 /* EXTI */
 IRQ_MAP_NRFX(GPIOTE, nrfx_gpiote_irq_handler);
 
+/* nPM1300 */
+static I2CBusState I2C_NPMC_IIC1_BUS_STATE = {};
+
+static const I2CBusHal I2C_NPMC_IIC1_BUS_HAL = {
+  .twim = NRFX_TWIM_INSTANCE(1),
+  .frequency = NRF_TWIM_FREQ_400K,
+};
+
+static const I2CBus I2C_NPMC_IIC1_BUS = {
+  .state = &I2C_NPMC_IIC1_BUS_STATE,
+  .hal = &I2C_NPMC_IIC1_BUS_HAL,
+  .scl_gpio = {
+    .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+    .gpio_pin = NRF_GPIO_PIN_MAP(0, 14),
+  },
+  .sda_gpio = {
+    .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+    .gpio_pin = NRF_GPIO_PIN_MAP(0, 15),
+  },
+  .name = "I2C_NPMC_IIC1"
+};
+IRQ_MAP_NRFX(SPIM1_SPIS1_TWIM1_TWIS1_SPI1_TWI1, nrfx_twim_1_irq_handler);
+/* PERIPHERAL ID 9 */
+
+static const I2CSlavePort I2C_SLAVE_NPM1300 = {
+  .bus = &I2C_NPMC_IIC1_BUS,
+  .address = 0xD6,
+};
+
+I2CSlavePort * const I2C_NPM1300 = &I2C_SLAVE_NPM1300;
+
 /* peripheral I2C bus */
 static I2CBusState I2C_IIC2_BUS_STATE = {};
 
 static const I2CBusHal I2C_IIC2_BUS_HAL = {
-  .twim = NRFX_TWIM_INSTANCE(1),
+  .twim = NRFX_TWIM_INSTANCE(0),
   .frequency = NRF_TWIM_FREQ_400K,
 };
 
@@ -94,15 +125,16 @@ static const I2CBus I2C_IIC2_BUS = {
   .hal = &I2C_IIC2_BUS_HAL,
   .scl_gpio = {
     .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-    .gpio_pin = NRF_GPIO_PIN_MAP(1, 11),
+    .gpio_pin = NRF_GPIO_PIN_MAP(0, 25),
   },
   .sda_gpio = {
     .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-    .gpio_pin = NRF_GPIO_PIN_MAP(1, 12),
+    .gpio_pin = NRF_GPIO_PIN_MAP(0, 11),
   },
   .name = "I2C_IIC2"
 };
-IRQ_MAP_NRFX(SPIM1_SPIS1_TWIM1_TWIS1_SPI1_TWI1, nrfx_twim_1_irq_handler);
+IRQ_MAP_NRFX(SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0, nrfx_twim_0_irq_handler);
+
 /* PERIPHERAL ID 11 */
 
 /* sensor SPI bus */
@@ -132,8 +164,9 @@ void board_early_init(void) {
 }
 
 void board_init(void) {
+  i2c_init(&I2C_NPMC_IIC1_BUS);
   i2c_init(&I2C_IIC2_BUS);
-  
+
 #if 0
   i2c_init(&I2C_PMIC_HRM_BUS);
 

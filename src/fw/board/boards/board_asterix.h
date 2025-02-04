@@ -24,7 +24,7 @@ static const BoardConfig BOARD_CONFIG = {
   .dbgserial_int = {
     .peripheral = NRFX_GPIOTE_INSTANCE(0), 
     .channel = 0,
-    .gpio_pin = NRF_GPIO_PIN_MAP(0, 28),
+    .gpio_pin = NRF_GPIO_PIN_MAP(0, 5),
   },
 
   .has_mic = true,
@@ -33,13 +33,13 @@ static const BoardConfig BOARD_CONFIG = {
 static const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons = {
     [BUTTON_ID_BACK] =
-        { "Back",   { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(0, 27) }, NRF_GPIO_PIN_PULLUP },
+        { "Back",   { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(0, 28) }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_UP] =
-        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 11) }, NRF_GPIO_PIN_PULLUP },
+        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 29) }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_SELECT] =
-        { "Select", { NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(1, 0) }, NRF_GPIO_PIN_PULLUP },
+        { "Select", { NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 30) }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_DOWN] =
-        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(1, 2) }, NRF_GPIO_PIN_PULLUP },
+        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(0, 31) }, NRF_GPIO_PIN_PULLUP },
   },
   .button_com = { 0 },
   .active_high = false,
@@ -106,12 +106,12 @@ static const BoardConfigMag BOARD_CONFIG_MAG = {
     .axes_inverts[AXIS_Z] = false,
 #endif
   },
-  .mag_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 25) },
-  .mag_int = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 5, .gpio_pin = NRF_GPIO_PIN_MAP(0, 25), },
+  .mag_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 3) },
+  .mag_int = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 5, .gpio_pin = NRF_GPIO_PIN_MAP(0, 3), },
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 25), true }, // LRA_EN
+  .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 2), true }, // LRA_EN
   .vsys_scale = 3300,
 };
 
@@ -221,11 +221,11 @@ static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),
 
-  .clk = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 8), true },
-  .mosi = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 6), true },
-  .cs = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true },
+  .clk = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 6), true },
+  .mosi = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 8), true },
+  .cs = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 3), true },
 
-  .on_ctrl = {GPIO_Port_NULL, },
+  .on_ctrl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 9), true },
 };
 
 extern const VoltageMonitorDevice * VOLTAGE_MONITOR_ALS;
@@ -239,3 +239,5 @@ extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 
 extern MicDevice * const MIC;
+
+extern I2CSlavePort * const I2C_NPM1300;
