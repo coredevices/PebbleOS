@@ -225,7 +225,7 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .mosi = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 8), true },
   .cs = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 3), true },
 
-  .on_ctrl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 9), true },
+  .on_ctrl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true },
 };
 
 extern const VoltageMonitorDevice * VOLTAGE_MONITOR_ALS;
