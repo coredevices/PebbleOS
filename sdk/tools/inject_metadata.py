@@ -145,9 +145,10 @@ def inject_metadata(target_binary, target_elf, resources_file, timestamp, allow_
                 continue
 
             # Carve off the first column, since it sometimes has a space in it which screws up the
-            # split. Two leading spaces, a square bracket, 2 digits (with space padding),
-            # a second square brack is 6
-            line = line[6:]
+            # split.
+            if not ']' in line:
+                continue
+            line = line[line.index(']') + 1:]
 
             columns = line.split()
             if len(columns) < 6:
