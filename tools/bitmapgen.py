@@ -240,9 +240,9 @@ class PebbleBitmap(object):
                     # shift and store the color index in a packed value
                     packed_count = packed_count + 1  # pre-increment for calculation below
                     packed_value = packed_value | (color_index << \
-                            (self.bitdepth * (8 / self.bitdepth - (packed_count))))
+                            (self.bitdepth * (8 // self.bitdepth - (packed_count))))
 
-                    if (packed_count == 8 / self.bitdepth):
+                    if (packed_count == 8 // self.bitdepth):
                         out_pixels.append(struct.pack("B", packed_value))
                         packed_count = 0
                         packed_value = 0
@@ -251,7 +251,7 @@ class PebbleBitmap(object):
             if (packed_count):
                 out_pixels.append(struct.pack("B", packed_value))
 
-        return ''.join(out_pixels)
+        return b''.join(out_pixels)
 
     def image_bits(self):
         if self.bitmap_format == FORMAT_COLOR or self.bitmap_format == FORMAT_COLOR_RAW:

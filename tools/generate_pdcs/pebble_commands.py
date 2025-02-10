@@ -221,7 +221,7 @@ class CircleCommand(Command):
     def serialize(self):
         s = pack('B', DRAW_COMMAND_TYPE_CIRCLE)  # command type
         s += self.serialize_common()
-        s += pack('H', self.radius)  # circle radius (16-bit)
+        s += pack('H', int(self.radius))  # circle radius (16-bit)
         s += self.serialize_points()
         return s
 

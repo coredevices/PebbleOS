@@ -39,9 +39,9 @@ class binary_header(Task.Task):
             array_name = re.sub(r'[^A-Za-z0-9]', '_', self.inputs[0].name)
 
         if getattr(self.generator, 'compressed', False):
-            encoded_code = ''.join(sparse_length_encoding.encode(code))
+            encoded_code = b''.join(sparse_length_encoding.encode(code))
             # verify that it was encoded correctly
-            if ''.join(sparse_length_encoding.decode(encoded_code)) != code:
+            if b''.join(sparse_length_encoding.decode(encoded_code)) != code:
                 raise Errors.WafError('encoding error')
             code = encoded_code
 
@@ -49,7 +49,7 @@ class binary_header(Task.Task):
         output += ['static const uint8_t %s[] = {' % array_name]
         line = []
         for n, b in enumerate(code):
-            line += ['0x%.2x,' % ord(b)]
+            line += ['0x%.2x,' % b]
             if n % 16 == 15:
                 output += [''.join(line)]
                 line = []

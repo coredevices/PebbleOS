@@ -53,16 +53,18 @@ _MAX_COUNT = 0x807F  # max is ((0x7F << 8) | (0xFF) + 0x80
 def encode(source):
     # Analyze the source data to select the escape byte. To keep things simple, we don't allow 0 to
     # be the escape character.
-    source = bytes(source)
-    frequency = Counter({chr(n): 0 for n in range(1, 256)})
+    frequency = Counter({n: 0 for n in range(1, 256)})
     frequency.update(source)
+
     # most_common() doesn't define what happens if there's a tie in frequency. Let's always pick
     # the lowest value of that frequency to make the encoding predictable.
-    occurences = frequency.most_common()
-    escape = min(x[0] for x in occurences if x[1] == occurences[-1][1])
-    yield escape
+    occurrences = frequency.most_common()
+    escape = min(byte for byte, count in occurrences if count == occurrences[-1][1])
+
+    yield bytes([escape])
+
     for b, g in groupby(source):
-        if b == b'\0':
+        if b == 0x00:
             # this is a run of zeros
             count = len(list(g))
             while count >= 0x80:
@@ -70,49 +72,52 @@ def encode(source):
                 unit = min(count, _MAX_COUNT)
                 count -= unit
                 unit -= 0x80
-                yield escape
-                yield chr(((unit >> 8) & 0x7F) | 0x80)
-                yield chr(unit & 0xFF)
+                yield bytes([escape])
+                yield bytes([((unit >> 8) & 0x7F) | 0x80])
+                yield bytes([unit & 0xFF])
             if count == 1:
                 # can't encode a length of 1 zero, so just emit it directly
-                yield b
+                yield bytes([0x00])
             elif 1 < count < 0x80:
                 # encode the number of zeros using one byte
-                yield escape
-                yield chr(count)
+                yield bytes([escape])
+                yield bytes([count])
             elif count < 0:
                 raise Exception('Encoding malfunctioned')
         else:
             # simply insert the characters (and escape the escape character)
             for _ in g:
-                yield b
+                yield bytes([b])
                 if b == escape:
-                    yield b'\1'
-    yield escape
-    yield b'\0'
+                    yield bytes([1])
 
+    yield bytes([escape])
+    yield bytes([0x00])
 
 def decode(stream):
     stream = iter(stream)
     escape = next(stream)
+
     while True:
         char = next(stream)
+
         if char == escape:
             code = next(stream)
-            if code == b'\0':
+            if code == 0x00:
                 return
-            elif code == b'\1':
-                yield escape
+            elif code == 0x01:
+                yield bytes([escape])
             else:
-                if ord(code) & 0x80 == 0:
-                    count = ord(code)
+                if code & 0x80 == 0:
+                    count = code
                 else:
-                    count = (((ord(code) & 0x7f) << 8) | ord(next(stream))) + 0x80
-                    assert(count <= _MAX_COUNT)
-                for _ in xrange(count):
-                    yield b'\0'
+                    count = (((code & 0x7F) << 8) | next(stream)) + 0x80
+                    assert count <= _MAX_COUNT
+
+                for _ in range(count):
+                    yield bytes([0x00])
         else:
-            yield char
+            yield bytes([char])
 
 
 if __name__ == '__main__':
@@ -123,54 +128,54 @@ if __name__ == '__main__':
 
         class TestSparseLengthEncoding(unittest.TestCase):
             def test_empty(self):
-                raw_data = ''
-                encoded_data = ''.join(encode(raw_data))
-                decoded_data = ''.join(decode(encoded_data))
-                self.assertEquals(encoded_data, '\x01\x01\x00')
+                raw_data = b''
+                encoded_data = b''.join(encode(raw_data))
+                decoded_data = b''.join(decode(encoded_data))
+                self.assertEqual(encoded_data, b'\x01\x01\x00')
 
             def test_no_zeros(self):
-                raw_data = '\x02\xff\xef\x99'
-                encoded_data = ''.join(encode(raw_data))
-                decoded_data = ''.join(decode(encoded_data))
-                self.assertEquals(encoded_data, '\x01\x02\xff\xef\x99\x01\x00')
+                raw_data = b'\x02\xff\xef\x99'
+                encoded_data = b''.join(encode(raw_data))
+                decoded_data = b''.join(decode(encoded_data))
+                self.assertEqual(encoded_data, b'\x01\x02\xff\xef\x99\x01\x00')
 
             def test_one_zero(self):
-                raw_data = '\x00'
-                encoded_data = ''.join(encode(raw_data))
-                decoded_data = ''.join(decode(encoded_data))
-                self.assertEquals(encoded_data, '\x01\x00\x01\x00')
+                raw_data = b'\x00'
+                encoded_data = b''.join(encode(raw_data))
+                decoded_data = b''.join(decode(encoded_data))
+                self.assertEqual(encoded_data, b'\x01\x00\x01\x00')
 
             def test_small_number_of_zeros(self):
                 # under 0x80 zeros
-                raw_data = '\0' * 0x0040
-                encoded_data = ''.join(encode(raw_data))
-                decoded_data = ''.join(decode(encoded_data))
-                self.assertEquals(encoded_data, '\x01\x01\x40\x01\x00')
-                self.assertEquals(decoded_data, raw_data)
+                raw_data = b'\0' * 0x0040
+                encoded_data = b''.join(encode(raw_data))
+                decoded_data = b''.join(decode(encoded_data))
+                self.assertEqual(encoded_data, b'\x01\x01\x40\x01\x00')
+                self.assertEqual(decoded_data, raw_data)
 
             def test_medium_number_of_zeros(self):
                 # between 0x80 and 0x807f zeros
-                raw_data = '\0' * 0x1800
-                encoded_data = ''.join(encode(raw_data))
-                decoded_data = ''.join(decode(encoded_data))
-                self.assertEquals(encoded_data, '\x01\x01\x97\x80\x01\x00')
-                self.assertEquals(decoded_data, raw_data)
+                raw_data = b'\0' * 0x1800
+                encoded_data = b''.join(encode(raw_data))
+                decoded_data = b''.join(decode(encoded_data))
+                self.assertEqual(encoded_data, b'\x01\x01\x97\x80\x01\x00')
+                self.assertEqual(decoded_data, raw_data)
 
             def test_remainder_one(self):
                 # leaves a remainder of 1 zero
-                raw_data = '\0' * (0x807f + 1)
-                encoded_data = ''.join(encode(raw_data))
-                decoded_data = ''.join(decode(encoded_data))
-                self.assertEquals(encoded_data, '\x01\x01\xff\xff\x00\x01\x00')
-                self.assertEquals(decoded_data, raw_data)
+                raw_data = b'\0' * (0x807f + 1)
+                encoded_data = b''.join(encode(raw_data))
+                decoded_data = b''.join(decode(encoded_data))
+                self.assertEqual(encoded_data, b'\x01\x01\xff\xff\x00\x01\x00')
+                self.assertEqual(decoded_data, raw_data)
 
             def test_remainder_under_128(self):
                 # leaves a remainder of 100 zeros
-                raw_data = '\0' * (0x807f + 100)
-                encoded_data = ''.join(encode(raw_data))
-                decoded_data = ''.join(decode(encoded_data))
-                self.assertEquals(encoded_data, '\x01\x01\xff\xff\x01\x64\x01\x00')
-                self.assertEquals(decoded_data, raw_data)
+                raw_data = b'\0' * (0x807f + 100)
+                encoded_data = b''.join(encode(raw_data))
+                decoded_data = b''.join(decode(encoded_data))
+                self.assertEqual(encoded_data, b'\x01\x01\xff\xff\x01\x64\x01\x00')
+                self.assertEqual(decoded_data, raw_data)
 
         unittest.main()
     elif len(sys.argv) == 2:
