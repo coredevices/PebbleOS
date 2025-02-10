@@ -1,0 +1,20 @@
+MEMORY
+{
+    KERNEL_RAM  (xrw) : ORIGIN = @KERNEL_RAM_ADDR@, LENGTH = @KERNEL_RAM_SIZE@
+    WORKER_RAM (xrw)  : ORIGIN = @WORKER_RAM_ADDR@, LENGTH = @WORKER_RAM_SIZE@
+    APP_RAM (xrw)     : ORIGIN = @APP_RAM_ADDR@,    LENGTH = @APP_RAM_SIZE@
+
+    /* Bootloader now ends at 0x8008000, once we're sure we won't break */
+    /* current watches, we should take advantage of this free space. */
+    FLASH (rx) : ORIGIN = @FW_FLASH_ORIGIN@, LENGTH = @FW_FLASH_LENGTH@
+}
+
+__FLASH_start__ = @FLASH_ORIGIN@;
+__FLASH_size__ = @FLASH_SIZE@;
+
+REGION_ALIAS("REGION_ISR_STACK", KERNEL_RAM);
+REGION_ALIAS("REGION_KERNEL_STACKS", KERNEL_RAM);
+REGION_ALIAS("REGION_KERNEL_HEAP", KERNEL_RAM);
+
+@BOOTLOADER_SYMBOLS@
+

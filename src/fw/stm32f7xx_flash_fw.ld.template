@@ -1,0 +1,45 @@
+MEMORY
+{
+    /*
+     * STM32F769 has 512kb total of system RAM
+     * DTCM-RAM - 128kb - TCM "for critical real-time data"
+     *   0x20000000 - 0x2001ffff
+     * SRAM1 - 368kb - AHB
+     *   0x20020000 - 0x2007bfff
+     * SRAM2 - 16kb - AHB
+     *   0x2007c000 - 0x2007ffff
+     *
+     * We put a bunch of static variables (tagged with DTCM_BSS) into DTCM and then use both SRAM
+     * regions as one continuous blob which gives us 384k of RAM to play with.
+     */
+    DTCM (rw) : ORIGIN = 0x20000000, LENGTH = 128K
+
+    KERNEL_RAM  (xrw) : ORIGIN = @KERNEL_RAM_ADDR@, LENGTH = @KERNEL_RAM_SIZE@
+    WORKER_RAM (xrw)  : ORIGIN = @WORKER_RAM_ADDR@, LENGTH = @WORKER_RAM_SIZE@
+    APP_RAM (xrw)     : ORIGIN = @APP_RAM_ADDR@,    LENGTH = @APP_RAM_SIZE@
+
+    FLASH (rx) : ORIGIN = @FW_FLASH_ORIGIN@, LENGTH = @FW_FLASH_LENGTH@
+}
+
+__FLASH_start__ = @FLASH_ORIGIN@;
+__FLASH_size__ = @FLASH_SIZE@;
+
+__DTCM_RAM_size__ = LENGTH(DTCM);
+
+REGION_ALIAS("REGION_ISR_STACK", DTCM);
+REGION_ALIAS("REGION_KERNEL_STACKS", DTCM);
+REGION_ALIAS("REGION_KERNEL_HEAP", KERNEL_RAM);
+
+SECTIONS
+{
+    .dtcm_bss (NOLOAD) : {
+        __dtcm_bss_start = .;
+
+        *(.dtcm_bss)
+        *(.dtcm_bss.*)
+
+        . = ALIGN(8);
+        __dtcm_bss_end = .;
+    } >DTCM
+}
+
