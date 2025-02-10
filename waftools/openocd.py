@@ -135,7 +135,7 @@ def get_flavor(conf):
                                           output=waflib.Context.STDERR)
         version_string = version_string.splitlines()[0]
         matches = re.search("(\d+)\.(\d+)\.(\d+)", version_string)
-        version = map(int, matches.groups())
+        version = list(map(int, matches.groups()))
         return (version[0] >= 0 and version[1] >= 7,
                 'pebble' in version_string)
     except Exception:
