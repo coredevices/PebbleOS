@@ -188,7 +188,7 @@ def get_args():
     """
     args = {}
     info_args_str = gdb.execute("info args", to_string=True)
-    print info_args_str
+    print(info_args_str)
     for line in info_args_str.splitlines():
         match = GET_ARGS_RE.search(line)
         var_name = match.group()

@@ -15,28 +15,28 @@
 
 
 from pyftdi.serialext.protocol_ftdi import FtdiSerial
-from pyftdi.pyftdi.usbtools import UsbTools
+from pyftdi.usbtools import UsbTools
 from string import printable as printablechars
 
 
 def _get_vps():
     vps = set()
-    for vendor, pids in FtdiSerial.PRODUCT_IDS.items():
-        for pname, pid in pids.items():
+    for vendor, pids in list(FtdiSerial.PRODUCT_IDS.items()):
+        for pname, pid in list(pids.items()):
             vps.add((vendor, pid))
 
     return vps
 
 
 def _is_accessory(tty_type):
-    return tty_type is "accessory"
+    return tty_type == "accessory"
 
 
 def _tty_get_port(num_ports, tty_type):
     if num_ports < 4:
         # tintin
         port = None if _is_accessory(tty_type) else 2
-    elif tty_type is "ble":
+    elif tty_type == "ble":
         port = 3
     else:
         # snowy, silk
@@ -58,7 +58,7 @@ def _product_of_tty_type(product, tty_type):
 
 
 def _dict_try_key_from_value(d, i):
-    for n, id in d.items():
+    for n, id in list(d.items()):
         if id == i:
             return n
     return i

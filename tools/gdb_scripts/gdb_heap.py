@@ -76,7 +76,7 @@ class Heap(object):
         self.heap_info_type = gdb.lookup_type("HeapInfo_t")
         self.size = gdb_utils.Address(str(self.end)) - gdb_utils.Address(str(self.start))
 
-        self.malloc_instrumentation = "pc" in self.heap_info_type.keys()
+        self.malloc_instrumentation = "pc" in list(self.heap_info_type.keys())
         self.corrupted = False
         self.show_progress = show_progress
 
@@ -96,7 +96,7 @@ class Heap(object):
                 gdb.write('.')
                 gdb.flush()
             if next(loop_count) > 10000 or self.corrupted:
-                print "ERROR: heap corrupted"
+                print("ERROR: heap corrupted")
                 return
 
             block_prev_size = int(segment_ptr["PrevSize"])
@@ -135,7 +135,7 @@ class Heap(object):
 
         # Heap blocks with less than one block's worth of space between it
         # and the next will grow to take up that space.
-        return frozenset(common_size + x * self.alignment_size for x in xrange(offset_blocks+1))
+        return frozenset(common_size + x * self.alignment_size for x in range(offset_blocks+1))
 
     def object_size(self, obj_type):
         bytes = int(gdb.lookup_type(obj_type).sizeof)

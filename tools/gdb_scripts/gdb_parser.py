@@ -59,13 +59,13 @@ def parse_heap(heap, recognizer_subset=None):
         heap_recognizers = {name: recognizers[name] for name in recognizer_subset}
 
     ordered_recognizers, hidden = _order_recognizers(heap_recognizers)
-    logger.info('Running: {}'.format(', '.join(ordered_recognizers.keys())))
-    for name, recognizer in ordered_recognizers.iteritems():
+    logger.info('Running: {}'.format(', '.join(list(ordered_recognizers.keys()))))
+    for name, recognizer in ordered_recognizers.items():
         try:
-            results[name] = filter(None, (recognizer.impl(block, heap, results) for
-                                          block in heap.allocated_blocks()))
+            results[name] = [_f for _f in (recognizer.impl(block, heap, results) for
+                                          block in heap.allocated_blocks()) if _f]
         except:
-            print name + " hit an exception. Skipping"
+            print(name + " hit an exception. Skipping")
 
     for dependency in hidden:
         del results[dependency]
@@ -83,13 +83,13 @@ def _order_recognizers(recognizer_subset):
     while recognizer_subset and len(ordered) != last_length:
         last_length = len(ordered)
 
-        for name, recognizer in recognizer_subset.items():
+        for name, recognizer in list(recognizer_subset.items()):
             if not recognizer.depends_on or recognizer.depends_on in ordered:
                 ordered[name] = recognizer
                 del recognizer_subset[name]
 
     # Add implicit dependencies
-    for name, recognizer in recognizer_subset.iteritems():
+    for name, recognizer in recognizer_subset.items():
         if recognizer.depends_on not in ordered:
             logger.info('Adding dependency: {}'.format(recognizer.depends_on))
             ordered[recognizer.depends_on] = recognizers[recognizer.depends_on]
@@ -146,7 +146,7 @@ class RecognizerType(type):
         return cls.__name__
 
 
-class Recognizer(object):
+class Recognizer(object, metaclass=RecognizerType):
     """ This is a declarative recognizer. It auto-registers with the recognizer dictionary.
 
     Note that declarative recognizers are singletons that don't get instantiated, so
@@ -171,7 +171,6 @@ class Recognizer(object):
     ...     def is_type(self, block, search_blocks):
     ...         return block['foo'] == 4
     """
-    __metaclass__ = RecognizerType
 
     type = None
     depends_on = None
@@ -414,7 +413,7 @@ class EventService(Recognizer):
 
     def is_type(self, entry, search_blocks):
         subscribers = 0
-        for x in xrange(Tasks().total):
+        for x in range(Tasks().total):
             if entry['subscribers'][x] != 0:
                 subscribers += 1
         return entry['num_subscribers'] == subscribers
@@ -478,7 +477,7 @@ class GBitmap(Recognizer):
         is_circular_format = (format == GBitmapFormats['GBitmapFormat8BitCircular'])
         is_valid_circular = (is_circular_format and row_size_bytes == 0)
         is_valid_rect = (not is_circular_format and row_size_bytes * 8 >= bounds_width)
-        return (is_valid_circular or is_valid_rect) and (format in GBitmapFormats.values())
+        return (is_valid_circular or is_valid_rect) and (format in list(GBitmapFormats.values()))
 
 
 class GBitmap_addr(Recognizer):

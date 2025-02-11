@@ -267,7 +267,7 @@ class FreeRTOSQueue(object):
         return self.get_queue_item_description(self.previously_processed_items())
 
     def __str__(self):
-        return self.get_queue_item_description(self.items())
+        return self.get_queue_item_description(list(self.items()))
 
 
 class Tasks(object):
@@ -277,7 +277,7 @@ class Tasks(object):
 
         task_handles = gdb.parse_and_eval("g_task_handles")
         self.total = int(gdb.parse_and_eval("NumPebbleTask"))
-        for x in xrange(self.total):
+        for x in range(self.total):
             task = task_handles[x].cast(gdb.lookup_type("TCB_t").pointer())
             if task:
                 self.valid_tasks.append(task_handles[x])
@@ -297,8 +297,8 @@ class LinkedList(object):
 
         while node.address != 0:
             if node[prev_direction] != prev_address:
-                print("Warning: LinkedList {} corrupted? "
-                      "Expected {} got {}".format(node.address, prev_address, node[prev_direction]))
+                print(("Warning: LinkedList {} corrupted? "
+                      "Expected {} got {}".format(node.address, prev_address, node[prev_direction])))
                 break
             self.addresses.append(node.address)
             prev_address = node.address
@@ -332,7 +332,7 @@ class DumpQueue(gdb.Command):
                                  help="[TYPE_CAST]")
 
     def print_usage(self):
-        print self.parser.print_usage()
+        print(self.parser.print_usage())
 
     def invoke(self, unicode_args, from_tty):
         args = self.parser.parse_args(unicode_args)
@@ -343,10 +343,10 @@ class DumpQueue(gdb.Command):
         freertos_queue = FreeRTOSQueue(args.queueinfo, args.typecast)
 
         if args.dump_prev:
-            print "---Dumping previously processed queue items---\n"
-            print freertos_queue.print_previously_processed_items()
+            print("---Dumping previously processed queue items---\n")
+            print(freertos_queue.print_previously_processed_items())
         else:
-            print str(freertos_queue)
+            print(str(freertos_queue))
 DumpQueue()
 
 
@@ -357,7 +357,7 @@ class QueueStats(gdb.Command):
 
     def invoke(self, unicode_args, from_tty):
         def print_line():
-            print "~" * 80
+            print("~" * 80)
 
         # Dict Format:
         #  Thread Name 1 : [
@@ -385,13 +385,13 @@ class QueueStats(gdb.Command):
             ]
         }
 
-        for owner in owners_of_queues_to_dump.iterkeys():
-            print "Dumping queue(s) used by %s" % owner
+        for owner in owners_of_queues_to_dump.keys():
+            print("Dumping queue(s) used by %s" % owner)
             print_line()
             for queues in owners_of_queues_to_dump[owner]:
-                print "\n--Queue Name: %s--\n" % queues[0]
+                print("\n--Queue Name: %s--\n" % queues[0])
                 freertos_queue = FreeRTOSQueue(queues[0], queues[1])
-                print str(freertos_queue)
+                print(str(freertos_queue))
 QueueStats()
 
 
@@ -403,9 +403,9 @@ class PrintList(gdb.Command):
 
     def invoke(self, unicode_args, from_tty):
         if not unicode_args:
-            print "Prints a list of ListNode nodes.\n" \
+            print("Prints a list of ListNode nodes.\n" \
                   "Expected command format:\n" \
-                  "pl LIST_HEAD [TYPE_CAST]"
+                  "pl LIST_HEAD [TYPE_CAST]")
             return
         split_args = unicode_args.split(" ", 1)
         list_head = split_args[0]
@@ -415,7 +415,7 @@ class PrintList(gdb.Command):
         if len(split_args) > 1:
             cast = split_args[1]
             if '*' in cast:
-                print "Specify non-pointer type"
+                print("Specify non-pointer type")
                 return
             cast_type = gdb.lookup_type(cast).pointer()
             node_value = node_value.cast(cast_type)
@@ -425,13 +425,13 @@ class PrintList(gdb.Command):
         num_nodes = 0
         while node_value:
             num_nodes += 1
-            print str(node_value.dereference())
+            print(str(node_value.dereference()))
             if cast_type:
                 node_value = node_value.cast(list_node_ptr_type)["next"]
                 node_value = node_value.cast(cast_type)
             else:
                 node_value = node_value["next"]
-        print "%u list nodes" % num_nodes
+        print("%u list nodes" % num_nodes)
 
 PrintList()
 
@@ -445,7 +445,7 @@ class StackRecover(gdb.Command):
         self.parser = gdb_utils.GdbArgumentParser(prog='pbl stackwizard', description=desc)
 
     def print_usage(self):
-        print self.parser.print_usage()
+        print(self.parser.print_usage())
 
     def invoke(self, unicode_args, from_tty):
         def count_frames():
@@ -481,7 +481,7 @@ class StackRecover(gdb.Command):
 
         last_pc_addr = 0
 
-        print "Examining stack starting at 0x%x ..." % pxBottomStackAddr
+        print("Examining stack starting at 0x%x ..." % pxBottomStackAddr)
 
         # This algorithm is pretty naive. It effectively assumes that the only
         # time a code address is on the stack is because it was what was stored
@@ -509,9 +509,9 @@ class StackRecover(gdb.Command):
 
                     # we've found a potential match. Does it give us a reasonable backtrace?
                     if count_frames() > 4:
-                        print "Potential backtrace found %d bytes above stack bottom!" % \
-                            (last_pc_addr - int(pxBottomStackAddr.cast(uint32_type)))
-                        print "~" * 80
+                        print("Potential backtrace found %d bytes above stack bottom!" % \
+                            (last_pc_addr - int(pxBottomStackAddr.cast(uint32_type))))
+                        print("~" * 80)
                         gdb.execute("backtrace")
                         break
 
@@ -528,14 +528,14 @@ class StackStats(gdb.Command):
         super(StackStats, self).__init__('sbt', gdb.COMMAND_USER)
 
     def print_usage(self):
-        print "Prints a backtrace of the currently selected thread displaying\n" \
-            " how much stack each method uses\n"
+        print("Prints a backtrace of the currently selected thread displaying\n" \
+            " how much stack each method uses\n")
 
     def invoke(self, unicode_args, from_tty):
         cur_frame = gdb.newest_frame()
         tot_depth = 0
         if cur_frame.name() is not None:
-            print "     - %s" % cur_frame.name()
+            print("     - %s" % cur_frame.name())
 
         while cur_frame and cur_frame.is_valid():
             # Parses the following string to pull out the $sp:
@@ -554,9 +554,9 @@ class StackStats(gdb.Command):
                     tot_depth += stack_use
                     name = cur_frame.older().name()
                     if name is not None:
-                        print "%4d - %s" % (stack_use, name)
+                        print("%4d - %s" % (stack_use, name))
             cur_frame = cur_frame.older()
-        print "Total Stack Depth: %d bytes" % tot_depth
+        print("Total Stack Depth: %d bytes" % tot_depth)
 StackStats()
 
 
@@ -575,7 +575,7 @@ class HeapParser(gdb.Command):
                                  help="dump unknowns on the heap")
 
     def print_usage(self):
-        print self.parser.print_usage()
+        print(self.parser.print_usage())
 
     def invoke(self, unicode_args, from_tty):
         args = self.parser.parse_args(unicode_args)
@@ -588,7 +588,7 @@ class HeapParser(gdb.Command):
         prefer = ["Semaphore", "AppMessageBuffer", "AnalyticsStopwatch"]
 
         block_data = dict([(str(block.data), []) for block in heap])
-        for name, blocks in data.iteritems():
+        for name, blocks in data.items():
             addresses = [str(block.data) for block in blocks]
             for address in addresses:
                 block_data[address].append(name)
@@ -607,33 +607,33 @@ class HeapParser(gdb.Command):
                 block_data[key] = deduped
 
         if args.dump_heap:
-            print "~" * 60
+            print("~" * 60)
             for block in heap:
-                print "Addr: {}  Bytes: {:<6} {}".format(block.data, block.size,
-                                                         block_data[str(block.data)])
+                print("Addr: {}  Bytes: {:<6} {}".format(block.data, block.size,
+                                                         block_data[str(block.data)]))
 
-        print "~" * 60
-        print "Summary:"
+        print("~" * 60)
+        print("Summary:")
 
-        for struct, blocks in OrderedDict(sorted(data.items())).iteritems():
-            print "{:<30}: {:<3} ({} bytes)".format(struct, len(blocks),
-                                                    sum(block.size for block in blocks))
+        for struct, blocks in OrderedDict(sorted(data.items())).items():
+            print("{:<30}: {:<3} ({} bytes)".format(struct, len(blocks),
+                                                    sum(block.size for block in blocks)))
 
         if args.dump_strings:
-            print "~" * 60
-            print "Strings:"
+            print("~" * 60)
+            print("Strings:")
 
             for block in data["String"]:
-                print "Addr: {} -> {}".format(block.data, block.cast("char").string())
+                print("Addr: {} -> {}".format(block.data, block.cast("char").string()))
 
-            print "Tasks:"
+            print("Tasks:")
             for block in data["Task"]:
-                print "Addr: {} -> Task: {}".format(block.data,
-                                                    block.cast("TCB_t")["pcTaskName"].string())
+                print("Addr: {} -> Task: {}".format(block.data,
+                                                    block.cast("TCB_t")["pcTaskName"].string()))
 
         if args.dump_unknowns:
-            print "~" * 60
-            print "Unknown:"
+            print("~" * 60)
+            print("Unknown:")
 
             for block in data["Unknown"]:
                 desc = ""
@@ -641,12 +641,12 @@ class HeapParser(gdb.Command):
                     pc = int(block.info["pc"])
                     info = gdb_utils.addr2line(pc)
                     desc = "{info.filename}:{info.line}".format(info=info)
-                print "Addr: {}  Bytes: {:<8} {}".format(block.data, block.size, desc)
-            print "Note: Most unknowns in the kernel heap are from applib_malloc."
+                print("Addr: {}  Bytes: {:<8} {}".format(block.data, block.size, desc))
+            print("Note: Most unknowns in the kernel heap are from applib_malloc.")
         if len(data["Unknown"]) > 20:
-            print "Warning: High amount of unknown blocks. Consider adding another parser."
+            print("Warning: High amount of unknown blocks. Consider adding another parser.")
         if len([block for block in data["Unknown"] if block.size < 100]) > 8:
-            print "High amount of small unknown blocks. Is an animation onscreen?"
+            print("High amount of small unknown blocks. Is an animation onscreen?")
 
 HeapParser()
 
@@ -693,7 +693,7 @@ class LockStats(gdb.Command):
                 task_lock_wait_dict[waiter].append(mutex.owner_name())
             message.append("")
 
-        for task, locks in task_lock_wait_dict.items():
+        for task, locks in list(task_lock_wait_dict.items()):
             for lock in locks:
                 # Is the lock waiting for the current task?
                 if task in task_lock_wait_dict.get(lock, []):
@@ -703,7 +703,7 @@ class LockStats(gdb.Command):
         message = "\n".join(message)
 
         if do_print:
-            print message
+            print(message)
 
         return message
 
@@ -725,7 +725,7 @@ class HeapStats(gdb.Command):
                                  help="dump the size allocated by each file")
 
     def print_usage(self):
-        print self.parser.print_help()
+        print(self.parser.print_help())
 
     def invoke(self, unicode_args, from_tty):
         args = self.parser.parse_args(unicode_args)
@@ -742,11 +742,11 @@ class HeapStats(gdb.Command):
             self.extract_info(block)
 
         # Ensure the next line printed is on its own line instead of appended to the progress
-        print ""
+        print("")
 
         if args.dump_heap or args.dump_size:
             if not self.malloc_instrumentation:
-                print "Warning: Malloc instrumentation not enabled."
+                print("Warning: Malloc instrumentation not enabled.")
             for block in heap:
                 self.extract_file_info(block)
 
@@ -761,29 +761,29 @@ class HeapStats(gdb.Command):
                 else:
                     filesize_dict["FREE"] += size_bytes
 
-            filesize_dict_sorted = OrderedDict(sorted(filesize_dict.items(),
+            filesize_dict_sorted = OrderedDict(sorted(list(filesize_dict.items()),
                 key=lambda x: x[1], reverse=True))
-            print "File: Heap usage (bytes)"
-            for filename, size in filesize_dict_sorted.iteritems():
-                print "{}: {}".format(filename, size)
+            print("File: Heap usage (bytes)")
+            for filename, size in filesize_dict_sorted.items():
+                print("{}: {}".format(filename, size))
 
         if args.dump_heap:
             for pc, ptr, size_bytes, filename, desc in self.file_size_list:
-                print "PC:0x{:0>8x} Addr:{} Bytes:{:<8} {}".format(pc, ptr, size_bytes, desc)
+                print("PC:0x{:0>8x} Addr:{} Bytes:{:<8} {}".format(pc, ptr, size_bytes, desc))
 
         if args.dump_freq:
             heap_size_dict = Counter(self.alloc_segments)
-            heaps_dict_sorted = OrderedDict(sorted(heap_size_dict.items(),
+            heaps_dict_sorted = OrderedDict(sorted(list(heap_size_dict.items()),
                 key=lambda x: x[1], reverse=True))
-            print "Freq: Size (bytes)"
-            for size, freq in heaps_dict_sorted.items():
-                print "{:>4d}: {}".format(freq, size)
+            print("Freq: Size (bytes)")
+            for size, freq in list(heaps_dict_sorted.items()):
+                print("{:>4d}: {}".format(freq, size))
 
         if heap.corrupted:
             message = "HEAP CORRUPTED!"
             if not args.dump_heap:
                 message += " Dump heap for details"
-            print message
+            print(message)
 
         class HeapInfo(namedtuple('HeapInfo', 'blocks size max')):
             def __new__(cls, segments):
@@ -792,14 +792,14 @@ class HeapStats(gdb.Command):
         free = HeapInfo(self.free_segments)
         alloc = HeapInfo(self.alloc_segments)
 
-        print("Heap start {heap.start}\n"
+        print(("Heap start {heap.start}\n"
               "Heap end {heap.end}\n"
               "Heap total size {heap.size}\n"
               "Heap allocated {alloc.size}\n"
               "Heap high water mark {heap.high_water_mark}\n"
               "Heap free blocks: {free.size} bytes, {free.blocks} blocks\n"
               "Heap alloc blocks: {alloc.size:d} bytes, {alloc.blocks} blocks\n"
-              "Heap largest free block: {free.max}").format(heap=heap, free=free, alloc=alloc)
+              "Heap largest free block: {free.max}").format(heap=heap, free=free, alloc=alloc))
 
     def extract_info(self, block):
         if block.corruption_code:
@@ -870,10 +870,10 @@ class LayerTree(gdb.Command):
         window_ptr_type = gdb.lookup_type("Window").pointer()
         # see GDB Bug 10676 https://sourceware.org/bugzilla/show_bug.cgi?id=10676 for why I use str()
         if str(window_ptr.type) != str(window_ptr_type):
-            print "Error: argument must be of type {}, this one is {}".format(window_ptr_type, window_ptr.type)
+            print("Error: argument must be of type {}, this one is {}".format(window_ptr_type, window_ptr.type))
 
         def print_layer(layer_ptr, level):
-            print "{}Layer ({}): frame: ({}, {}, {}, {}), bounds: ({}, {}, {}, {}), hidden: {}, update_proc: {}".format(
+            print("{}Layer ({}): frame: ({}, {}, {}, {}), bounds: ({}, {}, {}, {}), hidden: {}, update_proc: {}".format(
                 " " * 2 * level,
                 layer_ptr,
                 layer_ptr["frame"]["origin"]["x"],
@@ -885,7 +885,7 @@ class LayerTree(gdb.Command):
                 layer_ptr["bounds"]["size"]["w"],
                 layer_ptr["bounds"]["size"]["h"],
                 layer_ptr["hidden"],
-                layer_ptr["update_proc"])
+                layer_ptr["update_proc"]))
 
         def layer_dump_level(layer_ptr, level):
             def layer_dump_node(layer_ptr, level):
@@ -945,9 +945,9 @@ class WorkerSymbols(gdb.Command):
         super(WorkerSymbols, self).__init__('worker_symbols', gdb.COMMAND_USER)
 
     def print_usage(self):
-        print "Load in symbols for the worker task\n" \
+        print("Load in symbols for the worker task\n" \
               "Expected command format:\n" \
-              "worker_symbols <worker-elf-file>"
+              "worker_symbols <worker-elf-file>")
 
     def complete(self, text, word):
         return gdb.COMPLETE_FILENAME
@@ -967,9 +967,9 @@ class AppSymbols(gdb.Command):
         super(AppSymbols, self).__init__('app_symbols', gdb.COMMAND_USER)
 
     def print_usage(self):
-        print "Load in symbols for the app task\n" \
+        print("Load in symbols for the app task\n" \
               "Expected command format:\n" \
-              "app_symbols <app-elf-file>"
+              "app_symbols <app-elf-file>")
 
     def complete(self, text, word):
         return gdb.COMPLETE_FILENAME
@@ -988,7 +988,7 @@ class RebootReason(gdb.Command):
         super(RebootReason, self).__init__('reboot_reason', gdb.COMMAND_USER)
 
     def print_usage(self):
-        print "Print Reboot reason from RTC registers.\n"
+        print("Print Reboot reason from RTC registers.\n")
 
     def invoke(self, unicode_args, from_tty):
         gdb.execute('p (RebootReasonCode)(*(uint8_t *)0x40002864)')
@@ -1023,7 +1023,7 @@ class SharedCircularBuffer(object):
 
     def read_and_consume(self, size):
         data = []
-        for _ in xrange(size):
+        for _ in range(size):
             if self.read_index == self.write_index:
                 break
             data.append(chr(self.buffer[self.read_index]))
@@ -1058,7 +1058,7 @@ class DumpLogBuffer(gdb.Command):
         length = int(id_struct['data_length'])
         offset = int(id_struct['name_length'])
         return ''.join('%02x' % int(id_struct['data'][x])
-                       for x in xrange(offset, offset+length))
+                       for x in range(offset, offset+length))
 
     def invoke(self, arg, from_tty):
         gdb.write('Build ID: %s\n' % self._get_build_id())
@@ -1097,14 +1097,14 @@ class DumpNotificationsApp(gdb.Command):
                                                    gdb.COMPLETE_NONE)
 
     def print_usage(self):
-        print "Attempts to dump the notifications that were loaded" \
-              " in the Notifications app"
+        print("Attempts to dump the notifications that were loaded" \
+              " in the Notifications app")
 
     def invoke(self, unicode_args, from_tty):
         symstr = "'src/fw/apps/system_apps/notifications_app.c'::s_data"
         app_data =  gdb.parse_and_eval(symstr)
         if app_data == 0:
-            print "Notifications app was not open?"
+            print("Notifications app was not open?")
             return
 
         # For some reason, I couldn't get a pretty printer
@@ -1113,45 +1113,45 @@ class DumpNotificationsApp(gdb.Command):
             uint8_ptr_type = gdb.lookup_type("uint8_t").array(16)
             uuid_bytes = u.cast(uint8_ptr_type)
             s = ""
-            for n in xrange(16):
+            for n in range(16):
                 s += "%02x" % int(uuid_bytes[n])
             return s
 
         uuid_set = set()
 
-        print "Notification list:"
-        print "-----"
+        print("Notification list:")
+        print("-----")
         node = app_data["notification_list"]
         node_type = node.type
         while node:
             u = node["id"]
             uuid_str = string_from_uuid(u)
-            print "UUID: %s" % uuid_str
+            print("UUID: %s" % uuid_str)
             if uuid_str in uuid_set:
-                print "WARNING: Dupe UUID %s" % uuid_str
+                print("WARNING: Dupe UUID %s" % uuid_str)
             else:
                 uuid_set.add(uuid_str)
             node = node["node"]["next"].cast(node_type)
 
 
-        print "\nLoaded notification list:"
-        print "-----"
+        print("\nLoaded notification list:")
+        print("-----")
         node = app_data["loaded_notification_list"]
         node_type = node.type
         while node:
             u = node["notification"]["header"]["id"]
             ts = node["notification"]["header"]["timestamp"]
             ancs_uid = node["notification"]["header"]["ancs_uid"]
-            print "UUID: %s TS: %u ANCS_UID: %u" % (string_from_uuid(u), ts,
-                                                    ancs_uid)
+            print("UUID: %s TS: %u ANCS_UID: %u" % (string_from_uuid(u), ts,
+                                                    ancs_uid))
 
             attr_list = node["notification"]["attr_list"]
-            for n in xrange(attr_list["num_attributes"]):
+            for n in range(attr_list["num_attributes"]):
                 attr_ptr = attr_list["attributes"][n]
                 identifier = int(attr_ptr["id"])
                 if identifier == 1 or identifier == 2 or identifier == 3:
-                    print attr_ptr["cstring"]
-            print ""
+                    print(attr_ptr["cstring"])
+            print("")
             node = node["node"]["next"].cast(node_type)
 
 DumpNotificationsApp()
@@ -1193,14 +1193,14 @@ class FilesInfo(gdb.Command):
 
         for line in info_data_lines:
             if not line.startswith('\t0x'):
-                print line
+                print(line)
             else:
                 memory_ranges.append(_rangeInfo.parse_line(line))
 
         memory_ranges.sort()
 
         for memory_range in memory_ranges:
-            print ("\t%s" % str(memory_range))
+            print(("\t%s" % str(memory_range)))
 
 FilesInfo()
 
@@ -1213,14 +1213,14 @@ class PNGDump(gdb.Command):
         super(PNGDump, self).__init__('pbl to_png', gdb.COMMAND_USER, gdb.COMPLETE_SYMBOL)
 
     def print_usage(self):
-        print "Dump a GBitmap or framebuffer to a png file."
-        print "pbl to_png <gbitmap | framebuffer> [filename]"
+        print("Dump a GBitmap or framebuffer to a png file.")
+        print("pbl to_png <gbitmap | framebuffer> [filename]")
 
     def invoke(self, unicode_args, from_tty):
         from tools.pbi2png import pbi_struct, pbi_to_png, \
                                   pbi_format, pbi_is_palettized, palette_size
         if not unicode_args:
-            print "non unicode"
+            print("non unicode")
             self.print_usage()
             return
 
@@ -1264,19 +1264,19 @@ class PNGDump(gdb.Command):
 
         uint8_t = gdb.lookup_type("uint8_t")
         pix_arr = pixel_ptr.cast(uint8_t.pointer())
-        pixels = bytearray([int((pix_arr + x).dereference()) for x in xrange(size)])
+        pixels = bytearray([int((pix_arr + x).dereference()) for x in range(size)])
 
         pbi_fmt = pbi_format(pbi.info)
         if pbi_is_palettized(pbi_fmt):
             # palette gets appended to end of pixel buffer
             sz = palette_size(pbi_fmt)
             palette_arr = source_value["palette"].cast(uint8_t.pointer())
-            pixels.extend([int((palette_arr + x).dereference()) for x in xrange(sz)])
+            pixels.extend([int((palette_arr + x).dereference()) for x in range(sz)])
 
         png = pbi_to_png(pbi, pixels)
         if png:
             png.save(filename)
-            print "Saved to {}".format(filename)
+            print("Saved to {}".format(filename))
 
 PNGDump()
 
@@ -1288,8 +1288,8 @@ class FaultWizard(gdb.Command):
         super(FaultWizard, self).__init__('pbl fault_wizard', gdb.COMMAND_USER, gdb.COMPLETE_SYMBOL)
 
     def print_usage(self):
-        print "Set the values from the previous crash into the " \
-              "current thread's real sp,lr,pc registers"
+        print("Set the values from the previous crash into the " \
+              "current thread's real sp,lr,pc registers")
 
     def get_and_set_reg(self, reg_name):
         reg_var = get_static_variable("s_fault_saved_%s" % reg_name)
@@ -1297,12 +1297,12 @@ class FaultWizard(gdb.Command):
 
         # Check if the register is set
         if int(reg_val) == 0:
-            print "Register %s was zero. Did not set it" % reg_name
+            print("Register %s was zero. Did not set it" % reg_name)
             return
 
         # Set the frame's register
         gdb.execute("set $%s=%s" % (reg_name, reg_val))
-        print "Set register %s to 0x%x" % (reg_name, reg_val)
+        print("Set register %s to 0x%x" % (reg_name, reg_val))
 
     def invoke(self, unicode_args, from_tty):
         self.get_and_set_reg("sp")
@@ -1320,7 +1320,7 @@ class PrintMetadata(gdb.Command):
         super(PrintMetadata, self).__init__('pbl metadata', gdb.COMMAND_USER, gdb.COMPLETE_SYMBOL)
 
     def print_usage(self):
-        print "Prints metadata from TINTIN_METADATA in a readable format"
+        print("Prints metadata from TINTIN_METADATA in a readable format")
 
     def invoke(self, unicode_args, from_tty):
         metadata = TintinMetadata()

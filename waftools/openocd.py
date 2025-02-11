@@ -41,12 +41,8 @@ def daemon(ctx, cfg_file, use_swd=False):
     if _is_openocd_running():
         yield
     else:
-        if use_swd:
-            expect_str = "SWD IDCODE"
-        else:
-            expect_str = "device found"
-
-        proc = pexpect.spawn('openocd', ['-f', cfg_file], logfile=sys.stdout)
+        expect_str = "Listening on port"
+        proc = pexpect.spawn('openocd', ['-f', cfg_file], encoding='utf-8', logfile=sys.stdout)
         # Wait for OpenOCD to connect to the board:
         result = proc.expect([expect_str, pexpect.TIMEOUT], timeout=10)
         if result == 0:

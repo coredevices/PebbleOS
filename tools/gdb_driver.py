@@ -23,8 +23,8 @@ def find_gdb_path():
     for name in prioritized_names:
         try:
             which_all_cmd = 'which %s' % name
-            out = subprocess.check_output(which_all_cmd, shell=True)
-        except subprocess.CalledProcessError, e:
+            out = subprocess.check_output(which_all_cmd, shell=True, encoding='utf-8')
+        except subprocess.CalledProcessError as e:
             if e.returncode == 1:
                 continue  # `which` returns with 1 when nothing is found
             raise e
