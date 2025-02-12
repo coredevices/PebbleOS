@@ -19,7 +19,7 @@ import sys
 import argparse
 
 from elftools.elf.elffile import ELFFile
-from newlogging import get_log_dict_from_file
+from .newlogging import get_log_dict_from_file
 
 
 FORMAT_SPECIFIER_REGEX = (r"(?P<flags>[-+ #0])?(?P<width>\*|\d*)?(?P<precision>\.\d+|\.\*)?"
@@ -44,7 +44,7 @@ def check_dict_log_strings(log_dict):
     """ Return complete error string rather than raise an exception on the first. """
     output = []
 
-    for log_line in log_dict.itervalues():
+    for log_line in log_dict.values():
         # Skip build_id and new_logging_version keys
         if 'file' not in log_line:
             continue

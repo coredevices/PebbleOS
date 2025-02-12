@@ -282,7 +282,7 @@ def parse_args(raw_args):
                 # Every parameter is a 32-bit signed integer printed as a hex string with no
                 # leading zeros. Add the zero padding if necessary, convert to 4 hex bytes, 
                 # and then reinterpret as a 32-bit signed big-endian integer.
-                args.append(struct.unpack('>i', arg.rjust(8, '0').decode('hex'))[0])
+                args.append(struct.unpack('>i', bytes.fromhex(arg.rjust(8, '0')))[0])
                 
             arg_run = []
 
@@ -296,7 +296,7 @@ def parse_args(raw_args):
                 # Every parameter is a 32-bit signed integer printed as a hex string with no
                 # leading zeros. Add the zero padding if necessary, convert to 4 hex bytes, 
                 # and then reinterpret as a 32-bit signed big-endian integer.
-                args.append(struct.unpack('>i', arg.rjust(8, '0').decode('hex'))[0])
+                args.append(struct.unpack('>i', bytes.fromhex(arg.rjust(8, '0')))[0])
 
     return args
 

@@ -69,6 +69,7 @@ class LogDict:
                 raise Exception("Unknown header tag '{}'".format(line))
 
         if self.log_dict[LOG_DICT_KEY_VERSION] != NEW_LOGGING_VERSION:
+            version = self.log_dict[LOG_DICT_KEY_VERSION]
             # Worthy of an exception! Something bad has happened with the tools configuration.
             raise Exception("Expected log strings version {} not {}".format(NEW_LOGGING_VERSION,
                                                                             version))
@@ -128,7 +129,7 @@ class LogDict:
 def get_elf_section(filename, section_name):
     with open(filename, 'rb') as file:
         section = ELFFile(file).get_section_by_name(section_name)
-        return section.data() if section is not None else None
+        return section.data().decode('utf-8') if section is not None else None
 
 
 def get_elf_build_id(filename):

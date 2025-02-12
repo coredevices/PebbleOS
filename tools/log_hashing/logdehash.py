@@ -108,7 +108,7 @@ class LogDehash(object):
         print('Supported Cores:')
         for key in sorted(self.loghash_dict, key=self.loghash_dict.get):
             if key.startswith(LOG_DICT_KEY_CORE_ID):
-                print('    {}: {}'.format(key, self.loghash_dict[key]))
+                print(('    {}: {}'.format(key, self.loghash_dict[key])))
 
     def update_log_string_metrics(self):
         if not self.loghash_dict:
@@ -118,7 +118,7 @@ class LogDehash(object):
         # Handle justification
         max_basename = 0
         max_linenum = 0
-        for line_dict in self.loghash_dict.itervalues():
+        for line_dict in self.loghash_dict.values():
             if 'file' in line_dict and 'line' in line_dict:
                 max_basename = max(max_basename, len(os.path.basename(line_dict['file'])))
                 max_linenum = max(max_basename, len(os.path.basename(line_dict['line'])))
@@ -138,8 +138,7 @@ class LogDehash(object):
         """
         string = str(msg)
         if "NL:" in string:  # Newlogging
-            decoded_line = string.decode('utf-8', 'replace')
-            safe_line = ud.normalize('NFKD', decoded_line).encode('utf-8', 'ignore')
+            safe_line = ud.normalize('NFKD', string)
             line_dict = newlogging.dehash_line_unformatted(safe_line, self.loghash_dict)
             return line_dict
         else:
