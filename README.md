@@ -8,6 +8,15 @@ Read more in the very detailed [PebbleOS architecture presentation](https://docs
 Then read this [presentation on how PebbleOS works](https://docs.google.com/presentation/d/1M--yoEJBO-uckvY5CTFfHT4srw6RCj9RTGT57RcogX8/edit?usp=sharing)!
 
 Join the [Rebble Discord](https://discordapp.com/invite/aRUAYFN) #firmware-dev channel to discuss.
+
+### Watch the Podcast
+Several original PebbleOS firmware engineers [recorded a podcast](https://www.youtube.com/watch?v=dk5wsNN8abo) about the OS. 
+| Podcast | Gemini Summary |
+|----------|----------|
+| [![CleanShot 2025-02-11 at 22 26 27@2x](https://github.com/user-attachments/assets/9c55aefa-06f5-4a58-bf4f-fa40e1bd45bd)](https://www.youtube.com/watch?v=dk5wsNN8abo)   | [![Arc 2025-02-11 22 25 13](https://github.com/user-attachments/assets/ee5361b3-a89c-450e-97a5-f10796c1fba5)](https://g.co/gemini/share/03350ab7b4e6) |
+
+
+
 ### Architecture
 ![CleanShot 2025-01-31 at 14 38 16@2x](https://github.com/user-attachments/assets/23d13a36-55e6-4e3a-87ab-4fb1fd1fca5a)
 
