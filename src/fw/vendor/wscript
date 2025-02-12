@@ -26,12 +26,12 @@ def build(bld):
         else:
             excludes = ['**/stm32f4xx_fsmc.c']
 
-        micro_sources = bld.path.ant_glob('STM32F4xx_StdPeriph_Driver/src/*.c',
+        micro_sources = bld.path.ant_glob('stm32-sdk/STM32F4xx_StdPeriph_Driver/src/*.c',
                                           excl=excludes)
 
-        micro_includes = ['CMSIS/Include',
-                          'CMSIS/Device/ST/STM32F4xx/Include',
-                          'STM32F4xx_StdPeriph_Driver/inc']
+        micro_includes = ['CMSIS/CMSIS/Core/Include',
+                          'stm32-sdk/Device/ST/STM32F4xx/Include',
+                          'stm32-sdk/STM32F4xx_StdPeriph_Driver/inc']
 
     elif bld.env.MICRO_FAMILY == 'STM32F2':
         micro_sources = bld.path.ant_glob('STM32F2xx_StdPeriph_Driver/src/*.c')
