@@ -32,7 +32,7 @@ def process_include_files(self):
     for include_file in to_list(self.inject_include_files):
         if isinstance(include_file, Nod3):
             node = include_file
-        elif isinstance(include_file, basestring):
+        elif isinstance(include_file, str):
             node = self.path.find_node(include_file)
             if not node:
                 self.bld.fatal('%s does not exist.' % include_file)

@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-jerry_context_t jerry_global_context;
-jmem_heap_t jerry_global_heap __attribute__((__aligned__(JMEM_ALIGNMENT)));
-jerry_hash_table_t jerry_global_hash_table;
+extern jerry_context_t jerry_global_context;
+extern jmem_heap_t jerry_global_heap __attribute__((__aligned__(JMEM_ALIGNMENT)));
+extern jerry_hash_table_t jerry_global_hash_table;
 
 size_t jerry_parse_and_save_snapshot_from_zt_utf8_string(
   const jerry_char_t *zt_utf8_source_p,
@@ -67,4 +67,8 @@ void jerry_port_console(const char *format, ...) {
   va_start(args, format);
   prv_log(format, args);
   va_end(args);
+}
+
+void jerry_port_fatal (jerry_fatal_code_t code, void *lr) {
+  exit(code);
 }

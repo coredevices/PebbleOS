@@ -63,13 +63,17 @@ may work right now.
     python_libs/pulse2 \
     python_libs/pebble-loghash
   ```
+- Install emscripten
+  - If you're on Mac and using [Homebrew](https://brew.sh), you can run `brew install emscripten`.
+  - If you're on Linux, follow the instructions [here](https://github.com/emscripten-core/emsdk) and install version 4.0.1.
+  - You can skip this if you wish by configuring with `--nojs` but beware the built-in clock for several devices requires JS and will render a blank screen when disabled.
 
 ## Building
 
 First, configure the project like this:
 
 ```shell
-./waf configure --board <board> --nojs
+./waf configure --board <board>
 ```
 
 Note: If you wish to debug, you're likely to want `--nowatchdog --nostop --nosleep` also.
@@ -140,7 +144,7 @@ If you're using an Apple Silicon Mac, you might find it easier to build QEMU fro
 The steps here are similar that of real hardware:
 
 ```shell
-./waf configure --board=snowy_bb2 --nojs --qemu
+./waf configure --board=snowy_bb2 --qemu
 ./waf build
 ./waf qemu_image_spi
 ./waf qemu

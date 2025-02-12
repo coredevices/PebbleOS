@@ -85,9 +85,6 @@ def jerry_build_js_compiler(bld):
     transform_js_file = bld.path.make_node('js_tooling/transform_js.py').abspath()
     env.append_value('CFLAGS', ['--js-transform', transform_js_file])
 
-    # tell Emscripten to create a single file
-    env.append_value('CFLAGS', ['--memory-init-file', '0'])
-
     # Uncomment this line to get verbose output for emscripten
     # env.append_value('CFLAGS', ['-v'])
 
@@ -97,14 +94,27 @@ def jerry_build_js_compiler(bld):
                           "_jerry_parse_and_save_snapshot_from_zt_utf8_string",
                           "_legacy_defective_checksum_memory",
                           "_rocky_fill_header",
-                          "_jerry_port_set_errormsg_handler")
+                          "_jerry_port_set_errormsg_handler",
+                          "_malloc",
+                          "_memset")
     env.append_value('CFLAGS', ['-s', 'EXPORTED_FUNCTIONS=[{}]'.format(
         ', '.join(('"' + f + '"' for f in exported_functions)))])
+
+    exported_runtime_methods = ( "getValue",
+                                 "setValue",
+                                 "ccall",
+                                 "addFunction",
+                                 "removeFunction")
+    env.append_value('CFLAGS', ['-s', 'EXPORTED_RUNTIME_METHODS=[{}]'.format(
+        ', '.join(('"' + f + '"' for f in exported_runtime_methods)))])
 
     # so we can call jerry_port_set_errormsg_handler() with a JS function pointer
     env.append_value('CFLAGS', ['-s', 'RESERVED_FUNCTION_POINTERS=1'])
 
     env.append_value('CFLAGS', ['-s', 'ERROR_ON_UNDEFINED_SYMBOLS=0'])
+
+    env.append_value('CFLAGS', ['-s', 'ALLOW_TABLE_GROWTH'])
+    env.append_value('CFLAGS', ['-s', 'WASM_ASYNC_COMPILATION=0'])
 
     sources = bld.path.ant_glob('jerry-core/**/*.c')
     sources += bld.path.ant_glob('js_tooling/*.c')
@@ -211,6 +221,7 @@ def build(bld):
                      '-Wno-error=unused-parameter',
                      '-Wno-error=unused-variable',
                      '-Wno-error=unused-function',
+                     '-Wno-error=implicit-fallthrough',
                      '-Wno-pedantic']
 
     if bld.variant == 'test':

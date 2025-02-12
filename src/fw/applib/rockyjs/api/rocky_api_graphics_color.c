@@ -314,6 +314,7 @@ static bool prv_parse_hex(const char *color_value, GColor8 *parsed_color) {
         return true;
       }
     }
+    /* FALLTHROUGH */
     case 5: { // #RGBA
       if (prv_parse_hex_comps(color_value + 1, 1, &r, &g, &b, &a)) {
         *parsed_color = GColorFromRGBA(r * (255/15), g * (255/15), b * (255/15), a * (255/15));
@@ -323,12 +324,14 @@ static bool prv_parse_hex(const char *color_value, GColor8 *parsed_color) {
         return true;
       }
     }
+    /* FALLTHROUGH */
     case 7: { // #RRGGBB
       if (prv_parse_hex_comps(color_value + 1, 2, &r, &g, &b, NULL)) {
         *parsed_color = GColorFromRGB(r, g, b);
         return true;
       }
     }
+    /* FALLTHROUGH */
     case 9: { // #RRGGBBAA
       if (prv_parse_hex_comps(color_value + 1, 2, &r, &g, &b, &a)) {
         *parsed_color = GColorFromRGBA(r, g, b, a);

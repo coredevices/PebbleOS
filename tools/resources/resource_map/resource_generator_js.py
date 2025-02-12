@@ -48,7 +48,7 @@ class JsResourceGenerator(ResourceGenerator):
                bytecode.abspath(),
                memory_usage_output.abspath()]
 
-        proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, encoding='utf-8')
         out, err = proc.communicate()
 
         if proc.returncode != 0:

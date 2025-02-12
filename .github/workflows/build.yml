@@ -8,6 +8,8 @@ on:
 
 env:
   ARM_GNU_TOOLCHAIN_VERSION: 14.2.rel1
+  EM_VERSION: 4.0.1
+  EM_CACHE_FOLDER: 'emsdk-cache'
 
 jobs:
   build:
@@ -21,6 +23,13 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+
+      - name: Setup emsdk cache
+        id: cache-emsdk
+        uses: actions/cache@v2
+        with:
+          path: ${{env.EM_CACHE_FOLDER}}
+          key: emsdk-${{env.EM_VERSION}}-${{ runner.os }}
 
       - uses: actions/setup-python@v5
         with:
@@ -40,8 +49,13 @@ jobs:
           sudo tar xf arm-gnu-toolchain-${ARM_GNU_TOOLCHAIN_VERSION}-x86_64-arm-none-eabi.tar.xz -C /opt
           echo "/opt/arm-gnu-toolchain-${ARM_GNU_TOOLCHAIN_VERSION}-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH
 
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{env.EM_VERSION}}
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --nojs
+        run: ./waf configure --board ${{ matrix.board }}
 
       - name: Build FW
         run: ./waf build
@@ -63,7 +77,7 @@ jobs:
 
       - name: Configure (QEMU)
         if: ${{ matrix.board != 'asterix_vla_dvb1' }}
-        run: ./waf clean configure --board ${{ matrix.board }} --nojs --qemu
+        run: ./waf clean configure --board ${{ matrix.board }} --qemu
 
       - name: Build FW (QEMU)
         if: ${{ matrix.board != 'asterix_vla_dvb1' }}

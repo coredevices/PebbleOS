@@ -18,8 +18,8 @@ with open(sys.argv[1], "r") as f:
 
 # source = replace_ensured(source, "func = eval('_' + ident); // explicit lookup",
 #                                  "// func = eval('_' + ident); // explicit lookup")
-source = replace_ensured(source, "process['on']('uncaughtException',",
-                                 "process['on']('uncaughtException-ignore',")
+# source = replace_ensured(source, "process.on('uncaughtException',",
+#                                  "process.on('uncaughtException-ignore',")
 
 source = "(function(){\n%s\n})(this);" % source
 

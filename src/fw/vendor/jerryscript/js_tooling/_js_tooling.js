@@ -144,13 +144,13 @@ function createSnapshot(js, options) {
     logDuration(timeJerryInit);
 
     var collectedErrors = [];
-    var errorHandlerPtr = jerry['Runtime'].addFunction(function(msgPtr) {
+    var errorHandlerPtr = addFunction(function(msgPtr) {
         var msg = jerry['Pointer_stringify'](msgPtr).trim();
         if (msg !== 'Error:') {
             collectedErrors.push(msg);
         }
         return true;
-    });
+    }, "ip");
     jerry_port_set_errormsg_handler(errorHandlerPtr);
 
     var timeJerry = captureDuration('jerry_parse_and_save_snapshot');
@@ -165,7 +165,7 @@ function createSnapshot(js, options) {
         return error(collectedErrors.join('. '));
     }
     logDuration(timeJerry);
-    jerry['Runtime'].removeFunction(errorHandlerPtr);
+    removeFunction(errorHandlerPtr);
 
     var timeJerryCleanup = captureDuration('jerry_cleanup');
     jerry['_jerry_cleanup']();
