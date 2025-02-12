@@ -1,0 +1,20 @@
+name: Lint Git Commits 
+
+on:
+  pull_request: {}
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Install GitLint
+        run: pip install gitlint
+
+      - name: Run GitLint 
+        run: gitlint --commits "${{ github.event.pull_request.base.sha }}..HEAD"
