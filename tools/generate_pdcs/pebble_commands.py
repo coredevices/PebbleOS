@@ -184,6 +184,7 @@ class PathCommand(Command):
         self.type = DRAW_COMMAND_TYPE_PATH if not precise else DRAW_COMMAND_TYPE_PRECISE_PATH
         Command.__init__(self, points, translate, stroke_width, stroke_color, fill_color, verbose,
                          precise, raise_error)
+        assert(len(points) >= 1)
 
     def serialize(self):
         s = pack('B', self.type)   # command type

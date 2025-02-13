@@ -96,7 +96,8 @@ def parse_path(element, translate, stroke_width, stroke_color, fill_color, verbo
     if d is not None:
         path = svg.path.parse_path(d)
         points = [(lambda l: (l.real, l.imag))(line.start) for line in path]
-        if not points:
+        move_commands_only = len([line for line in path if isinstance(line, svg.path.Move)]) == len(path)
+        if not points or move_commands_only:
             print("No points in parsed path")
             return None
 
