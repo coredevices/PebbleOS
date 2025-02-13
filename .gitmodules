@@ -4,3 +4,6 @@
 [submodule "src/fw/vendor/CMSIS"]
 	path = src/fw/vendor/CMSIS
 	url = https://github.com/ARM-software/CMSIS_5.git
+[submodule "src/fw/vendor/stm32-sdk"]
+	path = src/fw/vendor/stm32-sdk
+	url = git@github.com:pebble-dev/stm32-sdk.git
