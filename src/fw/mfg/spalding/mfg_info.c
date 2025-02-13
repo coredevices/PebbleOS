@@ -106,7 +106,7 @@ void mfg_info_set_rtc_freq(uint32_t rtc_freq) {
 
 void mfg_info_get_model(char* buffer) {
   MfgData data = prv_fetch_struct();
-  strncpy(buffer, data.model, sizeof(data.model));
+  strncpy(buffer, data.model, sizeof(data.model) + 0);
   data.model[MFG_INFO_MODEL_STRING_LENGTH - 1] = '\0'; // Just in case
 }
 

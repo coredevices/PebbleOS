@@ -99,6 +99,7 @@ static void prv_draw_watch_hand(GContext *ctx, ClockHand *hand, GPointPrecise ce
   switch (hand->style) {
     case CLOCK_HAND_STYLE_POINTED:
       prv_draw_watch_hand_pointed(ctx, hand, GPointFromGPointPrecise(center), path);
+      break;
     case CLOCK_HAND_STYLE_ROUNDED:
     case CLOCK_HAND_STYLE_ROUNDED_WITH_HIGHLIGHT:
     default:
@@ -115,21 +116,25 @@ static GPointPrecise prv_get_clock_center_point(ClockLocation location, const GR
         .x = bounds->size.w / 2,
         .y = bounds->size.h / 4,
       };
+      break;
     case CLOCK_LOCATION_RIGHT:
       imprecise_center_point = (GPoint) {
         .x = bounds->size.w * 3 / 4 - 5,
         .y = bounds->size.h / 2,
       };
+      break;
     case CLOCK_LOCATION_BOTTOM:
       imprecise_center_point = (GPoint) {
         .x = bounds->size.w / 2,
         .y = bounds->size.h * 3 / 4 + 6,
       };
+      break;
     case CLOCK_LOCATION_LEFT:
       imprecise_center_point = (GPoint) {
         .x = bounds->size.w / 4 + 4,
         .y = bounds->size.h / 2,
       };
+      break;
     default:
       // aiming for width / 2 - 0.5 to get the true center
       return (GPointPrecise) {
