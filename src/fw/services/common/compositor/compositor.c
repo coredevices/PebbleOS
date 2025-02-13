@@ -170,9 +170,10 @@ void compositor_render_app(void) {
   GSize app_framebuffer_size;
   app_manager_get_framebuffer_size(&app_framebuffer_size);
 
+  const FrameBuffer *app_framebuffer = app_state_get_framebuffer();
+
   if (gsize_equal(&app_framebuffer_size, &s_framebuffer.size)) {
 #if CAPABILITY_COMPOSITOR_USES_DMA && !TARGET_QEMU && !UNITTEST
-    const FrameBuffer *app_framebuffer = app_state_get_framebuffer();
     compositor_dma_run(s_framebuffer.buffer, app_framebuffer->buffer, FRAMEBUFFER_SIZE_BYTES);
 #else
     GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
@@ -229,7 +230,8 @@ void compositor_render_app(void) {
     }
 
     // Set the remaining pixels to black.
-    const int bottom_bezel_length = (uintptr_t)&s_framebuffer.buffer[DISP_ROWS * DISP_COLS] -
+    size_t framebuffer_size = framebuffer_get_size_bytes(&s_framebuffer);
+    const int bottom_bezel_length = (uintptr_t)&s_framebuffer.buffer[framebuffer_size] -
                                     (uintptr_t)dst;
     memset(dst, GColorBlack.argb, bottom_bezel_length);
 #endif
