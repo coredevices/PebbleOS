@@ -41,7 +41,7 @@ import argparse
 import select
 
 
-CTRL_C_CHARACTER = '\3'
+CTRL_C_CHARACTER = b'\3'
 
 ##########################################################################################
 class QemuGdbError(Exception):
@@ -192,8 +192,8 @@ class QemuGdbProxy(object):
 
         """
 
-        target_data = ''
-        client_data = ''
+        target_data = b''
+        client_data = b''
 
         while (not target_data and not client_data):
             # Form our read list. The target socket is always in the read list. Depending on if we
@@ -216,7 +216,7 @@ class QemuGdbProxy(object):
                 if not target_data:
                     raise QemuGdbError("target system disconnected")
                 logging.debug("got target data: '%s' (0x%s) " % (target_data,
-                                                                target_data.encode('hex')))
+                                                                target_data.hex()))
 
             # Data available from client?
             if self.client_conn_socket is not None:
@@ -227,7 +227,7 @@ class QemuGdbProxy(object):
                         self.client_conn_socket.close()
                         self.client_conn_socket = None
                     logging.debug("got client data: '%s' (0x%s) " % (client_data,
-                                                                     client_data.encode('hex')))
+                                                                     client_data.hex()))
 
             # Connection request from client?
             else:
@@ -240,8 +240,8 @@ class QemuGdbProxy(object):
 
     ##########################################################################################
     def _create_packet(self, data):
-        checksum = sum(ord(c) for c in data) % 256
-        packet = "$%s#%02X" % (data, checksum)
+        checksum = sum(data) % 256
+        packet = b"$%s#%02X" % (data, checksum)
 
         logging.debug('--<<<<<<<<<<<< GDB packet: %s', packet)
         return packet
@@ -264,7 +264,7 @@ class QemuGdbProxy(object):
             thread = self.threads[self.active_thread_id]
         except KeyError:
             raise QemuGdbError("Unknown thread id")
-        print "TODO: NEED TO WRITE TO THREAD STACK ON TARGET TOO"
+        print("TODO: NEED TO WRITE TO THREAD STACK ON TARGET TOO")
         thread.set_register(reg_index, value)
 
 
@@ -424,16 +424,16 @@ class QemuGdbProxy(object):
         The QEMU gdb server only understands a thread id of 1, so if we pass it other thread ids,
         it will barf. 
         """
-        if ';' not in msg:
+        if b';' not in msg:
             return None
-        action_thread_pair = msg.split(';')[1]
-        if ':' in action_thread_pair:
-            action = action_thread_pair.split(':')[0]
+        action_thread_pair = msg.split(b';')[1]
+        if b':' in action_thread_pair:
+            action = action_thread_pair.split(b':')[0]
         else:
             action = action_thread_pair
 
         # Send to target with the thread ID
-        packet = self._create_packet("vCont;%s" % (action))
+        packet = self._create_packet(b"vCont;%s" % (action))
         self.target_socket.send(packet)
 
         # Change back to active thread of 1
@@ -445,55 +445,55 @@ class QemuGdbProxy(object):
     def _handle_thread_is_alive_req(self, data):
         num = int(data, 16)
         if (num == -1 or num == 0):   # All threads
-            return self._create_packet("OK")
+            return self._create_packet(b"OK")
 
         if num in self.threads:
-            return self._create_packet("OK")
-        return self._create_packet("E22")
+            return self._create_packet(b"OK")
+        return self._create_packet(b"E22")
 
 
     ##########################################################################################
     def _handle_get_all_registers_req(self):
         """ Get all registers for the active thread """
 
-        resp = ''
+        resp = b''
         for i in range(len(PebbleThread.reg_name_to_index)):
             value = self._target_read_register(i)
-            resp += "%08X" % (byte_swap_uint32(value))
+            resp += b"%08X" % (byte_swap_uint32(value))
         return self._create_packet(resp)
 
 
 
     ##########################################################################################
     def _handle_query_req(self, msg):
-        msg = msg.split('#')[0]
-        query = msg.split(':')
+        msg = msg.split(b'#')[0]
+        query = msg.split(b':')
         logging.debug('GDB received query: %s', query)
 
         if query is None:
             logging.error('GDB received query packet malformed')
             return None
 
-        elif query[0] == 'C':
-            return self._create_packet("%d" % (self.active_thread_id))
+        elif query[0] == b'C':
+            return self._create_packet(b"%d" % (self.active_thread_id))
         
-        elif query[0] == 'fThreadInfo':
+        elif query[0] == b'fThreadInfo':
             if not self.got_all_symbols:
                 # NOTE: When running the 4.9 gcc tool chain, gdb asks for thread info right
                 # after attaching, before we have a chance to look up symbols, so respond
                 # with "last thread" if we don't have symbols yet.
-                return self._create_packet("l")        # last
+                return self._create_packet(b"l")        # last
             self._target_collect_thread_info()
             # For some strange reason, if the active thread is first, the first "i thread" gdb
             # command only displays that one thread, so reverse sort to put it at the end
-            id_strs = ("%016x" % id for id in sorted(self.threads.keys(), reverse=True))
-            return self._create_packet("m" + ",".join(id_strs))
+            id_strs = ("%016x" % id for id in sorted(list(self.threads.keys()), reverse=True))
+            return self._create_packet(b"m" + b",".join(id_strs))
         
-        elif query[0] == 'sThreadInfo':
-            return self._create_packet("l")        # last
+        elif query[0] == b'sThreadInfo':
+            return self._create_packet(b"l")        # last
 
-        elif query[0].startswith('ThreadExtraInfo'):
-            id_str = query[0].split(',')[1]
+        elif query[0].startswith(b'ThreadExtraInfo'):
+            id_str = query[0].split(b',')[1]
             id = int(id_str, 16)
 
             found_thread = self.threads.get(id, None)
@@ -505,10 +505,10 @@ class QemuGdbProxy(object):
                 resp = "%s 0x%08X" % (found_thread.name, found_thread.ptr)
             return self._create_packet(resp.encode('hex'))
 
-        elif 'Symbol' in query[0]:
-            if query[2] != '':
+        elif b'Symbol' in query[0]:
+            if query[2] != b'':
                 sym_name = query[2].decode('hex')
-                if query[1] != '':
+                if query[1] != b'':
                     sym_value = int(query[1], 16)
                     logging.debug("Setting value of symbol '%s' to 0x%08x" % (sym_name, sym_value))
                     self.symbol_dict[sym_name] = sym_value
@@ -519,16 +519,16 @@ class QemuGdbProxy(object):
 
             # Anymore we need to look up?
             symbol = None
-            for x, y in self.symbol_dict.items():
+            for x, y in list(self.symbol_dict.items()):
                 if y is None:
                     symbol = x
                     break
             if symbol is not None:
                 logging.debug("Asking gdb to lookup symbol %s" % (symbol))
-                return self._create_packet('qSymbol:%s' % (symbol.encode('hex')))
+                return self._create_packet(b'qSymbol:%s' % (symbol.encode('hex')))
             else:
                 self.got_all_symbols = True
-                return self._create_packet('OK')
+                return self._create_packet(b'OK')
         
         else:
             return None
@@ -545,29 +545,29 @@ class QemuGdbProxy(object):
         
         logging.debug('-->>>>>>>>>>>> GDB req packet: %s', msg)
 
-        msg = msg.split('#')[0]
+        msg = msg.split(b'#')[0]
 
         # query command
-        if msg[1] == 'q':
+        if msg[1] == b'q':
             return self._handle_query_req(msg[2:])
             
-        elif msg[1] == 'H':
-            if msg[2] == 'c':
+        elif msg[1] == b'H':
+            if msg[2] == b'c':
                 return None
             else:
                 return self._handle_set_active_thread_req(msg[3:])
 
-        elif msg[1] == 'T':
+        elif msg[1] == b'T':
             return self._handle_thread_is_alive_req(msg[2:])
 
-        elif msg[1] == 'g':
+        elif msg[1] == b'g':
             if (self.active_thread_id <= 0
                       or self.active_thread_id == self.QEMU_MONITOR_CURRENT_THREAD_ID):
                 return None
             else:
                 return self._handle_get_all_registers_req()
 
-        elif msg[1] == 'p':
+        elif msg[1] == b'p':
             # 'p <n>' : read value of register n
             if self.active_thread_id == self.QEMU_MONITOR_CURRENT_THREAD_ID:
                 return None
@@ -577,19 +577,19 @@ class QemuGdbProxy(object):
                 value = self._target_read_register(reg_num)
                 return self._create_packet("%08X" % (byte_swap_uint32(value)))
 
-        elif msg[1] == 'P':
+        elif msg[1] == b'P':
             # 'P <n>=<r>' : set value of register n to r
             if self.active_thread_id == self.QEMU_MONITOR_CURRENT_THREAD_ID:
                 return None
             else:
-                msg = msg[2:].split('=')
+                msg = msg[2:].split(b'=')
                 reg_num = int(msg[0], 16)
                 val = int(msg[1], 16)
                 val = byte_swap_uint32(val)
                 self._target_write_register(reg_num, val)
                 return self._create_packet("OK")
 
-        elif msg[1:].startswith('vCont'):
+        elif msg[1:].startswith(b'vCont'):
             return self._handle_continue_req(msg[1:])
 
         else:
@@ -634,7 +634,7 @@ class QemuGdbProxy(object):
 
         # --------------------------------------------------------------------------------------
         # Loop processing requests
-        data = ''
+        data = b''
         while True:
             # read more data from client until we get at least one packet
             while True:
@@ -650,14 +650,14 @@ class QemuGdbProxy(object):
                     client_data = client_data[client_data.index(CTRL_C_CHARACTER)+1:]
 
                 data += client_data
-                if "$" in data and "#" in data:
+                if b"$" in data and b"#" in data:
                     break
 
             # Process all complete packets we have received from the client
-            while "$" in data and "#" in data:
-                data = data[data.index("$"):]
+            while b"$" in data and b"#" in data:
+                data = data[data.index(b"$"):]
                 logging.debug("Processing remaining data: %s" % (data))
-                end = data.index("#") + 3  # 2 bytes of checksum
+                end = data.index(b"#") + 3  # 2 bytes of checksum
                 packet = data[0:end]
                 data = data[end:]
 
@@ -673,14 +673,14 @@ class QemuGdbProxy(object):
 
                 # else, we generated our own response that needs to go to the client
                 elif resp != '':
-                    self.client_conn_socket.send('+' + resp)
+                    self.client_conn_socket.send(b'+' + resp)
 
                     # wait for ack from the client
                     (target_data, client_data) = self._fetch_socket_data()
                     if target_data:
                         self.client_conn_socket.send(target_data)
 
-                    if client_data[0] != '+':
+                    if client_data[0] != b'+':
                         logging.debug('gdb client did not ack')
                     else:
                         logging.debug('gdb client acked')

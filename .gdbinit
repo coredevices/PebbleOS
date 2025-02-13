@@ -5,4 +5,3 @@ source tools/gdb_scripts/gdb_python_path_fix.py
 # source all tools
 source tools/gdb_scripts/gdb_tintin.py
 source tools/gdb_scripts/gdb_printers.py
-source tools/gdb_scripts/gdb_tintin_bluetooth.py

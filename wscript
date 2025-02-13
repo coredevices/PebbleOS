@@ -1161,7 +1161,7 @@ def qemu_image_spi(ctx):
     spi_flash_path = _create_spi_flash_image(ctx, 'qemu_spi_flash.bin')
     with open(spi_flash_path, 'wb') as qemu_spi_img_file:
         # Pad the first section before system resources with FF's'
-        qemu_spi_img_file.write("\xff" * resources_begin)
+        qemu_spi_img_file.write(bytes([0xff]) * resources_begin)
 
         # Write system resources:
         pbpack = ctx.get_pbpack_node()
@@ -1170,13 +1170,15 @@ def qemu_image_spi(ctx):
 
         # Pad with 0xFF up to image size
         tail_padding_size = image_size - resources_begin - len(res_img)
-        qemu_spi_img_file.write("\xff" * tail_padding_size)
+        qemu_spi_img_file.write(bytes([0xff]) * tail_padding_size)
 
-    with open(os.devnull, 'w') as null:
-        qemu_spi_cooker_node = ctx.path.get_bld().make_node('qemu_spi_cooker')
-        qemu_spi_cooker_path = qemu_spi_cooker_node.path_from(ctx.path)
-        subprocess.check_call([qemu_spi_cooker_path, spi_flash_path], stdout=null)
-
+        # qemu_spi_cooker is broken on OSX but it doesn't really matter
+        # it's only there to speed up first boot, an empty image will do
+        if sys.platform != 'darwin':
+            with open(os.devnull, 'w') as null:
+                qemu_spi_cooker_node = ctx.path.get_bld().make_node('qemu_spi_cooker')
+                qemu_spi_cooker_path = qemu_spi_cooker_node.path_from(ctx.path)
+                subprocess.check_call([qemu_spi_cooker_path, spi_flash_path], stdout=null)
 
 def mfg_image_spi(ctx):
     """Creates a SPI flash image of PRF for MFG pre-burn. Includes a
@@ -1379,7 +1381,7 @@ class QemuGdb(BuildContext):
 def qemu_gdb(ctx):
     # First, startup the gdb proxy
     cmd_line = "python ./tools/qemu/qemu_gdb_proxy.py --port=1233 --target=localhost:1234"
-    proc = pexpect.spawn(cmd_line, logfile=sys.stdout)
+    proc = pexpect.spawn(cmd_line, logfile=sys.stdout, encoding='utf-8')
     proc.expect(["Connected to target", pexpect.TIMEOUT], timeout=10)
     fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
     run_arm_gdb(ctx, fw_elf, target_server_port=1233)
