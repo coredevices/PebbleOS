@@ -6,4 +6,4 @@
 	url = https://github.com/ARM-software/CMSIS_5.git
 [submodule "src/fw/vendor/stm32-sdk"]
 	path = src/fw/vendor/stm32-sdk
-	url = git@github.com:pebble-dev/stm32-sdk.git
+	url = https://github.com/pebble-dev/stm32-sdk.git
