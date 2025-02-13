@@ -50,6 +50,7 @@ bool accel_manager_run_selftest(void) WEAK;
 bool gyro_manager_run_selftest(void) WEAK;
 bool mag3110_check_whoami(void) WEAK;
 bool snowy_mag3110_query_whoami(void) WEAK;
+bool mic_selftest(void) WEAK;
 
 // NULL function pointer means test is not implemented
 static const struct SelfTestCase s_test_cases[] = {
@@ -68,6 +69,7 @@ static const struct SelfTestCase s_test_cases[] = {
 #endif
   { "BT Module", bt_driver_test_selftest },
   { "Flash Comm", flash_check_whoami },
+  { "Mic", mic_selftest },
   { "Buttons", button_selftest },
 };
 

@@ -1164,11 +1164,31 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if bld.capability('HAS_MICROPHONE'):
+if bld.is_snowy_compatible():
     bld.objects(
         name='driver_mic',
         source=[
             'mic/mic_command.c',
+            'mic/stm32/pdm.c',
+        ],
+        use=[
+            'driver_accessory',
+            'driver_dma',
+            'driver_gpio',
+            'driver_periph_config',
+            'driver_pmic',
+            'fw_includes',
+            'root_includes',
+            'freertos',
+            'stm32_stdlib',
+        ],
+    )
+elif bld.is_silk() or bld.is_cutts() or bld.is_robert():
+    bld.objects(
+        name='driver_mic',
+        source=[
+            'mic/mic_command.c',
+            'mic/stm32/dfsdm.c',
         ],
         use=[
             'driver_accessory',

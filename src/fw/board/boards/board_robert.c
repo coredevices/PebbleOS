@@ -21,6 +21,7 @@
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/hrm/as7000.h"
 #include "drivers/i2c_definitions.h"
+#include "drivers/mic/stm32/dfsdm_definitions.h"
 #include "drivers/pmic.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/stm32f2/dma_definitions.h"
@@ -777,6 +778,34 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 #endif
 };
 QSPIFlash * const QSPI_FLASH = &QSPI_FLASH_DEVICE;
+
+
+static MicDeviceState DMA_BSS s_mic_state;
+static MicDevice MIC_DEVICE = {
+  .state = &s_mic_state,
+
+  .filter = DFSDM_Filter0,
+  .channel = DFSDM_Channel0,
+  .extremes_detector_channel = DFSDM_ExtremChannel0,
+  .regular_channel = DFSDM_RegularChannel0,
+  .pdm_frequency = MHZ_TO_HZ(2),
+  .rcc_apb_periph = RCC_APB2Periph_DFSDM,
+  .dma = &DFSDM_DMA_REQUEST,
+  .ck_gpio = { GPIOD, GPIO_Pin_3, GPIO_PinSource3, GPIO_AF3_DFSDM },
+  .sd_gpio = { GPIOC, GPIO_Pin_1, GPIO_PinSource1, GPIO_AF3_DFSDM },
+#if BOARD_ROBERT_BB || BOARD_ROBERT_EVT || BOARD_CUTTS_BB
+  .mic_power_state_fn = set_ldo3_power_state,
+#elif BOARD_ROBERT_BB2
+  // the mic is always powered
+#else
+#error "Unknown board"
+#endif
+  .power_on_delay_ms = 30,
+  .settling_delay_ms = 100,
+  .default_volume = 64,
+  .final_right_shift = 11,
+};
+MicDevice * const MIC = &MIC_DEVICE;
 
 
 void board_early_init(void) {

@@ -20,6 +20,7 @@
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/hrm/as7000.h"
 #include "drivers/i2c_definitions.h"
+#include "drivers/mic/stm32/dfsdm_definitions.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/stm32f2/dma_definitions.h"
 #include "drivers/stm32f2/i2c_hal_definitions.h"
@@ -438,6 +439,27 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
   .reset_gpio = { GPIO_Port_NULL },
 };
 QSPIFlash * const QSPI_FLASH = &QSPI_FLASH_DEVICE;
+
+
+static MicDeviceState s_mic_state;
+static MicDevice MIC_DEVICE = {
+  .state = &s_mic_state,
+
+  .filter = DFSDM_Filter0,
+  .channel = DFSDM_Channel2,
+  .extremes_detector_channel = DFSDM_ExtremChannel2,
+  .regular_channel = DFSDM_RegularChannel2,
+  .pdm_frequency = MHZ_TO_HZ(2),
+  .rcc_apb_periph = RCC_APB2Periph_DFSDM,
+  .dma = &DFSDM_DMA_REQUEST,
+  .ck_gpio = { GPIOC, GPIO_Pin_2, GPIO_PinSource2, GPIO_AF8_DFSDM },
+  .sd_gpio = { GPIOB, GPIO_Pin_14, GPIO_PinSource14, GPIO_AF8_DFSDM },
+  .power_on_delay_ms = 50,
+  .settling_delay_ms = 0,
+  .default_volume = 64,
+  .final_right_shift = 11,
+};
+MicDevice * const MIC = &MIC_DEVICE;
 
 
 void board_early_init(void) {
