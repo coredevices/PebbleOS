@@ -24,6 +24,8 @@ from pebble import pulse2, commander
 
 from pebble.commander._commands.imaging import load_firmware, load_resources
 
+import pebble_ftdi_custom_pids
+pebble_ftdi_custom_pids.configure_pids()
 
 class FakeCommander(object):
     def __init__(self, flash):

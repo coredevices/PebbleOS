@@ -2,7 +2,7 @@
 Pillow
 freetype-py
 ply==3.4
-pyusb==1.0.0b2
+pyusb==1.3.1
 pyserial
 sh==1.04
 pypng
@@ -34,5 +34,5 @@ packaging
 #pebble.programmer>=0.0.4
 #pebble.commander==0.0.11
 libpebble2>=0.0.16
-pyftdi==0.13.4
+pyftdi==0.56.0
 pathlib

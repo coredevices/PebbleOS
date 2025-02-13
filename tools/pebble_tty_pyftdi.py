@@ -14,15 +14,17 @@
 # limitations under the License.
 
 
-from pyftdi.serialext.protocol_ftdi import FtdiSerial
+import pebble_ftdi_custom_pids
+from pyftdi.ftdi import Ftdi
 from pyftdi.usbtools import UsbTools
 from string import printable as printablechars
 
+pebble_ftdi_custom_pids.configure_pids()
 
 def _get_vps():
     vps = set()
-    for vendor, pids in list(FtdiSerial.PRODUCT_IDS.items()):
-        for pname, pid in list(pids.items()):
+    for vendor, pids in list(Ftdi.PRODUCT_IDS.items()):
+        for pid in list(pids.values()):
             vps.add((vendor, pid))
 
     return vps
@@ -71,10 +73,10 @@ def _tty_to_uri(tty, tty_type):
         return None
 
     vid = vendor
-    vendor = _dict_try_key_from_value(FtdiSerial.VENDOR_IDS, vendor)
+    vendor = _dict_try_key_from_value(Ftdi.VENDOR_IDS, vendor)
 
-    if vid in FtdiSerial.PRODUCT_IDS:
-        product = _dict_try_key_from_value(FtdiSerial.PRODUCT_IDS[vid], pid)
+    if vid in Ftdi.PRODUCT_IDS:
+        product = _dict_try_key_from_value(Ftdi.PRODUCT_IDS[vid], pid)
 
         # Check if this product matches the desired tty type
         if not (_product_of_tty_type(product, tty_type)):
@@ -87,7 +89,10 @@ def _get_all_ttys(tty_type):
     indices = {}
     ttys = []
 
-    for vid, pid, serial, num_ports, name in UsbTools.find_all(_get_vps()):
+    for device, num_ports in UsbTools.find_all(_get_vps()):
+        vid = device.vid
+        pid = device.pid
+        serial = device.sn
         ikey = (vid, pid)
         indices[ikey] = indices.get(ikey, 0) + 1
         if not serial or [c for c in serial if c not in printablechars or c == '?']:

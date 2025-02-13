@@ -23,6 +23,8 @@ import sys
 from pebble import pulse2, commander
 from log_hashing.logdehash import LogDehash
 
+import pebble_ftdi_custom_pids
+pebble_ftdi_custom_pids.configure_pids()
 
 PROMPT_STRING = '> '
 
