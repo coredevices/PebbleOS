@@ -452,19 +452,19 @@
     {
       "type": "font",
       "name": "AGENCY_FB_36_NUMBERS_AM_PM",
-      "file": "normal/base/ttf/AgencyFB-RegularCondensed.ttf",
+      "file": "normal/base/pbf/AGENCY_FB_36_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
       "type": "font",
       "name": "AGENCY_FB_60_NUMBERS_AM_PM",
-      "file": "normal/base/ttf/AgencyFB-RegularCondensed.ttf",
+      "file": "normal/base/pbf/AGENCY_FB_60_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
       "type": "font",
       "name": "AGENCY_FB_60_THIN_NUMBERS_AM_PM",
-      "file": "normal/base/ttf/AgencyFB-ThinCondensed.ttf",
+      "file": "normal/base/pbf/AGENCY_FB_60_THIN_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     }
   ]

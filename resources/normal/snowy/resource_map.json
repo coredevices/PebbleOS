@@ -6,9 +6,11 @@
       "name": "VOICE_MICROPHONE_LARGE",
       "file": "normal/snowy/images/Pebble_80x80_Microphone.svg",
       "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "_comment": [
+        "Built into firmware to ensure that voice API memory contract is not violated",
+        "Ensure that if this is moved to resources, images are allocated up front when",
+        "a dictation session is started"
+      ]
     },
     {
       "type": "pdc",
@@ -413,26 +415,26 @@
     {
       "type": "font",
       "name": "AGENCY_FB_36_NUMBERS_AM_PM",
-      "file": "normal/base/ttf/AgencyFB-RegularCondensed.ttf",
+      "file": "normal/base/pbf/AGENCY_FB_36_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
       "type": "font",
       "name": "AGENCY_FB_60_NUMBERS_AM_PM",
-      "file": "normal/base/ttf/AgencyFB-RegularCondensed.ttf",
+      "file": "normal/base/pbf/AGENCY_FB_60_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
       "type": "font",
       "name": "AGENCY_FB_60_THIN_NUMBERS_AM_PM",
-      "file": "normal/base/ttf/AgencyFB-ThinCondensed.ttf",
+      "file": "normal/base/pbf/AGENCY_FB_60_THIN_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
-     "type": "js",
-     "name": "JS_TICTOC",
-     "file": "normal/base/js/tictoc.js",
-     "builtin": true
+      "type": "js",
+      "name": "JS_TICTOC",
+      "file": "normal/base/js/tictoc.js",
+      "builtin": true
     }
   ]
 }
