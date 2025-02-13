@@ -1539,4 +1539,18 @@ elif mcu_family == 'NRF52840':
         ],
     )
 
+if bld.get_hrm() == 'AS7000':
+    bld.objects(
+        name='driver_hrm',
+        source=[
+            'hrm/as7000.c',
+        ],
+        use=[
+            'driver_gpio',
+            'driver_i2c',
+            'fw_includes',
+            'stm32_stlib'
+        ],
+    )
+
 # vim:filetype=python

@@ -293,6 +293,7 @@ extern SPISlavePort * const BMI160_SPI;
 
 extern I2CSlavePort * const I2C_MAX14690;
 extern I2CSlavePort * const I2C_MAG3110;
+extern I2CSlavePort * const I2C_AS7000;
 
 extern VoltageMonitorDevice * const VOLTAGE_MONITOR_ALS;
 extern VoltageMonitorDevice * const VOLTAGE_MONITOR_BATTERY;
@@ -304,6 +305,10 @@ extern QSPIFlash * const QSPI_FLASH;
 
 extern ICE40LPDevice * const ICE40LP;
 extern SPISlavePort * const DIALOG_SPI;
+
+extern MicDevice * const MIC;
+
+extern HRMDevice * const HRM;
 
 #if BOARD_CUTTS_BB
 extern TouchSensor * const EWD1000;

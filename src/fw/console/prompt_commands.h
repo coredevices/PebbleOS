@@ -268,6 +268,8 @@ extern void command_low_power_debug(char *enable_arg);
 extern void command_audit_delay_us(void);
 extern void command_enter_stop(void);
 
+extern void dialog_test_cmds(void);
+
 extern void command_dump_notif_pref_db(void);
 
 extern void command_bt_conn_param_set(
@@ -283,6 +285,12 @@ extern void command_btle_test_end(void);
 extern void command_btle_pa_set(char *option);
 extern void command_btle_unmod_tx_start(char *tx_channel);
 extern void command_btle_unmod_tx_stop(void);
+
+#if CAPABILITY_HAS_BUILTIN_HRM
+extern void command_hrm_read(void);
+extern void command_hrm_wipe(void);
+extern void command_hrm_freeze(void);
+#endif
 
 #if MFG_INFO_RECORDS_TEST_RESULTS
 extern void command_mfg_info_test_results(void);
@@ -466,6 +474,12 @@ static const Command s_prompt_commands[] = {
 
 #endif // PLATFORM_TINTIN
 #endif // RECOVERY_FW
+
+#if CAPABILITY_HAS_BUILTIN_HRM
+  { "hrm read", command_hrm_read, 0},
+  { "hrm wipe", command_hrm_wipe, 0},
+  { "hrm freeze", command_hrm_freeze, 0},
+#endif
 
 #if CAPABILITY_HAS_ACCESSORY_CONNECTOR
   { "accessory power", command_accessory_power_set, 1 },

@@ -19,6 +19,7 @@
 #include "drivers/display/ice40lp/ice40lp_definitions.h"
 #include "drivers/exti.h"
 #include "drivers/flash/qspi_flash_definitions.h"
+#include "drivers/hrm/as7000.h"
 #include "drivers/i2c_definitions.h"
 #include "drivers/pmic.h"
 #include "drivers/qspi_definitions.h"
@@ -291,6 +292,51 @@ static const I2CBus I2C_TOUCH_ALS_BUS = {
 };
 #endif
 
+static I2CBusState I2C_HRM_BUS_STATE = {};
+
+static const I2CBusHal I2C_HRM_BUS_HAL = {
+  .i2c = I2C2,
+  .clock_ctrl = RCC_APB1Periph_I2C2,
+  .bus_mode = I2CBusMode_FastMode,
+  .clock_speed = 400000,
+#if BOARD_ROBERT_BB || BOARD_CUTTS_BB
+  // TODO: These need to be measured. Just using PMIC_MAG values for now.
+  .rise_time_ns = 150,
+  .fall_time_ns = 6,
+#elif BOARD_ROBERT_BB2
+  // TODO: These need to be measured. Just using PMIC_MAG values for now.
+  .rise_time_ns = 150,
+  .fall_time_ns = 6,
+#elif BOARD_ROBERT_EVT
+  // TODO: These need to be measured. Just using PMIC_MAG values for now.
+  .rise_time_ns = 70,
+  .fall_time_ns = 5,
+#else
+#error "Unknown board"
+#endif
+  .ev_irq_channel = I2C2_EV_IRQn,
+  .er_irq_channel = I2C2_ER_IRQn,
+};
+
+static const I2CBus I2C_HRM_BUS = {
+  .state = &I2C_HRM_BUS_STATE,
+  .hal = &I2C_HRM_BUS_HAL,
+  .scl_gpio = {
+    .gpio = GPIOF,
+    .gpio_pin = GPIO_Pin_1,
+    .gpio_pin_source = GPIO_PinSource1,
+    .gpio_af = GPIO_AF4_I2C2
+  },
+  .sda_gpio = {
+    .gpio = GPIOF,
+    .gpio_pin = GPIO_Pin_0,
+    .gpio_pin_source = GPIO_PinSource0,
+    .gpio_af = GPIO_AF4_I2C2
+  },
+  .stop_mode_inhibitor = InhibitorI2C2,
+  .name = "I2C_HRM"
+};
+
 #if BOARD_CUTTS_BB
 static I2CBusState I2C_NFC_BUS_STATE = {};
 
@@ -387,9 +433,17 @@ static const I2CSlavePort I2C_SLAVE_MAG3110 = {
   .address = 0x0e << 1
 };
 
+static const I2CSlavePort I2C_SLAVE_AS7000 = {
+  .bus = &I2C_HRM_BUS,
+  .address = 0x60
+};
+
 I2CSlavePort * const I2C_MAX14690 = &I2C_SLAVE_MAX14690;
 I2CSlavePort * const I2C_MAG3110 = &I2C_SLAVE_MAG3110;
+I2CSlavePort * const I2C_AS7000 = &I2C_SLAVE_AS7000;
 
+IRQ_MAP(I2C2_EV, i2c_hal_event_irq_handler, &I2C_HRM_BUS);
+IRQ_MAP(I2C2_ER, i2c_hal_error_irq_handler, &I2C_HRM_BUS);
 IRQ_MAP(I2C4_EV, i2c_hal_event_irq_handler, &I2C_PMIC_MAG_BUS);
 IRQ_MAP(I2C4_ER, i2c_hal_error_irq_handler, &I2C_PMIC_MAG_BUS);
 #if BOARD_CUTTS_BB
@@ -397,6 +451,24 @@ IRQ_MAP(I2C1_EV, i2c_hal_event_irq_handler, &I2C_TOUCH_ALS_BUS);
 IRQ_MAP(I2C1_ER, i2c_hal_error_irq_handler, &I2C_TOUCH_ALS_BUS);
 #endif
 
+
+// HRM DEVICE
+static HRMDeviceState s_hrm_state;
+static HRMDevice HRM_DEVICE = {
+  .state = &s_hrm_state,
+  .handshake_int = { EXTI_PortSourceGPIOI, 10 },
+  .int_gpio = {
+    .gpio = GPIOI,
+    .gpio_pin = GPIO_Pin_10
+  },
+  .en_gpio = {
+    .gpio = GPIOF,
+    .gpio_pin = GPIO_Pin_3,
+    .active_high = false,
+  },
+  .i2c_slave = &I2C_SLAVE_AS7000,
+};
+HRMDevice * const HRM = &HRM_DEVICE;
 
 #if BOARD_CUTTS_BB
 static const TouchSensor EWD1000_DEVICE = {
@@ -716,6 +788,7 @@ void board_init(void) {
   i2c_init(&I2C_TOUCH_ALS_BUS);
   i2c_init(&I2C_NFC_BUS);
 #endif
+  i2c_init(&I2C_HRM_BUS);
   i2c_init(&I2C_PMIC_MAG_BUS);
   spi_slave_port_init(BMI160_SPI);
 

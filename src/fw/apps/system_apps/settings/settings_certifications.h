@@ -168,12 +168,11 @@ static const CertificationIds * prv_get_certification_ids(void) {
 #elif defined(BOARD_SPALDING) || defined(BOARD_SPALDING_EVT)
   return &s_certification_ids_spalding;
 #elif PLATFORM_SILK
-// TODO: remove force-false
-//  if (mfg_info_is_hrm_present()) {
-//    return &s_certification_ids_silk_hr;
-//  } else {
+  if (mfg_info_is_hrm_present()) {
+    return &s_certification_ids_silk_hr;
+  } else {
     return &s_certification_ids_silk;
-//  }
+  }
 #elif PLATFORM_ASTERIX
   // TODO: add real certification ids
   return &s_certification_ids_fallback;

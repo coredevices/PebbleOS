@@ -48,3 +48,16 @@ typedef const struct HRMDevice {
   OutputConfig en_gpio;
   I2CSlavePort *i2c_slave;
 } HRMDevice;
+
+typedef struct PACKED AS7000InfoRecord {
+  uint8_t protocol_version_major;
+  uint8_t protocol_version_minor;
+  uint8_t sw_version_major;
+  uint8_t sw_version_minor;
+  uint8_t application_id;
+  uint8_t hw_revision;
+} AS7000InfoRecord;
+
+//! Fills a struct which contains version info about the AS7000
+//! This should probably only be used by the HRM Demo app
+void as7000_get_version_info(HRMDevice *dev, AS7000InfoRecord *info_out);

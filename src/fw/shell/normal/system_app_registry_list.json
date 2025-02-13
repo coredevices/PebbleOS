@@ -534,6 +534,12 @@
       ]
     },
     {
+      "id": -89,
+      "enum": "HRM_DEMO",
+      "md_fn": "hrm_demo_get_app_info",
+      "ifdefs": ["SHOW_ACTIVITY_DEMO", "CAPABILITY_HAS_BUILTIN_HRM=1"]
+    },
+    {
       "id": -90,
       "enum": "REMINDERS",
       "md_fn": "reminder_app_get_info",

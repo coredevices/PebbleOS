@@ -229,11 +229,14 @@ extern UARTDevice * const BT_TX_BOOTROM_UART;
 extern UARTDevice * const BT_RX_BOOTROM_UART;
 
 extern I2CSlavePort * const I2C_AS3701B;
+extern I2CSlavePort * const I2C_AS7000;
 
 extern const VoltageMonitorDevice * VOLTAGE_MONITOR_ALS;
 extern const VoltageMonitorDevice * VOLTAGE_MONITOR_BATTERY;
 
 extern const TemperatureSensor * const TEMPERATURE_SENSOR;
+
+extern HRMDevice * const HRM;
 
 extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
