@@ -120,7 +120,7 @@ def _get_supported_interfaces(ctx):
     out_lines = out.splitlines()
     interfaces = []
     for line in out_lines:
-        matches = re.search("\d+: (\w+)", line)
+        matches = re.search(r"\d+: (\w+)", line)
         if matches:
             interfaces.append(matches.groups()[0])
     return interfaces
@@ -134,7 +134,7 @@ def get_flavor(conf):
                                           quiet=waflib.Context.BOTH,
                                           output=waflib.Context.STDERR)
         version_string = version_string.splitlines()[0]
-        matches = re.search("(\d+)\.(\d+)\.(\d+)", version_string)
+        matches = re.search(r"(\d+)\.(\d+)\.(\d+)", version_string)
         version = list(map(int, matches.groups()))
         return (version[0] >= 0 and version[1] >= 7,
                 'pebble' in version_string)
