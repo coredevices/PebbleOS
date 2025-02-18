@@ -1344,8 +1344,13 @@ def qemu_launch(ctx):
     if ctx.has_touch():
         machine_dep_args.append('-show-cursor')
 
+    qemu_bin = os.getenv("PEBBLE_QEMU_BIN")
+    if not qemu_bin or not (os.path.isfile(qemu_bin) and os.access(qemu_bin, os.X_OK)):
+        qemu_bin = 'qemu-system-arm'
+        
     cmd_line = (
-        "qemu-system-arm -rtc base=localtime "
+        qemu_bin + " "
+        "-rtc base=localtime "
         "-monitor stdio "
         "-s "
         "-serial file:uart1.log "
