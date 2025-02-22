@@ -374,7 +374,9 @@ static void prv_information_window_push(SettingsSystemData *data) {
             "%s, v%u", i18n_get_locale(), i18n_get_version());
 
   info->subtitle_text[SystemInformationItemBtAddress]  = info->bt_mac_addr;
-  info->subtitle_text[SystemInformationItemFirmware]   = (char*)TINTIN_METADATA.version_tag;
+  info->subtitle_text[SystemInformationItemFirmware]   =
+    (char*) (strlen(TINTIN_METADATA.version_tag) >= 2
+             ? TINTIN_METADATA.version_tag : TINTIN_METADATA.version_short);
   info->subtitle_text[SystemInformationItemLanguage]   = info->language_string;
   info->subtitle_text[SystemInformationItemRecovery]   = info->recovery_version_string;
   info->subtitle_text[SystemInformationItemBootloader] = info->boot_version_string;

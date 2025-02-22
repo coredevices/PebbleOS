@@ -18,13 +18,14 @@ import waflib.Context
 import waflib.Logs
 
 def get_git_revision(ctx):
+    commit = tag = "?"
+    timestamp = "1"
     try:
-        tag = ctx.cmd_and_log(['git', 'describe'], quiet=waflib.Context.BOTH).strip()
-        commit = ctx.cmd_and_log(['git', 'rev-parse', 'HEAD'], quiet=waflib.Context.BOTH).strip()
+        commit = ctx.cmd_and_log(['git', 'rev-parse', '--short', 'HEAD'], quiet=waflib.Context.BOTH).strip()
         timestamp = ctx.cmd_and_log(['git', 'log', '-1', '--format=%ct', 'HEAD'], quiet=waflib.Context.BOTH).strip()
+        tag = ctx.cmd_and_log(['git', 'describe'], quiet=waflib.Context.BOTH).strip()
     except Exception:
         waflib.Logs.warn('get_git_version: unable to determine git revision')
-        tag, commit, timestamp = ("?", "?", "1")
     # Validate that git tag follows the required form:
     # See https://github.com/pebble/tintin/wiki/Firmware,-PRF-&-Bootloader-Versions
     # Note: version_regex.groups() returns sequence ('0', '0', '0', 'suffix'):
