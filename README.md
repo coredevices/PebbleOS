@@ -39,8 +39,6 @@ may work right now.
   sure it is available on your `PATH` by checking `arm-none-eabi-gcc --version`
   returns the expected version.
 - If using Ubuntu, install `gcc-multilib` and `gettext`
-- (If you want to use an nRF based board) Install `nrfjprog` from
-  https://www.nordicsemi.com/Products/Development-tools/nRF-Command-Line-Tools.
 - Create a Python venv:
 
   ```shell
@@ -114,19 +112,8 @@ image, use:
 Note that you may change the default probe using the `--jtag` option when
 configuring the project.
 
-## Flashing firmware (nRF)
-
-First make sure Nordic S140 Softdevice is flashed (only do this once):
-
-```shell
-nrfjprog --program src/fw/vendor/nrf5-sdk/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --sectoranduicrerase --reset
-```
-
-Flash the firmware:
-
-```shell
-nrfjprog --program build/src/fw/tintin_fw.elf --sectorerase --reset
-```
+Note: If using nRF52 based board, make sure Nordic S140 Softdevice is flashed.
+You can find it [here](src/fw/vendor/nrf5-sdk/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex).
 
 ## Flashing resources
 
