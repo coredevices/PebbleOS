@@ -255,7 +255,7 @@ board_capability_dicts = [
         }
     },
     {
-        'boards': [ 'asterix_vla_dvb1' ],
+        'boards': [ 'asterix_evt1' ],
         'capabilities':
         {
             'HAS_APP_GLANCES',

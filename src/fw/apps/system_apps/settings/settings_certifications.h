@@ -164,7 +164,7 @@ static const CertificationIds * prv_get_certification_ids(void) {
   return &s_certification_ids_snowy;
 #elif defined(BOARD_SPALDING) || defined(BOARD_SPALDING_EVT)
   return &s_certification_ids_spalding;
-#elif PLATFORM_SILK && !defined(IS_BIGBOARD) && !defined(BOARD_ASTERIX_VLA_DVB1)
+#elif PLATFORM_SILK && !defined(IS_BIGBOARD) && !defined(BOARD_ASTERIX_EVT1)
 // TODO: remove force-false
 //  if (mfg_info_is_hrm_present()) {
 //    return &s_certification_ids_silk_hr;

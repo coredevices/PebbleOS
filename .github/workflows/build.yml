@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "asterix_vla_dvb1"]
+        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "asterix_evt1"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,7 +61,7 @@ jobs:
         run: ./waf build
 
       - name: Build recovery FW
-        if: ${{ matrix.board == 'asterix_vla_dvb1' }}
+        if: ${{ matrix.board == 'asterix_evt1' }}
         run: ./waf build_prf
 
       - name: Store firmware images
@@ -76,15 +76,15 @@ jobs:
             build/**/*.pbpack
 
       - name: Configure (QEMU)
-        if: ${{ matrix.board != 'asterix_vla_dvb1' }}
+        if: ${{ matrix.board != 'asterix_evt1' }}
         run: ./waf clean configure --board ${{ matrix.board }} --qemu
 
       - name: Build FW (QEMU)
-        if: ${{ matrix.board != 'asterix_vla_dvb1' }}
+        if: ${{ matrix.board != 'asterix_evt1' }}
         run: ./waf build qemu_image_micro qemu_image_spi
 
       - name: Store firmware images (QEMU)
-        if: ${{ matrix.board != 'asterix_vla_dvb1' }}
+        if: ${{ matrix.board != 'asterix_evt1' }}
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.board }}-qemu

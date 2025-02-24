@@ -81,7 +81,7 @@ def options(opt):
                              'robert_bb2',
                              'robert_evt',
                              'robert_es',
-                             'asterix_vla_dvb1',],
+                             'asterix_evt1',],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
     opt.add_option('--jtag', action='store', default=None, dest='jtag',  # default is bb2 (below)
@@ -212,7 +212,7 @@ def handle_configure_options(conf):
                       'See PBL-10174.')
             conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
 
-    if 'bb' in conf.options.board or conf.options.board in ('asterix_vla_dvb1'):
+    if 'bb' in conf.options.board or conf.options.board in ('asterix_evt1'):
         conf.env.append_value('DEFINES', 'IS_BIGBOARD')
 
     if conf.options.nosleep:
@@ -421,7 +421,7 @@ def configure(conf):
     elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
         conf.env.JTAG = 'jtag_ftdi'
     elif conf.options.board in ('cutts_bb', 'robert_bb', 'robert_bb2', 'robert_evt',
-                                'silk_evt', 'silk_bb', 'silk_bb2', 'silk', 'asterix_vla_dvb1'):
+                                'silk_evt', 'silk_bb', 'silk_bb2', 'silk', 'asterix_evt1'):
         conf.env.JTAG = 'swd_ftdi'
     else:
         # default to bb2
