@@ -129,30 +129,24 @@ def _get_supported_interfaces(ctx):
 
 
 def get_flavor(conf):
-    """ Returns a 2-tuple (is_newer_than_0_7_0, is_pebble_flavor) """
+    """ Returns a if OpenOCD is Pebble flavor """
 
     try:
         version_string = conf.cmd_and_log(['openocd', '--version'],
                                           quiet=waflib.Context.BOTH,
                                           output=waflib.Context.STDERR)
         version_string = version_string.splitlines()[0]
-        matches = re.search(r"(\d+)\.(\d+)\.(\d+)", version_string)
-        version = list(map(int, matches.groups()))
-        return (version[0] >= 0 and version[1] >= 7,
-                'pebble' in version_string)
+        return 'pebble' in version_string
     except Exception:
         Logs.error("Couldn't parse openocd version")
         return (False, False)
 
 
-def _get_reset_conf(conf, is_newer_than_0_7_0, should_connect_assert_srst):
-    if is_newer_than_0_7_0:
-        options = ['trst_and_srst', 'srst_nogate']
-        if should_connect_assert_srst:
-            options.append('connect_assert_srst')
-        return ' '.join(options)
-    else:
-        return 'trst_and_srst'
+def _get_reset_conf(conf, should_connect_assert_srst):
+    options = ['trst_and_srst', 'srst_nogate']
+    if should_connect_assert_srst:
+        options.append('connect_assert_srst')
+    return ' '.join(options)
 
 
 def write_cfg(conf):
@@ -172,9 +166,9 @@ def write_cfg(conf):
     elif conf.env.MICRO_FAMILY == 'NRF52840':
         target = 'nrf52.cfg'
 
-    (is_newer_than_0_7_0, is_pebble_flavor) = get_flavor(conf)
+    is_pebble_flavor = get_flavor(conf)
 
-    reset_config = _get_reset_conf(conf, is_newer_than_0_7_0, False)
+    reset_config = _get_reset_conf(conf, False)
     Logs.info("reset_config: %s" % reset_config)
 
     if is_pebble_flavor:

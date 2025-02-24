@@ -1685,8 +1685,7 @@ def flash_everything(ctx, fw_bin):
 
 def force_flash(ctx):
     """forces a connected device into a flashing state"""
-    (is_newer_than_0_7_0, _) = waftools.openocd.get_flavor(ctx)
-    reset_config = waftools.openocd._get_reset_conf(ctx, is_newer_than_0_7_0, True)
+    reset_config = waftools.openocd._get_reset_conf(ctx, True)
     reset_cmd = "reset_config %s; " % reset_config
     waftools.openocd.run_command(ctx, reset_cmd + 'init; reset halt;', ignore_fail=True)
     waftools.openocd.run_command(ctx, reset_cmd + 'init; stm32x unlock 0;', ignore_fail=True)
