@@ -1637,9 +1637,8 @@ def flash_boot(ctx):
     if not ctx.env.BOOTLOADER_HEX:
         ctx.fatal("Target does not have a bootloader binary available")
     waftools.openocd.run_command(ctx, 'init; reset halt; ' +
-                                 'flash write_image erase ' + ctx.env.BOOTLOADER_HEX + '; '
-                                 'reset;',
-                                 expect=["wrote"],
+                                 'program {} reset;'.format(ctx.env.BOOTLOADER_HEX),
+                                 expect=["Programming Finished"],
                                  enforce_expect=True)
 
 
@@ -1656,9 +1655,8 @@ def flash_fw(ctx, fw_bin):
 
     hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
     waftools.openocd.run_command(ctx, 'init; reset halt; ' +
-                                 'flash write_image erase {}; '.format(hex_path) +
-                                 'reset;',
-                                 expect=["wrote"],
+                                 'program {} reset;'.format(hex_path),
+                                 expect=["Programming Finished"],
                                  enforce_expect=True)
 
 
@@ -1676,10 +1674,9 @@ def flash_everything(ctx, fw_bin):
 
     hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
     waftools.openocd.run_command(ctx, 'init; reset halt; '
-                                 'flash write_image erase ' + ctx.env.BOOTLOADER_HEX + ';\n'
-                                 'flash write_image erase ' + hex_path + '; '
-                                 'reset;',
-                                 expect=["wrote", "wrote", "shutdown"],
+                                 'program {};'.format(ctx.env.BOOTLOADER_HEX) +
+                                 'program {} reset;'.format(hex_path),
+                                 expect=["Programming Finished", "Programming Finished", "shutdown"],
                                  enforce_expect=True)
 
 
