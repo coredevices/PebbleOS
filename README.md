@@ -104,6 +104,16 @@ Make sure openocd is installed, then run:
 ./waf flash
 ```
 
+If bootloader image is not available, or you simply want to flash the firmware
+image, use:
+
+```shell
+./waf flash_fw
+```
+
+Note that you may change the default probe using the `--jtag` option when
+configuring the project.
+
 ## Flashing firmware (nRF)
 
 First make sure Nordic S140 Softdevice is flashed (only do this once):
