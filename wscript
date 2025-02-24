@@ -421,8 +421,10 @@ def configure(conf):
     elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
         conf.env.JTAG = 'jtag_ftdi'
     elif conf.options.board in ('cutts_bb', 'robert_bb', 'robert_bb2', 'robert_evt',
-                                'silk_evt', 'silk_bb', 'silk_bb2', 'silk', 'asterix_evt1'):
+                                'silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
         conf.env.JTAG = 'swd_ftdi'
+    elif conf.options.board in ('asterix_evt1'):
+        conf.env.JTAG = 'cmsis-dap'
     else:
         # default to bb2
         conf.env.JTAG = 'bb2'
