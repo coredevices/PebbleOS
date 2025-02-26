@@ -352,7 +352,7 @@ class TestControlProtocolFSM(ControlProtocolTestMixin, unittest.TestCase):
 
     def test_code_reject_truncates_rejected_packet(self):
         self.test_trivial_handshake()
-        self.incoming_packet(0xaa, 0x20, 'a'*1496)  # 1500-byte Info
+        self.incoming_packet(0xaa, 0x20, b'a'*1496)  # 1500-byte Info
         self.assert_packet_sent('Code_Reject', 0,
                                 b'\xaa\x20\x05\xdc' + b'a'*1492)
 

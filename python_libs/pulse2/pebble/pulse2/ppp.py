@@ -818,7 +818,7 @@ class ControlProtocol(object):
                 ControlCode(rejected_packet.code)
                 # Known code; not supporting any of these is catastrophic.
                 self.logger.error(
-                        'Remote peer rejected a packet with code %s; ',
+                        'Remote peer rejected a packet with code %s; '
                         'the connection cannot proceed without this code '
                         'being supported', rejected_packet.code)
                 self.receive_code_reject_catastrophic()

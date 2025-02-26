@@ -109,7 +109,7 @@ class TestInterface(unittest.TestCase):
 
     def test_opening_two_sockets_on_same_protocol_is_an_error(self):
         socket1 = self.uut.connect(0xf0f1)
-        with self.assertRaisesRegexp(ValueError, 'socket is already bound'):
+        with self.assertRaisesRegex(ValueError, 'socket is already bound'):
             socket2 = self.uut.connect(0xf0f1)
 
     def test_closing_socket_allows_another_to_be_opened(self):
@@ -120,7 +120,7 @@ class TestInterface(unittest.TestCase):
 
     def test_sending_from_closed_interface_is_an_error(self):
         self.uut.close()
-        with self.assertRaisesRegexp(ValueError, 'closed interface'):
+        with self.assertRaisesRegex(ValueError, 'closed interface'):
             self.uut.send_packet(0x8889, b'data')
 
     def test_get_link_returns_None_when_lcp_is_down(self):
@@ -128,7 +128,7 @@ class TestInterface(unittest.TestCase):
 
     def test_get_link_from_closed_interface_is_an_error(self):
         self.uut.close()
-        with self.assertRaisesRegexp(ValueError, 'closed interface'):
+        with self.assertRaisesRegex(ValueError, 'closed interface'):
             self.uut.get_link(timeout=0)
 
     def test_get_link_when_lcp_is_up(self):
@@ -253,9 +253,9 @@ class TestLink(unittest.TestCase):
 
     def test_open_socket_after_down_is_an_error(self):
         self.uut.down()
-        with self.assertRaisesRegexp(ValueError, 'closed Link'):
+        with self.assertRaisesRegex(ValueError, 'closed Link'):
             self.uut.open_socket('fake', 0xabcd)
 
     def test_open_socket_with_bad_transport_name(self):
-        with self.assertRaisesRegexp(KeyError, "Unknown transport 'bad'"):
+        with self.assertRaisesRegex(KeyError, "Unknown transport 'bad'"):
             self.uut.open_socket('bad', 0xabcd)

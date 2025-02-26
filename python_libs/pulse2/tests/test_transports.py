@@ -161,7 +161,7 @@ class TestBestEffortTransport(CommonTransportTestCases, unittest.TestCase):
         self.uut.send(0xaaaa, b'a'*1496)
 
     def test_send_greater_than_mtu(self):
-        with self.assertRaisesRegexp(ValueError, 'Packet length'):
+        with self.assertRaisesRegex(ValueError, 'Packet length'):
             self.uut.send(0xaaaa, b'a'*1497)
 
     def test_transport_down_closes_link_socket_and_ncp(self):
@@ -350,7 +350,7 @@ class TestReliableTransport(CommonTransportTestCases,
 
     def test_send_with_no_response(self):
         self.uut.send(0xd00d, b'blarg')
-        for _ in xrange(self.uut.max_retransmits):
+        for _ in range(self.uut.max_retransmits):
             FakeTimer.get_active_timers()[-1].expire()
         self.uut.ncp.restart.assert_called_once_with()
 
@@ -401,7 +401,7 @@ class TestReliableTransport(CommonTransportTestCases,
         self.uut.send(0xaaaa, b'a'*1494)
 
     def test_send_greater_than_mtu(self):
-        with self.assertRaisesRegexp(ValueError, 'Packet length'):
+        with self.assertRaisesRegex(ValueError, 'Packet length'):
             self.uut.send(0xaaaa, b'a'*1496)
 
     def test_send_from_socket(self):
