@@ -1,0 +1,14 @@
+[project]
+name = "pbl-tool"
+version = "1.0.1"
+description = "Internal tool for interacting with pebbles."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+	# This doesn't install in Python 3
+	# "pebble_tool @ git+https://github.com/pebble/pebble-tool.git",
+	"libpebble2[pulse]>=0.0.23",
+]
+
+[project.scripts]
+pbl = "pbl:run_tool"

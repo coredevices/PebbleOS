@@ -1,0 +1,19 @@
+[project]
+name = "pebble.commander"
+version = "0.0.11"
+description = "Pebble Commander"
+readme = "README.rst"
+# Currently it doesn't run on Python 3
+# requires-python = ">=3.9"
+dependencies = [
+	"pebble.pulse2>=0.0.7,<1",
+]
+
+[project.optional-dependencies]
+Interactive = [
+	"pebble.loghash>=2.6",
+	"prompt_toolkit>=0.55",
+]
+
+[project.scripts]
+pebble-commander = "pebble.commander.__main__:main [Interactive]"

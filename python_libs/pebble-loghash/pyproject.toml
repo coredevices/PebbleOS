@@ -1,0 +1,7 @@
+[project]
+name = "pebble.loghash"
+version = "2.6.0"
+description = "Pebble Log Hashing module"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []

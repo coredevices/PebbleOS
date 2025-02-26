@@ -1,0 +1,18 @@
+[project]
+name = "pblconvert"
+version = "0.0.2"
+description = "Tools to convert files into valid Pebble resources"
+readme = "README.rst"
+requires-python = ">=3.9"
+dependencies = [
+	"lxml==3.4.4",
+	"cairosvg",
+	"mock",
+	"Pillow",
+]
+
+[project.scripts]
+pblconvert = "pblconvert.pblconvert:main"
+
+[tool.setuptools]
+packages = ["pblconvert"]
