@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from targets import STM32F4FlashProgrammer, STM32F7FlashProgrammer
-from swd_port import SerialWireDebugPort
-from ftdi_swd import FTDISerialWireDebug
+from .targets import STM32F4FlashProgrammer, STM32F7FlashProgrammer
+from .swd_port import SerialWireDebugPort
+from .ftdi_swd import FTDISerialWireDebug
 
 def get_device(board, reset=True, frequency=None):
     boards = {

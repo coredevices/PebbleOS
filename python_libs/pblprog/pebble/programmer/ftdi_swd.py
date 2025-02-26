@@ -14,7 +14,7 @@
 
 from array import array
 
-from pyftdi.pyftdi.ftdi import Ftdi
+from pyftdi.ftdi import Ftdi
 import usb.util
 
 class FTDISerialWireDebug(object):

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from stm32 import STM32FlashProgrammer
+from .stm32 import STM32FlashProgrammer
 
 class STM32F7FlashProgrammer(STM32FlashProgrammer):
     IDCODE = 0x5BA02477

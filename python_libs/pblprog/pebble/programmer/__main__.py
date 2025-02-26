@@ -25,11 +25,11 @@ def main(args=None):
         parser.add_argument('--board', action='store', choices=['robert_bb2', 'silk_bb'], required=True,
                             help='Which board is being programmed')
         parser.add_argument('--verbose', action='store_true',
-	                        help='Output lots of debugging info to the console.')
+                            help='Output lots of debugging info to the console.')
 
         args = parser.parse_args()
 
-	logging.basicConfig(level=(logging.DEBUG if args.verbose else logging.INFO))
+    logging.basicConfig(level=(logging.DEBUG if args.verbose else logging.INFO))
 
     flash(args.board, args.hex_files)
 
