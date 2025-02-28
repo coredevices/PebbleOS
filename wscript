@@ -424,7 +424,7 @@ def configure(conf):
                                 'silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
         conf.env.JTAG = 'swd_ftdi'
     elif conf.options.board in ('asterix_evt1'):
-        conf.env.JTAG = 'cmsis-dap'
+        conf.env.JTAG = 'swd_cmsisdap'
     else:
         # default to bb2
         conf.env.JTAG = 'bb2'
