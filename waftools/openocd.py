@@ -176,16 +176,12 @@ def write_cfg(conf):
     reset_config = _get_reset_conf(conf, False)
     Logs.info("reset_config: %s" % reset_config)
 
-    if is_pebble_flavor:
-        Logs.info("openocd is Pebble flavored!")
-        os_name = 'Pebble_FreeRTOS'
-    else:
-        os_name = 'FreeRTOS'
+    if not is_pebble_flavor:
+        Logs.warn("openocd is not Pebble flavored!")
 
     openocd_cfg = OPENOCD_CFG_TEMPLATE.substitute(jtag=JTAG_OPTIONS[jtag],
                                                   target=target,
-                                                  reset_config=reset_config,
-                                                  os_name=os_name)
+                                                  reset_config=reset_config)
     waflib.Utils.writef('./openocd.cfg', openocd_cfg)
 
 
@@ -197,7 +193,7 @@ source [find target/${target}]
 
 reset_config ${reset_config}
 
-$$_TARGETNAME configure -rtos ${os_name}
+$$_TARGETNAME configure -rtos FreeRTOS
 $$_TARGETNAME configure -event gdb-attach {
     echo "Halting target because GDB is attaching..."
     halt
