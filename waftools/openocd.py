@@ -71,7 +71,7 @@ def _is_openocd_running():
         s.close()
     except socket.error as e:
         s.close()
-        return e[0] == errno.EADDRINUSE
+        return e.errno == errno.EADDRINUSE
     return False
 
 
