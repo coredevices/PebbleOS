@@ -10,3 +10,6 @@
 [submodule "src/bluetooth-fw/nimble/vendor/mynewt-nimble"]
 	path = src/bluetooth-fw/nimble/vendor/mynewt-nimble
 	url = https://github.com/apache/mynewt-nimble.git
+[submodule "src/bluetooth-fw/nimble/vendor/ti-service-packs"]
+	path = src/bluetooth-fw/nimble/vendor/ti-service-packs
+	url = https://git.ti.com/git/ti-bt/service-packs.git
