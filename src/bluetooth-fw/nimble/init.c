@@ -75,9 +75,6 @@ void bt_driver_init(void) {
   s_host_stopped = xSemaphoreCreateBinary();
 
   nimble_port_init();
-  ble_svc_gap_init();
-  ble_svc_gatt_init();
-  ble_svc_dis_init();
   ble_store_ram_init();
 
   TaskParameters_t task_params = {
@@ -101,6 +98,10 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_svc_dis_firmware_revision_set(s_dis_info.fw_revision);
   ble_svc_dis_software_revision_set(s_dis_info.sw_revision);
   ble_svc_dis_manufacturer_name_set(s_dis_info.manufacturer);
+
+  ble_svc_gap_init();
+  ble_svc_gatt_init();
+  ble_svc_dis_init();
 
   ble_hs_sched_start();
   bool started = xSemaphoreTake(s_host_started,
