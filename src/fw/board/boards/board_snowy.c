@@ -49,6 +49,7 @@ CREATE_DMA_STREAM(1, 3); // DMA1_STREAM3_DEVICE - Mic I2S RX
 CREATE_DMA_STREAM(1, 6); // DMA1_STREAM6_DEVICE - Accessory UART RX
 CREATE_DMA_STREAM(2, 0); // DMA2_STREAM0_DEVICE - Compositor DMA
 CREATE_DMA_STREAM(2, 5); // DMA2_STREAM5_DEVICE - ICE40LP TX
+CREATE_DMA_STREAM(2, 2); // DMA2_STREAM4_DEVICE - Bluetooth UART RX
 
 // DMA Requests
 
@@ -111,6 +112,16 @@ static DMARequest ICE40LP_SPI_TX_DMA_REQUEST = {
   .data_size = DMARequestDataSize_Byte,
 };
 
+static DMARequestState s_bluetooth_uart_rx_dma_request_state;
+static DMARequest BLUETOOTH_UART_RX_DMA_REQUEST = {
+  .state = &s_bluetooth_uart_rx_dma_request_state,
+  .stream = &DMA2_STREAM2_DEVICE,
+  .channel = 4,
+  .irq_priority = 0x0e,
+  .priority = DMARequestPriority_High,
+  .type = DMARequestType_PeripheralToMemory,
+  .data_size = DMARequestDataSize_Byte,
+};
 
 // UART DEVICES
 
@@ -171,6 +182,42 @@ static UARTDevice ACCESSORY_UART_DEVICE = {
 UARTDevice * const ACCESSORY_UART = &ACCESSORY_UART_DEVICE;
 IRQ_MAP(UART8, uart_irq_handler, ACCESSORY_UART);
 
+static UARTDeviceState s_bluetooth_uart_state;
+static UARTDevice BLUETOOTH_UART_DEVICE = {
+  .state = &s_bluetooth_uart_state,
+  .tx_gpio = {
+    .gpio = GPIOA,
+    .gpio_pin = GPIO_Pin_9,
+    .gpio_pin_source = GPIO_PinSource9,
+    .gpio_af = GPIO_AF_USART1
+  },
+  .rx_gpio = {
+    .gpio = GPIOA,
+    .gpio_pin = GPIO_Pin_10,
+    .gpio_pin_source = GPIO_PinSource10,
+    .gpio_af = GPIO_AF_USART1
+  },
+  .cts_gpio = {
+    .gpio = GPIOA,
+    .gpio_pin = GPIO_Pin_11,
+    .gpio_pin_source = GPIO_PinSource11,
+    .gpio_af = GPIO_AF_USART1
+  },
+  .rts_gpio = {
+    .gpio = GPIOA,
+    .gpio_pin = GPIO_Pin_12,
+    .gpio_pin_source = GPIO_PinSource12,
+    .gpio_af = GPIO_AF_USART1
+  },
+  .enable_flow_control = true,
+  .periph = USART1,
+  .irq_channel = USART1_IRQn,
+  .irq_priority = 0xe,
+  .rcc_apb_periph = RCC_APB2Periph_USART1,
+  // .rx_dma = &BLUETOOTH_UART_RX_DMA_REQUEST
+};
+UARTDevice * const BLUETOOTH_UART = &BLUETOOTH_UART_DEVICE;
+IRQ_MAP(USART1, uart_irq_handler, BLUETOOTH_UART);
 
 // I2C DEVICES
 

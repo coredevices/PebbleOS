@@ -1,5 +1,10 @@
+def _recurse(ctx):
+    if ctx.env.bt_controller == 'cc2564x':
+        ctx.recurse('chipset/cc2564')
+
+
 def configure(conf):
-    pass
+    _recurse(conf)
 
 
 def build(bld):
@@ -23,6 +28,7 @@ def build(bld):
         f'{nimble_root}/nimble/transport/common/hci_h4/include',
         f'{nimble_root}/porting/nimble/include',
         f'{nimble_root}/ext/tinycrypt/include',
+        f'chipset/include',
         f'port/include',
         f'include',
     ]
@@ -80,7 +86,10 @@ def build(bld):
           'fw_includes',
           'freertos',
           'root_includes',
+          'bt_chipset_driver',
         ],
         includes=include_dirs,
         env = nimble_env,
     )
+
+    _recurse(bld)

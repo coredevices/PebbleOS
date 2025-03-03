@@ -255,6 +255,7 @@ extern DMARequest * const MIC_I2S_RX_DMA;
 extern UARTDevice * const QEMU_UART;
 extern UARTDevice * const DBG_UART;
 extern UARTDevice * const ACCESSORY_UART;
+extern UARTDevice * const BLUETOOTH_UART;
 
 extern SPISlavePort * const BMI160_SPI;
 
