@@ -7,3 +7,6 @@
 [submodule "src/fw/vendor/stm32-sdk"]
 	path = src/fw/vendor/stm32-sdk
 	url = https://github.com/pebble-dev/stm32-sdk.git
+[submodule "src/bluetooth-fw/nimble/vendor/mynewt-nimble"]
+	path = src/bluetooth-fw/nimble/vendor/mynewt-nimble
+	url = https://github.com/apache/mynewt-nimble.git
