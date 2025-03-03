@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct GAPLEAdvertisingJobTerm GAPLEAdvertisingJobTerm;
