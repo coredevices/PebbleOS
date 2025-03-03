@@ -13,8 +13,7 @@ def uses_dialog_bluetooth(ctx):
 
 def _recurse(ctx):
     if ctx.env.bt_controller == 'cc2564x':
-        # TODO: replace with real FW
-        ctx.recurse('stub')
+        ctx.recurse('nimble')
     elif ctx.uses_dialog_bluetooth():
         # TODO: replace with real FW
         ctx.recurse('stub')
