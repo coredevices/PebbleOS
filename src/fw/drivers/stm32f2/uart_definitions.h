@@ -38,8 +38,11 @@ typedef struct UARTState {
 typedef const struct UARTDevice {
   UARTDeviceState *state;
   bool half_duplex;
+  bool enable_flow_control;
   AfConfig tx_gpio;
   AfConfig rx_gpio;
+  AfConfig cts_gpio;
+  AfConfig rts_gpio;
   USART_TypeDef *periph;
   uint32_t rcc_apb_periph;
   uint8_t irq_channel;

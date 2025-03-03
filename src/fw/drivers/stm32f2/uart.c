@@ -57,6 +57,11 @@ static void prv_init(UARTDevice *dev, bool is_open_drain, UARTCR1Flags cr1_extra
     PBL_ASSERTN(!dev->half_duplex);
     gpio_af_init(&dev->rx_gpio, otype, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
   }
+  if (dev->enable_flow_control) {
+    PBL_ASSERTN(dev->cts_gpio.gpio && dev->rts_gpio.gpio);
+    gpio_af_init(&dev->cts_gpio, otype, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
+    gpio_af_init(&dev->rts_gpio, otype, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
+  }
 
   // configure the UART peripheral control registers
   // - 8-bit word length
@@ -67,6 +72,10 @@ static void prv_init(UARTDevice *dev, bool is_open_drain, UARTCR1Flags cr1_extra
   dev->periph->CR1 = cr1_extra_flags;
   dev->periph->CR2 = 0;
   dev->periph->CR3 = (dev->half_duplex ? USART_CR3_HDSEL : 0);
+
+  if (dev->enable_flow_control) {
+    dev->periph->CR3 |= USART_CR3_CTSE | USART_CR3_RTSE;
+  }
 
   // QEMU doesn't want you to read the DR while the UART is not enabled, but it
   // should be fine to clear errors this way
