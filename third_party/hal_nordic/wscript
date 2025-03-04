@@ -13,7 +13,6 @@ def build(bld):
 
         micro_includes = [
 	    '.',
-            '../../src/fw/vendor/CMSIS/CMSIS/Core/Include',
             'nrf5-sdk-uarte-backport/',
             'nrf5-sdk/modules/nrfx/',
             'nrf5-sdk/modules/nrfx/mdk',
@@ -37,6 +36,6 @@ def build(bld):
 
         bld.stlib(source=micro_sources,
                   target='hal_nordic',
-                  use='pblibc',
+                  use=['cmsis_core', 'pblibc'],
                   includes=micro_includes,
                   export_includes=micro_includes)

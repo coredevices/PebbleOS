@@ -17,27 +17,24 @@ def build(bld):
         micro_sources = bld.path.ant_glob('stm32-sdk/STM32F4xx_StdPeriph_Driver/src/*.c',
                                           excl=excludes)
 
-        micro_includes = ['../../src/fw/vendor/CMSIS/CMSIS/Core/Include',
-                          'stm32-sdk/Device/ST/STM32F4xx/Include',
+        micro_includes = ['stm32-sdk/Device/ST/STM32F4xx/Include',
                           'stm32-sdk/STM32F4xx_StdPeriph_Driver/inc']
 
     elif bld.env.MICRO_FAMILY == 'STM32F2':
         micro_sources = bld.path.ant_glob('STM32F2xx_StdPeriph_Driver/src/*.c')
 
-        micro_includes = ['../../src/fw/vendor/CMSIS/Include',
-                          '../../src/fw/vendor/CMSIS/Device/ST/STM32F2xx/Include',
-                          'STM32F2xx_StdPeriph_Driver/inc']
+        micro_includes = ['stm32-sdk/Device/ST/STM32F2xx/Include',
+                          'stm32-sdk/STM32F2xx_StdPeriph_Driver/inc']
 
     elif bld.env.MICRO_FAMILY == 'STM32F7':
         micro_sources = bld.path.ant_glob('stm32f7haxx_stdperiph/*.c')
 
-        micro_includes = ['../../src/fw/vendor/CMSIS/Include',
-                          '../../src/fw/vendor/CMSIS/Device/ST/STM32F7xx/Include',
-                          'stm32f7haxx_stdperiph']
+        micro_includes = ['stm32-sdk/Device/ST/STM32F7xx/Include',
+                          'stm32-sdk/stm32f7haxx_stdperiph']
 
     bld.stlib(source=micro_sources,
               target='stm32_stdlib',
-              use='pblibc',
+              use=['cmsis_core', 'pblibc'],
               includes=micro_includes,
               export_includes=micro_includes)
 
