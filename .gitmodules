@@ -1,5 +1,5 @@
 [submodule "src/fw/vendor/nrf5-sdk"]
-	path = src/fw/vendor/nrf5-sdk
+	path = third_party/hal_nordic/nrf5-sdk
 	url = https://github.com/greenlsi/nrf5-sdk
 [submodule "src/fw/vendor/CMSIS"]
 	path = src/fw/vendor/CMSIS

@@ -1210,7 +1210,7 @@ if mcu_family == 'NRF52840':
             'freertos',
             'fw_includes',
             'root_includes',
-            'stm32_stdlib',
+            'hal_nordic',
         ],
     )
 

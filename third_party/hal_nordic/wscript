@@ -1,0 +1,42 @@
+def configure(conf):
+    if conf.env.MICRO_FAMILY == 'NRF52840':
+        conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
+    if conf.is_asterix():
+        conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
+
+
+def build(bld):
+    if bld.env.MICRO_FAMILY == 'NRF52840':
+        # nRF52 uses nrf5-sdk
+        micro_sources = bld.path.ant_glob('nrf5-sdk/modules/nrfx/**/*.c', excl = ['**/system_nrf*.c', '**/startup_nrf_common.c', '**/nrfx_twi_twim.c', '**/nrfx_uarte.c'])
+        micro_sources.append('nrf5-sdk-uarte-backport/nrfx_uarte.c')
+
+        micro_includes = [
+	    '.',
+            '../../src/fw/vendor/CMSIS/CMSIS/Core/Include',
+            'nrf5-sdk-uarte-backport/',
+            'nrf5-sdk/modules/nrfx/',
+            'nrf5-sdk/modules/nrfx/mdk',
+            'nrf5-sdk/modules/nrfx/drivers/include',
+            'nrf5-sdk/components/libraries/util',
+            'nrf5-sdk/components/libraries/log',
+            'nrf5-sdk/components/libraries/log/src',
+            'nrf5-sdk/components/libraries/experimental_section_vars',
+            'nrf5-sdk/components/libraries/memobj',
+            'nrf5-sdk/components/libraries/queue',
+            'nrf5-sdk/components/libraries/balloc',
+            'nrf5-sdk/components/libraries/atomic',
+            'nrf5-sdk/components/libraries/strerror',
+        ]
+
+        if bld.is_asterix():
+            # is there a better way to do this?
+            micro_includes += ['../../src/fw/board/boards/board_asterix']
+        else:
+            bld.fatal("no board for nRF5 includes")
+
+        bld.stlib(source=micro_sources,
+                  target='hal_nordic',
+                  use='pblibc',
+                  includes=micro_includes,
+                  export_includes=micro_includes)

@@ -1,6 +1,8 @@
 def _recurse(ctx):
     if ctx.env.MICRO_FAMILY.startswith('STM32'):
         ctx.recurse('hal_stm32')
+    elif ctx.env.MICRO_FAMILY.startswith('NRF'):
+        ctx.recurse('hal_nordic')
 
 def configure(conf):
     _recurse(conf)
