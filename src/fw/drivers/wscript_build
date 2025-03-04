@@ -1194,7 +1194,7 @@ if mcu_family == 'NRF52840':
             'nrf5/stubs/temperature.c',
             'nrf5/stubs/periph_config.c',
             'nrf5/stubs/gpio_defaults.c',
-            'nrf5/exti_nrf52.c',
+            'nrf5/exti.c',
             'nrf5/uart.c',
             'nrf5/gpio.c',
             'nrf5/i2c_hal.c',

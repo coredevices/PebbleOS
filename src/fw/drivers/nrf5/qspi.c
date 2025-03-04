@@ -25,7 +25,6 @@
 #include "semphr.h"
 
 #include <nrfx_qspi.h>
-#include <nrfx_clock.h>
 
 /* nRF5's QSPI controller is different enough from STM32's that we
  * reimplement qspi_flash.c, not stm32/qspi.c.  */
@@ -152,14 +151,10 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
     dev->qspi->state->dma_semaphore = xSemaphoreCreateBinary();
   dev->qspi->state->waiting = 0;
   
-  nrfx_qspi_config_t config = NRFX_QSPI_DEFAULT_CONFIG;
+  nrfx_qspi_config_t config = NRFX_QSPI_DEFAULT_CONFIG(
+    dev->qspi->clk_gpio, dev->qspi->cs_gpio, dev->qspi->data_gpio[0],
+    dev->qspi->data_gpio[1], dev->qspi->data_gpio[2], dev->qspi->data_gpio[3]);
   config.phy_if.sck_freq = NRF_QSPI_FREQ_32MDIV1;
-  config.pins.sck_pin = dev->qspi->clk_gpio;
-  config.pins.csn_pin = dev->qspi->cs_gpio;
-  config.pins.io0_pin = dev->qspi->data_gpio[0];
-  config.pins.io1_pin = dev->qspi->data_gpio[1];
-  config.pins.io2_pin = dev->qspi->data_gpio[2];
-  config.pins.io3_pin = dev->qspi->data_gpio[3];
   config.prot_if.readoc = NRF_QSPI_READOC_FASTREAD; /* XXX: later: use QSPI mode */
   config.prot_if.writeoc = NRF_QSPI_WRITEOC_PP;
   config.prot_if.addrmode = NRF_QSPI_ADDRMODE_24BIT;

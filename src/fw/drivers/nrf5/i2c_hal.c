@@ -22,9 +22,8 @@ static void prv_twim_evt_handler(nrfx_twim_evt_t const *evt, void *ctx) {
 }
 
 static void prv_twim_init(I2CBus *bus) {
-  nrfx_twim_config_t config = NRFX_TWIM_DEFAULT_CONFIG;
-  config.scl = bus->scl_gpio.gpio_pin;
-  config.sda = bus->sda_gpio.gpio_pin;
+  nrfx_twim_config_t config = NRFX_TWIM_DEFAULT_CONFIG(
+    bus->scl_gpio.gpio_pin, bus->sda_gpio.gpio_pin);
   config.frequency = bus->hal->frequency;
   config.hold_bus_uninit = true;
   

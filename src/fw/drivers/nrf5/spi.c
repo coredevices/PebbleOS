@@ -30,11 +30,8 @@ void prv_spi_bus_init(const SPIBus *bus) {
 static void prv_spi_slave_init(const SPISlavePort *slave, bool is_reinit) {
   SPIBus *bus = slave->spi_bus;
 
-  nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG;
-  config.sck_pin = bus->spi_sclk;
-  config.mosi_pin = bus->spi_mosi;
-  config.miso_pin = bus->spi_miso;
-  config.ss_pin = NRFX_SPIM_PIN_NOT_USED;
+  nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG(
+    bus->spi_sclk, bus->spi_mosi, bus->spi_miso, NRF_SPIM_PIN_NOT_CONNECTED);
   config.frequency = bus->state->spi_clock_speed_hz;
   config.mode = (slave->spi_cpol == SpiCPol_Low  && slave->spi_cpha == SpiCPha_1Edge) ? NRF_SPIM_MODE_0 :
                 (slave->spi_cpol == SpiCPol_Low  && slave->spi_cpha == SpiCPha_2Edge) ? NRF_SPIM_MODE_1 :

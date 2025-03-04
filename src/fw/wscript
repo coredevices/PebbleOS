@@ -119,6 +119,7 @@ def _generate_memory_layout(bld):
         flash_size = '2048K'
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
+        # TODO: add bootloader support
         bootloader_size = '0K'
         flash_size = '1024K'
 

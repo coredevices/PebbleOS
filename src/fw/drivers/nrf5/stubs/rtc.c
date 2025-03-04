@@ -24,10 +24,6 @@
 #include <mcu.h>
 #include <hal/nrf_rtc.h>
 
-#if MICRO_FAMILY_NRF52840
-#include <nrfx_clock.h>
-#endif
-
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>

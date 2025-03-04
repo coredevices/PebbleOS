@@ -20,11 +20,6 @@
 #include <nrfx_pwm.h>
 #pragma GCC diagnostic pop
 
-#if MICRO_FAMILY_NRF52840
-#define NRFX_GPIOTE_INSTANCE(x) 0
-typedef int nrfx_gpiote_t;
-#endif
-
 #define GPIO_Port_NULL (NULL)
 #define GPIO_Pin_NULL ((uint16_t)-1)
 //! Guaranteed invalid IRQ priority

@@ -20,7 +20,9 @@
 
 // QSPI
 #include <nrfx_qspi.h>
-#include <nrfx_power_clock.h>
+#include <nrfx_gpiote.h>
+#include <nrfx_spim.h>
+#include <nrfx_twim.h>
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_clock.h>
 
@@ -62,7 +64,7 @@ static UARTDevice DBG_UART_DEVICE = {
   .counter = NRFX_TIMER_INSTANCE(2),
 };
 UARTDevice * const DBG_UART = &DBG_UART_DEVICE;
-IRQ_MAP_NRFX(UARTE0_UART0, nrfx_uarte_0_irq_handler);
+IRQ_MAP_NRFX(UART0_UARTE0, nrfx_uarte_0_irq_handler);
 /* PERIPHERAL ID 8 */
 
 /* buttons */
@@ -70,12 +72,12 @@ IRQ_MAP_NRFX(TIMER1, nrfx_timer_1_irq_handler);
 IRQ_MAP_NRFX(TIMER2, nrfx_timer_2_irq_handler);
 
 /* display */
-
 IRQ_MAP_NRFX(SPIM3, nrfx_spim_3_irq_handler);
+
 /* PERIPHERAL ID 10 */
 
 /* EXTI */
-IRQ_MAP_NRFX(GPIOTE, nrfx_gpiote_irq_handler);
+IRQ_MAP_NRFX(GPIOTE, nrfx_gpiote_0_irq_handler);
 
 /* nPM1300 */
 static I2CBusState I2C_NPMC_IIC1_BUS_STATE = {};
@@ -98,7 +100,7 @@ static const I2CBus I2C_NPMC_IIC1_BUS = {
   },
   .name = "I2C_NPMC_IIC1"
 };
-IRQ_MAP_NRFX(SPIM1_SPIS1_TWIM1_TWIS1_SPI1_TWI1, nrfx_twim_1_irq_handler);
+IRQ_MAP_NRFX(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, nrfx_twim_1_irq_handler);
 /* PERIPHERAL ID 9 */
 
 static const I2CSlavePort I2C_SLAVE_NPM1300 = {
@@ -130,7 +132,7 @@ static const I2CBus I2C_IIC2_BUS = {
   },
   .name = "I2C_IIC2"
 };
-IRQ_MAP_NRFX(SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0, nrfx_twim_0_irq_handler);
+IRQ_MAP_NRFX(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, nrfx_twim_0_irq_handler);
 
 /* PERIPHERAL ID 11 */
 
@@ -140,8 +142,6 @@ IRQ_MAP_NRFX(SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0, nrfx_twim_0_irq_handler);
 
 PwmState BACKLIGHT_PWM_STATE;
 IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
-
-IRQ_MAP_NRFX(POWER_CLOCK, nrfx_power_clock_irq_handler);
 
 void board_early_init(void) {
   PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
@@ -153,9 +153,9 @@ void board_early_init(void) {
   nrf_gpio_pin_set(16);
 
   /* TODO: check that LFCLK actually comes up */
-  nrf_clock_event_clear(NRF_CLOCK_EVENT_LFCLKSTARTED);
-  nrf_clock_int_enable(NRF_CLOCK_INT_LF_STARTED_MASK);
-  nrf_clock_task_trigger(NRF_CLOCK_TASK_LFCLKSTART);
+  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
+  nrf_clock_int_enable(NRF_CLOCK, NRF_CLOCK_INT_LF_STARTED_MASK);
+  nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
 }
 
 void board_init(void) {

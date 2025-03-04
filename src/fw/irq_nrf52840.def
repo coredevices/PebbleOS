@@ -17,9 +17,9 @@
 /* ==========================================  nrf52840 Specific Interrupt Numbers  ========================================== */
 REVERSE_IRQ_DEF(POWER_CLOCK          ,   0)              /*!< 0  POWER_CLOCK                                                            */
 REVERSE_IRQ_DEF(RADIO                ,   1)              /*!< 1  RADIO                                                                  */
-REVERSE_IRQ_DEF(UARTE0_UART0         ,   2)              /*!< 2  UARTE0_UART0                                                           */
-REVERSE_IRQ_DEF(SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0,   3)  /*!< 3  SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0                                      */
-REVERSE_IRQ_DEF(SPIM1_SPIS1_TWIM1_TWIS1_SPI1_TWI1,   4)  /*!< 4  SPIM1_SPIS1_TWIM1_TWIS1_SPI1_TWI1                                      */
+REVERSE_IRQ_DEF(UART0_UARTE0         ,   2)              /*!< 2  UART0_UARTE0                                                           */
+REVERSE_IRQ_DEF(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0,   3)  /*!< 3  SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0                                      */
+REVERSE_IRQ_DEF(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1,   4)  /*!< 4  SPIM1_SPIS1_TWIM1_TWIS1_SPI1_TWI1                                      */
 REVERSE_IRQ_DEF(NFCT                 ,   5)              /*!< 5  NFCT                                                                   */
 REVERSE_IRQ_DEF(GPIOTE               ,   6)              /*!< 6  GPIOTE                                                                 */
 REVERSE_IRQ_DEF(SAADC                ,   7)              /*!< 7  SAADC                                                                  */
@@ -48,7 +48,7 @@ REVERSE_IRQ_DEF(PDM                  ,  29)              /*!< 29 PDM            
 REVERSE_IRQ_DEF(MWU                  ,  32)              /*!< 32 MWU                                                                    */
 REVERSE_IRQ_DEF(PWM1                 ,  33)              /*!< 33 PWM1                                                                   */
 REVERSE_IRQ_DEF(PWM2                 ,  34)              /*!< 34 PWM2                                                                   */
-REVERSE_IRQ_DEF(SPIM2_SPIS2_SPI2     ,  35)              /*!< 35 SPIM2_SPIS2_SPI2                                                       */
+REVERSE_IRQ_DEF(SPI2_SPIM2_SPIS2     ,  35)              /*!< 35 SPI2_SPIM2_SPIS2                                                       */
 REVERSE_IRQ_DEF(RTC2                 ,  36)              /*!< 36 RTC2                                                                   */
 REVERSE_IRQ_DEF(I2S                  ,  37)              /*!< 37 I2S                                                                    */
 REVERSE_IRQ_DEF(FPUIRQ                  ,  38)              /*!< 38 FPU                                                                    */

@@ -50,9 +50,11 @@ void uart_init(UARTDevice *dev) {
   
   /* Roughly patterned off of https://devzone.nordicsemi.com/f/nordic-q-a/28420/uarte-in-circular-mode */
   nrfx_timer_config_t tconfig = {
-    .frequency = NRF_TIMER_FREQ_1MHz, /* dummy */
+    .frequency = 1000000, /* dummy */
     .mode = NRF_TIMER_MODE_COUNTER,
-    .bit_width = NRF_TIMER_BIT_WIDTH_32
+    .bit_width = NRF_TIMER_BIT_WIDTH_32,
+    .interrupt_priority = NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY,
+    .p_context = NULL,
   };
   err = nrfx_timer_init(&dev->counter, &tconfig, _timer_event_handler);
   PBL_ASSERTN(err == NRFX_SUCCESS);

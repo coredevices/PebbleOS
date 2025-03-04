@@ -8,11 +8,11 @@
 #include <mcu.h>
 
 void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
-  nrfx_pwm_config_t config = NRFX_PWM_DEFAULT_CONFIG;
-  config.output_pins[0] = pwm->output.gpio_pin;
-  config.output_pins[1] = NRFX_PWM_PIN_NOT_USED;
-  config.output_pins[2] = NRFX_PWM_PIN_NOT_USED;
-  config.output_pins[3] = NRFX_PWM_PIN_NOT_USED;
+  nrfx_pwm_config_t config = NRFX_PWM_DEFAULT_CONFIG(
+    pwm->output.gpio_pin,
+    NRF_PWM_PIN_NOT_CONNECTED,
+    NRF_PWM_PIN_NOT_CONNECTED,
+    NRF_PWM_PIN_NOT_CONNECTED);
   // this is hokey and imprecise, but oh well
   if      (frequency >= 16000000) config.base_clock = NRF_PWM_CLK_16MHz;
   else if (frequency >=  8000000) config.base_clock = NRF_PWM_CLK_8MHz;
@@ -28,7 +28,7 @@ void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
   config.load_mode = NRF_PWM_LOAD_COMMON;
   config.step_mode = NRF_PWM_STEP_TRIGGERED;
     
-  nrfx_err_t rv = nrfx_pwm_init(&pwm->peripheral, &config, NULL);
+  nrfx_err_t rv = nrfx_pwm_init(&pwm->peripheral, &config, NULL, NULL);
   PBL_ASSERTN(rv == NRFX_SUCCESS);
   
   pwm->state->enabled = 0;

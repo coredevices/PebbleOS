@@ -9,7 +9,7 @@ elif bld.is_cutts() or bld.is_robert():
     sources.append(bld.path.make_node("startup_stm32.c"))
     sources.append(bld.path.make_node("system_stm32f7xx.c"))
 elif bld.is_asterix():
-    sources.append(bld.path.make_node("../../../third_party/hal_nordic/nrf5-sdk/modules/nrfx/mdk/system_nrf52840.c"))
+    sources.append(bld.path.make_node("../../../third_party/hal_nordic/nrfx/mdk/system_nrf52840.c"))
     sources.append(bld.path.make_node("startup_stm32.c")) # good enough
 else:
     bld.fatal("No clock configuration file specified for this platform")

@@ -39,7 +39,7 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx);
 
 static void initialize_button_timer(void) {
   nrfx_timer_config_t config = {
-    .frequency = NRF_TIMER_FREQ_31250Hz,
+    .frequency = 31250,
     .mode = NRF_TIMER_MODE_TIMER,
     .bit_width = NRF_TIMER_BIT_WIDTH_32,
     .interrupt_priority = NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY,
