@@ -112,9 +112,6 @@ image, use:
 Note that you may change the default probe using the `--jtag` option when
 configuring the project.
 
-Note: If using nRF52 based board, make sure Nordic S140 Softdevice is flashed.
-You can find it [here](src/fw/vendor/nrf5-sdk/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex).
-
 ## Flashing resources
 
 The first time you boot you may see a "sad watch" screen because resources are not

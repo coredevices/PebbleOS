@@ -119,8 +119,7 @@ def _generate_memory_layout(bld):
         flash_size = '2048K'
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
-        #bootloader_size = '64K'
-        bootloader_size = '156K' # softdevice takes room
+        bootloader_size = '0K'
         flash_size = '1024K'
 
     if bld.env.QEMU:

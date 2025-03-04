@@ -281,12 +281,8 @@ static void prvRestoreContextOfFirstTask( void )
 {
 	__asm volatile
 	(
-#if MICRO_FAMILY_NRF52840
-		"       ldr r0, =__ISR_VECTOR_TABLE__                   \n" /* VTOR does not point where we expect on Nordic-MBR machines! */
-#else
 		"	ldr r0, =0xE000ED08				\n" /* Use the NVIC offset register to locate the stack. */
 		"	ldr r0, [r0]					\n"
-#endif
 		"	ldr r0, [r0]					\n"
 		"	msr msp, r0						\n" /* Set the msp back to the start of the stack. */
 		"	ldr	r3, pxCurrentTCBConst2		\n" /* Restore the context. */

@@ -39,10 +39,6 @@
 #include "task.h"
 #include "freertos_application.h"
 
-#if MICRO_FAMILY_NRF52840
-#include "nrf_nvic.h"
-#endif
-
 static uint64_t s_analytics_device_sleep_cpu_cycles = 0;
 static RtcTicks s_analytics_device_stop_ticks = 0;
 
@@ -89,12 +85,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   // interrupts with priorities lower than configMAX_SYSCALL_INTERRUPT_PRIORITY
   // from executing and from waking the processor.
   // See: http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABGGICD.html#BGBHDHAI
-#if MICRO_FAMILY_NRF52840
-  uint8_t is_nest;
-  sd_nvic_critical_region_enter(&is_nest);
-#else
   __disable_irq();
-#endif
 
   power_tracking_stop(PowerSystemMcuCoreRun);
 
@@ -147,11 +138,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
   power_tracking_start(PowerSystemMcuCoreRun);
 
-#if MICRO_FAMILY_NRF52840
-  sd_nvic_critical_region_exit(is_nest);
-#else
   __enable_irq();
-#endif
 }
 
 void vApplicationStackOverflowHook(TaskHandle_t task_handle, signed char *name) {

@@ -77,10 +77,6 @@
 #include "queue.h"
 #include <string.h>
 
-#if MICRO_FAMILY_NRF52840
-#include "nrf_nvic.h"
-#endif
-
 /* Constants required to access and manipulate the NVIC. */
 #define portNVIC_SYSTICK_CTRL					( ( volatile uint32_t * ) 0xe000e010 )
 #define portNVIC_SYSTICK_LOAD					( ( volatile uint32_t * ) 0xe000e014 )
@@ -321,12 +317,7 @@ void vPortEndScheduler( void )
 
 void vPortEnterCritical( void )
 {
-#if MICRO_FAMILY_NRF52840
-	uint8_t dummy;
-	sd_nvic_critical_region_enter();
-#else
 	portDISABLE_INTERRUPTS();
-#endif
 	uxCriticalNesting++;
 }
 /*-----------------------------------------------------------*/
@@ -337,9 +328,6 @@ void vPortExitCritical( void )
 	uxCriticalNesting--;
 	if( uxCriticalNesting == 0 )
 	{
-#if MICRO_FAMILY_NRF52840
-		sd_nvic_critical_region_exit(0);
-#endif
 		portENABLE_INTERRUPTS();
 	}
 }

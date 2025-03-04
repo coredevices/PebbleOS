@@ -22,10 +22,7 @@
 #include <nrfx_qspi.h>
 #include <nrfx_power_clock.h>
 #include <hal/nrf_gpio.h>
-
-#undef STRINGIFY
-#include <nrf_sdh.h>
-#include <nrf_sdh_ble.h>
+#include <hal/nrf_clock.h>
 
 
 static QSPIPortState s_qspi_port_state;
@@ -154,13 +151,11 @@ void board_early_init(void) {
   nrf_gpio_cfg_output(16);
   nrf_gpio_pin_set(15);
   nrf_gpio_pin_set(16);
-  
-  /* do this now to turn on lfclk */
-  ret_code_t rv; 
-  rv = nrf_sdh_enable_request();
-  PBL_ASSERTN(rv == NRF_SUCCESS);
 
-  PBL_LOG(LOG_LEVEL_ERROR, "SDH enabled");
+  /* TODO: check that LFCLK actually comes up */
+  nrf_clock_event_clear(NRF_CLOCK_EVENT_LFCLKSTARTED);
+  nrf_clock_int_enable(NRF_CLOCK_INT_LF_STARTED_MASK);
+  nrf_clock_task_trigger(NRF_CLOCK_TASK_LFCLKSTART);
 }
 
 void board_init(void) {

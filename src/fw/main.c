@@ -117,10 +117,6 @@
 
 #include <string.h>
 
-#if MICRO_FAMILY_NRF52840
-#include "nrf_sdm.h"
-#endif
-
 /* here is as good as anywhere else ... */
 const int __attribute__((used)) uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
@@ -191,13 +187,9 @@ int main(void) {
 #endif
 
   extern void * __ISR_VECTOR_TABLE__;  // Defined in linker script
-#if MICRO_FAMILY_NRF52840
-  sd_softdevice_vector_table_base_set((uint32_t)&__ISR_VECTOR_TABLE__);
-#else
   SCB->VTOR = (uint32_t)&__ISR_VECTOR_TABLE__;
 
   NVIC_SetPriorityGrouping(3); // 4 bits for group priority; 0 bits for subpriority
-#endif
 
   enable_fault_handlers();
 

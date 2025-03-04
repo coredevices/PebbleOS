@@ -7,8 +7,6 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'STM32F779xx')
     elif conf.env.MICRO_FAMILY == 'NRF52840':
         conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
-        conf.env.append_unique('DEFINES', 'S140')
-        conf.env.append_unique('DEFINES', 'SOFTDEVICE_PRESENT')
     if conf.is_asterix():
         conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
     conf.recurse('FreeRTOS')
@@ -50,25 +48,6 @@ def build(bld):
     	# nRF52 uses nrf5-sdk
         micro_sources = bld.path.ant_glob('nrf5-sdk/modules/nrfx/**/*.c', excl = ['**/system_nrf*.c', '**/startup_nrf_common.c', '**/nrfx_twi_twim.c', '**/nrfx_uarte.c'])
         micro_sources.append('nrf5-sdk-uarte-backport/nrfx_uarte.c')
-        
-        nrf52_bluetooth_sources = [
-            'components/libraries/util/app_util_platform.c',
-            'components/libraries/experimental_section_vars/nrf_section_iter.c',
-            'components/softdevice/common/nrf_sdh.c',
-            'components/softdevice/common/nrf_sdh_ble.c',
-            'components/ble/nrf_ble_gatt/nrf_ble_gatt.c',
-            'components/ble/common/ble_advdata.c',
-            'components/ble/common/ble_srv_common.c',
-            'components/ble/nrf_ble_qwr/nrf_ble_qwr.c',
-            'components/ble/nrf_ble_gq/nrf_ble_gq.c',
-            'components/libraries/memobj/nrf_memobj.c',
-            'components/libraries/queue/nrf_queue.c',
-            'components/libraries/balloc/nrf_balloc.c',
-            'components/libraries/atomic/nrf_atomic.c',
-            'components/ble/ble_db_discovery/ble_db_discovery.c',
-            'components/libraries/util/app_util_platform.c',
-        ]
-        micro_sources += [ "nrf5-sdk/" + f for f in nrf52_bluetooth_sources ]
  
         micro_includes = [
             'CMSIS/CMSIS/Core/Include',
@@ -76,14 +55,6 @@ def build(bld):
             'nrf5-sdk/modules/nrfx/',
             'nrf5-sdk/modules/nrfx/mdk',
             'nrf5-sdk/modules/nrfx/drivers/include',
-            'nrf5-sdk/components/softdevice/mbr/headers',
-            'nrf5-sdk/components/ble/common',
-            'nrf5-sdk/components/ble/nrf_ble_gatt',
-            'nrf5-sdk/components/ble/nrf_ble_qwr',
-            'nrf5-sdk/components/ble/nrf_ble_gq',
-            'nrf5-sdk/components/ble/ble_db_discovery',
-            'nrf5-sdk/components/softdevice/s140/headers',
-            'nrf5-sdk/components/softdevice/common',
             'nrf5-sdk/components/libraries/util',
             'nrf5-sdk/components/libraries/log',
             'nrf5-sdk/components/libraries/log/src',
