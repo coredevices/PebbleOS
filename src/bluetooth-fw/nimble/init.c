@@ -36,6 +36,8 @@
 
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 500;
 
+extern void pebble_pairing_service_init(void);
+
 void ble_store_ram_init(void);
 
 static TaskHandle_t s_host_task_handle;
@@ -102,6 +104,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_svc_gap_init();
   ble_svc_gatt_init();
   ble_svc_dis_init();
+  pebble_pairing_service_init();
 
   ble_hs_sched_start();
   bool started = xSemaphoreTake(s_host_started,
