@@ -478,6 +478,7 @@ def configure(conf):
                       errmsg="Unable to locate the Node command. "
                              "Please check your Node installation and try again.")
 
+    conf.recurse('third_party')
     conf.recurse('src/idl')
     conf.recurse('src/fw')
     conf.recurse('sdk')
@@ -743,6 +744,7 @@ def build(bld):
     if bld.variant == '':
         bld.recurse('stored_apps')
 
+    bld.recurse('third_party')
     bld.recurse('src/include')
     bld.recurse('src/libbtutil')
     bld.recurse('src/bluetooth-fw')

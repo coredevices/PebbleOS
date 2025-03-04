@@ -1,11 +1,5 @@
 def configure(conf):
-    if conf.is_silk():
-        conf.env.append_unique('DEFINES', 'STM32F412xG')
-    elif conf.env.MICRO_FAMILY == 'STM32F4':
-        conf.env.append_unique('DEFINES', 'STM32F429_439xx')
-    elif conf.env.MICRO_FAMILY == 'STM32F7':
-        conf.env.append_unique('DEFINES', 'STM32F779xx')
-    elif conf.env.MICRO_FAMILY == 'NRF52840':
+    if conf.env.MICRO_FAMILY == 'NRF52840':
         conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
     if conf.is_asterix():
         conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
@@ -18,33 +12,7 @@ def build(bld):
     bld.recurse('FreeRTOS')
     bld.recurse('nanopb')
 
-    if bld.env.MICRO_FAMILY == 'STM32F4':
-        if bld.is_silk():
-            excludes = ['**/stm32f4xx_fmc.c']
-        else:
-            excludes = ['**/stm32f4xx_fsmc.c']
-
-        micro_sources = bld.path.ant_glob('stm32-sdk/STM32F4xx_StdPeriph_Driver/src/*.c',
-                                          excl=excludes)
-
-        micro_includes = ['CMSIS/CMSIS/Core/Include',
-                          'stm32-sdk/Device/ST/STM32F4xx/Include',
-                          'stm32-sdk/STM32F4xx_StdPeriph_Driver/inc']
-
-    elif bld.env.MICRO_FAMILY == 'STM32F2':
-        micro_sources = bld.path.ant_glob('STM32F2xx_StdPeriph_Driver/src/*.c')
-
-        micro_includes = ['CMSIS/Include',
-                          'CMSIS/Device/ST/STM32F2xx/Include',
-                          'STM32F2xx_StdPeriph_Driver/inc']
-
-    elif bld.env.MICRO_FAMILY == 'STM32F7':
-        micro_sources = bld.path.ant_glob('stm32f7haxx_stdperiph/*.c')
-
-        micro_includes = ['CMSIS/Include',
-                          'CMSIS/Device/ST/STM32F7xx/Include',
-                          'stm32f7haxx_stdperiph']
-    elif bld.env.MICRO_FAMILY == 'NRF52840':
+    if bld.env.MICRO_FAMILY == 'NRF52840':
     	# nRF52 uses nrf5-sdk
         micro_sources = bld.path.ant_glob('nrf5-sdk/modules/nrfx/**/*.c', excl = ['**/system_nrf*.c', '**/startup_nrf_common.c', '**/nrfx_twi_twim.c', '**/nrfx_uarte.c'])
         micro_sources.append('nrf5-sdk-uarte-backport/nrfx_uarte.c')
@@ -71,17 +39,15 @@ def build(bld):
             micro_includes += ['../board/boards/board_asterix']
         else:
             bld.fatal("no board for nRF5 includes")
-    else:
-        bld.fatal("No microcontroller family set for this build")
 
-    # this is used everywhere else named 'stm32_stdlib', so for now, we'll
-    # keep it this way, even though it actually refers to many other kinds
-    # of micros
-    bld.stlib(source=micro_sources,
-              target='stm32_stdlib',
-              use='pblibc',
-              # Parent dir is included for stm32fxxx_conf.h
-              includes=micro_includes + ['..'],
-              export_includes=micro_includes)
+        # this is used everywhere else named 'stm32_stdlib', so for now, we'll
+        # keep it this way, even though it actually refers to many other kinds
+        # of micros
+        bld.stlib(source=micro_sources,
+                  target='stm32_stdlib',
+                  use='pblibc',
+                  # Parent dir is included for stm32fxxx_conf.h
+                  includes=micro_includes + ['..'],
+                  export_includes=micro_includes)
 
 # vim:filetype=python

@@ -1,0 +1,44 @@
+def configure(conf):
+    if conf.is_silk():
+        conf.env.append_unique('DEFINES', 'STM32F412xG')
+    elif conf.env.MICRO_FAMILY == 'STM32F4':
+        conf.env.append_unique('DEFINES', 'STM32F429_439xx')
+    elif conf.env.MICRO_FAMILY == 'STM32F7':
+        conf.env.append_unique('DEFINES', 'STM32F779xx')
+
+
+def build(bld):
+    if bld.env.MICRO_FAMILY == 'STM32F4':
+        if bld.is_silk():
+            excludes = ['**/stm32f4xx_fmc.c']
+        else:
+            excludes = ['**/stm32f4xx_fsmc.c']
+
+        micro_sources = bld.path.ant_glob('stm32-sdk/STM32F4xx_StdPeriph_Driver/src/*.c',
+                                          excl=excludes)
+
+        micro_includes = ['../../src/fw/vendor/CMSIS/CMSIS/Core/Include',
+                          'stm32-sdk/Device/ST/STM32F4xx/Include',
+                          'stm32-sdk/STM32F4xx_StdPeriph_Driver/inc']
+
+    elif bld.env.MICRO_FAMILY == 'STM32F2':
+        micro_sources = bld.path.ant_glob('STM32F2xx_StdPeriph_Driver/src/*.c')
+
+        micro_includes = ['../../src/fw/vendor/CMSIS/Include',
+                          '../../src/fw/vendor/CMSIS/Device/ST/STM32F2xx/Include',
+                          'STM32F2xx_StdPeriph_Driver/inc']
+
+    elif bld.env.MICRO_FAMILY == 'STM32F7':
+        micro_sources = bld.path.ant_glob('stm32f7haxx_stdperiph/*.c')
+
+        micro_includes = ['../../src/fw/vendor/CMSIS/Include',
+                          '../../src/fw/vendor/CMSIS/Device/ST/STM32F7xx/Include',
+                          'stm32f7haxx_stdperiph']
+
+    bld.stlib(source=micro_sources,
+              target='stm32_stdlib',
+              use='pblibc',
+              includes=micro_includes,
+              export_includes=micro_includes)
+
+# vim:filetype=python

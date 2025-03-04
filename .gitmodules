@@ -5,7 +5,7 @@
 	path = src/fw/vendor/CMSIS
 	url = https://github.com/ARM-software/CMSIS_5.git
 [submodule "src/fw/vendor/stm32-sdk"]
-	path = src/fw/vendor/stm32-sdk
+	path = third_party/hal_stm32/stm32-sdk
 	url = https://github.com/pebble-dev/stm32-sdk.git
 [submodule "src/bluetooth-fw/nimble/vendor/mynewt-nimble"]
 	path = src/bluetooth-fw/nimble/vendor/mynewt-nimble
