@@ -425,6 +425,7 @@ def build(ctx):
          ),
          test_sources_ant_glob="test_graphics_text_node.c")
 
+
     clar(ctx,
         sources_ant_glob =
             " src/fw/applib/graphics/perimeter.c"

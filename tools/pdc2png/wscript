@@ -51,9 +51,7 @@ def build(bld):
     pdc2png_env.CFLAGS.append('-I' + bld.path.abspath() + '/../src/fw/util/time')
     pdc2png_env.CFLAGS.append('-I' + bld.path.abspath() + '/src/include')
 
-    # time_t is defined in sys/types in newlib, and time.h on recent Linux
-    # so just force the defined type for testing time
-    pdc2png_env.CFLAGS.append('-Dtime_t=__SYSCALL_SLONG_TYPE')
+    pdc2png_env.CFLAGS.append('-Wno-gnu-variable-sized-type-not-at-end')
 
     pbi2png_script = bld.path.find_node('../pbi2png.py')
     pbi2png_copy = bld.path.get_bld().parent.parent.make_node('pbi2png.py')
@@ -67,7 +65,7 @@ def build(bld):
                          'DISP_COLS=144', 'DISP_ROWS=168',
                          'DISPLAY_FRAMEBUFFER_BYTES=%d' % (144 * 168),
                          'PBL_COLOR', 'PBL_RECT', 'PLATFORM_SNOWY=1',
-                         'PBI2PNG_EXE="pbi2png.py"'],
+                         'PBI2PNG_EXE="../../tools/pbi2png.py"'],
                 use=['libutil-32bit', 'libos_includes'],
                 env=pdc2png_env)
 

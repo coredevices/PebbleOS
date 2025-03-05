@@ -34,7 +34,7 @@ void notifications_handle_notification_acted_upon(Uuid *id) {
   return;
 }
 
-void notifications_handle_notification_action_result() {
+void notifications_handle_notification_action_result(PebbleSysNotificationActionResult *action_result) {
 }
 
 void notifications_add_notification(TimelineItem *notification) {

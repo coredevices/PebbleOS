@@ -36,7 +36,7 @@ def make_test(self):
         task = self.create_task('run_test', sources)
         runtime_deps = getattr(self.link_task.generator, 'runtime_deps', None)
         if runtime_deps is not None:
-            task.dep_nodes = runtime_deps
+            task.dep_nodes = list(runtime_deps)
 
 # Lock to prevent concurrent modifications of the utest_results list. We may
 # have multiple tests running and finishing at the same time.
@@ -140,12 +140,12 @@ def summary(bld):
         # FIXME: We don't get a status per test, only at the suite level...
         # Perhaps clar itself should do the reporting?
         def strip_non_ascii(s):
-            return "".join(i for i in s if ord(i) < 128)
+            return "".join(i for i in str(s) if ord(i) < 128)
         test_case = junit_xml.TestCase('all')
         if code:
             # Include stdout and stderr if test failed:
-            test_case.stdout = strip_non_ascii(stdout)
-            test_case.stderr = strip_non_ascii(stderr)
+            test_case.stdout = strip_non_ascii(stdout.decode("utf-8"))
+            test_case.stderr = strip_non_ascii(stderr.decode("utf-8"))
             test_case.add_failure_info(message='failed')
         suite_name = node.parent.relpath()
         test_suite = junit_xml.TestSuite(suite_name, [test_case])
@@ -169,8 +169,8 @@ def summary(bld):
             if code:
                 Logs.pprint('RED', '    %s' % node.abspath())
                 # FIXME: Make UTF-8 print properly, see PBL-29528
-                print(ud.normalize('NFKD', out.decode('utf-8')).encode('ascii', 'ignore'))
-                print(ud.normalize('NFKD', err.decode('utf-8')).encode('ascii', 'ignore'))
+                print(ud.normalize('NFKD', out.decode('utf-8')))
+                print(ud.normalize('NFKD', err.decode('utf-8')))
         raise Errors.WafError('test failed')
 
 @taskgen_method
@@ -212,7 +212,7 @@ def build_product_source_files(bld, test_dir, include_paths, defines, cflags, pr
     product_objects = []
     for s in product_sources:
         # Make sure everything in the list is a node
-        if isinstance(s, basestring):
+        if isinstance(s, str):
             src_node = bld.path.find_node(s)
         else:
             src_node = s
@@ -413,6 +413,10 @@ def clar(bld, sources=None, sources_ant_glob=None, test_sources_ant_glob=None,
 
     if test_sources_ant_glob is None and not test_sources:
         raise Exception()
+
+    if test_sources_ant_glob in bld.env.BROKEN_TESTS:
+        Logs.pprint('RED', f'Skipping glob because it is in the BROKEN_TESTS list: {test_sources_ant_glob}')
+        return
 
     if test_sources is None:
         test_sources = []

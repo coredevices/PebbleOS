@@ -61,7 +61,7 @@ def main():
     options, args = parser.parse_args()
 
     folder = args[0] or '.'
-    print 'folder: %s' % folder
+    print('folder: %s' % folder)
     builder = ClarTestBuilder(folder,
         clar_path = options.clar_path,
         print_mode = options.print_mode)
@@ -112,7 +112,7 @@ class ClarTestBuilder:
                     self._process_test_file(test_name, f.read())
 
     def load_file(self, filename):
-        with open(filename) as f:
+        with open(filename, encoding="latin-1") as f:
           test_name = os.path.basename(filename)[:-2]
           self._process_test_file(test_name, f.read())
 

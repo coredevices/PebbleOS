@@ -95,7 +95,7 @@ def create_pdc_from_path(path, out_path, viewbox_size, verbose, duration, play_c
                 base = os.path.basename(path)
                 f = '.'.join(base.split('.')[:-1]) + '.pdc'
             out_path = os.path.join(dir_name, f)
-        with open(out_path, 'w') as out_file:
+        with open(out_path, 'wb') as out_file:
             out_file.write(output)
             out_file.close()
 

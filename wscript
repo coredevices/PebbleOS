@@ -726,8 +726,8 @@ def build(bld):
         bld.recurse('src/libbtutil')
         bld.recurse('src/libos')
         bld.recurse('src/libutil')
-        bld.recurse('tools')
         bld.recurse('tests')
+        bld.recurse('tools')
         return
     elif bld.variant == 'test_rocky_emx':
         if bld.env.APPLIB_TARGET != 'emscripten':

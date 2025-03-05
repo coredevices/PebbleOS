@@ -35,7 +35,7 @@ def build(ctx):
         override_includes=['dummy_board'])
     
     clar(ctx,
-        sources_ant_glob = 
+        sources_ant_glob =
             "src/fw/services/normal/timeline/actions_endpoint.c " \
             "src/fw/services/normal/timeline/attribute.c " \
             "src/fw/services/normal/timeline/attribute_group.c " \

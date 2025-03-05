@@ -61,7 +61,7 @@ def main():
     options, args = parser.parse_args()
 
     folder = args[0] or '.'
-    print 'folder: %s' % folder
+    print('folder: %s' % folder)
     builder = ClarTestBuilder(folder,
         clar_path = options.clar_path,
         print_mode = options.print_mode)

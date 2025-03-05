@@ -79,10 +79,10 @@ def pbi_to_png(pbi, pixel_bytearray):
             pixel_rgba_array.append(((argb8 >> 6) & 0x3) * 85)  # a
 
         png = Image.frombuffer('RGBA', (pbi.bounds_w, pbi.bounds_h),
-                               buffer(pixel_rgba_array), 'raw', 'RGBA', pbi.stride * 4, 1)
+                               memoryview(pixel_rgba_array), 'raw', 'RGBA', pbi.stride * 4, 1)
 
     elif gbitmap_version == 1 and pbi_is_palettized(gbitmap_format):
-        bitdepth = pbi_bitdepth(gbitmap_format)
+        bitdepth = int(pbi_bitdepth(gbitmap_format))
         print("{}-bit palettized color image".format(bitdepth))
 
         # Create palette colors in format R, G, B, A
@@ -96,12 +96,12 @@ def pbi_to_png(pbi, pixel_bytearray):
         # converting the depth-packed indexes for the palette to an unpacked list
         idx = 0  # index of actual packed values including padded values
         for pxl8 in pixel_bytearray[:palette_offset]:
-            for i in xrange(0, 8 / bitdepth):
+            for i in range(0, 8 // bitdepth):
                 # only append actual pixels, ignoring padding pixels
                 # which is the difference between the width and the stride
                 if (idx % (pbi.stride * (8 / bitdepth)) < pbi.bounds_w):
                     pixels.append(
-                        ((pxl8 >> (bitdepth * (8 / bitdepth - (i + 1)))) & ~(~0 << bitdepth)))
+                        ((pxl8 >> (bitdepth * (8 // bitdepth - (i + 1)))) & ~(~0 << bitdepth)))
                 idx = idx + 1
 
         # Manually convert from paletted to RGBA
@@ -124,7 +124,7 @@ def pbi_to_png(pbi, pixel_bytearray):
         png = Image.frombuffer('1', (pbi.bounds_w, pbi.bounds_h),
                                buffer(pixel_bytearray), 'raw', '1', pbi.stride, 1)
     else:
-        print "Bad PBI"
+        print("Bad PBI")
         png = None
 
     return png

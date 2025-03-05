@@ -14,6 +14,7 @@ def build(bld):
       defines.append('DUMA_SO_PREFER_GETENV')
 
     bld.stlib(source=['duma.c', 'print.c', 'sem_inc.c'],
+              cflags=['-Wno-unused-but-set-variable'], # Disabling a warning -Werror is tripping over
               defines=defines,
               target='duma')
 
