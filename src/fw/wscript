@@ -220,8 +220,7 @@ def _generate_memory_layout(bld):
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['aplite']
         app_ram_size_4x = APP_RAM_SIZES['diorite']
-        # We have a 256k continuous block of RAM for now, though some of this is going to have to belong to the softdevice.
-        total_ram = (0x20002300, 256 * 1024 - 0x2300)
+        total_ram = (0x20000000, 256 * 1024)
     else:
         bld.fatal("No set of supported SDK platforms defined for this board")
 
