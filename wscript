@@ -949,7 +949,7 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
         b.add_loghash(loghash_dict)
 
     # Add a LICENSE.txt file
-    b.add_license('LICENSE.txt')
+    b.add_license('LICENSE')
 
     # make sure ctx.capability is available
     ctx.recurse('platform', mandatory=False)
