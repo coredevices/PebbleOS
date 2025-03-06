@@ -121,7 +121,10 @@ flashed. To flash resources, run:
 ./waf image_resources
 ```
 
-You don't need to do this every time, only when resources are changed.
+You don't need to do this every time, only when resources are changed.  On
+some machines, probing the TTY automatically will fail; in this case, you
+can use the `--tty` parameter (i.e., `./waf image_resources --tty
+/dev/tty.usbserial-TG110ae90` to use the UART port of an attached Tigard).
 
 ## Viewing logs
 
