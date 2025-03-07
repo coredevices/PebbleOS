@@ -19,8 +19,6 @@
 #include "os/os_mbuf.h"
 // clang-format on
 
-#include "ble_chipset.h"
-
 #include "board/board.h"
 #include "drivers/uart.h"
 #include "kernel/pebble_tasks.h"
@@ -32,6 +30,9 @@
 #include "system/passert.h"
 #include "util/circular_buffer.h"
 #include "util/math.h"
+
+extern void ble_chipset_init(void);
+extern bool ble_chipset_start(void);
 
 struct uart_tx {
   uint8_t type;

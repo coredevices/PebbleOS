@@ -1,95 +1,24 @@
-def _recurse(ctx):
-    if ctx.env.bt_controller == 'cc2564x':
-        ctx.recurse('chipset/cc2564')
-
-
 def configure(conf):
-    _recurse(conf)
+    pass
 
 
 def build(bld):
-    nimble_root = bld.path.find_node('vendor/mynewt-nimble')
-
     include_dirs = [
-        f'{nimble_root}/nimble/include',
-        f'{nimble_root}/nimble/host/include',
-        f'{nimble_root}/nimble/host/services/ans/include',
-        f'{nimble_root}/nimble/host/services/bas/include',
-        f'{nimble_root}/nimble/host/services/bleuart/include',
-        f'{nimble_root}/nimble/host/services/gap/include',
-        f'{nimble_root}/nimble/host/services/gatt/include',
-        f'{nimble_root}/nimble/host/services/ias/include',
-        f'{nimble_root}/nimble/host/services/dis/include',
-        f'{nimble_root}/nimble/host/services/lls/include',
-        f'{nimble_root}/nimble/host/services/tps/include',
-        f'{nimble_root}/nimble/host/store/ram/include',
-        f'{nimble_root}/nimble/host/util/include',
-        f'{nimble_root}/nimble/transport/include',
-        f'{nimble_root}/nimble/transport/common/hci_h4/include',
-        f'{nimble_root}/porting/nimble/include',
-        f'{nimble_root}/ext/tinycrypt/include',
-        f'chipset/include',
-        f'port/include',
-        f'include',
+        'include',
     ]
 
     driver_source = bld.path.ant_glob([
         '*.c',
-        'port/src/*.c',
-    ])
-
-    nimble_source_exclude = [
-        'nimble/host/src/ble_gatts_lcl.c', # has a duplicate define, not needed anyway
-        'porting/nimble/src/hal_timer.c',
-    ]
-    nimble_source_files = nimble_root.ant_glob(
-        [
-            'porting/nimble/src/*.c',
-            'nimble/src/*.c',
-            'nimble/host/src/*.c',
-            'nimble/host/util/src/*.c',
-            'nimble/host/services/gap/src/*.c',
-            'nimble/host/services/gatt/src/*.c',
-            'nimble/host/services/dis/src/*.c',
-            'nimble/host/store/ram/src/*.c',
-            'nimble/transport/src/*.c',
-            'nimble/transport/common/hci_h4/src/*.c',
-            'ext/tinycrypt/src/*.c',
-        ],
-        excl = nimble_source_exclude,
-    )
-
-    nimble_env = bld.env.derive()
-    nimble_env.append_value('CFLAGS', [
-        '-Wno-pointer-arith',
-        '-Wno-unused-function',
-        '-Wno-sign-compare',
-        '-Wno-old-style-declaration',
-        '-Wimplicit-fallthrough=1',
-    ])
-    nimble_env.append_value('DEFINES', [
-        'NIMBLE_BLE_SM=1',
-        'MYNEWT_VAL_BLE_SM_SC=1',
-        'MYNEWT_VAL_BLE_HS_AUTO_START=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_MANUFACTURER_NAME_READ_PERM=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_MODEL_NUMBER_READ_PERM=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_SERIAL_NUMBER_READ_PERM=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_FIRMWARE_REVISION_READ_PERM=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_SOFTWARE_REVISION_READ_PERM=0',
     ])
 
     bld.objects(
-        source=driver_source + nimble_source_files,
+        source=driver_source,
         target='bt_driver',
         defines=['FILE_LOG_COLOR=LOG_COLOR_BLUE'],
         use=[
+          'nimble',
           'fw_includes',
-          'freertos',
           'root_includes',
-          'bt_chipset_driver',
         ],
         includes=include_dirs,
-        env = nimble_env,
     )
-
-    _recurse(bld)

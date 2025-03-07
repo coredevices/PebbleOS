@@ -1,0 +1,98 @@
+import waftools.cc2564_service_pack_convert
+
+
+def configure(conf):
+    pass
+
+def build(bld):
+    if bld.env.bt_controller == 'cc2564x':
+        service_pack_bin_bld_node = bld.srcnode.get_bld().make_node(
+            'resources/common/raw/bt_patch.bin'
+        )
+        service_pack_bts = '../../src/bluetooth-fw/nimble/vendor/ti-service-packs/initscripts/TIInit_6.7.16.bts'
+        bld(rule=waftools.cc2564_service_pack_convert.wafrule,
+            source=service_pack_bts,
+            target=service_pack_bin_bld_node)
+        bld.DYNAMIC_RESOURCES.append(service_pack_bin_bld_node)
+
+    nimble_includes = [
+        'mynewt-nimble/nimble/include',
+        'mynewt-nimble/nimble/host/include',
+        'mynewt-nimble/nimble/host/services/ans/include',
+        'mynewt-nimble/nimble/host/services/bas/include',
+        'mynewt-nimble/nimble/host/services/bleuart/include',
+        'mynewt-nimble/nimble/host/services/gap/include',
+        'mynewt-nimble/nimble/host/services/gatt/include',
+        'mynewt-nimble/nimble/host/services/ias/include',
+        'mynewt-nimble/nimble/host/services/dis/include',
+        'mynewt-nimble/nimble/host/services/lls/include',
+        'mynewt-nimble/nimble/host/services/tps/include',
+        'mynewt-nimble/nimble/host/store/ram/include',
+        'mynewt-nimble/nimble/host/util/include',
+        'mynewt-nimble/nimble/transport/include',
+        'mynewt-nimble/nimble/transport/common/hci_h4/include',
+        'mynewt-nimble/porting/nimble/include',
+        'mynewt-nimble/ext/tinycrypt/include',
+        'port/include',
+    ]
+
+    nimble_sources = bld.path.ant_glob(
+        [
+            'mynewt-nimble/porting/nimble/src/*.c',
+            'mynewt-nimble/nimble/src/*.c',
+            'mynewt-nimble/nimble/host/src/*.c',
+            'mynewt-nimble/nimble/host/util/src/*.c',
+            'mynewt-nimble/nimble/host/services/gap/src/*.c',
+            'mynewt-nimble/nimble/host/services/gatt/src/*.c',
+            'mynewt-nimble/nimble/host/services/dis/src/*.c',
+            'mynewt-nimble/nimble/host/store/ram/src/*.c',
+            'mynewt-nimble/nimble/transport/src/*.c',
+            'mynewt-nimble/nimble/transport/common/hci_h4/src/*.c',
+            'mynewt-nimble/ext/tinycrypt/src/*.c',
+            'port/src/*.c',
+        ],
+        excl = [
+            'mynewt-nimble/nimble/host/src/ble_gatts_lcl.c', # has a duplicate define, not needed anyway
+            'mynewt-nimble/porting/nimble/src/hal_timer.c',
+        ]
+    )
+
+    if bld.env.bt_controller == 'cc2564x':
+        nimble_sources += [
+            'transport/hci_uart_transport.c',
+            'transport/chipset/cc2564.c',
+        ]
+
+    nimble_env = bld.env.derive()
+
+    nimble_env.append_value('CFLAGS', [
+        '-Wno-pointer-arith',
+        '-Wno-unused-function',
+        '-Wno-sign-compare',
+        '-Wno-old-style-declaration',
+        '-Wimplicit-fallthrough=1',
+    ])
+
+    nimble_env.append_value('DEFINES', [
+        'NIMBLE_BLE_SM=1',
+        'MYNEWT_VAL_BLE_SM_SC=1',
+        'MYNEWT_VAL_BLE_HS_AUTO_START=0',
+        'MYNEWT_VAL_BLE_SVC_DIS_MANUFACTURER_NAME_READ_PERM=0',
+        'MYNEWT_VAL_BLE_SVC_DIS_MODEL_NUMBER_READ_PERM=0',
+        'MYNEWT_VAL_BLE_SVC_DIS_SERIAL_NUMBER_READ_PERM=0',
+        'MYNEWT_VAL_BLE_SVC_DIS_FIRMWARE_REVISION_READ_PERM=0',
+        'MYNEWT_VAL_BLE_SVC_DIS_SOFTWARE_REVISION_READ_PERM=0',
+    ])
+
+    bld.objects(
+        source=nimble_sources,
+        target='nimble',
+        defines=['FILE_LOG_COLOR=LOG_COLOR_BLUE'],
+        use=[
+          'fw_includes',
+          'freertos',
+        ],
+        includes=nimble_includes,
+        export_includes=nimble_includes,
+        env=nimble_env,
+    )

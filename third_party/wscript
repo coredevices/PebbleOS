@@ -1,9 +1,13 @@
 def _recurse(ctx):
     ctx.recurse('cmsis_core')
+
     if ctx.env.MICRO_FAMILY.startswith('STM32'):
         ctx.recurse('hal_stm32')
     elif ctx.env.MICRO_FAMILY.startswith('NRF'):
         ctx.recurse('hal_nordic')
+
+    if ctx.env.bt_controller == 'cc2564x':
+        ctx.recurse('nimble')
 
 def configure(conf):
     _recurse(conf)
