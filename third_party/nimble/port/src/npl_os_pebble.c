@@ -65,7 +65,7 @@ void npl_pebble_eventq_put(struct ble_npl_eventq *evq, struct ble_npl_event *ev)
     ret = xQueueSendToBackFromISR(evq->q, &ev, &woken);
     portYIELD_FROM_ISR(woken);
   } else {
-    ret = xQueueSendToBack(evq->q, &ev, portMAX_DELAY);
+    ret = xQueueSendToBack(evq->q, &ev, vPortInCritical() ? 0U : portMAX_DELAY);
   }
 
   assert(ret == pdPASS);
