@@ -547,7 +547,7 @@ int8_t *pcAllocatedBuffer;
 	BaseType_t xReturn;
 	Queue_t * const pxMutex = ( Queue_t * ) xMutex;
 
-		configASSERT_SAFE_TO_CALL_FREERTOS_API();
+		configASSERT_SAFE_TO_CALL_WAIT_FREERTOS_API(xTicksToWait);
 		configASSERT( pxMutex );
 
 		/* Comments regarding mutual exclusion as per those within
@@ -618,7 +618,7 @@ BaseType_t xEntryTimeSet = pdFALSE, xYieldRequired;
 TimeOut_t xTimeOut;
 Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 
-	configASSERT_SAFE_TO_CALL_FREERTOS_API();
+	configASSERT_SAFE_TO_CALL_WAIT_FREERTOS_API(xTicksToWait);
 	configASSERT( pxQueue );
 	configASSERT( !( ( pvItemToQueue == NULL ) && ( pxQueue->uxItemSize != ( UBaseType_t ) 0U ) ) );
 	configASSERT( !( ( xCopyPosition == queueOVERWRITE ) && ( pxQueue->uxLength != 1 ) ) );
@@ -1376,7 +1376,7 @@ TimeOut_t xTimeOut;
 int8_t *pcOriginalReadPosition;
 Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 
-	configASSERT_SAFE_TO_CALL_FREERTOS_API();
+	configASSERT_SAFE_TO_CALL_WAIT_FREERTOS_API(xTicksToWait);
 	configASSERT( pxQueue );
 	configASSERT( !( ( pvBuffer == NULL ) && ( pxQueue->uxItemSize != ( UBaseType_t ) 0U ) ) );
 	#if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
@@ -2536,7 +2536,7 @@ BaseType_t xReturn;
 	{
 	QueueSetMemberHandle_t xReturn = NULL;
 
-		configASSERT_SAFE_TO_CALL_FREERTOS_API();
+		configASSERT_SAFE_TO_CALL_WAIT_FREERTOS_API(xTicksToWait);
 		( void ) xQueueGenericReceive( ( QueueHandle_t ) xQueueSet, &xReturn, xTicksToWait, pdFALSE ); /*lint !e961 Casting from one typedef to another is not redundant. */
 		return xReturn;
 	}

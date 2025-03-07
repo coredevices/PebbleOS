@@ -210,7 +210,7 @@ BaseType_t xLightMutexLock( LightMutexHandle_t xMutex, TickType_t xTicksToWait )
 	TimeOut_t xTimeOut;
 	LightMutex_t * const pxMutex = ( LightMutex_t * ) xMutex;
 
-	configASSERT_SAFE_TO_CALL_FREERTOS_API();
+	configASSERT_SAFE_TO_CALL_WAIT_FREERTOS_API(xTicksToWait);
 	configASSERT( pxMutex );
 	#if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
 	{
@@ -427,7 +427,7 @@ BaseType_t xLightMutexLockRecursive( LightMutexHandle_t xMutex, TickType_t xTick
 	BaseType_t xReturn;
 	LightMutex_t * const pxMutex = ( LightMutex_t * ) xMutex;
 
-		configASSERT_SAFE_TO_CALL_FREERTOS_API();
+		configASSERT_SAFE_TO_CALL_WAIT_FREERTOS_API(xTicksToWait);
 		configASSERT( pxMutex );
 
 		/* Comments regarding mutual exclusion as per those within
