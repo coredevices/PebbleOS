@@ -1,20 +1,7 @@
-import waftools.cc2564_service_pack_convert
-
-
 def configure(conf):
     pass
 
 def build(bld):
-    if bld.env.bt_controller == 'cc2564x':
-        service_pack_bin_bld_node = bld.srcnode.get_bld().make_node(
-            'resources/common/raw/bt_patch.bin'
-        )
-        service_pack_bts = '../../src/bluetooth-fw/nimble/vendor/ti-service-packs/initscripts/TIInit_6.7.16.bts'
-        bld(rule=waftools.cc2564_service_pack_convert.wafrule,
-            source=service_pack_bts,
-            target=service_pack_bin_bld_node)
-        bld.DYNAMIC_RESOURCES.append(service_pack_bin_bld_node)
-
     nimble_includes = [
         'mynewt-nimble/nimble/include',
         'mynewt-nimble/nimble/host/include',

@@ -8,6 +8,7 @@ def _recurse(ctx):
 
     if ctx.env.bt_controller == 'cc2564x':
         ctx.recurse('nimble')
+        ctx.recurse('ti_bt_sp')
 
 def configure(conf):
     _recurse(conf)
