@@ -4,22 +4,27 @@ def configure(conf):
 def build(bld):
     # FreeRTOS vendor code
     if bld.env.MICRO_FAMILY == 'STM32F2':
-        freertos_port_name = 'ARM_CM3_PEBBLE'
+        freertos_port_name = 'ARM_CM3'
     elif bld.env.MICRO_FAMILY == 'STM32F4':
-        freertos_port_name = 'ARM_CM4_PEBBLE'
+        freertos_port_name = 'ARM_CM4F'
     elif bld.env.MICRO_FAMILY == 'STM32F7':
-        freertos_port_name = 'ARM_CM4_PEBBLE' # fix to CM7 when we have it
+        freertos_port_name = 'ARM_CM4F' # fix to CM7 when we have it
     elif bld.env.MICRO_FAMILY == 'NRF52840':
-        freertos_port_name = 'ARM_CM4_PEBBLE'
+        freertos_port_name = 'ARM_CM4F'
     else:
         bld.fatal('Unrecognized env.MICRO_FAMILY value %r' %
                   bld.env.MICRO_FAMILY)
 
-    freertos_includes = [ 'Source/include',
-                          'Source/portable/GCC/' + freertos_port_name ]
+    freertos_includes = [
+        '.',
+        'FreeRTOS-Kernel/FreeRTOS/Source/include',
+        f'FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/{freertos_port_name}'
+    ]
 
-    freertos_source_paths = [ 'Source',
-                              'Source/portable/GCC/' + freertos_port_name ]
+    freertos_source_paths = [
+        'FreeRTOS-Kernel/FreeRTOS/Source',
+        f'FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/{freertos_port_name}'
+    ]
     freertos_sources = sum([bld.path.ant_glob(d + '/*.c')
                            for d in freertos_source_paths], [])
 
@@ -33,4 +38,5 @@ def build(bld):
               export_defines='GCC_{}'.format(freertos_port_name))
 
 # vim:filetype=python
+
 

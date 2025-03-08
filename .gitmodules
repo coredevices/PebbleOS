@@ -13,3 +13,6 @@
 [submodule "third_party/hal_nordic/nrfx"]
 	path = third_party/hal_nordic/nrfx
 	url = https://github.com/NordicSemiconductor/nrfx
+[submodule "third_party/freertos/FreeRTOS-Kernel"]
+	path = third_party/freertos/FreeRTOS-Kernel
+	url = https://github.com/pebble-dev/FreeRTOS-Kernel

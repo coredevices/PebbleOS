@@ -126,7 +126,7 @@ def analyze_libs(root_directory, sections, use_fast):
 
 def print_groups(text_section, verbose):
     mappings = [
-        ('fw/vendor/FreeRTOS/', 'FreeRTOS'),
+        ('third_party/freertos/FreeRTOS-Kernel/', 'FreeRTOS'),
         ('core/vendor/STM32F2xx_StdPeriph_Lib_V1.0.0', 'STM32'),
         ('newlib/', 'newlib'),
         ('libgcc/', 'libgcc'),

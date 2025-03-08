@@ -328,8 +328,9 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
                      "src/fw/vendor/jerryscript/jerry-core/ecma/operations",
                      "src/fw/vendor/jerryscript/jerry-core/parser/js",
                      "src/fw/vendor/jerryscript/jerry-core/parser/regexp",
-                     "src/fw/vendor/FreeRTOS/Source/include",
-                     "src/fw/vendor/FreeRTOS/Source/portable/GCC/ARM_CM3_PEBBLE",
+                     "third_party/freertos",
+                     "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+                     "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
                      "src/fw/vendor/nanopb" ]
 
     # Use Snowy's resource headers as a fallback if we don't override it here

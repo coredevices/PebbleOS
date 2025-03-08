@@ -89,8 +89,8 @@ def generate_shim_files(shim_def_path, pbl_src_dir, pbl_output_src_dir, sdk_incl
 
     compiler_flags = ["-D{}".format(d) for d in platform_info["DEFINES"]]
 
-    freertos_port_name = "ARM_CM3_PEBBLE" if platform_name == "aplite" else "ARM_CM4_PEBBLE"
-    compiler_flags.extend(["-I{}/fw/vendor/FreeRTOS/Source/{}".format(pbl_src_dir, p) for p in
+    freertos_port_name = "ARM_CM3" if platform_name == "aplite" else "ARM_CM4F"
+    compiler_flags.extend(["-I{}/../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/{}".format(pbl_src_dir, p) for p in
                           ["include",
                            "portable/GCC/{}".format(freertos_port_name)]])
 

@@ -40,8 +40,9 @@ def build(bld):
                 "../../src/fw",
                 "../../src/libutil/includes",
                 "../../src/fw/util/time",
-                "../../src/fw/vendor/FreeRTOS/Source/include",
-                "../../src/fw/vendor/FreeRTOS/Source/portable/GCC/ARM_CM3_PEBBLE"]
+                "../../third_party/freertos",
+                "../../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
+                "../../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3"]
 
     includes = [bld.path.find_node(i).abspath() for i in includes]
 
