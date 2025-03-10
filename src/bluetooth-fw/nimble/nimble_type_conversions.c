@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include <string.h>
-
 #include "nimble_type_conversions.h"
 
+#include <btutil/bt_uuid.h>
 #include <host/ble_gap.h>
+#include <string.h>
 
 void nimble_addr_to_pebble_addr(ble_addr_t *addr, BTDeviceAddress *addr_out) {
   memcpy(&addr_out->octets, &addr->val, BLE_DEV_ADDR_LEN);
@@ -44,7 +44,41 @@ bool pebble_device_to_nimble_conn_handle(const BTDeviceInternal *device, uint16_
   int rc = ble_gap_conn_find_by_addr(&addr, &desc);
   if (rc == 0) {
     *handle = desc.conn_handle;
+  } else {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
+              "failed to find connection handle for addr" BT_DEVICE_ADDRESS_FMT,
+              BT_DEVICE_ADDRESS_XPLODE(device->address));
   }
 
   return rc == 0;
+}
+
+void nimble_conn_params_to_pebble(struct ble_gap_conn_desc *desc, BleConnectionParams *params) {
+  params->conn_interval_1_25ms = desc->conn_itvl;
+  params->slave_latency_events = desc->conn_latency;  // TODO: check this is right
+  params->supervision_timeout_10ms = desc->supervision_timeout;
+}
+
+void pebble_conn_update_to_nimble(const BleConnectionParamsUpdateReq *req,
+                                  struct ble_gap_upd_params *params) {
+  params->itvl_min = req->interval_min_1_25ms;
+  params->itvl_max = req->interval_max_1_25ms;
+  params->latency = req->slave_latency_events;  // TODO: check this is right
+  params->supervision_timeout = req->supervision_timeout_10ms;
+}
+
+void nimble_uuid_to_pebble(const ble_uuid_any_t *stack_uuid, Uuid *uuid) {
+  switch (stack_uuid->u.type) {
+    case BLE_UUID_TYPE_16:
+      *uuid = bt_uuid_expand_16bit(stack_uuid->u16.value);
+      break;
+    case BLE_UUID_TYPE_32:
+      *uuid = bt_uuid_expand_32bit(stack_uuid->u32.value);
+      break;
+    case BLE_UUID_TYPE_128:
+      *uuid = UuidMakeFromLEBytes(stack_uuid->u128.value);
+      break;
+    default:
+      PBL_ASSERTN(0);
+  }
 }
