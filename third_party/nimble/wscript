@@ -50,6 +50,10 @@ def build(bld):
             'transport/chipset/cc2564.c',
         ]
 
+        nimble_includes = [
+            'port/include/cc2564x',
+        ] + nimble_includes
+
     nimble_env = bld.env.derive()
 
     nimble_env.append_value('CFLAGS', [
@@ -58,17 +62,6 @@ def build(bld):
         '-Wno-sign-compare',
         '-Wno-old-style-declaration',
         '-Wimplicit-fallthrough=1',
-    ])
-
-    nimble_env.append_value('DEFINES', [
-        'NIMBLE_BLE_SM=1',
-        'MYNEWT_VAL_BLE_SM_SC=1',
-        'MYNEWT_VAL_BLE_HS_AUTO_START=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_MANUFACTURER_NAME_READ_PERM=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_MODEL_NUMBER_READ_PERM=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_SERIAL_NUMBER_READ_PERM=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_FIRMWARE_REVISION_READ_PERM=0',
-        'MYNEWT_VAL_BLE_SVC_DIS_SOFTWARE_REVISION_READ_PERM=0',
     ])
 
     bld.objects(
