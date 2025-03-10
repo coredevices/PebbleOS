@@ -28,7 +28,13 @@ void bt_driver_id_set_local_device_name(const char device_name[BT_DEVICE_NAME_BU
 }
 
 void bt_driver_id_copy_local_identity_address(BTDeviceAddress *addr_out) {
-  int rc = ble_hs_id_copy_addr(BLE_ADDR_PUBLIC, (uint8_t *)&addr_out->octets, NULL);
+  int rc;
+  uint8_t own_addr_type;
+
+  rc = ble_hs_id_infer_auto(0, &own_addr_type);
+  PBL_ASSERTN(rc == 0);
+
+  rc = ble_hs_id_copy_addr(own_addr_type, (uint8_t *)&addr_out->octets, NULL);
   PBL_ASSERTN(rc == 0);
 }
 

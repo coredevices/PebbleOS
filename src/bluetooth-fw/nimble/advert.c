@@ -41,6 +41,8 @@ void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
 
 bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms,
                                          bool enable_scan_resp) {
+  int rc;
+  uint8_t own_addr_type;
   struct ble_gap_adv_params advp = {
       .conn_mode = enable_scan_resp ? BLE_GAP_CONN_MODE_UND : BLE_GAP_DISC_MODE_NON,
       .disc_mode = BLE_GAP_DISC_MODE_GEN,
@@ -48,7 +50,10 @@ bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_
       .itvl_max = BLE_GAP_CONN_ITVL_MS(max_interval_ms),
   };
 
-  int rc = ble_gap_adv_start(BLE_OWN_ADDR_PUBLIC, NULL, BLE_HS_FOREVER, &advp, NULL, NULL);
+  rc = ble_hs_id_infer_auto(0, &own_addr_type);
+  PBL_ASSERTN(rc == 0);
+
+  rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER, &advp, NULL, NULL);
   return rc == 0;
 }
 
