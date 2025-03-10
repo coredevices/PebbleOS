@@ -15,55 +15,77 @@
  */
 
 #include <bluetooth/pebble_pairing_service.h>
-#include <system/logging.h>
-#include <system/passert.h>
-
+#include <comm/ble/gap_le_connection.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
+#include <system/logging.h>
+#include <system/passert.h>
 
-static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_handle,
-                                        struct ble_gatt_access_ctxt *ctxt, void *arg) {
+#include "nimble_type_conversions.h"
+
+static int pebble_pairing_service_get_connectivity_status(
+    uint16_t conn_handle, PebblePairingServiceConnectivityStatus *status) {
   struct ble_gap_conn_desc desc;
-  if (ble_gap_conn_find(conn_handle, &desc) != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to find connection descriptor when reading connection status");
+  int rc = ble_gap_conn_find(conn_handle, &desc);
+  if (rc != 0) {
+    PBL_LOG_D(
+        LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
+        "Failed to find connection descriptor for %d when reading connection status, code: %d",
+        conn_handle, rc);
     return -1;
   }
 
-  PebblePairingServiceConnectivityStatus status = {
-      .is_reversed_ppogatt_enabled = false,
-      .ble_is_connected = true,
-      .supports_pinning_without_security_request = false,
-      .ble_is_bonded = desc.sec_state.bonded,
-      .ble_is_encrypted = desc.sec_state.encrypted,
-  };
+  status->is_reversed_ppogatt_enabled = false;
+  status->ble_is_connected = true;
+  status->supports_pinning_without_security_request = false;
+  status->ble_is_bonded = desc.sec_state.bonded;
+  status->ble_is_encrypted = desc.sec_state.encrypted;
+
+  return 0;
+}
+
+int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_handle,
+                                                              uint16_t attr_handle) {
+  PebblePairingServiceConnectivityStatus status;
+  int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
+              "pebble_pairing_service_get_connectivity_status failed: %d", rc);
+    return rc;
+  }
+
+  struct os_mbuf *om = ble_hs_mbuf_from_flat(&status, sizeof(status));
+  rc = ble_gatts_notify_custom(conn_handle, attr_handle, om);
+  PBL_LOG(LOG_LEVEL_INFO, "ble_gatts_notify for attr %d returned %d", attr_handle, rc);
+  return rc;
+}
+
+static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_handle,
+                                        struct ble_gatt_access_ctxt *ctxt, void *arg) {
+  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR) return 0;
+
+  PebblePairingServiceConnectivityStatus status;
+  int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "prv_access_connection_status failed: %d", rc);
+    return 0;
+  }
+
   os_mbuf_append(ctxt->om, &status, sizeof(status));
   return 0;
 }
 
 static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle,
                                       struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  int rc = 0;
-  switch (ctxt->op) {
-    case BLE_GATT_ACCESS_OP_READ_CHR:
-      break;
-    case BLE_GATT_ACCESS_OP_WRITE_CHR:
-      rc = ble_gap_security_initiate(conn_handle);
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "security_init rc=%d", rc);
-      break;
-  }
+  int rc = ble_gap_security_initiate(conn_handle);
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_gap_security_initiate rc=%d", rc);
   return rc;
 }
 
 static int prv_access_gatt_mtu(uint16_t conn_handle, uint16_t attr_handle,
                                struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  // TODO: implement
-  return 0;
-}
-
-static int prv_access_connection_params(uint16_t conn_handle, uint16_t attr_handle,
-                                        struct ble_gatt_access_ctxt *ctxt, void *arg) {
   // TODO: implement
   return 0;
 }
@@ -75,25 +97,22 @@ static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
         .characteristics =
             (struct ble_gatt_chr_def[]){
                 {
-                    .uuid = BLE_UUID128_DECLARE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID),
+                    .uuid = BLE_UUID128_DECLARE(
+                        BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID)),
                     .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
                     .access_cb = prv_access_connection_status,
                 },
                 {
-                    .uuid = BLE_UUID128_DECLARE(PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID),
+                    .uuid = BLE_UUID128_DECLARE(
+                        BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID)),
                     .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE,
                     .access_cb = prv_access_trigger_pairing,
                 },
                 {
-                    .uuid = BLE_UUID128_DECLARE(PEBBLE_BT_PAIRING_SERVICE_GATT_MTU_UUID),
+                    .uuid = BLE_UUID128_DECLARE(
+                        BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_GATT_MTU_UUID)),
                     .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_NOTIFY,
                     .access_cb = prv_access_gatt_mtu,
-                },
-                {
-                    .uuid =
-                        BLE_UUID128_DECLARE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_PARAMETERS_UUID),
-                    .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_NOTIFY,
-                    .access_cb = prv_access_connection_params,
                 },
                 {
                     0, /* No more characteristics in this service */
@@ -114,20 +133,34 @@ void pebble_pairing_service_init(void) {
   PBL_ASSERTN(rc == 0);
 }
 
-void prv_notify_chr_updated(const ble_uuid_t *chr_uuid) {
-  uint16_t chr_val_handle;
-  int rc = ble_gatts_find_chr(pebble_pairing_svc[0].uuid, chr_uuid, NULL, &chr_val_handle);
+void prv_notify_chr_updated(const GAPLEConnection *connection, const ble_uuid_t *chr_uuid) {
+  int rc;
+
+  uint16_t conn_handle;
+  rc = pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "prv_notify_chr_updated: Failed to find characteristic handle");
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
+              "prv_notify_chr_updated: failed to find connection handle");
     return;
   }
-  ble_gatts_chr_updated(chr_val_handle);
+
+  uint16_t attr_handle;
+  rc = ble_gatts_find_chr(pebble_pairing_svc[0].uuid, chr_uuid, NULL, &attr_handle);
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
+              "prv_notify_chr_updated: failed to find characteristic handle");
+    return;
+  }
+  pebble_pairing_service_get_connectivity_send_notification(conn_handle, attr_handle);
 }
 
 void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {
-  prv_notify_chr_updated(BLE_UUID128_DECLARE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID));
+  prv_notify_chr_updated(
+      connection,
+      BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID)));
 }
 
 void bt_driver_pebble_pairing_service_handle_gatt_mtu_change(const GAPLEConnection *connection) {
-  prv_notify_chr_updated(BLE_UUID128_DECLARE(PEBBLE_BT_PAIRING_SERVICE_GATT_MTU_UUID));
+  prv_notify_chr_updated(
+      connection, BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_GATT_MTU_UUID)));
 }
