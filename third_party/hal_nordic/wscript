@@ -27,6 +27,7 @@ def build(bld):
         micro_includes = [
 	    '.',
             'nrfx',
+            'nrfx/hal',
             'nrfx/mdk',
             'nrfx/drivers/include',
             'nrfx/templates',
