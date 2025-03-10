@@ -34,6 +34,9 @@
 #include "task.h"
 #include "timers.h"
 
+#include "os/os_cputime.h"
+#include "os/util.h"
+
 #define BLE_NPL_OS_ALIGNMENT 4
 
 #define BLE_NPL_TIME_FOREVER portMAX_DELAY
@@ -183,9 +186,7 @@ static inline uint32_t ble_npl_time_ticks_to_ms32(ble_npl_time_t ticks) { return
 static inline void ble_npl_time_delay(ble_npl_time_t ticks) { vTaskDelay(ticks); }
 
 #if NIMBLE_CFG_CONTROLLER
-static inline void ble_npl_hw_set_isr(int irqn, void (*addr)(void)) {
-  npl_pebble_hw_set_isr(irqn, addr);
-}
+void ble_npl_hw_set_isr(int irqn, void (*addr)(void));
 #endif
 
 static inline uint32_t ble_npl_hw_enter_critical(void) {
@@ -195,6 +196,9 @@ static inline uint32_t ble_npl_hw_enter_critical(void) {
 
 static inline void ble_npl_hw_exit_critical(uint32_t ctx) { vPortExitCritical(); }
 
+static inline bool ble_npl_hw_is_in_critical(void) {
+  return vPortInCritical();
+}
 #define realloc kernel_realloc
 
 #endif /* _NPL_H_ */

@@ -36,23 +36,13 @@ def build(bld):
             'mynewt-nimble/nimble/transport/src/*.c',
             'mynewt-nimble/nimble/transport/common/hci_h4/src/*.c',
             'mynewt-nimble/ext/tinycrypt/src/*.c',
-            'port/src/*.c',
+            'port/src/npl_os_pebble.c',
         ],
         excl = [
             'mynewt-nimble/nimble/host/src/ble_gatts_lcl.c', # has a duplicate define, not needed anyway
             'mynewt-nimble/porting/nimble/src/hal_timer.c',
         ]
     )
-
-    if bld.env.bt_controller == 'cc2564x':
-        nimble_sources += [
-            'transport/hci_uart_transport.c',
-            'transport/chipset/cc2564.c',
-        ]
-
-        nimble_includes = [
-            'port/include/cc2564x',
-        ] + nimble_includes
 
     nimble_env = bld.env.derive()
 
@@ -64,15 +54,54 @@ def build(bld):
         '-Wimplicit-fallthrough=1',
     ])
 
+    nimble_export_defines = []
+
+    nimble_use =[
+        'fw_includes',
+        'freertos',
+    ]
+
+    if bld.env.bt_controller == 'cc2564x':
+        nimble_sources += [
+            'transport/hci_uart_transport.c',
+            'transport/chipset/cc2564.c',
+        ]
+
+        nimble_includes = [
+            'port/include/cc2564x',
+        ] + nimble_includes
+
+    elif bld.env.bt_controller == 'nrf52':
+        nimble_sources += bld.path.ant_glob([
+            'mynewt-nimble/nimble/controller/src/*.c',
+            'mynewt-nimble/nimble/drivers/nrf5x/src/*.c',
+            'mynewt-nimble/nimble/drivers/nrf5x/src/nrf52/*.c',
+            'mynewt-nimble/porting/nimble/src/hal_timer.c',
+            'port/src/nrf52.c',
+        ])
+
+        nimble_includes = [
+            'port/include/nrf52',
+            'mynewt-nimble/nimble/controller/include',
+            'mynewt-nimble/nimble/drivers/nrf5x/include',
+        ] + nimble_includes
+
+        nimble_env.append_value('DEFINES', [
+            'FREERTOS=1',
+            'NIMBLE_CFG_CONTROLLER=1',
+        ])
+
+        nimble_export_defines.append('NIMBLE_CFG_CONTROLLER=1')
+
+        nimble_use.append('hal_nordic')
+
     bld.objects(
         source=nimble_sources,
         target='nimble',
         defines=['FILE_LOG_COLOR=LOG_COLOR_BLUE'],
-        use=[
-          'fw_includes',
-          'freertos',
-        ],
+        use=nimble_use,
         includes=nimble_includes,
         export_includes=nimble_includes,
+        export_defines=nimble_export_defines,
         env=nimble_env,
     )
