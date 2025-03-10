@@ -34,12 +34,15 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-static const uint32_t s_bt_stack_start_stop_timeout_ms = 500;
+static const uint32_t s_bt_stack_start_stop_timeout_ms = 2000;
 
 extern void pebble_pairing_service_init(void);
 
 void ble_store_ram_init(void);
 
+#if NIMBLE_CFG_CONTROLLER
+static TaskHandle_t s_ll_task_handle;
+#endif
 static TaskHandle_t s_host_task_handle;
 static SemaphoreHandle_t s_host_started;
 static SemaphoreHandle_t s_host_stopped;
@@ -79,19 +82,34 @@ void bt_driver_init(void) {
   nimble_port_init();
   ble_store_ram_init();
 
-  TaskParameters_t task_params = {
+  TaskParameters_t host_task_params = {
       .pvTaskCode = prv_host_task_main,
       .pcName = "NimbleHost",
       .usStackDepth = 4000 / sizeof(StackType_t),  // TODO: probably reduce this
-      .uxPriority = (tskIDLE_PRIORITY + 3) | portPRIVILEGE_BIT,
+      .uxPriority = (configMAX_PRIORITIES - 2) | portPRIVILEGE_BIT,
       .puxStackBuffer = NULL,
   };
 
-  pebble_task_create(PebbleTask_BTCallback, &task_params, &s_host_task_handle);
+  pebble_task_create(PebbleTask_BTCallback, &host_task_params, &s_host_task_handle);
   PBL_ASSERTN(s_host_task_handle);
+
+#if NIMBLE_CFG_CONTROLLER
+  TaskParameters_t ll_task_params = {
+    .pvTaskCode = nimble_port_ll_task_func,
+    .pcName = "NimbleLL",
+    .usStackDepth = (configMINIMAL_STACK_SIZE + 400) / sizeof(StackType_t),
+    .uxPriority = (configMAX_PRIORITIES - 1) | portPRIVILEGE_BIT,
+    .puxStackBuffer = NULL,
+  };
+
+  pebble_task_create(PebbleTask_BTRX, &ll_task_params, &s_ll_task_handle);
+  PBL_ASSERTN(s_ll_task_handle);
+#endif
 }
 
 bool bt_driver_start(BTDriverConfig *config) {
+  int rc;
+
   PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "bt_driver_start");
 
   s_dis_info = config->dis_info;
@@ -113,6 +131,9 @@ bool bt_driver_start(BTDriverConfig *config) {
     PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "bt_driver_start timeout");
     return false;
   }
+
+  rc = ble_hs_util_ensure_addr(0);
+  PBL_ASSERTN(rc == 0);
 
   return true;
 }

@@ -17,6 +17,7 @@ def build(bld):
         defines=['FILE_LOG_COLOR=LOG_COLOR_BLUE'],
         use=[
           'nimble',
+          'freertos',
           'fw_includes',
           'root_includes',
         ],
