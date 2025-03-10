@@ -66,11 +66,11 @@ char pebble_task_get_char(PebbleTask task) {
     return 'w';
   case PebbleTask_App:
     return 'a';
-  case PebbleTask_BTCallback:
+  case PebbleTask_BTHost:
     return 'b';
-  case PebbleTask_BTRX:
+  case PebbleTask_BTController:
     return 'c';
-  case PebbleTask_BTTimer:
+  case PebbleTask_BTHCI:
     return 'd';
   case PebbleTask_NewTimers:
     return 't';
@@ -122,11 +122,11 @@ void analytics_external_collect_stack_free(void) {
     prv_task_get_stack_free(PebbleTask_KernelBackground), AnalyticsClient_System);
 
   analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_BLUETOPIA_BIG,
-    prv_task_get_stack_free(PebbleTask_BTCallback), AnalyticsClient_System);
+    prv_task_get_stack_free(PebbleTask_BTHost), AnalyticsClient_System);
   analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_BLUETOPIA_MEDIUM,
-    prv_task_get_stack_free(PebbleTask_BTRX), AnalyticsClient_System);
+    prv_task_get_stack_free(PebbleTask_BTController), AnalyticsClient_System);
   analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_BLUETOPIA_SMALL,
-    prv_task_get_stack_free(PebbleTask_BTTimer), AnalyticsClient_System);
+    prv_task_get_stack_free(PebbleTask_BTHCI), AnalyticsClient_System);
 
   analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_NEWTIMERS,
     prv_task_get_stack_free(PebbleTask_NewTimers), AnalyticsClient_System);
@@ -172,9 +172,9 @@ void pebble_task_create(PebbleTask pebble_task, TaskParameters_t *task_params,
       break;
     case PebbleTask_KernelMain:
     case PebbleTask_KernelBackground:
-    case PebbleTask_BTCallback:
-    case PebbleTask_BTRX:
-    case PebbleTask_BTTimer:
+    case PebbleTask_BTHost:
+    case PebbleTask_BTController:
+    case PebbleTask_BTHCI:
     case PebbleTask_NewTimers:
     case PebbleTask_PULSE:
       mpu_init_region_from_region(&app_region, memory_layout_get_app_region(),
@@ -200,9 +200,9 @@ void pebble_task_create(PebbleTask pebble_task, TaskParameters_t *task_params,
     case PebbleTask_KernelBackground:
       stack_guard_region = memory_layout_get_kernel_bg_stack_guard_region();
       break;
-    case PebbleTask_BTCallback:
-    case PebbleTask_BTRX:
-    case PebbleTask_BTTimer:
+    case PebbleTask_BTHost:
+    case PebbleTask_BTController:
+    case PebbleTask_BTHCI:
     case PebbleTask_NewTimers:
     case PebbleTask_PULSE:
       break;

@@ -31,9 +31,9 @@ typedef enum PebbleTask {
   PebbleTask_Worker,
   PebbleTask_App,
 
-  PebbleTask_BTCallback,    // Task Bluetooth callbacks are handled on
-  PebbleTask_BTRX,          // Task handling inbound data from BT controller
-  PebbleTask_BTTimer,       // Timer task - only used by cc2564x BT controller today
+  PebbleTask_BTHost,        // Bluetooth Host
+  PebbleTask_BTController,  // Bluetooth Controller
+  PebbleTask_BTHCI,         // Bluetooth HCI
 
   PebbleTask_NewTimers,
 

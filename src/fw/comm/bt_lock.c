@@ -24,7 +24,7 @@
 // *and* by Bluetopia. It gets handed to Bluetopia using bt_lock_get() in
 // BTPSKRNL.c when Bluetopia is initialized. The firmware uses this lock to
 // protect Bluetooth-related state that is read and written from the Bluetooth
-// callback task (PebbleTask_BTCallback) and other tasks. If we created our
+// callback task (PebbleTask_BTHost) and other tasks. If we created our
 // own mutex for this purpose, we would encounter dead-lock situations.
 // For example:
 //   Task1: Bluetopia code -> grabs BT stack lock -> Pebble callback -> grabs pebble mutex

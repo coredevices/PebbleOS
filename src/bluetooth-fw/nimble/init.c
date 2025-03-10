@@ -90,7 +90,7 @@ void bt_driver_init(void) {
       .puxStackBuffer = NULL,
   };
 
-  pebble_task_create(PebbleTask_BTCallback, &host_task_params, &s_host_task_handle);
+  pebble_task_create(PebbleTask_BTHost, &host_task_params, &s_host_task_handle);
   PBL_ASSERTN(s_host_task_handle);
 
 #if NIMBLE_CFG_CONTROLLER
@@ -102,7 +102,7 @@ void bt_driver_init(void) {
     .puxStackBuffer = NULL,
   };
 
-  pebble_task_create(PebbleTask_BTRX, &ll_task_params, &s_ll_task_handle);
+  pebble_task_create(PebbleTask_BTController, &ll_task_params, &s_ll_task_handle);
   PBL_ASSERTN(s_ll_task_handle);
 #endif
 }

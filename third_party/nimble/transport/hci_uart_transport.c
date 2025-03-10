@@ -202,7 +202,7 @@ void ble_transport_ll_init(void) {
       .puxStackBuffer = NULL,
   };
 
-  pebble_task_create(PebbleTask_BTRX, &task_params, &s_rx_task_handle);
+  pebble_task_create(PebbleTask_BTHCI, &task_params, &s_rx_task_handle);
   PBL_ASSERTN(s_rx_task_handle);
 
   if (ble_chipset_start()) {
