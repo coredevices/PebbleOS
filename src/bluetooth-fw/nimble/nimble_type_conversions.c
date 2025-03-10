@@ -42,12 +42,12 @@ bool pebble_device_to_nimble_conn_handle(const BTDeviceInternal *device, uint16_
   pebble_device_to_nimble_addr(device, &addr);
 
   int rc = ble_gap_conn_find_by_addr(&addr, &desc);
-  if (rc == 0) {
-    *handle = desc.conn_handle;
-  } else {
+  if (rc != 0) {
     PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "failed to find connection handle for addr" BT_DEVICE_ADDRESS_FMT,
-              BT_DEVICE_ADDRESS_XPLODE(device->address));
+      "failed to find connection handle for addr" BT_DEVICE_ADDRESS_FMT,
+      BT_DEVICE_ADDRESS_XPLODE(device->address));
+  } else {
+    *handle = desc.conn_handle;
   }
 
   return rc == 0;
