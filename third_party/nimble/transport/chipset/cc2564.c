@@ -27,7 +27,7 @@ typedef struct PACKED {
   uint8_t size;
 } BTSHCICommand;
 
-extern void ble_queue_cmd(void *buf, bool needs_free);
+extern void ble_queue_cmd(void *buf, bool needs_free, bool wait);
 
 static bool ble_run_bts(const ResAppNum bts_file) {
   size_t i = 0;
@@ -54,7 +54,7 @@ static bool ble_run_bts(const ResAppNum bts_file) {
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "ble_bts: Skipping opcode 0x%X", command->opcode);
       continue;
     }
-    ble_queue_cmd(&command->opcode, false);
+    ble_queue_cmd(&command->opcode, false, true);
   }
 
   resource_mapped_release(task);
