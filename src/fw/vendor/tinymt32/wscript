@@ -1,9 +1,0 @@
-def configure(conf):
-    pass
-
-def build(bld):
-    bld.stlib(source=['tinymt32.c'],
-              target='tinymt32',
-              use='pblibc')
-
-# vim:filetype=python
