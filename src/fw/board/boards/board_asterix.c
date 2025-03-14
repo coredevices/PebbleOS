@@ -152,10 +152,16 @@ void board_early_init(void) {
   nrf_gpio_pin_set(15);
   nrf_gpio_pin_set(16);
 
-  /* TODO: check that LFCLK actually comes up */
+  nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
   nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
-  nrf_clock_int_enable(NRF_CLOCK, NRF_CLOCK_INT_LF_STARTED_MASK);
   nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
+  /* TODO: Add timeout, report failure if LFCLK does not start. For now,
+   * WDT should trigger a reboot. Calibrated RC may be used as a fallback,
+   * provided we can adjust BLE SCA settings at runtime.
+   */
+  while (!nrf_clock_event_check(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED)) {
+  }
+  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
 }
 
 void board_init(void) {
