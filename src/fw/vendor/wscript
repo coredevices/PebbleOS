@@ -4,6 +4,5 @@ def configure(conf):
 
 def build(bld):
     bld.recurse('tinymt32')
-    bld.recurse('nanopb')
 
 # vim:filetype=python

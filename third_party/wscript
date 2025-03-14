@@ -1,6 +1,7 @@
 def _recurse(ctx):
     ctx.recurse('cmsis_core')
     ctx.recurse('freertos')
+    ctx.recurse('nanopb')
 
     if ctx.env.MICRO_FAMILY.startswith('STM32'):
         ctx.recurse('hal_stm32')
