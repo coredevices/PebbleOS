@@ -6,7 +6,7 @@ def build(ctx):
                           " src/fw/applib/app_message/app_message_outbox.c"
                           " src/fw/applib/app_message/app_message_inbox.c"
                           " src/fw/util/rand/rand.c"
-                          " src/fw/vendor/tinymt32/tinymt32.c"
+                          " third_party/tinymt/TinyMT/tinymt/tinymt32.c"
                           " src/fw/process_management/pebble_process_info.c"
                           " src/fw/util/dict.c",
          test_sources_ant_glob="test_app_message.c")
@@ -40,7 +40,7 @@ def build(ctx):
             " src/fw/util/dict.c"
             " src/fw/applib/persist.c"
             " src/fw/util/rand/rand.c"
-            " src/fw/vendor/tinymt32/tinymt32.c"
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c"
             " src/fw/services/normal/filesystem/app_file.c"
             " src/fw/services/normal/filesystem/flash_translation.c"
             " src/fw/services/normal/filesystem/pfs.c"

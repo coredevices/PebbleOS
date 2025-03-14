@@ -39,7 +39,7 @@ def build(bld):
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
-                           "src/fw/vendor/tinymt32/tinymt32.c "
+                           "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                            "src/fw/comm/ble/gap_le_connection.c "
                            "src/fw/comm/ble/gatt_client_accessors.c "
                            "src/fw/comm/ble/gatt_client_discovery.c "
@@ -54,7 +54,7 @@ def build(bld):
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
-                           "src/fw/vendor/tinymt32/tinymt32.c "
+                           "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                            "src/fw/comm/ble/gap_le_connection.c "
                            "src/fw/comm/ble/gatt_client_accessors.c "
                            "src/fw/comm/ble/gatt_client_discovery.c "
@@ -69,7 +69,7 @@ def build(bld):
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
-                           "src/fw/vendor/tinymt32/tinymt32.c "
+                           "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                            "src/fw/comm/ble/gap_le_connection.c "
                            "src/fw/comm/ble/gap_le_task.c "
                            "src/fw/comm/ble/gatt_client_accessors.c "
@@ -87,7 +87,7 @@ def build(bld):
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
-                           "src/fw/vendor/tinymt32/tinymt32.c "
+                           "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                            "src/fw/comm/ble/gatt_client_discovery.c "
                            "src/fw/comm/ble/gatt_service_changed.c "
                            "src/fw/comm/internals/bt_conn_mgr.c "
@@ -99,7 +99,7 @@ def build(bld):
 
     clar(bld,
          sources_ant_glob = "src/fw/util/rand/rand.c "
-                          "src/fw/vendor/tinymt32/tinymt32.c "
+                          "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                           "src/fw/comm/ble/gap_le_connection.c "
                           "src/fw/comm/ble/gatt_client_discovery.c "
                           "src/fw/comm/ble/gatt_service_changed.c "
@@ -142,7 +142,7 @@ def build(bld):
         "src/fw/comm/ble/kernel_le_client/ancs/ancs_app_name_storage.c " \
         "src/fw/services/common/regular_timer.c " \
         "src/fw/util/rand/rand.c " \
-        "src/fw/vendor/tinymt32/tinymt32.c " \
+        "third_party/tinymt/TinyMT/tinymt/tinymt32.c " \
         "tests/fakes/fake_events.c " \
         "tests/fakes/fake_kernel_services_notifications.c " \
         "tests/fakes/fake_gatt_client_subscriptions.c " \
@@ -161,7 +161,7 @@ def build(bld):
     clar(bld,
          sources_ant_glob="src/fw/comm/ble/kernel_le_client/kernel_le_client.c "
                            "src/fw/util/rand/rand.c "
-                           "src/fw/vendor/tinymt32/tinymt32.c",
+                           "third_party/tinymt/TinyMT/tinymt/tinymt32.c",
          test_sources_ant_glob="test_kernel_le_client.c")
 
     for ppogatt_version in [ 0, 1]:
@@ -170,7 +170,7 @@ def build(bld):
                            "src/fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c " \
                            "src/fw/services/common/regular_timer.c " \
                            "src/fw/util/rand/rand.c "
-                           "src/fw/vendor/tinymt32/tinymt32.c "
+                           "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                            "tests/fakes/fake_gatt_client_operations.c " \
                            "tests/fakes/fake_gatt_client_subscriptions.c " \
                            "tests/fakes/fake_rtc.c " \

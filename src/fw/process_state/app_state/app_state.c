@@ -34,7 +34,7 @@
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
 #include "util/attributes.h"
-#include "vendor/tinymt32/tinymt32.h"
+#include "tinymt32.h"
 
 #include <string.h>
 

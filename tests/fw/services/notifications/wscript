@@ -4,7 +4,7 @@ def build(ctx):
     clar(ctx,
         sources_ant_glob = "src/fw/services/normal/notifications/notification_storage.c" \
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c" \
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " src/fw/util/stringlist.c" \
             " src/fw/util/time/time.c" \
             " src/fw/services/normal/filesystem/flash_translation.c" \

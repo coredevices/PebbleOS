@@ -20,7 +20,7 @@
 #include "process_management/process_manager.h"
 #include "process_state/worker_state/worker_state.h"
 #include "syscall/syscall.h"
-#include "vendor/tinymt32/tinymt32.h"
+#include "tinymt32.h"
 #include "util/attributes.h"
 
 typedef struct {

@@ -3,6 +3,6 @@ def configure(conf):
         conf.recurse('jerryscript')
 
 def build(bld):
-    bld.recurse('tinymt32')
+    pass
 
 # vim:filetype=python

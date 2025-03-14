@@ -16,7 +16,7 @@ def build(ctx):
             " src/fw/services/normal/settings/settings_file.c" \
             " src/fw/services/normal/settings/settings_raw_iter.c" \
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c",
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
         test_sources_ant_glob = "test_settings_file.c",
         defines=['DUMA_DISABLED'],  # DUMA false-positive, therefore disabled
         override_includes=['dummy_board'])

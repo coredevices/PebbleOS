@@ -19,3 +19,6 @@
 [submodule "third_party/nanopb/nanopb"]
 	path = third_party/nanopb/nanopb
 	url = https://github.com/nanopb/nanopb
+[submodule "third_party/tinymt/TinyMT"]
+	path = third_party/tinymt/TinyMT
+	url = https://github.com/MersenneTwister-Lab/TinyMT

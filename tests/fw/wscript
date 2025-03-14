@@ -5,7 +5,7 @@ def build(ctx):
         sources_ant_glob =
             " src/fw/applib/graphics/gtypes.c"
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c",
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
         test_sources_ant_glob = "test_clar.c")
     clar(ctx,
         sources_ant_glob = "src/fw/applib/graphics/utf8.c" \
@@ -59,7 +59,7 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob = "src/fw/util/rand/rand.c " \
-                          "src/fw/vendor/tinymt32/tinymt32.c " \
+                          "third_party/tinymt/TinyMT/tinymt/tinymt32.c " \
                           "src/fw/process_management/launcher_app_message.c " \
                           "src/fw/util/dict.c " \
                           "tests/fakes/fake_session.c ",
@@ -82,7 +82,7 @@ def build(ctx):
             " src/fw/util/time/time.c" \
             " src/fw/util/time/mktime.c" \
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c" \
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " src/fw/services/common/cron.c" \
             " src/fw/services/normal/filesystem/flash_translation.c" \
             " src/fw/services/normal/filesystem/pfs.c" \
@@ -107,7 +107,7 @@ def build(ctx):
             " src/fw/flash_region/filesystem_regions.c" \
             " src/fw/util/time/time.c" \
             " src/fw/util/time/mktime.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c" \
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " src/fw/services/common/cron.c" \
             " src/fw/services/normal/filesystem/flash_translation.c" \
             " src/fw/services/normal/filesystem/pfs.c" \
@@ -200,7 +200,7 @@ def build(ctx):
              " tests/fakes/fake_rtc.c" \
              " src/fw/applib/data_logging.c" \
              " src/fw/util/rand/rand.c" \
-             " src/fw/vendor/tinymt32/tinymt32.c",
+             " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
          test_sources_ant_glob = "test_data_logging.c",
          override_includes=['dummy_board'])
 
@@ -212,7 +212,7 @@ def build(ctx):
        sources_ant_glob = \
            " src/fw/applib/app_exit_reason.c" \
            " src/fw/util/rand/rand.c" \
-           " src/fw/vendor/tinymt32/tinymt32.c" \
+           " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
            " src/fw/process_management/process_manager.c" \
            " src/fw/process_management/pebble_process_info.c" \
            " src/fw/process_management/app_manager.c" \
@@ -265,7 +265,7 @@ def build(ctx):
              "src/fw/util/legacy_checksum.c "
              "src/fw/util/rand/rand.c "
              "src/fw/util/time/time.c "
-             "src/fw/vendor/tinymt32/tinymt32.c "
+             "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
              "tests/fakes/fake_rtc.c "
              "tests/fakes/fake_spi_flash.c "
              "tests/stubs/stubs_blob_db.c "
@@ -299,7 +299,7 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = " src/fw/util/rand/rand.c" \
-                           " src/fw/vendor/tinymt32/tinymt32.c" \
+                           " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
                            " src/fw/process_management/app_run_state.c",
         test_sources_ant_glob = "test_app_run_state.c")
 

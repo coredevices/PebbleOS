@@ -35,7 +35,7 @@
 
 #include "kernel/pebble_tasks.h"
 #include "system/passert.h"
-#include "vendor/tinymt32/tinymt32.h"
+#include "tinymt32.h"
 
 extern uint32_t *app_state_get_rand_ptr(void);
 extern uint32_t *worker_state_get_rand_ptr(void);

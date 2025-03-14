@@ -43,7 +43,7 @@ def build(ctx):
             " src/fw/services/normal/activity/insights_settings.c" \
             " src/fw/services/normal/timeline/metricgroup.c" \
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c" \
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " tests/fakes/fake_clock.c" \
             " tests/fakes/fake_settings_file.c" \
             " tests/fakes/fake_kernel_services_notifications.c" \

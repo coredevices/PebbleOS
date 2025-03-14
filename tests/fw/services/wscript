@@ -46,7 +46,7 @@ def build(ctx):
             " src/fw/services/normal/analytics/analytics_event.c" \
             " tests/fakes/fake_rtc.c" \
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c",
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
         test_sources_ant_glob = "test_analytics.c",
         override_includes=['dummy_board'])
 
@@ -80,7 +80,7 @@ def build(ctx):
             " src/fw/util/legacy_checksum.c" \
             " src/fw/util/rand/rand.c" \
             " src/fw/util/time/time.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c",
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
         test_sources_ant_glob = "test_contacts.c",
         override_includes=['dummy_board'])
 
@@ -135,7 +135,7 @@ def build(ctx):
         sources_ant_glob = \
             " tests/fakes/fake_rtc.c" \
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c" \
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " src/fw/services/normal/timeline/item.c" \
             " src/fw/services/normal/timeline/attributes_actions.c" \
             " src/fw/services/normal/timeline/attribute_group.c" \
@@ -195,7 +195,7 @@ def build(ctx):
             " src/fw/flash_region/flash_region.c" \
             " src/fw/flash_region/filesystem_regions.c" \
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c" \
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " src/fw/process_management/pebble_process_info.c" \
             " src/fw/resource/resource.c" \
             " src/fw/resource/resource_storage.c" \
@@ -239,7 +239,7 @@ def build(ctx):
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c" \
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " tests/fakes/fake_bootbits.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c" \
@@ -270,7 +270,7 @@ def build(ctx):
     clar(ctx,
         sources_ant_glob = " ".join([
             " src/fw/util/rand/rand.c" \
-            " src/fw/vendor/tinymt32/tinymt32.c" \
+            " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " src/fw/util/generic_attribute.c" \
             " src/fw/services/normal/voice/transcription.c" \
             " src/fw/services/normal/voice_endpoint.c " \
@@ -318,7 +318,7 @@ def build(ctx):
         "  src/fw/services/normal/settings/settings_file.c" \
         "  src/fw/services/normal/settings/settings_raw_iter.c" \
         "  src/fw/util/rand/rand.c" \
-        "  src/fw/vendor/tinymt32/tinymt32.c" \
+        "  third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
         "  src/fw/applib/graphics/gcolor_definitions.c" \
         "  src/fw/applib/graphics/gtypes.c" \
         "  src/fw/process_management/pebble_process_info.c" \
@@ -360,7 +360,7 @@ def build(ctx):
              "src/fw/util/crc8.c "
              "src/fw/util/legacy_checksum.c "
              "src/fw/util/rand/rand.c "
-             "src/fw/vendor/tinymt32/tinymt32.c "
+             "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
              "tests/fakes/fake_rtc.c "
              "tests/fakes/fake_spi_flash.c "
              "tests/fakes/fake_system_app_registry_apps.c "
@@ -372,7 +372,7 @@ def build(ctx):
     clar(ctx,
         sources_ant_glob =
             "  src/fw/util/rand/rand.c" \
-            "  src/fw/vendor/tinymt32/tinymt32.c" \
+            "  third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             "  src/fw/services/normal/app_fetch_endpoint.c" \
             "  tests/fakes/fake_events.c " \
             "  tests/fakes/fake_session.c ",
