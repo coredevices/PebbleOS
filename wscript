@@ -121,6 +121,8 @@ def options(opt):
                    help='Disable PBL_LOG macros to save space')
     opt.add_option('--nohash', action='store_true',
                    help='Disable log hashing and make the logs human readable')
+    opt.add_option('--log-level', default='info', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
+		   help='Default global log level')
 
     opt.add_option('--lang',
                    action='store',
@@ -252,6 +254,9 @@ def handle_configure_options(conf):
     if conf.options.verbose_logs:
         conf.env.append_value('DEFINES', 'VERBOSE_LOGGING')
         print("Verbose logging enabled")
+
+    print(f"Log level: {conf.options.log_level.upper()}")
+    conf.env.append_value('DEFINES', f'DEFAULT_LOG_LEVEL=LOG_LEVEL_{conf.options.log_level.upper()}')
 
     if conf.options.ui_debug:
         conf.env.append_value('DEFINES', 'UI_DEBUG')

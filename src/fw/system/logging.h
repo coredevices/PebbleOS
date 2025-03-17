@@ -216,11 +216,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
   #define DEFAULT_LOG_DOMAIN LOG_DOMAIN_MISC
 #endif // DEFAULT_LOG_DOMAIN
 
-#if defined(PLATFORM_TINTIN) && !defined(TARGET_QEMU)
-  #define PBL_SHOULD_LOG(level) ((level) < LOG_LEVEL_DEBUG)
-#else
-  #define PBL_SHOULD_LOG(level) (true)
-#endif
+#define PBL_SHOULD_LOG(level) ((level) <= DEFAULT_LOG_LEVEL)
 
 
 #ifdef PBL_LOG_ENABLED
