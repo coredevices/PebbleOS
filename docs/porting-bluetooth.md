@@ -142,7 +142,6 @@ These apply only to Bluetooth Classic and are no-ops on BLE.
 * bt_driver_classic_update_connectability
 * bt_driver_reconnect_pause
 * bt_driver_reconnect_resume
-* reconnect_set_interval
 * bt_driver_reconnect_try_now
 * bt_driver_reconnect_reset_interval
 * bt_driver_reconnect_notify_platform_bitfield
