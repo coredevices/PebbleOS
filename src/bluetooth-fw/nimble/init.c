@@ -62,11 +62,6 @@ static void prv_host_task_main(void *unused) {
 
   ble_hs_cfg.sync_cb = sync_cb;
   ble_hs_cfg.reset_cb = reset_cb;
-  ble_hs_cfg.sm_our_key_dist |= BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
-  ble_hs_cfg.sm_their_key_dist |= BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
-  ble_hs_cfg.sm_io_cap = BLE_SM_IO_CAP_NO_IO;
-  ble_hs_cfg.sm_bonding = 1;
-  ble_hs_cfg.sm_sc = 1;
 
   nimble_port_run();
 }
