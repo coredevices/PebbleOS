@@ -331,7 +331,7 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
                      "third_party/freertos",
                      "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
                      "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
-                     "src/fw/vendor/nanopb" ]
+                     "third_party/nanopb/nanopb" ]
 
     # Use Snowy's resource headers as a fallback if we don't override it here
     resource_override_dir_name = platform if platform in ('silk', 'robert') else 'snowy'
