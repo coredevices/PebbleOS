@@ -34,7 +34,7 @@
     if (LOG_DOMAIN_BT) {                                                             \
       va_list args;                                                                  \
       va_start(args, fmt);                                                           \
-      pbl_log_vargs(NIMBLE_LOG_LEVEL_##lvl, __FILE__, __LINE__, fmt, args);          \
+      pbl_log_vargs(NIMBLE_LOG_LEVEL_##lvl, "", 0, fmt, args);                       \
       va_end(args);                                                                  \
     }                                                                                \
   }
