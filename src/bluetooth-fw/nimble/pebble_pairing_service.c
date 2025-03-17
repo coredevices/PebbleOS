@@ -15,13 +15,13 @@
  */
 
 #include <bluetooth/pebble_pairing_service.h>
+#include <system/logging.h>
+#include <system/passert.h>
 
-#include "host/ble_gap.h"
-#include "host/ble_gatt.h"
-#include "host/ble_uuid.h"
-#include "os/os_mbuf.h"
-#include "system/logging.h"
-#include "system/passert.h"
+#include <host/ble_gap.h>
+#include <host/ble_gatt.h>
+#include <host/ble_uuid.h>
+#include <os/os_mbuf.h>
 
 static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_handle,
                                         struct ble_gatt_access_ctxt *ctxt, void *arg) {

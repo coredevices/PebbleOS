@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-#include "bluetooth/responsiveness.h"
-
-#include <inttypes.h>
-
-#include "bluetooth/gap_le_connect.h"
+#include <bluetooth/responsiveness.h>
 
 bool bt_driver_le_connection_parameter_update(const BTDeviceInternal *addr,
                                               const BleConnectionParamsUpdateReq *req) {

@@ -3,10 +3,6 @@ def configure(conf):
 
 
 def build(bld):
-    include_dirs = [
-        'include',
-    ]
-
     driver_source = bld.path.ant_glob([
         '*.c',
     ])
@@ -21,5 +17,4 @@ def build(bld):
           'fw_includes',
           'root_includes',
         ],
-        includes=include_dirs,
     )

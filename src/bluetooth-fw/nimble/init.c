@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-#include <bluetooth/init.h>
 #include <stdlib.h>
 
-#include "FreeRTOS.h"
-#include "comm/bt_lock.h"
-#include "host/ble_hs.h"
-#include "host/ble_hs_stop.h"
-#include "host/util/util.h"
-#include "kernel/event_loop.h"
-#include "nimble/nimble_port.h"
-#include "os/tick.h"
-#include "pebble_errors.h"
-#include "semphr.h"
-#include "services/ans/ble_svc_ans.h"
-#include "services/dis/ble_svc_dis.h"
-#include "services/gap/ble_svc_gap.h"
-#include "services/gatt/ble_svc_gatt.h"
-#include "system/logging.h"
-#include "system/passert.h"
+#include <bluetooth/init.h>
+#include <comm/bt_lock.h>
+#include <kernel/pebble_tasks.h>
+#include <os/tick.h>
+#include <system/logging.h>
+#include <system/passert.h>
+
+#include <FreeRTOS.h>
+#include <semphr.h>
+
+#include <host/ble_hs.h>
+#include <host/ble_hs_stop.h>
+#include <host/util/util.h>
+#include <nimble/nimble_port.h>
+#include <services/dis/ble_svc_dis.h>
+#include <services/gap/ble_svc_gap.h>
+#include <services/gatt/ble_svc_gatt.h>
 
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 2000;
 

@@ -16,10 +16,11 @@
 
 #pragma once
 
-#include <bluetooth/gap_le_connect.h>
-#include <bluetooth/responsiveness.h>
+#include <stdint.h>
 
-#include "host/ble_gap.h"
+#include <bluetooth/bluetooth_types.h>
+
+#include <nimble/ble.h>
 
 void nimble_addr_to_pebble_addr(ble_addr_t *addr, BTDeviceAddress *addr_out);
 

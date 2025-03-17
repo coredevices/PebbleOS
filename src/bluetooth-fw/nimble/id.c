@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-#include <bluetooth/bluetooth_types.h>
 #include <bluetooth/id.h>
-#include <string.h>
+#include <system/passert.h>
 
-#include "host/ble_hs_id.h"
-#include "services/gap/ble_svc_gap.h"
-#include "system/passert.h"
+#include <host/ble_hs_id.h>
+#include <services/gap/ble_svc_gap.h>
 
 void bt_driver_id_set_local_device_name(const char device_name[BT_DEVICE_NAME_BUFFER_SIZE]) {
   int rc = ble_svc_gap_device_name_set(device_name);

@@ -15,9 +15,10 @@
  */
 
 #include <bluetooth/bt_driver_advert.h>
+#include <system/logging.h>
+#include <system/passert.h>
 
-#include "host/ble_gap.h"
-#include "system/logging.h"
+#include <host/ble_gap.h>
 
 void bt_driver_advert_advertising_disable(void) {
   int rc = ble_gap_adv_stop();

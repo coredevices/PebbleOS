@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <bluetooth/reconnect.h>
 
 void bt_driver_reconnect_pause(void) {}
 

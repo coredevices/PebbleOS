@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#include <bluetooth/gatt.h>
-#include <btutil/bt_device.h>
-
-#include "host/ble_gatt.h"
 #include "nimble_type_conversions.h"
-#include "os/os_mbuf.h"
+
+#include <bluetooth/gatt.h>
+
+#include <host/ble_gatt.h>
 
 static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                    struct ble_gatt_attr *attr, void *arg) {

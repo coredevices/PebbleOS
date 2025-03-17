@@ -15,11 +15,6 @@
  */
 
 #include <bluetooth/analytics.h>
-#include <bluetooth/bluetooth_types.h>
-#include <stdbool.h>
-#include <stdint.h>
-
-#include "comm/ble/gap_le_connection.h"
 
 bool bt_driver_analytics_get_connection_quality(const BTDeviceInternal *address,
                                                 uint8_t *link_quality_out, int8_t *rssi_out) {

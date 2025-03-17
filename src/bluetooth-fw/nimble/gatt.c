@@ -15,7 +15,6 @@
  */
 
 #include <bluetooth/gatt.h>
-#include <inttypes.h>
 
 void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {}
 

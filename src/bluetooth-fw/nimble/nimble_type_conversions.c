@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-#include <bluetooth/gap_le_connect.h>
-#include <bluetooth/responsiveness.h>
+#include <string.h>
 
-#include "host/ble_gap.h"
+#include "nimble_type_conversions.h"
+
+#include <host/ble_gap.h>
 
 void nimble_addr_to_pebble_addr(ble_addr_t *addr, BTDeviceAddress *addr_out) {
   memcpy(&addr_out->octets, &addr->val, BLE_DEV_ADDR_LEN);

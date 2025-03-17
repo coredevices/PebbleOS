@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-#include <bluetooth/bluetooth_types.h>
 #include <bluetooth/gatt.h>
-#include <inttypes.h>
 
 // -------------------------------------------------------------------------------------------------
 // Gatt Client Discovery API calls

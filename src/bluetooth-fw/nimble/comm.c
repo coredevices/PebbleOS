@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-#include <stdbool.h>
-
-#include "bluetooth/bt_driver_comm.h"
-#include "kernel/event_loop.h"
+#include <bluetooth/bt_driver_comm.h>
+#include <kernel/event_loop.h>
 
 static void prv_send_job(void *data) {
   CommSession *session = (CommSession *)data;
