@@ -49,16 +49,16 @@ static SemaphoreHandle_t s_host_stopped;
 static DisInfo s_dis_info;
 
 static void sync_cb(void) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "BT sync_cb");
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "NimBLE host synchronized");
   xSemaphoreGive(s_host_started);
 }
 
 static void reset_cb(int reason) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "BT reset_cb, reason: %d", reason);
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_WARNING, "NimBLE reset (reason: %d)", reason);
 }
 
 static void prv_host_task_main(void *unused) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "BT host task started");
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "NimBLE host task started");
 
   ble_hs_cfg.sync_cb = sync_cb;
   ble_hs_cfg.reset_cb = reset_cb;
@@ -68,7 +68,6 @@ static void prv_host_task_main(void *unused) {
 
 // ----------------------------------------------------------------------------------------
 void bt_driver_init(void) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "bt_driver_init");
   bt_lock_init();
 
   s_host_started = xSemaphoreCreateBinary();
@@ -105,8 +104,6 @@ void bt_driver_init(void) {
 bool bt_driver_start(BTDriverConfig *config) {
   int rc;
 
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "bt_driver_start");
-
   s_dis_info = config->dis_info;
   ble_svc_dis_model_number_set(s_dis_info.model_number);
   ble_svc_dis_serial_number_set(s_dis_info.serial_number);
@@ -123,28 +120,31 @@ bool bt_driver_start(BTDriverConfig *config) {
   bool started = xSemaphoreTake(s_host_started,
                                 milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms)) == pdTRUE;
   if (!started) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "bt_driver_start timeout");
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Host synchronization timed out");
     return false;
   }
 
   rc = ble_hs_util_ensure_addr(0);
-  PBL_ASSERTN(rc == 0);
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to ensure address: %d", rc);
+    return false;
+  }
 
   return true;
 }
 
 static void prv_ble_hs_stop_cb(int status, void *arg) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "stop_cb, status: %d", status);
   xSemaphoreGive(s_host_stopped);
 }
 
 void bt_driver_stop(void) {
+  BaseType_t rc;
   static struct ble_hs_stop_listener listener;
+
   ble_hs_stop(&listener, prv_ble_hs_stop_cb, NULL);
-  if (xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms)) ==
-      pdFALSE) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "bt_driver_stop timeout");
-  }
+  rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms)) ==
+  PBL_ASSERT(rc == pdTRUE, "NimBLE host stop timed out");
+
   ble_gatts_reset();
 }
 
