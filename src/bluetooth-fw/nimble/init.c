@@ -37,7 +37,6 @@
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 2000;
 
 extern void pebble_pairing_service_init(void);
-
 void ble_store_ram_init(void);
 
 #if NIMBLE_CFG_CONTROLLER
@@ -47,23 +46,28 @@ static TaskHandle_t s_host_task_handle;
 static SemaphoreHandle_t s_host_started;
 static SemaphoreHandle_t s_host_stopped;
 static DisInfo s_dis_info;
+static struct ble_hs_stop_listener s_listener;
 
-static void sync_cb(void) {
+static void prv_sync_cb(void) {
   PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "NimBLE host synchronized");
   xSemaphoreGive(s_host_started);
 }
 
-static void reset_cb(int reason) {
+static void prv_reset_cb(int reason) {
   PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_WARNING, "NimBLE reset (reason: %d)", reason);
 }
 
 static void prv_host_task_main(void *unused) {
   PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "NimBLE host task started");
 
-  ble_hs_cfg.sync_cb = sync_cb;
-  ble_hs_cfg.reset_cb = reset_cb;
+  ble_hs_cfg.sync_cb = prv_sync_cb;
+  ble_hs_cfg.reset_cb = prv_reset_cb;
 
   nimble_port_run();
+}
+
+static void prv_ble_hs_stop_cb(int status, void *arg) {
+  xSemaphoreGive(s_host_stopped);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -103,6 +107,7 @@ void bt_driver_init(void) {
 
 bool bt_driver_start(BTDriverConfig *config) {
   int rc;
+  BaseType_t f_rc;
 
   s_dis_info = config->dis_info;
   ble_svc_dis_model_number_set(s_dis_info.model_number);
@@ -117,9 +122,8 @@ bool bt_driver_start(BTDriverConfig *config) {
   pebble_pairing_service_init();
 
   ble_hs_sched_start();
-  bool started = xSemaphoreTake(s_host_started,
-                                milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms)) == pdTRUE;
-  if (!started) {
+  f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
+  if (f_rc != pdTRUE) {
     PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Host synchronization timed out");
     return false;
   }
@@ -133,21 +137,14 @@ bool bt_driver_start(BTDriverConfig *config) {
   return true;
 }
 
-static void prv_ble_hs_stop_cb(int status, void *arg) {
-  xSemaphoreGive(s_host_stopped);
-}
-
 void bt_driver_stop(void) {
-  BaseType_t rc;
-  static struct ble_hs_stop_listener listener;
+  BaseType_t f_rc;
 
-  ble_hs_stop(&listener, prv_ble_hs_stop_cb, NULL);
-  rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms)) ==
-  PBL_ASSERT(rc == pdTRUE, "NimBLE host stop timed out");
+  ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
+  f_rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
+  PBL_ASSERT(f_rc == pdTRUE, "NimBLE host stop timed out");
 
   ble_gatts_reset();
 }
 
-void bt_driver_power_down_controller_on_boot(void) {
-  // no-op
-}
+void bt_driver_power_down_controller_on_boot(void) {}
