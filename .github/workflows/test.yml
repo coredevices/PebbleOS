@@ -37,12 +37,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gettext gcc-multilib
-          pip install -r requirements-linux.txt
-          pip install -e \
-            python_libs/pblprog \
-            python_libs/pebble-commander \
-            python_libs/pulse2 \
-            python_libs/pebble-loghash
+          pip install -r requirements.txt
           wget --no-verbose "https://developer.arm.com/-/media/Files/downloads/gnu/${ARM_GNU_TOOLCHAIN_VERSION}/binrel/arm-gnu-toolchain-${ARM_GNU_TOOLCHAIN_VERSION}-x86_64-arm-none-eabi.tar.xz"
           sudo tar xf arm-gnu-toolchain-${ARM_GNU_TOOLCHAIN_VERSION}-x86_64-arm-none-eabi.tar.xz -C /opt
           echo "/opt/arm-gnu-toolchain-${ARM_GNU_TOOLCHAIN_VERSION}-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH

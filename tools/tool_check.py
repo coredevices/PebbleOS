@@ -20,7 +20,7 @@ from packaging import version
 
 from waflib import Logs
 
-REQUIREMENTS_OSX = 'requirements-osx.txt'
+REQUIREMENTS_OSX = 'requirements.txt'
 REQUIREMENTS_BREW = 'requirements-brew.txt'
 
 VERSION_REGEX = r"^(?P<package>.*)(?P<comparator>==|<=|>=|<|>)(?P<version>.*)"
@@ -69,6 +69,10 @@ def text_to_req_list(req_list_text):
     req_list = []
 
     for raw_line in req_list_text.splitlines():
+        # Skip editable (local) packages for now
+        if raw_line.startswith('-e'):
+            continue
+
         # Recursively handle -r includes
         if raw_line.startswith('-r '):
             with open(raw_line[3:]) as file:

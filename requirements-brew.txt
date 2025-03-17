@@ -1,9 +1,7 @@
-nanopb-generator
 freetype
 gettext
 llvm
 cmake
 lcov
 node
-arm-none-eabi-gcc
 emscripten

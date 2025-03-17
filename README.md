@@ -51,15 +51,7 @@ may work right now.
   ```
 - Install dependencies:
   ```shell
-  pip install -r requirements-linux.txt
-  ```
-- Install local dependencies:
-  ```shell
-  pip install -e \
-    python_libs/pblprog \
-    python_libs/pebble-commander \
-    python_libs/pulse2 \
-    python_libs/pebble-loghash
+  pip install -r requirements.txt
   ```
 - Install emscripten
   - If you're on Mac and using [Homebrew](https://brew.sh), you can run `brew install emscripten`.

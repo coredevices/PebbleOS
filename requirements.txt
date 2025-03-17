@@ -1,31 +1,37 @@
-#--extra-index-url https://pebble:W9Ngyc3ohHFvLKfUUxmVruCmBaHQxNBCpfDCXyoAwLJgncZmAw@pypi.pbl.io/
-Pillow==2.0.0
-freetype-py==1.0
+pillow
+freetype-py
 ply==3.4
-pyusb==1.0.0b2
-pyserial==2.7
+pyusb==1.3.1
+pyserial
 sh==1.04
-pypng==0.0.16
+pypng
 pexpect
-cobs<1.2.0
-svg.path<5
+cobs==1.0.0
+svg.path
 requests
 GitPython==1.0.1
-pyelftools==0.23
-pycrypto==2.6.1
+pyelftools
+pycryptodome
 mock
 nose
 boto
-prompt-toolkit>=0.55
+prompt_toolkit>=0.55
 enum34
 bitarray
 pep8
 polib
 intelhex>=2.1,<3
-
-# pypi.getpebble.com provided modules
-#pebble.loghash>=2.6
-#pebble.programmer>=0.0.4
-#pebble.commander==0.0.11
+protobuf
+grpcio-tools
+nanopb
+certifi
+libclang
+packaging
 libpebble2>=0.0.16
-#pyftdi==0.10.5
+pyftdi==0.56.0
+pathlib
+
+-e python_libs/pblprog
+-e python_libs/pebble-commander
+-e python_libs/pulse2
+-e python_libs/pebble-loghash
