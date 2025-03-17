@@ -265,6 +265,7 @@ def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_fla
     if not os.path.isfile(filename):
         raise Exception("Invalid filename: " + filename)
 
+    args.append("-ffreestanding")
     index = clang.cindex.Index.create()
     tu = index.parse(filename, args=args, options=clang.cindex.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD)
 
