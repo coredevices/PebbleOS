@@ -45,7 +45,7 @@
 
 /*** Repository @syscfg info */
 #ifndef MYNEWT_VAL_REPO_HASH_SYSCFG
-#define MYNEWT_VAL_REPO_HASH_SYSCFG "539158b54631f30621e7fa01752cd9e0851b8d2b-dirty"
+#define MYNEWT_VAL_REPO_HASH_SYSCFG "a9e189376ac42b09e9c85459393c5957497cef79-dirty"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_SYSCFG
@@ -871,8 +871,9 @@
 #define MYNEWT_VAL_BLE_RPA_TIMEOUT (300)
 #endif
 
+/* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_BONDING
-#define MYNEWT_VAL_BLE_SM_BONDING (0)
+#define MYNEWT_VAL_BLE_SM_BONDING (1)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_SM_CSIS_SIRK
@@ -907,8 +908,9 @@
 #define MYNEWT_VAL_BLE_SM_OOB_DATA_FLAG (0)
 #endif
 
+/* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_OUR_KEY_DIST
-#define MYNEWT_VAL_BLE_SM_OUR_KEY_DIST (0)
+#define MYNEWT_VAL_BLE_SM_OUR_KEY_DIST (3)
 #endif
 
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
@@ -924,8 +926,9 @@
 #define MYNEWT_VAL_BLE_SM_SC_ONLY (0)
 #endif
 
+/* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_THEIR_KEY_DIST
-#define MYNEWT_VAL_BLE_SM_THEIR_KEY_DIST (0)
+#define MYNEWT_VAL_BLE_SM_THEIR_KEY_DIST (3)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_STORE_MAX_BONDS
