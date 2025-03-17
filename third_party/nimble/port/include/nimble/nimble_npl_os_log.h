@@ -31,10 +31,12 @@
 #define BLE_NPL_LOG_IMPL(lvl)                                                        \
   static inline void _BLE_NPL_LOG_CAT(BLE_NPL_LOG_MODULE, _BLE_NPL_LOG_CAT(_, lvl))( \
       const char *fmt, ...) {                                                        \
-    va_list args;                                                                    \
-    va_start(args, fmt);                                                             \
-    pbl_log_vargs(NIMBLE_LOG_LEVEL_##lvl, __FILE__, __LINE__, fmt, args);            \
-    va_end(args);                                                                    \
+    if (LOG_DOMAIN_BT) {                                                             \
+      va_list args;                                                                  \
+      va_start(args, fmt);                                                           \
+      pbl_log_vargs(NIMBLE_LOG_LEVEL_##lvl, __FILE__, __LINE__, fmt, args);          \
+      va_end(args);                                                                  \
+    }                                                                                \
   }
 
 #endif /* _NIMBLE_NPL_OS_LOG_H_ */
