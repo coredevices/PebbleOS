@@ -23,6 +23,10 @@
 void bt_driver_advert_advertising_disable(void) {
   int rc;
 
+  if (ble_gap_adv_active() == 0) {
+    return;
+  }
+
   rc = ble_gap_adv_stop();
   PBL_ASSERT(rc == 0, "Failed to stop advertising (%d)", rc);
 }
