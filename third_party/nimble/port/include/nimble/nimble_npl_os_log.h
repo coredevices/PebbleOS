@@ -31,7 +31,7 @@
 #define BLE_NPL_LOG_IMPL(lvl)                                                        \
   static inline void _BLE_NPL_LOG_CAT(BLE_NPL_LOG_MODULE, _BLE_NPL_LOG_CAT(_, lvl))( \
       const char *fmt, ...) {                                                        \
-    if (LOG_DOMAIN_BT) {                                                             \
+    if (PBL_SHOULD_LOG(NIMBLE_LOG_LEVEL_##lvl) && LOG_DOMAIN_BT) {                   \
       va_list args;                                                                  \
       va_start(args, fmt);                                                           \
       pbl_log_vargs(NIMBLE_LOG_LEVEL_##lvl, "", 0, fmt, args);                       \
