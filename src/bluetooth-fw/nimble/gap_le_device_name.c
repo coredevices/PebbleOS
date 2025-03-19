@@ -28,9 +28,11 @@ const ble_uuid16_t device_name_chr_uuid = BLE_UUID16_INIT(GAP_DEVICE_NAME_CHR);
 
 static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                          struct ble_gatt_attr *attr, void *arg) {
-  if (error->status != 0 && error->status != BLE_HS_EDONE) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "prv_device_name_read_event_cb error=%d",
-              error->status);
+  if (error->status != 0) {
+    if (error->status != BLE_HS_EDONE) {
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "prv_device_name_read_event_cb error=%d",
+                error->status);
+    }
     return 0;
   }
 
