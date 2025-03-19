@@ -14,18 +14,33 @@
  * limitations under the License.
  */
 
-#include "board/board.h"
-#include "drivers/gpio.h"
-#include "kernel/util/sleep.h"
-#include "resource/resource.h"
-#include "resource/resource_ids.auto.h"
-#include "resource/resource_mapped.h"
+#include <board/board.h>
+#include <drivers/gpio.h>
+#include <drivers/uart.h>
+#include <kernel/util/sleep.h>
+#include <nimble/transport/hci_h4.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+#include <resource/resource_mapped.h>
+#include <system/logging.h>
+
+#define HCI_VS_SLEEP_MODE_CONFIG (0xFD0C)
+#define HCI_VS_UPDATE_UART_HCI_BAUDRATE (0xFF36)
+#define HCI_BAUD_RATE (921600)
 
 typedef struct PACKED {
   uint8_t type;
   uint16_t opcode;
   uint8_t size;
+  uint8_t data[];
 } BTSHCICommand;
+
+typedef struct PACKED {
+  uint8_t type;
+  uint16_t opcode;
+  uint8_t size;
+  uint32_t baud_rate;
+} BTSHCIUpdateBaudRateCommand;
 
 extern void ble_queue_cmd(void *buf, bool needs_free, bool wait);
 
@@ -48,13 +63,28 @@ static bool ble_run_bts(const ResAppNum bts_file) {
     BTSHCICommand *command = (BTSHCICommand *)&bts_data[i];
     i += sizeof(BTSHCICommand) + command->size;
 
-    // skip update baud rate command and sleep mode config
     // TODO: re-add sleep mode config and deal with entering/exiting sleep mode
-    if (command->opcode == 0xFF36 || command->opcode == 0xFD0C) {
+    if (command->opcode == HCI_VS_SLEEP_MODE_CONFIG) {
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "ble_bts: Skipping opcode 0x%X", command->opcode);
       continue;
     }
+
+    if (command->opcode == HCI_VS_UPDATE_UART_HCI_BAUDRATE) {
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "ble_bts: Setting baud rate to %d", HCI_BAUD_RATE);
+      BTSHCIUpdateBaudRateCommand baud_rate_command = {
+          .opcode = HCI_VS_UPDATE_UART_HCI_BAUDRATE,
+          .size = sizeof(uint32_t),
+          .type = HCI_H4_CMD,
+          .baud_rate = HCI_BAUD_RATE,
+      };
+      command = (BTSHCICommand *)&baud_rate_command;
+    }
+
     ble_queue_cmd(&command->opcode, false, true);
+
+    if (command->opcode == HCI_VS_UPDATE_UART_HCI_BAUDRATE) {
+      uart_set_baud_rate(BLUETOOTH_UART, HCI_BAUD_RATE);
+    }
   }
 
   resource_mapped_release(task);
