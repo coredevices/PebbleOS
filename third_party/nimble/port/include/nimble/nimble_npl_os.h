@@ -55,7 +55,11 @@ struct ble_npl_eventq {
 };
 
 struct ble_npl_callout {
+#if configUSE_TIMERS
+  TimerHandle_t handle;
+#else
   TimerID handle;
+#endif
   struct ble_npl_eventq *evq;
   struct ble_npl_event ev;
   uint64_t ticks;
