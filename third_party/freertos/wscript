@@ -3,6 +3,7 @@ def configure(conf):
 
 def build(bld):
     # FreeRTOS vendor code
+    use_timers = False
     if bld.env.MICRO_FAMILY == 'STM32F2':
         freertos_port_name = 'ARM_CM3'
     elif bld.env.MICRO_FAMILY == 'STM32F4':
@@ -11,6 +12,7 @@ def build(bld):
         freertos_port_name = 'ARM_CM4F' # fix to CM7 when we have it
     elif bld.env.MICRO_FAMILY == 'NRF52840':
         freertos_port_name = 'ARM_CM4F'
+        use_timers = True
     else:
         bld.fatal('Unrecognized env.MICRO_FAMILY value %r' %
                   bld.env.MICRO_FAMILY)
@@ -28,7 +30,11 @@ def build(bld):
     freertos_sources = sum([bld.path.ant_glob(d + '/*.c')
                            for d in freertos_source_paths], [])
 
-    bld(export_includes=freertos_includes, name='freertos_includes')
+    freertos_defines = [f'FREERTOS_USE_TIMERS={int(use_timers)}']
+
+    bld(export_includes=freertos_includes,
+        export_defines=freertos_defines,
+        name='freertos_includes')
 
     bld.stlib(source=freertos_sources,
               target='freertos',

@@ -90,7 +90,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_TICKLESS_IDLE  2   // Use STOP mode
 #define configUSE_STATS_FORMATTING_FUNCTIONS 1
 
-#define configUSE_TIMERS 0
+#define configUSE_TIMERS FREERTOS_USE_TIMERS
 #define configTIMER_TASK_PRIORITY (configMAX_PRIORITIES - 1)
 #define configTIMER_QUEUE_LENGTH 32
 #define configTIMER_TASK_STACK_DEPTH (256 + 64)
