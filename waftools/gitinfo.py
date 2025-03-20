@@ -18,26 +18,25 @@ import waflib.Context
 import waflib.Logs
 
 def get_git_revision(ctx):
-    commit = tag = "?"
-    timestamp = "1"
+    commit = ctx.cmd_and_log(['git', 'rev-parse', '--short', 'HEAD'], quiet=waflib.Context.BOTH).strip()
+    timestamp = ctx.cmd_and_log(['git', 'log', '-1', '--format=%ct', 'HEAD'], quiet=waflib.Context.BOTH).strip()
+
     try:
-        commit = ctx.cmd_and_log(['git', 'rev-parse', '--short', 'HEAD'], quiet=waflib.Context.BOTH).strip()
-        timestamp = ctx.cmd_and_log(['git', 'log', '-1', '--format=%ct', 'HEAD'], quiet=waflib.Context.BOTH).strip()
         tag = ctx.cmd_and_log(['git', 'describe'], quiet=waflib.Context.BOTH).strip()
     except Exception:
-        waflib.Logs.warn('get_git_version: unable to determine git revision')
+        tag = "v9.9.9-dev"
+        waflib.Logs.warn(f'Git tag not found, using {tag}')
+
     # Validate that git tag follows the required form:
     # See https://github.com/pebble/tintin/wiki/Firmware,-PRF-&-Bootloader-Versions
     # Note: version_regex.groups() returns sequence ('0', '0', '0', 'suffix'):
     version_regex = re.search(r"^v(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:(?:-)(.+))?$", tag)
-    if version_regex:
-        # Get version numbers from version_regex.groups() sequence and replace None values with 0
-        # e.g. v2-beta11 => ('2', None, None, 'beta11') => ('2', '0', '0')
-        version = [x if x else '0' for x in version_regex.groups()]
-    else:
-        waflib.Logs.warn('get_git_revision: Invalid git tag! '
-                         'Must follow this form: `v0[.0[.0]][-suffix]`')
-        version = ['0', '0', '0', 'unknown']
+    if not version_regex:
+        raise ValueError(f'Invalid tag: {tag}')
+
+    # Get version numbers from version_regex.groups() sequence and replace None values with 0
+    # e.g. v2-beta11 => ('2', None, None, 'beta11') => ('2', '0', '0')
+    version = [x if x else '0' for x in version_regex.groups()]
 
     # Used for pebble_pipeline payload, generate a string that contains everything after minor.
     # Force include patch as 0 if it doesn't exist.
