@@ -69,7 +69,7 @@ class Address(int):
     Its `__repr__` prints its value formatted as hexadecimal.
 
     """
-    ADDR_REGEX = re.compile("^\s*(0x[a-fA-F0-9]{7,8})")
+    ADDR_REGEX = re.compile(r"^\s*(0x[a-fA-F0-9]{7,8})")
 
     def __new__(cls, *args, **kwargs):
         if args:
