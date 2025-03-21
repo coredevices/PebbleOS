@@ -44,6 +44,7 @@ static int pebble_pairing_service_get_connectivity_status(
   status->ble_is_connected = true;
   status->ble_is_bonded = desc.sec_state.bonded;
   status->ble_is_encrypted = desc.sec_state.encrypted;
+  status->supports_pinning_without_security_request = true;
 
   return 0;
 }
