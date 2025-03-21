@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "nimble_store.h"
+
 #include <stdlib.h>
 
 #include <bluetooth/init.h>
@@ -37,7 +39,6 @@
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 2000;
 
 extern void pebble_pairing_service_init(void);
-void ble_store_ram_init(void);
 
 #if NIMBLE_CFG_CONTROLLER
 static TaskHandle_t s_ll_task_handle;
@@ -78,7 +79,7 @@ void bt_driver_init(void) {
   s_host_stopped = xSemaphoreCreateBinary();
 
   nimble_port_init();
-  ble_store_ram_init();
+  nimble_store_init();
 
   TaskParameters_t host_task_params = {
       .pvTaskCode = prv_host_task_main,

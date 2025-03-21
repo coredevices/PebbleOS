@@ -122,21 +122,6 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
   };
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &enc_change_event.dev_address);
   bt_driver_handle_le_encryption_change_event(&enc_change_event);
-
-  BleBonding bonding = {
-      .is_gateway = true,
-      .should_pin_address = false,
-      .pairing_info =
-          {
-              .is_local_encryption_info_valid = false,
-              .is_remote_encryption_info_valid = false,
-              .is_remote_identity_info_valid = true,
-              .is_remote_signing_info_valid = false,
-              .is_mitm_protection_enabled = false,
-          },
-  };
-  nimble_addr_to_pebble_device(&desc.peer_id_addr, &bonding.pairing_info.identity);
-  bt_driver_cb_handle_create_bonding(&bonding, &enc_change_event.dev_address);
 }
 
 static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {

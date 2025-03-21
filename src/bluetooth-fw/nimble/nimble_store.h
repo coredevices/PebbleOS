@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Google LLC
+ * Copyright 2025 Core Devices LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include <bluetooth/bonding_sync.h>
+#ifndef _NIMBLE_STORE_H_
+#define _NIMBLE_STORE_H_
 
-void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {}
+void nimble_store_init(void);
 
-void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {}
+#endif
