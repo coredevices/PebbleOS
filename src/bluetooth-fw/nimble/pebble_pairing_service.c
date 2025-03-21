@@ -37,9 +37,8 @@ static int pebble_pairing_service_get_connectivity_status(
     return -1;
   }
 
-  status->is_reversed_ppogatt_enabled = false;
+  memset(status, 0, sizeof(*status));
   status->ble_is_connected = true;
-  status->supports_pinning_without_security_request = false;
   status->ble_is_bonded = desc.sec_state.bonded;
   status->ble_is_encrypted = desc.sec_state.encrypted;
 
