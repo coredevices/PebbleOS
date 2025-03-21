@@ -96,12 +96,18 @@ static void prv_comm_start(void) {
   PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing prefs: is_enabled=%u",
           config->is_hrm_supported_and_enabled);
 #endif
+#ifdef BT_REQUIRE_EARLY_BONDINGS
+  bt_persistent_storage_register_existing_ble_bondings();
+#endif
+
   s_comm_is_running = bt_driver_start(config);
   kernel_free(config);
 
   if (s_comm_is_running) {
     bt_local_addr_init();
+#ifndef BT_REQUIRE_EARLY_BONDINGS
     bt_persistent_storage_register_existing_ble_bondings();
+#endif
     gap_le_init();
     bt_local_id_configure_driver();
 #if CAPABILITY_HAS_BUILTIN_HRM

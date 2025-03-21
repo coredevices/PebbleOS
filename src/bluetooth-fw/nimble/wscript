@@ -1,5 +1,5 @@
 def configure(conf):
-    pass
+    conf.env.append_value('DEFINES', 'BT_REQUIRE_EARLY_BONDINGS')
 
 
 def build(bld):
