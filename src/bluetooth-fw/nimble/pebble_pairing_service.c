@@ -25,6 +25,9 @@
 
 #include "nimble_type_conversions.h"
 
+#define TRIGGER_PAIRING_NO_SEC_REQ    (1U << 1U)
+#define TRIGGER_PAIRING_FORCE_SEC_REQ (1U << 2U)
+
 static int pebble_pairing_service_get_connectivity_status(
     uint16_t conn_handle, PebblePairingServiceConnectivityStatus *status) {
   struct ble_gap_conn_desc desc;
@@ -78,9 +81,41 @@ static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_hand
 
 static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle,
                                       struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  int rc = ble_gap_security_initiate(conn_handle);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_gap_security_initiate rc=%d", rc);
-  return rc;
+  int rc;
+  struct ble_gap_conn_desc desc;
+
+  rc = ble_gap_conn_find(conn_handle, &desc);
+  if (rc != 0) {
+    return rc;
+  }
+
+  if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR && !desc.sec_state.encrypted) {
+    rc = ble_gap_security_initiate(conn_handle);
+    if (rc != 0) {
+      return rc;
+    }
+  } else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
+    uint8_t flags;
+
+    rc = ble_hs_mbuf_to_flat(ctxt->om, &flags, sizeof(flags), NULL);
+    if (rc != 0) {
+      return rc;
+    }
+
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "Trigger pairing flags 0x%x", flags);
+
+    if ((((flags & TRIGGER_PAIRING_NO_SEC_REQ) == 0U) && !desc.sec_state.encrypted) ||
+        ((flags & TRIGGER_PAIRING_FORCE_SEC_REQ) != 0U)) {
+      rc = ble_gap_security_initiate(conn_handle);
+      if (rc != 0) {
+        return rc;
+      }
+    }
+  } else {
+    return BLE_ATT_ERR_UNLIKELY;
+  }
+
+  return 0;
 }
 
 static int prv_access_gatt_mtu(uint16_t conn_handle, uint16_t attr_handle,
