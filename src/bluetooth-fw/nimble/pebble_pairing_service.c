@@ -134,10 +134,9 @@ void pebble_pairing_service_init(void) {
 
 void prv_notify_chr_updated(const GAPLEConnection *connection, const ble_uuid_t *chr_uuid) {
   int rc;
-
   uint16_t conn_handle;
-  rc = pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle);
-  if (rc != 0) {
+
+  if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
     PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
               "prv_notify_chr_updated: failed to find connection handle");
     return;
