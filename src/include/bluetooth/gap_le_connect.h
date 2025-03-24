@@ -95,17 +95,21 @@ typedef struct PACKED BleEncryptionChange {
   bool encryption_enabled;
 } BleEncryptionChange;
 
-typedef struct PACKED BleAddressAndIRKChange {
-  //! Current (or old in case is_address_updated == true) device address info.
+typedef struct PACKED BleAddressChange {
+  //! Current device address info.
   BTDeviceInternal device;
-  //! True if the "new_device" field is valid and underlying stack started using a different address
-  //! to refer to the connection.
-  bool is_address_updated;
+  //! New device address info.
   BTDeviceInternal new_device;
+} BleAddressChange;
+
+typedef struct PACKED BleIRKChange {
+  //! Current device address info.
+  BTDeviceInternal device;
   //! True if the "irk" field is valid
-  bool is_resolved;
+  bool irk_valid;
+  //! Identity Resolving Key
   SMIdentityResolvingKey irk;
-} BleAddressAndIRKChange;
+} BleIRKChange;
 
 //! Bluetooth LE GAP Connection Driver APIs
 int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address);
@@ -119,6 +123,6 @@ extern void bt_driver_handle_le_disconnection_complete_event(
 extern void bt_driver_handle_le_encryption_change_event(const BleEncryptionChange *event);
 extern void bt_driver_handle_le_conn_params_update_event(
     const BleConnectionUpdateCompleteEvent *event);
-extern void bt_driver_handle_le_connection_handle_update_address_and_irk(
-    const BleAddressAndIRKChange *e);
+extern void bt_driver_handle_le_connection_handle_update_address(const BleAddressChange *e);
+extern void bt_driver_handle_le_connection_handle_update_irk(const BleIRKChange *e);
 extern void bt_driver_handle_peer_version_info_event(const BleRemoteVersionInfoReceivedEvent *e);

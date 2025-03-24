@@ -311,29 +311,40 @@ static bool prv_update_clients(GAPLEConnectionIntent *intent,
   return true;
 }
 
-void bt_driver_handle_le_connection_handle_update_address_and_irk(const BleAddressAndIRKChange *e) {
+void bt_driver_handle_le_connection_handle_update_address(const BleAddressChange *e) {
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_device(&e->device);
     if (!connection) {
       PBL_LOG(LOG_LEVEL_ERROR,
-              "Got address & IRK update for non-existent connection. "
+              "Got address update for non-existent connection. "
               "Old addr:"BT_DEVICE_ADDRESS_FMT, BT_DEVICE_ADDRESS_XPLODE(e->device.address));
       goto unlock;
     }
-    if (e->is_address_updated) {
-      connection->device = e->new_device;
-      PBL_LOG(LOG_LEVEL_INFO,
-              "Updated address to "BT_DEVICE_ADDRESS_FMT". Updated IRK: %c",
-              BT_DEVICE_ADDRESS_XPLODE(connection->device.address), e->is_resolved ? 'Y' : 'N');
-    } else if (e->is_resolved) {
-      PBL_LOG(LOG_LEVEL_INFO, "Updated IRK: %c", e->is_resolved ? 'Y' : 'N');
+
+    connection->device = e->new_device;
+    PBL_LOG(LOG_LEVEL_INFO,
+            "Updated address to "BT_DEVICE_ADDRESS_FMT,
+            BT_DEVICE_ADDRESS_XPLODE(connection->device.address));
+  }
+unlock:
+  bt_unlock();
+}
+
+void bt_driver_handle_le_connection_handle_update_irk(const BleIRKChange *e) {
+  bt_lock();
+  {
+    GAPLEConnection *connection = gap_le_connection_by_device(&e->device);
+    if (!connection) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Got IRK update for non-existent connection");
+      goto unlock;
     }
-    const SMIdentityResolvingKey *remote_irk = e->is_resolved ? &e->irk : NULL;
+
     if (connection->irk) {
       PBL_LOG(LOG_LEVEL_WARNING, "Connection already has IRK!?");
     }
-    gap_le_connection_set_irk(connection, remote_irk);
+
+    gap_le_connection_set_irk(connection, e->irk_valid ? &e->irk : NULL);
   }
 unlock:
   bt_unlock();
