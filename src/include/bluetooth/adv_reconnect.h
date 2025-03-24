@@ -17,6 +17,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <comm/ble/gap_le_advert.h>
+
 typedef struct GAPLEAdvertisingJobTerm GAPLEAdvertisingJobTerm;
 
 const GAPLEAdvertisingJobTerm *bt_driver_adv_reconnect_get_job_terms(size_t *num_terms_out);
