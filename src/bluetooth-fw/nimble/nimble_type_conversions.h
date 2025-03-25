@@ -26,11 +26,11 @@
   a15, a14, a13, a12, a11, a10, a9, a8, a7, a6, a5, a4, a3, a2, a1, a0
 #define BLE_UUID_SWIZZLE(x) BLE_UUID_SWIZZLE_(x)
 
-void nimble_addr_to_pebble_addr(ble_addr_t *addr, BTDeviceAddress *addr_out);
+void nimble_addr_to_pebble_addr(const ble_addr_t *addr, BTDeviceAddress *addr_out);
 
 void pebble_device_to_nimble_addr(const BTDeviceInternal *device, ble_addr_t *addr_out);
 
-void nimble_addr_to_pebble_device(ble_addr_t *stack_addr, BTDeviceInternal *host_addr);
+void nimble_addr_to_pebble_device(const ble_addr_t *stack_addr, BTDeviceInternal *host_addr);
 
 bool pebble_device_to_nimble_conn_handle(const BTDeviceInternal *device, uint16_t *handle);
 

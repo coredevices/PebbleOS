@@ -20,7 +20,7 @@
 #include <host/ble_gap.h>
 #include <string.h>
 
-void nimble_addr_to_pebble_addr(ble_addr_t *addr, BTDeviceAddress *addr_out) {
+void nimble_addr_to_pebble_addr(const ble_addr_t *addr, BTDeviceAddress *addr_out) {
   memcpy(&addr_out->octets, &addr->val, BLE_DEV_ADDR_LEN);
 }
 
@@ -29,7 +29,7 @@ void pebble_device_to_nimble_addr(const BTDeviceInternal *device, ble_addr_t *ad
   memcpy(&addr_out->val, &device->address.octets, BLE_DEV_ADDR_LEN);
 }
 
-void nimble_addr_to_pebble_device(ble_addr_t *stack_addr, BTDeviceInternal *host_addr) {
+void nimble_addr_to_pebble_device(const ble_addr_t *stack_addr, BTDeviceInternal *host_addr) {
   nimble_addr_to_pebble_addr(stack_addr, &host_addr->address);
   host_addr->is_random_address = stack_addr->type == BLE_ADDR_RANDOM;
   host_addr->is_classic = false;
