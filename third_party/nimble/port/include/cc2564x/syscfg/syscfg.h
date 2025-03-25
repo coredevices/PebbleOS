@@ -910,7 +910,7 @@
 
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_OUR_KEY_DIST
-#define MYNEWT_VAL_BLE_SM_OUR_KEY_DIST (3)
+#define MYNEWT_VAL_BLE_SM_OUR_KEY_DIST (1)
 #endif
 
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
