@@ -66,7 +66,7 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
 
   struct BleConnectionCompleteEvent complete_event = {
       .handle = event->connect.conn_handle,
-      .is_master = desc.role != BLE_GAP_ROLE_MASTER,
+      .is_master = desc.role == BLE_GAP_ROLE_MASTER,
       .status = HciStatusCode_Success,
       .is_resolved = false,
   };
