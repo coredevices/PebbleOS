@@ -68,10 +68,14 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
       .handle = event->connect.conn_handle,
       .is_master = desc.role == BLE_GAP_ROLE_MASTER,
       .status = HciStatusCode_Success,
-      .is_resolved = false,
   };
+
+  // If OTA address != ID address, then the address must be resolved.
+  // This happens for an already paired devices.
+  complete_event.is_resolved = ble_addr_cmp(&desc.peer_id_addr, &desc.peer_ota_addr) != 0;
+
   nimble_conn_params_to_pebble(&desc, &complete_event.conn_params);
-  nimble_addr_to_pebble_device(&desc.peer_ota_addr, &complete_event.peer_address);
+  nimble_addr_to_pebble_device(&desc.peer_id_addr, &complete_event.peer_address);
   bt_driver_handle_le_connection_complete_event(&complete_event);
 }
 
