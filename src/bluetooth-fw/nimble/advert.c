@@ -312,7 +312,7 @@ bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_
 }
 
 // no impl needed for nimble, buggy stack workaround
-bool bt_driver_advert_client_has_cycled(void) { return true; }
+bool bt_driver_advert_client_has_cycled(void) { return false; }
 
 // no impl needed for nimble, buggy stack workaround
 void bt_driver_advert_client_set_cycled(bool has_cycled) {}
