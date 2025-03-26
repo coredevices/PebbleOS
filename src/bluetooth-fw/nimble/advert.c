@@ -73,10 +73,6 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
   nimble_conn_params_to_pebble(&desc, &complete_event.conn_params);
   nimble_addr_to_pebble_device(&desc.peer_ota_addr, &complete_event.peer_address);
   bt_driver_handle_le_connection_complete_event(&complete_event);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO,
-            "device connected! connection handle:%d addr:" BT_DEVICE_ADDRESS_FMT,
-            event->connect.conn_handle,
-            BT_DEVICE_ADDRESS_XPLODE(complete_event.peer_address.address));
 }
 
 static void prv_handle_disconnection_event(struct ble_gap_event *event) {
@@ -92,7 +88,6 @@ static void prv_handle_disconnection_event(struct ble_gap_event *event) {
   nimble_addr_to_pebble_device(&event->disconnect.conn.peer_id_addr,
                                &disconnection_event.peer_address);
   bt_driver_handle_le_disconnection_complete_event(&disconnection_event);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "device disconnected!");
 }
 
 static void prv_handle_enc_change_event(struct ble_gap_event *event) {
@@ -177,10 +172,6 @@ static void prv_handle_identity_resolved_event(struct ble_gap_event *event) {
   BleAddressChange addr_change_event;
   nimble_addr_to_pebble_device(&desc.peer_ota_addr, &addr_change_event.device);
   nimble_addr_to_pebble_device(&desc.peer_id_addr, &addr_change_event.new_device);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "identity resolved, old addr:" BT_DEVICE_ADDRESS_FMT,
-            BT_DEVICE_ADDRESS_XPLODE(addr_change_event.device.address));
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "identity resolved, new addr:" BT_DEVICE_ADDRESS_FMT,
-            BT_DEVICE_ADDRESS_XPLODE(addr_change_event.new_device.address));
   bt_driver_handle_le_connection_handle_update_address(&addr_change_event);
 }
 
