@@ -283,7 +283,7 @@ bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_
   int rc;
   uint8_t own_addr_type;
   struct ble_gap_adv_params advp = {
-      .conn_mode = enable_scan_resp ? BLE_GAP_CONN_MODE_UND : BLE_GAP_DISC_MODE_NON,
+      .conn_mode = BLE_GAP_CONN_MODE_UND,
       .disc_mode = BLE_GAP_DISC_MODE_GEN,
       .itvl_min = BLE_GAP_CONN_ITVL_MS(min_interval_ms),
       .itvl_max = BLE_GAP_CONN_ITVL_MS(max_interval_ms),
