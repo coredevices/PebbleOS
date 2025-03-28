@@ -22,7 +22,7 @@ uint8_t * otp_get_lock(const uint8_t index) {
 }
 
 bool otp_is_locked(const uint8_t index) {
-  return true;
+  return false;
 }
 
 OtpWriteResult otp_write_slot(const uint8_t index, const char *value) {

@@ -46,7 +46,7 @@ static MfgData prv_fetch_struct(void) {
       break;
     default:
       // No data present, just return an initialized struct with default values.
-      return (MfgData) { .data_version = CURRENT_DATA_VERSION };
+      return (MfgData) { .data_version = CURRENT_DATA_VERSION, .color = WATCH_INFO_COLOR_PEBBLE_2_HR_BLACK, .model = "1002" /* SilkHR */ };
   }
 
   return result;
