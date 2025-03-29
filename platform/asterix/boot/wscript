@@ -1,0 +1,99 @@
+import os
+import sys
+import waflib.Logs
+
+sys.path.append(os.path.abspath('waftools'))
+import objcopy
+import gitinfo
+
+
+def options(opt):
+    opt.load('compiler_c')
+    opt.add_option('--board', action='store', default='asterix_evt1',
+                   help='Which board to build for '
+                   '(asterix_evt1)',
+                   choices=['asterix_evt1'])
+    opt.add_option('--nowatchdog', action='store_true',
+                   help='Do not enable watchdog timer or reset upon failure')
+    opt.add_option('--loglevel', type='int', default=0,
+                   help='Set the logging verbosity [default: %default]')
+    opt.add_option('--displaydemo', action='store_true',
+                   help='Make the bootloader infinitely loop through boot splash and error codes')
+
+
+def configure(conf):
+    CPU_FLAGS = [
+        '-mcpu=cortex-m4', '-mthumb',
+        '-mfpu=fpv4-sp-d16', '-mfloat-abi=softfp',
+        ]
+    OPT_FLAGS = [ '-Os' ,'-g' ]
+    C_FLAGS = [
+        '-std=c11', '-ffunction-sections',
+        '-Wall', '-Wextra', '-Werror', '-Wpointer-arith',
+        '-Wno-unused-parameter', '-Wno-missing-field-initializers',
+        '-Wno-error=unused-function', '-Wno-error=unused-variable',
+        '-Wno-error=unused-parameter', '-Wno-error=unused-but-set-variable',
+        '-Wno-packed-bitfield-compat'
+        ]
+
+    conf.find_program('arm-none-eabi-gcc', var='CC', mandatory=True)
+    conf.env.AS = conf.env.CC
+    for tool in 'ar objcopy'.split():
+        conf.find_program('arm-none-eabi-' + tool, var=tool.upper(),
+                          mandatory=True)
+    conf.env.BOARD = conf.options.board
+    conf.env.append_value('CFLAGS', CPU_FLAGS + OPT_FLAGS + C_FLAGS)
+    conf.env.append_value('DEFINES', [
+        '_REENT_SMALL=1',
+        'USE_STDPERIPH_DRIVER=1',
+        'BOARD_{}=1'.format(conf.options.board.upper())
+        ])
+
+    conf.env.append_unique('LINKFLAGS',
+            ['-Wl,--cref', '-Wl,--gc-sections', '-specs=nano.specs']
+            + CPU_FLAGS + OPT_FLAGS)
+
+    if conf.options.nowatchdog:
+        conf.env.append_value('DEFINES', 'NO_WATCHDOG')
+
+    if conf.options.displaydemo:
+        conf.env.append_value('DEFINES', 'DISPLAY_DEMO_LOOP')
+
+    conf.env.BOOTLOADER_LENGTH = '16384'
+    conf.env.append_value(
+            'DEFINES', 'BOOTLOADER_LENGTH=' + conf.env.BOOTLOADER_LENGTH)
+
+    conf.load('gcc gas objcopy ldscript')
+    conf.load('binary_header')
+
+    conf.recurse('vendor')
+
+
+def build(bld):
+    if bld.cmd == 'install':
+        raise Exception("install isn't a supported command. Did you mean flash?")
+
+    linkflags = ['-Wl,-Map,asterix_boot.map']
+
+    sources = (
+            bld.path.ant_glob('src/*.S') +
+            bld.path.ant_glob('src/**/*.c'))
+
+    bld(features='subst',
+        source='src/git_version.auto.h.in',
+        target='src/git_version.auto.h',
+        **gitinfo.get_git_revision(bld))
+
+    bld.recurse('vendor')
+    bld(features='c asm cprogram objcopy',
+        source=sources,
+        includes=['src', 'src/board'],
+        target='tintin_boot.elf',
+        ldscript='src/linker.ld',
+        linkflags=linkflags,
+        objcopy_bfdname='ihex',
+        objcopy_target='tintin_boot.hex',
+        use='hal_nordic',
+        lib=['gcc'])
+    bld(rule=objcopy.objcopy_simple_bin, source='tintin_boot.elf', target='tintin_boot.bin')
+# vim:filetype=python

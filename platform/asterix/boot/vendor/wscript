@@ -1,0 +1,39 @@
+def configure(conf):
+    conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
+    conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
+    conf.env.append_unique('DEFINES', 'NRFX_QSPI_ENABLED=1')
+    conf.env.append_unique('DEFINES', 'NRFX_SPIM_ENABLED=1')
+    conf.env.append_unique('DEFINES', 'NRFX_SPIM3_ENABLED=1')
+    conf.env.append_unique('DEFINES', 'NRFX_TWI_ENABLED=1')
+    conf.env.append_unique('DEFINES', 'NRFX_TWI1_ENABLED=1')
+    conf.env.append_unique('DEFINES', 'NRFX_UARTE_ENABLED=1')
+    conf.env.append_unique('DEFINES', 'NRFX_UARTE0_ENABLED=1')
+
+def build(bld):
+    bld.recurse('../../../../third_party/cmsis_core')
+
+    micro_sources = bld.path.parent.parent.parent.parent.ant_glob(f'third_party/hal_nordic/nrfx/**/*.c', excl = ['**/system_nrf*.c', '**/startup_nrf_common.c', '**/nrfx_twi_twim.c'])
+
+    nrfx_basedir = "../../../../third_party/hal_nordic"
+    
+    micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/system_nrf52840.c" ]
+    micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/gcc_startup_nrf52840.S" ]
+
+    micro_includes = [
+        nrfx_basedir,
+        f'{nrfx_basedir}/nrfx',
+        f'{nrfx_basedir}/nrfx/hal',
+        f'{nrfx_basedir}/nrfx/mdk',
+        f'{nrfx_basedir}/nrfx/drivers/include',
+        f'{nrfx_basedir}/nrfx/templates',
+    ]
+
+    # micro_includes += ['../../src/fw/board/boards/board_asterix']
+
+    bld.stlib(source=micro_sources,
+              target='hal_nordic',
+              use=['cmsis_core'],
+              includes=micro_includes,
+              export_includes=micro_includes)
+
+# vim:filetype=python
