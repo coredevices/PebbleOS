@@ -241,7 +241,7 @@ void display_error_code(uint32_t code) {
   uint8_t buffer[DISP_ROWS][DISP_LINE_BYTES];
   memset(buffer, 0x00, sizeof(buffer));
 
-  prv_draw_bitmap(dead_face_bits, 24, 32, dead_face_width, dead_face_height, buffer);
+  prv_draw_bitmap(dead_face_bits, (140 - dead_face_width) / 2, 24, dead_face_width, dead_face_height, buffer);
 
   prv_draw_code(code, buffer);
 
