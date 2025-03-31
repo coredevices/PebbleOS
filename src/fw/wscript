@@ -119,8 +119,7 @@ def _generate_memory_layout(bld):
         flash_size = '2048K'
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
-        # TODO: add bootloader support
-        bootloader_size = '0K'
+        bootloader_size = '16K'
         flash_size = '1024K'
 
     if bld.env.QEMU:
@@ -220,7 +219,8 @@ def _generate_memory_layout(bld):
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['aplite']
         app_ram_size_4x = APP_RAM_SIZES['diorite']
-        total_ram = (0x20000000, 256 * 1024)
+        retained_size = 256
+        total_ram = (0x20000000 + retained_size, 256 * 1024 - retained_size)
     else:
         bld.fatal("No set of supported SDK platforms defined for this board")
 

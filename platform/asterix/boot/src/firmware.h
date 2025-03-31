@@ -1,4 +1,4 @@
 #pragma once
 
-/* FIXME do NOT hardcode! */
-#define FIRMWARE_BASE 0x0002b000
+extern char __fw_start[0x1000];
+#define FIRMWARE_BASE ((uint32_t)(__fw_start))
