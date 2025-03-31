@@ -297,14 +297,14 @@ static void init_drivers(void) {
   accessory_init();
 #endif
 
+#if CAPABILITY_HAS_PMIC
+  pmic_init();
+#endif // CAPABILITY_HAS_PMIC
+
   flash_init();
   flash_sleep_when_idle(true);
   flash_enable_write_protection();
   flash_prf_set_protection(true);
-
-#if CAPABILITY_HAS_PMIC
-  pmic_init();
-#endif // CAPABILITY_HAS_PMIC
 
 #if CAPABILITY_HAS_MICROPHONE
   mic_init(MIC);
