@@ -4,9 +4,20 @@ MEMORY
     WORKER_RAM (xrw)  : ORIGIN = @WORKER_RAM_ADDR@, LENGTH = @WORKER_RAM_SIZE@
     APP_RAM (xrw)     : ORIGIN = @APP_RAM_ADDR@,    LENGTH = @APP_RAM_SIZE@
 
+    RETAINED (xrw)    : ORIGIN = 0x20000000, LENGTH = 256
+
     /* Bootloader now ends at 0x8008000, once we're sure we won't break */
     /* current watches, we should take advantage of this free space. */
     FLASH (rx) : ORIGIN = @FW_FLASH_ORIGIN@, LENGTH = @FW_FLASH_LENGTH@
+}
+
+SECTIONS
+{
+    .retained : ALIGN(4) {
+        __retained_start = .;
+        *(.retained)
+        __retained_end = .;
+    } > RETAINED
 }
 
 __FLASH_start__ = @FLASH_ORIGIN@;

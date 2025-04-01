@@ -15,6 +15,8 @@ void boot_bit_init(void) {
   /* FIXME: compute region to be enabled based on __retained_start (or use nrfx helpers) */
   NRF_POWER->RAM[0].POWERSET |= POWER_RAM_POWER_S2RETENTION_On << POWER_RAM_POWER_S2RETENTION_Pos;
 
+  retained_init();
+
   if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
     retained_write(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
   }

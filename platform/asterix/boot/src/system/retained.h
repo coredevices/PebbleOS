@@ -15,6 +15,8 @@
 #define REBOOT_REASON_MUTEX_LR                  10 // Now REBOOT_REASON_DROPPED_EVENT
 #define REBOOT_REASON_MUTEX_PC                  11 // Deprecated
 #define SLOT_OF_LAST_LAUNCHED_APP               19
+#define NRF_RETAINED_REGISTER_CRC               31
 
+void retained_init();
 void retained_write(uint8_t id, uint32_t value);
 uint32_t retained_read(uint8_t id);

@@ -18,7 +18,7 @@
 #TaskGen.declare_chain(name='bin', rule='${OBJCOPY} -O binary ${SRC} ${TGT}', ext_in='.elf', ext_out='.bin')
 
 def objcopy(task, mode, extra_args=None):
-    cmd = 'arm-none-eabi-objcopy -S -R .stack -R .priv_bss -R .bss '
+    cmd = 'arm-none-eabi-objcopy -S -R .stack -R .priv_bss -R .bss -R .retained '
 
     if hasattr(task.generator, 'extra_args'):
         cmd += '%s ' % (task.generator.extra_args)

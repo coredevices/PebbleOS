@@ -19,6 +19,7 @@
 #include "drivers/rtc.h"
 #include "system/logging.h"
 #include "system/version.h"
+#include "util/crc32.h"
 
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
@@ -31,30 +32,55 @@
 
 #if MICRO_FAMILY_NRF5
 
-static uint32_t _bootbits;
+static uint32_t __attribute__((section(".retained"))) retained[256 / 4];
+
+static void retained_write(uint8_t id, uint32_t value) {
+  retained[id] = value;
+  uint32_t crc32_computed = crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
+  retained[NRF_RETAINED_REGISTER_CRC] = crc32_computed;
+}
+
+static uint32_t retained_read(uint8_t id) {
+  return retained[id];
+}
 
 void boot_bit_init(void) {
-  _bootbits = BOOT_BIT_INITIALIZED;
+  // Make sure that the bootbits have a valid CRC -- otherwise, their
+  // in-memory value is probably scrambled and should be reset.
+  uint32_t crc32_computed = crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
+  if (crc32_computed != retained[NRF_RETAINED_REGISTER_CRC]) {
+    PBL_LOG(LOG_LEVEL_WARNING, "Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!", crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
+    memset(retained, 0, sizeof(retained));
+  }
+
+  if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
+    retained_write(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
+  }
 }
 
 void boot_bit_set(BootBitValue bit) {
-  _bootbits |= bit;
+  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
+  current_value |= bit;
+  retained_write(RTC_BKP_BOOTBIT_DR, current_value);
 }
 
 void boot_bit_clear(BootBitValue bit) {
-  _bootbits &= ~bit;
+  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
+  current_value &= ~bit;
+  retained_write(RTC_BKP_BOOTBIT_DR, current_value);
 }
 
 bool boot_bit_test(BootBitValue bit) {
-  return _bootbits & bit;
+  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
+  return (current_value & bit);
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "0x%"PRIx32, _bootbits);
+  PBL_LOG(LOG_LEVEL_DEBUG, "0x%"PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
-  return _bootbits;
+  return retained_read(RTC_BKP_BOOTBIT_DR);
 }
 
 void command_boot_bits_get(void) {
@@ -66,11 +92,11 @@ void boot_version_write(void) {
   if (boot_version_read() == TINTIN_METADATA.version_timestamp) {
     return;
   }
-  /* RTC_WriteBackupRegister(BOOTLOADER_VERSION_REGISTER, TINTIN_METADATA.version_timestamp); */
+  retained_write(BOOTLOADER_VERSION_REGISTER, TINTIN_METADATA.version_timestamp);
 }
 
 uint32_t boot_version_read(void) {
-  return 0xABCD1234;
+  return retained_read(BOOTLOADER_VERSION_REGISTER);
 }
 
 #else /* !nrf5 */
