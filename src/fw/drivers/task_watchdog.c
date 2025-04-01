@@ -49,6 +49,10 @@
 #include "debug/setup.h"
 #endif
 
+#if MICRO_FAMILY_NRF5
+#include <hal/nrf_rtc.h>
+#endif
+
 #define APP_THROTTLE_TIME_MS 300
 
 // These bits get set by calls to task_watchdog_bit_set and checked and cleared periodically by our watchdog feed
@@ -75,8 +79,13 @@ static TimerID s_throttle_timer_id = TIMER_INVALID_ID;
 static uint8_t s_ticks_since_successful_feed = 0;
 
 // We use this interrupt vector for our lower priority interrupts
+#if MICRO_FAMILY_NRF5
+#define WATCHDOG_FREERTOS_IRQn        EGU5_SWI5_IRQn
+#define WATCHDOG_FREERTOS_IRQHandler  EGU5_SWI5_IRQHandler
+#else
 #define WATCHDOG_FREERTOS_IRQn        CAN2_SCE_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  CAN2_SCE_IRQHandler
+#endif
 
 static void prv_task_watchdog_feed(void);
 
@@ -150,7 +159,17 @@ static void prv_log_failed_message(RebootReason *reboot_reason) {
 // -------------------------------------------------------------------------------------------------
 // The Timer ISR. This runs at super high priority (higher than configMAX_SYSCALL_INTERRUPT_PRIORITY), so
 // it is not safe to call ANY FreeRTOS functions from here.
-#if !MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF5
+void RTC2_IRQHandler(void) {
+  nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
+  nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK);
+  nrf_rtc_event_enable(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
+
+  s_ticks_since_successful_feed++;
+  prv_task_watchdog_feed();
+}
+#else
 void TIM2_IRQHandler(void) {
   // Workaround M3 bug that causes interrupt to fire twice:
   // https://my.st.com/public/Faq/Lists/faqlst/DispForm.aspx?ID=143
@@ -253,6 +272,20 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
 // which resets the watchdog timer if it detects that none of our watchable tasks are stuck.
 void task_watchdog_init(void) {
 #if MICRO_FAMILY_NRF5
+  // We use RTC2 as the WDT kicker; RTC1 is used by the OS RTC
+  nrf_rtc_prescaler_set(NRF_RTC2, NRF_RTC_FREQ_TO_PRESCALER(TIMER_CLOCK_HZ));
+
+  // trigger compare interrupt at appropriate time
+  nrf_rtc_cc_set(NRF_RTC2, 0, TIME_PERIOD);
+  nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK);
+  nrf_rtc_event_enable(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
+
+  NVIC_SetPriority(RTC2_IRQn, TASK_WATCHDOG_PRIORITY << 4);
+  NVIC_ClearPendingIRQ(RTC2_IRQn);
+  NVIC_EnableIRQ(RTC2_IRQn);
+
+  nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_START);
 #else
   // The timer is on ABP1 which is clocked by PCLK1
   RCC_ClocksTypeDef clocks;
@@ -295,25 +328,31 @@ void task_watchdog_init(void) {
 
   TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
   TIM_Cmd(TIM2, ENABLE);
+#endif
 
   // Setup another unused interrupt vector to handle our low priority interrupts. When we need to do higher
   // level functions (like PBL_LOG), we trigger this lower-priority interrupt to fire. Since it runs at
   // configMAX_SYSCALL_INTERRUPT_PRIORITY or lower, it can at least call FreeRTOS ISR functions.
+#if MICRO_FAMILY_NRF5
+  NVIC_SetPriority(WATCHDOG_FREERTOS_IRQn, configMAX_SYSCALL_INTERRUPT_PRIORITY);
+#else
   NVIC_InitStructure.NVIC_IRQChannel = WATCHDOG_FREERTOS_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configMAX_SYSCALL_INTERRUPT_PRIORITY >> 4;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
+#endif
 
   NVIC_EnableIRQ(WATCHDOG_FREERTOS_IRQn);
-#endif
 
   // create the app throttling timer
   s_throttle_timer_id = new_timer_create();
 }
 
 static void task_watchdog_disable_interrupt() {
-#if !MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF5
+  NVIC_DisableIRQ(RTC2_IRQn);
+#else
   NVIC_DisableIRQ(TIM2_IRQn);
 #endif
   taskENTER_CRITICAL();
@@ -321,7 +360,9 @@ static void task_watchdog_disable_interrupt() {
 
 static void task_watchdog_enable_interrupt() {
   taskEXIT_CRITICAL();
-#if !MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF5
+  NVIC_EnableIRQ(RTC2_IRQn);
+#else
   NVIC_EnableIRQ(TIM2_IRQn);
 #endif
 }
@@ -358,24 +399,19 @@ void task_watchdog_mask_clear(PebbleTask task) {
 }
 
 void task_watchdog_step_elapsed_time_ms(uint32_t elapsed_ms) {
-  uint32_t timer_ticks = (elapsed_ms * TIMER_CLOCK_HZ) / 1000;
+  // nRF5 has the RTC running during sleep, and needs no help here
 #if !MICRO_FAMILY_NRF5
+  uint32_t timer_ticks = (elapsed_ms * TIMER_CLOCK_HZ) / 1000;
   timer_ticks += TIM2->CNT;
-#endif
 
   uint8_t timer_ticks_elapsed = timer_ticks / TIME_PERIOD;
   if (timer_ticks_elapsed > 0) {
     // we don't want the interrupt to fire while we are editing the feed count
-#if !MICRO_FAMILY_NRF5
     TIM_Cmd(TIM2, DISABLE);
-#endif
     s_ticks_since_successful_feed += timer_ticks_elapsed;
-#if !MICRO_FAMILY_NRF5
     TIM_Cmd(TIM2, ENABLE);
-#endif
   }
 
-#if !MICRO_FAMILY_NRF5
   TIM2->CNT = timer_ticks % TIME_PERIOD;
 #endif
   prv_task_watchdog_feed();
@@ -411,9 +447,7 @@ static void prv_task_watchdog_feed(void) {
       reboot_reason_clear();
       // Trigger our lower priority interrupt to fire. If it fires when reboot reason is not RebootReasonCode_Watchdog,
       //  it simply logs a message that the we recovered from a watchdog stall
-#if !MICRO_FAMILY_NRF5
       NVIC_SetPendingIRQ(WATCHDOG_FREERTOS_IRQn);
-#endif
       s_last_warning_message_tick_time = 0;
     }
 
@@ -442,9 +476,7 @@ static void prv_task_watchdog_feed(void) {
     // Trigger our lower priority interrupt to fire. When it sees
     //  RebootReasonCode_Watchdog in the reboot reason, it logs information
     //  about the stuck task
-#if !MICRO_FAMILY_NRF5
     NVIC_SetPendingIRQ(WATCHDOG_FREERTOS_IRQn);
-#endif
 
     // If the low priority interrupt hasn't reset us by the time 6.5 seconds
     // rolls around (it will issue the reset if executed at least 6 seconds

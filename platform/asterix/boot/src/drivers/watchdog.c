@@ -5,8 +5,8 @@
 
 void watchdog_init(void) {
 	NRF_WDT->RREN = WDT_RREN_RR0_Enabled << WDT_RREN_RR0_Pos;
-	/* WDT expiration: 4s */
-	NRF_WDT->CRV = 32768 * 4;
+	/* WDT expiration: 8s */
+	NRF_WDT->CRV = 32768 * 8;
 }
 
 void watchdog_start(void) {

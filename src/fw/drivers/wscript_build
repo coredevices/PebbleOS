@@ -1178,7 +1178,7 @@ if mcu_family == 'NRF52840':
             'flash/xt25f64b.c',
             'nrf5/qspi.c',
             'task_watchdog.c',
-            'nrf5/stubs/watchdog.c',
+            'nrf5/watchdog.c',
             'display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c',
             'nrf5/stubs/accel.c',
             'nrf5/stubs/ambient_light.c',
