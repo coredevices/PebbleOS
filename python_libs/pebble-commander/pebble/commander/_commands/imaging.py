@@ -19,6 +19,7 @@ import os
 import struct
 import sys
 import traceback
+from functools import reduce
 
 import pebble.pulse2.exceptions
 
@@ -98,7 +99,7 @@ class PebbleFirmwareBinaryInfo(object):
 
         # Trim leading NULLS on the strings:
         for k in ["version_tag", "version_short"]:
-            self.info[k] = self.info[k].rstrip("\x00")
+            self.info[k] = self.info[k].rstrip(b"\x00")
 
     def __str__(self):
         return str(self.info)
