@@ -86,7 +86,7 @@ PRF can be also be built:
 ./waf build_prf
 ```
 
-## Flashing firmware (silk/snowy bigboards)
+## Flashing firmware
 
 Make sure openocd is installed, then run:
 
@@ -104,6 +104,13 @@ image, use:
 Note that you may change the default probe using the `--jtag` option when
 configuring the project.
 
+When working on PRF firmware, you can flash it into the regular application area
+by running:
+
+```
+./waf flash_prf
+```
+
 ## Flashing resources
 
 The first time you boot you may see a "sad watch" screen because resources are not
@@ -118,10 +125,22 @@ some machines, probing the TTY automatically will fail; in this case, you
 can use the `--tty` parameter (i.e., `./waf image_resources --tty
 /dev/tty.usbserial-TG110ae90` to use the UART port of an attached Tigard).
 
+PRF can also be flashed into the external flash by running:
+
+```
+./waf image_recovery
+```
+
 ## Viewing logs
 
 ```shell
 ./waf console
+```
+
+If running PRF firmware, use:
+
+```shell
+./waf console_prf
 ```
 
 ## Building for QEMU
