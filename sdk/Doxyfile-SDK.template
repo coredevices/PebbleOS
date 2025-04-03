@@ -640,9 +640,9 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = \
-@TINTIN_ROOT@/docs/common.dox \
-@TINTIN_ROOT@/docs/mainpage_sdk.dox \
-@TINTIN_ROOT@/docs/external_refs \
+@TINTIN_ROOT@/sdk/docs/common.dox \
+@TINTIN_ROOT@/sdk/docs/mainpage_sdk.dox \
+@TINTIN_ROOT@/sdk/docs/external_refs \
 @PLATFORM_PATH@/include/pebble.h \
 @PLATFORM_PATH@/include/doxygen/pebble_worker.h \
 @PLATFORM_PATH@/include/gcolor_definitions.h
@@ -705,7 +705,7 @@ EXCLUDE_SYMBOLS        =
 # directories that contain example code fragments that are included (see
 # the \include command).
 
-EXAMPLE_PATH           = @TINTIN_ROOT@/docs/external_refs
+EXAMPLE_PATH           = @TINTIN_ROOT@/sdk/docs/external_refs
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp
@@ -725,7 +725,7 @@ EXAMPLE_RECURSIVE      = NO
 # directories that contain image that are included in the documentation (see
 # the \image command).
 
-IMAGE_PATH             = @TINTIN_ROOT@/docs/images
+IMAGE_PATH             = @TINTIN_ROOT@/sdk/docs/images
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -874,13 +874,13 @@ HTML_FILE_EXTENSION    = .html
 # have to redo this when upgrading to a newer version of doxygen or when
 # changing the value of configuration settings such as GENERATE_TREEVIEW!
 
-HTML_HEADER            = @TINTIN_ROOT@/docs/template/header.html
+HTML_HEADER            = @TINTIN_ROOT@/sdk/docs/template/header.html
 
 # The HTML_FOOTER tag can be used to specify a personal HTML footer for
 # each generated HTML page. If it is left blank doxygen will generate a
 # standard footer.
 
-HTML_FOOTER            = @TINTIN_ROOT@/docs/template/footer.html
+HTML_FOOTER            = @TINTIN_ROOT@/sdk/docs/template/footer.html
 
 # The HTML_STYLESHEET tag can be used to specify a user-defined cascading
 # style sheet that is used by each HTML page. It can be used to
@@ -889,7 +889,7 @@ HTML_FOOTER            = @TINTIN_ROOT@/docs/template/footer.html
 # the style sheet file to the HTML output directory, so don't put your own
 # style sheet in the HTML output directory as well, or it will be erased!
 
-HTML_STYLESHEET        = @TINTIN_ROOT@/docs/template/stylesheet.css
+HTML_STYLESHEET        = @TINTIN_ROOT@/sdk/docs/template/stylesheet.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -899,11 +899,11 @@ HTML_STYLESHEET        = @TINTIN_ROOT@/docs/template/stylesheet.css
 # the files will be copied as-is; there are no commands or markers available.
 
 HTML_EXTRA_FILES       = \
-@TINTIN_ROOT@/docs/template/bg-navbar.png \
-@TINTIN_ROOT@/docs/template/navbar-icon.png \
-@TINTIN_ROOT@/docs/template/navbar-brdr.png \
-@TINTIN_ROOT@/docs/template/bootstrap.css \
-@TINTIN_ROOT@/docs/template/pebble-developer.css
+@TINTIN_ROOT@/sdk/docs/template/bg-navbar.png \
+@TINTIN_ROOT@/sdk/docs/template/navbar-icon.png \
+@TINTIN_ROOT@/sdk/docs/template/navbar-brdr.png \
+@TINTIN_ROOT@/sdk/docs/template/bootstrap.css \
+@TINTIN_ROOT@/sdk/docs/template/pebble-developer.css
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output.
 # Doxygen will adjust the colors in the style sheet and background images
