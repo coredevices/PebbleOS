@@ -1,0 +1,31 @@
+name: 💬 RFC
+description: File a RFC (Request for Comments)
+labels: ["RFC"]
+body:
+- type: checkboxes
+  attributes:
+    label: Is there an existing issue for this?
+    description: Please search to see if an issue already exists for the proposed RFC.
+    options:
+    - label: I have searched the existing issues
+      required: true
+
+- type: textarea
+  attributes:
+    label: Problem
+    description: A concise description of the problem you are trying to solve.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Proposed change
+    description: A concise description of the change you are proposing.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Anything else?
+    description: |
+      Links? References? Anything that will give us more context!

@@ -1,0 +1,29 @@
+name: ➕ Feature request
+description: File a feature request
+labels: ["feature"]
+body:
+- type: checkboxes
+  attributes:
+    label: Is there an existing issue for this?
+    description: Please search to see if an issue already exists for the proposed feature request.
+    options:
+    - label: I have searched the existing issues
+      required: true
+
+- type: textarea
+  attributes:
+    label: Proposed feature request
+    description: A concise description of your feature request.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Alternatives
+    description: Describe alternatives you have considered.
+
+- type: textarea
+  attributes:
+    label: Anything else?
+    description: |
+      Links? References? Anything that will give us more context!
