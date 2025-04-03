@@ -871,6 +871,10 @@
 #define MYNEWT_VAL_BLE_RPA_TIMEOUT (300)
 #endif
 
+#ifndef MYNEWT_VAL_BLE_HOST_RPA_RESOLVER
+#define MYNEWT_VAL_BLE_HOST_RPA_RESOLVER (1)
+#endif
+
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_BONDING
 #define MYNEWT_VAL_BLE_SM_BONDING (1)

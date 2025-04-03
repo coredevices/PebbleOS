@@ -14,3 +14,4 @@
 
 syscfg.vals:
     BLE_TRANSPORT_LL: socket
+    BLE_HOST_RPA_RESOLVER: 1
