@@ -50,9 +50,10 @@
 // Let the unittest define this using a header override:
 #  include "services/normal/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
 #else
-#  if BT_CONTROLLER_CC2564X
-#    include "services/normal/bluetooth/bluetooth_persistent_storage_v1_impl.h"
-#  elif BT_CONTROLLER_DA14681 || BT_CONTROLLER_QEMU || BT_CONTROLLER_NRF52
+// TODO: perhaps revert this back to v1 for cc2564x if we can figure out how to handle the old format
+// right now, you have to make sure you've erased all bondings before upgrading else you'll crash
+// because the v2 code chokes on the v1 format
+#  if BT_CONTROLLER_DA14681 || BT_CONTROLLER_QEMU || BT_CONTROLLER_NRF52 || BT_CONTROLLER_CC2564X
 #    include "services/normal/bluetooth/bluetooth_persistent_storage_v2_impl.h"
 #  else
 #    error "Unknown BT_CONTROLLER_... define?"
