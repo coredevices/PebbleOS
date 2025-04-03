@@ -60,3 +60,5 @@ analyze_mcu_flash_usage_treemap.jsonp
 
 waflib.zip
 *~
+
+docs/_build

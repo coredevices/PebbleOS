@@ -1,0 +1,3 @@
+sphinx~=8.2
+myst-parser~=4.0
+sphinx-book-theme~=1.1
