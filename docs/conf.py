@@ -58,4 +58,5 @@ html_theme_options = {
 
 myst_enable_extensions = [
     "colon_fence",
+    "fieldlist",
 ]
