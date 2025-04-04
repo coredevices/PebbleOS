@@ -10,4 +10,5 @@ getting_started.md
 :caption: 🛠️ Development
 development/options.md
 development/prf.md
+development/qemu.md
 ```
