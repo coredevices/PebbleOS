@@ -52,3 +52,10 @@ html_theme_options = {
     "use_edit_page_button": True,
     "use_issues_button": True,
 }
+
+# -- Options for myst_parser extension -----------------------------------------
+# https://myst-parser.readthedocs.io/en/latest/configuration.html
+
+myst_enable_extensions = [
+    "colon_fence",
+]
