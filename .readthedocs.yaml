@@ -21,6 +21,15 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.13"
+  jobs:
+    post_checkout:
+      # Skip build if there are no doc changes in a PR
+      # Ref. https://docs.readthedocs.com/platform/stable/build-customization.html#cancel-build-based-on-a-condition
+      - |
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- docs/ .readthedocs.yaml;
+        then
+          exit 183;
+        fi
 
 sphinx:
     configuration: docs/conf.py
