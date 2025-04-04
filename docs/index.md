@@ -4,3 +4,9 @@
 :hidden:
 getting_started.md
 ```
+
+```{toctree}
+:hidden:
+:caption: 🛠️ Development
+development/prf.md
+```
