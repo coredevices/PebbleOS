@@ -3,6 +3,9 @@ name: Compliance checks
 on:
   pull_request: {}
 
+env:
+  CLANG_FORMAT_VERSION: "20.1"
+
 jobs:
   lint:
     runs-on: ubuntu-24.04
@@ -13,8 +16,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      - name: Install GitLint
-        run: pip install gitlint
+      - name: Install dependencies
+        run: pip install gitlint clang-format~=${CLANG_FORMAT_VERSION}
 
       - name: Run GitLint 
         run: gitlint --commits "${{ github.event.pull_request.base.sha }}..HEAD"
+
+      - name: Run clang-format
+        run: git clang-format ${{ github.event.pull_request.base.sha }} --diff --verbose
