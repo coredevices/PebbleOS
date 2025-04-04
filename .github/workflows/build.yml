@@ -5,6 +5,17 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    paths:
+      - '.github/workflows/build.yml'
+      - 'resources/**'
+      - 'sdk/**'
+      - 'src/**'
+      - 'stored_apps/**'
+      - 'tools/**'
+      - 'third_party/**'
+      - 'waftools/**'
+      - 'waf'
+      - 'wscript'
 
 env:
   ARM_GNU_TOOLCHAIN_VERSION: 14.2.rel1
