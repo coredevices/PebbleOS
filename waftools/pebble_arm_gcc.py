@@ -115,6 +115,9 @@ def configure(conf):
       conf.env.CC = find_clang_path(conf)
     else:
       conf.env.CC = CROSS_COMPILE_PREFIX + 'gcc'
+    conf.find_program('ccache', var='CCACHE', mandatory=False)
+    if conf.env.CCACHE:
+        conf.env.CC = [conf.env.CCACHE[0], conf.env.CC]
 
     conf.env.LINK_CC = conf.env.CC
 
