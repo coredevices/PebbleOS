@@ -91,7 +91,7 @@ void bt_driver_init(void) {
   TaskParameters_t ll_task_params = {
       .pvTaskCode = nimble_port_ll_task_func,
       .pcName = "NimbleLL",
-      .usStackDepth = (configMINIMAL_STACK_SIZE + 400) / sizeof(StackType_t),
+      .usStackDepth = (configMINIMAL_STACK_SIZE + 600) / sizeof(StackType_t),
       .uxPriority = (configMAX_PRIORITIES - 1) | portPRIVILEGE_BIT,
       .puxStackBuffer = NULL,
   };
