@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-#include "nimble_store.h"
-
-#include <stdlib.h>
-
+#include <FreeRTOS.h>
 #include <bluetooth/init.h>
 #include <comm/bt_lock.h>
-#include <kernel/pebble_tasks.h>
-#include <os/tick.h>
-#include <system/logging.h>
-#include <system/passert.h>
-
-#include <FreeRTOS.h>
-#include <semphr.h>
-
 #include <host/ble_hs.h>
 #include <host/ble_hs_stop.h>
 #include <host/util/util.h>
+#include <kernel/pebble_tasks.h>
 #include <nimble/nimble_port.h>
+#include <os/tick.h>
+#include <semphr.h>
 #include <services/dis/ble_svc_dis.h>
 #include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
+#include <stdlib.h>
+#include <system/logging.h>
+#include <system/passert.h>
+
+#include "nimble_store.h"
 
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 2000;
 
@@ -67,9 +64,7 @@ static void prv_host_task_main(void *unused) {
   nimble_port_run();
 }
 
-static void prv_ble_hs_stop_cb(int status, void *arg) {
-  xSemaphoreGive(s_host_stopped);
-}
+static void prv_ble_hs_stop_cb(int status, void *arg) { xSemaphoreGive(s_host_stopped); }
 
 // ----------------------------------------------------------------------------------------
 void bt_driver_init(void) {
@@ -94,11 +89,11 @@ void bt_driver_init(void) {
 
 #if NIMBLE_CFG_CONTROLLER
   TaskParameters_t ll_task_params = {
-    .pvTaskCode = nimble_port_ll_task_func,
-    .pcName = "NimbleLL",
-    .usStackDepth = (configMINIMAL_STACK_SIZE + 400) / sizeof(StackType_t),
-    .uxPriority = (configMAX_PRIORITIES - 1) | portPRIVILEGE_BIT,
-    .puxStackBuffer = NULL,
+      .pvTaskCode = nimble_port_ll_task_func,
+      .pcName = "NimbleLL",
+      .usStackDepth = (configMINIMAL_STACK_SIZE + 400) / sizeof(StackType_t),
+      .uxPriority = (configMAX_PRIORITIES - 1) | portPRIVILEGE_BIT,
+      .puxStackBuffer = NULL,
   };
 
   pebble_task_create(PebbleTask_BTController, &ll_task_params, &s_ll_task_handle);
