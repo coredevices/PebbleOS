@@ -37,12 +37,6 @@ def build(bld):
 
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/common/bluetooth/ble_root_keys.c"
-         ),
-         test_sources_ant_glob="test_ble_root_keys.c")
-
-    clar(bld,
-         sources_ant_glob=(
             "src/fw/services/common/bluetooth/local_addr.c"
          ),
          test_sources_ant_glob="test_local_addr.c")

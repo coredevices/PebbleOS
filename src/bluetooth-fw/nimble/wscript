@@ -1,6 +1,5 @@
 def configure(conf):
     conf.env.append_value('DEFINES', 'BT_REQUIRE_EARLY_BONDINGS')
-    conf.env.append_value('DEFINES', 'BT_NO_REQUIRE_ROOT_KEYS_GEN')
 
 
 def build(bld):
