@@ -179,8 +179,26 @@ elif bld.is_asterix():
     bld(
         name='drivers',
         use=[
-            'driver_nrf52',
+            'driver_ambient_light',
+            'driver_backlight',
+            'driver_battery',
+            'driver_button',
+            'driver_display',
+            'driver_flash',
+            'driver_gpio_defaults',
+            'driver_imu',
+            'driver_mcu',
             'driver_mpu',
+            'driver_otp',
+            'driver_periph_config',
+            'driver_pmic',
+            'driver_rng',
+            'driver_rtc',
+            'driver_task_watchdog',
+            'driver_temperature',
+            'driver_uart',
+            'driver_vibe',
+            'driver_voltage_monitor',
         ],
     )
 
@@ -218,6 +236,18 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'stm32_stdlib',
         ],
     )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_ambient_light',
+        source=[
+            'nrf5/stubs/ambient_light.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if mcu_family in ('STM32F4', 'STM32F7'):
     bld.objects(
@@ -233,6 +263,18 @@ if mcu_family in ('STM32F4', 'STM32F7'):
             'stm32_stdlib',
         ],
     )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_temperature',
+        source=[
+            'nrf5/stubs/temperature.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 # FIXME: break dependency on driver_led_controller when not needed
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
@@ -245,6 +287,19 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'driver_pwm',
             'driver_gpio',
             'driver_led_controller',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_backlight',
+        source=[
+            'backlight.c',
+        ],
+        use=[
+            'driver_pwm',
+            'driver_gpio',
             'fw_includes',
             'root_includes',
         ],
@@ -282,6 +337,19 @@ elif bld.is_tintin():
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif bld.is_asterix():
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_battery',
+        source=[
+            'battery/battery_common.c',
+            'nrf5/stubs/battery.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
         ],
     )
 else:
@@ -330,6 +398,19 @@ if bld.is_silk() and not bld.env.QEMU:
         ],
     )
 
+if bld.is_asterix():
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_lsm6dso',
+        source=[
+            'nrf5/stubs/accel.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
         name='driver_button',
@@ -346,6 +427,21 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_button',
+        source=[
+            'nrf5/button.c',
+            'nrf5/debounced_button.c',
+        ],
+        use=[
+            'driver_exti',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -400,6 +496,21 @@ elif bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
             'stm32_stdlib',
         ],
     )
+elif bld.is_asterix():
+    # FIXME: driver should use platform agnostic SPI interface
+    bld.objects(
+        name='driver_display',
+        source=[
+            'display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c',
+        ],
+        use=[
+            'driver_gpio',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ],
+    )
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
@@ -424,6 +535,19 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_exti',
+        source=[
+            'nrf5/exti.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -517,6 +641,23 @@ elif bld.is_snowy_compatible():
             'stm32_stdlib',
         ],
     )
+elif bld.is_asterix():
+    bld.objects(
+        name='driver_flash',
+        source=[
+            'flash/flash_api.c',
+            'flash/flash_crc.c',
+            'flash/flash_erase.c',
+            'flash/cd_flash_driver.c',
+            'flash/xt25f64b.c',
+        ],
+        use=[
+            'driver_qspi',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if bld.is_snowy_compatible():
     bld.objects(
@@ -543,6 +684,18 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_gpio',
+        source=[
+            'nrf5/gpio.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -601,6 +754,14 @@ elif mcu_family in ('STM32F4', 'STM32F7'):
             'driver_gpio',
         ],
     )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_gpio_defaults',
+        source=[
+            'nrf5/stubs/gpio_defaults.c',
+        ],
+    )
 
 if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
@@ -636,6 +797,20 @@ elif mcu_family in ('STM32F7',):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_i2c',
+        source=[
+            'i2c.c',
+            'nrf5/i2c_hal.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -690,6 +865,18 @@ elif bld.is_silk():
         use=[
             'driver_bma255',
             'driver_mag_null',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif bld.is_asterix():
+    bld.objects(
+        name='driver_imu',
+        source=[
+            'imu/imu_asterix.c',
+        ],
+        use=[
+            'driver_lsm6dso',
             'fw_includes',
             'root_includes',
         ],
@@ -769,6 +956,18 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'freertos',
         ],
     )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_mcu',
+        source=[
+            'nrf5/stubs/mcu.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if bld.capability('HAS_MICROPHONE'):
     bld.objects(
@@ -817,6 +1016,18 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'stm32_stdlib',
         ],
     )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_otp',
+        source=[
+            'nrf5/stubs/otp.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
@@ -829,6 +1040,19 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_periph_config',
+        source=[
+            'nrf5/stubs/periph_config.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
         ],
     )
 
@@ -857,6 +1081,18 @@ elif bld.is_silk():
         ],
         use=[
             'driver_gpio',
+            'driver_i2c',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif bld.is_asterix():
+    bld.objects(
+        name='driver_pmic',
+        source=[
+            'pmic/npm1300.c',
+        ],
+        use=[
             'driver_i2c',
             'fw_includes',
             'root_includes',
@@ -921,6 +1157,18 @@ elif mcu_family in ('STM32F7',):
             'stm32_stdlib',
         ]
     )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_pwm',
+        source=[
+            'nrf5/pwm.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ]
+    )
 
 if 'STM32F412xG' in bld.env.DEFINES or mcu_family in ('STM32F7',):
     bld.objects(
@@ -935,6 +1183,19 @@ if 'STM32F412xG' in bld.env.DEFINES or mcu_family in ('STM32F7',):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_qspi',
+        source=[
+            'nrf5/qspi.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -966,6 +1227,18 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'stm32_stdlib',
         ]
     )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_voltage_monitor',
+        source=[
+            'nrf5/stubs/voltage_monitor.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+        ]
+    )
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
@@ -978,6 +1251,18 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_rng',
+        source=[
+            'nrf5/stubs/rng.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
         ],
     )
 
@@ -1015,6 +1300,19 @@ elif mcu_family in ('STM32F4', 'STM32F7'):
             'stm32_stdlib',
         ],
     )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_rtc',
+        source=[
+            'nrf5/stubs/rtc.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
@@ -1039,6 +1337,17 @@ if mcu_family == 'STM32F7':
         use=[
             'fw_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_spi',
+        source=[
+            'nrf5/spi.c',
+        ],
+        use=[
+            'fw_includes',
+            'hal_nordic',
         ],
     )
 
@@ -1069,6 +1378,20 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_task_watchdog',
+        source=[
+            'task_watchdog.c',
+        ],
+        use=[
+            'driver_watchdog',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -1132,6 +1455,19 @@ elif mcu_family == 'STM32F7':
             'stm32_stdlib',
         ],
     )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_uart',
+        source=[
+            'nrf5/uart.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ],
+    )
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
@@ -1143,6 +1479,19 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'driver_gpio',
             'driver_periph_config',
             'driver_pwm'
+            'freertos',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_vibe',
+        source=[
+            'nrf5/stubs/vibe.c',
+        ],
+        use=[
             'freertos',
             'fw_includes',
             'root_includes',
@@ -1161,53 +1510,13 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'stm32_stdlib',
         ],
     )
-
-if mcu_family == 'NRF52840':
-    # XXX: factor this into... drivers
+elif mcu_family == 'NRF52840':
     bld.objects(
-        name='driver_nrf52',
+        name='driver_watchdog',
         source=[
-            'nrf5/stubs/rtc.c',
-            'nrf5/stubs/rng.c',
-            'flash/flash_api.c',
-            'flash/flash_crc.c',
-            'flash/flash_erase.c',
-            'flash/cd_flash_driver.c',
-            'battery/battery_common.c',
-            'nrf5/stubs/battery.c',
-            'flash/xt25f64b.c',
-            'nrf5/qspi.c',
-            'task_watchdog.c',
             'nrf5/watchdog.c',
-            'display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c',
-            'nrf5/stubs/accel.c',
-            'nrf5/stubs/ambient_light.c',
-            'nrf5/stubs/vibe.c',
-            'i2c.c',
-            'nrf5/stubs/otp.c',
-            'nrf5/stubs/mcu.c',
-            'backlight.c',
-            'nrf5/button.c',
-            'nrf5/debounced_button.c',
-            'nrf5/stubs/voltage_monitor.c',
-            'imu/imu_asterix.c',
-            'nrf5/stubs/temperature.c',
-            'nrf5/stubs/periph_config.c',
-            'nrf5/stubs/gpio_defaults.c',
-            'nrf5/exti.c',
-            'nrf5/uart.c',
-            'nrf5/gpio.c',
-            'nrf5/i2c_hal.c',
-            'nrf5/spi.c',
-            'nrf5/pwm.c',
-            'pmic/npm1300.c',
         ],
         use=[
-            'driver_clocksource',
-            'driver_gpio',
-            'driver_pwr',
-            'driver_periph_config',
-            'freertos',
             'fw_includes',
             'root_includes',
             'hal_nordic',
