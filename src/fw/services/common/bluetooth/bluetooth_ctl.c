@@ -15,19 +15,21 @@
  */
 
 #define FILE_LOG_COLOR LOG_COLOR_BLUE
-#include "system/logging.h"
+#include "services/common/bluetooth/bluetooth_ctl.h"
 
-#include "console/dbgserial.h"
+#include <bluetooth/init.h>
+#include <string.h>
+
 #include "comm/ble/gap_le.h"
 #include "comm/ble/gatt_client_subscriptions.h"
+#include "console/dbgserial.h"
 #include "drivers/clocksource.h"
-
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/stop.h"
+#include "os/mutex.h"
 #include "pebble_errors.h"
 #include "services/common/analytics/analytics.h"
-#include "services/common/bluetooth/bluetooth_ctl.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/bluetooth/dis.h"
 #include "services/common/bluetooth/local_addr.h"
@@ -36,23 +38,17 @@
 #include "services/common/regular_timer.h"
 #include "services/common/system_task.h"
 #include "services/normal/bluetooth/ble_hrm.h"
-#include "os/mutex.h"
-
-#include <bluetooth/init.h>
-
-#include <string.h>
+#include "system/logging.h"
 
 static bool s_comm_initialized = false;
 static bool s_comm_airplane_mode_on = false;
 static bool s_comm_enabled = false;
 static bool s_comm_is_running = false;
 static bool s_comm_state_change_eval_is_scheduled;
-static BtCtlModeOverride s_comm_override =  BtCtlModeOverrideNone;
+static BtCtlModeOverride s_comm_override = BtCtlModeOverrideNone;
 static PebbleMutex *s_comm_state_change_mutex;
 
-bool bt_ctl_is_airplane_mode_on(void) {
-  return s_comm_airplane_mode_on;
-}
+bool bt_ctl_is_airplane_mode_on(void) { return s_comm_airplane_mode_on; }
 
 bool bt_ctl_is_bluetooth_active(void) {
   if (s_comm_enabled) {
@@ -65,18 +61,14 @@ bool bt_ctl_is_bluetooth_active(void) {
   return false;
 }
 
-bool bt_ctl_is_bluetooth_running(void) {
-  return s_comm_is_running;
-}
+bool bt_ctl_is_bluetooth_running(void) { return s_comm_is_running; }
 
 static void prv_put_disconnection_event(void) {
-  PebbleEvent event = (PebbleEvent) {
-    .type = PEBBLE_BT_CONNECTION_EVENT,
-    .bluetooth.connection = {
-      .is_ble = true,
-      .state = PebbleBluetoothConnectionEventStateDisconnected,
-    }
-  };
+  PebbleEvent event = (PebbleEvent){.type = PEBBLE_BT_CONNECTION_EVENT,
+                                    .bluetooth.connection = {
+                                        .is_ble = true,
+                                        .state = PebbleBluetoothConnectionEventStateDisconnected,
+                                    }};
   PBL_LOG(LOG_LEVEL_DEBUG, "New BT Conn change event, We are now disconnected");
   event_put(&event);
 }
@@ -144,14 +136,16 @@ static void prv_comm_stop(void) {
 static void prv_send_state_change_event(void) {
   PBL_LOG(LOG_LEVEL_DEBUG, "----> Sending a BT state event");
   PebbleEvent event = {
-    .type = PEBBLE_BT_STATE_EVENT,
-    .bluetooth = {
-      .state = {
-        .airplane = s_comm_airplane_mode_on,
-        .enabled = s_comm_enabled,
-        .override = s_comm_override,
-      },
-    },
+      .type = PEBBLE_BT_STATE_EVENT,
+      .bluetooth =
+          {
+              .state =
+                  {
+                      .airplane = s_comm_airplane_mode_on,
+                      .enabled = s_comm_enabled,
+                      .override = s_comm_override,
+                  },
+          },
   };
   event_put(&event);
 }
@@ -273,7 +267,7 @@ void bt_ctl_reset_bluetooth(void) {
   }
 }
 
-void command_bt_airplane_mode(const char* new_mode) {
+void command_bt_airplane_mode(const char *new_mode) {
   // as tests run using command_bt_airplane_mode, will retain nomenclature
   // but work as override mode change
   BtCtlModeOverride override = BtCtlModeOverrideStop;
