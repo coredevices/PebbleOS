@@ -16,8 +16,12 @@
 
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/gap_le_connect.h>
+#include <bluetooth/sm_types.h>
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
+#include <host/ble_hs_hci.h>
+#include <host/ble_store.h>
+#include <services/common/bluetooth/bluetooth_persistent_storage.h>
 #include <string.h>
 #include <system/logging.h>
 #include <system/passert.h>
@@ -242,9 +246,38 @@ static int prv_nimble_store_write(int obj_type, const union ble_store_value *val
   }
 }
 
+static int prv_nimble_store_gen_key(uint8_t key, struct ble_store_gen_key *gen_key,
+                                    uint16_t conn_handle) {
+  SM128BitKey stored_keys[SMRootKeyTypeNum];
+
+  if (!bt_persistent_storage_get_root_key(SMRootKeyTypeIdentity,
+                                          &stored_keys[SMRootKeyTypeIdentity])) {
+    int ret;
+
+    ret = ble_hs_hci_rand(stored_keys, sizeof(stored_keys));
+    if (ret != 0) {
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Could not generate root keys: %d", ret);
+      return ret;
+    }
+
+    bt_persistent_storage_set_root_keys(stored_keys);
+  }
+
+  switch (key) {
+    case BLE_STORE_GEN_KEY_IRK:
+      memcpy(gen_key->irk, stored_keys[SMRootKeyTypeIdentity].data, KEY_SIZE);
+      break;
+    default:
+      return BLE_HS_ENOTSUP;
+  }
+
+  return 0;
+}
+
 void nimble_store_init(void) {
   ble_hs_cfg.store_read_cb = prv_nimble_store_read;
   ble_hs_cfg.store_write_cb = prv_nimble_store_write;
+  ble_hs_cfg.store_gen_key_cb = prv_nimble_store_gen_key;
 }
 
 static void prv_convert_bonding_remote_to_store_val(const BleBonding *bonding,

@@ -89,7 +89,10 @@ static void prv_comm_start(void) {
   stop_mode_disable(InhibitorCommMode);
   // Heap allocated to reduce stack usage
   BTDriverConfig *config = kernel_zalloc_check(sizeof(BTDriverConfig));
+#ifndef BT_NO_REQUIRE_ROOT_KEYS_GEN
+  // TODO: should be removed if no other bluetooth implementations support this
   ble_root_keys_get_and_generate_if_needed(config->root_keys);
+#endif
   dis_get_info(&config->dis_info);
 #if CAPABILITY_HAS_BUILTIN_HRM
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
