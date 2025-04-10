@@ -48,6 +48,7 @@ typedef const struct QSPIFlashPart {
     uint8_t rdsr1;
     uint8_t rdsr2;
     uint8_t wrsr;
+    uint8_t wrsr2;
     uint8_t erase_suspend;
     uint8_t erase_resume;
     uint8_t enter_low_power;
