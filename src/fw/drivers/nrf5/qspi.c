@@ -29,12 +29,6 @@
 /* nRF5's QSPI controller is different enough from STM32's that we
  * reimplement qspi_flash.c, not stm32/qspi.c.  */
 
-//! Address value which signifies no address being sent
-#define QSPI_ADDR_NO_ADDR (UINT32_MAX)
-//! Word size for DMA reads
-#define QSPI_DMA_READ_WORD_SIZE (4)
-
-
 static void prv_use(QSPIPort *dev) {
   dev->state->use_count++;
 }
@@ -188,30 +182,6 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
     prv_check_whoami(dev);
   }
 
-  if (0) {
-    dev->state->coredump_mode = 1;
-    nrfx_err_t err;
-    uint8_t buf[16];
-    PBL_LOG(LOG_LEVEL_WARNING, "erase...");
-    dev->qspi->state->waiting = 1;
-    err = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_ALL, 0);
-    PBL_ASSERTN(err == NRFX_SUCCESS);
-    while (dev->qspi->state->waiting);
-
-    PBL_LOG(LOG_LEVEL_WARNING, "wait done...");
-    while (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS);
-
-    PBL_LOG(LOG_LEVEL_WARNING, "readback..");
-    dev->qspi->state->waiting = 1;
-    err = nrfx_qspi_read(buf, 16, 0);
-    PBL_ASSERTN(err == NRFX_SUCCESS);
-    while (dev->qspi->state->waiting);
-    PBL_LOG(LOG_LEVEL_WARNING, "new data: %02x %02x %02x %02x %02x %02x %02x %02x",
-        buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
-
-    dev->state->coredump_mode = 0;
-  }
-
   prv_release(dev->qspi);
 }
 
@@ -292,29 +262,6 @@ void qspi_flash_erase_resume(QSPIFlash *dev, uint32_t addr) {
   prv_release(dev->qspi);
 }
 
-#if 0
-static void prv_read_mmap_with_params(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length,
-                                      uint8_t instruction, uint8_t dummy_cycles, bool is_ddr) {
-  qspi_mmap_start(dev->qspi, instruction, addr, dummy_cycles, length, is_ddr);
-
-  // Point the buffer at the QSPI region
-  memcpy(buffer, (uint32_t *)(QSPI_MMAP_BASE_ADDRESS + addr), length);
-
-  // stop memory mapped mode
-  qspi_mmap_stop(dev->qspi);
-}
-
-static void prv_read_mmap(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
-  uint8_t instruction;
-  uint8_t dummy_cycles;
-  bool is_ddr;
-  prv_get_fast_read_params(dev, &instruction, &dummy_cycles, &is_ddr);
-
-  prv_read_mmap_with_params(dev, addr, buffer, length, instruction,
-                            dummy_cycles, is_ddr);
-}
-#endif
-
 static void prv_qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
   PBL_ASSERTN(!dev->qspi->state->waiting);
   dev->qspi->state->waiting = 1;
@@ -329,9 +276,6 @@ static void prv_qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *bu
   } else {
     dev->qspi->state->waiting = 0;
   }
-
-  //uint8_t *buf = (uint8_t *)buffer;
-  //PBL_LOG(LOG_LEVEL_WARNING, "... read %ld @ %08lx -> %02x %02x %02x %02x...", length, addr, buf[0], buf[1], buf[2], buf[3]);
 }
 
 void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
@@ -488,9 +432,6 @@ void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
   }
 }
 
-#if 1
-// While this works with normal hardware, it has a large stack requirment and I can't
-// see a compelling reason to use it over the mmap blank check variant
 static bool prv_blank_check_poll(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
   const uint32_t size_bytes = is_subsector ? SUBSECTOR_SIZE_BYTES : SECTOR_SIZE_BYTES;
   const uint32_t BUF_SIZE_BYTES = 128;
@@ -506,40 +447,10 @@ static bool prv_blank_check_poll(QSPIFlash *dev, uint32_t addr, bool is_subsecto
   }
   return true;
 }
-#else
-
-static bool prv_blank_check_mmap(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
-  const uint32_t size_bytes = is_subsector ? SUBSECTOR_SIZE_BYTES : SECTOR_SIZE_BYTES;
-  bool result = true;
-  uint8_t instruction;
-  uint8_t dummy_cycles;
-  bool is_ddr;
-  prv_get_fast_read_params(dev, &instruction, &dummy_cycles, &is_ddr);
-  qspi_mmap_start(dev->qspi, instruction, addr, dummy_cycles, size_bytes, is_ddr);
-
-  // Point the buffer at the QSPI region
-  uint32_t const volatile * const buffer = (uint32_t *)(QSPI_MMAP_BASE_ADDRESS + addr);
-  uint32_t size_words = size_bytes / sizeof(uint32_t);
-  for (uint32_t i = 0; i < size_words; ++i) {
-    if (buffer[i] != FLASH_RESET_WORD_VALUE) {
-      result = false;
-      break;
-    }
-  }
-
-  // stop memory mapped mode
-  qspi_mmap_stop(dev->qspi);
-  return result;
-}
-#endif
 
 status_t qspi_flash_blank_check(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
   prv_use(dev->qspi);
-#if 1
   const bool result = prv_blank_check_poll(dev, addr, is_subsector);
-#else
-  const bool result = prv_blank_check_mmap(dev, addr, is_subsector);
-#endif
   prv_release(dev->qspi);
   return result ? S_TRUE : S_FALSE;
 }
