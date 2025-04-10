@@ -14,7 +14,7 @@
 static QSPIFlashPart QSPI_FLASH_PART = {
   .instructions = {
     .fast_read = 0x0B,
-    .page_program = 0x02,
+    .pp = 0x02,
     .erase_sector_4k = 0x20,
     .erase_block_64k = 0xD8,
     .write_enable = 0x06,

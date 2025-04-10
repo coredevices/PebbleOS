@@ -33,7 +33,14 @@ typedef const struct QSPIFlashPart {
   struct {
     uint8_t fast_read;
     uint8_t fast_read_ddr;
-    uint8_t page_program;
+    uint8_t read2o;
+    uint8_t read2io;
+    uint8_t read4o;
+    uint8_t read4io;
+    uint8_t pp;
+    uint8_t pp2o;
+    uint8_t pp4o;
+    uint8_t pp4io;
     uint8_t erase_sector_4k;
     uint8_t erase_block_64k;
     uint8_t write_enable;

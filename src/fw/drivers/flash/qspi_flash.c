@@ -267,7 +267,7 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
 
   qspi_use(dev->qspi);
   prv_write_enable(dev);
-  qspi_indirect_write(dev->qspi, dev->state->part->instructions.page_program, addr, buffer,
+  qspi_indirect_write(dev->qspi, dev->state->part->instructions.pp, addr, buffer,
                       bytes_in_page);
   qspi_poll_bit(dev->qspi, dev->state->part->instructions.read_status,
                 dev->state->part->status_bit_masks.busy, false /* !set */, QSPI_NO_TIMEOUT);
