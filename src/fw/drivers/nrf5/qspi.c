@@ -1,14 +1,13 @@
 #include "drivers/qspi.h"
-#include "drivers/qspi_definitions.h"
-
-#include "drivers/flash/qspi_flash.h"
-#include "drivers/flash/qspi_flash_definitions.h"
 
 #include "board/board.h"
 #include "drivers/dma.h"
 #include "drivers/flash/flash_impl.h"
+#include "drivers/flash/qspi_flash.h"
+#include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/gpio.h"
 #include "drivers/periph_config.h"
+#include "drivers/qspi_definitions.h"
 #include "flash_region/flash_region.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"
@@ -20,34 +19,25 @@
 
 #define NRF5_COMPATIBLE
 #include <mcu.h>
+#include <nrfx_qspi.h>
 
 #include "FreeRTOS.h"
 #include "semphr.h"
 
-#include <nrfx_qspi.h>
-
 /* nRF5's QSPI controller is different enough from STM32's that we
  * reimplement qspi_flash.c, not stm32/qspi.c.  */
 
-static void prv_use(QSPIPort *dev) {
-  dev->state->use_count++;
-}
+static void prv_use(QSPIPort *dev) { dev->state->use_count++; }
 
-static void prv_release(QSPIPort *dev) {
-  PBL_ASSERTN(dev->state->use_count > 0);
-}
+static void prv_release(QSPIPort *dev) { PBL_ASSERTN(dev->state->use_count > 0); }
 
-status_t flash_impl_set_nvram_erase_status(bool is_subsector,
-                                           FlashAddress addr) {
+status_t flash_impl_set_nvram_erase_status(bool is_subsector, FlashAddress addr) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_clear_nvram_erase_status(void) {
-  return S_SUCCESS;
-}
+status_t flash_impl_clear_nvram_erase_status(void) { return S_SUCCESS; }
 
-status_t flash_impl_get_nvram_erase_status(bool *is_subsector,
-                                           FlashAddress *addr) {
+status_t flash_impl_get_nvram_erase_status(bool *is_subsector, FlashAddress *addr) {
   // XXX
   return S_FALSE;
 }
@@ -71,13 +61,12 @@ static void prv_write_cmd_no_addr(QSPIPort *dev, uint8_t cmd) {
 }
 
 static bool prv_poll_bit(QSPIPort *dev, uint8_t instruction, uint8_t bit_mask, bool should_be_set,
-                   uint32_t timeout_us) {
+                         uint32_t timeout_us) {
   uint32_t loops = 0;
   uint8_t val;
   while (1) {
     prv_read_register(dev, instruction, &val, 1);
-    if ((!!(val & bit_mask)) == should_be_set)
-      break;
+    if ((!!(val & bit_mask)) == should_be_set) break;
     if ((timeout_us != QSPI_NO_TIMEOUT) && (++loops > timeout_us)) {
       PBL_LOG(LOG_LEVEL_ERROR, "Timeout waiting for a bit!?!?");
       return false;
@@ -92,7 +81,7 @@ static void prv_write_enable(QSPIFlash *dev) {
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.write_enable);
   // wait for writing to be enabled
   prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
-                dev->state->part->status_bit_masks.write_enable, true /* set */, QSPI_NO_TIMEOUT);
+               dev->state->part->status_bit_masks.write_enable, true /* set */, QSPI_NO_TIMEOUT);
 }
 
 static bool prv_check_whoami(QSPIFlash *dev) {
@@ -106,7 +95,7 @@ static bool prv_check_whoami(QSPIFlash *dev) {
     PBL_LOG(LOG_LEVEL_INFO, "Flash is %s", dev->state->part->name);
     return true;
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Flash isn't expected %s (whoami: 0x%"PRIx32")",
+    PBL_LOG(LOG_LEVEL_ERROR, "Flash isn't expected %s (whoami: 0x%" PRIx32 ")",
             dev->state->part->name, read_whoami);
     return false;
   }
@@ -119,9 +108,7 @@ bool qspi_flash_check_whoami(QSPIFlash *dev) {
   return result;
 }
 
-bool qspi_flash_is_in_coredump_mode(QSPIFlash *dev) {
-  return dev->state->coredump_mode;
-}
+bool qspi_flash_is_in_coredump_mode(QSPIFlash *dev) { return dev->state->coredump_mode; }
 
 static void _flash_handler(nrfx_qspi_evt_t event, void *ctx) {
   QSPIFlash *dev = (QSPIFlash *)ctx;
@@ -141,13 +128,12 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   dev->state->coredump_mode = coredump_mode;
 
   // Init the DMA semaphore, used for I/O ops
-  if (!coredump_mode)
-    dev->qspi->state->dma_semaphore = xSemaphoreCreateBinary();
+  if (!coredump_mode) dev->qspi->state->dma_semaphore = xSemaphoreCreateBinary();
   dev->qspi->state->waiting = 0;
-  
+
   nrfx_qspi_config_t config = NRFX_QSPI_DEFAULT_CONFIG(
-    dev->qspi->clk_gpio, dev->qspi->cs_gpio, dev->qspi->data_gpio[0],
-    dev->qspi->data_gpio[1], dev->qspi->data_gpio[2], dev->qspi->data_gpio[3]);
+      dev->qspi->clk_gpio, dev->qspi->cs_gpio, dev->qspi->data_gpio[0], dev->qspi->data_gpio[1],
+      dev->qspi->data_gpio[2], dev->qspi->data_gpio[3]);
   config.phy_if.sck_freq = NRF_QSPI_FREQ_32MDIV1;
 
   switch (dev->read_mode) {
@@ -192,7 +178,7 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   err = nrfx_qspi_init(&config, coredump_mode ? NULL : _flash_handler, (void *)dev);
   PBL_ASSERTN(err == NRFX_SUCCESS);
   was_init = 1;
-  
+
   prv_use(dev->qspi);
 
   if (dev->reset_gpio.gpio) {
@@ -241,8 +227,9 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
   prv_write_enable(dev);
 
   dev->qspi->state->waiting = 1;
-  
-  nrfx_err_t err = nrfx_qspi_erase(is_subsector ? NRF_QSPI_ERASE_LEN_4KB : NRF_QSPI_ERASE_LEN_64KB, addr);
+
+  nrfx_err_t err =
+      nrfx_qspi_erase(is_subsector ? NRF_QSPI_ERASE_LEN_4KB : NRF_QSPI_ERASE_LEN_64KB, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   if (!dev->state->coredump_mode) {
@@ -254,9 +241,9 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
 
   // wait for busy to be set indicating the erase has started
   const uint32_t busy_timeout_us = 500;
-  const bool result = prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
-                                    dev->state->part->status_bit_masks.busy, true /* set */,
-                                    busy_timeout_us);
+  const bool result =
+      prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
+                   dev->state->part->status_bit_masks.busy, true /* set */, busy_timeout_us);
   prv_release(dev->qspi);
 
   return result ? S_SUCCESS : E_ERROR;
@@ -289,15 +276,16 @@ void qspi_flash_erase_resume(QSPIFlash *dev, uint32_t addr) {
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.erase_resume);
   // wait for the erase_suspend bit to be cleared
   prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr2,
-                dev->state->part->flag_status_bit_masks.erase_suspend, false /* !set */,
-                QSPI_NO_TIMEOUT);
+               dev->state->part->flag_status_bit_masks.erase_suspend, false /* !set */,
+               QSPI_NO_TIMEOUT);
   prv_release(dev->qspi);
 }
 
-static void prv_qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
+static void prv_qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer,
+                                         uint32_t length) {
   PBL_ASSERTN(!dev->qspi->state->waiting);
   dev->qspi->state->waiting = 1;
-  
+
   nrfx_err_t err = nrfx_qspi_read(buffer, length, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
@@ -313,7 +301,7 @@ static void prv_qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *bu
 void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
   prv_use(dev->qspi);
 
-  uint32_t buf_p = (uint32_t) buffer;
+  uint32_t buf_p = (uint32_t)buffer;
   if (buf_p & 3) {
     /* argh ... */
     uint32_t align_len = 4 - (buf_p & 3);
@@ -346,7 +334,7 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 }
 
 static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
-                                uint32_t length) {
+                                 uint32_t length) {
   PBL_ASSERTN(((uint32_t)buffer & 3) == 0);
   PBL_ASSERTN(((uint32_t)buffer & 0xF0000000) == 0x20000000);
   PBL_ASSERTN(length > 0);
@@ -356,7 +344,7 @@ static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t ad
   PBL_ASSERTN(!dev->qspi->state->waiting);
   dev->qspi->state->waiting = 1;
 
-  nrfx_err_t err = nrfx_qspi_write(buffer, length, addr); 
+  nrfx_err_t err = nrfx_qspi_write(buffer, length, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   if (!dev->state->coredump_mode) {
@@ -367,7 +355,7 @@ static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t ad
   }
 
   prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
-                dev->state->part->status_bit_masks.busy, false /* !set */, QSPI_NO_TIMEOUT);
+               dev->state->part->status_bit_masks.busy, false /* !set */, QSPI_NO_TIMEOUT);
 }
 
 static uint8_t s_qspi_ram_buffer[32];
@@ -375,12 +363,12 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
                                 uint32_t length) {
   const uint32_t offset_in_page = addr % PAGE_SIZE_BYTES;
   uint32_t bytes_in_page = MIN(PAGE_SIZE_BYTES - offset_in_page, length);
-  
-  if (((uintptr_t) buffer & 0xF0000000) != 0x20000000) {
+
+  if (((uintptr_t)buffer & 0xF0000000) != 0x20000000) {
     /* we cannot DMA from non-RAM, so bounce through a RAM buffer if we have
      * to; this is not performant but it is ok because any time we are
      * writing to QSPI flash from internal flash, it is during
-     * initialization and should be pretty infrequent 
+     * initialization and should be pretty infrequent
      */
     bytes_in_page = MIN(bytes_in_page, sizeof(s_qspi_ram_buffer));
     memcpy(s_qspi_ram_buffer, buffer, bytes_in_page);
@@ -389,14 +377,14 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
      * us again until qspi_flash_get_write_status completes
      */
   }
-  
+
   length = bytes_in_page;
-  
+
   prv_use(dev->qspi);
 
   prv_write_enable(dev);
 
-  uint32_t buf_p = (uint32_t) buffer;
+  uint32_t buf_p = (uint32_t)buffer;
   if (buf_p & 3) {
     /* argh ... */
     uint32_t align_len = 4 - (buf_p & 3);
@@ -411,8 +399,7 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
     addr += align_len;
     buffer = ((uint8_t *)buffer) + align_len;
 
-    while (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS)
-      delay_us(10);
+    while (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS) delay_us(10);
   }
 
   uint32_t tail_len = length & 3;
@@ -425,8 +412,7 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
 
   if (tail_len) {
     /* argh... */
-    while (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS)
-      delay_us(10);
+    while (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS) delay_us(10);
 
     uint32_t tbuf = 0xFFFFFFFF;
     memcpy(&tbuf, buffer, tail_len);
@@ -508,17 +494,11 @@ void qspi_flash_ll_set_register_bits(QSPIFlash *dev, uint8_t read_instruction,
   prv_release(dev->qspi);
 }
 
-status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
-  return S_NO_ACTION_REQUIRED;
-}
+status_t qspi_flash_write_protection_enable(QSPIFlash *dev) { return S_NO_ACTION_REQUIRED; }
 
-status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) {
-  return S_SUCCESS;
-}
+status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) { return S_SUCCESS; }
 
-status_t qspi_flash_unlock_all(QSPIFlash *dev) {
-  return S_SUCCESS;
-}
+status_t qspi_flash_unlock_all(QSPIFlash *dev) { return S_SUCCESS; }
 
 #if !RELEASE
 #include "console/prompt.h"
@@ -537,9 +517,7 @@ static bool prv_flash_read_verify(QSPIFlash *dev, int size, int offset) {
 
   const int buf_size = 64;
   char buf[buf_size];
-  prompt_send_response_fmt(buf, buf_size, "Size: %d UNIMPL: MMP: %"PRIu32,
-                           size, mmap_time);
-
+  prompt_send_response_fmt(buf, buf_size, "Size: %d UNIMPL: MMP: %" PRIu32, size, mmap_time);
 
   return success;
 }
@@ -550,20 +528,11 @@ struct FlashReadTestValues {
 };
 
 const struct FlashReadTestValues FLASH_READ_TEST_TABLE[] = {
-  { .size = 1024, .offset = 0 },
-  { .size = 1025, .offset = 0 },
-  { .size = 1026, .offset = 0 },
-  { .size = 1027, .offset = 0 },
-  { .size = 1024, .offset = 1 },
-  { .size = 1025, .offset = 2 },
-  { .size = 1026, .offset = 3 },
-  { .size = 4,    .offset = 0 },
-  { .size = 20,   .offset = 0 },
-  { .size = 60,   .offset = 0 },
-  { .size = 127,  .offset = 0 },
-  { .size = 128,  .offset = 0 },
+    {.size = 1024, .offset = 0}, {.size = 1025, .offset = 0}, {.size = 1026, .offset = 0},
+    {.size = 1027, .offset = 0}, {.size = 1024, .offset = 1}, {.size = 1025, .offset = 2},
+    {.size = 1026, .offset = 3}, {.size = 4, .offset = 0},    {.size = 20, .offset = 0},
+    {.size = 60, .offset = 0},   {.size = 127, .offset = 0},  {.size = 128, .offset = 0},
 };
-
 
 void command_flash_apicheck(const char *len_str) {
   QSPIFlash *dev = QSPI_FLASH;
@@ -640,14 +609,14 @@ void command_flash_apicheck(const char *len_str) {
   }
   profiler_stop();
   uint32_t duration = profiler_get_total_duration(true);
-  prompt_send_response_fmt(buf, buf_size, "Erase took: %"PRIu32, duration);
+  prompt_send_response_fmt(buf, buf_size, "Erase took: %" PRIu32, duration);
 
   // Fash erases take at least ~100ms, if we're too short we probably didn't erase
   const uint32_t min_erase_time = 10000;
   if (result != S_SUCCESS) {
     ++failures;
-     prompt_send_response_fmt(buf, buf_size,
-                              "FAILURE: erase did not report success %"PRIi32, result);
+    prompt_send_response_fmt(buf, buf_size, "FAILURE: erase did not report success %" PRIi32,
+                             result);
   } else if (was_busy == false) {
     ++failures;
     prompt_send_response("FAILURE: Flash never became busy, but we should be busy for 300ms.");
@@ -662,13 +631,13 @@ void command_flash_apicheck(const char *len_str) {
   // must call blank_check_poll by hand, otherwise we'll get the dma version
   profiler_start();
   prv_use(dev->qspi);
-  bool is_blank = qspi_flash_blank_check(QSPI_FLASH, FLASH_REGION_FIRMWARE_SCRATCH_BEGIN,
-                                       SUBSECTOR_SIZE_BYTES);
+  bool is_blank =
+      qspi_flash_blank_check(QSPI_FLASH, FLASH_REGION_FIRMWARE_SCRATCH_BEGIN, SUBSECTOR_SIZE_BYTES);
   prv_release(dev->qspi);
   profiler_stop();
 
   uint32_t blank = profiler_get_total_duration(true);
-  prompt_send_response_fmt(buf, buf_size, "Sector blank check via read took: %"PRIu32, blank);
+  prompt_send_response_fmt(buf, buf_size, "Sector blank check via read took: %" PRIu32, blank);
   if (is_blank != S_TRUE) {
     ++failures;
     prompt_send_response("FAILURE: sector not blank!?!");
@@ -681,8 +650,7 @@ void command_flash_apicheck(const char *len_str) {
   profiler_stop();
 
   blank = profiler_get_total_duration(true);
-  prompt_send_response_fmt(buf, buf_size, "Subsector blank check via read took: %"PRIu32,
-                           blank);
+  prompt_send_response_fmt(buf, buf_size, "Subsector blank check via read took: %" PRIu32, blank);
   if (is_blank != S_TRUE) {
     ++failures;
     prompt_send_response("FAILURE: sector not blank!?!");
@@ -692,10 +660,8 @@ void command_flash_apicheck(const char *len_str) {
 
   if (failures == 0) {
     prompt_send_response_fmt(buf, buf_size, "SUCCESS: run %d tests and all passeed", passes);
-  }
-  else {
-    prompt_send_response_fmt(buf, buf_size, "FAILED: run %d tests and %d failed",
-                             passes + failures,
+  } else {
+    prompt_send_response_fmt(buf, buf_size, "FAILED: run %d tests and %d failed", passes + failures,
                              failures);
   }
 }
