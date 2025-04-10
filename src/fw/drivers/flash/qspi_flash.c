@@ -95,12 +95,8 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   qspi_use(dev->qspi);
 
   if (dev->reset_gpio.gpio) {
-#if MICRO_FAMILY_NRF5
-    WTF;
-#else
     gpio_output_init(&dev->reset_gpio, GPIO_OType_PP, GPIO_Speed_2MHz);
     gpio_output_set(&dev->reset_gpio, false);
-#endif
   }
 
   // Must call quad_enable first, all commands are QSPI
