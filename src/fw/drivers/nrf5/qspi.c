@@ -91,7 +91,7 @@ static bool prv_poll_bit(QSPIPort *dev, uint8_t instruction, uint8_t bit_mask, b
 static void prv_write_enable(QSPIFlash *dev) {
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.write_enable);
   // wait for writing to be enabled
-  prv_poll_bit(dev->qspi, dev->state->part->instructions.read_status,
+  prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
                 dev->state->part->status_bit_masks.write_enable, true /* set */, QSPI_NO_TIMEOUT);
 }
 
@@ -222,8 +222,8 @@ status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
 
   uint8_t status_reg;
   uint8_t flag_status_reg;
-  prv_read_register(dev->qspi, dev->state->part->instructions.read_status, &status_reg, 1);
-  prv_read_register(dev->qspi, dev->state->part->instructions.read_flag_status, &flag_status_reg, 1);
+  prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &status_reg, 1);
+  prv_read_register(dev->qspi, dev->state->part->instructions.rdsr2, &flag_status_reg, 1);
 
   prv_release(dev->qspi);
 
@@ -254,7 +254,7 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
 
   // wait for busy to be set indicating the erase has started
   const uint32_t busy_timeout_us = 500;
-  const bool result = prv_poll_bit(dev->qspi, dev->state->part->instructions.read_status,
+  const bool result = prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
                                     dev->state->part->status_bit_masks.busy, true /* set */,
                                     busy_timeout_us);
   prv_release(dev->qspi);
@@ -266,7 +266,7 @@ status_t qspi_flash_erase_suspend(QSPIFlash *dev, uint32_t addr) {
   prv_use(dev->qspi);
 
   uint8_t status_reg;
-  prv_read_register(dev->qspi, dev->state->part->instructions.read_status, &status_reg, 1);
+  prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &status_reg, 1);
   if (!(status_reg & dev->state->part->status_bit_masks.busy)) {
     // no erase in progress
     prv_release(dev->qspi);
@@ -288,7 +288,7 @@ void qspi_flash_erase_resume(QSPIFlash *dev, uint32_t addr) {
   prv_use(dev->qspi);
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.erase_resume);
   // wait for the erase_suspend bit to be cleared
-  prv_poll_bit(dev->qspi, dev->state->part->instructions.read_flag_status,
+  prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr2,
                 dev->state->part->flag_status_bit_masks.erase_suspend, false /* !set */,
                 QSPI_NO_TIMEOUT);
   prv_release(dev->qspi);
@@ -366,7 +366,7 @@ static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t ad
     dev->qspi->state->waiting = 0;
   }
 
-  prv_poll_bit(dev->qspi, dev->state->part->instructions.read_status,
+  prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
                 dev->state->part->status_bit_masks.busy, false /* !set */, QSPI_NO_TIMEOUT);
 }
 
@@ -441,7 +441,7 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
 status_t qspi_flash_get_write_status(QSPIFlash *dev) {
   prv_use(dev->qspi);
   uint8_t status_reg;
-  prv_read_register(dev->qspi, dev->state->part->instructions.read_status, &status_reg, 1);
+  prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &status_reg, 1);
   prv_release(dev->qspi);
   return (status_reg & dev->state->part->status_bit_masks.busy) ? E_BUSY : S_SUCCESS;
 }
