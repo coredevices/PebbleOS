@@ -649,7 +649,7 @@ elif bld.is_asterix():
             'flash/flash_crc.c',
             'flash/flash_erase.c',
             'flash/cd_flash_driver.c',
-            'flash/xt25f64b.c',
+            'flash/gd25lq255e.c',
         ],
         use=[
             'driver_qspi',
