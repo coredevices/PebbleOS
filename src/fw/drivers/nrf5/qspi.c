@@ -27,6 +27,8 @@
 /* nRF5's QSPI controller is different enough from STM32's that we
  * reimplement qspi_flash.c, not stm32/qspi.c.  */
 
+#define FLASH_RESET_WORD_VALUE (0xffffffff)
+
 static void prv_use(QSPIPort *dev) { dev->state->use_count++; }
 
 static void prv_release(QSPIPort *dev) { PBL_ASSERTN(dev->state->use_count > 0); }
@@ -42,20 +44,28 @@ status_t flash_impl_get_nvram_erase_status(bool *is_subsector, FlashAddress *add
   return S_FALSE;
 }
 
-#define FLASH_RESET_WORD_VALUE (0xffffffff)
-
 static void prv_read_register(QSPIPort *dev, uint8_t instruction, uint8_t *data, uint32_t length) {
   nrf_qspi_cinstr_conf_t instr = NRFX_QSPI_DEFAULT_CINSTR(instruction, length + 1);
-  instr.io2_level = 1;
-  instr.io3_level = 1;
+  instr.io2_level = true;
+  instr.io3_level = true;
   nrfx_err_t err = nrfx_qspi_cinstr_xfer(&instr, NULL, data);
+  PBL_ASSERTN(err == NRFX_SUCCESS);
+}
+
+static void prv_write_register(QSPIPort *dev, uint8_t instruction, const uint8_t *data,
+                               uint32_t length) {
+  nrf_qspi_cinstr_conf_t instr = NRFX_QSPI_DEFAULT_CINSTR(instruction, length + 1);
+  instr.io2_level = true;
+  instr.io3_level = true;
+  instr.wren = true;
+  nrfx_err_t err = nrfx_qspi_cinstr_xfer(&instr, data, NULL);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 }
 
 static void prv_write_cmd_no_addr(QSPIPort *dev, uint8_t cmd) {
   nrf_qspi_cinstr_conf_t instr = NRFX_QSPI_DEFAULT_CINSTR(cmd, 1);
-  instr.io2_level = 1;
-  instr.io3_level = 1;
+  instr.io2_level = true;
+  instr.io3_level = true;
   nrfx_err_t err = nrfx_qspi_cinstr_xfer(&instr, NULL, NULL);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 }
@@ -118,6 +128,48 @@ static void _flash_handler(nrfx_qspi_evt_t event, void *ctx) {
     BaseType_t woken = pdFALSE;
     xSemaphoreGiveFromISR(dev->qspi->state->dma_semaphore, &woken);
     portYIELD_FROM_ISR(woken);
+  }
+}
+
+static void prv_configure_qe(QSPIFlash *dev) {
+  uint8_t sr[2];
+
+  // Check first if read/write mode requires QE to be set
+  if (!(dev->read_mode == QSPI_FLASH_READ_READ2IO || dev->read_mode == QSPI_FLASH_READ_READ4O ||
+        dev->read_mode == QSPI_FLASH_READ_READ4IO || dev->write_mode == QSPI_FLASH_WRITE_PP4O ||
+        dev->write_mode == QSPI_FLASH_WRITE_PP4IO)) {
+    return;
+  }
+
+  // Check if QE is needed
+  if (dev->state->part->qer_type == JESD216_DW15_QER_NONE) {
+    return;
+  }
+
+  // Enable QE bit
+  switch (dev->state->part->qer_type) {
+    case JESD216_DW15_QER_S1B6:
+      prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, sr, 1);
+      sr[0] |= (1 << 6);
+      prv_write_register(dev->qspi, dev->state->part->instructions.wrsr, sr, 1);
+      break;
+    case JESD216_DW15_QER_S2B1v1:
+    case JESD216_DW15_QER_S2B1v4:
+    case JESD216_DW15_QER_S2B1v5:
+      // Writing SR2 requires writing SR1 as well
+      prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &sr[0], 1);
+      prv_read_register(dev->qspi, dev->state->part->instructions.rdsr2, &sr[1], 1);
+      sr[1] |= (1 << 1);
+      prv_write_register(dev->qspi, dev->state->part->instructions.wrsr, sr, 2);
+      break;
+    case JESD216_DW15_QER_S2B1v6:
+      // We can write SR2 without writing SR1
+      prv_read_register(dev->qspi, dev->state->part->instructions.rdsr2, sr, 1);
+      sr[0] |= (1 << 1);
+      prv_write_register(dev->qspi, dev->state->part->instructions.wrsr2, sr, 1);
+      break;
+    default:
+      PBL_ASSERT(false, "Unsupported QER type %d", dev->state->part->qer_type);
   }
 }
 
@@ -199,6 +251,8 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   if (!coredump_mode) {
     prv_check_whoami(dev);
   }
+
+  prv_configure_qe(dev);
 
   prv_release(dev->qspi);
 }
