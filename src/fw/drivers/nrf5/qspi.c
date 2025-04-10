@@ -149,8 +149,40 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
     dev->qspi->clk_gpio, dev->qspi->cs_gpio, dev->qspi->data_gpio[0],
     dev->qspi->data_gpio[1], dev->qspi->data_gpio[2], dev->qspi->data_gpio[3]);
   config.phy_if.sck_freq = NRF_QSPI_FREQ_32MDIV1;
-  config.prot_if.readoc = NRF_QSPI_READOC_FASTREAD; /* XXX: later: use QSPI mode */
-  config.prot_if.writeoc = NRF_QSPI_WRITEOC_PP;
+
+  switch (dev->read_mode) {
+    case QSPI_FLASH_READ_READ2O:
+      config.prot_if.readoc = NRF_QSPI_READOC_READ2O;
+      break;
+    case QSPI_FLASH_READ_READ2IO:
+      config.prot_if.readoc = NRF_QSPI_READOC_READ2IO;
+      break;
+    case QSPI_FLASH_READ_READ4O:
+      config.prot_if.readoc = NRF_QSPI_READOC_READ4O;
+      break;
+    case QSPI_FLASH_READ_READ4IO:
+      config.prot_if.readoc = NRF_QSPI_READOC_READ4IO;
+      break;
+    default:
+      config.prot_if.readoc = NRF_QSPI_READOC_FASTREAD;
+      break;
+  }
+
+  switch (dev->write_mode) {
+    case QSPI_FLASH_WRITE_PP2O:
+      config.prot_if.writeoc = NRF_QSPI_WRITEOC_PP2O;
+      break;
+    case QSPI_FLASH_WRITE_PP4O:
+      config.prot_if.writeoc = NRF_QSPI_WRITEOC_PP4O;
+      break;
+    case QSPI_FLASH_WRITE_PP4IO:
+      config.prot_if.writeoc = NRF_QSPI_WRITEOC_PP4IO;
+      break;
+    default:
+      config.prot_if.writeoc = NRF_QSPI_WRITEOC_PP;
+      break;
+  }
+
   config.prot_if.addrmode = NRF_QSPI_ADDRMODE_24BIT;
 
   nrfx_err_t err;
