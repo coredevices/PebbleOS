@@ -28,6 +28,7 @@ static QSPIFlashPart QSPI_FLASH_PART = {
     .write_disable = 0x04,
     .rdsr1 = 0x05,
     .rdsr2 = 0x35,
+    .wrsr = 0x01,
     .erase_suspend = 0x75,
     .erase_resume = 0x7A,
     .enter_low_power = 0xB9,
