@@ -36,8 +36,8 @@ static QSPIPort QSPI_PORT = {
   .data_gpio = {
     NRF_GPIO_PIN_MAP(0, 20),
     NRF_GPIO_PIN_MAP(0, 21),
-    NRF_QSPI_PIN_NOT_CONNECTED,
-    NRF_QSPI_PIN_NOT_CONNECTED,
+    NRF_GPIO_PIN_MAP(0, 22),
+    NRF_GPIO_PIN_MAP(0, 23),
   },
 };
 QSPIPort * const QSPI = &QSPI_PORT;
