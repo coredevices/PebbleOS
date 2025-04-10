@@ -29,55 +29,60 @@
 #include <mcu.h>
 
 static QSPIFlashPart QSPI_FLASH_PART = {
-  .instructions = {
-    .fast_read = 0x0B,
-    .pp = 0x02,
-    .erase_sector_4k = 0x20,
-    .erase_block_64k = 0xD8,
-    .write_enable = 0x06,
-    .write_disable = 0x04,
-    .rdsr1 = 0x05,
-    .rdsr2 = 0x2B,
-    .erase_suspend = 0xB0,
-    .erase_resume = 0x30,
-    .enter_low_power = 0xB9,
-    .exit_low_power = 0xAB,
-    .enter_quad_mode = 0x35,
-    .reset_enable = 0x66,
-    .reset = 0x99,
-    .qspi_id = 0xAF,
+    .instructions =
+        {
+            .fast_read = 0x0B,
+            .pp = 0x02,
+            .erase_sector_4k = 0x20,
+            .erase_block_64k = 0xD8,
+            .write_enable = 0x06,
+            .write_disable = 0x04,
+            .rdsr1 = 0x05,
+            .rdsr2 = 0x2B,
+            .erase_suspend = 0xB0,
+            .erase_resume = 0x30,
+            .enter_low_power = 0xB9,
+            .exit_low_power = 0xAB,
+            .enter_quad_mode = 0x35,
+            .reset_enable = 0x66,
+            .reset = 0x99,
+            .qspi_id = 0xAF,
 
-    .block_lock = 0x36,
-    .block_lock_status = 0x3C,
-    .block_unlock_all = 0x98,
+            .block_lock = 0x36,
+            .block_lock_status = 0x3C,
+            .block_unlock_all = 0x98,
 
-    .write_protection_enable = 0x68,
-    .read_protection_status = 0x2B,
-  },
-  .status_bit_masks = {
-    .busy = 1 << 0,
-    .write_enable = 1 << 1,
-  },
-  .flag_status_bit_masks = {
-    .erase_suspend = 1 << 3,
-  },
-  .dummy_cycles = {
-    .fast_read = 4,
-  },
-  .block_lock = {
-    .has_lock_data = false,
-    .locked_check = 0xff,
+            .write_protection_enable = 0x68,
+            .read_protection_status = 0x2B,
+        },
+    .status_bit_masks =
+        {
+            .busy = 1 << 0,
+            .write_enable = 1 << 1,
+        },
+    .flag_status_bit_masks =
+        {
+            .erase_suspend = 1 << 3,
+        },
+    .dummy_cycles =
+        {
+            .fast_read = 4,
+        },
+    .block_lock =
+        {
+            .has_lock_data = false,
+            .locked_check = 0xff,
 
-    .protection_enabled_mask = (1 << 7),
-  },
-  .reset_latency_ms = 13,
-  .suspend_to_read_latency_us = 20,
-  .standby_to_low_power_latency_us = 10,
-  .low_power_to_standby_latency_us = 30,
-  .supports_fast_read_ddr = false,
-  .supports_block_lock = true,
-  .qspi_id_value = 0x3725c2,
-  .name = "MX25U64",
+            .protection_enabled_mask = (1 << 7),
+        },
+    .reset_latency_ms = 13,
+    .suspend_to_read_latency_us = 20,
+    .standby_to_low_power_latency_us = 10,
+    .low_power_to_standby_latency_us = 30,
+    .supports_fast_read_ddr = false,
+    .supports_block_lock = true,
+    .qspi_id_value = 0x3725c2,
+    .name = "MX25U64",
 };
 
 //! Any PRF built after this timestamp supports mx25u flash protection
@@ -86,9 +91,7 @@ static QSPIFlashPart QSPI_FLASH_PART = {
 //! True if the installed PRF version supports flash protection
 static bool s_flash_protection_supported = false;
 
-bool flash_check_whoami(void) {
-  return qspi_flash_check_whoami(QSPI_FLASH);
-}
+bool flash_check_whoami(void) { return qspi_flash_check_whoami(QSPI_FLASH); }
 
 FlashAddress flash_impl_get_sector_base_address(FlashAddress addr) {
   return (addr & SECTOR_ADDR_MASK);
@@ -125,7 +128,7 @@ void flash_impl_enable_write_protection(void) {
 
 status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
   if (!s_flash_protection_supported) {
-    return S_SUCCESS; // If not supported, pretend protection succeeded.
+    return S_SUCCESS;  // If not supported, pretend protection succeeded.
   }
 
   FlashAddress block_addr = start_sector;
@@ -150,9 +153,7 @@ status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_se
   return S_SUCCESS;
 }
 
-status_t flash_impl_unprotect(void) {
-  return qspi_flash_unlock_all(QSPI_FLASH);
-}
+status_t flash_impl_unprotect(void) { return qspi_flash_unlock_all(QSPI_FLASH); }
 
 status_t flash_impl_init(bool coredump_mode) {
   qspi_flash_init(QSPI_FLASH, &QSPI_FLASH_PART, coredump_mode);
@@ -160,9 +161,7 @@ status_t flash_impl_init(bool coredump_mode) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_get_erase_status(void) {
-  return qspi_flash_is_erase_complete(QSPI_FLASH);
-}
+status_t flash_impl_get_erase_status(void) { return qspi_flash_is_erase_complete(QSPI_FLASH); }
 
 status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
   return qspi_flash_erase_begin(QSPI_FLASH, subsector_addr, true /* is_subsector */);
@@ -190,9 +189,7 @@ int flash_impl_write_page_begin(const void *buffer, const FlashAddress start_add
   return qspi_flash_write_page_begin(QSPI_FLASH, buffer, start_addr, len);
 }
 
-status_t flash_impl_get_write_status(void) {
-  return qspi_flash_get_write_status(QSPI_FLASH);
-}
+status_t flash_impl_get_write_status(void) { return qspi_flash_get_write_status(QSPI_FLASH); }
 
 status_t flash_impl_enter_low_power_mode(void) {
   qspi_flash_set_lower_power_mode(QSPI_FLASH, true);
@@ -215,10 +212,6 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr) {
   return qspi_flash_blank_check(QSPI_FLASH, addr, true /* is_subsector */);
 }
 
-uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) {
-  return 400;
-}
+uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) { return 400; }
 
-uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) {
-  return 40;
-}
+uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) { return 40; }

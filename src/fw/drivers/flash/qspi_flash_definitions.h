@@ -16,12 +16,11 @@
 
 #pragma once
 
-#include "qspi_flash_part_definitions.h"
+#include <stdint.h>
 
 #include "board/board.h"
 #include "drivers/qspi.h"
-
-#include <stdint.h>
+#include "qspi_flash_part_definitions.h"
 
 typedef struct QSPIFlashState {
   QSPIFlashPart *part;

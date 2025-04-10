@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-#include "drivers/flash/flash_impl.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "drivers/flash/flash_impl.h"
 #include "drivers/gpio.h"
 #include "drivers/periph_config.h"
 #include "flash_region/flash_region.h"
-#include "system/passert.h"
-#include "system/logging.h"
 #include "kernel/util/delay.h"
+#include "system/logging.h"
+#include "system/passert.h"
 #include "util/math.h"
 #include "util/size.h"
 #include "util/units.h"
@@ -37,7 +36,6 @@ static const uintptr_t FMC_BANK_1_BASE_ADDRESS = 0x60000000;
 
 //! This is the unit that we use for writing
 static const uint32_t PAGE_SIZE_BYTES = 64;
-
 
 //! Different commands we can send to the flash
 typedef enum S29VSCommand {
@@ -75,12 +73,10 @@ typedef enum S29VSStatusBit {
 } S29VSStatusBit;
 static const uint16_t SPANSION_MANUFACTURER_ID = 0x01;
 static const uint16_t MACRONIX_MANUFACTURER_ID = 0xc2;
-static const GPIO_InitTypeDef s_default_at_flash_cfg = {
-  .GPIO_Mode = GPIO_Mode_AF,
-  .GPIO_Speed = GPIO_Speed_100MHz,
-  .GPIO_OType = GPIO_OType_PP,
-  .GPIO_PuPd  = GPIO_PuPd_NOPULL
-};
+static const GPIO_InitTypeDef s_default_at_flash_cfg = {.GPIO_Mode = GPIO_Mode_AF,
+                                                        .GPIO_Speed = GPIO_Speed_100MHz,
+                                                        .GPIO_OType = GPIO_OType_PP,
+                                                        .GPIO_PuPd = GPIO_PuPd_NOPULL};
 
 static void prv_issue_command_argument(FlashAddress sector_address, uint16_t cmd_arg);
 static void prv_issue_command(FlashAddress sector_address, S29VSCommand cmd);
@@ -101,11 +97,8 @@ static void prv_flash_idle_gpios(bool enable_gpios) {
   if (enable_gpios) {
     gpio_init = s_default_at_flash_cfg;
   } else {
-    gpio_init = (GPIO_InitTypeDef) {
-      .GPIO_Mode = GPIO_Mode_AN,
-      .GPIO_Speed = GPIO_Speed_2MHz,
-      .GPIO_PuPd  = GPIO_PuPd_NOPULL
-    };
+    gpio_init = (GPIO_InitTypeDef){
+        .GPIO_Mode = GPIO_Mode_AN, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_PuPd = GPIO_PuPd_NOPULL};
   }
 
   // leave RESET_N and CE: they need to retain their state
@@ -130,7 +123,7 @@ static uint32_t s_num_flash_uses = 0;
 
 void flash_impl_use(void) {
   if (s_num_flash_uses == 0) {
-    periph_config_enable(FMC_Bank1, RCC_AHB3Periph_FMC); // FIXME
+    periph_config_enable(FMC_Bank1, RCC_AHB3Periph_FMC);  // FIXME
     prv_flash_idle_gpios(true);
   }
   s_num_flash_uses++;
@@ -140,16 +133,14 @@ void flash_impl_release_many(uint32_t num_locks) {
   PBL_ASSERTN(s_num_flash_uses >= num_locks);
   s_num_flash_uses -= num_locks;
   if (s_num_flash_uses == 0) {
-    periph_config_disable(FMC_Bank1, RCC_AHB3Periph_FMC); // FIXME
+    periph_config_disable(FMC_Bank1, RCC_AHB3Periph_FMC);  // FIXME
   }
 }
 
-void flash_impl_release(void) {
-  flash_impl_release_many(1);
-}
+void flash_impl_release(void) { flash_impl_release_many(1); }
 
 static uint16_t flash_s29vs_read_short(FlashAddress addr) {
-  return *((__IO uint16_t*)(FMC_BANK_1_BASE_ADDRESS + addr));
+  return *((__IO uint16_t *)(FMC_BANK_1_BASE_ADDRESS + addr));
 }
 
 FlashAddress flash_impl_get_sector_base_address(FlashAddress addr) {
@@ -172,8 +163,8 @@ static uint8_t prv_read_status_register(FlashAddress sector_base_addr) {
 static uint8_t prv_poll_for_ready(FlashAddress sector_base_addr) {
   // TODO: We should probably just assert if this takes too long
   uint8_t status;
-  while (((status = prv_read_status_register(sector_base_addr)) &
-         S29VSStatusBit_DeviceReady) == 0) {
+  while (((status = prv_read_status_register(sector_base_addr)) & S29VSStatusBit_DeviceReady) ==
+         0) {
     delay_us(10);
   }
 
@@ -190,7 +181,7 @@ static void prv_issue_command_argument(FlashAddress sector_address, uint16_t cmd
   // word aligned address as opposed to a byte address.
   static const uint32_t COMMAND_ARGUMENT_ADDRESS = 0x2AA;
 
-  ((__IO uint16_t*) (FMC_BANK_1_BASE_ADDRESS + sector_address))[COMMAND_ARGUMENT_ADDRESS] = cmd_arg;
+  ((__IO uint16_t *)(FMC_BANK_1_BASE_ADDRESS + sector_address))[COMMAND_ARGUMENT_ADDRESS] = cmd_arg;
 }
 
 //! @param sector_address The address of the start of the sector to write the command to.
@@ -200,12 +191,10 @@ static void prv_issue_command(FlashAddress sector_address, S29VSCommand cmd) {
   // word aligned address as opposed to a byte address.
   static const uint32_t COMMAND_ADDRESS = 0x555;
 
-  ((__IO uint16_t*) (FMC_BANK_1_BASE_ADDRESS + sector_address))[COMMAND_ADDRESS] = cmd;
+  ((__IO uint16_t *)(FMC_BANK_1_BASE_ADDRESS + sector_address))[COMMAND_ADDRESS] = cmd;
 }
 
-static void prv_software_reset(void) {
-  prv_issue_command(0, S29VSCommand_SoftwareReset);
-}
+static void prv_software_reset(void) { prv_issue_command(0, S29VSCommand_SoftwareReset); }
 
 // Note: If this command has been executed at least once, all sectors are
 // locked. They then must be unlocked before and relocked after each program
@@ -213,18 +202,19 @@ static void prv_software_reset(void) {
 // unlocked at any given time. For sector ranges which have been protected using
 // the "Sector Lock Range Command", this function will have no effect.
 static void prv_allow_write_if_sector_is_not_protected(bool lock, uint32_t sector_addr) {
-    prv_issue_command(0, S29VSCommand_SectorLock);
-    prv_issue_command_argument(0, S29VSCommand_SectorLock);
+  prv_issue_command(0, S29VSCommand_SectorLock);
+  prv_issue_command_argument(0, S29VSCommand_SectorLock);
 
-    int lock_flag = (lock ? 0 : 1) << 7; // set A6 to 0 to lock and 1 to unlock
-    ((__IO uint16_t*) (FMC_BANK_1_BASE_ADDRESS + sector_addr + lock_flag))[0] =
-        S29VSCommand_SectorLock;
+  int lock_flag = (lock ? 0 : 1) << 7;  // set A6 to 0 to lock and 1 to unlock
+  ((__IO uint16_t *)(FMC_BANK_1_BASE_ADDRESS + sector_addr + lock_flag))[0] =
+      S29VSCommand_SectorLock;
 }
 
 static uint16_t prv_read_manufacturer_id(void) {
-  // Issue the DeviceIDEntry command to change to the ID-CFI Address Map. This means that reading from the bank will
-  // give us ID-CFI information instead of the normal flash contents. See Table 11.2 (ID/CFI Data) for all the
-  // content you can read here. Reset the state afterwards to return to the default address map.
+  // Issue the DeviceIDEntry command to change to the ID-CFI Address Map. This means that reading
+  // from the bank will give us ID-CFI information instead of the normal flash contents. See
+  // Table 11.2 (ID/CFI Data) for all the content you can read here. Reset the state afterwards to
+  // return to the default address map.
 
   flash_impl_use();
   prv_issue_command(0, S29VSCommand_DeviceIDEntry);
@@ -251,7 +241,7 @@ static void prv_write_configuration_register(uint16_t data) {
   // Cycle 4: SA+ Address 555h & Data 29h
   prv_issue_command(0, S29VSCommand_WriteBufferLoad);
   prv_issue_command_argument(0, 0);
-  ((__IO uint16_t*) (FMC_BANK_1_BASE_ADDRESS))[0] = data;
+  ((__IO uint16_t *)(FMC_BANK_1_BASE_ADDRESS))[0] = data;
   prv_issue_command(0, S29VSCommand_BufferToFlash);
 
   prv_software_reset();
@@ -271,23 +261,19 @@ static void prv_flash_protect_range(uint32_t start_sector, uint32_t end_sector) 
   start_sector = flash_impl_get_sector_base_address(start_sector);
   end_sector = flash_impl_get_sector_base_address(end_sector);
 
-  ((__IO uint16_t*) (FMC_BANK_1_BASE_ADDRESS + start_sector))[0] =
-      S29VSCommand_SectorLockRangeArg;
-  ((__IO uint16_t*) (FMC_BANK_1_BASE_ADDRESS + end_sector))[0] =
-      S29VSCommand_SectorLockRangeArg;
+  ((__IO uint16_t *)(FMC_BANK_1_BASE_ADDRESS + start_sector))[0] = S29VSCommand_SectorLockRangeArg;
+  ((__IO uint16_t *)(FMC_BANK_1_BASE_ADDRESS + end_sector))[0] = S29VSCommand_SectorLockRangeArg;
 
   flash_impl_release();
 }
 
 void flash_s29vs_hw_init(void) {
   // Configure the reset pin (D2)
-  GPIO_InitTypeDef gpio_init = {
-  .GPIO_Pin = GPIO_Pin_2,
-  .GPIO_Mode = GPIO_Mode_OUT,
-  .GPIO_Speed = GPIO_Speed_100MHz,
-  .GPIO_OType = GPIO_OType_PP,
-  .GPIO_PuPd = GPIO_PuPd_NOPULL
-  };
+  GPIO_InitTypeDef gpio_init = {.GPIO_Pin = GPIO_Pin_2,
+                                .GPIO_Mode = GPIO_Mode_OUT,
+                                .GPIO_Speed = GPIO_Speed_100MHz,
+                                .GPIO_OType = GPIO_OType_PP,
+                                .GPIO_PuPd = GPIO_PuPd_NOPULL};
   GPIO_Init(GPIOD, &gpio_init);
 
   GPIO_WriteBit(GPIOD, GPIO_Pin_2, Bit_SET);
@@ -326,9 +312,9 @@ void flash_s29vs_hw_init(void) {
   // We have configured the pins, lets perform a full HW reset to put the chip
   // in a good state
   GPIO_WriteBit(GPIOD, GPIO_Pin_2, Bit_RESET);
-  delay_us(10); // only needs to be 50ns according to data sheet
+  delay_us(10);  // only needs to be 50ns according to data sheet
   GPIO_WriteBit(GPIOD, GPIO_Pin_2, Bit_SET);
-  delay_us(30); // need 200ns + 10us before CE can be pulled low
+  delay_us(30);  // need 200ns + 10us before CE can be pulled low
 
   flash_impl_set_burst_mode(false);
 }
@@ -348,13 +334,11 @@ static void prv_flash_reset(void) {
   gpio_release(GPIOB);
 }
 
-void flash_impl_enable_write_protection(void) {
-}
+void flash_impl_enable_write_protection(void) {}
 
 // Protects start_sector - end_sector, inclusive, from any kind of program
 // operation
-status_t flash_impl_write_protect(FlashAddress start_sector,
-                                  FlashAddress end_sector) {
+status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
   prv_flash_reset();
   prv_flash_protect_range(start_sector, end_sector);
   return S_SUCCESS;
@@ -421,15 +405,14 @@ status_t flash_impl_erase_sector_begin(FlashAddress sector_addr) {
   prv_allow_write_if_sector_is_not_protected(false, sector_addr);
 
   prv_issue_command(sector_addr, S29VSCommand_EraseSetup);
-  prv_issue_command_argument(sector_addr,
-                             S29VSCommandEraseAguments_SectorErase);
+  prv_issue_command_argument(sector_addr, S29VSCommandEraseAguments_SectorErase);
   prv_allow_write_if_sector_is_not_protected(true, sector_addr);
 
   // Check the status register to make sure that the erase has started.
   const uint8_t sr = prv_read_status_register(sector_addr);
   if ((sr & S29VSStatusBit_DeviceReady) == 0) {
     // Program or erase operation in progress. Is it in the current bank?
-    result = ((sr & S29VSStatusBit_BankStatus) == 0)? S_SUCCESS : E_BUSY;
+    result = ((sr & S29VSStatusBit_BankStatus) == 0) ? S_SUCCESS : E_BUSY;
   } else {
     // Operation hasn't started. Something is wrong.
     if (sr & S29VSStatusBit_SectorLockStatus) {
@@ -452,7 +435,7 @@ status_t flash_impl_erase_sector_begin(FlashAddress sector_addr) {
   }
 
 done:
-flash_impl_release();
+  flash_impl_release();
   return result;
 }
 
@@ -489,8 +472,7 @@ status_t flash_impl_erase_resume(FlashAddress sector_addr) {
   sector_addr = flash_impl_get_sector_base_address(sector_addr);
   flash_impl_use();
   uint8_t sr = prv_read_status_register(sector_addr);
-  if ((sr & S29VSStatusBit_DeviceReady) != 0 &&
-      (sr & S29VSStatusBit_EraseSuspended) != 0) {
+  if ((sr & S29VSStatusBit_DeviceReady) != 0 && (sr & S29VSStatusBit_EraseSuspended) != 0) {
     prv_issue_command(sector_addr, S29VSCommand_EraseResume);
     status = S_SUCCESS;
   } else {
@@ -500,7 +482,6 @@ status_t flash_impl_erase_resume(FlashAddress sector_addr) {
   flash_impl_release();
   return status;
 }
-
 
 // It is dangerous to leave this built in by default.
 #if 0
@@ -514,8 +495,7 @@ status_t flash_impl_erase_bulk_begin(void) {
 }
 #endif
 
-static void prv_read_words_pio(uint16_t* buffer, uint16_t* flash_data_region,
-                               uint32_t num_words) {
+static void prv_read_words_pio(uint16_t *buffer, uint16_t *flash_data_region, uint32_t num_words) {
   for (uint32_t words_read = 0; words_read < num_words; words_read++) {
     buffer[words_read] = flash_data_region[words_read];
   }
@@ -525,8 +505,7 @@ static void prv_read_words_pio(uint16_t* buffer, uint16_t* flash_data_region,
 // length is currently 1 for synchronous reads. This can be optimized in future
 // to do larger burst sizes and/or unrolling larger transfer sizes into 32-bit
 // reads.
-status_t flash_impl_read_sync(void *buffer_ptr, FlashAddress start_addr,
-                              size_t buffer_size) {
+status_t flash_impl_read_sync(void *buffer_ptr, FlashAddress start_addr, size_t buffer_size) {
   uint8_t *buffer = buffer_ptr;
   flash_impl_use();
 
@@ -534,10 +513,10 @@ status_t flash_impl_read_sync(void *buffer_ptr, FlashAddress start_addr,
   bool odd_start_addr = ((start_addr % 2) == 1);
   uint32_t bytes_read = 0;
 
-  uint16_t* buff_ptr = (uint16_t *)&buffer[bytes_read];
+  uint16_t *buff_ptr = (uint16_t *)&buffer[bytes_read];
   if (odd_start_addr) {
     // read first byte into a temporary buffer but read from source on aligned word boundary
-    uint16_t temp_buffer = *(__IO uint16_t *)(flash_data_addr-1);
+    uint16_t temp_buffer = *(__IO uint16_t *)(flash_data_addr - 1);
     buffer[bytes_read++] = (uint8_t)((temp_buffer >> 8) & 0xFF);
   }
 
@@ -549,11 +528,11 @@ status_t flash_impl_read_sync(void *buffer_ptr, FlashAddress start_addr,
     if (!odd_buff_addr) {
       // Both flash_data_addr and buffer are aligned
       uint32_t num_words = (buffer_size - bytes_read) / 2;
-      prv_read_words_pio(buff_ptr, (uint16_t*)(flash_data_addr + bytes_read), num_words);
-      bytes_read += num_words*2;
+      prv_read_words_pio(buff_ptr, (uint16_t *)(flash_data_addr + bytes_read), num_words);
+      bytes_read += num_words * 2;
     } else {
       // Not aligned - read into temporary buffer and copy over
-      __IO uint16_t *flash_data_region = (__IO uint16_t*)(flash_data_addr + bytes_read);
+      __IO uint16_t *flash_data_region = (__IO uint16_t *)(flash_data_addr + bytes_read);
       uint32_t num_words = (buffer_size - bytes_read) / 2;
       for (uint32_t words_read = 0; words_read < num_words; words_read++) {
         uint16_t temp_buffer = flash_data_region[words_read];
@@ -564,7 +543,8 @@ status_t flash_impl_read_sync(void *buffer_ptr, FlashAddress start_addr,
   }
 
   buff_ptr = (uint16_t *)&buffer[bytes_read];
-  // See if there are any remaining bytes left - at this point - flash_data_addr is still halfword aligned
+  // See if there are any remaining bytes left - at this point - flash_data_addr is still halfword
+  // aligned
   if (buffer_size - bytes_read == 1) {
     uint16_t temp_buffer = *(__IO uint16_t *)(flash_data_addr + bytes_read);
     buffer[bytes_read++] = (uint8_t)(temp_buffer & 0xFF);
@@ -578,8 +558,7 @@ status_t flash_impl_read_sync(void *buffer_ptr, FlashAddress start_addr,
   return S_SUCCESS;
 }
 
-int flash_impl_write_page_begin(const void *vp_buffer,
-                                const FlashAddress start_addr, size_t len) {
+int flash_impl_write_page_begin(const void *vp_buffer, const FlashAddress start_addr, size_t len) {
   if (!len) {
     return E_INVALID_ARGUMENT;
   }
@@ -604,8 +583,7 @@ int flash_impl_write_page_begin(const void *vp_buffer,
     ++num_shorts;
   }
 
-  const FlashAddress sector_addr =
-    flash_impl_get_sector_base_address(start_addr);
+  const FlashAddress sector_addr = flash_impl_get_sector_base_address(start_addr);
 
   flash_impl_use();
   prv_issue_command(sector_addr, S29VSCommand_ClearStatusRegister);
@@ -634,8 +612,8 @@ int flash_impl_write_page_begin(const void *vp_buffer,
   // We're now ready to write the words. Subsequent writes to the sector will
   // actually write the data through to the write buffer.
 
-  __IO uint16_t *flash_write_dest = (__IO uint16_t*)
-      (FMC_BANK_1_BASE_ADDRESS + (start_addr & ~0x1));
+  __IO uint16_t *flash_write_dest =
+      (__IO uint16_t *)(FMC_BANK_1_BASE_ADDRESS + (start_addr & ~0x1));
   uint32_t bytes_remaining = bytes_in_page;
 
   // Handle leading byte
@@ -679,7 +657,7 @@ int flash_impl_write_page_begin(const void *vp_buffer,
   const uint8_t sr = prv_read_status_register(sector_addr);
   if ((sr & S29VSStatusBit_DeviceReady) == 0) {
     // Program or erase operation in progress. Is it in the current bank?
-    result = ((sr & S29VSStatusBit_BankStatus) == 0)? S_SUCCESS : E_BUSY;
+    result = ((sr & S29VSStatusBit_BankStatus) == 0) ? S_SUCCESS : E_BUSY;
   } else {
     // Operation hasn't started. Something is wrong.
     if (sr & S29VSStatusBit_SectorLockStatus) {
@@ -748,19 +726,11 @@ static void prv_switch_flash_mode(FMC_NORSRAMInitTypeDef *nor_init) {
 static uint16_t prv_get_num_wait_cycles(uint32_t flash_clock_freq) {
   // wait_cycle table based on frequency (table 7.1)
   // NOTE: 27MHZ frequency skipped due to data latency being 4 smaller than the wait_cycle
-  uint32_t wait_cycle[] = {
-    40000000  ,
-    54000000  ,
-    66000000  ,
-    80000000  ,
-    95000000  ,
-    104000000 ,
-    120000000
-  };
+  uint32_t wait_cycle[] = {40000000, 54000000, 66000000, 80000000, 95000000, 104000000, 120000000};
   // find number wait states based on table
   uint32_t wait_state;
   for (wait_state = 4; wait_state < (ARRAY_LENGTH(wait_cycle) + 4); wait_state++) {
-    if (flash_clock_freq < wait_cycle[wait_state-4]) {
+    if (flash_clock_freq < wait_cycle[wait_state - 4]) {
       break;
     }
   }
@@ -772,72 +742,71 @@ status_t flash_impl_set_burst_mode(bool burst_mode) {
   const uint32_t TAVDP_MIN = 60;             // min addr setup time in tenths of ns
   const uint32_t TADVO_MIN = 40;             // min addr hold time in tenths
 
-  const uint32_t SETUP_STEP = MHZ_TO_HZ(16); // for data setup equation
+  const uint32_t SETUP_STEP = MHZ_TO_HZ(16);  // for data setup equation
 
-  const uint16_t WAIT_STATE_MASK = 0x7800;   // mask for wait state binary for sync burst
+  const uint16_t WAIT_STATE_MASK = 0x7800;  // mask for wait state binary for sync burst
 
   flash_impl_use();
 
   // get system clock tick speed
   RCC_ClocksTypeDef clocks;
   RCC_GetClocksFreq(&clocks);
-  uint32_t h_clock = clocks.HCLK_Frequency;          // frequency in hertz
-  uint32_t time_per_cycle = ((uint64_t)(10000000000)) / h_clock; // period in 1/10th ns
+  uint32_t h_clock = clocks.HCLK_Frequency;                       // frequency in hertz
+  uint32_t time_per_cycle = ((uint64_t)(10000000000)) / h_clock;  // period in 1/10th ns
 
   FMC_NORSRAMTimingInitTypeDef nor_timing_init = {
-    // time between address write and address latch (AVD high)
-    // tAAVDS on datasheet, min 4 ns
-    //
-    // AVD low time
-    // tAVDP on datasheet, min 6 ns
-    .FMC_AddressSetupTime = (TAVDP_MIN / time_per_cycle) + 1, // give setup of min 6ns
+      // time between address write and address latch (AVD high)
+      // tAAVDS on datasheet, min 4 ns
+      //
+      // AVD low time
+      // tAVDP on datasheet, min 6 ns
+      .FMC_AddressSetupTime = (TAVDP_MIN / time_per_cycle) + 1,  // give setup of min 6ns
 
-    // time between AVD high (address is available) and OE low (memory can write)
-    // tAVDO on the datasheet, min 4 ns
-    .FMC_AddressHoldTime = (TADVO_MIN / time_per_cycle) + 1,  // gives hold of min 4ns
+      // time between AVD high (address is available) and OE low (memory can write)
+      // tAVDO on the datasheet, min 4 ns
+      .FMC_AddressHoldTime = (TADVO_MIN / time_per_cycle) + 1,  // gives hold of min 4ns
 
-    // time between OE low (memory can write) and valid data being available
-    // FIXME: optimize this equation
-    // current linear equation has slope of 1 cycle/SETUP_STEP, with initial value 1
-    // setupTime based on h_clock frequency
-    // equation derived from existing working values; 5 at 64Mhz, 8 at 128 Mhz
-    // the data was then interpolated into a line, with a padded value of 1
-    .FMC_DataSetupTime = (h_clock / SETUP_STEP) + 1,
+      // time between OE low (memory can write) and valid data being available
+      // FIXME: optimize this equation
+      // current linear equation has slope of 1 cycle/SETUP_STEP, with initial value 1
+      // setupTime based on h_clock frequency
+      // equation derived from existing working values; 5 at 64Mhz, 8 at 128 Mhz
+      // the data was then interpolated into a line, with a padded value of 1
+      .FMC_DataSetupTime = (h_clock / SETUP_STEP) + 1,
 
-    // Time between chip selects
-    // not on the datasheet, picked a random safe number
-    // FIXME: at high bus frequencies, more than one cycle may be needed
-    .FMC_BusTurnAroundDuration = 1, // TODO: actually ok? See back-to-back Read/Write Cycle
+      // Time between chip selects
+      // not on the datasheet, picked a random safe number
+      // FIXME: at high bus frequencies, more than one cycle may be needed
+      .FMC_BusTurnAroundDuration = 1,  // TODO: actually ok? See back-to-back Read/Write Cycle
 
-    .FMC_CLKDivision = 15, // Not used for async NOR
-    .FMC_DataLatency = 15, // Not used for async NOR
-    .FMC_AccessMode = FMC_AccessMode_A // Only used for ExtendedMode == FMC_ExtendedMode_Enable, which we don't use
+      .FMC_CLKDivision = 15,              // Not used for async NOR
+      .FMC_DataLatency = 15,              // Not used for async NOR
+      .FMC_AccessMode = FMC_AccessMode_A  // Only used for ExtendedMode == FMC_ExtendedMode_Enable,
+                                          // which we don't use
   };
 
-  FMC_NORSRAMInitTypeDef nor_init = {
-    .FMC_Bank = FMC_Bank1_NORSRAM1,
-    .FMC_DataAddressMux = FMC_DataAddressMux_Enable,
-    .FMC_MemoryType = FMC_MemoryType_NOR,
-    .FMC_MemoryDataWidth = FMC_NORSRAM_MemoryDataWidth_16b,
-    .FMC_BurstAccessMode = FMC_BurstAccessMode_Disable,
-    .FMC_AsynchronousWait = FMC_AsynchronousWait_Disable,
-    .FMC_WaitSignalPolarity = FMC_WaitSignalPolarity_Low,
-    .FMC_WrapMode = FMC_WrapMode_Disable,
-    .FMC_WaitSignalActive = FMC_WaitSignalActive_BeforeWaitState,
-    .FMC_WriteOperation = FMC_WriteOperation_Enable,
-    .FMC_WaitSignal = FMC_WaitSignal_Enable,
-    .FMC_ExtendedMode = FMC_ExtendedMode_Disable,
-    .FMC_WriteBurst = FMC_WriteBurst_Disable,
-    .FMC_ContinousClock = FMC_CClock_SyncOnly,
-    .FMC_ReadWriteTimingStruct = &nor_timing_init
-  };
+  FMC_NORSRAMInitTypeDef nor_init = {.FMC_Bank = FMC_Bank1_NORSRAM1,
+                                     .FMC_DataAddressMux = FMC_DataAddressMux_Enable,
+                                     .FMC_MemoryType = FMC_MemoryType_NOR,
+                                     .FMC_MemoryDataWidth = FMC_NORSRAM_MemoryDataWidth_16b,
+                                     .FMC_BurstAccessMode = FMC_BurstAccessMode_Disable,
+                                     .FMC_AsynchronousWait = FMC_AsynchronousWait_Disable,
+                                     .FMC_WaitSignalPolarity = FMC_WaitSignalPolarity_Low,
+                                     .FMC_WrapMode = FMC_WrapMode_Disable,
+                                     .FMC_WaitSignalActive = FMC_WaitSignalActive_BeforeWaitState,
+                                     .FMC_WriteOperation = FMC_WriteOperation_Enable,
+                                     .FMC_WaitSignal = FMC_WaitSignal_Enable,
+                                     .FMC_ExtendedMode = FMC_ExtendedMode_Disable,
+                                     .FMC_WriteBurst = FMC_WriteBurst_Disable,
+                                     .FMC_ContinousClock = FMC_CClock_SyncOnly,
+                                     .FMC_ReadWriteTimingStruct = &nor_timing_init};
 
   // configure the peripheral before we try to read from it
   prv_switch_flash_mode(&nor_init);
 
   uint16_t configuration_register = prv_read_configuration_register();
   // clear bits that are about to be set
-  configuration_register &= 0x0278; // clear bits [15:10], [8:7], [2:0]
+  configuration_register &= 0x0278;  // clear bits [15:10], [8:7], [2:0]
 
   // add one. This way, if (h_clock < MAX_FREQ), only divide by one (use h_clock as is)
   // else divide by whatever is needed to be under MAX_FREQ
@@ -855,7 +824,7 @@ status_t flash_impl_set_burst_mode(bool burst_mode) {
     // commented out so the DataSetupTime for ASYNC (up above) is used instead
     // this is to ensure sync_burst works with dynamic changes to h_clk frequency
 
-    nor_timing_init.FMC_CLKDivision = clk_division;    // divide h_clock if h_clock > 108MHZ
+    nor_timing_init.FMC_CLKDivision = clk_division;  // divide h_clock if h_clock > 108MHZ
 
     uint16_t wait_state = prv_get_num_wait_cycles(h_clock / clk_division);
     // testing shows that a difference of 4 needs to be maintained between wait_state and latency
@@ -899,18 +868,17 @@ status_t flash_impl_blank_check_sector(FlashAddress addr) {
   flash_impl_use();
   uint8_t status = prv_read_status_register(base_addr);
   if ((status & S29VSStatusBit_DeviceReady) == 0 ||
-      (status & (S29VSStatusBit_EraseSuspended |
-                 S29VSStatusBit_ProgramSuspended)) != 0) {
+      (status & (S29VSStatusBit_EraseSuspended | S29VSStatusBit_ProgramSuspended)) != 0) {
     ret = E_BUSY;
     goto done;
   }
 
   prv_issue_command(base_addr, S29VSCommand_SectorBlank);
   status = prv_poll_for_ready(base_addr);
-  ret = ((status & S29VSStatusBit_EraseStatus) == 0)? S_TRUE : S_FALSE;
+  ret = ((status & S29VSStatusBit_EraseStatus) == 0) ? S_TRUE : S_FALSE;
 
 done:
-flash_impl_release();
+  flash_impl_release();
   return ret;
 }
 
@@ -918,19 +886,13 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr) {
   return flash_impl_blank_check_sector(addr);
 }
 
-
 bool flash_check_whoami(void) {
   uint16_t manufacturer_id = prv_read_manufacturer_id();
-  PBL_LOG(LOG_LEVEL_DEBUG, "Flash Manufacturer ID: 0x%"PRIx16, manufacturer_id);
+  PBL_LOG(LOG_LEVEL_DEBUG, "Flash Manufacturer ID: 0x%" PRIx16, manufacturer_id);
 
-  return manufacturer_id == SPANSION_MANUFACTURER_ID ||
-         manufacturer_id == MACRONIX_MANUFACTURER_ID;
+  return manufacturer_id == SPANSION_MANUFACTURER_ID || manufacturer_id == MACRONIX_MANUFACTURER_ID;
 }
 
-uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) {
-  return 800;
-}
+uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) { return 800; }
 
-uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) {
-  return 800;
-}
+uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) { return 800; }

@@ -10,49 +10,50 @@
 #define NRF5_COMPATIBLE
 #include <mcu.h>
 
-
 static QSPIFlashPart QSPI_FLASH_PART = {
-  .instructions = {
-    .fast_read = 0x0B,
-    .pp = 0x02,
-    .erase_sector_4k = 0x20,
-    .erase_block_64k = 0xD8,
-    .write_enable = 0x06,
-    .write_disable = 0x04,
-    .rdsr1 = 0x05,
-    .rdsr2 = 0x35,
-    .erase_suspend = 0x75,
-    .erase_resume = 0x7A,
-    .enter_low_power = 0xB9,
-    .exit_low_power = 0xAB,
-    .enter_quad_mode = 0x38,
-    .reset_enable = 0x66,
-    .reset = 0x99,
-    .qspi_id = 0x9F, /* single SPI ID */
-  },
-  .status_bit_masks = {
-    .busy = 1 << 0,
-    .write_enable = 1 << 1,
-  },
-  .flag_status_bit_masks = {
-    .erase_suspend = 0, /* erase suspend not supported */
-  },
-  .dummy_cycles = {
-    .fast_read = 4,
-  },
-  .supports_block_lock = false,
-  .reset_latency_ms = 12,
-  .suspend_to_read_latency_us = 20,
-  .standby_to_low_power_latency_us = 3,
-  .low_power_to_standby_latency_us = 20,
-  .supports_fast_read_ddr = false,
-  .qspi_id_value = 0x17400b,
-  .name = "XT25F64B",
+    .instructions =
+        {
+            .fast_read = 0x0B,
+            .pp = 0x02,
+            .erase_sector_4k = 0x20,
+            .erase_block_64k = 0xD8,
+            .write_enable = 0x06,
+            .write_disable = 0x04,
+            .rdsr1 = 0x05,
+            .rdsr2 = 0x35,
+            .erase_suspend = 0x75,
+            .erase_resume = 0x7A,
+            .enter_low_power = 0xB9,
+            .exit_low_power = 0xAB,
+            .enter_quad_mode = 0x38,
+            .reset_enable = 0x66,
+            .reset = 0x99,
+            .qspi_id = 0x9F, /* single SPI ID */
+        },
+    .status_bit_masks =
+        {
+            .busy = 1 << 0,
+            .write_enable = 1 << 1,
+        },
+    .flag_status_bit_masks =
+        {
+            .erase_suspend = 0, /* erase suspend not supported */
+        },
+    .dummy_cycles =
+        {
+            .fast_read = 4,
+        },
+    .supports_block_lock = false,
+    .reset_latency_ms = 12,
+    .suspend_to_read_latency_us = 20,
+    .standby_to_low_power_latency_us = 3,
+    .low_power_to_standby_latency_us = 20,
+    .supports_fast_read_ddr = false,
+    .qspi_id_value = 0x17400b,
+    .name = "XT25F64B",
 };
 
-bool flash_check_whoami(void) {
-  return qspi_flash_check_whoami(QSPI_FLASH);
-}
+bool flash_check_whoami(void) { return qspi_flash_check_whoami(QSPI_FLASH); }
 
 FlashAddress flash_impl_get_sector_base_address(FlashAddress addr) {
   return (addr & SECTOR_ADDR_MASK);
@@ -62,8 +63,7 @@ FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
   return (addr & SUBSECTOR_ADDR_MASK);
 }
 
-void flash_impl_enable_write_protection(void) {
-}
+void flash_impl_enable_write_protection(void) {}
 
 status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
 #if 0
@@ -102,9 +102,7 @@ status_t flash_impl_init(bool coredump_mode) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_get_erase_status(void) {
-  return qspi_flash_is_erase_complete(QSPI_FLASH);
-}
+status_t flash_impl_get_erase_status(void) { return qspi_flash_is_erase_complete(QSPI_FLASH); }
 
 status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
   return qspi_flash_erase_begin(QSPI_FLASH, subsector_addr, true /* is_subsector */);
@@ -132,9 +130,7 @@ int flash_impl_write_page_begin(const void *buffer, const FlashAddress start_add
   return qspi_flash_write_page_begin(QSPI_FLASH, buffer, start_addr, len);
 }
 
-status_t flash_impl_get_write_status(void) {
-  return qspi_flash_get_write_status(QSPI_FLASH);
-}
+status_t flash_impl_get_write_status(void) { return qspi_flash_get_write_status(QSPI_FLASH); }
 
 status_t flash_impl_enter_low_power_mode(void) {
   qspi_flash_set_lower_power_mode(QSPI_FLASH, true);
@@ -157,10 +153,6 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr) {
   return qspi_flash_blank_check(QSPI_FLASH, addr, true /* is_subsector */);
 }
 
-uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) {
-  return 150;
-}
+uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) { return 150; }
 
-uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) {
-  return 50;
-}
+uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) { return 50; }
