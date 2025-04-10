@@ -19,6 +19,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef enum JESD216Dw15QerType {
+  JESD216_DW15_QER_NONE = 0,
+  JESD216_DW15_QER_S2B1v1 = 1,
+  JESD216_DW15_QER_S1B6 = 2,
+  JESD216_DW15_QER_S2B7 = 3,
+  JESD216_DW15_QER_S2B1v4 = 4,
+  JESD216_DW15_QER_S2B1v5 = 5,
+  JESD216_DW15_QER_S2B1v6 = 6,
+} JESD216Dw15QerType;
+
 typedef const struct QSPIFlashPart {
   struct {
     uint8_t fast_read;
@@ -57,10 +67,11 @@ typedef const struct QSPIFlashPart {
     uint8_t fast_read_ddr;
   } dummy_cycles;
   struct {
-    bool has_lock_data; //<! true ifdata needs to be send along with the block_lock instruction
-    uint8_t lock_data; //<! The data to be sent on a block_lock command, if has_lock_data is true
-    uint8_t locked_check; //<! Value block_lock_status instruction should return if sector is locked
-    uint8_t protection_enabled_mask; //<! Mask read_protection_status instr to check if enabled
+    bool has_lock_data;  //<! true ifdata needs to be send along with the block_lock instruction
+    uint8_t lock_data;   //<! The data to be sent on a block_lock command, if has_lock_data is true
+    uint8_t
+        locked_check;  //<! Value block_lock_status instruction should return if sector is locked
+    uint8_t protection_enabled_mask;  //<! Mask read_protection_status instr to check if enabled
   } block_lock;
   uint32_t reset_latency_ms;
   uint32_t suspend_to_read_latency_us;
@@ -68,7 +79,7 @@ typedef const struct QSPIFlashPart {
   uint32_t low_power_to_standby_latency_us;
   bool supports_fast_read_ddr;
   bool supports_block_lock;
+  JESD216Dw15QerType qer_type;
   uint32_t qspi_id_value;
   const char *name;
 } QSPIFlashPart;
-
