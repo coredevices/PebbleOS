@@ -118,13 +118,12 @@ bool qspi_flash_is_in_coredump_mode(QSPIFlash *dev) { return dev->state->coredum
 
 static void _flash_handler(nrfx_qspi_evt_t event, void *ctx) {
   QSPIFlash *dev = (QSPIFlash *)ctx;
+  BaseType_t woken = pdFALSE;
+
   PBL_ASSERTN(event == NRFX_QSPI_EVENT_DONE);
   dev->qspi->state->waiting = 0;
-  if (!dev->state->coredump_mode) {
-    BaseType_t woken = pdFALSE;
-    xSemaphoreGiveFromISR(dev->qspi->state->dma_semaphore, &woken);
-    portYIELD_FROM_ISR(woken);
-  }
+  xSemaphoreGiveFromISR(dev->qspi->state->dma_semaphore, &woken);
+  portYIELD_FROM_ISR(woken);
 }
 
 static void prv_configure_qe(QSPIFlash *dev) {
