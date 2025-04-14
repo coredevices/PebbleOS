@@ -93,6 +93,12 @@ static void prv_write_enable(QSPIFlash *dev) {
                dev->state->part->status_bit_masks.write_enable, true /* set */, QSPI_NO_TIMEOUT);
 }
 
+static void prv_wait_for_completion(QSPIFlash *dev) {
+  if (!dev->state->coredump_mode) {
+    xSemaphoreTake(dev->qspi->state->dma_semaphore, portMAX_DELAY);
+  }
+}
+
 static bool prv_check_whoami(QSPIFlash *dev) {
   // The WHOAMI is 3 bytes
   const uint32_t whoami_length = 3;
@@ -276,9 +282,7 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
       nrfx_qspi_erase(is_subsector ? NRF_QSPI_ERASE_LEN_4KB : NRF_QSPI_ERASE_LEN_64KB, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
-  if (!dev->state->coredump_mode) {
-    xSemaphoreTake(dev->qspi->state->dma_semaphore, portMAX_DELAY);
-  }
+  prv_wait_for_completion(dev);
 
   // wait for busy to be set indicating the erase has started
   const uint32_t busy_timeout_us = 500;
@@ -319,10 +323,7 @@ static void prv_qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *bu
   nrfx_err_t err = nrfx_qspi_read(buffer, length, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
-  // XXX: later: use mmap?
-  if (!dev->state->coredump_mode) {
-    xSemaphoreTake(dev->qspi->state->dma_semaphore, portMAX_DELAY);
-  }
+  prv_wait_for_completion(dev);
 }
 
 void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
@@ -365,9 +366,7 @@ static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t ad
   nrfx_err_t err = nrfx_qspi_write(buffer, length, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
-  if (!dev->state->coredump_mode) {
-    xSemaphoreTake(dev->qspi->state->dma_semaphore, portMAX_DELAY);
-  }
+  prv_wait_for_completion(dev);
 
   prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
                dev->state->part->status_bit_masks.busy, false /* !set */, QSPI_NO_TIMEOUT);
