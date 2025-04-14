@@ -121,7 +121,7 @@ static void _flash_handler(nrfx_qspi_evt_t event, void *ctx) {
   BaseType_t woken = pdFALSE;
 
   PBL_ASSERTN(event == NRFX_QSPI_EVENT_DONE);
-  dev->qspi->state->waiting = 0;
+
   xSemaphoreGiveFromISR(dev->qspi->state->dma_semaphore, &woken);
   portYIELD_FROM_ISR(woken);
 }
@@ -176,7 +176,6 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
 
   // Init the DMA semaphore, used for I/O ops
   if (!coredump_mode) dev->qspi->state->dma_semaphore = xSemaphoreCreateBinary();
-  dev->qspi->state->waiting = 0;
 
   nrfx_qspi_config_t config = NRFX_QSPI_DEFAULT_CONFIG(
       dev->qspi->clk_gpio, dev->qspi->cs_gpio, dev->qspi->data_gpio[0], dev->qspi->data_gpio[1],
@@ -273,17 +272,12 @@ status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
 status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
   prv_write_enable(dev);
 
-  dev->qspi->state->waiting = 1;
-
   nrfx_err_t err =
       nrfx_qspi_erase(is_subsector ? NRF_QSPI_ERASE_LEN_4KB : NRF_QSPI_ERASE_LEN_64KB, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   if (!dev->state->coredump_mode) {
     xSemaphoreTake(dev->qspi->state->dma_semaphore, portMAX_DELAY);
-    PBL_ASSERTN(!dev->qspi->state->waiting);
-  } else {
-    dev->qspi->state->waiting = 0;
   }
 
   // wait for busy to be set indicating the erase has started
@@ -322,18 +316,12 @@ void qspi_flash_erase_resume(QSPIFlash *dev, uint32_t addr) {
 
 static void prv_qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer,
                                          uint32_t length) {
-  PBL_ASSERTN(!dev->qspi->state->waiting);
-  dev->qspi->state->waiting = 1;
-
   nrfx_err_t err = nrfx_qspi_read(buffer, length, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   // XXX: later: use mmap?
   if (!dev->state->coredump_mode) {
     xSemaphoreTake(dev->qspi->state->dma_semaphore, portMAX_DELAY);
-    PBL_ASSERTN(!dev->qspi->state->waiting);
-  } else {
-    dev->qspi->state->waiting = 0;
   }
 }
 
@@ -374,17 +362,11 @@ static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t ad
 
   prv_write_enable(dev);
 
-  PBL_ASSERTN(!dev->qspi->state->waiting);
-  dev->qspi->state->waiting = 1;
-
   nrfx_err_t err = nrfx_qspi_write(buffer, length, addr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   if (!dev->state->coredump_mode) {
     xSemaphoreTake(dev->qspi->state->dma_semaphore, portMAX_DELAY);
-    PBL_ASSERTN(!dev->qspi->state->waiting);
-  } else {
-    dev->qspi->state->waiting = 0;
   }
 
   prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,

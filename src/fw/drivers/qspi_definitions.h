@@ -27,9 +27,6 @@
 
 typedef struct QSPIPortState {
   SemaphoreHandle_t dma_semaphore;
-#if MICRO_FAMILY_NRF5
-  volatile int waiting;
-#endif
   int use_count;
 } QSPIPortState;
 
