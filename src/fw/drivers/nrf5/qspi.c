@@ -30,6 +30,8 @@
 
 #define FLASH_RESET_WORD_VALUE (0xffffffff)
 
+static uint8_t s_qspi_ram_buffer[32];
+
 status_t flash_impl_set_nvram_erase_status(bool is_subsector, FlashAddress addr) {
   return S_SUCCESS;
 }
@@ -390,7 +392,6 @@ static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t ad
                dev->state->part->status_bit_masks.busy, false /* !set */, QSPI_NO_TIMEOUT);
 }
 
-static uint8_t s_qspi_ram_buffer[32];
 int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
                                 uint32_t length) {
   const uint32_t offset_in_page = addr % PAGE_SIZE_BYTES;
