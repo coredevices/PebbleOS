@@ -19,6 +19,7 @@
 
 #define NRF5_COMPATIBLE
 #include <mcu.h>
+#include <nrfx.h>
 #include <nrfx_qspi.h>
 
 #include "FreeRTOS.h"
@@ -423,7 +424,7 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
   const uint32_t offset_in_page = addr % PAGE_SIZE_BYTES;
   uint32_t bytes_in_page = MIN(PAGE_SIZE_BYTES - offset_in_page, length);
 
-  if (((uintptr_t)buffer & 0xF0000000) != 0x20000000) {
+  if (!nrfx_is_in_ram(buffer)) {
     /* we cannot DMA from non-RAM, so bounce through a RAM buffer if we have
      * to; this is not performant but it is ok because any time we are
      * writing to QSPI flash from internal flash, it is during
