@@ -396,8 +396,6 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 
 static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
                                  uint32_t length) {
-  PBL_ASSERTN(((uint32_t)buffer & 3) == 0);
-  PBL_ASSERTN(((uint32_t)buffer & 0xF0000000) == 0x20000000);
   PBL_ASSERTN(length > 0);
 
   prv_write_enable(dev);
