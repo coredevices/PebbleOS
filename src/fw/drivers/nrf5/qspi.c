@@ -435,9 +435,7 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
 }
 
 status_t qspi_flash_get_write_status(QSPIFlash *dev) {
-  uint8_t status_reg;
-  prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &status_reg, 1);
-  return (status_reg & dev->state->part->status_bit_masks.busy) ? E_BUSY : S_SUCCESS;
+  return nrfx_qspi_mem_busy_check() == NRFX_SUCCESS ? S_SUCCESS : E_BUSY;
 }
 
 void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
