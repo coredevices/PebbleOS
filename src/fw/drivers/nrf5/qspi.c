@@ -221,7 +221,11 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
       break;
   }
 
-  config.prot_if.addrmode = NRF_QSPI_ADDRMODE_24BIT;
+  if (dev->state->part->size > 0x1000000) {
+    config.prot_if.addrmode = NRF_QSPI_ADDRMODE_32BIT;
+  } else {
+    config.prot_if.addrmode = NRF_QSPI_ADDRMODE_24BIT;
+  }
 
   nrfx_err_t err;
   if (was_init) {
@@ -237,7 +241,6 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
     WTF;
   }
 
-  // we do not enter QPI mode on nRF5
   // Reset the flash to stop any program's or erase in progress from before reboot
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.reset_enable);
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.reset);
@@ -250,6 +253,10 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
 
   if (!coredump_mode) {
     prv_check_whoami(dev);
+  }
+
+  if (config.prot_if.addrmode == NRF_QSPI_ADDRMODE_32BIT) {
+    prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.en4b);
   }
 
   prv_configure_qe(dev);
