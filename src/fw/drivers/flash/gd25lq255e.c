@@ -58,6 +58,7 @@ static QSPIFlashPart QSPI_FLASH_PART = {
     .supports_fast_read_ddr = false,
     .qer_type = JESD216_DW15_QER_S2B1v1,
     .qspi_id_value = 0x1960c8,
+    .size = 0x2000000, /* 32MB */
     .name = "GD25LQ255E",
 };
 
