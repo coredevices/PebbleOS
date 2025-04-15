@@ -91,5 +91,6 @@ typedef const struct QSPIFlashPart {
   bool supports_block_lock;
   JESD216Dw15QerType qer_type;
   uint32_t qspi_id_value;
+  uint32_t size;
   const char *name;
 } QSPIFlashPart;
