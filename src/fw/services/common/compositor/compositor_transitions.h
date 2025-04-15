@@ -21,7 +21,7 @@
 #include "default/compositor_slide_transitions.h"
 #include "default/compositor_shutter_transitions.h"
 #include "legacy/compositor_app_slide_transitions.h"
-#if PLATFORM_SILK
+#if PLATFORM_SILK || PLATFORM_ASTERIX
 # include "legacy/compositor_modal_slide_transitions.h"
 #else
 # include "default/compositor_modal_transitions.h"

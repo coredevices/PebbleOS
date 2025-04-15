@@ -150,6 +150,9 @@ static const RegulatoryFlags * prv_get_regulatory_flags(void) {
   return &s_regulatory_flags_spalding;
 #elif PLATFORM_SILK
   return &s_regulatory_flags_silk;
+#elif PLATFORM_ASTERIX
+  // TODO: add applicable flags
+  return &s_regulatory_flags_fallback;
 #else
   return &s_regulatory_flags_fallback;
 #endif
@@ -164,13 +167,16 @@ static const CertificationIds * prv_get_certification_ids(void) {
   return &s_certification_ids_snowy;
 #elif defined(BOARD_SPALDING) || defined(BOARD_SPALDING_EVT)
   return &s_certification_ids_spalding;
-#elif PLATFORM_SILK && !defined(IS_BIGBOARD) && !defined(BOARD_ASTERIX_EVT1)
+#elif PLATFORM_SILK
 // TODO: remove force-false
 //  if (mfg_info_is_hrm_present()) {
 //    return &s_certification_ids_silk_hr;
 //  } else {
     return &s_certification_ids_silk;
 //  }
+#elif PLATFORM_ASTERIX
+  // TODO: add real certification ids
+  return &s_certification_ids_fallback;
 #else
   return &s_certification_ids_fallback;
 #endif

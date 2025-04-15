@@ -188,7 +188,7 @@ def add_platform_defines(ctx, env):
         platform = 'ROBERT'
     elif ctx.is_asterix():
         bit_depth = 1
-        platform = 'SILK' # For now, Asterix-likes are actually Silk-like.
+        platform = 'ASTERIX'
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 

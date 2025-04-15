@@ -30,7 +30,7 @@ static uint8_t s_current_flush_line;
 
 static void (*s_update_complete_handler)(void);
 
-#if PLATFORM_SILK
+#if PLATFORM_SILK || PLATFORM_ASTERIX
 static const uint8_t s_corner_shape[] = { 3, 1, 1 };
 static uint8_t s_line_buffer[FRAMEBUFFER_BYTES_PER_ROW];
 #endif
@@ -44,7 +44,7 @@ static bool prv_flush_get_next_line_cb(DisplayRow* row) {
   if (s_current_flush_line < y_end) {
     row->address = s_current_flush_line;
     void *fb_line = framebuffer_get_line(fb, s_current_flush_line);
-#if PLATFORM_SILK
+#if PLATFORM_SILK || PLATFORM_ASTERIX
     // Draw rounded corners onto the screen without modifying the
     // system framebuffer.
     if (s_current_flush_line < ARRAY_LENGTH(s_corner_shape) ||

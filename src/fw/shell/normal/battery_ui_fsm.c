@@ -71,7 +71,7 @@ static void prv_dismiss_plugged(void);
 static void prv_display_fully_charged(void *data);
 static void prv_dismiss_fully_charged(void);
 // TODO PBL-39883: Replace w/ QUIRK_RESET_ON_SHUTDOWN_WHILE_CHARGING once arbitrary prefixes land
-#if PLATFORM_TINTIN || PLATFORM_SILK
+#if PLATFORM_TINTIN || PLATFORM_SILK || PLATFORM_ASTERIX
 static void prv_shutdown(void *ignored);
 #else
 static void prv_enter_shutdown_charging(void *ignored);
@@ -99,7 +99,7 @@ static const BatteryUIState ui_states[] = {
       BatteryGood, BatteryWarning, BatteryLowPower, BatteryCritical, BatteryShutdownCharging
   }},
 // TODO PBL-39883: Replace w/ QUIRK_RESET_ON_SHUTDOWN_WHILE_CHARGING once arbitrary prefixes land
-#if PLATFORM_TINTIN || PLATFORM_SILK
+#if PLATFORM_TINTIN || PLATFORM_SILK || PLATFORM_ASTERIX
   [BatteryShutdownCharging] = { .enter = prv_shutdown }
 #else
   [BatteryShutdownCharging] = { .enter = prv_enter_shutdown_charging }
@@ -211,7 +211,7 @@ static void prv_dismiss_fully_charged(void) {
 }
 
 // TODO PBL-39883: Replace w/ QUIRK_RESET_ON_SHUTDOWN_WHILE_CHARGING once arbitrary prefixes land
-#if PLATFORM_TINTIN || PLATFORM_SILK
+#if PLATFORM_TINTIN || PLATFORM_SILK || PLATFORM_ASTERIX
 static void prv_shutdown(void *ignored) {
   battery_ui_handle_shut_down();
 }

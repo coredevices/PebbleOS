@@ -80,6 +80,12 @@ static jerry_value_t prv_get_platform_name(void) {
 #  define SILK_MODEL(model_str) NULL
 #endif // PLATFORM_SPALDING
 
+#if PLATFORM_ASTERIX
+#  define ASTERIX_MODEL(model_str) model_str
+#else
+#  define ASTERIX_MODEL(model_str) NULL
+#endif // PLATFORM_ASTERIX
+
 #if PLATFORM_ROBERT
 #  define ROBERT_MODEL(model_str) model_str
 #else

@@ -340,7 +340,7 @@ void prv_prepare_canvas_and_render_cells(MenuCellType cell_type, int16_t cell_wi
 //////////////////////
 
 void test_menu_layer_system_cells__basic_cell_width_144_legacy2(void) {
-#if PLATFORM_TINTIN || PLATFORM_SILK
+#if PLATFORM_TINTIN || PLATFORM_SILK || PLATFORM_ASTERIX
   // NOTE: The generated bitmap will look really funky because it's rendering 8bit gbitmaps as
   //       1bit due to the legacy2 check in gbitmap_get_format. This is normal and expected.
 
