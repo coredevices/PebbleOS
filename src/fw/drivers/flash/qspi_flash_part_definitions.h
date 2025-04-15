@@ -63,6 +63,7 @@ typedef const struct QSPIFlashPart {
     uint8_t block_unlock_all;
     uint8_t write_protection_enable;
     uint8_t read_protection_status;
+    uint8_t en4b;
   } instructions;
   struct {
     uint8_t busy;
