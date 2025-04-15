@@ -10,9 +10,6 @@
 #define NRF5_COMPATIBLE
 #include <mcu.h>
 
-/* this part is 32MB and can be run in 4 address byte mode, but we only support 3 address byte mode
- * for now */
-
 static QSPIFlashPart QSPI_FLASH_PART = {
     .instructions =
         {
@@ -38,6 +35,7 @@ static QSPIFlashPart QSPI_FLASH_PART = {
             .reset_enable = 0x66,
             .reset = 0x99,
             .qspi_id = 0x9F, /* single SPI ID */
+            .en4b = 0xB7,
         },
     .status_bit_masks =
         {
