@@ -6,24 +6,18 @@ Follow this guide to:
 - Get the source code
 - Build, flash, and run PebbleOS on a watch with programming port access
 
-## Get the source code
-
-You can clone the PebbleOS repository by running:
-
-```shell
-git clone --recurse-submodules https://github.com/pebble-dev/pebble-firmware
-```
-
-Once cloned, enter the `pebble-firmware` directory before continuing:
-
-```shell
-cd pebble-firmware
-```
-
 ## Pre-requisites
 
-First download the Arm GNU toolchain 14.2.Rel1 from [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads).
-Make sure to make it available on your path `PATH`.
+First download the Arm GNU toolchain `arm-none-eabi` 14.2.Rel1 from [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads).
+Make sure to make it available on your path `PATH` by checking GCC version:
+
+```shell
+$ arm-none-eabi-gcc --version
+arm-none-eabi-gcc (Arm GNU Toolchain 14.2.Rel1 (Build arm-14.52)) 14.2.1 20241119
+Copyright (C) 2024 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+```
 
 A series of system-level dependencies are required.
 Follow the next steps to install them.
@@ -31,7 +25,7 @@ Follow the next steps to install them.
 :::::{tab-set}
 :sync-group: os
 
-::::{tab-item} Ubuntu 24.04
+::::{tab-item} Ubuntu 24.04 LTS
 :sync: ubuntu
 
 1. Update package list:
@@ -43,7 +37,7 @@ sudo apt update
 2. Install required dependencies
 
 ```shell
-sudo apt install gcc-multilib gettext python3-venv
+sudo apt install clang gcc gcc-multilib git gettext python3-dev python3-venv
 ```
 
 ::::
@@ -62,11 +56,13 @@ If building with Javascript support enabled (default), install Emscripten:
 :::::{tab-set}
 :sync-group: os
 
-::::{tab-item} Ubuntu 24.04
+::::{tab-item} Ubuntu 24.04 LTS
 :sync: ubuntu
 
-1. Install Emscripten SDK as detailed [here](https://github.com/emscripten-core/emsdk).
-   Pick version 4.0.1.
+1. Install Emscripten SDK as detailed [here](https://emscripten.org/docs/getting_started/downloads.html).
+   Pick version `4.0.1` instead of `latest` when running `./emsdk install` or `./emsdk activate`.
+   To conveniently access Emscripten SDK tools, the activate command will offer some suggestions.
+   It is recommended to follow them.
 ::::
 
 ::::{tab-item} macOS
@@ -81,13 +77,29 @@ brew install emscripten@4.0.1
 ::::
 :::::
 
+## Get the source code
+
+You can clone the PebbleOS repository by running:
+
+```shell
+git clone --recurse-submodules https://github.com/pebble-dev/pebble-firmware
+```
+
+Once cloned, enter the `pebble-firmware` directory before continuing:
+
+```shell
+cd pebble-firmware
+```
+
+## Python dependencies
+
 A series of additional Python dependencies are also required.
 Follow the next steps to install them in a [Python virtual environment](https://docs.python.org/3/library/venv.html).
 
 1. Create a new virtual environment:
 
 ```shell
-python -m venv .venv
+python3 -m venv .venv
 ```
 
 2. Activate the virtual environment:
