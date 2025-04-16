@@ -318,42 +318,46 @@ void qspi_flash_erase_resume(QSPIFlash *dev, uint32_t addr) {
                QSPI_NO_TIMEOUT);
 }
 
-static void prv_qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer,
-                                         uint32_t length) {
-  nrfx_err_t err = nrfx_qspi_read(buffer, length, addr);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-  prv_wait_for_completion(dev);
-}
-
 void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
-  uint32_t buf_p = (uint32_t)buffer;
-  if (buf_p & 3) {
-    /* argh ... */
-    uint32_t align_len = 4 - (buf_p & 3);
-    uint32_t tbuf = 0xAAAAAAAA;
-    if (align_len > length) {
-      align_len = length;
-    }
+  uint8_t __attribute__((aligned(4))) b_buf[4];
+  uint8_t buf_pre;
+  uint8_t buf_suf;
+  uint32_t buf_mid;
+  nrfx_err_t err;
 
-    prv_qspi_flash_read_blocking(dev, addr, &tbuf, 4);
-    memcpy(buffer, &tbuf, align_len);
-    length -= align_len;
-    addr += align_len;
-    buffer = ((uint8_t *)buffer) + align_len;
+  buf_pre = (4U - (uint8_t)((uint32_t)buffer % 4U)) % 4U;
+  if (buf_pre > length) {
+    buf_pre = length;
   }
-  uint32_t tail_len = length & 3;
-  length -= tail_len;
-  if (length) {
-    prv_qspi_flash_read_blocking(dev, addr, buffer, length);
-    addr += length;
-    buffer = ((uint8_t *)buffer) + length;
+
+  buf_suf = (uint8_t)((length - buf_pre) % 4U);
+  buf_mid = length - buf_pre - buf_suf;
+
+  if (buf_pre != 0U) {
+    err = nrfx_qspi_read(b_buf, 4U, addr);
+    prv_wait_for_completion(dev);
+    PBL_ASSERTN(err == NRFX_SUCCESS);
+
+    memcpy(buffer, b_buf, buf_pre);
+    addr += buf_pre;
+    buffer = ((uint8_t *)buffer) + buf_pre;
   }
-  if (tail_len) {
-    /* argh... */
-    uint32_t tbuf = 0xAAAAAAAA;
-    prv_qspi_flash_read_blocking(dev, addr, &tbuf, 4);
-    memcpy(buffer, &tbuf, tail_len);
+
+  if (buf_mid != 0U) {
+    err = nrfx_qspi_read(buffer, buf_mid, addr);
+    prv_wait_for_completion(dev);
+    PBL_ASSERTN(err == NRFX_SUCCESS);
+
+    addr += buf_mid;
+    buffer = ((uint8_t *)buffer) + buf_mid;
+  }
+
+  if (buf_suf != 0U) {
+    err = nrfx_qspi_read(b_buf, 4U, addr);
+    prv_wait_for_completion(dev);
+    PBL_ASSERTN(err == NRFX_SUCCESS);
+
+    memcpy(buffer, b_buf, buf_suf);
   }
 }
 
