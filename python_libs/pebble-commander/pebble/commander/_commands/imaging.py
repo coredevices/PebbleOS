@@ -175,6 +175,9 @@ def _load(connection, image, progress, verbose, address):
     if verbose:
         print('Retries: %d' % retries)
 
+    if result_crc != image_crc:
+        print('CRC mismatch, got 0x%08X but expected %08X' % (result_crc, image_crc))
+
     return result_crc == image_crc
 
 
