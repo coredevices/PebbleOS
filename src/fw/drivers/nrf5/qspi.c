@@ -116,9 +116,7 @@ static bool prv_check_whoami(QSPIFlash *dev) {
   }
 }
 
-bool qspi_flash_check_whoami(QSPIFlash *dev) {
-  return prv_check_whoami(dev);
-}
+bool qspi_flash_check_whoami(QSPIFlash *dev) { return prv_check_whoami(dev); }
 
 bool qspi_flash_is_in_coredump_mode(QSPIFlash *dev) { return dev->state->coredump_mode; }
 
@@ -361,80 +359,71 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
   }
 }
 
-static void prv_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
-                                 uint32_t length) {
-  PBL_ASSERTN(length > 0);
-
-  prv_write_enable(dev);
-
-  nrfx_err_t err = nrfx_qspi_write(buffer, length, addr);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-  prv_wait_for_completion(dev);
-
-  prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
-               dev->state->part->status_bit_masks.busy, false /* !set */, QSPI_NO_TIMEOUT);
-}
-
 int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
                                 uint32_t length) {
-  const uint32_t offset_in_page = addr % PAGE_SIZE_BYTES;
-  uint32_t bytes_in_page = MIN(PAGE_SIZE_BYTES - offset_in_page, length);
+  uint8_t __attribute__((aligned(4))) b_buf[4];
+  uint8_t buf_pre;
+  uint8_t buf_suf;
+  uint32_t buf_mid;
+  nrfx_err_t err;
 
+  // we can write from start address up to the end of the page
+  length = MIN(length, PAGE_SIZE_BYTES - (addr % PAGE_SIZE_BYTES));
+
+  // bounce data to RAM if not in RAM
   if (!nrfx_is_in_ram(buffer)) {
-    /* we cannot DMA from non-RAM, so bounce through a RAM buffer if we have
-     * to; this is not performant but it is ok because any time we are
-     * writing to QSPI flash from internal flash, it is during
-     * initialization and should be pretty infrequent
-     */
-    bytes_in_page = MIN(bytes_in_page, sizeof(s_qspi_ram_buffer));
-    memcpy(s_qspi_ram_buffer, buffer, bytes_in_page);
+    length = MIN(length, sizeof(s_qspi_ram_buffer));
+    memcpy(s_qspi_ram_buffer, buffer, length);
     buffer = s_qspi_ram_buffer;
-    /* s_qspi_ram_buffer does not get overwritten because nobody will call
-     * us again until qspi_flash_get_write_status completes
-     */
   }
 
-  length = bytes_in_page;
+  buf_pre = (4U - (uint8_t)((uint32_t)buffer % 4U)) % 4U;
+  if (buf_pre > length) {
+    buf_pre = length;
+  }
+
+  buf_suf = (uint8_t)((length - buf_pre) % 4U);
+  buf_mid = length - buf_pre - buf_suf;
 
   prv_write_enable(dev);
 
-  uint32_t buf_p = (uint32_t)buffer;
-  if (buf_p & 3) {
-    /* argh ... */
-    uint32_t align_len = 4 - (buf_p & 3);
-    uint32_t tbuf = 0xFFFFFFFF;
-    if (align_len > length) {
-      align_len = length;
+  if (buf_pre != 0U) {
+    memset(&b_buf[buf_pre], 0xff, sizeof(b_buf) - buf_pre);
+    memcpy(b_buf, buffer, buf_pre);
+
+    err = nrfx_qspi_write(b_buf, 4U, addr);
+    prv_wait_for_completion(dev);
+    PBL_ASSERTN(err == NRFX_SUCCESS);
+
+    addr += buf_pre;
+    buffer = ((uint8_t *)buffer) + buf_pre;
+  }
+
+  if (buf_mid != 0U) {
+    while (nrfx_qspi_mem_busy_check() == NRFX_ERROR_BUSY) {
     }
 
-    memcpy(&tbuf, buffer, align_len);
-    prv_write_page_begin(dev, &tbuf, addr, 4);
-    length -= align_len;
-    addr += align_len;
-    buffer = ((uint8_t *)buffer) + align_len;
+    err = nrfx_qspi_write(buffer, buf_mid, addr);
+    prv_wait_for_completion(dev);
+    PBL_ASSERTN(err == NRFX_SUCCESS);
 
-    while (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS) delay_us(10);
+    addr += buf_mid;
+    buffer = ((uint8_t *)buffer) + buf_mid;
   }
 
-  uint32_t tail_len = length & 3;
-  length -= tail_len;
-  if (length) {
-    prv_write_page_begin(dev, buffer, addr, length);
-    addr += length;
-    buffer = ((uint8_t *)buffer) + length;
+  if (buf_suf != 0U) {
+    while (nrfx_qspi_mem_busy_check() == NRFX_ERROR_BUSY) {
+    }
+
+    memset(&b_buf[buf_suf], 0xff, 4U - buf_suf);
+    memcpy(b_buf, buffer, buf_suf);
+
+    err = nrfx_qspi_write(b_buf, 4U, addr);
+    prv_wait_for_completion(dev);
+    PBL_ASSERTN(err == NRFX_SUCCESS);
   }
 
-  if (tail_len) {
-    /* argh... */
-    while (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS) delay_us(10);
-
-    uint32_t tbuf = 0xFFFFFFFF;
-    memcpy(&tbuf, buffer, tail_len);
-    prv_write_page_begin(dev, &tbuf, addr, 4);
-  }
-
-  return bytes_in_page;
+  return length;
 }
 
 status_t qspi_flash_get_write_status(QSPIFlash *dev) {
