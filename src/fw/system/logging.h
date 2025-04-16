@@ -188,7 +188,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
   #define LOG_DOMAIN_BT_HCI           1
   #define LOG_DOMAIN_BT_SNIFF         1
 #else
-  #define LOG_DOMAIN_BT               1
+#define LOG_DOMAIN_BT 0
 #endif
 
 #if LOG_DOMAIN_BT_PROFILES
