@@ -3,9 +3,9 @@ import logging
 import pebble_tool
 from libpebble2.communication.transports.pulse import PULSETransport
 from libpebble2.exceptions import PebbleError
-from commands import coredump
-from commands import install_lang
-from commands import test
+from .commands import coredump
+from .commands import install_lang
+from .commands import test
 
 # TODO: unopened logging ports cause super noisy logs, fix this in the
 # pulse package then remove this

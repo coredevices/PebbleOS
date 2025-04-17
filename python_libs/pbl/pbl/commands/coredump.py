@@ -36,7 +36,7 @@ class CoredumpCommand(PebbleCommand):
         self.progress_bar.finish()
 
         filename = self._generate_filename() if args.filename is None else args.filename
-        with open(filename, "w") as core_file:
+        with open(filename, "wb") as core_file:
             core_file.write(core_data)
         print("Saved coredump to {}".format(filename))
 
