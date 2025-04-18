@@ -410,29 +410,103 @@ void command_flash_show_erased_sectors(const char *arg) {
   }
 }
 
-/*
- * Commented out by default because this command can harm your flash chip!!
-static void prv_flash_stress_callback(void *data) {
-  uint32_t flash_addr = FLASH_REGION_DEBUG_DB_BEGIN;
-  uint32_t sector_address = flash_get_sector_base_address(flash_addr);
-  PBL_LOG(LOG_LEVEL_DEBUG, "erasing flash address %x", sector_address);
-  flash_erase_sector_blocking(sector_address);
+#include "util/rand.h"
 
-  const char* data_to_write = "hello world";
-  PBL_LOG(LOG_LEVEL_DEBUG, "writing to flash address %x", flash_addr);
-  flash_write_bytes((const uint8_t *)data_to_write, flash_addr, strlen(data_to_write));
-  system_task_add_callback(prv_flash_stress_callback, NULL);
+static uint32_t prv_xorshift32(uint32_t seed) {
+  seed ^= seed << 13;
+  seed ^= seed >> 17;
+  seed ^= seed < 5;
+  return seed;
+}
+
+static uint32_t s_flash_stress_addr = FLASH_REGION_FIRMWARE_SCRATCH_BEGIN;
+static uint32_t s_flash_stress_last_sector = FLASH_REGION_FIRMWARE_SCRATCH_BEGIN + SECTOR_SIZE_BYTES;
+
+static void prv_flash_stress_callback(void *data) {
+  int iters = (int)data;
+
+  if (iters == 0) {
+    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test complete");
+    return;
+  }
+  
+  int bufsz = rand32() % 1024;
+  uint8_t *buf = kernel_malloc(bufsz);
+  if (!buf) {
+    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: malloc of size %d failed", bufsz);
+    system_task_add_callback(prv_flash_stress_callback, (void *)(iters - 1));
+    return;
+  }
+
+  uint32_t lfsr_seed = rand32();
+  if (lfsr_seed == 0)
+    lfsr_seed = 1;
+
+  uint32_t flash_addr = s_flash_stress_addr;
+  s_flash_stress_addr += bufsz;
+  if (s_flash_stress_addr >= FLASH_REGION_FIRMWARE_SCRATCH_END) {
+    s_flash_stress_addr = flash_addr = FLASH_REGION_FIRMWARE_SCRATCH_BEGIN;
+    s_flash_stress_addr += bufsz;
+  }
+
+  int miscompare = 0;
+ 
+  uint32_t sector_address = flash_get_sector_base_address(flash_addr + bufsz); // the beginning has already been erased, since we are always smaller than a sector
+  if (sector_address != s_flash_stress_last_sector) {
+    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: erasing flash address %lx", sector_address);
+    flash_erase_sector_blocking(sector_address);
+    s_flash_stress_last_sector = sector_address;
+    if (!prv_is_really_erased(sector_address, 0)) {
+      PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: flash address %lx erase failed!", sector_address);
+      miscompare = -1;
+      goto bailout;
+    }
+  }
+  
+  uint32_t lfsr_cur = lfsr_seed;
+  for (int i = 0; i < bufsz; i++) {
+    buf[i] = lfsr_cur & 0xFF;
+    lfsr_cur = prv_xorshift32(lfsr_cur);
+  }
+
+  flash_write_bytes((const uint8_t *)buf, flash_addr, bufsz);
+  
+  for (int j = 0; j < 8; j++) {
+    memset(buf, 0, bufsz);
+    flash_read_bytes(buf, flash_addr, bufsz);
+
+    lfsr_cur = lfsr_seed;
+
+    for (int i = 0; i < bufsz; i++) {
+      if (buf[i] != (lfsr_cur & 0xFF)) {
+        PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: readback %d: miscompare at offset %d (%lx): expected 0x%02lx, found 0x%02x", j, i, flash_addr + i, lfsr_cur & 0xFF, buf[i]);
+        miscompare++;
+      }
+      lfsr_cur = prv_xorshift32(lfsr_cur);
+    }
+    if (miscompare)
+      break;
+  }
+
+bailout:  
+  kernel_free(buf);
+
+  if (miscompare) {
+    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: %d miscompares on %d byte chunk at address %lx!  giving up", miscompare, bufsz, flash_addr);
+  } else {
+    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: %d bytes at address %lx OK; %d to go", bufsz, flash_addr, iters - 1);
+    system_task_add_callback(prv_flash_stress_callback, (void *)(iters - 1));
+  }
 }
 
 
-void command_flash_stress(void) {
+void command_flash_stress(const char *n) {
+  int count = atoi(n);
   // WARNING!! Running this test can shorten the life of your flash chip because it violates the
   // "wait 90 seconds between erases of the same sector" spec.
-  prompt_send_response("Stress flash");
-  system_task_add_callback(prv_flash_stress_callback, NULL);
+  prompt_send_response("flash stress test running in background");
+  system_task_add_callback(prv_flash_stress_callback, (void *)count);
 }
-*/
-
 
 void command_reset() {
   prompt_command_finish();
