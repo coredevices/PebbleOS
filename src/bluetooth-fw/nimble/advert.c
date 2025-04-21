@@ -37,9 +37,6 @@ void bt_driver_advert_advertising_disable(void) {
   PBL_ASSERT(rc == 0, "Failed to stop advertising (%d)", rc);
 }
 
-// no impl needed for nimble, buggy stack workaround
-bool bt_driver_advert_is_connectable(void) { return true; }
-
 bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) { return false; }
 
 void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
@@ -303,12 +300,3 @@ bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_
 
   return true;
 }
-
-// no impl needed for nimble, buggy stack workaround
-bool bt_driver_advert_client_has_cycled(void) { return false; }
-
-// no impl needed for nimble, buggy stack workaround
-void bt_driver_advert_client_set_cycled(bool has_cycled) {}
-
-// no impl needed for nimble, buggy stack workaround
-bool bt_driver_advert_should_not_cycle(void) { return false; }

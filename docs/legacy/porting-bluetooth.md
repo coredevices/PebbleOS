@@ -149,16 +149,6 @@ These apply only to Bluetooth Classic and are no-ops on BLE.
 * bt_driver_classic_pairability_set_enabled
 * sys_app_comm_get_sniff_interval
 
-### BLE advertisement bug workaround APIs.
-
-Bluetopia was buggy.  These APIs should be no-ops with a driver that doesn't
-need to be repeatedly kicked.
-
-* bt_driver_advert_is_connectable -- true
-* bt_driver_advert_client_has_cycled -- true
-* bt_driver_advert_client_set_cycled
-* bt_driver_advert_should_not_cycle -- false
-
 ### Analytics
 
 * bt_driver_analytics_get_connection_quality

@@ -29,13 +29,3 @@ void bt_driver_advert_advertising_disable(void);
 bool bt_driver_advert_client_get_tx_power(int8_t *tx_power);
 
 void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data);
-
-// FIXME: These are ugly. They are used because of the workarounds with the TI chips.
-
-bool bt_driver_advert_is_connectable(void);
-
-bool bt_driver_advert_client_has_cycled(void);
-
-void bt_driver_advert_client_set_cycled(bool has_cycled);
-
-bool bt_driver_advert_should_not_cycle(void);
