@@ -37,7 +37,7 @@ bool system_flash_erase(
     return true;
   }
 
-  if (!addr_is_word_aligned(address) || !addr_is_word_aligned(address + length)) {
+  if (!addr_is_word_aligned(address)) {
     dbgserial_putstr("system_flash_erase: address not word aligned");
     return false;
   }
@@ -71,25 +71,43 @@ bool system_flash_erase(
 bool system_flash_write(
     uint32_t address, const void *data, size_t length,
     SystemFlashProgressCb progress_callback, void *progress_context) {
+  uint32_t aligned;
+  uint8_t last;
 
-  if (!addr_is_word_aligned(address) || !addr_is_word_aligned(address + length)) {
+  if (!addr_is_word_aligned(address)) {
     dbgserial_putstr("system_flash_write: address not word aligned");
     return false;
   }
 
+  last = length % 4U;
+  aligned = length - last;
+
   nrf_nvmc_mode_set(NRF_NVMC, NRF_NVMC_MODE_WRITE);
 
   const uint8_t *data_array = data;
-  for (uint32_t i = 0; i < length; i+=4) {
+  for (uint32_t i = 0; i < aligned; i+=4) {
     while (!nrf_nvmc_ready_check(NRF_NVMC)) {
       // Wait for the write to be ready
     }
 
     nrf_nvmc_word_write(address + i, *(uint32_t *)&data_array[i]);
     if (progress_callback && i % 128 == 0) {
-      progress_callback(i/128, length/128, progress_context);
+      progress_callback(i/128, aligned/128, progress_context);
     }
   }
+
+  if (last != 0U) {
+    uint32_t val = 0xFFFFFFFFU;
+
+    while (!nrf_nvmc_ready_check(NRF_NVMC)) {
+      // Wait for the write to be ready
+    }
+
+    memcpy(&val, &data_array[aligned], last);
+    nrf_nvmc_word_write(address + aligned, val);
+  }
+
   nrf_nvmc_mode_set(NRF_NVMC, NRF_NVMC_MODE_READONLY);
+
   return true;
 }
