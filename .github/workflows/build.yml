@@ -70,16 +70,17 @@ jobs:
         if: ${{ matrix.board == 'asterix_evt1' }}
         run: ./waf build_prf
 
-      - name: Store firmware images
+
+      - name: Bundle
+        run: ./waf bundle
+
+      - name: Store firmware bundles
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.board }}
           path: |
             build/**/*.elf
-            build/**/*.hex
-            build/**/*.bin
-            build/**/*.map
-            build/**/*.pbpack
+            build/*.pbz
 
       - name: Configure (QEMU)
         if: ${{ matrix.board != 'asterix_evt1' }}
