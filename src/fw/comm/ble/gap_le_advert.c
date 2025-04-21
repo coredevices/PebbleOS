@@ -166,11 +166,6 @@ static void prv_unlink_job(GAPLEAdvertisingJob *job) {
   } else {
     list_remove(&job->node, (ListNode **) &s_jobs, NULL);
   }
-
-  // Part of CC2564 advertising bug work-around:
-  if (job == s_current) {
-    bt_driver_advert_client_set_cycled(false);
-  }
 }
 
 static bool prv_is_registered_job(const GAPLEAdvertisingJob *job) {
@@ -266,7 +261,7 @@ static void prv_cycle_timer_callback(void *unused) {
 
   bt_lock();
   {
-    if (!s_current || !bt_driver_advert_client_has_cycled() || !s_gap_le_advert_is_initialized) {
+    if (!s_current || !s_gap_le_advert_is_initialized) {
       // Job got removed in the meantime.
       goto unlock;
     }
@@ -320,21 +315,12 @@ static void prv_timer_stop(void) {
 //! though the current job has not changed. This is (only) useful when the
 //! connectability mode has changed.
 static void prv_perform_next_job(bool force_refresh) {
-
-  // Part of work-around for CC2564 bug (see comment with prv_work_around_should_not_cycle).
-  // When forced, we've just connected or disconnected, in that case cycle as well, because
-  // otherwise we'll continue to advertise non-connectable if we've just disconnected and there
-  // was already a job being advertised.
-  if (!force_refresh && bt_driver_advert_should_not_cycle()) {
-    return;
-  }
-
   // Pick the next job:
   GAPLEAdvertisingJob *next = s_jobs;
 
   // s_is_dangling is checked here, in case the next job happens to have been allocated at the
   // same address as the old s_current:
-  const bool is_same_job = (next == s_current && bt_driver_advert_client_has_cycled());
+  const bool is_same_job = (next == s_current);
 
   if (is_same_job && !force_refresh && s_is_advertising) {
     // No change in job to give air time, keep going.
@@ -404,9 +390,7 @@ static void prv_perform_next_job(bool force_refresh) {
   }
 
   s_current = next;
-  bt_driver_advert_client_set_cycled(true);
 }
-
 
 // -----------------------------------------------------------------------------
 GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
@@ -554,7 +538,7 @@ void gap_le_advert_unschedule_job_types(
     GAPLEAdvertisingJobTag *tag_types, size_t num_types) {
   bt_lock();
 
-  ListNode *first_node = bt_driver_advert_client_has_cycled() ? &s_current->node : &s_jobs->node;
+  ListNode *first_node = &s_current->node;
 
   // get the last job in the list
   ListNode *curr_node = list_get_prev(first_node);
@@ -656,11 +640,6 @@ void gap_le_advert_handle_connect_as_slave(void) {
     // handler (kernel_le_client.c) will unschedule jobs accordingly and we
     // want to avoid unnecessary refreshes of the advertising state
     s_is_advertising = false;
-
-    if (!bt_driver_advert_client_has_cycled()) {
-      s_current = NULL;
-      bt_driver_advert_client_set_cycled(true);
-    }
 
     analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BLE_ESTIMATED_BYTES_ADVERTISED_COUNT);
   }
