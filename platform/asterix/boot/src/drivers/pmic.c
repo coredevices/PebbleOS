@@ -13,7 +13,7 @@
 #define LDSW2VOUTSEL 0x0DU
 #define LDSW2VOUTSEL_1V8 0x08U
 
-static nrfx_twi_t twi = NRFX_TWI_INSTANCE(BOARD_PMIC_I2C);
+static const nrfx_twi_t twi = NRFX_TWI_INSTANCE(BOARD_PMIC_I2C);
 static const nrfx_twi_config_t config =
     NRFX_TWI_DEFAULT_CONFIG(BOARD_PMIC_I2C_SCL_PIN, BOARD_PMIC_I2C_SDA_PIN);
 
