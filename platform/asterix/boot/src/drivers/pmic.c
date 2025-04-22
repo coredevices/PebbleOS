@@ -1,6 +1,7 @@
 #include <board.h>
 #include <nrfx_twi.h>
 #include <drivers/dbgserial.h>
+#include <system/passert.h>
 
 #define LDSW_BASE 0x08U
 
@@ -23,11 +24,7 @@ void pmic_init(void)
 	nrfx_twi_xfer_desc_t xfer = NRFX_TWI_XFER_DESC_TX(0x6b, data, sizeof(data));
 
 	err = nrfx_twi_init(&twi, &config, NULL, NULL);
-	if (err != NRFX_SUCCESS) {
-		dbgserial_print("TWI init failed: ");
-		dbgserial_print_hex(err);
-		dbgserial_newline();
-	}
+	PBL_ASSERT(err == NRFX_SUCCESS, "TWI init failed: %d", err);
 
 	nrfx_twi_enable(&twi);
 
@@ -35,31 +32,19 @@ void pmic_init(void)
 	data[1] = LDSW2LDOSEL;
 	data[2] = LDSW2LDOSEL_LDO;
 	err = nrfx_twi_xfer(&twi, &xfer, 0);
-	if (err != NRFX_SUCCESS) {
-		dbgserial_print("TWI transfer failed: ");
-		dbgserial_print_hex(err);
-		dbgserial_newline();
-	}
+	PBL_ASSERT(err == NRFX_SUCCESS, "TWI transfer failed: %d", err);
 
 	data[0] = LDSW_BASE;
 	data[1] = LDSW2VOUTSEL;
 	data[2] = LDSW2VOUTSEL_1V8;
 	err = nrfx_twi_xfer(&twi, &xfer, 0);
-	if (err != NRFX_SUCCESS) {
-		dbgserial_print("TWI transfer failed: ");
-		dbgserial_print_hex(err);
-		dbgserial_newline();
-	}
+	PBL_ASSERT(err == NRFX_SUCCESS, "TWI transfer failed: %d", err);
 
 	data[0] = LDSW_BASE;
 	data[1] = TASKLDSW2SET;
 	data[2] = 0x01U;
 	err = nrfx_twi_xfer(&twi, &xfer, 0);
-	if (err != NRFX_SUCCESS) {
-		dbgserial_print("TWI transfer failed: ");
-		dbgserial_print_hex(err);
-		dbgserial_newline();
-	}
+	PBL_ASSERT(err == NRFX_SUCCESS, "TWI transfer failed: %d", err);
 
 	nrfx_twi_disable(&twi);
 }
