@@ -3,6 +3,7 @@
 #include <hal/nrf_nvmc.h>
 
 #include "drivers/dbgserial.h"
+#include "drivers/watchdog.h"
 #include "util/misc.h"
 
 #define FLASH_SECTOR_SIZE 0x1000
@@ -54,6 +55,9 @@ bool system_flash_erase(uint32_t address, size_t length, SystemFlashProgressCb p
     while (!nrf_nvmc_ready_check(NRF_NVMC)) {
       // Wait for the erase to complete
     }
+
+    watchdog_kick();
+
     if (progress_callback) {
       progress_callback(sector - first_sector + 1, count, progress_context);
     }
@@ -84,6 +88,9 @@ bool system_flash_write(uint32_t address, const void *data, size_t length,
     }
 
     nrf_nvmc_word_write(address + i, *(uint32_t *)&data_array[i]);
+
+    watchdog_kick();
+
     if (progress_callback && i % 128 == 0) {
       progress_callback(i / 128, aligned / 128, progress_context);
     }

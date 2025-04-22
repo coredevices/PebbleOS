@@ -217,6 +217,8 @@ static void sad_watch(uint32_t error_code)
 
 int main(void)
 {
+	watchdog_kick();
+
 	dbgserial_init();
 
 	dbgserial_putstr("");
@@ -338,9 +340,8 @@ int main(void)
 		sad_watch(ERROR_RESET_LOOP);
 	}
 
-	watchdog_init();
 #ifndef NO_WATCHDOG
-	watchdog_start();
+	watchdog_init();
 #endif
 
 	jump_to_fw();
