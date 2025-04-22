@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/build.yml'
+      - 'platform/**'
       - 'resources/**'
       - 'sdk/**'
       - 'src/**'
@@ -81,6 +82,32 @@ jobs:
           path: |
             build/**/*.elf
             build/*.pbz
+
+      - name: Obtain platform name
+        id: get-platform
+        run: |
+          BOARD=${{ matrix.board }}
+          PLATFORM=${BOARD%%_*}
+          echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
+
+      - name: Configure bootloader
+        if: ${{ matrix.board == 'asterix_evt1' }}
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        run: ./waf configure --board ${{ matrix.board }}
+
+      - name: Build bootloader
+        if: ${{ matrix.board == 'asterix_evt1' }}
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        run: ./waf build
+
+      - name: Store bootloader images
+        if: ${{ matrix.board == 'asterix_evt1' }}
+        uses: actions/upload-artifact@v4
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        with:
+          name: bootloader-${{ matrix.board }}
+          path: |
+            platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.*
 
       - name: Configure (QEMU)
         if: ${{ matrix.board != 'asterix_evt1' }}
