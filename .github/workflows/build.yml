@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "asterix_evt1"]
+        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "asterix"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,11 +71,11 @@ jobs:
         run: ./waf bundle
 
       - name: Build recovery FW
-        if: ${{ matrix.board == 'asterix_evt1' }}
+        if: ${{ matrix.board == 'asterix' }}
         run: ./waf build_prf
 
       - name: Bundle recovery FW
-        if: ${{ matrix.board == 'asterix_evt1' }}
+        if: ${{ matrix.board == 'asterix' }}
         run: ./waf bundle_prf
 
       - name: Store firmware bundles
@@ -94,17 +94,17 @@ jobs:
           echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
 
       - name: Configure bootloader
-        if: ${{ matrix.board == 'asterix_evt1' }}
+        if: ${{ matrix.board == 'asterix' }}
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
         run: ./waf configure --board ${{ matrix.board }}
 
       - name: Build bootloader
-        if: ${{ matrix.board == 'asterix_evt1' }}
+        if: ${{ matrix.board == 'asterix' }}
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
         run: ./waf build
 
       - name: Store bootloader images
-        if: ${{ matrix.board == 'asterix_evt1' }}
+        if: ${{ matrix.board == 'asterix' }}
         uses: actions/upload-artifact@v4
         with:
           name: bootloader-${{ matrix.board }}
@@ -112,15 +112,15 @@ jobs:
             platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.*
 
       - name: Configure (QEMU)
-        if: ${{ matrix.board != 'asterix_evt1' }}
+        if: ${{ matrix.board != 'asterix' }}
         run: ./waf clean configure --board ${{ matrix.board }} --qemu
 
       - name: Build FW (QEMU)
-        if: ${{ matrix.board != 'asterix_evt1' }}
+        if: ${{ matrix.board != 'asterix' }}
         run: ./waf build qemu_image_micro qemu_image_spi
 
       - name: Store firmware images (QEMU)
-        if: ${{ matrix.board != 'asterix_evt1' }}
+        if: ${{ matrix.board != 'asterix' }}
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.board }}-qemu

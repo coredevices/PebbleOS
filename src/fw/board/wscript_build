@@ -87,7 +87,7 @@ elif board in ('cutts_bb','robert_bb','robert_bb2','robert_evt'):
             'drivers',
         ],
     )
-elif board in ('asterix_evt1'):
+elif board in ('asterix'):
     bld.objects(
         name='board',
         source=[

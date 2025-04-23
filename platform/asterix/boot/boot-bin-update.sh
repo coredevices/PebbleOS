@@ -20,7 +20,7 @@ cd "${0%/*}"
 
 reloutdir="../../../bin/boot"
 OUTDIR=`cd "${reloutdir}"; pwd`
-BOARDS=(asterix_evt1)
+BOARDS=(asterix)
 # Use commit timestamp, same as the one compiled into the bootloader binary
 VERSION=`git log -1 --format=%ct HEAD`
 

@@ -255,7 +255,7 @@ board_capability_dicts = [
         }
     },
     {
-        'boards': [ 'asterix_evt1' ],
+        'boards': [ 'asterix' ],
         'capabilities':
         {
             'HAS_APP_GLANCES',

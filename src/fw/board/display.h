@@ -73,7 +73,7 @@ typedef struct {
 #include "displays/display_silk.h"
 #elif BOARD_CALVIN_BB
 #include "displays/display_silk.h"
-#elif BOARD_ASTERIX_EVT1
+#elif BOARD_ASTERIX
 #include "displays/display_silk.h"
 #elif BOARD_CUTTS_BB
 #include "displays/display_snowy.h"

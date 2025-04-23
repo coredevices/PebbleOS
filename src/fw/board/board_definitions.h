@@ -59,7 +59,7 @@
 #include "boards/board_robert.h" // prototypes for Robert BB2
 #elif BOARD_ROBERT_EVT
 #include "boards/board_robert.h" // prototypes for Robert EVT
-#elif BOARD_ASTERIX_EVT1
+#elif BOARD_ASTERIX
 #include "boards/board_asterix.h"
 #else
 #error "Unknown board definition"

@@ -143,7 +143,7 @@ IRQ_MAP_NRFX(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, nrfx_twim_0_irq_handler);
 
 /* sensor SPI bus */
 
-/* asterix_evt1 shares SPI with flash, which we don't support */
+/* asterix shares SPI with flash, which we don't support */
 
 PwmState BACKLIGHT_PWM_STATE;
 IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);

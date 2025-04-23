@@ -126,7 +126,7 @@ pip install -r requirements.txt
 ./waf configure --board $BOARD
 ```
 
-where `$BOARD` is any of the supported boards, e.g. `snowy_bb2`, `asterix_evt1`, ...
+where `$BOARD` is any of the supported boards, e.g. `snowy_bb2`, `asterix`, ...
 
 2. Build:
 

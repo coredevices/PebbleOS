@@ -9,10 +9,10 @@ import gitinfo
 
 def options(opt):
     opt.load('compiler_c')
-    opt.add_option('--board', action='store', default='asterix_evt1',
+    opt.add_option('--board', action='store', default='asterix',
                    help='Which board to build for '
-                   '(asterix_evt1)',
-                   choices=['asterix_evt1'])
+                   '(asterix)',
+                   choices=['asterix'])
     opt.add_option('--nowatchdog', action='store_true',
                    help='Do not enable watchdog timer or reset upon failure')
     opt.add_option('--loglevel', type='int', default=0,
