@@ -67,13 +67,16 @@ jobs:
       - name: Build FW
         run: ./waf build
 
+      - name: Bundle
+        run: ./waf bundle
+
       - name: Build recovery FW
         if: ${{ matrix.board == 'asterix_evt1' }}
         run: ./waf build_prf
 
-
-      - name: Bundle
-        run: ./waf bundle
+      - name: Bundle recovery FW
+        if: ${{ matrix.board == 'asterix_evt1' }}
+        run: ./waf bundle_prf
 
       - name: Store firmware bundles
         uses: actions/upload-artifact@v4
@@ -81,7 +84,7 @@ jobs:
           name: firmware-${{ matrix.board }}
           path: |
             build/**/*.elf
-            build/*.pbz
+            build/**/*.pbz
 
       - name: Obtain platform name
         id: get-platform
