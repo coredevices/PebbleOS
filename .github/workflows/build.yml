@@ -103,7 +103,6 @@ jobs:
       - name: Store bootloader images
         if: ${{ matrix.board == 'asterix_evt1' }}
         uses: actions/upload-artifact@v4
-        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
         with:
           name: bootloader-${{ matrix.board }}
           path: |
