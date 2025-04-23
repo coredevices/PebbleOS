@@ -1,7 +1,6 @@
 #include <board.h>
 #include <drivers/dbgserial.h>
 #include <nrfx_twi.h>
-#include <system/passert.h>
 
 #define CHARGER_BASE 0x03U
 #define ADC_BASE 0x05U
@@ -41,7 +40,7 @@ static const nrfx_twi_t twi = NRFX_TWI_INSTANCE(BOARD_PMIC_I2C);
 static const nrfx_twi_config_t config =
     NRFX_TWI_DEFAULT_CONFIG(BOARD_PMIC_I2C_SCL_PIN, BOARD_PMIC_I2C_SDA_PIN);
 
-static void prv_pmic_write(uint8_t base, uint8_t reg, uint8_t val) {
+static int prv_pmic_write(uint8_t base, uint8_t reg, uint8_t val) {
   nrfx_err_t err;
   uint8_t data[3];
   nrfx_twi_xfer_desc_t xfer = NRFX_TWI_XFER_DESC_TX(0x6b, data, sizeof(data));
@@ -51,14 +50,21 @@ static void prv_pmic_write(uint8_t base, uint8_t reg, uint8_t val) {
   data[2] = val;
 
   err = nrfx_twi_xfer(&twi, &xfer, 0);
-  PBL_ASSERT(err == NRFX_SUCCESS, "TWI transfer failed: %d", err);
+  if (err != NRFX_SUCCESS) {
+    return -1;
+  }
+
+  return 0;
 }
 
-void pmic_init(void) {
+int pmic_init(void) {
+  int ret;
   nrfx_err_t err;
 
   err = nrfx_twi_init(&twi, &config, NULL, NULL);
-  PBL_ASSERT(err == NRFX_SUCCESS, "TWI init failed: %d", err);
+  if (err != NRFX_SUCCESS) {
+    return -1;
+  }
 
   nrfx_twi_enable(&twi);
 
@@ -68,22 +74,58 @@ void pmic_init(void) {
   // - Reduced termination voltage (for warm region): 4.00V
   // - 64mA charge/discharge current (standard charging)
   // - Enable charging
-  prv_pmic_write(CHARGER_BASE, BCHGENABLECLR, ENABLECHARGING_DISABLECHG);
+  ret = prv_pmic_write(CHARGER_BASE, BCHGENABLECLR, ENABLECHARGING_DISABLECHG);
+  if (ret != 0) {
+    return ret;
+  }
 
-  prv_pmic_write(ADC_BASE, ADCNTCRSEL, ADCNTCRSEL_10K);
+  ret = prv_pmic_write(ADC_BASE, ADCNTCRSEL, ADCNTCRSEL_10K);
+  if (ret != 0) {
+    return ret;
+  }
 
-  prv_pmic_write(CHARGER_BASE, BCHGVTERM, BCHGVTERMNORM_4V20);
-  prv_pmic_write(CHARGER_BASE, BCHGVTERMR, BCHGVTERMREDUCED_4V00);
+  ret = prv_pmic_write(CHARGER_BASE, BCHGVTERM, BCHGVTERMNORM_4V20);
+  if (ret != 0) {
+    return ret;
+  }
 
-  prv_pmic_write(CHARGER_BASE, BCHGISETMSB, 16);
-  prv_pmic_write(CHARGER_BASE, BCHGISETDISCHARGEMSB, 16);
+  ret = prv_pmic_write(CHARGER_BASE, BCHGVTERMR, BCHGVTERMREDUCED_4V00);
+  if (ret != 0) {
+    return ret;
+  }
 
-  prv_pmic_write(CHARGER_BASE, BCHGENABLESET, ENABLECHARGING_ENABLECHG);
+  ret = prv_pmic_write(CHARGER_BASE, BCHGISETMSB, 16);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_pmic_write(CHARGER_BASE, BCHGISETDISCHARGEMSB, 16);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_pmic_write(CHARGER_BASE, BCHGENABLESET, ENABLECHARGING_ENABLECHG);
+  if (ret != 0) {
+    return ret;
+  }
 
   // LDO2 as LDO @ 1.8V (powers the QSPI flash)
-  prv_pmic_write(LDSW_BASE, LDSW2LDOSEL, LDSW2LDOSEL_LDO);
-  prv_pmic_write(LDSW_BASE, LDSW2VOUTSEL, LDSW2VOUTSEL_1V8);
-  prv_pmic_write(LDSW_BASE, TASKLDSW2SET, 0x01U);
+  ret = prv_pmic_write(LDSW_BASE, LDSW2LDOSEL, LDSW2LDOSEL_LDO);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_pmic_write(LDSW_BASE, LDSW2VOUTSEL, LDSW2VOUTSEL_1V8);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_pmic_write(LDSW_BASE, TASKLDSW2SET, 0x01U);
+  if (ret != 0) {
+    return ret;
+  }
 
   nrfx_twi_disable(&twi);
+
+  return 0;
 }

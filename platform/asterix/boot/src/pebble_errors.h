@@ -9,6 +9,7 @@ static const uint32_t ERROR_STUCK_BUTTON  = 0xfe504501;
 static const uint32_t ERROR_BAD_SPI_FLASH = 0xfe504502;
 static const uint32_t ERROR_CANT_LOAD_FW = 0xfe504503;
 static const uint32_t ERROR_RESET_LOOP = 0xfe504504;
+static const uint32_t ERROR_PMIC_INIT = 0xfe504505;
 
 // BT Errors
 static const uint32_t ERROR_CANT_LOAD_BT = 0xfe504510;

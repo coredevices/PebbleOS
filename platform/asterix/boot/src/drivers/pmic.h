@@ -1,3 +1,3 @@
 #pragma once
 
-void pmic_init(void);
+int pmic_init(void);

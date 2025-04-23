@@ -207,6 +207,8 @@ static void sad_watch(uint32_t error_code) {
 }
 
 int main(void) {
+  int ret;
+
   watchdog_kick();
 
   dbgserial_init();
@@ -245,7 +247,12 @@ int main(void) {
     boot_bit_clear(BOOT_BIT_RECOVERY_LOAD_FAIL_STRIKE_TWO);
   }
 
-  pmic_init();
+  ret = pmic_init();
+  if (ret != 0) {
+    dbgserial_putstr("PMIC init failed");
+    sad_watch(ERROR_PMIC_INIT);
+  }
+
   flash_init();
   button_init();
   display_init();
