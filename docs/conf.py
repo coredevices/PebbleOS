@@ -42,9 +42,12 @@ nitpicky = True
 
 html_theme = "sphinx_book_theme"
 html_static_path = ["_static"]
-html_logo = "_static/images/logo.png"
+html_logo = "_static/images/logo.svg"
 html_css_files = ["css/custom.css"]
 html_theme_options = {
+    "logo": {
+        "text": "PebbleOS",
+    },
     "repository_url": "https://github.com/pebble-dev/pebble-firmware",
     "repository_branch": "main",
     "path_to_docs": "docs",
