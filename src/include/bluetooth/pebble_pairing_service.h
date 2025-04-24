@@ -22,7 +22,6 @@
 
 #define PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID PEBBLE_BT_UUID_EXPAND(1)
 #define PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID PEBBLE_BT_UUID_EXPAND(2)
-#define PEBBLE_BT_PAIRING_SERVICE_GATT_MTU_UUID PEBBLE_BT_UUID_EXPAND(3)
 // Note: UUID 4 was used by the 3.14-rc Android App for V0 of the Connection Param characteristic
 // but never shipped externally
 #define PEBBLE_BT_PAIRING_SERVICE_CONNECTION_PARAMETERS_UUID PEBBLE_BT_UUID_EXPAND(5)
@@ -225,12 +224,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 //! change.
 //! @param connection The connection for which the status was changed.
 void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection);
-
-//! Signals to the Pebble GATT service the GATT MTU has changed, allowing it to notify any BLE
-//! devices that are subscribed to GATT MTU characteristic.
-//! @param connection The connection for which the GATT MTU has changed.
-//! @note the caller is responsible for taking bt_lock!
-void bt_driver_pebble_pairing_service_handle_gatt_mtu_change(const GAPLEConnection *connection);
 
 //! Indicate to the FW that Connectivity Status characteristic has been unsubscribed from.
 //! This is used to detect that the Pebble iOS app has been terminated.

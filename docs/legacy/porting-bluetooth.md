@@ -86,7 +86,6 @@ See at least one implementation:
 https://github.com/pebble-dev/RebbleOS/blob/master/hw/drivers/nrf52_bluetooth/nrf52_bluetooth_ppogatt.c#L352-L417
 
 * bt_driver_pebble_pairing_service_handle_status_change
-* bt_driver_pebble_pairing_service_handle_gatt_mtu_change
 * bt_driver_cb_pebble_pairing_service_handle_connection_parameter_write
 * bt_driver_cb_pebble_pairing_service_handle_ios_app_termination_detected
 

@@ -76,7 +76,6 @@ void bt_driver_cb_gatt_handle_mtu_update(const GattDeviceMtuUpdateEvent *event) 
             connection->gatt_mtu, event->mtu);
     if (has_mtu_changed) {
       connection->gatt_mtu = event->mtu;
-      bt_driver_pebble_pairing_service_handle_gatt_mtu_change(connection);
     }
     BLE_LOG_DEBUG("GATT MTU Updated: remote: %u", event->mtu);
   }

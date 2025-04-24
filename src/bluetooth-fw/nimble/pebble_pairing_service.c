@@ -119,12 +119,6 @@ static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle
   return 0;
 }
 
-static int prv_access_gatt_mtu(uint16_t conn_handle, uint16_t attr_handle,
-                               struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  // TODO: implement
-  return 0;
-}
-
 static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
     {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
@@ -142,12 +136,6 @@ static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
                         BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID)),
                     .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE,
                     .access_cb = prv_access_trigger_pairing,
-                },
-                {
-                    .uuid = BLE_UUID128_DECLARE(
-                        BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_GATT_MTU_UUID)),
-                    .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_NOTIFY,
-                    .access_cb = prv_access_gatt_mtu,
                 },
                 {
                     0, /* No more characteristics in this service */
@@ -192,9 +180,4 @@ void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection
   prv_notify_chr_updated(
       connection,
       BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID)));
-}
-
-void bt_driver_pebble_pairing_service_handle_gatt_mtu_change(const GAPLEConnection *connection) {
-  prv_notify_chr_updated(
-      connection, BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_GATT_MTU_UUID)));
 }
