@@ -846,7 +846,7 @@ def size_resources(ctx):
     elif ctx.env.MICRO_FAMILY == 'STM32F7':
         max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'NRF52840':
-        max_size = 512 * 1024
+        max_size = 1024 * 1024
     else:
         max_size = 256 * 1024
 

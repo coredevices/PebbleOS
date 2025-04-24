@@ -28,15 +28,18 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #define FLASH_REGION_DEF(MACRO, arg)                                                      \
-  MACRO(FIRMWARE_SCRATCH, 0x0100000 /*  1024k */, arg)        /*      0x0 - 0x0100000 */  \
-  MACRO(SYSTEM_RESOURCES_BANK_0, 0x0080000 /*   512K */, arg) /* 0x0100000 - 0x0180000 */ \
-  MACRO(SYSTEM_RESOURCES_BANK_1, 0x0080000 /*   512K */, arg) /* 0x0180000 - 0x0200000 */ \
-  MACRO(SAFE_FIRMWARE, 0x0080000 /*   512k */, arg)           /* 0x0200000 - 0x0280000 */ \
-  MACRO(DEBUG_DB, 0x0020000 /*   128k */, arg)                /* 0x0280000 - 0x02A0000 */ \
-  MACRO(FILESYSTEM, 0x1D50000 /* 30016k */, arg)              /* 0x02A0000 - 0x1FF0000 */ \
-  MACRO(RSVD, 0x000E000 /*    56k */, arg)                    /* 0x1FF0000 - 0x1FFE000 */ \
-  MACRO(SHARED_PRF_STORAGE, 0x0001000 /*     4k */, arg)      /* 0x1FFE000 - 0x1FFF000 */ \
-  MACRO(MFG_INFO, 0x0001000 /*     4k */, arg)                /* 0x1FFF000 - 0x2000000 */
+  /* Protectable region (512K, lower 1/64) BP4-0=10100 */                                 \
+  MACRO(SAFE_FIRMWARE,           0x0080000 /*   512K */, arg) /* 0x0000000 - 0x007FFFF */ \
+  /* Non-protectable region (31.5MB) */                                                   \
+  MACRO(FIRMWARE_SCRATCH,        0x0100000 /*  1024K */, arg) /* 0x0080000 - 0x017FFFF */ \
+  MACRO(SYSTEM_RESOURCES_BANK_0, 0x0100000 /*  1024K */, arg) /* 0x0180000 - 0x027FFFF */ \
+  MACRO(SYSTEM_RESOURCES_BANK_1, 0x0100000 /*  1024K */, arg) /* 0x0280000 - 0x037FFFF */ \
+  MACRO(FILESYSTEM,              0x1A50000 /* 26944K */, arg) /* 0x0380000 - 0x1DCFFFF */ \
+  MACRO(RSVD2,                   0x0200000 /*  2048K */, arg) /* 0x1DD0000 - 0x1FCFFFF */ \
+  MACRO(DEBUG_DB,                0x0020000 /*   128K */, arg) /* 0x1FD0000 - 0x1FEFFFF */ \
+  MACRO(RSVD3,                   0x000E000 /*    56K */, arg) /* 0x1FF0000 - 0x1FFDFFF */ \
+  MACRO(MFG_INFO,                0x0001000 /*     4K */, arg) /* 0x1FFE000 - 0x1FFEFFF */ \
+  MACRO(SHARED_PRF_STORAGE,      0x0001000 /*     4K */, arg) /* 0x1FFF000 - 0x1FFFFFF */
 
 #include "flash_region_def_helper.h"
 
@@ -76,12 +79,6 @@
 
 // make sure all the sizes are multiples of the subsector size (4k)
 FLASH_REGION_SIZE_CHECK(SUBSECTOR_SIZE_BYTES)
-
-// make sure the PRF and MFG regions are within the last 64k sector so we can protect them.
-_Static_assert(FLASH_REGION_SHARED_PRF_STORAGE_BEGIN >= BOARD_NOR_FLASH_SIZE - SECTOR_SIZE_BYTES,
-               "Shared PRF storage should be within the last 64k of flash");
-_Static_assert(FLASH_REGION_MFG_INFO_BEGIN >= BOARD_NOR_FLASH_SIZE - SECTOR_SIZE_BYTES,
-               "MFG info should be within the last 64k of flash");
 
 // make sure the total size is what we expect (32mb)
 _Static_assert(BOARD_NOR_FLASH_SIZE == 0x2000000, "Flash size should be 32mb");
