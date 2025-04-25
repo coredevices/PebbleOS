@@ -9,7 +9,7 @@ Follow this guide to:
 ## Pre-requisites
 
 First download the Arm GNU toolchain `arm-none-eabi` 14.2.Rel1 from [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads).
-Make sure to make it available on your path `PATH` by checking GCC version:
+Make sure to make it available on your path `PATH` and then check GCC version is reported correctly:
 
 ```shell
 $ arm-none-eabi-gcc --version
@@ -47,6 +47,12 @@ sudo apt install clang gcc gcc-multilib git gettext python3-dev python3-venv
 
 1. Install [brew](https://brew.sh/).
 
+2. Link `brew` Python:
+
+```shell
+brew link python@3
+```
+
 ::::
 
 :::::
@@ -60,7 +66,7 @@ If building with Javascript support enabled (default), install Emscripten:
 :sync: ubuntu
 
 1. Install Emscripten SDK as detailed [here](https://emscripten.org/docs/getting_started/downloads.html).
-   Pick version `4.0.1` instead of `latest` when running `./emsdk install` or `./emsdk activate`.
+   Pick version `4.0.7` instead of `latest` when running `./emsdk install` or `./emsdk activate`.
    To conveniently access Emscripten SDK tools, the activate command will offer some suggestions.
    It is recommended to follow them.
 ::::
@@ -71,8 +77,12 @@ If building with Javascript support enabled (default), install Emscripten:
 1. Install Emscripten using `brew`:
 
 ```shell
-brew install emscripten@4.0.1
+brew install emscripten
 ```
+
+Note that `brew` does not seem to offer all Emscripten versions.
+Versions 4.0.x should work fine.
+If `brew` versions cause issues, consider using [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) instead.
 
 ::::
 :::::
