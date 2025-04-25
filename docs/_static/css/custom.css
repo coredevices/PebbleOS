@@ -31,6 +31,6 @@ html {
   --pst-font-family-heading: "Tomorrow", sans-serif;
 }
 
-.caption, .logo__title {
+.caption, .logo__title, .home-title {
   font-family: "Tomorrow", sans-serif;
 }
