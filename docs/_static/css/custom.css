@@ -2,3 +2,29 @@
   margin-top: 0px !important;
   margin-bottom: 0px !important;
 }
+
+@font-face {
+  font-family: "Tomorrow";
+  font-weight: 400;
+  src: url("../fonts/Tomorrow/Tomorrow-Regular.ttf");
+}
+
+@font-face {
+  font-family: "Tomorrow";
+  font-weight: 500;
+  src: url("../fonts/Tomorrow/Tomorrow-Medium.ttf");
+}
+
+@font-face {
+  font-family: "Tomorrow";
+  font-weight: 600;
+  src: url("../fonts/Tomorrow/Tomorrow-SemiBold.ttf");
+}
+
+html {
+  --pst-font-family-heading: "Tomorrow", sans-serif;
+}
+
+.caption, .logo__title {
+  font-family: "Tomorrow", sans-serif;
+}
