@@ -1,3 +1,9 @@
+html[data-theme="light"],
+html[data-theme="dark"] {
+  --pst-color-primary: #3577b9;
+  --pst-color-secondary: #6ab4ff;
+}
+
 #rtd-footer-container {
   margin-top: 0px !important;
   margin-bottom: 0px !important;
