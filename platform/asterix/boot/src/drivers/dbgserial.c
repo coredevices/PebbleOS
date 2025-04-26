@@ -43,19 +43,21 @@ static size_t s_message_length = 0;
 static unsigned char s_message_buffer[MAX_MESSAGE];
 
 void dbgserial_init(void) {
-  NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Enabled;
   NRF_UART0->BAUDRATE = UART_BAUDRATE_BAUDRATE_Baud1M;
   NRF_UART0->TASKS_STARTTX = 1;
   NRF_UART0->PSELTXD = BOARD_UART_TX_PIN;
 }
 
 static void prv_putchar(uint8_t c) {
+  NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Enabled;
   NRF_UART0->TXD = c;
   while (NRF_UART0->EVENTS_TXDRDY != 1) {}
   NRF_UART0->EVENTS_TXDRDY = 0;
+  NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Disabled;
 }
 
 void dbgserial_print(const char* str) {
+
   for (; *str && s_message_length < MAX_MESSAGE; ++str) {
     if (*str == '\n') {
       dbgserial_newline();
@@ -63,6 +65,7 @@ void dbgserial_print(const char* str) {
       s_message_buffer[s_message_length++] = *str;
     }
   }
+
 }
 
 void dbgserial_newline(void) {
