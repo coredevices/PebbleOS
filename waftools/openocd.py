@@ -30,6 +30,7 @@ JTAG_OPTIONS = {'olimex': 'source [find interface/ftdi/olimex-arm-usb-ocd-h.cfg]
                 'jtag_ftdi': 'source waftools/openocd_jtag_ftdi.cfg',
                 'swd_ftdi': 'source waftools/openocd_swd_ftdi.cfg',
                 'swd_jlink': 'source waftools/openocd_swd_jlink.cfg',
+                'swd_tigard': 'source waftools/openocd_swd_tigard.cfg',
                 'swd_stlink': 'source [find interface/stlink-v2.cfg]',
                 'swd_cmsisdap': 'source waftools/openocd_swd_cmsisdap.cfg',
                 }
