@@ -4,7 +4,9 @@
 
 #define CHARGER_BASE 0x03U
 #define ADC_BASE 0x05U
+#define TIMER_BASE 0x07U
 #define LDSW_BASE 0x08U
+#define ERRLOG_BASE 0x0EU
 
 // CHARGER
 #define BCHGENABLESET 0x04U
@@ -27,6 +29,10 @@
 #define ADCNTCRSEL 0x0AU
 #define ADCNTCRSEL_10K 0x1U
 
+// TIMER
+#define TIMERCLR 0x01U
+#define TIMERCLR_TASKTIMERDIS 0x01U
+
 // LDO
 #define TASKLDSW2SET 0x02U
 
@@ -35,6 +41,10 @@
 
 #define LDSW2VOUTSEL 0x0DU
 #define LDSW2VOUTSEL_1V8 0x08U
+
+// ERRLOG
+#define SCRATCH0 0x1U
+#define SCRATCH0_BOOTTIMEREN 0x01U
 
 static const nrfx_twi_t twi = NRFX_TWI_INSTANCE(BOARD_PMIC_I2C);
 static const nrfx_twi_config_t config =
@@ -67,6 +77,17 @@ int pmic_init(void) {
   }
 
   nrfx_twi_enable(&twi);
+  
+  // Turn off any watchdog / boot timer right away.
+  ret = prv_pmic_write(TIMER_BASE, TIMERCLR, TIMERCLR_TASKTIMERDIS);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_pmic_write(ERRLOG_BASE, SCRATCH0, 0x00);
+  if (ret != 0) {
+    return ret;
+  }
 
   // Configure charger (TODO: values are board/battery dependent)
   // - Thermistor: 10K NTC
