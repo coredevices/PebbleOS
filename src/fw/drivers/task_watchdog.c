@@ -285,7 +285,7 @@ void task_watchdog_init(void) {
   nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK);
   nrf_rtc_event_enable(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
 
-  NVIC_SetPriority(RTC2_IRQn, TASK_WATCHDOG_PRIORITY << 4);
+  NVIC_SetPriority(RTC2_IRQn, TASK_WATCHDOG_PRIORITY);
   NVIC_ClearPendingIRQ(RTC2_IRQn);
   NVIC_EnableIRQ(RTC2_IRQn);
 
