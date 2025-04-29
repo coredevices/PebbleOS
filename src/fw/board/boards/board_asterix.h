@@ -33,13 +33,13 @@ static const BoardConfig BOARD_CONFIG = {
 static const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons = {
     [BUTTON_ID_BACK] =
-        { "Back",   { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(0, 28) }, NRF_GPIO_PIN_PULLUP },
+        { "Back",   { NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 28) }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_UP] =
-        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 29) }, NRF_GPIO_PIN_PULLUP },
+        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 29) }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_SELECT] =
-        { "Select", { NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 30) }, NRF_GPIO_PIN_PULLUP },
+        { "Select", { NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(0, 30) }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_DOWN] =
-        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(0, 31) }, NRF_GPIO_PIN_PULLUP },
+        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 5, NRF_GPIO_PIN_MAP(0, 31) }, NRF_GPIO_PIN_PULLUP },
   },
   .button_com = { 0 },
   .active_high = false,
@@ -47,8 +47,8 @@ static const BoardConfigButton BOARD_CONFIG_BUTTON = {
 };
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
-  .pmic_int = { },
-  .pmic_int_gpio = { .gpio_pin = GPIO_Pin_NULL, }, /* TODO */
+  .pmic_int = { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12) },
+  .pmic_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 12) },
 
   .battery_vmon_scale = { /* TODO */
     // Battery voltage is scaled down by a pair of resistors:
@@ -107,7 +107,7 @@ static const BoardConfigMag BOARD_CONFIG_MAG = {
 #endif
   },
   .mag_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 3) },
-  .mag_int = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 5, .gpio_pin = NRF_GPIO_PIN_MAP(0, 3), },
+  .mag_int = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 6, .gpio_pin = NRF_GPIO_PIN_MAP(0, 3), },
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {

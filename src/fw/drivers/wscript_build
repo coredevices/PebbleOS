@@ -340,12 +340,11 @@ elif bld.is_tintin():
         ],
     )
 elif bld.is_asterix():
-    # FIXME: provide working implementation
     bld.objects(
         name='driver_battery',
         source=[
             'battery/battery_common.c',
-            'nrf5/stubs/battery.c',
+            # PMIC provides this implementation
         ],
         use=[
             'fw_includes',
