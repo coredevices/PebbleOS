@@ -32,6 +32,10 @@ static void __attribute__((noreturn)) jump_to_fw(void) {
   dbgserial_print_hex((uintptr_t)reset_handler);
   dbgserial_print("...\r\n\r\n");
 
+  // Give it one last kick to give user firmware a known amount of time to
+  // start up.
+  watchdog_kick();
+
   // The Cortex-M user guide states that the reset values for the core registers
   // are as follows:
   //   R0-R12 = Unknown
@@ -170,6 +174,7 @@ static bool check_force_boot_recovery(void) {
         // stop waiting if not held down any longer
         return false;
       }
+      watchdog_kick();
       delay_ms(1);
     }
 
@@ -202,6 +207,7 @@ static void sad_watch(uint32_t error_code) {
     if (button_state != prev_button_state) {
       system_reset();
     }
+    watchdog_kick();
     delay_ms(10);
   }
 }
