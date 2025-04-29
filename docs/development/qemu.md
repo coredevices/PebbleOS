@@ -29,7 +29,7 @@ sudo apt install autoconf libglib2.0-dev libpixman-1-dev
 :sync: macos
 
 ```shell
-brew install autoconf glib pixmap
+brew install autoconf glib pixman
 ```
 
 ::::
