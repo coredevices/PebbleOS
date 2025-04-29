@@ -3,7 +3,6 @@
 #include <nrfx_twi.h>
 
 #define CHARGER_BASE 0x03U
-#define BUCK_BASE 0x04U
 #define ADC_BASE 0x05U
 #define TIMER_BASE 0x07U
 #define LDSW_BASE 0x08U
@@ -26,17 +25,6 @@
 #define BCHGVTERMR 0x0DU
 #define BCHGVTERMREDUCED_4V00 0x4U
 
-// BUCK
-#define BUCK1PWMSET 0x4U
-#define BUCK1PWMSET_SET 0x01U
-
-#define BUCK1NORMVOUT 0x8U
-#define BUCK1RETVOUT 0x8U
-#define BUCKVOUT_1V8 0x8U
-
-#define BUCKSWCTRLSET 0xFU
-#define BUCKSWCTRLSET_BUCK1SWCTRLSET 0x01U
-
 // ADC
 #define ADCNTCRSEL 0x0AU
 #define ADCNTCRSEL_10K 0x1U
@@ -57,7 +45,6 @@
 // ERRLOG
 #define SCRATCH0 0x1U
 #define SCRATCH0_BOOTTIMEREN 0x01U
-
 
 static const nrfx_twi_t twi = NRFX_TWI_INSTANCE(BOARD_PMIC_I2C);
 static const nrfx_twi_config_t config =
@@ -98,28 +85,6 @@ int pmic_init(void) {
   }
 
   ret = prv_pmic_write(ERRLOG_BASE, SCRATCH0, 0x00);
-  if (ret != 0) {
-    return ret;
-  }
-
-  // Set up the BUCK1 regulator for maximal stability and manual control to
-  // 1.8V -- system FW can reenable hysteretic mode later to save power.
-  ret = prv_pmic_write(BUCK_BASE, BUCK1PWMSET, BUCK1PWMSET_SET);
-  if (ret != 0) {
-    return ret;
-  }
-
-  ret = prv_pmic_write(BUCK_BASE, BUCK1NORMVOUT, BUCKVOUT_1V8);
-  if (ret != 0) {
-    return ret;
-  }
-
-  ret = prv_pmic_write(BUCK_BASE, BUCK1RETVOUT, BUCKVOUT_1V8);
-  if (ret != 0) {
-    return ret;
-  }
-
-  ret = prv_pmic_write(BUCK_BASE, BUCKSWCTRLSET, BUCKSWCTRLSET_BUCK1SWCTRLSET);
   if (ret != 0) {
     return ret;
   }
