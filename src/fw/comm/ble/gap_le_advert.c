@@ -103,6 +103,8 @@ static RegularTimerInfo s_cycle_regular_timer;
 
 static bool s_is_advertising;
 
+static bool s_is_connected;
+
 //! Cache of the last advertising transmission power in dBm. A cache is kept in
 //! case the API call fails, for example because Bluetooth is disabled.
 //! 12 dBm is what the PAN1315 Bluetooth module reports.
@@ -263,6 +265,11 @@ static void prv_cycle_timer_callback(void *unused) {
   {
     if (!s_current || !s_gap_le_advert_is_initialized) {
       // Job got removed in the meantime.
+      goto unlock;
+    }
+
+    if (s_is_connected) {
+      // Don't do anything if connected
       goto unlock;
     }
 
@@ -641,6 +648,8 @@ void gap_le_advert_handle_connect_as_slave(void) {
     // want to avoid unnecessary refreshes of the advertising state
     s_is_advertising = false;
 
+    s_is_connected = true;
+
     analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BLE_ESTIMATED_BYTES_ADVERTISED_COUNT);
   }
 unlock:
@@ -654,6 +663,9 @@ void gap_le_advert_handle_disconnect_as_slave(void) {
     if (!s_gap_le_advert_is_initialized) {
       goto unlock;
     }
+
+    s_is_connected = false;
+
     // Call prv_perform_next_job() to trigger refreshing the configuration of
     // the controller: it can advertise connectable packets again.
     prv_perform_next_job(true /* force refresh, connectability mode changed */);
