@@ -71,7 +71,11 @@ static TimerID s_throttle_timer_id = TIMER_INVALID_ID;
 // How often we want the interrupt to fire
 #define TIMER_INTERRUPT_HZ  2
 // The frequency to run the peripheral at
+#if MICRO_FAMILY_NRF5
+#define TIMER_CLOCK_HZ 32768
+#else
 #define TIMER_CLOCK_HZ 32000
+#endif
 // The number of timer ticks that should elapse before the timer interrupt fires
 #define TIME_PERIOD  (TIMER_CLOCK_HZ / TIMER_INTERRUPT_HZ)
 
