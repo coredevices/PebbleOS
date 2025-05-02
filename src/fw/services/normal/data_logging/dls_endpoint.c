@@ -149,11 +149,15 @@ static void check_ack_timeout(void) {
 }
 
 static void ack_timer_cb(void *cb_data) {
+  dls_list_lock();
+
   mutex_lock(s_endpoint_data.mutex);
 
   check_ack_timeout();
 
   mutex_unlock(s_endpoint_data.mutex);
+
+  dls_list_unlock();
 }
 
 static bool find_soonest_ack_timeout_cb(DataLoggingSession *session, void *data) {

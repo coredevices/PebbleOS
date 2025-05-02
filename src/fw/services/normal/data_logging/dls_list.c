@@ -327,6 +327,14 @@ DataLoggingSession *dls_list_get_next(DataLoggingSession *cur) {
   return logging_session;
 }
 
+void dls_list_lock(void) {
+  mutex_lock_recursive(s_list_mutex);
+}
+
+void dls_list_unlock(void) {
+  mutex_unlock_recursive(s_list_mutex);
+}
+
 bool dls_list_for_each_session(bool (callback(DataLoggingSession*, void*)), void *data) {
   mutex_lock_recursive(s_list_mutex);
   DataLoggingSession *logging_session = s_logging_sessions;

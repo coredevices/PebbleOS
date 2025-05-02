@@ -77,3 +77,9 @@ DataLoggingStatus dls_get_session_status(DataLoggingSession *session);
 
 //! Assert that the current task owns the list mutex
 void dls_assert_own_list_mutex(void);
+
+//! Lock the list mutex (recursive lock).
+void dls_list_lock(void);
+
+//! Unlock the list mutex (recursive unlock)
+void dls_list_unlock(void);
