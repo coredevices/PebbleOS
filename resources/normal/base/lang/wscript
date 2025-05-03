@@ -43,7 +43,7 @@ def make_lang(ctx):
         subprocess.call(['msgmerge', '--lang=' + lang_code, '--update', po_path, new_po_file.name])
 
 def pack_all_langs(ctx):
-    language_codes = os.walk(ctx.path.abspath()).next()[1]
+    language_codes = next(os.walk(ctx.path.abspath()))[1]
 
     for language_code in language_codes:
         pack_lang_code(ctx, language_code)
@@ -85,7 +85,7 @@ def pack_lang_code(ctx, lang_code):
 
         waflib.Logs.pprint('CYAN', 'Created mo at {}'.format(mo_path))
 
-        with open(mo_path, 'r') as f:
+        with open(mo_path, 'rb') as f:
             resource_data[name] = f.read()
 
         ui_codepoints_path = os.path.join(build_path, 'codepoints.json')

@@ -23,7 +23,7 @@ def generate_codepoint_requirements(path, encoding='utf-8', controlchars=False):
     with codecs.open(path, encoding=encoding, mode='r') as fin:
         for line in fin:
             if lang is None:
-                langstr = re.search("^\"Language: (\w*)", line)
+                langstr = re.search(r"^\"Language: (\w*)", line)
                 lang = langstr.group(1) if langstr else None
                 continue
 
