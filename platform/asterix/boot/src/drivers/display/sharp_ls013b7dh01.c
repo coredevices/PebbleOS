@@ -13,7 +13,6 @@
 #include "drivers/display/resources/hex_digits.h"
 #include "drivers/display/resources/dead_face.xbm"
 #include "drivers/display/resources/empty_bar.xbm"
-#include "drivers/display/resources/error_url.xbm"
 #include "drivers/display/resources/pebbleos_logo.xbm"
 
 #define DISP_COLS 144
@@ -247,8 +246,6 @@ void display_error_code(uint32_t code) {
   prv_draw_bitmap(dead_face_bits, (140 - dead_face_width) / 2, 24, dead_face_width, dead_face_height, buffer);
 
   prv_draw_code(code, buffer);
-
-  prv_draw_bitmap(error_url_bits, 16, 144, error_url_width, error_url_height, buffer);
 
   prv_display_buffer(buffer);
 }
