@@ -185,7 +185,7 @@ void display_boot_splash(void) {
   // Draw black
   memset(buffer, 0x00, sizeof(buffer));
 
-  prv_draw_bitmap(pebbleos_logo_bits, 17, 69, pebbleos_logo_width, pebbleos_logo_height, buffer);
+  prv_draw_bitmap(pebbleos_logo_bits, 16, 69, pebbleos_logo_width, pebbleos_logo_height, buffer);
 
   prv_display_buffer(buffer);
 }
@@ -278,7 +278,7 @@ void display_firmware_update_progress(uint32_t numerator, uint32_t denominator) 
   uint8_t buffer[DISP_ROWS][DISP_LINE_BYTES];
   memset(buffer, 0x00, sizeof(buffer));
 
-  prv_draw_bitmap(pebbleos_logo_bits, 17, 69, pebbleos_logo_width, pebbleos_logo_height, buffer);
+  prv_draw_bitmap(pebbleos_logo_bits, 16, 69, pebbleos_logo_width, pebbleos_logo_height, buffer);
 
 
   prv_draw_bitmap(empty_bar_bits, x_offset, y_offset, empty_bar_width, empty_bar_height, buffer);
