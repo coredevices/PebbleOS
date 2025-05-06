@@ -50,7 +50,7 @@ def configure(conf):
         ])
 
     conf.env.append_unique('LINKFLAGS',
-            ['-Wl,--cref', '-Wl,--gc-sections', '-specs=nano.specs']
+            ['-Wl,--print-memory-usage', '-Wl,--gc-sections', '-specs=nano.specs']
             + CPU_FLAGS + OPT_FLAGS)
 
     if conf.options.nowatchdog:
