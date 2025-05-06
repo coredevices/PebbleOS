@@ -1601,8 +1601,8 @@ def _check_firmware_image_size(ctx, path):
             # 2048k of flash and 32k bootloader
             max_firmware_size = (2048 - 32) * BYTES_PER_K
     elif ctx.env.MICRO_FAMILY == 'NRF52840':
-        # 1024k of flash and 16k bootloader
-        max_firmware_size = (1024 - 16) * BYTES_PER_K
+        # 1024k of flash and 32k bootloader
+        max_firmware_size = (1024 - 32) * BYTES_PER_K
     else:
         ctx.fatal('Cannot check firmware size against unknown micro family "{}"'
                   .format(ctx.env.MICRO_FAMILY))
