@@ -337,6 +337,8 @@ int main(void) {
     sad_watch(ERROR_RESET_LOOP);
   }
 
+  display_deinit();
+
 #ifndef NO_WATCHDOG
   watchdog_init();
 #endif

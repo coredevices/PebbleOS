@@ -6,6 +6,7 @@
 
 #include <board.h>
 
+#include <hal/nrf_pwm.h>
 #include <nrfx_spim.h>
 
 // Bootloader images
@@ -26,6 +27,8 @@
 #define DISP_MODE_STATIC (0x00)
 #define DISP_MODE_WRITE (0x80)
 #define DISP_MODE_CLEAR (0x20)
+
+static uint16_t s_extcomin_period;
 
 static nrfx_spim_t spim = NRFX_SPIM_INSTANCE(3);
 static nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG(
@@ -296,6 +299,19 @@ void display_firmware_update_progress(uint32_t numerator, uint32_t denominator) 
 void display_init(void) {
   config.frequency = NRFX_MHZ_TO_HZ(1);
 
+  // PWM: 120Hz, 100us pulse
+  s_extcomin_period = ((100U * 125000UL) / 1000000UL) | (1U << 15U);
+  nrf_pwm_pin_set(BOARD_DISP_EXTCOMIN_PWM, 0, BOARD_DISP_EXTCOMIN_PIN);
+  nrf_pwm_enable(BOARD_DISP_EXTCOMIN_PWM);
+  nrf_pwm_configure(BOARD_DISP_EXTCOMIN_PWM, NRF_PWM_CLK_125kHz, NRF_PWM_MODE_UP, 125000 / 120);
+  nrf_pwm_loop_set(BOARD_DISP_EXTCOMIN_PWM, 0);
+  nrf_pwm_decoder_set(BOARD_DISP_EXTCOMIN_PWM, NRF_PWM_LOAD_COMMON, NRF_PWM_STEP_AUTO);
+  nrf_pwm_seq_ptr_set(BOARD_DISP_EXTCOMIN_PWM, 0, &s_extcomin_period);
+  nrf_pwm_seq_cnt_set(BOARD_DISP_EXTCOMIN_PWM, 0, 1);
+  nrf_pwm_seq_refresh_set(BOARD_DISP_EXTCOMIN_PWM, 0, 0);
+  nrf_pwm_seq_end_delay_set(BOARD_DISP_EXTCOMIN_PWM, 0, 0);
+  nrf_pwm_task_trigger(BOARD_DISP_EXTCOMIN_PWM, NRF_PWM_TASK_SEQSTART0);
+
   nrfx_spim_init(&spim, &config, NULL, NULL);
 
   BOARD_DISP_CS_PORT->PIN_CNF[BOARD_DISP_CS_PIN] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos) |
@@ -309,4 +325,9 @@ void display_init(void) {
 				 (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) |
 				 (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos);
   prv_display_start();
+}
+
+void display_deinit(void) {
+  nrfx_spim_uninit(&spim);
+  nrf_pwm_disable(BOARD_DISP_EXTCOMIN_PWM);
 }

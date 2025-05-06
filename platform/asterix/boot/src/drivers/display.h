@@ -2,6 +2,8 @@
 
 void display_init(void);
 
+void display_deinit(void);
+
 void display_boot_splash(void);
 
 void display_error_code(uint32_t);
