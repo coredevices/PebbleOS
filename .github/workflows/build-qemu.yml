@@ -1,0 +1,58 @@
+name: Build Firmware (QEMU)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-qemu.yml'
+      - 'resources/**'
+      - 'sdk/**'
+      - 'src/**'
+      - 'stored_apps/**'
+      - 'tools/**'
+      - 'third_party/**'
+      - 'waftools/**'
+      - 'waf'
+      - 'wscript'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+
+    strategy:
+      matrix:
+        board: ["snowy_bb2", "spalding_bb2", "silk_bb2"]
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Configure
+        run: ./waf configure --board ${{ matrix.board }} --qemu
+
+      - name: Build
+        run: ./waf build qemu_image_micro qemu_image_spi
+
+      - name: Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.board }}-qemu
+          path: |
+            build/qemu_micro_flash.bin
+            build/qemu_spi_flash.bin

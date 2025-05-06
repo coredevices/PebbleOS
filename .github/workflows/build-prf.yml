@@ -1,0 +1,59 @@
+name: Build PRF
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-prf.yml'
+      - 'resources/**'
+      - 'src/**'
+      - 'tools/**'
+      - 'third_party/**'
+      - 'waftools/**'
+      - 'waf'
+      - 'wscript'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+
+    strategy:
+      matrix:
+        board: ["asterix"]
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Configure
+        run: ./waf configure --board ${{ matrix.board }}
+
+      - name: Build
+        run: ./waf build_prf
+
+      - name: Bundle
+        run: ./waf bundle_prf
+
+      - name: Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: prf-${{ matrix.board }}
+          path: |
+            build/**/*.elf
+            build/**/*.pbz

@@ -1,0 +1,61 @@
+name: Build Firmware
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-firmware.yml'
+      - 'resources/**'
+      - 'sdk/**'
+      - 'src/**'
+      - 'stored_apps/**'
+      - 'tools/**'
+      - 'third_party/**'
+      - 'waftools/**'
+      - 'waf'
+      - 'wscript'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+
+    strategy:
+      matrix:
+        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "asterix"]
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Configure
+        run: ./waf configure --board ${{ matrix.board }}
+
+      - name: Build
+        run: ./waf build
+
+      - name: Bundle
+        run: ./waf bundle
+
+      - name: Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.board }}
+          path: |
+            build/**/*.elf
+            build/**/*.pbz

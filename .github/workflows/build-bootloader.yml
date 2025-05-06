@@ -1,0 +1,59 @@
+name: Build Bootloader
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-bootloader.yml'
+      - 'platform/**'
+      - 'third_party/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+
+    strategy:
+      matrix:
+        board: ["asterix"]
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Obtain platform name
+        id: get-platform
+        run: |
+          BOARD=${{ matrix.board }}
+          PLATFORM=${BOARD%%_*}
+          echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
+
+      - name: Configure bootloader
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        run: ./waf configure --board ${{ matrix.board }}
+
+      - name: Build bootloader
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        run: ./waf build
+
+      - name: Store bootloader images
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootloader-${{ matrix.board }}
+          path: |
+            platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.*
