@@ -23,8 +23,23 @@
 #include <host/ble_hs_hci.h>
 #include <system/logging.h>
 #include <system/passert.h>
+#include <util/math.h>
 
 #include "nimble_type_conversions.h"
+
+static const ble_uuid16_t s_device_name_chr_uuid = BLE_UUID16_INIT(0x2A00);
+static char s_device_name[BT_DEVICE_NAME_BUFFER_SIZE];
+
+static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
+                                         struct ble_gatt_attr *attr, void *arg) {
+  if (error->status == 0) {
+    size_t len = MIN(attr->om->om_len, sizeof(s_device_name) - 1);
+    strncpy(s_device_name, (char *)attr->om->om_data, len);
+    s_device_name[len] = '\0';
+  }
+
+  return 0;
+}
 
 void bt_driver_advert_advertising_disable(void) {
   int rc;
@@ -82,6 +97,13 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
     PBL_ASSERT(rc == 0, "Failed to read peer security (%d)", rc);
 
     memcpy(complete_event.irk.data, value_sec.irk, 16);
+  } else {
+    // If the address is not resolved, pairing is gonna happen.
+    // Trigger name read to have it ready for the pairing confirmation.
+    memset(s_device_name, 0, sizeof(s_device_name));
+    ble_gattc_read_by_uuid(event->connect.conn_handle, 1, UINT16_MAX,
+                           (ble_uuid_t *)&s_device_name_chr_uuid, prv_device_name_read_event_cb,
+                           NULL);
   }
 
   nimble_conn_params_to_pebble(&desc, &complete_event.conn_params);
@@ -142,6 +164,7 @@ static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
 static void prv_handle_passkey_event(struct ble_gap_event *event) {
   char passkey_str[7];
   uint32_t passkey = 0;
+  const char *device_name = NULL;
   PairingUserConfirmationCtx *ctx =
       (PairingUserConfirmationCtx *)((uintptr_t)event->passkey.conn_handle);
 
@@ -149,9 +172,12 @@ static void prv_handle_passkey_event(struct ble_gap_event *event) {
     passkey = event->passkey.params.numcmp;
   }
 
+  if (s_device_name[0] != '\0') {
+    device_name = s_device_name;
+  }
+
   snprintf(passkey_str, sizeof(passkey_str), "%06lu", passkey);
-  // TODO: get device name
-  bt_driver_cb_pairing_confirm_handle_request(ctx, passkey_str, NULL);
+  bt_driver_cb_pairing_confirm_handle_request(ctx, device_name, passkey_str);
 }
 
 static void prv_handle_pairing_complete_event(struct ble_gap_event *event) {
