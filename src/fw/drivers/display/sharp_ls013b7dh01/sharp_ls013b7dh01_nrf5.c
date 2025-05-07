@@ -6,6 +6,7 @@
 #include "drivers/dma.h"
 #include "drivers/gpio.h"
 #include "drivers/periph_config.h"
+#include "drivers/pwm.h"
 #include "drivers/spi.h"
 #include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
@@ -152,6 +153,11 @@ void display_init(void) {
   vSemaphoreCreateBinary(s_dma_update_in_progress_semaphore);
 
   prv_display_start();
+
+  // Generate PWM signal for EXTCOMIN (120Hz, ~100us pulse width)
+  pwm_init(&BOARD_CONFIG_DISPLAY.extcomin, 125000 / 120, 125000);
+  pwm_set_duty_cycle(&BOARD_CONFIG_DISPLAY.extcomin, (100U * 125000UL) / 1000000UL);
+  pwm_enable(&BOARD_CONFIG_DISPLAY.extcomin, true);
 
   s_initialized = true;
 }
