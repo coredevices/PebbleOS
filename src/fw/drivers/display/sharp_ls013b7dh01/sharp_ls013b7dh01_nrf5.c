@@ -37,7 +37,7 @@ static const unsigned int DISP_MODE_STATIC = 0x00;
 static const unsigned int DISP_MODE_WRITE = 0x80;
 static const unsigned int DISP_MODE_CLEAR = 0x20;
 
-// We want the SPI clock to run at 2MHz by default
+// We want the SPI clock to run at 1MHz by default
 static uint32_t s_spi_clock_hz;
 
 static bool s_initialized = false;
@@ -146,7 +146,7 @@ void display_init(void) {
     return;
   }
 
-  s_spi_clock_hz = MHZ_TO_HZ(2);
+  s_spi_clock_hz = MHZ_TO_HZ(1);
 
   prv_display_context_init(&s_display_context);
 
