@@ -73,6 +73,7 @@ IRQ_MAP_NRFX(TIMER1, nrfx_timer_1_irq_handler);
 IRQ_MAP_NRFX(TIMER2, nrfx_timer_2_irq_handler);
 
 /* display */
+PwmState DISPLAY_EXTCOMIN_STATE;
 IRQ_MAP_NRFX(SPIM3, nrfx_spim_3_irq_handler);
 
 /* PERIPHERAL ID 10 */

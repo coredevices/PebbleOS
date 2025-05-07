@@ -7,6 +7,7 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'NRFX_PPI_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_PWM_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_PWM0_ENABLED=1')
+        conf.env.append_unique('DEFINES', 'NRFX_PWM1_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_QSPI_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_SPIM_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_SPIM3_ENABLED=1')

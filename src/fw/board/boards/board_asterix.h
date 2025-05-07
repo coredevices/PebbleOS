@@ -218,6 +218,7 @@ static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   },
 };
 
+extern PwmState DISPLAY_EXTCOMIN_STATE;
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),
 
@@ -226,6 +227,12 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .cs = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 3), true },
 
   .on_ctrl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true },
+
+  .extcomin = {
+    .state = &DISPLAY_EXTCOMIN_STATE,
+    .output = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 15), true },
+    .peripheral = NRFX_PWM_INSTANCE(1),
+  },
 };
 
 extern const VoltageMonitorDevice * VOLTAGE_MONITOR_ALS;
