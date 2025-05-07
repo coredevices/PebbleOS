@@ -32,6 +32,7 @@
 #define KEY_SIZE 16
 
 #define BLE_FLAG_SECURE_CONNECTIONS 0x01
+#define BLE_FLAG_AUTHENTICATED 0x02
 
 typedef struct {
   ListNode node;
@@ -195,6 +196,10 @@ static void prv_notify_host_bonding_changed(const int obj_type,
     bonding.flags |= BLE_FLAG_SECURE_CONNECTIONS;
   }
 
+  if (value_sec->authenticated) {
+    bonding.flags |= BLE_FLAG_AUTHENTICATED;
+  }
+
   nimble_addr_to_pebble_device(&value_sec->peer_addr, &bonding.pairing_info.identity);
 
   nimble_addr_to_pebble_addr(&value_sec->peer_addr, &addr);
@@ -208,7 +213,7 @@ static void prv_notify_host_bonding_changed(const int obj_type,
 
 static int prv_nimble_store_write_sec(const int obj_type,
                                       const struct ble_store_value_sec *value_sec) {
-  if (value_sec->key_size != KEY_SIZE || value_sec->authenticated || value_sec->csrk_present) {
+  if (value_sec->key_size != KEY_SIZE || value_sec->csrk_present) {
     PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Unsupported security parameters");
     return BLE_HS_ENOTSUP;
   }
@@ -299,6 +304,7 @@ static void prv_convert_bonding_remote_to_store_val(const BleBonding *bonding,
   }
 
   value_sec->sc = !!(bonding->flags & BLE_FLAG_SECURE_CONNECTIONS);
+  value_sec->authenticated = !!(bonding->flags & BLE_FLAG_AUTHENTICATED);
 
   pebble_device_to_nimble_addr(&bonding->pairing_info.identity, &value_sec->peer_addr);
 }
@@ -317,6 +323,7 @@ static void prv_convert_bonding_local_to_store_val(const BleBonding *bonding,
   }
 
   value_sec->sc = !!(bonding->flags & BLE_FLAG_SECURE_CONNECTIONS);
+  value_sec->authenticated = !!(bonding->flags & BLE_FLAG_AUTHENTICATED);
 
   pebble_device_to_nimble_addr(&bonding->pairing_info.identity, &value_sec->peer_addr);
 }
