@@ -149,7 +149,7 @@ static void prv_handle_passkey_event(struct ble_gap_event *event) {
     passkey = event->passkey.params.numcmp;
   }
 
-  snprintf(passkey_str, sizeof(passkey_str), "%lu", passkey);
+  snprintf(passkey_str, sizeof(passkey_str), "%06lu", passkey);
   // TODO: get device name
   bt_driver_cb_pairing_confirm_handle_request(ctx, passkey_str, NULL);
 }
