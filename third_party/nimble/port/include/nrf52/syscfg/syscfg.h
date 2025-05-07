@@ -18,7 +18,7 @@
 
 /*** Repository @apache-mynewt-core info */
 #ifndef MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_CORE
-#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_CORE "7a30a7a901136d55ccb10b1a55ff7effcc640605"
+#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_CORE "01bda44b9f58d847495025e5160c66c55651dc81"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_APACHE_MYNEWT_CORE
@@ -27,7 +27,7 @@
 
 /*** Repository @apache-mynewt-nimble info */
 #ifndef MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE
-#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE "7b14eab3d07caffa3a70046271b9f5b805f5c965-dirty"
+#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE "a6b2f3f9af8b7b46f51f3af3a89d656dffd9483e"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_APACHE_MYNEWT_NIMBLE
@@ -45,7 +45,7 @@
 
 /*** Repository @syscfg info */
 #ifndef MYNEWT_VAL_REPO_HASH_SYSCFG
-#define MYNEWT_VAL_REPO_HASH_SYSCFG "a9e189376ac42b09e9c85459393c5957497cef79-dirty"
+#define MYNEWT_VAL_REPO_HASH_SYSCFG "13675fd87d5b8f6c2b8268ab65dc653be78ce7a9-dirty"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_SYSCFG
@@ -60,6 +60,10 @@
 #endif
 
 #undef MYNEWT_VAL_LINK_TEMPLATE
+
+#ifndef MYNEWT_VAL_MAIN_STACK_FILL
+#define MYNEWT_VAL_MAIN_STACK_FILL (0)
+#endif
 
 #ifndef MYNEWT_VAL_MAIN_STACK_SIZE
 #define MYNEWT_VAL_MAIN_STACK_SIZE (768)
@@ -900,10 +904,12 @@
 #define MYNEWT_VAL_FLOAT_USER (0)
 #endif
 
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-core/kernel/os) */
 #ifndef MYNEWT_VAL_MSYS_1_BLOCK_COUNT
 #define MYNEWT_VAL_MSYS_1_BLOCK_COUNT (35)
 #endif
 
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-core/kernel/os) */
 #ifndef MYNEWT_VAL_MSYS_1_BLOCK_SIZE
 #define MYNEWT_VAL_MSYS_1_BLOCK_SIZE (304)
 #endif
@@ -1403,6 +1409,10 @@
 
 #ifndef MYNEWT_VAL_BLE_LL_ADD_STRICT_SCHED_PERIODS
 #define MYNEWT_VAL_BLE_LL_ADD_STRICT_SCHED_PERIODS (0)
+#endif
+
+#ifndef MYNEWT_VAL_BLE_LL_ADV_CODING_SELECTION
+#define MYNEWT_VAL_BLE_LL_ADV_CODING_SELECTION (0)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_CFG_FEAT_CONN_PARAM_REQ
@@ -2059,6 +2069,10 @@
 #define MYNEWT_VAL_BLE_HOST (1)
 #endif
 
+#ifndef MYNEWT_VAL_BLE_HOST_RPA_RESOLVER
+#define MYNEWT_VAL_BLE_HOST_RPA_RESOLVER (0)
+#endif
+
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_HS_AUTO_START
 #define MYNEWT_VAL_BLE_HS_AUTO_START (0)
@@ -2168,10 +2182,6 @@
 #define MYNEWT_VAL_BLE_RPA_TIMEOUT (300)
 #endif
 
-#ifndef MYNEWT_VAL_BLE_HOST_RPA_RESOLVER
-#define MYNEWT_VAL_BLE_HOST_RPA_RESOLVER (0)
-#endif
-
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_BONDING
 #define MYNEWT_VAL_BLE_SM_BONDING (1)
@@ -2181,28 +2191,33 @@
 #define MYNEWT_VAL_BLE_SM_CSIS_SIRK (0)
 #endif
 
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_IO_CAP
 #define MYNEWT_VAL_BLE_SM_IO_CAP (BLE_HS_IO_DISPLAY_YESNO)
 #endif
 
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_KEYPRESS
 #define MYNEWT_VAL_BLE_SM_KEYPRESS (0)
 #endif
 
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_LEGACY
-#define MYNEWT_VAL_BLE_SM_LEGACY (1)
+#define MYNEWT_VAL_BLE_SM_LEGACY (0)
 #endif
 
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_LVL
-#define MYNEWT_VAL_BLE_SM_LVL (0)
+#define MYNEWT_VAL_BLE_SM_LVL (4)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_SM_MAX_PROCS
 #define MYNEWT_VAL_BLE_SM_MAX_PROCS (1)
 #endif
 
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_MITM
-#define MYNEWT_VAL_BLE_SM_MITM (0)
+#define MYNEWT_VAL_BLE_SM_MITM (1)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_SM_OOB_DATA_FLAG
@@ -2223,8 +2238,9 @@
 #define MYNEWT_VAL_BLE_SM_SC_DEBUG_KEYS (0)
 #endif
 
+/* Overridden by targets/nrf52 (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_SM_SC_ONLY
-#define MYNEWT_VAL_BLE_SM_SC_ONLY (0)
+#define MYNEWT_VAL_BLE_SM_SC_ONLY (1)
 #endif
 
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
