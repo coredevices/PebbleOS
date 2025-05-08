@@ -230,6 +230,28 @@ static int prv_nimble_store_write_sec(const int obj_type,
   return 0;
 }
 
+static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_sec *key_sec) {
+  BTDeviceInternal device;
+  BleStoreValue *s;
+
+  bt_lock();
+  s = prv_nimble_store_find_sec(obj_type, key_sec);
+  bt_unlock();
+
+  if (s == NULL) {
+    return BLE_HS_ENOENT;
+  }
+
+  // NOTE: deletion will wipe both PEER and OUR sec data, regardless of which
+  // object type was passed in this call as they are stored together. This is
+  // handled by bt_driver_handle_host_removed_bonding(), called internally by
+  // bt_persistent_storage_delete_ble_pairing_by_addr().
+  nimble_addr_to_pebble_device(&key_sec->peer_addr, &device);
+  bt_persistent_storage_delete_ble_pairing_by_addr(&device);
+
+  return 0;
+}
+
 static int prv_nimble_store_read(const int obj_type, const union ble_store_key *key,
                                  union ble_store_value *value) {
   switch (obj_type) {
@@ -246,6 +268,16 @@ static int prv_nimble_store_write(int obj_type, const union ble_store_value *val
     case BLE_STORE_OBJ_TYPE_OUR_SEC:
     case BLE_STORE_OBJ_TYPE_PEER_SEC:
       return prv_nimble_store_write_sec(obj_type, &val->sec);
+    default:
+      return BLE_HS_ENOTSUP;
+  }
+}
+
+static int prv_nimble_store_delete(int obj_type, const union ble_store_key *key) {
+  switch (obj_type) {
+    case BLE_STORE_OBJ_TYPE_OUR_SEC:
+    case BLE_STORE_OBJ_TYPE_PEER_SEC:
+      return prv_nimble_store_delete_sec(obj_type, &key->sec);
     default:
       return BLE_HS_ENOTSUP;
   }
@@ -282,6 +314,7 @@ static int prv_nimble_store_gen_key(uint8_t key, struct ble_store_gen_key *gen_k
 void nimble_store_init(void) {
   ble_hs_cfg.store_read_cb = prv_nimble_store_read;
   ble_hs_cfg.store_write_cb = prv_nimble_store_write;
+  ble_hs_cfg.store_delete_cb = prv_nimble_store_delete;
   ble_hs_cfg.store_gen_key_cb = prv_nimble_store_gen_key;
 }
 
