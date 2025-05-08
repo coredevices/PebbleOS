@@ -741,6 +741,54 @@ void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID bonding) {
   shared_prf_storage_erase_ble_pairing_data();
 }
 
+typedef struct {
+  BTDeviceInternal device;
+  SMIdentityResolvingKey irk_out;
+  char name_out[BT_DEVICE_NAME_BUFFER_SIZE];
+  BTBondingID id_out;
+  bool found;
+} FindByAddrItrData;
+
+static bool prv_find_by_addr_itr(SettingsFile *file,
+                                 SettingsRecordInfo *info, void *context) {
+  // check entry is valid
+  if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
+    return true; // continue iterating
+  }
+
+  FindByAddrItrData *itr_data = (FindByAddrItrData *) context;
+
+  BTBondingID key;
+  BtPersistBondingData stored_data;
+  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+
+  if (stored_data.type == BtPersistBondingTypeBLE &&
+      bt_device_equal(&itr_data->device.opaque,
+                      &stored_data.ble_data.pairing_info.identity.opaque)) {
+    itr_data->irk_out = stored_data.ble_data.pairing_info.irk;
+    strncpy(itr_data->name_out, stored_data.ble_data.name, BT_DEVICE_NAME_BUFFER_SIZE);
+    itr_data->id_out = key;
+    itr_data->found = true;
+    return false; // stop iterating
+  }
+
+  return true; // continue iterating
+}
+
+void bt_persistent_storage_delete_ble_pairing_by_addr(const BTDeviceInternal *device) {
+  FindByAddrItrData itr_data = {
+    .device = *device,
+    .found = false,
+  };
+  prv_file_each(prv_find_by_addr_itr, &itr_data);
+
+  if (!itr_data.found) {
+    return;
+  }
+
+  bt_persistent_storage_delete_ble_pairing_by_id(itr_data.id_out);
+}
 
 static void prv_fill_ble_data(SMIdentityResolvingKey *irk_in,
                               BTDeviceInternal *device_in,
@@ -804,39 +852,6 @@ static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(
   prv_fill_ble_data(
       NULL, NULL, data.ble_data.name, NULL, NULL, name_out);
   return true;
-}
-
-typedef struct {
-  BTDeviceInternal device;
-  SMIdentityResolvingKey irk_out;
-  char name_out[BT_DEVICE_NAME_BUFFER_SIZE];
-  bool found;
-} FindByAddrItrData;
-
-static bool prv_find_by_addr_itr(SettingsFile *file,
-                                 SettingsRecordInfo *info, void *context) {
-  // check entry is valid
-  if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
-    return true; // continue iterating
-  }
-
-  FindByAddrItrData *itr_data = (FindByAddrItrData *) context;
-
-  BTBondingID key;
-  BtPersistBondingData stored_data;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
-  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
-
-  if (stored_data.type == BtPersistBondingTypeBLE &&
-      bt_device_equal(&itr_data->device.opaque,
-                      &stored_data.ble_data.pairing_info.identity.opaque)) {
-    itr_data->irk_out = stored_data.ble_data.pairing_info.irk;
-    strncpy(itr_data->name_out, stored_data.ble_data.name, BT_DEVICE_NAME_BUFFER_SIZE);
-    itr_data->found = true;
-    return false; // stop iterating
-  }
-
-  return true; // continue iterating
 }
 
 bool bt_persistent_storage_get_ble_pairing_by_addr(const BTDeviceInternal *device,

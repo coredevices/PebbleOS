@@ -68,6 +68,8 @@ bool bt_persistent_storage_update_ble_device_name(BTBondingID bonding, const cha
 
 void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID);
 
+void bt_persistent_storage_delete_ble_pairing_by_addr(const BTDeviceInternal *device);
+
 bool bt_persistent_storage_get_ble_pairing_by_id(BTBondingID bonding,
                                                  SMIdentityResolvingKey *IRK_out,
                                                  BTDeviceInternal *device_out,

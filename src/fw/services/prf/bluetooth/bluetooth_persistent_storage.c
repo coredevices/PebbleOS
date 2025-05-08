@@ -149,6 +149,10 @@ void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID bonding) {
   prv_call_ble_bonding_change_handlers(bonding, BtPersistBondingOpWillDelete);
 }
 
+void bt_persistent_storage_delete_ble_pairing_by_addr(const BTDeviceInternal *device) {
+  bt_persistent_storage_delete_ble_pairing_by_id(BLE_BONDING_ID);
+}
+
 bool bt_persistent_storage_get_ble_pairing_by_id(BTBondingID bonding,
                                           SMIdentityResolvingKey *IRK_out,
                                           BTDeviceInternal *device_out,
