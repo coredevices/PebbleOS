@@ -94,9 +94,14 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
     key_sec.peer_addr = desc.peer_id_addr;
 
     rc = ble_store_read_peer_sec(&key_sec, &value_sec);
-    PBL_ASSERT(rc == 0, "Failed to read peer security (%d)", rc);
-
-    memcpy(complete_event.irk.data, value_sec.irk, 16);
+    if (rc != 0) {
+      // We can get a resolved address in case of a repeated pairing event,
+      // where peer security is deleted. An identity resolved event will be
+      // received later after the new pairing is completed.
+      complete_event.is_resolved = false;
+    } else {
+      memcpy(complete_event.irk.data, value_sec.irk, 16);
+    }
   } else {
     // If the address is not resolved, pairing is gonna happen.
     // Trigger name read to have it ready for the pairing confirmation.
