@@ -183,12 +183,14 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
   //  Similarly, if the battery voltage has rebounded when the timer expires, the shutdown
   //    will not occur.
 
-  bool critical = (state.charge_percent == 0) && !state.is_charging;
+  bool critical = (state.charge_percent == 0 && state.is_present) && !state.is_charging;
+;
 
 #ifndef RECOVERY_FW
   const uint32_t LOW_POWER_PERCENT = ratio32_from_percent(BOARD_CONFIG_POWER.low_power_threshold);
 
-  bool low_power = !state.is_charging && (state.charge_percent <= LOW_POWER_PERCENT);
+  bool low_power = !state.is_charging && !state.is_plugged &&
+                   (state.charge_percent <= LOW_POWER_PERCENT && state.is_present);
   s_low_on_first_run = s_low_on_first_run || (low_power && s_first_run);
 #else
   const uint32_t PRF_LOW_POWER_THRESHOLD_PERCENT = ratio32_from_percent(5);
