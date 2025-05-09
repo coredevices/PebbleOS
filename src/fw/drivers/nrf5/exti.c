@@ -45,7 +45,10 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
     .p_trigger_config = &tcfg,
     .p_handler_config = &hcfg
   };
-  nrfx_gpiote_input_configure(&cfg.peripheral, cfg.gpio_pin, &pcfg);
+  
+  err = nrfx_gpiote_input_configure(&cfg.peripheral, cfg.gpio_pin, &pcfg);
+  PBL_ASSERTN(err == NRFX_SUCCESS);
+  
   nrfx_gpiote_trigger_disable(&cfg.peripheral, cfg.gpio_pin);
 }
 
