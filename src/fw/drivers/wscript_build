@@ -1467,7 +1467,22 @@ elif mcu_family == 'NRF52840':
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if bld.capability('HAS_VIBE_DRV2604'):
+    bld.objects(
+        name='driver_vibe',
+        source=[
+            'vibe_drv2604.c',
+        ],
+        use=[
+            'driver_gpio',
+            'driver_periph_config',
+            'driver_i2c'
+            'freertos',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
         name='driver_vibe',
         source=[

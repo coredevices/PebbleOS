@@ -110,7 +110,7 @@ IRQ_MAP_NRFX(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, nrfx_twim_1_irq_handler);
 
 static const I2CSlavePort I2C_SLAVE_NPM1300 = {
     .bus = &I2C_NPMC_IIC1_BUS,
-    .address = 0xD6,
+    .address = 0x6B << 1,
 };
 
 I2CSlavePort *const I2C_NPM1300 = &I2C_SLAVE_NPM1300;
@@ -123,7 +123,6 @@ static const I2CBusHal I2C_IIC2_BUS_HAL = {
     .frequency = NRF_TWIM_FREQ_400K,
 };
 
-/* FIXME */
 static const I2CBus I2C_IIC2_BUS = {
     .state = &I2C_IIC2_BUS_STATE,
     .hal = &I2C_IIC2_BUS_HAL,
@@ -140,6 +139,13 @@ static const I2CBus I2C_IIC2_BUS = {
     .name = "I2C_IIC2",
 };
 IRQ_MAP_NRFX(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, nrfx_twim_0_irq_handler);
+
+static const I2CSlavePort I2C_SLAVE_DRV2604 = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x5A << 1,
+};
+
+I2CSlavePort *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
 
 /* PERIPHERAL ID 11 */
 
