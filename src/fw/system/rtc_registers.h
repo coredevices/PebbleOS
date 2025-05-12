@@ -45,6 +45,9 @@
 // zero them out and give up.
 #define NRF_RETAINED_REGISTER_CRC               31
 
+extern void retained_write(uint8_t id, uint32_t value);
+extern uint32_t retained_read(uint8_t id);
+
 #else
 #define RTC_BKP_BOOTBIT_DR                      RTC_BKP_DR0
 #define STUCK_BUTTON_REGISTER                   RTC_BKP_DR1
