@@ -28,6 +28,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define OS_RTC_INST NRF_RTC1
+static void prv_rtc_irq_handler(void);
+IRQ_MAP_NRFX(RTC1, prv_rtc_irq_handler);
+
 //! The type of a raw reading from the RTC (masked to 0xFFFFFF).
 typedef uint32_t RtcIntervalTicks;
 
@@ -47,7 +51,7 @@ static RtcIntervalTicks prv_elapsed_ticks(RtcIntervalTicks before, RtcIntervalTi
 }
 
 static RtcIntervalTicks prv_get_rtc_interval_ticks(void) {
-  return nrf_rtc_counter_get(NRF_RTC1);
+  return nrf_rtc_counter_get(OS_RTC_INST);
 }
 
 /***
@@ -313,8 +317,8 @@ void rtc_init(void) {
     PBL_LOG(LOG_LEVEL_INFO, "RTC appears to have been reset :( hope you have your phone connected");
   }
 
-  nrf_rtc_prescaler_set(NRF_RTC1, NRF_RTC_FREQ_TO_PRESCALER(RTC_TICKS_HZ));
-  nrf_rtc_task_trigger(NRF_RTC1, NRF_RTC_TASK_START);
+  nrf_rtc_prescaler_set(OS_RTC_INST, NRF_RTC_FREQ_TO_PRESCALER(RTC_TICKS_HZ));
+  nrf_rtc_task_trigger(OS_RTC_INST, NRF_RTC_TASK_START);
   
   prv_restore_rtc_time_state();
   s_did_init_rtc = true;
@@ -331,17 +335,49 @@ void rtc_init_timers(void) {
   regular_timer_add_minutes_callback(&rtc_sync_timer);
 }
 
+/*** Logic to control RTC wakeup timer. ***/
+
+static RtcTicks s_alarm_set_time = 0;
+static RtcTicks s_alarm_expiry_time = 0;
+static bool s_tick_alarm_initialized = false;
 
 void rtc_alarm_init(void) {
+  nrf_rtc_event_disable(OS_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_int_disable(OS_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
+  s_tick_alarm_initialized = true;
 }
 
 void rtc_alarm_set(RtcTicks num_ticks) {
+  PBL_ASSERTN(s_tick_alarm_initialized);
+  
+  nrf_rtc_event_disable(OS_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_event_clear(OS_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+  
+  s_alarm_set_time = rtc_get_ticks();
+  s_alarm_expiry_time = s_alarm_set_time + num_ticks;
+  
+  /* We're bounded by the regular_timer_add_minutes_callback for the
+   * rtc_alarm_set, so we're not going to wrap around more than once -- one
+   * minute is always less than 4.5 hours.
+   */
+  nrf_rtc_cc_set(OS_RTC_INST, 0, s_alarm_expiry_time & RTC_COUNTER_COUNTER_Msk);
+  
+  nrf_rtc_event_enable(OS_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_int_enable(OS_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
 }
 
 RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return 0;
+  return rtc_get_ticks() - s_alarm_set_time;
 }
 
 bool rtc_alarm_is_initialized(void) {
-  return 0;
+  return s_tick_alarm_initialized;
+}
+
+//! Handler for the RTC alarm interrupt. We don't actually have to do anything in this handler,
+//! just the interrupt firing is enough to bring us out of stop mode.
+static void prv_rtc_irq_handler(void) {
+  nrf_rtc_event_disable(OS_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_event_clear(OS_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_int_disable(OS_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
 }
