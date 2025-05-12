@@ -209,11 +209,11 @@ extern I2CSlavePort * const I2C_AS3701B;
 
 extern PwmState BACKLIGHT_PWM_STATE;
 static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
-  .options = ActuatorOptions_Pwm,
-  //.ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true },
+  .options = ActuatorOptions_Pwm | ActuatorOptions_Ctl,
+  .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true },
   .pwm = {
     .state = &BACKLIGHT_PWM_STATE,
-    .output = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 4), true },
+    .output = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true },
     .peripheral = NRFX_PWM_INSTANCE(0)
   },
 };
