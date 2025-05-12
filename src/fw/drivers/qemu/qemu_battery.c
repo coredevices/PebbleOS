@@ -34,6 +34,10 @@ void battery_init(void) {
   s_usb_connected = qemu_setting_get(QemuSetting_DefaultPluggedIn);
 }
 
+bool battery_is_present(void) {
+  return true;
+}
+
 // TODO: update whoever uses this function
 int battery_get_millivolts(void) {
   return s_battery_mv;
