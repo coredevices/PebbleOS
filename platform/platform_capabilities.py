@@ -28,6 +28,7 @@ JAVASCRIPT_BYTECODE_VERSION = 1
 master_capability_set = {
     'COMPOSITOR_USES_DMA',
     'HAS_ACCESSORY_CONNECTOR',
+    'HAS_ALS_OPT3001',
     'HAS_APPLE_MFI',
     'HAS_APP_GLANCES',
     'HAS_BUILTIN_HRM',
@@ -259,6 +260,7 @@ board_capability_dicts = [
         'boards': [ 'asterix' ],
         'capabilities':
         {
+            'HAS_ALS_OPT3001',
             'HAS_APP_GLANCES',
             'HAS_CORE_NAVIGATION4',
             'HAS_HEALTH_TRACKING',

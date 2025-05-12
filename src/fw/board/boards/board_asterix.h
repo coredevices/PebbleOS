@@ -9,10 +9,10 @@
 #define BOARD_RTC_INST NRF_RTC1
 
 static const BoardConfig BOARD_CONFIG = {
-  .ambient_light_dark_threshold = 150,
-  .ambient_k_delta_threshold = 50,
+  .ambient_light_dark_threshold = 100,
+  .ambient_k_delta_threshold = 30,
   .photo_en = { },
-  .als_always_on = true,
+  .als_always_on = true, // XXX: some day, we will probably want to poll this less frequently, but the ALS on this device is slow, so we pay the 3.7uA for now
 
   // new sharp display requires 30/60Hz so we feed it directly from PMIC... XXX: some day
   .lcd_com = { 0 },
@@ -251,3 +251,4 @@ extern MicDevice * const MIC;
 
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort * const I2C_DRV2604;
+extern I2CSlavePort * const I2C_OPT3001;

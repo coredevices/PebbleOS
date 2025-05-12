@@ -147,6 +147,13 @@ static const I2CSlavePort I2C_SLAVE_DRV2604 = {
 
 I2CSlavePort *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
 
+static const I2CSlavePort I2C_SLAVE_OPT3001 = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x44 << 1,
+};
+
+I2CSlavePort *const I2C_OPT3001 = &I2C_SLAVE_OPT3001;
+
 /* PERIPHERAL ID 11 */
 
 /* sensor SPI bus */
