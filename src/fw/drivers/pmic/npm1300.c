@@ -35,6 +35,7 @@ typedef enum {
   PmicRegisters_BCHARGER_BCHGENABLESET = 0x0304,
   PmicRegisters_BCHARGER_BCHGENABLECLR = 0x0305,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS = 0x0334,
+  PmicRegisters_BCHARGER_BCHGCHARGESTATUS__BATTERYDETECTED = 1,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__COMPLETED = 2,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__TRICKLECHARGE = 4,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTCURRENT = 8,
@@ -213,6 +214,14 @@ uint16_t pmic_get_vsys(void) {
   uint32_t vsys = vsys_raw * 6375 / 1023;
   
   return vsys;
+}
+
+bool battery_is_present(void) {
+  uint8_t reg = 0;
+  if (!prv_read_register(PmicRegisters_BCHARGER_BCHGCHARGESTATUS, &reg)) {
+    return false;
+  }
+  return (reg & PmicRegisters_BCHARGER_BCHGCHARGESTATUS__BATTERYDETECTED) != 0;
 }
 
 int battery_get_millivolts(void) {
