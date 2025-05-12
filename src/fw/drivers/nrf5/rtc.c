@@ -132,24 +132,47 @@ const char* time_t_to_string(char* buffer, time_t t) {
 //! We attempt to save registers by placing both the timezone abbreviation
 //! timezone index and the daylight_savingtime into the same register set
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
+  uint32_t *raw = (uint32_t*)tzinfo;
+  _Static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t),
+      "RTC Set Timezone invalid data size");
+
+  retained_write(RTC_TIMEZONE_ABBR_START, raw[0]);
+  retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, raw[1]);
+  retained_write(RTC_TIMEZONE_GMTOFFSET, raw[2]);
+  retained_write(RTC_TIMEZONE_DST_START, raw[3]);
+  retained_write(RTC_TIMEZONE_DST_END, raw[4]);
 }
 
 
 void rtc_get_timezone(TimezoneInfo *tzinfo) {
+  uint32_t *raw = (uint32_t*)tzinfo;
+
+  raw[0] = retained_read(RTC_TIMEZONE_ABBR_START);
+  raw[1] = retained_read(RTC_TIMEZONE_ABBR_END_TZID_DSTID);
+  raw[2] = retained_read(RTC_TIMEZONE_GMTOFFSET);
+  raw[3] = retained_read(RTC_TIMEZONE_DST_START);
+  raw[4] = retained_read(RTC_TIMEZONE_DST_END);
 }
 
 void rtc_timezone_clear(void) {
+  retained_write(RTC_TIMEZONE_ABBR_START, 0);
+  retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, 0);
+  retained_write(RTC_TIMEZONE_GMTOFFSET, 0);
+  retained_write(RTC_TIMEZONE_DST_START, 0);
+  retained_write(RTC_TIMEZONE_DST_END, 0);
 }
 
 uint16_t rtc_get_timezone_id(void) {
-  return 0;
+  return ((retained_read(RTC_TIMEZONE_ABBR_END_TZID_DSTID) >> 16) & 0xFFFF);
 }
 
 bool rtc_is_timezone_set(void) {
-  return 0;
+  // True if the timezone abbreviation has been set (including UNK for unknown)
+  return (retained_read(RTC_TIMEZONE_ABBR_START) != 0);
 }
 
 void rtc_enable_backup_regs(void) {
+  /* we always use retained ram for this, so no problem */
 }
 
 void rtc_calibrate_frequency(uint32_t frequency) {

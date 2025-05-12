@@ -1300,11 +1300,10 @@ elif mcu_family in ('STM32F4', 'STM32F7'):
         ],
     )
 elif mcu_family == 'NRF52840':
-    # FIXME: provide working implementation
     bld.objects(
         name='driver_rtc',
         source=[
-            'nrf5/stubs/rtc.c',
+            'nrf5/rtc.c',
         ],
         use=[
             'freertos',
