@@ -61,6 +61,7 @@ static const ConnectionState s_transitions[] = {
 };
 
 typedef struct BatteryState {
+  bool present;
   uint64_t init_time;
   uint32_t percent;
   uint16_t voltage;
@@ -235,6 +236,9 @@ static void prv_update_state(void *force_update) {
       charging || state_changed) {
     battery_state_put_change_event(prv_get_precise_charge_state(&s_last_battery_state));
   }
+
+  // Update battery presency status
+  s_last_battery_state.present = battery_is_present();
 }
 
 static void prv_update_callback(void *data) {
@@ -286,7 +290,8 @@ PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state
   PreciseBatteryChargeState event_state = {
     .charge_percent = state->percent,
     .is_charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged),
-    .is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged)
+    .is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged),
+    .is_present = s_last_battery_state.present,
   };
   return event_state;
 }
