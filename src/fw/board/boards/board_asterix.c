@@ -10,6 +10,7 @@
 #include "drivers/nrf5/uart_definitions.h"
 #include "drivers/pwm.h"
 #include "drivers/qspi_definitions.h"
+#include "drivers/rtc.h"
 #include "drivers/temperature.h"
 #include "drivers/voltage_monitor.h"
 #include "flash_region/flash_region.h"
@@ -148,6 +149,8 @@ IRQ_MAP_NRFX(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, nrfx_twim_0_irq_handler);
 
 PwmState BACKLIGHT_PWM_STATE;
 IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
+
+IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
 
 void board_early_init(void) {
   PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
