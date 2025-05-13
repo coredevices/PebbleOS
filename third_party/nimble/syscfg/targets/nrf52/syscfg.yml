@@ -24,3 +24,5 @@ syscfg.vals:
     BLE_SM_LEGACY: 0
     BLE_SM_MITM: 1
     BLE_SM_LVL: 4
+    # TODO: put this back in production [FIRM-121]
+    BLE_LL_SCA: 500

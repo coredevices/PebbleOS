@@ -315,6 +315,22 @@ void rtc_init(void) {
 
   nrf_rtc_prescaler_set(BOARD_RTC_INST, NRF_RTC_FREQ_TO_PRESCALER(RTC_TICKS_HZ));
   nrf_rtc_task_trigger(BOARD_RTC_INST, NRF_RTC_TASK_START);
+
+#if TEST_RTC_FREQ
+  // FIXME: can be removed after FIRM-121 is fixed
+  extern void board_early_init();
+  board_early_init();
+  for (int i = 0; i < 100; i++) {
+    uint32_t ctr0 = nrf_rtc_counter_get(BOARD_RTC_INST);
+    while (nrf_rtc_counter_get(BOARD_RTC_INST) == ctr0)
+      ;
+    ctr0 = nrf_rtc_counter_get(BOARD_RTC_INST) + 100;
+    uint32_t iters = 0;
+    while (nrf_rtc_counter_get(BOARD_RTC_INST) != ctr0)
+      iters++;
+    PBL_LOG(LOG_LEVEL_INFO, "RTC: 100 RTC ticks took %"PRIu32" iters", iters);
+  }
+#endif
   
   prv_restore_rtc_time_state();
   s_did_init_rtc = true;
