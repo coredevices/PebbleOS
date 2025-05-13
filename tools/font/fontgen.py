@@ -238,7 +238,7 @@ class Font:
         src_ptr = self.max_glyph_size - len(glyph_packed)
 
         def glyph_packed_iterator(tbl, num):
-            for i in xrange(0, num):
+            for i in range(0, num):
                 yield struct.unpack('<B', tbl[i])[0]
 
         # Generate glyph buffer. Ignore the header
