@@ -34,8 +34,10 @@ def _is_accessory(tty_type):
     return tty_type == "accessory"
 
 
-def _tty_get_port(num_ports, tty_type):
-    if num_ports < 4:
+def _tty_get_port(num_ports, tty_type, product):
+    if "Tigard" in product:
+        port = None if _is_accessory(tty_type) else 1
+    elif num_ports < 4:
         # tintin
         port = None if _is_accessory(tty_type) else 2
     elif tty_type == "ble":
@@ -67,8 +69,8 @@ def _dict_try_key_from_value(d, i):
 
 
 def _tty_to_uri(tty, tty_type):
-    vendor, pid, serial, num_ports = tty
-    port = _tty_get_port(num_ports, tty_type)
+    vendor, pid, product, serial, num_ports = tty
+    port = _tty_get_port(num_ports, tty_type, product)
     if port is None:
         return None
 
@@ -92,12 +94,13 @@ def _get_all_ttys(tty_type):
     for device, num_ports in UsbTools.find_all(_get_vps()):
         vid = device.vid
         pid = device.pid
+        product = device.description
         serial = device.sn
         ikey = (vid, pid)
         indices[ikey] = indices.get(ikey, 0) + 1
         if not serial or [c for c in serial if c not in printablechars or c == '?']:
             serial = '%d' % indices[ikey]
-        tty = _tty_to_uri((vid, pid, serial, num_ports), tty_type)
+        tty = _tty_to_uri((vid, pid, product, serial, num_ports), tty_type)
         if tty:
             ttys.append(tty)
 
