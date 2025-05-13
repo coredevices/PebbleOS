@@ -7,3 +7,6 @@ ignore-squash-commits=false
 
 [title-match-regex]
 regex=[a-z0-9/]+: .*
+
+[title-max-length]
+line-length=100
