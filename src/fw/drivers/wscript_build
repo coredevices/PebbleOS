@@ -192,6 +192,7 @@ elif bld.is_asterix():
             'driver_otp',
             'driver_periph_config',
             'driver_pmic',
+            'driver_pwr',
             'driver_rng',
             'driver_rtc',
             'driver_task_watchdog',
@@ -737,6 +738,17 @@ elif mcu_family == 'STM32F2':
         name='driver_pwr',
         source=[
             'stm32f2/pwr.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_pwr',
+        source=[
+            'stubs/pwr.c',
         ],
         use=[
             'fw_includes',
