@@ -19,6 +19,7 @@
 #include "board/board.h"
 #include "drivers/uart.h"
 
+#include <stdarg.h>
 #include <stdio.h>
 
 

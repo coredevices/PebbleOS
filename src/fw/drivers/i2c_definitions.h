@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "drivers/rtc.h"
 #include "os/mutex.h"
 #include "kernel/util/stop.h"
 
