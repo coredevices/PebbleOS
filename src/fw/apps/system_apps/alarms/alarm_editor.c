@@ -31,6 +31,7 @@
 #include "services/normal/alarms/alarm.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "util/size.h"
 
 #include <string.h>
 
