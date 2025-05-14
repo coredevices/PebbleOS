@@ -1494,7 +1494,6 @@ if bld.capability('HAS_VIBE_DRV2604'):
             'driver_gpio',
             'driver_periph_config',
             'driver_i2c'
-            'freertos',
             'fw_includes',
             'root_includes',
         ],
