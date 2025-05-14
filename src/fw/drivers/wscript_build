@@ -1514,17 +1514,6 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'root_includes',
         ],
     )
-elif mcu_family == 'NRF52840':
-    # FIXME: provide working implementation
-    bld.objects(
-        name='driver_vibe',
-        source=[
-            'stubs/vibe.c',
-        ],
-        use=[
-            'fw_includes',
-        ],
-    )
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
