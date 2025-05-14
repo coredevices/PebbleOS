@@ -258,7 +258,6 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
         ],
     )
 
@@ -285,7 +284,6 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
         ],
     )
 
@@ -419,7 +417,6 @@ if bld.is_asterix():
         ],
         use=[
             'fw_includes',
-            'root_includes',
         ],
     )
 
@@ -752,7 +749,6 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
         ],
     )
 
@@ -783,6 +779,9 @@ elif mcu_family == 'NRF52840':
         name='driver_gpio_defaults',
         source=[
             'stubs/gpio_defaults.c',
+        ],
+        use=[
+            'fw_includes',
         ],
     )
 
@@ -988,7 +987,6 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
         ],
     )
 
@@ -1048,7 +1046,6 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
         ],
     )
 
@@ -1073,9 +1070,7 @@ elif mcu_family == 'NRF52840':
             'stubs/periph_config.c',
         ],
         use=[
-            'freertos',
             'fw_includes',
-            'root_includes',
         ],
     )
 
@@ -1259,7 +1254,6 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
         ]
     )
 
@@ -1285,7 +1279,6 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
         ],
     )
 
@@ -1529,9 +1522,7 @@ elif mcu_family == 'NRF52840':
             'stubs/vibe.c',
         ],
         use=[
-            'freertos',
             'fw_includes',
-            'root_includes',
         ],
     )
 
