@@ -253,7 +253,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_ambient_light',
         source=[
-            'nrf5/stubs/ambient_light.c',
+            'stubs/ambient_light.c',
         ],
         use=[
             'fw_includes',
@@ -280,7 +280,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_temperature',
         source=[
-            'nrf5/stubs/temperature.c',
+            'stubs/temperature.c',
         ],
         use=[
             'fw_includes',
@@ -414,7 +414,7 @@ if bld.is_asterix():
     bld.objects(
         name='driver_lsm6dso',
         source=[
-            'nrf5/stubs/accel.c',
+            'stubs/accel.c',
         ],
         use=[
             'fw_includes',
@@ -770,7 +770,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_gpio_defaults',
         source=[
-            'nrf5/stubs/gpio_defaults.c',
+            'stubs/gpio_defaults.c',
         ],
     )
 
@@ -972,7 +972,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_mcu',
         source=[
-            'nrf5/stubs/mcu.c',
+            'stubs/mcu.c',
         ],
         use=[
             'fw_includes',
@@ -1032,7 +1032,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_otp',
         source=[
-            'nrf5/stubs/otp.c',
+            'stubs/otp.c',
         ],
         use=[
             'fw_includes',
@@ -1058,7 +1058,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_periph_config',
         source=[
-            'nrf5/stubs/periph_config.c',
+            'stubs/periph_config.c',
         ],
         use=[
             'freertos',
@@ -1243,7 +1243,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_voltage_monitor',
         source=[
-            'nrf5/stubs/voltage_monitor.c',
+            'stubs/voltage_monitor.c',
         ],
         use=[
             'fw_includes',
@@ -1269,7 +1269,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_rng',
         source=[
-            'nrf5/stubs/rng.c',
+            'stubs/rng.c',
         ],
         use=[
             'fw_includes',
@@ -1514,7 +1514,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_vibe',
         source=[
-            'nrf5/stubs/vibe.c',
+            'stubs/vibe.c',
         ],
         use=[
             'freertos',
