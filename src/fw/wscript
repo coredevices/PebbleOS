@@ -642,6 +642,7 @@ def build(bld):
                      'libos_includes',
                      'libutil_includes',
                      'root_includes',
+                     'freertos_includes',
                      'idl_includes',
                      'nanopb_includes']
 
