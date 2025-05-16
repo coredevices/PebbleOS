@@ -89,12 +89,6 @@ We take that image and load part of it into RAM. That lay out looks like...
 */
 
 SECTIONS {
-    .isr_vector : {
-        ASSERT(. == ORIGIN(FLASH), "Error: Vector table is offset from the start of the FLASH region");
-        PROVIDE(__ISR_VECTOR_TABLE__ = .);
-        KEEP(*(.isr_vector))            /* Startup code */
-    } >FLASH
-
     /* Exception handling sections. "contains index entries for section unwinding"
      * We don't actually use this or know what it is, but it seems happy to go here. */
     .ARM.exidx :

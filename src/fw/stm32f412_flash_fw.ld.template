@@ -16,3 +16,10 @@ REGION_ALIAS("REGION_ISR_STACK", KERNEL_RAM);
 REGION_ALIAS("REGION_KERNEL_STACKS", KERNEL_RAM);
 REGION_ALIAS("REGION_KERNEL_HEAP", KERNEL_RAM);
 
+SECTIONS {
+    .isr_vector : {
+        ASSERT(. == ORIGIN(FLASH), "Error: Vector table is offset from the start of the FLASH region");
+        PROVIDE(__ISR_VECTOR_TABLE__ = .);
+        KEEP(*(.isr_vector))
+    } >FLASH
+}
