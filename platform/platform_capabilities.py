@@ -186,7 +186,7 @@ board_capability_dicts = [
         {
             'HAS_ACCESSORY_CONNECTOR',
             'HAS_APP_GLANCES',
-            # 'HAS_BUILTIN_HRM', -- TODO: disabled because driver was removed
+            'HAS_BUILTIN_HRM',
             'HAS_CORE_NAVIGATION4',
             'HAS_HEALTH_TRACKING',
             'HAS_JAVASCRIPT',
@@ -211,7 +211,7 @@ board_capability_dicts = [
             'COMPOSITOR_USES_DMA',
             'HAS_ACCESSORY_CONNECTOR',
             'HAS_APP_GLANCES',
-            # 'HAS_BUILTIN_HRM', -- TODO: disabled because driver was removed
+            'HAS_BUILTIN_HRM',
             'HAS_CORE_NAVIGATION4',
             'HAS_GLYPH_BITMAP_CACHING',
             'HAS_HEALTH_TRACKING',
