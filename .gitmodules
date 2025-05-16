@@ -22,3 +22,6 @@
 [submodule "third_party/tinymt/TinyMT"]
 	path = third_party/tinymt/TinyMT
 	url = https://github.com/MersenneTwister-Lab/TinyMT
+[submodule "third_party/pebble-nonfree"]
+	path = third_party/pebble-nonfree
+	url = https://github.com/pebble-dev/pebble-nonfree.git

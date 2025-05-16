@@ -435,6 +435,12 @@
      "name": "JS_TICTOC",
      "file": "normal/base/js/tictoc.js",
      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "AS7000_FW_IMAGE",
+      "file": "../third_party/pebble-nonfree/drivers/hrm/as7000/as7000_fw_image.bin",
+      "builtin": true
     }
   ]
 }
