@@ -205,7 +205,9 @@ static void prv_display_write_sync(const uint8_t *buf, size_t len) {
 // Clear-all mode is entered by sending 0x04 to the panel
 void display_clear(void) {
   uint8_t buf[] = { DISP_MODE_CLEAR, 0x00 };
+  prv_enable_chip_select();
   prv_display_write_sync(buf, sizeof(buf));
+  prv_disable_chip_select();
 }
 
 bool display_update_in_progress(void) {
