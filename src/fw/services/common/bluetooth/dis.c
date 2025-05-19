@@ -21,15 +21,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "board/board.h"
 #include "process_management/pebble_process_info.h"
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 #include "system/version.h"
 
-#define MANUFACTURER_STR "Pebble Technology"
-
 _Static_assert(MODEL_NUMBER_LEN  >= MFG_HW_VERSION_SIZE + 1, "Size mismatch");
-_Static_assert(MANUFACTURER_LEN  >= sizeof(MANUFACTURER_STR), "Size mismatch");
+_Static_assert(MANUFACTURER_LEN  >= sizeof(BT_VENDOR_NAME), "Size mismatch");
 _Static_assert(SERIAL_NUMBER_LEN >= MFG_SERIAL_NUMBER_SIZE + 1, "Size mismatch");
 _Static_assert(FW_REVISION_LEN   >= sizeof(TINTIN_METADATA.version_tag), "Size mismatch");
 
@@ -38,7 +37,7 @@ static void prv_set_model_number(DisInfo *info) {
 }
 
 static void prv_set_manufacturer_name(DisInfo *info) {
-  strncpy(info->manufacturer, MANUFACTURER_STR, MANUFACTURER_LEN);
+  strncpy(info->manufacturer, BT_VENDOR_NAME, MANUFACTURER_LEN);
 }
 
 static void prv_set_serial_number(DisInfo *info) {
