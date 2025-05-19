@@ -331,7 +331,7 @@ void rtc_init(void) {
     PBL_LOG(LOG_LEVEL_INFO, "RTC: 100 RTC ticks took %"PRIu32" iters", iters);
   }
 #endif
-  
+
   prv_restore_rtc_time_state();
   s_did_init_rtc = true;
 }
@@ -347,49 +347,22 @@ void rtc_init_timers(void) {
   regular_timer_add_minutes_callback(&rtc_sync_timer);
 }
 
-/*** Logic to control RTC wakeup timer. ***/
-
-static RtcTicks s_alarm_set_time = 0;
-static RtcTicks s_alarm_expiry_time = 0;
-static bool s_tick_alarm_initialized = false;
 
 void rtc_alarm_init(void) {
-  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
-  s_tick_alarm_initialized = true;
 }
 
 void rtc_alarm_set(RtcTicks num_ticks) {
-  PBL_ASSERTN(s_tick_alarm_initialized);
-  
-  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  
-  s_alarm_set_time = rtc_get_ticks();
-  s_alarm_expiry_time = s_alarm_set_time + num_ticks;
-  
-  /* We're bounded by the regular_timer_add_minutes_callback for the
-   * rtc_alarm_set, so we're not going to wrap around more than once -- one
-   * minute is always less than 4.5 hours.
-   */
-  nrf_rtc_cc_set(BOARD_RTC_INST, 0, s_alarm_expiry_time & RTC_COUNTER_COUNTER_Msk);
-  
-  nrf_rtc_event_enable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_int_enable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
 }
 
 RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return rtc_get_ticks() - s_alarm_set_time;
+  return 0;
 }
 
 bool rtc_alarm_is_initialized(void) {
-  return s_tick_alarm_initialized;
+  return 0;
 }
 
 //! Handler for the RTC alarm interrupt. We don't actually have to do anything in this handler,
 //! just the interrupt firing is enough to bring us out of stop mode.
 void rtc_irq_handler(void) {
-  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
 }
