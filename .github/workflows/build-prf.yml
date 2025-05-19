@@ -25,6 +25,7 @@ jobs:
     strategy:
       matrix:
         board: ["asterix"]
+        mode: ["normal", "mfg"]
 
     steps:
       - name: Mark Github workspace as safe
@@ -42,7 +43,12 @@ jobs:
           pip install -r requirements.txt
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }}
+        run: |
+          if [ "${{ matrix.mode }}" == "mfg" ]; then
+            OPTS="--mfg --nohash"
+          fi
+
+          ./waf configure --board ${{ matrix.board }} $OPTS
 
       - name: Build
         run: ./waf build_prf
@@ -53,7 +59,7 @@ jobs:
       - name: Store
         uses: actions/upload-artifact@v4
         with:
-          name: prf-${{ matrix.board }}
+          name: prf-${{ matrix.board }}-${{ matrix.mode }}
           path: |
             build/**/*.elf
             build/**/*.pbz
