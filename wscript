@@ -214,7 +214,7 @@ def handle_configure_options(conf):
                       'See PBL-10174.')
             conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
 
-    if 'bb' in conf.options.board or conf.options.board in ('asterix'):
+    if 'bb' in conf.options.board:
         conf.env.append_value('DEFINES', 'IS_BIGBOARD')
 
     if conf.options.nosleep:
