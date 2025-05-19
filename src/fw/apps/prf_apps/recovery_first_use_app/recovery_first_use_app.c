@@ -169,6 +169,16 @@ static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
   int16_t icon_y_offset;
   int16_t text_y_offset;
 
+#if PLATFORM_ASTERIX
+  icon_res_id = RESOURCE_ID_LAUNCH_APP;
+  icon_x_offset = 17;
+  icon_y_offset = 22;
+  text_y_offset = 124;
+
+  // Icon is a QR with URL to install/launch app
+  url_string = "";
+  background = GColorWhite;
+#else
   // Have we gone through first use before? If not, show first use UI. Otherwise show recovery UI.
   const bool first_use_is_complete = shared_prf_storage_get_getting_started_complete();
 
@@ -199,7 +209,7 @@ static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
   }
 
   if (first_use_is_complete) {
-#if PBL_BW && !PLATFORM_TINTIN && !PLATFORM_ASTERIX
+#if PBL_BW && !PLATFORM_TINTIN
     // Override the icon to use the fullscreen version
     icon_res_id = RESOURCE_ID_LAUNCH_APP;
     icon_x_offset = 0;
@@ -215,6 +225,7 @@ static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
     url_string = "pebble.com/app";
     background = PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite);
   }
+#endif
 
   // Create the icon
   KinoReel *icon_reel = kino_reel_create_with_resource(icon_res_id);
