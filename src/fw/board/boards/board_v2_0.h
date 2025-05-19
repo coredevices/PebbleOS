@@ -24,6 +24,8 @@
 #include "drivers/imu/mag3110/mag3110.h"
 #include "drivers/imu/lis3dh/lis3dh.h"
 
+#define BT_VENDOR_ID 0x0154
+
 #define BOARD_LSE_MODE RCC_LSE_ON
 
 static const BoardConfig BOARD_CONFIG = {

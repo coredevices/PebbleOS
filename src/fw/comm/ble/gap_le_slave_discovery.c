@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "board/board.h"
+
 #include "gap_le_slave_discovery.h"
 #include "gap_le_advert.h"
 
@@ -129,7 +131,7 @@ static void prv_schedule_ad_job(void) {
          MFG_SERIAL_NUMBER_SIZE);
 
   ble_ad_set_manufacturer_specific_data(ad,
-                                       PEBBLE_BT_VENDOR_ID,
+                                       BT_VENDOR_ID,
                                        (const uint8_t *) &mfg_data,
                                        sizeof(struct ManufacturerSpecificData));
 #if !RECOVERY_FW

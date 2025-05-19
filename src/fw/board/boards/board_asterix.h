@@ -3,6 +3,7 @@
 #include "services/imu/units.h"
 #include "util/size.h"
 
+#define BT_VENDOR_ID 0x0EEA
 
 #define BOARD_LSE_MODE RCC_LSE_Bypass
 

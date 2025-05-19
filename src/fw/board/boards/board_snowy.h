@@ -27,6 +27,8 @@
 #include "services/imu/units.h"
 #include "util/size.h"
 
+#define BT_VENDOR_ID 0x0154
+
 #define BOARD_LSE_MODE RCC_LSE_Bypass
 
 static const BoardConfig BOARD_CONFIG = {
