@@ -67,6 +67,10 @@ typedef enum {
   PmicRegisters_LDSW_LDSW2LDOSEL = 0x0809,
   PmicRegisters_LDSW_LDSW1VOUTSEL = 0x080C,
   PmicRegisters_LDSW_LDSW2VOUTSEL = 0x080D,
+  PmicRegisters_SHIP_TASKSHPHLDCFGSTROBE = 0x0B01,
+  PmicRegisters_SHIP_TASKENTERSHIPMODE = 0x0B02,
+  PmicRegisters_SHIP_SHPHLDCONFIG = 0x0B04,
+  PmicRegisters_SHIP_SHPHLDCONFIG__SHPHLDTIM_96MS = 3,
 } PmicRegisters;
 
 void battery_init(void) {
@@ -166,6 +170,9 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_GPIOS_GPIOMODE1, PmicRegisters_GPIOS_GPIOMODE__GPOIRQ);
   ok &= prv_write_register(PmicRegisters_GPIOS_GPIOOPENDRAIN1, 0);
 
+  ok &= prv_write_register(PmicRegisters_SHIP_SHPHLDCONFIG, PmicRegisters_SHIP_SHPHLDCONFIG__SHPHLDTIM_96MS);
+  ok &= prv_write_register(PmicRegisters_SHIP_TASKSHPHLDCFGSTROBE, 1);
+
   prv_configure_interrupts();
 
   if (!ok) {
@@ -176,16 +183,22 @@ bool pmic_init(void) {
 }
 
 bool pmic_power_off(void) {
-  /* TODO(FIRM-114): shut almost everything off, but not the nRF Vdd, and then put the nRF in system_off */
-  return false;
+  // TODO: review implementation, see GH-238
+  if (pmic_is_usb_connected()) {
+    PBL_LOG(LOG_LEVEL_ERROR, "USB is connected, cannot power off");
+    return false;
+  }
+
+  if (!prv_write_register(PmicRegisters_SHIP_TASKENTERSHIPMODE, 1)) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to enter ship mode");
+    return false;
+  }
+
+  return true;
 }
 
-// This is a hard power off, resulting in all rails being disabled.
-// Generally, this is not desirable since we'll lose the backup domain.
-// You're *probably* looking for pmic_power_off.
 bool pmic_full_power_off(void) {
-  /* TODO(FIRM-114): put the PMIC in ship mode */
-  return false;
+  return pmic_power_off();
 }
 
 uint16_t pmic_get_vsys(void) {
