@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    if: github.repository == 'pebble-dev/pebble-firmware'
 
     env:
       BOARD_NAME: "asterix"
