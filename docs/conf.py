@@ -48,7 +48,7 @@ html_theme_options = {
     "logo": {
         "text": "PebbleOS",
     },
-    "repository_url": "https://github.com/pebble-dev/pebble-firmware",
+    "repository_url": "https://github.com/coredevices/pebbleos",
     "repository_branch": "main",
     "path_to_docs": "docs",
     "use_repository_button": True,

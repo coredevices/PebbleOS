@@ -92,7 +92,7 @@ If `brew` versions cause issues, consider using [Emscripten SDK](https://emscrip
 You can clone the PebbleOS repository by running:
 
 ```shell
-git clone --recurse-submodules https://github.com/pebble-dev/pebble-firmware
+git clone --recurse-submodules https://github.com/coredevices/pebbleos
 ```
 
 Once cloned, enter the `pebble-firmware` directory before continuing:

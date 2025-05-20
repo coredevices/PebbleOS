@@ -37,7 +37,7 @@ Get started
 ```
 
 ```{only} html
-[![](https://img.shields.io/github/stars/pebble-dev/pebble-firmware?style=social)](https://github.com/pebble-dev/pebble-firmware)
+[![](https://img.shields.io/github/stars/coredevices/pebbleos?style=social)](https://github.com/coredevices/pebbleos)
 ```
 
 :::
@@ -60,7 +60,7 @@ Learn how to build PebbleOS from source!
 :::
 
 :::{grid-item-card}
-:link: https://github.com/pebble-dev/pebble-firmware
+:link: https://github.com/coredevices/pebbleos
 :class-header: bg-light
 
 ⌚ Browse the sources
