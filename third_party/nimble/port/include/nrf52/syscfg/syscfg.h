@@ -1752,7 +1752,7 @@
 
 /* Value copied from BLE_LL_OUR_SCA */
 #ifndef MYNEWT_VAL_BLE_LL_SCA
-#define MYNEWT_VAL_BLE_LL_SCA (500)
+#define MYNEWT_VAL_BLE_LL_SCA (60)
 #endif
 
 /* Value copied from BLE_LL_CFG_FEAT_LL_PRIVACY */
