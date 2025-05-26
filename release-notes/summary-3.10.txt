@@ -1,1 +1,0 @@
-We've refined Health notifications, made emoji more fun, fixed bugs, and improved performance. Learn more at blog.getpebble.com.

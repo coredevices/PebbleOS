@@ -1,1 +1,0 @@
-Enjoy beautiful Pebble Health graphs on the mobile app, auto-detection of runs and long walks, Smart Alarms, and new activity insights in Time-series watches. Bug fixes and performance improvements for all models. Learn more at blog.pebble.com.

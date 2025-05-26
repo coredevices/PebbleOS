@@ -1,2 +1,0 @@
-* Mo' features, mo' bugfixes
-

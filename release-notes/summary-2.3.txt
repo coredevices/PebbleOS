@@ -1,1 +1,0 @@
-Improves Bluetooth LE connectivity and stability. Skip over notifications with a double-click.

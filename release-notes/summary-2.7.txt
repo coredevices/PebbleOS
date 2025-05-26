@@ -1,1 +1,0 @@
-Includes a slew of optimizations and bug fixes! http://blog.getpebble.com

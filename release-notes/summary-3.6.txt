@@ -1,1 +1,0 @@
-Lots of under-the-hood fixes and improvements to timeline, notifications, and more. Details at blog.getpebble.com.

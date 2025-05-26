@@ -1,1 +1,0 @@
-Introducing Pebble Health for Time series watches, timeline support for Classic watches, bug fixes, and improvements. Learn more at blog.getpebble.com.

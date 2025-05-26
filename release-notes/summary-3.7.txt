@@ -1,1 +1,0 @@
-Adds support for iOS Message Replies (AT&T phone contracts only), plus fixes and improvements. Learn more at blog.getpebble.com.

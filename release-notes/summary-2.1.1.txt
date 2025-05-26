@@ -1,1 +1,0 @@
-Addresses a number of issues pertaining to BT reconnection and reliability and other bug fixes

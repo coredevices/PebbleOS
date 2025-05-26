@@ -1,1 +1,0 @@
-Update includes support for emoji, compass & more! http://blog.getpebble.com
