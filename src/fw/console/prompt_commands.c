@@ -497,7 +497,7 @@ void command_flash_sec_info(void) {
 void command_flash_sec_lock(const char *password) {
   if (strcmp(password, "l0ckm3f0r3v3r") == 0) {
     flash_lock_security_registers();
-    prompt_send_response("Flash security registers locked");
+    prompt_send_response("OK");
   } else {
     prompt_send_response("FAIL: Invalid password");
   }
