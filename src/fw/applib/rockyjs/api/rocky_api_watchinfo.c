@@ -192,6 +192,12 @@ static jerry_value_t prv_get_model_name(void) {
       case WATCH_INFO_COLOR_PEBBLE_TIME_2_GOLD:
         model_name = ROBERT_MODEL("pebble_time_2_gold");
         break;
+      case WATCH_INFO_COLOR_COREDEVICES_C2D_BLACK:
+        model_name = ASTERIX_MODEL("coredevices_c2d_black");
+        break;
+      case WATCH_INFO_COLOR_COREDEVICES_C2D_WHITE:
+        model_name = ASTERIX_MODEL("coredevices_c2d_white");
+        break;
       case WATCH_INFO_COLOR_UNKNOWN:
       case WATCH_INFO_COLOR__MAX:
         model_name = NULL;
