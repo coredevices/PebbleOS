@@ -1,0 +1,120 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+
+    strategy:
+      matrix:
+        board: ["asterix"]
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+          tags: true
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Obtain platform name
+        id: get-platform
+        run: |
+          BOARD=${{ matrix.board }}
+          PLATFORM=${BOARD%%_*}
+          echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
+
+      - name: Configure bootloader
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        run: ./waf configure --board ${{ matrix.board }}
+
+      - name: Build bootloader
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        run: ./waf build
+
+      - name: Copy bootloader artifacts
+        run: |
+          mkdir -p artifacts
+          cp platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.hex \
+             artifacts/bootloader_${{ matrix.board }}_${{github.ref_name}}.hex
+
+      - name: Configure bootloader (nowatchdog)
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        run: ./waf configure --board ${{ matrix.board }} --nowatchdog
+
+      - name: Build bootloader (nowatchdog)
+        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
+        run: ./waf build
+
+      - name: Copy bootloader artifacts (nowatchdog)
+        run: |
+          mkdir -p artifacts
+          cp platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.hex \
+             artifacts/bootloader_nowatchdog_${{ matrix.board }}_${{github.ref_name}}.hex
+
+      - name: Configure
+        run: ./waf configure --board ${{ matrix.board }} --release
+
+      - name: Build firmware
+        run: ./waf build
+
+      - name: Bundle firmware
+        run: ./waf bundle
+
+      - name: Copy firmware artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/src/fw/tintin_fw.hex artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}.hex
+          cp build/*.pbz artifacts
+
+      - name: Build PRF
+        run: ./waf build_prf
+
+      - name: Bundle PRF
+        run: ./waf bundle_prf
+
+      - name: Copy PRF artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/prf/src/fw/tintin_fw.hex artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.hex
+          cp build/prf/*.pbz artifacts
+
+      - name: Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ matrix.board }}
+          path: artifacts
+
+  release:
+    runs-on: ubuntu-24.04
+
+    needs: build
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Display artifacts
+        run: ls -R
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts-*/*
