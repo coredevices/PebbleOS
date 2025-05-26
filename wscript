@@ -989,31 +989,6 @@ def bundle(ctx):
     else:
         _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path),
                      resource_path=ctx.get_pbpack_node().path_from(ctx.path))
-        _generate_release_notes(ctx)
-
-
-def _generate_release_notes(ctx):
-    def _write_tag_to_release_notes(task):
-        output = task.outputs[0].abspath()
-        tag = task.generator.version_tag
-        with open(output, 'w') as f:
-            f.write(tag)
-        task.dep_vars = tag
-
-    git_revision = waftools.gitinfo.get_git_revision(ctx)
-    version = "{}.{}".format(git_revision['MAJOR_VERSION'], git_revision['MINOR_VERSION'])
-    version_hotfix = "{}.{}".format(version, git_revision['PATCH_VERSION'])
-    summary_node = ctx.path.find_node('release-notes').find_node('summary-{}.txt'.format(version_hotfix))
-    if summary_node is None:
-        summary_node = ctx.path.find_node('release-notes').find_node('summary-{}.txt'.format(version))
-    if summary_node is not None:
-        ctx(rule='cp ${SRC} ${TGT}',
-            source=summary_node,
-            target=ctx.path.get_bld().make_node('release-notes.txt'))
-    else:
-        ctx(rule=_write_tag_to_release_notes,
-            version_tag=git_revision['TAG'],
-            target=ctx.path.get_bld().make_node('release-notes.txt'))
 
 
 class bundle_prf(BuildContext):
