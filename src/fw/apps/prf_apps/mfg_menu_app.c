@@ -38,6 +38,7 @@
 #include "resource/resource_ids.auto.h"
 #include "services/common/bluetooth/local_id.h"
 #include "services/common/bluetooth/pairability.h"
+#include "system/bootbits.h"
 #include "system/reset.h"
 #include "util/size.h"
 
@@ -118,6 +119,11 @@ static void prv_select_btle(int index, void *context) {
 }
 #endif
 
+static void prv_select_load_prf(int index, void *context) {
+  boot_bit_set(BOOT_BIT_FORCE_PRF);
+  system_reset();
+}
+
 static void prv_select_reset(int index, void *context) {
   system_reset();
 }
@@ -193,6 +199,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Test BTLE",         .callback = prv_select_btle },
 #endif
     { .title = "Certification",     .callback = prv_select_certification },
+    { .title = "Load PRF",          .callback = prv_select_load_prf },
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown }
   };
