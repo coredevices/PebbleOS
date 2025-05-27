@@ -92,7 +92,19 @@ jobs:
         run: |
           mkdir -p artifacts
           cp build/prf/src/fw/tintin_fw.hex artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.hex
+          cp build/prf/src/fw/tintin_fw.bin artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.bin
           cp build/prf/*.pbz artifacts
+
+      - name: Configure PRF MFG
+        run: ./waf configure --board ${{ matrix.board }} --mfg --nohash --release
+
+      - name: Build MFG PRF
+        run: ./waf build_prf
+
+      - name: Copy MFG PRF artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/prf/src/fw/tintin_fw.hex artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.hex
 
       - name: Store
         uses: actions/upload-artifact@v4
