@@ -416,12 +416,14 @@ static const Command s_prompt_commands[] = {
   { "serial write", command_serial_write, 1 },
   { "hwver write", command_hwver_write, 1 },
   { "pcbaserial write", command_pcba_serial_write, 1 },
+#if MANUFACTURING_FW
   { "color write", command_color_write, 1 },
 #if PBL_ROUND
   { "disp offset write", command_disp_offset_write, 2 },
 #endif
   { "rtcfreq write", command_rtcfreq_write, 1 },
   { "model write", command_model_write, 1 },
+#endif // MANUFACTURING_FW
   { "bootloader test", command_bootloader_test, 1 },
 
   { "scheduler force active", command_scheduler_force_active, 0 },
