@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/bt_driver_advert.h>
 #include <bluetooth/gatt.h>
