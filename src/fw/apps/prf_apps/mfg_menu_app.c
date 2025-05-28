@@ -26,6 +26,7 @@
 #include "apps/prf_apps/mfg_certification_app.h"
 #include "apps/prf_apps/mfg_display_app.h"
 #include "apps/prf_apps/mfg_hrm_app.h"
+#include "apps/prf_apps/mfg_program_color_app.h"
 #include "apps/prf_apps/mfg_runin_app.h"
 #include "apps/prf_apps/mfg_vibe_app.h"
 #include "kernel/event_loop.h"
@@ -119,6 +120,10 @@ static void prv_select_btle(int index, void *context) {
 }
 #endif
 
+static void prv_select_program_color(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_program_color_app_get_info());
+}
+
 static void prv_select_load_prf(int index, void *context) {
   boot_bit_set(BOOT_BIT_FORCE_PRF);
   system_reset();
@@ -199,6 +204,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Test BTLE",         .callback = prv_select_btle },
 #endif
     { .title = "Certification",     .callback = prv_select_certification },
+    { .title = "Program Color",     .callback = prv_select_program_color },
     { .title = "Load PRF",          .callback = prv_select_load_prf },
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown }
