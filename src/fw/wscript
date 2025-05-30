@@ -120,7 +120,10 @@ def _generate_memory_layout(bld):
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
         bootloader_size = '32K'
-        flash_size = '1024K'
+        if bld.is_asterix() and bld.variant == 'prf':
+            flash_size = '512K'
+        else:
+            flash_size = '1024K'
 
     if bld.env.QEMU:
         flash_size = '4M'
