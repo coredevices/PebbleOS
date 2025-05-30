@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,9 +68,10 @@ jobs:
         id: build_id
         run: |
           echo "BUILD_ID=$(arm-none-eabi-readelf -n build/prf/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
-    
+
       - name: Upload log hash dictionary
         uses: Noelware/s3-action@2.3.1
+        if: ${{ github.event_name == 'push' }}
         with:
           access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
           secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
