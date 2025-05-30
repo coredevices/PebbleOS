@@ -72,7 +72,7 @@ typedef struct {
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  if (app_data->selected_color_index == 0) {
+  if (ARRAY_LENGTH(s_color_table) == 0 || app_data->selected_color_index == 0) {
     return;
   }
 
@@ -84,7 +84,8 @@ static void prv_up_click_handler(ClickRecognizerRef recognizer, void *data) {
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  if (app_data->selected_color_index == ARRAY_LENGTH(s_color_table) - 1) {
+  if (ARRAY_LENGTH(s_color_table) == 0 ||
+      app_data->selected_color_index == (int)ARRAY_LENGTH(s_color_table) - 1) {
     return;
   }
 
@@ -97,7 +98,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
   AppData *app_data = app_state_get_user_data();
   char model[MFG_INFO_MODEL_STRING_LENGTH];
 
-  if (app_data->selected_color_index == -1) {
+  if (ARRAY_LENGTH(s_color_table) == 0 || app_data->selected_color_index == -1) {
     return;
   }
   
