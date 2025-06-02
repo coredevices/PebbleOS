@@ -24,8 +24,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          fetch-tags: true
           submodules: true
+
+      - name: Fetch tags
+        run: |
+          git fetch --tags --force
 
       - name: Install Python dependencies
         run: |
