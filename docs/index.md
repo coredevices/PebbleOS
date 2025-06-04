@@ -97,6 +97,12 @@ development/qemu.md
 
 ```{toctree}
 :hidden:
+:caption: ⌚ Boards
+boards/index.md
+```
+
+```{toctree}
+:hidden:
 :caption: 📖 Reference 
 reference/external.md
 ```

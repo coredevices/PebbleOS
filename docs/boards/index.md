@@ -1,0 +1,6 @@
+# Boards
+
+```{toctree}
+:glob:
+**/*
+```
