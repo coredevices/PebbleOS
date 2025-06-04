@@ -128,7 +128,7 @@ jobs:
           bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
           files: |
             build/prf/src/fw/tintin_fw_loghash_dict.json
-          path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
+          path-format: ${{ steps.prf_build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
 
       - name: Configure PRF MFG
         run: ./waf configure --board ${{ matrix.board }} --mfg --nohash --release
