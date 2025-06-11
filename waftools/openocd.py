@@ -158,6 +158,13 @@ def _get_reset_conf(conf, should_connect_assert_srst):
         raise Exception("Unsupported microcontroller family: %s" % conf.env.MICRO_FAMILY)
 
 
+def _get_adapter_speed(conf):
+    if conf.env.JTAG == 'swd_cmsisdap' and conf.env.MICRO_FAMILY == 'NRF52840':
+        return 10000
+
+    return None
+
+
 def write_cfg(conf):
     jtag = conf.env.JTAG
     if jtag == 'bb2':
@@ -184,12 +191,20 @@ def write_cfg(conf):
     reset_config = _get_reset_conf(conf, False)
     Logs.info("reset_config: %s" % reset_config)
 
+    adapter_speed_cfg = ""
+    adapter_speed = _get_adapter_speed(conf)
+    if adapter_speed:
+        adapter_speed_cfg = f"adapter speed {adapter_speed}"
+
     if not is_pebble_flavor:
         Logs.warn("openocd is not Pebble flavored!")
 
-    openocd_cfg = OPENOCD_CFG_TEMPLATE.substitute(jtag=JTAG_OPTIONS[jtag],
-                                                  target=target,
-                                                  reset_config=reset_config)
+    openocd_cfg = OPENOCD_CFG_TEMPLATE.substitute(
+        jtag=JTAG_OPTIONS[jtag],
+        target=target,
+        reset_config=reset_config,
+        adapter_speed_cfg=adapter_speed_cfg
+    )
     waflib.Utils.writef('./openocd.cfg', openocd_cfg)
 
 
@@ -199,6 +214,7 @@ OPENOCD_CFG_TEMPLATE = string.Template("""
 ${jtag}
 source [find target/${target}]
 
+${adapter_speed_cfg}
 reset_config ${reset_config}
 
 $$_TARGETNAME configure -rtos FreeRTOS
