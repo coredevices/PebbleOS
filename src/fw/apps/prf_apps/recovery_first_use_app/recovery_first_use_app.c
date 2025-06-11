@@ -279,7 +279,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
   text_layer_set_text(&data->name_text_layer, data->name_text_buffer);
 
   // Set the name font
-#if !PLATFORM_ROBERT && !PLATFORM_CALCULUS
+#if !PLATFORM_ROBERT && !PLATFORM_CALCULUS && !PLATFORM_ASTERIX
   const bool first_use_is_complete = shared_prf_storage_get_getting_started_complete();
   const char *name_font_key;
   if (first_use_is_complete || data->has_pebble_mobile_app_connected || data->is_showing_version) {
