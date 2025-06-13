@@ -195,7 +195,7 @@ static GATTServiceDiscoveryCharacteristicNode *prv_create_chr_node(const struct 
 
 static GATTServiceDiscoveryServiceNode *prv_create_service_node(const struct ble_gatt_svc *svc) {
   GATTServiceDiscoveryServiceNode *service_node =
-      kernel_zalloc_check(sizeof(GATTServiceDiscoveryCharacteristicNode));
+      kernel_zalloc_check(sizeof(GATTServiceDiscoveryServiceNode));
   list_init(&service_node->node);
   service_node->service = *svc;
   return service_node;
