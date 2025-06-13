@@ -56,7 +56,7 @@ static ListNode **prv_find_sec_list_for_obj_type(const int obj_type) {
     case BLE_STORE_OBJ_TYPE_PEER_SEC:
       return (ListNode **)&s_peer_value_secs;
     default:
-      PBL_ASSERT(0, "Unkmown store object type");
+      PBL_ASSERT(0, "Unknown store object type");
   }
 }
 
