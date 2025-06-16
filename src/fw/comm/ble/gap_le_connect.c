@@ -956,6 +956,7 @@ static BTErrno prv_unregister_intent(GAPLEConnectionIntent *intent,
 
   const BTDeviceInternal *device = &intent->device;
   const bool is_connected_real = gap_le_connection_is_connected(device);
+  const bool is_encrypted = gap_le_connection_is_encrypted(device);
 
   const BTBondingID bonding_id = prv_get_bonding_id_for_intent(intent);
 
@@ -967,8 +968,10 @@ static BTErrno prv_unregister_intent(GAPLEConnectionIntent *intent,
   if (!prv_is_intent_used(intent)) {
     should_remove_and_free = true;
 
-    if (is_connected_real) {
+    if (is_connected_real && is_encrypted) {
       // Disconnect the device because no one is using it
+      // If connection is not encrypted, we are likely undergoing a re-pairing,
+      // so don't disconnect.
       const int result = bt_driver_gap_le_disconnect(device);
       if (result != 0) {
         PBL_LOG(LOG_LEVEL_ERROR, "Ble disconnect failed: %d", result);
