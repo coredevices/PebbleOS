@@ -107,8 +107,8 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
   #define DEFAULT_LOG_COLOR        LOG_COLOR_GREY
 #endif
 
+#define LOG_DOMAIN_BT                 1
 #define LOG_DOMAIN_MISC               1
-#define LOG_DOMAIN_BT_CORE            1
 #define LOG_DOMAIN_FS                 1
 #define LOG_DOMAIN_COMM               1
 #define LOG_DOMAIN_ACCEL              0
@@ -127,22 +127,6 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 
 #define LOG_DOMAIN_BLOBDB             0
 
-#ifndef LOG_DOMAIN_BT_ISPP
-  #define LOG_DOMAIN_BT_ISPP          0
-#endif
-
-#ifndef LOG_DOMAIN_BT_SDP
-  #define LOG_DOMAIN_BT_SDP           0
-#endif
-
-#ifndef LOG_DOMAIN_BT_GAP
-  #define LOG_DOMAIN_BT_GAP           0
-#endif
-
-#ifndef LOG_DOMAIN_BT_PROFILES
-  #define LOG_DOMAIN_BT_PROFILES      0
-#endif
-
 #ifndef LOG_DOMAIN_BT_PAIRING_INFO
 #if !RELEASE
   #define LOG_DOMAIN_BT_PAIRING_INFO  1
@@ -151,50 +135,16 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 #endif
 #endif
 
-#ifndef LOG_DOMAIN_BT_SNIFF
-  #define LOG_DOMAIN_BT_SNIFF         0
-#endif
-
-#ifndef LOG_DOMAIN_BT_HCI
-  #define LOG_DOMAIN_BT_HCI           0
-#endif
-
-#ifndef LOG_DOMAIN_BLE // Not grouped with BT classic
-  #define LOG_DOMAIN_BLE              0
+#ifndef LOG_DOMAIN_BT_STACK
+  #define LOG_DOMAIN_BT_STACK        0
 #endif
 
 #ifndef LOG_DOMAIN_DATA_LOGGING
   #define LOG_DOMAIN_DATA_LOGGING     0
 #endif
 
-#ifndef LOG_DOMAIN_BLE_CORE // Not included with BLE
-  #define LOG_DOMAIN_BLE_CORE         0
-#endif
-
-#ifndef LOG_DOMAIN_BLE_GAP // Not included with BLE
-  #define LOG_DOMAIN_BLE_GAP          0
-#endif
-
-#ifndef LOG_DOMAIN_BLE_SM // Not included with BLE
-  #define LOG_DOMAIN_BLE_SM           0
-#endif
-
 #ifdef LOG_DOMAIN_ALL // Turn on all domains that are off by default
   #define LOG_DOMAIN_BT
-#endif
-
-#ifdef LOG_DOMAIN_BT
-  #define LOG_DOMAIN_BT_PROFILES      1
-  #define LOG_DOMAIN_BT_HCI           1
-  #define LOG_DOMAIN_BT_SNIFF         1
-#else
-#define LOG_DOMAIN_BT 0
-#endif
-
-#if LOG_DOMAIN_BT_PROFILES
-  #define LOG_DOMAIN_BT_ISPP          1
-  #define LOG_DOMAIN_BT_SDP           1
-  #define LOG_DOMAIN_BT_GAP           1
 #endif
 
 #ifndef LOG_DOMAIN_TOUCH

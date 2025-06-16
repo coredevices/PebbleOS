@@ -49,7 +49,7 @@ static bool ble_run_bts(const ResAppNum bts_file) {
   size_t bts_len = 0;
 
   if (!resource_is_valid(SYSTEM_APP, bts_file)) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Can't load BT service pack: bad system resources!");
+    PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_ERROR, "Can't load BT service pack: bad system resources!");
     return false;
   }
 
@@ -65,12 +65,12 @@ static bool ble_run_bts(const ResAppNum bts_file) {
 
     // TODO: re-add sleep mode config and deal with entering/exiting sleep mode
     if (command->opcode == HCI_VS_SLEEP_MODE_CONFIG) {
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "ble_bts: Skipping opcode 0x%X", command->opcode);
+      PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_INFO, "ble_bts: Skipping opcode 0x%X", command->opcode);
       continue;
     }
 
     if (command->opcode == HCI_VS_UPDATE_UART_HCI_BAUDRATE) {
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "ble_bts: Setting baud rate to %d", HCI_BAUD_RATE);
+      PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_INFO, "ble_bts: Setting baud rate to %d", HCI_BAUD_RATE);
       BTSHCIUpdateBaudRateCommand baud_rate_command = {
           .opcode = HCI_VS_UPDATE_UART_HCI_BAUDRATE,
           .size = sizeof(uint32_t),
@@ -105,7 +105,7 @@ bool ble_chipset_start(void) {
   // HACK: this is just here to let the service pack commands get processed before we continue
   psleep(500);
 
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "bts files sent");
+  PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_INFO, "bts files sent");
 
   return true;
 }

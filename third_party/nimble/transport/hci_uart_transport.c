@@ -145,7 +145,7 @@ static bool prv_uart_rx_irq_handler(UARTDevice *dev, uint8_t data,
   BaseType_t should_context_switch = false;
 
   if (err_flags->framing_error || err_flags->overrun_error) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Bluetooth UART overrun:%d framing:%d",
+    PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_ERROR, "Bluetooth UART overrun:%d framing:%d",
               err_flags->overrun_error, err_flags->framing_error);
   }
 
@@ -181,7 +181,7 @@ static void prv_rx_task_main(void *unused) {
 
       consumed_bytes = hci_h4_sm_rx(&hci_uart_h4sm, read_buf, bytes_remaining);
       if (consumed_bytes <= 0) {
-        PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "hci_h4_sm_rx rc=%d", consumed_bytes);
+        PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_ERROR, "hci_h4_sm_rx rc=%d", consumed_bytes);
         break;
       }
 

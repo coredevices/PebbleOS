@@ -620,7 +620,7 @@ static void prv_start_connecting(void) {
     return;
   }
 
-  BLE_GAP_LOG_DEBUG("Starting connecting..");
+  BLE_LOG_DEBUG("Starting connecting..");
   unsigned int stack_id = bt_stack_id();
   // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.12:
   const GAP_LE_Address_Type_t local_addr_type = BleAddressType_Random;
@@ -654,7 +654,7 @@ static void prv_stop_connecting(void) {
     return;
   }
   unsigned int stack_id = bt_stack_id();
-  BLE_GAP_LOG_DEBUG("Stopping connecting...");
+  BLE_LOG_DEBUG("Stopping connecting...");
   // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.13:
   const int r = GAP_LE_Cancel_Create_Connection(stack_id);
   if (r) {
@@ -672,8 +672,8 @@ static void prv_mutate_whitelist(const BTDeviceInternal *device, bool is_adding)
   PBL_LOG(LOG_LEVEL_WARNING, "BLE whitelist mutation unimplemented");
 #else
   unsigned int stack_id = bt_stack_id();
-  BLE_GAP_LOG_DEBUG("Mutating white-list (adding=%u): " BD_ADDR_FMT,
-                    is_adding, BT_DEVICE_ADDRESS_XPLODE(device->address));
+  BLE_LOG_DEBUG("Mutating white-list (adding=%u): " BD_ADDR_FMT,
+                is_adding, BT_DEVICE_ADDRESS_XPLODE(device->address));
   // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.15:
   uint8_t status = 0;
   const uint8_t addr_type = device->is_random_address ? 0x01 : 0x00;
@@ -1124,7 +1124,7 @@ BTErrno gap_le_connect_cancel_by_bonding(BTBondingID bonding_id, GAPLEClient cli
 void gap_le_connect_cancel_all(GAPLEClient client) {
   bt_lock();
   {
-    BLE_GAP_LOG_DEBUG("Cancel connecting all for client %u...", client);
+    BLE_LOG_DEBUG("Cancel connecting all for client %u...", client);
 
     GAPLEConnectionIntent *intent = s_intents;
     while (intent) {
