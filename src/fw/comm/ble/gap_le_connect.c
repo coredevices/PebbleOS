@@ -580,7 +580,7 @@ void bt_driver_handle_le_encryption_change_event(const BleEncryptionChange *even
   if (!is_encrypted) {
     // The "Encryption Change" event can only enable encryption, there's no inverse,
     // so there must be an error:
-    PBL_LOG(LOG_LEVEL_ERROR, "Encryption change failed: %u", event->status);
+    PBL_LOG(LOG_LEVEL_ERROR, "LE encryption change: failed (%u)", event->status);
     goto unlock;
   }
 
@@ -588,7 +588,7 @@ void bt_driver_handle_le_encryption_change_event(const BleEncryptionChange *even
   // gap_le_connection_by_device() will fail.
   GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
   if (connection->is_encrypted) {
-    PBL_LOG(LOG_LEVEL_INFO, "Encryption refreshed!");
+    PBL_LOG(LOG_LEVEL_INFO, "LE encryption change: refreshed");
     goto unlock;
   }
 
@@ -596,7 +596,7 @@ void bt_driver_handle_le_encryption_change_event(const BleEncryptionChange *even
   connection->is_encrypted = true;
 
   if (!local_is_master) {
-    PBL_LOG(LOG_LEVEL_INFO, "Hurray! LE Security established.");
+    PBL_LOG(LOG_LEVEL_INFO, "LE encryption change: encrypted");
     bluetooth_analytics_handle_encryption_change();
     bt_driver_pebble_pairing_service_handle_status_change(connection);
   }
