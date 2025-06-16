@@ -61,8 +61,13 @@ int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_hand
 
   struct os_mbuf *om = ble_hs_mbuf_from_flat(&status, sizeof(status));
   rc = ble_gatts_notify_custom(conn_handle, attr_handle, om);
-  PBL_LOG(LOG_LEVEL_INFO, "ble_gatts_notify for attr %d returned %d", attr_handle, rc);
-  return rc;
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
+              "ble_gatts_notify_custom failed for attr %d: %d", attr_handle, rc);
+    return rc;
+  }
+
+  return 0;
 }
 
 static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_handle,
