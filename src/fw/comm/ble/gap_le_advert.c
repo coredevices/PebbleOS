@@ -276,8 +276,6 @@ static void prv_cycle_timer_callback(void *unused) {
     prv_increment_time_elapsed_for_all_silent_terms_except_current();
 
     GAPLEAdvertisingJob *job = s_current;
-    BLE_LOG_DEBUG("Currently running job: %s (non-connectable=%u)",
-                  prv_string_for_debug_tag(job->tag), gap_le_connect_is_connected_as_slave());
 
     // Set to next job (round-robin) that isn't silent (unless there is no non-silent one):
     s_jobs = (GAPLEAdvertisingJob *) job->node.next;
