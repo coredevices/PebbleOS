@@ -399,9 +399,6 @@ static void prv_pebble_mobile_app_event_handler(PebbleEvent *event, void *contex
   }
 
   const bool is_connected = event->bluetooth.comm_session_event.is_open;
-  // When the Pebble app is connected, to being discoverable / pairable. We do this to avoid
-  // stressing out the BT controller during the FW update with discoverability advertisements, etc.
-  prv_allow_pairing(s_fu_app_data, !is_connected);
 
   s_fu_app_data->is_pebble_mobile_app_connected = event->bluetooth.comm_session_event.is_open;
   if (is_connected) {
