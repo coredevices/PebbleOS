@@ -269,6 +269,14 @@ static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
   }
 }
 
+static void prv_handle_notification_tx_event(struct ble_gap_event *event) {
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG,
+            "notification tx event; status=%d attr_handle=%d indication=%d\n",
+            event->notify_tx.status,
+            event->notify_tx.attr_handle,
+            event->notify_tx.indication);
+}
+
 #ifdef RECOVERY_FW
 // TODO (GH-205): Implement UI to prompt user to accept/reject a repeat pairing request.
 // For now, allow this action while in recovery mode as there is no UI there
@@ -329,6 +337,10 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_NOTIFY_RX:
       // no log here because it's incredibly noisy
       prv_handle_notification_rx_event(event);
+      break;
+    case BLE_GAP_EVENT_NOTIFY_TX:
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_NOTIFY_TX");
+      prv_handle_notification_tx_event(event);
       break;
 #ifdef RECOVERY_FW
     case BLE_GAP_EVENT_REPEAT_PAIRING:
