@@ -201,6 +201,19 @@ bool gap_le_connection_is_connected(const BTDeviceInternal *device) {
 
 // -------------------------------------------------------------------------------------------------
 
+bool gap_le_connection_is_encrypted(const BTDeviceInternal *device) {
+  bool encrypted = false;
+  bt_lock();
+  GAPLEConnection *connection = prv_find_connection(device);
+  if (connection != NULL) {
+    encrypted = connection->is_encrypted;
+  }
+  bt_unlock();
+  return encrypted;
+}
+
+// -------------------------------------------------------------------------------------------------
+
 uint16_t gap_le_connection_get_gatt_mtu(const BTDeviceInternal *device) {
   bt_lock();
   const GAPLEConnection *connection = prv_find_connection(device);

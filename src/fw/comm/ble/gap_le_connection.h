@@ -43,6 +43,8 @@ void gap_le_connection_remove(const BTDeviceInternal *device);
 
 bool gap_le_connection_is_connected(const BTDeviceInternal *device);
 
+bool gap_le_connection_is_encrypted(const BTDeviceInternal *device);
+
 uint16_t gap_le_connection_get_gatt_mtu(const BTDeviceInternal *device);
 
 void gap_le_connection_init(void);
