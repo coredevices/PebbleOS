@@ -66,6 +66,7 @@ typedef struct PACKED BleConnectionCompleteEvent {
   bool is_resolved;
   SMIdentityResolvingKey irk;
   uint16_t handle;
+  uint16_t mtu;
 } BleConnectionCompleteEvent;
 
 // "Disconnection Complete Event" - v4.2 7.7.5
