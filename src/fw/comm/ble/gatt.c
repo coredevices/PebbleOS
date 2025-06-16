@@ -72,7 +72,7 @@ void bt_driver_cb_gatt_handle_mtu_update(const GattDeviceMtuUpdateEvent *event) 
       goto unlock;
     }
     
-    PBL_LOG(LOG_LEVEL_DEBUG, "Handle MTU change from %d to %d bytes",
+    PBL_LOG(LOG_LEVEL_INFO, "Handle MTU change from %d to %d bytes",
             connection->gatt_mtu, event->mtu);
     connection->gatt_mtu = event->mtu;
   }
