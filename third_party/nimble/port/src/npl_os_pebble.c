@@ -378,6 +378,6 @@ ble_npl_error_t npl_pebble_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_
 }
 
 void __assert_func(const char *file, int line, const char *func, const char *e) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Nimble assert at line %d, func: %s - %s", line, func, e);
+  PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_ERROR, "Nimble assert at line %d, func: %s - %s", line, func, e);
   WTF;
 }
