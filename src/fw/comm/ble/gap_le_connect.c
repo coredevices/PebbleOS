@@ -411,6 +411,7 @@ void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEv
                                                           local_is_master);
       // Cache the BLE connection parameters
       connection->conn_params = *params;
+      connection->gatt_mtu = event->mtu;
 
       bool found_match = false;
       GAPLEConnectionIntent *intent = s_intents;

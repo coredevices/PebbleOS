@@ -83,6 +83,7 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
       .handle = event->connect.conn_handle,
       .is_master = desc.role == BLE_GAP_ROLE_MASTER,
       .status = HciStatusCode_Success,
+      .mtu = ble_att_mtu(event->connect.conn_handle),
   };
 
   // If OTA address != ID address, then the address must be resolved.
