@@ -74,7 +74,7 @@ static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in s
 static bool s_backlight_motion_enabled = true;
 
 #define PREF_KEY_STATIONARY "stationaryMode"
-#if RELEASE && !PLATFORM_SPALDING
+#if (RELEASE && !PLATFORM_SPALDING) || PLATFORM_ASTERIX || PLATFORM_OBELIX
 static bool s_stationary_mode_enabled = false;
 #else
 static bool s_stationary_mode_enabled = true;
