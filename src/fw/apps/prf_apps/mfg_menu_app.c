@@ -104,7 +104,7 @@ static void prv_select_als(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_als_app_get_info());
 }
 
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX && defined(MANUFACTURING_FW)
 static void prv_select_speaker(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_speaker_app_get_info());
 }
@@ -215,7 +215,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #if BT_CONTROLLER_DA14681
     { .title = "Test BTLE",         .callback = prv_select_btle },
 #endif
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX && defined(MANUFACTURING_FW)
     { .title = "Test Speaker",          .callback = prv_select_speaker },
 #endif
     { .title = "Certification",     .callback = prv_select_certification },
