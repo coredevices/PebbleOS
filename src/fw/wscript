@@ -122,14 +122,14 @@ def _generate_memory_layout(bld):
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
         # We use XIP flash, so the bootloader does not have to be taken into account.
         bootloader_size = '0K'
-        if bld.is_obelix() and bld.variant == 'prf':
+        if bld.is_obelix() and bld.variant == 'prf' and not bld.env.IS_MFG:
             flash_size = '512K'
         else:
             flash_size = '3072K'
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
         bootloader_size = '32K'
-        if bld.is_asterix() and bld.variant == 'prf':
+        if bld.is_asterix() and bld.variant == 'prf' and not bld.env.IS_MFG:
             flash_size = '512K'
         else:
             flash_size = '1024K'
