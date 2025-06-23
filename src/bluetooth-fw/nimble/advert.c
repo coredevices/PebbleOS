@@ -362,8 +362,8 @@ bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_
   struct ble_gap_adv_params advp = {
       .conn_mode = BLE_GAP_CONN_MODE_UND,
       .disc_mode = BLE_GAP_DISC_MODE_GEN,
-      .itvl_min = BLE_GAP_CONN_ITVL_MS(min_interval_ms),
-      .itvl_max = BLE_GAP_CONN_ITVL_MS(max_interval_ms),
+      .itvl_min = BLE_GAP_ADV_ITVL_MS(min_interval_ms),
+      .itvl_max = BLE_GAP_ADV_ITVL_MS(max_interval_ms),
   };
 
   rc = ble_hs_id_infer_auto(0, &own_addr_type);
