@@ -318,6 +318,23 @@ void nimble_store_init(void) {
   ble_hs_cfg.store_gen_key_cb = prv_nimble_store_gen_key;
 }
 
+static bool prv_store_value_free(ListNode *node, void *context) {
+  kernel_free(node);
+  return false;
+}
+
+void nimble_store_unload(void) {
+  bt_lock();
+
+  list_foreach((ListNode *)s_peer_value_secs, prv_store_value_free, NULL);
+  list_foreach((ListNode *)s_our_value_secs, prv_store_value_free, NULL);
+
+  s_peer_value_secs = NULL;
+  s_our_value_secs = NULL;
+
+  bt_unlock();
+}
+
 static void prv_convert_bonding_remote_to_store_val(const BleBonding *bonding,
                                                     struct ble_store_value_sec *value_sec) {
   memset(value_sec, 0, sizeof(struct ble_store_value_sec));
