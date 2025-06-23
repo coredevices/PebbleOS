@@ -47,7 +47,7 @@ def _extract_project_info(conf, info_json, json_filename):
         version = _validate_version(conf, info_json['version'])
         project_info['versionLabel'] = version
 
-        if isinstance(info_json['author'], basestring):
+        if isinstance(info_json['author'], str):
             project_info['companyName'] = (
                 info_json['author'].split('(', 1)[0].split('<', 1)[0].strip())
         elif isinstance(info_json['author'], dict) and 'name' in info_json['author']:

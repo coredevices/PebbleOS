@@ -34,7 +34,7 @@ class layouts_json(Task.Task):
         """
         published_media_dict = {m['id']: m['name'] for m in self.published_media}
         timeline_entries = [{'id': media_id, 'name': media_name} for media_id, media_name in
-                            published_media_dict.iteritems()]
+                            published_media_dict.items()]
         image_uris = {
             'resources': {'app://images/' + r['name']: r['id'] for r in timeline_entries}
         }
@@ -123,7 +123,7 @@ class timeline_reso(Task.Task):
                                           range(len(timeline_resources), timeline_id + 1))
 
             # Set the resource IDs for this timeline item
-            for size, res_id in item['timeline'].iteritems():
+            for size, res_id in item['timeline'].items():
                 if res_id not in resource_id_mapping:
                     bld.fatal("Invalid resource ID {} specified in publishedMedia".format(res_id))
                 timeline_resources[timeline_id][size] = resource_id_mapping[res_id]

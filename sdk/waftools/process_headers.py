@@ -61,7 +61,6 @@ def process_headers(task_gen):
     task_gen.create_task('copy_headers', src=header_nodes, tgt=target_nodes)
 
 
-@Task.update_outputs
 class copy_headers(Task.Task):
     """
     Task class to copy specified headers from a source location to a target location

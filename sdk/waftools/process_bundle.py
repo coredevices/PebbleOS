@@ -23,7 +23,6 @@ from process_elf import generate_bin_file
 from resources.types.resource_ball import ResourceBall
 
 
-@Task.update_outputs
 class lib_package(Task.Task):
     """
     Task class to generate a library bundle for distribution
@@ -70,7 +69,6 @@ class lib_package(Task.Task):
         package.pack()
 
 
-@Task.update_outputs
 class app_bundle(Task.Task):
     """
     Task class to generate an app bundle for distribution

@@ -190,7 +190,7 @@ def fix_pebble_h_dependencies(task_gen):
     for task in task_gen.tasks:
         if type(task) == c.c:
             # Swap out the bound member function for our own
-            task.scan = types.MethodType(_wrap_c_preproc_scan, task, c.c)
+            task.scan = types.MethodType(_wrap_c_preproc_scan, task)
 
 
 @feature('pebble_cprogram')

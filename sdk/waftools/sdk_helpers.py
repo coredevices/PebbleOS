@@ -62,7 +62,7 @@ def _get_png_size(data):
     :return: tuple containing the width and height of the PNG
     """
     # Assert that this is the IHDR header
-    assert data[:4] == 'IHDR'
+    assert data[:4] == b'IHDR'
 
     # Read the first 4 bytes after IHDR for width
     width = struct.unpack('>I', data[4:8])[0]
@@ -120,7 +120,7 @@ def append_to_attr(self, attr, new_values):
 
 
 def configure_libraries(ctx, libraries):
-    dependencies = libraries.keys()
+    dependencies = list(libraries.keys())
     lib_json = []
     lib_resources_json = {}
 
@@ -204,7 +204,7 @@ def get_target_platforms(ctx):
         ctx.fatal("No valid targetPlatforms specified in appinfo.json. Valid options are {}"
                   .format(supported_platforms))
 
-    ctx.env.TARGET_PLATFORMS = sorted([p.encode('utf-8') for p in target_platforms], reverse=True)
+    ctx.env.TARGET_PLATFORMS = sorted([p for p in target_platforms], reverse=True)
     return target_platforms
 
 
@@ -293,7 +293,7 @@ def process_package(ctx, package, root_lib_node=None):
                                        lib_node.ant_glob(['**/*.js', '**/*.json'],
                                                          excl="**/*.min.js")]
 
-            dependencies = libinfo['dependencies'].keys() if 'dependencies' in libinfo else []
+            dependencies = list(libinfo['dependencies'].keys()) if 'dependencies' in libinfo else []
             return libinfo, resources_json, dependencies
 
 
@@ -360,9 +360,9 @@ def validate_resource_not_larger_than(ctx, resource_file, dimensions=None, width
                     resource_size = _get_pdc_size(reso.data[4:])
         else:
             data = f.read(24)
-            if data[1:4] == 'PNG':
+            if data[1:4] == b'PNG':
                 resource_size = _get_png_size(data[12:])
-            elif data[:4] == 'PDCI':
+            elif data[:4] == b'PDCI':
                 resource_size = _get_pdc_size(data[4:])
             else:
                 ctx.fatal("Unsupported published resource type for {}".format(resource_file))
