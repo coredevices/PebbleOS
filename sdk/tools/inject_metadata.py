@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-from __future__ import with_statement
+
 from struct import pack, unpack
 
 import os

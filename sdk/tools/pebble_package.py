@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
+
 import argparse
 import errno
 import os
@@ -55,7 +55,7 @@ class PebblePackage(object):
 
     def pack(self, package_path=None):
         with zipfile.ZipFile(os.path.join(package_path, self.package_filename), 'w') as zip_file:
-            for filename, file_path in self.package_files.iteritems():
+            for filename, file_path in self.package_files.items():
                 zip_file.write(file_path, filename)
             zip_file.comment = type(self).__name__
 
@@ -88,13 +88,13 @@ class LibraryPackage(PebblePackage):
         super(LibraryPackage, self).__init__(package_filename)
 
     def add_files(self, includes, binaries, resources, js):
-        for include, include_path in includes.iteritems():
+        for include, include_path in includes.items():
             self.add_file(os.path.join('include', include), include_path)
-        for binary, binary_path in binaries.iteritems():
+        for binary, binary_path in binaries.items():
             self.add_file(os.path.join('binaries', binary), binary_path)
-        for resource, resource_path in resources.iteritems():
+        for resource, resource_path in resources.items():
             self.add_file(os.path.join('resources', resource), resource_path)
-        for js_file, js_file_path in js.iteritems():
+        for js_file, js_file_path in js.items():
             self.add_file(os.path.join('js', js_file), js_file_path)
 
     def unpack(self, package_path='dist'):
