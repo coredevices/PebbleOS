@@ -6,7 +6,7 @@
 	url = https://github.com/pebble-dev/stm32-sdk.git
 [submodule "src/bluetooth-fw/nimble/vendor/mynewt-nimble"]
 	path = third_party/nimble/mynewt-nimble
-	url = https://github.com/pebble-dev/mynewt-nimble.git
+	url = https://github.com/coredevices/mynewt-nimble.git
 [submodule "src/bluetooth-fw/nimble/vendor/ti-service-packs"]
 	path = third_party/ti_bt_sp/ti-service-packs
 	url = https://git.ti.com/git/ti-bt/service-packs.git
