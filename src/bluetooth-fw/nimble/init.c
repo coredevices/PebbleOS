@@ -141,6 +141,8 @@ void bt_driver_stop(void) {
   PBL_ASSERT(f_rc == pdTRUE, "NimBLE host stop timed out");
 
   ble_gatts_reset();
+
+  nimble_store_unload();
 }
 
 void bt_driver_power_down_controller_on_boot(void) {}
