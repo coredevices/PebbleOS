@@ -250,8 +250,9 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
 
     bt_lock();
     if (!consumed) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Subscription buffer full. Dropping GATT notification of %u bytes",
-              length);
+      PBL_LOG(LOG_LEVEL_ERROR,
+              "Subscription buffer full. Dropping GATT notification of %u bytes (bt_lock held: %s)",
+              length, bt_lock_is_held() ? "yes" : "no");
       analytics_inc(ANALYTICS_DEVICE_METRIC_BLE_GATT_DROPPED_NOTIFICATIONS_COUNT,
                     AnalyticsClient_System);
       continue;
