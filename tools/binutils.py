@@ -59,7 +59,7 @@ class FileInfo(object):
     def pprint(self, verbose):
         print('  %s: size %u' % (self.filename, self.size))
         if verbose:
-            l = sorted(self.symbols.itervalues(), key=lambda x: -x.size)
+            l = sorted(self.symbols.values(), key=lambda x: -x.size)
             for s in l:
                 print('    %6u %-36s' % (s.size, s.name))
 

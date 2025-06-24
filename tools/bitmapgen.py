@@ -110,7 +110,7 @@ class PebbleBitmap(object):
 
         if crop:
             alphas = [[p[3] for p in row] for row in self._im_pixels]
-            alphas_transposed = zip(*alphas)
+            alphas_transposed = list(zip(*alphas))
             for row in alphas:
                 if any(row):
                     break
@@ -375,9 +375,9 @@ def process_all_bitmaps():
         header_paths.append(os.path.basename(to_file))
 
     f = open(os.path.join(directory, 'bitmaps.h'), 'w')
-    print>> f, '#pragma once'
+    print('#pragma once', file=f)
     for h in header_paths:
-        print>> f, "#include \"{0}\"".format(h)
+        print("#include \"{0}\"".format(h), file=f)
     f.close()
 
 def grouper(iterable, n, fillvalue=None):
