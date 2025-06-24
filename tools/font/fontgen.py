@@ -129,7 +129,7 @@ class Font:
         self.table_size = HASH_TABLE_SIZE
         self.tracking_adjust = 0
         self.regex = None
-        self.codepoints = range(MIN_CODEPOINT, MAX_EXTENDED_CODEPOINT)
+        self.codepoints = list(range(MIN_CODEPOINT, MAX_EXTENDED_CODEPOINT))
         self.codepoint_bytes = 2
         self.max_glyphs = max_glyphs
         self.max_glyph_size = max_glyph_size
@@ -180,7 +180,7 @@ class Font:
 
     def is_supported_glyph(self, codepoint):
         return (self.face.get_char_index(codepoint) > 0 or
-                (codepoint == unichr(self.wildcard_codepoint)))
+                (codepoint == chr(self.wildcard_codepoint)))
 
     def compress_glyph_RLE4(self, bitmap):
         # This Run Length Compression scheme works by converting runs of identical symbols to the

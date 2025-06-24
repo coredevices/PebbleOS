@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-from __future__ import print_function
+
 from struct import pack, unpack
 from collections import OrderedDict
 
@@ -414,7 +414,7 @@ def cmd_firmware(args):
     make_firmware_bundle(**vars(args))
 
 def cmd_watchapp(args):
-    args.sdk_verison = dict(zip(['major', 'minor'], [int(x) for x in args.sdk_version.split('.')]))
+    args.sdk_verison = dict(list(zip(['major', 'minor'], [int(x) for x in args.sdk_version.split('.')])))
 
     make_watchapp_bundle(**vars(args))
 
