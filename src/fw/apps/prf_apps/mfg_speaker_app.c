@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include "mfg_speaker_data.h"
-
 #include "applib/app.h"
 #include "applib/tick_timer_service.h"
 #include "applib/ui/app_window_stack.h"
@@ -31,23 +29,22 @@
 #include "process_state/app_state/app_state.h"
 #include "util/size.h"
 
-#include "hal/nrf_clock.h"
-#include "nrfx_i2s.h"
-
-#define TIMEOUT 1000
-#define SAMPLE_BIT_WIDTH 16
-#define INITIAL_BLOCKS 2
-#define BLOCK_COUNT (INITIAL_BLOCKS + 2)
-
-static const nrfx_i2s_t prv_i2s = NRFX_I2S_INSTANCE(0);
-static nrfx_i2s_config_t prv_i2s_cfg =
-    NRFX_I2S_DEFAULT_CONFIG(NRF_GPIO_PIN_MAP(0, 12), NRF_GPIO_PIN_MAP(0, 7), NRF_GPIO_PIN_MAP(1, 9),
-                            NRF_GPIO_PIN_MAP(0, 13), NRF_I2S_PIN_NOT_CONNECTED);
-static const nrfx_i2s_buffers_t prv_i2s_bufs = {
-  .p_rx_buffer = NULL,
-  .p_tx_buffer = (uint32_t *)audio_data,
-  .buffer_size = BLOCK_SIZE / sizeof(uint32_t),
-};
+#define DA7212_CIF_CTRL              0x1D
+#define DA7212_DAI_CLK_MODE          0x28
+#define DA7212_DAI_CTRL              0x29
+#define DA7212_DIG_ROUTING_DAC       0x2A
+#define DA7212_DAC_FILTERS5          0x40
+#define DA7212_DAC_R_GAIN            0x46
+#define DA7212_LINE_GAIN             0x4A
+#define DA7212_MIXOUT_R_SELECT       0x4C
+#define DA7212_SYSTEM_MODES_OUTPUT   0x51
+#define DA7212_DAC_R_CTRL            0x6A
+#define DA7212_LINE_CTRL             0x6D
+#define DA7212_MIXOUT_R_CTRL         0x6F
+#define DA7212_TONE_GEN_CFG1         0xB4
+#define DA7212_TONE_GEN_CYCLES       0xB6
+#define DA7212_TONE_GEN_ON_PER       0xBB
+#define DA7212_SYSTEM_ACTIVE         0xFD
 
 typedef struct {
   Window window;
@@ -56,151 +53,73 @@ typedef struct {
   TextLayer status;
 } AppData;
 
-static bool prv_codec_setup(void) {
-  int ret;
-  uint8_t data[2];
-
-  uint8_t init[][2] = {
-      // word freq to 44.1khz
-      {0x22, 0x0a},
-      // codec in slave mode, 32 BCLK per WCLK
-      {0x28, 0x00},
-      // enable DAC_L
-      {0x69, 0x88},
-      // setup LINE_AMP_GAIN to 15db
-      {0x4a, 0x3f},
-      // enable LINE amplifier
-      {0x6d, 0x80},
-      // enable DAC_R
-      {0x6a, 0x80},
-      // setup MIXIN_R_GAIN to 0dB
-      {0x35, 0x03},
-      // enable MIXIN_R
-      {0x66, 0x80},
-      // setup DIG_ROUTING_DAI to DAI
-      {0x21, 0x32},
-      // setup DIG_ROUTING_DAC to mono
-      {0x2a, 0xba},
-      // setup DAC_L_GAIN to 0dB
-      {0x45, 0x6f},
-      // setup DAC_R_GAIN to 0dB
-      {0x46, 0x6f},
-      // enable DAI, 16bit per channel
-      {0x29, 0x80},
-      // setup SYSTEM_MODES_OUTPUT to use DAC_R,DAC_L and LINE
-      {0X51, 0x00},
-      // setup Master bias enable
-      {0X23, 0x08},
-      // Sets the input clock range for the PLL 40-80MHz
-      {0X27, 0x00},
-      // setup MIXOUT_R_SELECT to DAC_R selected
-      {0X4C, 0x08},
-      // setup MIXOUT_R_CTRL to MIXOUT_R mixer amp enable and MIXOUT R mixer enable
-      {0X6F, 0x98},
-  };
+static void da7212_register_write(uint8_t reg, uint8_t value) {
+  uint8_t data[2] = {reg, value};
+  bool ret;
 
   i2c_use(I2C_DA7212);
 
-  // CIF_CTRL: soft reset
-  data[0] = 0x1d;
-  data[1] = 0x80;
   ret = i2c_write_block(I2C_DA7212, 2, data);
-  if (!ret) {
-    goto end;
-  }
+  PBL_ASSERTN(ret);
 
+  i2c_release(I2C_DA7212);
+}
+
+static void prv_da7212_play_tone(void) {
+  // CIF_CTRL: soft reset
+  da7212_register_write(DA7212_CIF_CTRL, 0x80);
+  
   psleep(10);
 
   // SYSTEM_ACTIVE: wake-up
-  data[0] = 0xfd;
-  data[1] = 0x01;
-  ret = i2c_write_block(I2C_DA7212, 2, data);
-  if (!ret) {
-    goto end;
-  }
+  da7212_register_write(DA7212_SYSTEM_ACTIVE, 0x01);
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(init); ++i) {
-    const uint8_t *entry = init[i];
+  // Soft mute
+  da7212_register_write(DA7212_DAC_FILTERS5, 0x80);
 
-    ret = i2c_write_block(I2C_DA7212, 2, entry);
-    if (!ret) {
-      goto end;
-    }
-  }
+  // DAI: enable (16-bit)
+  da7212_register_write(DA7212_DAI_CTRL, 0x80);
+  // DAI: enable master mode, BCLK=64
+  da7212_register_write(DA7212_DAI_CLK_MODE, 0x81);
 
-end:
-  i2c_release(I2C_DA7212);
+  // DAC_R/L source: DAI_R/L
+  da7212_register_write(DA7212_DIG_ROUTING_DAC, 0x32);
 
-  return ret;
+  // DAC_R: 0dB gain
+  da7212_register_write(DA7212_DAC_R_GAIN, 0x6f);
+  // DAC_R: enable
+  da7212_register_write(DA7212_DAC_R_CTRL, 0x80);
+
+  // MIXOUT_R: input from DAC_R
+  da7212_register_write(DA7212_MIXOUT_R_SELECT, 0x08);
+  // MIXOUT_R: enable + amplifier
+  da7212_register_write(DA7212_MIXOUT_R_CTRL, 0x88);
+
+  // Line: 0dB gain
+  da7212_register_write(DA7212_LINE_GAIN, 0x30);
+  // Line: enable amplifier, gain ramping, drive output
+  da7212_register_write(DA7212_LINE_CTRL, 0xa8);
+
+  // Tone generator: infinite cycles
+  da7212_register_write(DA7212_TONE_GEN_CYCLES, 0x07);
+  // Tone generator: 200ms pulse
+  da7212_register_write(DA7212_TONE_GEN_ON_PER, 0x14);
+  // Tone generator: start
+  da7212_register_write(DA7212_TONE_GEN_CFG1, 0x80);
+
+  // System modes output: enable DAC_R, Line
+  da7212_register_write(DA7212_SYSTEM_MODES_OUTPUT, 0x89);
+
+  // Soft mute off
+  da7212_register_write(DA7212_DAC_FILTERS5, 0x00);
 }
 
-static bool prv_codec_standby(void) {
-  bool ret;
-  uint8_t data[2];
-
-  i2c_use(I2C_DA7212);
-  data[0] = 0xfd;
-  data[1] = 0x00;
-  ret = i2c_write_block(I2C_DA7212, 2, data);
-  i2c_release(I2C_DA7212);
-
-  return ret;
-}
-
-static void prv_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t status) {
-  if (status == NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED) {
-    nrfx_i2s_next_buffers_set(&prv_i2s, &prv_i2s_bufs);
-    return;
-  }
-}
-
-static bool prv_speaker_play(void) {
-  nrfx_err_t err;
-  bool ret;
-
-  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_HFCLKSTARTED);
-  nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTART);
-  while (!nrf_clock_event_check(NRF_CLOCK, NRF_CLOCK_EVENT_HFCLKSTARTED)) {
-  }
-  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_HFCLKSTARTED);
-
-  prv_i2s_cfg.channels = NRF_I2S_CHANNELS_STEREO;
-  prv_i2s_cfg.mck_setup = NRF_I2S_MCK_32MDIV23;
-
-  err = nrfx_i2s_init(&prv_i2s, &prv_i2s_cfg, prv_data_handler);
-  if (err != NRFX_SUCCESS) {
-    return false;
-  }
-
-  err = nrfx_i2s_start(&prv_i2s, &prv_i2s_bufs, 0);
-  if (err != NRFX_SUCCESS) {
-    return false;
-  }
-
-  ret = prv_codec_setup();
-  if (!ret) {
-    return ret;
-  }
-
-  return true;
-}
-
-static bool prv_speaker_stop(void) {
-  bool ret;
-
-  ret = prv_codec_standby();
-  if (!ret) {
-    return ret;
-  }
-
-  nrfx_i2s_stop(&prv_i2s);
-  nrfx_i2s_uninit(&prv_i2s);
-
-  return 0;
+static void prv_da7212_idle(void) {
+  da7212_register_write(DA7212_SYSTEM_ACTIVE, 0x00);
 }
 
 static void prv_timer_callback(void *cb_data) {
-  (void)prv_speaker_stop();
+  (void)prv_da7212_idle();
   app_window_stack_pop(true /* animated */);
 }
 
@@ -223,7 +142,8 @@ static void prv_handle_init(void) {
 
   app_window_stack_push(window, true /* Animated */);
 
-  (void)prv_speaker_play();
+  prv_da7212_play_tone();
+
   app_timer_register(5000, prv_timer_callback, NULL);
 }
 
