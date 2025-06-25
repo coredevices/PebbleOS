@@ -77,7 +77,7 @@ class FontResourceGenerator(ResourceGenerator):
             font = Font(ttf_path, height, max_glyphs, definition.max_glyph_size, is_legacy)
 
             if definition.character_regex is not None:
-                font.set_regex_filter(definition.character_regex.encode('utf8'))
+                font.set_regex_filter(definition.character_regex)
 
             if definition.character_list is not None:
                 font.set_codepoint_list(definition.character_list)
