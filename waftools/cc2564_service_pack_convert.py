@@ -28,7 +28,6 @@ def convert(bts_file_path):
         bts_file.seek(32) # skip header
         while True:
             bts_data = bts_file.read(BTS_HEADER_STRUCT_SIZE)
-            print(bts_data)
             if not bts_data:
                 break
 
