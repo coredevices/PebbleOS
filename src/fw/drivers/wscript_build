@@ -977,10 +977,11 @@ elif mcu_family == 'SF32LB52':
         name='driver_i2c',
         source=[
             'i2c.c',
-            'stubs/i2c.c',
+            'sf32lb52/i2c_hal.c',
         ],
         use=[
             'fw_includes',
+            'i2c_hal_definitions.h',
         ],
     )
 
@@ -1480,7 +1481,7 @@ elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_rng',
         source=[
-            'stubs/rng.c',
+            'sf32lb52/rng.c',
         ],
         use=[
             'fw_includes',
