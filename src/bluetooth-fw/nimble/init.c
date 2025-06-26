@@ -33,7 +33,7 @@
 
 #include "nimble_store.h"
 
-static const uint32_t s_bt_stack_start_stop_timeout_ms = 2000;
+static const uint32_t s_bt_stack_start_stop_timeout_ms = 3000;
 
 extern void pebble_pairing_service_init(void);
 
