@@ -62,7 +62,8 @@ typedef enum {
 } GPIOSpeed_TypeDef;
 
 typedef struct {
-  uint8_t exti_line;
+  GPIO_TypeDef* const peripheral; ///< One of GPIOX. For example, GPIOA.
+  const uint32_t gpio_pin; ///< One of GPIO_Pin_X.
 } ExtiConfig;
 
 typedef struct {
