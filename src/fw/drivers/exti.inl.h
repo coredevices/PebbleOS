@@ -18,7 +18,7 @@
 //!
 //! Helper functions intended to be inlined into the calling code.
 
-#ifndef MICRO_FAMILY_NRF5
+#if !defined(MICRO_FAMILY_NRF5) && !defined(MICRO_FAMILY_SF32LB52)
 static inline void exti_enable(ExtiConfig config) {
   exti_enable_other(config.exti_line);
 }

@@ -654,7 +654,7 @@ elif mcu_family == 'SF32LB52':
     bld.objects(
         name='driver_exti',
         source=[
-            'stubs/exti.c',
+            'sf32lb52/exti.c',
         ],
         use=[
             'fw_includes',

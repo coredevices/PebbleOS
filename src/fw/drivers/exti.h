@@ -42,7 +42,7 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
 //! Configures the given EXTI and NVIC for the given configuration.
 void exti_configure_other(ExtiLineOther exti_line, ExtiTrigger trigger);
 
-#ifndef MICRO_FAMILY_NRF5
+#if !defined(MICRO_FAMILY_NRF5) && !defined(MICRO_FAMILY_SF32LB52)
 static inline void exti_enable(ExtiConfig config);
 static inline void exti_disable(ExtiConfig config);
 #else
