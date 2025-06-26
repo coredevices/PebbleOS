@@ -8,6 +8,7 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'NRFX_I2S0_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_GPIOTE_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS=4')
+        conf.env.append_unique('DEFINES', 'NRFX_PDM_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_PPI_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_PWM_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_PWM0_ENABLED=1')
