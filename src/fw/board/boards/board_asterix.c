@@ -25,6 +25,7 @@
 #include <nrfx_qspi.h>
 #include <nrfx_spim.h>
 #include <nrfx_twim.h>
+#include <nrfx_pdm.h>
 
 static QSPIPortState s_qspi_port_state;
 static QSPIPort QSPI_PORT = {
@@ -162,6 +163,8 @@ static const I2CSlavePort I2C_SLAVE_DA7212 = {
 I2CSlavePort *const I2C_DA7212 = &I2C_SLAVE_DA7212;
 
 IRQ_MAP_NRFX(I2S, nrfx_i2s_0_irq_handler);
+
+IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
 
 /* PERIPHERAL ID 11 */
 
