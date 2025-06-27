@@ -68,7 +68,7 @@ static void prv_gap_le_device_name_request(GAPLEConnection *connection) {
                                   prv_device_name_read_event_cb, (void *)connection);
   if (rc != 0) {
     PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_gap_le_device_name_request ble_gattc_read_by_uuid rc=%d", rc);
+              "prv_gap_le_device_name_request ble_gattc_read_by_uuid rc=0x%04x", (uint16_t)rc);
   }
 }
 

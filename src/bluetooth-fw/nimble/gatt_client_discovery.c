@@ -164,8 +164,8 @@ static void prv_discover_next_dscs(uint16_t conn_handle, GATTServiceDiscoveryCon
       MIN(chr_node->characteristic.val_handle, chr_node->characteristic.def_handle);
   uint16_t end_handle = prv_get_last_dsc_handle(context);
   int rc = ble_gattc_disc_all_dscs(conn_handle, start_handle, end_handle, prv_find_dsc_cb, context);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_gattc_disc_all_dscs (%d -> %d) rc=%d",
-            start_handle, end_handle, rc);
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_gattc_disc_all_dscs (%d -> %d) rc=0x%04x",
+            start_handle, end_handle, (uint16_t)rc);
 }
 
 static void prv_discover_next_chrs(uint16_t conn_handle, GATTServiceDiscoveryContext *context) {
@@ -173,7 +173,7 @@ static void prv_discover_next_chrs(uint16_t conn_handle, GATTServiceDiscoveryCon
       (GATTServiceDiscoveryServiceNode *)context->current_service;
   int rc = ble_gattc_disc_all_chrs(conn_handle, service_node->service.start_handle,
                                    service_node->service.end_handle, prv_find_chr_cb, context);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_gattc_disc_all_chrs rc=%d", rc);
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_gattc_disc_all_chrs rc=0x%04x", (uint16_t)rc);
 }
 
 static GATTServiceDiscoveryDescriptorNode *prv_create_descriptor_node(

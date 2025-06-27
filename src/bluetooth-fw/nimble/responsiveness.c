@@ -37,7 +37,7 @@ bool bt_driver_le_connection_parameter_update(const BTDeviceInternal *addr,
 
   rc = ble_gap_update_params(desc.conn_handle, &params);
   if (rc != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "ble_gap_update_params failed: %d", rc);
+    PBL_LOG(LOG_LEVEL_ERROR, "ble_gap_update_params failed: 0x%04x", (uint16_t)rc);
     return false;
   }
   return true;

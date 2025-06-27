@@ -28,5 +28,5 @@ void bt_driver_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_co
   };
   int rc = ble_sm_inject_io(conn_handle, &key);
 
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_sm_inject_io rc=%d", rc);
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_sm_inject_io rc=0x%04x", (uint16_t)rc);
 }
