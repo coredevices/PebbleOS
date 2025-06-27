@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 
+#include "board/board.h"
 #include "drivers/rtc.h"
 #include "drivers/rtc_private.h"
 #include "system/passert.h"
@@ -25,6 +26,8 @@
 #include "task.h"
 
 #include "bf0_hal_rtc.h"
+
+#define LXT_LP_CYCLE 200
 
 // The RTC clock, CLK_RTC, can be configured to use the LXT32 (32.768 kHz) or
 // LRC10 (9.8 kHz). The prescaler values need to be set such that the CLK1S
@@ -47,11 +50,47 @@ static RTC_HandleTypeDef RTC_Handler = {
         },
 };
 
+#ifndef SF32LB52_USE_LXT
+static uint32_t prv_rtc_get_lpcycle() {
+  uint32_t value;
+
+  value = HAL_Get_backup(RTC_BACKUP_LPCYCLE_AVE);
+  if (value == 0) {
+    value = 1200000;
+  }
+
+  value += 1;  // Calibrate in initial with 8 cycle
+  HAL_Set_backup(RTC_BACKUP_LPCYCLE, (uint32_t)value);
+
+  return value;
+}
+
+void prv_rtc_rc10_calculate_div(RTC_HandleTypeDef* hdl, uint32_t value) {
+  hdl->Init.DivB = RC10K_SUB_SEC_DIVB;
+
+  // 1 seconds has total 1/(x/(48*8))/256=1.5M/x cycles, times 2^14 for DIVA
+  uint32_t divider = RTC_Handler.Init.DivB * value;
+  value = ((uint64_t)48000000 * LXT_LP_CYCLE * (1 << 14) + (divider >> 1)) / divider;
+  hdl->Init.DivAInt = (uint32_t)(value >> 14);
+  hdl->Init.DivAFrac = (uint32_t)(value & ((1 << 14) - 1));
+}
+#endif
+
 void rtc_init(void) {
   HAL_StatusTypeDef ret;
 
+#ifdef SF32LB52_USE_LXT
   ret = HAL_PMU_LXTReady();
   PBL_ASSERTN(ret == HAL_OK);
+#else
+  // If LXT is disabled, we need to use the RC10K as the clock source.
+  // The RC10K needs to be initialized in board_x.c before it can be used
+  uint32_t value;
+  value = prv_rtc_get_lpcycle();
+  if (value != 0U) {
+    prv_rtc_rc10_calculate_div(&RTC_Handler, value);
+  }
+#endif
 
   ret = HAL_RTC_Init(&RTC_Handler, RTC_INIT_NORMAL);
   PBL_ASSERTN(ret == HAL_OK);
