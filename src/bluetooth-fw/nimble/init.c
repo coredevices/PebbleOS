@@ -126,7 +126,7 @@ bool bt_driver_start(BTDriverConfig *config) {
 
   rc = ble_hs_util_ensure_addr(0);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to ensure address: %d", rc);
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to ensure address: 0x%04x", (uint16_t)rc);
     return false;
   }
 

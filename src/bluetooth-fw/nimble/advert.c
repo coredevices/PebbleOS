@@ -52,7 +52,7 @@ void bt_driver_advert_advertising_disable(void) {
   }
 
   rc = ble_gap_adv_stop();
-  PBL_ASSERT(rc == 0, "Failed to stop advertising (%d)", rc);
+  PBL_ASSERT(rc == 0, "Failed to stop advertising (0x%04x)", (uint16_t)rc);
 }
 
 bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) { return false; }
@@ -61,11 +61,11 @@ void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
   int rc;
 
   rc = ble_gap_adv_set_data((uint8_t *)&ad_data->data, ad_data->ad_data_length);
-  PBL_ASSERT(rc == 0, "Failed to set advertising data (%d)", rc);
+  PBL_ASSERT(rc == 0, "Failed to set advertising data (0x%04x)", (uint16_t)rc);
 
   rc = ble_gap_adv_rsp_set_data((uint8_t *)&ad_data->data[ad_data->ad_data_length],
                                 ad_data->scan_resp_data_length);
-  PBL_ASSERT(rc == 0, "Failed to set scan response data (%d)", rc);
+  PBL_ASSERT(rc == 0, "Failed to set scan response data (0x%04x)", (uint16_t)rc);
 }
 
 static void prv_handle_connection_event(struct ble_gap_event *event) {
@@ -374,7 +374,7 @@ bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_
 
   rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER, &advp, prv_handle_gap_event, NULL);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to start advertising (%d)", rc);
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to start advertising (0x%04x)", (uint16_t)rc);
     return false;
   }
 

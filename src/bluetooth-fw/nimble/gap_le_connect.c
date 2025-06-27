@@ -30,7 +30,7 @@ int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) {
 
   int rc = ble_gap_terminate(conn_handle, BLE_ERR_REM_USER_CONN_TERM);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "ble_gap_terminate rc=%d", rc);
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "ble_gap_terminate rc=0x%04x", (uint16_t)rc);
   }
 
   return rc;

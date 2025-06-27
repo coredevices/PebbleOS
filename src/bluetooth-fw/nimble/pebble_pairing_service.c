@@ -63,7 +63,7 @@ int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_hand
   rc = ble_gatts_notify_custom(conn_handle, attr_handle, om);
   if (rc != 0) {
     PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "ble_gatts_notify_custom failed for attr %d: %d", attr_handle, rc);
+              "ble_gatts_notify_custom failed for attr %d: 0x%04x", attr_handle, (uint16_t)rc);
     return rc;
   }
 
