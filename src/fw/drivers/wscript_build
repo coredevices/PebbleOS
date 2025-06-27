@@ -830,7 +830,7 @@ elif mcu_family == 'SF32LB52':
     bld.objects(
         name='driver_gpio',
         source=[
-            'stubs/gpio.c',
+            'sf32lb52/gpio.c',
         ],
         use=[
             'fw_includes',
