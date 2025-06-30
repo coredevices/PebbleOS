@@ -55,7 +55,7 @@ bool pebble_device_to_nimble_conn_handle(const BTDeviceInternal *device, uint16_
 
 void nimble_conn_params_to_pebble(struct ble_gap_conn_desc *desc, BleConnectionParams *params) {
   params->conn_interval_1_25ms = desc->conn_itvl;
-  params->slave_latency_events = desc->conn_latency;  // TODO: check this is right
+  params->slave_latency_events = desc->conn_latency;
   params->supervision_timeout_10ms = desc->supervision_timeout;
 }
 
@@ -63,7 +63,7 @@ void pebble_conn_update_to_nimble(const BleConnectionParamsUpdateReq *req,
                                   struct ble_gap_upd_params *params) {
   params->itvl_min = req->interval_min_1_25ms;
   params->itvl_max = req->interval_max_1_25ms;
-  params->latency = req->slave_latency_events;  // TODO: check this is right
+  params->latency = req->slave_latency_events;
   params->supervision_timeout = req->supervision_timeout_10ms;
 }
 
