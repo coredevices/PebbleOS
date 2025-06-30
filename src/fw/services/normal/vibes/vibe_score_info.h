@@ -33,6 +33,10 @@ typedef enum VibeScoreId {
 #define DEFAULT_VIBE_SCORE_NOTIFS (VibeScoreId_Pulse)
 #define DEFAULT_VIBE_SCORE_INCOMING_CALLS (VibeScoreId_Pulse)
 #define DEFAULT_VIBE_SCORE_ALARMS (VibeScoreId_Pulse)
+#elif PLATFORM_ASTERIX
+#define DEFAULT_VIBE_SCORE_NOTIFS (VibeScoreId_StandardShortPulseHigh)
+#define DEFAULT_VIBE_SCORE_INCOMING_CALLS (VibeScoreId_Pulse)
+#define DEFAULT_VIBE_SCORE_ALARMS (VibeScoreId_Reveille)
 #else
 #define DEFAULT_VIBE_SCORE_NOTIFS (VibeScoreId_NudgeNudge)
 #define DEFAULT_VIBE_SCORE_INCOMING_CALLS (VibeScoreId_Pulse)
