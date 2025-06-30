@@ -35,6 +35,11 @@ bool bt_driver_le_connection_parameter_update(const BTDeviceInternal *addr,
 
   pebble_conn_update_to_nimble(req, &params);
 
+  PBL_LOG(LOG_LEVEL_DEBUG, "Requesting connection parameter update: "
+          "interval=(%u, %u), latency=%u, timeout=%u, ce_len=(%u, %u)",
+          params.itvl_min, params.itvl_max, params.latency, params.supervision_timeout,
+          params.min_ce_len, params.max_ce_len);
+
   rc = ble_gap_update_params(desc.conn_handle, &params);
   if (rc != 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "ble_gap_update_params failed: 0x%04x", (uint16_t)rc);
