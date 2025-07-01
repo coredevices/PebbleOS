@@ -359,7 +359,7 @@ static void prv_playback(void) {
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   s_i2s_bufs.p_tx_buffer = (uint32_t *)sine_wave;
-  s_i2s_bufs.buffer_size = SINE_WAVE_TOTAL_SAMPLES / 4;
+  s_i2s_bufs.buffer_size = SINE_WAVE_TOTAL_SAMPLES / 2;
   err = nrfx_i2s_start(&s_i2s, &s_i2s_bufs, 0);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
