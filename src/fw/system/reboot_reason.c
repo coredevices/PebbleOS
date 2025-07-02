@@ -18,7 +18,6 @@
 
 #include "mcu/interrupts.h"
 #include "os/tick.h"
-#include "system/bootbits.h"
 #include "system/logging.h"
 
 #define STM32F2_COMPATIBLE
@@ -37,7 +36,23 @@ _Static_assert(sizeof(RebootReason) == sizeof(uint32_t[6]), "RebootReason is a f
 
 void reboot_reason_set(RebootReason *reason) {
 #if MICRO_FAMILY_NRF5
-  /* XXX(nrf5): WDKWWDR (we really do not have enough NV storage for this, this shoudl go with bootbits). */
+  uint32_t *raw = (uint32_t*)reason;
+
+  if (retained_read(REBOOT_REASON_REGISTER_1)) {
+    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
+    if (!mcu_state_is_isr() && __get_BASEPRI() == 0
+            && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+      PBL_LOG(LOG_LEVEL_WARNING, "Reboot reason is already set");
+    }
+    return;
+  }
+
+  retained_write(REBOOT_REASON_REGISTER_1, raw[0]);
+  retained_write(REBOOT_REASON_REGISTER_2, raw[1]);
+  retained_write(REBOOT_REASON_STUCK_TASK_PC, raw[2]);
+  retained_write(REBOOT_REASON_STUCK_TASK_LR, raw[3]);
+  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[4]);
+  retained_write(REBOOT_REASON_DROPPED_EVENT, raw[5]);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
 #else
@@ -67,7 +82,8 @@ void reboot_reason_set_restarted_safely(void) {
   reason.restarted_safely = true;
 
 #if MICRO_FAMILY_NRF5
-  /* XXX(nrf5): WDKWWDR (we really do not have enough NV storage for this, this shoudl go with bootbits). */
+  uint32_t* raw = (uint32_t *)&reason;
+  retained_write(REBOOT_REASON_REGISTER_1, *raw);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
 #else
@@ -78,7 +94,13 @@ void reboot_reason_set_restarted_safely(void) {
 
 void reboot_reason_get(RebootReason *reason) {
 #if MICRO_FAMILY_NRF5
-  /* XXX(nrf5): WDKWWDR (we really do not have enough NV storage for this, this shoudl go with bootbits). */
+  uint32_t *raw = (uint32_t *)reason;
+  raw[0] = retained_read(REBOOT_REASON_REGISTER_1);
+  raw[1] = retained_read(REBOOT_REASON_REGISTER_2);
+  raw[2] = retained_read(REBOOT_REASON_STUCK_TASK_PC);
+  raw[3] = retained_read(REBOOT_REASON_STUCK_TASK_LR);
+  raw[4] = retained_read(REBOOT_REASON_STUCK_TASK_CALLBACK);
+  raw[5] = retained_read(REBOOT_REASON_DROPPED_EVENT);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
 #else
@@ -94,7 +116,12 @@ void reboot_reason_get(RebootReason *reason) {
 
 void reboot_reason_clear(void) {
 #if MICRO_FAMILY_NRF5
-  /* XXX(nrf5): WDKWWDR (we really do not have enough NV storage for this, this shoudl go with bootbits). */
+  retained_write(REBOOT_REASON_REGISTER_1, 0);
+  retained_write(REBOOT_REASON_REGISTER_2, 0);
+  retained_write(REBOOT_REASON_STUCK_TASK_PC, 0);
+  retained_write(REBOOT_REASON_STUCK_TASK_LR, 0);
+  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
+  retained_write(REBOOT_REASON_DROPPED_EVENT, 0);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
 #else
@@ -109,8 +136,7 @@ void reboot_reason_clear(void) {
 
 uint32_t reboot_get_slot_of_last_launched_app(void) {
 #if MICRO_FAMILY_NRF5
-  /* XXX(nrf5): WDKWWDR (we really do not have enough NV storage for this, this shoudl go with bootbits). */
-  return 0;
+  return retained_read(SLOT_OF_LAST_LAUNCHED_APP);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
   return 0;
@@ -121,7 +147,7 @@ uint32_t reboot_get_slot_of_last_launched_app(void) {
 
 void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
 #if MICRO_FAMILY_NRF5
-  /* XXX(nrf5): WDKWWDR (we really do not have enough NV storage for this, this shoudl go with bootbits). */
+  retained_write(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
 #else
