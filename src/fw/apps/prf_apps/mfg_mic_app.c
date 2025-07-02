@@ -190,16 +190,16 @@ static void prv_codec_setup(void) {
   da7212_register_write(DA7212_DIG_ROUTING_DAI, 0x32);
   // DIG_ROUTING_DAC: DAC_R/L mono mix of R/L
   da7212_register_write(DA7212_DIG_ROUTING_DAC, 0xba);
-  // DAC_R_GAIN: 3dB
-  da7212_register_write(DA7212_DAC_R_GAIN, 0x73);
+  // DAC_R_GAIN: 0dB
+  da7212_register_write(DA7212_DAC_R_GAIN, 0x6f);
   // DAC_R_CTRL: enable
   da7212_register_write(DA7212_DAC_R_CTRL, 0x80);
   // MIXOUT_R_SELECT: DAC_R
   da7212_register_write(DA7212_MIXOUT_R_SELECT, 0x08);
   // MIXOUT_R_CTRL: enable, softmix enable, amp enable
   da7212_register_write(DA7212_MIXOUT_R_CTRL, 0x98);
-  // LINE_GAIN: 15dB
-  da7212_register_write(DA7212_LINE_GAIN, 0x3f);
+  // LINE_GAIN: 0dB
+  da7212_register_write(DA7212_LINE_GAIN, 0x30);
   // LINE_CTRL: enable
   da7212_register_write(DA7212_LINE_CTRL, 0x80);
 }
