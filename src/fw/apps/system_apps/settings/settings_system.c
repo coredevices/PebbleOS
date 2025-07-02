@@ -383,7 +383,11 @@ static void prv_information_window_push(SettingsSystemData *data) {
   info->subtitle_text[SystemInformationItemHardware]   = info->hw_version_string;
   info->subtitle_text[SystemInformationItemSerial]     = info->serial_string;
   info->subtitle_text[SystemInformationItemUptime]     = info->uptime_string;
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+  info->subtitle_text[SystemInformationItemLegal]      = "core.store/terms";
+#else
   info->subtitle_text[SystemInformationItemLegal]      = "pebble.com/legal";
+#endif
 
   window_init(&data->window, WINDOW_NAME("System Information"));
   window_set_user_data(&data->window, data);
