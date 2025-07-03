@@ -102,6 +102,8 @@ def build(bld):
 
         nimble_env.append_value('DEFINES', [
             'FREERTOS=1',
+            'PEBBLEOS',
+            'NRF52_SERIES',
             'NIMBLE_CFG_CONTROLLER=1',
         ])
 
