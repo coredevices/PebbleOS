@@ -189,6 +189,7 @@ elif bld.is_asterix():
             'driver_imu',
             'driver_mcu',
             'driver_mpu',
+            'driver_nrf5_hfxo',
             'driver_otp',
             'driver_periph_config',
             'driver_pmic',
@@ -1827,6 +1828,19 @@ if bld.get_hrm() == 'AS7000':
             'driver_i2c',
             'fw_includes',
             'stm32_stlib'
+        ],
+    )
+
+if mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_nrf5_hfxo',
+        source=[
+            'nrf5/hfxo.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'hal_nordic',
         ],
     )
 
