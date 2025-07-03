@@ -28,6 +28,9 @@ static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx);
 static void _timer_event_handler(nrf_timer_event_t event_type, void *ctx) { }
 
 void uart_init(UARTDevice *dev) {
+  NRF_UARTE0->TASKS_STOPRX = 1;
+  NRF_UARTE0->TASKS_STOPTX = 1;
+  NRF_UARTE0->ENABLE = 0;
   return;
   nrfx_uarte_config_t config = {
     .txd_pin = dev->tx_gpio,
