@@ -193,7 +193,7 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   nrfx_qspi_config_t config = NRFX_QSPI_DEFAULT_CONFIG(
       dev->qspi->clk_gpio, dev->qspi->cs_gpio, dev->qspi->data_gpio[0], dev->qspi->data_gpio[1],
       dev->qspi->data_gpio[2], dev->qspi->data_gpio[3]);
-  config.phy_if.sck_freq = NRF_QSPI_FREQ_DIV4;
+  config.phy_if.sck_freq = NRF_QSPI_FREQ_DIV1;
 
   switch (dev->read_mode) {
     case QSPI_FLASH_READ_READ2O:
