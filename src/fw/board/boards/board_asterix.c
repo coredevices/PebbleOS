@@ -162,6 +162,27 @@ static const I2CSlavePort I2C_SLAVE_DA7212 = {
 
 I2CSlavePort *const I2C_DA7212 = &I2C_SLAVE_DA7212;
 
+static const I2CSlavePort I2C_SLAVE_MMC5603NJ = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x30 << 1,
+};
+
+I2CSlavePort *const I2C_MMC5603NJ = &I2C_SLAVE_MMC5603NJ;
+
+static const I2CSlavePort I2C_SLAVE_BMP390 = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x76 << 1,
+};
+
+I2CSlavePort *const I2C_BMP390 = &I2C_SLAVE_BMP390;
+
+static const I2CSlavePort I2C_SLAVE_LSM6D = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x6A << 1,
+};
+
+I2CSlavePort *const I2C_LSM6D = &I2C_SLAVE_LSM6D;
+
 IRQ_MAP_NRFX(I2S, nrfx_i2s_0_irq_handler);
 
 IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
@@ -204,6 +225,11 @@ void board_early_init(void) {
 void board_init(void) {
   i2c_init(&I2C_NPMC_IIC1_BUS);
   i2c_init(&I2C_IIC2_BUS);
+
+  uint8_t da7212_powerdown[] = { 0xFD /* SYSTEM_ACTIVE */, 0 };
+  i2c_use(I2C_DA7212);
+  i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
+  i2c_release(I2C_DA7212);
 
 #if 0
   i2c_init(&I2C_PMIC_HRM_BUS);

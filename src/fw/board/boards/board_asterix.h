@@ -256,3 +256,6 @@ extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort * const I2C_DRV2604;
 extern I2CSlavePort * const I2C_OPT3001;
 extern I2CSlavePort * const I2C_DA7212;
+extern I2CSlavePort * const I2C_MMC5603NJ;
+extern I2CSlavePort * const I2C_BMP390;
+extern I2CSlavePort * const I2C_LSM6D;
