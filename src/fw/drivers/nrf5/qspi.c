@@ -6,6 +6,7 @@
 #include "drivers/flash/qspi_flash.h"
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/gpio.h"
+#include "drivers/nrf5/hfxo.h"
 #include "drivers/periph_config.h"
 #include "drivers/qspi_definitions.h"
 #include "flash_region/flash_region.h"
@@ -116,7 +117,15 @@ static bool prv_check_whoami(QSPIFlash *dev) {
   }
 }
 
-bool qspi_flash_check_whoami(QSPIFlash *dev) { return prv_check_whoami(dev); }
+bool qspi_flash_check_whoami(QSPIFlash *dev) {
+  bool ret;
+
+  nrf52_clock_hfxo_request();
+  ret = prv_check_whoami(dev);
+  nrf52_clock_hfxo_release();
+
+  return ret;
+}
 
 bool qspi_flash_is_in_coredump_mode(QSPIFlash *dev) { return dev->state->coredump_mode; }
 
@@ -237,6 +246,8 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
     WTF;
   }
 
+  nrf52_clock_hfxo_request();
+
   // Reset the flash to stop any program's or erase in progress from before reboot
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.reset_enable);
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.reset);
@@ -256,13 +267,18 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   }
 
   prv_configure_qe(dev);
+
+  nrf52_clock_hfxo_release();
 }
 
 status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
   uint8_t status_reg;
   uint8_t flag_status_reg;
+
+  nrf52_clock_hfxo_request();
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &status_reg, 1);
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr2, &flag_status_reg, 1);
+  nrf52_clock_hfxo_release();
 
   if (status_reg & dev->state->part->status_bit_masks.busy) {
     return E_BUSY;
@@ -274,6 +290,8 @@ status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
 }
 
 status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
+  nrf52_clock_hfxo_request();
+
   prv_write_enable(dev);
 
   nrfx_err_t err =
@@ -288,14 +306,20 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
       prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr1,
                    dev->state->part->status_bit_masks.busy, true /* set */, busy_timeout_us);
 
+  nrf52_clock_hfxo_release();
+
   return result ? S_SUCCESS : E_ERROR;
 }
 
 status_t qspi_flash_erase_suspend(QSPIFlash *dev, uint32_t addr) {
   uint8_t status_reg;
+
+  nrf52_clock_hfxo_request();
+
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &status_reg, 1);
   if (!(status_reg & dev->state->part->status_bit_masks.busy)) {
     // no erase in progress
+    nrf52_clock_hfxo_release();
     return S_NO_ACTION_REQUIRED;
   }
 
@@ -305,15 +329,21 @@ status_t qspi_flash_erase_suspend(QSPIFlash *dev, uint32_t addr) {
     delay_us(dev->state->part->suspend_to_read_latency_us);
   }
 
+  nrf52_clock_hfxo_release();
+
   return S_SUCCESS;
 }
 
 void qspi_flash_erase_resume(QSPIFlash *dev, uint32_t addr) {
+  nrf52_clock_hfxo_request();
+
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.erase_resume);
   // wait for the erase_suspend bit to be cleared
   prv_poll_bit(dev->qspi, dev->state->part->instructions.rdsr2,
                dev->state->part->flag_status_bit_masks.erase_suspend, false /* !set */,
                QSPI_NO_TIMEOUT);
+
+  nrf52_clock_hfxo_release();
 }
 
 void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
@@ -330,6 +360,8 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 
   buf_suf = (uint8_t)((length - buf_pre) % 4U);
   buf_mid = length - buf_pre - buf_suf;
+
+  nrf52_clock_hfxo_request();
 
   if (buf_pre != 0U) {
     err = nrfx_qspi_read(b_buf, 4U, addr);
@@ -357,6 +389,8 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 
     memcpy(buffer, b_buf, buf_suf);
   }
+
+  nrf52_clock_hfxo_release();
 }
 
 int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
@@ -384,6 +418,8 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
 
   buf_suf = (uint8_t)((length - buf_pre) % 4U);
   buf_mid = length - buf_pre - buf_suf;
+
+  nrf52_clock_hfxo_request();
 
   prv_write_enable(dev);
 
@@ -423,16 +459,27 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
     PBL_ASSERTN(err == NRFX_SUCCESS);
   }
 
+  nrf52_clock_hfxo_release();
+
   return length;
 }
 
 status_t qspi_flash_get_write_status(QSPIFlash *dev) {
-  return nrfx_qspi_mem_busy_check() == NRFX_SUCCESS ? S_SUCCESS : E_BUSY;
+  nrfx_err_t ret;
+
+  nrf52_clock_hfxo_request();
+  ret = nrfx_qspi_mem_busy_check();
+  nrf52_clock_hfxo_release();
+
+  return ret == NRFX_SUCCESS ? S_SUCCESS : E_BUSY;
 }
 
 void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
   uint8_t instruction;
   uint32_t delay;
+
+  nrf52_clock_hfxo_request();
+
   if (active) {
     instruction = dev->state->part->instructions.enter_low_power;
     delay = dev->state->part->standby_to_low_power_latency_us;
@@ -444,6 +491,8 @@ void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
   if (delay) {
     delay_us(delay);
   }
+
+  nrf52_clock_hfxo_release();
 }
 
 static bool prv_blank_check_poll(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
@@ -451,14 +500,21 @@ static bool prv_blank_check_poll(QSPIFlash *dev, uint32_t addr, bool is_subsecto
   const uint32_t BUF_SIZE_BYTES = 128;
   const uint32_t BUF_SIZE_WORDS = BUF_SIZE_BYTES / sizeof(uint32_t);
   uint32_t buffer[BUF_SIZE_WORDS];
+
+  nrf52_clock_hfxo_request();
+
   for (uint32_t offset = 0; offset < size_bytes; offset += BUF_SIZE_BYTES) {
     flash_impl_read_sync(buffer, addr + offset, BUF_SIZE_BYTES);
     for (uint32_t i = 0; i < BUF_SIZE_WORDS; ++i) {
       if (buffer[i] != FLASH_RESET_WORD_VALUE) {
+          nrf52_clock_hfxo_release();
         return false;
       }
     }
   }
+
+  nrf52_clock_hfxo_release();
+
   return true;
 }
 
@@ -472,6 +528,8 @@ void qspi_flash_ll_set_register_bits(QSPIFlash *dev, uint8_t read_instruction,
   // make sure we're not trying to set any bits not within the mask
   PBL_ASSERTN((value & mask) == value);
 
+  nrf52_clock_hfxo_request();
+
   // first read the register
   uint8_t reg_value;
   prv_read_register(dev->qspi, read_instruction, &reg_value, 1);
@@ -482,6 +540,8 @@ void qspi_flash_ll_set_register_bits(QSPIFlash *dev, uint8_t read_instruction,
   // enable writing and write the register value
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.write_enable);
   qspi_indirect_write_no_addr(dev->qspi, write_instruction, &reg_value, 1);
+
+  nrf52_clock_hfxo_release();
 }
 
 status_t qspi_flash_write_protection_enable(QSPIFlash *dev) { return S_NO_ACTION_REQUIRED; }
@@ -520,8 +580,11 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
   uint8_t out[6];
   uint8_t in[6];
 
+  nrf52_clock_hfxo_request();
+
   ret = prv_qspi_security_register_check(dev, addr);
   if (ret != S_SUCCESS) {
+    nrf52_clock_hfxo_release();
     return ret;
   }
 
@@ -543,6 +606,7 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
 
   err = nrfx_qspi_cinstr_xfer(&instr, out, in);
   if (err != NRFX_SUCCESS) {
+    nrf52_clock_hfxo_release();
     return E_ERROR;
   }
 
@@ -552,13 +616,17 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
     *val = in[4];
   }
 
+  nrf52_clock_hfxo_release();
+
   return 0;
 }
 
 status_t qspi_flash_security_registers_are_locked(QSPIFlash *dev, bool *locked) {
   uint8_t sr2;
 
+  nrf52_clock_hfxo_request();
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr2, &sr2, 1);
+  nrf52_clock_hfxo_release();
 
   *locked = !!(sr2 & dev->state->part->flag_status_bit_masks.sec_lock);
 
@@ -571,8 +639,11 @@ status_t qspi_flash_erase_security_register(QSPIFlash *dev, uint32_t addr) {
   nrf_qspi_cinstr_conf_t instr = NRFX_QSPI_DEFAULT_CINSTR(dev->state->part->instructions.erase_sec, 0);
   uint8_t out[4];
 
+  nrf52_clock_hfxo_request();
+
   ret = prv_qspi_security_register_check(dev, addr);
   if (ret != S_SUCCESS) {
+    nrf52_clock_hfxo_release();
     return ret;
   }
 
@@ -595,11 +666,14 @@ status_t qspi_flash_erase_security_register(QSPIFlash *dev, uint32_t addr) {
 
   err = nrfx_qspi_cinstr_xfer(&instr, out, NULL);
   if (err != NRFX_SUCCESS) {
+    nrf52_clock_hfxo_release();
     return E_ERROR;
   }
 
   while (nrfx_qspi_mem_busy_check() == NRFX_ERROR_BUSY) {
   }
+
+  nrf52_clock_hfxo_release();
 
   return 0;
 }
@@ -610,8 +684,11 @@ status_t qspi_flash_write_security_register(QSPIFlash *dev, uint32_t addr, uint8
   nrf_qspi_cinstr_conf_t instr = NRFX_QSPI_DEFAULT_CINSTR(dev->state->part->instructions.program_sec, 0);
   uint8_t out[5];
 
+  nrf52_clock_hfxo_request();
+
   ret = prv_qspi_security_register_check(dev, addr);
   if (ret != S_SUCCESS) {
+    nrf52_clock_hfxo_release();
     return ret;
   }
 
@@ -636,11 +713,14 @@ status_t qspi_flash_write_security_register(QSPIFlash *dev, uint32_t addr, uint8
 
   err = nrfx_qspi_cinstr_xfer(&instr, out, NULL);
   if (err != NRFX_SUCCESS) {
+    nrf52_clock_hfxo_release();
     return E_ERROR;
   }
 
   while (nrfx_qspi_mem_busy_check() == NRFX_ERROR_BUSY) {
   }
+
+  nrf52_clock_hfxo_release();
 
   return 0;
 }
@@ -653,12 +733,16 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
 status_t qspi_flash_lock_security_registers(QSPIFlash *dev) {
   uint8_t sr[2];
 
+  nrf52_clock_hfxo_request();
+
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &sr[0], 1);
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr2, &sr[1], 1);
 
   sr[1] |= dev->state->part->flag_status_bit_masks.sec_lock;
 
   prv_write_register(dev->qspi, dev->state->part->instructions.wrsr, sr, 2);
+
+  nrf52_clock_hfxo_release();
 
   return 0;
 }
