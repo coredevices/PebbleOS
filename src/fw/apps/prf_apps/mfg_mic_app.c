@@ -199,8 +199,8 @@ static void prv_codec_setup(void) {
   da7212_register_write(DA7212_MIXOUT_R_SELECT, 0x08);
   // MIXOUT_R_CTRL: enable, softmix enable, amp enable
   da7212_register_write(DA7212_MIXOUT_R_CTRL, 0x98);
-  // LINE_GAIN: 0dB
-  da7212_register_write(DA7212_LINE_GAIN, 0x30);
+  // LINE_GAIN: 10dB
+  da7212_register_write(DA7212_LINE_GAIN, 0x3a);
   // LINE_CTRL: enable
   da7212_register_write(DA7212_LINE_CTRL, 0x80);
 }
