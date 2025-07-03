@@ -96,8 +96,8 @@ void bt_driver_cb_gatt_handle_notification(const GattServerNotifIndicEvent *even
                                                        event->attr_handle,
                                                        event->attr_val,
                                                        event->attr_val_len);
-  BLE_LOG_DEBUG("GATT Server Notification for handle %u " BT_DEVICE_ADDRESS_FMT,
-                event->attr_handle, BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
+  BLE_LOG_VERBOSE("GATT Server Notification for handle %u " BT_DEVICE_ADDRESS_FMT,
+                  event->attr_handle, BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
 }
 
 void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event) {
@@ -107,9 +107,9 @@ void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event)
   {
     connection = gap_le_connection_by_addr(&event->dev_address);
 
-    BLE_LOG_DEBUG("GATT Server Indication for handle %u " BT_DEVICE_ADDRESS_FMT,
-                  event->attr_handle,
-                  BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
+    BLE_LOG_VERBOSE("GATT Server Indication for handle %u " BT_DEVICE_ADDRESS_FMT,
+                    event->attr_handle,
+                    BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
 
     // We are done if we got disconnected in the meantime or if this is a Service Changed indication
     // consumed by gatt_service_changed.c
