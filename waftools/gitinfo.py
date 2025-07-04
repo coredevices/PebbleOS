@@ -22,7 +22,7 @@ def get_git_revision(ctx):
     timestamp = ctx.cmd_and_log(['git', 'log', '-1', '--format=%ct', 'HEAD'], quiet=waflib.Context.BOTH).strip()
 
     try:
-        tag = ctx.cmd_and_log(['git', 'describe'], quiet=waflib.Context.BOTH).strip()
+        tag = ctx.cmd_and_log(['git', 'describe', '--dirty'], quiet=waflib.Context.BOTH).strip()
     except Exception:
         tag = "v9.9.9-dev"
         waflib.Logs.warn(f'Git tag not found, using {tag}')
