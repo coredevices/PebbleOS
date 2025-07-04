@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-#include "board/board.h"
-#include "system/passert.h"
-
 #include "bf0_hal.h"
 #include "bf0_hal_efuse.h"
 #include "bf0_hal_lcpu_config.h"
-#include "bf0_hal_rcc.h"
 #include "bf0_hal_pmu.h"
+#include "bf0_hal_rcc.h"
+#include "board/board.h"
+#include "system/passert.h"
 
 #define HCPU_FREQ_MHZ 240
 
@@ -67,6 +66,50 @@ UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
 
 IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
 IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
+
+static I2CDeviceState i2c1_device_state;
+
+static struct I2CBusHal i2c1_bus_device = {
+    .i2c_state = &i2c1_device_state,
+    .hi2c =
+        {
+            .Instance = I2C1,
+            .Init = {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+            .Mode = HAL_I2C_MODE_MASTER,
+            
+        },
+        
+    .device_name = "i2c1",
+    .scl =
+        {
+            .pad = PAD_PA30,
+            .func = I2C1_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA33,
+            .func = I2C1_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .core = CORE_ID_HCPU,
+    .module = RCC_MOD_I2C1,
+    .irqn = I2C1_IRQn,
+    .irq_priority = 5,
+    .timeout = 5000,
+};
+I2CBusState I2C1_BUS_STATE;
+I2CBus I2C1_BUS = {
+    .hal = &i2c1_bus_device,
+    .state = &I2C1_BUS_STATE,
+};
+
+I2CBus *const i2c1_bus = &I2C1_BUS;
+IRQ_MAP(I2C1, i2c_irq_handler, i2c1_bus);
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 static UARTDeviceState s_hci_trace_uart_state = {

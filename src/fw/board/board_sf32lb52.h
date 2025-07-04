@@ -136,5 +136,6 @@ typedef const struct QSPIFlash QSPIFlash;
 void board_early_init(void);
 void board_init(void);
 
+#include "drivers/sf32lb52/i2c_hal_definitions.h"
 #include "board_definitions.h"
 
