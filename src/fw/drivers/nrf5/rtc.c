@@ -20,6 +20,8 @@
 
 #include "util/time/time.h"
 
+#include "FreeRTOS.h"
+
 #define NRF5_COMPATIBLE
 #include <mcu.h>
 #include <hal/nrf_rtc.h>
@@ -305,6 +307,12 @@ void rtc_calibrate_frequency(uint32_t frequency) {
 }
 
 void rtc_init(void) {
+  /* May have been initialized out of sequence by FreeRTOS startup -- if so,
+   * no worries.  */
+  if (s_did_init_rtc) {
+    return;
+  }
+
 #ifndef NRF_RTC_FREQ_TO_PRESCALER
 #define NRF_RTC_FREQ_TO_PRESCALER RTC_FREQ_TO_PRESCALER
 #endif
@@ -318,6 +326,9 @@ void rtc_init(void) {
 
   prv_restore_rtc_time_state();
   s_did_init_rtc = true;
+
+  NVIC_SetPriority(BOARD_RTC_IRQN, configKERNEL_INTERRUPT_PRIORITY);
+  NVIC_EnableIRQ(BOARD_RTC_IRQN);
 
 #if TEST_RTC_FREQ
   // FIXME: can be removed after FIRM-121 is fixed
@@ -334,6 +345,29 @@ void rtc_init(void) {
     PBL_LOG(LOG_LEVEL_INFO, "RTC: 100 RTC ticks took %"PRIu32" iters", iters);
   }
 #endif
+}
+
+void rtc_enable_synthetic_systick(void) {
+  // Now that the RTC is awake, we can switch from SysTick to RTC interrupt
+  // ticks.  We need to do this so that we actually get ticks in wfi, since
+  // nRF5 stops SysTick in sleep.
+  _Static_assert(RTC_TICKS_HZ == configTICK_RATE_HZ);
+  if (!s_did_init_rtc) {
+    rtc_init();
+  }
+
+  nrf_rtc_event_enable(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
+  nrf_rtc_int_enable(BOARD_RTC_INST, NRF_RTC_INT_TICK_MASK);
+}
+
+void rtc_systick_pause(void) {
+  // We don't want the fine-grained interrupts at 100Hz when we're in stop
+  // mode -- we have a timer set for that, after all.
+  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
+}
+
+void rtc_systick_resume(void) {
+  nrf_rtc_event_enable(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
 }
 
 //! Our RTC tick counter can overflow if nobody asks about it.  This
@@ -386,10 +420,21 @@ bool rtc_alarm_is_initialized(void) {
   return s_tick_alarm_initialized;
 }
 
-//! Handler for the RTC alarm interrupt. We don't actually have to do anything in this handler,
-//! just the interrupt firing is enough to bring us out of stop mode.
+//! Handler for the RTC alarm interrupt.  We don't actually have to do
+//! anything in that handler, just the interrupt firing is enough to bring
+//! us out of stop mode.  But once we switch into RTC-provided-systick mode,
+//! we *do* need to call into systick!
 void rtc_irq_handler(void) {
+  if (nrf_rtc_event_check(BOARD_RTC_INST, NRF_RTC_EVENT_TICK)) {
+    extern void SysTick_Handler();
+
+    nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
+    SysTick_Handler();
+  }
+
   nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
   nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
   nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
+
+  NVIC_ClearPendingIRQ(BOARD_RTC_IRQN);
 }
