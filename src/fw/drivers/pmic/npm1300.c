@@ -55,6 +55,8 @@ typedef enum {
   PmicRegisters_GPIOS_GPIOOPENDRAIN1 = 0x0615,
   PmicRegisters_ERRLOG_SCRATCH0 = 0x0E01,
   PmicRegisters_ERRLOG_SCRATCH1 = 0x0E02,
+  PmicRegisters_BUCK_BUCK1ENACLR = 0x0401,
+  PmicRegisters_BUCK_BUCK2ENACLR = 0x0402,
   PmicRegisters_BUCK_BUCK1NORMVOUT = 0x0408,
   PmicRegisters_BUCK_BUCK2NORMVOUT = 0x040A,
   PmicRegisters_BUCK_BUCKSTATUS = 0x0434,
@@ -139,6 +141,21 @@ static void prv_configure_interrupts(void) {
   exti_configure_pin(BOARD_CONFIG_POWER.pmic_int, ExtiTrigger_Rising, prv_npm1300_interrupt_handler);
   exti_enable(BOARD_CONFIG_POWER.pmic_int);
 }
+
+void HACK_pmic_kill_ldo(int ldo) {
+  if (ldo == 1)
+    prv_write_register(PmicRegisters_LDSW_TASKLDSW1CLR, 1);
+  if (ldo == 2)
+    prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
+}
+
+void HACK_pmic_kill_buck(int buck) {
+  if (buck == 1)
+    prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
+  if (buck == 2)
+    prv_write_register(PmicRegisters_BUCK_BUCK2ENACLR, 1);
+}
+
 
 bool pmic_init(void) {
   bool ok = true;

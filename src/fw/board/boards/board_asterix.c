@@ -17,6 +17,7 @@
 #include "kernel/util/sleep.h"
 #include "system/passert.h"
 #include "util/units.h"
+#include "console/prompt.h"
 
 // QSPI
 #include <hal/nrf_clock.h>
@@ -211,4 +212,53 @@ void board_init(void) {
 
   qspi_init(QSPI, BOARD_NOR_FLASH_SIZE);
 #endif
+}
+
+extern void HACK_pmic_kill_ldo(int ldo);
+extern void HACK_pmic_kill_buck(int buck);
+
+void command_systemoff(void) {
+  prompt_command_finish();
+  
+  /* does not seem to change system power consumption */
+  uint8_t da7212_powerdown[] = { 0xFD /* SYSTEM_ACTIVE */, 0 };
+  i2c_use(I2C_DA7212);
+  i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
+  i2c_release(I2C_DA7212);
+  
+  flash_power_down_for_stop_mode();
+
+  // pulls in about 20 uA over above
+  HACK_pmic_kill_ldo(1);
+  HACK_pmic_kill_ldo(2);
+  
+  // does not seem to pull in >10 uA, but does seem to reduce noise, so at
+  // least something is happening there
+  HACK_pmic_kill_buck(2);
+  
+  // pulls in about 100 uA
+  HACK_pmic_kill_buck(1);
+
+  // obviously we never get here if we kill BUCK1.
+  __DSB();
+  __ISB();
+  
+  NRF_POWER->SYSTEMOFF = 1;
+}
+
+void command_wfi_forever(void) {
+  extern void do_wfi();
+  
+  prompt_command_finish();
+  flash_power_down_for_stop_mode();
+
+  // Not __disable_irq -- that doesn't actually stop IRQs from waking us. 
+  // (See comment in src/fw/freertos_application.c.)
+  portENTER_CRITICAL();
+  
+  while (1) {
+    __DSB();
+    __ISB();
+    do_wfi();
+  }
 }
