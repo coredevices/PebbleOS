@@ -18,7 +18,7 @@
 
 /*** Repository @apache-mynewt-core info */
 #ifndef MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_CORE
-#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_CORE "70e9ad0667a67d7bdfb25e61c3da41e38168a223"
+#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_CORE "71b9c035d88e88cea2fd0db5dcdd7bdaf6973934"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_APACHE_MYNEWT_CORE
@@ -27,7 +27,7 @@
 
 /*** Repository @apache-mynewt-nimble info */
 #ifndef MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE
-#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE "14a0f7806a4d872379f816b92b8187c9151af6e9"
+#define MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_NIMBLE "93d716b43e2df6e4f18cf39d887395d0ba7fc23e"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_APACHE_MYNEWT_NIMBLE
@@ -45,7 +45,7 @@
 
 /*** Repository @syscfg info */
 #ifndef MYNEWT_VAL_REPO_HASH_SYSCFG
-#define MYNEWT_VAL_REPO_HASH_SYSCFG "d541318f3d094e82b5984984f03134a4e1308dde-dirty"
+#define MYNEWT_VAL_REPO_HASH_SYSCFG "c69c6b902649d3a2a0cb631a1bf77f9f26d198b6-dirty"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_SYSCFG
@@ -760,6 +760,10 @@
 
 #ifndef MYNEWT_VAL_BLE_HOST
 #define MYNEWT_VAL_BLE_HOST (1)
+#endif
+
+#ifndef MYNEWT_VAL_BLE_HOST_RPA_RESOLVER
+#define MYNEWT_VAL_BLE_HOST_RPA_RESOLVER (0)
 #endif
 
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
