@@ -35,7 +35,6 @@
 #include "timers.h"
 
 #include "os/os_cputime.h"
-#include "os/util.h"
 
 #if NRF52_SERIES
 #include "drivers/nrf5/hfxo.h"
