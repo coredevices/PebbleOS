@@ -10,6 +10,7 @@
 #define BOARD_LSE_MODE RCC_LSE_Bypass
 
 #define BOARD_RTC_INST NRF_RTC1
+#define BOARD_RTC_IRQN RTC1_IRQn
 
 static const BoardConfig BOARD_CONFIG = {
   .ambient_light_dark_threshold = 100,
