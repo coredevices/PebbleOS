@@ -1492,7 +1492,7 @@ elif mcu_family == 'SF32LB52':
     bld.objects(
         name='driver_rng',
         source=[
-            'stubs/rng.c',
+            'sf32lb52/rng.c',
         ],
         use=[
             'fw_includes',
