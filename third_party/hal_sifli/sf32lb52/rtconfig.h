@@ -18,5 +18,6 @@
 #define RT_CONFIG_H
 
 #define SF32LB52X_REV_AUTO 1
+#define LXT_LP_CYCLE 200
 
 #endif
