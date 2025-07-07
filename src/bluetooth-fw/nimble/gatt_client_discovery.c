@@ -267,6 +267,8 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
                 error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
+      } else if (error->status == BLE_HS_ENOTCONN) {
+        errno = BTErrnoServiceDiscoveryDisconnected;
       } else {
         errno = BTErrnoInternalErrorBegin + error->status;
       }
@@ -324,6 +326,8 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
                 error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
+      } else if (error->status == BLE_HS_ENOTCONN) {
+        errno = BTErrnoServiceDiscoveryDisconnected;
       } else {
         errno = BTErrnoInternalErrorBegin + error->status;
       }
@@ -375,6 +379,8 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "service discovery error: %d", error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
+      } else if (error->status == BLE_HS_ENOTCONN) {
+        errno = BTErrnoServiceDiscoveryDisconnected;
       } else {
         errno = BTErrnoInternalErrorBegin + error->status;
       }
