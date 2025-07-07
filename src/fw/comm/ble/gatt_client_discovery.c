@@ -396,6 +396,8 @@ bool bt_driver_cb_gatt_client_discovery_complete(GAPLEConnection *connection, BT
       // it's possible the discovery completed before we handled the timeout, in which case
       // we get a BTErrnoOK which means we will get a completion event already
       finalize_discovery = (errno != BTErrnoOK);
+    } else if (errno == BTErrnoServiceDiscoveryDisconnected) {
+      finalize_discovery = false;
     }
 
     if (errno == BTErrnoOK) {
