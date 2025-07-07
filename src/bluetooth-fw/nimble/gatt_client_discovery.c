@@ -222,6 +222,7 @@ static void prv_list_append_or_set(ListNode **list, ListNode *node) {
 static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                            uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
+  BTErrno errno;
 
   switch (error->status) {
     case 0:
@@ -264,8 +265,13 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
     default:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "discovery: descriptor discovery error: %d",
                 error->status);
-      bt_driver_cb_gatt_client_discovery_complete(context->connection,
-                                                  BTErrnoInternalErrorBegin + error->status);
+      if (error->status == BLE_HS_ETIMEOUT) {
+        errno = BTErrnoServiceDiscoveryTimeout;
+      } else {
+        errno = BTErrnoInternalErrorBegin + error->status;
+      }
+
+      bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
   }
@@ -276,6 +282,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                            const struct ble_gatt_chr *chr, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
+  BTErrno errno;
 
   switch (error->status) {
     case 0:
@@ -315,8 +322,13 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
     default:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "discovery: characteristic discovery error: %d",
                 error->status);
-      bt_driver_cb_gatt_client_discovery_complete(context->connection,
-                                                  BTErrnoInternalErrorBegin + error->status);
+      if (error->status == BLE_HS_ETIMEOUT) {
+        errno = BTErrnoServiceDiscoveryTimeout;
+      } else {
+        errno = BTErrnoInternalErrorBegin + error->status;
+      }
+
+      bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
   }
@@ -327,6 +339,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                const struct ble_gatt_svc *service, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
+  BTErrno errno;
 
   switch (error->status) {
     case 0:
@@ -360,8 +373,13 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 
     default:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "service discovery error: %d", error->status);
-      bt_driver_cb_gatt_client_discovery_complete(context->connection,
-                                                  BTErrnoInternalErrorBegin + error->status);
+      if (error->status == BLE_HS_ETIMEOUT) {
+        errno = BTErrnoServiceDiscoveryTimeout;
+      } else {
+        errno = BTErrnoInternalErrorBegin + error->status;
+      }
+
+      bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
   }
