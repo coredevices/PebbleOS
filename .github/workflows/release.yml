@@ -172,6 +172,15 @@ jobs:
             --software-version ${{ github.ref_name }} \
             artifacts/normal_${{ matrix.board }}_${{ github.ref_name }}.pbz
 
+          memfault \
+            --org-token ${{ secrets.MEMFAULT_ORG_TOKEN }} \
+            --org ${{ secrets.MEMFAULT_ORG }} \
+            --project ${{ secrets.MEMFAULT_PROJECT }} \
+            deploy-release \
+            --release-version ${{ github.ref_name }} \
+            --cohort internal
+            
+
   release:
     runs-on: ubuntu-24.04
 
