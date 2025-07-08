@@ -200,7 +200,6 @@ elif bld.is_asterix():
             'driver_temperature',
             'driver_uart',
             'driver_vibe',
-            'driver_voltage_monitor',
         ],
     )
 
@@ -231,7 +230,6 @@ elif bld.is_obelix():
             'driver_temperature',
             'driver_uart',
             'driver_vibe',
-            'driver_voltage_monitor',
         ],
     )
 ## ----------
@@ -1428,6 +1426,7 @@ elif mcu_family == 'SF32LB52':
     )
 
 if 'STM32F412xG' in bld.env.DEFINES:
+    bld.env.DEFINES.append('HAS_DRIVER_VOLTAGE_MONITOR')
     bld.objects(
         name='driver_voltage_monitor',
         source=[
@@ -1442,6 +1441,7 @@ if 'STM32F412xG' in bld.env.DEFINES:
         ]
     )
 elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+    bld.env.DEFINES.append('HAS_DRIVER_VOLTAGE_MONITOR')
     bld.objects(
         name='driver_voltage_monitor',
         source=[
@@ -1455,28 +1455,7 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
             'stm32_stdlib',
         ]
     )
-elif mcu_family == 'NRF52840':
-    # FIXME: provide working implementation
-    bld.objects(
-        name='driver_voltage_monitor',
-        source=[
-            'stubs/voltage_monitor.c',
-        ],
-        use=[
-            'fw_includes',
-        ]
-    )
-elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): provide working implementation
-    bld.objects(
-        name='driver_voltage_monitor',
-        source=[
-            'stubs/voltage_monitor.c',
-        ],
-        use=[
-            'fw_includes',
-        ]
-    )
+
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(

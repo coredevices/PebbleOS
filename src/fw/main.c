@@ -293,7 +293,9 @@ static void init_drivers(void) {
 
   serial_console_init();
 
+#ifdef HAS_DRIVER_VOLTAGE_MONITOR
   voltage_monitor_init();
+#endif
 
   battery_init();
   vibe_init();
