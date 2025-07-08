@@ -27,6 +27,7 @@
 #define DRV2604_MODE_TRIGGER 0x00
 #define DRV2604_MODE_RTP     0x05
 #define DRV2604_MODE_AUTOCAL 0x07
+#define DRV2604_MODE_STANDBY 0x40
 #define DRV2604_RTP_INPUT     0x02
 #define DRV2604_GO            0x0C
 #define DRV2604_RATED_VOLTAGE 0x16
@@ -88,6 +89,7 @@ void vibe_init(void) {
     { DRV2604_A_CAL_BEMF, 0x80 },
     { DRV2604_CONTROL1, DRV2604_CONTROL1_STARTUP_BOOST | DRV2604_CONTROL1_DRIVE_TIME(0x10 /* 2.1 ms */) },
     { DRV2604_CONTROL2, DRV2604_CONTROL2_BIDIR_INPUT | DRV2604_CONTROL2_BRAKE_STABILIZER | DRV2604_CONTROL2_SAMPLE_TIME(3) | DRV2604_CONTROL2_BLANKING_TIME(1) | DRV2604_CONTROL2_IDISS_TIME(1) },
+    { DRV2604_MODE, DRV2604_MODE_STANDBY | DRV2604_MODE_TRIGGER },
   };
 
   for (size_t i = 0; i < sizeof(regs) / sizeof(regs[0]); i++) {
@@ -140,6 +142,9 @@ void vibe_ctl(bool on) {
 
   PBL_LOG(LOG_LEVEL_DEBUG, "Vibe status <%s>", on ? "on" : "off");
 
+  if (!on) {
+    prv_write_register(DRV2604_MODE, DRV2604_MODE_STANDBY | DRV2604_MODE_RTP); /* enter standby even if the enable GPIO is not hooked up */
+  }
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, on);
   s_vibe_ctl_on = on;
   if (on) {
@@ -151,6 +156,7 @@ void vibe_force_off(void) {
   if (!s_initialized) {
     return;
   }
+  prv_write_register(DRV2604_MODE, DRV2604_MODE_STANDBY | DRV2604_MODE_RTP); /* enter standby even if the enable GPIO is not hooked up */
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
   s_vibe_ctl_on = false;
 }
