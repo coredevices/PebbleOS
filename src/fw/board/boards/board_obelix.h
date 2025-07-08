@@ -29,6 +29,5 @@ extern UARTDevice * const HCI_TRACE_UART;
 extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
-extern const VoltageMonitorDevice * VOLTAGE_MONITOR_BATTERY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
