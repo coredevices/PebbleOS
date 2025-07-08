@@ -223,13 +223,4 @@ void board_init(void) {
   i2c_use(I2C_DA7212);
   i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
   i2c_release(I2C_DA7212);
-
-#if 0
-  i2c_init(&I2C_PMIC_HRM_BUS);
-
-  voltage_monitor_device_init(VOLTAGE_MONITOR_ALS);
-  voltage_monitor_device_init(VOLTAGE_MONITOR_BATTERY);
-
-  qspi_init(QSPI, BOARD_NOR_FLASH_SIZE);
-#endif
 }
