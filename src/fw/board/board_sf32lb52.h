@@ -133,6 +133,9 @@ typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;
 
+#include "drivers/i2c_definitions.h"
+#include "drivers/sf32lb52/i2c_hal_definitions.h"
+
 void board_early_init(void);
 void board_init(void);
 
