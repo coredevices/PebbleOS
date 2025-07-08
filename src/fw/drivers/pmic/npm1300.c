@@ -57,6 +57,7 @@ typedef enum {
   PmicRegisters_ERRLOG_SCRATCH1 = 0x0E02,
   PmicRegisters_BUCK_BUCK1NORMVOUT = 0x0408,
   PmicRegisters_BUCK_BUCK2NORMVOUT = 0x040A,
+  PmicRegisters_BUCK_BUCKSWCTRLSEL = 0x040F,
   PmicRegisters_BUCK_BUCKSTATUS = 0x0434,
   PmicRegisters_LDSW_TASKLDSW1SET = 0x0800,
   PmicRegisters_LDSW_TASKLDSW1CLR = 0x0801,
@@ -152,6 +153,14 @@ bool pmic_init(void) {
     return false;
   }
   PBL_LOG(LOG_LEVEL_DEBUG, "found the nPM1300, BUCK1NORMVOUT = 0x%x", buck_out);
+  
+  // work around erratum 27 for nPM1300 rev1, which we tripped in the bootloader (oops)
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, 9 /* 1.9V */);
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCK2NORMVOUT, 21 /* 3.1V */);
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, 3 /* both of them, load */);
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, 8 /* 1.8V */);
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCK2NORMVOUT, 20 /* 3.0V */);
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, 3 /* both of them, load */);
   
   ok &= prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &buck_out);
   PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 LDSW status before enabling LDSW2 0x%x", buck_out);
