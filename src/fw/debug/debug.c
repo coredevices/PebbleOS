@@ -203,11 +203,12 @@ void debug_init(McuRebootReason mcu_reboot_reason) {
   version_copy_current_build_id_hex_string(build_id_string, 64);
   DEBUG_LOG(LOG_LEVEL_INFO, "BUILD ID: %s", build_id_string);
 
-  debug_reboot_reason_print(mcu_reboot_reason);
-
   #if MEMFAULT
+  // This must be called before debug_reboot_reason_print which resets the reason
   memfault_platform_boot();
   #endif
+
+  debug_reboot_reason_print(mcu_reboot_reason);
 }
 
 void debug_print_last_launched_app(void) {
