@@ -26,7 +26,7 @@
 #include "util/attributes.h"
 #include "util/size.h"
 
-static void prv_push_welcome_notification(void *UNUSED data) {
+static void prv_push_welcome_notification(void *PBL_UNUSED data) {
   AttributeList notif_attr_list = {};
   attribute_list_add_uint32(&notif_attr_list, AttributeIdIconTiny,
                             TIMELINE_RESOURCE_NOTIFICATION_FLAG);

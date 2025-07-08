@@ -54,27 +54,13 @@
 # endif
 # pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wmissing-declarations"
-#  ifdef UNUSED
-/* bleh */
-#   define HAD_UNUSED
-#   undef UNUSED
-#  endif
 #  include <nrf52840.h>
-#  ifdef HAD_UNUSED
-#   define UNUSED __attribute__((__unused__))
-#   undef HAD_UNUSED
-#  endif
 # pragma GCC diagnostic pop
 #elif defined(MICRO_FAMILY_SF32LB52)
 # if !defined(SF32LB52_COMPATIBLE) && !defined(CMSIS_COMPATIBLE)
 #  error "Source is incompatible with the target MCU"
 # endif
-# ifdef UNUSED
-#  undef UNUSED
-# endif
 # include <bf0_hal.h>
-# undef UNUSED
-# define UNUSED __attribute__((__unused__))
 #elif !defined(SDK) && !defined(UNITTEST)
 # error "Unknown or missing MICRO_FAMILY_* define"
 #endif

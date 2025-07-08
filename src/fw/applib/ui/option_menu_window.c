@@ -71,7 +71,7 @@ static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer, uint16_t sectio
 }
 
 uint16_t option_menu_default_cell_height(OptionMenuContentType content_type, bool selected) {
-  const OptionMenuStyle * const UNUSED style = prv_get_style();
+  const OptionMenuStyle * const PBL_UNUSED style = prv_get_style();
   const int16_t cell_height =
       PBL_IF_ROUND_ELSE(selected ? MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT :
                                    MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,

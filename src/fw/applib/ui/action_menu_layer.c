@@ -390,8 +390,8 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
                                ActionMenuLayer *aml, const ActionMenuItem *item,
                                bool selected) {
   GRect label_text_container = cell_layer->bounds;
-  // bottom_inset won't be used on black and white, using UNUSED here quiets the linter
-  UNUSED int16_t bottom_inset = 0;
+  // bottom_inset won't be used on black and white, using PBL_UNUSED here quiets the linter
+  PBL_UNUSED int16_t bottom_inset = 0;
 #if PBL_ROUND
   // On round displays, inset the box from the bottom to account for drawing the indicator at the
   // bottom center, and then draw the indicator

@@ -108,7 +108,7 @@ static void draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex 
   graphics_context_set_compositing_mode(ctx, op);
 
   // TODO: PBL-22652 extract common way to configure simple lists on S4
-  UNUSED const bool selected = (cell_index->row == data->menu_layer.selection.index.row);
+  PBL_UNUSED const bool selected = (cell_index->row == data->menu_layer.selection.index.row);
   // used for a fish-eye effect in the menus, also conveniently prevents us from clipping
   // during the animation
   GFont const title_font = fonts_get_system_font(

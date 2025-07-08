@@ -61,7 +61,7 @@ static void prv_glance_changed(void *context) {
 ////////////////////////
 // MenuLayer callbacks
 
-static void prv_menu_layer_select(UNUSED MenuLayer *menu_layer, MenuIndex *cell_index,
+static void prv_menu_layer_select(PBL_UNUSED MenuLayer *menu_layer, MenuIndex *cell_index,
                                   void *context) {
   LauncherMenuLayer *launcher_menu_layer = context;
   AppMenuDataSource *data_source = launcher_menu_layer->data_source;
@@ -91,8 +91,8 @@ static void prv_menu_layer_select(UNUSED MenuLayer *menu_layer, MenuIndex *cell_
   prv_launcher_menu_layer_mark_dirty(launcher_menu_layer);
 }
 
-static uint16_t prv_menu_layer_get_num_rows(UNUSED MenuLayer *menu_layer,
-                                            UNUSED uint16_t section_index, void *context) {
+static uint16_t prv_menu_layer_get_num_rows(PBL_UNUSED MenuLayer *menu_layer,
+                                            PBL_UNUSED uint16_t section_index, void *context) {
   LauncherMenuLayer *launcher_menu_layer = context;
   AppMenuDataSource *data_source = launcher_menu_layer->data_source;
   return data_source ? app_menu_data_source_get_count(data_source) : (uint16_t)0;
@@ -126,8 +126,8 @@ static void prv_menu_layer_draw_row(GContext* ctx, const Layer *cell_layer, Menu
   }
 }
 
-static int16_t prv_menu_layer_get_cell_height(UNUSED MenuLayer *menu_layer,
-                                              UNUSED MenuIndex *cell_index, UNUSED void *context) {
+static int16_t prv_menu_layer_get_cell_height(PBL_UNUSED MenuLayer *menu_layer,
+                                              PBL_UNUSED MenuIndex *cell_index, PBL_UNUSED void *context) {
 #if PBL_RECT
   return LAUNCHER_MENU_LAYER_CELL_RECT_CELL_HEIGHT;
 #elif PBL_ROUND
@@ -152,8 +152,8 @@ static void prv_play_glance_for_row(LauncherMenuLayer *launcher_menu_layer, uint
   launcher_app_glance_service_play_glance_for_app_node(&launcher_menu_layer->glance_service, node);
 }
 
-static void prv_menu_layer_selection_will_change(MenuLayer *UNUSED menu_layer, MenuIndex *new_index,
-                                                 MenuIndex UNUSED old_index, void *context) {
+static void prv_menu_layer_selection_will_change(MenuLayer *PBL_UNUSED menu_layer, MenuIndex *new_index,
+                                                 MenuIndex PBL_UNUSED old_index, void *context) {
   LauncherMenuLayer *launcher_menu_layer = context;
   prv_play_glance_for_row(launcher_menu_layer, new_index->row);
 }

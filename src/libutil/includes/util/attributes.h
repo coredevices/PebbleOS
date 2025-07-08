@@ -44,7 +44,7 @@
 
 // General attributes
 #define USED __attribute__((__used__))
-#define UNUSED __attribute__((__unused__))
+#define PBL_UNUSED __attribute__((__unused__))
 #define WEAK __attribute__((__weak__))
 #define ALIAS(sym) __attribute__((__weak__, __alias__(sym)))
 #define EXTERNALLY_VISIBLE GCC_ONLY(__attribute__((__externally_visible__)))

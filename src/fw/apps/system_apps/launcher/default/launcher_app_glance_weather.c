@@ -58,8 +58,8 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 }
 
 static void prv_weather_glance_subtitle_dynamic_text_node_update(
-    UNUSED GContext *ctx, UNUSED GTextNode *node, UNUSED const GRect *box,
-    UNUSED const GTextNodeDrawConfig *config, UNUSED bool render, char *buffer, size_t buffer_size,
+    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
     void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceWeather *weather_glance =
@@ -93,7 +93,7 @@ static uint32_t prv_get_weather_icon_resource_id_for_type(WeatherType type) {
   return lookup_success ? res_info.res_id : (uint32_t)RESOURCE_ID_INVALID;
 }
 
-static void prv_weather_event_handler(UNUSED PebbleEvent *event, void *context) {
+static void prv_weather_event_handler(PBL_UNUSED PebbleEvent *event, void *context) {
   LauncherAppGlanceStructured *structured_glance = context;
   LauncherAppGlanceWeather *weather_glance =
       launcher_app_glance_structured_get_data(structured_glance);

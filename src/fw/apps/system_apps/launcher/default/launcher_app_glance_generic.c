@@ -279,11 +279,11 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
   return NULL_SAFE_FIELD_ACCESS(generic_glance, title_buffer, NULL);
 }
 
-static void prv_generic_glance_dynamic_text_node_update(UNUSED GContext *ctx,
-                                                        UNUSED GTextNode *node,
-                                                        UNUSED const GRect *box,
-                                                        UNUSED const GTextNodeDrawConfig *config,
-                                                        UNUSED bool render, char *buffer,
+static void prv_generic_glance_dynamic_text_node_update(PBL_UNUSED GContext *ctx,
+                                                        PBL_UNUSED GTextNode *node,
+                                                        PBL_UNUSED const GRect *box,
+                                                        PBL_UNUSED const GTextNodeDrawConfig *config,
+                                                        PBL_UNUSED bool render, char *buffer,
                                                         size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   if (!structured_glance) {

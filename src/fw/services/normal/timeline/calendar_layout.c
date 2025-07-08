@@ -318,7 +318,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .callback = prv_format_glance_end_time,
     .buffer_size = MAX(TIME_STRING_TIME_LENGTH, TIME_STRING_DATE_LENGTH),
   };
-  UNUSED static const LayoutNodeConstructorConfig s_glance_end_time_with_icon_config = {
+  PBL_UNUSED static const LayoutNodeConstructorConfig s_glance_end_time_with_icon_config = {
     .extent.node.type = LayoutNodeType_Constructor,
     .constructor = prv_create_icon_label_node_rect,
     .context = (void *)&s_glance_end_icon_label_context,
@@ -331,7 +331,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.offset.y = PBL_IF_RECT_ELSE(4, 1), // recurring offset y
     .text.extent.margin.h = PBL_IF_RECT_ELSE(4, 1), // recurring margin height
   };
-  UNUSED static const LayoutNodeConstructorConfig s_if_recurring_config = {
+  PBL_UNUSED static const LayoutNodeConstructorConfig s_if_recurring_config = {
     .extent.node.type = LayoutNodeType_Constructor,
     .constructor = prv_construct_if_recurring,
     .context = (void *)&s_recurring_config,
@@ -371,7 +371,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .callback = prv_format_start_time,
     .buffer_size = CALENDAR_TIME_LINE_LENGTH,
   };
-  UNUSED static const LayoutNodeConstructorConfig s_start_time_with_icon_config = {
+  PBL_UNUSED static const LayoutNodeConstructorConfig s_start_time_with_icon_config = {
     .extent.node.type = LayoutNodeType_Constructor,
     .constructor = prv_create_icon_label_node_rect,
     .context = (void *)&s_start_icon_label_context,
@@ -381,7 +381,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .callback = prv_format_end_time,
     .buffer_size = CALENDAR_TIME_LINE_LENGTH,
   };
-  UNUSED static const LayoutNodeConstructorConfig s_end_time_with_icon_config = {
+  PBL_UNUSED static const LayoutNodeConstructorConfig s_end_time_with_icon_config = {
     .extent.node.type = LayoutNodeType_Constructor,
     .constructor = prv_create_icon_label_node_rect,
     .context = (void *)&s_end_icon_label_context,

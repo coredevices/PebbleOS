@@ -430,7 +430,7 @@ static int16_t prv_draw_generic_mark(GContext *ctx, GBitmap *mark, GPoint origin
 #define MARK_PADDING 10
 
 static void prv_draw_rt_cell_rect(GContext *ctx, const Layer *cell_layer, GBitmap *mark,
-                                  const char *text, UNUSED bool is_selected) {
+                                  const char *text, PBL_UNUSED bool is_selected) {
   int16_t x = (MARK_PADDING / 2);
   GRect box = cell_layer->bounds;
   const bool highlight = menu_cell_layer_is_highlighted(cell_layer);

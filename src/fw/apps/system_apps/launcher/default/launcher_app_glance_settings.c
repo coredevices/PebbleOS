@@ -83,7 +83,7 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 }
 
 static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
-                                           UNUSED const GTextNodeDrawConfig *config, bool render,
+                                           PBL_UNUSED const GTextNodeDrawConfig *config, bool render,
                                            GSize *size_out, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceSettings *settings_glance =
@@ -106,7 +106,7 @@ static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
 }
 
 static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
-                                          UNUSED const GTextNodeDrawConfig *config, bool render,
+                                          PBL_UNUSED const GTextNodeDrawConfig *config, bool render,
                                           GSize *size_out, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceSettings *settings_glance =
@@ -171,8 +171,8 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
 }
 
 static void prv_battery_percent_dynamic_text_node_update(
-    UNUSED GContext *ctx, UNUSED GTextNode *node, UNUSED const GRect *box,
-    UNUSED const GTextNodeDrawConfig *config, UNUSED bool render, char *buffer, size_t buffer_size,
+    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
     void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceSettings *settings_glance =
