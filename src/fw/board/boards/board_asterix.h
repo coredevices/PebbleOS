@@ -240,8 +240,6 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   },
 };
 
-extern const TemperatureSensor * const TEMPERATURE_SENSOR;
-
 extern HRMDevice * const HRM;
 
 extern QSPIPort * const QSPI;
