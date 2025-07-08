@@ -42,6 +42,8 @@ void pwm_set_duty_cycle(const PwmConfig *pwm, uint32_t duty_cycle) {
   pwm->state->value = pwm->state->resolution - duty_cycle;
   if (pwm->state->enabled)
     nrfx_pwm_simple_playback(&pwm->peripheral, &pwm->state->seq, 1, 0);
+  if (duty_cycle == 0)
+    nrfx_pwm_stop(&pwm->peripheral, 0);
 }
 
 void pwm_enable(const PwmConfig *pwm, bool enable) {
