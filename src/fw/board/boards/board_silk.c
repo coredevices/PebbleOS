@@ -25,7 +25,7 @@
 #include "drivers/stm32f2/i2c_hal_definitions.h"
 #include "drivers/stm32f2/spi_definitions.h"
 #include "drivers/stm32f2/uart_definitions.h"
-#include "drivers/temperature.h"
+#include "drivers/temperature/analog.h"
 #include "drivers/voltage_monitor.h"
 #include "flash_region/flash_region.h"
 #include "util/units.h"
@@ -314,7 +314,7 @@ const VoltageMonitorDevice * VOLTAGE_MONITOR_TEMPERATURE = &VOLTAGE_MONITOR_TEMP
 // Temperature sensor
 // STM32F412 datasheet rev 2
 // Section 6.3.21
-TemperatureSensor const TEMPERATURE_SENSOR_DEVICE = {
+AnalogTemperatureSensor const TEMPERATURE_SENSOR_DEVICE = {
   .voltage_monitor = &VOLTAGE_MONITOR_TEMPERATURE_DEVICE,
   .millivolts_ref = 760,
   .millidegrees_ref = 25000,
@@ -322,7 +322,7 @@ TemperatureSensor const TEMPERATURE_SENSOR_DEVICE = {
   .slope_denominator = 2000,
 };
 
-TemperatureSensor * const TEMPERATURE_SENSOR = &TEMPERATURE_SENSOR_DEVICE;
+AnalogTemperatureSensor * const TEMPERATURE_SENSOR = &TEMPERATURE_SENSOR_DEVICE;
 
 
 //

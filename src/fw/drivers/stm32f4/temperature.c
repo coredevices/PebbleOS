@@ -18,6 +18,7 @@
 #include "console/prompt.h"
 #include "drivers/gpio.h"
 #include "drivers/temperature.h"
+#include "drivers/temperature/analog.h"
 #include "drivers/voltage_monitor.h"
 #include "drivers/periph_config.h"
 #include "kernel/util/sleep.h"

@@ -269,7 +269,7 @@ extern I2CSlavePort * const I2C_MFI;
 extern VoltageMonitorDevice * const VOLTAGE_MONITOR_ALS;
 extern VoltageMonitorDevice * const VOLTAGE_MONITOR_BATTERY;
 
-extern const TemperatureSensor * const TEMPERATURE_SENSOR;
+extern const AnalogTemperatureSensor * const TEMPERATURE_SENSOR;
 
 static MicDevice * const MIC = (void *)0;
 

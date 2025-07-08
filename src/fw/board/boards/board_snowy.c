@@ -22,7 +22,7 @@
 #include "drivers/stm32f2/i2c_hal_definitions.h"
 #include "drivers/stm32f2/spi_definitions.h"
 #include "drivers/stm32f2/uart_definitions.h"
-#include "drivers/temperature.h"
+#include "drivers/temperature/analog.h"
 #include "drivers/voltage_monitor.h"
 #include "util/units.h"
 
@@ -345,7 +345,7 @@ VoltageMonitorDevice * const VOLTAGE_MONITOR_TEMPERATURE = &VOLTAGE_MONITOR_TEMP
 // Temperature sensor
 // STM32F439 datasheet rev 5
 // Section 6.3.22
-const TemperatureSensor TEMPERATURE_SENSOR_DEVICE = {
+const AnalogTemperatureSensor TEMPERATURE_SENSOR_DEVICE = {
   .voltage_monitor = &VOLTAGE_MONITOR_TEMPERATURE_DEVICE,
   .millivolts_ref = 760,
   .millidegrees_ref = 25000,
@@ -353,7 +353,7 @@ const TemperatureSensor TEMPERATURE_SENSOR_DEVICE = {
   .slope_denominator = 2000,
 };
 
-const TemperatureSensor * const TEMPERATURE_SENSOR = &TEMPERATURE_SENSOR_DEVICE;
+const AnalogTemperatureSensor * const TEMPERATURE_SENSOR = &TEMPERATURE_SENSOR_DEVICE;
 
 //
 // SPI Bus configuration

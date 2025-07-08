@@ -236,7 +236,7 @@ extern VoltageMonitorDevice * const VOLTAGE_MONITOR_ALS;
 extern VoltageMonitorDevice * const VOLTAGE_MONITOR_BATTERY;
 extern VoltageMonitorDevice * const VOLTAGE_MONITOR_TEMPERATURE;
 
-extern const TemperatureSensor * const TEMPERATURE_SENSOR;
+extern const AnalogTemperatureSensor * const TEMPERATURE_SENSOR;
 
 static MicDevice * const MIC = (void *)0;
 
