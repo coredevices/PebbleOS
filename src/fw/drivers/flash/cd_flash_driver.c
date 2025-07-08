@@ -24,6 +24,8 @@
 
 #include "kernel/core_dump_private.h"
 
+static bool s_active;
+
 //! We have our own flash driver for coredump support because it must not use
 //! any FreeRTOS constructs & we want to keep it as simple as possible. In
 //! addition we want the flexibility to be able to reset the flash driver to
@@ -37,6 +39,12 @@ void cd_flash_init(void) {
   flash_impl_write_protect(
       FLASH_REGION_SAFE_FIRMWARE_BEGIN,
       (FLASH_REGION_SAFE_FIRMWARE_END - SECTOR_SIZE_BYTES));
+
+  s_active = true;
+}
+
+bool cd_flash_active(void) {
+  return s_active;
 }
 
 void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
@@ -97,4 +105,12 @@ uint32_t cd_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr,
 void cd_flash_read_bytes(void* buffer_ptr, uint32_t start_addr,
     uint32_t buffer_size) {
   flash_impl_read_sync(buffer_ptr, start_addr, buffer_size);
+}
+
+status_t cd_flash_read_security_register(uint32_t addr, uint8_t *val) {
+  return flash_impl_read_security_register(addr, val);
+}
+
+status_t cd_flash_security_registers_are_locked(bool *locked) {
+  return flash_impl_security_registers_are_locked(locked);
 }
