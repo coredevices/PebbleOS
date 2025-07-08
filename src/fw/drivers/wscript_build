@@ -1040,11 +1040,23 @@ elif bld.is_silk():
             'root_includes',
         ],
     )
-elif bld.is_asterix() or bld.is_obelix():
+elif bld.is_asterix():
     bld.objects(
         name='driver_imu',
         source=[
             'imu/imu_asterix.c',
+        ],
+        use=[
+            'driver_lsm6dso',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif bld.is_obelix():
+    bld.objects(
+        name='driver_imu',
+        source=[
+            'stubs/imu.c',
         ],
         use=[
             'driver_lsm6dso',
