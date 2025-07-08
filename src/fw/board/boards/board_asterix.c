@@ -186,6 +186,8 @@ void board_early_init(void) {
   nrf_gpio_pin_set(15);
   
   nrf_gpio_pin_set(16);
+ 
+  NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 
   nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
   nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);

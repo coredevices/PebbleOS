@@ -36,6 +36,10 @@
 #define SF32LB52_COMPATIBLE
 #include <mcu.h>
 
+#if defined(MICRO_FAMILY_NRF5)
+#include <hal/nrf_nvmc.h>
+#endif
+
 #include "FreeRTOS.h"
 #include "task.h"
 #include "freertos_application.h"
@@ -89,6 +93,14 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   // See: http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABGGICD.html#BGBHDHAI
   __disable_irq();
 
+#if defined(MICRO_FAMILY_NRF5)
+  // We're going to sleep, so turn off the caches (they consume quiescent
+  // power).  It's more efficient to have them on when we're awake, but for
+  // now, they gotta go.  This holds true even if we're not going to sleep
+  // long enough to trigger stop mode.
+  NRF_NVMC->ICACHECNF &= ~NVMC_ICACHECNF_CACHEEN_Msk;
+#endif
+
   power_tracking_stop(PowerSystemMcuCoreRun);
 
   if (eTaskConfirmSleepModeStatus() != eAbortSleep) {
@@ -139,6 +151,10 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   }
 
   power_tracking_start(PowerSystemMcuCoreRun);
+
+#if defined(MICRO_FAMILY_NRF5)
+  NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
+#endif
 
   __enable_irq();
 }
