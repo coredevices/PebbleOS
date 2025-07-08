@@ -16,29 +16,14 @@
 
 #include "drivers/battery.h"
 
-#include "drivers/gpio.h"
-#include "drivers/periph_config.h"
+#include "board/board.h"
+#include "drivers/voltage_monitor.h"
 
-static bool s_charging_forced_disable = false;
-
-bool battery_charge_controller_thinks_we_are_charging(void) {
-  if (s_charging_forced_disable) {
-    return false;
-  }
-
-  return battery_charge_controller_thinks_we_are_charging_impl();
-}
-
-bool battery_is_usb_connected(void) {
-  if (s_charging_forced_disable) {
-    return false;
-  }
-
-  return battery_is_usb_connected_impl();
-}
-
-void battery_force_charge_enable(bool charging_enabled) {
-  s_charging_forced_disable = !charging_enabled;
-
-  battery_set_charge_enable(charging_enabled);
+ADCVoltageMonitorReading battery_read_voltage_monitor(void) {
+  VoltageReading info;
+  voltage_monitor_read(VOLTAGE_MONITOR_BATTERY, &info);
+  return (ADCVoltageMonitorReading) {
+    .vref_total = info.vref_total,
+    .vmon_total = info.vmon_total,
+  };
 }
