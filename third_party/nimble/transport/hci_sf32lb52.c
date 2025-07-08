@@ -15,8 +15,8 @@
  */
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-#include <board/board.h>
-#include <drivers/uart.h>
+  #include <board/board.h>
+  #include <drivers/uart.h>
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
 #include <kernel/pebble_tasks.h>
@@ -56,12 +56,8 @@ static struct hci_h4_sm s_hci_h4sm;
 static ipc_queue_handle_t s_ipc_port;
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-static uint16_t s_hci_trace_seq;
+  static uint16_t s_hci_trace_seq;
 #endif
-
-// TODO(SF32LB52): adjust according to NimBLE configuration?
-static uint8_t s_hci_acl[256];
-static uint8_t s_hci_cmd[256];
 
 extern void lcpu_power_on(void);
 
@@ -70,21 +66,21 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
   const char *type_str;
 
   switch (type) {
-    case HCI_H4_CMD:
-      type_str = "CMD";
-      break;
-    case HCI_H4_ACL:
-      type_str = "ACL";
-      break;
-    case HCI_H4_EVT:
-      type_str = "EVT";
-      break;
-    case HCI_H4_ISO:
-      type_str = "ISO";
-      break;
-    default:
-      type_str = "UKN";
-      break;
+  case HCI_H4_CMD:
+    type_str = "CMD";
+    break;
+  case HCI_H4_ACL:
+    type_str = "ACL";
+    break;
+  case HCI_H4_EVT:
+    type_str = "EVT";
+    break;
+  case HCI_H4_ISO:
+    type_str = "ISO";
+    break;
+  default:
+    type_str = "UKN";
+    break;
   }
 
   PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, "%s, %s %" PRIu16, type_str,
@@ -184,29 +180,29 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
 
   switch (pkt_type) {
   case HCI_H4_EVT:
-      ev = data;
-      cmd_complete = (void *)ev->data;
+    ev = data;
+    cmd_complete = (void *)ev->data;
 
-      if (ev->opcode == BLE_HCI_EVCODE_COMMAND_COMPLETE) {
-        PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, "CMD complete %x", cmd_complete->opcode);
-        // NOTE: do not confuse NimBLE with SF32LB52 vendor specific command
-        if (cmd_complete->opcode == 0xFC11) {
-            break;
-        }
+    if (ev->opcode == BLE_HCI_EVCODE_COMMAND_COMPLETE) {
+      PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, "CMD complete %x", cmd_complete->opcode);
+      // NOTE: do not confuse NimBLE with SF32LB52 vendor specific command
+      if (cmd_complete->opcode == 0xFC11) {
+        break;
       }
+    }
 
-      prv_hci_trace(pkt_type, data, ev->length + sizeof(*ev), H4TL_PACKET_CTRL);
+    prv_hci_trace(pkt_type, data, ev->length + sizeof(*ev), H4TL_PACKET_CTRL);
 
-      return ble_transport_to_hs_evt(data);
-    case HCI_H4_ACL:
-      om = (struct os_mbuf *)data;
+    return ble_transport_to_hs_evt(data);
+  case HCI_H4_ACL:
+    om = (struct os_mbuf *)data;
 
-      prv_hci_trace(pkt_type, OS_MBUF_DATA(om, uint8_t *), OS_MBUF_PKTLEN(om), H4TL_PACKET_CTRL);
+    prv_hci_trace(pkt_type, OS_MBUF_DATA(om, uint8_t *), OS_MBUF_PKTLEN(om), H4TL_PACKET_CTRL);
 
-      return ble_transport_to_hs_acl(data);
-    default:
-      WTF;
-      break;
+    return ble_transport_to_hs_acl(data);
+  default:
+    WTF;
+    break;
   }
 
   return -1;
@@ -220,7 +216,7 @@ static void prv_hci_task_main(void *unused) {
 
     while (true) {
       size_t len;
-      
+
       len = ipc_queue_read(s_ipc_port, buf, sizeof(buf));
       if (len > 0U) {
         while (len > 0U) {
@@ -268,16 +264,12 @@ void ble_transport_ll_init(void) {
 /* APIs to be implemented by HS/LL side of transports */
 int ble_transport_to_ll_cmd_impl(void *buf) {
   struct ble_hci_cmd *cmd = buf;
+  uint8_t h4_cmd = HCI_H4_CMD;
   size_t written;
 
-  PBL_ASSERTN((sizeof(*cmd) + cmd->length) <= sizeof(s_hci_cmd) - 1);
-
-  s_hci_cmd[0] = HCI_H4_CMD;
-  memcpy(&s_hci_cmd[1], cmd, sizeof(*cmd) + cmd->length);
-
   prv_hci_trace(HCI_H4_CMD, (uint8_t *)cmd, sizeof(*cmd) + cmd->length, H4TL_PACKET_HOST);
-
-  written = ipc_queue_write(s_ipc_port, s_hci_cmd, 1 + sizeof(*cmd) + cmd->length,
+  written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
+  written = ipc_queue_write(s_ipc_port, cmd, sizeof(*cmd) + cmd->length,
                             IPC_TIMEOUT_TICKS);
   ble_transport_free(buf);
 
@@ -287,17 +279,13 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
 int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   uint8_t *data;
   size_t written;
-
-  PBL_ASSERTN(OS_MBUF_PKTLEN(om) <= sizeof(s_hci_acl) - 1);
+  uint8_t h4_cmd = HCI_H4_ACL;
 
   data = OS_MBUF_DATA(om, uint8_t *);
-
-  s_hci_acl[0] = HCI_H4_ACL;
-  memcpy(&s_hci_acl[1], data, OS_MBUF_PKTLEN(om));
-
   prv_hci_trace(HCI_H4_ACL, data, OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
 
-  written = ipc_queue_write(s_ipc_port, s_hci_acl, 1 + OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
+  written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
+  written = ipc_queue_write(s_ipc_port, data, OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
   os_mbuf_free(om);
 
   return (written >= 0U) ? 0 : -1;
@@ -306,11 +294,15 @@ int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
 int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   uint8_t *data;
   size_t written;
+  uint8_t h4_cmd = HCI_H4_ISO;
 
   data = OS_MBUF_DATA(om, uint8_t *);
-  
+  prv_hci_trace(HCI_H4_ISO, data, OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
+
+  written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
   written = ipc_queue_write(s_ipc_port, data, OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
   os_mbuf_free(om);
 
   return (written >= 0U) ? 0 : -1;
 }
+
