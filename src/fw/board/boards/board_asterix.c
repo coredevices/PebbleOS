@@ -201,13 +201,6 @@ IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
 void board_early_init(void) {
   PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
 
-  /* shared SPI chip outputs */
-  nrf_gpio_cfg_output(15);
-  nrf_gpio_cfg_output(16);
-  nrf_gpio_pin_set(15);
-  
-  nrf_gpio_pin_set(16);
-
   nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
   nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
   nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
