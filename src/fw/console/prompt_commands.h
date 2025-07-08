@@ -55,6 +55,8 @@ extern void command_assert_fail(void);
 extern void command_stuck_timer(void);
 
 extern void command_croak(void);
+extern void command_systemoff(void);
+extern void command_wfi_forever(void);
 extern void command_hardfault(void);
 
 extern void command_dump_malloc_kernel(void);
@@ -575,6 +577,11 @@ static const Command s_prompt_commands[] = {
   { "hard fault", command_hardfault, 0 },
   */
   { "croak", command_croak, 0 },
+
+#ifdef PLATFORM_ASTERIX
+  { "systemoff", command_systemoff, 0 },
+  { "wfi forever", command_wfi_forever, 0 },
+#endif
 
 #ifdef MALLOC_INSTRUMENTATION
   { "dump malloc kernel", command_dump_malloc_kernel, 0 },

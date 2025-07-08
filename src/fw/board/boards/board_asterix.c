@@ -17,6 +17,7 @@
 #include "kernel/util/sleep.h"
 #include "system/passert.h"
 #include "util/units.h"
+#include "console/prompt.h"
 
 // QSPI
 #include <hal/nrf_clock.h>
@@ -177,6 +178,55 @@ IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
 
 IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
 
+static void nrf_foad() {
+  // Return as much of the system as possible to a consistent state.
+  NRF_POWER->TASKS_LOWPWR = 1;
+  NRF_I2S->ENABLE = 0;
+  NRF_PDM->ENABLE = 0;
+  NRF_PWM0->ENABLE = 0;
+  NRF_PWM0->PSEL.OUT[0] = 0x80000000;
+  NRF_PWM0->PSEL.OUT[1] = 0x80000000;
+  NRF_PWM0->PSEL.OUT[2] = 0x80000000;
+  NRF_PWM0->PSEL.OUT[3] = 0x80000000;
+  NRF_PWM1->ENABLE = 0;
+  NRF_PWM1->PSEL.OUT[0] = 0x80000000;
+  NRF_PWM1->PSEL.OUT[1] = 0x80000000;
+  NRF_PWM1->PSEL.OUT[2] = 0x80000000;
+  NRF_PWM1->PSEL.OUT[3] = 0x80000000;
+  NRF_PWM2->ENABLE = 0;
+  NRF_PWM2->PSEL.OUT[0] = 0x80000000;
+  NRF_PWM2->PSEL.OUT[1] = 0x80000000;
+  NRF_PWM2->PSEL.OUT[2] = 0x80000000;
+  NRF_PWM2->PSEL.OUT[3] = 0x80000000;
+  NRF_PWM3->ENABLE = 0;
+  NRF_PWM3->PSEL.OUT[0] = 0x80000000;
+  NRF_PWM3->PSEL.OUT[1] = 0x80000000;
+  NRF_PWM3->PSEL.OUT[2] = 0x80000000;
+  NRF_PWM3->PSEL.OUT[3] = 0x80000000;
+  NRF_SPIM0->ENABLE = 0;
+  NRF_SPIM1->ENABLE = 0;
+  NRF_SPIM2->ENABLE = 0;
+  NRF_SPIM3->ENABLE = 0;
+  NRF_TWIM0->ENABLE = 0;
+  NRF_TWIM1->ENABLE = 0;
+  NRF_UARTE0->ENABLE = 0;
+  NRF_UARTE1->ENABLE = 0;
+  NRF_USBD->ENABLE = 0;
+  NRF_TIMER0->TASKS_STOP = 1;
+  NRF_TIMER1->TASKS_STOP = 1;
+  NRF_TIMER2->TASKS_STOP = 1;
+  NRF_TIMER3->TASKS_STOP = 1;
+  NRF_TIMER4->TASKS_STOP = 1;
+  NRF_RADIO->TASKS_DISABLE = 1;
+  NRF_RADIO->POWER = 0;
+  NRF_NVMC->CONFIG = 0; // disable write
+
+  for (int i = 0; i < 32; i++)
+    nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, i));
+  for (int i = 0; i < 16; i++)
+    nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(1, i));
+}
+
 void board_early_init(void) {
   PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
 
@@ -186,6 +236,8 @@ void board_early_init(void) {
   nrf_gpio_pin_set(15);
   
   nrf_gpio_pin_set(16);
+ 
+  nrf_foad(); 
 
   nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
   nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
@@ -211,4 +263,63 @@ void board_init(void) {
 
   qspi_init(QSPI, BOARD_NOR_FLASH_SIZE);
 #endif
+}
+
+extern void HACK_pmic_kill_ldo(int ldo);
+extern void HACK_pmic_kill_buck(int buck);
+
+void command_systemoff(void) {
+  prompt_command_finish();
+  
+  /* does not seem to change system power consumption */
+  uint8_t da7212_powerdown[] = { 0xFD /* SYSTEM_ACTIVE */, 0 };
+  i2c_use(I2C_DA7212);
+  i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
+  i2c_release(I2C_DA7212);
+  
+  flash_power_down_for_stop_mode();
+
+  // pulls in about 20 uA over above
+  HACK_pmic_kill_ldo(1);
+  HACK_pmic_kill_ldo(2);
+  
+  // does not seem to pull in >10 uA, but does seem to reduce noise, so at
+  // least something is happening there
+  HACK_pmic_kill_buck(2);
+  
+  // pulls in about 100 uA
+  HACK_pmic_kill_buck(1);
+
+  // obviously we never get here if we kill BUCK1.
+  __DSB();
+  __ISB();
+  
+  NRF_POWER->SYSTEMOFF = 1;
+}
+
+void command_wfi_forever(void) {
+  extern void do_wfi();
+  
+  prompt_command_finish();
+  flash_power_down_for_stop_mode();
+
+  // Not __disable_irq -- that doesn't actually stop IRQs from waking us. 
+  // (See comment in src/fw/freertos_application.c.)
+  portENTER_CRITICAL();
+  
+  nrf_foad();
+  NRF_RTC0->TASKS_STOP = 1;
+  NRF_RTC1->TASKS_STOP = 1;
+  NRF_QSPI->TASKS_DEACTIVATE = 1;
+  NRF_QSPI->ENABLE = 0;
+  NRF_NVMC->ICACHECNF &= ~NVMC_ICACHECNF_CACHEEN_Msk;
+  
+  // keep extcomin toggling
+  nrf_gpio_cfg_output(NRF_GPIO_PIN_MAP(1, 15));
+  
+  while (1) {
+    __DSB();
+    __ISB();
+    do_wfi();
+  }
 }
