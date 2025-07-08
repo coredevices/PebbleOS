@@ -978,7 +978,7 @@ elif mcu_family == 'SF32LB52':
         name='driver_i2c',
         source=[
             'i2c.c',
-            'stubs/i2c.c',
+            'sf32lb52/i2c_hal.c',
         ],
         use=[
             'fw_includes',
