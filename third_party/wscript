@@ -17,6 +17,7 @@ def build(bld):
     bld.recurse('nanopb')
     bld.recurse('tinymt')
     bld.recurse('qr_code_generator')
+    bld.recurse('nonfree')
 
     if bld.env.MICRO_FAMILY.startswith('STM32'):
         bld.recurse('hal_stm32')

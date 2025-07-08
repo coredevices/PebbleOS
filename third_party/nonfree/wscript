@@ -1,0 +1,10 @@
+def build(bld):
+    if bld.is_asterix():
+        bld.read_stlib(
+            'nrf_fuel_gauge',
+            export_includes=[
+                'pebbleos-nonfree/npm1300/nrf_fuel_gauge/include',
+                'pebbleos-nonfree/npm1300/models'
+            ],
+            paths=['pebbleos-nonfree/npm1300/nrf_fuel_gauge/lib/cortex-m4/soft-float']
+        )
