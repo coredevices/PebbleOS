@@ -376,6 +376,7 @@ if bld.env.QEMU:
         source=[
             'battery/battery_adc_conversion.c',
             'battery/battery_common.c',
+            'battery/battery_voltage_monitor.c',
             'qemu/qemu_battery.c',
         ],
         use=[
@@ -393,6 +394,7 @@ elif bld.is_tintin():
             'battery/battery_adc_conversion.c',
             'battery/battery_common.c',
             'battery/battery_tintin.c',
+            'battery/battery_voltage_monitor.c',
         ],
         use=[
             'driver_exti',
@@ -436,6 +438,7 @@ else:
             'battery/battery_adc_conversion.c',
             'battery/battery_common.c',
             'battery/battery_pmic.c',
+            'battery/battery_voltage_monitor.c',
         ],
         use=[
             'driver_gpio',
