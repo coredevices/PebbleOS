@@ -128,7 +128,6 @@ typedef const struct I2CBus I2CBus;
 typedef const struct I2CSlavePort I2CSlavePort;
 typedef const struct HRMDevice HRMDevice;
 typedef const struct VoltageMonitorDevice VoltageMonitorDevice;
-typedef const struct TemperatureSensor TemperatureSensor;
 typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;

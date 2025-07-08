@@ -18,9 +18,12 @@
 
 #include <stdint.h>
 
-void temperature_init(void);
+#include "board/board.h"
 
-// Get the temperature in millidegrees-C
-// WARNING: the temperature sensor may not be calibrated and thus this reading
-// should not be relied on to get a true representation of absolute temperature
-int32_t temperature_read(void);
+struct AnalogTemperatureSensor {
+  const VoltageMonitorDevice *voltage_monitor;
+  int32_t millivolts_ref;
+  int32_t millidegrees_ref;
+  int32_t slope_numerator;
+  int32_t slope_denominator;
+};

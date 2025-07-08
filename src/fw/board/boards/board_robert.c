@@ -27,7 +27,7 @@
 #include "drivers/stm32f2/spi_definitions.h"
 #include "drivers/stm32f7/i2c_hal_definitions.h"
 #include "drivers/stm32f7/uart_definitions.h"
-#include "drivers/temperature.h"
+#include "drivers/temperature/analog.h"
 #include "drivers/touch/ewd1000/touch_sensor_definitions.h"
 #include "drivers/voltage_monitor.h"
 #include "flash_region/flash_region.h"
@@ -527,14 +527,14 @@ VoltageMonitorDevice * const VOLTAGE_MONITOR_TEMPERATURE = &VOLTAGE_MONITOR_TEMP
 
 // Temperature sensor
 
-const TemperatureSensor TEMPERATURE_SENSOR_DEVICE = {
+const AnalogTemperatureSensor TEMPERATURE_SENSOR_DEVICE = {
   .voltage_monitor = &VOLTAGE_MONITOR_TEMPERATURE_DEVICE,
   .millivolts_ref = 760,
   .millidegrees_ref = 25000,
   .slope_numerator = 5,
   .slope_denominator = 2000,
 };
-const TemperatureSensor * const TEMPERATURE_SENSOR = &TEMPERATURE_SENSOR_DEVICE;
+const AnalogTemperatureSensor * const TEMPERATURE_SENSOR = &TEMPERATURE_SENSOR_DEVICE;
 
 
 //
