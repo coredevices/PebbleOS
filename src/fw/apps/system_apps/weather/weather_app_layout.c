@@ -104,8 +104,8 @@ static const GPoint s_gps_arrow_path_points[] = {
 };
 
 static void prv_draw_gps_arrow_node_callback(GContext *ctx, const GRect *rect,
-                                             UNUSED const GTextNodeDrawConfig *config, bool render,
-                                             GSize *size_out, UNUSED void *user_data) {
+                                             PBL_UNUSED const GTextNodeDrawConfig *config, bool render,
+                                             GSize *size_out, PBL_UNUSED void *user_data) {
   GPath gps_arrow_path = (GPath) {
       .num_points = ARRAY_LENGTH(s_gps_arrow_path_points),
       .points = (GPoint *)s_gps_arrow_path_points,

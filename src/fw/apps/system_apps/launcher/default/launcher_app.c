@@ -62,7 +62,7 @@ static void prv_will_focus(bool in_focus) {
 ////////////////////////////////
 // AppMenuDataSource callbacks
 
-static bool prv_app_filter_callback(UNUSED AppMenuDataSource *source, AppInstallEntry *entry) {
+static bool prv_app_filter_callback(PBL_UNUSED AppMenuDataSource *source, AppInstallEntry *entry) {
   // Skip watchfaces and hidden apps
   return (!app_install_entry_is_watchface(entry) && !app_install_entry_is_hidden((entry)));
 }

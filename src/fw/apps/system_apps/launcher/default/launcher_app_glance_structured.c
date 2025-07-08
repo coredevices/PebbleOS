@@ -43,8 +43,8 @@ typedef struct GenericGlanceIconDrawCommandProcessor {
 
 static void prv_structured_glance_icon_draw_command_processor_process_command(
     GDrawCommandProcessor *processor, GDrawCommand *processed_command,
-    UNUSED size_t processed_command_max_size, UNUSED const GDrawCommandList *list,
-    UNUSED const GDrawCommand *command) {
+    PBL_UNUSED size_t processed_command_max_size, PBL_UNUSED const GDrawCommandList *list,
+    PBL_UNUSED const GDrawCommand *command) {
   GenericGlanceIconDrawCommandProcessor *processor_with_data =
       (GenericGlanceIconDrawCommandProcessor *)processor;
   const GColor8 *luminance_tint_lookup_table = processor_with_data->luminance_tint_lookup_table;
@@ -73,8 +73,8 @@ typedef struct GenericGlanceIconBitmapProcessor {
 } GenericGlanceIconBitmapProcessor;
 
 static void prv_strucutred_glance_icon_bitmap_processor_pre_func(
-    GBitmapProcessor *processor, GContext *ctx, UNUSED const GBitmap **bitmap_to_use,
-    UNUSED GRect *global_grect_to_use) {
+    GBitmapProcessor *processor, GContext *ctx, PBL_UNUSED const GBitmap **bitmap_to_use,
+    PBL_UNUSED GRect *global_grect_to_use) {
   GenericGlanceIconBitmapProcessor *processor_with_data =
       (GenericGlanceIconBitmapProcessor *)processor;
   // Save the current compositing mode and tint color
@@ -86,8 +86,8 @@ static void prv_strucutred_glance_icon_bitmap_processor_pre_func(
 }
 
 static void prv_structured_glance_icon_bitmap_processor_post_func(
-    GBitmapProcessor *processor, GContext *ctx, UNUSED const GBitmap *bitmap_used,
-    UNUSED const GRect *global_clipped_grect_used) {
+    GBitmapProcessor *processor, GContext *ctx, PBL_UNUSED const GBitmap *bitmap_used,
+    PBL_UNUSED const GRect *global_clipped_grect_used) {
   GenericGlanceIconBitmapProcessor *processor_with_data =
     (GenericGlanceIconBitmapProcessor *)processor;
   // Restore the saved compositing mode and tint color
@@ -134,7 +134,7 @@ void launcher_app_glance_structured_draw_icon(LauncherAppGlanceStructured *struc
 }
 
 static void prv_structured_glance_icon_node_draw_cb(GContext *ctx, const GRect *rect,
-                                                    UNUSED const GTextNodeDrawConfig *config,
+                                                    PBL_UNUSED const GTextNodeDrawConfig *config,
                                                     bool render, GSize *size_out, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   KinoReel *icon = NULL;
@@ -187,8 +187,8 @@ static GTextNode *prv_structured_glance_create_text_node(
 }
 
 static void prv_structured_glance_title_dynamic_text_node_update(
-    UNUSED GContext *ctx, UNUSED GTextNode *node, UNUSED const GRect *box,
-    UNUSED const GTextNodeDrawConfig *config, UNUSED bool render, char *buffer, size_t buffer_size,
+    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
     void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   const char *title = NULL;
@@ -429,7 +429,7 @@ static NOINLINE GTextNode *prv_create_structured_glance_node(
 }
 
 static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
-                               UNUSED KinoReelProcessor *processor) {
+                               PBL_UNUSED KinoReelProcessor *processor) {
   LauncherAppGlanceStructured *structured_glance = kino_reel_custom_get_data(reel);
   if (!structured_glance) {
     return;

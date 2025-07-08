@@ -230,8 +230,8 @@ void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection
                                     GRect *frame) {
   const GSize size = timeline_resources_get_gsize(TimelineResourceSizeTiny);
   const bool is_future = (scroll_direction == TimelineScrollDirectionDown);
-  UNUSED const int offset_y_rect = -5;
-  UNUSED const int offset_y_round = is_future ? 40 : 17; // Center the icon in the display
+  PBL_UNUSED const int offset_y_rect = -5;
+  PBL_UNUSED const int offset_y_round = is_future ? 40 : 17; // Center the icon in the display
   const GPoint origin = {
     .x = bounds->size.w - size.w + 2,
     .y = PBL_IF_RECT_ELSE(offset_y_rect, offset_y_round),
@@ -497,7 +497,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
 
   const char *secondary_text = prv_get_secondary_text(layout);
   const bool is_fat = (layout->layout_layer.mode == LayoutLayerModePinnedFat);
-  UNUSED const bool is_thin = (layout->layout_layer.mode == LayoutLayerModePinnedThin);
+  PBL_UNUSED const bool is_thin = (layout->layout_layer.mode == LayoutLayerModePinnedThin);
   const TimelineLayoutStyle *style = prv_get_style();
   const bool thin_can_have_secondary = style->thin_can_have_secondary;
   const bool has_secondary =
@@ -649,7 +649,7 @@ static void prv_get_card_view_bounds(TimelineLayout *layout, GRect *box_out) {
 static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, GSize *size_out) {
   const bool is_card = (layout->layout_layer.mode == LayoutLayerModeCard);
   const bool is_peek = (layout->layout_layer.mode == LayoutLayerModePeek);
-  const bool UNUSED paging = PBL_IF_ROUND_ELSE((is_card || is_peek), false);
+  const bool PBL_UNUSED paging = PBL_IF_ROUND_ELSE((is_card || is_peek), false);
   GRect box;
   (is_card ? prv_get_card_view_bounds : prv_get_pin_view_bounds)(layout, &box);
   graphics_context_set_text_color(

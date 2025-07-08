@@ -112,12 +112,12 @@ static void prv_timeline_peek_update_proc(Layer *layer, GContext *ctx) {
   prv_draw_background(ctx, &peek->layout_layer.frame, num_concurrent);
 }
 
-static void prv_redraw(void *UNUSED data) {
+static void prv_redraw(void *PBL_UNUSED data) {
   TimelinePeek *peek = &s_peek;
   layer_mark_dirty(&peek->layout_layer);
 }
 
-static void prv_cron_callback(CronJob *job, void *UNUSED data) {
+static void prv_cron_callback(CronJob *job, void *PBL_UNUSED data) {
   launcher_task_add_callback(prv_redraw, NULL);
   cron_job_schedule(job);
 }
