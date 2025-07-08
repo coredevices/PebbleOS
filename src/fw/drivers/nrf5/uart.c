@@ -21,6 +21,10 @@
 #endif
 
 
+//#define NRF_FOAD return;
+
+#define NRF_FOAD
+
 // UART: 8n1, duplex
 
 static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx);
@@ -31,7 +35,7 @@ void uart_init(UARTDevice *dev) {
   NRF_UARTE0->TASKS_STOPRX = 1;
   NRF_UARTE0->TASKS_STOPTX = 1;
   NRF_UARTE0->ENABLE = 0;
-  return;
+  NRF_FOAD
   nrfx_uarte_config_t config = {
     .txd_pin = dev->tx_gpio,
     .rxd_pin = dev->rx_gpio,
@@ -111,12 +115,12 @@ void uart_init_rx_only(UARTDevice *dev) {
 }
 
 void uart_deinit(UARTDevice *dev) {
-  return;
+  NRF_FOAD
   nrfx_uarte_uninit(&dev->periph);
 }
 
 void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
-  return;
+  NRF_FOAD
   nrf_uarte_baudrate_t baud_cfg =
 #define MKBAUD(b) (baud_rate == b) ? NRF_UARTE_BAUDRATE_##b :
     MKBAUD(1200)
@@ -167,7 +171,7 @@ void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void uart_write_byte(UARTDevice *dev, uint8_t data) {
-  return;
+  NRF_FOAD
   /* XXX: nRF5 can run either a PIO UART or a DMA, but not tx-as-PIO /
    * rx-as-DMA.  we could create our own linked TX buffer, but it is not
    * really performance critical for now.  so for now we will do a blocking
@@ -227,32 +231,32 @@ bool uart_is_tx_complete(UARTDevice *dev) {
 }
 
 void uart_wait_for_tx_complete(UARTDevice *dev) {
-  return;
+  NRF_FOAD
   while (!uart_is_tx_complete(dev)) continue;
 }
 
 
 void uart_set_rx_interrupt_handler(UARTDevice *dev, UARTRXInterruptHandler irq_handler) {
-  return;
+  NRF_FOAD
   PBL_ASSERTN(dev->state->initialized);
   dev->state->rx_irq_handler = irq_handler;
 }
 
 void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_handler) {
-  return;
+  NRF_FOAD
   PBL_ASSERTN(dev->state->initialized);
   WTF; /* accessory only, for now */
   dev->state->tx_irq_handler = irq_handler;
 }
 
 void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  return;
+  NRF_FOAD
   PBL_ASSERTN(dev->state->initialized);
   dev->state->rx_int_enabled = enabled;
 }
 
 void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  return;
+  NRF_FOAD
   PBL_ASSERTN(dev->state->initialized);
   WTF;
 }
@@ -270,7 +274,7 @@ void uart_clear_all_interrupt_flags(UARTDevice *dev) {
 #define GET_SUBBUF_P(dev, n) (dev->state->rx_dma_buffer + dev->state->rx_dma_length * (n))
 
 static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx) {
-  return;
+  NRF_FOAD
   UARTDevice *dev = (UARTDevice *)ctx;
   bool should_context_switch = false;
 
@@ -342,7 +346,7 @@ static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx) {
 }
 
 void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
-  return;
+  NRF_FOAD
   /* the nRF5 model of DMA is sort of annoying.  what we do is we split the
    * buffer in half, and double-buffer, swapping back and forth while
    * triggering the RXSTOP -> RXSTART shortcut; every time we get a RXDRDY,
