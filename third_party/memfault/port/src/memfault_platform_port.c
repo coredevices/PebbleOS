@@ -18,6 +18,7 @@
 #include "services/common/clock.h"
 #include "services/common/new_timer/new_timer.h"
 #include "system/logging.h"
+#include "system/version.h"
 
 // Buffer used to store formatted string for output
 #define MEMFAULT_DEBUG_LOG_BUFFER_SIZE_BYTES \
@@ -42,8 +43,8 @@ void memfault_platform_get_device_info(sMemfaultDeviceInfo *info) {
   *info = (sMemfaultDeviceInfo){
     .device_serial = (mfg_serial_number[0] != '\0') ? mfg_serial_number : "unknown",
     .hardware_version = (mfg_hw_rev[0] != '\0') ? mfg_hw_rev : "unknown",
-    .software_type = "qemu-app",
-    .software_version = "1.0.0",
+    .software_type = "pebbleos",
+    .software_version = TINTIN_METADATA.version_tag,
   };
 }
 
