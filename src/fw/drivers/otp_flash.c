@@ -21,6 +21,10 @@
 #define OTP_SLOT_SIZE 32U
 #define SEC_REG_IDX 0x0U
 
+bool cd_flash_active(void);
+status_t cd_flash_read_security_register(uint32_t addr, uint8_t *val);
+status_t cd_flash_security_registers_are_locked(bool *locked);
+
 static char s_slot[NUM_OTP_SLOTS][OTP_SLOT_SIZE];
 
 char * otp_get_slot(const uint8_t index) {
@@ -37,8 +41,13 @@ char * otp_get_slot(const uint8_t index) {
   }
 
   for (uint8_t i = 0U; i < OTP_SLOT_SIZE; i++) {
-    ret = flash_read_security_register(info->sec_regs[SEC_REG_IDX] + index * OTP_SLOT_SIZE + i,
-                                       (uint8_t *)&s_slot[index][i]);
+    if (cd_flash_active()) {
+      ret = cd_flash_read_security_register(info->sec_regs[SEC_REG_IDX] + index * OTP_SLOT_SIZE + i,
+                                            (uint8_t *)&s_slot[index][i]);
+    } else {
+      ret = flash_read_security_register(info->sec_regs[SEC_REG_IDX] + index * OTP_SLOT_SIZE + i,
+                                         (uint8_t *)&s_slot[index][i]);
+    }
     if (ret != S_SUCCESS) {
       return NULL;
     }
@@ -55,7 +64,11 @@ bool otp_is_locked(const uint8_t index) {
   status_t ret;
   bool locked;
 
-  ret = flash_security_registers_are_locked(&locked);
+  if (cd_flash_active()) {
+    ret = cd_flash_security_registers_are_locked(&locked);
+  } else {
+    ret = flash_security_registers_are_locked(&locked);
+  }
   if (ret != S_SUCCESS) {
     return false;
   }
