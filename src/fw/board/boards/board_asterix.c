@@ -12,7 +12,6 @@
 #include "drivers/qspi_definitions.h"
 #include "drivers/rtc.h"
 #include "drivers/temperature.h"
-#include "drivers/voltage_monitor.h"
 #include "flash_region/flash_region.h"
 #include "kernel/util/sleep.h"
 #include "system/passert.h"
