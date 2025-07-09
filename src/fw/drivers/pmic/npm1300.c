@@ -35,6 +35,13 @@ typedef enum {
   PmicRegisters_VBUSIN_VBUSINSTATUS__VBUSINPRESENT = 1,
   PmicRegisters_BCHARGER_BCHGENABLESET = 0x0304,
   PmicRegisters_BCHARGER_BCHGENABLECLR = 0x0305,
+  PmicRegisters_BCHARGER_BCHGISETMSB = 0x0308,
+  PmicRegisters_BCHARGER_BCHGISETLSB = 0x0309,
+  PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB = 0x030A,
+  PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB = 0x30B,
+  PmicRegisters_BCHARGER_BCHGITERMSEL = 0x030F,
+  PmicRegisters_BCHARGER_BCHGITERMSEL__SEL10 = 0U,
+  PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20 = 1U,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS = 0x0334,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__BATTERYDETECTED = 1,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__COMPLETED = 2,
@@ -74,6 +81,11 @@ typedef enum {
   PmicRegisters_SHIP_SHPHLDCONFIG = 0x0B04,
   PmicRegisters_SHIP_SHPHLDCONFIG__SHPHLDTIM_96MS = 3,
 } PmicRegisters;
+
+#define NPM1300_BCHGISETDISCHARGEMSB_200MA 42U
+#define NPM1300_BCHGISETDISCHARGELSB_200MA 0U
+#define NPM1300_BCHGISETDISCHARGEMSB_1000MA 207U
+#define NPM1300_BCHGISETDISCHARGELSB_1000MA 1U
 
 void battery_init(void) {
 }
@@ -143,6 +155,7 @@ static void prv_configure_interrupts(void) {
 
 bool pmic_init(void) {
   bool ok = true;
+  uint8_t val;
 
   s_i2c_lock = mutex_create();
   s_debounce_charger_timer = new_timer_create();
@@ -182,6 +195,47 @@ bool pmic_init(void) {
 
   ok &= prv_write_register(PmicRegisters_SHIP_SHPHLDCONFIG, PmicRegisters_SHIP_SHPHLDCONFIG__SHPHLDTIM_96MS);
   ok &= prv_write_register(PmicRegisters_SHIP_TASKSHPHLDCFGSTROBE, 1);
+
+  if ((NPM1300_CONFIG.chg_current_ma < 32U) || (NPM1300_CONFIG.chg_current_ma > 800U) ||
+      (NPM1300_CONFIG.chg_current_ma % 2U != 0U)) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Invalid charge current: %d mA", NPM1300_CONFIG.chg_current_ma);
+    return false;
+  }
+
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGENABLECLR, 1);
+
+  val = (uint8_t)(NPM1300_CONFIG.chg_current_ma / 4U);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETMSB, val);
+  val = (NPM1300_CONFIG.chg_current_ma / 2U) % 2U;
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETLSB, val);
+
+  if (NPM1300_CONFIG.dischg_limit_ma == 200) {
+    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
+                             NPM1300_BCHGISETDISCHARGEMSB_200MA);
+    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
+                             NPM1300_BCHGISETDISCHARGELSB_200MA);
+  } else if (NPM1300_CONFIG.dischg_limit_ma == 1000) {
+    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
+			     NPM1300_BCHGISETDISCHARGEMSB_1000MA);
+    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
+			     NPM1300_BCHGISETDISCHARGELSB_1000MA);
+  } else {
+    PBL_LOG(LOG_LEVEL_ERROR, "Invalid discharge limit: %d mA", NPM1300_CONFIG.dischg_limit_ma);
+    return false;
+  }
+
+  if (NPM1300_CONFIG.term_current_pct == 10U) {
+    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
+                             PmicRegisters_BCHARGER_BCHGITERMSEL__SEL10);
+  } else if(NPM1300_CONFIG.term_current_pct == 20U) {
+    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
+                             PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20);
+  } else {
+    PBL_LOG(LOG_LEVEL_ERROR, "Invalid termination current: %d", NPM1300_CONFIG.term_current_pct);
+    return false;
+  }
+
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGENABLESET, 1);
 
   prv_configure_interrupts();
 
