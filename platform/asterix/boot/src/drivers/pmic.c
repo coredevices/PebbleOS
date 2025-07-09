@@ -37,6 +37,15 @@
 #define BCHGVTERMR 0x0DU
 #define BCHGVTERMREDUCED_4V00 0x4U
 
+#define NTCCOLD 0x10U
+#define NTCCOLDLSB 0x11U
+#define NTCCOOL 0x12U
+#define NTCCOOLLSB 0x13U
+#define NTCWARM 0x14U
+#define NTCWARMLSB 0x15U
+#define NTCHOT 0x16U
+#define NTCHOTLSB 0x17U
+
 // BUCK
 #define BUCK2ENASET 0x2
 
@@ -168,6 +177,7 @@ int pmic_init(void) {
     //   safety timers) -- this doesn't happen in a loop because after we
     //   fail to boot three times, we will sit at sadwatch until a button is
     //   pressed
+    // - Set COLD/COOL/WARM/HOT tresholds to 0/10/45/45 degrees Celsius
     // - Enable charging
     { VBUSIN_BASE, VBUSINILIMSTARTUP, VBUSLIM_500MA }, // should be default, but 'reset value from OTP, value listed in this table may not be correct'
     { CHARGER_BASE, BCHGENABLECLR, ENABLECHARGING_DISABLECHG },
@@ -178,6 +188,14 @@ int pmic_init(void) {
     { CHARGER_BASE, BCHGISETDISCHARGEMSB, 42 },
     { CHARGER_BASE, TASKCLEARCHGERR, 1 },
     { CHARGER_BASE, TASKRELEASEERROR, 1 },
+    { CHARGER_BASE, NTCCOLD, 0xBBU },
+    { CHARGER_BASE, NTCCOLDLSB, 0x01U },
+    { CHARGER_BASE, NTCCOOL, 0xA4U },
+    { CHARGER_BASE, NTCCOOLLSB, 0x02U },
+    { CHARGER_BASE, NTCWARM, 0x54U },
+    { CHARGER_BASE, NTCWARMLSB, 0x01U },
+    { CHARGER_BASE, NTCHOT, 0x54U },
+    { CHARGER_BASE, NTCHOTLSB, 0x01U },
     { CHARGER_BASE, BCHGENABLESET, ENABLECHARGING_ENABLECHG },
 
     // LDO1 as LDO @ 1.8V (powers the DA7212 ... do not back power it through I/O pins, and it must always be on because sensors share I2C bus with it!)
