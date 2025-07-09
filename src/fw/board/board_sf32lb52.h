@@ -88,6 +88,22 @@ typedef struct {
   int flags;
 } Pinmux;
 
+typedef struct {
+  GPT_HandleTypeDef handle;
+  GPT_ClockConfigTypeDef clock_config;
+  uint16_t value;
+  uint16_t resolution;
+  int enabled;
+  uint16_t channel;
+  uint8_t  is_comp;
+} PwmState;
+
+typedef struct {
+  Pinmux pwm_pin;
+  PwmState *state;
+} PwmConfig;
+
+
 typedef enum {
   ActuatorOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable vibe
   ActuatorOptions_Pwm = 1 << 1, ///< PWM control
