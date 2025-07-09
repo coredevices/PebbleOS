@@ -22,8 +22,6 @@
 
 #define NRF5_COMPATIBLE
 #include <mcu.h>
-#include <nrfx_ppi.h>
-#include <hal/nrf_rtc.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -55,8 +53,6 @@ static SemaphoreHandle_t s_dma_update_in_progress_semaphore;
 
 static void prv_display_context_init(DisplayContext* context);
 static bool prv_do_dma_update(void);
-
-static const unsigned int DISPLAY_TOGGLE_HZ = 60;
 
 static void prv_enable_chip_select(void) {
   gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, true);
@@ -158,46 +154,10 @@ void display_init(void) {
 
   prv_display_start();
 
-  // Set up the RTC to tick at 60Hz, like Zephyr does.  Some boards will
-  // reuse the WDT RTC for this.
-  if (BOARD_CONFIG_DISPLAY.extcomin_rtc == BOARD_WATCHDOG_RTC_INST) {
-    PBL_ASSERTN(DISPLAY_TOGGLE_HZ == BOARD_WATCHDOG_RTC_FREQUENCY);
-  }
-  nrf_rtc_prescaler_set(BOARD_CONFIG_DISPLAY.extcomin_rtc, NRF_RTC_FREQ_TO_PRESCALER(DISPLAY_TOGGLE_HZ));
-  nrf_rtc_task_trigger(BOARD_CONFIG_DISPLAY.extcomin_rtc, NRF_RTC_TASK_START);
-  nrf_rtc_event_enable(BOARD_CONFIG_DISPLAY.extcomin_rtc, NRF_RTC_EVENT_TICK);
-  
-  uint32_t event = nrf_rtc_event_address_get(BOARD_CONFIG_DISPLAY.extcomin_rtc, NRF_RTC_EVENT_TICK);
-  
-  // Set up a GPIOTE channel to toggle the EXTCOMIN pin.
-  nrfx_err_t err;
-
-  if (!nrfx_gpiote_init_check(&BOARD_CONFIG_DISPLAY.extcomin_pin.peripheral)) {
-    err = nrfx_gpiote_init(&BOARD_CONFIG_DISPLAY.extcomin_pin.peripheral, NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY);
-    PBL_ASSERTN(err == NRFX_SUCCESS);
-  }
-  
-  nrfx_gpiote_output_config_t out_cfg = {
-    .drive = NRF_GPIO_PIN_S0S1, 
-    .input_connect = NRF_GPIO_PIN_INPUT_DISCONNECT,
-    .pull = NRF_GPIO_PIN_NOPULL,
-  };
-  nrfx_gpiote_task_config_t task_cfg = {
-    .task_ch = BOARD_CONFIG_DISPLAY.extcomin_pin.channel,
-    .polarity = NRF_GPIOTE_POLARITY_TOGGLE,
-    .init_val = NRF_GPIOTE_INITIAL_VALUE_LOW,
-  };
-  err = nrfx_gpiote_output_configure(&BOARD_CONFIG_DISPLAY.extcomin_pin.peripheral, BOARD_CONFIG_DISPLAY.extcomin_pin.gpio_pin, &out_cfg, &task_cfg);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  
-  uint32_t task = nrfx_gpiote_out_task_address_get(&BOARD_CONFIG_DISPLAY.extcomin_pin.peripheral, BOARD_CONFIG_DISPLAY.extcomin_pin.gpio_pin);
-  
-  // Wire the RTC TICK event to trigger the GPIOTE.
-  nrf_ppi_channel_t extcomin_channel;
-  err = nrfx_ppi_channel_alloc(&extcomin_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  nrfx_ppi_channel_assign(extcomin_channel, event, task);
-  nrfx_ppi_channel_enable(extcomin_channel);
+  // Generate PWM signal for EXTCOMIN (120Hz, ~100us pulse width)
+  pwm_init(&BOARD_CONFIG_DISPLAY.extcomin, 125000 / 120, 125000);
+  pwm_set_duty_cycle(&BOARD_CONFIG_DISPLAY.extcomin, (100U * 125000UL) / 1000000UL);
+  pwm_enable(&BOARD_CONFIG_DISPLAY.extcomin, true);
 
   s_initialized = true;
 }
