@@ -1,5 +1,6 @@
 #pragma once
 
+#include "drivers/pmic/npm1300.h"
 #include "services/imu/units.h"
 #include "util/size.h"
 
@@ -254,3 +255,5 @@ extern I2CSlavePort * const I2C_DA7212;
 extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_BMP390;
 extern I2CSlavePort * const I2C_LSM6D;
+
+extern const Npm1300Config NPM1300_CONFIG;
