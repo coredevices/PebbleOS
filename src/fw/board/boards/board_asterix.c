@@ -8,6 +8,7 @@
 #include "drivers/nrf5/i2c_hal_definitions.h"
 #include "drivers/nrf5/spi_definitions.h"
 #include "drivers/nrf5/uart_definitions.h"
+#include "drivers/pmic/npm1300.h"
 #include "drivers/pwm.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/rtc.h"
@@ -195,6 +196,13 @@ PwmState BACKLIGHT_PWM_STATE;
 IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
 
 IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
+
+const Npm1300Config NPM1300_CONFIG = {
+  .chg_current_ma = 152,
+  .dischg_limit_ma = 200,
+  .term_current_pct = 10,
+  .thermistor_beta = 3380,
+};
 
 void board_early_init(void) {
   PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
