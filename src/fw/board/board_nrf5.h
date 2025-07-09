@@ -323,8 +323,7 @@ typedef struct {
   const OutputConfig on_ctrl;
   const nrf_gpio_pin_drive_t on_ctrl_otype;
 
-  const GpioteConfig extcomin_pin;
-  NRF_RTC_Type *const extcomin_rtc;
+  const PwmConfig extcomin;
 } BoardConfigSharpDisplay;
 
 typedef const struct DMARequest DMARequest;

@@ -8,12 +8,8 @@
 
 #define BOARD_LSE_MODE RCC_LSE_Bypass
 
-// RTC0 is used by NimBLE BLE_PHY
-
 #define BOARD_RTC_INST NRF_RTC1
 #define BOARD_RTC_IRQN RTC1_IRQn
-
-// RTC2 is used by display also
 
 #define BOARD_WATCHDOG_RTC_INST NRF_RTC2
 #define BOARD_WATCHDOG_RTC_IRQN RTC2_IRQn
@@ -232,6 +228,7 @@ static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   },
 };
 
+extern PwmState DISPLAY_EXTCOMIN_STATE;
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),
 
@@ -241,11 +238,10 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
 
   .on_ctrl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true },
 
-  .extcomin_rtc = BOARD_WATCHDOG_RTC_INST,
-  .extcomin_pin = {
-    .peripheral = NRFX_GPIOTE_INSTANCE(0),
-    .channel = 7,
-    .gpio_pin = NRF_GPIO_PIN_MAP(1, 15),
+  .extcomin = {
+    .state = &DISPLAY_EXTCOMIN_STATE,
+    .output = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 15), true },
+    .peripheral = NRFX_PWM_INSTANCE(1),
   },
 };
 
