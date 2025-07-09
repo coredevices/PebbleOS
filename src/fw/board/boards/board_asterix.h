@@ -11,11 +11,6 @@
 #define BOARD_RTC_INST NRF_RTC1
 #define BOARD_RTC_IRQN RTC1_IRQn
 
-#define BOARD_WATCHDOG_RTC_INST NRF_RTC2
-#define BOARD_WATCHDOG_RTC_IRQN RTC2_IRQn
-#define BOARD_WATCHDOG_RTC_IRQHANDLER RTC2_IRQHandler
-#define BOARD_WATCHDOG_RTC_FREQUENCY 60 // Some boards may prefer 32768, but we reuse the RTC.TICK for the display
-
 static const BoardConfig BOARD_CONFIG = {
   .ambient_light_dark_threshold = 100,
   .ambient_k_delta_threshold = 30,
