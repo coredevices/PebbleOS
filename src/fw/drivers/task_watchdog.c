@@ -52,7 +52,6 @@
 
 #if MICRO_FAMILY_NRF5
 #include <hal/nrf_rtc.h>
-#include "board/board.h"
 #endif
 
 #define APP_THROTTLE_TIME_MS 300
@@ -74,7 +73,7 @@ static TimerID s_throttle_timer_id = TIMER_INVALID_ID;
 #define TIMER_INTERRUPT_HZ  2
 // The frequency to run the peripheral at
 #if MICRO_FAMILY_NRF5
-#define TIMER_CLOCK_HZ BOARD_WATCHDOG_RTC_FREQUENCY
+#define TIMER_CLOCK_HZ 32768
 #else
 #define TIMER_CLOCK_HZ 32000
 #endif
@@ -166,11 +165,11 @@ static void prv_log_failed_message(RebootReason *reboot_reason) {
 // The Timer ISR. This runs at super high priority (higher than configMAX_SYSCALL_INTERRUPT_PRIORITY), so
 // it is not safe to call ANY FreeRTOS functions from here.
 #if MICRO_FAMILY_NRF5
-void BOARD_WATCHDOG_RTC_IRQHANDLER(void) {
-  nrf_rtc_event_clear(BOARD_WATCHDOG_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_task_trigger(BOARD_WATCHDOG_RTC_INST, NRF_RTC_TASK_CLEAR);
-  nrf_rtc_int_enable(BOARD_WATCHDOG_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
-  nrf_rtc_event_enable(BOARD_WATCHDOG_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+void RTC2_IRQHandler(void) {
+  nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
+  nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK);
+  nrf_rtc_event_enable(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
 
   s_ticks_since_successful_feed++;
   prv_task_watchdog_feed();
@@ -280,24 +279,20 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
 // which resets the watchdog timer if it detects that none of our watchable tasks are stuck.
 void task_watchdog_init(void) {
 #if MICRO_FAMILY_NRF5
-  // We use RTC2 as the WDT kicker; RTC1 is used by the OS RTC, and RTC0
-  // belongs to NimBLE.  Annoyingly, we're out of RTCs on nRF52, and we'd
-  // really like one more to use the TICK event to trigger the GPIOTE for
-  // VCOM, so we also reuse RTC2 for that, allowing the board to set the
-  // underlying RTC frequency.
-  nrf_rtc_prescaler_set(BOARD_WATCHDOG_RTC_INST, NRF_RTC_FREQ_TO_PRESCALER(BOARD_WATCHDOG_RTC_FREQUENCY));
+  // We use RTC2 as the WDT kicker; RTC1 is used by the OS RTC
+  nrf_rtc_prescaler_set(NRF_RTC2, NRF_RTC_FREQ_TO_PRESCALER(TIMER_CLOCK_HZ));
 
   // trigger compare interrupt at appropriate time
-  nrf_rtc_cc_set(BOARD_WATCHDOG_RTC_INST, 0, TIME_PERIOD);
-  nrf_rtc_event_clear(BOARD_WATCHDOG_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_int_enable(BOARD_WATCHDOG_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
-  nrf_rtc_event_enable(BOARD_WATCHDOG_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_cc_set(NRF_RTC2, 0, TIME_PERIOD);
+  nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
+  nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK);
+  nrf_rtc_event_enable(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
 
-  NVIC_SetPriority(BOARD_WATCHDOG_RTC_IRQN, TASK_WATCHDOG_PRIORITY);
-  NVIC_ClearPendingIRQ(BOARD_WATCHDOG_RTC_IRQN);
-  NVIC_EnableIRQ(BOARD_WATCHDOG_RTC_IRQN);
+  NVIC_SetPriority(RTC2_IRQn, TASK_WATCHDOG_PRIORITY);
+  NVIC_ClearPendingIRQ(RTC2_IRQn);
+  NVIC_EnableIRQ(RTC2_IRQn);
 
-  nrf_rtc_task_trigger(BOARD_WATCHDOG_RTC_INST, NRF_RTC_TASK_START);
+  nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_START);
 #elif MICRO_FAMILY_SF32LB52
 // TODO(SF32LB52): Add implementation
 #else
@@ -367,7 +362,7 @@ void task_watchdog_init(void) {
 
 static void task_watchdog_disable_interrupt() {
 #if MICRO_FAMILY_NRF5
-  NVIC_DisableIRQ(BOARD_WATCHDOG_RTC_IRQN);
+  NVIC_DisableIRQ(RTC2_IRQn);
 #elif MICRO_FAMILY_SF32LB52
 // TODO(SF32LB52): Add implementation
 #else
@@ -379,7 +374,7 @@ static void task_watchdog_disable_interrupt() {
 static void task_watchdog_enable_interrupt() {
   taskEXIT_CRITICAL();
 #if MICRO_FAMILY_NRF5
-  NVIC_EnableIRQ(BOARD_WATCHDOG_RTC_IRQN);
+  NVIC_EnableIRQ(RTC2_IRQn);
 #elif MICRO_FAMILY_SF32LB52
 // TODO(SF32LB52): Add implementation
 #else
