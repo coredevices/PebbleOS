@@ -15,32 +15,38 @@
  */
 
 #include "drivers/rng.h"
+
 #include "system/passert.h"
 
 #define SF32LB52_COMPATIBLE
 #include "mcu.h"
+static bool s_inited;
+
+static RNG_HandleTypeDef s_rng_hdl = {
+    .Instance = hwp_trng,
+};
 
 bool rng_rand(uint32_t *rand_out) {
   PBL_ASSERTN(rand_out);
-  RNG_HandleTypeDef rng_hdl = {0};
   HAL_StatusTypeDef status;
-
-  rng_hdl.Instance = hwp_trng;
-
-  status = HAL_RNG_Init(&rng_hdl);
-  if (status != HAL_OK) {
-    PBL_LOG(LOG_LEVEL_ERROR, "rng_rand init fail!");
-    return false;
+  if (!s_inited) {
+    status = HAL_RNG_Init(&s_rng_hdl);
+    if (status != HAL_OK) {
+      PBL_LOG(LOG_LEVEL_ERROR, "rng_rand init fail!");
+      return false;
+    }
+    s_inited = true;
   }
-
-  status = HAL_RNG_Generate(&rng_hdl, rand_out, 1);
+  
+  HAL_RCC_EnableModule(RCC_MOD_TRNG);
+  status = HAL_RNG_Generate(&s_rng_hdl, rand_out, 0);
+  HAL_RCC_DisableModule(RCC_MOD_TRNG);
+  
   if (status != HAL_OK) {
-    HAL_RNG_DeInit(&rng_hdl);
+    HAL_RNG_DeInit(&s_rng_hdl);
+    s_inited = false;
     PBL_LOG(LOG_LEVEL_ERROR, "rnd_rand generate fail! %d", status);
     return false;
   }
-
-  HAL_RNG_DeInit(&rng_hdl);
-
   return true;
 }
