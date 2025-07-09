@@ -7,12 +7,19 @@ def build(bld):
 
     def _build_services(bld, sources):
         bld.gettext(source=sources, target='services.pot')
+        use = [
+            'fw_includes',
+            'freertos_includes',
+            'bt_driver',
+            'root_includes'
+        ]
+
+        if bld.is_asterix():
+            use.append('nrf_fuel_gauge')
+
         bld.stlib(source=sources,
                   target='fw_services',
-                  use=['fw_includes',
-                       'freertos_includes',
-                       'bt_driver',
-                       'root_includes'])
+                  use=use)
 
     def _build_normal_recovery_services(bld):
         def _get_excludes(bld):
@@ -29,10 +36,16 @@ def build(bld):
                 excludes.append('normal/vibes/vibe_client.c')
                 excludes.append('normal/vibes/vibe_score.c')
                 excludes.append('normal/vibes/vibe_score_info.c')
+                excludes.append('common/battery/nrf_fuel_gauge/**')
+            elif bld.is_asterix():
+                excludes.append('common/legacy/*registry*.c')
+                excludes.append('common/compositor/default/compositor_modal_transitions.*')
+                excludes.append('common/battery/voltage/**')
             else:
                 excludes.append('common/legacy/*registry*.c')
+                excludes.append('common/battery/nrf_fuel_gauge/**')
                 # FIXME(OBELIX): obelix should not be here
-                if bld.is_silk() or bld.is_asterix() or bld.is_obelix():
+                if bld.is_silk() or bld.is_obelix():
                     excludes.append('common/compositor/default/compositor_modal_transitions.*')
                 else:
                     excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
