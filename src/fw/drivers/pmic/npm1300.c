@@ -1,6 +1,8 @@
 /* Because nPM1300 also has the battery monitor, we implement both the
  * pmic_* and the battery_* API here.  */
 
+#include <math.h>
+
 #include "drivers/pmic.h"
 #include "drivers/battery.h"
 
@@ -24,6 +26,9 @@ static PebbleMutex *s_i2c_lock;
 
 typedef enum {
   PmicRegisters_MAIN_EVENTSADCCLR = 0x0003,
+  PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCVBATRDY = 0x01,
+  PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY = 0x02,
+  PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY = 0x40,
   PmicRegisters_MAIN_EVENTSBCHARGER1CLR = 0x000B,
   PmicRegisters_MAIN_INTENEVENTSBCHARGER1SET = 0x000C,
   PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED = 16,
@@ -54,9 +59,23 @@ typedef enum {
   PmicRegisters_ADC_TASKVSYSMEASURE  = 0x0503,
   PmicRegisters_ADC_TASKIBATMEASURE  = 0x0506,
   PmicRegisters_ADC_TASKVBUS7MEASURE = 0x0507,
+  PmicRegisters_ADC_ADCIBATMEASSTATUS = 0x0510,
+  PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_MASK = 0x0C,
+  PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_DISCHRG = 0x04,
+  PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_CHRG = 0x0C,
   PmicRegisters_ADC_ADCVBATRESULTMSB = 0x0511,
+  PmicRegisters_ADC_ADCNTCRESULTMSB = 0x512,
   PmicRegisters_ADC_ADCVSYSRESULTMSB = 0x0514,
   PmicRegisters_ADC_ADCGP0RESULTLSBS = 0x0515,
+  PmicRegisters_ADC_ADCGP0RESULTLSBS_VBATRESULTLSB_MSK = 0x03,
+  PmicRegisters_ADC_ADCGP0RESULTLSBS_VBATRESULTLSB_POS = 0U,
+  PmicRegisters_ADC_ADCGP0RESULTLSBS_NTCRESULTLSB_MSK = 0x03,
+  PmicRegisters_ADC_ADCGP0RESULTLSBS_NTCRESULTLSB_POS = 2U,
+  PmicRegisters_ADC_ADCVBAT2RESULTMSB = 0x0518,
+  PmicRegisters_ADC_ADCGP1RESULTLSBS = 0x051a,
+  PmicRegisters_ADC_ADCGP1RESULTLSBS_VBAT2RESULTLSB_MSK = 0x03,
+  PmicRegisters_ADC_ADCGP1RESULTLSBS_VBAT2RESULTLSB_POS = 0x04,
+  PmicRegisters_ADC_ADCIBATMEASEN = 0x0524,
   PmicRegisters_GPIOS_GPIOMODE1 = 0x0601,
   PmicRegisters_GPIOS_GPIOMODE__GPOIRQ = 5,
   PmicRegisters_GPIOS_GPIOOPENDRAIN1 = 0x0615,
@@ -86,6 +105,17 @@ typedef enum {
 #define NPM1300_BCHGISETDISCHARGELSB_200MA 0U
 #define NPM1300_BCHGISETDISCHARGEMSB_1000MA 207U
 #define NPM1300_BCHGISETDISCHARGELSB_1000MA 1U
+
+#define NPM1300_BCHARGER_ADC_BITS_RESOLUTION 1023UL
+#define NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL 112
+#define NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV 100
+#define NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL 1250
+#define NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV -1000
+// Full scale voltage for battery voltage measurement
+#define NPM1300_ADC_VFS_VBAT_MV 5000UL
+// ADC MSB shift
+#define NPM1300_ADC_MSB_SHIFT 2U
+
 
 void battery_init(void) {
 }
@@ -195,6 +225,9 @@ bool pmic_init(void) {
 
   ok &= prv_write_register(PmicRegisters_SHIP_SHPHLDCONFIG, PmicRegisters_SHIP_SHPHLDCONFIG__SHPHLDTIM_96MS);
   ok &= prv_write_register(PmicRegisters_SHIP_TASKSHPHLDCFGSTROBE, 1);
+
+  // automatic IBAT measurement after VBAT
+  ok &= prv_write_register(PmicRegisters_ADC_ADCIBATMEASEN, 1);
 
   if ((NPM1300_CONFIG.chg_current_ma < 32U) || (NPM1300_CONFIG.chg_current_ma > 800U) ||
       (NPM1300_CONFIG.chg_current_ma % 2U != 0U)) {
@@ -332,6 +365,119 @@ int battery_get_millivolts(void) {
   uint32_t vbat = vbat_raw * 5000 / 1023;
   
   return vbat;
+}
+
+int battery_get_constants(BatteryConstants *constants) {
+  uint8_t ibat_status;
+  int32_t full_scale_ua;
+  uint8_t msb;
+  uint8_t lsb;
+  uint16_t raw;
+  uint8_t reg;
+
+  // Obtain IBAT full scale
+  if (!prv_read_register(PmicRegisters_ADC_ADCIBATMEASSTATUS, &ibat_status)) {
+    return -1;
+  }
+
+  if (ibat_status & PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_MASK ==
+      PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_CHRG) {
+    full_scale_ua =
+        ((int32_t)NPM1300_CONFIG.chg_current_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL) /
+        NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV;
+  } else {
+    full_scale_ua =
+        ((int32_t)NPM1300_CONFIG.dischg_limit_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
+        NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV;
+  }
+
+  // Clear the ADC ready events for VBAT, IBAT, and NTC
+  if (!prv_write_register(PmicRegisters_MAIN_EVENTSADCCLR,
+                          PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCVBATRDY |
+                          PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY |
+                          PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY)) {
+    return -1;
+  }
+
+  // Trigger VBAT+IBAT measurement (IBATMEASENABLE is enabled)
+  if (!prv_write_register(PmicRegisters_ADC_TASKVBATMEASURE, 1)) {
+    return -1;
+  }
+
+  // Trigger NTC measurement
+  if (!prv_write_register(PmicRegisters_ADC_TASKNTCMEASURE, 1)) {
+    return -1;
+  }
+
+  // Process the VBAT measurement
+  reg = 0U;
+  while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCVBATRDY) == 0U) {
+    if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
+      return -1;
+    }
+  }
+
+  if (!prv_read_register(PmicRegisters_ADC_ADCVBATRESULTMSB, &msb)) {
+    return -1;
+  }
+
+  if (!prv_read_register(PmicRegisters_ADC_ADCGP0RESULTLSBS, &lsb)) {
+    return -1;
+  }
+
+  raw = (msb << NPM1300_ADC_MSB_SHIFT) |
+        ((lsb & PmicRegisters_ADC_ADCGP0RESULTLSBS_VBATRESULTLSB_MSK) >>
+         PmicRegisters_ADC_ADCGP0RESULTLSBS_VBATRESULTLSB_POS);
+
+  constants->v_mv = (raw * NPM1300_ADC_VFS_VBAT_MV) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
+
+  // Process the IBAT measurement
+  while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY) == 0U) {
+    if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
+      return -1;
+    }
+  }
+
+  if (!prv_read_register(PmicRegisters_ADC_ADCVBAT2RESULTMSB, &msb)) {
+    return -1;
+  }
+
+  if (!prv_read_register(PmicRegisters_ADC_ADCGP1RESULTLSBS, &lsb)) {
+    return -1;
+  }
+
+  raw = (msb << NPM1300_ADC_MSB_SHIFT) |
+        ((lsb & PmicRegisters_ADC_ADCGP1RESULTLSBS_VBAT2RESULTLSB_MSK) >>
+         PmicRegisters_ADC_ADCGP1RESULTLSBS_VBAT2RESULTLSB_POS);
+
+  constants->i_ua = (raw * full_scale_ua) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
+
+  // Process the NTC measurement
+  while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY) == 0U) {
+    if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
+      return -1;
+    }
+  }
+
+  if (!prv_read_register(PmicRegisters_ADC_ADCNTCRESULTMSB, &lsb)) {
+    return -1;
+  }
+
+  if (!prv_read_register(PmicRegisters_ADC_ADCGP0RESULTLSBS, &msb)) {
+    return -1;
+  }
+
+  raw = (lsb << NPM1300_ADC_MSB_SHIFT) |
+        ((msb & PmicRegisters_ADC_ADCGP0RESULTLSBS_NTCRESULTLSB_MSK) >>
+         PmicRegisters_ADC_ADCGP0RESULTLSBS_NTCRESULTLSB_POS);
+
+  // Ref: PS v1.2 Section 7.1.4: Battery temperature (Kelvin)
+  float log_result = logf((1024.f / (float)raw) - 1.0f);
+  float inv_temp_k = (1.f / 298.15f) - (log_result / (float)NPM1300_CONFIG.thermistor_beta);
+
+  constants->t_mc = (int32_t)(1000.0f * ((1.f / inv_temp_k) - 273.15f));
+
+  return 0;
 }
 
 bool pmic_set_charger_state(bool enable) {
