@@ -11,6 +11,13 @@ int battery_get_millivolts(void) {
   return 4000;
 }
 
+int battery_get_constants(BatteryConstants *constants) {
+  constants->v_mv = 4000;
+  constants->i_ua = 100;
+  constants->t_mc = 25000;
+  return 0;
+}
+
 bool battery_charge_controller_thinks_we_are_charging_impl(void) {
   return 1;
 }
