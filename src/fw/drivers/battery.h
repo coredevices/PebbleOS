@@ -24,6 +24,19 @@
  * comments are relevant to both snowy and previous generations
  * ********************************************************************/
 
+//! Battery charge status.
+typedef enum {
+  //! Unknown charge status.
+  BatteryChargeStatusUnknown,
+  //! Charging is complete, battery full.
+  BatteryChargeStatusComplete,
+  //! Battery is in trickle charge mode.
+  BatteryChargeStatusTrickle,
+  //! Battery is in constant current charge mode.
+  BatteryChargeStatusCC,
+  //! Battery is in constant voltage charge mode.
+  BatteryChargeStatusCV,
+} BatteryChargeStatus;
 
 //! Battery constants.
 typedef struct BatteryConstants {
@@ -103,3 +116,10 @@ ADCVoltageMonitorReading battery_read_voltage_monitor(void);
 uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading,
                                                uint32_t numerator, uint32_t denominator);
 
+//! Get the current battery charge status.
+//!
+//! @param[out] status The current charge status.
+//!
+//! @retval 0 On success.
+//! @retval error Error code on failure.
+int battery_charge_status_get(BatteryChargeStatus *status);
