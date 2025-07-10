@@ -4,7 +4,7 @@ import waftools.gitinfo
 def build(bld):
     # Collect all the files in the libc directory
     source_dirs = ['string', 'math', 'stub']
-    sources = sum([bld.path.ant_glob('%s/*.[csS]' % d) for d in source_dirs], [])
+    sources = sum([bld.path.ant_glob('%s/**/*.[csS]' % d) for d in source_dirs], [])
     sources.extend(bld.path.ant_glob('*.[csS]'))
 
     def build_libc(target, env):
