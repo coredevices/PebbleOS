@@ -25,6 +25,16 @@
  * ********************************************************************/
 
 
+//! Battery constants.
+typedef struct BatteryConstants {
+  //!< Battery voltage in millivolts.
+  int32_t v_mv;
+  //!< Battery current in microamperes.
+  int32_t i_ua;
+  //!< Battery temperature in millidegrees Celsius.
+  int32_t t_mc;
+} BatteryConstants;
+
 void battery_init(void);
 
 /**
@@ -38,6 +48,16 @@ bool battery_is_present(void);
 /** @returns the battery voltage after smoothing and averaging
  */
 int battery_get_millivolts(void);
+
+/**
+ * Obtain battery constants.
+ *
+ * @param[out] constants
+ *
+ * @retval 0 On success.
+ * @retval error Error code on failure.
+ */
+int battery_get_constants(BatteryConstants *constants);
 
 /** @returns true if the battery charge controller thinks we are charging.
  * This is often INCORRECT on Pebble Steel due to the additional current
