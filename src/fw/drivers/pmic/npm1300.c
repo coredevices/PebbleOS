@@ -380,7 +380,7 @@ int battery_get_constants(BatteryConstants *constants) {
     return -1;
   }
 
-  if (ibat_status & PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_MASK ==
+  if ((ibat_status & PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_MASK) ==
       PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_CHRG) {
     full_scale_ua =
         ((int32_t)NPM1300_CONFIG.chg_current_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL) /
@@ -538,6 +538,36 @@ void set_4V5_power_state(bool enabled) {
 void set_6V6_power_state(bool enabled) {
 }
 
+int battery_charge_status_get(BatteryChargeStatus *status) {
+  uint8_t chg_status;
+
+  if (!prv_read_register(PmicRegisters_BCHARGER_BCHGCHARGESTATUS, &chg_status)) {
+    return -1;
+  }
+
+  switch (chg_status & (PmicRegisters_BCHARGER_BCHGCHARGESTATUS__COMPLETED |
+                        PmicRegisters_BCHARGER_BCHGCHARGESTATUS__TRICKLECHARGE |
+                        PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTCURRENT |
+                        PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTVOLTAGE)) {
+    case PmicRegisters_BCHARGER_BCHGCHARGESTATUS__COMPLETED:
+      *status = BatteryChargeStatusComplete;
+      break;
+    case PmicRegisters_BCHARGER_BCHGCHARGESTATUS__TRICKLECHARGE:
+      *status = BatteryChargeStatusTrickle;
+      break;
+    case PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTCURRENT:
+      *status = BatteryChargeStatusCC;
+      break;
+    case PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTVOLTAGE:
+      *status = BatteryChargeStatusCV;
+      break;
+    default:
+      *status = BatteryChargeStatusUnknown;
+      break;
+  }
+
+  return 0;
+}
 
 void command_pmic_read_registers(void) {
   char buffer[64];
