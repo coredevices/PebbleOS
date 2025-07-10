@@ -18,6 +18,11 @@ int battery_get_constants(BatteryConstants *constants) {
   return 0;
 }
 
+int battery_charge_status_get(BatteryChargeStatus *status) {
+  *status = BatteryChargeStatusUnknown;
+  return 0;
+}
+
 bool battery_charge_controller_thinks_we_are_charging_impl(void) {
   return 1;
 }
