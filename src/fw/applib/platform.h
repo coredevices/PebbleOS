@@ -33,10 +33,9 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeBasalt
   #elif PLATFORM_SPALDING
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeChalk
-  // FIXME(OBELIX): Obelix is not diorite
-  #elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX
+  #elif PLATFORM_SILK || PLATFORM_ASTERIX
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeDiorite
-  #elif PLATFORM_ROBERT || PLATFORM_CALCULUS
+  #elif PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
   #else
     #error "PBL_PLATFORM_TYPE_CURRENT couldn't be determined: No PLATFORM_* defined!"

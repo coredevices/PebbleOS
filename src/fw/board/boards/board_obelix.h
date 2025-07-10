@@ -23,6 +23,7 @@
 #define SF32LB52_USE_LXT
 
 extern UARTDevice * const DBG_UART;
+extern LCDDevice *const DBG_LCD1;
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern UARTDevice * const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY

@@ -67,6 +67,101 @@ UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
 IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
 IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
 
+
+
+LCDDevice LCD1 =     {
+    .lcdc ={
+        .Instance = LCDC1,
+        .Init = {
+             .lcd_itf = LCDC_INTF_JDI_PARALLEL,
+             .freq = 60,
+             .color_mode = LCDC_PIXEL_FORMAT_RGB565,
+             
+             .cfg = {
+                 .jdi = {
+                     .bank_col_head = 0,
+                     .valid_columns = PBL_DISPLAY_WIDTH,
+                     .bank_col_tail = 8,
+             
+                     .bank_row_head = 0,
+                     .valid_rows = PBL_DISPLAY_HEIGHT,
+                     .bank_row_tail = 4,
+                 },
+              },
+         },
+    },
+    .pin = {
+        .xrst = {
+            .pad = PAD_PA40,
+            .func = LCDC1_JDI_XRST,
+            .flags = PIN_NOPULL,
+            },
+        .vst = {
+            .pad = PAD_PA08,
+            .func = LCDC1_JDI_VST,
+            .flags = PIN_NOPULL,
+            },
+        .vck = {
+            .pad = PAD_PA39,
+            .func = LCDC1_JDI_VCK,
+            .flags = PIN_NOPULL,
+            },
+        .enb = {
+            .pad = PAD_PA07,
+            .func = LCDC1_JDI_ENB,
+            .flags = PIN_NOPULL,
+            },
+        .hst = {
+            .pad = PAD_PA06,
+            .func = LCDC1_JDI_HST,
+            .flags = PIN_NOPULL,
+            },
+        .hck = {
+            .pad = PAD_PA41,
+            .func = LCDC1_JDI_HCK,
+            .flags = PIN_NOPULL,
+            },
+        .r1 = {
+            .pad = PAD_PA05,
+            .func = LCDC1_JDI_R1,
+            .flags = PIN_NOPULL,
+            },
+        .r2 = {
+            .pad = PAD_PA42,
+            .func = LCDC1_JDI_R2,
+            .flags = PIN_NOPULL,
+            },
+        .g1 = {
+            .pad = PAD_PA04,
+            .func = LCDC1_JDI_G1,
+            .flags = PIN_NOPULL,
+            },
+        .g2 = {
+            .pad = PAD_PA43,
+            .func = LCDC1_JDI_G2,
+            .flags = PIN_NOPULL,
+            },
+        .b1 = {
+            .pad = PAD_PA03,
+            .func = LCDC1_JDI_B1,
+            .flags = PIN_NOPULL,
+            },
+        .b2 = {
+            .pad = PAD_PA02,
+            .func = LCDC1_JDI_B2,
+            .flags = PIN_NOPULL,
+            },
+        .vcom = {
+            .pad = PAD_PA24,
+            .func = GPIO_A24,
+            .flags = PIN_NOPULL,
+        },
+
+    },
+};
+
+LCDDevice *const DBG_LCD1 = &LCD1; 
+IRQ_MAP(LCDC1, lcd_irq_handler, DBG_LCD1);
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 static UARTDeviceState s_hci_trace_uart_state = {
   .huart = {
