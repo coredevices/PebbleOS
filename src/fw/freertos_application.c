@@ -112,9 +112,6 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       // TODO: It would be nice if there was a clean way to actually 'suppress
       // ticks' while in sleep mode. If we figure that out, we would likely
       // need to update how this calculation works
-      //
-      // TODO(nrf5): systick is actually suppressed while in sleep mode!  so
-      // this calculation is bogus
       uint32_t systick_start = SysTick->VAL;
 
       power_tracking_start(PowerSystemMcuCoreSleep);
@@ -250,14 +247,6 @@ bool vPortCorrectTicks(void) {
   return need_context_switch;
 }
 
-bool vPortEnableTimer() {
-#if defined(MICRO_FAMILY_NRF5)
-  rtc_enable_synthetic_systick();
-  return true;
-#else
-  return false;
-#endif
-}
 
 // CPU analytics
 ///////////////////////////////////////////////////////////
