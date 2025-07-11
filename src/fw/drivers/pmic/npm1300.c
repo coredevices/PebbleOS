@@ -106,7 +106,7 @@ typedef enum {
 #define NPM1300_BCHGISETDISCHARGEMSB_1000MA 207U
 #define NPM1300_BCHGISETDISCHARGELSB_1000MA 1U
 
-#define NPM1300_BCHARGER_ADC_BITS_RESOLUTION 1023UL
+#define NPM1300_BCHARGER_ADC_BITS_RESOLUTION 1023
 #define NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL 112
 #define NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV 100
 #define NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL 1250
@@ -429,7 +429,7 @@ int battery_get_constants(BatteryConstants *constants) {
         ((lsb & PmicRegisters_ADC_ADCGP0RESULTLSBS_VBATRESULTLSB_MSK) >>
          PmicRegisters_ADC_ADCGP0RESULTLSBS_VBATRESULTLSB_POS);
 
-  constants->v_mv = (raw * NPM1300_ADC_VFS_VBAT_MV) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
+  constants->v_mv = (int32_t)(raw * NPM1300_ADC_VFS_VBAT_MV) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
 
   // Process the IBAT measurement
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY) == 0U) {
@@ -450,7 +450,7 @@ int battery_get_constants(BatteryConstants *constants) {
         ((lsb & PmicRegisters_ADC_ADCGP1RESULTLSBS_VBAT2RESULTLSB_MSK) >>
          PmicRegisters_ADC_ADCGP1RESULTLSBS_VBAT2RESULTLSB_POS);
 
-  constants->i_ua = (raw * full_scale_ua) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
+  constants->i_ua = ((int32_t)raw * full_scale_ua) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
 
   // Process the NTC measurement
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY) == 0U) {
