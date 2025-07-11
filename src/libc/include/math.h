@@ -35,6 +35,8 @@ typedef double double_t;
 #define isinff(x)  (((x) == INFINITY_F) || ((x) == -INFINITY_F))
 #define isnanf(x)  ((x) != (x))
 
+float ceilf(float x);
+
 float expf(float x);
 
 float fabsf(float x);
