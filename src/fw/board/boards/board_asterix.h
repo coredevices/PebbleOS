@@ -84,14 +84,8 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
 #endif
 
   .low_power_threshold = 5,
-
-  // Based on measurements from v4.0-beta16.
-  // Typical Connected Current at VBAT without HRM ~520uA
-  // Added draw with HRM on : ~1.5mA ==> Average impact (5% per hour + 1 hour continuous / day)
-  //    (.05 * 23/24 + 1.0 * 1/24) * 1.5mA = ~134uA
-  // Assume ~150uA or so for notifications & user interaction
-  // Total Hours = 125 mA * hr / (.520 + .134 + 150)mA = 155 hours
-  .battery_capacity_hours = 155 /* TODO */,
+  // Current is now wild (~5mA, battery is 130mAh, so ~26h)
+  .battery_capacity_hours = 26,
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
