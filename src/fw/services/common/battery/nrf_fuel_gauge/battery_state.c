@@ -167,8 +167,9 @@ static void prv_update_state(void *force_update) {
           s_last_ttf);
 
   if (update || s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Battery state update: soc: %" PRIu8 ", charging: %s, plugged: %s",
-            s_last_pct, s_last_battery_charge_state.is_charging ? "yes" : "no",
+    PBL_LOG(LOG_LEVEL_DEBUG,
+            "Battery state update: soc: %" PRIu8 ", v: %" PRId32 " mv, charging: %s, plugged: %s",
+            s_last_pct, constants.v_mv, s_last_battery_charge_state.is_charging ? "yes" : "no",
             s_last_battery_charge_state.is_plugged ? "yes" : "no");
     prv_battery_state_put_change_event(s_last_battery_charge_state);
   }
