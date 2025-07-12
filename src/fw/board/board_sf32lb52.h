@@ -88,6 +88,22 @@ typedef struct {
   int flags;
 } Pinmux;
 
+typedef struct {
+  uint16_t value;
+  uint16_t resolution;
+  int enabled;
+  uint16_t channel;
+  uint8_t  is_comp; /* Is complementary*/  
+} PwmState;
+
+typedef struct {
+  GPT_HandleTypeDef handle;
+  GPT_ClockConfigTypeDef clock_config;
+  Pinmux pwm_pin;
+  PwmState  *state;
+} PwmConfig;
+
+
 typedef enum {
   ActuatorOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable vibe
   ActuatorOptions_Pwm = 1 << 1, ///< PWM control
@@ -119,6 +135,7 @@ typedef enum {
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/sf32lb52/uart_definitions.h"
+#include "drivers/pwm.h"
 
 typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;

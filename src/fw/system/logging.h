@@ -155,6 +155,10 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
   #define LOG_DOMAIN_I2C              0
 #endif
 
+#ifndef LOG_DOMAIN_PWM
+  #define LOG_DOMAIN_PWM              0
+#endif
+
 #ifndef STRINGIFY
   #define STRINGIFY_NX(a) #a
   #define STRINGIFY(a) STRINGIFY_NX(a)
