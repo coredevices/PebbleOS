@@ -232,6 +232,87 @@ static void prv_hci_task_main(void *unused) {
   }
 }
 
+int bt_mac_addr_generate_via_uid_v2(uint8_t *addr) {
+  int result = -4;
+  uint8_t uid[16] = {0};
+  uint8_t pattern;
+  int32_t ret = HAL_EFUSE_Read(0, uid, 16);
+  uint8_t use_v2 = 0;
+  uint32_t i;
+
+  if (!addr)
+    return -1;
+
+  if (ret != 16) {
+    return -2;
+  }
+
+  for (i = 0; i < 16; i++)
+    if (uid[i] != 0)
+      break;
+
+  if (i >= 16) {
+    return -3;
+  }
+
+  pattern = uid[7];
+
+  if (pattern == 0xA5) {
+    uint8_t chk_sum = uid[6];
+    uint8_t chk_sum_cal = uid[0] + uid[1] + uid[2] + uid[3] + uid[4] + uid[5];
+
+    if (chk_sum == chk_sum_cal)
+      use_v2 = 1;
+  }
+
+  memcpy((void *)addr, (void *)&uid[0], 6);
+  if (use_v2) {
+    result = 0;
+  } else
+    result = -5;
+
+  return result;
+}
+
+
+#define NVDS_BUFF_START 0x2040FE00
+#define NVDS_BUFF_SIZE 512
+
+/*
+ * default value description:
+    0x01, 0x06, 0x12, 0x34, 0x56, 0x78, 0x AB, 0xCD: The default bd addres
+    0x0D, 02, 0x64, 0x19: Control pre-wakeup time for the sleep of BT subsysm in LCPU. The value is different in RC10K and LXT32K.
+    0x12, 0x01, 0x01: Control maximum sleep duration of BT subsystem. the last 0x01 means 10s in BLE only and 30s in dual mode. 0 means 500ms.
+    0x2F, 0x04, 0x20, 0x00, 0x00, 0x00: Control the log in Contoller and changed to 0x20, 0x00, 0x09, 0x0 will enable HCI log defautly.
+    0x15, 0x01, 0x01: Internal usage, for scheduling.
+*/
+
+
+static uint8_t g_ble_slp_default_rc10k[] = {
+  0x01, 0x06, 0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD,
+  0x0D, 0x02, 0x64, 0x19,
+  0x12, 0x01, 0x01,
+  0x2F, 0x04, 0x20, 0x00, 0x00, 0x00,
+  0x15, 0x01, 0x01
+};
+
+/*
+ * Overwrite weak function called when LCPU power on
+   Read Bluetooth Address from EFUSE.
+ *
+*/
+void lcpu_nvds_config(void) {
+  int r = bt_mac_addr_generate_via_uid_v2(&(g_ble_slp_default_rc10k[2]));
+  uint8_t *nvds_addr = (uint8_t *)NVDS_BUFF_START;//0x204FFD00;
+
+  *(uint32_t *)nvds_addr = 0x4E564453;
+  *(uint16_t *)(nvds_addr + 4) = sizeof(g_ble_slp_default_rc10k);
+  *(uint16_t *)(nvds_addr + 6) = 0;
+  memcpy((void *)(nvds_addr + 8), g_ble_slp_default_rc10k, sizeof(g_ble_slp_default_rc10k));
+  HAL_DBG_printf("add: %d\r", r);
+  HAL_DBG_print_data((char *)nvds_addr, 0, 8 + sizeof(g_ble_slp_default_rc10k));
+}
+
 void ble_transport_ll_init(void) {
   int ret;
 
