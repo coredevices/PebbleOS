@@ -62,7 +62,8 @@ static ipc_queue_handle_t s_ipc_port;
 extern void lcpu_power_on(void);
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
-void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
+void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet)
+{
   const char *type_str;
 
   switch (type) {
@@ -88,7 +89,8 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
   PBL_HEXDUMP_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, data, len);
 }
 #elif defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
-void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
+void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet)
+{
   uint8_t trace_hdr[HCI_TRACE_HEADER_LEN];
 
   // Magic for Pebble HCI, 'PBTS'
@@ -123,7 +125,8 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
 #define prv_hci_trace(type, data, len, h4tl_packet)
 #endif
 
-static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size) {
+static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size)
+{
   BaseType_t woken;
 
   xSemaphoreGiveFromISR(s_ipc_data_ready, &woken);
@@ -132,7 +135,8 @@ static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size) {
   return 0;
 }
 
-static int prv_config_ipc(void) {
+static int prv_config_ipc(void)
+{
   ipc_queue_cfg_t q_cfg;
   int32_t ret;
 
@@ -144,7 +148,8 @@ static int prv_config_ipc(void) {
   uint8_t rev_id = __HAL_SYSCFG_GET_REVID();
   if (rev_id < HAL_CHIP_REV_ID_A4) {
     q_cfg.rx_buf_addr = RX_BUF_ADDR;
-  } else {
+  }
+  else {
     q_cfg.rx_buf_addr = RX_BUF_REV_B_ADDR;
   }
 
@@ -173,7 +178,8 @@ static int prv_config_ipc(void) {
   return 0;
 }
 
-static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
+static int prv_hci_frame_cb(uint8_t pkt_type, void *data)
+{
   struct ble_hci_ev *ev;
   struct ble_hci_ev_command_complete *cmd_complete;
   struct os_mbuf *om;
@@ -208,7 +214,8 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   return -1;
 }
 
-static void prv_hci_task_main(void *unused) {
+static void prv_hci_task_main(void *unused)
+{
   uint8_t buf[64];
 
   while (true) {
@@ -225,95 +232,16 @@ static void prv_hci_task_main(void *unused) {
           consumed_bytes = hci_h4_sm_rx(&s_hci_h4sm, buf, len);
           len -= consumed_bytes;
         }
-      } else {
+      }
+      else {
         break;
       }
     }
   }
 }
 
-int bt_mac_addr_generate_via_uid_v2(uint8_t *addr) {
-  int result = -4;
-  uint8_t uid[16] = {0};
-  uint8_t pattern;
-  int32_t ret = HAL_EFUSE_Read(0, uid, 16);
-  uint8_t use_v2 = 0;
-  uint32_t i;
-
-  if (!addr)
-    return -1;
-
-  if (ret != 16) {
-    return -2;
-  }
-
-  for (i = 0; i < 16; i++)
-    if (uid[i] != 0)
-      break;
-
-  if (i >= 16) {
-    return -3;
-  }
-
-  pattern = uid[7];
-
-  if (pattern == 0xA5) {
-    uint8_t chk_sum = uid[6];
-    uint8_t chk_sum_cal = uid[0] + uid[1] + uid[2] + uid[3] + uid[4] + uid[5];
-
-    if (chk_sum == chk_sum_cal)
-      use_v2 = 1;
-  }
-
-  memcpy((void *)addr, (void *)&uid[0], 6);
-  if (use_v2) {
-    result = 0;
-  } else
-    result = -5;
-
-  return result;
-}
-
-
-#define NVDS_BUFF_START 0x2040FE00
-#define NVDS_BUFF_SIZE 512
-
-/*
- * default value description:
-    0x01, 0x06, 0x12, 0x34, 0x56, 0x78, 0x AB, 0xCD: The default bd addres
-    0x0D, 02, 0x64, 0x19: Control pre-wakeup time for the sleep of BT subsysm in LCPU. The value is different in RC10K and LXT32K.
-    0x12, 0x01, 0x01: Control maximum sleep duration of BT subsystem. the last 0x01 means 10s in BLE only and 30s in dual mode. 0 means 500ms.
-    0x2F, 0x04, 0x20, 0x00, 0x00, 0x00: Control the log in Contoller and changed to 0x20, 0x00, 0x09, 0x0 will enable HCI log defautly.
-    0x15, 0x01, 0x01: Internal usage, for scheduling.
-*/
-
-
-static uint8_t g_ble_slp_default_rc10k[] = {
-  0x01, 0x06, 0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD,
-  0x0D, 0x02, 0x64, 0x19,
-  0x12, 0x01, 0x01,
-  0x2F, 0x04, 0x20, 0x00, 0x00, 0x00,
-  0x15, 0x01, 0x01
-};
-
-/*
- * Overwrite weak function called when LCPU power on
-   Read Bluetooth Address from EFUSE.
- *
-*/
-void lcpu_nvds_config(void) {
-  int r = bt_mac_addr_generate_via_uid_v2(&(g_ble_slp_default_rc10k[2]));
-  uint8_t *nvds_addr = (uint8_t *)NVDS_BUFF_START;//0x204FFD00;
-
-  *(uint32_t *)nvds_addr = 0x4E564453;
-  *(uint16_t *)(nvds_addr + 4) = sizeof(g_ble_slp_default_rc10k);
-  *(uint16_t *)(nvds_addr + 6) = 0;
-  memcpy((void *)(nvds_addr + 8), g_ble_slp_default_rc10k, sizeof(g_ble_slp_default_rc10k));
-  HAL_DBG_printf("add: %d\r", r);
-  HAL_DBG_print_data((char *)nvds_addr, 0, 8 + sizeof(g_ble_slp_default_rc10k));
-}
-
-void ble_transport_ll_init(void) {
+void ble_transport_ll_init(void)
+{
   int ret;
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
@@ -343,7 +271,8 @@ void ble_transport_ll_init(void) {
 }
 
 /* APIs to be implemented by HS/LL side of transports */
-int ble_transport_to_ll_cmd_impl(void *buf) {
+int ble_transport_to_ll_cmd_impl(void *buf)
+{
   struct ble_hci_cmd *cmd = buf;
   uint8_t h4_cmd = HCI_H4_CMD;
   size_t written;
@@ -357,7 +286,8 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
   return (written >= 0U) ? 0 : -1;
 }
 
-int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
+int ble_transport_to_ll_acl_impl(struct os_mbuf *om)
+{
   uint8_t *data;
   size_t written;
   uint8_t h4_cmd = HCI_H4_ACL;
@@ -372,7 +302,8 @@ int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   return (written >= 0U) ? 0 : -1;
 }
 
-int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
+int ble_transport_to_ll_iso_impl(struct os_mbuf *om)
+{
   uint8_t *data;
   size_t written;
   uint8_t h4_cmd = HCI_H4_ISO;
