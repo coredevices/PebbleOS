@@ -384,7 +384,7 @@ static void prv_information_window_push(SettingsSystemData *data) {
   info->subtitle_text[SystemInformationItemSerial]     = info->serial_string;
   info->subtitle_text[SystemInformationItemUptime]     = info->uptime_string;
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
-  info->subtitle_text[SystemInformationItemLegal]      = "core.store/terms";
+  info->subtitle_text[SystemInformationItemLegal]      = "repebble.com/terms";
 #else
   info->subtitle_text[SystemInformationItemLegal]      = "pebble.com/legal";
 #endif

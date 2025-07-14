@@ -105,7 +105,7 @@ typedef struct RecoveryFUAppData {
 } RecoveryFUAppData;
 
 #if PLATFORM_ASTERIX
-static const char *s_qr_url_fmt = "https://qr.core.store/?sn=%s&model=%s";
+static const char *s_qr_url_fmt = "https://qr.repebble.com/?sn=%s&model=%s";
 #endif
 
 // Unfortunately, the event_service_client_subscribe doesn't take a void *context...
