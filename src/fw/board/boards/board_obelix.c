@@ -196,16 +196,22 @@ void board_early_init(void) {
   BSP_System_Config();
 
   HAL_HPAON_StartGTimer();
+#ifdef SF32LB52_USE_LXT
   HAL_PMU_EnableRC32K(1);
-  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
 
+  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
+#else
+  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC10);
+#endif
   HAL_PMU_EnableDLL(1);
 
+#ifdef SF32LB52_USE_LXT
   HAL_PMU_EnableXTAL32();
   ret = HAL_PMU_LXTReady();
   PBL_ASSERTN(ret == HAL_OK);
 
   HAL_RTC_ENABLE_LXT();
+#endif
 
   HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
 
