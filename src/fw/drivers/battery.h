@@ -50,14 +50,6 @@ typedef struct BatteryConstants {
 
 void battery_init(void);
 
-/**
- * Check if the battery is present.
- *
- * @retval true if the battery is present (or driver does not support checking).
- * @retval false if the battery is not present.
-*/
-bool battery_is_present(void);
-
 /** @returns the battery voltage after smoothing and averaging
  */
 int battery_get_millivolts(void);
