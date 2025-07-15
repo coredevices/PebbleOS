@@ -417,7 +417,7 @@ RtcTicks rtc_alarm_get_elapsed_ticks(void) {
 }
 
 bool rtc_alarm_is_initialized(void) {
-  return s_tick_alarm_initialized;
+  return 0 && s_tick_alarm_initialized;
 }
 
 //! Handler for the RTC alarm interrupt.  We don't actually have to do
