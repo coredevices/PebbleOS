@@ -54,6 +54,7 @@ typedef enum {
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTCURRENT = 8,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTVOLTAGE = 16,
   PmicRegisters_BCHARGER_BCHGERRREASON = 0x0336,
+  PmicRegisters_BCHARGER_ENABLEVBATLOWCHARGE = 0x0350,
   PmicRegisters_ADC_TASKVBATMEASURE  = 0x0500,
   PmicRegisters_ADC_TASKNTCMEASURE   = 0x0501,
   PmicRegisters_ADC_TASKVSYSMEASURE  = 0x0503,
@@ -267,6 +268,8 @@ bool pmic_init(void) {
     PBL_LOG(LOG_LEVEL_ERROR, "Invalid termination current: %d", NPM1300_CONFIG.term_current_pct);
     return false;
   }
+
+  ok &= prv_write_register(PmicRegisters_BCHARGER_ENABLEVBATLOWCHARGE, 1);
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGENABLESET, 1);
 
