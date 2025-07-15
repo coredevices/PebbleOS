@@ -45,28 +45,44 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
   FLASH_HandleTypeDef *hflash;
   uint32_t taddr, remain;
   int res;
-  __disable_irq();
 
   hflash = &dev->qspi->state->ctx.handle;
 
-  if ((addr < hflash->base) || (addr > (hflash->base + hflash->size))) return 1;
+  if ((addr < hflash->base) || (addr > (hflash->base + hflash->size))) {
+    return -1;
+  }
 
   taddr = addr - hflash->base;
   remain = size;
 
-  if ((taddr & (SUBSECTOR_SIZE_BYTES - 1)) != 0) return -1;
-  if ((remain & (SUBSECTOR_SIZE_BYTES - 1)) != 0) return -2;
+  if ((taddr & (SUBSECTOR_SIZE_BYTES - 1)) != 0) {
+    return -1;
+  }
+
+  if ((remain & (SUBSECTOR_SIZE_BYTES - 1)) != 0) {
+    return -1;
+  }
+
+  __disable_irq();
 
   while (remain > 0) {
     res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
-    if (res != 0) return 1;
+    if (res != 0) {
+      res = -1;
+      goto end;
+    }
 
     remain -= SUBSECTOR_SIZE_BYTES;
     taddr += SUBSECTOR_SIZE_BYTES;
   }
 
+end:
+  SCB_InvalidateDCache_by_Addr((void *)addr, size);
+  SCB_InvalidateICache_by_Addr((void *)addr, size);
+
   __enable_irq();
-  return 0;
+
+  return res;
 }
 
 static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t size) {
@@ -78,7 +94,9 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
 
   hflash = &dev->qspi->state->ctx.handle;
 
-  if ((addr < hflash->base) || (addr > (hflash->base + hflash->size))) return 0;
+  if ((addr < hflash->base) || (addr > (hflash->base + hflash->size))) {
+    return -1;
+  }
 
   if (IS_SAME_FLASH_ADDR(buf, addr) || IS_SPI_NONDMA_RAM_ADDR(buf) ||
       (IS_DMA_ACCROSS_1M_BOUNDARY((uint32_t)buf, size))) {
@@ -104,8 +122,8 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
 
     res = HAL_QSPIEX_WRITE_PAGE(hflash, taddr, tbuf, fill);
     if ((uint32_t)res != fill) {
-      size = 0;
-      goto exit;
+      res = -1;
+      goto end;
     }
 
     taddr += fill;
@@ -117,8 +135,8 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
     fill = remain > PAGE_SIZE_BYTES ? PAGE_SIZE_BYTES : remain;
     res = HAL_QSPIEX_WRITE_PAGE(hflash, taddr, tbuf, fill);
     if ((uint32_t)res != fill) {
-      size = 0;
-      goto exit;
+      res = -1;
+      goto end;
     }
 
     taddr += fill;
@@ -126,14 +144,19 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
     remain -= fill;
   }
 
-exit:
+  res = size;
+
+end:
+  SCB_InvalidateDCache_by_Addr((void *)addr, size);
+  SCB_InvalidateICache_by_Addr((void *)addr, size);
+
   __enable_irq();
 
   if (local_buf) {
     kernel_free(local_buf);
   }
 
-  return size;
+  return res;
 }
 
 bool qspi_flash_check_whoami(QSPIFlash *dev) { 
