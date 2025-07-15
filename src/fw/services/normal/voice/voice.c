@@ -27,6 +27,7 @@
 #include "services/normal/audio_endpoint.h"
 #include "services/normal/voice/transcription.h"
 #include "services/normal/voice_endpoint.h"
+#include "services/normal/voice/opus_codec.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -35,7 +36,7 @@
 
 #include <string.h>
 
-#define SPEEX_BITSTREAM_VERSION (4)
+#define OPUS_BITSTREAM_VERSION (1)
 
 #define TIMEOUT_SESSION_SETUP (8000)
 #define TIMEOUT_SESSION_RESULT  (15000)
@@ -62,12 +63,19 @@ static Uuid s_app_uuid;
 static AudioEndpointSessionId s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
 static TimerID s_timeout = TIMER_INVALID_ID;
 
+// Opus codec state
+static VoiceOpusCodec *s_opus_codec = NULL;
+static int16_t *s_pcm_buffer = NULL;
+static uint8_t *s_opus_buffer = NULL;
+static size_t s_pcm_buffer_size;
+static size_t s_opus_buffer_size;
+
 static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data);
 static void prv_session_result_timeout(void * data);
 
 #if defined(VOICE_DEBUG)
-// printf implemented here because the ADT Speex debug library calls printf for logging
+// printf implemented here for debugging compatibility
 int printf(const char *template, ...) {
   va_list args;
   va_start(args, template);
@@ -80,15 +88,101 @@ int printf(const char *template, ...) {
 }
 #endif
 
+// Audio data handler for microphone samples
+static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *context) {
+  if (!s_opus_codec || !s_opus_buffer || s_state != SessionState_Recording) {
+    return;
+  }
+
+  // Ensure we have the expected number of samples (one Opus frame)
+  if (sample_count != OPUS_VOICE_FRAME_SIZE) {
+    PBL_LOG(LOG_LEVEL_WARNING, "Unexpected sample count: %zu (expected %d)", 
+            sample_count, OPUS_VOICE_FRAME_SIZE);
+    return;
+  }
+
+  // Encode audio samples using Opus
+  int encoded_bytes = voice_opus_encode(s_opus_codec, samples, s_opus_buffer, s_opus_buffer_size);
+  if (encoded_bytes > 0) {
+    // Transfer encoded audio via audio endpoint
+    audio_endpoint_add_frame(s_session_id, s_opus_buffer, encoded_bytes);
+    PBL_LOG(LOG_LEVEL_DEBUG, "Encoded %zu samples to %d bytes", sample_count, encoded_bytes);
+  } else {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to encode audio samples");
+  }
+}
+
 static void prv_teardown_session(void) {
 #if !defined(TARGET_QEMU)
-  // TODO: replace stub
+  // Cleanup Opus codec and buffers
+  if (s_opus_codec) {
+    voice_opus_destroy(s_opus_codec);
+    s_opus_codec = NULL;
+  }
+  
+  if (s_pcm_buffer) {
+    kernel_free(s_pcm_buffer);
+    s_pcm_buffer = NULL;
+  }
+  
+  if (s_opus_buffer) {
+    kernel_free(s_opus_buffer);
+    s_opus_buffer = NULL;
+  }
+  
+  s_pcm_buffer_size = 0;
+  s_opus_buffer_size = 0;
+#endif
+}
+
+static bool prv_setup_session(void) {
+#if !defined(TARGET_QEMU)
+  // Initialize Opus codec
+  s_opus_codec = voice_opus_create();
+  if (!s_opus_codec) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to create Opus codec");
+    return false;
+  }
+
+  // Initialize encoder for voice recording
+  if (!voice_opus_init_encoder(s_opus_codec, OPUS_VOICE_SAMPLE_RATE, OPUS_VOICE_BITRATE)) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize Opus encoder");
+    prv_teardown_session();
+    return false;
+  }
+
+  // Allocate PCM buffer for microphone samples (one frame at a time)
+  s_pcm_buffer_size = OPUS_VOICE_FRAME_SIZE * sizeof(int16_t);
+  s_pcm_buffer = kernel_malloc_check(s_pcm_buffer_size);
+  if (!s_pcm_buffer) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate PCM buffer (%zu bytes)", s_pcm_buffer_size);
+    prv_teardown_session();
+    return false;
+  }
+
+  // Allocate Opus output buffer
+  s_opus_buffer_size = OPUS_VOICE_MAX_PACKET;
+  s_opus_buffer = kernel_malloc_check(s_opus_buffer_size);
+  if (!s_opus_buffer) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate Opus buffer (%zu bytes)", s_opus_buffer_size);
+    prv_teardown_session();
+    return false;
+  }
+
+  PBL_LOG(LOG_LEVEL_INFO, "Voice session setup complete - Opus %s, PCM buffer: %zu bytes, Opus buffer: %zu bytes",
+          voice_opus_get_version_string(), s_pcm_buffer_size, s_opus_buffer_size);
+  return true;
+#else
+  // For QEMU, we don't need actual audio processing
+  PBL_LOG(LOG_LEVEL_INFO, "Voice session setup complete (QEMU mode)");
+  return true;
 #endif
 }
 
 static void prv_stop_recording(void) {
 #if !defined(TARGET_QEMU)
-  // TODO: replace stub
+  // Stop the microphone
+  mic_stop(MIC);
 #endif
 
   audio_endpoint_stop_transfer(s_session_id);
@@ -98,8 +192,8 @@ static void prv_stop_recording(void) {
 
 static void prv_cancel_recording(void) {
 #if !defined(TARGET_QEMU)
-  // TODO: reenable
-  // mic_stop(MIC);
+  // Stop the microphone
+  mic_stop(MIC);
 #endif
 
   audio_endpoint_cancel_transfer(s_session_id);
@@ -142,8 +236,9 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
 
 static void prv_start_recording(void) {
 #if !defined(TARGET_QEMU)
-  // TODO: reenable
-  // PBL_ASSERTN(mic_start(MIC, &prv_audio_data_handler, NULL, s_frame_buffer, s_frame_size));
+  // Start the microphone with audio data handler
+  // Use the PCM buffer for microphone samples
+  PBL_ASSERTN(mic_start(MIC, &prv_audio_data_handler, NULL, s_pcm_buffer, OPUS_VOICE_FRAME_SIZE));
 #endif
 
   PBL_LOG(LOG_LEVEL_INFO, "Recording");
@@ -279,16 +374,22 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   }
 
 #if !defined(TARGET_QEMU)
-  // TODO: replace stub
+  // Setup Opus codec and buffers for voice recording
+  if (!prv_setup_session()) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to setup voice session");
+    mutex_unlock(s_lock);
+    return VOICE_SESSION_ID_INVALID;
+  }
 #endif
 
-  // TODO: replace fake values
-  AudioTransferInfoSpeex transfer_info = (AudioTransferInfoSpeex) {
-    .sample_rate = 0,
-    .bit_rate = 0,
-    .frame_size = 0,
-    .bitstream_version = 0,
+  // Setup Opus codec parameters for voice recording
+  AudioTransferInfoOpus transfer_info = (AudioTransferInfoOpus) {
+    .sample_rate = OPUS_VOICE_SAMPLE_RATE,     // 16 kHz
+    .bit_rate = OPUS_VOICE_BITRATE,            // 16 kbps  
+    .frame_size = OPUS_VOICE_FRAME_SIZE,       // 320 samples (20ms at 16kHz)
+    .bitstream_version = OPUS_BITSTREAM_VERSION, // Opus version identifier
   };
+  strncat(transfer_info.version, voice_opus_get_version_string(), sizeof(transfer_info.version) - 1);
 
   s_session_id = audio_endpoint_setup_transfer(prv_audio_transfer_setup_complete_handler,
                                                prv_audio_transfer_stopped_handler);
@@ -357,7 +458,7 @@ unlock:
 
 // This will trigger an event to be sent to the main task indicating success or failure to set up
 // a session. If the session setup result was success, the microphone will be enabled and we'll
-// start sending Speex encoded data via the audio endpoint to the phone. voice_stop_dictation will
+// start sending Opus encoded data via the audio endpoint to the phone. voice_stop_dictation will
 // end the recording
 void voice_handle_session_setup_result(VoiceEndpointResult result,
     VoiceEndpointSessionType session_type, bool app_initiated) {
