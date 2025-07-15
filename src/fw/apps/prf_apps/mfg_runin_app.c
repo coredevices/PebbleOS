@@ -47,6 +47,9 @@ static const char* status_text[] = {
 #ifdef PLATFORM_TINTIN
 static const int SLOW_THRESHOLD_PERCENTAGE = 42; // ~3850mv
 static const int PASS_BATTERY_PERCENTAGE = 84; // ~4050mv
+#elif defined(PLATFORM_ASTERIX)
+static const int SLOW_THRESHOLD_PERCENTAGE = 0;
+static const int PASS_BATTERY_PERCENTAGE = 70;
 #else
 static const int SLOW_THRESHOLD_PERCENTAGE = 0; // Always go "slow" on snowy
 static const int PASS_BATTERY_PERCENTAGE = 60; // ~4190mv
@@ -59,7 +62,7 @@ typedef struct {
   char status_string[20];
 
   TextLayer details;
-  char details_string[45];
+  char details_string[64];
 
   RuninTestState test_state;
   uint32_t seconds_remaining;
@@ -75,20 +78,18 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   RuninTestState next_state = data->test_state;
 
   const int charge_mv = battery_get_millivolts();
-  const int charge_percent = battery_curve_lookup_percent_by_voltage(charge_mv,
-      battery_charge_controller_thinks_we_are_charging());
-  const int usb_is_connected = battery_is_usb_connected();
+  const BatteryChargeState charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
     case RuninStateStart:
-      if (usb_is_connected) {
+      if (charge_state.is_plugged && charge_state.is_charging) {
         next_state = RuninStateRunning;
       } else {
         next_state = RuninStatePlugCharger;
       }
       break;
     case RuninStatePlugCharger:
-      if (usb_is_connected) {
+      if (charge_state.is_plugged && charge_state.is_charging) {
         next_state = RuninStateRunning;
       }
       break;
@@ -96,16 +97,16 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       if (!data->countdown_running) {
         data->countdown_running = true;
       }
-      if (!usb_is_connected) {
+      if (!charge_state.is_plugged || !charge_state.is_charging) {
         data->pass_count = 0;
         next_state = RuninStatePlugCharger;
         break;
       }
-      if (charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {
+      if (charge_state.charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {
         // go slow for a bit
         battery_set_fast_charge(false);
         data->fastcharge_enabled = false;
-      } else if (charge_percent > PASS_BATTERY_PERCENTAGE) {
+      } else if (charge_state.charge_percent > PASS_BATTERY_PERCENTAGE) {
         // The reading can be a bit shaky in the short term (i.e. a flaky USB connection), or we
         // just started charging. Make sure we have settled before transitioning into the
         // RuninStatePass state
@@ -146,9 +147,11 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   int mins_remaining = data->seconds_remaining / 60;
   int secs_remaining = data->seconds_remaining % 60;
   sniprintf(data->details_string, sizeof(data->details_string),
-            "Time:%02u:%02u\r\n%umV (%"PRIu8"%%)\r\nUSB: %s",
+            "Time:%02u:%02u\r\n%umV (%"PRIu8"%%)\r\nUSB: %s\r\nCharging: %s",
             mins_remaining, secs_remaining, charge_mv,
-            charge_percent, usb_is_connected ? "yes":"no");
+            charge_state.charge_percent,
+            charge_state.is_plugged ? "yes" : "no",
+            charge_state.is_charging ? "yes" : "no");
   text_layer_set_text(&data->details, data->details_string);
 }
 
@@ -196,10 +199,6 @@ static void app_init(void) {
 
   Window *window = &data->window;
   window_init(window, "Runin Test");
-  // NF: Quanta wants this app to prevent resetting.  I think it is overly restrictive
-  // but they claim that it will minimize operator error if there is only one path
-  // that can be followed.
-  window_set_overrides_back_button(window, true);
 
   TextLayer *status = &data->status;
   text_layer_init(status, &window->layer.bounds);
