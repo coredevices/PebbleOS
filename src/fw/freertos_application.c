@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+
 #include "debug/power_tracking.h"
 #include "drivers/mcu.h"
 #include "drivers/rtc.h"
