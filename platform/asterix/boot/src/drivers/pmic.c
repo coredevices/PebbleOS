@@ -37,6 +37,8 @@
 #define BCHGVTERMR 0x0DU
 #define BCHGVTERMREDUCED_4V00 0x4U
 
+#define ENABLEVBATLOWCHARGE 0x50U
+
 #define NTCCOLD 0x10U
 #define NTCCOLDLSB 0x11U
 #define NTCCOOL 0x12U
@@ -196,6 +198,7 @@ int pmic_init(void) {
     { CHARGER_BASE, NTCWARMLSB, 0x01U },
     { CHARGER_BASE, NTCHOT, 0x54U },
     { CHARGER_BASE, NTCHOTLSB, 0x01U },
+    { CHARGER_BASE, ENABLEVBATLOWCHARGE, 0x01U },
     { CHARGER_BASE, BCHGENABLESET, ENABLECHARGING_ENABLECHG },
 
     // LDO1 as LDO @ 1.8V (powers the DA7212 ... do not back power it through I/O pins, and it must always be on because sensors share I2C bus with it!)
