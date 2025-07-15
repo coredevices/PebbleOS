@@ -1,8 +1,8 @@
-# Asterix
+# Asterix (Core 2 Duo)
 
 ## Programming
 
-The Asterix board provides a B2B (Board-To-Board) connector that gives access to:
+Asterix/Core 2 Duo mainboard has a B2B (Board-To-Board) connector that gives access to:
 
 - MCU VDD, VUSB and GND
 - MCU SWCLK, SWDIO and RESET
@@ -52,3 +52,22 @@ Do not use any adapter that does not operate at 1.8V, or there is a **risk of da
 
    - L: connected
    - R: disconnected
+
+
+### Usage and tips
+
+When using the built-in programmer and USB-UART converter, make sure to place switches (3) and (4) to the right, as shown in the picture below.
+It is also recommended to provide VUSB while programming so that the watch is always programmable regardless of the battery level.
+For this to happen, place switch (8) to the left.
+
+```{figure} images/b2bv2-switch-orientation.webp
+Correct orientation of the switches when using built-in programmer, USB-UART converter and powering VUSB
+```
+
+- Please make sure to connect the B2Bv2 board in the **EXACT** way detailed in this document.
+  If you connect it in any other orientation, your watch will be rendered unusable.
+  You have been warned.
+- If you are having trouble programming your watch, check the orientation of the switches.
+  Sometimes they accidentally get switched to the wrong side during shipping.
+- If your serial console is showing text but not accepting input, then your connector is likely not seated correctly.
+  Press to click it in more.
