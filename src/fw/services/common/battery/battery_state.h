@@ -53,7 +53,6 @@ typedef struct {
   //! the user-facing defintion of whether we're charging (100% battery).
   bool is_charging;
   bool is_plugged;
-  bool is_present;
 } PreciseBatteryChargeState;
 
 //! Function to get the current battery charge state
