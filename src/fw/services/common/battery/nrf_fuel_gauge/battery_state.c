@@ -241,7 +241,6 @@ void battery_state_init(void) {
                                               s_last_chg_status == BatteryChargeStatusUnknown);
 
   s_last_battery_charge_state.is_plugged = battery_is_usb_connected_impl();
-  s_last_battery_charge_state.is_present = battery_is_present();
 
   s_periodic_timer_id = new_timer_create();
 
