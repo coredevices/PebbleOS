@@ -626,7 +626,7 @@ static const Command s_prompt_commands[] = {
   // Firmware specific
   //{ "task-list", command_print_task_list, 0 },
 
-  //{ "cpustats", dump_current_runtime_stats, 0 },
+  { "cpustats", dump_current_runtime_stats, 0 },
   //{ "bt prefs get", command_get_remote_prefs, 0 },
   //{ "bt prefs del", command_del_remote_pref, 1 },
   //{ "bt sniff bounce", command_bt_sniff_bounce, 0 },

@@ -19,6 +19,7 @@
 #include "drivers/rtc.h"
 #include "drivers/task_watchdog.h"
 
+#include "console/prompt.h"
 #include "kernel/memory_layout.h"
 #include "kernel/pbl_malloc.h"
 #include "os/tick.h"
@@ -274,13 +275,22 @@ void dump_current_runtime_stats(void) {
   uint32_t tot_time = running_ms + sleep_ms + stop_ms;
 
   char buf[80];
-  dbgserial_putstr_fmt(buf, sizeof(buf), "Run:   %"PRIu32" ms (%"PRIu32" %%)",
-                       running_ms, (running_ms * 100) / tot_time);
-  dbgserial_putstr_fmt(buf, sizeof(buf), "Sleep: %"PRIu32" ms (%"PRIu32" %%)",
-                       sleep_ms, (sleep_ms * 100) / tot_time);
-  dbgserial_putstr_fmt(buf, sizeof(buf), "Stop:  %"PRIu32" ms (%"PRIu32" %%)",
-                       stop_ms, (stop_ms * 100) / tot_time);
-  dbgserial_putstr_fmt(buf, sizeof(buf), "Tot:   %"PRIu32" ms", tot_time);
+  snprintf(buf, sizeof(buf), "Run:   %"PRIu32" ms (%"PRIu32" %%)",
+           running_ms, (running_ms * 100) / tot_time);
+  prompt_send_response(buf);
+  snprintf(buf, sizeof(buf), "Sleep: %"PRIu32" ms (%"PRIu32" %%)",
+           sleep_ms, (sleep_ms * 100) / tot_time);
+  prompt_send_response(buf);
+  snprintf(buf, sizeof(buf), "Stop:  %"PRIu32" ms (%"PRIu32" %%)",
+           stop_ms, (stop_ms * 100) / tot_time);
+  prompt_send_response(buf);
+  snprintf(buf, sizeof(buf), "Tot:   %"PRIu32" ms", tot_time);
+  prompt_send_response(buf);
+  
+  uint32_t rtc_ticks = rtc_get_ticks();
+  uint32_t rtos_ticks = xTaskGetTickCount();
+  snprintf(buf, sizeof(buf), "RTC ticks: %"PRIu32", RTOS ticks: %"PRIu32, rtc_ticks, rtos_ticks);
+  prompt_send_response(buf);
 }
 
 void analytics_external_collect_cpu_stats(void) {
