@@ -204,10 +204,6 @@ static void battery_vusb_interrupt_handler(bool *should_context_switch) {
   system_task_add_callback_from_isr(prv_start_timer_sys_task_callback, NULL, should_context_switch);
 }
 
-bool battery_is_present(void) {
-  return true;
-}
-
 int battery_get_millivolts(void) {
   ADCVoltageMonitorReading info = battery_read_voltage_monitor();
 

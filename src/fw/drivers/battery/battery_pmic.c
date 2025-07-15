@@ -27,10 +27,6 @@ void battery_init(void) {
   return;
 }
 
-bool battery_is_present(void) {
-  return true;
-}
-
 int battery_get_millivolts(void) {
   if (!pmic_enable_battery_measure()) {
     PBL_LOG(LOG_LEVEL_WARNING, "Failed to enable battery measure. "
