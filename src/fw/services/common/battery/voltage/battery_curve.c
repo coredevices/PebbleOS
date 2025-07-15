@@ -248,10 +248,6 @@ static uint32_t prv_lookup_percent_by_voltage(
   return charge_percent;
 }
 
-uint32_t battery_curve_lookup_percent_by_voltage(uint32_t battery_mv, bool is_charging) {
-  return prv_lookup_percent_by_voltage(battery_mv, is_charging, 1);
-}
-
 static uint32_t prv_sample_scaled_charge_percent(
     uint32_t battery_mv, bool is_charging, uint32_t scaling_factor) {
   int compensate = 0;  // We compensate 5% during rounding, so don't do here

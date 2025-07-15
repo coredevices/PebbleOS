@@ -34,12 +34,6 @@ uint32_t battery_curve_get_hours_remaining(uint32_t percent_remaining) {
   return ((BOARD_CONFIG_POWER.battery_capacity_hours * percent_remaining) / 100);
 }
 
-// TODO: use nRF Fuel gauge SoC calculation
-// Only used in PRF MFG, not actively used now so can probably be removed
-uint32_t battery_curve_lookup_percent_by_voltage(uint32_t battery_mv, bool is_charging) {
-  return 100U;
-}
-
 #if CAPABILITY_HAS_LED
 // TODO: Probably can go away
 void battery_curve_set_compensation(BatteryCurveVoltageCompensationKey key, int mv) {
