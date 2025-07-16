@@ -84,8 +84,11 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
 #endif
 
   .low_power_threshold = 5,
-  // Current is now wild (~5mA, battery is 130mAh, so ~26h)
-  .battery_capacity_hours = 26,
+
+  // Current is not great but getting there.  1 mA or so on 130 mAh battery;
+  // Memfault reports 160h expected battery, but we'll conservatively
+  // estimate 130 hours
+  .battery_capacity_hours = 130,
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
