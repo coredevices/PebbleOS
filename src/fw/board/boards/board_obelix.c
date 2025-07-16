@@ -22,6 +22,7 @@
 #include "board/board.h"
 #include "system/passert.h"
 
+
 #define HCPU_FREQ_MHZ 240
 
 static UARTDeviceState s_dbg_uart_state = {
@@ -66,6 +67,30 @@ UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
 
 IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
 IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
+
+static PwmState s_pwm1_ch1_state = {
+    .handle = {
+        .Instance = hwp_gptim1,
+        .Init = {
+             .CounterMode = GPT_COUNTERMODE_UP,
+        },
+
+    },
+    .clock_config = {
+        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
+    },
+    .channel = 1,
+};
+
+static PwmConfig s_pwm1_ch1 = {
+    .pwm_pin = {
+        .pad = PAD_PA01,
+        .func = GPTIM1_CH1,
+        .flags = PIN_NOPULL,
+    },
+    .state = &s_pwm1_ch1_state,
+};
+PwmConfig *const PWM1_CH1 = &s_pwm1_ch1;
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 static UARTDeviceState s_hci_trace_uart_state = {
