@@ -15,38 +15,38 @@
  */
 
 #include "drivers/rng.h"
-
+#include "system/logging.h"
 #include "system/passert.h"
 
-#define SF32LB52_COMPATIBLE
-#include "mcu.h"
-static bool s_inited;
+#include "bf0_hal_rcc.h"
+#include "bf0_hal_rng.h"
 
+static bool s_inited;
 static RNG_HandleTypeDef s_rng_hdl = {
     .Instance = hwp_trng,
 };
 
 bool rng_rand(uint32_t *rand_out) {
-  PBL_ASSERTN(rand_out);
   HAL_StatusTypeDef status;
+
+  HAL_RCC_EnableModule(RCC_MOD_TRNG);
+
   if (!s_inited) {
     status = HAL_RNG_Init(&s_rng_hdl);
-    if (status != HAL_OK) {
-      PBL_LOG(LOG_LEVEL_ERROR, "rng_rand init fail!");
-      return false;
-    }
+    PBL_ASSERTN(status == HAL_OK);
+
+    status = HAL_RNG_GenerateRandomSeed(&s_rng_hdl, rand_out);
+    PBL_ASSERTN(status == HAL_OK);
+
     s_inited = true;
   }
-  
-  HAL_RCC_EnableModule(RCC_MOD_TRNG);
-  status = HAL_RNG_Generate(&s_rng_hdl, rand_out, 0);
-  HAL_RCC_DisableModule(RCC_MOD_TRNG);
-  
+
+  status = HAL_RNG_GenerateRandomNumber(&s_rng_hdl, rand_out);
   if (status != HAL_OK) {
-    HAL_RNG_DeInit(&s_rng_hdl);
-    s_inited = false;
-    PBL_LOG(LOG_LEVEL_ERROR, "rnd_rand generate fail! %d", status);
-    return false;
+    PBL_LOG(LOG_LEVEL_ERROR, "HAL_RNG_GenerateRandomNumber failed: %d", status);
   }
-  return true;
+
+  HAL_RCC_DisableModule(RCC_MOD_TRNG);
+
+  return status == HAL_OK;
 }
