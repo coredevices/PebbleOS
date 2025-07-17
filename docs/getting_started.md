@@ -37,7 +37,7 @@ sudo apt update
 2. Install required dependencies
 
 ```shell
-sudo apt install clang gcc gcc-multilib git gettext python3-dev python3-venv
+sudo apt install clang gcc gcc-multilib git gettext python3-dev python3-venv openocd
 ```
 
 ::::
@@ -51,6 +51,12 @@ sudo apt install clang gcc gcc-multilib git gettext python3-dev python3-venv
 
 ```shell
 brew link python@3
+```
+
+3. Install `openocd`
+
+```shell
+brew install openocd
 ```
 
 ::::
@@ -98,7 +104,7 @@ git clone --recurse-submodules https://github.com/coredevices/pebbleos
 Once cloned, enter the `pebble-firmware` directory before continuing:
 
 ```shell
-cd pebble-firmware
+cd pebbleos
 ```
 
 ## Python dependencies
