@@ -5,3 +5,8 @@ MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(battery_v, kMemfaultMetricType_Unsi
 MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(memory_pct_max, kMemfaultMetricType_Unsigned, 100)
 
 #include "ports/freertos/config/memfault_metrics_heartbeat_freertos_config.def"
+
+#if CAPABILITY_NEEDS_FIRM_233_WAR
+MEMFAULT_METRICS_KEY_DEFINE(firm_233_log_events, kMemfaultMetricType_Unsigned)
+MEMFAULT_METRICS_KEY_DEFINE(firm_233_airplane_mode_cycles, kMemfaultMetricType_Unsigned)
+#endif
