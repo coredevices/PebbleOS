@@ -33,20 +33,27 @@ bool rng_rand(uint32_t *rand_out) {
     status = HAL_RNG_Init(&s_rng_hdl);
     if (status != HAL_OK) {
       PBL_LOG(LOG_LEVEL_ERROR, "rng_rand init fail!");
-      return false;
+      goto exit;
+    }
+    /*Must generate 1 seed, make sure the seed flag is valid; otherwise, the random number
+     * generation will fail.*/
+    status = HAL_RNG_Generate(&s_rng_hdl, rand_out, 1);
+    if (status != HAL_OK) {
+      PBL_LOG(LOG_LEVEL_ERROR, "rnd_seed generate fail! %d", status);
+      goto error;
     }
     s_inited = true;
   }
-  
+
   HAL_RCC_EnableModule(RCC_MOD_TRNG);
   status = HAL_RNG_Generate(&s_rng_hdl, rand_out, 0);
   HAL_RCC_DisableModule(RCC_MOD_TRNG);
-  
-  if (status != HAL_OK) {
-    HAL_RNG_DeInit(&s_rng_hdl);
-    s_inited = false;
-    PBL_LOG(LOG_LEVEL_ERROR, "rnd_rand generate fail! %d", status);
-    return false;
-  }
-  return true;
+  if (status == HAL_OK) return true;
+
+  s_inited = false;
+  PBL_LOG(LOG_LEVEL_ERROR, "rnd_rand generate fail! %d", status);
+error:
+  HAL_RNG_DeInit(&s_rng_hdl);
+exit:
+  return false;
 }
