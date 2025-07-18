@@ -39,7 +39,7 @@ bool rng_rand(uint32_t *rand_out) {
   }
   
   HAL_RCC_EnableModule(RCC_MOD_TRNG);
-  status = HAL_RNG_Generate(&s_rng_hdl, rand_out, 0);
+  status = HAL_RNG_Generate(&s_rng_hdl, rand_out, 1);
   HAL_RCC_DisableModule(RCC_MOD_TRNG);
   
   if (status != HAL_OK) {
