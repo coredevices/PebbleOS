@@ -56,6 +56,8 @@ Do not use any adapter that does not operate at 1.8V, or there is a **risk of da
 
 ### Usage and tips
 
+After receiving your Firmware Dev Kit, please update the firmware on the board to the [latest release](https://github.com/coredevices/asterix_b2b2_fw/releases).
+
 When using the built-in programmer and USB-UART converter, make sure to place switches (3) and (4) to the right, as shown in the picture below.
 It is also recommended to provide VUSB while programming so that the watch is always programmable regardless of the battery level.
 For this to happen, place switch (8) to the left.
