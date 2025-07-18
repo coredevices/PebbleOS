@@ -139,7 +139,7 @@ static void prv_test_session_setup_msg(uint16_t endpoint_id, const uint8_t* data
   cl_assert_equal_i(endpoint_id, 11000);
 
   size_t expected_len = sizeof(SessionSetupMsg) + sizeof(GenericAttribute) +
-                        sizeof(AudioTransferInfoSpeex) +
+                        sizeof(AudioTransferInfoOpus) +
                         (s_app_initiated ? (sizeof(GenericAttribute) + sizeof(Uuid)) : 0);
   cl_assert_equal_i(length, expected_len);
 
@@ -186,7 +186,7 @@ static void prv_test_session_setup_msg(uint16_t endpoint_id, const uint8_t* data
 void test_voice_endpoint__send_session_setup(void) {
   fake_transport_set_sent_cb(s_transport, prv_test_session_setup_msg);
 
-  AudioTransferInfoSpeex transfer_info = (AudioTransferInfoSpeex) {
+  AudioTransferInfoOpus transfer_info = (AudioTransferInfoOpus) {
     .sample_rate = 16000,
     .bit_rate = 12800,
     .frame_size = 320,
@@ -219,7 +219,7 @@ void test_voice_endpoint__send_session_setup(void) {
 void test_voice_endpoint__send_session_setup_app_initiated(void) {
   fake_transport_set_sent_cb(s_transport, prv_test_session_setup_msg);
 
-  AudioTransferInfoSpeex transfer_info = (AudioTransferInfoSpeex) {
+  AudioTransferInfoOpus transfer_info = (AudioTransferInfoOpus) {
     .sample_rate = 16000,
     .bit_rate = 12800,
     .frame_size = 320,
