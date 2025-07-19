@@ -32,7 +32,7 @@ typedef enum {
 // Attribute ID definitions
 typedef enum {
   VEAttributeIdInvalid = 0x00,
-  VEAttributeIdAudioTransferInfoSpeex = 0x01,
+  VEAttributeIdAudioTransferInfoOpus = 0x01,
   VEAttributeIdTranscription = 0x02,
   VEAttributeIdAppUuid = 0x03,
   VEAttributeIdReminder = 0x04,

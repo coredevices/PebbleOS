@@ -42,15 +42,15 @@ typedef enum {
   VoiceEndpointResultFailInvalidMessage = 0x06,
 } VoiceEndpointResult;
 
-// Sent before Speex encoded data
+// Sent before Opus encoded data (maintaining compatibility with mobile app)
 typedef struct PACKED {
   char version[20];
   uint32_t sample_rate;
   uint16_t bit_rate;
   uint8_t bitstream_version;
   uint16_t frame_size;
-} AudioTransferInfoSpeex;
+} AudioTransferInfoOpus;
 
 //! Called by the voice service to set up a dictation or command recognition session
 void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
-    AudioEndpointSessionId session_id, AudioTransferInfoSpeex *info, Uuid *app_uuid);
+    AudioEndpointSessionId session_id, AudioTransferInfoOpus *info, Uuid *app_uuid);

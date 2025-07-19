@@ -17,8 +17,11 @@ def build(bld):
         micro_sources = bld.path.ant_glob('stm32-sdk/STM32F4xx_StdPeriph_Driver/src/*.c',
                                           excl=excludes)
 
+        micro_sources += bld.path.ant_glob('stm32-sdk/OpenPDMFilter/*.c')
+        
         micro_includes = ['stm32-sdk/Device/ST/STM32F4xx/Include',
-                          'stm32-sdk/STM32F4xx_StdPeriph_Driver/inc']
+                          'stm32-sdk/STM32F4xx_StdPeriph_Driver/inc',
+                          'stm32-sdk/OpenPDMFilter']
 
     elif bld.env.MICRO_FAMILY == 'STM32F2':
         micro_sources = bld.path.ant_glob('STM32F2xx_StdPeriph_Driver/src/*.c')

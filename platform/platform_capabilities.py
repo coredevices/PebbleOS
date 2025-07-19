@@ -95,7 +95,7 @@ board_capability_dicts = [
             'HAS_MAGNETOMETER',
             'HAS_MAPPABLE_FLASH',
             'HAS_MASKING',
-            # 'HAS_MICROPHONE', -- TODO: disabled because driver was removed
+            'HAS_MICROPHONE',
             'HAS_PMIC',
             'HAS_SDK_SHELL4',
             'HAS_TEMPERATURE',
@@ -122,7 +122,7 @@ board_capability_dicts = [
             'HAS_MAGNETOMETER',
             'HAS_MAPPABLE_FLASH',
             'HAS_MASKING',
-            # 'HAS_MICROPHONE', -- TODO: disabled because driver was removed
+            'HAS_MICROPHONE',
             'HAS_PMIC',
             'HAS_SDK_SHELL4',
             'HAS_TEMPERATURE',
@@ -148,7 +148,7 @@ board_capability_dicts = [
             'HAS_MAGNETOMETER',
             'HAS_MAPPABLE_FLASH',
             'HAS_MASKING',
-            # 'HAS_MICROPHONE', -- TODO: disabled because driver was removed
+            'HAS_MICROPHONE',
             'HAS_PMIC',
             'HAS_SDK_SHELL4',
             'HAS_TEMPERATURE',
@@ -173,7 +173,7 @@ board_capability_dicts = [
             'HAS_MAGNETOMETER',
             'HAS_MAPPABLE_FLASH',
             'HAS_MASKING',
-            # 'HAS_MICROPHONE', -- TODO: disabled because driver was removed
+            'HAS_MICROPHONE',
             'HAS_PMIC',
             'HAS_SDK_SHELL4',
             'HAS_TEMPERATURE',
@@ -194,7 +194,7 @@ board_capability_dicts = [
             'HAS_JAVASCRIPT',
             'HAS_LAUNCHER4',
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
-            # 'HAS_MICROPHONE', -- TODO: disabled because driver was removed
+            'HAS_MICROPHONE',
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             'HAS_PMIC',
             'HAS_SDK_SHELL4',
@@ -221,7 +221,7 @@ board_capability_dicts = [
             'HAS_LAUNCHER4',
             'HAS_MAGNETOMETER',
             'HAS_MASKING',
-            # 'HAS_MICROPHONE', -- TODO: disabled because driver was removed
+            'HAS_MICROPHONE',
             'HAS_PMIC',
             'HAS_SDK_SHELL4',
             'HAS_SPRF_V3',

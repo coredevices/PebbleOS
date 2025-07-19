@@ -34,3 +34,6 @@
 [submodule "third_party/nonfree/pebbleos-nonfree"]
 	path = third_party/nonfree/pebbleos-nonfree
 	url = https://github.com/coredevices/pebbleos-nonfree
+[submodule "third_party/opus/opus"]
+	path = third_party/opus/opus
+	url = https://github.com/xiph/opus.git

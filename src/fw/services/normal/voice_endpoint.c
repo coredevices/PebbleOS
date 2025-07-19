@@ -185,15 +185,15 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
 #endif
 
 void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
-    AudioEndpointSessionId session_id, AudioTransferInfoSpeex *info, Uuid *app_uuid) {
+    AudioEndpointSessionId session_id, AudioTransferInfoOpus *info, Uuid *app_uuid) {
 
   CommSession *comm_session = comm_session_get_system_session();
   comm_session_set_responsiveness(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMin,
                                   MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
 
-  // We're only sending one attribute now: the speex audio transfer info packet
+  // We're only sending one attribute now: the opus audio transfer info packet
   size_t size = sizeof(SessionSetupMsg) + sizeof(GenericAttribute) +
-                sizeof(AudioTransferInfoSpeex) +
+                sizeof(AudioTransferInfoOpus) +
                 (app_uuid ? (sizeof(Uuid) + sizeof(GenericAttribute)) : 0);
   SessionSetupMsg *msg = kernel_malloc_check(size);
   *msg = (SessionSetupMsg) {
@@ -216,8 +216,8 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
     attr = generic_attribute_add_attribute(attr, VEAttributeIdAppUuid, app_uuid, sizeof(Uuid));
   }
 
-  attr = generic_attribute_add_attribute(attr, VEAttributeIdAudioTransferInfoSpeex, info,
-      sizeof(AudioTransferInfoSpeex));
+  attr = generic_attribute_add_attribute(attr, VEAttributeIdAudioTransferInfoOpus, info,
+      sizeof(AudioTransferInfoOpus));
 
   size_t actual_size = (uint8_t *)attr - (uint8_t *)msg;
   PBL_ASSERTN(actual_size == size);
