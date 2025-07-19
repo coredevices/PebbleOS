@@ -45,7 +45,7 @@
 #define STM32F4_COMPATIBLE
 #include <mcu.h>
 
-#include "vendor/ST-libPDM/pdm_filter.h"
+#include "OpenPDMFilter.h"
 
 #define DECIMATION_FACTOR         (64)
 #define IN_BUF_BATCH_SIZE         (8)
@@ -59,7 +59,7 @@ static uint16_t s_in_buffer[2][IN_BUFFER_LENGTH];
 static uint8_t s_circ_buf_store[(MIC_SAMPLE_RATE / 1000) * CIRCULAR_BUF_BATCH_SIZE * 4
                                 * sizeof(uint16_t)];
 
-static PDMFilter_InitStruct s_pdm_filter;
+static TPDMFilter_InitStruct s_pdm_filter;
 
 static uint16_t s_volume;
 
@@ -190,6 +190,8 @@ void mic_init(MicDevice *this) {
   s_pdm_filter.HP_HZ = 10;
   s_pdm_filter.Out_MicChannels = 1;
   s_pdm_filter.In_MicChannels = 1;
+  s_pdm_filter.Decimation = DECIMATION_FACTOR;
+  s_pdm_filter.MaxVolume = 64;
 
   dma_request_init(MIC_I2S_RX_DMA);
 
@@ -232,7 +234,7 @@ bool mic_start(MicDevice *mic, MicDataHandlerCB data_handler, void *context,
   // The filter library checks that the CRC is present on the platform. Yay DRM
   periph_config_enable(CRC, RCC_AHB1Periph_CRC);
   CRC_ResetDR();
-  PDM_Filter_Init(&s_pdm_filter);
+  Open_PDM_Filter_Init(&s_pdm_filter);
   periph_config_disable(CRC, RCC_AHB1Periph_CRC);
 
   //Enable I2S PLL
@@ -361,7 +363,7 @@ static bool prv_dma_handler(DMARequest *request, void *context, bool is_complete
   uint16_t *pdm_buffer = s_in_buffer[is_complete ? 1 : 0];
   // byte endianness needs to be swapped for the filter library
   for (size_t i = 0; i < ARRAY_LENGTH(s_in_buffer[0]); i++) {
-    pdm_buffer[i] = htons(pdm_buffer[i]);
+    pdm_buffer[i] = HTONS(pdm_buffer[i]);
   }
 
   bool overflow = false;
@@ -369,8 +371,7 @@ static bool prv_dma_handler(DMARequest *request, void *context, bool is_complete
   uint16_t *pdm_end = pdm_buffer + ARRAY_LENGTH(s_in_buffer[0]);
   while (pdm_buffer < pdm_end) {
     // Process one millisecond of data per call
-    PDM_Filter_64_LSB((uint8_t *)pdm_buffer, pcm16_buffer, s_volume,
-        (PDMFilter_InitStruct *)&s_pdm_filter);
+    Open_PDM_Filter_64((uint8_t *)pdm_buffer, pcm16_buffer, s_volume, &s_pdm_filter);
     pdm_buffer += DECIMATION_FACTOR;
 
     // while the filter is settling discard samples (about 100 ms)
