@@ -111,7 +111,7 @@ static void prv_dfsdm_configure(MicDevice *this) {
   uint32_t prescaler = clocks.PCLK2_Frequency / this->pdm_frequency;
 
   // Disable the device before changing the config
-  DFSDM_Cmd(DISABLE);
+  DFSDM_Command(DISABLE);
   DFSDM_ChannelCmd(this->channel, DISABLE);
   DFSDM_FilterCmd(this->filter, DISABLE);
 
@@ -147,7 +147,7 @@ static void prv_dfsdm_configure(MicDevice *this) {
 // must have initialized both the DFSDM and DMA
 static void prv_dfsdm_enable(MicDevice *this) {
   // Enable DFSDM and DMA
-  DFSDM_Cmd(ENABLE);
+  DFSDM_Command(ENABLE);
   DFSDM_ChannelCmd(this->channel, ENABLE);
 
   // Wait for microphone to power up
@@ -158,7 +158,7 @@ static void prv_dfsdm_enable(MicDevice *this) {
   DFSDM_FilterCmd(this->filter, ENABLE);
   DFSDM_RegularContinuousModeCmd(this->filter, ENABLE);
   DFSDM_StartSoftwareRegularConversion(this->filter);
-  dma_request_start_circular(this->dma, this->state->in_buffer, (void *)&this->filter->RDATAR,
+  dma_request_start_circular(this->dma, this->state->in_buffer, (void *)&this->filter->FLTRDATAR,
                              sizeof(this->state->in_buffer), prv_dma_handler, (void *)this);
 }
 
@@ -166,7 +166,7 @@ static void prv_dfsdm_disable(MicDevice *this) {
   // Disable DMA and DFSDM
   dma_request_stop(this->dma);
   DFSDM_ChannelCmd(this->channel, DISABLE);
-  DFSDM_Cmd(DISABLE);
+  DFSDM_Command(DISABLE);
 
   prv_disable_clocks(this);
 }
@@ -438,16 +438,16 @@ bool mic_selftest(void) {
   // Configure the DFSDM peripheral with short-circuit detection.
   prv_enable_clocks(MIC);
   // Set the short-circut threshold length to its maximum value.
-  DFSDM_ConfigShortCircuitThreshold(DFSDM_Channel2, 255);
+  DFSDM_ConfigShortCircuitThreshold(DFSDM1_Channel2, 255);
   prv_dfsdm_configure(MIC);
 
   // Start DFSDM conversion without DMA. Throw out the samples; we only
   // care about the short-circuit detection.
-  DFSDM_Cmd(ENABLE);
-  DFSDM_ChannelCmd(DFSDM_Channel2, ENABLE);
-  DFSDM_FilterCmd(DFSDM_Filter0, ENABLE);
-  DFSDM_RegularContinuousModeCmd(DFSDM_Filter0, ENABLE);
-  DFSDM_StartSoftwareRegularConversion(DFSDM_Filter0);
+  DFSDM_Command(ENABLE);
+  DFSDM_ChannelCmd(DFSDM1_Channel2, ENABLE);
+  DFSDM_FilterCmd((DFSDM_TypeDef *) DFSDM1_Filter0_BASE, ENABLE);
+  DFSDM_RegularContinuousModeCmd((DFSDM_TypeDef *) DFSDM1_Filter0_BASE, ENABLE);
+  DFSDM_StartSoftwareRegularConversion((DFSDM_TypeDef *) DFSDM1_Filter0_BASE);
 
   // Wait until the microphone wakes up. The datasheet max wakeup time
   // for the two microphones we may use on Silk is around 30 ms. Add in
