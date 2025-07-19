@@ -54,19 +54,31 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
   taddr = addr - hflash->base;
   remain = size;
 
-  if ((taddr & (SUBSECTOR_SIZE_BYTES - 1)) != 0) return -1;
-  if ((remain & (SUBSECTOR_SIZE_BYTES - 1)) != 0) return -2;
+  if ((taddr & (SUBSECTOR_SIZE_BYTES - 1)) != 0) {
+    res = -1;
+    goto end;
+  }
+  if ((remain & (SUBSECTOR_SIZE_BYTES - 1)) != 0) {
+    res = -2;
+    goto end;
+  }
 
   while (remain > 0) {
     res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
-    if (res != 0) return 1;
+    if (res != 0) {
+      res = 1;
+      goto end;
+    }
 
     remain -= SUBSECTOR_SIZE_BYTES;
     taddr += SUBSECTOR_SIZE_BYTES;
   }
-
+  res = 0;
+end:
+  SCB_InvalidateDCache_by_Addr((void *)addr, size);
+  SCB_InvalidateICache_by_Addr((void *)addr, size);
   __enable_irq();
-  return 0;
+  return res;
 }
 
 static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t size) {
@@ -88,7 +100,6 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
   } else {
     tbuf = buf;
   }
-
   __disable_irq();
 
   taddr = addr - hflash->base;
@@ -104,7 +115,7 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
 
     res = HAL_QSPIEX_WRITE_PAGE(hflash, taddr, tbuf, fill);
     if ((uint32_t)res != fill) {
-      size = 0;
+      res = 0;
       goto exit;
     }
 
@@ -117,7 +128,7 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
     fill = remain > PAGE_SIZE_BYTES ? PAGE_SIZE_BYTES : remain;
     res = HAL_QSPIEX_WRITE_PAGE(hflash, taddr, tbuf, fill);
     if ((uint32_t)res != fill) {
-      size = 0;
+      res = 0;
       goto exit;
     }
 
@@ -125,18 +136,21 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
     tbuf += fill;
     remain -= fill;
   }
-
+  res = size;
 exit:
+
+  SCB_InvalidateDCache_by_Addr((void *)addr, size);
+  SCB_InvalidateICache_by_Addr((void *)addr, size);
   __enable_irq();
 
   if (local_buf) {
     kernel_free(local_buf);
   }
 
-  return size;
+  return res;
 }
 
-bool qspi_flash_check_whoami(QSPIFlash *dev) { 
+bool qspi_flash_check_whoami(QSPIFlash *dev) {
   QSPI_FLASH_CTX_T *ctx = &dev->qspi->state->ctx;
   uint32_t id = ctx->dev_id;
 
@@ -150,11 +164,17 @@ bool qspi_flash_check_whoami(QSPIFlash *dev) {
   }
 }
 
-status_t qspi_flash_write_protection_enable(QSPIFlash *dev) { return S_NO_ACTION_REQUIRED; }
+status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
+  return S_NO_ACTION_REQUIRED;
+}
 
-status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) { return S_SUCCESS; }
+status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) {
+  return S_SUCCESS;
+}
 
-status_t qspi_flash_unlock_all(QSPIFlash *dev) { return S_SUCCESS; }
+status_t qspi_flash_unlock_all(QSPIFlash *dev) {
+  return S_SUCCESS;
+}
 
 void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   HAL_StatusTypeDef res;
@@ -218,7 +238,9 @@ status_t flash_impl_set_nvram_erase_status(bool is_subsector, FlashAddress addr)
   return S_SUCCESS;
 }
 
-status_t flash_impl_clear_nvram_erase_status(void) { return S_SUCCESS; }
+status_t flash_impl_clear_nvram_erase_status(void) {
+  return S_SUCCESS;
+}
 
 status_t flash_impl_get_nvram_erase_status(bool *is_subsector, FlashAddress *addr) {
   return S_FALSE;
