@@ -27,6 +27,9 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/stop.h"
+#if MEMFAULT
+#include "memfault/metrics/connectivity.h"
+#endif
 #include "os/mutex.h"
 #include "pebble_errors.h"
 #include "services/common/analytics/analytics.h"
@@ -148,6 +151,15 @@ static void prv_send_state_change_event(void) {
           },
   };
   event_put(&event);
+#if MEMFAULT
+  if (s_comm_airplane_mode_on) {
+    memfault_metrics_connectivity_connected_state_change(
+      kMemfaultMetricsConnectivityState_Stopped);
+  } else {
+    memfault_metrics_connectivity_connected_state_change(
+      kMemfaultMetricsConnectivityState_Started);
+  }
+#endif
 }
 
 static void prv_comm_state_change(void *context) {
