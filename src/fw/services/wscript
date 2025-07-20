@@ -16,7 +16,8 @@ def build(bld):
 
         if bld.is_asterix():
             use.append('nrf_fuel_gauge')
-
+        if bld.env.memfault:
+            use.append('memfault_includes')
         bld.stlib(source=sources,
                   target='fw_services',
                   use=use)

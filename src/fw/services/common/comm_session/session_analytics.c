@@ -18,6 +18,9 @@
 
 #include "drivers/rtc.h"
 
+#if MEMFAULT
+#include "memfault/metrics/connectivity.h"
+#endif
 #include "services/common/comm_session/session_internal.h"
 #include "services/common/analytics/analytics.h"
 #include "services/common/ping.h"
@@ -42,6 +45,10 @@ void comm_session_analytics_open_session(CommSession *session) {
     int analytic_id = prv_get_analytic_id_for_session(session);
     analytics_stopwatch_start(analytic_id, AnalyticsClient_System);
     analytics_inc(ANALYTICS_DEVICE_METRIC_BT_SYSTEM_SESSION_OPEN_COUNT, AnalyticsClient_System);
+#if MEMFAULT
+    memfault_metrics_connectivity_connected_state_change(
+      kMemfaultMetricsConnectivityState_Connected);
+#endif
   }
   session->open_ticks = rtc_get_ticks();
 }
@@ -51,6 +58,10 @@ void comm_session_analytics_close_session(CommSession *session, CommSessionClose
   if (is_system) {
     int analytic_id = prv_get_analytic_id_for_session(session);
     analytics_stopwatch_stop(analytic_id);
+#if MEMFAULT
+    memfault_metrics_connectivity_connected_state_change(
+      kMemfaultMetricsConnectivityState_ConnectionLost);
+#endif
   }
 
   const RtcTicks duration_ticks = (rtc_get_ticks() - session->open_ticks);
