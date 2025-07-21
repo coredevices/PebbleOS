@@ -20,6 +20,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include <FreeRTOS.h>
+
 #define MIC_SAMPLE_RATE     (16000) //!< Microphone audio data sample rate
 #define MIC_DEFAULT_VOLUME  (-1)
 
