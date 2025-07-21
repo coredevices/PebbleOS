@@ -62,8 +62,7 @@ static ipc_queue_handle_t s_ipc_port;
 extern void lcpu_power_on(void);
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
-void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet)
-{
+void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
   const char *type_str;
 
   switch (type) {
@@ -89,8 +88,7 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
   PBL_HEXDUMP_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, data, len);
 }
 #elif defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
-void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet)
-{
+void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
   uint8_t trace_hdr[HCI_TRACE_HEADER_LEN];
 
   // Magic for Pebble HCI, 'PBTS'
@@ -121,12 +119,24 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
     uart_write_byte(HCI_TRACE_UART, data[i]);
   }
 }
+
+#include "stdarg.h"
+#include "stdio.h"
+void HAL_DBG_printf(const char *fmt, ...) {
+  va_list args;
+  static char rt_log_buf[80];
+
+  va_start(args, fmt);
+  vsnprintf(rt_log_buf, sizeof(rt_log_buf) - 1, fmt, args);
+  HAL_UART_Transmit(&(HCI_TRACE_UART->state->huart), (uint8_t *)rt_log_buf, strlen(rt_log_buf), HAL_MAX_DELAY);
+  va_end(args);
+}
+
 #else
 #define prv_hci_trace(type, data, len, h4tl_packet)
 #endif
 
-static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size)
-{
+static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size) {
   BaseType_t woken;
 
   xSemaphoreGiveFromISR(s_ipc_data_ready, &woken);
@@ -135,8 +145,7 @@ static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size)
   return 0;
 }
 
-static int prv_config_ipc(void)
-{
+static int prv_config_ipc(void) {
   ipc_queue_cfg_t q_cfg;
   int32_t ret;
 
@@ -148,8 +157,7 @@ static int prv_config_ipc(void)
   uint8_t rev_id = __HAL_SYSCFG_GET_REVID();
   if (rev_id < HAL_CHIP_REV_ID_A4) {
     q_cfg.rx_buf_addr = RX_BUF_ADDR;
-  }
-  else {
+  } else {
     q_cfg.rx_buf_addr = RX_BUF_REV_B_ADDR;
   }
 
@@ -178,8 +186,7 @@ static int prv_config_ipc(void)
   return 0;
 }
 
-static int prv_hci_frame_cb(uint8_t pkt_type, void *data)
-{
+static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   struct ble_hci_ev *ev;
   struct ble_hci_ev_command_complete *cmd_complete;
   struct os_mbuf *om;
@@ -214,8 +221,7 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data)
   return -1;
 }
 
-static void prv_hci_task_main(void *unused)
-{
+static void prv_hci_task_main(void *unused) {
   uint8_t buf[64];
 
   while (true) {
@@ -232,16 +238,14 @@ static void prv_hci_task_main(void *unused)
           consumed_bytes = hci_h4_sm_rx(&s_hci_h4sm, buf, len);
           len -= consumed_bytes;
         }
-      }
-      else {
+      } else {
         break;
       }
     }
   }
 }
 
-void ble_transport_ll_init(void)
-{
+void ble_transport_ll_init(void) {
   int ret;
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
@@ -270,9 +274,11 @@ void ble_transport_ll_init(void)
   lcpu_power_on();
 }
 
+#define MAX_HCI_PKT_SIZE 1024
+static uint8_t temp_hci_data[MAX_HCI_PKT_SIZE];
+
 /* APIs to be implemented by HS/LL side of transports */
-int ble_transport_to_ll_cmd_impl(void *buf)
-{
+int ble_transport_to_ll_cmd_impl(void *buf) {
   struct ble_hci_cmd *cmd = buf;
   uint8_t h4_cmd = HCI_H4_CMD;
   size_t written;
@@ -286,33 +292,31 @@ int ble_transport_to_ll_cmd_impl(void *buf)
   return (written >= 0U) ? 0 : -1;
 }
 
-int ble_transport_to_ll_acl_impl(struct os_mbuf *om)
-{
+int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   uint8_t *data;
   size_t written;
   uint8_t h4_cmd = HCI_H4_ACL;
 
-  data = OS_MBUF_DATA(om, uint8_t *);
-  prv_hci_trace(HCI_H4_ACL, data, OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
-
+  PBL_ASSERT(OS_MBUF_PKTLEN(om) < MAX_HCI_PKT_SIZE, "Too long ACL packet");
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
-  written = ipc_queue_write(s_ipc_port, data, OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
+  os_mbuf_copydata(om, 0,  OS_MBUF_PKTLEN(om), temp_hci_data);
+  prv_hci_trace(HCI_H4_ACL, temp_hci_data, OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
+  written = ipc_queue_write(s_ipc_port, temp_hci_data, OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
   os_mbuf_free(om);
 
   return (written >= 0U) ? 0 : -1;
 }
 
-int ble_transport_to_ll_iso_impl(struct os_mbuf *om)
-{
-  uint8_t *data;
+int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   size_t written;
   uint8_t h4_cmd = HCI_H4_ISO;
 
-  data = OS_MBUF_DATA(om, uint8_t *);
-  prv_hci_trace(HCI_H4_ISO, data, OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
+  PBL_ASSERT(OS_MBUF_PKTLEN(om) < MAX_HCI_PKT_SIZE, "Too long ISO packet");
+  os_mbuf_copydata(om, 0,  OS_MBUF_PKTLEN(om), temp_hci_data);
+  prv_hci_trace(HCI_H4_ISO, temp_hci_data, OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
-  written = ipc_queue_write(s_ipc_port, data, OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
+  written = ipc_queue_write(s_ipc_port, temp_hci_data, OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
   os_mbuf_free(om);
 
   return (written >= 0U) ? 0 : -1;
