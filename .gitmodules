@@ -34,3 +34,6 @@
 [submodule "third_party/nonfree/pebbleos-nonfree"]
 	path = third_party/nonfree/pebbleos-nonfree
 	url = https://github.com/coredevices/pebbleos-nonfree
+[submodule "third_party/speex/speex"]
+	path = third_party/speex/speex
+	url = https://github.com/xiph/speex
