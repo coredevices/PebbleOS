@@ -26,6 +26,7 @@
 #include "resource/resource_ids.auto.h"
 #include "services/normal/timeline/layout_layer.h"
 #include "services/normal/timeline/notification_layout.h"
+#include "services/normal/notifications/alerts_preferences_private.h"
 #include "kernel/ui/kernel_ui.h"
 #include "process_state/app_state/app_state.h"
 #include "system/logging.h"
@@ -204,6 +205,12 @@ static void prv_update_status_bar_color(SwapLayer *swap_layer) {
     color_status_bar = WITHIN(cur_frame->origin.y, -96, 66) || swap_layer->swap_in_progress;
 #endif
     bg_color = layout_get_colors(swap_layer->current)->bg_color;
+
+#if PBL_BW
+    // On a black and white display, use the appropriate status bar color based on design style
+    const bool use_alternative_design = alerts_preferences_get_notification_alternative_design();
+    bg_color = use_alternative_design ? GColorBlack : GColorLightGray;
+#endif
   }
 
   prv_update_colors(swap_layer, bg_color, color_status_bar);
