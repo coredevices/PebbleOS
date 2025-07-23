@@ -27,6 +27,7 @@ def build(bld):
             'SiFli-SDK/drivers/cmsis/sf32lb52x/bt_rf_fulcal.c',
             'SiFli-SDK/middleware/ipc_queue/porting/sf32lb52x/hcpu/ipc_hw_port.c',
             'sf32lb52/system_bf0_ap.c',
+            'sf32lb52/lcpu_config.c',
         ]
 
     micro_includes = [
