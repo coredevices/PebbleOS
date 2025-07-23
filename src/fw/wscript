@@ -344,6 +344,7 @@ def _link_firmware(bld, sources):
             'nanopb',
             'pblibc',
             'root_includes',
+            'speex',
             'startup',
             'tinymt32',
             'upng']
