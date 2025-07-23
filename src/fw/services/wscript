@@ -11,7 +11,8 @@ def build(bld):
             'fw_includes',
             'freertos_includes',
             'bt_driver',
-            'root_includes'
+            'root_includes',
+            'speex_includes',
         ]
 
         if bld.is_asterix():
