@@ -65,6 +65,9 @@ def build(bld):
             if not bld.capability('HAS_MAGNETOMETER'):
                 excludes.append('common/ecompass.c')
 
+            if not bld.capability('HAS_MICROPHONE'):
+                excludes.append('normal/voice/**')
+
             return excludes
 
         excludes = _get_excludes(bld)
