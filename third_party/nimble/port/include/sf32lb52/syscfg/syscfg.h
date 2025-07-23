@@ -45,7 +45,7 @@
 
 /*** Repository @syscfg info */
 #ifndef MYNEWT_VAL_REPO_HASH_SYSCFG
-#define MYNEWT_VAL_REPO_HASH_SYSCFG "c69c6b902649d3a2a0cb631a1bf77f9f26d198b6-dirty"
+#define MYNEWT_VAL_REPO_HASH_SYSCFG "3bdec47963cc638a2a9296673b24588381ecf196-dirty"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_SYSCFG
@@ -948,6 +948,19 @@
 #define MYNEWT_VAL_BLE_STORE_MAX_CCCDS (8)
 #endif
 
+/*** @apache-mynewt-nimble/nimble/host/services/bas */
+#ifndef MYNEWT_VAL_BLE_SVC_BAS_BATTERY_LEVEL_NOTIFY_ENABLE
+#define MYNEWT_VAL_BLE_SVC_BAS_BATTERY_LEVEL_NOTIFY_ENABLE (1)
+#endif
+
+#ifndef MYNEWT_VAL_BLE_SVC_BAS_BATTERY_LEVEL_READ_PERM
+#define MYNEWT_VAL_BLE_SVC_BAS_BATTERY_LEVEL_READ_PERM (0)
+#endif
+
+#ifndef MYNEWT_VAL_BLE_SVC_BAS_SYSINIT_STAGE
+#define MYNEWT_VAL_BLE_SVC_BAS_SYSINIT_STAGE (303)
+#endif
+
 /*** @apache-mynewt-nimble/nimble/host/services/dis */
 /* Overridden by app (defined by @apache-mynewt-nimble/nimble/host/services/dis) */
 #ifndef MYNEWT_VAL_BLE_SVC_DIS_DEFAULT_READ_PERM
@@ -1333,6 +1346,7 @@
 #define MYNEWT_PKG_apache_mynewt_core__util_rwlock 1
 #define MYNEWT_PKG_apache_mynewt_nimble__nimble 1
 #define MYNEWT_PKG_apache_mynewt_nimble__nimble_host 1
+#define MYNEWT_PKG_apache_mynewt_nimble__nimble_host_services_bas 1
 #define MYNEWT_PKG_apache_mynewt_nimble__nimble_host_services_dis 1
 #define MYNEWT_PKG_apache_mynewt_nimble__nimble_host_services_gap 1
 #define MYNEWT_PKG_apache_mynewt_nimble__nimble_host_services_gatt 1
