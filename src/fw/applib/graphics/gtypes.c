@@ -392,6 +392,13 @@ GColor8 gcolor_legible_over(GColor8 background_color) {
   return bright ? GColorBlack : GColorWhite;
 }
 
+GColor8 gcolor_invert(GColor8 color) {
+  // Invert the RGB components while keeping the alpha channel unchanged
+  return (GColor8) {
+    .argb = (color.argb & 0b11000000) | (~color.argb & 0b00111111)
+  };
+}
+
 BitmapInfo gbitmap_get_info(const GBitmap *bitmap) {
   if (!bitmap) {
     return (BitmapInfo) { 0 };
