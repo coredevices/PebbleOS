@@ -116,9 +116,9 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_svc_gap_init();
   ble_svc_gatt_init();
   ble_svc_dis_init();
-  ble_svc_bas_init();
   pebble_pairing_service_init();
-
+  ble_svc_bas_init();
+  
   ble_hs_sched_start();
   f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
