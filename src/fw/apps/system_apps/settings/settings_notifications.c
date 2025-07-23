@@ -57,6 +57,7 @@ enum NotificationsItem {
 #endif
   NotificationsItemTextSize,
   NotificationsItemWindowTimeout,
+  NotificationsItemDesignStyle,
   NotificationsItem_Count,
 };
 
@@ -246,6 +247,38 @@ static void prv_window_timeout_menu_push(SettingsNotificationsData *data) {
       data);
 }
 
+// Design Style
+////////////////////////
+
+static const char *s_design_style_labels[] = {
+  /// Standard notification design option (default)
+  i18n_noop("Standard"),
+  /// Alternative notification design option
+  i18n_noop("Alternative"),
+};
+
+static int prv_design_style_get_selection_index(void) {
+  return alerts_preferences_get_notification_alternative_design() ? 1 : 0;
+}
+
+static void prv_design_style_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  alerts_preferences_set_notification_alternative_design(selection == 1);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_design_style_menu_push(SettingsNotificationsData *data) {
+  const int index = prv_design_style_get_selection_index();
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_design_style_menu_select,
+  };
+  /// Status bar title for the Notification Design Style settings screen
+  const char *title = i18n_noop("Style");
+  settings_option_menu_push(
+      title, OptionMenuContentType_SingleLine, index, &callbacks,
+      ARRAY_LENGTH(s_design_style_labels), true /* icons_enabled */, s_design_style_labels,
+      data);
+}
+
 // Menu Layer Callbacks
 ////////////////////////
 
@@ -290,6 +323,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = s_window_timeouts_labels[prv_window_timeout_get_selection_index()];
       break;
     }
+    case NotificationsItemDesignStyle: {
+      /// String within Settings->Notifications that describes the notification design style
+      title = i18n_noop("Style");
+      subtitle = s_design_style_labels[prv_design_style_get_selection_index()];
+      break;
+    }
     default:
       WTF;
   }
@@ -323,6 +362,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case NotificationsItemWindowTimeout:
       prv_window_timeout_menu_push(data);
+      break;
+    case NotificationsItemDesignStyle:
+      prv_design_style_menu_push(data);
       break;
     default:
       WTF;
