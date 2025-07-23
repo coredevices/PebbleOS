@@ -25,6 +25,7 @@
 #include <os/tick.h>
 #include <semphr.h>
 #include <services/dis/ble_svc_dis.h>
+#include <services/bas/ble_svc_bas.h>
 #include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
 #include <stdlib.h>
@@ -115,6 +116,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_svc_gap_init();
   ble_svc_gatt_init();
   ble_svc_dis_init();
+  ble_svc_bas_init();
   pebble_pairing_service_init();
 
   ble_hs_sched_start();
