@@ -44,6 +44,10 @@ uint32_t alerts_preferences_get_notification_window_timeout_ms(void);
 
 void alerts_preferences_set_notification_window_timeout_ms(uint32_t timeout_ms);
 
+bool alerts_preferences_get_notification_alternative_design(void);
+
+void alerts_preferences_set_notification_alternative_design(bool alternative);
+
 bool alerts_preferences_get_vibrate(void);
 
 void alerts_preferences_set_vibrate(bool enable);
