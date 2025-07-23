@@ -37,6 +37,7 @@ struct KinoLayer {
   GAlign alignment;
   KinoLayerCallbacks callbacks;
   void *context;
+  bool invert_colors;
 };
 
 void kino_layer_init(KinoLayer *kino_layer, const GRect *frame);
@@ -50,11 +51,12 @@ void kino_layer_destroy(KinoLayer *kino_layer);
 Layer *kino_layer_get_layer(KinoLayer *kino_layer);
 
 void kino_layer_set_reel(KinoLayer *kino_layer, KinoReel *reel, bool take_ownership);
+void kino_layer_set_invert_colors(KinoLayer *kino_layer, bool invert);
 
 //! @internal
 void kino_layer_set_reel_with_resource(KinoLayer *kino_layer, uint32_t resource_id);
 void kino_layer_set_reel_with_resource_system(KinoLayer *kino_layer, ResAppNum app_num,
-                                              uint32_t resource_id);
+                                              uint32_t resource_id, bool invert);
 
 KinoReel *kino_layer_get_reel(KinoLayer *kino_layer);
 
