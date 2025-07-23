@@ -49,6 +49,7 @@
 #include "services/normal/blob_db/reminder_db.h"
 #include "services/normal/notifications/alerts.h"
 #include "services/normal/notifications/alerts_preferences.h"
+#include "services/normal/notifications/alerts_preferences_private.h"
 #include "services/normal/notifications/alerts_private.h"
 #include "services/normal/notifications/ancs/ancs_filtering.h"
 #include "services/normal/notifications/do_not_disturb.h"
@@ -412,7 +413,12 @@ static void prv_show_peek_for_notification(NotificationWindowData *data, Uuid *i
     .app_id = &data->notification_app_id, // This is set earlier when we reload the layout
     .fallback_id = fallback_icon_id,
   };
+#if PBL_BW
+  const bool use_alternative_design = alerts_preferences_get_notification_alternative_design();
+  peek_layer_set_icon_with_invert(data->peek_layer, &data->peek_icon_info, use_alternative_design);
+#else
   peek_layer_set_icon(data->peek_layer, &data->peek_icon_info);
+#endif
   peek_layer_set_background_color(data->peek_layer, colors->bg_color);
 
   // This is so that only the banner of the swap_layer is sticking out from the bottom
@@ -1077,7 +1083,6 @@ static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *la
   kino_layer_play(&((NotificationLayout *)layout)->icon_layer);
 }
 
-#if PBL_COLOR
 static void prv_update_colors_handler(SwapLayer *swap_layer, GColor bg_color,
                                       bool status_bar_filled, void *context) {
   NotificationWindowData *data = context;
@@ -1086,7 +1091,6 @@ static void prv_update_colors_handler(SwapLayer *swap_layer, GColor bg_color,
   status_bar_layer_set_colors(&data->status_layer, PBL_IF_ROUND_ELSE(GColorClear, status_color),
                               gcolor_legible_over(status_color));
 }
-#endif
 
 static void prv_interaction_handler(SwapLayer *swap_layer, void *context) {
   NotificationWindowData *data = context;
