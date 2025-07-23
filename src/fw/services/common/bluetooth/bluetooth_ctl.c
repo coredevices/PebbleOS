@@ -33,6 +33,7 @@
 #include "os/mutex.h"
 #include "pebble_errors.h"
 #include "services/common/analytics/analytics.h"
+#include "services/common/bluetooth/ble_bas.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/bluetooth/dis.h"
 #include "services/common/bluetooth/local_addr.h"
@@ -106,6 +107,7 @@ static void prv_comm_start(void) {
 #if CAPABILITY_HAS_BUILTIN_HRM
     ble_hrm_init();
 #endif
+    ble_bas_init();
     bt_pairability_init();
     analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BT_OFF_TIME);
   } else {
@@ -121,6 +123,7 @@ static void prv_comm_stop(void) {
     return;
   }
   stop_mode_disable(InhibitorCommMode);
+  ble_bas_deinit();
 #if CAPABILITY_HAS_BUILTIN_HRM
   ble_hrm_deinit();
 #endif
