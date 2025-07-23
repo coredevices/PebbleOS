@@ -25,6 +25,7 @@
 #include "sports_layout.h"
 #include "weather_layout.h"
 
+#include "services/normal/notifications/alerts_preferences_private.h"
 #include "system/passert.h"
 #include "applib/ui/status_bar_layer.h"
 
@@ -56,10 +57,16 @@ static const LayoutColors s_default_colors = {
   .bg_color = { .argb = PBL_IF_COLOR_ELSE(GColorLightGrayARGB8, GColorWhiteARGB8) },
 };
 
-static const LayoutColors s_default_notification_colors = {
-  .primary_color = { .argb = GColorBlackARGB8 },
-  .secondary_color = { .argb = GColorBlackARGB8 },
-  .bg_color = { .argb = GColorLightGrayARGB8 },
+static const LayoutColors s_default_notification_colors_alternative = {
+    .primary_color = {.argb = GColorWhiteARGB8},
+    .secondary_color = {.argb = GColorBlackARGB8},
+    .bg_color = {.argb = GColorBlackARGB8},
+};
+
+static const LayoutColors s_default_notification_colors_standard = {
+    .primary_color = {.argb = GColorBlackARGB8},
+    .secondary_color = {.argb = GColorBlackARGB8},
+    .bg_color = {.argb = GColorLightGrayARGB8},
 };
 
 LayoutLayer *layout_create(LayoutId id, const LayoutLayerConfig *config) {
@@ -97,7 +104,12 @@ const LayoutColors *layout_get_colors(const LayoutLayer *layout) {
 }
 
 const LayoutColors *layout_get_notification_colors(const LayoutLayer *layout) {
-  return PBL_IF_COLOR_ELSE(layout_get_colors(layout), &s_default_notification_colors);
+#if PBL_COLOR
+  return layout_get_colors(layout);
+#else
+  const bool use_alternative_design = alerts_preferences_get_notification_alternative_design();
+  return use_alternative_design ? &s_default_notification_colors_alternative : &s_default_notification_colors_standard;
+#endif
 }
 
 void layout_set_mode(LayoutLayer *layout, LayoutLayerMode final_mode) {
