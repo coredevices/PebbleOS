@@ -77,3 +77,6 @@ void kino_player_rewind(KinoPlayer *player);
 void kino_player_deinit(KinoPlayer *player);
 
 void kino_player_draw(KinoPlayer *player, GContext *ctx, GPoint offset);
+
+void kino_player_draw_processed(KinoPlayer *player, GContext *ctx, GPoint offset,
+                                KinoReelProcessor *processor);

@@ -207,8 +207,13 @@ void kino_player_rewind(KinoPlayer *player) {
 }
 
 void kino_player_draw(KinoPlayer *player, GContext *ctx, GPoint offset) {
+  kino_player_draw_processed(player, ctx, offset, NULL);
+}
+
+void kino_player_draw_processed(KinoPlayer *player, GContext *ctx, GPoint offset,
+                                KinoReelProcessor *processor) {
   if (player && player->reel) {
-    kino_reel_draw(player->reel, ctx, offset);
+    kino_reel_draw_processed(player->reel, ctx, offset, processor);
   }
 }
 
