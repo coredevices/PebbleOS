@@ -32,6 +32,7 @@
 #include "services/common/clock.h"
 #include "services/common/i18n/i18n.h"
 #include "services/normal/blob_db/pin_db.h"
+#include "services/normal/notifications/alerts_preferences_private.h"
 #include "services/normal/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
 #include "system/hexdump.h"
@@ -381,8 +382,14 @@ static void prv_card_init(NotificationLayout *layout, AttributeList *attributes,
   const int16_t origin_x = frame->origin.x + (frame->size.w / 2) - (icon_size.w / 2);
   const int16_t origin_y = frame->origin.y + CARD_ICON_UPPER_PADDING;
   kino_layer_init(&layout->icon_layer, &GRect(origin_x, origin_y, icon_size.w, icon_size.h));
+#if PBL_BW
+  const bool use_alternative_design = alerts_preferences_get_notification_alternative_design();
   kino_layer_set_reel_with_resource_system(&layout->icon_layer, layout->icon_res_info.res_app_num,
-                                           layout->icon_res_info.res_id);
+                                           layout->icon_res_info.res_id, use_alternative_design);
+#else
+  kino_layer_set_reel_with_resource_system(&layout->icon_layer, layout->icon_res_info.res_app_num,
+                                           layout->icon_res_info.res_id, false);
+#endif
   layer_add_child(&layout->layout.layer, kino_layer_get_layer(&layout->icon_layer));
 }
 
@@ -569,11 +576,29 @@ bool notification_layout_verify(bool existing_attributes[]) {
 
 static void prv_layout_init_colors(NotificationLayout *notification_layout) {
   LayoutColors *colors = &notification_layout->colors;
-  *colors = (LayoutColors) {
-    .primary_color = GColorBlack,
-    .secondary_color = GColorBlack,
-    .bg_color = GColorLightGray,
+  
+#if PBL_BW
+  const bool use_alternative_design = alerts_preferences_get_notification_alternative_design();
+  if (use_alternative_design) {
+    *colors = (LayoutColors){
+        .primary_color = GColorWhite,
+        .secondary_color = GColorBlack,
+        .bg_color = GColorBlack,
+    };
+  } else {
+    *colors = (LayoutColors){
+        .primary_color = GColorBlack,
+        .secondary_color = GColorBlack,
+        .bg_color = GColorLightGray,
+    };
+  }
+#else
+  *colors = (LayoutColors){
+      .primary_color = GColorBlack,
+      .secondary_color = GColorBlack,
+      .bg_color = GColorLightGray,
   };
+#endif
 
 #if PBL_COLOR
   const bool is_notification =
