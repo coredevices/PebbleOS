@@ -25,6 +25,7 @@ pkg.deps:
     - "@apache-mynewt-core/sys/log/stub"
     - "@apache-mynewt-core/sys/stats/stub"
     - "@apache-mynewt-nimble/nimble/host"
+    - "@apache-mynewt-nimble/nimble/host/services/bas"
     - "@apache-mynewt-nimble/nimble/host/services/gap"
     - "@apache-mynewt-nimble/nimble/host/services/gatt"
     - "@apache-mynewt-nimble/nimble/host/services/dis"

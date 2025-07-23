@@ -44,6 +44,7 @@ def build(bld):
             'mynewt-nimble/nimble/src/*.c',
             'mynewt-nimble/nimble/host/src/*.c',
             'mynewt-nimble/nimble/host/util/src/*.c',
+            'mynewt-nimble/nimble/host/services/bas/src/*.c',
             'mynewt-nimble/nimble/host/services/gap/src/*.c',
             'mynewt-nimble/nimble/host/services/gatt/src/*.c',
             'mynewt-nimble/nimble/host/services/dis/src/*.c',
