@@ -99,6 +99,12 @@ GColor8 gcolor_get_grayscale(GColor8 color);
 //! @return A legible color for the given background color
 GColor8 gcolor_legible_over(GColor8 background_color);
 
+
+//! This method inverts a color.
+//! @param color The color to invert
+//! @return The inverted color
+GColor8 gcolor_invert(GColor8 color);
+
 //! @internal
 //! Returns true if the alpha channel of the given color is set to 0.
 bool gcolor_is_invisible(GColor8 color);
