@@ -2,6 +2,7 @@
 #include <drivers/dbgserial.h>
 #include <nrfx_twi.h>
 
+#define SYSTEM_BASE 0x01U
 #define VBUSIN_BASE 0x02U
 #define CHARGER_BASE 0x03U
 #define BUCK_BASE 0x04U
@@ -11,6 +12,13 @@
 #define LDSW_BASE 0x08U
 #define SHIP_BASE 0x0BU
 #define ERRLOG_BASE 0x0EU
+
+// SYSTEM
+#define TESTACCESS 0x23U
+#define TESTACCESS_VAL0 0x44U
+#define TESTACCESS_VAL1 0x90U
+#define TESTACCESS_VAL2 0xFAU
+#define TESTACCESS_VAL3 0xCEU
 
 // VBUSIN
 #define VBUSINILIMSTARTUP 0x02U
@@ -37,7 +45,11 @@
 #define BCHGVTERMR 0x0DU
 #define BCHGVTERMREDUCED_4V00 0x4U
 
-#define ENABLEVBATLOWCHARGE 0x50U
+#define BCHGDEBUG 0x46U
+#define BCHGDEBUG_DISABLEBATTERYDETECT 0x04U
+
+#define BCHGVBATLOWCHARGE 0x50U
+#define BCHGVBATLOWCHARGE_ENABLEVBATLOWCHARGE 0x01U
 
 #define NTCCOLD 0x10U
 #define NTCCOLDLSB 0x11U
@@ -180,6 +192,9 @@ int pmic_init(void) {
     //   fail to boot three times, we will sit at sadwatch until a button is
     //   pressed
     // - Set COLD/COOL/WARM/HOT tresholds to 0/10/45/45 degrees Celsius
+    // - Disable battery detection (so that C0 hw behaves as D0, ie, no battery detection)
+    //   This is a no-op on D0 hw.
+    // - Enable battery charging if voltage is low (recommended when using a battery with PCM)
     // - Enable charging
     { VBUSIN_BASE, VBUSINILIMSTARTUP, VBUSLIM_500MA }, // should be default, but 'reset value from OTP, value listed in this table may not be correct'
     { CHARGER_BASE, BCHGENABLECLR, ENABLECHARGING_DISABLECHG },
@@ -198,7 +213,15 @@ int pmic_init(void) {
     { CHARGER_BASE, NTCWARMLSB, 0x01U },
     { CHARGER_BASE, NTCHOT, 0x54U },
     { CHARGER_BASE, NTCHOTLSB, 0x01U },
-    { CHARGER_BASE, ENABLEVBATLOWCHARGE, 0x01U },
+    // Allow using some test registers on nPM1300 C0 hw:
+    // - BCHGDEBUG
+    // - BCHGVBATLOWCHARGE
+    { SYSTEM_BASE, TESTACCESS, TESTACCESS_VAL0 },
+    { SYSTEM_BASE, TESTACCESS, TESTACCESS_VAL1 },
+    { SYSTEM_BASE, TESTACCESS, TESTACCESS_VAL2 },
+    { SYSTEM_BASE, TESTACCESS, TESTACCESS_VAL3 },
+    { CHARGER_BASE, BCHGDEBUG, BCHGDEBUG_DISABLEBATTERYDETECT },
+    { CHARGER_BASE, BCHGVBATLOWCHARGE, BCHGVBATLOWCHARGE_ENABLEVBATLOWCHARGE },
     { CHARGER_BASE, BCHGENABLESET, ENABLECHARGING_ENABLECHG },
 
     // LDO1 as LDO @ 1.8V (powers the DA7212 ... do not back power it through I/O pins, and it must always be on because sensors share I2C bus with it!)
