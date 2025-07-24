@@ -36,6 +36,11 @@ typedef enum {
   PmicRegisters_MAIN_INTENEVENTSVBUSIN0SET = 0x0018,
   PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED = 1,
   PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED = 2,
+  PmicRegisters_SYSTEM_TESTACCESS = 0x0123,
+  PmicRegisters_SYSTEM_TESTACCESS__VAL0 = 0x44,
+  PmicRegisters_SYSTEM_TESTACCESS__VAL1 = 0x90,
+  PmicRegisters_SYSTEM_TESTACCESS__VAL2 = 0xFA,
+  PmicRegisters_SYSTEM_TESTACCESS__VAL3 = 0xCE,
   PmicRegisters_VBUSIN_VBUSINSTATUS = 0x0207,
   PmicRegisters_VBUSIN_VBUSINSTATUS__VBUSINPRESENT = 1,
   PmicRegisters_BCHARGER_BCHGENABLESET = 0x0304,
@@ -53,7 +58,9 @@ typedef enum {
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTCURRENT = 8,
   PmicRegisters_BCHARGER_BCHGCHARGESTATUS__CONSTANTVOLTAGE = 16,
   PmicRegisters_BCHARGER_BCHGERRREASON = 0x0336,
-  PmicRegisters_BCHARGER_ENABLEVBATLOWCHARGE = 0x0350,
+  PmicRegisters_BCHARGER_BCHGDEBUG = 0x0346,
+  PmicRegisters_BCHARGER_BCHGDEBUG__DISABLEBATTERYDETECT = 0x04,
+  PmicRegisters_BCHARGER_BCHGVBATLOWCHARGE = 0x0350,
   PmicRegisters_ADC_TASKVBATMEASURE  = 0x0500,
   PmicRegisters_ADC_TASKNTCMEASURE   = 0x0501,
   PmicRegisters_ADC_TASKVSYSMEASURE  = 0x0503,
@@ -268,7 +275,19 @@ bool pmic_init(void) {
     return false;
   }
 
-  ok &= prv_write_register(PmicRegisters_BCHARGER_ENABLEVBATLOWCHARGE, 1);
+  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, 
+                           PmicRegisters_SYSTEM_TESTACCESS__VAL0);
+  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, 
+                           PmicRegisters_SYSTEM_TESTACCESS__VAL1);
+  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, 
+                           PmicRegisters_SYSTEM_TESTACCESS__VAL2);
+  ok &= prv_write_register(PmicRegisters_SYSTEM_TESTACCESS, 
+                           PmicRegisters_SYSTEM_TESTACCESS__VAL3);
+
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGDEBUG,
+                           PmicRegisters_BCHARGER_BCHGDEBUG__DISABLEBATTERYDETECT);
+
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVBATLOWCHARGE, 1);
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGENABLESET, 1);
 
