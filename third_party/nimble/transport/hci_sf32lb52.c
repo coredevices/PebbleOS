@@ -50,10 +50,6 @@
 #define RX_BUF_ADDR LCPU_ADDR_2_HCPU_ADDR(LCPU2HCPU_MB_CH1_BUF_START_ADDR);
 #define RX_BUF_REV_B_ADDR LCPU_ADDR_2_HCPU_ADDR(LCPU2HCPU_MB_CH1_BUF_REV_B_START_ADDR);
 
-// FIXME(SF32LB52): Adjust according to stack configuration?
-#define MAX_HCI_PKT_SIZE 1024
-
-static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
 static TaskHandle_t s_hci_task_handle;
 static SemaphoreHandle_t s_ipc_data_ready;
 static struct hci_h4_sm s_hci_h4sm;
@@ -277,7 +273,7 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI CMD header");
-    err = -1;
+    err = BLE_ERR_MEM_CAPACITY;
     goto exit;
   }
 
@@ -285,7 +281,7 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
                             IPC_TIMEOUT_TICKS);
   if (written != sizeof(*cmd) + cmd->length) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI CMD data");
-    err = -1;
+    err = BLE_ERR_MEM_CAPACITY;
     goto exit;
   }
 
@@ -298,28 +294,32 @@ exit:
 int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   size_t written;
   uint8_t h4_cmd = HCI_H4_ACL;
+  struct os_mbuf *x;
   int err = 0;
 
-  PBL_ASSERT(OS_MBUF_PKTLEN(om) < MAX_HCI_PKT_SIZE, "ACL packet too long");
-  os_mbuf_copydata(om, 0, OS_MBUF_PKTLEN(om), s_hci_buf);
-  prv_hci_trace(HCI_H4_ACL, s_hci_buf, OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
+  prv_hci_trace(HCI_H4_ACL, OS_MBUF_DATA(om, uint8_t *), OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1U, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ACL header");
-    err = -1;
+    err = BLE_ERR_MEM_CAPACITY;
     goto exit;
   }
 
-  written = ipc_queue_write(s_ipc_port, s_hci_buf, OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
-  if (written != OS_MBUF_PKTLEN(om)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ACL data");
-    err = -1;
-    goto exit;
+  x = om;
+  while (x != NULL) {
+    written = ipc_queue_write(s_ipc_port, x->om_data, x->om_len, IPC_TIMEOUT_TICKS);
+    if (written != x->om_len) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ACL data");
+      err = BLE_ERR_MEM_CAPACITY;
+      goto exit;
+    }
+
+    x = SLIST_NEXT(x, om_next);
   }
 
 exit:
-  os_mbuf_free(om);
+  os_mbuf_free_chain(om);
 
   return err;
 }
@@ -328,27 +328,31 @@ int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   size_t written;
   uint8_t h4_cmd = HCI_H4_ISO;
   int err = 0;
+  struct os_mbuf *x;
 
-  PBL_ASSERT(OS_MBUF_PKTLEN(om) < MAX_HCI_PKT_SIZE, "ISO packet too long");
-  os_mbuf_copydata(om, 0, OS_MBUF_PKTLEN(om), s_hci_buf);
-  prv_hci_trace(HCI_H4_ISO, s_hci_buf, OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
+  prv_hci_trace(HCI_H4_ISO, OS_MBUF_DATA(om, uint8_t *), OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ISO header");
-    err = -1;
+    err = BLE_ERR_MEM_CAPACITY;
     goto exit;
   }
 
-  written = ipc_queue_write(s_ipc_port, s_hci_buf, OS_MBUF_PKTLEN(om), IPC_TIMEOUT_TICKS);
-  if (written != OS_MBUF_PKTLEN(om)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ISO data");
-    err = -1;
-    goto exit;
+  x = om;
+  while (x != NULL) {
+    written = ipc_queue_write(s_ipc_port, x->om_data, x->om_len, IPC_TIMEOUT_TICKS);
+    if (written != x->om_len) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ISO data");
+      err = BLE_ERR_MEM_CAPACITY;
+      goto exit;
+    }
+
+    x = SLIST_NEXT(x, om_next);
   }
 
 exit:
-  os_mbuf_free(om);
+  os_mbuf_free_chain(om);
 
   return err;
 }
