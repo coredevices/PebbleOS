@@ -50,6 +50,8 @@
 #define RX_BUF_ADDR LCPU_ADDR_2_HCPU_ADDR(LCPU2HCPU_MB_CH1_BUF_START_ADDR);
 #define RX_BUF_REV_B_ADDR LCPU_ADDR_2_HCPU_ADDR(LCPU2HCPU_MB_CH1_BUF_REV_B_START_ADDR);
 
+#define BLE_HCI_EXT_SF32LB52_BLE_READY 0xFC11U
+
 static TaskHandle_t s_hci_task_handle;
 static SemaphoreHandle_t s_ipc_data_ready;
 static struct hci_h4_sm s_hci_h4sm;
@@ -186,7 +188,7 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
     if (ev->opcode == BLE_HCI_EVCODE_COMMAND_COMPLETE) {
       PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, "CMD complete %x", cmd_complete->opcode);
       // NOTE: do not confuse NimBLE with SF32LB52 vendor specific command
-      if (cmd_complete->opcode == 0xFC11) {
+      if (cmd_complete->opcode == BLE_HCI_EXT_SF32LB52_BLE_READY) {
         break;
       }
     }
