@@ -37,6 +37,8 @@
 // power consumption profiles
 #define BATTERY_SAMPLE_RATE_MS (1 * 1000)
 
+#define LOG_MIN_SEC 30
+
 static const struct battery_model prv_battery_model = {
 #if PLATFORM_ASTERIX
 #include "battery_asterix.inc"
@@ -56,6 +58,7 @@ static int32_t s_analytics_last_voltage_mv;
 static uint8_t s_analytics_last_pct;
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
+static RtcTicks s_last_log;
 
 static void prv_schedule_update(uint32_t delay, bool force_update);
 
@@ -166,12 +169,15 @@ static void prv_update_state(void *force_update) {
           constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta, s_last_pct, s_last_tte,
           s_last_ttf);
 
-  if (update || s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)) {
-    PBL_LOG(LOG_LEVEL_DEBUG,
-            "Battery state update: soc: %" PRIu8 ", v: %" PRId32 " mv, charging: %s, plugged: %s",
-            s_last_pct, constants.v_mv, s_last_battery_charge_state.is_charging ? "yes" : "no",
+  if (update || (((now - s_last_log) / RTC_TICKS_HZ > LOG_MIN_SEC) &&
+                 (s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)))) {
+    PBL_LOG(LOG_LEVEL_INFO, "Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32 " uA, "
+            "T: %" PRId32 " mC, charging: %s, plugged: %s",
+            s_last_pct, constants.v_mv, constants.i_ua, constants.t_mc,
+            s_last_battery_charge_state.is_charging ? "yes" : "no",
             s_last_battery_charge_state.is_plugged ? "yes" : "no");
     prv_battery_state_put_change_event(s_last_battery_charge_state);
+    s_last_log = now;
   }
 }
 
