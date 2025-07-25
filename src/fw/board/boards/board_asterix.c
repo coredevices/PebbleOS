@@ -198,7 +198,8 @@ IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
 IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
 
 const Npm1300Config NPM1300_CONFIG = {
-  .chg_current_ma = 152,
+  // 128mA = ~1C (rapid charge)
+  .chg_current_ma = 128,
   .dischg_limit_ma = 200,
   .term_current_pct = 10,
   .thermistor_beta = 3380,
