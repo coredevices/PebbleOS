@@ -57,10 +57,6 @@ static SemaphoreHandle_t s_ipc_data_ready;
 static struct hci_h4_sm s_hci_h4sm;
 static ipc_queue_handle_t s_ipc_port;
 
-#ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-  static uint16_t s_hci_trace_seq;
-#endif
-
 extern void lcpu_power_on(void);
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
@@ -90,6 +86,7 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
   PBL_HEXDUMP_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, data, len);
 }
 #elif defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
+static uint16_t s_hci_trace_seq;
 void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
   uint8_t trace_hdr[HCI_TRACE_HEADER_LEN];
 
@@ -124,6 +121,18 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
 #else
 #define prv_hci_trace(type, data, len, h4tl_packet)
 #endif
+
+#if defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)||defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
+#define MAX_HCI_PKT_SIZE 1024
+static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
+void prv_hci_trace_mb(uint8_t type, struct os_mbuf *om, uint8_t h4tl_packet)  {
+  os_mbuf_copydata(om, 0, os_mbuf_len(om), s_hci_buf);
+  prv_hci_trace(type, s_hci_buf, os_mbuf_len(om), h4tl_packet);
+}
+#else
+#define prv_hci_trace_mb(type, om, h4tl_packet)
+#endif
+
 
 static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size) {
   BaseType_t woken;
@@ -299,7 +308,7 @@ int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   struct os_mbuf *x;
   int err = 0;
 
-  prv_hci_trace(HCI_H4_ACL, OS_MBUF_DATA(om, uint8_t *), OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
+  prv_hci_trace_mb(HCI_H4_ACL, om, H4TL_PACKET_HOST);
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1U, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
@@ -332,7 +341,7 @@ int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   int err = 0;
   struct os_mbuf *x;
 
-  prv_hci_trace(HCI_H4_ISO, OS_MBUF_DATA(om, uint8_t *), OS_MBUF_PKTLEN(om), H4TL_PACKET_HOST);
+  prv_hci_trace_mb(HCI_H4_ISO, om, H4TL_PACKET_HOST);
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
