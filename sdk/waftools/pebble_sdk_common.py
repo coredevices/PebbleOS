@@ -172,10 +172,15 @@ def setup_pebble_c(task_gen):
     append_to_attr(task_gen, 'includes', platform)
     for lib in task_gen.bld.env.LIB_JSON:
         if 'pebble' in lib:
-            lib_include_node = task_gen.bld.path.find_node(lib['path']).find_node('include')
+            if hasattr(task_gen.bld, 'conf') and hasattr(task_gen.bld.conf, 'srcnode'):
+                project_path = task_gen.bld.conf.srcnode
+            else:
+                project_path = task_gen.bld.path
+
+            lib_include_node = project_path.find_node(lib['path']).find_node('include')
             append_to_attr(task_gen, 'includes',
-                           [lib_include_node,
-                            lib_include_node.find_node(str(lib['name'])).find_node(platform)])
+                           [lib_include_node.abspath(),
+                            lib_include_node.find_node(str(lib['name'])).find_node(platform).abspath()])
 
 
 @feature('c')
@@ -225,7 +230,12 @@ def setup_pebble_cprogram(task_gen):
         if not 'pebble' in lib:
             continue
 
-        binaries_path = task_gen.bld.path.find_node(lib['path']).find_node('binaries')
+        if hasattr(task_gen.bld, 'conf') and hasattr(task_gen.bld.conf, 'srcnode'):
+            project_path = task_gen.bld.conf.srcnode
+        else:
+            project_path = task_gen.bld.path
+        
+        binaries_path = project_path.find_node(lib['path']).find_node('binaries')
         if binaries_path:
             # Check for existence of platform folders inside binaries folder
             platform_binary_path = binaries_path.find_node(platform)

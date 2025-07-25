@@ -231,9 +231,7 @@ class merge_js(Task.Task):
             f.write(Template(webpack_config_template_content).substitute(
                 {k: json.dumps(m[k], separators=(',\n',': ')) for k in m }))
 
-        cmd = (
-            "'{webpack}' --config {config} --display-modules".
-            format(webpack=self.generator.env.WEBPACK, config=config_file.path_from(bld.path)))
+        cmd = self.generator.env.WEBPACK + ["--config", config_file.path_from(bld.path), "--display-modules"]
         try:
             out = bld.cmd_and_log(cmd, quiet=Context.BOTH, output=Context.STDOUT)
         except WafError as e:
