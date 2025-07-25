@@ -5,6 +5,8 @@
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
 #include "drivers/i2c_definitions.h"
+#include "drivers/mic.h"
+#include "drivers/mic/nrf5/pdm_definitions.h"
 #include "drivers/nrf5/i2c_hal_definitions.h"
 #include "drivers/nrf5/spi_definitions.h"
 #include "drivers/nrf5/uart_definitions.h"
@@ -187,6 +189,15 @@ IRQ_MAP_NRFX(I2S, nrfx_i2s_0_irq_handler);
 IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
 
 /* PERIPHERAL ID 11 */
+
+/* Microphone */
+static MicDeviceState s_mic_state_storage;
+static MicDevice s_mic_device = {
+  .state = &s_mic_state_storage,
+  .clk_pin = NRF_GPIO_PIN_MAP(1, 0),   // P1.00 - PDM CLK
+  .data_pin = NRF_GPIO_PIN_MAP(0, 24), // P0.24 - PDM DATA
+};
+MicDevice * const MIC = &s_mic_device;
 
 /* sensor SPI bus */
 
