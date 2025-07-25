@@ -36,6 +36,7 @@
 #define ENABLECHARGING_DISABLECHG 0x1U
 
 #define BCHGISETMSB 0x08U
+#define BCHGISETLSB 0x09U
 
 #define BCHGISETDISCHARGEMSB 0x0AU
 
@@ -185,7 +186,7 @@ int pmic_init(void) {
     // - Thermistor: 10K NTC
     // - Termination voltage: 4.2V
     // - Reduced termination voltage (for warm region): 4.00V
-    // - Charge current limit of 152 mA (approximately 1C for most reasonable wearable batteries)
+    // - Charge current limit of 64 mA (standard charging, 0.5C)
     // - Discharge current limit of 200 mA (increase current measurement accuracy)
     // - Release charger from error state if applicable (but do not clear
     //   safety timers) -- this doesn't happen in a loop because after we
@@ -201,7 +202,8 @@ int pmic_init(void) {
     { ADC_BASE, ADCNTCRSEL, ADCNTCRSEL_10K },
     { CHARGER_BASE, BCHGVTERM, BCHGVTERMNORM_4V20 },
     { CHARGER_BASE, BCHGVTERMR, BCHGVTERMREDUCED_4V00 },
-    { CHARGER_BASE, BCHGISETMSB, 38 },
+    { CHARGER_BASE, BCHGISETMSB, 16 },
+    { CHARGER_BASE, BCHGISETLSB, 0 },
     { CHARGER_BASE, BCHGISETDISCHARGEMSB, 42 },
     { CHARGER_BASE, TASKCLEARCHGERR, 1 },
     { CHARGER_BASE, TASKRELEASEERROR, 1 },
