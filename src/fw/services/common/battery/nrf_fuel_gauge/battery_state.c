@@ -53,7 +53,6 @@ static TimerID s_periodic_timer_id = TIMER_INVALID_ID;
 static BatteryChargeStatus s_last_chg_status;
 static uint64_t prv_ref_time;
 static int32_t s_last_voltage_mv;
-static uint8_t s_last_pct;
 static int32_t s_analytics_last_voltage_mv;
 static uint8_t s_analytics_last_pct;
 static uint32_t s_last_tte;
@@ -138,8 +137,8 @@ static void prv_update_state(void *force_update) {
                                (float)constants.t_mc / 1000.0f, (float)delta, NULL);
 
   pct_int = (uint8_t)ceilf(pct);
-  if (pct_int != s_last_pct) {
-    s_last_pct = pct_int;
+  if (pct_int != s_last_battery_charge_state.pct) {
+    s_last_battery_charge_state.pct = pct_int;
     s_last_battery_charge_state.charge_percent = (uint32_t)(pct * RATIO32_MAX) / 100U;
     update = true;
   }
@@ -166,14 +165,14 @@ static void prv_update_state(void *force_update) {
 
   PBL_LOG(LOG_LEVEL_DEBUG_VERBOSE,
           "Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td: %lu, soc: %u, tte: %lu, ttf: %lu",
-          constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta, s_last_pct, s_last_tte,
-          s_last_ttf);
+          constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta,
+          s_last_battery_charge_state.pct, s_last_tte, s_last_ttf);
 
   if (update || (((now - s_last_log) / RTC_TICKS_HZ > LOG_MIN_SEC) &&
                  (s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)))) {
     PBL_LOG(LOG_LEVEL_INFO, "Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32 " uA, "
             "T: %" PRId32 " mC, charging: %s, plugged: %s",
-            s_last_pct, constants.v_mv, constants.i_ua, constants.t_mc,
+            s_last_battery_charge_state.pct, constants.v_mv, constants.i_ua, constants.t_mc,
             s_last_battery_charge_state.is_charging ? "yes" : "no",
             s_last_battery_charge_state.is_plugged ? "yes" : "no");
     prv_battery_state_put_change_event(s_last_battery_charge_state);
@@ -274,7 +273,7 @@ DEFINE_SYSCALL(BatteryChargeState, sys_battery_get_charge_state, void) {
 BatteryChargeState battery_get_charge_state(void) {
   BatteryChargeState state;
 
-  state.charge_percent = s_last_pct;
+  state.charge_percent = s_last_battery_charge_state.pct;
   state.is_charging = s_last_battery_charge_state.is_charging;
   state.is_plugged = s_last_battery_charge_state.is_plugged;
 
@@ -291,7 +290,8 @@ void command_print_battery_status(void) {
   char buffer[32];
 
   prompt_send_response_fmt(buffer, 32, "%" PRId32 " mV", s_last_voltage_mv);
-  prompt_send_response_fmt(buffer, 32, "soc: %" PRIu8 "%% (%" PRIu32 ")", s_last_pct,
+  prompt_send_response_fmt(buffer, 32, "soc: %" PRIu8 "%% (%" PRIu32 ")",
+                           s_last_battery_charge_state.pct,
                            s_last_battery_charge_state.charge_percent);
   if (s_last_tte == 0U) {
     prompt_send_response_fmt(buffer, 32, "tte: N/A");
@@ -323,10 +323,11 @@ void analytics_external_collect_battery(void) {
   analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_VOLTAGE_DELTA, d_mv, AnalyticsClient_System);
   s_analytics_last_voltage_mv = s_last_voltage_mv;
 
-  d_pct = s_last_pct - s_analytics_last_pct;
+  d_pct = s_last_battery_charge_state.pct - s_analytics_last_pct;
   analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT_DELTA, d_pct, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT, s_last_pct, AnalyticsClient_System);
-  s_analytics_last_pct = s_last_pct;
+  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT, s_last_battery_charge_state.pct,
+                AnalyticsClient_System);
+  s_analytics_last_pct = s_last_battery_charge_state.pct;
 }
 
 static void prv_set_forced_charge_state(bool is_charging) {

@@ -285,6 +285,7 @@ void battery_state_handle_connection_event(bool is_connected) {
 PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state) {
   PreciseBatteryChargeState event_state = {
     .charge_percent = state->percent,
+    .pct = ratio32_to_percent(state->percent),
     .is_charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged),
     .is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged)
   };
