@@ -383,8 +383,8 @@ def wrap_task_name_with_platform(self):
     :param self: the task instance
     :return: the user-friendly string to print
     """
-    src_str = ' '.join([a.nice_path() for a in self.inputs])
-    tgt_str = ' '.join([a.nice_path() for a in self.outputs])
+    src_str = ' '.join([a.path_from(a.ctx.launch_node()) for a in self.inputs])
+    tgt_str = ' '.join([a.path_from(a.ctx.launch_node()) for a in self.outputs])
     sep = ' -> ' if self.outputs else ''
     name = self.__class__.__name__.replace('_task', '')
 
@@ -392,4 +392,4 @@ def wrap_task_name_with_platform(self):
     if self.env.PLATFORM_NAME:
         name = self.env.PLATFORM_NAME + " | " + name
 
-    return '%s: %s%s%s\n' % (name, src_str, sep, tgt_str)
+    return '%s: %s%s%s' % (name, src_str, sep, tgt_str)
