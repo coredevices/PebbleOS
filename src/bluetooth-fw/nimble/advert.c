@@ -239,13 +239,6 @@ static void prv_handle_subscription_event(struct ble_gap_event *event) {
             event->subscribe.conn_handle, event->subscribe.attr_handle,
             event->subscribe.prev_notify, event->subscribe.cur_notify,
             event->subscribe.prev_indicate, event->subscribe.cur_indicate);
-
-  int rc = pebble_pairing_service_get_connectivity_send_notification(event->subscribe.conn_handle,
-                                                                     event->subscribe.attr_handle);
-  if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "pebble_pairing_service_get_connectivity_send_notification rc=%d", rc);
-  }
 }
 
 static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
