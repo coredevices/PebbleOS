@@ -19,7 +19,6 @@
 #include "kernel/event_loop.h"
 #include "kernel/pebble_tasks.h"
 #include "syscall/syscall.h"
-#include "util/ratio.h"
 
 static EventServiceInfo s_bas_evt;
 
@@ -33,11 +32,8 @@ static void prv_execute_on_kernel_main(CallbackEventCallback cb) {
 
 static void prv_ble_bas_handle_event(PebbleEvent *e, void *context) {
   const PebbleBatteryStateChangeEvent *const battery_state_event = &e->battery_state;
-  uint8_t pct;
 
-  pct = (uint8_t)ratio32_to_percent(battery_state_event->new_state.charge_percent);
-
-  bt_driver_bas_handle_update(pct);
+  bt_driver_bas_handle_update(battery_state_event->new_state.pct);
 }
 
 static void prv_start_ble_bas_kernel_main(void *unused) {
