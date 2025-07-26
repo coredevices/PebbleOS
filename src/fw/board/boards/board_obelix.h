@@ -31,3 +31,4 @@ extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
+extern const BoardConfigButton BOARD_CONFIG_BUTTON;
