@@ -26,6 +26,7 @@
 #include "task.h"
 
 #include "bf0_hal_rtc.h"
+#include "mcu/interrupts.h"
 
 #define LXT_LP_CYCLE 200
 
