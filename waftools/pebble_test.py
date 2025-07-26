@@ -373,7 +373,7 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
     cflags_force_include = ['-Wno-unused-command-line-argument']
     cflags_force_include.append('-include' + board_path + '/displays/display_' + platform + '.h')
     platform_defines += ['PLATFORM_' + platform.upper(), 'PLATFORM_NAME="%s"' % platform] +\
-                        ['SCREEN_COLOR_DEPTH_BITS=%d' % bitdepth]
+                        ['SCREEN_COLOR_DEPTH_BITS=%d' % bit_depth]
 
     if sources_ant_glob is not None:
         platform_sources_ant_glob = sources_ant_glob

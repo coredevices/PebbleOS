@@ -135,7 +135,7 @@ typedef enum {
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/sf32lb52/uart_definitions.h"
-
+#include "drivers/display/jdi_lpm015m135a/jdi_lpm015m135a.h"
 typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;
 typedef const struct SPIBus SPIBus;

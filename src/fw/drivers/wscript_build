@@ -607,10 +607,11 @@ elif bld.is_obelix():
     bld.objects(
         name='driver_display',
         source=[
-            'stubs/display.c',
+            'display/jdi_lpm015m135a/jdi_lpm015m135a.c',
         ],
         use=[
             'fw_includes',
+            'display/jdi_lpm015m135a/jdi_lpm015m135a.h'
         ],
     )
 
