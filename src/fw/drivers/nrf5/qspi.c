@@ -224,6 +224,9 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   } else {
     config.prot_if.addrmode = NRF_QSPI_ADDRMODE_24BIT;
   }
+  
+  config.prot_if.dpmconfig = 1;
+  config.phy_if.dpmen = 0;
 
   nrfx_err_t err;
   if (was_init) {
@@ -236,6 +239,8 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   if (dev->reset_gpio.gpio) {
     WTF;
   }
+  
+  NRF_QSPI->DPMDUR = (1 << 16) | 2;
 
   // Reset the flash to stop any program's or erase in progress from before reboot
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.reset_enable);
@@ -431,18 +436,14 @@ status_t qspi_flash_get_write_status(QSPIFlash *dev) {
 }
 
 void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
-  uint8_t instruction;
-  uint32_t delay;
   if (active) {
-    instruction = dev->state->part->instructions.enter_low_power;
-    delay = dev->state->part->standby_to_low_power_latency_us;
+    NRF_QSPI->IFCONFIG1 |= (1 << QSPI_IFCONFIG1_DPMEN_Pos);
+    delay_us(dev->state->part->standby_to_low_power_latency_us);
+//    nrfx_qspi_deactivate();
   } else {
-    instruction = dev->state->part->instructions.exit_low_power;
-    delay = dev->state->part->low_power_to_standby_latency_us;
-  }
-  prv_write_cmd_no_addr(dev->qspi, instruction);
-  if (delay) {
-    delay_us(delay);
+//    nrfx_qspi_activate(1);
+    NRF_QSPI->IFCONFIG1 &= ~(1 << QSPI_IFCONFIG1_DPMEN_Pos);
+    delay_us(dev->state->part->low_power_to_standby_latency_us);
   }
 }
 
