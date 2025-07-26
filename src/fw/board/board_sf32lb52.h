@@ -20,6 +20,7 @@
 #include <stdbool.h>
 
 #include "bf0_hal_pinmux.h"
+#include "drivers/button_id.h"
 
 #define IRQ_PRIORITY_INVALID (1 << __NVIC_PRIO_BITS)
 
@@ -43,6 +44,8 @@ enum {
 
 #define GPIO_Port_NULL NULL
 #define GPIO_Pin_NULL 0U
+
+#define OBELIX_BUTTON_NUM 2
 
 typedef enum {
   GPIO_OType_PP,
@@ -117,6 +120,18 @@ typedef struct {
   InputConfig dbgserial_int_gpio;
   OutputConfig lcd_com;
 } BoardConfig;
+
+typedef struct {
+  const char* const name; ///< Name for debugging purposes.
+  const ExtiConfig gpioe;
+  const InputConfig gpioi;
+  GPIOPuPd_TypeDef pull;
+} ButtonConfig;
+
+typedef struct {
+  const ButtonConfig buttons[OBELIX_BUTTON_NUM];
+  const bool active_high;
+} BoardConfigButton;
 
 typedef struct {
   //! Percentage for watch only mode

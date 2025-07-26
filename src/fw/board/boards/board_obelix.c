@@ -199,6 +199,16 @@ const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 100U,
 };
 
+const BoardConfigButton BOARD_CONFIG_BUTTON = {
+  .buttons = {
+    [BUTTON_ID_BACK]    = { "Back", { hwp_gpio1, 34 }, { hwp_gpio1, 34 },  GPIO_PuPd_DOWN },
+    [BUTTON_ID_UP]      = { "Up",   { hwp_gpio1, 11 }, { hwp_gpio1, 11 },  GPIO_PuPd_DOWN },
+  },
+
+  .active_high = true,
+};
+
+
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;
 }

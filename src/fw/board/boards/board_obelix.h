@@ -33,3 +33,4 @@ extern I2CBus *const I2C1_BUS;
 extern PwmConfig *const PWM1_CH1;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
+extern const BoardConfigButton BOARD_CONFIG_BUTTON;
