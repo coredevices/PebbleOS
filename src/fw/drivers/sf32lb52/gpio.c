@@ -66,15 +66,8 @@ void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype,
   HAL_GPIO_Init(pin_config->gpio, &GPIO_InitStruct);
 }
 
-void gpio_input_init(const InputConfig *pin_config) {
-  gpio_use(pin_config->gpio);
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Pin = pin_config->gpio_pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-
-  HAL_PIN_Set(PAD_PA00 + pin_config->gpio_pin, GPIO_A0 + pin_config->gpio_pin, PIN_NOPULL, 1);
-  HAL_GPIO_Init(pin_config->gpio, &GPIO_InitStruct);
+void gpio_input_init(const InputConfig *input_cfg) {
+  gpio_input_init_pull_up_down(input_cfg, GPIO_PuPd_NOPULL);
 }
 
 void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef pupd) {
@@ -85,12 +78,13 @@ void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef
   GPIO_InitStruct.Pull = GPIO_NOPULL;
 
   int flag = 0;
+  /* pullup/down is handled in pinmux hal. */
   if (pupd == GPIO_PuPd_UP) {
-    flag = GPIO_PULLUP;
+    flag = PIN_PULLUP;
   } else if (pupd == GPIO_PuPd_DOWN) {
-    flag = GPIO_PULLDOWN;
+    flag = PIN_PULLDOWN;
   } else {
-    WTF;
+    flag = PIN_NOPULL;
   }
 
   HAL_PIN_Set(PAD_PA00 + input_cfg->gpio_pin, GPIO_A0 + input_cfg->gpio_pin, flag, 1);
