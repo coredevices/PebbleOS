@@ -236,10 +236,9 @@ def _generate_memory_layout(bld):
         retained_size = 256
         total_ram = (0x20000000 + retained_size, 256 * 1024 - retained_size)
     elif bld.is_obelix():
-        # FIXME(OBELIX): Obelix is not diorite
         app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['aplite']
-        app_ram_size_4x = APP_RAM_SIZES['diorite']
+        app_ram_size_3x = APP_RAM_SIZES['basalt']
+        app_ram_size_4x = APP_RAM_SIZES['emery']
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
         # FIXME(SF32LB52): due to MPU find_subregions_for_region assuming
         # ARMv7 subregion limitations, we need to reserve 32K!
