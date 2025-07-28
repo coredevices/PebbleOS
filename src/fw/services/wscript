@@ -46,8 +46,8 @@ def build(bld):
             else:
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/battery/nrf_fuel_gauge/**')
-                # FIXME(OBELIX): obelix should not be here
-                if bld.is_silk() or bld.is_obelix():
+
+                if bld.is_silk():
                     excludes.append('common/compositor/default/compositor_modal_transitions.*')
                 else:
                     excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
