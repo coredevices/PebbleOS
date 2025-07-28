@@ -63,7 +63,7 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
     return -1;
   }
 
-  __disable_irq();
+  portENTER_CRITICAL();
 
   while (remain > 0) {
     res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
@@ -80,7 +80,7 @@ end:
   SCB_InvalidateDCache_by_Addr((void *)addr, size);
   SCB_InvalidateICache_by_Addr((void *)addr, size);
 
-  __enable_irq();
+  portEXIT_CRITICAL();
 
   return res;
 }
@@ -107,7 +107,7 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
     tbuf = buf;
   }
 
-  __disable_irq();
+  portENTER_CRITICAL();
 
   taddr = addr - hflash->base;
   remain = size;
@@ -150,7 +150,7 @@ end:
   SCB_InvalidateDCache_by_Addr((void *)addr, size);
   SCB_InvalidateICache_by_Addr((void *)addr, size);
 
-  __enable_irq();
+  portEXIT_CRITICAL();
 
   if (local_buf) {
     kernel_free(local_buf);
