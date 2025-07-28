@@ -206,8 +206,7 @@ def add_platform_defines(ctx, env):
         bit_depth = 1
         platform = 'ASTERIX'
     elif ctx.is_obelix():
-        # FIXME(OBELIX): needs to be updated
-        bit_depth = 1
+        bit_depth = 8
         platform = 'OBELIX'
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
