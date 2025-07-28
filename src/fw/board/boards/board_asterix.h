@@ -118,8 +118,6 @@ static const BoardConfigActuator BOARD_CONFIG_VIBE = {
   .vsys_scale = 3300,
 };
 
-#if 0
-
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
     .axes_offsets[AXIS_X] = 0,
@@ -142,12 +140,12 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
     .double_tap_threshold = 12500,
   },
   .accel_int_gpios = {
-    [0] = { GPIOA, GPIO_Pin_6 },
-    [1] = { GPIOA, GPIO_Pin_3 },
+    [0] = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 13) },  // INT1 - LSM6DSO interrupt
+    // [1] = { ... },  // INT2 - not used on LSM6DSO (single interrupt pin)?
   },
   .accel_ints = {
-    [0] = { EXTI_PortSourceGPIOA, 6 },
-    [1] = { EXTI_PortSourceGPIOA, 3 }
+    [0] = { NRFX_GPIOTE_INSTANCE(0), 7, NRF_GPIO_PIN_MAP(1, 13) }, // INT1 - all interrupts
+    // [1] = { ... }  // INT2 - not used on LSM6DSO (single interrupt pin)?
   },
 };
 
@@ -155,51 +153,18 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 
 #define ACCESSORY_UART_IS_SHARED_WITH_BT 1
 static const BoardConfigAccessory BOARD_CONFIG_ACCESSORY = {
-  .exti = { EXTI_PortSourceGPIOA, 11 },
+  .power_en = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 11), true },
+  .int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 11) },
+  .gpiote = { NRFX_GPIOTE_INSTANCE(0), 9, NRF_GPIO_PIN_MAP(0, 11) },
 };
 
-static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
-  .controller = DA14681,
-  .reset = { GPIOC, GPIO_Pin_5, true },
-  .wakeup = {
-    .int_gpio = { GPIOC, GPIO_Pin_4 },
-    .int_exti = { EXTI_PortSourceGPIOC, 4 },
-  },
-};
-
-static const BoardConfigBTSPI BOARD_CONFIG_BT_SPI = {
-  .cs = { GPIOB, GPIO_Pin_1, false },
-};
-
-static const BoardConfigMCO1 BOARD_CONFIG_MCO1 = {
-  .output_enabled = true,
-  .af_cfg = {
-    .gpio = GPIOA,
-    .gpio_pin = GPIO_Pin_8,
-    .gpio_pin_source = GPIO_PinSource8,
-    .gpio_af = GPIO_AF_MCO,
-  },
-  .an_cfg = {
-    .gpio = GPIOA,
-    .gpio_pin = GPIO_Pin_8,
-  },
-};
-
-
-#define DIALOG_TIMER_IRQ_HANDLER TIM6_IRQHandler
-static const TimerIrqConfig BOARD_BT_WATCHDOG_TIMER = {
-  .timer = {
-    .peripheral = TIM6,
-    .config_clock = RCC_APB1Periph_TIM6,
-  },
-  .irq_channel = TIM6_IRQn,
-};
+// NRF52840 has built-in Bluetooth support, no external BT module configuration needed
+// MCO1 and Timer configurations are STM32-specific and not needed for NRF52840
 
 extern DMARequest * const COMPOSITOR_DMA;
 extern DMARequest * const SHARP_SPI_TX_DMA;
 
 extern UARTDevice * const QEMU_UART;
-#endif
 extern UARTDevice * const DBG_UART;
 #if 0
 extern UARTDevice * const ACCESSORY_UART;
