@@ -75,9 +75,8 @@ typedef struct {
 #include "displays/display_silk.h"
 #elif BOARD_ASTERIX
 #include "displays/display_silk.h"
-// FIXME(OBELIX): use correct display for obelix
 #elif BOARD_OBELIX
-#include "displays/display_silk.h"
+#include "displays/display_obelix.h"
 #elif BOARD_CUTTS_BB
 #include "displays/display_snowy.h"
 #elif BOARD_ROBERT_BB
