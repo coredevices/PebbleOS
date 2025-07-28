@@ -238,7 +238,7 @@ def build_product_source_files(bld, test_dir, include_paths, defines, cflags, pr
     return product_objects
 
 def get_bitdepth_for_platform(bld, platform):
-    if platform in ('snowy', 'spalding', 'robert'):
+    if platform in ('snowy', 'spalding', 'robert', 'obelix'):
         return 8
     elif platform in ('tintin', 'silk'):
         return 1
