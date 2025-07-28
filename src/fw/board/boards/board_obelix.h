@@ -20,7 +20,6 @@
 #define BT_VENDOR_NAME "Core Devices LLC"
 
 extern UARTDevice * const DBG_UART;
-
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern UARTDevice * const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
@@ -28,5 +27,6 @@ extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern PwmConfig *const PWM1_CH1;
+extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
