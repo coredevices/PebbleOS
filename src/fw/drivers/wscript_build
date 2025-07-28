@@ -603,14 +603,15 @@ elif bld.is_asterix():
         ],
     )
 elif bld.is_obelix():
-    # FIXME(OBELIX): provide working implementation
     bld.objects(
         name='driver_display',
         source=[
-            'stubs/display.c',
+            'sf32lb52/jdi_lpm015m135a.c',
         ],
         use=[
             'fw_includes',
+            'freertos',
+            'hal_sifli',
         ],
     )
 
