@@ -162,13 +162,13 @@ static struct I2CBusHal s_i2c_bus_hal_1 = {
     .device_name = "i2c1",
     .scl =
         {
-            .pad = PAD_PA30,
+            .pad = PAD_PA31,
             .func = I2C1_SCL,
             .flags = PIN_NOPULL,
         },
     .sda =
         {
-            .pad = PAD_PA33,
+            .pad = PAD_PA30,
             .func = I2C1_SDA,
             .flags = PIN_NOPULL,
         },

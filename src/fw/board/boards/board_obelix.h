@@ -19,9 +19,6 @@
 #define BT_VENDOR_ID 0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"
 
-// Use LXT (requires external crystal mounted)
-#define SF32LB52_USE_LXT
-
 extern UARTDevice * const DBG_UART;
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
