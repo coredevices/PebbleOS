@@ -271,11 +271,12 @@ static void prv_handle_notification_tx_event(struct ble_gap_event *event) {
             event->notify_tx.indication);
 }
 
-// TODO (GH-205): Implement UI to prompt user to accept/reject a repeat pairing request.
-// For now, allow this action while in recovery mode as there is no UI there
-// that allows to manually delete a pairing.
 static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
-#ifdef RECOVERY_FW
+  // In recovery mode there is no UI that allows to manually delete a pairing,
+  // so we unconditionally enable repeat pairing. In main firmware, only allow
+  // repeat pairing if using secure connections and we support user confirmation.
+#if defined(RECOVERY_FW) || \
+    (MYNEWT_VAL(BLE_SM_SC_ONLY) && (MYNEWT_VAL(BLE_SM_IO_CAP) == BLE_HS_IO_DISPLAY_YESNO))
   struct ble_gap_conn_desc desc;
   int ret;
 
