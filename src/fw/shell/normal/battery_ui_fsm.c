@@ -252,13 +252,15 @@ static bool prv_is_valid_transition(BatteryUIStateID next_state) {
 }
 
 static BatteryUIStateID prv_get_state(PreciseBatteryChargeState *state) {
-  // TODO: Refactor?
-  if (state->is_plugged) {
-    // Don't use the PreciseBatteryChargeState definition of is_charging, as it maps to the
-    // result of @see battery_charge_controller_thinks_we_are_charging instead of the actual
-    // user-facing definition of charging.
-    const uint32_t is_charging = battery_get_charge_state().is_charging;
-    return is_charging ? BatteryCharging : BatteryFullyCharged;
+  // Don't use the PreciseBatteryChargeState definition of is_charging, as it maps to the
+  // result of @see battery_charge_controller_thinks_we_are_charging instead of the actual
+  // user-facing definition of charging.
+  bool is_charging = battery_get_charge_state().is_charging;
+
+  if (is_charging) {
+    return BatteryCharging;
+  } else if (state->is_plugged && state->pct >= 100) {
+    return BatteryFullyCharged;
   } else if (battery_monitor_critical_lockout()) {
     return BatteryCritical;
   } else if (low_power_is_active()) {
