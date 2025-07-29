@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Core Devices LLC
+ * Copyright 2025 SiFli Technologies(Nanjing) Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,6 @@
 
 #pragma once
 
-#define BT_VENDOR_ID 0x0EEA
-#define BT_VENDOR_NAME "Core Devices LLC"
+#include "bf0_hal_tim.h"
 
-extern UARTDevice * const DBG_UART;
-#ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern UARTDevice * const HCI_TRACE_UART;
-#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern QSPIPort * const QSPI;
-extern QSPIFlash * const QSPI_FLASH;
-extern I2CBus *const I2C1_BUS;
-extern PwmConfig *const PWM1_CH1;
-extern DisplayJDIDevice *const DISPLAY;
-extern const BoardConfigPower BOARD_CONFIG_POWER;
-extern const BoardConfig BOARD_CONFIG;
-extern const BoardConfigButton BOARD_CONFIG_BUTTON;
+void debounced_button_irq_handler(GPT_TypeDef *timer);
