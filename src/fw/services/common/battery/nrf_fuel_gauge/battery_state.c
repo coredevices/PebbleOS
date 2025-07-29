@@ -104,23 +104,37 @@ static void prv_update_state(void *force_update) {
   BatteryConstants constants;
   RtcTicks now, delta;
   uint8_t pct_int;
+  bool is_plugged;
+  bool is_charging;
   bool update;
   float pct;
   int ret;
 
   update = force_update != NULL;
 
+  is_plugged = battery_is_usb_connected_impl();
+  if (is_plugged != s_last_battery_charge_state.is_plugged) {
+    ret = nrf_fuel_gauge_ext_state_update(is_plugged
+                                              ? NRF_FUEL_GAUGE_EXT_STATE_INFO_VBUS_CONNECTED
+                                              : NRF_FUEL_GAUGE_EXT_STATE_INFO_VBUS_DISCONNECTED,
+                                          NULL);
+    PBL_ASSERTN(ret == 0);
+    s_last_battery_charge_state.is_plugged = is_plugged;
+    update = true;
+  }
+
   ret = battery_charge_status_get(&chg_status);
   PBL_ASSERTN(ret == 0);
 
   if (chg_status != s_last_chg_status) {
     s_last_chg_status = chg_status;
-
     prv_charge_status_inform(chg_status);
+  }
 
-    s_last_battery_charge_state.is_charging =
-        !(chg_status == BatteryChargeStatusComplete || chg_status == BatteryChargeStatusUnknown);
-
+  is_charging = is_plugged && !(chg_status == BatteryChargeStatusComplete ||
+                                chg_status == BatteryChargeStatusUnknown);
+  if (is_charging != s_last_battery_charge_state.is_charging) {
+    s_last_battery_charge_state.is_charging = is_charging;
     update = true;
   }
 
@@ -242,10 +256,10 @@ void battery_state_init(void) {
 
   prv_charge_status_inform(s_last_chg_status);
 
-  s_last_battery_charge_state.is_charging = !(s_last_chg_status == BatteryChargeStatusComplete ||
-                                              s_last_chg_status == BatteryChargeStatusUnknown);
-
   s_last_battery_charge_state.is_plugged = battery_is_usb_connected_impl();
+  s_last_battery_charge_state.is_charging = s_last_battery_charge_state.is_plugged &&
+                                            !(s_last_chg_status == BatteryChargeStatusComplete ||
+                                              s_last_chg_status == BatteryChargeStatusUnknown);
 
   s_periodic_timer_id = new_timer_create();
 
@@ -253,16 +267,6 @@ void battery_state_init(void) {
 }
 
 void battery_state_handle_connection_event(bool is_connected) {
-  int ret;
-
-  s_last_battery_charge_state.is_plugged = is_connected;
-
-  ret = nrf_fuel_gauge_ext_state_update(is_connected
-                                            ? NRF_FUEL_GAUGE_EXT_STATE_INFO_VBUS_CONNECTED
-                                            : NRF_FUEL_GAUGE_EXT_STATE_INFO_VBUS_DISCONNECTED,
-                                        NULL);
-  PBL_ASSERTN(ret == 0);
-
   prv_schedule_update(RECONNECTION_DELAY_MS, true);
 }
 
