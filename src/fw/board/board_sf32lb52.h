@@ -22,6 +22,7 @@
 #include <stdbool.h>
 
 #include "bf0_hal_pinmux.h"
+#include "drivers/button_id.h"
 
 #define IRQ_PRIORITY_INVALID (1 << __NVIC_PRIO_BITS)
 
@@ -119,6 +120,20 @@ typedef struct {
   InputConfig dbgserial_int_gpio;
   OutputConfig lcd_com;
 } BoardConfig;
+
+typedef struct {
+  const char* name;
+  GPIO_TypeDef* const port;
+  uint8_t pin;
+  GPIOPuPd_TypeDef pull;
+  bool active_high;
+} ButtonConfig;
+
+typedef struct {
+  ButtonConfig buttons[NUM_BUTTONS];
+  GPT_TypeDef *timer;
+  IRQn_Type timer_irqn;
+} BoardConfigButton;
 
 typedef struct {
   //! Percentage for watch only mode

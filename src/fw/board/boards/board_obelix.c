@@ -20,6 +20,7 @@
 #include "bf0_hal_pmu.h"
 #include "bf0_hal_rcc.h"
 #include "board/board.h"
+#include "drivers/sf32lb52/debounced_button_definitions.h"
 #include "system/passert.h"
 
 
@@ -289,6 +290,18 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 100U,
 };
+
+const BoardConfigButton BOARD_CONFIG_BUTTON = {
+  .buttons = {
+    [BUTTON_ID_BACK]   = { "Back",   hwp_gpio1, 34, GPIO_PuPd_NOPULL, true },
+    [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 37, GPIO_PuPd_UP, false},
+    [BUTTON_ID_SELECT] = { "Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
+    [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 35, GPIO_PuPd_UP, false},
+  },
+  .timer = GPTIM1,
+  .timer_irqn = GPTIM1_IRQn,
+};
+IRQ_MAP(GPTIM1, debounced_button_irq_handler, GPTIM1);
 
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;

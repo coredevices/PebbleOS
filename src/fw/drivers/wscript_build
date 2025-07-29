@@ -523,16 +523,18 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): provide working implementation
     bld.objects(
         name='driver_button',
         source=[
-            'stubs/button.c',
-            'stubs/debounced_button.c',
+            'sf32lb52/button.c',
+            'sf32lb52/debounced_button.c',
         ],
         use=[
             'driver_exti',
+            'driver_gpio',
+            'freertos',
             'fw_includes',
+            'hal_sifli',
         ],
     )
 
