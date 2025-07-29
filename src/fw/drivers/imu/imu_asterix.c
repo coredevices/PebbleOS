@@ -5,6 +5,7 @@
 #include "drivers/spi.h"
 #include "kernel/util/delay.h"
 #include "drivers/i2c.h"
+#include "drivers/imu/mmc5603nj/mmc5603nj.h"
 
 #define MMC5603_PRODUCT_ID 0x39
 #define MMC5603_PRODUCT_ID_VALUE 0x10
@@ -73,6 +74,7 @@ void imu_init(void) {
     (void) prv_write_register(I2C_LSM6D, LSM6D_CTRL2_G, 0);
     (void) prv_write_register(I2C_LSM6D, LSM6D_CTRL4_C, LSM6D_CTRL4_C_SLEEP_G);
   }
+  mmc5603nj_init();
 }
 
 void imu_power_up(void) {

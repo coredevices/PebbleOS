@@ -1051,6 +1051,7 @@ elif bld.is_asterix():
         ],
         use=[
             'driver_lsm6dso',
+            'driver_mmc5603nj',
             'fw_includes',
             'root_includes',
         ],
@@ -1118,6 +1119,19 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+
+if bld.is_asterix():
+    bld.objects(
+        name='driver_mmc5603nj',
+        source=[
+            'imu/mmc5603nj/mmc5603nj.c',
+        ],
+        use=[
+            'driver_i2c',
+            'fw_includes',
+            'root_includes',
         ],
     )
 
