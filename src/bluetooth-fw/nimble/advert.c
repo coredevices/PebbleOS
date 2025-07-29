@@ -271,11 +271,11 @@ static void prv_handle_notification_tx_event(struct ble_gap_event *event) {
             event->notify_tx.indication);
 }
 
-#ifdef RECOVERY_FW
 // TODO (GH-205): Implement UI to prompt user to accept/reject a repeat pairing request.
 // For now, allow this action while in recovery mode as there is no UI there
 // that allows to manually delete a pairing.
 static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
+#ifdef RECOVERY_FW
   struct ble_gap_conn_desc desc;
   int ret;
 
@@ -287,8 +287,11 @@ static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
   ble_store_util_delete_peer(&desc.peer_id_addr);
 
   return BLE_GAP_REPEAT_PAIRING_RETRY;
-}
+#else
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_WARNING, "BLE_GAP_EVENT_REPEAT_PAIRING ignored");
+  return BLE_GAP_REPEAT_PAIRING_IGNORE;
 #endif
+}
 
 static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
@@ -336,11 +339,9 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_NOTIFY_TX");
       prv_handle_notification_tx_event(event);
       break;
-#ifdef RECOVERY_FW
     case BLE_GAP_EVENT_REPEAT_PAIRING:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_REPEAT_PAIRING");
       return prv_handle_repeat_pairing_event(event);
-#endif
     default:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_WARNING, "Unhandled GAP event: %d", event->type);
       break;
