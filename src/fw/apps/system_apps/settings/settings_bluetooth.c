@@ -100,8 +100,6 @@ typedef struct SettingsBluetoothData {
 #if CAPABILITY_HAS_BUILTIN_HRM
   EventServiceInfo ble_hrm_sharing_event_info;
 #endif
-
-  bool pairable;
 } SettingsBluetoothData;
 
 // BT stack interaction stuff
@@ -608,13 +606,7 @@ static void prv_expand_cb(SettingsCallbacks *context) {
   event_service_client_subscribe(&data->bt_connection_event_info);
   event_service_client_subscribe(&data->bt_pairing_event_info);
   event_service_client_subscribe(&data->ble_device_name_updated_event_info);
-  // FIXME: We do not support multiple BLE+ANCS bondings yet, so do not enable pairability if
-  // we have an existing one.
-  // NOTE: All BLE bondings are considered to be BLE+ANCS now!
-  if (!bt_persistent_storage_has_ble_ancs_bonding()) {
-    bt_pairability_use();
-    data->pairable = true;
-  }
+  bt_pairability_use();
   bt_driver_reconnect_pause();
   // Reload & redraw after pairing popup
   app_focus_service_subscribe_handlers((AppFocusHandlers) { .did_focus = prv_focus_handler });
@@ -625,9 +617,7 @@ static void prv_expand_cb(SettingsCallbacks *context) {
 // they consume a fair amount of power
 static void prv_hide_cb(SettingsCallbacks *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData *) context;
-  if (data->pairable) {
-    bt_pairability_release();
-  }
+  bt_pairability_release();
   bt_driver_reconnect_resume();
   bt_driver_reconnect_reset_interval();
   bt_driver_reconnect_try_now(false /*ignore_paused*/);
