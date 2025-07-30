@@ -268,7 +268,7 @@ board_capability_dicts = [
             'HAS_HEALTH_TRACKING',
             'HAS_JAVASCRIPT',
             'HAS_LAUNCHER4',
-            # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
+            'HAS_MAPPABLE_FLASH',
             # 'HAS_MICROPHONE',
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             'HAS_SDK_SHELL4',

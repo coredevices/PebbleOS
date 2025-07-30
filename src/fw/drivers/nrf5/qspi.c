@@ -649,6 +649,45 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
   return &dev->state->part->sec_registers;
 }
 
+static uint32_t s_num_flash_uses = 0;
+
+void flash_impl_use(void) {
+  if (s_num_flash_uses == 0) {
+    stop_mode_disable(InhibitorFlash);
+    nrfx_qspi_activate(true /* blocking */);
+    PBL_ASSERTN(*(volatile uint16_t *)(uintptr_t)(QSPI_MMAP_BASE_ADDRESS + FLASH_REGION_FILESYSTEM_BEGIN) == 0x5001);
+    
+    // Remove this delay_us(0), and the crash described in the CHAOS ALERT
+    // elsewhere will materialize.
+    delay_us(0);
+  }
+  s_num_flash_uses++;
+}
+
+void flash_impl_release_many(uint32_t num_locks) {
+  PBL_ASSERTN(s_num_flash_uses >= num_locks);
+  if (s_num_flash_uses == 0) {
+    nrfx_qspi_deactivate();
+    stop_mode_enable(InhibitorFlash);
+  }
+}
+
+void flash_impl_release(void) { flash_impl_release_many(1); }
+
+/* qspi_mmap_start is a name already taken by an internal API for stm32f, so
+ * we have this more generic API here */
+const void *qspi_mmap(QSPIPort *dev, uint32_t addr, uint32_t length) {
+  flash_impl_use();
+
+  dcache_invalidate((void *)(uintptr_t)(QSPI_MMAP_BASE_ADDRESS + addr), length);
+  
+  return (const void *)(uintptr_t)(QSPI_MMAP_BASE_ADDRESS + addr);
+}
+
+void qspi_munmap(QSPIPort *dev, const void *ptr) {
+  flash_impl_release();
+}
+
 #ifdef RECOVERY_FW
 status_t qspi_flash_lock_security_registers(QSPIFlash *dev) {
   uint8_t sr[2];
