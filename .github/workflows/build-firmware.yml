@@ -60,6 +60,7 @@ jobs:
             build/**/*.elf
             build/**/*.pbz
             build/**/*.bin
+            build/**/*.hex
 
       - name: Get Build ID
         id: build_id
