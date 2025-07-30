@@ -243,6 +243,11 @@ extern void command_set_runlevel(const char *runlevel);
 
 extern void command_litter_filesystem(void);
 
+#if CAPABILITY_HAS_MAPPABLE_FLASH
+/* HACK */
+extern void command_xip_hello_world(void);
+#endif
+
 typedef struct Command {
   char* cmd_str;
   void* func;
@@ -386,6 +391,9 @@ static const Command s_prompt_commands[] = {
 #ifndef RELEASE
   { "litter pfs", command_litter_filesystem, 0 },
 #endif
+#endif
+#if CAPABILITY_HAS_MAPPABLE_FLASH
+  { "xip hello world", command_xip_hello_world, 0 },
 #endif
 
   // ====================================================================================

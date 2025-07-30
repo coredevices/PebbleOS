@@ -1132,6 +1132,37 @@ void command_litter_filesystem(void) {
 #endif
 #endif
 
+#if CAPABILITY_HAS_MAPPABLE_FLASH
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+#include <resource/resource_mapped.h>
+
+void command_xip_hello_world(void) {
+  PebbleTask task = pebble_task_get_current();
+  resource_mapped_use(task);
+  
+  size_t xip_len;
+  const uint8_t *xip_data = resource_get_readonly_bytes(SYSTEM_APP, RESOURCE_ID_XIP_STUB, &xip_len, true /* is_privileged */);
+
+  char buf[80];
+  prompt_send_response_fmt(buf, sizeof(buf), "xip_data mapped at %p, first bytes are %02x %02x %02x %02x", xip_data, xip_data[0], xip_data[1], xip_data[2], xip_data[3]);
+
+  // CHAOS ALERT: with the `+ 1` here, we get assertion failures right after
+  // boot during launcher render around upng decode failure, EVEN THOUGH
+  // THIS CODE IS NOT EXECUTED.  If you remove the `+ 1`, then of course
+  // this will not work right (you will get a fault trying to jump to a
+  // non-THUMB-aligned address), but upng decode will work fine.
+  int (*xip_fn)(void (*puts)(const char *s)) = (void *)(xip_data + 1);
+  
+  int rv = xip_fn(prompt_send_response);
+  prompt_send_response_fmt(buf, sizeof(buf), "xip_fn returned %d", rv);
+  
+  resource_mapped_release(task);
+  prompt_command_finish();
+}
+#endif
+
+
 static GAPLEConnection *prv_get_le_connection_and_print_info(void) {
   GAPLEConnection *conn = gap_le_connection_any();
   if (!conn) {
