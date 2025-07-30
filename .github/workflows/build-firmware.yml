@@ -59,6 +59,7 @@ jobs:
           path: |
             build/**/*.elf
             build/**/*.pbz
+            build/**/*.bin
 
       - name: Get Build ID
         id: build_id
