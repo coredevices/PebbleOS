@@ -35,12 +35,4 @@ void memfault_metrics_heartbeat_collect_data(void) {
                     kernel_heap_pct / 100, kernel_heap_pct % 100);
 
   MEMFAULT_METRIC_SET_UNSIGNED(memory_pct_max, kernel_heap_pct);
-
-#if CAPABILITY_NEEDS_FIRM_233_WAR
-  extern uint32_t metric_firm_233_log_events;
-  extern uint32_t metric_firm_233_airplane_mode_cycles;
-
-  MEMFAULT_METRIC_SET_UNSIGNED(firm_233_log_events, metric_firm_233_log_events);
-  MEMFAULT_METRIC_SET_UNSIGNED(firm_233_airplane_mode_cycles, metric_firm_233_airplane_mode_cycles);
-#endif
 }
