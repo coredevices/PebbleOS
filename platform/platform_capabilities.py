@@ -42,6 +42,7 @@ master_capability_set = {
     'HAS_LED',
     'HAS_MAGNETOMETER',
     'HAS_MAPPABLE_FLASH',
+    'MAPPABLE_FLASH_IS_FOR_CODE_ONLY',
     'HAS_MASKING',
     'HAS_MICROPHONE',
     'HAS_PMIC',
@@ -269,6 +270,7 @@ board_capability_dicts = [
             'HAS_JAVASCRIPT',
             'HAS_LAUNCHER4',
             'HAS_MAPPABLE_FLASH',
+            'MAPPABLE_FLASH_IS_FOR_CODE_ONLY', # nRF52840 erratum 216
             # 'HAS_MICROPHONE',
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             'HAS_SDK_SHELL4',

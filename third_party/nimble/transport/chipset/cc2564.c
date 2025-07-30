@@ -57,7 +57,7 @@ static bool ble_run_bts(const ResAppNum bts_file) {
   resource_mapped_use(task);
 
   const uint8_t *bts_data =
-      resource_get_readonly_bytes(SYSTEM_APP, bts_file, &bts_len, true /* is_privileged */);
+      resource_get_readonly_bytes(SYSTEM_APP, bts_file, &bts_len, ReadonlyBytesFlags_IsPrivileged);
 
   while (i < bts_len) {
     BTSHCICommand *command = (BTSHCICommand *)&bts_data[i];

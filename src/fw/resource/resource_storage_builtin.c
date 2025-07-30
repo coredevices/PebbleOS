@@ -44,7 +44,7 @@ bool resource_storage_builtin_bytes_are_readonly(const void *bytes) {
 }
 
 static const uint8_t *resource_storage_builtin_readonly_bytes(ResourceStoreEntry *entry,
-                                                              bool has_privileged_access) {
+                                                              ReadonlyBytesFlags flags) {
   const BuiltInResourceData *builtin = entry->store_data;
   if (!builtin) {
     return NULL;

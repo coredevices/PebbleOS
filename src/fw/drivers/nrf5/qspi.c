@@ -655,11 +655,6 @@ void flash_impl_use(void) {
   if (s_num_flash_uses == 0) {
     stop_mode_disable(InhibitorFlash);
     nrfx_qspi_activate(true /* blocking */);
-    PBL_ASSERTN(*(volatile uint16_t *)(uintptr_t)(QSPI_MMAP_BASE_ADDRESS + FLASH_REGION_FILESYSTEM_BEGIN) == 0x5001);
-    
-    // Remove this delay_us(0), and the crash described in the CHAOS ALERT
-    // elsewhere will materialize.
-    delay_us(0);
   }
   s_num_flash_uses++;
 }

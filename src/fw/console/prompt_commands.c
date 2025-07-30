@@ -1142,7 +1142,7 @@ void command_xip_hello_world(void) {
   resource_mapped_use(task);
   
   size_t xip_len;
-  const uint8_t *xip_data = resource_get_readonly_bytes(SYSTEM_APP, RESOURCE_ID_XIP_STUB, &xip_len, true /* is_privileged */);
+  const uint8_t *xip_data = resource_get_readonly_bytes(SYSTEM_APP, RESOURCE_ID_XIP_STUB, &xip_len, ReadonlyBytesFlags_IsPrivileged | ReadonlyBytesFlags_IsCode);
 
   char buf[80];
   prompt_send_response_fmt(buf, sizeof(buf), "xip_data mapped at %p, first bytes are %02x %02x %02x %02x", xip_data, xip_data[0], xip_data[1], xip_data[2], xip_data[3]);
