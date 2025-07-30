@@ -63,12 +63,11 @@ static bool s_polling_active = false;
 
 
 static bool mmc5603nj_read(uint8_t reg_addr, uint8_t data_len, uint8_t *data) {
-  //PBL_LOG(LOG_LEVEL_DEBUG, "I2C read: device=MMC5603NJ, reg=0x%02x, len=%d", reg_addr, data_len);
+  
   i2c_use(I2C_MMC5603NJ);
   bool rv = i2c_write_block(I2C_MMC5603NJ, 1, &reg_addr);
   if (rv) {
     rv = i2c_read_block(I2C_MMC5603NJ, data_len, data);
-    //PBL_LOG(LOG_LEVEL_DEBUG, "I2C read result: success=%d, value=0x%02x", rv, data_len == 1 ? data[0] : 0xFF);
   } else {
     PBL_LOG(LOG_LEVEL_ERROR, "I2C write failed for register 0x%02x", reg_addr);
   }
@@ -77,11 +76,9 @@ static bool mmc5603nj_read(uint8_t reg_addr, uint8_t data_len, uint8_t *data) {
 }
 
 static bool mmc5603nj_write(uint8_t reg_addr, uint8_t data) {
-  //PBL_LOG(LOG_LEVEL_DEBUG, "I2C write: device=MMC5603NJ, reg=0x%02x, value=0x%02x", reg_addr, data);
   i2c_use(I2C_MMC5603NJ);
   uint8_t d[2] = { reg_addr, data };
   bool rv = i2c_write_block(I2C_MMC5603NJ, 2, d);
-  //PBL_LOG(LOG_LEVEL_DEBUG, "I2C write result: success=%d", rv);
   i2c_release(I2C_MMC5603NJ);
   return rv;
 }
@@ -94,18 +91,15 @@ static void mmc5603nj_polling_callback(void *data) {
   // Check if data is ready by reading status register
   uint8_t status;
   if (mmc5603nj_read(REG_STATUS1, 1, &status)) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Status register: 0x%02x", status);
       // Check if magnetometer data is ready (bit 6 according to datasheet - MEA_M_DONE)
       if (status & 0x40) { // Bit 6 indicates measurement done
-          PBL_LOG(LOG_LEVEL_DEBUG, "Magnetometer data ready, posting event");
+          
           // Post event to trigger data processing
           PebbleEvent e = {
               .type = PEBBLE_ECOMPASS_SERVICE_EVENT,
           };
           event_put(&e);
-      } else {
-          PBL_LOG(LOG_LEVEL_DEBUG, "Magnetometer data not ready yet");
-      }
+      } 
   } else {
       PBL_LOG(LOG_LEVEL_ERROR, "Failed to read status register");
   }
@@ -155,7 +149,7 @@ bool mmc5603nj_check_whoami(void) {
   
     uint8_t whoami = 0;
   
-    PBL_LOG(LOG_LEVEL_INFO, "Checking WHO_AM_I register (0x39)...");
+    
     mag_use();
     if (!mmc5603nj_read(WHO_AM_I_REG, 1, &whoami)) {
       PBL_LOG(LOG_LEVEL_ERROR, "Failed to read WHO_AM_I register");
@@ -164,13 +158,10 @@ bool mmc5603nj_check_whoami(void) {
     }
     mag_release();
   
-    PBL_LOG(LOG_LEVEL_INFO, "Read compass whoami byte 0x%x, expecting 0x%x",
-        whoami, COMPASS_WHOAMI_BYTE);
+    
   
     bool success = (whoami == COMPASS_WHOAMI_BYTE);
-    if (success) {
-      PBL_LOG(LOG_LEVEL_INFO, "WHO_AM_I check PASSED");
-    } else {
+    if (!success) {
       PBL_LOG(LOG_LEVEL_ERROR, "WHO_AM_I check FAILED - wrong device or communication issue");
     }
   
@@ -190,62 +181,58 @@ void mmc5603nj_init(void) {
 
     if (!mmc5603nj_check_whoami()) {
       PBL_LOG(LOG_LEVEL_ERROR, "Failed to query Mag - WHO_AM_I check failed");
-    } else {
-      PBL_LOG(LOG_LEVEL_INFO, "WHO_AM_I check passed - device responding");
-    }
-    
-    // Perform the proper reset sequence based on MMC56x3 driver
-    PBL_LOG(LOG_LEVEL_INFO, "Performing device reset sequence...");
-    
+    } 
+
     // Step 1: Write 0x80 to CTRL1_REG (reset command)
     if (!mmc5603nj_write(REG_INTERNAL_CONTROL_1, 0x80)) {
         PBL_LOG(LOG_LEVEL_ERROR, "Reset step 1 failed");
-    } else {
-        psleep(20); // 20ms delay
-        
-        // Step 2: Write 0x08 to CTRL0_REG (set command)
-        if (!mmc5603nj_write(REG_INTERNAL_CONTROL_0, 0x08)) {
-            PBL_LOG(LOG_LEVEL_ERROR, "Reset step 2 failed");
-        } else {
-            psleep(1); // 1ms delay
-            
-            // Step 3: Write 0x10 to CTRL0_REG (reset command)
-            if (!mmc5603nj_write(REG_INTERNAL_CONTROL_0, 0x10)) {
-                PBL_LOG(LOG_LEVEL_ERROR, "Reset step 3 failed");
-            } else {
-                psleep(1); // 1ms delay
-                PBL_LOG(LOG_LEVEL_INFO, "Device reset sequence completed");
-                
-                // Now set up continuous mode like the MMC56x3 driver
-                PBL_LOG(LOG_LEVEL_INFO, "Setting up continuous mode...");
-                
-                // Write 0x08 to CTRL0_REG (prerequisite)
-                if (!mmc5603nj_write(REG_INTERNAL_CONTROL_0, 0x08)) {
-                    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write CTRL0_REG prerequisite");
-                } else {
-                    // Read current CTRL2_REG value
-                    uint8_t ctrl2_value;
-                    if (!mmc5603nj_read(REG_INTERNAL_CONTROL_2, 1, &ctrl2_value)) {
-                        PBL_LOG(LOG_LEVEL_ERROR, "Failed to read CTRL2_REG");
-                    } else {
-                        PBL_LOG(LOG_LEVEL_INFO, "Current CTRL2_REG: 0x%02x", ctrl2_value);
-                        
-                        // Set bit 4 (0x10) to enable continuous mode
-                        ctrl2_value |= 0x10;
-                        PBL_LOG(LOG_LEVEL_INFO, "Setting CTRL2_REG to 0x%02x (continuous mode enabled)", ctrl2_value);
-                        
-                        if (!mmc5603nj_write(REG_INTERNAL_CONTROL_2, ctrl2_value)) {
-                            PBL_LOG(LOG_LEVEL_ERROR, "Failed to enable continuous mode");
-                        } else {
-                            PBL_LOG(LOG_LEVEL_INFO, "Continuous mode enabled successfully");
-                        }
-                    }
-                }
-            }
-        }
+        return;
     }
     
-    PBL_LOG(LOG_LEVEL_INFO, "MMC5603NJ initialization completed");
+    psleep(20); // 20ms delay
+    
+    // Step 2: Write 0x08 to CTRL0_REG (set command)
+    if (!mmc5603nj_write(REG_INTERNAL_CONTROL_0, 0x08)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "Reset step 2 failed");
+        return;
+    }
+    
+    psleep(1); // 1ms delay
+    
+    // Step 3: Write 0x10 to CTRL0_REG (reset command)
+    if (!mmc5603nj_write(REG_INTERNAL_CONTROL_0, 0x10)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "Reset step 3 failed");
+        return;
+    }
+    
+    psleep(1); // 1ms delay
+
+    
+    // Now set up continuous mode like the MMC56x3 driver
+    
+    // Write 0x08 to CTRL0_REG (prerequisite)
+    if (!mmc5603nj_write(REG_INTERNAL_CONTROL_0, 0x08)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "Failed to write CTRL0_REG prerequisite");
+        return;
+    }
+    
+    // Read current CTRL2_REG value
+    uint8_t ctrl2_value;
+    if (!mmc5603nj_read(REG_INTERNAL_CONTROL_2, 1, &ctrl2_value)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "Failed to read CTRL2_REG");
+        return;
+    }
+    
+    
+    // Set bit 4 (0x10) to enable continuous mode
+    ctrl2_value |= 0x10;
+    
+    if (!mmc5603nj_write(REG_INTERNAL_CONTROL_2, ctrl2_value)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "Failed to enable continuous mode");
+        return;
+    }
+    
+    
 }
   
 void mag_use(void) {
@@ -342,8 +329,6 @@ MagReadStatus mag_read_data(MagData *data) {
     // TODO: shouldn't happen at low sample rate, but handle case where some data
     // is overwritten
     if ((raw_data[0] & 0xf0) != 0) {
-      PBL_LOG(LOG_LEVEL_INFO, "Some Mag Sample Data was overwritten, "
-              "dr_status=0x%x", raw_data[0]);
       rv = MagReadClobbered; // we still need to read the data to clear the int
     }
   
@@ -352,8 +337,7 @@ MagReadStatus mag_read_data(MagData *data) {
     data->y = align_coord_system(1, &raw_data[0]);
     data->z = align_coord_system(2, &raw_data[0]);
   
-    // Log the magnetometer data every time it's read
-    PBL_LOG(LOG_LEVEL_INFO, "Mag data read - X: %d, Y: %d, Z: %d", data->x, data->y, data->z);
+    
     mutex_unlock(s_mag_mutex);
     return (MagReadSuccess);
   done:
@@ -363,124 +347,90 @@ MagReadStatus mag_read_data(MagData *data) {
   
 bool mag_change_sample_rate(MagSampleRate rate) {
     mutex_lock(s_mag_mutex);
-  
+
     if (s_use_refcount == 0) {
-      mutex_unlock(s_mag_mutex);
-      return (true);
+        mutex_unlock(s_mag_mutex);
+        return true;
     }
-  
-    bool success = false;
-  
+
     // Enter standby state since we can only change sample rate in this mode.
     if (!prv_enter_standby_mode()) {
-      goto done;
+        mutex_unlock(s_mag_mutex);
+        return false;
     }
-  
-    // ODR register range (1to255hzs)
-    // oversampling values at zero and just set the data rate bits.
+
+    // ODR register has range from (0-75)hz when BW bits of Internal control 0 = 00
     uint8_t new_sample_rate_value = 0;
     uint32_t poll_interval_ms = 200;
+    
     switch(rate) {
-      case MagSampleRate20Hz:
-        new_sample_rate_value = 20;
-        poll_interval_ms = 50; // 50ms for 20Hz
-        break;
-      case MagSampleRate5Hz:
-        new_sample_rate_value = 5;
-        poll_interval_ms = 200; // 200ms for 5Hz 
-        break;
-      default: //invalid sample rate
-        goto done;
+        case MagSampleRate20Hz:
+            new_sample_rate_value = 20;
+            poll_interval_ms = 50; // 50ms for 20Hz
+            break;
+        case MagSampleRate5Hz:
+            new_sample_rate_value = 5;
+            poll_interval_ms = 200; // 200ms for 5Hz 
+            break;
+        default: //invalid sample rate
+            mutex_unlock(s_mag_mutex);
+            return false;
     }
-  
+
     // Write the new sample rate into odr register
-    // Set the Cmm_freq_en bit to 1
-    // Set the Cmm_en bit to 1
-    // active mode.
     PBL_LOG(LOG_LEVEL_INFO, "Setting ODR register to 0x%02x", new_sample_rate_value);
-    if(!mmc5603nj_write(REG_ODR, new_sample_rate_value)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write ODR register");
-      goto done;
+    if (!mmc5603nj_write(REG_ODR, new_sample_rate_value)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "Failed to write ODR register");
+        mutex_unlock(s_mag_mutex);
+        return false;
     }
     psleep(10); // Small delay between writes
     
     // Read current value of INTERNAL_CONTROL_0 to preserve auto set/reset bit
     uint8_t control0;
-    if(!mmc5603nj_read(REG_INTERNAL_CONTROL_0, 1, &control0)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read INTERNAL_CONTROL_0");
-      goto done;
+    if (!mmc5603nj_read(REG_INTERNAL_CONTROL_0, 1, &control0)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "Failed to read INTERNAL_CONTROL_0");
+        mutex_unlock(s_mag_mutex);
+        return false;
     }
-    PBL_LOG(LOG_LEVEL_INFO, "Current INTERNAL_CONTROL_0: 0x%02x", control0);
     
     // Set cmm_freq_en bit while preserving auto set/reset bit
     uint8_t new_control0 = control0 | 0x80; // Set bit 7 (cmm_freq_en)
     PBL_LOG(LOG_LEVEL_INFO, "Setting INTERNAL_CONTROL_0 to 0x%02x (cmm_freq_en + auto set/reset)", new_control0);
-    if(!mmc5603nj_write(REG_INTERNAL_CONTROL_0, new_control0)){
+    if (!mmc5603nj_write(REG_INTERNAL_CONTROL_0, new_control0)) {
         PBL_LOG(LOG_LEVEL_ERROR, "Failed to write INTERNAL_CONTROL_0");
-        goto done;
+        mutex_unlock(s_mag_mutex);
+        return false;
     }
     psleep(10); // Small delay between writes
     
     PBL_LOG(LOG_LEVEL_INFO, "Setting INTERNAL_CONTROL_2 to 0x10 (cmm_en)");
-    if(!mmc5603nj_write(REG_INTERNAL_CONTROL_2, (0x10))){ //set cmm_en to 1
+    if (!mmc5603nj_write(REG_INTERNAL_CONTROL_2, 0x10)) { //set cmm_en to 1
         PBL_LOG(LOG_LEVEL_ERROR, "Failed to write INTERNAL_CONTROL_2");
-        goto done;
+        mutex_unlock(s_mag_mutex);
+        return false;
     }
     psleep(10); // Small delay after final write
-
-    // Verify the configuration by reading back the registers
-    uint8_t verify_odr, verify_control0, verify_control2;
-    if (mmc5603nj_read(REG_ODR, 1, &verify_odr) &&
-        mmc5603nj_read(REG_INTERNAL_CONTROL_0, 1, &verify_control0) &&
-        mmc5603nj_read(REG_INTERNAL_CONTROL_2, 1, &verify_control2)) {
-        PBL_LOG(LOG_LEVEL_INFO, "Configuration verification - ODR: 0x%02x, CONTROL0: 0x%02x, CONTROL2: 0x%02x", 
-                verify_odr, verify_control0, verify_control2);
-        
-        // Check if writes actually took effect
-        if (verify_odr != new_sample_rate_value) {
-            PBL_LOG(LOG_LEVEL_ERROR, "ODR write failed - expected 0x%02x, got 0x%02x", new_sample_rate_value, verify_odr);
-        }
-        if (verify_control0 != new_control0) {
-            PBL_LOG(LOG_LEVEL_ERROR, "CONTROL0 write failed - expected 0x%02x, got 0x%02x", new_control0, verify_control0);
-        }
-        if (verify_control2 != 0x10) {
-            PBL_LOG(LOG_LEVEL_ERROR, "CONTROL2 write failed - expected 0x10, got 0x%02x", verify_control2);
-        }
-    }
     
     mmc5603nj_stop_polling();
     s_polling_timer = new_timer_create();
     new_timer_start(s_polling_timer, poll_interval_ms, 
                    mmc5603nj_polling_callback, NULL, TIMER_START_FLAG_REPEATING);
     s_polling_active = true;
-    success = true;
-  done:
+    
     mutex_unlock(s_mag_mutex);
-  
-    return (success);
+    return true;
 }
   
 void mag_start_sampling(void) {
-    PBL_LOG(LOG_LEVEL_INFO, "Starting magnetometer sampling...");
     mag_use();
-  
+
     //enable auto set/reset
-    PBL_LOG(LOG_LEVEL_INFO, "Enabling auto set/reset (reg 0x1B = 0x20)...");
     if(!mmc5603nj_write(REG_INTERNAL_CONTROL_0, 0x20)){
       PBL_LOG(LOG_LEVEL_ERROR, "Failed to enable auto set/reset");
-    } else {
-      PBL_LOG(LOG_LEVEL_INFO, "Auto set/reset enabled successfully");
-    }
+    } 
   
-    PBL_LOG(LOG_LEVEL_INFO, "Setting sample rate to 5Hz...");
     mag_change_sample_rate(MagSampleRate5Hz);
-    PBL_LOG(LOG_LEVEL_INFO, "Magnetometer sampling started");
     
-    // Add a small delay and then check the status
-    psleep(100);
-    uint8_t status;
-    if (mmc5603nj_read(REG_STATUS1, 1, &status)) {
-        PBL_LOG(LOG_LEVEL_INFO, "Initial status register: 0x%02x", status);
-    }
 }
 
