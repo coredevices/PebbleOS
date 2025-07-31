@@ -4,6 +4,7 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'SOC_BF0_HCPU')
         conf.env.append_unique('DEFINES', 'HAL_TICK_PER_SECOND=1024')
         conf.env.append_unique('DEFINES', 'HAL_NMI_HANLDER_OVERRIDED')
+        conf.env.append_unique('DEFINES', 'LXT_DISABLE')
 
     if conf.env.MICRO_FAMILY == 'SF32LB52':
         conf.env.append_unique('DEFINES', 'SF32LB52X')
