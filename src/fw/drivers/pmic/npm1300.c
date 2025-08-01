@@ -97,6 +97,7 @@ typedef enum {
   PmicRegisters_LDSW_TASKLDSW2SET = 0x0802,
   PmicRegisters_LDSW_TASKLDSW2CLR = 0x0803,
   PmicRegisters_LDSW_LDSWSTATUS = 0x0804,
+  PmicRegisters_LDSW_LDSWSTATUS__LDSW2PWRUPLDO = 0x08,
   PmicRegisters_LDSW_LDSWCONFIG = 0x0807,
   PmicRegisters_LDSW_LDSW1LDOSEL = 0x0808,
   PmicRegisters_LDSW_LDSW2LDOSEL = 0x0809,
@@ -212,16 +213,19 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BUCK_BUCK2NORMVOUT, 20 /* 3.0V */);
   ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, 3 /* both of them, load */);
   
-  ok &= prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &buck_out);
-  PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 LDSW status before enabling LDSW2 0x%x", buck_out);
-  
-  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 0x01);
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, 8 /* 1.8V */);
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, 1 /* LDO */);
-  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 0x01);
+  if (!prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &val)) {
+    PBL_LOG(LOG_LEVEL_ERROR, "failed to read LDSWSTATUS");
+    return false;
+  }
 
-  ok &= prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &buck_out);
-  PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 LDSW status after enabling LDSW2 0x%x", buck_out);
+  if ((val & PmicRegisters_LDSW_LDSWSTATUS__LDSW2PWRUPLDO) == 0U) {
+    ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 0x01);
+    ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, 8 /* 1.8V */);
+    ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, 1 /* LDO */);
+    ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 0x01);
+  } else {
+    ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, 8 /* 1.8V */);
+  }
 
   ok &= prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
   ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSBCHARGER1SET, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
