@@ -188,6 +188,7 @@ elif bld.is_asterix():
             'driver_gpio_defaults',
             'driver_imu',
             'driver_mcu',
+            'driver_mic',
             'driver_mpu',
             'driver_nrf5_hfxo',
             'driver_otp',
@@ -1203,6 +1204,19 @@ elif bld.is_silk() or bld.is_cutts() or bld.is_robert():
             'root_includes',
             'freertos',
             'stm32_stdlib',
+        ],
+    )
+elif bld.is_asterix():
+    bld.objects(
+        name='driver_mic',
+        source=[
+            'mic/nrf5/pdm.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'freertos',
+            'hal_nordic',
         ],
     )
 
