@@ -19,6 +19,7 @@
 #include "board/board.h"
 #include "board/display.h"
 #include "drivers/display/display.h"
+#include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "system/logging.h"
@@ -218,6 +219,9 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   }
 
   stop_mode_enable(InhibitorDisplay);
+
+  // FIXME(SF32LB52): !HACK ALERT! Adding delay here to mitigate potential race
+  psleep(20);
 
   mutex_unlock(s_update);
 }
