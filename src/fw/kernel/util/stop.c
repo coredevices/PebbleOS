@@ -59,7 +59,8 @@ static InhibitorTickProfile s_inhibitor_profile[InhibitorNumItems];
 void enter_stop_mode(void) {
   dbgserial_enable_rx_exti();
 
-  flash_power_down_for_stop_mode();
+  // FIXME(NRF5): QSPI transfer does not succeed, causing an ASSERTION
+  // flash_power_down_for_stop_mode();
   rtc_systick_pause();
 
   /* XXX(nrf5): LATER: have MPSL turn off HFCLK */
@@ -69,7 +70,8 @@ void enter_stop_mode(void) {
   __ISB(); // Let the pipeline catch up (force the WFI to activate before moving on).
 
   rtc_systick_resume();
-  flash_power_up_after_stop_mode();
+  // FIXME(NRF5): QSPI transfer does not succeed, causing an ASSERTION
+  // flash_power_up_after_stop_mode();
 }
 #elif MICRO_FAMILY_SF32LB52
 void enter_stop_mode(void) {
@@ -152,6 +154,7 @@ void enter_stop_mode(void) {
 #endif
 
 void stop_mode_disable( StopModeInhibitor inhibitor ) {
+#if !MICRO_FAMILY_NRF5
   portENTER_CRITICAL();
   ++s_num_items_disallowing_stop_mode;
 
@@ -162,9 +165,11 @@ void stop_mode_disable( StopModeInhibitor inhibitor ) {
   // report the wrong number of nostop ticks.
   s_inhibitor_profile[inhibitor].ticks_when_stop_mode_disabled = rtc_get_ticks();
   portEXIT_CRITICAL();
+#endif
 }
 
 void stop_mode_enable( StopModeInhibitor inhibitor ) {
+#if !MICRO_FAMILY_NRF5
   portENTER_CRITICAL();
   PBL_ASSERTN(s_num_items_disallowing_stop_mode != 0);
   PBL_ASSERTN(s_inhibitor_profile[inhibitor].active_count != 0);
@@ -176,6 +181,7 @@ void stop_mode_enable( StopModeInhibitor inhibitor ) {
         s_inhibitor_profile[inhibitor].ticks_when_stop_mode_disabled;
   }
   portEXIT_CRITICAL();
+#endif
 }
 
 bool stop_mode_is_allowed(void) {
