@@ -520,6 +520,7 @@ def configure(conf):
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
     elif conf.is_asterix():
         conf.env.bt_controller = 'nrf52'
+        conf.env.imu_sensor = 'lsm6dso'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
     elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):
         conf.env.bt_controller = 'da14681-01'

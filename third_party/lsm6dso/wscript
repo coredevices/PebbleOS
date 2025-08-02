@@ -1,0 +1,18 @@
+def build(bld):
+    print('Building LSM6DSO IMU driver...')
+    lsm6dso_includes = [
+        'lsm6dso-pid'
+    ]
+
+    lsm6dso_sources = [
+        'lsm6dso-pid/lsm6dso_reg.c',
+    ]
+
+    bld(export_includes=lsm6dso_includes, name='lsm6dso_includes')
+
+    bld.stlib(source=lsm6dso_sources,
+              includes=lsm6dso_includes,
+              export_includes=lsm6dso_includes,
+              target='lsm6dso',
+              use=['pblibc'])
+
