@@ -158,7 +158,7 @@ bool resource_bytes_are_readonly(void *bytes) {
 }
 
 const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_id,
-                                           size_t *num_bytes_out, bool has_privileged_access) {
+                                           size_t *num_bytes_out, ReadonlyBytesFlags flags) {
   // we don't support memory-mapping for resources that don't belong to the system
   if (app_num != SYSTEM_APP) {
     return NULL;
@@ -177,7 +177,7 @@ const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_
     *num_bytes_out = resource.length;
   }
 
-  return resource.impl->readonly_bytes(&resource, has_privileged_access);
+  return resource.impl->readonly_bytes(&resource, flags);
 }
 
 ResourceVersion resource_get_version(ResAppNum app_num, uint32_t resource_id) {

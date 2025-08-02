@@ -71,7 +71,7 @@ DEFINE_SYSCALL(const uint8_t *, sys_resource_read_only_bytes, ResAppNum app_num,
     }
   }
 
-  return resource_get_readonly_bytes(app_num, resource_id, num_bytes_out, caller_is_privileged);
+  return resource_get_readonly_bytes(app_num, resource_id, num_bytes_out, caller_is_privileged ? ReadonlyBytesFlags_IsPrivileged : 0);
 }
 
 DEFINE_SYSCALL(bool, sys_resource_is_valid, ResAppNum app_num, uint32_t resource_id) {

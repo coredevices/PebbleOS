@@ -73,9 +73,18 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
                                        uint32_t start_offset, uint8_t *data, size_t num_bytes);
 
 //! @internal
+//! On some platforms, you can only map readonly_bytes from external flash
+//! if you plan to execute it (MAPPABLE_FLASH_IS_FOR_CODE_ONLY) -- you can't
+//! do random data accesses to it.
+typedef enum ReadonlyBytesFlags {
+  ReadonlyBytesFlags_IsPrivileged = (1 << 0),
+  ReadonlyBytesFlags_IsCode = (1 << 1),
+} ReadonlyBytesFlags;
+
+//! @internal
 //! Gets a pointer to a data of a built-in resource or memory-addressable resource if possible
 const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_id,
-                                           size_t *num_bytes_out, bool has_privileged_access);
+                                           size_t *num_bytes_out, ReadonlyBytesFlags flags);
 
 //! @internal
 //! True, if given pointer maps to a built-in resource or memory-addressable read-only resource

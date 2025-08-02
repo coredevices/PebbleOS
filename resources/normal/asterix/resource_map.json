@@ -435,6 +435,11 @@
      "name": "JS_TICTOC",
      "file": "normal/base/js/tictoc.js",
      "builtin": true
+    },
+    {
+     "type": "raw",
+     "name": "XIP_STUB",
+     "file": "normal/asterix/xip_stub.bin"
     }
   ]
 }

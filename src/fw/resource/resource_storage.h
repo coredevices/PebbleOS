@@ -70,7 +70,7 @@ typedef struct ResourceStoreImplementation {
   uint32_t (*get_crc)(ResourceStoreEntry *entry, uint32_t num_bytes, uint32_t entry_offset);
   uint32_t (*write)(ResourceStoreEntry *entry, uint32_t offset, void *data, size_t num_bytes);
   uint32_t (*read)(ResourceStoreEntry *entry, uint32_t offset, void *data, size_t num_bytes);
-  const uint8_t *(*readonly_bytes)(ResourceStoreEntry *entry, bool has_privileged_access);
+  const uint8_t *(*readonly_bytes)(ResourceStoreEntry *entry, ReadonlyBytesFlags flags);
 
   ResourceCallbackHandle (*watch)(ResourceStoreEntry *entry, ResourceChangedCallback callback,
                                   void* data);
