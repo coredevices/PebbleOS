@@ -465,8 +465,20 @@ if bld.is_silk() and not bld.env.QEMU:
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix():
-    # FIXME(ASTERIX,OBELIX): provide working implementation
+if bld.is_asterix():
+    bld.objects(
+        name='driver_lsm6dso',
+        source=[
+            'imu/lsm6dso/lsm6dso.c',
+        ],
+        use=[
+            'hal_lsm6dso',
+            'fw_includes',
+        ],
+    )
+
+if bld.is_obelix():
+    # FIXME(OBELIX): provide working implementation
     bld.objects(
         name='driver_lsm6dso',
         source=[
