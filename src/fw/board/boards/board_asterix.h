@@ -118,8 +118,6 @@ static const BoardConfigActuator BOARD_CONFIG_VIBE = {
   .vsys_scale = 3300,
 };
 
-#if 0
-
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
     .axes_offsets[AXIS_X] = 0,
@@ -141,17 +139,16 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
     .shake_thresholds[AccelThresholdLow] = 0xf,
     .double_tap_threshold = 12500,
   },
-  .accel_int_gpios = {
-    [0] = { GPIOA, GPIO_Pin_6 },
-    [1] = { GPIOA, GPIO_Pin_3 },
+  // TODO: Verify that there is only one INT pin connected to the LSM6DSO
+  .accel_int_gpios = { 
+    [0] = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 13) },
   },
   .accel_ints = {
-    [0] = { EXTI_PortSourceGPIOA, 6 },
-    [1] = { EXTI_PortSourceGPIOA, 3 }
+    [0] = { NRFX_GPIOTE_INSTANCE(0), 7, NRF_GPIO_PIN_MAP(1, 13) },
   },
 };
 
-
+#if 0
 
 #define ACCESSORY_UART_IS_SHARED_WITH_BT 1
 static const BoardConfigAccessory BOARD_CONFIG_ACCESSORY = {
