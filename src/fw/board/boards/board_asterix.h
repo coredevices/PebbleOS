@@ -59,6 +59,29 @@ static const BoardConfigActuator BOARD_CONFIG_VIBE = {
   .vsys_scale = 3300,
 };
 
+static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
+  .accel_config = {
+    .axes_offsets[AXIS_X] = 1,
+    .axes_offsets[AXIS_Y] = 0,
+    .axes_offsets[AXIS_Z] = 2,
+    .axes_inverts[AXIS_X] = false,
+    .axes_inverts[AXIS_Y] = false,
+    .axes_inverts[AXIS_Z] = false,
+    // This will need calibration.
+    .shake_thresholds[AccelThresholdHigh] = 64,
+    .shake_thresholds[AccelThresholdLow] = 0xf,
+    .double_tap_threshold = 12500,
+  },
+  // Ideally we would configure both interrupt pins, but we have run out of GPIOTE channels.
+  // We will use INT1 (connected to pin 13) for accelerometer interrupts, and leave INT2 (pin 11) unused.
+  .accel_int_gpios = {
+    [0] = { .gpio = NRF5_GPIO_RESOURCE_EXISTS, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
+  },
+  .accel_ints = {
+    [0] = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 7, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
+  },
+};
+
 extern UARTDevice * const DBG_UART;
 
 extern PwmState BACKLIGHT_PWM_STATE;
