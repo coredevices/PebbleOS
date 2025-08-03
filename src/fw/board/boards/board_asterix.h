@@ -61,18 +61,12 @@ static const BoardConfigActuator BOARD_CONFIG_VIBE = {
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
-    .axes_offsets[AXIS_X] = 0,
-    .axes_offsets[AXIS_Y] = 1,
+    .axes_offsets[AXIS_X] = 1,
+    .axes_offsets[AXIS_Y] = 0,
     .axes_offsets[AXIS_Z] = 2,
-#if IS_BIGBOARD
     .axes_inverts[AXIS_X] = false,
     .axes_inverts[AXIS_Y] = false,
     .axes_inverts[AXIS_Z] = false,
-#else
-    .axes_inverts[AXIS_X] = true,
-    .axes_inverts[AXIS_Y] = true,
-    .axes_inverts[AXIS_Z] = true,
-#endif
     // This will need calibration.
     .shake_thresholds[AccelThresholdHigh] = 64,
     .shake_thresholds[AccelThresholdLow] = 0xf,
