@@ -43,6 +43,12 @@ static odr_xl_interval_t prv_get_odr_for_interval(uint32_t interval_us);
 int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us);
 static void prv_lsm6dso_read_samples(void);
 static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data);
+typedef enum {
+  X_AXIS = 0,
+  Y_AXIS = 1,
+  Z_AXIS = 2,
+} axis_t;
+static int16_t prv_get_axis_projection_mg(axis_t axis, int16_t *raw_vector);
 static void prv_delay_ms(uint32_t ms);
 static uint64_t prv_get_timestamp_ms(void);
 
@@ -132,7 +138,7 @@ void lsm6dso_init(void) {
   }
 
   // Set default full scale
-  if (lsm6dso_xl_full_scale_set(&lsm6dso_ctx, LSM6DSO_2g)) {
+  if (lsm6dso_xl_full_scale_set(&lsm6dso_ctx, LSM6DSO_4g)) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set accelerometer full scale");
     return;
   }
@@ -361,9 +367,9 @@ static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
     return -1;  // Read error
   }
 
-  data->x = lsm6dso_from_fs2_to_mg(accel_raw[0]);
-  data->y = lsm6dso_from_fs2_to_mg(accel_raw[1]);
-  data->z = lsm6dso_from_fs2_to_mg(accel_raw[2]);
+  data->x = prv_get_axis_projection_mg(X_AXIS, accel_raw);
+  data->y = prv_get_axis_projection_mg(Y_AXIS, accel_raw);
+  data->z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
   data->timestamp_us = prv_get_timestamp_ms() * 1000;
 
   if (s_lsm6dso_state.num_samples > 0) {
@@ -371,6 +377,13 @@ static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
   }
 
   return 0;
+}
+
+static int16_t prv_get_axis_projection_mg(axis_t axis, int16_t *raw_vector) {
+  uint8_t axis_offset = BOARD_CONFIG_ACCEL.accel_config.axes_offsets[axis];
+  int axis_direction = BOARD_CONFIG_ACCEL.accel_config.axes_inverts[axis] ? -1 : 1;
+
+  return lsm6dso_from_fs4_to_mg(raw_vector[axis_offset] * axis_direction);
 }
 
 // Other utility functions
