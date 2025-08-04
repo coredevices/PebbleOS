@@ -61,6 +61,14 @@
 #  endif
 #endif
 
+//! Bondings/CCCD ids are 8-bit values.
+//! Bondings take 0-126 (127=invalid) and CCCDs take 128-254 (255=invalid).
+
+//! Maximum bonding ID that can be used.
+#define BT_BONDING_ID_MAX 0x7EU
+//! Minimum CCCD ID that can be used.
+#define BT_CCCD_ID_MIN 0x80U
+
 //! The BtPersistBonding*Data structs can never shrink, only grow
 
 //! Stores data about a remote BT classic device
@@ -90,6 +98,18 @@ typedef struct PACKED {
     BtPersistBondingBLEData ble_data;
   };
 } BtPersistBondingData;
+
+typedef struct PACKED {
+  BTDeviceInternal peer;
+  uint16_t chr_val_handle;
+  uint16_t flags;
+  unsigned value_changed:1;
+} BtPersistCCCDData;
+
+typedef struct PACKED {
+  BTCCCDID id;
+  BtPersistCCCDData data;
+} BtPersistCCCD;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Settings File
@@ -315,6 +335,34 @@ cleanup:
   return free_key;
 }
 
+//! Get the next available CCCDID
+static BTCCCDID prv_get_free_cccd() {
+  BTCCCDID free_cccd = BT_CCCD_ID_INVALID;
+
+  prv_lock();
+  {
+  SettingsFile fd;
+  status_t rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
+                                   BT_PERSISTENT_STORAGE_FILE_SIZE);
+  if (rv) {
+    goto cleanup;
+  }
+
+  for (BTCCCDID id = BT_CCCD_ID_MIN; id < BT_CCCD_ID_INVALID; id++) {
+    if (!settings_file_exists(&fd, &id, sizeof(id))) {
+      free_cccd = id;
+      break;
+    }
+  }
+
+  settings_file_close(&fd);
+
+  }
+cleanup:
+  prv_unlock();
+  return free_cccd;
+}
+
 static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file,
                                             SettingsRecordInfo *info,
                                             void *context) {
@@ -323,6 +371,12 @@ static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file,
   }
   if (info->val_len == 0) {
     return true;
+  }
+
+  BTBondingID key;
+  info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key > BT_BONDING_ID_MAX) {
+    return true; // continue iterating
   }
 
   BtPersistBondingData data;
@@ -585,8 +639,12 @@ static bool prv_get_key_for_sm_pairing_info_itr(SettingsFile *file,
   KeyForSMPairingItrData *itr_data = (KeyForSMPairingItrData*) context;
 
   BTBondingID key;
-  BtPersistBondingData stored_data;
   info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key > BT_BONDING_ID_MAX) {
+    return true; // continue iterating
+  }
+
+  BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE &&
@@ -729,11 +787,62 @@ static void prv_remove_ble_bonding_from_bt_driver(const BtPersistBondingData *de
   bt_driver_handle_host_removed_bonding(&bonding);
 }
 
+status_t prv_delete_all_cccd_for_addr(const BTDeviceInternal *dev) {
+  status_t rv;
+
+  prv_lock();
+  {
+  SettingsFile fd;
+  rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
+                          BT_PERSISTENT_STORAGE_FILE_SIZE);
+  if (rv) {
+    goto cleanup;
+  }
+
+  for (BTCCCDID id = BT_CCCD_ID_MIN; id < BT_CCCD_ID_INVALID; id++) {
+    if (settings_file_exists(&fd, &id, sizeof(id))) {
+      BtPersistCCCDData stored_data;
+
+      rv = settings_file_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data));
+      if (rv) {
+        goto cleanup;
+      }
+
+      if (bt_device_internal_equal(dev, &stored_data.peer)) {
+        BleCCCD cccd_to_delete = {
+          .peer = *dev,
+          .chr_val_handle = stored_data.chr_val_handle,
+          .flags = stored_data.flags,
+          .value_changed = stored_data.value_changed,
+        };
+
+        bt_driver_handle_host_removed_cccd(&cccd_to_delete);
+
+        rv = settings_file_delete(&fd, &id, sizeof(id));
+        if (rv) {
+          goto cleanup;
+        }
+      }
+    }
+  }
+
+  settings_file_close(&fd);
+
+  }
+cleanup:
+  prv_unlock();
+  return rv;
+}
+
 void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID bonding) {
   BtPersistBondingData deleted_data;
   if (!prv_delete_pairing_with_type_by_id(bonding, BtPersistBondingTypeBLE, &deleted_data)) {
     return;
   }
+
+  status_t rv;
+  rv = prv_delete_all_cccd_for_addr(&deleted_data.ble_data.pairing_info.identity);
+  PBL_ASSERTN(rv == S_SUCCESS);
 
   prv_remove_ble_bonding_from_bt_driver(&deleted_data);
 
@@ -760,8 +869,12 @@ static bool prv_find_by_addr_itr(SettingsFile *file,
   FindByAddrItrData *itr_data = (FindByAddrItrData *) context;
 
   BTBondingID key;
-  BtPersistBondingData stored_data;
   info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key > BT_BONDING_ID_MAX) {
+    return true; // continue iterating
+  }
+
+  BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE &&
@@ -896,13 +1009,17 @@ static bool prv_get_first_ancs_bonding_itr(SettingsFile *file,
 
   BTBondingID *first_ancs_supported_bonding_found = (BTBondingID *) context;
 
+  BTBondingID key;
+  info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key > BT_BONDING_ID_MAX) {
+    return true; // continue iterating
+  }
+
   BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
-
   if (stored_data.type == BtPersistBondingTypeBLE && stored_data.ble_data.supports_ancs) {
-    // Save the key
-    info->get_key(file, (uint8_t*) first_ancs_supported_bonding_found, info->key_len);
+    *first_ancs_supported_bonding_found = key;
     return false; // stop iterating
   }
 
@@ -942,6 +1059,14 @@ typedef struct {
   void *cb_data;
 } ForEachBLEPairingInternalData;
 
+typedef void (*BtPersistCCCDDBEachBLEInternal)(BTCCCDID key,
+                                               BtPersistCCCDData *stored_data, void *ctx);
+
+typedef struct {
+  BtPersistCCCDDBEachBLEInternal cb;
+  void *cb_data;
+} ForEachBLECCCDInternalData;
+
 typedef struct {
   BtPersistBondingDBEachBLE cb;
   void *cb_data;
@@ -965,13 +1090,40 @@ static bool prv_ble_pairing_internal_for_each_itr(SettingsFile *file,
   ForEachBLEPairingInternalData *internal_itr_data = (ForEachBLEPairingInternalData*) context;
 
   BTBondingID key;
-  BtPersistBondingData stored_data;
   info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key > BT_BONDING_ID_MAX) {
+    return true; // continue iterating
+  }
+
+  BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE) {
     internal_itr_data->cb(key, &stored_data, internal_itr_data->cb_data);
   }
+
+  return true;
+}
+
+static bool prv_ble_cccd_internal_for_each_itr(SettingsFile *file,
+                                               SettingsRecordInfo *info, void *context) {
+  // check entry is valid
+  if (info->val_len == 0 || info->key_len != sizeof(BTCCCDID)) {
+    return true; // continue iterating
+  }
+
+  ForEachBLECCCDInternalData *internal_itr_data = (ForEachBLECCCDInternalData*) context;
+
+  BTCCCDID key;
+  info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key < BT_CCCD_ID_MIN) {
+    return true; // continue iterating
+  }
+
+  BtPersistCCCDData stored_data;
+  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+
+  internal_itr_data->cb(key, &stored_data, internal_itr_data->cb_data);
 
   return true;
 }
@@ -998,11 +1150,29 @@ static void prv_register_bondings_for_each_ble_cb(BTBondingID key,
   bt_driver_handle_host_added_bonding(&bonding);
 }
 
+static void prv_register_cccd_for_each_ble_cb(BTCCCDID key,
+                                              BtPersistCCCDData *stored_data,
+                                              void *context) {
+  BleCCCD cccd = {
+    .peer = stored_data->peer,
+    .chr_val_handle = stored_data->chr_val_handle,
+    .flags = stored_data->flags,
+    .value_changed = stored_data->value_changed,
+  };
+
+  bt_driver_handle_host_added_cccd(&cccd);
+}
+
 void bt_persistent_storage_register_existing_ble_bondings(void) {
-  ForEachBLEPairingInternalData internal_itr_data = {
+  ForEachBLEPairingInternalData internal_itr_data_bonding = {
     .cb = prv_register_bondings_for_each_ble_cb,
   };
-  prv_file_each(prv_ble_pairing_internal_for_each_itr, &internal_itr_data);
+  prv_file_each(prv_ble_pairing_internal_for_each_itr, &internal_itr_data_bonding);
+
+  ForEachBLECCCDInternalData internal_itr_data_cccd = {
+    .cb = prv_register_cccd_for_each_ble_cb,
+  };
+  prv_file_each(prv_ble_cccd_internal_for_each_itr, &internal_itr_data_cccd);
 }
 
 void analytics_external_collect_ble_pairing_info(void) {
@@ -1016,6 +1186,97 @@ void analytics_external_collect_ble_pairing_info(void) {
   s_bt_persistent_storage_updates = 0;
 }
 
+typedef struct {
+  const BTDeviceInternal *peer;
+  uint16_t chr_val_handle;
+  BTCCCDID id;
+} FindCCCDItrData;
+
+static bool prv_find_cccd_itr(SettingsFile *file,
+                              SettingsRecordInfo *info, void *context) {
+  if (info->val_len == 0 || info->key_len != sizeof(BTCCCDID)) {
+    return true; // continue iterating
+  }
+
+  FindCCCDItrData *itr_data = (FindCCCDItrData *) context;
+
+  BTCCCDID key;
+  info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key < BT_CCCD_ID_MIN) {
+    return true; // continue iterating
+  }
+
+  BtPersistCCCDData stored_data;
+  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+
+  if (bt_device_internal_equal(itr_data->peer, &stored_data.peer) && 
+      stored_data.chr_val_handle == itr_data->chr_val_handle) {
+    itr_data->id = key;
+    return false; // stop iterating
+  }
+
+  return true;
+}
+
+BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd) {
+  PBL_ASSERTN(cccd != NULL);
+
+  FindCCCDItrData itr_data = {
+    .peer = &cccd->peer,
+    .chr_val_handle = cccd->chr_val_handle,
+    .id = BT_CCCD_ID_INVALID,
+  };
+  prv_file_each(prv_find_cccd_itr, &itr_data);
+
+  BTCCCDID cccd_id = itr_data.id;
+  if (cccd_id == BT_CCCD_ID_INVALID) {
+    cccd_id = prv_get_free_cccd();
+    if (cccd_id == BT_CCCD_ID_INVALID) {
+        return BT_CCCD_ID_INVALID;
+    }
+  }
+
+  BtPersistCCCDData stored_data = {
+    .peer = cccd->peer,
+    .chr_val_handle = cccd->chr_val_handle,
+    .flags = cccd->flags,
+    .value_changed = cccd->value_changed,
+  };
+
+  BtPersistCCCD stored_cccd = {
+    .id = cccd_id,
+    .data = stored_data,
+  };
+
+  GapBondingFileSetStatus status = prv_file_set(&stored_cccd.id, sizeof(stored_cccd.id),
+                                                &stored_cccd.data, sizeof(stored_cccd.data));
+  if (status == GapBondingFileSetFail) {
+    return BT_CCCD_ID_INVALID;
+  }
+
+  return cccd_id;
+}
+
+bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t chr_val_handle) {
+  BTCCCDID cccd_id;
+
+  FindCCCDItrData itr_data = {
+    .peer = peer,
+    .chr_val_handle = chr_val_handle,
+    .id = BT_CCCD_ID_INVALID
+  };
+  prv_file_each(prv_find_cccd_itr, &itr_data);
+
+  if (itr_data.id == BT_CCCD_ID_INVALID) {
+    return false;
+  }
+
+  if (prv_file_set(&cccd_id, sizeof(cccd_id), NULL, 0) == GapBondingFileSetFail) {
+    return false;
+  }
+
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BT Classic Pairing Info
@@ -1045,8 +1306,12 @@ static bool prv_get_key_for_bt_classic_addr_itr(SettingsFile *file,
   KeyForBTCAddrData *itr_data = (KeyForBTCAddrData*) context;
 
   BTBondingID key;
-  BtPersistBondingData stored_data;
   info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key > BT_BONDING_ID_MAX) {
+    return true; // continue iterating
+  }
+
+  BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBTClassic &&
@@ -1230,8 +1495,12 @@ static bool bt_persistent_storage_bt_classic_pairing_for_each_itr(SettingsFile *
   ForEachBTCPairingData *itr_data = (ForEachBTCPairingData*) context;
 
   BTBondingID key;
-  BtPersistBondingData stored_data;
   info->get_key(file, (uint8_t*) &key, info->key_len);
+  if (key > BT_BONDING_ID_MAX) {
+    return true; // continue iterating
+  }
+
+  BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBTClassic) {
@@ -1535,6 +1804,18 @@ static void prv_dump_bonding_db_data(char display_buf[DISPLAY_BUF_LEN],
   }
 }
 
+static void prv_dump_cccd_db_data(char display_buf[DISPLAY_BUF_LEN],
+                                  BTCCCDID cccd_id, BtPersistCCCDData *data) {
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "CCCD Key %d", (int)cccd_id - BT_CCCD_ID_MIN);
+
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Peer Address: "BT_DEVICE_ADDRESS_FMT,
+                           BT_DEVICE_ADDRESS_XPLODE_PTR(&data->peer.address));
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Handle: 0x%" PRIx16, 
+                           data->chr_val_handle);
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Flags: 0x%" PRIx16, data->flags);
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Value Changed: %s",
+                           bool_to_str(data->value_changed));
+}
 
 static bool prv_dump_bt_persistent_storage_contents(
     SettingsFile *file, SettingsRecordInfo *info, void *context) {
@@ -1601,11 +1882,23 @@ static bool prv_dump_bt_persistent_storage_contents(
                                "Pinned address: "BT_DEVICE_ADDRESS_FMT,
                                BT_DEVICE_ADDRESS_XPLODE_PTR(address));
     }
-  } else if (info->key_len == sizeof(BTBondingID)) {
-    PBL_ASSERTN(sizeof(BtPersistBondingData) == info->val_len);
-    BTBondingID id;
-    memcpy(&id, key, sizeof(BTBondingID));
-    prv_dump_bonding_db_data(display_buf, id, (BtPersistBondingData *)&val);
+  } else if (info->key_len == sizeof(BTBondingID) || info->key_len == sizeof(BTCCCDID)) {
+    BTBondingID bonding_id;
+    BTCCCDID cccd_id;
+
+    memcpy(&bonding_id, key, sizeof(BTBondingID));
+    if (bonding_id <= BT_BONDING_ID_MAX) {
+      PBL_ASSERTN(sizeof(BtPersistBondingData) == info->val_len);
+      prv_dump_bonding_db_data(display_buf, bonding_id, (BtPersistBondingData *)&val);
+      return true;
+    }
+
+    memcpy(&cccd_id, key, sizeof(BTCCCDID));
+    if (cccd_id >= BT_CCCD_ID_MIN) {
+      PBL_ASSERTN(sizeof(BtPersistCCCDData) == info->val_len);
+      prv_dump_cccd_db_data(display_buf, cccd_id, (BtPersistCCCDData *)&val);
+      return true;
+    }
   } else {
     prompt_send_response("Something new be in the bonding DB!");
     PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, &key[0], info->key_len);
