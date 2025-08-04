@@ -37,13 +37,24 @@
 typedef struct {
   ListNode node;
   struct ble_store_value_sec value_sec;
-} BleStoreValue;
+} BleStoreValueSec;
 
-static BleStoreValue *s_peer_value_secs;
-static BleStoreValue *s_our_value_secs;
+typedef struct {
+  ListNode node;
+  struct ble_store_value_cccd value_cccd;
+} BleStoreValueCCCD;
+
+typedef struct {
+  const struct ble_store_key_cccd *key;
+  unsigned int skipped;
+} BleStoreCCCDFindContext;
+
+static BleStoreValueSec *s_peer_value_secs;
+static BleStoreValueSec *s_our_value_secs;
+static BleStoreValueCCCD *s_cccds;
 
 static bool prv_nimble_store_find_sec_cb(ListNode *node, void *data) {
-  BleStoreValue *s = (BleStoreValue *)node;
+  BleStoreValueSec *s = (BleStoreValueSec *)node;
   struct ble_store_key_sec *key_sec = (struct ble_store_key_sec *)data;
 
   return ble_addr_cmp(&s->value_sec.peer_addr, &key_sec->peer_addr) == 0;
@@ -60,14 +71,14 @@ static ListNode **prv_find_sec_list_for_obj_type(const int obj_type) {
   }
 }
 
-static BleStoreValue *prv_nimble_store_find_sec(const int obj_type,
+static BleStoreValueSec *prv_nimble_store_find_sec(const int obj_type,
                                                 const struct ble_store_key_sec *key_sec) {
   ListNode *sec_list = *prv_find_sec_list_for_obj_type(obj_type);
 
   if (!ble_addr_cmp(&key_sec->peer_addr, BLE_ADDR_ANY)) {
-    return (BleStoreValue *)list_get_at(sec_list, key_sec->idx);
+    return (BleStoreValueSec *)list_get_at(sec_list, key_sec->idx);
   } else if (key_sec->idx == 0) {
-    return (BleStoreValue *)list_find(sec_list, prv_nimble_store_find_sec_cb,
+    return (BleStoreValueSec *)list_find(sec_list, prv_nimble_store_find_sec_cb,
                                       (void *)&key_sec->peer_addr);
   }
 
@@ -77,7 +88,7 @@ static BleStoreValue *prv_nimble_store_find_sec(const int obj_type,
 static int prv_nimble_store_read_sec(const int obj_type, const struct ble_store_key_sec *key_sec,
                                      struct ble_store_value_sec *value_sec) {
   int ret = 0;
-  BleStoreValue *s;
+  BleStoreValueSec *s;
 
   bt_lock();
 
@@ -95,9 +106,9 @@ unlock:
   return ret;
 }
 
-static BleStoreValue *prv_nimble_store_upsert_sec(const int obj_type,
+static BleStoreValueSec *prv_nimble_store_upsert_sec(const int obj_type,
                                                   const struct ble_store_value_sec *value_sec) {
-  BleStoreValue *s;
+  BleStoreValueSec *s;
   struct ble_store_key_sec key_sec;
   ble_store_key_from_value_sec(&key_sec, value_sec);
   ListNode **sec_list = prv_find_sec_list_for_obj_type(obj_type);
@@ -106,7 +117,7 @@ static BleStoreValue *prv_nimble_store_upsert_sec(const int obj_type,
 
   s = prv_nimble_store_find_sec(obj_type, &key_sec);
   if (s == NULL) {
-    s = kernel_zalloc_check(sizeof(BleStoreValue));
+    s = kernel_zalloc_check(sizeof(BleStoreValueSec));
     if (*sec_list == NULL) {
       *sec_list = (ListNode *)s;
     } else {
@@ -232,7 +243,7 @@ static int prv_nimble_store_write_sec(const int obj_type,
 
 static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_sec *key_sec) {
   BTDeviceInternal device;
-  BleStoreValue *s;
+  BleStoreValueSec *s;
 
   bt_lock();
   s = prv_nimble_store_find_sec(obj_type, key_sec);
@@ -252,12 +263,141 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
   return 0;
 }
 
+static bool prv_nimble_store_find_cccd_cb(ListNode *node, void *data) {
+  BleStoreValueCCCD *s = (BleStoreValueCCCD *)node;
+  BleStoreCCCDFindContext *ctx = data;
+
+  if ((ble_addr_cmp(&ctx->key->peer_addr, BLE_ADDR_ANY) != 0) &&
+      (ble_addr_cmp(&s->value_cccd.peer_addr, &ctx->key->peer_addr) != 0)) {
+    return false;
+  }
+
+  if ((ctx->key->chr_val_handle != 0U) &&
+      (s->value_cccd.chr_val_handle != ctx->key->chr_val_handle)) {
+    return false;
+  }
+
+  if (ctx->key->idx > ctx->skipped) {
+    ctx->skipped++;
+    return false;
+  }
+
+  return true;
+}
+
+static BleStoreValueCCCD *prv_nimble_store_find_cccd(const struct ble_store_key_cccd *key_cccd) {
+  BleStoreCCCDFindContext ctx = {
+    .key = key_cccd,
+    .skipped = 0U,
+  };
+
+  return (BleStoreValueCCCD *)list_find((ListNode *)s_cccds, prv_nimble_store_find_cccd_cb, &ctx);
+}
+
+static int prv_nimble_store_read_cccd(const struct ble_store_key_cccd *key_cccd,
+                                      struct ble_store_value_cccd *value_cccd) {
+  BleStoreValueCCCD *s;
+  int ret;
+
+  bt_lock();
+
+  s = prv_nimble_store_find_cccd(key_cccd);
+  if (s == NULL) {
+    ret = BLE_HS_ENOENT;
+    goto unlock;
+  }
+
+  *value_cccd = s->value_cccd;
+
+unlock:
+  bt_unlock();
+
+  return ret;
+}
+
+static void prv_nimble_store_insert_cccd(const struct ble_store_value_cccd *value_cccd) {
+  struct ble_store_key_cccd key_cccd;
+  BleStoreValueCCCD *s;
+
+  ble_store_key_from_value_cccd(&key_cccd, value_cccd);
+
+  s = prv_nimble_store_find_cccd(&key_cccd);
+  if (s == NULL) {
+    s = kernel_zalloc_check(sizeof(BleStoreValueCCCD));
+    if (s_cccds == NULL) {
+      s_cccds = s;
+    } else {
+      list_append((ListNode *)s_cccds, (ListNode *)s);
+    }
+  }
+
+  s->value_cccd = *value_cccd;
+}
+
+static int prv_nimble_store_write_cccd(const struct ble_store_value_cccd *value_cccd) {
+  BleCCCD cccd;
+  BTCCCDID cccd_id;
+  int ret = 0;
+
+  bt_lock();
+
+  nimble_addr_to_pebble_device(&value_cccd->peer_addr, &cccd.peer);
+  cccd.chr_val_handle = value_cccd->chr_val_handle;
+  cccd.flags = value_cccd->flags;
+  cccd.value_changed = value_cccd->value_changed;
+
+  cccd_id = bt_persistent_storage_store_cccd(&cccd);
+  if (cccd_id == BT_CCCD_ID_INVALID) {
+    ret = BLE_HS_ESTORE_CAP;
+    goto unlock;
+  }
+
+  prv_nimble_store_insert_cccd(value_cccd);
+
+unlock:
+  bt_unlock();
+
+  return ret;
+}
+
+static int prv_nimble_store_delete_cccd(const struct ble_store_key_cccd *key_cccd) {
+  bool res;
+  int ret = 0;
+  BTDeviceInternal peer;
+  BleStoreValueCCCD *s;
+
+  bt_lock();
+
+  nimble_addr_to_pebble_device(&key_cccd->peer_addr, &peer);
+  res = bt_persistent_storage_delete_cccd(&peer, key_cccd->chr_val_handle);
+  if (!res) {
+    ret = BLE_HS_ENOENT;
+    goto unlock;
+  }
+
+  s = prv_nimble_store_find_cccd(key_cccd);
+  if (s == NULL) {
+    ret = BLE_HS_ENOENT;
+    goto unlock;
+  }
+
+  list_remove((ListNode *)s, (ListNode **)&s_cccds, NULL);
+  kernel_free(s);
+
+unlock:
+  bt_unlock();
+
+  return ret;
+}
+
 static int prv_nimble_store_read(const int obj_type, const union ble_store_key *key,
                                  union ble_store_value *value) {
   switch (obj_type) {
     case BLE_STORE_OBJ_TYPE_OUR_SEC:
     case BLE_STORE_OBJ_TYPE_PEER_SEC:
       return prv_nimble_store_read_sec(obj_type, &key->sec, &value->sec);
+    case BLE_STORE_OBJ_TYPE_CCCD:
+      return prv_nimble_store_read_cccd(&key->cccd, &value->cccd);
     default:
       return BLE_HS_ENOTSUP;
   }
@@ -268,6 +408,8 @@ static int prv_nimble_store_write(int obj_type, const union ble_store_value *val
     case BLE_STORE_OBJ_TYPE_OUR_SEC:
     case BLE_STORE_OBJ_TYPE_PEER_SEC:
       return prv_nimble_store_write_sec(obj_type, &val->sec);
+    case BLE_STORE_OBJ_TYPE_CCCD:
+      return prv_nimble_store_write_cccd(&val->cccd);
     default:
       return BLE_HS_ENOTSUP;
   }
@@ -278,6 +420,8 @@ static int prv_nimble_store_delete(int obj_type, const union ble_store_key *key)
     case BLE_STORE_OBJ_TYPE_OUR_SEC:
     case BLE_STORE_OBJ_TYPE_PEER_SEC:
       return prv_nimble_store_delete_sec(obj_type, &key->sec);
+    case BLE_STORE_OBJ_TYPE_CCCD:
+      return prv_nimble_store_delete_cccd(&key->cccd);
     default:
       return BLE_HS_ENOTSUP;
   }
@@ -328,9 +472,11 @@ void nimble_store_unload(void) {
 
   list_foreach((ListNode *)s_peer_value_secs, prv_store_value_free, NULL);
   list_foreach((ListNode *)s_our_value_secs, prv_store_value_free, NULL);
+  list_foreach((ListNode *)s_cccds, prv_store_value_free, NULL);
 
   s_peer_value_secs = NULL;
   s_our_value_secs = NULL;
+  s_cccds = NULL;
 
   bt_unlock();
 }
@@ -389,7 +535,7 @@ void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
 }
 
 void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
-  BleStoreValue *s;
+  BleStoreValueSec *s_sec;
   struct ble_store_key_sec key_sec;
 
   key_sec.idx = 0;
@@ -397,15 +543,45 @@ void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
 
   bt_lock();
 
-  s = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_OUR_SEC, &key_sec);
-  if (s != NULL) {
-    list_remove((ListNode *)s, (ListNode **)&s_our_value_secs, NULL);
-    kernel_free(s);
+  s_sec = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_OUR_SEC, &key_sec);
+  if (s_sec != NULL) {
+    list_remove((ListNode *)s_sec, (ListNode **)&s_our_value_secs, NULL);
+    kernel_free(s_sec);
   }
 
-  s = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_PEER_SEC, &key_sec);
+  s_sec = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_PEER_SEC, &key_sec);
+  if (s_sec != NULL) {
+    list_remove((ListNode *)s_sec, (ListNode **)&s_peer_value_secs, NULL);
+    kernel_free(s_sec);
+  }
+
+  bt_unlock();
+}
+
+void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
+  struct ble_store_value_cccd value_cccd;
+
+  pebble_device_to_nimble_addr(&cccd->peer, &value_cccd.peer_addr);
+  value_cccd.chr_val_handle = cccd->chr_val_handle;
+  value_cccd.flags = cccd->flags;
+  value_cccd.value_changed = cccd->value_changed;
+
+  prv_nimble_store_insert_cccd(&value_cccd);
+}
+
+void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
+  BleStoreValueCCCD *s;
+  struct ble_store_key_cccd key_cccd;
+  
+  pebble_device_to_nimble_addr(&cccd->peer, &key_cccd.peer_addr);
+  key_cccd.chr_val_handle = cccd->chr_val_handle;
+  key_cccd.idx = 0;
+
+  bt_lock();
+
+  s = prv_nimble_store_find_cccd(&key_cccd);
   if (s != NULL) {
-    list_remove((ListNode *)s, (ListNode **)&s_peer_value_secs, NULL);
+    list_remove((ListNode *)s, (ListNode **)&s_cccds, NULL);
     kernel_free(s);
   }
 
