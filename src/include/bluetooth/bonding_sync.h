@@ -39,6 +39,17 @@ typedef struct PACKED BleBonding {
   BTDeviceAddress pinned_address;
 } BleBonding;
 
+typedef struct PACKED BleCCCD {
+  //! The peer device.
+  BTDeviceInternal peer;
+  //! The characteristic value handle that this CCCD is associated with.
+  uint16_t chr_val_handle;
+  //! Flags for the CCCD.
+  uint16_t flags;
+  //! True if the value has changed.
+  bool value_changed:1;
+} BleCCCD;
+
 //! Called by the FW after starting the Bluetooth stack to register existing bondings.
 //! @note When the Bluetooth is torn down, there won't be any "remove" calls. If needed, the BT
 //! driver lib should clean up itself in bt_driver_stop().
@@ -46,6 +57,12 @@ void bt_driver_handle_host_added_bonding(const BleBonding *bonding);
 
 //! Called by the FW when a bonding is removed (i.e. user "Forgot" a bonding from Settings).
 void bt_driver_handle_host_removed_bonding(const BleBonding *bonding);
+
+//! Called by the FW when a CCCD entry is added.
+void bt_driver_handle_host_added_cccd(const BleCCCD *cccd);
+
+//! Called by the FW when a CCCD entry is removed.
+void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd);
 
 //! Called by the BT driver after succesfully pairing a new device.
 //! @param addr The address that is used to refer to the connection. This is used to associate
