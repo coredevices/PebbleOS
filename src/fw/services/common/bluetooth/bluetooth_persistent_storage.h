@@ -19,6 +19,7 @@
 #include "services/common/comm_session/session_remote_version.h"
 
 #include <bluetooth/bluetooth_types.h>
+#include <bluetooth/bonding_sync.h>
 #include <bluetooth/id.h>
 #include <bluetooth/sm_types.h>
 
@@ -100,6 +101,10 @@ void bt_persistent_storage_for_each_ble_pairing(BtPersistBondingDBEachBLE cb, vo
 
 //! Registers all the existing BLE bondings with the BT driver lib.
 void bt_persistent_storage_register_existing_ble_bondings(void);
+
+BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd);
+
+bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t chr_val_handle);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BT Classic Pairing Info

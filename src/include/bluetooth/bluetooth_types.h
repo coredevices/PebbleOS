@@ -175,7 +175,11 @@ _Static_assert(sizeof(BLECharacteristic) == sizeof(uintptr_t), "BLECharacteristi
 //! They stay the same across reboots, so they can be persisted by apps.
 typedef uint8_t BTBondingID;
 
-#define BT_BONDING_ID_INVALID ((BTBondingID) ~0)
+#define BT_BONDING_ID_INVALID (0x7FU)
+
+typedef uint8_t BTCCCDID;
+
+#define BT_CCCD_ID_INVALID (0xFFU)
 
 typedef struct __attribute__((__packed__)) BTDeviceAddress {
   uint8_t octets[6];
