@@ -44,6 +44,7 @@
 #define BLE_BONDING_ID (0)
 #define BT_CLASSIC_BONDING_ID (1)
 
+#define BT_CCCD_ID_MIN 0x80U
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Info
@@ -217,6 +218,16 @@ void bt_persistent_storage_register_existing_ble_bondings(void) {
   bonding.is_gateway = true;
   bonding.flags = flags;
   bt_driver_handle_host_added_bonding(&bonding);
+}
+
+// PRF does not support persistent CCCD storage, these are just stubs
+
+BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd) {
+  return BT_CCCD_ID_MIN;
+}
+
+bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t chr_val_handle) {
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
