@@ -19,3 +19,7 @@ syscfg.vals:
     BLE_SM_OUR_KEY_DIST: 1
     BLE_SM_THEIR_KEY_DIST: 3
     BLE_SVC_DIS_DEFAULT_READ_PERM: 0
+    # On some case (e.g. iOS while subscribing to discovered services), we have
+    # found the memory pool used for GATT concurrent procedures running out of
+    # slots. This value doubles the default (4).
+    BLE_GATT_MAX_PROCS: 8
