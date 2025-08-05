@@ -19,6 +19,8 @@
 #include <system/logging.h>
 #include <util/math.h>
 
+#include <services/gatt/ble_svc_gatt.h>
+
 #include "nimble_type_conversions.h"
 
 // -------------------------------------------------------------------------------------------------
@@ -134,9 +136,104 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
   return true;
 }
 
-static void prv_convert_service_and_notify_os(GATTServiceDiscoveryContext *context) {
+static bool prv_find_svc_by_uuid(ListNode *node, void *data) {
+  GATTServiceDiscoveryServiceNode *service_node = (GATTServiceDiscoveryServiceNode *)node;
+  const ble_uuid_t *svc_uuid = (const ble_uuid_t *)data;
+  return ble_uuid_cmp(&service_node->service.uuid.u, svc_uuid) == 0;
+}
+
+static bool prv_find_chr_by_uuid(ListNode *node, void *data) {
+  GATTServiceDiscoveryCharacteristicNode *chr_node = (GATTServiceDiscoveryCharacteristicNode *)node;
+  const ble_uuid_t *chr_uuid = (const ble_uuid_t *)data;
+  return ble_uuid_cmp(&chr_node->characteristic.uuid.u, chr_uuid) == 0;
+}
+
+static bool prv_find_dsc_by_uuid(ListNode *node, void *data) {
+  GATTServiceDiscoveryDescriptorNode *dsc_node = (GATTServiceDiscoveryDescriptorNode *)node;
+  const ble_uuid_t *dsc_uuid = (const ble_uuid_t *)data;
+  return ble_uuid_cmp(&dsc_node->descriptor.uuid.u, dsc_uuid) == 0;
+}
+
+static bool prv_find_dsc_uuid(GATTServiceDiscoveryContext *context,
+                              const ble_uuid_t *svc_uuid,
+                              const ble_uuid_t *chr_uuid,
+                              const ble_uuid_t *dsc_uuid,
+                              uint16_t *chr_handle,
+                              uint16_t *dsc_handle) {
+  GATTServiceDiscoveryServiceNode *service_node = (GATTServiceDiscoveryServiceNode *)list_find(
+      context->services, prv_find_svc_by_uuid, (void *)svc_uuid);
+  if (service_node == NULL) {
+    return false;
+  }
+
+  GATTServiceDiscoveryCharacteristicNode *chr_node =
+      (GATTServiceDiscoveryCharacteristicNode *)list_find(service_node->characteristics,
+                                                          prv_find_chr_by_uuid, (void *)chr_uuid);
+  if (chr_node == NULL) {
+    return false;
+  }
+
+  GATTServiceDiscoveryDescriptorNode *dsc_node = (GATTServiceDiscoveryDescriptorNode *)list_find(
+      chr_node->descriptors, prv_find_dsc_by_uuid, (void *)dsc_uuid);
+  if (dsc_node == NULL) {
+    return false;
+  }
+
+  *chr_handle = chr_node->characteristic.val_handle;
+  *dsc_handle = dsc_node->descriptor.handle;
+
+  return true;
+}
+
+typedef struct {
+  GAPLEConnection *connection;
+  uint16_t chr_handle;
+} GATTServiceDiscoveryDescriptorContext;
+
+static int prv_on_svc_chgd_subscribe(uint16_t conn_handle, const struct ble_gatt_error *error,
+                                     struct ble_gatt_attr *attr, void *arg) {
+  if (error->status != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to subscribe to service changed: 0x%" PRIx16,
+              error->status);
+  } else {
+    GATTServiceDiscoveryDescriptorContext *ctx = arg;
+    bt_driver_cb_gatt_client_discovery_handle_service_changed(ctx->connection,
+                                                              ctx->chr_handle);
+
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "Subscribed to service changed");
+  }
+
+  kernel_free(arg);
+
+  return 0;
+}
+
+static void prv_convert_service_and_notify_os(uint16_t conn_handle, GATTServiceDiscoveryContext *context) {
   list_foreach(context->services, prv_convert_service_and_notify_os_cb, context->connection);
   bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
+
+  // Subscribe to service changed indications (BLE Core 6.0, part G 7.7.1)
+  uint16_t chr_handle, dsc_handle;
+  if (prv_find_dsc_uuid(context, BLE_UUID16_DECLARE(BLE_GATT_SVC_UUID16),
+                        BLE_UUID16_DECLARE(BLE_SVC_GATT_CHR_SERVICE_CHANGED_UUID16),
+                        BLE_UUID16_DECLARE(BLE_GATT_DSC_CLT_CFG_UUID16),
+                        &chr_handle, &dsc_handle)) {
+    uint16_t value;
+    int ret;
+
+    GATTServiceDiscoveryDescriptorContext *ctx = kernel_zalloc_check(
+        sizeof(GATTServiceDiscoveryDescriptorContext));
+    ctx->connection = context->connection;
+    ctx->chr_handle = chr_handle;
+
+    value = 0x0002;
+    ret = ble_gattc_write_flat(conn_handle, dsc_handle,
+                               &value, sizeof(value), prv_on_svc_chgd_subscribe, ctx);
+    if (ret != 0) {
+        PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to subscribe to service changed: %d", ret);
+    }
+  }
+
   prv_free_discovery_context(context);
 }
 
@@ -256,7 +353,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
           prv_discover_next_dscs(conn_handle, context);
         } else {
           // we're done!
-          prv_convert_service_and_notify_os(context);
+          prv_convert_service_and_notify_os(conn_handle, context);
         }
       }
 
