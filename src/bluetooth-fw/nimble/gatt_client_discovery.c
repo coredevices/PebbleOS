@@ -53,6 +53,7 @@ typedef struct {
 
 typedef struct {
   GAPLEConnection *connection;
+  ATTHandleRange range;
   ListNode *services;
   ListNode *current_service;
   ListNode *current_characteristic;
@@ -470,6 +471,11 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 
   switch (error->status) {
     case 0:
+      if (service->start_handle < context->range.start ||
+          service->end_handle > context->range.end) {
+        return 0; // skip this service
+      }
+
       GATTServiceDiscoveryServiceNode *service_node = prv_create_service_node(service);
       prv_list_append_or_set(&context->services, &service_node->node);
 
@@ -530,6 +536,7 @@ BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
 
   GATTServiceDiscoveryContext *context = kernel_zalloc_check(sizeof(GATTServiceDiscoveryContext));
   context->connection = (GAPLEConnection *)connection;
+  context->range = *data;
 
   int rc = ble_gattc_disc_all_svcs(conn_handle, prv_find_inc_svc_cb, (void *)context);
   if (rc != 0) {
