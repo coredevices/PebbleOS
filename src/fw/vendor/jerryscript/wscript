@@ -182,6 +182,7 @@ def build(bld):
       'JERRY_BUILD_DATE': wrap_quotes(run_cmd('date +%d/%m/%Y')),
       'CONFIG_ECMA_NUMBER_TYPE': 'CONFIG_ECMA_NUMBER_FLOAT64',
       'CONFIG_DISABLE_PRINT_BUILTIN': '',
+      'CONFIG_DISABLE_REGEXP_BUILTIN': '1',  # Disable RegExp to save space
       'JERRY_DISABLE_HEAVY_DEBUG': '',
       'JERRY_ENABLE_SNAPSHOT_SAVE': '',
       'JERRY_ENABLE_ERROR_MESSAGES': '1',
