@@ -21,7 +21,14 @@
 
 #include <services/gatt/ble_svc_gatt.h>
 
+#include <FreeRTOS.h>
+#include <semphr.h>
+
 #include "nimble_type_conversions.h"
+
+static bool s_discovery_in_progress;
+static bool s_stop_discovery_requested;
+static SemaphoreHandle_t s_discovery_stopped;
 
 // -------------------------------------------------------------------------------------------------
 // Gatt Client Discovery API calls
@@ -73,6 +80,7 @@ static bool prv_service_free_cb(ListNode *node, void *context) {
 static void prv_free_discovery_context(GATTServiceDiscoveryContext *context) {
   list_foreach(context->services, prv_service_free_cb, NULL);
   kernel_free(context);
+  s_discovery_in_progress = false;
 }
 
 /* TODO: the way this works is kinda inefficient, really we should notify the OS after we
@@ -321,6 +329,12 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
   GATTServiceDiscoveryContext *context = arg;
   BTErrno errno;
 
+  if (s_stop_discovery_requested) {
+    xSemaphoreGive(s_discovery_stopped);
+    prv_free_discovery_context(context);
+    return BLE_HS_EDONE;
+  }
+
   switch (error->status) {
     case 0:
       char chr_uuid_str[BLE_UUID_STR_LEN];
@@ -383,6 +397,12 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
   GATTServiceDiscoveryContext *context = arg;
   BTErrno errno;
 
+  if (s_stop_discovery_requested) {
+    xSemaphoreGive(s_discovery_stopped);
+    prv_free_discovery_context(context);
+    return BLE_HS_EDONE;
+  }
+
   switch (error->status) {
     case 0:
       char chr_uuid_str[BLE_UUID_STR_LEN];
@@ -442,6 +462,12 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
   GATTServiceDiscoveryContext *context = arg;
   BTErrno errno;
 
+  if (s_stop_discovery_requested) {
+    xSemaphoreGive(s_discovery_stopped);
+    prv_free_discovery_context(context);
+    return BLE_HS_EDONE;
+  }
+
   switch (error->status) {
     case 0:
       GATTServiceDiscoveryServiceNode *service_node = prv_create_service_node(service);
@@ -489,6 +515,10 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
   return 0;
 }
 
+void nimble_discover_init(void) {
+  s_discovery_stopped = xSemaphoreCreateBinary();
+}
+
 BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
                                              const ATTHandleRange *data) {
   PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "bt_driver_gatt_start_discovery_range %d-%d",
@@ -502,12 +532,31 @@ BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
   context->connection = (GAPLEConnection *)connection;
 
   int rc = ble_gattc_disc_all_svcs(conn_handle, prv_find_inc_svc_cb, (void *)context);
-  return rc == 0 ? BTErrnoOK : BTErrnoInternalErrorBegin + rc;
+  if (rc != 0) {
+    return BTErrnoInternalErrorBegin + rc;
+  }
+
+  s_discovery_in_progress = true;
+  s_stop_discovery_requested = false;
+
+  return BTErrnoOK;
 }
 
 // will need to implement this by returning a different value in the callback
 // but not sure if this can get called multiple times in parallel, might need
 // to stuff the flag in the connection struct
-BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) { return 0; }
+BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
+  uint16_t conn_handle;
+  if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
+    return BTErrnoInvalidState;
+  }
+
+  if (s_discovery_in_progress) {
+    s_stop_discovery_requested = true;
+    xSemaphoreTake(s_discovery_stopped, portMAX_DELAY);
+  }
+
+  return BTErrnoOK;
+}
 
 void bt_driver_gatt_handle_discovery_abandoned(void) {}
