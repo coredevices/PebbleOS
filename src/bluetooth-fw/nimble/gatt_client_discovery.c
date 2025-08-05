@@ -137,9 +137,6 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
 
   char service_uuid_str[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(&gatt_service->uuid, service_uuid_str);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG,
-            "bt_driver_cb_gatt_client_discovery_handle_indication for service %s",
-            service_uuid_str);
   bt_driver_cb_gatt_client_discovery_handle_indication(connection, gatt_service, BTErrnoOK);
 
   return true;
@@ -270,8 +267,10 @@ static void prv_discover_next_dscs(uint16_t conn_handle, GATTServiceDiscoveryCon
       MIN(chr_node->characteristic.val_handle, chr_node->characteristic.def_handle);
   uint16_t end_handle = prv_get_last_dsc_handle(context);
   int rc = ble_gattc_disc_all_dscs(conn_handle, start_handle, end_handle, prv_find_dsc_cb, context);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_gattc_disc_all_dscs (%d -> %d) rc=0x%04x",
-            start_handle, end_handle, (uint16_t)rc);
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "ble_gattc_disc_all_dscs rc=0x%04x (0x%04x -> 0x%04x)",
+              (uint16_t)rc, start_handle, end_handle);
+  }
 }
 
 static void prv_discover_next_chrs(uint16_t conn_handle, GATTServiceDiscoveryContext *context) {
@@ -279,7 +278,10 @@ static void prv_discover_next_chrs(uint16_t conn_handle, GATTServiceDiscoveryCon
       (GATTServiceDiscoveryServiceNode *)context->current_service;
   int rc = ble_gattc_disc_all_chrs(conn_handle, service_node->service.start_handle,
                                    service_node->service.end_handle, prv_find_chr_cb, context);
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "ble_gattc_disc_all_chrs rc=0x%04x", (uint16_t)rc);
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "ble_gattc_disc_all_chrs rc=0x%04x (0x%04x -> 0x%04x)",
+              (uint16_t)rc, service_node->service.start_handle, service_node->service.end_handle);
+  }
 }
 
 static GATTServiceDiscoveryDescriptorNode *prv_create_descriptor_node(
@@ -340,7 +342,8 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
     case 0:
       char chr_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&dsc->uuid.u, chr_uuid_str);
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "discovery: found descriptor %s", chr_uuid_str);
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "Found descriptor %s (hdl: 0x%" PRIx16 ")",
+                chr_uuid_str, dsc->handle);
 
       GATTServiceDiscoveryDescriptorNode *dsc_node = prv_create_descriptor_node(dsc);
       GATTServiceDiscoveryCharacteristicNode *chr_node = prv_get_current_chr(context);
@@ -352,7 +355,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
       break;
     case BLE_HS_EDONE:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "discovery: descriptor discovery done");
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "Descriptor discovery done");
 
       context->current_characteristic = list_get_next(context->current_characteristic);
 
@@ -375,7 +378,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       break;
 
     default:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "discovery: descriptor discovery error: %d",
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Descriptor discovery error: %d",
                 error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
@@ -409,8 +412,8 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       char chr_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&chr->uuid.u, chr_uuid_str);
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG,
-                "discovery: found characteristic %s (val hdl: %d, def hdl: %d)", chr_uuid_str,
-                chr->val_handle, chr->def_handle);
+                "Found characteristic %s (val hdl: 0x%" PRIx16 ", def hdl: 0x%" PRIx16 ")",
+                chr_uuid_str, chr->val_handle, chr->def_handle);
 
       GATTServiceDiscoveryCharacteristicNode *chr_node = prv_create_chr_node(chr);
       GATTServiceDiscoveryServiceNode *service_node = prv_get_current_service(context);
@@ -420,7 +423,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       break;
 
     case BLE_HS_EDONE:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "discovery: characteristic discovery done");
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "Characteristic discovery done");
 
       context->current_service = list_get_next(context->current_service);
 
@@ -440,7 +443,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       break;
 
     default:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "discovery: characteristic discovery error: %d",
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "Characteristic discovery error: %d",
                 error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
@@ -481,13 +484,14 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 
       char service_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&service->uuid.u, service_uuid_str);
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "discovery: found service %s, %d-%d (total %lu)",
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG,
+                "Found service %s, 0x%" PRIx16 "-0x%" PRIx16 " (total %lu)",
                 service_uuid_str, service->start_handle, service->end_handle,
                 list_count(context->services));
       break;
 
     case BLE_HS_EDONE:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "service discovery complete");
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "Service discovery complete");
 
       if (context->services != NULL) {
         // got services, start discovering characteristics
@@ -495,17 +499,14 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
         prv_discover_next_chrs(conn_handle, context);
       } else {
         // no services found
-        bool completed =
-            bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
-        PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG,
-                  "bt_driver_cb_gatt_client_discovery_complete returned %d", completed);
+        bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
         prv_free_discovery_context(context);
       }
 
       break;
 
     default:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "service discovery error: %d", error->status);
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Service discovery error: %d", error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
         errno = BTErrnoServiceDiscoveryTimeout;
       } else if (error->status == BLE_HS_ENOTCONN) {
@@ -527,8 +528,6 @@ void nimble_discover_init(void) {
 
 BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
                                              const ATTHandleRange *data) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "bt_driver_gatt_start_discovery_range %d-%d",
-            data->start, data->end);
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
     return BTErrnoInvalidState;
