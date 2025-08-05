@@ -58,7 +58,12 @@ BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const
   }
 
   int rc = ble_gattc_write_no_rsp_flat(conn_handle, att_handle, value, value_length);
-  return rc == 0 ? BTErrnoOK : BTErrnoInternalErrorBegin + rc;
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to write without response: %d", rc);
+    return BTErrnoInternalErrorBegin + rc;
+  }
+
+  return BTErrnoOK;
 }
 
 BTErrno bt_driver_gatt_write(GAPLEConnection *connection, const uint8_t *value, size_t value_length,
@@ -71,7 +76,12 @@ BTErrno bt_driver_gatt_write(GAPLEConnection *connection, const uint8_t *value, 
 
   int rc = ble_gattc_write_flat(conn_handle, att_handle, value, value_length,
                                 prv_gatt_write_event_cb, context);
-  return rc == 0 ? BTErrnoOK : BTErrnoInternalErrorBegin + rc;
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to write: %d", rc);
+    return BTErrnoInternalErrorBegin + rc;
+  }
+
+  return BTErrnoOK;
 }
 
 BTErrno bt_driver_gatt_read(GAPLEConnection *connection, uint16_t att_handle, void *context) {
@@ -82,5 +92,10 @@ BTErrno bt_driver_gatt_read(GAPLEConnection *connection, uint16_t att_handle, vo
   }
 
   int rc = ble_gattc_read(conn_handle, att_handle, prv_gatt_read_event_cb, context);
-  return rc == 0 ? BTErrnoOK : BTErrnoInternalErrorBegin + rc;
+  if (rc != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to read: %d", rc);
+    return BTErrnoInternalErrorBegin + rc;
+  }
+
+  return BTErrnoOK;
 }
