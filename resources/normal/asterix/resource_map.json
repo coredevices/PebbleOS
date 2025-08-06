@@ -406,26 +406,6 @@
       "file": "normal/silk/images/health_app_hr.png"
     },
     {
-      "type": "png",
-      "name": "BLE_HRM_SHARE_REQUEST_LARGE",
-      "file": "normal/silk/images/ble_hrm_share_request.png"
-    },
-    {
-      "type": "pdc",
-      "name": "BLE_HRM_SHARED",
-      "file": "normal/silk/images/ble_hrm_shared.svg"
-    },
-    {
-      "type": "png",
-      "name": "BLE_HRM_NOT_SHARED",
-      "file": "normal/silk/images/ble_hrm_not_shared.png"
-    },
-    {
-      "type": "png",
-      "name": "CONNECTIVITY_SHARING_HRM",
-      "file": "normal/silk/images/ble_hrm_sharing_app_glance.png"
-    },
-    {
       "type": "pdc",
       "name": "HEALTH_APP_CROWN",
       "file": "normal/silk/images/health_app_crown.svg"
