@@ -644,7 +644,6 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): provide working implementation
     bld.objects(
         name='driver_exti',
         source=[
@@ -820,7 +819,6 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): provide working implementation
     bld.objects(
         name='driver_gpio',
         source=[
@@ -966,7 +964,6 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): implement real driver
     bld.objects(
         name='driver_i2c',
         source=[
@@ -975,6 +972,8 @@ elif mcu_family == 'SF32LB52':
         ],
         use=[
             'fw_includes',
+            'freertos',
+            'hal_sifli',
         ],
     )
 
@@ -1517,7 +1516,6 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): provide working implementation
     bld.objects(
         name='driver_rng',
         source=[
@@ -1525,6 +1523,7 @@ elif mcu_family == 'SF32LB52':
         ],
         use=[
             'fw_includes',
+            'hal_sifli',
         ],
     )
 
