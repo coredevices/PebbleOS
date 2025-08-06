@@ -27,6 +27,7 @@
 #define NAN_F      ((float)(INFINITY * 0.0F))
 
 #define M_E        2.7182818284590452353602874713526625
+#define M_PI       3.1415926535897932384626433832795029
 
 typedef float float_t;
 
