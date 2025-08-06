@@ -122,7 +122,7 @@ SECTIONS {
         . = . + LENGTH(APP_RAM) - __ROCKY_BSS_size__;
         . = ALIGN(4);
         __ROCKY_BSS__ = ABSOLUTE(.);
-        src/fw/vendor/jerryscript/libjerry_core.a:(.bss .bss.*)
+        third_party/jerryscript/jerryscript/libjerry_core.a:(.bss .bss.*)
         . = ALIGN(4);
         *(.rocky_bss)
     } >APP_RAM

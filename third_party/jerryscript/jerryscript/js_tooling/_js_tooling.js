@@ -10,7 +10,7 @@
 if (typeof jerry === 'undefined') {
     // in development environment (if uses include _js_tooling.js instead of js_tooling.js) we use this indirection
     // to write wrapper code without the need to re-run Emscripten
-    jerry = require('../../../../../build/src/fw/vendor/jerryscript/js_tooling/js_tooling.js');
+    jerry = require('../../../../build/third_party/jerryscript/jerryscript/js_tooling/js_tooling.js');
 }
 
 // size_t

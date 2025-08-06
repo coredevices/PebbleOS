@@ -1,8 +1,0 @@
-def configure(conf):
-    if conf.capability('HAS_JAVASCRIPT'):
-        conf.recurse('jerryscript')
-
-def build(bld):
-    pass
-
-# vim:filetype=python

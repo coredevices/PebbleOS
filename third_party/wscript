@@ -10,6 +10,8 @@ def configure(conf):
     conf.recurse('memfault')
     conf.recurse('nimble')
 
+    if conf.capability('HAS_JAVASCRIPT'):
+        conf.recurse('jerryscript')
 
 def build(bld):
     bld.recurse('cmsis_core')

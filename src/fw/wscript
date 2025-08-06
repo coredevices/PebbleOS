@@ -70,7 +70,6 @@ def options(opt):
 
 def configure(conf):
     conf.load('binary_header')
-    conf.recurse('vendor')
     conf.recurse('applib')
     conf.recurse('services')
 
@@ -725,7 +724,6 @@ def build(bld):
     bld.recurse('drivers')
     bld.recurse('board')
     bld.recurse('shell')
-    bld.recurse('vendor')
     bld.recurse('services')
     bld.recurse('applib')
 

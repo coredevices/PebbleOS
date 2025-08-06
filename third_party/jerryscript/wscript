@@ -16,17 +16,17 @@ def process_js_tooling(self):
 
 JERRY_RUNTIME_HEAP_SIZE_KB = 32  # KB
 JERRY_COMPILER_HEAP_SIZE_KB = 512  # KB
-JERRY_CORE_DIRS = ['jerry-core',
-                   'jerry-core/jcontext',
-                   'jerry-core/jmem',
-                   'jerry-core/jrt',
-                   'jerry-core/lit',
-                   'jerry-core/vm',
-                   'jerry-core/ecma/builtin-objects',
-                   'jerry-core/ecma/base',
-                   'jerry-core/ecma/operations',
-                   'jerry-core/parser/js',
-                   'jerry-core/parser/regexp',
+JERRY_CORE_DIRS = ['jerryscript/jerry-core',
+                   'jerryscript/jerry-core/jcontext',
+                   'jerryscript/jerry-core/jmem',
+                   'jerryscript/jerry-core/jrt',
+                   'jerryscript/jerry-core/lit',
+                   'jerryscript/jerry-core/vm',
+                   'jerryscript/jerry-core/ecma/builtin-objects',
+                   'jerryscript/jerry-core/ecma/base',
+                   'jerryscript/jerry-core/ecma/operations',
+                   'jerryscript/jerry-core/parser/js',
+                   'jerryscript/jerry-core/parser/regexp',
                    ]
 
 def _get_jerry_include_dirs(bld):
@@ -37,7 +37,7 @@ def _get_jerry_include_dirs(bld):
 
 def jerry_build_js_compiler(bld):
     # Set the output node for JS tooling in the primary build ConfigSet
-    bld.env.JS_TOOLING_SCRIPT = bld.path.get_bld().make_node('js_tooling/generate_snapshot.js')
+    bld.env.JS_TOOLING_SCRIPT = bld.path.get_bld().make_node('jerryscript/js_tooling/generate_snapshot.js')
 
     env = bld.all_envs['emscripten']
 
@@ -57,7 +57,7 @@ def jerry_build_js_compiler(bld):
         env.append_value('CFLAGS', ['-O0'])
         env.append_value('CFLAGS', ['-g3'])
 
-    fw_path = bld.path.parent.parent
+    fw_path = bld.path.parent.parent.make_node('src/fw')
 
 
     env['CPPPATH_ST'] = '-I%s'
@@ -79,10 +79,10 @@ def jerry_build_js_compiler(bld):
     env.append_value('DEFINES', 'JERRY_RETURN_ADDRESS=0') # provide proper error handling w fake
 
     # Emscripten specific arguments
-    post_file = bld.path.make_node('js_tooling/_js_tooling.js').abspath()
+    post_file = bld.path.make_node('jerryscript/js_tooling/_js_tooling.js').abspath()
     env.append_value('CFLAGS', ['--post-js', post_file])
 
-    transform_js_file = bld.path.make_node('js_tooling/transform_js.py').abspath()
+    transform_js_file = bld.path.make_node('jerryscript/js_tooling/transform_js.py').abspath()
     env.append_value('CFLAGS', ['--js-transform', transform_js_file])
 
     # Uncomment this line to get verbose output for emscripten
@@ -116,13 +116,13 @@ def jerry_build_js_compiler(bld):
     env.append_value('CFLAGS', ['-s', 'ALLOW_TABLE_GROWTH'])
     env.append_value('CFLAGS', ['-s', 'WASM_ASYNC_COMPILATION=0'])
 
-    sources = bld.path.ant_glob('jerry-core/**/*.c')
-    sources += bld.path.ant_glob('js_tooling/*.c')
+    sources = bld.path.ant_glob('jerryscript/jerry-core/**/*.c')
+    sources += bld.path.ant_glob('jerryscript/js_tooling/*.c')
     sources += fw_path.ant_glob('util/legacy_checksum.c')
 
-    js_deps = [bld.path.find_node(x) for x in ('js_tooling/_js_tooling.js', 'js_tooling/transform_js.py')]
+    js_deps = [bld.path.find_node(x) for x in ('jerryscript/js_tooling/_js_tooling.js', 'jerryscript/js_tooling/transform_js.py')]
 
-    output_node = bld.path.get_bld().make_node('js_tooling/js_tooling.js')
+    output_node = bld.path.get_bld().make_node('jerryscript/js_tooling/js_tooling.js')
     output_node.parent.mkdir()
     bld(features=['js_tooling', 'use'],
         jerry_sources=sources,
@@ -131,15 +131,15 @@ def jerry_build_js_compiler(bld):
         use=['jerry_common_config'],
         env=env)
 
-    bld.path.find_node('js_tooling').get_bld().mkdir()
+    bld.path.find_node('jerryscript/js_tooling').get_bld().mkdir()
     for resource in ('index.js', 'generate_snapshot.js', 'package.json', 'test.html'):
-        src_node = bld.path.find_node('js_tooling/{}'.format(resource))
+        src_node = bld.path.find_node('jerryscript/js_tooling/{}'.format(resource))
         bld(rule='cp ${SRC} ${TGT}', source=src_node, target=src_node.get_bld(), env=env)
 
     bld(rule='${NPM} install .',
-        source=[output_node, bld.path.get_bld().make_node('js_tooling/package.json')],
-        target=bld.path.get_bld().make_node('js_tooling/node_modules/'),
-        cwd=bld.path.get_bld().find_node('js_tooling/').abspath(),
+        source=[output_node, bld.path.get_bld().make_node('jerryscript/js_tooling/package.json')],
+        target=bld.path.get_bld().make_node('jerryscript/js_tooling/node_modules/'),
+        cwd=bld.path.get_bld().find_node('jerryscript/js_tooling/').abspath(),
         env=env)
 
 
@@ -209,7 +209,7 @@ def build(bld):
     # If the current build doesn't want javascript, just build a header-only library so the
     # headers will continue to be available
     if not bld.capability('HAS_JAVASCRIPT') or bld.variant in ('prf', 'applib', 'test_rocky_emx'):
-        bld(export_includes=['jerry-core'], name='jerry_core')
+        bld(export_includes=['jerryscript/jerry-core'], name='jerry_core')
         return
 
 
@@ -294,7 +294,7 @@ def build(bld):
 
     bld.stlib(source=jerry_core_sources,
               target='jerry_core',
-              export_includes=['jerry-core'],
+              export_includes=['jerryscript/jerry-core'],
               use=['jerry_common_config', 'jerry_runtime_config'],
               inject_include_files=[pbl_jcontext_inc_h_rel_path],
               env=jerry_core_env)
@@ -326,7 +326,7 @@ def build(bld):
     all_libm_flags = compile_flags_libm + c_flags_jerry + pebble_cflags
     jerry_libm_env.append_value('CFLAGS', all_libm_flags)
 
-    jerry_libm_dir = 'jerry-libm'
+    jerry_libm_dir = 'jerryscript/jerry-libm'
 
     jerry_libm_env.append_value('INCLUDES', [jerry_libm_dir + '/include'])
 

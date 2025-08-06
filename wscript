@@ -704,7 +704,7 @@ def build(bld):
 
     if bld.variant in ('', 'applib', 'prf'):
         # Dependency for SDK
-        bld.recurse('src/fw/vendor/jerryscript')
+        bld.recurse('third_party/jerryscript')
 
     if bld.variant == '':
         # sdk generation
@@ -733,7 +733,7 @@ def build(bld):
         if bld.env.APPLIB_TARGET == 'emscripten':
             bld.fatal('Did you mean ./waf test_rocky_emx ?')
         bld.recurse('src/include')
-        bld.recurse('src/fw/vendor/jerryscript')
+        bld.recurse('third_party/jerryscript')
         bld.recurse('third_party/nanopb')
         bld.recurse('src/libbtutil')
         bld.recurse('src/libos')
@@ -746,7 +746,7 @@ def build(bld):
             bld.fatal('Make sure to ./waf configure with --target=emscripten')
         bld.recurse('src/libutil')
         bld.recurse('src/libos')
-        bld.recurse('src/fw/vendor/jerryscript')
+        bld.recurse('third_party/jerryscript')
         bld.recurse('third_party/nanopb')
         bld.recurse('applib-targets')
         bld.recurse('tools')
@@ -969,7 +969,7 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
     ctx.recurse('platform', mandatory=False)
 
     if ctx.capability('HAS_JAVASCRIPT'):
-        js_tooling = ctx.path.get_bld().find_node('src/fw/vendor/jerryscript/js_tooling/js_tooling.js')
+        js_tooling = ctx.path.get_bld().find_node('third_party/jerryscript/jerryscript/js_tooling/js_tooling.js')
         if js_tooling is not None:
             b.add_jstooling(js_tooling.path_from(ctx.path), ctx.capability('JAVASCRIPT_BYTECODE_VERSION'))
 
