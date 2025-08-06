@@ -22,8 +22,8 @@
 #include "system/passert.h"
 #include "util/size.h"
 #include "util/trig.h"
-#include "vendor/jerryscript/jerry-libm/include/math.h" // easiest way to get M_PI
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
