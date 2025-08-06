@@ -53,3 +53,5 @@ float logf(float x);
 float modff(float x, float *iptr);
 
 double round(double d);
+
+float roundf(float x);
