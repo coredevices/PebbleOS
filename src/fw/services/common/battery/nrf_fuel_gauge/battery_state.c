@@ -42,6 +42,9 @@
 static const struct battery_model prv_battery_model = {
 #if PLATFORM_ASTERIX
 #include "battery_asterix.inc"
+#elif PLATFORM_OBELIX
+// FIXME(OBELIX): Add battery model once ready!
+#include "battery_asterix.inc"
 #else
 #error "Battery model not defined for this platform"
 #endif
