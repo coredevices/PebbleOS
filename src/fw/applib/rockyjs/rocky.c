@@ -31,8 +31,6 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 
-#include "code_space_reservation.h"
-
 const RockySnapshotHeader ROCKY_EXPECTED_SNAPSHOT_HEADER = {
   .signature = {'P', 'J', 'S', 0}, // C-string terminator in case somebody treats this as source
 #if CAPABILITY_HAS_JAVASCRIPT
