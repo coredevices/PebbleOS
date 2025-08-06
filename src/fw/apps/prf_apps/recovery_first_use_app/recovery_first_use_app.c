@@ -73,7 +73,7 @@
 typedef struct RecoveryFUAppData {
   Window launch_app_window;
 
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
   QRCode qr_code;
   char qr_url_buffer[QR_URL_BUFFER_SIZE];
 #else
@@ -104,7 +104,7 @@ typedef struct RecoveryFUAppData {
   GettingStartedButtonComboState button_combo_state;
 } RecoveryFUAppData;
 
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
 static const char *s_qr_url_fmt = "https://qr.repebble.com/?sn=%s&model=%s";
 #endif
 
@@ -173,7 +173,7 @@ static void prv_click_configure(void* context) {
 ////////////////////////////////////////////////////////////
 // Windows
 
-#if !PLATFORM_ASTERIX
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
 static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
   uint32_t icon_res_id;
   const char *url_string;
@@ -282,7 +282,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
   }
   text_layer_set_text(&data->name_text_layer, data->name_text_buffer);
 
-#if !PLATFORM_ASTERIX
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
   // Set the name font
 #if !PLATFORM_ROBERT && !PLATFORM_CALCULUS
   const bool first_use_is_complete = shared_prf_storage_get_getting_started_complete();
@@ -328,7 +328,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
 static void prv_window_load(Window* window) {
   struct RecoveryFUAppData *data = (struct RecoveryFUAppData*) window_get_user_data(window);
 
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
   char serial_number[MFG_SERIAL_NUMBER_SIZE + 1];
   char model_name[MFG_INFO_MODEL_STRING_LENGTH];
 
@@ -441,7 +441,7 @@ static void prv_pebble_mobile_app_event_handler(PebbleEvent *event, void *contex
     s_fu_app_data->has_pebble_mobile_app_connected = true;
     gap_le_device_name_request_all();
   }
-#if !PLATFORM_ASTERIX
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
   prv_update_background_image_and_url_text(s_fu_app_data);
 #endif
   prv_update_name_text(s_fu_app_data);
@@ -515,7 +515,7 @@ static void handle_deinit(void) {
 
   getting_started_button_combo_deinit(&data->button_combo_state);
 
-#if !PLATFORM_ASTERIX
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
   kino_layer_deinit(&data->kino_layer);
 #endif
 
