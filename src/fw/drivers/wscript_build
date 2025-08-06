@@ -406,25 +406,12 @@ elif bld.is_tintin():
             'stm32_stdlib',
         ],
     )
-elif bld.is_asterix():
+elif bld.is_asterix() or bld.is_obelix():
     bld.objects(
         name='driver_battery',
         source=[
             'battery/battery_common.c',
             # PMIC provides this implementation
-        ],
-        use=[
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_obelix():
-    # FIXME(OBELIX): provide working implementation
-    bld.objects(
-        name='driver_battery',
-        source=[
-            'battery/battery_common.c',
-            'stubs/battery.c'
         ],
         use=[
             'fw_includes',
@@ -1337,7 +1324,7 @@ elif bld.is_silk():
             'root_includes',
         ],
     )
-elif bld.is_asterix():
+elif bld.is_asterix() or bld.is_obelix():
     bld.objects(
         name='driver_pmic',
         source=[
