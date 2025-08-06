@@ -292,6 +292,7 @@ board_capability_dicts = [
             'HAS_HEALTH_TRACKING',
             'HAS_JAVASCRIPT',
             'HAS_LAUNCHER4',
+            'HAS_PMIC',
             'HAS_SDK_SHELL4',
             'HAS_SPRF_V3',
             'HAS_TEMPERATURE',
