@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "drivers/pmic/npm1300.h"
+
 #define BT_VENDOR_ID 0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"
 
@@ -26,6 +28,8 @@ extern UARTDevice * const HCI_TRACE_UART;
 extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
+extern I2CSlavePort * const I2C_NPM1300;
+extern const Npm1300Config NPM1300_CONFIG;
 extern PwmConfig *const PWM1_CH1;
 extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;

@@ -282,7 +282,27 @@ I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
 IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
 
+static const I2CSlavePort s_i2c_npm1300 = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x6B,
+};
+
+I2CSlavePort *const I2C_NPM1300 = &s_i2c_npm1300;
+
+// TODO(OBELIX): Adjust to final battery parameters
+const Npm1300Config NPM1300_CONFIG = {
+  // 128mA = ~1C (rapid charge)
+  .chg_current_ma = 128,
+  .dischg_limit_ma = 200,
+  .term_current_pct = 10,
+  .thermistor_beta = 3380,
+};
+
 const BoardConfigPower BOARD_CONFIG_POWER = {
+  .pmic_int = {
+    .peripheral = hwp_gpio1,
+    .gpio_pin = 26,
+  },
   .low_power_threshold = 5U,
   .battery_capacity_hours = 100U,
 };
