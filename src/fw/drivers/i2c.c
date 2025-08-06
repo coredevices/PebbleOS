@@ -129,7 +129,7 @@ static void prv_bus_rail_power_down(I2CBus *bus) {
   }
   prv_rail_ctl(bus, false);
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
   i2c_hal_pins_set_gpio(bus);
 #endif
 
@@ -156,7 +156,7 @@ static void prv_bus_rail_power_down(I2CBus *bus) {
 //! Configure bus pins for use by I2C peripheral
 //! Lock bus and peripheral config access before configuring pins
 static void prv_bus_pins_cfg_i2c(I2CBus *bus) {
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
   i2c_hal_pins_set_i2c(bus);
 #else
   gpio_af_init(&bus->scl_gpio, GPIO_OType_OD, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
@@ -165,7 +165,7 @@ static void prv_bus_pins_cfg_i2c(I2CBus *bus) {
 }
 
 static void prv_bus_pins_cfg_input(I2CBus *bus) {
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
   i2c_hal_pins_set_gpio(bus);
 #endif
 
@@ -337,7 +337,7 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
     return false;
   }
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
   i2c_hal_pins_set_gpio(slave->bus);
 #endif
 
