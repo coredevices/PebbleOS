@@ -198,6 +198,8 @@ bool pmic_init(void) {
   s_i2c_lock = mutex_create();
   s_debounce_charger_timer = new_timer_create();
 
+  // TODO(NPM1300): This needs to be configurable at board level
+#if PLATFORM_ASTERIX
   uint8_t buck_out;
   if (!prv_read_register(PmicRegisters_BUCK_BUCK1NORMVOUT, &buck_out)) {
     PBL_LOG(LOG_LEVEL_ERROR, "failed to read BUCK1NORMVOUT");
@@ -226,6 +228,7 @@ bool pmic_init(void) {
   } else {
     ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, 8 /* 1.8V */);
   }
+#endif
 
   ok &= prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
   ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSBCHARGER1SET, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
