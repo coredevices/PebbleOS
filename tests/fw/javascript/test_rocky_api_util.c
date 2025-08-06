@@ -17,7 +17,7 @@
 #include "test_jerry_port_common.h"
 #include "test_rocky_common.h"
 #include "applib/rockyjs/pbl_jerry_port.h"
-#include "vendor/jerryscript/jerry-core/ecma/builtin-objects/ecma-builtin-helpers.h"
+#include "../../third_party/jerryscript/jerryscript/jerry-core/ecma/builtin-objects/ecma-builtin-helpers.h"
 
 #include "applib/rockyjs/api/rocky_api_global.h"
 

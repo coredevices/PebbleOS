@@ -195,14 +195,15 @@ def extract_declarations(tu, filenames, func):
 
 
 def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_flags=None):
-    src_dir = os.path.join(os.path.dirname(__file__), "../../src")
+    root_dir = os.path.join(os.path.dirname(__file__), "../..")
+    src_dir = os.path.join(root_dir, "src")
 
     args = [ "-I%s/core" % src_dir,
              "-I%s/include" % src_dir,
              "-I%s/fw" % src_dir,
              "-I%s/fw/applib/vendor/uPNG" % src_dir,
              "-I%s/fw/applib/vendor/tinflate" % src_dir,
-             "-I%s/fw/vendor/jerryscript/jerry-core" % src_dir,
+             "-I%s/third_party/jerryscript/jerryscript/jerry-core" % root_dir,
              "-I%s/libbtutil/include" % src_dir,
              "-I%s/libos/include" % src_dir,
              "-I%s/libutil/includes" % src_dir,

@@ -39,7 +39,7 @@
 
 // instead of including internal jerry script headers here and pulling the whole dependency we will
 // duplicate this value here instead
-// if this fails, duplicate value from src/fw/vendor/jerryscript/jerry-core/jerry-snapshot.h
+// if this fails, duplicate value from third_party/jerryscript/jerryscript/jerry-core/jerry-snapshot.h
 #define JERRY_SNAPSHOT_VERSION (6u)
 
 void app_event_loop_common(void) {}

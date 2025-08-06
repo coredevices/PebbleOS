@@ -131,7 +131,7 @@ def build(bld):
         # Make sure our tools for processing js resources are available before processing
         # resources if we have js resources to process
         js_tooling_scripts = [
-            bld.path.parent.get_bld().make_node('src/fw/vendor/jerryscript/js_tooling/{}.js'.
+            bld.path.parent.get_bld().make_node('third_party/jerryscript/jerryscript/js_tooling/{}.js'.
                                                 format(script))
             for script in ('generate_snapshot', 'js_tooling')]
         resource_dependencies.extend(js_tooling_scripts)
