@@ -13,8 +13,7 @@
     {
       "type": "raw",
       "name": "NO_EVENTS_LARGE",
-      "file": "normal/snowy/images/Pebble_80x80_No_events.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/Pebble_80x80_No_events.pdc"
     },
     {
       "type": "raw",
@@ -24,8 +23,7 @@
     {
       "type": "raw",
       "name": "BATTERY_ICON_CHARGING_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Battery_currently_charging.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Battery_currently_charging.pdc"
     },
     {
       "type": "raw",
@@ -55,8 +53,7 @@
     {
       "type": "raw",
       "name": "RESULT_MUTE_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Mute.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Mute.pdc"
     },
     {
       "type": "raw",
