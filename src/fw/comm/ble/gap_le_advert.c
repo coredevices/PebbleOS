@@ -22,7 +22,6 @@
 #include "comm/ble/ble_log.h"
 #include "comm/bt_lock.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/analytics/analytics.h"
 #include "services/common/regular_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -314,7 +313,6 @@ static void prv_perform_next_job(bool force_refresh) {
       PBL_LOG(GAP_LE_ADVERT_LOG_LEVEL, "Disable last Ad job");
       bt_driver_advert_advertising_disable();
       s_is_advertising = false;
-      analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BLE_ESTIMATED_BYTES_ADVERTISED_COUNT);
     }
   }
 
@@ -342,19 +340,6 @@ static void prv_perform_next_job(bool force_refresh) {
       s_is_advertising = true;
       PBL_LOG(GAP_LE_ADVERT_LOG_LEVEL, "Airing advertising job: %s ",
               prv_string_for_debug_tag(next->tag));
-
-      // Use average interval ms. BT controller does not report back what it uses.
-      const uint32_t interval_ms = (min_interval_ms + max_interval_ms) / 2;
-
-      // The ad data is fixed in size. See below.
-      // The scan response data size is omitted here, because we can't tell how
-      // often a scan request happens. BT controller does not report it either.
-      const uint32_t size = next->payload.ad_data_length /* ad data */ + 10 /* packet overhead */;
-      const uint32_t bytes_per_second = (size * 1000 /* ms */) / interval_ms;
-
-      analytics_stopwatch_start_at_rate(
-                                      ANALYTICS_DEVICE_METRIC_BLE_ESTIMATED_BYTES_ADVERTISED_COUNT,
-                                      bytes_per_second, AnalyticsClient_System);
     }
   }
 
@@ -589,8 +574,6 @@ void gap_le_advert_handle_connect_as_slave(void) {
     s_is_advertising = false;
 
     s_is_connected = true;
-
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BLE_ESTIMATED_BYTES_ADVERTISED_COUNT);
   }
 unlock:
   bt_unlock();
