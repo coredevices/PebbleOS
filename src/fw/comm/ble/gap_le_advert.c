@@ -326,8 +326,6 @@ static void prv_perform_next_job(bool force_refresh) {
       prv_timer_start();
     }
 
-    const bool enable_scan_resp = (next->payload.scan_resp_data_length > 0);
-
     if (s_current_ad_data != &next->payload) {
       // Give the advertisement data to the BT controller:
       bt_driver_advert_set_advertising_data(&next->payload);
@@ -339,8 +337,7 @@ static void prv_perform_next_job(bool force_refresh) {
     const uint32_t max_interval_ms = ((next->terms[next->cur_term].max_interval_slots * 5) / 8);
 
     BLE_LOG_DEBUG("Enable Ad job %s",  prv_string_for_debug_tag(next->tag));
-    bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms,
-                                                  enable_scan_resp);
+    bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms);
     if (result) {
       s_is_advertising = true;
       PBL_LOG(GAP_LE_ADVERT_LOG_LEVEL, "Airing advertising job: %s ",

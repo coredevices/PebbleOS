@@ -350,8 +350,7 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
   return 0;
 }
 
-bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms,
-                                         bool enable_scan_resp) {
+bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
   int rc;
   uint8_t own_addr_type;
   struct ble_gap_adv_params advp = {
