@@ -181,9 +181,10 @@ status_t qspi_flash_unlock_all(QSPIFlash *dev) { return S_SUCCESS; }
 
 void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   HAL_StatusTypeDef res;
-
+  
   (void)coredump_mode;
 
+  dev->state->part = part;
   dev->qspi->state->ctx.dual_mode = 1;
 
   res = HAL_FLASH_Init(&dev->qspi->state->ctx, (qspi_configure_t *)&dev->qspi->cfg,
@@ -246,3 +247,120 @@ status_t flash_impl_clear_nvram_erase_status(void) { return S_SUCCESS; }
 status_t flash_impl_get_nvram_erase_status(bool *is_subsector, FlashAddress *addr) {
   return S_FALSE;
 }
+
+status_t prv_qspi_security_register_check(QSPIFlash *dev, uint32_t addr) {
+  bool addr_valid = false;
+
+  if (dev->state->part->sec_registers.num_sec_regs == 0U) {
+    return E_INVALID_OPERATION;
+  }
+
+  for (uint8_t i = 0U; i < dev->state->part->sec_registers.num_sec_regs; ++i) {
+    if (addr >= dev->state->part->sec_registers.sec_regs[i] &&
+        addr < dev->state->part->sec_registers.sec_regs[i] +
+               dev->state->part->sec_registers.sec_reg_size) {
+      addr_valid = true;
+      break;
+    }
+  }
+
+  if (!addr_valid) {
+    return E_INVALID_ARGUMENT;
+  }
+
+  return S_SUCCESS;
+}
+
+status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_t *val) {
+  FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
+  int res;
+
+  res = prv_qspi_security_register_check(dev, addr);
+  if (res != S_SUCCESS) {
+    return res;
+  }
+
+  /* Security register read size should aligned with 4 bytes.  */
+  uint8_t values[4] = {0};
+  uint32_t offset = addr % 4;
+  uint32_t base_addr = addr - offset;
+
+  res = HAL_QSPI_READ_OTP(hflash, base_addr, values, 4);
+  if (res != 4) {
+    return E_ERROR;
+  }
+
+  *val = values[offset];
+
+  return S_SUCCESS;
+}
+
+status_t qspi_flash_security_registers_are_locked(QSPIFlash *dev, bool *locked) {
+  FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
+  uint8_t opt_val = 0;
+
+  /* OPT operation are synchronous, one match means all matched. */
+  opt_val = HAL_QSPI_GET_OTP_LB(hflash, dev->state->part->sec_registers.sec_regs[0]);
+  if (opt_val == 0xff) {
+    return E_ERROR;
+  }
+
+  if (opt_val != 0) {
+    *locked = true;
+    return S_SUCCESS;
+  }
+
+  *locked = false;
+
+  return S_SUCCESS;
+}
+
+status_t qspi_flash_erase_security_register(QSPIFlash *dev, uint32_t addr) {
+  FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
+  int res;
+
+  res = prv_qspi_security_register_check(dev, addr);
+  if (res != S_SUCCESS) {
+    return res;
+  }
+
+  res = HAL_QSPI_ERASE_OTP(hflash, addr);
+  if (res != 0) {
+    return E_ERROR;
+  }
+
+  return S_SUCCESS;
+}
+
+status_t qspi_flash_write_security_register(QSPIFlash *dev, uint32_t addr, uint8_t val) {
+  FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
+  int res;
+
+  res = prv_qspi_security_register_check(dev, addr);
+  if (res != S_SUCCESS) {
+    return res;
+  }
+
+  res = HAL_QSPI_WRITE_OTP(hflash, addr, &val, 1);
+  if (res != 1) {
+    return E_ERROR;
+  }
+
+  return S_SUCCESS;
+}
+
+const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev) {
+  return &dev->state->part->sec_registers;
+}
+
+#ifdef RECOVERY_FW
+status_t qspi_flash_lock_security_registers(QSPIFlash *dev) {
+  FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
+
+  for (uint8_t i = 0U; i < dev->state->part->sec_registers.num_sec_regs; ++i) {
+    HAL_QSPI_LOCK_OTP(hflash, dev->state->part->sec_registers.sec_regs[i]);
+  }
+
+  return S_SUCCESS;
+}
+#endif // RECOVERY_FW
