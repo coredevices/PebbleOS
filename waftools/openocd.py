@@ -91,8 +91,15 @@ def run_command(ctx, cmd, ignore_fail=False, expect=[], timeout=40,
     else:
         fail_handling = ' || true ' if ignore_fail else ''
         if shutdown:
-            # append 'shutdown' to make openocd exit:
-            cmd = "%s ; shutdown" % cmd
+            # append 'shutdown' to make openocd exit
+            if getattr(ctx, 'env', None) and ctx.env.MICRO_FAMILY == 'NRF52840':
+                # on nRF5, shut down the tracing modules in DEMCR, take the
+                # core out of debug in DHCSR, and then shut down the AP to
+                # get us back down to baseline power.  note that 'env' might
+                # be none here if this is not a BuildContext
+                cmd = "%s ; mww 0xe000edfc 0x0; mww 0xe000edf0 0xa05f0000 ; nrf52.dap dpreg 4 0 ; shutdown" % cmd
+            else:
+                cmd = "%s ; shutdown" % cmd
         ctx.exec_command('openocd -f %s -c "%s" 2>&1 | tee .waf.openocd.log %s' %
                          (cfg_file, cmd, fail_handling), stdout=None, stderr=None)
         if enforce_expect:
