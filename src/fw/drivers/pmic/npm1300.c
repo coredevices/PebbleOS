@@ -43,12 +43,18 @@ typedef enum {
   PmicRegisters_SYSTEM_TESTACCESS__VAL3 = 0xCE,
   PmicRegisters_VBUSIN_VBUSINSTATUS = 0x0207,
   PmicRegisters_VBUSIN_VBUSINSTATUS__VBUSINPRESENT = 1,
+  PmicRegisters_BCHARGER_TASKRELEASEERROR = 0x0300U,
+  PmicRegisters_BCHARGER_TASKCLEARCHGERR = 0x0301U,
   PmicRegisters_BCHARGER_BCHGENABLESET = 0x0304,
   PmicRegisters_BCHARGER_BCHGENABLECLR = 0x0305,
   PmicRegisters_BCHARGER_BCHGISETMSB = 0x0308,
   PmicRegisters_BCHARGER_BCHGISETLSB = 0x0309,
   PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB = 0x030A,
   PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB = 0x30B,
+  PmicRegisters_BCHARGER_BCHGVTERM = 0x030CU,
+  PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20 = 0x8U,
+  PmicRegisters_BCHARGER_BCHGVTERMR = 0x030DU,
+  PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00 = 0x4U,
   PmicRegisters_BCHARGER_BCHGITERMSEL = 0x030F,
   PmicRegisters_BCHARGER_BCHGITERMSEL__SEL10 = 0U,
   PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20 = 1U,
@@ -70,6 +76,9 @@ typedef enum {
   PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_MASK = 0x0C,
   PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_DISCHRG = 0x04,
   PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_CHRG = 0x0C,
+  PmicRegisters_ADC_ADCNTCRSEL = 0x050AU,
+  PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_HIZ = 0x0U,
+  PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K = 0x1U,
   PmicRegisters_ADC_ADCVBATRESULTMSB = 0x0511,
   PmicRegisters_ADC_ADCNTCRESULTMSB = 0x512,
   PmicRegisters_ADC_ADCVSYSRESULTMSB = 0x0514,
@@ -250,6 +259,23 @@ bool pmic_init(void) {
   }
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGENABLECLR, 1);
+
+  ok &= prv_write_register(PmicRegisters_BCHARGER_TASKCLEARCHGERR, 1);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_TASKRELEASEERROR, 1);
+
+  // FIXME: this needs to be configurable at board level
+#if PLATFORM_ASTERIX
+  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
+#elif PLATFORM_OBELIX
+  // FIXME(OBELIX): NTC not working
+  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_HIZ);
+#endif
+
+  // FIXME: this needs to be configurable at board level
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
+#endif
 
   val = (uint8_t)(NPM1300_CONFIG.chg_current_ma / 4U);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETMSB, val);
