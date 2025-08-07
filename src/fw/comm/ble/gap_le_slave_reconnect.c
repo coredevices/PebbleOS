@@ -30,7 +30,6 @@
 #include "services/common/regular_timer.h"
 #include "util/size.h"
 
-#include <bluetooth/adv_reconnect.h>
 #include <btutil/bt_uuid.h>
 
 //! Reference to the reconnection advertising job.
@@ -121,14 +120,25 @@ static void prv_evaluate(ReconnectType prev_type) {
       ad = &payload;
     }
 
-    size_t num_terms = 0;
-    const GAPLEAdvertisingJobTerm *advert_terms = bt_driver_adv_reconnect_get_job_terms(&num_terms);
+    // Values chosen according to:
+    // "Accessory Design Guidelies for Apple Devices" 55.4 Advertising Data
+    const GAPLEAdvertisingJobTerm advert_terms[] = {
+        {
+            .duration_secs = 30,
+            .min_interval_slots = 32, // 20ms
+            .max_interval_slots = 32, // 20ms
+        },
+        {
+            .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
+            .min_interval_slots = 1636, // 1022.5ms
+            .max_interval_slots = 1636, // 1022.5ms
+        },
+    };
 
-    s_reconnect_advert_job = gap_le_advert_schedule(ad,
-                                                    advert_terms, num_terms,
-                                                    prv_advert_job_unscheduled_callback,
-                                                    NULL,
-                                                    GAPLEAdvertisingJobTagReconnection);
+    s_reconnect_advert_job = gap_le_advert_schedule(
+        ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
+        prv_advert_job_unscheduled_callback, NULL, GAPLEAdvertisingJobTagReconnection);
+
     if (use_hrm_payload) {
       ble_ad_destroy(ad);
     }
