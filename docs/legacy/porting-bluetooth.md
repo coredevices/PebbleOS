@@ -36,7 +36,6 @@ is to implement them to get anything at all working.
 
 ### Advertising
 
-* bt_driver_adv_reconnect_get_job_terms
 * bt_driver_advert_advertising_disable 
 * bt_driver_advert_client_get_tx_power
 * bt_driver_advert_set_advertising_data
