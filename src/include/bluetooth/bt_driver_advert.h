@@ -21,8 +21,7 @@
 
 #include <bluetooth/bluetooth_types.h>
 
-bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms,
-                                        bool enable_scan_resp);
+bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms);
 
 void bt_driver_advert_advertising_disable(void);
 
