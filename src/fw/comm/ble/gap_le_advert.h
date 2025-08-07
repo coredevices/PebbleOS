@@ -19,10 +19,8 @@
 #include <bluetooth/bluetooth_types.h>
 
 typedef enum {
-  GAPLEAdvertisingJobTagLegacy = 1,
   GAPLEAdvertisingJobTagDiscovery,
   GAPLEAdvertisingJobTagReconnection,
-  GAPLEAdvertisingJobTagiOSAppLaunch,
 } GAPLEAdvertisingJobTag;
 
 struct GAPLEAdvertisingJob;
