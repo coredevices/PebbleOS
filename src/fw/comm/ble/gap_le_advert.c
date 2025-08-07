@@ -416,9 +416,6 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
     return NULL;
   }
 
-  // Minimum interval is 32 slots (20ms), or 160 slots (100ms) when there is a
-  // scan response:
-  const uint16_t min_threshold = payload->scan_resp_data_length ? 160 : 32;
   for (int i = 0; i < num_terms; i++) {
     // Loop-around term:
     const bool is_loop_around = (terms[i].duration_secs == GAPLE_ADVERTISING_DURATION_LOOP_AROUND);
@@ -443,8 +440,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
     }
 
     // Normal term, verify min and max interval values:
-    if (terms[i].min_interval_slots < min_threshold ||
-        terms[i].max_interval_slots < terms[i].min_interval_slots) {
+    if (terms[i].max_interval_slots < terms[i].min_interval_slots) {
       return NULL;
     }
   }
