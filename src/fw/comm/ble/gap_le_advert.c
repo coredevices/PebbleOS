@@ -120,7 +120,6 @@ static const char * prv_string_for_debug_tag(GAPLEAdvertisingJobTag tag) {
   switch (tag) {
     case GAPLEAdvertisingJobTagDiscovery: return "DIS";
     case GAPLEAdvertisingJobTagReconnection: return "RCN";
-    case GAPLEAdvertisingJobTagiOSAppLaunch: return "iOS";
     default: return "?";
   }
 }
