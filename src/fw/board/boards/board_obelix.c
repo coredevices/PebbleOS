@@ -360,4 +360,6 @@ void board_early_init(void) {
   HAL_EFUSE_Init();
 }
 
-void board_init(void) {}
+void board_init(void) {
+  i2c_init(I2C1_BUS);
+}
