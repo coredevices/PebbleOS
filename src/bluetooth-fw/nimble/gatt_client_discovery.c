@@ -81,7 +81,6 @@ static bool prv_service_free_cb(ListNode *node, void *context) {
 static void prv_free_discovery_context(GATTServiceDiscoveryContext *context) {
   list_foreach(context->services, prv_service_free_cb, NULL);
   kernel_free(context);
-  s_discovery_in_progress = false;
 }
 
 /* TODO: the way this works is kinda inefficient, really we should notify the OS after we
@@ -334,6 +333,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
   if (s_stop_discovery_requested) {
     xSemaphoreGive(s_discovery_stopped);
+    s_discovery_in_progress = false;
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -371,6 +371,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
           prv_discover_next_dscs(conn_handle, context);
         } else {
           // we're done!
+          s_discovery_in_progress = false;
           prv_convert_service_and_notify_os(conn_handle, context);
         }
       }
@@ -388,6 +389,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
+      s_discovery_in_progress = false;
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
@@ -403,6 +405,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
   if (s_stop_discovery_requested) {
     xSemaphoreGive(s_discovery_stopped);
+    s_discovery_in_progress = false;
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -453,6 +456,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
+      s_discovery_in_progress = false;
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
@@ -468,6 +472,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 
   if (s_stop_discovery_requested) {
     xSemaphoreGive(s_discovery_stopped);
+    s_discovery_in_progress = false;
     prv_free_discovery_context(context);
     return BLE_HS_EDONE;
   }
@@ -499,6 +504,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
         prv_discover_next_chrs(conn_handle, context);
       } else {
         // no services found
+        s_discovery_in_progress = false;
         bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
         prv_free_discovery_context(context);
       }
@@ -515,6 +521,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
         errno = BTErrnoInternalErrorBegin + error->status;
       }
 
+      s_discovery_in_progress = false;
       bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
