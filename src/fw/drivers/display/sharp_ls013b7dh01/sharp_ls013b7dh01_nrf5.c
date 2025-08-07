@@ -108,21 +108,6 @@ static void prv_display_start(void) {
                    BOARD_CONFIG_DISPLAY.on_ctrl_otype,
                    GPIO_Speed_50MHz);
 
-  if (BOARD_CONFIG.power_5v0_options != OptionNotPresent) {
-    GPIOOType_TypeDef otype = (BOARD_CONFIG.power_5v0_options == OptionActiveLowOpenDrain)
-        ? GPIO_OType_OD : GPIO_OType_PP;
-    gpio_output_init(&BOARD_CONFIG.power_ctl_5v0, otype, GPIO_Speed_50MHz);
-  }
-
-  if (BOARD_CONFIG.lcd_com.gpio) {
-    gpio_output_init(&BOARD_CONFIG.lcd_com, GPIO_OType_PP, GPIO_Speed_50MHz);
-  }
-
-  if (BOARD_CONFIG.power_5v0_options != OptionNotPresent) {
-    // +5V to 5V_EN pin
-    gpio_output_set(&BOARD_CONFIG.power_ctl_5v0, true);
-  }
-
   // +5V to LCD_DISP pin (Set this pin low to turn off the display)
   gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, true);
 
@@ -267,11 +252,6 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 }
 
 void display_pulse_vcom(void) {
-  PBL_ASSERTN(BOARD_CONFIG.lcd_com.gpio != 0);
-  gpio_output_set(&BOARD_CONFIG.lcd_com, true);
-  // the spec requires at least 1us; this provides ~2 so should be safe
-  for (volatile int i = 0; i < 8; i++);
-  gpio_output_set(&BOARD_CONFIG.lcd_com, false);
 }
 
 #if DISPLAY_ORIENTATION_ROTATED_180

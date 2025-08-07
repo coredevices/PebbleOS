@@ -97,16 +97,6 @@ typedef struct {
   const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
 } InputConfig;
 
-#if 0
-typedef struct {
-  ADC_TypeDef *const adc; ///< One of ADCX. For example ADC1.
-  const uint8_t adc_channel; ///< One of ADC_Channel_*
-  uint32_t clock_ctrl;  ///< Peripheral clock control flag
-  GPIO_TypeDef* const gpio; ///< One of GPIOX. For example, GPIOA.
-  const uint16_t gpio_pin; ///< One of GPIO_Pin_*
-} ADCInputConfig;
-#endif
-
 typedef struct {
   NRF_TIMER_Type *peripheral;
 } TimerConfig;
@@ -196,32 +186,15 @@ typedef struct {
   const GpioteConfig dbgserial_int;
   const InputConfig dbgserial_int_gpio;
 
-  // MFi Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const OutputConfig mfi_reset_pin;
-
   // Display Configuration
   /////////////////////////////////////////////////////////////////////////////
   const OutputConfig lcd_com; //!< This needs to be pulsed regularly to keep the sharp display fresh.
-
-  //! Controls power to the sharp display
-  const PowerCtl5VOptions power_5v0_options;
-  const OutputConfig power_ctl_5v0;
 
   const uint8_t backlight_on_percent; // percent of max possible brightness
   const uint8_t backlight_max_duty_cycle_percent; // Calibrated such that the preceived brightness
                     // of "backlight_on_percent = 100" (and all other values, to a reasonable
                     // tolerance) is identical across all platforms. >100% isn't possible, so
                     // future backlights must be at least as bright as Tintin's.
-
-  // FPC Pinstrap Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const InputConfig fpc_pinstrap_1;
-  const InputConfig fpc_pinstrap_2;
-
-  // GPIO Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const uint16_t num_avail_gpios;
 } BoardConfig;
 
 // Button Configuration
@@ -243,31 +216,6 @@ typedef struct {
 typedef struct {
   const GpioteConfig pmic_int;
   const InputConfig pmic_int_gpio;
-
-  //! Voltage rail control lines
-  const OutputConfig rail_4V5_ctrl;
-  const OutputConfig rail_6V6_ctrl;
-  const nrf_gpio_pin_drive_t rail_6V6_ctrl_otype;
-
-  //! Scaling factor for battery vmon
-  const VMonScale battery_vmon_scale;
-  //! Tells us if the USB cable plugged in.
-  const InputConfig vusb_stat;
-  const GpioteConfig vusb_gpiote;
-  //! Tells us whether the charger thinks we're charging or not.
-  const InputConfig chg_stat;
-  //! Tell the charger to use 2x current to charge faster (MFG only).
-  const OutputConfig chg_fast;
-  //! Enable the charger. We may want to disable this in MFG, normally it's always on.
-  const OutputConfig chg_en;
-
-  //! Interrupt that fires when the USB cable is plugged in
-  const bool has_vusb_interrupt;
-
-  const bool wake_on_usb_power;
-
-  const int charging_cutoff_voltage;
-  const int charging_status_led_voltage_compensation;
 
   //! Percentage for watch only mode
   const uint8_t low_power_threshold;
@@ -297,18 +245,6 @@ typedef struct {
                              //< duty cycle so that 100% duty cycle will always be 3.3V RMS.
 } BoardConfigActuator;
 
-typedef struct {
-  const OutputConfig power_en; //< Enable power supply to the accessory connector.
-  const InputConfig int_gpio;
-  const GpioteConfig gpiote;
-} BoardConfigAccessory;
-
-typedef struct {
-  const bool output_enabled;
-  const AfConfig af_cfg;
-  const InputConfig an_cfg;
-} BoardConfigMCO1;
-
 typedef enum {
   SpiPeriphClockNrf5
 } SpiPeriphClock;
@@ -336,8 +272,6 @@ typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;
-typedef const struct ICE40LPDevice ICE40LPDevice;
-typedef const struct TouchSensor TouchSensor;
 
 void board_early_init(void);
 void board_init(void);
