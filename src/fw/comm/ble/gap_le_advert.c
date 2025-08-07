@@ -438,11 +438,6 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
       }
       continue;
     }
-
-    // Normal term, verify min and max interval values:
-    if (terms[i].max_interval_slots < terms[i].min_interval_slots) {
-      return NULL;
-    }
   }
 
   // Create the job data structure:
