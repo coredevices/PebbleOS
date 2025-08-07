@@ -299,6 +299,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
+            'HAS_FLASH_OTP',
         },
     },
 ]
