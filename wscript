@@ -1692,6 +1692,10 @@ def force_flash(ctx):
     waftools.openocd.run_command(ctx, reset_cmd + 'init; stm32x unlock 0;', ignore_fail=True)
 
 
+class ResetDevice(BuildContext):
+    cmd = 'reset'
+    fun = 'reset'
+
 def reset(ctx):
     """resets a connected device"""
     waftools.openocd.run_command(ctx, 'init; reset;', expect=["found"])
