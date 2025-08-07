@@ -78,9 +78,6 @@ typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job
 //! scheduler should loop back to the first term.
 #define GAPLE_ADVERTISING_DURATION_LOOP_AROUND ((uint16_t) 0)
 
-//! Constant to use with gap_le_advert_schedule to schedule a "silence" term.
-#define GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS ((uint16_t) 0)
-
 //! Schedules an advertisement & scan response job.
 //! Based on the given minimum and maximum interval values, an interval is
 //! used depending on other time related tasks the Bluetooth controller has to
