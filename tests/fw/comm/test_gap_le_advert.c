@@ -218,11 +218,6 @@ void test_gap_le_advert__single_job_multiple_terms_silence_and_loop_around(void)
       .duration_secs = 1,
     },
     {
-      .min_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .max_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .duration_secs = 1,
-    },
-    {
       .duration_secs = GAPLE_ADVERTISING_DURATION_LOOP_AROUND,
       .loop_around_index = 1,
     },
@@ -247,11 +242,6 @@ void test_gap_le_advert__single_job_multiple_terms_silence_and_loop_around(void)
   assert_ad_data("yo");
   gap_le_assert_advertising_interval(advert_terms[1].min_interval_slots,
                                      advert_terms[1].max_interval_slots);
-
-  regular_timer_fire_seconds(1);
-
-  // Silent term:
-  cl_assert(!gap_le_is_advertising_enabled());
 
   regular_timer_fire_seconds(1);
 
@@ -473,181 +463,6 @@ void test_gap_le_advert__job_round_robin(void) {
   free(ad_d);
 }
 
-// Tests that the adv data is set when a job goes from a silent term to a non-silent one, and
-// another job's data was previously advertised.
-void test_gap_le_advert__data_set_after_silent_term(void) {
-  GAPLEAdvertisingJobTerm advert_terms_a[] =
-  {
-    {
-      .min_interval_slots = 160,
-      .max_interval_slots = 320,
-      .duration_secs = 1,
-    },
-  };
-
-  GAPLEAdvertisingJobTerm advert_terms_b[] =
-  {
-    {
-      .min_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .max_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .duration_secs = 1,
-    },
-    {
-      .min_interval_slots = 32,
-      .max_interval_slots = 64,
-      .duration_secs = 1,
-    },
-  };
-
-  // Schedule job "A":
-  BLEAdData *ad_a = create_ad("A", NULL);
-  GAPLEAdvertisingJobRef job_a;
-  job_a = gap_le_advert_schedule(ad_a,
-                                 advert_terms_a,
-                                 sizeof(advert_terms_a)/sizeof(GAPLEAdvertisingJobTerm),
-                                 unscheduled_callback, s_unscheduled_cb_data, 0);
-  cl_assert(job_a);
-  assert_ad_data("A");
-  regular_timer_fire_seconds(1);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
-  cl_assert_equal_p(s_unscheduled_job, job_a);
-
-  // Schedule job "B":
-  BLEAdData *ad_b = create_ad("B", NULL);
-  GAPLEAdvertisingJobRef job_b;
-  job_b = gap_le_advert_schedule(ad_b,
-                                 advert_terms_b,
-                                 sizeof(advert_terms_b)/sizeof(GAPLEAdvertisingJobTerm),
-                                 unscheduled_callback, s_unscheduled_cb_data, 0);
-
-  cl_assert(job_b);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
-
-  regular_timer_fire_seconds(1);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
-  assert_ad_data("B");
-}
-
-void test_gap_le_advert__round_robin_two_jobs_incl_silent_terms(void) {
-  GAPLEAdvertisingJobTerm advert_terms_a[] =
-  {
-    {
-      .min_interval_slots = 160,
-      .max_interval_slots = 320,
-      .duration_secs = 1,
-    },
-    {
-      .min_interval_slots = 480,
-      .max_interval_slots = 960,
-      .duration_secs = 1,
-    },
-    {
-      .min_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .max_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .duration_secs = 1,
-    },
-    {
-      .min_interval_slots = 256,
-      .max_interval_slots = 512,
-      .duration_secs = 1,
-    },
-  };
-
-  GAPLEAdvertisingJobTerm advert_terms_b[] =
-  {
-    {
-      .min_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .max_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .duration_secs = 1,
-    },
-    {
-      .min_interval_slots = 32,
-      .max_interval_slots = 64,
-      .duration_secs = 1,
-    },
-    {
-      .min_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .max_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS,
-      .duration_secs = 2,
-    },
-    {
-      .min_interval_slots = 960,
-      .max_interval_slots = 1240,
-      .duration_secs = 1,
-    },
-  };
-
-  // Schedule job "A":
-  BLEAdData *ad_a = create_ad("A", NULL);
-  GAPLEAdvertisingJobRef job_a;
-  job_a = gap_le_advert_schedule(ad_a,
-                                 advert_terms_a, sizeof(advert_terms_a)/sizeof(GAPLEAdvertisingJobTerm),
-                                 unscheduled_callback, s_unscheduled_cb_data, 0);
-  cl_assert(job_a);
-  assert_ad_data("A");
-
-  // Schedule job "B":
-  BLEAdData *ad_b = create_ad("B", NULL);
-  GAPLEAdvertisingJobRef job_b;
-  job_b = gap_le_advert_schedule(ad_b,
-                                 advert_terms_b, sizeof(advert_terms_b)/sizeof(GAPLEAdvertisingJobTerm),
-                                 unscheduled_callback, s_unscheduled_cb_data, 0);
-
-  // Even though B is newer, expect "A" to be scheduled still, because B's first term is silent:
-  cl_assert(job_b);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
-  assert_ad_data("A");
-  gap_le_assert_advertising_interval(advert_terms_a[0].min_interval_slots,
-                                     advert_terms_a[0].max_interval_slots);
-
-
-  // After A's first term, expect that B's second term will follow. B's first term was silent, so
-  // this "ran" at the same time as A's first term.
-  regular_timer_fire_seconds(1);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
-  assert_ad_data("B");
-  gap_le_assert_advertising_interval(advert_terms_b[1].min_interval_slots,
-                                     advert_terms_b[1].max_interval_slots);
-
-  // Expect A's second term. B's third term (silent) will "run" now too.
-  regular_timer_fire_seconds(1);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
-  assert_ad_data("A");
-  gap_le_assert_advertising_interval(advert_terms_a[1].min_interval_slots,
-                                     advert_terms_a[1].max_interval_slots);
-
-  // Expect silence. B's third (silent) is 2 secs, so one more to go and A's third term is silent.
-  regular_timer_fire_seconds(1);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
-
-  // Expect B's fourth term now.
-  regular_timer_fire_seconds(1);
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
-  assert_ad_data("B");
-  gap_le_assert_advertising_interval(advert_terms_b[3].min_interval_slots,
-                                     advert_terms_b[3].max_interval_slots);
-
-  regular_timer_fire_seconds(1);
-
-  // Expect B to be done:
-  cl_assert_equal_i(s_unscheduled_cb_count, 1);
-  cl_assert_equal_p(s_unscheduled_job, job_b);
-  cl_assert_equal_b(s_unscheduled_completed, true);
-
-  // Expect A's fourth term:
-  assert_ad_data("A");
-  cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
-  gap_le_assert_advertising_interval(advert_terms_a[3].min_interval_slots,
-                                     advert_terms_a[3].max_interval_slots);
-
-  regular_timer_fire_seconds(1);
-
-  // Expect A to be done as well:
-  cl_assert_equal_i(s_unscheduled_cb_count, 2);
-  cl_assert_equal_p(s_unscheduled_job, job_a);
-  cl_assert_equal_b(s_unscheduled_completed, true);
-}
-
 
 void test_gap_le_advert__job_round_robin_multiple_terms(void) {
   GAPLEAdvertisingJobTerm advert_terms[2] =
@@ -796,14 +611,6 @@ void test_gap_le_advert__invalid_params(void) {
   advert_term.min_interval_slots = 200;
   advert_term.max_interval_slots = 200;
   advert_term.duration_secs = GAPLE_ADVERTISING_DURATION_LOOP_AROUND;
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                               unscheduled_callback, s_unscheduled_cb_data, 0);
-  cl_assert_equal_p(job, NULL);
-
-  // Forever silent term:
-  advert_term.min_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS;
-  advert_term.max_interval_slots = GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS;
-  advert_term.duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE;
   job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert_equal_p(job, NULL);

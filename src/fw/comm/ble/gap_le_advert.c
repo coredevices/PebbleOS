@@ -134,29 +134,18 @@ static bool prv_is_current_term_infinite(const GAPLEAdvertisingJob *job) {
   return (job->terms[job->cur_term].duration_secs == GAPLE_ADVERTISING_DURATION_INFINITE);
 }
 
-static bool prv_is_current_term_silent(GAPLEAdvertisingJob *job) {
-  return (job->terms[job->cur_term].min_interval_slots == GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS);
-}
-
-//! Links the job into the ring of jobs. Will make the new job the start (s_jobs) of the ring only
-//! if the first term isn't silent.
-//! @return True if the new job was made the start of the ring, false if not.
-static bool prv_link_job(GAPLEAdvertisingJob *job) {
+//! Links the job into the ring of jobs.
+static void prv_link_job(GAPLEAdvertisingJob *job) {
   if (!s_jobs) {
     // First job, make it point to itself:
     job->node.next = &job->node;
     job->node.prev = &job->node;
     s_jobs = job;
-    return true;
   }
 
   list_insert_after(&s_jobs->node, &job->node);
-  // Make it the next one up, unless the first term is silent:
-  if (!prv_is_current_term_silent(job)) {
-    s_jobs = job;
-    return true;
-  }
-  return false;
+  // Make it the next one up
+  s_jobs = job;
 }
 
 static void prv_unlink_job(GAPLEAdvertisingJob *job) {
@@ -237,20 +226,6 @@ static void prv_increment_elapsed_time_for_job(GAPLEAdvertisingJob **job_ptr, bo
   }
 }
 
-static void prv_increment_time_elapsed_for_all_silent_terms_except_current(void) {
-  if (!s_jobs) {
-    return;
-  }
-  GAPLEAdvertisingJob *job = s_jobs;
-  do {
-    GAPLEAdvertisingJob *next = (GAPLEAdvertisingJob *) job->node.next;
-    if (job != s_current && prv_is_current_term_silent(job)) {
-      prv_increment_elapsed_time_for_job(&job, NULL);
-    }
-    job = next;
-  } while (job != s_jobs);
-}
-
 // -----------------------------------------------------------------------------
 //! Cycle timer callback.
 //! It increments the air-time counter of the job's current term.
@@ -273,16 +248,10 @@ static void prv_cycle_timer_callback(void *unused) {
       goto unlock;
     }
 
-    prv_increment_time_elapsed_for_all_silent_terms_except_current();
-
     GAPLEAdvertisingJob *job = s_current;
 
-    // Set to next job (round-robin) that isn't silent (unless there is no non-silent one):
+    // Set to next job (round-robin)
     s_jobs = (GAPLEAdvertisingJob *) job->node.next;
-    while (prv_is_current_term_silent(s_jobs) &&
-           s_jobs != job /* looped around */) {
-      s_jobs = (GAPLEAdvertisingJob *) s_jobs->node.next;
-    };
 
     prv_increment_elapsed_time_for_job(&job, &force_update);
 
@@ -357,40 +326,38 @@ static void prv_perform_next_job(bool force_refresh) {
       prv_timer_start();
     }
 
-    if (!prv_is_current_term_silent(next)) {
-      const bool enable_scan_resp = (next->payload.scan_resp_data_length > 0);
+    const bool enable_scan_resp = (next->payload.scan_resp_data_length > 0);
 
-      if (s_current_ad_data != &next->payload) {
-        // Give the advertisement data to the BT controller:
-        bt_driver_advert_set_advertising_data(&next->payload);
-        s_current_ad_data = &next->payload;
-      }
+    if (s_current_ad_data != &next->payload) {
+      // Give the advertisement data to the BT controller:
+      bt_driver_advert_set_advertising_data(&next->payload);
+      s_current_ad_data = &next->payload;
+    }
 
-      // One slot is 625us:
-      const uint32_t min_interval_ms = ((next->terms[next->cur_term].min_interval_slots * 5) / 8);
-      const uint32_t max_interval_ms = ((next->terms[next->cur_term].max_interval_slots * 5) / 8);
+    // One slot is 625us:
+    const uint32_t min_interval_ms = ((next->terms[next->cur_term].min_interval_slots * 5) / 8);
+    const uint32_t max_interval_ms = ((next->terms[next->cur_term].max_interval_slots * 5) / 8);
 
-      BLE_LOG_DEBUG("Enable Ad job %s",  prv_string_for_debug_tag(next->tag));
-      bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms,
-                                                    enable_scan_resp);
-      if (result) {
-        s_is_advertising = true;
-        PBL_LOG(GAP_LE_ADVERT_LOG_LEVEL, "Airing advertising job: %s ",
-                prv_string_for_debug_tag(next->tag));
+    BLE_LOG_DEBUG("Enable Ad job %s",  prv_string_for_debug_tag(next->tag));
+    bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms,
+                                                  enable_scan_resp);
+    if (result) {
+      s_is_advertising = true;
+      PBL_LOG(GAP_LE_ADVERT_LOG_LEVEL, "Airing advertising job: %s ",
+              prv_string_for_debug_tag(next->tag));
 
-        // Use average interval ms. BT controller does not report back what it uses.
-        const uint32_t interval_ms = (min_interval_ms + max_interval_ms) / 2;
+      // Use average interval ms. BT controller does not report back what it uses.
+      const uint32_t interval_ms = (min_interval_ms + max_interval_ms) / 2;
 
-        // The ad data is fixed in size. See below.
-        // The scan response data size is omitted here, because we can't tell how
-        // often a scan request happens. BT controller does not report it either.
-        const uint32_t size = next->payload.ad_data_length /* ad data */ + 10 /* packet overhead */;
-        const uint32_t bytes_per_second = (size * 1000 /* ms */) / interval_ms;
+      // The ad data is fixed in size. See below.
+      // The scan response data size is omitted here, because we can't tell how
+      // often a scan request happens. BT controller does not report it either.
+      const uint32_t size = next->payload.ad_data_length /* ad data */ + 10 /* packet overhead */;
+      const uint32_t bytes_per_second = (size * 1000 /* ms */) / interval_ms;
 
-        analytics_stopwatch_start_at_rate(
-                                       ANALYTICS_DEVICE_METRIC_BLE_ESTIMATED_BYTES_ADVERTISED_COUNT,
-                                       bytes_per_second, AnalyticsClient_System);
-      }
+      analytics_stopwatch_start_at_rate(
+                                      ANALYTICS_DEVICE_METRIC_BLE_ESTIMATED_BYTES_ADVERTISED_COUNT,
+                                      bytes_per_second, AnalyticsClient_System);
     }
   }
 
@@ -422,18 +389,6 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
     if (is_loop_around) {
       if (i == 0) {
         // First term cannot be loop-around
-        return NULL;
-      }
-      continue;
-    }
-
-    // Silent term:
-    const bool is_silent =
-          (terms[i].min_interval_slots == GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS &&
-           terms[i].max_interval_slots == GAPLE_ADVERTISING_SILENCE_INTERVAL_SLOTS);
-    if (is_silent) {
-      if (terms[i].duration_secs == GAPLE_ADVERTISING_DURATION_INFINITE) {
-        // Can't be silent forever
         return NULL;
       }
       continue;
@@ -471,9 +426,8 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
   bt_lock();
   {
     if (s_gap_le_advert_is_initialized && !s_deinit_in_progress) {
-      if (prv_link_job(job)) {
-        prv_perform_next_job(false);
-      }
+      prv_link_job(job);
+      prv_perform_next_job(false);
     } else {
       kernel_free(job->terms);
       kernel_free(job);
