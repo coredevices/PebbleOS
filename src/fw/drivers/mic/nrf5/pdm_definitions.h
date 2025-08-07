@@ -38,7 +38,7 @@
 
 typedef struct {
   nrfx_pdm_config_t pdm_config;
-  int16_t pdm_buffers[PDM_BUFFER_COUNT][PDM_BUFFER_SIZE_SAMPLES] __attribute__((aligned(4)));
+  int16_t *pdm_buffers[PDM_BUFFER_COUNT];
   uint8_t current_buffer_idx;
   
   // User interface
@@ -49,7 +49,7 @@ typedef struct {
   
   // Intermediate storage
   CircularBuffer circ_buffer;
-  uint8_t circ_buffer_storage[CIRCULAR_BUF_SIZE_BYTES] __attribute__((aligned(4)));
+  uint8_t *circ_buffer_storage;
   
   // State management
   PebbleRecursiveMutex *mutex;
