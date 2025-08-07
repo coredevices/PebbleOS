@@ -134,43 +134,27 @@ static void prv_schedule_ad_job(void) {
                                        BT_VENDOR_ID,
                                        (const uint8_t *) &mfg_data,
                                        sizeof(struct ManufacturerSpecificData));
-#if !RECOVERY_FW
-  // Initial high-rate period of 5 minutes long, then go slow for power savings:
+
+  // Values chosen according to:
+  // "Accessory Design Guidelies for Apple Devices" 55.4 Advertising Data
   const GAPLEAdvertisingJobTerm advert_terms[] = {
-    {
-      .min_interval_slots = 160, // 100ms
-      .max_interval_slots = 320, // 200ms
-      .duration_secs = 5 * 60, // 5 minutes
-    },
-    {
-      .min_interval_slots = 1636, // 1022.5ms
-      .max_interval_slots = 2056, // 1285ms
-      .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
-    }
-  };
-
-  s_discovery_advert_job = gap_le_advert_schedule(ad,
-                         advert_terms,
-                         sizeof(advert_terms)/sizeof(GAPLEAdvertisingJobTerm),
-                         prv_job_unschedule_callback,
-                         NULL,
-                         GAPLEAdvertisingJobTagDiscovery);
-
-#else
-  BLE_LOG_DEBUG("Running at PRF advertising rate for LE discovery");
-  // For PRF, just use a fast advertising rate indefinitely so the watch gets
-  // discovered as fast as possible
-  const GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 244, // 152.5ms
-    .max_interval_slots = 256, // 160ms
-    .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
+      {
+          // Extend this term from recommended 30s to 5min so user has e.g. time
+          // to download or open mobile app.
+          .duration_secs = 5 * 60,
+          .min_interval_slots = 32, // 20ms
+          .max_interval_slots = 32, // 20ms
+      },
+      {
+          .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
+          .min_interval_slots = 1636, // 1022.5ms
+          .max_interval_slots = 1636, // 1022.5ms
+      },
   };
 
   s_discovery_advert_job = gap_le_advert_schedule(
-      ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+      ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
       prv_job_unschedule_callback, NULL, GAPLEAdvertisingJobTagDiscovery);
-
-#endif
 
   ble_ad_destroy(ad);
 }
