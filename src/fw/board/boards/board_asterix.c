@@ -194,7 +194,6 @@ IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
 static MicDeviceState s_mic_state_storage;
 static MicDevice s_mic_device = {
   .state = &s_mic_state_storage,
-  .pdm_instance = NRFX_PDM_INSTANCE(0),
   .clk_pin = NRF_GPIO_PIN_MAP(1, 0),   // P1.00 - PDM CLK
   .data_pin = NRF_GPIO_PIN_MAP(0, 24), // P0.24 - PDM DATA
 };
