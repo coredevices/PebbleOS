@@ -173,6 +173,18 @@ static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
   bt_driver_handle_le_conn_params_update_event(&conn_params_update_event);
 }
 
+static void prv_handle_conn_update_req_event(struct ble_gap_event *event) {
+  *event->conn_update_req.self_params = *event->conn_update_req.peer_params;
+
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO,
+            "Connection update request: "
+            "itvl=(%u, %u) ms, latency=%u, spvn timeout=%u ms",
+            event->conn_update_req.self_params->itvl_min * BLE_HCI_CONN_ITVL / 1000,
+            event->conn_update_req.self_params->itvl_max * BLE_HCI_CONN_ITVL / 1000,
+            event->conn_update_req.self_params->latency,
+            event->conn_update_req.self_params->supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
+}
+
 static void prv_handle_passkey_event(struct ble_gap_event *event) {
   char passkey_str[7];
   uint32_t passkey = 0;
@@ -311,6 +323,10 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_CONN_UPDATE:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_CONN_UPDATE");
       prv_handle_conn_params_updated_event(event);
+      break;
+    case BLE_GAP_EVENT_CONN_UPDATE_REQ:
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_CONN_UPDATE_REQ");
+      prv_handle_conn_update_req_event(event);
       break;
     case BLE_GAP_EVENT_PASSKEY_ACTION:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_PASSKEY_ACTION");
