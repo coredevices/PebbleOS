@@ -65,6 +65,8 @@ void pebble_conn_update_to_nimble(const BleConnectionParamsUpdateReq *req,
   params->itvl_max = req->interval_max_1_25ms;
   params->latency = req->slave_latency_events;
   params->supervision_timeout = req->supervision_timeout_10ms;
+  params->min_ce_len = 0U;
+  params->max_ce_len = 0U;
 }
 
 void nimble_uuid_to_pebble(const ble_uuid_any_t *stack_uuid, Uuid *uuid) {
