@@ -92,32 +92,27 @@
 //! Try 3 times before giving up.
 #define MAX_UPDATE_REQUEST_ATTEMPTS (3)
 
+// TODO: Check slave_latency_events values. We currently observe some connection
+// drops that *may* be related to the slave latency being "too high". Let's just
+// remove slave latency for now, and see if that helps.
 static const GAPLEConnectRequestParams s_default_connection_params_table[NumResponseTimeState] = {
   [ResponseTimeMax] = {
-#if BT_CONTROLLER_DA14681
-    .slave_latency_events = 0,  // See PBL-38653
-#else
-    .slave_latency_events = 4,  // Max. allowed by iOS
-#endif
-    .connection_interval_min_1_25ms = 135,
-    .connection_interval_max_1_25ms = 161,
-    .supervision_timeout_10ms = 600,
+    .slave_latency_events = 0,
+    .connection_interval_min_1_25ms = 120, // 150ms
+    .connection_interval_max_1_25ms = 144, // 180ms
+    .supervision_timeout_10ms = 600, // 6s
   },
   [ResponseTimeMiddle] = {
-#if BT_CONTROLLER_DA14681
-    .slave_latency_events = 0,  // See PBL-38653
-#else
-    .slave_latency_events = 2,
-#endif
-    .connection_interval_min_1_25ms = 135,
-    .connection_interval_max_1_25ms = 161,
-    .supervision_timeout_10ms = 600,
+    .slave_latency_events = 0,
+    .connection_interval_min_1_25ms = 120, // 150ms
+    .connection_interval_max_1_25ms = 144, // 180ms
+    .supervision_timeout_10ms = 600, // 6s
   },
   [ResponseTimeMin] = {
-    .slave_latency_events = 0, // Not using Slave Latency
-    .connection_interval_min_1_25ms = 15,  // Min. allowed by iOS
-    .connection_interval_max_1_25ms = 30,
-    .supervision_timeout_10ms = 600,
+    .slave_latency_events = 0,
+    .connection_interval_min_1_25ms = 12, // 15ms
+    .connection_interval_max_1_25ms = 12, // 15ms
+    .supervision_timeout_10ms = 600, // 6s
   },
 };
 
