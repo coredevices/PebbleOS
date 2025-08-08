@@ -36,67 +36,17 @@
 static void prv_pdm_event_handler(nrfx_pdm_evt_t const *p_evt);
 static void prv_dispatch_samples_main(void *data);
 static void prv_dispatch_samples_common(void);
-static bool prv_allocate_buffers(MicDeviceState *state);
-static void prv_free_buffers(MicDeviceState *state);
 
 static bool prv_is_valid_buffer(MicDeviceState *state, int16_t *buffer) {
   for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
-    if (state->pdm_buffers[i] && buffer == state->pdm_buffers[i]) {
+    if (buffer == state->pdm_buffers[i]) {
       return true;
     }
   }
   return false;
 }
 
-static bool prv_allocate_buffers(MicDeviceState *state) {
-  // Allocate circular buffer storage
-  state->circ_buffer_storage = kernel_malloc(CIRCULAR_BUF_SIZE_BYTES);
-  if (!state->circ_buffer_storage) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate circular buffer storage");
-    return false;
-  }
-  
-  // Allocate PDM buffers
-  for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
-    state->pdm_buffers[i] = kernel_malloc(PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t));
-    if (!state->pdm_buffers[i]) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate PDM buffer %d", i);
-      // Free any previously allocated buffers
-      prv_free_buffers(state);
-      return false;
-    }
-    // Clear the buffer
-    memset(state->pdm_buffers[i], 0, PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t));
-  }
-  
-  // Initialize circular buffer with allocated storage
-  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, CIRCULAR_BUF_SIZE_BYTES);
-  
-  return true;
-}
-
-static void prv_free_buffers(MicDeviceState *state) {
-  // Free circular buffer storage
-  if (state->circ_buffer_storage) {
-    kernel_free(state->circ_buffer_storage);
-    state->circ_buffer_storage = NULL;
-  }
-  
-  // Free PDM buffers
-  for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
-    if (state->pdm_buffers[i]) {
-      kernel_free(state->pdm_buffers[i]);
-      state->pdm_buffers[i] = NULL;
-    }
-  }
-}
-
 static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
-  // Ensure circular buffer storage is allocated
-  if (!state->circ_buffer_storage) {
-    return;
-  }
-  
   // Write samples to circular buffer
   for (int i = 0; i < PDM_BUFFER_SIZE_SAMPLES; i++) {
     if (!circular_buffer_write(&state->circ_buffer, 
@@ -168,6 +118,11 @@ void mic_init(const MicDevice *this) {
   state->pdm_config.clock_freq = NRF_PDM_FREQ_1280K;
   state->pdm_config.ratio = NRF_PDM_RATIO_80X;
   
+  // Initialize circular buffer
+  circular_buffer_init(&state->circ_buffer, 
+                      state->circ_buffer_storage, 
+                      sizeof(state->circ_buffer_storage));
+  
   // Create mutex for thread safety
   state->mutex = mutex_create_recursive();
   PBL_ASSERTN(state->mutex);
@@ -187,8 +142,8 @@ static void prv_dispatch_samples_common(void) {
   
   mutex_lock_recursive(state->mutex);
 
-  // Only process if we have exactly one complete frame available and buffers are allocated
-  if (state->is_running && state->data_handler && state->audio_buffer && state->circ_buffer_storage) {
+  // Only process if we have exactly one complete frame available
+  if (state->is_running && state->data_handler && state->audio_buffer) {
     
     // Check if we have enough data for exactly one frame
     size_t frame_size_bytes = state->audio_buffer_len * sizeof(int16_t);
@@ -262,12 +217,8 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
 static bool prv_start_pdm_capture(const MicDevice *this) {
   MicDeviceState *state = this->state;
   
-  // Clear buffers and set initial buffer
-  for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
-    if (state->pdm_buffers[i]) {
-      memset(state->pdm_buffers[i], 0, PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t));
-    }
-  }
+  // Clear and set initial buffer
+  memset(state->pdm_buffers, 0, sizeof(state->pdm_buffers));
   state->current_buffer_idx = 0;
   
   nrfx_err_t err = nrfx_pdm_buffer_set(&this->pdm_instance, 
@@ -312,15 +263,8 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     return false;
   }
   
-  // Allocate buffers dynamically
-  if (!prv_allocate_buffers(state)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate microphone buffers");
-    mutex_unlock_recursive(state->mutex);
-    return false;
-  }
-  
   // Reset state
-  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, CIRCULAR_BUF_SIZE_BYTES);
+  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, sizeof(state->circ_buffer_storage));
   state->data_handler = data_handler;
   state->handler_context = context;
   state->audio_buffer = audio_buffer;
@@ -333,7 +277,6 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
     nrf52_clock_hfxo_release();
-    prv_free_buffers(state);
     mutex_unlock_recursive(state->mutex);
     return false;
   }
@@ -366,9 +309,6 @@ void mic_stop(const MicDevice *this) {
   
   // Release high frequency oscillator
   nrf52_clock_hfxo_release();
-  
-  // Free dynamically allocated buffers
-  prv_free_buffers(state);
   
   // Clear state
   state->data_handler = NULL;
