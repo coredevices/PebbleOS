@@ -9,7 +9,7 @@
 	url = https://github.com/coredevices/mynewt-nimble.git
 [submodule "src/bluetooth-fw/nimble/vendor/ti-service-packs"]
 	path = third_party/ti_bt_sp/ti-service-packs
-	url = https://git.ti.com/git/ti-bt/service-packs.git
+	url = https://github.com/coredevices/ti-bt-service-packs.git
 [submodule "third_party/hal_nordic/nrfx"]
 	path = third_party/hal_nordic/nrfx
 	url = https://github.com/NordicSemiconductor/nrfx
