@@ -156,7 +156,12 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
 }
 
 static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
-  if (event->conn_update.status != 0) return;
+  if (event->conn_update.status != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
+              "Connection parameters update failed: 0x%04x",
+              (uint16_t)event->conn_update.status);
+    return;
+  }
 
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->conn_update.conn_handle, &desc) != 0) {
@@ -165,11 +170,18 @@ static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
     return;
   }
 
+  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO,
+            "Connection parameters updated: "
+            "itvl=%u ms, latency=%u, spvn timeout=%u ms",
+            desc.conn_itvl * BLE_HCI_CONN_ITVL / 1000, desc.conn_latency,
+            desc.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
+
   struct BleConnectionUpdateCompleteEvent conn_params_update_event = {
       .status = HciStatusCode_Success,
   };
   nimble_conn_params_to_pebble(&desc, &conn_params_update_event.conn_params);
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &conn_params_update_event.dev_address);
+
   bt_driver_handle_le_conn_params_update_event(&conn_params_update_event);
 }
 
