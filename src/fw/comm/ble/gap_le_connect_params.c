@@ -256,6 +256,7 @@ static void prv_evaluate(GAPLEConnection *connection, ResponseTimeState desired_
 
   // Connection parameters are updated, but they don't match the desired parameters.
   // (Re)request a parameter update:
+  PBL_LOG(LOG_LEVEL_INFO, "Connection parameters do not match desired state: %u", desired_state);
   prv_request_params_update(connection, desired_state);
 }
 
@@ -289,14 +290,6 @@ void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompl
   }
 
   const ResponseTimeState desired_state = conn_mgr_get_latency_for_le_connection(connection, NULL);
-  const bool did_match_desired_state_before =
-      prv_do_actual_params_match_desired_state(connection, desired_state, NULL);
-
-  PBL_LOG(LOG_LEVEL_INFO,
-          "LE Conn params updated: status: %u, %u, slave lat: %u, supervision timeout: %u "
-          "did_match_before: %u",
-          event->status, params->conn_interval_1_25ms, params->slave_latency_events,
-          params->supervision_timeout_10ms, did_match_desired_state_before);
 
   // Cache the BLE connection parameters
   connection->conn_params = *params;
