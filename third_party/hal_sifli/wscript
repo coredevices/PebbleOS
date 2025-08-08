@@ -23,6 +23,7 @@ def build(bld):
             'SiFli-SDK/drivers/cmsis/sf32lb52x/bf0_pin_const.c',
             'SiFli-SDK/drivers/cmsis/sf32lb52x/bf0_lcpu_init.c',
             'SiFli-SDK/drivers/cmsis/sf32lb52x/lcpu_patch.c',
+            'SiFli-SDK/drivers/cmsis/sf32lb52x/lcpu_config_type.c',
             'SiFli-SDK/drivers/cmsis/sf32lb52x/lcpu_patch_rev_b.c',
             'SiFli-SDK/drivers/cmsis/sf32lb52x/bt_rf_fulcal.c',
             'SiFli-SDK/middleware/ipc_queue/porting/sf32lb52x/hcpu/ipc_hw_port.c',
@@ -37,6 +38,7 @@ def build(bld):
         'SiFli-SDK/external/CMSIS/Include',
         'SiFli-SDK/middleware/include',
         'SiFli-SDK/middleware/ipc_queue/common',
+        'SiFli-SDK/middleware/ipc_queue/include',
     ]
 
     if bld.env.MICRO_FAMILY == 'SF32LB52':
