@@ -266,7 +266,6 @@ extern void command_pause_animations(void);
 extern void command_resume_animations(void);
 
 extern void command_change_le_mode(char *mode);
-extern void command_le_mode_chaos_monkey(char *enabled_str);
 extern void command_ble_send_service_changed_indication(void);
 extern void command_ble_rediscover(void);
 extern void command_ble_logging_set_level(const char *level);
@@ -549,7 +548,6 @@ static const Command s_prompt_commands[] = {
   { "ble mode", command_change_le_mode, 1 },
   { "ble ind svc", command_ble_send_service_changed_indication, 0 },
   { "ble rediscover", command_ble_rediscover, 0 },
-  // { "ble mode_monkey", command_le_mode_chaos_monkey, 1 },
   { "ble set log level", command_ble_logging_set_level, 1},
   { "ble get log level", command_ble_logging_get_level, 0},
   { "ble core dump", command_ble_core_dump, 1 },

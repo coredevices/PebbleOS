@@ -346,65 +346,6 @@ void command_change_le_mode(char *mode) {
       conn_hdl, BtConsumerPrompt, state, MAX_PERIOD_RUN_FOREVER);
 }
 
-static TimerID s_chaos_monkey_timer;
-static ResponseTimeState s_chaos_monkey_last_state;
-
-static void prv_mode_chaos_monkey_stop(void) {
-  new_timer_delete(s_chaos_monkey_timer);
-  s_chaos_monkey_timer = TIMER_INVALID_ID;
-}
-
-static void prv_mode_chaos_monkey_callback(void *data) {
-  bt_lock();
-
-  GAPLEConnection *hdl = (GAPLEConnection *) data;
-  if (s_chaos_monkey_timer == TIMER_INVALID_ID) {
-    goto unlock;
-  }
-  if (!gap_le_connection_is_valid(hdl)) {
-    prv_mode_chaos_monkey_stop();
-    goto unlock;
-  }
-
-  ResponseTimeState requested_state;
-  do {
-    requested_state = bounded_rand_int(ResponseTimeMax, ResponseTimeMin);
-  } while (requested_state == s_chaos_monkey_last_state);
-  s_chaos_monkey_last_state = requested_state;
-
-  conn_mgr_set_ble_conn_response_time(hdl, BtConsumerPrompt,
-                                      requested_state, MAX_PERIOD_RUN_FOREVER);
-
-  const uint32_t delay_ms = bounded_rand_int(1, 3000);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Mode chaos monkey: next change=%"PRIu32"ms", delay_ms);
-
-  new_timer_start(s_chaos_monkey_timer, delay_ms, prv_mode_chaos_monkey_callback, data, 0);
-
-unlock:
-  bt_unlock();
-}
-
-void command_le_mode_chaos_monkey(char *enabled_str) {
-  bool new_enabled = atoi(enabled_str);
-
-  bool is_enabled = (s_chaos_monkey_timer != TIMER_INVALID_ID);
-  if (new_enabled == is_enabled) {
-    return;
-  }
-
-  bt_lock();
-  if (new_enabled) {
-    GAPLEConnection *conn_hdl = gap_le_connection_any();
-    if (conn_hdl) {
-      s_chaos_monkey_timer = new_timer_create();
-      prv_mode_chaos_monkey_callback(conn_hdl);
-    }
-  } else {
-    prv_mode_chaos_monkey_stop();
-  }
-  bt_unlock();
-}
-
 ResponseTimeState conn_mgr_get_latency_for_le_connection(
     GAPLEConnection *hdl, uint16_t *secs_to_wait) {
   bt_lock_assert_held(true);
