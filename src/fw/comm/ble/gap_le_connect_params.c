@@ -319,24 +319,3 @@ void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompl
 unlock:
   bt_unlock();
 }
-
-// -------------------------------------------------------------------------------------------------
-//! Extern'd for and used by gap_le_connect.c
-//! Handles Bluetopia's Connection Parameter Update Response.
-//! This event is sent by the remote's host over the LE Signaling L2CAP channel, to either "accept"
-//! or "reject" the parameter set as requested with GAP_LE_Connection_Parameter_Update_Request.
-//! When the parameters are "accepted" the other side ought to apply them and a
-//! LL_CONNECTION_UPDATE_REQ message (link layer) ought to be the result. However, this does not
-//! always seem to be the case on iOS (8.3 and 9.0 beta 1).
-#if 0 // TODO: Move to cc2564x driver and keep logging around
-void gap_le_connect_params_handle_connection_parameter_update_response(
-                       const GAP_LE_Connection_Parameter_Update_Response_Event_Data_t *event_data) {
-  if (event_data->Accepted) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Connection Parameter Update Response: accepted=%u",
-            event_data->Accepted);
-  } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Connection Parameter Update Response: accepted=%u",
-            event_data->Accepted);
-  }
-}
-#endif
