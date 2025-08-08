@@ -139,10 +139,10 @@ static void prv_link_job(GAPLEAdvertisingJob *job) {
     job->node.next = &job->node;
     job->node.prev = &job->node;
     s_jobs = job;
+  } else {
+    list_insert_after(&s_jobs->node, &job->node);
   }
 
-  list_insert_after(&s_jobs->node, &job->node);
-  // Make it the next one up
   s_jobs = job;
 }
 
