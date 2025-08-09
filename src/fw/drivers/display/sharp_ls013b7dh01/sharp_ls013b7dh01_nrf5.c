@@ -51,8 +51,51 @@ static uint32_t s_dma_line_buffer[DISP_DMA_BUFFER_SIZE_WORDS];
 
 static SemaphoreHandle_t s_dma_update_in_progress_semaphore;
 
+static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx);
 static void prv_display_context_init(DisplayContext* context);
 static bool prv_do_dma_update(void);
+
+static bool s_spim_initialized = false;
+
+// Broadly, these two routines bracket enable_ and disable_chip_select, but
+// in the full update use case, we only set up and tear down once to save
+// some cycles (and avoid having to set up and tear down once per scanline).
+static void prv_enable_spim(void) {
+  PBL_ASSERTN(!s_spim_initialized);
+  
+  // Due to nRF52840 erratum 195, SPIM3 needs to be fully disabled
+  // (uninit'ed) to stop drawing current, so rather than just configuring
+  // the SPI peripheral once on boot, we configure it before every
+  // transaction, then shut it down again.
+  
+  nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG(
+    BOARD_CONFIG_DISPLAY.clk.gpio_pin,
+    BOARD_CONFIG_DISPLAY.mosi.gpio_pin,
+    NRF_SPIM_PIN_NOT_CONNECTED,
+    NRF_SPIM_PIN_NOT_CONNECTED);
+  config.frequency = NRFX_MHZ_TO_HZ(2);
+
+  /* spim4 has hardware SS but it is tricky to convince NRFX to expose it to
+   * us; for now, we use the classic enable chip select mechanism */
+#if 0
+  config.use_hw_ss = 1;
+  config.ss_duration = 256; /* 4 us * 64MHz */
+#endif
+
+  nrfx_err_t err = nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, NULL);
+  PBL_ASSERTN(err == NRFX_SUCCESS);
+  
+  s_spim_initialized = true;
+}
+
+static void prv_disable_spim(void) {
+  PBL_ASSERTN(s_spim_initialized);
+  
+  // includes WAR for erratum 195, in nrfx driver
+  nrfx_spim_uninit(&BOARD_CONFIG_DISPLAY.spi);
+
+  s_spim_initialized = false;
+}
 
 static void prv_enable_chip_select(void) {
   gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, true);
@@ -70,39 +113,11 @@ static void prv_disable_chip_select(void) {
   for (volatile int i = 0; i < 16; i++);
 }
 
-static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
-  s_spidma_waiting = 0;
-  if (!s_spidma_immediate) {
-    bool needs_switch = prv_do_dma_update();
-    portEND_SWITCHING_ISR(needs_switch);
-  }
-}
 
 static void prv_display_start(void) {
   periph_config_acquire_lock();
 
-  if (s_initialized) {
-    nrfx_spim_uninit(&BOARD_CONFIG_DISPLAY.spi);
-  }
-
   gpio_output_init(&BOARD_CONFIG_DISPLAY.cs, GPIO_OType_PP, GPIO_Speed_50MHz);
-
-  nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG(
-    BOARD_CONFIG_DISPLAY.clk.gpio_pin,
-    BOARD_CONFIG_DISPLAY.mosi.gpio_pin,
-    NRF_SPIM_PIN_NOT_CONNECTED,
-    NRF_SPIM_PIN_NOT_CONNECTED);
-  config.frequency = NRFX_MHZ_TO_HZ(2);
-
-  /* spim4 has hardware SS but it is tricky to convince NRFX to expose it to
-   * us; for now, we use the classic enable chip select mechanism */
-#if 0
-  config.use_hw_ss = 1;
-  config.ss_duration = 256; /* 4 us * 64MHz */
-#endif
-
-  nrfx_err_t err = nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, NULL);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
 
   gpio_output_init(&BOARD_CONFIG_DISPLAY.on_ctrl,
                    BOARD_CONFIG_DISPLAY.on_ctrl_otype,
@@ -120,7 +135,6 @@ uint32_t display_baud_rate_change(uint32_t new_frequency_hz) {
 
   uint32_t old_spi_clock_hz = s_spi_clock_hz;
   s_spi_clock_hz = new_frequency_hz;
-  prv_display_start();
 
   xSemaphoreGive(s_dma_update_in_progress_semaphore);
   return old_spi_clock_hz;
@@ -151,6 +165,14 @@ static void prv_display_context_init(DisplayContext* context) {
   context->state = DISPLAY_STATE_IDLE;
   context->get_next_row = NULL;
   context->complete = NULL;
+}
+
+static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
+  s_spidma_waiting = 0;
+  if (!s_spidma_immediate) {
+    bool needs_switch = prv_do_dma_update();
+    portEND_SWITCHING_ISR(needs_switch);
+  }
 }
 
 static void prv_display_write_async(const uint8_t *buf, size_t len) {
@@ -190,9 +212,11 @@ static void prv_display_write_sync(const uint8_t *buf, size_t len) {
 // Clear-all mode is entered by sending 0x04 to the panel
 void display_clear(void) {
   uint8_t buf[] = { DISP_MODE_CLEAR, 0x00 };
+  prv_enable_spim();
   prv_enable_chip_select();
   prv_display_write_sync(buf, sizeof(buf));
   prv_disable_chip_select();
+  prv_disable_spim();
 }
 
 void display_set_enabled(bool enabled) {
@@ -210,9 +234,11 @@ bool display_update_in_progress(void) {
 // Static mode is entered by sending 0x00 to the panel
 static void prv_display_enter_static(void) {
   uint8_t buf[] = { DISP_MODE_STATIC, 0x00, 0x00 };
+  prv_enable_spim();
   prv_enable_chip_select();
   prv_display_write_sync(buf, sizeof(buf));
   prv_disable_chip_select();
+  prv_disable_spim();
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
@@ -224,6 +250,8 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   analytics_inc(ANALYTICS_DEVICE_METRIC_DISPLAY_UPDATES_PER_HOUR, AnalyticsClient_System);
 
   power_tracking_start(PowerSystemMcuDma1);
+
+  prv_enable_spim();
 
   prv_display_context_init(&s_display_context);
   s_display_context.get_next_row = nrcb;
@@ -244,6 +272,9 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   uint8_t buf[] = { 0x00 };
   prv_display_write_sync(buf, sizeof(buf));
   prv_disable_chip_select();
+
+  prv_disable_spim();
+
   prv_display_enter_static();
 
   xSemaphoreGive(s_dma_update_in_progress_semaphore);
