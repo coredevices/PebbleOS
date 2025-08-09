@@ -768,7 +768,7 @@ elif bld.is_obelix():
             'flash/flash_crc.c',
             'flash/flash_erase.c',
             'flash/cd_flash_driver.c',
-            'flash/py25q128ha.c',
+            'flash/gd25q256e.c',
         ],
         use=[
             'driver_qspi',
