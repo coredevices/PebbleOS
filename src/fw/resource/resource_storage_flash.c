@@ -140,10 +140,19 @@ bool resource_storage_flash_bytes_are_readonly(const void *bytes) {
 }
 
 static const uint8_t *resource_storage_system_bank_readonly_bytes(ResourceStoreEntry *entry,
-                                                                  bool has_privileged_access) {
-  if (!has_privileged_access) {
+                                                                  ReadonlyBytesFlags flags) {
+  if (!(flags & ReadonlyBytesFlags_IsPrivileged)) {
     return NULL;
   }
+#if CAPABILITY_MAPPABLE_FLASH_IS_FOR_CODE_ONLY
+  // On nRF52840, you can only execute from a mappable flash -- you can't
+  // actually do arbitrary ldr's from it.  Pass this flag in in order to
+  // pinky swear that you're going to jump to it.
+  if (!(flags & ReadonlyBytesFlags_IsCode)) {
+    return NULL;
+  }
+#endif
+
   return (uint8_t *)(uintptr_t)(FLASH_MEMORY_MAPPABLE_ADDRESS + BANK.begin + entry->offset);
 }
 

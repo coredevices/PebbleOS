@@ -105,7 +105,7 @@ static uint32_t resource_storage_file_read(ResourceStoreEntry *entry, uint32_t o
 }
 
 static const uint8_t *resource_storage_file_readonly_bytes_unsupported(ResourceStoreEntry *entry,
-                                                                       bool has_privileged_access) {
+                                                                       ReadonlyBytesFlags flags) {
   return NULL;
 }
 

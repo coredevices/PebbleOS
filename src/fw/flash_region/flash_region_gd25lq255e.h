@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "drivers/qspi.h"
+
 #define PAGE_SIZE_BYTES (0x100)
 
 #define SECTOR_SIZE_BYTES (0x10000)
@@ -23,6 +25,9 @@
 
 #define SUBSECTOR_SIZE_BYTES (0x1000)
 #define SUBSECTOR_ADDR_MASK (~(SUBSECTOR_SIZE_BYTES - 1))
+
+#define FLASH_MEMORY_MAPPABLE_ADDRESS QSPI_MMAP_BASE_ADDRESS
+#define FLASH_MEMORY_MAPPABLE_SIZE BOARD_NOR_FLASH_SIZE
 
 // A bit of preprocessor magic to help with automatically calculating flash region addresses
 //////////////////////////////////////////////////////////////////////////////

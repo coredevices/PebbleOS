@@ -22,7 +22,13 @@
 #include "drivers/qspi_definitions.h"
 
 //! Memory mapped region for the QSPI controller
-#define QSPI_MMAP_BASE_ADDRESS ((uintptr_t) 0x90000000)
+#if MICRO_FAMILY_NRF5
+#  define QSPI_MMAP_BASE_ADDRESS ((uintptr_t) NRF_MEMORY_EXTFLASH_BASE)
+#elif MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
+#  define QSPI_MMAP_BASE_ADDRESS ((uintptr_t) 0x90000000)
+#else
+// QSPI_MMAP_BASE_ADDRESS not defined for this machine; error if someone tries to use it
+#endif
 
 //! Timouts for qspi_poll_bit
 #define QSPI_NO_TIMEOUT (0)
