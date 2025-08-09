@@ -54,7 +54,23 @@ void reboot_reason_set(RebootReason *reason) {
   retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[4]);
   retained_write(REBOOT_REASON_DROPPED_EVENT, raw[5]);
 #elif defined MICRO_FAMILY_SF32LB52
-  // TODO(SF32LB52): Add implementation
+  uint32_t *raw = (uint32_t*)reason;
+
+  if (HAL_Get_backup(REBOOT_REASON_REGISTER_1)) {
+    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
+    if (!mcu_state_is_isr() && __get_BASEPRI() == 0
+            && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+      PBL_LOG(LOG_LEVEL_WARNING, "Reboot reason is already set");
+    }
+    return;
+  }
+
+  HAL_Set_backup(REBOOT_REASON_REGISTER_1, raw[0]);
+  HAL_Set_backup(REBOOT_REASON_REGISTER_2, raw[1]);
+  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_PC, raw[2]);
+  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, raw[3]);
+  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[4]);
+  HAL_Set_backup(REBOOT_REASON_DROPPED_EVENT, raw[5]);
 #else
   uint32_t *raw = (uint32_t*)reason;
 
@@ -85,7 +101,8 @@ void reboot_reason_set_restarted_safely(void) {
   uint32_t* raw = (uint32_t *)&reason;
   retained_write(REBOOT_REASON_REGISTER_1, *raw);
 #elif defined MICRO_FAMILY_SF32LB52
-  // TODO(SF32LB52): Add implementation
+  uint32_t* raw = (uint32_t *)&reason;
+  HAL_Set_backup(REBOOT_REASON_REGISTER_1, *raw);
 #else
   uint32_t* raw = (uint32_t *)&reason;
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, *raw);
@@ -102,7 +119,13 @@ void reboot_reason_get(RebootReason *reason) {
   raw[4] = retained_read(REBOOT_REASON_STUCK_TASK_CALLBACK);
   raw[5] = retained_read(REBOOT_REASON_DROPPED_EVENT);
 #elif defined MICRO_FAMILY_SF32LB52
-  // TODO(SF32LB52): Add implementation
+  uint32_t *raw = (uint32_t *)reason;
+  raw[0] = HAL_Get_backup(REBOOT_REASON_REGISTER_1);
+  raw[1] = HAL_Get_backup(REBOOT_REASON_REGISTER_2);
+  raw[2] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_PC);
+  raw[3] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_LR);
+  raw[4] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_CALLBACK);
+  raw[5] = HAL_Get_backup(REBOOT_REASON_DROPPED_EVENT);
 #else
   uint32_t *raw = (uint32_t *)reason;
   raw[0] = RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1);
@@ -123,7 +146,12 @@ void reboot_reason_clear(void) {
   retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
   retained_write(REBOOT_REASON_DROPPED_EVENT, 0);
 #elif defined MICRO_FAMILY_SF32LB52
-  // TODO(SF32LB52): Add implementation
+  HAL_Set_backup(REBOOT_REASON_REGISTER_1, 0);
+  HAL_Set_backup(REBOOT_REASON_REGISTER_2, 0);
+  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_PC, 0);
+  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, 0);
+  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
+  HAL_Set_backup(REBOOT_REASON_DROPPED_EVENT, 0);
 #else
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, 0);
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_2, 0);
