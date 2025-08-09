@@ -25,22 +25,25 @@
 #include "lsm6dso_reg.h"
 #include "lsm6dso.h"
 
-// Forward declaration of private functions defined below public functions
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
+// Forward declaration of private functions defined below public functions
 static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
                                 uint16_t read_size);
 static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *buffer,
                                  uint16_t write_size);
-static void prv_lsm6dso_register_exti(void);
+static void prv_lsm6dso_init(void);
+static void prv_lsm6dso_chase_target_state(void);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
-static void prv_lsm6dso_process_interrupts(void);
 static void prv_lsm6dso_configure_interrupts(void);
+static void prv_configure_double_tap_thresholds(bool enable);
+static void prv_lsm6dso_process_interrupts(void);
 typedef struct {
   lsm6dso_odr_xl_t odr;
   uint32_t interval_us;
 } odr_xl_interval_t;
 static odr_xl_interval_t prv_get_odr_for_interval(uint32_t interval_us);
-int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us);
+static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us);
 static void prv_lsm6dso_read_samples(void);
 static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data);
 typedef enum {
@@ -54,23 +57,22 @@ static uint64_t prv_get_timestamp_ms(void);
 
 // Toplevel module state
 
-static bool s_interrupts_pending = false;
-static bool s_exti_configured = false;
-static struct {
-  bool initialized;
+static bool s_lsm6dso_initialized = false;
+static bool s_lsm6dso_enabled = true;
+static bool s_lsm6dso_running = false;
+typedef struct {
   uint32_t sampling_interval_us;
   uint32_t num_samples;
   bool shake_detection_enabled;
   bool shake_sensitivity_high;
   bool double_tap_detection_enabled;
-} s_lsm6dso_state = {
-    .initialized = false,
-    .sampling_interval_us = 0,
-    .num_samples = 0,
-    .shake_detection_enabled = false,
-    .shake_sensitivity_high = false,
-    .double_tap_detection_enabled = false,
-};
+} lsm6dso_state_t;
+lsm6dso_state_t s_lsm6dso_state = {0};
+lsm6dso_state_t s_lsm6dso_state_target = {0};
+static bool s_interrupts_pending = false;
+static uint32_t s_tap_threshold = 0x08;
+// TODO: Do something like: (but currently this doesn't work well)
+//    BOARD_CONFIG_ACCEL.accel_config.double_tap_threshold / 1250;  // 125 mg step at 4g range
 
 // STM library context for LSM6DSO
 
@@ -85,7 +87,78 @@ stmdev_ctx_t lsm6dso_ctx = {
 // LSM6DSO configuration entrypoints
 
 void lsm6dso_init(void) {
-  if (s_lsm6dso_state.initialized) {
+  // Initialize the LSM6DSO sensor to a powered down state.
+  prv_lsm6dso_init();
+}
+
+void lsm6dso_power_up(void) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering up accelerometer");
+  s_lsm6dso_enabled = true;
+  prv_lsm6dso_chase_target_state();
+}
+
+void lsm6dso_power_down(void) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering down accelerometer");
+  s_lsm6dso_enabled = false;
+  prv_lsm6dso_chase_target_state();
+}
+
+// accel.h implementation
+
+const AccelDriverInfo ACCEL_DRIVER_INFO = {
+    .sample_interval_max = 625000,       // 1.6 Hz
+    .sample_interval_low_power = 80000,  // 12.5Hz
+    .sample_interval_ui = 80000,         // 12.5Hz
+    .sample_interval_game = 19231,       // 52Hz
+    .sample_interval_min = 150,          // 6667Hz
+};
+
+uint32_t accel_set_sampling_interval(uint32_t interval_us) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting sampling interval to %lu us", interval_us);
+  s_lsm6dso_state_target.sampling_interval_us = interval_us;
+  prv_lsm6dso_chase_target_state();
+  return s_lsm6dso_state.sampling_interval_us;
+}
+
+uint32_t accel_get_sampling_interval(void) { return s_lsm6dso_state.sampling_interval_us; }
+
+void accel_set_num_samples(uint32_t num_samples) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting number of samples to %lu", num_samples);
+  s_lsm6dso_state_target.num_samples = num_samples;
+  prv_lsm6dso_chase_target_state();
+}
+
+int accel_peek(AccelDriverSample *data) { return prv_lsm6dso_read_sample(data); }
+
+void accel_enable_shake_detection(bool on) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s shake detection.", on ? "Enabling" : "Disabling");
+  s_lsm6dso_state_target.shake_detection_enabled = on;
+  prv_lsm6dso_chase_target_state();
+}
+
+bool accel_get_shake_detection_enabled(void) { return s_lsm6dso_state.shake_detection_enabled; }
+
+void accel_enable_double_tap_detection(bool on) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s double tap detection.", on ? "Enabling" : "Disabling");
+  s_lsm6dso_state_target.double_tap_detection_enabled = on;
+  prv_lsm6dso_chase_target_state();
+}
+
+bool accel_get_double_tap_detection_enabled(void) {
+  return s_lsm6dso_state.double_tap_detection_enabled;
+}
+
+void accel_set_shake_sensitivity_high(bool sensitivity_high) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting shake sensitivity to %s.",
+          sensitivity_high ? "high" : "normal");
+  s_lsm6dso_state_target.shake_sensitivity_high = sensitivity_high;
+  prv_lsm6dso_chase_target_state();
+}
+
+// Initialization
+
+static void prv_lsm6dso_init(void) {
+  if (s_lsm6dso_initialized) {
     return;
   }
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Initializing");
@@ -137,6 +210,19 @@ void lsm6dso_init(void) {
     return;
   }
 
+  // Configure interrupts
+  // Since we are using only one interrupt pin, it is important that we set
+  // these to pulsed so that if we miss an interrupt due to timing issues we do
+  // not miss subsequent ones.
+  if (lsm6dso_data_ready_mode_set(&lsm6dso_ctx, LSM6DSO_DRDY_PULSED)) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set data ready mode");
+    return;
+  }
+  if (lsm6dso_int_notification_set(&lsm6dso_ctx, LSM6DSO_ALL_INT_PULSED)) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupt notification");
+    return;
+  }
+
   // Set default full scale
   if (lsm6dso_xl_full_scale_set(&lsm6dso_ctx, LSM6DSO_4g)) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set accelerometer full scale");
@@ -157,72 +243,93 @@ void lsm6dso_init(void) {
     return;
   }
 
-  // Configure external interrupt callbacks
-  prv_lsm6dso_register_exti();
-  prv_lsm6dso_configure_interrupts();
+  // Set up external interrupts
+  // Note that we only configure on interrupt pin for now, since not all devices
+  // have enough channels for two (and it is not in any case neccessary).
+  exti_configure_pin(BOARD_CONFIG_ACCEL.accel_ints[0], ExtiTrigger_Rising,
+                     prv_lsm6dso_interrupt_handler);
 
-  s_lsm6dso_state.initialized = true;
-  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6D: Initialization complete");
+  s_lsm6dso_initialized = true;
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Initialization complete");
 }
 
-void lsm6dso_power_up(void) {
-  lsm6dso_xl_power_mode_set(&lsm6dso_ctx, LSM6DSO_LOW_NORMAL_POWER_MD);
-}
-
-void lsm6dso_power_down(void) {
-  lsm6dso_xl_power_mode_set(&lsm6dso_ctx, LSM6DSO_ULTRA_LOW_POWER_MD);
-}
-
-// accel.h implementation
-
-const AccelDriverInfo ACCEL_DRIVER_INFO = {
-    .sample_interval_max = 625000,       // 1.6 Hz
-    .sample_interval_low_power = 80000,  // 12.5Hz
-    .sample_interval_ui = 80000,         // 12.5Hz
-    .sample_interval_game = 19231,       // 52Hz
-    .sample_interval_min = 150,          // 6667Hz
-};
-
-uint32_t accel_set_sampling_interval(uint32_t interval_us) {
-  return prv_lsm6dso_set_sampling_interval(interval_us);
-}
-
-uint32_t accel_get_sampling_interval(void) { return s_lsm6dso_state.sampling_interval_us; }
-
-void accel_set_num_samples(uint32_t num_samples) {
-  s_lsm6dso_state.num_samples = num_samples;
-  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Set number of samples to %lu", num_samples);
-
-  if (s_lsm6dso_state.sampling_interval_us == 0) {
-    prv_lsm6dso_set_sampling_interval(ACCEL_DRIVER_INFO.sample_interval_low_power);
+static void prv_lsm6dso_chase_target_state(void) {
+  if (!s_lsm6dso_initialized) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Cannot chase target state before initialization");
+    return;
   }
-  prv_lsm6dso_configure_interrupts();
-}
 
-int accel_peek(AccelDriverSample *data) {
-  // TODO: Handle automatically enabling if disabled.
-  return prv_lsm6dso_read_sample(data);
-}
+  bool s_update_interrupts = false;
 
-void accel_enable_shake_detection(bool on) {
-  s_lsm6dso_state.shake_detection_enabled = on;
-  // TODO: Trigger necessary reconfiguration
-}
+  // Check whether we should be spinning up the accelerometer
+  bool should_be_running = s_lsm6dso_state_target.sampling_interval_us > 0 ||
+                           s_lsm6dso_state_target.num_samples > 0 ||
+                           s_lsm6dso_state_target.shake_detection_enabled ||
+                           s_lsm6dso_state_target.double_tap_detection_enabled;
 
-bool accel_get_shake_detection_enabled(void) { return s_lsm6dso_state.shake_detection_enabled; }
+  if (!should_be_running || !s_lsm6dso_enabled) {
+    if (s_lsm6dso_running) {
+      PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Stopping accelerometer");
+      lsm6dso_xl_data_rate_set(&lsm6dso_ctx, LSM6DSO_XL_ODR_OFF);
+      s_lsm6dso_running = false;
+      s_lsm6dso_state = (lsm6dso_state_t){0};
+      prv_lsm6dso_configure_interrupts();
+    }
+    return;
+  } else if (!s_lsm6dso_running) {
+    s_lsm6dso_running = true;
+    s_update_interrupts = true;
+  }
 
-void accel_enable_double_tap_detection(bool on) {
-  s_lsm6dso_state.double_tap_detection_enabled = on;
-  // TODO: Trigger necessary reconfiguration
-}
+  // Update number of samples
+  if (s_lsm6dso_state_target.num_samples != s_lsm6dso_state.num_samples) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting number of samples to %lu",
+            s_lsm6dso_state_target.num_samples);
+    s_lsm6dso_state.num_samples = s_lsm6dso_state_target.num_samples;
+    s_update_interrupts = true;
+  }
 
-bool accel_get_double_tap_detection_enabled(void) {
-  return s_lsm6dso_state.double_tap_detection_enabled;
-}
+  // Update shake detection
+  if (s_lsm6dso_state_target.shake_detection_enabled != s_lsm6dso_state.shake_detection_enabled) {
+    s_lsm6dso_state.shake_detection_enabled = s_lsm6dso_state_target.shake_detection_enabled;
+    s_update_interrupts = true;
+  }
 
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {
-  s_lsm6dso_state.shake_sensitivity_high = sensitivity_high;
-  // TODO: Trigger necessary reconfiguration
+  // Update shake sensitivity
+  if (s_lsm6dso_state_target.shake_sensitivity_high != s_lsm6dso_state.shake_sensitivity_high) {
+    s_lsm6dso_state.shake_sensitivity_high = s_lsm6dso_state_target.shake_sensitivity_high;
+    s_update_interrupts = true;
+  }
+
+  // Update double tap detection
+  if (s_lsm6dso_state_target.double_tap_detection_enabled !=
+      s_lsm6dso_state.double_tap_detection_enabled) {
+    prv_configure_double_tap_thresholds(s_lsm6dso_state_target.double_tap_detection_enabled);
+    s_lsm6dso_state.double_tap_detection_enabled =
+        s_lsm6dso_state_target.double_tap_detection_enabled;
+    s_update_interrupts = true;
+  }
+
+  // Update sampling interval
+  if (s_update_interrupts ||
+      s_lsm6dso_state_target.sampling_interval_us != s_lsm6dso_state.sampling_interval_us) {
+    prv_lsm6dso_set_sampling_interval(s_lsm6dso_state_target.sampling_interval_us);
+  }
+
+  // Update interrupts if necessary
+  if (s_update_interrupts) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Updating interrupts");
+    prv_lsm6dso_configure_interrupts();
+  }
+
+  s_lsm6dso_state_target = s_lsm6dso_state;  // Reset target state to current state
+
+  PBL_LOG(LOG_LEVEL_DEBUG,
+          "LSM6DSO: Reached target state: sampling_interval_us=%lu, num_samples=%lu, "
+          "shake_detection_enabled=%d, shake_high_sensitivity=%d, double_tap_detection_enabled=%d",
+          s_lsm6dso_state.sampling_interval_us, s_lsm6dso_state.num_samples,
+          s_lsm6dso_state.shake_detection_enabled, s_lsm6dso_state.shake_sensitivity_high,
+          s_lsm6dso_state.double_tap_detection_enabled);
 }
 
 // I2C read/write
@@ -249,48 +356,6 @@ static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *
 
 // Interrupt handling
 
-static void prv_lsm6dso_register_exti(void) {
-  if (s_exti_configured) {
-    return;
-  }
-
-  // Register the EXTI handler for accelerometer interrupts
-  exti_configure_pin(BOARD_CONFIG_ACCEL.accel_ints[0], ExtiTrigger_Rising,
-                     prv_lsm6dso_interrupt_handler);
-  s_exti_configured = true;
-}
-
-static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
-  if (s_interrupts_pending) {
-    return;
-  }
-
-  s_interrupts_pending = true;
-  accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
-}
-
-static void prv_lsm6dso_process_interrupts(void) {
-  // Check what actually triggered the interrupt(s)
-  lsm6dso_all_sources_t all_sources;
-  lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources);
-
-  if (all_sources.double_tap) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered");
-    // TODO
-  }
-
-  if (all_sources.sig_mot) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Shake detection interrupt triggered");
-    // TODO
-  }
-
-  if (all_sources.drdy_xl) {
-    prv_lsm6dso_read_samples();
-  }
-
-  s_interrupts_pending = false;
-}
-
 static void prv_lsm6dso_configure_interrupts(void) {
   PBL_LOG(LOG_LEVEL_DEBUG,
           "LSM6DSO: Configuring interrupts: num_samples=%lu, shake_detection_enabled=%d, "
@@ -298,21 +363,125 @@ static void prv_lsm6dso_configure_interrupts(void) {
           s_lsm6dso_state.num_samples, s_lsm6dso_state.shake_detection_enabled,
           s_lsm6dso_state.double_tap_detection_enabled);
 
+  if (s_lsm6dso_enabled &&
+      (s_lsm6dso_state.num_samples || s_lsm6dso_state.shake_detection_enabled ||
+       s_lsm6dso_state.double_tap_detection_enabled)) {
+    exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+  } else {
+    exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+    return;
+  }
+
   lsm6dso_pin_int1_route_t int1_routes = {0};
   int1_routes.drdy_xl = s_lsm6dso_state.num_samples > 0;
   // TODO: int1_routes.fifo_th = s_lsm6dso_state.num_samples > 0;
   int1_routes.double_tap = s_lsm6dso_state.double_tap_detection_enabled;
-  int1_routes.sig_mot = s_lsm6dso_state.shake_detection_enabled;
+  int1_routes.fsm1 = s_lsm6dso_state.shake_detection_enabled;
 
   if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
   }
+}
 
-  if (s_lsm6dso_state.num_samples || s_lsm6dso_state.shake_detection_enabled ||
-      s_lsm6dso_state.double_tap_detection_enabled) {
-    exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+static const uint8_t lsm6so_prg_wrist_tilt[] = {
+    0x52, 0x00, 0x14, 0x00, 0x00, 0x00, 0xae, 0xb7, 0x80, 0x00,
+    0x00, 0x06, 0x0f, 0x05, 0x73, 0x33, 0x07, 0x54, 0x44, 0x22,
+};
+
+void prv_configure_shake_thresholds(bool enable) {
+  // TODO: Not yet sure how to simultaneously handle shakes and double taps; so
+  // writing tilt detection to the FSM on board the device. I cannot tell the
+  // direction from this, but it does nicely turn on the screen when I tilt
+  // my wrist.
+
+  lsm6dso_long_cnt_int_value_set(&lsm6dso_ctx, 0x0000U);  // Not sure why this is necessary
+  lsm6dso_fsm_start_address_set(&lsm6dso_ctx, LSM6DSO_START_FSM_ADD);
+  lsm6dso_fsm_number_of_programs_set(&lsm6dso_ctx, 1);
+  lsm6dso_emb_fsm_enable_t fsm_enable = {0};
+  fsm_enable.fsm_enable_a.fsm1_en = PROPERTY_ENABLE;
+  lsm6dso_fsm_enable_set(&lsm6dso_ctx, &fsm_enable);
+  lsm6dso_fsm_data_rate_set(&lsm6dso_ctx, LSM6DSO_ODR_FSM_26Hz);
+  uint16_t fsm_addr;
+  fsm_addr = LSM6DSO_START_FSM_ADD;
+  /* wrist_tilt */
+  lsm6dso_ln_pg_write(&lsm6dso_ctx, fsm_addr, (uint8_t *)lsm6so_prg_wrist_tilt,
+                      sizeof(lsm6so_prg_wrist_tilt));
+  lsm6dso_emb_sens_t emb_sens;
+  emb_sens.fsm = PROPERTY_ENABLE;
+  lsm6dso_embedded_sens_set(&lsm6dso_ctx, &emb_sens);
+}
+
+void prv_configure_double_tap_thresholds(bool enable) {
+  if (enable) {
+    // Configure tap detection parameters
+    lsm6dso_tap_threshold_x_set(&lsm6dso_ctx, s_tap_threshold);  // Adjust threshold as needed
+    lsm6dso_tap_threshold_y_set(&lsm6dso_ctx, s_tap_threshold);
+    lsm6dso_tap_threshold_z_set(&lsm6dso_ctx, s_tap_threshold);
+
+    // Enable tap detection on all axes
+    lsm6dso_tap_detection_on_x_set(&lsm6dso_ctx, PROPERTY_ENABLE);
+    lsm6dso_tap_detection_on_y_set(&lsm6dso_ctx, PROPERTY_ENABLE);
+    lsm6dso_tap_detection_on_z_set(&lsm6dso_ctx, PROPERTY_ENABLE);
+
+    // Configure tap timing
+    lsm6dso_tap_shock_set(&lsm6dso_ctx, 0x03);  // Shock duration
+    lsm6dso_tap_quiet_set(&lsm6dso_ctx, 0x02);  // Quiet period
+    lsm6dso_tap_dur_set(&lsm6dso_ctx, 0x08);    // Double tap window
+
+    // Enable double tap recognition
+    lsm6dso_tap_mode_set(&lsm6dso_ctx, LSM6DSO_BOTH_SINGLE_DOUBLE);
   } else {
-    exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+    // Disable tap detection
+    lsm6dso_tap_detection_on_x_set(&lsm6dso_ctx, PROPERTY_DISABLE);
+    lsm6dso_tap_detection_on_y_set(&lsm6dso_ctx, PROPERTY_DISABLE);
+    lsm6dso_tap_detection_on_z_set(&lsm6dso_ctx, PROPERTY_DISABLE);
+  }
+}
+
+static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
+  if (s_interrupts_pending) {
+    return;
+  }
+  s_interrupts_pending = true;
+  accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
+}
+
+static void prv_lsm6dso_process_interrupts(void) {
+  s_interrupts_pending = false;
+  lsm6dso_all_sources_t all_sources;
+  lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources);
+
+  if (all_sources.double_tap) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered");
+    // Handle double tap detection
+    axis_t axis;
+    if (all_sources.tap_x) {
+      axis = X_AXIS;
+    } else if (all_sources.tap_y) {
+      axis = Y_AXIS;
+    } else if (all_sources.tap_z) {
+      axis = Z_AXIS;
+    } else {
+      PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: No tap axis detected");
+      return;  // No valid tap detected
+    }
+
+    uint8_t axis_offset = BOARD_CONFIG_ACCEL.accel_config.axes_offsets[axis];
+    uint8_t axis_direction = (BOARD_CONFIG_ACCEL.accel_config.axes_inverts[axis] ? -1 : 1) *
+                             (all_sources.tap_sign ? -1 : 1);
+
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered; axis=%d, direction=%d",
+            axis_offset, axis_direction);
+    accel_cb_double_tap_detected(axis_offset, axis_direction);
+  }
+
+  if (all_sources.fsm1) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Shake detection interrupt triggered");
+    accel_cb_shake_detected(AXIS_Y, 1);  // We have no idea which direction this came from.
+  }
+
+  if (all_sources.drdy_xl) {
+    prv_lsm6dso_read_samples();
   }
 }
 
@@ -332,10 +501,15 @@ static odr_xl_interval_t prv_get_odr_for_interval(uint32_t interval_us) {
   return (odr_xl_interval_t){LSM6DSO_XL_ODR_6667Hz, 150};
 }
 
-int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
-  if (!s_lsm6dso_state.initialized) {
+static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
+  if (!s_lsm6dso_initialized) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Not initialized, cannot set sampling interval");
     return -1;
+  }
+
+  if (s_lsm6dso_state.double_tap_detection_enabled) {
+    interval_us =
+        MIN(interval_us, 2398);  // Max interval for shake/double tap detection to work reliably
   }
 
   odr_xl_interval_t odr_interval = prv_get_odr_for_interval(interval_us);
@@ -356,7 +530,7 @@ static void prv_lsm6dso_read_samples(void) {
 }
 
 static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
-  if (!s_lsm6dso_state.initialized) {
+  if (!s_lsm6dso_initialized) {
     return -1;  // Not initialized
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Not initialized, cannot read sample");
   }
