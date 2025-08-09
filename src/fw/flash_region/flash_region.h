@@ -44,7 +44,7 @@
 #elif PLATFORM_SNOWY || PLATFORM_SPALDING
 #include "flash_region_s29vs.h"
 #elif PLATFORM_OBELIX
-#include "flash_region_py25q128ha.h"
+#include "flash_region_gd25q256e.h"
 #endif
 
 // NOTE: The following functions are deprecated! New code should use the
