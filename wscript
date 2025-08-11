@@ -83,7 +83,9 @@ def options(opt):
                              'robert_evt',
                              'robert_es',
                              'asterix',
-                             'obelix'],
+                             'obelix',
+                             'obelix_bb',
+                            ],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
     opt.add_option('--jtag', action='store', default=None, dest='jtag',  # default is bb2 (below)

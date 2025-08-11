@@ -99,7 +99,7 @@ elif board in ('asterix'):
             'drivers',
         ],
     )
-elif board in ('obelix'):
+elif board in ('obelix', 'obelix_bb'):
     bld.objects(
         name='board',
         source=[
