@@ -34,6 +34,8 @@
 
 #if PLATFORM_ASTERIX
 const char *const s_model = "C2D";
+#elif PLATFORM_OBELIX
+const char *const s_model = "CT2";
 #else
 const char *const s_model = "Unknown";
 #endif
@@ -56,6 +58,12 @@ const ColorTable s_color_table[] = {
     .name = "WHITE",
     .short_name = "WH",
   }
+#elif PLATFORM_OBELIX
+  {
+    .color = WATCH_INFO_COLOR_COREDEVICES_CT2_BLACK,
+    .name = "BLACK",
+    .short_name = "BK",
+  },
 #endif
 };
 

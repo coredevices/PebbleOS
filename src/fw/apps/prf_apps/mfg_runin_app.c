@@ -47,7 +47,7 @@ static const char* status_text[] = {
 #ifdef PLATFORM_TINTIN
 static const int SLOW_THRESHOLD_PERCENTAGE = 42; // ~3850mv
 static const int PASS_BATTERY_PERCENTAGE = 84; // ~4050mv
-#elif defined(PLATFORM_ASTERIX)
+#elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX)
 static const int SLOW_THRESHOLD_PERCENTAGE = 0;
 static const int PASS_BATTERY_PERCENTAGE = 70;
 #else

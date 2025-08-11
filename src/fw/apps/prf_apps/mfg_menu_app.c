@@ -115,7 +115,7 @@ static void prv_select_mic(int index, void *context) {
 }
 #endif
 
-#if !PLATFORM_SILK && !PLATFORM_ASTERIX
+#if !PLATFORM_SILK && !PLATFORM_ASTERIX && !PLATFORM_OBELIX
 static void prv_select_bt_sig_rf(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_sig_rf_app_get_info());
 }
@@ -211,7 +211,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
       .title = "Test Vibe",         .callback = prv_select_vibe },
     { .icon = prv_get_icon_for_test(MfgTest_ALS),
       .title = "Test ALS",          .callback = prv_select_als },
-#if !PLATFORM_SILK && !PLATFORM_ASTERIX
+#if !PLATFORM_SILK && !PLATFORM_ASTERIX && !PLATFORM_OBELIX
     { .title = "Test bt_sig_rf",    .callback = prv_select_bt_sig_rf },
 #endif
 #if CAPABILITY_HAS_BUILTIN_HRM
