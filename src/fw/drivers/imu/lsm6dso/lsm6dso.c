@@ -16,9 +16,25 @@
  */
 
 #include "drivers/accel.h"
+#include "drivers/i2c.h"
+#include "kernel/util/sleep.h"
 #include "lsm6dso_reg.h"
 
 #include "lsm6dso.h"
+
+// Forward declaration of private functions defined below public functions
+static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
+                                uint16_t read_size);
+static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *buffer,
+                                 uint16_t write_size);
+static void prv_lsm6dso_mdelay(uint32_t ms);
+
+// HAL context for LSM6DSO
+stmdev_ctx_t lsm6dso_ctx = {
+    .write_reg = prv_lsm6dso_write,
+    .read_reg = prv_lsm6dso_read,
+    .mdelay = prv_lsm6dso_mdelay,
+};
 
 // LSM6DSO configuration entrypoints
 
@@ -69,3 +85,27 @@ bool accel_get_double_tap_detection_enabled(void) {
 }
 
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
+
+// HAL context implementations
+
+static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
+                                uint16_t read_size) {
+  i2c_use(I2C_LSM6D);
+  bool result = i2c_write_block(I2C_LSM6D, 1, &reg_addr);
+  if (result) result = i2c_read_block(I2C_LSM6D, read_size, buffer);
+  i2c_release(I2C_LSM6D);
+  return result ? 0 : -1;
+}
+
+static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *buffer,
+                                 uint16_t write_size) {
+  i2c_use(I2C_LSM6D);
+  uint8_t d[write_size + 1];
+  d[0] = reg_addr;
+  memcpy(&d[1], buffer, write_size);
+  bool result = i2c_write_block(I2C_LSM6D, write_size + 1, d);
+  i2c_release(I2C_LSM6D);
+  return result ? 0 : -1;
+}
+
+static void prv_lsm6dso_mdelay(uint32_t ms) { psleep(ms); }
