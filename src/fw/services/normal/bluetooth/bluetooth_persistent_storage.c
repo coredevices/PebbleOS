@@ -61,14 +61,6 @@
 #  endif
 #endif
 
-//! Bondings/CCCD ids are 8-bit values.
-//! Bondings take 0-126 (127=invalid) and CCCDs take 128-254 (255=invalid).
-
-//! Maximum bonding ID that can be used.
-#define BT_BONDING_ID_MAX 0x7EU
-//! Minimum CCCD ID that can be used.
-#define BT_CCCD_ID_MIN 0x80U
-
 //! The BtPersistBonding*Data structs can never shrink, only grow
 
 //! Stores data about a remote BT classic device
@@ -348,7 +340,7 @@ static BTCCCDID prv_get_free_cccd() {
     goto cleanup;
   }
 
-  for (BTCCCDID id = BT_CCCD_ID_MIN; id < BT_CCCD_ID_INVALID; id++) {
+  for (BTCCCDID id = 0U; id < BT_CCCD_ID_INVALID; id++) {
     if (!settings_file_exists(&fd, &id, sizeof(id))) {
       free_cccd = id;
       break;
@@ -375,9 +367,6 @@ static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file,
 
   BTBondingID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key > BT_BONDING_ID_MAX) {
-    return true; // continue iterating
-  }
 
   BtPersistBondingData data;
   info->get_val(file, &data, sizeof(data));
@@ -640,9 +629,6 @@ static bool prv_get_key_for_sm_pairing_info_itr(SettingsFile *file,
 
   BTBondingID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key > BT_BONDING_ID_MAX) {
-    return true; // continue iterating
-  }
 
   BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
@@ -799,7 +785,7 @@ status_t prv_delete_all_cccd_for_addr(const BTDeviceInternal *dev) {
     goto cleanup;
   }
 
-  for (BTCCCDID id = BT_CCCD_ID_MIN; id < BT_CCCD_ID_INVALID; id++) {
+  for (BTCCCDID id = 0U; id < BT_CCCD_ID_INVALID; id++) {
     if (settings_file_exists(&fd, &id, sizeof(id))) {
       BtPersistCCCDData stored_data;
 
@@ -870,9 +856,6 @@ static bool prv_find_by_addr_itr(SettingsFile *file,
 
   BTBondingID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key > BT_BONDING_ID_MAX) {
-    return true; // continue iterating
-  }
 
   BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
@@ -1011,9 +994,6 @@ static bool prv_get_first_ancs_bonding_itr(SettingsFile *file,
 
   BTBondingID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key > BT_BONDING_ID_MAX) {
-    return true; // continue iterating
-  }
 
   BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
@@ -1091,9 +1071,6 @@ static bool prv_ble_pairing_internal_for_each_itr(SettingsFile *file,
 
   BTBondingID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key > BT_BONDING_ID_MAX) {
-    return true; // continue iterating
-  }
 
   BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
@@ -1116,9 +1093,6 @@ static bool prv_ble_cccd_internal_for_each_itr(SettingsFile *file,
 
   BTCCCDID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key < BT_CCCD_ID_MIN) {
-    return true; // continue iterating
-  }
 
   BtPersistCCCDData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
@@ -1202,9 +1176,6 @@ static bool prv_find_cccd_itr(SettingsFile *file,
 
   BTCCCDID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key < BT_CCCD_ID_MIN) {
-    return true; // continue iterating
-  }
 
   BtPersistCCCDData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
@@ -1307,9 +1278,6 @@ static bool prv_get_key_for_bt_classic_addr_itr(SettingsFile *file,
 
   BTBondingID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key > BT_BONDING_ID_MAX) {
-    return true; // continue iterating
-  }
 
   BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
@@ -1496,9 +1464,6 @@ static bool bt_persistent_storage_bt_classic_pairing_for_each_itr(SettingsFile *
 
   BTBondingID key;
   info->get_key(file, (uint8_t*) &key, info->key_len);
-  if (key > BT_BONDING_ID_MAX) {
-    return true; // continue iterating
-  }
 
   BtPersistBondingData stored_data;
   info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
@@ -1696,6 +1661,44 @@ void bt_persistent_storage_set_cached_system_capabilities(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Common
 
+// TODO: remove once all internal watches have migrated!
+void prv_migrate_legacy_cccd_entries(void) {
+  status_t rv;
+  SettingsFile fd;
+
+  rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
+                          BT_PERSISTENT_STORAGE_FILE_SIZE);
+  PBL_ASSERTN(rv == S_SUCCESS);
+
+  for (BTBondingID id = 128U; id < BT_BONDING_ID_INVALID; id++) {
+    if (settings_file_exists(&fd, &id, sizeof(id))) {
+      BTCCCDID cccd_id;
+      BtPersistCCCDData stored_data;
+
+      rv = settings_file_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data));
+      PBL_ASSERTN(rv == S_SUCCESS);
+
+      rv = settings_file_delete(&fd, &id, sizeof(id));
+      PBL_ASSERTN(rv == S_SUCCESS);
+
+      for (BTCCCDID cccd_id = 0U; cccd_id < BT_CCCD_ID_INVALID; cccd_id++) {
+        if (!settings_file_exists(&fd, &cccd_id, sizeof(cccd_id))) {
+          break;
+        }
+      }
+
+      PBL_ASSERTN(cccd_id < BT_CCCD_ID_INVALID);
+
+      rv = settings_file_set(&fd, &cccd_id, sizeof(cccd_id), &stored_data, sizeof(stored_data));
+      PBL_ASSERTN(rv == S_SUCCESS);
+
+      PBL_LOG(LOG_LEVEL_INFO, "Migrated legacy CCCD entry with id %d", id);
+    }
+  }
+
+  settings_file_close(&fd);
+}
+
 void bt_persistent_storage_init(void) {
   // Note: this gets called well before the BT stack is initialized, make sure there is no code
   // that tries to use the BT stack in this path.
@@ -1705,6 +1708,8 @@ void bt_persistent_storage_init(void) {
 
   // Load cached capability bits from flash
   prv_load_cached_system_capabilities(&s_cached_system_capabilities);
+
+  prv_migrate_legacy_cccd_entries();
 }
 
 static void prv_delete_all_pairings_itr(SettingsFile *old_file, SettingsFile *new_file,
@@ -1806,7 +1811,7 @@ static void prv_dump_bonding_db_data(char display_buf[DISPLAY_BUF_LEN],
 
 static void prv_dump_cccd_db_data(char display_buf[DISPLAY_BUF_LEN],
                                   BTCCCDID cccd_id, BtPersistCCCDData *data) {
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "CCCD Key %d", (int)cccd_id - BT_CCCD_ID_MIN);
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "CCCD Key %d", (int)cccd_id);
 
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Peer Address: "BT_DEVICE_ADDRESS_FMT,
                            BT_DEVICE_ADDRESS_XPLODE_PTR(&data->peer.address));
@@ -1882,23 +1887,18 @@ static bool prv_dump_bt_persistent_storage_contents(
                                "Pinned address: "BT_DEVICE_ADDRESS_FMT,
                                BT_DEVICE_ADDRESS_XPLODE_PTR(address));
     }
-  } else if (info->key_len == sizeof(BTBondingID) || info->key_len == sizeof(BTCCCDID)) {
+  } else if (info->key_len == sizeof(BTBondingID)) {
     BTBondingID bonding_id;
-    BTCCCDID cccd_id;
 
     memcpy(&bonding_id, key, sizeof(BTBondingID));
-    if (bonding_id <= BT_BONDING_ID_MAX) {
-      PBL_ASSERTN(sizeof(BtPersistBondingData) == info->val_len);
-      prv_dump_bonding_db_data(display_buf, bonding_id, (BtPersistBondingData *)&val);
-      return true;
-    }
+    PBL_ASSERTN(sizeof(BtPersistBondingData) == info->val_len);
+    prv_dump_bonding_db_data(display_buf, bonding_id, (BtPersistBondingData *)&val);
+  } else if (info->key_len == sizeof(BTCCCDID)) {
+    BTCCCDID cccd_id;
 
     memcpy(&cccd_id, key, sizeof(BTCCCDID));
-    if (cccd_id >= BT_CCCD_ID_MIN) {
-      PBL_ASSERTN(sizeof(BtPersistCCCDData) == info->val_len);
-      prv_dump_cccd_db_data(display_buf, cccd_id, (BtPersistCCCDData *)&val);
-      return true;
-    }
+    PBL_ASSERTN(sizeof(BtPersistCCCDData) == info->val_len);
+    prv_dump_cccd_db_data(display_buf, cccd_id, (BtPersistCCCDData *)&val);
   } else {
     prompt_send_response("Something new be in the bonding DB!");
     PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, &key[0], info->key_len);
