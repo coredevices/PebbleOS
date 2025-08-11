@@ -18,6 +18,7 @@
 #include "drivers/accel.h"
 #include "drivers/i2c.h"
 #include "drivers/exti.h"
+#include "drivers/rtc.h"
 #include "kernel/util/sleep.h"
 #include "system/logging.h"
 #include "lsm6dso_reg.h"
@@ -35,6 +36,21 @@ static void prv_lsm6dso_chase_target_state(void);
 static void prv_lsm6dso_configure_interrupts(void);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
+typedef struct {
+  lsm6dso_odr_xl_t odr;
+  uint32_t interval_us;
+} odr_xl_interval_t;
+static odr_xl_interval_t prv_get_odr_for_interval(uint32_t interval_us);
+static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us);
+static void prv_lsm6dso_read_samples(void);
+static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data);
+typedef enum {
+  X_AXIS = 0,
+  Y_AXIS = 1,
+  Z_AXIS = 2,
+} axis_t;
+static int16_t prv_get_axis_projection_mg(axis_t axis, int16_t *raw_vector);
+static uint64_t prv_get_timestamp_ms(void);
 
 // HAL context for LSM6DSO
 stmdev_ctx_t lsm6dso_ctx = {
@@ -81,30 +97,30 @@ void lsm6dso_power_down(void) {
 // accel.h implementation
 
 const AccelDriverInfo ACCEL_DRIVER_INFO = {
-    .sample_interval_max = 1000000, // 1 second
-    .sample_interval_low_power = 100000, // 100 ms
-    .sample_interval_ui = 250000, // 250 ms
-    .sample_interval_game = 20000, // 20 ms
-    .sample_interval_min = 1000, // 1 ms
+    .sample_interval_max = 625000,       // 1.6 Hz
+    .sample_interval_low_power = 80000,  // 12.5Hz
+    .sample_interval_ui = 80000,         // 12.5Hz
+    .sample_interval_game = 19231,       // 52Hz
+    .sample_interval_min = 150,          // 6667Hz
 };
 
 uint32_t accel_set_sampling_interval(uint32_t interval_us) {
-  return 0;
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Requesting update of sampling interval to %lu us",
+          interval_us);
+  s_lsm6dso_state_target.sampling_interval_us = interval_us;
+  prv_lsm6dso_chase_target_state();
+  return s_lsm6dso_state.sampling_interval_us;
 }
 
-uint32_t accel_get_sampling_interval(void) {
-  return 0;
+uint32_t accel_get_sampling_interval(void) { return s_lsm6dso_state.sampling_interval_us; }
+
+void accel_set_num_samples(uint32_t num_samples) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting number of samples to %lu", num_samples);
+  s_lsm6dso_state_target.num_samples = num_samples;
+  prv_lsm6dso_chase_target_state();
 }
 
-void accel_set_num_samples(uint32_t num_samples) {}
-
-int accel_peek(AccelDriverSample *data) {
-  data->timestamp_us = 0;
-  data->x = 0;
-  data->y = 0;
-  data->z = 0;
-  return 0;
-}
+int accel_peek(AccelDriverSample *data) { return prv_lsm6dso_read_sample(data); }
 
 void accel_enable_shake_detection(bool on) {}
 
@@ -302,7 +318,8 @@ static void prv_lsm6dso_chase_target_state(void) {
   // Update sampling interval
   if (update_interrupts ||
       s_lsm6dso_state_target.sampling_interval_us != s_lsm6dso_state.sampling_interval_us) {
-    // TODO: Set the sampling interval to the closest supported ODR to that requested.
+    s_lsm6dso_state.sampling_interval_us =
+        prv_lsm6dso_set_sampling_interval(s_lsm6dso_state_target.sampling_interval_us);
   }
 
   // Update interrupts if necessary
@@ -353,4 +370,87 @@ static void prv_lsm6dso_process_interrupts(void) {
   s_interrupts_pending = false;
   lsm6dso_all_sources_t all_sources;
   lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources);
+
+  if (s_lsm6dso_state.num_samples > 0 && all_sources.drdy_xl) {
+    prv_lsm6dso_read_samples();
+  }
+}
+
+// Sampling interval configuration
+
+static odr_xl_interval_t prv_get_odr_for_interval(uint32_t interval_us) {
+  if (interval_us >= 625000) return (odr_xl_interval_t){LSM6DSO_XL_ODR_1Hz6, 625000};
+  if (interval_us >= 80000) return (odr_xl_interval_t){LSM6DSO_XL_ODR_12Hz5, 80000};
+  if (interval_us >= 38462) return (odr_xl_interval_t){LSM6DSO_XL_ODR_26Hz, 38462};
+  if (interval_us >= 19231) return (odr_xl_interval_t){LSM6DSO_XL_ODR_52Hz, 19231};
+  if (interval_us >= 9615) return (odr_xl_interval_t){LSM6DSO_XL_ODR_104Hz, 9615};
+  if (interval_us >= 4808) return (odr_xl_interval_t){LSM6DSO_XL_ODR_208Hz, 4808};
+  if (interval_us >= 2398) return (odr_xl_interval_t){LSM6DSO_XL_ODR_417Hz, 2398};
+  if (interval_us >= 1200) return (odr_xl_interval_t){LSM6DSO_XL_ODR_833Hz, 1200};
+  if (interval_us >= 600) return (odr_xl_interval_t){LSM6DSO_XL_ODR_1667Hz, 600};
+  if (interval_us >= 300) return (odr_xl_interval_t){LSM6DSO_XL_ODR_3333Hz, 300};
+  return (odr_xl_interval_t){LSM6DSO_XL_ODR_6667Hz, 150};
+}
+
+static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
+  if (!s_lsm6dso_initialized) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Not initialized, cannot set sampling interval");
+    return -1;
+  }
+
+  odr_xl_interval_t odr_interval = prv_get_odr_for_interval(interval_us);
+  lsm6dso_xl_data_rate_set(&lsm6dso_ctx, odr_interval.odr);
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Set sampling interval to %lu us (requested %lu us)",
+          s_lsm6dso_state.sampling_interval_us, interval_us);
+  return odr_interval.interval_us;
+}
+
+// Accelerometer sample reading (and reporting)
+
+static void prv_lsm6dso_read_samples(void) {
+  // TODO: Properly implement FIFO buffer.
+  AccelDriverSample sample;
+  prv_lsm6dso_read_sample(&sample);
+}
+
+static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
+  if (!s_lsm6dso_initialized) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Not initialized, cannot read sample");
+    return -1;
+  }
+
+  // TODO: Handle case when accelerometer is not enabled or running (by briefly
+  // enabling it.
+
+  int16_t accel_raw[3];
+  if (lsm6dso_acceleration_raw_get(&lsm6dso_ctx, accel_raw) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read accelerometer data");
+    return -1;
+  }
+
+  data->x = prv_get_axis_projection_mg(X_AXIS, accel_raw);
+  data->y = prv_get_axis_projection_mg(Y_AXIS, accel_raw);
+  data->z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
+  data->timestamp_us = prv_get_timestamp_ms() * 1000;
+
+  if (s_lsm6dso_state.num_samples > 0) {
+    accel_cb_new_sample(data);
+  }
+
+  return 0;
+}
+
+static int16_t prv_get_axis_projection_mg(axis_t axis, int16_t *raw_vector) {
+  uint8_t axis_offset = BOARD_CONFIG_ACCEL.accel_config.axes_offsets[axis];
+  int axis_direction = BOARD_CONFIG_ACCEL.accel_config.axes_inverts[axis] ? -1 : 1;
+
+  return lsm6dso_from_fs4_to_mg(raw_vector[axis_offset] * axis_direction);
+}
+
+static uint64_t prv_get_timestamp_ms(void) {
+  time_t time_s;
+  uint16_t time_ms;
+  rtc_get_time_ms(&time_s, &time_ms);
+  return (((uint64_t)time_s) * 1000 + time_ms);
 }
