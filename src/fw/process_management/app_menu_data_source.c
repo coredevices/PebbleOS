@@ -365,8 +365,10 @@ static void prv_load_list_if_needed(AppMenuDataSource *source) {
 
   app_install_enumerate_entries(prv_app_enumerate_callback, source);
 
-  app_free(source->order_storage);
-  source->order_storage = NULL;
+  if (source->order_storage != NULL) {
+    app_free(source->order_storage);
+    source->order_storage = NULL;
+  }
 }
 
 static void prv_unload_node(const AppMenuDataSource *source, AppMenuNode *node) {
