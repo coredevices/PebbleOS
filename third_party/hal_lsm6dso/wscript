@@ -1,0 +1,14 @@
+def build(bld):
+    lsm6dso_includes = [
+        'lsm6dso-pid'
+    ]
+
+    lsm6dso_sources = [
+        'lsm6dso-pid/lsm6dso_reg.c',
+    ]
+
+    bld.stlib(source=lsm6dso_sources,
+              includes=lsm6dso_includes,
+              export_includes=lsm6dso_includes,
+              target='hal_lsm6dso',
+              use=['pblibc'])
