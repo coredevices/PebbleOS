@@ -36,6 +36,7 @@ static void prv_lsm6dso_init(void);
 static void prv_lsm6dso_chase_target_state(void);
 static void prv_lsm6dso_configure_interrupts(void);
 static void prv_lsm6dso_configure_double_tap(bool enable);
+static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
 typedef struct {
@@ -127,11 +128,13 @@ void accel_set_num_samples(uint32_t num_samples) {
 
 int accel_peek(AccelDriverSample *data) { return prv_lsm6dso_read_sample(data); }
 
-void accel_enable_shake_detection(bool on) {}
-
-bool accel_get_shake_detection_enabled(void) {
-  return false;
+void accel_enable_shake_detection(bool on) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s shake detection.", on ? "Enabling" : "Disabling");
+  s_lsm6dso_state_target.shake_detection_enabled = on;
+  prv_lsm6dso_chase_target_state();
 }
+
+bool accel_get_shake_detection_enabled(void) { return s_lsm6dso_state.shake_detection_enabled; }
 
 void accel_enable_double_tap_detection(bool on) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s double tap detection.", on ? "Enabling" : "Disabling");
@@ -143,7 +146,12 @@ bool accel_get_double_tap_detection_enabled(void) {
   return s_lsm6dso_state.double_tap_detection_enabled;
 }
 
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
+void accel_set_shake_sensitivity_high(bool sensitivity_high) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting shake sensitivity to %s.",
+          sensitivity_high ? "high" : "normal");
+  s_lsm6dso_state_target.shake_sensitivity_high = sensitivity_high;
+  prv_lsm6dso_chase_target_state();
+}
 
 // HAL context implementations
 
@@ -303,15 +311,12 @@ static void prv_lsm6dso_chase_target_state(void) {
   }
 
   // Update shake detection
-  if (s_lsm6dso_state_target.shake_detection_enabled != s_lsm6dso_state.shake_detection_enabled) {
+  if (s_lsm6dso_state_target.shake_detection_enabled != s_lsm6dso_state.shake_detection_enabled ||
+      s_lsm6dso_state_target.shake_sensitivity_high != s_lsm6dso_state.shake_sensitivity_high) {
     s_lsm6dso_state.shake_detection_enabled = s_lsm6dso_state_target.shake_detection_enabled;
-    update_interrupts = true;
-  }
-
-  // Update shake sensitivity
-  if (s_lsm6dso_state_target.shake_sensitivity_high != s_lsm6dso_state.shake_sensitivity_high) {
-    // TODO: Update the shake sensitivity thresholds.
     s_lsm6dso_state.shake_sensitivity_high = s_lsm6dso_state_target.shake_sensitivity_high;
+    prv_lsm6dso_configure_shake(s_lsm6dso_state_target.shake_detection_enabled,
+                                s_lsm6dso_state_target.shake_sensitivity_high);
     update_interrupts = true;
   }
 
@@ -394,6 +399,34 @@ void prv_lsm6dso_configure_double_tap(bool enable) {
   }
 }
 
+static const uint8_t lsm6so_prg_wrist_tilt_prg[] = {
+    0x52, 0x00, 0x14, 0x00, 0x00, 0x00, 0xae, 0xb7, 0x80, 0x00,
+    0x00, 0x06, 0x0f, 0x05, 0x73, 0x33, 0x07, 0x54, 0x44, 0x22,
+};
+
+void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
+  // TODO: Not yet sure how to simultaneously handle shakes and double taps; so
+  // writing tilt detection to the FSM on board the device. I cannot tell the
+  // direction from this, but it does nicely turn on the screen when I tilt
+  // my wrist.
+
+  lsm6dso_long_cnt_int_value_set(&lsm6dso_ctx, 0x0000U);  // Not sure why this is necessary
+  lsm6dso_fsm_start_address_set(&lsm6dso_ctx, LSM6DSO_START_FSM_ADD);
+  lsm6dso_fsm_number_of_programs_set(&lsm6dso_ctx, 1);
+  lsm6dso_emb_fsm_enable_t fsm_enable = {0};
+  fsm_enable.fsm_enable_a.fsm1_en = PROPERTY_ENABLE;
+  lsm6dso_fsm_enable_set(&lsm6dso_ctx, &fsm_enable);
+  lsm6dso_fsm_data_rate_set(&lsm6dso_ctx, LSM6DSO_ODR_FSM_26Hz);
+  uint16_t fsm_addr;
+  fsm_addr = LSM6DSO_START_FSM_ADD;
+  /* wrist_tilt */
+  lsm6dso_ln_pg_write(&lsm6dso_ctx, fsm_addr, (uint8_t *)lsm6so_prg_wrist_tilt_prg,
+                      sizeof(lsm6so_prg_wrist_tilt_prg));
+  lsm6dso_emb_sens_t emb_sens;
+  emb_sens.fsm = PROPERTY_ENABLE;
+  lsm6dso_embedded_sens_set(&lsm6dso_ctx, &emb_sens);
+}
+
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
   if (s_interrupts_pending) {  // avoid flooding the kernel queue
     return;
@@ -433,6 +466,11 @@ static void prv_lsm6dso_process_interrupts(void) {
     PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered; axis=%d, direction=%d",
             axis_offset, axis_direction);
     accel_cb_double_tap_detected(axis_offset, axis_direction);
+  }
+
+  if (all_sources.fsm1) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Shake detection interrupt triggered");
+    accel_cb_shake_detected(AXIS_Y, 1);  // We have no idea which direction this came from.
   }
 }
 
