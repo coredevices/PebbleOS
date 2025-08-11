@@ -37,3 +37,6 @@
 [submodule "third_party/speex/speex"]
 	path = third_party/speex/speex
 	url = https://github.com/xiph/speex
+[submodule "third_party/hal_lsm6dso/lsm6dso-pid"]
+	path = third_party/hal_lsm6dso/lsm6dso-pid
+	url = https://github.com/STMicroelectronics/lsm6dso-pid.git
