@@ -138,7 +138,6 @@ static void prv_link_job(GAPLEAdvertisingJob *job) {
     // First job, make it point to itself:
     job->node.next = &job->node;
     job->node.prev = &job->node;
-    s_jobs = job;
   } else {
     list_insert_after(&s_jobs->node, &job->node);
   }
