@@ -31,6 +31,10 @@ static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *
                                  uint16_t write_size);
 static void prv_lsm6dso_mdelay(uint32_t ms);
 static void prv_lsm6dso_init(void);
+static void prv_lsm6dso_chase_target_state(void);
+static void prv_lsm6dso_configure_interrupts(void);
+static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
+static void prv_lsm6dso_process_interrupts(void);
 
 // HAL context for LSM6DSO
 stmdev_ctx_t lsm6dso_ctx = {
@@ -42,6 +46,18 @@ stmdev_ctx_t lsm6dso_ctx = {
 // Toplevel module state
 
 static bool s_lsm6dso_initialized = false;
+static bool s_lsm6dso_enabled = true;
+static bool s_lsm6dso_running = false;
+typedef struct {
+  uint32_t sampling_interval_us;
+  uint32_t num_samples;
+  bool shake_detection_enabled;
+  bool shake_sensitivity_high;
+  bool double_tap_detection_enabled;
+} lsm6dso_state_t;
+lsm6dso_state_t s_lsm6dso_state = {0};
+lsm6dso_state_t s_lsm6dso_state_target = {0};
+static bool s_interrupts_pending = false;
 
 // LSM6DSO configuration entrypoints
 
@@ -50,9 +66,17 @@ void lsm6dso_init(void) {
   prv_lsm6dso_init();
 }
 
-void lsm6dso_power_up(void) {}
+void lsm6dso_power_up(void) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering up accelerometer");
+  s_lsm6dso_enabled = true;
+  prv_lsm6dso_chase_target_state();
+}
 
-void lsm6dso_power_down(void) {}
+void lsm6dso_power_down(void) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering down accelerometer");
+  s_lsm6dso_enabled = false;
+  prv_lsm6dso_chase_target_state();
+}
 
 // accel.h implementation
 
@@ -216,4 +240,117 @@ static void prv_lsm6dso_init(void) {
 
   s_lsm6dso_initialized = true;
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Initialization complete");
+}
+
+//! Synchronize the LSM6DSO state with the desired target state.
+static void prv_lsm6dso_chase_target_state(void) {
+  if (!s_lsm6dso_initialized) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Cannot chase target state before initialization");
+    return;
+  }
+
+  bool update_interrupts = false;
+
+  // Check whether we should be spinning up the accelerometer
+  bool should_be_running = s_lsm6dso_state_target.sampling_interval_us > 0 ||
+                           s_lsm6dso_state_target.num_samples > 0 ||
+                           s_lsm6dso_state_target.shake_detection_enabled ||
+                           s_lsm6dso_state_target.double_tap_detection_enabled;
+
+  if (!should_be_running || !s_lsm6dso_enabled) {
+    if (s_lsm6dso_running) {
+      PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Stopping accelerometer");
+      lsm6dso_xl_data_rate_set(&lsm6dso_ctx, LSM6DSO_XL_ODR_OFF);
+      s_lsm6dso_running = false;
+      s_lsm6dso_state = (lsm6dso_state_t){0};
+      prv_lsm6dso_configure_interrupts();
+    }
+    return;
+  } else if (!s_lsm6dso_running) {
+    s_lsm6dso_running = true;
+    update_interrupts = true;
+  }
+
+  // Update number of samples
+  if (s_lsm6dso_state_target.num_samples != s_lsm6dso_state.num_samples) {
+    s_lsm6dso_state.num_samples = s_lsm6dso_state_target.num_samples;
+    update_interrupts = true;
+  }
+
+  // Update shake detection
+  if (s_lsm6dso_state_target.shake_detection_enabled != s_lsm6dso_state.shake_detection_enabled) {
+    s_lsm6dso_state.shake_detection_enabled = s_lsm6dso_state_target.shake_detection_enabled;
+    update_interrupts = true;
+  }
+
+  // Update shake sensitivity
+  if (s_lsm6dso_state_target.shake_sensitivity_high != s_lsm6dso_state.shake_sensitivity_high) {
+    // TODO: Update the shake sensitivity thresholds.
+    s_lsm6dso_state.shake_sensitivity_high = s_lsm6dso_state_target.shake_sensitivity_high;
+    update_interrupts = true;
+  }
+
+  // Update double tap detection
+  if (s_lsm6dso_state_target.double_tap_detection_enabled !=
+      s_lsm6dso_state.double_tap_detection_enabled) {
+    // TODO: Configure the double tap thresholds.
+    s_lsm6dso_state.double_tap_detection_enabled =
+        s_lsm6dso_state_target.double_tap_detection_enabled;
+    update_interrupts = true;
+  }
+
+  // Update sampling interval
+  if (update_interrupts ||
+      s_lsm6dso_state_target.sampling_interval_us != s_lsm6dso_state.sampling_interval_us) {
+    // TODO: Set the sampling interval to the closest supported ODR to that requested.
+  }
+
+  // Update interrupts if necessary
+  if (update_interrupts) {
+    prv_lsm6dso_configure_interrupts();
+  }
+
+  s_lsm6dso_state_target = s_lsm6dso_state;  // Reset target state to current state
+
+  PBL_LOG(LOG_LEVEL_DEBUG,
+          "LSM6DSO: Reached target state: sampling_interval_us=%lu, num_samples=%lu, "
+          "shake_detection_enabled=%d, shake_high_sensitivity=%d, double_tap_detection_enabled=%d",
+          s_lsm6dso_state.sampling_interval_us, s_lsm6dso_state.num_samples,
+          s_lsm6dso_state.shake_detection_enabled, s_lsm6dso_state.shake_sensitivity_high,
+          s_lsm6dso_state.double_tap_detection_enabled);
+}
+
+static void prv_lsm6dso_configure_interrupts(void) {
+  if (s_lsm6dso_enabled &&
+      (s_lsm6dso_state.num_samples || s_lsm6dso_state.shake_detection_enabled ||
+       s_lsm6dso_state.double_tap_detection_enabled)) {
+    exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+  } else {
+    exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+    return;
+  }
+
+  lsm6dso_pin_int1_route_t int1_routes = {0};
+  int1_routes.drdy_xl = s_lsm6dso_state.num_samples > 0;
+  // TODO: Handle batching of samples using FIFO when num_samples > 1
+  int1_routes.double_tap = s_lsm6dso_state.double_tap_detection_enabled;
+  int1_routes.fsm1 = s_lsm6dso_state.shake_detection_enabled;
+
+  if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
+  }
+}
+
+static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
+  if (s_interrupts_pending) {  // avoid flooding the kernel queue
+    return;
+  }
+  s_interrupts_pending = true;
+  accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
+}
+
+static void prv_lsm6dso_process_interrupts(void) {
+  s_interrupts_pending = false;
+  lsm6dso_all_sources_t all_sources;
+  lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources);
 }
