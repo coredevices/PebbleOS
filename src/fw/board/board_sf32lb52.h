@@ -143,6 +143,10 @@ typedef struct {
   const uint8_t battery_capacity_hours;
 } BoardConfigPower;
 
+typedef struct {
+  OutputConfig ctrl;
+} BoardConfigActuator;
+
 typedef enum {
   SpiPeriphClockAPB1,
   SpiPeriphClockAPB2

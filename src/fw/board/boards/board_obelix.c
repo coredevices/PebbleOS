@@ -298,6 +298,17 @@ const Npm1300Config NPM1300_CONFIG = {
   .thermistor_beta = 3380,
 };
 
+static const I2CSlavePort s_i2c_aw86225 = {
+  .bus = &s_i2c_bus_1,
+  .address = 0x58,
+};
+
+I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
+
+const BoardConfigActuator BOARD_CONFIG_VIBE = {
+  .ctrl = {hwp_gpio1, 1, true},
+};
+
 const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = {
     .peripheral = hwp_gpio1,
