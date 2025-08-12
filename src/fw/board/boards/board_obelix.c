@@ -16,6 +16,7 @@
 
 #include "bf0_hal.h"
 #include "bf0_hal_efuse.h"
+#include "bf0_hal_hlp.h"
 #include "bf0_hal_lcpu_config.h"
 #include "bf0_hal_pmu.h"
 #include "bf0_hal_rcc.h"
@@ -337,6 +338,15 @@ uint32_t BSP_GetOtpBase(void) {
 
 void board_early_init(void) {
   HAL_StatusTypeDef ret;
+  uint32_t bootopt;
+
+  // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
+  // that the flash is properly power cycled on reset. A flash power cycle is
+  // needed if left in 4-byte addressing mode, as bootrom does not support it.
+  bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
+  bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
+  bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
+  HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
 
   if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
     HAL_HPAON_EnableXT48();
