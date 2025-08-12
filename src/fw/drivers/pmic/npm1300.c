@@ -450,10 +450,13 @@ int battery_get_constants(BatteryConstants *constants) {
     return -1;
   }
 
+  // FIXME(OBELIX): NTC not working
+#if !PLATFORM_OBELIX
   // Trigger NTC measurement
   if (!prv_write_register(PmicRegisters_ADC_TASKNTCMEASURE, 1)) {
     return -1;
   }
+#endif
 
   // Process the VBAT measurement
   reg = 0U;
@@ -498,6 +501,8 @@ int battery_get_constants(BatteryConstants *constants) {
 
   constants->i_ua = ((int32_t)raw * full_scale_ua) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
 
+  // FIXME(OBELIX): NTC not working
+#if !PLATFORM_OBELIX
   // Process the NTC measurement
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY) == 0U) {
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
@@ -522,6 +527,9 @@ int battery_get_constants(BatteryConstants *constants) {
   float inv_temp_k = (1.f / 298.15f) - (log_result / (float)NPM1300_CONFIG.thermistor_beta);
 
   constants->t_mc = (int32_t)(1000.0f * ((1.f / inv_temp_k) - 273.15f));
+#else
+  constants->t_mc = 25000;
+#endif
 
   return 0;
 }
