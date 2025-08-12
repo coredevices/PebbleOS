@@ -53,11 +53,11 @@ class PebblePackage(object):
         else:
             self.package_files[name] = file_path
 
-    def pack(self, package_path=None):
+    def pack(self, package_path="."):
         with zipfile.ZipFile(os.path.join(package_path, self.package_filename), 'w') as zip_file:
             for filename, file_path in self.package_files.items():
                 zip_file.write(file_path, filename)
-            zip_file.comment = type(self).__name__
+            zip_file.comment = type(self).__name__.encode('utf-8')
 
     def unpack(self, package_path=''):
         try:
