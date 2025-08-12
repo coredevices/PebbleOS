@@ -34,6 +34,7 @@ typedef struct QSPIPortState {
 #if MICRO_FAMILY_SF32LB52
   QSPI_FLASH_CTX_T ctx;
   DMA_HandleTypeDef hdma;
+  bool initialized;
 #else
   SemaphoreHandle_t dma_semaphore;
   int use_count;

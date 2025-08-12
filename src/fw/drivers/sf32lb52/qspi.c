@@ -181,8 +181,16 @@ status_t qspi_flash_unlock_all(QSPIFlash *dev) { return S_SUCCESS; }
 
 void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   HAL_StatusTypeDef res;
-  
-  (void)coredump_mode;
+
+  if (dev->qspi->state->initialized) {
+    if (coredump_mode) {
+      dev->qspi->state->ctx.handle.dma = NULL;
+    } else {
+      dev->qspi->state->ctx.handle.dma = &dev->qspi->state->hdma;
+    }
+
+    return;
+  }
 
   dev->state->part = part;
   dev->qspi->state->ctx.dual_mode = 1;
@@ -190,7 +198,10 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   res = HAL_FLASH_Init(&dev->qspi->state->ctx, (qspi_configure_t *)&dev->qspi->cfg,
                        &dev->qspi->state->hdma, (struct dma_config *)&dev->qspi->dma,
                        dev->qspi->clk_div);
+
   PBL_ASSERT(res == HAL_OK, "HAL_FLASH_Init failed");
+
+  dev->qspi->state->initialized = true;
 }
 
 status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
