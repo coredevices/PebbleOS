@@ -17,6 +17,7 @@
 #include "system/reset.h"
 
 #define CMSIS_COMPATIBLE
+#define SF32LB52_COMPATIBLE
 #include <mcu.h>
 
 #include "board/board.h"
@@ -71,7 +72,12 @@ NORETURN system_hard_reset(void) {
   // Don't do anything fancy here. We may be in a context where nothing works, not even
   // interrupts. Just reset us.
 
+#if MICRO_FAMILY_SF32LB52
+  HAL_PMU_Reboot();
+#else
   NVIC_SystemReset();
+#endif
+
   __builtin_unreachable();
 }
 
