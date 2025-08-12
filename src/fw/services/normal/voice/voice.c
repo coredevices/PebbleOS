@@ -135,6 +135,12 @@ static void prv_stop_recording(void) {
   audio_endpoint_stop_transfer(s_session_id);
   PBL_LOG(LOG_LEVEL_INFO, "Stop recording audio");
   prv_teardown_session();
+
+  // We no longer need to encode frames once recording has stopped. Free Speex resources
+  // immediately so memory becomes available while we wait for the result.
+  if (voice_speex_is_initialized()) {
+    voice_speex_deinit();
+  }
 }
 
 static void prv_cancel_recording(void) {
@@ -146,6 +152,11 @@ static void prv_cancel_recording(void) {
   audio_endpoint_cancel_transfer(s_session_id);
   PBL_LOG(LOG_LEVEL_INFO, "Cancel audio recording");
   prv_teardown_session();
+
+  // Free Speex resources since we are aborting the session.
+  if (voice_speex_is_initialized()) {
+    voice_speex_deinit();
+  }
 }
 
 static void prv_reset(void) {
@@ -323,11 +334,7 @@ static VoiceStatus prv_get_status_from_result(VoiceEndpointResult result) {
 
 void voice_init(void) {
   s_lock = mutex_create();
-  
-  // Initialize Speex encoder
-  if (!voice_speex_init()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize Speex encoder");
-  }
+  // Speex encoder is now initialized lazily when a dictation session starts
 }
 
 // This will kick off a dictation session. After the setup session message is sent via the
@@ -337,6 +344,15 @@ void voice_init(void) {
 VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   VOICE_LOG("voice_start_dictation called with session_type: %d", session_type);
   mutex_lock(s_lock);
+
+  // Lazily initialize Speex encoder to avoid baseline memory usage when voice not used
+  if (!voice_speex_is_initialized()) {
+    if (!voice_speex_init()) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize Speex encoder");
+      mutex_unlock(s_lock);
+      return VOICE_SESSION_ID_INVALID;
+    }
+  }
 
   if (s_state != SessionState_Idle) {
     VOICE_LOG("Voice service not idle (state: %d), returning invalid session", s_state);
