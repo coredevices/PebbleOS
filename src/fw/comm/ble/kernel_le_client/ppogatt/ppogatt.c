@@ -510,33 +510,25 @@ static void prv_start_reset(PPoGATTClient *client) {
       if (s_disconnect_counter < (PPOGATT_DISCONNECT_COUNT_MAX + 3)) {
         PBL_LOG(LOG_LEVEL_ERROR, "Not disconnecting because max disconnects reached...");
       }
-      return;
-    } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Disconnecting because max resets reached...");
 
-      // Record the time of this disconnect request
-      analytics_event_PPoGATT_disconnect(rtc_get_time(), false);
-
-      bt_lock();
-      const BLECharacteristic characteristic = client->characteristics.meta;
-      GAPLEConnection *connection = gatt_client_characteristic_get_connection(characteristic);
-      bt_unlock();
-
-      if (connection != NULL) {
-        bt_driver_gap_le_disconnect(&connection->device);
-      } else {
-        PBL_LOG(LOG_LEVEL_ERROR, "PPoGatt: disconnect attempt failed, no connection for char 0x%x",
-                (int)characteristic);
-#if !RELEASE
-        // Observed this path getting hit in PBL-43336, let's try to collect a core to look at the
-        // gatt service state
-        PBL_ASSERTN(0);
-#endif
-      }
       return;
     }
+
+    PBL_LOG(LOG_LEVEL_ERROR, "Disconnecting because max resets reached...");
+
+    // Record the time of this disconnect request
+    analytics_event_PPoGATT_disconnect(rtc_get_time(), false);
+
+    bt_lock();
+    const BLECharacteristic characteristic = client->characteristics.meta;
+    GAPLEConnection *connection = gatt_client_characteristic_get_connection(characteristic);
+    PBL_ASSERTN(connection != NULL);
+    bt_unlock();
+
+    bt_driver_gap_le_disconnect(&connection->device);
+  } else {
+    prv_enter_awaiting_reset_complete(client, true /* self_initiated */);
   }
-  prv_enter_awaiting_reset_complete(client, true /* self_initiated */);
 }
 
 // -------------------------------------------------------------------------------------------------
