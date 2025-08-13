@@ -38,7 +38,7 @@
 //! Number of maximum consecutive timeouts without getting a packet Ack'd
 #define PPOGATT_TIMEOUT_COUNT_MAX (2)
 //! Number of maximum consecutive resets without getting a packet Ack'd
-#define PPOGATT_RESET_COUNT_MAX (10)
+#define PPOGATT_RESET_COUNT_MAX (5)
 //! Number of maximum consecutive disconnects without getting a packet Ack'd
 #define PPOGATT_DISCONNECT_COUNT_MAX (2)
 //! Maximum amount of time PPoGATT will wait before sending an Ack for received data
