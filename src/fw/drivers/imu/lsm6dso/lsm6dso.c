@@ -153,6 +153,11 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   prv_lsm6dso_chase_target_state();
 }
 
+bool accel_run_selftest(void) {
+  // TODO: Implement  a sensible self-test for LSM6DSO 
+  return true;
+}
+
 // HAL context implementations
 
 static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
