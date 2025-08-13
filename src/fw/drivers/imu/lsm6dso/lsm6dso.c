@@ -35,6 +35,8 @@ static void prv_lsm6dso_mdelay(uint32_t ms);
 static void prv_lsm6dso_init(void);
 static void prv_lsm6dso_chase_target_state(void);
 static void prv_lsm6dso_configure_interrupts(void);
+static lsm6dso_bdr_xl_t prv_get_fifo_batch_rate(uint32_t interval_us);
+static void prv_lsm6dso_configure_fifo(bool enable);
 static void prv_lsm6dso_configure_double_tap(bool enable);
 static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
@@ -78,6 +80,10 @@ lsm6dso_state_t s_lsm6dso_state = {0};
 lsm6dso_state_t s_lsm6dso_state_target = {0};
 static bool s_interrupts_pending = false;
 static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_threshold / 1250;
+static bool s_fifo_in_use = false; // true when we have enabled FIFO batching
+
+// Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
+#define LSM6DSO_FIFO_MAX_WATERMARK 1023
 
 // Maximum allowed sampling interval (i.e., slowest rate, in microseconds)
 #define LSM6DSO_EVENT_MAX_INTERVAL_US 2398
@@ -363,14 +369,74 @@ static void prv_lsm6dso_configure_interrupts(void) {
   }
 
   lsm6dso_pin_int1_route_t int1_routes = {0};
-  int1_routes.drdy_xl = s_lsm6dso_state.num_samples > 0;
-  // TODO: Handle batching of samples using FIFO when num_samples > 1
+  bool use_fifo = s_lsm6dso_state.num_samples > 1; // batching requested
+  if (use_fifo) {
+    int1_routes.fifo_th = 1; // watermark interrupt
+    int1_routes.drdy_xl = 0;
+    prv_lsm6dso_configure_fifo(true);
+  } else {
+    int1_routes.drdy_xl = s_lsm6dso_state.num_samples > 0; // single-sample mode
+    int1_routes.fifo_th = 0;
+    prv_lsm6dso_configure_fifo(false);
+  }
   int1_routes.double_tap = s_lsm6dso_state.double_tap_detection_enabled;
   int1_routes.wake_up = s_lsm6dso_state.shake_detection_enabled; // use wake-up (any-motion)
 
   if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
   }
+}
+
+// Map output data rate (interval) to FIFO batching rate enum
+static lsm6dso_bdr_xl_t prv_get_fifo_batch_rate(uint32_t interval_us) {
+  if (interval_us >= 625000) return LSM6DSO_XL_BATCHED_AT_6Hz5; // lowest supported batching
+  if (interval_us >= 80000) return LSM6DSO_XL_BATCHED_AT_12Hz5;
+  if (interval_us >= 38462) return LSM6DSO_XL_BATCHED_AT_26Hz;
+  if (interval_us >= 19231) return LSM6DSO_XL_BATCHED_AT_52Hz;
+  if (interval_us >= 9615) return LSM6DSO_XL_BATCHED_AT_104Hz;
+  if (interval_us >= 4808) return LSM6DSO_XL_BATCHED_AT_208Hz;
+  if (interval_us >= 2398) return LSM6DSO_XL_BATCHED_AT_417Hz;
+  if (interval_us >= 1200) return LSM6DSO_XL_BATCHED_AT_833Hz;
+  if (interval_us >= 600) return LSM6DSO_XL_BATCHED_AT_1667Hz;
+  if (interval_us >= 300) return LSM6DSO_XL_BATCHED_AT_3333Hz;
+  return LSM6DSO_XL_BATCHED_AT_6667Hz;
+}
+
+static void prv_lsm6dso_configure_fifo(bool enable) {
+  if (enable == s_fifo_in_use) {
+    return; // nothing to do
+  }
+
+  if (enable) {
+    // Program FIFO watermark and batch rate (only accelerometer)
+    uint32_t watermark = s_lsm6dso_state.num_samples;
+    if (watermark == 0) watermark = 1; // safety
+    if (watermark > LSM6DSO_FIFO_MAX_WATERMARK) watermark = LSM6DSO_FIFO_MAX_WATERMARK;
+    if (lsm6dso_fifo_watermark_set(&lsm6dso_ctx, (uint16_t)watermark)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set FIFO watermark");
+    }
+    // Enable accelerometer batching at (approx) current ODR
+    lsm6dso_bdr_xl_t batch_rate = prv_get_fifo_batch_rate(s_lsm6dso_state.sampling_interval_us);
+    if (lsm6dso_fifo_xl_batch_set(&lsm6dso_ctx, batch_rate)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set FIFO batch rate");
+    }
+    // Disable gyro batching
+    lsm6dso_fifo_gy_batch_set(&lsm6dso_ctx, LSM6DSO_GY_NOT_BATCHED);
+    // Put FIFO in stream mode so we keep collecting samples and get periodic watermark interrupts
+    if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to enable FIFO stream mode");
+    }
+  } else {
+    // Disable batching & return to bypass
+    lsm6dso_fifo_xl_batch_set(&lsm6dso_ctx, LSM6DSO_XL_NOT_BATCHED);
+    lsm6dso_fifo_gy_batch_set(&lsm6dso_ctx, LSM6DSO_GY_NOT_BATCHED);
+    if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to disable FIFO");
+    }
+  }
+
+  s_fifo_in_use = enable;
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: FIFO %s (wm=%lu)", enable ? "enabled" : "disabled", (unsigned long)s_lsm6dso_state.num_samples);
 }
 
 void prv_lsm6dso_configure_double_tap(bool enable) {
@@ -418,6 +484,10 @@ static void prv_lsm6dso_process_interrupts(void) {
   lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources);
 
   if (s_lsm6dso_state.num_samples > 0 && all_sources.drdy_xl) {
+    prv_lsm6dso_read_samples();
+  }
+  // FIFO watermark (or overrun/full) events when batching
+  if (s_lsm6dso_state.num_samples > 1 && (all_sources.fifo_th || all_sources.fifo_full || all_sources.fifo_ovr)) {
     prv_lsm6dso_read_samples();
   }
 
@@ -540,9 +610,58 @@ static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
 // Accelerometer sample reading (and reporting)
 
 static void prv_lsm6dso_read_samples(void) {
-  // TODO: Properly implement FIFO buffer.
-  AccelDriverSample sample;
-  prv_lsm6dso_read_sample(&sample);
+  if (s_lsm6dso_state.num_samples <= 1 || !s_fifo_in_use) {
+    // Single sample path
+    AccelDriverSample sample;
+    prv_lsm6dso_read_sample(&sample);
+    return;
+  }
+
+  // Drain FIFO
+  uint16_t fifo_level = 0;
+  if (lsm6dso_fifo_data_level_get(&lsm6dso_ctx, &fifo_level) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO level");
+    return;
+  }
+  if (fifo_level == 0) {
+    return; // nothing to do
+  }
+
+  const uint64_t now_us = prv_get_timestamp_ms() * 1000ULL;
+  const uint32_t interval_us = s_lsm6dso_state.sampling_interval_us ?: 1000; // avoid div by zero
+
+  for (uint16_t i = 0; i < fifo_level; ++i) {
+    lsm6dso_fifo_tag_t tag;
+    if (lsm6dso_fifo_sensor_tag_get(&lsm6dso_ctx, &tag) != 0) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO tag");
+      break;
+    }
+
+    uint8_t raw_bytes[6];
+    if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_FIFO_DATA_OUT_X_L, raw_bytes, sizeof(raw_bytes)) != 0) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO sample (%u/%u)", i, fifo_level);
+      break;
+    }
+
+    if (tag != LSM6DSO_XL_NC_TAG && tag != LSM6DSO_XL_NC_T_1_TAG && tag != LSM6DSO_XL_NC_T_2_TAG && tag != LSM6DSO_XL_2XC_TAG && tag != LSM6DSO_XL_3XC_TAG) {
+      // Not an accelerometer sample (e.g., gyro/timestamp/config), ignore
+      continue;
+    }
+
+    int16_t raw_vector[3];
+    raw_vector[0] = (int16_t)((raw_bytes[1] << 8) | raw_bytes[0]);
+    raw_vector[1] = (int16_t)((raw_bytes[3] << 8) | raw_bytes[2]);
+    raw_vector[2] = (int16_t)((raw_bytes[5] << 8) | raw_bytes[4]);
+
+    AccelDriverSample sample = {0};
+    sample.x = prv_get_axis_projection_mg(X_AXIS, raw_vector);
+    sample.y = prv_get_axis_projection_mg(Y_AXIS, raw_vector);
+    sample.z = prv_get_axis_projection_mg(Z_AXIS, raw_vector);
+    // Approximate timestamp: assume fifo_level contiguous samples ending now
+    uint32_t sample_index_from_end = (fifo_level - 1) - i; // 0 for newest
+    sample.timestamp_us = now_us - (sample_index_from_end * (uint64_t)interval_us);
+    accel_cb_new_sample(&sample);
+  }
 }
 
 static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
