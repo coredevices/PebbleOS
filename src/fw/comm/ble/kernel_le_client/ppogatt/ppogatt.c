@@ -124,6 +124,8 @@ typedef struct PPoGATTClient {
   //! Number of consecutive resets so far
   uint8_t resets_counter;
 
+  bool disconnect_requested; //! True if the client requested a disconnect
+
   TimerID rx_ack_timer;   //! Timer to ensure Acks for data are dispatched regularly
 
   //! Whether the PPoGATT server transports "System", "App" or "Hybrid" PP sessions.
@@ -505,6 +507,10 @@ static void prv_enter_awaiting_reset_complete(PPoGATTClient *client, bool self_i
 
 static void prv_start_reset(PPoGATTClient *client) {
   if (++client->resets_counter >= PPOGATT_RESET_COUNT_MAX) {
+    if (client->disconnect_requested) {
+      return;
+    }
+
     if (++s_disconnect_counter > PPOGATT_DISCONNECT_COUNT_MAX) {
       // only log this the first couple of times it happens
       if (s_disconnect_counter < (PPOGATT_DISCONNECT_COUNT_MAX + 3)) {
@@ -526,6 +532,7 @@ static void prv_start_reset(PPoGATTClient *client) {
     bt_unlock();
 
     bt_driver_gap_le_disconnect(&connection->device);
+    client->disconnect_requested = true;
   } else {
     prv_enter_awaiting_reset_complete(client, true /* self_initiated */);
   }
