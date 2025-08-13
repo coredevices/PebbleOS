@@ -21,6 +21,7 @@
 #include "drivers/rtc.h"
 #include "kernel/util/sleep.h"
 #include "system/logging.h"
+#include "util/math.h"
 #include "lsm6dso_reg.h"
 
 #include "lsm6dso.h"
@@ -34,6 +35,7 @@ static void prv_lsm6dso_mdelay(uint32_t ms);
 static void prv_lsm6dso_init(void);
 static void prv_lsm6dso_chase_target_state(void);
 static void prv_lsm6dso_configure_interrupts(void);
+static void prv_lsm6dso_configure_double_tap(bool enable);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
 typedef struct {
@@ -74,6 +76,10 @@ typedef struct {
 lsm6dso_state_t s_lsm6dso_state = {0};
 lsm6dso_state_t s_lsm6dso_state_target = {0};
 static bool s_interrupts_pending = false;
+static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_threshold / 1250;
+
+// Maximum allowed sampling interval (i.e., slowest rate, in microseconds)
+#define LSM6DSO_EVENT_MAX_INTERVAL_US 2398
 
 // LSM6DSO configuration entrypoints
 
@@ -128,10 +134,14 @@ bool accel_get_shake_detection_enabled(void) {
   return false;
 }
 
-void accel_enable_double_tap_detection(bool on) {}
+void accel_enable_double_tap_detection(bool on) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s double tap detection.", on ? "Enabling" : "Disabling");
+  s_lsm6dso_state_target.double_tap_detection_enabled = on;
+  prv_lsm6dso_chase_target_state();
+}
 
 bool accel_get_double_tap_detection_enabled(void) {
-  return false;
+  return s_lsm6dso_state.double_tap_detection_enabled;
 }
 
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
@@ -309,7 +319,7 @@ static void prv_lsm6dso_chase_target_state(void) {
   // Update double tap detection
   if (s_lsm6dso_state_target.double_tap_detection_enabled !=
       s_lsm6dso_state.double_tap_detection_enabled) {
-    // TODO: Configure the double tap thresholds.
+    prv_lsm6dso_configure_double_tap(s_lsm6dso_state_target.double_tap_detection_enabled);
     s_lsm6dso_state.double_tap_detection_enabled =
         s_lsm6dso_state_target.double_tap_detection_enabled;
     update_interrupts = true;
@@ -358,6 +368,37 @@ static void prv_lsm6dso_configure_interrupts(void) {
   }
 }
 
+void prv_lsm6dso_configure_double_tap(bool enable) {
+  if (enable) {
+    // Configure tap detection parameters
+    lsm6dso_tap_threshold_x_set(&lsm6dso_ctx, s_tap_threshold);  // Adjust threshold as needed
+    lsm6dso_tap_threshold_y_set(&lsm6dso_ctx, s_tap_threshold);
+    lsm6dso_tap_threshold_z_set(&lsm6dso_ctx, s_tap_threshold);
+
+    // Enable tap detection on all axes
+    lsm6dso_tap_detection_on_x_set(&lsm6dso_ctx, PROPERTY_ENABLE);
+    lsm6dso_tap_detection_on_y_set(&lsm6dso_ctx, PROPERTY_ENABLE);
+    lsm6dso_tap_detection_on_z_set(&lsm6dso_ctx, PROPERTY_ENABLE);
+
+    // Configure tap timing
+    uint8_t tap_shock = BOARD_CONFIG_ACCEL.accel_config.tap_shock;
+    uint8_t tap_quiet = BOARD_CONFIG_ACCEL.accel_config.tap_quiet;
+    uint8_t tap_dur = BOARD_CONFIG_ACCEL.accel_config.tap_dur;
+
+    lsm6dso_tap_shock_set(&lsm6dso_ctx, tap_shock);  // Shock duration
+    lsm6dso_tap_quiet_set(&lsm6dso_ctx, tap_quiet);  // Quiet period
+    lsm6dso_tap_dur_set(&lsm6dso_ctx, tap_dur);      // Double tap window
+
+    // Enable double tap recognition
+    lsm6dso_tap_mode_set(&lsm6dso_ctx, LSM6DSO_BOTH_SINGLE_DOUBLE);
+  } else {
+    // Disable tap detection
+    lsm6dso_tap_detection_on_x_set(&lsm6dso_ctx, PROPERTY_DISABLE);
+    lsm6dso_tap_detection_on_y_set(&lsm6dso_ctx, PROPERTY_DISABLE);
+    lsm6dso_tap_detection_on_z_set(&lsm6dso_ctx, PROPERTY_DISABLE);
+  }
+}
+
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
   if (s_interrupts_pending) {  // avoid flooding the kernel queue
     return;
@@ -373,6 +414,30 @@ static void prv_lsm6dso_process_interrupts(void) {
 
   if (s_lsm6dso_state.num_samples > 0 && all_sources.drdy_xl) {
     prv_lsm6dso_read_samples();
+  }
+
+  if (all_sources.double_tap) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered");
+    // Handle double tap detection
+    axis_t axis;
+    if (all_sources.tap_x) {
+      axis = X_AXIS;
+    } else if (all_sources.tap_y) {
+      axis = Y_AXIS;
+    } else if (all_sources.tap_z) {
+      axis = Z_AXIS;
+    } else {
+      PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: No tap axis detected");
+      return;  // No valid tap detected
+    }
+
+    uint8_t axis_offset = BOARD_CONFIG_ACCEL.accel_config.axes_offsets[axis];
+    uint8_t axis_direction = (BOARD_CONFIG_ACCEL.accel_config.axes_inverts[axis] ? -1 : 1) *
+                             (all_sources.tap_sign ? -1 : 1);
+
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered; axis=%d, direction=%d",
+            axis_offset, axis_direction);
+    accel_cb_double_tap_detected(axis_offset, axis_direction);
   }
 }
 
@@ -396,6 +461,10 @@ static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
   if (!s_lsm6dso_initialized) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Not initialized, cannot set sampling interval");
     return -1;
+  }
+
+  if (s_lsm6dso_state.double_tap_detection_enabled) {
+    interval_us = MIN(interval_us, LSM6DSO_EVENT_MAX_INTERVAL_US);
   }
 
   odr_xl_interval_t odr_interval = prv_get_odr_for_interval(interval_us);

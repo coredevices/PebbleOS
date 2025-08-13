@@ -70,7 +70,17 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
     // This will need calibration.
     .shake_thresholds[AccelThresholdHigh] = 64,
     .shake_thresholds[AccelThresholdLow] = 0xf,
-    .double_tap_threshold = 12500,
+    .double_tap_threshold = 12500, //This already is a good value and does not need calibration.
+  // LSM6DSO tap timing register values tuned for reliable double-tap:
+  // tap_shock (0-3): maximum duration (in ODR steps) where an over-threshold event is still
+  //   considered a tap. Higher tolerates longer impacts. 3 = ~max;
+  // tap_quiet (0-3): quiet time after first tap during which accel must stay below threshold
+  //   before second tap; balances rejection of long impacts vs responsiveness. 2 is moderate.
+  // tap_dur (0-15): maximum interval (in ODR steps) between first and second tap. 8 chosen to
+  //   allow natural user double taps without allowing widely spaced taps.
+  .tap_shock = 0x03,
+  .tap_quiet = 0x02,
+  .tap_dur = 0x08,
   },
   // Ideally we would configure both interrupt pins, but we have run out of GPIOTE channels.
   // We will use INT1 (connected to pin 13) for accelerometer interrupts, and leave INT2 (pin 11) unused.
