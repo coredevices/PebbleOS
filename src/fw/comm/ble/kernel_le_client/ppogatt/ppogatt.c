@@ -313,27 +313,12 @@ static void prv_increment_timeout_counter_if_necessary(PPoGATTClient *client) {
 }
 
 static void prv_check_timeouts(PPoGATTClient *client) {
-  static int s_ppogatt_timeout_count = 0;
-
   if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset ||
       client->state == StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset) {
     if (prv_has_timeout(client)) {
       // We've timed out waiting for a reset to be completed, start over:
-
-      // iAP and PPoGATT are connecting concurrently at the moment. To avoid having two system
-      // sessions, the iOS app will deliberately hold the PPoGATT client in the reset state, by not
-      // sending the Reset Complete, if there is already a session over iAP.
-      // Co-operate with this and check whether this might be the case, if so, don't re-request a
-      // reset:
-      // To be removed with https://pebbletechnology.atlassian.net/browse/PBL-21864
-      if (!comm_session_get_system_session()) {
-        // It seems like sometimes we get wedged here, rather than spam the logs, cap the amount of
-        // times we will print this message
-        if (s_ppogatt_timeout_count++ < 5) {
-          PBL_LOG(LOG_LEVEL_INFO, "Timed out waiting for Reset Complete, Resetting again...");
-        }
-        prv_start_reset(client);
-      }
+      PBL_LOG(LOG_LEVEL_INFO, "Timed out waiting for Reset Complete, Resetting again...");
+      prv_start_reset(client);
     }
     return;
   }
@@ -345,9 +330,6 @@ static void prv_check_timeouts(PPoGATTClient *client) {
     // no point in continuing.
     return;
   }
-
-  // No timeouts
-  s_ppogatt_timeout_count = 0;
 }
 
 static void prv_timer_callback(void *unused) {
