@@ -704,3 +704,138 @@ static uint64_t prv_get_timestamp_ms(void) {
   rtc_get_time_ms(&time_s, &time_ms);
   return (((uint64_t)time_s) * 1000 + time_ms);
 }
+
+// Helper to grab one raw sample set (blocking) and convert to mg (board axis adjusted)
+static int prv_get_sample_mg(int16_t out_mg[3]) {
+  int16_t raw[3];
+  if (lsm6dso_acceleration_raw_get(&lsm6dso_ctx, raw) != 0) {
+    return -1;
+  }
+  out_mg[0] = prv_get_axis_projection_mg(X_AXIS, raw);
+  out_mg[1] = prv_get_axis_projection_mg(Y_AXIS, raw);
+  out_mg[2] = prv_get_axis_projection_mg(Z_AXIS, raw);
+  return 0;
+}
+
+// Self-test implementation
+//
+// Reference: LSM6DSO datasheet / application notes. Procedure (simplified):
+// 1. Configure XL @ 52Hz, FS=4g. Collect a small set of samples (ST disabled).
+// 2. Enable self-test (positive) and wait for output to settle. Collect samples.
+// 3. Compute absolute delta per axis (ON - OFF) in mg and compare against threshold.
+// 4. Disable self-test and restore previous configuration.
+//
+// We only enforce a minimum delta (lower bound) which indicates the internal actuation worked.
+// Chosen conservative thresholds (mg) based on typical min values from datasheet; may be tuned.
+//
+
+bool accel_run_selftest(void) {
+  if (!s_lsm6dso_initialized) {
+    // Attempt init if not already done
+    prv_lsm6dso_init();
+    if (!s_lsm6dso_initialized) {
+      return false;
+    }
+  }
+
+  // Save current target/current state so we can restore later
+  const lsm6dso_state_t saved_state = s_lsm6dso_state;
+  const lsm6dso_state_t saved_target = s_lsm6dso_state_target;
+  const bool saved_enabled = s_lsm6dso_enabled;
+
+  // Ensure accelerometer enabled & running at known configuration
+  s_lsm6dso_enabled = true;
+  s_lsm6dso_state_target.sampling_interval_us = 19231; // ~52Hz per mapping
+  s_lsm6dso_state_target.num_samples = 0; // disable callbacks during test
+  s_lsm6dso_state_target.shake_detection_enabled = false;
+  s_lsm6dso_state_target.double_tap_detection_enabled = false;
+  prv_lsm6dso_chase_target_state();
+
+  // Force FS=4g (required for mg conversion helper used elsewhere)
+  lsm6dso_xl_full_scale_set(&lsm6dso_ctx, LSM6DSO_4g);
+
+
+  // Collect baseline (self-test disabled)
+  (void)lsm6dso_xl_self_test_set(&lsm6dso_ctx, LSM6DSO_XL_ST_DISABLE);
+  psleep(100); // allow settling
+  int32_t sum_off[3] = {0};
+  const int kNumSamples = 5;
+  int collected = 0;
+  for (int i = 0; i < kNumSamples; ++i) {
+    int16_t mg[3];
+    if (prv_get_sample_mg(mg) != 0) {
+      break;
+    }
+    sum_off[0] += mg[0];
+    sum_off[1] += mg[1];
+    sum_off[2] += mg[2];
+    ++collected;
+    psleep(20); // ~1 sample period @52Hz (19ms)
+  }
+  if (collected == 0) {
+    // restore state
+    s_lsm6dso_state = saved_state;
+    s_lsm6dso_state_target = saved_target;
+    s_lsm6dso_enabled = saved_enabled;
+    prv_lsm6dso_chase_target_state();
+    return false;
+  }
+  int32_t avg_off[3] = { sum_off[0]/collected, sum_off[1]/collected, sum_off[2]/collected };
+
+  // Enable positive self-test stimulus
+  if (lsm6dso_xl_self_test_set(&lsm6dso_ctx, LSM6DSO_XL_ST_POSITIVE) != 0) {
+    // restore and fail
+    s_lsm6dso_state = saved_state;
+    s_lsm6dso_state_target = saved_target;
+    s_lsm6dso_enabled = saved_enabled;
+    prv_lsm6dso_chase_target_state();
+    return false;
+  }
+  psleep(100); // settling per app note
+
+  int32_t sum_on[3] = {0};
+  collected = 0;
+  for (int i = 0; i < kNumSamples; ++i) {
+    int16_t mg[3];
+    if (prv_get_sample_mg(mg) != 0) {
+      break;
+    }
+    sum_on[0] += mg[0];
+    sum_on[1] += mg[1];
+    sum_on[2] += mg[2];
+    ++collected;
+    psleep(20);
+  }
+  int32_t avg_on[3] = {0};
+  if (collected > 0) {
+    avg_on[0] = sum_on[0]/collected;
+    avg_on[1] = sum_on[1]/collected;
+    avg_on[2] = sum_on[2]/collected;
+  }
+
+  // Disable self-test
+  lsm6dso_xl_self_test_set(&lsm6dso_ctx, LSM6DSO_XL_ST_DISABLE);
+
+  // Thresholds (mg) - conservative lower bounds
+  const int kMinDeltaXY_mg = 90;  // datasheet min typically ~90 mg
+  const int kMinDeltaZ_mg  = 90;  // Z similar / slightly different; keep same for simplicity
+
+  bool pass = true;
+  int32_t delta_x = ABS(avg_on[0] - avg_off[0]);
+  int32_t delta_y = ABS(avg_on[1] - avg_off[1]);
+  int32_t delta_z = ABS(avg_on[2] - avg_off[2]);
+  if (delta_x < kMinDeltaXY_mg) { pass = false; }
+  if (delta_y < kMinDeltaXY_mg) { pass = false; }
+  if (delta_z < kMinDeltaZ_mg)  { pass = false; }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Self-test deltas mg X=%"PRId32" Y=%"PRId32" Z=%"PRId32" (min XY=%d Z=%d) => %s",
+          delta_x, delta_y, delta_z, kMinDeltaXY_mg, kMinDeltaZ_mg, pass ? "PASS" : "FAIL");
+
+  // Restore previous configuration (best-effort)
+  s_lsm6dso_state = saved_state;
+  s_lsm6dso_state_target = saved_target;
+  s_lsm6dso_enabled = saved_enabled;
+  prv_lsm6dso_chase_target_state();
+
+  return pass;
+}
