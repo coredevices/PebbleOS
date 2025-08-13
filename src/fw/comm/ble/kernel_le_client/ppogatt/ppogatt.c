@@ -47,6 +47,7 @@ typedef enum {
   StateDisconnectedSubscribingData,
   // StateConnectedClosedAwaitingResetRequest, // Server-only state
   StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset,
+  StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled,
   StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset,
   StateConnectedOpen,
 } State;
@@ -323,6 +324,8 @@ static void prv_check_timeouts(PPoGATTClient *client) {
       prv_start_reset(client);
     }
     return;
+  } else if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled) {
+    return;
   }
 
   uint8_t sn = client->out.next_expected_ack_sn;
@@ -512,11 +515,10 @@ static void prv_start_reset(PPoGATTClient *client) {
     }
 
     if (++s_disconnect_counter > PPOGATT_DISCONNECT_COUNT_MAX) {
-      // only log this the first couple of times it happens
-      if (s_disconnect_counter < (PPOGATT_DISCONNECT_COUNT_MAX + 3)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Not disconnecting because max disconnects reached...");
-      }
-
+      // If we have disconnected too many times, do not disconnect and leave the client in a
+      // "stalled" state, so that we have the option to "unstall" by sending a remote reset
+      client->state = StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled;
+      PBL_LOG(LOG_LEVEL_WARNING, "Reset request stalled, not disconnecting");
       return;
     }
 
@@ -700,6 +702,7 @@ static void prv_handle_data_notification(PPoGATTClient *client,
       PBL_LOG(LOG_LEVEL_ERROR, "Got reset complete while open!?");
     }
   } else if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset ||
+             client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled ||
              client->state == StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset) {
     if (LIKELY(packet->type == PPoGATTPacketTypeResetComplete)) {
       prv_handle_reset_complete(client, packet, value_length - sizeof(PPoGATTPacket));
