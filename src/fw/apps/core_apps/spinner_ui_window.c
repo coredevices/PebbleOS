@@ -63,7 +63,7 @@ static void prv_draw_spinner_circles(Layer *layer, GContext* ctx) {
   SpinnerUIData *data = window_get_user_data(layer_get_window(layer));
 
   // This is the background image's circle.
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
   const unsigned int center_of_circle_y_val = 103;
 #else
   const unsigned int center_of_circle_y_val = PBL_IF_RECT_ELSE(72, layer->bounds.size.h / 2);

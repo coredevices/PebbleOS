@@ -30,7 +30,7 @@
 #include "util/string.h"
 #include "util/struct.h"
 
-#if PLATFORM_ROBERT
+#if PLATFORM_ROBERT || PLATFORM_OBELIX
 #define LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN (9)
 #else
 #define LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN (5)
@@ -360,7 +360,7 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   // We require a valid title node
   PBL_ASSERTN(title_node);
   // Push the title node a little up or down to match the relevant design spec
-#if PLATFORM_ROBERT
+#if PLATFORM_ROBERT || PLATFORM_OBELIX
   title_node->offset.y += 1;
 #else
   title_node->offset.y -= 1;
@@ -436,7 +436,7 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
   }
 
   GRect glance_frame = (GRect) { .origin = offset, .size = structured_glance->glance.size };
-#if PLATFORM_ROBERT
+#if PLATFORM_ROBERT || PLATFORM_OBELIX
   const int16_t horizontal_inset = 10;
 #else
   const int16_t horizontal_inset = PBL_IF_RECT_ELSE(6, 23);
