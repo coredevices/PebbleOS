@@ -36,6 +36,7 @@ static void prv_lsm6dso_init(void);
 static void prv_lsm6dso_chase_target_state(void);
 static void prv_lsm6dso_configure_interrupts(void);
 static void prv_lsm6dso_configure_double_tap(bool enable);
+static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
 typedef struct {
@@ -128,11 +129,13 @@ void accel_set_num_samples(uint32_t num_samples) {
 
 int accel_peek(AccelDriverSample *data) { return prv_lsm6dso_read_sample(data); }
 
-void accel_enable_shake_detection(bool on) {}
-
-bool accel_get_shake_detection_enabled(void) {
-  return false;
+void accel_enable_shake_detection(bool on) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s shake detection.", on ? "Enabling" : "Disabling");
+  s_lsm6dso_state_target.shake_detection_enabled = on;
+  prv_lsm6dso_chase_target_state();
 }
+
+bool accel_get_shake_detection_enabled(void) { return s_lsm6dso_state.shake_detection_enabled; }
 
 void accel_enable_double_tap_detection(bool on) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s double tap detection.", on ? "Enabling" : "Disabling");
@@ -144,7 +147,12 @@ bool accel_get_double_tap_detection_enabled(void) {
   return s_lsm6dso_state.double_tap_detection_enabled;
 }
 
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
+void accel_set_shake_sensitivity_high(bool sensitivity_high) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting shake sensitivity to %s.",
+          sensitivity_high ? "high" : "normal");
+  s_lsm6dso_state_target.shake_sensitivity_high = sensitivity_high;
+  prv_lsm6dso_chase_target_state();
+}
 
 // HAL context implementations
 
@@ -304,15 +312,12 @@ static void prv_lsm6dso_chase_target_state(void) {
   }
 
   // Update shake detection
-  if (s_lsm6dso_state_target.shake_detection_enabled != s_lsm6dso_state.shake_detection_enabled) {
+  if (s_lsm6dso_state_target.shake_detection_enabled != s_lsm6dso_state.shake_detection_enabled ||
+      s_lsm6dso_state_target.shake_sensitivity_high != s_lsm6dso_state.shake_sensitivity_high) {
     s_lsm6dso_state.shake_detection_enabled = s_lsm6dso_state_target.shake_detection_enabled;
-    update_interrupts = true;
-  }
-
-  // Update shake sensitivity
-  if (s_lsm6dso_state_target.shake_sensitivity_high != s_lsm6dso_state.shake_sensitivity_high) {
-    // TODO: Update the shake sensitivity thresholds.
     s_lsm6dso_state.shake_sensitivity_high = s_lsm6dso_state_target.shake_sensitivity_high;
+    prv_lsm6dso_configure_shake(s_lsm6dso_state.shake_detection_enabled,
+                                s_lsm6dso_state.shake_sensitivity_high);
     update_interrupts = true;
   }
 
@@ -361,7 +366,7 @@ static void prv_lsm6dso_configure_interrupts(void) {
   int1_routes.drdy_xl = s_lsm6dso_state.num_samples > 0;
   // TODO: Handle batching of samples using FIFO when num_samples > 1
   int1_routes.double_tap = s_lsm6dso_state.double_tap_detection_enabled;
-  int1_routes.fsm1 = s_lsm6dso_state.shake_detection_enabled;
+  int1_routes.wake_up = s_lsm6dso_state.shake_detection_enabled; // use wake-up (any-motion)
 
   if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
@@ -439,6 +444,63 @@ static void prv_lsm6dso_process_interrupts(void) {
             axis_offset, axis_direction);
     accel_cb_double_tap_detected(axis_offset, axis_direction);
   }
+
+  // Wake-up (any-motion) event -> treat as shake. Axis & direction derived from wake_up_src.
+  if (s_lsm6dso_state.shake_detection_enabled && all_sources.wake_up) {
+    lsm6dso_wake_up_src_t wake_src;
+    if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_WAKE_UP_SRC, (uint8_t *)&wake_src, 1) == 0) {
+      IMUCoordinateAxis axis = AXIS_X;
+      int32_t direction = 1; // LSM6DSO does not give sign directly for wake-up; approximate via sign of latest sample on axis
+      // Determine which axis triggered: order X,Y,Z
+      const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
+      if (wake_src.x_wu) {
+        axis = AXIS_X;
+      } else if (wake_src.y_wu) {
+        axis = AXIS_Y;
+      } else if (wake_src.z_wu) {
+        axis = AXIS_Z;
+      }
+      // Read current sample to infer direction
+      int16_t accel_raw[3];
+      if (lsm6dso_acceleration_raw_get(&lsm6dso_ctx, accel_raw) == 0) {
+        int16_t val = accel_raw[cfg->axes_offsets[axis]];
+        bool invert = cfg->axes_inverts[axis];
+        direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
+      }
+      accel_cb_shake_detected(axis, direction);
+    }
+  }
+}
+
+// Configure wake-up (any-motion) for shake detection using wake-up threshold & duration.
+static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
+  if (!enable) {
+    // Disable wake-up related routing by clearing threshold
+    lsm6dso_wkup_threshold_set(&lsm6dso_ctx, 0);
+    return;
+  }
+
+  // Select slope filter (not high-pass) for wake-up detection
+  lsm6dso_xl_hp_path_internal_set(&lsm6dso_ctx, LSM6DSO_USE_SLOPE);
+
+  // Weight of threshold: use FS/64 for finer resolution when high sensitivity
+  lsm6dso_wkup_ths_weight_set(&lsm6dso_ctx,
+                              sensitivity_high ? LSM6DSO_LSb_FS_DIV_256 : LSM6DSO_LSb_FS_DIV_64);
+
+  // Duration: increase a bit to reduce spurious triggers
+  lsm6dso_wkup_dur_set(&lsm6dso_ctx,
+                       sensitivity_high ? 0 : 1);
+
+  // Threshold: derive from board config; clamp into 0..63
+  uint32_t raw_high = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
+  uint32_t raw_low = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
+  uint32_t raw = sensitivity_high ? raw_high : raw_low;
+  // Increase sensitivity: scale threshold down (halve). Ensure at least 2 to avoid noise storms.
+  raw = (raw + 1) / 2; // divide by 2 rounding up
+  if (raw > 63) raw = 63; // lsm6dso wk_ths is 6 bits
+  // Sanity fallback if 0 (avoid constant triggers) choose very low but non-zero
+  if (raw == 0) raw = 2;
+  lsm6dso_wkup_threshold_set(&lsm6dso_ctx, (uint8_t)raw);
 }
 
 // Sampling interval configuration
