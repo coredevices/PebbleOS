@@ -64,7 +64,7 @@ static int prv_get_rendered_text_height(const char *text, const GRect *text_box)
 
 static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int window_height) {
   const uint16_t status_layer_offset = has_status_bar ? 6 : 0;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
   const uint16_t icon_top_default_margin_px = 42 + status_layer_offset;
 #else
   const uint16_t icon_top_default_margin_px = 18 + status_layer_offset;
