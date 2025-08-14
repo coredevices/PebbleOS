@@ -1661,44 +1661,6 @@ void bt_persistent_storage_set_cached_system_capabilities(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Common
 
-// TODO: remove once all internal watches have migrated!
-void prv_migrate_legacy_cccd_entries(void) {
-  status_t rv;
-  SettingsFile fd;
-
-  rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
-                          BT_PERSISTENT_STORAGE_FILE_SIZE);
-  PBL_ASSERTN(rv == S_SUCCESS);
-
-  for (BTBondingID id = 128U; id < BT_BONDING_ID_INVALID; id++) {
-    if (settings_file_exists(&fd, &id, sizeof(id))) {
-      BTCCCDID cccd_id;
-      BtPersistCCCDData stored_data;
-
-      rv = settings_file_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data));
-      PBL_ASSERTN(rv == S_SUCCESS);
-
-      rv = settings_file_delete(&fd, &id, sizeof(id));
-      PBL_ASSERTN(rv == S_SUCCESS);
-
-      for (BTCCCDID cccd_id = 0U; cccd_id < BT_CCCD_ID_INVALID; cccd_id++) {
-        if (!settings_file_exists(&fd, &cccd_id, sizeof(cccd_id))) {
-          break;
-        }
-      }
-
-      PBL_ASSERTN(cccd_id < BT_CCCD_ID_INVALID);
-
-      rv = settings_file_set(&fd, &cccd_id, sizeof(cccd_id), &stored_data, sizeof(stored_data));
-      PBL_ASSERTN(rv == S_SUCCESS);
-
-      PBL_LOG(LOG_LEVEL_INFO, "Migrated legacy CCCD entry with id %d", id);
-    }
-  }
-
-  settings_file_close(&fd);
-}
-
 void bt_persistent_storage_init(void) {
   // Note: this gets called well before the BT stack is initialized, make sure there is no code
   // that tries to use the BT stack in this path.
@@ -1708,8 +1670,6 @@ void bt_persistent_storage_init(void) {
 
   // Load cached capability bits from flash
   prv_load_cached_system_capabilities(&s_cached_system_capabilities);
-
-  prv_migrate_legacy_cccd_entries();
 }
 
 static void prv_delete_all_pairings_itr(SettingsFile *old_file, SettingsFile *new_file,
