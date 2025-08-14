@@ -1,6 +1,5 @@
 def build(bld):
     # FreeRTOS vendor code
-    use_timers = False
     if bld.env.MICRO_FAMILY == 'STM32F2':
         freertos_port_name = 'ARM_CM3'
     elif bld.env.MICRO_FAMILY == 'STM32F4':
@@ -9,7 +8,6 @@ def build(bld):
         freertos_port_name = 'ARM_CM4F' # fix to CM7 when we have it
     elif bld.env.MICRO_FAMILY == 'NRF52840':
         freertos_port_name = 'ARM_CM4F'
-        use_timers = True
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
         freertos_port_name = 'ARM_CM33'
     else:
@@ -28,8 +26,7 @@ def build(bld):
     ]
     freertos_sources = sum([bld.path.ant_glob(d + '/*.c')
                            for d in freertos_source_paths], [])
-
-    freertos_defines = [f'FREERTOS_USE_TIMERS={int(use_timers)}']
+    freertos_defines = []
 
     # FIXME(SF32LB52): Add valid regions once MPU can be used
     # This currently results in 0 regions!

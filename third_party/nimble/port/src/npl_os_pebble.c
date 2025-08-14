@@ -223,89 +223,6 @@ ble_npl_error_t npl_pebble_sem_release(struct ble_npl_sem *sem) {
   return BLE_NPL_OK;
 }
 
-#if configUSE_TIMERS
-static void
-os_callout_timer_cb(TimerHandle_t timer)
-{
-    struct ble_npl_callout *co;
-
-    co = pvTimerGetTimerID(timer);
-    assert(co);
-
-    if (co->evq) {
-        ble_npl_eventq_put(co->evq, &co->ev);
-    } else {
-        co->ev.fn(&co->ev);
-    }
-}
-
-void
-npl_pebble_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *evq,
-                     ble_npl_event_fn *ev_cb, void *ev_arg)
-{
-    memset(co, 0, sizeof(*co));
-    co->handle = xTimerCreate("co", 1, pdFALSE, co, os_callout_timer_cb);
-    co->evq = evq;
-    ble_npl_event_init(&co->ev, ev_cb, ev_arg);
-}
-
-ble_npl_error_t
-npl_pebble_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks)
-{
-    BaseType_t woken1, woken2, woken3;
-
-    if (ticks == 0) {
-        ticks = 1;
-    }
-
-    if (mcu_state_is_isr()) {
-        xTimerStopFromISR(co->handle, &woken1);
-        xTimerChangePeriodFromISR(co->handle, ticks, &woken2);
-        xTimerResetFromISR(co->handle, &woken3);
-
-        portYIELD_FROM_ISR(woken1 || woken2 || woken3);
-    } else {
-        xTimerStop(co->handle, portMAX_DELAY);
-        xTimerChangePeriod(co->handle, ticks, portMAX_DELAY);
-        xTimerReset(co->handle, portMAX_DELAY);
-    }
-
-    return BLE_NPL_OK;
-}
-
-ble_npl_time_t
-npl_pebble_callout_remaining_ticks(struct ble_npl_callout *co,
-                                     ble_npl_time_t now)
-{
-    ble_npl_time_t rt;
-    uint32_t exp;
-
-    exp = xTimerGetExpiryTime(co->handle);
-
-    if (exp > now) {
-        rt = exp - now;
-    } else {
-        rt = 0;
-    }
-
-    return rt;
-}
-
-void
-npl_pebble_callout_stop(struct ble_npl_callout *co) {
-  xTimerStop(co->handle, portMAX_DELAY);
-}
-
-bool
-npl_pebble_callout_is_active(struct ble_npl_callout *co) {
-  return xTimerIsTimerActive(co->handle) == pdTRUE;
-}
-
-ble_npl_time_t
-npl_pebble_callout_get_ticks(struct ble_npl_callout *co) {
-  return xTimerGetExpiryTime(co->handle);
-}
-#else
 static void os_callout_timer_cb(void *timer);
 
 //! npl_pebble_callout_do_update is the core logic of the update, and can
@@ -425,7 +342,6 @@ ble_npl_time_t npl_pebble_callout_remaining_ticks(struct ble_npl_callout *co, bl
   new_timer_scheduled(co->handle, &rt);
   return rt;
 }
-#endif /* configUSE_TIMERS */
 
 ble_npl_error_t npl_pebble_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks) {
   uint64_t ticks;
