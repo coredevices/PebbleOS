@@ -53,6 +53,9 @@ static RtcTicks s_analytics_device_stop_ticks = 0;
 static uint64_t s_analytics_app_sleep_cpu_cycles = 0;
 static RtcTicks s_analytics_app_stop_ticks = 0;
 
+static uint32_t s_last_ticks_elapsed_in_stop = 0;
+static uint32_t s_ticks_corrected = 0;
+
 // We need different timings for our different platforms since we use different mechanisms to keep
 // time and to wake us up out of stop mode. On stm32f2 we don't have a millisecond register so we
 // use the "retina rtc" and a RTC Alarm peripheral. On stm32f4 we do have a millisecond register
@@ -71,7 +74,6 @@ static const RtcTicks EARLY_WAKEUP_TICKS = 4;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 8;
 #endif
-
 
 // 1024 ticks so that we only wake up once every regular timer interval.
 static const RtcTicks MAX_STOP_TICKS = 1024;
@@ -144,6 +146,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       enter_stop_mode();
 
       RtcTicks ticks_elapsed = rtc_alarm_get_elapsed_ticks();
+      s_last_ticks_elapsed_in_stop = ticks_elapsed;
       vTaskStepTick(ticks_elapsed);
 
       // Update the task watchdog every time we come out of STOP mode (which is
@@ -212,6 +215,7 @@ void* pvPortMalloc(size_t xSize) {
   return kernel_malloc(xSize);
 }
 
+
 // Called from the SysTick handler ISR to adjust ticks for situations where the CPU might
 // occasionally fall behind and miss some tick interrupts (like when running under emulation).
 bool vPortCorrectTicks(void) {
@@ -249,6 +253,7 @@ bool vPortCorrectTicks(void) {
     /* Increment the RTOS ticks. */
     need_context_switch |= (xTaskIncrementTick() != 0);
     act_ticks++;
+    s_ticks_corrected++;
   }
   return need_context_switch;
 }
@@ -291,7 +296,7 @@ void dump_current_runtime_stats(void) {
   
   uint32_t rtc_ticks = rtc_get_ticks();
   uint32_t rtos_ticks = xTaskGetTickCount();
-  snprintf(buf, sizeof(buf), "RTC ticks: %"PRIu32", RTOS ticks: %"PRIu32, rtc_ticks, rtos_ticks);
+  snprintf(buf, sizeof(buf), "RTC ticks: %"PRIu32", RTOS ticks: %"PRIu32 ", ticks corrected: %"PRIu32 ", last ticks stopped: %"PRIu32, rtc_ticks, rtos_ticks, s_ticks_corrected, s_last_ticks_elapsed_in_stop);
   prompt_send_response(buf);
 }
 
