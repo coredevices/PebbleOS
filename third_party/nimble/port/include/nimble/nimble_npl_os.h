@@ -62,7 +62,21 @@ struct ble_npl_callout {
   TimerHandle_t handle;
 #else
   TimerID handle;
+
+  //! whether we have made changes to this timer from ISR state and need
+  //! someone to go sync them back up on the main thread for us
+  bool update_pending;
+
+  //! if we are pending_update, there might have been some ticks between
+  //! when we asked to do work, and when it happens; set an actual target
+  //! time in ticks for newtimer, rather than deferring the number of ticks
+  //! to start counting when we actually schedule
+  RtcTicks update_target_time_ticks;
+
+  //! event to be pushed for update from ISR
+  struct ble_npl_event update_ev;
 #endif
+
   struct ble_npl_eventq *evq;
   struct ble_npl_event ev;
   uint64_t ticks;
@@ -176,7 +190,22 @@ static inline void ble_npl_callout_set_arg(struct ble_npl_callout *co, void *arg
   co->ev.arg = arg;
 }
 
-static inline uint32_t ble_npl_time_get(void) { return xTaskGetTickCountFromISR(); }
+static inline ble_npl_time_t ble_npl_time_get(void) {
+  /* This downconverts from an RtcTicks (uint64_t) to a uint32_t.  This is
+   * safe because nothing in NimBLE uses an absolute ble_npl_time_get (i.e.,
+   * it does not turn it into an absolute ble_npl_time_t), or a
+   * ble_npl_time_get that is long-lived; it is always compared by
+   * subtracting and casting to a ble_npl_stime_t, rather than by looking
+   * for equality.
+   *
+   * (Some of the `mesh` code uses ble_npl_time_get in ways that look
+   * distressing, but luckily, we do not use any of that code.  And, more to
+   * the point, uint32_t is a non-optional definition of ble_npl_time_t: for
+   * instance, ble_gap.c fails to build with any other definition of
+   * ble_npl_time_t.)
+   */
+  return rtc_get_ticks();
+}
 
 static inline ble_npl_error_t ble_npl_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks) {
   return npl_pebble_time_ms_to_ticks(ms, out_ticks);
