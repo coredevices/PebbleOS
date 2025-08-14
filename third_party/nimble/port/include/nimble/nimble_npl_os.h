@@ -58,9 +58,6 @@ struct ble_npl_eventq {
 };
 
 struct ble_npl_callout {
-#if configUSE_TIMERS
-  TimerHandle_t handle;
-#else
   TimerID handle;
 
   //! whether we have made changes to this timer from ISR state and need
@@ -75,7 +72,6 @@ struct ble_npl_callout {
 
   //! event to be pushed for update from ISR
   struct ble_npl_event update_ev;
-#endif
 
   struct ble_npl_eventq *evq;
   struct ble_npl_event ev;
