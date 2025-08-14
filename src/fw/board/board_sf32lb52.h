@@ -144,6 +144,33 @@ typedef struct {
 } BoardConfigPower;
 
 typedef enum {
+  AccelThresholdLow, ///< A sensitive state used for stationary mode
+  AccelThresholdHigh, ///< The accelerometer's default sensitivity
+  AccelThreshold_Num,
+} AccelThreshold;
+
+typedef struct {
+  int axes_offsets[3];
+  bool axes_inverts[3];
+  uint32_t shake_thresholds[AccelThreshold_Num];
+  uint32_t double_tap_threshold;
+  // LSM6DSO tap timing parameters (in register units):
+  // tap_shock:   0..3   => maximum duration of an over-threshold acceleration for tap recognition.
+  // tap_quiet:   0..3   => quiet time after a tap where acceleration must remain below threshold.
+  // tap_dur:     0..15  => max time window between first and second tap for double tap detection.
+  // Values of 0 use driver defaults if unsupported by the underlying IMU.
+  uint8_t tap_shock;
+  uint8_t tap_quiet;
+  uint8_t tap_dur;
+} AccelConfig;
+
+typedef struct {
+  const AccelConfig accel_config;
+  const InputConfig accel_int_gpios[2];
+  const ExtiConfig accel_ints[2];
+} BoardConfigAccel;
+
+typedef enum {
   SpiPeriphClockAPB1,
   SpiPeriphClockAPB2
 } SpiPeriphClock;
