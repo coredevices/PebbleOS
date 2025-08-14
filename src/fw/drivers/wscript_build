@@ -1048,7 +1048,7 @@ elif bld.is_obelix():
     bld.objects(
         name='driver_imu',
         source=[
-            'stubs/imu.c',
+            'imu/imu_obelix.c',
         ],
         use=[
             'driver_lsm6dso',
