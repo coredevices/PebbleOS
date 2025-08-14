@@ -35,7 +35,7 @@ def build(bld):
     if bld.env.bt_controller == 'cc2564x':
         bld.recurse('ti_bt_sp')
 
-    if bld.is_asterix():
+    if bld.is_asterix() or bld.is_obelix():
         bld.recurse('hal_lsm6dso')
 
     bld.recurse('memfault')
