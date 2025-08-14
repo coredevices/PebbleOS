@@ -17,6 +17,7 @@
 #pragma once
 
 #include "drivers/pmic/npm1300.h"
+#include "services/imu/units.h"
 
 #define BT_VENDOR_ID 0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"
@@ -37,3 +38,43 @@ extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
+
+static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
+  .accel_config = {
+#ifdef IS_BIGBOARD
+    .axes_offsets[AXIS_X] = 0,
+    .axes_offsets[AXIS_Y] = 1,
+    .axes_offsets[AXIS_Z] = 2,
+    .axes_inverts[AXIS_X] = true,
+    .axes_inverts[AXIS_Y] = true,
+    .axes_inverts[AXIS_Z] = false,
+#else
+    .axes_offsets[AXIS_X] = 0,
+    .axes_offsets[AXIS_Y] = 1,
+    .axes_offsets[AXIS_Z] = 2,
+    .axes_inverts[AXIS_X] = false,
+    .axes_inverts[AXIS_Y] = true,
+    .axes_inverts[AXIS_Z] = true,
+#endif
+    // TODO(OBELIX): Needs calibration
+    .shake_thresholds[AccelThresholdHigh] = 64U,
+    .shake_thresholds[AccelThresholdLow] = 15U,
+    .double_tap_threshold = 12500U,
+    // LSM6DSO tap timing register values tuned for reliable double-tap:
+    // tap_shock (0-3): maximum duration (in ODR steps) where an over-threshold event is still
+    //   considered a tap. Higher tolerates longer impacts. 3 = ~max;
+    // tap_quiet (0-3): quiet time after first tap during which accel must stay below threshold
+    //   before second tap; balances rejection of long impacts vs responsiveness. 2 is moderate.
+    // tap_dur (0-15): maximum interval (in ODR steps) between first and second tap. 8 chosen to
+    //   allow natural user double taps without allowing widely spaced taps.
+    .tap_shock = 0x03U,
+    .tap_quiet = 0x02U,
+    .tap_dur = 0x08U,
+  },
+  .accel_int_gpios = {
+    [0] = { .gpio = hwp_gpio1, .gpio_pin = 38 },
+  },
+  .accel_ints = {
+    [0] = { .peripheral = hwp_gpio1, .gpio_pin = 38 },
+  },
+};
