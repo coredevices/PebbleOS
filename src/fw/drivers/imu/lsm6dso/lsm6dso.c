@@ -80,7 +80,7 @@ lsm6dso_state_t s_lsm6dso_state = {0};
 lsm6dso_state_t s_lsm6dso_state_target = {0};
 static bool s_interrupts_pending = false;
 static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_threshold / 1250;
-static bool s_fifo_in_use = false; // true when we have enabled FIFO batching
+static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
 
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
 #define LSM6DSO_FIFO_MAX_WATERMARK 1023
@@ -369,18 +369,18 @@ static void prv_lsm6dso_configure_interrupts(void) {
   }
 
   lsm6dso_pin_int1_route_t int1_routes = {0};
-  bool use_fifo = s_lsm6dso_state.num_samples > 1; // batching requested
+  bool use_fifo = s_lsm6dso_state.num_samples > 1;  // batching requested
   if (use_fifo) {
-    int1_routes.fifo_th = 1; // watermark interrupt
+    int1_routes.fifo_th = 1;  // watermark interrupt
     int1_routes.drdy_xl = 0;
     prv_lsm6dso_configure_fifo(true);
   } else {
-    int1_routes.drdy_xl = s_lsm6dso_state.num_samples > 0; // single-sample mode
+    int1_routes.drdy_xl = s_lsm6dso_state.num_samples > 0;  // single-sample mode
     int1_routes.fifo_th = 0;
     prv_lsm6dso_configure_fifo(false);
   }
   int1_routes.double_tap = s_lsm6dso_state.double_tap_detection_enabled;
-  int1_routes.wake_up = s_lsm6dso_state.shake_detection_enabled; // use wake-up (any-motion)
+  int1_routes.wake_up = s_lsm6dso_state.shake_detection_enabled;  // use wake-up (any-motion)
 
   if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
@@ -389,7 +389,7 @@ static void prv_lsm6dso_configure_interrupts(void) {
 
 // Map output data rate (interval) to FIFO batching rate enum
 static lsm6dso_bdr_xl_t prv_get_fifo_batch_rate(uint32_t interval_us) {
-  if (interval_us >= 625000) return LSM6DSO_XL_BATCHED_AT_6Hz5; // lowest supported batching
+  if (interval_us >= 625000) return LSM6DSO_XL_BATCHED_AT_6Hz5;  // lowest supported batching
   if (interval_us >= 80000) return LSM6DSO_XL_BATCHED_AT_12Hz5;
   if (interval_us >= 38462) return LSM6DSO_XL_BATCHED_AT_26Hz;
   if (interval_us >= 19231) return LSM6DSO_XL_BATCHED_AT_52Hz;
@@ -404,13 +404,13 @@ static lsm6dso_bdr_xl_t prv_get_fifo_batch_rate(uint32_t interval_us) {
 
 static void prv_lsm6dso_configure_fifo(bool enable) {
   if (enable == s_fifo_in_use) {
-    return; // nothing to do
+    return;  // nothing to do
   }
 
   if (enable) {
     // Program FIFO watermark and batch rate (only accelerometer)
     uint32_t watermark = s_lsm6dso_state.num_samples;
-    if (watermark == 0) watermark = 1; // safety
+    if (watermark == 0) watermark = 1;  // safety
     if (watermark > LSM6DSO_FIFO_MAX_WATERMARK) watermark = LSM6DSO_FIFO_MAX_WATERMARK;
     if (lsm6dso_fifo_watermark_set(&lsm6dso_ctx, (uint16_t)watermark)) {
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set FIFO watermark");
@@ -436,7 +436,8 @@ static void prv_lsm6dso_configure_fifo(bool enable) {
   }
 
   s_fifo_in_use = enable;
-  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: FIFO %s (wm=%lu)", enable ? "enabled" : "disabled", (unsigned long)s_lsm6dso_state.num_samples);
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: FIFO %s (wm=%lu)", enable ? "enabled" : "disabled",
+          (unsigned long)s_lsm6dso_state.num_samples);
 }
 
 void prv_lsm6dso_configure_double_tap(bool enable) {
@@ -487,7 +488,8 @@ static void prv_lsm6dso_process_interrupts(void) {
     prv_lsm6dso_read_samples();
   }
   // FIFO watermark (or overrun/full) events when batching
-  if (s_lsm6dso_state.num_samples > 1 && (all_sources.fifo_th || all_sources.fifo_full || all_sources.fifo_ovr)) {
+  if (s_lsm6dso_state.num_samples > 1 &&
+      (all_sources.fifo_th || all_sources.fifo_full || all_sources.fifo_ovr)) {
     prv_lsm6dso_read_samples();
   }
 
@@ -520,7 +522,8 @@ static void prv_lsm6dso_process_interrupts(void) {
     lsm6dso_wake_up_src_t wake_src;
     if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_WAKE_UP_SRC, (uint8_t *)&wake_src, 1) == 0) {
       IMUCoordinateAxis axis = AXIS_X;
-      int32_t direction = 1; // LSM6DSO does not give sign directly for wake-up; approximate via sign of latest sample on axis
+      int32_t direction = 1;  // LSM6DSO does not give sign directly for wake-up; approximate via
+                              // sign of latest sample on axis
       // Determine which axis triggered: order X,Y,Z
       const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
       if (wake_src.x_wu) {
@@ -558,16 +561,15 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
                               sensitivity_high ? LSM6DSO_LSb_FS_DIV_256 : LSM6DSO_LSb_FS_DIV_64);
 
   // Duration: increase a bit to reduce spurious triggers
-  lsm6dso_wkup_dur_set(&lsm6dso_ctx,
-                       sensitivity_high ? 0 : 1);
+  lsm6dso_wkup_dur_set(&lsm6dso_ctx, sensitivity_high ? 0 : 1);
 
   // Threshold: derive from board config; clamp into 0..63
   uint32_t raw_high = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
   uint32_t raw_low = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
   uint32_t raw = sensitivity_high ? raw_high : raw_low;
   // Increase sensitivity: scale threshold down (halve). Ensure at least 2 to avoid noise storms.
-  raw = (raw + 1) / 2; // divide by 2 rounding up
-  if (raw > 63) raw = 63; // lsm6dso wk_ths is 6 bits
+  raw = (raw + 1) / 2;     // divide by 2 rounding up
+  if (raw > 63) raw = 63;  // lsm6dso wk_ths is 6 bits
   // Sanity fallback if 0 (avoid constant triggers) choose very low but non-zero
   if (raw == 0) raw = 2;
   lsm6dso_wkup_threshold_set(&lsm6dso_ctx, (uint8_t)raw);
@@ -624,11 +626,11 @@ static void prv_lsm6dso_read_samples(void) {
     return;
   }
   if (fifo_level == 0) {
-    return; // nothing to do
+    return;  // nothing to do
   }
 
   const uint64_t now_us = prv_get_timestamp_ms() * 1000ULL;
-  const uint32_t interval_us = s_lsm6dso_state.sampling_interval_us ?: 1000; // avoid div by zero
+  const uint32_t interval_us = s_lsm6dso_state.sampling_interval_us ?: 1000;  // avoid div by zero
 
   for (uint16_t i = 0; i < fifo_level; ++i) {
     lsm6dso_fifo_tag_t tag;
@@ -638,12 +640,14 @@ static void prv_lsm6dso_read_samples(void) {
     }
 
     uint8_t raw_bytes[6];
-    if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_FIFO_DATA_OUT_X_L, raw_bytes, sizeof(raw_bytes)) != 0) {
+    if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_FIFO_DATA_OUT_X_L, raw_bytes, sizeof(raw_bytes)) !=
+        0) {
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO sample (%u/%u)", i, fifo_level);
       break;
     }
 
-    if (tag != LSM6DSO_XL_NC_TAG && tag != LSM6DSO_XL_NC_T_1_TAG && tag != LSM6DSO_XL_NC_T_2_TAG && tag != LSM6DSO_XL_2XC_TAG && tag != LSM6DSO_XL_3XC_TAG) {
+    if (tag != LSM6DSO_XL_NC_TAG && tag != LSM6DSO_XL_NC_T_1_TAG && tag != LSM6DSO_XL_NC_T_2_TAG &&
+        tag != LSM6DSO_XL_2XC_TAG && tag != LSM6DSO_XL_3XC_TAG) {
       // Not an accelerometer sample (e.g., gyro/timestamp/config), ignore
       continue;
     }
@@ -658,7 +662,7 @@ static void prv_lsm6dso_read_samples(void) {
     sample.y = prv_get_axis_projection_mg(Y_AXIS, raw_vector);
     sample.z = prv_get_axis_projection_mg(Z_AXIS, raw_vector);
     // Approximate timestamp: assume fifo_level contiguous samples ending now
-    uint32_t sample_index_from_end = (fifo_level - 1) - i; // 0 for newest
+    uint32_t sample_index_from_end = (fifo_level - 1) - i;  // 0 for newest
     sample.timestamp_us = now_us - (sample_index_from_end * (uint64_t)interval_us);
     accel_cb_new_sample(&sample);
   }
@@ -745,8 +749,8 @@ bool accel_run_selftest(void) {
 
   // Ensure accelerometer enabled & running at known configuration
   s_lsm6dso_enabled = true;
-  s_lsm6dso_state_target.sampling_interval_us = 19231; // ~52Hz per mapping
-  s_lsm6dso_state_target.num_samples = 0; // disable callbacks during test
+  s_lsm6dso_state_target.sampling_interval_us = 19231;  // ~52Hz per mapping
+  s_lsm6dso_state_target.num_samples = 0;               // disable callbacks during test
   s_lsm6dso_state_target.shake_detection_enabled = false;
   s_lsm6dso_state_target.double_tap_detection_enabled = false;
   prv_lsm6dso_chase_target_state();
@@ -754,10 +758,9 @@ bool accel_run_selftest(void) {
   // Force FS=4g (required for mg conversion helper used elsewhere)
   lsm6dso_xl_full_scale_set(&lsm6dso_ctx, LSM6DSO_4g);
 
-
   // Collect baseline (self-test disabled)
   (void)lsm6dso_xl_self_test_set(&lsm6dso_ctx, LSM6DSO_XL_ST_DISABLE);
-  psleep(100); // allow settling
+  psleep(100);  // allow settling
   int32_t sum_off[3] = {0};
   const int kNumSamples = 5;
   int collected = 0;
@@ -770,7 +773,7 @@ bool accel_run_selftest(void) {
     sum_off[1] += mg[1];
     sum_off[2] += mg[2];
     ++collected;
-    psleep(20); // ~1 sample period @52Hz (19ms)
+    psleep(20);  // ~1 sample period @52Hz (19ms)
   }
   if (collected == 0) {
     // restore state
@@ -780,7 +783,7 @@ bool accel_run_selftest(void) {
     prv_lsm6dso_chase_target_state();
     return false;
   }
-  int32_t avg_off[3] = { sum_off[0]/collected, sum_off[1]/collected, sum_off[2]/collected };
+  int32_t avg_off[3] = {sum_off[0] / collected, sum_off[1] / collected, sum_off[2] / collected};
 
   // Enable positive self-test stimulus
   if (lsm6dso_xl_self_test_set(&lsm6dso_ctx, LSM6DSO_XL_ST_POSITIVE) != 0) {
@@ -791,7 +794,7 @@ bool accel_run_selftest(void) {
     prv_lsm6dso_chase_target_state();
     return false;
   }
-  psleep(100); // settling per app note
+  psleep(100);  // settling per app note
 
   int32_t sum_on[3] = {0};
   collected = 0;
@@ -808,9 +811,9 @@ bool accel_run_selftest(void) {
   }
   int32_t avg_on[3] = {0};
   if (collected > 0) {
-    avg_on[0] = sum_on[0]/collected;
-    avg_on[1] = sum_on[1]/collected;
-    avg_on[2] = sum_on[2]/collected;
+    avg_on[0] = sum_on[0] / collected;
+    avg_on[1] = sum_on[1] / collected;
+    avg_on[2] = sum_on[2] / collected;
   }
 
   // Disable self-test
@@ -818,17 +821,25 @@ bool accel_run_selftest(void) {
 
   // Thresholds (mg) - conservative lower bounds
   const int kMinDeltaXY_mg = 90;  // datasheet min typically ~90 mg
-  const int kMinDeltaZ_mg  = 90;  // Z similar / slightly different; keep same for simplicity
+  const int kMinDeltaZ_mg = 90;   // Z similar / slightly different; keep same for simplicity
 
   bool pass = true;
   int32_t delta_x = ABS(avg_on[0] - avg_off[0]);
   int32_t delta_y = ABS(avg_on[1] - avg_off[1]);
   int32_t delta_z = ABS(avg_on[2] - avg_off[2]);
-  if (delta_x < kMinDeltaXY_mg) { pass = false; }
-  if (delta_y < kMinDeltaXY_mg) { pass = false; }
-  if (delta_z < kMinDeltaZ_mg)  { pass = false; }
+  if (delta_x < kMinDeltaXY_mg) {
+    pass = false;
+  }
+  if (delta_y < kMinDeltaXY_mg) {
+    pass = false;
+  }
+  if (delta_z < kMinDeltaZ_mg) {
+    pass = false;
+  }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Self-test deltas mg X=%"PRId32" Y=%"PRId32" Z=%"PRId32" (min XY=%d Z=%d) => %s",
+  PBL_LOG(LOG_LEVEL_DEBUG,
+          "LSM6DSO: Self-test deltas mg X=%" PRId32 " Y=%" PRId32 " Z=%" PRId32
+          " (min XY=%d Z=%d) => %s",
           delta_x, delta_y, delta_z, kMinDeltaXY_mg, kMinDeltaZ_mg, pass ? "PASS" : "FAIL");
 
   // Restore previous configuration (best-effort)
