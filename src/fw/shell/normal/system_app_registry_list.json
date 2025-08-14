@@ -330,7 +330,11 @@
       "md_fn": "workout_app_get_info",
       "color_argb8": "GColorYellowARGB8",
       "target_platforms": [
-        "silk"
+        "silk",
+        "snowy",
+        "spalding",
+        "asterix",
+        "obelix"
       ]
     },
     {
