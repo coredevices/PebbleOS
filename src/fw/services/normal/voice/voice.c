@@ -169,7 +169,7 @@ static void prv_cancel_recording(void) {
 static void prv_reset(void) {
   s_state = SessionState_Idle;
   s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
-  s_teardown_in_progress = false;
+  
 }
 
 static void prv_cancel_session(void) {
