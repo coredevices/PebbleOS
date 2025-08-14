@@ -127,7 +127,7 @@ def options(opt):
                    help='Disable log hashing and make the logs human readable')
     opt.add_option('--log-level', default='debug', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
        help='Default global log level')
-    opt.add_option('--flash-log-level', default='debug', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
+    opt.add_option('--flash-log-level', default='info', choices=['error', 'warn', 'info', 'debug', 'debug_verbose'],
        help='Default flash log level')
 
     opt.add_option('--lang',
