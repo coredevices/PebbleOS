@@ -53,6 +53,10 @@ static RtcTicks s_analytics_device_stop_ticks = 0;
 static uint64_t s_analytics_app_sleep_cpu_cycles = 0;
 static RtcTicks s_analytics_app_stop_ticks = 0;
 
+static uint32_t s_last_ticks_elapsed_in_stop = 0;
+static uint32_t s_last_ticks_commanded_in_stop = 0;
+static uint32_t s_ticks_corrected = 0;
+
 // We need different timings for our different platforms since we use different mechanisms to keep
 // time and to wake us up out of stop mode. On stm32f2 we don't have a millisecond register so we
 // use the "retina rtc" and a RTC Alarm peripheral. On stm32f4 we do have a millisecond register
@@ -71,7 +75,6 @@ static const RtcTicks EARLY_WAKEUP_TICKS = 4;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 8;
 #endif
-
 
 // 1024 ticks so that we only wake up once every regular timer interval.
 static const RtcTicks MAX_STOP_TICKS = 1024;
@@ -108,6 +111,28 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
   if (eTaskConfirmSleepModeStatus() != eAbortSleep) {
     if (xExpectedIdleTime < MIN_STOP_TICKS || !stop_mode_is_allowed()) {
+#if defined(MICRO_FAMILY_NRF5)
+      // We'd like to count how long we were asleep for, but on nRF5,
+      // systick is suppressed in sleep mode so that the 64MHz core clock
+      // doesn't have to be running.  We can't use the PebbleOS system RTC
+      // to measure how long we were asleep for because it is not
+      // sufficiently granular -- it's running at the system tick rate, so
+      // all we will learn is either 'we slept until the tick timer went
+      // off', or 'we got interrupted before the end of the tick'.
+      //
+      // It would be nice to get a higher resolution timer of how long we
+      // were asleep for, though.  Luckily, when NimBLE is active, it's
+      // using RTC0 in 32 kHz mode, and we can use that to measure how long
+      // we were asleep for!  This is, of course, kind of a hack -- it works
+      // only while NimBLE is running.  But we don't have any dramtically
+      // better options, and this is definitely better than nothing.
+      //
+      // This is used *only* here, and is used *only* for statistics, so
+      // it's OK if this is brittle (and, it is!).  If NimBLE is not running
+      // (and RTC0 is shut down), then we just end up measuring 0 here -- no
+      // harm, no foul.
+      uint32_t rtc_start = NRF_RTC0->COUNTER;
+#else
       // We assume that a WFI to trigger sleep mode will not last longer than 1
       // SysTick. (The SysTick INT doesn't automatically get suppressed) Thus,
       // we use the SysTick timer to get a better estimate of our sleep time
@@ -115,10 +140,8 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       // TODO: It would be nice if there was a clean way to actually 'suppress
       // ticks' while in sleep mode. If we figure that out, we would likely
       // need to update how this calculation works
-      //
-      // TODO(nrf5): systick is actually suppressed while in sleep mode!  so
-      // this calculation is bogus
       uint32_t systick_start = SysTick->VAL;
+#endif
 
       power_tracking_start(PowerSystemMcuCoreSleep);
       __DSB();  // Drain any pending memory writes before entering sleep.
@@ -126,6 +149,14 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       __ISB();  // Let the pipeline catch up (force the WFI to activate before moving on).
       power_tracking_stop(PowerSystemMcuCoreSleep);
 
+#if defined(MICRO_FAMILY_NRF5)
+      uint32_t rtc_end = NRF_RTC0->COUNTER;
+      
+      if (rtc_end < rtc_start) /* NimBLE uses RTC0 (24 bits), 32 kiHz */
+        rtc_end += 0x1000000;
+      uint32_t rtc_elapsed = rtc_end - rtc_start;
+      uint32_t cycles_elapsed = rtc_elapsed * SystemCoreClock / 32768;
+#else
       uint32_t systick_stop = SysTick->VAL;
       uint32_t cycles_elapsed;
       if (systick_stop < systick_start) {
@@ -133,6 +164,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       } else {
         cycles_elapsed = (SysTick->LOAD - systick_stop) + systick_start;
       }
+#endif
 
       s_analytics_device_sleep_cpu_cycles += cycles_elapsed;
       s_analytics_app_sleep_cpu_cycles += cycles_elapsed;
@@ -140,10 +172,12 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       const RtcTicks stop_duration = MIN(xExpectedIdleTime - EARLY_WAKEUP_TICKS, MAX_STOP_TICKS);
 
       // Go into stop mode until the wakeup_tick.
+      s_last_ticks_commanded_in_stop = stop_duration;
       rtc_alarm_set(stop_duration);
       enter_stop_mode();
 
       RtcTicks ticks_elapsed = rtc_alarm_get_elapsed_ticks();
+      s_last_ticks_elapsed_in_stop = ticks_elapsed;
       vTaskStepTick(ticks_elapsed);
 
       // Update the task watchdog every time we come out of STOP mode (which is
@@ -212,6 +246,7 @@ void* pvPortMalloc(size_t xSize) {
   return kernel_malloc(xSize);
 }
 
+
 // Called from the SysTick handler ISR to adjust ticks for situations where the CPU might
 // occasionally fall behind and miss some tick interrupts (like when running under emulation).
 bool vPortCorrectTicks(void) {
@@ -249,6 +284,7 @@ bool vPortCorrectTicks(void) {
     /* Increment the RTOS ticks. */
     need_context_switch |= (xTaskIncrementTick() != 0);
     act_ticks++;
+    s_ticks_corrected++;
   }
   return need_context_switch;
 }
@@ -276,7 +312,7 @@ void dump_current_runtime_stats(void) {
 
   uint32_t tot_time = running_ms + sleep_ms + stop_ms;
 
-  char buf[80];
+  char buf[160];
   snprintf(buf, sizeof(buf), "Run:   %"PRIu32" ms (%"PRIu32" %%)",
            running_ms, (running_ms * 100) / tot_time);
   prompt_send_response(buf);
@@ -291,7 +327,8 @@ void dump_current_runtime_stats(void) {
   
   uint32_t rtc_ticks = rtc_get_ticks();
   uint32_t rtos_ticks = xTaskGetTickCount();
-  snprintf(buf, sizeof(buf), "RTC ticks: %"PRIu32", RTOS ticks: %"PRIu32, rtc_ticks, rtos_ticks);
+  snprintf(buf, sizeof(buf), "RTC ticks: %"PRIu32", RTOS ticks: %"PRIu32 ", ticks corrected: %"PRIu32 ", last ticks stopped: %"PRIu32 " / %"PRIu32,
+                             rtc_ticks, rtos_ticks, s_ticks_corrected, s_last_ticks_elapsed_in_stop, s_last_ticks_commanded_in_stop);
   prompt_send_response(buf);
 }
 
