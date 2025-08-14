@@ -24,4 +24,4 @@
 #define BLE_LOG_DEBUG(fmt, args...) PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, fmt, ## args)
 #define BLE_LOG_VERBOSE(fmt, args...) PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG_VERBOSE, fmt, ## args)
 #define BLE_HEXDUMP(data, length) PBL_HEXDUMP_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, data, length)
-
+#define BLE_HEXDUMP_VERBOSE(data, length) PBL_HEXDUMP_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG_VERBOSE, data, length)
