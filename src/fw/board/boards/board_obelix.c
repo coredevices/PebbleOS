@@ -283,6 +283,53 @@ I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
 IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
 
+static I2CDeviceState s_i2c_device_state_2;
+
+static struct I2CBusHal s_i2c_bus_hal_2 = {
+    .i2c_state = &s_i2c_device_state_2,
+    .hi2c =
+        {
+            .Instance = I2C2,
+            .Init = {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+            .Mode = HAL_I2C_MODE_MASTER,
+
+        },
+
+    .device_name = "i2c2",
+    .scl =
+        {
+            .pad = PAD_PA32,
+            .func = I2C2_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA33,
+            .func = I2C2_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .core = CORE_ID_HCPU,
+    .module = RCC_MOD_I2C2,
+    .irqn = I2C2_IRQn,
+    .irq_priority = 5,
+    .timeout = 5000,
+};
+
+static I2CBusState s_i2c_bus_state_2;
+
+static I2CBus s_i2c_bus_2 = {
+    .hal = &s_i2c_bus_hal_2,
+    .state = &s_i2c_bus_state_2,
+};
+
+I2CBus *const I2C2_BUS = &s_i2c_bus_2;
+
+IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
+
 static const I2CSlavePort s_i2c_npm1300 = {
     .bus = &s_i2c_bus_1,
     .address = 0x6B,
@@ -400,4 +447,5 @@ void board_early_init(void) {
 
 void board_init(void) {
   i2c_init(I2C1_BUS);
+  i2c_init(I2C2_BUS);
 }
