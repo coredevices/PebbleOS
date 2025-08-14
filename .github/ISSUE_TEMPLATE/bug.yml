@@ -31,17 +31,34 @@ body:
   validations:
     required: true
 
-- type: textarea
+- type: input
   attributes:
-    label: Environment
-    description: |
-      examples:
-        - **OS**: Ubuntu 20.04
-        - **Watch**: Pebble Time (Snowy)
-    value: |
-        - **OS**:
-        - **Watch**:
-    render: markdown
+    label: Version 
+    description: PebbleOS version (Git tag or sha)
+  validations:
+    required: true
+
+- type: dropdown
+  attributes:
+    label: Host OS
+    multiple: true
+    options:
+      - Ubuntu 24.04 LTS
+      - macOS 15
+      - Others (unsupported)
+      - N/A
+  validations:
+    required: true
+
+- type: dropdown
+  attributes:
+    label: Watch
+    multiple: true
+    options:
+      - Pebble 2 Duo (Asterix)
+      - Pebble 2 (Silk)
+      - Pebble Time 2 (Obelix)
+      - Pebble Time (Snowy)
   validations:
     required: true
 
