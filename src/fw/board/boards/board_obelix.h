@@ -28,6 +28,7 @@ extern UARTDevice * const HCI_TRACE_UART;
 extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
+extern I2CBus *const I2C2_BUS;
 extern I2CSlavePort * const I2C_NPM1300;
 extern const Npm1300Config NPM1300_CONFIG;
 extern PwmConfig *const PWM1_CH1;
