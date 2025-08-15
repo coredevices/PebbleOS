@@ -471,6 +471,36 @@ void prv_lsm6dso_configure_double_tap(bool enable) {
   }
 }
 
+// Configure wake-up (any-motion) for shake detection using wake-up threshold & duration.
+static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
+  if (!enable) {
+    // Disable wake-up related routing by clearing threshold
+    lsm6dso_wkup_threshold_set(&lsm6dso_ctx, 0);
+    return;
+  }
+
+  // Select slope filter (not high-pass) for wake-up detection
+  lsm6dso_xl_hp_path_internal_set(&lsm6dso_ctx, LSM6DSO_USE_SLOPE);
+
+  // Weight of threshold: use FS/64 for finer resolution when high sensitivity
+  lsm6dso_wkup_ths_weight_set(&lsm6dso_ctx,
+                              sensitivity_high ? LSM6DSO_LSb_FS_DIV_256 : LSM6DSO_LSb_FS_DIV_64);
+
+  // Duration: increase a bit to reduce spurious triggers
+  lsm6dso_wkup_dur_set(&lsm6dso_ctx, sensitivity_high ? 0 : 1);
+
+  // Threshold: derive from board config; clamp into 0..63
+  uint32_t raw_high = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
+  uint32_t raw_low = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
+  uint32_t raw = sensitivity_high ? raw_high : raw_low;
+  // Increase sensitivity: scale threshold down (halve). Ensure at least 2 to avoid noise storms.
+  raw = (raw + 1) / 2;     // divide by 2 rounding up
+  if (raw > 63) raw = 63;  // lsm6dso wk_ths is 6 bits
+  // Sanity fallback if 0 (avoid constant triggers) choose very low but non-zero
+  if (raw == 0) raw = 2;
+  lsm6dso_wkup_threshold_set(&lsm6dso_ctx, (uint8_t)raw);
+}
+
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
   if (s_interrupts_pending) {  // avoid flooding the kernel queue
     return;
@@ -543,36 +573,6 @@ static void prv_lsm6dso_process_interrupts(void) {
       accel_cb_shake_detected(axis, direction);
     }
   }
-}
-
-// Configure wake-up (any-motion) for shake detection using wake-up threshold & duration.
-static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
-  if (!enable) {
-    // Disable wake-up related routing by clearing threshold
-    lsm6dso_wkup_threshold_set(&lsm6dso_ctx, 0);
-    return;
-  }
-
-  // Select slope filter (not high-pass) for wake-up detection
-  lsm6dso_xl_hp_path_internal_set(&lsm6dso_ctx, LSM6DSO_USE_SLOPE);
-
-  // Weight of threshold: use FS/64 for finer resolution when high sensitivity
-  lsm6dso_wkup_ths_weight_set(&lsm6dso_ctx,
-                              sensitivity_high ? LSM6DSO_LSb_FS_DIV_256 : LSM6DSO_LSb_FS_DIV_64);
-
-  // Duration: increase a bit to reduce spurious triggers
-  lsm6dso_wkup_dur_set(&lsm6dso_ctx, sensitivity_high ? 0 : 1);
-
-  // Threshold: derive from board config; clamp into 0..63
-  uint32_t raw_high = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
-  uint32_t raw_low = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
-  uint32_t raw = sensitivity_high ? raw_high : raw_low;
-  // Increase sensitivity: scale threshold down (halve). Ensure at least 2 to avoid noise storms.
-  raw = (raw + 1) / 2;     // divide by 2 rounding up
-  if (raw > 63) raw = 63;  // lsm6dso wk_ths is 6 bits
-  // Sanity fallback if 0 (avoid constant triggers) choose very low but non-zero
-  if (raw == 0) raw = 2;
-  lsm6dso_wkup_threshold_set(&lsm6dso_ctx, (uint8_t)raw);
 }
 
 // Sampling interval configuration
