@@ -19,7 +19,9 @@
 #include "drivers/i2c.h"
 #include "drivers/exti.h"
 #include "drivers/rtc.h"
+#include "drivers/vibe.h"
 #include "kernel/util/sleep.h"
+#include "services/common/vibe_pattern.h"
 #include "system/logging.h"
 #include "util/math.h"
 #include "lsm6dso_reg.h"
@@ -41,6 +43,7 @@ static void prv_lsm6dso_configure_double_tap(bool enable);
 static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
+static bool prv_is_vibing(void);
 typedef struct {
   lsm6dso_odr_xl_t odr;
   uint32_t interval_us;
@@ -81,12 +84,16 @@ lsm6dso_state_t s_lsm6dso_state_target = {0};
 static bool s_interrupts_pending = false;
 static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_threshold / 1250;
 static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
+static uint32_t s_last_vibe_detected = 0;
 
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
 #define LSM6DSO_FIFO_MAX_WATERMARK 1023
 
 // Maximum allowed sampling interval (i.e., slowest rate, in microseconds)
 #define LSM6DSO_EVENT_MAX_INTERVAL_US 2398
+
+// Delay after detecting a vibe before shake/tap interrupts should be processed again
+#define LSM6DSO_VIBE_COOLDOWN_MS 50
 
 // LSM6DSO configuration entrypoints
 
@@ -523,6 +530,12 @@ static void prv_lsm6dso_process_interrupts(void) {
     prv_lsm6dso_read_samples();
   }
 
+  // If currently vibing, any additional events should be ignored (they are
+  // likely spurious).
+  if (prv_is_vibing()) {
+    return;
+  }
+
   if (all_sources.double_tap) {
     PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered");
     // Handle double tap detection
@@ -573,6 +586,21 @@ static void prv_lsm6dso_process_interrupts(void) {
       accel_cb_shake_detected(axis, direction);
     }
   }
+}
+
+static bool prv_is_vibing(void) {
+  if (vibes_get_vibe_strength() != VIBE_STRENGTH_OFF) {
+    s_last_vibe_detected = prv_get_timestamp_ms();
+    return true;
+  }
+  if (s_last_vibe_detected > 0) {
+    if (prv_get_timestamp_ms() - s_last_vibe_detected < LSM6DSO_VIBE_COOLDOWN_MS) {
+      return true;
+    } else {
+      s_last_vibe_detected = 0;  // reset if cooldown expired
+    }
+  }
+  return false;
 }
 
 // Sampling interval configuration
