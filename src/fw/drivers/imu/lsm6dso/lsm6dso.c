@@ -89,8 +89,8 @@ static uint32_t s_last_vibe_detected = 0;
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
 #define LSM6DSO_FIFO_MAX_WATERMARK 1023
 
-// Maximum allowed sampling interval (i.e., slowest rate, in microseconds)
-#define LSM6DSO_EVENT_MAX_INTERVAL_US 2398
+// Maximum allowed sampling interval for tap detection (i.e., slowest rate, in microseconds)
+#define LSM6DSO_TAP_DETECTION_MAX_INTERVAL_US 2398
 
 // Delay after detecting a vibe before shake/tap interrupts should be processed again
 #define LSM6DSO_VIBE_COOLDOWN_MS 50
@@ -627,7 +627,7 @@ static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
   }
 
   if (s_lsm6dso_state.double_tap_detection_enabled) {
-    interval_us = MIN(interval_us, LSM6DSO_EVENT_MAX_INTERVAL_US);
+    interval_us = MIN(interval_us, LSM6DSO_TAP_DETECTION_MAX_INTERVAL_US);
   }
 
   odr_xl_interval_t odr_interval = prv_get_odr_for_interval(interval_us);
