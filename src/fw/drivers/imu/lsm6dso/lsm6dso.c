@@ -521,12 +521,11 @@ static void prv_lsm6dso_process_interrupts(void) {
   lsm6dso_all_sources_t all_sources;
   lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources);
 
+  // Collect accelerometer samples if requested
   if (s_lsm6dso_state.num_samples > 0 && all_sources.drdy_xl) {
     prv_lsm6dso_read_samples();
-  }
-  // FIFO watermark (or overrun/full) events when batching
-  if (s_lsm6dso_state.num_samples > 1 &&
-      (all_sources.fifo_th || all_sources.fifo_full || all_sources.fifo_ovr)) {
+  } else if (s_lsm6dso_state.num_samples > 1 &&
+             (all_sources.fifo_th || all_sources.fifo_full || all_sources.fifo_ovr)) {
     prv_lsm6dso_read_samples();
   }
 
@@ -536,6 +535,7 @@ static void prv_lsm6dso_process_interrupts(void) {
     return;
   }
 
+  // Process double tap events
   if (all_sources.double_tap) {
     PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered");
     // Handle double tap detection
@@ -583,6 +583,7 @@ static void prv_lsm6dso_process_interrupts(void) {
         bool invert = cfg->axes_inverts[axis];
         direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
       }
+      PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Shake detected; axis=%d, direction=%lu", axis, direction);
       accel_cb_shake_detected(axis, direction);
     }
   }
