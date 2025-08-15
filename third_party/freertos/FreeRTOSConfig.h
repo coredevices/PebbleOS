@@ -97,7 +97,7 @@ extern uint32_t SystemCoreClock;
 #define configLAST_MPU_REGION FREERTOS_LAST_MPU_REGION
 #endif
 
-#define configUSE_TIMERS FREERTOS_USE_TIMERS
+#define configUSE_TIMERS 0
 #define configTIMER_TASK_PRIORITY (configMAX_PRIORITIES - 1)
 #define configTIMER_QUEUE_LENGTH 32
 #define configTIMER_TASK_STACK_DEPTH (256 + 64)
