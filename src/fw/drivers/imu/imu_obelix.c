@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Google LLC
+ * Copyright 2025 Core Devices LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "drivers/imu.h"
+#include "drivers/imu/lsm6dso/lsm6dso.h"
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-#include "system/logging.h"
-#include "system/passert.h"
-#include "system/hexdump.h"
+void imu_init(void) {
+  lsm6dso_init();
+}
 
-#define BLE_LOG_DEBUG(fmt, args...) PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, fmt, ## args)
-#define BLE_LOG_VERBOSE(fmt, args...) PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG_VERBOSE, fmt, ## args)
-#define BLE_HEXDUMP(data, length) PBL_HEXDUMP_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, data, length)
-#define BLE_HEXDUMP_VERBOSE(data, length) PBL_HEXDUMP_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG_VERBOSE, data, length)
+void imu_power_up(void) {
+  lsm6dso_power_up();
+}
+
+void imu_power_down(void) {
+  lsm6dso_power_down();
+}

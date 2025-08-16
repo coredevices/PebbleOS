@@ -269,7 +269,7 @@ board_capability_dicts = [
             'HAS_JAVASCRIPT',
             'HAS_LAUNCHER4',
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
-            # 'HAS_MICROPHONE',
+            'HAS_MICROPHONE',
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             'HAS_SDK_SHELL4',
             'HAS_SPRF_V3',
@@ -285,7 +285,7 @@ board_capability_dicts = [
         },
     },
     {
-        'boards': [ 'obelix' ],
+        'boards': [ 'obelix', 'obelix_bb' ],
         'capabilities':
         {
             'HAS_APP_GLANCES',
@@ -302,6 +302,7 @@ board_capability_dicts = [
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
             'HAS_VIBE_AW95226',
+            'HAS_FLASH_OTP',
         },
     },
 ]

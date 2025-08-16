@@ -47,6 +47,7 @@ typedef enum {
   StateDisconnectedSubscribingData,
   // StateConnectedClosedAwaitingResetRequest, // Server-only state
   StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset,
+  StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled,
   StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset,
   StateConnectedOpen,
 } State;
@@ -123,6 +124,8 @@ typedef struct PPoGATTClient {
 
   //! Number of consecutive resets so far
   uint8_t resets_counter;
+
+  bool disconnect_requested; //! True if the client requested a disconnect
 
   TimerID rx_ack_timer;   //! Timer to ensure Acks for data are dispatched regularly
 
@@ -313,28 +316,15 @@ static void prv_increment_timeout_counter_if_necessary(PPoGATTClient *client) {
 }
 
 static void prv_check_timeouts(PPoGATTClient *client) {
-  static int s_ppogatt_timeout_count = 0;
-
   if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset ||
       client->state == StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset) {
     if (prv_has_timeout(client)) {
       // We've timed out waiting for a reset to be completed, start over:
-
-      // iAP and PPoGATT are connecting concurrently at the moment. To avoid having two system
-      // sessions, the iOS app will deliberately hold the PPoGATT client in the reset state, by not
-      // sending the Reset Complete, if there is already a session over iAP.
-      // Co-operate with this and check whether this might be the case, if so, don't re-request a
-      // reset:
-      // To be removed with https://pebbletechnology.atlassian.net/browse/PBL-21864
-      if (!comm_session_get_system_session()) {
-        // It seems like sometimes we get wedged here, rather than spam the logs, cap the amount of
-        // times we will print this message
-        if (s_ppogatt_timeout_count++ < 5) {
-          PBL_LOG(LOG_LEVEL_INFO, "Timed out waiting for Reset Complete, Resetting again...");
-        }
-        prv_start_reset(client);
-      }
+      PBL_LOG(LOG_LEVEL_INFO, "Timed out waiting for Reset Complete, Resetting again...");
+      prv_start_reset(client);
     }
+    return;
+  } else if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled) {
     return;
   }
 
@@ -345,9 +335,6 @@ static void prv_check_timeouts(PPoGATTClient *client) {
     // no point in continuing.
     return;
   }
-
-  // No timeouts
-  s_ppogatt_timeout_count = 0;
 }
 
 static void prv_timer_callback(void *unused) {
@@ -523,38 +510,34 @@ static void prv_enter_awaiting_reset_complete(PPoGATTClient *client, bool self_i
 
 static void prv_start_reset(PPoGATTClient *client) {
   if (++client->resets_counter >= PPOGATT_RESET_COUNT_MAX) {
-    if (++s_disconnect_counter > PPOGATT_DISCONNECT_COUNT_MAX) {
-      // only log this the first couple of times it happens
-      if (s_disconnect_counter < (PPOGATT_DISCONNECT_COUNT_MAX + 3)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Not disconnecting because max disconnects reached...");
-      }
-      return;
-    } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Disconnecting because max resets reached...");
-
-      // Record the time of this disconnect request
-      analytics_event_PPoGATT_disconnect(rtc_get_time(), false);
-
-      bt_lock();
-      const BLECharacteristic characteristic = client->characteristics.meta;
-      GAPLEConnection *connection = gatt_client_characteristic_get_connection(characteristic);
-      bt_unlock();
-
-      if (connection != NULL) {
-        bt_driver_gap_le_disconnect(&connection->device);
-      } else {
-        PBL_LOG(LOG_LEVEL_ERROR, "PPoGatt: disconnect attempt failed, no connection for char 0x%x",
-                (int)characteristic);
-#if !RELEASE
-        // Observed this path getting hit in PBL-43336, let's try to collect a core to look at the
-        // gatt service state
-        PBL_ASSERTN(0);
-#endif
-      }
+    if (client->disconnect_requested) {
       return;
     }
+
+    if (++s_disconnect_counter > PPOGATT_DISCONNECT_COUNT_MAX) {
+      // If we have disconnected too many times, do not disconnect and leave the client in a
+      // "stalled" state, so that we have the option to "unstall" by sending a remote reset
+      client->state = StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled;
+      PBL_LOG(LOG_LEVEL_WARNING, "Reset request stalled, not disconnecting");
+      return;
+    }
+
+    PBL_LOG(LOG_LEVEL_ERROR, "Disconnecting because max resets reached...");
+
+    // Record the time of this disconnect request
+    analytics_event_PPoGATT_disconnect(rtc_get_time(), false);
+
+    bt_lock();
+    const BLECharacteristic characteristic = client->characteristics.meta;
+    GAPLEConnection *connection = gatt_client_characteristic_get_connection(characteristic);
+    PBL_ASSERTN(connection != NULL);
+    bt_unlock();
+
+    bt_driver_gap_le_disconnect(&connection->device);
+    client->disconnect_requested = true;
+  } else {
+    prv_enter_awaiting_reset_complete(client, true /* self_initiated */);
   }
-  prv_enter_awaiting_reset_complete(client, true /* self_initiated */);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -719,6 +702,7 @@ static void prv_handle_data_notification(PPoGATTClient *client,
       PBL_LOG(LOG_LEVEL_ERROR, "Got reset complete while open!?");
     }
   } else if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset ||
+             client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled ||
              client->state == StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset) {
     if (LIKELY(packet->type == PPoGATTPacketTypeResetComplete)) {
       prv_handle_reset_complete(client, packet, value_length - sizeof(PPoGATTPacket));

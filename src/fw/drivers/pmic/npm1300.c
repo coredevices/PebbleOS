@@ -264,15 +264,9 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BCHARGER_TASKRELEASEERROR, 1);
 
   // FIXME: this needs to be configurable at board level
-#if PLATFORM_ASTERIX
-  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
-#elif PLATFORM_OBELIX
-  // FIXME(OBELIX): NTC not working
-  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_HIZ);
-#endif
-
-  // FIXME: this needs to be configurable at board level
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
+  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
+
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
 #endif

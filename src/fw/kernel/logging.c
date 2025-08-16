@@ -143,7 +143,6 @@ void kernel_pbl_log_serial(LogBinaryMessage *log_message, bool async) {
 void kernel_pbl_log_flash(LogBinaryMessage *log_message, bool async) {
   int length = sizeof(*log_message) + log_message->message_length;
 
-  static const uint8_t FLASH_LOG_LEVEL = LOG_LEVEL_INFO;
   if (g_pbl_log_enabled &&
       (log_message->log_level == LOG_LEVEL_ALWAYS ||
        (log_message->log_level <= FLASH_LOG_LEVEL))) {

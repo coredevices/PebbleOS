@@ -34,6 +34,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/profiler.h"
+#include "util/likely.h"
 #include "util/uuid.h"
 
 #include <string.h>
@@ -67,6 +68,12 @@ static Uuid s_app_uuid;
 
 static AudioEndpointSessionId s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
 static TimerID s_timeout = TIMER_INVALID_ID;
+
+// Session generation & teardown guards to mitigate race conditions between explicit cancel
+// and timeout callbacks executing on the timer thread.
+static uint32_t s_session_generation = 0;      // Monotonic session counter
+static uint32_t s_timeout_generation = 0;      // Generation tied to currently scheduled timeout
+static bool s_teardown_in_progress = false;    // Debounce concurrent teardown paths
 
 static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data);
@@ -135,6 +142,12 @@ static void prv_stop_recording(void) {
   audio_endpoint_stop_transfer(s_session_id);
   PBL_LOG(LOG_LEVEL_INFO, "Stop recording audio");
   prv_teardown_session();
+
+  // We no longer need to encode frames once recording has stopped. Free Speex resources
+  // immediately so memory becomes available while we wait for the result.
+  if (voice_speex_is_initialized()) {
+    voice_speex_deinit();
+  }
 }
 
 static void prv_cancel_recording(void) {
@@ -146,11 +159,17 @@ static void prv_cancel_recording(void) {
   audio_endpoint_cancel_transfer(s_session_id);
   PBL_LOG(LOG_LEVEL_INFO, "Cancel audio recording");
   prv_teardown_session();
+
+  // Free Speex resources since we are aborting the session.
+  if (voice_speex_is_initialized()) {
+    voice_speex_deinit();
+  }
 }
 
 static void prv_reset(void) {
   s_state = SessionState_Idle;
   s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
+  
 }
 
 static void prv_cancel_session(void) {
@@ -182,6 +201,7 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
   // TODO: Handle this better: there is no feedback to the UI that we've stopped recording
   s_state = SessionState_WaitForSessionResult;
   prv_stop_recording();
+  s_timeout_generation = s_session_generation;
   prv_start_result_timeout();
 }
 
@@ -275,6 +295,13 @@ static void prv_audio_transfer_setup_complete_handler(AudioEndpointSessionId ses
 static void prv_session_result_timeout(void * data) {
   mutex_lock(s_lock);
 
+  if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
+    VOICE_LOG("Ignoring stale session result timeout (t_gen=%"PRIu32" cur=%"PRIu32" teardown=%d)",
+              s_timeout_generation, s_session_generation, s_teardown_in_progress);
+    mutex_unlock(s_lock);
+    return;
+  }
+
   PBL_ASSERTN(s_state == SessionState_WaitForSessionResult);
 
   prv_reset();
@@ -287,6 +314,13 @@ static void prv_session_result_timeout(void * data) {
 
 static void prv_session_setup_timeout(void * data) {
   mutex_lock(s_lock);
+  if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
+    VOICE_LOG("Ignoring stale session setup timeout (t_gen=%"PRIu32" cur=%"PRIu32" teardown=%d)",
+              s_timeout_generation, s_session_generation, s_teardown_in_progress);
+    mutex_unlock(s_lock);
+    return;
+  }
+
   PBL_ASSERTN(s_state == SessionState_StartSession ||
               s_state == SessionState_VoiceEndpointSetupReceived ||
               s_state == SessionState_AudioEndpointSetupReceived);
@@ -323,11 +357,7 @@ static VoiceStatus prv_get_status_from_result(VoiceEndpointResult result) {
 
 void voice_init(void) {
   s_lock = mutex_create();
-  
-  // Initialize Speex encoder
-  if (!voice_speex_init()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize Speex encoder");
-  }
+  // Speex encoder is now initialized lazily when a dictation session starts
 }
 
 // This will kick off a dictation session. After the setup session message is sent via the
@@ -338,11 +368,26 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   VOICE_LOG("voice_start_dictation called with session_type: %d", session_type);
   mutex_lock(s_lock);
 
+  // Lazily initialize Speex encoder to avoid baseline memory usage when voice not used
+  if (!voice_speex_is_initialized()) {
+    if (!voice_speex_init()) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize Speex encoder");
+      mutex_unlock(s_lock);
+      return VOICE_SESSION_ID_INVALID;
+    }
+  }
+
   if (s_state != SessionState_Idle) {
     VOICE_LOG("Voice service not idle (state: %d), returning invalid session", s_state);
     mutex_unlock(s_lock);
     return VOICE_SESSION_ID_INVALID;
   }
+  // Start new session generation and clear teardown guard
+  s_session_generation++;
+  if (UNLIKELY(s_session_generation == 0)) { // handle wrap-around (very unlikely)
+    s_session_generation = 1;
+  }
+  s_teardown_in_progress = false;
   VOICE_LOG("Setting state to StartSession");
   s_state = SessionState_StartSession;
 
@@ -388,6 +433,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   if (s_timeout == TIMER_INVALID_ID) {
     s_timeout = new_timer_create();
   }
+  s_timeout_generation = s_session_generation;
   new_timer_start(s_timeout, TIMEOUT_SESSION_SETUP, prv_session_setup_timeout, NULL, 0);
 
   mutex_unlock(s_lock);
@@ -426,7 +472,13 @@ void voice_cancel_dictation(VoiceSessionId session_id) {
   }
 
   if (s_state != SessionState_Idle) {
-    new_timer_stop(s_timeout);
+    bool stopped = new_timer_stop(s_timeout);
+    if (!stopped) {
+      // Timer callback in progress or already firing; invalidate generation so callback no-ops
+      s_timeout_generation = 0;
+      VOICE_LOG("Timeout stop race (cancel), invalidating timeout generation");
+    }
+    s_teardown_in_progress = true;
     if (s_state == SessionState_StartSession ||
         s_state == SessionState_VoiceEndpointSetupReceived ||
         s_state == SessionState_AudioEndpointSetupReceived) {

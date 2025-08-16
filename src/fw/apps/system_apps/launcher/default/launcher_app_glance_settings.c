@@ -219,7 +219,7 @@ static GTextNode *prv_create_subtitle_node(LauncherAppGlanceStructured *structur
                                            vertically_centered_battery_percent_text_node);
   }
 
-#if PLATFORM_ROBERT
+#if PLATFORM_ROBERT || PLATFORM_OBELIX
   const int16_t subtitle_icon_offset_y = 5;
 #else
   const int16_t subtitle_icon_offset_y = 2;

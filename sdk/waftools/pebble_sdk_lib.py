@@ -13,6 +13,15 @@
 # limitations under the License.
 
 import json
+import sys
+import os
+
+# The wscript of a Pebble Package loads this module directly
+
+# waf loads this module from waflib/extras, which contains the file sdk_paths
+extras_dir = os.path.dirname(os.path.abspath(__file__))
+if extras_dir not in sys.path:
+    sys.path.insert(0, extras_dir)
 
 import sdk_paths
 

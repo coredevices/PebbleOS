@@ -133,6 +133,10 @@ static void prv_update_prf_info_text_layers_text(BTPairingUIData *data) {
 #if PLATFORM_ROBERT || PLATFORM_CALCULUS
   const char *font_key_default = FONT_KEY_GOTHIC_28_BOLD;
   const char *font_key_japanese = FONT_KEY_MINCHO_24_PAIR;
+#elif PLATFORM_OBELIX
+  const char *font_key_default = FONT_KEY_GOTHIC_28_BOLD;
+  // FIXME(OBELIX): We need MINCHO_24, but not available right now
+  const char *font_key_japanese = FONT_KEY_MINCHO_20_PAIR;
 #else
   const char *font_key_default = FONT_KEY_GOTHIC_24_BOLD;
   const char *font_key_japanese = FONT_KEY_MINCHO_20_PAIR;
@@ -275,7 +279,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
   switch (data->ui_state) {
     case BTPairingUIStateAwaitingUserConfirmation:
       alignment = GAlignTopLeft;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
       x_offset = 39;
       y_offset = 85;
 #else
@@ -286,7 +290,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
       break;
     case BTPairingUIStateAwaitingResult:
       alignment = GAlignLeft;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
       x_offset = 76;
       y_offset = 30;
 #else
@@ -298,7 +302,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
     case BTPairingUIStateFailed:
     case BTPairingUIStateSuccess:
       alignment = GAlignTop;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
       x_offset = 0;
       y_offset = 59;
 #else
@@ -386,7 +390,7 @@ static void prv_window_load(Window *window) {
   const int32_t width_of_action_bar_with_padding = ACTION_BAR_WIDTH + PBL_IF_RECT_ELSE(2, -4);
   const int32_t width = window->layer.bounds.size.w - width_of_action_bar_with_padding;
   const int32_t x_offset = PBL_IF_RECT_ELSE(0, 22);
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
   const int32_t info_text_y_offset = 36;
 #else
   const int32_t info_text_y_offset = PBL_IF_RECT_ELSE(10, 12);
@@ -396,13 +400,13 @@ static void prv_window_load(Window *window) {
   kino_layer_init(kino_layer, &window->layer.bounds);
   layer_add_child(&window->layer, &kino_layer->layer);
 
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
   GRect pair_text_area = GRect(0, -2, width, 44);
 #else
   GRect pair_text_area = GRect(0, -2, width, 30);
 #endif
 
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
   layer_set_frame(&data->info_text_mask_layer, &GRect(x_offset, info_text_y_offset, width, 30));
 #else
   layer_set_frame(&data->info_text_mask_layer, &GRect(x_offset, info_text_y_offset, width, 26));
@@ -414,7 +418,7 @@ static void prv_window_load(Window *window) {
   text_layer_init_with_parameters(info_text_layer,
                                   &pair_text_area,
                                   data->info_text_layer_buffer,
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
                                   fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
 #else
                                   fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),

@@ -26,10 +26,10 @@
 
 static SharedCircularBuffer s_buffer;
 static SharedCircularBufferClient s_buffer_client;
-// 526 bytes is enough to buffer up the worst case bunch of reboot messages - a watchdog reset with a timer
-// callback. During normal operation, since log messages are hashed, most are only 30-40 bytes long with the longest
-// being about 80 bytes, so this is enough for 7-15 or so messages.
-static uint8_t s_buffer_storage[550];
+// During normal operation, since log messages are hashed, most are only 30-40
+// bytes long with the longest being about 80 bytes, so this is enough for 15-40
+// or so messages.
+static uint8_t s_buffer_storage[1200];
 static PebbleMutex *s_buffer_mutex = INVALID_MUTEX_HANDLE; //!< Protects s_buffer
 static PebbleMutex *s_flash_write_mutex = INVALID_MUTEX_HANDLE; //!< Protects log line consistency
 static bool s_is_flash_write_scheduled; //!< true if handle_buffer_sync KernelBG callback is scheduled

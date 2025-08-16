@@ -31,7 +31,7 @@ typedef enum PreferredContentSize {
 
 #if !PUBLIC_SDK
 //! TODO PBL-41920: This belongs in a platform specific location
-#if PLATFORM_ROBERT
+#if PLATFORM_ROBERT || PLATFORM_OBELIX
 #define PreferredContentSizeDefault PreferredContentSizeLarge
 #else
 #define PreferredContentSizeDefault PreferredContentSizeMedium

@@ -45,7 +45,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
 
   int fd;
   if ((fd = pfs_open(ORDER_FILE, OP_FLAG_READ, 0, 0)) < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not open app menu order file");
+    PBL_LOG(LOG_LEVEL_DEBUG, "App menu order file does not exist");
     mutex_unlock(s_data.order_mutex);
     return NULL;
   }

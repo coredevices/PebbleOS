@@ -20,7 +20,7 @@
 
 #include "process_management/app_menu_data_source.h"
 
-#if PLATFORM_ROBERT
+#if PLATFORM_ROBERT || PLATFORM_OBELIX
 #define LAUNCHER_MENU_LAYER_TITLE_FONT (FONT_KEY_GOTHIC_24_BOLD)
 #define LAUNCHER_MENU_LAYER_SUBTITLE_FONT (FONT_KEY_GOTHIC_18)
 #else

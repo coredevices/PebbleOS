@@ -76,8 +76,11 @@ static void prv_unschedule_adv_if_needed(void) {
 static void prv_evaluate(ReconnectType prev_type) {
   ReconnectType cur_type = prv_current_reconnect_type();
   if (cur_type == prev_type) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "Reconnect type unchanged: %d", cur_type);
     return;
   }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "Reconnect type changed: %d -> %d", prev_type, cur_type);
 
   if (cur_type != ReconnectType_None) {
     prv_unschedule_adv_if_needed();
@@ -170,18 +173,18 @@ void gap_le_slave_reconnect_start(void) {
   bt_lock();
   {
     if (prv_is_advertising_for_reconnection()) {
-      // Already advertising for reconnection...
+      PBL_LOG(LOG_LEVEL_DEBUG, "Already advertising for reconnection");
       goto unlock;
     }
 
     if (gap_le_connect_is_connected_as_slave()) {
-      // Already connected as slave...
+      PBL_LOG(LOG_LEVEL_DEBUG, "Already connected as slave");
       goto unlock;
     }
 
     if (!bt_persistent_storage_has_active_ble_gateway_bonding() &&
         !bt_persistent_storage_has_ble_ancs_bonding()) {
-      // No bonded master device that would want to reconnect, do nothing.
+      PBL_LOG(LOG_LEVEL_DEBUG, "No bonded master device");
       goto unlock;
     }
 

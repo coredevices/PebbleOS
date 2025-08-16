@@ -113,7 +113,7 @@ void display_init(void) {
   state->hlcdc.Init = (LCDC_InitTypeDef){
       .lcd_itf = LCDC_INTF_JDI_PARALLEL,
       .color_mode = LCDC_PIXEL_FORMAT_RGB332,
-      .freq = DISPLAY->vcom.freq_hz,
+      .freq = 746268,  // HCK frequency
       .cfg =
           {
               .jdi =

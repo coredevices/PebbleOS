@@ -188,6 +188,7 @@ elif bld.is_asterix():
             'driver_gpio_defaults',
             'driver_imu',
             'driver_mcu',
+            'driver_mic',
             'driver_mpu',
             'driver_nrf5_hfxo',
             'driver_otp',
@@ -465,13 +466,13 @@ if bld.is_silk() and not bld.env.QEMU:
     )
 
 if bld.is_asterix() or bld.is_obelix():
-    # FIXME(ASTERIX,OBELIX): provide working implementation
     bld.objects(
         name='driver_lsm6dso',
         source=[
-            'stubs/accel.c',
+            'imu/lsm6dso/lsm6dso.c',
         ],
         use=[
+            'hal_lsm6dso',
             'fw_includes',
         ],
     )
@@ -768,7 +769,7 @@ elif bld.is_obelix():
             'flash/flash_crc.c',
             'flash/flash_erase.c',
             'flash/cd_flash_driver.c',
-            'flash/py25q128ha.c',
+            'flash/gd25q256e.c',
         ],
         use=[
             'driver_qspi',
@@ -1047,7 +1048,7 @@ elif bld.is_obelix():
     bld.objects(
         name='driver_imu',
         source=[
-            'stubs/imu.c',
+            'imu/imu_obelix.c',
         ],
         use=[
             'driver_lsm6dso',
@@ -1189,6 +1190,19 @@ elif bld.is_silk() or bld.is_cutts() or bld.is_robert():
             'root_includes',
             'freertos',
             'stm32_stdlib',
+        ],
+    )
+elif bld.is_asterix():
+    bld.objects(
+        name='driver_mic',
+        source=[
+            'mic/nrf5/pdm.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'freertos',
+            'hal_nordic',
         ],
     )
 

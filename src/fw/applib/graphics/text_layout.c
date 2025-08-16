@@ -470,7 +470,7 @@ void update_dimensions_char_visitor_cb(GContext* ctx, const TextBoxParams* const
   line->width_px = (cursor.origin.x + glyph_width_px) - line->origin.x;
 
   PBL_ASSERT(line->width_px <= text_box_params->box.size.w,
-      "Line <%p>: max extent=<%u> exceeds text_box_params width=<%u>",
+      "Line <%p>: max extent=<%" PRId16 "> exceeds text_box_params width=<%" PRId16 ">",
       line, line->width_px + line->origin.x, text_box_params->box.size.w);
 }
 
@@ -495,7 +495,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
   }
 
   PBL_ASSERT(line->width_px <= text_box_params->box.size.w,
-      "Line <%p>: max extent=<%u> exceeds text_box_params width=<%u>", line,
+      "Line <%p>: max extent=<%" PRId16 "> exceeds text_box_params width=<%" PRId16 ">", line,
       line->width_px + line->origin.x, text_box_params->box.size.w);
 
   int suffix_width_px = 0;

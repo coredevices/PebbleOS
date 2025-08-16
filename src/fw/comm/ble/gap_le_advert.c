@@ -138,7 +138,6 @@ static void prv_link_job(GAPLEAdvertisingJob *job) {
     // First job, make it point to itself:
     job->node.next = &job->node;
     job->node.prev = &job->node;
-    s_jobs = job;
   } else {
     list_insert_after(&s_jobs->node, &job->node);
   }
@@ -369,7 +368,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
     const bool is_loop_around = (terms[i].duration_secs == GAPLE_ADVERTISING_DURATION_LOOP_AROUND);
     if (is_loop_around) {
       if (i == 0) {
-        // First term cannot be loop-around
+        PBL_LOG(LOG_LEVEL_ERROR, "Loop-around term cannot be the first term");
         return NULL;
       }
       continue;

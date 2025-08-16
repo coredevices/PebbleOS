@@ -47,16 +47,16 @@ sudo apt install clang gcc gcc-multilib git gettext python3-dev python3-venv ope
 
 1. Install [brew](https://brew.sh/).
 
-2. Link `brew` Python:
+2. Install dependencies:
+
+```shell
+brew install python openocd
+```
+
+3. Link `brew` Python:
 
 ```shell
 brew link python@3
-```
-
-3. Install `openocd`
-
-```shell
-brew install openocd
 ```
 
 ::::
@@ -101,7 +101,7 @@ You can clone the PebbleOS repository by running:
 git clone --recurse-submodules https://github.com/coredevices/pebbleos
 ```
 
-Once cloned, enter the `pebble-firmware` directory before continuing:
+Once cloned, enter the `pebbleos` directory before continuing:
 
 ```shell
 cd pebbleos

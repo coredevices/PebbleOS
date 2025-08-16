@@ -866,13 +866,13 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
   NSNotification* nsnotification = (NSNotification*) notification;
   ANCSProperty properties = ANCSProperty_None;
 
-  BLE_LOG_DEBUG("NSNotification: ");
-  BLE_LOG_DEBUG("> EventID: %d", nsnotification->event_id);
-  BLE_LOG_DEBUG("> EventFlags: <%d>", nsnotification->event_flags);
-  BLE_LOG_DEBUG("> CategoryID: <%d>", nsnotification->category_id);
-  BLE_LOG_DEBUG("> CategoryCount: <%d>", nsnotification->category_count);
-  BLE_LOG_DEBUG("> NotificationUID: <%"PRIu32">", nsnotification->uid);
-  BLE_HEXDUMP((uint8_t *)nsnotification, sizeof(NSNotification));
+  BLE_LOG_VERBOSE("NSNotification: ");
+  BLE_LOG_VERBOSE("> EventID: %d", nsnotification->event_id);
+  BLE_LOG_VERBOSE("> EventFlags: <%d>", nsnotification->event_flags);
+  BLE_LOG_VERBOSE("> CategoryID: <%d>", nsnotification->category_id);
+  BLE_LOG_VERBOSE("> CategoryCount: <%d>", nsnotification->category_count);
+  BLE_LOG_VERBOSE("> NotificationUID: <%"PRIu32">", nsnotification->uid);
+  BLE_HEXDUMP_VERBOSE((uint8_t *)nsnotification, sizeof(NSNotification));
 
   // Handle the CategoryID
   if (nsnotification->category_id == CategoryIDMissedCall) {

@@ -16,6 +16,7 @@
 
 #include "bf0_hal.h"
 #include "bf0_hal_efuse.h"
+#include "bf0_hal_hlp.h"
 #include "bf0_hal_lcpu_config.h"
 #include "bf0_hal_pmu.h"
 #include "bf0_hal_rcc.h"
@@ -282,6 +283,60 @@ I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
 IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
 
+static I2CDeviceState s_i2c_device_state_2;
+
+static struct I2CBusHal s_i2c_bus_hal_2 = {
+    .i2c_state = &s_i2c_device_state_2,
+    .hi2c =
+        {
+            .Instance = I2C2,
+            .Init = {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+            .Mode = HAL_I2C_MODE_MASTER,
+
+        },
+
+    .device_name = "i2c2",
+    .scl =
+        {
+            .pad = PAD_PA32,
+            .func = I2C2_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA33,
+            .func = I2C2_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .core = CORE_ID_HCPU,
+    .module = RCC_MOD_I2C2,
+    .irqn = I2C2_IRQn,
+    .irq_priority = 5,
+    .timeout = 5000,
+};
+
+static I2CBusState s_i2c_bus_state_2;
+
+static I2CBus s_i2c_bus_2 = {
+    .hal = &s_i2c_bus_hal_2,
+    .state = &s_i2c_bus_state_2,
+};
+
+I2CBus *const I2C2_BUS = &s_i2c_bus_2;
+
+IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
+
+static const I2CSlavePort s_i2c_lsm6d = {
+    .bus = &s_i2c_bus_2,
+    .address = 0x6A,
+};
+
+I2CSlavePort *const I2C_LSM6D = &s_i2c_lsm6d;
+
 static const I2CSlavePort s_i2c_npm1300 = {
     .bus = &s_i2c_bus_1,
     .address = 0x6B,
@@ -325,9 +380,17 @@ const BoardConfig BOARD_CONFIG = {
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons = {
     [BUTTON_ID_BACK]   = { "Back",   hwp_gpio1, 34, GPIO_PuPd_NOPULL, true },
+#ifdef IS_BIGBOARD
     [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 37, GPIO_PuPd_UP, false},
+#else
+    [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 35, GPIO_PuPd_UP, false},
+#endif
     [BUTTON_ID_SELECT] = { "Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
+#ifdef IS_BIGBOARD
     [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 35, GPIO_PuPd_UP, false},
+#else
+    [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
+#endif
   },
   .timer = GPTIM1,
   .timer_irqn = GPTIM1_IRQn,
@@ -340,6 +403,15 @@ uint32_t BSP_GetOtpBase(void) {
 
 void board_early_init(void) {
   HAL_StatusTypeDef ret;
+  uint32_t bootopt;
+
+  // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
+  // that the flash is properly power cycled on reset. A flash power cycle is
+  // needed if left in 4-byte addressing mode, as bootrom does not support it.
+  bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
+  bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
+  bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
+  HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
 
   if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
     HAL_HPAON_EnableXT48();
@@ -393,4 +465,5 @@ void board_early_init(void) {
 
 void board_init(void) {
   i2c_init(I2C1_BUS);
+  i2c_init(I2C2_BUS);
 }
