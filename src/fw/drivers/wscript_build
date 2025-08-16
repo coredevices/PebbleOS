@@ -1772,11 +1772,7 @@ if bld.capability('HAS_VIBE_AW95226'):
     bld.objects(
         name='driver_vibe',
         source=[
-            'vibe/aw86225/vibe_aw86225.c',
-            'vibe/aw86225/aw862xx.c',
-            'vibe/aw86225/haptic_nv_params.c',
-            'vibe/aw86225/haptic_nv_config.c',
-            'vibe/aw86225/haptic_nv.c',
+            'vibe/vibe_aw86225.c',
         ],
         use=[
             'fw_includes'
