@@ -22,7 +22,6 @@
 #include "apps/prf_apps/mfg_als_app.h"
 #include "apps/prf_apps/mfg_bt_device_name_app.h"
 #include "apps/prf_apps/mfg_bt_sig_rf_app.h"
-#include "apps/prf_apps/mfg_btle_app.h"
 #include "apps/prf_apps/mfg_button_app.h"
 #include "apps/prf_apps/mfg_certification_app.h"
 #include "apps/prf_apps/mfg_display_app.h"
@@ -131,12 +130,6 @@ static void prv_select_certification(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_certification_app_get_info());
 }
 
-#if BT_CONTROLLER_DA14681
-static void prv_select_btle(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_btle_app_get_info());
-}
-#endif
-
 static void prv_select_program_color(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_program_color_app_get_info());
 }
@@ -216,9 +209,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #endif
 #if CAPABILITY_HAS_BUILTIN_HRM
     { .title = "Test HRM",          .callback = prv_select_hrm },
-#endif
-#if BT_CONTROLLER_DA14681
-    { .title = "Test BTLE",         .callback = prv_select_btle },
 #endif
 #if PLATFORM_ASTERIX
     { .title = "Test Speaker",      .callback = prv_select_speaker },
