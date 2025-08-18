@@ -16,14 +16,5 @@
 
 #pragma once
 
-#if BT_CONTROLLER_DA14681
-// Larger MTU sizes appear to have a more considerable impact on throughput than one would expect
-// (theoretical gain from 158 bytes - 512 bytes should only be ~3% but we are seeing up to ~30%
-// bumps).  More investigation needs to be done to understand exactly why. For now, let's bump the
-// size so Android phones which support large MTUs can leverage it
-#define ATT_MAX_SUPPORTED_MTU (339)
-#else
-// It's 158 bytes now because that's the maximum payload iOS 8 allows.
-// On legacy products, only iOS uses LE so stick with this max buffer size
-#define ATT_MAX_SUPPORTED_MTU (158)
-#endif
+// See NimBLE BLE_ATT_PREFERRED_MTU setting
+#define ATT_MAX_SUPPORTED_MTU 256
