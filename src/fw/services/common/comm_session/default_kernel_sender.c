@@ -68,16 +68,11 @@ typedef struct SendBuffer {
 //! @note We leave it up to the caller of the exported comm_session_send_* APIs to implement a
 //! retry mechanism when we are OOM. A lot of callers just implicitly assume things will work and
 //! the payload get dropped on the floor.
-#if BT_CONTROLLER_DA14681
-#define DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED \
-  ((sizeof(PebbleProtocolHeader) + DEFAULT_KERNEL_SENDER_MAX_PAYLOAD_SIZE) * 4)
-#else
 //! TODO: I don't know where we stand heap wise on older platforms like spalding. We don't really
 //! have any analytics in place to track this. Before changing the behavior, let's back it with
 //! some data. For now ...  live and let live
 #define DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED \
   ((sizeof(PebbleProtocolHeader) + DEFAULT_KERNEL_SENDER_MAX_PAYLOAD_SIZE))
-#endif
 
 // -------------------------------------------------------------------------------------------------
 //! Semaphore that is signaled when data has been consumed by the transport,
