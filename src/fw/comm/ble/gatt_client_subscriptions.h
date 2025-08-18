@@ -26,20 +26,8 @@
 struct GAPLEConnection;
 
 #define MAX_ATT_WRITE_PAYLOAD_SIZE (ATT_MAX_SUPPORTED_MTU - 3)
-#ifdef RECOVERY_FW
-// In PRF, we use a very high connection interval to make the FW update go as fast as possible.
-// We're requesting between 11-21ms (see gap_le_connect_params.c). It ultimately depends on the
-// master device (iOS) to decide which value to pick. So far the shortest I've seen is 15ms (not
-// using the 'hack' to act like a HID device/keyboard/mouse, which will make it go down to 11ms).
-// However, at 15ms notifications are getting dropped regularly already. Just to be safe, make the
-// buffer in PRF really big:
-#define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE ((MAX_ATT_WRITE_PAYLOAD_SIZE + \
-sizeof(GATTBufferedNotificationHeader)) * 6)
-#else
-// FIXME: https://pebbletechnology.atlassian.net/browse/PBL-11671
-#define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE ((MAX_ATT_WRITE_PAYLOAD_SIZE + \
-sizeof(GATTBufferedNotificationHeader)) * 4)
-#endif
+#define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE \
+  ((MAX_ATT_WRITE_PAYLOAD_SIZE + sizeof(GATTBufferedNotificationHeader)) * 4)
 
 //! Data structure representing a subscription of a specific client for
 //! noticications or indications of a GATT characteristic for a specific
