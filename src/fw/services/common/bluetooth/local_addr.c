@@ -119,9 +119,6 @@ void bt_local_addr_init(void) {
 #if RECOVERY_FW
     PBL_LOG(LOG_LEVEL_INFO, "Pausing address cycling because PRF!");
     bt_local_addr_pause_cycling();
-#elif BT_CONTROLLER_CC2564X && !RELEASE
-    PBL_LOG(LOG_LEVEL_INFO, "Pausing address cycling because cc2564x and beta build!");
-    bt_local_addr_pause_cycling();
 #else
     PBL_LOG(LOG_LEVEL_INFO, "No bondings found that require address pinning!");
     bt_driver_set_local_address(true /* allow_cycling */, NULL);
