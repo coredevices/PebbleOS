@@ -317,6 +317,7 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
 
 DEFINE_SYSCALL(void, sys_vibe_pattern_clear, void) {
   mutex_lock(s_vibe_pattern_mutex);
+  new_timer_stop(s_pattern_timer);
   while (s_vibe_queue_head) {
     VibePatternStep *removed_node = s_vibe_queue_head;
     s_vibe_queue_head = (VibePatternStep*)list_pop_head((ListNode*)s_vibe_queue_head);
