@@ -438,17 +438,6 @@ static const Command s_prompt_commands[] = {
   { "bt test start", command_bt_test_start, 0 },
   { "bt test stop", command_bt_test_stop, 0 },
   { "bt test hcipass", command_bt_test_hci_passthrough, 0 },
-#if BT_CONTROLLER_DA14681
-  { "bt sleep check", command_bt_sleep_check, 1 },
-  { "btle tx test start", command_btle_test_le_tx_start, 3 },
-  { "btle rx test start", command_btle_test_rx_start, 1 },
-  { "btle test end", command_btle_test_end, 0 },
-  { "btle umod tx test start", command_btle_unmod_tx_start, 1 },
-  { "btle umod tx test stop", command_btle_unmod_tx_stop, 0 },
-# if PLATFORM_ROBERT
-  { "btle test pa", command_btle_pa_set, 1 },
-# endif
-#endif
 
   { "bt test bt_sig_rf", command_bt_test_bt_sig_rf_mode, 0},
 
@@ -578,9 +567,6 @@ static const Command s_prompt_commands[] = {
   { "dump malloc kernel", command_dump_malloc_kernel, 0 },
   { "dump malloc app", command_dump_malloc_app, 0 },
   { "dump malloc worker", command_dump_malloc_worker, 0 },
-#if BT_CONTROLLER_CC2564X
-  { "dump malloc bt", command_dump_malloc_bt, 0 },
-#endif /* BT_CONTROLLER_CC2564X */
 #endif /* MALLOC_INSTRUMENTATION */
 
   /*
