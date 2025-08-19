@@ -33,6 +33,7 @@ def build(bld):
 	    '.',
             'nrfx',
             'nrfx/hal',
+            'nrfx/helpers',
             'nrfx/mdk',
             'nrfx/drivers/include',
             'nrfx/templates',
