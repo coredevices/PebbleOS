@@ -22,6 +22,10 @@
 
 #define NRF5_COMPATIBLE
 #include <mcu.h>
+#include <hal/nrf_gpio.h>
+#include <hal/nrf_gpiote.h>
+#include <hal/nrf_rtc.h>
+#include <nrfx_gppi.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -140,6 +144,55 @@ uint32_t display_baud_rate_change(uint32_t new_frequency_hz) {
   return old_spi_clock_hz;
 }
 
+static void prv_extcomin_init(void) {
+  nrfx_err_t err;
+  const NrfLowPowerPWM *extcomin = &BOARD_CONFIG_DISPLAY.extcomin;
+  uint32_t evt_addr, task_addr;
+  uint8_t ppi_ch[2];
+
+  nrf_gpiote_te_default(extcomin->gpiote, extcomin->gpiote_ch);
+
+  nrf_gpio_pin_write(extcomin->psel, 0);
+  nrf_gpio_cfg_output(extcomin->psel);
+
+  // RTC: CC0 is the period end, CC1 is the pulse end
+  nrf_rtc_task_trigger(extcomin->rtc, NRF_RTC_TASK_STOP);
+  nrf_rtc_event_clear(extcomin->rtc, nrf_rtc_compare_event_get(0));
+  nrf_rtc_event_clear(extcomin->rtc, nrf_rtc_compare_event_get(1));
+  nrf_rtc_task_trigger(extcomin->rtc, NRF_RTC_TASK_CLEAR);
+  nrf_rtc_prescaler_set(extcomin->rtc, NRF_RTC_FREQ_TO_PRESCALER(32768));
+  nrf_rtc_event_enable(extcomin->rtc, (NRF_RTC_INT_COMPARE0_MASK | NRF_RTC_INT_COMPARE1_MASK));
+  nrf_rtc_cc_set(extcomin->rtc, 0, (32768 * extcomin->period_us) / 1000000 - 1);
+  nrf_rtc_cc_set(extcomin->rtc, 1, (32768 * extcomin->pulse_us) / 1000000 - 1);
+
+  nrf_gpiote_task_configure(extcomin->gpiote, extcomin->gpiote_ch, extcomin->psel,
+                            NRF_GPIOTE_POLARITY_NONE, NRF_GPIOTE_INITIAL_VALUE_LOW);
+  nrf_gpiote_task_enable(extcomin->gpiote, extcomin->gpiote_ch);
+
+  err = nrfx_gppi_channel_alloc(&ppi_ch[0]);
+  PBL_ASSERTN(err == NRFX_SUCCESS);
+
+  err = nrfx_gppi_channel_alloc(&ppi_ch[1]);
+  PBL_ASSERTN(err == NRFX_SUCCESS);
+
+  // Period end (CC0) sets GPIO, clears RTC
+  evt_addr = nrf_rtc_event_address_get(extcomin->rtc, nrf_rtc_compare_event_get(0));
+  task_addr = nrf_gpiote_task_address_get(extcomin->gpiote, nrf_gpiote_set_task_get(extcomin->gpiote_ch));
+  nrfx_gppi_channel_endpoints_setup(ppi_ch[0], evt_addr, task_addr);
+
+  task_addr = nrf_rtc_event_address_get(extcomin->rtc, NRF_RTC_TASK_CLEAR);
+  nrfx_gppi_fork_endpoint_setup(ppi_ch[0], task_addr);
+
+  // Pulse end (CC1) clears GPIO
+  evt_addr = nrf_rtc_event_address_get(extcomin->rtc, nrf_rtc_compare_event_get(1));
+  task_addr = nrf_gpiote_task_address_get(extcomin->gpiote, nrf_gpiote_clr_task_get(extcomin->gpiote_ch));
+  nrfx_gppi_channel_endpoints_setup(ppi_ch[1], evt_addr, task_addr);
+
+  nrfx_gppi_channels_enable((1UL << ppi_ch[0]) | (1UL << ppi_ch[1]));
+
+  nrf_rtc_task_trigger(extcomin->rtc, NRF_RTC_TASK_START);
+}
+
 void display_init(void) {
   if (s_initialized) {
     return;
@@ -153,10 +206,7 @@ void display_init(void) {
 
   prv_display_start();
 
-  // Generate PWM signal for EXTCOMIN (120Hz, ~100us pulse width)
-  pwm_init(&BOARD_CONFIG_DISPLAY.extcomin, 125000 / 120, 125000);
-  pwm_set_duty_cycle(&BOARD_CONFIG_DISPLAY.extcomin, (100U * 125000UL) / 1000000UL);
-  pwm_enable(&BOARD_CONFIG_DISPLAY.extcomin, true);
+  prv_extcomin_init();
 
   s_initialized = true;
 }
