@@ -22,6 +22,11 @@
 
 static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                    struct ble_gatt_attr *attr, void *arg) {
+  if (error->status != 0U) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "GATT write failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16,
+              error->att_handle, error->status);
+  }
+
   GattClientOpWriteReponse resp = {
       .hdr = {
           .type = GattClientOpResponseWrite,
@@ -34,6 +39,11 @@ static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_e
 
 static int prv_gatt_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                   struct ble_gatt_attr *attr, void *arg) {
+  if (error->status != 0U) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "GATT read failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16,
+              error->att_handle, error->status);
+  }
+
   GattClientOpReadReponse resp = {
       .hdr =
           {
