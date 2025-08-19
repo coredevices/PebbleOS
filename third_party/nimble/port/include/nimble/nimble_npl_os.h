@@ -37,7 +37,8 @@
 #include "os/os_cputime.h"
 
 #if NRF52_SERIES
-#include "drivers/nrf5/hfxo.h"
+#include "drivers/clocksource.h"
+#include "kernel/util/stop.h"
 #endif
 
 #define BLE_NPL_OS_ALIGNMENT 4
@@ -232,5 +233,25 @@ static inline bool ble_npl_hw_is_in_critical(void) {
   return vPortInCritical();
 }
 #define realloc kernel_realloc
+
+#if NRF52_SERIES
+
+static inline void nrf52_clock_hfxo_request(void) {
+  /* Any time NimBLE wants to turn on the HFXO, we are also going to have
+   * pretty stringent wake latency requirements, so we must not do expensive
+   * and slow things like waking the NOR flash up from DPD on interrupts.
+   * So, we disable stop mode at the same time as actually enabling the
+   * HFXO.
+   */
+  stop_mode_disable(InhibitorBluetooth);
+  clocksource_hfxo_request();
+}
+
+static inline void nrf52_clock_hfxo_release(void) {
+  clocksource_hfxo_release();
+  stop_mode_enable(InhibitorBluetooth);
+}
+
+#endif
 
 #endif /* _NPL_H_ */

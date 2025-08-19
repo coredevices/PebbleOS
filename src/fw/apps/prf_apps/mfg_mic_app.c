@@ -25,7 +25,7 @@
 #include "drivers/i2c_definitions.h"
 #include "drivers/i2c_hal.h"
 #include "drivers/flash.h"
-#include "drivers/nrf5/hfxo.h"
+#include "drivers/clocksource.h"
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
@@ -251,7 +251,7 @@ static void prv_mic_capture(void) {
 
   s_data_ready = xSemaphoreCreateBinary();
 
-  nrf52_clock_hfxo_request();
+  clocksource_hfxo_request();
 
   s_pdm_cfg.mode = NRF_PDM_MODE_STEREO;
   // Sample rate of 16KHz (1280KHz / 80 = 16KHz)
@@ -279,7 +279,7 @@ static void prv_mic_capture(void) {
   nrfx_pdm_stop(&s_pdm);
   nrfx_pdm_uninit(&s_pdm);
 
-  nrf52_clock_hfxo_release();
+  clocksource_hfxo_release();
 
   vSemaphoreDelete(s_data_ready);
 
@@ -307,7 +307,7 @@ static void prv_playback(void) {
 
   s_need_data = xSemaphoreCreateBinary();
 
-  nrf52_clock_hfxo_request();
+  clocksource_hfxo_request();
 
   // MCLK: 4MHz, sample rate: ~16KHz (4Mhz / 256 = 15625Hz)
   s_i2s_cfg.mck_setup = NRF_I2S_MCK_32MDIV8;
@@ -343,7 +343,7 @@ static void prv_playback(void) {
   nrfx_i2s_stop(&s_i2s);
   nrfx_i2s_uninit(&s_i2s);
 
-  nrf52_clock_hfxo_release();
+  clocksource_hfxo_release();
 
   vSemaphoreDelete(s_need_data);
 
@@ -353,7 +353,7 @@ static void prv_playback(void) {
 static void prv_playback(void) {
   nrfx_err_t err;
 
-  nrf52_clock_hfxo_request();
+  clocksource_hfxo_request();
 
   // MCLK: 4MHz, sample rate: ~16KHz (4Mhz / 256 = 15625Hz)
   s_i2s_cfg.mck_setup = NRF_I2S_MCK_32MDIV8;
@@ -375,7 +375,7 @@ static void prv_playback(void) {
   nrfx_i2s_stop(&s_i2s);
   nrfx_i2s_uninit(&s_i2s);
 
-  nrf52_clock_hfxo_release();
+  clocksource_hfxo_release();
 }
 #endif
 
