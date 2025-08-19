@@ -258,6 +258,15 @@ typedef enum {
 } SpiPeriphClock;
 
 typedef struct {
+  NRF_RTC_Type *rtc;
+  NRF_GPIOTE_Type *gpiote;
+  uint8_t gpiote_ch;
+  uint32_t psel;
+  uint32_t period_us;
+  uint32_t pulse_us;
+} NrfLowPowerPWM;
+
+typedef struct {
   nrfx_spim_t spi;
 
   const OutputConfig mosi;
@@ -267,7 +276,7 @@ typedef struct {
   const OutputConfig on_ctrl;
   const nrf_gpio_pin_drive_t on_ctrl_otype;
 
-  const PwmConfig extcomin;
+  const NrfLowPowerPWM extcomin;
 } BoardConfigSharpDisplay;
 
 typedef const struct DMARequest DMARequest;
