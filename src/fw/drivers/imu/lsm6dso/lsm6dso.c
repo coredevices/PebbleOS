@@ -44,6 +44,8 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
 static bool prv_is_vibing(void);
+static bool prv_lsm6dso_health_check(void);
+static void prv_lsm6dso_attempt_recovery(void);
 typedef struct {
   lsm6dso_odr_xl_t odr;
   uint32_t interval_us;
@@ -86,6 +88,12 @@ static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_thr
 static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
 static uint32_t s_last_vibe_detected = 0;
 
+// Error tracking and recovery
+static uint32_t s_i2c_error_count = 0;
+static uint32_t s_last_successful_read_ms = 0;
+static uint32_t s_consecutive_read_failures = 0;
+static bool s_sensor_health_ok = true;
+
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
 #define LSM6DSO_FIFO_MAX_WATERMARK 1023
 
@@ -94,6 +102,11 @@ static uint32_t s_last_vibe_detected = 0;
 
 // Delay after detecting a vibe before shake/tap interrupts should be processed again
 #define LSM6DSO_VIBE_COOLDOWN_MS 50
+
+// Error recovery thresholds
+#define LSM6DSO_MAX_CONSECUTIVE_FAILURES 3
+#define LSM6DSO_HEALTH_CHECK_INTERVAL_MS 5000  // Check sensor health every 5 seconds
+#define LSM6DSO_MAX_SILENT_PERIOD_MS 30000     // Max time without successful read
 
 // LSM6DSO configuration entrypoints
 
@@ -175,7 +188,25 @@ static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
   bool result = i2c_write_block(I2C_LSM6D, 1, &reg_addr);
   if (result) result = i2c_read_block(I2C_LSM6D, read_size, buffer);
   i2c_release(I2C_LSM6D);
-  return result ? 0 : -1;
+  
+  if (!result) {
+    s_i2c_error_count++;
+    s_consecutive_read_failures++;
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: I2C read failed (reg=0x%02x, count=%lu)", 
+            reg_addr, s_consecutive_read_failures);
+    if (s_consecutive_read_failures >= LSM6DSO_MAX_CONSECUTIVE_FAILURES) {
+      s_sensor_health_ok = false;
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Sensor health degraded after %lu failures", 
+              s_consecutive_read_failures);
+    }
+    return -1;
+  } else {
+    s_consecutive_read_failures = 0;
+    s_last_successful_read_ms = prv_get_timestamp_ms();
+    s_sensor_health_ok = true;
+  }
+  
+  return 0;
 }
 
 static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *buffer,
@@ -186,7 +217,14 @@ static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *
   memcpy(&d[1], buffer, write_size);
   bool result = i2c_write_block(I2C_LSM6D, write_size + 1, d);
   i2c_release(I2C_LSM6D);
-  return result ? 0 : -1;
+  
+  if (!result) {
+    s_i2c_error_count++;
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: I2C write failed (reg=0x%02x)", reg_addr);
+    return -1;
+  }
+  
+  return 0;
 }
 
 static void prv_lsm6dso_mdelay(uint32_t ms) { psleep(ms); }
@@ -199,6 +237,12 @@ static void prv_lsm6dso_init(void) {
   if (s_lsm6dso_initialized) {
     return;
   }
+
+  // Initialize error tracking
+  s_i2c_error_count = 0;
+  s_consecutive_read_failures = 0;
+  s_last_successful_read_ms = 0;
+  s_sensor_health_ok = true;
 
   // Verify sensor is present and functioning
   uint8_t whoami;
@@ -519,7 +563,20 @@ static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
 static void prv_lsm6dso_process_interrupts(void) {
   s_interrupts_pending = false;
   lsm6dso_all_sources_t all_sources;
-  lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources);
+  
+  if (lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read interrupt sources");
+    // If we can't read interrupt sources, the sensor may be unresponsive
+    s_consecutive_read_failures++;
+    if (s_consecutive_read_failures >= LSM6DSO_MAX_CONSECUTIVE_FAILURES) {
+      s_sensor_health_ok = false;
+      PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Interrupt processing failed, sensor health degraded");
+    }
+    return;
+  }
+  
+  // Reset failure count on successful read
+  s_consecutive_read_failures = 0;
 
   // Collect accelerometer samples if requested
   if (s_lsm6dso_state.num_samples > 0 && all_sources.drdy_xl) {
@@ -703,6 +760,21 @@ static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
     return -1;
   }
 
+  // Check sensor health periodically
+  static uint32_t s_last_health_check_ms = 0;
+  uint32_t now_ms = prv_get_timestamp_ms();
+  if (now_ms - s_last_health_check_ms > LSM6DSO_HEALTH_CHECK_INTERVAL_MS) {
+    s_last_health_check_ms = now_ms;
+    if (!prv_lsm6dso_health_check()) {
+      if (s_sensor_health_ok) {
+        // Health just degraded, attempt recovery
+        prv_lsm6dso_attempt_recovery();
+      }
+      s_sensor_health_ok = false;
+      return -1;
+    }
+  }
+
   // TODO: Handle case when accelerometer is not enabled or running (by briefly
   // enabling it.
 
@@ -878,4 +950,74 @@ bool accel_run_selftest(void) {
   prv_lsm6dso_chase_target_state();
 
   return pass;
+}
+
+// Health monitoring and recovery functions
+
+//! Check if the sensor is responding properly by attempting to read WHO_AM_I
+static bool prv_lsm6dso_health_check(void) {
+  if (!s_lsm6dso_initialized) {
+    return false;
+  }
+  
+  // Check if we haven't had a successful read in too long
+  uint32_t now_ms = prv_get_timestamp_ms();
+  if (s_last_successful_read_ms > 0 && 
+      (now_ms - s_last_successful_read_ms) > LSM6DSO_MAX_SILENT_PERIOD_MS) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: No successful reads in %lu ms", 
+            now_ms - s_last_successful_read_ms);
+    return false;
+  }
+  
+  // Try to read WHO_AM_I register as a health check
+  uint8_t whoami;
+  if (lsm6dso_device_id_get(&lsm6dso_ctx, &whoami) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Health check failed - cannot read WHO_AM_I");
+    return false;
+  }
+  
+  if (whoami != LSM6DSO_ID) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Health check failed - invalid WHO_AM_I (0x%02x)", whoami);
+    return false;
+  }
+  
+  return true;
+}
+
+//! Attempt to recover from sensor communication failure
+static void prv_lsm6dso_attempt_recovery(void) {
+  PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Attempting sensor recovery...");
+  
+  // Save current state
+  bool was_enabled = s_lsm6dso_enabled;
+  lsm6dso_state_t saved_target = s_lsm6dso_state_target;
+  
+  // Power down and reinitialize
+  s_lsm6dso_enabled = false;
+  s_lsm6dso_running = false;
+  s_lsm6dso_initialized = false;
+  
+  // Clear error counters
+  s_consecutive_read_failures = 0;
+  s_i2c_error_count = 0;
+  
+  // Wait a bit for sensor to stabilize
+  psleep(100);
+  
+  // Re-initialize sensor
+  prv_lsm6dso_init();
+  
+  if (s_lsm6dso_initialized) {
+    // Restore previous state
+    s_lsm6dso_enabled = was_enabled;
+    s_lsm6dso_state_target = saved_target;
+    
+    if (s_lsm6dso_enabled) {
+      prv_lsm6dso_chase_target_state();
+    }
+    
+    PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Recovery successful");
+  } else {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Recovery failed - sensor still unresponsive");
+  }
 }
