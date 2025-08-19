@@ -23,7 +23,7 @@
 
 static uint8_t prv_refcnt;
 
-void nrf52_clock_hfxo_request(void) {
+void clocksource_hfxo_request(void) {
   portENTER_CRITICAL();
 
   PBL_ASSERT(prv_refcnt < UINT8_MAX, "HFXO refcount overflow");
@@ -40,7 +40,7 @@ void nrf52_clock_hfxo_request(void) {
   portEXIT_CRITICAL();
 }
 
-void nrf52_clock_hfxo_release(void) {
+void clocksource_hfxo_release(void) {
   portENTER_CRITICAL();
 
   PBL_ASSERT(prv_refcnt != 0U, "HFXO refcount underflow");

@@ -18,7 +18,7 @@
 #include "drivers/mic/nrf5/pdm_definitions.h"
 
 #include "board/board.h"
-#include "drivers/nrf5/hfxo.h"
+#include "drivers/clocksource.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
@@ -328,11 +328,11 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   state->main_pending = false;
   
   // Request high frequency crystal oscillator
-  nrf52_clock_hfxo_request();
+  clocksource_hfxo_request();
   
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
-    nrf52_clock_hfxo_release();
+    clocksource_hfxo_release();
     prv_free_buffers(state);
     mutex_unlock_recursive(state->mutex);
     return false;
@@ -365,7 +365,7 @@ void mic_stop(const MicDevice *this) {
   nrfx_pdm_stop(&this->pdm_instance);
   
   // Release high frequency oscillator
-  nrf52_clock_hfxo_release();
+  clocksource_hfxo_release();
   
   // Free dynamically allocated buffers
   prv_free_buffers(state);
