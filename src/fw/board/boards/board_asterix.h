@@ -105,7 +105,6 @@ static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   },
 };
 
-extern PwmState DISPLAY_EXTCOMIN_STATE;
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),
 
@@ -116,9 +115,13 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .on_ctrl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true },
 
   .extcomin = {
-    .state = &DISPLAY_EXTCOMIN_STATE,
-    .output = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 15), true },
-    .peripheral = NRFX_PWM_INSTANCE(1),
+    .rtc = NRF_RTC2,
+    .gpiote = NRF_GPIOTE,
+    .gpiote_ch = 6,
+    .psel = NRF_GPIO_PIN_MAP(1, 15),
+    // 120Hz/5% (feeds flip-flop, generating 60Hz/50% signal to EXTCOMIN)
+    .period_us = 1000000 / 120,
+    .pulse_us = (1000000 / 120) / 20,
   },
 };
 
