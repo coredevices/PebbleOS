@@ -156,6 +156,17 @@ typedef enum {
 typedef struct {
   int axes_offsets[3];
   bool axes_inverts[3];
+} MagConfig;
+
+typedef struct {
+  const MagConfig mag_config;
+  //const InputConfig mag_int_gpio;
+  //const GpioteConfig mag_int;
+} BoardConfigMag;
+
+typedef struct {
+  int axes_offsets[3];
+  bool axes_inverts[3];
   uint32_t shake_thresholds[AccelThreshold_Num];
   uint32_t double_tap_threshold;
   // LSM6DSO tap timing parameters (in register units):

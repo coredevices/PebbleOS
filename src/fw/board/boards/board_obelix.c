@@ -364,6 +364,13 @@ const BoardConfigActuator BOARD_CONFIG_VIBE = {
   .ctrl = {hwp_gpio1, 1, true},
 };
 
+static const I2CSlavePort s_i2c_mmc5603 = {
+    .bus = &s_i2c_bus_2,
+    .address = 0x30,
+};
+
+I2CSlavePort *const I2C_MMC5603 = &s_i2c_mmc5603;
+
 const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = {
     .peripheral = hwp_gpio1,

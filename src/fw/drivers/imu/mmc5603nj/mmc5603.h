@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Core Devices LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "drivers/imu.h"
-#include "drivers/imu/lsm6dso/lsm6dso.h"
-#include "drivers/imu/mmc5603nj/mmc5603.h"
 
-void imu_init(void) {
-  lsm6dso_init();
-  mmc5603_init();
-}
+void mmc5603_init(void);
 
-void imu_power_up(void) {
-  lsm6dso_power_up();
-}
-
-void imu_power_down(void) {
-  lsm6dso_power_down();
-}
