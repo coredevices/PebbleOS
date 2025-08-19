@@ -22,8 +22,14 @@
 #include "kernel/pebble_tasks.h"
 
 #define TASK_WATCHDOG_PRIORITY 0x1
+#define TASK_WATCHDOG_FEED_PERIOD_MS 500
 
 void task_watchdog_init(void);
+
+//! Feed the hardware watchdog. Only needed if task watchdog timer is external to the task watchdog
+//! and is not being fed by the task watchdog timer ISR. Call this function periodically
+//! with TASK_WATCHDOG_FEED_PERIOD_MS to ensure the hardware watchdog is fed.
+void task_watchdog_feed(void);
 
 //! Feed the watchdog for a particular task. If a task doesn't call this function frequently
 //! enough and it's mask is set we will eventually trigger a reboot.

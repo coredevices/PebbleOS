@@ -70,15 +70,13 @@ _Static_assert(sizeof(s_watchdog_bits) == sizeof(s_watchdog_mask),
 static TimerID s_throttle_timer_id = TIMER_INVALID_ID;
 
 // How often we want the interrupt to fire
-#define TIMER_INTERRUPT_HZ  2
+#define TIMER_INTERRUPT_HZ  (1000 / TASK_WATCHDOG_FEED_PERIOD_MS)
 // The frequency to run the peripheral at
-#if MICRO_FAMILY_NRF5
-#define TIMER_CLOCK_HZ 32768
-#else
+#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
 #define TIMER_CLOCK_HZ 32000
-#endif
 // The number of timer ticks that should elapse before the timer interrupt fires
 #define TIME_PERIOD  (TIMER_CLOCK_HZ / TIMER_INTERRUPT_HZ)
+#endif
 
 // How many ticks have elapsed since we fed the HW watchdog
 static uint8_t s_ticks_since_successful_feed = 0;
@@ -164,25 +162,14 @@ static void prv_log_failed_message(RebootReason *reboot_reason) {
 // -------------------------------------------------------------------------------------------------
 // The Timer ISR. This runs at super high priority (higher than configMAX_SYSCALL_INTERRUPT_PRIORITY), so
 // it is not safe to call ANY FreeRTOS functions from here.
-#if MICRO_FAMILY_NRF5
-void RTC2_IRQHandler(void) {
-  nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
-  nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK);
-  nrf_rtc_event_enable(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
-
-  s_ticks_since_successful_feed++;
-  prv_task_watchdog_feed();
-}
-#elif MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_SF32LB52
 // TODO(SF32LB52): Add implementation
-#else
+#elif !MICRO_FAMILY_NRF5
 void TIM2_IRQHandler(void) {
   // Workaround M3 bug that causes interrupt to fire twice:
   // https://my.st.com/public/Faq/Lists/faqlst/DispForm.aspx?ID=143
   TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-  s_ticks_since_successful_feed++;
-  prv_task_watchdog_feed();
+  task_watchdog_feed();
 }
 #endif
 
@@ -278,24 +265,9 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
 // Setup a very high priority interrupt to fire periodically. This ISR will call task_watchdog_feed()
 // which resets the watchdog timer if it detects that none of our watchable tasks are stuck.
 void task_watchdog_init(void) {
-#if MICRO_FAMILY_NRF5
-  // We use RTC2 as the WDT kicker; RTC1 is used by the OS RTC
-  nrf_rtc_prescaler_set(NRF_RTC2, NRF_RTC_FREQ_TO_PRESCALER(TIMER_CLOCK_HZ));
-
-  // trigger compare interrupt at appropriate time
-  nrf_rtc_cc_set(NRF_RTC2, 0, TIME_PERIOD);
-  nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK);
-  nrf_rtc_event_enable(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
-
-  NVIC_SetPriority(RTC2_IRQn, TASK_WATCHDOG_PRIORITY);
-  NVIC_ClearPendingIRQ(RTC2_IRQn);
-  NVIC_EnableIRQ(RTC2_IRQn);
-
-  nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_START);
-#elif MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_SF32LB52
 // TODO(SF32LB52): Add implementation
-#else
+#elif !MICRO_FAMILY_NRF5
   // The timer is on ABP1 which is clocked by PCLK1
   RCC_ClocksTypeDef clocks;
   RCC_GetClocksFreq(&clocks);
@@ -360,12 +332,15 @@ void task_watchdog_init(void) {
   s_throttle_timer_id = new_timer_create();
 }
 
+void task_watchdog_feed(void) {
+  s_ticks_since_successful_feed++;
+  prv_task_watchdog_feed();
+}
+
 static void task_watchdog_disable_interrupt() {
-#if MICRO_FAMILY_NRF5
-  NVIC_DisableIRQ(RTC2_IRQn);
-#elif MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_SF32LB52
 // TODO(SF32LB52): Add implementation
-#else
+#elif !MICRO_FAMILY_NRF5
   NVIC_DisableIRQ(TIM2_IRQn);
 #endif
   taskENTER_CRITICAL();
@@ -373,11 +348,9 @@ static void task_watchdog_disable_interrupt() {
 
 static void task_watchdog_enable_interrupt() {
   taskEXIT_CRITICAL();
-#if MICRO_FAMILY_NRF5
-  NVIC_EnableIRQ(RTC2_IRQn);
-#elif MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_SF32LB52
 // TODO(SF32LB52): Add implementation
-#else
+#elif !MICRO_FAMILY_NRF5
   NVIC_EnableIRQ(TIM2_IRQn);
 #endif
 }

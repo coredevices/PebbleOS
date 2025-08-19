@@ -7,6 +7,7 @@
 #include "drivers/exti.h"
 #include "drivers/periph_config.h"
 #include "drivers/watchdog.h"
+#include "drivers/task_watchdog.h"
 
 #include "kernel/util/stop.h"
 #include "mcu/interrupts.h"
@@ -322,6 +323,13 @@ void rtc_init(void) {
   }
 
   nrf_rtc_prescaler_set(BOARD_RTC_INST, NRF_RTC_FREQ_TO_PRESCALER(RTC_TICKS_HZ));
+
+  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_1);
+  nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_1);
+  nrf_rtc_event_enable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_1);
+  nrf_rtc_int_enable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE1_MASK);
+  nrf_rtc_cc_set(BOARD_RTC_INST, 1, (RTC_TICKS_HZ / (1000 / TASK_WATCHDOG_FEED_PERIOD_MS)) - 1);
+
   nrf_rtc_task_trigger(BOARD_RTC_INST, NRF_RTC_TASK_START);
 
   prv_restore_rtc_time_state();
@@ -435,9 +443,21 @@ void rtc_irq_handler(void) {
     SysTick_Handler();
   }
 
-  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
+  if (nrf_rtc_event_check(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0)) {
+    nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+    nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
+    nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
+  }
+
+  if (nrf_rtc_event_check(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_1)) {
+    task_watchdog_feed();
+
+    nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_1);
+
+    uint32_t next_feed_ticks = nrf_rtc_counter_get(BOARD_RTC_INST) +
+                               (RTC_TICKS_HZ / (1000 / TASK_WATCHDOG_FEED_PERIOD_MS));
+    nrf_rtc_cc_set(BOARD_RTC_INST, 1, next_feed_ticks & RTC_COUNTER_COUNTER_Msk);
+  }
 
   NVIC_ClearPendingIRQ(BOARD_RTC_IRQN);
 }
