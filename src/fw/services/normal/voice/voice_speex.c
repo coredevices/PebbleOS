@@ -143,12 +143,21 @@ void voice_speex_deinit(void) {
 
   if (s_encoder.enc_state) {
     speex_encoder_destroy(s_encoder.enc_state);
+    s_encoder.enc_state = NULL;
   }
 
   speex_bits_destroy(&s_encoder.bits);
 
-  kernel_free(s_encoder.frame_buffer);
-  kernel_free(s_encoder.encoded_buffer);
+
+  if (s_encoder.frame_buffer) {
+    kernel_free(s_encoder.frame_buffer);
+    s_encoder.frame_buffer = NULL;
+  }
+
+  if (s_encoder.encoded_buffer) {
+    kernel_free(s_encoder.encoded_buffer);
+    s_encoder.encoded_buffer = NULL;
+  }
 
   memset(&s_encoder, 0, sizeof(s_encoder));
 }

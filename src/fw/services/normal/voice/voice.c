@@ -74,10 +74,12 @@ static TimerID s_timeout = TIMER_INVALID_ID;
 static uint32_t s_session_generation = 0;      // Monotonic session counter
 static uint32_t s_timeout_generation = 0;      // Generation tied to currently scheduled timeout
 static bool s_teardown_in_progress = false;    // Debounce concurrent teardown paths
+static bool s_delayed_speex_cleanup = false;   // Flag to defer Speex cleanup during cancellation
 
 static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data);
 static void prv_session_result_timeout(void * data);
+static void prv_delayed_cleanup_timeout(void *data);
 
 #if defined(VOICE_DEBUG)
 // printf implemented here because the ADT Speex debug library calls printf for logging
@@ -101,6 +103,11 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
 
   if (s_state != SessionState_Recording) {
     VOICE_LOG("Not recording, dropping audio data");
+    return;
+  }
+
+  // Additional safety check - ensure we have a valid session
+  if (s_session_id == AUDIO_ENDPOINT_SESSION_INVALID_ID) {
     return;
   }
 
@@ -135,19 +142,22 @@ static void prv_teardown_session(void) {
 
 static void prv_stop_recording(void) {
   VOICE_LOG("prv_stop_recording called - stopping mic and audio endpoint transfer");
+
+  // First, set state to non-recording to prevent any new audio processing
+  s_state = SessionState_WaitForSessionResult;
+  
+  // Stop audio endpoint transfer BEFORE stopping microphone
+  // This prevents new frames from being added while the endpoint shuts down
+  audio_endpoint_stop_transfer(s_session_id);
+
 #if !defined(TARGET_QEMU)
   mic_stop(MIC);
 #endif
 
-  audio_endpoint_stop_transfer(s_session_id);
   PBL_LOG(LOG_LEVEL_INFO, "Stop recording audio");
   prv_teardown_session();
-
-  // We no longer need to encode frames once recording has stopped. Free Speex resources
-  // immediately so memory becomes available while we wait for the result.
-  if (voice_speex_is_initialized()) {
-    voice_speex_deinit();
-  }
+  
+  // Speex cleanup will be handled by delayed cleanup to avoid race conditions
 }
 
 static void prv_cancel_recording(void) {
@@ -159,17 +169,28 @@ static void prv_cancel_recording(void) {
   audio_endpoint_cancel_transfer(s_session_id);
   PBL_LOG(LOG_LEVEL_INFO, "Cancel audio recording");
   prv_teardown_session();
+}
 
-  // Free Speex resources since we are aborting the session.
-  if (voice_speex_is_initialized()) {
-    voice_speex_deinit();
-  }
+static void prv_cancel_early_session(void) {
+  // For early cancellation, only cancel the audio endpoint transfer
+  // Don't call mic_stop() since the microphone was never started
+  audio_endpoint_cancel_transfer(s_session_id);
+  PBL_LOG(LOG_LEVEL_INFO, "Cancel audio recording");
+  prv_teardown_session();
 }
 
 static void prv_reset(void) {
+  // Clean up Speex codec safely after recording is completely done
+  // Skip immediate cleanup if delayed cleanup is scheduled to avoid race conditions
+  if (s_delayed_speex_cleanup) {
+    // Speex cleanup will be handled by delayed timer
+  } else {
+    voice_speex_deinit();
+  }
+  
   s_state = SessionState_Idle;
   s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
-  
+
 }
 
 static void prv_cancel_session(void) {
@@ -182,9 +203,9 @@ static void prv_start_result_timeout(void) {
 }
 
 static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id) {
-  VOICE_LOG("prv_audio_transfer_stopped_handler called with session_id=%d (current=%d)", 
+    VOICE_LOG("prv_audio_transfer_stopped_handler called with session_id=%d (current=%d)", 
             session_id, s_session_id);
-            
+  
   if (s_session_id != session_id) {
     PBL_LOG(LOG_LEVEL_WARNING, "Received audio transfer message when no session was in progress ("
             "%d)", session_id);
@@ -312,6 +333,15 @@ static void prv_session_result_timeout(void * data) {
   mutex_unlock(s_lock);
 }
 
+static void prv_delayed_cleanup_timeout(void *data) {
+  mutex_lock(s_lock);
+  
+  voice_speex_deinit();
+  s_delayed_speex_cleanup = false;
+  
+  mutex_unlock(s_lock);
+}
+
 static void prv_session_setup_timeout(void * data) {
   mutex_lock(s_lock);
   if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
@@ -379,6 +409,12 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
 
   if (s_state != SessionState_Idle) {
     VOICE_LOG("Voice service not idle (state: %d), returning invalid session", s_state);
+    mutex_unlock(s_lock);
+    return VOICE_SESSION_ID_INVALID;
+  }
+  
+  // Prevent new sessions while delayed cleanup is pending to avoid race conditions
+  if (s_delayed_speex_cleanup) {
     mutex_unlock(s_lock);
     return VOICE_SESSION_ID_INVALID;
   }
@@ -482,12 +518,27 @@ void voice_cancel_dictation(VoiceSessionId session_id) {
     if (s_state == SessionState_StartSession ||
         s_state == SessionState_VoiceEndpointSetupReceived ||
         s_state == SessionState_AudioEndpointSetupReceived) {
-      prv_cancel_recording();
+      prv_cancel_early_session();
+      // Use delayed cleanup for early cancellation to avoid race conditions with phone/endpoint
+      s_delayed_speex_cleanup = true;
+      new_timer_start(s_timeout, 100, prv_delayed_cleanup_timeout, NULL, 0);
+      prv_reset();
     } else if (s_state == SessionState_Recording) {
       prv_stop_recording();
+      // Use delayed cleanup to avoid race condition with microphone
+      s_delayed_speex_cleanup = true;
+      new_timer_start(s_timeout, 100, prv_delayed_cleanup_timeout, NULL, 0);
+      prv_reset();
+    } else if (s_state == SessionState_WaitForSessionResult) {
+      // Recording is done but audio endpoint might still be processing
+      s_delayed_speex_cleanup = true;
+      new_timer_start(s_timeout, 100, prv_delayed_cleanup_timeout, NULL, 0);
+      prv_reset();
+    } else {
+      // For any other state, safe to reset immediately
+      prv_reset();
     }
   }
-  prv_reset();
 
 unlock:
   mutex_unlock(s_lock);
@@ -502,7 +553,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
   VOICE_LOG("voice_handle_session_setup_result: result=%d, session_type=%d, app_initiated=%d", 
             result, session_type, app_initiated);
   VOICE_LOG("Current state: %d", s_state);
-            
+
   mutex_lock(s_lock);
 
   if (s_state == SessionState_Idle) {

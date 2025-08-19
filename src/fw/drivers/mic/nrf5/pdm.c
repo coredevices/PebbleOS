@@ -55,10 +55,11 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate circular buffer storage");
     return false;
   }
-  
+
   // Allocate PDM buffers
   for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
-    state->pdm_buffers[i] = kernel_malloc(PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t));
+    size_t buffer_size = PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t);
+    state->pdm_buffers[i] = kernel_malloc(buffer_size);
     if (!state->pdm_buffers[i]) {
       PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate PDM buffer %d", i);
       // Free any previously allocated buffers
@@ -66,7 +67,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
       return false;
     }
     // Clear the buffer
-    memset(state->pdm_buffers[i], 0, PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t));
+    memset(state->pdm_buffers[i], 0, buffer_size);
   }
   
   // Initialize circular buffer with allocated storage
@@ -92,8 +93,21 @@ static void prv_free_buffers(MicDeviceState *state) {
 }
 
 static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
+  // Ensure we're still running and have valid state
+  if (!state->is_running) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "prv_process_pdm_buffer: Not running, ignoring data");
+    return;
+  }
+  
   // Ensure circular buffer storage is allocated
   if (!state->circ_buffer_storage) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "prv_process_pdm_buffer: No circular buffer storage, ignoring data");
+    return;
+  }
+  
+  // Ensure we have valid audio buffer info
+  if (!state->audio_buffer || state->audio_buffer_len == 0) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "prv_process_pdm_buffer: No audio buffer configured, ignoring data");
     return;
   }
   
@@ -130,7 +144,13 @@ static void prv_pdm_event_handler(nrfx_pdm_evt_t const *p_evt) {
   MicDeviceState *state = MIC->state;
   
   PBL_ASSERTN(state->is_initialized);
-  PBL_ASSERTN(state->is_running);
+  
+  // Don't assert on is_running during shutdown - the PDM might send final events
+  if (!state->is_running) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "prv_pdm_event_handler: Microphone stopped, ignoring event");
+    return;
+  }
+  
   PBL_ASSERTN(p_evt->error == NRFX_PDM_NO_ERROR);
   
   if (p_evt->buffer_requested) {
@@ -270,16 +290,15 @@ static bool prv_start_pdm_capture(const MicDevice *this) {
   }
   state->current_buffer_idx = 0;
   
-  nrfx_err_t err = nrfx_pdm_buffer_set(&this->pdm_instance, 
-                           state->pdm_buffers[0], 
-                           PDM_BUFFER_SIZE_SAMPLES);
-  if (err != NRFX_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to set initial PDM buffer: %d", err);
+  // Check if buffers are valid
+  if (!state->pdm_buffers[0] || !state->pdm_buffers[1]) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Invalid PDM buffers: [0]=%p [1]=%p", 
+            state->pdm_buffers[0], state->pdm_buffers[1]);
     return false;
   }
   
-  // Start PDM capture
-  err = nrfx_pdm_start(&this->pdm_instance);
+  // Try starting PDM first, then set buffer in event handler
+  nrfx_err_t err = nrfx_pdm_start(&this->pdm_instance);
   if (err != NRFX_SUCCESS) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to start PDM: %d", err);
     return false;
@@ -330,15 +349,18 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   // Request high frequency crystal oscillator
   clocksource_hfxo_request();
   
+  // Set is_running to true BEFORE starting PDM, since the event handler will be called immediately
+  state->is_running = true;
+  
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
+    state->is_running = false;  // Reset on failure    
     clocksource_hfxo_release();
     prv_free_buffers(state);
     mutex_unlock_recursive(state->mutex);
     return false;
   }
   
-  state->is_running = true;
   PBL_LOG(LOG_LEVEL_INFO, "Microphone started");
   
   mutex_unlock_recursive(state->mutex);
@@ -363,6 +385,10 @@ void mic_stop(const MicDevice *this) {
   
   // Stop PDM capture
   nrfx_pdm_stop(&this->pdm_instance);
+  
+  // Give the PDM hardware a moment to finish any pending operations
+  // This helps ensure no DMA operations are still accessing our buffers
+  psleep(1); // 1ms delay to let hardware settle
   
   // Release high frequency oscillator
   clocksource_hfxo_release();
