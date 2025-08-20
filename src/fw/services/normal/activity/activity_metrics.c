@@ -493,9 +493,17 @@ void activity_metrics_prv_minute_handler(time_t utc_sec) {
 
   uint16_t cur_day_index = time_util_get_day(utc_sec);
   if (cur_day_index != state->cur_day_index) {
-    // If we've just encountered a midnight rollover, shift history to the new day
-    // before we compute metrics for the new day
-    prv_shift_history(utc_sec);
+    // Check if we're transitioning from invalid day index (RTC was invalid during init)
+    bool rtc_was_invalid_during_init = (state->cur_day_index == UINT16_MAX);
+    
+    if (rtc_was_invalid_during_init) {
+      // Don't shift history when transitioning from invalid RTC to valid RTC
+      PBL_LOG(LOG_LEVEL_INFO, "RTC became valid in metrics handler, not shifting history");
+    } else {
+      // If we've just encountered a midnight rollover, shift history to the new day
+      // before we compute metrics for the new day
+      prv_shift_history(utc_sec);
+    }
   }
 
   // Update the derived metrics
@@ -654,6 +662,17 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
       uint16_t day = time_util_get_day(old_history.utc_sec);
       int old_age = state->cur_day_index - day;
 
+      // Check if RTC is valid - if not, don't do history rolling
+      const time_t valid_epoch = 946684800; // 1.1.2000 in seconds since epoch
+      bool rtc_valid = (utc_now >= valid_epoch);
+      
+      if (!rtc_valid) {
+        // RTC not valid - don't roll history, just preserve current values
+        PBL_LOG(LOG_LEVEL_WARNING, "RTC not valid in metrics_init, skipping history rolling for metric %d", metric);
+        new_history = old_history; // Keep existing history as-is
+        old_age = 0; // Prevent writing back to flash
+      } else {
+
       // If this is resting kcalories, the default for each day is not 0
       if (metric == ActivityMetricRestingKCalories) {
         uint32_t full_day_resting_calories =
@@ -676,6 +695,7 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
         if (new_index >= 0 && new_index < ACTIVITY_HISTORY_DAYS) {
           new_history.values[new_index] = old_history.values[i];
         }
+      }
       }
       // init the time stamp if not initialized yet
       if (new_history.utc_sec == 0) {

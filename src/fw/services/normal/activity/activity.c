@@ -46,6 +46,7 @@
 #include "util/math.h"
 #include "util/size.h"
 #include "util/units.h"
+#include "util/time/time.h"
 
 #include <pebbleos/cron.h>
 
@@ -406,7 +407,11 @@ static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
   mutex_lock_recursive(s_activity_state.mutex);
   {
     cur_day_index = time_util_get_day(utc_sec);
-    need_history_update_event = (cur_day_index != s_activity_state.cur_day_index);
+    
+    // Check if we should trigger history update event
+    // Don't trigger if current day index is invalid (UINT16_MAX) indicating RTC was invalid during init
+    bool rtc_was_invalid_during_init = (s_activity_state.cur_day_index == UINT16_MAX);
+    need_history_update_event = (cur_day_index != s_activity_state.cur_day_index) && !rtc_was_invalid_during_init;
 
     // Call the activity sessions minute handler
     activity_sessions_prv_minute_handler(utc_sec);
@@ -415,7 +420,17 @@ static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
     prv_update_storage(utc_sec);
 
     // If we are starting a new day, reset all metrics
-    if (cur_day_index != s_activity_state.cur_day_index) {
+    // But skip if transitioning from invalid day index (RTC was invalid during init)
+    if (cur_day_index != s_activity_state.cur_day_index && !rtc_was_invalid_during_init) {
+      time_t rtc_time = rtc_get_time();
+
+      // Check if the RTC timestamp is valid (greater than 1.1.2000)
+      const time_t valid_epoch = 946684800; // 1.1.2000 in seconds since epoch
+      if (rtc_time < valid_epoch) {
+          PBL_LOG(LOG_LEVEL_WARNING, "RTC not initialized. Skipping data reset.");
+          return;
+      }
+
       s_activity_state.step_data = (ActivityStepData) { 0 };
       s_activity_state.sleep_data = (ActivitySleepData) { 0 };
       memset(&s_activity_state.hr.metrics.minutes_in_zone, 0,
@@ -431,6 +446,10 @@ static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
       activity_sessions_prv_remove_out_of_range_activity_sessions(utc_sec,
                                                                   false /*remove_ongoing*/);
       activity_insights_recalculate_stats();
+    } else if (rtc_was_invalid_during_init) {
+      // RTC was invalid during init but is valid now - just update day index without resetting
+      PBL_LOG(LOG_LEVEL_INFO, "RTC became valid, updating day index from UINT16_MAX to %"PRIu16, cur_day_index);
+      s_activity_state.cur_day_index = cur_day_index;
     }
 
     // Update the heart rate sampling period if necessary
@@ -915,7 +934,39 @@ static bool prv_wait_system_task(SystemTaskEventCallback cb, void *context, bool
 // ------------------------------------------------------------------------------------------------
 bool activity_init(void) {
   ACTIVITY_LOG_DEBUG("init");
-  s_activity_state = (ActivityState) {};
+  
+  // Check if RTC is properly initialized before clearing state
+  time_t rtc_time = rtc_get_time();
+  const time_t valid_epoch = 946684800; // 1.1.2000 in seconds since epoch
+  bool rtc_valid = (rtc_time >= valid_epoch);
+  
+  PBL_LOG(LOG_LEVEL_INFO, "activity_init: RTC time=%"PRIu32", valid=%d, current_steps=%"PRIu32, 
+          (uint32_t)rtc_time, rtc_valid, (uint32_t)s_activity_state.step_data.steps);
+  
+  // If RTC is not valid, try to load step data from persistent storage before clearing state
+  ActivityStepData preserved_steps = {0};
+  if (!rtc_valid) {
+    PBL_LOG(LOG_LEVEL_WARNING, "RTC not initialized during activity_init. Loading step data from storage.");
+    
+    // Try to load step count from settings file
+    SettingsFile *temp_file = activity_private_settings_open();
+    if (temp_file) {
+      ActivitySettingsValueHistory step_history = {0};
+      ActivitySettingsKey key = ActivitySettingsKeyStepCountHistory;
+      settings_file_get(temp_file, &key, sizeof(key), &step_history, sizeof(step_history));
+      preserved_steps.steps = step_history.values[0]; // Current day steps
+      activity_private_settings_close(temp_file);
+      PBL_LOG(LOG_LEVEL_INFO, "Loaded %"PRIu32" steps from storage", (uint32_t)preserved_steps.steps);
+    }
+
+    // Only clear non-step data and restore preserved steps
+    s_activity_state = (ActivityState) {};
+    s_activity_state.step_data = preserved_steps;
+  } else {
+    PBL_LOG(LOG_LEVEL_INFO, "RTC valid, clearing all activity state");
+    s_activity_state = (ActivityState) {};
+  }
+  
   s_activity_state.mutex = mutex_create_recursive();
 
   // This semaphore used to wake up the calling task when it is waiting for KernelBG to
@@ -944,7 +995,15 @@ bool activity_init(void) {
 
   // Init the current day index
   time_t utc_now = rtc_get_time();
-  s_activity_state.cur_day_index = time_util_get_day(utc_now);
+  
+  if (rtc_valid) {
+    s_activity_state.cur_day_index = time_util_get_day(utc_now);
+  } else {
+    // RTC not valid - set to an invalid day index that won't match any real day
+    // This prevents false day-change detection when RTC becomes valid later
+    s_activity_state.cur_day_index = UINT16_MAX;
+    PBL_LOG(LOG_LEVEL_WARNING, "RTC not valid, setting invalid day index to prevent false day changes");
+  }
 
   // Roll back the history if needed and init each of the metrics for today
   activity_metrics_prv_init(file, utc_now);
