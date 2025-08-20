@@ -537,18 +537,17 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
   lsm6dso_wkup_ths_weight_set(&lsm6dso_ctx,
                               sensitivity_high ? LSM6DSO_LSb_FS_DIV_256 : LSM6DSO_LSb_FS_DIV_64);
 
-  // Duration: increase a bit to reduce spurious triggers
-  lsm6dso_wkup_dur_set(&lsm6dso_ctx, sensitivity_high ? 0 : 1);
+  lsm6dso_wkup_dur_set(&lsm6dso_ctx, 0);
 
   // Threshold: derive from board config; clamp into 0..63
   uint32_t raw_high = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
   uint32_t raw_low = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
   uint32_t raw = sensitivity_high ? raw_high : raw_low;
-  // Increase sensitivity: scale threshold down (halve). Ensure at least 2 to avoid noise storms.
-  raw = (raw + 1) / 2;     // divide by 2 rounding up
+  // Increase sensitivity more aggressively: scale threshold down to 1/3
+  raw = (raw + 2) / 3;     // divide by 3 rounding up for better light tap sensitivity
   if (raw > 63) raw = 63;  // lsm6dso wk_ths is 6 bits
   // Sanity fallback if 0 (avoid constant triggers) choose very low but non-zero
-  if (raw == 0) raw = 2;
+  if (raw == 0) raw = 1;
   lsm6dso_wkup_threshold_set(&lsm6dso_ctx, (uint8_t)raw);
 }
 
