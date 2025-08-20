@@ -45,7 +45,7 @@ static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
 static bool prv_is_vibing(void);
 static bool prv_lsm6dso_health_check(void);
-static void prv_lsm6dso_attempt_recovery(void);
+static bool prv_lsm6dso_attempt_recovery(void);
 typedef struct {
   lsm6dso_odr_xl_t odr;
   uint32_t interval_us;
@@ -91,7 +91,7 @@ static uint32_t s_last_vibe_detected = 0;
 // Error tracking and recovery
 static uint32_t s_i2c_error_count = 0;
 static uint32_t s_last_successful_read_ms = 0;
-static uint32_t s_consecutive_read_failures = 0;
+static uint32_t s_consecutive_errors = 0;
 static bool s_sensor_health_ok = true;
 
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
@@ -103,10 +103,12 @@ static bool s_sensor_health_ok = true;
 // Delay after detecting a vibe before shake/tap interrupts should be processed again
 #define LSM6DSO_VIBE_COOLDOWN_MS 50
 
-// Error recovery thresholds
+// Error recovery thresholds and watchdog timeouts
 #define LSM6DSO_MAX_CONSECUTIVE_FAILURES 3
 #define LSM6DSO_HEALTH_CHECK_INTERVAL_MS 5000  // Check sensor health every 5 seconds
 #define LSM6DSO_MAX_SILENT_PERIOD_MS 30000     // Max time without successful read
+#define LSM6DSO_WATCHDOG_TIMEOUT_MS 5000       // Watchdog timeout for detecting unresponsive sensor
+#define LSM6DSO_MAX_CONSECUTIVE_ERRORS 5       // Maximum consecutive errors before attempting recovery
 
 // LSM6DSO configuration entrypoints
 
@@ -191,17 +193,17 @@ static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
   
   if (!result) {
     s_i2c_error_count++;
-    s_consecutive_read_failures++;
+    s_consecutive_errors++;
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: I2C read failed (reg=0x%02x, count=%lu)", 
-            reg_addr, s_consecutive_read_failures);
-    if (s_consecutive_read_failures >= LSM6DSO_MAX_CONSECUTIVE_FAILURES) {
+            reg_addr, s_consecutive_errors);
+    if (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_FAILURES) {
       s_sensor_health_ok = false;
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Sensor health degraded after %lu failures", 
-              s_consecutive_read_failures);
+              s_consecutive_errors);
     }
     return -1;
   } else {
-    s_consecutive_read_failures = 0;
+    s_consecutive_errors = 0;
     s_last_successful_read_ms = prv_get_timestamp_ms();
     s_sensor_health_ok = true;
   }
@@ -220,8 +222,11 @@ static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *
   
   if (!result) {
     s_i2c_error_count++;
+    s_consecutive_errors++;
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: I2C write failed (reg=0x%02x)", reg_addr);
     return -1;
+  } else {
+    s_consecutive_errors = 0;
   }
   
   return 0;
@@ -240,7 +245,6 @@ static void prv_lsm6dso_init(void) {
 
   // Initialize error tracking
   s_i2c_error_count = 0;
-  s_consecutive_read_failures = 0;
   s_last_successful_read_ms = 0;
   s_sensor_health_ok = true;
 
@@ -256,6 +260,8 @@ static void prv_lsm6dso_init(void) {
             whoami, LSM6DSO_ID);
     return;
   }
+  
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Sensor detected successfully (WHO_AM_I=0x%02x)", whoami);
 
   // Reset sensor to known state
   if (lsm6dso_reset_set(&lsm6dso_ctx, PROPERTY_ENABLE)) {
@@ -263,9 +269,20 @@ static void prv_lsm6dso_init(void) {
     return;
   }
   uint8_t rst;
-  do {  // Wait for reset to complete
-    lsm6dso_reset_get(&lsm6dso_ctx, &rst);
-  } while (rst);
+  int reset_timeout = 100; // 100ms max wait for reset
+  do {  // Wait for reset to complete with timeout
+    psleep(1);
+    if (lsm6dso_reset_get(&lsm6dso_ctx, &rst) != 0) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read reset status");
+      return;
+    }
+    reset_timeout--;
+  } while (rst && reset_timeout > 0);
+  
+  if (reset_timeout == 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Reset timeout - sensor may be unresponsive");
+    return;
+  }
 
   // Disable I3C interface
   if (lsm6dso_i3c_disable_set(&lsm6dso_ctx, LSM6DSO_I3C_DISABLE)) {
@@ -314,6 +331,7 @@ static void prv_lsm6dso_init(void) {
   // Configure interrupts
   // Note that we only configure on interrupt pin for now, since not all devices
   // have enough channels for two (and it is not in any case neccessary).
+  
   exti_configure_pin(BOARD_CONFIG_ACCEL.accel_ints[0], ExtiTrigger_Rising,
                      prv_lsm6dso_interrupt_handler);
 
@@ -330,6 +348,8 @@ static void prv_lsm6dso_init(void) {
   }
 
   s_lsm6dso_initialized = true;
+  s_last_successful_read_ms = prv_get_timestamp_ms();
+  s_consecutive_errors = 0;
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Initialization complete");
 }
 
@@ -338,6 +358,26 @@ static void prv_lsm6dso_chase_target_state(void) {
   if (!s_lsm6dso_initialized) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Cannot chase target state before initialization");
     return;
+  }
+
+  // Check for unresponsive sensor and attempt recovery
+  uint32_t now = prv_get_timestamp_ms();
+  if (s_lsm6dso_running && s_last_successful_read_ms > 0) {
+    if ((now - s_last_successful_read_ms > LSM6DSO_WATCHDOG_TIMEOUT_MS) ||
+        (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_ERRORS)) {
+      PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Sensor appears unresponsive (last_read: %lu ms ago, errors: %lu)",
+              now - s_last_successful_read_ms, s_consecutive_errors);
+      
+      if (!prv_lsm6dso_attempt_recovery()) {
+        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Recovery failed, disabling sensor");
+        s_lsm6dso_enabled = false;
+        return;
+      }
+      
+      // Reset state and continue with normal configuration
+      s_lsm6dso_state = (lsm6dso_state_t){0};
+      s_lsm6dso_running = false;
+    }
   }
 
   bool update_interrupts = false;
@@ -399,7 +439,9 @@ static void prv_lsm6dso_chase_target_state(void) {
     prv_lsm6dso_configure_interrupts();
   }
 
-  s_lsm6dso_state_target = s_lsm6dso_state;  // Reset target state to current state
+  // Note: Do NOT reset target state here as it creates a race condition
+  // where new target changes during this function execution could be lost.
+  // Instead, only sync the fields that were actually processed.
 
   PBL_LOG(LOG_LEVEL_DEBUG,
           "LSM6DSO: Reached target state: sampling_interval_us=%lu, num_samples=%lu, "
@@ -566,8 +608,8 @@ static void prv_lsm6dso_process_interrupts(void) {
   if (lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources) != 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read interrupt sources");
     // If we can't read interrupt sources, the sensor may be unresponsive
-    s_consecutive_read_failures++;
-    if (s_consecutive_read_failures >= LSM6DSO_MAX_CONSECUTIVE_FAILURES) {
+    s_consecutive_errors++;
+    if (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_FAILURES) {
       s_sensor_health_ok = false;
       PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Interrupt processing failed, sensor health degraded");
     }
@@ -575,7 +617,14 @@ static void prv_lsm6dso_process_interrupts(void) {
   }
   
   // Reset failure count on successful read
-  s_consecutive_read_failures = 0;
+  s_consecutive_errors = 0;
+
+  // Handle FIFO overflow - reset FIFO to prevent lockup
+  if (all_sources.fifo_ovr) {
+    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: FIFO overflow detected, resetting FIFO");
+    lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+    lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+  }
 
   // Collect accelerometer samples if requested
   if (s_lsm6dso_state.num_samples > 0 && all_sources.drdy_xl) {
@@ -687,10 +736,18 @@ static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
   }
 
   odr_xl_interval_t odr_interval = prv_get_odr_for_interval(interval_us);
-  lsm6dso_xl_data_rate_set(&lsm6dso_ctx, odr_interval.odr);
+  if (lsm6dso_xl_data_rate_set(&lsm6dso_ctx, odr_interval.odr) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set ODR");
+    return -1;
+  }
+  
+  // Wait for ODR change to take effect (LSM6DSO needs time to stabilize)
+  if (odr_interval.odr != LSM6DSO_XL_ODR_OFF) {
+    psleep(10); // Allow time for ODR change to stabilize
+  }
 
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Set sampling interval to %lu us (requested %lu us)",
-          s_lsm6dso_state.sampling_interval_us, interval_us);
+          odr_interval.interval_us, interval_us);
   return odr_interval.interval_us;
 }
 
@@ -708,10 +765,25 @@ static void prv_lsm6dso_read_samples(void) {
   uint16_t fifo_level = 0;
   if (lsm6dso_fifo_data_level_get(&lsm6dso_ctx, &fifo_level) != 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO level");
+    // Reset FIFO on communication error
+    lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+    if (s_fifo_in_use) {
+      lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+    }
     return;
   }
   if (fifo_level == 0) {
     return;  // nothing to do
+  }
+
+  // Prevent infinite loops on stuck FIFO
+  if (fifo_level > LSM6DSO_FIFO_MAX_WATERMARK) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: FIFO level too high (%u), resetting", fifo_level);
+    lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+    if (s_fifo_in_use) {
+      lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+    }
+    return;
   }
 
   const uint64_t now_us = prv_get_timestamp_ms() * 1000ULL;
@@ -721,6 +793,11 @@ static void prv_lsm6dso_read_samples(void) {
     lsm6dso_fifo_tag_t tag;
     if (lsm6dso_fifo_sensor_tag_get(&lsm6dso_ctx, &tag) != 0) {
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO tag");
+      // Reset FIFO on communication error
+      lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+      if (s_fifo_in_use) {
+        lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+      }
       break;
     }
 
@@ -728,6 +805,11 @@ static void prv_lsm6dso_read_samples(void) {
     if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_FIFO_DATA_OUT_X_L, raw_bytes, sizeof(raw_bytes)) !=
         0) {
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO sample (%u/%u)", i, fifo_level);
+      // Reset FIFO on communication error
+      lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+      if (s_fifo_in_use) {
+        lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+      }
       break;
     }
 
@@ -953,70 +1035,65 @@ bool accel_run_selftest(void) {
 
 // Health monitoring and recovery functions
 
-//! Check if the sensor is responding properly by attempting to read WHO_AM_I
+// Health check function to verify sensor is still responsive
 static bool prv_lsm6dso_health_check(void) {
-  if (!s_lsm6dso_initialized) {
-    return false;
-  }
-  
-  // Check if we haven't had a successful read in too long
-  uint32_t now_ms = prv_get_timestamp_ms();
-  if (s_last_successful_read_ms > 0 && 
-      (now_ms - s_last_successful_read_ms) > LSM6DSO_MAX_SILENT_PERIOD_MS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: No successful reads in %lu ms", 
-            now_ms - s_last_successful_read_ms);
-    return false;
-  }
-  
-  // Try to read WHO_AM_I register as a health check
   uint8_t whoami;
   if (lsm6dso_device_id_get(&lsm6dso_ctx, &whoami) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Health check failed - cannot read WHO_AM_I");
+    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Health check failed - cannot read WHO_AM_I");
     return false;
   }
-  
   if (whoami != LSM6DSO_ID) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Health check failed - invalid WHO_AM_I (0x%02x)", whoami);
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Health check failed - wrong WHO_AM_I (0x%02x)", whoami);
     return false;
   }
-  
   return true;
 }
 
-//! Attempt to recover from sensor communication failure
-static void prv_lsm6dso_attempt_recovery(void) {
-  PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Attempting sensor recovery...");
+// Recovery mechanism for unresponsive sensor
+static bool prv_lsm6dso_attempt_recovery(void) {
+  PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Attempting sensor recovery");
   
-  // Save current state
-  bool was_enabled = s_lsm6dso_enabled;
-  lsm6dso_state_t saved_target = s_lsm6dso_state_target;
-  
-  // Power down and reinitialize
-  s_lsm6dso_enabled = false;
-  s_lsm6dso_running = false;
-  s_lsm6dso_initialized = false;
-  
-  // Clear error counters
-  s_consecutive_read_failures = 0;
-  s_i2c_error_count = 0;
-  
-  // Wait a bit for sensor to stabilize
-  psleep(100);
-  
-  // Re-initialize sensor
-  prv_lsm6dso_init();
-  
-  if (s_lsm6dso_initialized) {
-    // Restore previous state
-    s_lsm6dso_enabled = was_enabled;
-    s_lsm6dso_state_target = saved_target;
-    
-    if (s_lsm6dso_enabled) {
-      prv_lsm6dso_chase_target_state();
-    }
-    
-    PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Recovery successful");
-  } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Recovery failed - sensor still unresponsive");
+  // Reset the sensor
+  if (lsm6dso_reset_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to reset sensor during recovery");
+    return false;
   }
+  
+  // Wait for reset to complete
+  uint8_t rst;
+  int timeout = 100; // 100ms timeout
+  do {
+    psleep(1);
+    if (lsm6dso_reset_get(&lsm6dso_ctx, &rst) != 0) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to check reset status during recovery");
+      return false;
+    }
+    timeout--;
+  } while (rst && timeout > 0);
+  
+  if (timeout == 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Reset timeout during recovery");
+    return false;
+  }
+  
+  // Re-initialize basic settings
+  if (lsm6dso_i3c_disable_set(&lsm6dso_ctx, LSM6DSO_I3C_DISABLE) != 0 ||
+      lsm6dso_block_data_update_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0 ||
+      lsm6dso_auto_increment_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0 ||
+      lsm6dso_xl_full_scale_set(&lsm6dso_ctx, LSM6DSO_4g) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to restore basic settings during recovery");
+    return false;
+  }
+  
+  s_consecutive_errors = 0;
+  s_last_successful_read_ms = prv_get_timestamp_ms();
+  
+  // Final health check
+  if (!prv_lsm6dso_health_check()) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Recovery failed - health check failed");
+    return false;
+  }
+  
+  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Sensor recovery successful");
+  return true;
 }
