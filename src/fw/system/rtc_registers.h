@@ -24,11 +24,9 @@
 #define CURRENT_TIME_REGISTER                   3
 #define CURRENT_INTERVAL_TICKS_REGISTER         4
 #define REBOOT_REASON_REGISTER_1                5
-#define REBOOT_REASON_REGISTER_2                6
-#define REBOOT_REASON_STUCK_TASK_PC             7
-#define REBOOT_REASON_STUCK_TASK_LR             8
-#define REBOOT_REASON_STUCK_TASK_CALLBACK       9
-#define REBOOT_REASON_DROPPED_EVENT             10
+#define REBOOT_REASON_STUCK_TASK_PC             6
+#define REBOOT_REASON_STUCK_TASK_LR             7
+#define REBOOT_REASON_STUCK_TASK_CALLBACK       8
 // formerly REBOOT_REASON_MUTEX_PC
 #define RTC_BKP_FLASH_ERASE_PROGRESS            11
 #define RTC_TIMEZONE_ABBR_START                 12
@@ -55,11 +53,9 @@ extern uint32_t retained_read(uint8_t id);
 #define CURRENT_TIME_REGISTER                   3
 #define CURRENT_INTERVAL_TICKS_REGISTER         4
 #define REBOOT_REASON_REGISTER_1                5
-#define REBOOT_REASON_REGISTER_2                6
 #define REBOOT_REASON_STUCK_TASK_PC             7
 #define REBOOT_REASON_STUCK_TASK_LR             8
 #define REBOOT_REASON_STUCK_TASK_CALLBACK       9
-#define REBOOT_REASON_DROPPED_EVENT             10
 
 #else
 #define RTC_BKP_BOOTBIT_DR                      RTC_BKP_DR0
@@ -68,11 +64,9 @@ extern uint32_t retained_read(uint8_t id);
 #define CURRENT_TIME_REGISTER                   RTC_BKP_DR3
 #define CURRENT_INTERVAL_TICKS_REGISTER         RTC_BKP_DR4
 #define REBOOT_REASON_REGISTER_1                RTC_BKP_DR5
-#define REBOOT_REASON_REGISTER_2                RTC_BKP_DR6
-#define REBOOT_REASON_STUCK_TASK_PC             RTC_BKP_DR7
-#define REBOOT_REASON_STUCK_TASK_LR             RTC_BKP_DR8
-#define REBOOT_REASON_STUCK_TASK_CALLBACK       RTC_BKP_DR9
-#define REBOOT_REASON_DROPPED_EVENT             RTC_BKP_DR10
+#define REBOOT_REASON_STUCK_TASK_PC             RTC_BKP_DR6
+#define REBOOT_REASON_STUCK_TASK_LR             RTC_BKP_DR7
+#define REBOOT_REASON_STUCK_TASK_CALLBACK       RTC_BKP_DR8
 // formerly REBOOT_REASON_MUTEX_PC
 #define RTC_BKP_FLASH_ERASE_PROGRESS            RTC_BKP_DR11
 #define RTC_TIMEZONE_ABBR_START                 RTC_BKP_DR12

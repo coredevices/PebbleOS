@@ -149,7 +149,7 @@ static void hard_fault_handler_c(unsigned int* hardfault_args) {
   // Log the lr instead of the pc. We frequently crash due to PC being madness. While the lr may be a little further
   // than the actual crash, it should give us enough context.
   const unsigned int stacked_lr = ((unsigned long) hardfault_args[5]);
-  RebootReason reason = { .code = RebootReasonCode_HardFault, .extra = stacked_lr };
+  RebootReason reason = { .code = RebootReasonCode_HardFault, .extra = { .value = stacked_lr } };
   reboot_reason_set(&reason);
 
   // Yay, ripping stuff from the internet!

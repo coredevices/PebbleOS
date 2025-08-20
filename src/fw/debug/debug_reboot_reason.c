@@ -58,7 +58,7 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   // Keep hourly logging to keep track of hours without crashes.
   analytics_set(ANALYTICS_DEVICE_METRIC_SYSTEM_CRASH_CODE,
                 0xDEAD0000 | reason.code, AnalyticsClient_System);
-  uint32_t lr = reason.extra;
+  uint32_t lr = reason.extra.value;
 
   // Leave this NULL to do your own printing.
   const char *reason_string = NULL;
@@ -160,8 +160,7 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   case RebootReasonCode_EventQueueFull:
     show_reset_alert = true;
     DEBUG_LOG(LOG_LEVEL_INFO, "%s%sEvent Queue Full", restarted_safely_string, rebooted_due_to);
-    DEBUG_LOG(LOG_LEVEL_INFO, "Task: <%s> LR: 0x%"PRIx32" Current: 0x%"PRIx32" Dropped: 0x%"PRIx32,
-              pebble_task_get_name(reason.event_queue.destination_task),
+    DEBUG_LOG(LOG_LEVEL_INFO, "LR: 0x%"PRIx32" Current: 0x%"PRIx32" Dropped: 0x%"PRIx32,
               reason.event_queue.push_lr,
               reason.event_queue.current_event,
               reason.event_queue.dropped_event);
@@ -170,7 +169,7 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   // Generic reason string
   if (reason_string) {
     DEBUG_LOG(LOG_LEVEL_INFO, reason_string, restarted_safely_string, rebooted_due_to,
-              reason.extra);
+              reason.extra.value);
   }
 
   analytics_set(ANALYTICS_DEVICE_METRIC_SYSTEM_CRASH_LR, lr, AnalyticsClient_System);

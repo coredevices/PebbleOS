@@ -132,7 +132,6 @@ static void prv_log_event_put_failure(const char *queue_name, uintptr_t saved_lr
   RebootReason reason = {
     .code = RebootReasonCode_EventQueueFull,
     .event_queue = {
-      .destination_task = PebbleTask_KernelMain,
       .push_lr = saved_lr,
       .current_event = s_current_event,
       .dropped_event = prv_get_fancy_type_from_event(event)

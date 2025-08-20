@@ -151,7 +151,7 @@ static void setup_log_app_crash_info(CrashInfo crash_info) {
 }
 
 static NORETURN kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
-  RebootReason reason = { .code = reason_code, .extra = lr };
+  RebootReason reason = { .code = reason_code, .extra = { .value = lr } };
   reboot_reason_set(&reason);
   reset_due_to_software_failure();
 }

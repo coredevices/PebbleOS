@@ -72,7 +72,7 @@ static void prv_update_proc(Layer* layer, GContext* ctx) {
 static void prv_panic_reset_callback(void* data) {
   RebootReason reason = {
     .code = RebootReasonCode_LauncherPanic,
-    .extra = launcher_panic_get_current_error()
+    .extra = { .value = launcher_panic_get_current_error() }
   };
   reboot_reason_set(&reason);
 
