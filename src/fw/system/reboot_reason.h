@@ -67,15 +67,16 @@ typedef struct PACKED {
     uint16_t data16;
     uint8_t data8[2];
   };
-  uint32_t extra;
   union {
+    struct {
+      uint32_t value;
+    } extra;
     struct {
       uint32_t stuck_task_pc;
       uint32_t stuck_task_lr;
       uint32_t stuck_task_callback;
     } watchdog; //!< Valid if code == RebootReasonCode_Watchdog
     struct {
-      uint32_t destination_task;
       uint32_t push_lr;
       uint32_t current_event;
       uint32_t dropped_event;

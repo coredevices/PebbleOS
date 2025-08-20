@@ -26,7 +26,7 @@
 #define REBOOT_REASON_STUCK_TASK_PC             RTC_BKP_DR7
 #define REBOOT_REASON_STUCK_TASK_LR             RTC_BKP_DR8
 #define REBOOT_REASON_STUCK_TASK_CALLBACK       RTC_BKP_DR9
-#define REBOOT_REASON_MUTEX_LR                  RTC_BKP_DR10 // Now REBOOT_REASON_DROPPED_EVENT
+#define REBOOT_REASON_MUTEX_LR                  RTC_BKP_DR10
 #define REBOOT_REASON_MUTEX_PC                  RTC_BKP_DR11 // Deprecated
 #define MAG_XY_CORRECTION_VALS                  RTC_BKP_DR17
 #define MAG_Z_CORRECTION_VAL                    RTC_BKP_DR18

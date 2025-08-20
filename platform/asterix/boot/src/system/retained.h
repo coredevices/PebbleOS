@@ -12,7 +12,7 @@
 #define REBOOT_REASON_STUCK_TASK_PC             7
 #define REBOOT_REASON_STUCK_TASK_LR             8
 #define REBOOT_REASON_STUCK_TASK_CALLBACK       9
-#define REBOOT_REASON_MUTEX_LR                  10 // Now REBOOT_REASON_DROPPED_EVENT
+#define REBOOT_REASON_MUTEX_LR                  10
 #define REBOOT_REASON_MUTEX_PC                  11 // Deprecated
 #define SLOT_OF_LAST_LAUNCHED_APP               19
 #define NRF_RETAINED_REGISTER_CRC               31

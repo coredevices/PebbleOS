@@ -32,7 +32,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-_Static_assert(sizeof(RebootReason) == sizeof(uint32_t[6]), "RebootReason is a funny size");
+_Static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a funny size");
 
 void reboot_reason_set(RebootReason *reason) {
 #if MICRO_FAMILY_NRF5
@@ -48,11 +48,9 @@ void reboot_reason_set(RebootReason *reason) {
   }
 
   retained_write(REBOOT_REASON_REGISTER_1, raw[0]);
-  retained_write(REBOOT_REASON_REGISTER_2, raw[1]);
-  retained_write(REBOOT_REASON_STUCK_TASK_PC, raw[2]);
-  retained_write(REBOOT_REASON_STUCK_TASK_LR, raw[3]);
-  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[4]);
-  retained_write(REBOOT_REASON_DROPPED_EVENT, raw[5]);
+  retained_write(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
+  retained_write(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
+  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
 #else
@@ -68,11 +66,9 @@ void reboot_reason_set(RebootReason *reason) {
   }
 
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, raw[0]);
-  RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_2, raw[1]);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_PC, raw[2]);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_LR, raw[3]);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[4]);
-  RTC_WriteBackupRegister(REBOOT_REASON_DROPPED_EVENT, raw[5]);
+  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
+  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
+  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
 #endif
 }
 
@@ -96,41 +92,33 @@ void reboot_reason_get(RebootReason *reason) {
 #if MICRO_FAMILY_NRF5
   uint32_t *raw = (uint32_t *)reason;
   raw[0] = retained_read(REBOOT_REASON_REGISTER_1);
-  raw[1] = retained_read(REBOOT_REASON_REGISTER_2);
-  raw[2] = retained_read(REBOOT_REASON_STUCK_TASK_PC);
-  raw[3] = retained_read(REBOOT_REASON_STUCK_TASK_LR);
-  raw[4] = retained_read(REBOOT_REASON_STUCK_TASK_CALLBACK);
-  raw[5] = retained_read(REBOOT_REASON_DROPPED_EVENT);
+  raw[1] = retained_read(REBOOT_REASON_STUCK_TASK_PC);
+  raw[2] = retained_read(REBOOT_REASON_STUCK_TASK_LR);
+  raw[3] = retained_read(REBOOT_REASON_STUCK_TASK_CALLBACK);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
 #else
   uint32_t *raw = (uint32_t *)reason;
   raw[0] = RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1);
-  raw[1] = RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_2);
-  raw[2] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_PC);
-  raw[3] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_LR);
-  raw[4] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_CALLBACK);
-  raw[5] = RTC_ReadBackupRegister(REBOOT_REASON_DROPPED_EVENT);
+  raw[1] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_PC);
+  raw[2] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_LR);
+  raw[3] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_CALLBACK);
 #endif
 }
 
 void reboot_reason_clear(void) {
 #if MICRO_FAMILY_NRF5
   retained_write(REBOOT_REASON_REGISTER_1, 0);
-  retained_write(REBOOT_REASON_REGISTER_2, 0);
   retained_write(REBOOT_REASON_STUCK_TASK_PC, 0);
   retained_write(REBOOT_REASON_STUCK_TASK_LR, 0);
   retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
-  retained_write(REBOOT_REASON_DROPPED_EVENT, 0);
 #elif defined MICRO_FAMILY_SF32LB52
   // TODO(SF32LB52): Add implementation
 #else
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, 0);
-  RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_2, 0);
   RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_PC, 0);
   RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_LR, 0);
   RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
-  RTC_WriteBackupRegister(REBOOT_REASON_DROPPED_EVENT, 0);
 #endif
 }
 
