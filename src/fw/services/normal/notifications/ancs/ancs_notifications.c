@@ -40,6 +40,7 @@
 #include <stdio.h>
 
 static const Uuid uuid_reminders_data_source = UUID_REMINDERS_DATA_SOURCE;
+static const Uuid uuid_calendar_data_source = UUID_CALENDAR_DATA_SOURCE;
 
 static void prv_dismiss_notification(const TimelineItem *notification) {
   const TimelineItemAction *action = timeline_item_find_dismiss_action(notification);
@@ -98,9 +99,42 @@ static time_t prv_get_timestamp_from_ancs_date(const ANCSAttribute *date,
   return timestamp;
 }
 
-static bool prv_should_ignore_because_calendar_reminder(const ANCSAttribute *app_id) {
-  // do not show calendar notifications if we have reminders set (PBL-13271)
-  return pstring_equal_cstring(&app_id->pstr, IOS_CALENDAR_APP_ID) && !reminder_db_is_empty();
+static bool prv_calendar_reminder_filter(SerializedTimelineItemHeader *hdr, void *context) {
+  // Check that the data source is the calendar app
+  TimelineItem pin;
+  pin_db_read_item_header(&pin, &hdr->common.parent_id);
+  if (uuid_equal(&pin.header.parent_id, &uuid_calendar_data_source)) {
+    return true;
+  }
+  return false;
+}
+
+static bool prv_should_ignore_because_calendar_reminder(const ANCSAttribute *app_id,
+                                                        time_t timestamp,
+                                                        const ANCSAttribute *title) {
+  if (!pstring_equal_cstring(&app_id->pstr, IOS_CALENDAR_APP_ID)) {
+    return false;
+  }
+
+  // If reminder database is empty, we can't have any calendar reminders
+  if (reminder_db_is_empty()) {
+    return false;
+  }
+
+  // copy out calendar event title to a char buffer
+  char calendar_title_buffer[title->length + 1];
+  pstring_pstring16_to_string(&title->pstr, calendar_title_buffer);
+
+  TimelineItem reminder;
+
+  // Check if we have a matching reminder for this calendar event
+  if (reminder_db_find_by_timestamp_title(timestamp, calendar_title_buffer, prv_calendar_reminder_filter,
+                                          &reminder)) {
+    timeline_item_free_allocated_buffer(&reminder);
+    return true;
+  }
+
+  return false;
 }
 
 static bool prv_reminder_filter(SerializedTimelineItemHeader *hdr, void *context) {
@@ -238,7 +272,7 @@ static bool prv_should_ignore_notification(uint32_t uid,
   // apps and location-based reminder are handled as regular notifications.
 
   // filter out extraneous calendar messages
-  if (prv_should_ignore_because_calendar_reminder(app_id)) {
+  if (prv_should_ignore_because_calendar_reminder(app_id, timestamp, title)) {
     PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring ANCS calendar notification because reminders are set");
     return true;
   }
