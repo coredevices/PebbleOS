@@ -175,6 +175,8 @@ static void dump_gpio_configuration_state(void) {
 int main(void) {
 #if defined(MICRO_FAMILY_SF32LB52)
   board_early_init();
+  // FIXME(SF32LB52): remove once we have bootloader
+  boot_bit_init();
 #endif
 
   gpio_init_all();

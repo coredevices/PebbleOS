@@ -102,32 +102,35 @@ uint32_t boot_version_read(void) {
 
 #elif MICRO_FAMILY_SF32LB52
 
-// TODO(SF32LB52): implement
-
-static uint32_t _bootbits;
-
 void boot_bit_init(void) {
-  _bootbits = BOOT_BIT_INITIALIZED;
+  if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
+    HAL_Set_backup(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
+  }
 }
 
 void boot_bit_set(BootBitValue bit) {
-  _bootbits |= bit;
+  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  current_value |= bit;
+  HAL_Set_backup(RTC_BKP_BOOTBIT_DR, current_value);
 }
 
 void boot_bit_clear(BootBitValue bit) {
-  _bootbits &= ~bit;
+  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  current_value &= ~bit;
+  HAL_Set_backup(RTC_BKP_BOOTBIT_DR, current_value);
 }
 
 bool boot_bit_test(BootBitValue bit) {
-  return _bootbits & bit;
+  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  return (current_value & bit);
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "0x%"PRIx32, _bootbits);
+  PBL_LOG(LOG_LEVEL_DEBUG, "0x%"PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
-  return _bootbits;
+ return HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
 }
 
 void command_boot_bits_get(void) {
