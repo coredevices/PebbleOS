@@ -242,4 +242,6 @@ void board_init(void) {
   i2c_use(I2C_DA7212);
   i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
   i2c_release(I2C_DA7212);
+
+  NRF_PWM1->ENABLE = 0; // Bootloader left this powered on.  We're done with it now, though; we use GPIOTE+PPI to toggle Vcom.
 }
