@@ -219,10 +219,17 @@ void command_version_info(void) {
   char hw_version[MFG_HW_VERSION_SIZE + 1];
   mfg_info_get_hw_version(hw_version, sizeof(hw_version));
 
-  const uint32_t* mcu_serial = mcu_get_serial();
-  prompt_send_response_fmt(buffer, sizeof(buffer),
-                           "MCU Serial: %08"PRIx32" %08"PRIx32" %08"PRIx32,
-                           mcu_serial[0], mcu_serial[1], mcu_serial[2]);
+  uint8_t mcu_serial[32];
+  size_t mcu_serial_size = sizeof(mcu_serial);
+  StatusCode err = mcu_get_serial(mcu_serial, &mcu_serial_size);
+  if (err != S_SUCCESS) {
+    prompt_send_response_fmt(buffer, sizeof(buffer),
+                             "MCU Serial: N/A (%d)", err);
+  } else {
+    char serial_str[sizeof(mcu_serial) * 2 + 1];
+    byte_stream_to_hex_string(serial_str, sizeof(serial_str), mcu_serial, mcu_serial_size, false);
+    prompt_send_response_fmt(buffer, sizeof(buffer), "MCU Serial: %s", serial_str);
+  }
 
   prompt_send_response_fmt(buffer, sizeof(buffer), "Boot:%"PRIu32"\nHW:%s\nSN:%s",
                            boot_version_read(), hw_version, serial_number);
