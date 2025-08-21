@@ -1142,14 +1142,14 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): provide working implementation
     bld.objects(
         name='driver_mcu',
         source=[
-            'stubs/mcu.c',
+            'sf32lb52/mcu.c',
         ],
         use=[
             'fw_includes',
+            'hal_sifli',
         ],
     )
 
