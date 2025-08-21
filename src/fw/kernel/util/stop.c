@@ -59,17 +59,13 @@ static InhibitorTickProfile s_inhibitor_profile[InhibitorNumItems];
 void enter_stop_mode(void) {
   dbgserial_enable_rx_exti();
 
-  flash_power_down_for_stop_mode();
   rtc_systick_pause();
-
-  /* XXX(nrf5): LATER: have MPSL turn off HFCLK */
 
   __DSB(); // Drain any pending memory writes before entering sleep.
   do_wfi(); // Wait for Interrupt (enter sleep mode). Work around F2/F4 errata.
   __ISB(); // Let the pipeline catch up (force the WFI to activate before moving on).
 
   rtc_systick_resume();
-  flash_power_up_after_stop_mode();
 }
 #elif MICRO_FAMILY_SF32LB52
 void enter_stop_mode(void) {
