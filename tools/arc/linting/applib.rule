@@ -1,8 +1,0 @@
-<rule version="1">
- <pattern>\b(task_|app_)?[cmz]alloc(_check)?</pattern>
- <message>
-   <id>applib_malloc</id>
-   <severity>style</severity>
-   <summary>For structures that are exported, we try to always use applib_malloc. Please consider using this paradigm. If you have any questions, consult Bradley Murray. He is great.</summary>
- </message>
-</rule>
