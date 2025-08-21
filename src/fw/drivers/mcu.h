@@ -16,9 +16,11 @@
 
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
-//! @return a 96-bit serial number for the MCU, programmed by the MCU manufacturer.
-const uint32_t* mcu_get_serial(void);
+#include "system/status_codes.h"
+
+StatusCode mcu_get_serial(void *buf, size_t *buf_sz);
 
 uint32_t mcu_cycles_to_milliseconds(uint64_t cpu_ticks);
