@@ -15,6 +15,7 @@
  */
 
 #include "drivers/mcu.h"
+#include <string.h>
 
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
@@ -22,13 +23,20 @@
 #include <mcu.h>
 
 #if MICRO_FAMILY_STM32F7
-const uint32_t *STM32_UNIQUE_DEVICE_ID_ADDR = (uint32_t*) 0x1ff0f420;
+static const uint8_t STM32_UNIQUE_DEVICE_ID_ADDR[] = {0x1f, 0xf0, 0xf4, 0x20};
 #else
-const uint32_t *STM32_UNIQUE_DEVICE_ID_ADDR = (uint32_t*) 0x1fff7a10;
+static const uint8_t STM32_UNIQUE_DEVICE_ID_ADDR[] = {0x1f, 0xff, 0x7a, 0x10};
 #endif
 
-const uint32_t* mcu_get_serial(void) {
-  return STM32_UNIQUE_DEVICE_ID_ADDR;
+StatusCode mcu_get_serial(void *buf, size_t *buf_sz) {
+  if (*buf_sz < sizeof(STM32_UNIQUE_DEVICE_ID_ADDR)) {
+    return E_OUT_OF_MEMORY;
+  }
+
+  memcpy(buf, STM32_UNIQUE_DEVICE_ID_ADDR, sizeof(STM32_UNIQUE_DEVICE_ID_ADDR));
+  *buf_sz = sizeof(STM32_UNIQUE_DEVICE_ID_ADDR);
+
+  return S_SUCCESS;
 }
 
 uint32_t mcu_cycles_to_milliseconds(uint64_t cpu_ticks) {
