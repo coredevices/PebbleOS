@@ -38,7 +38,7 @@ def dehash_read(self, size, plain_read):
     #  - If not, continue as usual
     #  - If it does, dehash the buffered line and use clever tricks to swap it into the terminal
     #    view in-place (obviously, don't be using this method for raw serial IO or file output)
-    raw_read_data = plain_read(self, size)
+    raw_read_data = plain_read(self, size).decode()
     read_data = []
     for read_char in raw_read_data:
         if read_char == "\n":
@@ -49,7 +49,7 @@ def dehash_read(self, size, plain_read):
         else:
             line_buffer.append(read_char)
             read_data.append(read_char)
-    return "".join(read_data)
+    return "".join(read_data).encode()
 
 def socket_serial_read(self, size=1):
     """
