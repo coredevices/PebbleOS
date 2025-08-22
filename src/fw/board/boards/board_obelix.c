@@ -84,15 +84,63 @@ static PwmState s_pwm1_ch1_state = {
     .channel = 1,
 };
 
-static PwmConfig s_pwm1_ch1 = {
-    .pwm_pin = {
-        .pad = PAD_PA01,
-        .func = GPTIM1_CH1,
-        .flags = PIN_NOPULL,
+static PwmState s_pwm1_ch2_state = {
+    .handle = {
+        .Instance = hwp_gptim1,
+        .Init = {
+             .CounterMode = GPT_COUNTERMODE_UP,
+        },
+
     },
-    .state = &s_pwm1_ch1_state,
+    .clock_config = {
+        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
+    },
+    .channel = 2,
 };
-PwmConfig *const PWM1_CH1 = &s_pwm1_ch1;
+
+static PwmState s_pwm1_ch3_state = {
+    .handle = {
+        .Instance = hwp_gptim1,
+        .Init = {
+             .CounterMode = GPT_COUNTERMODE_UP,
+        },
+
+    },
+    .clock_config = {
+        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
+    },
+    .channel = 3,
+};
+
+const LedControllerPwm LED_CONTROLLER_PWM = {
+    .pwm = {
+        [0] = {
+            .pwm_pin = {
+                .pad = PAD_PA28,
+                .func = GPTIM1_CH1,
+                .flags = PIN_NOPULL,
+            },
+            .state = &s_pwm1_ch1_state,
+        },
+        [1] = {
+            .pwm_pin = {
+                .pad = PAD_PA29,
+                .func = GPTIM1_CH2,
+                .flags = PIN_NOPULL,
+            },
+            .state = &s_pwm1_ch2_state,
+        },
+        [2] = {
+            .pwm_pin = {
+                .pad = PAD_PA44,
+                .func = GPTIM1_CH3,
+                .flags = PIN_NOPULL,
+            },
+            .state = &s_pwm1_ch3_state,
+        },
+    },
+    .initial_color = LED_WHITE,
+};
 
 static DisplayJDIState s_display_state = {
     .hlcdc = {
