@@ -341,10 +341,7 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE1=0')
         conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE2=0')
 
-    if (
-        not conf.options.no_pulse_everywhere and
-        (conf.options.mfg or not conf.options.release)
-    ):
+    if not conf.options.no_pulse_everywhere:
         conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
 
 def _create_cm0_env(conf):
