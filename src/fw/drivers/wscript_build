@@ -1060,7 +1060,7 @@ if bld.env.BOARD == "v2_0":
     bld.objects(
         name='driver_led_controller',
         source=[
-            'led_controller.c',
+            'led_controller/is31fl3196.c',
         ],
         use=[
             'driver_gpio',
