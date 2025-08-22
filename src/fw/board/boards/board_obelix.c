@@ -411,7 +411,7 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
 };
 
 const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 100U,
+  .backlight_on_percent = 25,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {

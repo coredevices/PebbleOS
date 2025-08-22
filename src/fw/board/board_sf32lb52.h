@@ -106,6 +106,9 @@ typedef struct {
   PwmState *state;
 } PwmConfig;
 
+typedef struct {
+} TimerConfig;
+
 typedef enum {
   ActuatorOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable vibe
   ActuatorOptions_Pwm = 1 << 1, ///< PWM control
@@ -121,6 +124,7 @@ typedef struct {
 
 typedef struct {
   uint8_t backlight_on_percent;
+  uint8_t backlight_max_duty_cycle_percent;
   ExtiConfig dbgserial_int;
   InputConfig dbgserial_int_gpio;
   OutputConfig lcd_com;
