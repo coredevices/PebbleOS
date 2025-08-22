@@ -33,3 +33,8 @@ void dbgserial_enable_rx_exti(void);
 
 //! Enables/disables DMA-based receiving
 void dbgserial_set_rx_dma_enabled(bool enabled);
+
+#if MICRO_FAMILY_NRF5
+void dbgserial_disable_rx_dma_before_stop();
+void dbgserial_enable_rx_dma_after_stop();
+#endif
