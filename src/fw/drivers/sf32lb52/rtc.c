@@ -19,6 +19,7 @@
 #include "board/board.h"
 #include "drivers/rtc.h"
 #include "drivers/rtc_private.h"
+#include "mcu/interrupts.h"
 #include "system/passert.h"
 #include "util/time/time.h"
 
