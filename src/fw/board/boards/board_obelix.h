@@ -41,6 +41,10 @@ extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
 
+static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
+  .options = ActuatorOptions_IssiI2C,
+};
+
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
 #ifdef IS_BIGBOARD

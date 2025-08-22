@@ -106,13 +106,18 @@ typedef struct {
   PwmState *state;
 } PwmConfig;
 
-
 typedef enum {
   ActuatorOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable vibe
   ActuatorOptions_Pwm = 1 << 1, ///< PWM control
   ActuatorOptions_IssiI2C = 1 << 2, ///< I2C Device, currently used for V1_5 -> OG steel backlight
   ActuatorOptions_HBridge = 1 << 3, //< PWM actuates an H-Bridge, requires ActuatorOptions_PWM
 } ActuatorOptions;
+
+typedef struct {
+  const ActuatorOptions options;
+  const OutputConfig ctl;
+  const PwmConfig pwm;
+} BoardConfigActuator;
 
 typedef struct {
   uint8_t backlight_on_percent;
