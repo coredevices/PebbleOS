@@ -356,7 +356,9 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
 }
 
 void uart_stop_rx_dma(UARTDevice *dev) {
+#ifdef DEBUG_UART
   PBL_LOG(LOG_LEVEL_INFO, "stop_rx_dma");
+#endif
   nrfx_uarte_rx_abort(&dev->periph, true, true);
   nrfx_timer_disable(&dev->counter);
 }
