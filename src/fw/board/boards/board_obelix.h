@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "drivers/led_controller/pwm.h"
 #include "drivers/pmic/npm1300.h"
 #include "services/imu/units.h"
 
@@ -33,6 +34,7 @@ extern I2CBus *const I2C2_BUS;
 extern I2CSlavePort * const I2C_LSM6D;
 extern I2CSlavePort * const I2C_NPM1300;
 extern const Npm1300Config NPM1300_CONFIG;
+extern const LedControllerPwm LED_CONTROLLER_PWM;
 extern PwmConfig *const PWM1_CH1;
 extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
