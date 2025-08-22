@@ -166,7 +166,7 @@ void backlight_set_brightness(uint16_t brightness) {
   }
 
   if (BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_IssiI2C) {
-    led_controller_backlight_set_brightness(brightness >> 8);
+    led_controller_backlight_set_brightness(brightness * 100 / BACKLIGHT_BRIGHTNESS_MAX);
   }
 }
 
