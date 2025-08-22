@@ -357,15 +357,15 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): provide working implementation
     bld.objects(
         name='driver_backlight',
         source=[
-            'stubs/backlight.c',
+            'backlight.c',
         ],
         use=[
             'fw_includes',
             'root_includes',
+            'driver_led_controller',
         ],
     )
 
@@ -1070,6 +1070,16 @@ if bld.env.BOARD == "v2_0":
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+elif bld.is_obelix():
+    bld.objects(
+        name='driver_led_controller',
+        source=[
+            'led_controller/pwm.c',
+        ],
+        use=[
+            'driver_pwm',
         ],
     )
 
