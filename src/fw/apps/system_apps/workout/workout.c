@@ -36,6 +36,8 @@
 #include "services/normal/activity/health_util.h"
 #include "services/normal/activity/workout_service.h"
 #include "system/logging.h"
+#include "resource/resource_ids.auto.h"
+#include "popups/health_tracking_ui.h"
 
 #include <stdio.h>
 
@@ -196,6 +198,14 @@ void workout_push_summary_window(void) {
 // Initialization
 
 static void prv_init(void) {
+    if (!activity_is_initialized()) {
+    /// Workouts waiting for time sync
+    static const char *msg = i18n_noop("Workout requires the time to be synced."
+                                       " Please connect your phone.");
+    health_tracking_ui_show_message(RESOURCE_ID_ALARM_CLOCK_TINY, msg, true);
+    return;
+  }
+
   if (!activity_prefs_tracking_is_enabled()) {
     /// Health disabled text
     static const char *msg = i18n_noop("Enable Pebble Health in the mobile app to track workouts");

@@ -283,6 +283,9 @@ typedef struct __attribute__((__packed__)) {
 //! @return true if successfully initialized
 bool activity_init(void);
 
+//! Returns true if the activity service is initialized
+bool activity_is_initialized(void);
+
 //! Start the activity tracking service. This starts sampling of the accelerometer
 //! @param test_mode if true, samples must be fed in using activity_feed_samples()
 //! @return true if successfully started
