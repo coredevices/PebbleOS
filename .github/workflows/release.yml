@@ -17,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        board: ["asterix", "obelix"]
+        board: ["asterix"]
 
     steps:
       - name: Mark Github workspace as safe
@@ -46,34 +46,28 @@ jobs:
           echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
 
       - name: Configure bootloader
-        if: ${{ matrix.board == 'asterix' }}
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
         run: ./waf configure --board ${{ matrix.board }}
 
       - name: Build bootloader
-        if: ${{ matrix.board == 'asterix' }}
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
         run: ./waf build
 
       - name: Copy bootloader artifacts
-        if: ${{ matrix.board == 'asterix' }}
         run: |
           mkdir -p artifacts
           cp platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.hex \
              artifacts/bootloader_${{ matrix.board }}_${{github.ref_name}}.hex
 
       - name: Configure bootloader (nowatchdog)
-        if: ${{ matrix.board == 'asterix' }}
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
         run: ./waf configure --board ${{ matrix.board }} --nowatchdog
 
       - name: Build bootloader (nowatchdog)
-        if: ${{ matrix.board == 'asterix' }}
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
         run: ./waf build
 
       - name: Copy bootloader artifacts (nowatchdog)
-        if: ${{ matrix.board == 'asterix' }}
         run: |
           mkdir -p artifacts
           cp platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.hex \
