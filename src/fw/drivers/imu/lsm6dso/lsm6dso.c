@@ -48,6 +48,7 @@ static bool prv_lsm6dso_health_check(void);
 static bool prv_lsm6dso_attempt_recovery(void);
 typedef struct {
   lsm6dso_odr_xl_t odr;
+  lsm6dso_xl_hm_mode_t power_mode;
   uint32_t interval_us;
 } odr_xl_interval_t;
 static odr_xl_interval_t prv_get_odr_for_interval(uint32_t interval_us);
@@ -712,17 +713,17 @@ static bool prv_is_vibing(void) {
 // Sampling interval configuration
 
 static odr_xl_interval_t prv_get_odr_for_interval(uint32_t interval_us) {
-  if (interval_us >= 625000) return (odr_xl_interval_t){LSM6DSO_XL_ODR_1Hz6, 625000};
-  if (interval_us >= 80000) return (odr_xl_interval_t){LSM6DSO_XL_ODR_12Hz5, 80000};
-  if (interval_us >= 38462) return (odr_xl_interval_t){LSM6DSO_XL_ODR_26Hz, 38462};
-  if (interval_us >= 19231) return (odr_xl_interval_t){LSM6DSO_XL_ODR_52Hz, 19231};
-  if (interval_us >= 9615) return (odr_xl_interval_t){LSM6DSO_XL_ODR_104Hz, 9615};
-  if (interval_us >= 4808) return (odr_xl_interval_t){LSM6DSO_XL_ODR_208Hz, 4808};
-  if (interval_us >= 2398) return (odr_xl_interval_t){LSM6DSO_XL_ODR_417Hz, 2398};
-  if (interval_us >= 1200) return (odr_xl_interval_t){LSM6DSO_XL_ODR_833Hz, 1200};
-  if (interval_us >= 600) return (odr_xl_interval_t){LSM6DSO_XL_ODR_1667Hz, 600};
-  if (interval_us >= 300) return (odr_xl_interval_t){LSM6DSO_XL_ODR_3333Hz, 300};
-  return (odr_xl_interval_t){LSM6DSO_XL_ODR_6667Hz, 150};
+  if (interval_us >= 625000) return (odr_xl_interval_t){LSM6DSO_XL_ODR_1Hz6, LSM6DSO_ULTRA_LOW_POWER_MD, 625000};
+  if (interval_us >= 80000) return (odr_xl_interval_t){LSM6DSO_XL_ODR_12Hz5, LSM6DSO_ULTRA_LOW_POWER_MD, 80000};
+  if (interval_us >= 38462) return (odr_xl_interval_t){LSM6DSO_XL_ODR_26Hz, LSM6DSO_ULTRA_LOW_POWER_MD, 38462};
+  if (interval_us >= 19231) return (odr_xl_interval_t){LSM6DSO_XL_ODR_52Hz, LSM6DSO_ULTRA_LOW_POWER_MD, 19231};
+  if (interval_us >= 9615) return (odr_xl_interval_t){LSM6DSO_XL_ODR_104Hz, LSM6DSO_LOW_NORMAL_POWER_MD, 9615};
+  if (interval_us >= 4808) return (odr_xl_interval_t){LSM6DSO_XL_ODR_208Hz, LSM6DSO_LOW_NORMAL_POWER_MD, 4808};
+  if (interval_us >= 2398) return (odr_xl_interval_t){LSM6DSO_XL_ODR_417Hz, LSM6DSO_HIGH_PERFORMANCE_MD, 2398};
+  if (interval_us >= 1200) return (odr_xl_interval_t){LSM6DSO_XL_ODR_833Hz, LSM6DSO_HIGH_PERFORMANCE_MD, 1200};
+  if (interval_us >= 600) return (odr_xl_interval_t){LSM6DSO_XL_ODR_1667Hz, LSM6DSO_HIGH_PERFORMANCE_MD, 600};
+  if (interval_us >= 300) return (odr_xl_interval_t){LSM6DSO_XL_ODR_3333Hz, LSM6DSO_HIGH_PERFORMANCE_MD, 300};
+  return (odr_xl_interval_t){LSM6DSO_XL_ODR_6667Hz, LSM6DSO_HIGH_PERFORMANCE_MD, 150};
 }
 
 static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
@@ -736,11 +737,50 @@ static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
   }
 
   odr_xl_interval_t odr_interval = prv_get_odr_for_interval(interval_us);
+
+  lsm6dso_odr_xl_t old_odr;
+  if (lsm6dso_xl_data_rate_get(&lsm6dso_ctx, &old_odr) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: failed to read old ODR");
+    return -1;
+  }
+
+  lsm6dso_xl_hm_mode_t old_power_mode;
+  if (lsm6dso_xl_power_mode_get(&lsm6dso_ctx, &old_power_mode) != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: failed to read old power mode");
+    return -1;
+  }
+
+  // For now, gyro is off, so it is fine to use ULP mode.  When we have gyro
+  // support, though, we need to avoid ULP mode (LSM6DSO datasheet section
+  // 6.2.1) -- modify that here once you do that!
+  lsm6dso_xl_hm_mode_t new_power_mode = odr_interval.power_mode;
+
+  if (old_odr == odr_interval.odr && old_power_mode == new_power_mode) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: we were already in that sampling mode, so we're good");
+    return odr_interval.interval_us;
+  }
+
+  if (old_power_mode != new_power_mode) {
+    // Section 6.2.1: you have to power down the accel before switching ULP
+    // mode
+    if (lsm6dso_xl_data_rate_set(&lsm6dso_ctx, LSM6DSO_XL_ODR_OFF) != 0) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: failed to power off before changing power mode");
+      return -1;
+    }
+
+    if (lsm6dso_xl_power_mode_set(&lsm6dso_ctx, new_power_mode) != 0) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: failed to set power mode");
+      return -1;
+    }
+
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: switched to accelerometer power mode lsm6dso_xl_hm_mode_t = %d", new_power_mode);
+  }
+
   if (lsm6dso_xl_data_rate_set(&lsm6dso_ctx, odr_interval.odr) != 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set ODR");
     return -1;
   }
-  
+
   // Wait for ODR change to take effect (LSM6DSO needs time to stabilize)
   if (odr_interval.odr != LSM6DSO_XL_ODR_OFF) {
     psleep(10); // Allow time for ODR change to stabilize
