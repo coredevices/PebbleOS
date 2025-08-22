@@ -26,6 +26,7 @@
 #include "mcu/interrupts.h"
 #include "services/common/analytics/analytics.h"
 #include "system/passert.h"
+#include "console/dbgserial_input.h"
 
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
@@ -58,6 +59,7 @@ static InhibitorTickProfile s_inhibitor_profile[InhibitorNumItems];
 #if MICRO_FAMILY_NRF5
 void enter_stop_mode(void) {
   dbgserial_enable_rx_exti();
+  dbgserial_disable_rx_dma_before_stop();
 
   flash_power_down_for_stop_mode();
   rtc_systick_pause();
@@ -70,6 +72,8 @@ void enter_stop_mode(void) {
 
   rtc_systick_resume();
   flash_power_up_after_stop_mode();
+
+  dbgserial_enable_rx_dma_after_stop();
 }
 #elif MICRO_FAMILY_SF32LB52
 void enter_stop_mode(void) {
