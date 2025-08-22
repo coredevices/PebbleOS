@@ -123,7 +123,7 @@ def yes_no_to_bool(arg):
 
 # Process "arguments"
 arg_justify = "small"
-arg_color = False
+arg_color = True
 arg_bold = -1
 arg_core = False
 
@@ -163,4 +163,6 @@ if sys.argv[1] == 'None':
     raise Exception("No tty specified. Do you have a device attached?")
 
 # Fire it up as usual
+sys.argv.extend(["--filter", "colorize"])
+
 main()
