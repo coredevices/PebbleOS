@@ -30,8 +30,11 @@ typedef void (*AccelDataReadyCallback)(void *context);
 
 typedef struct AccelManagerState AccelManagerState;
 
-
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 26 * 2; // wake every 2 seconds -- lsm6dso is 26Hz
+#else
 static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 25;
+#endif
 
 
 void accel_manager_init(void);
