@@ -1040,6 +1040,7 @@ elif bld.is_asterix():
         ],
         use=[
             'driver_lsm6dso',
+            'driver_mmc5603nj',
             'fw_includes',
             'root_includes',
         ],
