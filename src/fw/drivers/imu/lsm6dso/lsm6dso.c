@@ -830,20 +830,8 @@ static void prv_lsm6dso_read_samples(void) {
   const uint32_t interval_us = s_lsm6dso_state.sampling_interval_us ?: 1000;  // avoid div by zero
 
   for (uint16_t i = 0; i < fifo_level; ++i) {
-    lsm6dso_fifo_tag_t tag;
-    if (lsm6dso_fifo_sensor_tag_get(&lsm6dso_ctx, &tag) != 0) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO tag");
-      // Reset FIFO on communication error
-      lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
-      if (s_fifo_in_use) {
-        lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
-      }
-      break;
-    }
-
-    uint8_t raw_bytes[6];
-    if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_FIFO_DATA_OUT_X_L, raw_bytes, sizeof(raw_bytes)) !=
-        0) {
+    uint8_t raw_bytes[7];
+    if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_FIFO_DATA_OUT_TAG, raw_bytes, sizeof(raw_bytes)) != 0) {
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read FIFO sample (%u/%u)", i, fifo_level);
       // Reset FIFO on communication error
       lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
@@ -853,6 +841,7 @@ static void prv_lsm6dso_read_samples(void) {
       break;
     }
 
+    lsm6dso_fifo_tag_t tag = raw_bytes[0] >> 3;
     if (tag != LSM6DSO_XL_NC_TAG && tag != LSM6DSO_XL_NC_T_1_TAG && tag != LSM6DSO_XL_NC_T_2_TAG &&
         tag != LSM6DSO_XL_2XC_TAG && tag != LSM6DSO_XL_3XC_TAG) {
       // Not an accelerometer sample (e.g., gyro/timestamp/config), ignore
@@ -860,9 +849,9 @@ static void prv_lsm6dso_read_samples(void) {
     }
 
     int16_t raw_vector[3];
-    raw_vector[0] = (int16_t)((raw_bytes[1] << 8) | raw_bytes[0]);
-    raw_vector[1] = (int16_t)((raw_bytes[3] << 8) | raw_bytes[2]);
-    raw_vector[2] = (int16_t)((raw_bytes[5] << 8) | raw_bytes[4]);
+    raw_vector[0] = (int16_t)((raw_bytes[2] << 8) | raw_bytes[1]);
+    raw_vector[1] = (int16_t)((raw_bytes[4] << 8) | raw_bytes[3]);
+    raw_vector[2] = (int16_t)((raw_bytes[6] << 8) | raw_bytes[5]);
 
     AccelDriverSample sample = {0};
     sample.x = prv_get_axis_projection_mg(X_AXIS, raw_vector);
