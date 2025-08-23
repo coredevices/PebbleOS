@@ -1120,6 +1120,19 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
         ],
     )
 
+if bld.is_asterix():
+    bld.objects(
+        name='driver_mmc5603nj',
+        source=[
+            'imu/mmc5603nj/mmc5603nj.c',
+        ],
+        use=[
+            'driver_i2c',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+
 if not bld.capability('HAS_MAGNETOMETER'):
     bld.objects(
         name='driver_mag_null',
