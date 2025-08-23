@@ -411,7 +411,7 @@ void rtc_alarm_set(RtcTicks num_ticks) {
   nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
   
   s_alarm_set_time = rtc_get_ticks();
-  s_alarm_expiry_time = s_alarm_set_time + num_ticks;
+  s_alarm_expiry_time = s_alarm_set_time + num_ticks - 1;
   
   /* We're bounded by the regular_timer_add_minutes_callback for the
    * rtc_alarm_set, so we're not going to wrap around more than once -- one
