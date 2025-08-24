@@ -61,15 +61,22 @@
 // Our globals
 static ActivityState s_activity_state;
 static bool s_hrm_present = false;
+static bool s_activity_initialized = false;
 
 // ------------------------------------------------------------------------------------------------
 ActivityState *activity_private_state(void) {
+  if (!s_activity_initialized) {
+    return NULL;
+  }
   return &s_activity_state;
 }
 
 
 // ------------------------------------------------------------------------------------------------
 bool activity_is_hrm_present(void) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   return s_hrm_present;
 }
 
@@ -917,6 +924,7 @@ bool activity_init(void) {
   ACTIVITY_LOG_DEBUG("init");
   s_activity_state = (ActivityState) {};
   s_activity_state.mutex = mutex_create_recursive();
+  s_activity_initialized = true;
 
   // This semaphore used to wake up the calling task when it is waiting for KernelBG to
   // handle a request
@@ -997,15 +1005,25 @@ bool activity_init(void) {
   return true;
 }
 
+bool activity_is_initialized(void) {
+  return s_activity_initialized;
+}
+
 
 // ------------------------------------------------------------------------------------------------
 bool activity_start_tracking(bool test_mode) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   return system_task_add_callback(prv_start_tracking_cb, (void *)test_mode);
 }
 
 
 // ------------------------------------------------------------------------------------------------
 bool activity_stop_tracking(void) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   mutex_lock_recursive(s_activity_state.mutex);
   {
     prv_stop_tracking_early();
@@ -1017,6 +1035,9 @@ bool activity_stop_tracking(void) {
 
 // ------------------------------------------------------------------------------------------------
 bool activity_tracking_on(void) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   bool result;
   mutex_lock_recursive(s_activity_state.mutex);
   result = s_activity_state.started;
@@ -1030,6 +1051,9 @@ bool activity_tracking_on(void) {
 // Note that this can be called from a timer callback so we do all the heavy lifting from a
 // kernel BG callback
 void activity_set_enabled(bool enable) {
+  if (!s_activity_initialized) {
+    return;
+  }
   mutex_lock_recursive(s_activity_state.mutex);
   {
     s_activity_state.enabled_run_level = enable;
@@ -1041,6 +1065,9 @@ void activity_set_enabled(bool enable) {
 
 // ------------------------------------------------------------------------------------------------
 bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   if (sessions == NULL) {
     return false;
   }
@@ -1108,6 +1135,9 @@ static void prv_get_minute_history_system_cb(void *context_param) {
 
 bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
                                  time_t *utc_start) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   // Fill in the context
   ActivityGetMinuteHistoryContext context = (ActivityGetMinuteHistoryContext) {
     .minute_data = minute_data,
@@ -1137,6 +1167,9 @@ DEFINE_SYSCALL(bool, sys_activity_get_minute_history, HealthMinuteData *minute_d
 
 // ------------------------------------------------------------------------------------------------
 bool activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *averages) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   return health_db_get_typical_step_averages(day_of_week, averages);
 }
 
@@ -1153,12 +1186,20 @@ DEFINE_SYSCALL(bool, sys_activity_get_step_averages, DayInWeek day_of_week,
 
 // ------------------------------------------------------------------------------------------------
 bool activity_get_metric_typical(ActivityMetric metric, DayInWeek day, int32_t *value_out) {
+  if (!s_activity_initialized) {
+    *value_out = 0;
+    return false;
+  }
   *value_out = 0;
   return health_db_get_typical_value(metric, day, value_out);
 }
 
 // ------------------------------------------------------------------------------------------------
 bool activity_get_metric_monthly_avg(ActivityMetric metric, int32_t *value_out) {
+  if (!s_activity_initialized) {
+    *value_out = 0;
+    return false;
+  }
   *value_out = 0;
   return health_db_get_monthly_average_value(metric, value_out);
 }
@@ -1167,6 +1208,9 @@ bool activity_get_metric_monthly_avg(ActivityMetric metric, int32_t *value_out) 
 bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled,
                                     uint32_t *session_id, uint32_t *num_samples,
                                     uint32_t *seconds) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   bool success = true;
   mutex_lock_recursive(s_activity_state.mutex);
   {
@@ -1230,6 +1274,9 @@ static void prv_dump_sleep_log_system_cb(void *context_param) {
 }
 
 bool activity_dump_sleep_log(void) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   // Fill in the context
   ActivityDumpSleepLogContext context = (ActivityDumpSleepLogContext) { };
 
@@ -1242,6 +1289,9 @@ bool activity_dump_sleep_log(void) {
 
 // ------------------------------------------------------------------------------------------------
 bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   if (!s_activity_state.test_mode) {
     PBL_LOG(LOG_LEVEL_ERROR, "not in test mode");
     return false;
@@ -1278,6 +1328,9 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
 
 // ------------------------------------------------------------------------------------------------
 bool activity_test_run_minute_callback(void) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   return system_task_add_callback(prv_minute_system_task_cb, NULL);
 }
 
@@ -1299,6 +1352,9 @@ static void prv_write_metric_history(ActivitySettingsKey key,
 bool activity_test_reset(bool reset_settings, bool tracking_on,
                          const ActivitySettingsValueHistory *sleep_history,
                          const ActivitySettingsValueHistory *step_history) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   bool tracking = s_activity_state.started || tracking_on;
   bool test_mode = s_activity_state.test_mode;
 
@@ -1362,6 +1418,9 @@ static void prv_sleep_file_info_system_cb(void *context_param) {
 
 bool activity_test_minute_file_info(bool compact_first, uint32_t *num_records, uint32_t *data_bytes,
                                     uint32_t *minutes) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   // Fill in the context
   ActivitySleepFileInfoContext context = (ActivitySleepFileInfoContext) {
     .compact_first = compact_first,
@@ -1406,6 +1465,9 @@ static void prv_fill_minute_file_system_cb(void *context_param) {
 }
 
 bool activity_test_fill_minute_file(void) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   // Fill in the context
   ActivitySleepFileInfoContext context = (ActivitySleepFileInfoContext) { };
 
@@ -1440,6 +1502,9 @@ static void prv_send_fake_dls_records_system_cb(void *context_param) {
 }
 
 bool activity_test_send_fake_dls_records(void) {
+  if (!s_activity_initialized) {
+    return false;
+  }
   // Enqueue it for KernelBG to process
   return system_task_add_callback(prv_send_fake_dls_records_system_cb, NULL);
 }
@@ -1447,6 +1512,9 @@ bool activity_test_send_fake_dls_records(void) {
 
 // ------------------------------------------------------------------------------------------------
 void activity_test_set_steps_and_avg(int32_t new_steps, int32_t current_avg, int32_t daily_avg) {
+  if (!s_activity_initialized) {
+    return;
+  }
   mutex_lock_recursive(s_activity_state.mutex);
   {
     // set the current steps to new_steps
@@ -1480,6 +1548,9 @@ void activity_test_set_steps_and_avg(int32_t new_steps, int32_t current_avg, int
 
 // ------------------------------------------------------------------------------------------------
 void activity_test_set_steps_history() {
+  if (!s_activity_initialized) {
+    return;
+  }
   ActivitySettingsValueHistory step_history = {
     .utc_sec = rtc_get_time(),
     .values = {
@@ -1499,6 +1570,9 @@ void activity_test_set_steps_history() {
 
 // ------------------------------------------------------------------------------------------------
 void activity_test_set_sleep_history() {
+  if (!s_activity_initialized) {
+    return;
+  }
   ActivitySettingsValueHistory sleep_history = {
     .utc_sec = rtc_get_time(),
     .values = {

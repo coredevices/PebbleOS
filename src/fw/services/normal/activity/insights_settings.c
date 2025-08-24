@@ -157,6 +157,9 @@ static void prv_close_settings_and_unlock(SettingsFile *file) {
 }
 
 void activity_insights_settings_init(void) {
+  if (!activity_is_initialized()) {
+    return;
+  }
   // Create our mutex
   s_insight_settings_mutex = mutex_create();
 
@@ -184,6 +187,9 @@ void activity_insights_settings_init(void) {
 }
 
 uint16_t activity_insights_settings_get_version(void) {
+  if (!activity_is_initialized()) {
+    return ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_VERSION;
+  }
   uint16_t version = ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_VERSION;
   SettingsFile file;
   if (prv_open_settings_and_lock(&file)) {
@@ -199,6 +205,9 @@ uint16_t activity_insights_settings_get_version(void) {
 
 bool activity_insights_settings_read(const char *insight_name,
                                      ActivityInsightSettings *settings_out) {
+  if (!activity_is_initialized()) {
+    return false;
+  }
   bool rv = false;
   *settings_out = (ActivityInsightSettings) {};
 
@@ -237,6 +246,9 @@ close:
 
 bool activity_insights_settings_write(const char *insight_name,
                                       ActivityInsightSettings *settings) {
+  if (!activity_is_initialized()) {
+    return false;
+  }
   bool rv = false;
 
   SettingsFile file;
@@ -254,10 +266,16 @@ bool activity_insights_settings_write(const char *insight_name,
 }
 
 PFSCallbackHandle activity_insights_settings_watch(PFSFileChangedCallback callback) {
+  if (!activity_is_initialized()) {
+    return 0; // Return invalid handle
+  }
   return pfs_watch_file(ACTIVITY_INSIGHTS_SETTINGS_FILENAME, callback, FILE_CHANGED_EVENT_CLOSED,
                         NULL);
 }
 
 void activity_insights_settings_unwatch(PFSCallbackHandle cb_handle) {
+  if (!activity_is_initialized()) {
+    return;
+  }
   pfs_unwatch_file(cb_handle);
 }
