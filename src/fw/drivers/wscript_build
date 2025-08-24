@@ -1770,7 +1770,7 @@ if bld.capability('HAS_VIBE_DRV2604'):
     bld.objects(
         name='driver_vibe',
         source=[
-            'vibe_drv2604.c',
+            'vibe/vibe_drv2604.c',
         ],
         use=[
             'driver_gpio',
@@ -1780,11 +1780,23 @@ if bld.capability('HAS_VIBE_DRV2604'):
             'root_includes',
         ],
     )
+if bld.capability('HAS_VIBE_AW86225'):
+    bld.objects(
+        name='driver_vibe',
+        source=[
+            'vibe/vibe_aw86225.c',
+        ],
+        use=[
+            'fw_includes',
+            'driver_i2c',
+            'driver_gpio',
+        ],
+    )
 elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
         name='driver_vibe',
         source=[
-            'vibe.c',
+            'vibe/vibe.c',
         ],
         use=[
             'driver_gpio',
