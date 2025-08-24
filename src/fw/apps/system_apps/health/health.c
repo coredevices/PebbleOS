@@ -28,6 +28,7 @@
 #include "services/normal/activity/activity.h"
 #include "services/normal/activity/activity_private.h"
 #include "services/normal/timeline/timeline.h"
+#include "resource/resource_ids.auto.h"
 #include "system/logging.h"
 
 // Health app versions
@@ -110,6 +111,14 @@ static void prv_initialize(void) {
     static const char *msg = i18n_noop("Track your steps, sleep, and more!"
                                        " Enable Pebble Health in the mobile app.");
     health_tracking_ui_show_message(RESOURCE_ID_HEART_TINY, msg, true);
+    return;
+  }
+
+  if (!activity_is_initialized()) {
+    /// Health waiting for time sync
+    static const char *msg = i18n_noop("Health requires the time to be synced."
+                                       " Please connect your phone.");
+    health_tracking_ui_show_message(RESOURCE_ID_ALARM_CLOCK_TINY, msg, true);
     return;
   }
 

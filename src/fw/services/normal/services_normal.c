@@ -18,6 +18,9 @@
 
 #include <string.h>
 
+#include "applib/event_service_client.h"
+#include "drivers/rtc.h"
+#include "kernel/events.h"
 #include "process_management/app_install_manager.h" // FIXME: This should really be in services/
 #include "process_management/launcher_app_message.h" // FIXME: This should really be in services/
 #include "services/normal/activity/activity.h"
@@ -51,6 +54,40 @@
 
 #include "util/size.h"
 
+// Minimum valid time: January 1, 2010 00:00:00 UTC (timestamp: 1262304000)
+// This represents the minimum time we consider valid for activity initialization
+#define MIN_VALID_TIME_TIMESTAMP 1262304000
+
+// State for deferred activity initialization
+static bool s_activity_init_deferred = false;
+static EventServiceInfo s_time_event_info;
+
+static void prv_time_set_event_handler(PebbleEvent *e, void *context) {
+  // Check if time is now valid and activity init was deferred
+  if (s_activity_init_deferred && rtc_get_time() >= MIN_VALID_TIME_TIMESTAMP) {
+    // Time is now valid, initialize activity
+    s_activity_init_deferred = false;
+    
+    // Unsubscribe from time events
+    event_service_client_unsubscribe(&s_time_event_info);
+    
+    activity_init();
+    // If the user had tracking enabled before init was deferred, start tracking now so we
+    // don't miss steps when initialization happens after boot.
+    if (activity_prefs_tracking_is_enabled()) {
+      // Ensure the runlevel-enabled flag is set for the activity service so the usual
+      // enable/disable machinery will attempt to start tracking. This covers the case
+      // where services_set_runlevel() already ran before activity was initialized.
+      activity_set_enabled(true);
+      activity_start_tracking(false /* test_mode */);
+    }
+  }
+}
+
+static bool prv_is_time_valid_for_activity_init(void) {
+  return rtc_get_time() >= MIN_VALID_TIME_TIMESTAMP;
+}
+
 void services_normal_early_init(void) {
   pfs_init(true);
 }
@@ -73,7 +110,20 @@ void services_normal_init(void) {
   app_order_storage_init();
 
 #if CAPABILITY_HAS_HEALTH_TRACKING
-  activity_init();
+  // Check if time is valid before initializing activity
+  if (prv_is_time_valid_for_activity_init()) {
+    activity_init();
+  } else {
+    // Defer activity initialization until time is set properly
+    s_activity_init_deferred = true;
+    
+    // Subscribe to time set events
+    s_time_event_info = (EventServiceInfo) {
+      .type = PEBBLE_SET_TIME_EVENT,
+      .handler = prv_time_set_event_handler,
+    };
+    event_service_client_subscribe(&s_time_event_info);
+  }
 #endif
 
   notifications_init();
