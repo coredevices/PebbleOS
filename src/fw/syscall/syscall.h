@@ -201,6 +201,9 @@ bool sys_activity_get_sessions(uint32_t *session_entries, ActivitySession *sessi
 bool sys_activity_sessions_is_session_type_ongoing(ActivitySessionType type);
 bool sys_activity_prefs_heart_rate_is_enabled(void);
 
+// Expose whether Activity is initialized to user/applib code.
+bool sys_activity_is_initialized(void);
+
 void sys_app_comm_set_responsiveness(SniffInterval interval);
 SniffInterval sys_app_comm_get_sniff_interval(void);
 

@@ -920,7 +920,7 @@ bool health_service_private_get_metric_history(HealthMetric metric, uint32_t his
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_metric_accessible(
   HealthMetric metric, time_t time_start, time_t time_end) {
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
   return health_service_metric_aggregate_averaged_accessible(metric, time_start, time_end,
@@ -931,7 +931,7 @@ HealthServiceAccessibilityMask health_service_metric_accessible(
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_metric_averaged_accessible(
   HealthMetric metric, time_t time_start, time_t time_end, HealthServiceTimeScope scope) {
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
   return health_service_metric_aggregate_averaged_accessible(metric, time_start, time_end,
@@ -946,7 +946,7 @@ HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessib
 #if !CAPABILITY_HAS_HEALTH_TRACKING
   return HealthServiceAccessibilityMaskNotSupported;
 #else
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
   if (prv_is_heart_rate_metric(metric) && !sys_activity_prefs_heart_rate_is_enabled()) {
@@ -986,7 +986,7 @@ HealthValue health_service_sum_today(HealthMetric metric) {
 #if !CAPABILITY_HAS_HEALTH_TRACKING
   return 0;
 #else
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return 0;
   }
   const time_t today_midnight = sys_time_start_of_today();
@@ -998,7 +998,7 @@ HealthValue health_service_sum_today(HealthMetric metric) {
 
 // ----------------------------------------------------------------------------------------------
 HealthValue health_service_sum(HealthMetric metric, time_t time_start, time_t time_end) {
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return 0;
   }
   return health_service_aggregate_averaged(metric, time_start, time_end, HealthAggregationSum,
@@ -1009,7 +1009,7 @@ HealthValue health_service_sum(HealthMetric metric, time_t time_start, time_t ti
 // Compute the sum of a metric, but averaged over multiple days.
 HealthValue health_service_sum_averaged(HealthMetric metric, time_t time_start, time_t time_end,
                                         HealthServiceTimeScope scope) {
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return 0;
   }
   return health_service_aggregate_averaged(metric, time_start, time_end, HealthAggregationSum,
@@ -1018,7 +1018,7 @@ HealthValue health_service_sum_averaged(HealthMetric metric, time_t time_start, 
 
 // ----------------------------------------------------------------------------------------------
 HealthValue health_service_peek_current_value(HealthMetric metric) {
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return 0;
   }
   time_t now_utc = sys_get_time();
@@ -1076,7 +1076,7 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
 #if !CAPABILITY_HAS_HEALTH_TRACKING
   return 0;
 #else
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return 0;
   }
   // Make sure this metric is supported by this type of aggregation
@@ -1151,9 +1151,6 @@ bool health_service_events_subscribe(HealthEventHandler handler, void *context) 
 #if !CAPABILITY_HAS_HEALTH_TRACKING
   return false;
 #else
-  if (!activity_is_initialized()) {
-    return false;
-  }
   HealthServiceState *state = prv_get_state(true);
   if (!state) {
     return false;
@@ -1253,7 +1250,7 @@ bool health_service_set_heart_rate_sample_period(uint16_t interval_sec) {
 #if !CAPABILITY_HAS_BUILTIN_HRM
   return false;
 #else
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return false;
   }
   if (!sys_activity_prefs_heart_rate_is_enabled()) {
@@ -1318,7 +1315,7 @@ uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32
 #if !CAPABILITY_HAS_HEALTH_TRACKING
   return false;
 #else
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return 0;
   }
   if (!minute_data || max_records == 0 || !time_start) {
@@ -1357,7 +1354,7 @@ HealthActivityMask health_service_peek_current_activities(void) {
 #if !CAPABILITY_HAS_HEALTH_TRACKING
   return HealthActivityNone;
 #else
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return HealthActivityNone;
   }
   HealthValue sleep_state;
@@ -1404,7 +1401,7 @@ void health_service_activities_iterate(HealthActivityMask activity_mask,
 #if !CAPABILITY_HAS_HEALTH_TRACKING
   return;
 #else
-  if (!activity_is_initialized()) {
+  if (!sys_activity_is_initialized()) {
     return;
   }
   HealthServiceState *state = prv_get_state(true);
