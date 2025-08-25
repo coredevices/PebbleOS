@@ -1100,6 +1100,11 @@ DEFINE_SYSCALL(bool, sys_activity_get_sessions, uint32_t *session_entries,
   return activity_get_sessions(session_entries, sessions);
 }
 
+// Expose whether Activity has been initialized to user/applib code via a syscall.
+DEFINE_SYSCALL(bool, sys_activity_is_initialized, void) {
+  return s_activity_initialized;
+}
+
 
 // ------------------------------------------------------------------------------------------------
 DEFINE_SYSCALL(bool, sys_activity_prefs_heart_rate_is_enabled, void) {
