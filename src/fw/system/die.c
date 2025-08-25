@@ -32,9 +32,6 @@
 #endif
 
 NORETURN reset_due_to_software_failure(void) {
-  // Make sure vibration is off
-  vibe_force_off();
-
 #if PULSE_EVERYWHERE
   pulse_logging_log_buffer_flush();
 #endif
