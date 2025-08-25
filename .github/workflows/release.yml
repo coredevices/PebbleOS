@@ -88,6 +88,7 @@ jobs:
           cp build/src/fw/tintin_fw.hex artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}.hex
           cp build/src/fw/tintin_fw.elf artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}.elf
           cp build/*.pbz artifacts
+          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}_loghash_dict.json
 
       - name: Get Build ID
         id: build_id
@@ -117,6 +118,7 @@ jobs:
           cp build/prf/src/fw/tintin_fw.hex artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.hex
           cp build/prf/src/fw/tintin_fw.bin artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.bin
           cp build/prf/*.pbz artifacts
+          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ matrix.board }}_${{github.ref_name}}_loghash_dict.json
 
       - name: Get PRF Build ID
         id: prf_build_id

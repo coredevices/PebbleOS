@@ -63,6 +63,7 @@ jobs:
           path: |
             build/**/*.elf
             build/**/*.pbz
+            build/prf/src/fw/tintin_fw_loghash_dict.json
 
       - name: Get Build ID
         id: build_id
