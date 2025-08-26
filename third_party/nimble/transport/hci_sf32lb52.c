@@ -67,6 +67,7 @@ static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
 #endif
 
 extern void lcpu_power_on(void);
+extern void lcpu_custom_nvds_config(void);
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
 void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
@@ -276,6 +277,7 @@ void ble_transport_ll_init(void) {
   ret = prv_config_ipc();
   PBL_ASSERTN(ret == 0);
 
+  lcpu_custom_nvds_config();
   lcpu_power_on();
 }
 

@@ -122,6 +122,8 @@ def build(bld):
             'port/include/sf32lb52',
         ] + nimble_includes
 
+        nimble_use.append('hal_sifli')
+
 
     bld.objects(
         source=nimble_sources,

@@ -72,7 +72,7 @@ static int prv_bt_mac_addr_generate(uint8_t mac_addr[6]) {
   return true;
 }
 
-void lcpu_nvds_config(void) {
+void lcpu_custom_nvds_config(void) {
   uint8_t *nvds_addr = (uint8_t *)NVDS_BUFF_START;
   uint8_t mac_addr[6];
   bool res;
