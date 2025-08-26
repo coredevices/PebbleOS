@@ -643,7 +643,7 @@ static void prv_send_minute_data(uint16_t uncertain_m, time_t sleep_start_utc,
       // Handle writing the record out to data logging
       DataLoggingResult result = dls_log(dls_session, dls_record, 1);
       // PBL-43622: Will revert later
-      PBL_LOG(LOG_LEVEL_INFO, "Logging %"PRIu8" MLD Records, First UTC: %"PRIu32,
+      PBL_LOG(LOG_LEVEL_DEBUG, "Logging %"PRIu8" MLD Records, First UTC: %"PRIu32,
               dls_record->hdr.num_samples, dls_record->hdr.time_utc);
       if (result != DATA_LOGGING_SUCCESS) {
         PBL_LOG(LOG_LEVEL_WARNING, "Error %"PRIi32" while logging activity data", (int32_t) result);
