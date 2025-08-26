@@ -35,7 +35,7 @@ class LogMessage(collections.namedtuple('LogMessage',
     @classmethod
     def parse(cls, packet):
         result = cls.response_struct.unpack(packet[:cls.response_struct.size])
-        msg = packet[cls.response_struct.size:].decode("utf8")
+        msg = packet[cls.response_struct.size:].decode("utf8", errors="ignore")
 
         log_level = result[2].decode("utf8")
         task = result[3].decode("utf8")
