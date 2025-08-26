@@ -130,8 +130,7 @@ void exti_enable(ExtiConfig cfg) {
     gpiox->IESR_EXT |= (1 << offset);
   }
 
-  HAL_NVIC_SetPriority(GPIO1_IRQn, 2, 5);  // Configure NVIC priority
-  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+  HAL_NVIC_SetPriority(GPIO1_IRQn, 6, 0);
   HAL_NVIC_EnableIRQ(GPIO1_IRQn);
 }
 
