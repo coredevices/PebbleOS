@@ -26,7 +26,6 @@
 #include "mcu/interrupts.h"
 #include "services/common/analytics/analytics.h"
 #include "system/passert.h"
-#include "console/dbgserial_input.h"
 
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
@@ -59,7 +58,6 @@ static InhibitorTickProfile s_inhibitor_profile[InhibitorNumItems];
 #if MICRO_FAMILY_NRF5
 void enter_stop_mode(void) {
   dbgserial_enable_rx_exti();
-  dbgserial_disable_rx_dma_before_stop();
 
   rtc_systick_pause();
 
@@ -68,8 +66,6 @@ void enter_stop_mode(void) {
   __ISB(); // Let the pipeline catch up (force the WFI to activate before moving on).
 
   rtc_systick_resume();
-
-  dbgserial_enable_rx_dma_after_stop();
 }
 #elif MICRO_FAMILY_SF32LB52
 void enter_stop_mode(void) {

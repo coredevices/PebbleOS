@@ -127,22 +127,3 @@ void dbgserial_set_rx_dma_enabled(bool enabled) {
     uart_stop_rx_dma(DBG_UART);
   }
 }
-
-#if MICRO_FAMILY_NRF5
-
-void dbgserial_disable_rx_dma_before_stop() {
-  // We will have an EXTI wake us if something happens.  We'll lose the
-  // first byte anyway, but probably we would have on STM32 also -- and
-  // anyway, Pulse will retransmit.
-  if (s_dma_enabled) {
-    uart_stop_rx_dma(DBG_UART);
-  }
-}
-
-void dbgserial_enable_rx_dma_after_stop() {
-  if (s_dma_enabled) {
-    uart_start_rx_dma(DBG_UART, s_dma_buffer, DMA_BUFFER_LENGTH);
-  }
-}
-
-#endif
