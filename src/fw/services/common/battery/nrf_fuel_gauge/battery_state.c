@@ -35,7 +35,7 @@
 #define RECONNECTION_DELAY_MS (1 * 1000)
 // TODO: Adjust sample rate based on activity periods once we have good
 // power consumption profiles
-#define BATTERY_SAMPLE_RATE_S 1
+#define BATTERY_SAMPLE_RATE_MS (1 * 1000)
 
 #define LOG_MIN_SEC 30
 
@@ -198,13 +198,8 @@ static void prv_update_state(void *force_update) {
 }
 
 static void prv_update_callback(void *data) {
-  new_timer_stop(s_periodic_timer_id);
   system_task_add_callback(prv_update_state, data);
-}
-
-static void prv_callback_from_regular_timer(void *data) {
-  // no need to stop the new_timer here, since this came from the regular_timer
-  system_task_add_callback(prv_update_state, data);
+  prv_schedule_update(BATTERY_SAMPLE_RATE_MS, false);
 }
 
 static void prv_schedule_update(uint32_t delay, bool force_update) {
@@ -272,11 +267,6 @@ void battery_state_init(void) {
   s_periodic_timer_id = new_timer_create();
 
   battery_state_force_update();
-
-  static RegularTimerInfo battery_regular_timer = {
-    .cb = prv_callback_from_regular_timer
-  };
-  regular_timer_add_multisecond_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_S);
 }
 
 void battery_state_handle_connection_event(bool is_connected) {
