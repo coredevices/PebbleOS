@@ -110,9 +110,7 @@ static void prv_sleep_timeout(void *arg) {
 }
 
 static void prv_use(QSPIFlash *dev) {
-  if (!dev->state->coredump_mode) {
-    mutex_lock(s_sleep_mutex);
-  }
+  mutex_lock(s_sleep_mutex);
 
   PBL_ASSERTN(s_is_init);
   s_is_active++;
@@ -120,8 +118,8 @@ static void prv_use(QSPIFlash *dev) {
   if (s_is_awake) {
     if (!dev->state->coredump_mode) {
       new_timer_stop(s_sleep_timer);
-      mutex_unlock(s_sleep_mutex);
     }
+    mutex_unlock(s_sleep_mutex);
     return;
   }
 
@@ -139,27 +137,18 @@ static void prv_use(QSPIFlash *dev) {
   delay_us(dev->state->part->low_power_to_standby_latency_us);
 
   s_is_awake = true;
-
-  if (!dev->state->coredump_mode) {
-    mutex_unlock(s_sleep_mutex);
-  }
+  mutex_unlock(s_sleep_mutex);
 }
 
 static void prv_release(QSPIFlash *dev) {
-  if (!dev->state->coredump_mode) {
-    mutex_lock(s_sleep_mutex);
-  }
-
+  mutex_lock(s_sleep_mutex);
   PBL_ASSERTN(s_is_active);
   s_is_active--;
   // if not in coredump node, set new_timer to go back to sleep...
   if (!dev->state->coredump_mode && !s_is_active) {
     new_timer_start(s_sleep_timer, FLASH_TIMEOUT_MS, prv_sleep_timeout, (void *)dev, 0 /* flags */);
   }
-
-  if (!dev->state->coredump_mode) {
-    mutex_unlock(s_sleep_mutex);
-  }
+  mutex_unlock(s_sleep_mutex);
 }
 
 void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
@@ -312,11 +301,10 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   dev->state->coredump_mode = coredump_mode;
 
   // Init the DMA semaphore, used for I/O ops
-  if (!coredump_mode) {
-    dev->qspi->state->dma_semaphore = xSemaphoreCreateBinary();
-    s_sleep_timer = new_timer_create();
-    s_sleep_mutex = mutex_create();
-  }
+  if (!coredump_mode) dev->qspi->state->dma_semaphore = xSemaphoreCreateBinary();
+
+  s_sleep_timer = new_timer_create();
+  s_sleep_mutex = mutex_create();
 
   nrfx_qspi_config_t config = NRFX_QSPI_DEFAULT_CONFIG(
       dev->qspi->clk_gpio, dev->qspi->cs_gpio, dev->qspi->data_gpio[0], dev->qspi->data_gpio[1],
