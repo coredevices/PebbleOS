@@ -59,8 +59,7 @@ static void initialize_button_timer(void) {
   s_tim_hdl.Init.RepetitionCounter = 0;
   HAL_GPT_Base_Init(&s_tim_hdl);
 
-  /* Default NVIC priority group set in exit driver, group_2 */
-  HAL_NVIC_SetPriority(BOARD_CONFIG_BUTTON.timer_irqn, 3, 1);
+  HAL_NVIC_SetPriority(BOARD_CONFIG_BUTTON.timer_irqn, 7, 0);
   HAL_NVIC_EnableIRQ(BOARD_CONFIG_BUTTON.timer_irqn);
 
   __HAL_GPT_SET_AUTORELOAD(&s_tim_hdl, TIMER_PERIOD_TICKS);
