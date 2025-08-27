@@ -49,6 +49,8 @@ RUNNERS = {
     'robert_evt': ['openocd'],
     'robert_es': ['openocd'],
     'asterix': ['openocd'],
+    'obelix': ['sftool'],
+    'obelix_bb': ['sftool'],
 }
 
 def truncate(msg):
