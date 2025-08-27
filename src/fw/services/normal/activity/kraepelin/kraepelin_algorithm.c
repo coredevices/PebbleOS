@@ -191,6 +191,25 @@ typedef struct {
 
 
 // Set the sleep parameters
+#if defined(PLATFORM_ASTERIX)
+static const KAlgSleepParams KALG_SLEEP_PARAMS = {
+  .max_sleep_minute_score = 500,  // Increased significantly for asterix - much stricter
+  .force_wake_minute_score = 8000,
+  .force_wake_minute_vmc = 10000,
+  .min_sleep_minutes = 5,
+
+  .max_wake_minute_early_offset = 60,
+  .max_wake_minutes_early = 14,
+  .max_wake_minutes_late = 11,
+
+  .min_sleep_cycle_len_minutes = 60,
+  .min_valid_vmc = 30,  // Increased significantly for asterix
+  .max_active_minutes_pct = 89,
+  .max_avg_vmc = 250,  // Increased significantly for asterix
+  .vmc_clip = 1000,
+  .min_sleep_len_for_active_pct_check = 39,
+};
+#else
 static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .max_sleep_minute_score = 330,
   .force_wake_minute_score = 8000,
@@ -208,6 +227,7 @@ static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .vmc_clip = 1000,
   .min_sleep_len_for_active_pct_check = 39,
 };
+#endif
 
 
 // ----------------------------------------------------------------------------------------
@@ -286,11 +306,19 @@ typedef struct {
 
 
 // Set the not-worn parameters
+#if defined(PLATFORM_ASTERIX)
+static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
+  .max_non_worn_vmc = 2500,
+  .min_worn_vmc = 15,  // Increased significantly for asterix - much higher baseline noise
+  .max_low_vmc_run_m = 30,  // Reduced to catch desk time within 30 minutes
+};
+#else
 static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
   .max_non_worn_vmc = 2500,
   .min_worn_vmc = 4,
   .max_low_vmc_run_m = 180,
 };
+#endif
 
 
 // ---------------------------------------------------------------------------------------------
