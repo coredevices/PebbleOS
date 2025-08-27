@@ -71,7 +71,6 @@ def options(opt):
     )
 
 
-
 def configure(conf):
     conf.load('binary_header')
     conf.recurse('applib')
@@ -135,7 +134,9 @@ def _generate_memory_layout(bld):
         else:
             # PTABLE + Bootloader
             offset_size = '128K'
-            flash_size = '3072K'
+            # Reserve 1 sector so we can implement upgrade algorithms like
+            # swap move or swap offset.
+            flash_size = '3072K - 4K'
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
         # Bootloader
