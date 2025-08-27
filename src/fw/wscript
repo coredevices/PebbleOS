@@ -744,6 +744,10 @@ def build(bld):
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
 
+    # Enable swap offset based upgrade on selected platforms
+    if bld.is_obelix():
+        bld.env.append_value('DEFINES', ['SWAP_OFFSET_UPGRADE'])
+
     if bld.variant == 'prf':
         _build_recovery(bld)
     else:
