@@ -26,6 +26,30 @@ import waftools.xcode_pebble
 
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
 
+RUNNERS = {
+    'bb2': ['openocd'],
+    'ev2_4': ['openocd'],
+    'v1_5': ['openocd'],
+    'v2_0': ['openocd'],
+    'snowy_bb2': ['openocd'],
+    'snowy_evt2': ['openocd'],
+    'snowy_dvt': ['openocd'],
+    'snowy_s3': ['openocd'],
+    'spalding_bb2': ['openocd'],
+    'spalding_evt': ['openocd'],
+    'spalding': ['openocd'],
+    'silk_evt': ['openocd'],
+    'silk_bb': ['openocd'],
+    'silk': ['openocd'],
+    'silk_bb2': ['openocd'],
+    'cutts_bb': ['openocd'],
+    'robert_bb': ['openocd'],
+    'robert_bb2': ['openocd'],
+    'robert_evt': ['openocd'],
+    'robert_es': ['openocd'],
+    'asterix': ['openocd'],
+}
+
 def truncate(msg):
     if msg is None:
         return msg
@@ -88,6 +112,8 @@ def options(opt):
                             ],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
+    opt.add_option('--runner', default=None, choices=['openocd'],
+                   help='Which runner we are using')
     opt.add_option('--jtag', action='store', default=None, dest='jtag',  # default is bb2 (below)
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
                    help='Which JTAG programmer we are using '
@@ -429,6 +455,14 @@ def configure(conf):
         bt_board = 'robert_es'
         conf.options.board = 'robert_evt'
 
+    if not conf.options.runner:
+        conf.env.RUNNER = RUNNERS.get(conf.options.board, [None])[0]
+    else:
+        if conf.options.runner not in RUNNERS.get(conf.options.board, []):
+            conf.fatal('Runner {} is not supported on board {}'.format(
+                       conf.options.runner, conf.options.board))
+        conf.env.RUNNER = conf.options.runner
+
     if conf.options.jtag:
         conf.env.JTAG = conf.options.jtag
     elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
@@ -499,7 +533,9 @@ def configure(conf):
     conf.recurse('sdk')
 
     conf.recurse('bin/boot')
-    waftools.openocd.write_cfg(conf)
+
+    if conf.options.runner == 'openocd':
+        waftools.openocd.write_cfg(conf)
 
     # Save a baseline environment that we'll use for unit tests
     # Detach so operations against conf.env don't affect unit_test_env
@@ -1419,8 +1455,12 @@ class Gdb(BuildContext):
 
 
 def gdb(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
+    if ctx.env.RUNNER != 'openocd':
+        ctx.fatal('GDB only supported with openocd runner')
+
     if fw_elf is None:
         fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
+
     with waftools.openocd.daemon(ctx, cfg_file,
                                  use_swd=(is_ble or 'swd' in ctx.env.JTAG)):
         run_arm_gdb(ctx, fw_elf, cmd_str='--init-command=".gdbinit"')
@@ -1646,10 +1686,13 @@ def flash_boot(ctx):
     """flashes a bootloader"""
     if not ctx.env.BOOTLOADER_HEX:
         ctx.fatal("Target does not have a bootloader binary available")
-    waftools.openocd.run_command(ctx, 'init; reset halt; ' +
-                                 'program {} reset;'.format(ctx.env.BOOTLOADER_HEX),
-                                 expect=["Programming Finished"],
-                                 enforce_expect=True)
+    if ctx.env.RUNNER == 'openocd':
+        waftools.openocd.run_command(ctx, 'init; reset halt; ' +
+                                    'program {} reset;'.format(ctx.env.BOOTLOADER_HEX),
+                                    expect=["Programming Finished"],
+                                    enforce_expect=True)
+    else:
+        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
 
 class FlashFirmware(BuildContext):
@@ -1664,10 +1707,14 @@ def flash_fw(ctx, fw_bin):
     _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
 
     hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
-    waftools.openocd.run_command(ctx, 'init; reset halt; ' +
-                                 'program {} reset;'.format(hex_path),
-                                 expect=["Programming Finished"],
-                                 enforce_expect=True)
+
+    if ctx.env.RUNNER == 'openocd':
+        waftools.openocd.run_command(ctx, 'init; reset halt; ' +
+                                    'program {} reset;'.format(hex_path),
+                                    expect=["Programming Finished"],
+                                    enforce_expect=True)
+    else:
+        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
 
 def flash_everything(ctx, fw_bin):
@@ -1683,19 +1730,26 @@ def flash_everything(ctx, fw_bin):
         ctx.fatal("Target does not have a bootloader binary available")
 
     hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
-    waftools.openocd.run_command(ctx, 'init; reset halt; '
-                                 'program {};'.format(ctx.env.BOOTLOADER_HEX) +
-                                 'program {} reset;'.format(hex_path),
-                                 expect=["Programming Finished", "Programming Finished", "shutdown"],
-                                 enforce_expect=True)
+
+    if ctx.env.RUNNER == 'openocd':
+        waftools.openocd.run_command(ctx, 'init; reset halt; '
+                                    'program {};'.format(ctx.env.BOOTLOADER_HEX) +
+                                    'program {} reset;'.format(hex_path),
+                                    expect=["Programming Finished", "Programming Finished", "shutdown"],
+                                    enforce_expect=True)
+    else:
+        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
 
 def force_flash(ctx):
     """forces a connected device into a flashing state"""
-    reset_config = waftools.openocd._get_reset_conf(ctx, True)
-    reset_cmd = "reset_config %s; " % reset_config
-    waftools.openocd.run_command(ctx, reset_cmd + 'init; reset halt;', ignore_fail=True)
-    waftools.openocd.run_command(ctx, reset_cmd + 'init; stm32x unlock 0;', ignore_fail=True)
+    if ctx.env.RUNNER == 'openocd':
+        reset_config = waftools.openocd._get_reset_conf(ctx, True)
+        reset_cmd = "reset_config %s; " % reset_config
+        waftools.openocd.run_command(ctx, reset_cmd + 'init; reset halt;', ignore_fail=True)
+        waftools.openocd.run_command(ctx, reset_cmd + 'init; stm32x unlock 0;', ignore_fail=True)
+    else:
+        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
 
 class ResetDevice(BuildContext):
@@ -1704,13 +1758,19 @@ class ResetDevice(BuildContext):
 
 def reset(ctx):
     """resets a connected device"""
-    waftools.openocd.run_command(ctx, 'init; reset;', expect=["found"])
+    if ctx.env.RUNNER == 'openocd':
+        waftools.openocd.run_command(ctx, 'init; reset;', expect=["found"])
+    else:
+        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
 
 def bork(ctx):
     """resets and wipes a connected a device"""
-    waftools.openocd.run_command(ctx, 'init; reset halt;', ignore_fail=True)
-    waftools.openocd.run_command(ctx, 'init; flash erase_sector 0 0 1;', ignore_fail=True)
+    if ctx.env.RUNNER == 'openocd':
+        waftools.openocd.run_command(ctx, 'init; reset halt;', ignore_fail=True)
+        waftools.openocd.run_command(ctx, 'init; flash erase_sector 0 0 1;', ignore_fail=True)
+    else:
+        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
 
 def make_lang(ctx):
