@@ -38,7 +38,7 @@ bool version_copy_running_fw_metadata(FirmwareMetadata *out_metadata);
 bool version_copy_recovery_fw_metadata(FirmwareMetadata *out_metadata);
 
 //! Copies the version metadata of the update firmware located in
-//! FLASH_REGION_FIRMWARE_SCRATCH_BEGIN into the provided struct.
+//! FLASH_REGION_FIRMWARE_SLOT_1_BEGIN into the provided struct.
 //! If there is no valid metadata available, the struct will be wiped to be all zeroes.
 //! @param[out] out_metadata pointer to a FirmwareMetadata to which to copy the version metadata
 //! @returns true if it successfully copied the version metadata.

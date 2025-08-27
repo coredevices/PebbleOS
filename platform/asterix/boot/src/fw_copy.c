@@ -145,7 +145,7 @@ void check_update_fw(void) {
   boot_bit_clear(BOOT_BIT_RECOVERY_LOAD_FAIL_STRIKE_ONE);
   boot_bit_clear(BOOT_BIT_RECOVERY_LOAD_FAIL_STRIKE_TWO);
 
-  UpdateFirmwareResult result = update_fw(FLASH_REGION_FIRMWARE_SCRATCH_BEGIN);
+  UpdateFirmwareResult result = update_fw(FLASH_REGION_FIRMWARE_SLOT_1_BEGIN);
   switch (result) {
   case UPDATE_FW_SUCCESS:
     break;

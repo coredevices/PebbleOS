@@ -76,7 +76,7 @@ static void erase_callback(void *data) {
   }
 
   if (arg & ERASE_NORMAL_FW) {
-    erase_fw(FLASH_REGION_FIRMWARE_SCRATCH_BEGIN);
+    erase_fw(FLASH_REGION_FIRMWARE_SLOT_1_BEGIN);
 
     system_flash_erase(FLASH_Sector_4);
     system_flash_erase(FLASH_Sector_5);

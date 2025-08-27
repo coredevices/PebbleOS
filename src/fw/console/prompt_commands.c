@@ -290,10 +290,10 @@ void command_flash_test(const char* test_case_num_str, const char* iterations_st
 
 void command_flash_validate(void) {
   // just test one sector, which is probably less than the size of the region
-  const uint32_t TEST_ADDR = FLASH_REGION_FIRMWARE_SCRATCH_BEGIN;
+  const uint32_t TEST_ADDR = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
   const uint32_t TEST_LENGTH = SECTOR_SIZE_BYTES;
   PBL_ASSERTN((TEST_ADDR & SECTOR_ADDR_MASK) == TEST_ADDR);
-  PBL_ASSERTN((TEST_ADDR + TEST_LENGTH) <= FLASH_REGION_FIRMWARE_SCRATCH_END);
+  PBL_ASSERTN((TEST_ADDR + TEST_LENGTH) <= FLASH_REGION_FIRMWARE_SLOT_1_END);
 
   // erase a sector
   flash_erase_sector_blocking(TEST_ADDR);
@@ -518,8 +518,8 @@ static uint32_t prv_xorshift32(uint32_t seed) {
   return seed;
 }
 
-static uint32_t s_flash_stress_addr = FLASH_REGION_FIRMWARE_SCRATCH_BEGIN;
-static uint32_t s_flash_stress_last_sector = FLASH_REGION_FIRMWARE_SCRATCH_BEGIN + SECTOR_SIZE_BYTES;
+static uint32_t s_flash_stress_addr = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
+static uint32_t s_flash_stress_last_sector = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN + SECTOR_SIZE_BYTES;
 
 static void prv_flash_stress_callback(void *data) {
   int iters = (int)data;
@@ -543,8 +543,8 @@ static void prv_flash_stress_callback(void *data) {
 
   uint32_t flash_addr = s_flash_stress_addr;
   s_flash_stress_addr += bufsz;
-  if (s_flash_stress_addr >= FLASH_REGION_FIRMWARE_SCRATCH_END) {
-    s_flash_stress_addr = flash_addr = FLASH_REGION_FIRMWARE_SCRATCH_BEGIN;
+  if (s_flash_stress_addr >= FLASH_REGION_FIRMWARE_SLOT_1_END) {
+    s_flash_stress_addr = flash_addr = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
     s_flash_stress_addr += bufsz;
   }
 

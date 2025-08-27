@@ -168,8 +168,8 @@ void command_bootloader_test(const char *dest_type) {
   }
   if (as_fw) {
     BLTEST_LOG("STAGE 1 -- Copying STAGE 2 to scratch");
-    prv_bootloader_test_copy(FLASH_REGION_FIRMWARE_SCRATCH_BEGIN,
-                             FLASH_REGION_FIRMWARE_SCRATCH_END);
+    prv_bootloader_test_copy(FLASH_REGION_FIRMWARE_SLOT_1_BEGIN,
+                             FLASH_REGION_FIRMWARE_SLOT_1_END);
 
     BLTEST_LOG("STAGE 1 -- Marking new FW boot bit");
     boot_bit_set(BOOT_BIT_NEW_FW_AVAILABLE);
