@@ -232,6 +232,7 @@ elif bld.is_obelix():
             'driver_uart',
             'driver_vibe',
             'driver_pwm',
+            'driver_mic',
         ],
     )
 ## ----------
@@ -1212,6 +1213,18 @@ elif bld.is_asterix():
             'root_includes',
             'freertos',
             'hal_nordic',
+        ],
+    )
+elif bld.is_obelix():
+    bld.objects(
+        name='driver_mic',
+        source=[
+            'mic/sf32lb52/pdm.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'hal_sifli',
         ],
     )
 

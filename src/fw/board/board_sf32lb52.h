@@ -190,6 +190,7 @@ typedef enum {
 #include "drivers/qspi_definitions.h"
 #include "drivers/sf32lb52/uart_definitions.h"
 #include "drivers/sf32lb52/jdi_lpm015m135a.h"
+#include "drivers/mic/sf32lb52/pdm_definitions.h"
 
 typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;
