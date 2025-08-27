@@ -89,8 +89,13 @@ bool version_copy_recovery_fw_metadata(FirmwareMetadata *out_metadata) {
 
 bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata) {
   const bool check_crc = false;
-  return prv_version_copy_flash_fw_metadata(out_metadata, FLASH_REGION_FIRMWARE_SLOT_1_BEGIN,
-                                            check_crc);
+  uint32_t addr = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
+
+#ifdef SWAP_OFFSET_UPGRADE
+  addr += SUBSECTOR_SIZE_BYTES;
+#endif
+
+  return prv_version_copy_flash_fw_metadata(out_metadata, addr, check_crc);
 }
 
 bool version_copy_recovery_fw_version(char* dest, const int dest_len_bytes) {
