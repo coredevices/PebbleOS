@@ -117,7 +117,7 @@ def options(opt):
                         'bb2, snowy_dvt, spalding, silk...')
     opt.add_option('--runner', default=None, choices=['openocd', 'sftool'],
                    help='Which runner we are using')
-    opt.add_option('--jtag', action='store', default=None, dest='jtag',  # default is bb2 (below)
+    opt.add_option('--openocd-jtag', action='store', default=None, dest='openocd_jtag',  # default is bb2 (below)
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
                    help='Which JTAG programmer we are using '
                         '(bb2 (default), olimex, ev2, etc)')
@@ -466,18 +466,19 @@ def configure(conf):
                        conf.options.runner, conf.options.board))
         conf.env.RUNNER = conf.options.runner
 
-    if conf.options.jtag:
-        conf.env.JTAG = conf.options.jtag
-    elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
-        conf.env.JTAG = 'jtag_ftdi'
-    elif conf.options.board in ('cutts_bb', 'robert_bb', 'robert_bb2', 'robert_evt',
-                                'silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
-        conf.env.JTAG = 'swd_ftdi'
-    elif conf.options.board in ('asterix'):
-        conf.env.JTAG = 'swd_cmsisdap'
-    else:
-        # default to bb2
-        conf.env.JTAG = 'bb2'
+    if conf.env.RUNNER == 'openocd':
+        if conf.options.openocd_jtag:
+            conf.env.OPENOCD_JTAG = conf.options.openocd_jtag
+        elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
+            conf.env.OPENOCD_JTAG = 'jtag_ftdi'
+        elif conf.options.board in ('cutts_bb', 'robert_bb', 'robert_bb2', 'robert_evt',
+                                    'silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
+            conf.env.OPENOCD_JTAG = 'swd_ftdi'
+        elif conf.options.board in ('asterix'):
+            conf.env.OPENOCD_JTAG = 'swd_cmsisdap'
+        else:
+            # default to bb2
+            conf.env.OPENOCD_JTAG = 'bb2'
 
     # Cutts and Robert access flash through the ITCM bus (except in QEMU)
     if (conf.is_cutts() or conf.is_robert()) and not conf.env.QEMU:
@@ -1465,7 +1466,7 @@ def gdb(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
         fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
 
     with waftools.openocd.daemon(ctx, cfg_file,
-                                 use_swd=(is_ble or 'swd' in ctx.env.JTAG)):
+                                 use_swd=(is_ble or 'swd' in ctx.env.OPENOCD_JTAG)):
         run_arm_gdb(ctx, fw_elf, cmd_str='--init-command=".gdbinit"')
 
 
