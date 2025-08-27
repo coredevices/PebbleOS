@@ -98,16 +98,19 @@ def _generate_memory_layout(bld):
     elif bld.is_obelix():
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
 
-    # Determine bootloader size so we can later calculate FLASH_LENGTH_*
+    # Determine sizes so we can later calculate FLASH_LENGTH_*
     if bld.env.MICRO_FAMILY == 'STM32F2':
+        # Bootloader
+        offset_size = '16K'
         flash_size = '512K'
-        bootloader_size = '16K'
 
     elif bld.env.MICRO_FAMILY == 'STM32F4':
         if bld.env.BOARD in ('snowy_evt', 'snowy_evt2', 'spalding_evt'):
-            bootloader_size = '64K'
+            # Bootloader
+            offset_size = '64K'
         else:
-            bootloader_size = '16K'
+            # Bootloader
+            offset_size = '16K'
         if bld.is_silk() and bld.variant == 'prf':
             # silk PRF is limited to 512k to save on SPI flash space
             flash_size = '512K'
@@ -115,19 +118,23 @@ def _generate_memory_layout(bld):
             flash_size = '1024K'
 
     elif bld.env.MICRO_FAMILY == 'STM32F7':
-        bootloader_size = '32K'
+        # Bootloader
+        offset_size = '32K'
         flash_size = '2048K'
 
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
-        # We use XIP flash, so the bootloader does not have to be taken into account.
-        bootloader_size = '0K'
-        if bld.is_obelix() and bld.variant == 'prf' and not bld.env.IS_MFG:
+        if bld.variant == 'prf':
+            # PTABLE + Bootloader + Firmware Slot 0/1 + Resource Bank 0/1
+            offset_size = '10368K'
             flash_size = '512K'
         else:
+            # PTABLE + Bootloader
+            offset_size = '128K'
             flash_size = '3072K'
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
-        bootloader_size = '32K'
+        # Bootloader
+        offset_size = '32K'
         if bld.is_asterix() and bld.variant == 'prf' and not bld.env.IS_MFG:
             flash_size = '512K'
         else:
@@ -141,13 +148,13 @@ def _generate_memory_layout(bld):
     elif bld.env.MICRO_FAMILY == 'NRF52840':
         flash_origin = '0x00000000'
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
-        flash_origin = '0x12020000'
+        flash_origin = '0x12000000'
     else:
         flash_origin = '0x08000000'
 
     # Determine FLASH_LENGTH_*
-    fw_flash_length = '%(flash_size)s - %(bootloader_size)s' % locals()
-    fw_flash_origin = '%(flash_origin)s + %(bootloader_size)s' % locals()
+    fw_flash_length = '%(flash_size)s - %(offset_size)s' % locals()
+    fw_flash_origin = '%(flash_origin)s + %(offset_size)s' % locals()
 
     if bld.env.MICRO_FAMILY == 'STM32F2' and bld.variant == '':
         # If we're building a tintin normal firmware make sure to plug in all the symbols that we
