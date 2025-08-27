@@ -28,8 +28,8 @@
 
 // Scratch space for firmware images (normal and recovery).
 // We assume this is 64k aligned...
-#define FLASH_REGION_FIRMWARE_SCRATCH_BEGIN 0x0
-#define FLASH_REGION_FIRMWARE_SCRATCH_END 0x80000 // 512k
+#define FLASH_REGION_FIRMWARE_SLOT_1_BEGIN 0x0
+#define FLASH_REGION_FIRMWARE_SLOT_1_END 0x80000 // 512k
 
 // Formerly FLASH_REGION_APP_BEGIN
 #define FLASH_REGION_FILESYSTEM_3_BEGIN 0x80000

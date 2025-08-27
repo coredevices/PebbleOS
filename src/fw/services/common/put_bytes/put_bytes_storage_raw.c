@@ -38,9 +38,9 @@ typedef struct MemoryLayout {
 
 static const MemoryLayout* prv_get_layout_for_type(PutBytesObjectType object_type) {
   static const MemoryLayout layouts[] = {
-    { FLASH_REGION_FIRMWARE_SCRATCH_BEGIN, FLASH_REGION_FIRMWARE_SCRATCH_END,
+    { FLASH_REGION_FIRMWARE_SLOT_1_BEGIN, FLASH_REGION_FIRMWARE_SLOT_1_END,
       sizeof(FirmwareDescription) },
-    { FLASH_REGION_FIRMWARE_SCRATCH_BEGIN, FLASH_REGION_FIRMWARE_SCRATCH_END,
+    { FLASH_REGION_FIRMWARE_SLOT_1_BEGIN, FLASH_REGION_FIRMWARE_SLOT_1_END,
       sizeof(FirmwareDescription) },
   };
   static MemoryLayout resource_layout;

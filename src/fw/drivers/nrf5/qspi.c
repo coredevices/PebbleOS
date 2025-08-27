@@ -759,9 +759,9 @@ void command_flash_apicheck(const char *len_str) {
 
   // write a few bytes to the sector we're going to erase so it's not empty
   uint8_t dummy_data = 0x55;
-  flash_write_bytes(&dummy_data, FLASH_REGION_FIRMWARE_SCRATCH_BEGIN, sizeof(dummy_data));
+  flash_write_bytes(&dummy_data, FLASH_REGION_FIRMWARE_SLOT_1_BEGIN, sizeof(dummy_data));
   profiler_start();
-  status_t result = flash_impl_erase_sector_begin(FLASH_REGION_FIRMWARE_SCRATCH_BEGIN);
+  status_t result = flash_impl_erase_sector_begin(FLASH_REGION_FIRMWARE_SLOT_1_BEGIN);
   flash_impl_get_erase_status();
   if (result == S_SUCCESS) {
     while (flash_impl_get_erase_status() == E_BUSY) {
@@ -792,7 +792,7 @@ void command_flash_apicheck(const char *len_str) {
   // must call blank_check_poll by hand, otherwise we'll get the dma version
   profiler_start();
   bool is_blank =
-      qspi_flash_blank_check(QSPI_FLASH, FLASH_REGION_FIRMWARE_SCRATCH_BEGIN, SUBSECTOR_SIZE_BYTES);
+      qspi_flash_blank_check(QSPI_FLASH, FLASH_REGION_FIRMWARE_SLOT_1_BEGIN, SUBSECTOR_SIZE_BYTES);
   profiler_stop();
 
   uint32_t blank = profiler_get_total_duration(true);
@@ -805,7 +805,7 @@ void command_flash_apicheck(const char *len_str) {
   }
 
   profiler_start();
-  is_blank = flash_impl_blank_check_subsector(FLASH_REGION_FIRMWARE_SCRATCH_BEGIN);
+  is_blank = flash_impl_blank_check_subsector(FLASH_REGION_FIRMWARE_SLOT_1_BEGIN);
   profiler_stop();
 
   blank = profiler_get_total_duration(true);
@@ -834,7 +834,7 @@ void command_flash_apicheck(const char *len_str) {
 #define SIGNAL_TEST_MAGIC_PATTERN (0xA5)
 #define TEST_BUFFER_SIZE (1024)
 static uint8_t s_test_buffer[TEST_BUFFER_SIZE];
-static const uint32_t s_test_addr = FLASH_REGION_FIRMWARE_SCRATCH_END - SECTOR_SIZE_BYTES;
+static const uint32_t s_test_addr = FLASH_REGION_FIRMWARE_SLOT_1_END - SECTOR_SIZE_BYTES;
 static bool s_signal_test_initialized;
 
 static void prv_get_fast_read_params(QSPIFlash *dev, uint8_t *instruction, uint8_t *dummy_cycles,

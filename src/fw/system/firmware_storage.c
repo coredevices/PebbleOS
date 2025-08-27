@@ -51,4 +51,3 @@ bool firmware_storage_check_valid_firmware_description(
 
   return calculated_crc == firmware_description->checksum;
 }
-
