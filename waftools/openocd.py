@@ -162,14 +162,14 @@ def _get_reset_conf(conf, should_connect_assert_srst):
 
 
 def _get_adapter_speed(conf):
-    if conf.env.JTAG == 'swd_cmsisdap' and conf.env.MICRO_FAMILY == 'NRF52840':
+    if conf.env.OPENOCD_JTAG == 'swd_cmsisdap' and conf.env.MICRO_FAMILY == 'NRF52840':
         return 10000
 
     return None
 
 
 def write_cfg(conf):
-    jtag = conf.env.JTAG
+    jtag = conf.env.OPENOCD_JTAG
     if jtag == 'bb2':
         if 'ftdi' not in _get_supported_interfaces(conf):
             jtag = 'bb2-legacy'

@@ -21,8 +21,8 @@ Below you will find a list of the most relevant ones.
 
 ## Flashing
 
-:`--jtag`:
-  Choose alternative flash/debug probe.
+:`--openocd-jtag`:
+  Choose alternative flash/debug probe when using OpenOCD runner.
 
 ## Logging
 
