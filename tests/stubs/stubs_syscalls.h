@@ -61,8 +61,8 @@ GFont WEAK sys_font_get_system_font(const char *key) {
   return NULL;
 }
 
-bool WEAK sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
-  return false;
+uint8_t WEAK sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
+  return 0;
 }
 
 AppInstallId WEAK sys_process_manager_get_current_process_id(void) {

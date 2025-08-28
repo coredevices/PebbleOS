@@ -22,8 +22,8 @@ AccelManagerState* sys_accel_manager_data_subscribe(
   return NULL;
 }
 
-bool sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
-  return false;
+uint8_t sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
+  return 0;
 }
 
 uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state, uint32_t min_rate_mhz) {

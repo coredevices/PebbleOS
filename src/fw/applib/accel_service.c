@@ -157,8 +157,11 @@ static void prv_do_data_handle(void *context) {
 
   if (state->manager_state == NULL) {
     if (state->deferred_free) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Deferred free");
-      kernel_free(state);
+      state->pending_events--;
+      if (state->pending_events == 0) {
+        PBL_LOG(LOG_LEVEL_DEBUG, "Deferred free");
+        kernel_free(state);
+      }
     }
     // event queue is handled kernel-side, so an event may fire after we've unsubscribed
     return;
@@ -348,7 +351,7 @@ void accel_session_delete(AccelServiceState * session) {
   // we better have unsubscribed at this point
   PBL_ASSERTN(session->manager_state == NULL);
 
-  // A deferred free means one lingering event was posted. We will free the session once the event
+  // A deferred free means lingering events were posted. We will free the session once the event
   // gets drained in 'prv_do_data_handle'
   if (!session->deferred_free) {
     kernel_free(session);
@@ -413,8 +416,10 @@ void accel_session_data_unsubscribe(AccelServiceState *state) {
   if (!state->manager_state) {
     return;
   }
-  if (sys_accel_manager_data_unsubscribe(state->manager_state)) {
-    // There is a pending event posted. Only session tasks allocate memory for their state in the
+
+  state->pending_events = sys_accel_manager_data_unsubscribe(state->manager_state);
+  if (state->pending_events > 0) {
+    // There are pending events posted. Only session tasks allocate memory for their state in the
     // first place so only free the memory if this is true
     state->deferred_free = prv_is_session_task();
   }

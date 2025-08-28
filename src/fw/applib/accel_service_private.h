@@ -26,6 +26,7 @@ typedef struct AccelServiceState {
   AccelManagerState *manager_state;
   AccelSamplingRate sampling_rate;
   bool              deferred_free;
+  uint8_t           pending_events;
   uint16_t          samples_per_update;
   AccelRawData      *raw_data;   // of size samples_per_update
 

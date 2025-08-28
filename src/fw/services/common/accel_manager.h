@@ -58,8 +58,8 @@ AccelManagerState* sys_accel_manager_data_subscribe(
     AccelSamplingRate rate, AccelDataReadyCallback data_cb, void* context,
     PebbleTask handler_task);
 
-//! @return true if an unprocessed data event is outstanding
-bool sys_accel_manager_data_unsubscribe(AccelManagerState *state);
+//! @return number of outstanding unprocessed data events
+uint8_t sys_accel_manager_data_unsubscribe(AccelManagerState *state);
 
 //! Configured an existing subscription to use a given sample rate. Jitter-inducing subsampling
 //! may be used to accomplish the desired rate.
