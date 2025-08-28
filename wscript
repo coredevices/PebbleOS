@@ -23,6 +23,7 @@ import waftools.gitinfo
 import waftools.ldscript
 import waftools.openocd
 import waftools.sftool
+import waftools.nrfutil
 import waftools.xcode_pebble
 
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
@@ -115,7 +116,7 @@ def options(opt):
                             ],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
-    opt.add_option('--runner', default=None, choices=['openocd', 'sftool'],
+    opt.add_option('--runner', default=None, choices=['openocd', 'sftool', 'nrfutil'],
                    help='Which runner we are using')
     opt.add_option('--openocd-jtag', action='store', default=None, dest='openocd_jtag',  # default is bb2 (below)
                    choices=waftools.openocd.JTAG_OPTIONS.keys(),
@@ -1697,6 +1698,8 @@ def flash_boot(ctx):
                                     enforce_expect=True)
     elif ctx.env.RUNNER == 'sftool':
         waftools.sftool.write_flash(ctx, ctx.env.BOOTLOADER_HEX)
+    elif ctx.env.RUNNER == 'nrfutil':
+        waftools.nrfutil.program_and_reset(ctx, ctx.env.BOOTLOADER_HEX)
     else:
         ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
@@ -1721,6 +1724,8 @@ def flash_fw(ctx, fw_bin):
                                     enforce_expect=True)
     elif ctx.env.RUNNER == 'sftool':
         waftools.sftool.write_flash(ctx, hex_path)
+    elif ctx.env.RUNNER == 'nrfutil':
+        waftools.nrfutil.program_and_reset(ctx, hex_path)
     else:
         ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
@@ -1748,6 +1753,10 @@ def flash_everything(ctx, fw_bin):
     elif ctx.env.RUNNER == 'sftool':
         waftools.sftool.write_flash(ctx, ctx.env.BOOTLOADER_HEX)
         waftools.sftool.write_flash(ctx, hex_path)
+    elif ctx.env.RUNNER == 'nrfutil':
+        waftools.nrfutil.program(ctx, ctx.env.BOOTLOADER_HEX)
+        waftools.nrfutil.program(ctx, hex_path)
+        waftools.nrfutil.reset(ctx)
     else:
         ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
@@ -1782,6 +1791,8 @@ def bork(ctx):
         waftools.openocd.run_command(ctx, 'init; flash erase_sector 0 0 1;', ignore_fail=True)
     elif ctx.env.RUNNER == 'sftool':
         waftools.sftool.erase_flash(ctx)
+    elif ctx.env.RUNNER == 'nrfutil':
+        waftools.nrfutil.erase(ctx)
     else:
         ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
