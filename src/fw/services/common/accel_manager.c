@@ -65,7 +65,7 @@ typedef struct AccelManagerState {
   uint64_t              timestamp_ms;      // timestamp of first item in the buffer
   AccelRawData          *raw_buffer;       // raw buffer allocated by subscriber
   uint8_t               num_samples;       // number of samples in raw_buffer
-  bool                  event_posted;      // True if we've posted a "data ready" callback event
+  uint8_t               events_posted;     // Number of posted "data ready" callback event
 } AccelManagerState;
 
 typedef struct {
@@ -326,14 +326,14 @@ static void prv_dispatch_data(void) {
     }
 
     // If buffer is full, notify subscriber to process it
-    if (!state->event_posted && state->num_samples >= state->samples_per_update) {
+    if ((state->events_posted == 0) && state->num_samples >= state->samples_per_update) {
       // Notify the subscriber that data is available
-      state->event_posted = prv_call_data_callback(state);
-
-      ACCEL_LOG_DEBUG("full set of %d samples for session %p", state->num_samples, state);
-
-      if (!state->event_posted) {
-        PBL_LOG(LOG_LEVEL_INFO, "Failed to post accel event to task: 0x%x", (int) state->task);
+      bool posted = prv_call_data_callback(state);
+      if (posted) {
+        state->events_posted++;
+        ACCEL_LOG_DEBUG("full set of %d samples for session %p", state->num_samples, state);
+      } else {
+        PBL_LOG(LOG_LEVEL_ERROR, "Failed to post accel event to task: 0x%x", (int) state->task);
       }
     }
     state = (AccelManagerState *)state->list_node.next;
@@ -484,10 +484,12 @@ DEFINE_SYSCALL(AccelManagerState*, sys_accel_manager_data_subscribe,
 }
 
 DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *state) {
-  bool event_outstanding;
+  bool events_outstanding;
   mutex_lock_recursive(s_accel_manager_mutex);
   {
-    event_outstanding = state->event_posted;
+    // FIXME: we should return the number of outstanding events, so the caller
+    // knows in which event to de-allocate the state!
+    events_outstanding = state->events_posted > 0;
     // Remove this subscriber and free up its state variables
     shared_circular_buffer_remove_subsampled_client(
         &s_buffer, &state->buffer_client);
@@ -503,7 +505,7 @@ DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *stat
     prv_update_driver_config();
   }
   mutex_unlock_recursive(s_accel_manager_mutex);
-  return event_outstanding;
+  return events_outstanding;
 }
 
 DEFINE_SYSCALL(int, sys_accel_manager_set_sampling_rate,
@@ -599,7 +601,9 @@ DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples,
     success = false;
   }
 
-  state->event_posted = false;
+  state->events_posted--;
+  PBL_ASSERTN(state->events_posted >= 0);
+
   state->num_samples = 0;
   // Fill it again from circular buffer
   prv_dispatch_data();
