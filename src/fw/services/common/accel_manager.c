@@ -578,6 +578,19 @@ DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_num_samples,
 
   mutex_lock_recursive(s_accel_manager_mutex);
 
+  // Validate that state is still a current subscriber
+  bool found = false;
+  AccelManagerState *iter = (AccelManagerState *)s_data_subscribers;
+  while (iter) {
+    if (iter == state) { found = true; break; }
+    iter = (AccelManagerState *)iter->list_node.next;
+  }
+  if (!found) {
+    mutex_unlock_recursive(s_accel_manager_mutex);
+    ACCEL_LOG_DEBUG("Invalid accel state passed to get_num_samples: %p", state);
+    return 0;
+  }
+
   uint32_t result = state->num_samples;
   *timestamp_ms = state->timestamp_ms;
 
