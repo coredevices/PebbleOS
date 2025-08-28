@@ -49,7 +49,7 @@ RUNNERS = {
     'robert_bb2': ['openocd'],
     'robert_evt': ['openocd'],
     'robert_es': ['openocd'],
-    'asterix': ['openocd'],
+    'asterix': ['openocd', 'nrfutil'],
     'obelix': ['sftool'],
     'obelix_bb': ['sftool'],
 }
