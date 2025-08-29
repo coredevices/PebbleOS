@@ -277,7 +277,7 @@ static bool prv_call_data_callback(AccelManagerState *state) {
 //! populating subscriber storage with new samples (at the requested sample
 //! frequency) and generating a callback event on the subscriber's queue when
 //! the requested number of samples have been batched
-static void prv_dispatch_data(void) {
+static void prv_dispatch_data(bool post_event) {
   mutex_lock_recursive(s_accel_manager_mutex);
 
   AccelManagerState * state = (AccelManagerState *)s_data_subscribers;
@@ -326,7 +326,8 @@ static void prv_dispatch_data(void) {
     }
 
     // If buffer is full, notify subscriber to process it
-    if (!state->event_posted && state->num_samples >= state->samples_per_update) {
+    if (post_event && !state->event_posted &&
+        state->num_samples >= state->samples_per_update) {
       // Notify the subscriber that data is available
       state->event_posted = prv_call_data_callback(state);
 
@@ -602,7 +603,7 @@ DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples,
   state->event_posted = false;
   state->num_samples = 0;
   // Fill it again from circular buffer
-  prv_dispatch_data();
+  prv_dispatch_data(state->task != pebble_task_get_current() /* post_event */);
 
   mutex_unlock_recursive(s_accel_manager_mutex);
   return success;
@@ -693,7 +694,7 @@ void accel_cb_new_sample(AccelDriverSample const *data) {
 
   PBL_ASSERTN(rv);
 
-  prv_dispatch_data();
+  prv_dispatch_data(true /* post_event */);
 }
 
 void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
