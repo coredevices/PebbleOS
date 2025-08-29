@@ -92,6 +92,19 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   },
 };
 
+static const BoardConfigMag BOARD_CONFIG_MAG = {
+  .mag_config = {
+    .axes_offsets[AXIS_X] = 1,
+    .axes_offsets[AXIS_Y] = 0,
+    .axes_offsets[AXIS_Z] = 2,
+    .axes_inverts[AXIS_X] = false,
+    .axes_inverts[AXIS_Y] = false,
+    .axes_inverts[AXIS_Z] = false,
+  },
+  .mag_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 3) },
+  .mag_int = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 6, .gpio_pin = NRF_GPIO_PIN_MAP(0, 3), },
+};
+
 extern UARTDevice * const DBG_UART;
 
 extern PwmState BACKLIGHT_PWM_STATE;
