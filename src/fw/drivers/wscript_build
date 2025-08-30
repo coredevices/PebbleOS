@@ -1848,10 +1848,11 @@ elif mcu_family == 'SF32LB52':
     bld.objects(
         name='driver_watchdog',
         source=[
-            'stubs/watchdog.c',
+            'sf32lb52/watchdog.c',
         ],
         use=[
             'fw_includes',
+            'root_includes',
         ],
     )
 
