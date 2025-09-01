@@ -110,8 +110,10 @@ typedef enum {
   PmicRegisters_LDSW_LDSWCONFIG = 0x0807,
   PmicRegisters_LDSW_LDSW1LDOSEL = 0x0808,
   PmicRegisters_LDSW_LDSW2LDOSEL = 0x0809,
+  PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE = 1,
   PmicRegisters_LDSW_LDSW1VOUTSEL = 0x080C,
   PmicRegisters_LDSW_LDSW2VOUTSEL = 0x080D,
+  PmicRegisters_LDSW_LDSW2VOUTSEL__3V3 = 23,
   PmicRegisters_SHIP_TASKSHPHLDCFGSTROBE = 0x0B01,
   PmicRegisters_SHIP_TASKENTERSHIPMODE = 0x0B02,
   PmicRegisters_SHIP_SHPHLDCONFIG = 0x0B04,
@@ -269,6 +271,14 @@ bool pmic_init(void) {
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
+#endif
+
+  // FIXME: this needs to be configurable at board level
+#if PLATFORM_OBELIX
+  //3.3V @ LDO2
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE);
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, PmicRegisters_LDSW_LDSW2VOUTSEL__3V3);
+  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 1);
 #endif
 
   val = (uint8_t)(NPM1300_CONFIG.chg_current_ma / 4U);
