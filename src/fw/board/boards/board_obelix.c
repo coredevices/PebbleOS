@@ -445,6 +445,39 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
 };
 IRQ_MAP(GPTIM1, debounced_button_irq_handler, GPTIM1);
 
+static MicDeviceState mic_state = {
+  .hdma = {
+  .Instance = DMA1_Channel5,
+    .Init = {
+       .Request = DMA_REQUEST_36,
+       .IrqPrio = 5,
+    },
+  },
+};
+static const MicDevice mic_device = {
+    .state = &mic_state,
+    .pdm_instance = hwp_pdm1,
+    .clk_gpio = {
+        .pad = PAD_PA22,
+        .func = PDM1_CLK,
+        .flags = PIN_NOPULL,
+    },
+    .data_gpio = {
+        .pad = PAD_PA23,
+        .func = PDM1_DATA,
+        .flags = PIN_PULLDOWN,
+    },
+    .pdm_dma_irq = DMAC1_CH5_IRQn,
+    .pdm_irq = PDM1_IRQn,
+    .pdm_irq_priority = 5, 
+    .channels = 2,
+    .sample_rate = 16000,
+    .channel_depth = 16,
+};
+const MicDevice* MIC = &mic_device;
+IRQ_MAP(PDM1, pdm1_data_handler, MIC);
+IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
+
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;
 }
@@ -514,4 +547,6 @@ void board_early_init(void) {
 void board_init(void) {
   i2c_init(I2C1_BUS);
   i2c_init(I2C2_BUS);
+
+  mic_init(MIC);
 }
