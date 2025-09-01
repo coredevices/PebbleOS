@@ -63,10 +63,10 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
     return -1;
   }
 
-  portENTER_CRITICAL();
-
   while (remain > 0) {
+    portENTER_CRITICAL();
     res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
+    portEXIT_CRITICAL();
     if (res != 0) {
       res = -1;
       goto end;
@@ -79,8 +79,6 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
 end:
   SCB_InvalidateDCache_by_Addr((void *)addr, size);
   SCB_InvalidateICache_by_Addr((void *)addr, size);
-
-  portEXIT_CRITICAL();
 
   return res;
 }
@@ -106,9 +104,7 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
   } else {
     tbuf = buf;
   }
-
-  portENTER_CRITICAL();
-
+  
   taddr = addr - hflash->base;
   remain = size;
 
@@ -120,7 +116,9 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
       fill = size;
     }
 
+    portENTER_CRITICAL();
     res = HAL_QSPIEX_WRITE_PAGE(hflash, taddr, tbuf, fill);
+    portEXIT_CRITICAL();
     if ((uint32_t)res != fill) {
       res = -1;
       goto end;
@@ -133,7 +131,9 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
 
   while (remain > 0) {
     fill = remain > PAGE_SIZE_BYTES ? PAGE_SIZE_BYTES : remain;
+    portENTER_CRITICAL();
     res = HAL_QSPIEX_WRITE_PAGE(hflash, taddr, tbuf, fill);
+    portEXIT_CRITICAL();
     if ((uint32_t)res != fill) {
       res = -1;
       goto end;
@@ -149,8 +149,6 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
 end:
   SCB_InvalidateDCache_by_Addr((void *)addr, size);
   SCB_InvalidateICache_by_Addr((void *)addr, size);
-
-  portEXIT_CRITICAL();
 
   if (local_buf) {
     kernel_free(local_buf);
