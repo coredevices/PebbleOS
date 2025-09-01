@@ -42,6 +42,7 @@ extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
+extern const MicDevice* MIC;
 
 static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   .options = ActuatorOptions_IssiI2C,
