@@ -52,7 +52,12 @@ SECTIONS
         *.o                 (.text.rt_memset)
         *rt_memclr*.*.o       (.text*)
         *memset*.*.o          (.text*)      
-        *memcpy*.*.o          (.text*)  
+        *memcpy*.*.o          (.text*)
+
+        *lptim_systick.*.o    (.text* .rodata*)
+        *stop.*.o             (.text* .rodata*)
+        *freertos_application.*.o (.text* .rodata*)
+
 
         . = ALIGN(4);
         __retm_ro_end = .;

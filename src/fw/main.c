@@ -52,6 +52,7 @@
 #include "drivers/vibe.h"
 #include "drivers/voltage_monitor.h"
 #include "drivers/watchdog.h"
+#include "drivers/lptim_systick.h"
 
 #include "resource/resource.h"
 #include "resource/system_resource.h"
@@ -210,6 +211,9 @@ int main(void) {
   print_splash_screen();
 
   rtc_init();
+#ifdef MICRO_FAMILY_SF32LB52
+  lptim_systick_init();
+#endif
 
 #if BOOTLOADER_TEST_STAGE2
 #define BLTEST_LOG(x...) pbl_log(LOG_LEVEL_ALWAYS, __FILE__, __LINE__, x)

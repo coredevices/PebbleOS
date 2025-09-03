@@ -23,7 +23,12 @@
 
 typedef uint64_t RtcTicks;
 
+#if !defined(MICRO_FAMILY_SF32LB52)
 #define RTC_TICKS_HZ (1024u)
+#else
+// SF32lb52 lptim using RC10K.
+#define RTC_TICKS_HZ (1000u)
+#endif
 
 //! Initialize the RTC driver at startup. Note that this runs very early in the startup process
 //! and very few other systems will be running when this is called.
