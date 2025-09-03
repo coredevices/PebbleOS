@@ -19,6 +19,7 @@
 #include "debug/power_tracking.h"
 #include "drivers/mcu.h"
 #include "drivers/rtc.h"
+#include "drivers/lptim_systick.h"
 #include "drivers/task_watchdog.h"
 
 #include "console/prompt.h"
@@ -72,24 +73,36 @@ static const RtcTicks MIN_STOP_TICKS = 5;
 static const RtcTicks EARLY_WAKEUP_TICKS = 4;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 8;
-#elif defined(MICRO_FAMILY_NRF5) || defined(MICRO_FAMILY_SF32LB52)
-/* XXX(sf32lb): double check this */
+#elif defined(MICRO_FAMILY_NRF5)
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 5;
+#elif defined(MICRO_FAMILY_SF32LB52)
+//! Stop mode until this number of ticks before the next scheduled task
+static const RtcTicks EARLY_WAKEUP_TICKS = 2;
+//! Stop mode until this number of ticks before the next scheduled task
+static const RtcTicks MIN_STOP_TICKS = 0xFFFFFFFF; // disable stop mode for now
+#else
+#error "Unknown micro family"
 #endif
 
-// 1024 ticks so that we only wake up once every regular timer interval.
-static const RtcTicks MAX_STOP_TICKS = 1024;
+// 1 second ticks so that we only wake up once every regular timer interval.
+static const RtcTicks MAX_STOP_TICKS = RTC_TICKS_HZ;
 
 extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
+#if !defined(MICRO_FAMILY_SF32LB52)
   if (!rtc_alarm_is_initialized() || !sleep_mode_is_allowed()) {
     // the RTC is not yet initialized to the point where it can wake us from sleep or sleep/stop
     // is disabled. Just returning will cause a busy loop where the caller thought we slept for
     // 0 ticks and will reevaluate what to do next (probably just try again).
     return;
   }
+#else
+  if (!lptim_systick_is_initialized() || !sleep_mode_is_allowed()) {
+    return;
+  }
+#endif
 
   // Note: all tasks are suspended at this point, but we can still be interrupted
   // so the critical section is necessary. taskENTER_CRITICAL() is not used here
@@ -136,6 +149,8 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       // (and RTC0 is shut down), then we just end up measuring 0 here -- no
       // harm, no foul.
       uint32_t rtc_start = NRF_RTC0->COUNTER;
+#elif defined(MICRO_FAMILY_SF32LB52)
+      uint32_t counter_start = LPTIM1->CNT;
 #else
       // We assume that a WFI to trigger sleep mode will not last longer than 1
       // SysTick. (The SysTick INT doesn't automatically get suppressed) Thus,
@@ -160,6 +175,13 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
         rtc_end += 0x1000000;
       uint32_t rtc_elapsed = rtc_end - rtc_start;
       uint32_t cycles_elapsed = rtc_elapsed * SystemCoreClock / 32768;
+#elif defined(MICRO_FAMILY_SF32LB52)
+      uint32_t counter_stop = LPTIM1->CNT;
+      if (counter_stop < counter_start) {
+        counter_stop += 0x10000;
+      }
+      uint32_t counter_elapsed = counter_stop - counter_start;
+      uint32_t cycles_elapsed = (counter_elapsed * RTC_TICKS_HZ) / 8000;
 #else
       uint32_t systick_stop = SysTick->VAL;
       uint32_t cycles_elapsed;
@@ -177,10 +199,17 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
       // Go into stop mode until the wakeup_tick.
       s_last_ticks_commanded_in_stop = stop_duration;
+#if !defined(MICRO_FAMILY_SF32LB52)
       rtc_alarm_set(stop_duration);
       enter_stop_mode();
 
       RtcTicks ticks_elapsed = rtc_alarm_get_elapsed_ticks();
+#else
+      lptim_systick_tickless_idle((uint32_t)stop_duration);
+      enter_stop_mode();
+
+      uint32_t ticks_elapsed = lptim_systick_get_elapsed_ticks();
+#endif
       s_last_ticks_elapsed_in_stop = ticks_elapsed;
       vTaskStepTick(ticks_elapsed);
 
@@ -296,6 +325,9 @@ bool vPortCorrectTicks(void) {
 bool vPortEnableTimer() {
 #if defined(MICRO_FAMILY_NRF5)
   rtc_enable_synthetic_systick();
+  return true;
+#elif defined(MICRO_FAMILY_SF32LB52)
+  lptim_systick_enable();
   return true;
 #else
   return false;
