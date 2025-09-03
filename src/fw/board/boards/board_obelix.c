@@ -285,7 +285,9 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 };
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 
-static I2CDeviceState s_i2c_device_state_1;
+static I2CDeviceState s_i2c_device_state_1 = {
+    .int_enabled = true,
+};
 
 static struct I2CBusHal s_i2c_bus_hal_1 = {
     .i2c_state = &s_i2c_device_state_1,
@@ -332,7 +334,9 @@ I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
 IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
 
-static I2CDeviceState s_i2c_device_state_2;
+static I2CDeviceState s_i2c_device_state_2 = {
+    .int_enabled = true,
+};
 
 static struct I2CBusHal s_i2c_bus_hal_2 = {
     .i2c_state = &s_i2c_device_state_2,
