@@ -48,17 +48,9 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12) },
   .pmic_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 12) },
   .low_power_threshold = 5,
-  // Average current over 60s is now ~210uA when:
-  // - Watch is connected to a phone with ResponseTimeMax
-  // - Watchface updating every minute
-  // - Accelerometer on shake detection mode
-  // For now we assume this is the most frequent scenario over time.
-  // Given a 130mAh, this roughly gives ~619 hours. Let's be cautious and stay
-  // at ~600 hours until we do more measurements. We could also use fuel gauge
-  // to improve TTE given real current draw (some apps or watchfaces will drain
-  // battery faster, and those will get innacurate system warnings as they are
-  // now based on this static value).
-  .battery_capacity_hours = 600,
+  // Average current is now ~450uA (still a too high!) when the watch is
+  // connected to a phone and "idle". Given a 130mAh, this roughly gives ~288h
+  .battery_capacity_hours = 288,
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {
