@@ -88,7 +88,8 @@ dstzone_list = ("-",
                 "Moldova",
                 "Iran",
                 "Chile",
-                "Tonga")
+                "Tonga",
+                "Eire")
 dstzone_dict = {name: index for index, name in enumerate(dstzone_list)}
 
 # Make sure some of these values don't move around, because the firmware code in
