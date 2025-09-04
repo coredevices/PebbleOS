@@ -48,9 +48,10 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12) },
   .pmic_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 12) },
   .low_power_threshold = 5,
-  // Average current is now ~450uA (still a too high!) when the watch is
-  // connected to a phone and "idle". Given a 130mAh, this roughly gives ~288h
-  .battery_capacity_hours = 288,
+  // Current is not great but getting there.  1 mA or so on 130 mAh battery;
+  // Memfault reports 160h expected battery, but we'll conservatively
+  // estimate 130 hours
+  .battery_capacity_hours = 130,
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {
