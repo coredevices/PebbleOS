@@ -74,7 +74,7 @@ void enter_stop_mode(void) {
 }
 #elif MICRO_FAMILY_SF32LB52
 // Refer from sdk sifli_deep_handler function
-void enter_stop_mode(void) {
+__attribute__((section(".RamFunc"))) void enter_stop_mode(void) {
   uint32_t dll1_freq;
   uint32_t dll2_freq;
   int clk_src;
@@ -90,7 +90,7 @@ void enter_stop_mode(void) {
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
   dll1_freq = HAL_RCC_HCPU_GetDLL1Freq();
   dll2_freq = HAL_RCC_HCPU_GetDLL2Freq();
-  
+
   HAL_RCC_HCPU_DisableDLL1();
   HAL_RCC_HCPU_DisableDLL2();
 

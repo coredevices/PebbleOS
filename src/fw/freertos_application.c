@@ -82,7 +82,7 @@ static const RtcTicks MIN_STOP_TICKS = 5;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks MIN_STOP_TICKS = 0xFFFFFFFF; // disable stop mode for now
+static const RtcTicks MIN_STOP_TICKS = 5; // disable stop mode for now
 #else
 #error "Unknown micro family"
 #endif
