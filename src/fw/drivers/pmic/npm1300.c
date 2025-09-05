@@ -41,6 +41,10 @@ typedef enum {
   PmicRegisters_SYSTEM_TESTACCESS__VAL1 = 0x90,
   PmicRegisters_SYSTEM_TESTACCESS__VAL2 = 0xFA,
   PmicRegisters_SYSTEM_TESTACCESS__VAL3 = 0xCE,
+  PmicRegisters_VBUSIN_TASKUPDATELIMSW = 0x0200,
+  PmicRegisters_VBUSIN_TASKUPDATELIMSW__EN = 0x01,
+  PmicRegisters_VBUSIN_VBUSINILIM0 = 0x0201,
+  PmicRegisters_VBUSIN_VBUSINILIMSTARTUP = 0x0202,
   PmicRegisters_VBUSIN_VBUSINSTATUS = 0x0207,
   PmicRegisters_VBUSIN_VBUSINSTATUS__VBUSINPRESENT = 1,
   PmicRegisters_BCHARGER_TASKRELEASEERROR = 0x0300U,
@@ -134,6 +138,7 @@ typedef enum {
 #define NPM1300_ADC_VFS_VBAT_MV 5000UL
 // ADC MSB shift
 #define NPM1300_ADC_MSB_SHIFT 2U
+#define NPM1300_VBUS_CURRENT_DIVISOR 100U
 
 
 void battery_init(void) {
@@ -170,6 +175,16 @@ static void prv_handle_charge_state_change(void *null) {
   const bool is_connected = pmic_is_usb_connected();
   PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 Interrupt: Charging? %s Plugged? %s",
       is_charging ? "YES" : "NO", is_connected ? "YES" : "NO");
+
+  if (is_connected && NPM1300_CONFIG.vbus_current_lim0 != 0) {
+    bool ok = prv_write_register(PmicRegisters_VBUSIN_VBUSINILIM0,
+      NPM1300_CONFIG.vbus_current_lim0/NPM1300_VBUS_CURRENT_DIVISOR);
+    ok &= prv_write_register(PmicRegisters_VBUSIN_TASKUPDATELIMSW,
+      PmicRegisters_VBUSIN_TASKUPDATELIMSW__EN);
+    if (!ok) {
+      PBL_LOG(LOG_LEVEL_ERROR, "config vbus limite0 failed");
+    }
+  }
 
   PebbleEvent event = {
     .type = PEBBLE_BATTERY_CONNECTION_EVENT,
@@ -299,6 +314,11 @@ bool pmic_init(void) {
   } else {
     PBL_LOG(LOG_LEVEL_ERROR, "Invalid discharge limit: %d mA", NPM1300_CONFIG.dischg_limit_ma);
     return false;
+  }
+
+  if (NPM1300_CONFIG.vbus_current_startup != 0) {
+    ok &= prv_write_register(PmicRegisters_VBUSIN_VBUSINILIMSTARTUP,
+      NPM1300_CONFIG.vbus_current_startup/NPM1300_VBUS_CURRENT_DIVISOR);
   }
 
   if (NPM1300_CONFIG.term_current_pct == 10U) {

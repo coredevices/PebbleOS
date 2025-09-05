@@ -26,4 +26,8 @@ typedef struct {
   uint8_t term_current_pct;
   //! Thermistor beta value
   uint16_t thermistor_beta;
+  //! Vbus current limite0
+  uint16_t vbus_current_lim0;
+  //! Vbus current limite startup
+  uint16_t vbus_current_startup;
 } Npm1300Config;
