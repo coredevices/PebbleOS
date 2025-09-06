@@ -152,6 +152,16 @@ SECTIONS {
         . = __unpriv_ro_bss_start__ + __unpriv_ro_bss_size__;
     } >KERNEL_RAM
 
+    .ramfunc (NOLOAD) : AT(ADDR(.text) + SIZEOF(.text)) {
+        . = ALIGN(8);
+        __ramfunc_start = .;
+        *(.ramfunc)
+        *(.ramfunc*)
+        . = ALIGN(8);
+        __ramfunc_end = .;
+    } >KERNEL_RAM
+    __ramfunc_load_start = LOADADDR(.ramfunc);
+
     .kernel_bss (NOLOAD) : {
         *(.freertos_privileged_data)
 

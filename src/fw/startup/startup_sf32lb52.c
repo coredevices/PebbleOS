@@ -35,6 +35,10 @@ extern uint8_t __retm_ro_load_start[];
 extern uint8_t __retm_ro_start[];
 extern uint8_t __retm_ro_end[];
 
+extern uint8_t __ramfunc_load_start[];
+extern uint8_t __ramfunc_start[];
+extern uint8_t __ramfunc_end[];
+
 extern int main(void);
 
 NAKED_FUNC NORETURN Reset_Handler(void) {
@@ -49,6 +53,10 @@ NAKED_FUNC NORETURN Reset_Handler(void) {
 
   for (int i = 0; i < (__retm_ro_end - __retm_ro_start); i++) {
     __retm_ro_start[i] = __retm_ro_load_start[i];
+  }
+
+  for (int i = 0; i < (__ramfunc_end - __ramfunc_start); i++) {
+    __ramfunc_start[i] = __ramfunc_load_start[i];
   }
 
   // Clear the bss section, assumes .bss goes directly after .data

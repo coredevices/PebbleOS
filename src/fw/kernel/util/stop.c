@@ -19,6 +19,7 @@
 #include "drivers/flash.h"
 #include "drivers/periph_config.h"
 #include "drivers/rtc.h"
+#include "drivers/lptim_systick.h"
 #include "drivers/task_watchdog.h"
 #include "os/tick.h"
 #include "kernel/util/stop.h"
@@ -72,8 +73,57 @@ void enter_stop_mode(void) {
   dbgserial_enable_rx_dma_after_stop();
 }
 #elif MICRO_FAMILY_SF32LB52
-void enter_stop_mode(void) {
-  // TODO(SF32LB52): implement
+// Refer from sdk sifli_deep_handler function
+__attribute__((section(".RamFunc"))) void enter_stop_mode(void) {
+  uint32_t dll1_freq;
+  uint32_t dll2_freq;
+  int clk_src;
+
+  dbgserial_enable_rx_exti();
+
+  lptim_systick_pause();
+
+  NVIC_EnableIRQ(AON_IRQn);
+
+  // Switch system clock to HRC48, backup current clock source
+  clk_src = HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS);
+  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
+  dll1_freq = HAL_RCC_HCPU_GetDLL1Freq();
+  dll2_freq = HAL_RCC_HCPU_GetDLL2Freq();
+
+  HAL_RCC_HCPU_DisableDLL1();
+  HAL_RCC_HCPU_DisableDLL2();
+
+  // HAL_HPAON_DISABLE_PAD();
+  // HAL_HPAON_DISABLE_VHP();
+
+  HAL_HPAON_CLEAR_HP_ACTIVE();
+  HAL_HPAON_SET_POWER_MODE(AON_PMR_DEEP_SLEEP);
+
+  // Go stop now.
+  __DSB(); // Drain any pending memory writes before entering sleep.
+  do_wfi(); // Wait for Interrupt (enter sleep mode). Work around F2/F4 errata.
+  __ISB(); // Let the pipeline catch up (force the WFI to activate before moving on).
+
+  // HAL_HPAON_ENABLE_PAD();
+  // HAL_HPAON_ENABLE_VHP();
+
+  HAL_HPAON_SET_HP_ACTIVE();
+  HAL_HPAON_CLEAR_POWER_MODE();
+
+  // Wait for HXT48 to be ready
+  if (dll1_freq != 0) {
+    while (0 == (hwp_hpsys_aon->ACR & HPSYS_AON_ACR_HXT48_RDY)) {
+      __NOP();
+    }
+  }
+
+  // Switch back to original clock source
+  HAL_RCC_HCPU_EnableDLL1(dll1_freq);
+  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
+  HAL_RCC_HCPU_EnableDLL2(dll2_freq);
+
+  lptim_systick_resume();
 }
 #else /* STM32 */
 void enter_stop_mode(void) {
