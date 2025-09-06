@@ -34,6 +34,7 @@ extern I2CBus *const I2C2_BUS;
 extern I2CSlavePort * const I2C_LSM6D;
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort *const I2C_AW86225;
+extern I2CSlavePort *const I2C_W1160;
 extern const Npm1300Config NPM1300_CONFIG;
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 extern const LedControllerPwm LED_CONTROLLER_PWM;

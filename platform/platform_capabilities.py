@@ -29,6 +29,7 @@ master_capability_set = {
     'COMPOSITOR_USES_DMA',
     'HAS_ACCESSORY_CONNECTOR',
     'HAS_ALS_OPT3001',
+    'HAS_ALS_W1160',
     'HAS_APPLE_MFI',
     'HAS_APP_GLANCES',
     'HAS_BUILTIN_HRM',
@@ -304,6 +305,7 @@ board_capability_dicts = [
             'HAS_VIBE_AW86225',
             'HAS_FLASH_OTP',
             'HAS_MICROPHONE',
+            'HAS_ALS_W1160',
         },
     },
 ]
