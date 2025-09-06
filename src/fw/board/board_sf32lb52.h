@@ -128,6 +128,9 @@ typedef struct {
   ExtiConfig dbgserial_int;
   InputConfig dbgserial_int_gpio;
   OutputConfig lcd_com;
+  //ambient light config
+  uint32_t ambient_light_dark_threshold;
+  uint32_t ambient_k_delta_threshold;
 } BoardConfig;
 
 typedef struct {
