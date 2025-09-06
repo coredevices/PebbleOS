@@ -262,7 +262,19 @@ if bld.capability('HAS_ALS_OPT3001'):
     bld.objects(
         name='driver_ambient_light',
         source=[
-            'ambient_light_opt3001.c',
+            'ambient/ambient_light_opt3001.c',
+        ],
+        use=[
+            'driver_i2c',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif bld.capability('HAS_ALS_W1160'):
+    bld.objects(
+        name='driver_ambient_light',
+        source=[
+            'ambient/ambient_light_w1160.c',
         ],
         use=[
             'driver_i2c',
@@ -274,7 +286,7 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
         name='driver_ambient_light',
         source=[
-            'ambient_light.c',
+            'ambient/ambient_light.c',
         ],
         use=[
             'driver_gpio',
