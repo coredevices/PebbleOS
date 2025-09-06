@@ -309,6 +309,7 @@ board_capability_dicts = [
             'HAS_MICROPHONE',
             'HAS_TOUCHSCREEN',
             'HAS_BUILTIN_HRM',
+            'HAS_ALS_W1160',
         },
     },
 ]

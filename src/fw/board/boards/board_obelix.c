@@ -426,6 +426,13 @@ const Npm1300Config NPM1300_CONFIG = {
   .vbus_current_startup = 500,
 };
 
+static const I2CSlavePort s_i2c_w1160 = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x48,
+  };
+  
+I2CSlavePort *const I2C_W1160 = &s_i2c_w1160;
+
 const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = {
     .peripheral = hwp_gpio1,
@@ -437,6 +444,8 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
 
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
+  .ambient_light_dark_threshold = 150,
+  .ambient_k_delta_threshold = 25,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
