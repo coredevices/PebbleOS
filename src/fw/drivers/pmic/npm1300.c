@@ -256,6 +256,14 @@ bool pmic_init(void) {
   }
 #endif
 
+// FIXME(OBELIX): Needs to be configurable at board level
+#if PLATFORM_OBELIX
+  //enable 1.8V@LDO1
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);  //LDO
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8);  //1.8V
+  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW1SET, 1); //enable
+#endif
+
   ok &= prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
   ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSBCHARGER1SET, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
   ok &= prv_write_register(PmicRegisters_MAIN_EVENTSVBUSIN0CLR, PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED | PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED);
