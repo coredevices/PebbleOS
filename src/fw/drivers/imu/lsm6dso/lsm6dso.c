@@ -84,7 +84,6 @@ typedef struct {
 } lsm6dso_state_t;
 lsm6dso_state_t s_lsm6dso_state = {0};
 lsm6dso_state_t s_lsm6dso_state_target = {0};
-static bool s_interrupts_pending = false;
 static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_threshold / 1250;
 static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
 static uint32_t s_last_vibe_detected = 0;
@@ -453,32 +452,54 @@ static void prv_lsm6dso_chase_target_state(void) {
 }
 
 static void prv_lsm6dso_configure_interrupts(void) {
-  if (s_lsm6dso_enabled &&
+  // Disable interrupts during configuration to prevent race conditions
+  // and ensure atomic configuration updates
+  
+  bool should_enable_interrupts = s_lsm6dso_enabled &&
       (s_lsm6dso_state.num_samples || s_lsm6dso_state.shake_detection_enabled ||
-       s_lsm6dso_state.double_tap_detection_enabled)) {
-    exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
-  } else {
-    exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+       s_lsm6dso_state.double_tap_detection_enabled);
+  
+  // Always disable interrupts first to ensure clean state
+  exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+  
+  if (!should_enable_interrupts) {
+    // Also disable all interrupt sources in the sensor to prevent phantom interrupts
+    lsm6dso_pin_int1_route_t int1_routes = {0}; // All disabled
+    lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes);
     return;
   }
 
   lsm6dso_pin_int1_route_t int1_routes = {0};
   bool use_fifo = s_lsm6dso_state.num_samples > 1;  // batching requested
+  
+  // Configure FIFO first, then set up interrupt routing
   if (use_fifo) {
-    int1_routes.fifo_th = 1;  // watermark interrupt
-    int1_routes.drdy_xl = 0;
     prv_lsm6dso_configure_fifo(true);
+    int1_routes.fifo_th = 1;  // watermark interrupt
+    int1_routes.fifo_ovr = 1; // Enable overflow interrupt to prevent lockup
+    int1_routes.drdy_xl = 0;
   } else {
+    prv_lsm6dso_configure_fifo(false);
     int1_routes.drdy_xl = s_lsm6dso_state.num_samples > 0;  // single-sample mode
     int1_routes.fifo_th = 0;
-    prv_lsm6dso_configure_fifo(false);
+    int1_routes.fifo_ovr = 0;
   }
+  
   int1_routes.double_tap = s_lsm6dso_state.double_tap_detection_enabled;
   int1_routes.wake_up = s_lsm6dso_state.shake_detection_enabled;  // use wake-up (any-motion)
 
+  // Configure interrupt routing atomically
   if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
+    return;
   }
+  
+  // Clear any pending interrupt sources before enabling external interrupt
+  lsm6dso_all_sources_t all_sources;
+  lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources); // This clears pending sources
+  
+  // Finally enable the external interrupt
+  exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
 }
 
 // Map output data rate (interval) to FIFO batching rate enum
@@ -502,20 +523,38 @@ static void prv_lsm6dso_configure_fifo(bool enable) {
   }
 
   if (enable) {
-    // Program FIFO watermark and batch rate (only accelerometer)
+    // Proper FIFO watermark calculation to prevent overflow
+    // Setting watermark too high can cause overflow and sensor lockup
+    
     uint32_t watermark = s_lsm6dso_state.num_samples;
     if (watermark == 0) watermark = 1;  // safety
+    
+    // Set watermark to 75% of requested samples to prevent overflow
+    // This provides buffer for timing variations
+    watermark = (watermark * 3) / 4;
+    if (watermark == 0) watermark = 1;  // minimum
     if (watermark > LSM6DSO_FIFO_MAX_WATERMARK) watermark = LSM6DSO_FIFO_MAX_WATERMARK;
+    
+    PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting FIFO watermark to %lu (requested %lu samples)", 
+            watermark, s_lsm6dso_state.num_samples);
+    
     if (lsm6dso_fifo_watermark_set(&lsm6dso_ctx, (uint16_t)watermark)) {
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set FIFO watermark");
     }
+    
     // Enable accelerometer batching at (approx) current ODR
     lsm6dso_bdr_xl_t batch_rate = prv_get_fifo_batch_rate(s_lsm6dso_state.sampling_interval_us);
     if (lsm6dso_fifo_xl_batch_set(&lsm6dso_ctx, batch_rate)) {
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to set FIFO batch rate");
     }
-    // Disable gyro batching
+    
+    // Disable gyro batching to save FIFO space
     lsm6dso_fifo_gy_batch_set(&lsm6dso_ctx, LSM6DSO_GY_NOT_BATCHED);
+    
+    // Clear FIFO before enabling to start fresh
+    lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+    psleep(1); // Allow time for FIFO to clear
+    
     // Put FIFO in stream mode so we keep collecting samples and get periodic watermark interrupts
     if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE)) {
       PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to enable FIFO stream mode");
@@ -596,20 +635,46 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
 }
 
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
-  if (s_interrupts_pending) {  // avoid flooding the kernel queue
+  // Always process interrupts immediately to prevent lost events
+  // The LSM6DSO can miss events if interrupts are ignored due to pending flags
+  
+  // Clear the hardware interrupt sources immediately to prevent sensor lockup
+  // This is done in ISR context to minimize latency
+  static volatile bool interrupt_active = false;
+  
+  // Prevent recursive calls but ensure we don't lose interrupts
+  if (interrupt_active) {
+    // If already processing, queue another work item to catch any new events
+    accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
     return;
   }
-  s_interrupts_pending = true;
+  
+  interrupt_active = true;
   accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
+  interrupt_active = false;
 }
 
 static void prv_lsm6dso_process_interrupts(void) {
-  s_interrupts_pending = false;
+  // Read and clear interrupt sources atomically to prevent loss
   lsm6dso_all_sources_t all_sources;
   
-  if (lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read interrupt sources");
-    // If we can't read interrupt sources, the sensor may be unresponsive
+  // Multiple attempts to read interrupt sources in case of transient I2C issues
+  int read_attempts = 0;
+  const int max_read_attempts = 2;
+  
+  do {
+    if (lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources) == 0) {
+      break; // Success
+    }
+    read_attempts++;
+    if (read_attempts < max_read_attempts) {
+      // Brief delay and retry - this prevents losing interrupts due to transient I2C glitches
+      psleep(1);
+    }
+  } while (read_attempts < max_read_attempts);
+  
+  if (read_attempts >= max_read_attempts) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read interrupt sources after retries");
     s_consecutive_errors++;
     if (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_FAILURES) {
       s_sensor_health_ok = false;
@@ -621,11 +686,31 @@ static void prv_lsm6dso_process_interrupts(void) {
   // Reset failure count on successful read
   s_consecutive_errors = 0;
 
-  // Handle FIFO overflow - reset FIFO to prevent lockup
-  if (all_sources.fifo_ovr) {
-    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: FIFO overflow detected, resetting FIFO");
+  // Prevent FIFO overflow by proper watermark management
+  // FIFO overflow causes the sensor to stop generating interrupts
+  if (all_sources.fifo_ovr || all_sources.fifo_full) {
+    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: FIFO overflow/full detected, clearing FIFO");
+    
+    // Properly clear FIFO without losing configuration
+    uint16_t current_watermark;
+    lsm6dso_bdr_xl_t current_batch_rate;
+    
+    // Save current FIFO configuration
+    lsm6dso_fifo_watermark_get(&lsm6dso_ctx, &current_watermark);
+    lsm6dso_fifo_xl_batch_get(&lsm6dso_ctx, &current_batch_rate);
+    
+    // Reset FIFO to bypass mode
     lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
-    lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+    
+    // Wait for FIFO to actually clear
+    psleep(1);
+    
+    // Restore FIFO configuration if it was enabled
+    if (s_fifo_in_use) {
+      lsm6dso_fifo_watermark_set(&lsm6dso_ctx, current_watermark);
+      lsm6dso_fifo_xl_batch_set(&lsm6dso_ctx, current_batch_rate);
+      lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+    }
   }
 
   // Collect accelerometer samples if requested
