@@ -5,3 +5,8 @@ MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(battery_v, kMemfaultMetricType_Unsi
 MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(memory_pct_max, kMemfaultMetricType_Unsigned, 100)
 
 #include "ports/freertos/config/memfault_metrics_heartbeat_freertos_config.def"
+
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+MEMFAULT_METRICS_KEY_DEFINE(firm_579_log_events, kMemfaultMetricType_Unsigned)
+MEMFAULT_METRICS_KEY_DEFINE(firm_579_attempted_recoveries, kMemfaultMetricType_Unsigned)
+#endif
