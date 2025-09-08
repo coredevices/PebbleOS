@@ -48,6 +48,10 @@ def is_obelix(ctx):
     return ctx.get_board().startswith('obelix')
 
 @conf
+def is_hollow(ctx):
+    return ctx.get_board().startswith('hollow')
+
+@conf
 def get_platform_name(ctx):
     if is_tintin(ctx):
         return "tintin"
@@ -65,6 +69,8 @@ def get_platform_name(ctx):
         return "asterix"
     elif is_obelix(ctx):
         return "obelix"
+    elif is_hollow(ctx):
+        return "hollow" # TODO update... will simply be following obelix for now...
     else:
         return "unknown"
 
@@ -113,6 +119,8 @@ def get_qemu_cpu(ctx):
         return 'cortex-m4'
     elif is_obelix(ctx):
         return 'cortex-star-mc1'
+    elif is_hollow(ctx):
+        return 'cortex-star-mc1' # TODO Armv8-m core? might need to be updated
     else:
         return 'unknown'
 
@@ -153,6 +161,8 @@ def has_touch(ctx):
         return False
     elif is_obelix(ctx):
         # FIXME(OBELIX): needs to be updated
+        return False
+    elif is_hollow(ctx):
         return False
     else:
         return None
@@ -208,6 +218,9 @@ def add_platform_defines(ctx, env):
     elif ctx.is_obelix():
         bit_depth = 8
         platform = 'OBELIX'
+    elif ctx.is_hollow():
+        bit_depth = 8
+        platform = 'HOLLOW'
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 

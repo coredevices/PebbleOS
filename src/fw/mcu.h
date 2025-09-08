@@ -61,6 +61,11 @@
 #  error "Source is incompatible with the target MCU"
 # endif
 # include <bf0_hal.h>
+#elif defined(MICRO_FAMILY_PSE84) // TODO update
+# if !defined(PSE84_COMPATIBLE) && !defined(CMSIS_COMPATIBLE)
+#  error "Source is incompatible with the target MCU"
+# endif
+# include <bf0_hal.h>
 #elif !defined(SDK) && !defined(UNITTEST)
 # error "Unknown or missing MICRO_FAMILY_* define"
 #endif

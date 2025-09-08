@@ -103,6 +103,25 @@ emery_platform = {
              "compass", "200w", "228h"]
 }
 
+knight_platform = { # TODO update
+    "NAME": "hollow",
+    "MAX_APP_BINARY_SIZE": 0x20000,  # 128K
+    "MAX_APP_MEMORY_SIZE": 0x20000,  # 128K
+    "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
+    "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
+    "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
+    "DEFINES": ["PBL_PLATFORM_EMERY", "PBL_COLOR", "PBL_RECT",
+                "PBL_MICROPHONE", "PBL_SMARTSTRAP", "PBL_HEALTH",
+                "PBL_SMARTSTRAP_POWER", "PBL_COMPASS",
+                "PBL_DISPLAY_WIDTH=200", "PBL_DISPLAY_HEIGHT=228"],
+    "BUILD_DIR": "hollow",
+    "BUNDLE_BIN_DIR": "hollow",
+    "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
+    "MAX_FONT_GLYPH_SIZE": 320,
+    "TAGS": ["hollow", "color", "rect", "mic", "strap", "health", "strappower",
+             "compass", "200w", "228h"]
+}
+
 
 pebble_platforms = {
     "emery": emery_platform,
@@ -110,6 +129,7 @@ pebble_platforms = {
     "chalk": chalk_platform,
     "basalt": basalt_platform,
     "aplite": aplite_platform,
+    "knight": knight_platform,
 }
 
 

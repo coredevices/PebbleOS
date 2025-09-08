@@ -52,6 +52,7 @@ RUNNERS = {
     'asterix': ['openocd', 'nrfutil'],
     'obelix': ['sftool'],
     'obelix_bb': ['sftool'],
+    'hollow' : ['openocd'],
 }
 
 def truncate(msg):
@@ -113,6 +114,7 @@ def options(opt):
                              'asterix',
                              'obelix',
                              'obelix_bb',
+                             'hollow',
                             ],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
@@ -503,6 +505,9 @@ def configure(conf):
     elif conf.is_cutts() or conf.is_robert() or conf.is_obelix():
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
+    elif conf.is_hollow():
+        conf.env.PLATFORM_NAME = 'knight'
+        conf.env.MIN_SDK_VERSION = 3
     else:
         conf.fatal('No platform specified for {}!'.format(conf.options.board))
 
@@ -519,6 +524,8 @@ def configure(conf):
         conf.env.MICRO_FAMILY = 'NRF52840'
     elif conf.is_obelix():
         conf.env.MICRO_FAMILY = 'SF32LB52'
+    elif conf.is_hollow():
+        conf.env.MICRO_FAMILY = 'PSE84'
     else:
         conf.fatal('No micro family specified for {}!'.format(conf.options.board))
 

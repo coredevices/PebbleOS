@@ -111,6 +111,18 @@ elif board in ('obelix', 'obelix_bb'):
             'drivers',
         ],
     )
+elif board in ('hollow'): # TODO update
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_hollow.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'drivers',
+        ],
+    )
 else:
     bld.fatal('src/fw/board/wscript_build: '
               'Unknown board {}'.format(board))
