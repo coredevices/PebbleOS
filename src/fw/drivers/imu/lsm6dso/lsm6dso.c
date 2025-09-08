@@ -94,6 +94,13 @@ static uint32_t s_last_successful_read_ms = 0;
 static uint32_t s_consecutive_errors = 0;
 static bool s_sensor_health_ok = true;
 
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+/* Counters exported to memfault heartbeat (declared as extern where used).
+ * These must be non-static so they are visible to other translation units. */
+uint32_t metric_firm_579_log_events = 0;
+uint32_t metric_firm_579_attempted_recoveries = 0;
+#endif
+
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
 #define LSM6DSO_FIFO_MAX_WATERMARK 1023
 
@@ -1167,10 +1174,16 @@ static bool prv_lsm6dso_health_check(void) {
 // Recovery mechanism for unresponsive sensor
 static bool prv_lsm6dso_attempt_recovery(void) {
   PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Attempting sensor recovery");
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+  metric_firm_579_attempted_recoveries++;
+#endif
   
   // Reset the sensor
   if (lsm6dso_reset_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to reset sensor during recovery");
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+    metric_firm_579_log_events++;
+#endif
     return false;
   }
   
@@ -1180,14 +1193,20 @@ static bool prv_lsm6dso_attempt_recovery(void) {
   do {
     psleep(1);
     if (lsm6dso_reset_get(&lsm6dso_ctx, &rst) != 0) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to check reset status during recovery");
-      return false;
+  PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to check reset status during recovery");
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+  metric_firm_579_log_events++;
+#endif
+  return false;
     }
     timeout--;
   } while (rst && timeout > 0);
   
   if (timeout == 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Reset timeout during recovery");
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+    metric_firm_579_log_events++;
+#endif
     return false;
   }
   
@@ -1196,8 +1215,11 @@ static bool prv_lsm6dso_attempt_recovery(void) {
       lsm6dso_block_data_update_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0 ||
       lsm6dso_auto_increment_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0 ||
       lsm6dso_xl_full_scale_set(&lsm6dso_ctx, LSM6DSO_4g) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to restore basic settings during recovery");
-    return false;
+  PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to restore basic settings during recovery");
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+  metric_firm_579_log_events++;
+#endif
+  return false;
   }
   
   s_consecutive_errors = 0;
@@ -1206,9 +1228,15 @@ static bool prv_lsm6dso_attempt_recovery(void) {
   // Final health check
   if (!prv_lsm6dso_health_check()) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Recovery failed - health check failed");
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+    metric_firm_579_log_events++;
+#endif
     return false;
   }
   
   PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Sensor recovery successful");
+#if CAPABILITY_NEEDS_FIRM_579_STATS
+  metric_firm_579_log_events++;
+#endif
   return true;
 }
