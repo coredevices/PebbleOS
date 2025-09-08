@@ -31,6 +31,7 @@ static UARTDeviceState s_dbg_uart_state = {
   .huart = {
     .Instance = USART1,
     .Init = {
+      .BaudRate = 1000000,
       .WordLength = UART_WORDLENGTH_8B,
       .StopBits = UART_STOPBITS_1,
       .Parity = UART_PARITY_NONE,
