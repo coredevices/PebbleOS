@@ -2979,16 +2979,6 @@ msgstr "Dettatura non disponibile."
 msgid "Error occurred. Try again."
 msgstr "Errore. RItenta."
 
-#: ../src/fw/applib/voice/voice_window.c:351
-msgid ""
-"Turn on usage logs to use voice.\n"
-"\n"
-"On your phone, go to Settings in the Pebble Time app."
-msgstr ""
-"Attiva registri di util. per la voce.\n"
-"\n"
-"Sul tel., vai su Impostaz. nell'app Pebble Time."
-
 #: ../src/fw/applib/voice/voice_window.c:402
 msgid "Missed that. Try again."
 msgstr "Non riuscito. Riprova."

@@ -3007,15 +3007,6 @@ msgstr "Dictation vocale indisponible"
 msgid "Error occurred. Try again."
 msgstr "Erreur. Veuillez réessayer."
 
-#: ../src/fw/applib/voice/voice_window.c:351
-msgid ""
-"Turn on usage logs to use voice.\n"
-"\n"
-"On your phone, go to Settings in the Pebble Time app."
-msgstr ""
-"Veuillez autoriser la collecte de données dans l'application Pebble Time "
-"pour utiliser les fonctions vocales."
-
 #: ../src/fw/applib/voice/voice_window.c:402
 msgid "Missed that. Try again."
 msgstr "Je n'ai pas bien compris."

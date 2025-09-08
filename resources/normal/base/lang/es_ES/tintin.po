@@ -3003,16 +3003,6 @@ msgstr "Dictado no disponible."
 msgid "Error occurred. Try again."
 msgstr "Algo va mal. Prueba otra vez."
 
-#: ../src/fw/applib/voice/voice_window.c:351
-msgid ""
-"Turn on usage logs to use voice.\n"
-"\n"
-"On your phone, go to Settings in the Pebble Time app."
-msgstr ""
-"Activa el envió de diagnósticos para utilizar la voz.\n"
-"\n"
-"En tu móvil, abre Ajustes en la app Pebble Time."
-
 #: ../src/fw/applib/voice/voice_window.c:402
 msgid "Missed that. Try again."
 msgstr "¿Perdón? Prueba otra vez."

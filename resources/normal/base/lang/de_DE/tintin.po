@@ -2964,16 +2964,6 @@ msgstr "Diktieren nicht verfügbar."
 msgid "Error occurred. Try again."
 msgstr "Fehler aufgetreten. Versuche es erneut."
 
-#: ../src/fw/applib/voice/voice_window.c:351
-msgid ""
-"Turn on usage logs to use voice.\n"
-"\n"
-"On your phone, go to Settings in the Pebble Time app."
-msgstr ""
-"Aktiviere Nutzungsstatistiken, um Sprache zu verwenden.\n"
-"\n"
-"Öffne \"Einstellungen\" in der Pebble-Time-App auf deinem Handy."
-
 #: ../src/fw/applib/voice/voice_window.c:402
 msgid "Missed that. Try again."
 msgstr "Nicht verstanden. Nochmal bitte."
