@@ -38,6 +38,9 @@ extern uint8_t __retm_ro_end[];
 extern int main(void);
 
 NAKED_FUNC NORETURN Reset_Handler(void) {
+  SCB_EnableICache();
+  SCB_EnableDCache();
+
   // FIXME(SF32LB52): Set stack limits
   __set_MSPLIM((uint32_t)(0));
   __set_PSPLIM((uint32_t)(0));

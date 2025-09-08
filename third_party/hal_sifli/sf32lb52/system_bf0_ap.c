@@ -127,7 +127,4 @@ void SystemInit(void) {
 #endif
 
   prv_mpu_config();
-
-  SCB_EnableICache();
-  SCB_EnableDCache();
 }
