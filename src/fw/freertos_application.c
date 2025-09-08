@@ -80,9 +80,9 @@ static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 static const RtcTicks MIN_STOP_TICKS = 5;
 #elif defined(MICRO_FAMILY_SF32LB52)
 //! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks EARLY_WAKEUP_TICKS = 2;
+static const RtcTicks EARLY_WAKEUP_TICKS = 10;
 //! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks MIN_STOP_TICKS = 0xFFFFFFFF; // disable stop mode for now
+static const RtcTicks MIN_STOP_TICKS = 15; // disable stop mode for now
 #else
 #error "Unknown micro family"
 #endif

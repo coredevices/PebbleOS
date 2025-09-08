@@ -73,15 +73,43 @@ void enter_stop_mode(void) {
   dbgserial_enable_rx_dma_after_stop();
 }
 #elif MICRO_FAMILY_SF32LB52
+static uint32_t iser_bak[16];
+
+static void clear_interrupt_setting(void)
+{
+    uint32_t i;
+    for (i = 0; i < 16; i++)
+    {
+        iser_bak[i] = NVIC->ISER[i];
+        NVIC->ICER[i] = 0xFFFFFFFF;
+        __DSB();
+        __ISB();
+    }
+}
+
+static void restore_interrupt_setting(void)
+{
+    uint32_t i;
+    for (i = 0; i < 16; i++)
+    {
+        __COMPILER_BARRIER();
+        NVIC->ISER[i] = iser_bak[i];
+        __COMPILER_BARRIER();
+    }
+}
+
 // Refer from sdk sifli_deep_handler function
 void enter_stop_mode(void) {
   uint32_t dll1_freq;
   uint32_t dll2_freq;
   int clk_src;
 
-  dbgserial_enable_rx_exti();
-
   lptim_systick_pause();
+
+  clear_interrupt_setting();
+
+  /* To avoid cache access qspi flash */
+  HAL_Delay_us(100);
 
   NVIC_EnableIRQ(AON_IRQn);
 
@@ -90,7 +118,7 @@ void enter_stop_mode(void) {
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
   dll1_freq = HAL_RCC_HCPU_GetDLL1Freq();
   dll2_freq = HAL_RCC_HCPU_GetDLL2Freq();
-  
+
   HAL_RCC_HCPU_DisableDLL1();
   HAL_RCC_HCPU_DisableDLL2();
 
@@ -122,6 +150,10 @@ void enter_stop_mode(void) {
   HAL_RCC_HCPU_EnableDLL1(dll1_freq);
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
   HAL_RCC_HCPU_EnableDLL2(dll2_freq);
+
+  HAL_Delay_us(0);
+
+  restore_interrupt_setting();
 
   lptim_systick_resume();
 }
