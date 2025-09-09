@@ -88,7 +88,9 @@ dstzone_list = ("-",
                 "Moldova",
                 "Iran",
                 "Chile",
-                "Tonga")
+                "Tonga",
+                "Eire",
+                )
 dstzone_dict = {name: index for index, name in enumerate(dstzone_list)}
 
 # Make sure some of these values don't move around, because the firmware code in
@@ -263,17 +265,29 @@ def build_zoneinfo_list(tzfile):
                              r"(?P<offset>[-0-9:]+)\s+"
                              # The name of the dstrule, such as US, or - if no DST
                              r"(?P<dst_name>[-A-Za-z]+)\s+"
-                             # The short name of the timezone, like E%sT (EST or EDT) or VET
+                             # The short name of the timezone, like E%sT (EST or EDT), %z or VET
                              # Or a GMT offset like +06
-                             r"(?P<tz_abbr>([A-Z%s\/]+)|\+\d+)"
+                             r"(?P<tz_abbr>([A-Z%sz\/]+)|\+\d+)"
                              # Trailing spaces and comments, no year or dates allowed
                              r"(\s+\#.*)?$",
                              line, re.VERBOSE)
 
             if match and region:
-                tz_abbr = match.group("tz_abbr").replace('%s', '*')
-                if tz_abbr.startswith('GMT/'):
-                    tz_abbr = tz_abbr[4:]
+                tz_abbr = match.group("tz_abbr")
+                if tz_abbr == '%z':
+                    m = re.match(r"(?P<sign>[-+]?)(?P<hours>\d+):(?P<minutes>\d+)",
+                                 match.group("offset"))
+                    if not m:
+                        raise Exception(f"Unsupported offset {match.group('offset')} for region {region}")
+
+                    sign = m.group("sign") or "+"
+                    hours = int(m.group("hours"))
+                    minutes = int(m.group("minutes"))
+                    tz_abbr = f"{sign}{hours:02d}{minutes:02d}"
+                else:
+                    tz_abbr = match.group("tz_abbr").replace('%s', '*')
+                    if tz_abbr.startswith('GMT/') or tz_abbr.startswith('IST/'):
+                        tz_abbr = tz_abbr[4:]
 
                 zoneinfo_list.append(continent + " " + region + " " + match.group("offset") +
                                      " " + tz_abbr + " " + match.group("dst_name"))
@@ -366,6 +380,8 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         # fix timezone abbreviations that no longer have a DST mode
         if dst_zone not in dstzone_dict:
             tz_abbr.replace('*', 'S')  # remove
+        if len(tz_abbr) > 5:
+            raise Exception(f"Timezone abbreviation too long: {tz_abbr}")
         output_bin.write(tz_abbr.ljust(5, '\0').encode("utf8"))  # 5-character region zero padded
 
         # dst table entry, 0 for NONE (ie. dash '-')
