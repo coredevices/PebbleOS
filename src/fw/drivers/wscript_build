@@ -229,6 +229,7 @@ elif bld.is_obelix():
             'driver_rtc',
             'driver_task_watchdog',
             'driver_temperature',
+            'driver_touch',
             'driver_uart',
             'driver_vibe',
             'driver_pwm',
@@ -1719,15 +1720,17 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
         ],
     )
 
-if bld.is_cutts():
-    if bld.env.QEMU:
+if bld.capability('HAS_TOUCHSCREEN'):
+    # FIXME(OBELIX): Add driver implementation
+    if bld.is_obelix() or bld.env.QEMU:
         bld.objects(
             name='driver_touch',
             source=[
-                'qemu/qemu_touch.c',
+                'stubs/touch.c',
             ],
         )
-    else:
+
+    if bld.is_cutts():
         bld.objects(
             name='driver_touch',
             source=bld.path.ant_glob('touch/ewd1000/*.c'),
