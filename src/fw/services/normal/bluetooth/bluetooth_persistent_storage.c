@@ -717,6 +717,13 @@ BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *new_pai
   if (is_gateway && status == GapBondingFileSetUpdated) {
     prv_update_bondings(key, BtPersistBondingTypeBLE);
   }
+
+  // In practice we only support a single BLE pairing at a time, so if we add a new one,
+  // set ourselves as unfaithful.
+  if (op == BtPersistBondingOpDidAdd) {
+    bt_persistent_storage_set_unfaithful(true);
+  }
+
   prv_call_ble_bonding_change_handlers(key, op);
 
   return key;
