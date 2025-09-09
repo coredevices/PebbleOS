@@ -433,7 +433,7 @@ def build_and_create_tzdata(olson_database, output_text, output_bin):
     # save output as text for reference
     with open(output_text, 'wb') as output_txt:
         for zoneinfo in zoneinfo_list:
-            output_txt.write("%s\n" % zoneinfo)
+            output_txt.write(f"{zoneinfo}\n".encode())
 
     dstrule_list = dstrules_parse(olson_database)
 
