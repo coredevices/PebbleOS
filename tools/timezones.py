@@ -411,22 +411,6 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         output_bin.write(linkname.ljust(TIMEZONE_LINK_NAME_LENGTH, '\0').encode("utf8"))
 
 
-def build_zoneinfo_dict(olson_database):
-    timezones = {}
-    for zoneinfo in zoneinfo_list:
-        zoneinfo_parts = zoneinfo.split()
-        region = zoneinfo_parts[0]
-        city = zoneinfo_parts[1]
-
-        if region not in timezones:
-            timezones[region] = []
-
-        if city not in timezones[region]:
-            timezones[region].append(city)
-
-    return timezones
-
-
 def build_and_create_tzdata(olson_database, output_text, output_bin):
     zoneinfo_list = build_zoneinfo_list(olson_database)
 
