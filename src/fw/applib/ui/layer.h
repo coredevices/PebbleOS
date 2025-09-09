@@ -131,13 +131,11 @@ typedef struct Layer {
   //! Property changed callback
   PropertyChangedProc property_changed_proc;
 
-#if CAPABILITY_HAS_TOUCHSCREEN
   //! List of attached recognizers
   RecognizerList recognizer_list;
 
   //! Override callback to determine whether a layer contains a point
   LayerContainsPointOverride contains_point_override;
-#endif
 } Layer;
 
 typedef struct DataLayer {
