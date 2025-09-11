@@ -395,6 +395,8 @@ static void prv_test_sjlj(void) {
 }
 #endif
 
+RtcTicks ticks_to_boot;
+
 static NOINLINE void prv_main_task_init(void) {
   // The Snowy bootloader does not clear the watchdog flag itself. Clear the
   // flag ourselves so that a future safe reset does not look like a watchdog
@@ -492,6 +494,12 @@ static NOINLINE void prv_main_task_init(void) {
   clear_reset_loop_detection_bits();
 
   task_watchdog_mask_set(PebbleTask_KernelMain);
+
+  ticks_to_boot = rtc_get_ticks();
+  extern RtcTicks s_analytics_device_stop_ticks;
+  extern int s_analytics_stops_induced;
+  extern int s_analytics_sleeps_induced;
+  PBL_LOG(LOG_LEVEL_INFO, "completed boot in %ld ticks, %ld of which stopped (%d stops, %d sleeps)", (uint32_t) ticks_to_boot, (uint32_t) s_analytics_device_stop_ticks, s_analytics_stops_induced, s_analytics_sleeps_induced);
 
   stop_mode_enable(InhibitorMain);
 

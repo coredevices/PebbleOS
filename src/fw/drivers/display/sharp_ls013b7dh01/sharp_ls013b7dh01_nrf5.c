@@ -296,6 +296,12 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   PBL_ASSERTN(uccb != NULL);
   stop_mode_disable(InhibitorDisplay);
   xSemaphoreTake(s_dma_update_in_progress_semaphore, portMAX_DELAY);
+  
+  RtcTicks start_time = rtc_get_ticks();
+  static RtcTicks s_last_start = 0;
+  RtcTicks dstart = start_time - s_last_start;
+  s_last_start = start_time;
+  
   analytics_stopwatch_start(ANALYTICS_APP_METRIC_DISPLAY_WRITE_TIME, AnalyticsClient_App);
   analytics_inc(ANALYTICS_DEVICE_METRIC_DISPLAY_UPDATES_PER_HOUR, AnalyticsClient_System);
 
@@ -326,10 +332,17 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   prv_disable_spim();
 
   prv_display_enter_static();
-
+  
+  start_time = rtc_get_ticks() - start_time;
+  
   xSemaphoreGive(s_dma_update_in_progress_semaphore);
   stop_mode_enable(InhibitorDisplay);
   analytics_stopwatch_stop(ANALYTICS_APP_METRIC_DISPLAY_WRITE_TIME);
+
+  static int frame = 0;
+  if ((frame++) % 10 == 0) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "display update %d took %d ticks, %d interval from previous update", frame, (int)start_time, (int)dstart);
+  }
 }
 
 void display_pulse_vcom(void) {
