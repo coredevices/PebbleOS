@@ -415,6 +415,72 @@ const BoardConfigActuator BOARD_CONFIG_VIBE = {
     .ctl = {hwp_gpio1, 1, true},
 };
 
+static I2CDeviceState s_i2c_device_state_3;
+
+static struct I2CBusHal s_i2c_bus_hal_3 = {
+    .i2c_state = &s_i2c_device_state_3,
+    .hi2c =
+        {
+            .Instance = I2C3,
+            .Init = {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+            .Mode = HAL_I2C_MODE_MASTER,
+
+        },
+
+    .device_name = "i2c3",
+    .scl =
+        {
+            .pad = PAD_PA11,
+            .func = I2C3_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA10,
+            .func = I2C3_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .core = CORE_ID_HCPU,
+    .module = RCC_MOD_I2C3,
+    .irqn = I2C3_IRQn,
+    .irq_priority = 5,
+    .timeout = 5000,
+};
+
+static I2CBusState s_i2c_bus_state_3;
+
+static I2CBus s_i2c_bus_3 = {
+    .hal = &s_i2c_bus_hal_3,
+    .state = &s_i2c_bus_state_3,
+};
+
+I2CBus *const I2C3_BUS = &s_i2c_bus_3;
+IRQ_MAP(I2C3, i2c_irq_handler, I2C3_BUS);
+
+static const I2CSlavePort s_i2c_cst816 = {
+    .bus = I2C3_BUS,
+    .address = 0x15,
+};
+
+static const I2CSlavePort s_i2c_cst816_boot = {
+    .bus = I2C3_BUS,
+    .address = 0x6A,
+};
+
+static const TouchSensor touch_cst816 = {
+    .i2c = &s_i2c_cst816,
+    .i2c_boot = &s_i2c_cst816_boot,
+    .int_exti = {
+        .peripheral = hwp_gpio1,
+        .gpio_pin = 27,
+    },
+};
+const TouchSensor *CST816 = &touch_cst816;
+
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {
   // 128mA = ~1C (rapid charge)
@@ -570,6 +636,7 @@ void board_early_init(void) {
 void board_init(void) {
   i2c_init(I2C1_BUS);
   i2c_init(I2C2_BUS);
+  i2c_init(I2C3_BUS);
 
   mic_init(MIC);
 }

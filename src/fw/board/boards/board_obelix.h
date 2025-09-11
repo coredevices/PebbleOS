@@ -18,6 +18,7 @@
 
 #include "drivers/led_controller/pwm.h"
 #include "drivers/pmic/npm1300.h"
+#include "drivers/touch/cst816/touch_sensor_definitions.h"
 #include "services/imu/units.h"
 
 #define BT_VENDOR_ID 0x0EEA
@@ -45,6 +46,7 @@ extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
 extern const MicDevice* MIC;
 extern HRMDevice * const HRM;
+extern const TouchSensor *CST816;
 
 static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   .options = ActuatorOptions_IssiI2C,
