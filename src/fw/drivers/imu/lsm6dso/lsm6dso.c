@@ -434,11 +434,28 @@ static void prv_lsm6dso_chase_target_state(void) {
     update_interrupts = true;
   }
 
-  // Update sampling interval
+  // Update sampling interval. Ensure ODR is enabled when event-only features are active.
   if (update_interrupts ||
       s_lsm6dso_state_target.sampling_interval_us != s_lsm6dso_state.sampling_interval_us) {
-    s_lsm6dso_state.sampling_interval_us =
-        prv_lsm6dso_set_sampling_interval(s_lsm6dso_state_target.sampling_interval_us);
+    uint32_t requested_interval = s_lsm6dso_state_target.sampling_interval_us;
+
+    // If double-tap is enabled, we must run fast enough regardless of data subscribers.
+    if (s_lsm6dso_state_target.double_tap_detection_enabled) {
+      if (requested_interval == 0) {
+        requested_interval = LSM6DSO_TAP_DETECTION_MAX_INTERVAL_US; // ~417 Hz ceiling
+      } else {
+        requested_interval = MIN(requested_interval, LSM6DSO_TAP_DETECTION_MAX_INTERVAL_US);
+      }
+    }
+
+    // If shake detection is enabled (any-motion wake), make sure ODR is not OFF.
+    // Choose a conservative, low-power ODR suitable for motion detection when nothing else requests data.
+    if (s_lsm6dso_state_target.shake_detection_enabled && requested_interval == 0) {
+      // 52 Hz is a good compromise for responsiveness vs. power on this part.
+      requested_interval = 19231; // ~52 Hz
+    }
+
+    s_lsm6dso_state.sampling_interval_us = prv_lsm6dso_set_sampling_interval(requested_interval);
   }
 
   // Update interrupts if necessary
@@ -525,10 +542,8 @@ static lsm6dso_bdr_xl_t prv_get_fifo_batch_rate(uint32_t interval_us) {
 }
 
 static void prv_lsm6dso_configure_fifo(bool enable) {
-  if (enable == s_fifo_in_use) {
-    return;  // nothing to do
-  }
-
+  // Always (re)program watermark and batch rates when enabling or already enabled,
+  // but only flip FIFO mode when the enabled/disabled state changes.
   if (enable) {
     // Proper FIFO watermark calculation to prevent overflow
     // Setting watermark too high can cause overflow and sensor lockup
@@ -558,20 +573,25 @@ static void prv_lsm6dso_configure_fifo(bool enable) {
     // Disable gyro batching to save FIFO space
     lsm6dso_fifo_gy_batch_set(&lsm6dso_ctx, LSM6DSO_GY_NOT_BATCHED);
     
-    // Clear FIFO before enabling to start fresh
-    lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
-    psleep(1); // Allow time for FIFO to clear
-    
-    // Put FIFO in stream mode so we keep collecting samples and get periodic watermark interrupts
-    if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to enable FIFO stream mode");
+    // If FIFO was previously disabled, enable it cleanly
+    if (!s_fifo_in_use) {
+      // Clear FIFO before enabling to start fresh
+      lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+      psleep(1); // Allow time for FIFO to clear
+
+      // Put FIFO in stream mode so we keep collecting samples and get periodic watermark interrupts
+      if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to enable FIFO stream mode");
+      }
     }
   } else {
-    // Disable batching & return to bypass
-    lsm6dso_fifo_xl_batch_set(&lsm6dso_ctx, LSM6DSO_XL_NOT_BATCHED);
-    lsm6dso_fifo_gy_batch_set(&lsm6dso_ctx, LSM6DSO_GY_NOT_BATCHED);
-    if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to disable FIFO");
+    if (s_fifo_in_use) {
+      // Disable batching & return to bypass
+      lsm6dso_fifo_xl_batch_set(&lsm6dso_ctx, LSM6DSO_XL_NOT_BATCHED);
+      lsm6dso_fifo_gy_batch_set(&lsm6dso_ctx, LSM6DSO_GY_NOT_BATCHED);
+      if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to disable FIFO");
+      }
     }
   }
 
@@ -827,6 +847,12 @@ static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us) {
 
   if (s_lsm6dso_state.double_tap_detection_enabled) {
     interval_us = MIN(interval_us, LSM6DSO_TAP_DETECTION_MAX_INTERVAL_US);
+  }
+
+  // Ensure sufficient ODR for wake-up (shake) detection even without data subscribers.
+  // Use ~52Hz as a practical minimum for responsive any-motion events.
+  if (s_lsm6dso_state.shake_detection_enabled) {
+    interval_us = MIN(interval_us, 19231); // ~52 Hz
   }
 
   odr_xl_interval_t odr_interval = prv_get_odr_for_interval(interval_us);
