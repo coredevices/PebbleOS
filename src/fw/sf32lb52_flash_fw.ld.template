@@ -54,6 +54,10 @@ SECTIONS
         *memset*.*.o          (.text*)      
         *memcpy*.*.o          (.text*)  
 
+        *stop.*.o             (.text* .rodata*)
+        *freertos_application.*.o (.text* .rodata*)
+        *lptim_systick.*.o    (.text* .rodata*)
+
         . = ALIGN(4);
         __retm_ro_end = .;
     } >KERNEL_RAM AT>FLASH
