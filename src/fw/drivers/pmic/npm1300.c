@@ -98,6 +98,12 @@ typedef enum {
   PmicRegisters_ADC_ADCIBATMEASEN = 0x0524,
   PmicRegisters_GPIOS_GPIOMODE1 = 0x0601,
   PmicRegisters_GPIOS_GPIOMODE__GPOIRQ = 5,
+  PmicRegisters_GPIOS_GPIOMODE2 = 0x0602,
+  PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH = 8,
+  PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW = 9,
+  PmicRegisters_GPIOS_GPIOPUEN2 = 0x060C,
+  PmicRegisters_GPIOS_GPIOPUEN__EN = 1,
+  PmicRegisters_GPIOS_GPIOPUEN__DIS = 0,
   PmicRegisters_GPIOS_GPIOOPENDRAIN1 = 0x0615,
   PmicRegisters_ERRLOG_SCRATCH0 = 0x0E01,
   PmicRegisters_ERRLOG_SCRATCH1 = 0x0E02,
@@ -668,3 +674,24 @@ void command_pmic_status(void) {
 void command_pmic_rails(void) {
   // TODO: Implement.
 }
+
+static bool gpio_set(Npm1300GpioId_t id, bool is_high) {
+  bool rv = false;
+  switch (id) {
+    case Npm1300_Gpio2:
+      rv = prv_write_register(PmicRegisters_GPIOS_GPIOMODE2, 
+          is_high ? PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH : PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW);
+      rv &= prv_write_register(PmicRegisters_GPIOS_GPIOPUEN2,
+          is_high ? PmicRegisters_GPIOS_GPIOPUEN__EN : PmicRegisters_GPIOS_GPIOPUEN__DIS);
+      break;
+
+    default:
+      break;
+  }
+
+  return rv;
+}
+
+Npm1300Ops_t NPM1300_OPS = {
+  .gpio_set = gpio_set,
+};
