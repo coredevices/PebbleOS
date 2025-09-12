@@ -39,6 +39,14 @@
 #define NRF5_COMPATIBLE
 #include <mcu.h>
 
+// Duration (in minutes) to run high-frequency sampling during compass calibration.
+// Defaults to 2 minutes, but some platforms (e.g., Asterix) require longer.
+#if PLATFORM_ASTERIX
+#define ECOMPASS_CALIBRATION_FAST_MINUTES 6
+#else
+#define ECOMPASS_CALIBRATION_FAST_MINUTES 2
+#endif
+
 #define VALID_CORR_MARKER            0x5644
 #define BITS_PER_CORRECTION_VAL      16
 #define CORRECTION_VAL_MASK          ((1 << BITS_PER_CORRECTION_VAL) - 1)
@@ -351,7 +359,7 @@ void ecompass_service_handle(void) {
     if (!s_calib_run) {
       ecomp_corr_reset();
       mag_change_sample_rate(MagSampleRate20Hz);
-      regular_timer_add_multiminute_callback(&s_cb_info, 2);
+      regular_timer_add_multiminute_callback(&s_cb_info, ECOMPASS_CALIBRATION_FAST_MINUTES);
       s_calib_run = true;
       s_high_freq_calib_active = true;
       samples_collected = 0;
