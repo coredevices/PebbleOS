@@ -31,6 +31,7 @@
 #include "apps/prf_apps/mfg_runin_app.h"
 #include "apps/prf_apps/mfg_speaker_app.h"
 #include "apps/prf_apps/mfg_vibe_app.h"
+#include "apps/prf_apps/mfg_touch_app.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/standby.h"
@@ -126,6 +127,12 @@ static void prv_select_hrm(int index, void *context) {
 }
 #endif
 
+#if CAPABILITY_HAS_TOUCHSCREEN
+static void prv_select_touch(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_touch_app_get_info());
+}
+#endif
+
 static void prv_select_certification(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_certification_app_get_info());
 }
@@ -213,6 +220,10 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #if PLATFORM_ASTERIX
     { .title = "Test Speaker",      .callback = prv_select_speaker },
     { .title = "Test Microphone",   .callback = prv_select_mic },
+#endif
+
+#if CAPABILITY_HAS_TOUCHSCREEN
+    { .title = "Test Touch",        .callback = prv_select_touch },
 #endif
     { .title = "Certification",     .callback = prv_select_certification },
     { .title = "Program Color",     .callback = prv_select_program_color },
