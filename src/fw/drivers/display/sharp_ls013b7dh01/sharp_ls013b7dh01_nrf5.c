@@ -19,6 +19,7 @@
 #include "util/reverse.h"
 #include "util/units.h"
 
+#include "shell/prefs.h"
 
 #define NRF5_COMPATIBLE
 #include <mcu.h>
@@ -335,7 +336,6 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 void display_pulse_vcom(void) {
 }
 
-#if DISPLAY_ORIENTATION_ROTATED_180
 //!
 //! memcpy the src buffer to dst and reverse the bits
 //! to match the display order
@@ -347,7 +347,6 @@ static void prv_memcpy_reverse_bytes(uint8_t* dst, uint8_t* src, int bytes) {
         *dst++ = reverse_byte(*src++);
     }
 }
-#else
 //!
 //! memcpy the src buffer to dst backwards (i.e. the highest src byte
 //! is the lowest byte in dst.
@@ -358,7 +357,6 @@ static void prv_memcpy_backwards(uint32_t* dst, uint32_t* src, int length) {
     *dst-- = ntohl(*src++);
   }
 }
-#endif
 
 
 static bool prv_do_dma_update(void) {
@@ -379,15 +377,15 @@ static bool prv_do_dma_update(void) {
 
     s_display_context.state = DISPLAY_STATE_WRITING;
 
-#if DISPLAY_ORIENTATION_ROTATED_180
-      prv_memcpy_reverse_bytes((uint8_t*)s_dma_line_buffer, r.data, DISP_LINE_BYTES);
-      s_dma_line_buffer[0] &= ~(0xffff);
-      s_dma_line_buffer[0] |= (DISP_MODE_WRITE | reverse_byte(r.address + 1) << 8);
-#else
-      prv_memcpy_backwards(s_dma_line_buffer, (uint32_t*)r.data, DISP_LINE_WORDS);
+    if (display_is_flipped()) { 
+      prv_memcpy_backwards(s_dma_line_buffer, (uint32_t *)r.data, DISP_LINE_WORDS);
       s_dma_line_buffer[0] &= ~(0xffff);
       s_dma_line_buffer[0] |= (DISP_MODE_WRITE | reverse_byte(167 - r.address + 1) << 8);
-#endif
+    } else { // if not flipped we want normal orientation
+      prv_memcpy_reverse_bytes((uint8_t *)s_dma_line_buffer, r.data, DISP_LINE_BYTES);
+      s_dma_line_buffer[0] &= ~(0xffff);
+      s_dma_line_buffer[0] |= (DISP_MODE_WRITE | reverse_byte(r.address + 1) << 8);
+    }
     prv_display_write_async(((uint8_t*) s_dma_line_buffer), DISP_DMA_BUFFER_SIZE_BYTES);
 
     break;
@@ -403,15 +401,15 @@ static bool prv_do_dma_update(void) {
       return was_higher_priority_task_woken != pdFALSE;
     }
 
-#if DISPLAY_ORIENTATION_ROTATED_180
-    prv_memcpy_reverse_bytes((uint8_t*)s_dma_line_buffer, r.data, DISP_LINE_BYTES);
-    s_dma_line_buffer[0] &= ~(0xffff);
-    s_dma_line_buffer[0] |= (DISP_MODE_WRITE | reverse_byte(r.address + 1) << 8);
-#else
-    prv_memcpy_backwards(s_dma_line_buffer, (uint32_t*)r.data, DISP_LINE_WORDS);
-    s_dma_line_buffer[0] &= ~(0xffff);
-    s_dma_line_buffer[0] |= reverse_byte(167 - r.address + 1) << 8;
-#endif
+    if (display_is_flipped()) {  // display orientation flipped
+      prv_memcpy_backwards(s_dma_line_buffer, (uint32_t *)r.data, DISP_LINE_WORDS);
+      s_dma_line_buffer[0] &= ~(0xffff);
+      s_dma_line_buffer[0] |= reverse_byte(167 - r.address + 1) << 8;
+    } else {  // default orientation
+      prv_memcpy_reverse_bytes((uint8_t *)s_dma_line_buffer, r.data, DISP_LINE_BYTES);
+      s_dma_line_buffer[0] &= ~(0xffff);
+      s_dma_line_buffer[0] |= (DISP_MODE_WRITE | reverse_byte(r.address + 1) << 8);
+    }
     prv_display_write_async(((uint8_t*) s_dma_line_buffer) + 1, DISP_DMA_BUFFER_SIZE_BYTES - 1);
     break;
   }
