@@ -44,6 +44,22 @@ static const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .timer = NRFX_TIMER_INSTANCE(1),
 };
 
+static const BoardConfigButton BOARD_CONFIG_BUTTON_FLIPPED = {
+  .buttons = {
+    [BUTTON_ID_BACK] =
+        { "Back",   { NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 28) }, NRF_GPIO_PIN_PULLUP },
+    [BUTTON_ID_UP] =
+        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 5, NRF_GPIO_PIN_MAP(0, 31) }, NRF_GPIO_PIN_PULLUP },
+    [BUTTON_ID_SELECT] =
+        { "Select", { NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(0, 30) }, NRF_GPIO_PIN_PULLUP },
+    [BUTTON_ID_DOWN] =
+        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 29) }, NRF_GPIO_PIN_PULLUP },
+  },
+  .active_high = false,
+  .timer = NRFX_TIMER_INSTANCE(1),
+};
+
+
 static const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12) },
   .pmic_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 12) },
