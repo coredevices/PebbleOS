@@ -73,6 +73,11 @@ static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in s
 #define PREF_KEY_BACKLIGHT_MOTION "lightMotion"
 static bool s_backlight_motion_enabled = true;
 
+#if PLATFORM_ASTERIX
+#define PREF_KEY_DISPLAY_FLIPPED "displayFlipped"
+static bool s_display_flipped = false;
+#endif
+
 #define PREF_KEY_STATIONARY "stationaryMode"
 #if RELEASE && !PLATFORM_SPALDING
 static bool s_stationary_mode_enabled = false;
@@ -252,6 +257,13 @@ static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   s_backlight_motion_enabled = *enabled;
   return true;
 }
+
+#if PLATFORM_ASTERIX
+static bool prv_set_s_display_flipped(bool *flipped) {
+  s_display_flipped = *flipped;
+  return true;
+}
+#endif
 
 static bool prv_set_s_stationary_mode_enabled(bool *enabled) {
   s_stationary_mode_enabled = *enabled;
@@ -775,6 +787,16 @@ bool backlight_is_motion_enabled(void) {
 void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
 }
+
+#if PLATFORM_ASTERIX
+bool display_is_flipped(void) { 
+  return s_display_flipped; 
+}
+
+void display_set_flipped(bool flipped) {
+  prv_pref_set(PREF_KEY_DISPLAY_FLIPPED, &flipped, sizeof(flipped));
+}
+#endif
 
 bool shell_prefs_get_stationary_enabled(void) {
   return s_stationary_mode_enabled;
