@@ -52,6 +52,12 @@ def build(bld):
         'DISABLE_NOTIFICATIONS',  # Disable notification functions
     ]
 
+    # Define stack sizes for encoder and decoder
+    speex_defines += [
+        'NB_ENC_STACK=(2000*sizeof(spx_sig_t))',  # ~8 KiB
+        'NB_DEC_STACK=(1500*sizeof(spx_sig_t))',  # ~6 KiB
+    ]
+
     # Compiler flags to handle warnings
     speex_cflags = [
         '-Wno-implicit-function-declaration',
