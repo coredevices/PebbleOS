@@ -10,11 +10,13 @@ extern void *kernel_zalloc_check(size_t size);
 extern void *kernel_realloc(void *ptr, size_t size);
 extern void kernel_free(void *ptr);
 
+
 /* Override memory allocation functions to use PebbleOS kernel functions */
-static inline void *speex_alloc(int size) { return kernel_zalloc_check(size); }
-static inline void *speex_alloc_scratch(int size) { return kernel_zalloc_check(size); }
-static inline void *speex_realloc(void *ptr, int size) { return kernel_realloc(ptr, size); }
+static inline void *speex_alloc(int size) { return kernel_zalloc_check((size_t)size); }
+static inline void *speex_alloc_scratch(int size) { return kernel_zalloc_check((size_t)size); }
+static inline void *speex_realloc(void *ptr, int size) { return kernel_realloc(ptr, (size_t)size); }
 static inline void speex_free(void *ptr) { kernel_free(ptr); }
+static inline void speex_free_scratch(void *ptr) { kernel_free(ptr); }
 
 /* Override debug/warning functions to be no-ops for embedded system */
 static inline void _speex_fatal(const char *str, const char *file, int line) { (void)str; (void)file; (void)line; }
