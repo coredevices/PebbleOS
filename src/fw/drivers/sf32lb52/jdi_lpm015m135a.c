@@ -117,15 +117,18 @@ void display_init(void) {
           {
               .jdi =
                   (JDI_LCD_CFG){
-                      .bank_col_head = 0,
+                      .bank_col_head = 2,
                       .valid_columns = PBL_DISPLAY_WIDTH,
-                      .bank_col_tail = 8,
+                      .bank_col_tail = 6,
                       .bank_row_head = 0,
                       .valid_rows = PBL_DISPLAY_HEIGHT,
-                      .bank_row_tail = 4,
+                      .bank_row_tail = 6,
+                      .enb_start_col = 3,
+                      .enb_end_col = 99,
                   },
           },
   };
+
 
   HAL_LCDC_Init(&state->hlcdc);
   HAL_LCDC_LayerReset(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT);
