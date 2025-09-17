@@ -307,6 +307,7 @@ board_capability_dicts = [
             'HAS_FLASH_OTP',
             'HAS_MICROPHONE',
             'HAS_TOUCHSCREEN',
+            'HAS_BUILTIN_HRM',
         },
     },
 ]

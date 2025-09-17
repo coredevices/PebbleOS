@@ -43,6 +43,7 @@ extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
 extern const MicDevice* MIC;
+extern HRMDevice * const HRM;
 
 static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   .options = ActuatorOptions_IssiI2C,

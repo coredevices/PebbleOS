@@ -22,6 +22,7 @@
 #include "bf0_hal_rcc.h"
 #include "board/board.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
+#include "drivers/stubs/hrm.h"
 #include "system/passert.h"
 
 
@@ -403,6 +404,12 @@ static const I2CSlavePort s_i2c_aw86225 = {
 };
   
 I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
+
+static HRMDeviceState s_hrm_state;
+static HRMDevice s_hrm = {
+  .state = &s_hrm_state,
+};
+HRMDevice * const HRM = &s_hrm;
 
 const BoardConfigActuator BOARD_CONFIG_VIBE = {
     .ctl = {hwp_gpio1, 1, true},
