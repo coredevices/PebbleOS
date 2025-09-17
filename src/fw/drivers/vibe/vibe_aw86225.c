@@ -39,7 +39,7 @@
 #define AW862XX_REG_CONTCFG13                           (0x24)
 #define AW862XX_REG_PLAYCFG3                            (0x08)
 #define AW862XX_REG_PLAYCFG4                            (0x09)
-
+#define AW862XX_REG_SYSCTRL1                            (0x43)
 
 #define AW862XX_BIT_PLAYCFG3_BRK_EN_MASK                (~(1<<2))
 #define AW862XX_BIT_PLAYCFG3_BRK                        (1<<2)
@@ -61,9 +61,13 @@
 
 #define AW862XX_CONTCFG1_EDGE_FREQ                      (0xC0)
 #define AW862XX_CONTCFG1_WAVE_MODE                      (0x01)  /* 0:sine; 1:cos */
-#define AW862XX_CONTCFG2_CONF_F0                        (100)   /* REG = 24,000/f0 */
+#define AW862XX_CONTCFG2_CONF_F0                        (102)   /* REG = 24,000/f0 */
 #define AW862XX_CONTCFG3_DRV_WIDTH                      (209)   /* f0-8-track_margin-brk_gain*/
 #define AW862XX_CONTCFG7_FULL_SCALE                     (0x7FL)
+#define AW862XX_CONTCFG6_TRACK_MASK                     (~(1<<7))
+#define AW862XX_CONTCFG6_TRACK_EN                       (1<<7)
+#define AW862XX_SYSCTRL1_VBAT_MODE_MASK                 (~(1<<7))
+#define AW862XX_SYSCTRL1_VBAT_MODE_EN                   (1<<7)
 
 #define AW862XX_POR_WAIT_TIME                           (2) /* ms */
 
@@ -119,8 +123,10 @@ void vibe_init(void) {
   ret &= prv_write_register(AW862XX_REG_CONTCFG3, AW862XX_CONTCFG3_DRV_WIDTH);
   ret &= prv_write_register(AW862XX_REG_CONTCFG7, AW862XX_CONTCFG7_FULL_SCALE);
   
+  prv_modify_reg(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_TRACK_MASK, AW862XX_CONTCFG6_TRACK_EN);
   prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK, AW862XX_BIT_PLAYCFG3_BRK_ENABLE);
   prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK, AW862XX_BIT_PLAYCFG3_PLAY_MODE_CONT);
+  prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_VBAT_MODE_MASK, AW862XX_SYSCTRL1_VBAT_MODE_EN);
 
   PBL_ASSERT(ret, "Failed to initialize AW86225");
 }
