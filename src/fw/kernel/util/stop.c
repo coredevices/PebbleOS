@@ -121,19 +121,20 @@ void enter_stop_mode(void) {
   HAL_RCC_HCPU_DisableDLL1();
   HAL_RCC_HCPU_DisableDLL2();
 
-  // HAL_HPAON_DISABLE_PAD();
-  // HAL_HPAON_DISABLE_VHP();
-
   HAL_HPAON_CLEAR_HP_ACTIVE();
   HAL_HPAON_SET_POWER_MODE(AON_PMR_DEEP_SLEEP);
 
-  // Go stop now.
-  __DSB(); // Drain any pending memory writes before entering sleep.
-  do_wfi(); // Wait for Interrupt (enter sleep mode). Work around F2/F4 errata.
-  __ISB(); // Let the pipeline catch up (force the WFI to activate before moving on).
-
-  // HAL_HPAON_ENABLE_PAD();
-  // HAL_HPAON_ENABLE_VHP();
+  __WFI();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
 
   HAL_HPAON_SET_HP_ACTIVE();
   HAL_HPAON_CLEAR_POWER_MODE();
