@@ -158,4 +158,6 @@ void AON_IRQHandler(void)
 {
   NVIC_DisableIRQ(AON_IRQn);
   HAL_HPAON_CLEAR_POWER_MODE();
+
+  HAL_HPAON_CLEAR_WSR(0);
 }
