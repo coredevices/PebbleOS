@@ -22,7 +22,9 @@
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
 #include "apps/system_app_ids.h"
+#if PLATFORM_SILK || PLATFORM_ROBERT
 #include "drivers/hrm/as7000/as7000.h"
+#endif
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
@@ -136,7 +138,7 @@ static void prv_send_status_and_version(void) {
 
   dict_write_uint8(app_data->out_iter, AppMessageKey_Status, AppStatus_Enabled_1HZ);
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CAPABILITY_HAS_BUILTIN_HRM && (PLATFORM_SILK || PLATFORM_ROBERT)
   if (mfg_info_is_hrm_present()) {
     AS7000InfoRecord hrm_info = {};
     as7000_get_version_info(HRM, &hrm_info);
