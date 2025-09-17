@@ -18,7 +18,7 @@
 
 #include "drivers/exti.h"
 #include "drivers/flash/qspi_flash_definitions.h"
-#include "drivers/hrm/as7000.h"
+#include "drivers/hrm/as7000/as7000.h"
 #include "drivers/i2c_definitions.h"
 #include "drivers/mic/stm32/dfsdm_definitions.h"
 #include "drivers/qspi_definitions.h"

@@ -1904,7 +1904,7 @@ if bld.get_hrm() == 'AS7000':
     bld.objects(
         name='driver_hrm',
         source=[
-            'hrm/as7000.c',
+            'hrm/as7000/as7000.c',
         ],
         use=[
             'driver_gpio',

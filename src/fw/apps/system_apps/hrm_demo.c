@@ -22,7 +22,7 @@
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
 #include "apps/system_app_ids.h"
-#include "drivers/hrm/as7000.h"
+#include "drivers/hrm/as7000/as7000.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
