@@ -33,6 +33,10 @@
 #include "system/logging.h"
 #include "util/math.h"
 
+#if defined(MICRO_FAMILY_SF32LB52)
+#include <ipc_queue.h>
+#endif
+
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
@@ -80,9 +84,9 @@ static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 static const RtcTicks MIN_STOP_TICKS = 5;
 #elif defined(MICRO_FAMILY_SF32LB52)
 //! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks EARLY_WAKEUP_TICKS = 2;
+static const RtcTicks EARLY_WAKEUP_TICKS = 10; // relative large to avid tasks.c:1960 assert
 //! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks MIN_STOP_TICKS = 0xFFFFFFFF; // disable stop mode for now
+static const RtcTicks MIN_STOP_TICKS = 15;
 #else
 #error "Unknown micro family"
 #endif
@@ -99,7 +103,9 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
     return;
   }
 #else
-  if (!lptim_systick_is_initialized() || !sleep_mode_is_allowed()) {
+  if (!lptim_systick_is_initialized() || !sleep_mode_is_allowed() ||
+      !ipc_queue_check_idle()) {
+    // To avoid LCPU enter incorrect state, make sure ipc queue is empty before enter stop mode.
     return;
   }
 #endif
