@@ -182,6 +182,15 @@ typedef struct {
   const ExtiConfig accel_ints[2];
 } BoardConfigAccel;
 
+typedef struct {
+  int axes_offsets[3];
+  bool axes_inverts[3];
+} MagConfig;
+
+typedef struct {
+  const MagConfig mag_config;
+} BoardConfigMag;
+
 typedef enum {
   SpiPeriphClockAPB1,
   SpiPeriphClockAPB2
