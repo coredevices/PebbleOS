@@ -115,3 +115,6 @@ void timeline_peek_prefs_set_enabled(bool enabled);
 bool timeline_peek_prefs_get_enabled(void);
 void timeline_peek_prefs_set_before_time(uint16_t before_time_m);
 uint16_t timeline_peek_prefs_get_before_time(void);
+
+bool shell_prefs_can_coredump_on_request(void);
+void shell_prefs_set_coredump_on_request(bool enabled);

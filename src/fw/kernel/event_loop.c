@@ -41,6 +41,7 @@
 #include "drivers/battery.h"
 #include "drivers/button.h"
 #include "drivers/task_watchdog.h"
+#include "kernel/core_dump.h"
 #include "kernel/kernel_applib_state.h"
 #include "kernel/low_power.h"
 #include "kernel/panic.h"
@@ -84,6 +85,7 @@
 #include "services/runlevel.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/watchface.h"
+#include "shell/prefs.h"
 #include "shell/shell_event_loop.h"
 #include "shell/system_app_state_machine.h"
 #include "system/bootbits.h"
@@ -102,6 +104,11 @@
 
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
 static int s_back_hold_timer = TIMER_INVALID_ID;
+
+static const uint32_t BACK_QUICKPRESS_INTERVAL_TICKS = 300;
+static const int BACK_QUICKPRESS_COREDUMP_PRESSES = 10;
+static RtcTicks s_back_quickpress_last = 0;
+static int s_back_quickpress_count = 0;
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   PebbleEvent event = {
@@ -181,6 +188,22 @@ static void launcher_handle_button_event(PebbleEvent* e) {
                                      0 /*flags*/);
       PBL_ASSERTN(success);
     }
+
+    // 10 quick-presses of the back button triggers a manual coredump, if
+    // that feature is enabled in system settings.
+    if (button_id == BUTTON_ID_BACK) {
+      RtcTicks now = rtc_get_ticks();
+      if ((now - s_back_quickpress_last) > BACK_QUICKPRESS_INTERVAL_TICKS) {
+        s_back_quickpress_count = 0;
+      }
+      s_back_quickpress_last = now;
+      s_back_quickpress_count++;
+      if (s_back_quickpress_count >= BACK_QUICKPRESS_COREDUMP_PRESSES && shell_prefs_can_coredump_on_request()) {
+        PBL_LOG(LOG_LEVEL_INFO, "triggering core dump because you asked for it!");
+        core_dump_reset(true /* is_forced */);
+      }
+    }
+
     light_button_pressed();
   } else if (e->type == PEBBLE_BUTTON_UP_EVENT) {
     if (button_id == BUTTON_ID_BACK) {

@@ -178,6 +178,9 @@ static uint16_t s_timeline_peek_before_time_m =
     (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
 #endif
 
+#define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
+static bool s_coredump_on_request_enabled = false;
+
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
 // This handler will be called when the setting is changed from inside the firmware using one of
@@ -432,6 +435,11 @@ static bool prv_set_s_timeline_peek_before_time_m(uint16_t *before_time_m) {
   return true;
 }
 #endif
+
+static bool prv_set_s_coredump_on_request_enabled(bool *enabled) {
+  s_coredump_on_request_enabled = *enabled;
+  return true;
+}
 
 // ------------------------------------------------------------------------------------
 // Table of all prefs
@@ -1176,3 +1184,11 @@ uint16_t timeline_peek_prefs_get_before_time(void) {
   return TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S;
 }
 #endif
+
+bool shell_prefs_can_coredump_on_request(void) {
+  return s_coredump_on_request_enabled;
+}
+
+void shell_prefs_set_coredump_on_request(bool enabled) {
+  prv_pref_set(PREF_KEY_COREDUMP_ON_REQUEST, &enabled, sizeof(enabled));
+}
