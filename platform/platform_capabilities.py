@@ -310,6 +310,7 @@ board_capability_dicts = [
             'HAS_TOUCHSCREEN',
             'HAS_BUILTIN_HRM',
             'HAS_ALS_W1160',
+            'HAS_MAGNETOMETER',
         },
     },
 ]
