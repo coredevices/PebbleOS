@@ -38,3 +38,6 @@
   PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_ENABLED, s_timeline_peek_enabled)
   PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_BEFORE_TIME_M, s_timeline_peek_before_time_m)
 #endif
+#if PLATFORM_ASTERIX
+  PREFS_MACRO(PREF_KEY_DISPLAY_FLIPPED, s_display_flipped)
+ #endif

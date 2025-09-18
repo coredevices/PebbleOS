@@ -89,6 +89,13 @@ void backlight_set_intensity_percent(uint8_t intensity_percent);
 bool backlight_is_motion_enabled(void);
 void backlight_set_motion_enabled(bool enable);
 
+// The display flipped setting is used to rotate the display 180 degrees.
+// This is only available on asterix and is used by the display and button drivers.
+#if PLATFORM_ASTERIX
+bool display_is_flipped(void);
+void display_set_flipped(bool flipped);
+#endif
+
 // Stationary mode will put the watch in a low power state. Disabling will
 // prevent the watch from turning off any features.
 bool shell_prefs_get_stationary_enabled(void);

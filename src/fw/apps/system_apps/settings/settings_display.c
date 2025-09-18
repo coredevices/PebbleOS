@@ -92,6 +92,43 @@ static void prv_intensity_menu_push(SettingsDisplayData *data) {
       true /* icons_enabled */, s_intensity_labels, data);
 }
 
+#if PLATFORM_ASTERIX
+// Orientation Settings
+/////////////////////////////
+static const char *s_display_orientation_labels[] = {
+  i18n_noop("Default"),
+  i18n_noop("Flipped"),
+};
+
+static int prv_display_orientation_get_selection_index() { 
+  return display_is_flipped() ? 1 : 0; 
+}
+
+static void prv_display_orientation_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  if (prv_display_orientation_get_selection_index() == selection) {
+    // No change
+    app_window_stack_remove(&option_menu->window, true /* animated */);
+    return;
+  }
+
+  display_set_flipped(!display_is_flipped());
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
+  const int index = prv_display_orientation_get_selection_index();
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_display_orientation_menu_select,
+  };
+
+  const char *title = i18n_noop("Orientation");
+  settings_option_menu_push(
+    title, OptionMenuContentType_SingleLine, index, &callbacks,
+    ARRAY_LENGTH(s_display_orientation_labels), true, s_display_orientation_labels, 
+    data);
+}
+#endif
+
 // Timeout Settings
 /////////////////////////////
 
@@ -139,6 +176,9 @@ enum SettingsDisplayItem {
   SettingsDisplayAmbientSensor,
   SettingsDisplayBacklightIntensity,
   SettingsDisplayBacklightTimeout,
+#if PLATFORM_ASTERIX
+  SettingsDisplayOrientation,
+#endif
 #if PLATFORM_SPALDING
   SettingsDisplayAdjustAlignment,
 #endif
@@ -181,6 +221,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case SettingsDisplayBacklightTimeout:
       prv_timeout_menu_push(data);
       break;
+#if PLATFORM_ASTERIX
+    case SettingsDisplayOrientation:
+      prv_display_orientation_menu_push(data);
+      break;
+#endif
 #if PLATFORM_SPALDING
     case SettingsDisplayAdjustAlignment:
       settings_display_calibration_push(app_state_get_window_stack());
@@ -235,6 +280,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Timeout");
       subtitle = s_timeout_labels[prv_timeout_get_selection_index()];
       break;
+#if PLATFORM_ASTERIX
+    case SettingsDisplayOrientation:
+      title = i18n_noop("Orientation");
+      subtitle = s_display_orientation_labels[prv_display_orientation_get_selection_index()];
+      break;
+#endif
 #if PLATFORM_SPALDING
     case SettingsDisplayAdjustAlignment:
       title = i18n_noop("Screen Alignment");
