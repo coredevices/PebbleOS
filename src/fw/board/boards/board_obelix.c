@@ -141,7 +141,7 @@ const LedControllerPwm LED_CONTROLLER_PWM = {
             .state = &s_pwm1_ch3_state,
         },
     },
-    .initial_color = LED_WHITE,
+    .initial_color = LED_WARM_WHITE,
 };
 
 static DisplayJDIState s_display_state = {
