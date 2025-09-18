@@ -474,6 +474,7 @@ static void prv_cleanup_and_send_response(ResponseCode code) {
 }
 
 static void prv_commit_object(uint32_t crc) {
+#if !CAPABILITY_HAS_PBLBOOT
   if (s_pb_state.type == ObjectFirmware || s_pb_state.type == ObjectRecovery) {
     FirmwareDescription fw_descr = {
       .description_length = sizeof(FirmwareDescription),
@@ -491,9 +492,9 @@ static void prv_commit_object(uint32_t crc) {
     // implementation
     fw_descr.checksum = pb_storage_calculate_crc(&s_pb_state.storage, PutBytesCrcType_CRC32);
 #endif
-
     pb_storage_write(&s_pb_state.storage, 0, (uint8_t *)&fw_descr, sizeof(FirmwareDescription));
   }
+#endif
 
   struct InstallableObject* o = s_ready_to_install + (s_pb_state.type - 1);
   o->token = s_pb_state.token;
