@@ -37,6 +37,7 @@
 #define STM32F4_COMPATIBLE
 #define STM32F7_COMPATIBLE
 #define NRF5_COMPATIBLE
+#define SF32LB52_COMPATIBLE
 #include <mcu.h>
 
 // Duration (in minutes) to run high-frequency sampling during compass calibration.
