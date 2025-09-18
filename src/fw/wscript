@@ -16,6 +16,7 @@ import waftools.generate_timezone_data
 import waftools.gitinfo
 import waftools.ldscript
 import waftools.objcopy
+import waftools.pblboot
 
 
 @feature("c")
@@ -177,6 +178,10 @@ def _generate_memory_layout(bld):
         flash_origin = '0x08000000'
 
     firmware_offset = 0
+    if bld.env.MICRO_FAMILY == 'SF32LB52':
+      firmware_offset = 512
+
+    bld.env.FIRMWARE_OFFSET = firmware_offset
     bld.env.append_value('DEFINES', [f'FIRMWARE_OFFSET={firmware_offset}'])
 
     # Determine FLASH_LENGTH_*
@@ -414,10 +419,20 @@ def _link_firmware(bld, sources):
         else:
             extra_args = ''
 
-        hex_node = elf_node.change_ext('.hex')
-        bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node, extra_args=extra_args)
-        bin_node = elf_node.change_ext('.bin')
-        bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
+        if bld.capability('HAS_PBLBOOT'):
+            nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
+            bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node, extra_args=extra_args)
+            hex_node = elf_node.change_ext('.hex')
+            bld(rule=waftools.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
+            nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
+            bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
+            bin_node = elf_node.change_ext('.bin')
+            bld(rule=waftools.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
+        else:
+            hex_node = elf_node.change_ext('.hex')
+            bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node, extra_args=extra_args)
+            bin_node = elf_node.change_ext('.bin')
+            bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
 
         # Create the log_strings .elf and check the format specifier rules
         if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
