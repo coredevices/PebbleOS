@@ -187,6 +187,8 @@ void mic_init(const MicDevice *this) {
   state->pdm_config = (nrfx_pdm_config_t)NRFX_PDM_DEFAULT_CONFIG(this->clk_pin, this->data_pin);
   state->pdm_config.clock_freq = NRF_PDM_FREQ_1280K;
   state->pdm_config.ratio = NRF_PDM_RATIO_80X;
+  state->pdm_config.gain_l = BOARD_CONFIG.mic_config.gain;
+  state->pdm_config.gain_r = BOARD_CONFIG.mic_config.gain;
   
   // Create mutex for thread safety
   state->mutex = mutex_create_recursive();

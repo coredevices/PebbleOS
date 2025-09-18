@@ -18,6 +18,7 @@
 #include <nrfx_gpiote.h>
 #include <nrfx_timer.h>
 #include <nrfx_pwm.h>
+#include <nrfx_pdm.h>
 #pragma GCC diagnostic pop
 
 #define GPIO_Port_NULL (NULL)
@@ -157,7 +158,7 @@ typedef struct {
   AfConfig i2s_sd;
   NRF_SPIM_Type *spi;
   uint32_t spi_clock_ctrl;
-  uint16_t gain;
+  nrf_pdm_gain_t gain;
 
   //! Pin we use to control power to the microphone. Only used on certain boards.
   OutputConfig mic_gpio_power;
