@@ -47,18 +47,27 @@
 #include "flash_region_gd25q256e.h"
 #endif
 
-#if CAPABILITY_HAS_PBLBOOT && !defined(RECOVERY_FW)
+#if CAPABILITY_HAS_PBLBOOT
 // We assume that if we have pblboot, we use the two slots with direct XIP
+#ifdef RECOVERY_FW
+// On recovery we always write to slot 0
+#define FLASH_REGION_FIRMWARE_DEST_BEGIN FLASH_REGION_FIRMWARE_SLOT_0_BEGIN
+#define FLASH_REGION_FIRMWARE_DEST_END FLASH_REGION_FIRMWARE_SLOT_0_END
+#else
 #ifdef FIRMWARE_SLOT_0
+// If we're running from slot 0, write to slot 1
 #define FLASH_REGION_FIRMWARE_DEST_BEGIN FLASH_REGION_FIRMWARE_SLOT_1_BEGIN
 #define FLASH_REGION_FIRMWARE_DEST_END FLASH_REGION_FIRMWARE_SLOT_1_END
 #else
+// If we're running from slot 1, write to slot 0
 #define FLASH_REGION_FIRMWARE_DEST_BEGIN FLASH_REGION_FIRMWARE_SLOT_0_BEGIN
 #define FLASH_REGION_FIRMWARE_DEST_END FLASH_REGION_FIRMWARE_SLOT_0_END
 #endif
+#endif
 #else
-#define FLASH_REGION_FIRMWARE_DEST_BEGIN FLASH_REGION_FIRMWARE_SLOT_0_BEGIN
-#define FLASH_REGION_FIRMWARE_DEST_END FLASH_REGION_FIRMWARE_SLOT_0_END
+// We assume that if we don't have pblboot, we only have one slot (scratch area)
+#define FLASH_REGION_FIRMWARE_DEST_BEGIN FLASH_REGION_FIRMWARE_SLOT_1_BEGIN
+#define FLASH_REGION_FIRMWARE_DEST_END FLASH_REGION_FIRMWARE_SLOT_1_END
 #endif
 
 // NOTE: The following functions are deprecated! New code should use the

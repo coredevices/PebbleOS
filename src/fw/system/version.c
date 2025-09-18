@@ -89,7 +89,7 @@ bool version_copy_recovery_fw_metadata(FirmwareMetadata *out_metadata) {
 
 bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata) {
   const bool check_crc = false;
-  uint32_t addr = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
+  uint32_t addr = FLASH_REGION_FIRMWARE_DEST_BEGIN;
 
   return prv_version_copy_flash_fw_metadata(out_metadata, addr, check_crc);
 }
