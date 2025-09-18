@@ -1069,6 +1069,7 @@ elif bld.is_obelix():
         ],
         use=[
             'driver_lsm6dso',
+            'driver_mmc5603nj',
             'fw_includes',
             'root_includes',
         ],
@@ -1137,7 +1138,7 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
         ],
     )
 
-if bld.is_asterix():
+if bld.is_asterix() or bld.is_obelix():
     bld.objects(
         name='driver_mmc5603nj',
         source=[

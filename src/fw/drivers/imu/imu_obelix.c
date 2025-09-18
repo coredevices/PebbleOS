@@ -16,9 +16,11 @@
 
 #include "drivers/imu.h"
 #include "drivers/imu/lsm6dso/lsm6dso.h"
+#include "drivers/imu/mmc5603nj/mmc5603nj.h"
 
 void imu_init(void) {
   lsm6dso_init();
+  mmc5603nj_init();
 }
 
 void imu_power_up(void) {
