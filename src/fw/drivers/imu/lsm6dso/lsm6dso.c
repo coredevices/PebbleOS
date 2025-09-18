@@ -21,6 +21,7 @@
 #include "drivers/rtc.h"
 #include "drivers/vibe.h"
 #include "kernel/util/sleep.h"
+#include "services/common/new_timer/new_timer.h"
 #include "services/common/vibe_pattern.h"
 #include "system/logging.h"
 #include "util/math.h"
@@ -44,6 +45,7 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
 static bool prv_is_vibing(void);
+static void prv_lsm6dso_retry_interrupt_config(void *unused);
 static bool prv_lsm6dso_health_check(void);
 static bool prv_lsm6dso_attempt_recovery(void);
 typedef struct {
@@ -87,6 +89,7 @@ lsm6dso_state_t s_lsm6dso_state_target = {0};
 static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_threshold / 1250;
 static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
 static uint32_t s_last_vibe_detected = 0;
+static bool s_interrupt_config_retry_scheduled = false;
 
 // Error tracking and recovery
 static uint32_t s_i2c_error_count = 0;
@@ -485,6 +488,9 @@ static void prv_lsm6dso_configure_interrupts(void) {
   // Disable interrupts during configuration to prevent race conditions
   // and ensure atomic configuration updates
   
+  // Clear any outstanding retry flag now that we're actively reconfiguring.
+  s_interrupt_config_retry_scheduled = false;
+
   bool should_enable_interrupts = s_lsm6dso_enabled &&
       (s_lsm6dso_state.num_samples || s_lsm6dso_state.shake_detection_enabled ||
        s_lsm6dso_state.double_tap_detection_enabled);
@@ -520,16 +526,34 @@ static void prv_lsm6dso_configure_interrupts(void) {
 
   // Configure interrupt routing atomically
   if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts (retrying)");
+
+    if (should_enable_interrupts) {
+      // Keep external interrupt alive using the previous sensor routing.
+      exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+    }
+
+    if (!s_interrupt_config_retry_scheduled) {
+      if (!new_timer_add_work_callback(prv_lsm6dso_retry_interrupt_config, NULL)) {
+        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to queue interrupt reconfiguration retry");
+      } else {
+        s_interrupt_config_retry_scheduled = true;
+      }
+    }
     return;
   }
-  
+
   // Clear any pending interrupt sources before enabling external interrupt
   lsm6dso_all_sources_t all_sources;
   lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources); // This clears pending sources
   
   // Finally enable the external interrupt
   exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+}
+
+static void prv_lsm6dso_retry_interrupt_config(void *unused) {
+  s_interrupt_config_retry_scheduled = false;
+  prv_lsm6dso_configure_interrupts();
 }
 
 // Map output data rate (interval) to FIFO batching rate enum
