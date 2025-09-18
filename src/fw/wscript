@@ -70,6 +70,15 @@ def options(opt):
         help="Build PRF so that it links to the firmware region",
     )
 
+    opt.add_option(
+        '--slot',
+        action='store',
+        type=int,
+        default=0,
+        choices=[0, 1],
+        help='Select for which slot to build the firmware. 0=primary, 1=secondary'
+    )
+
 
 def configure(conf):
     conf.load('binary_header')
@@ -86,6 +95,9 @@ def configure(conf):
         conf.env.NORMAL_SHELL = 'normal'
 
     conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
+
+    conf.env.SLOT = conf.options.slot
+    conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
 
 def _generate_memory_layout(bld):
 
