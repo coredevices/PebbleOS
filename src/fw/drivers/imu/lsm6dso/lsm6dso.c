@@ -370,8 +370,14 @@ static void prv_lsm6dso_chase_target_state(void) {
   // Check for unresponsive sensor and attempt recovery
   uint32_t now = prv_get_timestamp_ms();
   if (s_lsm6dso_running && s_last_successful_read_ms > 0) {
-    if ((now - s_last_successful_read_ms > LSM6DSO_WATCHDOG_TIMEOUT_MS) ||
-        (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_ERRORS)) {
+    // Only treat a quiet bus as a watchdog failure when we actively stream samples;
+    // motion-only use (shake/tap) can legitimately go several seconds with no reads.
+    const bool streaming_samples = (s_lsm6dso_state.num_samples > 0);
+    const bool watchdog_expired =
+        streaming_samples && (now - s_last_successful_read_ms > LSM6DSO_WATCHDOG_TIMEOUT_MS);
+    const bool too_many_errors = (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_ERRORS);
+
+    if (watchdog_expired || too_many_errors) {
       PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Sensor appears unresponsive (last_read: %lu ms ago, errors: %lu)",
               now - s_last_successful_read_ms, s_consecutive_errors);
       
