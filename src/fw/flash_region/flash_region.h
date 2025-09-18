@@ -70,6 +70,9 @@
 #define FLASH_REGION_FIRMWARE_DEST_END FLASH_REGION_FIRMWARE_SLOT_1_END
 #endif
 
+#define FLASH_REGION_FIRMWARE_DEST_START (FLASH_REGION_FIRMWARE_DEST_BEGIN + FIRMWARE_OFFSET)
+#define FLASH_REGION_SAFE_FIRMWARE_START (FLASH_REGION_SAFE_FIRMWARE_BEGIN + FIRMWARE_OFFSET)
+
 // NOTE: The following functions are deprecated! New code should use the
 // asynchronous version, flash_erase_optimal_range, in flash.h.
 

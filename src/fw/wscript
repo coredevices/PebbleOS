@@ -176,9 +176,12 @@ def _generate_memory_layout(bld):
     else:
         flash_origin = '0x08000000'
 
+    firmware_offset = 0
+    bld.env.append_value('DEFINES', [f'FIRMWARE_OFFSET={firmware_offset}'])
+
     # Determine FLASH_LENGTH_*
-    fw_flash_length = '%(flash_size)s - %(offset_size)s' % locals()
-    fw_flash_origin = '%(flash_origin)s + %(offset_size)s' % locals()
+    fw_flash_length = '%(flash_size)s - %(offset_size)s - %(firmware_offset)d' % locals()
+    fw_flash_origin = '%(flash_origin)s + %(offset_size)s + %(firmware_offset)d' % locals()
 
     if bld.env.MICRO_FAMILY == 'STM32F2' and bld.variant == '':
         # If we're building a tintin normal firmware make sure to plug in all the symbols that we
