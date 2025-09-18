@@ -192,6 +192,11 @@ int16_t shell_prefs_get_automatic_timezone_id(void) {
   return -1;
 }
 
+bool shell_prefs_can_coredump_on_request() {
+  // it would be good to have a core dump escape hatch in PRF
+  return true;
+}
+
 AlertMask alerts_get_mask(void) {
   return AlertMaskAllOff;
 }
