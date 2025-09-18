@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#if !CAPABILITY_HAS_PBLBOOT
 typedef struct PACKED FirmwareDescription {
   uint32_t description_length;
   uint32_t firmware_length;
@@ -34,4 +35,20 @@ FirmwareDescription firmware_storage_read_firmware_description(uint32_t firmware
 
 bool firmware_storage_check_valid_firmware_description(
     uint32_t firmware_start_address, const FirmwareDescription* firmware_description);
+#else
 
+#define FIRMWARE_HEADER_MAGIC 0x96f3b83d
+
+typedef struct PACKED FirmwareHeader {
+  uint32_t magic;
+  uint32_t header_length;
+  uint64_t fw_timestamp;
+  uint32_t fw_start;
+  uint32_t fw_length;
+  uint32_t fw_crc;
+} FirmwareHeader;
+
+FirmwareHeader firmware_storage_read_firmware_header(uint32_t address);
+bool firmware_storage_check_valid_firmware_header(
+    uint32_t address, const FirmwareHeader* header);
+#endif
