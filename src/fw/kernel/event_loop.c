@@ -154,11 +154,30 @@ bool launcher_popups_are_blocked(void) {
   return s_block_popup_count > 0;
 }
 
+// FIRM-425: sometimes, if the system goes out to lunch for a long time when
+// loading a watchface as a result of pressing 'back', the
+// FORCE_QUIT_HOLD_MS timer will trigger.  Check once we wake up and process
+// the launcher_force_quit_app event to see if the back button release event
+// got processed between the NewTimer firing and KernelMain waking up to do the kill.
+static bool s_force_quit_was_cancelled = false;
+
 void launcher_cancel_force_quit(void) {
+  s_force_quit_was_cancelled = true;
   new_timer_stop(s_back_hold_timer);
 }
 
+// Export the count of how many times this has happened to Memfault.
+uint32_t metric_firm_425_back_button_long_presses_cancelled = 0;
+
 static void launcher_force_quit_app(void *data) {
+  if (s_force_quit_was_cancelled) {
+    // If you see this in logs after FIRM-556 (general system sluggishness)
+    // is fixed, please file a bug!
+    PBL_LOG(LOG_LEVEL_ERROR, "NewTimer event fired for force quit, but the back button was released before we went to deal with it!  Wow, we must have been really slow!  Please file a bug!");
+    metric_firm_425_back_button_long_presses_cancelled++;
+    return;
+  }
+
   if (low_power_is_active() || factory_reset_ongoing()) {
     PBL_LOG(LOG_LEVEL_DEBUG, "Forcekill disabled due to low-power or factory-reset");
     return;
@@ -169,6 +188,9 @@ static void launcher_force_quit_app(void *data) {
 }
 
 static void back_button_force_quit_handler(void *data) {
+  // Happens on NewTimer thread -- the launcher task may still be "behind"
+  // on servicing events, so do check again later once *this* event gets
+  // serviced to see if this is still relevant!
   launcher_task_add_callback(launcher_force_quit_app, NULL);
 }
 
@@ -184,6 +206,7 @@ static void launcher_handle_button_event(PebbleEvent* e) {
         process_metadata_get_run_level(
             app_manager_get_current_app_md()) == ProcessAppRunLevelNormal) {
       // Start timer for force-quitting app
+      s_force_quit_was_cancelled = false;
       bool success = new_timer_start(s_back_hold_timer, FORCE_QUIT_HOLD_MS, back_button_force_quit_handler, NULL,
                                      0 /*flags*/);
       PBL_ASSERTN(success);

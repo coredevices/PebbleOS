@@ -57,4 +57,7 @@ void memfault_metrics_heartbeat_collect_data(void) {
     MEMFAULT_METRIC_SET_UNSIGNED(firm_579_log_events, metric_firm_579_log_events);
     MEMFAULT_METRIC_SET_UNSIGNED(firm_579_attempted_recoveries, metric_firm_579_attempted_recoveries);
 #endif
+
+  extern uint32_t metric_firm_425_back_button_long_presses_cancelled;
+  MEMFAULT_METRIC_SET_UNSIGNED(firm_425_back_button_long_presses_cancelled, metric_firm_425_back_button_long_presses_cancelled);
 }

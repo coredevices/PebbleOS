@@ -22,3 +22,9 @@ MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_recovery_successes, kMemfaultMetricTyp
 MEMFAULT_METRICS_KEY_DEFINE(firm_579_log_events, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(firm_579_attempted_recoveries, kMemfaultMetricType_Unsigned)
 #endif
+
+// Number of times that the user has pressed the back button, and it would
+// have caused a force quit but we realized that the KernelMain task had
+// just gone out to lunch and the user didn't ask for that at all
+// (FIRM-425).
+MEMFAULT_METRICS_KEY_DEFINE(firm_425_back_button_long_presses_cancelled, kMemfaultMetricType_Unsigned)
