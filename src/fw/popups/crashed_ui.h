@@ -18,6 +18,9 @@
 
 #include "process_management/app_install_types.h"
 
+//! Show the "Bug report captured" modal
+void crashed_ui_show_forced_core_dump(void);
+
 //! Show the "Your Pebble just reset" modal
 void crashed_ui_show_pebble_reset(void);
 
