@@ -32,6 +32,7 @@
 #include "apps/prf_apps/mfg_speaker_app.h"
 #include "apps/prf_apps/mfg_vibe_app.h"
 #include "apps/prf_apps/mfg_touch_app.h"
+#include "apps/prf_apps/mfg_backlight_app.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/standby.h"
@@ -92,6 +93,12 @@ static void prv_select_button(int index, void *context) {
 static void prv_select_display(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_display_app_get_info());
 }
+
+#if PLATFORM_OBELIX
+static void prv_select_backlight(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_backlight_app_get_info());
+}
+#endif
 
 static void prv_select_runin(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_runin_app_get_info());
@@ -206,11 +213,17 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
       .title = "Test Buttons",      .callback = prv_select_button },
     { .icon = prv_get_icon_for_test(MfgTest_Display),
       .title = "Test Display",      .callback = prv_select_display },
+#if CAPABILITY_HAS_TOUCHSCREEN
+    { .title = "Test Touch",        .callback = prv_select_touch },
+#endif
+#if PLATFORM_OBELIX
+    { .title = "Test Backlight",         .callback = prv_select_backlight },
+#endif
+    { .icon = prv_get_icon_for_test(MfgTest_ALS),
+      .title = "Test ALS",          .callback = prv_select_als },
     { .title = "Test Runin",        .callback = prv_select_runin },
     { .icon = prv_get_icon_for_test(MfgTest_Vibe),
       .title = "Test Vibe",         .callback = prv_select_vibe },
-    { .icon = prv_get_icon_for_test(MfgTest_ALS),
-      .title = "Test ALS",          .callback = prv_select_als },
 #if !PLATFORM_SILK && !PLATFORM_ASTERIX && !PLATFORM_OBELIX
     { .title = "Test bt_sig_rf",    .callback = prv_select_bt_sig_rf },
 #endif
@@ -220,10 +233,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #if PLATFORM_ASTERIX
     { .title = "Test Speaker",      .callback = prv_select_speaker },
     { .title = "Test Microphone",   .callback = prv_select_mic },
-#endif
-
-#if CAPABILITY_HAS_TOUCHSCREEN
-    { .title = "Test Touch",        .callback = prv_select_touch },
 #endif
     { .title = "Certification",     .callback = prv_select_certification },
     { .title = "Program Color",     .callback = prv_select_program_color },
