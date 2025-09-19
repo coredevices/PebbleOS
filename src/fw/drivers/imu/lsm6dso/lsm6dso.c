@@ -57,6 +57,9 @@ static odr_xl_interval_t prv_get_odr_for_interval(uint32_t interval_us);
 static int32_t prv_lsm6dso_set_sampling_interval(uint32_t interval_us);
 static void prv_lsm6dso_read_samples(void);
 static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data);
+static void prv_note_new_sample(const AccelDriverSample *sample);
+static void prv_note_new_sample_mg(int16_t x_mg, int16_t y_mg, int16_t z_mg);
+static uint32_t prv_compute_age_ms(uint64_t now_ms, uint64_t then_ms);
 typedef enum {
   X_AXIS = 0,
   Y_AXIS = 1,
@@ -96,6 +99,10 @@ static uint32_t s_i2c_error_count = 0;
 static uint32_t s_last_successful_read_ms = 0;
 static uint32_t s_consecutive_errors = 0;
 static bool s_sensor_health_ok = true;
+static int16_t s_last_sample_mg[3] = {0};
+static uint64_t s_last_sample_timestamp_ms = 0;
+static uint32_t s_watchdog_event_count = 0;
+static uint32_t s_recovery_success_count = 0;
 
 #if CAPABILITY_NEEDS_FIRM_579_STATS
 /* Counters exported to memfault heartbeat (declared as extern where used).
@@ -381,6 +388,7 @@ static void prv_lsm6dso_chase_target_state(void) {
     const bool too_many_errors = (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_ERRORS);
 
     if (watchdog_expired || too_many_errors) {
+      s_watchdog_event_count++;
       PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Sensor appears unresponsive (last_read: %lu ms ago, errors: %lu)",
               now - s_last_successful_read_ms, s_consecutive_errors);
       
@@ -831,6 +839,10 @@ static void prv_lsm6dso_process_interrupts(void) {
         int16_t val = accel_raw[cfg->axes_offsets[axis]];
         bool invert = cfg->axes_inverts[axis];
         direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
+        int16_t mg_x = prv_get_axis_projection_mg(X_AXIS, accel_raw);
+        int16_t mg_y = prv_get_axis_projection_mg(Y_AXIS, accel_raw);
+        int16_t mg_z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
+        prv_note_new_sample_mg(mg_x, mg_y, mg_z);
       }
       PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Shake detected; axis=%d, direction=%lu", axis, direction);
       accel_cb_shake_detected(axis, direction);
@@ -1010,6 +1022,7 @@ static void prv_lsm6dso_read_samples(void) {
     uint32_t sample_index_from_end = (fifo_level - 1) - i;  // 0 for newest
     sample.timestamp_us = now_us - (sample_index_from_end * (uint64_t)interval_us);
     accel_cb_new_sample(&sample);
+    prv_note_new_sample(&sample);
   }
 }
 
@@ -1048,6 +1061,8 @@ static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
   data->z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
   data->timestamp_us = prv_get_timestamp_ms() * 1000;
 
+  prv_note_new_sample(data);
+
   if (s_lsm6dso_state.num_samples > 0) {
     accel_cb_new_sample(data);
   }
@@ -1067,6 +1082,49 @@ static uint64_t prv_get_timestamp_ms(void) {
   uint16_t time_ms;
   rtc_get_time_ms(&time_s, &time_ms);
   return (((uint64_t)time_s) * 1000 + time_ms);
+}
+
+static void prv_note_new_sample(const AccelDriverSample *sample) {
+  if (!sample) {
+    return;
+  }
+
+  s_last_sample_mg[0] = sample->x;
+  s_last_sample_mg[1] = sample->y;
+  s_last_sample_mg[2] = sample->z;
+
+  if (sample->timestamp_us != 0) {
+    s_last_sample_timestamp_ms = sample->timestamp_us / 1000ULL;
+  } else {
+    s_last_sample_timestamp_ms = prv_get_timestamp_ms();
+  }
+}
+
+static void prv_note_new_sample_mg(int16_t x_mg, int16_t y_mg, int16_t z_mg) {
+  AccelDriverSample sample = {
+      .x = x_mg,
+      .y = y_mg,
+      .z = z_mg,
+      .timestamp_us = prv_get_timestamp_ms() * 1000ULL,
+  };
+  prv_note_new_sample(&sample);
+}
+
+static uint32_t prv_compute_age_ms(uint64_t now_ms, uint64_t then_ms) {
+  if (then_ms == 0) {
+    return UINT32_MAX;
+  }
+
+  if (now_ms <= then_ms) {
+    return 0;
+  }
+
+  uint64_t delta = now_ms - then_ms;
+  if (delta > UINT32_MAX) {
+    return UINT32_MAX;
+  }
+
+  return (uint32_t)delta;
 }
 
 // Helper to grab one raw sample set (blocking) and convert to mg (board axis adjusted)
@@ -1294,5 +1352,47 @@ static bool prv_lsm6dso_attempt_recovery(void) {
 #if CAPABILITY_NEEDS_FIRM_579_STATS
   metric_firm_579_log_events++;
 #endif
+  s_recovery_success_count++;
   return true;
+}
+
+void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
+  if (!diagnostics) {
+    return;
+  }
+
+  *diagnostics = (Lsm6dsoDiagnostics){0};
+
+  diagnostics->last_sample_mg[0] = s_last_sample_mg[0];
+  diagnostics->last_sample_mg[1] = s_last_sample_mg[1];
+  diagnostics->last_sample_mg[2] = s_last_sample_mg[2];
+
+  const uint64_t now_ms = prv_get_timestamp_ms();
+  diagnostics->last_sample_age_ms = prv_compute_age_ms(now_ms, s_last_sample_timestamp_ms);
+  diagnostics->last_successful_read_age_ms =
+      prv_compute_age_ms(now_ms, (uint64_t)s_last_successful_read_ms);
+
+  diagnostics->i2c_error_count = s_i2c_error_count;
+  diagnostics->consecutive_error_count = s_consecutive_errors;
+  diagnostics->watchdog_event_count = s_watchdog_event_count;
+  diagnostics->recovery_success_count = s_recovery_success_count;
+
+  uint32_t flags = 0;
+  if (s_lsm6dso_initialized) {
+    flags |= LSM6DSO_STATE_FLAG_INITIALIZED;
+  }
+  if (s_lsm6dso_enabled) {
+    flags |= LSM6DSO_STATE_FLAG_ENABLED;
+  }
+  if (s_lsm6dso_running) {
+    flags |= LSM6DSO_STATE_FLAG_RUNNING;
+  }
+  if (s_sensor_health_ok) {
+    flags |= LSM6DSO_STATE_FLAG_HEALTH_OK;
+  }
+  if (s_last_sample_timestamp_ms != 0) {
+    flags |= LSM6DSO_STATE_FLAG_SAMPLE_VALID;
+  }
+
+  diagnostics->state_flags = flags;
 }
