@@ -73,3 +73,10 @@ void app_actionable_dialog_push(ActionableDialog *actionable_dialog);
 //! Pops the given \ref ActionableDialog from the window stack it was pushed to.
 //! @param actionable_dialog Pointer to a \ref ActionableDialog to pop
 void actionable_dialog_pop(ActionableDialog *actionable_dialog);
+
+//! Attaches user data to an \ref ActionableDialog, since the \ref
+//! ActionableDialog already uses the \ref Window 's user_data field.
+void actionable_dialog_set_user_data(ActionableDialog *actionable_dialog, void *context);
+
+//! Retrieve user data associated with an \ref ActionableDialog.
+void *actionable_dialog_get_user_data(ActionableDialog *actionable_dialog);

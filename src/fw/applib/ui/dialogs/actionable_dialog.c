@@ -250,3 +250,11 @@ void actionable_dialog_set_click_config_provider(ActionableDialog *actionable_di
                                                  ClickConfigProvider click_config_provider) {
   actionable_dialog->config_provider = click_config_provider;
 }
+
+void actionable_dialog_set_user_data(ActionableDialog *actionable_dialog, void *user_data) {
+  actionable_dialog->user_data = user_data;
+}
+
+void *actionable_dialog_get_user_data(ActionableDialog *actionable_dialog) {
+  return actionable_dialog->user_data;
+}
