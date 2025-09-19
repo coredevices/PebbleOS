@@ -68,6 +68,11 @@ enum {
   SystemInformationItem_Count,
 };
 
+enum {
+  DebuggingItemCoreDumpNow = 0,
+  DebuggingItemCoreDumpShortcut,
+  DebuggingItem_Count,
+};
 
 typedef struct SystemCertificationData SystemCertificationData;
 
@@ -136,15 +141,17 @@ typedef enum {
   SystemMenuItemInformation,
   SystemMenuItemCertification,
   SystemMenuItemStationaryToggle,
+  SystemMenuItemDebugging,
   SystemMenuItemShutDown,
   SystemMenuItemFactoryReset,
   SystemMenuItem_Count,
 } SystemMenuItem;
 
 static const char *s_item_titles[SystemMenuItem_Count] = {
-  [SystemMenuItemInformation]  = i18n_noop("Information"),
+  [SystemMenuItemInformation]   = i18n_noop("Information"),
   [SystemMenuItemCertification] = i18n_noop("Certification"),
   [SystemMenuItemStationaryToggle] = i18n_noop("Stand-By Mode"),
+  [SystemMenuItemDebugging]     = i18n_noop("Debugging"),
   [SystemMenuItemShutDown]      = i18n_noop("Shut Down"),
   [SystemMenuItemFactoryReset]  = i18n_noop("Factory Reset"),
 };
@@ -233,63 +240,6 @@ static uint16_t prv_information_get_num_rows_callback(MenuLayer *menu_layer,
   return SystemInformationItem_Count;
 }
 
-static void prv_coredump_confirm_cb(ClickRecognizerRef recognizer, void *context) {
-  core_dump_reset(true /* force_overwrite */);
-}
-
-static void prv_confirm_pop(ClickRecognizerRef recognizer, void *context) {
-  confirmation_dialog_pop((ConfirmationDialog *)context);
-}
-
-static void prv_coredump_click_config(void *context) {
-  window_single_click_subscribe(BUTTON_ID_UP, prv_coredump_confirm_cb);
-  window_single_click_subscribe(BUTTON_ID_DOWN, prv_confirm_pop);
-  window_single_click_subscribe(BUTTON_ID_BACK, prv_confirm_pop);
-}
-
-static void prv_coredump_reset_confirm_cb(ClickRecognizerRef recognizer, void *context) {
-  ExpandableDialog *s_dialog = expandable_dialog_create("Core Dump Reset");
-  Dialog *dialog = expandable_dialog_get_dialog(s_dialog);
-
-  dialog_set_text(dialog, i18n_get("The core dump was created successfully. "
-      "Please create a support request as usual.", s_dialog));
-  dialog_set_text_color(dialog, GColorWhite);
-  dialog_set_background_color(dialog, GColorRed);
-
-  i18n_free_all(s_dialog);
-
-  app_expandable_dialog_push(s_dialog);
-  confirmation_dialog_pop((ConfirmationDialog *)context);
-}
-
-static void prv_coredump_reset_decline_cb(ClickRecognizerRef recognizer, void *context) {
-  ConfirmationDialog *confirmation_dialog = prv_settings_confirm("Core Dump",
-      i18n_noop("Core dump and reboot?"), RESOURCE_ID_GENERIC_QUESTION_LARGE);
-  confirmation_dialog_set_click_config_provider(confirmation_dialog,
-      prv_coredump_click_config);
-  app_confirmation_dialog_push(confirmation_dialog);
-  confirmation_dialog_pop((ConfirmationDialog *)context);
-}
-
-static void prv_information_click_config(void *context) {
-  window_single_click_subscribe(BUTTON_ID_UP, prv_coredump_reset_confirm_cb);
-  window_single_click_subscribe(BUTTON_ID_DOWN, prv_coredump_reset_decline_cb);
-}
-
-static void prv_information_long_click_callback(MenuLayer *menu_layer,
-                                                MenuIndex *cell_index,
-                                                void *callback_context) {
-  if (cell_index->row == SystemInformationItemFirmware) {
-    ConfirmationDialog *confirmation_dialog = prv_settings_confirm("Information",
-        i18n_noop("Did your Pebble reset?"), RESOURCE_ID_RESULT_FAILED_LARGE);
-
-    confirmation_dialog_set_click_config_provider(confirmation_dialog,
-        prv_information_click_config);
-
-    app_confirmation_dialog_push(confirmation_dialog);
-  }
-}
-
 #include "drivers/led_controller.h"
 #include "system/rtc_registers.h"
 static void prv_color_led_easter_egg(void) {
@@ -337,7 +287,6 @@ static void prv_information_window_load(Window *window) {
     .get_cell_height = prv_information_get_cell_height_callback,
     .draw_row = prv_information_draw_row_callback,
     .select_click = prv_information_select_callback,
-    .select_long_click = prv_information_long_click_callback,
   });
   menu_layer_set_highlight_colors(menu_layer, SETTINGS_MENU_HIGHLIGHT_COLOR, GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
@@ -399,6 +348,161 @@ static void prv_information_window_push(SettingsSystemData *data) {
   app_window_stack_push(&data->window, true);
 }
 
+// Coredump trigger sequence
+////////////////////////////
+
+static void prv_coredump_confirm_cb(ClickRecognizerRef recognizer, void *context) {
+  core_dump_reset(true /* force_overwrite */);
+}
+
+static void prv_confirm_pop(ClickRecognizerRef recognizer, void *context) {
+  confirmation_dialog_pop((ConfirmationDialog *)context);
+}
+
+static void prv_coredump_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_coredump_confirm_cb);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_confirm_pop);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_confirm_pop);
+}
+
+static void prv_maybe_trigger_core_dump() {
+  ConfirmationDialog *confirmation_dialog = prv_settings_confirm("Core Dump",
+      i18n_noop("Core dump and reboot?"), RESOURCE_ID_RESULT_FAILED_LARGE);
+  confirmation_dialog_set_click_config_provider(confirmation_dialog,
+      prv_coredump_click_config);
+  app_confirmation_dialog_push(confirmation_dialog);
+}
+
+// Debug options window
+///////////////////////
+
+static const char* s_debugging_titles[DebuggingItem_Count] = {
+  [DebuggingItemCoreDumpNow]      = i18n_noop("Bug report now"),
+  [DebuggingItemCoreDumpShortcut] = i18n_noop("Bug shortcut"),
+};
+
+static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_layer,
+                                            MenuIndex *cell_index, void *context) {
+  PBL_ASSERTN(cell_index->section == 0);
+  PBL_ASSERTN(cell_index->row < DebuggingItem_Count);
+
+  SettingsSystemData *data = (SettingsSystemData *) context;
+
+  const char *title = i18n_get(s_debugging_titles[cell_index->row], data);
+  const char *subtitle_text = NULL;
+  if (cell_index->row == DebuggingItemCoreDumpShortcut) {
+    subtitle_text = shell_prefs_can_coredump_on_request() ? i18n_get("10 back-button presses", data) : i18n_get("Disabled", data);
+  }
+  menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, NULL);
+}
+
+int16_t prv_debugging_get_cell_height_callback(MenuLayer *menu_layer,
+                                               MenuIndex *cell_index, void *context) {
+  return PBL_IF_RECT_ELSE(menu_cell_basic_cell_height(),
+                          (menu_layer_is_index_selected(menu_layer, cell_index) ?
+                           MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT :
+                           MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT));
+}
+
+static uint16_t prv_debugging_get_num_rows_callback(MenuLayer *menu_layer,
+                                                    uint16_t section_index, void *context) {
+  return DebuggingItem_Count;
+}
+
+static void prv_debugging_select_callback(MenuLayer *menu_layer,
+                                          MenuIndex *cell_index,
+                                          void *context) {
+  switch (cell_index->row) {
+    case DebuggingItemCoreDumpNow:
+      prv_maybe_trigger_core_dump();
+      break;
+    case DebuggingItemCoreDumpShortcut:
+      shell_prefs_set_coredump_on_request(!shell_prefs_can_coredump_on_request());
+      break;
+    default:
+      WTF;
+  }
+  menu_layer_reload_data(menu_layer);
+}
+
+static void prv_debugging_window_load(Window *window) {
+  SettingsSystemData *data = (SettingsSystemData*) window_get_user_data(window);
+
+  prv_init_status_bar(&data->status_layer, &data->window, i18n_get("Debugging", data));
+
+  // Create the menu
+  MenuLayer *menu_layer = &data->menu_layer;
+  GRect bounds = data->window.layer.bounds;
+  const GEdgeInsets menu_layer_insets = (GEdgeInsets) {
+    .top = STATUS_BAR_LAYER_HEIGHT,
+    .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT)
+  };
+  bounds = grect_inset(bounds, menu_layer_insets);
+  menu_layer_init(menu_layer, &bounds);
+  menu_layer_set_callbacks(menu_layer, data, &(MenuLayerCallbacks) {
+    .get_num_rows = prv_debugging_get_num_rows_callback,
+    .get_cell_height = prv_debugging_get_cell_height_callback,
+    .draw_row = prv_debugging_draw_row_callback,
+    .select_click = prv_debugging_select_callback,
+  });
+  menu_layer_set_highlight_colors(menu_layer, SETTINGS_MENU_HIGHLIGHT_COLOR, GColorWhite);
+  menu_layer_set_click_config_onto_window(menu_layer, &data->window);
+
+  layer_add_child(&data->window.layer, menu_layer_get_layer(menu_layer));
+}
+
+static void prv_debugging_window_unload(Window *window) {
+  SettingsSystemData *data = (SettingsSystemData*) window_get_user_data(window);
+  menu_layer_deinit(&data->menu_layer);
+  prv_deinit_status_bar(&data->status_layer);
+}
+
+static void prv_debugging_window_push(SettingsSystemData *data) {
+  window_init(&data->window, WINDOW_NAME("Debugging"));
+  window_set_user_data(&data->window, data);
+  window_set_window_handlers(&data->window, &(WindowHandlers) {
+    .load = prv_debugging_window_load,
+    .unload = prv_debugging_window_unload,
+  });
+
+  app_window_stack_push(&data->window, true);
+}
+
+// Debugging interstitial
+/////////////////////////
+
+// Only show this once per boot.
+static bool s_debugging_interstitial_confirmed = false;
+
+static void prv_debugging_confirm_cb(ClickRecognizerRef recognizer, void *context) {
+  ConfirmationDialog *dialog = (ConfirmationDialog *)context;
+  SettingsSystemData *data = (SettingsSystemData *)actionable_dialog_get_user_data((ActionableDialog *) dialog);
+  
+  confirmation_dialog_pop(dialog);
+
+  s_debugging_interstitial_confirmed = true;
+  prv_debugging_window_push(data);
+}
+
+static void prv_debugging_interstitial_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_debugging_confirm_cb);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_confirm_pop);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_confirm_pop);
+}
+
+static void prv_debugging_interstitial_trigger(SettingsSystemData *context) {
+  if (s_debugging_interstitial_confirmed) {
+    prv_debugging_window_push(context);
+    return;
+  }
+
+  ConfirmationDialog *confirmation_dialog = prv_settings_confirm("Debugging confirmation",
+      i18n_noop("PebbleOS developers only!"), RESOURCE_ID_GENERIC_WARNING_SMALL);
+  actionable_dialog_set_user_data((ActionableDialog *)confirmation_dialog, (void *)context);
+  confirmation_dialog_set_click_config_provider(confirmation_dialog,
+      prv_debugging_interstitial_click_config);
+  app_confirmation_dialog_push(confirmation_dialog);
+}
 
 // Certification Window
 ///////////////////////
@@ -953,6 +1057,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       break;
     case SystemMenuItemInformation:
     case SystemMenuItemCertification:
+    case SystemMenuItemDebugging:
     case SystemMenuItemFactoryReset:
     case SystemMenuItem_Count:
       break;
@@ -983,6 +1088,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       if (prv_shutdown_enabled()) {
         launcher_task_add_callback(prv_shutdown_cb, 0);
       }
+      break;
+    case SystemMenuItemDebugging:
+      prv_debugging_interstitial_trigger(data);
       break;
     case SystemMenuItemFactoryReset:
       settings_factory_reset_window_push();
