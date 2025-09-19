@@ -45,6 +45,9 @@ const char *app_custom_get_title(AppInstallId app_id) {
 void crashed_ui_show_worker_crash(AppInstallId install_id) {
 }
 
+void crashed_ui_show_forced_core_dump(void) {
+}
+
 void crashed_ui_show_pebble_reset(void) {
 }
 
