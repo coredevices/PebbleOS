@@ -54,4 +54,5 @@ typedef struct ActionableDialog {
   };
   ActionBarLayer *action_bar;
   ClickConfigProvider config_provider;
+  void *user_data;
 } ActionableDialog;
