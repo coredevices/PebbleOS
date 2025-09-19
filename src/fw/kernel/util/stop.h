@@ -36,6 +36,7 @@ typedef enum {
   InhibitorI2C3,
   InhibitorI2C4,
   InhibitorBluetoothWatchdog,
+  InhibitorPWM,
 
   InhibitorNumItems
 } StopModeInhibitor;
