@@ -32,11 +32,17 @@ typedef struct {
   int16_t last_sample_mg[3];
   uint32_t last_sample_age_ms;
   uint32_t last_successful_read_age_ms;
+  uint32_t last_interrupt_age_ms;
+  uint32_t last_wake_event_age_ms;
+  uint32_t last_double_tap_age_ms;
   uint32_t i2c_error_count;
   uint32_t consecutive_error_count;
   uint32_t watchdog_event_count;
   uint32_t recovery_success_count;
   uint32_t state_flags;
+  uint32_t interrupt_count;
+  uint32_t wake_event_count;
+  uint32_t double_tap_event_count;
 } Lsm6dsoDiagnostics;
 
 //! Initialize the LSM6DSO accelerometer driver.
