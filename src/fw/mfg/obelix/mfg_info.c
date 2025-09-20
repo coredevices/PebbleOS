@@ -70,6 +70,10 @@ void mfg_info_set_model(const char* model) {
   prv_update_struct(&data);
 }
 
+bool mfg_info_is_hrm_present(void) {
+  return true;
+}
+
 uint32_t mfg_info_get_rtc_freq(void) {
   // Not implemented.
   return 0U;

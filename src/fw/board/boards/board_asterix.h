@@ -27,6 +27,9 @@ static const BoardConfig BOARD_CONFIG = {
   },
 
   .has_mic = true,
+  .mic_config = {
+    .gain = 65,
+  }
 };
 
 static const BoardConfigButton BOARD_CONFIG_BUTTON = {
@@ -48,17 +51,10 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12) },
   .pmic_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 12) },
   .low_power_threshold = 5,
-  // Average current over 60s is now ~210uA when:
-  // - Watch is connected to a phone with ResponseTimeMax
-  // - Watchface updating every minute
-  // - Accelerometer on shake detection mode
-  // For now we assume this is the most frequent scenario over time.
-  // Given a 130mAh, this roughly gives ~619 hours. Let's be cautious and stay
-  // at ~600 hours until we do more measurements. We could also use fuel gauge
-  // to improve TTE given real current draw (some apps or watchfaces will drain
-  // battery faster, and those will get innacurate system warnings as they are
-  // now based on this static value).
-  .battery_capacity_hours = 600,
+  // Current is not great but getting there.  1 mA or so on 130 mAh battery;
+  // Memfault reports 160h expected battery, but we'll conservatively
+  // estimate 130 hours
+  .battery_capacity_hours = 130,
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {
@@ -96,6 +92,17 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   },
   .accel_ints = {
     [0] = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 7, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
+  },
+};
+
+static const BoardConfigMag BOARD_CONFIG_MAG = {
+  .mag_config = {
+    .axes_offsets[AXIS_X] = 1,
+    .axes_offsets[AXIS_Y] = 0,
+    .axes_offsets[AXIS_Z] = 2,
+    .axes_inverts[AXIS_X] = false,
+    .axes_inverts[AXIS_Y] = true,
+    .axes_inverts[AXIS_Z] = false,
   },
 };
 

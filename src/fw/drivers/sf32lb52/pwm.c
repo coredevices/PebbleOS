@@ -19,6 +19,7 @@
 #include "board/board.h"
 #include "drivers/pwm.h"
 #include "system/passert.h"
+#include "kernel/util/stop.h"
 
 #include "bf0_hal_tim.h"
 
@@ -101,9 +102,13 @@ void pwm_enable(const PwmConfig *pwm, bool enable) {
 
     ret = HAL_GPT_PWM_Start(htim, channel);
     PBL_ASSERTN(ret == HAL_OK);
+
+    stop_mode_disable(InhibitorPWM);
   } else {
     ret = HAL_GPT_PWM_Stop(htim, channel);
     PBL_ASSERTN(ret == HAL_OK);
+
+    stop_mode_enable(InhibitorPWM);
   }
 }
 

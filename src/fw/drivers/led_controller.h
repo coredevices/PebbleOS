@@ -26,6 +26,7 @@
 #define LED_BLUE        0x00000064
 #define LED_ORANGE      0x00285F00
 #define LED_WHITE       0x00FFFFFF
+#define LED_WARM_WHITE  0x00F0D0B0
 
 #define LED_DIM_GREEN   0x00003C00  // Low power version for charging indicator
 #define LED_DIM_ORANGE  0x000F2300  // Low power version for charging indicator

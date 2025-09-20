@@ -94,7 +94,7 @@
         "_comment": "Only for 3.x apps"
     }, {
         "name": "BitmapLayer",
-        "size_2x": 52,
+        "size_2x": 60,
         "size_3x_padding": 8,
         "size_3x": 76,
         "dependencies": ["Layer"]
@@ -124,8 +124,8 @@
         "_comment": "Only for 3.x apps"
     }, {
         "name": "InverterLayer",
-        "size_2x": 44,
-        "size_3x": 44,
+        "size_2x": 52,
+        "size_3x": 52,
         "_comment": [ "Only meant for 2.x apps, but there are 3.x apps out there that abuse this.",
                       "See PBL-31276.",
                       "Layer is not marked as a dependency (event though it is!) because Layer ",
@@ -134,20 +134,20 @@
                       "back and add some without breaking our contract." ]
     }, {
         "name": "Layer",
-        "size_2x": 44,
-        "size_3x_padding": 16,
+        "size_2x": 52,
+        "size_3x_padding": 8,
         "size_3x": 60
     }, {
         "name": "MenuLayer",
-        "size_2x": 348,
-        "size_3x_padding": 40,
+        "size_2x": 380,
+        "size_3x_padding": 32,
         "size_3x": 452,
         "dependencies": ["ScrollLayer", "InverterLayer"],
         "_comment": "FIXME: MenuLayer has internal padding that needs removing"
     }, {
         "name": "NumberWindow",
         "size_2x": 352,
-        "size_3x_padding": 188,
+        "size_3x_padding": 204,
         "size_3x": 568,
         "dependencies": ["Window", "ActionBarLayer", "TextLayer", "TextLayer"]
     }, {
@@ -163,7 +163,7 @@
         "_comment": "Only for 3.x apps"
     }, {
         "name": "RotBitmapLayer",
-        "size_2x": 68,
+        "size_2x": 76,
         "size_3x_padding": 12,
         "size_3x": 96,
         "dependencies": ["Layer"]
@@ -175,20 +175,20 @@
         "dependencies": ["Layer", "Layer", "Layer"]
     }, {
         "name": "SimpleMenuLayer",
-        "size_2x": 360,
+        "size_2x": 392,
         "size_3x_padding": 32,
         "size_3x": 496,
         "dependencies": ["MenuLayer"]
     }, {
         "name": "StatusBarLayer",
-        "size_2x": 104,
+        "size_2x": 112,
         "size_3x_padding": 80,
         "size_3x": 200,
         "dependencies": ["Layer"],
         "_comment": "Generously padded because it's not feature complete yet"
     }, {
         "name": "TextLayer",
-        "size_2x": 60,
+        "size_2x": 68,
         "size_3x_padding": 16,
         "size_3x": 92,
         "dependencies": ["Layer"]
@@ -203,7 +203,7 @@
         "_comment": "Only for 3.x apps"
     }, {
         "name": "Window",
-        "size_2x": 84,
+        "size_2x": 92,
         "size_3x_padding": 0,
         "size_3x": 100,
         "dependencies": ["Layer"]
@@ -214,7 +214,7 @@
         "size_3x": 32
     }, {
         "name": "MenuRenderIterator",
-        "size_2x": 96,
+        "size_2x": 104,
         "size_3x_padding": 0,
         "size_3x": 112,
         "dependencies": ["Layer"]
@@ -274,7 +274,7 @@
         "_comment": ["Cache to speed up frequent health service API calls (only 3.9+)"]
     }, {
         "name": "OptionMenu",
-        "size_2x": 632,
+        "size_2x": 680,
         "size_3x_padding": 12,
         "size_3x": 876,
         "dependencies": ["Window", "StatusBarLayer", "MenuLayer", "GBitmap", "GBitmap"],

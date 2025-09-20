@@ -164,10 +164,14 @@ void crashed_ui_show_worker_crash(const AppInstallId install_id) {
 }
 
 // ---------------------------------------------------------------------------
-#if (defined(SHOW_BAD_BT_STATE_ALERT) || defined(SHOW_PEBBLE_JUST_RESET_ALERT))
+#define CORE_DUMP_COMPLETE \
+  i18n_noop("A bug report has been captured. " \
+            "Please finish uploading the bug report using the Pebble phone app.")
+
 #define YOUR_PEBBLE_RESET \
   i18n_noop("Your Pebble just reset. " \
             "Please report this using the 'Support' link in the Pebble phone app.")
+
 #define PHONE_BT_CONTROLLER_WEDGED \
   i18n_noop("Bluetooth on your phone is in a high power state. " \
             "Please report this using 'Support' and reboot your phone.")
@@ -183,6 +187,12 @@ static void prv_push_reset_dialog(void *context) {
 
   light_enable_interaction();
 }
+
+void crashed_ui_show_forced_core_dump(void) {
+  launcher_task_add_callback(prv_push_reset_dialog, CORE_DUMP_COMPLETE);
+}
+
+#if (defined(SHOW_BAD_BT_STATE_ALERT) || defined(SHOW_PEBBLE_JUST_RESET_ALERT))
 
 //! Restrict only to the two defines above
 //! Show the "Your pebble has just reset"

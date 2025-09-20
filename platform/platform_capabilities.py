@@ -29,6 +29,7 @@ master_capability_set = {
     'COMPOSITOR_USES_DMA',
     'HAS_ACCESSORY_CONNECTOR',
     'HAS_ALS_OPT3001',
+    'HAS_ALS_W1160',
     'HAS_APPLE_MFI',
     'HAS_APP_GLANCES',
     'HAS_BUILTIN_HRM',
@@ -57,6 +58,7 @@ master_capability_set = {
     'HAS_PUTBYTES_PREACKING',
     'HAS_FLASH_OTP',
     'HAS_VIBE_AW86225',
+    'NEEDS_FIRM_579_STATS',
 }
 
 board_capability_dicts = [
@@ -278,10 +280,11 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
-            # 'HAS_MAGNETOMETER',
+            'HAS_MAGNETOMETER',
             'HAS_VIBE_DRV2604',
             'HAS_PMIC',
             'HAS_FLASH_OTP',
+            'NEEDS_FIRM_579_STATS',
         },
     },
     {
@@ -303,6 +306,11 @@ board_capability_dicts = [
             'HAS_PUTBYTES_PREACKING',
             'HAS_VIBE_AW86225',
             'HAS_FLASH_OTP',
+            'HAS_MICROPHONE',
+            'HAS_TOUCHSCREEN',
+            'HAS_BUILTIN_HRM',
+            'HAS_ALS_W1160',
+            'HAS_MAGNETOMETER',
         },
     },
     {

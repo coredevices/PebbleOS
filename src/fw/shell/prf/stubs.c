@@ -45,6 +45,9 @@ const char *app_custom_get_title(AppInstallId app_id) {
 void crashed_ui_show_worker_crash(AppInstallId install_id) {
 }
 
+void crashed_ui_show_forced_core_dump(void) {
+}
+
 void crashed_ui_show_pebble_reset(void) {
 }
 
@@ -190,6 +193,11 @@ void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
 
 int16_t shell_prefs_get_automatic_timezone_id(void) {
   return -1;
+}
+
+bool shell_prefs_can_coredump_on_request() {
+  // it would be good to have a core dump escape hatch in PRF
+  return true;
 }
 
 AlertMask alerts_get_mask(void) {

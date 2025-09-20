@@ -22,6 +22,7 @@
 #include "bf0_hal_rcc.h"
 #include "board/board.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
+#include "drivers/stubs/hrm.h"
 #include "system/passert.h"
 
 
@@ -31,6 +32,7 @@ static UARTDeviceState s_dbg_uart_state = {
   .huart = {
     .Instance = USART1,
     .Init = {
+      .BaudRate = 1000000,
       .WordLength = UART_WORDLENGTH_8B,
       .StopBits = UART_STOPBITS_1,
       .Parity = UART_PARITY_NONE,
@@ -139,7 +141,7 @@ const LedControllerPwm LED_CONTROLLER_PWM = {
             .state = &s_pwm1_ch3_state,
         },
     },
-    .initial_color = LED_WHITE,
+    .initial_color = LED_WARM_WHITE,
 };
 
 static DisplayJDIState s_display_state = {
@@ -284,7 +286,9 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 };
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 
-static I2CDeviceState s_i2c_device_state_1;
+static I2CDeviceState s_i2c_device_state_1 = {
+    .int_enabled = true,
+};
 
 static struct I2CBusHal s_i2c_bus_hal_1 = {
     .i2c_state = &s_i2c_device_state_1,
@@ -331,7 +335,9 @@ I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
 IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
 
-static I2CDeviceState s_i2c_device_state_2;
+static I2CDeviceState s_i2c_device_state_2 = {
+    .int_enabled = true,
+};
 
 static struct I2CBusHal s_i2c_bus_hal_2 = {
     .i2c_state = &s_i2c_device_state_2,
@@ -385,6 +391,13 @@ static const I2CSlavePort s_i2c_lsm6d = {
 
 I2CSlavePort *const I2C_LSM6D = &s_i2c_lsm6d;
 
+static const I2CSlavePort s_i2c_mmc5603nj = {
+    .bus = &s_i2c_bus_2,
+    .address = 0x30,
+};
+
+I2CSlavePort *const I2C_MMC5603NJ = &s_i2c_mmc5603nj;
+
 static const I2CSlavePort s_i2c_npm1300 = {
     .bus = &s_i2c_bus_1,
     .address = 0x6B,
@@ -399,9 +412,81 @@ static const I2CSlavePort s_i2c_aw86225 = {
   
 I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
 
+static HRMDeviceState s_hrm_state;
+static HRMDevice s_hrm = {
+  .state = &s_hrm_state,
+};
+HRMDevice * const HRM = &s_hrm;
+
 const BoardConfigActuator BOARD_CONFIG_VIBE = {
     .ctl = {hwp_gpio1, 1, true},
 };
+
+static I2CDeviceState s_i2c_device_state_3;
+
+static struct I2CBusHal s_i2c_bus_hal_3 = {
+    .i2c_state = &s_i2c_device_state_3,
+    .hi2c =
+        {
+            .Instance = I2C3,
+            .Init = {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+            .Mode = HAL_I2C_MODE_MASTER,
+
+        },
+
+    .device_name = "i2c3",
+    .scl =
+        {
+            .pad = PAD_PA11,
+            .func = I2C3_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA10,
+            .func = I2C3_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .core = CORE_ID_HCPU,
+    .module = RCC_MOD_I2C3,
+    .irqn = I2C3_IRQn,
+    .irq_priority = 5,
+    .timeout = 5000,
+};
+
+static I2CBusState s_i2c_bus_state_3;
+
+static I2CBus s_i2c_bus_3 = {
+    .hal = &s_i2c_bus_hal_3,
+    .state = &s_i2c_bus_state_3,
+};
+
+I2CBus *const I2C3_BUS = &s_i2c_bus_3;
+IRQ_MAP(I2C3, i2c_irq_handler, I2C3_BUS);
+
+static const I2CSlavePort s_i2c_cst816 = {
+    .bus = I2C3_BUS,
+    .address = 0x15,
+};
+
+static const I2CSlavePort s_i2c_cst816_boot = {
+    .bus = I2C3_BUS,
+    .address = 0x6A,
+};
+
+static const TouchSensor touch_cst816 = {
+    .i2c = &s_i2c_cst816,
+    .i2c_boot = &s_i2c_cst816_boot,
+    .int_exti = {
+        .peripheral = hwp_gpio1,
+        .gpio_pin = 27,
+    },
+};
+const TouchSensor *CST816 = &touch_cst816;
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {
@@ -410,7 +495,16 @@ const Npm1300Config NPM1300_CONFIG = {
   .dischg_limit_ma = 200,
   .term_current_pct = 10,
   .thermistor_beta = 3380,
+  .vbus_current_lim0 = 500,
+  .vbus_current_startup = 500,
 };
+
+static const I2CSlavePort s_i2c_w1160 = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x48,
+  };
+  
+I2CSlavePort *const I2C_W1160 = &s_i2c_w1160;
 
 const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = {
@@ -423,6 +517,8 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
 
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
+  .ambient_light_dark_threshold = 150,
+  .ambient_k_delta_threshold = 25,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
@@ -444,6 +540,39 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .timer_irqn = GPTIM1_IRQn,
 };
 IRQ_MAP(GPTIM1, debounced_button_irq_handler, GPTIM1);
+
+static MicDeviceState mic_state = {
+  .hdma = {
+  .Instance = DMA1_Channel5,
+    .Init = {
+       .Request = DMA_REQUEST_36,
+       .IrqPrio = 5,
+    },
+  },
+};
+static const MicDevice mic_device = {
+    .state = &mic_state,
+    .pdm_instance = hwp_pdm1,
+    .clk_gpio = {
+        .pad = PAD_PA22,
+        .func = PDM1_CLK,
+        .flags = PIN_NOPULL,
+    },
+    .data_gpio = {
+        .pad = PAD_PA23,
+        .func = PDM1_DATA,
+        .flags = PIN_PULLDOWN,
+    },
+    .pdm_dma_irq = DMAC1_CH5_IRQn,
+    .pdm_irq = PDM1_IRQn,
+    .pdm_irq_priority = 5, 
+    .channels = 2,
+    .sample_rate = 16000,
+    .channel_depth = 16,
+};
+const MicDevice* MIC = &mic_device;
+IRQ_MAP(PDM1, pdm1_data_handler, MIC);
+IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
 
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;
@@ -514,4 +643,7 @@ void board_early_init(void) {
 void board_init(void) {
   i2c_init(I2C1_BUS);
   i2c_init(I2C2_BUS);
+  i2c_init(I2C3_BUS);
+
+  mic_init(MIC);
 }

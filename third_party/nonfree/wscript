@@ -13,3 +13,11 @@ def build(bld):
             ],
             paths=paths
         )
+
+    if bld.is_obelix():
+        bld(
+            name='cst816_fw',
+            export_includes=[
+                'pebbleos-nonfree/cst816',
+            ],
+        )

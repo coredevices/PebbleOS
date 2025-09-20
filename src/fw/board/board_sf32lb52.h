@@ -128,6 +128,9 @@ typedef struct {
   ExtiConfig dbgserial_int;
   InputConfig dbgserial_int_gpio;
   OutputConfig lcd_com;
+  //ambient light config
+  uint32_t ambient_light_dark_threshold;
+  uint32_t ambient_k_delta_threshold;
 } BoardConfig;
 
 typedef struct {
@@ -179,6 +182,15 @@ typedef struct {
   const ExtiConfig accel_ints[2];
 } BoardConfigAccel;
 
+typedef struct {
+  int axes_offsets[3];
+  bool axes_inverts[3];
+} MagConfig;
+
+typedef struct {
+  const MagConfig mag_config;
+} BoardConfigMag;
+
 typedef enum {
   SpiPeriphClockAPB1,
   SpiPeriphClockAPB2
@@ -190,6 +202,7 @@ typedef enum {
 #include "drivers/qspi_definitions.h"
 #include "drivers/sf32lb52/uart_definitions.h"
 #include "drivers/sf32lb52/jdi_lpm015m135a.h"
+#include "drivers/mic/sf32lb52/pdm_definitions.h"
 
 typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;

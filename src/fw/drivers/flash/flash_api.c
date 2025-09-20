@@ -564,7 +564,6 @@ uint32_t flash_get_subsector_base_address(uint32_t flash_addr) {
   return flash_impl_get_subsector_base_address(flash_addr);
 }
 
-#if !MICRO_FAMILY_NRF5
 void flash_power_down_for_stop_mode(void) {
   flash_impl_enter_low_power_mode();
 }
@@ -572,7 +571,6 @@ void flash_power_down_for_stop_mode(void) {
 void flash_power_up_after_stop_mode(void) {
   flash_impl_exit_low_power_mode();
 }
-#endif
 
 bool flash_sector_is_erased(uint32_t sector_addr) {
   return flash_impl_blank_check_sector(flash_impl_get_sector_base_address(sector_addr));

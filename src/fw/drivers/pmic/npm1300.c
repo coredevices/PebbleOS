@@ -41,6 +41,10 @@ typedef enum {
   PmicRegisters_SYSTEM_TESTACCESS__VAL1 = 0x90,
   PmicRegisters_SYSTEM_TESTACCESS__VAL2 = 0xFA,
   PmicRegisters_SYSTEM_TESTACCESS__VAL3 = 0xCE,
+  PmicRegisters_VBUSIN_TASKUPDATELIMSW = 0x0200,
+  PmicRegisters_VBUSIN_TASKUPDATELIMSW__EN = 0x01,
+  PmicRegisters_VBUSIN_VBUSINILIM0 = 0x0201,
+  PmicRegisters_VBUSIN_VBUSINILIMSTARTUP = 0x0202,
   PmicRegisters_VBUSIN_VBUSINSTATUS = 0x0207,
   PmicRegisters_VBUSIN_VBUSINSTATUS__VBUSINPRESENT = 1,
   PmicRegisters_BCHARGER_TASKRELEASEERROR = 0x0300U,
@@ -94,6 +98,12 @@ typedef enum {
   PmicRegisters_ADC_ADCIBATMEASEN = 0x0524,
   PmicRegisters_GPIOS_GPIOMODE1 = 0x0601,
   PmicRegisters_GPIOS_GPIOMODE__GPOIRQ = 5,
+  PmicRegisters_GPIOS_GPIOMODE2 = 0x0602,
+  PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH = 8,
+  PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW = 9,
+  PmicRegisters_GPIOS_GPIOPUEN2 = 0x060C,
+  PmicRegisters_GPIOS_GPIOPUEN__EN = 1,
+  PmicRegisters_GPIOS_GPIOPUEN__DIS = 0,
   PmicRegisters_GPIOS_GPIOOPENDRAIN1 = 0x0615,
   PmicRegisters_ERRLOG_SCRATCH0 = 0x0E01,
   PmicRegisters_ERRLOG_SCRATCH1 = 0x0E02,
@@ -110,8 +120,10 @@ typedef enum {
   PmicRegisters_LDSW_LDSWCONFIG = 0x0807,
   PmicRegisters_LDSW_LDSW1LDOSEL = 0x0808,
   PmicRegisters_LDSW_LDSW2LDOSEL = 0x0809,
+  PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE = 1,
   PmicRegisters_LDSW_LDSW1VOUTSEL = 0x080C,
   PmicRegisters_LDSW_LDSW2VOUTSEL = 0x080D,
+  PmicRegisters_LDSW_LDSW2VOUTSEL__3V3 = 23,
   PmicRegisters_SHIP_TASKSHPHLDCFGSTROBE = 0x0B01,
   PmicRegisters_SHIP_TASKENTERSHIPMODE = 0x0B02,
   PmicRegisters_SHIP_SHPHLDCONFIG = 0x0B04,
@@ -132,6 +144,7 @@ typedef enum {
 #define NPM1300_ADC_VFS_VBAT_MV 5000UL
 // ADC MSB shift
 #define NPM1300_ADC_MSB_SHIFT 2U
+#define NPM1300_VBUS_CURRENT_DIVISOR 100U
 
 
 void battery_init(void) {
@@ -168,6 +181,16 @@ static void prv_handle_charge_state_change(void *null) {
   const bool is_connected = pmic_is_usb_connected();
   PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 Interrupt: Charging? %s Plugged? %s",
       is_charging ? "YES" : "NO", is_connected ? "YES" : "NO");
+
+  if (is_connected && NPM1300_CONFIG.vbus_current_lim0 != 0) {
+    bool ok = prv_write_register(PmicRegisters_VBUSIN_VBUSINILIM0,
+      NPM1300_CONFIG.vbus_current_lim0/NPM1300_VBUS_CURRENT_DIVISOR);
+    ok &= prv_write_register(PmicRegisters_VBUSIN_TASKUPDATELIMSW,
+      PmicRegisters_VBUSIN_TASKUPDATELIMSW__EN);
+    if (!ok) {
+      PBL_LOG(LOG_LEVEL_ERROR, "config vbus limite0 failed");
+    }
+  }
 
   PebbleEvent event = {
     .type = PEBBLE_BATTERY_CONNECTION_EVENT,
@@ -239,6 +262,14 @@ bool pmic_init(void) {
   }
 #endif
 
+// FIXME(OBELIX): Needs to be configurable at board level
+#if PLATFORM_OBELIX
+  //enable 1.8V@LDO1
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);  //LDO
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8);  //1.8V
+  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW1SET, 1); //enable
+#endif
+
   ok &= prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
   ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSBCHARGER1SET, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
   ok &= prv_write_register(PmicRegisters_MAIN_EVENTSVBUSIN0CLR, PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSDETECTED | PmicRegisters_MAIN_EVENTSVBUSIN0__EVENTVBUSREMOVED);
@@ -271,6 +302,14 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
 #endif
 
+  // FIXME: this needs to be configurable at board level
+#if PLATFORM_OBELIX
+  //3.3V @ LDO2
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE);
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, PmicRegisters_LDSW_LDSW2VOUTSEL__3V3);
+  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 1);
+#endif
+
   val = (uint8_t)(NPM1300_CONFIG.chg_current_ma / 4U);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETMSB, val);
   val = (NPM1300_CONFIG.chg_current_ma / 2U) % 2U;
@@ -289,6 +328,11 @@ bool pmic_init(void) {
   } else {
     PBL_LOG(LOG_LEVEL_ERROR, "Invalid discharge limit: %d mA", NPM1300_CONFIG.dischg_limit_ma);
     return false;
+  }
+
+  if (NPM1300_CONFIG.vbus_current_startup != 0) {
+    ok &= prv_write_register(PmicRegisters_VBUSIN_VBUSINILIMSTARTUP,
+      NPM1300_CONFIG.vbus_current_startup/NPM1300_VBUS_CURRENT_DIVISOR);
   }
 
   if (NPM1300_CONFIG.term_current_pct == 10U) {
@@ -630,3 +674,24 @@ void command_pmic_status(void) {
 void command_pmic_rails(void) {
   // TODO: Implement.
 }
+
+static bool gpio_set(Npm1300GpioId_t id, bool is_high) {
+  bool rv = false;
+  switch (id) {
+    case Npm1300_Gpio2:
+      rv = prv_write_register(PmicRegisters_GPIOS_GPIOMODE2, 
+          is_high ? PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH : PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW);
+      rv &= prv_write_register(PmicRegisters_GPIOS_GPIOPUEN2,
+          is_high ? PmicRegisters_GPIOS_GPIOPUEN__EN : PmicRegisters_GPIOS_GPIOPUEN__DIS);
+      break;
+
+    default:
+      break;
+  }
+
+  return rv;
+}
+
+Npm1300Ops_t NPM1300_OPS = {
+  .gpio_set = gpio_set,
+};

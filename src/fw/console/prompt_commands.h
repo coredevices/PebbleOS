@@ -492,8 +492,10 @@ static const Command s_prompt_commands[] = {
 
 #if CAPABILITY_HAS_BUILTIN_HRM
   { "hrm read", command_hrm_read, 0},
+#if PLATFORM_SILK || PLATFORM_ROBERT
   { "hrm wipe", command_hrm_wipe, 0},
   { "hrm freeze", command_hrm_freeze, 0},
+#endif // PLATFORM_SILK || PLATFORM_ROBERT
 #endif
 
 #if CAPABILITY_HAS_ACCESSORY_CONNECTOR

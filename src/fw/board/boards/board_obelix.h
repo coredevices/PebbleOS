@@ -18,6 +18,7 @@
 
 #include "drivers/led_controller/pwm.h"
 #include "drivers/pmic/npm1300.h"
+#include "drivers/touch/cst816/touch_sensor_definitions.h"
 #include "services/imu/units.h"
 
 #define BT_VENDOR_ID 0x0EEA
@@ -32,8 +33,10 @@ extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern I2CBus *const I2C2_BUS;
 extern I2CSlavePort * const I2C_LSM6D;
+extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort *const I2C_AW86225;
+extern I2CSlavePort *const I2C_W1160;
 extern const Npm1300Config NPM1300_CONFIG;
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 extern const LedControllerPwm LED_CONTROLLER_PWM;
@@ -42,6 +45,9 @@ extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
+extern const MicDevice* MIC;
+extern HRMDevice * const HRM;
+extern const TouchSensor *CST816;
 
 static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   .options = ActuatorOptions_IssiI2C,
@@ -84,5 +90,25 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   },
   .accel_ints = {
     [0] = { .peripheral = hwp_gpio1, .gpio_pin = 38 },
+  },
+};
+
+static const BoardConfigMag BOARD_CONFIG_MAG = {
+  .mag_config = {
+#ifdef IS_BIGBOARD
+    .axes_offsets[AXIS_X] = 1,
+    .axes_offsets[AXIS_Y] = 0,
+    .axes_offsets[AXIS_Z] = 2,
+    .axes_inverts[AXIS_X] = true,
+    .axes_inverts[AXIS_Y] = false,
+    .axes_inverts[AXIS_Z] = false,
+#else
+    .axes_offsets[AXIS_X] = 1,
+    .axes_offsets[AXIS_Y] = 0,
+    .axes_offsets[AXIS_Z] = 2,
+    .axes_inverts[AXIS_X] = false,
+    .axes_inverts[AXIS_Y] = true,
+    .axes_inverts[AXIS_Z] = false,
+#endif
   },
 };

@@ -78,6 +78,7 @@
 #define OVERRIDE_SPEEX_ALLOC_SCRATCH
 #define OVERRIDE_SPEEX_REALLOC
 #define OVERRIDE_SPEEX_FREE
+#define OVERRIDE_SPEEX_FREE_SCRATCH
 
 /* Override debug/warning functions */
 #define OVERRIDE_SPEEX_FATAL
