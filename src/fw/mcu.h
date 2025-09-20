@@ -56,15 +56,23 @@
 #  pragma GCC diagnostic ignored "-Wmissing-declarations"
 #  include <nrf52840.h>
 # pragma GCC diagnostic pop
+#elif defined(MICRO_FAMILY_NRF5340)
+# if !defined(NRF5340_COMPATIBLE) && !defined(CMSIS_COMPATIBLE) && !defined(NRF5_COMPATIBLE)
+#  error "Source is incompatible with the target MCU"
+# endif
+# pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wmissing-declarations"
+#  include <nrf5340_application.h>
+# pragma GCC diagnostic pop
 #elif defined(MICRO_FAMILY_SF32LB52)
 # if !defined(SF32LB52_COMPATIBLE) && !defined(CMSIS_COMPATIBLE)
 #  error "Source is incompatible with the target MCU"
 # endif
 # include <bf0_hal.h>
-#elif defined(MICRO_FAMILY_PSE84) // TODO update
-# if !defined(PSE84_COMPATIBLE) && !defined(CMSIS_COMPATIBLE)
-#  error "Source is incompatible with the target MCU"
-# endif
+//#elif defined(MICRO_FAMILY_PSE84) // TODO update
+//# if !defined(PSE84_COMPATIBLE) && !defined(CMSIS_COMPATIBLE)
+//#  error "Source is incompatible with the target MCU"
+//# endif
 # include <bf0_hal.h>
 #elif !defined(SDK) && !defined(UNITTEST)
 # error "Unknown or missing MICRO_FAMILY_* define"
@@ -75,5 +83,6 @@
 #undef STM32F4_COMPATIBLE
 #undef STM32F7_COMPATIBLE
 #undef NRF52840_COMPATIBLE
+#undef NRF5340_COMPATIBLE
 #undef NRF5_COMPATIBLE
 #undef SF32LB52_COMPATIBLE

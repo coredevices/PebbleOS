@@ -102,7 +102,8 @@ def _generate_memory_layout(bld):
     elif bld.is_obelix():
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
     elif bld.is_hollow():
-        ldscript_template = bld.path.find_node('pse84_flash_fw.ld.template')
+        # ldscript_template = bld.path.find_node('pse84_flash_fw.ld.template')
+        ldscript_template = bld.path.find_node('nrf5340_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
     if bld.env.MICRO_FAMILY == 'STM32F2':
@@ -148,24 +149,31 @@ def _generate_memory_layout(bld):
         else:
             flash_size = '1024K'
 
-    elif bld.env.MICRO_FAMILY == 'PSE84':
-        if bld.variant == 'prf' and not bld.env.PRF_AS_FIRMWARE:
-            # PTABLE + Bootloader + Firmware Slot 0/1 + Resource Bank 0/1
-            offset_size = '10368K'
+    elif bld.env.MICRO_FAMILY == 'NRF5340': # TODO change if upgrade to PSE84
+        # Bootloader
+        offset_size = '32K'
+        if bld.is_asterix() and bld.variant == 'prf' and not bld.env.IS_MFG:
             flash_size = '512K'
         else:
-            # PTABLE + Bootloader
-            offset_size = '128K'
-            # Reserve 1 sector so we can implement upgrade algorithms like
-            # swap move or swap offset.
-            flash_size = '3072K - 4K'
+            flash_size = '1024K'
+
+        # if bld.variant == 'prf' and not bld.env.PRF_AS_FIRMWARE:
+        #     # PTABLE + Bootloader + Firmware Slot 0/1 + Resource Bank 0/1
+        #     offset_size = '10368K'
+        #     flash_size = '512K'
+        # else:
+        #     # PTABLE + Bootloader
+        #     offset_size = '128K'
+        #     # Reserve 1 sector so we can implement upgrade algorithms like
+        #     # swap move or swap offset.
+        #     flash_size = '3072K - 4K'
 
     if bld.env.QEMU:
         flash_size = '4M'
 
     if bld.env.FLASH_ITCM:
         flash_origin = '0x00200000'
-    elif bld.env.MICRO_FAMILY == 'NRF52840':
+    elif bld.env.MICRO_FAMILY == 'NRF52840' or bld.env.MICRO_FAMILY == 'NRF5340': # TODO change if upgrade to PSE84
         flash_origin = '0x00000000'
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
         flash_origin = '0x12000000'
@@ -274,10 +282,8 @@ def _generate_memory_layout(bld):
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['basalt']
         app_ram_size_4x = APP_RAM_SIZES['knight']
-        # We have 512K of SRAM, last 1K reserved for LCPU IPC
-        # FIXME(SF32LB52): due to MPU find_subregions_for_region assuming
-        # ARMv7 subregion limitations, we need to reserve 32K!
-        total_ram = (0x20000000, (512 - 32) * 1024)
+        retained_size = 512
+        total_ram = (0x20000000 + retained_size, 512 * 1024 - retained_size)
     else:
         bld.fatal("No set of supported SDK platforms defined for this board")
 

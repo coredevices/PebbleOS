@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -o errexit
+
+SCRIPTDIR="${0%/*}"
+IMGFILE="${SCRIPTDIR}/build/tintin_boot.hex"
+IMGFILE="$(realpath $IMGFILE)"
+
+if [ ! -f "${IMGFILE}" ]; then
+  echo "Cannot find bootloader binary at '${IMGFILE}'."
+  echo "Try running './waf build'"
+  exit 1
+fi
+
+cd ../../.. # grab the toplevel openocd.cfg
+
+OPENOCD_SCRIPT="
+init
+reset halt
+flash write_image erase \"${IMGFILE}\"
+reset
+shutdown
+"
+
+openocd -f openocd.cfg -c "${OPENOCD_SCRIPT}"
+
+# vim:filetype=sh

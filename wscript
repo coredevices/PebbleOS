@@ -52,7 +52,7 @@ RUNNERS = {
     'asterix': ['openocd', 'nrfutil'],
     'obelix': ['sftool'],
     'obelix_bb': ['sftool'],
-    'hollow' : ['openocd'],
+    'hollow' : ['openocd', 'nrfutil'],
 }
 
 def truncate(msg):
@@ -477,7 +477,7 @@ def configure(conf):
         elif conf.options.board in ('cutts_bb', 'robert_bb', 'robert_bb2', 'robert_evt',
                                     'silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
             conf.env.OPENOCD_JTAG = 'swd_ftdi'
-        elif conf.options.board in ('asterix'):
+        elif conf.options.board in ('asterix', 'hollow'): # setting the debug interface ('the runner?')
             conf.env.OPENOCD_JTAG = 'swd_cmsisdap'
         else:
             # default to bb2
@@ -524,8 +524,9 @@ def configure(conf):
         conf.env.MICRO_FAMILY = 'NRF52840'
     elif conf.is_obelix():
         conf.env.MICRO_FAMILY = 'SF32LB52'
-    elif conf.is_hollow():
-        conf.env.MICRO_FAMILY = 'PSE84'
+    elif conf.is_hollow(): # setting the MCU
+        # conf.env.MICRO_FAMILY = 'PSE84'
+        conf.env.MICRO_FAMILY = 'NRF5340'
     else:
         conf.fatal('No micro family specified for {}!'.format(conf.options.board))
 
@@ -571,7 +572,7 @@ def configure(conf):
     elif conf.is_tintin() or conf.is_snowy() or conf.is_spalding():
         conf.env.bt_controller = 'cc2564x'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
-    elif conf.is_asterix():
+    elif conf.is_asterix() or conf.is_hollow(): # TODO needs to be changed if upgrade to PSE84
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
     elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):
@@ -910,6 +911,8 @@ def size_resources(ctx):
         max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'SF32LB52':
         max_size = 2048 * 1024
+    elif ctx.env.MICRO_FAMILY == 'NRF5340':
+        max_size = 2048 * 1024 # TODO double check what this is and if correct
     else:
         max_size = 256 * 1024
 
@@ -1654,6 +1657,12 @@ def _check_firmware_image_size(ctx, path):
         else:
             # 3072k of flash
             max_firmware_size = 3072 * BYTES_PER_K
+    elif ctx.env.MICRO_FAMILY == 'NRF5340': # TODO change if update to PSE84
+        if ctx.variant == 'prf' and not ctx.env.IS_MFG:
+            max_firmware_size = 512 * BYTES_PER_K
+        else:
+            # 1024k of flash and 32k bootloader
+            max_firmware_size = (1024 - 32) * BYTES_PER_K
     else:
         ctx.fatal('Cannot check firmware size against unknown micro family "{}"'
                   .format(ctx.env.MICRO_FAMILY))
