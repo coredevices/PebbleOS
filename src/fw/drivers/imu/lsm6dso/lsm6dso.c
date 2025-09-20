@@ -103,6 +103,13 @@ static int16_t s_last_sample_mg[3] = {0};
 static uint64_t s_last_sample_timestamp_ms = 0;
 static uint32_t s_watchdog_event_count = 0;
 static uint32_t s_recovery_success_count = 0;
+// Interrupt activity instrumentation so we can spot when the sensor stops firing INT1.
+static uint64_t s_last_interrupt_ms = 0;
+static uint64_t s_last_wake_event_ms = 0;
+static uint64_t s_last_double_tap_ms = 0;
+static uint32_t s_interrupt_count = 0;
+static uint32_t s_wake_event_count = 0;
+static uint32_t s_double_tap_event_count = 0;
 
 #if CAPABILITY_NEEDS_FIRM_579_STATS
 /* Counters exported to memfault heartbeat (declared as extern where used).
@@ -126,6 +133,7 @@ uint32_t metric_firm_579_attempted_recoveries = 0;
 #define LSM6DSO_MAX_SILENT_PERIOD_MS 30000     // Max time without successful read
 #define LSM6DSO_WATCHDOG_TIMEOUT_MS 5000       // Watchdog timeout for detecting unresponsive sensor
 #define LSM6DSO_MAX_CONSECUTIVE_ERRORS 5       // Maximum consecutive errors before attempting recovery
+#define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
 
 // LSM6DSO configuration entrypoints
 
@@ -720,6 +728,26 @@ static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
 }
 
 static void prv_lsm6dso_process_interrupts(void) {
+  const uint64_t now_ms = prv_get_timestamp_ms();
+  const uint64_t previous_interrupt_ms = s_last_interrupt_ms;
+  s_last_interrupt_ms = now_ms;
+  s_interrupt_count++;
+
+  uint32_t gap_ms = 0;
+  if (previous_interrupt_ms == 0) {
+    PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: First INT1 service (count=%lu)",
+            (unsigned long)s_interrupt_count);
+  } else {
+    uint64_t raw_gap_ms = now_ms - previous_interrupt_ms;
+    gap_ms = (raw_gap_ms > UINT32_MAX) ? UINT32_MAX : (uint32_t)raw_gap_ms;
+    if (gap_ms >= LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS) {
+      PBL_LOG(LOG_LEVEL_INFO,
+              "LSM6DSO: INT1 gap %lu ms (count=%lu wake=%lu tap=%lu)",
+              (unsigned long)gap_ms, (unsigned long)s_interrupt_count,
+              (unsigned long)s_wake_event_count, (unsigned long)s_double_tap_event_count);
+    }
+  }
+
   // Read and clear interrupt sources atomically to prevent loss
   lsm6dso_all_sources_t all_sources;
   
@@ -794,6 +822,8 @@ static void prv_lsm6dso_process_interrupts(void) {
 
   // Process double tap events
   if (all_sources.double_tap) {
+    s_double_tap_event_count++;
+    s_last_double_tap_ms = now_ms;
     PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Double tap interrupt triggered");
     // Handle double tap detection
     axis_t axis;
@@ -819,6 +849,8 @@ static void prv_lsm6dso_process_interrupts(void) {
 
   // Wake-up (any-motion) event -> treat as shake. Axis & direction derived from wake_up_src.
   if (s_lsm6dso_state.shake_detection_enabled && all_sources.wake_up) {
+    s_wake_event_count++;
+    s_last_wake_event_ms = now_ms;
     lsm6dso_wake_up_src_t wake_src;
     if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_WAKE_UP_SRC, (uint8_t *)&wake_src, 1) == 0) {
       IMUCoordinateAxis axis = AXIS_X;
@@ -1371,11 +1403,17 @@ void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
   diagnostics->last_sample_age_ms = prv_compute_age_ms(now_ms, s_last_sample_timestamp_ms);
   diagnostics->last_successful_read_age_ms =
       prv_compute_age_ms(now_ms, (uint64_t)s_last_successful_read_ms);
+  diagnostics->last_interrupt_age_ms = prv_compute_age_ms(now_ms, s_last_interrupt_ms);
+  diagnostics->last_wake_event_age_ms = prv_compute_age_ms(now_ms, s_last_wake_event_ms);
+  diagnostics->last_double_tap_age_ms = prv_compute_age_ms(now_ms, s_last_double_tap_ms);
 
   diagnostics->i2c_error_count = s_i2c_error_count;
   diagnostics->consecutive_error_count = s_consecutive_errors;
   diagnostics->watchdog_event_count = s_watchdog_event_count;
   diagnostics->recovery_success_count = s_recovery_success_count;
+  diagnostics->interrupt_count = s_interrupt_count;
+  diagnostics->wake_event_count = s_wake_event_count;
+  diagnostics->double_tap_event_count = s_double_tap_event_count;
 
   uint32_t flags = 0;
   if (s_lsm6dso_initialized) {

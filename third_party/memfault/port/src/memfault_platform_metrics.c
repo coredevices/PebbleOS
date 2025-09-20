@@ -45,11 +45,18 @@ void memfault_metrics_heartbeat_collect_data(void) {
   MEMFAULT_METRIC_SET_SIGNED(accel_lsm6dso_last_z_mg, accel_diag.last_sample_mg[2]);
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_sample_age_ms, accel_diag.last_sample_age_ms);
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_read_age_ms, accel_diag.last_successful_read_age_ms);
+  MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_interrupt_age_ms, accel_diag.last_interrupt_age_ms);
+  MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_wake_age_ms, accel_diag.last_wake_event_age_ms);
+  MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_double_tap_age_ms, accel_diag.last_double_tap_age_ms);
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_state_flags, accel_diag.state_flags);
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_i2c_error_count, accel_diag.i2c_error_count);
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_consecutive_errors, accel_diag.consecutive_error_count);
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_watchdog_events, accel_diag.watchdog_event_count);
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_recovery_successes, accel_diag.recovery_success_count);
+  MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_interrupt_count, accel_diag.interrupt_count);
+  MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_wake_events, accel_diag.wake_event_count);
+  MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_double_tap_events,
+                               accel_diag.double_tap_event_count);
 
 #if CAPABILITY_NEEDS_FIRM_579_STATS
     extern uint32_t metric_firm_579_log_events;
