@@ -74,7 +74,9 @@ struct PACKED FirmwareMetadata {
   char version_short[FW_METADATA_VERSION_SHORT_BYTES];
   bool is_recovery_firmware:1;
   bool is_ble_firmware:1;
-  uint8_t reserved:6;
+  bool is_dual_slot:1;
+  bool is_slot_0:1;
+  uint8_t reserved:4;
   uint8_t hw_platform;
   //! This should be the last field, since we put the meta data struct at the end of the fw binary.
   uint8_t metadata_version;

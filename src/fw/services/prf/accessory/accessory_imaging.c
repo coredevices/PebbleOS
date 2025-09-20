@@ -348,8 +348,8 @@ static void prv_handle_flash_geometry_request(const void *payload, uint32_t leng
     response.address = bank->begin;
     response.length = bank->end - response.address;
   } else if (request->region == REGION_FW_SCRATCH) {
-    response.address = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
-    response.length = FLASH_REGION_FIRMWARE_SLOT_1_END - response.address;
+    response.address = FLASH_REGION_FIRMWARE_DEST_BEGIN;
+    response.length = FLASH_REGION_FIRMWARE_DEST_END - response.address;
   } else if (request->region == REGION_PFS) {
     response.address = FLASH_REGION_FILESYSTEM_BEGIN;
     response.length = FLASH_REGION_FILESYSTEM_END - response.address;
