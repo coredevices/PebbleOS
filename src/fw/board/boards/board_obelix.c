@@ -539,10 +539,10 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
     [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
 #endif
   },
-  .timer = GPTIM1,
-  .timer_irqn = GPTIM1_IRQn,
+  .timer = GPTIM2,
+  .timer_irqn = GPTIM2_IRQn,
 };
-IRQ_MAP(GPTIM1, debounced_button_irq_handler, GPTIM1);
+IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
 
 static MicDeviceState mic_state = {
   .hdma = {
