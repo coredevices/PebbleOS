@@ -134,6 +134,7 @@ uint32_t metric_firm_579_attempted_recoveries = 0;
 #define LSM6DSO_WATCHDOG_TIMEOUT_MS 5000       // Watchdog timeout for detecting unresponsive sensor
 #define LSM6DSO_MAX_CONSECUTIVE_ERRORS 5       // Maximum consecutive errors before attempting recovery
 #define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
+#define LSM6DSO_INTERRUPT_LOCKUP_THRESHOLD_MS 15000  // Max time without interrupt for motion detection
 
 // LSM6DSO configuration entrypoints
 
@@ -395,17 +396,28 @@ static void prv_lsm6dso_chase_target_state(void) {
         streaming_samples && (now - s_last_successful_read_ms > LSM6DSO_WATCHDOG_TIMEOUT_MS);
     const bool too_many_errors = (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_ERRORS);
 
-    if (watchdog_expired || too_many_errors) {
+    // Check for interrupt lockup - when motion detection is enabled but no interrupts occur
+    const bool motion_detection_active = (s_lsm6dso_state.shake_detection_enabled ||
+                                          s_lsm6dso_state.double_tap_detection_enabled);
+    const bool interrupt_lockup = motion_detection_active && s_last_interrupt_ms > 0 &&
+                                  (now - s_last_interrupt_ms > LSM6DSO_INTERRUPT_LOCKUP_THRESHOLD_MS);
+
+    if (watchdog_expired || too_many_errors || interrupt_lockup) {
       s_watchdog_event_count++;
-      PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Sensor appears unresponsive (last_read: %lu ms ago, errors: %lu)",
-              now - s_last_successful_read_ms, s_consecutive_errors);
-      
+      if (interrupt_lockup) {
+        PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Interrupt lockup detected (last interrupt: %lu ms ago)",
+                (unsigned long)(now - s_last_interrupt_ms));
+      } else {
+        PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Sensor appears unresponsive (last_read: %lu ms ago, errors: %lu)",
+                now - s_last_successful_read_ms, s_consecutive_errors);
+      }
+
       if (!prv_lsm6dso_attempt_recovery()) {
         PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Recovery failed, disabling sensor");
         s_lsm6dso_enabled = false;
         return;
       }
-      
+
       // Reset state and continue with normal configuration
       s_lsm6dso_state = (lsm6dso_state_t){0};
       s_lsm6dso_running = false;
@@ -597,9 +609,9 @@ static void prv_lsm6dso_configure_fifo(bool enable) {
     uint32_t watermark = s_lsm6dso_state.num_samples;
     if (watermark == 0) watermark = 1;  // safety
     
-    // Set watermark to 75% of requested samples to prevent overflow
-    // This provides buffer for timing variations
-    watermark = (watermark * 3) / 4;
+    // Set watermark to 50% of requested samples to prevent overflow
+    // This provides more buffer for timing variations and prevents lockup
+    watermark = watermark / 2;
     if (watermark == 0) watermark = 1;  // minimum
     if (watermark > LSM6DSO_FIFO_MAX_WATERMARK) watermark = LSM6DSO_FIFO_MAX_WATERMARK;
     
@@ -798,12 +810,28 @@ static void prv_lsm6dso_process_interrupts(void) {
     // Wait for FIFO to actually clear
     psleep(1);
     
+    // Clear all interrupt sources after FIFO reset to ensure clean state
+    lsm6dso_all_sources_t clear_sources;
+    lsm6dso_all_sources_get(&lsm6dso_ctx, &clear_sources);
+
     // Restore FIFO configuration if it was enabled
     if (s_fifo_in_use) {
-      lsm6dso_fifo_watermark_set(&lsm6dso_ctx, current_watermark);
+      // Reduce watermark by half to prevent future overflow
+      uint16_t reduced_watermark = current_watermark / 2;
+      if (reduced_watermark == 0) reduced_watermark = 1;
+      
+      lsm6dso_fifo_watermark_set(&lsm6dso_ctx, reduced_watermark);
       lsm6dso_fifo_xl_batch_set(&lsm6dso_ctx, current_batch_rate);
       lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+
+      PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Reduced FIFO watermark from %u to %u to prevent future overflow",
+              current_watermark, reduced_watermark);
     }
+
+    // Force re-enable of external interrupt to ensure it's active
+    exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+    psleep(1);
+    exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
   }
 
   // Collect accelerometer samples if requested
@@ -1367,6 +1395,26 @@ static bool prv_lsm6dso_attempt_recovery(void) {
 #endif
   return false;
   }
+
+  // Reset FIFO to bypass mode to clear any stuck state
+  lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+
+  // Reset interrupt configuration to ensure clean state
+  lsm6dso_pin_int1_route_t int1_routes = {0}; // All disabled
+  lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes);
+
+  // Configure pulsed interrupts to prevent lockup
+  lsm6dso_data_ready_mode_set(&lsm6dso_ctx, LSM6DSO_DRDY_PULSED);
+  lsm6dso_int_notification_set(&lsm6dso_ctx, LSM6DSO_ALL_INT_PULSED);
+
+  // Clear any pending interrupt sources
+  lsm6dso_all_sources_t clear_sources;
+  lsm6dso_all_sources_get(&lsm6dso_ctx, &clear_sources);
+
+  // Reset external interrupt pin
+  exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+  psleep(2);
+  exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
   
   s_consecutive_errors = 0;
   s_last_successful_read_ms = prv_get_timestamp_ms();
