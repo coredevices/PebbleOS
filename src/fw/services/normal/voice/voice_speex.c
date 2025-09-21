@@ -15,6 +15,7 @@
  */
 
 #include "voice_speex.h"
+#include "voice_agc.h"
 
 #include "system/logging.h"
 #include "system/passert.h"
@@ -51,6 +52,7 @@ typedef struct {
   size_t frame_buffer_size;
   uint8_t *encoded_buffer;
   size_t encoded_buffer_size;
+  VoiceAgcState agc;
 } VoiceSpeexEncoder;
 
 static VoiceSpeexEncoder s_encoder = {0};
@@ -68,6 +70,7 @@ bool voice_speex_init(void) {
   }
 
   memset(&s_encoder, 0, sizeof(s_encoder));
+  voice_agc_init(&s_encoder.agc);
 
   // Initialize Speex encoder - use wideband mode for 16kHz sample rate
   const SpeexMode *mode = &speex_wb_mode;
@@ -194,11 +197,18 @@ size_t voice_speex_get_frame_buffer_size(void) {
   return s_encoder.initialized ? s_encoder.frame_buffer_size : 0;
 }
 
-int voice_speex_encode_frame(const int16_t *samples, uint8_t *encoded_data, size_t max_encoded_size) {
+int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max_encoded_size) {
   if (!s_encoder.initialized) {
     VOICE_SPEEX_LOG("ERROR: encode_frame called but Speex not initialized");
     return -1;
   }
+
+  if (!samples || !encoded_data) {
+    VOICE_SPEEX_LOG("ERROR: encode_frame called with invalid buffers");
+    return -1;
+  }
+
+  voice_agc_process_frame(&s_encoder.agc, samples, s_encoder.frame_size);
 
   // Reset bits structure
   speex_bits_reset(&s_encoder.bits);
