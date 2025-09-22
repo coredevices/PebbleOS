@@ -37,8 +37,10 @@ class group_cprogram(link_task):
 
 
 @conf
-def get_pbz_node(ctx, fw_type, board_type, version_string):
-    return ctx.path.get_bld().make_node('{}_{}_{}.pbz'.format(fw_type, board_type, version_string))
+def get_pbz_node(ctx, fw_type, board_type, version_string, slot=None):
+    return ctx.path.get_bld().make_node('{}_{}_{}{}.pbz'.format(
+        fw_type, board_type, version_string, "" if slot is None else f"_slot{slot}"
+    ))
 
 
 @conf
