@@ -217,7 +217,7 @@ bool shared_circular_buffer_read_consume(SharedCircularBuffer *buffer, SharedCir
 // -------------------------------------------------------------------------------------------------
 void shared_circular_buffer_add_subsampled_client(
     SharedCircularBuffer *buffer, SubsampledSharedCircularBufferClient *client,
-    uint16_t subsample_numerator, uint16_t subsample_denominator) {
+    uint32_t subsample_numerator, uint32_t subsample_denominator) {
   PBL_ASSERTN(shared_circular_buffer_add_client(buffer,
                                                 &client->buffer_client));
   subsampled_shared_circular_buffer_client_set_ratio(
@@ -234,7 +234,7 @@ void shared_circular_buffer_remove_subsampled_client(
 // -------------------------------------------------------------------------------------------------
 void subsampled_shared_circular_buffer_client_set_ratio(
     SubsampledSharedCircularBufferClient *client,
-    uint16_t numerator, uint16_t denominator) {
+    uint32_t numerator, uint32_t denominator) {
   PBL_ASSERTN(numerator > 0 && denominator >= numerator);
   if (client->numerator != numerator || client->denominator != denominator) {
     // The subsampling algorithm does not need the subsampling ratio to
