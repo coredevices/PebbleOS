@@ -120,10 +120,10 @@ bool shared_circular_buffer_read_consume(SharedCircularBuffer *buffer, SharedCir
 
 typedef struct SubsampledSharedCircularBufferClient {
   SharedCircularBufferClient buffer_client;
-  uint16_t numerator;
-  uint16_t denominator;
+  uint32_t numerator;
+  uint32_t denominator;
   //! Used to track whether to copy or discard each successive data item
-  uint16_t subsample_state;
+  uint32_t subsample_state;
 } SubsampledSharedCircularBufferClient;
 
 //! Add a read client which subsamples the data.
@@ -140,7 +140,7 @@ typedef struct SubsampledSharedCircularBufferClient {
 //! @sa subsampled_shared_circular_buffer_client_set_ratio
 void shared_circular_buffer_add_subsampled_client(
     SharedCircularBuffer *buffer, SubsampledSharedCircularBufferClient *client,
-    uint16_t subsample_numerator, uint16_t subsample_denominator);
+    uint32_t subsample_numerator, uint32_t subsample_denominator);
 
 //! Remove a subsampling read client
 //! @param buffer The buffer to remove the client from
@@ -163,7 +163,7 @@ void shared_circular_buffer_remove_subsampled_client(
 //!     introduce jitter to the subsampled data stream.
 void subsampled_shared_circular_buffer_client_set_ratio(
     SubsampledSharedCircularBufferClient *client,
-    uint16_t numerator, uint16_t denominator);
+    uint32_t numerator, uint32_t denominator);
 
 //! Read and consume items with subsampling.
 //!
