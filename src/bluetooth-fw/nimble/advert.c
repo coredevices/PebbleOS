@@ -318,6 +318,18 @@ static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
 #endif
 }
 
+static void prv_handle_phy_update_event(struct ble_gap_event *event) {
+  if (event->phy_updated.status != 0) {
+    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
+              "PHY update failed: 0x%04x",
+              (uint16_t)event->phy_updated.status);
+    return;
+  }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "PHY update complete; conn_handle=%d, tx_phy=%d, rx_phy=%d",
+          event->phy_updated.conn_handle, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
+}
+
 static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
@@ -371,6 +383,10 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_REPEAT_PAIRING:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_REPEAT_PAIRING");
       return prv_handle_repeat_pairing_event(event);
+    case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE:
+      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_PHY_UPDATE_COMPLETE");
+      prv_handle_phy_update_event(event);
+      break;
     default:
       PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_WARNING, "Unhandled GAP event: %d", event->type);
       break;
