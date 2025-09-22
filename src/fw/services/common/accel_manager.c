@@ -211,11 +211,11 @@ static void prv_setup_subsampling(uint32_t sampling_interval) {
   while (state) {
     uint32_t interval_gcd = gcd(sampling_interval,
                                 state->sampling_interval_us);
-    uint16_t numerator = sampling_interval / interval_gcd;
-    uint16_t denominator = state->sampling_interval_us / interval_gcd;
+    uint32_t numerator = sampling_interval / interval_gcd;
+    uint32_t denominator = state->sampling_interval_us / interval_gcd;
 
     PBL_LOG(LOG_LEVEL_DEBUG,
-            "set subsampling for session %p to %" PRIu16 "/%" PRIu16,
+            "set subsampling for session %p to %" PRIu32 "/%" PRIu32,
             state, numerator, denominator);
     subsampled_shared_circular_buffer_client_set_ratio(
         &state->buffer_client, numerator, denominator);
