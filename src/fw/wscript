@@ -99,8 +99,11 @@ def configure(conf):
 
     conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
 
-    conf.env.SLOT = conf.options.slot
-    conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
+    if conf.capability('HAS_PBLBOOT'):
+        conf.env.SLOT = conf.options.slot
+        conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
+    else:
+        conf.env.SLOT = -1
 
 def _generate_memory_layout(bld):
 

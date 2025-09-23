@@ -993,7 +993,7 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
     b = mkbundle.PebbleBundle()
 
     version_string, version_ts, version_commit = _get_version_info(ctx)
-    slot = ctx.env.SLOT if fw_type == 'normal' else None
+    slot = ctx.env.SLOT if fw_type == 'normal' and ctx.env.SLOT != -1 else None
     out_file = ctx.get_pbz_node(fw_type, ctx.env.BOARD, version_string, slot).path_from(ctx.path)
 
     try:
