@@ -138,8 +138,6 @@ void display_init(void) {
   HAL_NVIC_SetPriority(DISPLAY->irqn, DISPLAY->irq_priority, 0);
   HAL_NVIC_EnableIRQ(DISPLAY->irqn);
 
-  HAL_LCDC_Enter_LP(&state->hlcdc);
-
   s_update = mutex_create();
   vSemaphoreCreateBinary(s_write_done);
 
@@ -154,13 +152,11 @@ void display_clear(void) {
 
   memset(s_framebuffer, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
 
-  HAL_LCDC_Exit_LP(&state->hlcdc);
   HAL_LCDC_SetROIArea(&state->hlcdc, 0, 0, PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
   HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer, 0, 0,
                         PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
   HAL_LCDC_SendLayerData_IT(&state->hlcdc);
   xSemaphoreTake(s_write_done, portMAX_DELAY);
-  HAL_LCDC_Enter_LP(&state->hlcdc);
 
   mutex_unlock(s_update);
 }
@@ -206,14 +202,12 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   }
 
   if (rows > 0U) {
-    HAL_LCDC_Exit_LP(&state->hlcdc);
     HAL_LCDC_SetROIArea(&state->hlcdc, 0, y0, PBL_DISPLAY_WIDTH - 1, y0 + rows - 1);
     HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT,
                           &s_framebuffer[y0 * PBL_DISPLAY_WIDTH], 0, y0, PBL_DISPLAY_WIDTH - 1,
                           y0 + rows - 1);
     HAL_LCDC_SendLayerData_IT(&state->hlcdc);
     xSemaphoreTake(s_write_done, portMAX_DELAY);
-    HAL_LCDC_Enter_LP(&state->hlcdc);
   }
 
   if (uccb) {
