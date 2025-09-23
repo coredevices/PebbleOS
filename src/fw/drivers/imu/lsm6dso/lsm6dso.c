@@ -642,23 +642,11 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
 }
 
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
-  // Always process interrupts immediately to prevent lost events
-  // The LSM6DSO can miss events if interrupts are ignored due to pending flags
-  
-  // Clear the hardware interrupt sources immediately to prevent sensor lockup
-  // This is done in ISR context to minimize latency
-  static volatile bool interrupt_active = false;
-  
-  // Prevent recursive calls but ensure we don't lose interrupts
-  if (interrupt_active) {
-    // If already processing, queue another work item to catch any new events
-    accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
-    return;
-  }
-  
-  interrupt_active = true;
+  // Offload processing to a worker. The LSM6DSO can miss events if interrupts
+  // are ignored due to pending flags, so it is important to process them
+  // quickly. The actual clearing of the interrupt flags will happen in the
+  // worker via an I2C transaction.
   accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
-  interrupt_active = false;
 }
 
 static void prv_lsm6dso_process_interrupts(void) {
