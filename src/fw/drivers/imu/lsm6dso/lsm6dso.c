@@ -21,6 +21,7 @@
 #include "drivers/rtc.h"
 #include "drivers/vibe.h"
 #include "kernel/util/sleep.h"
+#include "services/common/regular_timer.h"
 #include "services/common/vibe_pattern.h"
 #include "system/logging.h"
 #include "util/math.h"
@@ -43,6 +44,7 @@ static void prv_lsm6dso_configure_double_tap(bool enable);
 static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
+static void prv_lsm6dso_interrupt_watchdog_callback(void *data);
 static bool prv_is_vibing(void);
 typedef struct {
   lsm6dso_odr_xl_t odr;
@@ -104,6 +106,12 @@ static uint32_t s_interrupt_count = 0;
 static uint32_t s_wake_event_count = 0;
 static uint32_t s_double_tap_event_count = 0;
 
+// Interrupt watchdog timer
+static RegularTimerInfo s_interrupt_watchdog_timer = {
+  .cb = prv_lsm6dso_interrupt_watchdog_callback,
+  .cb_data = NULL
+};
+
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
 #define LSM6DSO_FIFO_MAX_WATERMARK 1023
 
@@ -116,6 +124,7 @@ static uint32_t s_double_tap_event_count = 0;
 // Error recovery thresholds and watchdog timeouts
 #define LSM6DSO_MAX_CONSECUTIVE_FAILURES 3
 #define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
+#define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 90000  // 90 seconds
 
 // LSM6DSO configuration entrypoints
 
@@ -125,7 +134,6 @@ void lsm6dso_init(void) {
 }
 
 void lsm6dso_power_up(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering up accelerometer");
   s_lsm6dso_enabled = true;
   prv_lsm6dso_chase_target_state();
 }
@@ -382,11 +390,16 @@ static void prv_lsm6dso_chase_target_state(void) {
       s_lsm6dso_running = false;
       s_lsm6dso_state = (lsm6dso_state_t){0};
       prv_lsm6dso_configure_interrupts();
+      // Stop the interrupt watchdog when sensor is stopped
+      regular_timer_remove_callback(&s_interrupt_watchdog_timer);
     }
     return;
   } else if (!s_lsm6dso_running) {
     s_lsm6dso_running = true;
     update_interrupts = true;
+    // Start the interrupt watchdog when sensor starts running
+    regular_timer_add_multisecond_callback(&s_interrupt_watchdog_timer, 
+                            LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS / 1000);
   }
 
   // Update number of samples
@@ -833,6 +846,43 @@ static bool prv_is_vibing(void) {
     }
   }
   return false;
+}
+
+static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
+  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Watchdog callback running");
+  
+  // Check if interrupts have stopped for too long
+  const uint64_t now_ms = prv_get_timestamp_ms();
+  const uint64_t interrupt_age_ms = prv_compute_age_ms(now_ms, s_last_interrupt_ms);
+  
+  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Interrupt age: %lu ms, last interrupt: %lu ms, now: %lu ms",
+          (unsigned long)interrupt_age_ms, (unsigned long)s_last_interrupt_ms, (unsigned long)now_ms);
+  
+  if (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS) {
+    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Interrupt watchdog triggered - no interrupts for %lu ms, count=%lu",
+            (unsigned long)interrupt_age_ms, (unsigned long)s_interrupt_count);
+    
+    // Mark sensor as unhealthy
+    s_sensor_health_ok = false;
+    
+    // Attempt recovery: reset and reconfigure the sensor
+    if (s_lsm6dso_running) {
+      PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Attempting sensor recovery from interrupt lockup");
+      
+      // Stop the sensor
+      lsm6dso_xl_data_rate_set(&lsm6dso_ctx, LSM6DSO_XL_ODR_OFF);
+      s_lsm6dso_running = false;
+      
+      // Brief delay
+      psleep(10);
+      
+      // Restart the sensor
+      prv_lsm6dso_chase_target_state();
+      
+      // Reset health status - will be set to true if recovery succeeds
+      s_sensor_health_ok = true;
+    }
+  }
 }
 
 // Sampling interval configuration
