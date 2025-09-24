@@ -11,8 +11,8 @@ def options(opt):
     opt.load('compiler_c')
     opt.add_option('--board', action='store', default='asterix',
                    help='Which board to build for '
-                   '(asterix)',
-                   choices=['asterix'])
+                   '(hollow)',
+                   choices=['hollow'])
     opt.add_option('--nowatchdog', action='store_true',
                    help='Do not enable watchdog timer or reset upon failure')
     opt.add_option('--loglevel', type='int', default=0,
@@ -23,7 +23,7 @@ def options(opt):
 
 def configure(conf):
     CPU_FLAGS = [
-        '-mcpu=cortex-m4', '-mthumb',
+        '-mcpu=cortex-m33', '-mthumb',
         '-mfpu=fpv4-sp-d16', '-mfloat-abi=softfp',
         ]
     OPT_FLAGS = [ '-Os' ,'-g' ]
@@ -73,7 +73,7 @@ def build(bld):
     if bld.cmd == 'install':
         raise Exception("install isn't a supported command. Did you mean flash?")
 
-    linkflags = ['-Wl,-Map,asterix_boot.map']
+    linkflags = ['-Wl,-Map,hollow_boot.map']
 
     sources = (
             bld.path.ant_glob('src/*.S') +

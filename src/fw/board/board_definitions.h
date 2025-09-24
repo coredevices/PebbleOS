@@ -63,6 +63,8 @@
 #include "boards/board_asterix.h"
 #elif BOARD_OBELIX || BOARD_OBELIX_BB
 #include "boards/board_obelix.h"
+#elif BOARD_HOLLOW
+#include "boards/board_hollow.h"
 #else
 #error "Unknown board definition"
 #endif

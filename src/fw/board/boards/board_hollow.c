@@ -1,279 +1,46 @@
-/*
- * Copyright 2025 Seán Hernan
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+#include <nrfx_i2s.h>
 
-#include "bf0_hal.h"
-#include "bf0_hal_efuse.h"
-#include "bf0_hal_hlp.h"
-#include "bf0_hal_lcpu_config.h"
-#include "bf0_hal_pmu.h"
-#include "bf0_hal_rcc.h"
 #include "board/board.h"
-#include "drivers/sf32lb52/debounced_button_definitions.h"
+#include "drivers/flash/qspi_flash_definitions.h"
+#include "drivers/gpio.h"
+#include "drivers/i2c.h"
+#include "drivers/i2c_definitions.h"
+#include "drivers/mic.h"
+#include "drivers/mic/nrf5/pdm_definitions.h"
+#include "drivers/nrf5/i2c_hal_definitions.h"
+#include "drivers/nrf5/spi_definitions.h"
+#include "drivers/nrf5/uart_definitions.h"
+#include "drivers/pmic/npm1300.h"
+#include "drivers/pwm.h"
+#include "drivers/qspi_definitions.h"
+#include "drivers/rtc.h"
+#include "flash_region/flash_region.h"
+#include "kernel/util/sleep.h"
 #include "system/passert.h"
+#include "util/units.h"
 
-
-#define HCPU_FREQ_MHZ 240
-
-static UARTDeviceState s_dbg_uart_state = {
-  .huart = {
-    .Instance = USART1,
-    .Init = {
-      .WordLength = UART_WORDLENGTH_8B,
-      .StopBits = UART_STOPBITS_1,
-      .Parity = UART_PARITY_NONE,
-      .HwFlowCtl = UART_HWCONTROL_NONE,
-      .OverSampling = UART_OVERSAMPLING_16,
-    },
-  },
-  .hdma = {
-    .Instance = DMA1_Channel1,
-    .Init = {
-      .Request = DMA_REQUEST_5,
-      .IrqPrio = 5,
-    },
-  },
-};
-
-static UARTDevice DBG_UART_DEVICE = {
-    .state = &s_dbg_uart_state,
-    .tx = {
-        .pad = PAD_PA19,
-        .func = USART1_TXD,
-        .flags = PIN_NOPULL,
-    },
-    .rx = {
-        .pad = PAD_PA18,
-        .func = USART1_RXD,
-        .flags = PIN_PULLUP,
-    },
-    .irqn = USART1_IRQn,
-    .irq_priority = 5,
-    .dma_irqn = DMAC1_CH1_IRQn,
-    .dma_irq_priority = 5,
-};
-
-UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
-
-IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
-IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
-
-static PwmState s_pwm1_ch1_state = {
-    .handle = {
-        .Instance = hwp_gptim1,
-        .Init = {
-             .CounterMode = GPT_COUNTERMODE_UP,
-        },
-
-    },
-    .clock_config = {
-        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
-    },
-    .channel = 1,
-};
-
-static PwmState s_pwm1_ch2_state = {
-    .handle = {
-        .Instance = hwp_gptim1,
-        .Init = {
-             .CounterMode = GPT_COUNTERMODE_UP,
-        },
-
-    },
-    .clock_config = {
-        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
-    },
-    .channel = 2,
-};
-
-static PwmState s_pwm1_ch3_state = {
-    .handle = {
-        .Instance = hwp_gptim1,
-        .Init = {
-             .CounterMode = GPT_COUNTERMODE_UP,
-        },
-
-    },
-    .clock_config = {
-        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
-    },
-    .channel = 3,
-};
-
-const LedControllerPwm LED_CONTROLLER_PWM = {
-    .pwm = {
-        [0] = {
-            .pwm_pin = {
-                .pad = PAD_PA28,
-                .func = GPTIM1_CH1,
-                .flags = PIN_NOPULL,
-            },
-            .state = &s_pwm1_ch1_state,
-        },
-        [1] = {
-            .pwm_pin = {
-                .pad = PAD_PA29,
-                .func = GPTIM1_CH2,
-                .flags = PIN_NOPULL,
-            },
-            .state = &s_pwm1_ch2_state,
-        },
-        [2] = {
-            .pwm_pin = {
-                .pad = PAD_PA44,
-                .func = GPTIM1_CH3,
-                .flags = PIN_NOPULL,
-            },
-            .state = &s_pwm1_ch3_state,
-        },
-    },
-    .initial_color = LED_WHITE,
-};
-
-static DisplayJDIState s_display_state = {
-    .hlcdc = {
-        .Instance = LCDC1,
-    },
-};
-
-static DisplayJDIDevice s_display = {
-    .state = &s_display_state,
-    .irqn = LCDC1_IRQn,
-    .irq_priority = 5,
-    .vcom = {
-        .lptim = hwp_lptim2,
-        .freq_hz = 60U,
-    },
-    .pinmux = {
-        .xrst = {
-            .pad = PAD_PA40,
-            .func = LCDC1_JDI_XRST,
-            .flags = PIN_NOPULL,
-            },
-        .vst = {
-            .pad = PAD_PA08,
-            .func = LCDC1_JDI_VST,
-            .flags = PIN_NOPULL,
-            },
-        .vck = {
-            .pad = PAD_PA39,
-            .func = LCDC1_JDI_VCK,
-            .flags = PIN_NOPULL,
-            },
-        .enb = {
-            .pad = PAD_PA07,
-            .func = LCDC1_JDI_ENB,
-            .flags = PIN_NOPULL,
-            },
-        .hst = {
-            .pad = PAD_PA06,
-            .func = LCDC1_JDI_HST,
-            .flags = PIN_NOPULL,
-            },
-        .hck = {
-            .pad = PAD_PA41,
-            .func = LCDC1_JDI_HCK,
-            .flags = PIN_NOPULL,
-            },
-        .r1 = {
-            .pad = PAD_PA05,
-            .func = LCDC1_JDI_R1,
-            .flags = PIN_NOPULL,
-            },
-        .r2 = {
-            .pad = PAD_PA42,
-            .func = LCDC1_JDI_R2,
-            .flags = PIN_NOPULL,
-            },
-        .g1 = {
-            .pad = PAD_PA04,
-            .func = LCDC1_JDI_G1,
-            .flags = PIN_NOPULL,
-            },
-        .g2 = {
-            .pad = PAD_PA43,
-            .func = LCDC1_JDI_G2,
-            .flags = PIN_NOPULL,
-            },
-        .b1 = {
-            .pad = PAD_PA03,
-            .func = LCDC1_JDI_B1,
-            .flags = PIN_NOPULL,
-            },
-        .b2 = {
-            .pad = PAD_PA02,
-            .func = LCDC1_JDI_B2,
-            .flags = PIN_NOPULL,
-            },
-        .vcom = {
-            .pad = PAD_PA24,
-            .func = GPIO_A24,
-            .flags = PIN_NOPULL,
-        },
-        .va = {
-            .pad = PAD_PA25,
-            .func = GPIO_A25,
-            .flags = PIN_NOPULL,
-        },
-    },
-};
-
-DisplayJDIDevice *const DISPLAY = &s_display;
-IRQ_MAP(LCDC1, jdi_lpm015m135a_irq_handler, DISPLAY);
-
-#ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-static UARTDeviceState s_hci_trace_uart_state = {
-  .huart = {
-    .Instance = USART3,
-    .Init = {
-      .WordLength = UART_WORDLENGTH_8B,
-      .StopBits = UART_STOPBITS_1,
-      .Parity = UART_PARITY_NONE,
-      .HwFlowCtl = UART_HWCONTROL_NONE,
-      .OverSampling = UART_OVERSAMPLING_16,
-    },
-  },
-};
-
-static UARTDevice HCI_TRACE_UART_DEVICE = {
-    .state = &s_hci_trace_uart_state,
-    .tx = {
-        .pad = PAD_PA20,
-        .func = USART3_TXD,
-        .flags = PIN_NOPULL,
-    },
-};
-UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
-#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
+// QSPI
+#include <hal/nrf_clock.h>
+#include <hal/nrf_gpio.h>
+#include <nrfx_gpiote.h>
+#include <nrfx_qspi.h>
+#include <nrfx_spim.h>
+#include <nrfx_twim.h>
+#include <nrfx_pdm.h>
 
 static QSPIPortState s_qspi_port_state;
 static QSPIPort QSPI_PORT = {
     .state = &s_qspi_port_state,
-    .cfg = {
-      .Instance = FLASH2,
-      .line = HAL_FLASH_QMODE,
-      .base = FLASH2_BASE_ADDR,
-      .msize = 16,
-      .SpiMode = SPI_MODE_NOR,
-    },
-    .clk_div = 5U,
-    .dma = {
-      .Instance = DMA1_Channel2,
-      .dma_irq = DMAC1_CH2_IRQn,
-      .request = DMA_REQUEST_1,
-    },
+    .auto_polling_interval = 16,
+    .cs_gpio = NRF_GPIO_PIN_MAP(0, 17),
+    .clk_gpio = NRF_GPIO_PIN_MAP(0, 19),
+    .data_gpio =
+        {
+            NRF_GPIO_PIN_MAP(0, 20),
+            NRF_GPIO_PIN_MAP(0, 21),
+            NRF_GPIO_PIN_MAP(0, 22),
+            NRF_GPIO_PIN_MAP(0, 23),
+        },
 };
 QSPIPort *const QSPI = &QSPI_PORT;
 
@@ -281,129 +48,167 @@ static QSPIFlashState s_qspi_flash_state;
 static QSPIFlash QSPI_FLASH_DEVICE = {
     .state = &s_qspi_flash_state,
     .qspi = &QSPI_PORT,
+    .default_fast_read_ddr_enabled = false,
+    .read_mode = QSPI_FLASH_READ_READ4IO,
+    .write_mode = QSPI_FLASH_WRITE_PP4O,
+    .reset_gpio = {GPIO_Port_NULL},
 };
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
+IRQ_MAP_NRFX(QSPI, nrfx_qspi_irq_handler);
+/* PERIPHERAL ID 43 */
 
-static I2CDeviceState s_i2c_device_state_1;
+static UARTDeviceState s_dbg_uart_state;
+static UARTDevice DBG_UART_DEVICE = {
+    .state = &s_dbg_uart_state,
+    .tx_gpio = NRF_GPIO_PIN_MAP(0, 27),
+    .rx_gpio = NRF_GPIO_PIN_MAP(0, 5),
+    .rts_gpio = NRF_UARTE_PSEL_DISCONNECTED,
+    .cts_gpio = NRF_UARTE_PSEL_DISCONNECTED,
+    .periph = NRFX_UARTE_INSTANCE(0),
+    .counter = NRFX_TIMER_INSTANCE(2),
+};
+UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
+IRQ_MAP_NRFX(UART0_UARTE0, nrfx_uarte_0_irq_handler);
+/* PERIPHERAL ID 8 */
 
-static struct I2CBusHal s_i2c_bus_hal_1 = {
-    .i2c_state = &s_i2c_device_state_1,
-    .hi2c =
+/* buttons */
+IRQ_MAP_NRFX(TIMER1, nrfx_timer_1_irq_handler);
+IRQ_MAP_NRFX(TIMER2, nrfx_timer_2_irq_handler);
+
+/* display */
+PwmState DISPLAY_EXTCOMIN_STATE;
+IRQ_MAP_NRFX(SPIM3, nrfx_spim_3_irq_handler);
+
+/* PERIPHERAL ID 10 */
+
+/* EXTI */
+IRQ_MAP_NRFX(GPIOTE, nrfx_gpiote_0_irq_handler);
+
+/* nPM1300 */
+static I2CBusState I2C_NPMC_IIC1_BUS_STATE = {};
+
+static const I2CBusHal I2C_NPMC_IIC1_BUS_HAL = {
+    .twim = NRFX_TWIM_INSTANCE(1),
+    .frequency = NRF_TWIM_FREQ_400K,
+};
+
+static const I2CBus I2C_NPMC_IIC1_BUS = {
+    .state = &I2C_NPMC_IIC1_BUS_STATE,
+    .hal = &I2C_NPMC_IIC1_BUS_HAL,
+    .scl_gpio =
         {
-            .Instance = I2C1,
-            .Init = {
-                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-                .ClockSpeed = 400000,
-                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-            },
-            .Mode = HAL_I2C_MODE_MASTER,
-
+            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+            .gpio_pin = NRF_GPIO_PIN_MAP(0, 14),
         },
-
-    .device_name = "i2c1",
-    .scl =
+    .sda_gpio =
         {
-            .pad = PAD_PA31,
-            .func = I2C1_SCL,
-            .flags = PIN_NOPULL,
+            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+            .gpio_pin = NRF_GPIO_PIN_MAP(0, 15),
         },
-    .sda =
+    .name = "I2C_NPMC_IIC1",
+};
+IRQ_MAP_NRFX(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, nrfx_twim_1_irq_handler);
+/* PERIPHERAL ID 9 */
+
+static const I2CSlavePort I2C_SLAVE_NPM1300 = {
+    .bus = &I2C_NPMC_IIC1_BUS,
+    .address = 0x6B << 1,
+};
+
+I2CSlavePort *const I2C_NPM1300 = &I2C_SLAVE_NPM1300;
+
+/* peripheral I2C bus */
+static I2CBusState I2C_IIC2_BUS_STATE = {};
+
+static const I2CBusHal I2C_IIC2_BUS_HAL = {
+    .twim = NRFX_TWIM_INSTANCE(0),
+    .frequency = NRF_TWIM_FREQ_400K,
+};
+
+static const I2CBus I2C_IIC2_BUS = {
+    .state = &I2C_IIC2_BUS_STATE,
+    .hal = &I2C_IIC2_BUS_HAL,
+    .scl_gpio =
         {
-            .pad = PAD_PA30,
-            .func = I2C1_SDA,
-            .flags = PIN_NOPULL,
+            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+            .gpio_pin = NRF_GPIO_PIN_MAP(0, 25),
         },
-    .core = CORE_ID_HCPU,
-    .module = RCC_MOD_I2C1,
-    .irqn = I2C1_IRQn,
-    .irq_priority = 5,
-    .timeout = 5000,
-};
-
-static I2CBusState s_i2c_bus_state_1;
-
-static I2CBus s_i2c_bus_1 = {
-    .hal = &s_i2c_bus_hal_1,
-    .state = &s_i2c_bus_state_1,
-};
-
-I2CBus *const I2C1_BUS = &s_i2c_bus_1;
-
-IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
-
-static I2CDeviceState s_i2c_device_state_2;
-
-static struct I2CBusHal s_i2c_bus_hal_2 = {
-    .i2c_state = &s_i2c_device_state_2,
-    .hi2c =
+    .sda_gpio =
         {
-            .Instance = I2C2,
-            .Init = {
-                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-                .ClockSpeed = 400000,
-                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-            },
-            .Mode = HAL_I2C_MODE_MASTER,
-
+            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+            .gpio_pin = NRF_GPIO_PIN_MAP(0, 11),
         },
+    .name = "I2C_IIC2",
+};
+IRQ_MAP_NRFX(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, nrfx_twim_0_irq_handler);
 
-    .device_name = "i2c2",
-    .scl =
-        {
-            .pad = PAD_PA32,
-            .func = I2C2_SCL,
-            .flags = PIN_NOPULL,
-        },
-    .sda =
-        {
-            .pad = PAD_PA33,
-            .func = I2C2_SDA,
-            .flags = PIN_NOPULL,
-        },
-    .core = CORE_ID_HCPU,
-    .module = RCC_MOD_I2C2,
-    .irqn = I2C2_IRQn,
-    .irq_priority = 5,
-    .timeout = 5000,
+static const I2CSlavePort I2C_SLAVE_DRV2604 = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x5A << 1,
 };
 
-static I2CBusState s_i2c_bus_state_2;
+I2CSlavePort *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
 
-static I2CBus s_i2c_bus_2 = {
-    .hal = &s_i2c_bus_hal_2,
-    .state = &s_i2c_bus_state_2,
+static const I2CSlavePort I2C_SLAVE_OPT3001 = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x44 << 1,
 };
 
-I2CBus *const I2C2_BUS = &s_i2c_bus_2;
+I2CSlavePort *const I2C_OPT3001 = &I2C_SLAVE_OPT3001;
 
-IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
-
-static const I2CSlavePort s_i2c_lsm6d = {
-    .bus = &s_i2c_bus_2,
-    .address = 0x6A,
+static const I2CSlavePort I2C_SLAVE_DA7212 = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x1A << 1,
 };
 
-I2CSlavePort *const I2C_LSM6D = &s_i2c_lsm6d;
+I2CSlavePort *const I2C_DA7212 = &I2C_SLAVE_DA7212;
 
-static const I2CSlavePort s_i2c_npm1300 = {
-    .bus = &s_i2c_bus_1,
-    .address = 0x6B,
+static const I2CSlavePort I2C_SLAVE_MMC5603NJ = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x30 << 1,
 };
 
-I2CSlavePort *const I2C_NPM1300 = &s_i2c_npm1300;
+I2CSlavePort *const I2C_MMC5603NJ = &I2C_SLAVE_MMC5603NJ;
 
-static const I2CSlavePort s_i2c_aw86225 = {
-    .bus = &s_i2c_bus_1,
-    .address = 0x58,
-};
-  
-I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
-
-const BoardConfigActuator BOARD_CONFIG_VIBE = {
-    .ctl = {hwp_gpio1, 1, true},
+static const I2CSlavePort I2C_SLAVE_BMP390 = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x76 << 1,
 };
 
-// TODO(OBELIX): Adjust to final battery parameters
+I2CSlavePort *const I2C_BMP390 = &I2C_SLAVE_BMP390;
+
+static const I2CSlavePort I2C_SLAVE_LSM6D = {
+    .bus = &I2C_IIC2_BUS,
+    .address = 0x6A << 1,
+};
+
+I2CSlavePort *const I2C_LSM6D = &I2C_SLAVE_LSM6D;
+
+IRQ_MAP_NRFX(I2S, nrfx_i2s_0_irq_handler);
+
+IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
+
+/* PERIPHERAL ID 11 */
+
+/* Microphone */
+static MicDeviceState s_mic_state_storage;
+static MicDevice s_mic_device = {
+  .state = &s_mic_state_storage,
+  .pdm_instance = NRFX_PDM_INSTANCE(0),
+  .clk_pin = NRF_GPIO_PIN_MAP(1, 0),   // P1.00 - PDM CLK
+  .data_pin = NRF_GPIO_PIN_MAP(0, 24), // P0.24 - PDM DATA
+};
+MicDevice * const MIC = &s_mic_device;
+
+/* sensor SPI bus */
+
+/* asterix shares SPI with flash, which we don't support */
+
+PwmState BACKLIGHT_PWM_STATE;
+IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
+
+IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
+
 const Npm1300Config NPM1300_CONFIG = {
   // 128mA = ~1C (rapid charge)
   .chg_current_ma = 128,
@@ -412,106 +217,32 @@ const Npm1300Config NPM1300_CONFIG = {
   .thermistor_beta = 3380,
 };
 
-const BoardConfigPower BOARD_CONFIG_POWER = {
-  .pmic_int = {
-    .peripheral = hwp_gpio1,
-    .gpio_pin = 26,
-  },
-  .low_power_threshold = 5U,
-  .battery_capacity_hours = 100U,
-};
-
-const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 25,
-};
-
-const BoardConfigButton BOARD_CONFIG_BUTTON = {
-  .buttons = {
-    [BUTTON_ID_BACK]   = { "Back",   hwp_gpio1, 34, GPIO_PuPd_NOPULL, true },
-#ifdef IS_BIGBOARD
-    [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 37, GPIO_PuPd_UP, false},
-#else
-    [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 35, GPIO_PuPd_UP, false},
-#endif
-    [BUTTON_ID_SELECT] = { "Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
-#ifdef IS_BIGBOARD
-    [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 35, GPIO_PuPd_UP, false},
-#else
-    [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
-#endif
-  },
-  .timer = GPTIM1,
-  .timer_irqn = GPTIM1_IRQn,
-};
-IRQ_MAP(GPTIM1, debounced_button_irq_handler, GPTIM1);
-
-uint32_t BSP_GetOtpBase(void) {
-  return MPI2_MEM_BASE;
-}
-
 void board_early_init(void) {
-  HAL_StatusTypeDef ret;
-  uint32_t bootopt;
+  PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
 
-  // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
-  // that the flash is properly power cycled on reset. A flash power cycle is
-  // needed if left in 4-byte addressing mode, as bootrom does not support it.
-  bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
-  bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
-  bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
-  HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
+  NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 
-  if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
-    HAL_HPAON_EnableXT48();
-    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HXT48);
+  nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
+  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
+  nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
+  /* TODO: Add timeout, report failure if LFCLK does not start. For now,
+   * WDT should trigger a reboot. Calibrated RC may be used as a fallback,
+   * provided we can adjust BLE SCA settings at runtime.
+   */
+  while (!nrf_clock_event_check(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED)) {
   }
-
-  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_PERI, RCC_CLK_PERI_HXT48);
-
-  // Halt LCPU first to avoid LCPU in running state
-  HAL_HPAON_WakeCore(CORE_ID_LCPU);
-  HAL_RCC_Reset_and_Halt_LCPU(1);
-
-  // Load system configuration from EFUSE
-  BSP_System_Config();
-
-  HAL_HPAON_StartGTimer();
-#ifdef SF32LB52_USE_LXT
-  HAL_PMU_EnableRC32K(1);
-
-  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
-#else
-  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC10);
-#endif
-  HAL_PMU_EnableDLL(1);
-#ifdef SF32LB52_USE_LXT
-  HAL_PMU_EnableXTAL32();
-  ret = HAL_PMU_LXTReady();
-  PBL_ASSERTN(ret == HAL_OK);
-
-  HAL_RTC_ENABLE_LXT();
-#endif
-
-  HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
-
-  HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
-
-  HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
-
-  // Reset sysclk used by HAL_Delay_us
-  HAL_Delay_us(0);
-
-  ret = HAL_RCC_CalibrateRC48();
-  PBL_ASSERTN(ret == HAL_OK);
-
-  HAL_RCC_Init();
-  HAL_PMU_Init();
-
-  __HAL_SYSCFG_CLEAR_SECURITY();
-  HAL_EFUSE_Init();
+  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
 }
 
 void board_init(void) {
-  i2c_init(I2C1_BUS);
-  i2c_init(I2C2_BUS);
+  i2c_init(&I2C_NPMC_IIC1_BUS);
+  i2c_init(&I2C_IIC2_BUS);
+
+  uint8_t da7212_powerdown[] = { 0xFD /* SYSTEM_ACTIVE */, 0 };
+  i2c_use(I2C_DA7212);
+  i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
+  i2c_release(I2C_DA7212);
+  
+  // XXX: FIRM-264: stop mode breaks NimBLE
+  stop_mode_disable(InhibitorMain);
 }

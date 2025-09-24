@@ -31,6 +31,9 @@ enum {
 #define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
 #if defined(MICRO_FAMILY_NRF52840)
 #  include "irq_nrf52840.def"
+#elif defined(MICRO_FAMILY_NRF5340)
+#  include "irq_nrf5340.def"
+#else
 #else
 #  error need IRQ table for new micro family
 #endif
