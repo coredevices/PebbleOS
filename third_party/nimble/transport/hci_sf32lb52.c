@@ -238,11 +238,13 @@ static void prv_hci_task_main(void *unused) {
 
       len = ipc_queue_read(s_ipc_port, buf, sizeof(buf));
       if (len > 0U) {
+        uint8_t *pbuf = buf;
         while (len > 0U) {
           int consumed_bytes;
 
-          consumed_bytes = hci_h4_sm_rx(&s_hci_h4sm, buf, len);
+          consumed_bytes = hci_h4_sm_rx(&s_hci_h4sm, pbuf, len);
           len -= consumed_bytes;
+          pbuf += consumed_bytes;
         }
       } else {
         break;
