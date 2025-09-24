@@ -878,9 +878,17 @@ static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
       
       // Restart the sensor
       prv_lsm6dso_chase_target_state();
+      // Clear any pending interrupt flags to allow new interrupts
+      lsm6dso_all_sources_t clear_src;
+      lsm6dso_all_sources_get(&lsm6dso_ctx, &clear_src);
       
       // Reset health status - will be set to true if recovery succeeds
       s_sensor_health_ok = true;
+      // Reset interrupt timestamp and count to avoid repeated watchdog triggers
+      s_last_interrupt_ms = now_ms;
+      s_interrupt_count = 0;
+      // Reconfigure sensor interrupt routing and re-enable external interrupt
+      prv_lsm6dso_configure_interrupts();
     }
   }
 }
