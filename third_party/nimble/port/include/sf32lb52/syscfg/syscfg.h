@@ -45,7 +45,7 @@
 
 /*** Repository @syscfg info */
 #ifndef MYNEWT_VAL_REPO_HASH_SYSCFG
-#define MYNEWT_VAL_REPO_HASH_SYSCFG "3bdec47963cc638a2a9296673b24588381ecf196-dirty"
+#define MYNEWT_VAL_REPO_HASH_SYSCFG "83198b3b598600bdab70734c856882b21e7dc12c-dirty"
 #endif
 
 #ifndef MYNEWT_VAL_REPO_VERSION_SYSCFG
@@ -694,6 +694,7 @@
 #define MYNEWT_VAL_BLE_GATT_INDICATE (1)
 #endif
 
+/* Overridden by app (defined by @apache-mynewt-nimble/nimble/host) */
 #ifndef MYNEWT_VAL_BLE_GATT_MAX_PROCS
 #define MYNEWT_VAL_BLE_GATT_MAX_PROCS (8)
 #endif
@@ -1138,18 +1139,19 @@
 #define MYNEWT_VAL_BLE_TRANSPORT (1)
 #endif
 
+/* Overridden by targets/sf32lb52 (defined by @apache-mynewt-nimble/nimble/transport) */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_ACL_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_ACL_COUNT (10)
+#define MYNEWT_VAL_BLE_TRANSPORT_ACL_COUNT (20)
 #endif
 
 /* Value copied from BLE_TRANSPORT_ACL_COUNT */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_HS_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_HS_COUNT (10)
+#define MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_HS_COUNT (20)
 #endif
 
 /* Value copied from BLE_TRANSPORT_ACL_COUNT */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_LL_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_LL_COUNT (10)
+#define MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_LL_COUNT (20)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_ACL_SIZE
