@@ -238,6 +238,9 @@ Or re-configure with the --relax_toolchain_restrictions option. """
     elif conf.env.MICRO_FAMILY == "NRF52840":
         args += [ '-mcpu=cortex-m4']
         cpu_fpu = "fpv4-sp-d16"
+    elif conf.env.MICRO_FAMILY == "NRF5340":
+        args += [ '-mcpu=cortex-m33']
+        cpu_fpu = "fpv5-sp-d16"
     elif conf.env.MICRO_FAMILY == "SF32LB52":
         args += [ '-mcpu=star-mc1']
         cpu_fpu = "fpv5-sp-d16"

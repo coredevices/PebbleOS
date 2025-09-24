@@ -62,7 +62,9 @@
 # endif
 # pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wmissing-declarations"
-#  include <nrf5340_application.h>
+// including the CMSIS headerfiles
+#  include <nrf5340_application.h> // main core
+// #  include <nrf5340_network.h> // bt stack/ low power?
 # pragma GCC diagnostic pop
 #elif defined(MICRO_FAMILY_SF32LB52)
 # if !defined(SF32LB52_COMPATIBLE) && !defined(CMSIS_COMPATIBLE)

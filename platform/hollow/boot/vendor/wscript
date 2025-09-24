@@ -1,13 +1,13 @@
 def configure(conf):
-    conf.env.append_unique('DEFINES', 'NRF5340_XXAA')
+    conf.env.append_unique('DEFINES', 'NRF5340_XXAA_APPLICATION')
     conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
-    conf.env.append_unique('DEFINES', 'NRFX_QSPI_ENABLED=1')
-    conf.env.append_unique('DEFINES', 'NRFX_SPIM_ENABLED=1')
-    conf.env.append_unique('DEFINES', 'NRFX_SPIM3_ENABLED=1')
-    conf.env.append_unique('DEFINES', 'NRFX_TWI_ENABLED=1')
-    conf.env.append_unique('DEFINES', 'NRFX_TWI1_ENABLED=1')
-    conf.env.append_unique('DEFINES', 'NRFX_UARTE_ENABLED=1')
-    conf.env.append_unique('DEFINES', 'NRFX_UARTE0_ENABLED=1')
+    conf.env.append_unique('DEFINES', 'NRFX_QSPI_ENABLED=0')
+    conf.env.append_unique('DEFINES', 'NRFX_SPIM_ENABLED=0')
+    conf.env.append_unique('DEFINES', 'NRFX_SPIM3_ENABLED=0')
+    conf.env.append_unique('DEFINES', 'NRFX_TWI_ENABLED=0')
+    conf.env.append_unique('DEFINES', 'NRFX_TWI1_ENABLED=0')
+    conf.env.append_unique('DEFINES', 'NRFX_UARTE_ENABLED=0')
+    conf.env.append_unique('DEFINES', 'NRFX_UARTE0_ENABLED=0')
 
 def build(bld):
     bld.recurse('../../../../third_party/cmsis_core')
@@ -16,8 +16,8 @@ def build(bld):
 
     nrfx_basedir = "../../../../third_party/hal_nordic"
     
-    micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/system_nrf5340.c" ]
-    micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/gcc_startup_nrf5340.S" ]
+    micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/system_nrf5340_application.c" ]
+    micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/gcc_startup_nrf5340_application.S" ]
 
     micro_includes = [
         nrfx_basedir,

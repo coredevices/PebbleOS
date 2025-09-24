@@ -171,3 +171,14 @@ NORETURN app_error_handler_bare(uint32_t error_code) {
   app_error_fault_handler(error_code, 0, 0);
 }
 #endif
+
+#if MICRO_FAMILY_NRF5340
+NORETURN app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
+  PBL_LOG(LOG_LEVEL_ALWAYS, "nRF error %ld (pc %ld, info %ld)", id, pc, info);
+  trigger_fault(RebootReasonCode_Assert, pc);
+}
+
+NORETURN app_error_handler_bare(uint32_t error_code) {
+  app_error_fault_handler(error_code, 0, 0);
+}
+#endif

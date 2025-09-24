@@ -38,6 +38,14 @@ def build(bld):
             'FREERTOS_LAST_MPU_REGION=7',
         ]
 
+    # FIXME(SF32LB52): Add valid regions once MPU can be used   <- potentially not applicable
+    # This currently results in 0 regions!
+    if bld.env.MICRO_FAMILY == 'NRF5340':
+        freertos_defines += [
+            'FREERTOS_FIRST_MPU_REGION=8',
+            'FREERTOS_LAST_MPU_REGION=7',
+        ]
+
     bld(export_includes=freertos_includes,
         export_defines=freertos_defines,
         name='freertos_includes')
