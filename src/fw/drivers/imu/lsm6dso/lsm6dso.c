@@ -21,7 +21,7 @@
 #include "drivers/rtc.h"
 #include "drivers/vibe.h"
 #include "kernel/util/sleep.h"
-#include "services/common/new_timer/new_timer.h"
+#include "services/common/regular_timer.h"
 #include "services/common/vibe_pattern.h"
 #include "system/logging.h"
 #include "util/math.h"
@@ -44,10 +44,8 @@ static void prv_lsm6dso_configure_double_tap(bool enable);
 static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
+static void prv_lsm6dso_interrupt_watchdog_callback(void *data);
 static bool prv_is_vibing(void);
-static void prv_lsm6dso_retry_interrupt_config(void *unused);
-static bool prv_lsm6dso_health_check(void);
-static bool prv_lsm6dso_attempt_recovery(void);
 typedef struct {
   lsm6dso_odr_xl_t odr;
   lsm6dso_xl_hm_mode_t power_mode;
@@ -92,7 +90,6 @@ lsm6dso_state_t s_lsm6dso_state_target = {0};
 static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_threshold / 1250;
 static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
 static uint32_t s_last_vibe_detected = 0;
-static bool s_interrupt_config_retry_scheduled = false;
 
 // Error tracking and recovery
 static uint32_t s_i2c_error_count = 0;
@@ -101,8 +98,6 @@ static uint32_t s_consecutive_errors = 0;
 static bool s_sensor_health_ok = true;
 static int16_t s_last_sample_mg[3] = {0};
 static uint64_t s_last_sample_timestamp_ms = 0;
-static uint32_t s_watchdog_event_count = 0;
-static uint32_t s_recovery_success_count = 0;
 // Interrupt activity instrumentation so we can spot when the sensor stops firing INT1.
 static uint64_t s_last_interrupt_ms = 0;
 static uint64_t s_last_wake_event_ms = 0;
@@ -111,12 +106,11 @@ static uint32_t s_interrupt_count = 0;
 static uint32_t s_wake_event_count = 0;
 static uint32_t s_double_tap_event_count = 0;
 
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-/* Counters exported to memfault heartbeat (declared as extern where used).
- * These must be non-static so they are visible to other translation units. */
-uint32_t metric_firm_579_log_events = 0;
-uint32_t metric_firm_579_attempted_recoveries = 0;
-#endif
+// Interrupt watchdog timer
+static RegularTimerInfo s_interrupt_watchdog_timer = {
+  .cb = prv_lsm6dso_interrupt_watchdog_callback,
+  .cb_data = NULL
+};
 
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
 #define LSM6DSO_FIFO_MAX_WATERMARK 1023
@@ -129,11 +123,8 @@ uint32_t metric_firm_579_attempted_recoveries = 0;
 
 // Error recovery thresholds and watchdog timeouts
 #define LSM6DSO_MAX_CONSECUTIVE_FAILURES 3
-#define LSM6DSO_HEALTH_CHECK_INTERVAL_MS 5000  // Check sensor health every 5 seconds
-#define LSM6DSO_MAX_SILENT_PERIOD_MS 30000     // Max time without successful read
-#define LSM6DSO_WATCHDOG_TIMEOUT_MS 5000       // Watchdog timeout for detecting unresponsive sensor
-#define LSM6DSO_MAX_CONSECUTIVE_ERRORS 5       // Maximum consecutive errors before attempting recovery
 #define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
+#define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 90000  // 90 seconds
 
 // LSM6DSO configuration entrypoints
 
@@ -143,7 +134,6 @@ void lsm6dso_init(void) {
 }
 
 void lsm6dso_power_up(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering up accelerometer");
   s_lsm6dso_enabled = true;
   prv_lsm6dso_chase_target_state();
 }
@@ -385,33 +375,6 @@ static void prv_lsm6dso_chase_target_state(void) {
     return;
   }
 
-  // Check for unresponsive sensor and attempt recovery
-  uint32_t now = prv_get_timestamp_ms();
-  if (s_lsm6dso_running && s_last_successful_read_ms > 0) {
-    // Only treat a quiet bus as a watchdog failure when we actively stream samples;
-    // motion-only use (shake/tap) can legitimately go several seconds with no reads.
-    const bool streaming_samples = (s_lsm6dso_state.num_samples > 0);
-    const bool watchdog_expired =
-        streaming_samples && (now - s_last_successful_read_ms > LSM6DSO_WATCHDOG_TIMEOUT_MS);
-    const bool too_many_errors = (s_consecutive_errors >= LSM6DSO_MAX_CONSECUTIVE_ERRORS);
-
-    if (watchdog_expired || too_many_errors) {
-      s_watchdog_event_count++;
-      PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Sensor appears unresponsive (last_read: %lu ms ago, errors: %lu)",
-              now - s_last_successful_read_ms, s_consecutive_errors);
-      
-      if (!prv_lsm6dso_attempt_recovery()) {
-        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Recovery failed, disabling sensor");
-        s_lsm6dso_enabled = false;
-        return;
-      }
-      
-      // Reset state and continue with normal configuration
-      s_lsm6dso_state = (lsm6dso_state_t){0};
-      s_lsm6dso_running = false;
-    }
-  }
-
   bool update_interrupts = false;
 
   // Check whether we should be spinning up the accelerometer
@@ -427,11 +390,16 @@ static void prv_lsm6dso_chase_target_state(void) {
       s_lsm6dso_running = false;
       s_lsm6dso_state = (lsm6dso_state_t){0};
       prv_lsm6dso_configure_interrupts();
+      // Stop the interrupt watchdog when sensor is stopped
+      regular_timer_remove_callback(&s_interrupt_watchdog_timer);
     }
     return;
   } else if (!s_lsm6dso_running) {
     s_lsm6dso_running = true;
     update_interrupts = true;
+    // Start the interrupt watchdog when sensor starts running
+    regular_timer_add_multisecond_callback(&s_interrupt_watchdog_timer, 
+                            LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS / 1000);
   }
 
   // Update number of samples
@@ -504,9 +472,6 @@ static void prv_lsm6dso_configure_interrupts(void) {
   // Disable interrupts during configuration to prevent race conditions
   // and ensure atomic configuration updates
   
-  // Clear any outstanding retry flag now that we're actively reconfiguring.
-  s_interrupt_config_retry_scheduled = false;
-
   bool should_enable_interrupts = s_lsm6dso_enabled &&
       (s_lsm6dso_state.num_samples || s_lsm6dso_state.shake_detection_enabled ||
        s_lsm6dso_state.double_tap_detection_enabled);
@@ -542,34 +507,16 @@ static void prv_lsm6dso_configure_interrupts(void) {
 
   // Configure interrupt routing atomically
   if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts (retrying)");
-
-    if (should_enable_interrupts) {
-      // Keep external interrupt alive using the previous sensor routing.
-      exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
-    }
-
-    if (!s_interrupt_config_retry_scheduled) {
-      if (!new_timer_add_work_callback(prv_lsm6dso_retry_interrupt_config, NULL)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to queue interrupt reconfiguration retry");
-      } else {
-        s_interrupt_config_retry_scheduled = true;
-      }
-    }
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
     return;
   }
-
+  
   // Clear any pending interrupt sources before enabling external interrupt
   lsm6dso_all_sources_t all_sources;
   lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources); // This clears pending sources
   
   // Finally enable the external interrupt
   exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
-}
-
-static void prv_lsm6dso_retry_interrupt_config(void *unused) {
-  s_interrupt_config_retry_scheduled = false;
-  prv_lsm6dso_configure_interrupts();
 }
 
 // Map output data rate (interval) to FIFO batching rate enum
@@ -597,9 +544,9 @@ static void prv_lsm6dso_configure_fifo(bool enable) {
     uint32_t watermark = s_lsm6dso_state.num_samples;
     if (watermark == 0) watermark = 1;  // safety
     
-    // Set watermark to 75% of requested samples to prevent overflow
-    // This provides buffer for timing variations
-    watermark = (watermark * 3) / 4;
+    // Set watermark to 50% of requested samples to prevent overflow
+    // This provides more buffer for timing variations and prevents lockup
+    watermark = watermark / 2;
     if (watermark == 0) watermark = 1;  // minimum
     if (watermark > LSM6DSO_FIFO_MAX_WATERMARK) watermark = LSM6DSO_FIFO_MAX_WATERMARK;
     
@@ -708,23 +655,11 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
 }
 
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
-  // Always process interrupts immediately to prevent lost events
-  // The LSM6DSO can miss events if interrupts are ignored due to pending flags
-  
-  // Clear the hardware interrupt sources immediately to prevent sensor lockup
-  // This is done in ISR context to minimize latency
-  static volatile bool interrupt_active = false;
-  
-  // Prevent recursive calls but ensure we don't lose interrupts
-  if (interrupt_active) {
-    // If already processing, queue another work item to catch any new events
-    accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
-    return;
-  }
-  
-  interrupt_active = true;
+  // Offload processing to a worker. The LSM6DSO can miss events if interrupts
+  // are ignored due to pending flags, so it is important to process them
+  // quickly. The actual clearing of the interrupt flags will happen in the
+  // worker via an I2C transaction.
   accel_offload_work_from_isr(prv_lsm6dso_process_interrupts, should_context_switch);
-  interrupt_active = false;
 }
 
 static void prv_lsm6dso_process_interrupts(void) {
@@ -798,12 +733,28 @@ static void prv_lsm6dso_process_interrupts(void) {
     // Wait for FIFO to actually clear
     psleep(1);
     
+    // Clear all interrupt sources after FIFO reset to ensure clean state
+    lsm6dso_all_sources_t clear_sources;
+    lsm6dso_all_sources_get(&lsm6dso_ctx, &clear_sources);
+
     // Restore FIFO configuration if it was enabled
     if (s_fifo_in_use) {
-      lsm6dso_fifo_watermark_set(&lsm6dso_ctx, current_watermark);
+      // Reduce watermark by half to prevent future overflow
+      uint16_t reduced_watermark = current_watermark / 2;
+      if (reduced_watermark == 0) reduced_watermark = 1;
+      
+      lsm6dso_fifo_watermark_set(&lsm6dso_ctx, reduced_watermark);
       lsm6dso_fifo_xl_batch_set(&lsm6dso_ctx, current_batch_rate);
       lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE);
+
+      PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Reduced FIFO watermark from %u to %u to prevent future overflow",
+              current_watermark, reduced_watermark);
     }
+
+    // Force re-enable of external interrupt to ensure it's active
+    exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+    psleep(1);
+    exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
   }
 
   // Collect accelerometer samples if requested
@@ -895,6 +846,43 @@ static bool prv_is_vibing(void) {
     }
   }
   return false;
+}
+
+static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
+  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Watchdog callback running");
+  
+  // Check if interrupts have stopped for too long
+  const uint64_t now_ms = prv_get_timestamp_ms();
+  const uint64_t interrupt_age_ms = prv_compute_age_ms(now_ms, s_last_interrupt_ms);
+  
+  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Interrupt age: %lu ms, last interrupt: %lu ms, now: %lu ms",
+          (unsigned long)interrupt_age_ms, (unsigned long)s_last_interrupt_ms, (unsigned long)now_ms);
+  
+  if (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS) {
+    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Interrupt watchdog triggered - no interrupts for %lu ms, count=%lu",
+            (unsigned long)interrupt_age_ms, (unsigned long)s_interrupt_count);
+    
+    // Mark sensor as unhealthy
+    s_sensor_health_ok = false;
+    
+    // Attempt recovery: reset and reconfigure the sensor
+    if (s_lsm6dso_running) {
+      PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Attempting sensor recovery from interrupt lockup");
+      
+      // Stop the sensor
+      lsm6dso_xl_data_rate_set(&lsm6dso_ctx, LSM6DSO_XL_ODR_OFF);
+      s_lsm6dso_running = false;
+      
+      // Brief delay
+      psleep(10);
+      
+      // Restart the sensor
+      prv_lsm6dso_chase_target_state();
+      
+      // Reset health status - will be set to true if recovery succeeds
+      s_sensor_health_ok = true;
+    }
+  }
 }
 
 // Sampling interval configuration
@@ -1062,21 +1050,6 @@ static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
   if (!s_lsm6dso_initialized) {
     PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Not initialized, cannot read sample");
     return -1;
-  }
-
-  // Check sensor health periodically
-  static uint32_t s_last_health_check_ms = 0;
-  uint32_t now_ms = prv_get_timestamp_ms();
-  if (now_ms - s_last_health_check_ms > LSM6DSO_HEALTH_CHECK_INTERVAL_MS) {
-    s_last_health_check_ms = now_ms;
-    if (!prv_lsm6dso_health_check()) {
-      if (s_sensor_health_ok) {
-        // Health just degraded, attempt recovery
-        prv_lsm6dso_attempt_recovery();
-      }
-      s_sensor_health_ok = false;
-      return -1;
-    }
   }
 
   // TODO: Handle case when accelerometer is not enabled or running (by briefly
@@ -1301,93 +1274,6 @@ bool accel_run_selftest(void) {
   return pass;
 }
 
-// Health monitoring and recovery functions
-
-// Health check function to verify sensor is still responsive
-static bool prv_lsm6dso_health_check(void) {
-  uint8_t whoami;
-  if (lsm6dso_device_id_get(&lsm6dso_ctx, &whoami) != 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Health check failed - cannot read WHO_AM_I");
-    return false;
-  }
-  if (whoami != LSM6DSO_ID) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Health check failed - wrong WHO_AM_I (0x%02x)", whoami);
-    return false;
-  }
-  return true;
-}
-
-// Recovery mechanism for unresponsive sensor
-static bool prv_lsm6dso_attempt_recovery(void) {
-  PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Attempting sensor recovery");
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-  metric_firm_579_attempted_recoveries++;
-#endif
-  
-  // Reset the sensor
-  if (lsm6dso_reset_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to reset sensor during recovery");
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-    metric_firm_579_log_events++;
-#endif
-    return false;
-  }
-  
-  // Wait for reset to complete
-  uint8_t rst;
-  int timeout = 100; // 100ms timeout
-  do {
-    psleep(1);
-    if (lsm6dso_reset_get(&lsm6dso_ctx, &rst) != 0) {
-  PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to check reset status during recovery");
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-  metric_firm_579_log_events++;
-#endif
-  return false;
-    }
-    timeout--;
-  } while (rst && timeout > 0);
-  
-  if (timeout == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Reset timeout during recovery");
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-    metric_firm_579_log_events++;
-#endif
-    return false;
-  }
-  
-  // Re-initialize basic settings
-  if (lsm6dso_i3c_disable_set(&lsm6dso_ctx, LSM6DSO_I3C_DISABLE) != 0 ||
-      lsm6dso_block_data_update_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0 ||
-      lsm6dso_auto_increment_set(&lsm6dso_ctx, PROPERTY_ENABLE) != 0 ||
-      lsm6dso_xl_full_scale_set(&lsm6dso_ctx, LSM6DSO_4g) != 0) {
-  PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to restore basic settings during recovery");
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-  metric_firm_579_log_events++;
-#endif
-  return false;
-  }
-  
-  s_consecutive_errors = 0;
-  s_last_successful_read_ms = prv_get_timestamp_ms();
-  
-  // Final health check
-  if (!prv_lsm6dso_health_check()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Recovery failed - health check failed");
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-    metric_firm_579_log_events++;
-#endif
-    return false;
-  }
-  
-  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Sensor recovery successful");
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-  metric_firm_579_log_events++;
-#endif
-  s_recovery_success_count++;
-  return true;
-}
-
 void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
   if (!diagnostics) {
     return;
@@ -1409,8 +1295,6 @@ void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
 
   diagnostics->i2c_error_count = s_i2c_error_count;
   diagnostics->consecutive_error_count = s_consecutive_errors;
-  diagnostics->watchdog_event_count = s_watchdog_event_count;
-  diagnostics->recovery_success_count = s_recovery_success_count;
   diagnostics->interrupt_count = s_interrupt_count;
   diagnostics->wake_event_count = s_wake_event_count;
   diagnostics->double_tap_event_count = s_double_tap_event_count;

@@ -18,16 +18,9 @@ MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_double_tap_age_ms, kMemfaultMetricType
 MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_state_flags, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_i2c_error_count, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_consecutive_errors, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_watchdog_events, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_recovery_successes, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_interrupt_count, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_wake_events, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_double_tap_events, kMemfaultMetricType_Unsigned)
-
-#if CAPABILITY_NEEDS_FIRM_579_STATS
-MEMFAULT_METRICS_KEY_DEFINE(firm_579_log_events, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(firm_579_attempted_recoveries, kMemfaultMetricType_Unsigned)
-#endif
 
 // Number of times that the user has pressed the back button, and it would
 // have caused a force quit but we realized that the KernelMain task had

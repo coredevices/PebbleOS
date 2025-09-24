@@ -79,7 +79,8 @@ class PebbleBundle(object):
                      firmware_timestamp,
                      firmware_commit,
                      firmware_hwrev,
-                     firmware_version_tag):
+                     firmware_version_tag,
+                     firmware_slot=None):
         if self.has_firmware:
             raise Exception("Added multiple firmwares to a single bundle")
 
@@ -103,6 +104,13 @@ class PebbleBundle(object):
             'crc' : stm32crc(firmware_path),
             'versionTag' : firmware_version_tag,
         }
+
+        if firmware_slot is not None:
+            if firmware_type != 'normal':
+                raise Exception("Only normal firmware can have a slot")
+            if firmware_slot not in (0, 1):
+                raise Exception("Firmware slot must be 0 or 1")
+            self.bundle_manifest['firmware']['slot'] = firmware_slot
 
         self.has_firmware = True
         return True

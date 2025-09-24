@@ -43,6 +43,16 @@ const FirmwareMetadata TINTIN_METADATA SECTION(".pbl_fw_version") = {
 
   .is_recovery_firmware = FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE,
   .is_ble_firmware = false,
+#if PLATFORM_HAS_PBLBOOT
+  .is_dual_slot = true,
+#else
+  .is_dual_slot = false,
+#endif
+#if defined(FIRMWARE_SLOT_0) && !defined(RECOVERY_FW)
+  .is_slot_0 = true,
+#else
+  .is_slot_0 = false,
+#endif
   .reserved = 0,
 
   .hw_platform = FIRMWARE_METADATA_HW_PLATFORM,
@@ -60,6 +70,7 @@ bool version_copy_running_fw_metadata(FirmwareMetadata *out_metadata) {
 
 static bool prv_version_copy_flash_fw_metadata(FirmwareMetadata *out_metadata,
                                                uint32_t flash_address, bool check_crc) {
+#if !CAPABILITY_HAS_PBLBOOT
   FirmwareDescription firmware_description =
       firmware_storage_read_firmware_description(flash_address);
 
@@ -69,12 +80,20 @@ static bool prv_version_copy_flash_fw_metadata(FirmwareMetadata *out_metadata,
     *out_metadata = (FirmwareMetadata){};
     return false;
   }
-
+  uint32_t fw_len = firmware_description.description_length + firmware_description.firmware_length;
+#else
+  FirmwareHeader header =
+      firmware_storage_read_firmware_header(flash_address);
+  if (check_crc &&
+      !firmware_storage_check_valid_firmware_header(flash_address,
+                                                    &header)) {
+    *out_metadata = (FirmwareMetadata){};
+    return false;
+  }
+  uint32_t fw_len = header.fw_length;
+#endif
   // The FirmwareMetadata is stored at the end of the binary
-  const uint32_t metadata_offset = flash_address +
-                                   firmware_description.description_length +
-                                   firmware_description.firmware_length -
-                                   sizeof(FirmwareMetadata);
+  const uint32_t metadata_offset = flash_address + FIRMWARE_OFFSET + fw_len - sizeof(FirmwareMetadata);
 
   flash_read_bytes((uint8_t*)out_metadata, metadata_offset, sizeof(FirmwareMetadata));
 
@@ -89,11 +108,7 @@ bool version_copy_recovery_fw_metadata(FirmwareMetadata *out_metadata) {
 
 bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata) {
   const bool check_crc = false;
-  uint32_t addr = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
-
-#ifdef SWAP_OFFSET_UPGRADE
-  addr += SUBSECTOR_SIZE_BYTES;
-#endif
+  uint32_t addr = FLASH_REGION_FIRMWARE_DEST_BEGIN;
 
   return prv_version_copy_flash_fw_metadata(out_metadata, addr, check_crc);
 }
@@ -111,11 +126,18 @@ bool version_copy_recovery_fw_version(char* dest, const int dest_len_bytes) {
 }
 
 bool version_is_prf_installed(void) {
+#if !CAPABILITY_HAS_PBLBOOT
   FirmwareDescription firmware_description =
       firmware_storage_read_firmware_description(FLASH_REGION_SAFE_FIRMWARE_BEGIN);
 
   return firmware_storage_check_valid_firmware_description(FLASH_REGION_SAFE_FIRMWARE_BEGIN,
                                                            &firmware_description);
+#else
+  FirmwareHeader header =
+      firmware_storage_read_firmware_header(FLASH_REGION_SAFE_FIRMWARE_BEGIN);
+  return firmware_storage_check_valid_firmware_header(FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                                                      &header);
+#endif
 }
 
 const uint8_t * version_get_build_id(size_t *out_len) {

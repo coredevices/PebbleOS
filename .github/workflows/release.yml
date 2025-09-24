@@ -9,7 +9,7 @@ env:
   MEMFAULT_CLI_VERSION: "1.6.0"
 
 jobs:
-  build:
+  build-bootloader:
     runs-on: ubuntu-24.04
 
     container:
@@ -37,19 +37,6 @@ jobs:
         run: |
           pip install -U pip
           pip install -r requirements.txt
-
-      - name: Get npm cache directory
-        id: npm-cache-dir
-        shell: bash
-        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
-
-      - name: Node modules cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('third_party/jerryscript/jerryscript/js_tooling/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: Obtain platform name
         id: get-platform
@@ -86,38 +73,43 @@ jobs:
           cp platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.hex \
              artifacts/bootloader_nowatchdog_${{ matrix.board }}_${{github.ref_name}}.hex
 
+      - name: Store
+        uses: actions/upload-artifact@v4
+        with:
+          path: artifacts
+          name: artifacts-bootloader-${{ matrix.board }}
+
+  build-prf:
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+
+    strategy:
+      matrix:
+        board: ["asterix", "obelix"]
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Fetch tags
+        run: |
+          git fetch --tags --force
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
       - name: Configure
         run: ./waf configure --board ${{ matrix.board }} --release
-
-      - name: Build firmware
-        run: ./waf build
-
-      - name: Bundle firmware
-        run: ./waf bundle
-
-      - name: Copy firmware artifacts
-        run: |
-          mkdir -p artifacts
-          cp build/src/fw/tintin_fw.hex artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}.hex
-          cp build/src/fw/tintin_fw.elf artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}.elf
-          cp build/*.pbz artifacts
-          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}_loghash_dict.json
-
-      - name: Get Build ID
-        id: build_id
-        run: |
-          echo "BUILD_ID=$(arm-none-eabi-readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
-
-      - name: Upload log hash dictionary
-        uses: Noelware/s3-action@2.3.1
-        with:
-          access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
-          bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
-          files: |
-            build/src/fw/tintin_fw_loghash_dict.json
-          path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json
 
       - name: Build PRF
         run: ./waf build_prf
@@ -130,8 +122,9 @@ jobs:
           mkdir -p artifacts
           cp build/prf/src/fw/tintin_fw.hex artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.hex
           cp build/prf/src/fw/tintin_fw.bin artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.bin
+          cp build/prf/src/fw/tintin_fw.elf artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.elf
           cp build/prf/*.pbz artifacts
-          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ matrix.board }}_${{github.ref_name}}_loghash_dict.json
+          cp build/prf/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ matrix.board }}_${{github.ref_name}}_loghash_dict.json
 
       - name: Get PRF Build ID
         id: prf_build_id
@@ -159,14 +152,114 @@ jobs:
         run: |
           mkdir -p artifacts
           cp build/prf/src/fw/tintin_fw.hex artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.hex
+          cp build/prf/src/fw/tintin_fw.bin artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.bin
+          cp build/prf/src/fw/tintin_fw.elf artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.elf
 
       - name: Store
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts-${{ matrix.board }}
+          name: artifacts-prf-${{ matrix.board }}
           path: artifacts
 
-      - name: Upload to Memfault
+  build-firmware:
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+
+    strategy:
+      matrix:
+        board: ["asterix", "obelix"]
+        slot: [0, 1]
+
+        exclude:
+          - board: "asterix"
+            slot: 1
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Fetch tags
+        run: |
+          git fetch --tags --force
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+      - name: Node modules cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('third_party/jerryscript/jerryscript/js_tooling/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Set slot suffix
+        id: slot_suffix
+        run: |
+          NEEDS_SUFFIX="obelix"
+
+          if echo $NEEDS_SUFFIX | grep -wq "${{ matrix.board }}"; then
+            echo "SLOT_SUFFIX=_slot${{ matrix.slot }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "SLOT_SUFFIX=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure
+        run: ./waf configure --board ${{ matrix.board }} --slot ${{ matrix.slot }} --release
+
+      - name: Build firmware
+        run: ./waf build
+
+      - name: Bundle firmware
+        run: ./waf bundle
+
+      - name: Copy firmware artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/src/fw/tintin_fw.hex artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.hex
+          cp build/src/fw/tintin_fw.bin artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.bin
+          cp build/src/fw/tintin_fw.elf artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
+          cp build/*.pbz artifacts
+          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}_loghash_dict.json
+
+      - name: Get Build ID
+        id: build_id
+        run: |
+          echo "BUILD_ID=$(arm-none-eabi-readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload log hash dictionary
+        uses: Noelware/s3-action@2.3.1
+        with:
+          access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
+          secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
+          endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
+          bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
+          files: |
+            build/src/fw/tintin_fw_loghash_dict.json
+          path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json
+
+      - name: Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ matrix.board }}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}
+          path: artifacts
+
+      - name: Upload symbols to Memfault
         run: |
           pip install memfault-cli==${MEMFAULT_CLI_VERSION}
 
@@ -175,17 +268,67 @@ jobs:
             --org ${{ secrets.MEMFAULT_ORG }} \
             --project ${{ secrets.MEMFAULT_PROJECT }} \
             upload-mcu-symbols \
-            artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}.elf
+            artifacts/firmware_${{ matrix.board }}_${{github.ref_name}}${{ steps.slot_suffix.outputs.SLOT_SUFFIX }}.elf
 
-          memfault \
-            --org-token ${{ secrets.MEMFAULT_ORG_TOKEN }} \
-            --org ${{ secrets.MEMFAULT_ORG }} \
-            --project ${{ secrets.MEMFAULT_PROJECT }} \
-            upload-ota-payload \
-            --hardware-version ${{ matrix.board }} \
-            --software-type pebbleos \
-            --software-version ${{ github.ref_name }} \
-            artifacts/normal_${{ matrix.board }}_${{ github.ref_name }}.pbz
+  release:
+    runs-on: ubuntu-24.04
+
+    needs:
+      - build-bootloader
+      - build-prf
+      - build-firmware
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Display artifacts
+        run: ls -R
+
+      - name: Merge slot-specific pbz files
+        run: |
+          NEEDS_MERGE="obelix"
+
+          mkdir artifacts-merged
+          for board in $NEEDS_MERGE; do
+            python3 tools/merge_pbz.py \
+              --slot0-pbz "artifacts-${board}_slot0/normal_${board}_${{ github.ref_name }}_slot0.pbz" \
+              --slot1-pbz "artifacts-${board}_slot1/normal_${board}_${{ github.ref_name }}_slot1.pbz" \
+              --output "artifacts-merged/normal_${board}_${{ github.ref_name }}.pbz"
+          done
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2.2.2
+        with:
+          files: artifacts-*/*
+
+      - name: Deploy Memfault release
+        run: |
+          pip install memfault-cli==${MEMFAULT_CLI_VERSION}
+
+          for file in artifacts-*/normal*.pbz; do
+            # Skip slot-specific pbzs
+            if echo $file | grep -q "_slot"; then
+              continue
+            fi
+
+            BOARD=$(echo $file | sed -n -e 's/^.*normal_\([a-zA-Z0-9]*\)_v.*\.pbz$/\1/p')
+
+            memfault \
+              --org-token ${{ secrets.MEMFAULT_ORG_TOKEN }} \
+              --org ${{ secrets.MEMFAULT_ORG }} \
+              --project ${{ secrets.MEMFAULT_PROJECT }} \
+              upload-ota-payload \
+              --hardware-version $BOARD \
+              --software-type pebbleos \
+              --software-version ${{ github.ref_name }} \
+              $file
+          done
 
           memfault \
             --org-token ${{ secrets.MEMFAULT_ORG_TOKEN }} \
@@ -194,23 +337,3 @@ jobs:
             deploy-release \
             --release-version ${{ github.ref_name }} \
             --cohort internal
-            
-
-  release:
-    runs-on: ubuntu-24.04
-
-    needs: build
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Display artifacts
-        run: ls -R
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2.2.2
-        with:
-          files: artifacts-*/*

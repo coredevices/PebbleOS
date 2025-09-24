@@ -16,6 +16,7 @@ import waftools.generate_timezone_data
 import waftools.gitinfo
 import waftools.ldscript
 import waftools.objcopy
+import waftools.pblboot
 
 
 @feature("c")
@@ -36,8 +37,10 @@ class group_cprogram(link_task):
 
 
 @conf
-def get_pbz_node(ctx, fw_type, board_type, version_string):
-    return ctx.path.get_bld().make_node('{}_{}_{}.pbz'.format(fw_type, board_type, version_string))
+def get_pbz_node(ctx, fw_type, board_type, version_string, slot=None):
+    return ctx.path.get_bld().make_node('{}_{}_{}{}.pbz'.format(
+        fw_type, board_type, version_string, "" if slot is None else f"_slot{slot}"
+    ))
 
 
 @conf
@@ -70,6 +73,15 @@ def options(opt):
         help="Build PRF so that it links to the firmware region",
     )
 
+    opt.add_option(
+        '--slot',
+        action='store',
+        type=int,
+        default=0,
+        choices=[0, 1],
+        help='Select for which slot to build the firmware. 0=primary, 1=secondary'
+    )
+
 
 def configure(conf):
     conf.load('binary_header')
@@ -86,6 +98,12 @@ def configure(conf):
         conf.env.NORMAL_SHELL = 'normal'
 
     conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
+
+    if conf.capability('HAS_PBLBOOT'):
+        conf.env.SLOT = conf.options.slot
+        conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
+    else:
+        conf.env.SLOT = -1
 
 def _generate_memory_layout(bld):
 
@@ -130,16 +148,22 @@ def _generate_memory_layout(bld):
         flash_size = '2048K'
 
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
+        ptable_size = 64 * 1024
+        bootloader_size = 64 * 1024
+        slot_size = 3072 * 1024
+        resources_size = 2048 * 1024
+        prf_size = 512 * 1024
         if bld.variant == 'prf' and not bld.env.PRF_AS_FIRMWARE:
-            # PTABLE + Bootloader + Firmware Slot 0/1 + Resource Bank 0/1
-            offset_size = '10368K'
-            flash_size = '512K'
+            offset_size = str(
+                ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
+            )
+            flash_size = str(prf_size)
         else:
-            # PTABLE + Bootloader
-            offset_size = '128K'
-            # Reserve 1 sector so we can implement upgrade algorithms like
-            # swap move or swap offset.
-            flash_size = '3072K - 4K'
+            offset_size = ptable_size + bootloader_size
+            if bld.env.SLOT == 1:
+                offset_size += slot_size
+            offset_size = str(offset_size)
+            flash_size = str(slot_size)
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
         # Bootloader
@@ -180,9 +204,16 @@ def _generate_memory_layout(bld):
     else:
         flash_origin = '0x08000000'
 
+    firmware_offset = 0
+    if bld.env.MICRO_FAMILY == 'SF32LB52':
+      firmware_offset = 512
+
+    bld.env.FIRMWARE_OFFSET = firmware_offset
+    bld.env.append_value('DEFINES', [f'FIRMWARE_OFFSET={firmware_offset}'])
+
     # Determine FLASH_LENGTH_*
-    fw_flash_length = '%(flash_size)s - %(offset_size)s' % locals()
-    fw_flash_origin = '%(flash_origin)s + %(offset_size)s' % locals()
+    fw_flash_length = '%(flash_size)s - %(offset_size)s - %(firmware_offset)d' % locals()
+    fw_flash_origin = '%(flash_origin)s + %(offset_size)s + %(firmware_offset)d' % locals()
 
     if bld.env.MICRO_FAMILY == 'STM32F2' and bld.variant == '':
         # If we're building a tintin normal firmware make sure to plug in all the symbols that we
@@ -422,10 +453,20 @@ def _link_firmware(bld, sources):
         else:
             extra_args = ''
 
-        hex_node = elf_node.change_ext('.hex')
-        bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node, extra_args=extra_args)
-        bin_node = elf_node.change_ext('.bin')
-        bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
+        if bld.capability('HAS_PBLBOOT'):
+            nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
+            bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node, extra_args=extra_args)
+            hex_node = elf_node.change_ext('.hex')
+            bld(rule=waftools.pblboot.insert_header_hex, source=nohdr_hex_node, target=hex_node)
+            nohdr_bin_node = elf_node.change_ext('.nohdr.bin')
+            bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=nohdr_bin_node)
+            bin_node = elf_node.change_ext('.bin')
+            bld(rule=waftools.pblboot.insert_header_bin, source=nohdr_bin_node, target=bin_node)
+        else:
+            hex_node = elf_node.change_ext('.hex')
+            bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=hex_node, extra_args=extra_args)
+            bin_node = elf_node.change_ext('.bin')
+            bld(rule=waftools.objcopy.objcopy_bin, source=elf_node, target=bin_node)
 
         # Create the log_strings .elf and check the format specifier rules
         if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
@@ -774,10 +815,6 @@ def build(bld):
     # We can't use DMA until we root cause PBL-37278
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
-
-    # Enable swap offset based upgrade on selected platforms
-    if bld.is_obelix():
-        bld.env.append_value('DEFINES', ['SWAP_OFFSET_UPGRADE'])
 
     if bld.variant == 'prf':
         _build_recovery(bld)
