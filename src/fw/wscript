@@ -123,64 +123,68 @@ def _generate_memory_layout(bld):
     # Determine sizes so we can later calculate FLASH_LENGTH_*
     if bld.env.MICRO_FAMILY == 'STM32F2':
         # Bootloader
-        offset_size = '16K'
-        flash_size = '512K'
+        offset_size = 16 * 1024
+        flash_size = 512 * 1024
+        fw_max_size = flash_size
 
     elif bld.env.MICRO_FAMILY == 'STM32F4':
+        flash_size = 1024 * 1024
         if bld.env.BOARD in ('snowy_evt', 'snowy_evt2', 'spalding_evt'):
             # Bootloader
-            offset_size = '64K'
+            offset_size = 64 * 1024
         else:
             # Bootloader
-            offset_size = '16K'
+            offset_size = 16 * 1024
         if bld.is_silk() and bld.variant == 'prf':
             # silk PRF is limited to 512k to save on SPI flash space
-            flash_size = '512K'
+            fw_max_size = flash_size // 2
         else:
-            flash_size = '1024K'
+            fw_max_size = flash_size
 
     elif bld.env.MICRO_FAMILY == 'STM32F7':
         # Bootloader
-        offset_size = '32K'
-        flash_size = '2048K'
+        offset_size = 32 * 1024
+        flash_size = 2048 * 1024
+        fw_max_size = flash_size
 
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
+        flash_size = 32 * 1024 * 1024
         ptable_size = 64 * 1024
         bootloader_size = 64 * 1024
         slot_size = 3072 * 1024
         resources_size = 2048 * 1024
         prf_size = 512 * 1024
         if bld.variant == 'prf' and not bld.env.PRF_AS_FIRMWARE:
-            offset_size = str(
-                ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
-            )
-            flash_size = str(prf_size)
+            offset_size = ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
+            fw_max_size = prf_size
         else:
             offset_size = ptable_size + bootloader_size
             if bld.env.SLOT == 1:
                 offset_size += slot_size
-            offset_size = str(offset_size)
-            flash_size = str(slot_size)
+            offset_size = offset_size
+            fw_max_size = slot_size
 
     elif bld.env.MICRO_FAMILY == 'NRF52840':
         # Bootloader
-        offset_size = '32K'
+        offset_size = 32 * 1024
+        flash_size = 1024 * 1024
         if bld.is_asterix() and bld.variant == 'prf' and not bld.env.IS_MFG:
-            flash_size = '512K'
+            fw_max_size = flash_size // 2
         else:
-            flash_size = '1024K'
+            fw_max_size = flash_size
 
     if bld.env.QEMU:
-        flash_size = '4M'
+        flash_size = 4 * 1024 * 1024
+        fw_max_size = flash_size
 
     if bld.env.FLASH_ITCM:
-        flash_origin = '0x00200000'
+        flash_origin = 0x00200000
     elif bld.env.MICRO_FAMILY == 'NRF52840':
-        flash_origin = '0x00000000'
+        flash_origin = 0x00000000
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
-        flash_origin = '0x12000000'
+        flash_origin = 0x12000000
     else:
-        flash_origin = '0x08000000'
+        flash_origin = 0x08000000
 
     firmware_offset = 0
     if bld.env.MICRO_FAMILY == 'SF32LB52':
@@ -190,8 +194,8 @@ def _generate_memory_layout(bld):
     bld.env.append_value('DEFINES', [f'FIRMWARE_OFFSET={firmware_offset}'])
 
     # Determine FLASH_LENGTH_*
-    fw_flash_length = '%(flash_size)s - %(offset_size)s - %(firmware_offset)d' % locals()
-    fw_flash_origin = '%(flash_origin)s + %(offset_size)s + %(firmware_offset)d' % locals()
+    fw_flash_length = '%(fw_max_size)d - %(firmware_offset)d' % locals()
+    fw_flash_origin = '0x%(flash_origin)08x + %(offset_size)d + %(firmware_offset)d' % locals()
 
     if bld.env.MICRO_FAMILY == 'STM32F2' and bld.variant == '':
         # If we're building a tintin normal firmware make sure to plug in all the symbols that we
@@ -319,7 +323,7 @@ def _generate_memory_layout(bld):
         APP_RAM_SIZE=app_ram[1],
         WORKER_RAM_ADDR="0x{:x}".format(worker_ram[0]),
         WORKER_RAM_SIZE=worker_ram[1],
-        FLASH_ORIGIN=flash_origin,
+        FLASH_ORIGIN="0x{:x}".format(flash_origin),
         FW_FLASH_ORIGIN=fw_flash_origin,
         FW_FLASH_LENGTH=fw_flash_length,
         FLASH_SIZE=flash_size,
