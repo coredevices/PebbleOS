@@ -203,6 +203,14 @@ void command_version_info(void) {
           "%s FW:\n  ts:%"PRIu32"\n  tag:%s\n  short:%s\n  recov:%u\n  platform:%u",
           label[i], fw_metadata.version_timestamp, fw_metadata.version_tag,
           fw_metadata.version_short, fw_metadata.is_recovery_firmware, fw_metadata.hw_platform);
+
+      if ((i == 0) && fw_metadata.is_dual_slot) {
+        prompt_send_response_fmt(buffer, sizeof(buffer), "  dual slot");
+        if (!fw_metadata.is_recovery_firmware) {
+          prompt_send_response_fmt(buffer, sizeof(buffer), "  current slot:%s",
+                                   fw_metadata.is_slot_0 ? "0" : "1");
+        }
+      }
     } else {
       prompt_send_response_fmt(buffer, sizeof(buffer), "%s FW: no version info or lookup failed",
                                label[i]);
