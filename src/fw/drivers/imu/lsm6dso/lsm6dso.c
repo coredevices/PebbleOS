@@ -45,6 +45,7 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high);
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch);
 static void prv_lsm6dso_process_interrupts(void);
 static void prv_lsm6dso_interrupt_watchdog_callback(void *data);
+static bool prv_lsm6dso_force_reinit(void);
 static bool prv_is_vibing(void);
 typedef struct {
   lsm6dso_odr_xl_t odr;
@@ -105,6 +106,7 @@ static uint64_t s_last_double_tap_ms = 0;
 static uint32_t s_interrupt_count = 0;
 static uint32_t s_wake_event_count = 0;
 static uint32_t s_double_tap_event_count = 0;
+static uint32_t s_watchdog_recovery_attempts = 0;
 
 // Interrupt watchdog timer
 static RegularTimerInfo s_interrupt_watchdog_timer = {
@@ -125,6 +127,7 @@ static RegularTimerInfo s_interrupt_watchdog_timer = {
 #define LSM6DSO_MAX_CONSECUTIVE_FAILURES 3
 #define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
 #define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 90000  // 90 seconds
+#define LSM6DSO_SIMPLE_WATCHDOG_RECOVERY_ATTEMPTS 2
 
 // LSM6DSO configuration entrypoints
 
@@ -471,24 +474,28 @@ static void prv_lsm6dso_chase_target_state(void) {
 static void prv_lsm6dso_configure_interrupts(void) {
   // Disable interrupts during configuration to prevent race conditions
   // and ensure atomic configuration updates
-  
+
   bool should_enable_interrupts = s_lsm6dso_enabled &&
       (s_lsm6dso_state.num_samples || s_lsm6dso_state.shake_detection_enabled ||
        s_lsm6dso_state.double_tap_detection_enabled);
-  
+
   // Always disable interrupts first to ensure clean state
   exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
-  
+
   if (!should_enable_interrupts) {
     // Also disable all interrupt sources in the sensor to prevent phantom interrupts
     lsm6dso_pin_int1_route_t int1_routes = {0}; // All disabled
-    lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes);
+    if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to disable INT1 routes while turning off sensor");
+    }
     return;
   }
 
+  bool routing_configured = true;
+
   lsm6dso_pin_int1_route_t int1_routes = {0};
   bool use_fifo = s_lsm6dso_state.num_samples > 1;  // batching requested
-  
+
   // Configure FIFO first, then set up interrupt routing
   if (use_fifo) {
     prv_lsm6dso_configure_fifo(true);
@@ -501,22 +508,28 @@ static void prv_lsm6dso_configure_interrupts(void) {
     int1_routes.fifo_th = 0;
     int1_routes.fifo_ovr = 0;
   }
-  
+
   int1_routes.double_tap = s_lsm6dso_state.double_tap_detection_enabled;
   int1_routes.wake_up = s_lsm6dso_state.shake_detection_enabled;  // use wake-up (any-motion)
 
   // Configure interrupt routing atomically
   if (lsm6dso_pin_int1_route_set(&lsm6dso_ctx, int1_routes)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure interrupts");
-    return;
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to configure INT1 routes; re-enabling external interrupt");
+    routing_configured = false;
+  } else {
+    // Clear any pending interrupt sources before enabling external interrupt
+    lsm6dso_all_sources_t all_sources;
+    if (lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources)) {
+      PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Failed to clear pending interrupt sources after routing update");
+    }
   }
-  
-  // Clear any pending interrupt sources before enabling external interrupt
-  lsm6dso_all_sources_t all_sources;
-  lsm6dso_all_sources_get(&lsm6dso_ctx, &all_sources); // This clears pending sources
-  
-  // Finally enable the external interrupt
+
+  // Always re-enable the external interrupt so we do not lose future INT1 edges
   exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+
+  if (!routing_configured) {
+    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: INT1 routing not updated; external interrupt left enabled for recovery");
+  }
 }
 
 // Map output data rate (interval) to FIFO batching rate enum
@@ -667,6 +680,7 @@ static void prv_lsm6dso_process_interrupts(void) {
   const uint64_t previous_interrupt_ms = s_last_interrupt_ms;
   s_last_interrupt_ms = now_ms;
   s_interrupt_count++;
+  s_watchdog_recovery_attempts = 0;
 
   uint32_t gap_ms = 0;
   if (previous_interrupt_ms == 0) {
@@ -848,6 +862,31 @@ static bool prv_is_vibing(void) {
   return false;
 }
 
+static bool prv_lsm6dso_force_reinit(void) {
+  PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Performing forced sensor reinitialization");
+
+  // Prevent spurious edges while the device is reconfigured
+  exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+
+  s_lsm6dso_initialized = false;
+  s_lsm6dso_running = false;
+  s_fifo_in_use = false;
+  s_sensor_health_ok = false;
+  s_consecutive_errors = 0;
+
+  prv_lsm6dso_init();
+  if (!s_lsm6dso_initialized) {
+    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Forced reinit failed; sensor still unresponsive");
+    return false;
+  }
+
+  s_lsm6dso_state = (lsm6dso_state_t){0};
+
+  prv_lsm6dso_chase_target_state();
+
+  return s_lsm6dso_running;
+}
+
 static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
   PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Watchdog callback running");
   
@@ -859,17 +898,25 @@ static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
           (unsigned long)interrupt_age_ms, (unsigned long)s_last_interrupt_ms, (unsigned long)now_ms);
   
   if (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS) {
-    PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Interrupt watchdog triggered - no interrupts for %lu ms, count=%lu",
-            (unsigned long)interrupt_age_ms, (unsigned long)s_interrupt_count);
-    
+    s_watchdog_recovery_attempts++;
+    PBL_LOG(LOG_LEVEL_WARNING,
+            "LSM6DSO: Interrupt watchdog triggered - no interrupts for %lu ms, count=%lu, attempt=%lu",
+            (unsigned long)interrupt_age_ms, (unsigned long)s_interrupt_count,
+            (unsigned long)s_watchdog_recovery_attempts);
     // Mark sensor as unhealthy
     s_sensor_health_ok = false;
     
-    // Attempt recovery: reset and reconfigure the sensor
-    if (s_lsm6dso_running) {
-      PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Attempting sensor recovery from interrupt lockup");
+    if (!s_lsm6dso_running) {
+      return;
+    }
+    
+    bool recovered = false;
+    
+    if (s_watchdog_recovery_attempts <= LSM6DSO_SIMPLE_WATCHDOG_RECOVERY_ATTEMPTS) {
+      PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Attempting sensor recovery from interrupt lockup (attempt %lu/%u)",
+              (unsigned long)s_watchdog_recovery_attempts,
+              LSM6DSO_SIMPLE_WATCHDOG_RECOVERY_ATTEMPTS);
       
-      // Stop the sensor
       lsm6dso_xl_data_rate_set(&lsm6dso_ctx, LSM6DSO_XL_ODR_OFF);
       s_lsm6dso_running = false;
       
@@ -880,15 +927,31 @@ static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
       prv_lsm6dso_chase_target_state();
       // Clear any pending interrupt flags to allow new interrupts
       lsm6dso_all_sources_t clear_src;
-      lsm6dso_all_sources_get(&lsm6dso_ctx, &clear_src);
+      if (lsm6dso_all_sources_get(&lsm6dso_ctx, &clear_src) != 0) {
+        PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Failed to clear interrupt sources during watchdog recovery");
+      }
       
-      // Reset health status - will be set to true if recovery succeeds
+      recovered = true;
+    } else {
+      PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Watchdog escalating to forced sensor reinitialization (attempt %lu)",
+              (unsigned long)s_watchdog_recovery_attempts);
+
+      if (prv_lsm6dso_force_reinit()) {
+        recovered = true;
+        s_watchdog_recovery_attempts = 0;
+      } else {
+        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Forced sensor reinitialization failed");
+      }
+    }
+    
+    if (recovered) {
       s_sensor_health_ok = true;
       // Reset interrupt timestamp and count to avoid repeated watchdog triggers
       s_last_interrupt_ms = now_ms;
       s_interrupt_count = 0;
-      // Reconfigure sensor interrupt routing and re-enable external interrupt
-      prv_lsm6dso_configure_interrupts();
+      if (s_lsm6dso_running) {
+        prv_lsm6dso_configure_interrupts();
+      }
     }
   }
 }
