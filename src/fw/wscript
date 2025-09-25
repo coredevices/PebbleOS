@@ -154,7 +154,7 @@ def _generate_memory_layout(bld):
         slot_size = 3072 * 1024
         resources_size = 2048 * 1024
         prf_size = 512 * 1024
-        if bld.variant == 'prf' and not bld.env.PRF_AS_FIRMWARE:
+        if bld.variant == 'prf' and not (bld.env.IS_MFG or bld.env.PRF_AS_FIRMWARE):
             offset_size = ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
             fw_max_size = prf_size
         else:
