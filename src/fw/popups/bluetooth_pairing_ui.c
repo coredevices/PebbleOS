@@ -440,7 +440,11 @@ static void prv_window_load(Window *window) {
 
   prv_add_prf_layers(pair_text_area, data);
 
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
+  const int16_t y_offset = 55;
+#else
   const int16_t y_offset = PBL_IF_RECT_ELSE(0, 2);
+#endif
   // Device name:
   if (prv_has_device_name(data)) {
     TextLayer *device_name_layer = &data->device_name_text_layer;
