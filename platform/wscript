@@ -188,7 +188,7 @@ def get_hrm(ctx):
     elif is_silk(ctx):
         return "AS7000"
     elif is_obelix(ctx):
-        return "STUB"
+        return "GH3X2X"
     else:
         return None
 
