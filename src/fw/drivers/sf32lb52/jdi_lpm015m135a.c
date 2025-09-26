@@ -225,6 +225,9 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
       index = s_framebuffer_index;
     } else if (!s_framebuffer_dirty[s_framebuffer_index ^ 1]) {
       index = s_framebuffer_index ^ 1;
+    } else {
+      index = s_framebuffer_index ^ 1;
+      s_framebuffer_dirty[index] = false;
     }
     portEXIT_CRITICAL();
   }
