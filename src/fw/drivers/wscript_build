@@ -1943,6 +1943,17 @@ if bld.get_hrm() == 'AS7000':
             'stm32_stlib'
         ],
     )
+elif bld.get_hrm() == 'GH3X2X':
+    bld.objects(
+        name='driver_hrm',
+        source=[
+            'hrm/gh3x2x/gh3x2x.c',
+        ],
+        use=[
+            'fw_includes',
+            'gh3x2x',
+        ],
+    )
 elif bld.get_hrm() == 'STUB':
     bld.objects(
         name='driver_hrm',
