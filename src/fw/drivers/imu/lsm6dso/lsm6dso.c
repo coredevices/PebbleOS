@@ -127,7 +127,6 @@ static RegularTimerInfo s_interrupt_watchdog_timer = {
 #define LSM6DSO_MAX_CONSECUTIVE_FAILURES 3
 #define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
 #define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 90000  // 90 seconds
-#define LSM6DSO_SIMPLE_WATCHDOG_RECOVERY_ATTEMPTS 2
 
 // LSM6DSO configuration entrypoints
 
@@ -898,53 +897,18 @@ static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
           (unsigned long)interrupt_age_ms, (unsigned long)s_last_interrupt_ms, (unsigned long)now_ms);
   
   if (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS) {
-    s_watchdog_recovery_attempts++;
     PBL_LOG(LOG_LEVEL_WARNING,
-            "LSM6DSO: Interrupt watchdog triggered - no interrupts for %lu ms, count=%lu, attempt=%lu",
-            (unsigned long)interrupt_age_ms, (unsigned long)s_interrupt_count,
-            (unsigned long)s_watchdog_recovery_attempts);
+            "LSM6DSO: Interrupt watchdog triggered - no interrupts for %lu ms, count=%lu; forcing reinit",
+            (unsigned long)interrupt_age_ms, (unsigned long)s_interrupt_count);
     // Mark sensor as unhealthy
     s_sensor_health_ok = false;
     
     if (!s_lsm6dso_running) {
       return;
     }
-    
-    bool recovered = false;
-    
-    if (s_watchdog_recovery_attempts <= LSM6DSO_SIMPLE_WATCHDOG_RECOVERY_ATTEMPTS) {
-      PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Attempting sensor recovery from interrupt lockup (attempt %lu/%u)",
-              (unsigned long)s_watchdog_recovery_attempts,
-              LSM6DSO_SIMPLE_WATCHDOG_RECOVERY_ATTEMPTS);
-      
-      lsm6dso_xl_data_rate_set(&lsm6dso_ctx, LSM6DSO_XL_ODR_OFF);
-      s_lsm6dso_running = false;
-      
-      // Brief delay
-      psleep(10);
-      
-      // Restart the sensor
-      prv_lsm6dso_chase_target_state();
-      // Clear any pending interrupt flags to allow new interrupts
-      lsm6dso_all_sources_t clear_src;
-      if (lsm6dso_all_sources_get(&lsm6dso_ctx, &clear_src) != 0) {
-        PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Failed to clear interrupt sources during watchdog recovery");
-      }
-      
-      recovered = true;
-    } else {
-      PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Watchdog escalating to forced sensor reinitialization (attempt %lu)",
-              (unsigned long)s_watchdog_recovery_attempts);
 
-      if (prv_lsm6dso_force_reinit()) {
-        recovered = true;
-        s_watchdog_recovery_attempts = 0;
-      } else {
-        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Forced sensor reinitialization failed");
-      }
-    }
-    
-    if (recovered) {
+    // Always escalate to forced reinitialization on watchdog expiry
+    if (prv_lsm6dso_force_reinit()) {
       s_sensor_health_ok = true;
       // Reset interrupt timestamp and count to avoid repeated watchdog triggers
       s_last_interrupt_ms = now_ms;
@@ -952,6 +916,8 @@ static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
       if (s_lsm6dso_running) {
         prv_lsm6dso_configure_interrupts();
       }
+    } else {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Forced sensor reinitialization failed");
     }
   }
 }
