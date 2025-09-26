@@ -887,13 +887,13 @@ static bool prv_lsm6dso_force_reinit(void) {
 }
 
 static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
-  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Watchdog callback running");
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Watchdog callback running");
   
   // Check if interrupts have stopped for too long
   const uint64_t now_ms = prv_get_timestamp_ms();
   const uint64_t interrupt_age_ms = prv_compute_age_ms(now_ms, s_last_interrupt_ms);
   
-  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: Interrupt age: %lu ms, last interrupt: %lu ms, now: %lu ms",
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Interrupt age: %lu ms, last interrupt: %lu ms, now: %lu ms",
           (unsigned long)interrupt_age_ms, (unsigned long)s_last_interrupt_ms, (unsigned long)now_ms);
   
   if (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS) {
