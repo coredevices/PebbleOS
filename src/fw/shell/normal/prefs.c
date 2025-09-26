@@ -22,6 +22,7 @@
 
 #include "apps/system_apps/toggle/quiet_time.h"
 #include "board/board.h"
+#include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
 #include "mfg/mfg_info.h"
 #include "os/mutex.h"
@@ -72,6 +73,9 @@ static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in s
 
 #define PREF_KEY_BACKLIGHT_MOTION "lightMotion"
 static bool s_backlight_motion_enabled = true;
+
+#define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
+static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
 
 #define PREF_KEY_STATIONARY "stationaryMode"
 #if RELEASE && !PLATFORM_SPALDING
@@ -253,6 +257,22 @@ static bool prv_set_s_backlight_intensity(uint16_t *intensity) {
 
 static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   s_backlight_motion_enabled = *enabled;
+  return true;
+}
+
+static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
+  // Validate and constrain the threshold
+  if (*threshold > AMBIENT_LIGHT_LEVEL_MAX) {
+    s_backlight_ambient_threshold = AMBIENT_LIGHT_LEVEL_MAX;
+    return false;
+  }
+  if (*threshold < 1) {
+    s_backlight_ambient_threshold = 1;
+    return false;
+  }
+  s_backlight_ambient_threshold = *threshold;
+  // Update the ambient light driver
+  ambient_light_set_dark_threshold(*threshold);
   return true;
 }
 
@@ -506,6 +526,7 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 void shell_prefs_init(void) {
   s_backlight_intensity =
       prv_convert_backlight_percent_to_intensity(BOARD_CONFIG.backlight_on_percent);
+  s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
   s_mutex = mutex_create();
 
   SettingsFile file = {{0}};
@@ -527,6 +548,9 @@ void shell_prefs_init(void) {
   }
 
   settings_file_close(&file);
+  
+  // Update the ambient light driver with the loaded threshold value
+  ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
 }
 
 
@@ -782,6 +806,23 @@ bool backlight_is_motion_enabled(void) {
 
 void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
+}
+
+uint32_t backlight_get_ambient_threshold(void) {
+  return s_backlight_ambient_threshold;
+}
+
+void backlight_set_ambient_threshold(uint32_t threshold) {
+  // Validate threshold is within acceptable range
+  if (threshold > AMBIENT_LIGHT_LEVEL_MAX) {
+    threshold = AMBIENT_LIGHT_LEVEL_MAX;
+  }
+  if (threshold < 1) {
+    threshold = 1;
+  }
+  prv_pref_set(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD, &threshold, sizeof(threshold));
+  // Update the ambient light driver with the new threshold
+  ambient_light_set_dark_threshold(threshold);
 }
 
 bool shell_prefs_get_stationary_enabled(void) {

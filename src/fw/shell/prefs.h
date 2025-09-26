@@ -89,6 +89,10 @@ void backlight_set_intensity_percent(uint8_t intensity_percent);
 bool backlight_is_motion_enabled(void);
 void backlight_set_motion_enabled(bool enable);
 
+// The backlight ambient light threshold setting
+uint32_t backlight_get_ambient_threshold(void);
+void backlight_set_ambient_threshold(uint32_t threshold);
+
 // Stationary mode will put the watch in a low power state. Disabling will
 // prevent the watch from turning off any features.
 bool shell_prefs_get_stationary_enabled(void);
