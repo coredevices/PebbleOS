@@ -1,0 +1,9 @@
+{
+  "comments": "This file contains resource definitions for Obelix PRF and 'common' overrides",
+  "media": [
+    {
+      "name": "FONT_FALLBACK_INTERNAL",
+      "file": "common/base/pbf/GOTHIC_24.pbf"
+    }
+  ]
+}
