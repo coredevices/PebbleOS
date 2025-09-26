@@ -99,7 +99,7 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
     prv_display_update(index);
     s_framebuffer_index = index;
   } else {
-    // stop_mode_enable(InhibitorDisplay);
+    stop_mode_enable(InhibitorDisplay);
   }
 }
 
@@ -183,7 +183,7 @@ void display_clear(void) {
   portEXIT_CRITICAL();
 
   if (!(state->hlcdc.Instance->STATUS & LCD_IF_STATUS_JDI_PAR_RUN)) {
-    // stop_mode_disable(InhibitorDisplay);
+    stop_mode_disable(InhibitorDisplay);
     prv_display_update(index);
   }
 
@@ -248,7 +248,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   portEXIT_CRITICAL();
 
   if (!(state->hlcdc.Instance->STATUS & LCD_IF_STATUS_JDI_PAR_RUN)) {
-    // stop_mode_disable(InhibitorDisplay);
+    stop_mode_disable(InhibitorDisplay);
     prv_display_update(index);
   }
 
