@@ -22,7 +22,7 @@
 #include "bf0_hal_rcc.h"
 #include "board/board.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
-#include "drivers/stubs/hrm.h"
+#include "drivers/hrm/gh3x2x/gh3x2x.h"
 #include "system/passert.h"
 
 
