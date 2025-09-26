@@ -345,11 +345,22 @@ static void prv_window_load(Window* window) {
                                GColorBlack, GColorWhite);
   layer_add_child(&window->layer, &qr_code->layer);
 
+#if PLATFORM_OBELIX
+  const uint16_t name_height = 30;
+#else
+  const uint16_t name_height = 20;
+#endif
+
   TextLayer* name_text_layer = &data->name_text_layer;
   text_layer_init_with_parameters(name_text_layer,
-                                  &GRect(0, window->layer.bounds.size.h - 20,
-                                         window->layer.bounds.size.w, 20),
-                                  NULL, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+                                  &GRect(0, window->layer.bounds.size.h - name_height,
+                                         window->layer.bounds.size.w, name_height),
+                                  NULL,
+#if PLATFORM_OBELIX
+                                  fonts_get_system_font(FONT_KEY_GOTHIC_24),
+#else
+                                  fonts_get_system_font(FONT_KEY_GOTHIC_14),
+#endif
                                   GColorBlack, GColorWhite, GTextAlignmentCenter,
                                   GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->layer, &name_text_layer->layer);
