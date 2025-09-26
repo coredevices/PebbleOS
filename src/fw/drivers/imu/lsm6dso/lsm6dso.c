@@ -126,7 +126,7 @@ static RegularTimerInfo s_interrupt_watchdog_timer = {
 // Error recovery thresholds and watchdog timeouts
 #define LSM6DSO_MAX_CONSECUTIVE_FAILURES 3
 #define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
-#define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 90000  // 90 seconds
+#define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 30000  // 30 seconds
 
 // LSM6DSO configuration entrypoints
 
