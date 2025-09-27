@@ -34,6 +34,10 @@
 #include "services/common/analytics/analytics_logging.h"
 #include "services/common/analytics/analytics_external.h"
 
+#if MEMFAULT
+#include "memfault_metrics_entry.h"
+#endif
+
 // Stopwatches
 typedef struct {
   ListNode node;
@@ -47,6 +51,10 @@ static ListNode *s_stopwatch_list = NULL;
 static bool prv_is_stopwatch_for_metric(ListNode *found_node, void *data);
 
 void analytics_init(void) {
+#if MEMFAULT
+  // This must be called before any metrics fire
+  memfault_platform_boot_early();
+#endif
   analytics_metric_init();
   analytics_storage_init();
   analytics_logging_init();
