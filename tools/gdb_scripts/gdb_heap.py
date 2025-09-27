@@ -128,7 +128,7 @@ class Heap(object):
     def block_size(self, bytes):
         offset = (int(gdb.lookup_type("HeapInfo_t").sizeof) -
                   int(gdb.lookup_type("AlignmentStruct_t").sizeof))
-        offset_blocks = offset / self.alignment_size
+        offset_blocks = offset // self.alignment_size
 
         blocks = (bytes + self.alignment_size - 1) // self.alignment_size
         common_size = blocks * self.alignment_size + offset

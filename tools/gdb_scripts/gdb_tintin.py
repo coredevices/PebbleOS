@@ -315,12 +315,12 @@ class LinkedList(object):
 
 
 class DumpQueue(gdb.Command):
-    """Dumps the queue"""
+    """Dumps the contents of the specified queue"""
     def __init__(self):
         desc = "Dumps the contents of the specified queue.\n" \
                "Expected command format:\n" \
                "dumpqueue QueueHandle [TYPE_CAST] [-p]"
-        super(DumpQueue, self).__init__('dumpqueue', gdb.COMMAND_USER)
+        super(DumpQueue, self).__init__('pbl dumpqueue', gdb.COMMAND_USER)
         self.parser = gdb_utils.GdbArgumentParser(prog='dumpqueue', description=desc)
         self.parser.add_argument("-p", dest="dump_prev", action="store_true", default=False,
                                  help="dumps previously processed queue items instead of "
@@ -399,13 +399,13 @@ class PrintList(gdb.Command):
     """Prints a list of ListNode`s."""
 
     def __init__(self):
-        super(PrintList, self).__init__('pl', gdb.COMMAND_USER)
+        super(PrintList, self).__init__('pbl pl', gdb.COMMAND_USER)
 
     def invoke(self, unicode_args, from_tty):
         if not unicode_args:
             print("Prints a list of ListNode nodes.\n" \
                   "Expected command format:\n" \
-                  "pl LIST_HEAD [TYPE_CAST]")
+                  "pbl pl LIST_HEAD [TYPE_CAST]")
             return
         split_args = unicode_args.split(" ", 1)
         list_head = split_args[0]
@@ -525,7 +525,7 @@ class StackStats(gdb.Command):
     """Print Stack Usage by routine"""
 
     def __init__(self):
-        super(StackStats, self).__init__('sbt', gdb.COMMAND_USER)
+        super(StackStats, self).__init__('pbl sbt', gdb.COMMAND_USER)
 
     def print_usage(self):
         print("Prints a backtrace of the currently selected thread displaying\n" \
@@ -652,16 +652,16 @@ HeapParser()
 
 
 class LockStats(gdb.Command):
-    """Walk through mutexes"""
+    """Walk through mutexes and look for deadlocks"""
 
     def __init__(self):
-        super(LockStats, self).__init__('lockstats', gdb.COMMAND_USER)
+        super(LockStats, self).__init__('pbl lockstats', gdb.COMMAND_USER)
 
     def print_usage(self):
         print("Checks for deadlocks and prints warnings if a deadlock \n"
               "has occurred")
 
-    def invoke(self, unicode_args, do_print=True):
+    def invoke(self, unicode_args, from_tty):
         s_kernel_heap = get_static_variable('s_kernel_heap', ref=True)
         heap = Heap(s_kernel_heap)
 
@@ -702,8 +702,7 @@ class LockStats(gdb.Command):
 
         message = "\n".join(message)
 
-        if do_print:
-            print(message)
+        print(message)
 
         return message
 
@@ -714,7 +713,7 @@ class HeapStats(gdb.Command):
     """Print Heap info"""
 
     def __init__(self):
-        super(HeapStats, self).__init__('heapstats', gdb.COMMAND_USER)
+        super(HeapStats, self).__init__('pbl heapstats', gdb.COMMAND_USER)
         self.parser = gdb_utils.GdbArgumentParser(prog='heapstats', description="Print heap info")
         self.parser.add_argument("heap", help="pointer to the heap")
         self.parser.add_argument("-d", dest="dump_heap", action="store_true", default=False,
@@ -840,7 +839,7 @@ class LayerTree(gdb.Command):
     """Print the layer tree of either a given window, or the window currently on screen"""
 
     def __init__(self):
-        super(LayerTree, self).__init__('layer-tree',  gdb.COMMAND_USER)
+        super(LayerTree, self).__init__('pbl layer-tree',  gdb.COMMAND_USER)
 
     def invoke(self, unicode_args, from_tty):
         window_ptr = 0
@@ -942,7 +941,7 @@ class WorkerSymbols(gdb.Command):
     """Load in symbols for the worker task"""
 
     def __init__(self):
-        super(WorkerSymbols, self).__init__('worker_symbols', gdb.COMMAND_USER)
+        super(WorkerSymbols, self).__init__('pbl worker_symbols', gdb.COMMAND_USER)
 
     def print_usage(self):
         print("Load in symbols for the worker task\n" \
@@ -964,7 +963,7 @@ class AppSymbols(gdb.Command):
     """Load in symbols for the app task"""
 
     def __init__(self):
-        super(AppSymbols, self).__init__('app_symbols', gdb.COMMAND_USER)
+        super(AppSymbols, self).__init__('pbl app_symbols', gdb.COMMAND_USER)
 
     def print_usage(self):
         print("Load in symbols for the app task\n" \
@@ -985,7 +984,7 @@ class RebootReason(gdb.Command):
     """Print RebootReason stored in the RTC registers"""
 
     def __init__(self):
-        super(RebootReason, self).__init__('reboot_reason', gdb.COMMAND_USER)
+        super(RebootReason, self).__init__('pbl reboot_reason', gdb.COMMAND_USER)
 
     def print_usage(self):
         print("Print Reboot reason from RTC registers.\n")
