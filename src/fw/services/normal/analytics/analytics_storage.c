@@ -25,6 +25,10 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
+#if MEMFAULT
+#include "memfault/components.h"
+#endif
+
 static PebbleRecursiveMutex *s_analytics_storage_mutex = NULL;
 
 static AnalyticsHeartbeat *s_device_heartbeat = NULL;
@@ -42,6 +46,13 @@ void analytics_storage_init(void) {
 //////////
 // Lock
 void analytics_storage_take_lock(void) {
+#if MEMFAULT
+  // Memfault can reenter into the analytics module (for instance, through
+  // flash logging).  If it does, another thread that is performing an
+  // analytics operation could hold-and-wait on analytics lock -> memfault
+  // lock; if that happens, we'd deadlock.  Enforce an ordering on this.
+  memfault_lock();
+#endif
   mutex_lock_recursive(s_analytics_storage_mutex);
 }
 
@@ -55,6 +66,9 @@ bool analytics_storage_has_lock(void) {
 
 void analytics_storage_give_lock(void) {
   mutex_unlock_recursive(s_analytics_storage_mutex);
+#if MEMFAULT
+  memfault_unlock();
+#endif
 }
 
 ///////
