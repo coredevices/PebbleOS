@@ -92,6 +92,16 @@ class CoredumpAnalyzer:
             "thread apply all frame",
             "thread apply all info frame",
             "",
+            # Pebble-specific status
+            "echo \\n=== PEBBLEOS HEAP PROFILE ===\\n",
+            "pbl heap",
+            "",
+            "echo \\n=== PEBBLEOS LOCK PROFILE ===\\n",
+            "pbl lockstats",
+            "",
+            "echo \\n=== PEBBLEOS BUILD INFO ===\\n",
+            "pbl metadata",
+            "",
             # Exit
             "quit",
         ]
@@ -134,7 +144,9 @@ class CoredumpAnalyzer:
                 f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             )
             output_lines.append(f"ELF File: {self.elf_file}")
+            output_lines.append(subprocess.run(["file", self.elf_file], capture_output=True, text=True, check=False).stdout) # grab the build-id
             output_lines.append(f"Coredump File: {self.coredump_file}")
+            output_lines.append(subprocess.run(["file", self.coredump_file], capture_output=True, text=True, check=False).stdout) # grab the build-id
             output_lines.append("=" * 80)
             output_lines.append("")
 
