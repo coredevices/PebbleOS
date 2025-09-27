@@ -188,8 +188,11 @@ class PebbleMutex(Recognizer):
 
     def is_type(self, pebble_mutex, search_blocks):
         mutex = FreeRTOSMutex(pebble_mutex['freertos_mutex'])
-        return ((not mutex.locked()) == (pebble_mutex['lr'] == 0) and
-                (0 <= mutex.num_waiters() <= 10))
+        try:
+            return ((not mutex.locked()) == (pebble_mutex['lr'] == 0) and
+                    (0 <= mutex.num_waiters() <= 10))
+        except:
+            return False
 
 
 class LightMutex(Recognizer):
@@ -265,7 +268,7 @@ class TaskStack(Recognizer):
 # --- String-related --- #
 def is_string(data):
     try:
-        data = data.string().decode('utf-8')
+        data = data.bytes.decode('utf-8')
         return len(data) > 2 and all(ord(codepoint) > 127 or
                                      codepoint in string.printable for codepoint in data)
     except UnicodeDecodeError:
@@ -393,8 +396,10 @@ class NotificationNode(Recognizer):
     type = 'NotifList'
 
     def is_type(self, node, search_blocks):
-        s_presented_notifs = get_static_variable('s_presented_notifs')
-        notification_list = LinkedList(gdb.parse_and_eval(s_presented_notifs)['list_node'])
+        s_presented_notifs = gdb.parse_and_eval(get_static_variable('s_presented_notifs'))
+        if s_presented_notifs.dereference().address == 0:
+            return False
+        notification_list = LinkedList(s_presented_notifs['list_node'])
         return node in notification_list
 
 
@@ -438,6 +443,8 @@ class KAlgState(Recognizer):
     def is_type(self, state, search_blocks):
         s_alg_state_ref = get_static_variable('s_alg_state')
         s_alg_state = gdb.parse_and_eval(s_alg_state_ref)
+        if s_alg_state.dereference().address == 0:
+            return False
         return (s_alg_state["k_state"] == state.dereference().address)
 
 
