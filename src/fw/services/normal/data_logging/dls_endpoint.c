@@ -76,6 +76,14 @@ static const uint16_t ENDPOINT_ID_DATA_LOGGING = 0x1a7a;
 
 static const uint8_t MAX_NACK_COUNT = 20;
 
+// If we don't have a PRF -- or we are in PRF, or CoreApp is confused about
+// whether we have a PRF or not -- then CoreApp might decide not to talk to
+// us, and will NACK our DLS open requests.  Fair enough, I guess, but if
+// that's what's happening, then we shouldn't waste our battery continually
+// trying to reopen the session.
+static const uint8_t MAX_UNEXPECTED_NACK_COUNT = 20;
+static uint8_t s_unexpected_nacks = 0;
+
 static void reschedule_ack_timeout(void);
 
 static void update_session_state(DataLoggingSession *session, DataLoggingSessionCommState new_state,
@@ -377,6 +385,12 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
     case DataLoggingSessionCommStateOpening:
       //Currently, these messages never get NACK'd
       PBL_LOG(LOG_LEVEL_ERROR, "Unexpected NACK");
+      if (s_unexpected_nacks < MAX_UNEXPECTED_NACK_COUNT) {
+        s_unexpected_nacks++;
+        if (s_unexpected_nacks == MAX_UNEXPECTED_NACK_COUNT) {
+          PBL_LOG(LOG_LEVEL_ERROR, "I give up; I will not try to autonomously repair sessions anymore");
+        }
+      }
       break;
     case DataLoggingSessionCommStateSending:
       //Maybe queue a resend
@@ -395,7 +409,9 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
   mutex_unlock(s_endpoint_data.mutex);
 
   // reopen the session that was NACK'ed
-  dls_endpoint_open_session(logging_session);
+  if (s_unexpected_nacks < MAX_UNEXPECTED_NACK_COUNT) {
+    dls_endpoint_open_session(logging_session);
+  }
 }
 
 //! System task callback executed which reopens the next session in the list built up by report_cmd_system_task_cb
