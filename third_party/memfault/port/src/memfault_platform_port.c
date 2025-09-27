@@ -131,11 +131,16 @@ void memfault_unlock(void) {
   mutex_unlock_recursive(s_memfault_lock);
 }
 
-int memfault_platform_boot(void) {
+// We can't write to flash or read from flash yet (including for serial
+// numbers!), but we do at least want to be able to log metrics ASAP.
+void memfault_platform_boot_early(void) {
   s_memfault_lock = mutex_create_recursive();
 
   memfault_platform_reboot_tracking_boot();
+}
 
+int memfault_platform_boot(void) {
+  // Tracing requires being able to read flash, so don't do that in early boot!
   static uint8_t s_event_storage[1024];
   const sMemfaultEventStorageImpl *evt_storage =
     memfault_events_storage_boot(s_event_storage, sizeof(s_event_storage));
