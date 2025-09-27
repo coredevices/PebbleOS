@@ -35,7 +35,7 @@ class TintinMetadata(object):
         except:
             return None, None
 
-        for k, v in platform_types.iteritems():
+        for k, v in platform_types.items():
             if v == hw_version_num:
                 board_name = k
 
