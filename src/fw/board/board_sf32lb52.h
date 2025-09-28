@@ -203,6 +203,7 @@ typedef enum {
 #include "drivers/sf32lb52/uart_definitions.h"
 #include "drivers/sf32lb52/jdi_lpm015m135a.h"
 #include "drivers/mic/sf32lb52/pdm_definitions.h"
+#include "drivers/sf32lb52/audio/audio_definitions.h"
 
 typedef const struct DMARequest DMARequest;
 typedef const struct UARTDevice UARTDevice;
@@ -215,6 +216,7 @@ typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;
 typedef const struct DisplayJDIDevice DisplayJDIDevice;
+typedef const struct AudioDevice AudioDevice;
 
 #include "drivers/i2c_definitions.h"
 #include "drivers/sf32lb52/i2c_hal_definitions.h"
