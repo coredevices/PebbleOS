@@ -237,6 +237,7 @@ elif bld.is_obelix():
             'driver_pwm',
             'driver_mic',
             'driver_touch',
+            'driver_audio',
         ],
     )
 ## ----------
@@ -256,6 +257,21 @@ if bld.is_snowy_compatible() or bld.is_silk() or bld.is_cutts() or bld.is_robert
             'fw_includes',
             'root_includes',
             'stm32_stdlib',
+        ],
+    )
+
+if bld.is_obelix():
+    bld.objects(
+        name='driver_audio',
+        source=[
+            'sf32lb52/audio/audec.c',
+            'sf32lb52/audio/audio.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'driver_gpio',
+            'hal_sifli',
         ],
     )
 
