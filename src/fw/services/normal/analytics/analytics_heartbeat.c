@@ -136,9 +136,7 @@ static int64_t prv_location_get_value(uint8_t *location, AnalyticsMetricElementT
 //////////
 // Set
 
-#if MEMFAULT
-#include "memfault_metrics_entry.h"
-#endif
+void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, int64_t val);
 
 void analytics_heartbeat_set(AnalyticsHeartbeat *heartbeat, AnalyticsMetric metric, int64_t val) {
   uint8_t *location = prv_heartbeat_get_location(heartbeat, metric);

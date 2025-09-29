@@ -35,7 +35,7 @@
 #include "services/common/analytics/analytics_external.h"
 
 #if MEMFAULT
-#include "memfault_metrics_entry.h"
+void memfault_platform_boot_early(void);
 #endif
 
 // Stopwatches
