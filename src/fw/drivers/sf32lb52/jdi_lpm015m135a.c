@@ -32,15 +32,11 @@
 
 #define BYTE_222_TO_332(data) ((((data) & 0x30) << 2) | (((data) & 0x0c) << 1) | ((data) & 0x03))
 
-static uint8_t s_framebuffer[DISPLAY_FRAMEBUFFER_BYTES];
+static uint8_t s_framebuffer[2][DISPLAY_FRAMEBUFFER_BYTES];
+static bool s_framebuffer_dirty[2];
+static uint8_t s_framebuffer_index;
 static PebbleMutex *s_update;
 static SemaphoreHandle_t s_write_done;
-
-static void prv_fb_222_to_332(const DisplayRow *row) {
-  for (uint16_t count = 0U; count < PBL_DISPLAY_WIDTH; count++) {
-    s_framebuffer[row->address * PBL_DISPLAY_WIDTH + count] = BYTE_222_TO_332(*(row->data + count));
-  }
-}
 
 // TODO(SF32LB52): Improve/clarify display on/off code
 static void prv_display_on() {
@@ -79,15 +75,31 @@ static void prv_display_off() {
   MODIFY_REG(hwp_rtc->PBR1R, RTC_PBR1R_IE_Msk | RTC_PBR1R_PE_Msk | RTC_PBR1R_OE_Msk, 0);
 }
 
+static void prv_display_update(uint8_t index) {
+  DisplayJDIState *state = DISPLAY->state;
+
+  HAL_LCDC_SetROIArea(&state->hlcdc, 0, 0, PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
+  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer[index], 0, 0,
+                        PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
+  HAL_LCDC_SendLayerData_IT(&state->hlcdc);
+}
+
 void jdi_lpm015m135a_irq_handler(DisplayJDIDevice *disp) {
   DisplayJDIState *state = DISPLAY->state;
   HAL_LCDC_IRQHandler(&state->hlcdc);
 }
 
 void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
-  BaseType_t woken;
-  xSemaphoreGiveFromISR(s_write_done, &woken);
-  portYIELD_FROM_ISR(woken);
+  uint8_t index = s_framebuffer_index ^ 1;
+
+  s_framebuffer_dirty[s_framebuffer_index] = false;
+
+  if (s_framebuffer_dirty[index]) {
+    prv_display_update(index);
+    s_framebuffer_index = index;
+  } else {
+    stop_mode_enable(InhibitorDisplay);
+  }
 }
 
 void display_init(void) {
@@ -147,16 +159,31 @@ void display_init(void) {
 
 void display_clear(void) {
   DisplayJDIState *state = DISPLAY->state;
+  uint8_t index;
 
   mutex_lock(s_update);
 
-  memset(s_framebuffer, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+  portENTER_CRITICAL();
+  if (!s_framebuffer_dirty[s_framebuffer_index]) {
+    index = s_framebuffer_index;
+  } else if (!s_framebuffer_dirty[s_framebuffer_index ^ 1]) {
+    index = s_framebuffer_index ^ 1;
+  } else {
+    index = s_framebuffer_index ^ 1;
+    s_framebuffer_dirty[index] = false;
+  }
+  portEXIT_CRITICAL();
 
-  HAL_LCDC_SetROIArea(&state->hlcdc, 0, 0, PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
-  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer, 0, 0,
-                        PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
-  HAL_LCDC_SendLayerData_IT(&state->hlcdc);
-  xSemaphoreTake(s_write_done, portMAX_DELAY);
+  memset(s_framebuffer[index], 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+
+  portENTER_CRITICAL();
+  s_framebuffer_dirty[index] = true;
+  portEXIT_CRITICAL();
+
+  if (!(state->hlcdc.Instance->STATUS & LCD_IF_STATUS_JDI_PAR_RUN)) {
+    stop_mode_disable(InhibitorDisplay);
+    prv_display_update(index);
+  }
 
   mutex_unlock(s_update);
 }
@@ -184,10 +211,20 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   uint16_t rows = 0U;
   uint16_t y0 = 0U;
   bool y0_set = false;
+  uint8_t index;
 
   mutex_lock(s_update);
 
-  stop_mode_disable(InhibitorDisplay);
+  portENTER_CRITICAL();
+  if (!s_framebuffer_dirty[s_framebuffer_index]) {
+    index = s_framebuffer_index;
+  } else if (!s_framebuffer_dirty[s_framebuffer_index ^ 1]) {
+    index = s_framebuffer_index ^ 1;
+  } else {
+    index = s_framebuffer_index ^ 1;
+    s_framebuffer_dirty[index] = false;
+  }
+  portEXIT_CRITICAL();
 
   // convert all rows requiring an update to 332 format
   while (nrcb(&row)) {
@@ -196,25 +233,25 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
       y0_set = true;
     }
 
-    prv_fb_222_to_332(&row);
+    for (uint16_t count = 0U; count < PBL_DISPLAY_WIDTH; count++) {
+      s_framebuffer[index][row.address * PBL_DISPLAY_WIDTH + count] = BYTE_222_TO_332(*(row.data + count));
+    }
 
     rows++;
   }
 
-  if (rows > 0U) {
-    HAL_LCDC_SetROIArea(&state->hlcdc, 0, y0, PBL_DISPLAY_WIDTH - 1, y0 + rows - 1);
-    HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT,
-                          &s_framebuffer[y0 * PBL_DISPLAY_WIDTH], 0, y0, PBL_DISPLAY_WIDTH - 1,
-                          y0 + rows - 1);
-    HAL_LCDC_SendLayerData_IT(&state->hlcdc);
-    xSemaphoreTake(s_write_done, portMAX_DELAY);
+  portENTER_CRITICAL();
+  s_framebuffer_dirty[index] = true;
+  portEXIT_CRITICAL();
+
+  if (!(state->hlcdc.Instance->STATUS & LCD_IF_STATUS_JDI_PAR_RUN)) {
+    stop_mode_disable(InhibitorDisplay);
+    prv_display_update(index);
   }
 
   if (uccb) {
     uccb();
   }
-
-  stop_mode_enable(InhibitorDisplay);
 
   mutex_unlock(s_update);
 }
