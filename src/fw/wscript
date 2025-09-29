@@ -556,6 +556,11 @@ def _build_recovery(bld):
             'apps/prf_apps/mfg_mic_app.c',
             'apps/prf_apps/mfg_sine_wave.c',
         ])
+    
+    if not bld.is_obelix():
+        excludes.extend([
+            'apps/prf_apps/mfg_audio_app.c',
+        ])
 
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
