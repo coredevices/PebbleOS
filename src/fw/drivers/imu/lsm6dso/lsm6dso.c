@@ -126,7 +126,7 @@ static RegularTimerInfo s_interrupt_watchdog_timer = {
 // Error recovery thresholds and watchdog timeouts
 #define LSM6DSO_MAX_CONSECUTIVE_FAILURES 3
 #define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
-#define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 30000  // 30 seconds
+#define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 9950  // slightly below 10 seconds
 
 // LSM6DSO configuration entrypoints
 
@@ -401,7 +401,7 @@ static void prv_lsm6dso_chase_target_state(void) {
     update_interrupts = true;
     // Start the interrupt watchdog when sensor starts running
     regular_timer_add_multisecond_callback(&s_interrupt_watchdog_timer, 
-                            LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS / 1000);
+                            (LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS + 50) / 1000);
   }
 
   // Update number of samples
