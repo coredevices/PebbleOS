@@ -61,6 +61,7 @@ static VoiceSpeexEncoder s_encoder = {0};
 #define SPEEX_QUALITY 6          // Quality level (0-10)
 #define SPEEX_COMPLEXITY 1       // Complexity (1-10, lower for embedded)
 #define SPEEX_ENCODED_BUFFER_SIZE 320  // Max encoded frame size
+#define SPEEX_AUDIO_GAIN 3       // Audio gain multiplier (3x)
 
 bool voice_speex_init(void) {
   if (s_encoder.initialized) {
@@ -203,6 +204,18 @@ int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max
   if (!samples || !encoded_data) {
     VOICE_SPEEX_LOG("ERROR: encode_frame called with invalid buffers");
     return -1;
+  }
+
+  // Apply gain boost to samples
+  for (uint32_t i = 0; i < s_encoder.frame_size; i++) {
+    int32_t boosted = (int32_t)samples[i] * SPEEX_AUDIO_GAIN;
+    // Clamp to int16_t range to prevent overflow
+    if (boosted > INT16_MAX) {
+      boosted = INT16_MAX;
+    } else if (boosted < INT16_MIN) {
+      boosted = INT16_MIN;
+    }
+    samples[i] = (int16_t)boosted;
   }
 
   // Reset bits structure
