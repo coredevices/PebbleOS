@@ -32,7 +32,7 @@
 #define PDM_GAIN_DEFAULT           (NRF_PDM_GAIN_DEFAULT)
 
 // Circular buffer configuration
-#define CIRCULAR_BUF_SIZE_MS       (20)
+#define CIRCULAR_BUF_SIZE_MS       (320)
 #define CIRCULAR_BUF_SIZE_SAMPLES  ((MIC_SAMPLE_RATE * CIRCULAR_BUF_SIZE_MS) / 1000)
 #define CIRCULAR_BUF_SIZE_BYTES    (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
 

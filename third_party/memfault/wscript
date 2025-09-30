@@ -13,13 +13,17 @@ def configure(conf):
     else:
         conf.env.memfault = int(conf.env.memfault)
 
-    MEMFAULT = conf.env.memfault
-    conf.env.append_value("DEFINES", [f"MEMFAULT={MEMFAULT}"])
-
 
 def build(bld):
     if not bld.env.memfault:
         return
+
+    # FIXME(OBELIX): see GH-309
+    if bld.is_obelix() and bld.variant == "prf":
+        bld.env.memfault = 0
+        return
+    
+    bld.env.append_value("DEFINES", [f"MEMFAULT={bld.env.memfault}"])
 
     memfault_includes = [
         "memfault-firmware-sdk/",

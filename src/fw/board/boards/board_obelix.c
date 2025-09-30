@@ -539,10 +539,10 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
     [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
 #endif
   },
-  .timer = GPTIM1,
-  .timer_irqn = GPTIM1_IRQn,
+  .timer = GPTIM2,
+  .timer_irqn = GPTIM2_IRQn,
 };
-IRQ_MAP(GPTIM1, debounced_button_irq_handler, GPTIM1);
+IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
 
 static MicDeviceState mic_state = {
   .hdma = {
@@ -559,7 +559,7 @@ static const MicDevice mic_device = {
     .clk_gpio = {
         .pad = PAD_PA22,
         .func = PDM1_CLK,
-        .flags = PIN_NOPULL,
+        .flags = PIN_NOPULL, 
     },
     .data_gpio = {
         .pad = PAD_PA23,
@@ -576,6 +576,26 @@ static const MicDevice mic_device = {
 const MicDevice* MIC = &mic_device;
 IRQ_MAP(PDM1, pdm1_data_handler, MIC);
 IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
+
+static AudioDeviceState audio_state;
+static const AudioDevice audio_device = {
+    .state = &audio_state,
+    .irq_priority = 5,
+    .channels = 1,
+    .samplerate = 16000,
+    .data_format = 16,
+    .audec_dma_irq = DMAC1_CH4_IRQn,
+    .audec_dma_channel = DMA1_Channel4,
+    .audec_dma_request = DMA_REQUEST_41,
+
+    .pa_ctrl = {
+        .gpio = hwp_gpio1,
+        .gpio_pin = 0,
+        .active_high =true,
+    },
+};
+const AudioDevice* AUDIO = &audio_device;
+IRQ_MAP(DMAC1_CH4, audec_dac0_dma_irq_handler, AUDIO);
 
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;

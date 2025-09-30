@@ -23,6 +23,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "os/mutex.h"
+#include "services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/circular_buffer.h"
@@ -34,8 +35,7 @@
 #include "nrfx_pdm.h"
 
 static void prv_pdm_event_handler(nrfx_pdm_evt_t const *p_evt);
-static void prv_dispatch_samples_main(void *data);
-static void prv_dispatch_samples_common(void);
+static void prv_dispatch_samples_system_task(void *data);
 static bool prv_allocate_buffers(MicDeviceState *state);
 static void prv_free_buffers(MicDeviceState *state);
 
@@ -112,12 +112,41 @@ static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
   }
   
   // Write samples to circular buffer
+  uint32_t samples_written = 0;
   for (int i = 0; i < PDM_BUFFER_SIZE_SAMPLES; i++) {
-    if (!circular_buffer_write(&state->circ_buffer, 
-                              (const uint8_t *)&pdm_data[i], 
+    if (!circular_buffer_write(&state->circ_buffer,
+                              (const uint8_t *)&pdm_data[i],
                               sizeof(int16_t))) {
       break;  // Buffer is full, drop remaining samples
     }
+    samples_written++;
+  }
+
+  // Monitor for buffer overruns (dropped samples)
+  static uint32_t total_samples = 0, dropped_samples = 0;
+  total_samples += PDM_BUFFER_SIZE_SAMPLES;
+  dropped_samples += (PDM_BUFFER_SIZE_SAMPLES - samples_written);
+
+  // Monitor buffer utilization
+  uint16_t buffer_free = circular_buffer_get_write_space_remaining(&state->circ_buffer);
+  uint16_t buffer_total = CIRCULAR_BUF_SIZE_BYTES;
+  uint16_t buffer_used = buffer_total - buffer_free;
+  uint16_t buffer_utilization = (buffer_used * 100) / buffer_total;
+
+  // Log dropout statistics periodically
+  static uint32_t log_counter = 0;
+  if (++log_counter >= 100) { // Every 100 buffers (~2 seconds)
+    if (dropped_samples > 0) {
+      // Calculate percentage using integer arithmetic (x10 for one decimal place)
+      uint32_t percent_x10 = (dropped_samples * 1000) / total_samples;
+      PBL_LOG(LOG_LEVEL_DEBUG, "Audio dropouts: %"PRIu32"/%"PRIu32" samples dropped (%"PRIu32".%"PRIu32" percent), buffer util: %"PRIu16,
+              dropped_samples, total_samples, percent_x10 / 10, percent_x10 % 10, buffer_utilization);
+    } else {
+      PBL_LOG(LOG_LEVEL_DEBUG, "Audio buffer utilization: %"PRIu16" (%"PRIu16"/%"PRIu16" bytes)",
+              buffer_utilization, buffer_used, buffer_total);
+    }
+    log_counter = 0;
+    total_samples = dropped_samples = 0; // Reset counters
   }
   
   // Check if we have enough data for a complete frame
@@ -126,15 +155,10 @@ static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
   
   if (available_data >= frame_size_bytes && !state->main_pending) {
     state->main_pending = true;
-    PebbleEvent e = {
-      .type = PEBBLE_CALLBACK_EVENT,
-      .callback = {
-        .callback = prv_dispatch_samples_main,
-        .data = NULL
-      }
-    };
-    
-    if (!event_put_isr(&e)) {
+
+    // Dispatch to low-priority system task instead of kernel event queue
+    bool should_context_switch = false;
+    if (!system_task_add_callback_from_isr(prv_dispatch_samples_system_task, NULL, &should_context_switch)) {
       state->main_pending = false;
     }
   }
@@ -204,54 +228,76 @@ void mic_init(const MicDevice *this) {
   state->is_initialized = true;
 }
 
-static void prv_dispatch_samples_common(void) {
+// Process at most this many frames per system task callback to allow
+// other tasks (especially Bluetooth) to run and prevent send buffer overflow
+// This needs to be high enough to keep up with real-time audio (~50 frames/sec)
+// but low enough to allow BT to drain its send buffer between batches
+#define MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK 64
+
+static void prv_dispatch_samples_system_task(void *data) {
   MicDeviceState *state = MIC->state;
-  
+
+  // Defensive check
+  if (!state || !state->is_initialized) {
+    return;
+  }
+
   mutex_lock_recursive(state->mutex);
 
-  // Only process if we have exactly one complete frame available and buffers are allocated
+  // Process a limited number of frames to provide backpressure
+  // This prevents overwhelming the Bluetooth send buffer
   if (state->is_running && state->data_handler && state->audio_buffer && state->circ_buffer_storage) {
-    
-    // Check if we have enough data for exactly one frame
+
     size_t frame_size_bytes = state->audio_buffer_len * sizeof(int16_t);
-    
-    // Use the circular buffer API to check available data
-    uint16_t available_data = circular_buffer_get_read_space_remaining(&state->circ_buffer);
-    
-    if (available_data >= frame_size_bytes) {
-      // Copy exactly one frame
+    int frames_processed = 0;
+
+    while (state->is_running && state->data_handler && frames_processed < MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK) {
+      // Check if we have enough data for a complete frame
+      uint16_t available_data = circular_buffer_get_read_space_remaining(&state->circ_buffer);
+
+      if (available_data < frame_size_bytes) {
+        break;  // Not enough data for another frame
+      }
+
+      // Copy one frame
       uint16_t bytes_copied = circular_buffer_copy(&state->circ_buffer,
           (uint8_t *)state->audio_buffer,
           frame_size_bytes);
 
       if (bytes_copied == frame_size_bytes) {
-        // Call callback with exactly one frame
+        // Call callback with the frame
         state->data_handler(state->audio_buffer, state->audio_buffer_len, state->handler_context);
-        
-        // Consume exactly the frame we processed
+
+        // Consume the frame we processed
         circular_buffer_consume(&state->circ_buffer, bytes_copied);
+
+        frames_processed++;
+
+        // Feed the system task watchdog periodically during long processing
+        system_task_watchdog_feed();
+      } else {
+        break;  // Failed to copy, stop processing
       }
     }
-  }
-  
-  mutex_unlock_recursive(state->mutex);
-}
 
-static void prv_dispatch_samples_main(void *data) {
-  MicDeviceState *state = MIC->state;
-  
-  // Defensive check and clear pending flag
-  if (!state || !state->is_initialized) {
-    return;
+    // If we still have data available after processing, reschedule immediately
+    // to continue processing on the next system task cycle
+    uint16_t remaining_data = circular_buffer_get_read_space_remaining(&state->circ_buffer);
+    if (remaining_data >= frame_size_bytes && state->is_running && !state->main_pending) {
+      state->main_pending = true;
+      if (!system_task_add_callback(prv_dispatch_samples_system_task, NULL)) {
+        state->main_pending = false;
+      }
+    } else {
+      // Clear pending flag only if we're done processing
+      state->main_pending = false;
+    }
+  } else {
+    // Clear pending flag if we can't process
+    state->main_pending = false;
   }
-  
-  // Always clear the pending flag, even if we can't process
-  state->main_pending = false;
-  
-  // Only process if still running and properly initialized
-  if (state->is_running) {
-    prv_dispatch_samples_common();
-  }
+
+  mutex_unlock_recursive(state->mutex);
 }
 
 void mic_set_volume(const MicDevice *this, uint16_t volume) {

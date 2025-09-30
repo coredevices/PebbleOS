@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
+
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "process_management/pebble_process_md.h"
 
-typedef struct {
-  bool enabled;
-  int32_t gain_q12;
-  int32_t last_applied_gain_q12;
-  uint32_t smoothed_level;
-  uint16_t silence_run;
-} VoiceAgcState;
+const PebbleProcessMd* mfg_audio_app_get_info(void);
 
-void voice_agc_init(VoiceAgcState *agc);
-void voice_agc_process_frame(VoiceAgcState *agc, int16_t *samples, size_t sample_count);

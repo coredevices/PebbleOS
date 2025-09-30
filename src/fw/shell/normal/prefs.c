@@ -22,6 +22,7 @@
 
 #include "apps/system_apps/toggle/quiet_time.h"
 #include "board/board.h"
+#include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
 #include "mfg/mfg_info.h"
 #include "os/mutex.h"
@@ -72,6 +73,9 @@ static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in s
 
 #define PREF_KEY_BACKLIGHT_MOTION "lightMotion"
 static bool s_backlight_motion_enabled = true;
+
+#define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
+static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
 
 #define PREF_KEY_STATIONARY "stationaryMode"
 #if RELEASE && !PLATFORM_SPALDING
@@ -179,7 +183,13 @@ static uint16_t s_timeline_peek_before_time_m =
 #endif
 
 #define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
+#if PLATFORM_OBELIX
+#define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
+#endif
 static bool s_coredump_on_request_enabled = false;
+#if PLATFORM_OBELIX
+static uint8_t s_legacy_app_render_mode = 0; // Default to bezel mode
+#endif
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -253,6 +263,22 @@ static bool prv_set_s_backlight_intensity(uint16_t *intensity) {
 
 static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   s_backlight_motion_enabled = *enabled;
+  return true;
+}
+
+static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
+  // Validate and constrain the threshold
+  if (*threshold > AMBIENT_LIGHT_LEVEL_MAX) {
+    s_backlight_ambient_threshold = AMBIENT_LIGHT_LEVEL_MAX;
+    return false;
+  }
+  if (*threshold < 1) {
+    s_backlight_ambient_threshold = 1;
+    return false;
+  }
+  s_backlight_ambient_threshold = *threshold;
+  // Update the ambient light driver
+  ambient_light_set_dark_threshold(*threshold);
   return true;
 }
 
@@ -441,6 +467,16 @@ static bool prv_set_s_coredump_on_request_enabled(bool *enabled) {
   return true;
 }
 
+#if PLATFORM_OBELIX
+static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
+  if (*mode >= LegacyAppRenderModeCount) {
+    return false;  // Invalid value
+  }
+  s_legacy_app_render_mode = *mode;
+  return true;
+}
+#endif
+
 // ------------------------------------------------------------------------------------
 // Table of all prefs
 typedef bool (*PrefSetHandler)(const void *value, size_t val_len);
@@ -506,6 +542,7 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 void shell_prefs_init(void) {
   s_backlight_intensity =
       prv_convert_backlight_percent_to_intensity(BOARD_CONFIG.backlight_on_percent);
+  s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
   s_mutex = mutex_create();
 
   SettingsFile file = {{0}};
@@ -527,6 +564,9 @@ void shell_prefs_init(void) {
   }
 
   settings_file_close(&file);
+  
+  // Update the ambient light driver with the loaded threshold value
+  ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
 }
 
 
@@ -782,6 +822,23 @@ bool backlight_is_motion_enabled(void) {
 
 void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
+}
+
+uint32_t backlight_get_ambient_threshold(void) {
+  return s_backlight_ambient_threshold;
+}
+
+void backlight_set_ambient_threshold(uint32_t threshold) {
+  // Validate threshold is within acceptable range
+  if (threshold > AMBIENT_LIGHT_LEVEL_MAX) {
+    threshold = AMBIENT_LIGHT_LEVEL_MAX;
+  }
+  if (threshold < 1) {
+    threshold = 1;
+  }
+  prv_pref_set(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD, &threshold, sizeof(threshold));
+  // Update the ambient light driver with the new threshold
+  ambient_light_set_dark_threshold(threshold);
 }
 
 bool shell_prefs_get_stationary_enabled(void) {
@@ -1192,3 +1249,14 @@ bool shell_prefs_can_coredump_on_request(void) {
 void shell_prefs_set_coredump_on_request(bool enabled) {
   prv_pref_set(PREF_KEY_COREDUMP_ON_REQUEST, &enabled, sizeof(enabled));
 }
+
+#if PLATFORM_OBELIX
+LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
+  return (LegacyAppRenderMode)s_legacy_app_render_mode;
+}
+
+void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
+  uint8_t mode_value = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_LEGACY_APP_RENDER_MODE, &mode_value, sizeof(mode_value));
+}
+#endif

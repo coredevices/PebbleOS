@@ -49,42 +49,39 @@ void memfault_platform_get_device_info(sMemfaultDeviceInfo *info) {
 }
 
 void memfault_platform_log(eMemfaultPlatformLogLevel level, const char *fmt, ...) {
-#if 1
+  // Logging can be reentrant into memfault (i.e., logging can call into
+  // memfault because there is a flash write).  This could cause a deadlock
+  // if someone holds the flash lock and increments an analytic while
+  // memfault is otherwise logging (and holds the memfault lock and waits
+  // for the flash lock).  Memfault logs must all be logged at higher than
+  // FLASH_LOG_LEVEL.
+# if FLASH_LOG_LEVEL >= LOG_LEVEL_DEBUG
+#   warning memfault logging cannot be used if debug messages are logged to flash
+    return;
+# endif
+
   va_list args;
   va_start(args, fmt);
 
+
   if (level >= s_min_log_level) {
-    // If needed, additional data could be emitted in the log line (timestamp,
-    // etc). Here we'll insert ANSI color codes depending on log level.
-    switch (level) {
-      case kMemfaultPlatformLogLevel_Debug:
-        pbl_log_vargs(LOG_LEVEL_DEBUG, __FILE__, __LINE__, fmt, args);
-        break;
-      case kMemfaultPlatformLogLevel_Info:
-        pbl_log_vargs(LOG_LEVEL_INFO, __FILE__, __LINE__, fmt, args);
-        break;
-      case kMemfaultPlatformLogLevel_Warning:
-        pbl_log_vargs(LOG_LEVEL_WARNING, __FILE__, __LINE__, fmt, args);
-        break;
-      case kMemfaultPlatformLogLevel_Error:
-        pbl_log_vargs(LOG_LEVEL_ERROR, __FILE__, __LINE__, fmt, args);
-        break;
-      default:
-        break;
-    }
+    pbl_log_vargs(LOG_LEVEL_DEBUG, __FILE__, __LINE__, fmt, args);
   }
 
   va_end(args);
-#endif
 }
 
 void memfault_platform_log_raw(const char *fmt, ...) {
+# if FLASH_LOG_LEVEL >= LOG_LEVEL_DEBUG
+    return;
+# endif
+
   char log_buf[MEMFAULT_DEBUG_LOG_BUFFER_SIZE_BYTES];
   va_list args;
   va_start(args, fmt);
 
   vsnprintf(log_buf, sizeof(log_buf), fmt, args);
-  printf("%s\n", log_buf);
+  PBL_LOG(LOG_LEVEL_DEBUG, "%s", log_buf);
 
   va_end(args);
 }
@@ -131,11 +128,16 @@ void memfault_unlock(void) {
   mutex_unlock_recursive(s_memfault_lock);
 }
 
-int memfault_platform_boot(void) {
+// We can't write to flash or read from flash yet (including for serial
+// numbers!), but we do at least want to be able to log metrics ASAP.
+void memfault_platform_boot_early(void) {
   s_memfault_lock = mutex_create_recursive();
 
   memfault_platform_reboot_tracking_boot();
+}
 
+int memfault_platform_boot(void) {
+  // Tracing requires being able to read flash, so don't do that in early boot!
   static uint8_t s_event_storage[1024];
   const sMemfaultEventStorageImpl *evt_storage =
     memfault_events_storage_boot(s_event_storage, sizeof(s_event_storage));

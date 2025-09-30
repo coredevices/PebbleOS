@@ -31,9 +31,9 @@
 
 #include "FreeRTOS.h"
 
-/* Timer period 1us, auto reload is 2ms. */
-#define TIMER_FREQUENCY_HZ    1000000
-#define TIMER_PERIOD_TICKS    2000
+/* Timer period 100us, auto reload is 2ms. */
+#define TIMER_FREQUENCY_HZ    10000
+#define TIMER_PERIOD_TICKS    20
 
 #define RESET_BUTTONS ((1 << BUTTON_ID_SELECT) | (1 << BUTTON_ID_BACK))
 
@@ -48,30 +48,30 @@
 // A button must be stable for 20 samples (40ms) to be accepted.
 static const uint32_t s_num_debounce_samples = 20;
 static GPT_HandleTypeDef s_tim_hdl = {0};
+static bool s_timer_enabled = false;
 
 static void prv_timer_handler(void);
 
 static void initialize_button_timer(void) {
   s_tim_hdl.Instance = BOARD_CONFIG_BUTTON.timer;
-  s_tim_hdl.Init.Prescaler = HAL_RCC_GetPCLKFreq(CORE_ID_HCPU, 1) / TIMER_FREQUENCY_HZ - 1;
+  s_tim_hdl.Init.Prescaler = 24000000U / (TIMER_FREQUENCY_HZ - 1); // GPTIM2 clock is 24MHz
   s_tim_hdl.core = CORE_ID_HCPU;
   s_tim_hdl.Init.CounterMode = GPT_COUNTERMODE_UP;
   s_tim_hdl.Init.RepetitionCounter = 0;
+  s_tim_hdl.Init.Period = TIMER_PERIOD_TICKS;
   HAL_GPT_Base_Init(&s_tim_hdl);
 
   HAL_NVIC_SetPriority(BOARD_CONFIG_BUTTON.timer_irqn, 7, 0);
   HAL_NVIC_EnableIRQ(BOARD_CONFIG_BUTTON.timer_irqn);
 
-  __HAL_GPT_SET_AUTORELOAD(&s_tim_hdl, TIMER_PERIOD_TICKS);
+  __HAL_GPT_CLEAR_FLAG(&s_tim_hdl, GPT_FLAG_UPDATE); 
+  __HAL_GPT_URS_ENABLE(&s_tim_hdl);
   __HAL_GPT_SET_MODE(&s_tim_hdl, GPT_OPMODE_REPETITIVE);
 }
 
-static bool prv_check_timer_enabled(void) {
-  return (HAL_GPT_Base_GetState(&s_tim_hdl) != HAL_GPT_STATE_READY);
-}
-
 static void disable_button_timer(void) {
-  if (prv_check_timer_enabled()) {
+  if (s_timer_enabled) {
+    s_timer_enabled = false;
     HAL_GPT_Base_Stop_IT(&s_tim_hdl);
     stop_mode_enable(InhibitorButton);
   }
@@ -79,7 +79,8 @@ static void disable_button_timer(void) {
 
 static void prv_enable_button_timer(void) {
   __disable_irq();
-  if (!prv_check_timer_enabled()) {
+  if (!s_timer_enabled) {
+    s_timer_enabled = true;
     HAL_GPT_Base_Start_IT(&s_tim_hdl);
     stop_mode_disable(InhibitorButton);
   }

@@ -89,6 +89,10 @@ void backlight_set_intensity_percent(uint8_t intensity_percent);
 bool backlight_is_motion_enabled(void);
 void backlight_set_motion_enabled(bool enable);
 
+// The backlight ambient light threshold setting
+uint32_t backlight_get_ambient_threshold(void);
+void backlight_set_ambient_threshold(uint32_t threshold);
+
 // Stationary mode will put the watch in a low power state. Disabling will
 // prevent the watch from turning off any features.
 bool shell_prefs_get_stationary_enabled(void);
@@ -118,3 +122,15 @@ uint16_t timeline_peek_prefs_get_before_time(void);
 
 bool shell_prefs_can_coredump_on_request(void);
 void shell_prefs_set_coredump_on_request(bool enabled);
+
+#if PLATFORM_OBELIX
+// Legacy app rendering mode - whether to use bezel or scaling for legacy apps
+typedef enum LegacyAppRenderMode {
+  LegacyAppRenderMode_Bezel = 0,    // Center with black bezel (original behavior)
+  LegacyAppRenderMode_Scaling = 1,  // Scale to fill screen
+  LegacyAppRenderModeCount
+} LegacyAppRenderMode;
+
+LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void);
+void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode);
+#endif

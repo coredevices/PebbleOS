@@ -15,7 +15,6 @@
  */
 
 #include "voice_speex.h"
-#include "voice_agc.h"
 
 #include "system/logging.h"
 #include "system/passert.h"
@@ -52,17 +51,17 @@ typedef struct {
   size_t frame_buffer_size;
   uint8_t *encoded_buffer;
   size_t encoded_buffer_size;
-  VoiceAgcState agc;
 } VoiceSpeexEncoder;
 
 static VoiceSpeexEncoder s_encoder = {0};
 
 // Speex configuration
 #define SPEEX_SAMPLE_RATE 16000  // 16 kHz wideband
-#define SPEEX_BIT_RATE 8000      // 8 kbps
-#define SPEEX_QUALITY 4          // Quality level (0-10)
+#define SPEEX_BIT_RATE 9800      // 9.8 kbps
+#define SPEEX_QUALITY 6          // Quality level (0-10)
 #define SPEEX_COMPLEXITY 1       // Complexity (1-10, lower for embedded)
-#define SPEEX_ENCODED_BUFFER_SIZE 200  // Max encoded frame size
+#define SPEEX_ENCODED_BUFFER_SIZE 320  // Max encoded frame size
+#define SPEEX_AUDIO_GAIN 3       // Audio gain multiplier (3x)
 
 bool voice_speex_init(void) {
   if (s_encoder.initialized) {
@@ -70,7 +69,6 @@ bool voice_speex_init(void) {
   }
 
   memset(&s_encoder, 0, sizeof(s_encoder));
-  voice_agc_init(&s_encoder.agc);
 
   // Initialize Speex encoder - use wideband mode for 16kHz sample rate
   const SpeexMode *mode = &speex_wb_mode;
@@ -208,7 +206,17 @@ int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max
     return -1;
   }
 
-  voice_agc_process_frame(&s_encoder.agc, samples, s_encoder.frame_size);
+  // Apply gain boost to samples
+  for (uint32_t i = 0; i < s_encoder.frame_size; i++) {
+    int32_t boosted = (int32_t)samples[i] * SPEEX_AUDIO_GAIN;
+    // Clamp to int16_t range to prevent overflow
+    if (boosted > INT16_MAX) {
+      boosted = INT16_MAX;
+    } else if (boosted < INT16_MIN) {
+      boosted = INT16_MIN;
+    }
+    samples[i] = (int16_t)boosted;
+  }
 
   // Reset bits structure
   speex_bits_reset(&s_encoder.bits);

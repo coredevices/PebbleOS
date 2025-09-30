@@ -28,7 +28,7 @@ static const BoardConfig BOARD_CONFIG = {
 
   .has_mic = true,
   .mic_config = {
-    .gain = 65,
+    .gain = 40,
   }
 };
 

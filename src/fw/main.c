@@ -137,7 +137,11 @@ static void print_splash_screen(void)
 #else
   PBL_LOG(LOG_LEVEL_ALWAYS, "PebbleOS");
 #endif
-  PBL_LOG(LOG_LEVEL_ALWAYS, "%s", TINTIN_METADATA.version_tag);
+  PBL_LOG(LOG_LEVEL_ALWAYS, "%s%s",
+          TINTIN_METADATA.version_tag,
+          (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware) ?
+            (TINTIN_METADATA.is_slot_0 ? " (slot0)" : " (slot1)") :
+            "");
   PBL_LOG(LOG_LEVEL_ALWAYS, "(c) 2013-2025 The PebbleOS contributors");
   PBL_LOG(LOG_LEVEL_ALWAYS, " ");
 }
@@ -176,8 +180,6 @@ static void dump_gpio_configuration_state(void) {
 int main(void) {
 #if defined(MICRO_FAMILY_SF32LB52)
   board_early_init();
-  // FIXME(SF32LB52): remove once we have bootloader
-  boot_bit_init();
 #endif
 
   gpio_init_all();
