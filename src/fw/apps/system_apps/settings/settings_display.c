@@ -217,8 +217,34 @@ static void prv_als_threshold_menu_push(SettingsDisplayData *data) {
   app_window_stack_push(&number_window->window, animated);
 }
 
-// Menu Callbacks
+// Legacy App Mode Settings (Obelix only)
 /////////////////////////////
+#if PLATFORM_OBELIX
+static const char *s_legacy_app_mode_labels[] = {
+    i18n_noop("Bezel"),
+    i18n_noop("Scaled")
+};
+
+static void prv_legacy_app_mode_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  shell_prefs_set_legacy_app_render_mode((LegacyAppRenderMode)selection);
+  app_window_stack_remove(&option_menu->window, true /*animated*/);
+}
+
+static void prv_legacy_app_mode_menu_push(SettingsDisplayData *data) {
+  const int index = (int)shell_prefs_get_legacy_app_render_mode();
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_legacy_app_mode_menu_select,
+  };
+  const char *title = i18n_noop("Legacy App Display");
+  settings_option_menu_push(
+      title, OptionMenuContentType_SingleLine, index, &callbacks,
+      ARRAY_LENGTH(s_legacy_app_mode_labels),
+      false /* icons_enabled */, s_legacy_app_mode_labels, data);
+}
+#endif
+
+// Menu Callbacks
+////////////////////////////
 
 enum SettingsDisplayItem {
   SettingsDisplayLanguage,
@@ -230,6 +256,9 @@ enum SettingsDisplayItem {
   SettingsDisplayBacklightTimeout,
 #if PLATFORM_SPALDING
   SettingsDisplayAdjustAlignment,
+#endif
+#if PLATFORM_OBELIX
+  SettingsDisplayLegacyAppMode,
 #endif
   NumSettingsDisplayItems
 };
@@ -285,6 +314,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
 #if PLATFORM_SPALDING
     case SettingsDisplayAdjustAlignment:
       settings_display_calibration_push(app_state_get_window_stack());
+      break;
+#endif
+#if PLATFORM_OBELIX
+    case SettingsDisplayLegacyAppMode:
+      prv_legacy_app_mode_menu_push(data);
       break;
 #endif
     default:
@@ -355,6 +389,13 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 #if PLATFORM_SPALDING
     case SettingsDisplayAdjustAlignment:
       title = i18n_noop("Screen Alignment");
+      break;
+#endif
+#if PLATFORM_OBELIX
+    case SettingsDisplayLegacyAppMode:
+      title = i18n_noop("Legacy Apps");
+      subtitle = (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) ?
+                 i18n_noop("Scaled") : i18n_noop("Centered");
       break;
 #endif
     default:
