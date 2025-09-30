@@ -29,7 +29,7 @@ def build(bld):
     elif bld.env.MICRO_FAMILY.startswith('SF32'):
         bld.recurse('hal_sifli')
 
-    if bld.env.bt_controller in ('cc2564x', 'nrf52', 'sf32lb52'):
+    if bld.env.bt_controller in ('cc2564x', 'nrf52', 'sf32lb52', 'nrf53'):
         bld.recurse('nimble')
 
     if bld.env.bt_controller == 'cc2564x':

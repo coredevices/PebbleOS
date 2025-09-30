@@ -112,6 +112,32 @@ def build(bld):
 
         nimble_use.append('hal_nordic')
 
+    elif bld.env.bt_controller == 'nrf53':
+        nimble_sources += bld.path.ant_glob([
+            'mynewt-nimble/nimble/controller/src/*.c',
+            'mynewt-nimble/nimble/drivers/nrf5x/src/*.c',
+            'mynewt-nimble/nimble/drivers/nrf5x/src/nrf53/*.c',
+            'mynewt-nimble/porting/nimble/src/hal_timer.c',
+            'port/src/nrf53.c',
+        ])
+
+        nimble_includes = [
+            'port/include/nrf53',
+            'mynewt-nimble/nimble/controller/include',
+            'mynewt-nimble/nimble/drivers/nrf5x/include',
+        ] + nimble_includes
+
+        nimble_env.append_value('DEFINES', [
+            'FREERTOS=1',
+            'PEBBLEOS',
+            'NRF53_SERIES',
+            'NIMBLE_CFG_CONTROLLER=1',
+        ])
+
+        nimble_export_defines.append('NIMBLE_CFG_CONTROLLER=1')
+
+        nimble_use.append('hal_nordic')
+
     elif bld.env.bt_controller == 'sf32lb52':
         nimble_sources += [
             'transport/hci_sf32lb52.c',

@@ -1,5 +1,6 @@
 def configure(conf):
     conf.env.append_unique('DEFINES', 'NRF5340_XXAA_APPLICATION')
+    # conf.env.append_unique('DEFINES', 'NRF5340_XXAA_NETWORK')
     conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
     conf.env.append_unique('DEFINES', 'NRFX_QSPI_ENABLED=0')
     conf.env.append_unique('DEFINES', 'NRFX_SPIM_ENABLED=0')
@@ -18,6 +19,8 @@ def build(bld):
     
     micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/system_nrf5340_application.c" ]
     micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/gcc_startup_nrf5340_application.S" ]
+    # micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/system_nrf5340_network.c" ]
+    # micro_sources += [ f"{nrfx_basedir}/nrfx/mdk/gcc_startup_nrf5340_network.S" ]
 
     micro_includes = [
         nrfx_basedir,
@@ -28,7 +31,7 @@ def build(bld):
         f'{nrfx_basedir}/nrfx/templates',
     ]
 
-    # micro_includes += ['../../src/fw/board/boards/board_asterix']
+    micro_includes += ['../../src/fw/board/boards/board_hollow']
 
     bld.stlib(source=micro_sources,
               target='hal_nordic',

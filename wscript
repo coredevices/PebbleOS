@@ -572,7 +572,7 @@ def configure(conf):
     elif conf.is_tintin() or conf.is_snowy() or conf.is_spalding():
         conf.env.bt_controller = 'cc2564x'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
-    elif conf.is_asterix() or conf.is_hollow(): # TODO needs to be changed if upgrade to PSE84
+    elif conf.is_asterix():
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
     elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):
@@ -581,6 +581,9 @@ def configure(conf):
     elif conf.is_obelix():
         conf.env.bt_controller = 'sf32lb52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_SF32LB52'])
+    elif conf.is_hollow(): # TODO needs to be changed if upgrade to PSE84
+        conf.env.bt_controller = 'nrf53'
+        conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF53'])
     else:
         conf.env.bt_controller = 'da14681-00'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_DA14681'])
@@ -742,19 +745,21 @@ def build(bld):
 
     bld.load('file_name_c_define', tooldir='waftools')
 
-    bld.recurse('platform')
-    bld.recurse('src/idl')
+    bld.recurse('platform') # go to platorm folder and call the wscript there
+    # it sets defines and stuff but doesnt further recurse
+
+    bld.recurse('src/idl') # builds c stlib stuff for protobuff
 
     if bld.cmd == 'install':
         raise Exception("install isn't a supported command. Did you mean flash?")
 
     if bld.variant == 'pdc2png':
-        bld.recurse('src/libutil')
-        bld.recurse('tools')
+        bld.recurse('src/libutil') # builds libutil directory
+        bld.recurse('tools') # builds /pdc2png (pebble draw commands...) and /tests directories
         return
 
     if bld.variant == 'tools':
-        bld.recurse('tools')
+        bld.recurse('tools') # optionally builds all /tools directory
         return
 
     if bld.variant in ('', 'applib', 'prf'):
@@ -763,7 +768,7 @@ def build(bld):
 
     if bld.variant == '':
         # sdk generation
-        bld.recurse('sdk')
+        bld.recurse('sdk') # creates clean waf instance and then builds /sdk directory
 
     if bld.variant == 'applib':
         bld.recurse('resources')
@@ -1003,12 +1008,11 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
     b = mkbundle.PebbleBundle()
 
     version_string, version_ts, version_commit = _get_version_info(ctx)
-    slot = ctx.env.SLOT if fw_type == 'normal' and ctx.env.SLOT != -1 else None
-    out_file = ctx.get_pbz_node(fw_type, ctx.env.BOARD, version_string, slot).path_from(ctx.path)
+    out_file = ctx.get_pbz_node(fw_type, ctx.env.BOARD, version_string).path_from(ctx.path)
 
     try:
         _check_firmware_image_size(ctx, fw_bin_path)
-        b.add_firmware(fw_bin_path, fw_type, version_ts, version_commit, board, version_string, slot)
+        b.add_firmware(fw_bin_path, fw_type, version_ts, version_commit, board, version_string)
     except FirmwareTooLargeException as e:
         ctx.fatal(str(e))
     except mkbundle.MissingFileException as e:
