@@ -59,10 +59,10 @@ static VoiceSpeexEncoder s_encoder = {0};
 
 // Speex configuration
 #define SPEEX_SAMPLE_RATE 16000  // 16 kHz wideband
-#define SPEEX_BIT_RATE 8000      // 8 kbps
-#define SPEEX_QUALITY 4          // Quality level (0-10)
+#define SPEEX_BIT_RATE 9800      // 9.8 kbps
+#define SPEEX_QUALITY 6          // Quality level (0-10)
 #define SPEEX_COMPLEXITY 1       // Complexity (1-10, lower for embedded)
-#define SPEEX_ENCODED_BUFFER_SIZE 200  // Max encoded frame size
+#define SPEEX_ENCODED_BUFFER_SIZE 320  // Max encoded frame size
 
 bool voice_speex_init(void) {
   if (s_encoder.initialized) {
