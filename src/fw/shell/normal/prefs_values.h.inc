@@ -40,3 +40,6 @@
   PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_BEFORE_TIME_M, s_timeline_peek_before_time_m)
 #endif
   PREFS_MACRO(PREF_KEY_COREDUMP_ON_REQUEST, s_coredump_on_request_enabled)
+#if PLATFORM_OBELIX
+  PREFS_MACRO(PREF_KEY_LEGACY_APP_RENDER_MODE, s_legacy_app_render_mode)
+#endif

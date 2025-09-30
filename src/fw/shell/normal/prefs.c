@@ -183,7 +183,13 @@ static uint16_t s_timeline_peek_before_time_m =
 #endif
 
 #define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
+#if PLATFORM_OBELIX
+#define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
+#endif
 static bool s_coredump_on_request_enabled = false;
+#if PLATFORM_OBELIX
+static uint8_t s_legacy_app_render_mode = 0; // Default to bezel mode
+#endif
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -460,6 +466,16 @@ static bool prv_set_s_coredump_on_request_enabled(bool *enabled) {
   s_coredump_on_request_enabled = *enabled;
   return true;
 }
+
+#if PLATFORM_OBELIX
+static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
+  if (*mode >= LegacyAppRenderModeCount) {
+    return false;  // Invalid value
+  }
+  s_legacy_app_render_mode = *mode;
+  return true;
+}
+#endif
 
 // ------------------------------------------------------------------------------------
 // Table of all prefs
@@ -1233,3 +1249,14 @@ bool shell_prefs_can_coredump_on_request(void) {
 void shell_prefs_set_coredump_on_request(bool enabled) {
   prv_pref_set(PREF_KEY_COREDUMP_ON_REQUEST, &enabled, sizeof(enabled));
 }
+
+#if PLATFORM_OBELIX
+LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
+  return (LegacyAppRenderMode)s_legacy_app_render_mode;
+}
+
+void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
+  uint8_t mode_value = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_LEGACY_APP_RENDER_MODE, &mode_value, sizeof(mode_value));
+}
+#endif
