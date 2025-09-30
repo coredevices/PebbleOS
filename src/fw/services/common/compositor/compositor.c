@@ -34,6 +34,7 @@
 #include "process_management/app_manager.h"
 #include "process_management/process_manager.h"
 #include "process_state/app_state/app_state.h"
+#include "shell/prefs.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/profiler.h"
@@ -183,57 +184,101 @@ void compositor_render_app(void) {
 #endif
   } else {
 #if PBL_COLOR
-    // On Robert, we support running older apps which have a smaller framebuffer in "bezel mode"
-    // where we center them and draw a black bezel around them. Using memset to set the bezel to
-    // black and using memcpy to copy the app framebuffer into the center is the fastest method
-    // (significantly faster than DMA even). We only support the app framebuffer being smaller than
-    // the system framebuffer and we assume the system framebuffer is always DISP_COLS x DISP_ROWS.
-
     const int16_t app_width = app_framebuffer_size.w;
     const int16_t app_height = app_framebuffer_size.h;
-    const int16_t bezel_width = (DISP_COLS - app_width) / 2;
-    const int16_t bezel_height = (DISP_ROWS - app_height) / 2;
-    const int16_t app_peek_offset_y = timeline_peek_get_origin_y() - app_height;
-    const int16_t app_offset_y = CLIP(app_peek_offset_y, 0, bezel_height);
-    PBL_ASSERTN((bezel_width > 0) && (bezel_height > 0));
+    const int16_t disp_width = DISP_COLS;
+    const int16_t disp_height = DISP_ROWS;
 
-    uint8_t *dst = (uint8_t *)s_framebuffer.buffer;
-    uint8_t *app_buffer = (uint8_t *)app_framebuffer->buffer;
+#if PLATFORM_OBELIX && !RECOVERY_FW
+    // Check if we should use scaling mode for legacy apps
+    if (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) {
+      // Scale legacy apps to fill the display using nearest-neighbor scaling
 
-    // Set all the black pixels from the start, which is the sum of the following:
-    // - app_offset_y * DISP_COLS - the top part of the bezel
-    // - bezel_width - the left bezel for the first row of the app
-    // - corner_pixels - the top-left corner for the first row
-    const int top_bezel_length =
-        app_offset_y * DISP_COLS + bezel_width + s_rounded_corner_width[0];
-    memset(dst, GColorBlack.argb, top_bezel_length);
-    dst += top_bezel_length;
+      // Calculate scaling factors using fixed-point arithmetic (16.16 format)
+      // This gives us sub-pixel precision for better scaling
+      const uint32_t scale_x = ((uint32_t)app_width << 16) / disp_width;
+      const uint32_t scale_y = ((uint32_t)app_height << 16) / disp_height;
 
-    // Starting from the origin for the app (bezel_width, bezel_height), copy one row of the app
-    // framebuffer and set two bezel_width's worth of pixels to black. This will set the right-most
-    // bezel pixels of the current row to black, and the left-most bezel pixels of the next row to
-    // black.
-    int corner_width = prv_get_rounded_corner_width(0, app_height);
-    for (int app_row = 0; app_row < app_height; ++app_row) {
-      const int row_width = app_width - corner_width * 2;
-      // Copy the row of the app framebuffer (advance past the corner pixels on the left)
-      const uint8_t *src = &app_buffer[app_row * app_width + corner_width];
-      memcpy(dst, src, row_width);
-      dst += row_width;
+      uint8_t *dst = (uint8_t *)s_framebuffer.buffer;
+      uint8_t *app_buffer = (uint8_t *)app_framebuffer->buffer;
 
-      // Set the right-side corner and bezel of this row and left-size corner and bezel of the next.
-      const int next_corner_width = prv_get_rounded_corner_width(app_row + 1, app_height);
-      const int bezel_length = corner_width + bezel_width * 2 + next_corner_width;
-      memset(dst, GColorBlack.argb, bezel_length);
-      dst += bezel_length;
-      corner_width = next_corner_width;
+      // Perform nearest-neighbor scaling
+      for (int16_t dst_y = 0; dst_y < disp_height; dst_y++) {
+        // Calculate source Y coordinate
+        const uint32_t src_y_fixed = (uint32_t)dst_y * scale_y;
+        const int16_t src_y = src_y_fixed >> 16;  // Get integer part
+
+        // Ensure we don't go out of bounds
+        if (src_y >= app_height) continue;
+
+        for (int16_t dst_x = 0; dst_x < disp_width; dst_x++) {
+          // Calculate source X coordinate
+          const uint32_t src_x_fixed = (uint32_t)dst_x * scale_x;
+          const int16_t src_x = src_x_fixed >> 16;  // Get integer part
+
+          // Ensure we don't go out of bounds
+          if (src_x >= app_width) continue;
+
+          // Copy the pixel from source to destination
+          const uint32_t src_idx = src_y * app_width + src_x;
+          const uint32_t dst_idx = dst_y * disp_width + dst_x;
+          dst[dst_idx] = app_buffer[src_idx];
+        }
+      }
+    } else
+#endif
+    {
+      // Original bezel mode - center with black bezel
+      // On Robert, we support running older apps which have a smaller framebuffer in "bezel mode"
+      // where we center them and draw a black bezel around them. Using memset to set the bezel to
+      // black and using memcpy to copy the app framebuffer into the center is the fastest method
+      // (significantly faster than DMA even). We only support the app framebuffer being smaller than
+      // the system framebuffer and we assume the system framebuffer is always DISP_COLS x DISP_ROWS.
+
+      const int16_t bezel_width = (DISP_COLS - app_width) / 2;
+      const int16_t bezel_height = (DISP_ROWS - app_height) / 2;
+      const int16_t app_peek_offset_y = timeline_peek_get_origin_y() - app_height;
+      const int16_t app_offset_y = CLIP(app_peek_offset_y, 0, bezel_height);
+      PBL_ASSERTN((bezel_width > 0) && (bezel_height > 0));
+
+      uint8_t *dst = (uint8_t *)s_framebuffer.buffer;
+      uint8_t *app_buffer = (uint8_t *)app_framebuffer->buffer;
+
+      // Set all the black pixels from the start, which is the sum of the following:
+      // - app_offset_y * DISP_COLS - the top part of the bezel
+      // - bezel_width - the left bezel for the first row of the app
+      // - corner_pixels - the top-left corner for the first row
+      const int top_bezel_length =
+          app_offset_y * DISP_COLS + bezel_width + s_rounded_corner_width[0];
+      memset(dst, GColorBlack.argb, top_bezel_length);
+      dst += top_bezel_length;
+
+      // Starting from the origin for the app (bezel_width, bezel_height), copy one row of the app
+      // framebuffer and set two bezel_width's worth of pixels to black. This will set the right-most
+      // bezel pixels of the current row to black, and the left-most bezel pixels of the next row to
+      // black.
+      int corner_width = prv_get_rounded_corner_width(0, app_height);
+      for (int app_row = 0; app_row < app_height; ++app_row) {
+        const int row_width = app_width - corner_width * 2;
+        // Copy the row of the app framebuffer (advance past the corner pixels on the left)
+        const uint8_t *src = &app_buffer[app_row * app_width + corner_width];
+        memcpy(dst, src, row_width);
+        dst += row_width;
+
+        // Set the right-side corner and bezel of this row and left-size corner and bezel of the next.
+        const int next_corner_width = prv_get_rounded_corner_width(app_row + 1, app_height);
+        const int bezel_length = corner_width + bezel_width * 2 + next_corner_width;
+        memset(dst, GColorBlack.argb, bezel_length);
+        dst += bezel_length;
+        corner_width = next_corner_width;
+      }
+
+      // Set the remaining pixels to black.
+      size_t framebuffer_size = framebuffer_get_size_bytes(&s_framebuffer);
+      const int bottom_bezel_length = (uintptr_t)&s_framebuffer.buffer[framebuffer_size] -
+                                      (uintptr_t)dst;
+      memset(dst, GColorBlack.argb, bottom_bezel_length);
     }
-
-    // Set the remaining pixels to black.
-    size_t framebuffer_size = framebuffer_get_size_bytes(&s_framebuffer);
-    const int bottom_bezel_length = (uintptr_t)&s_framebuffer.buffer[framebuffer_size] -
-                                    (uintptr_t)dst;
-    memset(dst, GColorBlack.argb, bottom_bezel_length);
 #endif
   }
 
