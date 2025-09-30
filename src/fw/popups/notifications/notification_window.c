@@ -531,6 +531,18 @@ T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_p
 
 cleanup:
   timeline_item_destroy(item);
+  // If we failed to load the notification data, remove it from the presented
+  // list so the SwapLayer won't try to render a missing/empty layout.
+  notifications_presented_list_remove(id);
+
+  // If there are no more notifications to present, pop the notification window
+  // (mirrors the behavior in prv_remove_notification).
+  if ((notifications_presented_list_current_idx() < 0) && s_in_use) {
+    prv_pop_notification_window(data);
+  } else {
+    prv_reload_swap_layer(data);
+  }
+
   return NULL;
 }
 
@@ -578,11 +590,6 @@ static void prv_refresh_pop_timer(NotificationWindowData *data) {
 
   const uint32_t timeout_ms = alerts_get_notification_window_timeout_ms();
   prv_refresh_pop_timer_with_timeout(data, timeout_ms, false);
-}
-
-static void prv_pop_notification_window_after_delay(NotificationWindowData *data,
-                                                    uint32_t delay_ms) {
-  prv_refresh_pop_timer_with_timeout(data, delay_ms, true);
 }
 
 static time_t prv_get_stale_time(TimelineItem *item) {
@@ -1005,12 +1012,7 @@ static void prv_click_config_provider(void *data) {
 ///////////////////////
 
 static void prv_window_appear(Window *window) {
-  // check if we still have any notifications to display. If not, pop!
   NotificationWindowData *data = window_get_user_data(window);
-  if (notifications_presented_list_current_idx() < 0) {
-    prv_pop_notification_window_after_delay(data, 0);
-    return;
-  }
   prv_setup_reminder_watchdog(data);
 
   prv_refresh_pop_timer(data);
@@ -1021,6 +1023,16 @@ static void prv_window_appear(Window *window) {
   if (data->notifications_modified) {
     data->notifications_modified = false;
     prv_reload_swap_layer(data);
+  }
+
+  if (!swap_layer_get_current_layout(&data->swap_layer)) {
+    prv_reload_swap_layer(data);
+  }
+
+  // check if we still have any notifications to display. If not, pop!
+  if (notifications_presented_list_current_idx() < 0) {
+    prv_pop_notification_window(data);
+    return;
   }
 }
 
