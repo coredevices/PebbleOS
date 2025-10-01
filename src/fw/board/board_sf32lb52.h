@@ -107,7 +107,22 @@ typedef struct {
 } PwmConfig;
 
 typedef struct {
+  GPT_HandleTypeDef handle;
+  GPT_ClockConfigTypeDef clock_config;
+  uint16_t value;
+  int enabled;
+  IRQn_Type tim_irqn;
+} TimerState;
+
+typedef struct {
+  TimerState *state;
 } TimerConfig;
+
+typedef enum
+{
+  HWTIMER_MODE_ONESHOT = 0x01,
+  HWTIMER_MODE_PERIOD
+} TimerModes;
 
 typedef enum {
   ActuatorOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable vibe
