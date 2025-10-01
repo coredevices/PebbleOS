@@ -159,6 +159,7 @@ bool flash_is_whoami_correct(void);
 //! @return the size of the flash in bytes
 size_t flash_get_size(void);
 
+#if !MICRO_FAMILY_NRF5
 // This is only intended to be called when entering stop mode. It does not use
 // any locks because IRQs have already been disabled. The idea is to only incur
 // the wait penalty for entering/exiting deep sleep mode for the flash
@@ -167,6 +168,7 @@ size_t flash_get_size(void);
 // difference is negligible
 void flash_power_down_for_stop_mode(void);
 void flash_power_up_after_stop_mode(void);
+#endif
 
 typedef enum {
   FLASH_MODE_ASYNC = 0,
