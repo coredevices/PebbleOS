@@ -539,7 +539,7 @@ def configure(conf):
 
     conf.recurse('bin/boot')
 
-    if conf.options.runner == 'openocd':
+    if conf.env.RUNNER == 'openocd':
         waftools.openocd.write_cfg(conf)
 
     # Save a baseline environment that we'll use for unit tests
