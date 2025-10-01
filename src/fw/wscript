@@ -98,6 +98,8 @@ def configure(conf):
         conf.env.NORMAL_SHELL = 'normal'
 
     conf.env.PRF_AS_FIRMWARE = conf.options.prf_as_firmware
+    if conf.options.prf_as_firmware:
+        conf.env.append_value('DEFINES', 'RECOVERY_FW_AS_FW')
 
     if conf.capability('HAS_PBLBOOT'):
         conf.env.SLOT = conf.options.slot
