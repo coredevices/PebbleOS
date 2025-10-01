@@ -562,6 +562,7 @@ def _build_recovery(bld):
     if not bld.is_obelix():
         excludes.extend([
             'apps/prf_apps/mfg_audio_app.c',
+            'apps/prf_apps/mfg_pdm_mic_app.c',
         ])
 
     if bld.is_silk():
