@@ -34,6 +34,7 @@
 #include "apps/prf_apps/mfg_touch_app.h"
 #include "apps/prf_apps/mfg_backlight_app.h"
 #include "apps/prf_apps/mfg_audio_app.h"
+#include "apps/prf_apps/mfg_pdm_mic_app.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/standby.h"
@@ -102,6 +103,10 @@ static void prv_select_backlight(int index, void *context) {
 
 static void prv_select_audio(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_audio_app_get_info());
+}
+
+static void prv_select_pdm_mic(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_pdm_mic_app_get_info());
 }
 #endif
 
@@ -224,6 +229,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #if PLATFORM_OBELIX
     { .title = "Test Backlight",    .callback = prv_select_backlight },
     { .title = "Test Audio",        .callback = prv_select_audio },
+    { .title = "Test PDM Mic",        .callback = prv_select_pdm_mic },
 #endif
     { .icon = prv_get_icon_for_test(MfgTest_ALS),
       .title = "Test ALS",          .callback = prv_select_als },
