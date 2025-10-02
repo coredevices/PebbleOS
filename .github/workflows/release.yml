@@ -87,7 +87,7 @@ jobs:
 
     strategy:
       matrix:
-        board: ["asterix", "obelix", "obelix_bb2"]
+        board: ["asterix"]
 
     steps:
       - name: Mark Github workspace as safe
@@ -169,7 +169,7 @@ jobs:
 
     strategy:
       matrix:
-        board: ["asterix", "obelix", "obelix_bb2"]
+        board: ["asterix"]
         slot: [0, 1]
 
         exclude:
@@ -289,18 +289,6 @@ jobs:
 
       - name: Display artifacts
         run: ls -R
-
-      - name: Merge slot-specific pbz files
-        run: |
-          NEEDS_MERGE="obelix obelix_bb2"
-
-          mkdir artifacts-merged
-          for board in $NEEDS_MERGE; do
-            python3 tools/merge_pbz.py \
-              --slot0-pbz "artifacts-${board}_slot0/normal_${board}_${{ github.ref_name }}_slot0.pbz" \
-              --slot1-pbz "artifacts-${board}_slot1/normal_${board}_${{ github.ref_name }}_slot1.pbz" \
-              --output "artifacts-merged/normal_${board}_${{ github.ref_name }}.pbz"
-          done
 
       - name: Create release
         uses: softprops/action-gh-release@v2.2.2
