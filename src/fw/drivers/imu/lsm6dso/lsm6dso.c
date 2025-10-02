@@ -866,6 +866,9 @@ static bool prv_is_vibing(void) {
 static bool prv_lsm6dso_force_reinit(void) {
   PBL_LOG(LOG_LEVEL_WARNING, "LSM6DSO: Performing forced sensor reinitialization");
 
+  // Stop the watchdog timer before clearing state to prevent double-registration
+  regular_timer_remove_callback(&s_interrupt_watchdog_timer);
+
   // Prevent spurious edges while the device is reconfigured
   exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
 
