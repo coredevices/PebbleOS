@@ -31,6 +31,14 @@ void task_watchdog_init(void);
 //! with TASK_WATCHDOG_FEED_PERIOD_MS to ensure the hardware watchdog is fed.
 void task_watchdog_feed(void);
 
+//! Pause the task watchdog for a certain number of seconds. This is useful if you know
+//! you're going to be doing something that will take a long time and you don't want the
+//! watchdog to trigger a reboot.
+void task_watchdog_pause(unsigned int seconds);
+
+//! Resume the task watchdog after a call to task_watchdog_pause.
+void task_watchdog_resume(void);
+
 //! Feed the watchdog for a particular task. If a task doesn't call this function frequently
 //! enough and it's mask is set we will eventually trigger a reboot.
 void task_watchdog_bit_set(PebbleTask task);
