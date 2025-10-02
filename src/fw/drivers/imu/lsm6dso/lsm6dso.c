@@ -128,6 +128,7 @@ static RegularTimerInfo s_interrupt_watchdog_timer = {
 #define LSM6DSO_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
 #define LSM6DSO_INTERRUPT_WATCHDOG_MS 10000 //run watchdog every 10 seconds
 #define LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS 5000  // but count as failure if no interrupt in 5 seconds
+#define LSM6DSO_INTERRUPT_WATCHDOG_MS_NO_SAMPLES 600000 //if no samples are requested, every 10 minutes is fine
 
 // LSM6DSO configuration entrypoints
 
@@ -896,8 +897,8 @@ static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
   
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Interrupt age: %lu ms, last interrupt: %lu ms, now: %lu ms",
           (unsigned long)interrupt_age_ms, (unsigned long)s_last_interrupt_ms, (unsigned long)now_ms);
-  
-  if (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS) {
+
+  if ((interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS && s_lsm6dso_state.num_samples > 0) || (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_MS_NO_SAMPLES && s_lsm6dso_state.num_samples == 0)) {
     PBL_LOG(LOG_LEVEL_WARNING,
             "LSM6DSO: Interrupt watchdog triggered - no interrupts for %lu ms, count=%lu; forcing reinit",
             (unsigned long)interrupt_age_ms, (unsigned long)s_interrupt_count);
