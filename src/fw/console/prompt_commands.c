@@ -1116,17 +1116,24 @@ void command_enter_stop(void) {
 
 #ifndef RECOVERY_FW
 // Create a bunch of fragmentation in the filesystem by creating a large number
-// of small files and only deleting a small number of them
-void command_litter_filesystem(void) {
-  char name[10];
-  for (int i = 0; i < 100; i++) {
+// of files and only deleting a small number of them
+void command_litter_filesystem(const char *s_number, const char *s_size) {
+  char name[20];
+  int number = atoi(s_number);
+  size_t size = (size_t)atoi(s_size);
+  for (int i = 0; i < number; i++) {
     snprintf(name, sizeof(name), "litter%d", i);
-    int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, 300);
+    PBL_LOG(LOG_LEVEL_DEBUG, "Creating %s", name);
+    int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, size);
     if (i % 5 == 0) {
       pfs_close_and_remove(fd);
+      PBL_LOG(LOG_LEVEL_DEBUG, "Removed %s", name);
     } else {
       pfs_close(fd);
+      PBL_LOG(LOG_LEVEL_DEBUG, "Closed %s", name);
     }
+
+    task_watchdog_bit_set(pebble_task_get_current());
   }
 }
 #endif

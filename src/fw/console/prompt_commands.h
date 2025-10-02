@@ -241,7 +241,7 @@ extern void dump_current_runtime_stats(void);
 
 extern void command_set_runlevel(const char *runlevel);
 
-extern void command_litter_filesystem(void);
+extern void command_litter_filesystem(const char *s_number, const char *s_size);
 
 typedef struct Command {
   char* cmd_str;
@@ -383,7 +383,7 @@ static const Command s_prompt_commands[] = {
 #endif
   { "als read", command_als_read, 0},
 #ifndef RELEASE
-  { "litter pfs", command_litter_filesystem, 0 },
+  { "litter pfs", command_litter_filesystem, 2 },
 #endif
 #endif
 
