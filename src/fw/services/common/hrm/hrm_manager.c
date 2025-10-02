@@ -155,18 +155,20 @@ static void prv_handle_accel_data(void * data) {
 
   // Only read as many as we have space to store
   const size_t MAX_BUFFERED_SAMPLES = ARRAY_LENGTH(s_manager_state.accel_data.data);
+  uint32_t num_samples_to_copy = num_new_samples;
   if ((s_manager_state.accel_data.num_samples + num_new_samples) > MAX_BUFFERED_SAMPLES) {
     analytics_inc(ANALYTICS_DEVICE_METRIC_HRM_ACCEL_DATA_MISSING, AnalyticsClient_System);
-    num_new_samples = MAX_BUFFERED_SAMPLES - s_manager_state.accel_data.num_samples;
+    num_samples_to_copy = MAX_BUFFERED_SAMPLES - s_manager_state.accel_data.num_samples;
   }
 
   void *write_ptr = &s_manager_state.accel_data.data[s_manager_state.accel_data.num_samples];
-  memcpy(write_ptr, s_manager_state.accel_manager_buffer, num_new_samples * sizeof(AccelRawData));
+  memcpy(write_ptr, s_manager_state.accel_manager_buffer, num_samples_to_copy * sizeof(AccelRawData));
 
-  s_manager_state.accel_data.num_samples += num_new_samples;
+  s_manager_state.accel_data.num_samples += num_samples_to_copy;
 
   mutex_unlock(s_manager_state.accel_data_lock);
 
+  // Always consume all samples that were prepared, even if we couldn't store them all
   sys_accel_manager_consume_samples(s_manager_state.accel_state, num_new_samples);
 }
 
