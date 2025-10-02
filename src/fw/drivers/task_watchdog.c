@@ -81,6 +81,9 @@ static TimerID s_throttle_timer_id = TIMER_INVALID_ID;
 // How many ticks have elapsed since we fed the HW watchdog
 static uint8_t s_ticks_since_successful_feed = 0;
 
+// Pause state: number of ticks remaining in pause
+static uint32_t s_pause_ticks_remaining = 0;
+
 // We use this interrupt vector for our lower priority interrupts
 #if MICRO_FAMILY_NRF5
 #define WATCHDOG_FREERTOS_IRQn        QDEC_IRQn
@@ -386,6 +389,18 @@ void task_watchdog_mask_clear(PebbleTask task) {
   task_watchdog_enable_interrupt();
 }
 
+void task_watchdog_pause(unsigned int seconds) {
+  task_watchdog_disable_interrupt();
+  s_pause_ticks_remaining = seconds * TIMER_INTERRUPT_HZ;
+  task_watchdog_enable_interrupt();
+}
+
+void task_watchdog_resume(void) {
+  task_watchdog_disable_interrupt();
+  s_pause_ticks_remaining = 0;
+  task_watchdog_enable_interrupt();
+}
+
 void task_watchdog_step_elapsed_time_ms(uint32_t elapsed_ms) {
   // nRF5 has the RTC running during sleep, and needs no help here
 #if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
@@ -420,6 +435,14 @@ static void prv_task_watchdog_feed(void) {
   // We do want to log watchdog actions, since it's really important for debugging watchdog stalls either on
   // bigboards through serial or using flash logging. To accomplish this trigger a lower priority interrupt to fire,
   // which is at or below configMAX_SYSCALL_INTERRUPT_PRIORITY and make our logging calls from there.
+
+  // Handle pause state
+  if (s_pause_ticks_remaining > 0) {
+    s_pause_ticks_remaining--;
+    watchdog_feed();
+    s_ticks_since_successful_feed = 0;
+    return;
+  }
 
   static int s_last_warning_message_tick_time = 0; //!< Used to rate limit the warning message
   if ((s_watchdog_bits & s_watchdog_mask) == s_watchdog_mask) {
