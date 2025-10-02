@@ -265,7 +265,7 @@ enum SettingsDisplayItem {
 
 // number of items under SettingsDisplayBacklightMode which are hidden when backlight is disabled
 static const int NUM_BACKLIGHT_SUB_ITEMS = CLIP(SettingsDisplayBacklightTimeout -
-                                           SettingsDisplayBacklightMode, 0, NumSettingsDisplayItems);
+                                           SettingsDisplayBacklightMode - 1, 0, NumSettingsDisplayItems);
 
 static bool prv_should_show_backlight_sub_items() {
   return backlight_is_enabled();
