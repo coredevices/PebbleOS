@@ -49,7 +49,9 @@
 #include "freertos_application.h"
 
 static uint64_t s_analytics_device_sleep_cpu_cycles = 0;
-static RtcTicks s_analytics_device_stop_ticks = 0;
+RtcTicks s_analytics_device_stop_ticks = 0;
+int s_analytics_stops_induced = 0;
+int s_analytics_sleeps_induced = 0;
 
 static uint64_t s_analytics_app_sleep_cpu_cycles = 0;
 static RtcTicks s_analytics_app_stop_ticks = 0;
@@ -194,6 +196,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
       s_analytics_device_sleep_cpu_cycles += cycles_elapsed;
       s_analytics_app_sleep_cpu_cycles += cycles_elapsed;
+      s_analytics_sleeps_induced++;
     } else {
       const RtcTicks stop_duration = MIN(xExpectedIdleTime - EARLY_WAKEUP_TICKS, MAX_STOP_TICKS);
 
@@ -220,6 +223,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
       s_analytics_device_stop_ticks += ticks_elapsed;
       s_analytics_app_stop_ticks += ticks_elapsed;
+      s_analytics_stops_induced++;
     }
   }
 
