@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+
 #include "applib/app.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/text_layer.h"
