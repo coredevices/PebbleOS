@@ -587,6 +587,19 @@
       ]
     },
     {
+      "id": -99,
+      "enum": "BACKLIGHT_STATE_TOGGLE_UUID",
+      "md_fn": "backlight_state_toggle_get_app_info",
+      "target_platforms": [
+        "snowy",
+        "spalding",
+        "silk",
+        "robert",
+        "asterix",
+        "obelix"
+      ]
+    },
+    {
       "id": -94,
       "enum": "MOTION_BACKLIGHT_TOGGLE",
       "md_fn": "motion_backlight_toggle_get_app_info",
