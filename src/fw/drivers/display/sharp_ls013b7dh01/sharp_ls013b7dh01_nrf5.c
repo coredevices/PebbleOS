@@ -39,10 +39,7 @@
 #define DISP_MODE_WRITE 0x01U
 #define DISP_MODE_CLEAR 0x04U
 
-#define LINE_BUF_SIZE (DISP_DMA_BUFFER_SIZE_BYTES - 1)
-
-static uint8_t s_line_buf[LINE_BUF_SIZE];
-static NextRowCallback s_get_next_row;
+static uint8_t s_buf[2 + ((DISP_LINE_BYTES + 2) * PBL_DISPLAY_HEIGHT)];
 static PebbleMutex *s_update;
 static SemaphoreHandle_t s_sem;
 
@@ -118,35 +115,10 @@ static inline void prv_disable_chip_select(void) {
   gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, false);
 }
 
-static inline bool prv_xfer_next_row(void) {
-  DisplayRow r;
-  nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = s_line_buf, .tx_length = sizeof(s_line_buf)};
-
-  if (!s_get_next_row(&r)) {
-    return true;
-  }
-
-  s_line_buf[0] = r.address + 1;
-  memcpy(&s_line_buf[1], r.data, DISP_LINE_BYTES);
-
-  nrfx_err_t err = nrfx_spim_xfer(&BOARD_CONFIG_DISPLAY.spi, &desc, 0);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-  return false;
-}
-
 static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
-  bool done = true;
-
-  if (s_get_next_row != NULL) {
-    done = prv_xfer_next_row();
-  }
-
-  if (done) {
-    portBASE_TYPE woken = pdFALSE;
-    xSemaphoreGiveFromISR(s_sem, &woken);
-    portEND_SWITCHING_ISR(woken);
-  }
+  portBASE_TYPE woken = pdFALSE;
+  xSemaphoreGiveFromISR(s_sem, &woken);
+  portEND_SWITCHING_ISR(woken);
 }
 
 void display_init(void) {
@@ -191,23 +163,38 @@ void display_set_enabled(bool enabled) {
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  uint8_t buf = DISP_MODE_WRITE;
-  nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = &buf, .tx_length = sizeof(buf)};
+  DisplayRow row;
+  uint8_t *pbuf = s_buf;
+  nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = pbuf};
 
   mutex_lock(s_update);
+
+  // write command (write)
+  *pbuf++ = DISP_MODE_WRITE;
+  desc.tx_length++;
+
+  while (nrcb(&row)) {
+    // write row address, data and trailing dummy
+    *pbuf++ = row.address + 1;
+    memcpy(pbuf, row.data, DISP_LINE_BYTES);
+    pbuf += DISP_LINE_BYTES;
+    *pbuf++ = 0x00;
+
+    desc.tx_length += DISP_LINE_BYTES + 2;
+  }
+
+  // write last trailing dummy
+  *pbuf++ = 0x00;
+  desc.tx_length++;
 
   stop_mode_disable(InhibitorDisplay);
 
   prv_enable_spim();
   prv_enable_chip_select();
 
-  s_get_next_row = nrcb;
-
   nrfx_err_t err = nrfx_spim_xfer(&BOARD_CONFIG_DISPLAY.spi, &desc, 0);
   PBL_ASSERTN(err == NRFX_SUCCESS);
   xSemaphoreTake(s_sem, portMAX_DELAY);
-
-  s_get_next_row = NULL;
 
   prv_disable_chip_select();
   prv_disable_spim();
