@@ -23,6 +23,7 @@
 #include "applib/graphics/gtypes.h"
 #include "board/board.h"
 #include "drivers/gpio.h"
+#include "kernel/events.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "system/passert.h"
@@ -40,7 +41,8 @@
 #define DISP_MODE_CLEAR 0x04U
 
 static uint8_t s_buf[2 + ((DISP_LINE_BYTES + 2) * PBL_DISPLAY_HEIGHT)];
-static PebbleMutex *s_update;
+static bool s_updating;
+static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
 
 static void prv_extcomin_init(void) {
@@ -115,9 +117,32 @@ static inline void prv_disable_chip_select(void) {
   gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, false);
 }
 
+static void prv_terminate_transfer(void *data) {
+  s_updating = false;
+
+  prv_disable_chip_select();
+  prv_disable_spim();
+
+  s_uccb();
+}
+
 static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
   portBASE_TYPE woken = pdFALSE;
-  xSemaphoreGiveFromISR(s_sem, &woken);
+
+  if (s_updating) {
+    PebbleEvent e = {
+        .type = PEBBLE_CALLBACK_EVENT,
+        .callback =
+            {
+                .callback = prv_terminate_transfer,
+            },
+    };
+
+    woken = event_put_isr(&e) ? pdTRUE : pdFALSE;
+  } else {
+    xSemaphoreGiveFromISR(s_sem, &woken);
+  }
+
   portEND_SWITCHING_ISR(woken);
 }
 
@@ -139,13 +164,14 @@ void display_init(void) {
 
   prv_extcomin_init();
 
-  s_update = mutex_create();
   s_sem = xSemaphoreCreateBinary();
 }
 
 void display_clear(void) {
   uint8_t buf[] = {DISP_MODE_CLEAR, 0x00};
   nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = buf, .tx_length = sizeof(buf)};
+
+  PBL_ASSERTN(!s_updating);
 
   prv_enable_spim();
   prv_enable_chip_select();
@@ -167,7 +193,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   uint8_t *pbuf = s_buf;
   nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = pbuf};
 
-  mutex_lock(s_update);
+  PBL_ASSERTN(!s_updating);
 
   // write command (write)
   *pbuf++ = DISP_MODE_WRITE;
@@ -187,32 +213,18 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   *pbuf++ = 0x00;
   desc.tx_length++;
 
-  stop_mode_disable(InhibitorDisplay);
-
   prv_enable_spim();
   prv_enable_chip_select();
 
+  s_uccb = uccb;
+  s_updating = true;
+
   nrfx_err_t err = nrfx_spim_xfer(&BOARD_CONFIG_DISPLAY.spi, &desc, 0);
   PBL_ASSERTN(err == NRFX_SUCCESS);
-  xSemaphoreTake(s_sem, portMAX_DELAY);
-
-  prv_disable_chip_select();
-  prv_disable_spim();
-
-  uccb();
-
-  stop_mode_enable(InhibitorDisplay);
-
-  mutex_unlock(s_update);
 }
 
 bool display_update_in_progress(void) {
-  bool in_progress = !mutex_lock_with_timeout(s_update, 0);
-  if (!in_progress) {
-    mutex_unlock(s_update);
-  }
-
-  return in_progress;
+  return s_updating;
 }
 
 /* stubs */
