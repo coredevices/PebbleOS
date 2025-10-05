@@ -178,11 +178,12 @@ def _generate_memory_layout(bld):
 
     elif bld.env.MICRO_FAMILY == 'NRF5340': # TODO change if upgrade to PSE84
         # Bootloader
-        offset_size = '32K'
+        offset_size = 32 * 1024
+        flash_size = 1024 * 1024
         if bld.is_asterix() and bld.variant == 'prf' and not bld.env.IS_MFG:
-            flash_size = '512K'
+            fw_max_size = flash_size // 2
         else:
-            flash_size = '1024K'
+            fw_max_size = flash_size
 
         # if bld.variant == 'prf' and not bld.env.PRF_AS_FIRMWARE:
         #     # PTABLE + Bootloader + Firmware Slot 0/1 + Resource Bank 0/1
@@ -200,15 +201,9 @@ def _generate_memory_layout(bld):
         fw_max_size = flash_size
 
     if bld.env.FLASH_ITCM:
-<<<<<<< HEAD
-        flash_origin = '0x00200000'
-    elif bld.env.MICRO_FAMILY == 'NRF52840' or bld.env.MICRO_FAMILY == 'NRF5340': # TODO change if upgrade to PSE84
-        flash_origin = '0x00000000'
-=======
         flash_origin = 0x00200000
-    elif bld.env.MICRO_FAMILY == 'NRF52840':
+    elif bld.env.MICRO_FAMILY == 'NRF52840' or bld.env.MICRO_FAMILY == 'NRF5340': # TODO change if upgrade to PSE84
         flash_origin = 0x00000000
->>>>>>> upstream/main
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
         flash_origin = 0x12000000
     else:

@@ -123,6 +123,7 @@ def build(bld):
 
         nimble_includes = [
             'port/include/nrf53',
+            'mynewt-nimble/nimble/transport/common/hci_ipc/include',
             'mynewt-nimble/nimble/controller/include',
             'mynewt-nimble/nimble/drivers/nrf5x/include',
         ] + nimble_includes
