@@ -1,0 +1,45 @@
+[target]
+    family = "nRF52"
+    clockspeed = 4000
+
+[qspi]
+    mem_size = 0x2000000
+    read_mode = "READ4IO"
+    write_mode = "PP4O"
+    address_mode = "BIT32"
+    frequency = "M8"
+    spi_mode = "MODE0"
+    rx_delay = 2
+    wip_index = 0
+    page_program_size = "PAGE256"
+    retain_ram = false
+    [qspi.sck]
+	delay = 0
+        pin = 19
+        port = 0
+    [qspi.csn]
+        pin = 17
+        port = 0
+    [qspi.dio0]
+        pin = 20
+        port = 0
+    [qspi.dio1]
+        pin = 21
+        port = 0
+    [qspi.dio2]
+        pin = 22
+        port = 0
+    [qspi.dio3]
+        pin = 23
+        port = 0
+
+    [qspi.custom]
+        io2_level = "LEVEL_HIGH"
+        io3_level = "LEVEL_HIGH"
+
+        instructions =  [
+            # Enable 32-bit addressing
+            {command=0xB7, data=[]},
+            # Enable Quad IO
+            {command=0x01, data=[0x00, 0x02]}
+        ]
