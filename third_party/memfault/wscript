@@ -12,18 +12,22 @@ def configure(conf):
         conf.env.memfault = int(conf.options.release and (conf.is_asterix() or conf.is_obelix()))
     else:
         conf.env.memfault = int(conf.env.memfault)
+    # FIXME(OBELIX): see GH-309 - disable memfault for Obelix PRF builds
+    if conf.is_obelix() and conf.variant == "prf":
+        conf.env.memfault = 0
+
+    # Set MEMFAULT define for all builds (will be 0 for Obelix PRF)
+    MEMFAULT = conf.env.memfault
+    conf.env.append_value("DEFINES", [f"MEMFAULT={MEMFAULT}"])
 
 
 def build(bld):
-    if not bld.env.memfault:
+    # FIXME(OBELIX): see GH-309 - disable memfault library build for Obelix PRF
+    if bld.is_obelix() and bld.variant == "prf":
         return
 
-    # FIXME(OBELIX): see GH-309
-    if bld.is_obelix() and bld.variant == "prf":
-        bld.env.memfault = 0
+    if not bld.env.memfault:
         return
-    
-    bld.env.append_value("DEFINES", [f"MEMFAULT={bld.env.memfault}"])
 
     memfault_includes = [
         "memfault-firmware-sdk/",
