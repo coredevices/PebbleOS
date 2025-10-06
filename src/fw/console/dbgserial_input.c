@@ -30,6 +30,8 @@
 
 #include "drivers/gpio.h"
 
+#ifndef RELEASE
+
 #define STOP_MODE_TIMEOUT_MS (2000)
 
 static void dbgserial_interrupt_handler(bool *should_context_switch);
@@ -145,4 +147,20 @@ void dbgserial_enable_rx_dma_after_stop() {
   }
 }
 
+#endif
+
+#else
+void dbgserial_input_init(void) {}
+
+void dbgserial_enable_rx_exti(void) {}
+
+void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {}
+
+void dbgserial_set_rx_dma_enabled(bool enabled) {}
+
+#if MICRO_FAMILY_NRF5
+void dbgserial_disable_rx_dma_before_stop() {}
+
+void dbgserial_enable_rx_dma_after_stop() {}
+#endif
 #endif
