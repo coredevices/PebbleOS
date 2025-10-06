@@ -896,15 +896,15 @@ static void prv_lsm6dso_interrupt_watchdog_callback(void *data) {
   
   // Check if interrupts have stopped for too long
   const uint64_t now_ms = prv_get_timestamp_ms();
-  const uint64_t interrupt_age_ms = prv_compute_age_ms(now_ms, s_last_interrupt_ms);
+  const uint32_t interrupt_age_ms = prv_compute_age_ms(now_ms, s_last_interrupt_ms);
   
-  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Interrupt age: %lu ms, last interrupt: %lu ms, now: %lu ms",
-          (unsigned long)interrupt_age_ms, (unsigned long)s_last_interrupt_ms, (unsigned long)now_ms);
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Interrupt age: %" PRIu32 " ms", interrupt_age_ms);
 
-  if ((interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS && s_lsm6dso_state.num_samples > 0) || (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_MS_NO_SAMPLES && s_lsm6dso_state.num_samples == 0)) {
+  if ((interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_TIMEOUT_MS && s_lsm6dso_state.num_samples > 0) ||
+      (interrupt_age_ms >= LSM6DSO_INTERRUPT_WATCHDOG_MS_NO_SAMPLES && s_lsm6dso_state.num_samples == 0)) {
     PBL_LOG(LOG_LEVEL_WARNING,
-            "LSM6DSO: Interrupt watchdog triggered - no interrupts for %lu ms, count=%lu; forcing reinit",
-            (unsigned long)interrupt_age_ms, (unsigned long)s_interrupt_count);
+            "LSM6DSO: Interrupt watchdog triggered - no interrupts for %" PRIu32 " ms, count=%lu; forcing reinit",
+            interrupt_age_ms, (unsigned long)s_interrupt_count);
     // Mark sensor as unhealthy
     s_sensor_health_ok = false;
     
