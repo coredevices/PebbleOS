@@ -12,11 +12,8 @@ def configure(conf):
         conf.env.memfault = int(conf.options.release and (conf.is_asterix() or conf.is_obelix()))
     else:
         conf.env.memfault = int(conf.env.memfault)
-    # FIXME(OBELIX): see GH-309 - disable memfault for Obelix PRF builds
-    if conf.is_obelix() and conf.variant == "prf":
-        conf.env.memfault = 0
 
-    # Set MEMFAULT define for all builds (will be 0 for Obelix PRF)
+    # Set MEMFAULT define for all builds
     MEMFAULT = conf.env.memfault
     conf.env.append_value("DEFINES", [f"MEMFAULT={MEMFAULT}"])
 
