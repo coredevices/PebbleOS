@@ -34,7 +34,7 @@ class CoredumpAnalyzer:
             output_file
             or f"coredump_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
         )
-        self.gdb_executable = "arm-none-eabi-gdb"
+        self.gdb_executable = "arm-none-eabi-gdb-py"
 
     def create_gdb_script(self):
         """Create a GDB script with commands to extract relevant information."""
