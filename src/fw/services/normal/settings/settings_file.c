@@ -19,6 +19,7 @@
 
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
+#include "kernel/util/sleep.h"
 #include "services/normal/filesystem/pfs.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -83,13 +84,36 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
     PBL_LOG(LOG_LEVEL_WARNING,
             "Unrecognized version %d for file %s, closing and removing...",
             file_hdr.version, name);
-    status_t remove_status = pfs_close_and_remove(fd);
+
+    // Retry removal up to 3 times if file is busy
+    status_t remove_status = E_UNKNOWN;
+    const int max_retries = 3;
+    const int retry_delay_ms = 10;
+
+    for (int attempt = 0; attempt < max_retries; attempt++) {
+      remove_status = pfs_close_and_remove(fd);
+      if (PASSED(remove_status)) {
+        break;
+      }
+
+      if (remove_status == E_BUSY && attempt < max_retries - 1) {
+        PBL_LOG(LOG_LEVEL_DEBUG,
+                "File %s is busy, retrying removal (attempt %d/%d)",
+                name, attempt + 1, max_retries);
+        psleep(retry_delay_ms);
+      } else if (remove_status != E_BUSY) {
+        // Non-busy error, don't retry
+        break;
+      }
+    }
+
     if (FAILED(remove_status)) {
       PBL_LOG(LOG_LEVEL_WARNING,
-              "Failed to remove %s (status: %"PRId32"), retrying open without removal",
-              name, remove_status);
+              "Failed to remove %s after %d attempts (status: %"PRId32")",
+              name, max_retries, remove_status);
       return remove_status;
     }
+
     return prv_open(file, name, flags, max_used_space);
   }
 
