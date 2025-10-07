@@ -136,18 +136,9 @@ static int64_t prv_location_get_value(uint8_t *location, AnalyticsMetricElementT
 //////////
 // Set
 
-void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, int64_t val);
-
 void analytics_heartbeat_set(AnalyticsHeartbeat *heartbeat, AnalyticsMetric metric, int64_t val) {
   uint8_t *location = prv_heartbeat_get_location(heartbeat, metric);
   prv_location_set_value(location, val, analytics_metric_element_type(metric));
-
-#if MEMFAULT
-  if (heartbeat->kind == ANALYTICS_HEARTBEAT_KIND_DEVICE) {
-    memfault_metric_set_device_from_pebble_analytics(metric, val);
-  }
-#endif
-
 }
 
 void analytics_heartbeat_set_array(AnalyticsHeartbeat *heartbeat, AnalyticsMetric metric, uint32_t index, int64_t val) {
