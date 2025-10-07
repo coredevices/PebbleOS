@@ -1491,8 +1491,10 @@ status_t pfs_remove(const char *name) {
   status_t rv = get_avail_fd(name, &fd, false);
   if (rv >= FDAlreadyLoaded) { // the file is in the cache
     if (rv == FDBusy) {
-      PBL_CROAK("Cannot delete %s, it is currently in use",
-                PFS_FD(fd).file.name);
+      PBL_LOG(LOG_LEVEL_WARNING, "Cannot delete %s, it is currently in use",
+              PFS_FD(fd).file.name);
+      rv = E_BUSY;
+      goto cleanup;
     }
     page = PFS_FD(fd).file.start_page;
     mark_fd_free(fd);
