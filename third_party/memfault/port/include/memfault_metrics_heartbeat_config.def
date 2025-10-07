@@ -27,30 +27,3 @@ MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_double_tap_events, kMemfaultMetricType
 // just gone out to lunch and the user didn't ask for that at all
 // (FIRM-425).
 MEMFAULT_METRICS_KEY_DEFINE(firm_425_back_button_long_presses_cancelled, kMemfaultMetricType_Unsigned)
-
-///// Import old legacy PebbleOS metrics into Memfault. /////
-
-// exports: #define ANALYTICS_METRIC_TABLE(MARKER, DEVICE, APP, UINT8, UINT16, UINT32, INT8, INT16, INT32)
-#include "services/common/analytics/analytics_metric_table.h"
-
-#define ENTRY1(name) // no memfault metric for name without type
-#define ENTRY2(name, element_type) MEMFAULT_METRICS_KEY_DEFINE(name, element_type)
-#define ENTRY3(name, element_type, num_elements) // no memfault metric for array
-
-#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
-#define ENTRY(...) GET_MACRO(__VA_ARGS__, ENTRY3, ENTRY2, ENTRY1)(__VA_ARGS__)
-
-// We don't support Memfault metrics for per-app launch yet -- that would be
-// a 'session' analytic, whenever we're ready for that.
-#define NOOP(...)
-
-ANALYTICS_METRIC_TABLE(ENTRY /* marker */, ENTRY /* system */, NOOP /* app */,
-  kMemfaultMetricType_Unsigned, kMemfaultMetricType_Unsigned, kMemfaultMetricType_Unsigned,
-  kMemfaultMetricType_Signed, kMemfaultMetricType_Signed, kMemfaultMetricType_Signed)
-
-#undef ENTRY
-#undef GET_MACRO
-#undef ENTRY1
-#undef ENTRY2
-#undef ENTRY3
-#undef NOOP

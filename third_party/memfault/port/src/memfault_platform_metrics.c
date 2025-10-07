@@ -5,38 +5,6 @@
 #include "drivers/imu/lsm6dso/lsm6dso.h"
 #include "services/common/battery/battery_state.h"
 #include "util/heap.h"
-#include "services/common/analytics/analytics_metric_table.h"
-#include "services/common/analytics/analytics_external.h"
-
-void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, int64_t val) {
-
-#define ENTRY1(name) // no memfault metric for name without type
-#define ENTRY2(name, element_type) case name: element_type(name, val); break;
-#define ENTRY3(name, element_type, num_elements) // no memfault metric for array
-
-#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
-#define ENTRY(...) GET_MACRO(__VA_ARGS__, ENTRY3, ENTRY2, ENTRY1)(__VA_ARGS__)
-
-// We don't support Memfault metrics for per-app launch yet -- that would be
-// a 'session' analytic, whenever we're ready for that.
-#define NOOP(...)
-
-  switch (metric) {
-    ANALYTICS_METRIC_TABLE(ENTRY /* marker */, ENTRY /* system */, NOOP /* app */,
-      MEMFAULT_METRIC_SET_UNSIGNED, MEMFAULT_METRIC_SET_UNSIGNED, MEMFAULT_METRIC_SET_UNSIGNED,
-      MEMFAULT_METRIC_SET_SIGNED, MEMFAULT_METRIC_SET_SIGNED, MEMFAULT_METRIC_SET_SIGNED);
-    default:
-      break; /* it is a metric type we don't export to Memfault -- oh, well */
-  }
-
-#undef ENTRY
-#undef GET_MACRO
-#undef ENTRY1
-#undef ENTRY2
-#undef ENTRY3
-#undef NOOP
-
-}
 
 int memfault_platform_get_stateofcharge(sMfltPlatformBatterySoc *soc) {
   BatteryChargeState chargestate = battery_get_charge_state();
@@ -89,8 +57,4 @@ void memfault_metrics_heartbeat_collect_data(void) {
 
   extern uint32_t metric_firm_425_back_button_long_presses_cancelled;
   MEMFAULT_METRIC_SET_UNSIGNED(firm_425_back_button_long_presses_cancelled, metric_firm_425_back_button_long_presses_cancelled);
-
-#if !RECOVERY_FW
-  analytics_external_update();
-#endif
 }
