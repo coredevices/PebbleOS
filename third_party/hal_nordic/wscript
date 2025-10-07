@@ -27,7 +27,7 @@ def configure(conf):
     if conf.env.MICRO_FAMILY == 'NRF5340':
         # add core stuff
         conf.env.append_unique('DEFINES', 'NRF5340_XXAA_APPLICATION')
-        conf.env.append_unique('DEFINES', 'NRF5340_XXAA_NETWORK')
+        # conf.env.append_unique('DEFINES', 'NRF5340_XXAA_NETWORK')
     if conf.is_hollow():
         # config peripheral stuffs
         # conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')

@@ -63,8 +63,13 @@
 # pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wmissing-declarations"
 // including the CMSIS headerfiles
-#  include <nrf5340_application.h> // main core
-// #  include <nrf5340_network.h> // bt stack/ low power?
+#  if defined(NRF5340_XXAA_NETWORK) && defined(NRF5340_XXAA_APPLICATION)
+#   error "Both application and network nRF5340 core headers are defined"
+#  elif defined(NRF5340_XXAA_APPLICATION)
+#   include <nrf5340_application.h> // main core
+#  elif defined(NRF5340_XXAA_NETWORK)
+#   include <nrf5340_network.h> // bt core
+# endif
 # pragma GCC diagnostic pop
 #elif defined(MICRO_FAMILY_SF32LB52)
 # if !defined(SF32LB52_COMPATIBLE) && !defined(CMSIS_COMPATIBLE)

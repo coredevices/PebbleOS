@@ -13,7 +13,19 @@ def uses_dialog_bluetooth(ctx):
 
 def _recurse(ctx):
     if ctx.env.bt_controller in ('cc2564x', 'nrf52', 'sf32lb52', 'nrf53'):
-        ctx.recurse('nimble')
+        if ctx.env.bt_controller in ('nrf53') and 'NRF5340_XXAA_APPLICATION' in ctx.env['DEFINES']:
+            # recurse once with NRF5340_XXAA_APPLICATION defined
+            ctx.recurse('nimble')
+            # undefine NRF5340_XXAA_APPLICATION and define NRF5340_XXAA_NETWORK
+            ctx.env['DEFINES'].remove('NRF5340_XXAA_APPLICATION')
+            ctx.env.append_unique('DEFINES', 'NRF5340_XXAA_NETWORK')
+            # recurse a second time
+            ctx.recurse('nimble')
+            # put things back
+            ctx.env['DEFINES'].remove('NRF5340_XXAA_NETWORK')
+            ctx.env.append_unique('DEFINES', 'NRF5340_XXAA_APPLICATION')
+        else:
+            ctx.recurse('nimble')
     elif ctx.uses_dialog_bluetooth():
         # TODO: replace with real FW
         ctx.recurse('stub')
