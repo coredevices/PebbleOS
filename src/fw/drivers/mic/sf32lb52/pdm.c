@@ -27,9 +27,18 @@
 #include "services/common/system_task.h"
 #include "FreeRTOS.h"
 
-#define CFG_AUDIO_RECORD_PIPE_SIZE                    (288)
-#define CFG_AUDIO_RECORD_GAIN_DEFAULT                 (30)
-#define CFG_AUDIO_RECORD_GAIN_MAX                     (127)
+#define PDM_AUDIO_RECORD_PIPE_SIZE         (288)
+#define PDM_AUDIO_RECORD_GAIN_DEFAULT      (100)
+#define PDM_AUDIO_RECORD_GAIN_MAX          (127)
+
+// PDM Configuration
+#define PDM_BUFFER_SIZE_SAMPLES            (320)
+#define PDM_CH_COUNT                       (2)
+
+// Circular buffer configuration
+#define PDM_CIRCULAR_BUF_SIZE_MS           (128)
+#define PDM_CIRCULAR_BUF_SIZE_SAMPLES      ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_SIZE_MS) / 1000)
+#define PDM_CIRCULAR_BUF_SIZE_BYTES        (PDM_CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t) * PDM_CH_COUNT)
 
 static PDM_HandleTypeDef s_hpdm;
 static MicDeviceState* s_state;
@@ -60,6 +69,7 @@ void mic_init(const MicDevice *this) {
   hpdm->Init.Channels = this->channels;
   hpdm->Init.SampleRate = this->sample_rate;
   hpdm->Init.ChannelDepth = this->channel_depth;
+  hpdm->Init.clkSrc = 9600000;
   HAL_NVIC_SetPriority(this->pdm_irq, this->pdm_irq_priority, 0);
 
   state->is_initialized = true;
@@ -77,20 +87,20 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
     return;
   }
   // volume form 0~127
-  if(volume > CFG_AUDIO_RECORD_GAIN_MAX) volume = CFG_AUDIO_RECORD_GAIN_MAX;
+  if(volume > PDM_AUDIO_RECORD_GAIN_MAX) volume = PDM_AUDIO_RECORD_GAIN_MAX;
   HAL_PDM_Set_Gain(hpdm, this->channels, volume);
 }
 
 static bool prv_allocate_buffers(MicDeviceState *state) {
   // Allocate circular buffer storage
-  state->circ_buffer_storage = kernel_malloc(CIRCULAR_BUF_SIZE_BYTES);
+  state->circ_buffer_storage = kernel_malloc(PDM_CIRCULAR_BUF_SIZE_BYTES);
   if (!state->circ_buffer_storage) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate circular buffer storage");
     return false;
   }
   
   // Initialize circular buffer with allocated storage
-  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, CIRCULAR_BUF_SIZE_BYTES);
+  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, PDM_CIRCULAR_BUF_SIZE_BYTES);
   
   return true;
 }
@@ -128,7 +138,7 @@ static void prv_dispatch_samples_common(void) {
         // Consume exactly the frame we processed
         circular_buffer_consume(&s_state->circ_buffer, bytes_copied);
       }
-      available_data -= frame_size_bytes;
+      available_data -= bytes_copied;
     }
   }
   
@@ -222,8 +232,21 @@ static bool prv_start_pdm_capture(const MicDevice *this)
   HAL_StatusTypeDef res;
   HAL_RCC_EnableModule(RCC_MOD_PDM1);
   res = HAL_PDM_Init(hpdm);
+  if (this->channels ==1) {
+    hpdm->Init.Channels = PDM_CHANNEL_LEFT_ONLY;
+  } else {
+    hpdm->Init.Channels = PDM_CHANNEL_STEREO;
+  }
+  hpdm->Init.SampleRate = this->sample_rate;
+  hpdm->Init.ChannelDepth = (uint32_t) this->channel_depth;
   HAL_PDM_Config(hpdm, PDM_CFG_CHANNEL | PDM_CFG_SAMPLERATE | PDM_CFG_DEPTH);
-  HAL_PDM_Set_Gain(hpdm, this->channels, CFG_AUDIO_RECORD_GAIN_DEFAULT);
+  HAL_PDM_Set_Gain(hpdm, PDM_CHANNEL_STEREO, PDM_AUDIO_RECORD_GAIN_DEFAULT);
+
+  // 3.072M = 49.152M(audpll)/16, 96k sampling use 3.072M as clock.
+  if (hpdm->Init.clkSrc == 3072000 || hpdm->Init.SampleRate == PDM_SAMPLE_96KHZ)
+  {
+    bf0_enable_pll(hpdm->Init.SampleRate, 0);
+  }
   HAL_NVIC_EnableIRQ(this->pdm_dma_irq);
   HAL_NVIC_EnableIRQ(this->pdm_irq);
   res |= HAL_PDM_Receive_DMA(hpdm, hpdm->pRxBuffPtr, hpdm->RxXferSize);
@@ -259,12 +282,12 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     return false;
   }
 
-  hpdm->RxXferSize = this->channels * CFG_AUDIO_RECORD_PIPE_SIZE * 2;
+  hpdm->RxXferSize = this->channels * PDM_AUDIO_RECORD_PIPE_SIZE * sizeof(int16_t);
   hpdm->pRxBuffPtr = kernel_malloc(hpdm->RxXferSize);
   PBL_ASSERT(hpdm->pRxBuffPtr, "Can not allocate buffer");
 
   // Reset state
-  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, CIRCULAR_BUF_SIZE_BYTES);
+  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, PDM_CIRCULAR_BUF_SIZE_BYTES);
   state->data_handler = data_handler;
   state->handler_context = context;
   state->audio_buffer = audio_buffer;

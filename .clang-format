@@ -5,4 +5,5 @@ UseTab: Never
 PointerAlignment: Right
 ColumnLimit: 100
 SortIncludes: Never
+AllowShortFunctionsOnASingleLine: Empty
 ---

@@ -547,7 +547,7 @@ def configure(conf):
 
     conf.recurse('bin/boot')
 
-    if conf.options.runner == 'openocd':
+    if conf.env.RUNNER == 'openocd':
         waftools.openocd.write_cfg(conf)
 
     # Save a baseline environment that we'll use for unit tests
@@ -815,6 +815,15 @@ def build(bld):
 
     if bld.variant == '':
         bld.recurse('stored_apps')
+
+    # FIXME(OBELIX): see GH-309 - disable memfault library build for Obelix PRF
+    # because "prf" is a build flag and not a configuration flag, we need to
+    # override this in the general firmware build step
+    if bld.is_obelix() and bld.variant == 'prf':
+        # Remove any existing MEMFAULT define and replace with MEMFAULT=0
+        bld.env.DEFINES = [d for d in bld.env.DEFINES if not d.startswith('MEMFAULT')]
+        bld.env.append_value('DEFINES', 'MEMFAULT=0')
+        bld.env.memfault = 0
 
     bld.recurse('third_party')
     bld.recurse('src/include')

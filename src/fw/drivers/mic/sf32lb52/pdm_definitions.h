@@ -24,16 +24,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// PDM Configuration
-#define PDM_BUFFER_SIZE_SAMPLES    (320)
-#define PDM_BUFFER_COUNT           (2)
-#define PDM_GAIN_DEFAULT           (30)
-
-// Circular buffer configuration
-#define CIRCULAR_BUF_SIZE_MS       (128)
-#define CIRCULAR_BUF_SIZE_SAMPLES  ((MIC_SAMPLE_RATE * CIRCULAR_BUF_SIZE_MS) / 1000)
-#define CIRCULAR_BUF_SIZE_BYTES    (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
-
 // Note: If the MCU has cache, this needs to be placed in DMA_BSS.
 typedef struct MicState {
   uint8_t *circ_buffer_storage; 

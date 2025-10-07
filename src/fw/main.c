@@ -434,7 +434,13 @@ static NOINLINE void prv_main_task_init(void) {
   new_timer_service_init();
   regular_timer_init();
   clock_init();
+
+  // Initialize the task watchdog and immediately pause it for 30 seconds to
+  // give us time to initialize everything without worrying about task watchdog
+  // from firing if we block other tasks.
   task_watchdog_init();
+  task_watchdog_pause(30);
+
   analytics_init();
   register_system_timers();
   system_task_timer_init();
@@ -524,6 +530,8 @@ static NOINLINE void prv_main_task_init(void) {
   // Test setjmp/longjmp
   prv_test_sjlj();
 #endif
+
+  task_watchdog_resume();
 }
 
 static void main_task(void *parameter) {
