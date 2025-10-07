@@ -75,16 +75,16 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
 
   if (memcmp(&file_hdr.magic, SETTINGS_FILE_MAGIC, sizeof(file_hdr.magic)) != 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "Attempted to open %s, not a settings file.", name);
-    pfs_close_and_remove(fd);
+    pfs_close(fd);
     return E_INVALID_OPERATION;
   }
 
   if (file_hdr.version > SETTINGS_FILE_VERSION) {
     PBL_LOG(LOG_LEVEL_WARNING,
-            "Unrecognized version %d for file %s, removing...",
-            file_hdr.version, name);
-    pfs_close_and_remove(fd);
-    return prv_open(file, name, flags, max_used_space);
+            "Unrecognized version %d for file %s, expected %d",
+            file_hdr.version, name, SETTINGS_FILE_VERSION);
+    pfs_close(fd);
+    return E_INVALID_OPERATION;
   }
 
   status_t status = bootup_check(file);

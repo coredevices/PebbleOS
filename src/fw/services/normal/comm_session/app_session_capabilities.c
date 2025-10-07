@@ -17,6 +17,7 @@
 #include "process_management/app_install_types.h"
 #include "process_management/app_manager.h"
 #include "services/common/comm_session/app_session_capabilities.h"
+#include "services/normal/filesystem/pfs.h"
 #include "services/normal/settings/settings_file.h"
 #include "util/units.h"
 
@@ -98,8 +99,16 @@ void comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {
 
 void comm_session_app_session_capabilities_init(void) {
   SettingsFile settings_file;
-  if (PASSED(prv_open(&settings_file))) {
+  status_t open_status = prv_open(&settings_file);
+  if (PASSED(open_status)) {
     settings_file_rewrite(&settings_file, prv_rewrite_cb, NULL);
     settings_file_close(&settings_file);
+  } else if (open_status == E_INVALID_OPERATION) {
+    // File has invalid format (wrong magic or version), remove it and recreate
+    pfs_remove(APP_SESSION_CAPABILITIES_CACHE_FILENAME);
+    // Try to open again to create a fresh file
+    if (PASSED(prv_open(&settings_file))) {
+      settings_file_close(&settings_file);
+    }
   }
 }

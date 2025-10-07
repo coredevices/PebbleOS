@@ -26,6 +26,7 @@
 #include "services/common/event_service.h"
 #include "services/common/new_timer/new_timer.h"
 #include "services/common/system_task.h"
+#include "services/normal/filesystem/pfs.h"
 #include "services/normal/settings/settings_file.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
@@ -333,9 +334,19 @@ void wakeup_init(void) {
   s_wakeup_state.timestamp = -1;
 
   SettingsFile wakeup_settings;
-  if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open wakeup settings");
-    return;
+  status_t open_status = settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE);
+  if (FAILED(open_status)) {
+    if (open_status == E_INVALID_OPERATION) {
+      // File has invalid format (wrong magic or version), remove it and recreate
+      PBL_LOG(LOG_LEVEL_WARNING, "Wakeup settings file is invalid, removing and recreating");
+      pfs_remove(SETTINGS_FILE_NAME);
+      // Try to open again to create a fresh file
+      open_status = settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE);
+    }
+    if (FAILED(open_status)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open wakeup settings (status: %"PRId32")", open_status);
+      return;
+    }
   }
 
   // Want to check if there are any events first to prevent us from rewriting the file on boot if

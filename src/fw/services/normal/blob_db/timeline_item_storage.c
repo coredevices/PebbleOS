@@ -249,8 +249,18 @@ void timeline_item_storage_init(TimelineItemStorage *storage,
   };
   status_t rv = settings_file_open(&storage->file, storage->name, storage->max_size);
   if (FAILED(rv)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unable to create settings file %s, rv = %"PRId32 "!",
-            filename, rv);
+    if (rv == E_INVALID_OPERATION) {
+      // File has invalid format (wrong magic or version), remove it and recreate
+      PBL_LOG(LOG_LEVEL_WARNING, "Timeline storage file %s is invalid, removing and recreating",
+              filename);
+      pfs_remove(filename);
+      // Try to open again to create a fresh file
+      rv = settings_file_open(&storage->file, storage->name, storage->max_size);
+    }
+    if (FAILED(rv)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Unable to create settings file %s, rv = %"PRId32 "!",
+              filename, rv);
+    }
   }
 }
 
