@@ -7,8 +7,9 @@
 
 #if defined(MICRO_FAMILY_NRF52840)
 #  define NRF52840_COMPATIBLE
-#if defined(MICRO_FAMILY_NRF5340)
+#elif defined(MICRO_FAMILY_NRF5340)
 #  define NRF5340_COMPATIBLE
+#endif
 #include <mcu.h>
 
 #include <stdint.h>
@@ -35,8 +36,7 @@ enum {
 #if defined(MICRO_FAMILY_NRF52840)
 #  include "irq_nrf52840.def"
 #elif defined(MICRO_FAMILY_NRF5340)
-#  include "irq_nrf5340.def" // doesn't exist yet
-#else
+#  include "irq_nrf5340_application.def" // doesn't exist yet
 #else
 #  error need IRQ table for new micro family
 #endif

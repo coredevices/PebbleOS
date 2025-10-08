@@ -116,7 +116,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   // See: http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABGGICD.html#BGBHDHAI
   __disable_irq();
 
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF5) && !defined(NRF5340_XXAA_APPLICATION) // TODO need to find a better workaround...
   // We're going to sleep, so turn off the caches (they consume quiescent
   // power).  It's more efficient to have them on when we're awake, but for
   // now, they gotta go.  This holds true even if we're not going to sleep
@@ -225,7 +225,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
   power_tracking_start(PowerSystemMcuCoreRun);
 
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF5) && !defined(NRF5340_XXAA_APPLICATION) // TODO need to find a better fix...
   NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 #endif
 

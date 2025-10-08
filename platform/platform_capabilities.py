@@ -315,7 +315,7 @@ board_capability_dicts = [
     },
     {
         'boards': [ 'hollow'],
-        'capabilities': # TODO update
+        'capabilities': # TODO update... not sure this is used for anything?
         {
             'HAS_APP_GLANCES',
             'HAS_CORE_NAVIGATION4',

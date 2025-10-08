@@ -45,6 +45,8 @@
 #include "flash_region_s29vs.h"
 #elif PLATFORM_OBELIX
 #include "flash_region_gd25q256e.h"
+#elif PLATFORM_HOLLOW
+#include "flash_region_gd25q256e.h" /* needs to be updated...*/
 #endif
 
 #if CAPABILITY_HAS_PBLBOOT

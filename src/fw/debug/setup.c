@@ -33,6 +33,8 @@ void enable_mcu_debugging(void) {
 //  NRF_APPROTECT->APPROTECT.DISABLE = 1;
 #elif defined(MICRO_FAMILY_SF32LB52)
 // TODO(SF32LB52): implement
+#elif defined(MICRO_FAMILY_NRF5340)
+// TODO(NRF5340): implement
 #else
   DBGMCU_Config(DBGMCU_SLEEP | DBGMCU_STOP, ENABLE);
   // Stop RTC, IWDG & TIM2 during debugging
@@ -48,6 +50,8 @@ void disable_mcu_debugging(void) {
 //  NRF_APPROTECT->APPROTECT.DISABLE = 0;
 #elif MICRO_FAMILY_SF32LB52
 // TODO(SF32LB52): implement
+#elif defined(MICRO_FAMILY_NRF5340)
+// TODO(NRF5340): implement
 #else
   DBGMCU->CR = 0;
   DBGMCU->APB1FZ = 0;
