@@ -1416,6 +1416,8 @@ static void prv_invoke_watch_file_callbacks(const char* file_name, uint8_t event
 }
 
 status_t pfs_close(int fd) {
+  PBL_LOG(LOG_LEVEL_INFO, "pfs_close(%d)", fd);
+
   mutex_lock_recursive(s_pfs_mutex);
 
   int res = E_UNKNOWN;
@@ -1888,6 +1890,9 @@ cleanup:
   }
 
   mutex_unlock_recursive(s_pfs_mutex);
+
+  PBL_LOG(LOG_LEVEL_INFO, "pfs_open(%s) = %d", name, res);
+
   return (res);
 }
 
