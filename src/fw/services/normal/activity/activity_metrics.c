@@ -748,6 +748,7 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
     if (history_len > 1) {
       // Read from the history stored in settings
       ActivitySettingsValueHistory setting_history = {};
+      PBL_LOG(LOG_LEVEL_INFO, "Getting history for metric %"PRIi32"", (int32_t)metric);
       SettingsFile *file = activity_private_settings_open();
       if (!file) {
         PBL_LOG(LOG_LEVEL_ERROR, "Settings file DNE. No need to continue getting metric");
