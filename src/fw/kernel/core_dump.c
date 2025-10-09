@@ -118,7 +118,7 @@ typedef struct {
 static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
 #if MICRO_FAMILY_STM32F2
   { .start = (void *)SRAM_BASE, .length = COREDUMP_RAM_SIZE },
-#elif MICRO_FAMILY_NRF52840 || MICRO_FAMILY_SF32LB52
+#elif MICRO_FAMILY_NRF52840 || MICRO_FAMILY_SF32LB52 || MICRO_FAMILY_NRF5340
   { .start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE },
 #else
   { .start = (void *)SRAM1_BASE, .length = COREDUMP_RAM_SIZE },

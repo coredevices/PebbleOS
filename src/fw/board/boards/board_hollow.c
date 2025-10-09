@@ -68,7 +68,7 @@ static UARTDevice DBG_UART_DEVICE = {
     .counter = NRFX_TIMER_INSTANCE(2),
 };
 UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
-IRQ_MAP_NRFX(UART0_UARTE0, nrfx_uarte_0_irq_handler);
+IRQ_MAP_NRFX(SERIAL0, nrfx_uarte_0_irq_handler);
 /* PERIPHERAL ID 8 */
 
 /* buttons */
@@ -77,12 +77,12 @@ IRQ_MAP_NRFX(TIMER2, nrfx_timer_2_irq_handler);
 
 /* display */
 PwmState DISPLAY_EXTCOMIN_STATE;
-IRQ_MAP_NRFX(SPIM3, nrfx_spim_3_irq_handler);
+IRQ_MAP_NRFX(SERIAL1, nrfx_spim_3_irq_handler);
 
 /* PERIPHERAL ID 10 */
 
 /* EXTI */
-IRQ_MAP_NRFX(GPIOTE, nrfx_gpiote_0_irq_handler);
+IRQ_MAP_NRFX(SPIM4, nrfx_gpiote_0_irq_handler);
 
 /* nPM1300 */
 static I2CBusState I2C_NPMC_IIC1_BUS_STATE = {};
@@ -107,7 +107,7 @@ static const I2CBus I2C_NPMC_IIC1_BUS = {
         },
     .name = "I2C_NPMC_IIC1",
 };
-IRQ_MAP_NRFX(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, nrfx_twim_1_irq_handler);
+IRQ_MAP_NRFX(SERIAL2, nrfx_twim_1_irq_handler);
 /* PERIPHERAL ID 9 */
 
 static const I2CSlavePort I2C_SLAVE_NPM1300 = {
@@ -140,7 +140,7 @@ static const I2CBus I2C_IIC2_BUS = {
         },
     .name = "I2C_IIC2",
 };
-IRQ_MAP_NRFX(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, nrfx_twim_0_irq_handler);
+IRQ_MAP_NRFX(SERIAL3, nrfx_twim_0_irq_handler);
 
 static const I2CSlavePort I2C_SLAVE_DRV2604 = {
     .bus = &I2C_IIC2_BUS,
@@ -184,9 +184,9 @@ static const I2CSlavePort I2C_SLAVE_LSM6D = {
 
 I2CSlavePort *const I2C_LSM6D = &I2C_SLAVE_LSM6D;
 
-IRQ_MAP_NRFX(I2S, nrfx_i2s_0_irq_handler);
+IRQ_MAP_NRFX(I2S0, nrfx_i2s_0_irq_handler);
 
-IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
+IRQ_MAP_NRFX(PDM0, NRFX_PDM_INST_HANDLER_GET(0));
 
 /* PERIPHERAL ID 11 */
 
@@ -220,7 +220,7 @@ const Npm1300Config NPM1300_CONFIG = {
 void board_early_init(void) {
   PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
 
-  NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
+//   NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk; // TODO this might need to be fixed
 
   nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
   nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);

@@ -47,6 +47,15 @@ def build(bld):
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
                 excludes.append('common/battery/voltage/**')
+            elif bld.is_hollow():
+                excludes.append('common/legacy/*registry*.c')
+                excludes.append('common/compositor/default/compositor_modal_transitions.*')
+                excludes.append('common/battery/voltage/**')
+                excludes.append('normal/vibes/vibe_client.c')
+                excludes.append('normal/vibes/vibe_score.c')
+                excludes.append('normal/vibes/vibe_score_info.c')
+                excludes.append('common/battery/nrf_fuel_gauge/**')
+                excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
             else:
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/battery/nrf_fuel_gauge/**')

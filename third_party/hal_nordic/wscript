@@ -30,12 +30,13 @@ def configure(conf):
         # conf.env.append_unique('DEFINES', 'NRF5340_XXAA_NETWORK')
     if conf.is_hollow():
         # config peripheral stuffs
-        # conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
-        # conf.env.append_unique('DEFINES', 'CONFIG_GPIO_AS_PINRESET') # TODO find equivalent
+        conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
+        conf.env.append_unique('DEFINES', 'CONFIG_GPIO_AS_PINRESET') # TODO find equivalent
         conf.env.append_unique('DEFINES', 'NRFX_I2S_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_I2S0_ENABLED=1') # nrf_i2s.h replace?
         conf.env.append_unique('DEFINES', 'NRFX_GPIOTE_ENABLED=1')
-        # conf.env.append_unique('DEFINES', 'NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS=4') # double check number
+        conf.env.append_unique('DEFINES', 'NRFX_GPIOTE0_ENABLED=1')
+        conf.env.append_unique('DEFINES', 'NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS=4') # double check number
         conf.env.append_unique('DEFINES', 'NRFX_PDM_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_DPPI_ENABLED=1') # enabling Distributed Programmable Peripheral Interconnect
         conf.env.append_unique('DEFINES', 'NRFX_PWM_ENABLED=1')
@@ -49,8 +50,8 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'NRFX_TWIM_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_TWIM0_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_TWIM1_ENABLED=1')
-        conf.env.append_unique('DEFINES', 'NRFX_UARTE_ENABLED=0')
-        conf.env.append_unique('DEFINES', 'NRFX_UARTE0_ENABLED=0')
+        conf.env.append_unique('DEFINES', 'NRFX_UARTE_ENABLED=1')
+        conf.env.append_unique('DEFINES', 'NRFX_UARTE0_ENABLED=1')
 
 
 def build(bld):

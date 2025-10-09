@@ -844,6 +844,7 @@ void app_manager_get_framebuffer_size(GSize *size) {
       // oh dear...
       *size = GSize(LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS);
       return;
+    case PlatformTypeHollow:
     case PlatformTypeDiorite:
     case PlatformTypeEmery:
       *size = GSize(DISP_COLS, DISP_ROWS);

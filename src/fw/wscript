@@ -723,6 +723,9 @@ def _build_normal(bld):
         excludes.append('apps/system_apps/weather/**')
         excludes.append('apps/system_apps/workout/**')
 
+    if bld.is_hollow():
+        excludes.append('apps/system_apps/settings/settings_vibe_patterns.c')
+
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
     sources.extend(bld.path.make_node(x) for x in source_files)
     sources.extend(_get_comm_sources(bld, False))

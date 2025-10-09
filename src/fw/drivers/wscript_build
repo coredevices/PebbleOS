@@ -481,6 +481,18 @@ elif bld.is_asterix() or bld.is_obelix():
             'root_includes',
         ],
     )
+elif bld.is_hollow():
+    bld.objects(
+        name='driver_battery',
+        source=[
+            'battery/battery_common.c',
+            # PMIC provides this implementation
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 else:
     bld.objects(
         name='driver_battery',

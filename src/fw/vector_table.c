@@ -69,6 +69,8 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 # include "irq_nrf52.def"
 #elif defined(MICRO_FAMILY_SF32LB52)
 # include "irq_sf32lb52.def"
+#elif defined(MICRO_FAMILY_NRF5340)
+# include "irq_nrf5340_application.def"
 #else
 # include "irq_stm32.def"
 #endif
@@ -104,6 +106,8 @@ EXTERNALLY_VISIBLE SECTION(".isr_vector") const void * const vector_table[] = {
 # include "irq_nrf52840.def"
 #elif defined(MICRO_FAMILY_SF32LB52)
 # include "irq_sf32lb52.def"
+#elif defined(MICRO_FAMILY_NRF5340)
+# include "irq_nrf5340_application.def"
 #else
 # include "irq_stm32.def"
 #endif
