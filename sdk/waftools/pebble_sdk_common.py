@@ -264,11 +264,15 @@ def setup_pebble_cprogram(task_gen):
                 append_to_attr(task_gen, 'stlibpath', platform_binary_path.abspath())
                 append_to_attr(task_gen, 'stlib', lib['name'])
 
-    append_to_attr(task_gen, 'linkflags',
-                   ['-Wl,--build-id=sha1',
-                    '-Wl,-Map,pebble-{}.map,--emit-relocs'.format(getattr(task_gen,
-                                                                          'bin_type',
-                                                                          'app'))])
+    link_flags = ['-Wl,--build-id=sha1',
+                  '-Wl,-Map,pebble-{}.map,--emit-relocs'.format(getattr(task_gen,
+                                                                        'bin_type',
+                                                                        'app'))]
+    append_to_attr(task_gen, 'linkflags', link_flags)
+    # Waf 2.x requires setting LINKFLAGS in the environment, not just the task generator
+    if not hasattr(task_gen.env, 'LINKFLAGS'):
+        task_gen.env.LINKFLAGS = []
+    task_gen.env.LINKFLAGS.extend(link_flags)
     if not hasattr(task_gen, 'ldscript'):
         task_gen.ldscript = (
                 build_node.find_or_declare('pebble_app.ld.auto').path_from(task_gen.path))
