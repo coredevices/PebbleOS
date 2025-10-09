@@ -228,7 +228,9 @@ void flash_read_bytes(uint8_t* buffer, uint32_t start_addr,
   // reads while an erase is in progress, as long as the read is to another bank
   // than the one being erased.
   prv_erase_pause();
-  new_timer_start(s_erase_suspend_timer, 5, prv_erase_suspend_timer_cb, NULL, 0);
+  if (s_erase.suspended) {
+    new_timer_start(s_erase_suspend_timer, 5, prv_erase_suspend_timer_cb, NULL, 0);
+  }
   flash_impl_read_sync(buffer, start_addr, buffer_size);
   mutex_unlock(s_flash_lock);
 }
@@ -247,7 +249,9 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
   s_analytics_write_bytes_count += buffer_size;
   s_system_analytics_write_bytes_count += buffer_size;
   prv_erase_pause();
-  new_timer_start(s_erase_suspend_timer, 50, prv_erase_suspend_timer_cb, NULL, 0);
+  if (s_erase.suspended) {
+    new_timer_start(s_erase_suspend_timer, 50, prv_erase_suspend_timer_cb, NULL, 0);
+  }
   while (buffer_size) {
     int written = flash_impl_write_page_begin(buffer, start_addr, buffer_size);
     PBL_ASSERT(
