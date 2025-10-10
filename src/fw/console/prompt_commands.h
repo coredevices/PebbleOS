@@ -89,6 +89,7 @@ extern void command_flash_fill(const char*, const char*, const char*);
 extern void command_flash_test(const char* test_case_num_str, const char* iterations_str);
 extern void command_flash_test_locked_sectors(void);
 extern void command_flash_stress(const char *);
+extern void command_flash_benchmark(void);
 extern void command_flash_validate(void);
 extern void command_flash_apicheck(const char *len);
 extern void command_flash_unprotect(void);
@@ -661,6 +662,7 @@ static const Command s_prompt_commands[] = {
 
   // This command is dangerous to your flash.  Be careful.
   {"flash stress", command_flash_stress, 1 },
+  {"flash benchmark", command_flash_benchmark, 0 },
 #endif
 
   { "ping", command_ping_send, 0},
