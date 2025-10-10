@@ -81,12 +81,36 @@ static int s_is_active = 0; // some QSPI functions are reentrant (like blank-che
 static void prv_write_cmd_no_addr(QSPIPort *dev, uint8_t cmd);
 static void _flash_handler(nrfx_qspi_evt_t event, void *ctx);
 
+/* Unfortunately, new_timer is very slow to interface with (50us or more),
+ * and even taking a PebbleMutex is very expensive (30us or more) -- and
+ * flash operations happen a *lot*.
+ *
+ * So, when we start the timer to shut the flash back down, we really only
+ * want to do that if we absolutely have to -- if the timer is already
+ * running, it's so expensive to kick it out into the future that we'd
+ * rather that it just retrigger on its own later, rather than having to
+ * think about it on every single flash op.  (We encode that state into
+ * s_timer_is_set and s_sleep_last_ticks.)
+ *
+ * We also avoid taking the s_sleep_mutex in the uncontended path of flash
+ * accesses, for that is also quite expensive -- an atomic test-and-set
+ * s_sleep_defer indicates whether `prv_use` is trying to turn on the flash
+ * (and, therefore, `prv_sleep_timeout` must not turn it off), or vice
+ * versa.  (See comments in each of these functions for the precise
+ * synchronization sequence when it's necessary to "upgrade" from the
+ * lightweight lock to the mutex.)
+ */
 static TimerID s_sleep_timer;
+static RtcTicks s_sleep_last_ticks = 0; /* If we have woken recently, try again later. */
+static bool s_sleep_timer_is_set = false;
+
 static PebbleMutex *s_sleep_mutex;
+static bool s_sleep_defer = false;
 
 static void prv_sleep_timeout(void *arg) {
   QSPIFlash *dev = (QSPIFlash *)arg;
-  if (s_is_active || dev->state->coredump_mode) {
+  RtcTicks now = rtc_get_ticks();
+  if (s_is_active || dev->state->coredump_mode || ((s_sleep_last_ticks + FLASH_TIMEOUT_MS) > now)) {
     // the new_timer will come and try again later
     return;
   }
@@ -100,8 +124,27 @@ static void prv_sleep_timeout(void *arg) {
 #endif
 
   mutex_lock(s_sleep_mutex);
+  bool sleep_is_deferred = __atomic_test_and_set(&s_sleep_defer, __ATOMIC_SEQ_CST);
+  if (sleep_is_deferred) {
+    /* We got interrupted at the exact moment that prv_use is trying to wake
+     * prevent us from sleeping.  No problem -- the new_timer will come and
+     * try again later.
+     *
+     * In the mean time, we do not "own" the s_sleep_defer, so we don't need
+     * to clear it.
+     */
+    goto done_mutex;
+  }
 
   new_timer_stop(s_sleep_timer);
+  s_sleep_timer_is_set = false;
+
+  if (!s_is_awake) {
+    /* Nothing to do -- maybe we got errantly rescheduled (see comment in
+     * prv_release).
+     */
+    goto done_defer;
+  }
 
   prv_write_cmd_no_addr(dev->qspi, dev->state->part->instructions.enter_low_power);
   delay_us(dev->state->part->standby_to_low_power_latency_us);
@@ -112,22 +155,49 @@ static void prv_sleep_timeout(void *arg) {
 
   s_is_awake = false;
 
+done_defer:
+  __atomic_clear(&s_sleep_defer, __ATOMIC_SEQ_CST);
+done_mutex:
   mutex_unlock(s_sleep_mutex);
 }
 
 static void prv_use(QSPIFlash *dev) {
   if (!dev->state->coredump_mode) {
-    mutex_lock(s_sleep_mutex);
+    bool going_back_to_sleep;
+    do {
+      going_back_to_sleep = __atomic_test_and_set(&s_sleep_defer, __ATOMIC_SEQ_CST);
+      if (going_back_to_sleep) {
+        /* prv_sleep_timeout is currently putting us back to sleep.  Grab the
+         * mutex to wait until they finish putting us back to sleep, then we'll
+         * get back to work.
+         */
+        mutex_lock(s_sleep_mutex);
+        mutex_unlock(s_sleep_mutex);
+      }
+    } while (!going_back_to_sleep);
+
+    /* Now, we were the one responsible for setting the sleep_defer flag;
+     * we'll clean it up when we're done, and prv_sleep_timeout will not
+     * cause us trouble until we say that we're done.
+     */
   }
 
   PBL_ASSERTN(s_is_init);
   s_is_active++;
 
+  /* As soon as we're s_is_active, prv_sleep_timeout will not interrupt us
+   * -- that's as good as being s_sleep_deferred.  Now we can clean that up.
+   */
+  __atomic_clear(&s_sleep_defer, __ATOMIC_SEQ_CST);
+
+  s_sleep_last_ticks = rtc_get_ticks();
+
   if (s_is_awake) {
-    if (!dev->state->coredump_mode) {
-      new_timer_stop(s_sleep_timer);
-      mutex_unlock(s_sleep_mutex);
-    }
+    /* sleep_timer might still be alive, but we don't want to ask
+     * new_timer to do anything about it right now, since that's
+     * expensive.  If it comes and we are s_is_active later, it'll just
+     * reschedule itself.
+     */
     return;
   }
 
@@ -145,26 +215,20 @@ static void prv_use(QSPIFlash *dev) {
   delay_us(dev->state->part->low_power_to_standby_latency_us);
 
   s_is_awake = true;
-
-  if (!dev->state->coredump_mode) {
-    mutex_unlock(s_sleep_mutex);
-  }
 }
 
 static void prv_release(QSPIFlash *dev) {
-  if (!dev->state->coredump_mode) {
-    mutex_lock(s_sleep_mutex);
-  }
-
   PBL_ASSERTN(s_is_active);
   s_is_active--;
-  // if not in coredump node, set new_timer to go back to sleep...
-  if (!dev->state->coredump_mode && !s_is_active) {
-    new_timer_start(s_sleep_timer, FLASH_TIMEOUT_MS, prv_sleep_timeout, (void *)dev, 0 /* flags */);
-  }
 
-  if (!dev->state->coredump_mode) {
-    mutex_unlock(s_sleep_mutex);
+  if (!dev->state->coredump_mode && !s_is_active && !s_sleep_timer_is_set) {
+    /* Note that a previous new_timer could have come along just after we
+     * decremented s_is_active, and then we would set a new new_timer
+     * without noticing -- so the timeout CB needs to be aware of the
+     * potential to be called without anyone ever having woken us.
+     */
+    s_sleep_timer_is_set = true;
+    new_timer_start(s_sleep_timer, FLASH_TIMEOUT_MS, prv_sleep_timeout, (void *)dev, TIMER_START_FLAG_REPEATING);
   }
 }
 
