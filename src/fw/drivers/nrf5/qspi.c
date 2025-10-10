@@ -28,6 +28,12 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
+/* For short reads that don't take very long, there isn't enough time to
+ * do anything meaningful during a context switch; the requesting thread
+ * ought just spin-wait.
+ */
+#define READ_POLLING_THRESHOLD 512
+
 /* nRF5's QSPI controller is different enough from STM32's that we
  * reimplement qspi_flash.c, not stm32/qspi.c.  */
 
@@ -259,8 +265,12 @@ static void _flash_handler(nrfx_qspi_evt_t event, void *ctx) {
 
   PBL_ASSERTN(event == NRFX_QSPI_EVENT_DONE);
 
-  xSemaphoreGiveFromISR(dev->qspi->state->dma_semaphore, &woken);
-  portYIELD_FROM_ISR(woken);
+  if (dev->qspi->state->spin_waiting) {
+    dev->qspi->state->spin_waiting = false;
+  } else {
+    xSemaphoreGiveFromISR(dev->qspi->state->dma_semaphore, &woken);
+    portYIELD_FROM_ISR(woken);
+  }
 }
 
 /*** Flash init routines. ***/
@@ -503,8 +513,10 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
   buf_mid = length - buf_pre - buf_suf;
 
   if (buf_pre != 0U) {
+    dev->qspi->state->spin_waiting = true;
     err = nrfx_qspi_read(b_buf, 4U, addr);
-    prv_wait_for_completion(dev);
+    while (dev->qspi->state->spin_waiting)
+      ;
     PBL_ASSERTN(err == NRFX_SUCCESS);
 
     memcpy(buffer, b_buf, buf_pre);
@@ -513,8 +525,15 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
   }
 
   if (buf_mid != 0U) {
-    err = nrfx_qspi_read(buffer, buf_mid, addr);
-    prv_wait_for_completion(dev);
+    if (length < READ_POLLING_THRESHOLD) {
+      dev->qspi->state->spin_waiting = true;
+      err = nrfx_qspi_read(buffer, buf_mid, addr);
+      while (dev->qspi->state->spin_waiting)
+        ;
+    } else {
+      err = nrfx_qspi_read(buffer, buf_mid, addr);
+      prv_wait_for_completion(dev);
+    }
     PBL_ASSERTN(err == NRFX_SUCCESS);
 
     addr += buf_mid;
@@ -522,8 +541,10 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
   }
 
   if (buf_suf != 0U) {
+    dev->qspi->state->spin_waiting = true;
     err = nrfx_qspi_read(b_buf, 4U, addr);
-    prv_wait_for_completion(dev);
+    while (dev->qspi->state->spin_waiting)
+      ;
     PBL_ASSERTN(err == NRFX_SUCCESS);
 
     memcpy(buffer, b_buf, buf_suf);
