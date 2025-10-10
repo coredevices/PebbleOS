@@ -607,6 +607,57 @@ void command_flash_stress(const char *n) {
   system_task_add_callback(prv_flash_stress_callback, (void *)count);
 }
 
+static void s_flash_benchmark(size_t sz) {
+  uint32_t flash_addr = FLASH_REGION_FIRMWARE_DEST_BEGIN;
+
+  char rbuf[64];
+
+  void *buf = kernel_malloc(sz);
+  if (!buf) {
+    prompt_send_response("OOM allocating read buffer");
+    return;
+  }
+
+  prompt_send_response_fmt(rbuf, sizeof(rbuf), "benchmarking %d bytes...", sz);
+
+  RtcTicks ticks_elapsed;
+  int iters = 2048;
+
+  do {
+    RtcTicks ticks_start = rtc_get_ticks();
+
+    iters *= 2;
+    for (int i = 0; i < iters; i++) {
+      flash_read_bytes(buf, flash_addr, sz);
+      flash_addr += sz;
+      flash_addr &= ~3; /* keep us aligned */
+      flash_addr &= ~(SUBSECTOR_SIZE_BYTES << 1); /* keep us from wrapping too far */
+    }
+
+    ticks_elapsed = rtc_get_ticks() - ticks_start;
+  } while (ticks_elapsed < 300);
+
+  uint32_t us_per_tick = ticks_elapsed * 1000000 / (iters * RTC_TICKS_HZ);
+  prompt_send_response_fmt(rbuf, sizeof(rbuf), "  -> %d bytes: %d iters in %lld ticks = %ld us/iter", sz, iters, ticks_elapsed, us_per_tick);
+
+  free(buf);
+
+  /* this could take a while -- don't crash! */
+  task_watchdog_bit_set(pebble_task_get_current());
+}
+
+void command_flash_benchmark() {
+  prompt_send_response("running flash read benchmark");
+
+  s_flash_benchmark(4);
+  s_flash_benchmark(5);
+  s_flash_benchmark(16);
+  s_flash_benchmark(64);
+  s_flash_benchmark(256);
+  s_flash_benchmark(1024);
+}
+
+
 void command_reset() {
   prompt_command_finish();
 
