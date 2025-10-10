@@ -25,6 +25,10 @@
 #define MPU_ARMV8
 #endif
 
+#ifdef MICRO_FAMILY_NRF5340
+#define MPU_ARMV8
+#endif
+
 typedef enum MpuCachePolicy {
   // FIXME(SF32LB52): system_bf0_ap.c uses now up to 4 attributes as MPU is not fully implemented.
 #ifdef MICRO_FAMILY_SF32LB52

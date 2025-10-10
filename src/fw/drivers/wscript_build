@@ -600,6 +600,21 @@ elif mcu_family == 'SF32LB52':
             'hal_sifli',
         ],
     )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_button',
+        source=[
+            'nrf5/button.c',
+            'nrf5/debounced_button.c',
+        ],
+        use=[
+            'driver_exti',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ],
+    )
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
@@ -726,6 +741,19 @@ elif mcu_family == 'SF32LB52':
         ],
         use=[
             'fw_includes',
+        ],
+    )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_exti',
+        source=[
+            'nrf5/exti.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -903,6 +931,18 @@ elif mcu_family == 'SF32LB52':
             'fw_includes',
         ],
     )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_gpio',
+        source=[
+            'nrf5/gpio.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ],
+    )
 
 if mcu_family == 'STM32F7':
     bld.objects(
@@ -987,6 +1027,17 @@ elif mcu_family == 'SF32LB52':
             'stubs/gpio_defaults.c',
         ],
     )
+elif mcu_family == 'NRF5340':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_gpio_defaults',
+        source=[
+            'stubs/gpio_defaults.c',
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
 
 if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
@@ -1049,6 +1100,20 @@ elif mcu_family == 'SF32LB52':
             'fw_includes',
             'freertos',
             'hal_sifli',
+        ],
+    )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_i2c',
+        source=[
+            'i2c.c',
+            'nrf5/i2c_hal.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -1253,6 +1318,17 @@ elif mcu_family == 'SF32LB52':
             'hal_sifli',
         ],
     )
+elif mcu_family == 'NRF5340':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_mcu',
+        source=[
+            'stubs/mcu.c',
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
 
 if bld.is_snowy_compatible():
     bld.objects(
@@ -1320,7 +1396,7 @@ elif bld.is_obelix():
 
 
 # FIXME: make generic to Cortex-M
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7', 'NRF52840', 'SF32LB52'):
+if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7', 'NRF52840', 'SF32LB52', 'NRF5340'):
     bld.objects(
         name='driver_mpu',
         source=[
@@ -1384,6 +1460,17 @@ elif mcu_family == 'NRF52840':
     )
 elif mcu_family == 'SF32LB52':
     # FIXME(SF32LB52): provide working implementation
+    bld.objects(
+        name='driver_periph_config',
+        source=[
+            'stubs/periph_config.c',
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
+elif mcu_family == 'NRF5340':
+    # FIXME: provide working implementation
     bld.objects(
         name='driver_periph_config',
         source=[
@@ -1518,6 +1605,18 @@ elif mcu_family == 'SF32LB52':
             'hal_sifli',
          ]
     )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_pwm',
+        source=[
+            'nrf5/pwm.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ]
+    )
 
 if 'STM32F412xG' in bld.env.DEFINES or mcu_family in ('STM32F7',):
     bld.objects(
@@ -1557,6 +1656,19 @@ elif mcu_family == 'SF32LB52':
             'fw_includes',
             'root_includes',
             'hal_sifli',
+        ],
+    )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_qspi',
+        source=[
+            'nrf5/qspi.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -1627,6 +1739,17 @@ elif mcu_family == 'SF32LB52':
             'hal_sifli',
         ],
     )
+elif mcu_family == 'NRF5340':
+    # FIXME: provide working implementation
+    bld.objects(
+        name='driver_rng',
+        source=[
+            'stubs/rng.c',
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
 
 if mcu_family == 'STM32F2':
     bld.objects(
@@ -1687,6 +1810,18 @@ elif mcu_family == 'SF32LB52':
             'hal_sifli',
         ],
     )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_rtc',
+        source=[
+            'nrf5/rtc.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if mcu_family == 'SF32LB52':
     bld.objects(
@@ -1728,6 +1863,17 @@ if mcu_family == 'STM32F7':
         ],
     )
 elif mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_spi',
+        source=[
+            'nrf5/spi.c',
+        ],
+        use=[
+            'fw_includes',
+            'hal_nordic',
+        ],
+    )
+elif mcu_family == 'NRF5340':
     bld.objects(
         name='driver_spi',
         source=[
@@ -1793,6 +1939,20 @@ elif mcu_family == 'SF32LB52':
             'freertos',
             'fw_includes',
             'root_includes',
+        ],
+    )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_task_watchdog',
+        source=[
+            'task_watchdog.c',
+        ],
+        use=[
+            'driver_watchdog',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
         ],
     )
 
@@ -1896,6 +2056,19 @@ elif mcu_family == 'SF32LB52':
             'hal_sifli',
         ],
     )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_uart',
+        source=[
+            'nrf5/uart.c',
+        ],
+        use=[
+            'freertos',
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ],
+    )
 
 if bld.capability('HAS_VIBE_DRV2604'):
     bld.objects(
@@ -1985,6 +2158,18 @@ elif mcu_family == 'SF32LB52':
             'fw_includes',
         ],
     )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_watchdog',
+        source=[
+            'nrf5/watchdog.c',
+        ],
+        use=[
+            'fw_includes',
+            'root_includes',
+            'hal_nordic',
+        ],
+    )
 
 if bld.get_hrm() == 'AS7000':
     bld.objects(
@@ -2011,6 +2196,18 @@ elif bld.get_hrm() == 'STUB':
     )
 
 if mcu_family == 'NRF52840':
+    bld.objects(
+        name='driver_nrf5_hfxo',
+        source=[
+            'nrf5/hfxo.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'hal_nordic',
+        ],
+    )
+elif mcu_family == 'NRF5340':
     bld.objects(
         name='driver_nrf5_hfxo',
         source=[

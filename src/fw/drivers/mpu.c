@@ -35,7 +35,7 @@ extern const uint32_t __SRAM_size__[];
 #if defined(MICRO_FAMILY_NRF52840)
 #include <drivers/nrfx_common.h>
 #define SRAM_BASE (0x20000000UL)
-#if defined(MICRO_FAMILY_NRF52840)
+#if defined(MICRO_FAMILY_NRF5340)
 #include <drivers/nrfx_common.h>
 #define SRAM_BASE (0x20000000UL)
 #elif defined(MICRO_FAMILY_SF32LB52)
