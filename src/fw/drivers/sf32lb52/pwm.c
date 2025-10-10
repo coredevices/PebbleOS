@@ -103,12 +103,18 @@ void pwm_enable(const PwmConfig *pwm, bool enable) {
     ret = HAL_GPT_PWM_Start(htim, channel);
     PBL_ASSERTN(ret == HAL_OK);
 
-    stop_mode_disable(InhibitorPWM);
+    if (!pwm->state->enabled) {
+      pwm->state->enabled = true;
+      stop_mode_disable(InhibitorPWM);
+    }
   } else {
     ret = HAL_GPT_PWM_Stop(htim, channel);
     PBL_ASSERTN(ret == HAL_OK);
 
-    stop_mode_enable(InhibitorPWM);
+    if (pwm->state->enabled) {
+      pwm->state->enabled = false;
+      stop_mode_enable(InhibitorPWM);
+    }
   }
 }
 
