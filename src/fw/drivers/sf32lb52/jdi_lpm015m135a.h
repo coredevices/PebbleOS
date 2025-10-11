@@ -52,6 +52,8 @@ typedef const struct DisplayJDIDevice {
     Pinmux va;
     Pinmux vb;
   } pinmux;
+  OutputConfig vddp;
+  OutputConfig vlcd;
 } DisplayJDIDevice;
 
 void jdi_lpm015m135a_irq_handler(DisplayJDIDevice *disp);

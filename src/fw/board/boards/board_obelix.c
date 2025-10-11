@@ -232,6 +232,10 @@ static DisplayJDIDevice s_display = {
             .flags = PIN_NOPULL,
         },
     },
+#if BOARD_OBELIX_BB2
+    .vddp = {hwp_gpio1, 28, true},
+    .vlcd = {hwp_gpio1, 29, true},
+#endif
 };
 
 DisplayJDIDevice *const DISPLAY = &s_display;
