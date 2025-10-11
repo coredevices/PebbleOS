@@ -1111,10 +1111,10 @@ elif bld.is_obelix():
     bld.objects(
         name='driver_led_controller',
         source=[
-            'led_controller/pwm.c',
+            'led_controller/aw2016.c',
         ],
         use=[
-            'driver_pwm',
+            'driver_i2c',
         ],
     )
 
