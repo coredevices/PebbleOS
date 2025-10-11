@@ -19,6 +19,8 @@
 #include "board/board.h"
 #include "board/display.h"
 #include "drivers/display/display.h"
+#include "drivers/gpio.h"
+#include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "system/logging.h"
@@ -31,6 +33,7 @@
 #include "bf0_hal_lptim.h"
 
 #define BYTE_222_TO_332(data) ((((data) & 0x30) << 2) | (((data) & 0x0c) << 1) | ((data) & 0x03))
+#define POWER_SEQ_DELAY_TIME  (11)
 
 static uint8_t s_framebuffer[2][DISPLAY_FRAMEBUFFER_BYTES];
 static bool s_framebuffer_dirty[2];
@@ -40,6 +43,14 @@ static SemaphoreHandle_t s_write_done;
 
 // TODO(SF32LB52): Improve/clarify display on/off code
 static void prv_display_on() {
+  // FIXME(SF32LB52): make this mandatory once old big boards are gone
+  if (DISPLAY->vlcd.gpio != NULL && DISPLAY->vddp.gpio != NULL) {
+    gpio_output_set(&DISPLAY->vlcd, true);
+    psleep(POWER_SEQ_DELAY_TIME);
+    gpio_output_set(&DISPLAY->vddp, true);
+    psleep(POWER_SEQ_DELAY_TIME);
+  }
+
   LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
 
   lptim->CFGR |= LPTIM_INTLOCKSOURCE_APBCLOCK;
@@ -73,6 +84,14 @@ static void prv_display_off() {
   // IE=0, PE=0, OE=0
   MODIFY_REG(hwp_rtc->PBR0R, RTC_PBR0R_IE_Msk | RTC_PBR0R_PE_Msk | RTC_PBR0R_OE_Msk, 0);
   MODIFY_REG(hwp_rtc->PBR1R, RTC_PBR1R_IE_Msk | RTC_PBR1R_PE_Msk | RTC_PBR1R_OE_Msk, 0);
+
+  // FIXME(SF32LB52): make this mandatory once old big boards are gone
+  if (DISPLAY->vlcd.gpio != NULL && DISPLAY->vddp.gpio != NULL) {
+    psleep(POWER_SEQ_DELAY_TIME);
+    gpio_output_set(&DISPLAY->vddp, true);
+    psleep(POWER_SEQ_DELAY_TIME);
+    gpio_output_set(&DISPLAY->vlcd, true);
+  }
 }
 
 static void prv_display_update(uint8_t index) {
@@ -104,6 +123,12 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
 
 void display_init(void) {
   DisplayJDIState *state = DISPLAY->state;
+
+  // FIXME(SF32LB52): make this mandatory once old big boards are gone
+  if (DISPLAY->vlcd.gpio != NULL && DISPLAY->vddp.gpio != NULL) {
+    gpio_output_init(&DISPLAY->vddp, GPIO_OType_PP, GPIO_Speed_2MHz);
+    gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP, GPIO_Speed_2MHz);
+  }
 
   HAL_PIN_Set(DISPLAY->pinmux.xrst.pad, DISPLAY->pinmux.xrst.func, DISPLAY->pinmux.xrst.flags, 1);
   HAL_PIN_Set(DISPLAY->pinmux.vst.pad, DISPLAY->pinmux.vst.func, DISPLAY->pinmux.vst.flags, 1);
