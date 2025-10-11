@@ -303,7 +303,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
-            'HAS_VIBE_AW86225',
+            # 'HAS_VIBE_AW86225',
             'HAS_FLASH_OTP',
             'HAS_MICROPHONE',
             'HAS_TOUCHSCREEN',
