@@ -52,6 +52,7 @@ RUNNERS = {
     'asterix': ['openocd', 'nrfutil'],
     'obelix': ['sftool'],
     'obelix_bb': ['sftool'],
+    'obelix_bb2': ['sftool'],
 }
 
 def truncate(msg):
@@ -113,6 +114,7 @@ def options(opt):
                              'asterix',
                              'obelix',
                              'obelix_bb',
+                             'obelix_bb2',
                             ],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')

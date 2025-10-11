@@ -24,7 +24,7 @@ jobs:
 
     strategy:
       matrix:
-        board: ["asterix", "obelix", "obelix_bb"]
+        board: ["asterix", "obelix", "obelix_bb", "obelix_bb2"]
         mode: ["normal", "mfg"]
 
     steps:

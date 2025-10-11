@@ -287,7 +287,7 @@ board_capability_dicts = [
         },
     },
     {
-        'boards': [ 'obelix', 'obelix_bb' ],
+        'boards': [ 'obelix', 'obelix_bb', 'obelix_bb2' ],
         'capabilities':
         {
             'HAS_APP_GLANCES',
