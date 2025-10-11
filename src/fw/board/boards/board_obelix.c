@@ -158,6 +158,8 @@ static DisplayJDIDevice s_display = {
             .flags = PIN_NOPULL,
         },
     },
+    .vddp = {hwp_gpio1, 28, true},
+    .vlcd = {hwp_gpio1, 29, true},
 };
 
 DisplayJDIDevice *const DISPLAY = &s_display;
