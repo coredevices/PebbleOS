@@ -390,17 +390,30 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_backlight',
-        source=[
-            'backlight.c',
-        ],
-        use=[
-            'fw_includes',
-            'root_includes',
-            'driver_led_controller',
-        ],
-    )
+    if not bld.is_obelix_bb2():
+        bld.objects(
+            name='driver_backlight',
+            source=[
+                'backlight.c',
+            ],
+            use=[
+                'fw_includes',
+                'root_includes',
+                'driver_led_controller',
+            ],
+        )
+    else:
+        # FIXME(OBELIX): Add driver for AW2016
+        bld.objects(
+            name='driver_backlight',
+            source=[
+                'stubs/backlight.c',
+            ],
+            use=[
+                'fw_includes',
+                'root_includes',
+            ],
+        )
 
 if bld.env.QEMU:
     bld.objects(
@@ -1107,7 +1120,7 @@ if bld.env.BOARD == "v2_0":
             'stm32_stdlib',
         ],
     )
-elif bld.is_obelix():
+elif bld.is_obelix() and not bld.is_obelix_bb2():
     bld.objects(
         name='driver_led_controller',
         source=[

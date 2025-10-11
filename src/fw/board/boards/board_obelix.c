@@ -114,6 +114,7 @@ static PwmState s_pwm1_ch3_state = {
     .channel = 3,
 };
 
+#if !BOARD_OBELIX_BB2
 const LedControllerPwm LED_CONTROLLER_PWM = {
     .pwm = {
         [0] = {
@@ -143,6 +144,7 @@ const LedControllerPwm LED_CONTROLLER_PWM = {
     },
     .initial_color = LED_WARM_WHITE,
 };
+#endif
 
 static DisplayJDIState s_display_state = {
     .hlcdc = {
