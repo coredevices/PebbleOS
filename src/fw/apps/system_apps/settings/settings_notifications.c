@@ -252,9 +252,9 @@ static void prv_window_timeout_menu_push(SettingsNotificationsData *data) {
 
 static const char *s_design_style_labels[] = {
   /// Standard notification design option (default)
-  i18n_noop("Standard"),
+  i18n_noop("Classic"),
   /// Alternative notification design option
-  i18n_noop("Alternative"),
+  i18n_noop("Flat Black"),
 };
 
 static int prv_design_style_get_selection_index(void) {
@@ -272,7 +272,7 @@ static void prv_design_style_menu_push(SettingsNotificationsData *data) {
     .select = prv_design_style_menu_select,
   };
   /// Status bar title for the Notification Design Style settings screen
-  const char *title = i18n_noop("Style");
+  const char *title = i18n_noop("Banner Style");
   settings_option_menu_push(
       title, OptionMenuContentType_SingleLine, index, &callbacks,
       ARRAY_LENGTH(s_design_style_labels), true /* icons_enabled */, s_design_style_labels,
@@ -325,7 +325,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     }
     case NotificationsItemDesignStyle: {
       /// String within Settings->Notifications that describes the notification design style
-      title = i18n_noop("Style");
+      title = i18n_noop("Banner Style");
       subtitle = s_design_style_labels[prv_design_style_get_selection_index()];
       break;
     }
