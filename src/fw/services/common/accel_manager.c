@@ -211,6 +211,17 @@ static void prv_setup_subsampling(uint32_t sampling_interval) {
   while (state) {
     uint32_t interval_gcd = gcd(sampling_interval,
                                 state->sampling_interval_us);
+
+    // Protect against divide-by-zero if gcd returns 0 (when either input is 0)
+    // This can happen if the accelerometer driver is not initialized properly
+    if (interval_gcd == 0) {
+      PBL_LOG(LOG_LEVEL_ERROR,
+              "Invalid sampling interval (sampling_interval=%" PRIu32 ", state->sampling_interval_us=%" PRIu32 "), skipping session %p",
+              sampling_interval, state->sampling_interval_us, state);
+      state = (AccelManagerState *)state->list_node.next;
+      continue;
+    }
+
     uint32_t numerator = sampling_interval / interval_gcd;
     uint32_t denominator = state->sampling_interval_us / interval_gcd;
 
