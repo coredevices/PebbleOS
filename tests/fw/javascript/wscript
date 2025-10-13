@@ -13,7 +13,7 @@ def rocky_clar(ctx, **kwargs):
         jerry_uses = ['jerry_port_includes', 'jerry_core', 'jerry_libm']
 
     kwargs["use"] = jerry_uses + (kwargs["use"] if "use" in kwargs else [])
-    jerry_defines = ['CAPABILITY_HAS_JAVASCRIPT=1', 'CAPABILITY_JAVASCRIPT_BYTECODE_VERSION=1',
+    jerry_defines = ['CAPABILITY_HAS_ROCKY_JS=1', 'CAPABILITY_JAVASCRIPT_BYTECODE_VERSION=1',
                      'JMEM_STATS=1']
     kwargs["defines"] = jerry_defines + kwargs.get("defines", [])
     kwargs["defines"].extend(ctx.env.test_image_defines)
@@ -201,7 +201,7 @@ def build(ctx):
              " src/fw/applib/rockyjs/api/rocky_api_errors.c"
              " src/fw/applib/rockyjs/api/rocky_api_util.c",
              test_sources_ant_glob = "test_rocky_api_datetime.c",
-             defines=['CAPABILITY_HAS_JAVASCRIPT=1',
+             defines=['CAPABILITY_HAS_ROCKY_JS=1',
                       'CAPABILITY_JAVASCRIPT_BYTECODE_VERSION=1'])
 
         rocky_clar(ctx,

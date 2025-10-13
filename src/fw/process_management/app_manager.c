@@ -211,7 +211,7 @@ static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
     case ProcessAppSDKType_Legacy3x:
       return APP_RAM_3X_SIZE;
     case ProcessAppSDKType_4x:
-#if CAPABILITY_HAS_JAVASCRIPT
+#if CAPABILITY_HAS_ROCKY_JS
       if (app_md->is_rocky_app) {
         // on Spalding, we didn't have enough applib padding to guarantee both,
         // 4.x native app heap + JerryScript statis + increased stack for Rocky.
@@ -232,7 +232,7 @@ static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
 }
 
 static size_t prv_get_app_stack_size(const PebbleProcessMd *app_md) {
-#if CAPABILITY_HAS_JAVASCRIPT
+#if CAPABILITY_HAS_ROCKY_JS
   if (app_md->is_rocky_app) {
     return APP_STACK_ROCKY_SIZE;
   }

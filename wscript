@@ -1027,7 +1027,7 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
     # make sure ctx.capability is available
     ctx.recurse('platform', mandatory=False)
 
-    if ctx.capability('HAS_JAVASCRIPT'):
+    if ctx.capability('HAS_ROCKY_JS'):
         js_tooling = ctx.path.get_bld().find_node('third_party/jerryscript/jerryscript/js_tooling/js_tooling.js')
         if js_tooling is not None:
             b.add_jstooling(js_tooling.path_from(ctx.path), ctx.capability('JAVASCRIPT_BYTECODE_VERSION'))

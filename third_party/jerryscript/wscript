@@ -208,7 +208,7 @@ def build(bld):
 
     # If the current build doesn't want javascript, just build a header-only library so the
     # headers will continue to be available
-    if not bld.capability('HAS_JAVASCRIPT') or bld.variant in ('prf', 'applib', 'test_rocky_emx'):
+    if not bld.capability('HAS_ROCKY_JS') or bld.variant in ('prf', 'applib', 'test_rocky_emx'):
         bld(export_includes=['jerryscript/jerry-core'], name='jerry_core')
         return
 

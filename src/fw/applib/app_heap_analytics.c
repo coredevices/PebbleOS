@@ -21,7 +21,7 @@
 #include "services/common/analytics/analytics_event.h"
 #include "syscall/syscall.h"
 
-#if CAPABILITY_HAS_JAVASCRIPT && !RECOVERY_FW
+#if CAPABILITY_HAS_ROCKY_JS && !RECOVERY_FW
 #include "jmem-heap.h"
 #endif
 
@@ -51,7 +51,7 @@ void app_heap_analytics_log_native_heap_oom_fault(size_t requested_size, Heap *h
 }
 
 void app_heap_analytics_log_rocky_heap_oom_fault(void) {
-#if CAPABILITY_HAS_JAVASCRIPT && !RECOVERY_FW
+#if CAPABILITY_HAS_ROCKY_JS && !RECOVERY_FW
   if (!prv_is_current_task_app_or_worker()) {
     return;
   }
@@ -71,7 +71,7 @@ void app_heap_analytics_log_stats_to_app_heartbeat(bool is_rocky_app) {
                     AnalyticsClient_CurrentTask);
   sys_analytics_max(ANALYTICS_APP_METRIC_MEM_NATIVE_HEAP_PEAK, heap->high_water_mark,
                     AnalyticsClient_CurrentTask);
-#if CAPABILITY_HAS_JAVASCRIPT && !RECOVERY_FW
+#if CAPABILITY_HAS_ROCKY_JS && !RECOVERY_FW
 
   if (is_rocky_app) {
     jmem_heap_stats_t jerry_mem_stats = {};
