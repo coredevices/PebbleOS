@@ -565,11 +565,6 @@ def _build_recovery(bld):
             'apps/prf_apps/mfg_pdm_mic_app.c',
         ])
 
-    if bld.is_obelix_bb2():
-        excludes.extend([
-            'apps/prf_apps/mfg_backlight_app.c',
-        ])
-
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
 
