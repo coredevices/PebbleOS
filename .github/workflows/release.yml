@@ -317,7 +317,7 @@ jobs:
               continue
             fi
 
-            BOARD=$(echo $file | sed -n -e 's/^.*normal_\([a-zA-Z0-9]*\)_v.*\.pbz$/\1/p')
+            BOARD=$(echo $file | sed -n -e 's/^.*normal_\([a-zA-Z0-9_]*\)_v.*\.pbz$/\1/p')
 
             memfault \
               --org-token ${{ secrets.MEMFAULT_ORG_TOKEN }} \
