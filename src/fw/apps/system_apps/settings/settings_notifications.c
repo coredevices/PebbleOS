@@ -250,6 +250,7 @@ static void prv_window_timeout_menu_push(SettingsNotificationsData *data) {
 // Design Style
 ////////////////////////
 
+#if PBL_BW
 static const char *s_design_style_labels[] = {
   /// Standard notification design option (default)
   i18n_noop("Classic"),
@@ -278,6 +279,7 @@ static void prv_design_style_menu_push(SettingsNotificationsData *data) {
       ARRAY_LENGTH(s_design_style_labels), true /* icons_enabled */, s_design_style_labels,
       data);
 }
+#endif /* PBL_BW */
 
 // Menu Layer Callbacks
 ////////////////////////
@@ -323,12 +325,14 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = s_window_timeouts_labels[prv_window_timeout_get_selection_index()];
       break;
     }
+  #if PBL_BW
     case NotificationsItemDesignStyle: {
       /// String within Settings->Notifications that describes the notification design style
       title = i18n_noop("Banner Style");
       subtitle = s_design_style_labels[prv_design_style_get_selection_index()];
       break;
     }
+  #endif /* PBL_BW */
     default:
       WTF;
   }
@@ -363,9 +367,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case NotificationsItemWindowTimeout:
       prv_window_timeout_menu_push(data);
       break;
+#if PBL_BW
     case NotificationsItemDesignStyle:
       prv_design_style_menu_push(data);
       break;
+#endif /* PBL_BW */
     default:
       WTF;
   }
