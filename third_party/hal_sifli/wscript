@@ -4,13 +4,15 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'SOC_BF0_HCPU')
         conf.env.append_unique('DEFINES', 'HAL_TICK_PER_SECOND=1024')
         conf.env.append_unique('DEFINES', 'HAL_NMI_HANLDER_OVERRIDED')
+        conf.env.append_unique('LINKFLAGS', '-Wl,--undefined=HAL_GetTick')
 
     if conf.env.MICRO_FAMILY == 'SF32LB52':
         conf.env.append_unique('DEFINES', 'SF32LB52X')
 
 
 def build(bld):
-    micro_sources = bld.path.ant_glob('SiFli-SDK/drivers/hal/*.c', excl=['**/bf0_hal_audcodec.c'])
+    micro_sources = ['hal_glue.c']
+    micro_sources += bld.path.ant_glob('SiFli-SDK/drivers/hal/*.c', excl=['**/bf0_hal_audcodec.c'])
 
     micro_sources += [
         'SiFli-SDK/middleware/ipc_queue/common/circular_buf.c',
