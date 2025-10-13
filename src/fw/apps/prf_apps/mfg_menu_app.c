@@ -98,11 +98,9 @@ static void prv_select_display(int index, void *context) {
 }
 
 #if PLATFORM_OBELIX
-#if !BOARD_OBELIX_BB2
 static void prv_select_backlight(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_backlight_app_get_info());
 }
-#endif
 
 static void prv_select_audio(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_audio_app_get_info());
@@ -236,9 +234,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Test Touch",        .callback = prv_select_touch },
 #endif
 #if PLATFORM_OBELIX
-#if !BOARD_OBELIX_BB2
     { .title = "Test Backlight",    .callback = prv_select_backlight },
-#endif
     { .title = "Test Audio",        .callback = prv_select_audio },
     { .title = "Test PDM Mic",        .callback = prv_select_pdm_mic },
 #endif
