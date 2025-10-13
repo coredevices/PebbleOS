@@ -190,7 +190,7 @@ def _generate_memory_layout(bld):
 
     firmware_offset = 0
     if bld.env.MICRO_FAMILY == 'SF32LB52':
-      firmware_offset = 512
+      firmware_offset = 4096
 
     bld.env.FIRMWARE_OFFSET = firmware_offset
     bld.env.append_value('DEFINES', [f'FIRMWARE_OFFSET={firmware_offset}'])
