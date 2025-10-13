@@ -30,8 +30,6 @@
 #include "drivers/flash.h"
 
 #define PCM_BUFFER_SIZE          1024
-#define FLASH_START              FLASH_REGION_FIRMWARE_DEST_BEGIN
-#define FLASH_END                FLASH_REGION_FIRMWARE_DEST_END
 
 #define RECORDING_MS             5000
 #define SAMPLE_RATE_HZ           16000
@@ -41,6 +39,10 @@
 #define N_SAMPLES                (N_CHANNELS * ((SAMPLE_RATE_HZ * RECORDING_MS) / 1000))
 #define SAMPLE_SIZE_BYTES        (SAMPLE_BITS / 8)
 #define BLOCK_SIZE               (N_SAMPLES * SAMPLE_SIZE_BYTES)
+
+#define FLASH_START              FLASH_REGION_FIRMWARE_DEST_BEGIN
+#define FLASH_END                (FLASH_REGION_FIRMWARE_DEST_BEGIN + \
+                                  ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
 
 #define PROCESS_STATUS_STR_LEN   64
 
