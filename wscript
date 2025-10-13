@@ -150,7 +150,8 @@ def options(opt):
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
     opt.add_option('--qemu', action='store_true',
                    help='Build an image for qemu instead of a real board.')
-    opt.add_option('--nojs', action='store_true', help='Removes js support from the current build.')
+    opt.add_option('--js-engine', action='store', default='rocky', choices=['rocky', 'none'],
+                   help='Specify JavaScript engine (rocky or none)')
     opt.add_option('--sdkshell', action='store_true',
                    help='Use the sdk shell instead of the normal shell')
     opt.add_option('--nolog', action='store_true',
@@ -452,7 +453,7 @@ def configure(conf):
     conf.recurse('platform')
 
     conf.env.QEMU = conf.options.qemu
-    conf.env.NOJS = conf.options.nojs
+    conf.env.JS_ENGINE = conf.options.js_engine
 
     # The BT controller is the only thing different between robert_es and robert_evt, so just
     # retend robert_es is robert_evt. We'll be removing robert_es fairly soon anyways.

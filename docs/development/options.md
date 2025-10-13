@@ -5,8 +5,9 @@ Below you will find a list of the most relevant ones.
 
 ## Main features
 
-:`--nojs`:
-  Disable Javascript support
+:`--js-engine`:
+  Specify JavaScript engine (rocky or none). Default is 'rocky'.
+  Use 'none' to disable JavaScript support.
 
 ## Debugging
 
