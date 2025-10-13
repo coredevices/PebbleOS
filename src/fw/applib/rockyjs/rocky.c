@@ -33,7 +33,7 @@
 
 const RockySnapshotHeader ROCKY_EXPECTED_SNAPSHOT_HEADER = {
   .signature = {'P', 'J', 'S', 0}, // C-string terminator in case somebody treats this as source
-#if CAPABILITY_HAS_JAVASCRIPT
+#if CAPABILITY_HAS_ROCKY_JS
   .version = (uint8_t)CAPABILITY_JAVASCRIPT_BYTECODE_VERSION,
 #endif
 };
@@ -45,7 +45,7 @@ static void prv_rocky_init(void) {
 }
 
 bool rocky_is_snapshot(const uint8_t *buffer, size_t buffer_size) {
-#if CAPABILITY_HAS_JAVASCRIPT
+#if CAPABILITY_HAS_ROCKY_JS
   const size_t header_length = sizeof(ROCKY_EXPECTED_SNAPSHOT_HEADER);
   if (buffer_size < header_length ||
       memcmp(ROCKY_EXPECTED_SNAPSHOT_HEADER.signature,
@@ -98,7 +98,7 @@ static void prv_rocky_deinit(void) {
 }
 
 bool rocky_event_loop_with_string_or_snapshot(const void *buffer, size_t buffer_size) {
-#if CAPABILITY_HAS_JAVASCRIPT
+#if CAPABILITY_HAS_ROCKY_JS
   prv_rocky_init();
   const bool result = prv_rocky_eval_buffer(buffer, buffer_size);
   if (result) {
@@ -113,7 +113,7 @@ bool rocky_event_loop_with_string_or_snapshot(const void *buffer, size_t buffer_
 }
 
 static bool prv_rocky_event_loop_with_resource(ResAppNum app_num, uint32_t resource_id) {
-#if CAPABILITY_HAS_JAVASCRIPT
+#if CAPABILITY_HAS_ROCKY_JS
   if (!sys_get_current_app_is_rocky_app()) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot execute JavaScript, insufficient meta data.");
     return false;

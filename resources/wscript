@@ -121,7 +121,7 @@ def build(bld):
 
     resource_dependencies = resource_definition_sources
 
-    if not bld.capability('HAS_JAVASCRIPT') or bld.variant in ('applib', 'test_rocky_emx'):
+    if not bld.capability('HAS_ROCKY_JS') or bld.variant in ('applib', 'test_rocky_emx'):
         # If JS is not enabled, then strip out any js resource objects
         # listed. The resources should be ifdef'ed out in the code
         for r in resource_definitions:

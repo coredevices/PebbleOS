@@ -10,7 +10,7 @@ def configure(conf):
     conf.recurse('memfault')
     conf.recurse('nimble')
 
-    if conf.capability('HAS_JAVASCRIPT'):
+    if conf.capability('HAS_ROCKY_JS'):
         conf.recurse('jerryscript')
 
 def build(bld):

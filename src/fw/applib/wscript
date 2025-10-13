@@ -57,7 +57,7 @@ def build(bld):
                      'ui/time_range_selection_window.c',
                      'voice/*']
 
-    if not bld.capability('HAS_JAVASCRIPT') or bld.variant == 'prf':
+    if not bld.capability('HAS_ROCKY_JS') or bld.variant == 'prf':
         excludes += ['rockyjs/*']
 
     if not bld.is_spalding():

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#if !CAPABILITY_HAS_JAVASCRIPT
+#if !CAPABILITY_HAS_ROCKY_JS
 #include "rockyjs/rocky_res.h"
 
 bool rocky_event_loop_with_resource(uint32_t resource_id) {
