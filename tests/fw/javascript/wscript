@@ -21,7 +21,7 @@ def rocky_clar(ctx, **kwargs):
 
 
 def build(ctx):
-    if ctx.env.NOJS:
+    if ctx.env.JS_ENGINE != 'rocky':
         return
 
     rocky_clar(ctx,

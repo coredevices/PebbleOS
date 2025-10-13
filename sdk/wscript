@@ -160,7 +160,7 @@ def build(bld):
             source=sdk_file,
             target=common_folder_node.make_node(sdk_file.path_from(bld.path)))
 
-    if not bld.env.NOJS:
+    if bld.env.JS_ENGINE == 'rocky':
         js_tooling_path = os.path.dirname(bld.env.JS_TOOLING_SCRIPT.relpath())
         for js_tool in ('js_tooling.js', 'generate_snapshot.js'):
             bld(rule=COPY,

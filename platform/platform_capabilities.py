@@ -356,7 +356,7 @@ def get_capability_dict(ctx, board):
         # Disable smartstraps on QEMU builds
         capabilities_of_board.discard('HAS_ACCESSORY_CONNECTOR')
 
-    if ctx.env.NOJS:
+    if ctx.env.JS_ENGINE == 'none':
         capabilities_of_board.discard('HAS_ROCKY_JS')
 
     # End overrides section
