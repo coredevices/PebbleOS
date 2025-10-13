@@ -27,7 +27,6 @@
 #ifdef MICRO_FAMILY_STM32F2
 #include "services/common/legacy/factory_registry.h"
 #endif
-#include "drivers/accel.h"
 #include "services/common/accel_manager.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/comm_session/app_session_capabilities.h"
@@ -43,25 +42,13 @@
 #include "services/common/touch/touch.h"
 #include "services/common/vibe_pattern.h"
 #include "services/runlevel_impl.h"
-#include "system/logging.h"
 #include "util/size.h"
-
-#define LOG_DOMAIN "services_common"
 
 void services_common_init(void) {
   firmware_update_init();
   put_bytes_init();
   poll_remote_init();
-
-  // Only initialize the accelerometer manager if the accelerometer driver
-  // successfully initialized. We test this by attempting to peek at a sample.
-  AccelDriverSample probe_sample;
-  if (accel_peek(&probe_sample) == 0) {
-    accel_manager_init();
-  } else {
-    PBL_LOG(LOG_LEVEL_WARNING, "Accelerometer driver not initialized, skipping accel_manager_init");
-  }
-
+  accel_manager_init();
   light_init();
 
   cron_service_init();
