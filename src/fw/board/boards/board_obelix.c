@@ -420,6 +420,13 @@ static const I2CSlavePort s_i2c_aw86225 = {
   
 I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
 
+static const I2CSlavePort s_i2c_aw2016 = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x64,
+};
+
+I2CSlavePort *const I2C_AW2016 = &s_i2c_aw2016;
+
 static HRMDeviceState s_hrm_state;
 static HRMDevice s_hrm = {
   .state = &s_hrm_state,
