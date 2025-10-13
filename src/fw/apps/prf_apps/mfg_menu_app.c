@@ -46,6 +46,7 @@
 #include "services/common/bluetooth/local_id.h"
 #include "services/common/bluetooth/pairability.h"
 #include "system/bootbits.h"
+#include "system/firmware_storage.h"
 #include "system/reset.h"
 #include "util/size.h"
 
@@ -161,7 +162,13 @@ static void prv_select_program_color(int index, void *context) {
 }
 
 static void prv_select_load_prf(int index, void *context) {
+#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
+  // On Obelix MFG, we invalidate all slots so it will boot into PRF next time
+  firmware_storage_invalidate_firmware_slot(0);
+  firmware_storage_invalidate_firmware_slot(1);
+#else
   boot_bit_set(BOOT_BIT_FORCE_PRF);
+#endif
   system_reset();
 }
 
