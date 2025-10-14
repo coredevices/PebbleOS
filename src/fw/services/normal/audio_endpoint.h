@@ -29,17 +29,10 @@ typedef uint16_t AudioEndpointSessionId;
 //! Function signature of the callback to handle stop transfer message received from phone
 typedef void (*AudioEndpointStopTransferCallback)(AudioEndpointSessionId session_id);
 
-//! Function signature of the callback to handle the completion of the setup process.
-//! After this point, the client may start adding audio frames using audio_endpoint_add_frame.
-typedef void (*AudioEndpointSetupCompleteCallback)(AudioEndpointSessionId session_id);
-
 //! Create a session for transferring audio data from watch to phone
-//! @param setup_completed Callback to handle the completion of the audio endpoint setup process.
 //! @param stop_transfer Callback to handle stop transfer message received from phone.
 //! @return Session identifier to pass to other endpoint functions
-AudioEndpointSessionId audio_endpoint_setup_transfer(
-    AudioEndpointSetupCompleteCallback setup_completed,
-    AudioEndpointStopTransferCallback stop_transfer);
+AudioEndpointSessionId audio_endpoint_setup_transfer(AudioEndpointStopTransferCallback stop_transfer);
 
 //! Add a frame of audio data to session's internal buffer
 //! @param session_id Session identifier returned by audio_endpoint_start_transfer

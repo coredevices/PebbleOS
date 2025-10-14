@@ -297,22 +297,6 @@ static void prv_handle_subsystem_started(SessionState transition_to_state) {
   }
 }
 
-static void prv_audio_transfer_setup_complete_handler(AudioEndpointSessionId session_id) {
-  VOICE_LOG("prv_audio_transfer_setup_complete_handler called with session_id=%d (current=%d)", 
-            session_id, s_session_id);
-            
-  if (s_session_id != session_id) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Received audio transfer message when no session was in progress ("
-            "%d)", session_id);
-    return;
-  }
-
-  VOICE_LOG("Audio transfer setup complete, handling subsystem started");
-  mutex_lock(s_lock);
-  prv_handle_subsystem_started(SessionState_AudioEndpointSetupReceived);
-  mutex_unlock(s_lock);
-}
-
 static void prv_session_result_timeout(void * data) {
   mutex_lock(s_lock);
 
@@ -455,8 +439,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
             transfer_info.sample_rate, transfer_info.bit_rate, transfer_info.frame_size);
 
   VOICE_LOG("Setting up audio endpoint transfer");
-  s_session_id = audio_endpoint_setup_transfer(prv_audio_transfer_setup_complete_handler,
-                                               prv_audio_transfer_stopped_handler);
+  s_session_id = audio_endpoint_setup_transfer(prv_audio_transfer_stopped_handler);
   PBL_ASSERTN(s_session_id != AUDIO_ENDPOINT_SESSION_INVALID_ID);
   VOICE_LOG("Audio endpoint transfer setup complete with session_id=%d", s_session_id);
 
@@ -471,6 +454,9 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   }
   s_timeout_generation = s_session_generation;
   new_timer_start(s_timeout, TIMEOUT_SESSION_SETUP, prv_session_setup_timeout, NULL, 0);
+
+  VOICE_LOG("Audio transfer setup complete, handling subsystem started");
+  prv_handle_subsystem_started(SessionState_AudioEndpointSetupReceived);
 
   mutex_unlock(s_lock);
   return s_session_id;

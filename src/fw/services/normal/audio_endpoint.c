@@ -34,7 +34,6 @@ _Static_assert(ACTIVE_MODE_TIMEOUT > ACTIVE_MODE_START_BUFFER,
 
 typedef struct {
   AudioEndpointSessionId id;
-  AudioEndpointSetupCompleteCallback setup_completed;
   AudioEndpointStopTransferCallback stop_transfer;
   TimerID active_mode_trigger;
 } AudioEndpointSession;
@@ -58,7 +57,6 @@ static void prv_session_deinit(bool call_stop_handler) {
   }
 
   s_session.id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
-  s_session.setup_completed = NULL;
   s_session.stop_transfer = NULL;
   bt_unlock();
 
@@ -86,39 +84,14 @@ void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
 }
 #endif
 
-static void prv_responsiveness_granted_handler(void) {
-  if (s_session.id == AUDIO_ENDPOINT_SESSION_INVALID_ID) {
-    return;  // Party's over
-  }
-
-  AudioEndpointSetupCompleteCallback cb = NULL;
-  AudioEndpointSessionId id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
-
-  bt_lock();
-  // We're repeatedly calling comm_session_set_responsiveness_ext, but we only need to call the
-  // completed handler the first time the requested responsiveness takes effect:
-  if (s_session.setup_completed) {
-    cb = s_session.setup_completed;
-    id = s_session.id;
-    s_session.setup_completed = NULL;
-  }
-  bt_unlock();
-
-  if (cb) {
-    cb(id);
-  }
-}
-
 static void prv_start_active_mode(void *data) {
   CommSession *comm_session = comm_session_get_system_session();
   comm_session_set_responsiveness_ext(comm_session, BtConsumerPpAudioEndpoint, ResponseTimeMin,
                                       MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS,
-                                      prv_responsiveness_granted_handler);
+                                      NULL /* granted_handler */);
 }
 
-AudioEndpointSessionId audio_endpoint_setup_transfer(
-    AudioEndpointSetupCompleteCallback setup_completed,
-    AudioEndpointStopTransferCallback stop_transfer) {
+AudioEndpointSessionId audio_endpoint_setup_transfer(AudioEndpointStopTransferCallback stop_transfer) {
 
   if (s_session.id != AUDIO_ENDPOINT_SESSION_INVALID_ID) {
     return AUDIO_ENDPOINT_SESSION_INVALID_ID;
@@ -127,7 +100,6 @@ AudioEndpointSessionId audio_endpoint_setup_transfer(
   bt_lock();
 
   s_session.id = ++s_session_id;
-  s_session.setup_completed = setup_completed;
   s_session.stop_transfer = stop_transfer;
   s_session.active_mode_trigger = new_timer_create();
   s_dropped_frames = 0;
