@@ -539,10 +539,10 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
     [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
 #endif
   },
-  .timer = GPTIM2,
-  .timer_irqn = GPTIM2_IRQn,
+  .timer = GPTIM1,
+  .timer_irqn = GPTIM1_IRQn,
 };
-IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
+IRQ_MAP(GPTIM1, debounced_button_irq_handler, GPTIM1);
 
 static MicDeviceState mic_state = {
   .hdma = {
@@ -661,6 +661,29 @@ void board_early_init(void) {
 
   __HAL_SYSCFG_CLEAR_SECURITY();
   HAL_EFUSE_Init();
+
+  HAL_RCC_DisableModule(RCC_MOD_USART2);
+  HAL_RCC_DisableModule(RCC_MOD_USART3);
+  HAL_RCC_DisableModule(RCC_MOD_SPI1);
+  HAL_RCC_DisableModule(RCC_MOD_SPI2);
+  HAL_RCC_DisableModule(RCC_MOD_I2C1);
+  HAL_RCC_DisableModule(RCC_MOD_I2C2);
+  HAL_RCC_DisableModule(RCC_MOD_I2C3);
+  HAL_RCC_DisableModule(RCC_MOD_I2C4);
+  HAL_RCC_DisableModule(RCC_MOD_GPTIM1);
+  HAL_RCC_DisableModule(RCC_MOD_GPTIM2);
+  HAL_RCC_DisableModule(RCC_MOD_BTIM1);
+  HAL_RCC_DisableModule(RCC_MOD_BTIM2);
+  HAL_RCC_DisableModule(RCC_MOD_ATIM1);
+  HAL_RCC_DisableModule(RCC_MOD_MPI1);
+  HAL_RCC_DisableModule(RCC_MOD_MPI2);
+  HAL_RCC_DisableModule(RCC_MOD_USBC);
+  HAL_RCC_DisableModule(RCC_MOD_I2S1);
+  HAL_RCC_DisableModule(RCC_MOD_SDMMC1);
+  HAL_RCC_DisableModule(RCC_MOD_PDM1);
+  HAL_RCC_DisableModule(RCC_MOD_AUDPRC);
+  HAL_RCC_DisableModule(RCC_MOD_AUDCODEC);
+
 }
 
 void board_init(void) {
