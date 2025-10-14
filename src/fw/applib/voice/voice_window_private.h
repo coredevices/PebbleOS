@@ -40,7 +40,6 @@ typedef enum {
   StateStart,                   // Start state. Nothing happens
   StateStartWaitForReady,       // Dot flies in
   StateWaitForReady,            // Progress bar shows and animates, dot pulses
-  StateStopWaitForReady,        // Progress bar shrinks, dot continues to animate
   StateRecording,               // Microphone unfolds and text appears
   StateStopRecording,           // Microphone folds up again and text disappears
   StateWaitForResponse,         // Dot pulses, progress bar shown

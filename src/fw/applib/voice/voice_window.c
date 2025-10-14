@@ -490,7 +490,6 @@ static VoiceUiState prv_get_simple_state(VoiceUiState state) {
     StateStart,
     StateWaitForReady,      // StateStartWaitForReady
     StateWaitForReady,
-    StateRecording,         // StateStopWaitForReady
     StateRecording,
     StateWaitForResponse,   // StateStopRecording
     StateWaitForResponse,
@@ -975,10 +974,6 @@ static void prv_handle_stop_transition(VoiceUiData *data) {
       prv_set_mic_window_state(data, StateWaitForReady);
       break;
 
-    case StateStopWaitForReady:
-      prv_set_mic_window_state(data, StateRecording);
-      break;
-
     case StateRecording:
       // do nothing
       break;
@@ -1056,24 +1051,13 @@ static VoiceUiState prv_get_next_state(VoiceUiState current_state, VoiceUiState 
       break;
 
     case StateStartWaitForReady:
-      if (next_state == StateRecording) {
-        *defer_transition = true;
-        // Spoof the state to StateStopForReady so the next transition takes us to
-        // StateRecording
-        return StateStopWaitForReady;
-      } else if (next_state == StateWaitForReady) {
+      if (next_state == StateWaitForReady || next_state == StateRecording) {
         return next_state;
       }
       break;
 
     case StateWaitForReady:
       if (next_state == StateRecording) {
-        return StateStopWaitForReady;
-      }
-      break;
-
-    case StateStopWaitForReady:
-      if ((next_state == StateRecording) || (next_state == StateWaitForResponse)) {
         return next_state;
       }
       break;
@@ -1146,15 +1130,9 @@ static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
       break;
 
     case StateWaitForReady:
-      // Stop fly in animation. Start pulsing dot animation. Start progress bar animation
+      // Stop fly in animation. Start pulsing dot animation.
       prv_stop_fly_dot(data);
       prv_show_mic_dot_pulse(data);
-      prv_show_progress_bar(data, true /* animated */);
-      break;
-
-    case StateStopWaitForReady:
-      // Shrink progress bar
-      prv_shrink_progress_bar(data);
       break;
 
     // TODO: Create an intermediate state where the microphone unfolds and the vibe plays before
