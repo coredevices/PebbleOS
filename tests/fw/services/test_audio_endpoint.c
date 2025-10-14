@@ -66,12 +66,6 @@ static void prv_test_stop_transfer_msg(uint16_t endpoint_id, const uint8_t* data
   cl_assert(msg->session_id == s_session_id);
 }
 
-static int s_setup_complete_call_count;
-static void prv_test_setup_complete_callback(AudioEndpointSessionId session_id) {
-  cl_assert(session_id == s_session_id);
-  ++s_setup_complete_call_count;
-}
-
 static void prv_test_stop_transfer_callback(AudioEndpointSessionId session_id) {
   cl_assert(session_id == s_session_id);
 }
@@ -80,42 +74,17 @@ Transport *s_transport;
 
 void test_audio_endpoint__initialize(void) {
   fake_comm_session_init();
-  s_setup_complete_call_count = 0;
   s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
   s_session = fake_transport_set_connected(s_transport, true);
 
-  s_session_id = audio_endpoint_setup_transfer(prv_test_setup_complete_callback,
-                                               prv_test_stop_transfer_callback);
+  s_session_id = audio_endpoint_setup_transfer(prv_test_stop_transfer_callback);
   cl_assert(s_session_id != AUDIO_ENDPOINT_SESSION_INVALID_ID);
-}
-
-void test_audio_endpoint__setup_complete_callback_call_once(void) {
-  ResponsivenessGrantedHandler granted_handler =
-      fake_comm_session_get_last_responsiveness_granted_handler();
-  cl_assert_equal_i(s_setup_complete_call_count, 0);
-
-  granted_handler();
-  cl_assert_equal_i(s_setup_complete_call_count, 1);
-
-  granted_handler();
-  cl_assert_equal_i(s_setup_complete_call_count, 1);
-
-  audio_endpoint_stop_transfer(s_session_id);
-}
-
-void test_audio_endpoint__dont_call_setup_complete_callback_if_session_stopped(void) {
-  ResponsivenessGrantedHandler granted_handler =
-  fake_comm_session_get_last_responsiveness_granted_handler();
-  audio_endpoint_stop_transfer(s_session_id);
-
-  granted_handler();
-  cl_assert_equal_i(s_setup_complete_call_count, 0);
 }
 
 
 void test_audio_endpoint__session_control(void) {
   // Test that it is not possible to start another transfer session if one is already on-going:
-  AudioEndpointSessionId session_id = audio_endpoint_setup_transfer(NULL, NULL);
+  AudioEndpointSessionId session_id = audio_endpoint_setup_transfer(NULL);
   cl_assert(session_id == AUDIO_ENDPOINT_SESSION_INVALID_ID);
 
   audio_endpoint_stop_transfer(s_session_id);
