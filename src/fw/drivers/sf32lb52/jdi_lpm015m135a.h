@@ -27,6 +27,12 @@ typedef struct DisplayJDIState {
   LCDC_HandleTypeDef hlcdc;
 } DisplayJDIState;
 
+typedef struct DisplayJDISplash {
+  const uint8_t *data;
+  uint16_t width;
+  uint16_t height;
+} DisplayJDISplash;
+
 typedef const struct DisplayJDIDevice {
   DisplayJDIState *state;
   IRQn_Type irqn;
@@ -54,6 +60,7 @@ typedef const struct DisplayJDIDevice {
   } pinmux;
   OutputConfig vddp;
   OutputConfig vlcd;
+  DisplayJDISplash splash;
 } DisplayJDIDevice;
 
 void jdi_lpm015m135a_irq_handler(DisplayJDIDevice *disp);

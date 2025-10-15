@@ -35,6 +35,7 @@
 #define BYTE_222_TO_332(data) ((((data) & 0x30) << 2) | (((data) & 0x0c) << 1) | ((data) & 0x03))
 #define POWER_SEQ_DELAY_TIME  (11)
 
+static bool s_initialized;
 static uint8_t s_framebuffer[2][DISPLAY_FRAMEBUFFER_BYTES];
 static bool s_framebuffer_dirty[2];
 static uint8_t s_framebuffer_index;
@@ -122,6 +123,10 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
 }
 
 void display_init(void) {
+  if (s_initialized) {
+    return;
+  }
+
   DisplayJDIState *state = DISPLAY->state;
 
   // FIXME(SF32LB52): make this mandatory once old big boards are gone
@@ -178,8 +183,9 @@ void display_init(void) {
   s_update = mutex_create();
   vSemaphoreCreateBinary(s_write_done);
 
-  display_clear();
   prv_display_on();
+
+  s_initialized = true;
 }
 
 void display_clear(void) {
@@ -281,9 +287,39 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   mutex_unlock(s_update);
 }
 
-void display_pulse_vcom(void) {}
+void display_show_splash_screen(void) {
+  const DisplayJDISplash *splash = &DISPLAY->splash;
+  uint16_t x0, y0;
 
-void display_show_splash_screen(void) {}
+  if (splash->data == NULL) {
+    return;
+  }
+
+  if (splash->width > PBL_DISPLAY_WIDTH || splash->height > PBL_DISPLAY_HEIGHT) {
+    return;
+  }
+
+  display_init();
+
+  memset(s_framebuffer[0], 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+
+  x0 = (PBL_DISPLAY_WIDTH - splash->width) / 2;
+  y0 = (PBL_DISPLAY_HEIGHT - splash->height) / 2;
+  for (uint16_t y = 0U; y < splash->height; y++) {
+    for (uint16_t x = 0U; x < splash->width; x++) {
+      if (splash->data[y * (splash->width / 8) + x / 8] & (0x1U << (x & 7))) {
+        s_framebuffer[0][(y + y0) * PBL_DISPLAY_WIDTH + (x + x0)] = 0x00;
+      }
+    }
+  }
+
+  s_framebuffer_dirty[0] = true;
+
+  stop_mode_disable(InhibitorDisplay);
+  prv_display_update(0);
+}
+
+void display_pulse_vcom(void) {}
 
 void display_show_panic_screen(uint32_t error_code) {}
 
