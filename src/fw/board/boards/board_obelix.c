@@ -21,6 +21,7 @@
 #include "bf0_hal_pmu.h"
 #include "bf0_hal_rcc.h"
 #include "board/board.h"
+#include "board/splash.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
 #include "drivers/stubs/hrm.h"
 #include "system/passert.h"
@@ -236,6 +237,11 @@ static DisplayJDIDevice s_display = {
     .vddp = {hwp_gpio1, 28, true},
     .vlcd = {hwp_gpio1, 29, true},
 #endif
+    .splash = {
+        .data = splash_bits,
+        .width = splash_width,
+        .height = splash_height,
+    },
 };
 
 DisplayJDIDevice *const DISPLAY = &s_display;
