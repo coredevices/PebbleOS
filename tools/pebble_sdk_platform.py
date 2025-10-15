@@ -103,8 +103,27 @@ emery_platform = {
              "compass", "200w", "228h"]
 }
 
+flint_platform = {
+    "NAME": "flint",
+    "MAX_APP_BINARY_SIZE": 0x10000,  # 64K
+    "MAX_APP_MEMORY_SIZE": 0x6000,  # 24K
+    "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
+    "MAX_RESOURCES_SIZE_APPSTORE": 0x20000,  # 128K
+    "MAX_RESOURCES_SIZE_APPSTORE_2_X": 0x18000,  # 96K
+    "MAX_RESOURCES_SIZE": 0x80000,  # 512K
+    "DEFINES": ["PBL_PLATFORM_FLINT", "PBL_BW", "PBL_RECT",
+                "PBL_MICROPHONE", "PBL_HEALTH", "PBL_COMPASS"
+                "PBL_DISPLAY_WIDTH=144", "PBL_DISPLAY_HEIGHT=168"],
+    "BUILD_DIR": "flint",
+    "BUNDLE_BIN_DIR": "flint",
+    "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
+    "MAX_FONT_GLYPH_SIZE": 256,
+    "TAGS": ["flint", "bw", "rect", "compass", "144w", "168h"],
+}
+
 
 pebble_platforms = {
+    "flint": flint_platform,
     "emery": emery_platform,
     "diorite": diorite_platform,
     "chalk": chalk_platform,

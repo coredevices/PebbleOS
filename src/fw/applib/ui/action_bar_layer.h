@@ -103,7 +103,8 @@
   /*basalt*/ 30, \
   /*chalk*/ 40, \
   /*diorite*/ 30, \
-  /*emery*/ 34)
+  /*emery*/ 34, \
+  /*flint*/ 30)
 
 //! The width of the action bar in pixels.
 #define ACTION_BAR_WIDTH _ACTION_BAR_WIDTH(PBL_PLATFORM_TYPE_CURRENT)

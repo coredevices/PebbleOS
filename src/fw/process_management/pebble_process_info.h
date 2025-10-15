@@ -55,6 +55,8 @@ typedef enum {
   PROCESS_INFO_PLATFORM_CHALK   = 0x3 << 6,
   PROCESS_INFO_PLATFORM_DIORITE = 0x4 << 6,
   PROCESS_INFO_PLATFORM_EMERY   = 0x5 << 6,
+  //! Values that are actually added by SDK 4.9+
+  PROCESS_INFO_PLATFORM_FLINT   = 0x6 << 6,
 } PebbleProcessInfoFlags;
 
 //!   @} // group App
