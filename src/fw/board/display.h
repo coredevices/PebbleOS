@@ -71,6 +71,8 @@ typedef struct {
 #include "displays/display_silk.h"
 #elif BOARD_SILK
 #include "displays/display_silk.h"
+#elif BOARD_SILK_FLINT
+#include "displays/display_silk.h"
 #elif BOARD_CALVIN_BB
 #include "displays/display_silk.h"
 #elif BOARD_ASTERIX

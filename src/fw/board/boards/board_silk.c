@@ -279,6 +279,15 @@ I2CSlavePort * const I2C_AS7000 = &I2C_SLAVE_AS7000;
 IRQ_MAP(I2C3_EV, i2c_hal_event_irq_handler, &I2C_PMIC_HRM_BUS);
 IRQ_MAP(I2C3_ER, i2c_hal_error_irq_handler, &I2C_PMIC_HRM_BUS);
 
+#if BOARD_SILK_FLINT
+//We need this to get mag working on fake flint
+static const I2CSlavePort I2C_SLAVE_MAG3110 = {
+  .bus = &I2C_PMIC_HRM_BUS,
+  .address = 0x1C
+};
+I2CSlavePort * const I2C_MAG3110 = &I2C_SLAVE_MAG3110;
+#endif
+
 
 // VOLTAGE MONITOR DEVICES
 static const VoltageMonitorDevice VOLTAGE_MONITOR_ALS_DEVICE = {

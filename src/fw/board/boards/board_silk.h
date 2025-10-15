@@ -221,6 +221,22 @@ static const TimerIrqConfig BOARD_BT_WATCHDOG_TIMER = {
   .irq_channel = TIM6_IRQn,
 };
 
+#if BOARD_SILK_FLINT
+//We need this to get mag working on fake flint
+static const BoardConfigMag BOARD_CONFIG_MAG = {
+  .mag_config = {
+    .axes_offsets[AXIS_X] = 1,
+    .axes_offsets[AXIS_Y] = 0,
+    .axes_offsets[AXIS_Z] = 2,
+    .axes_inverts[AXIS_X] = false,
+    .axes_inverts[AXIS_Y] = true,
+    .axes_inverts[AXIS_Z] = false,
+  },
+};
+
+extern I2CSlavePort * const I2C_MAG3110;
+#endif
+
 extern DMARequest * const COMPOSITOR_DMA;
 extern DMARequest * const SHARP_SPI_TX_DMA;
 

@@ -44,6 +44,7 @@ RUNNERS = {
     'silk_bb': ['openocd'],
     'silk': ['openocd'],
     'silk_bb2': ['openocd'],
+    'silk_flint': ['openocd'],
     'cutts_bb': ['openocd'],
     'robert_bb': ['openocd'],
     'robert_bb2': ['openocd'],
@@ -106,6 +107,7 @@ def options(opt):
                              'silk_bb',
                              'silk',
                              'silk_bb2',
+                             'silk_flint', # "silk", but it has the flint apis for the emulator
                              'cutts_bb',
                              'robert_bb',
                              'robert_bb2',
@@ -500,13 +502,13 @@ def configure(conf):
     elif conf.is_snowy_compatible():
         conf.env.PLATFORM_NAME = 'basalt'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_silk():
+    elif conf.is_silk() and conf.options.board != 'silk_flint':
         conf.env.PLATFORM_NAME = 'diorite'
         conf.env.MIN_SDK_VERSION = 2
     elif conf.is_cutts() or conf.is_robert() or conf.is_obelix():
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
-    elif conf.is_asterix():
+    elif conf.is_asterix() or conf.options.board == 'silk_flint':
         conf.env.PLATFORM_NAME = 'flint'
         conf.env.MIN_SDK_VERSION = 2
     else:
