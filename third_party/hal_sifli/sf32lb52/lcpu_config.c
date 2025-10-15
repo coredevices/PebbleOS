@@ -38,15 +38,15 @@ static const uint8_t s_ble_slp_default_rc10k[] = {
 };
 
 static int prv_bt_mac_addr_generate(uint8_t mac_addr[6]) {
-  uint8_t uid[8];
+  uint8_t uid[8]= {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
   int32_t ret;
   uint8_t chksum;
   uint8_t i;
 
-  ret = HAL_EFUSE_Read(0, uid, 8U);
-  if (ret != 8) {
-    return false;
-  }
+  // ret = HAL_EFUSE_Read(0, uid, 8U);
+  // if (ret != 8) {
+  //   return false;
+  // }
 
   for (i = 0U; i < 8U; i++) {
     if (uid[i] != 0U) {

@@ -29,6 +29,7 @@
 #define MIN_PULSE 1U
 
 void pwm_set_duty_cycle(const PwmConfig *pwm, uint32_t duty_cycle) {
+  return;
   GPT_HandleTypeDef *htim = &pwm->state->handle;
   uint32_t period, pulse;
   uint32_t gpt_clock, psc;
@@ -82,6 +83,7 @@ void pwm_set_duty_cycle(const PwmConfig *pwm, uint32_t duty_cycle) {
 }
 
 void pwm_enable(const PwmConfig *pwm, bool enable) {
+  return;
   GPT_HandleTypeDef *htim = &pwm->state->handle;
   HAL_StatusTypeDef ret;
   uint32_t channel;
@@ -103,16 +105,23 @@ void pwm_enable(const PwmConfig *pwm, bool enable) {
     ret = HAL_GPT_PWM_Start(htim, channel);
     PBL_ASSERTN(ret == HAL_OK);
 
-    stop_mode_disable(InhibitorPWM);
+    if (!pwm->state->enabled) {
+      pwm->state->enabled = true;
+      stop_mode_disable(InhibitorPWM);
+    }
   } else {
     ret = HAL_GPT_PWM_Stop(htim, channel);
     PBL_ASSERTN(ret == HAL_OK);
 
-    stop_mode_enable(InhibitorPWM);
+    if (pwm->state->enabled) {
+      pwm->state->enabled = false;
+      stop_mode_enable(InhibitorPWM);
+    }
   }
 }
 
 void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
+  return;
   GPT_HandleTypeDef *htim = &pwm->state->handle;
   GPT_ClockConfigTypeDef *clock_config = &pwm->state->clock_config;
   HAL_StatusTypeDef ret;

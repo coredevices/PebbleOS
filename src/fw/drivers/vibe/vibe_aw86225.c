@@ -72,6 +72,7 @@
 #define AW862XX_POR_WAIT_TIME                           (2) /* ms */
 
 static bool prv_read_register(uint8_t register_address, uint8_t* data) {
+  return false;
 	i2c_use(I2C_AW86225);
 	bool rv = i2c_read_register_block(I2C_AW86225, register_address, 1, data);
 	i2c_release(I2C_AW86225);
@@ -79,6 +80,7 @@ static bool prv_read_register(uint8_t register_address, uint8_t* data) {
 }
   
 static bool prv_write_register(uint8_t register_address, uint8_t datum) {
+  return false;
 	i2c_use(I2C_AW86225);
 	bool rv = i2c_write_register_block(I2C_AW86225, register_address, 1, &datum);
 	i2c_release(I2C_AW86225);
@@ -87,6 +89,7 @@ static bool prv_write_register(uint8_t register_address, uint8_t datum) {
 
 void prv_modify_reg(uint8_t reg_addr, uint32_t mask, uint8_t reg_data)
 {
+  return;
 	uint8_t reg_val = 0;
 	uint8_t reg_mask = (uint8_t)mask;
 
@@ -98,6 +101,7 @@ void prv_modify_reg(uint8_t reg_addr, uint32_t mask, uint8_t reg_data)
 
 static void prv_aw862xx_play_go(bool flag)
 {
+  return;
 	uint8_t val;
 
   if (flag) {
@@ -110,6 +114,7 @@ static void prv_aw862xx_play_go(bool flag)
 }
 
 void vibe_init(void) {
+  return;
   gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
   psleep(AW862XX_POR_WAIT_TIME);
@@ -150,7 +155,7 @@ void vibe_force_off(void) {
 }
 
 int8_t vibe_get_braking_strength(void) {
-  uint8_t value;
+  uint8_t value = 0;
   prv_read_register(AW862XX_REG_CONTCFG7, &value);
   uint8_t strength = value * 100UL/AW862XX_CONTCFG7_FULL_SCALE;
   return strength;

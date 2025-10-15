@@ -201,6 +201,7 @@ static void cst816_hw_reset(void) {
 }
 
 void touch_sensor_init(void) {
+  return;
   s_i2c_lock = mutex_create();
   cst816_hw_reset();
 

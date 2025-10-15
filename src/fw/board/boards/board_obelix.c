@@ -552,10 +552,10 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
     [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
 #endif
   },
-  .timer = GPTIM2,
-  .timer_irqn = GPTIM2_IRQn,
+  .timer = GPTIM1,
+  .timer_irqn = GPTIM1_IRQn,
 };
-IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
+IRQ_MAP(GPTIM1, debounced_button_irq_handler, GPTIM1);
 
 static MicDeviceState mic_state = {
   .hdma = {
@@ -613,6 +613,51 @@ IRQ_MAP(DMAC1_CH4, audec_dac0_dma_irq_handler, AUDIO);
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;
 }
+static GPIO_TypeDef *GPIO_GetInstance(GPIO_TypeDef *hgpio, uint16_t gpio_pin, uint16_t *offset)
+{
+    uint16_t max_num;
+    uint16_t inst_idx;
+    GPIO_TypeDef *gpiox;
+
+    if ((GPIO_TypeDef *)hwp_gpio1 == hgpio)
+    {
+        max_num = GPIO1_PIN_NUM;
+    }
+    else
+    {
+        max_num = GPIO2_PIN_NUM;
+    }
+
+    HAL_ASSERT(gpio_pin < max_num);
+
+    if (gpio_pin >= max_num)
+    {
+        return (GPIO_TypeDef *)NULL;
+    }
+
+    inst_idx = gpio_pin >> 5;
+    *offset = gpio_pin & 31;
+
+    gpiox = (GPIO_TypeDef *)hgpio + inst_idx;
+
+    return gpiox;
+}
+
+#define CLEAR_OPEN_DRAIN_FLAG(gpiox,mask) do{ \
+        gpiox->IPHCR = (mask); \
+        gpiox->IPLCR = (mask); \
+}while(0)
+
+static void gpio_pm_disable(int pin)
+{
+    GPIO_TypeDef *gpiox;
+    uint16_t offset;
+
+    gpiox = GPIO_GetInstance(hwp_gpio1, pin, &offset);
+    *(&(hwp_pinmux1->PAD_PA00) + pin) &= ~((1 << 6) | (1 << 4)); // Clear IE, OE
+    CLEAR_OPEN_DRAIN_FLAG(gpiox, (1UL << offset));
+    gpiox->DOECR &= ~(1 << offset);
+}
 
 void board_early_init(void) {
   HAL_StatusTypeDef ret;
@@ -621,10 +666,10 @@ void board_early_init(void) {
   // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
   // that the flash is properly power cycled on reset. A flash power cycle is
   // needed if left in 4-byte addressing mode, as bootrom does not support it.
-  bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
-  bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
-  bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
-  HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
+//   bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
+//   bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
+//   bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
+//   HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
 
   if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
     HAL_HPAON_EnableXT48();
@@ -634,8 +679,8 @@ void board_early_init(void) {
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_PERI, RCC_CLK_PERI_HXT48);
 
   // Halt LCPU first to avoid LCPU in running state
-  HAL_HPAON_WakeCore(CORE_ID_LCPU);
-  HAL_RCC_Reset_and_Halt_LCPU(1);
+//   HAL_HPAON_WakeCore(CORE_ID_LCPU);
+//   HAL_RCC_Reset_and_Halt_LCPU(1);
 
   // Load system configuration from EFUSE
   BSP_System_Config();
@@ -657,11 +702,11 @@ void board_early_init(void) {
   HAL_RTC_ENABLE_LXT();
 #endif
 
-  HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
+//   HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
 
-  HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
+//   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
 
-  HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
+//   HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
 
   // Reset sysclk used by HAL_Delay_us
   HAL_Delay_us(0);
@@ -673,13 +718,82 @@ void board_early_init(void) {
   HAL_PMU_Init();
 
   __HAL_SYSCFG_CLEAR_SECURITY();
-  HAL_EFUSE_Init();
+//   HAL_EFUSE_Init();
+
+  HAL_RCC_DisableModule(RCC_MOD_USART2);
+  HAL_RCC_DisableModule(RCC_MOD_USART3);
+  HAL_RCC_DisableModule(RCC_MOD_SPI1);
+  HAL_RCC_DisableModule(RCC_MOD_SPI2);
+  HAL_RCC_DisableModule(RCC_MOD_I2C4);
+  HAL_RCC_DisableModule(RCC_MOD_BTIM1);
+  HAL_RCC_DisableModule(RCC_MOD_ATIM1);
+  HAL_RCC_DisableModule(RCC_MOD_MPI1);
+  HAL_RCC_DisableModule(RCC_MOD_USBC);
+  HAL_RCC_DisableModule(RCC_MOD_I2S1);
+  HAL_RCC_DisableModule(RCC_MOD_SDMMC1);
+
+//   HAL_RCC_DisableModule(RCC_MOD_I2C1);
+  HAL_RCC_DisableModule(RCC_MOD_I2C2);
+  HAL_RCC_DisableModule(RCC_MOD_I2C3);
+//   HAL_RCC_DisableModule(RCC_MOD_GPTIM1);
+//   HAL_RCC_DisableModule(RCC_MOD_GPTIM2);
+//   HAL_RCC_DisableModule(RCC_MOD_BTIM2);
+//   HAL_RCC_DisableModule(RCC_MOD_MPI2);
+//   HAL_RCC_DisableModule(RCC_MOD_PDM1);
+//   HAL_RCC_DisableModule(RCC_MOD_AUDPRC);
+//   HAL_RCC_DisableModule(RCC_MOD_AUDCODEC);
+
+    // display
+    gpio_pm_disable(40);
+    gpio_pm_disable(8);
+    gpio_pm_disable(39);
+    gpio_pm_disable(7);
+    gpio_pm_disable(6);
+    gpio_pm_disable(41);
+    gpio_pm_disable(5);
+    gpio_pm_disable(42);
+    gpio_pm_disable(4);
+    gpio_pm_disable(43);
+    gpio_pm_disable(3);
+    gpio_pm_disable(2);
+    gpio_pm_disable(24);
+    gpio_pm_disable(25);
+
+    // touch
+    gpio_pm_disable(27);
+    
+    // buttons 
+    gpio_pm_disable(34);
+    gpio_pm_disable(35);
+    gpio_pm_disable(36);
+    gpio_pm_disable(37);
+
+    // pwm
+    gpio_pm_disable(28);
+    gpio_pm_disable(29);
+    gpio_pm_disable(44);
+
+    // i2c1, still used by pmic
+    // gpio_pm_disable(10);
+    // gpio_pm_disable(11);
+    // i2c2
+    gpio_pm_disable(32);
+    gpio_pm_disable(33);
+    // i2c3
+    gpio_pm_disable(30);
+    gpio_pm_disable(31);
+
+    // clear IE, OE, PE for PA24~27
+    hwp_rtc->PBR0R &= ((1 << 1) | (1 << 2) | (1 << 3));
+    hwp_rtc->PBR1R &= ((1 << 1) | (1 << 2) | (1 << 3));
+    hwp_rtc->PBR2R &= ((1 << 1) | (1 << 2) | (1 << 3));
+    hwp_rtc->PBR3R &= ((1 << 1) | (1 << 2) | (1 << 3));
 }
 
 void board_init(void) {
   i2c_init(I2C1_BUS);
-  i2c_init(I2C2_BUS);
-  i2c_init(I2C3_BUS);
+//   i2c_init(I2C2_BUS);
+//   i2c_init(I2C3_BUS);
 
   mic_init(MIC);
 }

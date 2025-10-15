@@ -122,6 +122,8 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
 }
 
 void display_init(void) {
+  return;
+
   DisplayJDIState *state = DISPLAY->state;
 
   // FIXME(SF32LB52): make this mandatory once old big boards are gone
@@ -214,6 +216,7 @@ void display_clear(void) {
 }
 
 void display_set_enabled(bool enabled) {
+  return;
   if (enabled) {
     prv_display_on();
   } else {
@@ -264,6 +267,14 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
     rows++;
   }
+
+  mutex_unlock(s_update);
+
+  if (uccb) {
+    uccb();
+  }
+
+  return;
 
   portENTER_CRITICAL();
   s_framebuffer_dirty[index] = true;
