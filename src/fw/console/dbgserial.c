@@ -30,7 +30,7 @@
 #endif
 
 
-#ifndef RELEASE
+#if !defined(RELEASE) || defined(TARGET_QEMU)
 void dbgserial_init(void) {
   uart_init(DBG_UART);
   dbgserial_restore_baud_rate();
