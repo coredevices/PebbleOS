@@ -36,7 +36,8 @@
   /*basalt*/ 16, \
   /*chalk*/ 24, \
   /*diorite*/ 16, \
-  /*emery*/ 20)
+  /*emery*/ 20, \
+  /*flint*/ 16)
 
 //! The fixed height of the status bar, including separator height
 #define STATUS_BAR_LAYER_HEIGHT _STATUS_BAR_LAYER_HEIGHT(PBL_PLATFORM_TYPE_CURRENT)

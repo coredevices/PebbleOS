@@ -500,12 +500,15 @@ def configure(conf):
     elif conf.is_snowy_compatible():
         conf.env.PLATFORM_NAME = 'basalt'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_silk() or conf.is_asterix():
+    elif conf.is_silk():
         conf.env.PLATFORM_NAME = 'diorite'
         conf.env.MIN_SDK_VERSION = 2
     elif conf.is_cutts() or conf.is_robert() or conf.is_obelix():
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
+    elif conf.is_asterix():
+        conf.env.PLATFORM_NAME = 'flint'
+        conf.env.MIN_SDK_VERSION = 2
     else:
         conf.fatal('No platform specified for {}!'.format(conf.options.board))
 
