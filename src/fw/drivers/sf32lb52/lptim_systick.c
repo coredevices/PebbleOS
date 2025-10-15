@@ -73,8 +73,8 @@ void lptim_systick_init(void)
 
   s_lptim_systick_initialized = true;
 
-  gpio_output_init(&DEBUG_PIN_CONFIG, GPIO_OType_PP, GPIO_Speed_200MHz);
-  HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, false);
+  // gpio_output_init(&DEBUG_PIN_CONFIG, GPIO_OType_PP, GPIO_Speed_200MHz);
+  // HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, false);
 
   s_cal_tim_hdl.Instance = (GPT_TypeDef *)BTIM2;
   s_cal_tim_hdl.Init.Prescaler = 23; // BTIM2 clock is 24MHz, prescaled to 1MHz
@@ -192,8 +192,8 @@ static inline void lptim_systick_next_tick_setup(void)
 
 void LPTIM1_IRQHandler(void)
 {
-  HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, s_debug_pin_state);
-  s_debug_pin_state = !s_debug_pin_state;
+  // HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, s_debug_pin_state);
+  // s_debug_pin_state = !s_debug_pin_state;
 
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OC) != RESET) {
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_IT_OCIE);

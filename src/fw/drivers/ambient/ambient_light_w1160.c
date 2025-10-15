@@ -98,6 +98,7 @@ static bool prv_write_register(uint8_t register_address, uint8_t datum) {
 }
 
 void ambient_light_init(void) {
+  return;
   s_sensor_light_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
   psleep(W1160_POR_WAIT_TIME);
   uint8_t chip_id;
@@ -120,6 +121,7 @@ void ambient_light_init(void) {
 }
 
 uint32_t ambient_light_get_light_level(void) {
+  return 2048;
   uint8_t result[2] = {0};
   bool rv;
   rv = prv_read_register(W1160_DATA1_ALS_REG, &result[1]);

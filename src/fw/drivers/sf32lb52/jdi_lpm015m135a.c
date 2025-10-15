@@ -103,6 +103,8 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
 }
 
 void display_init(void) {
+  return;
+
   DisplayJDIState *state = DISPLAY->state;
 
   HAL_PIN_Set(DISPLAY->pinmux.xrst.pad, DISPLAY->pinmux.xrst.func, DISPLAY->pinmux.xrst.flags, 1);
@@ -189,6 +191,7 @@ void display_clear(void) {
 }
 
 void display_set_enabled(bool enabled) {
+  return;
   if (enabled) {
     prv_display_on();
   } else {
@@ -239,6 +242,14 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
     rows++;
   }
+
+  mutex_unlock(s_update);
+
+  if (uccb) {
+    uccb();
+  }
+
+  return;
 
   portENTER_CRITICAL();
   s_framebuffer_dirty[index] = true;

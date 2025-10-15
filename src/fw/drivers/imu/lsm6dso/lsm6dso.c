@@ -133,18 +133,21 @@ static RegularTimerInfo s_interrupt_watchdog_timer = {
 // LSM6DSO configuration entrypoints
 
 void lsm6dso_init(void) {
+  return;
   // Initialize the LSM6DSO sensor to a powered down state.
   prv_lsm6dso_init();
 }
 
 void lsm6dso_power_up(void) {
   s_lsm6dso_enabled = true;
+  return;
   prv_lsm6dso_chase_target_state();
 }
 
 void lsm6dso_power_down(void) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering down accelerometer");
   s_lsm6dso_enabled = false;
+  return;
   prv_lsm6dso_chase_target_state();
 }
 
@@ -205,6 +208,7 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
 
 static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
                                 uint16_t read_size) {
+  return -1;
   i2c_use(I2C_LSM6D);
   bool result = i2c_write_block(I2C_LSM6D, 1, &reg_addr);
   if (result) result = i2c_read_block(I2C_LSM6D, read_size, buffer);
@@ -232,6 +236,7 @@ static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
 
 static int32_t prv_lsm6dso_write(void *handle, uint8_t reg_addr, const uint8_t *buffer,
                                  uint16_t write_size) {
+  return -1;
   i2c_use(I2C_LSM6D);
   uint8_t d[write_size + 1];
   d[0] = reg_addr;
@@ -1089,23 +1094,23 @@ static void prv_lsm6dso_read_samples(void) {
 }
 
 static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
-  if (!s_lsm6dso_initialized) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Not initialized, cannot read sample");
-    return -1;
-  }
+  // if (!s_lsm6dso_initialized) {
+  //   PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Not initialized, cannot read sample");
+  //   return -1;
+  // }
 
-  // TODO: Handle case when accelerometer is not enabled or running (by briefly
-  // enabling it.
+  // // TODO: Handle case when accelerometer is not enabled or running (by briefly
+  // // enabling it.
 
-  int16_t accel_raw[3];
-  if (lsm6dso_acceleration_raw_get(&lsm6dso_ctx, accel_raw) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read accelerometer data");
-    return -1;
-  }
+  // int16_t accel_raw[3];
+  // if (lsm6dso_acceleration_raw_get(&lsm6dso_ctx, accel_raw) != 0) {
+  //   PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to read accelerometer data");
+  //   return -1;
+  // }
 
-  data->x = prv_get_axis_projection_mg(X_AXIS, accel_raw);
-  data->y = prv_get_axis_projection_mg(Y_AXIS, accel_raw);
-  data->z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
+  data->x = 0; // prv_get_axis_projection_mg(X_AXIS, accel_raw);
+  data->y = 0; // prv_get_axis_projection_mg(Y_AXIS, accel_raw);
+  data->z = 0; // prv_get_axis_projection_mg(Z_AXIS, accel_raw);
   data->timestamp_us = prv_get_timestamp_ms() * 1000;
 
   prv_note_new_sample(data);

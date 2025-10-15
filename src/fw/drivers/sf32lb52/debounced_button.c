@@ -92,6 +92,7 @@ static void prv_button_interrupt_handler(bool *should_context_switch) {
 }
 
 void debounced_button_init(void) {
+  return;
   button_init();
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {

@@ -279,8 +279,8 @@ void ble_transport_ll_init(void) {
   ret = prv_config_ipc();
   PBL_ASSERTN(ret == 0);
 
-  lcpu_custom_nvds_config();
-  lcpu_power_on();
+  // lcpu_custom_nvds_config();
+  // lcpu_power_on();
 }
 
 /* APIs to be implemented by HS/LL side of transports */

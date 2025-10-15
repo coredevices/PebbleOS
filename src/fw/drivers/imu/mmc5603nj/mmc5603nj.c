@@ -59,6 +59,7 @@ static bool s_measurement_ready = false;
 // MMC5603NJ entrypoints
 
 void mmc5603nj_init(void) {
+  return;
   s_mag_mutex = mutex_create();
   if (prv_mmc5603nj_init()) {
     PBL_LOG(LOG_LEVEL_DEBUG, "MMC5603NJ: Initialization complete");
@@ -95,6 +96,10 @@ void mag_release(void) {
 
 // callers responsibility to know if there is valid data to be read
 MagReadStatus mag_read_data(MagData *data) {
+  data->x = 0;
+  data->y = 0;
+  data->z = 0;
+  return MagReadSuccess;
   mutex_lock(s_mag_mutex);
   MagReadStatus rv = prv_mmc5603nj_get_sample(data);
   mutex_unlock(s_mag_mutex);
@@ -179,6 +184,7 @@ static bool prv_mmc5603nj_init(void) {
 // Ask the compass for a 8-bit value that's programmed into the IC at the
 // factory. Useful as a sanity check to make sure everything came up properly.
 bool prv_mmc5603nj_check_whoami(void) {
+  return true;
   uint8_t whoami = 0;
   if (!prv_mmc5603nj_read(MMC5603NJ_REG_WHO_AM_I, 1, &whoami)) {
     return false;
@@ -214,43 +220,43 @@ static bool prv_mmc5603nj_reset(void) {
 // Configure ODR
 
 bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
-  if (rate_hz == s_sample_rate_hz) {
-    return true;
-  }
+  // if (rate_hz == s_sample_rate_hz) {
+  //   return true;
+  // }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "MMC5603NJ: Setting sample rate to %d Hz", rate_hz);
+  // PBL_LOG(LOG_LEVEL_DEBUG, "MMC5603NJ: Setting sample rate to %d Hz", rate_hz);
 
-  // Reset device runtime status (disabling continuous mode/etc)
-  if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL2, 0x00)) {
-    return false;
-  }
+  // // Reset device runtime status (disabling continuous mode/etc)
+  // if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL2, 0x00)) {
+  //   return false;
+  // }
 
-  // Do one final read to reset any data ready flags
-  MagData discard_sample;
-  prv_mmc5603nj_get_sample(&discard_sample);
+  // // Do one final read to reset any data ready flags
+  // MagData discard_sample;
+  // prv_mmc5603nj_get_sample(&discard_sample);
 
-  if (rate_hz > 0) {
-    // Set new sampling rate
-    if (!prv_mmc5603nj_write(MMC5603NJ_REG_ODR, rate_hz)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to update ODR.");
-      return false;
-    }
+  // if (rate_hz > 0) {
+  //   // Set new sampling rate
+  //   if (!prv_mmc5603nj_write(MMC5603NJ_REG_ODR, rate_hz)) {
+  //     PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to update ODR.");
+  //     return false;
+  //   }
 
-    // Retrigger calculation of measurements rates
-    if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL0,
-                             MMC5603NJ_CTRL0_AUTO_SR_EN | MMC5603NJ_CTRL0_CMM_FREQ_EN)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to trigger measurement calculation update.");
-      return false;
-    }
+  //   // Retrigger calculation of measurements rates
+  //   if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL0,
+  //                            MMC5603NJ_CTRL0_AUTO_SR_EN | MMC5603NJ_CTRL0_CMM_FREQ_EN)) {
+  //     PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to trigger measurement calculation update.");
+  //     return false;
+  //   }
 
-    // Start continuous mode
-    if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL2, MMC5603NJ_CTRL2_AUTOSET_PRD_100 |
-                                                      MMC5603NJ_CTRL2_PRD_SET_EN |
-                                                      MMC5603NJ_CTRL2_CMM_EN)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to start continuous mode.");
-      return false;
-    }
-  }
+  //   // Start continuous mode
+  //   if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL2, MMC5603NJ_CTRL2_AUTOSET_PRD_100 |
+  //                                                     MMC5603NJ_CTRL2_PRD_SET_EN |
+  //                                                     MMC5603NJ_CTRL2_CMM_EN)) {
+  //     PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to start continuous mode.");
+  //     return false;
+  //   }
+  // }
 
   s_sample_rate_hz = rate_hz;
   if (!prv_configure_polling()) {
@@ -263,7 +269,7 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
 // Configure polling (to simulate data-ready interrupts)
 
 static bool prv_configure_polling(void) {
-  uint16_t polling_interval_ms = s_sample_rate_hz == 0 ? 0 : DIVIDE_CEIL(1000.0, s_sample_rate_hz);
+  uint16_t polling_interval_ms = s_sample_rate_hz == 0 ? 0 : DIVIDE_CEIL(1000.0, 1);
 
   if (s_polling_interval_ms == polling_interval_ms) {
     return true;
@@ -306,6 +312,7 @@ static void prv_mmc5603nj_polling_callback(void *data) {
 
 // Samples
 bool prv_mmc5603nj_is_data_ready(void) {
+  return true;
   uint8_t status = 0;
   prv_mmc5603nj_read(MMC5603NJ_REG_STATUS1, 1, &status);
   return (status & MMC5603NJ_STATUS1_MEAS_M_DONE_MASK) > 0;

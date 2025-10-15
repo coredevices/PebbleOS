@@ -25,9 +25,15 @@ StatusCode mcu_get_serial(void *buf, size_t *buf_sz) {
   if (*buf_sz < EFUSE_UID_SIZE) {
     return E_OUT_OF_MEMORY;
   }
-
-  HAL_EFUSE_Read(EFUSE_UID_OFFSET, (uint8_t *)buf, EFUSE_UID_SIZE);
+  uint8_t serial[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
+                    0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
   *buf_sz = EFUSE_UID_SIZE;
+  for (int i = 0; i < EFUSE_UID_SIZE; i++) {
+    ((uint8_t *)buf)[i] = serial[i];
+  }
+
+  // HAL_EFUSE_Read(EFUSE_UID_OFFSET, (uint8_t *)buf, EFUSE_UID_SIZE);
+  // *buf_sz = EFUSE_UID_SIZE;
 
   return S_SUCCESS;
 }
