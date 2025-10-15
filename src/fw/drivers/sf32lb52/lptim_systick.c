@@ -20,6 +20,7 @@
 #include "drivers/rtc.h"
 #include "drivers/lptim_systick.h"
 #include "system/logging.h"
+#include "drivers/gpio.h"
 
 #include "bf0_hal_lptim.h"
 #include "bf0_hal_aon.h"
@@ -40,6 +41,18 @@ static LPTIM_HandleTypeDef s_lptim1_handle = {0};
 static bool s_lptim_systick_initialized = false;
 static uint32_t s_last_idle_counter = 0;
 
+const OutputConfig DEBUG_PIN_CONFIG = {
+      .gpio = hwp_gpio1,
+      .gpio_pin = 27,
+      .active_high = false
+};
+static bool s_debug_pin_state = false;
+static uint32_t s_debug_count = 0;
+
+static GPT_HandleTypeDef s_cal_tim_hdl = {0};
+static uint32_t s_clock_frequency = 0;
+static uint32_t s_one_tick_count = 0;
+
 void lptim_systick_init(void)
 {
   HAL_LPTIM_InitDefault(&s_lptim1_handle);
@@ -59,7 +72,59 @@ void lptim_systick_init(void)
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_REQ, AON_PIN_MODE_HIGH); // LP2HP manual wakeup
 
   s_lptim_systick_initialized = true;
+
+  gpio_output_init(&DEBUG_PIN_CONFIG, GPIO_OType_PP, GPIO_Speed_200MHz);
+  HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, false);
+
+  s_cal_tim_hdl.Instance = (GPT_TypeDef *)BTIM2;
+  s_cal_tim_hdl.Init.Prescaler = 23; // BTIM2 clock is 24MHz, prescaled to 1MHz
+  s_cal_tim_hdl.core = CORE_ID_HCPU;
+  s_cal_tim_hdl.Init.CounterMode = GPT_COUNTERMODE_UP;
+  s_cal_tim_hdl.Init.RepetitionCounter = 0;
+  s_cal_tim_hdl.Init.Period = UINT32_MAX;
+  HAL_GPT_Base_Init(&s_cal_tim_hdl);
+
+  __HAL_LPTIM_ENABLE(&s_lptim1_handle);
+  __HAL_LPTIM_COUNTRST_RESET(&s_lptim1_handle);
+  __HAL_LPTIM_AUTORELOAD_SET(&s_lptim1_handle, 0xFFFF);
+  __HAL_LPTIM_START_SINGLE(&s_lptim1_handle);
+  __HAL_GPT_ENABLE(&s_cal_tim_hdl);
+
+  volatile uint32_t lptim_count_1, btim2_count_1;
+  volatile uint32_t lptim_count_2, btim2_count_2;
+
+  lptim_count_1 = LPTIM1->CNT;
+  while (lptim_count_1 ==LPTIM1->CNT) {
+    __NOP();
+  }
+  lptim_count_1 = LPTIM1->CNT;
+  btim2_count_1 = BTIM2->CNT;
+
+  while (BTIM2->CNT < 10 * 1000) {
+    __NOP();
+  }
+
+  lptim_count_2 = LPTIM1->CNT;
+  while (lptim_count_2 == LPTIM1->CNT) {
+    __NOP();
+  }
+  lptim_count_2 = LPTIM1->CNT;
+  btim2_count_2 = BTIM2->CNT;
+
+  uint32_t lptim_delta = lptim_count_2 - lptim_count_1;
+  uint32_t btim2_delta = btim2_count_2 - btim2_count_1;
+
+  s_clock_frequency = (lptim_delta * 1000000UL) / btim2_delta;
+  s_one_tick_count = s_clock_frequency / RTC_TICKS_HZ;
+
+  PBL_LOG(LOG_LEVEL_INFO, "lptim_systick: LPTIM1 frequency delta %lu / %lu", lptim_delta, btim2_delta);
+  PBL_LOG(LOG_LEVEL_INFO, "lptim_systick: LPTIM1 clock frequency %lu Hz", s_clock_frequency);
+  PBL_LOG(LOG_LEVEL_INFO, "lptim_systick: one tick count %lu", s_one_tick_count);
+
+  __HAL_LPTIM_DISABLE(&s_lptim1_handle);
+  __HAL_GPT_DISABLE(&s_cal_tim_hdl);
 }
+
 
 bool lptim_systick_is_initialized(void)
 {
@@ -79,12 +144,12 @@ void lptim_systick_enable(void)
 
 void lptim_systick_pause(void)
 {
-  /* NOP */
+  // HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, true);
 }
 
 void lptim_systick_resume(void)
 {
-  /* NOP */
+  // HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, false);
 }
 
 void lptim_systick_tickless_idle(uint32_t ticks_from_now)
@@ -127,6 +192,9 @@ static inline void lptim_systick_next_tick_setup(void)
 
 void LPTIM1_IRQHandler(void)
 {
+  HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, s_debug_pin_state);
+  s_debug_pin_state = !s_debug_pin_state;
+
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OC) != RESET) {
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_IT_OCIE);
     lptim_systick_next_tick_setup();
