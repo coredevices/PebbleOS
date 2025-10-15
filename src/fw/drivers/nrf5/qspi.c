@@ -241,6 +241,26 @@ void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
 
 /*** Underlying small flash I/O helpers. ***/
 
+/** Read from QSPI, but poll instead of waiting for the ISR.
+ *
+ * For very short reads, the interrupt overhead is really quite substantial.
+ * Poll on ready instead of having an IRQ.  We already qspi_activate'd in
+ * prv_use so we don't have to worry about that here.
+ */
+static void prv_nrf_qspi_read_polling(void *buf, size_t len, uint32_t addr) {
+  nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
+  nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+
+  nrf_qspi_read_buffer_set(NRF_QSPI, buf, len, addr);
+  nrf_qspi_task_trigger(NRF_QSPI, NRF_QSPI_TASK_READSTART);
+
+  while (!nrf_qspi_event_check(NRF_QSPI, NRF_QSPI_EVENT_READY))
+    ;
+
+  nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+  nrf_qspi_int_enable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
+}
+
 static void prv_read_register(QSPIPort *dev, uint8_t instruction, uint8_t *data, uint32_t length) {
   nrf_qspi_cinstr_conf_t instr = NRFX_QSPI_DEFAULT_CINSTR(instruction, length + 1);
   instr.io2_level = true;
@@ -329,12 +349,8 @@ static void _flash_handler(nrfx_qspi_evt_t event, void *ctx) {
 
   PBL_ASSERTN(event == NRFX_QSPI_EVENT_DONE);
 
-  if (dev->qspi->state->spin_waiting) {
-    dev->qspi->state->spin_waiting = false;
-  } else {
-    xSemaphoreGiveFromISR(dev->qspi->state->dma_semaphore, &woken);
-    portYIELD_FROM_ISR(woken);
-  }
+  xSemaphoreGiveFromISR(dev->qspi->state->dma_semaphore, &woken);
+  portYIELD_FROM_ISR(woken);
 }
 
 /*** Flash init routines. ***/
@@ -577,11 +593,7 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
   buf_mid = length - buf_pre - buf_suf;
 
   if (buf_pre != 0U) {
-    dev->qspi->state->spin_waiting = true;
-    err = nrfx_qspi_read(b_buf, 4U, addr);
-    while (dev->qspi->state->spin_waiting)
-      ;
-    PBL_ASSERTN(err == NRFX_SUCCESS);
+    prv_nrf_qspi_read_polling(b_buf, 4U, addr);
 
     memcpy(buffer, b_buf, buf_pre);
     addr += buf_pre;
@@ -590,10 +602,8 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 
   if (buf_mid != 0U) {
     if (length < READ_POLLING_THRESHOLD) {
-      dev->qspi->state->spin_waiting = true;
-      err = nrfx_qspi_read(buffer, buf_mid, addr);
-      while (dev->qspi->state->spin_waiting)
-        ;
+      prv_nrf_qspi_read_polling(buffer, buf_mid, addr);
+      err = NRFX_SUCCESS;
     } else {
       err = nrfx_qspi_read(buffer, buf_mid, addr);
       prv_wait_for_completion(dev);
@@ -605,11 +615,7 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
   }
 
   if (buf_suf != 0U) {
-    dev->qspi->state->spin_waiting = true;
-    err = nrfx_qspi_read(b_buf, 4U, addr);
-    while (dev->qspi->state->spin_waiting)
-      ;
-    PBL_ASSERTN(err == NRFX_SUCCESS);
+    prv_nrf_qspi_read_polling(b_buf, 4U, addr);
 
     memcpy(buffer, b_buf, buf_suf);
   }

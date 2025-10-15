@@ -39,9 +39,6 @@ typedef struct QSPIPortState {
   SemaphoreHandle_t dma_semaphore;
   int use_count;
 #endif
-#if MICRO_FAMILY_NRF5
-  volatile bool spin_waiting;
-#endif
 } QSPIPortState;
 
 typedef const struct QSPIPort {
