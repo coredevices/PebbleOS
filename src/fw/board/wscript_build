@@ -65,7 +65,7 @@ elif board in ('spalding_evt','spalding', 'spalding_bb2'):
             'drivers',
         ],
     )
-elif board in ('silk_evt', 'silk_bb', 'silk_bb2', 'silk',):
+elif board in ('silk_evt', 'silk_bb', 'silk_bb2', 'silk', 'silk_flint'):
     bld.objects(
         name='board',
         source=[

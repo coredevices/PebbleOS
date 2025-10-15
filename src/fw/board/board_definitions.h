@@ -51,6 +51,8 @@
 #include "boards/board_silk.h"
 #elif BOARD_SILK
 #include "boards/board_silk.h"
+#elif BOARD_SILK_FLINT
+#include "boards/board_silk.h"
 #elif BOARD_CUTTS_BB
 #include "boards/board_robert.h" // prototypes for Cutts
 #elif BOARD_ROBERT_BB

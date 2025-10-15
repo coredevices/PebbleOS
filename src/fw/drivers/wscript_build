@@ -1149,7 +1149,7 @@ if bld.is_tintin() and not bld.env.QEMU:
         ],
     )
 
-if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
+if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert() or bld.env.BOARD == 'silk_flint':
     bld.objects(
         name='driver_mag3110',
         source=[
