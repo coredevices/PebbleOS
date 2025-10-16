@@ -30,7 +30,7 @@
 
 #include "drivers/gpio.h"
 
-#if !defined(RELEASE) || defined(TARGET_QEMU)
+#if !defined(RELEASE) || defined(TARGET_QEMU) || defined(MANUFACTURING_FW)
 
 #define STOP_MODE_TIMEOUT_MS (2000)
 
