@@ -332,13 +332,14 @@ void flash_impl_release_many(uint32_t num_locks);
 //! @retval StatusCode if the read failed
 status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val);
 
-//! Check if the security registers are locked
+//! Check if a security register is locked
 //!
+//! @param address The address of the security register to check.
 //! @param [out] locked True if the security registers are locked
 //!
 //! @retval S_SUCCESS if the check was successful
 //! @retval StatusCode if the check failed
-status_t flash_impl_security_registers_are_locked(bool *locked);
+status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked);
 
 //! Erase security register
 //!
@@ -364,11 +365,13 @@ status_t flash_impl_write_security_register(uint32_t addr, uint8_t val);
 const FlashSecurityRegisters *flash_impl_security_registers_info(void);
 
 #ifdef RECOVERY_FW
-//! Lock security registers
+//! Lock security register
 //!
 //! @warning This is a one time operation and will permanently lock the security registers.
 //!
+//! @param address The address of the security register to lock.
+//!
 //! @retval S_SUCCESS if the lock was successful
 //! @retval StatusCode if the lock failed
-status_t flash_impl_lock_security_registers(void);
+status_t flash_impl_lock_security_register(uint32_t address);
 #endif // RECOVERY_FW

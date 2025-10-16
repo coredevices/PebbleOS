@@ -174,8 +174,8 @@ status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
   return qspi_flash_read_security_register(QSPI_FLASH, addr, val);
 }
 
-status_t flash_impl_security_registers_are_locked(bool *locked) {
-  return qspi_flash_security_registers_are_locked(QSPI_FLASH, locked);
+status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked) {
+  return qspi_flash_security_register_is_locked(QSPI_FLASH, address, locked);
 }
 
 status_t flash_impl_erase_security_register(uint32_t addr) {
@@ -191,7 +191,7 @@ const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
 }
 
 #ifdef RECOVERY_FW
-status_t flash_impl_lock_security_registers(void) {
-  return qspi_flash_lock_security_registers(QSPI_FLASH);
+status_t flash_impl_lock_security_register(uint32_t address) {
+  return qspi_flash_lock_security_register(QSPI_FLASH, address);
 }
 #endif

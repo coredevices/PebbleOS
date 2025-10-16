@@ -103,7 +103,7 @@ extern void command_flash_sec_erase(const char *);
 extern void command_flash_sec_wipe(void);
 extern void command_flash_sec_info(void);
 #if defined(RECOVERY_FW)
-extern void command_flash_sec_lock(const char *);
+extern void command_flash_sec_lock(const char *, const char *);
 #endif // RECOVERY_FW
 #endif // CAPABILITY_HAS_FLASH_OTP
 
@@ -416,7 +416,7 @@ static const Command s_prompt_commands[] = {
   { "model read", command_model_read, 0 },
 
 #if CAPABILITY_HAS_FLASH_OTP
-  { "flash sec lock", command_flash_sec_lock, 1},
+  { "flash sec lock", command_flash_sec_lock, 2},
 #endif // CAPABILITY_HAS_FLASH_OTP
 
   { "serial write", command_serial_write, 1 },

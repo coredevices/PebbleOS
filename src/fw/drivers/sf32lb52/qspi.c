@@ -24,6 +24,8 @@
 #include "system/status_codes.h"
 #include "util/math.h"
 
+#define SEC_ADDR_TO_IDX(addr) (((addr) >> 12U) - 1U)
+
 static bool prv_blank_check_poll(uint32_t addr, bool is_subsector) {
   const uint32_t size_bytes = is_subsector ? SUBSECTOR_SIZE_BYTES : SECTOR_SIZE_BYTES;
   const uint32_t BUF_SIZE_BYTES = 128;
@@ -304,22 +306,23 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
   return S_SUCCESS;
 }
 
-status_t qspi_flash_security_registers_are_locked(QSPIFlash *dev, bool *locked) {
+status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t addr, bool *locked) {
   FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
   uint8_t opt_val = 0;
+  int ret;
 
   /* OPT operation are synchronous, one match means all matched. */
-  opt_val = HAL_QSPI_GET_OTP_LB(hflash, dev->state->part->sec_registers.sec_regs[0]);
+  opt_val = HAL_QSPI_GET_OTP_LB(hflash, addr);
   if (opt_val == 0xff) {
     return E_ERROR;
   }
 
-  if (opt_val != 0) {
+  /* Security registers address*/
+  if ((opt_val & (1U << SEC_ADDR_TO_IDX(addr))) != 0U) {
     *locked = true;
-    return S_SUCCESS;
+  } else {
+    *locked = false;
   }
-
-  *locked = false;
 
   return S_SUCCESS;
 }
@@ -363,11 +366,13 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
 }
 
 #ifdef RECOVERY_FW
-status_t qspi_flash_lock_security_registers(QSPIFlash *dev) {
+status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
   FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
+  int res;
 
-  for (uint8_t i = 0U; i < dev->state->part->sec_registers.num_sec_regs; ++i) {
-    HAL_QSPI_LOCK_OTP(hflash, dev->state->part->sec_registers.sec_regs[i]);
+  res = HAL_QSPI_LOCK_OTP(hflash, addr);
+  if (res != 0) {
+    return E_ERROR;
   }
 
   return S_SUCCESS;

@@ -28,6 +28,8 @@
 /* nRF5's QSPI controller is different enough from STM32's that we
  * reimplement qspi_flash.c, not stm32/qspi.c.  */
 
+#define SEC_ADDR_TO_IDX(addr) (((addr) >> 12U) - 1U)
+
 #define FLASH_RESET_WORD_VALUE (0xffffffff)
 
 static uint8_t s_qspi_ram_buffer[32];
@@ -555,12 +557,18 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
   return 0;
 }
 
-status_t qspi_flash_security_registers_are_locked(QSPIFlash *dev, bool *locked) {
+status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t addr, bool *locked) {
   uint8_t sr2;
+  status_t res;
+
+  res = prv_qspi_security_register_check(dev, addr);
+  if (res != S_SUCCESS) {
+    return res;
+  }
 
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr2, &sr2, 1);
 
-  *locked = !!(sr2 & dev->state->part->flag_status_bit_masks.sec_lock);
+  *locked = !!(sr2 & ((1U << SEC_ADDR_TO_IDX(addr)) << 3U));
 
   return 0;
 }
@@ -650,13 +658,19 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
 }
 
 #ifdef RECOVERY_FW
-status_t qspi_flash_lock_security_registers(QSPIFlash *dev) {
+status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
   uint8_t sr[2];
+  status_t res;
+
+  res = prv_qspi_security_register_check(dev, addr);
+  if (res != S_SUCCESS) {
+    return res;
+  }
 
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr1, &sr[0], 1);
   prv_read_register(dev->qspi, dev->state->part->instructions.rdsr2, &sr[1], 1);
 
-  sr[1] |= dev->state->part->flag_status_bit_masks.sec_lock;
+  sr[1] |= (1U << SEC_ADDR_TO_IDX(addr)) << 3U;
 
   prv_write_register(dev->qspi, dev->state->part->instructions.wrsr, sr, 2);
 
