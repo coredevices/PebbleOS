@@ -111,6 +111,6 @@ status_t cd_flash_read_security_register(uint32_t addr, uint8_t *val) {
   return flash_impl_read_security_register(addr, val);
 }
 
-status_t cd_flash_security_registers_are_locked(bool *locked) {
-  return flash_impl_security_registers_are_locked(locked);
+status_t cd_flash_security_register_is_locked(uint32_t addr, bool *locked) {
+  return flash_impl_security_register_is_locked(addr, locked);
 }

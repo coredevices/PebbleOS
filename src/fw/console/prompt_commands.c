@@ -474,8 +474,6 @@ void command_flash_sec_wipe(void) {
 
 void command_flash_sec_info(void) {
   const FlashSecurityRegisters *info = flash_security_registers_info();
-  bool locked;
-  status_t ret;
   char buf[64];
 
   if (info->sec_regs == NULL) {
@@ -483,24 +481,27 @@ void command_flash_sec_info(void) {
     return;
   }
 
-  ret = flash_security_registers_are_locked(&locked);
-  if (ret != S_SUCCESS) {
-    prompt_send_response("FAIL: Unable to check security register lock status");
-    return;
-  }
-
-  prompt_send_response_fmt(buf, sizeof(buf), "Security registers are %slocked",
-                           locked ? "" : "not ");
   prompt_send_response_fmt(buf, sizeof(buf), "Number of security registers: %d", info->num_sec_regs);
   for (int i = 0; i < info->num_sec_regs; i++) {
-    prompt_send_response_fmt(buf, sizeof(buf), "Security register %d: 0x%08lx", i, info->sec_regs[i]);
+    bool locked;
+    status_t ret;
+
+    ret = flash_security_register_is_locked(info->sec_regs[i], &locked);
+    if (ret != S_SUCCESS) {
+      prompt_send_response("FAIL: Unable to check security register lock status");
+      return;
+    }
+
+    prompt_send_response_fmt(buf, sizeof(buf), "Security register %d: 0x%08lx (locked: %u)",
+                             i, info->sec_regs[i], locked);
   }
 }
 
 #ifdef RECOVERY_FW
-void command_flash_sec_lock(const char *password) {
+void command_flash_sec_lock(const char *address_str, const char *password) {
   if (strcmp(password, "l0ckm3f0r3v3r") == 0) {
-    flash_lock_security_registers();
+    uint32_t address = strtoul(address_str, NULL, 0);
+    flash_lock_security_register(address);
     prompt_send_response("OK");
   } else {
     prompt_send_response("FAIL: Invalid password");

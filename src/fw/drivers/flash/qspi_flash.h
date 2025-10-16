@@ -86,8 +86,8 @@ status_t qspi_flash_unlock_all(QSPIFlash *dev);
 //! Read security register
 status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_t *val);
 
-//! Check if the security registers are locked
-status_t qspi_flash_security_registers_are_locked(QSPIFlash *dev, bool *locked);
+//! Check if the given security registers is locked
+status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t address, bool *locked);
 
 //! Erase security register
 status_t qspi_flash_erase_security_register(QSPIFlash *dev, uint32_t addr);
@@ -101,5 +101,5 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
 #ifdef RECOVERY_FW
 //! Lock security registers
 //! @warning This is a one time operation and will permanently lock the security registers.
-status_t qspi_flash_lock_security_registers(QSPIFlash *dev);
+status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t address);
 #endif // RECOVERY_FW

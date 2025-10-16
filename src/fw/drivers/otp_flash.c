@@ -23,7 +23,7 @@
 
 bool cd_flash_active(void);
 status_t cd_flash_read_security_register(uint32_t addr, uint8_t *val);
-status_t cd_flash_security_registers_are_locked(bool *locked);
+status_t cd_flash_security_register_is_locked(uint32_t addr, bool *locked);
 
 static char s_slot[NUM_OTP_SLOTS][OTP_SLOT_SIZE];
 
@@ -61,13 +61,19 @@ uint8_t * otp_get_lock(const uint8_t index) {
 }
 
 bool otp_is_locked(const uint8_t index) {
+  const FlashSecurityRegisters *info;
   status_t ret;
   bool locked;
 
+  info = flash_security_registers_info();
+  if (info->num_sec_regs == 0U) {
+    return false;
+  }
+
   if (cd_flash_active()) {
-    ret = cd_flash_security_registers_are_locked(&locked);
+    ret = cd_flash_security_register_is_locked(info->sec_regs[SEC_REG_IDX], &locked);
   } else {
-    ret = flash_security_registers_are_locked(&locked);
+    ret = flash_security_register_is_locked(info->sec_regs[SEC_REG_IDX], &locked);
   }
   if (ret != S_SUCCESS) {
     return false;
