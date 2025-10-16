@@ -3,7 +3,7 @@ def configure(cfg):
     if cfg.options.nowatchdog:
         variant = 'nowatchdog_'
 
-    if cfg.options.board in ('snowy_bb2', 'snowy_s3', 'spalding_bb2'):
+    if cfg.options.board in ('snowy_bb2', 'snowy_s3', 'snowy_emery', 'spalding_bb2'):
         bootloader_board = 'snowy_dvt'
     elif cfg.is_silk():
         bootloader_board = 'silk'

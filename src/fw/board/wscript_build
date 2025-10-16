@@ -43,7 +43,7 @@ elif board in ('v2_0',):
             'drivers',
         ],
     )
-elif board in ('snowy_bb2','snowy_evt2','snowy_dvt','snowy_s3'):
+elif board in ('snowy_bb2','snowy_evt2','snowy_dvt','snowy_s3','snowy_emery'):
     bld.objects(
         name='board',
         source=[

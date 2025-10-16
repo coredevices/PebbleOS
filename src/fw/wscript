@@ -252,6 +252,14 @@ def _generate_memory_layout(bld):
         app_ram_size_4x = APP_UNSUPPORTED
         # We have a 128k continuous block of RAM.
         total_ram = (0x20000000, 128 * 1024)
+    elif bld.env.BOARD == 'snowy_emery':
+        app_ram_size_2x = APP_RAM_SIZES['aplite']
+        app_ram_size_3x = APP_RAM_SIZES['basalt']
+        app_ram_size_4x = APP_RAM_SIZES['emery']
+        # Snowy Emery has STM32F4 with 512K RAM like Silk but with robert capabilities.
+        # We allocate more RAM than standard snowy to support robert features (HRM, caching, etc).
+        # 512k continuous block of RAM (256k more than standard snowy), plus a separate 64k of CCM.
+        total_ram = (0x20000000, 512 * 1024)
     elif bld.is_snowy():
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['basalt']
@@ -486,7 +494,10 @@ def _get_dbg_paths(bld):
         return ('debug/default',)
 
 def _gen_fpga_bitstream_header(bld):
-    if bld.is_snowy():
+    if bld.env.BOARD == 'snowy_emery':
+        # Snowy Emery uses robert display, so use robert FPGA bitstream
+        source_bitstream = '../../platform/robert/Robert_UL1K_framebuffer_bitmap.fpga'
+    elif bld.is_snowy():
         if bld.env.BOARD in ('snowy_bb', 'snowy_evt'):
             source_bitstream = '../../platform/snowy/snowy_framebuffer_evt.fpga'
         else:

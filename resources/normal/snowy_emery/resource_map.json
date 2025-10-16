@@ -1,0 +1,368 @@
+{
+  "comments": "This file contains resource definitions for platform Snowy",
+  "media": [
+    {
+      "type": "pdc",
+      "name": "VOICE_MICROPHONE_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Microphone.svg",
+      "builtin": true,
+      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
+                   "Ensure that if this is moved to resources, images are allocated up front when",
+                   "a dictation session is started"]
+    },
+    {
+      "type": "pdc",
+      "name": "MODAL_CONTRACT_TO_MODAL_SEQUENCE",
+      "file": "normal/snowy/images/modal_contract_to_modal"
+    },
+    {
+      "type": "pdc",
+      "name": "MODAL_CONTRACT_FROM_MODAL_SEQUENCE",
+      "file": "normal/snowy/images/modal_contract_from_modal"
+    },
+    {
+      "type": "pdc",
+      "name": "MODAL_EXPAND_TO_APP_SEQUENCE",
+      "file": "normal/snowy/images/modal_expand_to_app"
+    },
+    {
+      "type": "raw",
+      "name": "NO_EVENTS_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_No_events.pdc"
+    },
+    {
+      "type": "raw",
+      "name": "ALARM_CLOCK_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Alarm_clock.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "BATTERY_ICON_CHARGING_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Battery_currently_charging.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "RESULT_DELETED_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Deleted.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "RESULT_SHREDDED_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Result_shredded.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "RESULT_DISMISSED_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Dismiss.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "GENERIC_CONFIRMATION_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Generic_confirmation.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "INCOMING_PHONE_CALL_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Incoming_call.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "RESULT_MUTE_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Mute.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "RESULT_SENT_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Sent.pdc",
+      "builtin": true
+    },
+    {
+      "type": "raw",
+      "name": "RESULT_UNMUTE_LARGE",
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Unmute.pdc",
+      "builtin": true
+    },
+    {
+      "type": "pdc",
+      "name": "TIMER_APP_FACE_ICON",
+      "file": "normal/snowy/images/launcher_app_face_timer_icon.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "STOPWATCH_APP_FACE_ICON",
+      "file": "normal/snowy/images/launcher_app_face_stopwatch_icon.svg"
+    },
+    {
+      "type": "png",
+      "name": "ESPN_APP_FACE_ICON",
+      "file": "normal/snowy/images/launcher_app_face_espn_icon.png"
+    },
+    {
+      "type": "pdc",
+      "name": "HEALTH_APP_FACE_ICON",
+      "file": "normal/snowy/images/launcher_app_face_health_icon.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "SEND_TEXT_APP_FACE_ICON",
+      "file": "normal/snowy/images/launcher_app_face_send_text_icon.svg"
+    },
+    {
+      "type": "png",
+      "name": "QUIET_TIME_ACTIVE",
+      "file": "normal/snowy/images/quiet_time_active.png"
+    },
+    {
+      "type": "png",
+      "name": "BATTERY_CHARGING_ICON",
+      "file": "normal/snowy/images/battery_charging_icon.png"
+    },
+    {
+      "type": "png",
+      "name": "HEALTH_ICON_MOON",
+      "file": "normal/snowy/images/health_icon_moon.png"
+    },
+    {
+      "type": "png",
+      "name": "HEALTH_ICON_ROTATED_MOON",
+      "file": "normal/snowy/images/health_icon_rotated_moon.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_HEART",
+      "file": "normal/robert/images/stride_heart.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_SHOE_GREEN",
+      "file": "normal/robert/images/stride_shoe_green.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_SHOE_BLUE",
+      "file": "normal/robert/images/stride_shoe_blue.png"
+    },
+    {
+      "type": "png",
+      "name": "WEATHER_CHANNEL_LOGO",
+      "file": "normal/snowy/images/weather_channel_logo.png"
+    },
+    {
+      "type": "pbi",
+      "name": "SYSTEM_FCC_MARK",
+      "file": "normal/snowy/images/system_fcc_mark.png"
+    },
+    {
+      "type": "pbi",
+      "name": "SYSTEM_KCC_MARK",
+      "file": "normal/snowy/images/system_kcc_mark.png"
+    },
+    {
+      "type": "pbi",
+      "name": "SYSTEM_CE_MARK",
+      "file": "normal/snowy/images/system_ce_mark.png"
+    },
+    {
+      "type": "pbi",
+      "name": "SYSTEM_WEEE_MARK",
+      "file": "normal/snowy/images/system_weee_mark.png"
+    },
+    {
+      "type": "pbi",
+      "name": "SYSTEM_R_MARK",
+      "file": "normal/snowy/images/system_r_mark.png"
+    },
+    {
+      "type": "pbi",
+      "name": "SYSTEM_T_MARK",
+      "file": "normal/snowy/images/system_t_mark.png"
+    },
+    {
+      "type": "pbi",
+      "name": "SYSTEM_AUS_RCM_MARK",
+      "file": "normal/silk/images/system_aus_rcm_mark.png"
+    },
+    {
+      "type": "pbi",
+      "name": "SYSTEM_NOM_NYCE_MARK",
+      "file": "normal/silk/images/system_nom_nyce_mark.png"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_BIG_OPEN_SMILE_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_big_open_smile.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_BIG_SMILE_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_big_smile.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_HEART_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_heart.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_KISSING_WITH_HEART_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_kissing_with_heart.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_LAUGHING_WITH_TEARS_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_laughing_with_tears.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_SAD_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_sad.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_SMILING_BLUSH_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_smiling_blush.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_SMILING_HEARTS_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_smiling_hearts.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_SMILING_WITH_TEETH_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_smiling_with_teeth.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_THUMBS_UP_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_thumbs_up.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_WINK_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_wink.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "EMOJI_WINK_TONGUE_LARGE",
+      "file": "normal/snowy/images/Pebble_80x80_Emoji_wink_tongue.svg"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_REVEILLE",
+      "file": "normal/snowy/vibes/reveille.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_HAPTIC_FEEDBACK",
+      "file": "normal/snowy/vibes/haptic_feedback.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_NUDGE_NUDGE",
+      "file": "normal/snowy/vibes/nudge_nudge.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_PULSE",
+      "file": "normal/snowy/vibes/pulse.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_JACKHAMMER",
+      "file": "normal/snowy/vibes/jackhammer.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_MARIO",
+      "file": "normal/snowy/vibes/mario.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_STANDARD_SHORT_LOW",
+      "file": "normal/snowy/vibes/standard_short_low.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_STANDARD_SHORT_HIGH",
+      "file": "normal/snowy/vibes/standard_short_high.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_STANDARD_LONG_LOW",
+      "file": "normal/snowy/vibes/standard_long_low.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_STANDARD_LONG_HIGH",
+      "file": "normal/snowy/vibes/standard_long_high.json"
+    },
+    {
+      "type": "vibe",
+      "name": "VIBE_SCORE_ALARM_LPM",
+      "file": "normal/snowy/vibes/alarm_lpm.json"
+    },
+    {
+      "type": "png",
+      "name": "SMART_ALARM_ICON_BLACK",
+      "file": "normal/snowy/images/sa_list_icon_black.png"
+    },
+    {
+      "type": "pdc",
+      "name": "SMART_ALARM_TINY",
+      "file": "normal/snowy/images/Pebble_25x25_Smart_alarm.svg"
+    },
+    {
+      "type": "png",
+      "name": "BLE_HRM_SHARE_REQUEST_LARGE",
+      "file": "normal/silk/images/ble_hrm_share_request.png"
+    },
+    {
+      "type": "pdc",
+      "name": "BLE_HRM_SHARED",
+      "file": "normal/silk/images/ble_hrm_shared.svg"
+    },
+    {
+      "type": "png",
+      "name": "BLE_HRM_NOT_SHARED",
+      "file": "normal/silk/images/ble_hrm_not_shared.png"
+    },
+    {
+      "type": "png",
+      "name": "CONNECTIVITY_SHARING_HRM",
+      "file": "normal/silk/images/ble_hrm_sharing_app_glance.png"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_46_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_46_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_88_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_88_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_88_THIN_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_88_THIN_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
+    },
+    {
+     "type": "js",
+     "name": "JS_TICTOC",
+     "file": "normal/base/js/tictoc.js",
+     "builtin": true
+    }
+  ]
+}
