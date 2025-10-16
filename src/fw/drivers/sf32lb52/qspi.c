@@ -201,6 +201,8 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
 
   PBL_ASSERT(res == HAL_OK, "HAL_FLASH_Init failed");
 
+  qspi_flash_check_whoami(dev);
+
   dev->qspi->state->initialized = true;
 }
 
