@@ -55,6 +55,8 @@ def is_obelix_bb2(ctx):
 def get_platform_name(ctx):
     if is_tintin(ctx):
         return "tintin"
+    elif ctx.get_board() == 'snowy_emery':
+        return "snowy_emery"
     elif is_snowy(ctx):
         return "snowy"
     elif is_spalding(ctx):
@@ -85,6 +87,8 @@ def is_snowy_compatible(ctx):
 def get_qemu_machine(ctx):
     if is_tintin(ctx):
         return 'pebble-bb2'
+    elif ctx.get_board() == 'snowy_emery':
+        return 'pebble-snowy-emery-bb'
     elif is_snowy(ctx):
         return 'pebble-snowy-bb'
     elif is_spalding(ctx):

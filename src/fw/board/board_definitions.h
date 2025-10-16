@@ -43,6 +43,8 @@
 #include "boards/board_spalding_evt.h" // prototypes for Spalding MP
 #elif BOARD_SNOWY_S3
 #include "boards/board_snowy.h" // prototypes for Spalding EVT, electrically identical to Snowy
+#elif BOARD_SNOWY_EMERY
+#include "boards/board_snowy.h" // Snowy hardware with Robert display and resources
 #elif BOARD_SILK_EVT
 #include "boards/board_silk.h"
 #elif BOARD_SILK_BB
