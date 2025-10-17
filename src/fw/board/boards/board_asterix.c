@@ -239,7 +239,4 @@ void board_init(void) {
   i2c_use(I2C_DA7212);
   i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
   i2c_release(I2C_DA7212);
-  
-  // XXX: FIRM-264: stop mode breaks NimBLE
-  stop_mode_disable(InhibitorMain);
 }
