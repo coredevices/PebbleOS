@@ -57,6 +57,7 @@ typedef enum {
   PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB = 0x30B,
   PmicRegisters_BCHARGER_BCHGVTERM = 0x030CU,
   PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20 = 0x8U,
+  PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V35 = 0xBU,
   PmicRegisters_BCHARGER_BCHGVTERMR = 0x030DU,
   PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00 = 0x4U,
   PmicRegisters_BCHARGER_BCHGITERMSEL = 0x030F,
@@ -295,7 +296,12 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BCHARGER_TASKRELEASEERROR, 1);
 
   // FIXME: this needs to be configurable at board level
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if PLATFORM_OBELIX
+  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
+
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V35);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
+#elif PLATFORM_ASTERIX
   ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
