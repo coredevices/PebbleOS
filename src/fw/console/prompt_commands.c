@@ -654,7 +654,9 @@ void command_flash_benchmark() {
   s_flash_benchmark(5);
   s_flash_benchmark(16);
   s_flash_benchmark(64);
+  s_flash_benchmark(128);
   s_flash_benchmark(256);
+  s_flash_benchmark(512);
   s_flash_benchmark(1024);
 }
 
