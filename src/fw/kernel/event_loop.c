@@ -211,7 +211,8 @@ static void launcher_handle_button_event(PebbleEvent* e) {
                                      0 /*flags*/);
       PBL_ASSERTN(success);
     }
-
+    
+#ifndef SHELL_SDK
     // 10 quick-presses of the back button triggers a manual coredump, if
     // that feature is enabled in system settings.
     if (button_id == BUTTON_ID_BACK) {
@@ -226,6 +227,7 @@ static void launcher_handle_button_event(PebbleEvent* e) {
         core_dump_reset(true /* is_forced */);
       }
     }
+#endif // !SHELL_SDK
 
     light_button_pressed();
   } else if (e->type == PEBBLE_BUTTON_UP_EVENT) {
