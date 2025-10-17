@@ -63,6 +63,25 @@ void QSPI_IRQHandler(void) {
 // -----------------------------------------------------------------------------
 // Internal helpers
 
+static void prv_get(QSPIFlash *dev) {
+  nrf_qspi_enable(NRF_QSPI);
+
+  nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
+  nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+  nrf_qspi_task_trigger(NRF_QSPI, NRF_QSPI_TASK_ACTIVATE);
+  while (!nrf_qspi_event_check(NRF_QSPI, NRF_QSPI_EVENT_READY)) {
+  }
+  nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+}
+
+static void prv_put(QSPIFlash *dev) {
+  nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
+  nrf_qspi_task_trigger(NRF_QSPI, NRF_QSPI_TASK_DEACTIVATE);
+  nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+
+  nrf_qspi_disable(NRF_QSPI);
+}
+
 static void prv_cinstr_write_read(QSPIFlash *dev, uint8_t instr, const void *data, void *buf,
                                   size_t len) {
   nrf_qspi_cinstr_conf_t conf = {
@@ -323,14 +342,7 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
 
   nrf_qspi_ifconfig1_set(NRF_QSPI, &conf_phy);
 
-  // Enable QSPI peripheral
-  nrf_qspi_enable(NRF_QSPI);
-
-  nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
-  nrf_qspi_task_trigger(NRF_QSPI, NRF_QSPI_TASK_ACTIVATE);
-  while (!nrf_qspi_event_check(NRF_QSPI, NRF_QSPI_EVENT_READY)) {
-  }
-  nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+  prv_get(dev);
 
   // Reset the flash to stop any program's or erase in progress from before reboot
   prv_cinstr(dev, part->instructions.reset_enable);
@@ -346,6 +358,8 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   // Configure QE if needed
   prv_configure_qe(dev);
 
+  prv_put(dev);
+
   NVIC_SetPriority(QSPI_IRQn, 5);
   NVIC_EnableIRQ(QSPI_IRQn);
 
@@ -357,7 +371,9 @@ bool qspi_flash_check_whoami(QSPIFlash *dev) {
   QSPIFlashPart *part = dev->state->part;
   uint32_t val;
 
+  prv_get(dev);
   prv_cinstr_read(dev, part->instructions.qspi_id, &val, 3U);
+  prv_put(dev);
 
   return val == part->qspi_id_value;
 }
@@ -380,6 +396,8 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
     len = NRF_QSPI_ERASE_LEN_64KB;
   }
 
+  prv_get(dev);
+
   prv_write_enable(dev);
 
   nrf_qspi_erase_ptr_set(NRF_QSPI, addr, len);
@@ -389,13 +407,18 @@ status_t qspi_flash_erase_begin(QSPIFlash *dev, uint32_t addr, bool is_subsector
   }
   nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
 
+  prv_put(dev);
+
   return S_SUCCESS;
 }
 
 status_t qspi_flash_erase_suspend(QSPIFlash *dev, uint32_t addr) {
   QSPIFlashPart *part = dev->state->part;
 
+  prv_get(dev);
+
   if (!prv_wip_check(dev)) {
+    prv_put(dev);
     return S_NO_ACTION_REQUIRED;
   }
 
@@ -405,29 +428,39 @@ status_t qspi_flash_erase_suspend(QSPIFlash *dev, uint32_t addr) {
     delay_us(part->suspend_to_read_latency_us);
   }
 
+  prv_put(dev);
+
   return S_SUCCESS;
 }
 
 void qspi_flash_erase_resume(QSPIFlash *dev, uint32_t addr) {
   QSPIFlashPart *part = dev->state->part;
 
+  prv_get(dev);
   prv_cinstr(dev, part->instructions.erase_resume);
+  prv_put(dev);
 }
 
 status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
   QSPIFlashPart *part = dev->state->part;
   uint8_t sr2;
 
+  prv_get(dev);
+
   // erase ongoing
   if (prv_wip_check(dev)) {
+    prv_put(dev);
     return E_BUSY;
   }
 
   // erase suspended
   prv_read_sr2(dev, &sr2);
   if ((sr2 & part->flag_status_bit_masks.erase_suspend) != 0U) {
+    prv_put(dev);
     return E_AGAIN;
   }
+
+  prv_put(dev);
 
   return S_SUCCESS;
 }
@@ -445,6 +478,8 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 
   buf_suf = (uint8_t)((length - buf_pre) % 4U);
   buf_mid = length - buf_pre - buf_suf;
+
+  prv_get(dev);
 
   if (buf_pre != 0U) {
     prv_read(dev, b_buf, 4U, addr);
@@ -467,6 +502,8 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 
     memcpy(buffer, b_buf, buf_suf);
   }
+
+  prv_put(dev);
 }
 
 int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
@@ -495,6 +532,8 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
 
   buf_suf = (uint8_t)((length - buf_pre) % 4U);
   buf_mid = length - buf_pre - buf_suf;
+
+  prv_get(dev);
 
   prv_write_enable(dev);
 
@@ -528,11 +567,19 @@ int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t add
     prv_write(dev, b_buf, 4U, addr);
   }
 
+  prv_put(dev);
+
   return length;
 }
 
 status_t qspi_flash_get_write_status(QSPIFlash *dev) {
-  return prv_wip_check(dev) ? E_BUSY : S_SUCCESS;
+  status_t res;
+
+  prv_get(dev);
+  res = prv_wip_check(dev);
+  prv_put(dev);
+
+  return res ? E_BUSY : S_SUCCESS;
 }
 
 void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
@@ -548,10 +595,14 @@ void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
     delay = part->low_power_to_standby_latency_us;
   }
 
+  prv_get(dev);
+
   prv_cinstr(dev, instr);
   if (delay) {
     delay_us(delay);
   }
+
+  prv_put(dev);
 }
 
 status_t qspi_flash_blank_check(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
@@ -597,7 +648,9 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
     out[2] = addr & 0xFFU;
   }
 
+  prv_get(dev);
   prv_cinstr_write_read(dev, part->instructions.read_sec, out, in, len);
+  prv_put(dev);
 
   if (part->size > ADDR_4BYTE_THRESHOLD) {
     *val = in[5];
@@ -618,7 +671,9 @@ status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t addr, b
     return res;
   }
 
+  prv_get(dev);
   prv_cinstr_read(dev, part->instructions.rdsr2, &sr2, 1);
+  prv_put(dev);
 
   *locked = !!(sr2 & ((1U << SEC_ADDR_TO_IDX(addr)) << 3U));
 
@@ -649,12 +704,16 @@ status_t qspi_flash_erase_security_register(QSPIFlash *dev, uint32_t addr) {
     out[2] = addr & 0xFFU;
   }
 
+  prv_get(dev);
+
   prv_write_enable(dev);
 
   prv_cinstr_write(dev, part->instructions.erase_sec, out, len);
 
   while (prv_wip_check(dev)) {
   }
+
+  prv_put(dev);
 
   return 0;
 }
@@ -685,12 +744,16 @@ status_t qspi_flash_write_security_register(QSPIFlash *dev, uint32_t addr, uint8
     out[3] = val;
   }
 
+  prv_get(dev);
+
   prv_write_enable(dev);
 
   prv_cinstr_write(dev, part->instructions.program_sec, out, len);
 
   while (prv_wip_check(dev)) {
   }
+
+  prv_put(dev);
 
   return 0;
 }
@@ -712,12 +775,16 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
     return res;
   }
 
+  prv_get(dev);
+
   prv_read_sr1(dev, &sr[0]);
   prv_read_sr2(dev, &sr[1]);
 
   sr[1] |= (1U << SEC_ADDR_TO_IDX(addr)) << 3U;
 
   prv_write_sr(dev, sr, 2U);
+
+  prv_put(dev);
 
   return 0;
 }
