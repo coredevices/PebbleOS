@@ -31,7 +31,10 @@
 #define QSPI_NUM_DATA_PINS (4)
 
 typedef struct QSPIPortState {
-#if MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_NRF5
+  SemaphoreHandle_t sem;
+  bool initialized;
+#elif MICRO_FAMILY_SF32LB52
   QSPI_FLASH_CTX_T ctx;
   DMA_HandleTypeDef hdma;
   bool initialized;
@@ -44,7 +47,7 @@ typedef struct QSPIPortState {
 typedef const struct QSPIPort {
   QSPIPortState *state;
 #if MICRO_FAMILY_NRF5
-  uint16_t auto_polling_interval;
+  uint32_t clk_freq_hz;
   uint32_t cs_gpio;
   uint32_t clk_gpio;
   uint32_t data_gpio[QSPI_NUM_DATA_PINS];
