@@ -512,8 +512,8 @@ const TouchSensor *CST816 = &touch_cst816;
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {
-  // 128mA = ~1C (rapid charge)
-  .chg_current_ma = 128,
+  // 190mA = 1C (rapid charge, max limit from datasheet)
+  .chg_current_ma = 190,
   .dischg_limit_ma = 200,
   .term_current_pct = 10,
   .thermistor_beta = 3380,
