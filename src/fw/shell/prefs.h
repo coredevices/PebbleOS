@@ -134,3 +134,9 @@ typedef enum LegacyAppRenderMode {
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void);
 void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode);
 #endif
+
+GColor shell_prefs_get_settings_menu_highlight_color(void);
+void shell_prefs_set_settings_menu_highlight_color(GColor color);
+
+GColor shell_prefs_get_apps_menu_highlight_color(void);
+void shell_prefs_set_apps_menu_highlight_color(GColor color);
