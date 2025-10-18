@@ -64,6 +64,9 @@ typedef enum StatusCode {
   //! Operation not completed; try again.
   E_AGAIN = -12,
 
+  //! Operation timed out.
+  E_TIMEOUT = -13,
+
   //! Equivalent of boolean true.
   S_TRUE = 1,
 
