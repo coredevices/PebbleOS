@@ -41,6 +41,7 @@
 #include "services/common/system_task.h"
 #include "system/bootbits.h"
 #include "system/passert.h"
+#include "shell/prefs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -72,7 +73,7 @@ static SettingsCallbacks *prv_get_current_callbacks(SettingsData *data) {
 
 static void prv_set_sub_menu_colors(GContext *ctx, const Layer *cell_layer, bool highlight) {
   if (highlight) {
-    graphics_context_set_fill_color(ctx, SETTINGS_MENU_HIGHLIGHT_COLOR);
+    graphics_context_set_fill_color(ctx, shell_prefs_get_settings_menu_highlight_color());
     graphics_context_set_text_color(ctx, GColorWhite);
   } else {
     graphics_context_set_fill_color(ctx, GColorWhite);
@@ -192,7 +193,7 @@ static void prv_settings_window_load(Window *window) {
     .selection_will_change = prv_selection_will_change_callback,
   });
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(menu_layer, SETTINGS_MENU_HIGHLIGHT_COLOR, GColorWhite);
+  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_settings_menu_highlight_color(), GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   layer_add_child(&data->window.layer, menu_layer_get_layer(menu_layer));
 
