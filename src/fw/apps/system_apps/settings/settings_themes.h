@@ -32,7 +32,6 @@ typedef struct ColorDefinition {
 static const ColorDefinition s_color_definitions[65] = {
   // Pebble colors taken from gcolor_definitions.h
   {"Default", GColorClear},
-  {"Black", GColorBlack},
   {"Blue", GColorBlue},
   {"Green", GColorGreen},
   {"Cyan", GColorCyan},
@@ -42,6 +41,7 @@ static const ColorDefinition s_color_definitions[65] = {
   {"Orange", GColorOrange},
   {"Yellow", GColorYellow},
   {"Gray", GColorDarkGray},
+  {"Shocking Pink", GColorShockingPink},
 
   {"Oxford Blue", GColorOxfordBlue},
   {"Duke Blue", GColorDukeBlue},
@@ -85,23 +85,22 @@ static const ColorDefinition s_color_definitions[65] = {
   {"Inchworm", GColorInchworm},
   {"Mint Green", GColorMintGreen},
   {"Celeste", GColorCeleste},
-  {"Folly", GColorFolly},
   {"Fashion Magenta", GColorFashionMagenta},
   {"Sunset Orange", GColorSunsetOrange},
   {"Brilliant Rose", GColorBrilliantRose},
-  {"Shocking Pink", GColorShockingPink},
   {"Chrome Yellow", GColorChromeYellow},
+  {"Folly", GColorFolly},
   {"Rajah", GColorRajah},
   {"Melon", GColorMelon},
   {"Rich Brilliant Lavender", GColorRichBrilliantLavender},
   {"Icterine", GColorIcterine},
   {"Pastel Yellow", GColorPastelYellow},
   {"White", GColorWhite},
+  {"Black", GColorBlack},
 };
 
 static const ColorDefinition s_color_definitions_short[12] = {
   {"Default", GColorClear},
-  {"Black", GColorBlack},
   {"Blue", GColorBlue},
   {"Green", GColorGreen},
   {"Cyan", GColorCyan},
@@ -111,6 +110,7 @@ static const ColorDefinition s_color_definitions_short[12] = {
   {"Orange", GColorOrange},
   {"Yellow", GColorYellow},
   {"Gray", GColorDarkGray},
+  {"Shocking Pink", GColorShockingPink},
   {"Show All...", GColorClear}, // Placeholder color for "Show All" option
 };
 

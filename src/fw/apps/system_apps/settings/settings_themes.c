@@ -133,10 +133,10 @@ static void prv_apps_color_menu_select(OptionMenu *option_menu, int selection, v
   if (selection == 0){
     /* Default option selected -> restore default color. */
     shell_prefs_set_apps_menu_highlight_color(DEFAULT_APPS_HIGHLIGHT_COLOR);
-    app_window_stack_remove(&option_menu->window, true /* animated */);
-    return;
   }
-  shell_prefs_set_apps_menu_highlight_color(s_color_definitions[selection].value);
+  else{
+    shell_prefs_set_apps_menu_highlight_color(s_color_definitions[selection].value);
+  }
   app_window_stack_remove(&option_menu->window, true /* animated */);
 }
 
@@ -149,10 +149,10 @@ static void prv_option_apps_menu_selection_will_change(OptionMenu *option_menu,
   }
   GColor color = s_color_definitions[new_row].value;
   if (color.argb != GColorClear.argb) {
-    option_menu_set_highlight_colors(option_menu, color, GColorWhite);
+    option_menu_set_highlight_colors(option_menu, color, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
   }
   else {
-    option_menu_set_highlight_colors(option_menu, DEFAULT_APPS_HIGHLIGHT_COLOR, GColorWhite);
+    option_menu_set_highlight_colors(option_menu, DEFAULT_APPS_HIGHLIGHT_COLOR, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
   }
 }
 
@@ -174,10 +174,10 @@ static void prv_push_apps_color_menu(SettingsThemesData *data) {
   if (option_menu) {
     const bool animated = true;
     if (selected == 0) {
-      option_menu_set_highlight_colors(option_menu, DEFAULT_APPS_HIGHLIGHT_COLOR, GColorWhite);
+      option_menu_set_highlight_colors(option_menu, DEFAULT_APPS_HIGHLIGHT_COLOR, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
     }
     else {
-      option_menu_set_highlight_colors(option_menu, s_color_definitions[selected].value, GColorWhite);
+      option_menu_set_highlight_colors(option_menu, s_color_definitions[selected].value, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
     }
     app_window_stack_push(&option_menu->window, animated);
   }
@@ -192,16 +192,16 @@ static void prv_apps_color_menu_select_short(OptionMenu *option_menu, int select
   if (selection == 0){
     /* Default option selected -> restore default color. */
     shell_prefs_set_apps_menu_highlight_color(DEFAULT_APPS_HIGHLIGHT_COLOR);
-    app_window_stack_remove(&option_menu->window, true /* animated */);
-    return;
   }
   else if (selection == ARRAY_LENGTH(s_color_definitions_short) - 1) {
     /* "Show All..." -> open full color menu. */
     prv_push_apps_color_menu((SettingsThemesData *)context);
     return;
   }
-  /* Map through to the full handler for regular short-list entries. */
-  prv_apps_color_menu_select(option_menu, selection, context);  
+  else{
+    shell_prefs_set_apps_menu_highlight_color(s_color_definitions[selection].value);
+  }
+  app_window_stack_remove(&option_menu->window, true /* animated */);
 }
 
 static void prv_option_apps_menu_selection_will_change_short(OptionMenu *option_menu,
@@ -212,15 +212,15 @@ static void prv_option_apps_menu_selection_will_change_short(OptionMenu *option_
     return;
   }
   GColor color = s_color_definitions_short[new_row].value;
-  if (color.argb != GColorClear.argb) {
-    option_menu_set_highlight_colors(option_menu, color, GColorWhite);
-  }
-  else if (new_row == ARRAY_LENGTH(s_color_definitions_short) - 1) {
+  if (new_row >= ARRAY_LENGTH(s_color_definitions_short) - 1) {
     /* "Show All..." selected -> preview current saved color. */
-    option_menu_set_highlight_colors(option_menu, shell_prefs_get_apps_menu_highlight_color(), GColorWhite);
+    option_menu_set_highlight_colors(option_menu, shell_prefs_get_apps_menu_highlight_color(), PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+  }
+  else if (color.argb != GColorClear.argb) {
+    option_menu_set_highlight_colors(option_menu, color, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
   }
   else {
-    option_menu_set_highlight_colors(option_menu, DEFAULT_APPS_HIGHLIGHT_COLOR, GColorWhite);
+    option_menu_set_highlight_colors(option_menu, DEFAULT_APPS_HIGHLIGHT_COLOR, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
   }
 }
 
@@ -243,14 +243,14 @@ static void prv_push_apps_color_menu_short(SettingsThemesData *data) {
   if (option_menu) {
     const bool animated = true;
     if (selected == 0) {
-      option_menu_set_highlight_colors(option_menu, DEFAULT_APPS_HIGHLIGHT_COLOR, GColorWhite);
+      option_menu_set_highlight_colors(option_menu, DEFAULT_APPS_HIGHLIGHT_COLOR, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
     }
     else if (selected == ARRAY_LENGTH(s_color_definitions_short) - 1) {
       // "Show All..." option selected
-      option_menu_set_highlight_colors(option_menu, shell_prefs_get_apps_menu_highlight_color(), GColorWhite);
+      option_menu_set_highlight_colors(option_menu, shell_prefs_get_apps_menu_highlight_color(), PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
     }
     else {
-      option_menu_set_highlight_colors(option_menu, s_color_definitions_short[selected].value, GColorWhite);
+      option_menu_set_highlight_colors(option_menu, s_color_definitions_short[selected].value, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
     }
     app_window_stack_push(&option_menu->window, animated);
   }
@@ -264,10 +264,10 @@ static void prv_settings_color_menu_select(OptionMenu *option_menu, int selectio
   if (selection == 0){
     /* Default option selected -> restore default color. */
     shell_prefs_set_settings_menu_highlight_color(DEFAULT_SETTINGS_HIGHLIGHT_COLOR);
-    app_window_stack_remove(&option_menu->window, true /* animated */);
-    return;
   }
-  shell_prefs_set_settings_menu_highlight_color(s_color_definitions[selection].value);
+  else{
+    shell_prefs_set_settings_menu_highlight_color(s_color_definitions[selection].value);
+  }
   app_window_stack_remove(&option_menu->window, true /* animated */);
 }
 
@@ -304,6 +304,9 @@ static void prv_push_settings_color_menu(SettingsThemesData *data) {
 
   if (option_menu) {
     const bool animated = true;
+    option_menu_set_normal_colors(option_menu,
+                               PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite),
+                               PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
     if (selected == 0) {
       option_menu_set_highlight_colors(option_menu, DEFAULT_SETTINGS_HIGHLIGHT_COLOR, GColorWhite);
     }
@@ -322,14 +325,14 @@ static void prv_settings_color_menu_select_short(OptionMenu *option_menu, int se
   if (selection == 0){
     /* Default option selected -> restore default color. */
     shell_prefs_set_settings_menu_highlight_color(DEFAULT_SETTINGS_HIGHLIGHT_COLOR);
-    app_window_stack_remove(&option_menu->window, true /* animated */);
-    return;
   }
   else if (selection == ARRAY_LENGTH(s_color_definitions_short) - 1) {
     prv_push_settings_color_menu((SettingsThemesData *)context);
     return;
   }
-  prv_settings_color_menu_select(option_menu, selection, context);
+  else{
+    shell_prefs_set_settings_menu_highlight_color(s_color_definitions[selection].value);
+  }
 }
 
 static void prv_option_settings_menu_selection_will_change_short(OptionMenu *option_menu,
@@ -340,12 +343,12 @@ static void prv_option_settings_menu_selection_will_change_short(OptionMenu *opt
     return;
   }
   GColor color = s_color_definitions[new_row].value;
-  if (color.argb != GColorClear.argb) {
-    option_menu_set_highlight_colors(option_menu, color, GColorWhite);
-  }
-  else if (new_row == ARRAY_LENGTH(s_color_definitions_short) - 1) {
+  if (new_row >= ARRAY_LENGTH(s_color_definitions_short) - 1) {
     /* "Show All..." selected -> preview saved color. */
     option_menu_set_highlight_colors(option_menu, shell_prefs_get_settings_menu_highlight_color(), GColorWhite);
+  }
+  else if (color.argb != GColorClear.argb) {
+    option_menu_set_highlight_colors(option_menu, color, GColorWhite);
   }
   else {
     option_menu_set_highlight_colors(option_menu, DEFAULT_SETTINGS_HIGHLIGHT_COLOR, GColorWhite);
@@ -370,6 +373,9 @@ static void prv_push_settings_color_menu_short(SettingsThemesData *data) {
 
   if (option_menu) {
     const bool animated = true;
+    option_menu_set_normal_colors(option_menu,
+                               PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite),
+                               PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
     if (selected == 0) {
       option_menu_set_highlight_colors(option_menu, DEFAULT_SETTINGS_HIGHLIGHT_COLOR, GColorWhite);
     }
