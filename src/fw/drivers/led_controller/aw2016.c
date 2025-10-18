@@ -25,7 +25,7 @@
 #define AW2016_REG_GCR1                 (0x01)
 #define AW2016_REG_GCR1__CHGDIS         (1<<1)
 #define AW2016_REG_GCR1__ENABLE         (1)
-#define AW2016_REG_GCR1__DISABLE        (1)
+#define AW2016_REG_GCR1__DISABLE        (0)
 #define AW2016_REG_GCR2                 (0x04)
 #define AW2016_REG_GCR2__IMAX_30MA      (1)
 #define AW2016_REG_LCTR                 (0x30)
@@ -61,7 +61,7 @@ static bool prv_write_register(uint8_t register_address, uint8_t value) {
 }
 
 static void prv_aw2016_disable(void) {
-  prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1__DISABLE);
+  prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1__CHGDIS|AW2016_REG_GCR1__DISABLE);
 }
 
 void led_controller_init(void) {
@@ -108,7 +108,8 @@ void led_controller_rgb_set_color(uint32_t rgb_color) {
   uint8_t blue = (s_rgb_current_color & 0x000000FF);
   blue = blue * s_brightness / 100;
 
-  bool rv = prv_write_register(AW2016_REG_DIM1, red);
+  bool rv = prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1__CHGDIS|AW2016_REG_GCR1__ENABLE);
+  rv &= prv_write_register(AW2016_REG_DIM1, red);
   rv &= prv_write_register(AW2016_REG_DIM2, green);
   rv &= prv_write_register(AW2016_REG_DIM3, blue);
 
