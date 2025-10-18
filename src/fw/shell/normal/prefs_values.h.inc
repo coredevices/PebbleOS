@@ -43,3 +43,6 @@
 #if PLATFORM_OBELIX
   PREFS_MACRO(PREF_KEY_LEGACY_APP_RENDER_MODE, s_legacy_app_render_mode)
 #endif
+
+  PREFS_MACRO(PREF_KEY_SETTINGS_MENU_HIGHLIGHT_COLOR, s_settings_menu_highlight_color)
+  PREFS_MACRO(PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR, s_apps_menu_highlight_color)

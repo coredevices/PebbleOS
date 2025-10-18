@@ -288,7 +288,7 @@ static void prv_information_window_load(Window *window) {
     .draw_row = prv_information_draw_row_callback,
     .select_click = prv_information_select_callback,
   });
-  menu_layer_set_highlight_colors(menu_layer, SETTINGS_MENU_HIGHLIGHT_COLOR, GColorWhite);
+  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_settings_menu_highlight_color(), GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
 
   layer_add_child(&data->window.layer, menu_layer_get_layer(menu_layer));
@@ -445,7 +445,7 @@ static void prv_debugging_window_load(Window *window) {
     .draw_row = prv_debugging_draw_row_callback,
     .select_click = prv_debugging_select_callback,
   });
-  menu_layer_set_highlight_colors(menu_layer, SETTINGS_MENU_HIGHLIGHT_COLOR, GColorWhite);
+  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_settings_menu_highlight_color(), GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
 
   layer_add_child(&data->window.layer, menu_layer_get_layer(menu_layer));
@@ -891,7 +891,7 @@ static void prv_certification_window_load(Window *window) {
     .draw_row = prv_certification_draw_row_callback,
     .select_click = prv_certification_select_callback,
   });
-  menu_layer_set_highlight_colors(menu_layer, SETTINGS_MENU_HIGHLIGHT_COLOR, GColorWhite);
+  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_settings_menu_highlight_color(), GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
 
   layer_add_child(&data->window.layer, menu_layer_get_layer(menu_layer));

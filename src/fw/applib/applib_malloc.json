@@ -274,9 +274,9 @@
         "_comment": ["Cache to speed up frequent health service API calls (only 3.9+)"]
     }, {
         "name": "OptionMenu",
-        "size_2x": 680,
+        "size_2x": 684,
         "size_3x_padding": 12,
-        "size_3x": 876,
+        "size_3x": 880,
         "dependencies": ["Window", "StatusBarLayer", "MenuLayer", "GBitmap", "GBitmap"],
         "_comment": "Not exported yet (only 3.x)"
     }, {
