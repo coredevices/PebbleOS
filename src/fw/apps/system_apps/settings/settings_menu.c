@@ -25,6 +25,7 @@
 #include "settings_system.h"
 #include "settings_time.h"
 #include "settings_timeline.h"
+#include "settings_themes.h"
 
 #if CAPABILITY_HAS_VIBE_SCORES
 #include "settings_vibe_patterns.h"
@@ -33,6 +34,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "services/common/i18n/i18n.h"
 #include "system/passert.h"
+#include "shell/prefs.h"
 
 static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemBluetooth]     = settings_bluetooth_get_info,
@@ -55,6 +57,9 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
 #endif
   [SettingsMenuItemDisplay]       = settings_display_get_info,
   [SettingsMenuItemSystem]        = settings_system_get_info,
+#if PBL_COLOR
+  [SettingsMenuItemThemes]        = settings_themes_get_info,
+#endif
 };
 
 const SettingsModuleMetadata *settings_menu_get_submodule_info(SettingsMenuItem category) {

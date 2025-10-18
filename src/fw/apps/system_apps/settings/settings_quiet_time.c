@@ -35,6 +35,7 @@
 #include "system/passert.h"
 #include "util/size.h"
 #include "util/string.h"
+#include "shell/prefs.h"
 
 #include <stdio.h>
 
@@ -177,7 +178,7 @@ static void prv_scheduled_dnd_menu_push(DoNotDisturbScheduleType type,
                                         SettingsQuietTimeData *data) {
   data->action_menu = (ActionMenuConfig) {
     .context = data,
-    .colors.background = SETTINGS_MENU_HIGHLIGHT_COLOR,
+    .colors.background = shell_prefs_get_settings_menu_highlight_color(),
     .did_close = prv_scheduled_dnd_menu_cleanup,
   };
 
