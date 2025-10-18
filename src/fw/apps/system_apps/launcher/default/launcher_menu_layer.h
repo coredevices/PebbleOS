@@ -28,8 +28,6 @@
 #define LAUNCHER_MENU_LAYER_SUBTITLE_FONT (FONT_KEY_GOTHIC_14)
 #endif
 
-#define LAUNCHER_MENU_LAYER_SELECTION_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorVividCerulean, \
-                                                                          GColorBlack))
 
 typedef struct LauncherMenuLayer {
   Layer container_layer;

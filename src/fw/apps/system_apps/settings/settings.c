@@ -25,6 +25,7 @@
 #include "resource/resource_ids.auto.h"
 #include "services/common/i18n/i18n.h"
 #include "system/passert.h"
+#include "shell/prefs.h"
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
 
@@ -46,6 +47,9 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer,
 
   const char *category_title = settings_menu_get_submodule_info(cell_index->row)->name;
   const char *title = i18n_get(category_title, data);
+  menu_layer_set_highlight_colors(&(data->menu_layer),
+                                shell_prefs_get_settings_menu_highlight_color(),
+                                GColorWhite);
   menu_cell_basic_draw(ctx, cell_layer, title, NULL, NULL);
 }
 
@@ -98,7 +102,7 @@ static void prv_window_load(Window *window) {
                                PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite),
                                PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
   menu_layer_set_highlight_colors(menu_layer,
-                                  PBL_IF_COLOR_ELSE(SETTINGS_MENU_HIGHLIGHT_COLOR, GColorBlack),
+                                  shell_prefs_get_settings_menu_highlight_color(),
                                   GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
 

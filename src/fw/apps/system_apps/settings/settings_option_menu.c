@@ -55,7 +55,7 @@ OptionMenu *settings_option_menu_create(
     .content_type = content_type,
     .choice = choice,
     .status_colors = { GColorWhite, GColorBlack },
-    .highlight_colors = { SETTINGS_MENU_HIGHLIGHT_COLOR, GColorWhite },
+    .highlight_colors = { shell_prefs_get_settings_menu_highlight_color(), GColorWhite },
     .icons_enabled = icons_enabled,
   };
   option_menu_configure(option_menu, &config);
