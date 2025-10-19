@@ -55,8 +55,6 @@ typedef const struct DisplayJDIDevice {
     Pinmux b1;
     Pinmux b2;
     Pinmux vcom;
-    Pinmux va;
-    Pinmux vb;
   } pinmux;
   OutputConfig vddp;
   OutputConfig vlcd;
