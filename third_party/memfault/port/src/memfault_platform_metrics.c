@@ -8,6 +8,8 @@
 #include "services/common/analytics/analytics_metric_table.h"
 #include "services/common/analytics/analytics_external.h"
 #include "applib/app_message/app_message_internal.h"
+#include "shell/normal/watchface.h"
+#include "process_management/app_install_manager.h"
 
 int memfault_platform_get_stateofcharge(sMfltPlatformBatterySoc *soc) {
   BatteryChargeState chargestate = battery_get_charge_state();
@@ -288,6 +290,15 @@ void memfault_metrics_heartbeat_collect_data(void) {
   // AppMessage metrics
   MEMFAULT_METRIC_SET_UNSIGNED(app_message_sent_count, app_message_outbox_get_sent_count());
   MEMFAULT_METRIC_SET_UNSIGNED(app_message_received_count, app_message_inbox_get_received_count());
+
+  // Active watchface name
+  AppInstallId watchface_id = watchface_get_default_install_id();
+  AppInstallEntry watchface_entry;
+  if (app_install_get_entry_for_install_id(watchface_id, &watchface_entry)) {
+    MEMFAULT_METRIC_SET_STRING(active_watchface_name, watchface_entry.name);
+  } else {
+    MEMFAULT_METRIC_SET_STRING(active_watchface_name, "Unknown");
+  }
 
 #if !RECOVERY_FW
   // Update Pebble analytics and forward curated metrics to Memfault
