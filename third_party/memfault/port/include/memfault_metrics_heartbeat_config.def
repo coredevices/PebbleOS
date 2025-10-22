@@ -28,6 +28,10 @@ MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_double_tap_events, kMemfaultMetricType
 // (FIRM-425).
 MEMFAULT_METRICS_KEY_DEFINE(firm_425_back_button_long_presses_cancelled, kMemfaultMetricType_Unsigned)
 
+// AppMessage metrics
+MEMFAULT_METRICS_KEY_DEFINE(app_message_sent_count, kMemfaultMetricType_Unsigned)
+MEMFAULT_METRICS_KEY_DEFINE(app_message_received_count, kMemfaultMetricType_Unsigned)
+
 ///// Curated Pebble Analytics Metrics (~70 total) /////
 
 // System Health & Stability

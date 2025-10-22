@@ -7,6 +7,7 @@
 #include "util/heap.h"
 #include "services/common/analytics/analytics_metric_table.h"
 #include "services/common/analytics/analytics_external.h"
+#include "applib/app_message/app_message_internal.h"
 
 int memfault_platform_get_stateofcharge(sMfltPlatformBatterySoc *soc) {
   BatteryChargeState chargestate = battery_get_charge_state();
@@ -283,6 +284,10 @@ void memfault_metrics_heartbeat_collect_data(void) {
 
   extern uint32_t metric_firm_425_back_button_long_presses_cancelled;
   MEMFAULT_METRIC_SET_UNSIGNED(firm_425_back_button_long_presses_cancelled, metric_firm_425_back_button_long_presses_cancelled);
+
+  // AppMessage metrics
+  MEMFAULT_METRIC_SET_UNSIGNED(app_message_sent_count, app_message_outbox_get_sent_count());
+  MEMFAULT_METRIC_SET_UNSIGNED(app_message_received_count, app_message_inbox_get_received_count());
 
 #if !RECOVERY_FW
   // Update Pebble analytics and forward curated metrics to Memfault
