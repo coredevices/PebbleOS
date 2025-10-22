@@ -154,3 +154,9 @@ void app_message_app_protocol_msg_callback(CommSession *session,
 
 void app_message_app_protocol_system_nack_callback(CommSession *session,
                                                    const uint8_t* data, size_t length);
+
+//! Get the count of AppMessages sent (for Memfault metrics)
+uint32_t app_message_outbox_get_sent_count(void);
+
+//! Get the count of AppMessages received (for Memfault metrics)
+uint32_t app_message_inbox_get_received_count(void);
