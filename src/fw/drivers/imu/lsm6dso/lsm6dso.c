@@ -579,17 +579,18 @@ static void prv_lsm6dso_configure_fifo(bool enable) {
     
     // Disable gyro batching to save FIFO space
     lsm6dso_fifo_gy_batch_set(&lsm6dso_ctx, LSM6DSO_GY_NOT_BATCHED);
-    
-    // If FIFO was previously disabled, enable it cleanly
-    if (!s_fifo_in_use) {
-      // Clear FIFO before enabling to start fresh
-      lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
-      psleep(1); // Allow time for FIFO to clear
 
-      // Put FIFO in stream mode so we keep collecting samples and get periodic watermark interrupts
-      if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to enable FIFO stream mode");
-      }
+    // Always clear and re-enable FIFO to ensure clean state after configuration changes.
+    // This is critical when watermark changes while FIFO is already enabled, as stale
+    // samples in the FIFO can prevent new watermark interrupts from being generated.
+    // For example, if FIFO has 25 samples and watermark is lowered to 3, the sensor
+    // won't generate an interrupt because the FIFO already exceeds the watermark.
+    lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_BYPASS_MODE);
+    psleep(1); // Allow time for FIFO to clear
+
+    // Put FIFO in stream mode so we keep collecting samples and get periodic watermark interrupts
+    if (lsm6dso_fifo_mode_set(&lsm6dso_ctx, LSM6DSO_STREAM_MODE)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "LSM6DSO: Failed to enable FIFO stream mode");
     }
   } else {
     if (s_fifo_in_use) {
