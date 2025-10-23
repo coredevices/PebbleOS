@@ -364,6 +364,14 @@ static bool prv_set_s_activity_preferences(ActivitySettings *new_settings) {
     invalid_data = true;
   }
 
+  // Ensure activity is enabled before trying to start tracking. This is necessary because
+  // services_set_runlevel() may have already run before activity was initialized (e.g., when
+  // time is not valid at boot), which means the enabled_run_level flag was never set.
+  // Without this, activity_start_tracking() will fail to start tracking on first boot.
+  if (activity_is_initialized()) {
+    activity_set_enabled(true);
+  }
+
   if (new_settings->tracking_enabled) {
     activity_start_tracking(false);
   } else {
