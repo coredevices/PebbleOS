@@ -231,7 +231,9 @@ void flash_read_bytes(uint8_t* buffer, uint32_t start_addr,
   if (s_erase.suspended) {
     new_timer_start(s_erase_suspend_timer, 5, prv_erase_suspend_timer_cb, NULL, 0);
   }
+  stop_mode_disable(InhibitorFlash);
   flash_impl_read_sync(buffer, start_addr, buffer_size);
+  stop_mode_enable(InhibitorFlash);
   mutex_unlock(s_flash_lock);
 }
 
