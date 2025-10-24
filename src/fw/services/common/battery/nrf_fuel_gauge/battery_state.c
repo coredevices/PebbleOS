@@ -127,7 +127,10 @@ static void prv_update_state(void *force_update) {
   }
 
   ret = battery_charge_status_get(&chg_status);
-  PBL_ASSERTN(ret == 0);
+  if (ret < 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not obtain charge status, skipping update (%d)", ret);
+    return;
+  }
 
   if (chg_status != s_last_chg_status) {
     s_last_chg_status = chg_status;
@@ -142,7 +145,10 @@ static void prv_update_state(void *force_update) {
   }
 
   ret = battery_get_constants(&constants);
-  PBL_ASSERTN(ret == 0);
+  if (ret < 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not obtain constants, skipping update (%d)", ret);
+    return;
+  }
 
   s_last_voltage_mv = constants.v_mv;
 
