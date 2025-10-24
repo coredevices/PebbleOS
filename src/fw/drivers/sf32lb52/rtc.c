@@ -36,9 +36,15 @@
 // clock frequency is as follows:
 //
 //   F(CLK1S) = CLK_RTC / (DIV_A_INT + DIV_A_FRAC / 2^14) / DIV_B
-#define DIV_A_INT 128
-#define DIV_A_FRAC 0
-#define DIV_B 256
+#ifndef SF32LB52_USE_LXT
+#define DIV_A_INT 38U
+#define DIV_A_FRAC 4608U
+#define DIV_B 256U
+#else
+#define DIV_A_INT 128U
+#define DIV_A_FRAC 0U
+#define DIV_B 256U
+#endif
 
 static RTC_HandleTypeDef RTC_Handler = {
     .Instance = (RTC_TypeDef*)RTC_BASE,
