@@ -25,8 +25,6 @@
 #include "system/passert.h"
 #include "util/math.h"
 
-static uint32_t s_app_message_sent_count = 0;
-
 static void prv_outbox_prepare(AppMessageCtxOutbox *outbox);
 
 static uint16_t prv_get_next_transaction_id(AppMessageCtxOutbox *outbox) {
@@ -277,7 +275,7 @@ AppMessageResult app_message_outbox_send(void) {
                   sizeof(AppMessageAppOutboxData) + transmission_size,
                   app_message_outbox_handle_app_outbox_message_sent, NULL);
 
-  s_app_message_sent_count++;
+  sys_app_pp_app_message_analytics_count_sent();
 
   return APP_MSG_OK;
 }
@@ -320,5 +318,5 @@ AppTimer *app_message_outbox_get_ack_nack_timer(void) {
 }
 
 uint32_t app_message_outbox_get_sent_count(void) {
-  return s_app_message_sent_count;
+  return sys_app_pp_app_message_get_sent_count();
 }

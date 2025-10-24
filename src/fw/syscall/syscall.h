@@ -226,6 +226,10 @@ void sys_app_outbox_send(const uint8_t *data, size_t length,
                          AppOutboxSentHandler sent_handler, void *cb_ctx);
 
 void sys_app_pp_app_message_analytics_count_drop(void);
+void sys_app_pp_app_message_analytics_count_sent(void);
+void sys_app_pp_app_message_analytics_count_received(void);
+uint32_t sys_app_pp_app_message_get_sent_count(void);
+uint32_t sys_app_pp_app_message_get_received_count(void);
 
 bool sys_app_pp_send_data(CommSession *session, uint16_t endpoint_id,
                           const uint8_t* data, uint16_t length);
