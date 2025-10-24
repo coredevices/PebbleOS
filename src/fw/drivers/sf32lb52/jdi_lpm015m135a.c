@@ -20,10 +20,12 @@
 #include "board/display.h"
 #include "drivers/display/display.h"
 #include "drivers/gpio.h"
+#include "kernel/events.h"
 #include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "system/logging.h"
+#include "system/passert.h"
 
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -35,12 +37,11 @@
 #define BYTE_222_TO_332(data) ((((data) & 0x30) << 2) | (((data) & 0x0c) << 1) | ((data) & 0x03))
 #define POWER_SEQ_DELAY_TIME  (11)
 
+static uint8_t s_framebuffer[DISPLAY_FRAMEBUFFER_BYTES];
 static bool s_initialized;
-static uint8_t s_framebuffer[2][DISPLAY_FRAMEBUFFER_BYTES];
-static bool s_framebuffer_dirty[2];
-static uint8_t s_framebuffer_index;
-static PebbleMutex *s_update;
-static SemaphoreHandle_t s_write_done;
+static bool s_updating;
+static UpdateCompleteCallback s_uccb;
+static SemaphoreHandle_t s_sem;
 
 // TODO(SF32LB52): Improve/clarify display on/off code
 static void prv_display_on() {
@@ -95,13 +96,19 @@ static void prv_display_off() {
   }
 }
 
-static void prv_display_update(uint8_t index) {
+static void prv_display_update_start(void) {
   DisplayJDIState *state = DISPLAY->state;
 
   HAL_LCDC_SetROIArea(&state->hlcdc, 0, 0, PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
-  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer[index], 0, 0,
+  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer, 0, 0,
                         PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
   HAL_LCDC_SendLayerData_IT(&state->hlcdc);
+}
+
+static void prv_display_update_terminate(void *data) {
+  s_updating = false;
+  s_uccb();
+  stop_mode_enable(InhibitorDisplay);
 }
 
 void jdi_lpm015m135a_irq_handler(DisplayJDIDevice *disp) {
@@ -110,16 +117,23 @@ void jdi_lpm015m135a_irq_handler(DisplayJDIDevice *disp) {
 }
 
 void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
-  uint8_t index = s_framebuffer_index ^ 1;
+  portBASE_TYPE woken = pdFALSE;
 
-  s_framebuffer_dirty[s_framebuffer_index] = false;
+  if (s_updating) {
+    PebbleEvent e = {
+        .type = PEBBLE_CALLBACK_EVENT,
+        .callback =
+            {
+                .callback = prv_display_update_terminate,
+            },
+    };
 
-  if (s_framebuffer_dirty[index]) {
-    prv_display_update(index);
-    s_framebuffer_index = index;
+    woken = event_put_isr(&e) ? pdTRUE : pdFALSE;
   } else {
-    stop_mode_enable(InhibitorDisplay);
+    xSemaphoreGiveFromISR(s_sem, &woken);
   }
+
+  portEND_SWITCHING_ISR(woken);
 }
 
 void display_init(void) {
@@ -180,8 +194,7 @@ void display_init(void) {
   HAL_NVIC_SetPriority(DISPLAY->irqn, DISPLAY->irq_priority, 0);
   HAL_NVIC_EnableIRQ(DISPLAY->irqn);
 
-  s_update = mutex_create();
-  vSemaphoreCreateBinary(s_write_done);
+  s_sem = xSemaphoreCreateBinary();
 
   prv_display_on();
 
@@ -190,33 +203,13 @@ void display_init(void) {
 
 void display_clear(void) {
   DisplayJDIState *state = DISPLAY->state;
-  uint8_t index;
 
-  mutex_lock(s_update);
+  memset(s_framebuffer, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
 
-  portENTER_CRITICAL();
-  if (!s_framebuffer_dirty[s_framebuffer_index]) {
-    index = s_framebuffer_index;
-  } else if (!s_framebuffer_dirty[s_framebuffer_index ^ 1]) {
-    index = s_framebuffer_index ^ 1;
-  } else {
-    index = s_framebuffer_index ^ 1;
-    s_framebuffer_dirty[index] = false;
-  }
-  portEXIT_CRITICAL();
-
-  memset(s_framebuffer[index], 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
-
-  portENTER_CRITICAL();
-  s_framebuffer_dirty[index] = true;
-  portEXIT_CRITICAL();
-
-  if (!(state->hlcdc.Instance->STATUS & LCD_IF_STATUS_JDI_PAR_RUN)) {
-    stop_mode_disable(InhibitorDisplay);
-    prv_display_update(index);
-  }
-
-  mutex_unlock(s_update);
+  stop_mode_disable(InhibitorDisplay);
+  prv_display_update_start();
+  xSemaphoreTake(s_sem, portMAX_DELAY);
+  stop_mode_enable(InhibitorDisplay);
 }
 
 void display_set_enabled(bool enabled) {
@@ -228,12 +221,7 @@ void display_set_enabled(bool enabled) {
 }
 
 bool display_update_in_progress(void) {
-  bool in_progress = !mutex_lock_with_timeout(s_update, 0);
-  if (!in_progress) {
-    mutex_unlock(s_update);
-  }
-
-  return in_progress;
+  return s_updating;
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
@@ -242,20 +230,8 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   uint16_t rows = 0U;
   uint16_t y0 = 0U;
   bool y0_set = false;
-  uint8_t index;
 
-  mutex_lock(s_update);
-
-  portENTER_CRITICAL();
-  if (!s_framebuffer_dirty[s_framebuffer_index]) {
-    index = s_framebuffer_index;
-  } else if (!s_framebuffer_dirty[s_framebuffer_index ^ 1]) {
-    index = s_framebuffer_index ^ 1;
-  } else {
-    index = s_framebuffer_index ^ 1;
-    s_framebuffer_dirty[index] = false;
-  }
-  portEXIT_CRITICAL();
+  PBL_ASSERTN(!s_updating);
 
   // convert all rows requiring an update to 332 format
   while (nrcb(&row)) {
@@ -265,26 +241,17 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
     }
 
     for (uint16_t count = 0U; count < PBL_DISPLAY_WIDTH; count++) {
-      s_framebuffer[index][row.address * PBL_DISPLAY_WIDTH + count] = BYTE_222_TO_332(*(row.data + count));
+      s_framebuffer[row.address * PBL_DISPLAY_WIDTH + count] = BYTE_222_TO_332(*(row.data + count));
     }
 
     rows++;
   }
 
-  portENTER_CRITICAL();
-  s_framebuffer_dirty[index] = true;
-  portEXIT_CRITICAL();
+  s_uccb = uccb;
+  s_updating = true;
 
-  if (!(state->hlcdc.Instance->STATUS & LCD_IF_STATUS_JDI_PAR_RUN)) {
-    stop_mode_disable(InhibitorDisplay);
-    prv_display_update(index);
-  }
-
-  if (uccb) {
-    uccb();
-  }
-
-  mutex_unlock(s_update);
+  stop_mode_disable(InhibitorDisplay);
+  prv_display_update_start();
 }
 
 void display_show_splash_screen(void) {
@@ -301,22 +268,22 @@ void display_show_splash_screen(void) {
 
   display_init();
 
-  memset(s_framebuffer[0], 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+  memset(s_framebuffer, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
 
   x0 = (PBL_DISPLAY_WIDTH - splash->width) / 2;
   y0 = (PBL_DISPLAY_HEIGHT - splash->height) / 2;
   for (uint16_t y = 0U; y < splash->height; y++) {
     for (uint16_t x = 0U; x < splash->width; x++) {
       if (splash->data[y * (splash->width / 8) + x / 8] & (0x1U << (x & 7))) {
-        s_framebuffer[0][(y + y0) * PBL_DISPLAY_WIDTH + (x + x0)] = 0x00;
+        s_framebuffer[(y + y0) * PBL_DISPLAY_WIDTH + (x + x0)] = 0x00;
       }
     }
   }
 
-  s_framebuffer_dirty[0] = true;
-
   stop_mode_disable(InhibitorDisplay);
-  prv_display_update(0);
+  prv_display_update_start();
+  xSemaphoreTake(s_sem, portMAX_DELAY);
+  stop_mode_enable(InhibitorDisplay);
 }
 
 void display_pulse_vcom(void) {}
