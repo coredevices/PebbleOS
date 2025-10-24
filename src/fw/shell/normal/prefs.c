@@ -22,6 +22,7 @@
 
 #include "apps/system_apps/toggle/quiet_time.h"
 #include "board/board.h"
+#include "applib/graphics/gtypes.h"
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
 #include "mfg/mfg_info.h"
@@ -190,6 +191,14 @@ static bool s_coredump_on_request_enabled = false;
 #if PLATFORM_OBELIX
 static uint8_t s_legacy_app_render_mode = 0; // Default to bezel mode
 #endif
+
+#define PREF_KEY_SETTINGS_MENU_HIGHLIGHT_COLOR "settingsMenuHighlightColor"
+#define PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR "appsMenuHighlightColor"
+
+
+static GColor s_settings_menu_highlight_color = GColorCobaltBlue;
+static GColor s_apps_menu_highlight_color = GColorVividCerulean;
+
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -485,6 +494,24 @@ static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
 }
 #endif
 
+static bool prv_set_s_settings_menu_highlight_color(GColor *color) {
+#if PBL_COLOR
+  s_settings_menu_highlight_color = *color;
+#else
+  s_settings_menu_highlight_color = GColorBlack;
+#endif
+  return true;
+}
+
+static bool prv_set_s_apps_menu_highlight_color(GColor *color) {
+#if PBL_COLOR
+  s_apps_menu_highlight_color = *color;
+#else
+  s_apps_menu_highlight_color = GColorBlack;
+#endif
+  return true;
+}
+  
 // ------------------------------------------------------------------------------------
 // Table of all prefs
 typedef bool (*PrefSetHandler)(const void *value, size_t val_len);
@@ -1268,3 +1295,27 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
   prv_pref_set(PREF_KEY_LEGACY_APP_RENDER_MODE, &mode_value, sizeof(mode_value));
 }
 #endif
+
+GColor shell_prefs_get_settings_menu_highlight_color(void){
+  #if !PBL_COLOR
+    return GColorBlack;
+  #endif
+  return s_settings_menu_highlight_color;
+}
+
+void shell_prefs_set_settings_menu_highlight_color(GColor color) {
+  prv_pref_set(PREF_KEY_SETTINGS_MENU_HIGHLIGHT_COLOR, &color, sizeof(GColor));
+}
+
+
+
+GColor shell_prefs_get_apps_menu_highlight_color(void){
+  #if !PBL_COLOR
+    return GColorBlack;
+  #endif
+  return s_apps_menu_highlight_color;
+}
+
+void shell_prefs_set_apps_menu_highlight_color(GColor color) {
+  prv_pref_set(PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR, &color, sizeof(GColor));
+}

@@ -19,11 +19,10 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/window.h"
+#include "shell/prefs.h"
 
 #include <stdint.h>
 
-#define SETTINGS_MENU_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack)
-#define SETTINGS_MENU_TITLE_NORMAL_COLOR PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack)
 
 typedef enum {
   SettingsMenuItemBluetooth = 0,
@@ -40,6 +39,9 @@ typedef enum {
   SettingsMenuItemDisplay,
   SettingsMenuItemActivity,
   SettingsMenuItemSystem,
+#if PBL_COLOR
+  SettingsMenuItemThemes,
+#endif
   SettingsMenuItem_Count,
   SettingsMenuItem_Invalid
 } SettingsMenuItem;

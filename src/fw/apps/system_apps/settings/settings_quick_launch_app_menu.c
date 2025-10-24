@@ -34,6 +34,7 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/app_menu_data_source.h"
 #include "resource/resource_ids.auto.h"
+#include "shell/prefs.h"
 
 typedef struct {
   AppMenuDataSource data_source;
@@ -126,7 +127,7 @@ void quick_launch_app_menu_window_push(ButtonId button) {
     .title = i18n_get(i18n_noop("Quick Launch"), data),
     .choice = (install_id == INSTALL_ID_INVALID) ? 0 : (app_index + NUM_CUSTOM_CELLS),
     .status_colors = { GColorWhite, GColorBlack, },
-    .highlight_colors = { SETTINGS_MENU_HIGHLIGHT_COLOR, GColorWhite },
+    .highlight_colors = { shell_prefs_get_settings_menu_highlight_color(), GColorWhite },
     .icons_enabled = true,
   };
   option_menu_configure(option_menu, &config);
