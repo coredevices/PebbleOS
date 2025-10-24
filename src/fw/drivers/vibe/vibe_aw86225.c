@@ -23,11 +23,12 @@
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 
-#define AW862XX_REG_ID                                  (0x00)
+#define AW862XX_REG_SRST                                (0x00)
+#define AW862XX_REG_PLAYCFG3                            (0x08)
+#define AW862XX_REG_PLAYCFG4                            (0x09)
 #define AW862XX_REG_CONTCFG1                            (0x18)
 #define AW862XX_REG_CONTCFG2                            (0x19)
 #define AW862XX_REG_CONTCFG3                            (0x1A)
-#define AW862XX_REG_CONTCFG4                            (0x1B)
 #define AW862XX_REG_CONTCFG5                            (0x1C)
 #define AW862XX_REG_CONTCFG6                            (0x1D)
 #define AW862XX_REG_CONTCFG7                            (0x1E)
@@ -35,11 +36,13 @@
 #define AW862XX_REG_CONTCFG9                            (0x20)
 #define AW862XX_REG_CONTCFG10                           (0x21)
 #define AW862XX_REG_CONTCFG11                           (0x22)
-#define AW862XX_REG_CONTCFG12                           (0x23)
-#define AW862XX_REG_CONTCFG13                           (0x24)
-#define AW862XX_REG_PLAYCFG3                            (0x08)
-#define AW862XX_REG_PLAYCFG4                            (0x09)
+#define AW862XX_REG_CONTRD14                            (0x25)
+#define AW862XX_REG_CONTRD15                            (0x26)
+#define AW862XX_REG_CONTRD16                            (0x27)
+#define AW862XX_REG_CONTRD17                            (0x28)
 #define AW862XX_REG_SYSCTRL1                            (0x43)
+#define AW862XX_REG_SYSCTRL7                            (0x49)
+#define AW862XX_REG_CHIPID                              (0x64)
 
 #define AW862XX_BIT_PLAYCFG3_BRK_EN_MASK                (~(1<<2))
 #define AW862XX_BIT_PLAYCFG3_BRK                        (1<<2)
@@ -61,7 +64,7 @@
 
 #define AW862XX_CONTCFG1_EDGE_FREQ                      (0xC0)
 #define AW862XX_CONTCFG1_WAVE_MODE                      (0x01)  /* 0:sine; 1:cos */
-#define AW862XX_CONTCFG2_CONF_F0                        (102)   /* REG = 24,000/f0 */
+#define AW862XX_CONTCFG2_CONF_F0                        (102)   /* REG = 24,000/f0, f0 is 235Hz */
 #define AW862XX_CONTCFG3_DRV_WIDTH                      (209)   /* f0-8-track_margin-brk_gain*/
 #define AW862XX_CONTCFG7_FULL_SCALE                     (0x7FL)
 #define AW862XX_CONTCFG6_TRACK_MASK                     (~(1<<7))
@@ -69,7 +72,8 @@
 #define AW862XX_SYSCTRL1_VBAT_MODE_MASK                 (~(1<<7))
 #define AW862XX_SYSCTRL1_VBAT_MODE_EN                   (1<<7)
 
-#define AW862XX_POR_WAIT_TIME                           (2) /* ms */
+#define AW862XX_PWR_OFF_TIME                            (2) /* ms */
+#define AW862XX_PWR_ON_TIME                             (8) /* ms */
 
 static bool prv_read_register(uint8_t register_address, uint8_t* data) {
 	i2c_use(I2C_AW86225);
@@ -111,11 +115,14 @@ static void prv_aw862xx_play_go(bool flag)
 
 void vibe_init(void) {
   gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
+
+  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
+  psleep(AW862XX_PWR_OFF_TIME);
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
-  psleep(AW862XX_POR_WAIT_TIME);
- 
+  psleep(AW862XX_PWR_ON_TIME);
+
   uint8_t chip_id;
-  bool ret = prv_read_register(AW862XX_REG_ID, &chip_id);
+  bool ret = prv_read_register(AW862XX_REG_CHIPID, &chip_id);
   PBL_ASSERT(ret, "Failed to get AW86225 chip ID");
 
   ret &= prv_write_register(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EDGE_FREQ|AW862XX_CONTCFG1_WAVE_MODE);
@@ -156,8 +163,114 @@ int8_t vibe_get_braking_strength(void) {
   return strength;
 }
 
+static int vibe_f0_detection(void)
+{
+  int brk_gain = 0x08;
+  int track_margain = 0x0F;
+  int f0 = 0;
+  int f0_pre = 235;
+  uint8_t drv_width = 0;
+  uint8_t reg_val = 0;
+
+  prv_write_register(0x5A, 0x00);
+  prv_modify_reg(0x08, ~(3 << 0), (2 << 0)); // Enter CONT mode
+  prv_modify_reg(0x18, ~(1 << 3), (1 << 3)); // Enable F0_DET
+  prv_modify_reg(0x1D, ~(1 << 7), (1 << 7)); // Enable track_en
+  prv_modify_reg(0x08, ~(1 << 2), (1 << 2)); // Enable auto brake
+  prv_modify_reg(0x1D, ~(0x7F << 0), 0x7F);  // Config cont_drv1_lvl
+  prv_write_register(0x1E, 0x7F); // Config cont_drv2_lvl
+  prv_write_register(0x1F, 0x04); // Config cont_drv1_time
+  prv_write_register(0x20, 0x06); // Config cont_drv2_time
+  prv_write_register(0x22, 0x0f); // Config cont_track_margin
+
+  drv_width = (uint8_t)(24000 / f0_pre - 8 - brk_gain - track_margain); // Calculate cont_drv_width
+  prv_write_register(0x1A, drv_width); // Config cont_drv_width
+
+  prv_write_register(0x09, 0x01); // Start play
+  psleep(300);
+  prv_write_register(0x09, 0x02); // Stop play
+
+  prv_read_register(0x25, &reg_val); // LRA_F0 high 8 bits
+  f0 = reg_val << 8;
+  prv_read_register(0x26, &reg_val); // LRA_F0 low 8 bits
+  f0 |= reg_val;
+  if (f0 == 0) {
+    return -1;
+  }
+  f0 = 384000 / f0;
+  
+  prv_modify_reg(0x18, ~(1 << 3), (0 << 3)); // Disable F0_DET
+  prv_modify_reg(0x08, ~(1 << 2), (0 << 2)); // Close auto brake
+
+  return f0;
+}
+
+static int vibe_f0_calibration(void) {
+  char f0_cali_lra = 0;
+  int f0_cali_step = 0;
+  int f0_pre = 235;
+  int f0_cali_min = 0;
+  int f0_cali_max = 0;
+  int f0 = 0;
+  
+  f0 = vibe_f0_detection();
+  if (f0 < 0) {
+    return -1;
+  }
+
+  /**
+   * TRIM_LRA[0:5] is used to calibration the f0 frequency.
+   *
+   * The TRIM_LRA LSB is 0.24%, up to 31, down to -32, calibration range
+   * is nearly +/- 7%.
+   *
+   * Below code calibrate the f0 to match f0_pre as possible.
+   */
+  f0_cali_min = f0_pre * 93 / 100;
+  f0_cali_max = f0_pre * 107 / 100;
+  if (f0 < f0_cali_min || f0 > f0_cali_max) {
+    return -1;
+  }
+
+  f0_cali_step = 10000 * ((int)f0 - (int)f0_pre) / ((int)f0_pre * 24);
+  if (f0_cali_step >= 0) {
+    if (f0_cali_step % 10 >= 5) {
+      f0_cali_step = 32 + (f0_cali_step / 10 + 1);
+    } else {
+      f0_cali_step = 32 + f0_cali_step / 10;
+    }
+
+  } else {
+    if (f0_cali_step % 10 <= -5) {
+      f0_cali_step = 32 + (f0_cali_step / 10 - 1);
+    } else {
+      f0_cali_step = 32 + f0_cali_step / 10;
+    }
+  }
+
+  if (f0_cali_step > 31) {
+    f0_cali_lra = (char)f0_cali_step - 32;
+  } else {
+    f0_cali_lra = (char)f0_cali_step + 32;
+  }
+
+  prv_write_register(0x5A, f0_cali_lra & 0x3F);
+
+  return 0;
+}
 
 void command_vibe_ctl(const char *arg) {
+  if (!strcmp(arg, "cal")) {
+    int rc = vibe_f0_calibration();
+    if (rc < 0) {
+      prompt_send_response("F0 cali fail");
+    } else {
+      prompt_send_response("F0 cali success");
+    }
+
+    return;
+  }
+
   int strength = atoi(arg);
 
   const bool out_of_bounds = ((strength < 0) || (strength > VIBE_STRENGTH_MAX));
