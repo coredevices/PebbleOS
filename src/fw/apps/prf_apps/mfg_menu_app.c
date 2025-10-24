@@ -102,6 +102,7 @@ static void prv_select_backlight(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_backlight_app_get_info());
 }
 
+#ifdef MANUFACTURING_FW
 static void prv_select_audio(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_audio_app_get_info());
 }
@@ -109,6 +110,7 @@ static void prv_select_audio(int index, void *context) {
 static void prv_select_pdm_mic(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_pdm_mic_app_get_info());
 }
+#endif
 #endif
 
 static void prv_select_runin(int index, void *context) {
@@ -235,8 +237,10 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #endif
 #if PLATFORM_OBELIX
     { .title = "Test Backlight",    .callback = prv_select_backlight },
+#ifdef MANUFACTURING_FW
     { .title = "Test Audio",        .callback = prv_select_audio },
     { .title = "Test PDM Mic",        .callback = prv_select_pdm_mic },
+#endif
 #endif
     { .icon = prv_get_icon_for_test(MfgTest_ALS),
       .title = "Test ALS",          .callback = prv_select_als },

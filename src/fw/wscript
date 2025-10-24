@@ -571,7 +571,7 @@ def _build_recovery(bld):
             'apps/prf_apps/mfg_sine_wave.c',
         ])
     
-    if not bld.is_obelix():
+    if not bld.is_obelix() or (bld.is_obelix() and not bld.env.IS_MFG):
         excludes.extend([
             'apps/prf_apps/mfg_audio_app.c',
             'apps/prf_apps/mfg_pdm_mic_app.c',
