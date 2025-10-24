@@ -20,8 +20,6 @@
 #include "system/logging.h"
 #include "syscall/syscall.h"
 
-static uint32_t s_app_message_received_count = 0;
-
 AppMessageResult app_message_inbox_open(AppMessageCtxInbox *inbox, size_t size_inbound) {
   const size_t size_maximum = app_message_inbox_size_maximum();
   if (size_inbound > size_maximum) {
@@ -120,9 +118,9 @@ void app_message_inbox_receive(CommSession *session, AppMessagePush *push_messag
   // ... only then send the ACK:
   app_message_inbox_send_ack_nack_reply(session, transaction_id, CMD_ACK);
 
-  s_app_message_received_count++;
+  sys_app_pp_app_message_analytics_count_received();
 }
 
 uint32_t app_message_inbox_get_received_count(void) {
-  return s_app_message_received_count;
+  return sys_app_pp_app_message_get_received_count();
 }

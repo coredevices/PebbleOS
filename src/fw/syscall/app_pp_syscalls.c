@@ -26,6 +26,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// Kernel-space counters for AppMessage metrics (for Memfault analytics)
+static uint32_t s_app_message_sent_count = 0;
+static uint32_t s_app_message_received_count = 0;
 
 static bool prv_is_endpoint_allowed(uint16_t endpoint_id) {
   return (endpoint_id == APP_MESSAGE_ENDPOINT_ID);
@@ -73,4 +76,20 @@ DEFINE_SYSCALL(bool, sys_app_pp_has_capability, CommSessionCapability capability
 
 DEFINE_SYSCALL(void, sys_app_pp_app_message_analytics_count_drop, void) {
   analytics_inc(ANALYTICS_APP_METRIC_MSG_DROP_COUNT, AnalyticsClient_App);
+}
+
+DEFINE_SYSCALL(void, sys_app_pp_app_message_analytics_count_sent, void) {
+  s_app_message_sent_count++;
+}
+
+DEFINE_SYSCALL(void, sys_app_pp_app_message_analytics_count_received, void) {
+  s_app_message_received_count++;
+}
+
+uint32_t sys_app_pp_app_message_get_sent_count(void) {
+  return s_app_message_sent_count;
+}
+
+uint32_t sys_app_pp_app_message_get_received_count(void) {
+  return s_app_message_received_count;
 }
