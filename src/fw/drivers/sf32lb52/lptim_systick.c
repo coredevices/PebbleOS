@@ -24,8 +24,8 @@
 #include "bf0_hal_lptim.h"
 #include "bf0_hal_aon.h"
 
-/* LPRC10K frequency nearly 8~9 KHz, fixed to 8KHz for systick */
-#define SYSTICK_CLOCK_HZ       8000
+/* LPRC10K frequency nearly 9 KHz, fixed to 9KHz for systick */
+#define SYSTICK_CLOCK_HZ       9000
 #define SYSTICK_ONE_TICK_HZ    (SYSTICK_CLOCK_HZ / RTC_TICKS_HZ)
 
 #if !defined(configUSE_TICKLESS_IDLE) || (configUSE_TICKLESS_IDLE != 2)
@@ -75,16 +75,6 @@ void lptim_systick_enable(void)
   __HAL_LPTIM_ENABLE_IT(&s_lptim1_handle, LPTIM_IT_OCIE);
 
   __HAL_LPTIM_START_CONTINUOUS(&s_lptim1_handle);
-}
-
-void lptim_systick_pause(void)
-{
-  /* NOP */
-}
-
-void lptim_systick_resume(void)
-{
-  /* NOP */
 }
 
 void lptim_systick_tickless_idle(uint32_t ticks_from_now)
