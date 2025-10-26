@@ -107,8 +107,6 @@ void enter_stop_mode(void) {
   uint32_t dll2_freq;
   int clk_src;
 
-  lptim_systick_pause();
-
   clear_interrupt_setting();
 
   /* Wait flash cache idle */
@@ -125,6 +123,9 @@ void enter_stop_mode(void) {
   HAL_RCC_HCPU_DisableDLL1();
   HAL_RCC_HCPU_DisableDLL2();
 
+  HAL_HPAON_DISABLE_PAD();
+  HAL_HPAON_DISABLE_VHP();
+  
   HAL_HPAON_CLEAR_HP_ACTIVE();
   HAL_HPAON_SET_POWER_MODE(AON_PMR_DEEP_SLEEP);
 
@@ -139,6 +140,9 @@ void enter_stop_mode(void) {
   __NOP();
   __NOP();
   __NOP();
+  
+  HAL_HPAON_ENABLE_PAD();
+  HAL_HPAON_ENABLE_VHP();
 
   HAL_HPAON_SET_HP_ACTIVE();
   HAL_HPAON_CLEAR_POWER_MODE();
@@ -157,8 +161,6 @@ void enter_stop_mode(void) {
   HAL_Delay_us(0);
 
   restore_interrupt_setting();
-
-  lptim_systick_resume();
 }
 #else /* STM32 */
 void enter_stop_mode(void) {

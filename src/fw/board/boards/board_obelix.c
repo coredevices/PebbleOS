@@ -647,13 +647,11 @@ void board_early_init(void) {
   BSP_System_Config();
 
   HAL_HPAON_StartGTimer();
-#ifdef SF32LB52_USE_LXT
+
   HAL_PMU_EnableRC32K(1);
 
   HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
-#else
-  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC10);
-#endif
+
   HAL_PMU_EnableDLL(1);
 #ifdef SF32LB52_USE_LXT
   HAL_PMU_EnableXTAL32();
@@ -693,4 +691,10 @@ void board_init(void) {
   i2c_init(I2C3_BUS);
 
   mic_init(MIC);
+
+  /* Enable user buttons as AON wakeup source */
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN10, AON_PIN_MODE_HIGH);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN11, AON_PIN_MODE_LOW);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN12, AON_PIN_MODE_LOW);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN13, AON_PIN_MODE_LOW);
 }
