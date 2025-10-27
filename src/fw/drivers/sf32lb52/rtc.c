@@ -22,13 +22,13 @@
 #include "mcu/interrupts.h"
 #include "system/passert.h"
 #include "util/time/time.h"
+#include "system/logging.h"
+#include "services/common/new_timer/new_timer.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 
 #include "bf0_hal_rtc.h"
-
-#define LXT_LP_CYCLE 200
 
 // The RTC clock, CLK_RTC, can be configured to use the LXT32 (32.768 kHz) or
 // LRC10 (9.8 kHz). The prescaler values need to be set such that the CLK1S
@@ -36,10 +36,23 @@
 // clock frequency is as follows:
 //
 //   F(CLK1S) = CLK_RTC / (DIV_A_INT + DIV_A_FRAC / 2^14) / DIV_B
+
 #ifndef SF32LB52_USE_LXT
 #define DIV_A_INT 38U
 #define DIV_A_FRAC 4608U
 #define DIV_B 256U
+
+// RC calibration clock cyles
+#define LXT_LP_CYCLE 200
+
+// The deviation limit of the current calibration value of RC10K relative to the average
+// calibration value.
+#define MAX_DELTA_BETWEEN_RTC_AVE (LXT_LP_CYCLE / 2)
+
+// The number of RC10K calibrations required for one RTC calibration
+#define RC10K_CALS_PER_RTC_CAL 20
+
+TimerID s_rc10k_cal_timer;
 #else
 #define DIV_A_INT 128U
 #define DIV_A_FRAC 0U
@@ -81,6 +94,98 @@ void prv_rtc_rc10_calculate_div(RTC_HandleTypeDef* hdl, uint32_t value) {
   hdl->Init.DivAInt = (uint32_t)(value >> 14);
   hdl->Init.DivAFrac = (uint32_t)(value & ((1 << 14) - 1));
 }
+
+static void prv_rtc_reconfig() {
+  uint32_t cur_ave;
+  HAL_StatusTypeDef ret;
+  cur_ave = prv_rtc_get_lpcycle();
+  prv_rtc_rc10_calculate_div(&RTC_Handler, cur_ave);
+
+  ret = HAL_RTC_Init(&RTC_Handler, RTC_INIT_REINIT);
+  PBL_ASSERTN(ret == HAL_OK);
+  HAL_Set_backup(RTC_BACKUP_LPCYCLE, cur_ave);
+}
+
+static void prv_rtc_calibrate() {
+  static uint32_t s_rtc_cycle_count_init = 0;
+  static double s_rtc_a = 0.0;
+  static double s_delta_total = 0.0;
+
+  if (s_rtc_cycle_count_init == 0) {
+    uint16_t sub;
+    time_t t;
+
+    prv_rtc_reconfig();
+    // Get initial lpcycle, RTC is running based on it.
+    s_rtc_cycle_count_init = HAL_Get_backup(RTC_BACKUP_LPCYCLE);
+    s_delta_total = 0.0;
+    rtc_get_time_ms(&t, &sub);
+    s_rtc_a = 1.0 * t + ((float)(1.0 * sub)) / RC10K_SUB_SEC_DIVB;
+  } else {
+    uint16_t sub2 = 0;
+    double rtc_cal = 0.0;
+    double delta = 0.0;
+    time_t t2;
+    uint32_t cur_ave;
+    uint32_t ref_cycle;
+    double rtc_b;
+
+    rtc_get_time_ms(&t2, &sub2);
+    cur_ave = HAL_Get_backup(RTC_BACKUP_LPCYCLE_AVE);
+    ref_cycle = cur_ave;
+    rtc_b = 1.0 * t2 + ((double)(1.0 * sub2)) / RC10K_SUB_SEC_DIVB;
+
+    // Delta time between s_rtc_a to rtc_b, in seconds.
+    delta = rtc_b - s_rtc_a;
+    // Calculate accurate rtc_b
+    rtc_cal = delta * ref_cycle / s_rtc_cycle_count_init + s_rtc_a;
+    // Detla time of accurrate rtc_b and current rtc_b
+    delta = rtc_cal - rtc_b;
+
+    // Accumulate error
+    s_delta_total += delta;
+
+    if (s_delta_total > 1.0 || s_delta_total < -1.0) {
+      // Accurate time
+      rtc_cal = s_delta_total + rtc_b;
+      // Apply integal part difference.
+      rtc_set_time((uint32_t)rtc_cal);
+      // Continue with subseconds
+      s_delta_total = rtc_cal - (uint32_t)rtc_cal;
+      // Next inteval start time
+      s_rtc_a = (uint32_t)rtc_cal;
+      if ((cur_ave > s_rtc_cycle_count_init &&
+           (cur_ave - s_rtc_cycle_count_init) > MAX_DELTA_BETWEEN_RTC_AVE) ||
+          (cur_ave < s_rtc_cycle_count_init &&
+           (s_rtc_cycle_count_init - cur_ave) > MAX_DELTA_BETWEEN_RTC_AVE)) {
+        prv_rtc_reconfig();
+        s_rtc_cycle_count_init = HAL_Get_backup(RTC_BACKUP_LPCYCLE);
+      }
+    } else {
+      // Next inteval start time
+      s_rtc_a = rtc_b;
+    }
+
+    PBL_LOG(LOG_LEVEL_DEBUG,
+            "origin: f=%dHz,cycle=%d avr: f=%dHz cycle_ave=%d delta=%d, delta_sum=%d\n",
+            (int)((uint64_t)48000 * LXT_LP_CYCLE * 1000 / s_rtc_cycle_count_init),
+            (int)s_rtc_cycle_count_init, (int)((uint64_t)48000 * LXT_LP_CYCLE * 1000 / ref_cycle),
+            (int)ref_cycle, (int)(delta * 1000), (int)(s_delta_total * 1000));
+  }
+}
+
+void prv_rc10k_cal_timer_cb(void* data) {
+  static uint8_t s_rtc10k_cal_cnt;
+
+  s_rtc10k_cal_cnt++;
+
+  HAL_RC_CAL_update_reference_cycle_on_48M(LXT_LP_CYCLE);
+
+  if (s_rtc10k_cal_cnt == RC10K_CALS_PER_RTC_CAL) {
+    s_rtc10k_cal_cnt = 0U;
+    prv_rtc_calibrate();
+  }
+}
 #endif
 
 void rtc_init(void) {
@@ -89,18 +194,12 @@ void rtc_init(void) {
 #ifdef SF32LB52_USE_LXT
   ret = HAL_PMU_LXTReady();
   PBL_ASSERTN(ret == HAL_OK);
-#else
-  // If LXT is disabled, we need to use the RC10K as the clock source.
-  // The RC10K needs to be initialized in board_x.c before it can be used
-  uint32_t value;
-  value = prv_rtc_get_lpcycle();
-  if (value != 0U) {
-    prv_rtc_rc10_calculate_div(&RTC_Handler, value);
-  }
-#endif
 
   ret = HAL_RTC_Init(&RTC_Handler, RTC_INIT_NORMAL);
   PBL_ASSERTN(ret == HAL_OK);
+#else
+  prv_rtc_reconfig();
+#endif
 }
 
 void rtc_init_timers(void) {}
@@ -183,15 +282,21 @@ time_t rtc_get_time(void) {
   return seconds;
 }
 
-RtcTicks rtc_get_ticks(void) { return get_ticks(); }
+RtcTicks rtc_get_ticks(void) {
+  return get_ticks();
+}
 
 void rtc_alarm_init(void) {}
 
 void rtc_alarm_set(RtcTicks num_ticks) {}
 
-RtcTicks rtc_alarm_get_elapsed_ticks(void) { return 0; }
+RtcTicks rtc_alarm_get_elapsed_ticks(void) {
+  return 0;
+}
 
-bool rtc_alarm_is_initialized(void) { return true; }
+bool rtc_alarm_is_initialized(void) {
+  return true;
+}
 
 bool rtc_sanitize_struct_tm(struct tm* t) {
   // These values come from time_t (which suffers from the 2038 problem) and our hardware which
@@ -224,7 +329,9 @@ void rtc_get_time_tm(struct tm* time_tm) {
   localtime_r(&t, time_tm);
 }
 
-const char* rtc_get_time_string(char* buffer) { return time_t_to_string(buffer, rtc_get_time()); }
+const char* rtc_get_time_string(char* buffer) {
+  return time_t_to_string(buffer, rtc_get_time());
+}
 
 const char* time_t_to_string(char* buffer, time_t t) {
   struct tm time;
@@ -243,10 +350,23 @@ void rtc_get_timezone(TimezoneInfo* tzinfo) {}
 
 void rtc_timezone_clear(void) {}
 
-uint16_t rtc_get_timezone_id(void) { return 0; }
+uint16_t rtc_get_timezone_id(void) {
+  return 0;
+}
 
-bool rtc_is_timezone_set(void) { return 0; }
+bool rtc_is_timezone_set(void) {
+  return 0;
+}
 
 void rtc_enable_backup_regs(void) {}
 
-void rtc_calibrate_frequency(uint32_t frequency) {}
+void rtc_calibrate_frequency(uint32_t frequency) {
+  prv_rtc_calibrate();
+
+  s_rc10k_cal_timer = new_timer_create();
+  PBL_ASSERTN(s_rc10k_cal_timer != TIMER_INVALID_ID);
+
+  bool success = new_timer_start(s_rc10k_cal_timer, 15000, prv_rc10k_cal_timer_cb, NULL,
+                                 TIMER_START_FLAG_REPEATING);
+  PBL_ASSERTN(success);
+}
