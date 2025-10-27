@@ -590,20 +590,32 @@ status_t qspi_flash_get_write_status(QSPIFlash *dev) {
 
 void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
   QSPIFlashPart *part = dev->state->part;
-  uint8_t instr;
-  uint32_t delay;
 
   if (active) {
-    instr = part->instructions.enter_low_power;
-    delay = part->standby_to_low_power_latency_us;
-  } else {
-    instr = part->instructions.exit_low_power;
-    delay = part->low_power_to_standby_latency_us;
-  }
+    prv_cinstr(dev, part->instructions.enter_low_power);
+    if (part->standby_to_low_power_latency_us) {
+      delay_us(part->standby_to_low_power_latency_us);
+    }
 
-  prv_cinstr(dev, instr);
-  if (delay) {
-    delay_us(delay);
+    nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
+    nrf_qspi_task_trigger(NRF_QSPI, NRF_QSPI_TASK_DEACTIVATE);
+    nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+
+    nrf_qspi_disable(NRF_QSPI);
+  } else {
+    nrf_qspi_enable(NRF_QSPI);
+
+    nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
+    nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+    nrf_qspi_task_trigger(NRF_QSPI, NRF_QSPI_TASK_ACTIVATE);
+    while (!nrf_qspi_event_check(NRF_QSPI, NRF_QSPI_EVENT_READY)) {
+    }
+    nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
+
+    prv_cinstr(dev, part->instructions.exit_low_power);
+    if (part->low_power_to_standby_latency_us) {
+      delay_us(part->low_power_to_standby_latency_us);
+    }
   }
 }
 
