@@ -22,29 +22,40 @@
 #include "mcu/interrupts.h"
 #include "system/passert.h"
 #include "util/time/time.h"
+#include "system/logging.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
-
 #include "bf0_hal_rtc.h"
-
-#define LXT_LP_CYCLE 200
-
+#include "services/common/new_timer/new_timer.h"
 // The RTC clock, CLK_RTC, can be configured to use the LXT32 (32.768 kHz) or
 // LRC10 (9.8 kHz). The prescaler values need to be set such that the CLK1S
 // event runs at 1 Hz. The formula that relates prescaler values with the
 // clock frequency is as follows:
 //
 //   F(CLK1S) = CLK_RTC / (DIV_A_INT + DIV_A_FRAC / 2^14) / DIV_B
+
 #ifndef SF32LB52_USE_LXT
 #define DIV_A_INT 38U
 #define DIV_A_FRAC 4608U
 #define DIV_B 256U
+#define RC10K_SW_PPM \
+  0  // Manually adjust the calibration para. Alwasys 0, This parameter will only be adjusted when
+     // the automatic calibration of rc10k fails to meet the requirements.
+#define MAX_DELTA_BETWEEN_RTC_AVE \
+  100  // The deviation limit of the current calibration value of rc10k relative to the average
+       // calibration value. harf of LXT_LP_CYCLE.
+#define LXT_LP_CYCLE 200  // Rc cal clk cyle length.
+#define RC_CAL_TIMES \
+  20  // The number of RC10K calibrations required for one RTC calibration.e.g  rc10k 15s one time,
+      // rtc 5min one time. Balance between performance and power consumption
+TimerID rc_cal_timer;  // new timer for rc cal
 #else
 #define DIV_A_INT 128U
 #define DIV_A_FRAC 0U
 #define DIV_B 256U
 #endif
+
 
 static RTC_HandleTypeDef RTC_Handler = {
     .Instance = (RTC_TypeDef*)RTC_BASE,
@@ -81,6 +92,18 @@ void prv_rtc_rc10_calculate_div(RTC_HandleTypeDef* hdl, uint32_t value) {
   hdl->Init.DivAInt = (uint32_t)(value >> 14);
   hdl->Init.DivAFrac = (uint32_t)(value & ((1 << 14) - 1));
 }
+
+static void rtc_reconfig() {
+  uint32_t cur_ave;
+  HAL_StatusTypeDef ret;
+  cur_ave = prv_rtc_get_lpcycle();
+  prv_rtc_rc10_calculate_div(&RTC_Handler, cur_ave);
+
+  ret = HAL_RTC_Init(&RTC_Handler, RTC_INIT_REINIT);
+  PBL_ASSERTN(ret == HAL_OK);
+  HAL_Set_backup(RTC_BACKUP_LPCYCLE, cur_ave);
+}
+
 #endif
 
 void rtc_init(void) {
@@ -183,15 +206,21 @@ time_t rtc_get_time(void) {
   return seconds;
 }
 
-RtcTicks rtc_get_ticks(void) { return get_ticks(); }
+RtcTicks rtc_get_ticks(void) {
+  return get_ticks();
+}
 
 void rtc_alarm_init(void) {}
 
 void rtc_alarm_set(RtcTicks num_ticks) {}
 
-RtcTicks rtc_alarm_get_elapsed_ticks(void) { return 0; }
+RtcTicks rtc_alarm_get_elapsed_ticks(void) {
+  return 0;
+}
 
-bool rtc_alarm_is_initialized(void) { return true; }
+bool rtc_alarm_is_initialized(void) {
+  return true;
+}
 
 bool rtc_sanitize_struct_tm(struct tm* t) {
   // These values come from time_t (which suffers from the 2038 problem) and our hardware which
@@ -224,7 +253,9 @@ void rtc_get_time_tm(struct tm* time_tm) {
   localtime_r(&t, time_tm);
 }
 
-const char* rtc_get_time_string(char* buffer) { return time_t_to_string(buffer, rtc_get_time()); }
+const char* rtc_get_time_string(char* buffer) {
+  return time_t_to_string(buffer, rtc_get_time());
+}
 
 const char* time_t_to_string(char* buffer, time_t t) {
   struct tm time;
@@ -243,10 +274,95 @@ void rtc_get_timezone(TimezoneInfo* tzinfo) {}
 
 void rtc_timezone_clear(void) {}
 
-uint16_t rtc_get_timezone_id(void) { return 0; }
+uint16_t rtc_get_timezone_id(void) {
+  return 0;
+}
 
-bool rtc_is_timezone_set(void) { return 0; }
+bool rtc_is_timezone_set(void) {
+  return 0;
+}
 
 void rtc_enable_backup_regs(void) {}
 
-void rtc_calibrate_frequency(uint32_t frequency) {}
+#ifndef SF32LB52_USE_LXT
+void rtc_calculate_delta() {
+  static uint32_t s_rtc_cycle_count_init = 0;
+  static double s_rtc_a = 0.0;
+  static double s_delta_total = 0.0;
+
+  if (s_rtc_cycle_count_init == 0) {
+    rtc_reconfig();
+    s_rtc_cycle_count_init =
+        HAL_Get_backup(RTC_BACKUP_LPCYCLE);  // Get initial lpcycle, RTC is running based on it.
+    s_delta_total = 0.0;
+    uint16_t sub = 0;
+    time_t t;
+    rtc_get_time_ms(&t, &sub);
+    s_rtc_a = 1.0 * t + ((float)(1.0 * sub)) / RC10K_SUB_SEC_DIVB;
+  } else {
+    uint16_t sub2 = 0;
+    double rtc_cal = 0.0;
+    double delta = 0.0;
+    time_t t2;
+    rtc_get_time_ms(&t2, &sub2);
+    uint32_t cur_ave = HAL_Get_backup(RTC_BACKUP_LPCYCLE_AVE);
+    uint32_t ref_cycle = cur_ave + RC10K_SW_PPM;
+    double rtc_b = 1.0 * t2 + ((double)(1.0 * sub2)) / RC10K_SUB_SEC_DIVB;
+
+    delta = rtc_b - s_rtc_a;  // Delta time between s_rtc_a to rtc_b, in seconds.
+    rtc_cal = delta * ref_cycle / s_rtc_cycle_count_init + s_rtc_a;  // Calculate accurate rtc_b
+    delta = rtc_cal - rtc_b;  // Detla time of accurrate rtc_b and current rtc_b
+
+    s_delta_total += delta;  // Accumulate error;
+
+    if (s_delta_total > 1.0 || s_delta_total < -1.0) {
+      rtc_cal = s_delta_total + rtc_b;              // Accurate time
+      rtc_set_time((uint32_t)rtc_cal);              // Apply integal part difference.
+      s_delta_total = rtc_cal - (uint32_t)rtc_cal;  // Continue with subseconds
+      s_rtc_a = (uint32_t)rtc_cal;                  // Next inteval start time
+      if ((cur_ave > s_rtc_cycle_count_init &&
+           (cur_ave - s_rtc_cycle_count_init) > MAX_DELTA_BETWEEN_RTC_AVE) ||
+          (cur_ave < s_rtc_cycle_count_init &&
+           (s_rtc_cycle_count_init - cur_ave) > MAX_DELTA_BETWEEN_RTC_AVE)) {
+        rtc_reconfig();
+        s_rtc_cycle_count_init = HAL_Get_backup(RTC_BACKUP_LPCYCLE);
+      }
+    } else {
+      s_rtc_a = rtc_b;  // Next inteval start time
+    }
+    PBL_LOG(LOG_LEVEL_DEBUG,
+            "origin: f=%dHz,cycle=%d avr: f=%dHz cycle_ave=%d delta=%d, delta_sum=%d\n",
+            (int)((uint64_t)48000 * LXT_LP_CYCLE * 1000 / s_rtc_cycle_count_init),
+            (int)s_rtc_cycle_count_init, (int)((uint64_t)48000 * LXT_LP_CYCLE * 1000 / ref_cycle),
+            (int)ref_cycle, (int)(delta * 1000), (int)(s_delta_total * 1000));
+  }
+}
+void prv_rc_cal_handler() {
+  static uint8_t s_rtc_delta_count = 0;
+  s_rtc_delta_count++;
+  HAL_RC_CAL_update_reference_cycle_on_48M(LXT_LP_CYCLE);
+  if (s_rtc_delta_count == RC_CAL_TIMES) {
+    s_rtc_delta_count = 0;
+    rtc_calculate_delta();
+  }
+}
+void rc_cal_timerCallback(void* data) {
+  prv_rc_cal_handler();
+}
+void rc_cal_init() {
+  rc_cal_timer = new_timer_create();
+  bool success =
+      new_timer_start(rc_cal_timer, 15000, rc_cal_timerCallback, NULL, TIMER_START_FLAG_REPEATING);
+  PBL_ASSERTN(success);
+}
+#endif
+void rtc_calibrate_frequency(uint32_t frequency) {
+  static uint8_t s_rc_cal_init = 0;
+  if (s_rc_cal_init == 0) {
+    s_rc_cal_init = 1;
+#ifndef SF32LB52_USE_LXT
+    rc_cal_init();
+    rtc_calculate_delta();
+#endif
+  }
+}
