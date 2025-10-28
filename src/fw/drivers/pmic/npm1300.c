@@ -58,6 +58,7 @@ typedef enum {
   PmicRegisters_BCHARGER_BCHGVTERM = 0x030CU,
   PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20 = 0x8U,
   PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V35 = 0xBU,
+  PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V45 = 0xDU,
   PmicRegisters_BCHARGER_BCHGVTERMR = 0x030DU,
   PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00 = 0x4U,
   PmicRegisters_BCHARGER_BCHGITERMSEL = 0x030F,
@@ -125,6 +126,7 @@ typedef enum {
   PmicRegisters_LDSW_LDSWCONFIG = 0x0807,
   PmicRegisters_LDSW_LDSW1LDOSEL = 0x0808,
   PmicRegisters_LDSW_LDSW2LDOSEL = 0x0809,
+  PmicRegisters_LDSW_LDSW2LDOSEL__LDSW_MODE = 0,
   PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE = 1,
   PmicRegisters_LDSW_LDSW1VOUTSEL = 0x080C,
   PmicRegisters_LDSW_LDSW2VOUTSEL = 0x080D,
@@ -267,8 +269,8 @@ bool pmic_init(void) {
   }
 #endif
 
-// FIXME(OBELIX): Needs to be configurable at board level
-#if PLATFORM_OBELIX
+// FIXME(OBELIX,GETAFIX): Needs to be configurable at board level
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
   // Disable BUCK1 (1.8V)
   ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL,
                            PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL);
@@ -310,6 +312,11 @@ bool pmic_init(void) {
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V35);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
+#elif PLATFORM_GETAFIX
+  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
+
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V45);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
 #elif PLATFORM_ASTERIX
   ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
@@ -322,6 +329,10 @@ bool pmic_init(void) {
   //3.3V @ LDO2
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE);
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, PmicRegisters_LDSW_LDSW2VOUTSEL__3V3);
+  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
+#elif PLATFORM_GETAFIX
+  // LDSW2 (3.3V for PDM)
+  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDSW_MODE);
   ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
 #endif
 
