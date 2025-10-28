@@ -48,7 +48,6 @@
 #include "shell/normal/display_calibration_prompt.h"
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
-#include "shell/normal/welcome.h"
 #include "shell/prefs.h"
 #include "system/logging.h"
 
@@ -78,7 +77,6 @@ void shell_event_loop_init(void) {
   bool factory_reset_or_first_use = !shared_prf_storage_get_getting_started_complete();
   // We are almost done booting, welcome the user if applicable. This _must_ occur before setting
   // the getting started completed below.
-  welcome_push_notification(factory_reset_or_first_use);
   if (factory_reset_or_first_use) {
     bt_persistent_storage_set_unfaithful(true);
   }
