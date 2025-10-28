@@ -60,7 +60,7 @@
 typedef struct RecoveryFUAppData {
   Window launch_app_window;
 
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
   QRCode qr_code;
   char qr_url_buffer[QR_URL_BUFFER_SIZE];
 #else
@@ -91,7 +91,7 @@ typedef struct RecoveryFUAppData {
   GettingStartedButtonComboState button_combo_state;
 } RecoveryFUAppData;
 
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
 static const char *s_qr_url_fmt = "https://qr.repebble.com/?sn=%s&model=%s";
 #endif
 
@@ -160,7 +160,7 @@ static void prv_click_configure(void* context) {
 ////////////////////////////////////////////////////////////
 // Windows
 
-#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX && !PLATFORM_GETAFIX
 static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
   uint32_t icon_res_id;
   const char *url_string;
@@ -269,7 +269,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
   }
   text_layer_set_text(&data->name_text_layer, data->name_text_buffer);
 
-#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX && !PLATFORM_GETAFIX
   // Set the name font
 #if !PLATFORM_ROBERT && !PLATFORM_CALCULUS
   const bool first_use_is_complete = shared_prf_storage_get_getting_started_complete();
@@ -315,7 +315,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
 static void prv_window_load(Window* window) {
   struct RecoveryFUAppData *data = (struct RecoveryFUAppData*) window_get_user_data(window);
 
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
   char serial_number[MFG_SERIAL_NUMBER_SIZE + 1];
   char model_name[MFG_INFO_MODEL_STRING_LENGTH];
 
@@ -326,13 +326,20 @@ static void prv_window_load(Window* window) {
 
   QRCode* qr_code = &data->qr_code;
   qr_code_init_with_parameters(qr_code,
+#if PBL_ROUND
+#define QR_CODE_SIZE ((window->layer.bounds.size.w * 10) / 14)
+                               &GRect((window->layer.bounds.size.w - QR_CODE_SIZE) / 2,
+                                      (window->layer.bounds.size.h - QR_CODE_SIZE) / 2,
+                                      QR_CODE_SIZE, QR_CODE_SIZE),
+#else
                                &GRect(10, 10, window->layer.bounds.size.w - 20,
                                       window->layer.bounds.size.h - 30),
+#endif
                                data->qr_url_buffer, strlen(data->qr_url_buffer), QRCodeECCMedium,
                                GColorBlack, GColorWhite);
   layer_add_child(&window->layer, &qr_code->layer);
 
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
   const uint16_t name_height = 30;
 #else
   const uint16_t name_height = 20;
@@ -340,10 +347,11 @@ static void prv_window_load(Window* window) {
 
   TextLayer* name_text_layer = &data->name_text_layer;
   text_layer_init_with_parameters(name_text_layer,
-                                  &GRect(0, window->layer.bounds.size.h - name_height,
+                                  &GRect(0, window->layer.bounds.size.h -
+                                         PBL_IF_RECT_ELSE(name_height, name_height + 10),
                                          window->layer.bounds.size.w, name_height),
                                   NULL,
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
                                   fonts_get_system_font(FONT_KEY_GOTHIC_24),
 #else
                                   fonts_get_system_font(FONT_KEY_GOTHIC_14),
@@ -439,7 +447,7 @@ static void prv_pebble_mobile_app_event_handler(PebbleEvent *event, void *contex
     s_fu_app_data->has_pebble_mobile_app_connected = true;
     gap_le_device_name_request_all();
   }
-#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX && !PLATFORM_GETAFIX
   prv_update_background_image_and_url_text(s_fu_app_data);
 #endif
   prv_update_name_text(s_fu_app_data);
@@ -513,7 +521,7 @@ static void handle_deinit(void) {
 
   getting_started_button_combo_deinit(&data->button_combo_state);
 
-#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX && !PLATFORM_GETAFIX
   kino_layer_deinit(&data->kino_layer);
 #endif
 
