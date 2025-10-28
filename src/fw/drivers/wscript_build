@@ -240,6 +240,39 @@ elif bld.is_obelix():
             'driver_audio',
         ],
     )
+
+elif bld.is_getafix():
+    bld(
+        name='drivers',
+        use=[
+            'driver_ambient_light',
+            'driver_backlight',
+            'driver_battery',
+            'driver_button',
+            'driver_display',
+            'driver_gpio',
+            'driver_flash',
+            'driver_gpio_defaults',
+            'driver_imu',
+            'driver_mcu',
+            'driver_mpu',
+            'driver_otp',
+            'driver_periph_config',
+            'driver_pmic',
+            'driver_pwr',
+            'driver_qspi',
+            'driver_rng',
+            'driver_rtc',
+            'driver_lptim_systick',
+            'driver_task_watchdog',
+            'driver_temperature',
+            'driver_touch',
+            'driver_uart',
+            'driver_vibe',
+            'driver_mic',
+            'driver_touch',
+        ],
+    )
 ## ----------
 
 if bld.is_snowy_compatible() or bld.is_silk() or bld.is_cutts() or bld.is_robert():
@@ -378,7 +411,7 @@ elif mcu_family == 'NRF52840':
             'root_includes',
         ],
     )
-elif mcu_family == 'SF32LB52':
+elif bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_backlight',
         source=[
@@ -427,7 +460,7 @@ elif bld.is_tintin():
             'stm32_stdlib',
         ],
     )
-elif bld.is_asterix() or bld.is_obelix():
+elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_battery',
         source=[
@@ -499,7 +532,7 @@ if bld.is_asterix():
     )
 
 # NOTE: enable LIS2DW12 by default on Obelix
-if bld.is_obelix():
+if bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_lis2dw12',
         source=[
@@ -626,7 +659,7 @@ elif bld.is_asterix():
             'hal_nordic',
         ],
     )
-elif bld.is_obelix():
+elif bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_display',
         source=[
@@ -795,7 +828,7 @@ elif bld.is_asterix():
             'root_includes',
         ],
     )
-elif bld.is_obelix():
+elif bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_flash',
         source=[
@@ -1080,6 +1113,19 @@ elif bld.is_obelix():
           'root_includes',
         ]
     )
+elif bld.is_getafix():
+    bld.objects(
+        name='driver_imu',
+        source=[
+            'imu/imu_getafix.c',
+        ],
+        use=[
+            'driver_lis2dw12',
+            'driver_mmc5603nj',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if bld.env.BOARD == "v2_0":
     bld.objects(
@@ -1107,7 +1153,16 @@ elif bld.is_obelix():
             'driver_i2c',
         ],
     )
-
+elif bld.is_getafix():
+    bld.objects(
+        name='driver_led_controller',
+        source=[
+            'led_controller/aw9364e.c',
+        ],
+        use=[
+            'driver_gpio',
+        ],
+    )
 
 if bld.is_tintin() and not bld.env.QEMU:
     bld.objects(
@@ -1145,7 +1200,7 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix():
+if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_mmc5603nj',
         source=[
@@ -1253,7 +1308,7 @@ elif bld.is_asterix():
             'hal_nordic',
         ],
     )
-elif bld.is_obelix():
+elif bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_mic',
         source=[
@@ -1360,7 +1415,7 @@ elif bld.is_silk():
             'root_includes',
         ],
     )
-elif bld.is_asterix() or bld.is_obelix():
+elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_pmic',
         source=[
@@ -1753,7 +1808,7 @@ if bld.capability('HAS_TOUCHSCREEN'):
                 'stubs/touch.c',
             ],
         )
-    elif bld.is_obelix():
+    elif bld.is_obelix() or bld.is_getafix():
         bld.objects(
             name='driver_touch',
             source=['touch/cst816/cst816.c'],
@@ -1852,6 +1907,18 @@ if bld.capability('HAS_VIBE_AW86225'):
         name='driver_vibe',
         source=[
             'vibe/vibe_aw86225.c',
+        ],
+        use=[
+            'fw_includes',
+            'driver_i2c',
+            'driver_gpio',
+        ],
+    )
+if bld.capability('HAS_VIBE_AW8623X'):
+    bld.objects(
+        name='driver_vibe',
+        source=[
+            'vibe/vibe_aw8623x.c',
         ],
         use=[
             'fw_includes',
