@@ -378,7 +378,6 @@ board_capability_dicts = [
             'HAS_MAGNETOMETER',
             'HAS_PBLBOOT',
             'HAS_ACCEL_SENSITIVITY',
-            'HAS_MASKING',
         },
     },
 ]

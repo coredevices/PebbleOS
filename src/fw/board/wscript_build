@@ -111,6 +111,18 @@ elif board in ('obelix_dvt', 'obelix_pvt', 'obelix_bb2'):
             'drivers',
         ],
     )
+elif board in ('getafix_evt',):
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_getafix.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'drivers',
+        ],
+    )
 else:
     bld.fatal('src/fw/board/wscript_build: '
               'Unknown board {}'.format(board))

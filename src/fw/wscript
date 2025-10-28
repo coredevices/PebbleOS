@@ -367,6 +367,8 @@ def _generate_memory_layout(bld):
 def _link_firmware(bld, sources):
     if bld.is_spalding():
         sources += ['board/displays/display_spalding.c']
+    elif bld.is_getafix():
+        sources += ['board/displays/display_getafix.c']
 
     fw_linkflags = ['-Wl,--cref',
                     '-Wl,-Map=tintin_fw.map',
