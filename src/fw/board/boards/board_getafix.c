@@ -1,0 +1,607 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include "bf0_hal.h"
+#include "bf0_hal_efuse.h"
+#include "bf0_hal_hlp.h"
+#include "bf0_hal_lcpu_config.h"
+#include "bf0_hal_pmu.h"
+#include "bf0_hal_rcc.h"
+#include "board/board.h"
+#include "board/splash.h"
+#include "drivers/sf32lb52/debounced_button_definitions.h"
+#include "drivers/watchdog.h"
+#include "system/passert.h"
+
+
+#define HCPU_FREQ_MHZ 240
+#define PWRKEY_RESET_CNT (32000 * 15)
+
+static UARTDeviceState s_dbg_uart_state = {
+  .huart = {
+    .Instance = USART1,
+    .Init = {
+      .BaudRate = 1000000,
+      .WordLength = UART_WORDLENGTH_8B,
+      .StopBits = UART_STOPBITS_1,
+      .Parity = UART_PARITY_NONE,
+      .HwFlowCtl = UART_HWCONTROL_NONE,
+      .OverSampling = UART_OVERSAMPLING_16,
+    },
+  },
+  .hdma = {
+    .Instance = DMA1_Channel1,
+    .Init = {
+      .Request = DMA_REQUEST_5,
+      .IrqPrio = 5,
+    },
+  },
+};
+
+static UARTDevice DBG_UART_DEVICE = {
+    .state = &s_dbg_uart_state,
+    .tx = {
+        .pad = PAD_PA19,
+        .func = USART1_TXD,
+        .flags = PIN_NOPULL,
+    },
+    .rx = {
+        .pad = PAD_PA18,
+        .func = USART1_RXD,
+        .flags = PIN_PULLUP,
+    },
+    .irqn = USART1_IRQn,
+    .irq_priority = 5,
+    .dma_irqn = DMAC1_CH1_IRQn,
+    .dma_irq_priority = 5,
+};
+
+UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
+
+IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
+IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
+
+#ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
+static UARTDeviceState s_hci_trace_uart_state = {
+  .huart = {
+    .Instance = USART3,
+    .Init = {
+      .WordLength = UART_WORDLENGTH_8B,
+      .StopBits = UART_STOPBITS_1,
+      .Parity = UART_PARITY_NONE,
+      .HwFlowCtl = UART_HWCONTROL_NONE,
+      .OverSampling = UART_OVERSAMPLING_16,
+    },
+  },
+};
+
+static UARTDevice HCI_TRACE_UART_DEVICE = {
+    .state = &s_hci_trace_uart_state,
+    .tx = {
+        .pad = PAD_PA27,
+        .func = USART3_TXD,
+        .flags = PIN_NOPULL,
+    },
+};
+UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
+#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
+
+static QSPIPortState s_qspi_port_state;
+static QSPIPort QSPI_PORT = {
+    .state = &s_qspi_port_state,
+    .cfg = {
+      .Instance = FLASH2,
+      .line = HAL_FLASH_QMODE,
+      .base = FLASH2_BASE_ADDR,
+      .msize = 32,
+      .SpiMode = SPI_MODE_NOR,
+    },
+    .clk_div = 5U,
+    .dma = {
+      .Instance = DMA1_Channel2,
+      .dma_irq = DMAC1_CH2_IRQn,
+      .request = DMA_REQUEST_1,
+    },
+};
+QSPIPort *const QSPI = &QSPI_PORT;
+
+static QSPIFlashState s_qspi_flash_state;
+static QSPIFlash QSPI_FLASH_DEVICE = {
+    .state = &s_qspi_flash_state,
+    .qspi = &QSPI_PORT,
+};
+QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
+
+static DisplayJDIState s_display_state = {
+    .hlcdc = {
+        .Instance = LCDC1,
+        .Init = {
+            .lcd_itf = LCDC_INTF_JDI_PARALLEL,
+            .color_mode = LCDC_PIXEL_FORMAT_RGB332,
+            .freq = 746268,  // HCK frequency
+            .cfg = {
+              .jdi = {
+                .bank_col_head = 0,
+                .valid_columns = PBL_DISPLAY_WIDTH,
+                .bank_col_tail = 8,
+                .bank_row_head = 0,
+                .valid_rows = PBL_DISPLAY_HEIGHT,
+                .bank_row_tail = 4,
+                .enb_start_col = 6,
+                .enb_end_col = 128,
+            },
+          },
+        },
+    },
+};
+
+static DisplayJDIDevice s_display = {
+    .state = &s_display_state,
+    .irqn = LCDC1_IRQn,
+    .irq_priority = 5,
+    .vcom = {
+        .lptim = hwp_lptim2,
+        .freq_hz = 60U,
+    },
+    .pinmux = {
+        .xrst = {
+            .pad = PAD_PA40,
+            .func = LCDC1_JDI_XRST,
+            .flags = PIN_NOPULL,
+            },
+        .vst = {
+            .pad = PAD_PA08,
+            .func = LCDC1_JDI_VST,
+            .flags = PIN_NOPULL,
+            },
+        .vck = {
+            .pad = PAD_PA39,
+            .func = LCDC1_JDI_VCK,
+            .flags = PIN_NOPULL,
+            },
+        .enb = {
+            .pad = PAD_PA07,
+            .func = LCDC1_JDI_ENB,
+            .flags = PIN_NOPULL,
+            },
+        .hst = {
+            .pad = PAD_PA06,
+            .func = LCDC1_JDI_HST,
+            .flags = PIN_NOPULL,
+            },
+        .hck = {
+            .pad = PAD_PA41,
+            .func = LCDC1_JDI_HCK,
+            .flags = PIN_NOPULL,
+            },
+        .r1 = {
+            .pad = PAD_PA05,
+            .func = LCDC1_JDI_R1,
+            .flags = PIN_NOPULL,
+            },
+        .r2 = {
+            .pad = PAD_PA42,
+            .func = LCDC1_JDI_R2,
+            .flags = PIN_NOPULL,
+            },
+        .g1 = {
+            .pad = PAD_PA04,
+            .func = LCDC1_JDI_G1,
+            .flags = PIN_NOPULL,
+            },
+        .g2 = {
+            .pad = PAD_PA43,
+            .func = LCDC1_JDI_G2,
+            .flags = PIN_NOPULL,
+            },
+        .b1 = {
+            .pad = PAD_PA03,
+            .func = LCDC1_JDI_B1,
+            .flags = PIN_NOPULL,
+            },
+        .b2 = {
+            .pad = PAD_PA02,
+            .func = LCDC1_JDI_B2,
+            .flags = PIN_NOPULL,
+            },
+        .vcom = {
+            .pad = PAD_PA24,
+            .func = GPIO_A24,
+            .flags = PIN_NOPULL,
+        },
+        .va = {
+            .pad = PAD_PA25,
+            .func = GPIO_A25,
+            .flags = PIN_NOPULL,
+        },
+    },
+    .vddp = {hwp_gpio1, 0, true},
+    .vlcd = {hwp_gpio1, 9, true},
+    .splash = {
+        .data = splash_bits,
+        .width = splash_width,
+        .height = splash_height,
+    },
+};
+
+DisplayJDIDevice *const DISPLAY = &s_display;
+IRQ_MAP(LCDC1, display_jdi_irq_handler, DISPLAY);
+
+const LedControllerAW9364E AW9364E = {
+    .gpio = {
+        .gpio = hwp_gpio1,
+        .gpio_pin = 1,
+        .active_high = true,
+    },
+};
+
+static I2CBusHalState s_i2c_bus_hal_state_1 = {
+    .hdl = {
+        .Instance = I2C1,
+        .Init = {
+            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+            .ClockSpeed = 400000,
+            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+        },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
+};
+
+static struct I2CBusHal s_i2c_bus_hal_1 = {
+    .state = &s_i2c_bus_hal_state_1,
+    .scl =
+        {
+            .pad = PAD_PA32,
+            .func = I2C1_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA33,
+            .func = I2C1_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .module = RCC_MOD_I2C1,
+    .irqn = I2C1_IRQn,
+    .irq_priority = 5,
+};
+
+static I2CBusState s_i2c_bus_state_1;
+
+static I2CBus s_i2c_bus_1 = {
+    .hal = &s_i2c_bus_hal_1,
+    .name = "i2c1",
+    .state = &s_i2c_bus_state_1,
+    .stop_mode_inhibitor = InhibitorI2C1,
+};
+
+I2CBus *const I2C1_BUS = &s_i2c_bus_1;
+
+IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
+
+static const I2CSlavePort s_i2c_lsm2dw12 = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x18,
+};
+
+I2CSlavePort *const I2C_LSM2DW12 = &s_i2c_lsm2dw12;
+
+static const I2CSlavePort s_i2c_mmc5603nj = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x30,
+};
+
+I2CSlavePort *const I2C_MMC5603NJ = &s_i2c_mmc5603nj;
+
+static I2CBusHalState s_i2c_bus_hal_state_2 = {
+    .hdl = {
+        .Instance = I2C2,
+        .Init = {
+            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+            .ClockSpeed = 400000,
+            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+        },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
+};
+
+static struct I2CBusHal s_i2c_bus_hal_2 = {
+    .state = &s_i2c_bus_hal_state_2,
+    .scl =
+        {
+            .pad = PAD_PA11,
+            .func = I2C2_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA10,
+            .func = I2C2_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .module = RCC_MOD_I2C2,
+    .irqn = I2C2_IRQn,
+    .irq_priority = 5,
+};
+
+static I2CBusState s_i2c_bus_state_2;
+
+static I2CBus s_i2c_bus_2 = {
+    .hal = &s_i2c_bus_hal_2,
+    .name = "i2c2",
+    .state = &s_i2c_bus_state_2,
+    .stop_mode_inhibitor = InhibitorI2C2,
+};
+
+I2CBus *const I2C2_BUS = &s_i2c_bus_2;
+IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
+
+static const I2CSlavePort s_i2c_cst816 = {
+    .bus = &s_i2c_bus_2,
+    .address = 0x15,
+};
+
+static const TouchSensor s_touch_cst816 = {
+    .i2c = &s_i2c_cst816,
+    .int_exti = {
+        .peripheral = hwp_gpio1,
+        .gpio_pin = 38,
+    },
+    .reset = {
+        .gpio = hwp_gpio1,
+        .gpio_pin = 28,
+    },
+    .max_x = 260,
+    .max_y = 260,
+    .invert_x_axis = false,
+    .invert_y_axis = true,
+};
+
+const TouchSensor *CST816 = &s_touch_cst816;
+
+static I2CBusHalState s_i2c_bus_hal_state_3 = {
+    .hdl = {
+        .Instance = I2C3,
+        .Init = {
+            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+            .ClockSpeed = 400000,
+            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+        },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
+};
+
+static struct I2CBusHal s_i2c_bus_hal_3 = {
+    .state = &s_i2c_bus_hal_state_3,
+    .scl =
+        {
+            .pad = PAD_PA31,
+            .func = I2C3_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA30,
+            .func = I2C3_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .module = RCC_MOD_I2C3,
+    .irqn = I2C3_IRQn,
+    .irq_priority = 5,
+};
+
+static I2CBusState s_i2c_bus_state_3;
+
+static I2CBus s_i2c_bus_3 = {
+    .hal = &s_i2c_bus_hal_3,
+    .name = "i2c3",
+    .state = &s_i2c_bus_state_3,
+    .stop_mode_inhibitor = InhibitorI2C3,
+};
+
+I2CBus *const I2C3_BUS = &s_i2c_bus_3;
+IRQ_MAP(I2C3, i2c_irq_handler, I2C3_BUS);
+
+static const I2CSlavePort s_i2c_npm1300 = {
+    .bus = &s_i2c_bus_3,
+    .address = 0x6B,
+};
+
+I2CSlavePort *const I2C_NPM1300 = &s_i2c_npm1300;
+
+static const I2CSlavePort s_i2c_w1160 = {
+    .bus = &s_i2c_bus_3,
+    .address = 0x48,
+};
+
+I2CSlavePort *const I2C_W1160 = &s_i2c_w1160;
+
+static const I2CSlavePort s_i2c_aw8623x = {
+    .bus = &s_i2c_bus_3,
+    .address = 0x5a,
+};
+
+I2CSlavePort *const I2C_AW8623X = &s_i2c_aw8623x;
+
+const BoardConfigActuator BOARD_CONFIG_VIBE = {
+    .ctl = {hwp_gpio1, 20, true},
+};
+
+const Npm1300Config NPM1300_CONFIG = {
+  // 70mA = 1C (max limit from datasheet)
+  .chg_current_ma = 70,
+  .dischg_limit_ma = 200,
+  .term_current_pct = 10,
+  .thermistor_beta = 3380,
+  .vbus_current_lim0 = 500,
+  .vbus_current_startup = 500,
+};
+
+const BoardConfigPower BOARD_CONFIG_POWER = {
+  .pmic_int = {
+    .peripheral = hwp_gpio1,
+    .gpio_pin = 44,
+  },
+  .low_power_threshold = 5U,
+  .battery_capacity_hours = 100U,
+};
+
+const BoardConfig BOARD_CONFIG = {
+  .backlight_on_percent = 25,
+  .ambient_light_dark_threshold = 150,
+  .ambient_k_delta_threshold = 25,
+};
+
+const BoardConfigButton BOARD_CONFIG_BUTTON = {
+  .buttons = {
+    [BUTTON_ID_BACK]   = { "Back",   hwp_gpio1, 34, GPIO_PuPd_NOPULL, true },
+    [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 35, GPIO_PuPd_UP, false},
+    [BUTTON_ID_SELECT] = { "Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
+    [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
+  },
+  .timer = GPTIM2,
+  .timer_irqn = GPTIM2_IRQn,
+};
+IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
+
+static MicDeviceState mic_state = {
+  .hdma = {
+  .Instance = DMA1_Channel5,
+    .Init = {
+       .Request = DMA_REQUEST_36,
+       .IrqPrio = 5,
+    },
+  },
+};
+static const MicDevice mic_device = {
+    .state = &mic_state,
+    .pdm_instance = hwp_pdm1,
+    .clk_gpio = {
+        .pad = PAD_PA22,
+        .func = PDM1_CLK,
+        .flags = PIN_NOPULL, 
+    },
+    .data_gpio = {
+        .pad = PAD_PA23,
+        .func = PDM1_DATA,
+        .flags = PIN_PULLDOWN,
+    },
+    .pdm_dma_irq = DMAC1_CH5_IRQn,
+    .pdm_irq = PDM1_IRQn,
+    .pdm_irq_priority = 5, 
+    .channels = 2,
+    .sample_rate = 16000,
+    .channel_depth = 16,
+};
+const MicDevice* MIC = &mic_device;
+IRQ_MAP(PDM1, pdm1_data_handler, MIC);
+IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
+
+uint32_t BSP_GetOtpBase(void) {
+  return MPI2_MEM_BASE;
+}
+
+void board_early_init(void) {
+  HAL_StatusTypeDef ret;
+  uint32_t bootopt;
+
+  // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
+  // that the flash is properly power cycled on reset. A flash power cycle is
+  // needed if left in 4-byte addressing mode, as bootrom does not support it.
+  bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
+  bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
+  bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
+  HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
+
+  if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
+    HAL_HPAON_EnableXT48();
+    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HXT48);
+  }
+
+  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_PERI, RCC_CLK_PERI_HXT48);
+
+  // Halt LCPU first to avoid LCPU in running state
+  HAL_HPAON_WakeCore(CORE_ID_LCPU);
+  HAL_RCC_Reset_and_Halt_LCPU(1);
+
+  // Load system configuration from EFUSE
+  BSP_System_Config();
+
+  HAL_HPAON_StartGTimer();
+
+  HAL_PMU_EnableRC32K(1);
+
+  // Stop and restart WDT in case it was clocked by RC10K before
+  watchdog_stop();
+
+  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
+
+  watchdog_init();
+  watchdog_start();
+
+  HAL_PMU_EnableDLL(1);
+#ifdef SF32LB52_USE_LXT
+  HAL_PMU_EnableXTAL32();
+  ret = HAL_PMU_LXTReady();
+  PBL_ASSERTN(ret == HAL_OK);
+
+  HAL_RTC_ENABLE_LXT();
+#endif
+
+  HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
+
+  HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
+
+  HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
+
+  // Reset sysclk used by HAL_Delay_us
+  HAL_Delay_us(0);
+
+  ret = HAL_RCC_CalibrateRC48();
+  PBL_ASSERTN(ret == HAL_OK);
+
+  HAL_RCC_Init();
+  HAL_PMU_Init();
+
+  __HAL_SYSCFG_CLEAR_SECURITY();
+  HAL_EFUSE_Init();
+
+  //set Sifli chipset pwrkey reset time to 15s, so it always use PMIC cold reboot for long press 
+  hwp_pmuc->PWRKEY_CNT = PWRKEY_RESET_CNT;
+
+  // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
+  hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
+  hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
+
+  // Set all PSRAM pins as analog (low-power)
+  HAL_PIN_Set_Analog(PAD_SA00, 1);
+  HAL_PIN_Set_Analog(PAD_SA01, 1);
+  HAL_PIN_Set_Analog(PAD_SA02, 1);
+  HAL_PIN_Set_Analog(PAD_SA03, 1);
+  HAL_PIN_Set_Analog(PAD_SA04, 1);
+  HAL_PIN_Set_Analog(PAD_SA05, 1);
+  HAL_PIN_Set_Analog(PAD_SA06, 1);
+  HAL_PIN_Set_Analog(PAD_SA07, 1);
+  HAL_PIN_Set_Analog(PAD_SA08, 1);
+  HAL_PIN_Set_Analog(PAD_SA09, 1);
+  HAL_PIN_Set_Analog(PAD_SA10, 1);
+  HAL_PIN_Set_Analog(PAD_SA11, 1);
+  HAL_PIN_Set_Analog(PAD_SA12, 1);
+}
+
+void board_init(void) {
+  i2c_init(I2C1_BUS);
+  i2c_init(I2C2_BUS);
+  i2c_init(I2C3_BUS);
+
+  mic_init(MIC);
+
+  /* Enable user buttons as AON wakeup source */
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN10, AON_PIN_MODE_HIGH);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN11, AON_PIN_MODE_LOW);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN12, AON_PIN_MODE_LOW);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN13, AON_PIN_MODE_LOW);
+}

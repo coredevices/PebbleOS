@@ -54,6 +54,8 @@
 #include "boards/board_asterix.h"
 #elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
 #include "boards/board_obelix.h"
+#elif BOARD_GETAFIX_EVT
+#include "boards/board_getafix.h"
 #else
 #error "Unknown board definition"
 #endif
