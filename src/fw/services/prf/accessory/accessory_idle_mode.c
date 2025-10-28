@@ -20,6 +20,8 @@ static const char KNOCKING_CODE[] = "0belix";
 static const char KNOCKING_CODE[] = "r0bert";
 #elif PLATFORM_CALCULUS
 static const char KNOCKING_CODE[] = "c@lculus";
+#elif PLATFORM_GETAFIX
+static const char KNOCKING_CODE[] = "g3taf1x";
 #else
 #error "Unknown platform"
 #endif
