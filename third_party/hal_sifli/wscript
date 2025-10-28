@@ -62,7 +62,7 @@ def build(bld):
 
     # FIXME(SF32LB52): board-specific settings should not be here
     micro_defines = []
-    if bld.is_obelix():
+    if bld.is_obelix() or bld.is_getafix():
       micro_defines += ['LXT_DISABLE']
 
     bld.stlib(
