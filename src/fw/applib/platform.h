@@ -10,6 +10,7 @@ typedef enum PlatformType {
   PlatformTypeDiorite,
   PlatformTypeEmery,
   PlatformTypeFlint,
+  PlatformTypeGabbro
 } PlatformType;
 
 // Unit tests and the firmware don't define the SDK platform defines because reasons.
@@ -27,6 +28,8 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
   #elif PLATFORM_ASTERIX
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
+  #elif PLATFORM_GETAFIX
+    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
   #else
     #error "PBL_PLATFORM_TYPE_CURRENT couldn't be determined: No PLATFORM_* defined!"
   #endif
@@ -43,18 +46,21 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
   #elif PBL_PLATFORM_FLINT
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
+  #elif PBL_PLATFORM_GABBRO
+    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
   #else
     #error "PBL_PLATFORM_TYPE_CURRENT couldn't be determined: No PBL_PLATFORM_* defined!"
   #endif
 #endif
 
-#define PBL_PLATFORM_SWITCH_DEFAULT(PLAT, DEFAULT, APLITE, BASALT, CHALK, DIORITE, EMERY, FLINT) (\
+#define PBL_PLATFORM_SWITCH_DEFAULT(PLAT, DEFAULT, APLITE, BASALT, CHALK, DIORITE, EMERY, FLINT, GABBRO) (\
   ((PLAT) == PlatformTypeFlint) ? (FLINT) : \
   ((PLAT) == PlatformTypeEmery) ? (EMERY) : \
   ((PLAT) == PlatformTypeDiorite) ? (DIORITE) : \
   ((PLAT) == PlatformTypeChalk) ? (CHALK) : \
   ((PLAT) == PlatformTypeBasalt) ? (BASALT) : \
   ((PLAT) == PlatformTypeBasalt) ? (APLITE) : \
+  ((PLAT) == PlatformTypeGabbro) ? (GABBRO) : \
   (DEFAULT) \
 )
 
@@ -63,8 +69,8 @@ typedef enum PlatformType {
 //
 // NOTE: Optimal use of this does _not_ call a function for the `PLAT` argument! If you do, it
 //       will be _evaluated on every comparison_, which is unlikely to be what you want!
-#define PBL_PLATFORM_SWITCH(PLAT, APLITE, BASALT, CHALK, DIORITE, EMERY, FLINT) \
-  PBL_PLATFORM_SWITCH_DEFAULT(PLAT, APLITE, APLITE, BASALT, CHALK, DIORITE, EMERY, FLINT)
+#define PBL_PLATFORM_SWITCH(PLAT, APLITE, BASALT, CHALK, DIORITE, EMERY, FLINT, GABBRO) \
+  PBL_PLATFORM_SWITCH_DEFAULT(PLAT, APLITE, APLITE, BASALT, CHALK, DIORITE, EMERY, FLINT, GABBRO)
 
 
 // INTERNAL
@@ -75,4 +81,5 @@ typedef enum PlatformType {
   /*chalk*/ "chalk", \
   /*diorite*/ "diorite", \
   /*emery*/ "emery", \
-  /*flint*/ "flint")
+  /*flint*/ "flint", \
+  /*gabbro*/ "gabbro")
