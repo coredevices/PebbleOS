@@ -85,6 +85,11 @@ static jerry_value_t prv_get_platform_name(void) {
 #  define ROBERT_MODEL(model_str) NULL
 #endif // PLATFORM_ROBERT
 
+#if PLATFORM_GETAFIX
+#  define GETAFIX_MODEL(model_str) model_str
+#else
+#  define GETAFIX_MODEL(model_str) NULL
+#endif // PLATFORM_GETAFIX
 
 static jerry_value_t prv_get_model_name(void) {
   WatchInfoColor color = sys_watch_info_get_color();
@@ -202,6 +207,15 @@ static jerry_value_t prv_get_model_name(void) {
         break;
       case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY:
         model_name = OBELIX_MODEL("coredevices_pt2_silver_grey");
+        break;
+      case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK:
+        model_name = GETAFIX_MODEL("coredevices_pr2_black");
+        break;
+      case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER:
+        model_name = GETAFIX_MODEL("coredevices_pr2_silver");
+        break;
+      case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD:
+        model_name = GETAFIX_MODEL("coredevices_pr2_gold");
         break;
       case WATCH_INFO_COLOR_UNKNOWN:
       case WATCH_INFO_COLOR__MAX:

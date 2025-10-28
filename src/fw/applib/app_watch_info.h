@@ -28,6 +28,7 @@ typedef enum {
   WATCH_INFO_MODEL_PEBBLE_TIME_2, //!< Pebble Time 2
   WATCH_INFO_MODEL_COREDEVICES_P2D, //!< CoreDevices P2D (Pebble 2 Duo)
   WATCH_INFO_MODEL_COREDEVICES_PT2, //!< CoreDevices PT2 (Pebble Time 2)
+  WATCH_INFO_MODEL_COREDEVICES_PR2, //!< CoreDevices PR2 (Pebble Round 2)
 
   WATCH_INFO_MODEL__MAX
 } WatchInfoModel;
@@ -84,6 +85,11 @@ typedef enum {
   WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED = 37, //!< CoreDevices PT2, Black/Red
   WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE = 38, //!< CoreDevices PT2, Silver/Blue
   WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY = 39, //!< CoreDevices PT2, Silver/Grey
+
+  WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK = 40, //!< CoreDevices PR2, Black
+  WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER = 41, //!< CoreDevices PR2, Silver
+  WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD = 42, //!< CoreDevices PR2, Gold
+
   WATCH_INFO_COLOR__MAX
 } WatchInfoColor;
 
