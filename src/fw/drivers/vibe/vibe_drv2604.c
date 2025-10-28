@@ -166,21 +166,34 @@ int8_t vibe_get_braking_strength(void) {
   return VIBE_STRENGTH_MIN;
 }
 
+status_t vibe_calibrate(void) {
+  bool bad = false;
+  bad |= !prv_write_register(DRV2604_MODE, DRV2604_MODE_AUTOCAL);
+  bad |= !prv_write_register(DRV2604_FBCTL, DRV2604_FBCTL_LRA | DRV2604_FBCTL_FB_BRAKE_FACTOR(2) | DRV2604_FBCTL_LOOP_GAIN(2));
+  bad |= !prv_write_register(DRV2604_RATED_VOLTAGE, 0x3F); /* default value */
+  bad |= !prv_write_register(DRV2604_OD_CLAMP,      0x89); /* default value */
+  bad |= !prv_write_register(DRV2604_CONTROL1, DRV2604_CONTROL1_STARTUP_BOOST | DRV2604_CONTROL1_DRIVE_TIME(0x10 /* 2.1 ms */));
+  bad |= !prv_write_register(DRV2604_CONTROL2, DRV2604_CONTROL2_BIDIR_INPUT | DRV2604_CONTROL2_BRAKE_STABILIZER | DRV2604_CONTROL2_SAMPLE_TIME(3) | DRV2604_CONTROL2_BLANKING_TIME(1) | DRV2604_CONTROL2_IDISS_TIME(1));
+  bad |= !prv_write_register(DRV2604_CONTROL4, DRV2604_CONTROL4_AUTO_CAL_TIME(3));
+  bad |= !prv_write_register(DRV2604_GO, 1); /* GO */
+
+  return bad ? E_ERROR : S_SUCCESS;
+}
 
 void command_vibe_ctl(const char *arg) {
   if (!strcmp(arg, "cal")) {
+    status_t res;
     char buf[64];
+
     prompt_send_response("vibe cal...");
-    bool bad = false;
-    bad |= !prv_write_register(DRV2604_MODE, DRV2604_MODE_AUTOCAL);
-    bad |= !prv_write_register(DRV2604_FBCTL, DRV2604_FBCTL_LRA | DRV2604_FBCTL_FB_BRAKE_FACTOR(2) | DRV2604_FBCTL_LOOP_GAIN(2));
-    bad |= !prv_write_register(DRV2604_RATED_VOLTAGE, 0x3F); /* default value */
-    bad |= !prv_write_register(DRV2604_OD_CLAMP,      0x89); /* default value */
-    bad |= !prv_write_register(DRV2604_CONTROL1, DRV2604_CONTROL1_STARTUP_BOOST | DRV2604_CONTROL1_DRIVE_TIME(0x10 /* 2.1 ms */));
-    bad |= !prv_write_register(DRV2604_CONTROL2, DRV2604_CONTROL2_BIDIR_INPUT | DRV2604_CONTROL2_BRAKE_STABILIZER | DRV2604_CONTROL2_SAMPLE_TIME(3) | DRV2604_CONTROL2_BLANKING_TIME(1) | DRV2604_CONTROL2_IDISS_TIME(1));
-    bad |= !prv_write_register(DRV2604_CONTROL4, DRV2604_CONTROL4_AUTO_CAL_TIME(3));
-    bad |= !prv_write_register(DRV2604_GO, 1); /* GO */
-    prompt_send_response_fmt(buf, 64, "vibe cal write bad %d", bad);
+
+    res = vibe_calibrate();
+    if (res != S_SUCCESS) {
+      prompt_send_response_fmt(buf, 64, "vibe cal failed");
+    } else {
+      prompt_send_response_fmt(buf, 64, "vibe cal succeeded");
+    }
+
     return;
   }
   
