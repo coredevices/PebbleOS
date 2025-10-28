@@ -20,19 +20,29 @@
 #include "applib/ui/text_layer.h"
 #include "applib/ui/vibes.h"
 #include "applib/ui/window.h"
+#include "drivers/vibe.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
 #include "mfg/results_ui.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 
+typedef enum {
+  STATE_CALIBRATE,
+  STATE_WAITING,
+  STATE_VIBING,
+  STATE_ERROR,
+} VibeTestState;
+
 typedef struct {
   Window window;
 
   TextLayer title;
+  TextLayer status;
 
   //! How many times we've vibrated
-  int vibe_count;
+  int wait;
+  VibeTestState state;
 
 #if MFG_INFO_RECORDS_TEST_RESULTS
   MfgResultsUI results_ui;
@@ -40,26 +50,39 @@ typedef struct {
 } AppData;
 
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-#if !MFG_INFO_RECORDS_TEST_RESULTS
   AppData *data = app_state_get_user_data();
 
-  const int MAX_VIBE_COUNT = 5;
-  if (data->vibe_count >= MAX_VIBE_COUNT) {
-    // We've vibed the number of times we wanted to, time to leave!
-    app_window_stack_pop(true /* animated */);
-    return;
+  const int WAIT_AFTER_CALIBRATION_S = 3;
+
+  if (data->state == STATE_CALIBRATE) {
+    status_t status = vibe_calibrate();
+    if (status == S_SUCCESS) {
+      text_layer_set_text(&data->status, "CALIBRATED");
+      data->state = STATE_WAITING;
+    } else if (status == E_INVALID_OPERATION) {
+      text_layer_set_text(&data->status, "CALIBRATION SKIPPED");
+      data->state = STATE_WAITING;
+    } else {
+      text_layer_set_text(&data->status, "CALIBRATION FAILED");
+      data->state = STATE_ERROR;
+      tick_timer_service_unsubscribe();
+    }
+  } else if (data->state == STATE_WAITING) {
+    data->wait++;
+    if (data->wait >= WAIT_AFTER_CALIBRATION_S) {
+      text_layer_set_text(&data->status, "VIBING...");
+      data->state = STATE_VIBING;
+    }
+  } else if (data->state == STATE_VIBING) {
+    vibes_short_pulse();
   }
-
-  ++data->vibe_count;
-#endif
-
-  vibes_short_pulse();
 }
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
   *data = (AppData) {
-    .vibe_count = 0
+    .wait = 0,
+    .state = STATE_CALIBRATE,
   };
 
   app_state_set_user_data(data);
@@ -75,9 +98,13 @@ static void prv_handle_init(void) {
   text_layer_set_text(title, "VIBE TEST");
   layer_add_child(&window->layer, &title->layer);
 
-#if MFG_INFO_RECORDS_TEST_RESULTS
-  mfg_results_ui_init(&data->results_ui, MfgTest_Vibe, window);
-#endif
+  TextLayer *status = &data->status;
+  text_layer_init(status,
+                  &GRect(5, 70,
+                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 70));
+  text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_text_alignment(status, GTextAlignmentCenter);
+  layer_add_child(&window->layer, &status->layer);
 
   app_window_stack_push(window, true /* Animated */);
 
