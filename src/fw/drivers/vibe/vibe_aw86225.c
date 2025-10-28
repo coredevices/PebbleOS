@@ -113,6 +113,49 @@ static void prv_aw862xx_play_go(bool flag)
 	}
 }
 
+
+static int prv_f0_detection(void)
+{
+  int brk_gain = 0x08;
+  int track_margain = 0x0F;
+  int f0 = 0;
+  int f0_pre = 235;
+  uint8_t drv_width = 0;
+  uint8_t reg_val = 0;
+
+  prv_write_register(0x5A, 0x00);
+  prv_modify_reg(0x08, ~(3 << 0), (2 << 0)); // Enter CONT mode
+  prv_modify_reg(0x18, ~(1 << 3), (1 << 3)); // Enable F0_DET
+  prv_modify_reg(0x1D, ~(1 << 7), (1 << 7)); // Enable track_en
+  prv_modify_reg(0x08, ~(1 << 2), (1 << 2)); // Enable auto brake
+  prv_modify_reg(0x1D, ~(0x7F << 0), 0x7F);  // Config cont_drv1_lvl
+  prv_write_register(0x1E, 0x7F); // Config cont_drv2_lvl
+  prv_write_register(0x1F, 0x04); // Config cont_drv1_time
+  prv_write_register(0x20, 0x06); // Config cont_drv2_time
+  prv_write_register(0x22, 0x0f); // Config cont_track_margin
+
+  drv_width = (uint8_t)(24000 / f0_pre - 8 - brk_gain - track_margain); // Calculate cont_drv_width
+  prv_write_register(0x1A, drv_width); // Config cont_drv_width
+
+  prv_write_register(0x09, 0x01); // Start play
+  psleep(300);
+  prv_write_register(0x09, 0x02); // Stop play
+
+  prv_read_register(0x25, &reg_val); // LRA_F0 high 8 bits
+  f0 = reg_val << 8;
+  prv_read_register(0x26, &reg_val); // LRA_F0 low 8 bits
+  f0 |= reg_val;
+  if (f0 == 0) {
+    return -1;
+  }
+  f0 = 384000 / f0;
+  
+  prv_modify_reg(0x18, ~(1 << 3), (0 << 3)); // Disable F0_DET
+  prv_modify_reg(0x08, ~(1 << 2), (0 << 2)); // Close auto brake
+
+  return f0;
+}
+
 void vibe_init(void) {
   gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
 
@@ -163,59 +206,18 @@ int8_t vibe_get_braking_strength(void) {
   return strength;
 }
 
-static int vibe_f0_detection(void)
-{
-  int brk_gain = 0x08;
-  int track_margain = 0x0F;
-  int f0 = 0;
-  int f0_pre = 235;
-  uint8_t drv_width = 0;
-  uint8_t reg_val = 0;
-
-  prv_write_register(0x5A, 0x00);
-  prv_modify_reg(0x08, ~(3 << 0), (2 << 0)); // Enter CONT mode
-  prv_modify_reg(0x18, ~(1 << 3), (1 << 3)); // Enable F0_DET
-  prv_modify_reg(0x1D, ~(1 << 7), (1 << 7)); // Enable track_en
-  prv_modify_reg(0x08, ~(1 << 2), (1 << 2)); // Enable auto brake
-  prv_modify_reg(0x1D, ~(0x7F << 0), 0x7F);  // Config cont_drv1_lvl
-  prv_write_register(0x1E, 0x7F); // Config cont_drv2_lvl
-  prv_write_register(0x1F, 0x04); // Config cont_drv1_time
-  prv_write_register(0x20, 0x06); // Config cont_drv2_time
-  prv_write_register(0x22, 0x0f); // Config cont_track_margin
-
-  drv_width = (uint8_t)(24000 / f0_pre - 8 - brk_gain - track_margain); // Calculate cont_drv_width
-  prv_write_register(0x1A, drv_width); // Config cont_drv_width
-
-  prv_write_register(0x09, 0x01); // Start play
-  psleep(300);
-  prv_write_register(0x09, 0x02); // Stop play
-
-  prv_read_register(0x25, &reg_val); // LRA_F0 high 8 bits
-  f0 = reg_val << 8;
-  prv_read_register(0x26, &reg_val); // LRA_F0 low 8 bits
-  f0 |= reg_val;
-  if (f0 == 0) {
-    return -1;
-  }
-  f0 = 384000 / f0;
-  
-  prv_modify_reg(0x18, ~(1 << 3), (0 << 3)); // Disable F0_DET
-  prv_modify_reg(0x08, ~(1 << 2), (0 << 2)); // Close auto brake
-
-  return f0;
-}
-
-static int vibe_f0_calibration(void) {
+// Refer to DG_AW862XX_Software_Design_Guide_CN_V1.1
+status_t vibe_calibrate(void) {
   char f0_cali_lra = 0;
   int f0_cali_step = 0;
   int f0_pre = 235;
   int f0_cali_min = 0;
   int f0_cali_max = 0;
-  int f0 = 0;
+  int f0;
   
-  f0 = vibe_f0_detection();
+  f0 = prv_f0_detection();
   if (f0 < 0) {
-    return -1;
+    return E_ERROR;
   }
 
   /**
@@ -256,13 +258,13 @@ static int vibe_f0_calibration(void) {
 
   prv_write_register(0x5A, f0_cali_lra & 0x3F);
 
-  return 0;
+  return S_SUCCESS;
 }
 
 void command_vibe_ctl(const char *arg) {
   if (!strcmp(arg, "cal")) {
-    int rc = vibe_f0_calibration();
-    if (rc < 0) {
+    status_t rc = vibe_calibrate();
+    if (rc != S_SUCCESS) {
       prompt_send_response("F0 cali fail");
     } else {
       prompt_send_response("F0 cali success");
