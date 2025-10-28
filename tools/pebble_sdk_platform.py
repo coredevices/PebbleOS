@@ -109,6 +109,22 @@ flint_platform = {
     "TAGS": ["flint", "bw", "rect", "mic", "health", "compass", "144w", "168h"],
 }
 
+gabbro_platform = {
+    "NAME": "gabbro",
+    "MAX_APP_BINARY_SIZE": 0x20000,  # 128K
+    "MAX_APP_MEMORY_SIZE": 0x20000,  # 128K
+    "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
+    "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
+    "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
+    "DEFINES": ["PBL_PLATFORM_GABBRO", "PBL_COLOR", "PBL_ROUND",
+                "PBL_MICROPHONE", "PBL_HEALTH", "PBL_COMPASS",
+                "PBL_DISPLAY_WIDTH=260", "PBL_DISPLAY_HEIGHT=260"],
+    "BUILD_DIR": "gabbro",
+    "BUNDLE_BIN_DIR": "gabbro",
+    "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
+    "MAX_FONT_GLYPH_SIZE": 320,
+    "TAGS": ["gabbro", "color", "round", "mic", "health", "compass", "260w", "260h"]
+}
 
 pebble_platforms = {
     "flint": flint_platform,
@@ -117,6 +133,7 @@ pebble_platforms = {
     "chalk": chalk_platform,
     "basalt": basalt_platform,
     "aplite": aplite_platform,
+    "gabbro": gabbro_platform,
 }
 
 
