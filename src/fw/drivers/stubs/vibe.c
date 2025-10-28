@@ -20,6 +20,9 @@ int8_t vibe_get_braking_strength(void) {
   return VIBE_STRENGTH_OFF;
 }
 
+status_t vibe_calibrate(void) {
+  return E_INVALID_OPERATION;
+}
 
 void command_vibe_ctl(const char *arg) {
   int strength = atoi(arg);
