@@ -39,6 +39,10 @@ static const ColorTable s_color_table[] = {
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED, .short_name = "BR" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE, .short_name = "SB" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY, .short_name = "SG" },
+#elif PLATFORM_GETAFIX
+  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK, .short_name = "BK" },
+  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER, .short_name = "SV" },
+  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD, .short_name = "GD" },
 #endif
 };
 
@@ -92,17 +96,24 @@ static void prv_handle_init(void) {
 
   QRCode* qr_code = &data->qr_code;
   qr_code_init_with_parameters(qr_code,
+#if PBL_ROUND
+#define QR_CODE_SIZE ((window->layer.bounds.size.w * 10) / 14)
+                               &GRect((window->layer.bounds.size.w - QR_CODE_SIZE) / 2,
+                                      (window->layer.bounds.size.h - QR_CODE_SIZE) / 2,
+                                      QR_CODE_SIZE, QR_CODE_SIZE),
+#else
                                &GRect(10, 10, window->layer.bounds.size.w - 20,
                                       window->layer.bounds.size.h - 30),
+#endif
                                data->qr_buffer, strlen(data->qr_buffer), QRCodeECCMedium,
                                GColorBlack, GColorWhite);
   layer_add_child(&window->layer, &qr_code->layer);
 
   TextLayer* serial = &data->serial;
   text_layer_init_with_parameters(serial,
-                                  &GRect(0, window->layer.bounds.size.h - 20,
+                                  &GRect(0, window->layer.bounds.size.h - PBL_IF_RECT_ELSE(20, 40),
                                          window->layer.bounds.size.w, 20),
-                                  data->serial_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+                                         data->serial_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_14),
                                   GColorBlack, GColorWhite, GTextAlignmentCenter,
                                   GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->layer, &serial->layer);

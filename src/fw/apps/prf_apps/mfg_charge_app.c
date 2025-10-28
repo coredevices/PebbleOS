@@ -37,7 +37,7 @@ static const int PASS_BATTERY_PERCENTAGE = 84; // ~4050mv
 
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
-#elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX)
+#elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
 static const int SLOW_THRESHOLD_PERCENTAGE = 0;
 static const int PASS_BATTERY_PERCENTAGE = 70;
 

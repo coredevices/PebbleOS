@@ -40,15 +40,22 @@ static void prv_handle_init(void) {
 
   QRCode* qr_code = &data->qr_code;
   qr_code_init_with_parameters(qr_code,
+#if PBL_ROUND
+#define QR_CODE_SIZE ((window->layer.bounds.size.w * 10) / 14)
+                               &GRect((window->layer.bounds.size.w - QR_CODE_SIZE) / 2,
+                                      (window->layer.bounds.size.h - QR_CODE_SIZE) / 2,
+                                      QR_CODE_SIZE, QR_CODE_SIZE),
+#else
                                &GRect(10, 10, window->layer.bounds.size.w - 20,
                                       window->layer.bounds.size.h - 30),
+#endif
                                data->name_buffer, strlen(data->name_buffer), QRCodeECCMedium,
                                GColorBlack, GColorWhite);
   layer_add_child(&window->layer, &qr_code->layer);
 
   TextLayer* name = &data->name;
   text_layer_init_with_parameters(name,
-                                  &GRect(0, window->layer.bounds.size.h - 20,
+                                  &GRect(0, window->layer.bounds.size.h - PBL_IF_RECT_ELSE(20, 40),
                                          window->layer.bounds.size.w, 20),
                                   data->name_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_14),
                                   GColorBlack, GColorWhite, GTextAlignmentCenter,

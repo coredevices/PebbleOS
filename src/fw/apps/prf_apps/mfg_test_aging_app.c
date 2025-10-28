@@ -574,7 +574,8 @@ static void prv_handle_init(void) {
 
   // Setup title and status layers (hidden initially)
   TextLayer *title = &data->title;
-  text_layer_init(title, &GRect(0, 0, bounds.size.w, 24));
+  const int16_t title_y = PBL_IF_ROUND_ELSE(10, 0);
+  text_layer_init(title, &GRect(0, title_y, bounds.size.w, 24));
   text_layer_set_font(title, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(title, GTextAlignmentCenter);
   text_layer_set_text(title, "TEST AGING");
@@ -582,9 +583,13 @@ static void prv_handle_init(void) {
   layer_set_hidden(&title->layer, true);
 
   TextLayer *status = &data->status;
-  text_layer_init(status, &GRect(5, 25, bounds.size.w - 10, bounds.size.h - 25));
+  const int16_t status_y = PBL_IF_ROUND_ELSE(40, 25);
+  const int16_t status_x = PBL_IF_ROUND_ELSE(15, 5);
+  text_layer_init(status, &GRect(status_x, status_y, bounds.size.w - (status_x * 2),
+                                 bounds.size.h - status_y));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_alignment(status, GTextAlignmentLeft);
+  text_layer_set_text_alignment(status, PBL_IF_ROUND_ELSE(GTextAlignmentCenter,
+                                                           GTextAlignmentLeft));
   layer_add_child(window_layer, &status->layer);
   layer_set_hidden(&status->layer, true);
 
