@@ -44,6 +44,7 @@ typedef enum {
   PROCESS_INFO_PLATFORM_EMERY   = 0x5 << 6,
   //! Values that are actually added by SDK 4.9+
   PROCESS_INFO_PLATFORM_FLINT   = 0x6 << 6,
+  PROCESS_INFO_PLATFORM_GABBRO  = 0x7 << 6,
 } PebbleProcessInfoFlags;
 
 //!   @} // group App
