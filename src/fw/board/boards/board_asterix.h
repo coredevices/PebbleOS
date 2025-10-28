@@ -51,10 +51,9 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12) },
   .pmic_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 12) },
   .low_power_threshold = 2,
-  // Current is not great but getting there.  1 mA or so on 130 mAh battery;
-  // Memfault reports 160h expected battery, but we'll conservatively
-  // estimate 130 hours
-  .battery_capacity_hours = 130,
+
+  // Memfault is currently estimates a bit above 400 hours as the median
+  .battery_capacity_hours = 400,
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {
