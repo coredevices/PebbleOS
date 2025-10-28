@@ -35,7 +35,8 @@ static ALWAYS_INLINE StatusBarTextFormat prv_get_text_format(void) {
       /*chalk*/ FONT_KEY_GOTHIC_14,
       /*diorite*/ FONT_KEY_GOTHIC_14,
       /*emery*/ FONT_KEY_GOTHIC_18,
-      /*flint*/ FONT_KEY_GOTHIC_14);
+      /*flint*/ FONT_KEY_GOTHIC_14,
+      /*gabbro*/ FONT_KEY_GOTHIC_18);
   return (StatusBarTextFormat) {
     .overflow_mode = GTextOverflowModeTrailingEllipsis,
     .text_alignment = GTextAlignmentCenter,
