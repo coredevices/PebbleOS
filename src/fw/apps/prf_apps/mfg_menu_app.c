@@ -318,7 +318,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Device Info",       .callback = prv_select_info_qr },
     { .icon = prv_get_icon_for_test(MfgTest_Buttons),
       .title = "Test Buttons",      .callback = prv_select_button },
-#if PBL_ROUND
+#if PBL_ROUND && !PLATFORM_GETAFIX
     { .title = "Calibrate Display", .callback = prv_select_calibrate_display },
 #endif
       { .icon = prv_get_icon_for_test(MfgTest_Display),
