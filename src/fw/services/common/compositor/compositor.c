@@ -176,18 +176,21 @@ void compositor_render_app(void) {
     const int16_t disp_width = DISP_COLS;
     const int16_t disp_height = DISP_ROWS;
 
-#if PLATFORM_OBELIX && !RECOVERY_FW
+#if (PLATFORM_OBELIX || PLATFORM_GETAFIX) && !RECOVERY_FW
     // Check if we should use scaling mode for legacy apps
     if (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) {
       // Scale legacy apps to fill the display using nearest-neighbor scaling
+
+      // Fill entire framebuffer with black first to avoid artifacts
+      memset(s_framebuffer.buffer, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
 
       // Calculate scaling factors using fixed-point arithmetic (16.16 format)
       // This gives us sub-pixel precision for better scaling
       const uint32_t scale_x = ((uint32_t)app_width << 16) / disp_width;
       const uint32_t scale_y = ((uint32_t)app_height << 16) / disp_height;
 
-      uint8_t *dst = (uint8_t *)s_framebuffer.buffer;
-      uint8_t *app_buffer = (uint8_t *)app_framebuffer->buffer;
+      GBitmap dst_bitmap = compositor_get_framebuffer_as_bitmap();
+      GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
 
       // Perform nearest-neighbor scaling
       for (int16_t dst_y = 0; dst_y < disp_height; dst_y++) {
@@ -198,7 +201,22 @@ void compositor_render_app(void) {
         // Ensure we don't go out of bounds
         if (src_y >= app_height) continue;
 
-        for (int16_t dst_x = 0; dst_x < disp_width; dst_x++) {
+        // Get the line pointers using framebuffer_get_line for proper platform handling
+        uint8_t *dst_line = framebuffer_get_line(&s_framebuffer, dst_y);
+        const uint8_t *src_line = framebuffer_get_line((FrameBuffer *)app_framebuffer, src_y);
+
+#if PBL_ROUND
+        // Get valid pixel ranges for both source and destination rows on round displays
+        const GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, dst_y);
+        const GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, src_y);
+        const int16_t dst_x_start = dst_row_info.min_x;
+        const int16_t dst_x_end = dst_row_info.max_x;
+#else
+        const int16_t dst_x_start = 0;
+        const int16_t dst_x_end = disp_width - 1;
+#endif
+
+        for (int16_t dst_x = dst_x_start; dst_x <= dst_x_end; dst_x++) {
           // Calculate source X coordinate
           const uint32_t src_x_fixed = (uint32_t)dst_x * scale_x;
           const int16_t src_x = src_x_fixed >> 16;  // Get integer part
@@ -206,10 +224,16 @@ void compositor_render_app(void) {
           // Ensure we don't go out of bounds
           if (src_x >= app_width) continue;
 
+#if PBL_ROUND
+          // On round displays, also check if the source pixel is within valid range
+          if (src_x < src_row_info.min_x || src_x > src_row_info.max_x) {
+            // Source pixel is outside circular mask, leave destination black
+            continue;
+          }
+#endif
+
           // Copy the pixel from source to destination
-          const uint32_t src_idx = src_y * app_width + src_x;
-          const uint32_t dst_idx = dst_y * disp_width + dst_x;
-          dst[dst_idx] = app_buffer[src_idx];
+          dst_line[dst_x] = src_line[src_x];
         }
       }
     } else
@@ -228,6 +252,32 @@ void compositor_render_app(void) {
       const int16_t app_offset_y = CLIP(app_peek_offset_y, 0, bezel_height);
       PBL_ASSERTN((bezel_width > 0) && (bezel_height > 0));
 
+#if PBL_ROUND
+      // For round displays, use bitmap row info to only copy valid pixels
+      GBitmap dst_bitmap = compositor_get_framebuffer_as_bitmap();
+      GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
+
+      // Fill entire framebuffer with black
+      memset(s_framebuffer.buffer, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
+
+      for (int app_row = 0; app_row < app_height; ++app_row) {
+        const int16_t dst_y = app_offset_y + app_row;
+
+        // Get row info for both source and destination to use min_x/max_x bounds
+        const GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, app_row);
+        const GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, dst_y);
+
+        // Calculate the effective range to copy based on row bounds
+        const int16_t src_start = src_row_info.min_x;
+        const int16_t src_end = src_row_info.max_x + 1; // max_x is inclusive
+        const int16_t copy_width = src_end - src_start;
+
+        // Copy only the valid pixel range to the centered position
+        memcpy(&dst_row_info.data[bezel_width + src_start],
+               &src_row_info.data[src_start],
+               copy_width);
+      }
+#else
       uint8_t *dst = (uint8_t *)s_framebuffer.buffer;
       uint8_t *app_buffer = (uint8_t *)app_framebuffer->buffer;
 
@@ -265,6 +315,7 @@ void compositor_render_app(void) {
       const int bottom_bezel_length = (uintptr_t)&s_framebuffer.buffer[framebuffer_size] -
                                       (uintptr_t)dst;
       memset(dst, GColorBlack.argb, bottom_bezel_length);
+#endif
     }
 #endif
   }
