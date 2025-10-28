@@ -22,6 +22,10 @@
 #if PLATFORM_OBELIX
 #define ALS_MIN_VALUE 100
 #define ALS_MAX_VALUE 250
+#elif PLATFORM_GETAFIX
+// FIXME(GETAFIX): Adjust to narrower range once validated
+#define ALS_MIN_VALUE 5000
+#define ALS_MAX_VALUE 20000
 #else
 #define ALS_MIN_VALUE 0
 #define ALS_MAX_VALUE 65535

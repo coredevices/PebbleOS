@@ -26,6 +26,8 @@
 const char *const s_model = "C2D";
 #elif PLATFORM_OBELIX
 const char *const s_model = "CT2";
+#elif PLATFORM_GETAFIX
+const char *const s_model = "PR2";
 #else
 const char *const s_model = "Unknown";
 #endif
@@ -68,6 +70,22 @@ const ColorTable s_color_table[] = {
     .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY,
     .name = "SILVER/GREY",
     .short_name = "SG",
+  },
+#elif PLATFORM_GETAFIX
+  {
+    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK,
+    .name = "BLACK",
+    .short_name = "BK",
+  },
+  {
+    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER,
+    .name = "SILVER",
+    .short_name = "SV",
+  },
+  {
+    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD,
+    .name = "GOLD",
+    .short_name = "GD",
   },
 #endif
 };
@@ -124,6 +142,20 @@ static void prv_get_display_colors(WatchInfoColor watch_color, GColor *color1, G
     case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY:
       *color1 = GColorLightGray;  // Silver approximation
       *color2 = GColorDarkGray;
+      break;
+
+    // PR2
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK:
+      *color1 = GColorBlack;
+      *color2 = GColorBlack;
+      break;
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER:
+      *color1 = GColorLightGray;  // Silver approximation
+      *color2 = GColorLightGray;
+      break;
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD:
+      *color1 = GColorYellow;  // Gold approximation
+      *color2 = GColorYellow;
       break;
 
     default:
