@@ -15,7 +15,7 @@ def build(bld):
             'speex_includes',
         ]
 
-        if bld.is_asterix() or bld.is_obelix():
+        if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
             use.append('nrf_fuel_gauge')
         if bld.env.memfault:
             use.append('memfault_includes')
@@ -43,7 +43,7 @@ def build(bld):
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/default/compositor_modal_transitions.*')
                 excludes.append('common/battery/voltage/**')
-            elif bld.is_obelix():
+            elif bld.is_obelix() or bld.is_getafix():
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
                 excludes.append('common/battery/voltage/**')
