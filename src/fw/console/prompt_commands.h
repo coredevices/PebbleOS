@@ -481,9 +481,9 @@ static const Command s_prompt_commands[] = {
 
   //{ "pmic rails", command_pmic_rails, 0},
 
-
+#if MANUFACTURING_FW
   { "disp", command_display_set, 1},
-
+#endif
 #if MFG_INFO_RECORDS_TEST_RESULTS
   { "mfg ui test results", command_mfg_info_test_results, 0 },
 #endif // MFG_INFO_RECORDS_TEST_RESULTS

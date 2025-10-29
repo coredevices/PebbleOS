@@ -564,18 +564,41 @@ def _build_recovery(bld):
     if 'MFG_INFO_RECORDS_TEST_RESULTS' not in bld.env.DEFINES:
         excludes.extend('mfg/results_ui.c')
 
-    if not bld.is_asterix():
+    if not bld.env.IS_MFG:
         excludes.extend([
-            'apps/prf_apps/mfg_speaker_app.c',
-            'apps/prf_apps/mfg_mic_app.c',
-            'apps/prf_apps/mfg_sine_wave.c',
-        ])
-    
-    if not bld.is_obelix() or (bld.is_obelix() and not bld.env.IS_MFG):
-        excludes.extend([
+            'apps/prf_apps/mfg_accel_app.c',
+            'apps/prf_apps/mfg_als_app.c',
             'apps/prf_apps/mfg_audio_app.c',
+            'apps/prf_apps/mfg_backlight_app.c',
+            'apps/prf_apps/mfg_bt_device_name_app.c',
+            'apps/prf_apps/mfg_bt_sig_rf_app_app.c',
+            'apps/prf_apps/mfg_button_app.c',
+            'apps/prf_apps/mfg_certification_app.c',
+            'apps/prf_apps/mfg_display_app.c',
+            'apps/prf_apps/mfg_display_calibration_app.c',
+            'apps/prf_apps/mfg_hrm_app.c',
+            'apps/prf_apps/mfg_mic_app.c',
             'apps/prf_apps/mfg_pdm_mic_app.c',
+            'apps/prf_apps/mfg_program_color_app.c',
+            'apps/prf_apps/mfg_runin_app.c',
+            'apps/prf_apps/mfg_sine_wave_app.c',
+            'apps/prf_apps/mfg_speaker_app.c',
+            'apps/prf_apps/mfg_touch_app.c',
+            'apps/prf_apps/mfg_vibe_app.c',
         ])
+    else:
+        if not bld.is_asterix():
+            excludes.extend([
+                'apps/prf_apps/mfg_speaker_app.c',
+                'apps/prf_apps/mfg_mic_app.c',
+                'apps/prf_apps/mfg_sine_wave.c',
+            ])
+    
+        if not bld.is_obelix():
+            excludes.extend([
+                'apps/prf_apps/mfg_audio_app.c',
+                'apps/prf_apps/mfg_pdm_mic_app.c',
+            ])
 
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
