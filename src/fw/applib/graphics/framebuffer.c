@@ -19,8 +19,19 @@ void framebuffer_init(FrameBuffer *fb, const GSize *size) {
 
 GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
   PBL_ASSERTN(!gsize_equal(size, &GSizeZero));
+#if PLATFORM_SPALDING
   const GBitmapDataRowInfoInternal *data_row_infos =
-    PBL_IF_RECT_ELSE(NULL, g_gbitmap_spalding_data_row_infos);
+      g_gbitmap_spalding_data_row_infos;
+#elif PLATFORM_GETAFIX
+  const GBitmapDataRowInfoInternal *data_row_infos;
+  if (fb->size.w == LEGACY_3X_DISP_COLS && fb->size.h == LEGACY_3X_DISP_ROWS) {
+    data_row_infos = g_gbitmap_getafix_legacy_3x_data_row_infos;
+  } else {
+    data_row_infos = g_gbitmap_getafix_data_row_infos;
+  }
+#else
+  const GBitmapDataRowInfoInternal *data_row_infos = NULL;
+#endif
 
   return (GBitmap) {
     .addr = fb->buffer,
