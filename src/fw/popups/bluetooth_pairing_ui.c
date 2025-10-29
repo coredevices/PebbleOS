@@ -130,13 +130,9 @@ static void prv_update_text_layer_with_translation(TextLayer *text_layer,
 }
 
 static void prv_update_prf_info_text_layers_text(BTPairingUIData *data) {
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
+#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
   const char *font_key_default = FONT_KEY_GOTHIC_28_BOLD;
   const char *font_key_japanese = FONT_KEY_MINCHO_24_PAIR;
-#elif PLATFORM_OBELIX
-  const char *font_key_default = FONT_KEY_GOTHIC_28_BOLD;
-  // FIXME(OBELIX): We need MINCHO_24, but not available right now
-  const char *font_key_japanese = FONT_KEY_MINCHO_20_PAIR;
 #else
   const char *font_key_default = FONT_KEY_GOTHIC_24_BOLD;
   const char *font_key_japanese = FONT_KEY_MINCHO_20_PAIR;
