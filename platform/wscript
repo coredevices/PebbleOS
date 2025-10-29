@@ -160,8 +160,7 @@ def has_touch(ctx):
     elif is_asterix(ctx):
         return False
     elif is_obelix(ctx):
-        # FIXME(OBELIX): needs to be updated
-        return False
+        return True
     else:
         return None
 
