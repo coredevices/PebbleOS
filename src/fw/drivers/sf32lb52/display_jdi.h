@@ -63,4 +63,4 @@ typedef const struct DisplayJDIDevice {
   DisplayJDISplash splash;
 } DisplayJDIDevice;
 
-void jdi_lpm015m135a_irq_handler(DisplayJDIDevice *disp);
+void display_jdi_irq_handler(DisplayJDIDevice *disp);
