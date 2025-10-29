@@ -628,7 +628,7 @@ elif bld.is_obelix():
     bld.objects(
         name='driver_display',
         source=[
-            'sf32lb52/jdi_lpm015m135a.c',
+            'sf32lb52/display_jdi.c',
         ],
         use=[
             'fw_includes',
