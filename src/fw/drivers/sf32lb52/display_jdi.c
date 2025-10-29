@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "jdi_lpm015m135a.h"
+#include "display_jdi.h"
 
 #include "board/board.h"
 #include "board/display.h"
@@ -111,7 +111,7 @@ static void prv_display_update_terminate(void *data) {
   stop_mode_enable(InhibitorDisplay);
 }
 
-void jdi_lpm015m135a_irq_handler(DisplayJDIDevice *disp) {
+void display_jdi_irq_handler(DisplayJDIDevice *disp) {
   DisplayJDIState *state = DISPLAY->state;
   HAL_LCDC_IRQHandler(&state->hlcdc);
 }
