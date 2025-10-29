@@ -19,8 +19,8 @@
 
 typedef struct PACKED FramebufferStatResp {
   uint8_t flags;
-  uint8_t width;
-  uint8_t height;
+  uint16_t width;
+  uint16_t height;
   uint8_t bpp;
   uint32_t length;
 } FramebufferStatResp;
