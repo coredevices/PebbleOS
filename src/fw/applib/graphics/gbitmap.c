@@ -210,6 +210,10 @@ T_STATIC size_t prv_gbitmap_size_for_data(GSize size, GBitmapFormat format) {
   if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
     return DISPLAY_FRAMEBUFFER_BYTES;
   }
+#elif PLATFORM_GETAFIX
+  if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
+    return DISPLAY_FRAMEBUFFER_BYTES;
+  }
 #endif
   return gbitmap_format_get_row_size_bytes(size.w, format) * size.h;
 }
@@ -243,9 +247,13 @@ static GBitmap* prv_gbitmap_create_blank(GSize size, GBitmapFormat format) {
       return NULL;
     }
 
-#ifdef PLATFORM_SPALDING
+#if PLATFORM_SPALDING
     if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
       bitmap->data_row_infos = g_gbitmap_spalding_data_row_infos;
+    }
+#elif PLATFORM_GETAFIX
+    if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
+      bitmap->data_row_infos = g_gbitmap_getafix_data_row_infos;
     }
 #endif
   }
