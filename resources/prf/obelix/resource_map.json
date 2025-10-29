@@ -4,6 +4,12 @@
     {
       "name": "FONT_FALLBACK_INTERNAL",
       "file": "common/base/pbf/GOTHIC_24.pbf"
+    },
+    {
+      "type": "font",
+      "name": "MINCHO_24_PAIR",
+      "file": "prf/base/ttf/sazanami-mincho.ttf",
+      "characterRegex": "[ペアリング]"
     }
   ]
 }
