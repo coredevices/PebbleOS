@@ -92,6 +92,7 @@ typedef struct SettingsBluetoothData {
 
   char header_buffer[HEADER_BUFFER_SIZE];
   ToggleState toggle_state;
+  bool did_enable_pairability;
 
   EventServiceInfo bt_airplane_event_info;
   EventServiceInfo bt_connection_event_info;
@@ -318,7 +319,27 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
     case PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT:
 #endif
     case PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT: {
+      bool had_remotes = (settings_data->remote_list_head != NULL);
       settings_bluetooth_update_remotes_private(settings_data);
+      bool has_remotes = (settings_data->remote_list_head != NULL);
+      
+      // Handle single phone pairing policy: enable/disable advertising based on pairing state
+      if (had_remotes && !has_remotes) {
+        // Device was removed, enable advertising
+        if (!settings_data->did_enable_pairability) {
+          bt_pairability_use();
+          settings_data->did_enable_pairability = true;
+          PBL_LOG(LOG_LEVEL_INFO, "Enabled advertising - no paired devices");
+        }
+      } else if (!had_remotes && has_remotes) {
+        // Device was added, disable advertising
+        if (settings_data->did_enable_pairability) {
+          bt_pairability_release();
+          settings_data->did_enable_pairability = false;
+          PBL_LOG(LOG_LEVEL_INFO, "Disabled advertising - device paired");
+        }
+      }
+      
       settings_menu_mark_dirty(SettingsMenuItemBluetooth);
       break;
     }
@@ -493,12 +514,9 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
           subtitle = i18n_get("Airplane Mode", data);
           icon = &data->icon_heap_bitmap[AirplaneIconIdx];
         } else {
-          if (selected) {
-            bt_local_id_copy_device_name(device_name_buffer, false);
-            subtitle = device_name_buffer;
-          } else {
-            subtitle = i18n_get("Now Discoverable", data);
-          }
+          // Always show device name as subtitle
+          bt_local_id_copy_device_name(device_name_buffer, false);
+          subtitle = device_name_buffer;
           icon = &data->icon_heap_bitmap[BluetoothIconIdx];
         }
       } else {
@@ -512,19 +530,19 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     // TODO PBL-23111: Decide how we should show these strings on round displays
 #if PBL_RECT
       // Hack: the pairing instruction is drawn in the cell callback, but outside of the cell...
+      const GDrawState draw_state = ctx->draw_state;
+      // Enable drawing outside of the cell:
+      ctx->draw_state.clip_box = ctx->dest_bitmap.bounds;
+
+      graphics_context_set_text_color(ctx, GColorBlack);
+      GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+      GRect box = cell_layer->bounds;
+      box.origin.x = 15;
+      box.origin.y = menu_cell_basic_cell_height() + (int16_t)9;
+      box.size.w -= 30;
+      box.size.h = 83;
+
       if (!data->remote_list_head) {
-        const GDrawState draw_state = ctx->draw_state;
-        // Enable drawing outside of the cell:
-        ctx->draw_state.clip_box = ctx->dest_bitmap.bounds;
-
-        graphics_context_set_text_color(ctx, GColorBlack);
-        GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
-        GRect box = cell_layer->bounds;
-        box.origin.x = 15;
-        box.origin.y = menu_cell_basic_cell_height() + (int16_t)9;
-        box.size.w -= 30;
-        box.size.h = 83;
-
         if (bt_ctl_is_airplane_mode_on()) {
           graphics_draw_text(ctx, i18n_get("Disable Airplane Mode to connect.", data), font,
                              box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
@@ -533,9 +551,17 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                              font, box, GTextOverflowModeTrailingEllipsis,
                              GTextAlignmentCenter, NULL);
         }
-
-        ctx->draw_state = draw_state;
+      } else {
+        // Show message when any phone is paired (even if disconnected)
+        // Position the message lower to appear below the paired phone row
+        GRect msg_box = box;
+        msg_box.origin.y += menu_cell_basic_cell_height() - 10;
+        graphics_draw_text(ctx, i18n_get("Forget this device to pair a new device.", data),
+                           font, msg_box, GTextOverflowModeTrailingEllipsis,
+                           GTextAlignmentCenter, NULL);
       }
+
+      ctx->draw_state = draw_state;
 #endif
   } else {
     const uint16_t device_index = row - 1;
@@ -606,7 +632,14 @@ static void prv_expand_cb(SettingsCallbacks *context) {
   event_service_client_subscribe(&data->bt_connection_event_info);
   event_service_client_subscribe(&data->bt_pairing_event_info);
   event_service_client_subscribe(&data->ble_device_name_updated_event_info);
-  bt_pairability_use();
+  
+  // Only enable pairing/advertising if there are no paired devices (single phone policy)
+  data->did_enable_pairability = false;
+  if (!data->remote_list_head) {
+    bt_pairability_use();
+    data->did_enable_pairability = true;
+  }
+  
   bt_driver_reconnect_pause();
   // Reload & redraw after pairing popup
   app_focus_service_subscribe_handlers((AppFocusHandlers) { .did_focus = prv_focus_handler });
@@ -617,7 +650,12 @@ static void prv_expand_cb(SettingsCallbacks *context) {
 // they consume a fair amount of power
 static void prv_hide_cb(SettingsCallbacks *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData *) context;
-  bt_pairability_release();
+  
+  // Only release pairability if we enabled it
+  if (data->did_enable_pairability) {
+    bt_pairability_release();
+  }
+  
   bt_driver_reconnect_resume();
   bt_driver_reconnect_reset_interval();
   bt_driver_reconnect_try_now(false /*ignore_paused*/);
