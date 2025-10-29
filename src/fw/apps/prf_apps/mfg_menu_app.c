@@ -75,6 +75,7 @@ static void prv_launch_app_cb(void *data) {
   app_manager_launch_new_app(&(AppLaunchConfig) { .md = data });
 }
 
+#ifdef MANUFACTURING_FW
 static void prv_select_bt_device_name(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_device_name_app_get_info());
 }
@@ -102,7 +103,6 @@ static void prv_select_backlight(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_backlight_app_get_info());
 }
 
-#ifdef MANUFACTURING_FW
 static void prv_select_audio(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_audio_app_get_info());
 }
@@ -110,7 +110,6 @@ static void prv_select_audio(int index, void *context) {
 static void prv_select_pdm_mic(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_pdm_mic_app_get_info());
 }
-#endif
 #endif
 
 static void prv_select_runin(int index, void *context) {
@@ -162,7 +161,7 @@ static void prv_select_program_color(int index, void *context) {
 }
 
 static void prv_select_load_prf(int index, void *context) {
-#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
+#if PLATFORM_OBELIX
   // On Obelix MFG, we invalidate all slots so it will boot into PRF next time
   firmware_storage_invalidate_firmware_slot(0);
   firmware_storage_invalidate_firmware_slot(1);
@@ -171,6 +170,7 @@ static void prv_select_load_prf(int index, void *context) {
 #endif
   system_reset();
 }
+#endif // MANUFACTURING_FW
 
 static void prv_select_reset(int index, void *context) {
   system_reset();
@@ -222,6 +222,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 
   // Define a const blueprint on the stack.
   const SimpleMenuItem s_menu_items[] = {
+#ifdef MANUFACTURING_FW
     { .title = "BT Device Name",    .callback = prv_select_bt_device_name },
     { .title = "Device Serial" },
 #if PBL_ROUND
@@ -237,10 +238,8 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #endif
 #if PLATFORM_OBELIX
     { .title = "Test Backlight",    .callback = prv_select_backlight },
-#ifdef MANUFACTURING_FW
     { .title = "Test Audio",        .callback = prv_select_audio },
     { .title = "Test PDM Mic",        .callback = prv_select_pdm_mic },
-#endif
 #endif
     { .icon = prv_get_icon_for_test(MfgTest_ALS),
       .title = "Test ALS",          .callback = prv_select_als },
@@ -260,6 +259,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Certification",     .callback = prv_select_certification },
     { .title = "Program Color",     .callback = prv_select_program_color },
     { .title = "Load PRF",          .callback = prv_select_load_prf },
+#endif
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown }
   };
