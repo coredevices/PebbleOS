@@ -25,6 +25,7 @@
 #define ROBERT_SCREEN_RES (PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228)
 #define SNOWY_SCREEN_RES (PBL_DISPLAY_WIDTH == 144 && PBL_DISPLAY_HEIGHT == 168)
 #define SPALDING_SCREEN_RES (PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180)
+#define GETAFIX_SCREEN_RES (PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // UI Utils
@@ -282,7 +283,7 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
 #elif SNOWY_SCREEN_RES
   const GTextAlignment alignment = screen_is_obstructed ? GTextAlignmentRight: GTextAlignmentCenter;
   bounds.origin.y += screen_is_obstructed ? 65 : 108; // steps text top offset
-#elif SPALDING_SCREEN_RES
+#elif SPALDING_SCREEN_RES || GETAFIX_SCREEN_RES
   const GTextAlignment alignment = GTextAlignmentCenter;
   bounds.origin.y += 113; // steps text top offset
 #endif
@@ -384,7 +385,7 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
   const int16_t fill_thickness = screen_is_obstructed ? 10 : 11;
 #elif ROBERT_SCREEN_RES
   const int16_t fill_thickness = screen_is_obstructed ? 5 : 13;
-#elif SPALDING_SCREEN_RES
+#elif SPALDING_SCREEN_RES || GETAFIX_SCREEN_RES
   const int16_t fill_thickness = (bounds.size.h - grect_inset(bounds, GEdgeInsets(15)).size.h) / 2;
 #endif
 
@@ -548,7 +549,7 @@ T_STATIC void prv_window_load_handler(Window *window) {
 #else
   gbitmap_init_with_resource(&data->shoe_blue, RESOURCE_ID_STRIDE_SHOE_BLUE);
   gbitmap_init_with_resource(&data->shoe_green, RESOURCE_ID_STRIDE_SHOE_GREEN);
-#if ROBERT_SCREEN_RES
+#if ROBERT_SCREEN_RES || GETAFIX_SCREEN_RES
   gbitmap_init_with_resource(&data->heart_icon, RESOURCE_ID_STRIDE_HEART);
   data->steps_font = fonts_get_system_font(FONT_KEY_AGENCY_FB_46_NUMBERS_AM_PM);
   data->time_font = fonts_get_system_font(FONT_KEY_AGENCY_FB_88_NUMBERS_AM_PM);
