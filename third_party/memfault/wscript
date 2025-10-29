@@ -19,10 +19,6 @@ def configure(conf):
 
 
 def build(bld):
-    # FIXME(OBELIX): see GH-309 - disable memfault library build for Obelix PRF
-    if bld.is_obelix() and bld.variant == "prf":
-        return
-
     if not bld.env.memfault:
         return
 
