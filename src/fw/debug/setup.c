@@ -28,27 +28,17 @@
 #include <mcu.h>
 
 void enable_mcu_debugging(void) {
-#ifndef RELEASE
-#if defined(MICRO_FAMILY_NRF52840)
-//  NRF_APPROTECT->APPROTECT.DISABLE = 1;
-#elif defined(MICRO_FAMILY_SF32LB52)
-// TODO(SF32LB52): implement
-#else
+#if !defined(RELEASE) && !defined(MICRO_FAMILY_NRF52840) && !defined(MICRO_FAMILY_SF32LB52)
   DBGMCU_Config(DBGMCU_SLEEP | DBGMCU_STOP, ENABLE);
   // Stop RTC, IWDG & TIM2 during debugging
   // Note: TIM2 is used by the task watchdog
   DBGMCU_APB1PeriphConfig(DBGMCU_RTC_STOP | DBGMCU_TIM2_STOP | DBGMCU_IWDG_STOP,
                           ENABLE);
 #endif
-#endif
 }
 
 void disable_mcu_debugging(void) {
-#if defined(MICRO_FAMILY_NRF52840)
-//  NRF_APPROTECT->APPROTECT.DISABLE = 0;
-#elif MICRO_FAMILY_SF32LB52
-// TODO(SF32LB52): implement
-#else
+#if !defined(RELEASE) && !defined(MICRO_FAMILY_NRF52840) && !defined(MICRO_FAMILY_SF32LB52)
   DBGMCU->CR = 0;
   DBGMCU->APB1FZ = 0;
   DBGMCU->APB2FZ = 0;
