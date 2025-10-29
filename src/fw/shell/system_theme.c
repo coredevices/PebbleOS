@@ -177,6 +177,7 @@ static const PreferredContentSize s_platform_default_content_sizes[] = {
   [PlatformTypeDiorite] = PreferredContentSizeMedium,
   [PlatformTypeEmery] = PreferredContentSizeLarge,
   [PlatformTypeFlint] = PreferredContentSizeMedium,
+  [PlatformTypeGabbro] = PreferredContentSizeLarge,
 };
 
 T_STATIC PreferredContentSize prv_convert_content_size_between_platforms(PreferredContentSize size,
