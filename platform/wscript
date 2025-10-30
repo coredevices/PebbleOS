@@ -48,10 +48,6 @@ def is_obelix(ctx):
     return ctx.get_board().startswith('obelix')
 
 @conf
-def is_obelix_bb2(ctx):
-    return ctx.get_board().startswith('obelix_bb2')
-
-@conf
 def get_platform_name(ctx):
     if is_tintin(ctx):
         return "tintin"
