@@ -1857,29 +1857,17 @@ if bld.capability('HAS_VIBE_DRV2604'):
         ],
     )
 if bld.capability('HAS_VIBE_AW86225'):
-    # FIXME(OBELIX): Enable once FPC board is ready
-    if not bld.is_obelix_bb2():
-        bld.objects(
-            name='driver_vibe',
-            source=[
-                'vibe/vibe_aw86225.c',
-            ],
-            use=[
-                'fw_includes',
-                'driver_i2c',
-                'driver_gpio',
-            ],
-        )
-    else:
-        bld.objects(
-            name='driver_vibe',
-            source=[
-                'stubs/vibe.c',
-            ],
-            use=[
-                'fw_includes',
-            ],
-        )
+    bld.objects(
+        name='driver_vibe',
+        source=[
+            'vibe/vibe_aw86225.c',
+        ],
+        use=[
+            'fw_includes',
+            'driver_i2c',
+            'driver_gpio',
+        ],
+    )
 elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
         name='driver_vibe',
