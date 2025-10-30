@@ -75,6 +75,8 @@
 #define AW862XX_PWR_OFF_TIME                            (2) /* ms */
 #define AW862XX_PWR_ON_TIME                             (8) /* ms */
 
+static bool s_initialized = false;
+
 static bool prv_read_register(uint8_t register_address, uint8_t* data) {
 	i2c_use(I2C_AW86225);
 	bool rv = i2c_read_register_block(I2C_AW86225, register_address, 1, data);
@@ -166,7 +168,10 @@ void vibe_init(void) {
 
   uint8_t chip_id;
   bool ret = prv_read_register(AW862XX_REG_CHIPID, &chip_id);
-  PBL_ASSERT(ret, "Failed to get AW86225 chip ID");
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read AW86225 chip ID");
+    return;
+  }
 
   ret &= prv_write_register(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EDGE_FREQ|AW862XX_CONTCFG1_WAVE_MODE);
   ret &= prv_write_register(AW862XX_REG_CONTCFG2, AW862XX_CONTCFG2_CONF_F0);
@@ -178,15 +183,28 @@ void vibe_init(void) {
   prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK, AW862XX_BIT_PLAYCFG3_PLAY_MODE_CONT);
   prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_VBAT_MODE_MASK, AW862XX_SYSCTRL1_VBAT_MODE_EN);
 
-  PBL_ASSERT(ret, "Failed to initialize AW86225");
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize AW86225");
+    return;
+  }
+
+  s_initialized = true;
 }
 
 void vibe_set_strength(int8_t strength) {
+  if (!s_initialized) {
+    return;
+  }
+
   uint32_t scale = strength * AW862XX_CONTCFG7_FULL_SCALE / 100UL;
   prv_write_register(AW862XX_REG_CONTCFG7, (uint8_t)scale);
 }
 
 void vibe_ctl(bool on) {
+  if (!s_initialized) {
+    return;
+  }
+
   if (on) {
     prv_aw862xx_play_go(true);
   } else {
@@ -196,10 +214,18 @@ void vibe_ctl(bool on) {
 }
 
 void vibe_force_off(void) {
+  if (!s_initialized) {
+    return;
+  }
+
   prv_aw862xx_play_go(false);
 }
 
 int8_t vibe_get_braking_strength(void) {
+  if (!s_initialized) {
+    return 0;
+  }
+
   uint8_t value;
   prv_read_register(AW862XX_REG_CONTCFG7, &value);
   uint8_t strength = value * 100UL/AW862XX_CONTCFG7_FULL_SCALE;
@@ -215,6 +241,10 @@ status_t vibe_calibrate(void) {
   int f0_cali_max = 0;
   int f0;
   
+  if (!s_initialized) {
+    return E_INVALID_OPERATION;
+  }
+
   f0 = prv_f0_detection();
   if (f0 < 0) {
     return E_ERROR;
