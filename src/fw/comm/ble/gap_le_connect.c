@@ -366,6 +366,18 @@ void bt_driver_handle_peer_version_info_event(const BleRemoteVersionInfoReceived
 
 //! bt_lock is assumed to be taken before calling this function.
 void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEvent *event) {
+  // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
+  // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
+  // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
+  TimerID param_watchdog_timer = TIMER_INVALID_ID;
+  if (event->status == HciStatusCode_Success) {
+    param_watchdog_timer = new_timer_create();
+    if (!param_watchdog_timer) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to create timer for connection params");
+      return;
+    }
+  }
+
   bt_lock();
   const BleConnectionParams *params = &event->conn_params;
   PBL_LOG(LOG_LEVEL_INFO,
@@ -403,12 +415,14 @@ void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEv
         PBL_LOG(LOG_LEVEL_ERROR,
                 "Not adding connection for device. It is already connected .. disconnecting");
         bt_driver_gap_le_disconnect(&event->peer_address);
+        param_watchdog_timer = TIMER_INVALID_ID; // Don't use timer, will clean up below
         break;
       }
 
       const SMIdentityResolvingKey *remote_irk = event->is_resolved ? &event->irk : NULL;
       GAPLEConnection *connection = gap_le_connection_add(&event->peer_address, remote_irk,
-                                                          local_is_master);
+                                                          local_is_master, param_watchdog_timer);
+      param_watchdog_timer = TIMER_INVALID_ID; // Timer now owned by connection
       // Cache the BLE connection parameters
       connection->conn_params = *params;
       connection->gatt_mtu = event->mtu;
@@ -482,6 +496,11 @@ void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEv
   // Continue initiating connections to disconnected devices:
   prv_start_connecting_if_needed();
   bt_unlock();
+  
+  // Clean up timer if we didn't use it (e.g., connection failed or already connected)
+  if (param_watchdog_timer != TIMER_INVALID_ID) {
+    new_timer_delete(param_watchdog_timer);
+  }
 }
 
 //! bt_lock is assumed to be taken before calling this function.
