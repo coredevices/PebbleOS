@@ -36,6 +36,7 @@
 
 #define BYTE_222_TO_332(data) ((((data) & 0x30) << 2) | (((data) & 0x0c) << 1) | ((data) & 0x03))
 #define POWER_SEQ_DELAY_TIME  (11)
+#define POWER_RESET_CYCLE_DELAY_TIME (500)
 
 static uint8_t s_framebuffer[DISPLAY_FRAMEBUFFER_BYTES];
 static bool s_initialized;
@@ -43,11 +44,47 @@ static bool s_updating;
 static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
 
+static void prv_power_cycle(void){
+  OutputConfig cfg = {
+    .gpio = hwp_gpio1,
+    .active_high = false,
+  };
+
+  // This will disable all JDI pull-ups/downs so that VLCD can fully turn off,
+  // allowing for a clean power cycle.
+
+  cfg.gpio_pin = DISPLAY->pinmux.b1.pad - PAD_PA00;
+  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_set(&cfg, false);
+
+  cfg.gpio_pin = DISPLAY->pinmux.vck.pad - PAD_PA00;
+  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_set(&cfg, false);
+
+  cfg.gpio_pin = DISPLAY->pinmux.xrst.pad - PAD_PA00;
+  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_set(&cfg, false);
+
+  cfg.gpio_pin = DISPLAY->pinmux.hck.pad - PAD_PA00;
+  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_set(&cfg, false);
+
+  cfg.gpio_pin = DISPLAY->pinmux.r2.pad - PAD_PA00;
+  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_set(&cfg, false);
+
+  cfg.gpio_pin = DISPLAY->vlcd.gpio_pin;
+  gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+  gpio_output_set(&cfg, false);
+
+  psleep(POWER_RESET_CYCLE_DELAY_TIME);
+}
+
 // TODO(SF32LB52): Improve/clarify display on/off code
 static void prv_display_on() {
   // FIXME(SF32LB52): make this mandatory once old big boards are gone
   if (DISPLAY->vlcd.gpio != NULL && DISPLAY->vddp.gpio != NULL) {
-    gpio_output_set(&DISPLAY->vlcd, true);
+    gpio_output_set(&DISPLAY->vlcd, false);
     psleep(POWER_SEQ_DELAY_TIME);
     gpio_output_set(&DISPLAY->vddp, true);
     psleep(POWER_SEQ_DELAY_TIME);
@@ -72,6 +109,9 @@ static void prv_display_on() {
 }
 
 static void prv_display_off() {
+  DisplayJDIState *state = DISPLAY->state;
+  HAL_LCDC_DeInit(&state->hlcdc);
+
   LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
 
   lptim->CR &= ~LPTIM_CR_ENABLE;
@@ -90,7 +130,7 @@ static void prv_display_off() {
   // FIXME(SF32LB52): make this mandatory once old big boards are gone
   if (DISPLAY->vlcd.gpio != NULL && DISPLAY->vddp.gpio != NULL) {
     psleep(POWER_SEQ_DELAY_TIME);
-    gpio_output_set(&DISPLAY->vddp, true);
+    gpio_output_set(&DISPLAY->vddp, false);
     psleep(POWER_SEQ_DELAY_TIME);
     gpio_output_set(&DISPLAY->vlcd, true);
   }
@@ -142,6 +182,8 @@ void display_init(void) {
   }
 
   DisplayJDIState *state = DISPLAY->state;
+
+  prv_power_cycle();
 
   // FIXME(SF32LB52): make this mandatory once old big boards are gone
   if (DISPLAY->vlcd.gpio != NULL && DISPLAY->vddp.gpio != NULL) {
