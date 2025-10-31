@@ -1909,14 +1909,14 @@ elif mcu_family == 'NRF52840':
         ],
     )
 elif mcu_family == 'SF32LB52':
-    # FIXME(SF32LB52): provide working implementation
     bld.objects(
         name='driver_watchdog',
         source=[
-            'stubs/watchdog.c',
+            'sf32lb52/watchdog.c',
         ],
         use=[
             'fw_includes',
+            'hal_sifli',
         ],
     )
 
