@@ -28,7 +28,7 @@
 #include "FreeRTOS.h"
 
 #define PDM_AUDIO_RECORD_PIPE_SIZE         (288)
-#define PDM_AUDIO_RECORD_GAIN_DEFAULT      (100)
+#define PDM_AUDIO_RECORD_GAIN_DEFAULT      (127)
 #define PDM_AUDIO_RECORD_GAIN_MAX          (127)
 
 // PDM Configuration
