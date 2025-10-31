@@ -52,7 +52,6 @@ void lptim_systick_init(void)
   HAL_LPTIM_Init(&s_lptim1_handle);
 
   NVIC_SetPriority(LPTIM1_IRQn, configKERNEL_INTERRUPT_PRIORITY);
-  NVIC_EnableIRQ(LPTIM1_IRQn);
 
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LPTIM1, AON_PIN_MODE_HIGH);    // LPPTIM1 OC wakeup
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_IRQ, AON_PIN_MODE_HIGH); // LP2HP mailbox interrupt
@@ -75,6 +74,8 @@ void lptim_systick_enable(void)
   __HAL_LPTIM_ENABLE_IT(&s_lptim1_handle, LPTIM_IT_OCIE);
 
   __HAL_LPTIM_START_CONTINUOUS(&s_lptim1_handle);
+
+  NVIC_EnableIRQ(LPTIM1_IRQn);
 }
 
 void lptim_systick_pause(void)
