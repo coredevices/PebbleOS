@@ -584,8 +584,10 @@ static const Command s_prompt_commands[] = {
 #endif
 
 
+#if PLATFORM_OBELIX
   // Drivers
-  //{ "rgb", command_rgb_set_color, 1 },
+  { "rgb", command_rgb_set_color, 1 },
+#endif
 
 //  { "watch", command_watch, 0 },
 
