@@ -143,9 +143,20 @@ static void prv_send_indication_timer_cb(void *ctx) {
 
 void bt_driver_cb_gatt_service_changed_server_subscribe(
     const GattServerSubscribeEvent *event) {
+  // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
+  // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
+  // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
+  TimerID timer = TIMER_INVALID_ID;
+  const bool subscribed = event->is_subscribing;
+  if (subscribed) {
+    timer = new_timer_create();
+    if (!timer) {
+      return;
+    }
+  }
+
   bt_lock();
   {
-    const bool subscribed = event->is_subscribing;
     if (subscribed) {
       PBL_LOG(LOG_LEVEL_DEBUG, "Remote subscribed to Service Changed characteristic");
 
@@ -165,10 +176,11 @@ void bt_driver_cb_gatt_service_changed_server_subscribe(
       PBL_LOG(LOG_LEVEL_INFO, "Indicating Service Changed to remote device");
 
       // Work-around for iOS issue (see comment above), send the indication after a short delay:
-      connection->gatt_service_changed_indication_timer = new_timer_create();
+      connection->gatt_service_changed_indication_timer = timer;
       new_timer_start(connection->gatt_service_changed_indication_timer,
                       GATT_SERVICE_CHANGED_INDICATION_DELAY_MS, prv_send_indication_timer_cb,
                       connection, 0);
+      timer = TIMER_INVALID_ID; // Timer now owned by connection, don't delete it below
       --s_service_changed_indications_left;
       // Don't send again for this connection:
       connection->has_sent_gatt_service_changed_indication = true;
@@ -176,6 +188,11 @@ void bt_driver_cb_gatt_service_changed_server_subscribe(
   }
 unlock:
   bt_unlock();
+  
+  // Clean up timer if we didn't use it
+  if (timer != TIMER_INVALID_ID) {
+    new_timer_delete(timer);
+  }
 }
 
 void bt_driver_cb_gatt_service_changed_server_read_subscription(

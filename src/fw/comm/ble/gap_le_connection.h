@@ -157,7 +157,8 @@ typedef struct GAPLEConnection {
 
 GAPLEConnection *gap_le_connection_add(const BTDeviceInternal *device,
                                        const SMIdentityResolvingKey *irk,
-                                       bool local_is_master);
+                                       bool local_is_master,
+                                       TimerID param_watchdog_timer);
 
 //! Checks to see if the LE connection is in our list of currently tracked
 //! connections
