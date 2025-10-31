@@ -36,6 +36,7 @@
 
 #define BYTE_222_TO_332(data) ((((data) & 0x30) << 2) | (((data) & 0x0c) << 1) | ((data) & 0x03))
 #define POWER_SEQ_DELAY_TIME  (11)
+#define POWER_RESET_CYCLE_DELAY_TIME (500)
 
 static uint8_t s_framebuffer[DISPLAY_FRAMEBUFFER_BYTES];
 static bool s_initialized;
@@ -47,7 +48,7 @@ static SemaphoreHandle_t s_sem;
 static void prv_display_on() {
   // FIXME(SF32LB52): make this mandatory once old big boards are gone
   if (DISPLAY->vlcd.gpio != NULL && DISPLAY->vddp.gpio != NULL) {
-    gpio_output_set(&DISPLAY->vlcd, true);
+    gpio_output_set(&DISPLAY->vlcd, false);
     psleep(POWER_SEQ_DELAY_TIME);
     gpio_output_set(&DISPLAY->vddp, true);
     psleep(POWER_SEQ_DELAY_TIME);
@@ -72,6 +73,9 @@ static void prv_display_on() {
 }
 
 static void prv_display_off() {
+  DisplayJDIState *state = DISPLAY->state;
+  HAL_LCDC_DeInit(&state->hlcdc);
+
   LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
 
   lptim->CR &= ~LPTIM_CR_ENABLE;
@@ -90,7 +94,7 @@ static void prv_display_off() {
   // FIXME(SF32LB52): make this mandatory once old big boards are gone
   if (DISPLAY->vlcd.gpio != NULL && DISPLAY->vddp.gpio != NULL) {
     psleep(POWER_SEQ_DELAY_TIME);
-    gpio_output_set(&DISPLAY->vddp, true);
+    gpio_output_set(&DISPLAY->vddp, false);
     psleep(POWER_SEQ_DELAY_TIME);
     gpio_output_set(&DISPLAY->vlcd, true);
   }
@@ -136,11 +140,39 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
   portEND_SWITCHING_ISR(woken);
 }
 
+static void prv_bsp_pin_set(int pin, int val)
+{
+    OutputConfig cfg = {0};
+    cfg.gpio_pin = pin;
+    cfg.gpio = hwp_gpio1;
+    gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
+    gpio_output_set(&cfg, val);
+}
+
+//reset all the PU pin to low level for a while
+static void prv_jdi_reset_cycle(void){
+  uint8_t pin_offset = DISPLAY->pinmux.b1.pad - PAD_PA00;
+  prv_bsp_pin_set(pin_offset, 0);
+  pin_offset = DISPLAY->pinmux.vck.pad - PAD_PA00;
+  prv_bsp_pin_set(pin_offset, 0);
+  pin_offset = DISPLAY->pinmux.xrst.pad - PAD_PA00;
+  prv_bsp_pin_set(pin_offset, 0);
+  pin_offset = DISPLAY->pinmux.hck.pad - PAD_PA00;
+  prv_bsp_pin_set(pin_offset, 0);
+  pin_offset = DISPLAY->pinmux.r2.pad - PAD_PA00;
+  prv_bsp_pin_set(pin_offset, 0);
+  pin_offset = DISPLAY->vlcd.gpio_pin;
+  prv_bsp_pin_set(pin_offset, 1);
+
+  psleep(POWER_RESET_CYCLE_DELAY_TIME);
+}
+
 void display_init(void) {
   if (s_initialized) {
     return;
   }
 
+  prv_jdi_reset_cycle();
   DisplayJDIState *state = DISPLAY->state;
 
   // FIXME(SF32LB52): make this mandatory once old big boards are gone
