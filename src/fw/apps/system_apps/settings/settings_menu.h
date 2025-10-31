@@ -37,11 +37,11 @@ typedef enum {
   SettingsMenuItemQuickLaunch,
   SettingsMenuItemDateTime,
   SettingsMenuItemDisplay,
-  SettingsMenuItemActivity,
-  SettingsMenuItemSystem,
 #if PBL_COLOR
   SettingsMenuItemThemes,
 #endif
+  SettingsMenuItemActivity,
+  SettingsMenuItemSystem,
   SettingsMenuItem_Count,
   SettingsMenuItem_Invalid
 } SettingsMenuItem;
