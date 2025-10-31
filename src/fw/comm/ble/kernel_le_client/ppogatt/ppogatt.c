@@ -352,14 +352,14 @@ static void prv_timer_callback(void *unused) {
 
 // -------------------------------------------------------------------------------------------------
 
-static PPoGATTClient *prv_create_client(void) {
+static PPoGATTClient *prv_create_client(TimerID timer) {
   PPoGATTClient *client = kernel_malloc(sizeof(PPoGATTClient));
   if (!client) {
     return NULL;
   }
   *client = (PPoGATTClient){};
   client->app_uuid = UUID_INVALID;
-  client->rx_ack_timer = new_timer_create();
+  client->rx_ack_timer = timer;
   s_ppogatt_head = (PPoGATTClient *) list_prepend((ListNode *)s_ppogatt_head, &client->node);
   if (!regular_timer_is_scheduled(&s_ack_timer)) {
     s_ack_timer.cb = prv_timer_callback;
@@ -861,10 +861,21 @@ void ppogatt_invalidate_all_references(void) {
 }
 
 void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
+  // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
+  // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
+  // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
+  TimerID timer = new_timer_create();
+  PBL_ASSERTN(timer);
+
   bt_lock();
   {
     // Create new clients:
-    PPoGATTClient *client = prv_create_client();
+    PPoGATTClient *client = prv_create_client(timer);
+    if (!client) {
+      bt_unlock();
+      new_timer_delete(timer);
+      return;
+    }
     BLECharacteristic meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.data = characteristics[PPoGATTCharacteristicData];

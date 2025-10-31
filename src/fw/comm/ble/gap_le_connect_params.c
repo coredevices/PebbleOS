@@ -225,8 +225,8 @@ void gap_le_connect_params_request(GAPLEConnection *connection,
   prv_request_params_update(connection, desired_state);
 }
 
-void gap_le_connect_params_setup_connection(GAPLEConnection *connection) {
-  connection->param_update_info.watchdog_timer = new_timer_create();
+void gap_le_connect_params_setup_connection(GAPLEConnection *connection, TimerID timer) {
+  connection->param_update_info.watchdog_timer = timer;
 }
 
 void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {
