@@ -63,3 +63,5 @@ waflib.zip
 
 docs/_build
 artifacts/
+
+.claude
