@@ -88,6 +88,9 @@ static uint32_t s_pause_ticks_remaining = 0;
 #if MICRO_FAMILY_NRF5
 #define WATCHDOG_FREERTOS_IRQn        QDEC_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  QDEC_IRQHandler
+#elif MICRO_FAMILY_SF32LB52
+#define WATCHDOG_FREERTOS_IRQn        USART5_IRQn
+#define WATCHDOG_FREERTOS_IRQHandler  USART5_IRQHandler
 #else
 #define WATCHDOG_FREERTOS_IRQn        CAN2_SCE_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  CAN2_SCE_IRQHandler
@@ -165,9 +168,7 @@ static void prv_log_failed_message(RebootReason *reboot_reason) {
 // -------------------------------------------------------------------------------------------------
 // The Timer ISR. This runs at super high priority (higher than configMAX_SYSCALL_INTERRUPT_PRIORITY), so
 // it is not safe to call ANY FreeRTOS functions from here.
-#if MICRO_FAMILY_SF32LB52
-// TODO(SF32LB52): Add implementation
-#elif !MICRO_FAMILY_NRF5
+#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
 void TIM2_IRQHandler(void) {
   // Workaround M3 bug that causes interrupt to fire twice:
   // https://my.st.com/public/Faq/Lists/faqlst/DispForm.aspx?ID=143
@@ -268,9 +269,7 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
 // Setup a very high priority interrupt to fire periodically. This ISR will call task_watchdog_feed()
 // which resets the watchdog timer if it detects that none of our watchable tasks are stuck.
 void task_watchdog_init(void) {
-#if MICRO_FAMILY_SF32LB52
-// TODO(SF32LB52): Add implementation
-#elif !MICRO_FAMILY_NRF5
+#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
   // The timer is on ABP1 which is clocked by PCLK1
   RCC_ClocksTypeDef clocks;
   RCC_GetClocksFreq(&clocks);
@@ -317,11 +316,9 @@ void task_watchdog_init(void) {
   // Setup another unused interrupt vector to handle our low priority interrupts. When we need to do higher
   // level functions (like PBL_LOG), we trigger this lower-priority interrupt to fire. Since it runs at
   // configMAX_SYSCALL_INTERRUPT_PRIORITY or lower, it can at least call FreeRTOS ISR functions.
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
   NVIC_SetPriority(WATCHDOG_FREERTOS_IRQn, configMAX_SYSCALL_INTERRUPT_PRIORITY);
   NVIC_EnableIRQ(WATCHDOG_FREERTOS_IRQn);
-#elif MICRO_FAMILY_SF32LB52
-  // TODO(SF32LB52): Add implementation
 #else
   NVIC_InitStructure.NVIC_IRQChannel = WATCHDOG_FREERTOS_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configMAX_SYSCALL_INTERRUPT_PRIORITY >> 4;
@@ -341,9 +338,7 @@ void task_watchdog_feed(void) {
 }
 
 static void task_watchdog_disable_interrupt() {
-#if MICRO_FAMILY_SF32LB52
-// TODO(SF32LB52): Add implementation
-#elif !MICRO_FAMILY_NRF5
+#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
   NVIC_DisableIRQ(TIM2_IRQn);
 #endif
   taskENTER_CRITICAL();
@@ -351,9 +346,7 @@ static void task_watchdog_disable_interrupt() {
 
 static void task_watchdog_enable_interrupt() {
   taskEXIT_CRITICAL();
-#if MICRO_FAMILY_SF32LB52
-// TODO(SF32LB52): Add implementation
-#elif !MICRO_FAMILY_NRF5
+#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
   NVIC_EnableIRQ(TIM2_IRQn);
 #endif
 }
@@ -458,9 +451,7 @@ static void prv_task_watchdog_feed(void) {
       reboot_reason_clear();
       // Trigger our lower priority interrupt to fire. If it fires when reboot reason is not RebootReasonCode_Watchdog,
       //  it simply logs a message that the we recovered from a watchdog stall
-#if !MICRO_FAMILY_SF32LB52
       NVIC_SetPendingIRQ(WATCHDOG_FREERTOS_IRQn);
-#endif
 
       s_last_warning_message_tick_time = 0;
     }
@@ -490,9 +481,7 @@ static void prv_task_watchdog_feed(void) {
     // Trigger our lower priority interrupt to fire. When it sees
     //  RebootReasonCode_Watchdog in the reboot reason, it logs information
     //  about the stuck task
-#if !MICRO_FAMILY_SF32LB52
     NVIC_SetPendingIRQ(WATCHDOG_FREERTOS_IRQn);
-#endif
     // If the low priority interrupt hasn't reset us by the time 6.5 seconds
     // rolls around (it will issue the reset if executed at least 6 seconds
     // after s_last_successful_feed_time), it likely means that we are stuck in
