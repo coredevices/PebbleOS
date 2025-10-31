@@ -80,3 +80,9 @@ void led_controller_rgb_set_color(uint32_t rgb_color) {
 }
 
 uint32_t led_controller_rgb_get_color(void) { return s_rgb_current_color; }
+
+void command_rgb_set_color(const char* color) {
+  uint32_t color_val = strtol(color, NULL, 16);
+
+  led_controller_rgb_set_color(color_val);
+}
