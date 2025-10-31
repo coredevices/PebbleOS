@@ -19,6 +19,7 @@
 #include "mcu/interrupts.h"
 #include "drivers/rtc.h"
 #include "drivers/lptim_systick.h"
+#include "drivers/task_watchdog.h"
 #include "system/logging.h"
 
 #include "bf0_hal_lptim.h"
@@ -128,6 +129,8 @@ static inline void lptim_systick_next_tick_setup(void)
 
 void LPTIM1_IRQHandler(void)
 {
+  static uint32_t wdt_feed_cnt = 0U;
+
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OC) != RESET) {
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_IT_OCIE);
     lptim_systick_next_tick_setup();
@@ -136,6 +139,12 @@ void LPTIM1_IRQHandler(void)
     if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OCWKUP) == RESET) {
       extern void SysTick_Handler();
       SysTick_Handler();
+    }
+
+    wdt_feed_cnt++;
+    if (wdt_feed_cnt >= (RTC_TICKS_HZ * TASK_WATCHDOG_FEED_PERIOD_MS) / 1000) {
+      wdt_feed_cnt = 0U;
+      task_watchdog_feed();
     }
   }
 
