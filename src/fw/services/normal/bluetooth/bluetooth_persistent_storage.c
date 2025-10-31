@@ -25,6 +25,7 @@
 #include "comm/ble/kernel_le_client/kernel_le_client.h"
 #include "comm/bt_lock.h"
 #include "console/prompt.h"
+#include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
 #include "services/common/analytics/analytics.h"
@@ -583,8 +584,13 @@ static unsigned int prv_get_num_pairings_by_type(BtPersistBondingType type) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Info
 void gap_le_connection_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op);
-static void prv_call_ble_bonding_change_handlers(BTBondingID bonding,
-                                                 BtPersistBondingOp op) {
+typedef struct {
+  BTBondingID bonding;
+  BtPersistBondingOp op;
+} BleBondingChangeContext;
+
+static void prv_call_ble_bonding_change_handlers_impl(BTBondingID bonding,
+                                                      BtPersistBondingOp op) {
   prv_update_active_gateway_if_needed(bonding, op);
 
   if (!bt_ctl_is_bluetooth_running()) {
@@ -595,6 +601,28 @@ static void prv_call_ble_bonding_change_handlers(BTBondingID bonding,
   gap_le_connect_handle_bonding_change(bonding, op);
   kernel_le_client_handle_bonding_change(bonding, op);
   prv_call_common_bonding_change_handlers(bonding, op);
+}
+
+static void prv_call_ble_bonding_change_handlers_cb(void *data) {
+  BleBondingChangeContext *context = data;
+  prv_call_ble_bonding_change_handlers_impl(context->bonding, context->op);
+  kernel_free(context);
+}
+
+static void prv_call_ble_bonding_change_handlers(BTBondingID bonding,
+                                                 BtPersistBondingOp op) {
+  if (launcher_task_is_current_task()) {
+    prv_call_ble_bonding_change_handlers_impl(bonding, op);
+    return;
+  }
+
+  BleBondingChangeContext *context = kernel_malloc_check(sizeof(*context));
+
+  *context = (BleBondingChangeContext) {
+    .bonding = bonding,
+    .op = op,
+  };
+  launcher_task_add_callback(prv_call_ble_bonding_change_handlers_cb, context);
 }
 
 typedef struct {
