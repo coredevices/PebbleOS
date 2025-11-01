@@ -27,15 +27,18 @@
 #include "applib/ui/dialogs/expandable_dialog.h"
 #include "applib/ui/option_menu_window.h"
 #include "applib/ui/ui.h"
+#include "drivers/ambient_light.h"
 #include "kernel/core_dump.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
+#include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 #include "resource/resource_ids.auto.h"
 #include "services/common/bluetooth/local_id.h"
 #include "services/common/i18n/i18n.h"
+#include "services/common/light.h"
 #include "services/common/status_led.h"
 #include "services/common/system_task.h"
 #include "services/normal/stationary.h"
@@ -71,6 +74,7 @@ enum {
 enum {
   DebuggingItemCoreDumpNow = 0,
   DebuggingItemCoreDumpShortcut,
+  DebuggingItemALSThreshold,
   DebuggingItem_Count,
 };
 
@@ -135,6 +139,11 @@ typedef struct SettingsSystemData {
   Window window;
   MenuLayer menu_layer;
   StatusBarLayer status_layer;
+  
+  // ALS threshold data
+  char als_threshold_buffer[16];  // Buffer for formatted ALS threshold
+  char als_status_buffer[64];     // Buffer for NumberWindow label with status
+  bool als_adjustment_active;     // Track if ALS adjustment is active
 } SettingsSystemData;
 
 typedef enum {
@@ -373,12 +382,95 @@ static void prv_maybe_trigger_core_dump() {
   app_confirmation_dialog_push(confirmation_dialog);
 }
 
+// ALS Threshold Settings
+/////////////////////////////
+
+static void prv_update_als_threshold_label(NumberWindow *number_window, SettingsSystemData *data) {
+  uint32_t current_reading = ambient_light_get_light_level();
+  uint32_t current_threshold = (uint32_t)number_window_get_value(number_window);
+  bool would_backlight_be_on = current_reading <= current_threshold;
+  
+  snprintf(data->als_status_buffer, sizeof(data->als_status_buffer), 
+           "Backlight: %s",
+           would_backlight_be_on ? "ON" : "OFF");
+  
+  number_window_set_label(number_window, data->als_status_buffer);
+}
+
+static void prv_als_threshold_incremented(NumberWindow *number_window, void *context) {
+  SettingsSystemData *data = (SettingsSystemData*)context;
+  prv_update_als_threshold_label(number_window, data);
+}
+
+static void prv_als_threshold_decremented(NumberWindow *number_window, void *context) {
+  SettingsSystemData *data = (SettingsSystemData*)context;
+  prv_update_als_threshold_label(number_window, data);
+}
+
+static void prv_als_threshold_selected(NumberWindow *number_window, void *context) {
+  SettingsSystemData *data = (SettingsSystemData*)context;
+  uint32_t new_threshold = (uint32_t)number_window_get_value(number_window);
+  backlight_set_ambient_threshold(new_threshold);
+  data->als_adjustment_active = false;
+  light_allow(true);
+  app_window_stack_remove(&number_window->window, true /* animated */);
+}
+
+static void prv_als_threshold_menu_push(SettingsSystemData *data) {
+  // Disable backlight while adjusting ALS threshold to prevent skewing readings
+  light_allow(false);
+  data->als_adjustment_active = true;
+
+  // Give time for backlight to turn off
+  // If we don't do this, the text may say the false result
+  // until the user changes the value
+  psleep(200);
+  
+  // Get current ambient light reading to show backlight status
+  uint32_t current_reading = ambient_light_get_light_level();
+  uint32_t current_threshold = backlight_get_ambient_threshold();
+  bool would_backlight_be_on = current_reading <= current_threshold;
+  
+  // Create descriptive label with current status
+  snprintf(data->als_status_buffer, sizeof(data->als_status_buffer), 
+           "Backlight: %s",
+           would_backlight_be_on ? "ON" : "OFF");
+  
+  NumberWindow *number_window = number_window_create(
+    data->als_status_buffer,
+    (NumberWindowCallbacks) {
+      .selected = prv_als_threshold_selected,
+      .incremented = prv_als_threshold_incremented,
+      .decremented = prv_als_threshold_decremented,
+    },
+    data
+  );
+  
+  if (!number_window) {
+    // Re-enable backlight if NumberWindow creation failed
+    data->als_adjustment_active = false;
+    light_allow(true);
+    return;
+  }
+  
+  
+  // Set reasonable min/max values for ALS threshold
+  number_window_set_min(number_window, 0);
+  number_window_set_max(number_window, AMBIENT_LIGHT_LEVEL_MAX);
+  number_window_set_step_size(number_window, 1);
+  number_window_set_value(number_window, (int32_t)current_threshold);
+  
+  const bool animated = true;
+  app_window_stack_push(&number_window->window, animated);
+}
+
 // Debug options window
 ///////////////////////
 
 static const char* s_debugging_titles[DebuggingItem_Count] = {
   [DebuggingItemCoreDumpNow]      = i18n_noop("Bug report now"),
   [DebuggingItemCoreDumpShortcut] = i18n_noop("Bug shortcut"),
+  [DebuggingItemALSThreshold]     = i18n_noop("ALS Threshold"),
 };
 
 static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_layer,
@@ -388,10 +480,22 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
 
   SettingsSystemData *data = (SettingsSystemData *) context;
 
+  // Check if user canceled out of ALS adjustment (this gets called when we return to settings menu)
+  if (data->als_adjustment_active) {
+    data->als_adjustment_active = false;
+    light_allow(true);
+  }
+
   const char *title = i18n_get(s_debugging_titles[cell_index->row], data);
   const char *subtitle_text = NULL;
   if (cell_index->row == DebuggingItemCoreDumpShortcut) {
     subtitle_text = shell_prefs_can_coredump_on_request() ? i18n_get("10 back-button presses", data) : i18n_get("Disabled", data);
+  } else if (cell_index->row == DebuggingItemALSThreshold) {
+    // Show current threshold value
+    uint32_t current_threshold = backlight_get_ambient_threshold();
+    snprintf(data->als_threshold_buffer, sizeof(data->als_threshold_buffer), 
+             "%"PRIu32, current_threshold);
+    subtitle_text = data->als_threshold_buffer;
   }
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, NULL);
 }
@@ -412,12 +516,17 @@ static uint16_t prv_debugging_get_num_rows_callback(MenuLayer *menu_layer,
 static void prv_debugging_select_callback(MenuLayer *menu_layer,
                                           MenuIndex *cell_index,
                                           void *context) {
+  SettingsSystemData *data = (SettingsSystemData *) context;
+  
   switch (cell_index->row) {
     case DebuggingItemCoreDumpNow:
       prv_maybe_trigger_core_dump();
       break;
     case DebuggingItemCoreDumpShortcut:
       shell_prefs_set_coredump_on_request(!shell_prefs_can_coredump_on_request());
+      break;
+    case DebuggingItemALSThreshold:
+      prv_als_threshold_menu_push(data);
       break;
     default:
       WTF;
