@@ -227,11 +227,6 @@ static DisplayJDIDevice s_display = {
             .func = GPIO_A24,
             .flags = PIN_NOPULL,
         },
-        .va = {
-            .pad = PAD_PA25,
-            .func = GPIO_A25,
-            .flags = PIN_NOPULL,
-        },
     },
 #if BOARD_OBELIX_BB2
     .vddp = {hwp_gpio1, 28, true},
@@ -647,13 +642,11 @@ void board_early_init(void) {
   BSP_System_Config();
 
   HAL_HPAON_StartGTimer();
-#ifdef SF32LB52_USE_LXT
+
   HAL_PMU_EnableRC32K(1);
 
   HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
-#else
-  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC10);
-#endif
+
   HAL_PMU_EnableDLL(1);
 #ifdef SF32LB52_USE_LXT
   HAL_PMU_EnableXTAL32();
@@ -680,6 +673,11 @@ void board_early_init(void) {
 
   __HAL_SYSCFG_CLEAR_SECURITY();
   HAL_EFUSE_Init();
+
+  // Reset HR pin, clear IE, PE
+  hwp_pinmux1->PAD_PA09 &= ~((1 << 6) | (1 << 4));
+  hwp_pinmux1->PAD_PA20 &= ~((1 << 6) | (1 << 4));
+  hwp_pinmux1->PAD_PA25 &= ~((1 << 6) | (1 << 4));
 }
 
 void board_init(void) {
@@ -688,4 +686,10 @@ void board_init(void) {
   i2c_init(I2C3_BUS);
 
   mic_init(MIC);
+
+  /* Enable user buttons as AON wakeup source */
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN10, AON_PIN_MODE_POS_EDGE);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN11, AON_PIN_MODE_NEG_EDGE);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN12, AON_PIN_MODE_NEG_EDGE);
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN13, AON_PIN_MODE_NEG_EDGE);
 }
