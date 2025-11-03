@@ -40,3 +40,6 @@
 [submodule "third_party/hal_lsm6dso/lsm6dso-pid"]
 	path = third_party/hal_lsm6dso/lsm6dso-pid
 	url = https://github.com/STMicroelectronics/lsm6dso-pid.git
+[submodule "third_party/hal_lis2dw12/lis2dw12-pid"]
+	path = third_party/hal_lis2dw12/lis2dw12-pid
+	url = https://github.com/STMicroelectronics/lis2dw12-pid.git
