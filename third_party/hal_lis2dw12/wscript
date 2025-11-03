@@ -1,0 +1,14 @@
+def build(bld):
+    lis2dw12_includes = [
+        'lis2dw12-pid'
+    ]
+
+    lis2dw12_sources = [
+        'lis2dw12-pid/lis2dw12_reg.c',
+    ]
+
+    bld.stlib(source=lis2dw12_sources,
+              includes=lis2dw12_includes,
+              export_includes=lis2dw12_includes,
+              target='hal_lis2dw12',
+              use=['pblibc'])
