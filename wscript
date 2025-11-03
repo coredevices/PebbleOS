@@ -132,8 +132,8 @@ def options(opt):
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
     opt.add_option('--qemu', action='store_true',
                    help='Build an image for qemu instead of a real board.')
-    opt.add_option('--js-engine', action='store', default='rocky', choices=['rocky', 'none'],
-                   help='Specify JavaScript engine (rocky or none)')
+    opt.add_option('--js-engine', action='store', default='rocky', choices=['rocky', 'moddable', 'none'],
+                   help='Specify JavaScript engine (rocky, moddable or none)')
     opt.add_option('--sdkshell', action='store_true',
                    help='Use the sdk shell instead of the normal shell')
     opt.add_option('--nolog', action='store_true',
@@ -623,6 +623,7 @@ def build(bld):
     if bld.variant in ('', 'applib', 'prf'):
         # Dependency for SDK
         bld.recurse('third_party/jerryscript')
+        bld.recurse('third_party/moddable')
 
     if bld.variant == '':
         # sdk generation

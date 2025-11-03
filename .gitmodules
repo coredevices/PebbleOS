@@ -43,3 +43,6 @@
 [submodule "third_party/resources/iconography"]
 	path = third_party/resources/iconography
 	url = https://github.com/pebble-dev/iconography
+[submodule "third_party/moddable/moddable"]
+	path = third_party/moddable/moddable
+	url = https://github.com/Moddable-OpenSource/moddable.git

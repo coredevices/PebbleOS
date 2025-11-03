@@ -91,6 +91,7 @@ def build(bld):
                    'jerry_runtime_config',
                    'jerry_common_config',
                    'jerry_core',
+                   'libxs',
                    'freertos_includes',
                    'root_includes'])
 

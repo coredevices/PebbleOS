@@ -164,6 +164,10 @@ def configure(conf):
 
 
 def build(bld):
+    # Skip build configuration during clean command
+    if bld.cmd == 'clean':
+        return
+
     def run_cmd(cmd):
         try:
             return bld.cmd_and_log(cmd, quiet=Context.BOTH).strip()
