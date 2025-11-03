@@ -405,6 +405,15 @@ static const I2CSlavePort s_i2c_lsm6d = {
 
 I2CSlavePort *const I2C_LSM6D = &s_i2c_lsm6d;
 
+
+//FIXME: now use 0x19 for DVT; will change to 0x18 when PVT
+static const I2CSlavePort s_i2c_lsm2dw12 = {
+    .bus = &s_i2c_bus_2,
+    .address = 0x19,
+};
+
+I2CSlavePort *const I2C_LSM2DW12 = &s_i2c_lsm2dw12;
+
 static const I2CSlavePort s_i2c_mmc5603nj = {
     .bus = &s_i2c_bus_2,
     .address = 0x30,
