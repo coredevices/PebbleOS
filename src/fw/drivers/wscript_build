@@ -486,7 +486,7 @@ if bld.is_silk() and not bld.env.QEMU:
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix():
+if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb():
     bld.objects(
         name='driver_lsm6dso',
         source=[
@@ -494,6 +494,19 @@ if bld.is_asterix() or bld.is_obelix():
         ],
         use=[
             'hal_lsm6dso',
+            'fw_includes',
+        ],
+    )
+
+# NOTE: enable LIS2DW12 by default on Obelix DVT/BB2
+if bld.is_obelix_dvt() or bld.is_obelix_bb2():
+    bld.objects(
+        name='driver_lis2dw12',
+        source=[
+            'imu/lis2dw12/lis2dw12.c',
+        ],
+        use=[
+            'hal_lis2dw12',
             'fw_includes',
         ],
     )
@@ -1055,17 +1068,25 @@ elif bld.is_asterix():
         ],
     )
 elif bld.is_obelix():
+    use = [
+        'driver_mmc5603nj',
+        'fw_includes',
+        'root_includes',
+    ]
+
+    # NOTE: enable LIS2DW12 by default on Obelix DVT/BB2
+    if bld.is_obelix_dvt() or bld.is_obelix_bb2():
+        use += ['driver_lis2dw12']
+        bld.env.DEFINES.append('IMU_USE_LIS2DW12')
+    else:
+        use += ['driver_lsm6dso']
+
     bld.objects(
         name='driver_imu',
         source=[
             'imu/imu_obelix.c',
         ],
-        use=[
-            'driver_lsm6dso',
-            'driver_mmc5603nj',
-            'fw_includes',
-            'root_includes',
-        ],
+        use=use,
     )
 
 if bld.env.BOARD == "v2_0":
