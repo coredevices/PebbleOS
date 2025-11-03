@@ -61,20 +61,20 @@ void graphics_private_set_pixel(GContext* ctx, GPoint point) {
 
 // ## Private blending wrapper functions for non-aa
 
+static const uint16_t grays[14] = {
+  0x0000, 0x0000,
+  0x1111, 0x4444,
+  0x5555, 0xAAAA,
+  0x5555, 0xAAAA,
+  0x5555, 0xAAAA, 
+  0xEEEE, 0xBBBB, 
+  0xFFFF, 0xFFFF
+};
+
 uint32_t graphics_private_get_1bit_grayscale_pattern(GColor color, uint8_t row_number) {
-  const GColor8Component luminance = (color.r + color.g + color.b) / 3;
-  switch (luminance) {
-    case 0:
-      return 0x00000000;
-    case 1:
-    case 2:
-      // This is done to create a checkerboard pattern for gray
-      return (row_number % 2) ? 0xAAAAAAAA : 0x55555555;
-    case 3:
-      return 0xFFFFFFFF;
-    default:
-      WTF;
-  }
+  uint16_t luma = ((color.r << 1) + color.r + (color.g << 2) + color.b) >> 1;     // 0 to 12
+  luma = grays[(luma & ~1) + (row_number & 1)];
+  return (luma << 16) | luma;
 }
 
 void prv_assign_line_horizontal_non_aa(GContext* ctx, int16_t y, int16_t x1, int16_t x2) {
