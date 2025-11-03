@@ -227,6 +227,7 @@ board_capability_dicts = [
             "HAS_MAGNETOMETER",
             "HAS_PMIC",
             "HAS_FLASH_OTP",
+            "HAS_MODDABLE_XS",
         },
     },
     {
