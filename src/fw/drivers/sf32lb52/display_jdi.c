@@ -114,7 +114,12 @@ static void prv_power_cycle(void){
 
 // TODO(SF32LB52): Improve/clarify display on/off code
 static void prv_display_on() {
+  // FIXME(OBELIX, GETAFIX): GPIO logic level should be specified at board level
+#if PLATFORM_OBELIX
   gpio_output_set(&DISPLAY->vlcd, false);
+#elif PLATFORM_GETAFIX
+  gpio_output_set(&DISPLAY->vlcd, true);
+#endif
   psleep(POWER_SEQ_DELAY_TIME);
   gpio_output_set(&DISPLAY->vddp, true);
   psleep(POWER_SEQ_DELAY_TIME);
@@ -159,7 +164,12 @@ static void prv_display_off() {
   psleep(POWER_SEQ_DELAY_TIME);
   gpio_output_set(&DISPLAY->vddp, false);
   psleep(POWER_SEQ_DELAY_TIME);
+  // FIXME(OBELIX, GETAFIX): GPIO logic level should be specified at board level
+#if PLATFORM_OBELIX
   gpio_output_set(&DISPLAY->vlcd, true);
+#elif PLATFORM_GETAFIX
+  gpio_output_set(&DISPLAY->vlcd, false);
+#endif
 }
 
 static void prv_display_update_start(void) {
