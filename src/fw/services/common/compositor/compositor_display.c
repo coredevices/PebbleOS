@@ -14,7 +14,7 @@
 
 //! This variable is used when we are flushing s_framebuffer out to the display driver.
 //! It's set to the current row index that we are DMA'ing out to the display.
-static uint8_t s_current_flush_line;
+static uint16_t s_current_flush_line;
 
 static void (*s_update_complete_handler)(void);
 
@@ -41,7 +41,7 @@ static bool prv_flush_get_next_line_cb(DisplayRow* row) {
   FrameBuffer *fb = compositor_get_framebuffer();
 
   s_current_flush_line = MAX(s_current_flush_line, fb->dirty_rect.origin.y);
-  const uint8_t y_end = fb->dirty_rect.origin.y + fb->dirty_rect.size.h;
+  const uint16_t y_end = fb->dirty_rect.origin.y + fb->dirty_rect.size.h;
   if (s_current_flush_line < y_end) {
     row->address = s_current_flush_line;
     void *fb_line = framebuffer_get_line(fb, s_current_flush_line);
