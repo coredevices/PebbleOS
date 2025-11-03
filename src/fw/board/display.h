@@ -9,8 +9,8 @@
 //! data type that's used to store row data infos in a space-efficient manner
 typedef struct {
   uint16_t offset;
-  uint8_t min_x;
-  uint8_t max_x;
+  uint16_t min_x;
+  uint16_t max_x;
 } GBitmapDataRowInfoInternal;
 
 // FIXME: PBL-21055 Fix SDK exporter failing to crawl framebuffer headers
