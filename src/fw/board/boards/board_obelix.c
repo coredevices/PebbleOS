@@ -409,12 +409,21 @@ I2CBus *const I2C2_BUS = &s_i2c_bus_2;
 
 IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
 
+#ifdef IMU_USE_LIS2DW12
+static const I2CSlavePort s_i2c_lsm2dw12 = {
+    .bus = &s_i2c_bus_2,
+    .address = 0x19,
+};
+
+I2CSlavePort *const I2C_LSM2DW12 = &s_i2c_lsm2dw12;
+#else
 static const I2CSlavePort s_i2c_lsm6d = {
     .bus = &s_i2c_bus_2,
     .address = 0x6A,
 };
 
 I2CSlavePort *const I2C_LSM6D = &s_i2c_lsm6d;
+#endif
 
 static const I2CSlavePort s_i2c_mmc5603nj = {
     .bus = &s_i2c_bus_2,
