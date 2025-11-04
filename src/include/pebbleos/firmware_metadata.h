@@ -52,7 +52,8 @@ typedef enum FirmwareMetadataPlatform {
   FirmwareMetadataPlatformPebbleRobertEVT = 13,
   FirmwareMetadataPlatformPebbleSilk = 14,
   FirmwareMetadataPlatformPebbleAsterix = 15,
-  FirmwareMetadataPlatformPebbleObelix = 16,
+  FirmwareMetadataPlatformPebbleObelixEVT = 16,
+  FirmwareMetadataPlatformPebbleObelixDVT = 17,
 
   FirmwareMetadataPlatformPebbleOneBigboard = 0xff,
   FirmwareMetadataPlatformPebbleOneBigboard2 = 0xfe,
@@ -65,6 +66,8 @@ typedef enum FirmwareMetadataPlatform {
   FirmwareMetadataPlatformPebbleRobertBigboard2 = 0xf7,
   FirmwareMetadataPlatformPebbleSilkFlint = 0xf6,
   FirmwareMetadataPlatformPebbleSnowyEmery = 0xf5,
+  FirmwareMetadataPlatformPebbleObelixBigboard = 0xf4,
+  FirmwareMetadataPlatformPebbleObelixBigboard2 = 0xf3,
 } FirmwareMetadataPlatform;
 
 // WARNING: changes in this struct must be reflected in:
@@ -141,8 +144,14 @@ _Static_assert(sizeof(struct FirmwareMetadata) == (sizeof(uint32_t) +
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleRobertEVT)
 #elif BOARD_ASTERIX
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleAsterix)
-#elif BOARD_OBELIX || BOARD_OBELIX_BB || BOARD_OBELIX_BB2
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelix)
+#elif BOARD_OBELIX_EVT
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixEVT)
+#elif BOARD_OBELIX_DVT
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixDVT)
+#elif BOARD_OBELIX_BB
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixBigboard)
+#elif BOARD_OBELIX_BB2
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixBigboard2)
 #elif BOARD_SILK_FLINT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkFlint)
 #elif BOARD_SNOWY_EMERY

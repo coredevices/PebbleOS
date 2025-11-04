@@ -115,7 +115,7 @@ static PwmState s_pwm1_ch3_state = {
     .channel = 3,
 };
 
-#if !BOARD_OBELIX_BB2
+#if !BOARD_OBELIX_DVT && !BOARD_OBELIX_BB2
 const LedControllerPwm LED_CONTROLLER_PWM = {
     .pwm = {
         [0] = {
@@ -233,7 +233,7 @@ static DisplayJDIDevice s_display = {
             .flags = PIN_NOPULL,
         },
     },
-#if BOARD_OBELIX_BB2
+#if BOARD_OBELIX_DVT || BOARD_OBELIX_BB2
     .vddp = {hwp_gpio1, 28, true},
     .vlcd = {hwp_gpio1, 29, true},
 #endif
