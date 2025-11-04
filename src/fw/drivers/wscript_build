@@ -1096,7 +1096,7 @@ if bld.env.BOARD == "v2_0":
         ],
     )
 elif bld.is_obelix():
-    if not bld.is_obelix_bb2():
+    if not bld.is_obelix_dvt() and not bld.is_obelix_bb2():
         bld.objects(
             name='driver_led_controller',
             source=[
