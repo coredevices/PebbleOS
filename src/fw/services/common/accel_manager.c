@@ -400,6 +400,39 @@ void analytics_external_collect_accel_samples_received(void) {
                 AnalyticsClient_System);
 }
 
+// Update the motion sensitivity based on user preference (0-100%)
+// This is called by the preferences system when the user changes the setting
+void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
+  // Sensitivity mapping:
+  // - sensitivity_percent: 0-100 where higher = more sensitive
+  // - For Asterix with LSM6DSO, this maps to the wake-up threshold
+  // - Lower threshold = more sensitive (triggers on smaller movements)
+  // - Higher threshold = less sensitive (requires larger movements to trigger)
+  //
+  // We'll map the user's percentage to a threshold multiplier:
+  // - 100% (most sensitive) = use Low threshold  (15) 
+  // - 50% (medium) = use mid-range (~40)
+  // - 0% (least sensitive) = use High threshold (64)
+  
+  #if PLATFORM_ASTERIX
+  extern void lsm6dso_set_sensitivity_percent(uint8_t percent);
+  mutex_lock_recursive(s_accel_manager_mutex);
+  lsm6dso_set_sensitivity_percent(sensitivity_percent);
+  mutex_unlock_recursive(s_accel_manager_mutex);
+  
+  PBL_LOG(LOG_LEVEL_INFO, "Motion sensitivity updated to %u percent", sensitivity_percent);
+  #else
+  // For other platforms, fall back to binary high/low setting
+  bool use_high_sensitivity = (sensitivity_percent >= 50);
+  mutex_lock_recursive(s_accel_manager_mutex);
+  accel_set_shake_sensitivity_high(use_high_sensitivity);
+  mutex_unlock_recursive(s_accel_manager_mutex);
+  
+  PBL_LOG(LOG_LEVEL_INFO, "Motion sensitivity updated to %u percent (using %s sensitivity)", 
+          sensitivity_percent, use_high_sensitivity ? "high" : "normal");
+  #endif
+}
+
 void accel_manager_init(void) {
   s_accel_manager_mutex = mutex_create_recursive();
 
@@ -417,6 +450,15 @@ void accel_manager_init(void) {
   prv_shake_add_subscriber_cb(PebbleTask_KernelMain);
 
   analytics_external_collect_accel_xyz_delta();
+  
+  // Apply saved motion sensitivity preference for Asterix/Obelix
+  // Only available in normal shell (not PRF)
+  #if (PLATFORM_ASTERIX) && !defined(RECOVERY_FW)
+  extern uint8_t shell_prefs_get_motion_sensitivity(void);
+  uint8_t saved_sensitivity = shell_prefs_get_motion_sensitivity();
+  accel_manager_update_sensitivity(saved_sensitivity);
+  PBL_LOG(LOG_LEVEL_INFO, "Initialized motion sensitivity to %u percent", saved_sensitivity);
+  #endif
 }
 
 static void prv_copy_accel_sample_to_accel_data(AccelDriverSample const *accel_sample,

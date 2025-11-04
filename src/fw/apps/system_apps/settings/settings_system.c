@@ -16,6 +16,7 @@
 
 #include "settings_factory_reset.h"
 #include "settings_menu.h"
+#include "settings_option_menu.h"
 #include "settings_system.h"
 #include "settings_window.h"
 
@@ -75,6 +76,9 @@ enum {
   DebuggingItemCoreDumpNow = 0,
   DebuggingItemCoreDumpShortcut,
   DebuggingItemALSThreshold,
+#if PLATFORM_ASTERIX
+  DebuggingItemMotionSensitivity,
+#endif
   DebuggingItem_Count,
 };
 
@@ -464,6 +468,51 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
   app_window_stack_push(&number_window->window, animated);
 }
 
+// Motion Sensitivity Settings (Asterix/Obelix only)
+/////////////////////////////
+#if PLATFORM_ASTERIX
+static const uint8_t s_motion_sensitivity_values[] = { 10, 25, 40, 55, 70, 85, 100 };
+
+static const char *s_motion_sensitivity_labels[] = {
+  i18n_noop("Very Low"),
+  i18n_noop("Low"),
+  i18n_noop("Medium-Low"),
+  i18n_noop("Medium"),
+  i18n_noop("Medium-High"),
+  i18n_noop("High"),
+  i18n_noop("Very High")
+};
+
+static int prv_motion_sensitivity_get_selection_index() {
+  const uint8_t sensitivity = shell_prefs_get_motion_sensitivity();
+  
+  // Find closest match
+  for (int i = 0; i < (int)ARRAY_LENGTH(s_motion_sensitivity_values); i++) {
+    if (sensitivity <= s_motion_sensitivity_values[i]) {
+      return i;
+    }
+  }
+  return ARRAY_LENGTH(s_motion_sensitivity_values) - 1;
+}
+
+static void prv_motion_sensitivity_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  shell_prefs_set_motion_sensitivity(s_motion_sensitivity_values[selection]);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_motion_sensitivity_menu_push(SettingsSystemData *data) {
+  int index = prv_motion_sensitivity_get_selection_index();
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_motion_sensitivity_menu_select,
+  };
+  const char *title = i18n_noop("Motion Sensitivity");
+  settings_option_menu_push(
+      title, OptionMenuContentType_SingleLine, index, &callbacks,
+      ARRAY_LENGTH(s_motion_sensitivity_labels),
+      true /* icons_enabled */, s_motion_sensitivity_labels, data);
+}
+#endif
+
 // Debug options window
 ///////////////////////
 
@@ -471,6 +520,9 @@ static const char* s_debugging_titles[DebuggingItem_Count] = {
   [DebuggingItemCoreDumpNow]      = i18n_noop("Bug report now"),
   [DebuggingItemCoreDumpShortcut] = i18n_noop("Bug shortcut"),
   [DebuggingItemALSThreshold]     = i18n_noop("ALS Threshold"),
+#if PLATFORM_ASTERIX
+  [DebuggingItemMotionSensitivity] = i18n_noop("Motion Sensitivity"),
+#endif
 };
 
 static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_layer,
@@ -497,6 +549,11 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
              "%"PRIu32, current_threshold);
     subtitle_text = data->als_threshold_buffer;
   }
+#if PLATFORM_ASTERIX
+  else if (cell_index->row == DebuggingItemMotionSensitivity) {
+    subtitle_text = i18n_get(s_motion_sensitivity_labels[prv_motion_sensitivity_get_selection_index()], data);
+  }
+#endif
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, NULL);
 }
 
@@ -528,6 +585,11 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
     case DebuggingItemALSThreshold:
       prv_als_threshold_menu_push(data);
       break;
+#if PLATFORM_ASTERIX
+    case DebuggingItemMotionSensitivity:
+      prv_motion_sensitivity_menu_push(data);
+      break;
+#endif
     default:
       WTF;
   }

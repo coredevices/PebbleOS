@@ -92,6 +92,10 @@ static uint32_t s_tap_threshold = BOARD_CONFIG_ACCEL.accel_config.double_tap_thr
 static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
 static uint32_t s_last_vibe_detected = 0;
 
+// User-configured sensitivity percentage (0-100), where 100 = most sensitive
+// Default to 100% (maximum sensitivity) to maintain current behavior
+static uint8_t s_user_sensitivity_percent = 100;
+
 // Error tracking and recovery
 static uint32_t s_i2c_error_count = 0;
 static uint32_t s_last_successful_read_ms = 0;
@@ -657,16 +661,36 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
   // Duration: increase a bit to reduce spurious triggers
   lsm6dso_wkup_dur_set(&lsm6dso_ctx, sensitivity_high ? 0 : 1);
 
-  // Threshold: derive from board config; clamp into 0..63
+  // Threshold calculation:
+  // - Board config provides Low (15) and High (64) thresholds
+  // - sensitivity_high flag indicates stationary mode (use low threshold for any movement)
+  // - s_user_sensitivity_percent (0-100) controls normal mode threshold
+  //   * 100% = most sensitive = use Low threshold (15)
+  //   * 50% = medium = interpolate between Low and High (~40)
+  //   * 0% = least sensitive = use High threshold (64)
+  
   uint32_t raw_high = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
   uint32_t raw_low = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
-  uint32_t raw = sensitivity_high ? raw_high : raw_low;
-  // Increase sensitivity: scale threshold down (halve). Ensure at least 2 to avoid noise storms.
-  raw = (raw + 1) / 2;     // divide by 2 rounding up
+  uint32_t raw;
+  
+  if (sensitivity_high) {
+    // Stationary mode: always use low threshold for maximum sensitivity
+    raw = raw_low;
+  } else {
+    // Normal mode: interpolate based on user preference
+    // Invert the percentage: 100% sensitive = low threshold, 0% sensitive = high threshold
+    uint32_t inverted_percent = 100 - s_user_sensitivity_percent;
+    raw = raw_low + ((raw_high - raw_low) * inverted_percent) / 100;
+  }
+  
+  // Clamp to valid range
   if (raw > 63) raw = 63;  // lsm6dso wk_ths is 6 bits
-  // Sanity fallback if 0 (avoid constant triggers) choose very low but non-zero
-  if (raw == 0) raw = 2;
+  if (raw < 2) raw = 2;     // Avoid noise storms with very low thresholds
+  
   lsm6dso_wkup_threshold_set(&lsm6dso_ctx, (uint8_t)raw);
+  
+  PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Shake threshold set to %lu (sensitivity_high=%d, user_percent=%u)", 
+          raw, sensitivity_high, s_user_sensitivity_percent);
 }
 
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
@@ -1360,4 +1384,19 @@ void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
   }
 
   diagnostics->state_flags = flags;
+}
+
+void lsm6dso_set_sensitivity_percent(uint8_t percent) {
+  if (percent > 100) {
+    percent = 100; // Clamp to max
+  }
+  
+  s_user_sensitivity_percent = percent;
+  
+  // Reconfigure shake detection if it's currently enabled
+  if (s_lsm6dso_state.shake_detection_enabled) {
+    prv_lsm6dso_configure_shake(true, s_lsm6dso_state.shake_sensitivity_high);
+  }
+  
+  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: User sensitivity set to %u percent", percent);
 }
