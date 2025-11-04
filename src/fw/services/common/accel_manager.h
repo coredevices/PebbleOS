@@ -90,5 +90,10 @@ bool gyro_manager_run_selftest(void);
 // event from any small movements
 void accel_enable_high_sensitivity(bool high_sensitivity);
 
+// Update the motion sensitivity based on user preference (0-100%)
+// Only available on Asterix/Obelix platforms
+// 100 = most sensitive, 0 = least sensitive
+void accel_manager_update_sensitivity(uint8_t sensitivity_percent);
+
 // lightweight call to determine if the watch is idle
 bool accel_is_idle(void);
