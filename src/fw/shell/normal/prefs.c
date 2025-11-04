@@ -75,6 +75,9 @@ static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in s
 #define PREF_KEY_BACKLIGHT_MOTION "lightMotion"
 static bool s_backlight_motion_enabled = true;
 
+#define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
+static uint8_t s_motion_sensitivity = 100; // Default to maximum sensitivity (100%)
+
 #define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
 static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
 
@@ -272,6 +275,24 @@ static bool prv_set_s_backlight_intensity(uint16_t *intensity) {
 
 static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   s_backlight_motion_enabled = *enabled;
+  return true;
+}
+
+static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
+  // Clamp sensitivity to 0-100 range
+  if (*sensitivity > 100) {
+    s_motion_sensitivity = 100; // Reset to default if invalid
+    return false;
+  }
+  s_motion_sensitivity = *sensitivity;
+  
+  // Update accelerometer sensitivity in accel_manager
+  // This applies the setting to the hardware
+  #if PLATFORM_ASTERIX
+  extern void accel_manager_update_sensitivity(uint8_t sensitivity);
+  accel_manager_update_sensitivity(*sensitivity);
+  #endif
+  
   return true;
 }
 
@@ -857,6 +878,18 @@ bool backlight_is_motion_enabled(void) {
 
 void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
+}
+
+uint8_t shell_prefs_get_motion_sensitivity(void) {
+  return s_motion_sensitivity;
+}
+
+void shell_prefs_set_motion_sensitivity(uint8_t sensitivity) {
+  // Clamp to valid range
+  if (sensitivity > 100) {
+    sensitivity = 50;
+  }
+  prv_pref_set(PREF_KEY_MOTION_SENSITIVITY, &sensitivity, sizeof(sensitivity));
 }
 
 uint32_t backlight_get_ambient_threshold(void) {
