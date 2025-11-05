@@ -42,6 +42,7 @@ typedef enum {
   PowerStateGood,
   PowerStateLowPower,
   PowerStateCritical,
+  PowerStatePluggedIn,
   PowerStateStandby
 } PowerStateID;
 
@@ -55,6 +56,7 @@ static const PowerState power_states[] = {
   [PowerStateGood] = { 0 },
   [PowerStateLowPower] = { .enter = prv_enter_lpm, .exit = prv_exit_lpm },
   [PowerStateCritical] = { .enter = prv_begin_standby_timer, .exit = prv_exit_critical },
+  [PowerStatePluggedIn] = { 0 },
   [PowerStateStandby] = { .enter = prv_enter_standby }
 };
 
@@ -200,7 +202,9 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
 
   PowerStateID new_state;
 
-  if (critical || s_low_on_first_run) {
+  if (state.is_plugged) {
+    new_state = PowerStatePluggedIn;
+  } else if (critical || s_low_on_first_run) {
     new_state = PowerStateCritical;
   } else if (low_power) {
     new_state = PowerStateLowPower;
