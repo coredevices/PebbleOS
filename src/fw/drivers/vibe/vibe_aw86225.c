@@ -64,6 +64,7 @@
 
 #define AW862XX_CONTCFG1_EDGE_FREQ                      (0xC0)
 #define AW862XX_CONTCFG1_WAVE_MODE                      (0x01)  /* 0:sine; 1:cos */
+#define AW862XX_CONTCFG1_EN_F0_DET                      (1<<3)
 #define AW862XX_CONTCFG2_CONF_F0                        (102)   /* REG = 24,000/f0, f0 is 235Hz */
 #define AW862XX_CONTCFG3_DRV_WIDTH                      (209)   /* f0-8-track_margin-brk_gain*/
 #define AW862XX_CONTCFG7_FULL_SCALE                     (0x7FL)
@@ -173,7 +174,7 @@ void vibe_init(void) {
     return;
   }
 
-  ret &= prv_write_register(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EDGE_FREQ|AW862XX_CONTCFG1_WAVE_MODE);
+  ret &= prv_write_register(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EDGE_FREQ  |AW862XX_CONTCFG1_WAVE_MODE | AW862XX_CONTCFG1_EN_F0_DET);
   ret &= prv_write_register(AW862XX_REG_CONTCFG2, AW862XX_CONTCFG2_CONF_F0);
   ret &= prv_write_register(AW862XX_REG_CONTCFG3, AW862XX_CONTCFG3_DRV_WIDTH);
   ret &= prv_write_register(AW862XX_REG_CONTCFG7, AW862XX_CONTCFG7_FULL_SCALE);
@@ -206,6 +207,8 @@ void vibe_ctl(bool on) {
   }
 
   if (on) {
+    prv_write_register(AW862XX_REG_CONTCFG8, 0xFF);
+    prv_write_register(AW862XX_REG_CONTCFG9, 0xFF);
     prv_aw862xx_play_go(true);
   } else {
     prv_aw862xx_play_go(false);
