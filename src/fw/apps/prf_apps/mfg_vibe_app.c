@@ -74,7 +74,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       data->state = STATE_VIBING;
     }
   } else if (data->state == STATE_VIBING) {
-    vibes_short_pulse();
+    vibes_long_pulse();
   }
 }
 
