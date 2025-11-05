@@ -12,4 +12,5 @@ typedef struct {
   I2CSlavePort *i2c;
   I2CSlavePort *i2c_boot;
   ExtiConfig int_exti;
+  OutputConfig reset;
 } TouchSensor;
