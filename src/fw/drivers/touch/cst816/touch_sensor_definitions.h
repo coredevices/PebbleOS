@@ -4,7 +4,9 @@
 
 #include "board/board.h"
 
+#if PLATFORM_OBELIX
 #define RESET_PIN_CTRLBY_NPM1300          1
+#endif
 
 typedef struct {
   I2CSlavePort *i2c;
