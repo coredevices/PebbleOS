@@ -47,12 +47,21 @@ static const char* status_text[] = {
 #ifdef PLATFORM_TINTIN
 static const int SLOW_THRESHOLD_PERCENTAGE = 42; // ~3850mv
 static const int PASS_BATTERY_PERCENTAGE = 84; // ~4050mv
+
+static const int TEMP_MIN_MC = 0;
+static const int TEMP_MAX_MC = 0;
 #elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX)
 static const int SLOW_THRESHOLD_PERCENTAGE = 0;
 static const int PASS_BATTERY_PERCENTAGE = 70;
+
+static const int TEMP_MIN_MC = 150000; // 15.0C
+static const int TEMP_MAX_MC = 350000; // 35.0C
 #else
 static const int SLOW_THRESHOLD_PERCENTAGE = 0; // Always go "slow" on snowy
 static const int PASS_BATTERY_PERCENTAGE = 60; // ~4190mv
+
+static const int TEMP_MIN_MC = 0;
+static const int TEMP_MAX_MC = 0;
 #endif
 
 typedef struct {
@@ -107,7 +116,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         // go slow for a bit
         battery_set_fast_charge(false);
         data->fastcharge_enabled = false;
-      } else if (charge_state.charge_percent > PASS_BATTERY_PERCENTAGE) {
+      } else if (charge_state.charge_percent > PASS_BATTERY_PERCENTAGE &&
+                 temp_mc >= TEMP_MIN_MC && temp_mc <= TEMP_MAX_MC) {
         // The reading can be a bit shaky in the short term (i.e. a flaky USB connection), or we
         // just started charging. Make sure we have settled before transitioning into the
         // RuninStatePass state
