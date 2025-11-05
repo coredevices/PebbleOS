@@ -48,12 +48,20 @@ def is_obelix(ctx):
     return ctx.get_board().startswith('obelix')
 
 @conf
+def is_obelix_evt(ctx):
+    return ctx.get_board() == 'obelix_evt'
+
+@conf
+def is_obelix_bb(ctx):
+    return ctx.get_board() == 'obelix_bb'
+
+@conf
 def is_obelix_dvt(ctx):
-    return ctx.get_board().startswith('obelix_dvt')
+    return ctx.get_board() == 'obelix_dvt'
 
 @conf
 def is_obelix_bb2(ctx):
-    return ctx.get_board().startswith('obelix_bb2')
+    return ctx.get_board() == 'obelix_bb2'
 
 @conf
 def get_platform_name(ctx):
