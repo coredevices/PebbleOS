@@ -325,6 +325,9 @@ uint16_t battery_state_get_voltage(void) {
   return s_last_battery_state.voltage;
 }
 
+int32_t battery_state_get_temp(void) {
+  return 0;
+}
 
 #include "console/prompt.h"
 void command_print_battery_status(void) {
