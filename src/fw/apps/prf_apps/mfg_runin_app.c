@@ -78,6 +78,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   RuninTestState next_state = data->test_state;
 
   const int charge_mv = battery_get_millivolts();
+  const int32_t temp_mc = battery_state_get_temperature();
   const BatteryChargeState charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
@@ -146,9 +147,12 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
   int mins_remaining = data->seconds_remaining / 60;
   int secs_remaining = data->seconds_remaining % 60;
+  int8_t temp_c = (int8_t)(temp_mc / 1000);
+  uint8_t temp_c_frac = ((temp_mc > 0 ? temp_mc : -temp_mc) % 1000) / 10;
   sniprintf(data->details_string, sizeof(data->details_string),
-            "Time:%02u:%02u\r\n%umV (%"PRIu8"%%)\r\nUSB: %s\r\nCharging: %s",
+            "Time:%02u:%02u\r\n%umV %" PRId8 ".%02" PRIu8 "C (%"PRIu8"%%)\r\nUSB: %s\r\nCharging: %s",
             mins_remaining, secs_remaining, charge_mv,
+            temp_c, temp_c_frac,
             charge_state.charge_percent,
             charge_state.is_plugged ? "yes" : "no",
             charge_state.is_charging ? "yes" : "no");
