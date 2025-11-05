@@ -56,6 +56,7 @@ static TimerID s_periodic_timer_id = TIMER_INVALID_ID;
 static BatteryChargeStatus s_last_chg_status;
 static uint64_t prv_ref_time;
 static int32_t s_last_voltage_mv;
+static int32_t s_last_temp_mc;
 static int32_t s_analytics_last_voltage_mv;
 static uint8_t s_analytics_last_pct;
 static uint32_t s_last_tte;
@@ -151,6 +152,7 @@ static void prv_update_state(void *force_update) {
   }
 
   s_last_voltage_mv = constants.v_mv;
+  s_last_temp_mc = constants.t_mc;
 
   now = rtc_get_ticks();
   delta = (now - prv_ref_time) / RTC_TICKS_HZ;
@@ -307,6 +309,8 @@ BatteryChargeState battery_get_charge_state(void) {
 TimerID battery_state_get_periodic_timer_id(void) { return s_periodic_timer_id; }
 
 uint16_t battery_state_get_voltage(void) { return (uint16_t)s_last_voltage_mv; }
+
+int32_t battery_state_get_temperature(void) { return s_last_temp_mc; }
 
 #include "console/prompt.h"
 void command_print_battery_status(void) {
