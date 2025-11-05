@@ -75,5 +75,8 @@ void battery_state_reset_filter(void);
 // Get the last recorded voltage
 uint16_t battery_state_get_voltage(void);
 
+// Get the last recorded temperature (mC)
+int32_t battery_state_get_temperature(void);
+
 // For unit tests
 TimerID battery_state_get_periodic_timer_id(void);
