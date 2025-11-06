@@ -36,23 +36,20 @@
 #include "util/size.h"
 
 typedef enum {
-  TestPattern_Black,
-  TestPattern_Gray,
-  TestPattern_White,
   TestPattern_Crosshair,
+  TestPattern_Black,
+  TestPattern_White,
 #if PBL_COLOR
   TestPattern_Red,
   TestPattern_Green,
   TestPattern_Blue,
+#else
+  TestPattern_Gray,
 #endif
 #if PBL_ROUND
   TestPattern_Border1,
   TestPattern_Border2,
   TestPattern_Border3,
-#endif
-#if PBL_COLOR
-  TestPattern_Pinwheel,
-  TestPattern_Veggies,
 #endif
 
   NumTestPatterns
@@ -153,17 +150,14 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   AppData *app_data = app_state_get_user_data();
 
   switch (app_data->test_pattern) {
+  case TestPattern_Crosshair:
+    prv_draw_crosshair_screen(layer, ctx, 0);
+    break;
   case TestPattern_Black:
     prv_draw_solid(layer, ctx, GColorBlack);
     break;
-  case TestPattern_Gray:
-    prv_draw_solid(layer, ctx, GColorDarkGray);
-    break;
   case TestPattern_White:
     prv_draw_solid(layer, ctx, GColorWhite);
-    break;
-  case TestPattern_Crosshair:
-    prv_draw_crosshair_screen(layer, ctx, 0);
     break;
 #if PBL_COLOR
   case TestPattern_Red:
@@ -175,6 +169,10 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   case TestPattern_Blue:
     prv_draw_solid(layer, ctx, GColorBlue);
     break;
+#else
+  case TestPattern_Gray:
+    prv_draw_solid(layer, ctx, GColorDarkGray);
+    break;
 #endif
 #if PBL_ROUND
   case TestPattern_Border1:
@@ -185,14 +183,6 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
     break;
   case TestPattern_Border3:
     prv_draw_crosshair_screen(layer, ctx, 4);
-    break;
-#endif
-#if PBL_COLOR
-  case TestPattern_Pinwheel:
-    prv_draw_bitmap(layer, ctx, RESOURCE_ID_TEST_IMAGE_PINWHEEL);
-    break;
-  case TestPattern_Veggies:
-    prv_draw_bitmap(layer, ctx, RESOURCE_ID_TEST_IMAGE_VEGGIES);
     break;
 #endif
   default:
@@ -290,16 +280,15 @@ static void prv_launch_app_cb(void *data) {
 
 void command_display_set(const char *color) {
   const char * const ARGS[] = {
-    [TestPattern_Black] = "black",
-    [TestPattern_Gray] = "gray",
-    [TestPattern_White] = "white",
     [TestPattern_Crosshair] = "crosshair",
+    [TestPattern_Black] = "black",
+    [TestPattern_White] = "white",
 #if PBL_COLOR
-    [TestPattern_Veggies] = "veggies",
-    [TestPattern_Pinwheel] = "pinwheel",
     [TestPattern_Red] = "red",
     [TestPattern_Green] = "green",
     [TestPattern_Blue] = "blue",
+#else
+    [TestPattern_Gray] = "gray",
 #endif
   };
 
