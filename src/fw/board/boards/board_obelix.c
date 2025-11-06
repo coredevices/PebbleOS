@@ -313,7 +313,7 @@ static struct I2CBusHal s_i2c_bus_hal_1 = {
                 .GeneralCallMode = I2C_GENERALCALL_DISABLE,
             },
             .Mode = HAL_I2C_MODE_MASTER,
-
+            .core = CORE_ID_HCPU,
         },
 
     .device_name = "i2c1",
@@ -341,6 +341,7 @@ static I2CBusState s_i2c_bus_state_1;
 static I2CBus s_i2c_bus_1 = {
     .hal = &s_i2c_bus_hal_1,
     .state = &s_i2c_bus_state_1,
+    .name = "i2c1",
     .stop_mode_inhibitor = InhibitorI2C1,
 };
 
@@ -363,7 +364,7 @@ static struct I2CBusHal s_i2c_bus_hal_2 = {
                 .GeneralCallMode = I2C_GENERALCALL_DISABLE,
             },
             .Mode = HAL_I2C_MODE_MASTER,
-
+            .core = CORE_ID_HCPU,
         },
 
     .device_name = "i2c2",
@@ -391,6 +392,7 @@ static I2CBusState s_i2c_bus_state_2;
 static I2CBus s_i2c_bus_2 = {
     .hal = &s_i2c_bus_hal_2,
     .state = &s_i2c_bus_state_2,
+    .name = "i2c2",
     .stop_mode_inhibitor = InhibitorI2C2,
 };
 
@@ -443,7 +445,9 @@ const BoardConfigActuator BOARD_CONFIG_VIBE = {
     .ctl = {hwp_gpio1, 1, true},
 };
 
-static I2CDeviceState s_i2c_device_state_3;
+static I2CDeviceState s_i2c_device_state_3 = {
+    .int_enabled = true,
+};
 
 static struct I2CBusHal s_i2c_bus_hal_3 = {
     .i2c_state = &s_i2c_device_state_3,
@@ -456,7 +460,7 @@ static struct I2CBusHal s_i2c_bus_hal_3 = {
                 .GeneralCallMode = I2C_GENERALCALL_DISABLE,
             },
             .Mode = HAL_I2C_MODE_MASTER,
-
+            .core = CORE_ID_HCPU,
         },
 
     .device_name = "i2c3",
@@ -484,6 +488,7 @@ static I2CBusState s_i2c_bus_state_3;
 static I2CBus s_i2c_bus_3 = {
     .hal = &s_i2c_bus_hal_3,
     .state = &s_i2c_bus_state_3,
+    .name = "i2c3",
     .stop_mode_inhibitor = InhibitorI2C3,
 };
 
