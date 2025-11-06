@@ -376,8 +376,10 @@ void ancs_notifications_handle_message(uint32_t uid,
       notification_storage_unlock();
       goto cleanup;
     }
+    PBL_LOG(LOG_LEVEL_INFO, "Updating ANCS notification: %"PRIu32, uid);
     prv_handle_ancs_update(notification, &existing_header);
   } else {
+    PBL_LOG(LOG_LEVEL_INFO, "New ANCS notification: %"PRIu32, uid);
     prv_handle_new_ancs_notif(notification);
   }
 
