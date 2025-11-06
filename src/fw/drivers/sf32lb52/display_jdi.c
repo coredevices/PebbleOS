@@ -33,6 +33,7 @@
 #include "bf0_hal.h"
 #include "bf0_hal_lcdc.h"
 #include "bf0_hal_lptim.h"
+#include "bf0_hal_rtc.h"
 
 #define BYTE_222_TO_332(data) ((((data) & 0x30) << 2) | (((data) & 0x0c) << 1) | ((data) & 0x03))
 #define POWER_SEQ_DELAY_TIME  (11)
@@ -92,8 +93,8 @@ static void prv_display_on() {
 
   LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
 
-  lptim->CFGR |= LPTIM_INTLOCKSOURCE_APBCLOCK;
-  lptim->ARR = 3750000 / DISPLAY->vcom.freq_hz;
+  lptim->CFGR |= LPTIM_INTCLOCKSOURCE_LPCLOCK;
+  lptim->ARR = RC10K_FREQ / DISPLAY->vcom.freq_hz;
   lptim->CMP = lptim->ARR / 2;
   lptim->CR |= LPTIM_CR_ENABLE;
   lptim->CR |= LPTIM_CR_CNTSTRT;
