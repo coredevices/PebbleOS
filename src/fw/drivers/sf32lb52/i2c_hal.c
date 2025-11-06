@@ -47,10 +47,10 @@ typedef struct I2CMsg {
   uint8_t *buf;
 } I2CDeviceMsg;
 
-I2CDeviceMsg msgs[2];
-uint32_t msgs_num;
+static I2CDeviceMsg msgs[2];
+static uint32_t msgs_num;
 
-static void hal_semaphore_give(I2CBusState *bus_state) {
+static void prv_semaphore_give(I2CBusState *bus_state) {
   xSemaphoreGive(bus_state->event_semaphore);
 }
 static portBASE_TYPE hal_semaphore_give_from_isr(I2CBusState *bus) {
@@ -66,16 +66,14 @@ void i2c_irq_handler(I2CBus *bus) {
     handle->XferISR(handle, 0, 0);
   }
 
-  if ((HAL_I2C_STATE_BUSY_TX != handle->State) && (HAL_I2C_STATE_BUSY_RX != handle->State)) {
-    hal_semaphore_give_from_isr(bus->state);
-    HAL_I2C_StateTypeDef i2c_state = HAL_I2C_GetState(handle);
-    if (i2c_state == HAL_I2C_STATE_READY)
-      bus->state->transfer_event = I2CTransferEvent_TransferComplete;
-    else if (i2c_state == HAL_I2C_STATE_TIMEOUT)
-      bus->state->transfer_event = I2CTransferEvent_Timeout;
-    else
-      bus->state->transfer_event = I2CTransferEvent_Error;
-    __HAL_I2C_DISABLE(handle);
+  HAL_I2C_StateTypeDef i2c_state = HAL_I2C_GetState(handle);
+
+  if ((i2c_state != HAL_I2C_STATE_BUSY_TX) && (i2c_state != HAL_I2C_STATE_BUSY_RX)) {
+    if (i2c_state == HAL_I2C_STATE_READY) {
+      i2c_handle_transfer_event(bus, I2CTransferEvent_TransferComplete);
+    } else {
+      i2c_handle_transfer_event(bus, I2CTransferEvent_Error);
+    }
   }
 }
 
@@ -163,36 +161,8 @@ static HAL_StatusTypeDef i2c_hal_master_xfer(I2CDeviceBusHal *i2c_hal, I2CDevice
         }
       }
     }
-    if (HAL_OK != status) goto exit;
-
-    while (1) {
-      HAL_I2C_StateTypeDef i2c_state = HAL_I2C_GetState(handle);
-
-      if (HAL_I2C_STATE_READY == i2c_state) {
-        status = HAL_OK;
-      } else if (HAL_I2C_STATE_TIMEOUT == i2c_state) {
-        status = HAL_TIMEOUT;
-      } else if ((HAL_I2C_STATE_BUSY_TX == i2c_state) ||
-                 (HAL_I2C_STATE_BUSY_RX == i2c_state))  // Interrupt or DMA mode, wait semaphore
-      {
-        status = HAL_BUSY;
-      } else {
-        status = HAL_ERROR;
-      }
-
-      break;
-    }
-    if (HAL_OK != status) goto exit;
-    if (hal->hi2c.ErrorCode) goto exit;
-
-    hal->hi2c.Instance->CR |= I2C_CR_UR;
-    HAL_Delay_us(1);  // Delay at least 9 cycle.
-    hal->hi2c.Instance->CR &= ~I2C_CR_UR;
   }
 
-exit:
-
-  if (status != HAL_BUSY) __HAL_I2C_DISABLE(handle);
   return status;
 }
 
@@ -242,20 +212,17 @@ void i2c_hal_abort_transfer(I2CBus *bus) {
 
 void i2c_hal_start_transfer(I2CBus *bus) {
   struct I2CBusHal *hal = (struct I2CBusHal *)bus->hal;
+  I2C_HandleTypeDef *handle = (I2C_HandleTypeDef *)&hal->hi2c;
   HAL_StatusTypeDef status = i2c_hal_master_xfer(hal, &msgs[0], msgs_num);
-  if (status == HAL_BUSY) {
-    return;
-  }
 
-  if (status == HAL_OK) {
-    bus->state->transfer_event = I2CTransferEvent_TransferComplete;
-    if (((hal->hdma.Instance == NULL)) && (hal->i2c_state->int_enabled == false))
-      hal_semaphore_give(bus->state);
-  } else if (status == HAL_TIMEOUT)
-    bus->state->transfer_event = I2CTransferEvent_Timeout;
-  else
-    bus->state->transfer_event = I2CTransferEvent_Error;
-  return;
+  I2CTransferEvent  event = I2CTransferEvent_Error;
+  if (HAL_OK != status) {
+    event = I2CTransferEvent_Error;
+    HAL_I2C_Reset(handle);
+    __HAL_I2C_DISABLE(handle);
+    bus->state->transfer_event = event;
+    prv_semaphore_give(bus->state);
+  }
 }
 
 int i2c_hal_configure(I2CDeviceBusHal *i2c_hal) {
@@ -275,9 +242,13 @@ int i2c_hal_configure(I2CDeviceBusHal *i2c_hal) {
   return 0;
 }
 
-void i2c_hal_enable(I2CBus *bus) { HAL_RCC_EnableModule(bus->hal->module); }
+void i2c_hal_enable(I2CBus *bus) {
+  HAL_RCC_EnableModule(bus->hal->module);
+}
 
-void i2c_hal_disable(I2CBus *bus) { HAL_RCC_DisableModule(bus->hal->module); }
+void i2c_hal_disable(I2CBus *bus) {
+  HAL_RCC_DisableModule(bus->hal->module);
+}
 
 bool i2c_hal_is_busy(I2CBus *bus) {
   bool ret = false;
@@ -296,15 +267,14 @@ static int i2c_hal_hw_init(struct I2CBusHal *i2c_hal) {
     dma_rtx_config.Instance = i2c_hal->hdma.Instance;
     dma_rtx_config.request = i2c_hal->hdma.Init.Request;
     HAL_I2C_DMA_Init(&(i2c_hal->hi2c), &dma_rtx_config, &dma_rtx_config);
+  }
 
-    HAL_NVIC_SetPriority(i2c_hal->dma_irqn, i2c_hal->dma_irq_priority, 0);
-    NVIC_EnableIRQ(i2c_hal->dma_irqn);
+  ret = i2c_hal_configure(i2c_hal);
 
-  } else if (i2c_hal->i2c_state->int_enabled) {
+  if (i2c_hal->i2c_state->int_enabled) {
     HAL_NVIC_SetPriority(i2c_hal->irqn, i2c_hal->irq_priority, 0);
     NVIC_EnableIRQ(i2c_hal->irqn);
   }
-  ret = i2c_hal_configure(i2c_hal);
 
   if (ret < 0) {
     return ret;
@@ -321,6 +291,7 @@ void i2c_hal_init(I2CBus *bus) {
   } else {
     PBL_LOG_D(LOG_DOMAIN_I2C, LOG_LEVEL_INFO, "I2C [%s] hw init ok!", bus->hal->device_name);
   }
+
   return;
 }
 
