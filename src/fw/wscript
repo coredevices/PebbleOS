@@ -581,6 +581,7 @@ def _build_recovery(bld):
             'apps/prf_apps/mfg_pdm_mic_app.c',
             'apps/prf_apps/mfg_program_color_app.c',
             'apps/prf_apps/mfg_runin_app.c',
+            'apps/prf_apps/mfg_serial_qr_app.c',
             'apps/prf_apps/mfg_sine_wave_app.c',
             'apps/prf_apps/mfg_speaker_app.c',
             'apps/prf_apps/mfg_touch_app.c',
