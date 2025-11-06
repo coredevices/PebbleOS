@@ -22,6 +22,7 @@
 #include "apps/prf_apps/mfg_als_app.h"
 #include "apps/prf_apps/mfg_bt_device_name_app.h"
 #include "apps/prf_apps/mfg_bt_sig_rf_app.h"
+#include "apps/prf_apps/mfg_serial_qr_app.h"
 #include "apps/prf_apps/mfg_button_app.h"
 #include "apps/prf_apps/mfg_certification_app.h"
 #include "apps/prf_apps/mfg_display_app.h"
@@ -78,6 +79,10 @@ static void prv_launch_app_cb(void *data) {
 #ifdef MANUFACTURING_FW
 static void prv_select_bt_device_name(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_device_name_app_get_info());
+}
+
+static void prv_select_serial_qr(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_serial_qr_app_get_info());
 }
 
 #if PBL_ROUND
@@ -224,7 +229,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   const SimpleMenuItem s_menu_items[] = {
 #ifdef MANUFACTURING_FW
     { .title = "BT Device Name",    .callback = prv_select_bt_device_name },
-    { .title = "Device Serial" },
+    { .title = "Device Serial",     .callback = prv_select_serial_qr },
 #if PBL_ROUND
     { .title = "Calibrate Display", .callback = prv_select_calibrate_display },
 #endif
