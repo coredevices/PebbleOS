@@ -78,6 +78,11 @@ static bool s_backlight_motion_enabled = true;
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
 static uint8_t s_motion_sensitivity = 100; // Default to maximum sensitivity (100%)
 
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#define PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY "lightDynamicIntensity"
+static bool s_backlight_dynamic_intensity_enabled = false;
+#endif
+
 #define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
 static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
 
@@ -277,6 +282,13 @@ static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   s_backlight_motion_enabled = *enabled;
   return true;
 }
+
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+static bool prv_set_s_backlight_dynamic_intensity_enabled(bool *enabled) {
+  s_backlight_dynamic_intensity_enabled = *enabled;
+  return true;
+}
+#endif
 
 static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
   // Clamp sensitivity to 0-100 range
@@ -879,6 +891,16 @@ bool backlight_is_motion_enabled(void) {
 void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
 }
+
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+bool backlight_is_dynamic_intensity_enabled(void) {
+  return s_backlight_dynamic_intensity_enabled;
+}
+
+void backlight_set_dynamic_intensity_enabled(bool enable) {
+  prv_pref_set(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY, &enable, sizeof(enable));
+}
+#endif
 
 uint8_t shell_prefs_get_motion_sensitivity(void) {
   return s_motion_sensitivity;

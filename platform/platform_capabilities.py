@@ -59,6 +59,7 @@ master_capability_set = {
     'HAS_FLASH_OTP',
     'HAS_VIBE_AW86225',
     'HAS_PBLBOOT',
+    'HAS_DYNAMIC_BACKLIGHT',
 }
 
 board_capability_dicts = [
@@ -365,6 +366,7 @@ board_capability_dicts = [
             'HAS_ALS_W1160',
             'HAS_MAGNETOMETER',
             'HAS_PBLBOOT',
+            'HAS_DYNAMIC_BACKLIGHT',
         },
     },
 ]

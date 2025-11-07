@@ -166,6 +166,9 @@ enum SettingsDisplayItem {
   SettingsDisplayBacklightMode,
   SettingsDisplayMotionSensor,
   SettingsDisplayAmbientSensor,
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+  SettingsDisplayDynamicIntensity,
+#endif
   SettingsDisplayBacklightIntensity,
   SettingsDisplayBacklightTimeout,
 #if PLATFORM_SPALDING
@@ -208,6 +211,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case SettingsDisplayAmbientSensor:
       light_toggle_ambient_sensor_enabled();
       break;
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+    case SettingsDisplayDynamicIntensity:
+      backlight_set_dynamic_intensity_enabled(!backlight_is_dynamic_intensity_enabled());
+      break;
+#endif
     case SettingsDisplayBacklightIntensity:
       prv_intensity_menu_push(data);
       break;
@@ -266,8 +274,26 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
         subtitle = i18n_noop("Off");
       }
       break;
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+    case SettingsDisplayDynamicIntensity:
+      title = i18n_noop("Dynamic Backlight");
+      if (backlight_is_dynamic_intensity_enabled()) {
+        subtitle = i18n_noop("On");
+      } else {
+        subtitle = i18n_noop("Off");
+      }
+      break;
+#endif
     case SettingsDisplayBacklightIntensity:
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+      if (backlight_is_dynamic_intensity_enabled()) {
+        title = i18n_noop("Max Intensity");
+      } else {
+        title = i18n_noop("Intensity");
+      }
+#else
       title = i18n_noop("Intensity");
+#endif
       subtitle = s_intensity_labels[prv_intensity_get_selection_index()];
       break;
     case SettingsDisplayBacklightTimeout:
