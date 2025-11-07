@@ -111,7 +111,7 @@ flint_platform = {
     "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
     "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
     "DEFINES": ["PBL_PLATFORM_FLINT", "PBL_BW", "PBL_RECT",
-                "PBL_MICROPHONE", "PBL_HEALTH", "PBL_COMPASS"
+                "PBL_MICROPHONE", "PBL_HEALTH", "PBL_COMPASS",
                 "PBL_DISPLAY_WIDTH=144", "PBL_DISPLAY_HEIGHT=168"],
     "BUILD_DIR": "flint",
     "BUNDLE_BIN_DIR": "flint",
