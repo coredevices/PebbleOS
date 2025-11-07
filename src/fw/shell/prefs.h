@@ -89,6 +89,12 @@ void backlight_set_intensity_percent(uint8_t intensity_percent);
 bool backlight_is_motion_enabled(void);
 void backlight_set_motion_enabled(bool enable);
 
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+// Dynamic backlight intensity based on ambient light sensor
+bool backlight_is_dynamic_intensity_enabled(void);
+void backlight_set_dynamic_intensity_enabled(bool enable);
+#endif
+
 // Motion sensitivity for accelerometer shake detection (0-100, lower = less sensitive)
 // Only available on platforms with LSM6DSO (Asterix, Obelix)
 uint8_t shell_prefs_get_motion_sensitivity(void);

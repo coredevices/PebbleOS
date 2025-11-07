@@ -85,6 +85,15 @@ static bool s_user_controlled_state;
 //! For temporary disabling backlight (ie: low power mode)
 static bool s_backlight_allowed = false;
 
+//! Cached ambient light level captured when backlight turns on (to avoid feedback from backlight illuminating sensor)
+static uint32_t s_cached_ambient_light_level = 0;
+
+//! Starting intensity for fade-out (captured when fade begins)
+static uint16_t s_fade_start_intensity = 0;
+
+//! Fade step size (calculated once at start of fade to avoid rounding jitter)
+static uint16_t s_fade_step_size = 0;
+
 //! Mutex to guard all the above state. We have a pattern of taking the lock in the public functions and assuming
 //! it's already taken in the prv_ functions.
 static PebbleMutex *s_mutex;
@@ -100,11 +109,54 @@ static void light_timer_callback(void *data) {
 static uint16_t prv_backlight_get_intensity(void) {
   // low_power_mode backlight intensity (25% of max brightness)
   const uint16_t backlight_low_power_intensity = (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)25) / 100;
-  return low_power_is_active() ? backlight_low_power_intensity : backlight_get_intensity();
+  
+  if (low_power_is_active()) {
+    return backlight_low_power_intensity;
+  }
+  
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !defined(RECOVERY_FW)
+  // Dynamic backlight: adjust intensity based on ambient light sensor
+  if (backlight_is_dynamic_intensity_enabled()) {
+    // Use cached light level to avoid feedback from backlight illuminating the sensor
+    uint32_t light_level = s_cached_ambient_light_level;
+    uint16_t user_max_intensity = backlight_get_intensity();
+    
+    // Low intensity is always 5% (the "Low" setting)
+    const uint16_t low_intensity = (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)5) / 100;
+    
+    // Get thresholds from board config
+    const uint32_t min_light_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
+    const uint32_t max_light_threshold = BOARD_CONFIG.dynamic_backlight_max_threshold;
+    
+    // If below minimum threshold, return low intensity
+    if (light_level < min_light_threshold) {
+      return low_intensity;
+    }
+    
+    // Clamp light level to max threshold
+    if (light_level > max_light_threshold) {
+      light_level = max_light_threshold;
+    }
+    
+    // Scale linearly from low_intensity to user_max_intensity based on ambient light
+    // Adjusted to start scaling from min_light_threshold
+    uint32_t dynamic_intensity = low_intensity + 
+      ((user_max_intensity - low_intensity) * (light_level - min_light_threshold)) / 
+      (max_light_threshold - min_light_threshold);
+    
+    return (uint16_t)dynamic_intensity;
+  }
+#endif
+  
+  return backlight_get_intensity();
 }
 
 static void prv_change_brightness(int32_t new_brightness) {
-  const uint16_t HALF_BRIGHTNESS = (prv_backlight_get_intensity() - BACKLIGHT_BRIGHTNESS_OFF) / 2;
+  // Use fade start intensity during fading, otherwise get current intensity
+  uint16_t reference_intensity = (s_light_state == LIGHT_STATE_ON_FADING && s_fade_start_intensity > 0) 
+                                  ? s_fade_start_intensity 
+                                  : prv_backlight_get_intensity();
+  const uint16_t HALF_BRIGHTNESS = (reference_intensity - BACKLIGHT_BRIGHTNESS_OFF) / 2;
 
   // update the debug stats
   if (new_brightness > HALF_BRIGHTNESS && s_current_brightness <= HALF_BRIGHTNESS) {
@@ -126,10 +178,19 @@ static void prv_change_brightness(int32_t new_brightness) {
 }
 
 static void prv_change_state(BacklightState new_state) {
+  BacklightState old_state = s_light_state;
   s_light_state = new_state;
+
+  // Capture ambient light level when transitioning from OFF to ON states
+  // This prevents feedback from the backlight illuminating the sensor
+  if ((new_state == LIGHT_STATE_ON || new_state == LIGHT_STATE_ON_TIMED) && 
+      s_current_brightness == BACKLIGHT_BRIGHTNESS_OFF) {
+    s_cached_ambient_light_level = ambient_light_get_light_level();
+  }
 
   // Calculate the new brightness and reset any timers based on our state.
   int32_t new_brightness = 0;
+  
   switch (new_state) {
     case LIGHT_STATE_ON:
       new_brightness = prv_backlight_get_intensity();
@@ -143,7 +204,12 @@ static void prv_change_state(BacklightState new_state) {
                       light_timer_callback, NULL, 0 /* flags */);
       break;
     case LIGHT_STATE_ON_FADING:
-      new_brightness = s_current_brightness - (prv_backlight_get_intensity() / LIGHT_FADE_STEPS);
+      // Capture the starting intensity only when we first enter fading state
+      if (old_state != LIGHT_STATE_ON_FADING) {
+        s_fade_start_intensity = s_current_brightness;
+        s_fade_step_size = s_fade_start_intensity / LIGHT_FADE_STEPS;
+      }
+      new_brightness = s_current_brightness - s_fade_step_size;
 
       if (new_brightness <= BACKLIGHT_BRIGHTNESS_OFF) {
         // Done fading!
@@ -193,6 +259,9 @@ void light_init(void) {
   s_timer_id = new_timer_create();
   s_num_buttons_down = 0;
   s_user_controlled_state = false;
+  s_cached_ambient_light_level = 0;
+  s_fade_start_intensity = 0;
+  s_fade_step_size = 0;
   s_mutex = mutex_create();
 }
 

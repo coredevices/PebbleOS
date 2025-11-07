@@ -9,6 +9,9 @@
   PREFS_MACRO(PREF_KEY_BACKLIGHT_INTENSITY, s_backlight_intensity)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_MOTION, s_backlight_motion_enabled)
   PREFS_MACRO(PREF_KEY_MOTION_SENSITIVITY, s_motion_sensitivity)
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY, s_backlight_dynamic_intensity_enabled)
+#endif
   PREFS_MACRO(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD, s_backlight_ambient_threshold)
   PREFS_MACRO(PREF_KEY_STATIONARY, s_stationary_mode_enabled)
   PREFS_MACRO(PREF_KEY_DEFAULT_WORKER, s_default_worker)
