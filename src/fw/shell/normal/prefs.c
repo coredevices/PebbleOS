@@ -86,6 +86,11 @@ static uint8_t s_motion_sensitivity = 85; // Default to High
 static bool s_backlight_dynamic_intensity_enabled = false;
 #endif
 
+#if PLATFORM_ASTERIX
+#define PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED "displayOrientationLeftHanded"
+static bool s_display_orientation_left = false;
+#endif 
+
 #define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
 static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
 
@@ -338,6 +343,13 @@ static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
   ambient_light_set_dark_threshold(*threshold);
   return true;
 }
+
+#if PLATFORM_ASTERIX
+static bool prv_set_s_display_orientation_left(bool *left) {
+  s_display_orientation_left = *left;
+  return true;
+}
+#endif
 
 static bool prv_set_s_stationary_mode_enabled(bool *enabled) {
   s_stationary_mode_enabled = *enabled;
@@ -960,6 +972,16 @@ void backlight_set_ambient_threshold(uint32_t threshold) {
   // Update the ambient light driver with the new threshold
   ambient_light_set_dark_threshold(threshold);
 }
+
+#if PLATFORM_ASTERIX
+bool display_orientation_is_left(void) {
+  return s_display_orientation_left;
+}
+
+void display_orientation_set_left(bool left) {
+  prv_pref_set(PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED, &left, sizeof(left));
+}
+#endif
 
 bool shell_prefs_get_stationary_enabled(void) {
   return s_stationary_mode_enabled;
