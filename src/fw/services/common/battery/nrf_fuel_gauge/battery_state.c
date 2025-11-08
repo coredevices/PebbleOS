@@ -45,6 +45,10 @@ static const struct battery_model prv_battery_model = {
 #elif PLATFORM_OBELIX
 // FIXME(OBELIX): Add battery model once ready!
 #include "battery_asterix.inc"
+#elif PLATFORM_HOLLOW
+// FIXME(HOLLOW): There won't be a specific battery model for this...
+// this is a problem... also have nPM1100 on board
+#include "battery_asterix.inc"
 #else
 #error "Battery model not defined for this platform"
 #endif

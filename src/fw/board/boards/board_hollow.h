@@ -23,7 +23,7 @@ static const BoardConfig BOARD_CONFIG = {
   .dbgserial_int = {
     .peripheral = NRFX_GPIOTE_INSTANCE(0), 
     .channel = 0,
-    .gpio_pin = NRF_GPIO_PIN_MAP(0, 5),
+    .gpio_pin = NRF_GPIO_PIN_MAP(8, 9),
   },
 
   .has_mic = true,
@@ -57,87 +57,87 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .battery_capacity_hours = 130,
 };
 
-static const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 2), true }, // LRA_EN
-  .vsys_scale = 3300,
-};
+// static const BoardConfigActuator BOARD_CONFIG_VIBE = {
+//   .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 2), true }, // LRA_EN
+//   .vsys_scale = 3300,
+// };
 
-static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .accel_config = {
-    .axes_offsets[AXIS_X] = 1,
-    .axes_offsets[AXIS_Y] = 0,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = false,
-    .axes_inverts[AXIS_Y] = false,
-    .axes_inverts[AXIS_Z] = false,
-    // This will need calibration.
-    .shake_thresholds[AccelThresholdHigh] = 64,
-    .shake_thresholds[AccelThresholdLow] = 0xf,
-    .double_tap_threshold = 12500, //This already is a good value and does not need calibration.
-  // LSM6DSO tap timing register values tuned for reliable double-tap:
-  // tap_shock (0-3): maximum duration (in ODR steps) where an over-threshold event is still
-  //   considered a tap. Higher tolerates longer impacts. 3 = ~max;
-  // tap_quiet (0-3): quiet time after first tap during which accel must stay below threshold
-  //   before second tap; balances rejection of long impacts vs responsiveness. 2 is moderate.
-  // tap_dur (0-15): maximum interval (in ODR steps) between first and second tap. 8 chosen to
-  //   allow natural user double taps without allowing widely spaced taps.
-  .tap_shock = 0x03,
-  .tap_quiet = 0x02,
-  .tap_dur = 0x08,
-  },
-  // Ideally we would configure both interrupt pins, but we have run out of GPIOTE channels.
-  // We will use INT1 (connected to pin 13) for accelerometer interrupts, and leave INT2 (pin 11) unused.
-  .accel_int_gpios = {
-    [0] = { .gpio = NRF5_GPIO_RESOURCE_EXISTS, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
-  },
-  .accel_ints = {
-    [0] = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 7, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
-  },
-};
+// static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
+//   .accel_config = {
+//     .axes_offsets[AXIS_X] = 1,
+//     .axes_offsets[AXIS_Y] = 0,
+//     .axes_offsets[AXIS_Z] = 2,
+//     .axes_inverts[AXIS_X] = false,
+//     .axes_inverts[AXIS_Y] = false,
+//     .axes_inverts[AXIS_Z] = false,
+//     // This will need calibration.
+//     .shake_thresholds[AccelThresholdHigh] = 64,
+//     .shake_thresholds[AccelThresholdLow] = 0xf,
+//     .double_tap_threshold = 12500, //This already is a good value and does not need calibration.
+//   // LSM6DSO tap timing register values tuned for reliable double-tap:
+//   // tap_shock (0-3): maximum duration (in ODR steps) where an over-threshold event is still
+//   //   considered a tap. Higher tolerates longer impacts. 3 = ~max;
+//   // tap_quiet (0-3): quiet time after first tap during which accel must stay below threshold
+//   //   before second tap; balances rejection of long impacts vs responsiveness. 2 is moderate.
+//   // tap_dur (0-15): maximum interval (in ODR steps) between first and second tap. 8 chosen to
+//   //   allow natural user double taps without allowing widely spaced taps.
+//   .tap_shock = 0x03,
+//   .tap_quiet = 0x02,
+//   .tap_dur = 0x08,
+//   },
+//   // Ideally we would configure both interrupt pins, but we have run out of GPIOTE channels.
+//   // We will use INT1 (connected to pin 13) for accelerometer interrupts, and leave INT2 (pin 11) unused.
+//   .accel_int_gpios = {
+//     [0] = { .gpio = NRF5_GPIO_RESOURCE_EXISTS, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
+//   },
+//   .accel_ints = {
+//     [0] = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 7, .gpio_pin = NRF_GPIO_PIN_MAP(1, 13) },
+//   },
+// };
 
-static const BoardConfigMag BOARD_CONFIG_MAG = {
-  .mag_config = {
-    .axes_offsets[AXIS_X] = 1,
-    .axes_offsets[AXIS_Y] = 0,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = false,
-    .axes_inverts[AXIS_Y] = true,
-    .axes_inverts[AXIS_Z] = false,
-  },
-};
+// static const BoardConfigMag BOARD_CONFIG_MAG = {
+//   .mag_config = {
+//     .axes_offsets[AXIS_X] = 1,
+//     .axes_offsets[AXIS_Y] = 0,
+//     .axes_offsets[AXIS_Z] = 2,
+//     .axes_inverts[AXIS_X] = false,
+//     .axes_inverts[AXIS_Y] = true,
+//     .axes_inverts[AXIS_Z] = false,
+//   },
+// };
 
 extern UARTDevice * const DBG_UART;
 
-extern PwmState BACKLIGHT_PWM_STATE;
-static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
-  .options = ActuatorOptions_Pwm | ActuatorOptions_Ctl,
-  .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true },
-  .pwm = {
-    .state = &BACKLIGHT_PWM_STATE,
-    .output = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true },
-    .peripheral = NRFX_PWM_INSTANCE(0)
-  },
-};
+// extern PwmState BACKLIGHT_PWM_STATE;
+// static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
+//   .options = ActuatorOptions_Pwm | ActuatorOptions_Ctl,
+//   .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true },
+//   .pwm = {
+//     .state = &BACKLIGHT_PWM_STATE,
+//     .output = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true },
+//     .peripheral = NRFX_PWM_INSTANCE(0)
+//   },
+// };
 
-static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
-  .spi = NRFX_SPIM_INSTANCE(3),
+// static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
+//   .spi = NRFX_SPIM_INSTANCE(3),
 
-  .clk = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 6), true },
-  .mosi = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 8), true },
-  .cs = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 3), true },
+//   .clk = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 6), true },
+//   .mosi = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 8), true },
+//   .cs = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 3), true },
 
-  .on_ctrl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true },
+//   .on_ctrl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true },
 
-  .extcomin = {
-    .rtc = NRF_RTC0,
-    .gpiote = NRF_GPIOTE,
-    .gpiote_ch = 6,
-    .psel = NRF_GPIO_PIN_MAP(1, 15),
-    // 120Hz/5% (feeds flip-flop, generating 60Hz/50% signal to EXTCOMIN)
-    .period_us = 1000000 / 120,
-    .pulse_us = (1000000 / 120) / 20,
-  },
-};
+//   .extcomin = {
+//     .rtc = NRF_RTC0,
+//     .gpiote = NRF_GPIOTE,
+//     .gpiote_ch = 6,
+//     .psel = NRF_GPIO_PIN_MAP(1, 15),
+//     // 120Hz/5% (feeds flip-flop, generating 60Hz/50% signal to EXTCOMIN)
+//     .period_us = 1000000 / 120,
+//     .pulse_us = (1000000 / 120) / 20,
+//   },
+// };
 
 extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;

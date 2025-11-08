@@ -15,7 +15,7 @@ def build(bld):
             'speex_includes',
         ]
 
-        if bld.is_asterix() or bld.is_obelix():
+        if bld.is_asterix() or bld.is_obelix() or bld.is_hollow():
             use.append('nrf_fuel_gauge')
         if bld.env.memfault:
             use.append('memfault_includes')
@@ -49,13 +49,13 @@ def build(bld):
                 excludes.append('common/battery/voltage/**')
             elif bld.is_hollow():
                 excludes.append('common/legacy/*registry*.c')
-                excludes.append('common/compositor/default/compositor_modal_transitions.*')
+                excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
                 excludes.append('common/battery/voltage/**')
+                
+                # don't know what the vibes client is, so excluding for now
                 excludes.append('normal/vibes/vibe_client.c')
                 excludes.append('normal/vibes/vibe_score.c')
                 excludes.append('normal/vibes/vibe_score_info.c')
-                excludes.append('common/battery/nrf_fuel_gauge/**')
-                excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
             else:
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/battery/nrf_fuel_gauge/**')

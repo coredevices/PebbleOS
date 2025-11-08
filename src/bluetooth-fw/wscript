@@ -14,16 +14,17 @@ def uses_dialog_bluetooth(ctx):
 def _recurse(ctx):
     if ctx.env.bt_controller in ('cc2564x', 'nrf52', 'sf32lb52', 'nrf53'):
         if ctx.env.bt_controller in ('nrf53') and 'NRF5340_XXAA_APPLICATION' in ctx.env['DEFINES']:
-            # recurse once with NRF5340_XXAA_APPLICATION defined
-            ctx.recurse('nimble')
-            # undefine NRF5340_XXAA_APPLICATION and define NRF5340_XXAA_NETWORK
-            ctx.env['DEFINES'].remove('NRF5340_XXAA_APPLICATION')
-            ctx.env.append_unique('DEFINES', 'NRF5340_XXAA_NETWORK')
-            # recurse a second time
-            ctx.recurse('nimble')
-            # put things back
-            ctx.env['DEFINES'].remove('NRF5340_XXAA_NETWORK')
-            ctx.env.append_unique('DEFINES', 'NRF5340_XXAA_APPLICATION')
+            # # create two dummy nodes, one for each of the cores...
+            # app_node = ctx
+            # net_node = ctx
+            # # recurse once with NRF5340_XXAA_APPLICATION defined
+            # app_node.recurse('nimble')
+            # # undefine NRF5340_XXAA_APPLICATION and define NRF5340_XXAA_NETWORK
+            # net_node.env['DEFINES'].remove('NRF5340_XXAA_APPLICATION')
+            # net_node.env.append_unique('DEFINES', 'NRF5340_XXAA_NETWORK')
+            # # recurse a second time
+            # net_node.recurse('nimble')
+            ctx.recurse('stub')
         else:
             ctx.recurse('nimble')
     elif ctx.uses_dialog_bluetooth():

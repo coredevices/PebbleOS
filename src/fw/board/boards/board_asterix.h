@@ -57,10 +57,10 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .battery_capacity_hours = 130,
 };
 
-static const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 2), true }, // LRA_EN
-  .vsys_scale = 3300,
-};
+// static const BoardConfigActuator BOARD_CONFIG_VIBE = {
+//   .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 2), true }, // LRA_EN
+//   .vsys_scale = 3300,
+// };
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {

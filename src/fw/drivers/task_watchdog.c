@@ -85,9 +85,12 @@ static uint8_t s_ticks_since_successful_feed = 0;
 static uint32_t s_pause_ticks_remaining = 0;
 
 // We use this interrupt vector for our lower priority interrupts
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52840
 #define WATCHDOG_FREERTOS_IRQn        QDEC_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  QDEC_IRQHandler
+#elif MICRO_FAMILY_NRF5340
+#define WATCHDOG_FREERTOS_IRQn        QDEC0_IRQn
+#define WATCHDOG_FREERTOS_IRQHandler  QDEC0_IRQHandler
 #else
 #define WATCHDOG_FREERTOS_IRQn        CAN2_SCE_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  CAN2_SCE_IRQHandler

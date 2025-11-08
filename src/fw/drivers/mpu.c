@@ -32,17 +32,17 @@
 extern const uint32_t __SRAM_size__[];
 #if !defined(SRAM_BASE)
 // On the STM32F2, SRAM_BASE is not defined, but is equal to SRAM1_BASE
-#if defined(MICRO_FAMILY_NRF52840)
-#include <drivers/nrfx_common.h>
-#define SRAM_BASE (0x20000000UL)
-#if defined(MICRO_FAMILY_NRF5340)
-#include <drivers/nrfx_common.h>
-#define SRAM_BASE (0x20000000UL)
-#elif defined(MICRO_FAMILY_SF32LB52)
-#define SRAM_BASE (0x20000000UL)
-#else
-#define SRAM_BASE SRAM1_BASE
-#endif
+# if defined(MICRO_FAMILY_NRF52840)
+#  include <drivers/nrfx_common.h>
+#  define SRAM_BASE (0x20000000UL)
+# elif defined(MICRO_FAMILY_NRF5340)
+#   include <drivers/nrfx_common.h>
+#   define SRAM_BASE (0x20000000UL)
+# elif defined(MICRO_FAMILY_SF32LB52)
+#   define SRAM_BASE (0x20000000UL)
+# else
+#   define SRAM_BASE SRAM1_BASE
+# endif
 #endif
 #define SRAM_END (SRAM_BASE + (uint32_t)__SRAM_size__)
 

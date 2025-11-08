@@ -60,7 +60,7 @@ def build(bld):
     if not bld.capability('HAS_JAVASCRIPT') or bld.variant == 'prf':
         excludes += ['rockyjs/*']
 
-    if not bld.is_spalding():
+    if not (bld.is_spalding() or bld.is_hollow()):
         excludes.append('ui/window_stack_animation_round*')
 
     if not bld.capability('HAS_MICROPHONE'):

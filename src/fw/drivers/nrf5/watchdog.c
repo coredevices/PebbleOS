@@ -12,6 +12,8 @@
 
 #include <inttypes.h>
 
+# define NRF_WDT NRF_WDT0
+
 void watchdog_init(void) {
   nrf_wdt_reload_request_enable(NRF_WDT, NRF_WDT_RR0);
   /* WDT expiration: 8s */

@@ -1,0 +1,59 @@
+#define REVERSE_IRQ_DEF(a,b) IRQ_DEF(b,a) /* ... lol ... */
+/* =======================================  ARM Cortex-M33 Specific Interrupt Numbers  ======================================= */
+#if 0  
+  Reset                = -15,              /*!< -15  Reset Vector, invoked on Power up and warm reset                     */
+  NonMaskableInt       = -14,              /*!< -14  Non maskable Interrupt, cannot be stopped or preempted               */
+  HardFault            = -13,              /*!< -13  Hard Fault, all classes of Fault                                     */
+  MemoryManagement     = -12,              /*!< -12  Memory Management, MPU mismatch, including Access Violation
+                                                     and No Match                                                              */
+  BusFault             = -11,              /*!< -11  Bus Fault, Pre-Fetch-, Memory Access Fault, other address/memory
+                                                     related Fault                                                             */
+  UsageFault           = -10,              /*!< -10  Usage Fault, i.e. Undef Instruction, Illegal State Transition        */
+  SecureFault          =  -9,              /*!< -9 Secure Fault Handler                                                   */
+  SVCall               =  -5,              /*!< -5 System Service Call via SVC instruction                                */
+  DebugMonitor         =  -4,              /*!< -4 Debug Monitor                                                          */
+  PendSV               =  -2,              /*!< -2 Pendable request for system service                                    */
+  SysTick              =  -1,              /*!< -1 System Tick Timer                                                      */
+#endif
+/* ====================================  nrf5340_application Specific Interrupt Numbers  ===================================== */
+REVERSE_IRQ_DEF(FPU_IRQn                  ,   0)              /*!< 0  FPU                                                                    */
+REVERSE_IRQ_DEF(CACHE                ,   1)              /*!< 1  CACHE                                                                  */
+REVERSE_IRQ_DEF(SPU                  ,   3)              /*!< 3  SPU                                                                    */
+REVERSE_IRQ_DEF(CLOCK_POWER          ,   5)              /*!< 5  CLOCK_POWER                                                            */
+REVERSE_IRQ_DEF(SERIAL0              ,   8)              /*!< 8  SERIAL0                                                                */
+REVERSE_IRQ_DEF(SERIAL1              ,   9)              /*!< 9  SERIAL1                                                                */
+REVERSE_IRQ_DEF(SPIM4                ,  10)              /*!< 10 SPIM4                                                                  */
+REVERSE_IRQ_DEF(SERIAL2              ,  11)              /*!< 11 SERIAL2                                                                */
+REVERSE_IRQ_DEF(SERIAL3              ,  12)              /*!< 12 SERIAL3                                                                */
+REVERSE_IRQ_DEF(GPIOTE0              ,  13)              /*!< 13 GPIOTE0                                                                */
+REVERSE_IRQ_DEF(SAADC                ,  14)              /*!< 14 SAADC                                                                  */
+REVERSE_IRQ_DEF(TIMER0               ,  15)              /*!< 15 TIMER0                                                                 */
+REVERSE_IRQ_DEF(TIMER1               ,  16)              /*!< 16 TIMER1                                                                 */
+REVERSE_IRQ_DEF(TIMER2               ,  17)              /*!< 17 TIMER2                                                                 */
+REVERSE_IRQ_DEF(RTC0                 ,  20)              /*!< 20 RTC0                                                                   */
+REVERSE_IRQ_DEF(RTC1                 ,  21)              /*!< 21 RTC1                                                                   */
+REVERSE_IRQ_DEF(WDT0                 ,  24)              /*!< 24 WDT0                                                                   */
+REVERSE_IRQ_DEF(WDT1                 ,  25)              /*!< 25 WDT1                                                                   */
+REVERSE_IRQ_DEF(COMP_LPCOMP          ,  26)              /*!< 26 COMP_LPCOMP                                                            */
+REVERSE_IRQ_DEF(EGU0                 ,  27)              /*!< 27 EGU0                                                                   */
+REVERSE_IRQ_DEF(EGU1                 ,  28)              /*!< 28 EGU1                                                                   */
+REVERSE_IRQ_DEF(EGU2                 ,  29)              /*!< 29 EGU2                                                                   */
+REVERSE_IRQ_DEF(EGU3                 ,  30)              /*!< 30 EGU3                                                                   */
+REVERSE_IRQ_DEF(EGU4                 ,  31)              /*!< 31 EGU4                                                                   */
+REVERSE_IRQ_DEF(EGU5                 ,  32)              /*!< 32 EGU5                                                                   */
+REVERSE_IRQ_DEF(PWM0                 ,  33)              /*!< 33 PWM0                                                                   */
+REVERSE_IRQ_DEF(PWM1                 ,  34)              /*!< 34 PWM1                                                                   */
+REVERSE_IRQ_DEF(PWM2                 ,  35)              /*!< 35 PWM2                                                                   */
+REVERSE_IRQ_DEF(PWM3                 ,  36)              /*!< 36 PWM3                                                                   */
+REVERSE_IRQ_DEF(PDM0                 ,  38)              /*!< 38 PDM0                                                                   */
+REVERSE_IRQ_DEF(I2S0                 ,  40)              /*!< 40 I2S0                                                                   */
+REVERSE_IRQ_DEF(IPC                  ,  42)              /*!< 42 IPC                                                                    */
+REVERSE_IRQ_DEF(QSPI                 ,  43)              /*!< 43 QSPI                                                                   */
+REVERSE_IRQ_DEF(NFCT                 ,  45)              /*!< 45 NFCT                                                                   */
+REVERSE_IRQ_DEF(GPIOTE1              ,  47)              /*!< 47 GPIOTE1                                                                */
+REVERSE_IRQ_DEF(QDEC0                ,  51)              /*!< 51 QDEC0                                                                  */
+REVERSE_IRQ_DEF(QDEC1                ,  52)              /*!< 52 QDEC1                                                                  */
+REVERSE_IRQ_DEF(USBD                 ,  54)              /*!< 54 USBD                                                                   */
+REVERSE_IRQ_DEF(USBREGULATOR         ,  55)              /*!< 55 USBREGULATOR                                                           */
+REVERSE_IRQ_DEF(KMU                  ,  57)              /*!< 57 KMU                                                                    */
+REVERSE_IRQ_DEF(CRYPTOCELL           ,  68)               /*!< 68 CRYPTOCELL                                                            */

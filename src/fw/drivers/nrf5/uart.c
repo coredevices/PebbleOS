@@ -74,20 +74,22 @@ void uart_init(UARTDevice *dev) {
   nrfx_ppi_channel_assign(endrx_clear_channel, nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_ENDRX), nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_CLEAR));
   nrfx_ppi_channel_enable(endrx_clear_channel);
 #else
+  nrfx_dppi_t const p_instance = NRFX_DPPI_INSTANCE(0);
+
   uint8_t rxdrdy_count_channel;
   uint8_t endrx_clear_channel;
 
-  err = nrfx_dppi_channel_alloc(&rxdrdy_count_channel);
+  err = nrfx_dppi_channel_alloc(&p_instance, &rxdrdy_count_channel);
   PBL_ASSERTN(err == NRFX_SUCCESS);
   NRF_DPPI_ENDPOINT_SETUP(nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_RXDRDY), rxdrdy_count_channel);
   NRF_DPPI_ENDPOINT_SETUP(nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_COUNT), rxdrdy_count_channel);
-  nrfx_dppi_channel_enable(rxdrdy_count_channel);
+  nrfx_dppi_channel_enable(&p_instance, rxdrdy_count_channel);
 
-  err = nrfx_dppi_channel_alloc(&endrx_clear_channel);
+  err = nrfx_dppi_channel_alloc(&p_instance, &endrx_clear_channel);
   PBL_ASSERTN(err == NRFX_SUCCESS);
   NRF_DPPI_ENDPOINT_SETUP(nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_ENDRX), endrx_clear_channel);
   NRF_DPPI_ENDPOINT_SETUP(nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_CLEAR), endrx_clear_channel);
-  nrfx_dppi_channel_enable(endrx_clear_channel);
+  nrfx_dppi_channel_enable(&p_instance, endrx_clear_channel);
 #endif
   
 

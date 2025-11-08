@@ -36,3 +36,15 @@ void battery_set_charge_enable(bool charging_enabled) {
 
 void battery_set_fast_charge(bool fast_charge_enabled) {
 }
+
+// unsure if these should be added...
+void battery_force_charge_enable(bool charging_enabled) {
+}
+
+bool battery_is_usb_connected(void) {
+  return 1;
+}
+
+bool battery_charge_controller_thinks_we_are_charging(void) {
+  return 1;
+}

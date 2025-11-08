@@ -245,9 +245,9 @@ elif bld.is_hollow(): # TODO update
     bld(
         name='drivers',
         use=[
-            # 'driver_ambient_light',
-            # 'driver_backlight',
-            # 'driver_battery',
+            'driver_ambient_light',
+            'driver_backlight',
+            'driver_battery',
             'driver_button',
             'driver_display',
             'driver_gpio',
@@ -265,9 +265,9 @@ elif bld.is_hollow(): # TODO update
             'driver_rng',
             'driver_rtc',
             'driver_task_watchdog',
-            # 'driver_temperature',
+            'driver_temperature',
             'driver_uart',
-            # 'driver_vibe',
+            'driver_vibe',
             'driver_pwm',
         ],
     )
@@ -355,6 +355,17 @@ elif mcu_family in ('NRF52840', 'SF32LB52'):
             'fw_includes',
         ],
     )
+elif mcu_family in ('NRF5340'):
+    # FIXME(NRF52840,SF32LB52): provide working implementation
+    bld.objects(
+        name='driver_ambient_light',
+        source=[
+            'stubs/ambient_light.c',
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
 
 if mcu_family in ('STM32F4', 'STM32F7'):
     bld.objects(
@@ -389,6 +400,18 @@ elif mcu_family in ('SF32LB52'):
         ],
         use=[
             'fw_includes',
+        ],
+    )
+elif mcu_family in ('NRF5340'):
+    # FIXME(NRF52840): provide working implementation
+    bld.objects(
+        name='driver_temperature',
+        source=[
+            'stubs/temperature.c',
+        ],
+        use=[
+            'fw_includes',
+            # 'root_includes',
         ],
     )
 
@@ -430,6 +453,19 @@ elif mcu_family == 'SF32LB52':
             'fw_includes',
             'root_includes',
             'driver_led_controller',
+        ],
+    )
+elif mcu_family == 'NRF5340':
+    bld.objects(
+        name='driver_backlight',
+        source=[
+            'stubs/backlight.c',
+        ],
+        use=[
+            # 'driver_pwm',
+            # 'driver_gpio',
+            'fw_includes',
+            # 'root_includes',
         ],
     )
 
@@ -485,12 +521,12 @@ elif bld.is_hollow():
     bld.objects(
         name='driver_battery',
         source=[
-            'battery/battery_common.c',
+            'stubs/battery.c',
             # PMIC provides this implementation
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            # 'root_includes',
         ],
     )
 else:
@@ -551,6 +587,17 @@ if bld.is_asterix() or bld.is_obelix():
             'fw_includes',
         ],
     )
+# if bld.is_hollow():
+#     bld.objects(
+#         name='driver_lsm6dso',
+#         source=[
+#             'imu/lsm6dso/lsm6dso.c',
+#         ],
+#         use=[
+#             'hal_lsm6dso',
+#             'fw_includes',
+#         ],
+#     )
 
 if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     bld.objects(
@@ -692,6 +739,22 @@ elif bld.is_obelix():
             'fw_includes',
             'freertos',
             'hal_sifli',
+        ],
+    )
+elif bld.is_hollow():
+    # FIXME: driver should use platform agnostic SPI interface
+    bld.objects(
+        name='driver_display',
+        source=[
+            # 'display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c',
+            'stubs/display.c'
+        ],
+        use=[
+            # 'driver_gpio',
+            # 'freertos',
+            'fw_includes',
+            # 'root_includes',
+            # 'hal_nordic',
         ],
     )
 
@@ -881,6 +944,23 @@ elif bld.is_obelix():
             'root_includes',
         ],
     )
+elif bld.is_hollow():
+    bld.objects(
+        name='driver_flash',
+        source=[
+            'flash/flash_api.c',
+            'flash/flash_crc.c',
+            'flash/flash_erase.c',
+            'flash/cd_flash_driver.c',
+            'flash/gd25lq255e.c',
+        ],
+        use=[
+            'driver_qspi',
+            'freertos',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if bld.is_snowy_compatible():
     bld.objects(
@@ -977,6 +1057,16 @@ elif mcu_family == 'STM32F2':
         ],
     )
 elif mcu_family in ('NRF52840', 'SF32LB52'):
+    bld.objects(
+        name='driver_pwr',
+        source=[
+            'stubs/pwr.c',
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
+elif mcu_family in ('NRF5340'):
     bld.objects(
         name='driver_pwr',
         source=[
@@ -1198,6 +1288,18 @@ elif bld.is_obelix():
             'root_includes',
         ],
     )
+elif bld.is_hollow():
+    bld.objects(
+        name='driver_imu',
+        source=[
+            # needs to be updated
+            'stubs/accel.c',
+            'stubs/imu.c', 
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
 
 if bld.env.BOARD == "v2_0":
     bld.objects(
@@ -1274,6 +1376,18 @@ if bld.is_asterix() or bld.is_obelix():
             'root_includes',
         ],
     )
+# elif bld.is_hollow():
+#     bld.objects(
+#         name='driver_mmc5603nj',
+#         source=[
+#             'imu/mmc5603nj/mmc5603nj.c',
+#         ],
+#         use=[
+#             'driver_i2c',
+#             'fw_includes',
+#             'root_includes',
+#         ],
+#     )
 
 if not bld.capability('HAS_MAGNETOMETER'):
     bld.objects(
@@ -1393,6 +1507,19 @@ elif bld.is_obelix():
             'hal_sifli',
         ],
     )
+# elif bld.is_hollow():
+#     bld.objects(
+#         name='driver_mic',
+#         source=[
+#             'mic/nrf5/pdm.c',
+#         ],
+#         use=[
+#             'fw_includes',
+#             'root_includes',
+#             'freertos',
+#             'hal_nordic',
+#         ],
+#     )
 
 
 # FIXME: make generic to Cortex-M
@@ -1523,6 +1650,18 @@ elif bld.is_asterix() or bld.is_obelix():
             'root_includes',
         ],
     )
+# elif bld.is_hollow():
+#     bld.objects(
+#         name='driver_pmic',
+#         source=[
+#             'pmic/npm1300.c', // nPM1100
+#         ],
+#         use=[
+#             'driver_i2c',
+#             'fw_includes',
+#             'root_includes',
+#         ],
+#     )
 
 if bld.env.QEMU:
     bld.objects(
@@ -2113,6 +2252,17 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     )
 elif mcu_family == 'SF32LB52':
     # FIXME(SF32LB52): provide working implementation
+    bld.objects(
+        name='driver_vibe',
+        source=[
+            'stubs/vibe.c',
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
+elif mcu_family == 'NRF5340':
+    # FIXME(NRF5340): provide working implementation
     bld.objects(
         name='driver_vibe',
         source=[

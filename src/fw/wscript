@@ -389,6 +389,10 @@ def _link_firmware(bld, sources):
     if bld.is_spalding():
         sources += ['board/displays/display_spalding.c']
 
+    if bld.is_hollow():
+        sources += ['board/displays/display_hollow.c']
+
+
     fw_linkflags = ['-Wl,--cref',
                     '-Wl,-Map=tintin_fw.map',
                     '-Wl,--gc-sections',

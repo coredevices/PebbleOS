@@ -1,8 +1,10 @@
 def build(bld):
-    if bld.is_asterix() or bld.is_obelix():
+    if bld.is_asterix() or bld.is_obelix() or bld.is_hollow():
         if bld.is_asterix():
             paths = ['pebbleos-nonfree/npm1300/nrf_fuel_gauge/lib/cortex-m4/soft-float']
         elif bld.is_obelix():
+            paths = ['pebbleos-nonfree/npm1300/nrf_fuel_gauge/lib/cortex-m33/soft-float']
+        elif bld.is_hollow(): # needs to be updated
             paths = ['pebbleos-nonfree/npm1300/nrf_fuel_gauge/lib/cortex-m33/soft-float']
 
         bld.read_stlib(
