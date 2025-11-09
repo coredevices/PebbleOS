@@ -35,6 +35,9 @@
 #include "services/common/accel_manager.h"
 #include "services/common/hrm/hrm_manager.h"
 #include "services/common/i18n/i18n.h"
+#if PLATFORM_ASTERIX
+#include "services/normal/orientation_manager.h"
+#endif
 #include "services/normal/bluetooth/ble_hrm.h"
 #include "services/normal/settings/settings_file.h"
 #include "services/normal/timeline/peek.h"
@@ -347,6 +350,7 @@ static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
 #if PLATFORM_ASTERIX
 static bool prv_set_s_display_orientation_left(bool *left) {
   s_display_orientation_left = *left;
+  orientation_handle_prefs_changed();
   return true;
 }
 #endif
