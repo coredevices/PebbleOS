@@ -118,6 +118,9 @@ static RegularTimerInfo s_interrupt_watchdog_timer = {
   .cb_data = NULL
 };
 
+// watch rotation
+static bool s_rotated_180 = false;
+
 // Maximum FIFO watermark supported by hardware (diff_fifo is 10 bits -> 0..1023)
 #define LSM6DSO_FIFO_MAX_WATERMARK 1023
 
@@ -1128,8 +1131,10 @@ static uint8_t prv_lsm6dso_read_sample(AccelDriverSample *data) {
     return -1;
   }
 
-  data->x = prv_get_axis_projection_mg(X_AXIS, accel_raw);
-  data->y = prv_get_axis_projection_mg(Y_AXIS, accel_raw);
+  data->x = s_rotated_180 ? prv_get_axis_projection_mg(X_AXIS, accel_raw) * -1
+                          : prv_get_axis_projection_mg(X_AXIS, accel_raw);
+  data->y = s_rotated_180 ? prv_get_axis_projection_mg(Y_AXIS, accel_raw) * -1
+                          : prv_get_axis_projection_mg(Y_AXIS, accel_raw);
   data->z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
   data->timestamp_us = prv_get_timestamp_ms() * 1000;
 
@@ -1399,4 +1404,8 @@ void lsm6dso_set_sensitivity_percent(uint8_t percent) {
   }
   
   PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: User sensitivity set to %u percent", percent);
+}
+
+void imu_set_rotated(bool rotated) {
+  s_rotated_180 = rotated;
 }
