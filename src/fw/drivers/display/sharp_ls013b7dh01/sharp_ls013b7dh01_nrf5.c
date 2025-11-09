@@ -27,6 +27,8 @@
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "system/passert.h"
+#include "util/reverse.h"
+
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_gpiote.h>
 #include <hal/nrf_rtc.h>
@@ -44,6 +46,9 @@ static uint8_t s_buf[2 + ((DISP_LINE_BYTES + 2) * PBL_DISPLAY_HEIGHT)];
 static bool s_updating;
 static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
+
+// watch rotation
+static bool s_rotated_180 = false;
 
 static void prv_extcomin_init(void) {
   nrfx_err_t err;
@@ -188,6 +193,10 @@ void display_set_enabled(bool enabled) {
   gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, enabled);
 }
 
+void display_set_rotated(bool rotated) {
+  s_rotated_180 = rotated;
+}
+
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   DisplayRow row;
   uint8_t *pbuf = s_buf;
@@ -201,11 +210,16 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
   while (nrcb(&row)) {
     // write row address, data and trailing dummy
-    *pbuf++ = row.address + 1;
-    memcpy(pbuf, row.data, DISP_LINE_BYTES);
-    pbuf += DISP_LINE_BYTES;
+    *pbuf++ = s_rotated_180 ? (PBL_DISPLAY_HEIGHT - 1) - row.address + 1 : row.address + 1;
+    if (s_rotated_180) {
+      for (int i = DISP_LINE_BYTES - 1; i >= 0; --i) {
+        *pbuf++ = reverse_byte(row.data[i]);
+      }
+    } else {
+      memcpy(pbuf, row.data, DISP_LINE_BYTES);
+      pbuf += DISP_LINE_BYTES;
+    }
     *pbuf++ = 0x00;
-
     desc.tx_length += DISP_LINE_BYTES + 2;
   }
 
