@@ -19,3 +19,5 @@
 #pragma once
 
 void mmc5603nj_init(void);
+
+void mag_set_rotated(bool rotated);
