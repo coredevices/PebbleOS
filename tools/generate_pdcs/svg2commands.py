@@ -17,6 +17,11 @@ from . import pebble_commands
 
 xmlns = '{http://www.w3.org/2000/svg}'
 
+# The most used color names
+WEB_COLORS = {
+    'black': '000000',
+    'white': 'ffffff'
+}
 
 def get_viewbox(root):
     try:
@@ -44,10 +49,16 @@ def get_translate(group):
 
 
 def parse_color(color, opacity, truncate):
-    if color is None or color[0] != '#':
+    if not color is None and color[0] == '#':
+        hex_color = color[1:7]
+        if len(hex_color) != 6:
+            hex_color = ''.join([hex_color[0], hex_color[0], hex_color[1], hex_color[1], hex_color[2], hex_color[2]])
+    elif not color is None and color.lower() in WEB_COLORS:
+        hex_color = WEB_COLORS[color]
+    else:
         return 0
 
-    rgb = int(color[1:7], 16)
+    rgb = int(hex_color, 16)
     r, g, b = (rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF
     a = int(opacity * 255)
 
@@ -179,17 +190,18 @@ svg_element_parser = {'path': parse_path,
 
 
 def create_command(translate, element, verbose=False, precise=False, raise_error=False,
-                   truncate_color=True):
+                   truncate_color=True, inherited_values={}):
+    values = overwrite_inherited(element, inherited_values)
     try:
-        stroke_width = int(element.get('stroke-width'))
+        stroke_width = int(values.get('stroke-width'))
     except TypeError:
         stroke_width = 1
     except ValueError:
         stroke_width = 0
 
-    stroke_color = parse_color(element.get('stroke'), calc_opacity(element.get('stroke-opacity'),
-                                                                   element.get('opacity')), truncate_color)
-    fill_color = parse_color(element.get('fill'), calc_opacity(element.get('fill-opacity'), element.get('opacity')),
+    stroke_color = parse_color(values.get('stroke'), calc_opacity(values.get('stroke-opacity'),
+                                                                  values.get('opacity')), truncate_color)
+    fill_color = parse_color(values.get('fill'), calc_opacity(values.get('fill-opacity'), values.get('opacity')),
                              truncate_color)
 
     if stroke_color == 0 and fill_color == 0:
@@ -215,8 +227,19 @@ def create_command(translate, element, verbose=False, precise=False, raise_error
     return None
 
 
+def overwrite_inherited(element, inherited_values):
+    for attr in ['stroke', 'stroke-width', 'stroke-opacity', 'fill', 'fill-opacity', 'opacity']:
+        if not element.get(attr) is None:
+            if attr == 'opacity' and attr in inherited_values:
+                # Opacity compounds
+                inherited_values[attr] = inherited_values[attr] * element.get(attr)
+            else:
+                inherited_values[attr] = element.get(attr)
+    return inherited_values
+
+
 def get_commands(translate, group, verbose=False, precise=False, raise_error=False,
-                 truncate_color=True):
+                 truncate_color=True, inherited_values={}):
     commands = []
     error = False
     for child in list(group):
@@ -232,14 +255,15 @@ def get_commands(translate, group, verbose=False, precise=False, raise_error=Fal
         # traverse tree of nested layers or groups
         if tag == 'layer' or tag == 'g':
             translate += get_translate(child)
+            inherited_values = overwrite_inherited(child, inherited_values)
             cmd_list, err = get_commands(translate, child, verbose, precise, raise_error,
-                                         truncate_color)
+                                         truncate_color, inherited_values)
             commands += cmd_list
             if err:
                 error = True
         else:
             try:
-                c = create_command(translate, child, verbose, precise, raise_error, truncate_color)
+                c = create_command(translate, child, verbose, precise, raise_error, truncate_color, inherited_values)
                 if c is not None:
                     commands.append(c)
             except pebble_commands.InvalidPointException:
