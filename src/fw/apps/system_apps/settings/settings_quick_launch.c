@@ -38,34 +38,35 @@
 #include "system/passert.h"
 #include "system/status_codes.h"
 
+#define NUM_ROWS (NUM_BUTTONS + 2)  // 4 hold buttons + 2 tap buttons (up and down)
+
+typedef enum {
+  ROW_TAP_UP = 0,
+  ROW_TAP_DOWN,
+  ROW_HOLD_UP,
+  ROW_HOLD_SELECT,
+  ROW_HOLD_DOWN,
+  ROW_HOLD_BACK,
+} QuickLaunchRow;
+
 typedef struct QuickLaunchData {
   SettingsCallbacks callbacks;
-  char app_names[NUM_BUTTONS][APP_NAME_SIZE_BYTES];
+  char app_names[NUM_ROWS][APP_NAME_SIZE_BYTES];
 } QuickLaunchData;
 
-static const char *s_button_titles[NUM_BUTTONS] = {
-  /// Shown in Quick Launch Settings as the title of the up button quick launch option.
-  [BUTTON_ID_UP]     = i18n_noop("Up Button"),
-  /// Shown in Quick Launch Settings as the title of the center button quick launch option.
-  [BUTTON_ID_SELECT] = i18n_noop("Center Button"),
-  /// Shown in Quick Launch Settings as the title of the down button quick launch option.
-  [BUTTON_ID_DOWN]   = i18n_noop("Down Button"),
-  /// Shown in Quick Launch Settings as the title of the back button quick launch option.
-  [BUTTON_ID_BACK]   = i18n_noop("Back Button"),
-};
-
-static ButtonId s_button_order[NUM_BUTTONS] = {
-  BUTTON_ID_UP,
-  BUTTON_ID_SELECT,
-  BUTTON_ID_DOWN,
-  BUTTON_ID_BACK,
-};
-
-static ButtonId s_button_order_map[NUM_BUTTONS] = {
-  [BUTTON_ID_UP]     = 0,
-  [BUTTON_ID_SELECT] = 1,
-  [BUTTON_ID_DOWN]   = 2,
-  [BUTTON_ID_BACK]   = 3,
+static const char *s_row_titles[NUM_ROWS] = {
+  /// Shown in Quick Launch Settings as the title of the tap up button option.
+  [ROW_TAP_UP]       = i18n_noop("Tap Up"),
+  /// Shown in Quick Launch Settings as the title of the tap down button option.
+  [ROW_TAP_DOWN]     = i18n_noop("Tap Down"),
+  /// Shown in Quick Launch Settings as the title of the hold up button quick launch option.
+  [ROW_HOLD_UP]      = i18n_noop("Hold Up"),
+  /// Shown in Quick Launch Settings as the title of the hold center button quick launch option.
+  [ROW_HOLD_SELECT]  = i18n_noop("Hold Center"),
+  /// Shown in Quick Launch Settings as the title of the hold down button quick launch option.
+  [ROW_HOLD_DOWN]    = i18n_noop("Hold Down"),
+  /// Shown in Quick Launch Settings as the title of the hold back button quick launch option.
+  [ROW_HOLD_BACK]    = i18n_noop("Hold Back"),
 };
 
 static void prv_get_subtitle_string(AppInstallId app_id, QuickLaunchData *data,
@@ -95,35 +96,88 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
 }
 
 static void prv_update_app_names(QuickLaunchData *data) {
-  for (ButtonId button = 0; button < NUM_BUTTONS; button++) {
-    char *subtitle_buf = data->app_names[button];
-    prv_get_subtitle_string(quick_launch_get_app(button), data, subtitle_buf, APP_NAME_SIZE_BYTES);
-  }
+  // Tap buttons
+  prv_get_subtitle_string(quick_launch_single_click_get_app(BUTTON_ID_UP), data,
+                          data->app_names[ROW_TAP_UP], APP_NAME_SIZE_BYTES);
+  prv_get_subtitle_string(quick_launch_single_click_get_app(BUTTON_ID_DOWN), data,
+                          data->app_names[ROW_TAP_DOWN], APP_NAME_SIZE_BYTES);
+  
+  // Hold buttons
+  prv_get_subtitle_string(quick_launch_get_app(BUTTON_ID_UP), data,
+                          data->app_names[ROW_HOLD_UP], APP_NAME_SIZE_BYTES);
+  prv_get_subtitle_string(quick_launch_get_app(BUTTON_ID_SELECT), data,
+                          data->app_names[ROW_HOLD_SELECT], APP_NAME_SIZE_BYTES);
+  prv_get_subtitle_string(quick_launch_get_app(BUTTON_ID_DOWN), data,
+                          data->app_names[ROW_HOLD_DOWN], APP_NAME_SIZE_BYTES);
+  prv_get_subtitle_string(quick_launch_get_app(BUTTON_ID_BACK), data,
+                          data->app_names[ROW_HOLD_BACK], APP_NAME_SIZE_BYTES);
 }
 
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                             const Layer *cell_layer, uint16_t row, bool selected) {
   QuickLaunchData *data = (QuickLaunchData *)context;
-  PBL_ASSERTN(row < NUM_BUTTONS);
-  const ButtonId button = s_button_order[row];
-  const char *title = i18n_get(s_button_titles[button], data);
-  char *subtitle_buf = data->app_names[button];
+  PBL_ASSERTN(row < NUM_ROWS);
+  const char *title = i18n_get(s_row_titles[row], data);
+  char *subtitle_buf = data->app_names[row];
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_buf, NULL);
 }
 
 static uint16_t prv_get_initial_selection_cb(SettingsCallbacks *context) {
   // If launched by quick launch, select the row of the button pressed, otherwise default to 0
-  return (app_launch_reason() == APP_LAUNCH_QUICK_LAUNCH) ?
-      s_button_order_map[app_launch_button()] : 0;
+  if (app_launch_reason() == APP_LAUNCH_QUICK_LAUNCH) {
+    ButtonId button = app_launch_button();
+    // Map button to hold row (quick launch is always hold/long press)
+    switch (button) {
+      case BUTTON_ID_UP:     return ROW_HOLD_UP;
+      case BUTTON_ID_SELECT: return ROW_HOLD_SELECT;
+      case BUTTON_ID_DOWN:   return ROW_HOLD_DOWN;
+      case BUTTON_ID_BACK:   return ROW_HOLD_BACK;
+      default: break;
+    }
+  }
+  return 0;
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-  PBL_ASSERTN(row < NUM_BUTTONS);
-  quick_launch_app_menu_window_push(s_button_order[row]);
+  PBL_ASSERTN(row < NUM_ROWS);
+  
+  ButtonId button;
+  bool is_tap;
+  
+  switch (row) {
+    case ROW_TAP_UP:
+      button = BUTTON_ID_UP;
+      is_tap = true;
+      break;
+    case ROW_TAP_DOWN:
+      button = BUTTON_ID_DOWN;
+      is_tap = true;
+      break;
+    case ROW_HOLD_UP:
+      button = BUTTON_ID_UP;
+      is_tap = false;
+      break;
+    case ROW_HOLD_SELECT:
+      button = BUTTON_ID_SELECT;
+      is_tap = false;
+      break;
+    case ROW_HOLD_DOWN:
+      button = BUTTON_ID_DOWN;
+      is_tap = false;
+      break;
+    case ROW_HOLD_BACK:
+      button = BUTTON_ID_BACK;
+      is_tap = false;
+      break;
+    default:
+      return;
+  }
+  
+  quick_launch_app_menu_window_push(button, is_tap);
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
-  return NUM_BUTTONS;
+  return NUM_ROWS;
 }
 
 static void prv_appear(SettingsCallbacks *context) {
