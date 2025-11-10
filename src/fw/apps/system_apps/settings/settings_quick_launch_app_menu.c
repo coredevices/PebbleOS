@@ -32,6 +32,7 @@
 #include "kernel/pbl_malloc.h"
 #include "services/common/i18n/i18n.h"
 #include "process_management/app_install_manager.h"
+#include "apps/system_apps/timeline/timeline.h"
 #include "process_management/app_menu_data_source.h"
 #include "resource/resource_ids.auto.h"
 #include "shell/prefs.h"
@@ -39,7 +40,9 @@
 typedef struct {
   AppMenuDataSource data_source;
   ButtonId button;
+  bool is_tap;
   int16_t selected;
+  OptionMenu *option_menu;
 } QuickLaunchAppMenuData;
 
 #define NUM_CUSTOM_CELLS 1
@@ -48,6 +51,11 @@ typedef struct {
 /* Callback Functions */
 
 static bool prv_app_filter_callback(struct AppMenuDataSource *source, AppInstallEntry *entry) {
+  QuickLaunchAppMenuData *data = (QuickLaunchAppMenuData *)source->callback_context;
+  const Uuid timeline_uuid = TIMELINE_UUID_INIT;
+  const Uuid timeline_past_uuid = TIMELINE_PAST_UUID_INIT;
+  const Uuid health_uuid = UUID_HEALTH_DATA_SOURCE;
+  
   if (app_install_entry_is_watchface(entry)) {
     return false; // Skip watchfaces
   }
@@ -55,6 +63,30 @@ static bool prv_app_filter_callback(struct AppMenuDataSource *source, AppInstall
       !app_install_entry_is_quick_launch_visible_only(entry)) {
     return false; // Skip hidden apps unless they are quick launch visible
   }
+  
+  // For tap buttons, filter Timeline apps based on button
+  if (data->is_tap) {
+    if (data->button == BUTTON_ID_UP) {
+      // Tap Up: Only show Timeline Past, hide Timeline Future
+      if (uuid_equal(&entry->uuid, &timeline_uuid)) {
+        return false;
+      }
+    } else if (data->button == BUTTON_ID_DOWN) {
+      // Tap Down: Only show Timeline Future, hide Timeline Past
+      if (uuid_equal(&entry->uuid, &timeline_past_uuid)) {
+        return false;
+      }
+      // We also only want the Health app for Tap Up
+      if (uuid_equal(&entry->uuid, &health_uuid)) {
+        return false;
+      }
+    } else {
+        if (uuid_equal(&entry->uuid, &health_uuid)) {
+          return false;
+        }
+    }
+  }
+  
   return true;
 }
 
@@ -83,20 +115,29 @@ static void prv_menu_select(OptionMenu *option_menu, int selection, void *contex
 
   QuickLaunchAppMenuData *data = context;
   if (selection == 0) {
-    quick_launch_set_app(data->button, INSTALL_ID_INVALID);
-    quick_launch_set_enabled(data->button, false);
+    if (data->is_tap) {
+      quick_launch_single_click_set_app(data->button, INSTALL_ID_INVALID);
+      quick_launch_single_click_set_enabled(data->button, false);
+    } else {
+      quick_launch_set_app(data->button, INSTALL_ID_INVALID);
+      quick_launch_set_enabled(data->button, false);
+    }
     app_window_stack_pop(true);
   } else {
     AppMenuNode* app_menu_node =
         app_menu_data_source_get_node_at_index(&data->data_source, selection - NUM_CUSTOM_CELLS);
-    quick_launch_set_app(data->button, app_menu_node->install_id);
+    if (data->is_tap) {
+      quick_launch_single_click_set_app(data->button, app_menu_node->install_id);
+    } else {
+      quick_launch_set_app(data->button, app_menu_node->install_id);
+    }
     app_window_stack_pop(true);
   }
 }
 
 static void prv_menu_reload_data(void *context) {
-  OptionMenu *option_menu = context;
-  option_menu_reload_data(option_menu);
+  QuickLaunchAppMenuData *data = context;
+  option_menu_reload_data(data->option_menu);
 }
 
 static void prv_menu_unload(OptionMenu *option_menu, void *context) {
@@ -108,18 +149,21 @@ static void prv_menu_unload(OptionMenu *option_menu, void *context) {
   app_free(data);
 }
 
-void quick_launch_app_menu_window_push(ButtonId button) {
+void quick_launch_app_menu_window_push(ButtonId button, bool is_tap) {
   QuickLaunchAppMenuData *data = app_zalloc_check(sizeof(*data));
   data->button = button;
+  data->is_tap = is_tap;
 
   OptionMenu *option_menu = option_menu_create();
+  data->option_menu = option_menu;
 
   app_menu_data_source_init(&data->data_source, &(AppMenuDataSourceCallbacks) {
     .changed = prv_menu_reload_data,
     .filter = prv_app_filter_callback,
-  }, option_menu);
+  }, data);
 
-  const AppInstallId install_id = quick_launch_get_app(button);
+  const AppInstallId install_id = is_tap ? quick_launch_single_click_get_app(button)
+                                          : quick_launch_get_app(button);
   const int app_index = app_menu_data_source_get_index_of_app_with_install_id(&data->data_source,
                                                                               install_id);
 

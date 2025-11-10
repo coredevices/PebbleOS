@@ -72,7 +72,18 @@ static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) 
   }, recognizer);
 }
 
-static void prv_launch_timeline(ClickRecognizerRef recognizer, void *data) {
+static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
+  if (!quick_launch_single_click_is_enabled(click_recognizer_get_button_id(recognizer))) return;
+  //check if quick launch app is not timeline
+  if (quick_launch_single_click_get_app(click_recognizer_get_button_id(recognizer)) != APP_ID_TIMELINE) {
+    //launch other quick launch apps
+    prv_launch_app_via_button(&(AppLaunchEventConfig) {
+      .id = quick_launch_single_click_get_app(click_recognizer_get_button_id(recognizer)),
+      .common.reason = APP_LAUNCH_QUICK_LAUNCH,
+    }, recognizer);
+    return;
+  }
+
   static TimelineArgs s_timeline_args;
   const bool is_up = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
   if (is_up) {
@@ -121,29 +132,13 @@ static void prv_launch_launcher_app(ClickRecognizerRef recognizer, void *data) {
   }, recognizer);
 }
 
-#if CAPABILITY_HAS_CORE_NAVIGATION4
-static void prv_launch_health_app(ClickRecognizerRef recognizer, void *data) {
-  prv_launch_app_via_button(&(AppLaunchEventConfig) {
-    .id = APP_ID_HEALTH_APP,
-  }, recognizer);
-}
-#endif // CAPABILITY_HAS_CORE_NAVIGATION4
-
-static ClickHandler prv_get_up_click_handler(void) {
-#if CAPABILITY_HAS_CORE_NAVIGATION4
-  return prv_launch_health_app;
-#else
-  return prv_launch_timeline;
-#endif // CAPABILITY_HAS_CORE_NAVIGATION4
-}
-
 static void prv_dismiss_timeline_peek(ClickRecognizerRef recognizer, void *data) {
   timeline_peek_dismiss();
 }
 
 static void prv_watchface_configure_click_handlers(void) {
-  prv_configure_click_handler(BUTTON_ID_UP, prv_get_up_click_handler());
-  prv_configure_click_handler(BUTTON_ID_DOWN, prv_launch_timeline);
+  prv_configure_click_handler(BUTTON_ID_UP, prv_launch_up_down);
+  prv_configure_click_handler(BUTTON_ID_DOWN, prv_launch_up_down);
   prv_configure_click_handler(BUTTON_ID_SELECT, prv_launch_launcher_app);
   prv_configure_click_handler(BUTTON_ID_BACK, prv_dismiss_timeline_peek);
 }
