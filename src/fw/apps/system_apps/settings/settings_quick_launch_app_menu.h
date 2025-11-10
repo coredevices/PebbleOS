@@ -19,4 +19,4 @@
 #include "shell/normal/quick_launch.h"
 #include <stdbool.h>
 
-void quick_launch_app_menu_window_push(ButtonId button);
+void quick_launch_app_menu_window_push(ButtonId button, bool is_tap);

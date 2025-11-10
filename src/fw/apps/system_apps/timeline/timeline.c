@@ -49,9 +49,6 @@
 
 // This is used to determine whether this app was launched as Timeline or Timeline Past.
 // See timeline_get_app_info, timeline_past_get_app_info, and the usage of sys_get_app_uuid.
-// uuid: DAAE3686-BFF6-4BA5-921B-262F847BB6E8
-#define TIMELINE_PAST_UUID_INIT {0xDA, 0xAE, 0x36, 0x86, 0xBF, 0xF6, 0x4B, 0xA5, \
-                                 0x92, 0x1B, 0x26, 0x2F, 0x84, 0x7B, 0xB6, 0xE8}
 
 #if PBL_ROUND || PLATFORM_TINTIN
 // Tintin looks funny with the dot animation, but it results in less code space usage
@@ -1262,11 +1259,10 @@ const PebbleProcessMd *timeline_get_app_info() {
     .common = {
       .main_func = prv_main,
       // uuid: 79C76B48-6111-4E80-8DEB-3119EEBEF33E
-      .uuid = {0x79, 0xC7, 0x6B, 0x48, 0x61, 0x11, 0x4E, 0x80,
-               0x8D, 0xEB, 0x31, 0x19, 0xEE, 0xBE, 0xF3, 0x3E},
-      .visibility = ProcessVisibilityHidden,
+      .uuid = TIMELINE_UUID_INIT,
+      .visibility = ProcessVisibilityQuickLaunch,
     },
-    .name = "Timeline",
+    .name = i18n_noop("Timeline Future"),
   };
   return &s_app_md.common;
 }

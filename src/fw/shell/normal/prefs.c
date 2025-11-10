@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
+#include "quick_launch.h"
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
 #include "shell/prefs.h"
 #include "shell/prefs_private.h"
 #include "shell/system_theme.h"
 
+#include "apps/system_apps/timeline/timeline.h"
 #include "apps/system_apps/toggle/quiet_time.h"
 #include "board/board.h"
 #include "applib/graphics/gtypes.h"
@@ -135,6 +137,19 @@ static QuickLaunchPreference s_quick_launch_select = {
 static QuickLaunchPreference s_quick_launch_back = {
   .enabled = true,
   .uuid = QUIET_TIME_TOGGLE_UUID,
+};
+
+#define PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP "qlSingleClickUp"
+#define PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_DOWN "qlSingleClickDown"
+
+static QuickLaunchPreference s_quick_launch_single_click_up = {
+  .enabled = true,
+  .uuid = UUID_HEALTH_DATA_SOURCE,
+};
+
+static QuickLaunchPreference s_quick_launch_single_click_down = {
+  .enabled = true,
+  .uuid = TIMELINE_UUID_INIT,
 };
 
 #define PREF_KEY_QUICK_LAUNCH_SETUP_OPENED "qlSetupOpened"
@@ -362,6 +377,16 @@ static bool prv_set_s_quick_launch_select(QuickLaunchPreference *pref) {
 
 static bool prv_set_s_quick_launch_back(QuickLaunchPreference *pref) {
   s_quick_launch_back = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_single_click_up(QuickLaunchPreference *pref) {
+  s_quick_launch_single_click_up = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_single_click_down(QuickLaunchPreference *pref) {
+  s_quick_launch_single_click_down = *pref;
   return true;
 }
 
@@ -1053,6 +1078,78 @@ void quick_launch_set_quick_launch_setup_opened(uint8_t version) {
 
 uint8_t quick_launch_get_quick_launch_setup_opened(void) {
   return s_quick_launch_setup_opened;
+}
+
+bool quick_launch_single_click_is_enabled(ButtonId button) {
+    switch (button) {
+      case BUTTON_ID_UP:
+        return s_quick_launch_single_click_up.enabled;
+      case BUTTON_ID_DOWN:
+        return s_quick_launch_single_click_down.enabled;
+      case BUTTON_ID_SELECT:
+      case BUTTON_ID_BACK:
+      case NUM_BUTTONS:
+        break;
+    }
+    return false;
+}
+
+AppInstallId quick_launch_single_click_get_app(ButtonId button) {
+  Uuid *uuid = NULL;
+  switch (button) {
+    case BUTTON_ID_UP:
+      uuid = &s_quick_launch_single_click_up.uuid;
+      break;
+    case BUTTON_ID_DOWN:
+      uuid = &s_quick_launch_single_click_down.uuid;
+      break;
+    default:
+      PBL_ASSERTN(0); // Should not reach here: invalid button id
+      break;
+  }
+  return app_install_get_id_for_uuid(uuid);
+}
+
+void quick_launch_single_click_set_app(ButtonId button, AppInstallId app_id) {
+  QuickLaunchPreference pref = (QuickLaunchPreference) {
+    .enabled = true,
+  };
+  app_install_get_uuid_for_install_id(app_id, &pref.uuid);
+
+  const char *key = NULL;
+  switch (button) {
+    case BUTTON_ID_UP:
+      key = PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP;
+      break;
+    case BUTTON_ID_DOWN:
+      key = PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_DOWN;
+      break;
+    default:
+      PBL_ASSERTN(0); // Should not reach here: invalid button id
+      break;
+  }
+  prv_pref_set(key, &pref, sizeof(pref));
+}
+
+void quick_launch_single_click_set_enabled(ButtonId button, bool enabled) {
+  QuickLaunchPreference pref;
+
+  const char *key = NULL;
+  switch (button) {
+    case BUTTON_ID_UP:
+      pref = s_quick_launch_single_click_up;
+      key = PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP;
+      break;
+    case BUTTON_ID_DOWN:
+      pref = s_quick_launch_single_click_down;
+      key = PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_DOWN;
+      break;
+    default:
+      PBL_ASSERTN(0); // Should not reach here: invalid button id
+      break;
+  }
+  pref.enabled = enabled;
+  prv_pref_set(key, &pref, sizeof(pref));
 }
 
 void watchface_set_default_install_id(AppInstallId app_id) {
