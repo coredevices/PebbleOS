@@ -90,7 +90,7 @@ void backlight_init(void) {
 
   s_led_enable = 0;
 
-  if (BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_Ctl) {
+  if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Ctl) {
     periph_config_acquire_lock();
     gpio_output_init(&BOARD_CONFIG_BACKLIGHT.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
     gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, false);
@@ -98,7 +98,7 @@ void backlight_init(void) {
     s_initialized = true;
   }
 
-  if (BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_Pwm) {
+  if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Pwm) {
     periph_config_acquire_lock();
     pwm_init(&BOARD_CONFIG_BACKLIGHT.pwm,
              TIMER_PERIOD_RESOLUTION,
@@ -107,7 +107,7 @@ void backlight_init(void) {
     s_initialized = true;
   }
 
-  if (BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_IssiI2C) {
+  if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_LedController) {
     led_controller_init();
     s_initialized = true;
   }
@@ -130,7 +130,7 @@ void led_disable(LEDEnabler enabler) {
 }
 
 void backlight_set_brightness(uint16_t brightness) {
-  if (BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_Ctl) {
+  if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Ctl) {
     if (brightness == 0) {
       led_disable(LEDEnablerBacklight);
     } else {
@@ -138,7 +138,7 @@ void backlight_set_brightness(uint16_t brightness) {
     }
   }
 
-  if (BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_Pwm) {
+  if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Pwm) {
     if (brightness == 0) {
       if (s_backlight_pwm_enabled) {
         prv_backlight_pwm_enable(false);
@@ -165,7 +165,7 @@ void backlight_set_brightness(uint16_t brightness) {
     }
   }
 
-  if (BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_IssiI2C) {
+  if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_LedController) {
     led_controller_backlight_set_brightness(brightness * 100 / BACKLIGHT_BRIGHTNESS_MAX);
   }
 }
