@@ -23,9 +23,11 @@
 #include "applib/ui/app_window_stack.h"
 #include "kernel/pbl_malloc.h"
 #include "shell/normal/app_idle_timeout.h"
+#include "shell/normal/quick_launch.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
 #include "process_state/app_state/app_state.h"
+#include "services/normal/timeline/timeline.h"
 #include "util/attributes.h"
 
 typedef struct LauncherAppWindowData {
@@ -64,6 +66,13 @@ static void prv_will_focus(bool in_focus) {
 // AppMenuDataSource callbacks
 
 static bool prv_app_filter_callback(PBL_UNUSED AppMenuDataSource *source, AppInstallEntry *entry) {
+  // Skip Health app if it's set as the quick launch single-click up action
+  const Uuid health_uuid = UUID_HEALTH_DATA_SOURCE;
+  const AppInstallId health_install_id = app_install_get_id_for_uuid(&health_uuid);
+  const AppInstallId quick_launch_app_id = quick_launch_single_click_get_app(BUTTON_ID_UP);
+  if (entry->install_id == health_install_id && health_install_id == quick_launch_app_id) {
+      return false;
+  }
   // Skip watchfaces and hidden apps
   return (!app_install_entry_is_watchface(entry) && !app_install_entry_is_hidden((entry)));
 }

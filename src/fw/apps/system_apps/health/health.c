@@ -169,9 +169,6 @@ const PebbleProcessMd *health_app_get_info(void) {
     .common = {
       .main_func = &prv_main,
       .uuid = UUID_HEALTH_DATA_SOURCE,
-#if CAPABILITY_HAS_CORE_NAVIGATION4
-      .visibility = ProcessVisibilityHidden,
-#endif
     },
     .name = i18n_noop("Health"),
   };
