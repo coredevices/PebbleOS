@@ -110,8 +110,8 @@ static const BoardConfigActuator BOARD_CONFIG_VIBE = {
   .ctl = { GPIOB, GPIO_Pin_0, true },
 };
 
-static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
-  .options = ActuatorOptions_IssiI2C,
+static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
+  .options = BacklightOptions_LedController,
   .ctl = { GPIOB, GPIO_Pin_5, true },
 };
 

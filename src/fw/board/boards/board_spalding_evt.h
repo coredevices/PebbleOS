@@ -172,8 +172,8 @@ static const BoardConfigActuator BOARD_CONFIG_VIBE = {
   },
 };
 
-static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
-  .options = ActuatorOptions_Pwm,
+static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
+  .options = BacklightOptions_Pwm,
   .ctl = {0},
   .pwm = {
     .output = { GPIOB, GPIO_Pin_14, true },
