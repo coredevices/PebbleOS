@@ -363,13 +363,21 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         prv_discover_next_dscs(conn_handle, context);
       } else {
         context->current_service = list_get_next(context->current_service);
-        if (context->current_service != NULL) {
+        while (context->current_service != NULL) {
           GATTServiceDiscoveryServiceNode *service_node = prv_get_current_service(context);
 
           context->current_characteristic = list_get_head(service_node->characteristics);
 
-          prv_discover_next_dscs(conn_handle, context);
-        } else {
+          if (context->current_characteristic != NULL) {
+            prv_discover_next_dscs(conn_handle, context);
+            break;
+          }
+
+          // Service has no characteristics, skip to next service
+          context->current_service = list_get_next(context->current_service);
+        }
+
+        if (context->current_service == NULL) {
           // we're done!
           s_discovery_in_progress = false;
           prv_convert_service_and_notify_os(conn_handle, context);
@@ -440,7 +448,13 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         GATTServiceDiscoveryServiceNode *service_node = prv_get_current_service(context);
         context->current_characteristic = list_get_head(service_node->characteristics);
 
-        prv_discover_next_dscs(conn_handle, context);
+        if (context->current_characteristic != NULL) {
+          prv_discover_next_dscs(conn_handle, context);
+        } else {
+          // No characteristics found, discovery complete
+          s_discovery_in_progress = false;
+          prv_convert_service_and_notify_os(conn_handle, context);
+        }
       }
 
       break;
