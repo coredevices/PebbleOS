@@ -82,7 +82,7 @@ static void prv_init_pins(void) {
 }
 
 void led_controller_init(void) {
-  PBL_ASSERTN(BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_IssiI2C);
+  PBL_ASSERTN(BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_LedController);
 
   prv_init_pins();
   prv_shutdown(false);
@@ -123,7 +123,7 @@ cleanup:
 }
 
 void led_controller_backlight_set_brightness(uint8_t brightness) {
-  if ((BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_IssiI2C) == 0 || !s_initialized) {
+  if ((BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_LedController) == 0 || !s_initialized) {
     return;
   }
 
@@ -147,7 +147,7 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
 
 
 void led_controller_rgb_set_color(uint32_t rgb_color) {
-  if ((BOARD_CONFIG_BACKLIGHT.options & ActuatorOptions_IssiI2C) == 0 || !s_initialized) {
+  if ((BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_LedController) == 0 || !s_initialized) {
     return;
   }
 

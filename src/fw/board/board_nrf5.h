@@ -173,9 +173,14 @@ typedef enum {
 typedef enum {
   ActuatorOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable vibe
   ActuatorOptions_Pwm = 1 << 1, ///< PWM control
-  ActuatorOptions_IssiI2C = 1 << 2, ///< I2C Device, currently used for V1_5 -> OG steel backlight
   ActuatorOptions_HBridge = 1 << 3, //< PWM actuates an H-Bridge, requires ActuatorOptions_PWM
 } ActuatorOptions;
+
+typedef enum {
+  BacklightOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable
+  BacklightOptions_Pwm = 1 << 1, ///< PWM control
+  BacklightOptions_LedController = 1 << 2, ///< LED Controller
+} BacklightOptions;
 
 typedef struct {
   // Audio Configuration
@@ -253,6 +258,12 @@ typedef struct {
                              //< For example, Silk VBat may droop to 3.3V, so we scale down vibe
                              //< duty cycle so that 100% duty cycle will always be 3.3V RMS.
 } BoardConfigActuator;
+
+typedef struct {
+  const BacklightOptions options;
+  const OutputConfig ctl;
+  const PwmConfig pwm;
+} BoardConfigBacklight;
 
 typedef enum {
   SpiPeriphClockNrf5

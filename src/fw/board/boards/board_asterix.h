@@ -108,7 +108,7 @@ static const BoardConfigMag BOARD_CONFIG_MAG = {
 extern UARTDevice * const DBG_UART;
 
 extern PwmState BACKLIGHT_PWM_STATE;
-static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
+static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
   .options = ActuatorOptions_Pwm | ActuatorOptions_Ctl,
   .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true },
   .pwm = {
