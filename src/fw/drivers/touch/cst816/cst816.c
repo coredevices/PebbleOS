@@ -12,6 +12,7 @@
 #include "services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "util/math.h"
 
 #if PLATFORM_OBELIX
 #include "cst816_fw.h"
@@ -260,6 +261,14 @@ static void prv_process_pending_messages(void* context) {
     .x = (((uint16_t)(data[1] & 0x0F)) << 8) | data[2],
     .y = (((uint16_t)(data[3] & 0X0F)) << 8) | data[4],
   };
+
+  if (CST816->invert_x_axis) {
+    point.x = CST816->max_x - point.x;
+  }
+
+  if (CST816->invert_y_axis) {
+    point.y = CST816->max_y - point.y;
+  }
 
   if (press == 0x01) {
     touch_handle_update(0, TouchState_FingerDown, &point, 0, current_time_ms);
