@@ -273,6 +273,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   *out_menu_items = app_malloc(sizeof(s_menu_items));
   memcpy(*out_menu_items, s_menu_items, sizeof(s_menu_items));
 
+#if MANUFACTURING_FW
   // Now we're going to modify the first two elements in the menu to include data available only
   // at runtime. If it was available at compile time we could have just shoved it in the
   // s_menu_items array but it's not. Note that we allocate a few buffers here that we never
@@ -292,6 +293,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   mfg_info_get_serialnumber(device_serial, buffer_size);
 
   (*out_menu_items)[1].subtitle = device_serial;
+#endif
 
   // We've now populated out_menu_items with the correct data. Return the number of items by
   // looking at the original list of menu items.
