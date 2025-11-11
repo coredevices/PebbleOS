@@ -166,7 +166,7 @@ static void prv_rtc_calibrate() {
       s_rtc_a = rtc_b;
     }
 
-    PBL_LOG(LOG_LEVEL_DEBUG,
+    PBL_LOG(LOG_LEVEL_INFO,
             "origin: f=%dHz,cycle=%d avr: f=%dHz cycle_ave=%d delta=%d, delta_sum=%d\n",
             (int)((uint64_t)48000 * LXT_LP_CYCLE * 1000 / s_rtc_cycle_count_init),
             (int)s_rtc_cycle_count_init, (int)((uint64_t)48000 * LXT_LP_CYCLE * 1000 / ref_cycle),
@@ -245,6 +245,12 @@ void rtc_set_time(time_t time) {
 
   HAL_RTC_SetTime(&RTC_Handler, &rtc_time_struct, RTC_FORMAT_BIN);
   HAL_RTC_SetDate(&RTC_Handler, &rtc_date_struct, RTC_FORMAT_BIN);
+
+  PBL_LOG(LOG_LEVEL_INFO, "RTC set time to %lu", time);
+  PBL_LOG(LOG_LEVEL_INFO, "%u:%u:%u, %u/%u/%u (%u)",
+          rtc_time_struct.Hours, rtc_time_struct.Minutes, rtc_time_struct.Seconds,
+          rtc_date_struct.Month, rtc_date_struct.Date, rtc_date_struct.Year,
+          rtc_date_struct.WeekDay);
 }
 
 void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
