@@ -316,8 +316,6 @@ static struct I2CBusHal s_i2c_bus_hal_1 = {
             .Mode = HAL_I2C_MODE_MASTER,
             .core = CORE_ID_HCPU,
         },
-
-    .device_name = "i2c1",
     .scl =
         {
             .pad = PAD_PA31,
@@ -367,8 +365,6 @@ static struct I2CBusHal s_i2c_bus_hal_2 = {
             .Mode = HAL_I2C_MODE_MASTER,
             .core = CORE_ID_HCPU,
         },
-
-    .device_name = "i2c2",
     .scl =
         {
             .pad = PAD_PA32,
@@ -463,8 +459,6 @@ static struct I2CBusHal s_i2c_bus_hal_3 = {
             .Mode = HAL_I2C_MODE_MASTER,
             .core = CORE_ID_HCPU,
         },
-
-    .device_name = "i2c3",
     .scl =
         {
             .pad = PAD_PA11,
