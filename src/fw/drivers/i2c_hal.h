@@ -33,8 +33,3 @@ void i2c_hal_abort_transfer(I2CBus *bus);
 void i2c_hal_init_transfer(I2CBus *bus);
 
 void i2c_hal_start_transfer(I2CBus *bus);
-
-#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
-void i2c_hal_pins_set_gpio(I2CBus *bus);
-void i2c_hal_pins_set_i2c(I2CBus *bus);
-#endif

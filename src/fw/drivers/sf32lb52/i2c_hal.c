@@ -260,6 +260,9 @@ static int i2c_hal_hw_init(struct I2CBusHal *i2c_hal) {
   int ret = 0;
   struct dma_config dma_rtx_config;
 
+  HAL_PIN_Set(i2c_hal->scl.pad, i2c_hal->scl.func, i2c_hal->scl.flags, 1);
+  HAL_PIN_Set(i2c_hal->sda.pad, i2c_hal->sda.func, i2c_hal->sda.flags, 1);
+
   if (i2c_hal->hdma.Instance != NULL) {
     __HAL_LINKDMA(&(i2c_hal->hi2c), hdmarx, i2c_hal->hdma);
     __HAL_LINKDMA(&(i2c_hal->hi2c), hdmatx, i2c_hal->hdma);
@@ -292,11 +295,4 @@ void i2c_hal_init(I2CBus *bus) {
   }
 
   return;
-}
-
-void i2c_hal_pins_set_gpio(I2CBus *bus) {}
-
-void i2c_hal_pins_set_i2c(I2CBus *bus) {
-  HAL_PIN_Set(bus->hal->scl.pad, bus->hal->scl.func, bus->hal->scl.flags, 1);
-  HAL_PIN_Set(bus->hal->sda.pad, bus->hal->sda.func, bus->hal->sda.flags, 1);
 }

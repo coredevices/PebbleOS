@@ -34,19 +34,16 @@ static void prv_twim_init(I2CBus *bus) {
 void i2c_hal_init(I2CBus *bus) {
   prv_twim_init(bus); 
   nrfx_twim_uninit(&bus->hal->twim);
-  bus->state->should_be_init = 0;
 }
 
 void i2c_hal_enable(I2CBus *bus) {
   prv_twim_init(bus); 
   nrfx_twim_enable(&bus->hal->twim);
-  bus->state->should_be_init = 1;
 }
 
 void i2c_hal_disable(I2CBus *bus) {
   nrfx_twim_disable(&bus->hal->twim);
   nrfx_twim_uninit(&bus->hal->twim);
-  bus->state->should_be_init = 0;
 }
 
 bool i2c_hal_is_busy(I2CBus *bus) {
@@ -89,15 +86,4 @@ void i2c_hal_start_transfer(I2CBus *bus) {
   
   nrfx_err_t rv = nrfx_twim_xfer(&bus->hal->twim, &desc, 0);
   PBL_ASSERTN(rv == NRFX_SUCCESS);
-}
-
-void i2c_hal_pins_set_gpio(I2CBus *bus) {
-  nrfx_twim_uninit(&bus->hal->twim);
-}
-
-void i2c_hal_pins_set_i2c(I2CBus *bus) {
-  if (bus->state->should_be_init) {
-    /* only put it back if we need to, otherwise, leave it as is */
-    i2c_hal_enable(bus);
-  }
 }
