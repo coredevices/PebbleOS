@@ -11,5 +11,4 @@
 typedef struct I2CBusHal {
   nrfx_twim_t twim;
   nrf_twim_frequency_t frequency; ///< Bus clock speed
-  int should_be_init;
 } I2CBusHal;

@@ -102,6 +102,7 @@ void i2c_rail_ctl_pmic(I2CBus *bus, bool enable) {
 }
 #endif
 
+#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
 void i2c_rail_ctl_pin(I2CBus *bus, bool enable) {
   gpio_output_set(&bus->rail_gpio, enable);
 }
@@ -129,10 +130,6 @@ static void prv_bus_rail_power_down(I2CBus *bus) {
   }
   prv_rail_ctl(bus, false);
 
-#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
-  i2c_hal_pins_set_gpio(bus);
-#endif
-
   // Drain through pull-ups
   OutputConfig out_scl = {
     .gpio = bus->scl_gpio.gpio,
@@ -156,19 +153,11 @@ static void prv_bus_rail_power_down(I2CBus *bus) {
 //! Configure bus pins for use by I2C peripheral
 //! Lock bus and peripheral config access before configuring pins
 static void prv_bus_pins_cfg_i2c(I2CBus *bus) {
-#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
-  i2c_hal_pins_set_i2c(bus);
-#else
   gpio_af_init(&bus->scl_gpio, GPIO_OType_OD, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
   gpio_af_init(&bus->sda_gpio, GPIO_OType_OD, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
-#endif
 }
 
 static void prv_bus_pins_cfg_input(I2CBus *bus) {
-#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
-  i2c_hal_pins_set_gpio(bus);
-#endif
-
   InputConfig in_scl = {
     .gpio = bus->scl_gpio.gpio,
     .gpio_pin = bus->scl_gpio.gpio_pin,
@@ -207,17 +196,19 @@ static void prv_bus_rail_power_up(I2CBus *bus) {
 
   prv_rail_ctl(bus, true);
 }
+#endif
 
 //! Configure the bus pins, enable the peripheral clock and initialize the I2C peripheral.
 //! Always lock the bus and peripheral config access before enabling it
 static void prv_bus_enable(I2CBus *bus) {
+#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
   // Don't power up rail if the bus is already in use (enable can be called to reset bus)
   if (bus->state->user_count ==  0) {
     prv_bus_rail_power_up(bus);
   }
 
   prv_bus_pins_cfg_i2c(bus);
-
+#endif
   i2c_hal_enable(bus);
 }
 
@@ -226,7 +217,7 @@ static void prv_bus_enable(I2CBus *bus) {
 //! Always lock the bus and peripheral config access before disabling it
 static void prv_bus_disable(I2CBus *bus) {
   i2c_hal_disable(bus);
-
+#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
   // Do not de-power rail if there are still devices using bus (just reset peripheral and pin
   // configuration during a bus reset)
   if (bus->state->user_count == 0) {
@@ -234,6 +225,7 @@ static void prv_bus_disable(I2CBus *bus) {
   } else {
     prv_bus_pins_cfg_input(bus);
   }
+#endif
 }
 
 //! Perform a soft reset of the bus
@@ -258,10 +250,12 @@ void i2c_init(I2CBus *bus) {
 
   i2c_hal_init(bus);
 
+#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
   if (bus->rail_gpio.gpio) {
     gpio_output_init(&bus->rail_gpio, GPIO_OType_PP, GPIO_Speed_2MHz);
   }
   prv_bus_rail_power_down(bus);
+#endif
 }
 
 void i2c_use(I2CSlavePort *slave) {
@@ -322,6 +316,7 @@ void i2c_reset(I2CSlavePort *slave) {
   mutex_unlock(slave->bus->state->bus_mutex);
 }
 
+#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
 bool i2c_bitbang_recovery(I2CSlavePort *slave) {
   PBL_ASSERTN(slave);
 
@@ -336,10 +331,6 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
     mutex_unlock(slave->bus->state->bus_mutex);
     return false;
   }
-
-#if MICRO_FAMILY_NRF5 || MICRO_FAMILY_SF32LB52
-  i2c_hal_pins_set_gpio(slave->bus);
-#endif
 
   InputConfig in_sda = {
     .gpio = slave->bus->sda_gpio.gpio,
@@ -380,6 +371,12 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
 
   return recovered;
 }
+#else
+bool i2c_bitbang_recovery(I2CSlavePort *slave) {
+  PBL_LOG(LOG_LEVEL_ERROR, "I2C bitbang recovery not supported on this platform");
+  return false;
+}
+#endif
 
 /*--------------------DATA TRANSFER FUNCTIONS--------------------------*/
 
