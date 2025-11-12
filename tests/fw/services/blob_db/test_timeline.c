@@ -592,11 +592,7 @@ void test_timeline__long_middle_past(void) {
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
     14700), 0);
-#if !CAPABILITY_HAS_CORE_NAVIGATION4
-  cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[2].header.id));
-
-  cl_assert(iter_next(&iterator));
-#endif
+ 
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[1].header.id));
 
   cl_assert(iter_next(&iterator));
@@ -604,11 +600,6 @@ void test_timeline__long_middle_past(void) {
 
   cl_assert(iter_prev(&iterator));
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[1].header.id));
-
-#if !CAPABILITY_HAS_CORE_NAVIGATION4
-  cl_assert(iter_prev(&iterator));
-  cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[2].header.id));
-#endif
 
   cl_assert(!iter_prev(&iterator));
 }
@@ -623,11 +614,11 @@ void test_timeline__long_middle_future(void) {
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
     14700), 0);
-#if CAPABILITY_HAS_CORE_NAVIGATION4
+
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[2].header.id));
 
   cl_assert(iter_next(&iterator));
-#endif
+  
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[3].header.id));
 
   cl_assert(iter_next(&iterator));
@@ -637,10 +628,8 @@ void test_timeline__long_middle_future(void) {
   cl_assert(iter_prev(&iterator));
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[3].header.id));
 
-#if CAPABILITY_HAS_CORE_NAVIGATION4
   cl_assert(iter_prev(&iterator));
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[2].header.id));
-#endif
 
   cl_assert(!iter_prev(&iterator));
 }
@@ -913,11 +902,11 @@ void test_timeline__extra_case_middle_future(void) {
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
     s_feb_5_midnight + 8 * SECONDS_PER_HOUR + 16 * SECONDS_PER_MINUTE), 0);
-#if CAPABILITY_HAS_CORE_NAVIGATION4
+
   cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[1].header.id));
 
   cl_assert(iter_next(&iterator));
-#endif
+
   cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[2].header.id));
 
   cl_assert(!iter_next(&iterator));
@@ -934,11 +923,7 @@ void test_timeline__extra_case_middle_past(void) {
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
     s_feb_5_midnight + 8 * 60 * 60 + 16 * 60), 0);
-#if !CAPABILITY_HAS_CORE_NAVIGATION4
-  cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[1].header.id));
 
-  cl_assert(iter_next(&iterator));
-#endif
   cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[0].header.id));
 
   cl_assert(!iter_next(&iterator));
