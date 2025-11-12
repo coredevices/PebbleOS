@@ -1172,9 +1172,9 @@ Zone	Africa/Maputo	2:10:18 -	LMT	1909
 
 # Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
 # Vanguard section, for zic and other parsers that support negative DST.
-Rule	Namibia	1994	only	-	Mar	21	0:00	-1:00	WAT
-Rule	Namibia	1994	2017	-	Sep	Sun>=1	2:00	0	CAT
-Rule	Namibia	1995	2017	-	Apr	Sun>=1	2:00	-1:00	WAT
+#Rule	Namibia	1994	only	-	Mar	21	0:00	-1:00	WAT
+#Rule	Namibia	1994	2017	-	Sep	Sun>=1	2:00	0	CAT
+#Rule	Namibia	1995	2017	-	Apr	Sun>=1	2:00	-1:00	WAT
 # Rearguard section, for parsers lacking negative DST; see ziguard.awk.
 #Rule	Namibia	1994	only	-	Mar	21	0:00	0	WAT
 #Rule	Namibia	1994	2017	-	Sep	Sun>=1	2:00	1:00	CAT
@@ -1188,14 +1188,14 @@ Zone	Africa/Windhoek	1:08:24 -	LMT	1892 Feb 8
 			2:00	1:00	SAST	1943 Mar 21  2:00
 			2:00	-	SAST	1990 Mar 21 # independence
 # Vanguard section, for zic and other parsers that support negative DST.
-			2:00	Namibia	%s
+#			2:00	Namibia	%s
 # Rearguard section, for parsers lacking negative DST; see ziguard.awk.
-#			2:00	-	CAT	1994 Mar 21  0:00
+			2:00	-	CAT	1994 Mar 21  0:00
 # From Paul Eggert (2017-04-07):
 # The official date of the 2017 rule change was 2017-10-24.  See:
 # http://www.lac.org.na/laws/annoSTAT/Namibian%20Time%20Act%209%20of%202017.pdf
-#			1:00	Namibia	%s	2017 Oct 24
-#			2:00	-	CAT
+			1:00	Namibia	%s	2017 Oct 24
+			2:00	-	CAT
 # End of rearguard section.
 
 
@@ -8840,11 +8840,11 @@ Zone	Europe/Dublin	-0:25:21 -	LMT	1880 Aug  2
 			 0:00	-	GMT	1948 Apr 18  2:00s
 			 0:00	GB-Eire	GMT/IST	1968 Oct 27
 # Vanguard section, for zic and other parsers that support negative DST.
-			 1:00	Eire	IST/GMT
+#			 1:00	Eire	IST/GMT
 # Rearguard section, for parsers lacking negative DST; see ziguard.awk.
-#			 1:00	-	IST	1971 Oct 31  2:00u
-#			 0:00	GB-Eire	GMT/IST	1996
-#			 0:00	EU	GMT/IST
+			 1:00	-	IST	1971 Oct 31  2:00u
+			 0:00	GB-Eire	GMT/IST	1996
+			 0:00	EU	GMT/IST
 # End of rearguard section.
 
 
@@ -9322,9 +9322,9 @@ Zone	Europe/Prague	0:57:44 -	LMT	1850
 			1:00	C-Eur	CE%sT	1945 May  9
 			1:00	Czech	CE%sT	1946 Dec  1  3:00
 # Vanguard section, for zic and other parsers that support negative DST.
-			1:00	-1:00	GMT	1947 Feb 23  2:00
+#			1:00	-1:00	GMT	1947 Feb 23  2:00
 # Rearguard section, for parsers lacking negative DST; see ziguard.awk.
-#			0:00	-	GMT	1947 Feb 23  2:00
+			0:00	-	GMT	1947 Feb 23  2:00
 # End of rearguard section.
 			1:00	Czech	CE%sT	1979
 			1:00	EU	CE%sT
@@ -10601,7 +10601,7 @@ Zone	Europe/Lisbon	-0:36:45 -	LMT	1884
 Zone Atlantic/Azores	-1:42:40 -	LMT	1884        # Ponta Delgada
 			-1:54:32 -	HMT	1912 Jan  1  2:00u # Horta MT
 # Vanguard section, for zic and other parsers that support %z.
-			-2:00	Port	%z	1966 Oct  2  2:00s
+#			-2:00	Port	%z	1966 Oct  2  2:00s
 # From Tim Parenti (2024-07-01):
 # While Decreto-Lei 309/76 of 1976-04-27 reintroduced DST on the mainland by
 # falling back on 1976-09-26, it assigned the Permanent Time Commission to
@@ -10616,20 +10616,20 @@ Zone Atlantic/Azores	-1:42:40 -	LMT	1884        # Ponta Delgada
 # Though transitions in the Azores officially remained at 0:00s through 1992,
 # this was equivalent to the EU-style 1:00u adopted by the mainland in 1986, so
 # model it as such.
-			-1:00	-	%z	1982 Mar 28  0:00s
-			-1:00	Port	%z	1986
+#			-1:00	-	%z	1982 Mar 28  0:00s
+#			-1:00	Port	%z	1986
 # Rearguard section, for parsers lacking %z; see ziguard.awk.
-#			-2:00	Port	-02/-01	1942 Apr 25 22:00s
-#			-2:00	Port	+00	1942 Aug 15 22:00s
-#			-2:00	Port	-02/-01	1943 Apr 17 22:00s
-#			-2:00	Port	+00	1943 Aug 28 22:00s
-#			-2:00	Port	-02/-01	1944 Apr 22 22:00s
-#			-2:00	Port	+00	1944 Aug 26 22:00s
-#			-2:00	Port	-02/-01	1945 Apr 21 22:00s
-#			-2:00	Port	+00	1945 Aug 25 22:00s
-#			-2:00	Port	-02/-01	1966 Oct  2  2:00s
-#			-1:00	-	-01	1982 Mar 28  0:00s
-#			-1:00	Port	-01/+00	1986
+			-2:00	Port	-02/-01	1942 Apr 25 22:00s
+			-2:00	Port	+00	1942 Aug 15 22:00s
+			-2:00	Port	-02/-01	1943 Apr 17 22:00s
+			-2:00	Port	+00	1943 Aug 28 22:00s
+			-2:00	Port	-02/-01	1944 Apr 22 22:00s
+			-2:00	Port	+00	1944 Aug 26 22:00s
+			-2:00	Port	-02/-01	1945 Apr 21 22:00s
+			-2:00	Port	+00	1945 Aug 25 22:00s
+			-2:00	Port	-02/-01	1966 Oct  2  2:00s
+			-1:00	-	-01	1982 Mar 28  0:00s
+			-1:00	Port	-01/+00	1986
 # End of rearguard section.
 #
 # From Paul Eggert (1996-11-12):
@@ -10654,17 +10654,17 @@ Zone Atlantic/Azores	-1:42:40 -	LMT	1884        # Ponta Delgada
 Zone Atlantic/Madeira	-1:07:36 -	LMT	1884        # Funchal
 			-1:07:36 -	FMT	1912 Jan  1  1:00u # Funchal MT
 # Vanguard section, for zic and other parsers that support %z.
-			-1:00	Port	%z	1966 Oct  2  2:00s
+#			-1:00	Port	%z	1966 Oct  2  2:00s
 # Rearguard section, for parsers lacking %z; see ziguard.awk.
-#			-1:00	Port	-01/+00	1942 Apr 25 22:00s
-#			-1:00	Port	+01	1942 Aug 15 22:00s
-#			-1:00	Port	-01/+00	1943 Apr 17 22:00s
-#			-1:00	Port	+01	1943 Aug 28 22:00s
-#			-1:00	Port	-01/+00	1944 Apr 22 22:00s
-#			-1:00	Port	+01	1944 Aug 26 22:00s
-#			-1:00	Port	-01/+00	1945 Apr 21 22:00s
-#			-1:00	Port	+01	1945 Aug 25 22:00s
-#			-1:00	Port	-01/+00	1966 Oct  2  2:00s
+			-1:00	Port	-01/+00	1942 Apr 25 22:00s
+			-1:00	Port	+01	1942 Aug 15 22:00s
+			-1:00	Port	-01/+00	1943 Apr 17 22:00s
+			-1:00	Port	+01	1943 Aug 28 22:00s
+			-1:00	Port	-01/+00	1944 Apr 22 22:00s
+			-1:00	Port	+01	1944 Aug 26 22:00s
+			-1:00	Port	-01/+00	1945 Apr 21 22:00s
+			-1:00	Port	+01	1945 Aug 25 22:00s
+			-1:00	Port	-01/+00	1966 Oct  2  2:00s
 # End of rearguard section.
 #
 # From Tim Parenti (2024-07-01):
