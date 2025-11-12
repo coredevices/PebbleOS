@@ -32,7 +32,11 @@ extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern I2CBus *const I2C2_BUS;
+#ifdef IMU_USE_LIS2DW12
+extern I2CSlavePort *const I2C_LSM2DW12;
+#else
 extern I2CSlavePort * const I2C_LSM6D;
+#endif
 extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort *const I2C_AW86225;
