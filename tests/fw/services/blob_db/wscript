@@ -26,8 +26,6 @@ def build(ctx):
              override_includes=['dummy_board'])
 
     test_timeline_service(test_name='test_timeline')
-    test_timeline_service(test_name='test_timeline~ux4',
-                          defines=['CAPABILITY_HAS_CORE_NAVIGATION4=1'])
 
     clar(ctx,
          sources_ant_glob=(

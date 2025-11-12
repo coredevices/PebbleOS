@@ -115,13 +115,8 @@ static bool prv_show_event(TimelineNode *node, time_t timestamp, time_t midnight
     return false;
   }
 
-#if CAPABILITY_HAS_CORE_NAVIGATION4
   // An event is in future until it ends
   const time_t fudge_time = node->duration * SECONDS_PER_MINUTE;
-#else
-  // An event is in future until either it ends or ten minutes passed, whichever happens first
-  const time_t fudge_time = MIN(node->duration, 10) * SECONDS_PER_MINUTE;
-#endif
   // deal with all day events
   if (node->all_day && node->timestamp == midnight) {
     return show_all_day_events;
