@@ -16,7 +16,6 @@ typedef const struct I2CBusHal {
   I2C_HandleTypeDef hi2c;
   DMA_HandleTypeDef hdma;
   const void *dev;
-  const char *device_name;
   Pinmux scl;
   Pinmux sda;
   uint8_t core;
@@ -26,7 +25,6 @@ typedef const struct I2CBusHal {
   IRQn_Type dma_irqn;
   uint8_t dma_irq_priority;
   uint32_t timeout;
-
 } I2CDeviceBusHal;
 
 void i2c_irq_handler(I2CBus *bus);
