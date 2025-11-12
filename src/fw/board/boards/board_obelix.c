@@ -299,23 +299,21 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 };
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 
-static I2CDeviceState s_i2c_device_state_1 = {
-    .int_enabled = true,
+static I2CBusHalState s_i2c_bus_hal_state_1 = {
+    .hdl = {
+        .Instance = I2C1,
+        .Init = {
+            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+            .ClockSpeed = 400000,
+            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+        },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
 };
 
-static struct I2CBusHal s_i2c_bus_hal_1 = {
-    .i2c_state = &s_i2c_device_state_1,
-    .hi2c =
-        {
-            .Instance = I2C1,
-            .Init = {
-                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-                .ClockSpeed = 400000,
-                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-            },
-            .Mode = HAL_I2C_MODE_MASTER,
-            .core = CORE_ID_HCPU,
-        },
+static I2CBusHal s_i2c_bus_hal_1 = {
+    .state = &s_i2c_bus_hal_state_1,
     .scl =
         {
             .pad = PAD_PA31,
@@ -328,11 +326,9 @@ static struct I2CBusHal s_i2c_bus_hal_1 = {
             .func = I2C1_SDA,
             .flags = PIN_NOPULL,
         },
-    .core = CORE_ID_HCPU,
     .module = RCC_MOD_I2C1,
     .irqn = I2C1_IRQn,
     .irq_priority = 5,
-    .timeout = 5000,
 };
 
 static I2CBusState s_i2c_bus_state_1;
@@ -348,23 +344,42 @@ I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
 IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
 
-static I2CDeviceState s_i2c_device_state_2 = {
-    .int_enabled = true,
+static const I2CSlavePort s_i2c_npm1300 = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x6B,
 };
 
-static struct I2CBusHal s_i2c_bus_hal_2 = {
-    .i2c_state = &s_i2c_device_state_2,
-    .hi2c =
-        {
-            .Instance = I2C2,
-            .Init = {
-                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-                .ClockSpeed = 400000,
-                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-            },
-            .Mode = HAL_I2C_MODE_MASTER,
-            .core = CORE_ID_HCPU,
+I2CSlavePort *const I2C_NPM1300 = &s_i2c_npm1300;
+
+static const I2CSlavePort s_i2c_aw86225 = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x58,
+};
+  
+I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
+
+static const I2CSlavePort s_i2c_aw2016 = {
+    .bus = &s_i2c_bus_1,
+    .address = 0x64,
+};
+
+I2CSlavePort *const I2C_AW2016 = &s_i2c_aw2016;
+
+static I2CBusHalState s_i2c_bus_hal_state_2 = {
+    .hdl = {
+        .Instance = I2C2,
+        .Init = {
+            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+            .ClockSpeed = 400000,
+            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
         },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
+};
+
+static I2CBusHal s_i2c_bus_hal_2 = {
+    .state = &s_i2c_bus_hal_state_2,
     .scl =
         {
             .pad = PAD_PA32,
@@ -377,11 +392,9 @@ static struct I2CBusHal s_i2c_bus_hal_2 = {
             .func = I2C2_SDA,
             .flags = PIN_NOPULL,
         },
-    .core = CORE_ID_HCPU,
     .module = RCC_MOD_I2C2,
     .irqn = I2C2_IRQn,
     .irq_priority = 5,
-    .timeout = 5000,
 };
 
 static I2CBusState s_i2c_bus_state_2;
@@ -411,54 +424,21 @@ static const I2CSlavePort s_i2c_mmc5603nj = {
 
 I2CSlavePort *const I2C_MMC5603NJ = &s_i2c_mmc5603nj;
 
-static const I2CSlavePort s_i2c_npm1300 = {
-    .bus = &s_i2c_bus_1,
-    .address = 0x6B,
-};
-
-I2CSlavePort *const I2C_NPM1300 = &s_i2c_npm1300;
-
-static const I2CSlavePort s_i2c_aw86225 = {
-    .bus = &s_i2c_bus_1,
-    .address = 0x58,
-};
-  
-I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
-
-static const I2CSlavePort s_i2c_aw2016 = {
-    .bus = &s_i2c_bus_1,
-    .address = 0x64,
-};
-
-I2CSlavePort *const I2C_AW2016 = &s_i2c_aw2016;
-
-static HRMDeviceState s_hrm_state;
-static HRMDevice s_hrm = {
-  .state = &s_hrm_state,
-};
-HRMDevice * const HRM = &s_hrm;
-
-const BoardConfigActuator BOARD_CONFIG_VIBE = {
-    .ctl = {hwp_gpio1, 1, true},
-};
-
-static I2CDeviceState s_i2c_device_state_3 = {
-    .int_enabled = true,
-};
-
-static struct I2CBusHal s_i2c_bus_hal_3 = {
-    .i2c_state = &s_i2c_device_state_3,
-    .hi2c =
-        {
-            .Instance = I2C3,
-            .Init = {
-                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-                .ClockSpeed = 400000,
-                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-            },
-            .Mode = HAL_I2C_MODE_MASTER,
-            .core = CORE_ID_HCPU,
+static I2CBusHalState s_i2c_bus_hal_state_3 = {
+    .hdl = {
+        .Instance = I2C3,
+        .Init = {
+            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+            .ClockSpeed = 400000,
+            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
         },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
+};
+
+static I2CBusHal s_i2c_bus_hal_3 = {
+    .state = &s_i2c_bus_hal_state_3,
     .scl =
         {
             .pad = PAD_PA11,
@@ -471,11 +451,9 @@ static struct I2CBusHal s_i2c_bus_hal_3 = {
             .func = I2C3_SDA,
             .flags = PIN_NOPULL,
         },
-    .core = CORE_ID_HCPU,
     .module = RCC_MOD_I2C3,
     .irqn = I2C3_IRQn,
     .irq_priority = 5,
-    .timeout = 5000,
 };
 
 static I2CBusState s_i2c_bus_state_3;
@@ -488,15 +466,16 @@ static I2CBus s_i2c_bus_3 = {
 };
 
 I2CBus *const I2C3_BUS = &s_i2c_bus_3;
+
 IRQ_MAP(I2C3, i2c_irq_handler, I2C3_BUS);
 
 static const I2CSlavePort s_i2c_cst816 = {
-    .bus = I2C3_BUS,
+    .bus = &s_i2c_bus_3,
     .address = 0x15,
 };
 
 static const I2CSlavePort s_i2c_cst816_boot = {
-    .bus = I2C3_BUS,
+    .bus = &s_i2c_bus_3,
     .address = 0x6A,
 };
 
@@ -508,7 +487,20 @@ static const TouchSensor touch_cst816 = {
         .gpio_pin = 27,
     },
 };
+
 const TouchSensor *CST816 = &touch_cst816;
+
+static HRMDeviceState s_hrm_state;
+
+static HRMDevice s_hrm = {
+  .state = &s_hrm_state,
+};
+
+HRMDevice * const HRM = &s_hrm;
+
+const BoardConfigActuator BOARD_CONFIG_VIBE = {
+    .ctl = {hwp_gpio1, 1, true},
+};
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {
