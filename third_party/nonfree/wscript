@@ -21,3 +21,90 @@ def build(bld):
                 'pebbleos-nonfree/cst816',
             ],
         )
+
+    if bld.is_obelix():
+        includes = [
+            'pebbleos-nonfree/gh3x2x/algo_lib/algo_params/HR/04_EXCLUSIVE',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_algo_code/goodix_algo_application/inc',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_algo_code/goodix_algo_call/inc',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_algo_code/goodix_algo_call/inc/hr_exc',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_algo_code/goodix_algo_call/inc/spo2_pre_exc',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_kernel_code/driver/inc',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_kernel_code/kernel',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_kernel_code/module/gh_agc',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_kernel_code/module/gh_egc',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_kernel_code/module/gh_other',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_kernel_code/module/gh_protocol',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_kernel_code/module/gh_soft_adt',
+            'pebbleos-nonfree/gh3x2x/demo_code/demo_mp_code/inc',
+        ]
+
+        bld.read_stlib(
+            'cortex-m33_arm-gcc-9.2.1_os_common_dl',
+            paths=['pebbleos-nonfree/gh3x2x/algo_lib/COMMON_DL/01_premium_and_exclusive/dlCom_pre2exc_pv_v1.3.0'],
+        )
+
+        bld.read_stlib(
+            'cortex-m33_arm-gcc-9.2.1_os_common_dsp',
+            paths=['pebbleos-nonfree/gh3x2x/algo_lib/COMMON_DSP/dsp_pv_v1.3.0'],
+        )
+
+        bld.read_stlib(
+            'cortex-m33_arm-gcc-9.2.1_os_ecg',
+            paths=['pebbleos-nonfree/gh3x2x/algo_lib/ECG/GH_ECG_pre_pv_v1.0.3.0'],
+        )
+
+        bld.read_stlib(
+            'cortex-m33_arm-gcc-9.2.1_os_hr',
+            paths=['pebbleos-nonfree/gh3x2x/algo_lib/HR/04_EXCLUSIVE/GH_HR_exc_pv_v2.0.3.0'],
+        )
+
+        bld.read_stlib(
+            'cortex-m33_arm-gcc-9.2.1_os_hrv',
+            paths=['pebbleos-nonfree/gh3x2x/algo_lib/HRV/GH_HRV_pre_pv_v1.0.1.0'],
+        )
+
+        bld.read_stlib(
+            'cortex-m33_arm-gcc-9.2.1_os_nadt',
+            paths=['pebbleos-nonfree/gh3x2x/algo_lib/NADT/GH_NADT_pre_pv_v1.0.2.0'],
+        )
+
+        bld.read_stlib(
+            'cortex-m33_arm-gcc-9.2.1_os_spo2',
+            paths=['pebbleos-nonfree/gh3x2x/algo_lib/SPO2/02_PREMIUM_EXCLUSIVE/GH_SPO2_pre_pv_v2.1.10.0'],
+        )
+
+        bld.read_stlib(
+            'gh3x2x_drv_cortexM33_band_gcc_common',
+            paths=['pebbleos-nonfree/gh3x2x/drv_lib']
+        )
+
+        sources = bld.path.ant_glob([
+            'pebbleos-nonfree/gh3x2x/algo_lib/**/*.c',
+            'pebbleos-nonfree/gh3x2x/demo_code/**/*.c',
+        ])
+
+        bld.env.append_unique(
+            'CFLAGS',
+            [
+                '-Wno-sign-compare',
+                '-Wno-incompatible-pointer-types',
+            ],
+        )
+
+        bld.objects(
+            name='gh3x2x',
+            source=sources,
+            includes=includes,
+            export_includes=includes,
+            use=[
+                'cortex-m33_arm-gcc-9.2.1_os_common_dl',
+                'cortex-m33_arm-gcc-9.2.1_os_common_dsp',
+                'cortex-m33_arm-gcc-9.2.1_os_ecg',
+                'cortex-m33_arm-gcc-9.2.1_os_hr',
+                'cortex-m33_arm-gcc-9.2.1_os_hrv',
+                'cortex-m33_arm-gcc-9.2.1_os_nadt',
+                'cortex-m33_arm-gcc-9.2.1_os_spo2',
+                'gh3x2x_drv_cortexM33_band_gcc_common',
+            ],
+        )
