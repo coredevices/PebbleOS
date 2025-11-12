@@ -341,6 +341,11 @@
       "file": "normal/silk/images/ble_hrm_sharing_app_glance.png"
     },
     {
+     "type": "pdc",
+     "name": "MENU_ICON_HEALTH",
+     "file": "normal/base/images/menu_icon_health.svg"
+    },
+    {
       "type": "font",
       "name": "AGENCY_FB_46_NUMBERS_AM_PM",
       "file": "normal/base/pbf/AGENCY_FB_46_NUMBERS_AM_PM.pbf",

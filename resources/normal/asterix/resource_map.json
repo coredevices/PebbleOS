@@ -409,6 +409,11 @@
       "file": "normal/silk/images/health_app_crown.svg"
     },
     {
+     "type": "pdc",
+     "name": "MENU_ICON_HEALTH",
+     "file": "normal/base/images/menu_icon_health.svg"
+    },
+    {
      "type": "js",
      "name": "JS_TICTOC",
      "file": "normal/base/js/tictoc.js",
