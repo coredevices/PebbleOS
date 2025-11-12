@@ -150,6 +150,10 @@ static void prv_reclaim_space(size_t size_needed, int fd) {
     uint8_t status = iter_state.header.common.status;
     if (!(status & TimelineItemStatusDeleted)) {
       // Mark for deletion
+      char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
+      uuid_to_string(&iter_state.header.common.id, uuid_buffer);
+      PBL_LOG(LOG_LEVEL_WARNING, "Storage full: marking notification %s as deleted (ANCS UID: %"PRIu32")", 
+              uuid_buffer, iter_state.header.common.ancs_uid);
       prv_set_header_status(&iter_state.header, TimelineItemStatusDeleted, fd);
       size_available += sizeof(SerializedTimelineItemHeader) + iter_state.header.payload_length;
       if (size_needed <= size_available) {
@@ -227,11 +231,17 @@ static bool prv_compress(size_t size_needed, int *fd) {
     TimelineItem notification;
     if (!prv_get_notification(&notification, &iter_state.header, *fd)) {
       // Error occurred
+      char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
+      uuid_to_string(&iter_state.header.common.id, uuid_buffer);
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read notification %s during compression. Resetting all notifications.", uuid_buffer);
       goto cleanup;
     }
     int result = prv_write_notification(&notification, &iter_state.header, new_fd);
     if (result < 0) {
       // Error occurred
+      char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
+      uuid_to_string(&iter_state.header.common.id, uuid_buffer);
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write notification %s during compression (error %d). Resetting all notifications.", uuid_buffer, result);
       kernel_free(notification.allocated_buffer);
       goto cleanup;
     }
@@ -274,6 +284,7 @@ void notification_storage_store(TimelineItem* notification) {
   if (size_needed > (NOTIFICATION_STORAGE_FILE_SIZE - s_write_offset)) {
     if (!prv_compress(size_needed, &fd)) {
       // Notification storage compression failed. Clear notifications storage
+      PBL_LOG(LOG_LEVEL_ERROR, "Notification storage compression failed! Resetting all notifications.");
       goto reset_storage;
     }
   }
@@ -283,6 +294,9 @@ void notification_storage_store(TimelineItem* notification) {
   int result = prv_write_notification(notification, &header, fd);
   if (result < 0) {
     // [AS] TODO: Write failure: reset storage, compression or reset watch?
+    char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
+    uuid_to_string(&notification->header.id, uuid_buffer);
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write notification %s (error %d). Resetting all notifications.", uuid_buffer, result);
     goto reset_storage;
   }
 
