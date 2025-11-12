@@ -234,11 +234,10 @@ int i2c_hal_configure(I2CDeviceBusHal *i2c_hal) {
   ret = HAL_I2C_Init(handle);
 
   if (ret != HAL_OK) {
-    PBL_LOG_D(LOG_DOMAIN_I2C, LOG_LEVEL_ERROR, "I2C [%s] bus_configure fail!",
-              i2c_hal->device_name);
+    PBL_LOG_D(LOG_DOMAIN_I2C, LOG_LEVEL_ERROR, "I2C bus configure fail!");
     return -1;
   }
-  PBL_LOG_D(LOG_DOMAIN_I2C, LOG_LEVEL_INFO, "I2C [%s] bus_configure ok!", i2c_hal->device_name);
+
   return 0;
 }
 
@@ -287,9 +286,9 @@ void i2c_hal_init(I2CBus *bus) {
   PBL_ASSERTN(bus != NULL);
   ret = i2c_hal_hw_init((struct I2CBusHal *)bus->hal);
   if (ret < 0) {
-    PBL_LOG_D(LOG_DOMAIN_I2C, LOG_LEVEL_ERROR, "I2C [%s] hw init fail!", bus->hal->device_name);
+    PBL_LOG_D(LOG_DOMAIN_I2C, LOG_LEVEL_ERROR, "I2C hw init fail!");
   } else {
-    PBL_LOG_D(LOG_DOMAIN_I2C, LOG_LEVEL_INFO, "I2C [%s] hw init ok!", bus->hal->device_name);
+    PBL_LOG_D(LOG_DOMAIN_I2C, LOG_LEVEL_INFO, "I2C hw init ok!");
   }
 
   return;
