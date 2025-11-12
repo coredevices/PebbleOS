@@ -170,6 +170,7 @@ const PebbleProcessMd *health_app_get_info(void) {
       .main_func = &prv_main,
       .uuid = UUID_HEALTH_DATA_SOURCE,
     },
+    .icon_resource_id = RESOURCE_ID_MENU_ICON_HEALTH,
     .name = i18n_noop("Health"),
   };
   return (const PebbleProcessMd*) &s_health_app_info;
