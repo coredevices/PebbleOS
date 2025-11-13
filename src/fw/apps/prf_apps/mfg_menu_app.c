@@ -36,6 +36,7 @@
 #include "apps/prf_apps/mfg_backlight_app.h"
 #include "apps/prf_apps/mfg_audio_app.h"
 #include "apps/prf_apps/mfg_pdm_mic_app.h"
+#include "apps/prf_apps/mfg_test_aging_app.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/standby.h"
@@ -165,6 +166,12 @@ static void prv_select_program_color(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_program_color_app_get_info());
 }
 
+#if PLATFORM_OBELIX
+static void prv_select_test_aging(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_aging_app_get_info());
+}
+#endif
+
 static void prv_select_load_prf(int index, void *context) {
 #if PLATFORM_OBELIX
   // On Obelix MFG, we invalidate all slots so it will boot into PRF next time
@@ -260,6 +267,9 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #if PLATFORM_ASTERIX
     { .title = "Test Speaker",      .callback = prv_select_speaker },
     { .title = "Test Microphone",   .callback = prv_select_mic },
+#endif
+#if PLATFORM_OBELIX
+    { .title = "Test Aging",        .callback = prv_select_test_aging },
 #endif
     { .title = "Certification",     .callback = prv_select_certification },
     { .title = "Program Color",     .callback = prv_select_program_color },
