@@ -584,6 +584,7 @@ def _build_recovery(bld):
             'apps/prf_apps/mfg_serial_qr_app.c',
             'apps/prf_apps/mfg_sine_wave_app.c',
             'apps/prf_apps/mfg_speaker_app.c',
+            'apps/prf_apps/mfg_test_aging_app.c',
             'apps/prf_apps/mfg_touch_app.c',
             'apps/prf_apps/mfg_vibe_app.c',
         ])
@@ -599,6 +600,7 @@ def _build_recovery(bld):
             excludes.extend([
                 'apps/prf_apps/mfg_audio_app.c',
                 'apps/prf_apps/mfg_pdm_mic_app.c',
+                'apps/prf_apps/mfg_test_aging_app.c',
             ])
 
     if bld.is_silk():
