@@ -570,6 +570,7 @@ def _build_recovery(bld):
             'apps/prf_apps/mfg_als_app.c',
             'apps/prf_apps/mfg_audio_app.c',
             'apps/prf_apps/mfg_backlight_app.c',
+            'apps/prf_apps/mfg_battery_discharge_app.c',
             'apps/prf_apps/mfg_bt_device_name_app.c',
             'apps/prf_apps/mfg_bt_sig_rf_app_app.c',
             'apps/prf_apps/mfg_button_app.c',

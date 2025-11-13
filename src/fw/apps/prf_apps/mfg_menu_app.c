@@ -30,6 +30,7 @@
 #include "apps/prf_apps/mfg_mic_app.h"
 #include "apps/prf_apps/mfg_program_color_app.h"
 #include "apps/prf_apps/mfg_runin_app.h"
+#include "apps/prf_apps/mfg_battery_discharge_app.h"
 #include "apps/prf_apps/mfg_speaker_app.h"
 #include "apps/prf_apps/mfg_vibe_app.h"
 #include "apps/prf_apps/mfg_touch_app.h"
@@ -120,6 +121,10 @@ static void prv_select_pdm_mic(int index, void *context) {
 
 static void prv_select_runin(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_runin_app_get_info());
+}
+
+static void prv_select_battery_discharge(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_battery_discharge_app_get_info());
 }
 
 static void prv_select_vibe(int index, void *context) {
@@ -256,6 +261,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .icon = prv_get_icon_for_test(MfgTest_ALS),
       .title = "Test ALS",          .callback = prv_select_als },
     { .title = "Test Runin",        .callback = prv_select_runin },
+    { .title = "Test Batt Discharge", .callback = prv_select_battery_discharge },
     { .icon = prv_get_icon_for_test(MfgTest_Vibe),
       .title = "Test Vibe",         .callback = prv_select_vibe },
 #if !PLATFORM_SILK && !PLATFORM_ASTERIX && !PLATFORM_OBELIX
