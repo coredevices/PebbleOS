@@ -147,8 +147,17 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
     case MsgIdSessionSetup: {
       if (size >= sizeof(SessionSetupResultMsg)) {
         SessionSetupResultMsg *msg = (SessionSetupResultMsg *) data;
+        
+        // Validate result enum value to prevent crashes from invalid values
+        VoiceEndpointResult result = msg->result;
+        if (result > VoiceEndpointResultFailInvalidMessage) {
+          PBL_LOG(LOG_LEVEL_ERROR, "Invalid VoiceEndpointResult value: %d, treating as invalid message", 
+                  (int)result);
+          result = VoiceEndpointResultFailInvalidMessage;
+        }
+        
         bool app_initiated = (msg->flags.app_initiated == 1);
-        voice_handle_session_setup_result(msg->result, msg->session_type, app_initiated);
+        voice_handle_session_setup_result(result, msg->session_type, app_initiated);
       } else {
         PBL_LOG(LOG_LEVEL_WARNING, "Invalid size for session setup result message");
       }
