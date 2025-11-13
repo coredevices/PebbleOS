@@ -433,7 +433,6 @@ static NOINLINE void prv_main_task_init(void) {
 
   new_timer_service_init();
   regular_timer_init();
-  clock_init();
 
   // Initialize the task watchdog and immediately pause it for 30 seconds to
   // give us time to initialize everything without worrying about task watchdog
@@ -446,6 +445,8 @@ static NOINLINE void prv_main_task_init(void) {
   system_task_timer_init();
 
   init_drivers();
+
+  clock_init();
 
 #if defined(IS_BIGBOARD)
   // Program a random S/N into the Bigboard in case it's not been done yet:
