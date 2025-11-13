@@ -517,8 +517,8 @@ static void prv_motion_sensitivity_menu_push(SettingsSystemData *data) {
 ///////////////////////
 
 static const char* s_debugging_titles[DebuggingItem_Count] = {
-  [DebuggingItemCoreDumpNow]      = i18n_noop("Bug report now"),
-  [DebuggingItemCoreDumpShortcut] = i18n_noop("Bug shortcut"),
+  [DebuggingItemCoreDumpNow]      = i18n_noop("CoreDump now"),
+  [DebuggingItemCoreDumpShortcut] = i18n_noop("CoreDump shortcut"),
   [DebuggingItemALSThreshold]     = i18n_noop("ALS Threshold"),
 #if PLATFORM_ASTERIX
   [DebuggingItemMotionSensitivity] = i18n_noop("Motion Sensitivity"),
