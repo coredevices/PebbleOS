@@ -17,8 +17,10 @@
 #include <stdint.h>
 
 #include "board/board.h"
+#include "drivers/flash.h"
 #include "drivers/rtc.h"
 #include "drivers/rtc_private.h"
+#include "flash_region/flash_region.h"
 #include "mcu/interrupts.h"
 #include "system/passert.h"
 #include "util/time/time.h"
@@ -348,20 +350,79 @@ const char* time_t_to_string(char* buffer, time_t t) {
   return buffer;
 }
 
-//! We attempt to save registers by placing both the timezone abbreviation
-//! timezone index and the daylight_savingtime into the same register set
-void rtc_set_timezone(TimezoneInfo* tzinfo) {}
+//! We store timezone info in the flash TZINFO region
 
-void rtc_get_timezone(TimezoneInfo* tzinfo) {}
+//! Versioned storage structure for timezone info in flash
+//! This allows for future migrations and avoids struct alignment issues
+typedef struct __attribute__((packed)) {
+  uint8_t version;            // Version number for future migrations
+  char tm_zone[TZ_LEN - 1];   // Up to 5 character timezone abbreviation
+  uint8_t dst_id;             // Daylight savings time zone index
+  int16_t timezone_id;        // Olson index of timezone
+  int32_t tm_gmtoff;          // GMT time offset
+  time_t dst_start;           // Timestamp of start of DST period (0 if none)
+  time_t dst_end;             // Timestamp of end of DST period (0 if none)
+} TzinfoFlashStorage;
 
-void rtc_timezone_clear(void) {}
+#define TZINFO_VERSION 1
+
+void rtc_set_timezone(TimezoneInfo* tzinfo) {
+  _Static_assert(sizeof(TzinfoFlashStorage) <= SUBSECTOR_SIZE_BYTES,
+      "TzinfoFlashStorage must fit in TZINFO flash region (4KB)");
+
+  // Copy to versioned buffer
+  TzinfoFlashStorage storage = {
+    .version = TZINFO_VERSION,
+    .dst_id = tzinfo->dst_id,
+    .timezone_id = tzinfo->timezone_id,
+    .tm_gmtoff = tzinfo->tm_gmtoff,
+    .dst_start = tzinfo->dst_start,
+    .dst_end = tzinfo->dst_end,
+  };
+  memcpy(storage.tm_zone, tzinfo->tm_zone, TZ_LEN - 1);
+
+  flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
+  flash_write_bytes((const uint8_t*)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
+}
+
+void rtc_get_timezone(TimezoneInfo* tzinfo) {
+  TzinfoFlashStorage storage;
+
+  flash_read_bytes((uint8_t*)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
+
+  if (storage.version != TZINFO_VERSION) {
+    // Future versions can handle migrations here
+    // For now, treat invalid version as unset
+    memset(tzinfo, 0, sizeof(TimezoneInfo));
+    return;
+  }
+
+  memcpy(tzinfo->tm_zone, storage.tm_zone, TZ_LEN - 1);
+  tzinfo->dst_id = storage.dst_id;
+  tzinfo->timezone_id = storage.timezone_id;
+  tzinfo->tm_gmtoff = storage.tm_gmtoff;
+  tzinfo->dst_start = storage.dst_start;
+  tzinfo->dst_end = storage.dst_end;
+}
+
+void rtc_timezone_clear(void) {
+  flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
+}
 
 uint16_t rtc_get_timezone_id(void) {
-  return 0;
+  TimezoneInfo tzinfo;
+
+  rtc_get_timezone(&tzinfo);
+
+  return (uint16_t)tzinfo.timezone_id;
 }
 
 bool rtc_is_timezone_set(void) {
-  return 0;
+  uint8_t version;
+
+  flash_read_bytes((uint8_t*)&version, FLASH_REGION_TZINFO_BEGIN, sizeof(version));
+
+  return version == TZINFO_VERSION;
 }
 
 void rtc_enable_backup_regs(void) {}
