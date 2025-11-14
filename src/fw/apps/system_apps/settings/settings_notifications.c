@@ -57,7 +57,9 @@ enum NotificationsItem {
 #endif
   NotificationsItemTextSize,
   NotificationsItemWindowTimeout,
+#if PBL_BW
   NotificationsItemDesignStyle,
+#endif
   NotificationsItem_Count,
 };
 
