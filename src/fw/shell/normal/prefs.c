@@ -79,7 +79,7 @@ static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in s
 static bool s_backlight_motion_enabled = true;
 
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
-static uint8_t s_motion_sensitivity = 70; // Default to Medium-High
+static uint8_t s_motion_sensitivity = 85; // Default to High
 
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY "lightDynamicIntensity"
