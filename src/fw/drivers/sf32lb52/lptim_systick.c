@@ -119,7 +119,8 @@ static inline void lptim_systick_next_tick_setup(void)
 
 void LPTIM1_IRQHandler(void)
 {
-  static uint32_t wdt_feed_cnt = 0U;
+  static uint32_t wdt_last_counter = 0U;
+  static uint32_t wdt_feed_counter = 0U;
 
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OC) != RESET) {
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_IT_OCIE);
@@ -129,18 +130,28 @@ void LPTIM1_IRQHandler(void)
     if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OCWKUP) == RESET) {
       extern void SysTick_Handler();
       SysTick_Handler();
-    }
 
-    wdt_feed_cnt++;
-    if (wdt_feed_cnt >= (RTC_TICKS_HZ * TASK_WATCHDOG_FEED_PERIOD_MS) / 1000) {
-      wdt_feed_cnt = 0U;
-      task_watchdog_feed();
+      uint32_t current_counter = LPTIM1->CNT;
+      if (current_counter < wdt_last_counter) {
+        current_counter += 0x10000;
+      }
+      wdt_feed_counter += (current_counter - wdt_last_counter);
+      wdt_last_counter = current_counter & 0xFFFF;
+      if (wdt_feed_counter >= (TASK_WATCHDOG_FEED_PERIOD_MS * SYSTICK_ONE_TICK_HZ)) {
+        wdt_feed_counter = 0U;
+        task_watchdog_feed();
+      }
     }
   }
 
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OCWKUP) != RESET) {
     __HAL_LPTIM_DISABLE_IT(&s_lptim1_handle, LPTIM_IT_OCWE);
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_ICR_WKUPCLR);
+
+      static WDT_HandleTypeDef hwdt = {
+        .Instance = hwp_wdt1,
+      };
+      __HAL_WDT_START(&hwdt);
   }
 }
 
