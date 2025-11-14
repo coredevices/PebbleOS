@@ -7,8 +7,21 @@
 #include "kernel/events.h"
 #include "system/passert.h"
 
+// watch rotation
+static bool s_rotated_180 = false;
+
+void button_set_rotated(bool rotated) {
+  s_rotated_180 = rotated;
+}
+
 bool button_is_pressed(ButtonId id) {
-  const ButtonConfig* button_config = &BOARD_CONFIG_BUTTON.buttons[id];
+  if (s_rotated_180 && id == BUTTON_ID_UP) {
+    id = BUTTON_ID_DOWN;
+  } else if (s_rotated_180 && id == BUTTON_ID_DOWN) {
+    id = BUTTON_ID_UP;
+  }
+
+  const ButtonConfig *button_config = &BOARD_CONFIG_BUTTON.buttons[id];
   
   uint32_t bit = nrf_gpio_pin_read(button_config->gpiote.gpio_pin);
   return (BOARD_CONFIG_BUTTON.active_high) ? bit : !bit;

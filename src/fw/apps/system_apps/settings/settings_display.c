@@ -95,6 +95,43 @@ static void prv_intensity_menu_push(SettingsDisplayData *data) {
       true /* icons_enabled */, s_intensity_labels, data);
 }
 
+#if PLATFORM_ASTERIX
+// Orientation Settings
+/////////////////////////////
+static const char *s_display_orientation_labels[] = {
+    i18n_noop("Default"),
+    i18n_noop("Left-Handed"),
+};
+
+static int prv_display_orientation_get_selection_index() {
+  return display_orientation_is_left() ? 1 : 0;
+}
+
+static void prv_display_orientation_menu_select(OptionMenu *option_menu, int selection,
+                                                void *context) {
+  if (prv_display_orientation_get_selection_index() == selection) {
+    // No change
+    app_window_stack_remove(&option_menu->window, true /* animated */);
+    return;
+  }
+
+  display_orientation_set_left(!display_orientation_is_left());
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
+  const int index = prv_display_orientation_get_selection_index();
+  const OptionMenuCallbacks callbacks = {
+      .select = prv_display_orientation_menu_select,
+  };
+
+  const char *title = i18n_noop("Orientation");
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_display_orientation_labels), true,
+                            s_display_orientation_labels, data);
+}
+#endif
+
 // Timeout Settings
 /////////////////////////////
 
@@ -163,6 +200,9 @@ static void prv_legacy_app_mode_menu_push(SettingsDisplayData *data) {
 
 enum SettingsDisplayItem {
   SettingsDisplayLanguage,
+#if PLATFORM_ASTERIX
+  SettingsDisplayOrientation,
+#endif
   SettingsDisplayBacklightMode,
   SettingsDisplayMotionSensor,
   SettingsDisplayAmbientSensor,
@@ -202,6 +242,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case SettingsDisplayLanguage:
       shell_prefs_toggle_language_english();
       break;
+#if PLATFORM_ASTERIX
+    case SettingsDisplayOrientation:
+      prv_display_orientation_menu_push(data);
+      break;
+#endif
     case SettingsDisplayBacklightMode:
       light_toggle_enabled();
       break;
@@ -250,6 +295,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Language");
       subtitle = i18n_get_lang_name();
       break;
+#if PLATFORM_ASTERIX
+    case SettingsDisplayOrientation:
+      title = i18n_noop("Orientation");
+      subtitle = s_display_orientation_labels[prv_display_orientation_get_selection_index()];
+      break;
+#endif
     case SettingsDisplayBacklightMode:
       title = i18n_noop("Backlight");
       if (backlight_is_enabled()) {

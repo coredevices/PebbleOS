@@ -47,6 +47,10 @@
 #include "services/normal/weather/weather_service.h"
 #include "services/runlevel_impl.h"
 
+#if PLATFORM_ASTERIX
+#include "services/normal/orientation_manager.h"
+#endif
+
 #ifndef PLATFORM_TINTIN
 #include "services/normal/activity/activity.h"
 #include "services/normal/voice/voice.h"
@@ -170,7 +174,13 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
   {
     .set_enable_fn = blob_db_enabled,
     .enable_mask = R_Normal,
+  },
+#if PLATFORM_ASTERIX
+  {
+    .set_enable_fn = orientation_manager_enable,
+    .enable_mask = R_Stationary | R_Normal,
   }
+#endif
 };
 
 void services_normal_set_runlevel(RunLevel runlevel) {

@@ -13,6 +13,10 @@ void display_clear(void) {
 void display_set_enabled(bool enabled) {
 }
 
+void display_set_rotated(bool rotated) {
+
+}
+
 bool display_update_in_progress(void) {
   return true;
 }

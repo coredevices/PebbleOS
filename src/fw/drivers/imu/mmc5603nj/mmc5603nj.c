@@ -56,6 +56,9 @@ static TimerID s_polling_timer = TIMER_INVALID_ID;
 static uint16_t s_polling_interval_ms = 0;
 static bool s_measurement_ready = false;
 
+// watch rotation
+static bool s_rotated_180 = false;
+
 // MMC5603NJ entrypoints
 
 void mmc5603nj_init(void) {
@@ -341,11 +344,17 @@ static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample) {
         (int16_t)(raw_axis_value - (1 << 15));  // offset by 2^15 for uint -> int alignment
   }
 
-  sample->x = prv_get_axis_projection(X_AXIS, raw_vector);
-  sample->y = prv_get_axis_projection(Y_AXIS, raw_vector);
+  sample->x = s_rotated_180 ? prv_get_axis_projection(X_AXIS, raw_vector) * -1
+                            : prv_get_axis_projection(X_AXIS, raw_vector);
+  sample->y = s_rotated_180 ? prv_get_axis_projection(Y_AXIS, raw_vector) * -1
+                            : prv_get_axis_projection(Y_AXIS, raw_vector);
   sample->z = prv_get_axis_projection(Z_AXIS, raw_vector);
 
   return MagReadSuccess;
+}
+
+void mag_set_rotated(bool rotated) {
+  s_rotated_180 = rotated;
 }
 
 static int16_t prv_get_axis_projection(axis_t axis, int16_t *raw_vector) {

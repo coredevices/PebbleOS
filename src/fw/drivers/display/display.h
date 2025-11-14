@@ -41,6 +41,8 @@ void display_clear(void);
 
 void display_set_enabled(bool enabled);
 
+void display_set_rotated(bool rotated);
+
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb);
 
 bool display_update_in_progress(void);
