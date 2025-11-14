@@ -51,7 +51,7 @@ pyenv local 2.7
 5. Clone QEMU
 
 ```shell
-git clone --recurse-submodules https://github.com/pebble-dev/qemu
+git clone --recurse-submodules https://github.com/coredevices/qemu
 cd qemu
 ```
 
