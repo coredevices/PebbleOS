@@ -37,6 +37,8 @@
 #error "lptim systick not compatible with LXT"
 #endif
 
+#define LPTIM_COUNT_MAX 0xFFFFU
+
 static LPTIM_HandleTypeDef s_lptim1_handle = {0};
 static bool s_lptim_systick_initialized = false;
 static uint32_t s_last_idle_counter = 0;
@@ -70,7 +72,7 @@ void lptim_systick_enable(void)
 {
   __HAL_LPTIM_ENABLE(&s_lptim1_handle);
   __HAL_LPTIM_COUNTRST_RESET(&s_lptim1_handle);
-  __HAL_LPTIM_AUTORELOAD_SET(&s_lptim1_handle, 0xFFFF);
+  __HAL_LPTIM_AUTORELOAD_SET(&s_lptim1_handle, LPTIM_COUNT_MAX);
   __HAL_LPTIM_COMPARE_SET(&s_lptim1_handle, SYSTICK_ONE_TICK_HZ);
   __HAL_LPTIM_ENABLE_IT(&s_lptim1_handle, LPTIM_IT_OCIE);
 
@@ -86,8 +88,8 @@ void lptim_systick_tickless_idle(uint32_t ticks_from_now)
   s_last_idle_counter = counter;
 
   counter += ticks_from_now * SYSTICK_ONE_TICK_HZ;
-  if (counter >= 0xFFFF) {
-    counter -= 0xFFFF;
+  if (counter >= LPTIM_COUNT_MAX) {
+    counter -= LPTIM_COUNT_MAX;
   }
 
   __HAL_LPTIM_COMPARE_SET(&s_lptim1_handle, counter);
@@ -99,7 +101,7 @@ uint32_t lptim_systick_get_elapsed_ticks(void)
   uint32_t counter = LPTIM1->CNT;
 
   if (counter < s_last_idle_counter) {
-    counter += 0x10000;
+    counter += (LPTIM_COUNT_MAX + 1);
   }
 
   return (counter - s_last_idle_counter) / SYSTICK_ONE_TICK_HZ;
@@ -110,8 +112,8 @@ static inline void lptim_systick_next_tick_setup(void)
   uint32_t counter = LPTIM1->CNT;
 
   counter += SYSTICK_ONE_TICK_HZ;
-  if (counter >= 0xFFFF) {
-    counter -= 0xFFFF;
+  if (counter >= LPTIM_COUNT_MAX) {
+    counter -= LPTIM_COUNT_MAX;
   }
 
   __HAL_LPTIM_COMPARE_SET(&s_lptim1_handle, counter);
@@ -119,7 +121,8 @@ static inline void lptim_systick_next_tick_setup(void)
 
 void LPTIM1_IRQHandler(void)
 {
-  static uint32_t wdt_feed_cnt = 0U;
+  static uint32_t wdt_last_counter = 0U;
+  static uint32_t wdt_feed_counter = 0U;
 
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OC) != RESET) {
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_IT_OCIE);
@@ -129,18 +132,32 @@ void LPTIM1_IRQHandler(void)
     if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OCWKUP) == RESET) {
       extern void SysTick_Handler();
       SysTick_Handler();
-    }
 
-    wdt_feed_cnt++;
-    if (wdt_feed_cnt >= (RTC_TICKS_HZ * TASK_WATCHDOG_FEED_PERIOD_MS) / 1000) {
-      wdt_feed_cnt = 0U;
-      task_watchdog_feed();
+      uint32_t current_counter = LPTIM1->CNT;
+      if (current_counter < wdt_last_counter) {
+        current_counter += (LPTIM_COUNT_MAX + 1);
+      }
+      wdt_feed_counter += (current_counter - wdt_last_counter);
+      wdt_last_counter = current_counter & LPTIM_COUNT_MAX;
+      if (wdt_feed_counter >= (TASK_WATCHDOG_FEED_PERIOD_MS * SYSTICK_ONE_TICK_HZ)) {
+        wdt_feed_counter = 0U;
+        task_watchdog_feed();
+      }
     }
   }
 
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OCWKUP) != RESET) {
     __HAL_LPTIM_DISABLE_IT(&s_lptim1_handle, LPTIM_IT_OCWE);
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_ICR_WKUPCLR);
+
+    // Force a watchdog refresh immediately after wakeup. The LPTIM SysTick requires
+    // time to restart; if the system re-enters Stop mode during this latency, a watchdog
+    // timeout may occur.
+    task_watchdog_bit_set_all();
+    task_watchdog_feed();
+    // refresh wdt feed counter
+    wdt_feed_counter = 0;
+    wdt_last_counter = LPTIM1->CNT;
   }
 }
 
