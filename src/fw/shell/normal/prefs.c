@@ -32,6 +32,7 @@
 #include "popups/timeline/peek.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
+#include "services/common/accel_manager.h"
 #include "services/common/hrm/hrm_manager.h"
 #include "services/common/i18n/i18n.h"
 #include "services/normal/bluetooth/ble_hrm.h"
@@ -316,7 +317,6 @@ static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
   // Update accelerometer sensitivity in accel_manager
   // This applies the setting to the hardware
   #if PLATFORM_ASTERIX
-  extern void accel_manager_update_sensitivity(uint8_t sensitivity);
   accel_manager_update_sensitivity(*sensitivity);
   #endif
   
@@ -660,6 +660,11 @@ void shell_prefs_init(void) {
   
   // Update the ambient light driver with the loaded threshold value
   ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
+
+  // Update accelerometer sensitivity with the loaded value
+#if PLATFORM_ASTERIX
+  accel_manager_update_sensitivity(s_motion_sensitivity);
+#endif
 }
 
 
