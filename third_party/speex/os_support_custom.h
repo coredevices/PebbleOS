@@ -24,15 +24,4 @@ static inline void speex_warning(const char *str) { (void)str; }
 static inline void speex_warning_int(const char *str, int val) { (void)str; (void)val; }
 static inline void speex_notify(const char *str) { (void)str; }
 
-/* Disable math functions that aren't available */
-#define sqrt(x) 0
-#define floor(x) ((int)(x))
-#define cos(x) 0
-#define sin(x) 0
-#define exp(x) 1
-#define log(x) 0
-#define pow(x, y) 1
-#define rint(x) ((int)(x))
-#define fabs(x) ((x) < 0 ? -(x) : (x))
-
 #endif /* OS_SUPPORT_CUSTOM_H */
