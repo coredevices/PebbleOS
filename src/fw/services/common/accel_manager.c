@@ -414,7 +414,7 @@ void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
   // - 50% (medium) = use mid-range (~40)
   // - 0% (least sensitive) = use High threshold (64)
   
-  #if PLATFORM_ASTERIX
+  #if PLATFORM_ASTERIX || PLATFORM_OBELIX
   extern void lsm6dso_set_sensitivity_percent(uint8_t percent);
   mutex_lock_recursive(s_accel_manager_mutex);
   lsm6dso_set_sensitivity_percent(sensitivity_percent);
@@ -453,7 +453,7 @@ void accel_manager_init(void) {
   
   // Apply saved motion sensitivity preference for Asterix/Obelix
   // Only available in normal shell (not PRF)
-  #if (PLATFORM_ASTERIX) && !defined(RECOVERY_FW)
+  #if (PLATFORM_ASTERIX || PLATFORM_OBELIX) && !defined(RECOVERY_FW)
   extern uint8_t shell_prefs_get_motion_sensitivity(void);
   uint8_t saved_sensitivity = shell_prefs_get_motion_sensitivity();
   accel_manager_update_sensitivity(saved_sensitivity);
