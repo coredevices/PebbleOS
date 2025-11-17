@@ -68,5 +68,10 @@ void light_toggle_ambient_sensor_enabled(void);
 //! Switches for temporary disabling backlight (ie: low power mode)
 void light_allow(bool allowed);
 
+//! Get the current active backlight brightness as a percentage (0-100)
+//! This returns the actual current brightness, which may differ from the
+//! configured brightness when dynamic backlight is enabled.
+uint8_t light_get_current_brightness_percent(void);
+
 //!   @} // group Light
 //! @} // group UI

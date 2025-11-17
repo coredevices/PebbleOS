@@ -433,6 +433,11 @@ DEFINE_SYSCALL(void, sys_light_reset_to_timed_mode, void) {
 
 extern BacklightBehaviour backlight_get_behaviour(void);
 
+uint8_t light_get_current_brightness_percent(void) {
+  uint8_t percent = (s_current_brightness * 100) / BACKLIGHT_BRIGHTNESS_MAX;
+  return percent;
+}
+
 void analytics_external_collect_backlight_settings(void) {
   BacklightBehaviour behaviour = backlight_get_behaviour();
   bool is_motion_enabled = backlight_is_motion_enabled();
