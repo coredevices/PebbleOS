@@ -124,9 +124,9 @@ static uint16_t prv_backlight_get_intensity(void) {
     // Low intensity is always 5% (the "Low" setting)
     const uint16_t low_intensity = (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)5) / 100;
     
-    // Get thresholds from board config
-    const uint32_t min_light_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
-    const uint32_t max_light_threshold = BOARD_CONFIG.dynamic_backlight_max_threshold;
+    // Get thresholds from preferences (allows runtime adjustment in debug menu)
+    const uint32_t min_light_threshold = backlight_get_dynamic_min_threshold();
+    const uint32_t max_light_threshold = backlight_get_dynamic_max_threshold();
     
     // If below minimum threshold, return low intensity
     if (light_level < min_light_threshold) {

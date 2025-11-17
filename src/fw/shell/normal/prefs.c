@@ -87,6 +87,12 @@ static uint8_t s_motion_sensitivity = 85; // Default to High
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY "lightDynamicIntensity"
 static bool s_backlight_dynamic_intensity_enabled = false;
+
+#define PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD "dynBacklightMinThreshold"
+static uint32_t s_dynamic_backlight_min_threshold = 0; // default set from board config in shell_prefs_init()
+
+#define PREF_KEY_DYNAMIC_BACKLIGHT_MAX_THRESHOLD "dynBacklightMaxThreshold"
+static uint32_t s_dynamic_backlight_max_threshold = 0; // default set from board config in shell_prefs_init()
 #endif
 
 #if PLATFORM_ASTERIX
@@ -310,6 +316,30 @@ static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
 static bool prv_set_s_backlight_dynamic_intensity_enabled(bool *enabled) {
   s_backlight_dynamic_intensity_enabled = *enabled;
+  return true;
+}
+
+static bool prv_set_s_dynamic_backlight_min_threshold(uint32_t *threshold) {
+  // Validate and constrain the threshold
+  if (*threshold > AMBIENT_LIGHT_LEVEL_MAX) {
+    s_dynamic_backlight_min_threshold = AMBIENT_LIGHT_LEVEL_MAX;
+    return false;
+  }
+  s_dynamic_backlight_min_threshold = *threshold;
+  return true;
+}
+
+static bool prv_set_s_dynamic_backlight_max_threshold(uint32_t *threshold) {
+  // Validate and constrain the threshold
+  if (*threshold > AMBIENT_LIGHT_LEVEL_MAX) {
+    s_dynamic_backlight_max_threshold = AMBIENT_LIGHT_LEVEL_MAX;
+    return false;
+  }
+  if (*threshold < 1) {
+    s_dynamic_backlight_max_threshold = 1;
+    return false;
+  }
+  s_dynamic_backlight_max_threshold = *threshold;
   return true;
 }
 #endif
@@ -652,6 +682,10 @@ void shell_prefs_init(void) {
   s_backlight_intensity =
       prv_convert_backlight_percent_to_intensity(BOARD_CONFIG.backlight_on_percent);
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+  s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
+  s_dynamic_backlight_max_threshold = BOARD_CONFIG.dynamic_backlight_max_threshold;
+#endif
   s_mutex = mutex_create();
 
   SettingsFile file = {{0}};
@@ -976,6 +1010,46 @@ void backlight_set_ambient_threshold(uint32_t threshold) {
   // Update the ambient light driver with the new threshold
   ambient_light_set_dark_threshold(threshold);
 }
+
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+uint32_t backlight_get_dynamic_min_threshold(void) {
+  return s_dynamic_backlight_min_threshold;
+}
+
+void backlight_set_dynamic_min_threshold(uint32_t threshold) {
+  // Validate threshold is within acceptable range
+  if (threshold > AMBIENT_LIGHT_LEVEL_MAX) {
+    threshold = AMBIENT_LIGHT_LEVEL_MAX;
+  }
+  if (threshold < 0) {
+    threshold = 0;
+  }
+  // Ensure min threshold is less than max threshold
+  if (threshold >= s_dynamic_backlight_max_threshold && s_dynamic_backlight_max_threshold > 0) {
+    threshold = s_dynamic_backlight_max_threshold - 1;
+  }
+  prv_pref_set(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD, &threshold, sizeof(threshold));
+}
+
+uint32_t backlight_get_dynamic_max_threshold(void) {
+  return s_dynamic_backlight_max_threshold;
+}
+
+void backlight_set_dynamic_max_threshold(uint32_t threshold) {
+  // Validate threshold is within acceptable range
+  if (threshold > AMBIENT_LIGHT_LEVEL_MAX) {
+    threshold = AMBIENT_LIGHT_LEVEL_MAX;
+  }
+  if (threshold < 1) {
+    threshold = 1;
+  }
+  // Ensure max threshold is greater than min threshold
+  if (threshold <= s_dynamic_backlight_min_threshold) {
+    threshold = s_dynamic_backlight_min_threshold + 1;
+  }
+  prv_pref_set(PREF_KEY_DYNAMIC_BACKLIGHT_MAX_THRESHOLD, &threshold, sizeof(threshold));
+}
+#endif
 
 #if PLATFORM_ASTERIX
 bool display_orientation_is_left(void) {
