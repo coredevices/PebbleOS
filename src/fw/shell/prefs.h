@@ -93,6 +93,12 @@ void backlight_set_motion_enabled(bool enable);
 // Dynamic backlight intensity based on ambient light sensor
 bool backlight_is_dynamic_intensity_enabled(void);
 void backlight_set_dynamic_intensity_enabled(bool enable);
+
+// Dynamic backlight thresholds (for debug menu)
+uint32_t backlight_get_dynamic_min_threshold(void);
+void backlight_set_dynamic_min_threshold(uint32_t threshold);
+uint32_t backlight_get_dynamic_max_threshold(void);
+void backlight_set_dynamic_max_threshold(uint32_t threshold);
 #endif
 
 // Motion sensitivity for accelerometer shake detection (0-100, lower = less sensitive)
