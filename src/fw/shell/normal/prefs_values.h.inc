@@ -11,6 +11,8 @@
   PREFS_MACRO(PREF_KEY_MOTION_SENSITIVITY, s_motion_sensitivity)
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   PREFS_MACRO(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY, s_backlight_dynamic_intensity_enabled)
+  PREFS_MACRO(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD, s_dynamic_backlight_min_threshold)
+  PREFS_MACRO(PREF_KEY_DYNAMIC_BACKLIGHT_MAX_THRESHOLD, s_dynamic_backlight_max_threshold)
 #endif
   PREFS_MACRO(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD, s_backlight_ambient_threshold)
   PREFS_MACRO(PREF_KEY_STATIONARY, s_stationary_mode_enabled)

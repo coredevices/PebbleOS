@@ -79,6 +79,10 @@ enum {
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
   DebuggingItemMotionSensitivity,
 #endif
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+  DebuggingItemDynamicBacklightMinThreshold,
+  DebuggingItemDynamicBacklightMaxThreshold,
+#endif
   DebuggingItem_Count,
 };
 
@@ -148,6 +152,12 @@ typedef struct SettingsSystemData {
   char als_threshold_buffer[16];  // Buffer for formatted ALS threshold
   char als_status_buffer[64];     // Buffer for NumberWindow label with status
   bool als_adjustment_active;     // Track if ALS adjustment is active
+  
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+  // Dynamic backlight threshold data
+  char dyn_bl_min_threshold_buffer[16];  // Buffer for formatted min threshold
+  char dyn_bl_max_threshold_buffer[16];  // Buffer for formatted max threshold
+#endif
 } SettingsSystemData;
 
 typedef enum {
@@ -468,6 +478,70 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
   app_window_stack_push(&number_window->window, animated);
 }
 
+// Dynamic Backlight Min Threshold Settings
+/////////////////////////////
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+static void prv_dyn_bl_min_threshold_selected(NumberWindow *number_window, void *context) {
+  uint32_t new_threshold = (uint32_t)number_window_get_value(number_window);
+  backlight_set_dynamic_min_threshold(new_threshold);
+  app_window_stack_remove(&number_window->window, true /* animated */);
+}
+
+static void prv_dyn_bl_min_threshold_menu_push(SettingsSystemData *data) {
+  NumberWindow *number_window = number_window_create(
+    "Min Light Threshold",
+    (NumberWindowCallbacks) {
+      .selected = prv_dyn_bl_min_threshold_selected,
+    },
+    data
+  );
+  
+  if (!number_window) {
+    return;
+  }
+  
+  // Set reasonable min/max values
+  number_window_set_min(number_window, 0);
+  number_window_set_max(number_window, AMBIENT_LIGHT_LEVEL_MAX);
+  number_window_set_step_size(number_window, 1);
+  number_window_set_value(number_window, (int32_t)backlight_get_dynamic_min_threshold());
+  
+  const bool animated = true;
+  app_window_stack_push(&number_window->window, animated);
+}
+
+// Dynamic Backlight Max Threshold Settings
+/////////////////////////////
+static void prv_dyn_bl_max_threshold_selected(NumberWindow *number_window, void *context) {
+  uint32_t new_threshold = (uint32_t)number_window_get_value(number_window);
+  backlight_set_dynamic_max_threshold(new_threshold);
+  app_window_stack_remove(&number_window->window, true /* animated */);
+}
+
+static void prv_dyn_bl_max_threshold_menu_push(SettingsSystemData *data) {
+  NumberWindow *number_window = number_window_create(
+    "Max Light Threshold",
+    (NumberWindowCallbacks) {
+      .selected = prv_dyn_bl_max_threshold_selected,
+    },
+    data
+  );
+  
+  if (!number_window) {
+    return;
+  }
+  
+  // Set reasonable min/max values
+  number_window_set_min(number_window, 1);
+  number_window_set_max(number_window, AMBIENT_LIGHT_LEVEL_MAX);
+  number_window_set_step_size(number_window, 1);
+  number_window_set_value(number_window, (int32_t)backlight_get_dynamic_max_threshold());
+  
+  const bool animated = true;
+  app_window_stack_push(&number_window->window, animated);
+}
+#endif
+
 // Motion Sensitivity Settings (Asterix/Obelix only)
 /////////////////////////////
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
@@ -523,6 +597,10 @@ static const char* s_debugging_titles[DebuggingItem_Count] = {
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
   [DebuggingItemMotionSensitivity] = i18n_noop("Motion Sensitivity"),
 #endif
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+  [DebuggingItemDynamicBacklightMinThreshold] = i18n_noop("Dyn BL Min Threshold"),
+  [DebuggingItemDynamicBacklightMaxThreshold] = i18n_noop("Dyn BL Max Threshold"),
+#endif
 };
 
 static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_layer,
@@ -552,6 +630,20 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
   else if (cell_index->row == DebuggingItemMotionSensitivity) {
     subtitle_text = i18n_get(s_motion_sensitivity_labels[prv_motion_sensitivity_get_selection_index()], data);
+  }
+#endif
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+  else if (cell_index->row == DebuggingItemDynamicBacklightMinThreshold) {
+    uint32_t min_threshold = backlight_get_dynamic_min_threshold();
+    snprintf(data->dyn_bl_min_threshold_buffer, sizeof(data->dyn_bl_min_threshold_buffer),
+             "%"PRIu32, min_threshold);
+    subtitle_text = data->dyn_bl_min_threshold_buffer;
+  }
+  else if (cell_index->row == DebuggingItemDynamicBacklightMaxThreshold) {
+    uint32_t max_threshold = backlight_get_dynamic_max_threshold();
+    snprintf(data->dyn_bl_max_threshold_buffer, sizeof(data->dyn_bl_max_threshold_buffer),
+             "%"PRIu32, max_threshold);
+    subtitle_text = data->dyn_bl_max_threshold_buffer;
   }
 #endif
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, NULL);
@@ -588,6 +680,14 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
     case DebuggingItemMotionSensitivity:
       prv_motion_sensitivity_menu_push(data);
+      break;
+#endif
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+    case DebuggingItemDynamicBacklightMinThreshold:
+      prv_dyn_bl_min_threshold_menu_push(data);
+      break;
+    case DebuggingItemDynamicBacklightMaxThreshold:
+      prv_dyn_bl_max_threshold_menu_push(data);
       break;
 #endif
     default:
