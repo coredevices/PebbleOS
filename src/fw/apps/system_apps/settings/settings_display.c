@@ -43,6 +43,9 @@
 
 typedef struct SettingsDisplayData {
   SettingsCallbacks callbacks;
+  char als_value_buffer[16];  // Buffer for ALS value display
+  char backlight_percent_buffer[16];  // Buffer for backlight percentage display
+  AppTimer *update_timer;  // Timer for live updating debug values
 } SettingsDisplayData;
 
 // Intensity Settings
@@ -304,7 +307,19 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case SettingsDisplayBacklightMode:
       title = i18n_noop("Backlight");
       if (backlight_is_enabled()) {
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+        // Show current backlight percentage when dynamic backlight is enabled
+        if (backlight_is_dynamic_intensity_enabled()) {
+          uint8_t current_percent = light_get_current_brightness_percent();
+          snprintf(data->backlight_percent_buffer, sizeof(data->backlight_percent_buffer),
+                   "On - %"PRIu8"%%", current_percent);
+          subtitle = data->backlight_percent_buffer;
+        } else {
+          subtitle = i18n_noop("On");
+        }
+#else
         subtitle = i18n_noop("On");
+#endif
       } else {
         subtitle = i18n_noop("Off");
       }
@@ -320,7 +335,11 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case SettingsDisplayAmbientSensor:
       title = i18n_noop("Ambient Sensor");
       if (backlight_is_ambient_sensor_enabled()) {
-        subtitle = i18n_noop("On");
+        // Display ALS value when ambient sensor is enabled
+        uint32_t als_value = ambient_light_get_light_level();
+        snprintf(data->als_value_buffer, sizeof(data->als_value_buffer), 
+                 "On (%"PRIu32")", als_value);
+        subtitle = data->als_value_buffer;
       } else {
         subtitle = i18n_noop("Off");
       }
@@ -381,8 +400,39 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsDisplayData *data = (SettingsDisplayData*) context;
+  if (data->update_timer) {
+    app_timer_cancel(data->update_timer);
+    data->update_timer = NULL;
+  }
   i18n_free_all(data);
   app_free(data);
+}
+
+// Timer callback to update debug values
+#define UPDATE_INTERVAL_MS 500  // Update twice per second
+static void prv_update_timer_cb(void *context) {
+  SettingsDisplayData *data = (SettingsDisplayData*)context;
+  
+  // Mark the menu as dirty to trigger a redraw
+  settings_menu_mark_dirty(SettingsMenuItemDisplay);
+  
+  // Reschedule the timer
+  data->update_timer = app_timer_register(UPDATE_INTERVAL_MS, prv_update_timer_cb, data);
+}
+
+static void prv_appear_cb(SettingsCallbacks *context) {
+  SettingsDisplayData *data = (SettingsDisplayData*)context;
+  if (!data->update_timer) {
+    data->update_timer = app_timer_register(UPDATE_INTERVAL_MS, prv_update_timer_cb, data);
+  }
+}
+
+static void prv_hide_cb(SettingsCallbacks *context) {
+  SettingsDisplayData *data = (SettingsDisplayData*)context;
+  if (data->update_timer) {
+    app_timer_cancel(data->update_timer);
+    data->update_timer = NULL;
+  }
 }
 
 static Window *prv_init(void) {
@@ -394,6 +444,8 @@ static Window *prv_init(void) {
     .draw_row = prv_draw_row_cb,
     .select_click = prv_select_click_cb,
     .num_rows = prv_num_rows_cb,
+    .appear = prv_appear_cb,
+    .hide = prv_hide_cb,
   };
 
   return settings_window_create(SettingsMenuItemDisplay, &data->callbacks);
