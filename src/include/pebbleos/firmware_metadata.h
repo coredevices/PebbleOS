@@ -54,6 +54,7 @@ typedef enum FirmwareMetadataPlatform {
   FirmwareMetadataPlatformPebbleAsterix = 15,
   FirmwareMetadataPlatformPebbleObelixEVT = 16,
   FirmwareMetadataPlatformPebbleObelixDVT = 17,
+  FirmwareMetadataPlatformPebbleObelixPVT = 18,
 
   FirmwareMetadataPlatformPebbleOneBigboard = 0xff,
   FirmwareMetadataPlatformPebbleOneBigboard2 = 0xfe,

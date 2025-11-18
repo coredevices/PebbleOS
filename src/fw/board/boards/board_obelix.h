@@ -44,7 +44,7 @@ extern I2CSlavePort *const I2C_W1160;
 extern I2CSlavePort *const I2C_AW2016;
 extern const Npm1300Config NPM1300_CONFIG;
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
-#if !BOARD_OBELIX_DVT && !BOARD_OBELIX_BB2
+#if !BOARD_OBELIX_DVT && !BOARD_OBELIX_PVT && !BOARD_OBELIX_BB2
 extern const LedControllerPwm LED_CONTROLLER_PWM;
 #endif
 extern PwmConfig *const PWM1_CH1;
