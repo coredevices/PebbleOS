@@ -30,6 +30,7 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 // Note: Before adding a new header, be sure you actually need it! The goal
@@ -942,6 +943,23 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
     prv_write_reg(BMI160_REG_INT_MOTION_1,
         BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh]);
   }
+}
+
+void accel_set_shake_sensitivity_percent(uint8_t percent) {
+  // Map percent [0,100] to threshold [high, low]
+  const uint8_t high_threshold =
+      BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
+  const uint8_t low_threshold =
+      BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
+   
+  if (percent >= 100) {
+      accel_set_shake_sensitivity_high(false /* sensitivity_high */);
+      return;
+  }
+    
+  const uint8_t threshold = high_threshold +
+        ((low_threshold - high_threshold) * (100 - percent)) / 100;
+  prv_write_reg(BMI160_REG_INT_MOTION_1, threshold);
 }
 
 static void prv_enable_shake_detection(void) {

@@ -701,6 +701,23 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   }
 }
 
+void accel_set_shake_sensitivity_percent(uint8_t percent) {
+    // Map percent [0,100] to threshold [high, low]
+    const uint8_t high_threshold =
+        BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
+    const uint8_t low_threshold =
+        BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
+    
+    if (percent >= 100) {
+        accel_set_shake_sensitivity_high(false /* sensitivity_high */);
+        return;
+    }
+    
+    const uint8_t threshold = high_threshold +
+        ((low_threshold - high_threshold) * (100 - percent)) / 100;
+    bma255_write_register(BMA255Register_INT_6, threshold);
+}
+
 bool accel_get_shake_detection_enabled(void) {
   return s_shake_detection_enabled;
 }
