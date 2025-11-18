@@ -28,6 +28,7 @@
 
 
 #define HCPU_FREQ_MHZ 240
+#define PWRKEY_RESET_CNT (32000 * 15)
 
 static UARTDeviceState s_dbg_uart_state = {
   .huart = {
@@ -684,6 +685,9 @@ void board_early_init(void) {
 
   __HAL_SYSCFG_CLEAR_SECURITY();
   HAL_EFUSE_Init();
+
+  //set Sifli chipset pwrkey reset time to 15s, so it always use PMIC cold reboot for long press 
+  hwp_pmuc->PWRKEY_CNT = PWRKEY_RESET_CNT;
 }
 
 void board_init(void) {
