@@ -498,8 +498,8 @@ if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb():
         ],
     )
 
-# NOTE: enable LIS2DW12 by default on Obelix DVT/BB2
-if bld.is_obelix_dvt() or bld.is_obelix_bb2():
+# NOTE: enable LIS2DW12 by default on Obelix DVT/PVT/BB2
+if bld.is_obelix_dvt() or bld.is_obelix_pvt() or bld.is_obelix_bb2():
     bld.objects(
         name='driver_lis2dw12',
         source=[
@@ -1074,8 +1074,8 @@ elif bld.is_obelix():
         'root_includes',
     ]
 
-    # NOTE: enable LIS2DW12 by default on Obelix DVT/BB2
-    if bld.is_obelix_dvt() or bld.is_obelix_bb2():
+    # NOTE: enable LIS2DW12 by default on Obelix DVT/PVT/BB2
+    if bld.is_obelix_dvt() or bld.is_obelix_pvt() or bld.is_obelix_bb2():
         use += ['driver_lis2dw12']
         bld.env.DEFINES.append('IMU_USE_LIS2DW12')
     else:
@@ -1106,7 +1106,7 @@ if bld.env.BOARD == "v2_0":
         ],
     )
 elif bld.is_obelix():
-    if not bld.is_obelix_dvt() and not bld.is_obelix_bb2():
+    if not bld.is_obelix_dvt() and not bld.is_obelix_pvt() and not bld.is_obelix_bb2():
         bld.objects(
             name='driver_led_controller',
             source=[

@@ -115,7 +115,7 @@ static PwmState s_pwm1_ch3_state = {
     .channel = 3,
 };
 
-#if !BOARD_OBELIX_DVT && !BOARD_OBELIX_BB2
+#if !BOARD_OBELIX_DVT && !BOARD_OBELIX_PVT && !BOARD_OBELIX_BB2
 const LedControllerPwm LED_CONTROLLER_PWM = {
     .pwm = {
         [0] = {
@@ -233,7 +233,7 @@ static DisplayJDIDevice s_display = {
             .flags = PIN_NOPULL,
         },
     },
-#if BOARD_OBELIX_DVT || BOARD_OBELIX_BB2
+#if BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
     .vddp = {hwp_gpio1, 28, true},
     .vlcd = {hwp_gpio1, 29, true},
 #endif
@@ -412,7 +412,11 @@ IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
 #ifdef IMU_USE_LIS2DW12
 static const I2CSlavePort s_i2c_lsm2dw12 = {
     .bus = &s_i2c_bus_2,
+#if BOARD_OBELIX_DVT
     .address = 0x19,
+#else
+    .address = 0x18,
+#endif
 };
 
 I2CSlavePort *const I2C_LSM2DW12 = &s_i2c_lsm2dw12;
