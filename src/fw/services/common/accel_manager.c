@@ -405,33 +405,20 @@ void analytics_external_collect_accel_samples_received(void) {
 void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
   // Sensitivity mapping:
   // - sensitivity_percent: 0-100 where higher = more sensitive
-  // - For Asterix with LSM6DSO, this maps to the wake-up threshold
+  // - For those that support it, this maps to the wake-up threshold
   // - Lower threshold = more sensitive (triggers on smaller movements)
   // - Higher threshold = less sensitive (requires larger movements to trigger)
   //
   // We'll map the user's percentage to a threshold multiplier:
-  // - 100% (most sensitive) = use Low threshold  (15) 
-  // - 50% (medium) = use mid-range (~40)
-  // - 0% (least sensitive) = use High threshold (64)
+  // - 100% (most sensitive) = use Low threshold 
+  // - 50% (medium) = use mid-range
+  // - 0% (least sensitive) = use High threshold
   
-  // FIXME(OBELIX): we do not use LSM6DSO, add generic API
-  #if PLATFORM_ASTERIX
-  extern void lsm6dso_set_sensitivity_percent(uint8_t percent);
   mutex_lock_recursive(s_accel_manager_mutex);
-  lsm6dso_set_sensitivity_percent(sensitivity_percent);
+  accel_set_shake_sensitivity_percent(sensitivity_percent);
   mutex_unlock_recursive(s_accel_manager_mutex);
   
   PBL_LOG(LOG_LEVEL_INFO, "Motion sensitivity updated to %u percent", sensitivity_percent);
-  #else
-  // For other platforms, fall back to binary high/low setting
-  bool use_high_sensitivity = (sensitivity_percent >= 50);
-  mutex_lock_recursive(s_accel_manager_mutex);
-  accel_set_shake_sensitivity_high(use_high_sensitivity);
-  mutex_unlock_recursive(s_accel_manager_mutex);
-  
-  PBL_LOG(LOG_LEVEL_INFO, "Motion sensitivity updated to %u percent (using %s sensitivity)", 
-          sensitivity_percent, use_high_sensitivity ? "high" : "normal");
-  #endif
 }
 
 void accel_manager_init(void) {

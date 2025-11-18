@@ -208,6 +208,21 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   prv_lsm6dso_chase_target_state();
 }
 
+void accel_set_shake_sensitivity_percent(uint8_t percent) {
+  if (percent > 100) {
+    percent = 100; // Clamp to max
+  }
+  
+  s_user_sensitivity_percent = percent;
+  
+  // Reconfigure shake detection if it's currently enabled
+  if (s_lsm6dso_state.shake_detection_enabled) {
+    prv_lsm6dso_configure_shake(true, s_lsm6dso_state.shake_sensitivity_high);
+  }
+  
+  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: User sensitivity set to %u percent", percent);
+}
+
 // HAL context implementations
 
 static int32_t prv_lsm6dso_read(void *handle, uint8_t reg_addr, uint8_t *buffer,
@@ -1389,21 +1404,6 @@ void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
   }
 
   diagnostics->state_flags = flags;
-}
-
-void lsm6dso_set_sensitivity_percent(uint8_t percent) {
-  if (percent > 100) {
-    percent = 100; // Clamp to max
-  }
-  
-  s_user_sensitivity_percent = percent;
-  
-  // Reconfigure shake detection if it's currently enabled
-  if (s_lsm6dso_state.shake_detection_enabled) {
-    prv_lsm6dso_configure_shake(true, s_lsm6dso_state.shake_sensitivity_high);
-  }
-  
-  PBL_LOG(LOG_LEVEL_INFO, "LSM6DSO: User sensitivity set to %u percent", percent);
 }
 
 void imu_set_rotated(bool rotated) {
