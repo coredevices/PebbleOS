@@ -63,6 +63,9 @@ static bool s_lis2dw12_enabled = true;
 static bool s_lis2dw12_running = false;
 static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
 static uint32_t s_last_vibe_detected = 0;
+// User-configured sensitivity percentage (0-100), where 100 = most sensitive
+// Default to 100% (maximum sensitivity) to maintain current behavior
+static uint8_t s_user_sensitivity_percent = 100;
 // Error tracking and recovery
 static uint32_t s_consecutive_errors = 0;
 static bool s_sensor_health_ok = true;
@@ -500,16 +503,36 @@ static void prv_lis2dw12_configure_shake(bool enable, bool sensitivity_high) {
   // Duration: increase a bit to reduce spurious triggers
   lis2dw12_wkup_dur_set(&lis2dw12_ctx, sensitivity_high ? 0 : 1);
 
-  // Threshold: derive from board config; clamp into 0..63
+  // Threshold calculation:
+  // - Board config provides Low and High thresholds
+  // - sensitivity_high flag indicates stationary mode (use low threshold for any movement)
+  // - s_user_sensitivity_percent (0-100) controls normal mode threshold
+  //   * 100% = most sensitive = use Low threshold
+  //   * 50% = medium = interpolate between Low and High
+  //   * 0% = least sensitive = use High threshold
+  
   uint32_t raw_high = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
   uint32_t raw_low = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
-  uint32_t raw = sensitivity_high ? raw_high : raw_low;
-  // Increase sensitivity: scale threshold down (halve). Ensure at least 2 to avoid noise storms.
-  raw = (raw + 1) / 2;     // divide by 2 rounding up
+  uint32_t raw;
+  
+  if (sensitivity_high) {
+    // Stationary mode: always use low threshold for maximum sensitivity
+    raw = raw_low;
+  } else {
+    // Normal mode: interpolate based on user preference
+    // Invert the percentage: 100% sensitive = low threshold, 0% sensitive = high threshold
+    uint32_t inverted_percent = 100 - s_user_sensitivity_percent;
+    raw = raw_low + ((raw_high - raw_low) * inverted_percent) / 100;
+  }
+  
+  // Clamp to valid range
   if (raw > 63) raw = 63;  // lis2dw12 wk_ths is 6 bits
-  // Sanity fallback if 0 (avoid constant triggers) choose very low but non-zero
-  if (raw == 0) raw = 2;
+  if (raw < 2) raw = 2;     // Avoid noise storms with very low thresholds
+  
   lis2dw12_wkup_threshold_set(&lis2dw12_ctx, (uint8_t)raw);
+  
+  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake threshold set to %lu (sensitivity_high=%d, user_percent=%u)", 
+          raw, sensitivity_high, s_user_sensitivity_percent);
 }
 
 static uint32_t prv_lis2dw12_set_sampling_interval(uint32_t target_interval) {
@@ -826,8 +849,22 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   prv_lis2dw12_chase_target_state();
 }
 
+void accel_set_shake_sensitivity_percent(uint8_t percent) {
+  if (percent > 100) {
+    percent = 100; // Clamp to max
+  }
+  
+  s_user_sensitivity_percent = percent;
+  
+  // Reconfigure shake detection if it's currently enabled
+  if (s_lis2dw12_state.shake_detection_enabled) {
+    prv_lis2dw12_configure_shake(true, s_lis2dw12_state.shake_sensitivity_high);
+  }
+  
+  PBL_LOG(LOG_LEVEL_INFO, "LIS2DW12: User sensitivity set to %u percent", percent);
+}
+
 bool accel_run_selftest(void) {
   //TODO: implement selftest function
   return true;
 }
-

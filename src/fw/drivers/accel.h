@@ -208,3 +208,8 @@ extern bool accel_run_selftest(void);
 //! threshold, where any minor amount of motion would trigger the system shake event.
 //! Note: Setting this value does not ensure that shake detection is enabled.
 void accel_set_shake_sensitivity_high(bool sensitivity_high);
+
+
+//! Update the accelerometer shake sensitivity as a percentage value from 0 to 100.
+//! Note: Setting this value does not ensure that shake detection is enabled.
+void accel_set_shake_sensitivity_percent(uint8_t percent);
