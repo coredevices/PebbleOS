@@ -414,7 +414,8 @@ void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
   // - 50% (medium) = use mid-range (~40)
   // - 0% (least sensitive) = use High threshold (64)
   
-  #if PLATFORM_ASTERIX || PLATFORM_OBELIX
+  // FIXME(OBELIX): we do not use LSM6DSO, add generic API
+  #if PLATFORM_ASTERIX
   extern void lsm6dso_set_sensitivity_percent(uint8_t percent);
   mutex_lock_recursive(s_accel_manager_mutex);
   lsm6dso_set_sensitivity_percent(sensitivity_percent);
