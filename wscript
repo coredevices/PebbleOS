@@ -54,6 +54,7 @@ RUNNERS = {
     'asterix': ['openocd', 'nrfutil'],
     'obelix_evt': ['sftool'],
     'obelix_dvt': ['sftool'],
+    'obelix_pvt': ['sftool'],
     'obelix_bb': ['sftool'],
     'obelix_bb2': ['sftool'],
 }
@@ -119,6 +120,7 @@ def options(opt):
                              'asterix',
                              'obelix_evt',
                              'obelix_dvt',
+                             'obelix_pvt',
                              'obelix_bb',
                              'obelix_bb2',
                             ],
