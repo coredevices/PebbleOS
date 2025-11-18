@@ -25,7 +25,6 @@
 #include "drivers/sf32lb52/debounced_button_definitions.h"
 #include "drivers/stubs/hrm.h"
 #include "system/passert.h"
-#include "kernel/util/stop.h"
 
 
 #define HCPU_FREQ_MHZ 240
@@ -686,7 +685,4 @@ void board_init(void) {
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN11, AON_PIN_MODE_LOW);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN12, AON_PIN_MODE_LOW);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN13, AON_PIN_MODE_LOW);
-
-  // Temporarily disable stop mode (GH-452)
-  stop_mode_disable(InhibitorMain);
 }
