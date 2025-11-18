@@ -19,6 +19,7 @@
 #include "applib/ui/action_toggle.h"
 #include "process_management/app_manager.h"
 #include "services/common/i18n/i18n.h"
+#include "services/common/light.h"
 #include "shell/prefs.h"
 
 static bool prv_get_state(void *context) {
@@ -27,6 +28,11 @@ static bool prv_get_state(void *context) {
 
 static void prv_set_state(bool enabled, void *context) {
   backlight_set_enabled(enabled);
+  if (enabled) {
+    light_enable(true);
+  } else {
+    light_enable(false);
+  }
 }
 
 static const ActionToggleImpl s_backlight_state_action_toggle_impl = {
