@@ -78,7 +78,6 @@ static void prv_launch_app_cb(void *data) {
   app_manager_launch_new_app(&(AppLaunchConfig) { .md = data });
 }
 
-#ifdef MANUFACTURING_FW
 static void prv_select_bt_device_name(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_device_name_app_get_info());
 }
@@ -187,7 +186,6 @@ static void prv_select_load_prf(int index, void *context) {
 #endif
   system_reset();
 }
-#endif // MANUFACTURING_FW
 
 static void prv_select_reset(int index, void *context) {
   system_reset();
@@ -239,7 +237,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 
   // Define a const blueprint on the stack.
   const SimpleMenuItem s_menu_items[] = {
-#ifdef MANUFACTURING_FW
     { .title = "BT Device Name",    .callback = prv_select_bt_device_name },
     { .title = "Device Serial",     .callback = prv_select_serial_qr },
 #if PBL_ROUND
@@ -280,7 +277,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Certification",     .callback = prv_select_certification },
     { .title = "Program Color",     .callback = prv_select_program_color },
     { .title = "Load PRF",          .callback = prv_select_load_prf },
-#endif
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown }
   };
@@ -289,7 +285,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   *out_menu_items = app_malloc(sizeof(s_menu_items));
   memcpy(*out_menu_items, s_menu_items, sizeof(s_menu_items));
 
-#if MANUFACTURING_FW
   // Now we're going to modify the first two elements in the menu to include data available only
   // at runtime. If it was available at compile time we could have just shoved it in the
   // s_menu_items array but it's not. Note that we allocate a few buffers here that we never
@@ -309,7 +304,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   mfg_info_get_serialnumber(device_serial, buffer_size);
 
   (*out_menu_items)[1].subtitle = device_serial;
-#endif
 
   // We've now populated out_menu_items with the correct data. Return the number of items by
   // looking at the original list of menu items.
