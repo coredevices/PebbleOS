@@ -294,18 +294,37 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
   }
 
   /* Security register read size should aligned with 4 bytes.  */
-  uint8_t values[4] = {0};
   uint32_t offset = addr % 4;
   uint32_t base_addr = addr - offset;
 
-  res = HAL_QSPI_READ_OTP(hflash, base_addr, values, 4);
-  if (res != 4) {
-    return E_ERROR;
+  /* Workaround for SF32 HAL bug: HAL_QSPI_READ_OTP returns stale data.
+   * Read multiple times until we get two consecutive matching reads. */
+  const int MAX_RETRIES = 5;
+  uint8_t prev_val = 0;
+  bool have_prev = false;
+  
+  for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    uint8_t values[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+    
+    res = HAL_QSPI_READ_OTP(hflash, base_addr, values, 4);
+    if (res != 4) {
+      return E_ERROR;
+    }
+    
+    if (have_prev && values[offset] == prev_val) {
+      /* Two consecutive reads match - we have reliable data */
+      *val = values[offset];
+      return S_SUCCESS;
+    }
+    
+    prev_val = values[offset];
+    have_prev = true;
   }
-
-  *val = values[offset];
-
-  return S_SUCCESS;
+  
+  /* Failed to get consistent reads after MAX_RETRIES */
+  PBL_LOG(LOG_LEVEL_ERROR, "SEC_REG: Inconsistent reads at 0x%lx", (unsigned long)addr);
+  *val = prev_val;  /* Return last read value */
+  return E_ERROR;
 }
 
 status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t addr, bool *locked) {
