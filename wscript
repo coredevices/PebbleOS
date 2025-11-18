@@ -1659,7 +1659,7 @@ def _check_firmware_image_size(ctx, path):
             max_firmware_size = (1024 - 32) * BYTES_PER_K
     elif ctx.env.MICRO_FAMILY == 'SF32LB52':
         if ctx.variant == 'prf' and not ctx.env.IS_MFG:
-            max_firmware_size = 512 * BYTES_PER_K
+            max_firmware_size = 576 * BYTES_PER_K
         else:
             # 3072k of flash
             max_firmware_size = 3072 * BYTES_PER_K
