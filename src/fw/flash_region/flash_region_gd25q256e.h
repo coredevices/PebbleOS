@@ -36,8 +36,8 @@
   MACRO(FIRMWARE_SLOT_1,         0x0300000 /*  3072K */, arg) /* 0x12320000 - 0x1261FFFF */ \
   MACRO(SYSTEM_RESOURCES_BANK_0, 0x0200000 /*  2048K */, arg) /* 0x12620000 - 0x1281FFFF */ \
   MACRO(SYSTEM_RESOURCES_BANK_1, 0x0200000 /*  2048K */, arg) /* 0x12820000 - 0x12A1FFFF */ \
-  MACRO(SAFE_FIRMWARE,           0x0080000 /*   512K */, arg) /* 0x12A20000 - 0x12A9FFFF */ \
-  MACRO(FILESYSTEM,              0x1520000 /* 21632K */, arg) /* 0x12AA0000 - 0x13FBFFFF */ \
+  MACRO(SAFE_FIRMWARE,           0x0090000 /*   576K */, arg) /* 0x12A20000 - 0x12AAFFFF */ \
+  MACRO(FILESYSTEM,              0x1510000 /* 21568K */, arg) /* 0x12AB0000 - 0x13FBFFFF */ \
   MACRO(RSVD1,                   0x000F000 /*    60K */, arg) /* 0x13FC0000 - 0x13FCEFFF */ \
   MACRO(DEBUG_DB,                0x0020000 /*   128K */, arg) /* 0x13FCF000 - 0x13FEEFFF */ \
   MACRO(RSVD2,                   0x000E000 /*    54K */, arg) /* 0x13FEF000 - 0x13FFCFFF */ \
