@@ -38,7 +38,7 @@ def build(bld):
     if bld.is_asterix():
         bld.recurse('hal_lsm6dso')
 
-    if bld.is_obelix():
+    if bld.is_obelix() or bld.is_getafix():
         bld.recurse('hal_lis2dw12')
 
     bld.recurse('memfault')
