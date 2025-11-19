@@ -265,6 +265,7 @@ void memfault_metrics_heartbeat_collect_data(void) {
 
   MEMFAULT_METRIC_SET_UNSIGNED(memory_pct_max, kernel_heap_pct);
 
+#if PLATFORM_ASTERIX || (PLATFORM_OBELIX && !defined(IMU_USE_LIS2DW12))
   // Capture accelerometer diagnostics to catch LSM6DSO stuck states.
   Lsm6dsoDiagnostics accel_diag;
   lsm6dso_get_diagnostics(&accel_diag);
@@ -283,6 +284,7 @@ void memfault_metrics_heartbeat_collect_data(void) {
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_wake_events, accel_diag.wake_event_count);
   MEMFAULT_METRIC_SET_UNSIGNED(accel_lsm6dso_double_tap_events,
                                accel_diag.double_tap_event_count);
+#endif
 
   extern uint32_t metric_firm_425_back_button_long_presses_cancelled;
   MEMFAULT_METRIC_SET_UNSIGNED(firm_425_back_button_long_presses_cancelled, metric_firm_425_back_button_long_presses_cancelled);
