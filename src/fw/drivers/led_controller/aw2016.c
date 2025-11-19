@@ -76,6 +76,17 @@ static bool prv_write_register(uint8_t register_address, uint8_t value) {
   return ret;
 }
 
+static bool prv_configure_registers(void) {
+  bool ret;
+  ret = prv_write_register(AW2016_REG_GCR2, AW2016_REG_GCR2_IMAX_30MA);
+  ret &= prv_write_register(AW2016_REG_LCTR, AW2016_REG_LCTR_EXP_LINEAR | AW2016_REG_LCTR_LE3_EN |
+                                                 AW2016_REG_LCTR_LE2_EN | AW2016_REG_LCTR_LE1_EN);
+  ret &= prv_write_register(AW2016_REG_LCFG1, AW2016_REG_LCFG1_CUR_MAX);
+  ret &= prv_write_register(AW2016_REG_LCFG2, AW2016_REG_LCFG2_CUR_MAX);
+  ret &= prv_write_register(AW2016_REG_LCFG3, AW2016_REG_LCFG3_CUR_MAX);
+  return ret;
+}
+
 void led_controller_init(void) {
   uint8_t value;
   bool ret;
@@ -87,12 +98,7 @@ void led_controller_init(void) {
   PBL_ASSERTN(ret);
 
   ret = prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
-  ret &= prv_write_register(AW2016_REG_GCR2, AW2016_REG_GCR2_IMAX_30MA);
-  ret &= prv_write_register(AW2016_REG_LCTR, AW2016_REG_LCTR_EXP_LINEAR | AW2016_REG_LCTR_LE3_EN |
-                                                 AW2016_REG_LCTR_LE2_EN | AW2016_REG_LCTR_LE1_EN);
-  ret &= prv_write_register(AW2016_REG_LCFG1, AW2016_REG_LCFG1_CUR_MAX);
-  ret &= prv_write_register(AW2016_REG_LCFG2, AW2016_REG_LCFG2_CUR_MAX);
-  ret &= prv_write_register(AW2016_REG_LCFG3, AW2016_REG_LCFG3_CUR_MAX);
+  ret &= prv_configure_registers();
 
   PBL_ASSERTN(ret);
 }
@@ -117,6 +123,7 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
   } else {
     ret =
         prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+    ret &= prv_configure_registers();
     PBL_ASSERTN(ret);
 
     led_controller_rgb_set_color(s_rgb_current_color);
