@@ -33,11 +33,6 @@ typedef enum {
 #else
   TestPattern_Gray,
 #endif
-#if PBL_ROUND
-  TestPattern_Border1,
-  TestPattern_Border2,
-  TestPattern_Border3,
-#endif
 
   NumTestPatterns
 } TestPattern;
@@ -163,17 +158,6 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
 #else
   case TestPattern_Gray:
     prv_draw_solid(layer, ctx, GColorDarkGray);
-    break;
-#endif
-#if PBL_ROUND
-  case TestPattern_Border1:
-    prv_draw_crosshair_screen(layer, ctx, 2);
-    break;
-  case TestPattern_Border2:
-    prv_draw_crosshair_screen(layer, ctx, 3);
-    break;
-  case TestPattern_Border3:
-    prv_draw_crosshair_screen(layer, ctx, 4);
     break;
 #endif
   default:
