@@ -218,13 +218,9 @@ static void prv_handle_init(void) {
 }
 
 static void s_main(void) {
-  light_enable(true);
-
   prv_handle_init();
 
   app_event_loop();
-
-  light_enable(false);
 }
 
 const PebbleProcessMd* mfg_display_app_get_info(void) {
