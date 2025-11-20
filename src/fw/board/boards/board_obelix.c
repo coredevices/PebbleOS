@@ -24,6 +24,7 @@
 #include "board/splash.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
 #include "drivers/stubs/hrm.h"
+#include "drivers/watchdog.h"
 #include "system/passert.h"
 
 
@@ -657,7 +658,13 @@ void board_early_init(void) {
 
   HAL_PMU_EnableRC32K(1);
 
+  // Stop and restart WDT in case it was clocked by RC10K before
+  watchdog_stop();
+
   HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
+
+  watchdog_init();
+  watchdog_start();
 
   HAL_PMU_EnableDLL(1);
 #ifdef SF32LB52_USE_LXT
