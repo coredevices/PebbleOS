@@ -44,6 +44,10 @@ void watchdog_start(void) {
   __HAL_WDT_START(&hwdt);
 }
 
+void watchdog_stop(void) {
+  __HAL_WDT_STOP(&hwdt);
+}
+
 void watchdog_feed(void) {
   __HAL_WDT_START(&hwdt);
 }
