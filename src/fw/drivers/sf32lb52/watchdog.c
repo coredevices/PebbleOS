@@ -28,8 +28,8 @@ static WDT_HandleTypeDef hwdt = {
 void watchdog_init(void) {
   HAL_StatusTypeDef status;
 
-  // Assume RC10K is used as WDT clock source.
-  hwdt.Init.Reload = RC10K_FREQ * WDT_TIMEOUT_S;
+  // On PebbleOS, we use RC32K as WDT clock source.
+  hwdt.Init.Reload = 32000 * WDT_TIMEOUT_S;
 
   __HAL_WDT_STOP(&hwdt);
   __HAL_WDT_INT(&hwdt, 0);
