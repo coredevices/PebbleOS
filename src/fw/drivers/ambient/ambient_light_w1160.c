@@ -81,6 +81,7 @@
 #define W1160_RESULT_MANTISSA_MASK  (0x0FFF)
 #define W1160_ADC2LUX_COEF          (3U)
 
+static bool s_initialized;
 static uint32_t s_sensor_light_dark_threshold;
 
 static bool prv_read_register(uint8_t register_address, uint8_t *result) {
@@ -98,13 +99,25 @@ static bool prv_write_register(uint8_t register_address, uint8_t datum) {
 }
 
 void ambient_light_init(void) {
-  s_sensor_light_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-  psleep(W1160_POR_WAIT_TIME);
   uint8_t chip_id;
-  bool rv = prv_read_register(W1160_PDT_ID_REG, &chip_id);
-  PBL_ASSERT(rv && W1160_CHIP_ID==chip_id, "Failed to get W1160 chip ID");
+  bool rv;
 
-  rv &= prv_write_register(W1160_AGCCTRL1_REG, W1160_AGCCTRL1_AGC_EN);
+  s_sensor_light_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
+
+  psleep(W1160_POR_WAIT_TIME);
+
+  rv = prv_read_register(W1160_PDT_ID_REG, &chip_id);
+  if (!rv) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not read W1160 chip ID");
+    return;
+  }
+
+  if (chip_id != W1160_CHIP_ID) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Unexpected W1160 chip ID: 0x%02x", chip_id);
+    return;
+  }
+
+  rv = prv_write_register(W1160_AGCCTRL1_REG, W1160_AGCCTRL1_AGC_EN);
   rv &= prv_write_register(W1160_MANUAL_GAIN_CTRL_REG, W1160_AGCCTRL1_MGC_EN);
   rv &= prv_write_register(W1160_DATA_GC_REG, W1160_DATA_GC_LVL);
   rv &= prv_write_register(W1160_AGCCTRL2_REG, W1160_AGCCTRL2_SEL_MODE|W1160_AGCCTRL2_12B_MODE);
@@ -117,11 +130,18 @@ void ambient_light_init(void) {
   rv &= prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN);
 
   PBL_ASSERT(rv, "Failed to initialize W1160");
+
+  s_initialized = true;
 }
 
 uint32_t ambient_light_get_light_level(void) {
   uint8_t result[2] = {0};
   bool rv;
+
+  if (!s_initialized) {
+    return 0UL;
+  }
+
   rv = prv_read_register(W1160_DATA1_ALS_REG, &result[1]);
   rv &= prv_read_register(W1160_DATA2_ALS_REG, &result[0]);
   PBL_ASSERT(rv, "Failed to read als data");
