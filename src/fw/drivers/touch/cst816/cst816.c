@@ -201,26 +201,39 @@ static void cst816_hw_reset(void) {
 }
 
 void touch_sensor_init(void) {
-  s_i2c_lock = mutex_create();
-  cst816_hw_reset();
-
   uint8_t chip_id;
   uint8_t fw_version;
   bool rv;
+
+  s_i2c_lock = mutex_create();
+
+  cst816_hw_reset();
+
   rv = prv_read_data(CST816_CHIP_ID_REG, &chip_id, 1, 1);
-  rv &= prv_read_data(CST816_FW_VERSION_REG, &fw_version, 1, 1);
   if (!rv) {
-    PBL_ASSERT(rv, "cst816 read chip ID error");
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not read CST816 chip ID");
+    return;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "cst816 fw version:0x%x", fw_version);
+
+  rv = prv_read_data(CST816_FW_VERSION_REG, &fw_version, 1, 1);
+  if (!rv) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not read CST816 firmware version");
+    return;
+  }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "CST816 firmware: 0x%02X", fw_version);
 
   uint8_t target_ver = app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX];
 
   if (target_ver != fw_version) {
     if (cst816_enter_bootmode()) {
-      cst816_fw_update();
+      rv = cst816_fw_update();
+      if (!rv) {
+        return;
+      }
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "cst816 enter boot mode failed");
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not enter CST816 boot mode");
+      return;
     }
   }
 
