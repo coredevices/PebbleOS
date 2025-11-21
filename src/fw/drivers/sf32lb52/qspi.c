@@ -298,7 +298,10 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
   uint32_t offset = addr % 4;
   uint32_t base_addr = addr - offset;
 
+  portENTER_CRITICAL();
   res = HAL_QSPI_READ_OTP(hflash, base_addr, values, 4);
+  portEXIT_CRITICAL();
+
   if (res != 4) {
     return E_ERROR;
   }
@@ -314,7 +317,10 @@ status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t addr, b
   int ret;
 
   /* OPT operation are synchronous, one match means all matched. */
+  portENTER_CRITICAL();
   opt_val = HAL_QSPI_GET_OTP_LB(hflash, addr);
+  portEXIT_CRITICAL();
+
   if (opt_val == 0xff) {
     return E_ERROR;
   }
@@ -338,7 +344,10 @@ status_t qspi_flash_erase_security_register(QSPIFlash *dev, uint32_t addr) {
     return res;
   }
 
+  portENTER_CRITICAL();
   res = HAL_QSPI_ERASE_OTP(hflash, addr);
+  portEXIT_CRITICAL();
+
   if (res != 0) {
     return E_ERROR;
   }
@@ -355,7 +364,10 @@ status_t qspi_flash_write_security_register(QSPIFlash *dev, uint32_t addr, uint8
     return res;
   }
 
+  portENTER_CRITICAL();
   res = HAL_QSPI_WRITE_OTP(hflash, addr, &val, 1);
+  portEXIT_CRITICAL();
+
   if (res != 1) {
     return E_ERROR;
   }
@@ -372,7 +384,10 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
   FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
   int res;
 
+  portENTER_CRITICAL();
   res = HAL_QSPI_LOCK_OTP(hflash, addr);
+  portEXIT_CRITICAL();
+
   if (res != 0) {
     return E_ERROR;
   }
