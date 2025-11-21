@@ -107,15 +107,30 @@ void health_data_update(HealthData *health_data) {
   //! Sleep related data
   health_service_private_get_metric_history(HealthMetricSleepSeconds, DAYS_PER_WEEK,
                                             health_data->sleep_data);
-  activity_get_metric_typical(ActivityMetricSleepTotalSeconds, local_tm.tm_wday,
-                              &health_data->typical_sleep);
-  activity_get_metric(ActivityMetricSleepRestfulSeconds, 1, &health_data->deep_sleep);
+  // Check if we have sleep data for today. If not, we want to show the last sleep session
+  // (yesterday's data)
+  bool use_yesterday = (health_data->sleep_data[0] == 0 && health_data->sleep_data[1] > 0);
+  int day_offset = use_yesterday ? 1 : 0;
+  int wday = (local_tm.tm_wday - day_offset + 7) % 7;
 
-  activity_get_metric(ActivityMetricSleepEnterAtSeconds, 1, &health_data->sleep_start);
-  activity_get_metric(ActivityMetricSleepExitAtSeconds, 1, &health_data->sleep_end);
-  activity_get_metric_typical(ActivityMetricSleepEnterAtSeconds, local_tm.tm_wday,
+  activity_get_metric_typical(ActivityMetricSleepTotalSeconds, wday,
+                              &health_data->typical_sleep);
+
+  int32_t deep_sleep_history[2];
+  activity_get_metric(ActivityMetricSleepRestfulSeconds, 2, deep_sleep_history);
+  health_data->deep_sleep = deep_sleep_history[day_offset];
+
+  int32_t sleep_start_history[2];
+  activity_get_metric(ActivityMetricSleepEnterAtSeconds, 2, sleep_start_history);
+  health_data->sleep_start = sleep_start_history[day_offset];
+
+  int32_t sleep_end_history[2];
+  activity_get_metric(ActivityMetricSleepExitAtSeconds, 2, sleep_end_history);
+  health_data->sleep_end = sleep_end_history[day_offset];
+
+  activity_get_metric_typical(ActivityMetricSleepEnterAtSeconds, wday,
                               &health_data->typical_sleep_start);
-  activity_get_metric_typical(ActivityMetricSleepExitAtSeconds, local_tm.tm_wday,
+  activity_get_metric_typical(ActivityMetricSleepExitAtSeconds, wday,
                               &health_data->typical_sleep_end);
   activity_get_metric_monthly_avg(ActivityMetricSleepTotalSeconds,
                                   &health_data->monthly_sleep_average);
@@ -245,6 +260,9 @@ int32_t *health_data_sleep_get(HealthData *health_data) {
 }
 
 int32_t health_data_current_sleep_get(HealthData *health_data) {
+  if (health_data->sleep_data[0] == 0 && health_data->sleep_data[1] > 0) {
+    return health_data->sleep_data[1];
+  }
   return health_data->sleep_data[0];
 }
 
