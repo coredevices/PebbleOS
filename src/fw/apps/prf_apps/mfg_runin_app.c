@@ -54,8 +54,8 @@ static const int TEMP_MAX_MC = 0;
 static const int SLOW_THRESHOLD_PERCENTAGE = 0;
 static const int PASS_BATTERY_PERCENTAGE = 70;
 
-static const int TEMP_MIN_MC = 150000; // 15.0C
-static const int TEMP_MAX_MC = 350000; // 35.0C
+static const int TEMP_MIN_MC = 15000; // 15.0C
+static const int TEMP_MAX_MC = 35000; // 35.0C
 #else
 static const int SLOW_THRESHOLD_PERCENTAGE = 0; // Always go "slow" on snowy
 static const int PASS_BATTERY_PERCENTAGE = 60; // ~4190mv
