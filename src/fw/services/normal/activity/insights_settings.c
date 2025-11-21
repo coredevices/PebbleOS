@@ -59,8 +59,8 @@ static PebbleMutex *s_insight_settings_mutex;
     .sleep = { \
       .max_fail_minutes = 7 * MINUTES_PER_HOUR, \
       .trigger_notif_seconds = 30 * SECONDS_PER_MINUTE, \
-      .trigger_notif_activity = 20, \
-      .trigger_notif_active_minutes = 5 \
+      .trigger_notif_activity = 10, \
+      .trigger_notif_active_minutes = 2 \
     } \
   } \
 }
