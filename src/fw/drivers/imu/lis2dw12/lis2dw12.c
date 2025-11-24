@@ -376,7 +376,7 @@ static void prv_lis2dw12_process_interrupts(void) {
   }
 
   // Wake-up (any-motion) event -> treat as shake. Axis & direction derived from wake_up_src.
-  if (s_lis2dw12_state.shake_detection_enabled && all_sources.tap_src.tap_sign) {
+  if (s_lis2dw12_state.shake_detection_enabled && all_sources.wake_up_src.wu_ia) {
     s_wake_event_count++;
     s_last_wake_event_ms = now_ms;
     lis2dw12_wake_up_src_t wake_src;
