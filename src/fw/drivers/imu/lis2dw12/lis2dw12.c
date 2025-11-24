@@ -324,7 +324,7 @@ static void prv_lis2dw12_process_interrupts(void) {
       uint8_t reduced_watermark = current_watermark / 2;
       if (reduced_watermark == 0) reduced_watermark = 1;
       
-      lis2dw12_fifo_watermark_get(&lis2dw12_ctx, &reduced_watermark);
+      lis2dw12_fifo_watermark_set(&lis2dw12_ctx, reduced_watermark);
       lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_STREAM_MODE);
 
       PBL_LOG(LOG_LEVEL_INFO, "LIS2DW12: Reduced FIFO watermark from %u to %u to prevent future overflow",
