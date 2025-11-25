@@ -11,12 +11,24 @@
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/ui/kino/kino_reel.h"
 #include "applib/ui/text_layer.h"
+#include "board/display.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
 #include "services/common/i18n/i18n.h"
 #include "system/logging.h"
 #include "util/size.h"
 #include "util/string.h"
+
+// Compile-time display offset calculations
+#define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
+#define HEALTH_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
+
+// Use larger font for taller displays
+#if DISP_ROWS > LEGACY_2X_DISP_ROWS
+#define HEALTH_STEPS_FONT FONT_KEY_LECO_32_BOLD_NUMBERS
+#else
+#define HEALTH_STEPS_FONT FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM
+#endif
 
 typedef struct HealthActivitySummaryCardData {
   HealthData *health_data;
@@ -79,7 +91,7 @@ static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
 static void prv_render_icon(GContext *ctx, Layer *base_layer) {
   HealthActivitySummaryCardData *data = layer_get_data(base_layer);
 
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(43, 38), 43);
+  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(43, 38), 43) + HEALTH_Y_OFFSET;
   const int x_center_offset = PBL_IF_BW_ELSE(19, 18);
   kino_reel_draw(data->icon, ctx, GPoint(base_layer->bounds.size.w / 2 - x_center_offset, y));
 }
@@ -90,17 +102,17 @@ static void prv_render_current_steps(GContext *ctx, Layer *base_layer) {
   char buffer[8];
   GFont font;
   if (data->current_steps) {
-    font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
+    font = fonts_get_system_font(HEALTH_STEPS_FONT);
     snprintf(buffer, sizeof(buffer), "%"PRIu32"", data->current_steps);
   } else {
     font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
     snprintf(buffer, sizeof(buffer), EM_DASH);
   }
 
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88);
+  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88) + HEALTH_Y_OFFSET;
   graphics_context_set_text_color(ctx, CURRENT_TEXT_COLOR);
   graphics_draw_text(ctx, buffer, font,
-                     GRect(0, y, base_layer->bounds.size.w, 35),
+                     GRect(0, y, base_layer->bounds.size.w, 40),
                      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 

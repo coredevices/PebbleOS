@@ -11,12 +11,17 @@
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/ui/kino/kino_layer.h"
 #include "applib/ui/text_layer.h"
+#include "board/display.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
 #include "services/common/i18n/i18n.h"
 #include "system/logging.h"
 #include "util/size.h"
 #include "util/string.h"
+
+// Compile-time display offset calculations
+#define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
+#define HEALTH_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
 
 typedef struct HealthSleepSummaryCardData {
   HealthData *health_data;
@@ -151,7 +156,7 @@ static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
 static void prv_render_icon(GContext *ctx, Layer *base_layer) {
   HealthSleepSummaryCardData *data = layer_get_data(base_layer);
 
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(37, 32), 39);
+  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(37, 32), 39) + HEALTH_Y_OFFSET;
   const int x_center_offset = 17;
   kino_reel_draw(data->icon, ctx, GPoint(base_layer->bounds.size.w / 2 - x_center_offset, y));
 }
@@ -159,8 +164,8 @@ static void prv_render_icon(GContext *ctx, Layer *base_layer) {
 static void prv_render_current_sleep_text(GContext *ctx, Layer *base_layer) {
   HealthSleepSummaryCardData *data = layer_get_data(base_layer);
 
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88);
-  const GRect rect = GRect(0, y, base_layer->bounds.size.w, 35);
+  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88) + HEALTH_Y_OFFSET;
+  const GRect rect = GRect(0, y, base_layer->bounds.size.w, 40);
 
   const int current_sleep = health_data_current_sleep_get(data->health_data);
   if (current_sleep) {
@@ -202,7 +207,7 @@ static void prv_render_typical_sleep_text(GContext *ctx, Layer *base_layer) {
 static void prv_render_no_sleep_data_text(GContext *ctx, Layer *base_layer) {
   HealthSleepSummaryCardData *data = layer_get_data(base_layer);
 
-  const int y = PBL_IF_RECT_ELSE(91, 100);
+  const int y = PBL_IF_RECT_ELSE(91, 100) + HEALTH_Y_OFFSET;
   const GRect rect = GRect(0, y, base_layer->bounds.size.w, 60);
 
   const char *text = i18n_get("No sleep data,\nwear your watch\nto sleep", base_layer);
@@ -256,8 +261,13 @@ Layer *health_sleep_summary_card_create(HealthData *health_data) {
       .segments = s_sleep_summary_progress_segments,
     },
     .health_data = health_data,
+#if DISP_ROWS > LEGACY_2X_DISP_ROWS
+    .number_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS),
+    .unit_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+#else
     .number_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
     .unit_font = fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
+#endif
     .typical_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
     .em_dash_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
   };

@@ -5,6 +5,7 @@
 
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/text.h"
+#include "board/display.h"
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
 #include "services/common/clock.h"
@@ -14,14 +15,30 @@
 #include "util/string.h"
 #include "util/time/time.h"
 
-//! Marks where the graph begins
-#define GRAPH_OFFSET_Y PBL_IF_RECT_ELSE(38, 48)
+// Compile-time display offset calculations
+#define DISPLAY_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
 
-//! Marks where the graph ends and where the labels begin
-#define LABEL_OFFSET_Y PBL_IF_RECT_ELSE(118, 113)
+//! Marks where the graph begins - base values for 168px height
+#define GRAPH_OFFSET_Y_BASE PBL_IF_RECT_ELSE(38, 48)
+
+//! Marks where the graph ends and where the labels begin - base values for 168px height
+#define LABEL_OFFSET_Y_BASE PBL_IF_RECT_ELSE(118, 113)
 #define LABEL_HEIGHT 27
+#define GRAPH_OFFSET_Y (GRAPH_OFFSET_Y_BASE + DISPLAY_Y_OFFSET)
+#define LABEL_OFFSET_Y (LABEL_OFFSET_Y_BASE + DISPLAY_Y_OFFSET)
 
 #define GRAPH_HEIGHT (LABEL_OFFSET_Y - GRAPH_OFFSET_Y)
+
+// Compile-time bar width calculation
+#define HEALTH_BAR_WIDTH (23 + (DISP_COLS - LEGACY_2X_DISP_COLS) / 19)
+#define HEALTH_BAR_INSET 3
+#define HEALTH_TOTAL_BAR_WIDTHS PBL_IF_RECT_ELSE((HEALTH_BAR_WIDTH * 7 + 3) - (HEALTH_BAR_INSET * 6), 141)
+
+// Compile-time avg line width calculations
+#define HEALTH_WEEKDAY_WIDTH_BASE PBL_IF_RECT_ELSE(103, 119)
+#define HEALTH_WEEKEND_WIDTH_BASE PBL_IF_RECT_ELSE(38, 58)
+#define HEALTH_WEEKDAY_WIDTH (HEALTH_WEEKDAY_WIDTH_BASE + (DISP_COLS - LEGACY_2X_DISP_COLS) * HEALTH_WEEKDAY_WIDTH_BASE / LEGACY_2X_DISP_COLS)
+#define HEALTH_WEEKEND_WIDTH (HEALTH_WEEKEND_WIDTH_BASE + (DISP_COLS - LEGACY_2X_DISP_COLS) * HEALTH_WEEKEND_WIDTH_BASE / LEGACY_2X_DISP_COLS)
 
 #define AVG_LINE_HEIGHT 4
 #define AVG_LINE_LEGEND_WIDTH 10
@@ -88,7 +105,7 @@ static int32_t prv_convert_to_graph_height(HealthGraphCard *graph_card, int32_t 
 }
 
 static void prv_setup_day_bar_box(int weekday, GRect *box, int16_t bar_height) {
-  const int w = 23; // normal bar width;
+  const int w = HEALTH_BAR_WIDTH;
 #if PBL_RECT
   // The center bars are slightly wider than the other bars
   // Note that Thursday is the center bar, not Wednesday since drawing begins with Monday
@@ -152,7 +169,7 @@ static GColor prv_get_bar_color(HealthGraphCard *graph_card, bool is_active, boo
 static void prv_draw_day_bars(HealthGraphCard *graph_card, GContext *ctx) {
   // With values from prv_setup_day_bar_box and prv_draw_day_bar,
   // total_bar_width is sum(bar_widths) - (bar_inset * (DAYS_PER_WEEK - 1))
-  const int total_bar_widths = PBL_IF_RECT_ELSE(144, 141);
+  const int total_bar_widths = HEALTH_TOTAL_BAR_WIDTHS;
   const int legend_line_height = fonts_get_font_height(graph_card->legend_font);
   const GRect *bounds = &graph_card->layer.bounds;
   GRect box = { .origin.x = (bounds->size.w - total_bar_widths) / 2, .origin.y = LABEL_OFFSET_Y };
@@ -210,11 +227,9 @@ static void prv_draw_avg_line(HealthGraphCard *graph_card, GContext *ctx, int32_
 
 static void prv_draw_avg_lines(HealthGraphCard *graph_card, GContext *ctx) {
   const GRect *bounds = &graph_card->layer.bounds;
-  const int weekday_width = PBL_IF_RECT_ELSE(103, 119);
-  prv_draw_avg_line(graph_card, ctx, graph_card->stats.weekday.avg, 0, weekday_width);
-  const int weekend_width = PBL_IF_RECT_ELSE(38, 58);
-  prv_draw_avg_line(graph_card, ctx, graph_card->stats.weekend.avg, bounds->size.w - weekend_width,
-                    weekend_width);
+  prv_draw_avg_line(graph_card, ctx, graph_card->stats.weekday.avg, 0, HEALTH_WEEKDAY_WIDTH);
+  prv_draw_avg_line(graph_card, ctx, graph_card->stats.weekend.avg, bounds->size.w - HEALTH_WEEKEND_WIDTH,
+                    HEALTH_WEEKEND_WIDTH);
 }
 
 static int32_t prv_get_info_data_point(HealthGraphCard *graph_card) {

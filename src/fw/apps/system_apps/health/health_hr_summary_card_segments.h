@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "board/display.h"
 #include "health_progress.h"
 
 //! 4 main segments + 4 real corners
@@ -10,9 +11,10 @@
 #define AMOUNT_PER_SEGMENT (HEALTH_PROGRESS_BAR_MAX_VALUE * 25 / 100)
 
 // The shape is the same, but the offsets are different
-// Slightly adjust the points on Round
-#define X_SHIFT (PBL_IF_ROUND_ELSE(18, 0))
-#define Y_SHIFT (PBL_IF_ROUND_ELSE(6, 0))
+// Dynamically center based on display size vs legacy 144x168 base
+// Round displays need additional adjustment for the bezel
+#define X_SHIFT (((DISP_COLS - LEGACY_2X_DISP_COLS) / 2) + PBL_IF_ROUND_ELSE(18, 0))
+#define Y_SHIFT (((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2) + PBL_IF_ROUND_ELSE(6, 0))
 
 static HealthProgressSegment s_hr_summary_progress_segments[] = {
   {
