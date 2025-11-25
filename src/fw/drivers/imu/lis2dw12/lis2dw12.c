@@ -379,33 +379,36 @@ static void prv_lis2dw12_process_interrupts(void) {
   if (s_lis2dw12_state.shake_detection_enabled && all_sources.wake_up_src.wu_ia) {
     s_wake_event_count++;
     s_last_wake_event_ms = now_ms;
-    lis2dw12_wake_up_src_t wake_src;
-    if (lis2dw12_read_reg(&lis2dw12_ctx, LIS2DW12_WAKE_UP_SRC, (uint8_t *)&wake_src, 1) == 0) {
-      IMUCoordinateAxis axis = AXIS_X;
-      int32_t direction = 1;  // LIS2DW12 does not give sign directly for wake-up; approximate via
-                              // sign of latest sample on axis
-      // Determine which axis triggered: order X,Y,Z
-      const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
-      if (wake_src.x_wu) {
-        axis = AXIS_X;
-      } else if (wake_src.y_wu) {
-        axis = AXIS_Y;
-      } else if (wake_src.z_wu) {
-        axis = AXIS_Z;
-      }
-      // Read current sample to infer direction
-      int16_t accel_raw[3];
-      if (lis2dw12_acceleration_raw_get(&lis2dw12_ctx, accel_raw) == 0) {
-        int16_t val = accel_raw[cfg->axes_offsets[axis]];
-        bool invert = cfg->axes_inverts[axis];
-        direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
-        int16_t mg_x = prv_get_axis_projection_mg(X_AXIS, accel_raw);
-        int16_t mg_y = prv_get_axis_projection_mg(Y_AXIS, accel_raw);
-        int16_t mg_z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
-        prv_note_new_sample_mg(mg_x, mg_y, mg_z);
-      }
-      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake detected; axis=%d, direction=%lu", axis, direction);
-      accel_cb_shake_detected(axis, direction);
+    
+    // Use wake_up_src already read by all_sources_get - don't re-read the register
+    // as that can clear flags and cause race conditions with pulsed interrupts
+    IMUCoordinateAxis axis = AXIS_X;
+    int32_t direction = 1;
+    
+    // Determine which axis triggered from already-read wake_up_src
+    const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
+    if (all_sources.wake_up_src.x_wu) {
+      axis = AXIS_X;
+    } else if (all_sources.wake_up_src.y_wu) {
+      axis = AXIS_Y;
+    } else if (all_sources.wake_up_src.z_wu) {
+      axis = AXIS_Z;
+    }
+    
+    // Use last known sample for direction instead of reading new data during interrupt
+    // Reading acceleration data here can interfere with FIFO operation
+    int16_t val = s_last_sample_mg[cfg->axes_offsets[axis]];
+    bool invert = cfg->axes_inverts[axis];
+    direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
+    
+    PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake detected; axis=%d, direction=%lu", axis, direction);
+    accel_cb_shake_detected(axis, direction);
+    
+    // Re-read interrupt sources to clear any pending flags after processing wake-up
+    // This prevents the sensor from getting stuck when FIFO and wake-up are both active
+    if (s_fifo_in_use) {
+      lis2dw12_all_sources_t clear_sources;
+      lis2dw12_all_sources_get(&lis2dw12_ctx, &clear_sources);
     }
   }
 }
@@ -594,6 +597,11 @@ static void prv_lis2dw12_configure_interrupts(void) {
     PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to configure INT1 routes; re-enabling external interrupt");
     routing_configured = false;
   } else {
+    // Allow time for interrupt routing configuration to take effect.
+    // The LIS2DW12 needs a brief delay after CTRL4/CTRL7 register writes
+    // before the wake-up interrupt logic is fully operational.
+    psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS);
+    
     // Clear any pending interrupt sources before enabling external interrupt
     lis2dw12_all_sources_t all_sources;
     if (lis2dw12_all_sources_get(&lis2dw12_ctx, &all_sources)) {
