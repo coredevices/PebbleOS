@@ -578,7 +578,7 @@ static void prv_lis2dw12_configure_interrupts(void) {
     prv_lis2dw12_configure_fifo(true);
     int1_routes.int1_diff5 = 1;
     int1_routes.int1_fth = 1;
-    int1_routes.int1_drdy = 1;
+    int1_routes.int1_drdy = 0;
   } else {
     prv_lis2dw12_configure_fifo(false);
     int1_routes.int1_diff5 = 0;
