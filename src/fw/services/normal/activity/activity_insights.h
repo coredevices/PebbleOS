@@ -94,9 +94,6 @@ void activity_insights_test_push_summary_pins(void);
 //! Used by test apps: Pushes the 2 rewards to the watch
 void activity_insights_test_push_rewards(void);
 
-//! Used by test apps: Pushes the day 1, 4 and 10 insights
-void activity_insights_test_push_day_insights(void);
-
 //! Used by test apps: Pushes a run and a walk notification
 void activity_insights_test_push_walk_run_sessions(void);
 
