@@ -69,8 +69,10 @@
 #define TEXT_RIGHTSIDE_PADDING \
   PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, ACTION_BAR_WIDTH + RIGHTSIDE_PADDING - TEXT_MARGIN_WIDTH)
 #define ICON_WIDTH 80
+// Center icon horizontally in content area (display width minus action bar)
 #define ICON_POSITION_X \
-  PBL_IF_RECT_ELSE(18, DISP_ROWS - (ACTION_BAR_WIDTH + RIGHTSIDE_PADDING) - ICON_WIDTH)
+  PBL_IF_RECT_ELSE(((DISP_COLS - ACTION_BAR_WIDTH - ICON_WIDTH) / 2), \
+                   DISP_ROWS - (ACTION_BAR_WIDTH + RIGHTSIDE_PADDING) - ICON_WIDTH)
 
 #if PBL_ROUND
 #define ICON_POSITION_CENTERED_X (DISP_ROWS / 2 - ICON_WIDTH / 2)
@@ -174,21 +176,39 @@ typedef struct {
   void *action_handle;
 } PhoneUIData;
 
+// Dynamic layout calculation for rectangular displays based on display height
+// Content area starts after status bar (16px) and we need to fit:
+// - Icon (80x80)
+// - Caller ID text area
+// - Status text area
+// Extra vertical space on larger displays is distributed to improve spacing
+#define PHONE_EXTRA_HEIGHT PBL_IF_RECT_ELSE((DISP_ROWS - 168), 0)
+
+// Default style: icon near top, text below
+#define PHONE_ICON_POS_Y_DEFAULT PBL_IF_RECT_ELSE((25 + PHONE_EXTRA_HEIGHT / 4), 22)
+#define PHONE_CALLER_ID_POS_Y_DEFAULT PBL_IF_RECT_ELSE((102 + PHONE_EXTRA_HEIGHT / 2), 93)
+#define PHONE_STATUS_POS_Y_DEFAULT PBL_IF_RECT_ELSE((142 + PHONE_EXTRA_HEIGHT * 3 / 4), 144)
+
+// Large style: more compact icon placement, larger text area
+#define PHONE_ICON_POS_Y_LARGE PBL_IF_RECT_ELSE((11 + PHONE_EXTRA_HEIGHT / 4), 22)
+#define PHONE_CALLER_ID_POS_Y_LARGE PBL_IF_RECT_ELSE((80 + PHONE_EXTRA_HEIGHT / 2), 88)
+#define PHONE_STATUS_POS_Y_LARGE PBL_IF_RECT_ELSE((138 + PHONE_EXTRA_HEIGHT * 3 / 4), 144)
+
 static const PhoneStyle s_phone_style_default = {
   .icon_size = TimelineResourceSizeLarge,
-  .icon_pos = { ICON_POSITION_X, PBL_IF_RECT_ELSE(25, 22) },
-  .caller_id_pos_y = PBL_IF_RECT_ELSE(102, 93),
+  .icon_pos = { ICON_POSITION_X, PHONE_ICON_POS_Y_DEFAULT },
+  .caller_id_pos_y = PHONE_CALLER_ID_POS_Y_DEFAULT,
   .caller_id_height = 50,
-  .status_pos_y = PBL_IF_RECT_ELSE(142, 144),
+  .status_pos_y = PHONE_STATUS_POS_Y_DEFAULT,
   .status_height = 20,
 };
 
 static const PhoneStyle s_phone_style_large = {
   .icon_size = PBL_IF_RECT_ELSE(TimelineResourceSizeSmall, TimelineResourceSizeLarge),
-  .icon_pos = { ICON_POSITION_X, PBL_IF_RECT_ELSE(11, 22) },
-  .caller_id_pos_y = PBL_IF_RECT_ELSE(80, 88),
+  .icon_pos = { ICON_POSITION_X, PHONE_ICON_POS_Y_LARGE },
+  .caller_id_pos_y = PHONE_CALLER_ID_POS_Y_LARGE,
   .caller_id_height = 60,
-  .status_pos_y = PBL_IF_RECT_ELSE(138, 144),
+  .status_pos_y = PHONE_STATUS_POS_Y_LARGE,
   .status_height = 20,
   .large_caller_id = true,
 };
