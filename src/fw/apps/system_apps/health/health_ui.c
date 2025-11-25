@@ -4,8 +4,14 @@
 #include "health_ui.h"
 
 #include "applib/pbl_std/pbl_std.h"
+#include "board/display.h"
 #include "services/common/i18n/i18n.h"
 #include "util/string.h"
+
+// Compile-time display offset calculations
+#define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
+#define HEALTH_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
+#define HEALTH_INSET (18 + HEALTH_X_OFFSET / 5)
 
 void health_ui_draw_text_in_box(GContext *ctx, const char *text, const GRect drawing_bounds,
                                 const int16_t y_offset, const GFont small_font, GColor box_color,
@@ -52,10 +58,10 @@ void health_ui_render_typical_text_box(GContext *ctx, Layer *layer, const char *
   char typical_text[32];
   snprintf(typical_text, sizeof(typical_text), i18n_get("TYPICAL %s", layer), weekday);
 
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(122, 120), 125);
+  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(122, 120), 125) + HEALTH_Y_OFFSET;
   GRect rect = GRect(0, y, layer->bounds.size.w, PBL_IF_RECT_ELSE(35, 36));
 #if PBL_RECT
-  rect = grect_inset(rect, GEdgeInsets(0, 18));
+  rect = grect_inset(rect, GEdgeInsets(0, HEALTH_INSET));
 #endif
 
   const GColor bg_color = PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack);

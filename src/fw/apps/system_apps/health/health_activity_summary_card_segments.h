@@ -4,6 +4,7 @@
 #pragma once
 
 #include "health_progress.h"
+#include "board/display.h"
 
 //! 5 main segments + 2 real corners + 2 endcaps implemented as corners (for bw)
 //! Each of the 5 non-corener segments get 20% of the total
@@ -11,6 +12,11 @@
 
 // Found through trial and error
 #define DEFAULT_MARK_WIDTH 50
+
+// Dynamically center based on display size vs legacy 144x168 base
+// Round displays need additional adjustment for the bezel
+#define X_ADJ (((DISP_COLS - LEGACY_2X_DISP_COLS) / 2) + PBL_IF_ROUND_ELSE(18, 0))
+#define Y_ADJ (((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2) + PBL_IF_ROUND_ELSE(6, 0))
 
 #if PBL_BW
 // The shape of the hexagon is slightly different on BW than on Color
@@ -72,11 +78,6 @@ static HealthProgressSegment s_activity_summary_progress_segments[] = {
   },
 };
 #else // Color
-// The shape is the same, but the offsets are different
-// Slightly adjust the points on Round
-#define X_ADJ (PBL_IF_ROUND_ELSE(18, 0))
-#define Y_ADJ (PBL_IF_ROUND_ELSE(6, 0))
-
 static HealthProgressSegment s_activity_summary_progress_segments[] = {
   {
     // This is an endcap for BW (is a no-op on color)
