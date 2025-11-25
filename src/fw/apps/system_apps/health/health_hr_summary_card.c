@@ -24,6 +24,7 @@
 #include "applib/ui/kino/kino_reel.h"
 #include "applib/ui/text_layer.h"
 #include "apps/system_apps/timeline/text_node.h"
+#include "board/display.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
 #include "services/common/clock.h"
@@ -31,6 +32,10 @@
 #include "system/logging.h"
 #include "util/size.h"
 #include "util/string.h"
+
+// Compile-time display offset calculations
+#define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
+#define HEALTH_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
 
 typedef struct HealthHrSummaryCardData {
   HealthData *health_data;
@@ -94,7 +99,7 @@ static void prv_render_icon(GContext *ctx, Layer *base_layer) {
   GDrawCommandFrame *frame = gdraw_command_sequence_get_frame_by_index(
       data->pulsing_heart, data->pulsing_heart_frame_index);
   if (frame) {
-    const GPoint offset = GPoint(-1, -23);
+    const GPoint offset = GPoint(-1 + HEALTH_X_OFFSET, -23 + HEALTH_Y_OFFSET);
     gdraw_command_frame_draw(ctx, data->pulsing_heart, frame, offset);
     return;
   }
@@ -126,7 +131,7 @@ static void prv_render_bpm(GContext *ctx, Layer *base_layer) {
     units_text_node->node.offset.y = units_offset_y;
   }
 
-  const int offset_y = PBL_IF_RECT_ELSE(101, 109);
+  const int offset_y = PBL_IF_RECT_ELSE(101, 109) + HEALTH_Y_OFFSET;
 
   graphics_text_node_draw(&container->node, ctx,
       &GRect(0, offset_y, base_layer->bounds.size.w,
@@ -146,7 +151,7 @@ static void prv_render_timstamp(GContext *ctx, Layer *base_layer) {
 
   clock_get_until_time_without_fulltime(buffer, buffer_size, data->last_updated, HOURS_PER_DAY);
 
-  const int y = PBL_IF_RECT_ELSE(130, 136);
+  const int y = PBL_IF_RECT_ELSE(130, 136) + HEALTH_Y_OFFSET;
   GRect rect = GRect(0, y, base_layer->bounds.size.w, 35);
 #if PBL_RECT
   rect = grect_inset(rect, GEdgeInsets(0, 18));
@@ -160,7 +165,7 @@ static void prv_render_timstamp(GContext *ctx, Layer *base_layer) {
 static void prv_render_hrm_disabled(GContext *ctx, Layer *base_layer) {
   HealthHrSummaryCardData *data = layer_get_data(base_layer);
 
-  const int y = PBL_IF_RECT_ELSE(100, 109);
+  const int y = PBL_IF_RECT_ELSE(100, 109) + HEALTH_Y_OFFSET;
 
   GRect rect = GRect(0, y, base_layer->bounds.size.w, 52);
 
@@ -217,9 +222,14 @@ Layer *health_hr_summary_card_create(HealthData *health_data) {
     .now_bpm = health_data_hr_get_current_bpm(health_data),
     .resting_bpm = health_data_hr_get_resting_bpm(health_data),
     .last_updated = health_data_hr_get_last_updated_timestamp(health_data),
+#if DISP_ROWS > LEGACY_2X_DISP_ROWS
+    .bpm_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS),
+    .units_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+#else
     .bpm_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
-    .timestamp_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
     .units_font = fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
+#endif
+    .timestamp_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
   };
 
   data->pulsing_heart_timer = app_timer_register(0, prv_pulsing_heart_timer_cb, base_layer);
