@@ -47,16 +47,6 @@
 #define NUM_COPY_VARIANTS 5
 #define VARIANT_RANDOM (-1)
 
-typedef TimelineItem *(*ActivationDelayInsightTrigger)(time_t notif_time);
-
-typedef struct {
-  int day_lag;
-  int hour;
-  int minute;
-  ActivationDelayInsightTrigger trigger;
-  ActivityInsightType insight_type;
-} ActivationDelayInsight;
-
 typedef struct NotificationConfig {
   time_t notif_time;
   ActivitySession *session;
@@ -731,231 +721,7 @@ static bool prv_validate_history_stats(const ActivityInsightMetricHistoryStats *
   return true;
 }
 
-// ------------------------------------------------------------------------------------------------
-static TimelineItem *prv_create_day_1_insight(time_t notif_time) {
-  if (activity_prefs_get_health_app_opened_version() != 0) {
-    // The user already knows about the Health app
-    return NULL;
-  }
 
-  AttributeList notif_attr_list = {0};
-  const char *body = i18n_get("Wanna know more about you? "
-                              "Track your activity and sleep with Pebble Health.",
-                              &notif_attr_list);
-  prv_build_notification_attr_list(&notif_attr_list, body, TIMELINE_RESOURCE_ACTIVITY,
-                                   ActivityInsightType_Day1, ActivitySessionType_None);
-
-  AttributeList dismiss_action_attr_list = {0};
-  attribute_list_add_cstring(&dismiss_action_attr_list, AttributeIdTitle,
-                             i18n_get("Dismiss", &notif_attr_list));
-
-  AttributeList open_app_action_attr_list = {0};
-  prv_set_open_app_action(&open_app_action_attr_list, HealthCardType_Activity, &notif_attr_list);
-
-  const int num_actions = 2;
-  TimelineItemActionGroup action_group = {
-    .num_actions = num_actions,
-    .actions = (TimelineItemAction[]) {
-      {
-        .id = 0,
-        .type = TimelineItemActionTypeDismiss,
-        .attr_list = dismiss_action_attr_list,
-      },
-      {
-        .id = 1,
-        .type = TimelineItemActionTypeOpenWatchApp,
-        .attr_list = open_app_action_attr_list,
-      }
-    },
-  };
-
-  // Note: it's fine if this returns null, since the parent functions will check for a null pointer
-  TimelineItem *item = timeline_item_create_with_attributes(notif_time, 0,
-                                                            TimelineItemTypeNotification,
-                                                            LayoutIdNotification, &notif_attr_list,
-                                                            &action_group);
-  i18n_free_all(&notif_attr_list);
-  attribute_list_destroy_list(&notif_attr_list);
-  attribute_list_destroy_list(&dismiss_action_attr_list);
-  attribute_list_destroy_list(&open_app_action_attr_list);
-
-  return item;
-}
-
-// ------------------------------------------------------------------------------------------------
-static TimelineItem *prv_create_day_4_insight(time_t notif_time) {
-  if (activity_prefs_get_health_app_opened_version() == 0) {
-    // The user has not enabled pebble health
-    return NULL;
-  }
-
-  AttributeList notif_attr_list = {0};
-  const char *body = i18n_get("You like sleep, don't you? "
-                              "Get fun stats on your sleep and start waking "
-                              "up less groggy with Pebble Health.",
-                              &notif_attr_list);
-  prv_build_notification_attr_list(&notif_attr_list, body, TIMELINE_RESOURCE_ACTIVITY,
-                                   ActivityInsightType_Day4, ActivitySessionType_None);
-
-  AttributeList dismiss_action_attr_list = {0};
-  attribute_list_add_cstring(&dismiss_action_attr_list, AttributeIdTitle,
-                             i18n_get("Dismiss", &notif_attr_list));
-
-  AttributeList open_app_action_attr_list = {0};
-  prv_set_open_app_action(&open_app_action_attr_list,
-                          HealthCardType_Sleep,
-                          &notif_attr_list);
-
-  const int num_actions = 2;
-  TimelineItemActionGroup action_group = {
-    .num_actions = num_actions,
-    .actions = (TimelineItemAction[]) {
-      {
-        .id = 0,
-        .type = TimelineItemActionTypeDismiss,
-        .attr_list = dismiss_action_attr_list,
-      },
-      {
-        .id = 1,
-        .type = TimelineItemActionTypeOpenWatchApp,
-        .attr_list = open_app_action_attr_list,
-      }
-    },
-  };
-
-  // Note: it's fine if this returns null, since the parent functions will check for a null pointer
-  TimelineItem *item = timeline_item_create_with_attributes(notif_time, 0,
-                                                            TimelineItemTypeNotification,
-                                                            LayoutIdNotification, &notif_attr_list,
-                                                            &action_group);
-  i18n_free_all(&notif_attr_list);
-  attribute_list_destroy_list(&notif_attr_list);
-  attribute_list_destroy_list(&dismiss_action_attr_list);
-  attribute_list_destroy_list(&open_app_action_attr_list);
-
-  return item;
-}
-
-// ------------------------------------------------------------------------------------------------
-static TimelineItem *prv_create_day_10_insight(time_t notif_time) {
-  AttributeList notif_attr_list = {0};
-  const char *body = i18n_get("Wish you could get daily updates on your "
-                              "activity and sleep progress? You can! "
-                              "Check out your stats with Pebble Health.",
-                              &notif_attr_list);
-  prv_build_notification_attr_list(&notif_attr_list, body, TIMELINE_RESOURCE_ACTIVITY,
-                                   ActivityInsightType_Day10, ActivitySessionType_None);
-
-  AttributeList dismiss_action_attr_list = {0};
-  attribute_list_add_cstring(&dismiss_action_attr_list, AttributeIdTitle,
-                             i18n_get("Dismiss", &notif_attr_list));
-
-  AttributeList open_app_action_attr_list = {0};
-  prv_set_open_app_action(&open_app_action_attr_list,
-                          HealthCardType_Activity,
-                          &notif_attr_list);
-
-  const int num_actions = 2;
-  TimelineItemActionGroup action_group = {
-    .num_actions = num_actions,
-    .actions = (TimelineItemAction[]) {
-      {
-        .id = 0,
-        .type = TimelineItemActionTypeDismiss,
-        .attr_list = dismiss_action_attr_list,
-      },
-      {
-        .id = 1,
-        .type = TimelineItemActionTypeOpenWatchApp,
-        .attr_list = open_app_action_attr_list,
-      }
-    },
-  };
-
-  // Note: it's fine if this returns null, since the parent functions will check for a null pointer
-  TimelineItem *item = timeline_item_create_with_attributes(notif_time, 0,
-                                                            TimelineItemTypeNotification,
-                                                            LayoutIdNotification, &notif_attr_list,
-                                                            &action_group);
-  i18n_free_all(&notif_attr_list);
-  attribute_list_destroy_list(&notif_attr_list);
-  attribute_list_destroy_list(&dismiss_action_attr_list);
-  attribute_list_destroy_list(&open_app_action_attr_list);
-
-  return item;
-}
-
-// ------------------------------------------------------------------------------------------------
-static const ActivationDelayInsight ACTIVATION_DELAY_INSIGHTS[ActivationDelayInsightTypeCount] = {
-  [ActivationDelayInsightType_Day1] = {
-    // https://pebbletechnology.atlassian.net/browse/PBL-28580
-    .day_lag = 1,
-    .hour = 18,
-    .minute = 0,
-    .trigger = prv_create_day_1_insight,
-    .insight_type = ActivityInsightType_Day1,
-  },
-  [ActivationDelayInsightType_Day4] = {
-    // https://pebbletechnology.atlassian.net/browse/PBL-28581
-    .day_lag = 4,
-    .hour = 20,
-    .minute = 30,
-    .trigger = prv_create_day_4_insight,
-    .insight_type = ActivityInsightType_Day4,
-  },
-  [ActivationDelayInsightType_Day10] = {
-    // https://pebbletechnology.atlassian.net/browse/PBL-28582
-    .day_lag = 10,
-    .hour = 20,
-    .minute = 30,
-    .trigger = prv_create_day_10_insight,
-    .insight_type = ActivityInsightType_Day10,
-  },
-};
-
-// ------------------------------------------------------------------------------------------------
-static void prv_trigger_activation_delay_insight(time_t now_utc,
-                                                 const ActivationDelayInsight *insight) {
-  TimelineItem *item = insight->trigger(now_utc);
-
-  if (item) {
-    analytics_event_health_insight_created(now_utc, insight->insight_type, 0);
-    prv_push_notification(item, NULL);
-  }
-}
-
-// ------------------------------------------------------------------------------------------------
-static NOINLINE void prv_do_activation_delay_insights(time_t now_utc) {
-  // Only needs to be checked every 15 minutes
-  struct tm tm_now;
-  gmtime_r(&now_utc, &tm_now);
-  if ((tm_now.tm_min % 15) != 0) {
-    return;
-  }
-
-  time_t activation_time_utc = activity_prefs_get_activation_time();
-  if (activation_time_utc == 0) {
-    return;
-  }
-
-  time_t activation_time = time_utc_to_local(activation_time_utc);
-  time_t now = time_utc_to_local(now_utc);
-
-  for (int i = 0; i < ActivationDelayInsightTypeCount; i++) {
-    time_t trigger_time_t = time_util_get_midnight_of(activation_time);
-    trigger_time_t += (ACTIVATION_DELAY_INSIGHTS[i].day_lag * SECONDS_PER_DAY);
-    struct tm trigger_time;
-    gmtime_r(&trigger_time_t, &trigger_time);
-    trigger_time_t += time_util_get_seconds_until_daily_time(&trigger_time,
-                                                             ACTIVATION_DELAY_INSIGHTS[i].hour,
-                                                             ACTIVATION_DELAY_INSIGHTS[i].minute);
-
-    if (!activity_prefs_has_activation_delay_insight_fired(i) && (now >= trigger_time_t)) {
-      prv_trigger_activation_delay_insight(now_utc, &ACTIVATION_DELAY_INSIGHTS[i]);
-      activity_prefs_set_activation_delay_insight_fired(i);
-    }
-  }
-}
 
 // ------------------------------------------------------------------------------------------------
 // This is called during init and midnight rollover in order to update our stats for the sleep
@@ -2150,7 +1916,6 @@ void NOINLINE activity_insights_process_minute_data(time_t now_utc) {
   }
 
   prv_do_activity_summary(now_utc);
-  prv_do_activation_delay_insights(now_utc);
   prv_process_activity_sessions(now_utc);
 }
 
@@ -2345,13 +2110,6 @@ static void prv_test_push_rewards(void *unused) {
   }
 }
 
-static void prv_test_push_day_insights(void *unused) {
-  time_t now_utc = rtc_get_time();
-  for (int i = 0; i < ActivationDelayInsightTypeCount; i++) {
-    prv_trigger_activation_delay_insight(now_utc, &ACTIVATION_DELAY_INSIGHTS[i]);
-  }
-}
-
 static void prv_test_push_walk_run_session(void *unused) {
   const time_t now_utc = rtc_get_time();
   ActivitySession walk_session = {
@@ -2426,10 +2184,6 @@ void activity_insights_test_push_summary_pins(void) {
 
 void activity_insights_test_push_rewards(void) {
   system_task_add_callback(prv_test_push_rewards, NULL);
-}
-
-void activity_insights_test_push_day_insights(void) {
-  system_task_add_callback(prv_test_push_day_insights, NULL);
 }
 
 void activity_insights_test_push_walk_run_sessions(void) {

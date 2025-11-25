@@ -611,11 +611,6 @@ static void prv_debug_cmd_push_walk_run(int index, void *context) {
 }
 
 // -----------------------------------------------------------------------------------------
-static void prv_debug_cmd_push_day_insights(int index, void *context) {
-  activity_insights_test_push_day_insights();
-}
-
-// -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_push_nap_session(int index, void *context) {
   activity_insights_test_push_nap_session();
 }
@@ -708,9 +703,6 @@ static void debug_window_load(Window *window) {
     }, {
       .title = "Walk/Run Notif",
       .callback = prv_debug_cmd_push_walk_run,
-    }, {
-      .title = "Push Day Insights",
-      .callback = prv_debug_cmd_push_day_insights,
     }, {
       .title = "Push Nap Session",
       .callback = prv_debug_cmd_push_nap_session,
