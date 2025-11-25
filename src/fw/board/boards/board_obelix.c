@@ -13,7 +13,6 @@
 #include "drivers/hrm/gh3x2x/gh3x2x.h"
 #include "drivers/watchdog.h"
 #include "system/passert.h"
-#include "kernel/util/stop.h"
 
 
 #define HCPU_FREQ_MHZ 240
@@ -697,7 +696,4 @@ void board_init(void) {
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN11, AON_PIN_MODE_NEG_EDGE);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN12, AON_PIN_MODE_NEG_EDGE);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN13, AON_PIN_MODE_NEG_EDGE);
-
-  // Temporarily disable stop mode (GH-452)
-  stop_mode_disable(InhibitorMain);
 }
