@@ -52,6 +52,10 @@
     APP("com.apple.mobileslideshow", TIMELINE_RESOURCE_NOTIFICATION_IOS_PHOTOS, GColorBlueMoonARGB8),
     APP("com.linkedin.LinkedIn", TIMELINE_RESOURCE_NOTIFICATION_LINKEDIN, GColorCobaltBlueARGB8),
     APP("com.tinyspeck.chatlyio", TIMELINE_RESOURCE_NOTIFICATION_SLACK, GColorFollyARGB8),
+    APP("com.revolut.revolut", TIMELINE_RESOURCE_PAY_BILL, GColorDarkGrayARGB8),
+    APP("com.transferwise.Transferwise", TIMELINE_RESOURCE_PAY_BILL, GColorGreenARGB8),
+    APP("de.no26.Number26", TIMELINE_RESOURCE_PAY_BILL, GColorCadetBlueARGB8),
+    APP("com.bunq.ios", TIMELINE_RESOURCE_PAY_BILL, GColorVividCeruleanARGB8),
 #endif
 
 #undef APP
