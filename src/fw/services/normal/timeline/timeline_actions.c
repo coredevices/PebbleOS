@@ -116,6 +116,8 @@ static void prv_cleanup_voice_data(VoiceResponseData *data) {
 #if CAPABILITY_HAS_MICROPHONE
   voice_window_destroy(data->voice_window);
 #endif
+  // Free the copied TimelineItem that was created in prv_start_voice_reply()
+  timeline_item_destroy(data->context);
   applib_free(data);
 }
 
@@ -871,10 +873,15 @@ static void prv_start_voice_reply(ActionMenu *action_menu,
   TimelineActionMenu *timeline_action_menu = context;
   action_menu_freeze(action_menu);
 
+  // Make a copy of the TimelineItem to avoid use-after-free if the notification window's
+  // swap layer is reloaded while the voice window is active
+  TimelineItem *item_copy = timeline_item_copy(timeline_action_menu->item);
+  PBL_ASSERTN(item_copy);
+
   VoiceResponseData *data = applib_malloc(sizeof(VoiceResponseData));
   *data = (VoiceResponseData) {
     .action_data = item->action_data,
-    .context = timeline_action_menu->item,
+    .context = item_copy,
     .action_menu = action_menu,
     .voice_window = voice_window_create(NULL, 0, VoiceEndpointSessionTypeDictation),
   };
