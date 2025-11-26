@@ -690,10 +690,4 @@ void board_init(void) {
   i2c_init(I2C3_BUS);
 
   mic_init(MIC);
-
-  /* Enable user buttons as AON wakeup source */
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN10, AON_PIN_MODE_POS_EDGE);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN11, AON_PIN_MODE_NEG_EDGE);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN12, AON_PIN_MODE_NEG_EDGE);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN13, AON_PIN_MODE_NEG_EDGE);
 }
