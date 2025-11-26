@@ -190,6 +190,10 @@ void debug_init(McuRebootReason mcu_reboot_reason) {
   version_copy_current_build_id_hex_string(build_id_string, 64);
   DEBUG_LOG(LOG_LEVEL_INFO, "BUILD ID: %s", build_id_string);
 
+#if CAPABILITY_HAS_PBLBOOT
+  DEBUG_LOG(LOG_LEVEL_INFO, "Boot slot: %d", TINTIN_METADATA.is_slot_0 ? 0 : 1);
+#endif
+
   #if MEMFAULT
   // This must be called before debug_reboot_reason_print which resets the reason
   memfault_platform_boot();
