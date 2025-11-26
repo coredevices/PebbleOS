@@ -208,9 +208,11 @@ def build(bld):
 
     # If the current build doesn't want javascript, just build a header-only library so the
     # headers will continue to be available
+    # obelix hrm libraries needs the jerry math
     if not bld.capability('HAS_ROCKY_JS') or bld.variant in ('prf', 'applib', 'test_rocky_emx'):
-        bld(export_includes=['jerryscript/jerry-core'], name='jerry_core')
-        return
+        if not bld.is_obelix():
+            bld(export_includes=['jerryscript/jerry-core'], name='jerry_core')
+            return
 
 
     # Define flags common to both jerry-core and jerry-libm
