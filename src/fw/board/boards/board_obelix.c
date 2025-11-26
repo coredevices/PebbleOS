@@ -491,10 +491,64 @@ static const TouchSensor touch_cst816 = {
 
 const TouchSensor *CST816 = &touch_cst816;
 
-static HRMDeviceState s_hrm_state;
+static I2CBusHalState s_i2c_bus_hal_state_4 = {
+    .hdl = {
+        .Instance = I2C4,
+        .Init = {
+            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+            .ClockSpeed = 400000,
+            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+        },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+    },
+};
 
+static I2CBusHal s_i2c_bus_hal_4 = {
+    .state = &s_i2c_bus_hal_state_4,
+    .scl =
+        {
+            .pad = PAD_PA09,
+            .func = I2C4_SCL,
+            .flags = PIN_NOPULL,
+        },
+    .sda =
+        {
+            .pad = PAD_PA20,
+            .func = I2C4_SDA,
+            .flags = PIN_NOPULL,
+        },
+    .module = RCC_MOD_I2C4,
+    .irqn = I2C4_IRQn,
+    .irq_priority = 5,
+};
+
+static I2CBusState s_i2c_bus_state_4;
+
+static I2CBus s_i2c_bus_4 = {
+    .hal = &s_i2c_bus_hal_4,
+    .state = &s_i2c_bus_state_4,
+    .name = "i2c4",
+    .stop_mode_inhibitor = InhibitorI2C4,
+};
+
+I2CBus *const I2C4_BUS = &s_i2c_bus_4;
+
+IRQ_MAP(I2C4, i2c_irq_handler, I2C4_BUS);
+
+static const I2CSlavePort s_i2c_gh3x2x = {
+    .bus = &s_i2c_bus_4,
+    .address = 0x14,
+};
+
+static HRMDeviceState s_hrm_state;
 static HRMDevice s_hrm = {
-  .state = &s_hrm_state,
+    .state = &s_hrm_state,
+    .i2c = &s_i2c_gh3x2x,
+    .int_exti = {
+        .peripheral = hwp_gpio1,
+        .gpio_pin = 44,
+    },
 };
 
 HRMDevice * const HRM = &s_hrm;
@@ -688,6 +742,7 @@ void board_init(void) {
   i2c_init(I2C1_BUS);
   i2c_init(I2C2_BUS);
   i2c_init(I2C3_BUS);
+  i2c_init(I2C4_BUS);
 
   mic_init(MIC);
 }
