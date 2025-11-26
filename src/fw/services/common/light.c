@@ -108,8 +108,8 @@ static uint16_t prv_backlight_get_intensity(void) {
     uint32_t light_level = s_cached_ambient_light_level;
     uint16_t user_max_intensity = backlight_get_intensity();
     
-    // Low intensity is always 5% (the "Low" setting)
-    const uint16_t low_intensity = (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)5) / 100;
+    // Low intensity is always 10%
+    const uint16_t low_intensity = (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)10) / 100;
     
     // Get thresholds from preferences (allows runtime adjustment in debug menu)
     const uint32_t min_light_threshold = backlight_get_dynamic_min_threshold();
