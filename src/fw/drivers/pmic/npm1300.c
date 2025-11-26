@@ -105,6 +105,8 @@ typedef enum {
   PmicRegisters_GPIOS_GPIOPUEN2 = 0x060C,
   PmicRegisters_GPIOS_GPIOPUEN__EN = 1,
   PmicRegisters_GPIOS_GPIOPUEN__DIS = 0,
+  PmicRegisters_GPIOS_GPIOMODE3 = 0x0603,
+  PmicRegisters_GPIOS_GPIOPUEN3 = 0x060D,
   PmicRegisters_GPIOS_GPIOOPENDRAIN1 = 0x0615,
   PmicRegisters_ERRLOG_SCRATCH0 = 0x0E01,
   PmicRegisters_ERRLOG_SCRATCH1 = 0x0E02,
@@ -690,7 +692,13 @@ static bool gpio_set(Npm1300GpioId_t id, bool is_high) {
       rv &= prv_write_register(PmicRegisters_GPIOS_GPIOPUEN2,
           is_high ? PmicRegisters_GPIOS_GPIOPUEN__EN : PmicRegisters_GPIOS_GPIOPUEN__DIS);
       break;
-
+    case Npm1300_Gpio3: {
+      rv = prv_write_register(PmicRegisters_GPIOS_GPIOMODE3, 
+          is_high ? PmicRegisters_GPIOS_GPIOMODE__OUTPUT_HIGH : PmicRegisters_GPIOS_GPIOMODE__OUTPUT_LOW);
+      rv &= prv_write_register(PmicRegisters_GPIOS_GPIOPUEN3,
+          is_high ? PmicRegisters_GPIOS_GPIOPUEN__EN : PmicRegisters_GPIOS_GPIOPUEN__DIS);
+      break;
+    }
     default:
       break;
   }
