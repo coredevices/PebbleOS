@@ -254,8 +254,6 @@ Or re-configure with the --relax_toolchain_restrictions option. """
     if conf.options.release and conf.options.beta:
       raise RuntimeError("--beta and --release are mutually exclusive and cannot be used together")
     if not conf.options.release:
-      conf.env.append_value('DEFINES', [ 'SHOW_PEBBLE_JUST_RESET_ALERT' ])
-      conf.env.append_value('DEFINES', [ 'SHOW_BAD_BT_STATE_ALERT' ])
       if not conf.is_bigboard():
         conf.env.append_value('DEFINES', [ 'SHOW_ACTIVITY_DEMO' ])
 

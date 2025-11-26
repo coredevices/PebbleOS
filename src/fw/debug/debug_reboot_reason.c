@@ -186,13 +186,5 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     crashed_ui_show_forced_core_dump();
   }
 
-#ifdef SHOW_PEBBLE_JUST_RESET_ALERT
-  // Trigger an alert display so that the user knows the watch rebooted due to a crash. This event
-  // will be caught and handled by the launcher.c event loop.
-  if (show_reset_alert && reason.code != RebootReasonCode_ForcedCoreDump) {
-    crashed_ui_show_pebble_reset();
-  }
-#endif
-
   reboot_reason_clear();
 }

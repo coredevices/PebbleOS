@@ -35,12 +35,6 @@ void crashed_ui_show_worker_crash(AppInstallId install_id) {
 void crashed_ui_show_forced_core_dump(void) {
 }
 
-void crashed_ui_show_pebble_reset(void) {
-}
-
-void crashed_ui_show_bluetooth_stuck(void) {
-}
-
 void app_idle_timeout_stop(void) {
 }
 
