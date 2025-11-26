@@ -23,7 +23,8 @@
 // 1: Initial version
 // 2: Graphs moved to mobile apps
 // 3: 4.0 app redesign
-#define CURRENT_HEALTH_APP_VERSION 3
+// 4: Added insights onboarding prompt
+#define CURRENT_HEALTH_APP_VERSION 4
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Main Structures
@@ -74,6 +75,23 @@ static void prv_health_service_event_handler(HealthEventType event, void *contex
 // Initialization and Termination
 //
 
+//! Show insights onboarding dialog for first-time users
+static void prv_show_insights_onboarding_dialog(void) {
+  /// Insights onboarding message
+  static const char *text = i18n_noop("Psst! Want smart tips about your activity and sleep? "
+                                      "You can enable Insights in the mobile app.");
+  ExpandableDialog *dialog = expandable_dialog_create_with_params(
+      "Insights Onboarding",
+      RESOURCE_ID_HEALTH_ICON_MOON,
+      text,
+      GColorBlack,
+      GColorWhite,
+      NULL,
+      RESOURCE_ID_ACTION_BAR_ICON_CHECK,
+      expandable_dialog_close_cb);
+  app_expandable_dialog_push(dialog);
+}
+
 //! Initialize application
 static void prv_finish_initilization_cb(bool in_focus) {
   if (in_focus) {
@@ -109,6 +127,7 @@ static void prv_initialize(void) {
     return;
   }
 
+  const uint8_t previous_version = activity_prefs_get_health_app_opened_version();
   activity_prefs_set_health_app_opened_version(CURRENT_HEALTH_APP_VERSION);
 
   HealthAppData *health_app_data = app_zalloc_check(sizeof(HealthAppData));
@@ -121,6 +140,13 @@ static void prv_initialize(void) {
   health_app_data->health_card_view = health_card_view_create(health_app_data->health_data);
 
   health_card_view_push(health_app_data->health_card_view);
+
+  // Show insights onboarding if user hasn't seen it yet and doesn't have insights enabled
+  const bool insights_enabled = activity_prefs_activity_insights_are_enabled() ||
+                                activity_prefs_sleep_insights_are_enabled();
+  if (previous_version < CURRENT_HEALTH_APP_VERSION && !insights_enabled) {
+    prv_show_insights_onboarding_dialog();
+  }
 
   // Finish up initializing the app a bit later. This helps reduce lag when opening the app
   app_focus_service_subscribe_handlers((AppFocusHandlers){
