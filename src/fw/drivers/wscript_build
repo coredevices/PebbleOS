@@ -1944,16 +1944,28 @@ if bld.get_hrm() == 'AS7000':
         ],
     )
 elif bld.get_hrm() == 'GH3X2X':
-    bld.objects(
-        name='driver_hrm',
-        source=[
-            'hrm/gh3x2x/gh3x2x.c',
-        ],
-        use=[
-            'fw_includes',
-            'gh3x2x',
-        ],
-    )
+    # GH3X2X blobs blow up flash usage, avoid building for normal PRF
+    if bld.variant == 'prf' and not bld.env.IS_MFG:
+        bld.objects(
+            name='driver_hrm',
+            source=[
+                'stubs/hrm.c',
+            ],
+            use=[
+                'fw_includes',
+            ],
+        )
+    else:
+        bld.objects(
+            name='driver_hrm',
+            source=[
+                'hrm/gh3x2x/gh3x2x.c',
+            ],
+            use=[
+                'fw_includes',
+                'gh3x2x',
+            ],
+        )
 elif bld.get_hrm() == 'STUB':
     bld.objects(
         name='driver_hrm',
