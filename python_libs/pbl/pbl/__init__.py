@@ -6,6 +6,7 @@ from libpebble2.exceptions import PebbleError
 from .commands import coredump
 from .commands import install_lang
 from .commands import test
+from .commands import install_firmware
 
 # TODO: unopened logging ports cause super noisy logs, fix this in the
 # pulse package then remove this
