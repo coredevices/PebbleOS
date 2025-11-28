@@ -58,8 +58,13 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
     .axes_inverts[AXIS_Y] = true,
     .axes_inverts[AXIS_Z] = false,
 #else
+#if (defined(BOARD_OBELIX_DVT) || defined(BOARD_OBELIX_PVT)) && defined(IMU_USE_LIS2DW12)
+    .axes_offsets[AXIS_X] = 1,
+    .axes_offsets[AXIS_Y] = 0,
+#else
     .axes_offsets[AXIS_X] = 0,
     .axes_offsets[AXIS_Y] = 1,
+#endif
     .axes_offsets[AXIS_Z] = 2,
     .axes_inverts[AXIS_X] = false,
     .axes_inverts[AXIS_Y] = true,
