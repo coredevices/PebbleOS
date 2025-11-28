@@ -3,11 +3,13 @@
 
 #include "put_bytes_storage_raw.h"
 
+#include "bluetooth/responsiveness.h"
 #include "drivers/flash.h"
 #include "drivers/task_watchdog.h"
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_storage_flash.h"
+#include "services/common/comm_session/session.h"
 #include "system/firmware_storage.h"
 #include "util/math.h"
 
@@ -120,6 +122,13 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
 
   storage->current_offset = layout->start_offset;
 
+  // Reduce BLE activity for the duration of raw flash operations to help prevent stack overflow
+  // in NimbleHost task. Flash operations block and concurrent BLE mbuf handling can cause deep
+  // call stacks. Using ResponseTimeMiddle reduces the frequency of BLE events while still
+  // maintaining reasonable transfer speeds.
+  comm_session_set_responsiveness(comm_session_get_system_session(),
+                                  BtConsumerPpPutBytes, ResponseTimeMiddle, 0);
+
   // This erase operation will take awhile, so disable the task watchdog for the current task
   // while we're doing this.
   bool previous_system_task_watchdog_state = task_watchdog_mask_get(PebbleTask_KernelBackground);
@@ -170,5 +179,8 @@ uint32_t pb_storage_raw_calculate_crc(PutBytesStorage *storage, PutBytesCrcType 
 }
 
 void pb_storage_raw_deinit(PutBytesStorage *storage, bool is_success) {
-  // Nothing to do
+  // Restore normal BLE responsiveness that was reduced in pb_storage_raw_init
+  comm_session_set_responsiveness(comm_session_get_system_session(),
+                                  BtConsumerPpPutBytes, ResponseTimeMin,
+                                  MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
 }
