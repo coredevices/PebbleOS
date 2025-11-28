@@ -11,7 +11,7 @@
 #include "mcu/interrupts.h"
 #include "system/passert.h"
 
-#define EXTI_MAX_GPIO1_PIN_NUM 8
+#define EXTI_MAX_GPIO1_PIN_NUM 16
 #define EXTI_MAX_GPIO2_PIN_NUM 1
 
 typedef struct {
