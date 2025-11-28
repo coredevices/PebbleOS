@@ -18,6 +18,7 @@
 #include "settings_bluetooth.h"
 #include "settings_display.h"
 #include "settings_menu.h"
+#include "settings_music.h"
 #include "settings_notifications.h"
 #include "settings_quick_launch.h"
 #include "settings_quiet_time.h"
@@ -47,13 +48,15 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemTimeline]      = settings_timeline_get_info,
 #endif
 #if !TINTIN_FORCE_FIT
-  [SettingsMenuItemActivity]      = settings_activity_tracker_get_info,
   [SettingsMenuItemQuickLaunch]   = settings_quick_launch_get_info,
+  [SettingsMenuItemMusic]         = settings_music_get_info,
   [SettingsMenuItemDateTime]      = settings_time_get_info,
+  [SettingsMenuItemActivity]      = settings_activity_tracker_get_info,
 #else
-  [SettingsMenuItemActivity]      = settings_system_get_info,
   [SettingsMenuItemQuickLaunch]   = settings_system_get_info,
+  [SettingsMenuItemMusic]         = settings_music_get_info,
   [SettingsMenuItemDateTime]      = settings_system_get_info,
+  [SettingsMenuItemActivity]      = settings_system_get_info,
 #endif
   [SettingsMenuItemDisplay]       = settings_display_get_info,
 #if PBL_COLOR
