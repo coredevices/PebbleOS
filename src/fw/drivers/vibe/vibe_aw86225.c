@@ -64,6 +64,7 @@
 #define AW862XX_PWR_ON_TIME                             (8) /* ms */
 
 static bool s_initialized = false;
+static int8_t s_target_strength = VIBE_STRENGTH_MAX;
 
 static bool prv_read_register(uint8_t register_address, uint8_t* data) {
 	i2c_use(I2C_AW86225);
@@ -180,6 +181,8 @@ void vibe_init(void) {
 }
 
 void vibe_set_strength(int8_t strength) {
+  s_target_strength = strength;
+
   if (!s_initialized) {
     return;
   }
@@ -194,6 +197,12 @@ void vibe_ctl(bool on) {
   }
 
   if (on) {
+    uint8_t val = 0;
+    bool ret = prv_read_register(AW862XX_REG_CONTCFG2, &val);
+    if (!ret || val != AW862XX_CONTCFG2_CONF_F0) {
+      vibe_init();
+      vibe_set_strength(s_target_strength);
+    }
     prv_write_register(AW862XX_REG_CONTCFG8, 0xFF);
     prv_write_register(AW862XX_REG_CONTCFG9, 0xFF);
     prv_aw862xx_play_go(true);
