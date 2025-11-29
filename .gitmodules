@@ -43,3 +43,6 @@
 [submodule "third_party/hal_lis2dw12/lis2dw12-pid"]
 	path = third_party/hal_lis2dw12/lis2dw12-pid
 	url = https://github.com/STMicroelectronics/lis2dw12-pid.git
+[submodule "third_party/fonts/JPBF"]
+	path = third_party/fonts/JPBF
+	url = https://github.com/jplexer/JPBF
