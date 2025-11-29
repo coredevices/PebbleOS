@@ -330,6 +330,48 @@
       "characterRegex": "[ 0-9:/.,°-]"
     },
     {
+      "type": "font",
+      "name": "JPBF_20_BOLD_NUMBERS",
+      "file": "../third_party/fonts/JPBF/JPBF.ttf",
+      "characterRegex": "[ 0-9:/.,°…▯ABHILKMNPT\\%\\?\\+-]"
+    },
+    {
+      "type": "font",
+      "name": "JPBF_26_BOLD_NUMBERS_AM_PM",
+      "file": "../third_party/fonts/JPBF/JPBF.ttf",
+      "characterRegex": "[ 0-9:/.,°…▯ABHILKMNPT\\%\\?\\+-]"
+    },
+    {
+      "type": "font",
+      "name": "JPBF_28_LIGHT_NUMBERS",
+      "file": "../third_party/fonts/JPBF/JPBF.ttf",
+      "characterRegex": "[ 0-9:/.,°…▯ABHILKMNPT\\%\\?\\+-]"
+    },
+    {
+      "type": "font",
+      "name": "JPBF_32_BOLD_NUMBERS",
+      "file": "../third_party/fonts/JPBF/JPBF.ttf",
+      "characterRegex": "[ 0-9:/.,°…▯ABHILKMNPT\\%\\?\\+-]"
+    },
+    {
+      "type": "font",
+      "name": "JPBF_36_BOLD_NUMBERS",
+      "file": "../third_party/fonts/JPBF/JPBF.ttf",
+      "characterRegex": "[ 0-9:/.,°…▯ABHILKMNPT\\%\\?\\+-]"
+    },
+    {
+      "type": "font",
+      "name": "JPBF_38_BOLD_NUMBERS",
+      "file": "../third_party/fonts/JPBF/JPBF.ttf",
+      "characterRegex": "[ 0-9:/.,°…▯ABHILKMNPT\\%\\?\\+-]"
+    },
+    {
+      "type": "font",
+      "name": "JPBF_42_NUMBERS",
+      "file": "../third_party/fonts/JPBF/JPBF.ttf",
+      "characterRegex": "[ 0-9:/.,°…▯ABHILKMNPT\\%\\?\\+-]"
+    },
+    {
       "type": "pbi8",
       "name": "MUSIC_ICON_SKIP_FORWARD",
       "file": "normal/base/images/music_icon_skip_forward.png"
