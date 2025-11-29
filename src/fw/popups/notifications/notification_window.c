@@ -1340,6 +1340,12 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
     return;
   }
 
+  if (do_not_disturb_is_active() && 
+      alerts_preferences_dnd_get_show_notifications() == DndNotificationModeHide) {
+    alerts_incoming_alert_analytics();
+    return;
+  }
+
   NotificationWindowData *data = &s_notification_window_data;
 
   // will fail and return early if already init'ed.

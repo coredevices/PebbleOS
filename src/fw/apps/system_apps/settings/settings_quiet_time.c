@@ -54,6 +54,7 @@ enum QuietTimeItem {
   QuietTimeItemWeekdayScheduled,
   QuietTimeItemWeekendScheduled,
   QuietTimeItemInterruptions,
+  QuietTimeItemNotifications,
   QuietTimeItem_Count,
 };
 
@@ -90,6 +91,36 @@ static const char *prv_get_dnd_mask_subtitle(void *i18n_key) {
       break;
   }
   return title;
+}
+
+static const DndNotificationMode s_dnd_notification_mode_cycle[] = {
+  DndNotificationModeShow,
+  DndNotificationModeHide,
+};
+
+static DndNotificationMode prv_cycle_dnd_notification_mode(void) {
+  DndNotificationMode mode = alerts_preferences_dnd_get_show_notifications();
+  int index = 0;
+  for (size_t i = 0; i < ARRAY_LENGTH(s_dnd_notification_mode_cycle); i++) {
+    if (s_dnd_notification_mode_cycle[i] == mode) {
+      index = i;
+      break;
+    }
+  }
+  mode = s_dnd_notification_mode_cycle[(index + 1) % ARRAY_LENGTH(s_dnd_notification_mode_cycle)];
+  alerts_preferences_dnd_set_show_notifications(mode);
+  return mode;
+}
+
+static const char *prv_get_dnd_notifications_enable(void *i18n_key) {
+  switch (alerts_preferences_dnd_get_show_notifications()) {
+    case DndNotificationModeShow:
+      return i18n_get("Show", i18n_key);
+    case DndNotificationModeHide:
+      return i18n_get("Hide", i18n_key);
+    default:
+      return "???";
+  }
 }
 
 ///////////////////////////////
@@ -274,6 +305,10 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_get("Interruptions", data);
       strncpy(subtitle, prv_get_dnd_mask_subtitle(data), buffer_length);
       break;
+    case QuietTimeItemNotifications:
+      title = i18n_get("Notifications", data);
+      strncpy(subtitle, prv_get_dnd_notifications_enable(data), buffer_length);
+      break;
     default:
         WTF;
   }
@@ -299,6 +334,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case QuietTimeItemInterruptions:
       prv_cycle_dnd_mask();
+      break;
+    case QuietTimeItemNotifications:
+      prv_cycle_dnd_notification_mode();
       break;
     default:
         WTF;
