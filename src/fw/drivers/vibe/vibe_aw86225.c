@@ -6,9 +6,10 @@
 #include "console/prompt.h"
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
+#include "kernel/util/sleep.h"
+#include "kernel/util/stop.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "kernel/util/sleep.h"
 
 #define AW862XX_REG_SRST                                (0x00)
 #define AW862XX_REG_PLAYCFG3                            (0x08)
@@ -65,6 +66,7 @@
 
 static bool s_initialized = false;
 static int8_t s_target_strength = VIBE_STRENGTH_MAX;
+static bool s_stop_mode_disabled = false;
 
 static bool prv_read_register(uint8_t register_address, uint8_t* data) {
 	i2c_use(I2C_AW86225);
@@ -196,6 +198,15 @@ void vibe_ctl(bool on) {
     return;
   }
 
+  if (s_stop_mode_disabled != on) {
+    if (on) {
+      stop_mode_disable(InhibitorVibes);
+    } else {
+      stop_mode_enable(InhibitorVibes);
+    }
+    s_stop_mode_disabled = on;
+  }
+
   if (on) {
     uint8_t val = 0;
     bool ret = prv_read_register(AW862XX_REG_CONTCFG2, &val);
@@ -215,6 +226,11 @@ void vibe_ctl(bool on) {
 void vibe_force_off(void) {
   if (!s_initialized) {
     return;
+  }
+
+  if (s_stop_mode_disabled) {
+    stop_mode_enable(InhibitorVibes);
+    s_stop_mode_disabled = false;
   }
 
   prv_aw862xx_play_go(false);
