@@ -27,6 +27,7 @@
 #include "services/common/put_bytes/put_bytes.h"
 #include "services/common/shared_prf_storage/shared_prf_storage.h"
 #include "services/common/touch/touch.h"
+#include "drivers/touch/touch_sensor.h"
 #include "services/common/vibe_pattern.h"
 #include "services/runlevel_impl.h"
 #include "util/size.h"
@@ -80,6 +81,12 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = bt_ctl_set_enabled,
     .enable_mask = R_FirmwareUpdate | R_Normal,
   },
+#if CAPABILITY_HAS_TOUCHSCREEN
+  {
+    .set_enable_fn = touch_sensor_set_enabled,
+    .enable_mask = R_Normal,
+  },
+#endif
 #if CAPABILITY_HAS_BUILTIN_HRM
   {
     .set_enable_fn = hrm_manager_enable,
