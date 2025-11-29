@@ -258,3 +258,11 @@ static void prv_exti_cb(bool *should_context_switch) {
   system_task_add_callback_from_isr(prv_process_pending_messages, NULL, should_context_switch);
   s_callback_scheduled = true;
 }
+
+void touch_sensor_set_enabled(bool enabled) {
+  if (enabled) {
+    exti_enable(CST816->int_exti);
+  } else {
+    exti_disable(CST816->int_exti);
+  }
+}
