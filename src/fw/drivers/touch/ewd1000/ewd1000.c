@@ -319,6 +319,14 @@ static void prv_exti_cb(bool *should_context_switch) {
   s_callback_scheduled = true;
 }
 
+void touch_sensor_set_enabled(bool enabled) {
+  if (enabled) {
+    exti_enable(EWD1000->int_exti);
+  } else {
+    exti_disable(EWD1000->int_exti);
+  }
+}
+
 
 // Initialization
 ////////////////////////////////////////////////////////////////////////////////
