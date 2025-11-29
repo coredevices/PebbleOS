@@ -3,3 +3,6 @@
 
 void touch_sensor_init(void) {
 }
+
+void touch_sensor_set_enabled(bool enabled) {
+}
