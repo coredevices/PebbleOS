@@ -108,11 +108,11 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .attr_id = AttributeIdSubtitle,
     .text.font_key = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
       //! @note this is the same as Medium until Small is designed
-      /* small */ FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
-      /* medium */ FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
-      /* large */ FONT_KEY_LECO_36_BOLD_NUMBERS,
+      /* small */ FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM,
+      /* medium */ FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM,
+      /* large */ FONT_KEY_JPBF_36_BOLD_NUMBERS,
       //! @note this is the same as Large until ExtraLarge is designed
-      /* extralarge */ FONT_KEY_LECO_36_BOLD_NUMBERS),
+      /* extralarge */ FONT_KEY_JPBF_36_BOLD_NUMBERS),
     .text.fixed_lines = 1, // subtitle fixed lines
     .text.alignment = LayoutTextAlignment_Center,
     .text.extent.margin.h = IF_ICON_AT_TOP_ELSE(1, 9), // subtitle margin height

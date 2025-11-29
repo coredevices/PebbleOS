@@ -39,7 +39,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
       [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
 #if !RECOVERY_FW
       //! @note this is the same as Medium until Small is designed
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
+      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_JPBF_20_BOLD_NUMBERS,
 #endif
       //! @note this is the same as Medium until Small is designed
       [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
@@ -62,7 +62,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
       [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
       [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
 #if !RECOVERY_FW
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
+      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_JPBF_20_BOLD_NUMBERS,
 #endif
       [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
       [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_18,
@@ -82,7 +82,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
       [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
       [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_24,
 #if !RECOVERY_FW
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
+      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM,
 #endif
       [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
       [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
@@ -106,7 +106,7 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
       [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_24_BOLD,
 #if !RECOVERY_FW
       //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
+      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM,
 #endif
       //! @note this is the same as Large until ExtraLarge is designed
       [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,

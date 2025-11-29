@@ -25,9 +25,9 @@
 
 // Use larger font for taller displays
 #if DISP_ROWS > LEGACY_2X_DISP_ROWS
-#define HEALTH_STEPS_FONT FONT_KEY_LECO_32_BOLD_NUMBERS
+#define HEALTH_STEPS_FONT FONT_KEY_JPBF_32_BOLD_NUMBERS
 #else
-#define HEALTH_STEPS_FONT FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM
+#define HEALTH_STEPS_FONT FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM
 #endif
 
 typedef struct HealthActivitySummaryCardData {

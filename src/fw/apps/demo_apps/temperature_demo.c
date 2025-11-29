@@ -170,7 +170,7 @@ static void prv_window_load(Window *window) {
   data->cur_temp_layer = text_layer_create(CUR_TEMP_RECT);
   text_layer_set_text_alignment(data->cur_temp_layer, GTextAlignmentCenter);
   text_layer_set_font(data->cur_temp_layer,
-                      fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS));
+                      fonts_get_system_font(FONT_KEY_JPBF_20_BOLD_NUMBERS));
   text_layer_set_background_color(data->cur_temp_layer, GColorClear);
   text_layer_set_text_color(data->cur_temp_layer, GColorBlack);
   layer_add_child(window_layer, text_layer_get_layer(data->cur_temp_layer));
@@ -179,7 +179,7 @@ static void prv_window_load(Window *window) {
   data->temp_range_layer = text_layer_create(TEMP_RANGE_RECT);
   text_layer_set_text_alignment(data->temp_range_layer, GTextAlignmentCenter);
   text_layer_set_font(data->temp_range_layer,
-                      fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS));
+                      fonts_get_system_font(FONT_KEY_JPBF_20_BOLD_NUMBERS));
   text_layer_set_background_color(data->temp_range_layer, GColorClear);
   text_layer_set_text_color(data->temp_range_layer, GColorBlack);
   layer_add_child(window_layer, text_layer_get_layer(data->temp_range_layer));

@@ -205,7 +205,7 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout_ref, int team_o
                                  has_record  ? AttributeIdRecordAway :
                                                AttributeIdRankAway;
   const char *large_font = is_pregame ? FONT_KEY_GOTHIC_28_BOLD :
-                                        FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM;
+                                        FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM;
   const char *small_font = FONT_KEY_GOTHIC_18_BOLD;
 
   const LayoutNodeTextAttributeConfig large_config = {

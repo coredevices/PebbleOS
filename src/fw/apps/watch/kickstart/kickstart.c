@@ -544,7 +544,7 @@ T_STATIC void prv_window_load_handler(Window *window) {
   gbitmap_init_with_resource(&data->shoe, RESOURCE_ID_STRIDE_SHOE);
   gbitmap_init_with_resource(&data->heart_icon, RESOURCE_ID_WORKOUT_APP_HEART);
   data->steps_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-  data->time_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
+  data->time_font = fonts_get_system_font(FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM);
 #else
   gbitmap_init_with_resource(&data->shoe_blue, RESOURCE_ID_STRIDE_SHOE_BLUE);
   gbitmap_init_with_resource(&data->shoe_green, RESOURCE_ID_STRIDE_SHOE_GREEN);

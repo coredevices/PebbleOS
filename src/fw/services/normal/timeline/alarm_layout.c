@@ -83,7 +83,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = timeline_layout_time_text_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.font_key = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
+    .text.font_key = FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM,
     .text.alignment = LayoutTextAlignment_Center,
     .text.extent.margin.h = PBL_IF_RECT_ELSE(9, 1), // time margin height
   };

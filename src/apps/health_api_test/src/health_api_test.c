@@ -441,7 +441,7 @@ static void steps_window_load(Window *window) {
   data->steps_card.cur_step_layer = text_layer_create(CUR_STEP_RECT);
   text_layer_set_text_alignment(data->steps_card.cur_step_layer, GTextAlignmentCenter);
   text_layer_set_font(data->steps_card.cur_step_layer,
-                      fonts_get_system_font(FONT_KEY_LECO_38_BOLD_NUMBERS));
+                      fonts_get_system_font(FONT_KEY_JPBF_38_BOLD_NUMBERS));
   text_layer_set_background_color(data->steps_card.cur_step_layer, GColorClear);
   text_layer_set_text_color(data->steps_card.cur_step_layer, GColorWhite);
   layer_add_child(window_layer, text_layer_get_layer(data->steps_card.cur_step_layer));
@@ -450,7 +450,7 @@ static void steps_window_load(Window *window) {
   data->steps_card.time_layer = text_layer_create(TIME_RECT);
   text_layer_set_text_alignment(data->steps_card.time_layer, GTextAlignmentCenter);
   text_layer_set_font(data->steps_card.time_layer,
-                      fonts_get_system_font(FONT_KEY_LECO_38_BOLD_NUMBERS));
+                      fonts_get_system_font(FONT_KEY_JPBF_38_BOLD_NUMBERS));
   text_layer_set_background_color(data->steps_card.time_layer, GColorClear);
   text_layer_set_text_color(data->steps_card.time_layer, GColorElectricBlue);
   layer_add_child(window_layer, text_layer_get_layer(data->steps_card.time_layer));
@@ -459,7 +459,7 @@ static void steps_window_load(Window *window) {
   data->steps_card.delta_step_layer = text_layer_create(DELTA_STEP_RECT);
   text_layer_set_text_alignment(data->steps_card.delta_step_layer, GTextAlignmentCenter);
   text_layer_set_font(data->steps_card.delta_step_layer,
-                      fonts_get_system_font(FONT_KEY_LECO_38_BOLD_NUMBERS));
+                      fonts_get_system_font(FONT_KEY_JPBF_38_BOLD_NUMBERS));
   text_layer_set_background_color(data->steps_card.delta_step_layer, GColorClear);
   text_layer_set_text_color(data->steps_card.delta_step_layer, GColorLightGray);
   layer_add_child(window_layer, text_layer_get_layer(data->steps_card.delta_step_layer));

@@ -301,7 +301,7 @@ static void prv_content_indicator_setup_direction(ContentIndicator *content_indi
 
 void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
   layout->location_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-  layout->temperature_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
+  layout->temperature_font = fonts_get_system_font(FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM);
   layout->high_low_phrase_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
   layout->tomorrow_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
 

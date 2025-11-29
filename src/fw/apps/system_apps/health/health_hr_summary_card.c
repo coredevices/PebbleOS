@@ -210,11 +210,11 @@ Layer *health_hr_summary_card_create(HealthData *health_data) {
     .resting_bpm = health_data_hr_get_resting_bpm(health_data),
     .last_updated = health_data_hr_get_last_updated_timestamp(health_data),
 #if DISP_ROWS > LEGACY_2X_DISP_ROWS
-    .bpm_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS),
-    .units_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+    .bpm_font = fonts_get_system_font(FONT_KEY_JPBF_32_BOLD_NUMBERS),
+    .units_font = fonts_get_system_font(FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM),
 #else
-    .bpm_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
-    .units_font = fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
+    .bpm_font = fonts_get_system_font(FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM),
+    .units_font = fonts_get_system_font(FONT_KEY_JPBF_20_BOLD_NUMBERS),
 #endif
     .timestamp_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
   };

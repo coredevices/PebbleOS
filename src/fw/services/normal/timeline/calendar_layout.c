@@ -111,7 +111,7 @@ static GTextNode *prv_day_node_constructor(
   }
   const LayoutColors *colors = &layout->timeline_layout.impl->default_colors;
   text_layer_init_with_parameters(&layout->date_layer, &GRectZero, layout->day_date_buffer,
-                                  fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
+                                  fonts_get_system_font(FONT_KEY_JPBF_20_BOLD_NUMBERS),
                                   colors->primary_color, GColorClear, GTextAlignmentCenter,
                                   GTextOverflowModeWordWrap);
   layer_add_child((Layer *)layout, (Layer *)&layout->date_layer);

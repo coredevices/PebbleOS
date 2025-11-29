@@ -124,7 +124,7 @@ void peek_layer_init(PeekLayer *peek_layer, const GRect *frame) {
   // number layer
   text_layer_init_with_parameters(&peek_layer->number.text_layer,
                                   &text_rect,
-                                  NULL, fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+                                  NULL, fonts_get_system_font(FONT_KEY_JPBF_26_BOLD_NUMBERS_AM_PM),
                                   GColorBlack, GColorClear, text_alignment,
                                   GTextOverflowModeTrailingEllipsis);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->number.text_layer);

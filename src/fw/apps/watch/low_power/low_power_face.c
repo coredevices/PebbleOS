@@ -65,7 +65,7 @@ static void init(void) {
   window_set_background_color(&s_low_power_data->low_power_window, GColorLightGray);
   app_window_stack_push(&s_low_power_data->low_power_window, true /* Animated */);
 
-  const GFont text_font = fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS);
+  const GFont text_font = fonts_get_system_font(FONT_KEY_JPBF_42_NUMBERS);
   const GTextAlignment text_alignment = GTextAlignmentCenter;
   const unsigned int font_height = fonts_get_font_height(text_font);
   const GTextOverflowMode text_overflow_mode = GTextOverflowModeTrailingEllipsis;
