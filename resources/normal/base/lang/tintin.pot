@@ -822,6 +822,11 @@ msgstr ""
 msgid "15 Seconds"
 msgstr ""
 
+#. / 30 Second Notification Window Timeout
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:208
+msgid "30 Seconds"
+msgstr ""
+
 #. / 1 Minute Notification Window Timeout
 #: ../src/fw/apps/system_apps/settings/settings_notifications.c:204
 msgid "1 Minute"
