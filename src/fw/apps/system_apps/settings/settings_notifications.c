@@ -181,6 +181,7 @@ static void prv_text_size_menu_push(SettingsNotificationsData *data) {
 // NOTE: Keep the following two arrays in sync and with the same size.
 static const uint32_t s_window_timeouts_ms[] = {
   15 * MS_PER_SECOND,
+  30 * MS_PER_SECOND,
   1  * MS_PER_MINUTE,
   NOTIF_WINDOW_TIMEOUT_DEFAULT,
   10 * MS_PER_MINUTE,
@@ -190,6 +191,8 @@ static const uint32_t s_window_timeouts_ms[] = {
 static const char *s_window_timeouts_labels[] = {
   /// 15 Second Notification Window Timeout
   i18n_noop("15 Seconds"),
+  /// 30 Second Notification Window Timeout
+  i18n_noop("30 Seconds"),
   /// 1 Minute Notification Window Timeout
   i18n_noop("1 Minute"),
   /// 3 Minute Notification Window Timeout
@@ -203,7 +206,7 @@ static const char *s_window_timeouts_labels[] = {
 _Static_assert(ARRAY_LENGTH(s_window_timeouts_ms) == ARRAY_LENGTH(s_window_timeouts_labels), "");
 
 static int prv_window_timeout_get_selection_index(void) {
-  const int DEFAULT_IDX = 2;
+  const int DEFAULT_IDX = 3;
   // Double check no one has fudged with the order and the fallback/default
   PBL_ASSERTN(s_window_timeouts_ms[DEFAULT_IDX] == NOTIF_WINDOW_TIMEOUT_DEFAULT);
 
