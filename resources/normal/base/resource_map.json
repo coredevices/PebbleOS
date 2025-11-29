@@ -297,19 +297,19 @@
       "type": "font",
       "name": "LECO_26_BOLD_NUMBERS_AM_PM",
       "file": "normal/base/pbf/LECO_26_BOLD_NUMBERS_AM_PM.pbf",
-      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
     },
     {
       "type": "font",
       "name": "LECO_32_BOLD_NUMBERS",
       "file": "normal/base/pbf/LECO_32_BOLD_NUMBERS.pbf",
-      "characterRegex": "[ 0-9:/.,°-]"
+      "characterRegex": "[ 0-9:/.,°-%]"
     },
     {
       "type": "font",
       "name": "LECO_36_BOLD_NUMBERS",
       "file": "normal/base/pbf/LECO_36_BOLD_NUMBERS.pbf",
-      "characterRegex": "[ 0-9:/.,°-]"
+      "characterRegex": "[ 0-9:/.,°-%]"
     },
     {
       "type": "font",
