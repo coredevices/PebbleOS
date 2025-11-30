@@ -747,64 +747,23 @@ void board_init(void) {
 //   mic_init(MIC);
 }
 
-// typedef struct
-// {
-//     __IO uint32_t DIR;
-//     __IO uint32_t DOR;
-// #ifndef SF32LB55X
-//     __IO uint32_t DOSR;
-//     __IO uint32_t DOCR;
-// #endif
-//     __IO uint32_t DOER;
-//     __IO uint32_t DOESR;
-//     __IO uint32_t DOECR;
-//     __IO uint32_t IER;
-//     __IO uint32_t IESR;
-//     __IO uint32_t IECR;
-//     __IO uint32_t ITR;
-//     __IO uint32_t ITSR;
-//     __IO uint32_t ITCR;
-// #ifndef SF32LB55X
-//     __IO uint32_t IPHR;
-//     __IO uint32_t IPHSR;
-//     __IO uint32_t IPHCR;
-//     __IO uint32_t IPLR;
-//     __IO uint32_t IPLSR;
-//     __IO uint32_t IPLCR;
-// #else
-//     __IO uint32_t IPSR;
-//     __IO uint32_t IPCR;
-// #endif
-//     __IO uint32_t ISR;
-// #ifndef SF32LB55X
-//     __IO uint32_t IER_EXT;
-//     __IO uint32_t IESR_EXT;
-//     __IO uint32_t IECR_EXT;
-//     __IO uint32_t ISR_EXT;
-//     __IO uint32_t OEMR;
-//     __IO uint32_t OEMSR;
-//     __IO uint32_t OEMCR;
-//     __IO uint32_t RSVD2[5];
-// #endif
-// } GPIO_TypeDef;
-
 static void board_post_init_v1(void);
 
 void board_post_init(void)
 {
-    // hwp_pinmux1->PAD_SA00 = 0x0;
-    // hwp_pinmux1->PAD_SA01 = 0x0;
-    // hwp_pinmux1->PAD_SA02 = 0x0;
-    // hwp_pinmux1->PAD_SA03 = 0x0;
-    // hwp_pinmux1->PAD_SA04 = 0x0;
-    // hwp_pinmux1->PAD_SA05 = 0x0;
-    // hwp_pinmux1->PAD_SA06 = 0x0;
-    // hwp_pinmux1->PAD_SA07 = 0x0;
-    // hwp_pinmux1->PAD_SA08 = 0x0;
-    // hwp_pinmux1->PAD_SA09 = 0x0;
-    // hwp_pinmux1->PAD_SA10 = 0x0;
-    // hwp_pinmux1->PAD_SA11 = 0x0;
-    // hwp_pinmux1->PAD_SA12 = 0x0;
+    hwp_pinmux1->PAD_SA00 = 0x250;
+    hwp_pinmux1->PAD_SA01 = 0x250;
+    hwp_pinmux1->PAD_SA02 = 0x250;
+    hwp_pinmux1->PAD_SA03 = 0x250;
+    hwp_pinmux1->PAD_SA04 = 0x250;
+    hwp_pinmux1->PAD_SA05 = 0x250;
+    hwp_pinmux1->PAD_SA06 = 0x250;
+    hwp_pinmux1->PAD_SA07 = 0x250;
+    hwp_pinmux1->PAD_SA08 = 0x250;
+    hwp_pinmux1->PAD_SA09 = 0x250;
+    hwp_pinmux1->PAD_SA10 = 0x250;
+    hwp_pinmux1->PAD_SA11 = 0x250;
+    hwp_pinmux1->PAD_SA12 = 0x250;
 
     hwp_pinmux1->PAD_PA30 = 0x0;
     hwp_pinmux1->PAD_PA31 = 0x0;
@@ -814,6 +773,9 @@ void board_post_init(void)
     hwp_pinmux1->PAD_PA11 = 0x0;
     hwp_pinmux1->PAD_PA09 = 0x0;
     hwp_pinmux1->PAD_PA20 = 0x0;
+
+    hwp_pinmux1->PAD_PA00 = 0x0;
+    hwp_pinmux1->PAD_PA01 = 0x0;
 
     hwp_pinmux1->PAD_PA02 = 0x0;
     hwp_pinmux1->PAD_PA03 = 0x0;

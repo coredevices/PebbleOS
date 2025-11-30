@@ -474,7 +474,7 @@ int battery_get_constants(BatteryConstants *constants) {
   uint8_t reg;
 
   constants->v_mv = 42000;
-  constants->i_ua = 200;
+  constants->i_ua = 100;
   constants->t_mc = 25000;
   /*hailong*/ return 0;
 
