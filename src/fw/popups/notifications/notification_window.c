@@ -1360,15 +1360,25 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
 
   alerts_incoming_alert_analytics();
   if (alerts_should_vibrate_for_type(prv_alert_type_for_notification_type(type))) {
+  LayoutLayer *current = swap_layer_get_current_layout(&data->swap_layer);
+  TimelineItem *item = (TimelineItem *)layout_get_context(current);
+	Uint32List *vibeDurations = attribute_get_uint32_list(&item->attr_list, AttributeIdVibrationPattern);
+	if (vibeDurations && vibeDurations->num_values > 0) {
+	  VibePattern patt;
+	  patt.durations = vibeDurations->values;
+	  patt.num_segments = vibeDurations->num_values;
+	  vibes_enqueue_custom_pattern(patt);
+	} else {
 #if CAPABILITY_HAS_VIBE_SCORES
-    VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
-    if (score) {
-      vibe_score_do_vibe(score);
-      vibe_score_destroy(score);
-    }
+      VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
+      if (score) {
+        vibe_score_do_vibe(score);
+        vibe_score_destroy(score);
+      }
 #else
-    vibes_short_pulse();
+      vibes_short_pulse();
 #endif
+    }
     // Timestamp set after call to vibrate since if something fails,
     // its better to have no vibe blocking then vibe blocking and no vibrations.
     alerts_set_notification_vibe_timestamp();
