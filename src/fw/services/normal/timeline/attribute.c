@@ -88,6 +88,7 @@ static AttributeType prv_attribute_type(AttributeId id) {
     case AttributeIdMetricValues:
       return AttributeTypeStringList;
     case AttributeIdMetricIcons:
+    case AttributeIdVibrationPattern:
       return AttributeTypeUint32List;
     default:
       return AttributeTypeUnknown;

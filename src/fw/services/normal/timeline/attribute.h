@@ -99,7 +99,7 @@ typedef enum {
   AttributeIdMetricNames = 41,
   //! (StringList) Metric values for Generic pins to display numeric data
   AttributeIdMetricValues = 42,
-  //! (Uint32List) Metric icons, casted to TimelineResourceId (uin16_t) on use
+  //! (Uint32List) Metric icons, casted to TimelineResourceId (uint16_t) on use
   AttributeIdMetricIcons = 43,
   //! (uint8_t) Health activity that the item is from
   AttributeIdHealthActivityType = 44,
@@ -111,6 +111,8 @@ typedef enum {
   AttributeIdSubtitleTemplateString = 47,
   //! Generic icon.
   AttributeIdIcon = 48,
+  //! (Uint32List) Custom vibration pattern for a notification, used with vibes_enqueue_custom_pattern
+  AttributeIdVibrationPattern = 49,
   NumAttributeIds,
 } AttributeId;
 
