@@ -51,19 +51,31 @@ static void prv_init(UARTDevice *dev, uint32_t mode) {
   }
 }
 
-void uart_init(UARTDevice *dev) { prv_init(dev, UART_MODE_TX_RX); }
+void uart_init(UARTDevice *dev) { 
+  ///*hailong*/ return;
+  prv_init(dev, UART_MODE_TX_RX);
+}
 
 void uart_init_open_drain(UARTDevice *dev) { WTF; }
 
-void uart_init_tx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_TX); }
+void uart_init_tx_only(UARTDevice *dev) {
+  ///*hailong*/ return;
+  prv_init(dev, UART_MODE_TX);
+}
 
-void uart_init_rx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_RX); }
+void uart_init_rx_only(UARTDevice *dev) {
+  ///*hailong*/ return;
+  prv_init(dev, UART_MODE_RX);
+}
 
-void uart_deinit(UARTDevice *dev) { HAL_UART_DeInit(&dev->state->huart); }
+void uart_deinit(UARTDevice *dev) {
+  ///*hailong*/ return;
+  HAL_UART_DeInit(&dev->state->huart);
+}
 
 void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
   HAL_StatusTypeDef ret;
-
+///*hailong*/ return;
   PBL_ASSERTN(dev->state->initialized);
 
   HAL_UART_DeInit(&dev->state->huart);
@@ -77,10 +89,12 @@ void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void uart_write_byte(UARTDevice *dev, uint8_t data) {
+  ///*hailong*/ return;
   HAL_UART_Transmit(&dev->state->huart, &data, 1, HAL_MAX_DELAY);
 }
 
 uint8_t uart_read_byte(UARTDevice *dev) {
+  ///*hailong*/ return 0;
   HAL_StatusTypeDef ret;
   uint8_t data;
 
@@ -91,26 +105,32 @@ uint8_t uart_read_byte(UARTDevice *dev) {
 }
 
 bool uart_is_rx_ready(UARTDevice *dev) {
+  ///*hailong*/ return false;
   return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_RXNE;
 }
 
 bool uart_has_rx_overrun(UARTDevice *dev) {
+  ///*hailong*/ return false;
   return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_ORE;
 }
 
 bool uart_has_rx_framing_error(UARTDevice *dev) {
+  ///*hailong*/ return false;
   return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_FE;
 }
 
 bool uart_is_tx_ready(UARTDevice *dev) {
+  ///*hailong*/ return true;
   return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_TXE;
 }
 
 bool uart_is_tx_complete(UARTDevice *dev) {
+  ///*hailong*/ return true;
   return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_TC;
 }
 
 void uart_wait_for_tx_complete(UARTDevice *dev) {
+  ///*hailong*/ return;
   while (!uart_is_tx_complete(dev)) continue;
 }
 
@@ -128,16 +148,19 @@ static void prv_set_interrupt_enabled(UARTDevice *dev, bool enabled) {
 }
 
 void uart_set_rx_interrupt_handler(UARTDevice *dev, UARTRXInterruptHandler irq_handler) {
+  ///*hailong*/ return;
   PBL_ASSERTN(dev->state->initialized);
   dev->state->rx_irq_handler = irq_handler;
 }
 
 void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_handler) {
+  ///*hailong*/ return;
   PBL_ASSERTN(dev->state->initialized);
   dev->state->tx_irq_handler = irq_handler;
 }
 
 void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
+  ///*hailong*/ return;
   PBL_ASSERTN(dev->state->initialized);
   if (enabled) {
     dev->state->rx_int_enabled = true;
@@ -152,6 +175,7 @@ void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
 }
 
 void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
+  ///*hailong*/ return;
   PBL_ASSERTN(dev->state->initialized);
   if (enabled) {
     dev->state->tx_int_enabled = true;
@@ -166,6 +190,7 @@ void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
 }
 
 void uart_irq_handler(UARTDevice *dev) {
+  ///*hailong*/ return;
   PBL_ASSERTN(dev->state->initialized);
   bool should_context_switch = false;
   uint32_t idx;
@@ -224,6 +249,7 @@ void uart_irq_handler(UARTDevice *dev) {
 }
 
 void uart_clear_all_interrupt_flags(UARTDevice *dev) {
+  ///*hailong*/ return;
   UART_HandleTypeDef *uart = &dev->state->huart;
   if (__HAL_UART_GET_FLAG(uart, UART_FLAG_ORE) != RESET) {
     __HAL_UART_CLEAR_OREFLAG(uart);
@@ -240,6 +266,7 @@ void uart_clear_all_interrupt_flags(UARTDevice *dev) {
 }
 
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
+  ///*hailong*/ return;
   size_t recv_len;
   size_t recv_total_index;
   uint32_t idx;
@@ -273,6 +300,7 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  ///*hailong*/ return;
   HAL_UART_RxHalfCpltCallback(huart);
 }
 
@@ -280,10 +308,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void uart_dma_irq_handler(UARTDevice *dev) {
+  ///*hailong*/ return;
   HAL_DMA_IRQHandler(&dev->state->hdma);
 }
 
 void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
+  ///*hailong*/ return;
   dev->state->rx_dma_buffer = buffer;
   dev->state->rx_dma_length = length;
   dev->state->rx_dma_index = 0;
@@ -292,11 +322,13 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
 }
 
 void uart_stop_rx_dma(UARTDevice *dev) {
+  ///*hailong*/ return;
   dev->state->rx_dma_buffer = NULL;
   dev->state->rx_dma_length = 0;
   HAL_UART_DMAPause(&dev->state->huart);
 }
 
 void uart_clear_rx_dma_buffer(UARTDevice *dev) {
+  ///*hailong*/ return;
   dev->state->rx_dma_index = dev->state->rx_dma_length - __HAL_DMA_GET_COUNTER(&dev->state->hdma);
 }
