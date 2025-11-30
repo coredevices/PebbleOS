@@ -87,7 +87,7 @@ static void prv_exit_critical(void) {
   // transition actions, only entry/exit actions.
   // We check that the state is PowerStateGood because the state machine does not transition through
   // all states in between the new and old states in a transition.
-  if (s_power_state == PowerStateGood) {
+  if (s_power_state == PowerStateGood || s_power_state == PowerStatePluggedIn) {
     prv_resume_normal_operation();
   }
 }
@@ -95,7 +95,7 @@ static void prv_exit_critical(void) {
 static void prv_exit_lpm(void) {
   // Checking the state here is a bit of a hack because the state machine does not have proper
   // transition actions, only entry/exit actions
-  if (s_power_state == PowerStateGood) {
+  if (s_power_state == PowerStateGood || s_power_state == PowerStatePluggedIn) {
     prv_resume_normal_operation();
   }
 }
