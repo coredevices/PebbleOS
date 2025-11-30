@@ -279,6 +279,8 @@ static void register_system_timers(void) {
   }
 }
 
+extern void board_post_init(void);
+
 static void init_drivers(void) {
   board_init();
 
@@ -293,14 +295,14 @@ static void init_drivers(void) {
 #endif
 
   battery_init();
-  vibe_init();
+  ///*hailong*/ vibe_init();
 
 #if CAPABILITY_HAS_ACCESSORY_CONNECTOR
   accessory_init();
 #endif
 
 #if CAPABILITY_HAS_PMIC
-  pmic_init();
+  ///*hailong*/ pmic_init();
 #endif // CAPABILITY_HAS_PMIC
 
   flash_init();
@@ -313,7 +315,7 @@ static void init_drivers(void) {
 #endif
 
 #if CAPABILITY_HAS_TOUCHSCREEN
-  touch_sensor_init();
+  ///*hailong*/ touch_sensor_init();
 #endif
 
   imu_init();
@@ -329,6 +331,8 @@ static void init_drivers(void) {
   rtc_alarm_init();
 
   power_tracking_init();
+
+  board_post_init();
 }
 
 static void clear_reset_loop_detection_bits(void) {
@@ -461,7 +465,7 @@ static NOINLINE void prv_main_task_init(void) {
 
 #if CAPABILITY_HAS_BUILTIN_HRM
   if (mfg_info_is_hrm_present()) {
-    hrm_init(HRM);
+    // hrm_init(HRM);
   }
 #endif
 
