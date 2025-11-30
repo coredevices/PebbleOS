@@ -774,6 +774,15 @@ void board_post_init(void)
     hwp_pinmux1->PAD_PA09 = 0x0;
     hwp_pinmux1->PAD_PA20 = 0x0;
 
+    hwp_pinmux1->PAD_PA12 = 0x201;
+    hwp_pinmux1->PAD_PA16 = 0x201;
+
+    hwp_pinmux1->PAD_PA13 = 0x2d1;
+    hwp_pinmux1->PAD_PA14 = 0x2d1;
+    hwp_pinmux1->PAD_PA15 = 0x2d1;
+    hwp_pinmux1->PAD_PA17 = 0x2d1;
+
+
     hwp_pinmux1->PAD_PA00 = 0x0;
     hwp_pinmux1->PAD_PA01 = 0x0;
 
