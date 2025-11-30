@@ -306,13 +306,16 @@ T_STATIC void prv_handle_display_update_complete(void) {
     s_deferred_render.animation.pending = false;
     prv_animation_update(s_animation_state.animation, s_deferred_render.animation.progress);
   }
-  if (s_deferred_render.app.pending) {
-    s_deferred_render.app.pending = false;
-    compositor_app_render_ready();
-  }
+  // Process transition_start before app so that the compositor state is set to
+  // AppTransitionPending before compositor_app_render_ready() is called. Otherwise, the app
+  // framebuffer may be rendered directly to the display before the transition animation starts.
   if (s_deferred_render.transition_start.pending) {
     s_deferred_render.transition_start.pending = false;
     compositor_transition(s_deferred_render.transition_start.compositor_animation);
+  }
+  if (s_deferred_render.app.pending) {
+    s_deferred_render.app.pending = false;
+    compositor_app_render_ready();
   }
 }
 
