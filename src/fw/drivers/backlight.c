@@ -95,7 +95,7 @@ void backlight_init(void) {
   }
 
   if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_LedController) {
-    led_controller_init();
+    ///*hailong*/ led_controller_init();
     s_initialized = true;
   }
 }

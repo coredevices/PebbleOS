@@ -42,6 +42,7 @@ void gh3026_i2c_read(uint8_t device_id, const uint8_t write_buffer[], uint16_t w
 void gh3026_reset_pin_init(void) {}
 
 void gh3026_reset_pin_ctrl(uint8_t pin_level) {
+  /*hailong*/ return;
 #if GH3X2X_RESET_PIN_CTRLBY_NPM1300
   NPM1300_OPS.gpio_set(Npm1300_Gpio3, pin_level);
   psleep(10);
@@ -49,6 +50,7 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 }
 
 void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_buffer_index) {
+  /*hailong*/ return;
   // TODO, clean the buffer now
   GU16 count = *gsensor_buffer_index;
   for (uint16_t i = 0; i < count; ++i) {
@@ -75,6 +77,7 @@ static void gh3026_int_irq_callback(bool *should_context_switch) {
 }
 
 void gh3026_int_pin_init(void) {
+  /*hailong*/ return;
   exti_configure_pin(HRM->int_exti, ExtiTrigger_Rising, gh3026_int_irq_callback);
   exti_enable(HRM->int_exti);
 }
@@ -91,6 +94,7 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
 }
 
 void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
+  /*hailong*/ return;
   if (type == 1) {
     HRMData hrm_data = {0};
 
@@ -124,6 +128,7 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
 
 void hrm_init(HRMDevice *dev) {
   int ret;
+  /*hailong*/ return;
 
   ret = Gh3x2xDemoInit();
   if (ret != 0) {
@@ -137,6 +142,7 @@ void hrm_init(HRMDevice *dev) {
 }
 
 void hrm_enable(HRMDevice *dev) {
+  /*hailong*/ return;
   if (!dev->state->initialized) {
     return;
   }
@@ -151,6 +157,7 @@ void hrm_enable(HRMDevice *dev) {
 }
 
 void hrm_disable(HRMDevice *dev) {
+  /*hailong*/ return;
   if (!dev->state->initialized) {
     return;
   }

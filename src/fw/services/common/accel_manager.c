@@ -414,17 +414,17 @@ void accel_manager_init(void) {
   shared_circular_buffer_init(&s_buffer, s_buffer_storage,
       sizeof(s_buffer_storage));
 
-  event_service_init(PEBBLE_ACCEL_SHAKE_EVENT, &prv_shake_add_subscriber_cb,
-      &prv_shake_remove_subscriber_cb);
+  ///*hailong*/ event_service_init(PEBBLE_ACCEL_SHAKE_EVENT, &prv_shake_add_subscriber_cb,
+  ///*hailong*/     &prv_shake_remove_subscriber_cb);
 
-  event_service_init(PEBBLE_ACCEL_DOUBLE_TAP_EVENT, &prv_double_tap_add_subscriber_cb,
-      &prv_double_tap_remove_subscriber_cb);
+  ///*hailong*/ event_service_init(PEBBLE_ACCEL_DOUBLE_TAP_EVENT, &prv_double_tap_add_subscriber_cb,
+  ///*hailong*/     &prv_double_tap_remove_subscriber_cb);
 
   // we always listen for motion events to decide whether or not to enable the backlight
   // TODO: KernelMain could probably subscribe to the motion service to accomplish this?
-  prv_shake_add_subscriber_cb(PebbleTask_KernelMain);
+  ///*hailong*/ prv_shake_add_subscriber_cb(PebbleTask_KernelMain);
 
-  analytics_external_collect_accel_xyz_delta();
+  ///*hailong*/ analytics_external_collect_accel_xyz_delta();
   
   // Apply saved motion sensitivity preference for Asterix/Obelix
   // Only available in normal shell (not PRF)
