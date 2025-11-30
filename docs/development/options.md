@@ -3,6 +3,26 @@
 When configuring the build (`./waf configure ...`) there are several options you can enable or tune.
 Below you will find a list of the most relevant ones.
 
+## Choosing your target
+
+There are a number of target boards to choose from when building PebbleOS. You can do so by
+using the (`--board`) flag followed by:
+
+:`v1_5`, `v2_0`:
+  Pebble Classic + Pebble Steel
+:`snowy_dvt`, `snowy_s3`: 
+  Pebble Time + Pebble Time Steel
+:`spalding`:
+  Pebble Time Round 
+:`silk`:
+  Pebble 2 SE/HR
+:`asterix`:
+  (Core Devices) Pebble 2 Duo
+:`obelix_dvt`, `obelix_bb2`:
+  (Core Devices) Pebble Time 2
+
+Keep in mind that some targets may not currently compile as-is.
+
 ## Main features
 
 :`--js-engine`:

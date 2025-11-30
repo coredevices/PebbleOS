@@ -91,6 +91,7 @@ getting_started.md
 :hidden:
 :caption: 🛠️ Development
 development/options.md
+development/building_fw.md
 development/prf.md
 development/qemu.md
 ```
