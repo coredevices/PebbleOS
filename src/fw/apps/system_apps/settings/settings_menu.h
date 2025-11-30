@@ -22,6 +22,7 @@ typedef enum {
   SettingsMenuItemTimeline,
 #endif
   SettingsMenuItemQuickLaunch,
+  SettingsMenuItemMusic,
   SettingsMenuItemDateTime,
   SettingsMenuItemDisplay,
 #if PBL_COLOR
