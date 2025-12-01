@@ -175,11 +175,13 @@ def build(bld):
     # These are shared defines for jerry-core, jerry-libm, js_tooling and
     # jerry-port (part of applib).
     #############################################
-    wrap_quotes = lambda s: '"{}"'.format(s)
+    # Note: JERRY_BRANCH_NAME, JERRY_COMMIT_HASH, JERRY_BUILD_DATE are hardcoded
+    # to avoid triggering full rebuilds on git operations. These are only used
+    # by the standalone jerry CLI (main-unix.c), not embedded firmware.
     jerry_common_defines_dict = {
-      'JERRY_BRANCH_NAME': wrap_quotes(run_cmd('git symbolic-ref -q HEAD')),
-      'JERRY_COMMIT_HASH': wrap_quotes(run_cmd('git rev-parse HEAD')),
-      'JERRY_BUILD_DATE': wrap_quotes(run_cmd('date +%d/%m/%Y')),
+      'JERRY_BRANCH_NAME': '"pebble"',
+      'JERRY_COMMIT_HASH': '"pebble"',
+      'JERRY_BUILD_DATE': '"pebble"',
       'CONFIG_ECMA_NUMBER_TYPE': 'CONFIG_ECMA_NUMBER_FLOAT64',
       'CONFIG_DISABLE_PRINT_BUILTIN': '',
       'JERRY_DISABLE_HEAVY_DEBUG': '',
