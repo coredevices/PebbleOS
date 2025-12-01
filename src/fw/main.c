@@ -328,6 +328,10 @@ static void init_drivers(void) {
   rtc_init_timers();
   rtc_alarm_init();
 
+#ifdef MICRO_FAMILY_SF32LB52
+  lptim_calibrate_init();
+#endif
+
   power_tracking_init();
 }
 
