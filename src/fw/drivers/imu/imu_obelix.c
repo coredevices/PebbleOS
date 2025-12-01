@@ -8,25 +8,25 @@
 
 void imu_init(void) {
 #ifdef IMU_USE_LIS2DW12
-  ///*hailong*/ lis2dw12_init();
+  lis2dw12_init();
 #else
-  ///*hailong*/ lsm6dso_init();
+  lsm6dso_init();
 #endif
-  ///*hailong*/ mmc5603nj_init();
+  mmc5603nj_init();
 }
 
 void imu_power_up(void) {
 #ifdef IMU_USE_LIS2DW12
-  ///*hailong*/ lis2dw12_power_up();
+  lis2dw12_power_up();
 #else
-  ///*hailong*/ lsm6dso_power_up();
+  lsm6dso_power_up();
 #endif
 }
 
 void imu_power_down(void) {
 #ifdef IMU_USE_LIS2DW12
-  ///*hailong*/ lis2dw12_power_down();
+  lis2dw12_power_down();
 #else
-  ///*hailong*/ lsm6dso_power_down();
+  lsm6dso_power_down();
 #endif
 }

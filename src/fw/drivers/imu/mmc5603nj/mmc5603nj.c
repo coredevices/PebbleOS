@@ -48,7 +48,7 @@ static bool s_rotated_180 = false;
 // MMC5603NJ entrypoints
 
 void mmc5603nj_init(void) {
-  /*hailong */ return;
+  /*hailong*/ return;
   s_mag_mutex = mutex_create();
   if (prv_mmc5603nj_init()) {
     PBL_LOG(LOG_LEVEL_DEBUG, "MMC5603NJ: Initialization complete");
@@ -60,7 +60,7 @@ void mmc5603nj_init(void) {
 // mag.h implementation
 
 void mag_use(void) {
-  /*hailong */ return;
+  /*hailong*/ return;
   PBL_ASSERTN(s_initialized);
   mutex_lock(s_mag_mutex);
   ++s_use_refcount;
@@ -68,13 +68,13 @@ void mag_use(void) {
 }
 
 void mag_start_sampling(void) {
-  /*hailong */ return;
+  /*hailong*/ return;
   mag_use();
   mag_change_sample_rate(MagSampleRate5Hz);
 }
 
 void mag_release(void) {
-  /*hailong */ return;
+  /*hailong*/ return;
   PBL_ASSERTN(s_initialized && s_use_refcount != 0);
   mutex_lock(s_mag_mutex);
   --s_use_refcount;
@@ -91,7 +91,7 @@ MagReadStatus mag_read_data(MagData *data) {
   data->x = 0;
   data->y = 0;
   data->z = 0;
-  /*hailong */ return MagReadSuccess;
+  /*hailong*/ return MagReadSuccess;
   mutex_lock(s_mag_mutex);
   MagReadStatus rv = prv_mmc5603nj_get_sample(data);
   mutex_unlock(s_mag_mutex);
@@ -99,7 +99,7 @@ MagReadStatus mag_read_data(MagData *data) {
 }
 
 bool mag_change_sample_rate(MagSampleRate rate) {
-  /*hailong */ return true;
+  /*hailong*/ return true;
   mutex_lock(s_mag_mutex);
 
   if (s_use_refcount == 0) {
@@ -177,7 +177,7 @@ static bool prv_mmc5603nj_init(void) {
 // Ask the compass for a 8-bit value that's programmed into the IC at the
 // factory. Useful as a sanity check to make sure everything came up properly.
 bool prv_mmc5603nj_check_whoami(void) {
-  /*hailong */ return true;
+  /*hailong*/ return true;
   uint8_t whoami = 0;
   if (!prv_mmc5603nj_read(MMC5603NJ_REG_WHO_AM_I, 1, &whoami)) {
     return false;
@@ -213,7 +213,7 @@ static bool prv_mmc5603nj_reset(void) {
 // Configure ODR
 
 bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
-  /*hailong */ return true;
+  /*hailong*/ return true;
   if (rate_hz == s_sample_rate_hz) {
     return true;
   }
@@ -306,7 +306,7 @@ static void prv_mmc5603nj_polling_callback(void *data) {
 
 // Samples
 bool prv_mmc5603nj_is_data_ready(void) {
-  /*hailong */ return true;
+  /*hailong*/ return true;
   uint8_t status = 0;
   prv_mmc5603nj_read(MMC5603NJ_REG_STATUS1, 1, &status);
   return (status & MMC5603NJ_STATUS1_MEAS_M_DONE_MASK) > 0;

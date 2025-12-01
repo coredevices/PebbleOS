@@ -295,14 +295,14 @@ static void init_drivers(void) {
 #endif
 
   battery_init();
-  ///*hailong*/ vibe_init();
+  vibe_init();
 
 #if CAPABILITY_HAS_ACCESSORY_CONNECTOR
   accessory_init();
 #endif
 
 #if CAPABILITY_HAS_PMIC
-  ///*hailong*/ pmic_init();
+  pmic_init();
 #endif // CAPABILITY_HAS_PMIC
 
   flash_init();
@@ -315,7 +315,7 @@ static void init_drivers(void) {
 #endif
 
 #if CAPABILITY_HAS_TOUCHSCREEN
-  ///*hailong*/ touch_sensor_init();
+  touch_sensor_init();
 #endif
 
   imu_init();

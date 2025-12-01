@@ -739,7 +739,7 @@ void board_early_init(void) {
 }
 
 void board_init(void) {
-     /*hailong*/ i2c_init(I2C1_BUS);
+  /*hailong*/ i2c_init(I2C1_BUS);
 //   /*hailong*/ i2c_init(I2C2_BUS);
 //   /*hailong*/ i2c_init(I2C3_BUS);
 //   /*hailong*/ i2c_init(I2C4_BUS);
@@ -960,5 +960,13 @@ static void board_post_init_v1(void)
     PBL_LOG(LOG_LEVEL_INFO, "gpio(32~44) DOER reg: 0x%lx", hwp_gpio2->DOER);
     PBL_LOG(LOG_LEVEL_INFO, "gpio(32~44) IER reg: 0x%lx", hwp_gpio2->IER);
     PBL_LOG(LOG_LEVEL_INFO, "gpio(32~44) ITR reg: 0x%lx", hwp_gpio2->ITR);
+
+    PBL_LOG(LOG_LEVEL_INFO, "hwp_rtc->PBR0R: 0x%lx", hwp_rtc->PBR0R);
+    PBL_LOG(LOG_LEVEL_INFO, "hwp_rtc->PBR1R: 0x%lx", hwp_rtc->PBR1R);
+    PBL_LOG(LOG_LEVEL_INFO, "hwp_rtc->PBR2R: 0x%lx", hwp_rtc->PBR2R);
+    PBL_LOG(LOG_LEVEL_INFO, "hwp_rtc->PBR3R: 0x%lx", hwp_rtc->PBR3R);
+
+    PBL_LOG(LOG_LEVEL_INFO, "RTC PAWK1R: 0x%lx", hwp_rtc->PAWK1R); 
+    PBL_LOG(LOG_LEVEL_INFO, "RTC PAWK2R: 0x%lx", hwp_rtc->PAWK2R); 
 
 }
