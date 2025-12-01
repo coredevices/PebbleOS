@@ -83,6 +83,7 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .tap_shock = 0x03,
   .tap_quiet = 0x02,
   .tap_dur = 0x08,
+  .default_motion_sensitivity = 85, // High
   },
   // Ideally we would configure both interrupt pins, but we have run out of GPIOTE channels.
   // We will use INT1 (connected to pin 13) for accelerometer interrupts, and leave INT2 (pin 11) unused.

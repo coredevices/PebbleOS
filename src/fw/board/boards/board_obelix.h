@@ -84,6 +84,7 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
     .tap_shock = 0x03U,
     .tap_quiet = 0x02U,
     .tap_dur = 0x08U,
+    .default_motion_sensitivity = 70U, // Medium-High
   },
   .accel_int_gpios = {
     [0] = { .gpio = hwp_gpio1, .gpio_pin = 38 },
