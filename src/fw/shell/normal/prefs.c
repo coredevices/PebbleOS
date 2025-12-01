@@ -673,6 +673,10 @@ void shell_prefs_init(void) {
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
   s_dynamic_backlight_max_threshold = BOARD_CONFIG.dynamic_backlight_max_threshold;
 #endif
+  // Use board-specific default motion sensitivity if provided (non-zero)
+  if (BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity != 0) {
+    s_motion_sensitivity = BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity;
+  }
   s_mutex = mutex_create();
 
   SettingsFile file = {{0}};
