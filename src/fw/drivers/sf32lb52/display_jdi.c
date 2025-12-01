@@ -8,6 +8,7 @@
 #include "drivers/display/display.h"
 #include "drivers/gpio.h"
 #include "kernel/events.h"
+#include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
@@ -23,10 +24,14 @@
 #include "bf0_hal_rtc.h"
 
 #define BYTE_222_TO_332(data) ((((data) & 0x30) << 2) | (((data) & 0x0c) << 1) | ((data) & 0x03))
+#define BYTE_332_TO_222(data) ((((data) & 0xC0) >> 2) | (((data) & 0x18) >> 1) | ((data) & 0x03))
 #define POWER_SEQ_DELAY_TIME  (11)
 #define POWER_RESET_CYCLE_DELAY_TIME (500)
 
-static uint8_t s_framebuffer[DISPLAY_FRAMEBUFFER_BYTES];
+// Pointer to the compositor's framebuffer - we convert in-place to save 44KB RAM
+static uint8_t *s_framebuffer;
+static uint16_t s_update_y0;
+static uint16_t s_update_y1;
 static bool s_initialized;
 static bool s_updating;
 static UpdateCompleteCallback s_uccb;
@@ -134,6 +139,14 @@ static void prv_display_update_start(void) {
 }
 
 static void prv_display_update_terminate(void *data) {
+  // Convert the updated region back from 332 to 222 format
+  for (uint16_t y = s_update_y0; y <= s_update_y1; y++) {
+    uint8_t *row = &s_framebuffer[y * PBL_DISPLAY_WIDTH];
+    for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH; x++) {
+      row[x] = BYTE_332_TO_222(row[x]);
+    }
+  }
+
   s_updating = false;
   s_uccb();
   stop_mode_enable(InhibitorDisplay);
@@ -234,12 +247,23 @@ void display_init(void) {
 void display_clear(void) {
   DisplayJDIState *state = DISPLAY->state;
 
-  memset(s_framebuffer, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+  // Allocate temporary framebuffer for clear operation
+  // This is only called during boot when heap has plenty of space
+  uint8_t *temp_fb = kernel_malloc(DISPLAY_FRAMEBUFFER_BYTES);
+  if (!temp_fb) {
+    return;
+  }
+  
+  memset(temp_fb, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+  s_framebuffer = temp_fb;
 
   stop_mode_disable(InhibitorDisplay);
   prv_display_update_start();
   xSemaphoreTake(s_sem, portMAX_DELAY);
   stop_mode_enable(InhibitorDisplay);
+  
+  kernel_free(temp_fb);
+  s_framebuffer = NULL;
 }
 
 void display_set_enabled(bool enabled) {
@@ -257,25 +281,36 @@ bool display_update_in_progress(void) {
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   DisplayJDIState *state = DISPLAY->state;
   DisplayRow row;
-  uint16_t rows = 0U;
-  uint16_t y0 = 0U;
-  bool y0_set = false;
+  bool first_row = true;
 
   PBL_ASSERTN(!s_updating);
 
-  // convert all rows requiring an update to 332 format
+  // Convert rows in-place from 222 to 332 format
+  // We use the compositor's framebuffer directly to save RAM
   while (nrcb(&row)) {
-    if (!y0_set) {
-      y0 = row.address;
-      y0_set = true;
+    if (first_row) {
+      // Capture pointer to compositor's framebuffer from first row
+      s_framebuffer = row.data;
+      s_update_y0 = row.address;
+      first_row = false;
     }
+    s_update_y1 = row.address;
 
-    for (uint16_t count = 0U; count < PBL_DISPLAY_WIDTH; count++) {
-      s_framebuffer[row.address * PBL_DISPLAY_WIDTH + count] = BYTE_222_TO_332(*(row.data + count));
+    // Convert this row in-place from 222 to 332
+    uint8_t *row_data = row.data;
+    for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH; x++) {
+      row_data[x] = BYTE_222_TO_332(row_data[x]);
     }
-
-    rows++;
   }
+
+  if (first_row) {
+    // No rows to update
+    uccb();
+    return;
+  }
+
+  // Adjust framebuffer pointer to start of buffer (row 0)
+  s_framebuffer = s_framebuffer - (s_update_y0 * PBL_DISPLAY_WIDTH);
 
   s_uccb = uccb;
   s_updating = true;
@@ -298,22 +333,34 @@ void display_show_splash_screen(void) {
 
   display_init();
 
-  memset(s_framebuffer, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+  // Allocate temporary framebuffer for splash screen
+  // This is only called during boot when heap has plenty of space
+  uint8_t *temp_fb = kernel_malloc(DISPLAY_FRAMEBUFFER_BYTES);
+  if (!temp_fb) {
+    return;
+  }
+
+  memset(temp_fb, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
 
   x0 = (PBL_DISPLAY_WIDTH - splash->width) / 2;
   y0 = (PBL_DISPLAY_HEIGHT - splash->height) / 2;
   for (uint16_t y = 0U; y < splash->height; y++) {
     for (uint16_t x = 0U; x < splash->width; x++) {
       if (splash->data[y * (splash->width / 8) + x / 8] & (0x1U << (x & 7))) {
-        s_framebuffer[(y + y0) * PBL_DISPLAY_WIDTH + (x + x0)] = 0x00;
+        temp_fb[(y + y0) * PBL_DISPLAY_WIDTH + (x + x0)] = 0x00;
       }
     }
   }
+
+  s_framebuffer = temp_fb;
 
   stop_mode_disable(InhibitorDisplay);
   prv_display_update_start();
   xSemaphoreTake(s_sem, portMAX_DELAY);
   stop_mode_enable(InhibitorDisplay);
+  
+  kernel_free(temp_fb);
+  s_framebuffer = NULL;
 }
 
 void display_pulse_vcom(void) {}
