@@ -146,6 +146,9 @@ typedef struct {
   uint8_t tap_shock;
   uint8_t tap_quiet;
   uint8_t tap_dur;
+  // Default motion sensitivity (0-100), where 100 = most sensitive.
+  // A value of 0 means use the firmware default (85 = High).
+  uint8_t default_motion_sensitivity;
 } AccelConfig;
 
 typedef struct {

@@ -132,6 +132,9 @@ typedef struct {
   bool axes_inverts[3];
   uint32_t shake_thresholds[AccelThreshold_Num];
   uint32_t double_tap_threshold;
+  // Default motion sensitivity (0-100), where 100 = most sensitive.
+  // A value of 0 means use the firmware default (85 = High).
+  uint8_t default_motion_sensitivity;
 } AccelConfig;
 
 typedef struct {
