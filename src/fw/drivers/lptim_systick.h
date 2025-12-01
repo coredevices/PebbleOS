@@ -8,6 +8,8 @@
 
 void lptim_systick_init(void);
 
+void lptim_calibrate_init(void);
+
 bool lptim_systick_is_initialized(void);
 
 void lptim_systick_enable(void);
