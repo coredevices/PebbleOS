@@ -106,6 +106,7 @@ static void prv_handle_init(void) {
     .type = PEBBLE_TOUCH_EVENT,
     .handler = prv_handle_touch_event,
   };
+  touch_reset();
   event_service_client_subscribe(&data->event_info);
 }
 
