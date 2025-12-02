@@ -19,11 +19,7 @@ extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern I2CBus *const I2C2_BUS;
-#ifdef IMU_USE_LIS2DW12
 extern I2CSlavePort *const I2C_LSM2DW12;
-#else
-extern I2CSlavePort * const I2C_LSM6D;
-#endif
 extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort *const I2C_AW86225;
@@ -31,9 +27,6 @@ extern I2CSlavePort *const I2C_W1160;
 extern I2CSlavePort *const I2C_AW2016;
 extern const Npm1300Config NPM1300_CONFIG;
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
-#if !BOARD_OBELIX_DVT && !BOARD_OBELIX_PVT && !BOARD_OBELIX_BB2
-extern const LedControllerPwm LED_CONTROLLER_PWM;
-#endif
 extern PwmConfig *const PWM1_CH1;
 extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
@@ -58,13 +51,8 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
     .axes_inverts[AXIS_Y] = true,
     .axes_inverts[AXIS_Z] = false,
 #else
-#if (defined(BOARD_OBELIX_DVT) || defined(BOARD_OBELIX_PVT)) && defined(IMU_USE_LIS2DW12)
     .axes_offsets[AXIS_X] = 1,
     .axes_offsets[AXIS_Y] = 0,
-#else
-    .axes_offsets[AXIS_X] = 0,
-    .axes_offsets[AXIS_Y] = 1,
-#endif
     .axes_offsets[AXIS_Z] = 2,
     .axes_inverts[AXIS_X] = false,
     .axes_inverts[AXIS_Y] = true,

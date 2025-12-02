@@ -486,7 +486,7 @@ if bld.is_silk() and not bld.env.QEMU:
         ],
     )
 
-if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb():
+if bld.is_asterix():
     bld.objects(
         name='driver_lsm6dso',
         source=[
@@ -498,8 +498,8 @@ if bld.is_asterix() or bld.is_obelix_evt() or bld.is_obelix_bb():
         ],
     )
 
-# NOTE: enable LIS2DW12 by default on Obelix DVT/PVT/BB2
-if bld.is_obelix_dvt() or bld.is_obelix_pvt() or bld.is_obelix_bb2():
+# NOTE: enable LIS2DW12 by default on Obelix
+if bld.is_obelix():
     bld.objects(
         name='driver_lis2dw12',
         source=[
@@ -1068,25 +1068,17 @@ elif bld.is_asterix():
         ],
     )
 elif bld.is_obelix():
-    use = [
-        'driver_mmc5603nj',
-        'fw_includes',
-        'root_includes',
-    ]
-
-    # NOTE: enable LIS2DW12 by default on Obelix DVT/PVT/BB2
-    if bld.is_obelix_dvt() or bld.is_obelix_pvt() or bld.is_obelix_bb2():
-        use += ['driver_lis2dw12']
-        bld.env.DEFINES.append('IMU_USE_LIS2DW12')
-    else:
-        use += ['driver_lsm6dso']
-
     bld.objects(
         name='driver_imu',
         source=[
             'imu/imu_obelix.c',
         ],
-        use=use,
+        use=[
+          'driver_lis2dw12',
+          'driver_mmc5603nj',
+          'fw_includes',
+          'root_includes',
+        ]
     )
 
 if bld.env.BOARD == "v2_0":
@@ -1106,26 +1098,15 @@ if bld.env.BOARD == "v2_0":
         ],
     )
 elif bld.is_obelix():
-    if not bld.is_obelix_dvt() and not bld.is_obelix_pvt() and not bld.is_obelix_bb2():
-        bld.objects(
-            name='driver_led_controller',
-            source=[
-                'led_controller/pwm.c',
-            ],
-            use=[
-                'driver_pwm',
-            ],
-        )
-    else :
-        bld.objects(
-            name='driver_led_controller',
-            source=[
-                'led_controller/aw2016.c',
-            ],
-            use=[
-                'driver_i2c',
-            ],
-        )
+    bld.objects(
+        name='driver_led_controller',
+        source=[
+            'led_controller/aw2016.c',
+        ],
+        use=[
+            'driver_i2c',
+        ],
+    )
 
 
 if bld.is_tintin() and not bld.env.QEMU:

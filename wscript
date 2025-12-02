@@ -52,10 +52,8 @@ RUNNERS = {
     'robert_evt': ['openocd'],
     'robert_es': ['openocd'],
     'asterix': ['openocd', 'nrfutil'],
-    'obelix_evt': ['sftool'],
     'obelix_dvt': ['sftool'],
     'obelix_pvt': ['sftool'],
-    'obelix_bb': ['sftool'],
     'obelix_bb2': ['sftool'],
 }
 
@@ -118,10 +116,8 @@ def options(opt):
                              'robert_evt',
                              'robert_es',
                              'asterix',
-                             'obelix_evt',
                              'obelix_dvt',
                              'obelix_pvt',
-                             'obelix_bb',
                              'obelix_bb2',
                             ],
                    help='Which board we are targeting '
