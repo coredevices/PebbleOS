@@ -27,7 +27,7 @@ static MfgData prv_fetch_struct(void) {
   // Fallback data if not available
   if (result.data_version != CURRENT_DATA_VERSION) {
       result.data_version = CURRENT_DATA_VERSION;
-      result.color = WATCH_INFO_COLOR_COREDEVICES_C2D_BLACK;
+      result.color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK;
       strncpy(result.model, "asterix", sizeof(result.model));
       result.model[MFG_INFO_MODEL_STRING_LENGTH - 1] = '\0';
   }
