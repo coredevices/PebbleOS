@@ -7,7 +7,9 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
+#include "applib/ui/path_layer.h"
 #include "applib/ui/text_layer.h"
+#include "drivers/display/display.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
 #include "process_state/app_state/app_state.h"
@@ -76,17 +78,24 @@ typedef struct {
   TextLayer color;
   TextLayer status;
 
+  PathLayer up_arrow;
+  PathLayer down_arrow;
+
   int selected_color_index;
 } AppData;
 
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  if (ARRAY_LENGTH(s_color_table) == 0 || app_data->selected_color_index == 0) {
+  if (ARRAY_LENGTH(s_color_table) == 0) {
     return;
   }
 
-  app_data->selected_color_index--;
+  if (app_data->selected_color_index == 0) {
+    app_data->selected_color_index = ARRAY_LENGTH(s_color_table) - 1;
+  } else {
+    app_data->selected_color_index--;
+  }
   text_layer_set_text(&app_data->color,
                       s_color_table[app_data->selected_color_index].name);
 }
@@ -94,12 +103,15 @@ static void prv_up_click_handler(ClickRecognizerRef recognizer, void *data) {
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  if (ARRAY_LENGTH(s_color_table) == 0 ||
-      app_data->selected_color_index == (int)ARRAY_LENGTH(s_color_table) - 1) {
+  if (ARRAY_LENGTH(s_color_table) == 0) {
     return;
   }
 
-  app_data->selected_color_index++;
+  if (app_data->selected_color_index == (int)ARRAY_LENGTH(s_color_table) - 1) {
+    app_data->selected_color_index = 0;
+  } else {
+    app_data->selected_color_index++;
+  }
   text_layer_set_text(&app_data->color,
                       s_color_table[app_data->selected_color_index].name);
 }
@@ -147,10 +159,24 @@ static void prv_handle_init(void) {
   text_layer_set_text(title, "PROGRAM COLOR");
   layer_add_child(&window->layer, &title->layer);
 
+  // Create up arrow (pointing up)
+  static GPoint UP_ARROW_POINTS[] = {{0, 10}, {7, 0}, {14, 10}};
+  static const GPathInfo UP_ARROW_PATH_INFO = {
+    .num_points = ARRAY_LENGTH(UP_ARROW_POINTS),
+    .points = UP_ARROW_POINTS
+  };
+  PathLayer *up_arrow = &data->up_arrow;
+  path_layer_init(up_arrow, &UP_ARROW_PATH_INFO);
+  path_layer_set_fill_color(up_arrow, GColorBlack);
+  path_layer_set_stroke_color(up_arrow, GColorBlack);
+  layer_set_frame(&up_arrow->layer,
+                  &GRect((window->layer.bounds.size.w / 2) - 7, 55, 14, 10));
+  layer_add_child(&window->layer, &up_arrow->layer);
+
   TextLayer *color = &data->color;
   text_layer_init(color,
                   &GRect(5, 70,
-                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 70));
+                         window->layer.bounds.size.w - 10, 28));
   text_layer_set_font(color, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(color, GTextAlignmentCenter);
   if (ARRAY_LENGTH(s_color_table) > 0) {
@@ -161,10 +187,24 @@ static void prv_handle_init(void) {
   }
   layer_add_child(&window->layer, &color->layer);
 
+  // Create down arrow (pointing down)
+  static GPoint DOWN_ARROW_POINTS[] = {{0, 0}, {7, 10}, {14, 0}};
+  static const GPathInfo DOWN_ARROW_PATH_INFO = {
+    .num_points = ARRAY_LENGTH(DOWN_ARROW_POINTS),
+    .points = DOWN_ARROW_POINTS
+  };
+  PathLayer *down_arrow = &data->down_arrow;
+  path_layer_init(down_arrow, &DOWN_ARROW_PATH_INFO);
+  path_layer_set_fill_color(down_arrow, GColorBlack);
+  path_layer_set_stroke_color(down_arrow, GColorBlack);
+  layer_set_frame(&down_arrow->layer,
+                  &GRect((window->layer.bounds.size.w / 2) - 7, 103, 14, 10));
+  layer_add_child(&window->layer, &down_arrow->layer);
+
   TextLayer *status = &data->status;
   text_layer_init(status,
-                  &GRect(5, 110,
-                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 110));
+                  &GRect(5, 120,
+                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 120));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(status, GTextAlignmentCenter);
   layer_add_child(&window->layer, &status->layer);
