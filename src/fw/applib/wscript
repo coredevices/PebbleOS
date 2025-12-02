@@ -46,9 +46,7 @@ def build(bld):
     bld.recurse('vendor/uPNG')
 
     if bld.variant == 'prf':
-        excludes += ['ui/dialogs/actionable_dialog.c',
-                     'ui/dialogs/bt_conn_dialog.c',
-                     'ui/dialogs/confirmation_dialog.c',
+        excludes += ['ui/dialogs/bt_conn_dialog.c',
                      'ui/dialogs/expandable_dialog.c',
                      'ui/option_menu_window.c',
                      'ui/progress_window.c',
