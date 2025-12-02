@@ -194,6 +194,7 @@ static MicDevice s_mic_device = {
   .pdm_instance = NRFX_PDM_INSTANCE(0),
   .clk_pin = NRF_GPIO_PIN_MAP(1, 0),   // P1.00 - PDM CLK
   .data_pin = NRF_GPIO_PIN_MAP(0, 24), // P0.24 - PDM DATA
+  .channels = 1,
 };
 MicDevice * const MIC = &s_mic_device;
 

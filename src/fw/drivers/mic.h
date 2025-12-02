@@ -34,3 +34,7 @@ void mic_stop(MicDevice *this);
 
 //! Indicates whether the mic is running
 bool mic_is_running(MicDevice *this);
+
+//! Get the number of audio channels (1 for mono, 2 for stereo)
+//! @return number of channels, or 1 if not specified
+uint32_t mic_get_channels(MicDevice *this);
