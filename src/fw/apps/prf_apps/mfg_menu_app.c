@@ -5,6 +5,7 @@
 #include "applib/graphics/bitblt.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
+#include "applib/ui/dialogs/confirmation_dialog.h"
 #include "apps/prf_apps/mfg_accel_app.h"
 #include "apps/prf_apps/mfg_als_app.h"
 #include "apps/prf_apps/mfg_bt_device_name_app.h"
@@ -151,15 +152,43 @@ static void prv_select_test_aging(int index, void *context) {
 }
 #endif
 
-static void prv_select_load_prf(int index, void *context) {
+static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context) {
+  ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
+  confirmation_dialog_pop(confirmation_dialog);
+
+  bool confirmed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  if (confirmed) {
 #if PLATFORM_OBELIX
-  // On Obelix MFG, we invalidate all slots so it will boot into PRF next time
-  firmware_storage_invalidate_firmware_slot(0);
-  firmware_storage_invalidate_firmware_slot(1);
+    // On Obelix MFG, we invalidate all slots so it will boot into PRF next time
+    firmware_storage_invalidate_firmware_slot(0);
+    firmware_storage_invalidate_firmware_slot(1);
 #else
-  boot_bit_set(BOOT_BIT_FORCE_PRF);
+    boot_bit_set(BOOT_BIT_FORCE_PRF);
 #endif
-  system_reset();
+    system_reset();
+  }
+}
+
+static void prv_load_prf_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_load_prf_confirmed);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_load_prf_confirmed);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_load_prf_confirmed);
+}
+
+static void prv_select_load_prf(int index, void *context) {
+  ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Load PRF");
+  Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
+
+  dialog_set_text(dialog, "Load PRF?\n\nThis action cannot be undone!");
+  dialog_set_background_color(dialog, GColorOrange);
+  dialog_set_text_color(dialog, GColorWhite);
+
+  confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_load_prf_click_config);
+
+  ActionBarLayer *action_bar = confirmation_dialog_get_action_bar(confirmation_dialog);
+  action_bar_layer_set_context(action_bar, confirmation_dialog);
+
+  app_confirmation_dialog_push(confirmation_dialog);
 }
 
 static void prv_select_reset(int index, void *context) {
