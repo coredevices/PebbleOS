@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "mfg_battery_discharge_app.h"
+#include "mfg_discharge_app.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -16,27 +16,27 @@
 #include "process_state/app_state/app_state.h"
 
 typedef enum {
-  BattDischargeStateStart = 0,
-  BattDischargeStateCharging,
-  BattDischargeStateUnplugWatch,
-  BattDischargeStateStationary,
-  BattDischargeStateQRBeforeDischarge,
-  BattDischargeStateDischarging,
-  BattDischargeStatePass,
-  BattDischargeStateFail,
-  BattDischargeStateQRAfterTest,
-} BattDischargeTestState;
+  DischargeStateStart = 0,
+  DischargeStateCharging,
+  DischargeStateUnplugWatch,
+  DischargeStateStationary,
+  DischargeStateQRBeforeDischarge,
+  DischargeStateDischarging,
+  DischargeStatePass,
+  DischargeStateFail,
+  DischargeStateQRAfterTest,
+} DischargeTestState;
 
 static const char *status_text[] = {
-    [BattDischargeStateStart] = "Start",
-    [BattDischargeStateCharging] = "Charging...",
-    [BattDischargeStateUnplugWatch] = "Unplug Watch",
-    [BattDischargeStateStationary] = "Stationary",
-    [BattDischargeStateQRBeforeDischarge] = "Press Center",
-    [BattDischargeStateDischarging] = "Discharging",
-    [BattDischargeStatePass] = "PASS",
-    [BattDischargeStateFail] = "FAIL",
-    [BattDischargeStateQRAfterTest] = "Press Center",
+    [DischargeStateStart] = "Start",
+    [DischargeStateCharging] = "Charging...",
+    [DischargeStateUnplugWatch] = "Unplug Watch",
+    [DischargeStateStationary] = "Stationary",
+    [DischargeStateQRBeforeDischarge] = "Press Center",
+    [DischargeStateDischarging] = "Discharging",
+    [DischargeStatePass] = "PASS",
+    [DischargeStateFail] = "FAIL",
+    [DischargeStateQRAfterTest] = "Press Center",
 };
 
 static const int CHARGE_TARGET_PERCENTAGE = 95;
@@ -64,7 +64,7 @@ typedef struct {
   char qr_data[128];  // Long-lived buffer for QR code data
   char qr_text_string[128];
 
-  BattDischargeTestState test_state;
+  DischargeTestState test_state;
   uint32_t seconds_remaining;
   bool countdown_running;
 
@@ -116,7 +116,7 @@ static void prv_hide_qr_code(AppData *data) {
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
-  BattDischargeTestState next_state = data->test_state;
+  DischargeTestState next_state = data->test_state;
 
   // Get battery state
   BatteryConstants battery_const;
@@ -124,17 +124,17 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   const BatteryChargeState charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
-    case BattDischargeStateStart:
+    case DischargeStateStart:
       if (charge_state.is_plugged && charge_state.is_charging) {
-        next_state = BattDischargeStateCharging;
+        next_state = DischargeStateCharging;
       }
       break;
 
-    case BattDischargeStateCharging:
+    case DischargeStateCharging:
       // Wait for battery to reach target percentage
       if (!charge_state.is_plugged || !charge_state.is_charging) {
         // Lost charging connection, go back to start
-        next_state = BattDischargeStateStart;
+        next_state = DischargeStateStart;
         data->pass_count = 0;
         break;
       }
@@ -143,7 +143,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         // Battery charged, verify stability
         if (data->pass_count > 5) {
           // Transition to unplug watch state
-          next_state = BattDischargeStateUnplugWatch;
+          next_state = DischargeStateUnplugWatch;
 
           // Disable charger
           battery_set_charge_enable(false);
@@ -155,11 +155,11 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       }
       break;
 
-    case BattDischargeStateUnplugWatch:
+    case DischargeStateUnplugWatch:
       // Wait for user to unplug the watch
       if (!charge_state.is_plugged) {
         // Watch unplugged, transition to stationary phase
-        next_state = BattDischargeStateStationary;
+        next_state = DischargeStateStationary;
 
         // Initialize stationary phase countdown
         data->seconds_remaining = STATIONARY_DURATION_SECONDS;
@@ -167,10 +167,10 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       }
       break;
 
-    case BattDischargeStateStationary:
+    case DischargeStateStationary:
       // Check if charger was plugged back in (should not happen)
       if (charge_state.is_plugged) {
-        next_state = BattDischargeStateFail;
+        next_state = DischargeStateFail;
         data->countdown_running = false;
         break;
       }
@@ -180,7 +180,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         --data->seconds_remaining;
         if (data->seconds_remaining == 0) {
           // Stationary phase complete, show QR code before discharge
-          next_state = BattDischargeStateQRBeforeDischarge;
+          next_state = DischargeStateQRBeforeDischarge;
 
           // Record starting battery state
           data->discharge_start_voltage_mv = battery_const.v_mv;
@@ -196,15 +196,15 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       }
       break;
 
-    case BattDischargeStateQRBeforeDischarge:
+    case DischargeStateQRBeforeDischarge:
       // Waiting for user to press center button to continue
       // No automatic state transition here
       break;
 
-    case BattDischargeStateDischarging:
+    case DischargeStateDischarging:
       // Check if charger was plugged back in (should not happen)
       if (charge_state.is_plugged) {
-        next_state = BattDischargeStateFail;
+        next_state = DischargeStateFail;
         data->countdown_running = false;
         break;
       }
@@ -224,17 +224,17 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
           // Check if battery is within acceptable range
           if (charge_state.charge_percent >= MIN_BATTERY_PERCENTAGE_AFTER_24H &&
               battery_const.v_mv >= MIN_BATTERY_VOLTAGE_AFTER_24H) {
-            next_state = BattDischargeStatePass;
+            next_state = DischargeStatePass;
           } else {
-            next_state = BattDischargeStateFail;
+            next_state = DischargeStateFail;
           }
         }
       }
       break;
 
-    case BattDischargeStatePass:
-    case BattDischargeStateFail:
-    case BattDischargeStateQRAfterTest:
+    case DischargeStatePass:
+    case DischargeStateFail:
+    case DischargeStateQRAfterTest:
     default:
       // Terminal states - no automatic transitions
       break;
@@ -243,17 +243,17 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   data->test_state = next_state;
 
   // Update status display
-  sniprintf(data->status_string, sizeof(data->status_string), "BATT DISCHARGE\n%s",
+  sniprintf(data->status_string, sizeof(data->status_string), "DISCHARGE\n%s",
             status_text[data->test_state]);
   text_layer_set_text(&data->status, data->status_string);
 
   // Update details display based on state
   switch (data->test_state) {
-    case BattDischargeStateStart:
+    case DischargeStateStart:
       sniprintf(data->details_string, sizeof(data->details_string), "Plug charger\nto begin test");
       break;
 
-    case BattDischargeStateCharging: {
+    case DischargeStateCharging: {
       int32_t temp_c = battery_const.t_mc / 1000;
       sniprintf(data->details_string, sizeof(data->details_string),
                 "Target: >=%d%%\n%" PRId32 "mV  %" PRId32 "C  (%d%%)\nUSB: %s\nCharging: %s",
@@ -262,7 +262,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       break;
     }
 
-    case BattDischargeStateUnplugWatch: {
+    case DischargeStateUnplugWatch: {
       int32_t temp_c = battery_const.t_mc / 1000;
       sniprintf(data->details_string, sizeof(data->details_string),
                 "Charging complete\n%" PRId32 "mV  %" PRId32
@@ -271,7 +271,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       break;
     }
 
-    case BattDischargeStateStationary: {
+    case DischargeStateStationary: {
       int hours = data->seconds_remaining / 3600;
       int mins = (data->seconds_remaining % 3600) / 60;
       int secs = data->seconds_remaining % 60;
@@ -281,7 +281,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       break;
     }
 
-    case BattDischargeStateDischarging: {
+    case DischargeStateDischarging: {
       int hours = data->seconds_remaining / 3600;
       int mins = (data->seconds_remaining % 3600) / 60;
       int secs = data->seconds_remaining % 60;
@@ -296,7 +296,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       break;
     }
 
-    case BattDischargeStatePass: {
+    case DischargeStatePass: {
       int32_t temp_c = battery_const.t_mc / 1000;
       int32_t current_ma = battery_const.i_ua / 1000;
 
@@ -307,7 +307,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       break;
     }
 
-    case BattDischargeStateFail: {
+    case DischargeStateFail: {
       int32_t temp_c = battery_const.t_mc / 1000;
       int32_t current_ma = battery_const.i_ua / 1000;
 
@@ -318,8 +318,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       break;
     }
 
-    case BattDischargeStateQRBeforeDischarge:
-    case BattDischargeStateQRAfterTest:
+    case DischargeStateQRBeforeDischarge:
+    case DischargeStateQRAfterTest:
       // QR code is displayed instead of details
       // Don't update text layers here
       return;
@@ -339,17 +339,17 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
   AppData *app_data = app_state_get_user_data();
 
   switch (app_data->test_state) {
-    case BattDischargeStatePass:
-    case BattDischargeStateFail:
+    case DischargeStatePass:
+    case DischargeStateFail:
       // Transition to QR state to show final battery data
-      app_data->test_state = BattDischargeStateQRAfterTest;
+      app_data->test_state = DischargeStateQRAfterTest;
       prv_show_qr_code(app_data, app_data->test_end_voltage_mv, app_data->test_end_temp_mc,
                        app_data->test_end_percent);
       break;
 
-    case BattDischargeStateQRBeforeDischarge:
+    case DischargeStateQRBeforeDischarge:
       // Start the discharge phase
-      app_data->test_state = BattDischargeStateDischarging;
+      app_data->test_state = DischargeStateDischarging;
       app_data->seconds_remaining = DISCHARGE_DURATION_SECONDS;
       app_data->countdown_running = true;
 
@@ -357,7 +357,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
       prv_hide_qr_code(app_data);
       break;
 
-    case BattDischargeStateQRAfterTest:
+    case DischargeStateQRAfterTest:
       // Exit the app
       app_window_stack_pop(true);
       break;
@@ -379,7 +379,7 @@ static void app_init(void) {
   app_state_set_user_data(data);
 
   *data = (AppData){
-      .test_state = BattDischargeStateStart,
+      .test_state = DischargeStateStart,
       .countdown_running = false,
       .seconds_remaining = 0,
       .discharge_start_voltage_mv = 0,
@@ -395,7 +395,7 @@ static void app_init(void) {
   battery_set_charge_enable(true);
 
   Window *window = &data->window;
-  window_init(window, "Battery Discharge Test");
+  window_init(window, "Discharge Test");
 
   TextLayer *status = &data->status;
   text_layer_init(status, &window->layer.bounds);
@@ -442,13 +442,13 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd *mfg_battery_discharge_app_get_info(void) {
+const PebbleProcessMd *mfg_discharge_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: a1b2c3d4-e5f6-4789-a0b1-c2d3e4f56789
       .common.uuid = {0xa1, 0xb2, 0xc3, 0xd4, 0xe5, 0xf6, 0x47, 0x89, 0xa0, 0xb1, 0xc2, 0xd3, 0xe4,
                       0xf5, 0x67, 0x89},
-      .name = "Batt Discharge",
+      .name = "Discharge",
   };
 
   return (PebbleProcessMd *)&s_app_info;

@@ -9,21 +9,21 @@
 #include "apps/prf_apps/mfg_accel_app.h"
 #include "apps/prf_apps/mfg_als_app.h"
 #include "apps/prf_apps/mfg_bt_device_name_app.h"
-#include "apps/prf_apps/mfg_serial_qr_app.h"
+#include "apps/prf_apps/mfg_charge_app.h"
+#include "apps/prf_apps/mfg_backlight_app.h"
 #include "apps/prf_apps/mfg_button_app.h"
+#include "apps/prf_apps/mfg_discharge_app.h"
 #include "apps/prf_apps/mfg_display_app.h"
 #include "apps/prf_apps/mfg_hrm_app.h"
-#include "apps/prf_apps/mfg_mic_app.h"
+#include "apps/prf_apps/mfg_mic_asterix_app.h"
+#include "apps/prf_apps/mfg_mic_obelix_app.h"
 #include "apps/prf_apps/mfg_program_color_app.h"
-#include "apps/prf_apps/mfg_runin_app.h"
-#include "apps/prf_apps/mfg_battery_discharge_app.h"
-#include "apps/prf_apps/mfg_speaker_app.h"
-#include "apps/prf_apps/mfg_vibe_app.h"
-#include "apps/prf_apps/mfg_touch_app.h"
-#include "apps/prf_apps/mfg_backlight_app.h"
-#include "apps/prf_apps/mfg_audio_app.h"
-#include "apps/prf_apps/mfg_pdm_mic_app.h"
+#include "apps/prf_apps/mfg_serial_qr_app.h"
+#include "apps/prf_apps/mfg_speaker_asterix_app.h"
+#include "apps/prf_apps/mfg_speaker_obelix_app.h"
 #include "apps/prf_apps/mfg_test_aging_app.h"
+#include "apps/prf_apps/mfg_touch_app.h"
+#include "apps/prf_apps/mfg_vibration_app.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/standby.h"
@@ -108,41 +108,35 @@ static void prv_select_display(int index, void *context) {
 static void prv_select_backlight(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_backlight_app_get_info());
 }
-
-static void prv_select_audio(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_audio_app_get_info());
-}
-
-static void prv_select_pdm_mic(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_pdm_mic_app_get_info());
-}
 #endif
 
-static void prv_select_runin(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_runin_app_get_info());
+static void prv_select_charge(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_charge_app_get_info());
 }
 
-static void prv_select_battery_discharge(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_battery_discharge_app_get_info());
-}
-
-static void prv_select_vibe(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_vibe_app_get_info());
+static void prv_select_vibration(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_vibration_app_get_info());
 }
 
 static void prv_select_als(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_als_app_get_info());
 }
 
-#if PLATFORM_ASTERIX
 static void prv_select_speaker(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_speaker_app_get_info());
+#if PLATFORM_ASTERIX
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_speaker_asterix_app_get_info());
+#elif PLATFORM_OBELIX
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_speaker_obelix_app_get_info());
+#endif
 }
 
 static void prv_select_mic(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mic_app_get_info());
-}
+#if PLATFORM_ASTERIX
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mic_asterix_app_get_info());
+#elif PLATFORM_OBELIX
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mic_obelix_app_get_info());
 #endif
+}
 
 #if CAPABILITY_HAS_BUILTIN_HRM
 static void prv_select_hrm(int index, void *context) {
@@ -171,9 +165,9 @@ static void prv_extras_select_accel(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_accel_app_get_info());
 }
 
-static void prv_extras_select_battery_discharge(int index, void *context) {
+static void prv_extras_select_discharge(int index, void *context) {
   // Launch app and mark to return to extras menu when it exits
-  launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_battery_discharge_app_get_info());
+  launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_discharge_app_get_info());
 }
 
 #if PLATFORM_OBELIX
@@ -191,7 +185,7 @@ static void prv_extras_window_load(Window *window) {
 
   const SimpleMenuItem extras_menu_items[] = {
     { .title = "Test Accel",        .callback = prv_extras_select_accel },
-    { .title = "Test Batt Discharge", .callback = prv_extras_select_battery_discharge },
+    { .title = "Test Discharge", .callback = prv_extras_select_discharge },
 #if PLATFORM_OBELIX
     { .title = "Test Aging",        .callback = prv_extras_select_test_aging },
 #endif
@@ -341,22 +335,20 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #endif
 #if PLATFORM_OBELIX
     { .title = "Test Backlight",    .callback = prv_select_backlight },
-    { .title = "Test Audio",        .callback = prv_select_audio },
-    { .title = "Test PDM Mic",      .callback = prv_select_pdm_mic },
 #endif
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
     { .title = "Test Speaker",      .callback = prv_select_speaker },
     { .title = "Test Microphone",   .callback = prv_select_mic },
 #endif
     { .icon = prv_get_icon_for_test(MfgTest_ALS),
       .title = "Test ALS",          .callback = prv_select_als },
     { .icon = prv_get_icon_for_test(MfgTest_Vibe),
-      .title = "Test Vibe",         .callback = prv_select_vibe },
+      .title = "Test Vibration",    .callback = prv_select_vibration },
 #if CAPABILITY_HAS_BUILTIN_HRM
     { .title = "Test HRM",          .callback = prv_select_hrm },
 #endif
     { .title = "Program Color",     .callback = prv_select_program_color },
-    { .title = "Test Runin",        .callback = prv_select_runin },
+    { .title = "Test Charge",       .callback = prv_select_charge },
     { .title = "Load PRF",          .callback = prv_select_load_prf },
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown },

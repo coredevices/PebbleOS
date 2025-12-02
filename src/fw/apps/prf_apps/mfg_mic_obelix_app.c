@@ -158,7 +158,7 @@ static void prv_handle_init(void) {
   text_layer_init(title, &window->layer.bounds);
   text_layer_set_font(title, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(title, GTextAlignmentCenter);
-  text_layer_set_text(title, "PDM MIC TEST");
+  text_layer_set_text(title, "MICROPHONE TEST");
   layer_add_child(&window->layer, &title->layer);
 
   TextLayer *status = &data->status;
@@ -185,13 +185,13 @@ static void s_main(void) {
   audio_stop(AUDIO);
 }
 
-const PebbleProcessMd *mfg_pdm_mic_app_get_info(void) {
+const PebbleProcessMd *mfg_mic_obelix_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: 6b064482-dc20-45a9-804c-5002746b49f9
       .common.uuid = {0x6b, 0x06, 0x44, 0x82, 0xdc, 0x20, 0x45, 0xa9, 0x80, 0x4c, 0x50, 0x02, 0x74,
                       0x6b, 0x49, 0xf9},
-      .name = "MfgPdmMic",
+      .name = "MfgMicObelix",
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

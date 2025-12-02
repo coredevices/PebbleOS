@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "mfg_runin_app.h"
+#include "mfg_charge_app.h"
 
 #include "applib/app.h"
 #include "applib/tick_timer_service.h"
@@ -16,19 +16,19 @@
 #include <stdio.h>
 
 typedef enum {
-  RuninStateStart = 0,
-  RuninStatePlugCharger,
-  RuninStateRunning,
-  RuninStatePass,
-  RuninStateFail,
-} RuninTestState;
+  ChargeStateStart = 0,
+  ChargeStatePlugCharger,
+  ChargeStateRunning,
+  ChargeStatePass,
+  ChargeStateFail,
+} ChargeTestState;
 
 static const char* status_text[] = {
-  [RuninStateStart] =       "Start",
-  [RuninStatePlugCharger] = "Plug Charger",
-  [RuninStateRunning] =     "Running...",
-  [RuninStatePass] =        "Pass",
-  [RuninStateFail] =        "Fail",
+  [ChargeStateStart] =       "Start",
+  [ChargeStatePlugCharger] = "Plug Charger",
+  [ChargeStateRunning] =     "Running...",
+  [ChargeStatePass] =        "Pass",
+  [ChargeStateFail] =        "Fail",
 };
 
 #ifdef PLATFORM_TINTIN
@@ -60,7 +60,7 @@ typedef struct {
   TextLayer details;
   char details_string[64];
 
-  RuninTestState test_state;
+  ChargeTestState test_state;
   uint32_t seconds_remaining;
   bool countdown_running;
   bool fastcharge_enabled;
@@ -71,32 +71,32 @@ typedef struct {
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
-  RuninTestState next_state = data->test_state;
+  ChargeTestState next_state = data->test_state;
 
   const int charge_mv = battery_get_millivolts();
   const int32_t temp_mc = battery_state_get_temperature();
   const BatteryChargeState charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
-    case RuninStateStart:
+    case ChargeStateStart:
       if (charge_state.is_plugged && charge_state.is_charging) {
-        next_state = RuninStateRunning;
+        next_state = ChargeStateRunning;
       } else {
-        next_state = RuninStatePlugCharger;
+        next_state = ChargeStatePlugCharger;
       }
       break;
-    case RuninStatePlugCharger:
+    case ChargeStatePlugCharger:
       if (charge_state.is_plugged && charge_state.is_charging) {
-        next_state = RuninStateRunning;
+        next_state = ChargeStateRunning;
       }
       break;
-    case RuninStateRunning:
+    case ChargeStateRunning:
       if (!data->countdown_running) {
         data->countdown_running = true;
       }
       if (!charge_state.is_plugged || !charge_state.is_charging) {
         data->pass_count = 0;
-        next_state = RuninStatePlugCharger;
+        next_state = ChargeStatePlugCharger;
         break;
       }
       if (charge_state.charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {
@@ -107,9 +107,9 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
                  temp_mc >= TEMP_MIN_MC && temp_mc <= TEMP_MAX_MC) {
         // The reading can be a bit shaky in the short term (i.e. a flaky USB connection), or we
         // just started charging. Make sure we have settled before transitioning into the
-        // RuninStatePass state
+        // ChargeStatePass state
         if (data->pass_count > 5) {
-          next_state = RuninStatePass;
+          next_state = ChargeStatePass;
 
           data->countdown_running = false;
           // disable the charger so that we don't overcharge the battery
@@ -120,8 +120,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         data->pass_count = 0;
       }
       break;
-    case RuninStatePass:
-    case RuninStateFail:
+    case ChargeStatePass:
+    case ChargeStateFail:
     default:
       break;
   }
@@ -130,16 +130,16 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
     --data->seconds_remaining;
     if (data->seconds_remaining == 0) {
       // Time's up!
-      next_state = RuninStateFail;
+      next_state = ChargeStateFail;
       data->countdown_running = false;
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed runin testing");
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed charge testing");
     }
   }
 
   data->test_state = next_state;
 
   sniprintf(data->status_string, sizeof(data->status_string),
-            "RUNIN\n%s", status_text[data->test_state]);
+            "CHARGE\n%s", status_text[data->test_state]);
   text_layer_set_text(&data->status, data->status_string);
 
   int mins_remaining = data->seconds_remaining / 60;
@@ -160,8 +160,8 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
   if (!app_data->countdown_running &&
-      (app_data->test_state == RuninStateStart ||
-       app_data->test_state == RuninStatePlugCharger)) {
+      (app_data->test_state == ChargeStateStart ||
+       app_data->test_state == ChargeStatePlugCharger)) {
 
     // if the test has not yet started, it is ok to push the back button to leave.
     app_window_stack_pop(true);
@@ -171,8 +171,8 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  if (app_data->test_state == RuninStateFail || app_data->test_state == RuninStatePass) {
-    // we've finished the runin test - long-press to close the app
+  if (app_data->test_state == ChargeStateFail || app_data->test_state == ChargeStatePass) {
+    // we've finished the charge test - long-press to close the app
     app_window_stack_pop(true);
   }
 }
@@ -188,7 +188,7 @@ static void app_init(void) {
   app_state_set_user_data(data);
 
   *data = (AppData) {
-    .test_state = RuninStateStart,
+    .test_state = ChargeStateStart,
     .countdown_running = false,
     .seconds_remaining = 5400, //1.5h
     .fastcharge_enabled = true,
@@ -199,7 +199,7 @@ static void app_init(void) {
   battery_set_charge_enable(true);
 
   Window *window = &data->window;
-  window_init(window, "Runin Test");
+  window_init(window, "Charge Test");
 
   TextLayer *status = &data->status;
   text_layer_init(status, &window->layer.bounds);
@@ -229,13 +229,13 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_runin_app_get_info(void) {
+const PebbleProcessMd* mfg_charge_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
     .common.main_func = &s_main,
     // UUID: fbb6d0e6-2d7d-40bc-8b01-f2f8beb9c394
     .common.uuid = { 0xfb, 0xb6, 0xd0, 0xe6, 0x2d, 0x7d, 0x40, 0xbc,
                      0x8b, 0x01, 0xf2, 0xf8, 0xbe, 0xb9, 0xc3, 0x94 },
-    .name = "Runin App",
+    .name = "Charge App",
   };
 
   return (PebbleProcessMd*) &s_app_info;
