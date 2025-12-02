@@ -47,9 +47,24 @@ const ColorTable s_color_table[] = {
   }
 #elif PLATFORM_OBELIX
   {
-    .color = WATCH_INFO_COLOR_COREDEVICES_CT2_BLACK,
-    .name = "BLACK",
-    .short_name = "BK",
+    .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY,
+    .name = "BLACK/GREY",
+    .short_name = "BG",
+  },
+  {
+    .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED,
+    .name = "BLACK/RED",
+    .short_name = "BR",
+  },
+  {
+    .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE,
+    .name = "SILVER/BLUE",
+    .short_name = "SB",
+  },
+  {
+    .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY,
+    .name = "SILVER/GREY",
+    .short_name = "SG",
   },
 #endif
 };

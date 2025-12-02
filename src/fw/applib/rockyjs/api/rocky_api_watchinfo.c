@@ -191,8 +191,17 @@ static jerry_value_t prv_get_model_name(void) {
       case WATCH_INFO_COLOR_COREDEVICES_C2D_WHITE:
         model_name = ASTERIX_MODEL("coredevices_c2d_white");
         break;
-      case WATCH_INFO_COLOR_COREDEVICES_CT2_BLACK:
-        model_name = OBELIX_MODEL("coredevices_ct2_black");
+      case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY:
+        model_name = OBELIX_MODEL("coredevices_pt2_black_grey");
+        break;
+      case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED:
+        model_name = OBELIX_MODEL("coredevices_pt2_black_red");
+        break;
+      case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE:
+        model_name = OBELIX_MODEL("coredevices_pt2_silver_blue");
+        break;
+      case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY:
+        model_name = OBELIX_MODEL("coredevices_pt2_silver_grey");
         break;
       case WATCH_INFO_COLOR_UNKNOWN:
       case WATCH_INFO_COLOR__MAX:
