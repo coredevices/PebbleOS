@@ -3,6 +3,7 @@
 
 #include "voice_speex.h"
 
+#include "board/board.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "kernel/pbl_malloc.h"
@@ -13,6 +14,7 @@
 #include "speex/speex.h"
 #include "speex/speex_bits.h"
 #include "speex/speex_header.h"
+#include "speex/speex_stereo.h"
 
 #include <string.h>
 #include <inttypes.h>
@@ -29,10 +31,12 @@ extern const SpeexMode speex_wb_mode;
 typedef struct {
   void *enc_state;
   SpeexBits bits;
+  SpeexStereoState stereo_state;
   uint32_t frame_size;       // Changed to uint32_t to match transfer info
   uint32_t sample_rate;      // Changed to uint32_t to match transfer info
   uint16_t bit_rate;         // Changed to uint16_t to match transfer info
   uint8_t bitstream_version; // Changed to uint8_t to match transfer info
+  uint8_t channels;          // 1 for mono, 2 for stereo
   bool initialized;
   uint8_t *frame_buffer;
   size_t frame_buffer_size;
@@ -57,6 +61,10 @@ bool voice_speex_init(void) {
 
   memset(&s_encoder, 0, sizeof(s_encoder));
 
+  // Get channel count from mic device (default to mono if not specified)
+  s_encoder.channels = (uint8_t)mic_get_channels(MIC);
+  VOICE_SPEEX_LOG("Mic channels: %"PRIu8, s_encoder.channels);
+
   // Initialize Speex encoder - use wideband mode for 16kHz sample rate
   const SpeexMode *mode = &speex_wb_mode;
   if (!mode) {
@@ -72,6 +80,11 @@ bool voice_speex_init(void) {
 
   // Initialize bits structure
   speex_bits_init(&s_encoder.bits);
+
+  // Initialize stereo state if stereo
+  if (s_encoder.channels == 2) {
+    s_encoder.stereo_state = (SpeexStereoState)SPEEX_STEREO_STATE_INIT;
+  }
 
   // Get frame size
   speex_encoder_ctl(s_encoder.enc_state, SPEEX_GET_FRAME_SIZE, &s_encoder.frame_size);
@@ -102,8 +115,8 @@ bool voice_speex_init(void) {
   
   s_encoder.bitstream_version = SPEEX_BITSTREAM_VERSION;
 
-  // Allocate frame buffer (16-bit samples)
-  s_encoder.frame_buffer_size = s_encoder.frame_size * sizeof(int16_t);
+  // Allocate frame buffer (16-bit samples, multiplied by channel count for stereo)
+  s_encoder.frame_buffer_size = s_encoder.frame_size * sizeof(int16_t) * s_encoder.channels;
   s_encoder.frame_buffer = (uint8_t *)kernel_malloc_check(s_encoder.frame_buffer_size);
 
   // Allocate encoded buffer
@@ -112,8 +125,8 @@ bool voice_speex_init(void) {
 
   s_encoder.initialized = true;
 
-  VOICE_SPEEX_LOG("Speex encoder initialized: sample_rate=%"PRIu32", bit_rate=%"PRIu16", frame_size=%"PRIu32,
-                  s_encoder.sample_rate, s_encoder.bit_rate, s_encoder.frame_size);
+  VOICE_SPEEX_LOG("Speex encoder initialized: sample_rate=%"PRIu32", bit_rate=%"PRIu16", frame_size=%"PRIu32", channels=%"PRIu8,
+                  s_encoder.sample_rate, s_encoder.bit_rate, s_encoder.frame_size, s_encoder.channels);
   
   // Verify sample rates match
   if (s_encoder.sample_rate != MIC_SAMPLE_RATE) {
@@ -171,7 +184,8 @@ void voice_speex_get_transfer_info(AudioTransferInfoSpeex *info) {
 }
 
 int voice_speex_get_frame_size(void) {
-  return s_encoder.initialized ? (int)s_encoder.frame_size : 0;
+  // Return total samples per frame (frame_size * channels for stereo)
+  return s_encoder.initialized ? (int)(s_encoder.frame_size * s_encoder.channels) : 0;
 }
 
 int16_t *voice_speex_get_frame_buffer(void) {
@@ -193,8 +207,10 @@ int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max
     return -1;
   }
 
+  uint32_t total_samples = s_encoder.frame_size * s_encoder.channels;
+
   // Apply gain boost to samples
-  for (uint32_t i = 0; i < s_encoder.frame_size; i++) {
+  for (uint32_t i = 0; i < total_samples; i++) {
     int32_t boosted = (int32_t)samples[i] * SPEEX_AUDIO_GAIN;
     // Clamp to int16_t range to prevent overflow
     if (boosted > INT16_MAX) {
@@ -208,7 +224,12 @@ int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max
   // Reset bits structure
   speex_bits_reset(&s_encoder.bits);
 
-  // Encode frame (using 32-bit samples)
+  if (s_encoder.channels == 2) {
+    // For stereo: encode stereo info and convert to mono in-place
+    speex_encode_stereo_int(samples, s_encoder.frame_size, &s_encoder.bits);
+  }
+
+  // Encode frame (for stereo, samples have been converted to mono in-place by speex_encode_stereo_int)
   speex_encode_int(s_encoder.enc_state, (spx_int16_t *)samples, &s_encoder.bits);
 
   // Write encoded data to buffer
@@ -219,8 +240,8 @@ int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max
     return -1;
   }
 
-  VOICE_SPEEX_LOG("Encoded frame: input_samples=%"PRIu32", output_bytes=%d, frame_size=%"PRIu32, 
-                  s_encoder.frame_size, encoded_bytes, s_encoder.frame_size);
+  VOICE_SPEEX_LOG("Encoded frame: input_samples=%"PRIu32", output_bytes=%d, frame_size=%"PRIu32", channels=%"PRIu8, 
+                  total_samples, encoded_bytes, s_encoder.frame_size, s_encoder.channels);
 
   return encoded_bytes;
 }
