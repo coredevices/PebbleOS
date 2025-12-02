@@ -18,7 +18,7 @@
 #include "apps/prf_apps/mfg_mic_asterix_app.h"
 #include "apps/prf_apps/mfg_mic_obelix_app.h"
 #include "apps/prf_apps/mfg_program_color_app.h"
-#include "apps/prf_apps/mfg_serial_qr_app.h"
+#include "apps/prf_apps/mfg_info_qr_app.h"
 #include "apps/prf_apps/mfg_speaker_asterix_app.h"
 #include "apps/prf_apps/mfg_speaker_obelix_app.h"
 #include "apps/prf_apps/mfg_test_aging_app.h"
@@ -82,8 +82,8 @@ static void prv_select_bt_device_name(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_device_name_app_get_info());
 }
 
-static void prv_select_serial_qr(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_serial_qr_app_get_info());
+static void prv_select_info_qr(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_info_qr_app_get_info());
 }
 
 #if PBL_ROUND
@@ -322,7 +322,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   // Define a const blueprint on the stack.
   const SimpleMenuItem s_menu_items[] = {
     { .title = "BT Device Name",    .callback = prv_select_bt_device_name },
-    { .title = "Device Serial",     .callback = prv_select_serial_qr },
+    { .title = "Device Info",       .callback = prv_select_info_qr },
     { .icon = prv_get_icon_for_test(MfgTest_Buttons),
       .title = "Test Buttons",      .callback = prv_select_button },
 #if PBL_ROUND
