@@ -29,6 +29,7 @@ def build(bld):
         'speex/libspeex/speex.c',
         'speex/libspeex/speex_callbacks.c',
         'speex/libspeex/speex_header.c',
+        'speex/libspeex/stereo.c',  # Enable stereo encoding/decoding support
         'speex/libspeex/vbr.c',
         'speex/libspeex/vorbis_psy.c',
         'speex/libspeex/vq.c',
