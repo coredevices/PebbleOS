@@ -226,13 +226,12 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   const SimpleMenuItem s_menu_items[] = {
     { .title = "BT Device Name",    .callback = prv_select_bt_device_name },
     { .title = "Device Serial",     .callback = prv_select_serial_qr },
+    { .icon = prv_get_icon_for_test(MfgTest_Buttons),
+      .title = "Test Buttons",      .callback = prv_select_button },
 #if PBL_ROUND
     { .title = "Calibrate Display", .callback = prv_select_calibrate_display },
 #endif
-    { .title = "Test Accel",        .callback = prv_select_accel },
-    { .icon = prv_get_icon_for_test(MfgTest_Buttons),
-      .title = "Test Buttons",      .callback = prv_select_button },
-    { .icon = prv_get_icon_for_test(MfgTest_Display),
+      { .icon = prv_get_icon_for_test(MfgTest_Display),
       .title = "Test Display",      .callback = prv_select_display },
 #if CAPABILITY_HAS_TOUCHSCREEN
     { .title = "Test Touch",        .callback = prv_select_touch },
@@ -240,32 +239,35 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #if PLATFORM_OBELIX
     { .title = "Test Backlight",    .callback = prv_select_backlight },
     { .title = "Test Audio",        .callback = prv_select_audio },
-    { .title = "Test PDM Mic",        .callback = prv_select_pdm_mic },
-#endif
-    { .icon = prv_get_icon_for_test(MfgTest_ALS),
-      .title = "Test ALS",          .callback = prv_select_als },
-    { .title = "Test Runin",        .callback = prv_select_runin },
-    { .title = "Test Batt Discharge", .callback = prv_select_battery_discharge },
-    { .icon = prv_get_icon_for_test(MfgTest_Vibe),
-      .title = "Test Vibe",         .callback = prv_select_vibe },
-#if !PLATFORM_SILK && !PLATFORM_ASTERIX && !PLATFORM_OBELIX
-    { .title = "Test bt_sig_rf",    .callback = prv_select_bt_sig_rf },
-#endif
-#if CAPABILITY_HAS_BUILTIN_HRM
-    { .title = "Test HRM",          .callback = prv_select_hrm },
+    { .title = "Test PDM Mic",      .callback = prv_select_pdm_mic },
 #endif
 #if PLATFORM_ASTERIX
     { .title = "Test Speaker",      .callback = prv_select_speaker },
     { .title = "Test Microphone",   .callback = prv_select_mic },
 #endif
+    { .icon = prv_get_icon_for_test(MfgTest_ALS),
+      .title = "Test ALS",          .callback = prv_select_als },
+    { .icon = prv_get_icon_for_test(MfgTest_Vibe),
+      .title = "Test Vibe",         .callback = prv_select_vibe },
+#if CAPABILITY_HAS_BUILTIN_HRM
+    { .title = "Test HRM",          .callback = prv_select_hrm },
+#endif
+    { .title = "Program Color",     .callback = prv_select_program_color },
+    { .title = "Test Runin",        .callback = prv_select_runin },
+#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
+    { .title = "Certification",     .callback = prv_select_certification },
+#endif
+    { .title = "Load PRF",          .callback = prv_select_load_prf },
+    { .title = "Reset",             .callback = prv_select_reset },
+    { .title = "Shutdown",          .callback = prv_select_shutdown },
+    { .title = "Test Accel",        .callback = prv_select_accel },
+    { .title = "Test Batt Discharge", .callback = prv_select_battery_discharge },
 #if PLATFORM_OBELIX
     { .title = "Test Aging",        .callback = prv_select_test_aging },
 #endif
-    { .title = "Certification",     .callback = prv_select_certification },
-    { .title = "Program Color",     .callback = prv_select_program_color },
-    { .title = "Load PRF",          .callback = prv_select_load_prf },
-    { .title = "Reset",             .callback = prv_select_reset },
-    { .title = "Shutdown",          .callback = prv_select_shutdown }
+#if !PLATFORM_SILK && !PLATFORM_ASTERIX && !PLATFORM_OBELIX
+    { .title = "Test bt_sig_rf",    .callback = prv_select_bt_sig_rf },
+#endif
   };
 
   // Copy it into the heap so we can modify it.
