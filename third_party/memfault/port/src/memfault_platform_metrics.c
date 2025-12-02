@@ -265,7 +265,7 @@ void memfault_metrics_heartbeat_collect_data(void) {
 
   MEMFAULT_METRIC_SET_UNSIGNED(memory_pct_max, kernel_heap_pct);
 
-#if PLATFORM_ASTERIX || (PLATFORM_OBELIX && !defined(IMU_USE_LIS2DW12))
+#if PLATFORM_ASTERIX
   // Capture accelerometer diagnostics to catch LSM6DSO stuck states.
   Lsm6dsoDiagnostics accel_diag;
   lsm6dso_get_diagnostics(&accel_diag);

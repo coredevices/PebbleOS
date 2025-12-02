@@ -320,7 +320,7 @@ board_capability_dicts = [
         },
     },
     {
-        'boards': [ 'obelix_evt', 'obelix_dvt', 'obelix_pvt', 'obelix_bb', 'obelix_bb2' ],
+        'boards': [ 'obelix_dvt', 'obelix_pvt', 'obelix_bb2' ],
         'capabilities':
         {
             'HAS_APP_GLANCES',
