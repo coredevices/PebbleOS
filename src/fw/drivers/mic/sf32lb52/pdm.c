@@ -165,9 +165,6 @@ static void prv_dispatch_samples_system_task(void *data) {
   mutex_unlock_recursive(s_state->mutex);
 }
 
-// Temporary buffer for stereo-to-mono conversion (max DMA size / 2)
-static int16_t s_mono_buffer[PDM_AUDIO_RECORD_PIPE_SIZE];
-
 static void prv_dma_data_processing(uint8_t* data, uint16_t size)
 {
   // Don't assert on is_running during shutdown - the PDM might send final events
@@ -188,20 +185,8 @@ static void prv_dma_data_processing(uint8_t* data, uint16_t size)
     return;
   }
   
-  // Convert stereo to mono by taking the left channel only
-  // Stereo data is interleaved: L0, R0, L1, R1, L2, R2, ...
-  int16_t *stereo_samples = (int16_t *)data;
-  uint16_t stereo_sample_count = size / sizeof(int16_t);
-  uint16_t mono_sample_count = stereo_sample_count / PDM_CH_COUNT;
-  
-  for (uint16_t i = 0; i < mono_sample_count; i++) {
-    // Take left channel (every other sample starting at index 0)
-    s_mono_buffer[i] = stereo_samples[i * PDM_CH_COUNT];
-  }
-  
-  // Write mono samples to circular buffer
-  uint16_t mono_size = mono_sample_count * sizeof(int16_t);
-  if (!circular_buffer_write(&s_state->circ_buffer, (uint8_t *)s_mono_buffer, mono_size)) {
+  // Write samples directly to circular buffer
+  if (!circular_buffer_write(&s_state->circ_buffer, data, size)) {
     PBL_LOG(LOG_LEVEL_ERROR, "circular buffer full");
     return;  // Buffer is full, drop remaining samples
   }
