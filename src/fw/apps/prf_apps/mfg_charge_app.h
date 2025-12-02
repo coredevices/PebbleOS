@@ -6,5 +6,5 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* mfg_runin_app_get_info(void);
+const PebbleProcessMd* mfg_charge_app_get_info(void);
 

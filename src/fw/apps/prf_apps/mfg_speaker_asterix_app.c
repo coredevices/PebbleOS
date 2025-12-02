@@ -140,13 +140,13 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd *mfg_speaker_app_get_info(void) {
+const PebbleProcessMd *mfg_speaker_asterix_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: 27047635-68f1-4ece-9ca7-52dd8e22d1dd
       .common.uuid = {0x27, 0x04, 0x76, 0x35, 0x68, 0xf1, 0x4e, 0xce, 0x9c, 0xa7, 0x52, 0xdd, 0x8e,
                       0x22, 0xd1, 0xdd},
-      .name = "MfgSpeaker",
+      .name = "MfgSpeakerAsterix",
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

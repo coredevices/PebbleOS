@@ -82,7 +82,7 @@ static void prv_handle_init(void) {
   text_layer_init(title, &window->layer.bounds);
   text_layer_set_font(title, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(title, GTextAlignmentCenter);
-  text_layer_set_text(title, "VIBE TEST");
+  text_layer_set_text(title, "VIBRATION TEST");
   layer_add_child(&window->layer, &title->layer);
 
   TextLayer *status = &data->status;
@@ -104,13 +104,13 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_vibe_app_get_info(void) {
+const PebbleProcessMd* mfg_vibration_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
     .common.main_func = &s_main,
     // UUID: f676085a-b130-4492-b6a1-85492602ba00
     .common.uuid = { 0xf6, 0x76, 0x08, 0x5a, 0xb1, 0x30, 0x44, 0x92,
                      0xb6, 0xa1, 0x85, 0x49, 0x26, 0x02, 0xba, 0x00 },
-    .name = "MfgVibe",
+    .name = "MfgVibration",
   };
   return (const PebbleProcessMd*) &s_app_info;
 }
