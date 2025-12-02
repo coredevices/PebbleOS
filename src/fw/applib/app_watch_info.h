@@ -27,7 +27,7 @@ typedef enum {
   WATCH_INFO_MODEL_PEBBLE_2_SE, //!< Pebble 2 SE
   WATCH_INFO_MODEL_PEBBLE_TIME_2, //!< Pebble Time 2
   WATCH_INFO_MODEL_COREDEVICES_P2D, //!< CoreDevices P2D (Pebble 2 Duo)
-  WATCH_INFO_MODEL_COREDEVICES_CT2, //!< CoreDevices CT2 (Core Time 2)
+  WATCH_INFO_MODEL_COREDEVICES_PT2, //!< CoreDevices PT2 (Pebble Time 2)
 
   WATCH_INFO_MODEL__MAX
 } WatchInfoModel;
