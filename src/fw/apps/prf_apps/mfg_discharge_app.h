@@ -5,6 +5,6 @@
 
 #include "process_management/pebble_process_md.h"
 
-//! Get the process metadata for the Battery Discharge Test MFG app
+//! Get the process metadata for the Discharge Test MFG app
 //! @return Pointer to the process metadata structure
-const PebbleProcessMd* mfg_battery_discharge_app_get_info(void);
+const PebbleProcessMd* mfg_discharge_app_get_info(void);

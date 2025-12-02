@@ -405,13 +405,13 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd *mfg_mic_app_get_info(void) {
+const PebbleProcessMd *mfg_mic_asterix_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: 95ada1ce-04b3-46b0-8519-0b42260b5c39
       .common.uuid = {0x95, 0xad, 0xa1, 0xce, 0x04, 0xb3, 0x46, 0xb0,
                       0x85, 0x19, 0x0b, 0x42, 0x26, 0x0b, 0x5c, 0x39},
-      .name = "MfgMic",
+      .name = "MfgMicAsterix",
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

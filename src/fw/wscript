@@ -566,15 +566,14 @@ def _build_recovery(bld):
 
     if not bld.is_asterix():
         excludes.extend([
-            'apps/prf_apps/mfg_speaker_app.c',
-            'apps/prf_apps/mfg_mic_app.c',
-            'apps/prf_apps/mfg_sine_wave.c',
+            'apps/prf_apps/mfg_speaker_asterix_app.c',
+            'apps/prf_apps/mfg_mic_asterix_app.c',
         ])
     
     if not bld.is_obelix():
         excludes.extend([
-            'apps/prf_apps/mfg_audio_app.c',
-            'apps/prf_apps/mfg_pdm_mic_app.c',
+            'apps/prf_apps/mfg_speaker_obelix_app.c',
+            'apps/prf_apps/mfg_mic_obelix_app.c',
             'apps/prf_apps/mfg_test_aging_app.c',
         ])
 

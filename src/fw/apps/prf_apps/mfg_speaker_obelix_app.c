@@ -49,7 +49,7 @@ static void prv_handle_init(void) {
   text_layer_init(title, &window->layer.bounds);
   text_layer_set_font(title, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(title, GTextAlignmentCenter);
-  text_layer_set_text(title, "AUDIO TEST");
+  text_layer_set_text(title, "SPEAKER TEST");
   layer_add_child(&window->layer, &title->layer);
 
   app_window_stack_push(window, true /* Animated */);
@@ -62,13 +62,13 @@ static void s_main(void) {
   audio_stop(AUDIO);
 }
 
-const PebbleProcessMd *mfg_audio_app_get_info(void) {
+const PebbleProcessMd *mfg_speaker_obelix_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: c1479d03-5550-4444-b1e7-e2cbad0e5678
       .common.uuid = {0xc1, 0x47, 0x9d, 0x03, 0x55, 0x50, 0x44, 0x44, 0xb1, 0xe7, 0xe2, 0xcb, 0xad,
                       0x0e, 0x56, 0x78},
-      .name = "MfgAudio",
+      .name = "MfgSpeakerObelix",
   };
   return (const PebbleProcessMd *)&s_app_info;
 }
