@@ -289,6 +289,10 @@ bool mic_is_running(MicDevice *this) {
   return s_running;
 }
 
+uint32_t mic_get_channels(const MicDevice *this) {
+  return 1;
+}
+
 static void prv_dispatch_samples_common(void) {
   mutex_lock_recursive(s_mic_mutex);
 
