@@ -8,10 +8,8 @@
 #include "apps/prf_apps/mfg_accel_app.h"
 #include "apps/prf_apps/mfg_als_app.h"
 #include "apps/prf_apps/mfg_bt_device_name_app.h"
-#include "apps/prf_apps/mfg_bt_sig_rf_app.h"
 #include "apps/prf_apps/mfg_serial_qr_app.h"
 #include "apps/prf_apps/mfg_button_app.h"
-#include "apps/prf_apps/mfg_certification_app.h"
 #include "apps/prf_apps/mfg_display_app.h"
 #include "apps/prf_apps/mfg_hrm_app.h"
 #include "apps/prf_apps/mfg_mic_app.h"
@@ -131,12 +129,6 @@ static void prv_select_mic(int index, void *context) {
 }
 #endif
 
-#if !PLATFORM_SILK && !PLATFORM_ASTERIX && !PLATFORM_OBELIX
-static void prv_select_bt_sig_rf(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_sig_rf_app_get_info());
-}
-#endif
-
 #if CAPABILITY_HAS_BUILTIN_HRM
 static void prv_select_hrm(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_hrm_app_get_info());
@@ -148,10 +140,6 @@ static void prv_select_touch(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_touch_app_get_info());
 }
 #endif
-
-static void prv_select_certification(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_certification_app_get_info());
-}
 
 static void prv_select_program_color(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_program_color_app_get_info());
@@ -254,9 +242,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #endif
     { .title = "Program Color",     .callback = prv_select_program_color },
     { .title = "Test Runin",        .callback = prv_select_runin },
-#if !PLATFORM_ASTERIX && !PLATFORM_OBELIX
-    { .title = "Certification",     .callback = prv_select_certification },
-#endif
     { .title = "Load PRF",          .callback = prv_select_load_prf },
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
@@ -264,9 +249,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Test Batt Discharge", .callback = prv_select_battery_discharge },
 #if PLATFORM_OBELIX
     { .title = "Test Aging",        .callback = prv_select_test_aging },
-#endif
-#if !PLATFORM_SILK && !PLATFORM_ASTERIX && !PLATFORM_OBELIX
-    { .title = "Test bt_sig_rf",    .callback = prv_select_bt_sig_rf },
 #endif
   };
 
