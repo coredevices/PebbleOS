@@ -466,3 +466,8 @@ bool mic_is_running(const MicDevice *this) {
   
   return this->state->is_running;
 }
+
+uint32_t mic_get_channels(const MicDevice *this) {
+  PBL_ASSERTN(this);
+  return this->channels ? this->channels : 1;
+}

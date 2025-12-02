@@ -52,4 +52,5 @@ typedef const struct MicDevice {
   const nrfx_pdm_t pdm_instance;
   uint32_t clk_pin;
   uint32_t data_pin;
+  uint32_t channels;
 } MicDevice;
