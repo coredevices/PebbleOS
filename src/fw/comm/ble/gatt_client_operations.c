@@ -185,30 +185,42 @@ static BTErrno prv_read(uintptr_t obj_ref, GAPLEClient client,
                         HandleAndConnectionGetter handle_getter,
                         PebbleBLEGATTClientEventType subtype) {
   BTErrno ret_val = BTErrnoOK;
+  GAPLEConnection *connection;
+  uint16_t att_handle;
+  GattClientEventContext *data;
+
   bt_lock();
   {
-    GAPLEConnection *connection;
-    const uint16_t att_handle = handle_getter(obj_ref, &connection);
+    att_handle = handle_getter(obj_ref, &connection);
     if (!att_handle) {
-      ret_val = BTErrnoInvalidParameter;
-      goto unlock;
+      bt_unlock();
+      return BTErrnoInvalidParameter;
     }
 
-    GattClientEventContext *data = prv_create_event_context(client);
+    data = prv_create_event_context(client);
     if (!data) {
-      ret_val = BTErrnoNotEnoughResources;
-      goto unlock;
+      bt_unlock();
+      return BTErrnoNotEnoughResources;
     }
 
     // Zero'd out and added to list in `prv_create_event_context`
     data->client = client;
     data->subtype = subtype;
     data->obj_ref = obj_ref;
-
-    ret_val = bt_driver_gatt_read(connection, att_handle, data);
   }
-unlock:
+  // Release bt_lock BEFORE calling into NimBLE to avoid deadlock.
+  // If the connection becomes invalid after releasing the lock, the NimBLE driver
+  // will fail to look up the conn_handle and return an error.
   bt_unlock();
+
+  ret_val = bt_driver_gatt_read(connection, att_handle, data);
+  if (ret_val != BTErrnoOK) {
+    // Clean up the context we created if the driver call failed
+    bt_lock();
+    list_remove(&data->node, (ListNode **)&s_client_event_ctxs[client], NULL);
+    kernel_free(data);
+    bt_unlock();
+  }
   return ret_val;
 }
 
@@ -216,30 +228,42 @@ static BTErrno prv_write(uintptr_t obj_ref, const uint8_t *value, size_t value_l
                          GAPLEClient client, HandleAndConnectionGetter handle_getter,
                          PebbleBLEGATTClientEventType subtype) {
   BTErrno ret_val = BTErrnoOK;
+  GAPLEConnection *connection;
+  uint16_t att_handle;
+  GattClientEventContext *data;
+
   bt_lock();
   {
-    GAPLEConnection *connection;
-    const uint16_t att_handle = handle_getter(obj_ref, &connection);
+    att_handle = handle_getter(obj_ref, &connection);
     if (!att_handle) {
-      ret_val = BTErrnoInvalidParameter;
-      goto unlock;
+      bt_unlock();
+      return BTErrnoInvalidParameter;
     }
 
-    GattClientEventContext *data = prv_create_event_context(client);
+    data = prv_create_event_context(client);
     if (!data) {
-      ret_val = BTErrnoNotEnoughResources;
-      goto unlock;
+      bt_unlock();
+      return BTErrnoNotEnoughResources;
     }
 
     // Zero'd out and added to list in `prv_create_event_context`
     data->client = client;
     data->subtype = subtype;
     data->obj_ref = obj_ref;
-
-    ret_val = bt_driver_gatt_write(connection, value, value_length, att_handle, data);
   }
-unlock:
+  // Release bt_lock BEFORE calling into NimBLE to avoid deadlock.
+  // If the connection becomes invalid after releasing the lock, the NimBLE driver
+  // will fail to look up the conn_handle and return an error.
   bt_unlock();
+
+  ret_val = bt_driver_gatt_write(connection, value, value_length, att_handle, data);
+  if (ret_val != BTErrnoOK) {
+    // Clean up the context we created if the driver call failed
+    bt_lock();
+    list_remove(&data->node, (ListNode **)&s_client_event_ctxs[client], NULL);
+    kernel_free(data);
+    bt_unlock();
+  }
   return ret_val;
 }
 
@@ -286,22 +310,24 @@ BTErrno gatt_client_op_write_without_response(BLECharacteristic characteristic,
                                               const uint8_t *value,
                                               size_t value_length,
                                               GAPLEClient client) {
-  BTErrno ret_val = BTErrnoOK;
+  GAPLEConnection *connection;
+  uint16_t att_handle;
+
   bt_lock();
   {
-    GAPLEConnection *connection;
-    const uint16_t att_handle =
+    att_handle =
         gatt_client_characteristic_get_handle_and_connection(characteristic, &connection);
     if (!att_handle) {
-      ret_val = BTErrnoInvalidParameter;
-      goto unlock;
+      bt_unlock();
+      return BTErrnoInvalidParameter;
     }
-
-    ret_val = bt_driver_gatt_write_without_response(connection, value, value_length, att_handle);
   }
-unlock:
+  // Release bt_lock BEFORE calling into NimBLE to avoid deadlock.
+  // If the connection becomes invalid after releasing the lock, the NimBLE driver
+  // will fail to look up the conn_handle and return BTErrnoInvalidState.
   bt_unlock();
-  return ret_val;
+
+  return bt_driver_gatt_write_without_response(connection, value, value_length, att_handle);
 }
 
 BTErrno gatt_client_op_write_descriptor(BLEDescriptor descriptor,
