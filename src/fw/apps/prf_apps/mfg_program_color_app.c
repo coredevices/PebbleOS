@@ -36,12 +36,12 @@ typedef struct {
 const ColorTable s_color_table[] = {
 #if PLATFORM_ASTERIX
   {
-    .color = WATCH_INFO_COLOR_COREDEVICES_C2D_BLACK,
+    .color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK,
     .name = "BLACK",
     .short_name = "BK",
   },
   {
-    .color = WATCH_INFO_COLOR_COREDEVICES_C2D_WHITE,
+    .color = WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE,
     .name = "WHITE",
     .short_name = "WH",
   }
