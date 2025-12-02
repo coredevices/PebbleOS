@@ -30,7 +30,6 @@
 #if CAPABILITY_HAS_BUILTIN_HRM
 
 #define STATUS_STRING_LEN 32
-#define BPM_STRING_LEN 32
 
 typedef struct {
   Window window;
@@ -38,9 +37,7 @@ typedef struct {
 
   TextLayer title_text_layer;
   TextLayer status_text_layer;
-  TextLayer bpm_text_layer;
   char status_string[STATUS_STRING_LEN];
-  char bpm_string[BPM_STRING_LEN];
   HRMSessionRef hrm_session;
 } AppData;
 
@@ -48,12 +45,8 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
   AppData *app_data = app_state_get_user_data();
 
   if (e->type == PEBBLE_HRM_EVENT) {
-    if (e->hrm.event_type == HRMEvent_LEDCurrent) {
-      snprintf(app_data->status_string, STATUS_STRING_LEN,
-               "TIA: %"PRIu16"\nLED: %"PRIu16" mA", e->hrm.led.tia, e->hrm.led.current_ua);
-    }
     if (e->hrm.event_type == HRMEvent_BPM) {
-      snprintf(app_data->bpm_string, BPM_STRING_LEN,
+      snprintf(app_data->status_string, STATUS_STRING_LEN,
               "HR:%d\nQuality:%d", e->hrm.bpm.bpm, e->hrm.bpm.quality);
     }
     layer_mark_dirty(&app_data->window.layer);
@@ -90,14 +83,6 @@ static void prv_handle_init(void) {
   text_layer_set_text(status, data->status_string);
   layer_add_child(&window->layer, &status->layer);
 
-  TextLayer *bpm = &data->bpm_text_layer;
-  text_layer_init(bpm,
-                  &GRect(5, 100, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 40));
-  text_layer_set_font(bpm, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-  text_layer_set_text_alignment(bpm, GTextAlignmentCenter);
-  text_layer_set_text(bpm, data->bpm_string);
-  layer_add_child(&window->layer, &bpm->layer);
-
   if (has_hrm) {
     data->hrm_event_info = (EventServiceInfo){
       .type = PEBBLE_HRM_EVENT,
@@ -108,7 +93,7 @@ static void prv_handle_init(void) {
     // Use app data as session ref
     AppInstallId  app_id = 1;
     data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
-                                                      HRMFeature_LEDCurrent|HRMFeature_BPM);
+                                                      HRMFeature_BPM);
   }
 
   app_window_stack_push(window, true);
