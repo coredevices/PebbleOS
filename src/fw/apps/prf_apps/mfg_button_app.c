@@ -3,6 +3,7 @@
 
 #include "applib/app.h"
 #include "applib/tick_timer_service.h"
+#include "board/display.h"
 #include "util/trig.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"
@@ -102,12 +103,20 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
     .points = ARROW_PATH_POINTS
   };
 
-#define ARROW_SIZE {26, 24}
-  static const GRect ARROW_RECTS[] = {
-    {{  5,  55}, ARROW_SIZE}, // BACK
-    {{112,  30}, ARROW_SIZE}, // UP
-    {{112,  90}, ARROW_SIZE}, // SELECT
-    {{112, 140}, ARROW_SIZE}, // DOWN
+#define ARROW_LR_MARGIN 5
+#define ARROW_TB_MARGIN 30
+#define ARROW_W 26
+#define ARROW_H 24
+#define ARROW_SIZE {ARROW_W, ARROW_H}
+  const GRect ARROW_RECTS[] = {
+    // BACK
+    {{ARROW_LR_MARGIN,                       ARROW_TB_MARGIN}, ARROW_SIZE},
+    // UP
+    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, ARROW_TB_MARGIN}, ARROW_SIZE},
+    // SELECT
+    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, (DISP_ROWS - ARROW_H) / 2}, ARROW_SIZE},
+    // DOWN
+    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, DISP_ROWS - ARROW_TB_MARGIN - ARROW_H }, ARROW_SIZE},
   };
 
   PathLayer *arrow = &data->arrows[id];
