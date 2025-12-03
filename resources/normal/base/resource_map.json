@@ -1415,17 +1415,17 @@
     {
       "type": "pdc",
       "name": "NOTIFICATION_OUTLOOK_TINY",
-      "file": "normal/base/images/Pebble_25x25_Outlook.svg"
+      "file": "../third_party/resources/iconography/brand-logos/25px_Outlook.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_OUTLOOK_SMALL",
-      "file": "normal/base/images/Pebble_50x50_Outlook.svg"
+      "file": "../third_party/resources/iconography/brand-logos/50px_Outlook.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_OUTLOOK_LARGE",
-      "file": "normal/base/images/Pebble_80x80_Outlook.svg"
+      "file": "../third_party/resources/iconography/brand-logos/80px_Outlook.svg"
     },
     {
       "type": "pdc",
