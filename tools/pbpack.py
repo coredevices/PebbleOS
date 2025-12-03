@@ -239,7 +239,7 @@ class ResourcePack(object):
             print('  %u: Offset %u Length %u CRC 0x%x' % (i, entry.offset, entry.length, entry.crc))
 
     def __init__(self, is_system):
-        self.table_size = 512 if is_system else 256
+        self.table_size = 768 if is_system else 256
         self.content_start = self.MANIFEST_SIZE_BYTES + self.table_size * self.TABLE_ENTRY_SIZE_BYTES
 
         # Note that we never actually set the timestamp in newly generated pbpacks. The timestamp

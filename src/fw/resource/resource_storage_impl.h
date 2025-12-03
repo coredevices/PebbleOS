@@ -44,7 +44,7 @@ typedef struct PACKED {
 } ResTableEntry;
 
 #define MAX_RESOURCES_PER_STORE 256
-#define MAX_RESOURCES_FOR_SYSTEM_STORE 512
+#define MAX_RESOURCES_FOR_SYSTEM_STORE 768
 #define MANIFEST_SIZE (sizeof(ResourceManifest))
 #define TABLE_ENTRY_SIZE (sizeof(ResTableEntry))
 #define RESOURCE_STORE_METADATA_BYTES \
