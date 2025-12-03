@@ -80,10 +80,14 @@ def calc_opacity(a1, a2):
 
 def get_points_from_str(point_str):
     points = []
-    for p in point_str.split():
-        pair = p.split(',')
+    # Normalize the point string: replace commas with spaces, then split on whitespace
+    # This handles both "x,y x,y" and "x y x y" formats
+    normalized = point_str.replace(',', ' ')
+    values = normalized.split()
+    # Process values in pairs
+    for i in range(0, len(values) - 1, 2):
         try:
-            points.append((float(pair[0]), float(pair[1])))
+            points.append((float(values[i]), float(values[i + 1])))
         except (ValueError, TypeError):
             return None
     return points
