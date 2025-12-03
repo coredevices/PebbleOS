@@ -73,7 +73,7 @@ static uint8_t s_motion_sensitivity = 85; // Default to High
 
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY "lightDynamicIntensity"
-static bool s_backlight_dynamic_intensity_enabled = false;
+static bool s_backlight_dynamic_intensity_enabled = true;
 
 #define PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD "dynBacklightMinThreshold"
 static uint32_t s_dynamic_backlight_min_threshold = 0; // default set from board config in shell_prefs_init()
@@ -214,7 +214,7 @@ static uint16_t s_timeline_peek_before_time_m =
 #endif
 static bool s_coredump_on_request_enabled = false;
 #if PLATFORM_OBELIX
-static uint8_t s_legacy_app_render_mode = 0; // Default to bezel mode
+static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
 #define PREF_KEY_SETTINGS_MENU_HIGHLIGHT_COLOR "settingsMenuHighlightColor"
