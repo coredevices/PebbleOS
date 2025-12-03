@@ -9,6 +9,7 @@
 #include "applib/ui/window_private.h"
 #include "applib/ui/path_layer.h"
 #include "applib/ui/text_layer.h"
+#include "applib/graphics/graphics.h"
 #include "drivers/display/display.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
@@ -81,8 +82,99 @@ typedef struct {
   PathLayer up_arrow;
   PathLayer down_arrow;
 
+#ifdef PBL_COLOR
+  Layer color_preview;
+#endif
+
   int selected_color_index;
+  char color_text[32];  // Buffer for "NAME (SN)" format
 } AppData;
+
+#ifdef PBL_COLOR
+// Helper function to convert WatchInfoColor to GColor for display
+static void prv_get_display_colors(WatchInfoColor watch_color, GColor *color1, GColor *color2) {
+  // Default to black for unknown colors
+  *color1 = GColorBlack;
+  *color2 = GColorBlack;
+
+  switch (watch_color) {
+    // Single color options (C2D)
+    case WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK:
+      *color1 = GColorBlack;
+      *color2 = GColorBlack;
+      break;
+    case WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE:
+      *color1 = GColorWhite;
+      *color2 = GColorWhite;
+      break;
+
+    // Two color options (CT2)
+    case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY:
+      *color1 = GColorBlack;
+      *color2 = GColorLightGray;
+      break;
+    case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED:
+      *color1 = GColorBlack;
+      *color2 = GColorRed;
+      break;
+    case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE:
+      *color1 = GColorLightGray;  // Silver approximation
+      *color2 = GColorBlue;
+      break;
+    case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY:
+      *color1 = GColorLightGray;  // Silver approximation
+      *color2 = GColorDarkGray;
+      break;
+
+    default:
+      break;
+  }
+}
+
+static void prv_color_preview_update_proc(Layer *layer, GContext *ctx) {
+  AppData *app_data = app_state_get_user_data();
+
+  if (app_data->selected_color_index < 0 ||
+      app_data->selected_color_index >= (int)ARRAY_LENGTH(s_color_table)) {
+    return;
+  }
+
+  GRect bounds;
+  layer_get_bounds(layer, &bounds);
+  WatchInfoColor watch_color = s_color_table[app_data->selected_color_index].color;
+
+  GColor color1, color2;
+  prv_get_display_colors(watch_color, &color1, &color2);
+
+  // Draw a square split diagonally if two different colors
+  if (gcolor_equal(color1, color2)) {
+    // Single color - fill entire square
+    graphics_context_set_fill_color(ctx, color1);
+    graphics_fill_rect(ctx, &bounds);
+  } else {
+    // Two colors - split diagonally
+    // Top triangle (color1)
+    graphics_context_set_fill_color(ctx, color1);
+    for (int y = 0; y < bounds.size.h; y++) {
+      GRect top_rect = GRect(bounds.origin.x, bounds.origin.y + y,
+                             bounds.size.w - y, 1);
+      graphics_fill_rect(ctx, &top_rect);
+    }
+
+    // Bottom triangle (color2)
+    graphics_context_set_fill_color(ctx, color2);
+    for (int y = 0; y < bounds.size.h; y++) {
+      GRect bottom_rect = GRect(bounds.origin.x + bounds.size.w - y,
+                                bounds.origin.y + y, y, 1);
+      graphics_fill_rect(ctx, &bottom_rect);
+    }
+  }
+
+  // Draw border
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_draw_rect(ctx, &bounds);
+}
+#endif
 
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
@@ -96,8 +188,13 @@ static void prv_up_click_handler(ClickRecognizerRef recognizer, void *data) {
   } else {
     app_data->selected_color_index--;
   }
-  text_layer_set_text(&app_data->color,
-                      s_color_table[app_data->selected_color_index].name);
+  snprintf(app_data->color_text, sizeof(app_data->color_text), "%s (%s)",
+           s_color_table[app_data->selected_color_index].name,
+           s_color_table[app_data->selected_color_index].short_name);
+  text_layer_set_text(&app_data->color, app_data->color_text);
+#ifdef PBL_COLOR
+  layer_mark_dirty(&app_data->color_preview);
+#endif
 }
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -112,8 +209,13 @@ static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
   } else {
     app_data->selected_color_index++;
   }
-  text_layer_set_text(&app_data->color,
-                      s_color_table[app_data->selected_color_index].name);
+  snprintf(app_data->color_text, sizeof(app_data->color_text), "%s (%s)",
+           s_color_table[app_data->selected_color_index].name,
+           s_color_table[app_data->selected_color_index].short_name);
+  text_layer_set_text(&app_data->color, app_data->color_text);
+#ifdef PBL_COLOR
+  layer_mark_dirty(&app_data->color_preview);
+#endif
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -170,18 +272,31 @@ static void prv_handle_init(void) {
   path_layer_set_fill_color(up_arrow, GColorBlack);
   path_layer_set_stroke_color(up_arrow, GColorBlack);
   layer_set_frame(&up_arrow->layer,
-                  &GRect((window->layer.bounds.size.w / 2) - 7, 55, 14, 10));
+                  &GRect((window->layer.bounds.size.w / 2) - 7, 40, 14, 10));
   layer_add_child(&window->layer, &up_arrow->layer);
+
+#ifdef PBL_COLOR
+  // Create color preview square above the color text
+  Layer *color_preview = &data->color_preview;
+  const int preview_size = 40;
+  layer_init(color_preview,
+             &GRect((window->layer.bounds.size.w / 2) - (preview_size / 2), 55,
+                    preview_size, preview_size));
+  layer_set_update_proc(color_preview, prv_color_preview_update_proc);
+  layer_add_child(&window->layer, color_preview);
+#endif
 
   TextLayer *color = &data->color;
   text_layer_init(color,
-                  &GRect(5, 70,
+                  &GRect(5, 100,
                          window->layer.bounds.size.w - 10, 28));
   text_layer_set_font(color, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(color, GTextAlignmentCenter);
   if (ARRAY_LENGTH(s_color_table) > 0) {
     data->selected_color_index = 0;
-    text_layer_set_text(color, s_color_table[0].name);
+    snprintf(data->color_text, sizeof(data->color_text), "%s (%s)",
+             s_color_table[0].name, s_color_table[0].short_name);
+    text_layer_set_text(color, data->color_text);
   } else {
     text_layer_set_text(color, "NO COLORS AVAILABLE");
   }
@@ -198,13 +313,13 @@ static void prv_handle_init(void) {
   path_layer_set_fill_color(down_arrow, GColorBlack);
   path_layer_set_stroke_color(down_arrow, GColorBlack);
   layer_set_frame(&down_arrow->layer,
-                  &GRect((window->layer.bounds.size.w / 2) - 7, 103, 14, 10));
+                  &GRect((window->layer.bounds.size.w / 2) - 7, 133, 14, 10));
   layer_add_child(&window->layer, &down_arrow->layer);
 
   TextLayer *status = &data->status;
   text_layer_init(status,
-                  &GRect(5, 120,
-                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 120));
+                  &GRect(5, 148,
+                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 148));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(status, GTextAlignmentCenter);
   layer_add_child(&window->layer, &status->layer);
