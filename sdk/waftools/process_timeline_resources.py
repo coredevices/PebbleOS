@@ -64,7 +64,7 @@ class timeline_reso(Task.Task):
         resource_id_mapping = self.env.RESOURCE_ID_MAPPING
 
         TIMELINE_RESOURCE_TABLE_ENTRY_FMT = '<III'
-        TLUT_SIGNATURE = 'TLUT'
+        TLUT_SIGNATURE = b'TLUT'
 
         timeline_resources = []
         published_media_from_libs = _collect_lib_published_media(self.generator)
