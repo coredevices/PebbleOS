@@ -177,60 +177,6 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
 
       bpm = hrm->bpm.bpm;
       bpm_quality = hrm->bpm.quality;
-    } else if (hrm->event_type == HRMEvent_LEDCurrent) {
-      led_current = hrm->led.current_ua;
-    } else if (hrm->event_type == HRMEvent_Diagnostics) {
-      if (!app_data->ready_to_send) {
-        return;
-      }
-
-      AppMessageResult result = app_message_outbox_begin(&app_data->out_iter);
-      PBL_ASSERTN(result == APP_MSG_OK);
-
-      if (bpm) {
-        dict_write_uint8(app_data->out_iter, AppMessageKey_HeartRate, bpm);
-        dict_write_uint8(app_data->out_iter, AppMessageKey_Confidence, bpm_quality);
-      }
-
-      if (led_current) {
-        dict_write_uint16(app_data->out_iter, AppMessageKey_Current, led_current);
-      }
-
-      if (hrm->debug->ppg_data.num_samples) {
-        HRMPPGData *d = &hrm->debug->ppg_data;
-        dict_write_data(app_data->out_iter, AppMessageKey_TIA,
-                        (uint8_t *)d->tia, d->num_samples * sizeof(d->tia[0]));
-        dict_write_data(app_data->out_iter, AppMessageKey_PPG,
-                        (uint8_t *)d->ppg, d->num_samples * sizeof(d->ppg[0]));
-      }
-
-      if (hrm->debug->ppg_data.tia[hrm->debug->ppg_data.num_samples - 1] == 0) {
-        PBL_LOG_COLOR(LOG_LEVEL_DEBUG, LOG_COLOR_CYAN, "last PPG TIA sample is 0!");
-      }
-
-      if (hrm->debug->ppg_data.num_samples != 20) {
-        PBL_LOG_COLOR(LOG_LEVEL_DEBUG, LOG_COLOR_CYAN, "Only got %"PRIu16" samples!",
-                      hrm->debug->ppg_data.num_samples);
-      }
-
-      if (hrm->debug->accel_data.num_samples) {
-        HRMAccelData *d = &hrm->debug->accel_data;
-        dict_write_data(app_data->out_iter, AppMessageKey_AccelData,
-                        (uint8_t *)d->data, d->num_samples * sizeof(d->data[0]));
-      }
-
-      PBL_LOG(LOG_LEVEL_DEBUG,
-              "Sending message - bpm:%u quality:%u current:%u "
-              "ppg_readings:%u accel_readings %"PRIu32,
-              bpm,
-              bpm_quality,
-              led_current,
-              hrm->debug->ppg_data.num_samples,
-              hrm->debug->accel_data.num_samples);
-
-      led_current = bpm = bpm_quality = 0;
-
-      prv_send_msg();
     } else if (hrm->event_type == HRMEvent_SubscriptionExpiring) {
       PBL_LOG(LOG_LEVEL_INFO, "Got subscription expiring event");
       // Subscribe again if our subscription is expiring
@@ -254,7 +200,7 @@ static void prv_enable_hrm(void) {
   const uint32_t update_time_s = 1;
   app_data->session = sys_hrm_manager_app_subscribe(
       APP_ID_HRM_DEMO, update_time_s, SECONDS_PER_HOUR,
-      HRMFeature_BPM | HRMFeature_LEDCurrent | HRMFeature_Diagnostics);
+      HRMFeature_BPM);
 }
 
 static void prv_disable_hrm(void) {

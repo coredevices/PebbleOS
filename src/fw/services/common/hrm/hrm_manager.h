@@ -26,20 +26,12 @@ typedef enum {
 typedef enum {
   HRMFeatureShift_BPM = 0,
   HRMFeatureShift_HRV = 1,
-  HRMFeatureShift_LEDCurrent = 2,
-  HRMFeatureShift_Diagnostics = 3,
-
   HRMFeatureShiftMax
 } HRMFeatureShift;
 
 typedef enum {
   HRMFeature_BPM = (1 << HRMFeatureShift_BPM), //!< Collect heartrate BPM.
   HRMFeature_HRV = (1 << HRMFeatureShift_HRV), //!< Collect heartrate variability.
-  HRMFeature_LEDCurrent = (1 << HRMFeatureShift_LEDCurrent), //!< Collect the LED current
-                                                             //!< consumption (uA). This should not
-                                                             //!< be made public by the HRM service,
-                                                             //!< and should only be used internally
-  HRMFeature_Diagnostics = (1 << 3), //!< Collect PPG & Accel data
   HRMFeatureMax
 } HRMFeature;
 
@@ -136,28 +128,13 @@ void hrm_manager_enable(bool on);
 //------------------------------------------------------------------------------
 // The driver needs to provide new data to the service and needs to pull accel data.
 
-#define MAX_PPG_SAMPLES 20
-
-typedef struct {
-  int num_samples;
-  uint8_t indexes[MAX_PPG_SAMPLES];
-  uint16_t ppg[MAX_PPG_SAMPLES];
-  uint16_t tia[MAX_PPG_SAMPLES];
-} HRMPPGData;
-
 //! HRMData will contain all HRM information that is currently available from the device.
 typedef struct {
-  uint16_t led_current_ua;
-
   uint8_t hrm_bpm;
   HRMQuality hrm_quality;
 
   uint16_t hrv_ppi_ms;
   HRMQuality hrv_quality;
-  uint8_t hrm_status;
-
-  HRMAccelData accel_data;
-  HRMPPGData ppg_data;
 } HRMData;
 
 //! Callback used by HRM Driver to indicate that new data is available.

@@ -246,53 +246,6 @@ static bool prv_set_host_one_second_time_register(HRMDevice *dev, uint32_t avera
       && prv_write_register(dev, ADDR_HOST_ONE_SECOND_TIME_LSB, lsb);
 }
 
-static void prv_read_ppg_data(HRMDevice *dev, HRMPPGData *data_out) {
-  uint8_t num_ppg_samples;
-  prv_read_register(HRM, ADDR_NUM_PPG_SAMPLES, &num_ppg_samples);
-  num_ppg_samples = MIN(num_ppg_samples, MAX_PPG_SAMPLES);
-
-  for (int i = 0; i < num_ppg_samples; ++i) {
-    struct PACKED {
-      uint8_t idx;
-      uint16_t ppg;
-      uint16_t tia;
-    } ppg_reading;
-
-    // Reading PPG data from the chip is a little weird. We need to read the PPG block of registers
-    // which maps to the ppg_reading struct above. We then need to verify that the index that we
-    // read matches the one that we expect. If we attempt to read the registers too quickly back to
-    // back that means that the AS7000 failed to update the value in time and we just need to try
-    // again. Limit this to a fixed number of attempts to make sure we don't infinite loop.
-    const int NUM_ATTEMPTS = 3;
-    bool success = false;
-    for (int j = 0; j < NUM_ATTEMPTS; ++j) {
-      prv_read_register_block(HRM, ADDR_PPG_IDX, &ppg_reading, sizeof(ppg_reading));
-      if (ppg_reading.idx == i + 1) {
-        data_out->indexes[i] = ppg_reading.idx;
-        data_out->ppg[i] = ntohs(ppg_reading.ppg);
-        data_out->tia[i] = ntohs(ppg_reading.tia);
-
-        success = true;
-        break;
-      }
-
-      PPG_DBG_VERBOSE("FAIL: got %"PRIu16" expected %u tia %"PRIu16,
-                      ppg_reading.idx, i + 1, ntohs(ppg_reading.tia));
-      // Keep trying...
-    }
-
-    if (!success) {
-      // We didn't find a sample, just give up on reading PPG for this handshake
-      break;
-    }
-
-    data_out->num_samples++;
-  }
-
-  PPG_DBG("num_samples reg: %"PRIu8" read: %u",
-          num_ppg_samples, data_out->num_samples);
-}
-
 static void prv_write_accel_sample(HRMDevice *dev, uint8_t sample_idx, AccelRawData *data) {
   struct PACKED {
     uint8_t sample_idx;
@@ -318,11 +271,9 @@ static void prv_read_hrm_data(HRMDevice *dev, HRMData *data) {
 
   prv_read_register_block(dev, ADDR_LED_CURRENT_MSB, &hrm_data_regs, sizeof(hrm_data_regs));
 
-  data->led_current_ua = ntohs(hrm_data_regs.led_current);
-  data->hrm_status = hrm_data_regs.hrm_status;
   data->hrm_bpm = hrm_data_regs.bpm;
 
-  if (data->hrm_status & AS7000Status_NoAccel) {
+  if (hrm_data_regs.hrm_status & AS7000Status_NoAccel) {
     data->hrm_quality = HRMQuality_NoAccel;
   } else if (hrm_data_regs.sqi <= AS7000SQIThreshold_Excellent) {
     data->hrm_quality = HRMQuality_Excellent;
@@ -364,11 +315,6 @@ static void prv_handle_handshake_pulse(void *unused_data) {
 
   HRMData data = (HRMData) {};
 
-  // Immediately read the PPG data. The timing constraints are pretty tight (we need to read this
-  // within 30ms~ of getting the handshake or else we'll lose PPG data). The other registers can
-  // be read at anytime before the next handshake, so it's ok to do this first.
-  prv_read_ppg_data(HRM, &data.ppg_data);
-
   if (should_expect_samples) {
     interval_timer_take_sample(&s_handshake_interval_timer);
   }
@@ -380,7 +326,6 @@ static void prv_handle_handshake_pulse(void *unused_data) {
   for (uint32_t i = 0; i < num_samples; ++i) {
     prv_write_accel_sample(HRM, i + 1, &accel_data->data[i]);
   }
-  data.accel_data = *accel_data;
   hrm_manager_release_accel_data();
 
   // Read the rest of the HRM data fields.
@@ -409,13 +354,6 @@ static void prv_handle_handshake_pulse(void *unused_data) {
 
   PROFILER_NODE_STOP(hrm_handling);
   mutex_unlock(HRM->state->lock);
-
-
-  // PPG_DBG log out each PPG data sample that we recorded
-  for (int i = 0; i < data.ppg_data.num_samples; i++) {
-    PPG_DBG_VERBOSE("idx %-2"PRIu8" ppg %-6"PRIu16" tia %-6"PRIu16,
-                    data.ppg_data.indexes[i], data.ppg_data.ppg[i], data.ppg_data.tia[i]);
-  }
 
   hrm_manager_new_data_cb(&data);
 
