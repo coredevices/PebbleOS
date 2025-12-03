@@ -273,6 +273,12 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
       uint32_t ticks_elapsed = lptim_systick_get_elapsed_ticks();
 
+      // Cap ticks_elapsed to xExpectedIdleTime to avoid FreeRTOS assertion failure
+      // in vTaskStepTick() when we oversleep due to wake-up latency or RC oscillator drift
+      if (ticks_elapsed > xExpectedIdleTime) {
+        ticks_elapsed = xExpectedIdleTime;
+      }
+
       s_last_ticks_elapsed_in_stop = ticks_elapsed;
       vTaskStepTick(ticks_elapsed);
 
