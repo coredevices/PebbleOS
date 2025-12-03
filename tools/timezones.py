@@ -140,7 +140,7 @@ def dstrules_parse(tzfile):
         for line_num, line in enumerate(lines):
             match_list = re.finditer(r"^Rule\s+(?P<dstzone>[-A-Za-z]+)\s+[0-9]+\s+max\s+-\s+"
                                      r"(?P<month>[A-Za-z]+)\s+(?P<wday_stuff>[>=A-Za-z0-9]+)\s+"
-                                     r"(?P<time>[:0-9]+)(?P<timemode>[swugz]*)\s+[:0-9su]+\s+"
+                                     r"(?P<time>[:0-9]+)(?P<timemode>[swugz]*)\s+(?P<save>[:0-9]+)[su]*\s+"
                                      r"(?P<DS>[DS-])", line)
             if match_list:
                 for match in match_list:
@@ -154,7 +154,17 @@ def dstrules_parse(tzfile):
                               file=sys.stderr)
                         raise
 
-                    ds = match.group("DS")
+                    # Determine DS from SAVE field: SAVE > 0 means entering DST ('D'),
+                    # SAVE = 0 means leaving DST ('S'). The LETTER field in tzdata is not
+                    # a reliable indicator (e.g., EU uses 'S' for Summer time which is DST).
+                    save = match.group("save")
+                    # Parse SAVE field (can be "0", "1:00", "0:30", etc.)
+                    if ':' in save:
+                        save_hours, save_mins = save.split(':')
+                        save_total = int(save_hours) * 60 + int(save_mins)
+                    else:
+                        save_total = int(save) * 60
+                    ds = 'D' if save_total > 0 else 'S'
                     wday_stuff = match.group("wday_stuff")
                     month = month_dict[match.group("month")]
                     hour, minute = match.group("time").split(':')
