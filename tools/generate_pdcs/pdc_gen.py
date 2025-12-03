@@ -20,7 +20,7 @@ from . import json2commands
 def create_pdc_data_from_path(path, viewbox_size, verbose, duration, play_count,
                               precise=False, raise_error=False):
     dir_name = path
-    output = ''
+    output = b''
     errors = []
     if not os.path.exists(path):
         raise Exception("Invalid path")
@@ -76,7 +76,7 @@ def create_pdc_from_path(path, out_path, viewbox_size, verbose, duration, play_c
     output, errors = create_pdc_data_from_path(path, viewbox_size, verbose, duration, play_count,
                                                precise=False, raise_error=False)
 
-    if output != '':
+    if output != b'':
         if out_path is None:
             if sequence:
                 f = os.path.basename(dir_name.rstrip('/')) + '.pdc'
