@@ -44,7 +44,11 @@ class ResourceGenerator(ResourceGeneratorBase):
         for r in resources:
             if resource['filename'] is not None:
                 filename_path = os.path.join(resource_source_path, r['filename'])
-                filename_path = find_most_specific_filename(bld, bld.env, bld.path, filename_path)
+                # Handle paths that reference files outside the resources directory (e.g. ../third_party/...)
+                if filename_path.startswith('..'):
+                    filename_path = os.path.normpath(filename_path)
+                else:
+                    filename_path = find_most_specific_filename(bld, bld.env, bld.path, filename_path)
             else:
                 filename_path = ''
 
