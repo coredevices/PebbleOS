@@ -32,6 +32,9 @@ typedef struct {
 //! Currently there's only one for the System session.
 static QemuTransport s_transport;
 
+//! Emulated bluetooth connection state
+static bool s_emulated_session_connected;
+
 // -----------------------------------------------------------------------------------------
 // bt_lock() is held by caller
 static void prv_send_next(Transport *transport) {
@@ -81,6 +84,17 @@ static CommSessionTransportType prv_get_type(struct Transport *transport) {
   return CommSessionTransportType_QEMU;
 }
 
+//! Copy of the same function in session.c
+static void prv_put_comm_session_event(bool is_open, bool is_system) {
+  PebbleEvent event = {
+    .type = PEBBLE_COMM_SESSION_EVENT,
+    .bluetooth.comm_session_event.is_open = is_open,
+    .bluetooth.comm_session_event
+    .is_system = is_system,
+  };
+  event_put(&event);
+}
+
 //! Defined in session.c
 extern void comm_session_set_capabilities(
     CommSession *session, CommSessionCapability capability_flags);
@@ -89,7 +103,7 @@ extern void comm_session_set_capabilities(
 void qemu_transport_set_connected(bool is_connected) {
   bt_lock();
 
-  const bool transport_is_connected = (s_transport.session);
+  const bool transport_is_connected = (s_transport.session) && s_emulated_session_connected;
   if (transport_is_connected == is_connected) {
     bt_unlock();
     return;
@@ -104,7 +118,8 @@ void qemu_transport_set_connected(bool is_connected) {
 
   bool send_event = true;
 
-  if (is_connected) {
+  if (is_connected && !s_transport.session) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "Opening new QemuTransport CommSession");
     s_transport.session = comm_session_open((Transport *) &s_transport,
                                             &s_qemu_transport_implementation,
                                             TransportDestinationHybrid);
@@ -119,30 +134,62 @@ void qemu_transport_set_connected(bool is_connected) {
                                                CommSessionVoiceApiSupport |
                                                CommSessionAppMessage8kSupport;
     comm_session_set_capabilities(s_transport.session, capabilities);
-  } else {
-    comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
-    s_transport.session = NULL;
+
+    if (send_event) {
+      PebbleEvent e = {
+        .type = PEBBLE_BT_CONNECTION_EVENT,
+        .bluetooth = {
+          .connection = {
+            .state = (s_transport.session) ? PebbleBluetoothConnectionEventStateConnected
+            : PebbleBluetoothConnectionEventStateDisconnected
+          }
+        }
+      };
+      event_put(&e);
+    }
+
+    s_emulated_session_connected = is_connected;
   }
 
-  if (send_event) {
-    PebbleEvent e = {
-      .type = PEBBLE_BT_CONNECTION_EVENT,
-      .bluetooth = {
-        .connection = {
-          .state = (s_transport.session) ? PebbleBluetoothConnectionEventStateConnected
-          : PebbleBluetoothConnectionEventStateDisconnected
-        }
-      }
-    };
-    event_put(&e);
+  if (s_emulated_session_connected != is_connected) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "Toggling emulated session connection state --> %s", is_connected ? "connecting" : "disconnecting");
+
+    // Only send PEBBLE_COMM_SESSION_EVENT without opening or terminating a session
+    // Apps will get notified in both case but the rest of the firmware will still
+    // communicate normally in case of disconnection
+    prv_put_comm_session_event(is_connected, true);
+    prv_put_comm_session_event(is_connected, false);
+
+    s_emulated_session_connected = is_connected;
   }
+
+  bt_unlock();
+}
+
+void qemu_transport_close_session() {
+  if (!s_transport.session) return;
+
+  bt_lock();
+
+  comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
+  s_transport.session = NULL;
+
+  PebbleEvent e = {
+    .type = PEBBLE_BT_CONNECTION_EVENT,
+    .bluetooth = {
+      .connection = {
+        .state = PebbleBluetoothConnectionEventStateDisconnected
+      }
+    }
+  };
+  event_put(&e);
 
   bt_unlock();
 }
 
 // -----------------------------------------------------------------------------------------
 bool qemu_transport_is_connected(void) {
-  return (s_transport.session != NULL);
+  return (s_transport.session != NULL) && s_emulated_session_connected;
 }
 
 // -----------------------------------------------------------------------------------------

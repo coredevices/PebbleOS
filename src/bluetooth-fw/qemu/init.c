@@ -41,6 +41,7 @@ bool bt_driver_start(BTDriverConfig *config) {
 
 void bt_driver_stop(void) {
   qemu_transport_set_connected(false);
+  qemu_transport_close_session();
 }
 
 void bt_driver_power_down_controller_on_boot(void) {
