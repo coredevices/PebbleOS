@@ -373,18 +373,8 @@ static void prv_system_task_hrm_handler(void *context) {
           continue;
         }
         break;
-      case HRMEvent_LEDCurrent:
-        if (!(state->features & HRMFeature_LEDCurrent)) {
-          continue;
-        }
-        break;
       case HRMEvent_HRV:
         if (!(state->features & HRMFeature_HRV)) {
-          continue;
-        }
-        break;
-      case HRMEvent_Diagnostics:
-        if (!(state->features & HRMFeature_Diagnostics)) {
           continue;
         }
         break;
@@ -430,26 +420,6 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
         },
       };
       break;
-    case HRMFeature_LEDCurrent:
-      *event = (PebbleHRMEvent) {
-        .event_type = HRMEvent_LEDCurrent,
-        .led = {
-          .current_ua = data->led_current_ua,
-          .tia = data->ppg_data.tia[0]
-        },
-      };
-      break;
-    case HRMFeature_Diagnostics:
-    {
-      HRMDiagnosticsData *debug = kernel_zalloc_check(sizeof(HRMDiagnosticsData));
-      debug->ppg_data = data->ppg_data;
-      debug->accel_data = data->accel_data;
-      *event = (PebbleHRMEvent) {
-        .event_type = HRMEvent_Diagnostics,
-        .debug = debug,
-      };
-      break;
-    }
     default:
       WTF;
   }
@@ -492,15 +462,8 @@ void hrm_manager_new_data_cb(const HRMData *data) {
   bool stable_sensor = prv_is_sensor_stable(data);
 
   HRM_LOG("HRM Data:");
-  HRM_LOG("Status %"PRIx8, data->hrm_status);
   HRM_LOG("HRM: %"PRIu8"bpm, Quality: %d, Stable: %d", data->hrm_bpm, data->hrm_quality,
           (int)stable_sensor);
-  HRM_LOG("PPG samples: %d", data->ppg_data.num_samples);
-  HRM_HEXDUMP(data->ppg_data.ppg, data->ppg_data.num_samples * sizeof(uint16_t));
-  HRM_LOG("TIA samples: %d", data->ppg_data.num_samples);
-  HRM_HEXDUMP(data->ppg_data.tia, data->ppg_data.num_samples * sizeof(uint16_t));
-  HRM_LOG("Accel samples: %"PRIu32, data->accel_data.num_samples);
-  HRM_LOG("LED %"PRIu16"uA, TIA: %"PRIu16, data->led_current_ua, data->tia);
 
   time_t utc_now = rtc_get_time();
   RtcTicks cur_ticks = rtc_get_ticks();
@@ -762,7 +725,6 @@ void hrm_manager_enable(bool on) {
 
 
 static HRMSessionRef s_console_session = HRM_INVALID_SESSION_REF;
-static uint8_t s_tia_count = 0;
 static void prv_console_unsubscribe_callback(void *data) {
   sys_hrm_manager_unsubscribe(s_console_session);
   s_console_session = HRM_INVALID_SESSION_REF;
@@ -770,21 +732,17 @@ static void prv_console_unsubscribe_callback(void *data) {
 }
 
 static void prv_console_read_callback(PebbleHRMEvent *event, void *context) {
-  if (event->event_type == HRMEvent_LEDCurrent) {
-    if (s_tia_count++ == 5) { // Need to leave time for TIA to ramp up
-      system_task_add_callback(prv_console_unsubscribe_callback, NULL);
-      char buf[32];
-      prompt_send_response_fmt(buf, 32, "TIA: %"PRIu16, event->led.tia);
-      prompt_send_response_fmt(buf, 32, "LED: %"PRIu16"uA", event->led.current_ua);
-    }
+  if (event->event_type == HRMEvent_BPM) {
+    system_task_add_callback(prv_console_unsubscribe_callback, NULL);
+    char buf[32];
+    prompt_send_response_fmt(buf, 32, "BPM: %"PRIu8 " quality: %"PRIu8, event->bpm.bpm, event->bpm.quality);
   }
 }
 
 void command_hrm_read(void) {
-  s_tia_count = 0;
   sys_hrm_manager_unsubscribe(s_console_session);
   s_console_session = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_LEDCurrent,
+      INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_BPM,
       prv_console_read_callback, NULL);
   prompt_command_continues_after_returning();
 }

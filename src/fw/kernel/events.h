@@ -622,19 +622,6 @@ typedef struct HRMHRVData { // 3 bytes
   HRMQuality quality:8;
 } HRMHRVData;
 
-typedef struct HRMLEDData { // 4 bytes
-  uint16_t current_ua;
-  uint16_t tia; //!< Transimpendance Amplifier value.
-                //!< This is used with thresholds (provided by AMS) to verify the part is
-                //!< functioning within specification.
-
-} HRMLEDData;
-
-typedef struct HRMDiagnosticsData {
-  HRMPPGData ppg_data;
-  HRMAccelData accel_data;
-} HRMDiagnosticsData;
-
 typedef struct HRMSubscriptionExpiringData { // 4 bytes
   HRMSessionRef session_ref;
 } HRMSubscriptionExpiringData;
@@ -642,8 +629,6 @@ typedef struct HRMSubscriptionExpiringData { // 4 bytes
 typedef enum HRMEventType {
   HRMEvent_BPM = 0,
   HRMEvent_HRV,
-  HRMEvent_LEDCurrent,
-  HRMEvent_Diagnostics,
   HRMEvent_SubscriptionExpiring
 } HRMEventType;
 
@@ -652,8 +637,6 @@ typedef struct PACKED PebbleHRMEvent { // 5 bytes
   union {
     HRMBPMData bpm;
     HRMHRVData hrv;
-    HRMLEDData led;
-    HRMDiagnosticsData *debug;
     HRMSubscriptionExpiringData expiring;
   };
 } PebbleHRMEvent;

@@ -300,12 +300,6 @@ void **event_get_buffer(PebbleEvent *event) {
       }
       break;
 
-    case PEBBLE_HRM_EVENT:
-      if (event->hrm.event_type == HRMEvent_Diagnostics) {
-        return (void **)(&event->hrm.debug);
-      }
-      break;
-
     case PEBBLE_APP_GLANCE_EVENT:
       return (void **)&event->app_glance.app_uuid;
 
