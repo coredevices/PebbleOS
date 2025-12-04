@@ -310,7 +310,7 @@ typedef struct {
 static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
   .max_non_worn_vmc = 2500,
   .min_worn_vmc = 15,  // Increased significantly for asterix - much higher baseline noise
-  .max_low_vmc_run_m = 30,  // Reduced to catch desk time within 30 minutes
+  .max_low_vmc_run_m = 120,  // Allow longer stillness during deep sleep while still catching desk time
 };
 #else
 static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
