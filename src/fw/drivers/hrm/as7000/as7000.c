@@ -271,6 +271,7 @@ static void prv_read_hrm_data(HRMDevice *dev, HRMData *data) {
 
   prv_read_register_block(dev, ADDR_LED_CURRENT_MSB, &hrm_data_regs, sizeof(hrm_data_regs));
 
+  data->features = HRMFeature_BPM;
   data->hrm_bpm = hrm_data_regs.bpm;
 
   if (hrm_data_regs.hrm_status & AS7000Status_NoAccel) {

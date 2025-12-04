@@ -622,6 +622,11 @@ typedef struct HRMHRVData { // 3 bytes
   HRMQuality quality:8;
 } HRMHRVData;
 
+typedef struct HRMSpO2Data { // 2 bytes
+  uint8_t percent;
+  HRMQuality quality:8;
+} HRMSpO2Data;
+
 typedef struct HRMSubscriptionExpiringData { // 4 bytes
   HRMSessionRef session_ref;
 } HRMSubscriptionExpiringData;
@@ -629,6 +634,7 @@ typedef struct HRMSubscriptionExpiringData { // 4 bytes
 typedef enum HRMEventType {
   HRMEvent_BPM = 0,
   HRMEvent_HRV,
+  HRMEvent_SpO2,
   HRMEvent_SubscriptionExpiring
 } HRMEventType;
 
@@ -637,6 +643,7 @@ typedef struct PACKED PebbleHRMEvent { // 5 bytes
   union {
     HRMBPMData bpm;
     HRMHRVData hrv;
+    HRMSpO2Data spo2;
     HRMSubscriptionExpiringData expiring;
   };
 } PebbleHRMEvent;
