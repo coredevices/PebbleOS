@@ -96,6 +96,7 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
 
     PBL_LOG(LOG_LEVEL_DEBUG, "GH3X2X BPM %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
 
+    hrm_data.features = HRMFeature_BPM;
     hrm_data.hrm_bpm = val & 0xff;
 
     if (quality == 254U) {

@@ -26,12 +26,14 @@ typedef enum {
 typedef enum {
   HRMFeatureShift_BPM = 0,
   HRMFeatureShift_HRV = 1,
+  HRMFeatureShift_SpO2 = 2,
   HRMFeatureShiftMax
 } HRMFeatureShift;
 
 typedef enum {
   HRMFeature_BPM = (1 << HRMFeatureShift_BPM), //!< Collect heartrate BPM.
   HRMFeature_HRV = (1 << HRMFeatureShift_HRV), //!< Collect heartrate variability.
+  HRMFeature_SpO2 = (1 << HRMFeatureShift_SpO2), //!< Collect blood oxygen saturation.
   HRMFeatureMax
 } HRMFeature;
 
@@ -130,11 +132,16 @@ void hrm_manager_enable(bool on);
 
 //! HRMData will contain all HRM information that is currently available from the device.
 typedef struct {
+  HRMFeature features;
+
   uint8_t hrm_bpm;
   HRMQuality hrm_quality;
 
   uint16_t hrv_ppi_ms;
   HRMQuality hrv_quality;
+
+  uint8_t spo2_percent;
+  HRMQuality spo2_quality;
 } HRMData;
 
 //! Callback used by HRM Driver to indicate that new data is available.
