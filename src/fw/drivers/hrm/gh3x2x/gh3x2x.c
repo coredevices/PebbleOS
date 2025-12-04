@@ -116,6 +116,32 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
     }
 
     hrm_manager_new_data_cb(&hrm_data);
+  } else if (type == 2) {
+    HRMData hrm_data = {0};
+
+    PBL_LOG(LOG_LEVEL_DEBUG, "GH3X2X SpO2 %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
+
+    hrm_data.features = HRMFeature_SpO2;
+    hrm_data.spo2_percent = val & 0xff;
+
+    // FIXME(GH3X2X): This mapping is wrong, we need to understand the actual quality values
+    if (quality == 254U) {
+      hrm_data.spo2_quality = HRMQuality_OffWrist;
+    } else if (quality >= 80U) {
+      hrm_data.spo2_quality = HRMQuality_Excellent;
+    } else if (quality >= 70U) {
+      hrm_data.spo2_quality = HRMQuality_Good;
+    } else if (quality >= 60U) {
+      hrm_data.spo2_quality = HRMQuality_Acceptable;
+    } else if (quality >= 50U) {
+      hrm_data.spo2_quality = HRMQuality_Poor;
+    } else if (quality >= 30U) {
+      hrm_data.spo2_quality = HRMQuality_Worst;
+    } else {
+      hrm_data.spo2_quality = HRMQuality_NoSignal;
+    }
+
+    hrm_manager_new_data_cb(&hrm_data);
   } else {
     PBL_LOG(LOG_LEVEL_WARNING, "GH3X2X unexpected report type (%" PRIu8 ")", type);
   }
@@ -148,7 +174,7 @@ void hrm_enable(HRMDevice *dev) {
   GH3X2X_FifoWatermarkThrConfig(GH3X2X_FIFO_WATERMARK_CONFIG);
   GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_NEED_FORCE_READ_FIFO);
   Gh3x2xDemoFunctionSampleRateSet(GH3X2X_FUNCTION_HR, GH3X2X_HR_SAMPLING_RATE);
-  Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
+  Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2);
 }
 
 void hrm_disable(HRMDevice *dev) {
