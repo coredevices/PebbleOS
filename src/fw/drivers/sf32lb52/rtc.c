@@ -41,7 +41,26 @@
 // The number of RC10K calibrations required for one RTC calibration
 #define RC10K_CALS_PER_RTC_CAL 20
 
+// Maximum reasonable correction in seconds. If the calculated correction exceeds this,
+// something is wrong and we should reset calibration state instead of applying it.
+// 60 seconds is generous - normal drift should be milliseconds per calibration cycle.
+#define MAX_REASONABLE_CORRECTION_SECS 60
+
 TimerID s_rc10k_cal_timer;
+
+// Calibration state - must be reset when RTC time is set externally
+static uint32_t s_rtc_cycle_count_init = 0;
+static double s_rtc_a = 0.0;
+static double s_delta_total = 0.0;
+
+static void prv_reset_calibration_state(void) {
+  s_rtc_cycle_count_init = 0;
+  s_rtc_a = 0.0;
+  s_delta_total = 0.0;
+}
+
+// Forward declaration - defined later in file
+static void prv_rtc_set_time_no_cal_reset(time_t time);
 #else
 #define DIV_A_INT 128U
 #define DIV_A_FRAC 0U
@@ -96,10 +115,6 @@ static void prv_rtc_reconfig() {
 }
 
 static void prv_rtc_calibrate() {
-  static uint32_t s_rtc_cycle_count_init = 0;
-  static double s_rtc_a = 0.0;
-  static double s_delta_total = 0.0;
-
   if (s_rtc_cycle_count_init == 0) {
     uint16_t sub;
     time_t t;
@@ -134,14 +149,25 @@ static void prv_rtc_calibrate() {
     // Accumulate error
     s_delta_total += delta;
 
+    // Sanity check: if accumulated error is unreasonably large, the RTC time was likely
+    // changed externally. Reset calibration state instead of applying a bogus correction.
+    if (s_delta_total > MAX_REASONABLE_CORRECTION_SECS ||
+        s_delta_total < -MAX_REASONABLE_CORRECTION_SECS) {
+      PBL_LOG(LOG_LEVEL_WARNING,
+              "RTC calibration: delta_sum=%d exceeds max, resetting calibration state",
+              (int)(s_delta_total * 1000));
+      prv_reset_calibration_state();
+      return;
+    }
+
     if (s_delta_total > 1.0 || s_delta_total < -1.0) {
       // Accurate time
       rtc_cal = s_delta_total + rtc_b;
-      // Apply integal part difference.
-      rtc_set_time((uint32_t)rtc_cal);
+      // Apply integral part difference.
+      prv_rtc_set_time_no_cal_reset((uint32_t)rtc_cal);
       // Continue with subseconds
       s_delta_total = rtc_cal - (uint32_t)rtc_cal;
-      // Next inteval start time
+      // Next interval start time
       s_rtc_a = (uint32_t)rtc_cal;
       if ((cur_ave > s_rtc_cycle_count_init &&
            (cur_ave - s_rtc_cycle_count_init) > MAX_DELTA_BETWEEN_RTC_AVE) ||
@@ -151,7 +177,7 @@ static void prv_rtc_calibrate() {
         s_rtc_cycle_count_init = HAL_Get_backup(RTC_BACKUP_LPCYCLE);
       }
     } else {
-      // Next inteval start time
+      // Next interval start time
       s_rtc_a = rtc_b;
     }
 
@@ -218,7 +244,9 @@ static RtcTicks get_ticks(void) {
   return ret_value;
 }
 
-void rtc_set_time(time_t time) {
+// Internal function to set RTC time without resetting calibration state.
+// Used by the calibration code when applying corrections.
+static void prv_rtc_set_time_no_cal_reset(time_t time) {
   struct tm t;
   gmtime_r(&time, &t);
 
@@ -240,6 +268,16 @@ void rtc_set_time(time_t time) {
           rtc_time_struct.Hours, rtc_time_struct.Minutes, rtc_time_struct.Seconds,
           rtc_date_struct.Month, rtc_date_struct.Date, rtc_date_struct.Year,
           rtc_date_struct.WeekDay);
+}
+
+void rtc_set_time(time_t time) {
+#ifndef SF32LB52_USE_LXT
+  // Reset calibration state when time is set externally to prevent
+  // the calibration algorithm from computing bogus corrections based on
+  // stale reference times.
+  prv_reset_calibration_state();
+#endif
+  prv_rtc_set_time_no_cal_reset(time);
 }
 
 void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
