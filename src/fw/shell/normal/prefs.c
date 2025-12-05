@@ -219,10 +219,14 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 
 #define PREF_KEY_SETTINGS_MENU_HIGHLIGHT_COLOR "settingsMenuHighlightColor"
 #define PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR "appsMenuHighlightColor"
+#define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS "musicShowVolumeControls"
+#define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR "musicShowProgressBar"
 
 
 static GColor s_settings_menu_highlight_color = GColorCobaltBlue;
 static GColor s_apps_menu_highlight_color = GColorVividCerulean;
+static bool s_music_show_volume_controls = true;
+static bool s_music_show_progress_bar = true;
 
 
 // ============================================================================================
@@ -600,6 +604,16 @@ static bool prv_set_s_apps_menu_highlight_color(GColor *color) {
 #else
   s_apps_menu_highlight_color = GColorBlack;
 #endif
+  return true;
+}
+
+static bool prv_set_s_music_show_volume_controls(bool *enabled) {
+  s_music_show_volume_controls = *enabled;
+  return true;
+}
+
+static bool prv_set_s_music_show_progress_bar(bool *enabled) {
+  s_music_show_progress_bar = *enabled;
   return true;
 }
   
@@ -1566,4 +1580,20 @@ GColor shell_prefs_get_apps_menu_highlight_color(void){
 
 void shell_prefs_set_apps_menu_highlight_color(GColor color) {
   prv_pref_set(PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR, &color, sizeof(GColor));
+}
+
+bool shell_prefs_get_music_show_volume_controls(void) {
+  return s_music_show_volume_controls;
+}
+
+void shell_prefs_set_music_show_volume_controls(bool enabled) {
+  prv_pref_set(PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS, &enabled, sizeof(enabled));
+}
+
+bool shell_prefs_get_music_show_progress_bar(void) {
+  return s_music_show_progress_bar;
+}
+
+void shell_prefs_set_music_show_progress_bar(bool enabled) {
+  prv_pref_set(PREF_KEY_MUSIC_SHOW_PROGRESS_BAR, &enabled, sizeof(enabled));
 }

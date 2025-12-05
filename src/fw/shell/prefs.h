@@ -149,3 +149,9 @@ void shell_prefs_set_settings_menu_highlight_color(GColor color);
 
 GColor shell_prefs_get_apps_menu_highlight_color(void);
 void shell_prefs_set_apps_menu_highlight_color(GColor color);
+
+bool shell_prefs_get_music_show_volume_controls(void);
+void shell_prefs_set_music_show_volume_controls(bool enabled);
+
+bool shell_prefs_get_music_show_progress_bar(void);
+void shell_prefs_set_music_show_progress_bar(bool enabled);
