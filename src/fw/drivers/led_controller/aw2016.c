@@ -101,6 +101,7 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
     return;
   }
 
+  const uint8_t previous_brightness = s_brightness;
   s_brightness = brightness;
 
   if (brightness == 0U) {
@@ -108,10 +109,12 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
                              AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_DIS);
     PBL_ASSERTN(ret);
   } else {
-    ret =
-        prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
-    ret &= prv_configure_registers();
-    PBL_ASSERTN(ret);
+    if (previous_brightness == 0U) {
+      ret = prv_write_register(AW2016_REG_GCR1,
+                               AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+      ret &= prv_configure_registers();
+      PBL_ASSERTN(ret);
+    }
 
     led_controller_rgb_set_color(s_rgb_current_color);
   }
