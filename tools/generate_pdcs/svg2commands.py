@@ -194,7 +194,9 @@ svg_element_parser = {'path': parse_path,
 
 
 def create_command(translate, element, verbose=False, precise=False, raise_error=False,
-                   truncate_color=True, inherited_values={}):
+                   truncate_color=True, inherited_values=None):
+    if inherited_values is None:
+        inherited_values = {}
     values = overwrite_inherited(element, inherited_values)
     try:
         stroke_width = int(values.get('stroke-width'))
@@ -235,15 +237,17 @@ def overwrite_inherited(element, inherited_values):
     for attr in ['stroke', 'stroke-width', 'stroke-opacity', 'fill', 'fill-opacity', 'opacity']:
         if not element.get(attr) is None:
             if attr == 'opacity' and attr in inherited_values:
-                # Opacity compounds
-                inherited_values[attr] = inherited_values[attr] * element.get(attr)
+                # Opacity compounds - convert to floats before multiplying
+                inherited_values[attr] = float(inherited_values[attr]) * float(element.get(attr))
             else:
                 inherited_values[attr] = element.get(attr)
     return inherited_values
 
 
 def get_commands(translate, group, verbose=False, precise=False, raise_error=False,
-                 truncate_color=True, inherited_values={}):
+                 truncate_color=True, inherited_values=None):
+    if inherited_values is None:
+        inherited_values = {}
     commands = []
     error = False
     for child in list(group):
