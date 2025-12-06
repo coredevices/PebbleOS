@@ -1,14 +1,13 @@
-# 🚀 Getting Started
+# Prerequisites
 
 Follow this guide to:
 
 - Set up a command-line PebbleOS development environment
 - Get the source code
-- Build, flash, and run PebbleOS on a watch with programming port access
 
-## Pre-requisites
+## ARM toolchain + system-level dependencies
 
-First download the Arm GNU toolchain `arm-none-eabi` 14.2.Rel1 from [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads).
+First, download the Arm GNU toolchain `arm-none-eabi` 14.2.Rel1 from [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads).
 Make sure to make it available on your path `PATH` and then check GCC version is reported correctly:
 
 ```shell
@@ -134,46 +133,3 @@ Remember to activate the virtual environment before every time you start working
 pip install -r requirements.txt
 ```
 
-## Building
-
-1. Configure the project:
-
-```shell
-./waf configure --board $BOARD
-```
-
-where `$BOARD` is any of the supported boards, e.g. `asterix` (Core 2 Duo), `snowy_bb2` (Pebble Time), ...
-
-2. Build:
-
-```shell
-./waf build
-```
-
-## Flashing
-
-Before attempting to flash, check the documentation for each {doc}`board <boards/index>` on how to prepare and connect your watch for programming.
-
-You can flash the built firmware (including pre-compiled bootloader) by running:
-
-```shell
-./waf flash
-```
-
-If flashing for the first time, your watch will reboot into PRF or a _sad watch_ state if PRF is missing, indicating that resources need to be flashed:
-
-```shell
-./waf image_resources --tty $SERIAL_ADAPTER
-```
-
-where `$SERIAL_ADAPTER` is the path for your serial adapter, e.g. `/dev/ttyACM0`, `/dev/tty.usbmodem1102`, etc.
-If using a board with a built-in FTDI programmer, the `--tty` argument can be removed.
-
-At this point you should observe the watch booting into the main application.
-You can also see the logs by opening the console:
-
-```shell
-./waf console --tty $SERIAL_ADAPTER
-```
-
-Try sending `help` to get a list of available console commands.
