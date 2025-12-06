@@ -28,7 +28,7 @@ PebbleOS is a lightweight, power-efficient operating system originally developed
 It supports custom watchfaces and apps using C and JavaScript.
 Optimized for memory-in-pixel (MIP) displays and long battery life, it features Bluetooth sync, a timeline interface, and a strong developer ecosystem through an open SDK.
 
-```{button-ref} getting_started
+```{button-ref} development/getting_started
 :ref-type: doc
 :color: primary
 :class: sd-rounded-pill float-left
@@ -49,14 +49,14 @@ Get started
 :gutter: 3
 
 :::{grid-item-card}
-:link: getting_started
+:link: development/getting_started
 :link-type: doc
 :class-header: bg-light
 
-🚀 Getting Started
+🚀 Prerequisites
 ^^^
 
-Learn how to build PebbleOS from source!
+Set up your environment to build PebbleOS from source!
 :::
 
 :::{grid-item-card}
@@ -82,15 +82,13 @@ Learn more about PebbleOS: podcasts, developer documents and more!
 
 ::::
 
-```{toctree}
-:hidden:
-getting_started.md
-```
 
 ```{toctree}
 :hidden:
 :caption: 🛠️ Development
+development/getting_started.md
 development/options.md
+development/building_fw.md
 development/prf.md
 development/qemu.md
 ```
