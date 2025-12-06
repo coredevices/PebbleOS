@@ -126,16 +126,19 @@ static bool s_rotated_180 = false;
 // LSM6DSO configuration entrypoints
 
 void lsm6dso_init(void) {
+  /* hailong */ return;
   // Initialize the LSM6DSO sensor to a powered down state.
   prv_lsm6dso_init();
 }
 
 void lsm6dso_power_up(void) {
+  /* hailong */ return;
   s_lsm6dso_enabled = true;
   prv_lsm6dso_chase_target_state();
 }
 
 void lsm6dso_power_down(void) {
+  /* hailong */ return;
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering down accelerometer");
   s_lsm6dso_enabled = false;
   prv_lsm6dso_chase_target_state();
@@ -155,6 +158,7 @@ uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Requesting update of sampling interval to %lu us",
           interval_us);
   s_lsm6dso_state_target.sampling_interval_us = interval_us;
+  /* hailong */ return interval_us;
   prv_lsm6dso_chase_target_state();
   return s_lsm6dso_state.sampling_interval_us;
 }
@@ -164,14 +168,19 @@ uint32_t accel_get_sampling_interval(void) { return s_lsm6dso_state.sampling_int
 void accel_set_num_samples(uint32_t num_samples) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting number of samples to %lu", num_samples);
   s_lsm6dso_state_target.num_samples = num_samples;
+  /* hailong */ return;
   prv_lsm6dso_chase_target_state();
 }
 
-int accel_peek(AccelDriverSample *data) { return prv_lsm6dso_read_sample(data); }
+int accel_peek(AccelDriverSample *data) { 
+  /* hailong */ return 0;
+  return prv_lsm6dso_read_sample(data);
+}
 
 void accel_enable_shake_detection(bool on) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s shake detection.", on ? "Enabling" : "Disabling");
   s_lsm6dso_state_target.shake_detection_enabled = on;
+  /* hailong */ return;
   prv_lsm6dso_chase_target_state();
 }
 
@@ -180,6 +189,7 @@ bool accel_get_shake_detection_enabled(void) { return s_lsm6dso_state.shake_dete
 void accel_enable_double_tap_detection(bool on) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: %s double tap detection.", on ? "Enabling" : "Disabling");
   s_lsm6dso_state_target.double_tap_detection_enabled = on;
+  /* hailong */ return;
   prv_lsm6dso_chase_target_state();
 }
 
@@ -191,6 +201,7 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Setting shake sensitivity to %s.",
           sensitivity_high ? "high" : "normal");
   s_lsm6dso_state_target.shake_sensitivity_high = sensitivity_high;
+  /* hailong */ return;
   prv_lsm6dso_chase_target_state();
 }
 
@@ -200,6 +211,7 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
   }
   
   s_user_sensitivity_percent = percent;
+  /* hailong */ return;
   
   // Reconfigure shake detection if it's currently enabled
   if (s_lsm6dso_state.shake_detection_enabled) {
@@ -617,6 +629,7 @@ static void prv_lsm6dso_configure_fifo(bool enable) {
 }
 
 void prv_lsm6dso_configure_double_tap(bool enable) {
+  /* hailong */ return;
   if (enable) {
     // Configure tap detection parameters
     lsm6dso_tap_threshold_x_set(&lsm6dso_ctx, s_tap_threshold);  // Adjust threshold as needed
@@ -649,6 +662,7 @@ void prv_lsm6dso_configure_double_tap(bool enable) {
 
 // Configure wake-up (any-motion) for shake detection using wake-up threshold & duration.
 static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
+  /* hailong */ return;
   if (!enable) {
     // Disable wake-up related routing by clearing threshold
     lsm6dso_wkup_threshold_set(&lsm6dso_ctx, 0);
@@ -698,6 +712,7 @@ static void prv_lsm6dso_configure_shake(bool enable, bool sensitivity_high) {
 }
 
 static void prv_lsm6dso_interrupt_handler(bool *should_context_switch) {
+  /* hailong */ return;
   // Offload processing to a worker. The LSM6DSO can miss events if interrupts
   // are ignored due to pending flags, so it is important to process them
   // quickly. The actual clearing of the interrupt flags will happen in the
@@ -1230,6 +1245,7 @@ static int prv_get_sample_mg(int16_t out_mg[3]) {
 //
 
 bool accel_run_selftest(void) {
+  /* hailong */ return true;
   if (!s_lsm6dso_initialized) {
     // Attempt init if not already done
     prv_lsm6dso_init();
@@ -1348,6 +1364,7 @@ bool accel_run_selftest(void) {
 }
 
 void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
+  /* hailong */ return;
   if (!diagnostics) {
     return;
   }

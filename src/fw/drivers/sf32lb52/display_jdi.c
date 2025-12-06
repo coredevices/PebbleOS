@@ -172,6 +172,7 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
 }
 
 void display_init(void) {
+  /*hailong*/ return;
   if (s_initialized) {
     return;
   }
@@ -236,6 +237,7 @@ void display_init(void) {
 }
 
 void display_clear(void) {
+  /*hailong*/ return;
   DisplayJDIState *state = DISPLAY->state;
 
   // Allocate temporary framebuffer for clear operation
@@ -258,6 +260,7 @@ void display_clear(void) {
 }
 
 void display_set_enabled(bool enabled) {
+  /*hailong*/ return;
   if (enabled) {
     prv_display_on();
   } else {
@@ -266,10 +269,13 @@ void display_set_enabled(bool enabled) {
 }
 
 bool display_update_in_progress(void) {
+  /*hailong*/ return false;
+
   return s_updating;
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
+  /*hailong*/ return;
   DisplayJDIState *state = DISPLAY->state;
   DisplayRow row;
   bool first_row = true;
@@ -311,6 +317,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 }
 
 void display_show_splash_screen(void) {
+  /*hailong*/ return;
   const DisplayJDISplash *splash = &DISPLAY->splash;
   uint16_t x0, y0;
 

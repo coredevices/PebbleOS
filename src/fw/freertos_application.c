@@ -282,6 +282,8 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       s_last_ticks_elapsed_in_stop = ticks_elapsed;
       vTaskStepTick(ticks_elapsed);
 
+      PBL_LOG(LOG_LEVEL_INFO, "idle time: %lu", ticks_elapsed);
+
       // Update the task watchdog every time we come out of STOP mode (which is
       // at least once/second) since the timer peripheral will not have been
       // incremented

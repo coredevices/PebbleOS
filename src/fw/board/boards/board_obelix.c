@@ -696,10 +696,234 @@ void board_early_init(void) {
 }
 
 void board_init(void) {
-  i2c_init(I2C1_BUS);
-  i2c_init(I2C2_BUS);
-  i2c_init(I2C3_BUS);
-  i2c_init(I2C4_BUS);
+  /*hailong*/ i2c_init(I2C1_BUS);
+//   /*hailong*/ i2c_init(I2C2_BUS);
+//   /*hailong*/ i2c_init(I2C3_BUS);
+//   /*hailong*/ i2c_init(I2C4_BUS);
 
-  mic_init(MIC);
+//   mic_init(MIC);
+}
+
+static void board_post_init_v1(void);
+
+void board_post_init(void)
+{
+    hwp_pinmux1->PAD_SA00 = 0x250;
+    hwp_pinmux1->PAD_SA01 = 0x250;
+    hwp_pinmux1->PAD_SA02 = 0x250;
+    hwp_pinmux1->PAD_SA03 = 0x250;
+    hwp_pinmux1->PAD_SA04 = 0x250;
+    hwp_pinmux1->PAD_SA05 = 0x250;
+    hwp_pinmux1->PAD_SA06 = 0x250;
+    hwp_pinmux1->PAD_SA07 = 0x250;
+    hwp_pinmux1->PAD_SA08 = 0x250;
+    hwp_pinmux1->PAD_SA09 = 0x250;
+    hwp_pinmux1->PAD_SA10 = 0x250;
+    hwp_pinmux1->PAD_SA11 = 0x250;
+    hwp_pinmux1->PAD_SA12 = 0x250;
+
+    hwp_pinmux1->PAD_PA30 = 0x0;
+    hwp_pinmux1->PAD_PA31 = 0x0;
+    hwp_pinmux1->PAD_PA32 = 0x0;
+    hwp_pinmux1->PAD_PA33 = 0x0;
+    hwp_pinmux1->PAD_PA10 = 0x0;
+    hwp_pinmux1->PAD_PA11 = 0x0;
+    hwp_pinmux1->PAD_PA09 = 0x0;
+    hwp_pinmux1->PAD_PA20 = 0x0;
+
+    hwp_pinmux1->PAD_PA12 = 0x201;
+    hwp_pinmux1->PAD_PA16 = 0x201;
+
+    hwp_pinmux1->PAD_PA13 = 0x2d1;
+    hwp_pinmux1->PAD_PA14 = 0x2d1;
+    hwp_pinmux1->PAD_PA15 = 0x2d1;
+    hwp_pinmux1->PAD_PA17 = 0x2d1;
+
+
+    hwp_pinmux1->PAD_PA00 = 0x0;
+    hwp_pinmux1->PAD_PA01 = 0x0;
+
+    hwp_pinmux1->PAD_PA02 = 0x0;
+    hwp_pinmux1->PAD_PA03 = 0x0;
+    hwp_pinmux1->PAD_PA04 = 0x0;
+    hwp_pinmux1->PAD_PA05 = 0x0;
+    hwp_pinmux1->PAD_PA06 = 0x0;
+    hwp_pinmux1->PAD_PA07 = 0x0;
+    hwp_pinmux1->PAD_PA08 = 0x0;
+
+    hwp_pinmux1->PAD_PA22 = 0x0;
+    hwp_pinmux1->PAD_PA23 = 0x0;
+
+    hwp_pinmux1->PAD_PA24 = 0x0;
+    hwp_pinmux1->PAD_PA25 = 0x0;
+    hwp_pinmux1->PAD_PA26 = 0x0;
+    hwp_pinmux1->PAD_PA27 = 0x0;
+
+    hwp_pinmux1->PAD_PA28 = 0x0;
+    hwp_pinmux1->PAD_PA29 = 0x0;
+
+    hwp_pinmux1->PAD_PA38 = 0x140;
+    hwp_pinmux1->PAD_PA39 = 0x140;
+    hwp_pinmux1->PAD_PA40 = 0x140;
+    hwp_pinmux1->PAD_PA41 = 0x140;
+    hwp_pinmux1->PAD_PA42 = 0x140;
+    hwp_pinmux1->PAD_PA43 = 0x140;
+    hwp_pinmux1->PAD_PA44 = 0x140;
+
+    hwp_pinmux1->PAD_PA34 = 0x140;
+    hwp_pinmux1->PAD_PA35 = 0x140;
+    hwp_pinmux1->PAD_PA36 = 0x140;
+    hwp_pinmux1->PAD_PA37 = 0x140;
+
+    hwp_rtc->PBR0R = 0;
+    hwp_rtc->PBR1R = 0;
+    hwp_rtc->PBR2R = 0;
+    hwp_rtc->PBR3R = 0;
+
+    hwp_rtc->PAWK1R = 0x1FFC0;
+    hwp_rtc->PAWK2R = 0x380;
+
+    hwp_gpio1->IER = 0;
+    hwp_gpio1->ITR = 0;
+
+    // // HAL_PIN_Set(PAD_PA34, GPIO_A34, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (34 - 32));
+    // // hwp_gpio2->DOR |= (1U << (34 - 32));
+    // // HAL_PIN_Set(PAD_PA35, GPIO_A35, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (35 - 32));
+    // // hwp_gpio2->DOR |= (1U << (35 - 32));
+    // // HAL_PIN_Set(PAD_PA36, GPIO_A36, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (36 - 32));
+    // // hwp_gpio2->DOR |= (1U << (36 - 32));
+    // // HAL_PIN_Set(PAD_PA37, GPIO_A37, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (37 - 32));
+    // // hwp_gpio2->DOR |= (1U << (37 - 32));
+
+    // // HAL_PIN_Set(PAD_PA38, GPIO_A38, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (38 - 32));
+    // // hwp_gpio2->DOR |= (1U << (38 - 32));
+	// // HAL_PIN_Set(PAD_PA39, GPIO_A39, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (39 - 32));
+    // // hwp_gpio2->DOR |= (1U << (39 - 32));
+	// // HAL_PIN_Set(PAD_PA40, GPIO_A40, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (40 - 32));
+    // // hwp_gpio2->DOR |= (1U << (40 - 32));
+	// // HAL_PIN_Set(PAD_PA41, GPIO_A41, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (41 - 32));
+    // // hwp_gpio2->DOR |= (1U << (41 - 32));
+	// // HAL_PIN_Set(PAD_PA42, GPIO_A42, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (42 - 32));
+    // // hwp_gpio2->DOR |= (1U << (42 - 32));
+	// // HAL_PIN_Set(PAD_PA43, GPIO_A43, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (43 - 32));
+    // // hwp_gpio2->DOR |= (1U << (43 - 32));
+	// // HAL_PIN_Set(PAD_PA44, GPIO_A44, PIN_PULLDOWN, 1);
+    // hwp_gpio2->DOER |= (1U << (44 - 32));
+    // // hwp_gpio2->DOR |= (1U << (44 - 32));
+
+
+    // HAL_PIN_Set(PAD_PA02, GPIO_A2, PIN_PULLDOWN, 1);
+    // hwp_gpio1->DOER |= (1U << 2);
+    // hwp_gpio1->DOR |= (1U << 2);
+	// HAL_PIN_Set(PAD_PA03, GPIO_A3, PIN_PULLDOWN, 1);
+    // hwp_gpio1->DOER |= (1U << 3);
+    // hwp_gpio1->DOR |= (1U << 3);
+	// HAL_PIN_Set(PAD_PA04, GPIO_A4, PIN_PULLDOWN, 1);
+    // hwp_gpio1->DOER |= (1U << 4);
+    // hwp_gpio1->DOR |= (1U << 5);
+	// HAL_PIN_Set(PAD_PA05, GPIO_A5, PIN_PULLDOWN, 1);
+    // hwp_gpio1->DOER |= (1U << 5);
+    // hwp_gpio1->DOR |= (1U << 5);
+	// HAL_PIN_Set(PAD_PA06, GPIO_A6, PIN_PULLDOWN, 1);
+    // hwp_gpio1->DOER |= (1U << 6);
+    // hwp_gpio1->DOR |= (1U << 6);
+	// HAL_PIN_Set(PAD_PA07, GPIO_A7, PIN_PULLDOWN, 1);
+    // hwp_gpio1->DOER |= (1U << 7);
+    // hwp_gpio1->DOR |= (1U << 7);
+	// HAL_PIN_Set(PAD_PA08, GPIO_A8, PIN_PULLDOWN, 1);
+    // hwp_gpio1->DOER |= (1U << 8);
+    // hwp_gpio1->DOR |= (1U << 8);
+
+
+    board_post_init_v1();
+}
+
+static void board_post_init_v1(void)
+{
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps00 pinmux: 0x%lx", hwp_pinmux1->PAD_SA00);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps01 pinmux: 0x%lx", hwp_pinmux1->PAD_SA01);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps02 pinmux: 0x%lx", hwp_pinmux1->PAD_SA02);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps03 pinmux: 0x%lx", hwp_pinmux1->PAD_SA03);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps04 pinmux: 0x%lx", hwp_pinmux1->PAD_SA04);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps05 pinmux: 0x%lx", hwp_pinmux1->PAD_SA05);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps06 pinmux: 0x%lx", hwp_pinmux1->PAD_SA06);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps07 pinmux: 0x%lx", hwp_pinmux1->PAD_SA07);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps08 pinmux: 0x%lx", hwp_pinmux1->PAD_SA08);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps09 pinmux: 0x%lx", hwp_pinmux1->PAD_SA09);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps10 pinmux: 0x%lx", hwp_pinmux1->PAD_SA10);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps11 pinmux: 0x%lx", hwp_pinmux1->PAD_SA11);
+    PBL_LOG(LOG_LEVEL_INFO, "##### ps12 pinmux: 0x%lx", hwp_pinmux1->PAD_SA12);
+
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa00 pinmux: 0x%lx", hwp_pinmux1->PAD_PA00);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa01 pinmux: 0x%lx", hwp_pinmux1->PAD_PA01);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa02 pinmux: 0x%lx", hwp_pinmux1->PAD_PA02);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa03 pinmux: 0x%lx", hwp_pinmux1->PAD_PA03);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa04 pinmux: 0x%lx", hwp_pinmux1->PAD_PA04);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa05 pinmux: 0x%lx", hwp_pinmux1->PAD_PA05);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa06 pinmux: 0x%lx", hwp_pinmux1->PAD_PA06);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa07 pinmux: 0x%lx", hwp_pinmux1->PAD_PA07);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa08 pinmux: 0x%lx", hwp_pinmux1->PAD_PA08);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa09 pinmux: 0x%lx", hwp_pinmux1->PAD_PA09);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa10 pinmux: 0x%lx", hwp_pinmux1->PAD_PA10);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa11 pinmux: 0x%lx", hwp_pinmux1->PAD_PA11);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa12 pinmux: 0x%lx", hwp_pinmux1->PAD_PA12);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa13 pinmux: 0x%lx", hwp_pinmux1->PAD_PA13);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa14 pinmux: 0x%lx", hwp_pinmux1->PAD_PA14);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa15 pinmux: 0x%lx", hwp_pinmux1->PAD_PA15);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa16 pinmux: 0x%lx", hwp_pinmux1->PAD_PA16);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa17 pinmux: 0x%lx", hwp_pinmux1->PAD_PA17);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa18 pinmux: 0x%lx", hwp_pinmux1->PAD_PA18);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa19 pinmux: 0x%lx", hwp_pinmux1->PAD_PA19);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa20 pinmux: 0x%lx", hwp_pinmux1->PAD_PA20);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa21 pinmux: 0x%lx", hwp_pinmux1->PAD_PA21);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa22 pinmux: 0x%lx", hwp_pinmux1->PAD_PA22);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa23 pinmux: 0x%lx", hwp_pinmux1->PAD_PA23);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa24 pinmux: 0x%lx", hwp_pinmux1->PAD_PA24);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa25 pinmux: 0x%lx", hwp_pinmux1->PAD_PA25);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa26 pinmux: 0x%lx", hwp_pinmux1->PAD_PA26);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa27 pinmux: 0x%lx", hwp_pinmux1->PAD_PA27);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa28 pinmux: 0x%lx", hwp_pinmux1->PAD_PA28);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa29 pinmux: 0x%lx", hwp_pinmux1->PAD_PA29);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa30 pinmux: 0x%lx", hwp_pinmux1->PAD_PA30);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa31 pinmux: 0x%lx", hwp_pinmux1->PAD_PA31);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa32 pinmux: 0x%lx", hwp_pinmux1->PAD_PA32);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa33 pinmux: 0x%lx", hwp_pinmux1->PAD_PA33);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa34 pinmux: 0x%lx", hwp_pinmux1->PAD_PA34);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa35 pinmux: 0x%lx", hwp_pinmux1->PAD_PA35);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa36 pinmux: 0x%lx", hwp_pinmux1->PAD_PA36);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa37 pinmux: 0x%lx", hwp_pinmux1->PAD_PA37);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa38 pinmux: 0x%lx", hwp_pinmux1->PAD_PA38);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa39 pinmux: 0x%lx", hwp_pinmux1->PAD_PA39);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa40 pinmux: 0x%lx", hwp_pinmux1->PAD_PA40);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa41 pinmux: 0x%lx", hwp_pinmux1->PAD_PA41);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa42 pinmux: 0x%lx", hwp_pinmux1->PAD_PA42);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa43 pinmux: 0x%lx", hwp_pinmux1->PAD_PA43);
+    PBL_LOG(LOG_LEVEL_INFO, "##### pa44 pinmux: 0x%lx", hwp_pinmux1->PAD_PA44);
+
+    PBL_LOG(LOG_LEVEL_INFO, "gpio(0~31)  DOER reg: 0x%lx", hwp_gpio1->DOER);
+    PBL_LOG(LOG_LEVEL_INFO, "gpio(0~31)  IER reg: 0x%lx", hwp_gpio1->IER);
+    PBL_LOG(LOG_LEVEL_INFO, "gpio(0~31)  ITR reg: 0x%lx", hwp_gpio1->ITR);
+
+    PBL_LOG(LOG_LEVEL_INFO, "gpio(32~44) DOER reg: 0x%lx", hwp_gpio2->DOER);
+    PBL_LOG(LOG_LEVEL_INFO, "gpio(32~44) IER reg: 0x%lx", hwp_gpio2->IER);
+    PBL_LOG(LOG_LEVEL_INFO, "gpio(32~44) ITR reg: 0x%lx", hwp_gpio2->ITR);
+
+    PBL_LOG(LOG_LEVEL_INFO, "hwp_rtc->PBR0R: 0x%lx", hwp_rtc->PBR0R);
+    PBL_LOG(LOG_LEVEL_INFO, "hwp_rtc->PBR1R: 0x%lx", hwp_rtc->PBR1R);
+    PBL_LOG(LOG_LEVEL_INFO, "hwp_rtc->PBR2R: 0x%lx", hwp_rtc->PBR2R);
+    PBL_LOG(LOG_LEVEL_INFO, "hwp_rtc->PBR3R: 0x%lx", hwp_rtc->PBR3R);
+
+    PBL_LOG(LOG_LEVEL_INFO, "RTC PAWK1R: 0x%lx", hwp_rtc->PAWK1R); 
+    PBL_LOG(LOG_LEVEL_INFO, "RTC PAWK2R: 0x%lx", hwp_rtc->PAWK2R); 
+
 }

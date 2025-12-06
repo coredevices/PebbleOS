@@ -151,6 +151,7 @@ typedef enum {
 
 
 void battery_init(void) {
+  /*hailong*/ return;
 }
 
 uint32_t pmic_get_last_reset_reason(void) {
@@ -370,7 +371,7 @@ bool pmic_init(void) {
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGENABLESET, 1);
 
-  prv_configure_interrupts();
+  ///*hailong*/ prv_configure_interrupts();
 
   if (!ok) {
     PBL_LOG(LOG_LEVEL_ERROR, "one or more PMIC transactions failed");
@@ -380,6 +381,7 @@ bool pmic_init(void) {
 }
 
 bool pmic_power_off(void) {
+  /*hailong*/ return false;
   // TODO: review implementation, see GH-238
   if (pmic_is_usb_connected()) {
     PBL_LOG(LOG_LEVEL_ERROR, "USB is connected, cannot power off");
@@ -400,10 +402,12 @@ bool pmic_power_off(void) {
 }
 
 bool pmic_full_power_off(void) {
+  /*hailong*/ return false;
   return pmic_power_off();
 }
 
 uint16_t pmic_get_vsys(void) {
+  /*hailong*/ return 5000;
   if (!prv_write_register(PmicRegisters_MAIN_EVENTSADCCLR, 0x08 /* EVENTADCVSYSRDY */)) {
     return 0;
   }
@@ -432,6 +436,8 @@ uint16_t pmic_get_vsys(void) {
 }
 
 int battery_get_millivolts(void) {
+  /*hailong*/ return 4200;
+
   if (!prv_write_register(PmicRegisters_MAIN_EVENTSADCCLR, 0x01 /* EVENTADCVBATRDY */)) {
     return 0;
   }
@@ -466,6 +472,11 @@ int battery_get_constants(BatteryConstants *constants) {
   uint8_t lsb;
   uint16_t raw;
   uint8_t reg;
+
+  constants->v_mv = 42000;
+  constants->i_ua = 100;
+  constants->t_mc = 25000;
+  /*hailong*/ return 0;
 
   // Obtain IBAT full scale
   if (!prv_read_register(PmicRegisters_ADC_ADCIBATMEASSTATUS, &ibat_status)) {
@@ -573,10 +584,12 @@ int battery_get_constants(BatteryConstants *constants) {
 }
 
 bool pmic_set_charger_state(bool enable) {
+  /* hailong */ return false;
   return prv_write_register(enable ? PmicRegisters_BCHARGER_BCHGENABLESET : PmicRegisters_BCHARGER_BCHGENABLECLR, 1);
 }
 
 void battery_set_charge_enable(bool charging_enabled) {
+  /* hailong */ return;
   pmic_set_charger_state(charging_enabled);
 }
 
@@ -585,6 +598,7 @@ void battery_set_fast_charge(bool fast_charge_enabled) {
 }
 
 bool pmic_is_charging(void) {
+  /* hailong */ return false;
   uint8_t status;
   if (!prv_read_register(PmicRegisters_BCHARGER_BCHGCHARGESTATUS, &status)) {
     return false;
@@ -594,10 +608,12 @@ bool pmic_is_charging(void) {
 }
 
 bool battery_charge_controller_thinks_we_are_charging_impl(void) {
+  /* hailong */ return false;
   return pmic_is_charging();
 }
 
 bool pmic_is_usb_connected(void) {
+  /* hailong */ return false;
   uint8_t status;
   if (!prv_read_register(PmicRegisters_VBUSIN_VBUSINSTATUS, &status)) {
     return false;
@@ -632,6 +648,9 @@ void set_6V6_power_state(bool enabled) {
 
 int battery_charge_status_get(BatteryChargeStatus *status) {
   uint8_t chg_status;
+
+  *status = BatteryChargeStatusComplete;
+  /* hailong */ return 0;
 
   if (!prv_read_register(PmicRegisters_BCHARGER_BCHGCHARGESTATUS, &chg_status)) {
     return -1;

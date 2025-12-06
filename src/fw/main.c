@@ -279,6 +279,8 @@ static void register_system_timers(void) {
   }
 }
 
+extern void board_post_init(void);
+
 static void init_drivers(void) {
   board_init();
 
@@ -333,6 +335,8 @@ static void init_drivers(void) {
 #endif
 
   power_tracking_init();
+
+  board_post_init();
 }
 
 static void clear_reset_loop_detection_bits(void) {
@@ -465,7 +469,7 @@ static NOINLINE void prv_main_task_init(void) {
 
 #if CAPABILITY_HAS_BUILTIN_HRM
   if (mfg_info_is_hrm_present()) {
-    hrm_init(HRM);
+    // hrm_init(HRM);
   }
 #endif
 
