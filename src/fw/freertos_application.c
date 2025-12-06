@@ -257,10 +257,23 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
         counter_stop += 0x10000;
       }
       uint32_t counter_elapsed = counter_stop - counter_start;
-      uint32_t cycles_elapsed = (counter_elapsed * RTC_TICKS_HZ) / 9000;
 
-      s_analytics_device_sleep_cpu_cycles += cycles_elapsed;
-      s_analytics_app_sleep_cpu_cycles += cycles_elapsed;
+      // Calculate elapsed ticks and step FreeRTOS tick count
+      // Use calibrated RC10K frequency (measured against HXT48)
+      uint32_t rc10k_freq = lptim_systick_get_rc10k_freq();
+      uint32_t ticks_elapsed = (counter_elapsed * RTC_TICKS_HZ) / rc10k_freq;
+      if (ticks_elapsed > 0) {
+        // Cap to xExpectedIdleTime to avoid FreeRTOS assertion
+        if (ticks_elapsed > xExpectedIdleTime) {
+          ticks_elapsed = xExpectedIdleTime;
+        }
+        vTaskStepTick(ticks_elapsed);
+        // Clear pending LPTIM interrupt and set up next tick to avoid double-counting
+        lptim_systick_sync_after_wfi();
+      }
+
+      s_analytics_device_sleep_cpu_cycles += ticks_elapsed;
+      s_analytics_app_sleep_cpu_cycles += ticks_elapsed;
     } else {
       const RtcTicks stop_duration = MIN(xExpectedIdleTime - EARLY_WAKEUP_TICKS, MAX_STOP_TICKS);
 
@@ -270,6 +283,8 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       lptim_systick_tickless_idle((uint32_t)stop_duration);
 
       enter_stop_mode();
+
+      lptim_systick_tickless_exit();
 
       uint32_t ticks_elapsed = lptim_systick_get_elapsed_ticks();
 
