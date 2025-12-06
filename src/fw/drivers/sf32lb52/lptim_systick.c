@@ -100,28 +100,63 @@ void lptim_systick_enable(void)
 
 void lptim_systick_tickless_idle(uint32_t ticks_from_now)
 {
-  // In tickless idle mode, use OCWE instead.
-  uint32_t counter = LPTIM1->CNT;
-  s_last_idle_counter = counter;
+  // For deep sleep wakeup, use overflow-based timing like the SDK.
+  // The HPAON wakeup source responds to overflow wakeup (OFWE), not compare wakeup (OCWE).
 
-  counter += ticks_from_now * s_one_tick_hz;
-  if (counter >= LPTIM_COUNT_MAX) {
-    counter -= LPTIM_COUNT_MAX;
+  // Disable normal tick interrupt
+  __HAL_LPTIM_DISABLE_IT(&s_lptim1_handle, LPTIM_IT_OCIE);
+
+  // Clear any pending wakeup flags
+  __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_ICR_WKUPCLR);
+
+  // Save current counter for elapsed time calculation
+  s_last_idle_counter = LPTIM1->CNT;
+
+  // Calculate the sleep period in LPTIM counts
+  uint32_t period = ticks_from_now * s_one_tick_hz;
+  if (period > LPTIM_COUNT_MAX) {
+    period = LPTIM_COUNT_MAX;
   }
 
-  __HAL_LPTIM_COMPARE_SET(&s_lptim1_handle, counter);
-  __HAL_LPTIM_ENABLE_IT(&s_lptim1_handle, LPTIM_IT_OCWE);
+  // Reset counter and set autoreload to the sleep period
+  __HAL_LPTIM_COUNTRST_RESET(&s_lptim1_handle);
+  while (__HAL_LPTIM_COUNTRST_GET(&s_lptim1_handle));
+
+  __HAL_LPTIM_AUTORELOAD_SET(&s_lptim1_handle, period);
+
+  // Enable overflow wakeup (this triggers HPAON wakeup)
+  __HAL_LPTIM_ENABLE_IT(&s_lptim1_handle, LPTIM_IT_OFWE);
 }
 
 uint32_t lptim_systick_get_elapsed_ticks(void)
 {
+  // Since we reset the counter to 0 before sleeping with overflow-based wakeup,
+  // the elapsed time is simply the current counter value.
   uint32_t counter = LPTIM1->CNT;
+  return counter / s_one_tick_hz;
+}
 
-  if (counter < s_last_idle_counter) {
-    counter += (LPTIM_COUNT_MAX + 1);
+void lptim_systick_tickless_exit(void)
+{
+  // Disable overflow wakeup interrupt
+  __HAL_LPTIM_DISABLE_IT(&s_lptim1_handle, LPTIM_IT_OFWE);
+
+  // Clear any pending flags
+  __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_ICR_WKUPCLR);
+
+  // Restore autoreload to max for continuous counting mode
+  __HAL_LPTIM_AUTORELOAD_SET(&s_lptim1_handle, LPTIM_COUNT_MAX);
+
+  // Re-enable normal tick interrupt
+  __HAL_LPTIM_ENABLE_IT(&s_lptim1_handle, LPTIM_IT_OCIE);
+
+  // Set up the next tick compare value (current counter + one tick period)
+  uint32_t counter = LPTIM1->CNT;
+  counter += s_one_tick_hz;
+  if (counter > LPTIM_COUNT_MAX) {
+    counter -= (LPTIM_COUNT_MAX + 1);
   }
-
-  return (counter - s_last_idle_counter) / s_one_tick_hz;
+  __HAL_LPTIM_COMPARE_SET(&s_lptim1_handle, counter);
 }
 
 static inline void lptim_systick_next_tick_setup(void)
@@ -129,11 +164,26 @@ static inline void lptim_systick_next_tick_setup(void)
   uint32_t counter = LPTIM1->CNT;
 
   counter += s_one_tick_hz;
-  if (counter >= LPTIM_COUNT_MAX) {
-    counter -= LPTIM_COUNT_MAX;
+  if (counter > LPTIM_COUNT_MAX) {
+    counter -= (LPTIM_COUNT_MAX + 1);
   }
 
   __HAL_LPTIM_COMPARE_SET(&s_lptim1_handle, counter);
+}
+
+void lptim_systick_sync_after_wfi(void)
+{
+  // Clear any pending OC flag and set up next compare in the future.
+  // This prevents double-counting ticks when vTaskStepTick() was already called.
+  __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_IT_OCIE);
+  lptim_systick_next_tick_setup();
+}
+
+uint32_t lptim_systick_get_rc10k_freq(void)
+{
+  // s_one_tick_hz = rc10k_freq / RTC_TICKS_HZ
+  // Therefore: rc10k_freq = s_one_tick_hz * RTC_TICKS_HZ
+  return s_one_tick_hz * RTC_TICKS_HZ;
 }
 
 void LPTIM1_IRQHandler(void)
@@ -145,8 +195,8 @@ void LPTIM1_IRQHandler(void)
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_IT_OCIE);
     lptim_systick_next_tick_setup();
 
-    // If not in tickless idle mode, call SysTick_Handler directly.
-    if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OCWKUP) == RESET) {
+    // If not in tickless idle mode (overflow wakeup not set), call SysTick_Handler directly.
+    if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OFWKUP) == RESET) {
       extern void SysTick_Handler();
       SysTick_Handler();
 
@@ -163,9 +213,13 @@ void LPTIM1_IRQHandler(void)
     }
   }
 
-  if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OCWKUP) != RESET) {
-    __HAL_LPTIM_DISABLE_IT(&s_lptim1_handle, LPTIM_IT_OCWE);
+  // Handle overflow wakeup from tickless idle (deep sleep)
+  if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OFWKUP) != RESET) {
+    __HAL_LPTIM_DISABLE_IT(&s_lptim1_handle, LPTIM_IT_OFWE);
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_ICR_WKUPCLR);
+
+    // Re-enable normal tick interrupt after waking from tickless idle
+    __HAL_LPTIM_ENABLE_IT(&s_lptim1_handle, LPTIM_IT_OCIE);
 
     // Force a watchdog refresh immediately after wakeup. The LPTIM SysTick requires
     // time to restart; if the system re-enters Stop mode during this latency, a watchdog
