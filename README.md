@@ -19,7 +19,7 @@ Here's a quick summary of resources to help you find your way around:
 ### Getting Started
 
 - 📖 [Documentation](https://pebbleos-core.readthedocs.io/en/latest)
-- 🚀 [Getting Started Guide](https://pebbleos-core.readthedocs.io/en/latest/getting_started.html)
+- 🚀 [Prerequisites Guide](https://pebbleos-core.readthedocs.io/en/latest/development/getting_started.html)
 
 ### Code and Development
 
