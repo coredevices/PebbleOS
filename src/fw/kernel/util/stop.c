@@ -100,6 +100,7 @@ void enter_stop_mode(void) {
   HAL_Delay_us(100);
 
   NVIC_EnableIRQ(AON_IRQn);
+  NVIC_EnableIRQ(LPTIM1_IRQn);
 
   // Switch system clock to HRC48, backup current clock source
   clk_src = HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS);
