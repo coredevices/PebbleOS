@@ -3,9 +3,11 @@ def configure(conf):
 
 
 def build(bld):
-    driver_source = bld.path.ant_glob([
-        '*.c',
-    ])
+    excludes = []
+    if not bld.is_obelix() or not bld.env.IS_MFG:
+        excludes.extend(['gh3x2x_tuning_service.c'])
+
+    driver_source = bld.path.ant_glob(['*.c'], excl=excludes)
 
     bld.objects(
         source=driver_source,

@@ -1937,6 +1937,7 @@ elif bld.get_hrm() == 'GH3X2X':
             ],
         )
     else:
+        bld.env.DEFINES.append('HRM_USE_GH3X2X')
         bld.objects(
             name='driver_hrm',
             source=[
