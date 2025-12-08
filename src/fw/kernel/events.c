@@ -299,6 +299,14 @@ void **event_get_buffer(PebbleEvent *event) {
         return (void **)(&event->bluetooth.le.gatt_client_service.info);
       }
       break;
+    
+    case PEBBLE_HRM_EVENT:
+      if (event->hrm.event_type == HRMEvent_CTR) {
+        return (void **)(&event->hrm.ctr);
+      } else if (event->hrm.event_type == HRMEvent_Leakage) {
+        return (void **)(&event->hrm.leakage);
+      }
+      break;
 
     case PEBBLE_APP_GLANCE_EVENT:
       return (void **)&event->app_glance.app_uuid;
