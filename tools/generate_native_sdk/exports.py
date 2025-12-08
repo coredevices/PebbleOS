@@ -125,7 +125,7 @@ def parse_export_file(filename, internal_sdk_build):
         current_revision = INTERNAL_REVISION if internal_sdk_build else file_revision
         exports = parse_exports_list(shim_defs['exports'], current_revision)
 
-    return shim_defs['files'], exports
+    return shim_defs['files'], exports, file_revision
 
 
 def walk_tree(exports_tree, func, include_groups = False):
