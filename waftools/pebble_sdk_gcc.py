@@ -6,6 +6,13 @@ from waflib.Errors import BuildError
 
 import inject_metadata
 
+# Try to import compute_sdk_version for dynamic SDK version computation
+try:
+    from compute_sdk_version import compute_sdk_version
+    HAS_COMPUTE_SDK_VERSION = True
+except ImportError:
+    HAS_COMPUTE_SDK_VERSION = False
+
 
 def configure(conf):
     """
@@ -60,7 +67,8 @@ def configure(conf):
 
 # -----------------------------------------------------------------------------------
 def gen_inject_metadata_rule(bld, src_bin_file, dst_bin_file, elf_file, resource_file, timestamp,
-                             has_pkjs, has_worker):
+                             has_pkjs, has_worker, symbol_revisions_path=None,
+                             sdk_version_major=None, sdk_version_minor=None):
     """
     Copy from src_bin_file to dst_bin_file and inject the correct meta-data into the
     header of dst_bin_file
@@ -72,6 +80,9 @@ def gen_inject_metadata_rule(bld, src_bin_file, dst_bin_file, elf_file, resource
     :param timestamp: the timestamp of the project build
     :param has_pkjs: boolean for whether the project contains code using PebbleKit JS
     :param has_worker: boolean for whether the project has a worker binary
+    :param symbol_revisions_path: path to symbol_revisions.json for computing min SDK version
+    :param sdk_version_major: default SDK major version
+    :param sdk_version_minor: default SDK minor version
     """
 
     def inject_data_rule(task):
@@ -83,6 +94,16 @@ def gen_inject_metadata_rule(bld, src_bin_file, dst_bin_file, elf_file, resource
             res_path = None
         tgt_path = task.outputs[0].abspath()
 
+        # Compute the minimum SDK version based on which functions the app uses
+        sdk_version = None
+        if HAS_COMPUTE_SDK_VERSION and symbol_revisions_path and sdk_version_major is not None:
+            sdk_version = compute_sdk_version(
+                elf_path,
+                symbol_revisions_path,
+                sdk_version_major,
+                sdk_version_minor if sdk_version_minor is not None else 0
+            )
+
         # First copy the raw bin that the compiler produced to a new location. This way we'll have
         # the raw binary around to inspect just in case anything went wrong while we were injecting
         # metadata.
@@ -92,7 +113,8 @@ def gen_inject_metadata_rule(bld, src_bin_file, dst_bin_file, elf_file, resource
 
         # Now actually inject the metadata into the new copy of the binary.
         inject_metadata.inject_metadata(tgt_path, elf_path, res_path, timestamp,
-                                        allow_js=has_pkjs, has_worker=has_worker)
+                                        allow_js=has_pkjs, has_worker=has_worker,
+                                        sdk_version=sdk_version)
 
     sources = [src_bin_file, elf_file]
     if resource_file is not None:
