@@ -15,6 +15,7 @@
 #include "apps/prf_apps/mfg_discharge_app.h"
 #include "apps/prf_apps/mfg_display_app.h"
 #include "apps/prf_apps/mfg_hrm_app.h"
+#include "apps/prf_apps/mfg_hrm_obelix_app.h"
 #include "apps/prf_apps/mfg_mic_asterix_app.h"
 #include "apps/prf_apps/mfg_mic_obelix_app.h"
 #include "apps/prf_apps/mfg_program_color_app.h"
@@ -140,7 +141,11 @@ static void prv_select_mic(int index, void *context) {
 
 #if CAPABILITY_HAS_BUILTIN_HRM
 static void prv_select_hrm(int index, void *context) {
+#if PLATFORM_OBELIX && HRM_USE_GH3X2X
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_hrm_obelix_app_get_info());
+#else
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_hrm_app_get_info());
+#endif
 }
 #endif
 

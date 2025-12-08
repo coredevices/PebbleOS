@@ -574,6 +574,7 @@ def _build_recovery(bld):
         excludes.extend([
             'apps/prf_apps/mfg_speaker_obelix_app.c',
             'apps/prf_apps/mfg_mic_obelix_app.c',
+            'apps/prf_apps/mfg_hrm_obelix_app.c',
             'apps/prf_apps/mfg_test_aging_app.c',
         ])
 
