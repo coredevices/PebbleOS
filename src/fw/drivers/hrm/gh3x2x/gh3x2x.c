@@ -7,6 +7,7 @@
 
 #include "drivers/hrm.h"
 #include "board/board.h"
+#include "kernel/events.h"
 #include "kernel/util/sleep.h"
 #include "services/common/system_task.h"
 #include "services/common/hrm/hrm_manager.h"
@@ -14,6 +15,7 @@
 
 #include "gh_demo.h"
 #include "gh_demo_inner.h"
+#include "gh3x2x_demo_mp.h"
 
 #define GH3X2X_LOG_ENABLE 0
 #define GH3X2X_FIFO_WATERMARK_CONFIG 80
@@ -159,7 +161,6 @@ void hrm_init(HRMDevice *dev) {
   }
 
   dev->state->initialized = true;
-
   hrm_disable(dev);
 }
 
@@ -174,7 +175,7 @@ void hrm_enable(HRMDevice *dev) {
   GH3X2X_FifoWatermarkThrConfig(GH3X2X_FIFO_WATERMARK_CONFIG);
   GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_NEED_FORCE_READ_FIFO);
   Gh3x2xDemoFunctionSampleRateSet(GH3X2X_FUNCTION_HR, GH3X2X_HR_SAMPLING_RATE);
-  Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2);
+  Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_ADT);
 }
 
 void hrm_disable(HRMDevice *dev) {
@@ -188,4 +189,250 @@ void hrm_disable(HRMDevice *dev) {
 
 bool hrm_is_enabled(HRMDevice *dev) {
   return dev->state->enabled;
+}
+
+void gh3x2x_wear_evt_notify(bool is_wear) {
+  HRMDevice* p_dev = HRM;
+  if (p_dev) {
+    p_dev->state->is_wear = is_wear;
+  }
+  PBL_LOG(LOG_LEVEL_DEBUG, "wear notify: %d", is_wear);
+}
+
+void gh3x2x_factory_test_enable(HRMDevice *dev, GH3x2xFTType test_type) {
+  if (!dev->state->initialized) {
+    return;
+  }
+  
+  uint32_t mode = 0;
+  if (test_type == HRM_FACTORY_TEST_CTR) {                    // CTR
+    mode = GH3X2X_FUNCTION_TEST1;
+  } else if (test_type == HRM_FACTORY_TEST_LIGHT_LEAK) {      // leakage
+    mode = GH3X2X_FUNCTION_TEST2;
+  } else if (test_type == HRM_FACTORY_TEST_HSM) {           // noise
+    mode = GH3X2X_FUNCTION_HSM;
+  } else {
+    return;
+  }
+
+  uint32_t* ppg_data;
+  GH3x2xFTData* p_factory = (GH3x2xFTData*)malloc(sizeof(GH3x2xFTData) + sizeof(uint32_t)*HRM_PPG_FACTORY_TEST_FIFO_LEN*HRM_PPG_CH_NUM);
+  if (p_factory == NULL) {
+    PBL_LOG(LOG_LEVEL_ERROR, "malloc failed.");
+    return;
+  }
+  memset(p_factory, 0, sizeof(GH3x2xFTData));
+  p_factory->drop_count = 30;
+  p_factory->test_mode = mode;
+  if (dev->state->factory != NULL) {
+    free(dev->state->factory);
+  }
+  ppg_data = (uint32_t*)(p_factory + 1);
+  for (uint32_t i=0; i<HRM_PPG_CH_NUM; ++i) {
+    p_factory->ppg_array[i] = ppg_data + HRM_PPG_FACTORY_TEST_FIFO_LEN*i;
+  }
+  dev->state->factory = p_factory;
+
+  dev->state->enabled = true;
+  s_hrm_int_flag = false;
+  Gh3x2xDemoStopSampling(0xFFFFFFFF);
+  Gh3x2xDemoStartSamplingWithCfgSwitch(mode, 1);
+}
+
+//shoud be called in system task
+static void gh3x2x_ft_ctr_start_handle(void* data) {
+  gh3x2x_factory_test_enable(HRM, HRM_FACTORY_TEST_CTR);
+}
+
+void gh3x2x_start_ft_ctr(void) {
+  system_task_add_callback(gh3x2x_ft_ctr_start_handle, NULL);
+}
+
+//shoud be called in system task
+static void gh3x2x_ft_leakage_start_handle(void* data) {
+  gh3x2x_factory_test_enable(HRM, HRM_FACTORY_TEST_LIGHT_LEAK);
+}
+
+void gh3x2x_start_ft_leakage(void) {
+  system_task_add_callback(gh3x2x_ft_leakage_start_handle, NULL);
+}
+
+void gh3x2x_factory_test_disable(HRMDevice *dev) {
+  if (!dev->state->initialized) {
+    return;
+  }
+  
+  dev->state->enabled = false;
+  Gh3x2xDemoStopSampling(0xFFFFFFFF);
+  if (dev->state->factory != NULL) {
+    free(dev->state->factory);
+    dev->state->factory = NULL;
+  }
+}
+
+uint8_t gh3x2x_factory_result_get(float* p_result)
+{
+  HRMDevice* p_dev = HRM;
+  if (p_result) {
+    GH3x2xFTData* p_factory = p_dev->state->factory;
+    if (p_factory != NULL && p_factory->count >= HRM_PPG_FACTORY_TEST_FIFO_LEN) {
+      memcpy(p_result, p_factory->result, sizeof(float)*HRM_PPG_FACTORY_TEST_FIFO_LEN);
+      return HRM_PPG_FACTORY_TEST_FIFO_LEN;
+    }
+  }
+  return 0;
+}
+
+void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
+  HRMDevice* p_dev = HRM;
+  if (p_dev == NULL || p_dev->state->enabled == false) {
+    return;
+  }
+
+  GH3x2xFTData* p_factory = p_dev->state->factory;
+  if (p_factory == NULL) {
+    return;
+  }
+  uint32_t mode = p_factory->test_mode;
+  if (mode == 0) {
+    return;
+  }
+
+  // save ppg raw data, 80 samples for each channel
+  uint32_t idx;
+  data_count /= HRM_PPG_CH_NUM;
+  while (data_count--) {
+    if (p_factory->drop_count > 0) {
+      p_factory->drop_count--;
+      p_rawdata += HRM_PPG_CH_NUM;
+    } else {
+      if (p_factory->wpos >= HRM_PPG_FACTORY_TEST_FIFO_LEN) {
+        p_factory->wpos = 0;
+      }
+      for (idx=0; idx<HRM_PPG_CH_NUM; ++idx) {
+        p_factory->ppg_array[idx][p_factory->wpos] = *p_rawdata++;
+      }
+      
+      p_factory->wpos++;
+      if (p_factory->count < HRM_PPG_FACTORY_TEST_FIFO_LEN) {
+        p_factory->count++;
+      }
+    }
+  }
+  if (p_factory->count < HRM_PPG_FACTORY_TEST_FIFO_LEN) {
+    return;
+  }
+
+  uint32_t i;
+  uint32_t ppg_avg[HRM_PPG_CH_NUM];
+  uint64_t total[HRM_PPG_CH_NUM];
+  HRMData hrm_data = {0};
+  memset(total, 0, sizeof(total));
+  for (idx=0; idx<HRM_PPG_CH_NUM; ++idx) {
+    // calcu total values for 80 samples ppg raw data
+    for (i=0; i<p_factory->count; ++i) {
+      total[idx] += p_factory->ppg_array[idx][i];
+    }
+    // calcu avr for each channel
+    ppg_avg[idx] = total[idx] / p_factory->count;
+  }
+  
+  //let keep the factory test data report 2hz
+  static int cnt = 0;
+  if (cnt++ % 25) return;
+  if (mode == GH3X2X_FUNCTION_TEST1) {
+    hrm_data.features = HRMFeature_CTR;
+    // calcu CTR:  result = ((ppg_avg-2^23))*1800*1000/(20*10*2*(2^23));
+    // Green >= 28; IR >= 36; Red >= 36
+    for (i=0; i<HRM_PPG_CH_NUM; ++i) {
+      p_factory->result[i] = ((double)(ppg_avg[i] - (1<<23)) * 4500) / (1<<23);
+      hrm_data.ctr[i] = p_factory->result[i];
+    }
+    hrm_manager_new_data_cb(&hrm_data);
+  } else if (mode == GH3X2X_FUNCTION_TEST2) {
+    hrm_data.features = HRMFeature_Leakage; 
+    // calcu leakage: result = (ppg_avg-(2^23))*1800*1000/(20*100*2*(2^23));
+    for (i=0; i<HRM_PPG_CH_NUM; ++i) {
+      p_factory->result[i] = ((double)(ppg_avg[i] - (1<<23)) * 450) / (1<<23);
+      hrm_data.leakage[i] = p_factory->result[i];
+    }
+    hrm_manager_new_data_cb(&hrm_data);
+  } else {
+    
+    ;
+  }
+}
+
+//for ppg raw data collection
+static void gh3x2x_ble_data_recv_handle(void *context) {
+  if (context == NULL) {
+    return;
+  }
+
+  uint32_t data_len;
+  uint8_t *p_data = (uint8_t*)context;
+  memcpy(&data_len, p_data, sizeof(uint32_t));
+  p_data += sizeof(uint32_t);
+  Gh3x2xDemoProtocolProcess((GU8*)p_data, data_len);
+  free(context);
+}
+
+bool gh3x2x_ble_data_recv(void* context) {
+  if (context == NULL) {
+    return false;
+  }
+
+  if (!system_task_add_callback(gh3x2x_ble_data_recv_handle, context)) {
+    return false;
+  }
+  return true;
+}
+
+void gh3x2x_timer_init(uint32_t period_ms) {
+  if (HRM) {
+    HRM->state->timer_period_ms = period_ms;
+  }
+}
+
+static void gh3x2x_timer_callback(void* data) {
+  uint32_t param = (uint32_t)data;
+  if (param != 0x87965421) {
+    system_task_add_callback(gh3x2x_timer_callback, (void*)0x87965421);
+    return;
+  }
+  Gh3x2xSerialSendTimerHandle();
+}
+
+static void gh3x2x_timer_start_handle(void* arg) {
+  if (HRM == NULL || HRM->state->timer != NULL) {
+    return;
+  }
+  if (HRM->state->timer_period_ms == 0) {
+    return;
+  }
+  HRM->state->timer = app_timer_register_repeatable(HRM->state->timer_period_ms, gh3x2x_timer_callback, NULL, true);
+}
+
+static void gh3x2x_timer_stop_handle(void* arg) {
+  if (HRM && HRM->state->timer) {
+    app_timer_cancel(HRM->state->timer);
+    HRM->state->timer = NULL;
+    HRM->state->timer_period_ms = 0;
+  }
+}
+
+void gh3x2x_timer_start(void) { 
+  PebbleEvent e = {
+    .type = PEBBLE_CALLBACK_EVENT,
+    .callback.callback = gh3x2x_timer_start_handle,
+  };
+  event_put(&e);
+}
+
+void gh3x2x_timer_stop(void) { 
+  PebbleEvent e = {
+    .type = PEBBLE_CALLBACK_EVENT,
+    .callback.callback = gh3x2x_timer_stop_handle,
+  };
+  event_put(&e);
 }
