@@ -577,6 +577,11 @@ def _build_recovery(bld):
             'apps/prf_apps/mfg_test_aging_app.c',
         ])
 
+    if not bld.is_obelix() or not bld.env.IS_MFG:
+        excludes.extend([
+            'apps/prf_apps/mfg_hrm_ctr_leakage_obelix_app.c',
+        ])
+
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
 
