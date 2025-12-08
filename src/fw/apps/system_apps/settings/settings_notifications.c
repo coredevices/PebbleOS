@@ -47,6 +47,7 @@ enum NotificationsItem {
 #if PBL_BW
   NotificationsItemDesignStyle,
 #endif
+  NotificationsItemVibeDelay,
   NotificationsItem_Count,
 };
 
@@ -273,6 +274,38 @@ static void prv_design_style_menu_push(SettingsNotificationsData *data) {
 }
 #endif /* PBL_BW */
 
+// Vibe Delay
+////////////////////////
+
+static const char *s_vibe_delay_labels[] = {
+  /// Vibrate at the beginning of notification animation (immediate)
+  i18n_noop("Beginning"),
+  /// Vibrate at the end of notification animation (delayed)
+  i18n_noop("End"),
+};
+
+static int prv_vibe_delay_get_selection_index(void) {
+  return alerts_preferences_get_notification_vibe_delay() ? 1 : 0;
+}
+
+static void prv_vibe_delay_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  alerts_preferences_set_notification_vibe_delay(selection == 1);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_vibe_delay_menu_push(SettingsNotificationsData *data) {
+  const int index = prv_vibe_delay_get_selection_index();
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_vibe_delay_menu_select,
+  };
+  /// Status bar title for the Notification Vibe Timing settings screen
+  const char *title = i18n_noop("Vibe Timing");
+  settings_option_menu_push(
+      title, OptionMenuContentType_SingleLine, index, &callbacks,
+      ARRAY_LENGTH(s_vibe_delay_labels), true /* icons_enabled */, s_vibe_delay_labels,
+      data);
+}
+
 // Menu Layer Callbacks
 ////////////////////////
 
@@ -325,6 +358,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       break;
     }
   #endif /* PBL_BW */
+    case NotificationsItemVibeDelay: {
+      /// String within Settings->Notifications that describes when vibration happens
+      title = i18n_noop("Vibe Timing");
+      subtitle = s_vibe_delay_labels[prv_vibe_delay_get_selection_index()];
+      break;
+    }
     default:
       WTF;
   }
@@ -364,6 +403,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       prv_design_style_menu_push(data);
       break;
 #endif /* PBL_BW */
+    case NotificationsItemVibeDelay:
+      prv_vibe_delay_menu_push(data);
+      break;
     default:
       WTF;
   }
