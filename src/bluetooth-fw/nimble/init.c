@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "gh3x2x_tuning_service.h"
+
 #include <FreeRTOS.h>
 #include <bluetooth/init.h>
 #include <comm/bt_lock.h>
@@ -109,6 +111,10 @@ bool bt_driver_start(BTDriverConfig *config) {
   pebble_pairing_service_init();
   ble_svc_bas_init();
   
+#if defined(MANUFACTURING_FW) && defined(HRM_USE_GH3X2X)
+  gh3x2x_tuning_service_init();
+#endif
+
   ble_hs_sched_start();
   f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
