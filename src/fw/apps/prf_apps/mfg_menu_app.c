@@ -15,6 +15,7 @@
 #include "apps/prf_apps/mfg_discharge_app.h"
 #include "apps/prf_apps/mfg_display_app.h"
 #include "apps/prf_apps/mfg_hrm_app.h"
+#include "apps/prf_apps/mfg_hrm_ctr_leakage_obelix_app.h"
 #include "apps/prf_apps/mfg_mic_asterix_app.h"
 #include "apps/prf_apps/mfg_mic_obelix_app.h"
 #include "apps/prf_apps/mfg_program_color_app.h"
@@ -141,6 +142,12 @@ static void prv_select_mic(int index, void *context) {
 #if CAPABILITY_HAS_BUILTIN_HRM
 static void prv_select_hrm(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_hrm_app_get_info());
+}
+#endif
+
+#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
+static void prv_select_hrm_ctr_leakage_obelix(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_hrm_ctr_leakage_obelix_app_get_info());
 }
 #endif
 
@@ -344,6 +351,9 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
       .title = "Test ALS",          .callback = prv_select_als },
     { .icon = prv_get_icon_for_test(MfgTest_Vibe),
       .title = "Test Vibration",    .callback = prv_select_vibration },
+#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
+    { .title = "Test HRM CTR/L",          .callback = prv_select_hrm_ctr_leakage_obelix },
+#endif
 #if CAPABILITY_HAS_BUILTIN_HRM
     { .title = "Test HRM",          .callback = prv_select_hrm },
 #endif
