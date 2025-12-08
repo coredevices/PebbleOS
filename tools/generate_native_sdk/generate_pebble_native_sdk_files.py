@@ -17,6 +17,7 @@ from generate_app_shim import make_app_shim_lib
 from generate_fw_shim import make_fw_shims
 from generate_json_api_description import make_json_api_description
 from generate_app_sdk_version_header import generate_app_sdk_version_header
+from generate_symbol_revisions import make_symbol_revisions_file
 
 from extract_symbol_info import extract_symbol_info
 from extract_comments import extract_comments
@@ -64,8 +65,19 @@ def generate_shim_files(shim_def_path, pbl_src_dir, pbl_output_src_dir, sdk_incl
     except KeyError:
         raise Exception("Unsupported platform: %s" % platform_name)
 
-    files, exports_tree = exports.parse_export_file(shim_def_path, internal_sdk_build)
+    files, exports_tree, current_revision = exports.parse_export_file(shim_def_path, internal_sdk_build)
     files = [ os.path.join(pbl_src_dir, f) for f in files ]
+
+    # Read SDK_VERSION_MINOR from pebble_process_info.h
+    process_info_path = os.path.join(pbl_src_dir, 'fw', 'process_management', 'pebble_process_info.h')
+    current_sdk_minor = None
+    with open(process_info_path, 'r') as f:
+        for line in f:
+            if "PROCESS_INFO_CURRENT_SDK_VERSION_MINOR" in line:
+                current_sdk_minor = int(line.split()[2].rstrip(), 16)
+                break
+    if current_sdk_minor is None:
+        raise Exception("Could not find PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h")
 
     functions = []
     exports.walk_tree(exports_tree, lambda e: functions.append(e) if e.type == 'function' else None)
@@ -126,6 +138,9 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
 
     # Build .json API description, used as input for static analysis tools:
     make_json_api_description(sorted_functions, pbl_output_src_dir)
+
+    # Build symbol_revisions.json for computing minimum SDK version at app build time
+    make_symbol_revisions_file(sorted_functions, sdk_include_dir, current_revision, current_sdk_minor)
 
     for filename, functions in (('pebble_sdk_version.h',
                                  (f for f in functions if not f.worker_only)),
