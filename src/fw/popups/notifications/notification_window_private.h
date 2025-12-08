@@ -48,4 +48,8 @@ typedef struct NotificationWindowData {
   Layer dnd_icon_layer;
   GBitmap dnd_icon;
   bool dnd_icon_visible;
+
+  // Delayed vibration support - vibe at end of animation instead of immediately
+  bool pending_vibe;
+  Uuid pending_vibe_id;
 } NotificationWindowData;
