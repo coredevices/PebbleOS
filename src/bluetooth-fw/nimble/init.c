@@ -109,6 +109,11 @@ bool bt_driver_start(BTDriverConfig *config) {
   pebble_pairing_service_init();
   ble_svc_bas_init();
   
+#ifdef HRM_USE_GH3X2X
+  //TODO: remove this once tuning finished
+  extern int gh3x2x_tuning_service_init(void);
+  gh3x2x_tuning_service_init();
+#endif
   ble_hs_sched_start();
   f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
