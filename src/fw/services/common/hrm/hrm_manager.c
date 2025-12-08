@@ -383,6 +383,18 @@ static void prv_system_task_hrm_handler(void *context) {
           continue;
         }
         break;
+#ifdef MANUFACTURING_FW
+      case HRMEvent_CTR:
+        if (!(state->features & HRMFeature_CTR)) {
+          continue;
+        }
+        break;
+      case HRMEvent_Leakage:
+        if (!(state->features & HRMFeature_Leakage)) {
+          continue;
+        }
+        break;
+#endif
       case HRMEvent_SubscriptionExpiring:
         continue;
     }
@@ -434,6 +446,28 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
         },
       };
       break;
+#ifdef MANUFACTURING_FW
+    case HRMFeature_CTR:
+    {
+      HRMCTRData *ctr_data = kernel_zalloc_check(sizeof(HRMCTRData));
+      memcpy(ctr_data->ctr, data->ctr, sizeof(HRMCTRData)); 
+      *event = (PebbleHRMEvent) {
+        .event_type = HRMEvent_CTR,
+        .ctr = ctr_data,
+      };
+      break;
+    }
+    case HRMFeature_Leakage:
+    {
+      HRMLeakageData *leakage_data = kernel_zalloc_check(sizeof(HRMLeakageData));
+      memcpy(leakage_data->leakage, data->leakage, sizeof(HRMLeakageData));
+      *event = (PebbleHRMEvent) {
+        .event_type = HRMEvent_Leakage,
+        .leakage = leakage_data,
+      };
+      break;
+    }
+#endif
     default:
       WTF;
   }
