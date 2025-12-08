@@ -86,6 +86,14 @@ def build(bld):
             ],
         )
 
+        if bld.env.IS_MFG:
+            bld.env.append_unique(
+                'DEFINES',
+                [
+                    'GH3X2X_BLE_NOTIFY_DATA',
+                ],
+            )
+
         bld.objects(
             name='gh3x2x',
             source=sources,
