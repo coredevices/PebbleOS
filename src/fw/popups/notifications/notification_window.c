@@ -84,6 +84,8 @@ static void prv_handle_notification_removed_common(Uuid *, NotificationType);
 
 static bool prv_should_pop_due_to_inactivity(void);
 
+static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id);
+
 /////////////////////
 // Helpers
 /////////////////////
@@ -299,10 +301,25 @@ static void prv_peek_anim_stopped(Animation *animation, bool finished, void *con
   TimelineItem *item = prv_get_current_notification(data);
   layer_set_hidden((Layer *)&data->action_button_layer,
                    !prv_should_provide_action_menu_for_item(data, item));
+
+  // Fallback: if a pending vibe wasn't triggered in prv_hide_peek_layer (e.g., a new
+  // notification arrived after prv_hide_peek_layer ran but before this callback),
+  // trigger it now
+  if (data->pending_vibe) {
+    data->pending_vibe = false;
+    prv_do_notification_vibe(data, &data->pending_vibe_id);
+  }
 }
 
 static void prv_hide_peek_layer(void *context) {
   NotificationWindowData *data = context;
+
+  // Execute pending vibration if delayed vibe was requested - do it as the notification
+  // starts sliding up to reveal the text
+  if (data->pending_vibe) {
+    data->pending_vibe = false;
+    prv_do_notification_vibe(data, &data->pending_vibe_id);
+  }
 
   // get the frame of the swap_layer and set its destination
   const GRect *swap_frame = &data->swap_layer.layer.frame;
@@ -1031,6 +1048,7 @@ static void prv_window_unload(Window *window) {
   }
 
   vibes_cancel();
+  data->pending_vibe = false;
   prv_cleanup_timers(data);
 
   // clean up peek layer
@@ -1152,6 +1170,7 @@ static void prv_init_notification_window(bool is_modal) {
   };
   data->action_menu = NULL;
   data->dnd_icon_visible = false;
+  data->pending_vibe = false;
 
   Window *window = &data->window;
   window_init(window, "Notification Window");
@@ -1322,6 +1341,39 @@ static void prv_handle_notification_acted_upon(Uuid *id) {
   }
 }
 
+static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
+  TimelineItem *item = prv_get_current_notification(data);
+  // Check if the current notification is the one we want to vibe for - if not then reload to make
+  // sure it is, before reading the attributes.
+  if (!item || !uuid_equal(&item->header.id, id)) {
+    prv_reload_swap_layer(data);
+    item = prv_get_current_notification(data);
+  }
+  if (!item) {
+    return;
+  }
+  Uint32List *vibeDurations = attribute_get_uint32_list(&item->attr_list, AttributeIdVibrationPattern);
+  if (vibeDurations && vibeDurations->num_values > 0) {
+    VibePattern patt;
+    patt.durations = vibeDurations->values;
+    patt.num_segments = vibeDurations->num_values;
+    vibes_enqueue_custom_pattern(patt);
+  } else {
+#if CAPABILITY_HAS_VIBE_SCORES
+    VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
+    if (score) {
+      vibe_score_do_vibe(score);
+      vibe_score_destroy(score);
+    }
+#else
+    vibes_short_pulse();
+#endif
+  }
+  // Timestamp set after call to vibrate since if something fails,
+  // its better to have no vibe blocking then vibe blocking and no vibrations.
+  alerts_set_notification_vibe_timestamp();
+}
+
 static void prv_handle_notification_added_common(Uuid *id, NotificationType type) {
   if (!alerts_should_notify_for_type(prv_alert_type_for_notification_type(type))) {
     return;
@@ -1366,33 +1418,15 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
 
   alerts_incoming_alert_analytics();
   if (alerts_should_vibrate_for_type(prv_alert_type_for_notification_type(type))) {
-    TimelineItem *item = prv_get_current_notification(data);
-    // Check if the current notification is the one that just arrived - if not then reload to make sure
-    // it is, before reading the attributes.
-    if (!uuid_equal(&item->header.id, id)) {
-      prv_reload_swap_layer(data);
-      item = prv_get_current_notification(data);
-    }
-    Uint32List *vibeDurations = attribute_get_uint32_list(&item->attr_list, AttributeIdVibrationPattern);
-    if (vibeDurations && vibeDurations->num_values > 0) {
-      VibePattern patt;
-      patt.durations = vibeDurations->values;
-      patt.num_segments = vibeDurations->num_values;
-      vibes_enqueue_custom_pattern(patt);
+    // Check if we should delay the vibration until the animation completes
+    if (alerts_preferences_get_notification_vibe_delay() && data->peek_layer) {
+      // Delay vibration until peek animation finishes
+      data->pending_vibe = true;
+      data->pending_vibe_id = *id;
     } else {
-#if CAPABILITY_HAS_VIBE_SCORES
-      VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
-      if (score) {
-        vibe_score_do_vibe(score);
-        vibe_score_destroy(score);
-      }
-#else
-      vibes_short_pulse();
-#endif
+      // Vibe immediately
+      prv_do_notification_vibe(data, id);
     }
-    // Timestamp set after call to vibrate since if something fails,
-    // its better to have no vibe blocking then vibe blocking and no vibrations.
-    alerts_set_notification_vibe_timestamp();
   }
 
   if (alerts_should_enable_backlight_for_type(prv_alert_type_for_notification_type(type))) {
