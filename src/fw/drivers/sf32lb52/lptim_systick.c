@@ -31,6 +31,7 @@
 static LPTIM_HandleTypeDef s_lptim1_handle = {0};
 static bool s_lptim_systick_initialized = false;
 static uint32_t s_last_idle_counter = 0;
+static uint32_t s_tickless_period = 0;  // Programmed sleep period in LPTIM counts
 static TimerID s_cal_timer;
 static uint16_t s_one_tick_hz;
 
@@ -118,6 +119,9 @@ void lptim_systick_tickless_idle(uint32_t ticks_from_now)
     period = LPTIM_COUNT_MAX;
   }
 
+  // Store the programmed period for elapsed time calculation after wakeup
+  s_tickless_period = period;
+
   // Reset counter and set autoreload to the sleep period
   __HAL_LPTIM_COUNTRST_RESET(&s_lptim1_handle);
   while (__HAL_LPTIM_COUNTRST_GET(&s_lptim1_handle));
@@ -130,10 +134,17 @@ void lptim_systick_tickless_idle(uint32_t ticks_from_now)
 
 uint32_t lptim_systick_get_elapsed_ticks(void)
 {
-  // Since we reset the counter to 0 before sleeping with overflow-based wakeup,
-  // the elapsed time is simply the current counter value.
-  uint32_t counter = LPTIM1->CNT;
-  return counter / s_one_tick_hz;
+  // Check if we woke up due to overflow (normal timer expiry) or early (GPIO, etc.)
+  // Per Sifli docs, wakeup takes ~250us, during which CNT reloads to 0 and keeps counting.
+  // If overflow occurred, use the programmed period; otherwise use current CNT.
+  if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OFWKUP) != RESET) {
+    // Overflow wakeup: we slept the full programmed period
+    return s_tickless_period / s_one_tick_hz;
+  } else {
+    // Early wakeup: CNT reflects actual elapsed time
+    uint32_t counter = LPTIM1->CNT;
+    return counter / s_one_tick_hz;
+  }
 }
 
 void lptim_systick_tickless_exit(void)
