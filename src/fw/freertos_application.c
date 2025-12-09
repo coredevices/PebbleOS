@@ -299,7 +299,9 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
       // Update the task watchdog every time we come out of STOP mode (which is
       // at least once/second) since the timer peripheral will not have been
-      // incremented
+      // incremented. Set all watchdog bits first since the LPTIM ISR that would
+      // normally do this hasn't run yet (interrupts are still globally disabled).
+      task_watchdog_bit_set_all();
       task_watchdog_step_elapsed_time_ms((ticks_elapsed * 1000) / RTC_TICKS_HZ);
 
       s_analytics_device_stop_ticks += ticks_elapsed;
