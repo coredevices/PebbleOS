@@ -32,6 +32,7 @@ static LPTIM_HandleTypeDef s_lptim1_handle = {0};
 static bool s_lptim_systick_initialized = false;
 static uint32_t s_last_idle_counter = 0;
 static uint32_t s_tickless_period = 0;  // Programmed sleep period in LPTIM counts
+static volatile bool s_overflow_wakeup = false;  // Set by ISR when overflow wakeup occurs
 static TimerID s_cal_timer;
 static uint16_t s_one_tick_hz;
 
@@ -109,6 +110,7 @@ void lptim_systick_tickless_idle(uint32_t ticks_from_now)
 
   // Clear any pending wakeup flags
   __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_ICR_WKUPCLR);
+  s_overflow_wakeup = false;
 
   // Save current counter for elapsed time calculation
   s_last_idle_counter = LPTIM1->CNT;
@@ -137,7 +139,7 @@ uint32_t lptim_systick_get_elapsed_ticks(void)
   // Check if we woke up due to overflow (normal timer expiry) or early (GPIO, etc.)
   // Per Sifli docs, wakeup takes ~250us, during which CNT reloads to 0 and keeps counting.
   // If overflow occurred, use the programmed period; otherwise use current CNT.
-  if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OFWKUP) != RESET) {
+  if (s_overflow_wakeup) {
     // Overflow wakeup: we slept the full programmed period
     return s_tickless_period / s_one_tick_hz;
   } else {
@@ -228,6 +230,9 @@ void LPTIM1_IRQHandler(void)
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OFWKUP) != RESET) {
     __HAL_LPTIM_DISABLE_IT(&s_lptim1_handle, LPTIM_IT_OFWE);
     __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_ICR_WKUPCLR);
+
+    // Record that we woke up due to overflow (for lptim_systick_get_elapsed_ticks)
+    s_overflow_wakeup = true;
 
     // Re-enable normal tick interrupt after waking from tickless idle
     __HAL_LPTIM_ENABLE_IT(&s_lptim1_handle, LPTIM_IT_OCIE);
