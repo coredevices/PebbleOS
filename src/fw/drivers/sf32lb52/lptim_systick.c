@@ -154,6 +154,12 @@ void lptim_systick_tickless_exit(void)
   // Disable overflow wakeup interrupt
   __HAL_LPTIM_DISABLE_IT(&s_lptim1_handle, LPTIM_IT_OFWE);
 
+  // Check if we woke up due to overflow BEFORE clearing the flag
+  // (ISR hasn't run yet because interrupts are globally disabled)
+  if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OFWKUP) != RESET) {
+    s_overflow_wakeup = true;
+  }
+
   // Clear any pending flags
   __HAL_LPTIM_CLEAR_FLAG(&s_lptim1_handle, LPTIM_ICR_WKUPCLR);
 
