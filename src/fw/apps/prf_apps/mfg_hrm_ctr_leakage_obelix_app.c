@@ -129,7 +129,7 @@ static void prv_handle_init(void) {
   text_layer_init(title, &window->layer.bounds);
   text_layer_set_font(title, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(title, GTextAlignmentCenter);
-  text_layer_set_text(title, "HRM CTR/L TEST");
+  text_layer_set_text(title, "HRM TEST");
   layer_add_child(&window->layer, &title->layer);
 
   sniprintf(data->status_string, STATUS_STRING_LEN, "Press Sel to Start");
