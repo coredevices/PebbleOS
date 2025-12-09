@@ -41,7 +41,12 @@ static void prv_cal_timer_cb(void* data) {
 
   HAL_RC_CAL_update_reference_cycle_on_48M(LXT_LP_CYCLE);
 
-  ref_cycle = HAL_Get_backup(RTC_BACKUP_LPCYCLE);
+  // Use the averaged calibration value, not the boot-time value
+  ref_cycle = HAL_Get_backup(RTC_BACKUP_LPCYCLE_AVE);
+  if (ref_cycle == 0) {
+    // Fallback to prevent divide-by-zero
+    ref_cycle = 1200000;
+  }
   s_one_tick_hz = ((48000000ULL * LXT_LP_CYCLE) / ref_cycle) / RTC_TICKS_HZ;
 
   __HAL_LPTIM_COMPARE_SET(&s_lptim1_handle, s_one_tick_hz);
@@ -136,6 +141,11 @@ void lptim_systick_tickless_idle(uint32_t ticks_from_now)
 
 uint32_t lptim_systick_get_elapsed_ticks(void)
 {
+  // Guard against divide-by-zero if calibration hasn't run yet
+  if (s_one_tick_hz == 0) {
+    return 0;
+  }
+
   // Check if we woke up due to overflow (normal timer expiry) or early (GPIO, etc.)
   // Per Sifli docs, wakeup takes ~250us, during which CNT reloads to 0 and keeps counting.
   // If overflow occurred, use the programmed period; otherwise use current CNT.
@@ -202,6 +212,10 @@ uint32_t lptim_systick_get_rc10k_freq(void)
 {
   // s_one_tick_hz = rc10k_freq / RTC_TICKS_HZ
   // Therefore: rc10k_freq = s_one_tick_hz * RTC_TICKS_HZ
+  // Return a sensible default if not yet calibrated to avoid divide-by-zero in callers
+  if (s_one_tick_hz == 0) {
+    return 10000;  // ~10kHz default
+  }
   return s_one_tick_hz * RTC_TICKS_HZ;
 }
 
