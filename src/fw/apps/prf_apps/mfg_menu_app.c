@@ -192,6 +192,9 @@ static void prv_extras_window_load(Window *window) {
 
   const SimpleMenuItem extras_menu_items[] = {
     { .title = "Test Accel",        .callback = prv_extras_select_accel },
+#if CAPABILITY_HAS_BUILTIN_HRM
+    { .title = "Test HRM",          .callback = prv_select_hrm },
+#endif
     { .title = "Test Discharge", .callback = prv_extras_select_discharge },
 #if PLATFORM_OBELIX
     { .title = "Test Aging",        .callback = prv_extras_select_test_aging },
@@ -353,9 +356,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
       .title = "Test Vibration",    .callback = prv_select_vibration },
 #if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
     { .title = "Test HRM CTR/L",          .callback = prv_select_hrm_ctr_leakage_obelix },
-#endif
-#if CAPABILITY_HAS_BUILTIN_HRM
-    { .title = "Test HRM",          .callback = prv_select_hrm },
 #endif
     { .title = "Program Color",     .callback = prv_select_program_color },
     { .title = "Test Charge",       .callback = prv_select_charge },
