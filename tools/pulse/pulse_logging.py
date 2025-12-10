@@ -55,7 +55,7 @@ if __name__ == '__main__':
     from log_hashing import log_dehash
 
     if len(sys.argv) != 2:
-        print 'Usage: python ' + sys.argv[0] + ' <loghash_dict_path>'
+        print('Usage: python ' + sys.argv[0] + ' <loghash_dict_path>')
         sys.exit(1)
 
     loghash_dict_path = sys.argv[1]
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     def start_logging(logger):
         while True:
             msg = logger.receive()
-            print dehash(str(msg))
+            print(dehash(str(msg)))
 
     with socket.Connection.open_dbgserial('ftdi://ftdi:4232:1/3') as connection:
         logging_thread = threading.Thread(target=start_logging, args=[connection.logging])
@@ -80,5 +80,5 @@ if __name__ == '__main__':
         inputCommand = raw_input('>')
         while inputCommand:
             for message in connection.prompt.command_and_response(inputCommand):
-                print message
+                print(message)
             inputCommand = raw_input('>')
