@@ -552,17 +552,9 @@ const BoardConfig BOARD_CONFIG = {
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons = {
     [BUTTON_ID_BACK]   = { "Back",   hwp_gpio1, 34, GPIO_PuPd_NOPULL, true },
-#if defined(IS_BIGBOARD) && !BOARD_OBELIX_BB2
-    [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 37, GPIO_PuPd_UP, false},
-#else
     [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 35, GPIO_PuPd_UP, false},
-#endif
     [BUTTON_ID_SELECT] = { "Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
-#if defined(IS_BIGBOARD) && !BOARD_OBELIX_BB2
-    [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 35, GPIO_PuPd_UP, false},
-#else
     [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
-#endif
   },
   .timer = GPTIM2,
   .timer_irqn = GPTIM2_IRQn,
