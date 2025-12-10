@@ -113,5 +113,5 @@ if __name__ == '__main__':
         inputCommand = raw_input('>')
         while inputCommand:
             for message in connection.prompt.command_and_response(inputCommand):
-                print message
+                print(message)
             inputCommand = raw_input('>')
