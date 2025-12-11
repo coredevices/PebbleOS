@@ -671,6 +671,8 @@ void board_early_init(void) {
 
   HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
 
+  // HAL_RCC_HCPU_EnableDLL2(288000000);
+
   // Reset sysclk used by HAL_Delay_us
   HAL_Delay_us(0);
 
@@ -687,6 +689,101 @@ void board_early_init(void) {
   hwp_pmuc->PWRKEY_CNT = PWRKEY_RESET_CNT;
 }
 
+static void board_psram_off(void)
+{
+    // Switch to external 1V8 fro PSRAM
+    hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
+    hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
+
+    HAL_Delay_us(5000);
+
+    i2c_use(I2C_NPM1300);
+    uint8_t d[3] = { 0x401 >> 8, 0x401 & 0xFF, 1 };
+    bool rv = i2c_write_block(I2C_NPM1300, 3, d);
+    i2c_release(I2C_NPM1300);
+
+    for (uint32_t i = 0; i <= 12; i++) {
+        HAL_PIN_Set_Analog(PAD_SA00 + i, 1);
+    }
+
+    return;
+}
+
+static void board_psram_init(void)
+{
+    FLASH_HandleTypeDef psram_handle = {
+        .Instance = hwp_qspi1,
+    };
+    qspi_configure_t qspi_cfg =
+    {
+        .Instance = hwp_qspi1,
+        .SpiMode = 0,
+        .msize = 8,
+        .base = QSPI1_MEM_BASE,
+    };
+    uint32_t pid = (hwp_hpsys_cfg->IDR & HPSYS_CFG_IDR_PID_Msk) >> HPSYS_CFG_IDR_PID_Pos;
+    pid &= 7;
+
+    // Winbond 32/64/128p
+    HAL_PIN_Set(PAD_SA01, MPI1_DIO0, PIN_PULLDOWN, 1);
+    HAL_PIN_Set(PAD_SA02, MPI1_DIO1, PIN_PULLDOWN, 1);
+    HAL_PIN_Set(PAD_SA03, MPI1_DIO2, PIN_PULLDOWN, 1);
+    HAL_PIN_Set(PAD_SA04, MPI1_DIO3, PIN_PULLDOWN, 1);
+    HAL_PIN_Set(PAD_SA08, MPI1_DIO4, PIN_PULLDOWN, 1);
+    HAL_PIN_Set(PAD_SA09, MPI1_DIO5, PIN_PULLDOWN, 1);
+    HAL_PIN_Set(PAD_SA10, MPI1_DIO6, PIN_PULLDOWN, 1);
+    HAL_PIN_Set(PAD_SA11, MPI1_DIO7, PIN_PULLDOWN, 1);
+    HAL_PIN_Set(PAD_SA07, MPI1_CLK,  PIN_NOPULL, 1);
+    HAL_PIN_Set(PAD_SA05, MPI1_CS,   PIN_NOPULL, 1);
+    HAL_PIN_Set(PAD_SA12, MPI1_DQSDM, PIN_NOPULL, 1);
+    HAL_PIN_Set_Analog(PAD_SA00, 1);
+    HAL_PIN_Set_Analog(PAD_SA06, 1);
+
+    HAL_MPI_EXIT_LOWP(&psram_handle, qspi_cfg.SpiMode);
+
+	HAL_FLASH_RELEASE_DPD(&psram_handle);
+
+    // HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_FLASH1, RCC_CLK_FLASH_DLL2);
+
+    // Switch to external 1V8 fro PSRAM
+    hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
+    hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
+
+    HAL_Delay_us(5000);
+
+    switch (pid)
+    {
+    case 5: //BOOT_PSRAM_APS_16P:
+        qspi_cfg.SpiMode = SPI_MODE_PSRAM;         // 16Mb APM QSPI PSRAM
+        break;
+    case 4: //BOOT_PSRAM_APS_32P:
+        qspi_cfg.SpiMode = SPI_MODE_LEGPSRAM;    // 32Mb APM LEGACY PSRAM
+        break;
+    case 6: //BOOT_PSRAM_WINBOND:                // Winbond HYPERBUS PSRAM
+        qspi_cfg.SpiMode = SPI_MODE_HBPSRAM;
+        break;
+    case 3: // BOOT_PSRAM_APS_64P:
+    case 2: //BOOT_PSRAM_APS_128P:
+        qspi_cfg.SpiMode = SPI_MODE_OPSRAM;      // 64Mb APM XCELLA PSRAM
+        break;
+    default:
+        qspi_cfg.SpiMode = SPI_MODE_NOR;
+        break;
+    }
+
+    if (PM_STANDBY_BOOT != SystemPowerOnModeGet())
+        psram_handle.wakeup = 0;
+    else
+        psram_handle.wakeup = 1;
+
+    uint32_t mpi1_div = 2;
+    HAL_MPI_PSRAM_Init(&psram_handle, &qspi_cfg, mpi1_div);
+
+    // Enter low power or DPD to save power (90uA)
+    // HAL_MPI_PSRAM_ENT_LOWP(&psram_handle, qspi_cfg.SpiMode);
+    // HAL_HYPER_PSRAM_DPD(&psram_handle);
+}
+
 void board_init(void) {
   i2c_init(I2C1_BUS);
   i2c_init(I2C2_BUS);
@@ -694,4 +791,6 @@ void board_init(void) {
   i2c_init(I2C4_BUS);
 
   mic_init(MIC);
+
+  board_psram_off();
 }
