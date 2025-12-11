@@ -13,6 +13,9 @@
 #include "settings_time.h"
 #include "settings_timeline.h"
 #include "settings_themes.h"
+#if CAPABILITY_HAS_HEALTH_TRACKING
+#include "settings_health.h"
+#endif
 
 #if CAPABILITY_HAS_VIBE_SCORES
 #include "settings_vibe_patterns.h"
@@ -32,6 +35,9 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemQuietTime]     = settings_quiet_time_get_info,
 #if CAPABILITY_HAS_TIMELINE_PEEK
   [SettingsMenuItemTimeline]      = settings_timeline_get_info,
+#endif
+#if CAPABILITY_HAS_HEALTH_TRACKING
+  [SettingsMenuItemHealth]    = settings_health_get_info,
 #endif
 #if !TINTIN_FORCE_FIT
   [SettingsMenuItemActivity]      = settings_activity_tracker_get_info,
