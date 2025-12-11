@@ -181,18 +181,11 @@ def make_pbl_bundle(task_gen):
         resources_pack = platform_build_node.make_node('app_resources.pbpack')
 
         bundle_sources.extend([app_bin_file, resources_pack])
-
-        # SDK version is computed and written to the binary by inject_metadata.
-        # Use the default SDK version for the manifest (the binary has the authoritative version).
-        sdk_version = {
-            'major': task_gen.bld.env.SDK_VERSION_MAJOR,
-            'minor': task_gen.bld.env.SDK_VERSION_MINOR
-        }
-
         bin_files.append({'watchapp': app_bin_file.abspath(),
                           'resources': resources_pack.abspath(),
                           'worker_bin': worker_bin_file.abspath() if worker_bin_file else None,
-                          'sdk_version': sdk_version,
+                          'sdk_version': {'major': task_gen.bld.env.SDK_VERSION_MAJOR,
+                                          'minor': task_gen.bld.env.SDK_VERSION_MINOR},
                           'subfolder': task_gen.bld.env.BUNDLE_BIN_DIR})
     task_gen.bld.env = cached_env
 
