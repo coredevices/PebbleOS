@@ -15,7 +15,7 @@
 
 uint16_t g_gh3x2x_ble_attr_tx_handle;
 uint16_t g_gh3x2x_ble_attr_rx_handle;
-uint16_t g_gh3x2x_ble_conn_handle;
+uint16_t g_gh3x2x_ble_conn_handle = 0xffff;
 
 /* {0000190e-0000-1000-8000-00805f9b34fb} */
 static const ble_uuid128_t gatt_svr_svc_gh3x2x_ble_uuid =
@@ -106,7 +106,10 @@ static int gatt_svr_chr_access_gh3x2x_ble_rx(uint16_t conn_handle, uint16_t attr
 }
 
 void gh3x2x_ble_notify(const uint8_t* p_data, uint32_t data_len) {
-  if (!g_gh3x2x_ble_conn_handle) return;
+  if (0xffff == g_gh3x2x_ble_conn_handle || data_len == 0 || p_data == NULL) {
+    return;
+  }
+
   struct os_mbuf *om = ble_hs_mbuf_from_flat(p_data, data_len);
   if (!om) {
       return;
