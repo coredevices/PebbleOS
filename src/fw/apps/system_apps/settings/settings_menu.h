@@ -24,6 +24,9 @@ typedef enum {
   SettingsMenuItemQuickLaunch,
   SettingsMenuItemDateTime,
   SettingsMenuItemDisplay,
+#if CAPABILITY_HAS_HEALTH_TRACKING
+  SettingsMenuItemHealth,
+#endif
 #if PBL_COLOR
   SettingsMenuItemThemes,
 #endif
