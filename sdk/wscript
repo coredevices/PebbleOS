@@ -226,8 +226,7 @@ def build(bld):
                                 platform_folder_node.make_node('include/pebble_sdk_version.h'),
                                 platform_folder_node.make_node('include/pebble_process_info.h'),
                                 platform_folder_node.make_node('include/pebble_worker.h'),
-                                platform_folder_node.make_node('include/pebble_worker_sdk_version.h'),
-                                platform_folder_node.make_node('include/symbol_revisions.json')]
+                                platform_folder_node.make_node('include/pebble_worker_sdk_version.h')]
     bld(rule="cd '{}' ; python '{}' --sdk-dir='{}' '{}' '{}' '{}' '{}' {}".
         format(tintin_home.abspath(),
                native_generator_script.abspath(),

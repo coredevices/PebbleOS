@@ -1,29 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 import objcopy
 import pebble_sdk_gcc
-
-
-def _find_symbol_revisions_path(env):
-    """
-    Find the path to symbol_revisions.json in the SDK.
-    Checks platform-specific path first, then common path.
-    """
-    # Try platform-specific SDK path
-    if env.PEBBLE_SDK_PLATFORM:
-        path = os.path.join(env.PEBBLE_SDK_PLATFORM, 'include', 'symbol_revisions.json')
-        if os.path.exists(path):
-            return path
-
-    # Try common SDK path
-    if env.PEBBLE_SDK_COMMON:
-        path = os.path.join(env.PEBBLE_SDK_COMMON, 'include', 'symbol_revisions.json')
-        if os.path.exists(path):
-            return path
-
-    return None
 
 
 # TODO: PBL-33841 Make this a feature
@@ -48,9 +27,6 @@ def generate_bin_file(task_gen, bin_type, elf_file, has_pkjs, has_worker):
     raw_bin_file = platform_build_node.make_node('pebble-{}.raw.bin'.format(bin_type))
     bin_file = platform_build_node.make_node('pebble-{}.bin'.format(bin_type))
 
-    # Find symbol_revisions.json for computing minimum SDK version
-    symbol_revisions_path = _find_symbol_revisions_path(task_gen.bld.env)
-
     task_gen.bld(rule=objcopy.objcopy_bin, source=elf_file, target=raw_bin_file)
     pebble_sdk_gcc.gen_inject_metadata_rule(task_gen.bld,
                                             src_bin_file=raw_bin_file,
@@ -59,8 +35,5 @@ def generate_bin_file(task_gen, bin_type, elf_file, has_pkjs, has_worker):
                                             resource_file=resources_file,
                                             timestamp=task_gen.bld.env.TIMESTAMP,
                                             has_pkjs=has_pkjs,
-                                            has_worker=has_worker,
-                                            symbol_revisions_path=symbol_revisions_path,
-                                            sdk_version_major=task_gen.bld.env.SDK_VERSION_MAJOR,
-                                            sdk_version_minor=task_gen.bld.env.SDK_VERSION_MINOR)
+                                            has_worker=has_worker)
     return bin_file
