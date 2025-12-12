@@ -648,6 +648,24 @@ void lis2dw12_init(void) {
     return;
   }
 
+  // Fix ADDR pull-up current leak by disabling internal pull-up if address is 0x18
+  // (ADDR pin grounded). This is an undocumented register (provided by FAE).
+  if (I2C_LSM2DW12->address == 0x18U) {
+    uint8_t val = 0;
+    ret = prv_lis2dw12_read(NULL, 0x17, &val, 1);
+    if (ret != 0) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read LIS2DW12 register 0x17");
+      return;
+    }
+
+    val |= 0x40;
+    ret = prv_lis2dw12_write(NULL, 0x17, &val, 1);
+    if (ret != 0) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write LIS2DW12 register 0x17");
+      return;
+    }
+  }
+
   /* full scale: +/- 2g */
 	if (lis2dw12_full_scale_set(&lis2dw12_ctx, LIS2DW12_2g)) {
 		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set accelerometer scale");
