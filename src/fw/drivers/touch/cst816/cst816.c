@@ -191,6 +191,7 @@ void touch_sensor_init(void) {
   uint8_t chip_id;
   uint8_t fw_version;
   bool rv;
+  /*low_power_opt*/ return;
 
   s_i2c_lock = mutex_create();
 

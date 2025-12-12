@@ -474,6 +474,7 @@ static void prv_lis2dw12_configure_fifo(bool enable) {
 }
 
 void prv_lis2dw12_configure_double_tap(bool enable) {
+  ///*low_power_opt*/ return;
   if (enable) {
     // Enable tap detection on all axes
     lis2dw12_tap_detection_on_x_set(&lis2dw12_ctx, PROPERTY_ENABLE);
@@ -621,8 +622,12 @@ static void prv_lis2dw12_configure_interrupts(void) {
   }
 }
 
+static int32_t prv_lis2dw12_write(void* handler, uint8_t reg, const uint8_t* data, uint16_t len);
+static int32_t prv_lis2dw12_read(void* handler, uint8_t reg, uint8_t* data, uint16_t len);
+
 // default odr off
 void lis2dw12_init(void) {
+  ///*low_power_opt*/ return;
   uint8_t id;
   int32_t ret = lis2dw12_device_id_get(&lis2dw12_ctx, &id);
   if (ret || LIS2DW12_ID != id) {
@@ -645,6 +650,21 @@ void lis2dw12_init(void) {
   
   if (reset_timeout == 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Reset timeout - sensor may be unresponsive");
+    return;
+  }
+
+  // Fix 150uA current leak on GS
+  uint8_t val = 0;
+  ret = prv_lis2dw12_read(NULL, 0x17, &val, 1);
+  if (ret != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read LIS2DW12 register 0x17");
+    return;
+  }
+
+  val |= 0x40;
+  ret = prv_lis2dw12_write(NULL, 0x17, &val, 1);
+  if (ret != 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write LIS2DW12 register 0x17");
     return;
   }
 
@@ -728,6 +748,10 @@ void lis2dw12_init(void) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to set accelerometer int notification mode");
 		return;
   }
+
+  hwp_pinmux1->PAD_PA38 = 0x2D0;
+  hwp_rtc->PAWK1R &= ~0x400;
+  hwp_rtc->PAWK2R &= ~0x400;
 }
 
 //! Synchronize the LIS2DW12 state with the desired target state.
@@ -808,12 +832,14 @@ static void prv_lis2dw12_chase_target_state(void) {
 
 void lis2dw12_power_up(void) {
   s_lis2dw12_enabled = true;
+  ///*low_power_opt*/ return;
   prv_lis2dw12_chase_target_state();
 }
 
 void lis2dw12_power_down(void) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Powering down accelerometer");
   s_lis2dw12_enabled = false;
+  ///*low_power_opt*/ return;
   prv_lis2dw12_chase_target_state();
 }
 
@@ -821,6 +847,7 @@ uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Requesting update of sampling interval to %lu us",
           interval_us);
   s_lis2dw12_state_target.sampling_interval_us = interval_us;
+  ///*low_power_opt*/ return interval_us;
   prv_lis2dw12_chase_target_state();
   return s_lis2dw12_state.sampling_interval_us;
 }
@@ -830,6 +857,7 @@ uint32_t accel_get_sampling_interval(void) { return s_lis2dw12_state.sampling_in
 void accel_set_num_samples(uint32_t num_samples) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Setting number of samples to %lu", num_samples);
   s_lis2dw12_state_target.num_samples = num_samples;
+  ///*low_power_opt*/ return;
   prv_lis2dw12_chase_target_state();
 }
 
@@ -838,6 +866,7 @@ int accel_peek(AccelDriverSample *data) { return prv_lis2dw12_read_sample(data);
 void accel_enable_shake_detection(bool on) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: %s shake detection.", on ? "Enabling" : "Disabling");
   s_lis2dw12_state_target.shake_detection_enabled = on;
+  ///*low_power_opt*/ return;
     prv_lis2dw12_chase_target_state();
 
 }
@@ -847,6 +876,7 @@ bool accel_get_shake_detection_enabled(void) { return s_lis2dw12_state.shake_det
 void accel_enable_double_tap_detection(bool on) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: %s double tap detection.", on ? "Enabling" : "Disabling");
   s_lis2dw12_state_target.double_tap_detection_enabled = on;
+  ///*low_power_opt*/ return;
   prv_lis2dw12_chase_target_state();
 }
 
@@ -858,6 +888,7 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Setting shake sensitivity to %s.",
           sensitivity_high ? "high" : "normal");
   s_lis2dw12_state_target.shake_sensitivity_high = sensitivity_high;
+  ///*low_power_opt*/ return;
   prv_lis2dw12_chase_target_state();
 }
 
@@ -867,6 +898,7 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
   }
   
   s_user_sensitivity_percent = percent;
+  ///*low_power_opt*/ return;
   
   // Reconfigure shake detection if it's currently enabled
   if (s_lis2dw12_state.shake_detection_enabled) {
