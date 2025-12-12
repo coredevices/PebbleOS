@@ -279,6 +279,8 @@ static void register_system_timers(void) {
   }
 }
 
+extern void board_post_init(void);
+
 static void init_drivers(void) {
   board_init();
 
@@ -512,6 +514,8 @@ static NOINLINE void prv_main_task_init(void) {
   // Initialize button driver at the last moment to prevent "system on" button press from
   // entering the kernel event queue.
   debounced_button_init();
+
+  board_post_init();
 
 #ifdef DUMP_GPIO_CFG_STATE
   // at this point everything should be configured!

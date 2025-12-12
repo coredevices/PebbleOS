@@ -70,6 +70,7 @@ static void prv_power_cycle(void){
   gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
   gpio_output_set(&cfg, false);
 
+
   psleep(POWER_RESET_CYCLE_DELAY_TIME);
 }
 
@@ -172,6 +173,7 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
 }
 
 void display_init(void) {
+  /*low_power_opt*/ return;
   if (s_initialized) {
     return;
   }
@@ -236,6 +238,7 @@ void display_init(void) {
 }
 
 void display_clear(void) {
+  /*low_power_opt*/ return;
   DisplayJDIState *state = DISPLAY->state;
 
   // Allocate temporary framebuffer for clear operation
@@ -258,6 +261,7 @@ void display_clear(void) {
 }
 
 void display_set_enabled(bool enabled) {
+  /*low_power_opt*/ return;
   if (enabled) {
     prv_display_on();
   } else {
@@ -266,10 +270,12 @@ void display_set_enabled(bool enabled) {
 }
 
 bool display_update_in_progress(void) {
+  /*low_power_opt*/ return false;
   return s_updating;
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
+  /*low_power_opt*/ return;
   DisplayJDIState *state = DISPLAY->state;
   DisplayRow row;
   bool first_row = true;
@@ -311,6 +317,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 }
 
 void display_show_splash_screen(void) {
+  /*low_power_opt*/ return;
   const DisplayJDISplash *splash = &DISPLAY->splash;
   uint16_t x0, y0;
 

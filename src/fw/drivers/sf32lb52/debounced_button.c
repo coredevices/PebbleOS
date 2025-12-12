@@ -79,7 +79,15 @@ static void prv_button_interrupt_handler(bool *should_context_switch) {
 }
 
 void debounced_button_init(void) {
+  ///*low_power_opt*/ return;
   button_init();
+
+  hwp_pinmux1->PAD_PA34 = 0x140;
+  hwp_pinmux1->PAD_PA35 = 0x170;
+  hwp_pinmux1->PAD_PA36 = 0x170;
+  hwp_pinmux1->PAD_PA37 = 0x170;
+  hwp_rtc->PAWK1R &= ~0x3C0;
+  hwp_rtc->PAWK2R &= ~0x3C0;
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     const ExtiConfig config = {

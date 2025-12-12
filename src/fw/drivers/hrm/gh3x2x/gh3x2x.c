@@ -51,6 +51,7 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 }
 
 void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_buffer_index) {
+  /*low_power_opt*/ return;
   // TODO, clean the buffer now
   GU16 count = *gsensor_buffer_index;
   for (uint16_t i = 0; i < count; ++i) {
@@ -77,6 +78,7 @@ static void gh3026_int_irq_callback(bool *should_context_switch) {
 }
 
 void gh3026_int_pin_init(void) {
+  /*low_power_opt*/ return;
   exti_configure_pin(HRM->int_exti, ExtiTrigger_Rising, gh3026_int_irq_callback);
   exti_enable(HRM->int_exti);
 }
@@ -93,6 +95,7 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
 }
 
 void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
+  /*low_power_opt*/ return;
   if (type == 1) {
     HRMData hrm_data = {0};
 
@@ -404,6 +407,7 @@ bool gh3x2x_ble_data_recv(void* context) {
 
 void hrm_init(HRMDevice *dev) {
   int ret;
+  /*low_power_opt*/ return;
 
   ret = Gh3x2xDemoInit();
   if (ret != 0) {
@@ -416,6 +420,7 @@ void hrm_init(HRMDevice *dev) {
 }
 
 void hrm_enable(HRMDevice *dev) {
+  /*low_power_opt*/ return;
   if (!dev->state->initialized) {
     return;
   }
@@ -434,6 +439,7 @@ void hrm_enable(HRMDevice *dev) {
 }
 
 void hrm_disable(HRMDevice *dev) {
+  /*low_power_opt*/ return;
   if (!dev->state->initialized) {
     return;
   }

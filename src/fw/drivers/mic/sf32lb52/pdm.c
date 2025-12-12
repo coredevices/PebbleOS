@@ -261,7 +261,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   PBL_ASSERTN(data_handler);
   PBL_ASSERTN(audio_buffer);
   PBL_ASSERTN(audio_buffer_len > 0);
-  
+  /*low_power_opt*/return false;
   MicDeviceState *state = this->state;
   PDM_HandleTypeDef* hpdm = this->state->hpdm;
   
@@ -311,7 +311,8 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
 void mic_stop(const MicDevice *this) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
-  
+  /*low_power_opt*/return;
+
   MicDeviceState *state = this->state;
   PDM_HandleTypeDef* hpdm = this->state->hpdm;
   

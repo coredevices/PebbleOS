@@ -25,14 +25,14 @@ static void prv_init(UARTDevice *dev, uint32_t mode) {
     case UART_MODE_TX_RX:
       HAL_PIN_Set(dev->tx.pad, dev->tx.func, dev->tx.flags, 1);
       HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
-      stop_mode_disable(InhibitorDbgSerial);
+      // stop_mode_disable(InhibitorDbgSerial);
       break;
     case UART_MODE_TX:
       HAL_PIN_Set(dev->tx.pad, dev->tx.func, dev->tx.flags, 1);
       break;
     case UART_MODE_RX:
       HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
-      stop_mode_disable(InhibitorDbgSerial);
+      // stop_mode_disable(InhibitorDbgSerial);
       break;
     default:
       WTF;
