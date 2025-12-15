@@ -19,6 +19,8 @@
 #define CST816_REG_WR_DELAY_TIME      2   /* ms */ 
 #define CST816_FW_CHECKSUM_CAL_TIME   500 /* ms */ 
 
+#define CST816_POWER_MODE_REG         0xE5
+#define CST816_POWER_MODE_SLEEP       0x03
 #define CST816_CHIP_ID_REG            0xA7
 #define CST816_FW_VERSION_REG         0xA9
 #define CST816_TOUCH_DATA_REG         0x02
@@ -261,8 +263,11 @@ static void prv_exti_cb(bool *should_context_switch) {
 
 void touch_sensor_set_enabled(bool enabled) {
   if (enabled) {
+    cst816_hw_reset();
     exti_enable(CST816->int_exti);
   } else {
+    uint8_t data = CST816_POWER_MODE_SLEEP;
+    bool rv = prv_write_data(CST816_POWER_MODE_REG, &data, 1, 1);
     exti_disable(CST816->int_exti);
   }
 }
