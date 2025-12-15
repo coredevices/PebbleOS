@@ -322,7 +322,7 @@ bool pmic_init(void) {
   //3.3V @ LDO2
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE);
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, PmicRegisters_LDSW_LDSW2VOUTSEL__3V3);
-  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 1);
+  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
 #endif
 
   val = (uint8_t)(NPM1300_CONFIG.chg_current_ma / 4U);

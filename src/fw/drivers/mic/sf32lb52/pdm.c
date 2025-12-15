@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/mic.h"
+#include "drivers/pmic/npm1300.h"
 #include "board/board.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
@@ -12,6 +13,11 @@
 #include "pdm_definitions.h"
 #include "services/common/system_task.h"
 #include "FreeRTOS.h"
+
+// HACK alert, we need proper regulator abstraction
+#if PLATFORM_OBELIX
+#define PDM_POWER_NPM1300_LDO2 1
+#endif
 
 #define PDM_AUDIO_RECORD_PIPE_SIZE         (288)
 #define PDM_AUDIO_RECORD_GAIN_DEFAULT      (120)
@@ -294,16 +300,22 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   state->audio_buffer_len = audio_buffer_len;
   state->main_pending = false;
   
+#if PDM_POWER_NPM1300_LDO2
+  (void)NPM1300_OPS.ldo2_set_enabled(true);
+#endif
   // Set is_running to true BEFORE starting PDM, since the event handler will be called immediately
   state->is_running = true;
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
-    state->is_running = false;  // Reset on failure    
+    state->is_running = false;  // Reset on failure
+#if PDM_POWER_NPM1300_LDO2
+  (void)NPM1300_OPS.ldo2_set_enabled(false);
+#endif
     prv_free_buffers(state);
     mutex_unlock_recursive(state->mutex);
     return false;
   }
-    
+
   mutex_unlock_recursive(state->mutex);
   return true;
 }
@@ -341,7 +353,11 @@ void mic_stop(const MicDevice *this) {
   state->audio_buffer = NULL;
   state->audio_buffer_len = 0;
   state->main_pending = false;
-    
+
+#if PDM_POWER_NPM1300_LDO2
+  (void)NPM1300_OPS.ldo2_set_enabled(false);
+#endif
+
   mutex_unlock_recursive(state->mutex);
 }
 
