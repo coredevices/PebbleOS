@@ -110,9 +110,11 @@ typedef enum {
   PmicRegisters_GPIOS_GPIOOPENDRAIN1 = 0x0615,
   PmicRegisters_ERRLOG_SCRATCH0 = 0x0E01,
   PmicRegisters_ERRLOG_SCRATCH1 = 0x0E02,
+  PmicRegisters_BUCK_BUCK1ENACLR = 0x0401,
   PmicRegisters_BUCK_BUCK1NORMVOUT = 0x0408,
   PmicRegisters_BUCK_BUCK2NORMVOUT = 0x040A,
   PmicRegisters_BUCK_BUCKSWCTRLSEL = 0x040F,
+  PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL = 0x01,
   PmicRegisters_BUCK_BUCKSTATUS = 0x0434,
   PmicRegisters_LDSW_TASKLDSW1SET = 0x0800,
   PmicRegisters_LDSW_TASKLDSW1CLR = 0x0801,
@@ -267,6 +269,11 @@ bool pmic_init(void) {
 
 // FIXME(OBELIX): Needs to be configurable at board level
 #if PLATFORM_OBELIX
+  // Disable BUCK1 (1.8V)
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL,
+                           PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL);
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, 8 /* 1.8V */);
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
   //enable 1.8V@LDO1
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);  //LDO
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8);  //1.8V
