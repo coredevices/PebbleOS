@@ -315,6 +315,11 @@ static void init_drivers(void) {
 
 #if CAPABILITY_HAS_TOUCHSCREEN
   touch_sensor_init();
+#if !defined(RECOVERY_FW)
+  // Only keep touch enabled on recovery (and so manufacturing as well)
+  // Once supported in main firmware, this should be removed.
+  touch_sensor_set_enabled(false);
+#endif
 #endif
 
   imu_init();
