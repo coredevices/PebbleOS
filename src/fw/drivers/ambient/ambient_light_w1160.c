@@ -62,7 +62,9 @@
 #define W1160_SLOW_ST_CONFIG1       (0x03)   /* 480ms */
 #define W1160_SLOW_ST_CONFIG2       (0xFF)
 #define W1160_SAMPLING_EN           (1<<1)   /* 1:en 0:dis */
+#define W1160_SAMPLING_DIS          (0<<1)   /* 1:en 0:dis */
 #define W1160_CHIP_ID               (0xE5)
+#define W1160_FLG_ALS_DR            (1<<7)
 
 #define W1160_RESULT_EXPONENT_SHIFT (12)
 #define W1160_RESULT_MANTISSA_MASK  (0x0FFF)
@@ -114,7 +116,6 @@ void ambient_light_init(void) {
   rv &= prv_write_register(W1160_IT_SLOW2_REG, W1160_SLOW_IT_CONFIG2);
   rv &= prv_write_register(W1160_SAMPLE_SLOW1_REG, W1160_SLOW_ST_CONFIG1);
   rv &= prv_write_register(W1160_SAMPLE_SLOW2_REG, W1160_SLOW_ST_CONFIG2);
-  rv &= prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN);
 
   PBL_ASSERT(rv, "Failed to initialize W1160");
 
@@ -123,17 +124,41 @@ void ambient_light_init(void) {
 
 uint32_t ambient_light_get_light_level(void) {
   uint8_t result[2] = {0};
+  uint16_t als;
   bool rv;
 
   if (!s_initialized) {
     return 0UL;
   }
 
+  rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN);
+  if (!rv) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not enable W1160 sampling");
+    return 0UL;
+  }
+
+  do {
+    rv = prv_read_register(W1160_FLAG1_REG, &result[0]);
+    if (!rv) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not read W1160 FLAG1");
+      return 0UL;
+    }
+  } while ((result[0] & W1160_FLG_ALS_DR) == 0U);
+
   rv = prv_read_register(W1160_DATA1_ALS_REG, &result[1]);
   rv &= prv_read_register(W1160_DATA2_ALS_REG, &result[0]);
-  PBL_ASSERT(rv, "Failed to read als data");
+  if (!rv) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not obtain W1160 data");
+    return 0UL;
+  }
 
-  uint16_t als = (((uint16_t)(result[1])) << 8) | result[0];
+  rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS);
+  if (!rv) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not disable W1160 sampling");
+    return 0UL;
+  }
+
+  als = (((uint16_t)(result[1])) << 8) | result[0];
 
   return als;
 }
