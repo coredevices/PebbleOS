@@ -19,6 +19,8 @@
 #include "services/common/analytics/analytics.h"
 #include "system/logging.h"
 #include "util/math.h"
+#include "board/board.h"
+#include "drivers/gpio.h"
 
 #if defined(MICRO_FAMILY_SF32LB52)
 #include <ipc_queue.h>
@@ -71,9 +73,9 @@ static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 static const RtcTicks MIN_STOP_TICKS = 5;
 #elif defined(MICRO_FAMILY_SF32LB52)
 //! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks EARLY_WAKEUP_TICKS = 4;
+static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks MIN_STOP_TICKS = 8;
+static const RtcTicks MIN_STOP_TICKS = 20;
 #else
 #error "Unknown micro family"
 #endif
@@ -279,6 +281,9 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
       // Go into stop mode until the wakeup_tick.
       s_last_ticks_commanded_in_stop = stop_duration;
+    
+      gpio_output_set(&DISPLAY->vddp, false);
+      gpio_output_set(&DISPLAY->vlcd, true);
 
       lptim_systick_tickless_idle((uint32_t)stop_duration);
 
@@ -297,6 +302,9 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       s_last_ticks_elapsed_in_stop = ticks_elapsed;
       vTaskStepTick(ticks_elapsed);
 
+      gpio_output_set(&DISPLAY->vlcd, false);
+      gpio_output_set(&DISPLAY->vddp, true);
+    
       // Update the task watchdog every time we come out of STOP mode (which is
       // at least once/second) since the timer peripheral will not have been
       // incremented. Set all watchdog bits first since the LPTIM ISR that would

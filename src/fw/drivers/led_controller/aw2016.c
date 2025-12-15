@@ -77,7 +77,7 @@ static bool prv_configure_registers(void) {
 void led_controller_init(void) {
   uint8_t value;
   bool ret;
-  /*low_power_opt*/return;
+  ///*low_power_opt*/return;
 
   ret = prv_read_register(AW2016_REG_RSTR, &value);
   PBL_ASSERTN(ret && (value == AW2016_REG_RSTR_CHIP_ID));
@@ -93,7 +93,8 @@ void led_controller_init(void) {
 
 void led_controller_backlight_set_brightness(uint8_t brightness) {
   bool ret;
-  /*low_power_opt*/return;
+  ///*low_power_opt*/return;
+  PBL_LOG(LOG_LEVEL_INFO, "################### brightness: %u", brightness);
 
   if (brightness > 100U) {
     brightness = 100U;
@@ -125,7 +126,7 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
 void led_controller_rgb_set_color(uint32_t rgb_color) {
   bool ret;
   uint8_t red, green, blue;
-  /*low_power_opt*/return;
+  ///*low_power_opt*/return;
   red = ((rgb_color & 0x00FF0000) >> 16) * s_brightness / 100;
   green = ((rgb_color & 0x0000FF00) >> 8) * s_brightness / 100;
   blue = (rgb_color & 0x000000FF) * s_brightness / 100;

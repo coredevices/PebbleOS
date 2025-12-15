@@ -800,7 +800,7 @@ static void board_psram_init(void)
 void board_init(void) {
   i2c_init(I2C1_BUS);
   i2c_init(I2C2_BUS);
-//   i2c_init(I2C3_BUS);
+  i2c_init(I2C3_BUS);
 //   i2c_init(I2C4_BUS);
 
 //   mic_init(MIC);
@@ -819,11 +819,11 @@ void board_post_init(void)
     hwp_pinmux1->PAD_PA01 = 0x0;
 
     // CTP I2C3 pin off
-    hwp_pinmux1->PAD_PA10 = 0x0;
-    hwp_pinmux1->PAD_PA11 = 0x0;
+    // hwp_pinmux1->PAD_PA10 = 0x0;
+    // hwp_pinmux1->PAD_PA11 = 0x0;
     // CTP IRQ off
-    hwp_pinmux1->PAD_PA27 = 0x0;
-    hwp_rtc->PBR3R = 0;
+    // hwp_pinmux1->PAD_PA27 = 0x0;
+    // hwp_rtc->PBR3R = 0;
 
     // ignore flash pin
     // hwp_pinmux1->PAD_PA12 = 0x201;
@@ -843,33 +843,32 @@ void board_post_init(void)
     // Pull down PA44 for HRM INT 
     hwp_pinmux1->PAD_PA44 = 0x0;
     // config reset pin (small increase or no effect in this case)
-    // extern void gh3026_reset_pin_ctrl(uint8_t pin_level);
-    // gh3026_reset_pin_ctrl(0);
+    NPM1300_OPS.gpio_set(Npm1300_Gpio3, 0);
 
     // display pin off
-    hwp_pinmux1->PAD_PA02 = 0x0;
-    hwp_pinmux1->PAD_PA03 = 0x0;
-    hwp_pinmux1->PAD_PA04 = 0x0;
-    hwp_pinmux1->PAD_PA05 = 0x0;
-    hwp_pinmux1->PAD_PA06 = 0x0;
-    hwp_pinmux1->PAD_PA07 = 0x0;
-    hwp_pinmux1->PAD_PA08 = 0x0;
-    hwp_pinmux1->PAD_PA39 = 0x0;
-    hwp_pinmux1->PAD_PA40 = 0x0;
-    hwp_pinmux1->PAD_PA41 = 0x0;
-    hwp_pinmux1->PAD_PA42 = 0x0;
-    hwp_pinmux1->PAD_PA43 = 0x0;
+    // hwp_pinmux1->PAD_PA02 = 0x0;
+    // hwp_pinmux1->PAD_PA03 = 0x0;
+    // hwp_pinmux1->PAD_PA04 = 0x0;
+    // hwp_pinmux1->PAD_PA05 = 0x0;
+    // hwp_pinmux1->PAD_PA06 = 0x0;
+    // hwp_pinmux1->PAD_PA07 = 0x0;
+    // hwp_pinmux1->PAD_PA08 = 0x0;
+    // hwp_pinmux1->PAD_PA39 = 0x0;
+    // hwp_pinmux1->PAD_PA40 = 0x0;
+    // hwp_pinmux1->PAD_PA41 = 0x0;
+    // hwp_pinmux1->PAD_PA42 = 0x0;
+    // hwp_pinmux1->PAD_PA43 = 0x0;
 
-    hwp_rtc->PAWK1R &= ~0x1F800;
-    hwp_rtc->PAWK2R &= ~0x1F800;
+    // hwp_rtc->PAWK1R &= ~0x1F800;
+    // hwp_rtc->PAWK2R &= ~0x1F800;
 
-    hwp_pinmux1->PAD_PA24 = 0x0;
-    hwp_pinmux1->PAD_PA25 = 0x0;
-    hwp_rtc->PBR0R = 0x0;
-    hwp_rtc->PBR1R = 0x0;
+    // hwp_pinmux1->PAD_PA24 = 0x0;
+    // hwp_pinmux1->PAD_PA25 = 0x0;
+    // hwp_rtc->PBR0R = 0x0;
+    // hwp_rtc->PBR1R = 0x0;
 
-    hwp_pinmux1->PAD_PA28 = 0x2d0;
-    hwp_pinmux1->PAD_PA29 = 0x2f0;
+    // hwp_pinmux1->PAD_PA28 = 0x2d0;
+    // hwp_pinmux1->PAD_PA29 = 0x2f0;
 
     board_post_init_dump_registers();
 }

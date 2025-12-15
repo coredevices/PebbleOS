@@ -145,8 +145,8 @@ void enter_stop_mode(void) {
   // Switch back to original clock source
   HAL_RCC_HCPU_EnableDLL1(dll1_freq);
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
-  HAL_RCC_HCPU_EnableDLL2(dll2_freq);
-  HAL_Delay_us(0);
+  // HAL_RCC_HCPU_EnableDLL2(dll2_freq);
+  // HAL_Delay_us(0);
 
   restore_interrupt_setting();
 }

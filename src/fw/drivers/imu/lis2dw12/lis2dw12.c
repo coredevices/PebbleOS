@@ -749,9 +749,9 @@ void lis2dw12_init(void) {
 		return;
   }
 
-  hwp_pinmux1->PAD_PA38 = 0x2D0;
-  hwp_rtc->PAWK1R &= ~0x400;
-  hwp_rtc->PAWK2R &= ~0x400;
+  // hwp_pinmux1->PAD_PA38 = 0x2D0;
+  // hwp_rtc->PAWK1R &= ~0x400;
+  // hwp_rtc->PAWK2R &= ~0x400;
 }
 
 //! Synchronize the LIS2DW12 state with the desired target state.

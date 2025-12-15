@@ -168,6 +168,8 @@ void lptim_systick_tickless_exit(void)
   // (ISR hasn't run yet because interrupts are globally disabled)
   if (__HAL_LPTIM_GET_FLAG(&s_lptim1_handle, LPTIM_FLAG_OFWKUP) != RESET) {
     s_overflow_wakeup = true;
+    s_tickless_period = s_tickless_period + LPTIM1->CNT;
+    // PBL_LOG(LOG_LEVEL_INFO, "LPTIM1->CNT: %lu", (uint32_t)LPTIM1->CNT);
   }
 
   // Clear any pending flags
