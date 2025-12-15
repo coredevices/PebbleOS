@@ -18,6 +18,10 @@
 #define WATCHFACE_METRICS_SAVE_INTERVAL_MINS 5
 #define WATCHFACE_METRICS_KEY "current"
 
+// Maximum elapsed time to accumulate per interval (guards against RTC time jumps)
+// Set to slightly more than the save interval to allow for normal operation
+#define WATCHFACE_METRICS_MAX_ELAPSED_SECS (WATCHFACE_METRICS_SAVE_INTERVAL_MINS * 60 + 60)
+
 // Stored data for the current watchface
 typedef struct {
   Uuid uuid;
@@ -37,6 +41,20 @@ static SettingsFile s_settings_file;
 static bool s_initialized = false;
 static RegularTimerInfo s_save_timer;
 static PebbleMutex *s_mutex;
+
+// -------------------------------------------------------------------------------------------
+// Calculate elapsed seconds since start_ticks, capped to guard against RTC time jumps
+static uint32_t prv_get_elapsed_secs(uint32_t start_ticks) {
+  uint32_t now_ticks = rtc_get_ticks();
+  uint32_t elapsed_ticks = now_ticks - start_ticks;
+  uint32_t elapsed_secs = elapsed_ticks / RTC_TICKS_HZ;
+
+  // Cap to guard against RTC time jumps (e.g., when time syncs from phone)
+  if (elapsed_secs > WATCHFACE_METRICS_MAX_ELAPSED_SECS) {
+    elapsed_secs = WATCHFACE_METRICS_MAX_ELAPSED_SECS;
+  }
+  return elapsed_secs;
+}
 
 // -------------------------------------------------------------------------------------------
 static void prv_ensure_open(void) {
@@ -138,16 +156,17 @@ static void prv_periodic_save_callback(void *data) {
     return;
   }
 
-  uint32_t now_ticks = rtc_get_ticks();
-  uint32_t elapsed_ticks = now_ticks - s_state.start_ticks;
-  uint32_t elapsed_secs = elapsed_ticks / RTC_TICKS_HZ;
-  uint32_t current_total = s_state.current_total_secs + elapsed_secs;
+  // Accumulate elapsed time and reset start_ticks for next interval
+  // This ensures time jumps only affect one interval
+  uint32_t elapsed_secs = prv_get_elapsed_secs(s_state.start_ticks);
+  s_state.current_total_secs += elapsed_secs;
+  s_state.start_ticks = rtc_get_ticks();
 
-  if (current_total != s_state.last_saved_secs) {
-    prv_save_data(&s_state.current_uuid, current_total);
-    s_state.last_saved_secs = current_total;
+  if (s_state.current_total_secs != s_state.last_saved_secs) {
+    prv_save_data(&s_state.current_uuid, s_state.current_total_secs);
+    s_state.last_saved_secs = s_state.current_total_secs;
     PBL_LOG(LOG_LEVEL_DEBUG, "Watchface metrics: periodic save, total: %lu secs",
-            (unsigned long)current_total);
+            (unsigned long)s_state.current_total_secs);
   }
 
   mutex_unlock(s_mutex);
@@ -175,10 +194,7 @@ void watchface_metrics_start(const Uuid *uuid) {
 
   // Stop current tracking if any (inline to avoid recursive lock)
   if (s_state.tracking) {
-    uint32_t now_ticks = rtc_get_ticks();
-    uint32_t elapsed_ticks = now_ticks - s_state.start_ticks;
-    uint32_t elapsed_secs = elapsed_ticks / RTC_TICKS_HZ;
-
+    uint32_t elapsed_secs = prv_get_elapsed_secs(s_state.start_ticks);
     s_state.current_total_secs += elapsed_secs;
     prv_save_data(&s_state.current_uuid, s_state.current_total_secs);
     s_state.tracking = false;
@@ -213,10 +229,7 @@ void watchface_metrics_stop(void) {
     return;
   }
 
-  uint32_t now_ticks = rtc_get_ticks();
-  uint32_t elapsed_ticks = now_ticks - s_state.start_ticks;
-  uint32_t elapsed_secs = elapsed_ticks / RTC_TICKS_HZ;
-
+  uint32_t elapsed_secs = prv_get_elapsed_secs(s_state.start_ticks);
   s_state.current_total_secs += elapsed_secs;
   prv_save_data(&s_state.current_uuid, s_state.current_total_secs);
   s_state.last_saved_secs = s_state.current_total_secs;
@@ -236,9 +249,7 @@ uint32_t watchface_metrics_get_current_time(void) {
   uint32_t result = 0;
 
   if (s_state.tracking) {
-    uint32_t now_ticks = rtc_get_ticks();
-    uint32_t elapsed_ticks = now_ticks - s_state.start_ticks;
-    uint32_t elapsed_secs = elapsed_ticks / RTC_TICKS_HZ;
+    uint32_t elapsed_secs = prv_get_elapsed_secs(s_state.start_ticks);
     result = s_state.current_total_secs + elapsed_secs;
   }
 
