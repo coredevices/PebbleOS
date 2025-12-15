@@ -33,6 +33,9 @@
 #include "services/normal/persist.h"
 #include "services/normal/voice/voice.h"
 #include "shell/normal/watchface.h"
+#if !RECOVERY_FW
+#include "shell/normal/watchface_metrics.h"
+#endif
 
 #include "syscall/syscall.h"
 #include "system/logging.h"
@@ -359,6 +362,12 @@ static void prv_handle_app_stop_analytics(const ProcessContext *const context,
   }
   if (task == PebbleTask_App) {
     analytics_stopwatch_stop(ANALYTICS_APP_METRIC_FRONT_MOST_TIME);
+#if !RECOVERY_FW
+    // Stop per-watchface time tracking if this was a watchface
+    if (context->app_md->process_type == ProcessTypeWatchface) {
+      watchface_metrics_stop();
+    }
+#endif
   }
   analytics_external_collect_app_cpu_stats();
   analytics_external_collect_app_flash_read_stats();
