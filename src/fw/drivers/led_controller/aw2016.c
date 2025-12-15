@@ -84,9 +84,7 @@ void led_controller_init(void) {
   ret = prv_write_register(AW2016_REG_RSTR, AW2016_REG_RSTR_RST);
   PBL_ASSERTN(ret);
 
-  ret = prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
-  ret &= prv_configure_registers();
-
+  ret = prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS);
   PBL_ASSERTN(ret);
 }
 
