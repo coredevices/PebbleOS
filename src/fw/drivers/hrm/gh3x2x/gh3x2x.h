@@ -27,7 +27,6 @@ typedef struct {
 
 typedef struct HRMDeviceState {
   bool enabled;
-  bool initialized;
   bool is_wear;
   uint16_t timer_period_ms;
   AppTimer *timer;

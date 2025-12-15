@@ -403,7 +403,12 @@ bool gh3x2x_ble_data_recv(void* context) {
 // HRM interface
 
 void hrm_init(HRMDevice *dev) {
+}
+
+void hrm_enable(HRMDevice *dev) {
   int ret;
+
+  gh3026_reset_pin_ctrl(1);
 
   ret = Gh3x2xDemoInit();
   if (ret != 0) {
@@ -411,17 +416,7 @@ void hrm_init(HRMDevice *dev) {
     return;
   }
 
-  dev->state->initialized = true;
-  hrm_disable(dev);
-}
-
-void hrm_enable(HRMDevice *dev) {
-  if (!dev->state->initialized) {
-    return;
-  }
-
   s_hrm_int_flag = false;
-  dev->state->enabled = true;
 
   GH3X2X_FifoWatermarkThrConfig(GH3X2X_FIFO_WATERMARK_CONFIG);
   GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_NEED_FORCE_READ_FIFO);
@@ -431,14 +426,14 @@ void hrm_enable(HRMDevice *dev) {
 #else
   Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2);
 #endif
+
+  dev->state->enabled = true;
 }
 
 void hrm_disable(HRMDevice *dev) {
-  if (!dev->state->initialized) {
-    return;
-  }
-
   Gh3x2xDemoStopSampling(0xFFFFFFFF);
+  gh3026_reset_pin_ctrl(0);
+
   dev->state->enabled = false;
 }
 
