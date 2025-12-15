@@ -375,6 +375,13 @@ static const I2CSlavePort s_i2c_lsm2dw12 = {
 
 I2CSlavePort *const I2C_LSM2DW12 = &s_i2c_lsm2dw12;
 
+static const I2CSlavePort s_i2c_lsm6dso = {
+    .bus = &s_i2c_bus_2,
+    .address = 0x6a,
+};
+
+I2CSlavePort *const I2C_LSM6DSO = &s_i2c_lsm6dso;
+
 static const I2CSlavePort s_i2c_mmc5603nj = {
     .bus = &s_i2c_bus_2,
     .address = 0x30,
