@@ -6,6 +6,7 @@
 #include "drivers/rtc.h"
 #include "os/mutex.h"
 #include "services/common/regular_timer.h"
+#include "services/common/system_task.h"
 #include "services/normal/settings/settings_file.h"
 #include "system/logging.h"
 #include "util/uuid.h"
@@ -71,23 +72,61 @@ static bool prv_load_data(const Uuid *uuid, uint32_t *out_time) {
 }
 
 // -------------------------------------------------------------------------------------------
-// Note: Caller must hold s_mutex
-static void prv_save_data(const Uuid *uuid, uint32_t total_secs) {
+// Pending save data for async save
+static struct {
+  bool pending;
+  Uuid uuid;
+  uint32_t total_secs;
+} s_pending_save;
+
+// -------------------------------------------------------------------------------------------
+// System task callback to perform the actual save (flash I/O)
+// Note: This runs on the system task to avoid blocking KernelMain during app transitions.
+// The flash I/O is done under s_mutex to serialize with any load operations.
+static void prv_save_data_system_task_cb(void *context) {
+  mutex_lock(s_mutex);
+
+  if (!s_pending_save.pending) {
+    mutex_unlock(s_mutex);
+    return;
+  }
+
+  Uuid uuid = s_pending_save.uuid;
+  uint32_t total_secs = s_pending_save.total_secs;
+  s_pending_save.pending = false;
+
   prv_ensure_open();
   if (!s_initialized) {
+    mutex_unlock(s_mutex);
     return;
   }
 
   WatchfaceMetricsData data = {
-    .uuid = *uuid,
+    .uuid = uuid,
     .total_time_secs = total_secs,
   };
+
+  // Note: Flash I/O is done under mutex to serialize with load operations,
+  // but this is acceptable since we're on the system task (low priority) and
+  // the mutex is only used within this module.
   status_t status = settings_file_set(&s_settings_file,
                                       WATCHFACE_METRICS_KEY, strlen(WATCHFACE_METRICS_KEY),
                                       &data, sizeof(data));
   if (status != S_SUCCESS) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to save watchface metrics: %d", (int)status);
   }
+
+  mutex_unlock(s_mutex);
+}
+
+// -------------------------------------------------------------------------------------------
+// Note: Caller must hold s_mutex. Schedules async save to system task.
+static void prv_save_data(const Uuid *uuid, uint32_t total_secs) {
+  s_pending_save.pending = true;
+  s_pending_save.uuid = *uuid;
+  s_pending_save.total_secs = total_secs;
+
+  system_task_add_callback(prv_save_data_system_task_cb, NULL);
 }
 
 // -------------------------------------------------------------------------------------------
