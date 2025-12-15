@@ -2195,6 +2195,51 @@
     },
     {
       "type": "pdc",
+      "name": "NOTIFICATION_YOUTUBE_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/25px_Youtube.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_YOUTUBE_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/50px_Youtube.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_YOUTUBE_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/80px_Youtube.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SIGNAL_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/25px_Signal.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SIGNAL_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/50px_Signal.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SIGNAL_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/80px_Signal.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TWITCH_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/25px_Twitch.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TWITCH_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/50px_Twitch.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TWITCH_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/80px_Twitch.svg"
+    },
+    {
+      "type": "pdc",
       "name": "SMART_ALARM_TINY",
       "file": "normal/snowy/images/Pebble_25x25_Smart_alarm.svg"
     },
@@ -3415,6 +3460,33 @@
         "tiny": "RESOURCE_ID_NOTIFICATION_EBAY_TINY",
         "small": "RESOURCE_ID_NOTIFICATION_EBAY_SMALL",
         "large": "RESOURCE_ID_NOTIFICATION_EBAY_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_YOUTUBE",
+      "id": 134,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_YOUTUBE_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_YOUTUBE_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_YOUTUBE_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_SIGNAL",
+      "id": 135,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_SIGNAL_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_SIGNAL_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_SIGNAL_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_TWITCH",
+      "id": 136,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_TWITCH_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_TWITCH_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_TWITCH_LARGE"
       }
     }
   ],
