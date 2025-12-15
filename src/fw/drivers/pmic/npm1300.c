@@ -713,6 +713,15 @@ static bool gpio_set(Npm1300GpioId_t id, bool is_high) {
   return rv;
 }
 
+static bool ldo2_set_enabled(bool enabled) {
+  if (enabled) {
+    return prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 1);
+  } else {
+    return prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
+  }
+}
+
 Npm1300Ops_t NPM1300_OPS = {
   .gpio_set = gpio_set,
+  .ldo2_set_enabled = ldo2_set_enabled,
 };

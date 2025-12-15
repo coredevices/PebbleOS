@@ -30,6 +30,7 @@ typedef enum {
 //! nPM1300 ops
 typedef struct {
   bool (*gpio_set)(Npm1300GpioId_t id, bool is_high);
+  bool (*ldo2_set_enabled)(bool enabled);
 }Npm1300Ops_t;
 
 extern Npm1300Ops_t NPM1300_OPS;
