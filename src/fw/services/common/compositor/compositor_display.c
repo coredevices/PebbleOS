@@ -4,6 +4,7 @@
 #include "compositor.h"
 
 #include "applib/graphics/framebuffer.h"
+#include "applib/graphics/gcolor_definitions.h"
 #include "applib/graphics/gtypes.h"
 #include "util/bitset.h"
 #include "util/math.h"
@@ -20,6 +21,19 @@ static void (*s_update_complete_handler)(void);
 #if PLATFORM_SILK || PLATFORM_ASTERIX
 static const uint8_t s_corner_shape[] = { 3, 1, 1 };
 static uint8_t s_line_buffer[FRAMEBUFFER_BYTES_PER_ROW];
+#endif
+
+#if PLATFORM_OBELIX
+static const uint8_t s_corner_shape[] = { 12, 9, 7, 6, 5, 4, 3, 2, 2, 1, 1, 1 };
+// For Obelix, we modify the framebuffer directly because the display driver
+// does in-place pixel format conversion and expects row.data to point into
+// the compositor's framebuffer. We save original corner pixels here to restore later.
+// Max corner pixels per row = 12, rows with corners = 12 top + 12 bottom = 24,
+// 2 corners per row (left+right), so 12 * 24 * 2 = 576 bytes
+#define CORNER_SAVE_ROWS ARRAY_LENGTH(s_corner_shape)
+static uint8_t s_saved_corners[CORNER_SAVE_ROWS * 2][12 * 2]; // [row][left+right pixels]
+static uint8_t s_dirty_y0;
+static uint8_t s_dirty_y1;
 #endif
 
 //! display_update get next line callback
@@ -49,6 +63,32 @@ static bool prv_flush_get_next_line_cb(DisplayRow* row) {
     } else {
       row->data = fb_line;
     }
+#elif PLATFORM_OBELIX
+    // Draw rounded corners by modifying the framebuffer directly.
+    // The display driver does in-place format conversion and expects row.data
+    // to point into the compositor's framebuffer. We save and restore corners.
+    if (s_current_flush_line < ARRAY_LENGTH(s_corner_shape) ||
+        s_current_flush_line >= DISP_ROWS - ARRAY_LENGTH(s_corner_shape)) {
+      uint8_t corner_idx =
+        (s_current_flush_line < ARRAY_LENGTH(s_corner_shape))?
+        s_current_flush_line : DISP_ROWS - s_current_flush_line - 1;
+      uint8_t save_idx =
+        (s_current_flush_line < ARRAY_LENGTH(s_corner_shape))?
+        s_current_flush_line : CORNER_SAVE_ROWS + corner_idx;
+      uint8_t corner_width = s_corner_shape[corner_idx];
+      uint8_t *line = fb_line;
+      // Save original corner pixels
+      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
+        s_saved_corners[save_idx][pixel] = line[pixel];
+        s_saved_corners[save_idx][12 + pixel] = line[DISP_COLS - pixel - 1];
+      }
+      // Draw black corners
+      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
+        line[pixel] = GColorBlackARGB8;
+        line[DISP_COLS - pixel - 1] = GColorBlackARGB8;
+      }
+    }
+    row->data = fb_line;
 #else
     row->data = fb_line;
 #endif
@@ -61,6 +101,31 @@ static bool prv_flush_get_next_line_cb(DisplayRow* row) {
 
 //! display_update complete callback
 static void prv_flush_complete_cb(void) {
+#if PLATFORM_OBELIX
+  // Restore original corner pixels that we modified before the display update
+  FrameBuffer *fb = compositor_get_framebuffer();
+  for (uint8_t i = 0; i < CORNER_SAVE_ROWS; ++i) {
+    uint8_t corner_width = s_corner_shape[i];
+    // Top corners (only if row was in dirty region)
+    if (i >= s_dirty_y0 && i <= s_dirty_y1) {
+      uint8_t *top_line = framebuffer_get_line(fb, i);
+      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
+        top_line[pixel] = s_saved_corners[i][pixel];
+        top_line[DISP_COLS - pixel - 1] = s_saved_corners[i][12 + pixel];
+      }
+    }
+    // Bottom corners (only if row was in dirty region)
+    uint8_t bottom_row = DISP_ROWS - i - 1;
+    if (bottom_row >= s_dirty_y0 && bottom_row <= s_dirty_y1) {
+      uint8_t *bottom_line = framebuffer_get_line(fb, bottom_row);
+      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
+        bottom_line[pixel] = s_saved_corners[CORNER_SAVE_ROWS + i][pixel];
+        bottom_line[DISP_COLS - pixel - 1] = s_saved_corners[CORNER_SAVE_ROWS + i][12 + pixel];
+      }
+    }
+  }
+#endif
+
   s_current_flush_line = 0;
   framebuffer_reset_dirty(compositor_get_framebuffer());
 
@@ -70,9 +135,15 @@ static void prv_flush_complete_cb(void) {
 }
 
 void compositor_display_update(void (*handle_update_complete_cb)(void)) {
-  if (!framebuffer_is_dirty(compositor_get_framebuffer())) {
+  FrameBuffer *fb = compositor_get_framebuffer();
+  if (!framebuffer_is_dirty(fb)) {
     return;
   }
+#if PLATFORM_OBELIX
+  // Capture dirty region bounds for corner restoration later
+  s_dirty_y0 = fb->dirty_rect.origin.y;
+  s_dirty_y1 = fb->dirty_rect.origin.y + fb->dirty_rect.size.h - 1;
+#endif
   s_update_complete_handler = handle_update_complete_cb;
   s_current_flush_line = 0;
 
