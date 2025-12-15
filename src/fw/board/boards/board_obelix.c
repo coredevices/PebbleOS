@@ -689,6 +689,21 @@ void board_early_init(void) {
   // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
   hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
   hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
+
+  // Set all PSRAM pins as analog (low-power)
+  HAL_PIN_Set_Analog(PAD_SA00, 1);
+  HAL_PIN_Set_Analog(PAD_SA01, 1);
+  HAL_PIN_Set_Analog(PAD_SA02, 1);
+  HAL_PIN_Set_Analog(PAD_SA03, 1);
+  HAL_PIN_Set_Analog(PAD_SA04, 1);
+  HAL_PIN_Set_Analog(PAD_SA05, 1);
+  HAL_PIN_Set_Analog(PAD_SA06, 1);
+  HAL_PIN_Set_Analog(PAD_SA07, 1);
+  HAL_PIN_Set_Analog(PAD_SA08, 1);
+  HAL_PIN_Set_Analog(PAD_SA09, 1);
+  HAL_PIN_Set_Analog(PAD_SA10, 1);
+  HAL_PIN_Set_Analog(PAD_SA11, 1);
+  HAL_PIN_Set_Analog(PAD_SA12, 1);
 }
 
 void board_init(void) {
