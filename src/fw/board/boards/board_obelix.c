@@ -685,6 +685,10 @@ void board_early_init(void) {
 
   //set Sifli chipset pwrkey reset time to 15s, so it always use PMIC cold reboot for long press 
   hwp_pmuc->PWRKEY_CNT = PWRKEY_RESET_CNT;
+
+  // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
+  hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
+  hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
 }
 
 void board_init(void) {
