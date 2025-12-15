@@ -42,7 +42,13 @@
 #include "services/normal/app_outbox_service.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/watchface.h"
+#if !RECOVERY_FW
+#include "shell/normal/watchface_metrics.h"
+#endif
 #include "shell/shell.h"
+#if MEMFAULT
+#include "memfault/components.h"
+#endif
 #include "shell/system_app_state_machine.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
@@ -900,6 +906,16 @@ static void prv_handle_app_start_analytics(const PebbleProcessMd *app_md,
     analytics_inc(ANALYTICS_DEVICE_METRIC_APP_USER_LAUNCH_COUNT, AnalyticsClient_System);
     analytics_inc(ANALYTICS_APP_METRIC_USER_LAUNCH_COUNT, AnalyticsClient_App);
   }
+
+  // Track per-watchface usage metrics
+#if !RECOVERY_FW
+  if (app_md->process_type == ProcessTypeWatchface) {
+    watchface_metrics_start(&app_md->uuid);
+#if MEMFAULT
+    MEMFAULT_METRIC_ADD(watchface_launch_count, 1);
+#endif
+  }
+#endif
 }
 
 
