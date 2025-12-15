@@ -35,6 +35,7 @@
 #include "shell/normal/display_calibration_prompt.h"
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
+#include "shell/normal/watchface_metrics.h"
 #include "shell/prefs.h"
 #include "system/logging.h"
 
@@ -52,6 +53,7 @@ void shell_event_loop_init(void) {
   app_outbox_service_init();
   app_message_sender_init();
   watchface_init();
+  watchface_metrics_init();
   timeline_peek_init();
 #if CAPABILITY_HAS_HEALTH_TRACKING
   // Start activity tracking if enabled

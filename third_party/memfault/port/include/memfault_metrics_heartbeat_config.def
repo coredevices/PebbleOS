@@ -115,6 +115,10 @@ MEMFAULT_METRICS_KEY_DEFINE(ANALYTICS_DEVICE_METRIC_DISPLAY_UPDATES_PER_HOUR, kM
 MEMFAULT_METRICS_KEY_DEFINE(ANALYTICS_DEVICE_METRIC_FPGA_REPROGRAM_COUNT, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_STRING_KEY_DEFINE(active_watchface_name, 96)
 
+// Watchface usage metrics (per-watchface, tracked for current/default watchface)
+MEMFAULT_METRICS_KEY_DEFINE(watchface_total_time_secs, kMemfaultMetricType_Unsigned)
+MEMFAULT_METRICS_KEY_DEFINE(watchface_launch_count, kMemfaultMetricType_Unsigned)
+
 // Health/HRM
 MEMFAULT_METRICS_KEY_DEFINE(ANALYTICS_DEVICE_METRIC_HRM_ACCEL_DATA_MISSING, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(ANALYTICS_DEVICE_METRIC_HRM_ON_TIME, kMemfaultMetricType_Unsigned)
