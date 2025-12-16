@@ -17,7 +17,7 @@
 #define AW2016_REG_GCR1_CHIPEN_DIS 0U
 
 #define AW2016_REG_GCR2 0x04U
-#define AW2016_REG_GCR2_IMAX_30MA 1U
+#define AW2016_REG_GCR2_IMAX_5MA 2U
 
 #define AW2016_REG_LCTR (0x30)
 #define AW2016_REG_LCTR_EXP_LINEAR (1U << 3U)
@@ -65,7 +65,7 @@ static bool prv_write_register(uint8_t register_address, uint8_t value) {
 
 static bool prv_configure_registers(void) {
   bool ret;
-  ret = prv_write_register(AW2016_REG_GCR2, AW2016_REG_GCR2_IMAX_30MA);
+  ret = prv_write_register(AW2016_REG_GCR2, AW2016_REG_GCR2_IMAX_5MA);
   ret &= prv_write_register(AW2016_REG_LCTR, AW2016_REG_LCTR_EXP_LINEAR | AW2016_REG_LCTR_LE3_EN |
                                                  AW2016_REG_LCTR_LE2_EN | AW2016_REG_LCTR_LE1_EN);
   ret &= prv_write_register(AW2016_REG_LCFG1, AW2016_REG_LCFG1_CUR_MAX);
