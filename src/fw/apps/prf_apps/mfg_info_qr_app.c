@@ -14,11 +14,13 @@
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
 #include "services/common/battery/battery_state.h"
+#include "services/common/bluetooth/local_id.h"
 #include "util/bitset.h"
 #include "util/size.h"
 
 #include "git_version.auto.h"
 
+#include <bluetooth/bluetooth_types.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -56,6 +58,7 @@ typedef struct {
   TextLayer serial;
 
   char serial_buffer[MFG_SERIAL_NUMBER_SIZE + 1];
+  char bt_mac_buffer[BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE];
   char qr_buffer[128];
 } AppData;
 
@@ -73,6 +76,8 @@ static void prv_handle_init(void) {
   strncpy(data->serial_buffer, serial_number, MFG_SERIAL_NUMBER_SIZE);
   data->serial_buffer[MFG_SERIAL_NUMBER_SIZE] = '\0';
 
+  bt_local_id_copy_address_mac_string(data->bt_mac_buffer);
+
   BatteryChargeState battery_state = battery_get_charge_state();
   uint16_t battery_mv = battery_state_get_voltage();
   uint8_t battery_pct = battery_state.charge_percent;
@@ -82,8 +87,8 @@ static void prv_handle_init(void) {
 
   // Build QR code string
   snprintf(data->qr_buffer, sizeof(data->qr_buffer),
-           "%s;%s;%u;%u;%s",
-           serial_number, GIT_TAG, battery_mv, battery_pct, color_short_name);
+           "%s;%s;%s;%u;%u;%s",
+           serial_number, data->bt_mac_buffer, GIT_TAG, battery_mv, battery_pct, color_short_name);
 
   QRCode* qr_code = &data->qr_code;
   qr_code_init_with_parameters(qr_code,
