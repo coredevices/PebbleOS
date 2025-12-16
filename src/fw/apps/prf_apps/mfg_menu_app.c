@@ -161,12 +161,6 @@ static void prv_select_program_color(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_program_color_app_get_info());
 }
 
-#if PLATFORM_OBELIX
-static void prv_select_test_aging(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_aging_app_get_info());
-}
-#endif
-
 static void prv_extras_select_accel(int index, void *context) {
   // Launch app and mark to return to extras menu when it exits
   launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_accel_app_get_info());
@@ -177,12 +171,10 @@ static void prv_extras_select_discharge(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_discharge_app_get_info());
 }
 
-#if PLATFORM_OBELIX
 static void prv_extras_select_test_aging(int index, void *context) {
   // Launch app and mark to return to extras menu when it exits
   launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_test_aging_app_get_info());
 }
-#endif
 
 static void prv_extras_window_load(Window *window) {
   ExtrasMenuData *data = window_get_user_data(window);
@@ -195,10 +187,8 @@ static void prv_extras_window_load(Window *window) {
 #if CAPABILITY_HAS_BUILTIN_HRM
     { .title = "Test HRM",          .callback = prv_select_hrm },
 #endif
-    { .title = "Test Discharge", .callback = prv_extras_select_discharge },
-#if PLATFORM_OBELIX
+    { .title = "Test Discharge",    .callback = prv_extras_select_discharge },
     { .title = "Test Aging",        .callback = prv_extras_select_test_aging },
-#endif
   };
 
   SimpleMenuItem *menu_items = app_malloc(sizeof(extras_menu_items));
