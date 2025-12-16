@@ -73,8 +73,10 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
   ChargeTestState next_state = data->test_state;
 
-  const int charge_mv = battery_get_millivolts();
-  const int32_t temp_mc = battery_state_get_temperature();
+  BatteryConstants battery_const;
+  battery_get_constants(&battery_const);
+  const int charge_mv = battery_const.v_mv;
+  const int32_t temp_mc = battery_const.t_mc;
   const BatteryChargeState charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
@@ -99,6 +101,15 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         next_state = ChargeStatePlugCharger;
         break;
       }
+
+      // Log battery state every second during charging
+      {
+        int32_t current_ma = battery_const.i_ua / 1000;
+        PBL_LOG(LOG_LEVEL_INFO, "Charging - V:%"PRId32"mV I:%"PRId32"mA T:%"PRId32"mC pct:%"PRIu8" Time:%"PRIu32"s",
+                battery_const.v_mv, current_ma, battery_const.t_mc, charge_state.charge_percent,
+                data->seconds_remaining);
+      }
+
       if (charge_state.charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {
         // go slow for a bit
         battery_set_fast_charge(false);
