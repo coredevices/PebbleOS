@@ -291,10 +291,6 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
 
 #ifdef MANUFACTURING_FW
 void gh3x2x_factory_test_enable(HRMDevice *dev, GH3x2xFTType test_type) {
-  if (!dev->state->initialized) {
-    return;
-  }
-  
   uint32_t mode = 0;
   if (test_type == HRM_FACTORY_TEST_CTR) {                    // CTR
     mode = GH3X2X_FUNCTION_TEST1;
@@ -349,10 +345,6 @@ void gh3x2x_start_ft_leakage(void) {
 }
 
 void gh3x2x_factory_test_disable(HRMDevice *dev) {
-  if (!dev->state->initialized) {
-    return;
-  }
-  
   dev->state->enabled = false;
   Gh3x2xDemoStopSampling(0xFFFFFFFF);
   if (dev->state->factory != NULL) {
