@@ -49,6 +49,7 @@ master_capability_set = {
     'HAS_PBLBOOT',
     'HAS_DYNAMIC_BACKLIGHT',
     'HAS_COLOR_BACKLIGHT',
+    'HAS_SPEAKER',
 }
 
 board_capability_dicts = [
@@ -346,6 +347,7 @@ board_capability_dicts = [
             'HAS_PBLBOOT',
             'HAS_DYNAMIC_BACKLIGHT',
             'HAS_COLOR_BACKLIGHT',
+            'HAS_SPEAKER',
         },
     },
 ]
