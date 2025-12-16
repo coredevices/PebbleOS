@@ -43,7 +43,9 @@ typedef enum {
 typedef enum {
   TestState_Menu = 0,
   TestState_Accel,
+#if PLATFORM_HAS_MAGNETOMETER
   TestState_Mag,
+#endif
 #if PLATFORM_HAS_COLOR_BACKLIGHT
   TestState_BacklightWhite,
   TestState_BacklightRed,
@@ -124,6 +126,7 @@ static void prv_test_accel(AppData *data) {
   text_layer_set_text(&data->status, data->status_string);
 }
 
+#if PLATFORM_HAS_MAGNETOMETER
 static void prv_test_mag(AppData *data) {
   MagData mag_sample;
   MagReadStatus status = mag_read_data(&mag_sample);
@@ -142,6 +145,7 @@ static void prv_test_mag(AppData *data) {
   }
   text_layer_set_text(&data->status, data->status_string);
 }
+#endif
 
 #if PLATFORM_HAS_COLOR_BACKLIGHT
 static void prv_test_backlight(AppData *data, const char *color_name, uint32_t color) {
@@ -229,9 +233,11 @@ static void prv_advance_test(AppData *data) {
   if (data->duration != Duration_Unlimited &&
       data->total_elapsed_sec >= data->max_duration_sec) {
     // Clean up current test before showing finished
+#if PLATFORM_HAS_MAGNETOMETER
     if (data->current_test == TestState_Mag) {
       mag_release();
     }
+#endif
 #if PLATFORM_HAS_COLOR_BACKLIGHT
     if (data->current_test >= TestState_BacklightWhite &&
         data->current_test <= TestState_BacklightBlue) {
@@ -256,9 +262,11 @@ static void prv_advance_test(AppData *data) {
   }
 
   // Start magnetometer if needed
+#if PLATFORM_HAS_MAGNETOMETER
   if (data->current_test == TestState_Mag) {
     mag_start_sampling();
   }
+#endif
 
   // Enable backlight for backlight tests
 #if PLATFORM_HAS_COLOR_BACKLIGHT
@@ -291,9 +299,11 @@ static void prv_update_display(AppData *data) {
     case TestState_Accel:
       prv_test_accel(data);
       break;
+#if PLATFORM_HAS_MAGNETOMETER
     case TestState_Mag:
       prv_test_mag(data);
       break;
+#endif
 #if PLATFORM_HAS_COLOR_BACKLIGHT
     case TestState_BacklightWhite:
       prv_test_backlight(data, "WHITE", 0xD0D0D0);
@@ -342,9 +352,11 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   // Check if current test duration has elapsed
   if (data->test_elapsed_sec >= TEST_DURATION_SEC) {
     // Clean up current test
+#if PLATFORM_HAS_MAGNETOMETER
     if (data->current_test == TestState_Mag) {
       mag_release();
     }
+#endif
 #if PLATFORM_HAS_COLOR_BACKLIGHT
     if (data->current_test >= TestState_BacklightWhite &&
         data->current_test <= TestState_BacklightBlue) {
@@ -372,9 +384,11 @@ static void prv_stop_test(void) {
   data->running = false;
 
   // Clean up any active tests
+#if PLATFORM_HAS_MAGNETOMETER
   if (data->current_test == TestState_Mag) {
     mag_release();
   }
+#endif
 #if PLATFORM_HAS_COLOR_BACKLIGHT
   if (data->current_test >= TestState_BacklightWhite &&
       data->current_test <= TestState_BacklightBlue) {
