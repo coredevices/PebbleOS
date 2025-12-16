@@ -14,6 +14,7 @@
 #include "drivers/battery.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
+#include "system/logging.h"
 
 typedef enum {
   DischargeStateStart = 0,
@@ -212,6 +213,13 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       // Countdown the discharge phase
       if (data->countdown_running) {
         --data->seconds_remaining;
+
+        // Log battery state every second during discharge
+        int32_t current_ma = battery_const.i_ua / 1000;
+        PBL_LOG(LOG_LEVEL_INFO, "Discharging - V:%"PRId32"mV I:%"PRId32"mA T:%"PRId32"mC pct:%"PRIu8" Time:%"PRIu32"s",
+                battery_const.v_mv, current_ma, battery_const.t_mc, charge_state.charge_percent,
+                data->seconds_remaining);
+
         if (data->seconds_remaining == 0) {
           // 24h discharge complete, check pass/fail criteria
           data->countdown_running = false;
