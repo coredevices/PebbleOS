@@ -81,7 +81,9 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = bt_ctl_set_enabled,
     .enable_mask = R_FirmwareUpdate | R_Normal,
   },
-#if CAPABILITY_HAS_TOUCHSCREEN
+#if CAPABILITY_HAS_TOUCHSCREEN && defined(RECOVERY_FW)
+  // Only keep touch enabled on recovery (and so manufacturing as well)
+  // Once supported in main firmware, this should be removed.
   {
     .set_enable_fn = touch_sensor_set_enabled,
     .enable_mask = R_Normal,
