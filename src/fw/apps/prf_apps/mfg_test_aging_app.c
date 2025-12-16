@@ -28,10 +28,12 @@
 #define STATUS_STRING_LEN 128
 #define TEST_DURATION_SEC 10
 
+#if PLATFORM_HAS_SPEAKER
 static const int16_t sine_wave_4k[] = {
   0, 32767, 0, -32768, 0, 32767, 0, -32768,
   0, 32767, 0, -32768, 0, 32767, 0, -32768,
 };
+#endif
 
 typedef enum {
   Duration_2Hours = 0,
@@ -54,7 +56,9 @@ typedef enum {
 #else
   TestState_Backlight,
 #endif
+#if PLATFORM_HAS_SPEAKER
   TestState_Audio,
+#endif
   TestState_ALS,
   TestState_Vibe,
   NumTestStates
@@ -80,7 +84,9 @@ typedef struct {
 
   bool running;
   bool menu_active;
+#if PLATFORM_HAS_SPEAKER
   bool audio_playing;
+#endif
 #if PLATFORM_HAS_COLOR_BACKLIGHT
   uint32_t saved_backlight_color;
 #endif
@@ -90,6 +96,7 @@ static void prv_stop_test(void);
 static void prv_start_tests(TestDuration duration);
 static void prv_update_menu_display(AppData *data);
 
+#if PLATFORM_HAS_SPEAKER
 // Audio transmission handler
 static void prv_audio_trans_handler(uint32_t *free_size) {
   uint32_t available_size = *free_size;
@@ -97,6 +104,7 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
     available_size = audio_write(AUDIO, (void*)&sine_wave_4k[0], sizeof(sine_wave_4k));
   }
 }
+#endif
 
 // Helper to format time as HH:MM:SS
 static void prv_format_time(char *buffer, size_t size, uint32_t seconds) {
@@ -171,6 +179,7 @@ static void prv_test_backlight(AppData *data) {
 }
 #endif
 
+#if PLATFORM_HAS_SPEAKER
 static void prv_test_audio(AppData *data) {
   char time_str[16];
   prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
@@ -188,6 +197,7 @@ static void prv_test_audio(AppData *data) {
     data->audio_playing = true;
   }
 }
+#endif
 
 static void prv_test_als(AppData *data) {
   uint32_t level = ambient_light_get_light_level();
@@ -249,10 +259,12 @@ static void prv_advance_test(AppData *data) {
       light_enable(false);
     }
 #endif
+#if PLATFORM_HAS_SPEAKER
     if (data->audio_playing) {
       audio_stop(AUDIO);
       data->audio_playing = false;
     }
+#endif
 
     data->running = false;
 
@@ -322,9 +334,11 @@ static void prv_update_display(AppData *data) {
       prv_test_backlight(data);
       break;
 #endif
+#if PLATFORM_HAS_SPEAKER
     case TestState_Audio:
       prv_test_audio(data);
       break;
+#endif
     case TestState_ALS:
       prv_test_als(data);
       break;
@@ -368,10 +382,12 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       light_enable(false);
     }
 #endif
+#if PLATFORM_HAS_SPEAKER
     if (data->current_test == TestState_Audio && data->audio_playing) {
       audio_stop(AUDIO);
       data->audio_playing = false;
     }
+#endif
 
     prv_advance_test(data);
     prv_update_display(data);
@@ -400,10 +416,12 @@ static void prv_stop_test(void) {
     light_enable(false);
   }
 #endif
+#if PLATFORM_HAS_SPEAKER
   if (data->audio_playing) {
     audio_stop(AUDIO);
     data->audio_playing = false;
   }
+#endif
 
   tick_timer_service_unsubscribe();
 }
@@ -531,7 +549,9 @@ static void prv_handle_init(void) {
   *data = (AppData) {
     .running = false,
     .menu_active = true,
+#if PLATFORM_HAS_SPEAKER
     .audio_playing = false,
+#endif
     .selected_duration = Duration_2Hours,
   };
 
