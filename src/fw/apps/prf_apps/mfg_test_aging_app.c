@@ -44,10 +44,14 @@ typedef enum {
   TestState_Menu = 0,
   TestState_Accel,
   TestState_Mag,
+#if PLATFORM_HAS_COLOR_BACKLIGHT
   TestState_BacklightWhite,
   TestState_BacklightRed,
   TestState_BacklightGreen,
   TestState_BacklightBlue,
+#else
+  TestState_Backlight,
+#endif
   TestState_Audio,
   TestState_ALS,
   TestState_Vibe,
@@ -75,7 +79,9 @@ typedef struct {
   bool running;
   bool menu_active;
   bool audio_playing;
+#if PLATFORM_HAS_COLOR_BACKLIGHT
   uint32_t saved_backlight_color;
+#endif
 } AppData;
 
 static void prv_stop_test(void);
@@ -137,6 +143,7 @@ static void prv_test_mag(AppData *data) {
   text_layer_set_text(&data->status, data->status_string);
 }
 
+#if PLATFORM_HAS_COLOR_BACKLIGHT
 static void prv_test_backlight(AppData *data, const char *color_name, uint32_t color) {
   char time_str[16];
   prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
@@ -148,6 +155,17 @@ static void prv_test_backlight(AppData *data, const char *color_name, uint32_t c
             data->cycle_count, time_str, color_name);
   text_layer_set_text(&data->status, data->status_string);
 }
+#else
+static void prv_test_backlight(AppData *data) {
+  char time_str[16];
+  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
+
+  sniprintf(data->status_string, sizeof(data->status_string),
+            "BACKLIGHT TEST\nCycle: %"PRIu32"\nTime: %s",
+            data->cycle_count, time_str);
+  text_layer_set_text(&data->status, data->status_string);
+}
+#endif
 
 static void prv_test_audio(AppData *data) {
   char time_str[16];
@@ -214,11 +232,17 @@ static void prv_advance_test(AppData *data) {
     if (data->current_test == TestState_Mag) {
       mag_release();
     }
+#if PLATFORM_HAS_COLOR_BACKLIGHT
     if (data->current_test >= TestState_BacklightWhite &&
         data->current_test <= TestState_BacklightBlue) {
       led_controller_rgb_set_color(data->saved_backlight_color);
       light_enable(false);
     }
+#else
+    if (data->current_test == TestState_Backlight) {
+      light_enable(false);
+    }
+#endif
     if (data->audio_playing) {
       audio_stop(AUDIO);
       data->audio_playing = false;
@@ -237,10 +261,16 @@ static void prv_advance_test(AppData *data) {
   }
 
   // Enable backlight for backlight tests
+#if PLATFORM_HAS_COLOR_BACKLIGHT
   if (data->current_test >= TestState_BacklightWhite &&
       data->current_test <= TestState_BacklightBlue) {
     light_enable(true);
   }
+#else
+  if (data->current_test == TestState_Backlight) {
+    light_enable(true);
+  }
+#endif
 }
 
 static void prv_update_display(AppData *data) {
@@ -264,6 +294,7 @@ static void prv_update_display(AppData *data) {
     case TestState_Mag:
       prv_test_mag(data);
       break;
+#if PLATFORM_HAS_COLOR_BACKLIGHT
     case TestState_BacklightWhite:
       prv_test_backlight(data, "WHITE", 0xD0D0D0);
       break;
@@ -276,6 +307,11 @@ static void prv_update_display(AppData *data) {
     case TestState_BacklightBlue:
       prv_test_backlight(data, "BLUE", 0x0000FF);
       break;
+#else
+    case TestState_Backlight:
+      prv_test_backlight(data);
+      break;
+#endif
     case TestState_Audio:
       prv_test_audio(data);
       break;
@@ -309,11 +345,17 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
     if (data->current_test == TestState_Mag) {
       mag_release();
     }
+#if PLATFORM_HAS_COLOR_BACKLIGHT
     if (data->current_test >= TestState_BacklightWhite &&
         data->current_test <= TestState_BacklightBlue) {
       led_controller_rgb_set_color(data->saved_backlight_color);
       light_enable(false);
     }
+#else
+    if (data->current_test == TestState_Backlight) {
+      light_enable(false);
+    }
+#endif
     if (data->current_test == TestState_Audio && data->audio_playing) {
       audio_stop(AUDIO);
       data->audio_playing = false;
@@ -333,11 +375,17 @@ static void prv_stop_test(void) {
   if (data->current_test == TestState_Mag) {
     mag_release();
   }
+#if PLATFORM_HAS_COLOR_BACKLIGHT
   if (data->current_test >= TestState_BacklightWhite &&
       data->current_test <= TestState_BacklightBlue) {
     led_controller_rgb_set_color(data->saved_backlight_color);
     light_enable(false);
   }
+#else
+  if (data->current_test == TestState_Backlight) {
+    light_enable(false);
+  }
+#endif
   if (data->audio_playing) {
     audio_stop(AUDIO);
     data->audio_playing = false;
@@ -429,7 +477,9 @@ static void prv_start_tests(TestDuration duration) {
   data->total_elapsed_sec = 0;
   data->cycle_count = 1;
   data->running = true;
+#if PLATFORM_HAS_COLOR_BACKLIGHT
   data->saved_backlight_color = led_controller_rgb_get_color();
+#endif
 
   switch (duration) {
     case Duration_2Hours:
