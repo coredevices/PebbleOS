@@ -31,6 +31,11 @@
 //! Maximum amount of time PPoGATT will wait before sending an Ack for received data
 #define PPOGATT_MAX_DATA_ACK_LATENCY_MS (200)
 
+//! Number of maximum retries for reading the meta characteristic
+#define PPOGATT_META_READ_RETRY_COUNT_MAX (3)
+//! Delay in milliseconds before retrying a failed meta characteristic read
+#define PPOGATT_META_READ_RETRY_DELAY_MS (500)
+
 typedef enum {
   PPoGATTPacketTypeData = 0x0,
   PPoGATTPacketTypeAck = 0x1,

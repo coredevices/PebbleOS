@@ -31,6 +31,7 @@
 
 typedef enum {
   StateDisconnectedReadingMeta,
+  StateDisconnectedAwaitingMetaRetry,
   StateDisconnectedSubscribingData,
   // StateConnectedClosedAwaitingResetRequest, // Server-only state
   StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset,
@@ -111,6 +112,9 @@ typedef struct PPoGATTClient {
 
   //! Number of consecutive resets so far
   uint8_t resets_counter;
+
+  //! Number of meta read retry attempts
+  uint8_t meta_read_retries;
 
   bool disconnect_requested; //! True if the client requested a disconnect
 
@@ -703,11 +707,40 @@ static void prv_handle_data_notification(PPoGATTClient *client,
 
 // -------------------------------------------------------------------------------------------------
 
+static void prv_retry_meta_read(PPoGATTClient *client) {
+  if (!client || client->state != StateDisconnectedAwaitingMetaRetry) {
+    return;
+  }
+
+  PBL_LOG(LOG_LEVEL_INFO, "Retrying PPoGATT meta read (attempt %u/%u)",
+          client->meta_read_retries + 1, PPOGATT_META_READ_RETRY_COUNT_MAX);
+
+  client->state = StateDisconnectedReadingMeta;
+  BLECharacteristic meta = client->characteristics.meta;
+  if (gatt_client_op_read(meta, GAPLEClientKernel) != BTErrnoOK) {
+    // Read failed to start, delete the client
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initiate meta read retry");
+    prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataReadFailure);
+  }
+}
+
+static void prv_meta_read_retry_timer_cb(void *data) {
+  PPoGATTClient *client = (PPoGATTClient *)data;
+  bt_lock();
+  {
+    prv_retry_meta_read(client);
+  }
+  bt_unlock();
+}
+
+// -------------------------------------------------------------------------------------------------
+
 static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
                                  size_t value_length, BLEGATTError error) {
   PBL_ASSERTN(client->state == StateDisconnectedReadingMeta);
   if (error != BLEGATTErrorSuccess) {
-    goto handle_error;
+    // GATT read failed - this is retriable since the mobile app may not be ready yet
+    goto handle_retriable_error;
   }
   if (value_length < sizeof(PPoGATTMetaV0)) {
     goto handle_error;
@@ -759,6 +792,8 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
     }
     client->state = StateDisconnectedSubscribingData;
     client->app_uuid = meta->app_uuid;
+    // Reset retry counter on success
+    client->meta_read_retries = 0;
 
     if (session_type == PPoGATTSessionType_Hybrid) {
       client->destination = TransportDestinationHybrid;
@@ -768,6 +803,20 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
     }
     return;
   }
+
+handle_retriable_error:
+  // GATT read failed - schedule a retry if we haven't exceeded the max retry count
+  if (++client->meta_read_retries < PPOGATT_META_READ_RETRY_COUNT_MAX) {
+    PBL_LOG(LOG_LEVEL_WARNING, "PPoGATT meta read failed (err=%x), scheduling retry %u/%u",
+            error, client->meta_read_retries, PPOGATT_META_READ_RETRY_COUNT_MAX);
+    client->state = StateDisconnectedAwaitingMetaRetry;
+    new_timer_start(client->rx_ack_timer, PPOGATT_META_READ_RETRY_DELAY_MS,
+                    prv_meta_read_retry_timer_cb, client, 0);
+    return;
+  }
+  PBL_LOG(LOG_LEVEL_ERROR, "PPoGATT meta read failed after %u retries",
+          PPOGATT_META_READ_RETRY_COUNT_MAX);
+  // Fall through to handle_error
 
 handle_error:
   PBL_LOG(LOG_LEVEL_ERROR, "Failed handling PPoGATT meta: len=%u ver=%x err=%x",
