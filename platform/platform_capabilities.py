@@ -48,6 +48,7 @@ master_capability_set = {
     'HAS_VIBE_AW86225',
     'HAS_PBLBOOT',
     'HAS_DYNAMIC_BACKLIGHT',
+    'HAS_COLOR_BACKLIGHT',
 }
 
 board_capability_dicts = [
@@ -344,6 +345,7 @@ board_capability_dicts = [
             'HAS_MAGNETOMETER',
             'HAS_PBLBOOT',
             'HAS_DYNAMIC_BACKLIGHT',
+            'HAS_COLOR_BACKLIGHT',
         },
     },
 ]
