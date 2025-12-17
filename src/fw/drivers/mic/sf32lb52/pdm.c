@@ -10,6 +10,7 @@
 #include "system/passert.h"
 #include "util/circular_buffer.h"
 #include "kernel/util/sleep.h"
+#include "kernel/util/stop.h"
 #include "pdm_definitions.h"
 #include "services/common/system_task.h"
 #include "FreeRTOS.h"
@@ -20,7 +21,7 @@
 #endif
 
 #define PDM_AUDIO_RECORD_PIPE_SIZE         (288)
-#define PDM_AUDIO_RECORD_GAIN_DEFAULT      (120)
+#define PDM_AUDIO_RECORD_GAIN_DEFAULT      (90)
 #define PDM_AUDIO_RECORD_GAIN_MAX          (120)
 
 // PDM Configuration
@@ -107,7 +108,7 @@ static void prv_free_buffers(MicDeviceState *state) {
 
 // Process at most this many frames per system task callback to allow
 // other tasks (especially Bluetooth) to run and prevent send buffer overflow
-#define MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK 64
+#define MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK 5
 
 static void prv_dispatch_samples_system_task(void *data) {  
   // Defensive check
@@ -192,10 +193,14 @@ static void prv_dma_data_processing(uint8_t* data, uint16_t size)
   }
   
   // Write samples directly to circular buffer
-  if (!circular_buffer_write(&s_state->circ_buffer, data, size)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "circular buffer full");
-    return;  // Buffer is full, drop remaining samples
+  // If buffer is full, drop oldest data to make room for fresh audio
+  uint16_t write_space = circular_buffer_get_write_space_remaining(&s_state->circ_buffer);
+  if (write_space < size) {
+    uint16_t to_drop = size - write_space;
+    circular_buffer_consume(&s_state->circ_buffer, to_drop);
+    PBL_LOG(LOG_LEVEL_WARNING, "Dropping %u bytes of old audio", to_drop);
   }
+  circular_buffer_write(&s_state->circ_buffer, data, size);
 
   // Check if we have enough data for a complete frame
   size_t frame_size_bytes = s_state->audio_buffer_len * sizeof(int16_t);
@@ -305,8 +310,13 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
 #endif
   // Set is_running to true BEFORE starting PDM, since the event handler will be called immediately
   state->is_running = true;
+
+  // Prevent CPU from entering stop mode during audio capture
+  stop_mode_disable(InhibitorMic);
+
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
+    stop_mode_enable(InhibitorMic);
     state->is_running = false;  // Reset on failure
 #if PDM_POWER_NPM1300_LDO2
   (void)NPM1300_OPS.ldo2_set_enabled(false);
@@ -357,6 +367,9 @@ void mic_stop(const MicDevice *this) {
 #if PDM_POWER_NPM1300_LDO2
   (void)NPM1300_OPS.ldo2_set_enabled(false);
 #endif
+
+  // Allow CPU to enter stop mode again
+  stop_mode_enable(InhibitorMic);
 
   mutex_unlock_recursive(state->mutex);
 }
