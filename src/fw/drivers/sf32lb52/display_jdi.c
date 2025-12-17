@@ -199,27 +199,6 @@ void display_init(void) {
   HAL_PIN_Set(DISPLAY->pinmux.va.pad, DISPLAY->pinmux.va.func, DISPLAY->pinmux.va.flags, 1);
   HAL_PIN_Set(DISPLAY->pinmux.vb.pad, DISPLAY->pinmux.vb.func, DISPLAY->pinmux.vb.flags, 1);
 
-  state->hlcdc.Init = (LCDC_InitTypeDef){
-      .lcd_itf = LCDC_INTF_JDI_PARALLEL,
-      .color_mode = LCDC_PIXEL_FORMAT_RGB332,
-      .freq = 746268,  // HCK frequency
-      .cfg =
-          {
-              .jdi =
-                  (JDI_LCD_CFG){
-                      .bank_col_head = 2,
-                      .valid_columns = PBL_DISPLAY_WIDTH,
-                      .bank_col_tail = 6,
-                      .bank_row_head = 0,
-                      .valid_rows = PBL_DISPLAY_HEIGHT,
-                      .bank_row_tail = 6,
-                      .enb_start_col = 3,
-                      .enb_end_col = 99,
-                  },
-          },
-  };
-
-
   HAL_LCDC_Init(&state->hlcdc);
   HAL_LCDC_LayerReset(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT);
   HAL_LCDC_LayerSetCmpr(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, 0);
