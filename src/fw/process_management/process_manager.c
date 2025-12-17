@@ -449,6 +449,17 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
       context->closing_state = ProcessRunState_ForceClosing;
       PBL_LOG_DBG("task is privileged, setting the syscall exit trap");
 
+      // Send a DEINIT event to wake up the app if it's blocked waiting for events
+      // (e.g., in sys_get_pebble_event). This allows the syscall to return and
+      // trigger process_manager_handle_syscall_exit() which will mark the process
+      // as safe to kill.
+      PBL_LOG_DBG("Sending DEINIT event to wake %s from syscall",
+              pebble_task_get_name(task));
+      PebbleEvent deinit_event = {
+        .type = PEBBLE_PROCESS_DEINIT_EVENT,
+      };
+      process_manager_send_event_to_process(task, &deinit_event);
+
       bool success = new_timer_start(s_deinit_timer_id, 3 * 1000, prv_force_close_timer_callback, (void*)task,
               0 /*flags*/);
       PBL_ASSERTN(success);
