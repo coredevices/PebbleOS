@@ -31,4 +31,4 @@ typedef struct PACKED FrameBuffer {
 } FrameBuffer;
 #endif
 
-uint8_t* framebuffer_get_line(FrameBuffer* f, uint8_t y);
+uint8_t* framebuffer_get_line(FrameBuffer* f, uint16_t y);
