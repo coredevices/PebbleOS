@@ -111,12 +111,24 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
   }
 
   GBitmap app_framebuffer = compositor_get_app_framebuffer_as_bitmap();
-  // We only check the destination data rows above (and not also the source data rows) because we
-  // assume that both source and destination are framebuffers using the native bitmap format
+  // Both source and destination must use the same format (native bitmap format)
   PBL_ASSERTN(app_framebuffer.info.format == framebuffer->info.format);
-  PBL_ASSERTN(app_framebuffer.data_row_infos == framebuffer->data_row_infos);
+
+  // Check if y is within the app framebuffer (e.g., legacy app vs notification)
+  if (y >= app_framebuffer.bounds.size.h) {
+    // Row is beyond app framebuffer, nothing to copy
+    return;
+  }
 
   const GBitmapDataRowInfo source_data_row_info = gbitmap_get_data_row_info(&app_framebuffer, y);
+
+  // Clip to the intersection of source and destination bounds
+  x1.raw_value = MAX(x1.raw_value, source_data_row_info.min_x << FIXED_S16_3_PRECISION);
+  x2.raw_value = MIN(x2.raw_value, source_data_row_info.max_x << FIXED_S16_3_PRECISION);
+  if (x1.integer > x2.integer) {
+    return;
+  }
+
   GColor8 *input = (GColor8 *)(source_data_row_info.data + x1.integer);
   GColor8 *output = (GColor8 *)(destination_data_row_info.data + x1.integer);
 
@@ -137,7 +149,7 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
 #if CAPABILITY_HAS_MASKING
     const GDrawMask *mask = ctx->draw_state.draw_mask;
     for (int x = x1.integer; x < x1.integer + width; x++) {
-      graphics_private_raw_mask_apply(output, mask, data_row_offset, x1.integer, 1, *input);
+      graphics_private_raw_mask_apply(output, mask, data_row_offset, x, 1, *input);
       input++;
       output++;
     }
@@ -164,9 +176,20 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);
 
   GBitmap app_framebuffer = compositor_get_app_framebuffer_as_bitmap();
-  // We assume that both source and destination are framebuffers using the native bitmap format
+  // Both source and destination must use the same format (native bitmap format)
   PBL_ASSERTN(app_framebuffer.info.format == framebuffer->info.format);
-  PBL_ASSERTN(app_framebuffer.data_row_infos == framebuffer->data_row_infos);
+
+  // Clip to app framebuffer height (e.g., legacy app vs notification)
+  const int16_t app_fb_max_y = app_framebuffer.bounds.size.h - 1;
+  if (y1.integer > app_fb_max_y) {
+    // Line starts beyond app framebuffer, nothing to copy
+    return;
+  }
+  if (y2.integer > app_fb_max_y) {
+    // Clip end of line to app framebuffer bounds
+    y2.integer = app_fb_max_y;
+    y2.fraction = FIXED_S16_3_ONE.raw_value - 1;
+  }
 
   GBitmapDataRowInfo source_data_row_info = gbitmap_get_data_row_info(&app_framebuffer, y1.integer);
   GColor8 *input = (GColor8 *)(source_data_row_info.data + x);
