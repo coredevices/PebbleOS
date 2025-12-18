@@ -41,7 +41,7 @@
 #define AW2016_REG_PWM3 0x36U
 
 static uint8_t s_brightness;
-static uint32_t s_rgb_current_color = LED_WARM_WHITE;
+static uint32_t s_rgb_current_color = LED_SOFT_WHITE;
 
 static bool prv_read_register(uint8_t register_address, uint8_t *value) {
   bool ret;
