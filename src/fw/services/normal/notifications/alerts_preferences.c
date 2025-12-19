@@ -67,7 +67,7 @@ static uint32_t s_notif_window_timeout_ms = NOTIF_WINDOW_TIMEOUT_DEFAULT;
 static bool s_notification_alternative_design = false;  // true = alternative (black banner), false = standard (default)
 
 #define PREF_KEY_NOTIF_VIBE_DELAY "notifVibeDelay"
-static bool s_notification_vibe_delay = false;  // true = vibe at end of animation, false = vibe immediately (default)
+static bool s_notification_vibe_delay = true;  // true = vibe at end of animation (default), false = vibe immediately
 
 ///////////////////////////////////
 //! Legacy preference keys
