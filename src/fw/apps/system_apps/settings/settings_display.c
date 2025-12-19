@@ -166,7 +166,7 @@ static void prv_timeout_menu_push(SettingsDisplayData *data) {
 /////////////////////////////
 #if PLATFORM_OBELIX
 static const char *s_legacy_app_mode_labels[] = {
-    i18n_noop("Bezel"),
+    i18n_noop("Centered"),
     i18n_noop("Scaled")
 };
 
