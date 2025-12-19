@@ -178,6 +178,7 @@ static void gh3x2x_timer_stop_handle(void* arg) {
   if (HRM && HRM->state->timer) {
     app_timer_cancel(HRM->state->timer);
     HRM->state->timer = NULL;
+    HRM->state->timer_period_ms = 0;
   }
 }
 
