@@ -16,6 +16,35 @@
 #define DEFAULT_SERIAL_BAUD_RATE 230400
 #endif
 
+// Stub out all dbgserial functions on nRF52840 release builds
+#if defined(RELEASE) && !defined(TARGET_QEMU) && !defined(MANUFACTURING_FW) && \
+    defined(MICRO_FAMILY_NRF52840)
+
+void dbgserial_init(void) {
+}
+
+void dbgserial_change_baud_rate(uint32_t new_baud) {
+}
+
+void dbgserial_restore_baud_rate(void) {
+}
+
+void dbgserial_putstr(const char* str) {
+}
+
+void dbgserial_putchar(uint8_t c) {
+}
+
+void dbgserial_putchar_lazy(uint8_t c) {
+}
+
+void dbgserial_flush(void) {
+}
+
+void dbgserial_putstr_fmt(char* buffer, unsigned int buffer_size, const char* fmt, ...) {
+}
+
+#else
 
 void dbgserial_init(void) {
 #if !defined(RELEASE) || defined(TARGET_QEMU) || defined(MANUFACTURING_FW)
@@ -64,3 +93,5 @@ void dbgserial_putstr_fmt(char* buffer, unsigned int buffer_size, const char* fm
 
   dbgserial_putstr(buffer);
 }
+
+#endif
