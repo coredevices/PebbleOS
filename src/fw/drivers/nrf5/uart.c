@@ -99,7 +99,26 @@ void uart_init_open_drain(UARTDevice *dev) {
 }
 
 void uart_init_tx_only(UARTDevice *dev) {
-  WTF; /* unimplemented, for now */
+  nrfx_uarte_config_t config = {
+    .txd_pin = dev->tx_gpio,
+    .rxd_pin = NRF_UARTE_PSEL_DISCONNECTED,
+    .rts_pin = NRF_UARTE_PSEL_DISCONNECTED,
+    .cts_pin = NRF_UARTE_PSEL_DISCONNECTED,
+    .p_context = (void *)dev,
+    .tx_cache = { .p_buffer = (uint8_t *) dev->state->tx_cache_buffer, .length = sizeof(dev->state->tx_cache_buffer) },
+    .baudrate = NRF_UARTE_BAUDRATE_1000000,
+    .config = {
+      .hwfc = NRF_UARTE_HWFC_DISABLED,
+      .parity = NRF_UARTE_PARITY_EXCLUDED,
+      .stop = NRF_UARTE_STOP_ONE
+    },
+    .interrupt_priority = NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY,
+  };
+
+  nrfx_err_t err = nrfx_uarte_init(&dev->periph, &config, _uart_event_handler);
+  PBL_ASSERTN(err == NRFX_SUCCESS);
+
+  dev->state->initialized = true;
 }
 
 void uart_init_rx_only(UARTDevice *dev) {
