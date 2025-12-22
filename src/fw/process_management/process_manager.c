@@ -362,7 +362,7 @@ static void prv_handle_app_stop_analytics(const ProcessContext *const context,
   }
   if (task == PebbleTask_App) {
     analytics_stopwatch_stop(ANALYTICS_APP_METRIC_FRONT_MOST_TIME);
-#if !RECOVERY_FW
+#if !RECOVERY_FW && !SHELL_SDK
     // Stop per-watchface time tracking if this was a watchface
     if (context->app_md->process_type == ProcessTypeWatchface) {
       watchface_metrics_stop();
