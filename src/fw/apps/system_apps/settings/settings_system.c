@@ -63,7 +63,7 @@ enum {
   DebuggingItemCoreDumpNow = 0,
   DebuggingItemCoreDumpShortcut,
   DebuggingItemALSThreshold,
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if CAPABILITY_HAS_ACCEL_SENSITIVITY
   DebuggingItemMotionSensitivity,
 #endif
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
@@ -531,7 +531,7 @@ static void prv_dyn_bl_max_threshold_menu_push(SettingsSystemData *data) {
 
 // Motion Sensitivity Settings (Asterix/Obelix only)
 /////////////////////////////
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if CAPABILITY_HAS_ACCEL_SENSITIVITY
 static const uint8_t s_motion_sensitivity_values[] = { 10, 25, 40, 55, 70, 85, 100 };
 
 static const char *s_motion_sensitivity_labels[] = {
@@ -581,7 +581,7 @@ static const char* s_debugging_titles[DebuggingItem_Count] = {
   [DebuggingItemCoreDumpNow]      = i18n_noop("CoreDump now"),
   [DebuggingItemCoreDumpShortcut] = i18n_noop("CoreDump shortcut"),
   [DebuggingItemALSThreshold]     = i18n_noop("ALS Threshold"),
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if CAPABILITY_HAS_ACCEL_SENSITIVITY
   [DebuggingItemMotionSensitivity] = i18n_noop("Motion Sensitivity"),
 #endif
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
@@ -614,7 +614,7 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
              "%"PRIu32, current_threshold);
     subtitle_text = data->als_threshold_buffer;
   }
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if CAPABILITY_HAS_ACCEL_SENSITIVITY
   else if (cell_index->row == DebuggingItemMotionSensitivity) {
     subtitle_text = i18n_get(s_motion_sensitivity_labels[prv_motion_sensitivity_get_selection_index()], data);
   }
@@ -664,7 +664,7 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
     case DebuggingItemALSThreshold:
       prv_als_threshold_menu_push(data);
       break;
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if CAPABILITY_HAS_ACCEL_SENSITIVITY
     case DebuggingItemMotionSensitivity:
       prv_motion_sensitivity_menu_push(data);
       break;
