@@ -908,7 +908,7 @@ static void prv_handle_app_start_analytics(const PebbleProcessMd *app_md,
   }
 
   // Track per-watchface usage metrics
-#if !RECOVERY_FW
+#if !RECOVERY_FW && !SHELL_SDK
   if (app_md->process_type == ProcessTypeWatchface) {
     watchface_metrics_start(&app_md->uuid);
 #if MEMFAULT
