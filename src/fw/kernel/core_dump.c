@@ -12,6 +12,8 @@
  * driver, etc.
  */
 
+#include <string.h>
+
 #include "kernel/core_dump.h"
 #include "kernel/core_dump_private.h"
 
@@ -199,9 +201,16 @@ static void prv_debug_str_str(const char* msg, const char* s) {
 // -------------------------------------------------------------------------------------------------
 // NOTE: We are explicitly avoiding use of vsniprintf and cohorts to reduce our stack
 // requirements
-static void prv_debug_str_int(const char* msg, uint32_t i) {
+static void prv_debug_str_int(const char* msg, uint32_t i, int base) {
   char buffer[12];
-  itoa(i, buffer, sizeof(buffer));
+
+  if (base == 16) {
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    itoa(i, &buffer[2], base);
+  } else {
+    itoa(i, buffer, base);
+  }
 
 #if PULSE_EVERYWHERE
   void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
@@ -225,7 +234,7 @@ static NORETURN prv_reset(void) {
 
 // -----------------------------------------------------------------------------------------
 void coredump_assert(int line) {
-  prv_debug_str_int("CD: assert - line ", line);
+  prv_debug_str_int("CD: assert - line ", line, 10);
   boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
   prv_reset();
 }
@@ -601,7 +610,7 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   if (!s_core_dump_is_forced && flash_base != CORE_DUMP_FLASH_INVALID_ADDR) {
     CoreDumpFlashRegionHeader region_hdr;
     CoreDumpImageHeader image_hdr;
-    prv_debug_str_int("CD: Checking: ", flash_base);
+    prv_debug_str_int("CD: Checking: ", flash_base, 16);
     prv_flash_read_bytes(&region_hdr, flash_base, sizeof(region_hdr));
     prv_flash_read_bytes(&image_hdr, flash_base + sizeof(region_hdr), sizeof(image_hdr));
 
@@ -618,7 +627,7 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
 
   // Get flash address to save new image to. This method also pre-erases the region for us.
   flash_base = prv_flash_start_address(true /*new*/);
-  prv_debug_str_int("CD: Saving to: ", flash_base);
+  prv_debug_str_int("CD: Saving to: ", flash_base, 16);
 
   // ---------------------------------------------------------------------------------------
   // Dump RAM and thread info into flash. We store data in flash using the following format:
@@ -693,6 +702,8 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
                                         sizeof(chunk_hdr));
 
   // Reset!
+  uint32_t total_size = s_flash_addr - flash_base;
+  prv_debug_str_int("CD: size (bytes) ", total_size, 10);
   prv_debug_str("CD: completed");
   prv_reset();
 }
