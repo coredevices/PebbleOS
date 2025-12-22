@@ -42,7 +42,7 @@ const char *bool_to_str(bool b) {
   }
 }
 
-void itoa(uint32_t num, char *buffer, int buffer_length) {
+void string_itoa(uint32_t num, char *buffer, int buffer_length) {
   if (buffer_length < 11) {
     return;
   }

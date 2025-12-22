@@ -22,7 +22,7 @@ void string_strip_trailing_whitespace(const char *string, char *string_out);
 
 //! Converts an unsigned integer value to a null-terminated hex-value string and stores the result
 //! in buffer.
-void itoa(uint32_t num, char *buffer, int buffer_length);
+void string_itoa(uint32_t num, char *buffer, int buffer_length);
 
 //! Converts a signed integer value to a null-terminated string and stores the result in buffer.
 //! NOTE: Buffer must be long enough to fit a string 12 bytes long.
