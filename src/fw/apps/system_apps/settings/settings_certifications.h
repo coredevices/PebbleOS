@@ -135,6 +135,18 @@ static const CertificationIds s_certification_ids_silk_hr = {
   .mexico_ifetel_id = "RCPPE1016-1238"
 };
 
+static const RegulatoryFlags s_regulatory_flags_obelix = {
+  .has_canada_ised = true,
+  .has_eu_ce = true,
+  .has_ukca = true,
+  .has_usa_fcc = true,
+};
+
+// FIXME(OBELIX): Replace with real IDs
+static const CertificationIds s_certification_ids_obelix = {
+  .canada_ised_id = "XXXXXX-YYYYYYYYYYY",
+  .usa_fcc_id = "XXX-YYY",
+};
 
 static const RegulatoryFlags * prv_get_regulatory_flags(void) {
 #if PLATFORM_SNOWY
@@ -146,6 +158,8 @@ static const RegulatoryFlags * prv_get_regulatory_flags(void) {
 #elif PLATFORM_ASTERIX
   // TODO: add applicable flags
   return &s_regulatory_flags_fallback;
+#elif PLATFORM_OBELIX
+  return &s_regulatory_flags_obelix;
 #else
   return &s_regulatory_flags_fallback;
 #endif
@@ -169,6 +183,8 @@ static const CertificationIds * prv_get_certification_ids(void) {
 #elif PLATFORM_ASTERIX
   // TODO: add real certification ids
   return &s_certification_ids_fallback;
+#elif PLATFORM_OBELIX
+  return &s_certification_ids_obelix;
 #else
   return &s_certification_ids_fallback;
 #endif
