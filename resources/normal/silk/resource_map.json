@@ -152,6 +152,11 @@
     },
     {
       "type": "pbi",
+      "name": "SYSTEM_UKCA_MARK",
+      "file": "normal/snowy/images/system_ukca_mark.png"
+    },
+    {
+      "type": "pbi",
       "name": "SYSTEM_R_MARK",
       "file": "normal/snowy/images/system_r_mark.png"
     },
