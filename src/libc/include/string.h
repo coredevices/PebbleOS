@@ -30,3 +30,5 @@ int atoi(const char *nptr) __attribute__((__pure__));
 long int atol(const char *nptr) __attribute__((__pure__));
 long int strtol(const char * restrict nptr, char ** restrict endptr, int base);
 unsigned long int strtoul(const char * restrict nptr, char ** restrict endptr, int base);
+
+char *itoa(int value, char *str, int base);
