@@ -14,12 +14,16 @@ typedef struct RegulatoryFlags {
   bool has_australia_rcm:1;
 //! Canada IC ID
   bool has_canada_ic:1;
+//! Canada ISED ID
+  bool has_canada_ised:1;
 //! China CMIIT ID
   bool has_china_cmiit:1;
 //! EU CE Mark
   bool has_eu_ce:1;
 //! EU WEEE Mark (wastebin with X)
   bool has_eu_weee:1;
+//! UKCA Mark
+  bool has_ukca:1;
 //! Japan TELEC (Telecom Engineering Center) [R] mark and ID
 //! (Radio equipment conformity)
   bool has_japan_telec_r:1;
@@ -37,6 +41,7 @@ typedef struct RegulatoryFlags {
 
 typedef struct CertificationIds {
   const char *canada_ic_id;
+  const char *canada_ised_id;
   const char *china_cmiit_id;
   const char *japan_telec_r_id;
   const char *japan_telec_t_id;
@@ -52,6 +57,7 @@ static const RegulatoryFlags s_regulatory_flags_fallback = {
 // Certifiation ID strings used for bigboards and such.
 static const CertificationIds s_certification_ids_fallback = {
   .canada_ic_id = "XXXXXX-YYY",
+  .canada_ised_id = "XXXXXX-YYYYYYYYYYY",
   .china_cmiit_id = "ABCDEFGHIJ",
   .japan_telec_r_id = "XXX-YYYYYY",
   .japan_telec_t_id = "D XX YYYY ZZZ",
@@ -181,5 +187,6 @@ ID_GETTER(japan_telec_t_id)
 ID_GETTER(korea_kcc_id)
 ID_GETTER(mexico_ifetel_id)
 ID_GETTER(usa_fcc_id)
+ID_GETTER(canada_ised_id)
 
 #undef ID_GETTER

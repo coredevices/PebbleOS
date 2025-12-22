@@ -89,6 +89,7 @@ typedef struct SystemCertificationData {
   GBitmap kcc_mark;
   GBitmap ce_mark;
   GBitmap weee_mark;
+  GBitmap ukca_mark;
   GBitmap r_mark;
   GBitmap t_mark;
   GBitmap aus_rcm_mark;
@@ -1057,6 +1058,7 @@ static void prv_certification_window_load(Window *window) {
   gbitmap_init_with_resource(&cd->kcc_mark, RESOURCE_ID_SYSTEM_KCC_MARK);
   gbitmap_init_with_resource(&cd->ce_mark, RESOURCE_ID_SYSTEM_CE_MARK);
   gbitmap_init_with_resource(&cd->weee_mark, RESOURCE_ID_SYSTEM_WEEE_MARK);
+  gbitmap_init_with_resource(&cd->ukca_mark, RESOURCE_ID_SYSTEM_UKCA_MARK);
   gbitmap_init_with_resource(&cd->r_mark, RESOURCE_ID_SYSTEM_R_MARK);
   gbitmap_init_with_resource(&cd->t_mark, RESOURCE_ID_SYSTEM_T_MARK);
   gbitmap_init_with_resource(
@@ -1078,6 +1080,13 @@ static void prv_certification_window_load(Window *window) {
         .draw_cell_fn = prv_draw_regulatory_id_cell,
         .arg1 = "Canada IC",
         .arg2 = prv_get_canada_ic_id(),
+    });
+  }
+  if (flags->has_canada_ised) {
+    prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+        .draw_cell_fn = prv_draw_regulatory_id_cell,
+        .arg1 = "Canada ISED",
+        .arg2 = prv_get_canada_ised_id(),
     });
   }
   if (flags->has_china_cmiit) {
@@ -1110,6 +1119,9 @@ static void prv_certification_window_load(Window *window) {
   }
   if (flags->has_eu_weee) {
     prv_append_regulatory_compliance_mark(cd, &cd->weee_mark);
+  }
+  if (flags->has_ukca) {
+    prv_append_regulatory_compliance_mark(cd, &cd->ukca_mark);
   }
   if (flags->has_australia_rcm) {
     prv_append_regulatory_compliance_mark(cd, &cd->aus_rcm_mark);
@@ -1164,6 +1176,7 @@ static void prv_certification_window_unload(Window *window) {
   gbitmap_deinit(&data->certification_data.kcc_mark);
   gbitmap_deinit(&data->certification_data.ce_mark);
   gbitmap_deinit(&data->certification_data.weee_mark);
+  gbitmap_deinit(&data->certification_data.ukca_mark);
   gbitmap_deinit(&data->certification_data.r_mark);
   gbitmap_deinit(&data->certification_data.t_mark);
   gbitmap_deinit(&data->certification_data.aus_rcm_mark);
