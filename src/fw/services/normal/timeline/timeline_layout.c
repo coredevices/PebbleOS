@@ -58,6 +58,10 @@ typedef struct TimelineLayoutStyle {
   int16_t primary_list_margin_h;
   int16_t primary_secondary_peek_margin_h;
   bool thin_can_have_secondary;
+  int16_t fat_future_title_offset_y;
+  int16_t fat_past_title_offset_y;
+  int16_t thin_future_title_offset_y;
+  int16_t thin_past_title_offset_y;
 } TimelineLayoutStyle;
 
 static const TimelineLayoutStyle s_style_medium = {
@@ -65,6 +69,10 @@ static const TimelineLayoutStyle s_style_medium = {
   .thin_time_margin_h = -8,
   .primary_list_margin_h = 6,
   .primary_line_spacing_delta = -2,
+  .fat_future_title_offset_y = 0,
+  .fat_past_title_offset_y = 0,
+  .thin_future_title_offset_y = 0,
+  .thin_past_title_offset_y = 0,
 };
 
 static const TimelineLayoutStyle s_style_large = {
@@ -75,6 +83,10 @@ static const TimelineLayoutStyle s_style_large = {
   // depends on whether the remaining screen space after fat permits.
   .primary_secondary_peek_margin_h = -5,
   .thin_can_have_secondary = true,
+  .fat_future_title_offset_y = 25,
+  .fat_past_title_offset_y = -30,
+  .thin_future_title_offset_y = 45,
+  .thin_past_title_offset_y = 10,
 };
 
 static const TimelineLayoutStyle * const s_styles[NumPreferredContentSizes] = {
@@ -218,7 +230,12 @@ void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection
   const GSize size = timeline_resources_get_gsize(TimelineResourceSizeTiny);
   const bool is_future = (scroll_direction == TimelineScrollDirectionDown);
   PBL_UNUSED const int offset_y_rect = -5;
-  PBL_UNUSED const int offset_y_round = is_future ? 40 : 17; // Center the icon in the display
+  // Center the icon vertically at screen center (offsets differ by content size/style)
+  const bool use_large_style = (PreferredContentSizeDefault >= PreferredContentSizeLarge);
+  // s_style_large: future_top_margin=39, past layout origin=117, icon_offset_y=3
+  // s_style_medium: future_top_margin=39, past layout origin=61, icon_offset_y=0
+  PBL_UNUSED const int offset_y_round = use_large_style ? (is_future ? 76 : -2)
+                                                        : (is_future ? 40 : 17);
   const GPoint origin = {
     .x = bounds->size.w - size.w + 2,
     .y = PBL_IF_RECT_ELSE(offset_y_rect, offset_y_round),
@@ -568,12 +585,14 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     }
   }
 
-  if (PBL_IF_ROUND_ELSE(is_fat && !has_secondary, false)) {
-    const int single_offset = 2;
-    const GFont numbers_font =
-        system_theme_get_font_for_default_size(TextStyleFont_TimeHeaderNumbers);
-    vertical_node->container.node.offset.y =
-        ((is_future ? -1 : 1) * fonts_get_font_height(numbers_font)) + single_offset;
+  if (PBL_IF_ROUND_ELSE(!is_peek, false)) {
+    if (is_fat) {
+      vertical_node->container.node.offset.y =
+          is_future ? style->fat_future_title_offset_y : style->fat_past_title_offset_y;
+    } else {
+      vertical_node->container.node.offset.y =
+          is_future ? style->thin_future_title_offset_y : style->thin_past_title_offset_y;
+    }
   }
 
   if (is_peek) {

@@ -89,8 +89,9 @@ static const TimelineLayerStyle s_style_medium = {
 };
 
 static const TimelineLayerStyle s_style_large = {
-  .sidebar_arrow_size = {14, 28},
-  .sidebar_width = 34,
+  .sidebar_arrow_size.w = PBL_IF_RECT_ELSE(14, 10),
+  .sidebar_arrow_size.h = PBL_IF_RECT_ELSE(28, 40),
+  .sidebar_width = PBL_IF_RECT_ELSE(34, 42),
   .fin_offset_x = 4,
   .future_fin_offset_y = 37,
   .past_top_margin = PBL_IF_RECT_ELSE(7, 18),
@@ -105,7 +106,7 @@ static const TimelineLayerStyle s_style_large = {
   .thin_pin_height = 88,
   .day_sep_dot_diameter = 12,
   .day_sep_offset.y = -21,
-  .past_day_sep_dot_offset_y = -16,
+  .past_day_sep_dot_offset_y = PBL_IF_RECT_ELSE(-16, -32),
   .future_day_sep_dot_offset_y = 16,
 };
 
