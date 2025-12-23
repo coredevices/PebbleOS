@@ -347,12 +347,19 @@ static void prv_handle_glance_event(PebbleEvent *event, void *context) {
 
 void launcher_app_glance_service_draw_glance_for_app_node(LauncherAppGlanceService *service,
                                                           GContext *ctx, const GRect *frame,
-                                                          bool is_highlighted, AppMenuNode *node) {
+                                                          bool is_highlighted,
+                                                          int16_t screen_center_y,
+                                                          AppMenuNode *node) {
   const bool use_glance_cache = prv_should_use_glance_cache_for_app_with_uuid(&node->uuid);
 
   LauncherAppGlance *glance =
       use_glance_cache ? prv_fetch_from_cache_or_load_glance_for_node(node, service) :
                          prv_load_glance_for_node(node, service);
+
+  // Set the screen Y position for arc effect on round displays
+  if (glance) {
+    glance->screen_center_y = screen_center_y;
+  }
 
   // Draw the glance in the provided frame
   launcher_app_glance_draw(ctx, frame, glance, is_highlighted);
