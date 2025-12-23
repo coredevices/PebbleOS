@@ -423,7 +423,26 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
   }
 
   GRect glance_frame = (GRect) { .origin = offset, .size = structured_glance->glance.size };
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_GETAFIX
+  // Create arc effect following the circular display edge
+  // For a circle: x = R - sqrt(R^2 - (y - R)^2), where R = display_size / 2
+  const int16_t radius = PBL_DISPLAY_HEIGHT / 2;
+
+  // Use actual screen Y position for smooth arc during scroll animations
+  const int16_t y_offset_from_center = structured_glance->glance.screen_center_y - radius;
+
+  // Calculate how far the circle edge is from the display edge at this Y
+  // circle_x = R - sqrt(R^2 - y_offset^2)
+  const int32_t y_offset_sq = (int32_t)y_offset_from_center * y_offset_from_center;
+  const int32_t radius_sq = (int32_t)radius * radius;
+  // Clamp to avoid negative sqrt when row is outside the circle (during scroll animations)
+  const int32_t sqrt_arg = MAX(0, radius_sq - y_offset_sq);
+  const int16_t circle_inset = radius - integer_sqrt(sqrt_arg);
+  // Add base inset for padding from the actual circle edge
+  // Extra 2px shift for non-center rows to push content slightly more inward
+  const int16_t base_inset = 10;
+  const int16_t horizontal_inset = base_inset + circle_inset;
+#elif PLATFORM_ROBERT || PLATFORM_OBELIX
   const int16_t horizontal_inset = 10;
 #else
   const int16_t horizontal_inset = PBL_IF_RECT_ELSE(6, 23);

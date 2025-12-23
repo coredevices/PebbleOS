@@ -30,6 +30,8 @@ struct LauncherAppGlance {
   GSize size;
   //! Whether or not the launcher app glance is currently highlighted
   bool is_highlighted;
+  //! Screen Y center position for arc effect calculation
+  int16_t screen_center_y;
   //! Whether or not the launcher app glance should consider slices
   bool should_consider_slices;
   //! The current slice that should be drawn in the launcher app glance

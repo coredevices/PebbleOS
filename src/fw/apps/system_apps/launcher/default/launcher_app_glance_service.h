@@ -59,10 +59,13 @@ void launcher_app_glance_service_deinit(LauncherAppGlanceService *service);
 //! @param ctx The graphics context to use to draw the launcher app glance
 //! @param frame The frame in which to draw the launcher app glance
 //! @param is_highlighted Whether or not the launcher app glance should be drawn highlighted
+//! @param screen_center_y Screen Y center position for arc effect
 //! @param node The \ref AppMenuNode of the app whose glance we should draw
 void launcher_app_glance_service_draw_glance_for_app_node(LauncherAppGlanceService *service,
                                                           GContext *ctx, const GRect *frame,
-                                                          bool is_highlighted, AppMenuNode *node);
+                                                          bool is_highlighted,
+                                                          int16_t screen_center_y,
+                                                          AppMenuNode *node);
 
 //! Rewind any glance being played by the provided launcher app glance service.
 //! @param service The service for which to rewind any playing glance
