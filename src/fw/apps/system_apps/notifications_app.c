@@ -701,6 +701,7 @@ static void prv_window_load(Window *window) {
                                   GColorWhite);
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
+  menu_layer_set_scroll_wrap_around(menu_layer, true);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
 
   TextLayer *text_layer = &data->text_layer;

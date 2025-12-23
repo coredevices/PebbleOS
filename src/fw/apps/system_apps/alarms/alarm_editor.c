@@ -259,6 +259,7 @@ static void prv_setup_day_picker_window(AlarmEditorData *data) {
                                   ALARMS_APP_HIGHLIGHT_COLOR,
                                   GColorWhite);
   menu_layer_set_click_config_onto_window(&data->day_picker_menu_layer, &data->day_picker_window);
+  menu_layer_set_scroll_wrap_around(&data->day_picker_menu_layer, true);
   layer_add_child(&data->day_picker_window.layer,
                   menu_layer_get_layer(&data->day_picker_menu_layer));
   if (!alarm_get_kind(data->alarm_id, &data->alarm_kind)) {
@@ -414,6 +415,7 @@ static void prv_setup_custom_day_picker_window(AlarmEditorData *data) {
                                   GColorWhite);
   menu_layer_set_click_config_onto_window(&data->custom_day_picker_menu_layer,
                                           &data->custom_day_picker_window);
+  menu_layer_set_scroll_wrap_around(&data->custom_day_picker_menu_layer, true);
   layer_add_child(&data->custom_day_picker_window.layer,
                   menu_layer_get_layer(&data->custom_day_picker_menu_layer));
   gbitmap_init_with_resource(&data->selected_icon, RESOURCE_ID_CHECKBOX_ICON_CHECKED);
