@@ -1352,26 +1352,32 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
   if (!item) {
     return;
   }
+  bool did_vibrate = false;
   Uint32List *vibeDurations = attribute_get_uint32_list(&item->attr_list, AttributeIdVibrationPattern);
   if (vibeDurations && vibeDurations->num_values > 0) {
     VibePattern patt;
     patt.durations = vibeDurations->values;
     patt.num_segments = vibeDurations->num_values;
     vibes_enqueue_custom_pattern(patt);
+    did_vibrate = true;
   } else {
 #if CAPABILITY_HAS_VIBE_SCORES
     VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
     if (score) {
       vibe_score_do_vibe(score);
       vibe_score_destroy(score);
+      did_vibrate = true;
     }
 #else
     vibes_short_pulse();
+    did_vibrate = true;
 #endif
   }
   // Timestamp set after call to vibrate since if something fails,
   // its better to have no vibe blocking then vibe blocking and no vibrations.
-  alerts_set_notification_vibe_timestamp();
+  if (did_vibrate) {
+    alerts_set_notification_vibe_timestamp();
+  }
 }
 
 static void prv_handle_notification_added_common(Uuid *id, NotificationType type) {
