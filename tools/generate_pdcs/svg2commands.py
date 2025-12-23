@@ -233,14 +233,43 @@ def create_command(translate, element, verbose=False, precise=False, raise_error
     return None
 
 
+def parse_style_attribute(style_str):
+    """Parse a CSS style attribute string into a dictionary."""
+    if not style_str:
+        return {}
+    result = {}
+    for part in style_str.split(';'):
+        part = part.strip()
+        if ':' in part:
+            key, value = part.split(':', 1)
+            result[key.strip()] = value.strip()
+    return result
+
+
+def element_get_with_style(element, attr):
+    """Get an attribute from an element, checking both direct attributes and CSS style."""
+    # First check for direct attribute
+    value = element.get(attr)
+    if value is not None:
+        return value
+    # Check in style attribute
+    style = element.get('style')
+    if style:
+        style_dict = parse_style_attribute(style)
+        if attr in style_dict:
+            return style_dict[attr]
+    return None
+
+
 def overwrite_inherited(element, inherited_values):
     for attr in ['stroke', 'stroke-width', 'stroke-opacity', 'fill', 'fill-opacity', 'opacity']:
-        if not element.get(attr) is None:
+        value = element_get_with_style(element, attr)
+        if value is not None:
             if attr == 'opacity' and attr in inherited_values:
                 # Opacity compounds - convert to floats before multiplying
-                inherited_values[attr] = float(inherited_values[attr]) * float(element.get(attr))
+                inherited_values[attr] = float(inherited_values[attr]) * float(value)
             else:
-                inherited_values[attr] = element.get(attr)
+                inherited_values[attr] = value
     return inherited_values
 
 
@@ -252,7 +281,7 @@ def get_commands(translate, group, verbose=False, precise=False, raise_error=Fal
     error = False
     for child in list(group):
         # ignore elements that are marked display="none"
-        display = child.get('display')
+        display = element_get_with_style(child, 'display')
         if display is not None and display == 'none':
             continue
         try:
