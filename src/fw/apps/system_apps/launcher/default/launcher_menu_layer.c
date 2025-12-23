@@ -98,9 +98,17 @@ static void prv_menu_layer_draw_row(GContext* ctx, const Layer *cell_layer, Menu
 
   const GRect *cell_layer_bounds = &cell_layer->bounds;
   const bool is_highlighted = menu_cell_layer_is_highlighted(cell_layer);
+
+  // Get global frame for continuous arc effect during scroll animations
+  // Include the animation offset for smooth animation during center-focused scroll
+  GRect global_frame;
+  layer_get_global_frame((Layer *)cell_layer, &global_frame);
+  const int16_t animation_offset = launcher_menu_layer->menu_layer.animation.cell_content_origin_offset_y;
+  const int16_t screen_center_y = global_frame.origin.y + animation_offset + (global_frame.size.h / 2);
+
   launcher_app_glance_service_draw_glance_for_app_node(&launcher_menu_layer->glance_service,
                                                        ctx, cell_layer_bounds, is_highlighted,
-                                                       node);
+                                                       screen_center_y, node);
 
   // If we should launch an app after this render, push a callback to do that on the app task
   if (launcher_menu_layer->app_to_launch_after_next_render != INSTALL_ID_INVALID) {
@@ -184,7 +192,8 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 #if PBL_ROUND
   const int top_bottom_inset =
       (frame.size.h - LAUNCHER_MENU_LAYER_CELL_ROUND_FOCUSED_CELL_HEIGHT -
-          (2 * LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT)) / 2;
+          (2 * LAUNCHER_MENU_LAYER_NUM_UNFOCUSED_ROWS_PER_SIDE *
+           LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT)) / 2;
   const GEdgeInsets menu_layer_frame_insets = GEdgeInsets(top_bottom_inset, 0);
   menu_layer_frame = grect_inset(menu_layer_frame, menu_layer_frame_insets);
 #endif
