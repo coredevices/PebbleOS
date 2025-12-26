@@ -152,6 +152,7 @@ typedef enum {
   SystemMenuItemInformation,
   SystemMenuItemCertification,
   SystemMenuItemStationaryToggle,
+  SystemMenuItemPanicMode,
   SystemMenuItemDebugging,
   SystemMenuItemShutDown,
   SystemMenuItemFactoryReset,
@@ -162,6 +163,7 @@ static const char *s_item_titles[SystemMenuItem_Count] = {
   [SystemMenuItemInformation]   = i18n_noop("Information"),
   [SystemMenuItemCertification] = i18n_noop("Certification"),
   [SystemMenuItemStationaryToggle] = i18n_noop("Stand-By Mode"),
+  [SystemMenuItemPanicMode]     = i18n_noop("Panic Mode"),
   [SystemMenuItemDebugging]     = i18n_noop("Debugging"),
   [SystemMenuItemShutDown]      = i18n_noop("Shut Down"),
   [SystemMenuItemFactoryReset]  = i18n_noop("Factory Reset"),
@@ -382,6 +384,79 @@ static void prv_maybe_trigger_core_dump() {
   confirmation_dialog_set_click_config_provider(confirmation_dialog,
       prv_coredump_click_config);
   app_confirmation_dialog_push(confirmation_dialog);
+}
+
+// Panic Mode confirmation
+////////////////////////////
+
+static void prv_panic_mode_dialog_load_cb(void *context) {
+  ExpandableDialog *expandable_dialog = (ExpandableDialog *)context;
+  Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
+  
+  // Center the main text after the dialog window loads
+  text_layer_set_text_alignment(&dialog->text_layer, GTextAlignmentCenter);
+  
+  // Center the header text
+  text_layer_set_text_alignment(&expandable_dialog->header_layer, GTextAlignmentCenter);
+  
+  // Center the icon by repositioning it, accounting for the action bar
+  KinoLayer *icon_layer = &dialog->icon_layer;
+  if (kino_layer_get_reel(icon_layer)) {
+    GRect icon_frame = icon_layer->layer.frame;
+    GRect window_frame = dialog->window.layer.frame;
+    
+    // Check if action bar is shown and account for its width
+    bool show_action_bar = expandable_dialog->show_action_bar;
+    uint16_t action_bar_width = show_action_bar ? ACTION_BAR_WIDTH : 0;
+    
+    // Center horizontally within the content area (excluding action bar)
+    uint16_t content_width = window_frame.size.w - action_bar_width;
+    icon_frame.origin.x = (content_width - icon_frame.size.w) / 2;
+    layer_set_frame(&icon_layer->layer, &icon_frame);
+  }
+}
+
+static void prv_panic_mode_confirm_cb(ClickRecognizerRef recognizer, void *context) {
+  ExpandableDialog *dialog = (ExpandableDialog *)context;
+  
+  expandable_dialog_pop(dialog);
+  
+  // Toggle panic mode setting
+  bool current_state = shell_prefs_get_panic_mode_enabled();
+  shell_prefs_set_panic_mode_enabled(!current_state);
+  
+  // Reload the menu to reflect the change
+  settings_menu_reload_data(SettingsMenuItemSystem);
+}
+
+static void prv_panic_mode_interstitial_trigger(SettingsSystemData *context) {
+  const char *message;
+  const char *header;
+  
+  // Show appropriate message based on current state
+  if (shell_prefs_get_panic_mode_enabled()) {
+    header = i18n_noop("Disable Panic Mode?");
+    message = i18n_noop("Notifications will no longer be cleared.");
+  } else {
+    header = i18n_noop("Enable Panic Mode?");
+    message = i18n_noop("Clears notifications on airplane, stand-by, and charging.");
+  }
+  
+  // Set up callbacks to center text after window loads
+  static DialogCallbacks callbacks = {
+    .load = prv_panic_mode_dialog_load_cb,
+    .unload = NULL
+  };
+  
+  // Create expandable dialog with scrolling support
+  ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
+      "Panic Mode", RESOURCE_ID_RESULT_DELETED_SMALL, message, GColorWhite,
+      GColorRed, &callbacks, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
+      prv_panic_mode_confirm_cb);
+  expandable_dialog_set_header(expandable_dialog, header);
+  expandable_dialog_show_action_bar(expandable_dialog, true);
+  
+  app_expandable_dialog_push(expandable_dialog);
 }
 
 // ALS Threshold Settings
@@ -1320,6 +1395,9 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case SystemMenuItemStationaryToggle:
       subtitle = stationary_get_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
+    case SystemMenuItemPanicMode:
+      subtitle = shell_prefs_get_panic_mode_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
+      break;
     case SystemMenuItemShutDown:
       if (!prv_shutdown_enabled()) {
         // XXX: For now, gray out the Shut Down item if unusable.
@@ -1354,6 +1432,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case SystemMenuItemStationaryToggle:
       stationary_set_enabled(!stationary_get_enabled());
+      break;
+    case SystemMenuItemPanicMode:
+      prv_panic_mode_interstitial_trigger(data);
       break;
     case SystemMenuItemShutDown:
       if (prv_shutdown_enabled()) {

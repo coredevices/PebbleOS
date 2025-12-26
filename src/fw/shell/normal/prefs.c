@@ -97,6 +97,9 @@ static bool s_stationary_mode_enabled = false;
 static bool s_stationary_mode_enabled = true;
 #endif
 
+#define PREF_KEY_PANIC_MODE "panicMode"
+static bool s_panic_mode_enabled = false;
+
 #define PREF_KEY_DEFAULT_WORKER "workerId"
 static Uuid s_default_worker = UUID_INVALID_INIT;
 
@@ -374,6 +377,11 @@ static bool prv_set_s_display_orientation_left(bool *left) {
 
 static bool prv_set_s_stationary_mode_enabled(bool *enabled) {
   s_stationary_mode_enabled = *enabled;
+  return true;
+}
+
+static bool prv_set_s_panic_mode_enabled(bool *enabled) {
+  s_panic_mode_enabled = *enabled;
   return true;
 }
 
@@ -1058,6 +1066,14 @@ bool shell_prefs_get_stationary_enabled(void) {
 
 void shell_prefs_set_stationary_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_STATIONARY, &enabled, sizeof(enabled));
+}
+
+bool shell_prefs_get_panic_mode_enabled(void) {
+  return s_panic_mode_enabled;
+}
+
+void shell_prefs_set_panic_mode_enabled(bool enabled) {
+  prv_pref_set(PREF_KEY_PANIC_MODE, &enabled, sizeof(enabled));
 }
 
 AppInstallId worker_preferences_get_default_worker(void) {
