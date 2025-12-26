@@ -39,6 +39,10 @@ bool alerts_preferences_get_notification_vibe_delay(void);
 
 void alerts_preferences_set_notification_vibe_delay(bool delay);
 
+bool alerts_preferences_get_notification_backlight(void);
+
+void alerts_preferences_set_notification_backlight(bool enable);
+
 bool alerts_preferences_get_vibrate(void);
 
 void alerts_preferences_set_vibrate(bool enable);
