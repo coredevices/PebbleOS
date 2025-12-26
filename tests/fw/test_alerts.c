@@ -280,3 +280,31 @@ void test_alerts__dnd_interruptions(void) {
   fake_rtc_set_ticks(rtc_get_ticks() + NOTIFICATION_VIBE_HOLDOFF_TICKS);
   cl_assert(alerts_should_enable_backlight_for_type(AlertOther));
 }
+
+void test_alerts__backlight_preference(void) {
+  s_dnd_active = false;
+  alerts_set_mask(AlertMaskAllOn);
+
+  // Backlight should be enabled by default
+  cl_assert(alerts_should_enable_backlight_for_type(AlertMobile));
+  cl_assert(alerts_should_enable_backlight_for_type(AlertPhoneCall));
+  cl_assert(alerts_should_enable_backlight_for_type(AlertReminder));
+
+  // Disable backlight preference
+  alerts_preferences_set_notification_backlight(false);
+
+  // Backlight should now be disabled for all alert types
+  cl_assert(!alerts_should_enable_backlight_for_type(AlertMobile));
+  cl_assert(!alerts_should_enable_backlight_for_type(AlertPhoneCall));
+  cl_assert(!alerts_should_enable_backlight_for_type(AlertReminder));
+  cl_assert(!alerts_should_enable_backlight_for_type(AlertOther));
+
+  // Re-enable backlight preference
+  alerts_preferences_set_notification_backlight(true);
+
+  // Backlight should be enabled again
+  cl_assert(alerts_should_enable_backlight_for_type(AlertMobile));
+  cl_assert(alerts_should_enable_backlight_for_type(AlertPhoneCall));
+  cl_assert(alerts_should_enable_backlight_for_type(AlertReminder));
+  cl_assert(alerts_should_enable_backlight_for_type(AlertOther));
+}
