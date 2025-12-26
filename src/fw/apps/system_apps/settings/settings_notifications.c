@@ -48,6 +48,7 @@ enum NotificationsItem {
   NotificationsItemDesignStyle,
 #endif
   NotificationsItemVibeDelay,
+  NotificationsItemBacklight,
   NotificationsItem_Count,
 };
 
@@ -364,6 +365,13 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = s_vibe_delay_labels[prv_vibe_delay_get_selection_index()];
       break;
     }
+    case NotificationsItemBacklight: {
+      /// String within Settings->Notifications that describes backlight setting
+      title = i18n_noop("Backlight");
+      subtitle = alerts_preferences_get_notification_backlight() ?
+                 i18n_noop("On") : i18n_noop("Off");
+      break;
+    }
     default:
       WTF;
   }
@@ -405,6 +413,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
 #endif /* PBL_BW */
     case NotificationsItemVibeDelay:
       prv_vibe_delay_menu_push(data);
+      break;
+    case NotificationsItemBacklight:
+      // Toggle backlight directly without submenu
+      alerts_preferences_set_notification_backlight(
+          !alerts_preferences_get_notification_backlight());
       break;
     default:
       WTF;
