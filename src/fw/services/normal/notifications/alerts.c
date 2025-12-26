@@ -49,6 +49,10 @@ bool alerts_should_notify_for_type(AlertType type) {
 }
 
 bool alerts_should_enable_backlight_for_type(AlertType type) {
+  if (!alerts_preferences_get_notification_backlight()) {
+    return false;
+  }
+
   if (do_not_disturb_is_active() && !(alerts_preferences_dnd_get_mask() & type)) {
     return false;
   }
