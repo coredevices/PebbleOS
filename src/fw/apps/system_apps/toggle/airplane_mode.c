@@ -8,13 +8,23 @@
 #include "process_management/app_manager.h"
 #include "services/common/bluetooth/bluetooth_ctl.h"
 #include "services/common/i18n/i18n.h"
+#include "services/normal/notifications/notification_storage.h"
+#include "shell/prefs.h"
 
 static bool prv_get_state(void *context) {
   return bt_ctl_is_airplane_mode_on();
 }
 
 static void prv_set_state(bool enabled, void *context) {
-  bt_ctl_set_airplane_mode_async(!bt_ctl_is_airplane_mode_on());
+  // Store the current state before toggling
+  bool will_be_enabled = !bt_ctl_is_airplane_mode_on();
+  
+  bt_ctl_set_airplane_mode_async(will_be_enabled);
+  
+  // If panic mode is enabled and we're turning on airplane mode, wipe notifications
+  if (will_be_enabled && shell_prefs_get_panic_mode_enabled()) {
+    notification_storage_reset_and_init();
+  }
 }
 
 static const ActionToggleImpl s_airplane_mode_action_toggle_impl = {

@@ -102,6 +102,10 @@ void backlight_set_ambient_threshold(uint32_t threshold);
 bool shell_prefs_get_stationary_enabled(void);
 void shell_prefs_set_stationary_enabled(bool enabled);
 
+// Panic mode will wipe all notifications when entering airplane mode, stationary mode, or charging.
+bool shell_prefs_get_panic_mode_enabled(void);
+void shell_prefs_set_panic_mode_enabled(bool enabled);
+
 // The default worker setting is used by process_management.
 AppInstallId worker_preferences_get_default_worker(void);
 void worker_preferences_set_default_worker(AppInstallId id);
