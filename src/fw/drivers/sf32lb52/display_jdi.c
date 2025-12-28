@@ -254,6 +254,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   bool first_row = true;
 
   PBL_ASSERTN(!s_updating);
+  stop_mode_disable(InhibitorDisplay);
 
   // Convert rows in-place from 222 to 332 format
   // We use the compositor's framebuffer directly to save RAM
@@ -285,7 +286,6 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   s_uccb = uccb;
   s_updating = true;
 
-  stop_mode_disable(InhibitorDisplay);
   prv_display_update_start();
 }
 
