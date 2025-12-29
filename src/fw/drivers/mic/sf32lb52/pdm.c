@@ -48,6 +48,7 @@ void mic_init(const MicDevice *this) {
   // Create mutex for thread safety
   state->mutex = mutex_create_recursive();
   PBL_ASSERTN(state->mutex);
+  state->volume = PDM_AUDIO_RECORD_GAIN_DEFAULT;
   
   //Pinmux configuration
   HAL_PIN_Set(this->clk_gpio.pad, this->clk_gpio.func, this->clk_gpio.flags, 1);
@@ -68,20 +69,21 @@ void mic_init(const MicDevice *this) {
   state->is_initialized = true;
 }
 
+//volume from 0~100
 void mic_set_volume(const MicDevice *this, uint16_t volume) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
   
   MicDeviceState *state = this->state;
   PDM_HandleTypeDef* hpdm = state->hpdm;
-  
   if (state->is_running) {
     PBL_LOG(LOG_LEVEL_WARNING, "Cannot set volume while microphone is running");
     return;
   }
-  // volume form 0~127
+  volume = volume * PDM_AUDIO_RECORD_GAIN_MAX/100;
+  // volume form 0~120 on HAL
   if(volume > PDM_AUDIO_RECORD_GAIN_MAX) volume = PDM_AUDIO_RECORD_GAIN_MAX;
-  HAL_PDM_Set_Gain(hpdm, this->channels, volume);
+  state->volume = volume;
 }
 
 static bool prv_allocate_buffers(MicDeviceState *state) {
@@ -251,7 +253,7 @@ static bool prv_start_pdm_capture(const MicDevice *this)
   hpdm->Init.SampleRate = this->sample_rate;
   hpdm->Init.ChannelDepth = (uint32_t) this->channel_depth;
   HAL_PDM_Config(hpdm, PDM_CFG_CHANNEL | PDM_CFG_SAMPLERATE | PDM_CFG_DEPTH);
-  HAL_PDM_Set_Gain(hpdm, PDM_CHANNEL_STEREO, PDM_AUDIO_RECORD_GAIN_DEFAULT);
+  HAL_PDM_Set_Gain(hpdm, PDM_CHANNEL_STEREO, this->state->volume);
 
   // 3.072M = 49.152M(audpll)/16, 96k sampling use 3.072M as clock.
   if (hpdm->Init.clkSrc == 3072000 || hpdm->Init.SampleRate == PDM_SAMPLE_96KHZ)
