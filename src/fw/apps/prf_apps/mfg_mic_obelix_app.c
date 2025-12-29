@@ -120,6 +120,8 @@ static void prv_recording_start(void) {
 
   snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Pls Speak");
   mic_init(MIC);
+  //set to maximum make it's more audiable in testing
+  mic_set_volume(MIC, 100); 
   mic_start(MIC, prv_mic_data_handler, NULL, app_data->pcm, PCM_BUFFER_SIZE);
 }
 
