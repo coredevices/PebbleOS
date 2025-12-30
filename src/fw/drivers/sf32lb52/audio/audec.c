@@ -7,6 +7,7 @@
 #include "system/logging.h"
 #include "util/misc.h"
 #include "services/common/system_task.h"
+#include "kernel/util/stop.h"
 
 //AVDD 3V3 for obelix
 #define BSP_AVDD_V18_ENABLE     0
@@ -337,6 +338,8 @@ void audec_start(AudioDevice* audio_device, AudioTransCB cb) {
     AUDCODEC_HandleTypeDef *haudcodec = &state->audcodec;
     state->trans_cb = cb;
 
+    stop_mode_disable(InhibitorAudio);
+
     prv_allocate_buffers(state);
 
     prv_bf0_audio_pll_config(audio_device, &codec_dac_clk_config[haudcodec->Init.samplerate_index]);
@@ -404,6 +407,8 @@ void audec_stop(AudioDevice* audio_device) {
 
     prv_free_buffers(state);
     memset(haudcodec->buf[HAL_AUDCODEC_DAC_CH0], 0, haudcodec->bufSize);
+
+    stop_mode_enable(InhibitorAudio);
 }
 
 void audec_dac0_dma_irq_handler(AudioDevice* audio_device)
