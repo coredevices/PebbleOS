@@ -40,6 +40,7 @@ typedef struct RegulatoryFlags {
 } RegulatoryFlags;
 
 typedef struct CertificationIds {
+  const char *company_name;
   const char *canada_ic_id;
   const char *canada_ised_id;
   const char *china_cmiit_id;
@@ -56,6 +57,7 @@ static const RegulatoryFlags s_regulatory_flags_fallback = {
 
 // Certifiation ID strings used for bigboards and such.
 static const CertificationIds s_certification_ids_fallback = {
+  .company_name = "ACME Inc.",
   .canada_ic_id = "XXXXXX-YYY",
   .canada_ised_id = "XXXXXX-YYYYYYYYYYY",
   .china_cmiit_id = "ABCDEFGHIJ",
@@ -79,6 +81,7 @@ static const RegulatoryFlags s_regulatory_flags_snowy = {
 };
 
 static const CertificationIds s_certification_ids_snowy = {
+  .company_name = "Pebble Technology Corp.",
   .canada_ic_id = "10805A-501",
   .china_cmiit_id = "2015DJ1504",
   .japan_telec_r_id = "201-150104",
@@ -88,6 +91,7 @@ static const CertificationIds s_certification_ids_snowy = {
 };
 
 static const CertificationIds s_certification_ids_bobby = {
+  .company_name = "Pebble Technology Corp.",
   .canada_ic_id = "10805A-511",
   .china_cmiit_id = "2015DJ3458",
   .japan_telec_r_id = "201-150257",
@@ -104,6 +108,7 @@ static const RegulatoryFlags s_regulatory_flags_spalding = {
 };
 
 static const CertificationIds s_certification_ids_spalding = {
+  .company_name = "Pebble Technology Corp.",
   .canada_ic_id = "10805A-601",
   .usa_fcc_id = "RGQ-601",
 };
@@ -120,6 +125,7 @@ static const RegulatoryFlags s_regulatory_flags_silk = {
 };
 
 static const CertificationIds s_certification_ids_silk = {
+  .company_name = "Pebble Technology Corp.",
   .canada_ic_id = "10805A-1001",
   .china_cmiit_id = "2016DJ4469",
   .usa_fcc_id = "RGQ-1001",
@@ -128,6 +134,7 @@ static const CertificationIds s_certification_ids_silk = {
 };
 
 static const CertificationIds s_certification_ids_silk_hr = {
+  .company_name = "Pebble Technology Corp.",
   .canada_ic_id = "10805A-1002",
   .china_cmiit_id = "2016DJ4931",
   .usa_fcc_id = "RGQ-1002",
@@ -144,6 +151,7 @@ static const RegulatoryFlags s_regulatory_flags_obelix = {
 
 // FIXME(OBELIX): Replace with real IDs
 static const CertificationIds s_certification_ids_obelix = {
+  .company_name = "Core Devices LLC",
   .canada_ised_id = "XXXXXX-YYYYYYYYYYY",
   .usa_fcc_id = "XXX-YYY",
 };
@@ -196,6 +204,7 @@ static const CertificationIds * prv_get_certification_ids(void) {
       s_certification_ids_fallback.ID_KIND; \
   }
 
+ID_GETTER(company_name)
 ID_GETTER(canada_ic_id)
 ID_GETTER(china_cmiit_id)
 ID_GETTER(japan_telec_r_id)
@@ -206,3 +215,9 @@ ID_GETTER(usa_fcc_id)
 ID_GETTER(canada_ised_id)
 
 #undef ID_GETTER
+
+//! Get the model string from MFG storage
+//! @param buffer a character array that's at least MFG_INFO_MODEL_STRING_LENGTH in size
+static void prv_get_model(char *buffer) {
+  mfg_info_get_model(buffer);
+}
