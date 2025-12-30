@@ -110,6 +110,8 @@ typedef struct SystemCertificationData {
   TextLayer title_text;
   TextLayer info_text;
   StatusBarLayer status_layer;
+
+  char model_buffer[MFG_INFO_MODEL_STRING_LENGTH];
 } SystemCertificationData;
 
 typedef struct SystemInformationData {
@@ -1068,6 +1070,22 @@ static void prv_certification_window_load(Window *window) {
 
   // Construct the certification menu
   const RegulatoryFlags *flags = prv_get_regulatory_flags();
+
+  // Add company name
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "Company",
+      .arg2 = prv_get_company_name(),
+  });
+
+  // Add model from MFG storage
+  prv_get_model(cd->model_buffer);
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "Model",
+      .arg2 = cd->model_buffer,
+  });
+
   if (flags->has_usa_fcc) {
     prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
         .draw_cell_fn = prv_draw_fcc_cell,
