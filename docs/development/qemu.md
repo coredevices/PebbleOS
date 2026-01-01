@@ -86,6 +86,7 @@ The steps here are similar that of real hardware:
 ./waf build
 ./waf qemu_image_spi
 ```
+(not inside Qemu repo, this is for PebbleOS repo)
 
 where `$BOARD` is any STM32 based board.
 

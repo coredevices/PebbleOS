@@ -90,6 +90,7 @@ development/getting_started.md
 development/options.md
 development/building_fw.md
 development/prf.md
+development/debug.md
 development/qemu.md
 ```
 
