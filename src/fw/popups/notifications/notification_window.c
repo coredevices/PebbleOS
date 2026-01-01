@@ -793,6 +793,56 @@ static void prv_mute_notification_weekends(ActionMenu *action_menu,
   prv_mute_notification(action_menu_item, MuteBitfield_Weekends);
 }
 
+static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, int duration_seconds) {
+  NotificationWindowData *window_data = action_menu_item->action_data;
+  TimelineItem *item = prv_get_current_notification(window_data);
+
+  const char *app_id = attribute_get_string(&item->attr_list, AttributeIdiOSAppIdentifier, "");
+  if (!app_id || !*app_id) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not mute notification. Unknown app_id");
+    return;
+  }
+
+  const int app_id_len = strlen(app_id);
+  iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)app_id, app_id_len);
+  if (notif_prefs && attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration)) {
+    const uint32_t expiration_time = rtc_get_time() + duration_seconds;
+    
+    Attribute *existing_attr = attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration);
+    existing_attr->uint32 = expiration_time;
+
+    ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len,
+                                  &notif_prefs->attr_list, &notif_prefs->action_group);
+
+    TimelineItemAction *dismiss = timeline_item_find_dismiss_action(item);
+    if (dismiss) {
+      timeline_invoke_action(item, dismiss, NULL);
+    }
+    prv_push_muted_dialog();
+    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_MUTED_COUNT, AnalyticsClient_System);
+  } else {
+    PBL_LOG(LOG_LEVEL_WARNING, "Could not mute notification. No prefs or mute attribute");
+  }
+
+  ios_notif_pref_db_free_prefs(notif_prefs);
+}
+
+static void prv_mute_notification_1_hour(ActionMenu *action_menu,
+                                         const ActionMenuItem *action_menu_item,
+                                         void *context) {
+  prv_mute_notification_timed(action_menu_item, 3600);
+}
+
+static void prv_mute_notification_today(ActionMenu *action_menu,
+                                        const ActionMenuItem *action_menu_item,
+                                        void *context) {
+  time_t now = rtc_get_time();
+  struct tm now_tm;
+  localtime_r(&now, &now_tm);
+  const int seconds_until_midnight = (24 * 3600) - (now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec);
+  prv_mute_notification_timed(action_menu_item, seconds_until_midnight);
+}
+
 static bool prv_has_mute_action(TimelineItem *item) {
   PebbleProtocolCapabilities capabilities;
   bt_persistent_storage_get_cached_system_capabilities(&capabilities);
@@ -894,12 +944,22 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
                                    prv_mute_notification_always,
                                    window_data);
     } else {
-      const uint8_t number_mute_actions = 3;
+      const uint8_t number_mute_actions = 5;
       ActionMenuLevel *mute_level = action_menu_level_create(number_mute_actions);
 
       action_menu_level_add_child(root_level,
                                   mute_level,
                                   mute_label_buf);
+
+      action_menu_level_add_action(mute_level,
+                                   i18n_get("Mute 1 Hour", root_level),
+                                   prv_mute_notification_1_hour,
+                                   window_data);
+
+      action_menu_level_add_action(mute_level,
+                                   i18n_get("Mute Today", root_level),
+                                   prv_mute_notification_today,
+                                   window_data);
 
       action_menu_level_add_action(mute_level,
                                    i18n_get("Mute Always", root_level),
