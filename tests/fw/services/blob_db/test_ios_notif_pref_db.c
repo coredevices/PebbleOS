@@ -126,9 +126,11 @@ void test_ios_notif_pref_db__store_prefs(void) {
 
   // Update the current entry with a new attribute
   attribute_list_add_uint32(&attr_list, AttributeIdLastUpdated, 123456);
+  attribute_list_add_uint32(&attr_list, AttributeIdMuteExpiration, 1767322800);
   ios_notif_pref_db_store_prefs((uint8_t *)key, key_len, &attr_list, &action_group);
 
   // Make sure we can get all the data back
+  ios_notif_pref_db_free_prefs(notif_prefs);
   notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)key, key_len);
   cl_assert(notif_prefs);
   title = attribute_find(&notif_prefs->attr_list, AttributeIdShortTitle);
@@ -143,6 +145,9 @@ void test_ios_notif_pref_db__store_prefs(void) {
   Attribute *updated = attribute_find(&notif_prefs->attr_list, AttributeIdLastUpdated);
   cl_assert(updated);
   cl_assert_equal_i(updated->uint32, 123456);
+  Attribute *expiration = attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration);
+  cl_assert(expiration);
+  cl_assert_equal_i(expiration->uint32, 1767322800);
 
   attribute_list_destroy_list(&attr_list);
   ios_notif_pref_db_free_prefs(notif_prefs);
