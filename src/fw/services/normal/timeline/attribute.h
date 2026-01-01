@@ -113,6 +113,8 @@ typedef enum {
   AttributeIdIcon = 48,
   //! (Uint32List) Custom vibration pattern for a notification, used with vibes_enqueue_custom_pattern
   AttributeIdVibrationPattern = 49,
+  //! (uint32_t) Timestamp when the mute should expire.
+  AttributeIdMuteExpiration = 50,
   NumAttributeIds,
 } AttributeId;
 
