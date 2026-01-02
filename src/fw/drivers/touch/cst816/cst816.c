@@ -12,7 +12,11 @@
 #include "services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "util/math.h"
+
+#if PLATFORM_OBELIX
 #include "cst816_fw.h"
+#endif
 
 #define CST816_RESET_CYCLE_TIME       10  /* ms */
 #define CST816_POR_DELAY_TIME         110 /* ms */
@@ -86,6 +90,7 @@ static bool prv_write_data(uint16_t register_address, const uint8_t *datum, uint
   return rv;
 }
 
+#if PLATFORM_OBELIX
 static bool cst816_enter_bootmode(void) {
 #if RESET_PIN_CTRLBY_NPM1300
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 0);
@@ -179,12 +184,18 @@ static bool cst816_fw_update(void) {
 
   return false;
 }
+#endif
 
 static void cst816_hw_reset(void) {
-#if RESET_PIN_CTRLBY_NPM1300
+#ifdef RESET_PIN_CTRLBY_NPM1300
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 0);
   psleep(CST816_RESET_CYCLE_TIME);
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 1);
+  psleep(CST816_POR_DELAY_TIME);
+#else
+  gpio_output_set(&CST816->reset, false);
+  psleep(CST816_RESET_CYCLE_TIME);
+  gpio_output_set(&CST816->reset, true);
   psleep(CST816_POR_DELAY_TIME);
 #endif
 }
@@ -195,6 +206,10 @@ void touch_sensor_init(void) {
   bool rv;
 
   s_i2c_lock = mutex_create();
+
+#ifndef RESET_PIN_CTRLBY_NPM1300
+  gpio_output_init(&CST816->reset, GPIO_OType_PP, GPIO_Speed_2MHz);
+#endif
 
   cst816_hw_reset();
 
@@ -212,6 +227,7 @@ void touch_sensor_init(void) {
 
   PBL_LOG(LOG_LEVEL_DEBUG, "CST816 firmware: 0x%02X", fw_version);
 
+#if PLATFORM_OBELIX
   uint8_t target_ver = app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX];
 
   if (target_ver != fw_version) {
@@ -225,6 +241,16 @@ void touch_sensor_init(void) {
       return;
     }
   }
+#endif
+
+#if PLATFORM_GETAFIX
+  // FIXME(GETAFIX): Disable default PD on Getafix, we need a proper GPIO API...
+  const InputConfig input_cfg = {
+    .gpio = CST816->int_exti.peripheral,
+    .gpio_pin = CST816->int_exti.gpio_pin,
+  };
+  gpio_input_init_pull_up_down(&input_cfg, GPIO_PuPd_NOPULL);
+#endif
 
   // initialize exti
   exti_configure_pin(CST816->int_exti, ExtiTrigger_Falling, prv_exti_cb);
@@ -244,6 +270,14 @@ static void prv_process_pending_messages(void* context) {
     .x = (((uint16_t)(data[1] & 0x0F)) << 8) | data[2],
     .y = (((uint16_t)(data[3] & 0X0F)) << 8) | data[4],
   };
+
+  if (CST816->invert_x_axis) {
+    point.x = CST816->max_x - point.x;
+  }
+
+  if (CST816->invert_y_axis) {
+    point.y = CST816->max_y - point.y;
+  }
 
   if (press == 0x01) {
     touch_handle_update(0, TouchState_FingerDown, &point, 0, current_time_ms);

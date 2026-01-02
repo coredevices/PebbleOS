@@ -119,7 +119,7 @@ def _generate_memory_layout(bld):
         ldscript_template = bld.path.find_node('stm32f2xx_flash_fw.ld.template')
     elif bld.is_asterix():
         ldscript_template = bld.path.find_node('nrf52840_flash_fw.ld.template')
-    elif bld.is_obelix():
+    elif bld.is_obelix() or bld.is_getafix():
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
@@ -227,6 +227,7 @@ def _generate_memory_layout(bld):
         'diorite': AppRamSize(66 * 1024, 30 * 1024),
         'emery': AppRamSize(130 * 1024, 62 * 1024),
         'flint': AppRamSize(66 * 1024, 30 * 1024),
+        'gabbro': AppRamSize(130 * 1024, 94 * 1024),
     }
     APP_UNSUPPORTED = AppRamSize(0, 0)
 
@@ -301,6 +302,14 @@ def _generate_memory_layout(bld):
         # FIXME(SF32LB52): due to MPU find_subregions_for_region assuming
         # ARMv7 subregion limitations, we need to reserve 32K!
         total_ram = (0x20000000, (512 - 32) * 1024)
+    elif bld.is_getafix():
+        app_ram_size_2x = APP_UNSUPPORTED
+        app_ram_size_3x = APP_RAM_SIZES['chalk']
+        app_ram_size_4x = APP_RAM_SIZES['gabbro']
+        # We have 512K of SRAM, last 1K reserved for LCPU IPC
+        # FIXME(SF32LB52): due to MPU find_subregions_for_region assuming
+        # ARMv7 subregion limitations, we need to reserve 32K!
+        total_ram = (0x20000000, (512 - 32) * 1024)
     else:
         bld.fatal("No set of supported SDK platforms defined for this board")
 
@@ -367,6 +376,8 @@ def _generate_memory_layout(bld):
 def _link_firmware(bld, sources):
     if bld.is_spalding():
         sources += ['board/displays/display_spalding.c']
+    elif bld.is_getafix():
+        sources += ['board/displays/display_getafix.c']
 
     fw_linkflags = ['-Wl,--cref',
                     '-Wl,-Map=tintin_fw.map',
@@ -482,6 +493,8 @@ def _get_mfg_paths(bld):
         return ('mfg/asterix',)
     elif bld.is_obelix():
         return ('mfg/obelix',)
+    elif bld.is_getafix():
+        return ('mfg/getafix',)
     else:
         bld.fatal('No MFG configuration for board %s' % bld.env.BOARD)
 
@@ -579,6 +592,11 @@ def _build_recovery(bld):
     if not bld.is_obelix() or not bld.env.IS_MFG:
         excludes.extend([
             'apps/prf_apps/mfg_hrm_ctr_leakage_obelix_app.c',
+        ])
+
+    if not bld.is_getafix():
+        excludes.extend([
+            'apps/prf_apps/mfg_mic_getafix_app.c',
         ])
 
     if bld.is_silk():

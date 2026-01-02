@@ -8,9 +8,9 @@
 //! @internal
 //! data type that's used to store row data infos in a space-efficient manner
 typedef struct {
-  uint16_t offset;
-  uint8_t min_x;
-  uint8_t max_x;
+  uint32_t offset;  // uint32_t needed for rectangular framebuffers > 65535 bytes
+  uint16_t min_x;
+  uint16_t max_x;
 } GBitmapDataRowInfoInternal;
 
 // FIXME: PBL-21055 Fix SDK exporter failing to crawl framebuffer headers
@@ -76,6 +76,8 @@ typedef struct {
 #include "displays/display_robert.h"
 #elif BOARD_ROBERT_EVT
 #include "displays/display_robert_evt.h"
+#elif BOARD_GETAFIX_EVT
+#include "displays/display_getafix.h"
 #else
 #error "Unknown display definition for board"
 #endif // BOARD_*

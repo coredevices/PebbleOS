@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 typedef struct {
-  uint8_t address;
+  uint16_t address;
   uint8_t* data;
 } DisplayRow;
 

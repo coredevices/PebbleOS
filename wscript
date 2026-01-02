@@ -55,6 +55,7 @@ RUNNERS = {
     'obelix_dvt': ['sftool'],
     'obelix_pvt': ['sftool'],
     'obelix_bb2': ['sftool'],
+    'getafix_evt': ['sftool'],
 }
 
 def truncate(msg):
@@ -119,6 +120,7 @@ def options(opt):
                              'obelix_dvt',
                              'obelix_pvt',
                              'obelix_bb2',
+                             'getafix_evt',
                             ],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
@@ -516,6 +518,9 @@ def configure(conf):
     elif conf.is_asterix() or conf.options.board == 'silk_flint':
         conf.env.PLATFORM_NAME = 'flint'
         conf.env.MIN_SDK_VERSION = 2
+    elif conf.is_getafix():
+        conf.env.PLATFORM_NAME = 'gabbro'
+        conf.env.MIN_SDK_VERSION = 4
     else:
         conf.fatal('No platform specified for {}!'.format(conf.options.board))
 
@@ -530,7 +535,7 @@ def configure(conf):
         conf.env.MICRO_FAMILY = 'STM32F7'
     elif conf.is_asterix():
         conf.env.MICRO_FAMILY = 'NRF52840'
-    elif conf.is_obelix():
+    elif conf.is_obelix() or conf.is_getafix():
         conf.env.MICRO_FAMILY = 'SF32LB52'
     else:
         conf.fatal('No micro family specified for {}!'.format(conf.options.board))
@@ -583,7 +588,7 @@ def configure(conf):
     elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):
         conf.env.bt_controller = 'da14681-01'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_DA14681'])
-    elif conf.is_obelix():
+    elif conf.is_obelix() or conf.is_getafix():
         conf.env.bt_controller = 'sf32lb52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_SF32LB52'])
     else:

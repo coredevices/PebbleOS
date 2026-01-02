@@ -164,7 +164,7 @@ static void prv_timeout_menu_push(SettingsDisplayData *data) {
 
 // Legacy App Mode Settings (Obelix only)
 /////////////////////////////
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
 static const char *s_legacy_app_mode_labels[] = {
     i18n_noop("Centered"),
     i18n_noop("Scaled")
@@ -207,7 +207,7 @@ enum SettingsDisplayItem {
 #if PLATFORM_SPALDING
   SettingsDisplayAdjustAlignment,
 #endif
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
   SettingsDisplayLegacyAppMode,
 #endif
   NumSettingsDisplayItems
@@ -265,7 +265,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       settings_display_calibration_push(app_state_get_window_stack());
       break;
 #endif
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
     case SettingsDisplayLegacyAppMode:
       prv_legacy_app_mode_menu_push(data);
       break;
@@ -365,7 +365,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Screen Alignment");
       break;
 #endif
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
     case SettingsDisplayLegacyAppMode:
       title = i18n_noop("Legacy Apps");
       subtitle = (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) ?

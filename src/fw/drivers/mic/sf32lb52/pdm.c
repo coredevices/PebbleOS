@@ -16,7 +16,7 @@
 #include "FreeRTOS.h"
 
 // HACK alert, we need proper regulator abstraction
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
 #define PDM_POWER_NPM1300_LDO2 1
 #endif
 

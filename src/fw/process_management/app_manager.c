@@ -840,6 +840,7 @@ void app_manager_get_framebuffer_size(GSize *size) {
     case PlatformTypeDiorite:
     case PlatformTypeEmery:
     case PlatformTypeFlint:
+    case PlatformTypeGabbro:
       *size = GSize(DISP_COLS, DISP_ROWS);
       return;
   }

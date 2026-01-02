@@ -17,6 +17,7 @@
 #include "apps/prf_apps/mfg_hrm_app.h"
 #include "apps/prf_apps/mfg_hrm_ctr_leakage_obelix_app.h"
 #include "apps/prf_apps/mfg_mic_asterix_app.h"
+#include "apps/prf_apps/mfg_mic_getafix_app.h"
 #include "apps/prf_apps/mfg_mic_obelix_app.h"
 #include "apps/prf_apps/mfg_program_color_app.h"
 #include "apps/prf_apps/mfg_info_qr_app.h"
@@ -135,6 +136,8 @@ static void prv_select_mic(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mic_asterix_app_get_info());
 #elif PLATFORM_OBELIX
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mic_obelix_app_get_info());
+#elif PLATFORM_GETAFIX
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mic_getafix_app_get_info());
 #endif
 }
 
@@ -318,7 +321,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Device Info",       .callback = prv_select_info_qr },
     { .icon = prv_get_icon_for_test(MfgTest_Buttons),
       .title = "Test Buttons",      .callback = prv_select_button },
-#if PBL_ROUND
+#if PBL_ROUND && !PLATFORM_GETAFIX
     { .title = "Calibrate Display", .callback = prv_select_calibrate_display },
 #endif
       { .icon = prv_get_icon_for_test(MfgTest_Display),
@@ -331,6 +334,8 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #endif
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
     { .title = "Test Speaker",      .callback = prv_select_speaker },
+#endif
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
     { .title = "Test Microphone",   .callback = prv_select_mic },
 #endif
     { .icon = prv_get_icon_for_test(MfgTest_ALS),

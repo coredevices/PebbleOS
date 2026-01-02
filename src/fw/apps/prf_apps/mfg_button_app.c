@@ -103,11 +103,70 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
     .points = ARROW_PATH_POINTS
   };
 
-#define ARROW_LR_MARGIN 5
-#define ARROW_TB_MARGIN 30
+// Original arrow dimensions
 #define ARROW_W 26
 #define ARROW_H 24
+// The arrow path center (used as rotation pivot)
+#define ARROW_CENTER_X 13
+#define ARROW_CENTER_Y 12
+// Layer size must be large enough to contain rotated arrow (diagonal of arrow)
+#define ARROW_LAYER_SIZE 36
 #define ARROW_SIZE {ARROW_W, ARROW_H}
+
+  PathLayer *arrow = &data->arrows[id];
+  path_layer_init(arrow, &ARROW_PATH_INFO);
+  path_layer_set_fill_color(arrow, GColorBlack);
+  path_layer_set_stroke_color(arrow, GColorBlack);
+
+#if PBL_ROUND
+  // Position arrows along the display circle
+  // Angles are in Pebble trig format (0 at 3 o'clock, counter-clockwise)
+  // Up: -30 deg from top, Down: +30 deg from top, Back: +30 deg from left
+#define ARROW_MARGIN 5
+  const int16_t center_x = DISP_COLS / 2;
+  const int16_t center_y = DISP_ROWS / 2;
+  const int16_t radius = center_x - ARROW_MARGIN - ARROW_LAYER_SIZE / 2;
+
+  // Angles: 0 = 3 o'clock, 90 = 12 o'clock (TRIG_MAX_ANGLE/4), etc.
+  // Back button: top-left, 30 deg from horizontal = 180 - 30 = 150 deg
+  // Up button: top-right, 30 deg from horizontal = 30 deg
+  // Select button: center right = 0 deg
+  // Down button: bottom-right, 30 deg from horizontal = -30 deg
+  const int32_t BUTTON_ANGLES[] = {
+    // BACK: top-left, 150 deg
+    DEG_TO_TRIGANGLE(150),
+    // UP: top-right, 30 deg
+    DEG_TO_TRIGANGLE(30),
+    // SELECT: center right, 0 deg
+    DEG_TO_TRIGANGLE(0),
+    // DOWN: bottom-right, -30 deg
+    DEG_TO_TRIGANGLE(-30),
+  };
+
+  int32_t angle = BUTTON_ANGLES[id];
+  // Position the layer so its center is at the desired edge position
+  int16_t x = center_x + (cos_lookup(angle) * radius / TRIG_MAX_RATIO) - ARROW_LAYER_SIZE / 2;
+  int16_t y = center_y - (sin_lookup(angle) * radius / TRIG_MAX_RATIO) - ARROW_LAYER_SIZE / 2;
+
+  // Use larger layer to accommodate rotated arrow without clipping
+  layer_set_frame(&arrow->layer, &GRect(x, y, ARROW_LAYER_SIZE, ARROW_LAYER_SIZE));
+
+  // Rotate arrow to point outward (away from center)
+  // Arrow graphic points right (0 deg), so rotate by -angle to point outward
+  int32_t rotation = -angle;
+  gpath_rotate_to(&arrow->path, rotation);
+  // Move the path so its center aligns with the layer center
+  // The path rotates around origin, so we need to offset by the layer center
+  // minus the rotated position of the original arrow center
+  int32_t cos_rot = cos_lookup(rotation);
+  int32_t sin_rot = sin_lookup(rotation);
+  int16_t rotated_center_x = (ARROW_CENTER_X * cos_rot - ARROW_CENTER_Y * sin_rot) / TRIG_MAX_RATIO;
+  int16_t rotated_center_y = (ARROW_CENTER_Y * cos_rot + ARROW_CENTER_X * sin_rot) / TRIG_MAX_RATIO;
+  gpath_move_to(&arrow->path, GPoint(ARROW_LAYER_SIZE / 2 - rotated_center_x,
+                                     ARROW_LAYER_SIZE / 2 - rotated_center_y));
+#else
+#define ARROW_LR_MARGIN 5
+#define ARROW_TB_MARGIN 30
   const GRect ARROW_RECTS[] = {
     // BACK
     {{ARROW_LR_MARGIN,                       ARROW_TB_MARGIN}, ARROW_SIZE},
@@ -119,17 +178,13 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
     {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, DISP_ROWS - ARROW_TB_MARGIN - ARROW_H }, ARROW_SIZE},
   };
 
-  PathLayer *arrow = &data->arrows[id];
-  path_layer_init(arrow, &ARROW_PATH_INFO);
-  path_layer_set_fill_color(arrow, GColorBlack);
-  path_layer_set_stroke_color(arrow, GColorBlack);
-
   layer_set_frame(&arrow->layer, &ARROW_RECTS[id]);
 
   if (id == BUTTON_ID_BACK) {
     gpath_rotate_to(&arrow->path, (TRIG_MAX_ANGLE / 2));
     gpath_move_to(&arrow->path, GPoint(26, 24));
   }
+#endif
 
   layer_add_child(&data->window.layer, &arrow->layer);
 }

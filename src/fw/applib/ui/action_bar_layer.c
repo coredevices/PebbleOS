@@ -35,7 +35,8 @@ static int prv_vertical_icon_margin(void) {
                              /*chalk*/ 53,
                              /*diorite*/ 24,
                              /*emery*/ 45,
-                             /*flint*/ 24);
+                             /*flint*/ 24,
+                             /*gabbro*/ 80);
 }
 
 static int prv_press_animation_offset(void) {
@@ -46,7 +47,8 @@ static int prv_press_animation_offset(void) {
                              /*chalk*/ 4,
                              /*diorite*/ 5,
                              /*emery*/ 5,
-                             /*flint*/ 5);
+                             /*flint*/ 5,
+                             /*gabbro*/ 4);
 }
 
 // TODO: Once PBL-16032 is implemented, use that instead.

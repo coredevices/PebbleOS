@@ -230,7 +230,8 @@ PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
          /* chalk */   PlatformTypeChalk,
          /* diorite */ PlatformTypeAplite, // there's was no Diorite SDK prior to 4.0
          /* emery */   PlatformTypeBasalt,
-         /* flint */   PlatformTypeAplite);
+         /* flint */   PlatformTypeAplite,
+         /* gabbro */  PlatformTypeChalk);
   }
   // 4.0 <= SDK < 4.2
   if (version_compare(app_sdk_version, first_4_2_version) < 0) {
@@ -240,7 +241,8 @@ PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
         /* chalk */   PlatformTypeChalk,
         /* diorite */ PlatformTypeDiorite, // there's was no Aplite SDK after 4.0
         /* emery */   PlatformTypeBasalt,
-        /* flint */   PlatformTypeDiorite);
+        /* flint */   PlatformTypeDiorite,
+        /* gabbro */  PlatformTypeChalk);
   }
 
   // 4.2 <= SDK --> the flags should be filled correctly.
@@ -258,6 +260,8 @@ PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
       return PlatformTypeEmery;
     case PROCESS_INFO_PLATFORM_FLINT:
       return PlatformTypeFlint;
+    case PROCESS_INFO_PLATFORM_GABBRO:
+      return PlatformTypeGabbro;
     default: {
       // If we encounter an unknown platform, we assume that it's meant for the current platform
       // (as it's most-likely a system-app). This is not a security risk as developers could always

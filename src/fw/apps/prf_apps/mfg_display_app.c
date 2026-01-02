@@ -33,11 +33,6 @@ typedef enum {
 #else
   TestPattern_Gray,
 #endif
-#if PBL_ROUND
-  TestPattern_Border1,
-  TestPattern_Border2,
-  TestPattern_Border3,
-#endif
 
   NumTestPatterns
 } TestPattern;
@@ -62,7 +57,11 @@ static void prv_draw_solid(Layer *layer, GContext *ctx, GColor color) {
 
 static void prv_draw_round_border(Layer *layer, GContext *ctx, uint8_t radial_padding_size) {
   for (int i = 0; i < layer->bounds.size.h / 2 - radial_padding_size; ++i) {
+#if PLATFORM_SPALDING
     const GBitmapDataRowInfoInternal *data_row_infos = g_gbitmap_spalding_data_row_infos;
+#elif PLATFORM_GETAFIX
+    const GBitmapDataRowInfoInternal *data_row_infos = g_gbitmap_getafix_data_row_infos;
+#endif
     const uint8_t mask = data_row_infos[i].min_x + radial_padding_size;
     const int offset = i + radial_padding_size;
     // Draw both row-wise and column-wise to fill in any discontinuities
@@ -161,17 +160,6 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
     prv_draw_solid(layer, ctx, GColorDarkGray);
     break;
 #endif
-#if PBL_ROUND
-  case TestPattern_Border1:
-    prv_draw_crosshair_screen(layer, ctx, 2);
-    break;
-  case TestPattern_Border2:
-    prv_draw_crosshair_screen(layer, ctx, 3);
-    break;
-  case TestPattern_Border3:
-    prv_draw_crosshair_screen(layer, ctx, 4);
-    break;
-#endif
   default:
     break;
   }
@@ -230,13 +218,9 @@ static void prv_handle_init(void) {
 }
 
 static void s_main(void) {
-  light_enable(true);
-
   prv_handle_init();
 
   app_event_loop();
-
-  light_enable(false);
 }
 
 const PebbleProcessMd* mfg_display_app_get_info(void) {

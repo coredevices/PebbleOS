@@ -209,11 +209,11 @@ static uint16_t s_timeline_peek_before_time_m =
 #endif
 
 #define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
 #endif
 static bool s_coredump_on_request_enabled = false;
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
@@ -575,7 +575,7 @@ static bool prv_set_s_coredump_on_request_enabled(bool *enabled) {
   return true;
 }
 
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
 static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
   if (*mode >= LegacyAppRenderModeCount) {
     return false;  // Invalid value
@@ -1533,7 +1533,7 @@ void shell_prefs_set_coredump_on_request(bool enabled) {
   prv_pref_set(PREF_KEY_COREDUMP_ON_REQUEST, &enabled, sizeof(enabled));
 }
 
-#if PLATFORM_OBELIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
   return (LegacyAppRenderMode)s_legacy_app_render_mode;
 }

@@ -48,6 +48,10 @@ def is_obelix(ctx):
     return ctx.get_board().startswith('obelix')
 
 @conf
+def is_getafix(ctx):
+    return ctx.get_board().startswith('getafix')
+
+@conf
 def get_platform_name(ctx):
     if is_tintin(ctx):
         return "tintin"
@@ -67,6 +71,8 @@ def get_platform_name(ctx):
         return "asterix"
     elif is_obelix(ctx):
         return "obelix"
+    elif is_getafix(ctx):
+        return "getafix"
     else:
         return "unknown"
 
@@ -117,6 +123,8 @@ def get_qemu_cpu(ctx):
         return 'cortex-m4'
     elif is_obelix(ctx):
         return 'cortex-star-mc1'
+    elif is_getafix(ctx):
+        return 'cortex-star-mc1'
     else:
         return 'unknown'
 
@@ -156,6 +164,8 @@ def has_touch(ctx):
     elif is_asterix(ctx):
         return False
     elif is_obelix(ctx):
+        return True
+    elif is_getafix(ctx):
         return True
     else:
         return None
@@ -213,6 +223,9 @@ def add_platform_defines(ctx, env):
     elif ctx.is_obelix():
         bit_depth = 8
         platform = 'OBELIX'
+    elif ctx.is_getafix():
+        bit_depth = 8
+        platform = 'GETAFIX'
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 
