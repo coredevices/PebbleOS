@@ -31,6 +31,7 @@ def configure(conf):
                      '-mthumb',
                      '-ffunction-sections',
                      '-fdata-sections',
+                     '-fcommon',
                      '-g',
                      '-fPIE',
                      optimize_flag]
@@ -39,10 +40,16 @@ def configure(conf):
                   '-Werror',
                   '-Wno-unused-parameter',
                   '-Wno-error=unused-function',
-                  '-Wno-error=unused-variable']
+                  '-Wno-error=unused-variable',
+                  '-Wno-error=builtin-declaration-mismatch',
+                  '-Wno-error=format-truncation',
+                  '-Wno-error=expansion-to-defined',
+                  '-Wno-error=zero-length-bounds',]
 
     if (conf.env.SDK_VERSION_MAJOR == 5) and (conf.env.SDK_VERSION_MINOR > 19):
         pebble_cflags.append('-D_TIME_H_')
+        # Override time_t to be 32-bit for Pebble compatibility (newer toolchains default to 64-bit)
+        pebble_cflags.append('-Dtime_t=long')
     pebble_cflags.extend(c_warnings)
 
     pebble_linkflags = ['-mcpu=cortex-m3',
