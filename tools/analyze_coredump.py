@@ -18,7 +18,7 @@ from datetime import datetime
 
 def find_gdb_executable():
     """Find an available arm-none-eabi-gdb with Python support."""
-    candidates = ["arm-none-eabi-gdb-py", "arm-none-eabi-gdb-py3"]
+    candidates = ["arm-none-eabi-gdb-py", "arm-none-eabi-gdb-py3", "arm-none-eabi-gdb"]
     for candidate in candidates:
         if shutil.which(candidate):
             return candidate
@@ -36,7 +36,7 @@ class CoredumpAnalyzer:
         self.gdb_executable = find_gdb_executable()
         if not self.gdb_executable:
             raise RuntimeError(
-                "Could not find arm-none-eabi-gdb-py or arm-none-eabi-gdb-py3. "
+                "Could not find arm-none-eabi-gdb-py, arm-none-eabi-gdb-py3, or arm-none-eabi-gdb. "
                 "Please ensure one of these is installed and in PATH."
             )
 
@@ -174,7 +174,7 @@ class CoredumpAnalyzer:
         except FileNotFoundError:
             print(
                 f"Error: {self.gdb_executable} not found. "
-                "Please ensure arm-none-eabi-gdb-py or arm-none-eabi-gdb-py3 is installed and in PATH."
+                "Please ensure arm-none-eabi-gdb-py, arm-none-eabi-gdb-py3, or arm-none-eabi-gdb is installed and in PATH."
             )
             return False
         except Exception as e:
