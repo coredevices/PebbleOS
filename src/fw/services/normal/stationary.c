@@ -18,6 +18,7 @@
 #include "services/common/i18n/i18n.h"
 #include "services/common/regular_timer.h"
 #include "services/common/system_task.h"
+#include "services/normal/notifications/notification_storage.h"
 #include "services/runlevel.h"
 #include "shell/prefs.h"
 #include "system/logging.h"
@@ -103,6 +104,11 @@ void stationary_handle_battery_connection_change_event(void) {
             "Stationary mode battery state change event received");
   if (battery_is_usb_connected()) {
     analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsEnterCharging);
+    
+    // If panic mode is enabled, wipe notifications when charger is connected
+    if (shell_prefs_get_panic_mode_enabled()) {
+      notification_storage_reset_and_init();
+    }
   } else {
     analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsExitCharging);
   }
@@ -218,6 +224,11 @@ static void prv_enter_stationary_state(void) {
   services_set_runlevel(RunLevel_Stationary);
   accel_enable_high_sensitivity(true);
   s_current_state = StationaryStateStationary;
+  
+  // If panic mode is enabled, wipe notifications when entering stationary mode
+  if (shell_prefs_get_panic_mode_enabled()) {
+    notification_storage_reset_and_init();
+  }
 }
 
 static void prv_exit_stationary(void) {
