@@ -182,6 +182,7 @@ static void prv_settings_window_load(Window *window) {
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
   menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_settings_menu_highlight_color(), GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
+  menu_layer_set_scroll_wrap_around(menu_layer, true);
   layer_add_child(&data->window.layer, menu_layer_get_layer(menu_layer));
 
   SettingsCallbacks *callbacks = prv_get_current_callbacks(data);
