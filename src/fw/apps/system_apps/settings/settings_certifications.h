@@ -164,11 +164,17 @@ static const RegulatoryFlags s_regulatory_flags_obelix = {
   .has_usa_fcc = true,
 };
 
-// FIXME(OBELIX): Replace with real IDs
 static const CertificationIds s_certification_ids_obelix = {
   .company_name = "Core Devices LLC",
-  .canada_ised_id = "XXXXXX-YYYYYYYYYYY",
-  .usa_fcc_id = "XXX-YYY",
+  .product_type = "Smart watch",
+  .trademark = "Pebble",
+  .place_of_origin = "Made in China",
+  .dc_input = "5 V / 300 mA",
+  .rated_voltage = "3.8 V",
+  .milliampere_hour = "185 mAh",
+  .watt_hour = "0.71 Wh",
+  .canada_ised_id = "34223-Pebble Time 2",
+  .usa_fcc_id = "2BQB2-Pebble Time 2",
 };
 
 static const RegulatoryFlags * prv_get_regulatory_flags(void) {
