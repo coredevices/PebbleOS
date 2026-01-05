@@ -145,6 +145,7 @@ static const CertificationIds s_certification_ids_silk_hr = {
 static const RegulatoryFlags s_regulatory_flags_obelix = {
   .has_canada_ised = true,
   .has_eu_ce = true,
+  .has_eu_weee = true,
   .has_ukca = true,
   .has_usa_fcc = true,
 };
