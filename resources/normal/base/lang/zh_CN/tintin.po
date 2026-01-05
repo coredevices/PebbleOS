@@ -1,0 +1,1717 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: 2.0\n"
+"Language: zh_CN\n"
+"Name: 简体中文\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: POEditor.com\n"
+
+#: ../src/fw/process_management/app_manager.c:494
+#, c-format
+msgid "%.*s is not responding"
+msgstr "%.*s 无响应"
+
+#: ../src/fw/process_management/process_manager.c:222
+msgid "This app requires a newer version of the Pebble firmware."
+msgstr "此应用需要更新版本的Pebble固件。"
+
+#: ../src/fw/popups/alarm_popup.c:60
+#, c-format
+msgid "Snooze for %d minutes"
+msgstr "稍后提醒 %d 分钟"
+
+#: ../src/fw/popups/alarm_popup.c:77
+msgid "Alarm dismissed"
+msgstr "闹钟已关闭"
+
+#: ../src/fw/popups/bluetooth_pairing_ui.c:244
+msgid "Pair?"
+msgstr "配对？"
+
+#: ../src/fw/popups/crashed_ui.c:106
+#, c-format
+msgid ""
+"%s%.*s is not responding.\n"
+"\n"
+"Open app?"
+msgstr ""
+"%s%.*s 无响应。\n"
+"\n"
+"打开应用？"
+
+#: ../src/fw/popups/crashed_ui.c:169
+msgid ""
+"Your Pebble just reset. Please report this using the 'Support' link in the "
+"Pebble phone app."
+msgstr ""
+"您的Pebble刚刚重启。请使用Pebble手机应用中的'支持'链接报告此问题。"
+
+#: ../src/fw/popups/crashed_ui.c:172
+msgid ""
+"Bluetooth on your phone is in a high power state. Please report this using "
+"'Support' and reboot your phone."
+msgstr ""
+"您手机的蓝牙处于高功耗状态。请使用'支持'报告此问题并重启手机。"
+
+#: ../src/fw/popups/health_tracking_ui.c:102
+msgid ""
+"This app requires Pebble Health to work. Enable Health in the Pebble mobile "
+"app to continue."
+msgstr ""
+"此应用需要Pebble Health才能运行。请在Pebble手机应用中启用Health以继续。"
+
+#: ../src/fw/popups/health_tracking_ui.c:112
+msgid ""
+"This feature requires Pebble Health to work. Enable Health in the Pebble "
+"mobile app to continue."
+msgstr ""
+"此功能需要Pebble Health才能运行。请在Pebble手机应用中启用Health以继续。"
+
+#: ../src/fw/popups/notifications/notification_window.c:692
+msgid "Snoozed"
+msgstr "已稍后"
+
+#: ../src/fw/popups/notifications/notification_window.c:726
+msgid "Muted"
+msgstr "已静音"
+
+#: ../src/fw/popups/notifications/notification_window.c:853
+msgid "Snooze"
+msgstr "稍后提醒"
+
+#: ../src/fw/popups/notifications/notification_window.c:872
+#, c-format
+msgid "Mute %s"
+msgstr "静音 %s"
+
+#: ../src/fw/popups/notifications/notification_window.c:895
+msgid "Mute Always"
+msgstr "永久静音"
+
+#: ../src/fw/popups/notifications/notification_window.c:900
+msgid "Mute Weekends"
+msgstr "周末静音"
+
+#: ../src/fw/popups/notifications/notification_window.c:905
+msgid "Mute Weekdays"
+msgstr "工作日静音"
+
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:78
+msgid "Allow All Notifications"
+msgstr "允许所有通知"
+
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:79
+msgid "Allow Phone Calls Only"
+msgstr "仅允许电话"
+
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:80
+msgid "Mute All Notifications"
+msgstr "静音所有通知"
+
+#. / Shows up in the Timeline settings as a "Timing" subtitle and submenu option.
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:77
+msgid "15 Min Before"
+msgstr "提前15分钟"
+
+#. / Shows up in the Timeline settings as a "Timing" subtitle and submenu option.
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:79
+msgid "30 Min Before"
+msgstr "提前30分钟"
+
+#. / Shows up in the Timeline settings as the title for the "Timing" submenu window.
+#. / Shows up in the Timeline settings as the title for the menu item that controls the
+#. / timing for when to begin showing the peek for an event.
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:108
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:146
+msgid "Timing"
+msgstr "时间"
+
+#. / Shows up in the Timeline settings as a toggle-able "Quick View" item.
+#. / Title for the Timeline Quick View first use dialog.
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:137
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:201
+msgid "Quick View"
+msgstr "快速查看"
+
+#. / Help text for the Timeline Quick View first use dialog.
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:203
+msgid "Appears on your watchface when an event is about to start."
+msgstr "事件即将开始时显示在表盘上。"
+
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:230
+msgid "Timeline"
+msgstr "时间线"
+
+#: ../src/fw/apps/system_apps/settings/settings_vibe_patterns.c:79
+msgid "Incoming Calls"
+msgstr "来电"
+
+#: ../src/fw/apps/system_apps/settings/settings_vibe_patterns.c:233
+msgid "Vibrations"
+msgstr "振动"
+
+#: ../src/fw/apps/system_apps/timeline/timeline.c:894
+msgid "No events"
+msgstr "无事件"
+
+#. / The title of Timeline Past in Quick Launch. If the translation is too long, cut out
+#. / Timeline and only translate "Past".
+#: ../src/fw/apps/system_apps/timeline/timeline.c:1283
+msgid "Timeline Past"
+msgstr "历史时间线"
+
+#: ../src/fw/apps/system_apps/toggle/airplane_mode.c:39
+msgid "Turn On Airplane Mode?"
+msgstr "开启飞行模式？"
+
+#: ../src/fw/apps/system_apps/toggle/airplane_mode.c:40
+msgid "Turn Off Airplane Mode?"
+msgstr "关闭飞行模式？"
+
+#: ../src/fw/apps/system_apps/toggle/airplane_mode.c:41
+msgid ""
+"Airplane\n"
+"Mode On"
+msgstr ""
+"飞行\n"
+"模式开"
+
+#: ../src/fw/apps/system_apps/toggle/airplane_mode.c:42
+msgid ""
+"Airplane\n"
+"Mode Off"
+msgstr ""
+"飞行\n"
+"模式关"
+
+#: ../src/fw/apps/system_apps/toggle/motion_backlight.c:37
+msgid "Turn On Motion Backlight?"
+msgstr "开启运动背光？"
+
+#: ../src/fw/apps/system_apps/toggle/motion_backlight.c:38
+msgid "Turn Off Motion Backlight?"
+msgstr "关闭运动背光？"
+
+#: ../src/fw/apps/system_apps/toggle/motion_backlight.c:39
+msgid ""
+"Motion\n"
+"Backlight On"
+msgstr ""
+"运动\n"
+"背光开"
+
+#: ../src/fw/apps/system_apps/toggle/motion_backlight.c:40
+msgid ""
+"Motion\n"
+"Backlight Off"
+msgstr ""
+"运动\n"
+"背光关"
+
+#: ../src/fw/apps/system_apps/toggle/motion_backlight.c:62
+msgid "Motion Backlight"
+msgstr "运动背光"
+
+#: ../src/fw/apps/system_apps/watchfaces.c:105
+msgid "Active"
+msgstr "活动"
+
+#: ../src/fw/apps/system_apps/watchfaces.c:219
+msgid "Watchfaces"
+msgstr "表盘"
+
+#. / Shown when there are no forecasts available to show the user
+#: ../src/fw/apps/system_apps/weather/weather_app.c:105
+msgid ""
+"No location information available. To see weather, add locations in your "
+"Pebble mobile app."
+msgstr ""
+"位置信息不可用。要查看天气，请在Pebble手机应用中添加位置。"
+
+#. / Shown when there is no connection to the phone and the data that we have is not recent
+#: ../src/fw/apps/system_apps/weather/weather_app.c:205
+msgid ""
+"Unable to connect. Your weather data may be out of date; try checking the "
+"connection on your phone."
+msgstr ""
+"无法连接。您的天气数据可能已过期；请尝试检查手机上的连接。"
+
+#: ../src/fw/apps/system_apps/weather/weather_app.c:231
+#: ../src/fw/services/normal/timeline/timeline.c:966
+msgid "Weather"
+msgstr "天气"
+
+#. / Shown when neither high nor low temperature is known
+#: ../src/fw/apps/system_apps/weather/weather_app_layout.c:80
+msgid "--° / --°"
+msgstr "--° / --°"
+
+#. / Shown when only the day's high temperature is known, (e.g. "68° / --°")
+#: ../src/fw/apps/system_apps/weather/weather_app_layout.c:85
+#, c-format
+msgid "%i° / --°"
+msgstr "%i° / --°"
+
+#. / Shown when only the day's low temperature is known (e.g. "--° / 52°")
+#: ../src/fw/apps/system_apps/weather/weather_app_layout.c:88
+#, c-format
+msgid "--° / %i°"
+msgstr "--° / %i°"
+
+#. / A day's high and low temperature, separated by a foward slash (e.g. "68° / 52°")
+#: ../src/fw/apps/system_apps/weather/weather_app_layout.c:91
+#, c-format
+msgid "%i° / %i°"
+msgstr "%i° / %i°"
+
+#. / Refers to the weather conditions for tomorrow
+#: ../src/fw/apps/system_apps/weather/weather_app_layout.c:234
+msgid "TOMORROW"
+msgstr "明天"
+
+#: ../src/fw/apps/system_apps/workout/sports.c:381
+msgid "Sports"
+msgstr "运动"
+
+#: ../src/fw/apps/system_apps/workout/workout.c:175
+msgid ""
+"Workout\n"
+"Ended"
+msgstr ""
+"锻炼\n"
+"已结束"
+
+#. / Health disabled text
+#: ../src/fw/apps/system_apps/workout/workout.c:201
+msgid "Enable Pebble Health in the mobile app to track workouts"
+msgstr "在手机应用中启用Pebble Health以追踪锻炼"
+
+#. / Workout app first use text
+#: ../src/fw/apps/system_apps/workout/workout.c:208
+msgid ""
+"Wear your watch snug and 2 fingers' width above your wrist bone for best "
+"results."
+msgstr ""
+"请将手表贴身佩戴，并在手腕骨上方约两指宽的位置，以获得最佳效果。"
+
+#. #-#-#-#-#  fw.pot (PACKAGE VERSION)  #-#-#-#-#
+#. / Workout Label
+#: ../src/fw/apps/system_apps/workout/workout.c:264
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:105
+#: ../src/fw/services/normal/activity/activity_insights.c:1876
+msgid "Workout"
+msgstr "锻炼"
+
+#. / Zone 1 HR Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:116
+msgid "FAT BURN"
+msgstr "燃脂"
+
+#. / Zone 2 HR Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:119
+msgid "ENDURANCE"
+msgstr "耐力"
+
+#. / Zone 3 HR Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:122
+msgid "PERFORMANCE"
+msgstr "表现"
+
+#. / Default/Zone 0 HR Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:125
+msgid "HEART RATE"
+msgstr "心率"
+
+#. / Duration Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:143
+msgid "DURATION"
+msgstr "时长"
+
+#. / Average Pace Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:147
+msgid "AVG PACE"
+msgstr "平均配速"
+
+#. / Average Pace Label with units
+#: ../src/fw/apps/system_apps/workout/workout_active.c:150
+msgid "AVG PACE (/MI)"
+msgstr "平均配速 (英里)"
+
+#: ../src/fw/apps/system_apps/workout/workout_active.c:151
+msgid "AVG PACE (/KM)"
+msgstr "平均配速 (公里)"
+
+#. / Pace Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:156
+msgid "PACE"
+msgstr "配速"
+
+#. / Pace Label with units
+#: ../src/fw/apps/system_apps/workout/workout_active.c:159
+msgid "PACE (/MI)"
+msgstr "配速 (英里)"
+
+#: ../src/fw/apps/system_apps/workout/workout_active.c:160
+msgid "PACE (/KM)"
+msgstr "配速 (公里)"
+
+#. / Speed Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:165
+msgid "SPEED"
+msgstr "速度"
+
+#. / Speed Label with units
+#: ../src/fw/apps/system_apps/workout/workout_active.c:168
+msgid "SPEED (MPH)"
+msgstr "速度 (英里/时)"
+
+#: ../src/fw/apps/system_apps/workout/workout_active.c:169
+msgid "SPEED (KM/H)"
+msgstr "速度 (公里/时)"
+
+#. / Distance Label with units
+#: ../src/fw/apps/system_apps/workout/workout_active.c:177
+msgid "DISTANCE (MI)"
+msgstr "距离 (英里)"
+
+#: ../src/fw/apps/system_apps/workout/workout_active.c:178
+msgid "DISTANCE (KM)"
+msgstr "距离 (公里)"
+
+#. / Steps Label
+#: ../src/fw/apps/system_apps/workout/workout_active.c:182
+msgid "STEPS"
+msgstr "步数"
+
+#: ../src/fw/apps/system_apps/workout/workout_active.c:360
+msgid "MPH"
+msgstr "英里/时"
+
+#: ../src/fw/apps/system_apps/workout/workout_active.c:361
+msgid "KM/H"
+msgstr "公里/时"
+
+#: ../src/fw/apps/system_apps/workout/workout_active.c:685
+msgid "End Workout?"
+msgstr "结束锻炼？"
+
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:30
+msgid ""
+"Still sweating? Your workout is active and will be ended soon. Open the "
+"workout to keep it going."
+msgstr ""
+"还在流汗吗？您的锻炼正在进行中，将很快结束。请打开锻炼以继续。"
+
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:45
+msgid "End Workout"
+msgstr "结束锻炼"
+
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:51
+msgid "Open Workout"
+msgstr "打开锻炼"
+
+#. #-#-#-#-#  fw.pot (PACKAGE VERSION)  #-#-#-#-#
+#. / Walk Label
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:108
+#: ../src/fw/services/normal/activity/activity_insights.c:1874
+msgid "Walk"
+msgstr "步行"
+
+#. #-#-#-#-#  fw.pot (PACKAGE VERSION)  #-#-#-#-#
+#. / Run Label
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:111
+#: ../src/fw/services/normal/activity/activity_insights.c:1872
+msgid "Run"
+msgstr "跑步"
+
+#. / Workout automatically detected dialog text
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:129
+msgid ""
+"Workout\n"
+"Detected"
+msgstr ""
+"锻炼\n"
+"已检测"
+
+#. / Walk automatically detected dialog text
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:132
+msgid ""
+"Walk\n"
+"Detected"
+msgstr ""
+"步行\n"
+"已检测"
+
+#. / Run automatically detected dialog text
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:135
+msgid ""
+"Run\n"
+"Detected"
+msgstr ""
+"跑步\n"
+"已检测"
+
+#: ../src/fw/apps/watch/kickstart/kickstart.c:364
+#, c-format
+msgid "%d BPM"
+msgstr "%d BPM"
+
+#. / Step count greater than 1000 with a thousands seperator
+#: ../src/fw/apps/watch/kickstart/kickstart.c:472
+#, c-format
+msgid "%d,%03d"
+msgstr "%d,%03d"
+
+#. #-#-#-#-#  fw.pot (PACKAGE VERSION)  #-#-#-#-#
+#. / Step count less than 1000
+#: ../src/fw/apps/watch/kickstart/kickstart.c:476
+#: ../src/fw/services/common/clock.c:898
+#: ../src/fw/services/normal/activity/health_util.c:108
+#: ../src/fw/services/normal/activity/health_util.c:124
+#, c-format
+msgid "%d"
+msgstr "%d"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.h:71
+msgid ""
+"Remember to also forget your Pebble's Bluetooth connection from your phone."
+msgstr ""
+"请同时从您的手机中忘记Pebble的蓝牙连接。"
+
+#. #-#-#-#-#  services.pot (PACKAGE VERSION)  #-#-#-#-#
+#. / Standard vibration pattern option that has a low intensity
+#: ../src/fw/services/normal/vibes/vibes.def:5
+#: ../src/fw/services/normal/vibes/vibes.def:6
+#: ../src/fw/services/normal/vibes/vibe_intensity.c:52
+msgid "Standard - Low"
+msgstr "标准-低"
+
+#. #-#-#-#-#  services.pot (PACKAGE VERSION)  #-#-#-#-#
+#. / Standard vibration pattern option that has a high intensity
+#: ../src/fw/services/normal/vibes/vibes.def:7
+#: ../src/fw/services/normal/vibes/vibes.def:8
+#: ../src/fw/services/normal/vibes/vibe_intensity.c:60
+msgid "Standard - High"
+msgstr "标准-高"
+
+#: ../src/fw/services/normal/vibes/vibes.def:9
+msgid "Pulse"
+msgstr "脉冲"
+
+#: ../src/fw/services/normal/vibes/vibes.def:10
+msgid "Nudge Nudge"
+msgstr "轻推"
+
+#: ../src/fw/services/normal/vibes/vibes.def:12
+msgid "Jackhammer"
+msgstr "钻孔机"
+
+#: ../src/fw/services/common/clock.c:479 ../src/fw/services/common/clock.c:750
+msgid "%R"
+msgstr "%R"
+
+#: ../src/fw/services/common/clock.c:479
+msgid "%l:%M"
+msgstr "%l:%M"
+
+#: ../src/fw/services/common/clock.c:492
+#, c-format
+msgid "%p"
+msgstr "%p"
+
+#: ../src/fw/services/common/clock.c:507
+#: ../src/fw/services/normal/timeline/timeline_layout.c:380
+msgid "All day"
+msgstr "全天"
+
+#: ../src/fw/services/common/clock.c:519 ../src/fw/services/common/clock.c:531
+#: ../src/fw/services/common/clock.c:857
+msgid "Now"
+msgstr "现在"
+
+#: ../src/fw/services/common/clock.c:523
+msgid " MIN. TO"
+msgstr " 分钟到"
+
+#: ../src/fw/services/common/clock.c:678 ../src/fw/services/common/clock.c:760
+#: ../src/fw/services/common/clock.c:768
+msgid "Yesterday"
+msgstr "昨天"
+
+#: ../src/fw/services/common/clock.c:680
+#: ../src/fw/services/normal/timeline/timeline_actions.c:1091
+msgid "Tomorrow"
+msgstr "明天"
+
+#: ../src/fw/services/common/clock.c:683 ../src/fw/services/common/clock.c:798
+#: ../src/fw/services/common/clock.c:806
+#, c-format
+msgid "%A"
+msgstr "%A"
+
+#: ../src/fw/services/common/clock.c:686
+msgid "%B %d"
+msgstr "%B %d"
+
+#: ../src/fw/services/common/clock.c:746
+msgid "%l:%M %p"
+msgstr "%l:%M %p"
+
+#: ../src/fw/services/common/clock.c:758
+msgid "Yesterday, %l:%M %p"
+msgstr "昨天, %l:%M %p"
+
+#: ../src/fw/services/common/clock.c:766
+msgid "Yesterday, %R"
+msgstr "昨天, %R"
+
+#: ../src/fw/services/common/clock.c:777
+msgid "%b %e, %l:%M %p"
+msgstr "%b %e, %l:%M %p"
+
+#: ../src/fw/services/common/clock.c:779 ../src/fw/services/common/clock.c:787
+msgid "%B %e"
+msgstr "%B %e"
+
+#: ../src/fw/services/common/clock.c:785
+msgid "%b %e, %R"
+msgstr "%b %e, %R"
+
+#: ../src/fw/services/common/clock.c:796
+msgid "%a, %l:%M %p"
+msgstr "%a, %l:%M %p"
+
+#: ../src/fw/services/common/clock.c:804
+msgid "%a, %R"
+msgstr "%a, %R"
+
+#: ../src/fw/services/common/clock.c:834
+#, c-format
+msgid "%lu H AGO"
+msgstr "%lu 小时前"
+
+#: ../src/fw/services/common/clock.c:836
+msgid "An hour ago"
+msgstr "一小时前"
+
+#: ../src/fw/services/common/clock.c:838
+#, c-format
+msgid "%lu hours ago"
+msgstr "%lu 小时前"
+
+#: ../src/fw/services/common/clock.c:848
+#, c-format
+msgid "%lu MIN AGO"
+msgstr "%lu 分钟前"
+
+#: ../src/fw/services/common/clock.c:850
+#, c-format
+msgid "%lu minute ago"
+msgstr "%lu 分钟前"
+
+#: ../src/fw/services/common/clock.c:852
+#, c-format
+msgid "%lu minutes ago"
+msgstr "%lu 分钟前"
+
+#: ../src/fw/services/common/clock.c:857
+msgid "NOW"
+msgstr "现在"
+
+#: ../src/fw/services/common/clock.c:865
+#, c-format
+msgid "IN %lu MIN"
+msgstr "%lu 分钟后"
+
+#: ../src/fw/services/common/clock.c:867
+#, c-format
+msgid "In %lu minute"
+msgstr "%lu 分钟后"
+
+#: ../src/fw/services/common/clock.c:869
+#, c-format
+msgid "In %lu minutes"
+msgstr "%lu 分钟后"
+
+#: ../src/fw/services/common/clock.c:879
+#, c-format
+msgid "IN %lu H"
+msgstr "%lu 小时后"
+
+#: ../src/fw/services/common/clock.c:881
+#, c-format
+msgid "In %lu hour"
+msgstr "%lu 小时后"
+
+#: ../src/fw/services/common/clock.c:883
+#, c-format
+msgid "In %lu hours"
+msgstr "%lu 小时后"
+
+#: ../src/fw/services/common/clock.c:894
+#, c-format
+msgid "%m/%d"
+msgstr "%m/%d"
+
+#: ../src/fw/services/common/clock.c:903
+msgid "%b "
+msgstr "%b "
+
+#: ../src/fw/services/common/clock.c:903
+msgid "%B "
+msgstr "%B "
+
+#: ../src/fw/services/common/clock.c:907
+#, c-format
+msgid "%e"
+msgstr "%e"
+
+#: ../src/fw/services/common/clock.c:958
+msgid "this morning"
+msgstr "今天早上"
+
+#: ../src/fw/services/common/clock.c:959
+msgid "this afternoon"
+msgstr "今天下午"
+
+#: ../src/fw/services/common/clock.c:960
+msgid "this evening"
+msgstr "今天晚上"
+
+#: ../src/fw/services/common/clock.c:961
+msgid "tonight"
+msgstr "今晚"
+
+#: ../src/fw/services/common/clock.c:962
+msgid "tomorrow morning"
+msgstr "明天早上"
+
+#: ../src/fw/services/common/clock.c:963
+msgid "tomorrow afternoon"
+msgstr "明天下午"
+
+#: ../src/fw/services/common/clock.c:964
+msgid "tomorrow evening"
+msgstr "明天晚上"
+
+#: ../src/fw/services/common/clock.c:965
+msgid "tomorrow night"
+msgstr "明晚"
+
+#: ../src/fw/services/common/clock.c:966 ../src/fw/services/common/clock.c:967
+msgid "the day after tomorrow"
+msgstr "后天"
+
+#: ../src/fw/services/common/clock.c:968
+msgid "the foreseeable future"
+msgstr "可预见的未来"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:194
+msgid ""
+"How are you feeling? Have you noticed extra focus, better mood or extra "
+"energy? You have been sleeping great this week! Keep it up!"
+msgstr ""
+"您感觉如何？是否注意到注意力更集中、心情更好或精力更充沛？您这周睡眠很好！继续保持！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:196
+msgid "I feel fabulous!"
+msgstr "我感觉棒极了！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:197
+msgid "About average"
+msgstr "一般"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:198
+msgid "I'm still tired"
+msgstr "我仍然很累"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:199
+#: ../src/fw/services/normal/activity/activity_insights.c:217
+msgid "Awesome!"
+msgstr "太棒了！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:200
+#: ../src/fw/services/normal/activity/activity_insights.c:218
+msgid "Keep it up!"
+msgstr "继续努力！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:201
+#: ../src/fw/services/normal/activity/activity_insights.c:219
+msgid "We'll get there!"
+msgstr "我们会成功的！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:212
+msgid ""
+"Congratulations - you're having a super active day! Activity makes you more "
+"focused and creative. How do you feel?"
+msgstr ""
+"恭喜 - 您今天非常活跃！活动让您更加专注和富有创造力。您感觉如何？"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:214
+#: ../src/fw/services/normal/activity/activity_insights.c:1172
+msgid "I feel great!"
+msgstr "我感觉很好！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:215
+msgid "About the same"
+msgstr "差不多"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:216
+msgid "Not feeling it"
+msgstr "没什么感觉"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:246
+msgid "Activity Summary"
+msgstr "活动摘要"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:253
+msgid "Do you feel more energetic, sharper or optimistic? Being active helps!"
+msgstr "您是否感到更有精力、更敏锐或更乐观？积极活动很有帮助！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:254
+msgid "GREAT DAY TODAY"
+msgstr "今天很棒"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:257
+msgid "You're being consistent and that's important, keep at it!"
+msgstr "您一直很坚持，这很重要，请继续保持！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:258
+msgid "CONSISTENT!"
+msgstr "坚持不懈！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:261
+#: ../src/fw/services/normal/activity/activity_insights.c:265
+msgid "Resting is fine, but try to recover and step it up tomorrow!"
+msgstr "休息是可以的，但请尝试恢复并明天加把劲！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:262
+#: ../src/fw/services/normal/activity/activity_insights.c:266
+msgid "NOT VERY ACTIVE"
+msgstr "不太活跃"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:274
+msgid "Sleep Summary"
+msgstr "睡眠摘要"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:282
+msgid "You had a good night! Feel the energy 😃"
+msgstr "您昨晚睡得很好！感受精力充沛吧 😃"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:285
+msgid "It's great that you're keeping a consistent sleep routine!"
+msgstr "您保持着规律的睡眠习惯，这很好！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:288
+#: ../src/fw/services/normal/activity/activity_insights.c:291
+msgid "A good night's sleep goes a long way! Try to get more hours tonight."
+msgstr "充足的睡眠对您大有裨益！今晚试着多睡一会儿。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:443
+msgid "Open App"
+msgstr "打开应用"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:548
+#: ../src/fw/services/normal/activity/activity_insights.c:553
+msgid "BELOW AVG"
+msgstr "低于平均"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:548
+#: ../src/fw/services/normal/activity/activity_insights.c:553
+msgid "Below avg"
+msgstr "低于平均"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:558
+msgid "ON AVG"
+msgstr "平均"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:558
+msgid "On avg"
+msgstr "平均"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:563
+msgid "ABOVE AVG"
+msgstr "高于平均"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:563
+msgid "Above avg"
+msgstr "高于平均"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:755
+msgid ""
+"Wanna know more about you? Track your activity and sleep with Pebble Health."
+msgstr ""
+"想更多地了解您自己吗？使用Pebble Health追踪您的活动和睡眠。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:806
+msgid ""
+"You like sleep, don't you? Get fun stats on your sleep and start waking up "
+"less groggy with Pebble Health."
+msgstr ""
+"您喜欢睡觉，不是吗？使用Pebble Health获取有趣的睡眠数据，并开始以更清醒的状态醒来。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:855
+msgid ""
+"Wish you could get daily updates on your activity and sleep progress? You "
+"can! Check out your stats with Pebble Health."
+msgstr ""
+"希望每天都能收到您的活动和睡眠进度更新吗？您可以！使用Pebble Health查看您的数据。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1076
+msgid "%H:%M"
+msgstr "%H:%M"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1076
+msgid "%l:%M%p"
+msgstr "%l:%M%p"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1101
+#, c-format
+msgid "%uH %uM Sleep"
+msgstr "%uH %uM 睡眠"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1132
+msgid "Nap Time"
+msgstr "小睡时间"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1140
+#, c-format
+msgid "%s of sleep"
+msgstr "%s 的睡眠"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1145
+msgid "YOU NAPPED"
+msgstr "您小睡了"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1146
+msgid "Of napping"
+msgstr "小睡中"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1154
+#, c-format
+msgid "%s - %s"
+msgstr "%s - %s"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1176
+msgid "I need more"
+msgstr "我需要更多"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1206
+#, c-format
+msgid "Aren't naps great? You knocked out for %dH %dM!"
+msgstr "小睡不是很棒吗？您睡了 %dH %dM！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1222
+msgid "I didn't nap!?"
+msgstr "我没有小睡！？"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1442
+msgid "Open Pin"
+msgstr "打开固定"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1526
+#, c-format
+msgid ""
+"Killer job! You've walked %d steps today which is %d%% above your typical. "
+"Do it again tomorrow and you'll be on top of the world!"
+msgstr ""
+"太棒了！您今天走了 %d 步，比平时多了 %d%%。明天继续这样做，您将站在世界之巅！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1528
+#, c-format
+msgid ""
+"Nice moves! You've walked %d steps today which is %d%% above your typical. "
+"Crush it again tomorrow 😀"
+msgstr ""
+"不错！您今天走了 %d 步，比平时多了 %d%%。明天继续努力 😀"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1530
+#, c-format
+msgid ""
+"Hey rockstar 🎤 You've walked %d steps today which is %d%% above your "
+"typical. Nothing can stop you!"
+msgstr ""
+"嘿，摇滚明星 🎤 您今天走了 %d 步，比平时多了 %d%%。没有什么能阻止您！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1532
+#, c-format
+msgid ""
+"We can barely keep up! You walked %d steps today which is %d%% above your "
+"typical. You're on 🔥"
+msgstr ""
+"我们几乎跟不上！您今天走了 %d 步，比平时多了 %d%%。您真是太棒了 🔥"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1535
+#, c-format
+msgid ""
+"You walked %d steps today which is %d%% above your typical. You just "
+"outstepped YOURSELF. Mic drop."
+msgstr ""
+"您今天走了 %d 步，比平时多了 %d%%。您超越了自己。简直太厉害了。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1542
+#, c-format
+msgid ""
+"You walked %d steps today; keep it up! Being active is the key to feeling "
+"like a million bucks. Try to beat your typical tomorrow."
+msgstr ""
+"您今天走了 %d 步，继续保持！积极活动是感觉良好的关键。明天试着超越平时。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1545
+#, c-format
+msgid "Good job! You walked %d steps today–do it again tomorrow."
+msgstr "做得好！您今天走了 %d 步，明天继续这样做。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1546
+#, c-format
+msgid ""
+"Someone's on the move 👊 You walked %d steps today; keep doing what you're "
+"doing!"
+msgstr ""
+"有人在行动 👊 您今天走了 %d 步，继续保持！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1548
+#, c-format
+msgid ""
+"You keep moving, we'll keep counting! You've clocked in %d steps today. Keep "
+"it rolling, hot stuff."
+msgstr ""
+"您继续移动，我们继续计数！您今天已经走了 %d 步。继续加油，厉害的人。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1555
+#, c-format
+msgid ""
+"You walked %d steps today which is %d%% below your typical. Try to be more "
+"active tomorrow–you can do it!"
+msgstr ""
+"您今天走了 %d 步，比平时少了 %d%%。明天试着更活跃一些-您能做到！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1557
+#, c-format
+msgid ""
+"You walked %d steps which is %d%% below your typical. Being active makes you "
+"feel amaaaazing–try to get back on track tomorrow."
+msgstr ""
+"您走了 %d 步，比平时少了 %d%%。积极活动让您感觉棒极了-明天试着回到正轨。"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1559
+#, c-format
+msgid ""
+"You walked %d steps today which is %d%% below your typical. Don't worry, "
+"tomorrow is just around the corner 😀"
+msgstr ""
+"您今天走了 %d 步，比平时少了 %d%%。别担心，明天很快就会到来 😀"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1561
+#, c-format
+msgid ""
+"You walked %d steps which is %d%% below your typical, but don't stress. "
+"You'll crush it tomorrow 😉"
+msgstr ""
+"您走了 %d 步，比平时少了 %d%%，但别紧张。明天您会表现更好 😉"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1568
+#, c-format
+msgid ""
+"You walked %d steps today. Don't fret, you can get back on track in no time "
+"😉"
+msgstr ""
+"您今天走了 %d 步。别担心，您很快就能回到正轨 😉"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1570
+#, c-format
+msgid "You walked %d steps today. Good news is the sky's the limit!"
+msgstr "您今天走了 %d 步。好消息是您的前途无量！"
+
+#: ../src/fw/services/normal/activity/activity_insights.c:1571
+#, c-format
+msgid ""
+"You walked %d steps today. Try to take even more steps tomorrow–show us what "
+"you're made of!"
+msgstr ""
+"您今天走了 %d 步。明天试着走更多步-让我们看看您的实力！"
+
+#: ../src/fw/popups/notifications/notification_window.c:915
+msgid "Dismiss All"
+msgstr "全部关闭"
+
+#: ../src/fw/popups/notifications/notification_window.c:922
+msgid "End Quiet Time"
+msgstr "结束勿扰时间"
+
+#: ../src/fw/popups/notifications/notification_window.c:923
+msgid "Start Quiet Time"
+msgstr "开始勿扰时间"
+
+#: ../src/fw/popups/phone_ui.c:579
+msgid "Call Accepted"
+msgstr "电话已接听"
+
+#: ../src/fw/popups/phone_ui.c:582
+msgid "Disconnected"
+msgstr "已断开连接"
+
+#: ../src/fw/popups/phone_ui.c:586
+msgid "Call Ended"
+msgstr "通话已结束"
+
+#: ../src/fw/popups/phone_ui.c:589
+msgid "Call Declined"
+msgstr "电话已拒绝"
+
+#: ../src/fw/popups/switch_worker_ui.c:110
+#, c-format
+msgid "Run %s instead of %s as the background app?"
+msgstr "将 %s 作为后台应用运行而非 %s ？"
+
+#: ../src/fw/popups/wakeup_ui.c:68
+msgid "While your Pebble was off wakeup events occurred for:\n"
+msgstr "您的Pebble关机期间发生了以下唤醒事件：\n"
+
+#: ../src/fw/shell/normal/battery_ui.c:64
+#: ../src/fw/shell/normal/shutdown_charging.c:102
+msgid "Fully Charged"
+msgstr "已充满"
+
+#: ../src/fw/shell/normal/battery_ui.c:70
+#: ../src/fw/shell/normal/shutdown_charging.c:107
+msgid "Charging"
+msgstr "充电中"
+
+#: ../src/fw/shell/normal/battery_ui.c:85
+#, c-format
+msgid "Powered 'til %s"
+msgstr "电量可维持至 %s"
+
+#: ../src/fw/shell/normal/display_calibration_prompt.c:61
+msgid "Your screen may need calibration. Calibrate it now?"
+msgstr "您的屏幕可能需要校准。现在校准吗？"
+
+#. / Welcome title text welcoming a 3.x user to 4.x
+#: ../src/fw/shell/normal/welcome.c:35
+msgid "Pebble Updated!"
+msgstr "Pebble已更新！"
+
+#: ../src/fw/shell/normal/welcome.c:38
+msgid ""
+"For activity and sleep tracking, press up from your watch face.\n"
+"\n"
+"Press down for current and future events.\n"
+"\n"
+"Read more at blog.pebble.com"
+msgstr ""
+"要追踪活动与睡眠，请从表盘向上按。\n"
+"\n"
+"向下按查看当前和未来的事件。\n"
+"\n"
+"详情请访问 blog.pebble.com"
+
+#: ../src/fw/shell/normal/welcome.c:47
+#: ../src/fw/apps/system_apps/workout/workout_utils.c:41
+#: ../src/fw/services/normal/activity/activity_insights.c:763
+#: ../src/fw/services/normal/activity/activity_insights.c:815
+#: ../src/fw/services/normal/activity/activity_insights.c:864
+#: ../src/fw/services/normal/activity/activity_insights.c:1434
+#: ../src/fw/services/normal/notifications/ancs/ancs_item.c:161
+msgid "Dismiss"
+msgstr "关闭"
+
+#: ../src/fw/apps/core_apps/progress_ui_app.c:80
+msgid "Update Complete"
+msgstr "更新完成"
+
+#: ../src/fw/apps/core_apps/progress_ui_app.c:80
+msgid "Update Failed"
+msgstr "更新失败"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:62
+#, c-format
+msgid "Snooze delay set to %d minutes"
+msgstr "稍后提醒延迟已设置为 %d 分钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:191
+msgid "Delete"
+msgstr "删除"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:196
+#: ../src/fw/apps/system_apps/settings/settings_quick_launch_app_menu.c:71
+#: ../src/fw/apps/system_apps/settings/settings_quiet_time.c:194
+msgid "Disable"
+msgstr "禁用"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:196
+#: ../src/fw/apps/system_apps/settings/settings_quiet_time.c:196
+msgid "Enable"
+msgstr "启用"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:201
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:464
+msgid "Change Time"
+msgstr "更改时间"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:206
+msgid "Change Days"
+msgstr "更改日期"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:212
+msgid "Convert to Basic Alarm"
+msgstr "转换为基本闹钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:213
+msgid "Convert to Smart Alarm"
+msgstr "转换为智能闹钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:219
+msgid "Snooze Delay"
+msgstr "稍后提醒延迟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:230
+msgid "5 minutes"
+msgstr "5分钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:231
+msgid "10 minutes"
+msgstr "10分钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:232
+msgid "15 minutes"
+msgstr "15分钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:233
+msgid "30 minutes"
+msgstr "30分钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_detail.c:234
+msgid "1 hour"
+msgstr "1小时"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:315
+msgid "Check something first."
+msgstr "请先检查一下。"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:465
+msgid "New Smart Alarm"
+msgstr "新建智能闹钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:465
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:560
+msgid "New Alarm"
+msgstr "新建闹钟"
+
+#. / Displays as "Wake up between" then "8:00 AM - 8:30 AM" below on a separate line
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:467
+msgid "Wake up between"
+msgstr "起床时间在"
+
+#. / Displays as "8:00 AM - 8:30 AM" then "Wake up interval" below on a separate line
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:469
+msgid "Wake up interval"
+msgstr "起床间隔"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:557
+msgid "Basic Alarm"
+msgstr "基本闹钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarm_editor.c:558
+#: ../src/fw/apps/system_apps/alarms/alarms.c:370
+#: ../src/fw/services/normal/alarms/alarm.c:389
+#: ../src/fw/services/normal/alarms/alarm_pin.c:33
+msgid "Smart Alarm"
+msgstr "智能闹钟"
+
+#: ../src/fw/apps/system_apps/alarms/alarms.c:138
+msgid "Alarm Deleted"
+msgstr "闹钟已删除"
+
+#: ../src/fw/apps/system_apps/alarms/alarms.c:250
+msgid "Limit reached."
+msgstr "已达到限制。"
+
+#: ../src/fw/apps/system_apps/alarms/alarms.c:294
+msgid "ON"
+msgstr "开"
+
+#: ../src/fw/apps/system_apps/alarms/alarms.c:294
+msgid "OFF"
+msgstr "关"
+
+#: ../src/fw/apps/system_apps/alarms/alarms.c:368
+msgid ""
+"Let us wake you in your lightest sleep so you're fully refreshed! Smart "
+"Alarm wakes you up to 30min before your alarm."
+msgstr ""
+"让我们在您最轻的睡眠中唤醒您，让您精神焕发！智能闹钟会在您设定闹钟前30分钟内唤醒您。"
+
+#: ../src/fw/apps/system_apps/alarms/alarms.c:484
+#: ../src/fw/apps/system_apps/settings/settings_vibe_patterns.c:84
+#: ../src/fw/services/normal/timeline/timeline.c:974
+msgid "Alarms"
+msgstr "闹钟"
+
+#: ../src/fw/apps/system_apps/app_fetch_ui.c:138
+msgid "Not connected"
+msgstr "未连接"
+
+#: ../src/fw/apps/system_apps/app_fetch_ui.c:150
+msgid ""
+"No internet\n"
+"connection"
+msgstr ""
+"无网络\n"
+"连接"
+
+#: ../src/fw/apps/system_apps/app_fetch_ui.c:152
+msgid "No internet connection"
+msgstr "无网络连接"
+
+#: ../src/fw/apps/system_apps/app_fetch_ui.c:158
+msgid "Incompatible JS"
+msgstr "不兼容的JS"
+
+#: ../src/fw/apps/system_apps/app_fetch_ui.c:167
+#: ../src/fw/services/normal/timeline/timeline_actions.c:278
+msgid "Failed"
+msgstr "失败"
+
+#. / Health disabled text
+#: ../src/fw/apps/system_apps/health/health.c:110
+msgid ""
+"Track your steps, sleep, and more! Enable Pebble Health in the mobile app."
+msgstr ""
+"追踪您的步数、睡眠等！在手机应用中启用Pebble Health。"
+
+#: ../src/fw/apps/system_apps/health/health.c:167
+#: ../src/fw/services/normal/timeline/timeline.c:979
+msgid "Health"
+msgstr "健康"
+
+#: ../src/fw/apps/system_apps/health/health_activity_detail_card.c:56
+#: ../src/fw/apps/system_apps/workout/workout_active.c:281
+#: ../src/fw/apps/system_apps/workout/workout_active.c:340
+#: ../src/fw/services/normal/activity/activity_insights.c:1852
+msgid "MI"
+msgstr "英里"
+
+#: ../src/fw/apps/system_apps/health/health_activity_detail_card.c:56
+#: ../src/fw/apps/system_apps/workout/workout_active.c:281
+#: ../src/fw/apps/system_apps/workout/workout_active.c:341
+#: ../src/fw/services/normal/activity/activity_insights.c:1852
+msgid "KM"
+msgstr "公里"
+
+#: ../src/fw/apps/system_apps/health/health_activity_detail_card.c:69
+#: ../src/fw/apps/system_apps/health/health_sleep_detail_card.c:80
+msgid "30 DAY AVG"
+msgstr "30天平均"
+
+#: ../src/fw/apps/system_apps/health/health_activity_detail_card.c:101
+msgid "CALORIES"
+msgstr "卡路里"
+
+#. / Distance Label
+#: ../src/fw/apps/system_apps/health/health_activity_detail_card.c:103
+#: ../src/fw/apps/system_apps/workout/workout_active.c:174
+msgid "DISTANCE"
+msgstr "距离"
+
+#: ../src/fw/apps/system_apps/health/health_detail_card.c:517
+#: ../src/fw/services/common/clock.c:505 ../src/fw/services/common/clock.c:676
+msgid "Today"
+msgstr "今天"
+
+#: ../src/fw/apps/system_apps/health/health_graph_card.c:299
+msgid ": "
+msgstr "："
+
+#: ../src/fw/apps/system_apps/health/health_graph_card.c:305
+#, c-format
+msgid "%a: "
+msgstr "%a: "
+
+#: ../src/fw/apps/system_apps/health/health_graph_card.c:388
+msgid "SMTWTFS"
+msgstr "日一二三四五六"
+
+#: ../src/fw/apps/system_apps/health/health_hr_detail_card.c:80
+#: ../src/fw/services/normal/activity/activity_insights.c:1958
+msgid "Fat Burn"
+msgstr "燃脂"
+
+#: ../src/fw/apps/system_apps/health/health_hr_detail_card.c:83
+#: ../src/fw/services/normal/activity/activity_insights.c:1965
+msgid "Endurance"
+msgstr "耐力"
+
+#: ../src/fw/apps/system_apps/health/health_hr_detail_card.c:86
+#: ../src/fw/services/normal/activity/activity_insights.c:1972
+msgid "Performance"
+msgstr "表现"
+
+#. / Resting HR
+#: ../src/fw/apps/system_apps/health/health_hr_detail_card.c:92
+msgid "TIME IN ZONES"
+msgstr "区间时间"
+
+#: ../src/fw/apps/system_apps/health/health_hr_summary_card.c:124
+msgid "BPM"
+msgstr "每分钟心跳"
+
+#. / HRM disabled
+#: ../src/fw/apps/system_apps/health/health_hr_summary_card.c:168
+msgid "Enable heart rate monitoring in the mobile app"
+msgstr "在手机应用中启用心率监测"
+
+#: ../src/fw/apps/system_apps/health/health_sleep_detail_card.c:82
+msgid "30 DAY"
+msgstr "30天"
+
+#: ../src/fw/apps/system_apps/health/health_sleep_detail_card.c:116
+msgid "SLEEP SESSION"
+msgstr "睡眠时段"
+
+#: ../src/fw/apps/system_apps/health/health_sleep_detail_card.c:129
+msgid "DEEP SLEEP"
+msgstr "深度睡眠"
+
+#: ../src/fw/apps/system_apps/health/health_sleep_summary_card.c:221
+msgid ""
+"No sleep data,\n"
+"wear your watch\n"
+"to sleep"
+msgstr ""
+"无睡眠数据，\n"
+"请佩戴手表\n"
+"睡觉"
+
+#: ../src/fw/apps/system_apps/health/health_ui.c:66
+#, c-format
+msgid "TYPICAL %s"
+msgstr "典型 %s"
+
+#. / Shown when the current temperature is unknown
+#. / Shown when today's current temperature is unknown
+#: ../src/fw/apps/system_apps/launcher/default/launcher_app_glance_weather.c:132
+#: ../src/fw/apps/system_apps/weather/weather_app_layout.c:202
+msgid "--°"
+msgstr "--°"
+
+#. / Shown when today's temperature and conditions phrase is known (e.g. "52° - Fair")
+#: ../src/fw/apps/system_apps/launcher/default/launcher_app_glance_weather.c:138
+#, c-format
+msgid "%i° - %s"
+msgstr "%i° - %s"
+
+#. / Today's current temperature (e.g. "68°")
+#: ../src/fw/apps/system_apps/launcher/default/launcher_app_glance_weather.c:140
+#: ../src/fw/apps/system_apps/weather/weather_app_layout.c:207
+#, c-format
+msgid "%i°"
+msgstr "%i°"
+
+#: ../src/fw/apps/system_apps/music_app.c:710
+msgid ""
+"START PLAYBACK\n"
+"ON YOUR PHONE"
+msgstr ""
+"在手机上\n"
+"开始播放"
+
+#: ../src/fw/apps/system_apps/music_app.c:1022
+msgid "Music"
+msgstr "音乐"
+
+#: ../src/fw/apps/system_apps/notifications_app.c:268
+msgid "Done"
+msgstr "完成"
+
+#: ../src/fw/apps/system_apps/notifications_app.c:295
+msgid "Clear history?"
+msgstr "清除历史记录？"
+
+#: ../src/fw/apps/system_apps/notifications_app.c:558
+#: ../src/fw/apps/system_apps/notifications_app.c:564
+msgid "Clear All"
+msgstr "全部清除"
+
+#: ../src/fw/apps/system_apps/notifications_app.c:727
+msgid "No notifications"
+msgstr "无通知"
+
+#: ../src/fw/apps/system_apps/notifications_app.c:813
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:379
+#: ../src/fw/apps/system_apps/settings/settings_vibe_patterns.c:74
+#: ../src/fw/services/normal/timeline/timeline.c:958
+msgid "Notifications"
+msgstr "通知"
+
+#: ../src/fw/apps/system_apps/reminders/reminder_app.c:66
+msgid "Completed"
+msgstr "已完成"
+
+#: ../src/fw/apps/system_apps/reminders/reminder_app.c:70
+msgid "Postpone"
+msgstr "推迟"
+
+#: ../src/fw/apps/system_apps/reminders/reminder_app.c:74
+#: ../src/fw/services/normal/activity/activity_insights.c:460
+#: ../src/fw/services/normal/timeline/timeline.c:674
+msgid "Remove"
+msgstr "移除"
+
+#: ../src/fw/apps/system_apps/reminders/reminder_app.c:126
+msgid "Added"
+msgstr "已添加"
+
+#: ../src/fw/apps/system_apps/reminders/reminder_app.c:309
+msgid "Reminder"
+msgstr "提醒"
+
+#: ../src/fw/apps/system_apps/send_text/send_text.c:215
+#: ../src/fw/services/normal/phone_call_util.c:31
+msgid "Unknown"
+msgstr "未知"
+
+#: ../src/fw/apps/system_apps/send_text/send_text.c:273
+#: ../src/fw/apps/system_apps/send_text/send_text.c:349
+msgid "Select Contact"
+msgstr "选择联系人"
+
+#: ../src/fw/apps/system_apps/send_text/send_text.c:363
+msgid ""
+"Add contacts in\n"
+"mobile app"
+msgstr ""
+"在手机应用中\n"
+"添加联系人"
+
+#: ../src/fw/apps/system_apps/send_text/send_text.c:396
+msgid "Send Text"
+msgstr "发送短信"
+
+#: ../src/fw/apps/system_apps/settings/settings.c:146
+msgid "Settings"
+msgstr "设置"
+
+#: ../src/fw/apps/system_apps/settings/settings_activity_tracker.c:175
+msgid "No background apps"
+msgstr "无后台应用"
+
+#. / No Notification Window Timeout
+#: ../src/fw/apps/system_apps/settings/settings_activity_tracker.c:184
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:210
+msgid "None"
+msgstr "无"
+
+#: ../src/fw/apps/system_apps/settings/settings_activity_tracker.c:256
+#: ../src/fw/apps/system_apps/settings/settings_activity_tracker.c:273
+msgid "Background App"
+msgstr "后台应用"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:159
+msgid "<Untitled>"
+msgstr "<无标题>"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:285
+msgid "Pairing Instructions"
+msgstr "配对说明"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:289
+#, c-format
+msgid "%u Paired Phones"
+msgstr "%u 部已配对手机"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:290
+#, c-format
+msgid "%u Paired Phone"
+msgstr "%u 部已配对手机"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:425
+msgid "No LE"
+msgstr "无LE"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:425
+msgid "LE Only"
+msgstr "仅LE"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:428
+msgid "Connected"
+msgstr "已连接"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:444
+msgid "Sharing Heart Rate ❤"
+msgstr "共享心率 ❤"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:489
+msgid "Connection"
+msgstr "连接"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:493
+#: ../src/fw/apps/system_apps/toggle/airplane_mode.c:64
+msgid "Airplane Mode"
+msgstr "飞行模式"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:500
+msgid "Now Discoverable"
+msgstr "现在可被发现"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:506
+msgid "Disabling..."
+msgstr "正在禁用..."
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:506
+msgid "Enabling..."
+msgstr "正在启用..."
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:529
+msgid "Disable Airplane Mode to connect."
+msgstr "请关闭飞行模式以连接。"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:532
+msgid "Open the Pebble app on your phone to connect."
+msgstr "打开手机上的Pebble应用以连接。"
+
+#: ../src/fw/apps/system_apps/settings/settings_bluetooth.c:670
+msgid "Bluetooth"
+msgstr "蓝牙"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:51
+msgid "Low"
+msgstr "低"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:52
+msgid "Medium"
+msgstr "中"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:53
+msgid "High"
+msgstr "高"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:54
+msgid "Blinding"
+msgstr "刺眼"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:89
+msgid "INTENSITY"
+msgstr "强度"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:89
+#: ../src/fw/apps/system_apps/settings/settings_display.c:231
+msgid "Intensity"
+msgstr "强度"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:101
+msgid "3 Seconds"
+msgstr "3秒"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:102
+msgid "5 Seconds"
+msgstr "5秒"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:103
+msgid "8 Seconds"
+msgstr "8秒"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:126
+msgid "TIMEOUT"
+msgstr "超时"
+
+#. / Status bar title for the Notification Window Timeout settings screen
+#. / String within Settings->Notifications that describes the window timeout setting
+#: ../src/fw/apps/system_apps/settings/settings_display.c:126
+#: ../src/fw/apps/system_apps/settings/settings_display.c:235
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:242
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:289
+msgid "Timeout"
+msgstr "超时"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:203
+#: ../src/fw/apps/system_apps/settings/settings_system.c:192
+msgid "Language"
+msgstr "语言"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:207
+msgid "Backlight"
+msgstr "背光"
+
+#. / Shows up in the Timeline settings as the status under the "Quick View" toggle.
+#: ../src/fw/apps/system_apps/settings/settings_display.c:209
+#: ../src/fw/apps/system_apps/settings/settings_display.c:217
+#: ../src/fw/apps/system_apps/settings/settings_display.c:225
+#: ../src/fw/apps/system_apps/settings/settings_quiet_time.c:248
+#: ../src/fw/apps/system_apps/settings/settings_system.c:942
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:139
+msgid "On"
+msgstr "开"
+
+#. / Shows up in the Timeline settings as the status under the "Quick View" toggle.
+#: ../src/fw/apps/system_apps/settings/settings_display.c:211
+#: ../src/fw/apps/system_apps/settings/settings_display.c:219
+#: ../src/fw/apps/system_apps/settings/settings_display.c:227
+#: ../src/fw/apps/system_apps/settings/settings_quiet_time.c:248
+#: ../src/fw/apps/system_apps/settings/settings_system.c:942
+#: ../src/fw/apps/system_apps/settings/settings_timeline.c:141
+msgid "Off"
+msgstr "关"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:215
+msgid "Motion Enabled"
+msgstr "已启用动作感应"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:223
+msgid "Ambient Sensor"
+msgstr "环境光传感器"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:240
+msgid "Screen Alignment"
+msgstr "屏幕对齐"
+
+#: ../src/fw/apps/system_apps/settings/settings_display.c:278
+msgid "Display"
+msgstr "显示"
+
+#: ../src/fw/apps/system_apps/settings/settings_display_calibration.c:64
+msgid "Horizontal Alignment"
+msgstr "水平对齐"
+
+#: ../src/fw/apps/system_apps/settings/settings_display_calibration.c:65
+msgid "Vertical Alignment"
+msgstr "垂直对齐"
+
+#: ../src/fw/apps/system_apps/settings/settings_display_calibration.c:66
+msgid "Confirm Alignment"
+msgstr "确认对齐"
+
+#: ../src/fw/apps/system_apps/settings/settings_display_calibration.c:69
+#: ../src/fw/apps/system_apps/settings/settings_display_calibration.c:70
+msgid ""
+"Up/Down to adjust\n"
+"Select to proceed"
+msgstr ""
+"上/下调整\n"
+"选择继续"
+
+#: ../src/fw/apps/system_apps/settings/settings_display_calibration.c:71
+msgid "Select to confirm alignment changes"
+msgstr "选择确认对齐更改"
+
+#: ../src/fw/apps/system_apps/settings/settings_factory_reset.c:72
+msgid "Resetting..."
+msgstr "正在重置..."
+
+#: ../src/fw/apps/system_apps/settings/settings_factory_reset.c:124
+msgid "Perform factory reset?"
+msgstr "执行恢复出厂设置？"
+
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:78
+msgid "Allow All Notifications"
+msgstr "允许所有通知"
+
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:79
+msgid "Allow Phone Calls Only"
+msgstr "仅允许电话"
+
+#: ../src/fw/apps/system_apps/settings/settings_notifications.c:80
+msgid "Mute All Notifications"
+msgstr "静音所有通知"
