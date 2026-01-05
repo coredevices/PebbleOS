@@ -1082,8 +1082,57 @@ static void prv_certification_window_load(Window *window) {
   prv_get_model(cd->model_buffer);
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
       .draw_cell_fn = prv_draw_regulatory_id_cell,
-      .arg1 = "Model",
+      .arg1 = "Product Model",
       .arg2 = cd->model_buffer,
+  });
+
+  // Add product type
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "Product Type",
+      .arg2 = prv_get_product_type(),
+  });
+
+  // Add trademark
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "Trademark",
+      .arg2 = prv_get_trademark(),
+  });
+
+  // Add place of origin
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "Place of Origin",
+      .arg2 = prv_get_place_of_origin(),
+  });
+
+  // Add DC input
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "DC Input",
+      .arg2 = prv_get_dc_input(),
+  });
+
+  // Add rated voltage
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "Rated Voltage",
+      .arg2 = prv_get_rated_voltage(),
+  });
+
+  // Add milliampere-hour
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "Milliampere-hour",
+      .arg2 = prv_get_milliampere_hour(),
+  });
+
+  // Add watt-hour
+  prv_append_certification_menu(cd, &(SystemCertificationMenuItem) {
+      .draw_cell_fn = prv_draw_regulatory_id_cell,
+      .arg1 = "Watt-hour",
+      .arg2 = prv_get_watt_hour(),
   });
 
   if (flags->has_usa_fcc) {

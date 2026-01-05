@@ -41,6 +41,13 @@ typedef struct RegulatoryFlags {
 
 typedef struct CertificationIds {
   const char *company_name;
+  const char *product_type;
+  const char *trademark;
+  const char *place_of_origin;
+  const char *dc_input;
+  const char *rated_voltage;
+  const char *milliampere_hour;
+  const char *watt_hour;
   const char *canada_ic_id;
   const char *canada_ised_id;
   const char *china_cmiit_id;
@@ -58,6 +65,13 @@ static const RegulatoryFlags s_regulatory_flags_fallback = {
 // Certifiation ID strings used for bigboards and such.
 static const CertificationIds s_certification_ids_fallback = {
   .company_name = "ACME Inc.",
+  .product_type = "Product Type",
+  .trademark = "Product Trademark",
+  .place_of_origin = "Country of Origin",
+  .dc_input = "XV/YYYmA",
+  .rated_voltage = "X.XV",
+  .milliampere_hour = "XXXmAh",
+  .watt_hour = "X.XXWh",
   .canada_ic_id = "XXXXXX-YYY",
   .canada_ised_id = "XXXXXX-YYYYYYYYYYY",
   .china_cmiit_id = "ABCDEFGHIJ",
@@ -206,6 +220,13 @@ static const CertificationIds * prv_get_certification_ids(void) {
   }
 
 ID_GETTER(company_name)
+ID_GETTER(product_type)
+ID_GETTER(trademark)
+ID_GETTER(place_of_origin)
+ID_GETTER(dc_input)
+ID_GETTER(rated_voltage)
+ID_GETTER(milliampere_hour)
+ID_GETTER(watt_hour)
 ID_GETTER(canada_ic_id)
 ID_GETTER(china_cmiit_id)
 ID_GETTER(japan_telec_r_id)
