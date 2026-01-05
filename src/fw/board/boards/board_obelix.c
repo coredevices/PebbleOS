@@ -738,4 +738,9 @@ void board_init(void) {
   i2c_init(I2C4_BUS);
 
   mic_init(MIC);
+
+#ifdef RECOVERY_FW
+  // FIXME(OBELIX): Remove once stable
+  stop_mode_disable(InhibitorMain);
+#endif
 }
