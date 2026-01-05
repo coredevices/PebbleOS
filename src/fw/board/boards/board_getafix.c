@@ -599,12 +599,6 @@ void board_init(void) {
 
   mic_init(MIC);
 
-  /* Enable user buttons as AON wakeup source */
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN10, AON_PIN_MODE_HIGH);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN11, AON_PIN_MODE_LOW);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN12, AON_PIN_MODE_LOW);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_PIN13, AON_PIN_MODE_LOW);
-
 #ifdef RECOVERY_FW
   // FIXME(GETAFIX): Remove once stable
   stop_mode_disable(InhibitorMain);
