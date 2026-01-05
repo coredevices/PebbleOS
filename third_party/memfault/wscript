@@ -9,7 +9,11 @@ def options(opt):
 def configure(conf):
     conf.env.memfault = conf.options.memfault
     if not conf.env.memfault:
-        conf.env.memfault = int(conf.options.release and (conf.is_asterix() or conf.is_obelix()))
+        conf.env.memfault = int(
+	    conf.options.release and (
+	        conf.is_asterix() or conf.is_obelix() or conf.is_getafix()
+            )
+        )
     else:
         conf.env.memfault = int(conf.env.memfault)
 
