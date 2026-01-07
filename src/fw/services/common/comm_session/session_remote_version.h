@@ -30,10 +30,7 @@ typedef struct PACKED {
       bool reminders_app_support:1;
       bool workout_app_support:1;
       bool smooth_fw_install_progress_support:1;
-      // Workaround the fact that we inadvertently injected some padding when we added a 5 bit
-      // field (PBL-37933) Since the padded bits are all getting 0'ed out today, we are free to use
-      // them in the future!
-      uint8_t padded_bits:1;
+      bool custom_vibe_pattern_support:1;
       uint8_t javascript_bytecode_version_appended: 1;
       uint8_t more_padded_bits:4;
       bool continue_fw_install_across_disconnect_support: 1;
