@@ -3,6 +3,7 @@
 
 #include "sync.h"
 #include "endpoint_private.h"
+#include "settings_blob_db.h"
 
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/comm_session/session.h"
@@ -43,6 +44,15 @@
 //! \code{.c}
 //! 0x05 <uint16_t token> <uint8_t DatabaseId>
 //! \endcode
+//!
+//! <b>INSERT_WITH_TIMESTAMP:</b> Insert with timestamp for conflict resolution.
+//! If watch data is newer, returns BLOB_DB_DATA_STALE and phone should resync.
+//!
+//! \code{.c}
+//! 0x0D <uint16_t token> <uint8_t DatabaseId> <uint32_t timestamp>
+//! <uint8_t key_size M> <uint8_t[M] key_bytes>
+//! <uint16_t value_size N> <uint8_t[N] value_bytes>
+//! \endcode
 
 //! BlobDB Endpoint ID
 static const uint16_t BLOB_DB_ENDPOINT_ID = 0xb1db;
@@ -52,6 +62,7 @@ static const uint8_t VALUE_DATA_LENGTH = (sizeof(uint16_t) + sizeof(uint8_t));
 
 //! Message Length Constants
 static const uint8_t MIN_INSERT_LENGTH = 8;
+static const uint8_t MIN_INSERT_WITH_TIMESTAMP_LENGTH = 12; // + 4 bytes for timestamp
 static const uint8_t MIN_DELETE_LENGTH = 6;
 static const uint8_t MIN_CLEAR_LENGTH  = 3;
 
@@ -174,6 +185,64 @@ static void prv_handle_database_insert(CommSession *session, const uint8_t *data
 }
 
 
+static void prv_handle_database_insert_with_timestamp(CommSession *session, const uint8_t *data,
+                                                      uint32_t length) {
+  if (length < MIN_INSERT_WITH_TIMESTAMP_LENGTH) {
+    prv_send_response(session, prv_try_read_token(data, length), BLOB_DB_INVALID_DATA);
+    return;
+  }
+
+  const uint8_t *iter = data;
+  BlobDBToken token;
+  BlobDBId db_id;
+
+  // Read token and db_id
+  iter = endpoint_private_read_token_db_id(iter, &token, &db_id);
+
+  // Read timestamp (4 bytes, little-endian)
+  uint32_t timestamp = *(uint32_t *)iter;
+  iter += sizeof(uint32_t);
+
+  // read key length and key bytes ptr
+  uint8_t key_size;
+  const uint8_t *key_bytes = NULL;
+  iter = prv_read_key_size(iter, data + length, &key_size);
+  iter = prv_read_ptr(iter, data + length, &key_bytes, key_size);
+
+  // If read past end or there is not enough data left in buffer for a value size and data to exist
+  if (!iter || (iter > (data + length - VALUE_DATA_LENGTH))) {
+    prv_send_response(session, token, BLOB_DB_INVALID_DATA);
+    return;
+  }
+
+  // read value length and value bytes ptr
+  uint16_t value_size;
+  const uint8_t *value_bytes = NULL;
+  iter = prv_read_value_size(iter, data + length, &value_size);
+  iter = prv_read_ptr(iter, data + length, &value_bytes, value_size);
+
+  // If we read too many bytes or didn't read all the bytes (2nd test)
+  if (!iter || (iter != (data + length))) {
+    prv_send_response(session, token, BLOB_DB_INVALID_DATA);
+    return;
+  }
+
+  // Only Settings BlobDB supports timestamped insert
+  if (db_id != BlobDBIdSettings) {
+    // Fall back to regular insert for other databases
+    status_t ret = blob_db_insert(db_id, key_bytes, key_size, value_bytes, value_size);
+    prv_send_response(session, token, prv_interpret_db_ret_val(ret));
+    return;
+  }
+
+  // Use timestamped insert for Settings - will reject if watch data is newer
+  status_t ret = settings_blob_db_insert_with_timestamp(key_bytes, key_size,
+                                                        value_bytes, value_size,
+                                                        (time_t)timestamp);
+  prv_send_response(session, token, prv_interpret_db_ret_val(ret));
+}
+
+
 static void prv_handle_database_delete(CommSession *session, const uint8_t *data, uint32_t length) {
   if (length < MIN_DELETE_LENGTH) {
     prv_send_response(session, prv_try_read_token(data, length), BLOB_DB_INVALID_DATA);
@@ -241,6 +310,10 @@ static void prv_blob_db_msg_decode_and_handle(
     case BLOB_DB_COMMAND_CLEAR:
       PBL_LOG(LOG_LEVEL_DEBUG, "Got CLEAR");
       prv_handle_database_clear(session, data, data_length);
+      break;
+    case BLOB_DB_COMMAND_INSERT_WITH_TIMESTAMP:
+      PBL_LOG(LOG_LEVEL_DEBUG, "Got INSERT_WITH_TIMESTAMP");
+      prv_handle_database_insert_with_timestamp(session, data, data_length);
       break;
     // Commands not implemented.
     case BLOB_DB_COMMAND_READ:

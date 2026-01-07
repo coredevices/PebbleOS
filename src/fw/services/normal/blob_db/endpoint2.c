@@ -4,6 +4,7 @@
 #include "api.h"
 #include "sync.h"
 #include "endpoint_private.h"
+#include "settings_blob_db.h"
 
 #include "services/common/comm_session/session.h"
 #include "services/common/comm_session/session_send_buffer.h"
@@ -201,6 +202,40 @@ static void prv_handle_version(CommSession *session, const uint8_t *data, uint32
 }
 
 
+static void prv_handle_dirty_all(CommSession *session, const uint8_t *data, uint32_t length) {
+  // Message format: [token (2 bytes)] [db_id (1 byte)]
+  static const uint8_t MIN_DIRTY_ALL_LENGTH = sizeof(BlobDBToken) + sizeof(BlobDBId);
+  if (length < MIN_DIRTY_ALL_LENGTH) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Got a dirty_all with an invalid length: %"PRIu32"", length);
+    return;
+  }
+
+  BlobDBToken token;
+  BlobDBId db_id;
+  endpoint_private_read_token_db_id(data, &token, &db_id);
+
+  struct PACKED DirtyAllResponseMsg {
+    BlobDBCommand cmd;
+    BlobDBToken token;
+    BlobDBResponse result;
+  } response = {
+    .cmd = BLOB_DB_COMMAND_DIRTY_ALL | RESPONSE_MASK,
+    .token = token,
+  };
+
+  // Currently only Settings BlobDB supports mark_all_dirty
+  if (db_id != BlobDBIdSettings) {
+    response.result = BLOB_DB_DB_NOT_SUPPORTED;
+    prv_send_response(session, (uint8_t *)&response, sizeof(response));
+    return;
+  }
+
+  status_t ret = settings_blob_db_mark_all_dirty();
+  response.result = (ret == S_SUCCESS) ? BLOB_DB_SUCCESS : BLOB_DB_GENERAL_FAILURE;
+  prv_send_response(session, (uint8_t *)&response, sizeof(response));
+}
+
+
 static void prv_send_error_response(CommSession *session,
                                     BlobDBCommand cmd,
                                     const uint8_t *data,
@@ -244,6 +279,10 @@ static void prv_blob_db_msg_decode_and_handle(
     case BLOB_DB_COMMAND_VERSION:
       PBL_LOG(LOG_LEVEL_DEBUG, "Got VERSION");
       prv_handle_version(session, data, data_length);
+      break;
+    case BLOB_DB_COMMAND_DIRTY_ALL:
+      PBL_LOG(LOG_LEVEL_DEBUG, "Got DIRTY_ALL");
+      prv_handle_dirty_all(session, data, data_length);
       break;
     default:
       PBL_LOG(LOG_LEVEL_ERROR, "Invalid BlobDB2 message received, cmd is %u", cmd);
