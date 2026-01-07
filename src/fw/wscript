@@ -180,7 +180,7 @@ def _generate_memory_layout(bld):
 
     elif bld.env.MICRO_FAMILY == 'NRF5340': # TODO change if upgrade to PSE84
         # Bootloader
-        offset_size = 32 * 1024
+        offset_size = 64 * 1024 + 512 # using mcuboot
         flash_size = 1024 * 1024
         if bld.is_asterix() and bld.variant == 'prf' and not bld.env.IS_MFG:
             fw_max_size = flash_size // 2
@@ -204,12 +204,14 @@ def _generate_memory_layout(bld):
 
     if bld.env.FLASH_ITCM:
         flash_origin = 0x00200000
-    elif bld.env.MICRO_FAMILY == 'NRF52840' or bld.env.MICRO_FAMILY == 'NRF5340': # TODO change if upgrade to PSE84
+    elif bld.env.MICRO_FAMILY == 'NRF52840': 
         flash_origin = 0x00000000
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
         flash_origin = 0x12000000
+    elif bld.env.MICRO_FAMILY == 'NRF5340':# TODO change if upgrade to PSE84
+        flash_origin = 0x00000000
     else:
-        flash_origin = 0x08000000
+        flash_origin = 0x08000000de
 
     firmware_offset = 0
     if bld.env.MICRO_FAMILY == 'SF32LB52':

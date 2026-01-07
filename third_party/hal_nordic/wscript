@@ -39,6 +39,8 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS=4') # double check number
         conf.env.append_unique('DEFINES', 'NRFX_PDM_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_DPPI_ENABLED=1') # enabling Distributed Programmable Peripheral Interconnect
+        conf.env.append_unique('DEFINES', 'NRFX_PDM_ENABLED=1')
+        conf.env.append_unique('DEFINES', 'NRFX_PDM0_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_PWM_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_PWM0_ENABLED=1')
         conf.env.append_unique('DEFINES', 'NRFX_QSPI_ENABLED=1')

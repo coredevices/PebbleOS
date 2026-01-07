@@ -15,7 +15,7 @@ def build(bld):
             'speex_includes',
         ]
 
-        if bld.is_asterix() or bld.is_obelix() or bld.is_hollow():
+        if bld.is_asterix() or bld.is_obelix():
             use.append('nrf_fuel_gauge')
         if bld.env.memfault:
             use.append('memfault_includes')
@@ -50,7 +50,11 @@ def build(bld):
             elif bld.is_hollow():
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
-                excludes.append('common/battery/voltage/**')
+
+                # we only have nrf1100, not nrf1300, so no fuel guage...
+                excludes.append('common/battery/nrf_fuel_gauge/**')
+                # and we need the battery/voltage libraries...
+                # excludes.append('common/battery/voltage/**')
                 
                 # don't know what the vibes client is, so excluding for now
                 excludes.append('normal/vibes/vibe_client.c')

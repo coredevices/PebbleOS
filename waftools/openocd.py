@@ -37,6 +37,8 @@ JTAG_OPTIONS = {'olimex': 'source [find interface/ftdi/olimex-arm-usb-ocd-h.cfg]
 
 OPENOCD_TELNET_PORT = 4444
 
+# OPENOCD = 'openocd'
+OPENOCD = '~/.local/xPacks/@xpack-dev-tools/openocd/0.12.0-7.1/.content/bin/openocd'
 
 @contextlib.contextmanager
 def daemon(ctx, cfg_file, use_swd=False):
@@ -44,7 +46,7 @@ def daemon(ctx, cfg_file, use_swd=False):
         yield
     else:
         expect_str = "Listening on port"
-        proc = pexpect.spawn('openocd', ['-f', cfg_file], encoding='utf-8', logfile=sys.stdout)
+        proc = pexpect.spawn(OPENOCD,['-f', cfg_file], encoding='utf-8', logfile=sys.stdout)
         # Wait for OpenOCD to connect to the board:
         result = proc.expect([expect_str, pexpect.TIMEOUT], timeout=10)
         if result == 0:
@@ -56,7 +58,7 @@ def daemon(ctx, cfg_file, use_swd=False):
 
 def _has_openocd(ctx):
     try:
-        ctx.cmd_and_log(['which', 'openocd'], quiet=waflib.Context.BOTH)
+        ctx.cmd_and_log(['which', OPENOCD], quiet=waflib.Context.BOTH)
         return True
     except:
         return False
@@ -100,7 +102,7 @@ def run_command(ctx, cmd, ignore_fail=False, expect=[], timeout=40,
                 cmd = "%s ; mww 0xe000edfc 0x0; mww 0xe000edf0 0xa05f0000 ; nrf52.dap dpreg 4 0 ; shutdown" % cmd
             else:
                 cmd = "%s ; shutdown" % cmd
-        ctx.exec_command('openocd -f %s -c "%s" 2>&1 | tee .waf.openocd.log %s' %
+        ctx.exec_command(f'{OPENOCD} -f %s -c "%s" 2>&1 | tee .waf.openocd.log %s' %
                          (cfg_file, cmd, fail_handling), stdout=None, stderr=None)
         if enforce_expect:
             # Read the result
@@ -120,7 +122,7 @@ def _get_supported_interfaces(ctx):
         return []
     # Ugh, openocd exits with status 1 when not specifying an interface...
     try:
-        ctx.cmd_and_log(['openocd', '-c', '"interface_list"'],
+        ctx.cmd_and_log([OPENOCD, '-c', '"interface_list"'],
                         quiet=waflib.Context.BOTH,
                         output=waflib.Context.STDERR)
     except Exception as e:
@@ -139,7 +141,7 @@ def get_flavor(conf):
     """ Returns a if OpenOCD is Pebble flavor """
 
     try:
-        version_string = conf.cmd_and_log(['openocd', '--version'],
+        version_string = conf.cmd_and_log([OPENOCD, '--version'],
                                           quiet=waflib.Context.BOTH,
                                           output=waflib.Context.STDERR)
         version_string = version_string.splitlines()[0]
@@ -162,7 +164,7 @@ def _get_reset_conf(conf, should_connect_assert_srst):
 
 
 def _get_adapter_speed(conf):
-    if conf.env.OPENOCD_JTAG == 'swd_cmsisdap' and conf.env.MICRO_FAMILY == 'NRF52840':
+    if conf.env.OPENOCD_JTAG == 'swd_cmsisdap' and (conf.env.MICRO_FAMILY == 'NRF52840' or conf.env.MICRO_FAMILY == 'NRF5340'):
         return 10000
 
     return None
@@ -185,7 +187,7 @@ def write_cfg(conf):
     elif conf.env.MICRO_FAMILY == 'NRF52840':
         target = 'nrf52.cfg'
     elif conf.env.MICRO_FAMILY == 'NRF5340':
-        target = 'nrf53.cfg'
+        target = 'nordic/nrf53.cfg'
 
     is_pebble_flavor = get_flavor(conf)
 
@@ -218,12 +220,12 @@ source [find target/${target}]
 ${adapter_speed_cfg}
 reset_config ${reset_config}
 
-$$_TARGETNAME configure -rtos FreeRTOS
-$$_TARGETNAME configure -event gdb-attach {
+$$_TARGETNAME_APP configure -rtos FreeRTOS
+$$_TARGETNAME_APP configure -event gdb-attach {
     echo "Halting target because GDB is attaching..."
     halt
 }
-$$_TARGETNAME configure -event gdb-detach {
+$$_TARGETNAME_APP configure -event gdb-detach {
     echo "Resuming target because GDB is detaching..."
     resume
 }

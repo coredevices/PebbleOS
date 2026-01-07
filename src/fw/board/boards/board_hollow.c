@@ -32,14 +32,14 @@ static QSPIPortState s_qspi_port_state;
 static QSPIPort QSPI_PORT = {
     .state = &s_qspi_port_state,
     .auto_polling_interval = 16,
-    .cs_gpio = NRF_GPIO_PIN_MAP(0, 17),
-    .clk_gpio = NRF_GPIO_PIN_MAP(0, 19),
+    .cs_gpio = NRF_GPIO_PIN_MAP(0, 18),
+    .clk_gpio = NRF_GPIO_PIN_MAP(0, 17),
     .data_gpio =
         {
-            NRF_GPIO_PIN_MAP(0, 20),
-            NRF_GPIO_PIN_MAP(0, 21),
-            NRF_GPIO_PIN_MAP(0, 22),
-            NRF_GPIO_PIN_MAP(0, 23),
+            NRF_GPIO_PIN_MAP(0, 13),
+            NRF_GPIO_PIN_MAP(0, 14),
+            NRF_GPIO_PIN_MAP(0, 15),
+            NRF_GPIO_PIN_MAP(0, 16),
         },
 };
 QSPIPort *const QSPI = &QSPI_PORT;
@@ -60,8 +60,8 @@ IRQ_MAP_NRFX(QSPI, nrfx_qspi_irq_handler);
 static UARTDeviceState s_dbg_uart_state;
 static UARTDevice DBG_UART_DEVICE = {
     .state = &s_dbg_uart_state,
-    .tx_gpio = NRF_GPIO_PIN_MAP(0, 27),
-    .rx_gpio = NRF_GPIO_PIN_MAP(0, 5),
+    .tx_gpio = NRF_GPIO_PIN_MAP(0, 9),
+    .rx_gpio = NRF_GPIO_PIN_MAP(0, 10),
     .rts_gpio = NRF_UARTE_PSEL_DISCONNECTED,
     .cts_gpio = NRF_UARTE_PSEL_DISCONNECTED,
     .periph = NRFX_UARTE_INSTANCE(0),
@@ -76,149 +76,149 @@ IRQ_MAP_NRFX(TIMER1, nrfx_timer_1_irq_handler);
 IRQ_MAP_NRFX(TIMER2, nrfx_timer_2_irq_handler);
 
 /* display */
-PwmState DISPLAY_EXTCOMIN_STATE;
-IRQ_MAP_NRFX(SERIAL1, nrfx_spim_3_irq_handler);
+// PwmState DISPLAY_EXTCOMIN_STATE;
+// IRQ_MAP_NRFX(SERIAL1, nrfx_spim_3_irq_handler);
 
 /* PERIPHERAL ID 10 */
 
 /* EXTI */
-IRQ_MAP_NRFX(SPIM4, nrfx_gpiote_0_irq_handler);
+// IRQ_MAP_NRFX(SPIM4, nrfx_gpiote_0_irq_handler);
 
 /* nPM1300 */
-static I2CBusState I2C_NPMC_IIC1_BUS_STATE = {};
+// static I2CBusState I2C_NPMC_IIC1_BUS_STATE = {};
 
-static const I2CBusHal I2C_NPMC_IIC1_BUS_HAL = {
-    .twim = NRFX_TWIM_INSTANCE(1),
-    .frequency = NRF_TWIM_FREQ_400K,
-};
+// static const I2CBusHal I2C_NPMC_IIC1_BUS_HAL = {
+//     .twim = NRFX_TWIM_INSTANCE(1),
+//     .frequency = NRF_TWIM_FREQ_400K,
+// };
 
-static const I2CBus I2C_NPMC_IIC1_BUS = {
-    .state = &I2C_NPMC_IIC1_BUS_STATE,
-    .hal = &I2C_NPMC_IIC1_BUS_HAL,
-    .scl_gpio =
-        {
-            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-            .gpio_pin = NRF_GPIO_PIN_MAP(0, 14),
-        },
-    .sda_gpio =
-        {
-            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-            .gpio_pin = NRF_GPIO_PIN_MAP(0, 15),
-        },
-    .name = "I2C_NPMC_IIC1",
-};
-IRQ_MAP_NRFX(SERIAL2, nrfx_twim_1_irq_handler);
+// static const I2CBus I2C_NPMC_IIC1_BUS = {
+//     .state = &I2C_NPMC_IIC1_BUS_STATE,
+//     .hal = &I2C_NPMC_IIC1_BUS_HAL,
+//     .scl_gpio =
+//         {
+//             .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+//             .gpio_pin = NRF_GPIO_PIN_MAP(0, 14),
+//         },
+//     .sda_gpio =
+//         {
+//             .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+//             .gpio_pin = NRF_GPIO_PIN_MAP(0, 15),
+//         },
+//     .name = "I2C_NPMC_IIC1",
+// };
+// IRQ_MAP_NRFX(SERIAL2, nrfx_twim_1_irq_handler);
 /* PERIPHERAL ID 9 */
 
-static const I2CSlavePort I2C_SLAVE_NPM1300 = {
-    .bus = &I2C_NPMC_IIC1_BUS,
-    .address = 0x6B << 1,
-};
+// static const I2CSlavePort I2C_SLAVE_NPM1300 = {
+//     .bus = &I2C_NPMC_IIC1_BUS,
+//     .address = 0x6B << 1,
+// };
 
-I2CSlavePort *const I2C_NPM1300 = &I2C_SLAVE_NPM1300;
+// I2CSlavePort *const I2C_NPM1300 = &I2C_SLAVE_NPM1300;
 
 /* peripheral I2C bus */
-static I2CBusState I2C_IIC2_BUS_STATE = {};
+// static I2CBusState I2C_IIC2_BUS_STATE = {};
 
-static const I2CBusHal I2C_IIC2_BUS_HAL = {
-    .twim = NRFX_TWIM_INSTANCE(0),
-    .frequency = NRF_TWIM_FREQ_400K,
-};
+// static const I2CBusHal I2C_IIC2_BUS_HAL = {
+//     .twim = NRFX_TWIM_INSTANCE(0),
+//     .frequency = NRF_TWIM_FREQ_400K,
+// };
 
-static const I2CBus I2C_IIC2_BUS = {
-    .state = &I2C_IIC2_BUS_STATE,
-    .hal = &I2C_IIC2_BUS_HAL,
-    .scl_gpio =
-        {
-            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-            .gpio_pin = NRF_GPIO_PIN_MAP(0, 25),
-        },
-    .sda_gpio =
-        {
-            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-            .gpio_pin = NRF_GPIO_PIN_MAP(0, 11),
-        },
-    .name = "I2C_IIC2",
-};
-IRQ_MAP_NRFX(SERIAL3, nrfx_twim_0_irq_handler);
+// static const I2CBus I2C_IIC2_BUS = {
+//     .state = &I2C_IIC2_BUS_STATE,
+//     .hal = &I2C_IIC2_BUS_HAL,
+//     .scl_gpio =
+//         {
+//             .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+//             .gpio_pin = NRF_GPIO_PIN_MAP(0, 25),
+//         },
+//     .sda_gpio =
+//         {
+//             .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+//             .gpio_pin = NRF_GPIO_PIN_MAP(0, 11),
+//         },
+//     .name = "I2C_IIC2",
+// };
+// IRQ_MAP_NRFX(SERIAL3, nrfx_twim_0_irq_handler);
 
-static const I2CSlavePort I2C_SLAVE_DRV2604 = {
-    .bus = &I2C_IIC2_BUS,
-    .address = 0x5A << 1,
-};
+// static const I2CSlavePort I2C_SLAVE_DRV2604 = {
+//     .bus = &I2C_IIC2_BUS,
+//     .address = 0x5A << 1,
+// };
 
-I2CSlavePort *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
+// I2CSlavePort *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
 
-static const I2CSlavePort I2C_SLAVE_OPT3001 = {
-    .bus = &I2C_IIC2_BUS,
-    .address = 0x44 << 1,
-};
+// static const I2CSlavePort I2C_SLAVE_OPT3001 = {
+//     .bus = &I2C_IIC2_BUS,
+//     .address = 0x44 << 1,
+// };
 
-I2CSlavePort *const I2C_OPT3001 = &I2C_SLAVE_OPT3001;
+// I2CSlavePort *const I2C_OPT3001 = &I2C_SLAVE_OPT3001;
 
-static const I2CSlavePort I2C_SLAVE_DA7212 = {
-    .bus = &I2C_IIC2_BUS,
-    .address = 0x1A << 1,
-};
+// static const I2CSlavePort I2C_SLAVE_DA7212 = {
+//     .bus = &I2C_IIC2_BUS,
+//     .address = 0x1A << 1,
+// };
 
-I2CSlavePort *const I2C_DA7212 = &I2C_SLAVE_DA7212;
+// I2CSlavePort *const I2C_DA7212 = &I2C_SLAVE_DA7212;
 
-static const I2CSlavePort I2C_SLAVE_MMC5603NJ = {
-    .bus = &I2C_IIC2_BUS,
-    .address = 0x30 << 1,
-};
+// static const I2CSlavePort I2C_SLAVE_MMC5603NJ = {
+//     .bus = &I2C_IIC2_BUS,
+//     .address = 0x30 << 1,
+// };
 
-I2CSlavePort *const I2C_MMC5603NJ = &I2C_SLAVE_MMC5603NJ;
+// I2CSlavePort *const I2C_MMC5603NJ = &I2C_SLAVE_MMC5603NJ;
 
-static const I2CSlavePort I2C_SLAVE_BMP390 = {
-    .bus = &I2C_IIC2_BUS,
-    .address = 0x76 << 1,
-};
+// static const I2CSlavePort I2C_SLAVE_BMP390 = {
+//     .bus = &I2C_IIC2_BUS,
+//     .address = 0x76 << 1,
+// };
 
-I2CSlavePort *const I2C_BMP390 = &I2C_SLAVE_BMP390;
+// I2CSlavePort *const I2C_BMP390 = &I2C_SLAVE_BMP390;
 
-static const I2CSlavePort I2C_SLAVE_LSM6D = {
-    .bus = &I2C_IIC2_BUS,
-    .address = 0x6A << 1,
-};
+// static const I2CSlavePort I2C_SLAVE_LSM6D = {
+//     .bus = &I2C_IIC2_BUS,
+//     .address = 0x6A << 1,
+// };
 
-I2CSlavePort *const I2C_LSM6D = &I2C_SLAVE_LSM6D;
+// I2CSlavePort *const I2C_LSM6D = &I2C_SLAVE_LSM6D;
 
-IRQ_MAP_NRFX(I2S0, nrfx_i2s_0_irq_handler);
+// IRQ_MAP_NRFX(I2S0, nrfx_i2s_0_irq_handler);
 
-IRQ_MAP_NRFX(PDM0, NRFX_PDM_INST_HANDLER_GET(0));
+// IRQ_MAP_NRFX(PDM0, NRFX_PDM_INST_HANDLER_GET(0));
 
 /* PERIPHERAL ID 11 */
 
 /* Microphone */
-static MicDeviceState s_mic_state_storage;
-static MicDevice s_mic_device = {
-  .state = &s_mic_state_storage,
-  .pdm_instance = NRFX_PDM_INSTANCE(0),
-  .clk_pin = NRF_GPIO_PIN_MAP(1, 0),   // P1.00 - PDM CLK
-  .data_pin = NRF_GPIO_PIN_MAP(0, 24), // P0.24 - PDM DATA
-};
-MicDevice * const MIC = &s_mic_device;
+// static MicDeviceState s_mic_state_storage;
+// static MicDevice s_mic_device = {
+//   .state = &s_mic_state_storage,
+//   .pdm_instance = NRFX_PDM_INSTANCE(0),
+//   .clk_pin = NRF_GPIO_PIN_MAP(1, 0),   // P1.00 - PDM CLK
+//   .data_pin = NRF_GPIO_PIN_MAP(0, 24), // P0.24 - PDM DATA
+// };
+// MicDevice * const MIC = &s_mic_device;
 
 /* sensor SPI bus */
 
 /* asterix shares SPI with flash, which we don't support */
 
-PwmState BACKLIGHT_PWM_STATE;
-IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
+// PwmState BACKLIGHT_PWM_STATE;
+// IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
 
-IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
+// IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
 
-const Npm1300Config NPM1300_CONFIG = {
-  // 128mA = ~1C (rapid charge)
-  .chg_current_ma = 128,
-  .dischg_limit_ma = 200,
-  .term_current_pct = 10,
-  .thermistor_beta = 3380,
-};
+// const Npm1300Config NPM1300_CONFIG = {
+//   // 128mA = ~1C (rapid charge)
+//   .chg_current_ma = 128,
+//   .dischg_limit_ma = 200,
+//   .term_current_pct = 10,
+//   .thermistor_beta = 3380,
+// };
 
 void board_early_init(void) {
-  PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
+  PBL_LOG(LOG_LEVEL_ERROR, "hollow early init");
 
 //   NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk; // TODO this might need to be fixed
 
@@ -235,13 +235,13 @@ void board_early_init(void) {
 }
 
 void board_init(void) {
-  i2c_init(&I2C_NPMC_IIC1_BUS);
-  i2c_init(&I2C_IIC2_BUS);
+//   i2c_init(&I2C_NPMC_IIC1_BUS);
+//   i2c_init(&I2C_IIC2_BUS);
 
-  uint8_t da7212_powerdown[] = { 0xFD /* SYSTEM_ACTIVE */, 0 };
-  i2c_use(I2C_DA7212);
-  i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
-  i2c_release(I2C_DA7212);
+//   uint8_t da7212_powerdown[] = { 0xFD /* SYSTEM_ACTIVE */, 0 };
+//   i2c_use(I2C_DA7212);
+//   i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
+//   i2c_release(I2C_DA7212);
   
   // XXX: FIRM-264: stop mode breaks NimBLE
   stop_mode_disable(InhibitorMain);
