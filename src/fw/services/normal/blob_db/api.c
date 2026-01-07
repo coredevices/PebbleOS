@@ -15,6 +15,7 @@
 #include "pin_db.h"
 #include "prefs_db.h"
 #include "reminder_db.h"
+#include "settings_blob_db.h"
 #include "watch_app_prefs_db.h"
 #include "weather_db.h"
 
@@ -154,6 +155,17 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
 #else
     .disabled = true,
 #endif
+  },
+  [BlobDBIdSettings] = {
+    .init = settings_blob_db_init,
+    .insert = settings_blob_db_insert,
+    .get_len = settings_blob_db_get_len,
+    .read = settings_blob_db_read,
+    .del = settings_blob_db_delete,
+    .flush = settings_blob_db_flush,
+    .is_dirty = settings_blob_db_is_dirty,
+    .get_dirty_list = settings_blob_db_get_dirty_list,
+    .mark_synced = settings_blob_db_mark_synced,
   },
 };
 
