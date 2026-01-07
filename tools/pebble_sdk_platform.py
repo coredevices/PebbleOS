@@ -87,7 +87,7 @@ emery_platform = {
     "BUILD_DIR": "emery",
     "BUNDLE_BIN_DIR": "emery",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
-    "MAX_FONT_GLYPH_SIZE": 320,
+    "MAX_FONT_GLYPH_SIZE": 512,
     "TAGS": ["emery", "color", "rect", "mic", "strap", "health", "strappower",
              "compass", "200w", "228h"]
 }
@@ -122,7 +122,7 @@ gabbro_platform = {
     "BUILD_DIR": "gabbro",
     "BUNDLE_BIN_DIR": "gabbro",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
-    "MAX_FONT_GLYPH_SIZE": 320,
+    "MAX_FONT_GLYPH_SIZE": 512,
     "TAGS": ["gabbro", "color", "round", "mic", "health", "compass", "260w", "260h"]
 }
 
