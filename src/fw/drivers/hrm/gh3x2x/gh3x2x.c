@@ -51,12 +51,22 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 #endif
 }
 
+static void prv_conv_fs4g_mg_to_lsb512(AccelRawData* data) {
+  //hrm use 512lsb/g, so convert the mg data to lsb by coef 1.953f(1000/512)
+  data->x = (int16_t)data->x/1.953f;
+  data->y = (int16_t)data->y/1.953f;
+  data->z = (int16_t)data->z/1.953f;
+}
+
 void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_buffer_index) {
-  // TODO, clean the buffer now
-  GU16 count = *gsensor_buffer_index;
+  HRMAccelData* acc = hrm_manager_get_accel_data();
+  GU16 count = *gsensor_buffer_index = acc->num_samples;
+  if(count > __GSENSOR_DATA_BUFFER_SIZE__) count = __GSENSOR_DATA_BUFFER_SIZE__;
   for (uint16_t i = 0; i < count; ++i) {
-    memset(&gsensor_buffer[i], 0, sizeof(STGsensorRawdata));
+    prv_conv_fs4g_mg_to_lsb512(&acc->data[i]);
+    memcpy(&gsensor_buffer[i], &acc->data[i], sizeof(STGsensorRawdata));
   }
+  hrm_manager_release_accel_data();
 }
 
 static void gh3026_int_callback_function(void *context) {
@@ -185,8 +195,6 @@ static void gh3x2x_timer_stop_handle(void* arg) {
   if (HRM && HRM->state->timer) {
     app_timer_cancel(HRM->state->timer);
     HRM->state->timer = NULL;
-    HRM->state->timer_period_ms = 0;
-    s_hrm_timer_flag = false;
   }
 }
 
