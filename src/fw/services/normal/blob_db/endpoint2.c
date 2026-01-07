@@ -22,6 +22,9 @@
 //! BlobDB Endpoint ID
 static const uint16_t BLOB_DB2_ENDPOINT_ID = 0xb2db;
 
+//! BlobDB Protocol Version - increment when adding new features
+static const uint8_t BLOB_DB_PROTOCOL_VERSION = 1;
+
 //! Message Length Constants
 static const uint8_t DIRTY_DATABASES_LENGTH = 2;
 static const uint8_t START_SYNC_LENGTH = 3;
@@ -179,6 +182,25 @@ static void prv_handle_sync_done_response(CommSession *session,
   }
 }
 
+static void prv_handle_version(CommSession *session, const uint8_t *data, uint32_t length) {
+  BlobDBToken token = *(BlobDBToken *)data;
+
+  struct PACKED BlobDBVersionResponseMsg {
+    BlobDBCommand command;
+    BlobDBToken token;
+    BlobDBResponse result;
+    uint8_t version;
+  } response = {
+    .command = BLOB_DB_COMMAND_VERSION_RESPONSE,
+    .token = token,
+    .result = BLOB_DB_SUCCESS,
+    .version = BLOB_DB_PROTOCOL_VERSION,
+  };
+
+  prv_send_response(session, (uint8_t *)&response, sizeof(response));
+}
+
+
 static void prv_send_error_response(CommSession *session,
                                     BlobDBCommand cmd,
                                     const uint8_t *data,
@@ -218,6 +240,10 @@ static void prv_blob_db_msg_decode_and_handle(
     case BLOB_DB_COMMAND_SYNC_DONE_RESPONSE:
       PBL_LOG(LOG_LEVEL_DEBUG, "SYNC DONE Response");
       prv_handle_sync_done_response(session, data, data_length);
+      break;
+    case BLOB_DB_COMMAND_VERSION:
+      PBL_LOG(LOG_LEVEL_DEBUG, "Got VERSION");
+      prv_handle_version(session, data, data_length);
       break;
     default:
       PBL_LOG(LOG_LEVEL_ERROR, "Invalid BlobDB2 message received, cmd is %u", cmd);
