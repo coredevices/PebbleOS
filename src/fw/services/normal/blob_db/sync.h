@@ -24,6 +24,7 @@ typedef struct {
   BlobDBId db_id;
   BlobDBDirtyItem *dirty_list;
   RegularTimerInfo timeout_timer;
+  RegularTimerInfo abandon_timer;
   BlobDBToken current_token;
   BlobDBSyncSessionType session_type;
 } BlobDBSyncSession;
