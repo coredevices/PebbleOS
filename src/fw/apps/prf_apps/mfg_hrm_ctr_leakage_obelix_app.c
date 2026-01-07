@@ -12,6 +12,7 @@
 #include "drivers/accel.h"
 #include "drivers/hrm.h"
 #include "drivers/hrm/gh3x2x/gh3x2x.h"
+#include "gh_demo.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
@@ -27,8 +28,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-
-#define HRM_ALGO_TUNING_MODE 0
 
 #define STATUS_STRING_LEN 32
 #define CTR_STRING_LEN 128
@@ -47,6 +46,14 @@
 #define PPG_RED_LEAK_THS0       (7.0f)
 #define PPG_RED_LEAK_THS1       (9.6f)
 
+typedef enum {
+  TestMode_NULL,
+  TestMode_CTR,
+  TestMode_Leakage,
+  TestMode_Algo_HR,
+  TestMode_Algo_SPO2,
+}HRMTestMode;
+
 typedef struct {
   Window window;
   EventServiceInfo hrm_event_info;
@@ -59,56 +66,59 @@ typedef struct {
   char ctr_string[CTR_STRING_LEN];
   char leak_string[LEAKAGE_STRING_LEN];
   HRMSessionRef hrm_session;
-  bool test_type;
+  HRMTestMode test_mode;
 } AppData;
 
 static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
   AppData *app_data = app_state_get_user_data();
 
   if (e->type == PEBBLE_HRM_EVENT) {
-  #if HRM_ALGO_TUNING_MODE
-    if (e->hrm.event_type == HRMEvent_BPM) {
-      memset(app_data->ctr_string, 0, CTR_STRING_LEN);
-      snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d Q:%d", e->hrm.bpm.bpm, e->hrm.bpm.quality);
-      PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->ctr_string);
-    } else if (e->hrm.event_type == HRMEvent_SpO2) {
-      memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
-      snprintf(app_data->leak_string, CTR_STRING_LEN, "SPO2:%d Q:%d", e->hrm.spo2.percent, e->hrm.spo2.quality);
-      PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->leak_string);
+    if (app_data->test_mode >= TestMode_Algo_HR) {
+      if (e->hrm.event_type == HRMEvent_BPM) {
+        snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling... %d", HRM->state->is_wear);
+        memset(app_data->ctr_string, 0, CTR_STRING_LEN);
+        snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d Q:%d", e->hrm.bpm.bpm, e->hrm.bpm.quality);
+        PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->ctr_string);
+      } else if (e->hrm.event_type == HRMEvent_SpO2) {
+        snprintf(app_data->status_string, STATUS_STRING_LEN, "SPO2 Sampling... %d", HRM->state->is_wear);
+        memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
+        snprintf(app_data->leak_string, CTR_STRING_LEN, "SPO2:%d Q:%d", e->hrm.spo2.percent, e->hrm.spo2.quality);
+        PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->leak_string);
+      }
     }
-  #else
-    if (e->hrm.event_type == HRMEvent_CTR) {
-      bool rst = (e->hrm.ctr->ctr[0] >= PPG_GR_CTR_THS0) && (e->hrm.ctr->ctr[1] >= PPG_GR_CTR_THS1) 
-              && (e->hrm.ctr->ctr[2] >= PPG_IR_CTR_THS0) && (e->hrm.ctr->ctr[3] >= PPG_IR_CTR_THS1)
-              && (e->hrm.ctr->ctr[4] >= PPG_RED_CTR_THS0) && (e->hrm.ctr->ctr[5] >= PPG_RED_CTR_THS1);
-      memset(app_data->ctr_string, 0, CTR_STRING_LEN);
-      snprintf(app_data->ctr_string, CTR_STRING_LEN,
-              "CTR:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d", 
-              rst?"PASS":"FAILED",
-              (int)e->hrm.ctr->ctr[0], (int)(e->hrm.ctr->ctr[0]*100)%100, 
-              (int)e->hrm.ctr->ctr[2], (int)(e->hrm.ctr->ctr[2]*100)%100, 
-              (int)e->hrm.ctr->ctr[4], (int)(e->hrm.ctr->ctr[4]*100)%100, 
-              (int)e->hrm.ctr->ctr[1], (int)(e->hrm.ctr->ctr[1]*100)%100, 
-              (int)e->hrm.ctr->ctr[3], (int)(e->hrm.ctr->ctr[3]*100)%100, 
-              (int)e->hrm.ctr->ctr[5], (int)(e->hrm.ctr->ctr[5]*100)%100);
-      PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->ctr_string);
-    } else if (e->hrm.event_type == HRMEvent_Leakage) {
-      bool rst = (e->hrm.leakage->leakage[0] <= PPG_GR_LEAK_THS0) && (e->hrm.leakage->leakage[1] <= PPG_GR_LEAK_THS1) 
-              && (e->hrm.leakage->leakage[2] <= PPG_IR_LEAK_THS0) && (e->hrm.leakage->leakage[3] <= PPG_IR_LEAK_THS1)
-              && (e->hrm.leakage->leakage[4] <= PPG_RED_LEAK_THS0) && (e->hrm.leakage->leakage[5] <= PPG_RED_LEAK_THS1);
-      memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
-      snprintf(app_data->leak_string, LEAKAGE_STRING_LEN,
-        "Leak:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d", 
-              rst?"PASS":"FAILED",
-              (int)e->hrm.leakage->leakage[0], (int)(e->hrm.leakage->leakage[0]*100)%100, 
-              (int)e->hrm.leakage->leakage[2], (int)(e->hrm.leakage->leakage[2]*100)%100, 
-              (int)e->hrm.leakage->leakage[4], (int)(e->hrm.leakage->leakage[4]*100)%100, 
-              (int)e->hrm.leakage->leakage[1], (int)(e->hrm.leakage->leakage[1]*100)%100, 
-              (int)e->hrm.leakage->leakage[3], (int)(e->hrm.leakage->leakage[3]*100)%100, 
-              (int)e->hrm.leakage->leakage[5], (int)(e->hrm.leakage->leakage[5]*100)%100);
-      PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->leak_string);
+    else {
+      if (e->hrm.event_type == HRMEvent_CTR) {
+        bool rst = (e->hrm.ctr->ctr[0] >= PPG_GR_CTR_THS0) && (e->hrm.ctr->ctr[1] >= PPG_GR_CTR_THS1) 
+                && (e->hrm.ctr->ctr[2] >= PPG_IR_CTR_THS0) && (e->hrm.ctr->ctr[3] >= PPG_IR_CTR_THS1)
+                && (e->hrm.ctr->ctr[4] >= PPG_RED_CTR_THS0) && (e->hrm.ctr->ctr[5] >= PPG_RED_CTR_THS1);
+        memset(app_data->ctr_string, 0, CTR_STRING_LEN);
+        snprintf(app_data->ctr_string, CTR_STRING_LEN,
+                "CTR:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d", 
+                rst?"PASS":"FAILED",
+                (int)e->hrm.ctr->ctr[0], (int)(e->hrm.ctr->ctr[0]*100)%100, 
+                (int)e->hrm.ctr->ctr[2], (int)(e->hrm.ctr->ctr[2]*100)%100, 
+                (int)e->hrm.ctr->ctr[4], (int)(e->hrm.ctr->ctr[4]*100)%100, 
+                (int)e->hrm.ctr->ctr[1], (int)(e->hrm.ctr->ctr[1]*100)%100, 
+                (int)e->hrm.ctr->ctr[3], (int)(e->hrm.ctr->ctr[3]*100)%100, 
+                (int)e->hrm.ctr->ctr[5], (int)(e->hrm.ctr->ctr[5]*100)%100);
+        PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->ctr_string);
+      } else if (e->hrm.event_type == HRMEvent_Leakage) {
+        bool rst = (e->hrm.leakage->leakage[0] <= PPG_GR_LEAK_THS0) && (e->hrm.leakage->leakage[1] <= PPG_GR_LEAK_THS1) 
+                && (e->hrm.leakage->leakage[2] <= PPG_IR_LEAK_THS0) && (e->hrm.leakage->leakage[3] <= PPG_IR_LEAK_THS1)
+                && (e->hrm.leakage->leakage[4] <= PPG_RED_LEAK_THS0) && (e->hrm.leakage->leakage[5] <= PPG_RED_LEAK_THS1);
+        memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
+        snprintf(app_data->leak_string, LEAKAGE_STRING_LEN,
+          "Leak:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d", 
+                rst?"PASS":"FAILED",
+                (int)e->hrm.leakage->leakage[0], (int)(e->hrm.leakage->leakage[0]*100)%100, 
+                (int)e->hrm.leakage->leakage[2], (int)(e->hrm.leakage->leakage[2]*100)%100, 
+                (int)e->hrm.leakage->leakage[4], (int)(e->hrm.leakage->leakage[4]*100)%100, 
+                (int)e->hrm.leakage->leakage[1], (int)(e->hrm.leakage->leakage[1]*100)%100, 
+                (int)e->hrm.leakage->leakage[3], (int)(e->hrm.leakage->leakage[3]*100)%100, 
+                (int)e->hrm.leakage->leakage[5], (int)(e->hrm.leakage->leakage[5]*100)%100);
+        PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->leak_string);
+      }
     }
-  #endif
     layer_mark_dirty(&app_data->window.layer);
   }
 }
@@ -118,24 +128,52 @@ static void prv_update_status(void* param) {
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
-#if HRM_ALGO_TUNING_MODE
-  return;
-#endif
   AppData *app_data = app_state_get_user_data();
-  if (app_data->test_type) {
+  sys_hrm_manager_set_features(app_data->hrm_session, HRMFeature_CTR | HRMFeature_Leakage);
+  if (app_data->test_mode != TestMode_CTR) {
     gh3x2x_start_ft_ctr();
+    app_data->test_mode = TestMode_CTR;
     snprintf(app_data->status_string, STATUS_STRING_LEN, "CTR Sampling...");
-  } else {
+  } else if(app_data->test_mode != TestMode_Leakage){
     gh3x2x_start_ft_leakage();
+    app_data->test_mode = TestMode_Leakage;
     snprintf(app_data->status_string, STATUS_STRING_LEN, "Leak Sampling...");
   }
-  app_data->test_type = !app_data->test_type;
+
+  app_timer_register(10, prv_update_status, &app_data->window.layer);
+}
+
+static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
+  AppData *app_data = app_state_get_user_data();
+  
+  if (app_data->test_mode != TestMode_Algo_HR) {
+    snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling...");
+    gh3x2x_set_work_mode(GH3X2X_FUNCTION_HR);
+    app_data->test_mode = TestMode_Algo_HR;
+  } else {
+    snprintf(app_data->status_string, STATUS_STRING_LEN, "SPO2 Sampling...");
+    gh3x2x_set_work_mode(GH3X2X_FUNCTION_SPO2);
+    app_data->test_mode = TestMode_Algo_SPO2;
+  }
+  
+  snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR: Q:");
+  snprintf(app_data->leak_string, LEAKAGE_STRING_LEN, "SPO2: Q:");
+  event_service_client_unsubscribe(&app_data->hrm_event_info);
+  sys_hrm_manager_unsubscribe(app_data->hrm_session);
+  //let sensor sleep by waiting 50ms
+  psleep(50);
+  event_service_client_subscribe(&app_data->hrm_event_info);
+  // Use app data as session ref
+  AppInstallId  app_id = 1;
+  app_data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
+                                                  HRMFeature_BPM | HRMFeature_SpO2);
 
   app_timer_register(10, prv_update_status, &app_data->window.layer);
 }
 
 static void prv_config_provider(void *data) {
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_down_click_handler);
 }
 
 static void prv_handle_init(void) {
@@ -191,13 +229,8 @@ static void prv_handle_init(void) {
 
   // Use app data as session ref
   AppInstallId  app_id = 1;
-  #if HRM_ALGO_TUNING_MODE
-  data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
-                                                    HRMFeature_BPM | HRMFeature_SpO2);
-  #else
   data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
                                                     HRMFeature_CTR | HRMFeature_Leakage);
-  #endif
 
   app_window_stack_push(window, true);
 }
