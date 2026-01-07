@@ -35,6 +35,7 @@ typedef enum PACKED {
   BlobDBIdWatchAppPrefs = 0x09,
   BlobDBIdHealth = 0x0A,
   BlobDBIdAppGlance = 0x0B,
+  BlobDBIdSettings = 0x0C,
   NumBlobDBs,
 } BlobDBId;
 _Static_assert(sizeof(BlobDBId) == 1, "BlobDBId is larger than 1 byte");

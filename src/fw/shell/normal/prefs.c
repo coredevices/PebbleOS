@@ -4,6 +4,7 @@
 #include "quick_launch.h"
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
+#include "shell/normal/prefs_sync.h"
 #include "shell/prefs.h"
 #include "shell/prefs_private.h"
 #include "shell/system_theme.h"
@@ -714,6 +715,9 @@ void shell_prefs_init(void) {
   
   // Update the ambient light driver with the loaded threshold value
   ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
+  
+  // Initialize prefs sync (must be after prefs are loaded)
+  prefs_sync_init();
 
   // Update accelerometer sensitivity with the loaded value
 #if CAPABILITY_HAS_ACCEL_SENSITIVITY
@@ -831,8 +835,10 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   {
     SettingsFile file = {{0}};
     if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
-      // Keys in the backing store include the null terminator, so we add 1 to key_len
-      success = (settings_file_get(&file, entry->key, key_len + 1, value, value_len)
+      // Keys in the backing store include the null terminator
+      // Use strlen(entry->key) + 1 to match how it was written, since key_len from
+      // BlobDB may or may not include the null terminator
+      success = (settings_file_get(&file, entry->key, strlen(entry->key) + 1, value, value_len)
                                    == S_SUCCESS);
       settings_file_close(&file);
     }
