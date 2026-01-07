@@ -91,9 +91,7 @@ static void prv_handle_finished(ProgressUIData *data, bool success) {
   }
 
   dialog_set_icon(&data->finished_dialog.dialog, res_id);
-#if !PLATFORM_ROBERT && !PLATFORM_CALCULUS && !PLATFORM_OBELIX && !PLATFORM_GETAFIX
   dialog_set_text(&data->finished_dialog.dialog, prv_get_dialog_text(data, success));
-#endif
   // Show the status screen for a bit before closing the app
   dialog_set_timeout(&data->finished_dialog.dialog, end_screen_timeout);
 
