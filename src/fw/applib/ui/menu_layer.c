@@ -21,6 +21,8 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/math.h"
+#include "util/size.h"
+#include "vibes.h"
 
 #include <string.h>
 
@@ -76,16 +78,103 @@ static void prv_menu_select_long_click_handler(ClickRecognizerRef recognizer,
   }
 }
 
+static inline uint16_t prv_menu_layer_get_num_sections(MenuLayer *menu_layer);
+static inline uint16_t prv_menu_layer_get_num_rows(MenuLayer *menu_layer, uint16_t section_index);
+
+static bool prv_menu_index_is_first_index(MenuLayer *menu_layer, const MenuIndex *index) {
+  (void)menu_layer;
+
+  MenuIndex first_index = MenuIndex(0, 0);
+  return menu_index_compare(index, &first_index) == 0;
+}
+
+static bool prv_menu_index_is_last_index(MenuLayer *menu_layer, const MenuIndex *index) {
+  int last_index_section = prv_menu_layer_get_num_sections(menu_layer) - 1;
+  int last_index_row = prv_menu_layer_get_num_rows(menu_layer, last_index_section) - 1;
+  MenuIndex last_index = MenuIndex(last_index_section, last_index_row);
+  return menu_index_compare(index, &last_index) == 0;
+}
+
+static void prv_vibe_pulse(void) {
+  uint32_t const segments[] = { 50 };
+  VibePattern pat = {
+    .durations = segments,
+    .num_segments = ARRAY_LENGTH(segments),
+  };
+  vibes_enqueue_custom_pattern(pat);
+}
+
+//! Handle the menu scroll wrap around
+//! @param menu_layer reference to the current MenuLayer
+//! @param recognizer reference to the ClickRecognizer struct
+//! @param scrolling_up `true` if scrolling up, `false` if scrolling down
+//! @return `true` if a wrap around has been applied
+static bool prv_menu_scroll_handle_wrap_around(MenuLayer *menu_layer, ClickRecognizerRef recognizer, bool scrolling_up) {
+  const uint8_t current_scroll_action = scrolling_up ? MenuLayerRepeatScrollingUp : MenuLayerRepeatScrollingDown;
+  const bool is_repeating = click_recognizer_is_repeating(recognizer);
+
+  if (is_repeating) {
+    menu_layer->cache.button_repeat_scrolling = current_scroll_action;
+    if (!menu_layer->scroll_force_wrap_on_repeat) {
+      return false;
+    }
+  }
+  menu_layer->cache.button_repeat_scrolling = MenuLayerNoRepeatScrolling;
+
+  MenuIndex current_index = menu_layer->selection.index;
+  int last_index_section = prv_menu_layer_get_num_sections(menu_layer) - 1;
+  int last_index_row = prv_menu_layer_get_num_rows(menu_layer, last_index_section) - 1;
+  MenuIndex first_index = MenuIndex(0, 0);
+  MenuIndex last_index = MenuIndex(last_index_section, last_index_row);
+  MenuIndex *wraparound_dest_index;
+  if ((menu_index_compare(&current_index, &first_index) == 0) && scrolling_up) {
+    wraparound_dest_index = &last_index;
+  } else if ((menu_index_compare(&current_index, &last_index) == 0) && !scrolling_up) {
+    wraparound_dest_index = &first_index;
+  } else {
+    return false;
+  }
+
+  const bool animated = true;
+  menu_layer_set_selected_index(menu_layer, *wraparound_dest_index, MenuRowAlignCenter, animated);
+  if (menu_layer->scroll_vibe_on_wrap_around) {
+    prv_vibe_pulse();
+  }
+  return true;
+}
+
 void menu_up_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer) {
   const bool up = true;
+  if (menu_layer->scroll_wrap_around && prv_menu_scroll_handle_wrap_around(menu_layer, recognizer, up)) {
+    return;
+  }
+  
+  MenuIndex prev_index = menu_layer->selection.index;
   const bool animated = true;
   menu_layer_set_selected_next(menu_layer, up, MenuRowAlignCenter, animated);
+  MenuIndex current_index = menu_layer->selection.index;
+  if ((menu_layer->scroll_vibe_on_blocked) &&
+    (menu_index_compare(&current_index, &prev_index) == 0) &&
+    (prv_menu_index_is_first_index(menu_layer, &current_index))) {
+      prv_vibe_pulse();
+  }
 }
 
 void menu_down_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer) {
   const bool up = false;
+  if (menu_layer->scroll_wrap_around && prv_menu_scroll_handle_wrap_around(menu_layer, recognizer, up)) {
+    return;
+  }
+  
+  MenuIndex prev_index = menu_layer->selection.index;
   const bool animated = true;
   menu_layer_set_selected_next(menu_layer, up, MenuRowAlignCenter, animated);
+  MenuIndex current_index = menu_layer->selection.index;
+  if ((menu_layer->scroll_vibe_on_blocked) &&
+    (menu_index_compare(&current_index, &prev_index) == 0) &&
+    (prv_menu_index_is_last_index(menu_layer, &current_index))) {
+      prv_vibe_pulse();
+  }
 }
 
 static void prv_menu_click_config_provider(MenuLayer *menu_layer) {
@@ -1292,4 +1381,47 @@ void menu_layer_set_center_focused(MenuLayer *menu_layer, bool center_focused) {
   }
   prv_set_center_focused(menu_layer, center_focused);
   menu_layer_update_caches(menu_layer);
+}
+
+bool menu_layer_get_scroll_wrap_around(MenuLayer *menu_layer) {
+  return menu_layer->scroll_wrap_around;
+}
+
+void menu_layer_set_scroll_wrap_around(MenuLayer *menu_layer, bool scroll_wrap_around) {
+  if (!menu_layer) {
+    return;
+  }
+  menu_layer->scroll_wrap_around = scroll_wrap_around;
+}
+
+uint8_t menu_layer_get_scroll_vibe_behavior(MenuLayer *menu_layer) {
+  if (menu_layer->scroll_vibe_on_blocked) {
+    return 2;
+  } else if (menu_layer->scroll_vibe_on_wrap_around) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+void menu_layer_set_scroll_vibe_on_wrap(MenuLayer *menu_layer, bool scroll_vibe_on_wrap) {
+  if (!menu_layer) {
+    return;
+  }
+
+  if (scroll_vibe_on_wrap) {
+    menu_layer->scroll_vibe_on_blocked = false;
+  }
+  menu_layer->scroll_vibe_on_wrap_around = scroll_vibe_on_wrap;
+}
+
+void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vibe_on_blocked) {
+  if (!menu_layer) {
+    return;
+  }
+  
+  if (scroll_vibe_on_blocked) {
+    menu_layer->scroll_vibe_on_wrap_around = false;
+  }
+  menu_layer->scroll_vibe_on_blocked = scroll_vibe_on_blocked;
 }
