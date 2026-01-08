@@ -1,9 +1,17 @@
 import os
+import platform
 import sh
 from waflib import Logs
 
 def build(bld):
-    pdc2png_env = bld.all_envs['32bit'].derive()
+    # On macOS ARM, 32-bit builds don't work. Use native 'local' environment.
+    # On Linux and Intel Mac, use the 32-bit environment as before.
+    if platform.system() == 'Darwin' and platform.processor() == 'arm':
+        pdc2png_env = bld.all_envs['local'].derive()
+        libutil_target = 'libutil'
+    else:
+        pdc2png_env = bld.all_envs['32bit'].derive()
+        libutil_target = 'libutil-32bit'
     output = bld.path.get_bld().parent.parent.make_node('pdc2png')
 
     sources = ["../../src/fw/applib/vendor/uPNG/upng.c",
@@ -66,7 +74,7 @@ def build(bld):
                          'DISPLAY_FRAMEBUFFER_BYTES=%d' % (144 * 168),
                          'PBL_COLOR', 'PBL_RECT', 'PLATFORM_SNOWY=1',
                          'PBI2PNG_EXE="../../tools/pbi2png.py"'],
-                use=['libutil-32bit', 'libos_includes'],
+                use=[libutil_target, 'libos_includes'],
                 env=pdc2png_env)
 
 
