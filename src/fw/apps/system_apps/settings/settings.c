@@ -11,6 +11,7 @@
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
 #include "services/common/i18n/i18n.h"
+#include "services/normal/menu_preferences.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
 
@@ -37,6 +38,12 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer,
   menu_layer_set_highlight_colors(&(data->menu_layer),
                                 shell_prefs_get_settings_menu_highlight_color(),
                                 GColorWhite);
+  menu_layer_set_scroll_wrap_around(&(data->menu_layer),
+                                menu_preferences_get_scroll_wrap_around());
+  menu_layer_set_scroll_vibe_on_wrap(&(data->menu_layer),
+                                menu_preferences_get_scroll_vibe_on_wrap_around());
+  menu_layer_set_scroll_vibe_on_blocked(&(data->menu_layer),
+                                menu_preferences_get_scroll_vibe_on_blocked());
   menu_cell_basic_draw(ctx, cell_layer, title, NULL, NULL);
 }
 
@@ -92,6 +99,9 @@ static void prv_window_load(Window *window) {
                                   shell_prefs_get_settings_menu_highlight_color(),
                                   GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
+  menu_layer_set_scroll_wrap_around(menu_layer, menu_preferences_get_scroll_wrap_around());
+  menu_layer_set_scroll_vibe_on_wrap(menu_layer, menu_preferences_get_scroll_vibe_on_wrap_around());
+  menu_layer_set_scroll_vibe_on_blocked(menu_layer, menu_preferences_get_scroll_vibe_on_blocked());
 
   layer_add_child(&data->window.layer, menu_layer_get_layer(menu_layer));
 }

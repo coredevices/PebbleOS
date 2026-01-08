@@ -11,6 +11,7 @@
 #include "applib/ui/content_indicator.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
+#include "services/normal/menu_preferences.h"
 #include "services/normal/timeline/timeline_resources.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
@@ -211,6 +212,9 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
     .get_cell_height = prv_menu_layer_get_cell_height,
     .selection_will_change = prv_menu_layer_selection_will_change,
   });
+  menu_layer_set_scroll_wrap_around(menu_layer, menu_preferences_get_scroll_wrap_around());
+  menu_layer_set_scroll_vibe_on_wrap(menu_layer, menu_preferences_get_scroll_vibe_on_wrap_around());
+  menu_layer_set_scroll_vibe_on_blocked(menu_layer, menu_preferences_get_scroll_vibe_on_blocked());
 
   // Only setup the content indicator on round
 #if PBL_ROUND
