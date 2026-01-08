@@ -34,13 +34,31 @@ env:
   TEST_BOARD: 'snowy_bb2'
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
-    container:
-      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Docker Linux (original)
+          - name: docker-linux
+            runs-on: ubuntu-24.04
+            container: ghcr.io/pebble-dev/pebbleos-docker:v1
+            safe_directory: ${{ github.workspace }}
+          # Native Linux
+          - name: native-linux
+            runs-on: ubuntu-24.04
+            safe_directory: ${{ github.workspace }}
+          # macOS
+          - name: macos
+            runs-on: macos-14
+            safe_directory: /Users/runner/work/PebbleOS/PebbleOS
+
+    name: test ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
+    container: ${{ matrix.container }}
     steps:
       - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
+        run: git config --system --add safe.directory "${{ matrix.safe_directory }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,7 +66,26 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Install Python dependencies
+      # Native Linux: Install ARM toolchain and dependencies
+      - name: Install dependencies (native Linux)
+        if: matrix.name == 'native-linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi ninja-build
+          pip install -U pip
+          pip install -r requirements.txt
+
+      # macOS: Install ARM toolchain and dependencies
+      - name: Install dependencies (macOS)
+        if: matrix.name == 'macos'
+        run: |
+          brew install gcc-arm-embedded ninja
+          pip3 install -U pip
+          pip3 install -r requirements.txt
+
+      # Docker: Already has dependencies, just update pip
+      - name: Install Python dependencies (Docker)
+        if: matrix.name == 'docker-linux'
         run: |
           pip install -U pip
           pip install -r requirements.txt
@@ -67,6 +104,7 @@ jobs:
 
       - name: Store failed test images
         uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          name: failed_diff_images
+          name: failed_diff_images-${{ matrix.name }}
           path: build/test/tests/failed/*-diff.png
