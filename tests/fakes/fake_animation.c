@@ -7,6 +7,8 @@
 
 #include <stdarg.h>
 
+#define UNUSED __attribute__((unused))
+
 //! List of all animations that were created in the current test in order of creation.
 ListNode *s_animations;
 
