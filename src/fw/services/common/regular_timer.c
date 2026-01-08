@@ -11,6 +11,8 @@
 #include "FreeRTOS.h"
 #include "portmacro.h"
 
+#include <time.h>
+
 //! Don't let users modify the list while callbacks are occurring.
 static PebbleMutex * s_callback_list_semaphore = 0;
 
@@ -24,6 +26,7 @@ static ListNode s_minutes_callbacks;
 // be sure that it isn't due to drifting.
 #define MISSING_MINUTE_CB_LOG_THRESHOLD_S 90
 static time_t s_last_minute_fire_ts; // uses
+static int s_last_minute_fired = -1; // Track which minute we last fired on
 
 
 
@@ -77,13 +80,25 @@ static void timer_callback(void* data) {
   time_t t = rtc_get_time();
   struct tm time;
   localtime_r(&t, &time);
-  if (time.tm_sec == 0) {
-    // If the phone sets the time, we may actually skip a regular_timer minute callback. Let's
-    // get an idea of how often this happens by logging
+
+  // Fire minute callbacks when the minute changes (not just when tm_sec == 0)
+  // This prevents missing callbacks when RTC adjusts
+  bool should_fire_minute = false;
+  if (s_last_minute_fired == -1) {
+    // First run - initialize but don't fire
+    s_last_minute_fired = time.tm_min;
+  } else if (s_last_minute_fired != time.tm_min) {
+    // Minute changed - fire callback
+    should_fire_minute = true;
+    s_last_minute_fired = time.tm_min;
+  }
+
+  if (should_fire_minute) {
+    // Keep the logging to detect large time jumps (multiple minutes skipped)
     const time_t now_ts = rtc_get_ticks() / configTICK_RATE_HZ;
     if ((now_ts - s_last_minute_fire_ts) > MISSING_MINUTE_CB_LOG_THRESHOLD_S) {
       PBL_LOG(LOG_LEVEL_WARNING,
-              "Skipped a regular_timer_minute callback. Previous ts: %lu, Now ts: %lu",
+              "Large time jump detected. Previous ts: %lu, Now ts: %lu",
               s_last_minute_fire_ts, now_ts);
     }
     s_last_minute_fire_ts = now_ts;
