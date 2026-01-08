@@ -32,7 +32,8 @@ JERRY_CORE_DIRS = ['jerryscript/jerry-core',
 def _get_jerry_include_dirs(bld):
     include_dirs = JERRY_CORE_DIRS
     if bld.variant == 'test':
-        include_dirs.append('third-party/valgrind')
+        # The valgrind headers are in jerryscript/third-party/valgrind
+        include_dirs.append('jerryscript/third-party/valgrind')
     return include_dirs
 
 def jerry_build_js_compiler(bld):
@@ -269,8 +270,12 @@ def build(bld):
     jerry_core_env = bld.env.derive()
 
     all_jerry_flags = compile_flags_jerry + c_flags_jerry + pebble_cflags
-    if bld.variant == 'test':
-       all_jerry_flags.append('-DJERRY_VALGRIND')
+    # Note: JERRY_VALGRIND was removed for test builds because the valgrind
+    # macros cause "unused expression" errors when not running under valgrind.
+    # The _zzq_default expansion from VALGRIND_DO_CLIENT_REQUEST_EXPR is
+    # not used, triggering -Werror,-Wunused-value.
+    # if bld.variant == 'test':
+    #    all_jerry_flags.append('-DJERRY_VALGRIND')
     jerry_core_env.append_value('CFLAGS', all_jerry_flags)
 
     jerry_core_env.append_value('DEFINES', [
@@ -281,8 +286,13 @@ def build(bld):
 
     jerry_core_include_dirs = _get_jerry_include_dirs(bld)
 
-    jerry_core_env.append_value('INCLUDES', [bld.path.find_node(d).abspath()
-                                             for d in jerry_core_include_dirs])
+    # Filter out directories that don't exist (find_node returns None)
+    jerry_include_paths = []
+    for d in jerry_core_include_dirs:
+        node = bld.path.find_node(d)
+        if node is not None:
+            jerry_include_paths.append(node.abspath())
+    jerry_core_env.append_value('INCLUDES', jerry_include_paths)
     jerry_core_source_excl = [
       'jcontext/jcontext.c',  # implementation provided by our own jerry_port.c
     ]
