@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/coredevices/pebbleos/actions/workflows/build-firmware.yml?query=branch%3Amain"><img src="https://github.com/coredevices/pebbleos/actions/workflows/build-firmware.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/coredevices/PebbleOS/actions/workflows/build-firmware.yml?query=branch%3Amain"><img src="https://github.com/coredevices/PebbleOS/actions/workflows/build-firmware.yml/badge.svg?branch=main"></a>
   <a href="https://pebbleos-core.readthedocs.io/en/latest"><img src="https://readthedocs.org/projects/pebbleos-core/badge/?version=latest&style=flat"></a>
   <a href="https://discordapp.com/invite/aRUAYFN"><img src="https://dcbadge.limes.pink/api/server/aRUAYFN?style=flat"></a>
 </p>
@@ -23,11 +23,11 @@ Here's a quick summary of resources to help you find your way around:
 
 ### Code and Development
 
-- ⌚ [Source Code Repository](https://github.com/coredevices/pebbleos)
-- 🐛 [Issue Tracker](https://github.com/coredevices/pebbleos/issues)
+- ⌚ [Source Code Repository](https://github.com/coredevices/PebbleOS)
+- 🐛 [Issue Tracker](https://github.com/coredevices/PebbleOS/issues)
 - 🤝 [Contribution Guide](CONTRIBUTING.md)
 
 ### Community and Support
 
 - 💬 [Discord](https://discordapp.com/invite/aRUAYFN)
-- 👥 [Discussions](https://github.com/coredevices/pebbleos/discussions)
+- 👥 [Discussions](https://github.com/coredevices/PebbleOS/discussions)
