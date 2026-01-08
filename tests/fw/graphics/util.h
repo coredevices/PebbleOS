@@ -160,7 +160,12 @@ GBitmap *get_gbitmap_from_pbi(const char *filename) {
   fread(&bmp->info_flags, sizeof(bmp->info_flags), 1, file);
   fread(&bmp->bounds, sizeof(bmp->bounds), 1, file);
 
-  size_t data_size = bmp->row_size_bytes * bmp->bounds.size.h;
+  // Handle circular format PBI files (row_size_bytes == 0)
+  // The writer stores circular format as row_size_bytes=0 with full-width pixel rows
+  const bool is_circular_pbi = (bmp->row_size_bytes == 0);
+  const size_t data_size = is_circular_pbi ?
+      (bmp->bounds.size.w * bmp->bounds.size.h) :
+      (bmp->row_size_bytes * bmp->bounds.size.h);
 
   bmp->addr = malloc(data_size);
   bmp->info.is_bitmap_heap_allocated = true;
@@ -308,14 +313,24 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
       continue;
     }
 
+    // Expected bitmap from PBI may have row_size_bytes=0 (circular format marker).
+    // In this case, pixel data is stored as rectangular (full width per row).
+    const GBitmapDataRowInfo expected_row_info = {
+      .data = expected_bmp_data + (y * expected_bmp->bounds.size.w),
+      .min_x = 0,
+      .max_x = expected_bmp->bounds.size.w - 1
+    };
+    const uint16_t expected_stride = (expected_bmp->row_size_bytes == 0) ?
+        expected_bmp->bounds.size.w : expected_bmp->row_size_bytes;
+
     for (int x = start_x; x < end_x; ++x) {
       uint8_t *actual_bmp_data = dest_row_info.data;
       uint8_t actual_bmp_val = prv_raw_image_get_value_for_format(actual_bmp_data, x, y_line,
                                                                   actual_bmp->row_size_bytes,
                                                                   actual_bmp_bpp,
                                                                   actual_bmp->info.format);
-      uint8_t expected_bmp_val = prv_raw_image_get_value_for_format(expected_bmp_data, x, y,
-                                                                    expected_bmp->row_size_bytes,
+      uint8_t expected_bmp_val = prv_raw_image_get_value_for_format(expected_row_info.data, x, 0,
+                                                                    expected_stride,
                                                                     expected_bmp_bpp,
                                                                     expected_bmp->info.format);
       GColor8 actual_bmp_color = prv_convert_to_gcolor8(actual_bmp->info.format,
