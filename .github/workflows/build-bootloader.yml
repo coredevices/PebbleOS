@@ -2,7 +2,6 @@ name: Build Bootloader
 
 on:
   push:
-    branches: [main]
   pull_request:
     branches: [main]
     paths:
@@ -12,6 +11,9 @@ on:
 
 jobs:
   build:
+    if: |
+      (github.event.repository.parent != null) ||
+      (github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
 
     container:

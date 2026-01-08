@@ -35,6 +35,9 @@ env:
 
 jobs:
   test:
+    if: |
+      (github.event.repository.parent != null) ||
+      (github.ref == 'refs/heads/main')
     strategy:
       fail-fast: false
       matrix:
