@@ -58,7 +58,12 @@ jobs:
     container: ${{ matrix.container }}
     steps:
       - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${{ matrix.safe_directory }}"
+        run: |
+          if [ "${{ matrix.name }}" = "native-linux" ]; then
+            sudo git config --system --add safe.directory "${{ matrix.safe_directory }}"
+          else
+            git config --system --add safe.directory "${{ matrix.safe_directory }}"
+          fi
 
       - name: Checkout
         uses: actions/checkout@v4
