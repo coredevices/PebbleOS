@@ -338,6 +338,12 @@ enum {
 _Static_assert(MenuLayerColor_Count == 2, "Bad enum MenuLayerColor");
 #endif
 
+enum {
+  MenuLayerNoRepeatScrolling = 0,
+  MenuLayerRepeatScrollingUp = 1,
+  MenuLayerRepeatScrollingDown = 2,
+};
+
 //! Data structure of a MenuLayer.
 //! @note a `MenuLayer *` can safely be casted to a `Layer *` and
 //! `ScrollLayer *` and can thus be used with all other functions that take a
@@ -359,6 +365,8 @@ typedef struct MenuLayer {
     //! @internal
     //! Cell index + geometry cache of a cell that was in frame during the last redraw
     MenuCellSpan cursor;
+
+    uint8_t button_repeat_scrolling:2;
   } cache;
   //! @internal
   //! Selected cell index + geometery cache of the selected cell
@@ -401,10 +409,24 @@ typedef struct MenuLayer {
   //! independent of the scrolling animation.
   bool selection_animation_disabled:1;
 
+  //! If true, the MenuLayer will be able to wrap around the first element and the last element
+  //! when scrolling.
+  bool scroll_wrap_around:1;
+
+  //! If this is true alongside \ref scroll_wrap_around, the MenuLayer will be able to wrap around
+  //! even when the 'up' or 'down' button is held down. 
+  bool scroll_force_wrap_on_repeat:1;
+
+  //! If True, a vibration will occur when wrapping around.
+  bool scroll_vibe_on_wrap_around:1;
+
+  //! If True, a vibration will occur when cursor is getting blocked at the top or bottom
+  bool scroll_vibe_on_blocked:1;
+
   //! Add some padding to keep track of the \ref MenuLayer size budget.
   //! As long as the size stays within this budget, 2.x apps can safely use the 3.x MenuLayer type.
   //! When padding is removed, the assertion below should also be removed.
-  uint8_t padding[44];
+  uint8_t padding[40];
 } MenuLayer;
 
 //! Padding used below the last item in pixels
@@ -612,6 +634,42 @@ bool menu_layer_get_center_focused(MenuLayer *menu_layer);
 //! @see \ref menu_layer_get_center_focused
 void menu_layer_set_center_focused(MenuLayer *menu_layer, bool center_focused);
 
+//! True, if the \ref MenuLayer can wrap around the first and last element.
+//! @see \ref menu_layer_set_scroll_wrap_around
+bool menu_layer_get_scroll_wrap_around(MenuLayer *menu_layer);
+
+//! Controls if the \ref MenuLayer can wrap around from the first element to the last when going 
+//! up and from the last element to the first when going down.
+//! Even enabled, wrap around will stay disabled when holding down the navigation buttons (up or down).
+//! Defaults to false for every platform
+//! @param menu_layer The menu layer for which to enable or disable the behavior.
+//! @param scroll_wrap_around true = enable the wrap around, false = disable it.
+//! @see \ref menu_layer_get_scroll_wrap_around
+void menu_layer_set_scroll_wrap_around(MenuLayer *menu_layer, bool scroll_wrap_around);
+
+//! Return a number depending on scroll vibe behavior :
+//! - 0 : no vibe will occur
+//! - 1 : vibe will occur on wrap around
+//! - 2 : vibe will occur when stuck at the top or bottom of the menu
+//! @see \ref menu_layer_set_scroll_vibe_on_wrap
+//! @see \ref menu_layer_set_scroll_vibe_on_blocked
+uint8_t menu_layer_get_scroll_vibe_behavior(MenuLayer *menu_layer);
+
+//! Controls if the \ref MenuLayer wil generate a vibe when wrapping around.
+//! Defaults to false for every platform
+//! @param menu_layer The menu layer for which to enable or disable the behavior.
+//! @param scroll_vibe_on_wrap true = enable the vibe on wrap around, false = disable it.
+//! @see \ref menu_layer_get_scroll_vibe_behavior
+//! @see \ref menu_layer_set_scroll_vibe_on_blocked
+void menu_layer_set_scroll_vibe_on_wrap(MenuLayer *menu_layer, bool scroll_vibe_on_wrap);
+
+//! Controls if the \ref MenuLayer wil generate a vibe when blocked at the top or bottom.
+//! Defaults to false for every platform
+//! @param menu_layer The menu layer for which to enable or disable the behavior.
+//! @param scroll_vibe_on_wrap true = enable the vibe on cursor block, false = disable it.
+//! @see \ref menu_layer_get_scroll_vibe_behavior
+//! @see \ref menu_layer_set_scroll_vibe_on_wrap
+void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vibe_on_blocked);
 
 //!     @} // end addtogroup MenuLayer
 //!   @} // end addtogroup Layer
