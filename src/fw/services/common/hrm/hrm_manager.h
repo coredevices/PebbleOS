@@ -46,7 +46,7 @@ typedef enum {
 } HRMFeature;
 
 // Hold enough data for 2s worth of samples just in case we miss a handshake
-#define HRM_MANAGER_ACCEL_RATE_MILLIHZ (12500)
+#define HRM_MANAGER_ACCEL_RATE_MILLIHZ (25000)
 #define HRM_MANAGER_MAX_ACCEL_SAMPLES ((2 * HRM_MANAGER_ACCEL_RATE_MILLIHZ) / 1000)
 
 // When an app exits, we change its subscription (if any) to expire in this many seconds
