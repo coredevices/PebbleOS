@@ -1,0 +1,15 @@
+name: Simple Test
+
+on:
+  push:
+    paths:
+      - 'tests/**'
+
+jobs:
+  test:
+    if: |
+      (github.event.repository.repository.fork == true) ||
+      (github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Fork detection works! Fork=${{ github.event.repository.repository.fork }} Ref=${{ github.ref }}"
