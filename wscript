@@ -419,6 +419,7 @@ def _create_cm0_env(conf):
                '-Wno-error=unused-const-variable',
                '-Wno-packed-bitfield-compat',
                '-Wno-address-of-packed-member',
+               '-Wno-unaligned-access',
                '-Wno-expansion-to-defined',
                '-Wno-enum-int-mismatch',
                '-Wno-enum-conversion']
@@ -630,6 +631,7 @@ def configure(conf):
                         '-Wno-error=missing-braces',
                         '-Wno-error=unused-const-variable',
                         '-Wno-error=address-of-packed-member',
+                        '-Wno-error=unaligned-access',
                         '-Wno-enum-conversion',
 
                         '-g3',
