@@ -129,8 +129,8 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob = \
-         " src/fw/services/common/battery/battery_state.c " \
-         " src/fw/services/common/battery/battery_curve.c " \
+         " src/fw/services/common/battery/nrf_fuel_gauge/battery_state.c " \
+         " src/fw/services/common/battery/nrf_fuel_gauge/battery_curve.c " \
          " src/fw/services/common/battery/battery_monitor.c " \
          " tests/fakes/fake_battery.c " \
          " tests/fakes/fake_rtc.c ",
