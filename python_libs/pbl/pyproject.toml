@@ -5,8 +5,7 @@ description = "Internal tool for interacting with pebbles."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-	# This doesn't install in Python 3
-	# "pebble_tool @ git+https://github.com/pebble/pebble-tool.git",
+	"pebble_tool>=5.0.18",
 	"libpebble2[pulse]>=0.0.23",
 ]
 
