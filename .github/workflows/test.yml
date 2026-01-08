@@ -76,7 +76,7 @@ jobs:
         if: matrix.name == 'native-linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi ninja-build
+          sudo apt-get install -y gcc-arm-none-eabi ninja-build gettext
           pip install -U pip
           pip install -r requirements.txt
 
