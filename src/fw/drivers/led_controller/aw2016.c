@@ -5,6 +5,8 @@
 
 #include "board/board.h"
 #include "drivers/i2c.h"
+#include "kernel/util/delay.h"
+#include "system/logging.h"
 #include "system/passert.h"
 
 #define AW2016_REG_RSTR 0x00U
@@ -95,10 +97,6 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
     brightness = 100U;
   }
 
-  if (s_brightness == brightness) {
-    return;
-  }
-
   const uint8_t previous_brightness = s_brightness;
   s_brightness = brightness;
 
@@ -110,7 +108,13 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
     if (previous_brightness == 0U) {
       ret = prv_write_register(AW2016_REG_GCR1,
                                AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+      // Wait for internal oscillator to stabilize before writing other registers
+      delay_us(500);
+
       ret &= prv_configure_registers();
+      if (!ret) {
+        PBL_LOG(LOG_LEVEL_ERROR, "AW2016: Failed to configure registers");
+      }
       PBL_ASSERTN(ret);
     }
 
@@ -130,6 +134,9 @@ void led_controller_rgb_set_color(uint32_t rgb_color) {
   ret &= prv_write_register(AW2016_REG_PWM2, green);
   ret &= prv_write_register(AW2016_REG_PWM3, blue);
 
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "AW2016: Failed to set PWM values");
+  }
   PBL_ASSERTN(ret);
 
   s_rgb_current_color = rgb_color;
