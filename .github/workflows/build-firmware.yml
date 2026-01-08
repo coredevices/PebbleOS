@@ -19,7 +19,7 @@ on:
 jobs:
   build:
     if: |
-      (github.event.repository.parent != null) ||
+      (github.event.repository.repository.fork == true) ||
       (github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
 
