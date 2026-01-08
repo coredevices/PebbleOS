@@ -20,6 +20,7 @@ static GContext s_ctx;
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
 #include "services/normal/timeline/timeline_resources.h"
+#include "stubs_shell_prefs.h"
 
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
 #define TIMELINE_RESOURCE_TEST_FAKE_PNG (9999 | 0x80000000)
