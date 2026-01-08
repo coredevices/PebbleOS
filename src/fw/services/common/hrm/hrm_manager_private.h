@@ -52,7 +52,7 @@ typedef struct HRMSubscriberState {
 #define NUM_EVENTS_TO_QUEUE (8)
 #define EVENT_STORAGE_SIZE  (sizeof(PebbleHRMEvent) * NUM_EVENTS_TO_QUEUE)
 
-#define HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE 2
+#define HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE 4
 
 // After every HRM_CHECK_SENSOR_DISABLE_COUNT calls to hrm_manager_new_data_cb(), we check to see
 // if we should disable the sensor.
