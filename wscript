@@ -148,6 +148,8 @@ def options(opt):
                    help='Enables test apps (off by default)')
     opt.add_option('--test_apps_list', type=str,
                    help='Specify AppInstallId\'s of the test apps to be compiled with the firmware')
+    opt.add_option('--continue_on_test_failure', action='store_true', dest='continue_on_test_failure',
+                   help='Continue running tests even after failures; do not exit with error code')
     opt.add_option('--performance_tests', action='store_true',
                    help='Enables instrumentation + apps for performance testing (off by default)')
     opt.add_option('--verbose_logs', action='store_true',

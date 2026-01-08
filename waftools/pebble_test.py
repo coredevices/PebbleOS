@@ -160,7 +160,9 @@ def summary(bld):
                 # FIXME: Make UTF-8 print properly, see PBL-29528
                 print(ud.normalize('NFKD', out.decode('utf-8')))
                 print(ud.normalize('NFKD', err.decode('utf-8')))
-        raise Errors.WafError('test failed')
+        # Only raise error if continue_on_test_failure is not set
+        if not bld.options.continue_on_test_failure:
+            raise Errors.WafError('test failed')
 
 @taskgen_method
 @feature("test_product_source")
