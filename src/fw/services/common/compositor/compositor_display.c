@@ -139,6 +139,10 @@ void compositor_display_update(void (*handle_update_complete_cb)(void)) {
   if (!framebuffer_is_dirty(fb)) {
     return;
   }
+#if PLATFORM_GETAFIX
+  // Force full screen updates - partial ROI causes animation issues on getafix display
+  fb->dirty_rect = (GRect){ GPointZero, fb->size };
+#endif
 #if PLATFORM_OBELIX
   // Capture dirty region bounds for corner restoration later
   s_dirty_y0 = fb->dirty_rect.origin.y;
@@ -153,4 +157,3 @@ void compositor_display_update(void (*handle_update_complete_cb)(void)) {
 bool compositor_display_update_in_progress(void) {
   return display_update_in_progress();
 }
-
