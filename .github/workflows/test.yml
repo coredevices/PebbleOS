@@ -2,7 +2,18 @@ name: Test
 
 on:
   push:
-    branches: [main]
+    paths:
+      - '.github/workflows/test.yml'
+      - 'resources/**'
+      - 'sdk/**'
+      - 'src/**'
+      - 'stored_apps/**'
+      - 'tests/**'
+      - 'tools/**'
+      - 'third_party/**'
+      - 'waftools/**'
+      - 'waf'
+      - 'wscript'
   pull_request:
     branches: [main]
     paths:
@@ -11,11 +22,13 @@ on:
       - 'sdk/**'
       - 'src/**'
       - 'stored_apps/**'
+      - 'tests/**'
       - 'tools/**'
       - 'third_party/**'
       - 'waftools/**'
       - 'waf'
       - 'wscript'
+  workflow_dispatch:
 
 env:
   TEST_BOARD: 'snowy_bb2'
@@ -41,7 +54,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Configure
-        run: ./waf configure --board ${{env.TEST_BOARD}}
+        run: ./waf configure --board ${{env.TEST_BOARD}} --js-engine=none
 
       - name: Run tests
         run: ./waf test
