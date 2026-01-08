@@ -9,3 +9,7 @@
 VibeIntensity alerts_preferences_get_vibe_intensity(void) {
   return DEFAULT_VIBE_INTENSITY;
 }
+
+bool alerts_preferences_get_notification_alternative_design(void) {
+  return false;
+}
