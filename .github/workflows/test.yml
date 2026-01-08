@@ -76,7 +76,7 @@ jobs:
         if: matrix.name == 'native-linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi ninja-build gettext
+          sudo apt-get install -y gcc-arm-none-eabi ninja-build gettext gcc-multilib g++-multilib libc6-dev-i386
           pip install -U pip
           pip install -r requirements.txt
 
@@ -101,8 +101,10 @@ jobs:
         run: |
           if [ "${{ matrix.name }}" = "macos" ]; then
             source .venv/bin/activate
+            ./waf configure --board ${{env.TEST_BOARD}} --js-engine=none --relax_toolchain_restrictions
+          else
+            ./waf configure --board ${{env.TEST_BOARD}} --js-engine=none
           fi
-          ./waf configure --board ${{env.TEST_BOARD}} --js-engine=none
 
       - name: Run tests
         run: |
