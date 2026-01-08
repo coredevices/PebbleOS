@@ -80,8 +80,10 @@ jobs:
         if: matrix.name == 'macos'
         run: |
           brew install gcc-arm-embedded ninja
-          pip3 install -U pip
-          pip3 install -r requirements.txt
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -U pip
+          pip install -r requirements.txt
 
       # Docker: Already has dependencies, just update pip
       - name: Install Python dependencies (Docker)
@@ -91,10 +93,18 @@ jobs:
           pip install -r requirements.txt
 
       - name: Configure
-        run: ./waf configure --board ${{env.TEST_BOARD}} --js-engine=none
+        run: |
+          if [ "${{ matrix.name }}" = "macos" ]; then
+            source .venv/bin/activate
+          fi
+          ./waf configure --board ${{env.TEST_BOARD}} --js-engine=none
 
       - name: Run tests
-        run: ./waf test --continue_on_test_failure
+        run: |
+          if [ "${{ matrix.name }}" = "macos" ]; then
+            source .venv/bin/activate
+          fi
+          ./waf test --continue_on_test_failure
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v5
