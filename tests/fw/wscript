@@ -136,7 +136,8 @@ def build(ctx):
          " tests/fakes/fake_rtc.c ",
          test_sources_ant_glob = "test_battery_monitor.c",
          defines=['PLATFORM_SNOWY'],
-         override_includes=['dummy_board'])
+         override_includes=['dummy_board'],
+         add_includes=['tests/stubs'])
 
     clar(ctx,
         sources_ant_glob = "src/fw/debug/legacy/debug_db.c",
