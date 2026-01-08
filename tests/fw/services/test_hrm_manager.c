@@ -107,8 +107,7 @@ bool battery_is_usb_connected(void) {
 #define TO_SESSION_REF(x) ((HRMSessionRef)(long)(x))
 
 static const HRMData s_hrm_event_data = {
-  .led_current_ua = 243,
-
+  .features = HRMFeature_BPM,
   .hrm_bpm = 82,
   .hrm_quality = HRMQuality_Excellent,
 };
@@ -388,12 +387,10 @@ void test_hrm_manager__different_feature_callbacks(void) {
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
 
-  // Expect 4 events: 1 for BPM, 1 for LED, 2 for subscribing to all, none for no feature.
-  cl_assert_equal_i(s_event_count, 4);
+  // Expect 2 events: 1 for BPM subscription, 1 for BPM data
+  cl_assert_equal_i(s_event_count, 2);
 
   sys_hrm_manager_unsubscribe(bpm_session);
-  sys_hrm_manager_unsubscribe(led_session);
-  sys_hrm_manager_unsubscribe(all_session);
   sys_hrm_manager_unsubscribe(no_session);
 }
 
