@@ -279,6 +279,11 @@ def build(bld):
     # clang on Linux errors on true == true or false == false compile-time assertions
     bld.env.CFLAGS.append('-Wno-tautological-compare')
 
+    # Disable DUMA on macOS ARM - it requires configuration that's not set up
+    import platform
+    if platform.system() == 'Darwin' and platform.processor() == 'arm':
+      bld.env.append_value('DEFINES', 'DUMA_DISABLED')
+
     # Any test in this list won't be compiled
     bld.env.BROKEN_TESTS = [
         'test_app_fetch_endpoint.c',
