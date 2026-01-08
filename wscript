@@ -640,6 +640,13 @@ def configure(conf):
                         '-fdata-sections',
                         '-ffunction-sections' ]
 
+    # On macOS ARM 64-bit, work around packed structure alignment issues
+    import platform
+    if platform.system() == 'Darwin' and platform.processor() == 'arm':
+        # Use flat namespace to allow linkage despite alignment issues
+        # This is only for local testing; CI uses Docker which doesn't have this issue
+        conf.env.LINKFLAGS = ['-Wl,-flat_namespace', '-Wl,-undefined,suppress']
+
     conf.env.append_value('DEFINES', 'CLAR_FIXTURE_PATH="' +
                                      conf.path.make_node('tests/fixtures/').abspath() + '"')
 
