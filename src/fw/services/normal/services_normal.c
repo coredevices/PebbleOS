@@ -20,6 +20,7 @@
 #include "services/normal/data_logging/data_logging_service.h"
 #include "services/normal/filesystem/pfs.h"
 #include "services/normal/protobuf_log/protobuf_log.h"
+#include "services/normal/menu_preferences.h"
 #include "services/normal/music_endpoint.h"
 #include "services/normal/music_internal.h"
 #include "services/normal/notifications/alerts_private.h"
@@ -121,6 +122,7 @@ void services_normal_init(void) {
   alerts_init();
   send_text_service_init();
   protobuf_log_init();
+  menu_preferences_init();
 
 #if CAPABILITY_HAS_WEATHER
   weather_service_init();

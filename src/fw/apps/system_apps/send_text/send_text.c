@@ -17,6 +17,7 @@
 #include "services/normal/blob_db/ios_notif_pref_db.h"
 #include "services/normal/blob_db/watch_app_prefs_db.h"
 #include "services/normal/contacts/contacts.h"
+#include "services/normal/menu_preferences.h"
 #include "services/normal/notifications/notification_constants.h"
 #include "services/normal/send_text_service.h"
 #include "services/normal/timeline/timeline.h"
@@ -325,6 +326,9 @@ static void prv_init(void) {
 
     menu_layer_set_highlight_colors(&data->menu_layer, SEND_TEXT_APP_HIGHLIGHT_COLOR, GColorWhite);
     menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
+    menu_layer_set_scroll_wrap_around(&data->menu_layer, menu_preferences_get_scroll_wrap_around());
+    menu_layer_set_scroll_vibe_on_wrap(&data->menu_layer, menu_preferences_get_scroll_vibe_on_wrap_around());
+    menu_layer_set_scroll_vibe_on_blocked(&data->menu_layer, menu_preferences_get_scroll_vibe_on_blocked());
     layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
     StatusBarLayer *status_layer = &data->status_layer;
