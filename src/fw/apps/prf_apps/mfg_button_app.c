@@ -128,13 +128,13 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
   const int16_t radius = center_x - ARROW_MARGIN - ARROW_LAYER_SIZE / 2;
 
   // Angles: 0 = 3 o'clock, 90 = 12 o'clock (TRIG_MAX_ANGLE/4), etc.
-  // Back button: top-left, 30 deg from horizontal = 180 - 30 = 150 deg
+  // Back button: left side, arrow pointing left = 180 deg
   // Up button: top-right, 30 deg from horizontal = 30 deg
   // Select button: center right = 0 deg
   // Down button: bottom-right, 30 deg from horizontal = -30 deg
   const int32_t BUTTON_ANGLES[] = {
-    // BACK: top-left, 150 deg
-    DEG_TO_TRIGANGLE(150),
+    // BACK: left side, pointing left
+    DEG_TO_TRIGANGLE(180),
     // UP: top-right, 30 deg
     DEG_TO_TRIGANGLE(30),
     // SELECT: center right, 0 deg
