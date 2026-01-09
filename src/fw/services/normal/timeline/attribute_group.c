@@ -32,9 +32,15 @@ static bool prv_parse_serial_group_type_data(AttributeGroupType type,
     int header_size;
     if (type == AttributeGroupType_Action) {
       header_size = sizeof(SerializedActionHeader);
+      if (data + header_size > end) {
+        return false;
+      }
       num_attributes = ((SerializedActionHeader *)data)->num_attributes;
     } else {
       header_size = sizeof(SerializedAddressHeader);
+      if (data + header_size > end) {
+        return false;
+      }
       num_attributes = ((SerializedAddressHeader *)data)->num_attributes;
     }
 
@@ -183,6 +189,9 @@ static AttributeList *prv_deserialize_action(TimelineItemAction *action,
                                              const uint8_t *payload_end,
                                              const uint8_t *buffer,
                                              const uint8_t *buf_end) {
+  if (*cursor + sizeof(SerializedActionHeader) > payload_end) {
+    return NULL;
+  }
   SerializedActionHeader *serialized_action = (SerializedActionHeader *)*cursor;
   *cursor += sizeof(SerializedActionHeader);
   action->id = serialized_action->id;
@@ -197,6 +206,9 @@ static AttributeList *prv_deserialize_address(Address *address,
                                               const uint8_t *payload_end,
                                               const uint8_t *buffer,
                                               const uint8_t *buf_end) {
+  if (*cursor + sizeof(SerializedAddressHeader) > payload_end) {
+    return NULL;
+  }
   SerializedAddressHeader *serialized_address = (SerializedAddressHeader *)*cursor;
   *cursor += sizeof(SerializedAddressHeader);
   address->id = serialized_address->uuid;
@@ -231,6 +243,10 @@ static bool prv_deserialize_group_element(AttributeGroupType type,
       group_type_element_attribtue_list = prv_deserialize_address(
           &((AddressList *)group_ptr)->addresses[i], &cursor, payload_end,
           buffer, buf_end);
+    }
+
+    if (!group_type_element_attribtue_list) {
+      return false;
     }
 
     if (!attribute_deserialize_list((char**)&buffer, (char *)buf_end, &cursor,
