@@ -22,8 +22,10 @@ static bool prv_mmc5603nj_init(void);
 static bool prv_mmc5603nj_check_whoami(void);
 static bool prv_mmc5603nj_reset(void);
 static bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz);
+#ifndef RECOVERY_FW
 static bool prv_configure_polling(void);
 static void prv_mmc5603nj_polling_callback(void *data);
+#endif
 static bool prv_mmc5603nj_is_data_ready(void);
 static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample);
 typedef enum {
@@ -38,8 +40,10 @@ static bool s_initialized = false;
 static int s_use_refcount = 0;
 static PebbleMutex *s_mag_mutex;
 static uint8_t s_sample_rate_hz = 0;
+#ifndef RECOVERY_FW
 static TimerID s_polling_timer = TIMER_INVALID_ID;
 static uint16_t s_polling_interval_ms = 0;
+#endif
 static bool s_measurement_ready = false;
 
 // watch rotation
@@ -242,13 +246,18 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
   }
 
   s_sample_rate_hz = rate_hz;
+
+#ifndef RECOVERY_FW
   if (!prv_configure_polling()) {
     PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to configure polling");
     return false;
   }
+#endif
+
   return true;
 }
 
+#ifndef RECOVERY_FW
 // Configure polling (to simulate data-ready interrupts)
 
 static bool prv_configure_polling(void) {
@@ -292,6 +301,7 @@ static void prv_mmc5603nj_polling_callback(void *data) {
     event_put(&e);
   }
 }
+#endif
 
 // Samples
 bool prv_mmc5603nj_is_data_ready(void) {
