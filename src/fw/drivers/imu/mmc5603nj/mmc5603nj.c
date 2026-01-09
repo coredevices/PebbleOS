@@ -340,11 +340,18 @@ static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample) {
         (int16_t)(raw_axis_value - (1 << 15));  // offset by 2^15 for uint -> int alignment
   }
 
-  sample->x = s_rotated_180 ? prv_get_axis_projection(X_AXIS, raw_vector) * -1
-                            : prv_get_axis_projection(X_AXIS, raw_vector);
-  sample->y = s_rotated_180 ? prv_get_axis_projection(Y_AXIS, raw_vector) * -1
-                            : prv_get_axis_projection(Y_AXIS, raw_vector);
-  sample->z = prv_get_axis_projection(Z_AXIS, raw_vector);
+  // Convert raw counts to milliGauss (mG)
+  // Sensitivity: 1024 counts/G (16-bit operation)
+  // Formula: mG = (raw_counts * 1000) / 1024
+  int16_t raw_x = s_rotated_180 ? prv_get_axis_projection(X_AXIS, raw_vector) * -1
+                                : prv_get_axis_projection(X_AXIS, raw_vector);
+  int16_t raw_y = s_rotated_180 ? prv_get_axis_projection(Y_AXIS, raw_vector) * -1
+                                : prv_get_axis_projection(Y_AXIS, raw_vector);
+  int16_t raw_z = prv_get_axis_projection(Z_AXIS, raw_vector);
+
+  sample->x = ((int32_t)raw_x * 1000) / 1024;
+  sample->y = ((int32_t)raw_y * 1000) / 1024;
+  sample->z = ((int32_t)raw_z * 1000) / 1024;
 
   return MagReadSuccess;
 }
