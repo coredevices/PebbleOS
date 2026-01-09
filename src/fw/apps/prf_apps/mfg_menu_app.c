@@ -93,10 +93,6 @@ static void prv_select_calibrate_display(int index, void *context) {
 }
 #endif
 
-static void prv_select_accel(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_accel_app_get_info());
-}
-
 static void prv_select_button(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_button_app_get_info());
 }
@@ -110,6 +106,10 @@ static void prv_select_backlight(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_backlight_app_get_info());
 }
 #endif
+
+static void prv_select_accel(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_accel_app_get_info());
+}
 
 static void prv_select_charge(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_charge_app_get_info());
@@ -163,11 +163,6 @@ static void prv_select_program_color(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_program_color_app_get_info());
 }
 
-static void prv_extras_select_accel(int index, void *context) {
-  // Launch app and mark to return to extras menu when it exits
-  launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_accel_app_get_info());
-}
-
 static void prv_extras_select_discharge(int index, void *context) {
   // Launch app and mark to return to extras menu when it exits
   launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_discharge_app_get_info());
@@ -218,7 +213,6 @@ static void prv_extras_window_load(Window *window) {
   GRect bounds = window_layer->bounds;
 
   const SimpleMenuItem extras_menu_items[] = {
-    { .title = "Test Accel",        .callback = prv_extras_select_accel },
 #if CAPABILITY_HAS_BUILTIN_HRM
     { .title = "Test HRM",          .callback = prv_select_hrm },
 #endif
@@ -333,6 +327,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #if PLATFORM_OBELIX
     { .title = "Test Backlight",    .callback = prv_select_backlight },
 #endif
+    { .title = "Test Accelerometer", .callback = prv_select_accel },
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
     { .title = "Test Speaker",      .callback = prv_select_speaker },
 #endif
