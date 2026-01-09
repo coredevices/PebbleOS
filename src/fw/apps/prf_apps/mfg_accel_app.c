@@ -36,12 +36,12 @@ typedef enum {
   STATE_PREPARE_FLAT,
   STATE_MEASURE_FLAT,
   STATE_RESULT_FLAT,
-  STATE_PREPARE_RIGHT,
-  STATE_MEASURE_RIGHT,
-  STATE_RESULT_RIGHT,
-  STATE_PREPARE_DOWN,
-  STATE_MEASURE_DOWN,
-  STATE_RESULT_DOWN,
+  STATE_PREPARE_LEFT,
+  STATE_MEASURE_LEFT,
+  STATE_RESULT_LEFT,
+  STATE_PREPARE_FRONT,
+  STATE_MEASURE_FRONT,
+  STATE_RESULT_FRONT,
 } TestState;
 
 static EventedTimerID s_timer;
@@ -117,66 +117,66 @@ static void prv_update_display(void *context) {
       break;
     }
 
-    case STATE_PREPARE_RIGHT:
+    case STATE_PREPARE_LEFT:
       sniprintf(data->status_string, sizeof(data->status_string),
-                "Turn RIGHT\n\nStarting in %"PRIu32" sec",
+                "Turn LEFT\n\nStarting in %"PRIu32" sec",
                 (PREPARE_TIME_MS - elapsed) / 1000 + 1);
       if (elapsed >= PREPARE_TIME_MS) {
-        data->state = STATE_MEASURE_RIGHT;
+        data->state = STATE_MEASURE_LEFT;
         data->state_start_time = rtc_get_ticks();
         data->sum = 0;
         data->cnt = 0;
       }
       break;
 
-    case STATE_MEASURE_RIGHT:
+    case STATE_MEASURE_LEFT:
       data->sum += sample.x;
       data->cnt++;
       sniprintf(data->status_string, sizeof(data->status_string),
-                "Measuring RIGHT\n\nX: %"PRIi16"\n%"PRIu32" sec remaining",
+                "Measuring LEFT\n\nX: %"PRIi16"\n%"PRIu32" sec remaining",
                 sample.x, (SAMPLE_TIME_MS - elapsed) / 1000 + 1);
       if (elapsed >= SAMPLE_TIME_MS) {
         data->avg = data->sum / (int32_t)data->cnt;
         data->pass = (data->avg >= RANGE_MIN && data->avg <= RANGE_MAX);
-        data->state = STATE_RESULT_RIGHT;
+        data->state = STATE_RESULT_LEFT;
       }
       break;
 
-    case STATE_RESULT_RIGHT: {
+    case STATE_RESULT_LEFT: {
       sniprintf(data->status_string, sizeof(data->status_string),
-                "RIGHT: %s\n\nX avg: %"PRId32"\nExpected: %d to %d\n\nPress SEL",
+                "LEFT: %s\n\nX avg: %"PRId32"\nExpected: %d to %d\n\nPress SEL",
                 data->pass ? "PASS" : "FAIL", data->avg, RANGE_MIN, RANGE_MAX);
       break;
     }
 
-    case STATE_PREPARE_DOWN:
+    case STATE_PREPARE_FRONT:
       sniprintf(data->status_string, sizeof(data->status_string),
-                "Turn DOWNWARDS\n\nStarting in %"PRIu32" sec",
+                "Turn FRONT\n\nStarting in %"PRIu32" sec",
                 (PREPARE_TIME_MS - elapsed) / 1000 + 1);
       if (elapsed >= PREPARE_TIME_MS) {
-        data->state = STATE_MEASURE_DOWN;
+        data->state = STATE_MEASURE_FRONT;
         data->state_start_time = rtc_get_ticks();
         data->sum = 0;
         data->cnt = 0;
       }
       break;
 
-    case STATE_MEASURE_DOWN:
+    case STATE_MEASURE_FRONT:
       data->sum += sample.y;
       data->cnt++;
       sniprintf(data->status_string, sizeof(data->status_string),
-                "Measuring DOWN\n\nY: %"PRIi16"\n%"PRIu32" sec remaining",
+                "Measuring FRONT\n\nY: %"PRIi16"\n%"PRIu32" sec remaining",
                 sample.y, (SAMPLE_TIME_MS - elapsed) / 1000 + 1);
       if (elapsed >= SAMPLE_TIME_MS) {
         data->avg = data->sum / (int32_t)data->cnt;
         data->pass = (data->avg >= RANGE_MIN && data->avg <= RANGE_MAX);
-        data->state = STATE_RESULT_DOWN;
+        data->state = STATE_RESULT_FRONT;
       }
       break;
 
-    case STATE_RESULT_DOWN: {
+    case STATE_RESULT_FRONT: {
       sniprintf(data->status_string, sizeof(data->status_string),
-                "DOWN: %s\n\nY avg: %"PRId32"\nExpected: %d to %d\n\nPress SEL",
+                "FRONT: %s\n\nY avg: %"PRId32"\nExpected: %d to %d\n\nPress SEL",
                 data->pass ? "PASS" : "FAIL", data->avg, RANGE_MIN, RANGE_MAX);
       break;
     }
@@ -194,16 +194,16 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
       break;
 
     case STATE_RESULT_FLAT:
-      data->state = STATE_PREPARE_RIGHT;
+      data->state = STATE_PREPARE_LEFT;
       data->state_start_time = rtc_get_ticks();
       break;
 
-    case STATE_RESULT_RIGHT:
-      data->state = STATE_PREPARE_DOWN;
+    case STATE_RESULT_LEFT:
+      data->state = STATE_PREPARE_FRONT;
       data->state_start_time = rtc_get_ticks();
       break;
 
-    case STATE_RESULT_DOWN:
+    case STATE_RESULT_FRONT:
       data->state = STATE_IDLE;
       data->state_start_time = rtc_get_ticks();
       break;
