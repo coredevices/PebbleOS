@@ -86,8 +86,8 @@ def generate_memory_usage_report(task_gen):
         app_task.max_sizes = (app_max_ram, max_resources, max_resources_appstore)
         app_task.bin_type = 'app'
     if worker:
-        worker_task = task_gen.create_task('memory_usage_report',
-                                           task_gen.to_nodes(worker)[0])
+        worker_node = task_gen.path.find_or_declare(worker)
+        worker_task = task_gen.create_task('memory_usage_report', worker_node)
         worker_task.max_sizes = (worker_max_ram, None, None)
         worker_task.bin_type = 'worker'
     if lib:
