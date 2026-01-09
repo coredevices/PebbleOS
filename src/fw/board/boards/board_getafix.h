@@ -42,13 +42,12 @@ static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
-    // TODO(GETAFIX): Review if correct
     .axes_offsets[AXIS_X] = 0,
     .axes_offsets[AXIS_Y] = 1,
     .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = false,
-    .axes_inverts[AXIS_Y] = true,
-    .axes_inverts[AXIS_Z] = true,
+    .axes_inverts[AXIS_X] = true,
+    .axes_inverts[AXIS_Y] = false,
+    .axes_inverts[AXIS_Z] = false,
     .shake_thresholds[AccelThresholdHigh] = 64U,
     .shake_thresholds[AccelThresholdLow] = 15U,
     .double_tap_threshold = 12500U,
