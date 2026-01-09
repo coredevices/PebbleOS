@@ -42,7 +42,11 @@ typedef struct {
   uint32_t flash_addr;
   int16_t pcm[PCM_BUFFER_SIZE];
   bool in_testing;
+  bool audio_playing;
+  bool mic_recording;
 } AppData;
+
+static bool app_is_runing = false;
 
 static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame_count) {
   if (audio_data == NULL || frame_count == 0) {
@@ -61,6 +65,7 @@ static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame
 }
 
 static void prv_audio_trans_handler(uint32_t *free_size) {
+  if (!app_is_runing) return;
   uint32_t available_size = *free_size;
   AppData *app_data = app_state_get_user_data();
   static enum {
@@ -68,13 +73,13 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
   } mic_id = MIC1;
 
   while (available_size > PCM_BUFFER_SIZE*sizeof(int16_t)) {
+    if (!app_is_runing) return;
     flash_read_bytes((uint8_t *)app_data->pcm, app_data->flash_addr, PCM_BUFFER_SIZE*sizeof(int16_t));
     app_data->flash_addr += PCM_BUFFER_SIZE*sizeof(int16_t);
-
     prv_interleaved_to_non_interleaved(app_data->pcm, PCM_BUFFER_SIZE/2);
-    if (mic_id == MIC1) {
+    if (mic_id == MIC1 && app_is_runing) {
       available_size = audio_write(AUDIO, (void*)app_data->pcm, PCM_BUFFER_SIZE);
-    } else if (mic_id == MIC2) {
+    } else if (mic_id == MIC2 && app_is_runing) {
       available_size = audio_write(AUDIO, (void*)&app_data->pcm[PCM_BUFFER_SIZE/2], PCM_BUFFER_SIZE);
     }
   }
@@ -83,6 +88,7 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
     app_data->flash_addr = FLASH_START;
     if(++mic_id >= MIC_MAX) {
       audio_stop(AUDIO);
+      app_data->audio_playing = false;
       app_data->in_testing = false;
       mic_id = MIC1;
       snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Press Sel to start");
@@ -94,9 +100,12 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
 }
 
 static void prv_start_playback() {
+  AppData *app_data = app_state_get_user_data();
+
   audio_init(AUDIO);
   audio_set_volume(AUDIO, 100);
   audio_start(AUDIO, prv_audio_trans_handler);
+  app_data->audio_playing = true;
 }
 
 static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *context) {
@@ -104,6 +113,7 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
   
   if (app_data->flash_addr - FLASH_START > BLOCK_SIZE) {
     mic_stop(MIC);
+    app_data->mic_recording = false;
     app_data->flash_addr = FLASH_START;
     snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Playing MIC1");
     prv_start_playback();
@@ -123,6 +133,7 @@ static void prv_recording_start(void) {
   //set to maximum make it's more audiable in testing
   mic_set_volume(MIC, 100); 
   mic_start(MIC, prv_mic_data_handler, NULL, app_data->pcm, PCM_BUFFER_SIZE);
+  app_data->mic_recording = true;
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -178,13 +189,24 @@ static void prv_handle_init(void) {
   app_timer_register(500, prv_timer_callback, NULL);
 }
 
+static void prv_handler_deinit(void) {
+  AppData *data = app_state_get_user_data();
+  if (data->mic_recording) {
+    mic_stop(MIC);
+  }
+  if (data->audio_playing) {
+    audio_stop(AUDIO);
+  }
+}
+
 static void s_main(void) {
   prv_handle_init();
+  app_is_runing = true;
   
   app_event_loop();
 
-  mic_stop(MIC);
-  audio_stop(AUDIO);
+  app_is_runing = false;
+  prv_handler_deinit();
 }
 
 const PebbleProcessMd *mfg_mic_obelix_app_get_info(void) {
