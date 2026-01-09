@@ -599,6 +599,12 @@ def _build_recovery(bld):
             'apps/prf_apps/mfg_mic_getafix_app.c',
         ])
 
+    # Exclude magnetometer test for platforms without magnetometer
+    if not bld.capability('HAS_MAGNETOMETER'):
+        excludes.extend([
+            'apps/prf_apps/mfg_mag_app.c',
+        ])
+
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
 
