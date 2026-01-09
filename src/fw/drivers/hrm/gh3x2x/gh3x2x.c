@@ -22,6 +22,7 @@
 #define GH3X2X_HR_SAMPLING_RATE 25
 
 static volatile uint32_t s_hrm_int_flag = false;
+static volatile uint32_t s_hrm_timer_flag = false;
 
 // GH3X2X library glue code
 
@@ -158,9 +159,15 @@ void gh3x2x_timer_init(uint32_t period_ms) {
 static void gh3x2x_timer_callback(void* data) {
   uint32_t param = (uint32_t)data;
   if (param != 0x87965421) {
-    system_task_add_callback(gh3x2x_timer_callback, (void*)0x87965421);
+    // Coalesce repeated timer firings - only queue one callback at a time
+    if (s_hrm_timer_flag == false) {
+      if (system_task_add_callback(gh3x2x_timer_callback, (void*)0x87965421)) {
+        s_hrm_timer_flag = true;
+      }
+    }
     return;
   }
+  s_hrm_timer_flag = false;
   Gh3x2xSerialSendTimerHandle();
 }
 
@@ -179,6 +186,7 @@ static void gh3x2x_timer_stop_handle(void* arg) {
     app_timer_cancel(HRM->state->timer);
     HRM->state->timer = NULL;
     HRM->state->timer_period_ms = 0;
+    s_hrm_timer_flag = false;
   }
 }
 
