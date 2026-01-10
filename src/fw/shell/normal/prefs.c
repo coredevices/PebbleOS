@@ -29,6 +29,7 @@
 #include "services/normal/bluetooth/ble_hrm.h"
 #include "services/normal/settings/settings_file.h"
 #include "services/normal/timeline/peek.h"
+#include "kernel/events.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/size.h"
@@ -872,6 +873,16 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
       // so we should write the new value to the backing
       prefs_private_write_backing(event->key, event->key_len, entry->value, entry->value_len);
     }
+
+    // Notify UI that a preference changed so it can refresh
+    PebbleEvent pref_event = {
+      .type = PEBBLE_PREF_CHANGE_EVENT,
+      .pref_change = {
+        .key = entry->key,
+        .key_len = strlen(entry->key) + 1,
+      },
+    };
+    event_put(&pref_event);
   }
 }
 

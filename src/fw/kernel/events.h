@@ -127,6 +127,7 @@ typedef enum {
   PEBBLE_APP_CACHE_EVENT,
   PEBBLE_ACTIVITY_EVENT,
   PEBBLE_WORKOUT_EVENT,
+  PEBBLE_PREF_CHANGE_EVENT,
 
   PEBBLE_NUM_EVENTS
 } PebbleEventType;
@@ -481,6 +482,11 @@ typedef struct PACKED { // 7 bytes
   uint8_t key_len;
 } PebbleBlobDBEvent;
 
+typedef struct PACKED { // 5 bytes
+  const char *key;  //!< The preference key that changed (null-terminated)
+  uint8_t key_len;  //!< Length of the key including null terminator
+} PebblePrefChangeEvent;
+
 typedef enum {
   VoiceEventTypeSessionSetup,
   VoiceEventTypeSessionResult,
@@ -809,6 +815,7 @@ typedef struct PACKED {
     PebbleAppCacheEvent app_cache_event;
     PebbleActivityEvent activity_event;
     PebbleWorkoutEvent workout;
+    PebblePrefChangeEvent pref_change;
   };
   PebbleTaskBitset task_mask;  // 1 == filter out, 0 == leave in
   // NOTE: we put this 8 bit field at the end so that we can pack this structure and still keep the

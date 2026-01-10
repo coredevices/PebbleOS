@@ -15,10 +15,12 @@
 
 #include "applib/app.h"
 #include "applib/battery_state_service.h"
+#include "applib/event_service_client.h"
 #include "applib/fonts/fonts.h"
 #include "applib/ui/menu_layer.h"
 #include "applib/ui/option_menu_window.h"
 #include "applib/ui/ui.h"
+#include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/fw_reset.h"
 #include "process_management/app_manager.h"
@@ -44,8 +46,19 @@ typedef struct SettingsData {
   SettingsCallbacks *callbacks;
 
   ClickConfigProvider menu_layer_click_config; //! HACK: Used to register a back click.
+
+  EventServiceInfo pref_change_event_info; //!< Subscription for pref change notifications
 } SettingsData;
 
+
+// Pref change handler
+///////////////////////
+
+static void prv_pref_change_handler(PebbleEvent *event, void *context) {
+  SettingsData *data = context;
+  // Refresh the menu when any pref changes
+  layer_mark_dirty(menu_layer_get_layer(&data->menu_layer));
+}
 
 // Filter category helpers
 //////////////////////////
@@ -194,6 +207,14 @@ static void prv_settings_window_load(Window *window) {
   if (callbacks->expand) {
     callbacks->expand(data->callbacks);
   }
+
+  // Subscribe to pref change events to auto-refresh when settings change remotely
+  data->pref_change_event_info = (EventServiceInfo) {
+    .type = PEBBLE_PREF_CHANGE_EVENT,
+    .handler = prv_pref_change_handler,
+    .context = data,
+  };
+  event_service_client_subscribe(&data->pref_change_event_info);
 }
 
 static void prv_settings_window_appear(Window *window) {
@@ -206,6 +227,10 @@ static void prv_settings_window_appear(Window *window) {
 
 static void prv_settings_window_unload(Window *window) {
   SettingsData *data = window_get_user_data(window);
+
+  // Unsubscribe from pref change events
+  event_service_client_unsubscribe(&data->pref_change_event_info);
+
   // Call the hide callback for the currently open category.
   SettingsCallbacks *callbacks = prv_get_current_callbacks(data);
   if (callbacks->hide) {
