@@ -16,6 +16,7 @@
 #endif
   PREFS_MACRO(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD, s_backlight_ambient_threshold)
   PREFS_MACRO(PREF_KEY_STATIONARY, s_stationary_mode_enabled)
+  PREFS_MACRO(PREF_KEY_PANIC_MODE, s_panic_mode_enabled)
   PREFS_MACRO(PREF_KEY_DEFAULT_WORKER, s_default_worker)
   PREFS_MACRO(PREF_KEY_TEXT_STYLE, s_text_style)
   PREFS_MACRO(PREF_KEY_LANG_ENGLISH, s_language_english)
