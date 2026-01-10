@@ -176,7 +176,7 @@ void compositor_render_app(void) {
     const int16_t disp_width = DISP_COLS;
     const int16_t disp_height = DISP_ROWS;
 
-#if (PLATFORM_OBELIX || PLATFORM_GETAFIX) && !RECOVERY_FW
+#if (CAPABILITY_HAS_APP_SCALING) && !RECOVERY_FW
     // Check if we should use scaling mode for legacy apps
     if (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) {
       // Scale legacy apps to fill the display using nearest-neighbor scaling

@@ -51,7 +51,8 @@ master_capability_set = {
     'HAS_DYNAMIC_BACKLIGHT',
     'HAS_COLOR_BACKLIGHT',
     'HAS_SPEAKER',
-    'HAS_ACCEL_SENSITIVITY'
+    'HAS_ACCEL_SENSITIVITY',
+    'HAS_APP_SCALING',
 }
 
 board_capability_dicts = [
@@ -150,7 +151,8 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
-            'HAS_PUTBYTES_PREACKING'
+            'HAS_PUTBYTES_PREACKING',
+            'HAS_APP_SCALING'
         }
     },
     {
@@ -226,6 +228,7 @@ board_capability_dicts = [
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
+            'HAS_APP_SCALING'
         },
     },
     {
@@ -296,7 +299,8 @@ board_capability_dicts = [
             'HAS_TIMELINE_PEEK',
             'HAS_VIBE_SCORES',
             'HAS_WEATHER',
-            'HAS_PUTBYTES_PREACKING'
+            'HAS_PUTBYTES_PREACKING',
+            'HAS_APP_SCALING'
         }
     },
     {
@@ -321,7 +325,8 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
-            'HAS_TOUCHSCREEN'
+            'HAS_TOUCHSCREEN',
+            'HAS_APP_SCALING'
         }
     },
     {
@@ -378,6 +383,7 @@ board_capability_dicts = [
             'HAS_COLOR_BACKLIGHT',
             'HAS_SPEAKER',
             'HAS_ACCEL_SENSITIVITY',
+            'HAS_APP_SCALING'
         },
     },
     {
@@ -404,6 +410,7 @@ board_capability_dicts = [
             'HAS_MAGNETOMETER',
             'HAS_PBLBOOT',
             'HAS_ACCEL_SENSITIVITY',
+            'HAS_APP_SCALING'
         },
     },
 ]

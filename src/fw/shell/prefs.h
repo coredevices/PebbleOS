@@ -127,7 +127,7 @@ uint16_t timeline_peek_prefs_get_before_time(void);
 bool shell_prefs_can_coredump_on_request(void);
 void shell_prefs_set_coredump_on_request(bool enabled);
 
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_SNOWY_EMERY || PLATFORM_SPALDING_GABBRO
+#if CAPABILITY_HAS_APP_SCALING
 // Legacy app rendering mode - whether to use bezel or scaling for legacy apps
 typedef enum LegacyAppRenderMode {
   LegacyAppRenderMode_Bezel = 0,    // Center with black bezel (original behavior)
