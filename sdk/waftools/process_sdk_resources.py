@@ -5,6 +5,7 @@ import copy
 from waflib import Node
 
 from resources.find_resource_filename import find_most_specific_filename
+from resources.types.resource_definition import ResourceDefinition
 from resources.types.resource_object import ResourceObject
 from resources.resource_map import resource_generator
 from sdk_helpers import is_sdk_2x, validate_resource_not_larger_than
@@ -116,6 +117,29 @@ def generate_resources(bld, resource_source_path):
 
             resource_definitions.append(d)
 
+    # Auto-inject MOD resource for moddable projects
+    if getattr(bld.env, "BUILD_TYPE", None) == "moddable":
+        import os
+
+        platform = bld.env.PLATFORM_NAME
+        mod_path = "build/mods/{}/mc.xsa".format(platform)
+        full_mod_path = os.path.join(bld.path.abspath(), mod_path)
+        if os.path.exists(full_mod_path):
+            mod_definition = ResourceDefinition(
+                type="raw", name="MOD", file=mod_path, target_platforms=[platform]
+            )
+            resource_definitions.append(mod_definition)
+            resource_file_mapping["MOD"] = mod_path
+            print(
+                "Auto-injected MOD resource for {} from {}".format(platform, mod_path)
+            )
+        else:
+            print(
+                "WARNING: MOD resource not found at {} for {}".format(
+                    full_mod_path, platform
+                )
+            )
+
     bld_dir = bld.path.get_bld().make_node(bld.env.BUILD_DIR)
     lib_resources = []
     for lib in bld.env.LIB_JSON:
@@ -223,7 +247,7 @@ def generate_resources(bld, resource_source_path):
         resource_ball=resource_ball,
         resource_id_header_target=resource_id_header,
         use_extern=build_type == "lib",
-        use_define=build_type == "app",
+        use_define=build_type in ("app", "moddable"),
         published_media=published_media_json,
     )
 
@@ -236,7 +260,7 @@ def generate_resources(bld, resource_source_path):
         published_media=published_media_json,
     )
 
-    if not bld.env.BUILD_TYPE or bld.env.BUILD_TYPE in ("app", "rocky"):
+    if not bld.env.BUILD_TYPE or bld.env.BUILD_TYPE in ("app", "rocky", "moddable"):
         # Create a resource pack for distribution with an application binary
         pbpack = bld_dir.make_node("app_resources.pbpack")
         bld(
