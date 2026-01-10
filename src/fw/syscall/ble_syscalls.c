@@ -16,6 +16,9 @@
 #include "comm/ble/gatt_client_operations.h"
 #include "comm/ble/gatt_client_subscriptions.h"
 
+#include "bluetooth/analytics.h"
+#include "comm/bt_lock.h"
+
 // -----------------------------------------------------------------------------
 // ble_scan.h
 
@@ -269,4 +272,34 @@ DEFINE_SYSCALL(void, sys_ble_descriptor_get_uuid, Uuid *uuid, BLEDescriptor desc
 
 DEFINE_SYSCALL(BLECharacteristic, sys_ble_descriptor_get_characteristic, BLEDescriptor descriptor) {
   return gatt_client_descriptor_get_characteristic(descriptor);
+}
+
+// -----------------------------------------------------------------------------
+// ble_connection_info.h
+
+DEFINE_SYSCALL(bool, sys_bluetooth_connection_get_rssi, int8_t *rssi_out) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(rssi_out, sizeof(*rssi_out));
+  }
+
+  bt_lock();
+  GAPLEConnection *connection = gap_le_connection_get_gateway();
+  if (!connection) {
+    bt_unlock();
+    return false;
+  }
+
+  const BTDeviceInternal *device = &connection->device;
+
+  uint8_t link_quality;
+  int8_t rssi;
+  bool success = bt_driver_analytics_get_connection_quality(device, &link_quality, &rssi);
+
+  bt_unlock();
+
+  if (success) {
+    *rssi_out = rssi;
+  }
+
+  return success;
 }

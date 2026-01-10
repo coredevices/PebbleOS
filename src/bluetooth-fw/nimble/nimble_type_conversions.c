@@ -5,6 +5,7 @@
 
 #include <btutil/bt_uuid.h>
 #include <host/ble_gap.h>
+#include <system/logging.h>
 #include <string.h>
 
 void nimble_addr_to_pebble_addr(const ble_addr_t *addr, BTDeviceAddress *addr_out) {

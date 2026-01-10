@@ -43,7 +43,7 @@ def _generate_sdk_waf(ctx):
     # environment
     def _build_waf(task):
         bld = task.generator.bld
-        cmd_str = ('cd "{}" && python "{}" distclean configure build --make-waf --tools="{}" &&'
+        cmd_str = ('cd "{}" && python3 "{}" distclean configure build --make-waf --tools="{}" &&'
                    'cp waf "{}"'.format(waf_folder.abspath(),
                                         task.inputs[0].abspath(),
                                         ','.join(x.abspath() for x in task.inputs[1:]),
@@ -227,7 +227,7 @@ def build(bld):
                                 platform_folder_node.make_node('include/pebble_process_info.h'),
                                 platform_folder_node.make_node('include/pebble_worker.h'),
                                 platform_folder_node.make_node('include/pebble_worker_sdk_version.h')]
-    bld(rule="cd '{}' ; python '{}' --sdk-dir='{}' '{}' '{}' '{}' '{}' {}".
+    bld(rule="cd '{}' ; python3 '{}' --sdk-dir='{}' '{}' '{}' '{}' '{}' {}".
         format(tintin_home.abspath(),
                native_generator_script.abspath(),
                platform_folder_node.abspath(),

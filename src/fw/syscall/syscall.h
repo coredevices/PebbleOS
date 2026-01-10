@@ -168,6 +168,8 @@ uint8_t sys_ble_characteristic_get_descriptors(BLECharacteristic characteristic,
 void sys_ble_descriptor_get_uuid(Uuid *uuid, BLEDescriptor descriptor);
 BLECharacteristic sys_ble_descriptor_get_characteristic(BLEDescriptor descriptor);
 
+bool sys_bluetooth_connection_get_rssi(int8_t *rssi_out);
+
 int16_t sys_event_service_get_plugin_service_index(const Uuid * uuid);
 
 DataLoggingSessionRef sys_data_logging_create(uint32_t tag, DataLoggingItemType type,

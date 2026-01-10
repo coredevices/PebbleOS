@@ -34,6 +34,7 @@
     "fw/applib/bluetooth/ble_central.h",
     "fw/applib/bluetooth/ble_characteristic.h",
     "fw/applib/bluetooth/ble_client.h",
+    "fw/applib/bluetooth/ble_connection_info.h",
     "fw/applib/bluetooth/ble_descriptor.h",
     "fw/applib/bluetooth/ble_ibeacon.h",
     "fw/applib/bluetooth/ble_scan.h",
@@ -341,6 +342,10 @@
                   "type": "function",
                   "name": "bluetooth_connection_service_unsubscribe",
                   "addedRevision": "0"
+                }, {
+                  "type": "function",
+                  "name": "bluetooth_connection_get_rssi",
+                  "addedRevision": "89"
                 }
               ]
             }, {
@@ -1274,6 +1279,11 @@
               "name": "ble_descriptor_get_characteristic",
               "implName": "sys_ble_descriptor_get_characteristic",
               "internal": true
+            }, {
+              "type": "function",
+              "name": "bluetooth_connection_get_rssi",
+              "implName": "sys_bluetooth_connection_get_rssi",
+              "internal": false
             }, {
               "type": "function",
               "name": "ble_client_get_maximum_value_length",
