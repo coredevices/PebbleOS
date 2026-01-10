@@ -194,9 +194,13 @@ def configure(conf):
     project_info = _extract_project_info(conf, info_json, info_json_node.name)
 
     conf.env.PROJECT_INFO = project_info
-    conf.env.BUILD_TYPE = (
-        "rocky" if project_info.get("projectType", None) == "rocky" else "app"
-    )
+    project_type = project_info.get("projectType", None)
+    if project_type == "rocky":
+        conf.env.BUILD_TYPE = "rocky"
+    elif project_type == "moddable":
+        conf.env.BUILD_TYPE = "moddable"
+    else:
+        conf.env.BUILD_TYPE = "app"
 
     if getattr(conf.env.PROJECT_INFO, "enableMultiJS", False):
         if not conf.env.WEBPACK:
