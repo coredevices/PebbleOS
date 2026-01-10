@@ -134,7 +134,6 @@ board_capability_dicts = [
             'HAS_APPLE_MFI',
             'HAS_APP_GLANCES',
             'HAS_DEFECTIVE_FW_CRC',
-            'HAS_GLYPH_BITMAP_CACHING',
             'HAS_HARDWARE_PANIC_SCREEN',
             'HAS_HEALTH_TRACKING',
             'HAS_ROCKY_JS',
