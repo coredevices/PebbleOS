@@ -237,9 +237,7 @@ static void prv_collapse_animation_update_round(GContext *ctx,
                                                 uint32_t distance_normalized) {
   // If we're expanding, blit the app framebuffer into the system framebuffer (so below the ring)
   if (!config.collapse_starting_animation) {
-    GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
-    GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
-    bitblt_bitmap_into_bitmap(&dest_bitmap, &src_bitmap, GPointZero, GCompOpAssign, GColorWhite);
+    compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
   }
 
   compositor_dot_transitions_collapsing_ring_animation_update(ctx, distance_normalized,
