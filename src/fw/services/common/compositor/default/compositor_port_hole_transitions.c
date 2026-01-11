@@ -62,13 +62,10 @@ static void prv_port_hole_transition_animation_update(GContext *ctx,
 
   if (distance_normalized > transition_progress_threshold) {
     // Second half of the transition
-    const GBitmap app_bitmap = compositor_get_app_framebuffer_as_bitmap();
-    GBitmap sys_bitmap = compositor_get_framebuffer_as_bitmap();
-    const GPoint point = direction_vertical ? GPoint(0, -current_offset_px) :
-                                              GPoint(-current_offset_px, 0);
-    // the framebuffer is already wiped at the beginning, so we can use GColorWhite as a fill color
-    // without filling it ourselves
-    bitblt_bitmap_into_bitmap(&sys_bitmap, &app_bitmap, point, GCompOpAssign, GColorWhite);
+    const GRect rect = direction_vertical ? GRect(0, -current_offset_px, DISP_COLS, DISP_ROWS - current_offset_px) :
+                                              GRect(-current_offset_px, 0, DISP_COLS - current_offset_px, DISP_ROWS);
+
+    compositor_scaled_app_fb_copy(rect, false /* copy_relative_to_origin */);
   } else {
     // First half of the transition
     const int16_t diff = s_data.animation_offset_px - current_offset_px;
