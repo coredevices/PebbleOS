@@ -41,31 +41,32 @@ static void prv_move_region_of_bitmap_horizontally(GBitmap *bitmap, const GRect 
   graphics_private_move_pixels_horizontally(&region_sub_bitmap, delta_x, true /* patch_garbage */);
 }
 
+static void prv_duplicate_framebuffer_cols(GBitmap *bitmap, int16_t start_col, int16_t end_col, int16_t dupe_col) {
+  const int16_t delta = start_col > end_col ? -1 : 1;
+  for (int16_t dest_col = start_col; dest_col != end_col; dest_col += delta) {
+    bitmap->bounds = (GRect) {
+      .origin.x = (dupe_col >= 0 ? dupe_col : dest_col),
+      .size = { 1, DISP_ROWS },
+    };
+    bitblt_bitmap_into_bitmap(bitmap, bitmap, GPoint(dest_col, 0), GCompOpAssign, GColorWhite);
+  }
+}
+
 static void prv_copy_app_fb_patching_garbage(int16_t dest_origin_x) {
-  const GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
   GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
+
+  compositor_scaled_app_fb_copy(GRect(dest_origin_x, 0, DISP_COLS - dest_origin_x, DISP_ROWS), false /* copy_relative_to_origin */);
 
   // Patch garbage pixels using the first/last column, if necessary
   if (dest_origin_x != 0) {
     const bool offscreen_left = (dest_origin_x < 0);
     const int16_t first_column_x = 0;
     const int16_t last_column_x = DISP_COLS - 1;
-    const GRect column_to_replicate = (GRect) {
-      .origin = GPoint((offscreen_left ? last_column_x : first_column_x), 0),
-      .size = GSize(1, DISP_ROWS),
-    };
-    GBitmap column_to_replicate_sub_bitmap;
-    gbitmap_init_as_sub_bitmap(&column_to_replicate_sub_bitmap, &src_bitmap, column_to_replicate);
+    const int16_t column_to_replicate = (offscreen_left ? last_column_x : first_column_x);
     const int16_t from = (int16_t)(offscreen_left ? (dest_origin_x + DISP_COLS) : first_column_x);
     const int16_t to = (int16_t)(offscreen_left ? last_column_x : dest_origin_x - 1);
-    for (int16_t x = from; x <= to; x++) {
-      bitblt_bitmap_into_bitmap(&dest_bitmap, &column_to_replicate_sub_bitmap,
-                                GPoint(x, 0), GCompOpAssign, GColorWhite);
-    }
+    prv_duplicate_framebuffer_cols(&dest_bitmap, from, to, column_to_replicate);
   }
-
-  bitblt_bitmap_into_bitmap(&dest_bitmap, &src_bitmap, GPoint(dest_origin_x, 0), GCompOpAssign,
-                            GColorWhite);
 }
 
 static void prv_manipulate_launcher_in_system_framebuffer(GContext *ctx,

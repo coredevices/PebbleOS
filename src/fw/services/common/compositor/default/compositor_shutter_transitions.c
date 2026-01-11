@@ -176,8 +176,6 @@ static void prv_draw_in(GContext *ctx, int move_size, uint32_t distance, bool ve
                         bool invert) {
   const int16_t current_offset_px = prv_interpolate_two_ways(distance, invert ? -move_size :
                                                                                 move_size);
-  const GBitmap app_bitmap = compositor_get_app_framebuffer_as_bitmap();
-  GBitmap sys_bitmap = compositor_get_framebuffer_as_bitmap();
   const GPoint point = vertical ? GPoint(0, -current_offset_px) :
                                   GPoint(-current_offset_px, 0);
 
@@ -185,7 +183,7 @@ static void prv_draw_in(GContext *ctx, int move_size, uint32_t distance, bool ve
   graphics_context_set_fill_color(ctx, s_data.sampled_color);
   graphics_fill_rect(ctx, &DISP_FRAME);
 
-  bitblt_bitmap_into_bitmap(&sys_bitmap, &app_bitmap, point, GCompOpAssign, GColorWhite);
+  compositor_scaled_app_fb_copy(GRect(point.x, point.y, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
 
   const GPoint drawing_box_origin = ctx->draw_state.drawing_box.origin;
   gpoint_add_eq(&ctx->draw_state.drawing_box.origin, point);
