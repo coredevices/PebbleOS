@@ -7,8 +7,10 @@
 
 #include "applib/graphics/utf8.h"
 #include "kernel/pbl_malloc.h"
+#include "resource/resource_storage_impl.h"
 #include "services/common/i18n/i18n.h"
 #include "system/logging.h"
+#include "services/normal/timeline/timeline_resources.h"
 #include "util/string.h"
 
 #include <stdio.h>
@@ -17,6 +19,10 @@
 //! plus the emoji, newline and quotes when there is a text message in addition to media.
 #define MULTIMEDIA_INDICATOR_LENGTH 64
 #define MULTIMEDIA_EMOJI "🎁"
+
+//! This is derived from MAX_RESOURCES_PER_STORE * 2, representing the
+//! boundary between system resource IDs and app resource IDs.
+#define MAX_SYSTEM_RESOURCE_ID (MAX_RESOURCES_PER_STORE * 2)
 
 // AttributeIdTitle + AttributeIdAncsAction. See prv_fill_native_ancs_action
 static const int NUM_NATIVE_ANCS_ACTION_ATTRS = 2;
@@ -183,6 +189,7 @@ static void prv_populate_attributes(TimelineItem *item,
                                     const ANCSAttribute *message,
                                     const ANCSAttribute *app_id,
                                     const ANCSAppMetadata *app_metadata,
+                                    const iOSNotifPrefs *notif_prefs,
                                     bool has_multimedia) {
   int attr_idx = 0;
 
@@ -246,17 +253,53 @@ static void prv_populate_attributes(TimelineItem *item,
     attr_idx++;
   }
 
-  // add the icon attribute
+  uint32_t icon_id = app_metadata->icon_id;
+  if (notif_prefs) {
+    uint32_t pref_icon = attribute_get_uint32(&notif_prefs->attr_list, AttributeIdIcon, 0);
+    if (pref_icon != 0) {
+      if (pref_icon < MAX_SYSTEM_RESOURCE_ID) {
+        pref_icon |= SYSTEM_RESOURCE_FLAG;
+      }
+      icon_id = pref_icon;
+    }
+  }
+
   item->attr_list.attributes[attr_idx].id = AttributeIdIconTiny;
-  item->attr_list.attributes[attr_idx].uint32 = app_metadata->icon_id;
+  item->attr_list.attributes[attr_idx].uint32 = icon_id;
   attr_idx++;
 
 #if PBL_COLOR
-  if (app_metadata->app_color != 0) {
+  uint8_t app_color = app_metadata->app_color;
+  uint8_t primary_color = 0;
+  if (notif_prefs) {
+    app_color = attribute_get_uint8(&notif_prefs->attr_list, AttributeIdBgColor, app_color);
+    primary_color = attribute_get_uint8(&notif_prefs->attr_list, AttributeIdPrimaryColor, 0);
+  }
+
+  if (app_color != 0) {
     item->attr_list.attributes[attr_idx].id = AttributeIdBgColor;
-    item->attr_list.attributes[attr_idx].uint8 = app_metadata->app_color;
+    item->attr_list.attributes[attr_idx].uint8 = app_color;
+    attr_idx++;
+  }
+  if (primary_color != 0) {
+    item->attr_list.attributes[attr_idx].id = AttributeIdPrimaryColor;
+    item->attr_list.attributes[attr_idx].uint8 = primary_color;
+    attr_idx++;
   }
 #endif
+
+  if (notif_prefs) {
+    const Attribute *vibe = attribute_find(&notif_prefs->attr_list, AttributeIdVibrationPattern);
+    if (vibe) {
+      item->attr_list.attributes[attr_idx] = *vibe;
+      Uint32List *src_list = vibe->uint32_list;
+      size_t list_size = Uint32ListSize(src_list->num_values);
+      item->attr_list.attributes[attr_idx].uint32_list = (Uint32List *)*buffer;
+      memcpy(*buffer, src_list, list_size);
+      *buffer += list_size;
+      attr_idx++;
+    }
+  }
 }
 
 static bool prv_should_hide_reply_because_group_sms(const TimelineItemAction *action,
@@ -371,6 +414,13 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
     required_space_for_strings += prv_max_ellipsified_cstring_size(title);
   }
 
+  if (notif_prefs) {
+    const Attribute *vibe = attribute_find(&notif_prefs->attr_list, AttributeIdVibrationPattern);
+    if (vibe) {
+      required_space_for_strings += Uint32ListSize(vibe->uint32_list->num_values);
+    }
+  }
+
   int num_pebble_actions = 0;
   if (notif_prefs) {
     for (int i = 0; i < notif_prefs->action_group.num_actions; i++) {
@@ -415,10 +465,27 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
                  ((app_id->length > 0) ? 1 : 0) +
                  ((message->length > 0 || has_multimedia) ? 1 : 0) +
                  (prv_should_add_sender_attr(app_id, title) ? 1 : 0) +
-#if PBL_COLOR
-                 ((app_metadata->app_color != 0) ? 1 : 0) + // for color
-#endif
                  1; // for icon
+
+#if PBL_COLOR
+  bool has_bg_color = (app_metadata->app_color != 0);
+  bool has_primary_color = false;
+  if (notif_prefs) {
+    if (attribute_find(&notif_prefs->attr_list, AttributeIdBgColor)) {
+      has_bg_color = true;
+    }
+    if (attribute_find(&notif_prefs->attr_list, AttributeIdPrimaryColor)) {
+      has_primary_color = true;
+    }
+  }
+  if (has_bg_color) num_attr++;
+  if (has_primary_color) num_attr++;
+#else
+#endif
+
+  if (notif_prefs && attribute_find(&notif_prefs->attr_list, AttributeIdVibrationPattern)) {
+    num_attr++;
+  }
 
   uint8_t *buffer;
   TimelineItem *item = timeline_item_create(num_attr, num_actions, attributes_per_action,
@@ -433,7 +500,7 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
   item->header.timestamp = timestamp;
 
   prv_populate_attributes(item, &buffer, title, display_name, subtitle, message, app_id,
-                          app_metadata, has_multimedia);
+                          app_metadata, notif_prefs, has_multimedia);
 
   uint8_t *buf_end = buffer + required_space_for_strings;
   prv_populate_actions(item, &buffer, buf_end, positive_action, negative_action, subtitle,
