@@ -15,6 +15,7 @@
 #include "services/runlevel.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "system/bootbits.h"
+#include "system/firmware_storage.h"
 #include "system/logging.h"
 #include "system/reboot_reason.h"
 #include "system/reset.h"
@@ -78,6 +79,11 @@ void factory_reset(bool should_shutdown) {
 #if !defined(RECOVERY_FW)
   // "First use" is part of the PRF image for Snowy
   boot_bit_set(BOOT_BIT_FORCE_PRF);
+#if CAPABILITY_HAS_PBLBOOT
+  // Invalidate both firmware slots so the bootloader doesn't boot into them
+  firmware_storage_invalidate_firmware_slot(0);
+  firmware_storage_invalidate_firmware_slot(1);
+#endif
 #endif
 
   prv_factory_reset_post(should_shutdown);
