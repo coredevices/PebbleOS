@@ -23,9 +23,9 @@
 #include <stdio.h>
 
 #if PLATFORM_ASTERIX
-const char *const s_model = "C2D";
+const char *const s_model = "P2D";
 #elif PLATFORM_OBELIX
-const char *const s_model = "CT2";
+const char *const s_model = "PT2";
 #elif PLATFORM_GETAFIX
 const char *const s_model = "PR2";
 #else
