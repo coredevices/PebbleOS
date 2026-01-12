@@ -202,6 +202,33 @@ board_capability_dicts = [
         },
     },
     {
+        'boards': ['spalding_gabbro'],
+        'capabilities':
+        {
+            'COMPOSITOR_USES_DMA',
+            'HAS_ACCESSORY_CONNECTOR',
+            'HAS_APP_GLANCES',
+            'HAS_DEFECTIVE_FW_CRC',
+            'HAS_HARDWARE_PANIC_SCREEN',
+            'HAS_HEALTH_TRACKING',
+            'HAS_ROCKY_JS',
+            'HAS_LAUNCHER4',
+            'HAS_MAGNETOMETER',
+            'HAS_MAPPABLE_FLASH',
+            'HAS_MASKING',
+            'HAS_MICROPHONE',
+            'HAS_PMIC',
+            'HAS_SDK_SHELL4',
+            'HAS_SPRF_V3',
+            'HAS_TEMPERATURE',
+            'HAS_TIMELINE_PEEK',
+            'HAS_VIBE_SCORES',
+            'USE_PARALLEL_FLASH',
+            'HAS_WEATHER',
+            'HAS_PUTBYTES_PREACKING',
+        },
+    },
+    {
         'boards': ['silk_bb', 'silk_evt', 'silk_bb2', 'silk'],
         'capabilities':
         {

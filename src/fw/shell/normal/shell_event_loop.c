@@ -46,7 +46,9 @@ void shell_event_loop_init(void) {
   shell_prefs_init();
 #if PLATFORM_SPALDING
   shell_prefs_display_offset_init();
+#if !PLATFORM_SPALDING_GABBRO
   display_calibration_prompt_show_if_needed();
+#endif
 #endif
   notification_window_service_init();
   app_inbox_service_init();

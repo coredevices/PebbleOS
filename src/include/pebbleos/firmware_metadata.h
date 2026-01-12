@@ -57,6 +57,7 @@ typedef enum FirmwareMetadataPlatform {
   FirmwareMetadataPlatformPebbleSnowyEmery = 0xf5,
   FirmwareMetadataPlatformPebbleObelixBigboard = 0xf4,
   FirmwareMetadataPlatformPebbleObelixBigboard2 = 0xf3,
+  FirmwareMetadataPlatformPebbleSpaldingGabbro = 0xf2,
 } FirmwareMetadataPlatform;
 
 // WARNING: changes in this struct must be reflected in:
@@ -143,6 +144,8 @@ _Static_assert(sizeof(struct FirmwareMetadata) == (sizeof(uint32_t) +
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkFlint)
 #elif BOARD_SNOWY_EMERY
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyEmery)
+#elif BOARD_SPALDING_GABBRO
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpaldingGabbro)
 #elif BOARD_GETAFIX_EVT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixEVT)
 #else

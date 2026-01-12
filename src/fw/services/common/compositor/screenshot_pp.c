@@ -98,10 +98,10 @@ static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
       remaining_framebuffer_row_bytes = remaining_chunk_bytes;
     }
 
-#if PLATFORM_SPALDING || PLATFORM_GETAFIX
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING || PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
     const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_spalding_data_row_infos;
-#elif PLATFORM_GETAFIX
+#elif PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
     const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_getafix_data_row_infos;
 #endif
     const size_t framebuffer_row_min_pixel = row_infos[state->row].min_x;

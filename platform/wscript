@@ -57,6 +57,8 @@ def get_platform_name(ctx):
         return "tintin"
     elif ctx.get_board() == 'snowy_emery':
         return "snowy_emery"
+    elif ctx.get_board() == 'spalding_gabbro':
+        return "spalding_gabbro"
     elif is_snowy(ctx):
         return "snowy"
     elif is_spalding(ctx):
@@ -91,6 +93,8 @@ def get_qemu_machine(ctx):
         return 'pebble-bb2'
     elif ctx.get_board() == 'snowy_emery':
         return 'pebble-snowy-emery-bb'
+    elif ctx.get_board() == 'spalding_gabbro':
+        return 'pebble-spalding-gabbro-bb'
     elif is_snowy(ctx):
         return 'pebble-snowy-bb'
     elif is_spalding(ctx):
@@ -238,6 +242,11 @@ def add_platform_defines(ctx, env):
                     'MIN_SDK_VERSION={}'.format(env.MIN_SDK_VERSION)])
     if 'NRF5' in env.MICRO_FAMILY:
         env.append_value('DEFINES', 'MICRO_FAMILY_NRF5=1')
+    # Add additional platform defines for variant boards to allow display-specific overrides
+    if ctx.get_board() == 'snowy_emery':
+        env.append_value('DEFINES', 'PLATFORM_SNOWY_EMERY=1')
+    if ctx.get_board() == 'spalding_gabbro':
+        env.append_value('DEFINES', 'PLATFORM_SPALDING_GABBRO=1')
 
     for cap, val in ctx.capabilities_dict().items():
         env.append_value('DEFINES', "CAPABILITY_%s=%s" % (cap, int(val)))
