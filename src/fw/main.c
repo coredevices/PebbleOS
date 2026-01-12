@@ -54,6 +54,7 @@
 #include "kernel/panic.h"
 #include "kernel/pulse_logging.h"
 #include "services/services.h"
+#include "services/common/boot_splash.h"
 #include "services/common/clock.h"
 #include "services/common/compositor/compositor.h"
 #include "services/common/regular_timer.h"
@@ -420,7 +421,7 @@ static NOINLINE void prv_main_task_init(void) {
   board_early_init();
 #endif
 
-  display_show_splash_screen();
+  boot_splash_start();
 
   kernel_applib_init();
 
@@ -492,7 +493,9 @@ static NOINLINE void prv_main_task_init(void) {
   display_set_offset(mfg_offset);
   // Log display offsets for use in contact support logs
   PBL_LOG(LOG_LEVEL_INFO, "MFG Display Offsets (%"PRIi16",%"PRIi16").", mfg_offset.x, mfg_offset.y);
-
+  
+  // Stop boot splash before initializing compositor
+  boot_splash_stop();
   // Can't use the compositor framebuffer until the compositor is initialized
   compositor_init();
   kernel_ui_init();
