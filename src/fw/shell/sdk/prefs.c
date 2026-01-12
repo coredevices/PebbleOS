@@ -296,3 +296,19 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
   prv_pref_set(PREF_KEY_LEGACY_APP_RENDER_MODE, &mode_value, sizeof(mode_value));
 }
 #endif
+
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return false;
+}
+
+void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
+  // Not used in SDK shell
+}
+
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return MenuScrollNoVibe;
+}
+
+void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
+  // Not used in SDK shell
+}
