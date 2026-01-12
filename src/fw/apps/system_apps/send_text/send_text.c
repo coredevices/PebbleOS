@@ -325,6 +325,9 @@ static void prv_init(void) {
 
     menu_layer_set_highlight_colors(&data->menu_layer, SEND_TEXT_APP_HIGHLIGHT_COLOR, GColorWhite);
     menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
+    menu_layer_set_scroll_wrap_around(&data->menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
+    menu_layer_set_scroll_vibe_on_wrap(&data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+    menu_layer_set_scroll_vibe_on_blocked(&data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
     layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
     StatusBarLayer *status_layer = &data->status_layer;
