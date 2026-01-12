@@ -261,6 +261,13 @@ def _generate_memory_layout(bld):
         # We allocate more RAM than standard snowy to support robert features (HRM, caching, etc).
         # 512k continuous block of RAM (256k more than standard snowy), plus a separate 64k of CCM.
         total_ram = (0x20000000, 512 * 1024)
+    elif bld.env.BOARD == 'spalding_gabbro':
+        app_ram_size_2x = APP_UNSUPPORTED
+        app_ram_size_3x = APP_RAM_SIZES['chalk']
+        app_ram_size_4x = APP_RAM_SIZES['gabbro']
+        # Spalding Gabbro needs STM32F4 with 512K RAM (like snowy_emery) for the larger 260x260 display.
+        # 512k continuous block of RAM, plus a separate 64k of CCM.
+        total_ram = (0x20000000, 512 * 1024)
     elif bld.is_snowy():
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['basalt']
@@ -374,10 +381,10 @@ def _generate_memory_layout(bld):
 
 
 def _link_firmware(bld, sources):
-    if bld.is_spalding():
-        sources += ['board/displays/display_spalding.c']
-    elif bld.is_getafix():
+    if bld.is_getafix() or bld.env.BOARD == 'spalding_gabbro':
         sources += ['board/displays/display_getafix.c']
+    elif bld.is_spalding():
+        sources += ['board/displays/display_spalding.c']
 
     fw_linkflags = ['-Wl,--cref',
                     '-Wl,-Map=tintin_fw.map',
@@ -510,6 +517,9 @@ def _gen_fpga_bitstream_header(bld):
     if bld.env.BOARD == 'snowy_emery':
         # Snowy Emery uses robert display, so use robert FPGA bitstream
         source_bitstream = '../../platform/robert/Robert_UL1K_framebuffer_bitmap.fpga'
+    elif bld.env.BOARD == 'spalding_gabbro':
+        # Spalding Gabbro uses getafix display, needs 260x260 round FPGA bitstream
+        source_bitstream = '../../platform/snowy/Spalding_Gabbro_260x260_framebuffer.fpga'
     elif bld.is_snowy():
         if bld.env.BOARD in ('snowy_bb', 'snowy_evt'):
             source_bitstream = '../../platform/snowy/snowy_framebuffer_evt.fpga'
@@ -702,7 +712,7 @@ def _build_normal(bld):
             excludes.append('process_management/app_menu_data_source.c')
     else:
         source_dirs.extend(('apps/%s/**' % d for d in ('system_apps', 'watch')))
-        if bld.is_spalding():
+        if bld.is_spalding() and bld.env.BOARD != 'spalding_gabbro':
             excludes.append('apps/watch/tictoc/default')
         else:
             excludes.append('apps/watch/tictoc/spalding')
