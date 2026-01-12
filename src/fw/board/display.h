@@ -46,6 +46,8 @@ typedef struct {
 #include "displays/display_snowy.h"
 #elif BOARD_SNOWY_EMERY
 #include "displays/display_robert.h"
+#elif BOARD_SPALDING_GABBRO
+#include "displays/display_getafix.h"
 #elif BOARD_SPALDING_BB2
 #include "displays/display_spalding.h"
 #elif BOARD_SPALDING_EVT

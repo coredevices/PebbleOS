@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
 
 #include "display_calibration_prompt.h"
 

@@ -206,11 +206,7 @@ static GColor* prv_allocate_palette(GBitmapFormat format) {
   ((format) == GBitmapFormat8BitCircular && (size).w == DISP_COLS && (size).h == DISP_ROWS)
 
 T_STATIC size_t prv_gbitmap_size_for_data(GSize size, GBitmapFormat format) {
-#if PLATFORM_SPALDING
-  if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
-    return DISPLAY_FRAMEBUFFER_BYTES;
-  }
-#elif PLATFORM_GETAFIX
+#if PLATFORM_SPALDING || PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
   if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
     return DISPLAY_FRAMEBUFFER_BYTES;
   }
@@ -247,11 +243,11 @@ static GBitmap* prv_gbitmap_create_blank(GSize size, GBitmapFormat format) {
       return NULL;
     }
 
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
     if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
       bitmap->data_row_infos = g_gbitmap_spalding_data_row_infos;
     }
-#elif PLATFORM_GETAFIX
+#elif PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
     if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
       bitmap->data_row_infos = g_gbitmap_getafix_data_row_infos;
     }

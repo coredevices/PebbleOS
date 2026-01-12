@@ -16,7 +16,12 @@ typedef enum PlatformType {
 // Unit tests and the firmware don't define the SDK platform defines because reasons.
 // Therefore, we need to switch on the platform for the platform type.
 #if !defined(SDK)
-  #if PLATFORM_TINTIN
+  // Variant boards should go before their base platforms, as they define the base platform too.
+  #if PLATFORM_SNOWY_EMERY
+    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
+  #elif PLATFORM_SPALDING_GABBRO
+    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
+  #elif PLATFORM_TINTIN
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeAplite
   #elif PLATFORM_SNOWY
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeBasalt

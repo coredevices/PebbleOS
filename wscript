@@ -38,6 +38,7 @@ RUNNERS = {
     'snowy_dvt': ['openocd'],
     'snowy_s3': ['openocd'],
     'snowy_emery': ['openocd'],
+    'spalding_gabbro': ['openocd'],
     'spalding_bb2': ['openocd'],
     'spalding_evt': ['openocd'],
     'spalding': ['openocd'],
@@ -103,6 +104,7 @@ def options(opt):
                              'snowy_dvt',
                              'snowy_s3',
                              'snowy_emery',  # snowy with robert screen and resources
+                             'spalding_gabbro',  # spalding with getafix screen and resources
                              'spalding_bb2',  # snowy_bb2 with s4 display
                              'spalding_evt',
                              'spalding',
@@ -506,6 +508,9 @@ def configure(conf):
     elif conf.options.board == 'snowy_emery':
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
+    elif conf.options.board == 'spalding_gabbro':
+        conf.env.PLATFORM_NAME = 'gabbro'
+        conf.env.MIN_SDK_VERSION = 4
     elif conf.is_snowy_compatible():
         conf.env.PLATFORM_NAME = 'basalt'
         conf.env.MIN_SDK_VERSION = 2

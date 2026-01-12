@@ -21,10 +21,10 @@ uint8_t *framebuffer_get_line(FrameBuffer *f, uint16_t y) {
   PBL_ASSERTN(!gsize_equal(&f->size, &GSizeZero));
   PBL_ASSERTN(y < f->size.h);
 
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
   const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_spalding_data_row_infos;
   const size_t offset = row_infos[y].offset;
-#elif PLATFORM_GETAFIX
+#elif PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
   const GBitmapDataRowInfoInternal *row_infos;
   if (f->size.w == LEGACY_3X_DISP_COLS && f->size.h == LEGACY_3X_DISP_ROWS) {
     row_infos = g_gbitmap_getafix_legacy_3x_data_row_infos;
@@ -43,9 +43,7 @@ inline size_t framebuffer_get_size_bytes(FrameBuffer *f) {
   // TODO: Make FRAMEBUFFER_SIZE_BYTES a macro which takes the cols and rows if we ever want
   // to support different size framebuffers for round displays or other displays where the 8-bit
   // framebuffer size is not just COLS * ROWS.
-#if PLATFORM_SPALDING
-  return FRAMEBUFFER_SIZE_BYTES;
-#elif PLATFORM_GETAFIX
+#if PLATFORM_SPALDING || PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
   return FRAMEBUFFER_SIZE_BYTES;
 #else
   return (size_t)f->size.w * (size_t)f->size.h;

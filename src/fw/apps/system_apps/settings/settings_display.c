@@ -164,7 +164,7 @@ static void prv_timeout_menu_push(SettingsDisplayData *data) {
 
 // Legacy App Mode Settings (Obelix only)
 /////////////////////////////
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_SNOWY_EMERY || PLATFORM_SPALDING_GABBRO
 static const char *s_legacy_app_mode_labels[] = {
     i18n_noop("Centered"),
     i18n_noop("Scaled")
@@ -204,10 +204,10 @@ enum SettingsDisplayItem {
 #endif
   SettingsDisplayBacklightIntensity,
   SettingsDisplayBacklightTimeout,
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
   SettingsDisplayAdjustAlignment,
 #endif
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_SNOWY_EMERY || PLATFORM_SPALDING_GABBRO
   SettingsDisplayLegacyAppMode,
 #endif
   NumSettingsDisplayItems
@@ -260,12 +260,12 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case SettingsDisplayBacklightTimeout:
       prv_timeout_menu_push(data);
       break;
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
     case SettingsDisplayAdjustAlignment:
       settings_display_calibration_push(app_state_get_window_stack());
       break;
 #endif
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_SNOWY_EMERY || PLATFORM_SPALDING_GABBRO
     case SettingsDisplayLegacyAppMode:
       prv_legacy_app_mode_menu_push(data);
       break;
@@ -360,12 +360,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Timeout");
       subtitle = s_timeout_labels[prv_timeout_get_selection_index()];
       break;
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
     case SettingsDisplayAdjustAlignment:
       title = i18n_noop("Screen Alignment");
       break;
 #endif
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_SNOWY_EMERY || PLATFORM_SPALDING_GABBRO
     case SettingsDisplayLegacyAppMode:
       title = i18n_noop("Legacy Apps");
       subtitle = (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) ?
