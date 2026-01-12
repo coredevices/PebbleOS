@@ -570,13 +570,8 @@ void display_show_panic_screen(uint32_t error_code) {
   mutex_unlock(s_display_update_mutex);
 }
 
-void display_show_splash_screen(void) {
-  // Assumes that the FPGA is already in bootloader mode but the SPI peripheral
-  // and GPIOs are not yet configured; exactly the state that the system is
-  // expected to be in before display_init() is called.
-  display_start();
-  display_spi_configure_default();
-  boot_display_show_boot_splash();
+void display_update_boot_frame(uint8_t *framebuffer) {
+  // On ice40lp, there is only one splash screen, and we handle that in the boot splash service.
 }
 
 void display_set_offset(GPoint offset) {

@@ -336,43 +336,11 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   prv_display_update_start();
 }
 
-void display_show_splash_screen(void) {
-  const DisplayJDISplash *splash = &DISPLAY->splash;
-  uint16_t x0, y0;
-
-  if (splash->data == NULL) {
-    return;
-  }
-
-  if (splash->width > PBL_DISPLAY_WIDTH || splash->height > PBL_DISPLAY_HEIGHT) {
-    return;
-  }
-
-  display_init();
-
-  // Allocate temporary framebuffer for splash screen
-  // This is only called during boot when heap has plenty of space
-  uint8_t *temp_fb = kernel_malloc(DISPLAY_FRAMEBUFFER_BYTES);
-  if (!temp_fb) {
-    return;
-  }
-
-  memset(temp_fb, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
-
-  x0 = (PBL_DISPLAY_WIDTH - splash->width) / 2;
-  y0 = (PBL_DISPLAY_HEIGHT - splash->height) / 2;
-  for (uint16_t y = 0U; y < splash->height; y++) {
-    for (uint16_t x = 0U; x < splash->width; x++) {
-      if (splash->data[y * (splash->width / 8) + x / 8] & (0x1U << (x & 7))) {
-        temp_fb[(y + y0) * PBL_DISPLAY_WIDTH + (x + x0)] = 0x00;
-      }
-    }
-  }
-
+void display_update_boot_frame(uint8_t *framebuffer) {
 #if DISPLAY_ORIENTATION_ROTATED_180
   // HMirror in software (VMirror is done by hardware)
   for (uint16_t y = 0; y < PBL_DISPLAY_HEIGHT; y++) {
-    uint8_t *row = &temp_fb[y * PBL_DISPLAY_WIDTH];
+    uint8_t *row = &framebuffer[y * PBL_DISPLAY_WIDTH];
     for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
       uint8_t tmp = row[x];
       row[x] = row[PBL_DISPLAY_WIDTH - 1 - x];
@@ -381,7 +349,7 @@ void display_show_splash_screen(void) {
   }
 #endif
 
-  s_framebuffer = temp_fb;
+  s_framebuffer = framebuffer;
   s_update_y0 = 0;
   s_update_y1 = PBL_DISPLAY_HEIGHT - 1;
 
@@ -389,9 +357,6 @@ void display_show_splash_screen(void) {
   prv_display_update_start();
   xSemaphoreTake(s_sem, portMAX_DELAY);
   stop_mode_enable(InhibitorDisplay);
-  
-  kernel_free(temp_fb);
-  s_framebuffer = NULL;
 }
 
 void display_pulse_vcom(void) {}

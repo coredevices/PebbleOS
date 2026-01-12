@@ -53,6 +53,7 @@ master_capability_set = {
     'HAS_SPEAKER',
     'HAS_ACCEL_SENSITIVITY',
     'HAS_APP_SCALING',
+    'HAS_FPGA_DISPLAY',
 }
 
 board_capability_dicts = [
@@ -98,6 +99,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
+            'HAS_FPGA_DISPLAY',
         },
     },
     {
@@ -124,6 +126,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
+            'HAS_FPGA_DISPLAY',
         },
     },
     {
@@ -152,6 +155,7 @@ board_capability_dicts = [
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
+            'HAS_FPGA_DISPLAY',
             'HAS_APP_SCALING'
         }
     },
@@ -177,6 +181,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
+            'HAS_FPGA_DISPLAY',
         },
     },
     {
@@ -201,6 +206,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
+            'HAS_FPGA_DISPLAY',
         },
     },
     {
@@ -228,6 +234,7 @@ board_capability_dicts = [
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
+            'HAS_FPGA_DISPLAY',
             'HAS_APP_SCALING'
         },
     },
@@ -300,6 +307,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
+            'HAS_FPGA_DISPLAY',
             'HAS_APP_SCALING'
         }
     },
@@ -326,6 +334,7 @@ board_capability_dicts = [
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
             'HAS_TOUCHSCREEN',
+            'HAS_FPGA_DISPLAY',
             'HAS_APP_SCALING'
         }
     },

@@ -17,8 +17,11 @@ typedef struct {
 typedef bool(*NextRowCallback)(DisplayRow* row);
 typedef void(*UpdateCompleteCallback)(void);
 
-//! Show the splash screen before the display has been fully initialized.
-void display_show_splash_screen(void);
+//! Update the display with a boot animation frame.
+//! This is a simple interface for the boot animation service to send frames
+//! to the display before the compositor is initialized.
+//! @param framebuffer Pointer to the framebuffer data (DISPLAY_FRAMEBUFFER_BYTES)
+void display_update_boot_frame(uint8_t *framebuffer);
 
 void display_init(void);
 

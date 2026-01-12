@@ -377,7 +377,7 @@ static void prv_setup_dma_transfer(uint8_t *framebuffer_addr, int framebuffer_si
                            prv_dma_handler, NULL);
 }
 
-void display_show_splash_screen(void) {
+void display_update_boot_frame(uint8_t *framebuffer) {
   // The bootloader has already drawn the splash screen for us; nothing to do!
 }
 
