@@ -5,7 +5,11 @@
 
 #include "board/board.h"
 #include "drivers/i2c.h"
+#include "services/common/new_timer/new_timer.h"
+#include "system/logging.h"
 #include "system/passert.h"
+
+#define AW2016_HEALTH_CHECK_INTERVAL_MS 100
 
 #define AW2016_REG_RSTR 0x00U
 #define AW2016_REG_RSTR_CHIP_ID 0x09U
@@ -15,6 +19,9 @@
 #define AW2016_REG_GCR1_CHGDIS_DIS (1U << 1U)
 #define AW2016_REG_GCR1_CHIPEN_EN (1U << 0U)
 #define AW2016_REG_GCR1_CHIPEN_DIS 0U
+
+#define AW2016_REG_ISR 0x02U
+#define AW2016_REG_ISR_PUIS (1U << 0U)  // Power-up interrupt status (read clears)
 
 #define AW2016_REG_GCR2 0x04U
 #define AW2016_REG_GCR2_IMAX_15MA 0U
@@ -42,6 +49,26 @@
 
 static uint8_t s_brightness;
 static uint32_t s_rgb_current_color = LED_SOFT_WHITE;
+static TimerID s_health_check_timer;
+
+// Forward declarations for timer callback
+static bool prv_check_and_recover_if_reset(void);
+
+static void prv_health_check_timer_callback(void *data) {
+  if (s_brightness == 0U) {
+    return;
+  }
+
+  if (prv_check_and_recover_if_reset()) {
+    PBL_LOG(LOG_LEVEL_WARNING, "AW2016 reset detected, recovered");
+    // Reapply current color after recovery
+    led_controller_rgb_set_color(s_rgb_current_color);
+  }
+
+  // Reschedule while backlight is on
+  new_timer_start(s_health_check_timer, AW2016_HEALTH_CHECK_INTERVAL_MS,
+                  prv_health_check_timer_callback, NULL, 0);
+}
 
 static bool prv_read_register(uint8_t register_address, uint8_t *value) {
   bool ret;
@@ -74,6 +101,23 @@ static bool prv_configure_registers(void) {
   return ret;
 }
 
+// Check if chip reset (PUIS=1) and recover if needed. Returns true if recovery was performed.
+static bool prv_check_and_recover_if_reset(void) {
+  uint8_t isr;
+  if (!prv_read_register(AW2016_REG_ISR, &isr)) {
+    return false;
+  }
+
+  if (isr & AW2016_REG_ISR_PUIS) {
+    // Chip has reset - re-enable and reconfigure
+    prv_write_register(AW2016_REG_GCR1,
+                       AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+    prv_configure_registers();
+    return true;
+  }
+  return false;
+}
+
 void led_controller_init(void) {
   uint8_t value;
   bool ret;
@@ -86,6 +130,8 @@ void led_controller_init(void) {
 
   ret = prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS);
   PBL_ASSERTN(ret);
+
+  s_health_check_timer = new_timer_create();
 }
 
 void led_controller_backlight_set_brightness(uint8_t brightness) {
@@ -95,7 +141,13 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
     brightness = 100U;
   }
 
-  if (s_brightness == brightness) {
+  // Check if chip reset while we thought it was on - recover if needed
+  bool recovered = false;
+  if (s_brightness != 0U) {
+    recovered = prv_check_and_recover_if_reset();
+  }
+
+  if (s_brightness == brightness && !recovered) {
     return;
   }
 
@@ -103,11 +155,14 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
   s_brightness = brightness;
 
   if (brightness == 0U) {
+    // Stop health check timer when turning off
+    new_timer_stop(s_health_check_timer);
+
     ret = prv_write_register(AW2016_REG_GCR1,
                              AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_DIS);
     PBL_ASSERTN(ret);
   } else {
-    if (previous_brightness == 0U) {
+    if (previous_brightness == 0U && !recovered) {
       ret = prv_write_register(AW2016_REG_GCR1,
                                AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
       ret &= prv_configure_registers();
@@ -115,6 +170,17 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
     }
 
     led_controller_rgb_set_color(s_rgb_current_color);
+
+    // Verify chip didn't reset during configuration (e.g., from inrush current)
+    if (prv_check_and_recover_if_reset()) {
+      led_controller_rgb_set_color(s_rgb_current_color);
+    }
+
+    // Start health check timer when turning on
+    if (previous_brightness == 0U) {
+      new_timer_start(s_health_check_timer, AW2016_HEALTH_CHECK_INTERVAL_MS,
+                      prv_health_check_timer_callback, NULL, 0);
+    }
   }
 }
 
