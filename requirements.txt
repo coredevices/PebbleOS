@@ -35,3 +35,4 @@ pathlib
 -e python_libs/pebble-commander
 -e python_libs/pulse2
 -e python_libs/pebble-loghash
+clang
