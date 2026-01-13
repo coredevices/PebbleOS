@@ -69,10 +69,23 @@ def load_library():
                 os.path.join(xcode_path,
                              'Toolchains/XcodeDefault.xctoolchain/usr/lib')
         clang.cindex.conf.set_library_path(libclang_path)
-    elif sys.platform == 'linux2':
-        libclang_path = subprocess.check_output(['llvm-config',
-                                                 '--libdir']).decode("utf8").strip()
-        clang.cindex.conf.set_library_path(libclang_path)
+    elif sys.platform.startswith('linux'):
+        # Python 3 uses 'linux', Python 2 used 'linux2'
+        try:
+            libclang_path = subprocess.check_output(['llvm-config',
+                                                     '--libdir']).decode("utf8").strip()
+            clang.cindex.conf.set_library_path(libclang_path)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            # llvm-config not found, try common library paths
+            for lib_path in ['/usr/lib', '/usr/lib/llvm', '/usr/lib/x86_64-linux-gnu',
+                             '/usr/local/lib', '/opt/llvm/lib']:
+                if os.path.exists(os.path.join(lib_path, 'libclang.so')):
+                    clang.cindex.conf.set_library_path(lib_path)
+                    logging.info(f"Found libclang at {lib_path}")
+                    break
+            else:
+                # Last resort: let the python clang bindings try to find it
+                logging.warning("Could not locate libclang, relying on default search paths")
 
     libclang_lib = clang.cindex.conf.lib
 
