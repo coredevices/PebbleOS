@@ -448,8 +448,8 @@ static bool prv_write_data(DataLoggingSessionStorage *storage, const void *data,
 // -----------------------------------------------------------------------------------------
 // Migrate a session's data to a new file, removing already consumed bytes from the front
 static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) {
-  bool success;
-  uint8_t *tmp_buf = NULL;
+  bool success = false;
+  uint8_t *data_buf = NULL;
 
   // Record in metrics
   analytics_inc(ANALYTICS_DEVICE_METRIC_DATA_LOGGING_REALLOC_COUNT, AnalyticsClient_System);
@@ -462,65 +462,66 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
             "Before compaction: num_bytes: %"PRIu32", write_offset:%"PRIu32,
             session->storage.num_bytes, session->storage.write_offset);
 
-  // Init a storage struct and create a new file for the compacted data
+  int32_t bytes_to_copy = session->storage.num_bytes;
+  if (bytes_to_copy == 0) {
+    // No data to copy, just delete the old file and we're done
+    dls_storage_delete_logging_storage(session);
+    success = true;
+    goto exit;
+  }
+
+  // Allocate buffer for all data to copy
+  // We need to read ALL data before opening the temp file, because PFS blocks opening
+  // the original file while a temp file with the same name is open (crash prevention).
+  data_buf = kernel_malloc(bytes_to_copy);
+  if (!data_buf) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory for reallocation buffer (%"PRId32" bytes)",
+            bytes_to_copy);
+    goto exit;
+  }
+
+  // Read all data from the original file into our buffer
+  uint32_t new_read_offset;
+  int32_t bytes_read = dls_storage_read(session, data_buf, bytes_to_copy, &new_read_offset);
+  if (bytes_read != bytes_to_copy) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read all data: expected %"PRId32", got %"PRId32,
+            bytes_to_copy, bytes_read);
+    goto exit;
+  }
+
+  // Consume the data from the original file
+  // Note: dls_storage_consume() opens and closes the session file internally
+  if (dls_storage_consume(session, bytes_read) < 0) {
+    goto exit;
+  }
+
+  // At this point, session->storage.fd should be DLS_INVALID_FILE because
+  // dls_storage_consume() closes the file at the end
+
+  // Now create the new file with OVERWRITE (temp file that will replace original)
   DataLoggingSessionStorage new_storage = {
     .fd = DLS_INVALID_FILE,
   };
-  success = prv_open_file(&new_storage, OP_FLAG_OVERWRITE | OP_FLAG_READ, new_size,
-                          session);
-  if (!success) {
+  if (!prv_open_file(&new_storage, OP_FLAG_OVERWRITE | OP_FLAG_READ, new_size, session)) {
     PBL_LOG(LOG_LEVEL_ERROR, "Could not create temporary file to migrate storage file");
     goto exit;
   }
 
-  // Copy data in chunks from the old file to the new one. Things go faster with a bigger buffer.
-  success = false;
-  // We have to make sure we have at least 1 delineated item within each DLS_ENDPOINT_MAX_PAYLOAD
-  // bytes and clipping max_chunk_size to DLS_ENDPOINT_MAX_PAYLOAD insures that. If we didn't clip
-  // it and the item size was 645 for example, we might pack 2 items back to back in storage
-  // using DLS_MAX_CHUNK_SIZE_BYTES (100) byte chunks and dls_private_send_session() wouldn't be
-  // able to get a complete single item because we wrote 1290 bytes using DLS_MAX_CHUNK_SIZE_BYTES
-  // byte chunks and there is no chunk boundary at the 645 byte offset.
+  // Write the buffered data to the new file
+  // We write in chunks to maintain proper DLS chunk headers
   int32_t max_chunk_size = DLS_ENDPOINT_MAX_PAYLOAD;
-  while (true) {
-    tmp_buf = kernel_malloc(max_chunk_size);
-    if (tmp_buf) {
-      break;
-    }
-    if (max_chunk_size < 256) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory for reallocation");
+  int32_t bytes_written = 0;
+  while (bytes_written < bytes_read) {
+    int32_t chunk_size = MIN(max_chunk_size, bytes_read - bytes_written);
+    if (!prv_write_data(&new_storage, data_buf + bytes_written, chunk_size)) {
+      pfs_close_and_remove(new_storage.fd);
+      new_storage.fd = DLS_INVALID_FILE;
       goto exit;
     }
-    max_chunk_size /= 2;
+    bytes_written += chunk_size;
   }
 
-  int32_t bytes_to_copy = session->storage.num_bytes;
-  while (bytes_to_copy) {
-    uint32_t new_read_offset;
-    int32_t bytes_read = dls_storage_read(session, tmp_buf, MIN(max_chunk_size, bytes_to_copy),
-                                          &new_read_offset);
-    if (bytes_read <= 0) {
-      goto exit;
-    }
-
-    // Write to new file
-    if (!prv_write_data(&new_storage, tmp_buf, bytes_read)) {
-      goto exit;
-    }
-
-    // Consume out of old one now.
-    if (dls_storage_consume(session, bytes_read) < 0) {
-      goto exit;
-    }
-
-    bytes_to_copy -= bytes_read;
-  }
-
-  // We successfully transferred the unread data to the new storage, place it into the session
-  // info
-  pfs_close(session->storage.fd);
-
-  // Close the new file now. That will finish up the swap for us
+  // Close the new file - this commits the overwrite and replaces the original
   pfs_close(new_storage.fd);
   new_storage.fd = DLS_INVALID_FILE;
 
@@ -533,10 +534,7 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
   success = true;
 
 exit:
-  kernel_free(tmp_buf);
-  if (new_storage.fd != DLS_INVALID_FILE) {
-    pfs_close_and_remove(new_storage.fd);
-  }
+  kernel_free(data_buf);
 
   if (!success) {
     PBL_LOG(LOG_LEVEL_ERROR, "Migration failed of session file %d", session->comm.session_id);
