@@ -290,7 +290,8 @@ void test_resource__initialize(void) {
 }
 
 void test_resource__cleanup(void) {
-
+  // Clean up fake flash to prevent state leakage between test modules
+  fake_spi_flash_cleanup();
 }
 
 void test_resource__system_resource_init(void) {
