@@ -49,6 +49,9 @@ void test_graphics_draw_core__initialize(void) {
 
 // Teardown
 void test_graphics_draw_core__cleanup(void) {
+  // Reset fake state to prevent cross-test contamination
+  s_fake_data_row_handling = false;
+  s_fake_data_row_handling_disable_vertical_flip = false;
   free(fb);
 }
 
