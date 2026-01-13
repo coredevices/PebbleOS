@@ -502,15 +502,15 @@ def configure(conf):
     if conf.is_tintin():
         conf.env.PLATFORM_NAME = 'aplite'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_spalding():
-        conf.env.PLATFORM_NAME = 'chalk'
-        conf.env.MIN_SDK_VERSION = 3
     elif conf.options.board == 'snowy_emery':
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.options.board == 'spalding_gabbro':
         conf.env.PLATFORM_NAME = 'gabbro'
         conf.env.MIN_SDK_VERSION = 4
+    elif conf.is_spalding():
+        conf.env.PLATFORM_NAME = 'chalk'
+        conf.env.MIN_SDK_VERSION = 3
     elif conf.is_snowy_compatible():
         conf.env.PLATFORM_NAME = 'basalt'
         conf.env.MIN_SDK_VERSION = 2
