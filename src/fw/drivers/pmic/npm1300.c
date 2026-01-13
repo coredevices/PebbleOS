@@ -22,7 +22,6 @@
 
 #define CHARGER_DEBOUNCE_MS 400
 static TimerID s_debounce_charger_timer = TIMER_INVALID_ID;
-static PebbleMutex *s_i2c_lock;
 
 typedef enum {
   PmicRegisters_MAIN_EVENTSADCCLR = 0x0003,
@@ -162,24 +161,18 @@ uint32_t pmic_get_last_reset_reason(void) {
 }
 
 static bool prv_read_register(uint16_t register_address, uint8_t *result) {
-  mutex_lock(s_i2c_lock);
   i2c_use(I2C_NPM1300);
   uint8_t regad[2] = { register_address >> 8, register_address & 0xFF };
-  bool rv = i2c_write_block(I2C_NPM1300, 2, regad);
-  if (rv)
-    rv = i2c_read_block(I2C_NPM1300, 1, result);
+  bool rv = i2c_write_read_block(I2C_NPM1300, 2, regad, 1, result);
   i2c_release(I2C_NPM1300);
-  mutex_unlock(s_i2c_lock);
   return rv;
 }
 
 static bool prv_write_register(uint16_t register_address, uint8_t datum) {
-  mutex_lock(s_i2c_lock);
   i2c_use(I2C_NPM1300);
   uint8_t d[3] = { register_address >> 8, register_address & 0xFF, datum };
   bool rv = i2c_write_block(I2C_NPM1300, 3, d);
   i2c_release(I2C_NPM1300);
-  mutex_unlock(s_i2c_lock);
   return rv;
 }
 
@@ -234,7 +227,6 @@ bool pmic_init(void) {
   bool ok = true;
   uint8_t val;
 
-  s_i2c_lock = mutex_create();
   s_debounce_charger_timer = new_timer_create();
 
   // TODO(NPM1300): This needs to be configurable at board level
