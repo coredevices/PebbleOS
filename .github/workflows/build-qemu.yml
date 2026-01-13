@@ -27,6 +27,7 @@ jobs:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
 
     strategy:
+      fail-fast: false
       matrix:
         board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "silk_flint", "snowy_emery", "spalding_gabbro"]
 
