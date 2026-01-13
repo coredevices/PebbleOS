@@ -100,7 +100,7 @@ static bool prv_should_set_first_event(PeekUpdateContext *update,
     // Check if new event overlaps with now (event is active or will be active)
     const time_t new_start = header->common.timestamp;
     const time_t new_end = new_start + (header->common.duration * SECONDS_PER_MINUTE);
-    if (now < new_end && new_start <= now + (s_peek_event_data.show_before_time_s)) {
+    if (now < new_end && new_start <= now + (time_t)(s_peek_event_data.show_before_time_s)) {
       return true;  // Non-persistent overlapping event becomes "first"
     }
   }
