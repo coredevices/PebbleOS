@@ -288,6 +288,7 @@ def build(ctx):
              " tests/fakes/fake_fonts.c"
              " tests/fakes/fake_graphics_context.c"
              " tests/fixtures/resources/timeline_resource_table.auto.c"
+             " tests/stubs/stubs_alerts_preferences.c"
              " tests/stubs/stubs_clock.c"
          ),
          test_sources_ant_glob = "test_notification_window.c",
@@ -425,6 +426,7 @@ def build(ctx):
              "tests/fakes/fake_fonts.c "
              "tests/fixtures/resources/timeline_resource_table.auto.c "
              "tests/stubs/stubs_app_manager.c "
+             "tests/stubs/stubs_alerts_preferences.c "
              "tests/stubs/stubs_clock.c "
              "tests/stubs/stubs_timeline_layout.c "
              "tests/stubs/stubs_timeline_peek.c "

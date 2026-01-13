@@ -160,7 +160,9 @@ def summary(bld):
                 # FIXME: Make UTF-8 print properly, see PBL-29528
                 print(ud.normalize('NFKD', out.decode('utf-8')))
                 print(ud.normalize('NFKD', err.decode('utf-8')))
-        raise Errors.WafError('test failed')
+        # Only raise error if continue_on_test_failure is not set
+        if not bld.options.continue_on_test_failure:
+            raise Errors.WafError('test failed')
 
 @taskgen_method
 @feature("test_product_source")
@@ -193,6 +195,11 @@ def build_product_source_files(bld, test_dir, include_paths, defines, cflags, pr
     h.update(Utils.h_list(include_paths))
     h.update(Utils.h_list(sorted(defines)))
     h.update(Utils.h_list(sorted(cflags)))
+    # Add platform name and color depth to cache hash to prevent cross-platform contamination
+    if 'PLATFORM_NAME' in bld.env:
+        h.update(bld.env['PLATFORM_NAME'].encode('utf-8'))
+    if 'SCREEN_COLOR_DEPTH_BITS' in bld.env:
+        h.update(bld.env['SCREEN_COLOR_DEPTH_BITS'].encode('utf-8'))
     compile_args_hash_str = h.hexdigest()
 
     if not hasattr(bld, 'utest_product_sources'):
@@ -227,9 +234,9 @@ def build_product_source_files(bld, test_dir, include_paths, defines, cflags, pr
     return product_objects
 
 def get_bitdepth_for_platform(bld, platform):
-    if platform in ('snowy', 'spalding', 'robert', 'obelix'):
+    if platform in ('snowy', 'spalding', 'robert', 'obelix', 'silk'):
         return 8
-    elif platform in ('tintin', 'silk'):
+    elif platform in ('tintin',):
         return 1
     else:
         bld.fatal('Unknown platform {}'.format(platform))
@@ -320,7 +327,8 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
                      "third_party/freertos",
                      "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
                      "third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
-                     "third_party/nanopb/nanopb" ]
+                     "third_party/nanopb/nanopb",
+                     "third_party/tinymt/TinyMT/tinymt" ]
 
     # Use Snowy's resource headers as a fallback if we don't override it here
     resource_override_dir_name = platform if platform in ('silk', 'robert') else 'snowy'

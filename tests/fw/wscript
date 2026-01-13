@@ -129,11 +129,13 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob = \
-         " src/fw/services/common/battery/battery_state.c " \
-         " src/fw/services/common/battery/battery_curve.c " \
+         " src/fw/services/common/battery/voltage/battery_state.c " \
+         " src/fw/services/common/battery/voltage/battery_curve.c " \
          " src/fw/services/common/battery/battery_monitor.c " \
+         " src/fw/services/common/regular_timer.c " \
          " tests/fakes/fake_battery.c " \
-         " tests/fakes/fake_rtc.c ",
+         " tests/fakes/fake_rtc.c " \
+         " tests/stubs/stubs_mutex.c ",
          test_sources_ant_glob = "test_battery_monitor.c",
          defines=['PLATFORM_SNOWY'],
          override_includes=['dummy_board'])
@@ -219,14 +221,16 @@ def build(ctx):
            " src/fw/process_management/pebble_process_md.c" \
            " src/fw/kernel/memory_layout.c" \
            " src/fw/kernel/util/segment.c" \
-           " tests/fakes/fake_rtc.c",
+           " tests/fakes/fake_rtc.c" \
+           " tests/stubs/stubs_watchface_metrics.c",
        test_sources_ant_glob = "test_app_manager.c",
        override_includes=['dummy_board'])
 
     clar(ctx,
        sources_ant_glob = \
            " src/fw/process_management/pebble_process_info.c" \
-           " src/fw/process_management/process_manager.c",
+           " src/fw/process_management/process_manager.c" \
+           " tests/stubs/stubs_watchface_metrics.c",
        test_sources_ant_glob = "test_process_manager.c",
        override_includes=['dummy_board'])
 

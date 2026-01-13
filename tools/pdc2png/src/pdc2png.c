@@ -175,13 +175,14 @@ static void prv_convert_pdc(const char *filename) {
     return;
   }
 
-  // Read size of data
-  size_t size;
-  if (fread(&size, sizeof(size), 1, f) != 1) {
+  // Read size of data (stored as 32-bit in file, size_t may be 64-bit)
+  uint32_t size_32;
+  if (fread(&size_32, sizeof(size_32), 1, f) != 1) {
     printf("Failed to read PDC size: %s\n", filename);
     fclose(f);
     return;
   }
+  size_t size = size_32;
 
   // Read data into memory
   void *data = malloc(size);

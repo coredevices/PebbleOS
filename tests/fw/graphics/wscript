@@ -664,7 +664,7 @@ def build(ctx):
         test_sources_ant_glob="test_graphics_draw_rotated_bitmap.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=["tintin", "snowy"])
+        platforms=["tintin", "snowy", "silk"])
 
     ###############################
     # 8-bit specific bitblt tests #

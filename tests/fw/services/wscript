@@ -468,7 +468,8 @@ def build(ctx):
         test_sources_ant_glob = "test_vibe.c")
 
     clar(ctx,
-         sources_ant_glob = "src/fw/services/normal/vibes/vibe_intensity.c",
+         sources_ant_glob = "src/fw/services/normal/vibes/vibe_intensity.c" \
+            " tests/stubs/stubs_alerts_preferences.c",
          test_sources_ant_glob = "test_vibe_intensity.c")
 
     clar(ctx,

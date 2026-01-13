@@ -109,7 +109,9 @@ def get_comment_range_for_decl(node):
     if source_range is None:
         if node.kind == clang.cindex.CursorKind.TYPEDEF_DECL:
             for child in node.get_children():
-                if is_node_kind_a_type_decl(child.kind) and len(get_node_spelling(child)) == 0:
+                # Use child.spelling and convert to str for proper comparison
+                child_spelling = str(child.spelling) if child.spelling else ""
+                if is_node_kind_a_type_decl(child.kind) and len(child_spelling) == 0:
                     source_range = get_comment_range(child)
 
     return source_range
@@ -142,7 +144,8 @@ def get_string_from_file(source_range):
 def dump_node(node, indent_level=0):
     spelling = node.spelling
     if node.kind == clang.cindex.CursorKind.MACRO_DEFINITION:
-        spelling = get_node_spelling(node)
+        # Convert CXString to Python string for printing
+        spelling = str(get_node_spelling(node)) if get_node_spelling(node) else ""
 
     print("%*s%s> %s" % (indent_level * 2, "", node.kind, spelling))
     print("%*sRange:   %s" % (4 + (indent_level * 2), "", str(node.extent)))
