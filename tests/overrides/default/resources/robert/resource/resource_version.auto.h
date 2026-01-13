@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-
 #pragma once
 
 //
@@ -9,7 +8,8 @@
 // DO NOT MODIFY
 //
 
+// Robert uses snowy's pbpack, so it needs snowy's CRC
 static const ResourceVersion SYSTEM_RESOURCE_VERSION = {
-  .crc = 3735539727,
+  .crc = 217382165,  // 0x0cf4fd15 (snowy's CRC)
   .timestamp = 0
 };
