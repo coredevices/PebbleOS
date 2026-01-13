@@ -32,8 +32,9 @@ def build(ctx):
             "third_party/tinymt/TinyMT/tinymt/tinymt32.c " \
             "tests/fakes/fake_spi_flash.c ",
         test_sources_ant_glob = "test_ancs_pebble_actions.c",
-        override_includes=['dummy_board'])
-    
+        override_includes=['dummy_board'],
+        platforms=['snowy', 'spalding', 'silk'])
+
     clar(ctx,
         sources_ant_glob =
             "src/fw/services/normal/timeline/actions_endpoint.c " \
@@ -45,5 +46,6 @@ def build(ctx):
             "src/fw/services/normal/timeline/timeline_actions.c " \
             "src/fw/util/time/time.c ",
         test_sources_ant_glob = "test_timeline_actions.c",
-        override_includes=['dummy_board'])
+        override_includes=['dummy_board'],
+        platforms=['snowy', 'spalding', 'silk'])
 # vim:filetype=python
