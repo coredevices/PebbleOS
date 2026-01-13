@@ -107,8 +107,7 @@ bool battery_is_usb_connected(void) {
 #define TO_SESSION_REF(x) ((HRMSessionRef)(long)(x))
 
 static const HRMData s_hrm_event_data = {
-  .led_current_ua = 243,
-
+  .features = HRMFeature_BPM,
   .hrm_bpm = 82,
   .hrm_quality = HRMQuality_Excellent,
 };
@@ -388,12 +387,11 @@ void test_hrm_manager__different_feature_callbacks(void) {
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
 
-  // Expect 4 events: 1 for BPM, 1 for LED, 2 for subscribing to all, none for no feature.
-  cl_assert_equal_i(s_event_count, 4);
+  // Expect 1 event: BPM data for BPM subscriber (no-feature subscriber gets nothing)
+  // Note: subscriptions don't generate events, only data delivery does
+  cl_assert_equal_i(s_event_count, 1);
 
   sys_hrm_manager_unsubscribe(bpm_session);
-  sys_hrm_manager_unsubscribe(led_session);
-  sys_hrm_manager_unsubscribe(all_session);
   sys_hrm_manager_unsubscribe(no_session);
 }
 
@@ -410,8 +408,8 @@ void test_hrm_manager__multiple_feature_callbacks(void) {
 
   prv_fake_send_new_data();
 
-  // Two events for each app subscriber
-  cl_assert_equal_i(s_event_count, num_refs * 2);
+  // One data event for each BPM subscriber (subscriptions don't generate events)
+  cl_assert_equal_i(s_event_count, num_refs);
 
   for (int i = 0; i < num_refs; ++i) {
     sys_hrm_manager_unsubscribe(session_refs[i]);
@@ -475,10 +473,10 @@ void test_hrm_manager__multiple_system_task_data_callbacks(void) {
   cl_assert_equal_i(s_cb_events_1[0].bpm.bpm, s_hrm_event_data.hrm_bpm);
   cl_assert_equal_i(s_cb_events_1[0].bpm.quality, s_hrm_event_data.hrm_quality);
 
-  cl_assert_equal_i(s_num_cb_events_1, 1);
-  cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
-  cl_assert_equal_i(s_cb_events_1[0].bpm.bpm, s_hrm_event_data.hrm_bpm);
-  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, s_hrm_event_data.hrm_quality);
+  cl_assert_equal_i(s_num_cb_events_2, 1);
+  cl_assert_equal_i(s_cb_events_2[0].event_type, HRMEvent_BPM);
+  cl_assert_equal_i(s_cb_events_2[0].bpm.bpm, s_hrm_event_data.hrm_bpm);
+  cl_assert_equal_i(s_cb_events_2[0].bpm.quality, s_hrm_event_data.hrm_quality);
 
   sys_hrm_manager_unsubscribe(session_ref_1);
   sys_hrm_manager_unsubscribe(session_ref_2);

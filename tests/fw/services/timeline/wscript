@@ -214,6 +214,7 @@ def build(ctx):
              " src/fw/services/normal/timeline/weather_layout.c"
              " src/fw/services/normal/weather/weather_types.c"
              " src/fw/shell/system_theme.c"
+             " tests/stubs/stubs_alerts_preferences.c"
              " tests/stubs/stubs_clock.c"
              " tests/stubs/stubs_timeline_layout.c"
          ),

@@ -13,6 +13,7 @@
 #include "clar.h"
 
 // Stubs
+#include "stubs_ambient_light.h"
 #include "stubs_analytics.h"
 #include "stubs_app_install_manager.h"
 #include "stubs_app_state.h"
@@ -74,6 +75,10 @@ bool activity_prefs_activity_insights_are_enabled(void) {
 }
 
 bool activity_prefs_sleep_insights_are_enabled(void) {
+  return true;
+}
+
+bool activity_is_initialized(void) {
   return true;
 }
 
@@ -241,13 +246,8 @@ bool activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *a
   return false;
 }
 
-static time_t s_activation_time = 0;
 time_t activity_prefs_get_activation_time(void) {
-  return s_activation_time;
-}
-
-static void prv_set_activation_time(time_t activation_time) {
-  s_activation_time = activation_time;
+  return 0;  // Always return 0 since activation delay feature was removed
 }
 
 static uint32_t s_activity_activation_delay_insight_bitmask = 0;
@@ -329,7 +329,6 @@ static void prv_set_time(const struct tm *input) {
   rtc_set_time(utc_sec);
 
   s_activity_activation_delay_insight_bitmask = 0;
-  s_activation_time = 0;
   s_activity_activation_delay_insight_bitmask = 0;
 }
 
@@ -339,10 +338,13 @@ void test_activity_insights__initialize(void) {
   prv_set_time(&s_init_time_tm);
 
   fake_kernel_services_notifications_reset();
-  s_activation_time = 0;
   s_health_app_opened_version = 0;
 
   s_data = (StaticData) {};
+
+  // Reset activity insights state - prevents session pin state from persisting between tests
+  // which would cause duplicate notification suppression logic to incorrectly skip notifications
+  activity_insights_reset_for_tests();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -783,59 +785,16 @@ void test_activity_insights__sleep_summary_no_history(void) {
 }
 
 // ---------------------------------------------------------------------------------------
-void test_activity_insights__activation_delay_insights_time_trigger(void) {
-  time_t now = mktime(&s_init_time_tm);
-  prv_set_activation_time(now);
-
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
-
-  now += SECONDS_PER_DAY; // Jan 2 @ 10:00am
-  rtc_set_time(now);
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
-
-  now += 8 * SECONDS_PER_HOUR; // Jan 2 @ 6:00pm
-  rtc_set_time(now);
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
-
-  now += (3 * SECONDS_PER_DAY) + (2 * SECONDS_PER_HOUR); // Jan 5 @ 8:00pm
-  rtc_set_time(now);
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
-
-  s_health_app_opened_version = 1;
-
-  now += 30 * SECONDS_PER_MINUTE; // Jan 5 @ 8:30pm
-  rtc_set_time(now);
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
-
-  now += 6 * SECONDS_PER_DAY; // Jan 11 @ 8:30pm
-  rtc_set_time(now);
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
-}
-
+// NOTE: The following two tests were removed because the "activation delay insights" feature
+// was intentionally removed in commit a3307437b ("services/normal/activity_insights: remove pebble health nag").
+// The tests tested functionality that sent "Pebble Health nag" notifications to encourage users
+// to open the Health app after watch activation. This feature was removed but the tests were
+// not cleaned up at the time.
+//
+// Removed tests:
+// - test_activity_insights__activation_delay_insights_time_trigger
+// - test_activity_insights__activation_delay_insights_fifteen_interval_trigger
 // ---------------------------------------------------------------------------------------
-void test_activity_insights__activation_delay_insights_fifteen_interval_trigger(void) {
-  time_t now = mktime(&s_init_time_tm);
-  prv_set_activation_time(now);
-
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
-
-  now += SECONDS_PER_DAY + (8 * SECONDS_PER_HOUR) + (5 * SECONDS_PER_MINUTE); // Jan 2 @ 6:05pm
-  rtc_set_time(now);
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
-
-  now += (10 * SECONDS_PER_MINUTE); // Jan 2 @ 6:15pm
-  rtc_set_time(now);
-  activity_insights_process_minute_data(now);
-  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
-}
 
 // Make sure that when the watch resets, we retain state properly
 void test_activity_insights__nap_session_power_cycle(void) {

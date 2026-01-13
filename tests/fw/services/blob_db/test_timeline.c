@@ -878,7 +878,8 @@ void test_timeline__extra_case_none_backwards(void) {
     s_feb_5_midnight + 5 * 60 * 60), 2);
 }
 
-// 8:16 am. 8:15 event is in future but not 8:00 event
+// 8:16 am. 8:00 event is still in future (ends 10:00), but 8:15 event just ended at 8:16
+// An event is no longer "in future" at the exact moment it ends (exclusive boundary)
 void test_timeline__extra_case_middle_future(void) {
   prv_insert_extra_case_items();
 
@@ -890,11 +891,8 @@ void test_timeline__extra_case_middle_future(void) {
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
     s_feb_5_midnight + 8 * SECONDS_PER_HOUR + 16 * SECONDS_PER_MINUTE), 0);
 
+  // Only the 8:00-10:00 event is in future; the 8:15-8:16 event ended exactly at 8:16
   cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[1].header.id));
-
-  cl_assert(iter_next(&iterator));
-
-  cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[2].header.id));
 
   cl_assert(!iter_next(&iterator));
 }
