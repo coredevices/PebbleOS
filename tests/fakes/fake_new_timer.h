@@ -46,6 +46,9 @@ typedef struct StubTimer {
 static ListNode *s_running_timers = NULL;
 static ListNode *s_idle_timers = NULL;
 
+// Timer ID counter - needs to be visible for reset
+static int s_stub_next_timer_id = 1;
+
 // Call counters
 static int s_num_new_timer_create_calls = 0;
 static int s_num_new_timer_start_calls = 0;
@@ -100,9 +103,8 @@ static int prv_timer_expire_compare_func(void* a, void* b) {
 
 static int stub_new_timer_create(void) {
   StubTimer *timer = (StubTimer *) kernel_malloc(sizeof(StubTimer));
-  static int s_next_timer_id = 1;
   *timer = (StubTimer) {
-    .id = s_next_timer_id++,
+    .id = s_stub_next_timer_id++,
   };
   s_idle_timers = list_insert_before(s_idle_timers, &timer->list_node);
   return timer->id;
@@ -253,6 +255,14 @@ void stub_new_timer_cleanup(void) {
     node = next;
   }
   PBL_ASSERTN(s_idle_timers == NULL);
+
+  // Reset all state for clean test execution
+  s_stub_next_timer_id = 1;
+  s_num_new_timer_create_calls = 0;
+  s_num_new_timer_start_calls = 0;
+  s_num_new_timer_stop_calls = 0;
+  s_num_new_timer_delete_calls = 0;
+  s_num_new_timer_schedule_calls = 0;
 }
 
 TimerID stub_new_timer_get_next(void) {

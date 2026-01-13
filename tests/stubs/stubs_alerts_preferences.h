@@ -5,7 +5,3 @@
 
 #include "services/normal/notifications/alerts_preferences_private.h"
 #include "services/normal/vibes/vibe_intensity.h"
-
-VibeIntensity alerts_preferences_get_vibe_intensity(void) {
-  return DEFAULT_VIBE_INTENSITY;
-}
