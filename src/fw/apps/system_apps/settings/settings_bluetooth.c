@@ -29,6 +29,7 @@
 #include "services/common/i18n/i18n.h"
 #include "services/common/system_task.h"
 #include "services/normal/bluetooth/ble_hrm.h"
+#include "shell/system_theme.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/string.h"
@@ -522,11 +523,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       ctx->draw_state.clip_box = ctx->dest_bitmap.bounds;
 
       graphics_context_set_text_color(ctx, GColorBlack);
-      GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+      GFont font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
+      const int16_t horizontal_inset = menu_cell_basic_horizontal_inset() * 3;
       GRect box = cell_layer->bounds;
-      box.origin.x = 15;
+      box.origin.x = horizontal_inset;
       box.origin.y = menu_cell_basic_cell_height() + (int16_t)9;
-      box.size.w -= 30;
+      box.size.w -= horizontal_inset * 2;
       box.size.h = 83;
 
       if (!data->remote_list_head) {
