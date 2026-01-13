@@ -15,12 +15,15 @@
 #include "drivers/periph_config.h"
 #include "kernel/events.h"
 #include "kernel/util/delay.h"
+#include "kernel/util/sleep.h"
 #include "os/mutex.h"
 #include "services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
 #define CHARGER_DEBOUNCE_MS 400
+#define ADC_POLL_DELAY_MS   5     // Delay between ADC poll iterations to reduce I2C traffic
+#define ADC_POLL_TIMEOUT_MS 100   // Max time to wait for ADC measurement
 static TimerID s_debounce_charger_timer = TIMER_INVALID_ID;
 
 typedef enum {
@@ -421,9 +424,17 @@ uint16_t pmic_get_vsys(void) {
     return 0;
   }
   uint8_t reg = 0;
+  uint32_t elapsed = 0;
   while ((reg & 0x08) == 0) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return 0;  // Timeout waiting for ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return 0;
+    }
+    if ((reg & 0x08) == 0) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
   
@@ -449,9 +460,17 @@ int battery_get_millivolts(void) {
     return 0;
   }
   uint8_t reg = 0;
+  uint32_t elapsed = 0;
   while ((reg & 0x01) == 0) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return 0;  // Timeout waiting for ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return 0;
+    }
+    if ((reg & 0x01) == 0) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
   
@@ -513,9 +532,17 @@ int battery_get_constants(BatteryConstants *constants) {
 
   // Process the VBAT measurement
   reg = 0U;
+  uint32_t elapsed = 0;
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCVBATRDY) == 0U) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return -1;  // Timeout waiting for VBAT ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return -1;
+    }
+    if ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCVBATRDY) == 0U) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
 
@@ -534,9 +561,17 @@ int battery_get_constants(BatteryConstants *constants) {
   constants->v_mv = (int32_t)(raw * NPM1300_ADC_VFS_VBAT_MV) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
 
   // Process the IBAT measurement
+  elapsed = 0;
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY) == 0U) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return -1;  // Timeout waiting for IBAT ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return -1;
+    }
+    if ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY) == 0U) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
 
@@ -555,9 +590,17 @@ int battery_get_constants(BatteryConstants *constants) {
   constants->i_ua = ((int32_t)raw * full_scale_ua) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
 
   // Process the NTC measurement
+  elapsed = 0;
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY) == 0U) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return -1;  // Timeout waiting for NTC ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return -1;
+    }
+    if ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY) == 0U) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
 
