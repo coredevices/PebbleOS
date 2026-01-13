@@ -55,7 +55,7 @@ def convert_png_to_pbi(task):
     dest_pbi = task.outputs[0].srcpath()
     bitdepth = None
 
-    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding', '~cutts', '~robert']):
+    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding', '~silk', '~cutts', '~robert']):
         img_fmt = 'color_raw'
     elif any(word in dest_pbi for word in ['.1bit.', '~tintin']):
         img_fmt = 'bw'
@@ -83,7 +83,7 @@ def convert_png_to_pblpng(task):
 
         if bit_suffix:
             bitdepth = int(bit_suffix.group(1))
-        elif any(word in dest_png for word in ['~snowy', '~spalding', '~cutts', '~robert']):
+        elif any(word in dest_png for word in ['~snowy', '~spalding', '~silk', '~cutts', '~robert']):
             bitdepth = 8
         elif any(word in dest_png for word in ['~tintin']):
             bitdepth = 1
@@ -105,7 +105,18 @@ def generate_test_pbis(ctx):
         dest_pbi = png_file.get_bld().change_ext('.pbi')
 
         # if the image contains Xbit in the name, then generate both 1bit and 8bit PBI images
+        # BUT skip if platform-specific .1bit.png and .8bit.png files already exist
         if ".Xbit." in str(dest_pbi):
+            # Check if platform-specific files exist - if so, skip Xbit processing
+            # Get the parent directory and base filename
+            parent = png_file.parent
+            name = png_file.name.replace('.Xbit.png', '')
+            bit1_file = parent.find_node(name + '.1bit.png')
+            bit8_file = parent.find_node(name + '.8bit.png')
+            if bit1_file and bit8_file:
+                # Platform-specific files exist, skip Xbit to avoid overwriting
+                continue
+
             dest_pbi = png_file.get_bld().change_ext('.1bit.pbi', '.Xbit.png')
             ctx(name='png_to_pbi', rule=convert_png_to_pbi, source=png_file, target=dest_pbi,
                 bmp_script=bitmapgen_path)
@@ -279,6 +290,11 @@ def build(bld):
     # clang on Linux errors on true == true or false == false compile-time assertions
     bld.env.CFLAGS.append('-Wno-tautological-compare')
 
+    # Disable DUMA on macOS ARM - it requires configuration that's not set up
+    import platform
+    if platform.system() == 'Darwin' and platform.processor() == 'arm':
+      bld.env.append_value('DEFINES', 'DUMA_DISABLED')
+
     # Any test in this list won't be compiled
     bld.env.BROKEN_TESTS = [
         'test_app_fetch_endpoint.c',
@@ -323,7 +339,10 @@ def build(bld):
 
     # Set up the fail directory, and make it. This is used to output data from the tests for
     # comparison with the expected results.
-    fail_dir = test_images_dest_dir.parent.make_node('failed')
+    # Create platform-specific failure directory to prevent cross-platform test contamination
+    platform = bld.env.get_flat('PLATFORM_NAME') if 'PLATFORM_NAME' in bld.env else 'unknown'
+    fail_dir_name = f'failed_{platform}'
+    fail_dir = test_images_dest_dir.parent.make_node(fail_dir_name)
     fail_path = fail_dir.abspath().strip()
     sh.rm('-rf', fail_path)
     fail_dir.mkdir()
