@@ -82,3 +82,17 @@ bool i2c_write_register_block(I2CSlavePort *slave, uint8_t register_address_star
 //! @param buffer                   Pointer to source buffer
 //! @return true if transfer succeeded, false if error occurred
 bool i2c_write_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* buffer);
+
+//! Write a block of data then read a block of data in a single atomic transaction.
+//! This function is thread-safe and holds the bus lock throughout both operations.
+//! Must not be called before \ref i2c_use has been called for the slave.
+//! Performs a write followed by read while holding the bus mutex, useful for devices that require
+//! sending a command/register address before reading data without allowing other transactions in between.
+//! @param slave                    I2C slave to communicate with
+//! @param write_size               Number of bytes to write
+//! @param write_buffer             Pointer to source buffer for write
+//! @param read_size                Number of bytes to read
+//! @param read_buffer              Pointer to destination buffer for read
+//! @return true if transfer succeeded, false if error occurred
+bool i2c_write_read_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* write_buffer,
+                          uint32_t read_size, uint8_t* read_buffer);

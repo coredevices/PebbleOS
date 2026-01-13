@@ -384,20 +384,14 @@ static bool prv_wait_for_not_busy(I2CBus *bus) {
 
 //! Set up and start a transfer to a bus, wait for it to finish and clean up after the transfer
 //! has completed
-static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t device_address,
-                            uint8_t register_address, uint32_t size, uint8_t *data,
-                            TransferType type) {
-  // Take control of bus; only one task may use bus at a time
-  mutex_lock(bus->state->bus_mutex);
-
+//! Caller must hold bus mutex
+static bool prv_do_transfer_locked(I2CBus *bus, TransferDirection direction, uint16_t device_address,
+                                   uint8_t register_address, uint32_t size, uint8_t *data,
+                                   TransferType type) {
   if (bus->state->user_count == 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "Attempted access to disabled bus %s", bus->name);
-    mutex_unlock(bus->state->bus_mutex);
     return false;
   }
-
-  // Disable stop mode while the I2C transfer is in progress - stop mode disables I2C peripheral
-  stop_mode_disable(bus->stop_mode_inhibitor);
 
   // If bus is busy (it shouldn't be as this function waits for the bus to report a non-idle state
   // before exiting) reset the bus and wait for it to become not-busy
@@ -407,8 +401,6 @@ static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t d
 
     if (!prv_wait_for_not_busy(bus)) {
       // Bus did not recover after reset
-      stop_mode_enable(bus->stop_mode_inhibitor);
-      mutex_unlock(bus->state->bus_mutex);
       PBL_LOG(LOG_LEVEL_ERROR, "I2C bus did not recover after reset (%s)", bus->name);
       prv_analytics_track_i2c_error();
       return false;
@@ -494,13 +486,25 @@ static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t d
     prv_bus_reset(bus);
   }
 
-  stop_mode_enable(bus->stop_mode_inhibitor);
-
-  mutex_unlock(bus->state->bus_mutex);
-
   if (!result) {
     prv_analytics_track_i2c_error();
   }
+  return result;
+}
+
+//! Wrapper that manages locking for prv_do_transfer_locked
+static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t device_address,
+                            uint8_t register_address, uint32_t size, uint8_t *data,
+                            TransferType type) {
+  mutex_lock(bus->state->bus_mutex);
+  stop_mode_disable(bus->stop_mode_inhibitor);
+
+  bool result = prv_do_transfer_locked(bus, direction, device_address, register_address, size,
+                                       data, type);
+
+  stop_mode_enable(bus->stop_mode_inhibitor);
+  mutex_unlock(bus->state->bus_mutex);
+
   return result;
 }
 
@@ -566,6 +570,38 @@ bool i2c_write_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* bu
 
   if (!result) {
     PBL_LOG(LOG_LEVEL_ERROR, "Block write failed on bus %s", slave->bus->name);
+  }
+
+  return result;
+}
+
+bool i2c_write_read_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* write_buffer,
+                          uint32_t read_size, uint8_t* read_buffer) {
+  PBL_ASSERTN(slave);
+  PBL_ASSERTN(write_buffer);
+  PBL_ASSERTN(read_buffer);
+
+  I2CBus *bus = slave->bus;
+
+  // Take control of bus; only one task may use bus at a time
+  mutex_lock(bus->state->bus_mutex);
+  stop_mode_disable(bus->stop_mode_inhibitor);
+
+  // Perform write transfer
+  bool result = prv_do_transfer_locked(bus, Write, slave->address, 0, write_size,
+                                       (uint8_t*)write_buffer, NoRegisterAddress);
+
+  // Only proceed with read if write succeeded
+  if (result) {
+    result = prv_do_transfer_locked(bus, Read, slave->address, 0, read_size,
+                                    read_buffer, NoRegisterAddress);
+  }
+
+  stop_mode_enable(bus->stop_mode_inhibitor);
+  mutex_unlock(bus->state->bus_mutex);
+
+  if (!result) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Write-read block failed on bus %s", bus->name);
   }
 
   return result;
