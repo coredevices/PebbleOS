@@ -167,7 +167,8 @@ def build(ctx):
         sources_ant_glob=templated_graphics_draw_text_sources_ant_glob.format(depth_dir="8_bit"),
         test_sources_ant_glob='test_graphics_draw_text_flow.c',
         defines = ctx.env.test_image_defines,
-        override_includes=['dummy_board'])
+        override_includes=['dummy_board'],
+        platforms=['snowy'])
 
 
     # All tests that are bit-depth agnostic should follow.

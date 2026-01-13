@@ -297,7 +297,6 @@ def build(bld):
 
     # Any test in this list won't be compiled
     bld.env.BROKEN_TESTS = [
-        'test_graphics_draw_text_flow.c',
         'test_perimeter.c',
         'test_ancs_pebble_actions.c',
         'test_timeline_actions.c',
