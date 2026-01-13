@@ -15,6 +15,7 @@
 #include "drivers/audio.h"
 #include "flash_region/flash_region.h"
 #include "drivers/flash.h"
+#include "applib/ui/window_private.h"
 
 #define PCM_BUFFER_SIZE          1024
 
@@ -46,8 +47,6 @@ typedef struct {
   bool mic_recording;
 } AppData;
 
-static bool app_is_runing = false;
-
 static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame_count) {
   if (audio_data == NULL || frame_count == 0) {
       return;
@@ -65,7 +64,6 @@ static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame
 }
 
 static void prv_audio_trans_handler(uint32_t *free_size) {
-  if (!app_is_runing) return;
   uint32_t available_size = *free_size;
   AppData *app_data = app_state_get_user_data();
   static enum {
@@ -73,13 +71,12 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
   } mic_id = MIC1;
 
   while (available_size > PCM_BUFFER_SIZE*sizeof(int16_t)) {
-    if (!app_is_runing) return;
     flash_read_bytes((uint8_t *)app_data->pcm, app_data->flash_addr, PCM_BUFFER_SIZE*sizeof(int16_t));
     app_data->flash_addr += PCM_BUFFER_SIZE*sizeof(int16_t);
     prv_interleaved_to_non_interleaved(app_data->pcm, PCM_BUFFER_SIZE/2);
-    if (mic_id == MIC1 && app_is_runing) {
+    if (mic_id == MIC1) {
       available_size = audio_write(AUDIO, (void*)app_data->pcm, PCM_BUFFER_SIZE);
-    } else if (mic_id == MIC2 && app_is_runing) {
+    } else if (mic_id == MIC2) {
       available_size = audio_write(AUDIO, (void*)&app_data->pcm[PCM_BUFFER_SIZE/2], PCM_BUFFER_SIZE);
     }
   }
@@ -91,10 +88,12 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
       app_data->audio_playing = false;
       app_data->in_testing = false;
       mic_id = MIC1;
+      // Re-enable back button when playback finishes
+      window_set_overrides_back_button(&app_data->window, false);
       snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Press Sel to start");
       return;
     }
-    
+
     snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Playing MIC2");
   }
 }
@@ -128,10 +127,13 @@ static void prv_recording_start(void) {
   app_data->flash_addr = FLASH_START;
   flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
 
+  // Disable back button during recording/playback
+  window_set_overrides_back_button(&app_data->window, true);
+
   snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Pls Speak");
   mic_init(MIC);
   //set to maximum make it's more audiable in testing
-  mic_set_volume(MIC, 100); 
+  mic_set_volume(MIC, 100);
   mic_start(MIC, prv_mic_data_handler, NULL, app_data->pcm, PCM_BUFFER_SIZE);
   app_data->mic_recording = true;
 }
@@ -201,11 +203,7 @@ static void prv_handler_deinit(void) {
 
 static void s_main(void) {
   prv_handle_init();
-  app_is_runing = true;
-  
   app_event_loop();
-
-  app_is_runing = false;
   prv_handler_deinit();
 }
 
