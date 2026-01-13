@@ -302,8 +302,6 @@ def build(bld):
         'test_session.c',
         'test_session_receive_router.c',
         'test_compositor.c',
-        'test_floor.c',
-        'test_pow.c',
         'test_ams.c',
         'test_ams_util.c',
         'test_gap_le_advert.c',
