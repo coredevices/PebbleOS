@@ -16,7 +16,13 @@
 #include "system/passert.h"
 #include "util/ratio.h"
 
+#if defined(UNITTEST)
+#include "stubs_nrf_fuel_gauge.h"
+#elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
 #include "nrf_fuel_gauge.h"
+#else
+#error "battery_state.c requires either UNITTEST or a supported platform"
+#endif
 
 #define ALWAYS_UPDATE_PCT 10.0f
 #define RECONNECTION_DELAY_MS (1 * 1000)
@@ -27,7 +33,9 @@
 #define LOG_MIN_SEC 30
 
 static const struct battery_model prv_battery_model = {
-#if PLATFORM_ASTERIX
+#if defined(UNITTEST)
+  .dummy = 0,  // Stub model for tests
+#elif PLATFORM_ASTERIX
 #include "battery_asterix.inc"
 #elif PLATFORM_OBELIX
 #include "battery_obelix.inc"
