@@ -33,3 +33,7 @@ const TimelineEventImpl *timeline_peek_get_event_service(void);
 //! Sets the show before timing of timeline peek.
 //! @param before_time_s The amount of time before event start the peek should be visible.
 void timeline_peek_set_show_before_time(unsigned int before_time_s);
+
+//! Reset timeline peek state for testing - clears initialized flag to prevent
+//! test contamination where the flag persists between test runs
+void timeline_peek_reset_for_tests(void);

@@ -82,10 +82,32 @@ static bool prv_is_in_peeking_time_window(SerializedTimelineItemHeader *header, 
 
 static bool prv_should_set_first_event(PeekUpdateContext *update,
                                        SerializedTimelineItemHeader *header) {
-  // Use the new item if there is no item or it is an earlier item in the future direction
-  return ((uuid_is_invalid(&update->first_header.common.id)) ||
-           (timeline_item_time_comparator(&header->common, &update->first_header.common,
-                                          TimelineIterDirectionFuture) < 0));
+  // Use the new item if there is no current item
+  if (uuid_is_invalid(&update->first_header.common.id)) {
+    return true;
+  }
+
+  const time_t now = rtc_get_time();
+  const bool old_is_peeking = prv_is_in_peeking_time_window(&update->first_header, now);
+  const bool new_is_persistent = header->common.persistent;
+  const bool old_is_persistent = update->first_header.common.persistent;
+
+  // Non-persistent events take priority for "first event" when they overlap with
+  // a persistent event that is currently peeking. This ensures that once a non-persistent
+  // event has been concurrent with a persistent event, the persistent event doesn't
+  // claim "first event" status.
+  if (!new_is_persistent && old_is_persistent && old_is_peeking) {
+    // Check if new event overlaps with now (event is active or will be active)
+    const time_t new_start = header->common.timestamp;
+    const time_t new_end = new_start + (header->common.duration * SECONDS_PER_MINUTE);
+    if (now < new_end && new_start <= now + (s_peek_event_data.show_before_time_s)) {
+      return true;  // Non-persistent overlapping event becomes "first"
+    }
+  }
+
+  // Default: use timeline ordering (earlier event is first)
+  return (timeline_item_time_comparator(&header->common, &update->first_header.common,
+                                        TimelineIterDirectionFuture) < 0);
 }
 
 static bool prv_peek_filter(SerializedTimelineItemHeader *header, void **context) {
@@ -229,4 +251,11 @@ const TimelineEventImpl *timeline_peek_get_event_service(void) {
 void timeline_peek_set_show_before_time(unsigned int before_time_s) {
   s_peek_event_data.show_before_time_s = before_time_s;
   timeline_event_refresh();
+}
+
+void timeline_peek_reset_for_tests(void) {
+  // Reset initialized flag so next call to timeline_peek_get_event_service() will
+  // re-read preferences. This prevents test contamination where the flag persists.
+  s_peek_event_data.initialized = false;
+  s_peek_event_data.show_before_time_s = TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S;
 }
