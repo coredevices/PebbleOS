@@ -433,7 +433,7 @@ def build(ctx):
             " src/fw/applib/graphics/gtypes.c",
         test_sources_ant_glob="test_perimeter.c",
         test_libs=['m'],
-        defines=defines,
+        defines=ctx.env.test_image_defines,
         platforms=['snowy', 'spalding'])
 
     clar(ctx,
