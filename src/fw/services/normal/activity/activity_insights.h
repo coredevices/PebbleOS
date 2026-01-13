@@ -99,3 +99,7 @@ void activity_insights_test_push_walk_run_sessions(void);
 
 //! Used by test apps: Pushes a nap pin and notification
 void activity_insights_test_push_nap_session(void);
+
+//! Reset activity insights state for testing - clears pin state to prevent
+//! duplicate notification suppression logic from affecting subsequent tests
+void activity_insights_reset_for_tests(void);
