@@ -11,7 +11,7 @@
 #include "services/common/light.h"
 #include "drivers/led_controller.h"
 
-#define BACKLIGHT_COLOR_WHITE       0xD0D0D0
+#define BACKLIGHT_COLOR_WHITE       0xFFFFFF
 #define BACKLIGHT_COLOR_RED         0xFF0000
 #define BACKLIGHT_COLOR_GREEN       0x00FF00
 #define BACKLIGHT_COLOR_BLUE        0x0000FF
@@ -105,7 +105,7 @@ static void s_main(void) {
 
   app_event_loop();
 
-  led_controller_rgb_set_color(0xd0d0d0);
+  led_controller_rgb_set_color(LED_SOFT_WHITE);
   light_enable(false);
 }
 
