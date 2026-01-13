@@ -133,6 +133,7 @@ jobs:
 
       - name: Upload PRF log hash dictionary
         uses: Noelware/s3-action@2.3.1
+        if: github.event.repository.fork == false
         with:
           access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
           secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
@@ -244,6 +245,7 @@ jobs:
 
       - name: Upload log hash dictionary
         uses: Noelware/s3-action@2.3.1
+        if: github.event.repository.fork == false
         with:
           access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
           secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}

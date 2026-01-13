@@ -2,7 +2,6 @@ name: Build PRF
 
 on:
   push:
-    branches: [main]
   pull_request:
     branches: [main]
     paths:
@@ -17,6 +16,9 @@ on:
 
 jobs:
   build:
+    if: |
+      (github.event.repository.fork == true) ||
+      (github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
 
     container:
@@ -85,7 +87,7 @@ jobs:
 
       - name: Upload log hash dictionary
         uses: Noelware/s3-action@2.3.1
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && github.event.repository.fork == false }}
         with:
           access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
           secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
