@@ -476,8 +476,8 @@ static status_t locate_flash_file(const char *name, uint16_t *page) {
           FILE_NAME_OFFSET);
 
       if ((memcmp(name, file_name, namelen) == 0) && (!is_tmp_file(pg))) {
-
-        if (read_header(pg, &pg_hdr, &file_hdr) == HdrCrcCorrupt) {
+        int hdr_result = read_header(pg, &pg_hdr, &file_hdr);
+        if (hdr_result == HdrCrcCorrupt) {
           PBL_LOG(LOG_LEVEL_WARNING, "%d: CRC corrupt", pg);
           continue;
         }
@@ -2381,5 +2381,23 @@ void test_force_reboot_during_garbage_collection(uint16_t start_page) {
 
 void test_override_last_written_page(uint16_t start_page) {
   s_test_last_page_written_override = s_last_page_written;
+}
+
+void pfs_reset(void) {
+  // Free the page flags cache if allocated
+  if (s_pfs_page_flags_cache != NULL) {
+    kernel_free(s_pfs_page_flags_cache);
+    s_pfs_page_flags_cache = NULL;
+  }
+  // Reset all internal state so pfs_init() starts fresh
+  s_pfs_page_count = 0;
+  s_pfs_size = 0;
+  s_last_page_written = 0;
+  s_test_last_page_written_override = -1;
+  s_gc_block.block_valid = false;
+  // Note: s_head_callback_node_list is NOT reset here because
+  // callbacks might still need to be unwatched during cleanup.
+  // The callback list will be empty after format anyway.
+  // File descriptors will be reset in pfs_init()
 }
 #endif
