@@ -54,15 +54,25 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
 
   while (remain > 0) {
     portENTER_CRITICAL();
-    res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
-    portEXIT_CRITICAL();
-    if (res != 0) {
-      res = -1;
-      goto end;
+    if ((taddr & (SECTOR_SIZE_BYTES - 1)) == 0 && remain >= SECTOR_SIZE_BYTES) {
+      res = HAL_QSPIEX_BLK64_ERASE(hflash, taddr);
+      portEXIT_CRITICAL();
+      if (res != 0) {
+        res = -1;
+        goto end;
+      }
+      remain -= SECTOR_SIZE_BYTES;
+      taddr += SECTOR_SIZE_BYTES;
+    } else {
+      res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
+      portEXIT_CRITICAL();
+      if (res != 0) {
+        res = -1;
+        goto end;
+      }
+      remain -= SUBSECTOR_SIZE_BYTES;
+      taddr += SUBSECTOR_SIZE_BYTES;
     }
-
-    remain -= SUBSECTOR_SIZE_BYTES;
-    taddr += SUBSECTOR_SIZE_BYTES;
   }
 
 end:
