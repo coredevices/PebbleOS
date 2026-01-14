@@ -23,6 +23,66 @@
 typedef struct {
   int dummy;
 } GATT_Service_Discovery_Event_Data_t;
+
+typedef struct {
+  int dummy;
+} GATT_Service_Discovery_Complete_Data_t;
+
+typedef struct {
+  int dummy;
+} GATT_Service_Discovery_Indication_Data_t;
+
+typedef struct {
+  int dummy;
+} GATT_Characteristic_Descriptor_Information_t;
+
+typedef struct {
+  int dummy;
+} GATT_Characteristic_Information_t;
+
+typedef void (*GATT_Connection_Event_Callback_t)(unsigned int, GATT_Connection_Event_Data_t *,
+                                                  unsigned long);
+
+typedef struct {
+  int dummy;
+} GATT_Connection_Event_Data_t;
+
+typedef struct {
+  int dummy;
+} GATT_UUID_t;
+
+typedef void (*GATT_Service_Discovery_Event_Callback_t)(unsigned int, unsigned int,
+                                                        GATT_Service_Discovery_Event_Data_t *);
+
+typedef struct {
+  int dummy;
+} GATT_Attribute_Handle_Group_t;
+
+typedef struct {
+  int dummy;
+} GATT_Service_Changed_Data_t;
+
+typedef void (*GATT_Client_Event_Callback_t)(unsigned int, void *);
+
+typedef struct {
+  int dummy;
+} GATT_Write_Response_Data_t;
+
+typedef struct {
+  int dummy;
+} GATT_Client_Event_Data_t;
+
+typedef uint16_t Word_t;
+
+// Enum values
+#define etGATT_Service_Discovery_Complete 0
+#define etGATT_Service_Discovery_Indication 1
+#define guUUID_16 0
+
+// Size constants
+#define GATT_SERVICE_DISCOVERY_COMPLETE_DATA_SIZE sizeof(void *)
+#define GATT_SERVICE_DISCOVERY_INDICATION_DATA_SIZE sizeof(void *)
+
 #endif
 
 bool fake_gatt_is_service_discovery_running(void);
