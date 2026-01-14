@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "clar_asserts.h"
 #include <util/heap.h>
 #include "util/list.h"
 #include "util/math.h"
