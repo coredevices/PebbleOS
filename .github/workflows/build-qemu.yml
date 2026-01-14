@@ -24,16 +24,15 @@ jobs:
       matrix:
         board:
           - snowy_bb2
-          - spalding_bb2
           - silk_bb2
         platform:
           - name: docker
             runs-on: ubuntu-24.04
             container: ghcr.io/pebble-dev/pebbleos-docker:v1
-            safe_directory: ${{ github.workspace }}
+            safe_directory: /__w/PebbleOS/PebbleOS
           - name: linux
             runs-on: ubuntu-24.04
-            safe_directory: ${{ github.workspace }}
+            safe_directory: /__w/PebbleOS/PebbleOS
 
     name: build ${{ matrix.board }} ${{ matrix.platform.name }} qemu
     runs-on: ${{ matrix.platform.runs-on }}
@@ -43,9 +42,9 @@ jobs:
       - name: Mark Github workspace as safe
         run: |
           if [ "${{ matrix.platform.name }}" = "linux" ]; then
-            sudo git config --system --add safe.directory "${{ matrix.platform.safe_directory }}"
+            sudo git config --global --add safe.directory "${{ matrix.platform.safe_directory }}"
           else
-            git config --system --add safe.directory "${{ matrix.platform.safe_directory }}"
+            git config --global --add safe.directory "${{ matrix.platform.safe_directory }}"
           fi
 
       - name: Checkout

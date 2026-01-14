@@ -3,7 +3,15 @@
 
 #include "fake_gap_le_connect_params.h"
 
-#include "GAPAPI.h"
+#ifdef __has_include
+  #if __has_include("GAPAPI.h")
+    #include "GAPAPI.h"
+  #endif
+#else
+  #ifdef COMPONENT_BTSTACK
+    #include "GAPAPI.h"
+  #endif
+#endif
 
 static ResponseTimeState s_last_requested_desired_state;
 

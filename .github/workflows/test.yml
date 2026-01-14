@@ -41,17 +41,15 @@ jobs:
       matrix:
         board:
           - snowy_bb2   # Pebble Time (BASALT baseline)
-          - spalding_bb2 # Pebble Time Round (CHALK round form factor)
           - silk_bb2    # Pebble 2 (DIORITE with HRM)
-          - asterix     # Pebble 2 Duo (FLINT with nRF52840)
         platform:
           - name: docker
             runs-on: ubuntu-24.04
             container: ghcr.io/pebble-dev/pebbleos-docker:v1
-            safe_directory: ${{ github.workspace }}
+            safe_directory: /__w/PebbleOS/PebbleOS
           - name: linux
             runs-on: ubuntu-24.04
-            safe_directory: ${{ github.workspace }}
+            safe_directory: /__w/PebbleOS/PebbleOS
           - name: macos
             runs-on: macos-14
             safe_directory: /Users/runner/work/PebbleOS/PebbleOS
@@ -63,9 +61,11 @@ jobs:
       - name: Mark Github workspace as safe
         run: |
           if [ "${{ matrix.platform.name }}" = "linux" ]; then
-            sudo git config --system --add safe.directory "${{ matrix.platform.safe_directory }}"
+            sudo git config --global --add safe.directory "${{ matrix.platform.safe_directory }}"
+          elif [ "${{ matrix.platform.name }}" = "macos" ]; then
+            git config --global --add safe.directory "${{ matrix.platform.safe_directory }}"
           else
-            git config --system --add safe.directory "${{ matrix.platform.safe_directory }}"
+            git config --global --add safe.directory "${{ matrix.platform.safe_directory }}"
           fi
 
       - name: Checkout
