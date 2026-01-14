@@ -72,7 +72,11 @@ jobs:
 
       - name: Install libclang
         run: |
-          apt-get update && apt-get install -y libclang-14-dev
+          if [ "${{ matrix.platform.name }}" = "linux" ]; then
+            sudo apt-get update && sudo apt-get install -y libclang-14-dev
+          else
+            apt-get update && apt-get install -y libclang-14-dev
+          fi
 
       - name: Get npm cache directory
         id: npm-cache-dir
