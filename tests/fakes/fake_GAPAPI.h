@@ -20,7 +20,29 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// If GAPAPI.h is not available, provide dummy type definitions
+#ifndef GAPAPI_AVAILABLE
+typedef struct {
+  int dummy;
+} GAP_LE_Event_Data_t;
+
+typedef struct {
+  int dummy;
+} Advertising_Data_t;
+
+typedef struct {
+  int dummy;
+} Scan_Response_Data_t;
+
+typedef struct {
+  int dummy;
+} GAPLEConnection;
+#endif
+
+// These functions are always available (either from GAPAPI or from the fake)
 #ifdef GAPAPI_AVAILABLE
+//! Provided to simulate stopping advertising because of an inbound connection.
+void gap_le_set_advertising_disabled(void);
 //! Provided to simulate stopping advertising because of an inbound connection.
 void gap_le_set_advertising_disabled(void);
 
@@ -53,5 +75,13 @@ const BD_ADDR_t *fake_GAPAPI_get_bd_addr_resolving_to_fake_irk(void);
 
 const BTDeviceInternal *fake_GAPAPI_get_device_resolving_to_fake_irk(void);
 
+void fake_GAPAPI_init(void);
+#else
+// When GAPAPI is not available, provide dummy function declarations
+void gap_le_set_advertising_disabled(void);
+bool gap_le_is_advertising_enabled(void);
+void gap_le_assert_advertising_interval(uint16_t expected_min_slots, uint16_t expected_max_slots);
+unsigned int gap_le_get_advertising_data(Advertising_Data_t *ad_data_out);
+unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_out);
 void fake_GAPAPI_init(void);
 #endif // GAPAPI_AVAILABLE

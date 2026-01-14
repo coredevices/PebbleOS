@@ -350,4 +350,31 @@ void fake_GAPAPI_init(void) {
   memset(&s_scan_resp_data, 0, sizeof(s_scan_resp_data));
   s_scan_resp_data_length = 0;
 }
+#else
+// When GAPAPI is not available, provide dummy implementations
+static bool s_is_le_advertising_enabled = false;
+
+void gap_le_set_advertising_disabled(void) {
+  s_is_le_advertising_enabled = false;
+}
+
+bool gap_le_is_advertising_enabled(void) {
+  return s_is_le_advertising_enabled;
+}
+
+void gap_le_assert_advertising_interval(uint16_t expected_min_slots, uint16_t expected_max_slots) {
+  // Dummy implementation - does nothing
+}
+
+unsigned int gap_le_get_advertising_data(Advertising_Data_t *ad_data_out) {
+  return 0;
+}
+
+unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_out) {
+  return 0;
+}
+
+void fake_GAPAPI_init(void) {
+  s_is_le_advertising_enabled = false;
+}
 #endif // GAPAPI_AVAILABLE
