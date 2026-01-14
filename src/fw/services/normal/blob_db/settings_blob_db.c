@@ -6,6 +6,7 @@
 #include "api.h"
 
 #include "kernel/pbl_malloc.h"
+#include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/normal/settings/settings_file.h"
 #include "shell/prefs_private.h"
 #include "system/logging.h"
@@ -102,6 +103,14 @@ static const size_t s_num_syncable_settings = ARRAY_LENGTH(s_syncable_settings);
 
 static bool s_initialized = false;
 
+//! Check if the connected phone supports Settings BlobDB sync
+//! Returns true if the phone advertises settings_sync_support capability
+bool settings_blob_db_phone_supports_sync(void) {
+  PebbleProtocolCapabilities capabilities;
+  bt_persistent_storage_get_cached_system_capabilities(&capabilities);
+  return capabilities.settings_sync_support;
+}
+
 //! Check if a setting key is in the sync whitelist
 static bool prv_is_syncable(const uint8_t *key, int key_len) {
   for (size_t i = 0; i < s_num_syncable_settings; i++) {
@@ -118,6 +127,11 @@ static bool prv_is_syncable(const uint8_t *key, int key_len) {
 //! This is coalesced - only one instance runs at a time.
 static void prv_deferred_sync_callback(void *data) {
   s_sync_callback_pending = false;
+
+  // Only sync if the phone supports settings sync
+  if (!settings_blob_db_phone_supports_sync()) {
+    return;
+  }
 
   // Sync all dirty settings using the existing dirty list mechanism
   blob_db_sync_db(BlobDBIdSettings);

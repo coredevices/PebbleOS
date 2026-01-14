@@ -55,3 +55,7 @@ status_t settings_blob_db_mark_all_dirty(void);
 status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
                                                 const uint8_t *val, int val_len,
                                                 time_t timestamp);
+
+//! Check if the connected phone supports Settings BlobDB sync
+//! @return true if phone advertises settings_sync_support capability
+bool settings_blob_db_phone_supports_sync(void);
