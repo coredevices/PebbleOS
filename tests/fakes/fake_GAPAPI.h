@@ -22,27 +22,14 @@
 
 // If GAPAPI.h is not available, provide dummy type definitions
 #ifndef GAPAPI_AVAILABLE
-typedef struct {
-  int dummy;
-} GAP_LE_Event_Data_t;
-
-typedef struct {
-  int dummy;
-} Advertising_Data_t;
-
-typedef struct {
-  int dummy;
-} Scan_Response_Data_t;
-
-typedef struct {
-  int dummy;
-} GAPLEConnection;
+typedef struct GAPLEConnection GAPLEConnection;  // Forward declaration (already defined elsewhere)
+typedef struct GAP_LE_Event_Data_t GAP_LE_Event_Data_t;
+typedef struct Advertising_Data_t Advertising_Data_t;
+typedef struct Scan_Response_Data_t Scan_Response_Data_t;
 #endif
 
 // These functions are always available (either from GAPAPI or from the fake)
 #ifdef GAPAPI_AVAILABLE
-//! Provided to simulate stopping advertising because of an inbound connection.
-void gap_le_set_advertising_disabled(void);
 //! Provided to simulate stopping advertising because of an inbound connection.
 void gap_le_set_advertising_disabled(void);
 
