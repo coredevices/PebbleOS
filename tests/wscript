@@ -316,7 +316,9 @@ def build(bld):
     fail_dir_name = f'failed_{platform}'
     fail_dir = test_images_dest_dir.parent.make_node(fail_dir_name)
     fail_path = fail_dir.abspath().strip()
-    sh.rm('-rf', fail_path)
+    # Use subprocess instead of sh.rm to avoid Python 3.14 compatibility issues
+    import subprocess
+    subprocess.run(['rm', '-rf', fail_path], check=False, capture_output=True)
     fail_dir.mkdir()
 
     def convert_to_emscripten_fs_path_if_needed(node):
