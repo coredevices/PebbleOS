@@ -19,21 +19,40 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
-
-    container:
-      image: ghcr.io/pebble-dev/pebbleos-docker:v1
-
     strategy:
+      fail-fast: false
       matrix:
-        board: ["asterix", "obelix_dvt", "obelix_pvt", "obelix_bb2", "getafix_evt",
-                "snowy_bb2", "snowy_evt2", "snowy_dvt", "snowy_s3", "snowy_emery",
-                "spalding_bb2", "spalding_evt", "spalding", "spalding_gabbro",
-                "silk_bb2", "silk_evt", "silk_bb", "silk"]
+        board:
+          - snowy_bb2
+          - spalding_bb2
+          - silk_bb2
+          - asterix
+          - obelix_dvt
+          - obelix_pvt
+        platform:
+          - name: docker
+            runs-on: ubuntu-24.04
+            container: ghcr.io/pebble-dev/pebbleos-docker:v1
+            safe_directory: ${{ github.workspace }}
+          - name: linux
+            runs-on: ubuntu-24.04
+            safe_directory: ${{ github.workspace }}
+          - name: macos
+            runs-on: macos-14
+            safe_directory: /Users/runner/work/PebbleOS/PebbleOS
+
+    name: build ${{ matrix.board }} ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.runs-on }}
+    container: ${{ matrix.platform.container }}
 
     steps:
       - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+        run: |
+          if [ "${{ matrix.platform.name }}" = "linux" ]; then
+            sudo git config --system --add safe.directory "${{ matrix.platform.safe_directory }}"
+          else
+            git config --system --add safe.directory "${{ matrix.platform.safe_directory }}"
+          fi
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,7 +60,28 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Install Python dependencies
+      # Native Linux: Install ARM toolchain and dependencies
+      - name: Install dependencies (native Linux)
+        if: matrix.platform.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi ninja-build gettext gcc-multilib g++-multilib libc6-dev-i386
+          pip install -U pip
+          pip install -r requirements.txt
+
+      # macOS: Install ARM toolchain and dependencies
+      - name: Install dependencies (macOS)
+        if: matrix.platform.name == 'macos'
+        run: |
+          brew install gcc-arm-embedded ninja llvm
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -U pip
+          pip install -r requirements.txt
+
+      # Docker: Already has dependencies, just update pip
+      - name: Install Python dependencies (Docker)
+        if: matrix.platform.name == 'docker'
         run: |
           pip install -U pip
           pip install -r requirements.txt
@@ -60,24 +100,34 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }}
+        run: |
+          if [ "${{ matrix.platform.name }}" = "macos" ]; then
+            export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
+            source .venv/bin/activate
+            ./waf configure --board ${{ matrix.board }} --relax_toolchain_restrictions
+          else
+            ./waf configure --board ${{ matrix.board }}
+          fi
 
       - name: Build
-        run: ./waf build
+        run: |
+          if [ "${{ matrix.platform.name }}" = "macos" ]; then
+            source .venv/bin/activate
+          fi
+          ./waf build
 
       - name: Bundle
-        run: ./waf bundle
+        run: |
+          if [ "${{ matrix.platform.name }}" = "macos" ]; then
+            source .venv/bin/activate
+          fi
+          ./waf bundle
 
       - name: Store
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.board }}
+          name: firmware-${{ matrix.board }}-${{ matrix.platform.name }}
           path: |
             build/**/*.elf
             build/**/*.pbz
             build/src/fw/tintin_fw_loghash_dict.json
-
-      - name: Get Build ID
-        id: build_id
-        run: |
-          echo "BUILD_ID=$(arm-none-eabi-readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"

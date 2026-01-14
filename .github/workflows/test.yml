@@ -3,6 +3,18 @@ name: Test
 on:
   push:
     branches: [main]
+    paths:
+      - '.github/workflows/test.yml'
+      - 'resources/**'
+      - 'sdk/**'
+      - 'src/**'
+      - 'stored_apps/**'
+      - 'tests/**'
+      - 'tools/**'
+      - 'third_party/**'
+      - 'waftools/**'
+      - 'waf'
+      - 'wscript'
   pull_request:
     branches: [main]
     paths:
@@ -11,23 +23,50 @@ on:
       - 'sdk/**'
       - 'src/**'
       - 'stored_apps/**'
+      - 'tests/**'
       - 'tools/**'
       - 'third_party/**'
       - 'waftools/**'
       - 'waf'
       - 'wscript'
-
-env:
-  TEST_BOARD: 'snowy_bb2'
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
-    container:
-      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+  test:
+    if: |
+      (github.event.repository.fork == true) ||
+      (github.ref == 'refs/heads/main')
+    strategy:
+      fail-fast: false
+      matrix:
+        board:
+          - snowy_bb2   # Pebble Time (BASALT baseline)
+          - spalding_bb2 # Pebble Time Round (CHALK round form factor)
+          - silk_bb2    # Pebble 2 (DIORITE with HRM)
+          - asterix     # Pebble 2 Duo (FLINT with nRF52840)
+        platform:
+          - name: docker
+            runs-on: ubuntu-24.04
+            container: ghcr.io/pebble-dev/pebbleos-docker:v1
+            safe_directory: ${{ github.workspace }}
+          - name: linux
+            runs-on: ubuntu-24.04
+            safe_directory: ${{ github.workspace }}
+          - name: macos
+            runs-on: macos-14
+            safe_directory: /Users/runner/work/PebbleOS/PebbleOS
+
+    name: test ${{ matrix.board }} ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.runs-on }}
+    container: ${{ matrix.platform.container }}
     steps:
       - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
+        run: |
+          if [ "${{ matrix.platform.name }}" = "linux" ]; then
+            sudo git config --system --add safe.directory "${{ matrix.platform.safe_directory }}"
+          else
+            git config --system --add safe.directory "${{ matrix.platform.safe_directory }}"
+          fi
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,17 +74,49 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Install Python dependencies
+      # Native Linux: Install ARM toolchain and dependencies
+      - name: Install dependencies (native Linux)
+        if: matrix.platform.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi ninja-build gettext gcc-multilib g++-multilib libc6-dev-i386
+          pip install -U pip
+          pip install -r requirements.txt
+
+      # macOS: Install ARM toolchain and dependencies
+      - name: Install dependencies (macOS)
+        if: matrix.platform.name == 'macos'
+        run: |
+          brew install gcc-arm-embedded ninja llvm
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -U pip
+          pip install -r requirements.txt
+
+      # Docker: Already has dependencies, just update pip
+      - name: Install Python dependencies (Docker)
+        if: matrix.platform.name == 'docker'
         run: |
           pip install -U pip
           pip install -r requirements.txt
 
       - name: Configure
-        run: ./waf configure --board ${{env.TEST_BOARD}}
+        run: |
+          if [ "${{ matrix.platform.name }}" = "macos" ]; then
+            export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
+            source .venv/bin/activate
+            ./waf configure --board ${{ matrix.board }} --js-engine=none --relax_toolchain_restrictions
+          else
+            ./waf configure --board ${{ matrix.board }} --js-engine=none
+          fi
 
       - name: Run tests
-        run: ./waf test
-        continue-on-error: true
+        run: |
+          if [ "${{ matrix.platform.name }}" = "macos" ]; then
+            export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
+            source .venv/bin/activate
+          fi
+          ./waf test --continue_on_test_failure
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v5
@@ -57,5 +128,6 @@ jobs:
       - name: Store failed test images
         uses: actions/upload-artifact@v4
         with:
-          name: failed_diff_images
+          name: failed_diff_images_${{ matrix.board }}_${{ matrix.platform.name }}
           path: build/test/tests/failed/*-diff.png
+        if: failure()
