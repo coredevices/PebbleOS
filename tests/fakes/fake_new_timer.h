@@ -3,7 +3,15 @@
 
 #pragma once
 
+// Only include fake_pbl_malloc.h in test contexts, not when compiling fake_new_timer.c
+// to avoid multiple definition conflicts with stubs_pbl_malloc.h
+#ifndef FAKE_NEW_TIMER_C
 #include "fake_pbl_malloc.h"
+#else
+// When compiling fake_new_timer.c, we just need forward declarations
+void *kernel_malloc(size_t bytes);
+void kernel_free(void *ptr);
+#endif
 
 #include "services/common/new_timer/new_timer.h"
 #include "util/list.h"

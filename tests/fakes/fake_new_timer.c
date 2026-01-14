@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#define FAKE_NEW_TIMER_C
 #include "fake_new_timer.h"
 
 #include "services/common/new_timer/new_timer.h"
