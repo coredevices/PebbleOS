@@ -43,24 +43,24 @@ typedef struct StubTimer {
 
 // =============================================================================================
 // Stubs
-static ListNode *s_running_timers = NULL;
-static ListNode *s_idle_timers = NULL;
+extern ListNode *s_running_timers;
+extern ListNode *s_idle_timers;
 
 // Timer ID counter - needs to be visible for reset
-static int s_stub_next_timer_id = 1;
+extern int s_stub_next_timer_id;
 
 // Call counters
-static int s_num_new_timer_create_calls = 0;
-static int s_num_new_timer_start_calls = 0;
-static int s_num_new_timer_stop_calls = 0;
-static int s_num_new_timer_delete_calls = 0;
-static int s_num_new_timer_schedule_calls = 0;
+extern int s_num_new_timer_create_calls;
+extern int s_num_new_timer_start_calls;
+extern int s_num_new_timer_stop_calls;
+extern int s_num_new_timer_delete_calls;
+extern int s_num_new_timer_schedule_calls;
 
 // Last parameters
-static TimerID s_new_timer_start_param_timer_id;
-static uint32_t s_new_timer_start_param_timeout_ms;
-static NewTimerCallback s_new_timer_start_param_cb;
-static void * s_new_timer_start_param_cb_data;
+extern TimerID s_new_timer_start_param_timer_id;
+extern uint32_t s_new_timer_start_param_timeout_ms;
+extern NewTimerCallback s_new_timer_start_param_cb;
+extern void * s_new_timer_start_param_cb_data;
 
 // Debug utility
 /*
@@ -279,39 +279,20 @@ void stub_new_timer_invoke(int num_to_invoke) {
 }
 
 // =============================================================================================
-// Fakes
+// Fakes - External implementations (see fake_new_timer.c)
 
 // Create a new timer
-static inline TimerID new_timer_create(void) {
-  s_num_new_timer_create_calls++;
-  return stub_new_timer_create();
-}
+TimerID new_timer_create(void);
 
 // Start a timer
-static inline bool new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
-                     uint32_t flags) {
-  s_num_new_timer_start_calls++;
-  s_new_timer_start_param_timer_id = timer_id;
-  s_new_timer_start_param_timeout_ms = timeout_ms;
-  s_new_timer_start_param_cb = cb;
-  s_new_timer_start_param_cb_data = cb_data;
-  return stub_new_timer_start(timer_id, timeout_ms, cb, cb_data, flags);
-}
+bool new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
+                     uint32_t flags);
 
 // Stop a timer
-static inline bool new_timer_stop(TimerID timer_id) {
-  s_num_new_timer_stop_calls++;
-  return stub_new_timer_stop(timer_id);
-}
+bool new_timer_stop(TimerID timer_id);
 
 // Delete a timer
-static inline void new_timer_delete(TimerID timer_id) {
-  s_num_new_timer_delete_calls++;
-  stub_new_timer_delete(timer_id);
-}
+void new_timer_delete(TimerID timer_id);
 
-static inline bool new_timer_scheduled(TimerID timer, uint32_t *expire_ms_p) {
-  s_num_new_timer_schedule_calls++;
-  return stub_new_timer_is_scheduled(timer);
-}
+bool new_timer_scheduled(TimerID timer, uint32_t *expire_ms_p);
 
