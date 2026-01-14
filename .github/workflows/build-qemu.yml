@@ -84,7 +84,12 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --qemu
+        run: |
+          if [ "${{ matrix.platform.name }}" = "linux" ]; then
+            ./waf configure --board ${{ matrix.board }} --qemu --js-engine=none
+          else
+            ./waf configure --board ${{ matrix.board }} --qemu
+          fi
 
       - name: Build
         run: ./waf build qemu_image_micro qemu_image_spi
