@@ -2,6 +2,7 @@ name: Build Firmware (QEMU)
 
 on:
   push:
+    branches: [main]
   pull_request:
     branches: [main]
     paths:
@@ -18,18 +19,14 @@ on:
 
 jobs:
   build:
-    if: |
-      (github.event.repository.fork == true) ||
-      (github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
 
     container:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
 
     strategy:
-      fail-fast: false
       matrix:
-        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "silk_flint", "snowy_emery", "spalding_gabbro"]
+        board: ["snowy_bb2", "spalding_bb2", "silk_bb2"]
 
     steps:
       - name: Mark Github workspace as safe
@@ -45,10 +42,6 @@ jobs:
         run: |
           pip install -U pip
           pip install -r requirements.txt
-
-      - name: Install libclang
-        run: |
-          apt-get update && apt-get install -y libclang-14-dev
 
       - name: Get npm cache directory
         id: npm-cache-dir

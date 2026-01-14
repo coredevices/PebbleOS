@@ -1,26 +1,16 @@
 name: Build Bootloader
 
 on:
-  push:
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/build-bootloader.yml'
-      - 'platform/**'
-      - 'third_party/**'
+  workflow_dispatch
 
 jobs:
   build:
-    if: |
-      (github.event.repository.fork == true) ||
-      (github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
 
     container:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
 
     strategy:
-      fail-fast: false
       matrix:
         board: ["asterix"]
 
@@ -38,10 +28,6 @@ jobs:
         run: |
           pip install -U pip
           pip install -r requirements.txt
-
-      - name: Install libclang
-        run: |
-          apt-get update && apt-get install -y libclang-14-dev
 
       - name: Obtain platform name
         id: get-platform

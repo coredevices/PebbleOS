@@ -69,30 +69,10 @@ def load_library():
                 os.path.join(xcode_path,
                              'Toolchains/XcodeDefault.xctoolchain/usr/lib')
         clang.cindex.conf.set_library_path(libclang_path)
-    elif sys.platform.startswith('linux'):
-        # Python 3 uses 'linux', Python 2 used 'linux2'
-        try:
-            libclang_path = subprocess.check_output(['llvm-config',
-                                                     '--libdir']).decode("utf8").strip()
-            clang.cindex.conf.set_library_path(libclang_path)
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            # llvm-config not found, try common library paths
-            lib_paths = ['/usr/lib', '/usr/lib/x86_64-linux-gnu', '/usr/local/lib', '/opt/llvm/lib']
-
-            # Also check for versioned llvm directories (e.g., /usr/lib/llvm-18/lib)
-            if os.path.isdir('/usr/lib'):
-                for entry in os.listdir('/usr/lib'):
-                    if entry.startswith('llvm-') and os.path.isdir(os.path.join('/usr/lib', entry)):
-                        lib_paths.append(os.path.join('/usr/lib', entry, 'lib'))
-
-            for lib_path in lib_paths:
-                if os.path.exists(os.path.join(lib_path, 'libclang.so')):
-                    clang.cindex.conf.set_library_path(lib_path)
-                    logging.info(f"Found libclang at {lib_path}")
-                    break
-            else:
-                # Last resort: let the python clang bindings try to find it
-                logging.warning("Could not locate libclang, relying on default search paths")
+    elif sys.platform == 'linux2':
+        libclang_path = subprocess.check_output(['llvm-config',
+                                                 '--libdir']).decode("utf8").strip()
+        clang.cindex.conf.set_library_path(libclang_path)
 
     libclang_lib = clang.cindex.conf.lib
 
@@ -129,9 +109,7 @@ def get_comment_range_for_decl(node):
     if source_range is None:
         if node.kind == clang.cindex.CursorKind.TYPEDEF_DECL:
             for child in node.get_children():
-                # Use child.spelling and convert to str for proper comparison
-                child_spelling = str(child.spelling) if child.spelling else ""
-                if is_node_kind_a_type_decl(child.kind) and len(child_spelling) == 0:
+                if is_node_kind_a_type_decl(child.kind) and len(get_node_spelling(child)) == 0:
                     source_range = get_comment_range(child)
 
     return source_range
@@ -164,8 +142,7 @@ def get_string_from_file(source_range):
 def dump_node(node, indent_level=0):
     spelling = node.spelling
     if node.kind == clang.cindex.CursorKind.MACRO_DEFINITION:
-        # Convert CXString to Python string for printing
-        spelling = str(get_node_spelling(node)) if get_node_spelling(node) else ""
+        spelling = get_node_spelling(node)
 
     print("%*s%s> %s" % (indent_level * 2, "", node.kind, spelling))
     print("%*sRange:   %s" % (4 + (indent_level * 2), "", str(node.extent)))

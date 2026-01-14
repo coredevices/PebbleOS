@@ -1,33 +1,18 @@
 name: Build PRF
 
 on:
-  push:
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/build-prf.yml'
-      - 'resources/**'
-      - 'src/**'
-      - 'tools/**'
-      - 'third_party/**'
-      - 'waftools/**'
-      - 'waf'
-      - 'wscript'
+  workflow_dispatch
 
 jobs:
   build:
-    if: |
-      (github.event.repository.fork == true) ||
-      (github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
 
     container:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
 
     strategy:
-      fail-fast: false
       matrix:
-        board: ["asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
+        board: ["asterix", "obelix_evt", "obelix_dvt", "obelix_pvt"]
         mode: ["normal", "mfg"]
 
     steps:
@@ -44,10 +29,6 @@ jobs:
         run: |
           pip install -U pip
           pip install -r requirements.txt
-
-      - name: Install libclang
-        run: |
-          apt-get update && apt-get install -y libclang-14-dev
 
       - name: Get npm cache directory
         id: npm-cache-dir
@@ -89,15 +70,3 @@ jobs:
         id: build_id
         run: |
           echo "BUILD_ID=$(arm-none-eabi-readelf -n build/prf/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
-
-      - name: Upload log hash dictionary
-        uses: Noelware/s3-action@2.3.1
-        if: ${{ github.event_name == 'push' && github.event.repository.fork == false }}
-        with:
-          access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
-          bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
-          files: |
-            build/prf/src/fw/tintin_fw_loghash_dict.json
-          path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
