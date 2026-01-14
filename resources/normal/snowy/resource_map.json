@@ -198,6 +198,11 @@
       "file": "normal/snowy/images/stride_shoe_blue_small.png"
     },
     {
+      "type": "png",
+      "name": "STRIDE_HEART",
+      "file": "normal/getafix/images/stride_heart.png"
+    },
+    {
       "type": "vibe",
       "name": "VIBE_SCORE_FLUTTER_PULSE",
       "file": "normal/snowy/vibes/flutter_pulse.json"
@@ -438,6 +443,24 @@
       "type": "font",
       "name": "AGENCY_FB_60_THIN_NUMBERS_AM_PM",
       "file": "normal/base/pbf/AGENCY_FB_60_THIN_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_46_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_46_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_88_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_88_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_88_THIN_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_88_THIN_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
