@@ -52,4 +52,5 @@ typedef struct NotificationWindowData {
   // Delayed vibration support - vibe at end of animation instead of immediately
   bool pending_vibe;
   Uuid pending_vibe_id;
+  bool pending_backlight;
 } NotificationWindowData;

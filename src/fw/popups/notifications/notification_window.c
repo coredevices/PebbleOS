@@ -302,23 +302,31 @@ static void prv_peek_anim_stopped(Animation *animation, bool finished, void *con
   layer_set_hidden((Layer *)&data->action_button_layer,
                    !prv_should_provide_action_menu_for_item(data, item));
 
-  // Fallback: if a pending vibe wasn't triggered in prv_hide_peek_layer (e.g., a new
+  // Fallback: if a pending vibe/backlight wasn't triggered in prv_hide_peek_layer (e.g., a new
   // notification arrived after prv_hide_peek_layer ran but before this callback),
   // trigger it now
   if (data->pending_vibe) {
     data->pending_vibe = false;
     prv_do_notification_vibe(data, &data->pending_vibe_id);
   }
+  if (data->pending_backlight) {
+    data->pending_backlight = false;
+    light_enable_interaction();
+  }
 }
 
 static void prv_hide_peek_layer(void *context) {
   NotificationWindowData *data = context;
 
-  // Execute pending vibration if delayed vibe was requested - do it as the notification
-  // starts sliding up to reveal the text
+  // Execute pending vibration and backlight if delayed vibe was requested - do it as the
+  // notification starts sliding up to reveal the text
   if (data->pending_vibe) {
     data->pending_vibe = false;
     prv_do_notification_vibe(data, &data->pending_vibe_id);
+  }
+  if (data->pending_backlight) {
+    data->pending_backlight = false;
+    light_enable_interaction();
   }
 
   // get the frame of the swap_layer and set its destination
@@ -1436,7 +1444,12 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
   }
 
   if (alerts_should_enable_backlight_for_type(prv_alert_type_for_notification_type(type))) {
-    light_enable_interaction();
+    // Check if we should delay the backlight until the animation completes (same as vibe delay)
+    if (alerts_preferences_get_notification_vibe_delay() && data->peek_layer) {
+      data->pending_backlight = true;
+    } else {
+      light_enable_interaction();
+    }
   }
 
   prv_refresh_pop_timer(data);
