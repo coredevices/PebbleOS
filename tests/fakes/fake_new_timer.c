@@ -2,13 +2,25 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
 
 #include "services/common/new_timer/new_timer.h"
 #include "util/list.h"
 #include "drivers/rtc.h"
 #include "system/passert.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Simple stubs for kernel_malloc and kernel_free
+// We can't include fake_pbl_malloc.h because it has inline functions
+// that call clar test framework functions which aren't available here
+void *kernel_malloc(size_t bytes) {
+  return malloc(bytes);
+}
+
+void kernel_free(void *ptr) {
+  free(ptr);
+}
 
 // =============================================================================================
 // Variables (defined here so they can be shared across translation units)
