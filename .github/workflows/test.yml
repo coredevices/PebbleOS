@@ -102,7 +102,7 @@ jobs:
       - name: Install libclang (Docker)
         if: matrix.platform.name == 'docker'
         run: |
-          apt-get update && apt-get install -y libclang-dev
+          apt-get update && apt-get install -y libclang-17-dev
 
       - name: Configure
         run: |

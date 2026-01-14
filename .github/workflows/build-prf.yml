@@ -47,7 +47,7 @@ jobs:
 
       - name: Install libclang
         run: |
-          apt-get update && apt-get install -y libclang-dev
+          apt-get update && apt-get install -y libclang-17-dev
 
       - name: Get npm cache directory
         id: npm-cache-dir
