@@ -14,11 +14,12 @@
 // Simple stubs for kernel_malloc and kernel_free
 // We can't include fake_pbl_malloc.h because it has inline functions
 // that call clar test framework functions which aren't available here
-void *kernel_malloc(size_t bytes) {
+// Make these static so they don't conflict with definitions in fake_pbl_malloc.h
+static void *kernel_malloc(size_t bytes) {
   return malloc(bytes);
 }
 
-void kernel_free(void *ptr) {
+static void kernel_free(void *ptr) {
   free(ptr);
 }
 
