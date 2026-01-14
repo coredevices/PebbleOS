@@ -173,8 +173,8 @@ static const CertificationIds s_certification_ids_obelix = {
   .rated_voltage = "3.8 V",
   .milliampere_hour = "185 mAh",
   .watt_hour = "0.71 Wh",
-  .canada_ised_id = "34223-Pebble Time 2",
-  .usa_fcc_id = "2BQB2-Pebble Time 2",
+  .canada_ised_id = "34223-PEBBLETIME2",
+  .usa_fcc_id = "2BQB2-PEBBLETIME2",
 };
 
 static const RegulatoryFlags * prv_get_regulatory_flags(void) {
