@@ -134,7 +134,10 @@ static void prv_push_apps_color_menu(SettingsThemesData *data) {
     .selection_will_change = prv_option_apps_menu_selection_will_change,
   };
   if (selected < 0) {
-    WTF;
+    // Invalid color stored - fall back to default instead of crashing
+    // This can happen if an invalid color was synced from the phone
+    PBL_LOG(LOG_LEVEL_WARNING, "Invalid apps menu color, using default");
+    selected = 0;
   }
   OptionMenu * const option_menu = settings_option_menu_create(
       title, OptionMenuContentType_SingleLine, selected, &callbacks,
@@ -193,7 +196,10 @@ static void prv_push_settings_color_menu(SettingsThemesData *data) {
     .selection_will_change = prv_option_settings_menu_selection_will_change,
   };
   if (selected < 0) {
-    WTF;
+    // Invalid color stored - fall back to default instead of crashing
+    // This can happen if an invalid color was synced from the phone
+    PBL_LOG(LOG_LEVEL_WARNING, "Invalid settings menu color, using default");
+    selected = 0;
   }
   OptionMenu * const option_menu = settings_option_menu_create(
       title, OptionMenuContentType_SingleLine, selected, &callbacks,
