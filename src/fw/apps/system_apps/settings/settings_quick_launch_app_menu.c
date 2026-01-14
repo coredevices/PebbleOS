@@ -28,7 +28,7 @@ typedef struct {
   AppMenuDataSource data_source;
   ButtonId button;
   bool is_tap;
-  int16_t selected;
+  bool is_combo;
   OptionMenu *option_menu;
 } QuickLaunchAppMenuData;
 
@@ -52,7 +52,8 @@ static bool prv_app_filter_callback(struct AppMenuDataSource *source, AppInstall
   }
   
   // For tap buttons, filter Timeline apps based on button
-  if (data->is_tap) {
+  // Skip special filtering for combo buttons
+  if (data->is_tap && !data->is_combo) {
     if (data->button == BUTTON_ID_UP) {
       // Tap Up: Only show Timeline Past, hide Timeline Future
       if (uuid_equal(&entry->uuid, &timeline_uuid)) {
@@ -102,7 +103,10 @@ static void prv_menu_select(OptionMenu *option_menu, int selection, void *contex
 
   QuickLaunchAppMenuData *data = context;
   if (selection == 0) {
-    if (data->is_tap) {
+    if (data->is_combo) {
+      quick_launch_combo_back_up_set_app(INSTALL_ID_INVALID);
+      quick_launch_combo_back_up_set_enabled(false);
+    } else if (data->is_tap) {
       quick_launch_single_click_set_app(data->button, INSTALL_ID_INVALID);
       quick_launch_single_click_set_enabled(data->button, false);
     } else {
@@ -113,7 +117,10 @@ static void prv_menu_select(OptionMenu *option_menu, int selection, void *contex
   } else {
     AppMenuNode* app_menu_node =
         app_menu_data_source_get_node_at_index(&data->data_source, selection - NUM_CUSTOM_CELLS);
-    if (data->is_tap) {
+    if (data->is_combo) {
+      quick_launch_combo_back_up_set_app(app_menu_node->install_id);
+      quick_launch_combo_back_up_set_enabled(true);
+    } else if (data->is_tap) {
       quick_launch_single_click_set_app(data->button, app_menu_node->install_id);
     } else {
       quick_launch_set_app(data->button, app_menu_node->install_id);
@@ -140,6 +147,7 @@ void quick_launch_app_menu_window_push(ButtonId button, bool is_tap) {
   QuickLaunchAppMenuData *data = app_zalloc_check(sizeof(*data));
   data->button = button;
   data->is_tap = is_tap;
+  data->is_combo = false;
 
   OptionMenu *option_menu = option_menu_create();
   data->option_menu = option_menu;
@@ -151,6 +159,41 @@ void quick_launch_app_menu_window_push(ButtonId button, bool is_tap) {
 
   const AppInstallId install_id = is_tap ? quick_launch_single_click_get_app(button)
                                           : quick_launch_get_app(button);
+  const int app_index = app_menu_data_source_get_index_of_app_with_install_id(&data->data_source,
+                                                                              install_id);
+
+  const OptionMenuConfig config = {
+    .title = i18n_get(i18n_noop("Quick Launch"), data),
+    .choice = (install_id == INSTALL_ID_INVALID) ? 0 : (app_index + NUM_CUSTOM_CELLS),
+    .status_colors = { GColorWhite, GColorBlack, },
+    .highlight_colors = { shell_prefs_get_settings_menu_highlight_color(), GColorWhite },
+    .icons_enabled = true,
+  };
+  option_menu_configure(option_menu, &config);
+  option_menu_set_callbacks(option_menu, &(OptionMenuCallbacks) {
+    .select = prv_menu_select,
+    .get_num_rows = prv_menu_get_num_rows,
+    .draw_row = prv_menu_draw_row,
+    .unload = prv_menu_unload,
+  }, data);
+
+  const bool animated = true;
+  app_window_stack_push(&option_menu->window, animated);
+}
+
+void quick_launch_app_menu_window_push_combo(void) {
+  QuickLaunchAppMenuData *data = app_zalloc_check(sizeof(*data));
+  data->is_combo = true;
+
+  OptionMenu *option_menu = option_menu_create();
+  data->option_menu = option_menu;
+
+  app_menu_data_source_init(&data->data_source, &(AppMenuDataSourceCallbacks) {
+    .changed = prv_menu_reload_data,
+    .filter = prv_app_filter_callback,
+  }, data);
+
+  const AppInstallId install_id = quick_launch_combo_back_up_get_app();
   const int app_index = app_menu_data_source_get_index_of_app_with_install_id(&data->data_source,
                                                                               install_id);
 

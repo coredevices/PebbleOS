@@ -63,6 +63,9 @@ void click_recognizer_handle_button_up(ClickRecognizer *recognizer);
 //! Tell the particular recognizer that the associated button has been pressed.
 void click_recognizer_handle_button_down(ClickRecognizer *recognizer);
 
+//! Reset the state of a single recognizer, including timers.
+void click_recognizer_reset(ClickRecognizer *recognizer);
+
 //! Initialize a click manager for use. This only needs to be called once to initialize the structure, and then the
 //! same struct can be reconfigured multiple times by using click_manager_clear.
 void click_manager_init(ClickManager* click_manager);
