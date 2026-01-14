@@ -431,24 +431,6 @@
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
-      "type": "font",
-      "name": "AGENCY_FB_46_NUMBERS_AM_PM",
-      "file": "normal/base/pbf/AGENCY_FB_46_NUMBERS_AM_PM.pbf",
-      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
-    },
-    {
-      "type": "font",
-      "name": "AGENCY_FB_88_NUMBERS_AM_PM",
-      "file": "normal/base/pbf/AGENCY_FB_88_NUMBERS_AM_PM.pbf",
-      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
-    },
-    {
-      "type": "font",
-      "name": "AGENCY_FB_88_THIN_NUMBERS_AM_PM",
-      "file": "normal/base/pbf/AGENCY_FB_88_THIN_NUMBERS_AM_PM.pbf",
-      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
-    },
-    {
       "type": "js",
       "name": "JS_TICTOC",
       "file": "normal/base/js/tictoc.js",
