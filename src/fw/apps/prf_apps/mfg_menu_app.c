@@ -182,6 +182,7 @@ static void prv_extras_select_test_aging(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_test_aging_app_get_info());
 }
 
+#ifdef MANUFACTURING_FW
 static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context) {
   ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
   confirmation_dialog_pop(confirmation_dialog);
@@ -214,6 +215,7 @@ static void prv_extras_select_load_prf(int index, void *context) {
 
   app_confirmation_dialog_push(confirmation_dialog);
 }
+#endif
 
 static void prv_extras_window_load(Window *window) {
   ExtrasMenuData *data = window_get_user_data(window);
@@ -227,7 +229,9 @@ static void prv_extras_window_load(Window *window) {
 #endif
     { .title = "Test Discharge",    .callback = prv_extras_select_discharge },
     { .title = "Test Aging",        .callback = prv_extras_select_test_aging },
+#ifdef MANUFACTURING_FW
     { .title = "Load PRF",          .callback = prv_extras_select_load_prf },
+#endif
   };
 
   SimpleMenuItem *menu_items = app_malloc(sizeof(extras_menu_items));
