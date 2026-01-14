@@ -161,7 +161,11 @@ def build(bld):
             target=common_folder_node.make_node(sdk_file.path_from(bld.path)))
 
     if bld.env.JS_ENGINE == 'rocky':
-        js_tooling_path = os.path.dirname(bld.env.JS_TOOLING_SCRIPT.relpath())
+        # JS_TOOLING_SCRIPT may be a single node or a list of nodes
+        js_tooling_script = bld.env.JS_TOOLING_SCRIPT
+        if isinstance(js_tooling_script, list):
+            js_tooling_script = js_tooling_script[0]
+        js_tooling_path = os.path.dirname(js_tooling_script.relpath())
         for js_tool in ('js_tooling.js', 'generate_snapshot.js'):
             bld(rule=COPY,
                 source=bld.path.parent.get_bld().make_node(js_tooling_path).make_node(js_tool),
