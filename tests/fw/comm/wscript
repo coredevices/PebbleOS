@@ -15,6 +15,7 @@ def build(bld):
                            "tests/fakes/fake_events.c "
                            "tests/fakes/fake_gatt_client_operations.c "
                            "tests/fakes/fake_gatt_client_subscriptions.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_put_bytes_storage_mem.c "
                            "tests/fakes/fake_queue.c "
                            "tests/fakes/fake_rtc.c "
@@ -35,6 +36,7 @@ def build(bld):
                            "src/fw/comm/internals/bt_conn_mgr.c "
                            "src/fw/services/common/regular_timer.c "
                            "tests/fakes/fake_GAPAPI.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_gap_le_connect_params.c ",
         test_sources_ant_glob = "test_gap_le_advert.c",
@@ -45,6 +47,7 @@ def build(bld):
         sources_ant_glob = "src/fw/comm/internals/bt_conn_mgr.c "
                            "src/fw/services/common/regular_timer.c "
                            "tests/fakes/fake_gap_le_connect_params.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c ",
         test_sources_ant_glob = "test_bt_conn_mgr.c",
         platforms=['snowy', 'spalding'])
@@ -195,6 +198,7 @@ def build(bld):
                            "third_party/tinymt/TinyMT/tinymt/tinymt32.c " \
                            "tests/fakes/fake_gatt_client_operations.c " \
                            "tests/fakes/fake_gatt_client_subscriptions.c " \
+                           "tests/fakes/fake_new_timer.c " \
                            "tests/fakes/fake_rtc.c " \
                            "tests/fakes/fake_session.c",
              defines=["USE_PPOGATT_VERSION=%d" % ppogatt_version],
