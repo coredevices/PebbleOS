@@ -104,6 +104,11 @@ jobs:
         run: |
           apt-get update && apt-get install -y libclang-17-dev
 
+      - name: Upgrade Python clang package (Docker)
+        if: matrix.platform.name == 'docker'
+        run: |
+          pip install --upgrade clang
+
       - name: Configure
         run: |
           if [ "${{ matrix.platform.name }}" = "macos" ]; then
