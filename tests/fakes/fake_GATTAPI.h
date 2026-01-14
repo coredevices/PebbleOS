@@ -3,10 +3,27 @@
 
 #pragma once
 
-#include "GATTAPI.h"
+#ifdef __has_include
+  #if __has_include("GATTAPI.h")
+    #include "GATTAPI.h"
+    #define GATTAPI_AVAILABLE
+  #endif
+#else
+  #ifdef COMPONENT_BTSTACK
+    #include "GATTAPI.h"
+    #define GATTAPI_AVAILABLE
+  #endif
+#endif
 
 #include <stdbool.h>
 #include <stdint.h>
+
+// If GATTAPI.h is not available, provide dummy type definitions
+#ifndef GATTAPI_AVAILABLE
+typedef struct {
+  int dummy;
+} GATT_Service_Discovery_Event_Data_t;
+#endif
 
 bool fake_gatt_is_service_discovery_running(void);
 
