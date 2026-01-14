@@ -3,13 +3,24 @@
 
 #pragma once
 
-#include "GAPAPI.h"
+#ifdef __has_include
+  #if __has_include("GAPAPI.h")
+    #include "GAPAPI.h"
+    #define GAPAPI_AVAILABLE
+  #endif
+#else
+  #ifdef COMPONENT_BTSTACK
+    #include "GAPAPI.h"
+    #define GAPAPI_AVAILABLE
+  #endif
+#endif
 
 #include <bluetooth/bluetooth_types.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef GAPAPI_AVAILABLE
 //! Provided to simulate stopping advertising because of an inbound connection.
 void gap_le_set_advertising_disabled(void);
 
@@ -43,3 +54,4 @@ const BD_ADDR_t *fake_GAPAPI_get_bd_addr_resolving_to_fake_irk(void);
 const BTDeviceInternal *fake_GAPAPI_get_device_resolving_to_fake_irk(void);
 
 void fake_GAPAPI_init(void);
+#endif // GAPAPI_AVAILABLE

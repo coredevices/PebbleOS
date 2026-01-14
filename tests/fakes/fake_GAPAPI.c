@@ -3,6 +3,8 @@
 
 #include "fake_GAPAPI.h"
 
+#ifdef GAPAPI_AVAILABLE
+
 #include "bluetopia_interface.h"
 
 #include <string.h>
@@ -348,3 +350,4 @@ void fake_GAPAPI_init(void) {
   memset(&s_scan_resp_data, 0, sizeof(s_scan_resp_data));
   s_scan_resp_data_length = 0;
 }
+#endif // GAPAPI_AVAILABLE
