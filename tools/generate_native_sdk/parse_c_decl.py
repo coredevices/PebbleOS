@@ -77,8 +77,15 @@ def load_library():
             clang.cindex.conf.set_library_path(libclang_path)
         except (subprocess.CalledProcessError, FileNotFoundError):
             # llvm-config not found, try common library paths
-            for lib_path in ['/usr/lib', '/usr/lib/llvm', '/usr/lib/x86_64-linux-gnu',
-                             '/usr/local/lib', '/opt/llvm/lib']:
+            lib_paths = ['/usr/lib', '/usr/lib/x86_64-linux-gnu', '/usr/local/lib', '/opt/llvm/lib']
+
+            # Also check for versioned llvm directories (e.g., /usr/lib/llvm-18/lib)
+            if os.path.isdir('/usr/lib'):
+                for entry in os.listdir('/usr/lib'):
+                    if entry.startswith('llvm-') and os.path.isdir(os.path.join('/usr/lib', entry)):
+                        lib_paths.append(os.path.join('/usr/lib', entry, 'lib'))
+
+            for lib_path in lib_paths:
                 if os.path.exists(os.path.join(lib_path, 'libclang.so')):
                     clang.cindex.conf.set_library_path(lib_path)
                     logging.info(f"Found libclang at {lib_path}")
