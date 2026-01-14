@@ -212,21 +212,6 @@
       "file": "normal/robert/images/stride_shoe_blue.png"
     },
     {
-      "type": "png",
-      "name": "STRIDE_SHOE_BLUE_SMALL",
-      "file": "normal/getafix/images/stride_shoe_blue.png"
-    },
-    {
-      "type": "png",
-      "name": "STRIDE_SHOE_GREEN_SMALL",
-      "file": "normal/getafix/images/stride_shoe_green.png"
-    },
-    {
-      "type": "png",
-      "name": "STRIDE_HEART",
-      "file": "normal/getafix/images/stride_heart.png"
-    },
-    {
       "type": "pbi8",
       "name": "ARROW_RIGHT",
       "file": "normal/spalding/images/arrow_right.png",

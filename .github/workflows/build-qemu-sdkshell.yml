@@ -25,6 +25,7 @@ jobs:
         board:
           - snowy_bb2
           - silk_bb2
+          - spalding_bb2
         platform:
           - name: docker
             runs-on: ubuntu-24.04

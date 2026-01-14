@@ -42,6 +42,10 @@ jobs:
         board:
           - snowy_bb2   # Pebble Time (BASALT baseline)
           - silk_bb2    # Pebble 2 (DIORITE with HRM)
+          - spalding_bb2
+          - asterix
+          - obelix_dvt
+          - obelix_pvt
         platform:
           - name: docker
             runs-on: ubuntu-24.04
