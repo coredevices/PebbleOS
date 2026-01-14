@@ -21,41 +21,61 @@
 // If GATTAPI.h is not available, provide dummy type definitions
 #ifndef GATTAPI_AVAILABLE
 typedef struct {
-  int dummy;
+  unsigned int Event_Data_Type;
+  unsigned int Event_Data_Size;
+  union {
+    void *GATT_Service_Discovery_Complete_Data;
+    void *GATT_Service_Discovery_Indication_Data;
+  } Event_Data;
 } GATT_Service_Discovery_Event_Data_t;
 
 typedef struct {
-  int dummy;
+  unsigned int ConnectionID;
+  uint8_t Status;
 } GATT_Service_Discovery_Complete_Data_t;
 
 typedef struct {
-  int dummy;
+  unsigned int ConnectionID;
+  struct {
+    unsigned int NumberOfCharacteristics;
+    void *CharacteristicInformationList;
+  } ServiceInformation;
+  unsigned int NumberOfCharacteristics;
+  void *CharacteristicInformationList;
 } GATT_Service_Discovery_Indication_Data_t;
 
 typedef struct {
-  int dummy;
+  unsigned int Characteristic_Descriptor_Handle;
+  unsigned int Characteristic_Descriptor_UUID;
+  unsigned int UUID_Type;
 } GATT_Characteristic_Descriptor_Information_t;
 
 typedef struct {
-  int dummy;
+  unsigned int Characteristic_Handle;
+  unsigned int Characteristic_UUID;
+  unsigned int Characteristic_Properties;
+  unsigned int NumberOfDescriptors;
+  GATT_Characteristic_Descriptor_Information_t *DescriptorList;
+  unsigned int UUID_Type;
 } GATT_Characteristic_Information_t;
 
-typedef void (*GATT_Connection_Event_Callback_t)(unsigned int, GATT_Connection_Event_Data_t *,
-                                                  unsigned long);
+typedef void (*GATT_Connection_Event_Callback_t)(unsigned int, void *, unsigned long);
 
 typedef struct {
   int dummy;
 } GATT_Connection_Event_Data_t;
 
 typedef struct {
-  int dummy;
+  unsigned int UUID_Type;
+  unsigned int UUID;
 } GATT_UUID_t;
 
 typedef void (*GATT_Service_Discovery_Event_Callback_t)(unsigned int, unsigned int,
                                                         GATT_Service_Discovery_Event_Data_t *);
 
 typedef struct {
-  int dummy;
+  unsigned int Starting_Handle;
+  unsigned int Ending_Handle;
 } GATT_Attribute_Handle_Group_t;
 
 typedef struct {
@@ -77,11 +97,13 @@ typedef uint16_t Word_t;
 // Enum values
 #define etGATT_Service_Discovery_Complete 0
 #define etGATT_Service_Discovery_Indication 1
+#define etGATT_Client_Write_Response 2
 #define guUUID_16 0
+#define gctLE 0
 
 // Size constants
-#define GATT_SERVICE_DISCOVERY_COMPLETE_DATA_SIZE sizeof(void *)
-#define GATT_SERVICE_DISCOVERY_INDICATION_DATA_SIZE sizeof(void *)
+#define GATT_SERVICE_DISCOVERY_COMPLETE_DATA_SIZE sizeof(GATT_Service_Discovery_Complete_Data_t)
+#define GATT_SERVICE_DISCOVERY_INDICATION_DATA_SIZE sizeof(GATT_Service_Discovery_Indication_Data_t)
 
 #endif
 
