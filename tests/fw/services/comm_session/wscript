@@ -7,7 +7,8 @@ def build(bld):
             "src/fw/services/common/comm_session/meta_endpoint.c "
             "tests/fakes/fake_session.c "
          ),
-         test_sources_ant_glob="test_meta_endpoint.c")
+         test_sources_ant_glob="test_meta_endpoint.c",
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(bld,
          sources_ant_glob=(
@@ -17,7 +18,8 @@ def build(bld):
             "tests/fakes/fake_session_send_buffer.c"
          ),
          test_sources_ant_glob="test_session.c",
-         override_includes=['dummy_board'])
+         override_includes=['dummy_board'],
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(bld,
          sources_ant_glob=(
@@ -26,13 +28,15 @@ def build(bld):
             "tests/fakes/fake_queue.c "
             "tests/fakes/fake_rtc.c"
          ),
-         test_sources_ant_glob="test_session_send_buffer.c")
+         test_sources_ant_glob="test_session_send_buffer.c",
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(bld,
          sources_ant_glob=(
             "src/fw/services/common/comm_session/session_send_queue.c "
          ),
-         test_sources_ant_glob="test_session_send_queue.c")
+         test_sources_ant_glob="test_session_send_queue.c",
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(bld,
          sources_ant_glob=(
@@ -43,7 +47,8 @@ def build(bld):
             "tests/fakes/fake_session_send_buffer.c "
          ),
          test_sources_ant_glob="test_session_receive_router.c",
-         override_includes=['dummy_board', 'pp_endpoints'])
+         override_includes=['dummy_board', 'pp_endpoints'],
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(bld,
          sources_ant_glob=(
@@ -51,14 +56,16 @@ def build(bld):
             "tests/fakes/fake_events.c "
          ),
          test_sources_ant_glob="test_session_remote_version.c",
-         override_includes=['dummy_board'])
+         override_includes=['dummy_board'],
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(bld,
          sources_ant_glob=(
             "src/fw/services/common/comm_session/default_kernel_receiver.c "
          ),
          test_sources_ant_glob="test_default_kernel_receiver.c",
-         override_includes=['dummy_board'])
+         override_includes=['dummy_board'],
+         platforms=['snowy', 'spalding', 'silk'])
 
 
 # vim:filetype=python

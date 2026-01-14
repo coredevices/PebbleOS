@@ -296,14 +296,7 @@ def build(bld):
       bld.env.append_value('DEFINES', 'DUMA_DISABLED')
 
     # Any test in this list won't be compiled
-    bld.env.BROKEN_TESTS = [
-        'test_bluetooth_persistent_storage_prf.c',
-        'test_bluetooth_persistent_storage.c',
-        'test_session.c',
-        'test_session_receive_router.c',
-        'test_compositor.c',
-        'test_graphics_circle.c'
-    ]
+    bld.env.BROKEN_TESTS = []
 
     # Don't run the python tool tests because they exercise a lot of old python2 code that still needs to be updated
     bld.env.PYTHON_TOOL_TESTS_DISABLED = True

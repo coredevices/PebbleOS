@@ -23,7 +23,8 @@ def _test_bluetooth_persistent_storage(bld, version=1):
          ),
          test_sources_ant_glob="test_bluetooth_persistent_storage.c",
          test_name=test_name,
-         override_includes=['dummy_board', version_override_include])
+         override_includes=['dummy_board', version_override_include],
+         platforms=['snowy', 'spalding', 'silk'])
 
 
 def build(bld):
@@ -33,13 +34,15 @@ def build(bld):
           "tests/fakes/fake_events.c "
          ),
          test_sources_ant_glob="test_ble_hrm.c",
-         defines=['CAPABILITY_HAS_BUILTIN_HRM=1'])
+         defines=['CAPABILITY_HAS_BUILTIN_HRM=1'],
+         platforms=['snowy', 'spalding'])
 
     clar(bld,
          sources_ant_glob=(
             "src/fw/services/common/bluetooth/local_addr.c"
          ),
-         test_sources_ant_glob="test_local_addr.c")
+         test_sources_ant_glob="test_local_addr.c",
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(bld,
          sources_ant_glob=(
@@ -49,7 +52,8 @@ def build(bld):
             "tests/fakes/fake_events.c "
          ),
          test_sources_ant_glob="test_bluetooth_persistent_storage_prf.c",
-         override_includes=['snowy_mfg_board'])
+         override_includes=['snowy_mfg_board'],
+         platforms=['snowy'])
 
     # Run the bluetooth_persistent_storage.c unit tests
     # for the v1 and v2 serialization formats:
