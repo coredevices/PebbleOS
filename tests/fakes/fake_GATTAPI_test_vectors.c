@@ -6,6 +6,8 @@
 
 #include <btutil/bt_uuid.h>
 
+#ifdef GATTAPI_AVAILABLE
+
 void fake_gatt_put_discovery_complete_event(uint8_t status,
                                             unsigned int connection_id) {
   GATT_Service_Discovery_Complete_Data_t data =
@@ -460,3 +462,4 @@ uint16_t fake_gatt_gatt_profile_service_service_changed_att_handle(void) {
 uint16_t fake_gatt_gatt_profile_service_service_changed_cccd_att_handle(void) {
   return 5; // .Characteristic_Descriptor_Handle = 0x05,
 }
+#endif // GATTAPI_AVAILABLE
