@@ -104,7 +104,9 @@ jobs:
           if [ "${{ matrix.platform.name }}" = "macos" ]; then
             export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
             source .venv/bin/activate
-            ./waf configure --board ${{ matrix.board }} --relax_toolchain_restrictions
+            ./waf configure --board ${{ matrix.board }} --js-engine=none --relax_toolchain_restrictions
+          elif [ "${{ matrix.platform.name }}" = "linux" ]; then
+            ./waf configure --board ${{ matrix.board }} --js-engine=none
           else
             ./waf configure --board ${{ matrix.board }}
           fi
