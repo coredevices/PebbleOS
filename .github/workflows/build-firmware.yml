@@ -30,8 +30,7 @@ jobs:
                 "bb2", "ev2_4", "v1_5", "v2_0",
                 "snowy_bb2", "snowy_evt2", "snowy_dvt", "snowy_s3", "snowy_emery",
                 "spalding_bb2", "spalding_evt", "spalding", "spalding_gabbro",
-                "silk_bb2", "silk_evt", "silk_bb", "silk",
-                "robert_bb2", "robert_evt"]
+                "silk_bb2", "silk_evt", "silk_bb", "silk"]
 
     steps:
       - name: Mark Github workspace as safe
