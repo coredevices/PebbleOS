@@ -67,30 +67,53 @@ typedef struct {
 
 typedef struct {
   unsigned int UUID_Type;
-  unsigned int UUID;
+  unsigned int UUID_16;
+  unsigned char UUID_128[16];
 } GATT_UUID_t;
 
-typedef void (*GATT_Service_Discovery_Event_Callback_t)(unsigned int, unsigned int,
-                                                        GATT_Service_Discovery_Event_Data_t *);
+typedef void (*GATT_Service_Discovery_Event_Callback_t)(unsigned int, GATT_Service_Discovery_Event_Data_t *, unsigned long);
 
 typedef struct {
   unsigned int Starting_Handle;
   unsigned int Ending_Handle;
+  unsigned int Service_Handle;
+  unsigned int End_Group_Handle;
+  GATT_UUID_t UUID;
 } GATT_Attribute_Handle_Group_t;
 
 typedef struct {
   int dummy;
 } GATT_Service_Changed_Data_t;
 
-typedef void (*GATT_Client_Event_Callback_t)(unsigned int, void *);
+typedef void (*GATT_Client_Event_Callback_t)(unsigned int, void *, unsigned long);
 
 typedef struct {
-  int dummy;
+  unsigned int ConnectionID;
+  unsigned int TransactionID;
+  unsigned int ConnectionType;
+  unsigned int BytesWritten;
 } GATT_Write_Response_Data_t;
 
 typedef struct {
-  int dummy;
+  unsigned int Event_Data_Type;
+  unsigned int Event_Data_Size;
+  union {
+    GATT_Write_Response_Data_t *GATT_Write_Response_Data;
+    void *GATT_Service_Changed_Data;
+  } Event_Data;
 } GATT_Client_Event_Data_t;
+
+typedef struct {
+  unsigned int Service_Handle;
+  unsigned int End_Group_Handle;
+  GATT_UUID_t UUID;
+} GATT_Service_Information_t;
+
+#define inc_service_list 0
+#define guUUID_128 1
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
 
 typedef uint16_t Word_t;
 
