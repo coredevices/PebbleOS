@@ -51,17 +51,17 @@ SDK-level classifications that determine software compatibility:
 Consumer products and their hardware:
 
 | Device                | Era         | Platform Type | Board        | Screen                      |
-| --------------------- | ----------- | ------------- | ------------ | --------------------------- | ------------ |
-| **Pebble**            | Pebble      | APLITE        | tintin_bb2   | 144×168 B&W                 |              |
-| **Pebble Steel**      | Pebble      | APLITE        | tintin_bb2   | 144×168 B&W                 |              |
-| **Pebble Time**       | Pebble      | BASALT        | snowy_bb2    | 144×168 color               |              |
-| **Pebble Time Round** | Pebble      | CHALK         | spalding_bb2 | 180×180 color round         |              |
-| **Pebble 2 SE**       | Pebble      | DIORITE       | silk_bb2     | 144×168 B&W                 |              |
-| **Pebble 2 HR**       | Pebble      | DIORITE       | silk_bb2     | 144×168 B&W                 |              |
-| **Pebble Time 2**     | Pebble      | EMERY         | robert_bb2   | 200×228 color               |              |
-| **Pebble 2 Duo**      | CoreDevices | FLINT         | asterix      | 144×168 B&W                 |              |
-| **Pebble Round 2**    | CoreDevices | GABBRO        | spalding_bb2 | 260×260 color round + touch | (prototype)  |
-| **Pebble Round 2**    | CoreDevices | GETAFIX       | getafix_evt  | 260×260 color round + touch | (production) |
+| --------------------- | ----------- | ------------- | ------------ | --------------------------- |
+| **Pebble**            | Pebble      | APLITE        | tintin_bb2   | 144×168 B&W                 |
+| **Pebble Steel**      | Pebble      | APLITE        | tintin_bb2   | 144×168 B&W                 |
+| **Pebble Time**       | Pebble      | BASALT        | snowy_bb2    | 144×168 color               |
+| **Pebble Time Round** | Pebble      | CHALK         | spalding_bb2 | 180×180 color round         |
+| **Pebble 2 SE**       | Pebble      | DIORITE       | silk_bb2     | 144×168 B&W                 |
+| **Pebble 2 HR**       | Pebble      | DIORITE       | silk_bb2     | 144×168 B&W                 |
+| **Pebble Time 2**     | Pebble      | EMERY         | robert_bb2   | 200×228 color               |
+| **Pebble 2 Duo**      | CoreDevices | FLINT         | asterix      | 144×168 B&W                 |
+| **Pebble Round 2**    | CoreDevices | GABBRO        | spalding_bb2 | 260×260 color round + touch |
+| **Pebble Round 2**    | CoreDevices | GETAFIX       | getafix_evt  | 260×260 color round + touch |
 
 ### Board Variants
 
