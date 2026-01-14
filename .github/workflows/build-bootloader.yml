@@ -43,10 +43,6 @@ jobs:
         run: |
           apt-get update && apt-get install -y libclang-dev
 
-      - name: Upgrade Python clang package
-        run: |
-          pip install --upgrade clang
-
       - name: Obtain platform name
         id: get-platform
         run: |

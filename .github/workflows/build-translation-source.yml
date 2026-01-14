@@ -37,10 +37,6 @@ jobs:
         run: |
           apt-get update && apt-get install -y libclang-dev
 
-      - name: Upgrade Python clang package
-        run: |
-          pip install --upgrade clang
-
       - name: Configure
         run: ./waf configure --board ${{ env.BOARD_NAME }}
 
