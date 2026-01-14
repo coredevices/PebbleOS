@@ -548,6 +548,11 @@ def configure(conf):
     else:
         conf.fatal('No micro family specified for {}!'.format(conf.options.board))
 
+    # Suppress maybe-uninitialized warnings in third-party code for NRF52 and SF32LB52 boards
+    # These warnings occur in hal_sifli and nimble Bluetooth stack code
+    if conf.is_asterix() or conf.is_obelix() or conf.is_getafix():
+        conf.env.append_value('CFLAGS', '-Wno-maybe-uninitialized')
+
     if conf.options.mfg:
         # Note that for the most part PRF and MFG firmwares are the same, so for MFG PRF builds
         # both MANUFACTURING_FW and RECOVERY_FW will be defined.
