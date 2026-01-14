@@ -39,6 +39,10 @@ jobs:
           pip install -U pip
           pip install -r requirements.txt
 
+      - name: Install libclang
+        run: |
+          apt-get update && apt-get install -y libclang-14-dev
+
       - name: Obtain platform name
         id: get-platform
         run: |

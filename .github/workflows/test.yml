@@ -99,6 +99,11 @@ jobs:
           pip install -U pip
           pip install -r requirements.txt
 
+      - name: Install libclang (Docker)
+        if: matrix.platform.name == 'docker'
+        run: |
+          apt-get update && apt-get install -y libclang-14-dev
+
       - name: Configure
         run: |
           if [ "${{ matrix.platform.name }}" = "macos" ]; then

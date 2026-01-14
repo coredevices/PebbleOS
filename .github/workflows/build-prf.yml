@@ -45,6 +45,10 @@ jobs:
           pip install -U pip
           pip install -r requirements.txt
 
+      - name: Install libclang
+        run: |
+          apt-get update && apt-get install -y libclang-14-dev
+
       - name: Get npm cache directory
         id: npm-cache-dir
         shell: bash
