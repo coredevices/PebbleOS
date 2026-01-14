@@ -282,13 +282,13 @@ void stub_new_timer_invoke(int num_to_invoke) {
 // Fakes
 
 // Create a new timer
-TimerID new_timer_create(void) {
+static inline TimerID new_timer_create(void) {
   s_num_new_timer_create_calls++;
   return stub_new_timer_create();
 }
 
 // Start a timer
-bool new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
+static inline bool new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
                      uint32_t flags) {
   s_num_new_timer_start_calls++;
   s_new_timer_start_param_timer_id = timer_id;
@@ -299,18 +299,18 @@ bool new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallback cb,
 }
 
 // Stop a timer
-bool new_timer_stop(TimerID timer_id) {
+static inline bool new_timer_stop(TimerID timer_id) {
   s_num_new_timer_stop_calls++;
   return stub_new_timer_stop(timer_id);
 }
 
 // Delete a timer
-void new_timer_delete(TimerID timer_id) {
+static inline void new_timer_delete(TimerID timer_id) {
   s_num_new_timer_delete_calls++;
   stub_new_timer_delete(timer_id);
 }
 
-bool new_timer_scheduled(TimerID timer, uint32_t *expire_ms_p) {
+static inline bool new_timer_scheduled(TimerID timer, uint32_t *expire_ms_p) {
   s_num_new_timer_schedule_calls++;
   return stub_new_timer_is_scheduled(timer);
 }
