@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <stddef.h>
+#include <stdlib.h>
+
 // Only include fake_pbl_malloc.h in test contexts, not when compiling fake_new_timer.c
 // to avoid multiple definition conflicts with stubs_pbl_malloc.h
 #ifndef FAKE_NEW_TIMER_C
