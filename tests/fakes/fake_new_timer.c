@@ -11,17 +11,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Simple stubs for kernel_malloc and kernel_free
-// We can't include fake_pbl_malloc.h because it has inline functions
-// that call clar test framework functions which aren't available here
-// Make these static so they don't conflict with definitions in fake_pbl_malloc.h
-static void *kernel_malloc(size_t bytes) {
-  return malloc(bytes);
-}
-
-static void kernel_free(void *ptr) {
-  free(ptr);
-}
+// Note: kernel_malloc and kernel_free are not defined here.
+// The stub functions in fake_new_timer.h use these functions, but when
+// fake_new_timer.c is compiled, those inline stub functions are not used.
+// Tests that include fake_new_timer.h will also include fake_pbl_malloc.h
+// which provides the actual kernel_malloc and kernel_free implementations.
 
 // =============================================================================================
 // Variables (defined here so they can be shared across translation units)
