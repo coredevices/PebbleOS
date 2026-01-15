@@ -268,7 +268,8 @@ def build(ctx):
             " src/fw/services/normal/audio_endpoint.c " \
             " tests/fakes/fake_new_timer.c " \
             " tests/fakes/fake_session.c"]),\
-        test_sources_ant_glob = "test_audio_endpoint.c")
+        test_sources_ant_glob = "test_audio_endpoint.c",
+        platforms=['snowy'])
 
     clar(ctx,
         sources_ant_glob = " ".join([
