@@ -6,6 +6,8 @@
 
 #include <btutil/bt_uuid.h>
 
+#ifdef GATTAPI_AVAILABLE
+
 void fake_gatt_put_discovery_complete_event(uint8_t status,
                                             unsigned int connection_id) {
   GATT_Service_Discovery_Complete_Data_t data =
@@ -460,3 +462,53 @@ uint16_t fake_gatt_gatt_profile_service_service_changed_att_handle(void) {
 uint16_t fake_gatt_gatt_profile_service_service_changed_cccd_att_handle(void) {
   return 5; // .Characteristic_Descriptor_Handle = 0x05,
 }
+#else
+// Stub implementations when GATTAPI_AVAILABLE is not defined (Linux/Docker)
+// These are minimal stubs that allow the tests to link
+
+void fake_gatt_put_discovery_complete_event(uint8_t status, unsigned int connection_id) {
+  // Stub implementation - not usable without Bluetopia types
+}
+
+void fake_gatt_put_discovery_indication_health_thermometer_service(unsigned int connection_id) {
+  // Stub implementation - not usable without Bluetopia types
+}
+
+const Service * fake_gatt_get_health_thermometer_service(void) {
+  return NULL;
+}
+
+void fake_gatt_put_discovery_indication_blood_pressure_service(unsigned int connection_id) {
+  // Stub implementation - not usable without Bluetopia types
+}
+
+const Service * fake_gatt_get_blood_pressure_service(void) {
+  return NULL;
+}
+
+void fake_gatt_get_bp_att_handle_range(uint16_t *start, uint16_t *end) {
+  *start = 0;
+  *end = 0;
+}
+
+void fake_gatt_put_discovery_indication_random_128bit_uuid_service(unsigned int connection_id) {
+  // Stub implementation - not usable without Bluetopia types
+}
+
+const Service * fake_gatt_get_random_128bit_uuid_service(void) {
+  return NULL;
+}
+
+void fake_gatt_put_discovery_indication_gatt_profile_service(unsigned int connection_id,
+                                                             bool has_service_changed_characteristic) {
+  // Stub implementation - not usable without Bluetopia types
+}
+
+uint16_t fake_gatt_gatt_profile_service_service_changed_att_handle(void) {
+  return 0;
+}
+
+uint16_t fake_gatt_gatt_profile_service_service_changed_cccd_att_handle(void) {
+  return 0;
+}
+#endif // GATTAPI_AVAILABLE
