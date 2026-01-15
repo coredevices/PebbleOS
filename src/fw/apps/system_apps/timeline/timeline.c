@@ -169,6 +169,40 @@ static void prv_launch_watchface(void *data) {
 #endif
 }
 
+// This function swaps from Timeline Future to Timeline Past when launching Timeline Full
+// To be precise: Timeline Full behaves like Timeline Future, but instead of going back to the
+// watchface when scrolling up, it will launch Timeline Past with a "force_full" argument.
+// By doing so, Timeline Past will launch the Timeline Full (being Timeline Future) when scrolling
+// down.
+static void prv_swap_timeline(void *data) {
+  const bool is_future = (s_app_data->timeline_model.direction == TimelineIterDirectionFuture);
+  const bool to_timeline = true;
+  const CompositorTransition *transition = PBL_IF_RECT_ELSE(
+      compositor_slide_transition_timeline_get(is_future, to_timeline, timeline_model_is_empty()),
+      compositor_dot_transition_timeline_get(is_future, to_timeline));
+  static TimelineArgs args = (TimelineArgs) {
+    .force_full = true
+  };
+  args.force_display_day_sep_on_start = s_app_data->day_sep_displayed_on_start;
+  if (is_future) {
+    Uuid past_uuid = TIMELINE_PAST_UUID_INIT;
+    args.direction = TimelineIterDirectionPast;
+    app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
+      .id = app_install_get_id_for_uuid((const Uuid *)(&past_uuid)),
+      .common.args = (const void *)&args,
+      .common.transition = transition,
+    });
+  } else {
+    Uuid full_uuid = TIMELINE_FULL_UUID_INIT;
+    args.direction = TimelineIterDirectionFuture;
+    app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
+      .id = app_install_get_id_for_uuid((const Uuid *)(&full_uuid)),
+      .common.args = (const void *)&args,
+      .common.transition = transition,
+    });
+  }
+}
+
 static void prv_cleanup_timer(EventedTimerID *timer) {
   if (evented_timer_exists(*timer)) {
     evented_timer_cancel(*timer);
@@ -575,7 +609,13 @@ static void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *conte
 
   if (data->state == TimelineAppStateNoEvents) {
     if (!next) {
-      prv_exit(data);
+      if (data->full_app_view) {
+        // We don't want to exit by scroll backwards while in the full timeline
+        // We want to switch instead
+        prv_swap_timeline(data);
+      } else {
+        prv_exit(data);
+      }
     }
     return; // There are no events
   } else if (prv_attempt_hide_day_sep(data)) {
@@ -599,7 +639,11 @@ static void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *conte
     timeline_layer_move_data(&data->timeline_layer, 1);
   } else {
     if (!timeline_model_iter_prev(&new_idx, &has_new)) {
-      prv_exit(data);
+      if (data->full_app_view) {
+        prv_swap_timeline(data);
+      } else {
+        prv_exit(data);
+      }
       goto done;
     }
     if (has_new) {
@@ -642,7 +686,12 @@ done:
 }
 
 static void prv_click_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
+  TimelineAppData *data = (TimelineAppData *)context;
+  if (!data->full_app_view) {
+    // We don't want to be brought back to the watchface when using the full timeline
+    // i.e. if we started the app in the menu launcher
+    window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
+  }
   window_single_click_subscribe(BUTTON_ID_UP, prv_up_down_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_up_down_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
@@ -957,9 +1006,14 @@ static void NOINLINE prv_setup_peek(TimelineAppData *data) {
     prv_setup_first_pin_peek(data);
     focus_handler = prv_peek_did_focus_handler;
 #endif
-  } else if (state && (state->current_day != time_util_get_midnight_of(now)) &&
+  } else if (state && ((state->current_day != time_util_get_midnight_of(now)) || (data->force_display_day_sep == true)) &&
              prv_set_state(data, TimelineAppStateFarDayHidePeek)) {
     // entering into a day that isn't today, setup the day separator
+    // If switching from Past to Future or Future to Past,
+    // this flag ensures that the next switch will display the day
+    // separator
+    data->day_sep_displayed_on_start = true;
+
     layer_set_hidden((Layer *)&data->peek_layer, true);
 #if ANIMATION_DOT
     timeline_layer_set_day_sep_frame(&data->timeline_layer, &data->timeline_layer.layer.frame);
@@ -1147,6 +1201,18 @@ static bool NOINLINE prv_setup_timeline_app(void) {
   const TimelineArgs *args = process_manager_get_current_process_args();
   Uuid app_uuid;
   sys_get_app_uuid(&app_uuid);
+
+  if (uuid_equal(&app_uuid, &(Uuid)TIMELINE_FULL_UUID_INIT) || (args && args->force_full)) {
+    // Activating the full app flag if we entered this code using "timeline full" UUID,
+    // or if the argument force_full is set.
+    data->full_app_view = true;
+    if (args != NULL) {
+      data->force_display_day_sep = args->force_display_day_sep_on_start;
+    } else {
+      data->force_display_day_sep = false;
+    }
+  }
+
   if (uuid_equal(&app_uuid, &(Uuid)TIMELINE_PAST_UUID_INIT)) {
     data->timeline_model.direction = TimelineIterDirectionPast;
   } else if (args == NULL) {
@@ -1264,6 +1330,19 @@ const PebbleProcessMd *timeline_past_get_app_info() {
     /// The title of Timeline Past in Quick Launch. If the translation is too long, cut out
     /// Timeline and only translate "Past".
     .name = i18n_noop("Timeline Past"),
+  };
+  return &s_app_md.common;
+}
+
+const PebbleProcessMd *timeline_full_get_app_info() {
+  static const PebbleProcessMdSystem s_app_md = {
+    .common = {
+      .main_func = prv_main,
+      .uuid = TIMELINE_FULL_UUID_INIT,
+      .visibility = ProcessVisibilityShown,
+    },
+    .name = i18n_noop("Timeline"),
+    .icon_resource_id = RESOURCE_ID_DAY_SEPARATOR_TINY,
   };
   return &s_app_md.common;
 }
