@@ -503,6 +503,7 @@ def build(ctx):
             "src/fw/services/common/hrm/hrm_manager.c " \
             "src/libos/tick.c " \
             "tests/fakes/fake_events.c " \
+            "tests/fakes/fake_new_timer.c " \
             "tests/fakes/fake_rtc.c " \
             "tests/fakes/fake_accel_service.c ",
         test_sources_ant_glob = "test_hrm_manager.c",
