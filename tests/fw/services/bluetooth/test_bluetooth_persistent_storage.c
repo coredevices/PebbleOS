@@ -36,7 +36,10 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include "stubs_bt_lock.h"
 #include "stubs_gap_le_advert.h"
 #include "stubs_bluetooth_analytics.h"
+
+#define LAUNCHER_TASK_ADD_CALLBACK_PROVIDED
 #include "stubs_event_loop.h"
+
 #include "stubs_gatt_client_discovery.h"
 #include "stubs_gatt_client_subscriptions.h"
 #include "stubs_logging.h"
