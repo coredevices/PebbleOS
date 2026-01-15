@@ -82,7 +82,8 @@ typedef struct {
 } GATT_Attribute_Handle_Group_t;
 
 typedef struct {
-  int dummy;
+  unsigned int Affected_Start_Handle;
+  unsigned int Affected_End_Handle;
 } GATT_Service_Changed_Data_t;
 
 typedef void (*GATT_Client_Event_Callback_t)(unsigned int, void *, unsigned long);
@@ -128,6 +129,11 @@ typedef uint16_t Word_t;
 #define GATT_SERVICE_DISCOVERY_COMPLETE_DATA_SIZE sizeof(GATT_Service_Discovery_Complete_Data_t)
 #define GATT_SERVICE_DISCOVERY_INDICATION_DATA_SIZE sizeof(GATT_Service_Discovery_Indication_Data_t)
 
+// Bluetopia GATT status constants (for testing)
+#define GATT_SERVICE_DISCOVERY_STATUS_SUCCESS           0
+#define GATT_SERVICE_DISCOVERY_STATUS_RESPONSE_TIMEOUT  0x0105
+#define BTGATT_ERROR_INVALID_PARAMETER                   0x0106
+
 #endif
 
 bool fake_gatt_is_service_discovery_running(void);
@@ -155,3 +161,24 @@ uint16_t fake_gatt_write_last_written_handle(void);
 void fake_gatt_put_write_response_for_last_write(void);
 
 void fake_gatt_init(void);
+
+// GATT API function declarations (implemented in fake_GATTAPI.c when GATTAPI_AVAILABLE)
+// These are declared here so stubs_bt_driver_gatt.h can use them
+int GATT_Service_Changed_Indication(unsigned int BluetoothStackID,
+                                    unsigned int ConnectionID,
+                                    GATT_Service_Changed_Data_t *Service_Changed_Data);
+
+int GATT_Service_Changed_CCCD_Read_Response(unsigned int BluetoothStackID,
+                                            unsigned int TransactionID,
+                                            Word_t CCCD);
+
+int GATT_Start_Service_Discovery_Handle_Range(unsigned int stack_id,
+                                             unsigned int connection_id,
+                                             GATT_Attribute_Handle_Group_t *DiscoveryHandleRange,
+                                             unsigned int NumberOfUUID,
+                                             GATT_UUID_t *UUIDList,
+                                             GATT_Service_Discovery_Event_Callback_t ServiceDiscoveryCallback,
+                                             unsigned long CallbackParameter);
+
+int GATT_Stop_Service_Discovery(unsigned int BluetoothStackID, unsigned int ConnectionID);
+

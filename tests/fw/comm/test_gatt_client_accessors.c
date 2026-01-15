@@ -73,7 +73,7 @@ static BTDeviceInternal prv_dummy_device(uint8_t octet) {
 
 static BTDeviceInternal prv_connected_dummy_device(uint8_t octet) {
   BTDeviceInternal device = prv_dummy_device(octet);
-  gap_le_connection_add(&device, NULL, true /* local_is_master */);
+  gap_le_connection_add(&device, NULL, true /* local_is_master */, TIMER_INVALID_ID);
   GAPLEConnection *connection = gap_le_connection_by_device(&device);
   connection->gatt_connection_id = TEST_GATT_CONNECTION_ID;
   return device;
