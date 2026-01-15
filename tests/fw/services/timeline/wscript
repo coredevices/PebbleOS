@@ -60,6 +60,7 @@ def build(ctx):
              "src/fw/util/crc8.c "
              "src/fw/util/time/time.c "
              "tests/fakes/fake_events.c "
+             "tests/fakes/fake_new_timer.c "
              "tests/fakes/fake_rtc.c "
              "tests/fakes/fake_settings_file.c "
          ),
