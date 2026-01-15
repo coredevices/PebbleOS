@@ -9,11 +9,8 @@
 // Forward declarations
 typedef struct BLEAdData BLEAdData;
 
-void gap_le_advert_handle_connect_as_slave(void) {
-}
-
-void gap_le_advert_handle_disconnect_as_slave(void) {
-}
+// NOTE: gap_le_advert_handle_connect_as_slave and gap_le_advert_handle_disconnect_as_slave
+// are already defined in src/fw/comm/ble/gap_le_advert.c, so we don't stub them here.
 
 // Bluetooth driver advertising functions
 bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
