@@ -120,6 +120,7 @@ def build(bld):
                            "tests/fakes/fake_gap_le_connect_params.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/stubs/stubs_bt_driver_gatt.c "
                            "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
@@ -136,6 +137,7 @@ def build(bld):
                           "tests/fakes/fake_gap_le_connect_params.c "
                           "tests/fakes/fake_GATTAPI.c "
                           "tests/fakes/fake_GATTAPI_test_vectors.c "
+                          "tests/fakes/fake_new_timer.c "
                           "tests/fakes/fake_rtc.c "
                           "tests/stubs/stubs_bt_driver_gatt.c "
                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
