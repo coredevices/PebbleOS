@@ -382,7 +382,6 @@ def build(ctx):
         sources_ant_glob =
             "  src/fw/util/rand/rand.c" \
             "  third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
-            "  src/fw/services/normal/app_fetch_endpoint.c" \
             "  tests/fakes/fake_events.c " \
             "  tests/fakes/fake_session.c ",
         test_sources_ant_glob = "test_app_fetch_endpoint.c",
