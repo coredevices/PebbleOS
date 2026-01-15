@@ -206,8 +206,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
 #else
 extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
-  if (!lptim_systick_is_initialized() || !sleep_mode_is_allowed() ||
-      !ipc_queue_check_idle()) {
+  if (!sleep_mode_is_allowed() || !ipc_queue_check_idle()) {
     // To avoid LCPU enter incorrect state, make sure ipc queue is empty before enter stop mode.
     return;
   }
