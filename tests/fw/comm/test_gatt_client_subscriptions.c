@@ -49,7 +49,6 @@ void fake_kernel_malloc_mark_assert_equal(void) { }
 #include "stubs_analytics.h"
 #include "stubs_bluetopia_interface.h"
 #include "stubs_bt_driver_gatt.h"
-#include "stubs_bt_driver_gatt_client_discovery.h"
 #include "stubs_bt_lock.h"
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
