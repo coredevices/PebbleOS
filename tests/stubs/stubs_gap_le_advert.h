@@ -3,9 +3,33 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stdint.h>
+
+// Forward declarations
+typedef struct BLEAdData BLEAdData;
+
 void gap_le_advert_handle_connect_as_slave(void) {
 }
 
 void gap_le_advert_handle_disconnect_as_slave(void) {
+}
+
+// Bluetooth driver advertising functions
+bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
+  return true;
+}
+
+void bt_driver_advert_advertising_disable(void) {
+}
+
+bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+  if (tx_power) {
+    *tx_power = 0;
+  }
+  return true;
+}
+
+void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
 }
 
