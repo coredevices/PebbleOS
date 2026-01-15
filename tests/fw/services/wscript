@@ -130,6 +130,7 @@ def build(ctx):
     clar(ctx,
         sources_ant_glob = \
             " src/fw/services/common/regular_timer.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_session.c" \
             " src/fw/services/common/debounced_connection_service.c",
