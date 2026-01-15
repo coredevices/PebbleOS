@@ -3,8 +3,6 @@
 
 #include "fake_GATTAPI.h"
 
-#ifdef GATTAPI_AVAILABLE
-
 #include "clar_asserts.h"
 
 #include <string.h>
@@ -178,4 +176,3 @@ void fake_gatt_put_write_response_for_last_write(void) {
   s_write_cb(s_write_stack_id, &event, s_write_cb_param);
   s_write_cb = NULL;
 }
-#endif // GATTAPI_AVAILABLE
