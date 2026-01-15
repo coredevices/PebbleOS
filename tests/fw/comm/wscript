@@ -61,6 +61,7 @@ def build(bld):
                            "src/fw/comm/ble/gatt_service_changed.c "
                            "src/fw/comm/internals/bt_conn_mgr.c "
                            "tests/fakes/fake_events.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
@@ -78,6 +79,7 @@ def build(bld):
                            "src/fw/comm/internals/bt_conn_mgr.c "
                            "tests/fakes/fake_gap_le_connect_params.c "
                            "tests/fakes/fake_events.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c ",

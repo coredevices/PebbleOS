@@ -422,6 +422,14 @@ def clar(bld, sources=None, sources_ant_glob=None, test_sources_ant_glob=None,
     defines = list(defines or [])
     defines.append('UNITTEST')
 
+    # Make a copy so if we modify it we don't accidentally modify the callers list
+    override_includes = list(override_includes or [])
+
+    # Add bluetooth_persistent_storage_v2 override for all tests since bluetooth_persistent_storage.c
+    # expects the unittest impl header when UNITTEST is defined
+    if 'bluetooth_persistent_storage_v2' not in override_includes:
+        override_includes.append('bluetooth_persistent_storage_v2')
+
     if platforms is None:
         platforms = ['default']
 
