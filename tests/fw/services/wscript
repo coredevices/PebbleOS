@@ -475,6 +475,7 @@ def build(ctx):
         sources_ant_glob = "src/fw/services/common/vibe_pattern.c" \
             " src/fw/applib/ui/vibes.c" \
             " tests/fakes/fake_events.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c",
         test_sources_ant_glob = "test_vibe.c")
 
