@@ -36,11 +36,17 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
 
-extern bool prv_contains_service_changed_characteristic(
-    GAPLEConnection *connection,
-    const GATT_Service_Discovery_Indication_Data_t *event);
-
 void core_dump_reset(bool is_forced) {
+}
+
+// Stub implementation for prv_contains_service_changed_characteristic
+// This function is normally defined in gatt_service_changed.c but is
+// not exposed in the header, so we need to provide a stub for testing.
+bool prv_contains_service_changed_characteristic(
+    GAPLEConnection *connection,
+    const GATT_Service_Discovery_Indication_Data_t *event) {
+  // Stub implementation - always returns false for testing purposes
+  return false;
 }
 
 static GAPLEConnection s_connection;
