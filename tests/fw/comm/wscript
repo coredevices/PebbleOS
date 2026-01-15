@@ -65,7 +65,9 @@ def build(bld):
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
-                           "tests/fakes/fake_gap_le_connect_params.c ",
+                           "tests/fakes/fake_gap_le_connect_params.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
         test_sources_ant_glob = "test_gatt_client_accessors.c",
         platforms=['snowy', 'spalding'])
 
@@ -82,7 +84,9 @@ def build(bld):
                            "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_GATTAPI.c "
-                           "tests/fakes/fake_GATTAPI_test_vectors.c ",
+                           "tests/fakes/fake_GATTAPI_test_vectors.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
         test_sources_ant_glob = "test_gatt_client_discovery.c",
         platforms=['snowy', 'spalding'])
 
@@ -101,7 +105,9 @@ def build(bld):
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
                            "tests/fakes/fake_gap_le_connect_params.c "
                            "tests/fakes/fake_queue.c "
-                           "tests/fakes/fake_rtc.c ",
+                           "tests/fakes/fake_rtc.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
         test_sources_ant_glob = "test_gatt_client_subscriptions.c",
         platforms=['snowy', 'spalding'])
 
@@ -114,7 +120,9 @@ def build(bld):
                            "tests/fakes/fake_gap_le_connect_params.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
-                           "tests/fakes/fake_rtc.c",
+                           "tests/fakes/fake_rtc.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
         test_sources_ant_glob = "test_gatt_service_changed_client.c",
         platforms=['snowy', 'spalding'])
 
@@ -128,7 +136,9 @@ def build(bld):
                           "tests/fakes/fake_gap_le_connect_params.c "
                           "tests/fakes/fake_GATTAPI.c "
                           "tests/fakes/fake_GATTAPI_test_vectors.c "
-                          "tests/fakes/fake_rtc.c",
+                          "tests/fakes/fake_rtc.c "
+                          "tests/stubs/stubs_bt_driver_gatt.c "
+                          "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
           test_sources_ant_glob="test_gatt_service_changed_server.c",
           platforms=['snowy', 'spalding'])
 
