@@ -45,7 +45,6 @@
 #include "stubs_codepoint.h"
 #include "stubs_utf8.h"
 #include "stubs_bt_lock.h"
-#include "stubs_system_task.h"
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
