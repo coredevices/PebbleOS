@@ -53,7 +53,7 @@ static struct {
   bool enabled;
 } s_hrm_state;
 
-void hrm_enable(HRMDevice *dev) { s_hrm_state.enabled = true; }
+bool hrm_enable(HRMDevice *dev) { s_hrm_state.enabled = true; return true; }
 void hrm_disable(HRMDevice *dev) { s_hrm_state.enabled = false; }
 bool hrm_is_enabled(HRMDevice *dev) { return s_hrm_state.enabled; }
 
