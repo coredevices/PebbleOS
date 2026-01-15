@@ -108,7 +108,8 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = \
-            " src/fw/services/common/light.c",
+            " src/fw/services/common/light.c" \
+            " tests/fakes/fake_new_timer.c",
         test_sources_ant_glob = "test_light.c",
         override_includes=['dummy_board'])
 
