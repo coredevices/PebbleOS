@@ -26,6 +26,7 @@
 
 #include "stubs_bluetopia_interface.h"
 #include "stubs_bt_driver_gatt.h"
+#include "stubs_bt_driver_gatt_client_discovery.h"
 #include "stubs_bt_lock.h"
 #include "stubs_events.h"
 #include "stubs_gatt_client_subscriptions.h"
