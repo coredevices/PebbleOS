@@ -12,5 +12,6 @@ def build(bld):
         ],
         use=[
             'fw_includes',
+            'hal_sifli',
         ],
     )
