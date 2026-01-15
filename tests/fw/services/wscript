@@ -45,6 +45,7 @@ def build(ctx):
             " src/fw/services/normal/analytics/analytics_storage.c" \
             " src/fw/services/normal/analytics/analytics_logging.c" \
             " src/fw/services/normal/analytics/analytics_event.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c" \
             " src/fw/util/rand/rand.c" \
             " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
@@ -87,7 +88,8 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = \
-            " src/fw/services/common/evented_timer.c",
+            " src/fw/services/common/evented_timer.c" \
+            " tests/fakes/fake_new_timer.c",
         test_sources_ant_glob = "test_evented_timer.c")
 
     clar(ctx,
