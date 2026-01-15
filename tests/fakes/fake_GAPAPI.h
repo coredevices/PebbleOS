@@ -24,8 +24,11 @@
 #ifndef GAPAPI_AVAILABLE
 typedef struct GAPLEConnection GAPLEConnection;  // Forward declaration (already defined elsewhere)
 typedef struct GAP_LE_Event_Data_t GAP_LE_Event_Data_t;
-typedef struct Advertising_Data_t Advertising_Data_t;
-typedef struct Scan_Response_Data_t Scan_Response_Data_t;
+
+// Advertising and scan response data are 31-byte arrays per Bluetooth spec
+#define GAP_ADVERTISING_DATA_SIZE 31
+typedef uint8_t Advertising_Data_t[GAP_ADVERTISING_DATA_SIZE];
+typedef uint8_t Scan_Response_Data_t[GAP_ADVERTISING_DATA_SIZE];
 #endif
 
 // These functions are always available (either from GAPAPI or from the fake)
