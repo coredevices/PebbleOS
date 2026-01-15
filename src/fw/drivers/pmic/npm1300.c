@@ -7,6 +7,7 @@
 #include "drivers/battery.h"
 
 #include "board/board.h"
+#include "drivers/led_controller.h"
 #include "console/prompt.h"
 #include "drivers/battery.h"
 #include "drivers/exti.h"
@@ -448,7 +449,10 @@ uint16_t pmic_get_vsys(void) {
   }
   uint16_t vsys_raw = (vsys_msb << 2) | (lsbs >> 6);
   uint32_t vsys = vsys_raw * 6375 / 1023;
-  
+#if PLATFORM_OBELIX
+  // Recover AW2016 backlight if reset by I2C clock stretching
+  led_controller_recover_from_i2c_reset();
+#endif
   return vsys;
 }
 
@@ -484,7 +488,11 @@ int battery_get_millivolts(void) {
   }
   uint16_t vbat_raw = (vbat_msb << 2) | (lsbs & 3);
   uint32_t vbat = vbat_raw * 5000 / 1023;
-  
+#if PLATFORM_OBELIX
+  // Recover AW2016 backlight if reset by I2C clock stretching
+  led_controller_recover_from_i2c_reset();
+#endif
+
   return vbat;
 }
 
@@ -621,6 +629,11 @@ int battery_get_constants(BatteryConstants *constants) {
   float inv_temp_k = (1.f / 298.15f) - (log_result / (float)NPM1300_CONFIG.thermistor_beta);
 
   constants->t_mc = (int32_t)(1000.0f * ((1.f / inv_temp_k) - 273.15f));
+
+#if PLATFORM_OBELIX
+  // Recover AW2016 backlight if reset by I2C clock stretching
+  led_controller_recover_from_i2c_reset();
+#endif
 
   return 0;
 }
