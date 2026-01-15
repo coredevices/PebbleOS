@@ -64,6 +64,7 @@ def build(ctx):
             "src/fw/applib/graphics/gcolor_definitions.c "
             "src/fw/applib/ui/layer.c "
             "tests/fakes/fake_events.c "
+            "tests/fakes/fake_new_timer.c "
             "tests/fakes/fake_rtc.c "
             "tests/fakes/fake_gbitmap_png.c "
             "src/fw/services/common/animation_service.c",
