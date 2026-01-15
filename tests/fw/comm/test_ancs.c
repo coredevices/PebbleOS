@@ -28,7 +28,6 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
-#include "stubs_pebble_tasks.h"
 #include "stubs_pebble_pairing_service.h"
 #include "stubs_prompt.h"
 #include "stubs_timeline.h"
