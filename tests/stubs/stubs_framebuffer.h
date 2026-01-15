@@ -16,5 +16,5 @@ void WEAK framebuffer_init(FrameBuffer *f, const GSize *size) { f->size = *size;
 GSize WEAK framebuffer_get_size(FrameBuffer *f) { return f->size; }
 
 size_t WEAK framebuffer_get_size_bytes(FrameBuffer *f) {
-  return f->size.w * f->size.h * DISPLAY_FRAMEBUFFER_BYTES_PER_PIXEL;
+  return (size_t)f->size.w * (size_t)f->size.h;
 }
