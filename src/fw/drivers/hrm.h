@@ -11,7 +11,8 @@
 void hrm_init(HRMDevice *dev);
 
 //! Enable the HRM
-void hrm_enable(HRMDevice *dev);
+//! @return true if successfully enabled, false if initialization failed
+bool hrm_enable(HRMDevice *dev);
 
 //! Disable the HRM
 void hrm_disable(HRMDevice *dev);
