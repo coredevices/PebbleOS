@@ -656,6 +656,20 @@
       "id": -97,
       "enum": "SPORTS",
       "md_fn": "sports_app_get_info"
+    },
+    {
+      "id": -32,
+      "enum": "TIMELINE_FULL",
+      "md_fn": "timeline_full_get_app_info",
+      "target_platforms": [
+        "snowy",
+        "spalding",
+        "silk",
+        "robert",
+        "asterix",
+        "obelix",
+        "getafix"
+      ]
     }
   ],
   "resource_apps": [
