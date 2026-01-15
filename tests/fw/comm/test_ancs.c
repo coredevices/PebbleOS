@@ -44,6 +44,8 @@
 #include "stubs_nexmo.h"
 #include "stubs_codepoint.h"
 #include "stubs_utf8.h"
+#include "stubs_bt_lock.h"
+#include "stubs_system_task.h"
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
@@ -62,6 +64,7 @@ PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char 
 #include "fake_notification_storage.h"
 #include "fake_pbl_malloc.h"
 #include "fake_spi_flash.h"
+#include "fake_system_task.h"
 
 bool shell_prefs_get_language_english(void) {
   return false;

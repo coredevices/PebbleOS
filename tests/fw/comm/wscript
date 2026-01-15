@@ -183,6 +183,7 @@ def build(bld):
         "tests/fakes/fake_events.c " \
         "tests/fakes/fake_kernel_services_notifications.c " \
         "tests/fakes/fake_gatt_client_subscriptions.c " \
+        "tests/fakes/fake_new_timer.c " \
         "tests/fakes/fake_rtc.c " \
         "tests/fakes/fake_session.c " \
         "src/fw/services/normal/notifications/ancs/ancs_notifications.c " \
