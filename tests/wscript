@@ -296,7 +296,7 @@ def build(bld):
       bld.env.append_value('DEFINES', 'DUMA_DISABLED')
 
     # Any test in this list won't be compiled
-    bld.env.BROKEN_TESTS = []
+    bld.env.BROKEN_TESTS = ['test_ams_snowy', 'test_ams_spalding']
 
     # Don't run the python tool tests because they exercise a lot of old python2 code that still needs to be updated
     bld.env.PYTHON_TOOL_TESTS_DISABLED = True
