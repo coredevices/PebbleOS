@@ -30,6 +30,7 @@
 #include "services/normal/settings/settings_file.h"
 #include "services/normal/timeline/peek.h"
 #include "kernel/events.h"
+#include "kernel/event_loop.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/size.h"
@@ -572,9 +573,16 @@ static uint8_t prv_set_s_timeline_settings_opened(uint8_t *version) {
   return true;
 }
 
+// Callback to run timeline_peek_set_enabled on KernelMain task.
+// This is needed because animation scheduling requires running on KernelMain or App task,
+// but settings sync runs from a different task context.
+static void prv_timeline_peek_set_enabled_callback(void *data) {
+  timeline_peek_set_enabled(s_timeline_peek_enabled);
+}
+
 static bool prv_set_s_timeline_peek_enabled(bool *enabled) {
   s_timeline_peek_enabled = *enabled;
-  timeline_peek_set_enabled(*enabled);
+  launcher_task_add_callback(prv_timeline_peek_set_enabled_callback, NULL);
   return true;
 }
 
