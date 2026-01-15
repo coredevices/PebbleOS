@@ -5,10 +5,6 @@
 
 #include "kernel/event_loop.h"
 
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  callback(data);
-}
-
 bool launcher_task_is_current_task(void) {
   return false;
 }
