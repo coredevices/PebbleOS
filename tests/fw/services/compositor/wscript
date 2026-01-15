@@ -5,8 +5,6 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob=(
              "src/fw/applib/graphics/gtypes.c "
-             "src/fw/applib/graphics/framebuffer.c "
-             "src/fw/applib/graphics/8_bit/framebuffer.c "
              "src/fw/services/common/compositor/compositor.c "
              "tests/stubs/stubs_modal_manager.c "
              "tests/stubs/stubs_app_state.c "
