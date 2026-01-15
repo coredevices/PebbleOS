@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+def configure(conf):
+    pass
+
+def build(bld):
+    bld.objects(
+        name='soc',
+        source=[
+            'init.c',
+        ],
+        use=[
+            'fw_includes',
+        ],
+    )
