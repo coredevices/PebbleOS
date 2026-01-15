@@ -19,8 +19,7 @@ def build(bld):
                            "tests/fakes/fake_put_bytes_storage_mem.c "
                            "tests/fakes/fake_queue.c "
                            "tests/fakes/fake_rtc.c "
-                           "tests/fakes/fake_session.c "
-                           "tests/fakes/fake_system_task.c",
+                           "tests/fakes/fake_session.c",
         test_sources_ant_glob = "test_ams.c",
         platforms=['snowy', 'spalding'])
 
