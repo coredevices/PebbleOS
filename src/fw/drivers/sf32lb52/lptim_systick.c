@@ -28,8 +28,9 @@
 
 #define LPTIM_COUNT_MAX 0xFFFFU
 
-static LPTIM_HandleTypeDef s_lptim1_handle = {0};
-static bool s_lptim_systick_initialized = false;
+static LPTIM_HandleTypeDef s_lptim1_handle = {
+  .Instance = LPTIM1,
+};
 static uint32_t s_last_idle_counter = 0;
 static uint32_t s_tickless_period = 0;  // Programmed sleep period in LPTIM counts
 static volatile bool s_overflow_wakeup = false;  // Set by ISR when overflow wakeup occurs
@@ -55,12 +56,6 @@ static void prv_cal_timer_cb(void* data) {
 void lptim_systick_init(void)
 {
   HAL_LPTIM_InitDefault(&s_lptim1_handle);
-  s_lptim1_handle.Instance = LPTIM1;
-  // Using RC10K as LPTIM1 clock source.
-  s_lptim1_handle.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
-  s_lptim1_handle.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
-  s_lptim1_handle.Init.Clock.IntSource = LPTIM_INTCLOCKSOURCE_LPCLOCK;
-  s_lptim1_handle.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
   HAL_LPTIM_Init(&s_lptim1_handle);
 
   NVIC_SetPriority(LPTIM1_IRQn, configKERNEL_INTERRUPT_PRIORITY);
@@ -71,8 +66,6 @@ void lptim_systick_init(void)
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_GPIO1, AON_PIN_MODE_HIGH);
 
   prv_cal_timer_cb(NULL);
-
-  s_lptim_systick_initialized = true;
 }
 
 void lptim_calibrate_init(void)
@@ -85,11 +78,6 @@ void lptim_calibrate_init(void)
   ret = new_timer_start(s_cal_timer, CAL_PERIOD_MS, prv_cal_timer_cb, NULL,
                         TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(ret);
-}
-
-bool lptim_systick_is_initialized(void)
-{
-  return s_lptim_systick_initialized;
 }
 
 void lptim_systick_enable(void)
