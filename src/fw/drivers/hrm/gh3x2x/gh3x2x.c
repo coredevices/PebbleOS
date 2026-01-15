@@ -406,7 +406,7 @@ bool gh3x2x_ble_data_recv(void* context) {
 void hrm_init(HRMDevice *dev) {
 }
 
-void hrm_enable(HRMDevice *dev) {
+bool hrm_enable(HRMDevice *dev) {
   int ret;
 
   gh3026_reset_pin_ctrl(1);
@@ -414,7 +414,8 @@ void hrm_enable(HRMDevice *dev) {
   ret = Gh3x2xDemoInit();
   if (ret != 0) {
     PBL_LOG(LOG_LEVEL_ERROR, "GH3X2X failed to initialize");
-    return;
+    gh3026_reset_pin_ctrl(0);
+    return false;
   }
 
   s_hrm_int_flag = false;
@@ -429,6 +430,7 @@ void hrm_enable(HRMDevice *dev) {
 #endif
 
   dev->state->enabled = true;
+  return true;
 }
 
 void hrm_disable(HRMDevice *dev) {

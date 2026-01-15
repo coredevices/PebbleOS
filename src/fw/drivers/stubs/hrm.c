@@ -6,8 +6,9 @@
 void hrm_init(HRMDevice *dev) {
 }
 
-void hrm_enable(HRMDevice *dev) {
+bool hrm_enable(HRMDevice *dev) {
     dev->state->enabled = true;
+    return true;
 }
 
 void hrm_disable(HRMDevice *dev) {
