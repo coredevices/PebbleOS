@@ -18,3 +18,7 @@ void bt_driver_gatt_handle_finalize_discovery(GAPLEConnection *connection) {
 
 void bt_driver_gatt_handle_discovery_abandoned(void) {
 }
+
+uint32_t bt_driver_gatt_get_watchdog_timer_id(void) {
+  return 0;
+}
