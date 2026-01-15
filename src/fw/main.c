@@ -108,6 +108,8 @@
 
 #include <string.h>
 
+void soc_early_init(void);
+
 /* here is as good as anywhere else ... */
 const int __attribute__((used)) uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
@@ -167,9 +169,7 @@ static void dump_gpio_configuration_state(void) {
 #endif /* DUMP_GPIO_CFG_STATE */
 
 int main(void) {
-#if defined(MICRO_FAMILY_SF32LB52)
-  board_early_init();
-#endif
+  soc_early_init();
 
   gpio_init_all();
 
@@ -417,9 +417,7 @@ static NOINLINE void prv_main_task_init(void) {
 
   memory_layout_setup_mpu();
 
-#if !defined(MICRO_FAMILY_SF32LB52)
   board_early_init();
-#endif
 
   boot_splash_start();
 
