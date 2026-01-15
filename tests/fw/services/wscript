@@ -27,6 +27,7 @@ def build(ctx):
             " tests/fakes/fake_session.c" \
             " src/fw/util/legacy_checksum.c" \
             " tests/fakes/fake_events.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_put_bytes_storage_mem.c" \
             " tests/fakes/fake_queue.c"
             " tests/fakes/fake_resource_storage.c" \
