@@ -16,7 +16,6 @@ jobs:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
 
     strategy:
-      fail-fast: false
       matrix:
         board: ["asterix"]
 
@@ -87,7 +86,6 @@ jobs:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
 
     strategy:
-      fail-fast: false
       matrix:
         board: ["asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
 
@@ -171,7 +169,6 @@ jobs:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
 
     strategy:
-      fail-fast: false
       matrix:
         board: ["asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
         slot: [0, 1]
