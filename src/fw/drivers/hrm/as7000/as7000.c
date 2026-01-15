@@ -962,15 +962,16 @@ cleanup:
   gpio_output_set(&dev->en_gpio, false);
 }
 
-void hrm_enable(HRMDevice *dev) {
+bool hrm_enable(HRMDevice *dev) {
   if (!dev->state->lock) {
     PBL_LOG(LOG_LEVEL_DEBUG, "Not an HRM Device.");
-    return;
+    return false;
   }
 
   mutex_lock(dev->state->lock);
   prv_enable(dev);
   mutex_unlock(dev->state->lock);
+  return true;  // AS7000 init is async, errors handled via state machine
 }
 
 void hrm_disable(HRMDevice *dev) {
