@@ -87,6 +87,7 @@ def configure(conf):
     conf.load('binary_header')
     conf.recurse('applib')
     conf.recurse('services')
+    conf.recurse('soc')
 
     if conf.is_silk():
         conf.env.append_value('DEFINES', ['MFG_INFO_RECORDS_TEST_RESULTS'])
@@ -419,6 +420,7 @@ def _link_firmware(bld, sources):
             'nanopb',
             'pblibc',
             'root_includes',
+            'soc',
             'speex',
             'startup',
             'tinymt32',
@@ -842,6 +844,7 @@ def build(bld):
     bld.recurse('shell')
     bld.recurse('services')
     bld.recurse('applib')
+    bld.recurse('soc')
 
     # We can't use DMA until we root cause PBL-37278
     if bld.is_silk():
