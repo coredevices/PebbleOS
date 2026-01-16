@@ -739,7 +739,7 @@ static bool prv_intent_filter_by_device(ListNode *node, void *data) {
 }
 
 static GAPLEConnectionIntent * prv_get_intent_by_device(const BTDeviceInternal *device) {
-  return (GAPLEConnectionIntent *) list_find(&s_intents->node,
+  return (GAPLEConnectionIntent *) list_find((ListNode *)s_intents,
                                              prv_intent_filter_by_device,
                                              (void *) device);
 }
@@ -754,7 +754,7 @@ static bool prv_intent_filter_by_bonding_id(ListNode *node, void *data) {
 }
 
 static GAPLEConnectionIntent * prv_get_intent_by_bonding_id(BTBondingID bonding_id) {
-  return (GAPLEConnectionIntent *) list_find(&s_intents->node,
+  return (GAPLEConnectionIntent *) list_find((ListNode *)s_intents,
                                              prv_intent_filter_by_bonding_id,
                                              (void *) (uintptr_t) bonding_id);
 }
@@ -765,11 +765,11 @@ static bool prv_intent_filter_disconnected(ListNode *node, void *data) {
 }
 
 static bool prv_has_intents_for_disconnected_devices(void) {
-  return list_find(&s_intents->node, prv_intent_filter_disconnected, NULL);
+  return list_find((ListNode *)s_intents, prv_intent_filter_disconnected, NULL);
 }
 
 static uint32_t prv_intents_count(void) {
-  return list_count(&s_intents->node);
+  return list_count((ListNode *)s_intents);
 }
 
 static bool prv_is_intent_used(const GAPLEConnectionIntent *intent) {
@@ -892,7 +892,7 @@ static BTErrno prv_register_intent(struct RegisterIntentRequest *request,
       return BTErrnoNotEnoughResources;
     }
     memset(intent, 0, alloc_size);
-    s_intents = (GAPLEConnectionIntent *) list_prepend(&s_intents->node,
+    s_intents = (GAPLEConnectionIntent *) list_prepend((ListNode *)s_intents,
                                                        &intent->node);
 
     if (request->is_bonding_based) {
