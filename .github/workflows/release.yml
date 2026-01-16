@@ -34,10 +34,41 @@ jobs:
         run: |
           git fetch --tags --force
 
+      - name: Setup cache directories
+        run: |
+          mkdir -p ${{ runner.temp }}/cache/pip
+          mkdir -p ${{ runner.temp }}/cache/ccache
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            .wafpickle-*
+          key: ${{ runner.os }}-release-${{ hashFiles('wscript', 'waftools/**', 'src/**.c', 'src/**.h', 'sdk/**.h', 'platform/asterix/boot/**.c', 'platform/asterix/boot/**.h') }}
+          restore-keys: |
+            ${{ runner.os }}-release-
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/ccache
+          key: ${{ runner.os }}-ccache-release-${{ hashFiles('src/**', 'platform/asterix/boot/**', 'waftools/**') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
       - name: Install Python dependencies
         run: |
-          pip install -U pip
-          pip install -r requirements.txt
+          pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
+          pip install -r requirements.txt --cache-dir ${{ runner.temp }}/cache/pip
 
       - name: Obtain platform name
         id: get-platform
@@ -48,11 +79,17 @@ jobs:
 
       - name: Configure bootloader
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
-        run: ./waf configure --board ${{ matrix.board }}
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf configure --board ${{ matrix.board }}
 
       - name: Build bootloader
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
-        run: ./waf build
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf build
 
       - name: Copy bootloader artifacts
         run: |
@@ -62,11 +99,17 @@ jobs:
 
       - name: Configure bootloader (nowatchdog)
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
-        run: ./waf configure --board ${{ matrix.board }} --nowatchdog
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf configure --board ${{ matrix.board }} --nowatchdog
 
       - name: Build bootloader (nowatchdog)
         working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
-        run: ./waf build
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf build
 
       - name: Copy bootloader artifacts (nowatchdog)
         run: |
@@ -105,16 +148,53 @@ jobs:
         run: |
           git fetch --tags --force
 
+      - name: Setup cache directories
+        run: |
+          mkdir -p ${{ runner.temp }}/cache/pip
+          mkdir -p ${{ runner.temp }}/cache/ccache
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            .wafpickle-*
+          key: ${{ runner.os }}-release-${{ hashFiles('wscript', 'waftools/**', 'src/**.c', 'src/**.h', 'sdk/**.h', 'platform/asterix/boot/**.c', 'platform/asterix/boot/**.h') }}
+          restore-keys: |
+            ${{ runner.os }}-release-
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/ccache
+          key: ${{ runner.os }}-ccache-release-${{ hashFiles('src/**', 'platform/asterix/boot/**', 'waftools/**') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
       - name: Install Python dependencies
         run: |
-          pip install -U pip
-          pip install -r requirements.txt
+          pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
+          pip install -r requirements.txt --cache-dir ${{ runner.temp }}/cache/pip
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --release
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf configure --board ${{ matrix.board }} --release
 
       - name: Build PRF
-        run: ./waf build_prf
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf build_prf
 
       - name: Bundle PRF
         run: ./waf bundle_prf
@@ -146,10 +226,16 @@ jobs:
           path-format: ${{ steps.prf_build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
 
       - name: Configure PRF MFG
-        run: ./waf configure --board ${{ matrix.board }} --mfg --nohash --release
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf configure --board ${{ matrix.board }} --mfg --nohash --release
 
       - name: Build MFG PRF
-        run: ./waf build_prf
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf build_prf
 
       - name: Copy MFG PRF artifacts
         run: |
@@ -194,10 +280,41 @@ jobs:
         run: |
           git fetch --tags --force
 
+      - name: Setup cache directories
+        run: |
+          mkdir -p ${{ runner.temp }}/cache/pip
+          mkdir -p ${{ runner.temp }}/cache/ccache
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            .wafpickle-*
+          key: ${{ runner.os }}-release-${{ hashFiles('wscript', 'waftools/**', 'src/**.c', 'src/**.h', 'sdk/**.h', 'platform/asterix/boot/**.c', 'platform/asterix/boot/**.h') }}
+          restore-keys: |
+            ${{ runner.os }}-release-
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/ccache
+          key: ${{ runner.os }}-ccache-release-${{ hashFiles('src/**', 'platform/asterix/boot/**', 'waftools/**') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
       - name: Install Python dependencies
         run: |
-          pip install -U pip
-          pip install -r requirements.txt
+          pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
+          pip install -r requirements.txt --cache-dir ${{ runner.temp }}/cache/pip
 
       - name: Get npm cache directory
         id: npm-cache-dir
@@ -224,10 +341,16 @@ jobs:
           fi
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --slot ${{ matrix.slot }} --release
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf configure --board ${{ matrix.board }} --slot ${{ matrix.slot }} --release
 
       - name: Build firmware
-        run: ./waf build
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf build
 
       - name: Bundle firmware
         run: ./waf bundle
