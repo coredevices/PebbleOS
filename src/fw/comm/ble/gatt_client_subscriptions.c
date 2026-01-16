@@ -620,7 +620,8 @@ static BTErrno prv_subscribe(BLECharacteristic characteristic_ref,
       .att_handle = att_handle,
     };
     // Prepend to the list of subscriptions of the connection:
-    ListNode *head = &connection->gatt_subscriptions->node;
+    ListNode *head = connection->gatt_subscriptions ?
+                       &connection->gatt_subscriptions->node : NULL;
     connection->gatt_subscriptions =
                              (GATTClientSubscriptionNode *) list_prepend(head, &subscription->node);
 
