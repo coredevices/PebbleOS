@@ -17,7 +17,7 @@
 #include "queue.h"
 #include "task.h"
 
-#define SYSTEM_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
+#define SYSTEM_TASK_PRIORITY (tskIDLE_PRIORITY + 2)
 
 typedef struct {
   SystemTaskEventCallback cb;
