@@ -21,6 +21,18 @@
 // If GATTAPI.h is not available, provide dummy type definitions
 #ifndef GATTAPI_AVAILABLE
 typedef struct {
+  unsigned int UUID_Type;
+  unsigned int UUID_16;
+  unsigned char UUID_128[16];
+} GATT_UUID_t;
+
+typedef struct {
+  unsigned int Service_Handle;
+  unsigned int End_Group_Handle;
+  GATT_UUID_t UUID;
+} GATT_Service_Information_t;
+
+typedef struct {
   unsigned int Event_Data_Type;
   unsigned int Event_Data_Size;
   union {
@@ -39,11 +51,14 @@ typedef struct {
   struct {
     unsigned int Service_Handle;
     unsigned int End_Group_Handle;
+    GATT_UUID_t UUID;
     unsigned int NumberOfCharacteristics;
     void *CharacteristicInformationList;
   } ServiceInformation;
   unsigned int NumberOfCharacteristics;
   void *CharacteristicInformationList;
+  unsigned int NumberOfIncludedService;
+  GATT_Service_Information_t *IncludedServiceList;
 } GATT_Service_Discovery_Indication_Data_t;
 
 typedef struct {
@@ -66,12 +81,6 @@ typedef void (*GATT_Connection_Event_Callback_t)(unsigned int, void *, unsigned 
 typedef struct {
   int dummy;
 } GATT_Connection_Event_Data_t;
-
-typedef struct {
-  unsigned int UUID_Type;
-  unsigned int UUID_16;
-  unsigned char UUID_128[16];
-} GATT_UUID_t;
 
 typedef void (*GATT_Service_Discovery_Event_Callback_t)(unsigned int, GATT_Service_Discovery_Event_Data_t *, unsigned long);
 
@@ -105,12 +114,6 @@ typedef struct {
     void *GATT_Service_Changed_Data;
   } Event_Data;
 } GATT_Client_Event_Data_t;
-
-typedef struct {
-  unsigned int Service_Handle;
-  unsigned int End_Group_Handle;
-  GATT_UUID_t UUID;
-} GATT_Service_Information_t;
 
 #define inc_service_list 0
 #define guUUID_128 1
