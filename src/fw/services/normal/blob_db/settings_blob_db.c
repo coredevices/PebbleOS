@@ -7,6 +7,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "services/normal/notifications/alerts_preferences_private.h"
 #include "services/normal/settings/settings_file.h"
 #include "shell/prefs_private.h"
 #include "system/logging.h"
@@ -16,6 +17,10 @@
 #include "util/size.h"
 
 #include <string.h>
+
+//! Notification preferences file name and size
+#define NOTIF_PREFS_FILE_NAME "notifpref"
+#define NOTIF_PREFS_FILE_LEN (1024)
 
 //! Flag to suppress change callback during phone-originated INSERTs.
 //! This prevents queuing unnecessary sync callbacks that would flood the system task queue.
@@ -101,6 +106,31 @@ static const char *s_syncable_settings[] = {
 
 static const size_t s_num_syncable_settings = ARRAY_LENGTH(s_syncable_settings);
 
+//! Notification preferences from notifpref file that should be synced
+static const char *s_syncable_notif_prefs[] = {
+  "mask",
+  "dndInterruptionsMask",
+  "dndShowNotifications",
+  "vibeIntensity",
+#if CAPABILITY_HAS_VIBE_SCORES
+  "vibeScoreNotifications",
+  "vibeScoreIncomingCalls",
+  "vibeScoreAlarms",
+#endif
+  "dndManuallyEnabled",
+  "dndSmartEnabled",
+  "dndWeekdaySchedule",
+  "dndWeekdayScheduleEnabled",
+  "dndWeekendSchedule",
+  "dndWeekendScheduleEnabled",
+  "notifWindowTimeout",
+  "notifDesignStyle",
+  "notifVibeDelay",
+  "notifBacklight",
+};
+
+static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
+
 static bool s_initialized = false;
 
 //! Check if the connected phone supports Settings BlobDB sync
@@ -111,16 +141,35 @@ bool settings_blob_db_phone_supports_sync(void) {
   return capabilities.settings_sync_support;
 }
 
-//! Check if a setting key is in the sync whitelist
-static bool prv_is_syncable(const uint8_t *key, int key_len) {
-  for (size_t i = 0; i < s_num_syncable_settings; i++) {
-    const char *syncable_key = s_syncable_settings[i];
-    int syncable_len = (int)(strlen(syncable_key) + 1); // Include null terminator
-    if (key_len == syncable_len && memcmp(key, syncable_key, (size_t)key_len) == 0) {
+//! Check if a key matches an entry in a given list
+//! Handles both key_len with null terminator (strlen+1) and without (strlen)
+static bool prv_is_key_in_list(const uint8_t *key, int key_len,
+                               const char **list, size_t list_len) {
+  for (size_t i = 0; i < list_len; i++) {
+    const char *list_key = list[i];
+    size_t list_key_strlen = strlen(list_key);
+    // Accept key_len matching strlen (no null) or strlen+1 (with null)
+    if ((key_len == (int)list_key_strlen || key_len == (int)(list_key_strlen + 1)) &&
+        memcmp(key, list_key, list_key_strlen) == 0) {
       return true;
     }
   }
   return false;
+}
+
+//! Check if a setting key is in the shell/prefs sync whitelist
+static bool prv_is_shell_pref(const uint8_t *key, int key_len) {
+  return prv_is_key_in_list(key, key_len, s_syncable_settings, s_num_syncable_settings);
+}
+
+//! Check if a setting key is in the notifpref sync whitelist
+static bool prv_is_notif_pref(const uint8_t *key, int key_len) {
+  return prv_is_key_in_list(key, key_len, s_syncable_notif_prefs, s_num_syncable_notif_prefs);
+}
+
+//! Check if a setting key is syncable (either shell pref or notif pref)
+static bool prv_is_syncable(const uint8_t *key, int key_len) {
+  return prv_is_shell_pref(key, key_len) || prv_is_notif_pref(key, key_len);
 }
 
 //! Kernel background callback to sync all dirty settings.
@@ -186,8 +235,18 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
     return E_INTERNAL;
   }
 
-  // Only allow whitelisted settings to be synced
-  if (!prv_is_syncable(key, key_len)) {
+  // Determine which file to use based on key type
+  const char *file_name;
+  int file_len;
+  bool is_notif_pref = prv_is_notif_pref(key, key_len);
+
+  if (is_notif_pref) {
+    file_name = NOTIF_PREFS_FILE_NAME;
+    file_len = NOTIF_PREFS_FILE_LEN;
+  } else if (prv_is_shell_pref(key, key_len)) {
+    file_name = SHELL_PREFS_FILE_NAME;
+    file_len = SHELL_PREFS_FILE_LEN;
+  } else {
     char key_str[128];
     size_t copy_len = (key_len > 0 && (size_t)key_len < sizeof(key_str)) ?
                       (size_t)key_len : sizeof(key_str) - 1;
@@ -198,7 +257,7 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
   }
 
   SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
     return status;
   }
@@ -223,7 +282,11 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
       .key = (uint8_t *)key,
       .key_len = key_len,
     };
-    prefs_private_handle_blob_db_event(&event);
+    if (is_notif_pref) {
+      alerts_preferences_handle_blob_db_event(&event);
+    } else {
+      prefs_private_handle_blob_db_event(&event);
+    }
   }
 
   s_suppress_change_callback = false;
@@ -235,8 +298,19 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
     return E_INTERNAL;
   }
 
+  // Determine which file to use based on key type
+  const char *file_name;
+  int file_len;
+  if (prv_is_notif_pref(key, key_len)) {
+    file_name = NOTIF_PREFS_FILE_NAME;
+    file_len = NOTIF_PREFS_FILE_LEN;
+  } else {
+    file_name = SHELL_PREFS_FILE_NAME;
+    file_len = SHELL_PREFS_FILE_LEN;
+  }
+
   SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
     return status;
   }
@@ -252,8 +326,19 @@ status_t settings_blob_db_read(const uint8_t *key, int key_len,
     return E_INTERNAL;
   }
 
+  // Determine which file to use based on key type
+  const char *file_name;
+  int file_len;
+  if (prv_is_notif_pref(key, key_len)) {
+    file_name = NOTIF_PREFS_FILE_NAME;
+    file_len = NOTIF_PREFS_FILE_LEN;
+  } else {
+    file_name = SHELL_PREFS_FILE_NAME;
+    file_len = SHELL_PREFS_FILE_LEN;
+  }
+
   SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
     return status;
   }
@@ -268,13 +353,22 @@ status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
     return E_INTERNAL;
   }
 
-  // Only allow whitelisted settings to be deleted
-  if (!prv_is_syncable(key, key_len)) {
+  // Determine which file to use based on key type
+  const char *file_name;
+  int file_len;
+  if (prv_is_notif_pref(key, key_len)) {
+    file_name = NOTIF_PREFS_FILE_NAME;
+    file_len = NOTIF_PREFS_FILE_LEN;
+  } else if (prv_is_shell_pref(key, key_len)) {
+    file_name = SHELL_PREFS_FILE_NAME;
+    file_len = SHELL_PREFS_FILE_LEN;
+  } else {
+    // Only allow whitelisted settings to be deleted
     return E_INVALID_OPERATION;
   }
 
   SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
     return status;
   }
@@ -334,15 +428,22 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
     return NULL;
   }
 
+  BuildDirtyListContext ctx = { .dirty_list = NULL, .dirty_list_tail = NULL };
+
+  // Iterate shell prefs file
   SettingsFile file;
   status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
-  if (FAILED(status)) {
-    return NULL;
+  if (PASSED(status)) {
+    settings_file_each(&file, prv_build_dirty_list_callback, &ctx);
+    settings_file_close(&file);
   }
 
-  BuildDirtyListContext ctx = { .dirty_list = NULL, .dirty_list_tail = NULL };
-  settings_file_each(&file, prv_build_dirty_list_callback, &ctx);
-  settings_file_close(&file);
+  // Iterate notif prefs file
+  status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+  if (PASSED(status)) {
+    settings_file_each(&file, prv_build_dirty_list_callback, &ctx);
+    settings_file_close(&file);
+  }
 
   return ctx.dirty_list;
 }
@@ -352,8 +453,19 @@ status_t settings_blob_db_mark_synced(const uint8_t *key, int key_len) {
     return E_INTERNAL;
   }
 
+  // Determine which file to use based on key type
+  const char *file_name;
+  int file_len;
+  if (prv_is_notif_pref(key, key_len)) {
+    file_name = NOTIF_PREFS_FILE_NAME;
+    file_len = NOTIF_PREFS_FILE_LEN;
+  } else {
+    file_name = SHELL_PREFS_FILE_NAME;
+    file_len = SHELL_PREFS_FILE_LEN;
+  }
+
   SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
     return status;
   }
@@ -392,15 +504,24 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
     return true; // Continue
   }
 
+  IsDirtyContext ctx = { .found_dirty = false };
+
+  // Check shell prefs file
   SettingsFile file;
   status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
-  if (FAILED(status)) {
-    return status;
+  if (PASSED(status)) {
+    settings_file_each(&file, is_dirty_callback, &ctx);
+    settings_file_close(&file);
   }
 
-  IsDirtyContext ctx = { .found_dirty = false };
-  settings_file_each(&file, is_dirty_callback, &ctx);
-  settings_file_close(&file);
+  // If already found dirty, no need to check notif prefs
+  if (!ctx.found_dirty) {
+    status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+    if (PASSED(status)) {
+      settings_file_each(&file, is_dirty_callback, &ctx);
+      settings_file_close(&file);
+    }
+  }
 
   *is_dirty_out = ctx.found_dirty;
   return S_SUCCESS;
@@ -423,15 +544,32 @@ status_t settings_blob_db_mark_all_dirty(void) {
 
   PBL_LOG(LOG_LEVEL_INFO, "Marking all settings as dirty for full sync");
 
+  status_t result = S_SUCCESS;
+
+  // Mark shell prefs file dirty
   SettingsFile file;
   status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
-  if (FAILED(status)) {
-    return status;
+  if (PASSED(status)) {
+    status = settings_file_mark_all_dirty(&file);
+    settings_file_close(&file);
+    if (FAILED(status)) {
+      result = status;
+    }
+  } else {
+    result = status;
   }
 
-  status = settings_file_mark_all_dirty(&file);
-  settings_file_close(&file);
-  return status;
+  // Mark notif prefs file dirty
+  status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+  if (PASSED(status)) {
+    status = settings_file_mark_all_dirty(&file);
+    settings_file_close(&file);
+    if (FAILED(status) && PASSED(result)) {
+      result = status;
+    }
+  }
+
+  return result;
 }
 
 // Context for finding last_modified timestamp
@@ -469,13 +607,23 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     return E_INTERNAL;
   }
 
-  // Only allow whitelisted settings
-  if (!prv_is_syncable(key, key_len)) {
+  // Determine which file to use based on key type
+  const char *file_name;
+  int file_len;
+  bool is_notif_pref = prv_is_notif_pref(key, key_len);
+
+  if (is_notif_pref) {
+    file_name = NOTIF_PREFS_FILE_NAME;
+    file_len = NOTIF_PREFS_FILE_LEN;
+  } else if (prv_is_shell_pref(key, key_len)) {
+    file_name = SHELL_PREFS_FILE_NAME;
+    file_len = SHELL_PREFS_FILE_LEN;
+  } else {
     return E_INVALID_OPERATION;
   }
 
   SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
     return status;
   }
@@ -518,7 +666,11 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
       .key = (uint8_t *)key,
       .key_len = key_len,
     };
-    prefs_private_handle_blob_db_event(&event);
+    if (is_notif_pref) {
+      alerts_preferences_handle_blob_db_event(&event);
+    } else {
+      prefs_private_handle_blob_db_event(&event);
+    }
   }
 
   s_suppress_change_callback = false;

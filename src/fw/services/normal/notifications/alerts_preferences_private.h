@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "kernel/events.h"
 #include "services/normal/notifications/alerts_private.h"
 #include "services/normal/notifications/do_not_disturb.h"
 #include "services/normal/notifications/notification_types.h"
@@ -74,4 +75,10 @@ void alerts_preferences_dnd_set_schedule_enabled(DoNotDisturbScheduleType type, 
 bool alerts_preferences_dnd_is_smart_enabled(void);
 
 void alerts_preferences_dnd_set_smart_enabled(bool enable);
+
+//! Process a BlobDB event for notification preferences. For BlobDBEventTypeInsert
+//! events, this method will update the internal global copy of that preference based on the
+//! new value that was placed into the backing store.
+//! @param[in] event pointer to the blob DB event
+void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event);
 
