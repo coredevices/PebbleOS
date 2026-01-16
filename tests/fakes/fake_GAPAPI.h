@@ -68,6 +68,10 @@ bool gap_le_is_advertising_enabled(void);
 void gap_le_assert_advertising_interval(uint16_t expected_min_slots, uint16_t expected_max_slots);
 unsigned int gap_le_get_advertising_data(Advertising_Data_t *ad_data_out);
 unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_out);
+int GAP_LE_Set_Advertising_Data(unsigned int BluetoothStackID, unsigned int Length,
+                                Advertising_Data_t *Advertising_Data);
+int GAP_LE_Set_Scan_Response_Data(unsigned int BluetoothStackID, unsigned int Length,
+                                   Scan_Response_Data_t *Scan_Response_Data);
 void fake_GAPAPI_init(void);
 
 // Fake GAP API functions (available even when real GAPAPI is not)

@@ -28,5 +28,7 @@ bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
 }
 
 void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
+  // Stub implementation - advertising data is set via GAP_LE_Set_Advertising_Data
+  // which is called by the production code in gap_le_advert.c
 }
 
