@@ -17,9 +17,11 @@ typedef struct {
   size_t bytes;
   void *ptr;
   void *lr;
+  int alloc_id;
 } PointerListNode;
 
 static PointerListNode *s_pointer_list = NULL;
+static int s_alloc_id = 0;
 
 static bool prv_pointer_list_filter(ListNode *node, void *ptr) {
   return ((PointerListNode *)node)->ptr == ptr;
@@ -31,6 +33,7 @@ static void prv_pointer_list_add(void *ptr, size_t bytes, void *lr) {
   node->ptr = ptr;
   node->bytes = bytes;
   node->lr = lr;
+  node->alloc_id = ++s_alloc_id;
   s_pointer_list = (PointerListNode *)list_prepend((ListNode *)s_pointer_list, &node->list_node);
 }
 
@@ -67,7 +70,12 @@ static void *calloc_and_track(int n, size_t bytes, void *lr) {
   }
 
   void *rt = calloc(n, bytes);
-  prv_pointer_list_add(rt, bytes, lr);
+  size_t total_bytes = bytes * n;
+  int alloc_id = s_alloc_id + 1;  // Will be assigned in prv_pointer_list_add
+  if (total_bytes == 24) {
+    printf("ALLOC 24 bytes: %p (id=%d, lr %p)\n", rt, alloc_id, lr);
+  }
+  prv_pointer_list_add(rt, total_bytes, lr);
   return rt;
 }
 
@@ -76,6 +84,18 @@ void fake_malloc_set_largest_free_block(size_t bytes) {
 }
 
 static void free_and_track(void *ptr) {
+  // Check if this might be a DiscoveryJobQueue by looking at the size
+  printf("DEBUG: free_and_track looking for %p\n", ptr);
+  ListNode *node = list_find((ListNode *)s_pointer_list, prv_pointer_list_filter, ptr);
+  if (node) {
+    PointerListNode *ptr_node = (PointerListNode *)node;
+    printf("DEBUG: free_and_track found %p (id=%d) with size %zu\n", ptr, ptr_node->alloc_id, ptr_node->bytes);
+    if (ptr_node->bytes == 24) {
+      printf("FREE 24 bytes: %p (id=%d)\n", ptr, ptr_node->alloc_id);
+    }
+  } else {
+    printf("DEBUG: free_and_track did NOT find %p in list\n", ptr);
+  }
   prv_pointer_list_remove(ptr);
   free(ptr);
 }
@@ -100,8 +120,8 @@ void fake_pbl_malloc_check_net_allocs(void) {
     ListNode *node = (ListNode *)s_pointer_list;
     while (node) {
       PointerListNode *ptr_node = (PointerListNode *)node;
-      printf("Still allocated: %p (%zu bytes, lr %p)\n",
-             ptr_node->ptr, ptr_node->bytes, ptr_node->lr);
+      printf("Still allocated: %p (id=%d, %zu bytes, lr %p)\n",
+             ptr_node->ptr, ptr_node->alloc_id, ptr_node->bytes, ptr_node->lr);
       node = list_get_next(node);
     }
   }
@@ -180,7 +200,11 @@ void *kernel_malloc(size_t bytes) {
 }
 
 void *kernel_zalloc(size_t bytes) {
-  return calloc_and_track(1, bytes, __builtin_return_address(0));
+  void *ptr = calloc_and_track(1, bytes, __builtin_return_address(0));
+  if (bytes == 24) {
+    printf("DEBUG: kernel_zalloc(24) = %p (caller %p)\n", ptr, __builtin_return_address(0));
+  }
+  return ptr;
 }
 
 void *kernel_zalloc_check(size_t bytes) {
