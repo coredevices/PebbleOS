@@ -3,17 +3,37 @@
 
 #pragma once
 
+#include "bluetooth/bluetooth_types.h"
 #include "comm/ble/gap_le_connection.h"
+#include "kernel/pbl_malloc.h"
+#include "util/list.h"
 
-// Stub for gatt_client_discovery_cleanup_by_connection
-// We make this inline so each test can provide its own minimal implementation
-// The production version is in gatt_client_discovery.c and will be linked in when needed
+// Forward declaration of the DiscoveryJobQueue structure
+// This MUST match the definition in gatt_client_discovery.c exactly
+typedef struct DiscoveryJobQueue {
+  ListNode node;
+  ATTHandleRange hdl;
+} DiscoveryJobQueue;
+
 static inline void gatt_client_discovery_cleanup_by_connection(struct GAPLEConnection *connection,
                                                                 BTErrno reason) {
-  // Stub: minimal implementation
-  // The real cleanup is done by gatt_client_cleanup_discovery_jobs which is called
-  // after this function in prv_destroy_connection
+  // Stub implementation: clean up discovery jobs to prevent memory leaks
+  // Manually walk the list and free each node
+  if (!connection) {
+    return;
+  }
+  DiscoveryJobQueue *current = connection->discovery_jobs;
+  while (current != NULL) {
+    DiscoveryJobQueue *next = (DiscoveryJobQueue *)current->node.next;
+    kernel_free(current);
+    current = next;
+  }
+  connection->discovery_jobs = NULL;
 }
 
-// Note: We do NOT stub gatt_client_cleanup_discovery_jobs
-// Let the production version from gatt_client_discovery.c be used instead
+// Stub for gatt_client_cleanup_discovery_jobs
+// This is needed for tests that don't include gatt_client_discovery.c
+static inline void gatt_client_cleanup_discovery_jobs(struct GAPLEConnection *connection) {
+  // Just call gatt_client_discovery_cleanup_by_connection to clean up
+  gatt_client_discovery_cleanup_by_connection(connection, BTErrnoOK);
+}
