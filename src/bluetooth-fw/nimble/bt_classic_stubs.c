@@ -25,7 +25,13 @@ bool bt_driver_supports_bt_classic(void) { return false; }
 
 void bt_driver_classic_pairability_set_enabled(bool enabled) {}
 
-uint32_t sys_app_comm_get_sniff_interval(void) { return 0; }
+// Forward declaration - actual definition is in applib/app_comm.h
+typedef enum {
+  SNIFF_INTERVAL_NORMAL = 0,
+  SNIFF_INTERVAL_REDUCED = 1,
+} SniffInterval;
+
+SniffInterval sys_app_comm_get_sniff_interval(void) { return SNIFF_INTERVAL_NORMAL; }
 
 void bt_driver_reconnect_pause(void) {}
 
