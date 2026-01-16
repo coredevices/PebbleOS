@@ -6,24 +6,25 @@
 #include "comm/ble/gap_le_connection.h"
 
 #include "kernel/pbl_malloc.h"
-#include "utility/list.h"
+#include "util/list.h"
 
 // Forward declaration of the DiscoveryJobQueue structure
 // This matches the definition in gatt_client_discovery.c
 typedef struct DiscoveryJobQueue {
-  struct ListNode node;
+  ListNode node;
   ATTHandleRange hdl;
 } DiscoveryJobQueue;
 
 void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connection, BTErrno reason) {
   // Clean up discovery jobs to prevent memory leaks
-  // This matches the implementation of gatt_client_cleanup_discovery_jobs in production code
-  while (connection->discovery_jobs != NULL) {
-    DiscoveryJobQueue *node = connection->discovery_jobs;
-    list_remove((ListNode *)connection->discovery_jobs,
-                (ListNode **)&connection->discovery_jobs, NULL);
-    kernel_free(node);
+  // Manually walk the list and free each node
+  DiscoveryJobQueue *current = connection->discovery_jobs;
+  while (current != NULL) {
+    DiscoveryJobQueue *next = (DiscoveryJobQueue *)current->node.next;
+    kernel_free(current);
+    current = next;
   }
+  connection->discovery_jobs = NULL;
 }
 
 void gatt_client_subscription_cleanup_by_att_handle_range(
