@@ -132,11 +132,17 @@ static void prv_handle_wb_write_response(const uint8_t *data,
 
   BlobDBSyncSession *sync_session = blob_db_sync_get_session_for_token(token);
   if (sync_session) {
-    if (response_code == BLOB_DB_SUCCESS) {
-      blob_db_sync_next(sync_session);
-    } else {
-      blob_db_sync_cancel(sync_session);
+    if (response_code != BLOB_DB_SUCCESS) {
+      // Log rejected items but still mark synced to avoid spamming phone on every sync
+      BlobDBDirtyItem *dirty_item = sync_session->dirty_list;
+      char key_str[32];
+      int copy_len = (dirty_item->key_len < (int)sizeof(key_str) - 1) ?
+                      dirty_item->key_len : (int)sizeof(key_str) - 1;
+      memcpy(key_str, dirty_item->key, copy_len);
+      key_str[copy_len] = '\0';
+      PBL_LOG(LOG_LEVEL_WARNING, "Writeback rejected: key=%s response=%d", key_str, response_code);
     }
+    blob_db_sync_next(sync_session);
   } else {
     // No session
     PBL_LOG(LOG_LEVEL_WARNING, "received blob db wb response with an invalid token: %d", token);
