@@ -34,6 +34,92 @@ static const RtcTicks MIN_STOP_TICKS = 8;
 // 1 second ticks so that we only wake up once every regular timer interval.
 static const RtcTicks MAX_STOP_TICKS = RTC_TICKS_HZ;
 
+static uint32_t s_iser_bak[16];
+
+static void prv_save_iser(void)
+{
+    uint32_t i;
+    for (i = 0; i < 16; i++)
+    {
+        s_iser_bak[i] = NVIC->ISER[i];
+        NVIC->ICER[i] = 0xFFFFFFFF;
+        __DSB();
+        __ISB();
+    }
+}
+
+static void prv_restore_iser(void)
+{
+    uint32_t i;
+    for (i = 0; i < 16; i++)
+    {
+        __COMPILER_BARRIER();
+        NVIC->ISER[i] = s_iser_bak[i];
+        __COMPILER_BARRIER();
+    }
+}
+
+static void prv_enter_deepslep(void) {
+  uint32_t dll1_freq;
+  uint32_t dll2_freq;
+  int clk_src;
+
+  prv_save_iser();
+
+  /* Wait flash cache idle */
+  HAL_Delay_us(100);
+
+  NVIC_EnableIRQ(AON_IRQn);
+  NVIC_EnableIRQ(LPTIM1_IRQn);
+
+  clk_src = HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS);
+  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
+  dll1_freq = HAL_RCC_HCPU_GetDLL1Freq();
+  dll2_freq = HAL_RCC_HCPU_GetDLL2Freq();
+  
+  HAL_RCC_HCPU_DisableDLL1();
+  HAL_RCC_HCPU_DisableDLL2();
+
+  HAL_HPAON_DISABLE_PAD();
+  HAL_HPAON_DISABLE_VHP();
+  
+  HAL_HPAON_CLEAR_HP_ACTIVE();
+  HAL_HPAON_SET_POWER_MODE(AON_PMR_DEEP_SLEEP);
+
+  __WFI();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
+  
+  HAL_HPAON_ENABLE_PAD();
+  HAL_HPAON_ENABLE_VHP();
+
+  HAL_HPAON_SET_HP_ACTIVE();
+  HAL_HPAON_CLEAR_POWER_MODE();
+
+  // Wait for HXT48 to be ready
+  if (dll1_freq != 0) {
+    while (0 == (hwp_hpsys_aon->ACR & HPSYS_AON_ACR_HXT48_RDY)) {
+      __NOP();
+    }
+  }
+
+  // Switch back to original clock source
+  HAL_RCC_HCPU_EnableDLL1(dll1_freq);
+  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
+  HAL_RCC_HCPU_EnableDLL2(dll2_freq);
+  HAL_Delay_us(0);
+
+  prv_restore_iser();
+}
+
 void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   if (!sleep_mode_is_allowed() || !ipc_queue_check_idle()) {
     // To avoid LCPU enter incorrect state, make sure ipc queue is empty before enter stop mode.
@@ -91,7 +177,7 @@ void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
       lptim_systick_tickless_idle((uint32_t)stop_duration);
 
-      enter_stop_mode();
+      prv_enter_deepslep();
 
       lptim_systick_tickless_exit();
 
