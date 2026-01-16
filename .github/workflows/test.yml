@@ -37,6 +37,7 @@ jobs:
       (github.event.repository.fork == true) ||
       (github.ref == 'refs/heads/main')
     strategy:
+      fail-fast: false
       matrix:
         board:
           - snowy_bb2   # Pebble Time (BASALT baseline)

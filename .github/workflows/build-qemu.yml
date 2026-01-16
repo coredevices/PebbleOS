@@ -20,6 +20,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         board:
           - snowy_bb2
