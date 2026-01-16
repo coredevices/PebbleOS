@@ -121,7 +121,16 @@ jobs:
             export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
             source .venv/bin/activate
           fi
-          ./waf test --continue_on_test_failure
+          # Run all tests even if some fail, but check results afterward
+          ./waf test --continue_on_test_failure 2>&1 | tee /tmp/test_output.txt
+          # Check if any tests failed by looking for "tests that fail X/Y" where X > 0
+          if grep -q "tests that fail [1-9]" /tmp/test_output.txt; then
+            echo "❌ Tests failed - failing pipeline"
+            exit 1
+          else
+            echo "✅ All tests passed"
+            exit 0
+          fi
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v5
