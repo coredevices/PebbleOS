@@ -50,36 +50,56 @@ static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pi
 }
 
 static void prv_insert_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin, ExtiHandlerCallback cb) {
-  // Find the handler index for this pin
+  ExtiHandlerConfig_t *configs;
+  uint8_t max_num;
+
+  if (hgpio == hwp_gpio1) {
+    configs = s_exti_gpio1_handler_configs;
+    max_num = EXTI_MAX_GPIO1_PIN_NUM;
+  } else {
+    configs = s_exti_gpio2_handler_configs;
+    max_num = EXTI_MAX_GPIO2_PIN_NUM;
+  }
+
+  // Find an available slot
   uint8_t index = 0;
-  while (index < (hgpio == hwp_gpio1 ? EXTI_MAX_GPIO1_PIN_NUM : EXTI_MAX_GPIO2_PIN_NUM) &&
-         s_exti_gpio1_handler_configs[index].callback != NULL) {
+  while (index < max_num && configs[index].callback != NULL) {
     index++;
   }
-  if (index >= (hgpio == hwp_gpio1 ? EXTI_MAX_GPIO1_PIN_NUM : EXTI_MAX_GPIO2_PIN_NUM)) {
+  if (index >= max_num) {
     // No available slot
     return;
   }
-  // Store the callback and index
-  s_exti_gpio1_handler_configs[index].gpio_pin = gpio_pin;
-  s_exti_gpio1_handler_configs[index].callback = cb;
+  // Store the callback and pin
+  configs[index].gpio_pin = gpio_pin;
+  configs[index].callback = cb;
 }
 
 static void prv_delete_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin) {
-  // Find the handler index for this pin
+  ExtiHandlerConfig_t *configs;
+  uint8_t max_num;
+
+  if (hgpio == hwp_gpio1) {
+    configs = s_exti_gpio1_handler_configs;
+    max_num = EXTI_MAX_GPIO1_PIN_NUM;
+  } else {
+    configs = s_exti_gpio2_handler_configs;
+    max_num = EXTI_MAX_GPIO2_PIN_NUM;
+  }
+
+  // Find the handler for this pin
   uint8_t index = 0;
-  while (index < (hgpio == hwp_gpio1 ? EXTI_MAX_GPIO1_PIN_NUM : EXTI_MAX_GPIO2_PIN_NUM) &&
-         s_exti_gpio1_handler_configs[index].callback != NULL &&
-         s_exti_gpio1_handler_configs[index].gpio_pin != gpio_pin) {
+  while (index < max_num && configs[index].callback != NULL &&
+         configs[index].gpio_pin != gpio_pin) {
     index++;
   }
-  if (index >= (hgpio == hwp_gpio1 ? EXTI_MAX_GPIO1_PIN_NUM : EXTI_MAX_GPIO2_PIN_NUM)) {
+  if (index >= max_num || configs[index].callback == NULL) {
     // Handler not found
     return;
   }
-  // Clear the callback and index
-  s_exti_gpio1_handler_configs[index].callback = NULL;
-  s_exti_gpio1_handler_configs[index].gpio_pin = 0;
+  // Clear the callback and pin
+  configs[index].callback = NULL;
+  configs[index].gpio_pin = 0;
 }
 
 void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback cb) {
@@ -105,6 +125,15 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
       gpiox->IPLSR = (1UL << offset);
       break;
   }
+
+  // Configure NVIC once during pin setup
+  if (cfg.peripheral == hwp_gpio1) {
+    HAL_NVIC_SetPriority(GPIO1_IRQn, 6, 0);
+    HAL_NVIC_EnableIRQ(GPIO1_IRQn);
+  } else {
+    HAL_NVIC_SetPriority(GPIO2_IRQn, 6, 0);
+    HAL_NVIC_EnableIRQ(GPIO2_IRQn);
+  }
 }
 
 void exti_enable(ExtiConfig cfg) {
@@ -112,13 +141,11 @@ void exti_enable(ExtiConfig cfg) {
   GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
   if (cfg.peripheral == hwp_gpio1) {
     // Enable the EXTI line for GPIO1
-    gpiox->IESR |= (1 << offset);
+    gpiox->IESR = (1 << offset);
   } else {
-    gpiox->IESR_EXT |= (1 << offset);
+    gpiox->IESR_EXT = (1 << offset);
   }
-
-  HAL_NVIC_SetPriority(GPIO1_IRQn, 6, 0);
-  HAL_NVIC_EnableIRQ(GPIO1_IRQn);
+  // Note: NVIC is configured once in exti_configure_pin, no need to set it here
 }
 
 void exti_disable(ExtiConfig cfg) {
@@ -126,9 +153,11 @@ void exti_disable(ExtiConfig cfg) {
   GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
   if (cfg.peripheral == hwp_gpio1) {
     // Disable the EXTI line for GPIO1
-    gpiox->IECR |= (1 << offset);
+    gpiox->IECR = (1 << offset);
+    gpiox->ISR = (1 << offset);
   } else {
-    gpiox->IECR_EXT |= (1 << offset);
+    gpiox->IECR_EXT = (1 << offset);
+    gpiox->ISR_EXT = (1 << offset);
   }
 }
 
@@ -139,6 +168,14 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
     while (index < EXTI_MAX_GPIO1_PIN_NUM && s_exti_gpio1_handler_configs[index].callback != NULL) {
       if (s_exti_gpio1_handler_configs[index].gpio_pin == GPIO_Pin) {
         cb = s_exti_gpio1_handler_configs[index].callback;
+        break;
+      }
+      index++;
+    }
+  } else if (hgpio == hwp_gpio2) {
+    while (index < EXTI_MAX_GPIO2_PIN_NUM && s_exti_gpio2_handler_configs[index].callback != NULL) {
+      if (s_exti_gpio2_handler_configs[index].gpio_pin == GPIO_Pin) {
+        cb = s_exti_gpio2_handler_configs[index].callback;
         break;
       }
       index++;
@@ -154,12 +191,48 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
   }
 }
 
-void GPIO1_IRQHandler(void) { HAL_GPIO_IRQHandler(hwp_gpio1); }
+void GPIO1_IRQHandler(void) {
+  // Optimized interrupt handler to avoid looping through all 78 pins
+  // which causes an interrupt storm and blocks other tasks (e.g. I2C).
+  GPIO_TypeDef *base = hwp_gpio1;
+  // GPIO1 has pins 0-78, spanning 3 banks (32 pins each)
+  for (int i = 0; i < 3; i++) {
+    GPIO_TypeDef *gpiox = base + i;
+    uint32_t isr = gpiox->ISR;
+    uint32_t ier = gpiox->IER;
+    uint32_t pending = isr & ier;
 
-void GPIO2_IRQHandler(
-    void)  // Define the interrupt siervice routine (ISR) according to the interrupt vector table
-{
-  HAL_GPIO_IRQHandler(hwp_gpio2);
+    while (pending) {
+      uint32_t bit = __builtin_ctz(pending);
+      uint32_t pin = (i * 32) + bit;
+
+      // Always call the HAL handler which will clear ISR and invoke callback
+      HAL_GPIO_EXTI_IRQHandler(hwp_gpio1, pin);
+
+      pending &= ~(1UL << bit);
+    }
+  }
+}
+
+void GPIO2_IRQHandler(void) {
+  GPIO_TypeDef *base = hwp_gpio2;
+  // GPIO2 has pins 0-36, spanning 2 banks (32 pins each)
+  for (int i = 0; i < 2; i++) {
+    GPIO_TypeDef *gpiox = base + i;
+    uint32_t isr = gpiox->ISR;
+    uint32_t ier = gpiox->IER;
+    uint32_t pending = isr & ier;
+
+    while (pending) {
+      uint32_t bit = __builtin_ctz(pending);
+      uint32_t pin = (i * 32) + bit;
+
+      // Always call the HAL handler which will clear ISR and invoke callback
+      HAL_GPIO_EXTI_IRQHandler(hwp_gpio2, pin);
+
+      pending &= ~(1UL << bit);
+    }
+  }
 }
 
 void exti_configure_other(ExtiLineOther exti_line, ExtiTrigger trigger) {}
