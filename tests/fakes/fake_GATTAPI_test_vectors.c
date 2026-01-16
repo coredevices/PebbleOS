@@ -8,7 +8,15 @@
 
 #ifdef GATTAPI_AVAILABLE
 
-void fake_gatt_put_discovery_complete_event(uint8_t status,
+// Stub conversion function - TODO: implement proper conversion
+GATTService *fake_gatt_convert_discovery_indication_to_service(
+    GATT_Service_Discovery_Indication_Data_t *indication_data) {
+  // This is a stub - real implementation would convert the Bluetopia event data
+  // to a GATTService* structure. For now, return NULL to indicate no service.
+  return NULL;
+}
+
+void fake_gatt_put_discovery_complete_event(uint16_t status,
                                             unsigned int connection_id) {
   GATT_Service_Discovery_Complete_Data_t data =
   (GATT_Service_Discovery_Complete_Data_t) {
@@ -466,12 +474,67 @@ uint16_t fake_gatt_gatt_profile_service_service_changed_cccd_att_handle(void) {
 // Stub implementations when GATTAPI_AVAILABLE is not defined (Linux/Docker)
 // These are minimal stubs that allow the tests to link
 
-void fake_gatt_put_discovery_complete_event(uint8_t status, unsigned int connection_id) {
-  // Stub implementation - not usable without Bluetopia types
+#include <bluetooth/gatt_service_types.h>
+#include "kernel/pbl_malloc.h"
+#include <btutil/bt_uuid.h>
+#include <string.h>
+
+// Conversion function for Linux/Docker build
+// Creates a minimal GATTService* structure from the Bluetopia indication data
+GATTService *fake_gatt_convert_discovery_indication_to_service(
+    GATT_Service_Discovery_Indication_Data_t *indication_data) {
+  if (!indication_data) {
+    return NULL;
+  }
+
+  // For now, create a minimal service without characteristics or descriptors
+  // This should be enough for basic service discovery tests
+  const uint8_t num_characteristics = 0;
+  const uint8_t num_descriptors = 0;
+  const uint8_t num_includes = 0;
+
+  // Calculate the size needed for the GATTService
+  const size_t size = COMPUTE_GATTSERVICE_SIZE_BYTES(num_characteristics, num_descriptors, num_includes);
+
+  // Allocate memory for the service
+  GATTService *service = kernel_zalloc_check(size);
+  if (!service) {
+    return NULL;
+  }
+
+  service->att_handle = indication_data->ServiceInformation.Service_Handle;
+  service->discovery_generation = 0;
+  service->size_bytes = size;
+  service->num_characteristics = num_characteristics;
+  service->num_descriptors = num_descriptors;
+  service->num_att_handles_included_services = num_includes;
+
+  // Set UUID based on the handle (0x1 = blood pressure service = 0x1810)
+  if (indication_data->ServiceInformation.Service_Handle == 0x1) {
+    service->uuid = bt_uuid_expand_16bit(0x1810); // Blood Pressure Service
+  } else {
+    service->uuid = bt_uuid_expand_16bit(0x1800); // Generic UUID
+  }
+
+  return service;
+}
+
+void fake_gatt_put_discovery_complete_event(uint16_t status, unsigned int connection_id) {
+  // Create a complete event structure
+  static GATT_Service_Discovery_Complete_Data_t complete_data;
+  complete_data.ConnectionID = connection_id;
+  complete_data.Status = status;
+
+  static GATT_Service_Discovery_Event_Data_t event;
+  event.Event_Data_Type = 0; // etGATT_Service_Discovery_Complete
+  event.Event_Data_Size = sizeof(GATT_Service_Discovery_Complete_Data_t);
+  event.Event_Data.GATT_Service_Discovery_Complete_Data = &complete_data;
+
+  fake_gatt_put_service_discovery_event(&event);
 }
 
 void fake_gatt_put_discovery_indication_health_thermometer_service(unsigned int connection_id) {
-  // Stub implementation - not usable without Bluetopia types
+  // Stub - not implemented for Linux/Docker build
 }
 
 const Service * fake_gatt_get_health_thermometer_service(void) {
@@ -479,7 +542,20 @@ const Service * fake_gatt_get_health_thermometer_service(void) {
 }
 
 void fake_gatt_put_discovery_indication_blood_pressure_service(unsigned int connection_id) {
-  // Stub implementation - not usable without Bluetopia types
+  // Stub - not implemented for Linux/Docker build
+  // Just create an empty indication event for now
+  static GATT_Service_Discovery_Indication_Data_t indication_data;
+  indication_data.ConnectionID = connection_id;
+  indication_data.ServiceInformation.Service_Handle = 0x1;
+  indication_data.ServiceInformation.End_Group_Handle = 0x9;
+  indication_data.NumberOfCharacteristics = 0;
+
+  static GATT_Service_Discovery_Event_Data_t event;
+  event.Event_Data_Type = 1; // etGATT_Service_Discovery_Indication
+  event.Event_Data_Size = sizeof(GATT_Service_Discovery_Indication_Data_t);
+  event.Event_Data.GATT_Service_Discovery_Indication_Data = &indication_data;
+
+  fake_gatt_put_service_discovery_event(&event);
 }
 
 const Service * fake_gatt_get_blood_pressure_service(void) {
