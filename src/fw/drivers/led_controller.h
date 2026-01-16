@@ -27,3 +27,7 @@ void led_controller_backlight_set_brightness(uint8_t brightness);
 void led_controller_rgb_set_color(uint32_t rgb_color);
 
 uint32_t led_controller_rgb_get_color(void);
+
+//! Recover AW2016 from I2C bus reset caused by clock stretching.
+//! Call this after NPM1300 operations that may cause long clock stretches.
+void led_controller_recover_from_i2c_reset(void);

@@ -164,6 +164,10 @@ uint32_t led_controller_rgb_get_color(void) {
   return s_rgb_current_color;
 }
 
+void led_controller_recover_from_i2c_reset(void) {
+  // IS31FL3196 is on a separate I2C bus - no recovery needed
+}
+
 void command_rgb_set_color(const char* color) {
   uint32_t color_val = strtol(color, NULL, 16);
 

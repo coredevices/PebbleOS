@@ -74,6 +74,35 @@ static bool prv_configure_registers(void) {
   return ret;
 }
 
+void led_controller_recover_from_i2c_reset(void) {
+  // AW2016 resets if SCL is held low for >130ms (clock stretching).
+  // This can happen during NPM1300 I2C transactions on the shared bus.
+  // Re-apply current brightness/color state if backlight was on.
+  if (s_brightness == 0U) {
+    return;
+  }
+
+  uint8_t gcr1;
+  if (!prv_read_register(AW2016_REG_GCR1, &gcr1)) {
+    return;
+  }
+
+  // Check if chip is still enabled, if not it was reset
+  if ((gcr1 & AW2016_REG_GCR1_CHIPEN_EN) == 0U) {
+    prv_write_register(AW2016_REG_GCR1,
+                       AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+    prv_configure_registers();
+
+    uint8_t red = ((s_rgb_current_color & 0x00FF0000) >> 16) * s_brightness / 100;
+    uint8_t green = ((s_rgb_current_color & 0x0000FF00) >> 8) * s_brightness / 100;
+    uint8_t blue = (s_rgb_current_color & 0x000000FF) * s_brightness / 100;
+
+    prv_write_register(AW2016_REG_PWM1, red);
+    prv_write_register(AW2016_REG_PWM2, green);
+    prv_write_register(AW2016_REG_PWM3, blue);
+  }
+}
+
 void led_controller_init(void) {
   uint8_t value;
   bool ret;

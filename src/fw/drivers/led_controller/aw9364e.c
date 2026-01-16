@@ -51,6 +51,10 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
 
 void led_controller_rgb_set_color(uint32_t rgb_color) {}
 
+void led_controller_recover_from_i2c_reset(void) {
+  // AW9364E uses GPIO, not I2C - no recovery needed
+}
+
 uint32_t led_controller_rgb_get_color(void) {
   return 0UL;
 }
