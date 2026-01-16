@@ -561,10 +561,11 @@ void compositor_transition(const CompositorTransition *compositor_animation) {
   }
 
   if (!prv_should_render() || s_deferred_render.animation.pending) {
-    if (s_deferred_render.app.pending) {
-      s_deferred_render.app.pending = false;
-      prv_release_app_framebuffer();
-    }
+    // Note: We intentionally do NOT clear s_deferred_render.app.pending here.
+    // The deferred app render should be preserved and processed when the display
+    // becomes available (in prv_handle_display_update_complete).
+    // This ensures that both the transition start and the app render are processed
+    // in the correct order after the display update completes.
 
     s_deferred_render.transition_start.pending = true;
     s_deferred_render.transition_start.compositor_animation = compositor_animation;
