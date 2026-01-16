@@ -6,6 +6,7 @@
 
 #include "freertos_types.h"
 #include "projdefs.h"
+#include <stdio.h>
 
 static PebbleEvent s_last_pebble_event;
 static uint32_t s_fake_event_count = 0;
@@ -14,9 +15,9 @@ static FakeEventCallback s_fake_event_cb = NULL;
 WEAK void **fake_event_get_buffer(PebbleEvent *event) {
   switch (event->type) {
     case PEBBLE_BLE_GATT_CLIENT_EVENT:
-      if (event->bluetooth.le.gatt_client.subtype == PebbleBLEGATTClientEventTypeServiceChange) {
-        return (void **)(&event->bluetooth.le.gatt_client_service.info);
-      }
+      // The gatt_client_service union field is used for all GATT client service events
+      // regardless of the subtype. The union contains an 'info' pointer that needs to be freed.
+      return (void **)(&event->bluetooth.le.gatt_client_service.info);
       break;
 
     default:
