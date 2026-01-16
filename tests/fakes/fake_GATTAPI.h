@@ -187,3 +187,8 @@ int GATT_Start_Service_Discovery_Handle_Range(unsigned int stack_id,
 
 int GATT_Stop_Service_Discovery(unsigned int BluetoothStackID, unsigned int ConnectionID);
 
+int GATT_Write_Request(unsigned int BluetoothStackID, unsigned int ConnectionID,
+                       Word_t AttributeHandle, Word_t AttributeLength, void *AttributeValue,
+                       GATT_Client_Event_Callback_t ClientEventCallback,
+                       unsigned long CallbackParameter);
+

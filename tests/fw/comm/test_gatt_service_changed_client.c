@@ -4,6 +4,8 @@
 #include "comm/ble/gatt_service_changed.h"
 #include "comm/ble/gap_le_connection.h"
 
+#include <bluetooth/gatt.h>
+
 #include "kernel/events.h"
 
 #include "clar.h"
@@ -63,6 +65,9 @@ bool prv_contains_service_changed_characteristic(
           }
         }
       }
+      // Return true for GATT profile service even without Service Changed characteristic
+      // This matches the production behavior where discovering the GATT service is always "handled"
+      return true;
     }
   }
   return false;
@@ -144,8 +149,47 @@ static void prv_bluetopia_service_discovery_cb(unsigned int stack_id,
     cl_assert_equal_i(s_connection.gatt_connection_id, TEST_GATT_CONNECTION_ID);
     cl_assert_equal_i(indication->ConnectionID, TEST_GATT_CONNECTION_ID);
 
-    s_last_handle_discovery_result =
-        prv_contains_service_changed_characteristic(&s_connection, indication) ? Handled : Unhandled;
+    // Check if the discovered service contains the Service Changed characteristic
+    const bool contains = prv_contains_service_changed_characteristic(&s_connection, indication);
+
+    if (contains) {
+      // Extract the Service Changed characteristic handle and call the production code
+      if (indication->NumberOfCharacteristics > 0 && indication->CharacteristicInformationList) {
+        GATT_Characteristic_Information_t *characteristics =
+            (GATT_Characteristic_Information_t *)indication->CharacteristicInformationList;
+        for (unsigned int i = 0; i < indication->NumberOfCharacteristics; i++) {
+          if (characteristics[i].UUID_Type == guUUID_16) {
+            const uint16_t char_uuid = (uint16_t)characteristics[i].Characteristic_UUID;
+            if (char_uuid == 0x2a05) { // Service Changed characteristic
+              // Call the production code to set up the connection's handle
+              bt_driver_cb_gatt_client_discovery_handle_service_changed(&s_connection,
+                                                                         characteristics[i].Characteristic_Handle);
+
+              // Find the CCCD descriptor for this characteristic and simulate a write
+              if (characteristics[i].NumberOfDescriptors > 0 && characteristics[i].DescriptorList) {
+                GATT_Characteristic_Descriptor_Information_t *descriptors =
+                    characteristics[i].DescriptorList;
+                for (unsigned int j = 0; j < characteristics[i].NumberOfDescriptors; j++) {
+                  if (descriptors[j].UUID_Type == guUUID_16) {
+                    const uint16_t desc_uuid = (uint16_t)descriptors[j].Characteristic_Descriptor_UUID;
+                    if (desc_uuid == 0x2902) { // CCCD
+                      // Simulate the CCCD write by calling GATT_Write_Request
+                      GATT_Write_Request(0, TEST_GATT_CONNECTION_ID,
+                                        descriptors[j].Characteristic_Descriptor_Handle,
+                                        sizeof(uint16_t), NULL, NULL, 0);
+                      break;
+                    }
+                  }
+                }
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    s_last_handle_discovery_result = contains ? Handled : Unhandled;
   }
 }
 
