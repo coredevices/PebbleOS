@@ -187,6 +187,7 @@ static int s_start_count = 0;
 static int s_stop_count = 0;
 static int s_service_changed_indication_count = 0;
 static uint16_t s_write_handle = 0;
+static unsigned int s_service_discovery_stack_id;
 static GATT_Service_Discovery_Event_Callback_t s_service_discovery_callback;
 static unsigned long s_service_discovery_callback_param;
 
@@ -209,6 +210,7 @@ int GATT_Start_Service_Discovery_Handle_Range(unsigned int stack_id,
                                              GATT_Service_Discovery_Event_Callback_t ServiceDiscoveryCallback,
                                              unsigned long CallbackParameter) {
   s_service_discovery_running = true;
+  s_service_discovery_stack_id = stack_id;
   s_service_discovery_callback = ServiceDiscoveryCallback;
   s_service_discovery_callback_param = CallbackParameter;
   ++s_start_count;
@@ -247,7 +249,7 @@ void fake_gatt_put_service_discovery_event(GATT_Service_Discovery_Event_Data_t *
   }
   // Call the registered callback if it exists
   if (s_service_discovery_callback) {
-    s_service_discovery_callback(0, event, s_service_discovery_callback_param);
+    s_service_discovery_callback(s_service_discovery_stack_id, event, s_service_discovery_callback_param);
   }
 }
 
@@ -257,6 +259,7 @@ void fake_gatt_init(void) {
   s_stop_count = 0;
   s_service_changed_indication_count = 0;
   s_write_handle = 0;
+  s_service_discovery_stack_id = 0;
   s_service_discovery_callback = NULL;
   s_service_discovery_callback_param = 0;
 }
