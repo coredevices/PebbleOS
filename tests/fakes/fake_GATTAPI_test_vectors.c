@@ -766,8 +766,8 @@ const Service * fake_gatt_get_blood_pressure_service(void) {
 }
 
 void fake_gatt_get_bp_att_handle_range(uint16_t *start, uint16_t *end) {
-  *start = 0;
-  *end = 0;
+  *start = 0x1;
+  *end = 0x9;
 }
 
 void fake_gatt_put_discovery_indication_random_128bit_uuid_service(unsigned int connection_id) {
