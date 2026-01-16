@@ -739,8 +739,23 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
                                  size_t value_length, BLEGATTError error) {
   PBL_ASSERTN(client->state == StateDisconnectedReadingMeta);
   if (error != BLEGATTErrorSuccess) {
-    // GATT read failed - this is retriable since the mobile app may not be ready yet
-    goto handle_retriable_error;
+    // Check if this is a permanent error that should not be retried
+    // Permanent errors include: InvalidHandle, ReadNotPermitted, InvalidPDU,
+    // InsufficientAuthentication/Authorization/Encryption, AttributeNotFound, etc.
+    // These errors indicate that the operation cannot succeed through retrying.
+    // Timeout and resource errors are retriable since the remote might recover.
+    switch (error) {
+      case BLEGATTErrorSuccess:
+        break;
+      // Retriable errors - remote might recover:
+      case BLEGATTErrorPrepareQueueFull:
+      case BLEGATTErrorInsufficientResources:
+      case BLEGATTErrorRequestTimeOut:
+        goto handle_retriable_error;
+      // Permanent errors - delete client immediately:
+      default:
+        goto handle_error;
+    }
   }
   if (value_length < sizeof(PPoGATTMetaV0)) {
     goto handle_error;
@@ -803,6 +818,10 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
     }
     return;
   }
+
+  // Subscribe failed - this is a permanent error, delete the client
+  PBL_LOG(LOG_LEVEL_ERROR, "Failed to subscribe to PPoGATT data characteristic: err=%x", e);
+  goto handle_error;
 
 handle_retriable_error:
   // GATT read failed - schedule a retry if we haven't exceeded the max retry count
