@@ -353,7 +353,9 @@ static const Command s_prompt_commands[] = {
   { "battery status", command_print_battery_status, 0 },
 #ifndef RELEASE
   { "audit delay", command_audit_delay_us, 0 },
+#if !MICRO_FAMILY_SF32LB52
   { "enter stop", command_enter_stop, 0},
+#endif
 #endif
 #ifndef RECOVERY_FW
   { "app list", command_app_list, 0 },
