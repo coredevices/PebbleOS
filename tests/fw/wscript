@@ -224,6 +224,7 @@ def build(ctx):
            " src/fw/process_management/pebble_process_md.c" \
            " src/fw/kernel/memory_layout.c" \
            " src/fw/kernel/util/segment.c" \
+           " tests/fakes/fake_new_timer.c" \
            " tests/fakes/fake_rtc.c" \
            " tests/stubs/stubs_watchface_metrics.c",
        test_sources_ant_glob = "test_app_manager.c",
@@ -233,6 +234,7 @@ def build(ctx):
        sources_ant_glob = \
            " src/fw/process_management/pebble_process_info.c" \
            " src/fw/process_management/process_manager.c" \
+           " tests/fakes/fake_new_timer.c" \
            " tests/stubs/stubs_watchface_metrics.c",
        test_sources_ant_glob = "test_process_manager.c",
        override_includes=['dummy_board'])
