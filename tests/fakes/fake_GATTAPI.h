@@ -31,12 +31,14 @@ typedef struct {
 
 typedef struct {
   unsigned int ConnectionID;
-  uint8_t Status;
+  unsigned int Status;
 } GATT_Service_Discovery_Complete_Data_t;
 
 typedef struct {
   unsigned int ConnectionID;
   struct {
+    unsigned int Service_Handle;
+    unsigned int End_Group_Handle;
     unsigned int NumberOfCharacteristics;
     void *CharacteristicInformationList;
   } ServiceInformation;
