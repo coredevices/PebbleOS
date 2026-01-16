@@ -4,6 +4,7 @@
 #include <inttypes.h>
 
 #include "console/prompt.h"
+#include "drivers/flash.h"
 #include "drivers/lptim_systick.h"
 #include "drivers/mcu.h"
 #include "drivers/rtc.h"
@@ -66,8 +67,7 @@ static void prv_enter_deepslep(void) {
 
   prv_save_iser();
 
-  /* Wait flash cache idle */
-  HAL_Delay_us(100);
+  flash_power_down_for_stop_mode();
 
   NVIC_EnableIRQ(AON_IRQn);
   NVIC_EnableIRQ(LPTIM1_IRQn);
