@@ -9,6 +9,7 @@ def build(bld):
         name='soc',
         source=[
             'init.c',
+            'freertos.c',
         ],
         use=[
             'fw_includes',
