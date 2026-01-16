@@ -45,7 +45,26 @@ void core_dump_reset(bool is_forced) {
 bool prv_contains_service_changed_characteristic(
     GAPLEConnection *connection,
     const GATT_Service_Discovery_Indication_Data_t *event) {
-  // Stub implementation - always returns false for testing purposes
+  // Check if this is the GATT profile service (UUID 0x1800 or 0x1801)
+  if (event->ServiceInformation.UUID.UUID_Type == guUUID_16) {
+    const uint16_t service_uuid = event->ServiceInformation.UUID.UUID_16;
+    if (service_uuid == 0x1800 || service_uuid == 0x1801) {
+      // Check if the service has characteristics
+      if (event->NumberOfCharacteristics > 0 && event->CharacteristicInformationList) {
+        // Look for Service Changed characteristic (UUID 0x2a05)
+        GATT_Characteristic_Information_t *characteristics =
+            (GATT_Characteristic_Information_t *)event->CharacteristicInformationList;
+        for (unsigned int i = 0; i < event->NumberOfCharacteristics; i++) {
+          if (characteristics[i].UUID_Type == guUUID_16) {
+            const uint16_t char_uuid = (uint16_t)characteristics[i].Characteristic_UUID;
+            if (char_uuid == 0x2a05) {
+              return true; // Found Service Changed characteristic
+            }
+          }
+        }
+      }
+    }
+  }
   return false;
 }
 
