@@ -1131,13 +1131,14 @@ void command_audit_delay_us(void) {
   __enable_irq();
 }
 
+#if !MICRO_FAMILY_SF32LB52
 // Simply parks the chip permanently in stop mode in whatever state it's currently in. This can be
 // pretty handy when trying to profile power of the chip under certains states
 // NOTE: If you did not configure with `--nowatchdog`, the HW watchdog will reboot you in ~8s
 void command_enter_stop(void) {
   dbgserial_putstr("Entering stop mode indefinitely ... reboot your board to get out!!");
   __disable_irq();
-#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF5
   RTC_ITConfig(RTC_IT_WUT, DISABLE);
   RTC_WakeUpCmd(DISABLE);
 #endif
@@ -1154,6 +1155,7 @@ void command_enter_stop(void) {
   dbgserial_putstr("woah, failed to enter stop mode");
   while (1) { }
 }
+#endif
 
 #ifndef RECOVERY_FW
 // Create a bunch of fragmentation in the filesystem by creating a large number
