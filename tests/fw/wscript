@@ -345,7 +345,8 @@ def build(ctx):
              platforms=[platform])
 
     clar(ctx,
-         sources_ant_glob="src/fw/apps/prf_apps/recovery_first_use_app/getting_started_button_combo.c ",
+         sources_ant_glob="src/fw/apps/prf_apps/recovery_first_use_app/getting_started_button_combo.c "
+                      "tests/fakes/fake_new_timer.c",
          test_sources_ant_glob="test_getting_started_button_combo.c",
          defines=["RECOVERY_FW"]) # Enable all combos
 
