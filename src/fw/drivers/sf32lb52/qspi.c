@@ -242,7 +242,11 @@ status_t qspi_flash_get_write_status(QSPIFlash *dev) {
   return S_SUCCESS;
 }
 
-void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {}
+void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
+  if (active) {
+    HAL_FLASH_NOP_CMD(&dev->qspi->state->ctx.handle);
+  }
+}
 
 status_t qspi_flash_blank_check(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
   return prv_blank_check_poll(addr, is_subsector);
