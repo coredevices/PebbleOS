@@ -562,8 +562,12 @@ static bool prv_sanitize_subscription_type(BLESubscription *subscription_type,
 
 static void prv_remove_subscription(GAPLEConnection *connection,
                                     GATTClientSubscriptionNode *subscription) {
+  PBL_LOG(LOG_LEVEL_DEBUG, "DEBUG: Removing subscription=%p, node=%p, conn->gatt_subscriptions=%p",
+           subscription, &subscription->node, connection->gatt_subscriptions);
   list_remove(&subscription->node,
               (ListNode **) &connection->gatt_subscriptions, NULL);
+  PBL_LOG(LOG_LEVEL_DEBUG, "DEBUG: After remove, conn->gatt_subscriptions=%p",
+           connection->gatt_subscriptions);
   kernel_free(subscription);
 }
 
@@ -622,15 +626,25 @@ static BTErrno prv_subscribe(BLECharacteristic characteristic_ref,
     // Prepend to the list of subscriptions of the connection:
     ListNode *head = connection->gatt_subscriptions ?
                        &connection->gatt_subscriptions->node : NULL;
+    PBL_LOG(LOG_LEVEL_DEBUG, "DEBUG: Before list_prepend, gatt_subscriptions=%p, head=%p, subscription=%p, &subscription->node=%p",
+             connection->gatt_subscriptions, head, subscription, &subscription->node);
+    ListNode *result = list_prepend(head, &subscription->node);
+    PBL_LOG(LOG_LEVEL_DEBUG, "DEBUG: After list_prepend, result=%p",
+             result);
     connection->gatt_subscriptions =
-                             (GATTClientSubscriptionNode *) list_prepend(head, &subscription->node);
+                             (GATTClientSubscriptionNode *) result;
 
     PBL_LOG(LOG_LEVEL_DEBUG, "Added BLE subscription for handle 0x%x", att_handle);
     did_create_new_subscription = true;
   }
 
+  PBL_LOG(LOG_LEVEL_DEBUG, "DEBUG: After create_new_subscription, subscription=%p",
+           subscription);
+
   // Keeping this around in case the write fails:
   const BLESubscription previous_type = subscription->subscriptions[client];
+  PBL_LOG(LOG_LEVEL_DEBUG, "DEBUG: After previous_type, subscription=%p",
+           subscription);
 
   // Update the client state:
   subscription->subscriptions[client] = subscription_type;
