@@ -100,6 +100,9 @@ void test_gatt_client_accessors__initialize(void) {
 
 void test_gatt_client_accessors__cleanup(void) {
   gap_le_connection_deinit();
+
+  // Clear any events that were sent during connection cleanup
+  fake_event_clear_last();
 }
 
 void test_gatt_client_accessors__copy_service_refs(void) {

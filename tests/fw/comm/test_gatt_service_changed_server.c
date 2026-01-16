@@ -19,6 +19,7 @@ extern void gatt_service_changed_server_init(void);
 #include "fake_GAPAPI.h"
 #include "fake_GATTAPI.h"
 #include "fake_GATTAPI_test_vectors.h"
+#include "fake_events.h"
 #include "fake_pbl_malloc.h"
 #include "fake_new_timer.h"
 #include "fake_rtc.h"
@@ -122,6 +123,10 @@ void test_gatt_service_changed_server__cleanup(void) {
     s_connection = NULL;
   }
   gap_le_connection_deinit();
+
+  // Clear any events that were sent during connection cleanup
+  fake_event_clear_last();
+
   stub_new_timer_cleanup();
 }
 

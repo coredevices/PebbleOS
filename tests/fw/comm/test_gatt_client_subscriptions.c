@@ -257,6 +257,10 @@ void test_gatt_client_subscriptions__cleanup(void) {
     gatt_client_subscriptions_cleanup_by_client(c);
   }
   gap_le_connection_deinit();
+
+  // Clear any events that were sent during connection cleanup
+  fake_event_clear_last();
+
   gatt_client_subscription_cleanup();
 
   fake_pbl_malloc_check_net_allocs();
