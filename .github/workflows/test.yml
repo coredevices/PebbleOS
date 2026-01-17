@@ -127,7 +127,8 @@ jobs:
       - name: Install dependencies (macOS)
         if: matrix.platform.name == 'macos'
         run: |
-          brew install gcc-arm-embedded ninja llvm ccache
+          brew install gcc-arm-embedded@14 ninja llvm ccache
+          brew link gcc-arm-embedded@14
           python3 -m venv .venv
           source .venv/bin/activate
           pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
