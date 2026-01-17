@@ -155,6 +155,7 @@ jobs:
           export CCACHE_MAXSIZE="5G"
           if [ "${{ matrix.platform.name }}" = "macos" ]; then
             export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
+            eval "$($HOME/.local/bin/mise activate bash)"
             source .venv/bin/activate
             ./waf configure --board ${{ matrix.board }} --js-engine=none --relax_toolchain_restrictions
           elif [ "${{ matrix.platform.name }}" = "linux" ]; then
@@ -169,6 +170,7 @@ jobs:
           export CCACHE_MAXSIZE="5G"
           if [ "${{ matrix.platform.name }}" = "macos" ]; then
             export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
+            eval "$($HOME/.local/bin/mise activate bash)"
             source .venv/bin/activate
           fi
           # Run all tests even if some fail, but check results afterward
