@@ -253,6 +253,10 @@ GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize size, GBitma
 
 // Compare two bitmap and return whether or not they are the same
 // Note that if both passed bitmaps are NULL, this test will succeed!
+//
+// Fuzzy comparison mode (enabled by FUZZY_IMAGE_COMPARE env var):
+// Allows small pixel differences (up to 0.1% of pixels) to accommodate
+// compiler version differences that cause minor rendering variations.
 bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename) {
   bool rc = false;
   GBitmap *diff_bmp = NULL;
@@ -281,6 +285,13 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
 
   const int16_t start_y = actual_bmp->bounds.origin.y;
   const int16_t end_y = start_y + actual_bmp->bounds.size.h;
+
+  // Check if fuzzy comparison mode is enabled
+  const bool fuzzy_compare = (getenv("FUZZY_IMAGE_COMPARE") != NULL);
+  const float fuzzy_threshold = fuzzy_compare ? atof(getenv("FUZZY_IMAGE_COMPARE")) : 0.001f;
+  int mismatch_count = 0;
+  int total_pixels = 0;
+
   rc = true;
 
   // Create a bitmap for the diff image - force 8-bit
@@ -340,14 +351,22 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
       GColor8 expected_bmp_color = prv_convert_to_gcolor8(expected_bmp->info.format,
                                                           expected_bmp_val, expected_bmp->palette);
 
+      total_pixels++;
+
       if (!gcolor_equal(actual_bmp_color, expected_bmp_color)) {
+        mismatch_count++;
+
         if (rc) {
           // Only print out the first mismatch
           printf("Mismatch at x: %d y: %d\n", x, y);
           printf("value for end_x was:%d\n", end_x);
           printf("format was %d\n", actual_bmp->info.format);
         }
-        rc = false;
+
+        // In fuzzy mode, only set rc=false if we exceed the threshold
+        if (!fuzzy_compare || (mismatch_count > (total_pixels * fuzzy_threshold))) {
+          rc = false;
+        }
       }
 
       // TODO: PBL-20932 Add 1-bit and palletized support
@@ -363,6 +382,18 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
         line[x] = actual_bmp_color.argb;
         line[(2 * diff_bmp->row_size_bytes / 3) + x + 1] = expected_bmp_color.argb;
       }
+    }
+  }
+
+  // Log fuzzy comparison results
+  if (fuzzy_compare && mismatch_count > 0) {
+    float mismatch_ratio = (float)mismatch_count / total_pixels;
+    printf("Fuzzy comparison: %d/%d mismatches (%.3f%%), threshold %.3f%%\n",
+           mismatch_count, total_pixels, mismatch_ratio * 100.0f, fuzzy_threshold * 100.0f);
+    if (rc) {
+      printf("  ✓ Within tolerance - test passes\n");
+    } else {
+      printf("  ✗ Exceeds tolerance - test fails\n");
     }
   }
 

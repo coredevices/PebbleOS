@@ -172,6 +172,9 @@ jobs:
             export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
             eval "$($HOME/.local/bin/mise activate bash)"
             source .venv/bin/activate
+            # Enable fuzzy image comparison to accommodate clang version differences
+            # Allows up to 0.1% pixel differences from compiler variations
+            export FUZZY_IMAGE_COMPARE=0.001
           fi
           # Run all tests even if some fail, but check results afterward
           ./waf test --continue_on_test_failure 2>&1 | tee /tmp/test_output.txt
