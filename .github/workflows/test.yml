@@ -127,8 +127,14 @@ jobs:
       - name: Install dependencies (macOS)
         if: matrix.platform.name == 'macos'
         run: |
-          brew install gcc-arm-embedded@14 ninja llvm ccache
-          brew link gcc-arm-embedded@14
+          # Install mise for version management
+          curl -fsSL https://mise.run | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Install gcc-arm-none-eabi 14.2.Rel1 via mise (not available via Homebrew)
+          mise install gcc-arm-none-eabi@14.2.Rel1
+          mise use -g gcc-arm-none-eabi@14.2.Rel1
+          # Install other dependencies via Homebrew
+          brew install ninja llvm ccache
           python3 -m venv .venv
           source .venv/bin/activate
           pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
