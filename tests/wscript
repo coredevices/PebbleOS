@@ -362,24 +362,23 @@ def build(bld):
     bld.env.append_value('CFLAGS', [
         '-O0',                     # No optimization - eliminates most version-specific optimizations
         '-g3',                     # Max debug info
-        '-ffp-model=strict',       # Strict floating-point (if supported)
-        '-fno-fast-math',          # Disable aggressive math optimizations
+        '-fno-inline-functions',   # Don't inline functions
+        '-fno-unroll-loops',       # Don't unroll loops
     ])
 
     # Check for compiler-specific flags
     if bld.env['CC'] and 'clang' in str(bld.env['CC']):
-        # Additional clang-specific consistency flags
+        # Clang-specific floating-point consistency
+        # Use -ffp-model=precise instead of strict to avoid conflicts
         bld.env.append_value('CFLAGS', [
-            '-ffinite-math-only',     # Assume no NaN/Inf
-            '-fno-inline-functions',  # Don't inline
-            '-fno-unroll-loops',      # Don't unroll loops
+            '-ffp-model=precise',   # Precise floating-point (less aggressive than strict)
+            '-fno-fast-math',       # Disable aggressive math optimizations
         ])
     else:
-        # GCC-specific consistency flags
+        # GCC-specific floating-point consistency
         bld.env.append_value('CFLAGS', [
-            '-ffloat-store',          # Force float to memory
-            '-fno-inline-functions',
-            '-fno-unroll-loops',
+            '-ffloat-store',        # Force float to memory (conservative rounding)
+            '-fno-math-errno',      # Don't set errno for math functions
         ])
 
     test_wscript_dirs = [os.path.dirname(f.abspath()) for f in bld.path.ant_glob('**/wscript')]
