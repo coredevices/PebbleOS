@@ -172,6 +172,21 @@ def copy_test_pngs_to_build_dir(ctx):
     return test_image_pngs
 
 
+def copy_test_pbis_to_build_dir(ctx):
+    test_image_pbis = []
+
+    # copy over pre-generated PBI fixture files
+    copy_resources_list = []
+    copy_resources_list.extend(
+        ctx.path.find_node('test_images').ant_glob("test_graphics_draw_text_flow__*.pbi"))
+    for copy_file in copy_resources_list:
+        dest_file = copy_file.get_bld()
+        ctx(name='copy_pbi', rule='cp -f ${SRC} ${TGT}', source=copy_file, target=dest_file)
+        test_image_pbis.append(dest_file)
+
+    return test_image_pbis
+
+
 def copy_pdc_files_to_build_dir(ctx):
     test_image_pdc_files = []
     copy_resources_list = ctx.path.find_node('test_images').ant_glob("*.pdc")
@@ -343,7 +358,7 @@ def build(bld):
 
     # Add test_pbis or test_pngs to runtime_deps for tests that require them
     if not bld.options.no_images:
-        bld.env.test_pbis = generate_test_pbis(bld)
+        bld.env.test_pbis = generate_test_pbis(bld) + copy_test_pbis_to_build_dir(bld)
         bld.env.test_pngs = copy_test_pngs_to_build_dir(bld)
         bld.env.test_pngs.extend(generate_test_pngs(bld))
         bld.env.test_pfos = copy_pfo_files_to_build_dir(bld)
