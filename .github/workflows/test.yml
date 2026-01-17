@@ -127,6 +127,8 @@ jobs:
       - name: Install dependencies (macOS)
         if: matrix.platform.name == 'macos'
         run: |
+          # Install bash 5+ (mise plugin requires bash v4+, GitHub macOS has bash v3)
+          brew install bash
           # Install mise for version management
           curl -fsSL https://mise.run | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
