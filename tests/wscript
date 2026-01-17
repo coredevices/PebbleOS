@@ -355,6 +355,33 @@ def build(bld):
         bld.env.append_value('CFLAGS', '-fprofile-arcs')
         bld.env.append_value('CFLAGS', '-ftest-coverage')
         bld.env.append_value('LINKFLAGS', '--coverage')
+
+    # Add compiler normalization flags for consistent test results across platforms
+    # Different clang versions (macOS 14 vs 26+, Xcode 15-17) generate different code
+    # Use -O0 for tests to eliminate optimization differences
+    bld.env.append_value('CFLAGS', [
+        '-O0',                     # No optimization - eliminates most version-specific optimizations
+        '-g3',                     # Max debug info
+        '-ffp-model=strict',       # Strict floating-point (if supported)
+        '-fno-fast-math',          # Disable aggressive math optimizations
+    ])
+
+    # Check for compiler-specific flags
+    if bld.env['CC'] and 'clang' in str(bld.env['CC']):
+        # Additional clang-specific consistency flags
+        bld.env.append_value('CFLAGS', [
+            '-ffinite-math-only',     # Assume no NaN/Inf
+            '-fno-inline-functions',  # Don't inline
+            '-fno-unroll-loops',      # Don't unroll loops
+        ])
+    else:
+        # GCC-specific consistency flags
+        bld.env.append_value('CFLAGS', [
+            '-ffloat-store',          # Force float to memory
+            '-fno-inline-functions',
+            '-fno-unroll-loops',
+        ])
+
     test_wscript_dirs = [os.path.dirname(f.abspath()) for f in bld.path.ant_glob('**/wscript')]
     for dir in test_wscript_dirs:
         bld.recurse(dir)
