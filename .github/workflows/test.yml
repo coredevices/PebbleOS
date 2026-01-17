@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [main]
+    branches: [main, testing]
     paths:
       - '.github/workflows/test.yml'
       - 'resources/**'
@@ -16,7 +16,7 @@ on:
       - 'waf'
       - 'wscript'
   pull_request:
-    branches: [main]
+    branches: [main, testing]
     paths:
       - '.github/workflows/test.yml'
       - 'resources/**'
