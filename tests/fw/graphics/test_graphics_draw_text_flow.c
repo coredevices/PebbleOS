@@ -14,6 +14,7 @@
 #include "applib/ui/window_private.h"
 #include "resource/resource_ids.auto.h"
 #include "util/size.h"
+#include "util/math.h"
 
 
 // Helper Functions
@@ -109,10 +110,54 @@ void test_graphics_draw_text_flow__cleanup(void) {
 
 
 #define RECT_TEXT_0_0 GRect(0, 0, DISP_COLS, DISP_ROWS)
+
+// Implementations of perimeter functions for testing
+// These are based on the implementations in src/fw/applib/graphics/perimeter.c
+// but provided here to make the test work on all platforms (not just round displays)
+
+GRangeHorizontal perimeter_for_circle(GRangeVertical vertical_range, GPoint center,
+                                      int32_t radius) {
+  radius = MAX(0, radius);
+  int32_t height = 0;
+  int32_t width = 0;
+
+  const int32_t top = center.y - radius;
+  const int32_t bottom = center.y + radius;
+
+  int32_t range_start = vertical_range.origin_y;
+  int32_t range_end = vertical_range.origin_y + vertical_range.size_h;
+
+  // Check if both top and bottom are outside but not surrounding the perimeter
+  if ((range_start < top && range_end < top) ||
+      (range_start > bottom && range_end > bottom)) {
+    return (GRangeHorizontal){0, 0};
+  }
+
+  range_start = CLIP(range_start, top, bottom);
+  range_end = CLIP(range_end, top, bottom);
+
+  // height of triangle from center to range start
+  height = ABS(center.y - range_start);
+  const int32_t start_width = integer_sqrt(ABS(((int64_t)radius * radius) - ((int64_t)height * height)));
+
+  // height of triangle from center to range end
+  height = ABS(center.y - range_end);
+  const int32_t end_width = integer_sqrt(ABS(((int64_t)radius * radius) - ((int64_t)height * height)));
+
+  width = MIN(start_width, end_width);
+
+  return (GRangeHorizontal){.origin_x = center.x - width, .size_w = width * 2};
+}
+
 GRangeHorizontal perimeter_for_display_round(const GPerimeter *perimeter,
                                              const GSize *ctx_size,
                                              GRangeVertical vertical_range,
-                                             uint16_t inset);
+                                             uint16_t inset) {
+  const GRect frame = (GRect) { GPointZero, *ctx_size };
+  const GPoint center = grect_center_point(&frame);
+  const int32_t radius = grect_shortest_side(frame) / 2 - inset;
+  return perimeter_for_circle(vertical_range, center, radius);
+}
 
 static uint8_t *prv_bitmap_offset_for_steps(GBitmap *bmp, int sx, int sy,
                                             int steps_x, int steps_y) {
@@ -290,7 +335,6 @@ void test_graphics_draw_text_flow__avoid_repeat_text_to_avoid_orphans(void) {
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
-GRangeHorizontal perimeter_for_circle(GRangeVertical vertical_range, GPoint center, int32_t radius);
 GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perimeter,
                                             const GSize *ctx_size,
                                             GRangeVertical vertical_range,

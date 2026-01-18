@@ -57,3 +57,9 @@ AppInstallId WEAK sys_process_manager_get_current_process_id(void) {
 }
 
 void WEAK sys_get_app_uuid(Uuid *uuid) {}
+
+// App analytics syscalls
+void WEAK sys_app_pp_app_message_analytics_count_sent(void) {}
+void WEAK sys_app_pp_app_message_analytics_count_received(void) {}
+uint32_t WEAK sys_app_pp_app_message_get_sent_count(void) { return 0; }
+uint32_t WEAK sys_app_pp_app_message_get_received_count(void) { return 0; }

@@ -13,6 +13,9 @@ typedef struct PACKED AppMenuOrderStorage {
 
 void app_order_storage_init(void);
 
+//! Reset app_order_storage state for testing - clears cached "file missing" flag
+void app_order_storage_reset_for_tests(void);
+
 //! Returns an AppMenuOrderStorage struct on the kernel heap
 AppMenuOrderStorage *app_order_read_order(void);
 

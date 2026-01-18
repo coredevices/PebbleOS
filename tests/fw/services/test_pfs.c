@@ -342,6 +342,83 @@ void test_pfs__overwrite(void) {
   pfs_close(fd);
 }
 
+// Test overwrite pattern where file is closed before reopening with OP_FLAG_OVERWRITE
+// This pattern is used by DLS storage compaction
+void test_pfs__overwrite_closed_file(void) {
+  const char *file = "testfile_close";
+  const char *string = "original content";
+  const char *overwrite_string = "overwritten!";
+  int rv;
+
+  // Create a file
+  int fd = pfs_open(file, OP_FLAG_WRITE, FILE_TYPE_STATIC, strlen(string));
+  cl_assert(fd >= 0);
+  rv = pfs_write(fd, (uint8_t *)string, strlen(string));
+  cl_assert_equal_i(rv, strlen(string));
+
+  // Close the file
+  cl_assert(pfs_close(fd) == S_SUCCESS);
+
+  // Now try to open with OP_FLAG_OVERWRITE - this should work
+  int tmp_fd = pfs_open(file, OP_FLAG_OVERWRITE, FILE_TYPE_STATIC, strlen(overwrite_string));
+  cl_assert(tmp_fd >= 0);
+  rv = pfs_write(tmp_fd, (uint8_t *)overwrite_string, strlen(overwrite_string));
+  cl_assert_equal_i(rv, strlen(overwrite_string));
+  cl_assert_equal_i(pfs_close(tmp_fd), S_SUCCESS);
+
+  // Verify the content was overwritten
+  uint8_t read_buf[strlen(overwrite_string)];
+  fd = pfs_open(file, OP_FLAG_READ, 0, 0);
+  cl_assert(fd >= 0);
+  rv = pfs_read(fd, &read_buf[0], strlen(overwrite_string));
+  cl_assert_equal_i(rv, strlen(overwrite_string));
+  cl_assert(memcmp(overwrite_string, read_buf, strlen(overwrite_string)) == 0);
+  pfs_close(fd);
+}
+
+// Test overwrite pattern matching DLS usage: larger file with OP_FLAG_WRITE | OP_FLAG_READ
+void test_pfs__overwrite_dls_pattern(void) {
+  const char *file = "dls_storage_test";
+  const size_t initial_size = 4096;  // Matches DLS_FILE_INIT_SIZE_BYTES
+  const size_t new_size = 8192;
+  int rv;
+
+  // Create file like DLS does
+  int fd = pfs_open(file, OP_FLAG_WRITE | OP_FLAG_READ, FILE_TYPE_STATIC, initial_size);
+  cl_assert(fd >= 0);
+
+  // Write some data (like DLS header)
+  uint8_t header[32];
+  memset(header, 0xAB, sizeof(header));
+  rv = pfs_write(fd, header, sizeof(header));
+  cl_assert_equal_i(rv, sizeof(header));
+
+  // Close the file
+  cl_assert(pfs_close(fd) == S_SUCCESS);
+
+  // Try to reopen with OP_FLAG_OVERWRITE | OP_FLAG_READ (like DLS compaction)
+  int tmp_fd = pfs_open(file, OP_FLAG_OVERWRITE | OP_FLAG_READ, FILE_TYPE_STATIC, new_size);
+  cl_assert(tmp_fd >= 0);  // This is where DLS fails
+
+  // Write new content
+  uint8_t new_header[32];
+  memset(new_header, 0xCD, sizeof(new_header));
+  rv = pfs_write(tmp_fd, new_header, sizeof(new_header));
+  cl_assert_equal_i(rv, sizeof(new_header));
+
+  // Close (this commits the overwrite)
+  cl_assert_equal_i(pfs_close(tmp_fd), S_SUCCESS);
+
+  // Verify
+  uint8_t read_buf[32];
+  fd = pfs_open(file, OP_FLAG_READ, 0, 0);
+  cl_assert(fd >= 0);
+  rv = pfs_read(fd, read_buf, sizeof(read_buf));
+  cl_assert_equal_i(rv, sizeof(read_buf));
+  cl_assert(memcmp(new_header, read_buf, sizeof(read_buf)) == 0);
+  pfs_close(fd);
+}
+
 void test_pfs__seek(void) {
   int len = 10;
   int fd = pfs_open("newfile", OP_FLAG_WRITE, FILE_TYPE_STATIC, len);

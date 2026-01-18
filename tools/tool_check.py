@@ -22,7 +22,9 @@ def tool_check():
     with open(REQUIREMENTS) as file:
         req_list = text_to_req_list(file.read())
 
-    pip_installed_text = sh.pip('freeze')
+    # Use subprocess instead of sh.pip() to properly inherit venv environment
+    pip_installed_text = subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'],
+                                                  text=True, stderr=subprocess.PIPE)
     pip_installed_dict = installed_list_to_dict(text_to_req_list(pip_installed_text))
 
     for req in req_list:

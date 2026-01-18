@@ -191,7 +191,12 @@ static void prv_menu_cell_basic_draw_custom_rect(
     const GSize text_size = graphics_text_layout_get_max_used_size(
         ctx, config->value, value_font, value_box, config->overflow_mode,
         GTextAlignmentRight, NULL);
-    box.size.w -= (text_size.w + horizontal_margin * 2);
+    const int16_t value_width = text_size.w + horizontal_margin * 2;
+    if (value_width < box.size.w) {
+      box.size.w -= value_width;
+    } else {
+      box.size.w = 0;
+    }
     graphics_draw_text(ctx, config->value, value_font, value_box,
                        config->overflow_mode, GTextAlignmentRight, NULL);
   }

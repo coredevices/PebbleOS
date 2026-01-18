@@ -3,7 +3,7 @@
 
 #include "comm/ble/gatt_service_changed.h"
 #include "comm/ble/gap_le_connection.h"
-#include "bluetopia_interface.h"
+#include "stubs_bluetopia_interface.h"
 
 #include "kernel/events.h"
 
@@ -19,6 +19,7 @@ extern void gatt_service_changed_server_init(void);
 #include "fake_GAPAPI.h"
 #include "fake_GATTAPI.h"
 #include "fake_GATTAPI_test_vectors.h"
+#include "fake_events.h"
 #include "fake_pbl_malloc.h"
 #include "fake_new_timer.h"
 #include "fake_rtc.h"
@@ -110,7 +111,7 @@ void test_gatt_service_changed_server__initialize(void) {
   gatt_service_changed_server_init();
   fake_gatt_init();
   gap_le_connection_init();
-  gap_le_connection_add(&s_device, NULL, false /* local_is_master */);
+  gap_le_connection_add(&s_device, NULL, false /* local_is_master */, TIMER_INVALID_ID);
   s_connection = gap_le_connection_by_device(&s_device);
   cl_assert(s_connection);
   s_connection->gatt_connection_id = s_connection_id;
@@ -122,6 +123,10 @@ void test_gatt_service_changed_server__cleanup(void) {
     s_connection = NULL;
   }
   gap_le_connection_deinit();
+
+  // Clear any events that were sent during connection cleanup
+  fake_event_clear_last();
+
   stub_new_timer_cleanup();
 }
 
@@ -163,7 +168,7 @@ void test_gatt_service_changed_server__reconnect_resubscribe_stop_sending_after_
   static const int max_times = 5;
 
   for (int i = 0; i < max_times + 1; ++i) {
-    gap_le_connection_add(&s_device, NULL, false /* local_is_master */);
+    gap_le_connection_add(&s_device, NULL, false /* local_is_master */, TIMER_INVALID_ID);
     s_connection = gap_le_connection_by_device(&s_device);
     cl_assert(s_connection);
     s_connection->gatt_connection_id = s_connection_id;

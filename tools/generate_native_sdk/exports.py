@@ -28,8 +28,12 @@ class FullExport(Export):
         super(FullExport, self).__init__(v, app_only, worker_only, deprecated)
 
         self.full_definition = None
+        self.skip_definition = v.get('skipDefinition', False)
 
     def complete(self):
+        if self.skip_definition:
+            return True
+
         return self.full_definition is not None
 
 

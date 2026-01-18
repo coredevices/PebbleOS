@@ -23,6 +23,10 @@ void app_order_storage_init(void) {
   s_data.order_mutex = mutex_create();
 }
 
+void app_order_storage_reset_for_tests(void) {
+  s_data.file_known_missing = false;
+}
+
 //! Must be called from the App Task
 AppMenuOrderStorage *app_order_read_order(void) {
   PBL_ASSERT_TASK(PebbleTask_App);

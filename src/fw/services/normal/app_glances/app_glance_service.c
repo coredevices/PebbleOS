@@ -138,13 +138,13 @@ void app_glance_service_init_glance(AppGlance *glance) {
 
 void app_glance_service_init(void) {
 
-  static EventServiceInfo s_blob_db_event_info = {
+  static EventServiceInfo __attribute__((aligned(8))) s_blob_db_event_info = {
     .type = PEBBLE_BLOBDB_EVENT,
     .handler = prv_blob_db_event_handler,
   };
   event_service_client_subscribe(&s_blob_db_event_info);
 
-  static EventServiceInfo s_app_cache_event_info = {
+  static EventServiceInfo __attribute__((aligned(8))) s_app_cache_event_info = {
     .type = PEBBLE_APP_CACHE_EVENT,
     .handler = prv_handle_app_cache_event,
   };

@@ -127,7 +127,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *e,
 
   uint16_t heap_buffer_size = 0;
   uint16_t value_length = 0;
-  bool has_more = sys_ble_client_get_notification_value_length(&value_length);
+  bool has_more = sys_ble_client_get_notification_value_length(NULL, &value_length);
   while (has_more) {
     if (heap_buffer_size < value_length) {
       const uint16_t new_heap_buffer_size = MIN(value_length, 64 /* arbitrary min size.. */);
@@ -216,7 +216,7 @@ static PrvHandler prv_handler_for_subtype(
 }
 
 // Exported for ble_app_support.c
-void ble_client_handle_event(PebbleEvent *e) {
+void ble_client_handle_event(PebbleEvent *e, void *context) {
   const PebbleBLEGATTClientEvent *gatt_event = &e->bluetooth.le.gatt_client;
   prv_handler_for_subtype(gatt_event->subtype)(gatt_event);
 }

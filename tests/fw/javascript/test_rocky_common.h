@@ -16,6 +16,11 @@
 #include <clar.h>
 #include <util/attributes.h>
 
+// Compatibility: attributes.h defines PBL_UNUSED, not UNUSED
+#ifndef UNUSED
+#define UNUSED PBL_UNUSED
+#endif
+
 #include <string.h>
 
 #define ASSERT_JS_GLOBAL_EQUALS_B(name, value) \

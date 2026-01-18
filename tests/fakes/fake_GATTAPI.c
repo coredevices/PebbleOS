@@ -3,6 +3,8 @@
 
 #include "fake_GATTAPI.h"
 
+#ifdef GATTAPI_AVAILABLE
+
 #include "clar_asserts.h"
 
 #include <string.h>
@@ -176,3 +178,128 @@ void fake_gatt_put_write_response_for_last_write(void) {
   s_write_cb(s_write_stack_id, &event, s_write_cb_param);
   s_write_cb = NULL;
 }
+#else
+// Stub implementations when GATTAPI_AVAILABLE is not defined (Linux/Docker)
+// These are minimal stubs that allow the tests to link
+
+static bool s_service_discovery_running = false;
+static int s_start_count = 0;
+static int s_stop_count = 0;
+static int s_service_changed_indication_count = 0;
+static uint16_t s_write_handle = 0;
+static unsigned int s_service_discovery_stack_id;
+static GATT_Service_Discovery_Event_Callback_t s_service_discovery_callback;
+static unsigned long s_service_discovery_callback_param;
+
+int GATT_Initialize(unsigned int BluetoothStackID,
+                    unsigned long Flags,
+                    GATT_Connection_Event_Callback_t ConnectionEventCallback,
+                    unsigned long CallbackParameter) {
+  return 0;
+}
+
+int GATT_Cleanup(unsigned int BluetoothStackID) {
+  return 0;
+}
+
+int GATT_Start_Service_Discovery_Handle_Range(unsigned int stack_id,
+                                             unsigned int connection_id,
+                                             GATT_Attribute_Handle_Group_t *DiscoveryHandleRange,
+                                             unsigned int NumberOfUUID,
+                                             GATT_UUID_t *UUIDList,
+                                             GATT_Service_Discovery_Event_Callback_t ServiceDiscoveryCallback,
+                                             unsigned long CallbackParameter) {
+  s_service_discovery_running = true;
+  s_service_discovery_stack_id = stack_id;
+  s_service_discovery_callback = ServiceDiscoveryCallback;
+  s_service_discovery_callback_param = CallbackParameter;
+  ++s_start_count;
+  return 0;
+}
+
+int GATT_Stop_Service_Discovery(unsigned int BluetoothStackID, unsigned int ConnectionID) {
+  s_service_discovery_running = false;
+  ++s_stop_count;
+  return 0;
+}
+
+bool fake_gatt_is_service_discovery_running(void) {
+  return s_service_discovery_running;
+}
+
+int fake_gatt_is_service_discovery_start_count(void) {
+  return s_start_count;
+}
+
+int fake_gatt_is_service_discovery_stop_count(void) {
+  return s_stop_count;
+}
+
+void fake_gatt_set_start_return_value(int ret_value) {
+  // Stub - does nothing
+}
+
+void fake_gatt_set_stop_return_value(int ret_value) {
+  // Stub - does nothing
+}
+
+void fake_gatt_put_service_discovery_event(GATT_Service_Discovery_Event_Data_t *event) {
+  if (event->Event_Data_Type == 0 /* etGATT_Service_Discovery_Complete */) {
+    s_service_discovery_running = false;
+  }
+  // Call the registered callback if it exists
+  if (s_service_discovery_callback) {
+    s_service_discovery_callback(s_service_discovery_stack_id, event, s_service_discovery_callback_param);
+  }
+}
+
+void fake_gatt_init(void) {
+  s_service_discovery_running = false;
+  s_start_count = 0;
+  s_stop_count = 0;
+  s_service_changed_indication_count = 0;
+  s_write_handle = 0;
+  s_service_discovery_stack_id = 0;
+  s_service_discovery_callback = NULL;
+  s_service_discovery_callback_param = 0;
+}
+
+int GATT_Service_Changed_CCCD_Read_Response(unsigned int BluetoothStackID,
+                                            unsigned int TransactionID,
+                                            Word_t CCCD) {
+  return 0;
+}
+
+int GATT_Service_Changed_Indication(unsigned int BluetoothStackID,
+                                    unsigned int ConnectionID,
+                                    GATT_Service_Changed_Data_t *Service_Changed_Data) {
+  ++s_service_changed_indication_count;
+  return 1;
+}
+
+int fake_gatt_get_service_changed_indication_count(void) {
+  return s_service_changed_indication_count;
+}
+
+int GATT_Service_Changed_Read_Response(unsigned int BluetoothStackID,
+                                       unsigned int TransactionID,
+                                       GATT_Service_Changed_Data_t *Service_Changed_Data) {
+  return 0;
+}
+
+int GATT_Write_Request(unsigned int BluetoothStackID, unsigned int ConnectionID,
+                       Word_t AttributeHandle, Word_t AttributeLength, void *AttributeValue,
+                       GATT_Client_Event_Callback_t ClientEventCallback,
+                       unsigned long CallbackParameter) {
+  s_write_handle = AttributeHandle;
+  return 1;
+}
+
+uint16_t fake_gatt_write_last_written_handle(void) {
+  return s_write_handle;
+}
+
+void fake_gatt_put_write_response_for_last_write(void) {
+  // Stub - does nothing
+}
+#endif // GATTAPI_AVAILABLE

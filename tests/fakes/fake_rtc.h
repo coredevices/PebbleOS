@@ -16,5 +16,6 @@ void fake_rtc_increment_time_ms(uint32_t inc);
 void fake_rtc_set_ticks(RtcTicks new_ticks);
 void fake_rtc_increment_ticks(RtcTicks tick_increment);
 void fake_rtc_auto_increment_ticks(RtcTicks tick_increment);
+void fake_rtc_cleanup(void);
 
 // TODO: there is a lot of stuff missing.

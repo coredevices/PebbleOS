@@ -75,6 +75,7 @@ void test_framebuffer_duma__draw_within_framebuffer(void) {
   
 // This test validates that a duma assert is caught when drawing outside of the framebuffer
 void test_framebuffer_duma__draw_beyond_framebuffer(void) {
+#ifndef DUMA_DISABLED
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
@@ -85,4 +86,8 @@ void test_framebuffer_duma__draw_beyond_framebuffer(void) {
   uint8_t *buffer = (uint8_t*)ctx.dest_bitmap.addr;
   // Expect this to assert using duma protection, we are writing past framebuffer
   cl_assert_passert(draw_fb_raw(buffer, FRAMEBUFFER_SIZE_BYTES + 1, GColorWhite));
+#else
+  // DUMA is disabled on this platform (e.g., macOS ARM), so this test cannot run
+  // The memory protection provided by DUMA is not available
+#endif
 }

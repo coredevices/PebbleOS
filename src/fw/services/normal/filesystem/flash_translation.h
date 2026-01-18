@@ -59,3 +59,7 @@ void ftl_format(void);
 void ftl_populate_region_list(void);
 
 void add_initial_space_to_filesystem(void);
+
+//! Resets the flash translation layer state.
+//! This should be called before re-initializing the filesystem in tests.
+void ftl_reset(void);

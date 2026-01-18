@@ -38,6 +38,10 @@ const ResourceStoreImplementation g_system_bank_impl;
 static void resource_storage_system_bank_init(void) {
   boot_bit_clear(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
 
+  // Reset state at start of init to ensure clean state between test runs
+  s_valid_resources_found = false;
+  s_active_bank = 0;
+
   ResourceStoreEntry entry = {
     .id = 0, // resource id 0 means the store itself
     .impl = &g_system_bank_impl,

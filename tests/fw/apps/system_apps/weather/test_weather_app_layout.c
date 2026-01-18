@@ -87,6 +87,9 @@ void test_weather_app_layout__initialize(void) {
   const GContextInitializationMode context_init_mode = GContextInitializationMode_System;
   graphics_context_init(&s_ctx, fb, context_init_mode);
 
+  // Set the app state graphics context for gbitmap_get_format() calls
+  s_app_state_get_graphics_context = &s_ctx;
+
   framebuffer_clear(fb);
 
   // Setup resources
@@ -103,6 +106,10 @@ void test_weather_app_layout__initialize(void) {
 
 void test_weather_app_layout__cleanup(void) {
   free(fb);
+  fb = NULL;
+  // Clean up fake modules to prevent state leakage between test modules
+  s_app_state_get_graphics_context = NULL;
+  fake_spi_flash_cleanup();
 }
 
 // Helpers

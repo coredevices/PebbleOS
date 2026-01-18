@@ -8,7 +8,8 @@ def build(ctx):
                           " src/fw/util/rand/rand.c"
                           " third_party/tinymt/TinyMT/tinymt/tinymt32.c"
                           " src/fw/process_management/pebble_process_info.c"
-                          " src/fw/util/dict.c",
+                          " src/fw/util/dict.c"
+                          " tests/stubs/stubs_app_pp_syscalls.c",
          test_sources_ant_glob="test_app_message.c")
 
     clar(ctx,

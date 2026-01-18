@@ -25,11 +25,17 @@ void test_pebble_process_md__uninitialized_unprivileged(void) {
   #define LEGACY_PLATFORM_AFTER_4 PlatformTypeChalk
 #elif PBL_RECT
   #if PBL_BW
-  #define LEGACY_PLATFORM_PRIOR_4 PlatformTypeAplite
-  #define LEGACY_PLATFORM_AFTER_4 PlatformTypeDiorite
+    #define LEGACY_PLATFORM_PRIOR_4 PlatformTypeAplite
+    #define LEGACY_PLATFORM_AFTER_4 PlatformTypeDiorite
   #elif PBL_COLOR
-  #define LEGACY_PLATFORM_PRIOR_4 PlatformTypeBasalt
-  #define LEGACY_PLATFORM_AFTER_4 PlatformTypeBasalt
+    // Silk is PBL_RECT && PBL_COLOR but maps to Diorite, not Basalt
+    #if defined(PLATFORM_SILK)
+      #define LEGACY_PLATFORM_PRIOR_4 PlatformTypeAplite
+      #define LEGACY_PLATFORM_AFTER_4 PlatformTypeDiorite
+    #else
+      #define LEGACY_PLATFORM_PRIOR_4 PlatformTypeBasalt
+      #define LEGACY_PLATFORM_AFTER_4 PlatformTypeBasalt
+    #endif
   #endif
 #endif
 

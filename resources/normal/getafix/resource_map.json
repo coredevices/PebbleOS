@@ -143,17 +143,27 @@
     {
       "type": "png",
       "name": "STRIDE_HEART",
-      "file": "normal/robert/images/stride_heart.png"
+      "file": "normal/getafix/images/stride_heart.png"
     },
     {
       "type": "png",
       "name": "STRIDE_SHOE_GREEN",
-      "file": "normal/robert/images/stride_shoe_green.png"
+      "file": "normal/getafix/images/stride_shoe_green.png"
     },
     {
       "type": "png",
       "name": "STRIDE_SHOE_BLUE",
-      "file": "normal/robert/images/stride_shoe_blue.png"
+      "file": "normal/getafix/images/stride_shoe_blue.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_SHOE_BLUE_SMALL",
+      "file": "normal/getafix/images/stride_shoe_blue.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_SHOE_GREEN_SMALL",
+      "file": "normal/getafix/images/stride_shoe_green.png"
     },
     {
       "type": "png",
@@ -357,9 +367,27 @@
     },
     {
       "type": "font",
+      "name": "AGENCY_FB_36_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_36_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
       "name": "AGENCY_FB_46_NUMBERS_AM_PM",
       "file": "normal/base/pbf/AGENCY_FB_46_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_60_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_60_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_60_THIN_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_60_THIN_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
     },
     {
       "type": "font",

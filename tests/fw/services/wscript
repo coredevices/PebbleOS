@@ -27,8 +27,9 @@ def build(ctx):
             " tests/fakes/fake_session.c" \
             " src/fw/util/legacy_checksum.c" \
             " tests/fakes/fake_events.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_put_bytes_storage_mem.c" \
-            " tests/fakes/fake_queue.c"
+            " tests/fakes/fake_queue.c" \
             " tests/fakes/fake_resource_storage.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c",
@@ -44,6 +45,7 @@ def build(ctx):
             " src/fw/services/normal/analytics/analytics_storage.c" \
             " src/fw/services/normal/analytics/analytics_logging.c" \
             " src/fw/services/normal/analytics/analytics_event.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c" \
             " src/fw/util/rand/rand.c" \
             " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
@@ -86,7 +88,8 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = \
-            " src/fw/services/common/evented_timer.c",
+            " src/fw/services/common/evented_timer.c" \
+            " tests/fakes/fake_new_timer.c",
         test_sources_ant_glob = "test_evented_timer.c")
 
     clar(ctx,
@@ -105,7 +108,8 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = \
-            " src/fw/services/common/light.c",
+            " src/fw/services/common/light.c" \
+            " tests/fakes/fake_new_timer.c",
         test_sources_ant_glob = "test_light.c",
         override_includes=['dummy_board'])
 
@@ -126,6 +130,7 @@ def build(ctx):
     clar(ctx,
         sources_ant_glob = \
             " src/fw/services/common/regular_timer.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_session.c" \
             " src/fw/services/common/debounced_connection_service.c",
@@ -212,6 +217,7 @@ def build(ctx):
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
             " src/fw/drivers/flash/flash_crc.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c" \
             " tests/fixtures/resources/builtin_resources.auto.c" \
@@ -241,6 +247,7 @@ def build(ctx):
             " src/fw/util/rand/rand.c" \
             " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
             " tests/fakes/fake_bootbits.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c" \
             " tests/fixtures/resources/builtin_resources.auto.c" \
@@ -259,8 +266,10 @@ def build(ctx):
         defines=["PLATFORM_SNOWY"],
         sources_ant_glob = " ".join([
             " src/fw/services/normal/audio_endpoint.c " \
+            " tests/fakes/fake_new_timer.c " \
             " tests/fakes/fake_session.c"]),\
-        test_sources_ant_glob = "test_audio_endpoint.c")
+        test_sources_ant_glob = "test_audio_endpoint.c",
+        platforms=['snowy'])
 
     clar(ctx,
         sources_ant_glob = " ".join([
@@ -423,6 +432,7 @@ def build(ctx):
             " src/fw/util/time/time.c" \
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c",
         defines=['CAPABILITY_HAS_HEALTH_TRACKING=1'],
@@ -456,6 +466,7 @@ def build(ctx):
             " src/fw/util/mbuf.c" \
             " src/fw/util/mbuf_iterator.c" \
             " tests/fakes/fake_accessory.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_smartstrap_profiles.c" \
             " tests/fakes/fake_smartstrap_state.c",
         test_sources_ant_glob = "test_smartstrap_comms.c")
@@ -464,11 +475,13 @@ def build(ctx):
         sources_ant_glob = "src/fw/services/common/vibe_pattern.c" \
             " src/fw/applib/ui/vibes.c" \
             " tests/fakes/fake_events.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c",
         test_sources_ant_glob = "test_vibe.c")
 
     clar(ctx,
-         sources_ant_glob = "src/fw/services/normal/vibes/vibe_intensity.c",
+         sources_ant_glob = "src/fw/services/normal/vibes/vibe_intensity.c" \
+            " tests/stubs/stubs_alerts_preferences.c",
          test_sources_ant_glob = "test_vibe_intensity.c")
 
     clar(ctx,
@@ -490,6 +503,7 @@ def build(ctx):
             "src/fw/services/common/hrm/hrm_manager.c " \
             "src/libos/tick.c " \
             "tests/fakes/fake_events.c " \
+            "tests/fakes/fake_new_timer.c " \
             "tests/fakes/fake_rtc.c " \
             "tests/fakes/fake_accel_service.c ",
         test_sources_ant_glob = "test_hrm_manager.c",

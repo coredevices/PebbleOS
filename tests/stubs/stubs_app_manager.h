@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "drivers/button_id.h"
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_management/process_manager.h"

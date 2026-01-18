@@ -34,12 +34,12 @@ typedef struct {
 } AppFetchState;
 
 //! Command type
-enum {
+static enum {
   APP_FETCH_INSTALL_COMMAND = 0x01,
 } AppFetchCommand;
 
 //! Possible results that come back from the INSTALL_COMMAND
-enum {
+static enum {
   APP_FETCH_INSTALL_RESPONSE = 0x01,
 } AppFetchResponse;
 

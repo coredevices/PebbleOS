@@ -556,8 +556,8 @@ T_STATIC void prv_window_load_handler(Window *window) {
   data->am_pm_font = fonts_get_system_font(FONT_KEY_AGENCY_FB_88_THIN_NUMBERS_AM_PM);
 #elif SNOWY_SCREEN_RES || SPALDING_SCREEN_RES
 #if PBL_RECT
-  gbitmap_init_with_resource(&data->shoe_blue_small, RESOURCE_ID_STRIDE_SHOE_BLUE_SMALL);
-  gbitmap_init_with_resource(&data->shoe_green_small, RESOURCE_ID_STRIDE_SHOE_GREEN_SMALL);
+  gbitmap_init_with_resource(&data->shoe_blue_small, RESOURCE_ID_STRIDE_SHOE_BLUE);
+  gbitmap_init_with_resource(&data->shoe_green_small, RESOURCE_ID_STRIDE_SHOE_GREEN);
 #endif // PBL_RECT
   data->steps_font = fonts_get_system_font(FONT_KEY_AGENCY_FB_36_NUMBERS_AM_PM);
   data->time_font = fonts_get_system_font(FONT_KEY_AGENCY_FB_60_NUMBERS_AM_PM);

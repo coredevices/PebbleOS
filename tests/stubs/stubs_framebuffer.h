@@ -14,3 +14,7 @@ void WEAK framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) {}
 void WEAK framebuffer_init(FrameBuffer *f, const GSize *size) { f->size = *size; }
 
 GSize WEAK framebuffer_get_size(FrameBuffer *f) { return f->size; }
+
+size_t WEAK framebuffer_get_size_bytes(FrameBuffer *f) {
+  return (size_t)f->size.w * (size_t)f->size.h;
+}

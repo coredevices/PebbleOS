@@ -31,11 +31,17 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
     printf("Unable to open file: %s\n", pbi_path);
     return false;
   }
-  // Just in case this output bitmap was created by hand.
-  bmp->info.version = GBITMAP_VERSION_CURRENT;
+  // Preserve the version from the loaded PBI file instead of forcing it to CURRENT
+  // This preserves byte 3 metadata when copying golden images
+  // bmp->info.version = GBITMAP_VERSION_CURRENT;
 
   // PBL-24228 Support Circular PBIs
   uint16_t info_flags = bmp->info_flags;
+
+  // Clear runtime-only flags before writing to file
+  // is_bitmap_heap_allocated is a runtime flag indicating whether to free the bitmap data
+  // It should not be persisted to the PBI file
+  ((BitmapInfo*)&info_flags)->is_bitmap_heap_allocated = false;
 #ifdef PLATFORM_SPALDING
   if(bmp->info.format == GBitmapFormat8BitCircular) {
     // Have to force output format to 8Bit;

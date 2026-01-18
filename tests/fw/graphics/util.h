@@ -160,7 +160,12 @@ GBitmap *get_gbitmap_from_pbi(const char *filename) {
   fread(&bmp->info_flags, sizeof(bmp->info_flags), 1, file);
   fread(&bmp->bounds, sizeof(bmp->bounds), 1, file);
 
-  size_t data_size = bmp->row_size_bytes * bmp->bounds.size.h;
+  // Handle circular format PBI files (row_size_bytes == 0)
+  // The writer stores circular format as row_size_bytes=0 with full-width pixel rows
+  const bool is_circular_pbi = (bmp->row_size_bytes == 0);
+  const size_t data_size = is_circular_pbi ?
+      (bmp->bounds.size.w * bmp->bounds.size.h) :
+      (bmp->row_size_bytes * bmp->bounds.size.h);
 
   bmp->addr = malloc(data_size);
   bmp->info.is_bitmap_heap_allocated = true;
@@ -248,6 +253,10 @@ GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize size, GBitma
 
 // Compare two bitmap and return whether or not they are the same
 // Note that if both passed bitmaps are NULL, this test will succeed!
+//
+// Fuzzy comparison mode (enabled by FUZZY_IMAGE_COMPARE env var):
+// Allows small pixel differences (up to 0.1% of pixels) to accommodate
+// compiler version differences that cause minor rendering variations.
 bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename) {
   bool rc = false;
   GBitmap *diff_bmp = NULL;
@@ -276,6 +285,13 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
 
   const int16_t start_y = actual_bmp->bounds.origin.y;
   const int16_t end_y = start_y + actual_bmp->bounds.size.h;
+
+  // Check if fuzzy comparison mode is enabled
+  const bool fuzzy_compare = (getenv("FUZZY_IMAGE_COMPARE") != NULL);
+  const float fuzzy_threshold = fuzzy_compare ? atof(getenv("FUZZY_IMAGE_COMPARE")) : 0.001f;
+  int mismatch_count = 0;
+  int total_pixels = 0;
+
   rc = true;
 
   // Create a bitmap for the diff image - force 8-bit
@@ -308,14 +324,26 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
       continue;
     }
 
+    // Expected bitmap from PBI may have row_size_bytes=0 (circular format marker).
+    // In this case, pixel data is stored as rectangular (full width per row).
+    // Calculate stride FIRST, then use it for row pointer calculation.
+    const uint16_t expected_stride = (expected_bmp->row_size_bytes == 0) ?
+        expected_bmp->bounds.size.w : expected_bmp->row_size_bytes;
+
+    const GBitmapDataRowInfo expected_row_info = {
+      .data = expected_bmp_data + (y * expected_stride),
+      .min_x = 0,
+      .max_x = expected_bmp->bounds.size.w - 1
+    };
+
     for (int x = start_x; x < end_x; ++x) {
       uint8_t *actual_bmp_data = dest_row_info.data;
       uint8_t actual_bmp_val = prv_raw_image_get_value_for_format(actual_bmp_data, x, y_line,
                                                                   actual_bmp->row_size_bytes,
                                                                   actual_bmp_bpp,
                                                                   actual_bmp->info.format);
-      uint8_t expected_bmp_val = prv_raw_image_get_value_for_format(expected_bmp_data, x, y,
-                                                                    expected_bmp->row_size_bytes,
+      uint8_t expected_bmp_val = prv_raw_image_get_value_for_format(expected_row_info.data, x, 0,
+                                                                    expected_stride,
                                                                     expected_bmp_bpp,
                                                                     expected_bmp->info.format);
       GColor8 actual_bmp_color = prv_convert_to_gcolor8(actual_bmp->info.format,
@@ -323,14 +351,22 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
       GColor8 expected_bmp_color = prv_convert_to_gcolor8(expected_bmp->info.format,
                                                           expected_bmp_val, expected_bmp->palette);
 
+      total_pixels++;
+
       if (!gcolor_equal(actual_bmp_color, expected_bmp_color)) {
+        mismatch_count++;
+
         if (rc) {
           // Only print out the first mismatch
           printf("Mismatch at x: %d y: %d\n", x, y);
           printf("value for end_x was:%d\n", end_x);
           printf("format was %d\n", actual_bmp->info.format);
         }
-        rc = false;
+
+        // In fuzzy mode, only set rc=false if we exceed the threshold
+        if (!fuzzy_compare || (mismatch_count > (total_pixels * fuzzy_threshold))) {
+          rc = false;
+        }
       }
 
       // TODO: PBL-20932 Add 1-bit and palletized support
@@ -346,6 +382,18 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
         line[x] = actual_bmp_color.argb;
         line[(2 * diff_bmp->row_size_bytes / 3) + x + 1] = expected_bmp_color.argb;
       }
+    }
+  }
+
+  // Log fuzzy comparison results
+  if (fuzzy_compare && mismatch_count > 0) {
+    float mismatch_ratio = (float)mismatch_count / total_pixels;
+    printf("Fuzzy comparison: %d/%d mismatches (%.3f%%), threshold %.3f%%\n",
+           mismatch_count, total_pixels, mismatch_ratio * 100.0f, fuzzy_threshold * 100.0f);
+    if (rc) {
+      printf("  ✓ Within tolerance - test passes\n");
+    } else {
+      printf("  ✗ Exceeds tolerance - test fails\n");
     }
   }
 

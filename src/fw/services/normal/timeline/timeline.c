@@ -102,13 +102,13 @@ static bool prv_show_event(TimelineNode *node, time_t timestamp, time_t midnight
     return false;
   }
 
-  // An event is in future until it ends
+  // An event is in future until it ends (exclusive - at the moment it ends, it's no longer future)
   const time_t fudge_time = node->duration * SECONDS_PER_MINUTE;
   // deal with all day events
   if (node->all_day && node->timestamp == midnight) {
     return show_all_day_events;
   } else if (direction == TimelineIterDirectionFuture) {
-    return (node->timestamp >= timestamp - fudge_time);
+    return (node->timestamp > timestamp - fudge_time);
   } else { // direction == TimelineIterDirectionPast
     return (node->timestamp < timestamp - fudge_time);
   }

@@ -272,14 +272,32 @@ void test_graphics_gtransform_${BIT_DEPTH_NAME}__rotation(void) {
   // Test rotation
   t1 = GTransformFromNumbers(10, 10, 10, 10, 10, 10);
   t2 = GTransformFromNumbers(10, 10, 10, 10, 10, 10);
-  // Initialize a, b, c, and d based on the expected result
-  // a = b = 10*cos(45) - 10*sin(45)
-  // c = d = 10*sin(45) + 10*cos(45)
-  t_c = GTransform(GTransformNumberFromNumber(0),
-                   GTransformNumberFromNumber(0), 
-                   (Fixed_S32_16){ .raw_value = (int32_t)(923960) },
-                   (Fixed_S32_16){ .raw_value = (int32_t)(923960) }, 
-                   GTransformNumberFromNumber(10), 
+  // Expected result after rotating [10,10,10,10,10,10] by 45 degrees:
+  // Use the same calculation as gtransform_init_rotation and gtransform_concat
+  // to avoid precision differences.
+  const int32_t angle = DEG_TO_TRIGANGLE(45);
+  const int32_t sine = sin_lookup(angle);
+  const int32_t cosine = cos_lookup(angle);
+  // Create rotation matrix components the same way gtransform_init_rotation does
+  int64_t cosine_val = (cosine * ((int64_t)GTransformNumberOne.raw_value)) / TRIG_MAX_RATIO;
+  int64_t sine_val = (sine * ((int64_t)GTransformNumberOne.raw_value)) / TRIG_MAX_RATIO;
+  Fixed_S32_16 R_cos = { .raw_value = (int32_t)cosine_val };
+  Fixed_S32_16 R_sin = { .raw_value = (int32_t)sine_val };
+  Fixed_S32_16 R_neg_sin = { .raw_value = (int32_t)(-sine_val) };
+  // t1 values (all 10)
+  Fixed_S32_16 t_val = GTransformNumberFromNumber(10);
+  // Calculate expected result using same Fixed_S32_16_mul as gtransform_concat
+  // t_new.a = R.a*t.a + R.b*t.c = cos*10 + (-sin)*10
+  Fixed_S32_16 expected_ab = Fixed_S32_16_add(Fixed_S32_16_mul(R_cos, t_val),
+                                              Fixed_S32_16_mul(R_neg_sin, t_val));
+  // t_new.c = R.c*t.a + R.d*t.c = sin*10 + cos*10
+  Fixed_S32_16 expected_cd = Fixed_S32_16_add(Fixed_S32_16_mul(R_sin, t_val),
+                                              Fixed_S32_16_mul(R_cos, t_val));
+  t_c = GTransform(expected_ab,
+                   expected_ab,
+                   expected_cd,
+                   expected_cd,
+                   GTransformNumberFromNumber(10),
                    GTransformNumberFromNumber(10));
 
   gtransform_rotate(&t_new, &t1, DEG_TO_TRIGANGLE(45));

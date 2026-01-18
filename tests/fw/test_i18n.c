@@ -7,6 +7,7 @@
 #include "services/common/i18n/i18n.h"
 #include "services/common/i18n/mo.h"
 #include "services/normal/filesystem/pfs.h"
+#include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "flash_region/flash_region.h"
 
@@ -52,12 +53,21 @@ void test_i18n__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
   pfs_format(true /* write erase headers */);
+  // Load system resources in flash first (required for resource validation)
+  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
+                                 false /* is_next */);
+  // Then load the French language fixture on PFS
   load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "lang");
+  resource_init();
   shell_prefs_set_language_english(false);
   i18n_set_resource(RESOURCE_ID_STRINGS);
 }
 
 void test_i18n__cleanup(void) {
+  // Clean up fake flash to prevent state leakage between test modules
+  fake_spi_flash_cleanup();
+  // Reset language preference
+  s_is_english = false;
 }
 
 extern I18nString *prv_list_find_string(const char *string, void * owner);

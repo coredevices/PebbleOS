@@ -7,7 +7,6 @@
 
 #include <pblibc_private.h>
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 

@@ -84,8 +84,9 @@ static void prv_structured_glance_icon_bitmap_processor_post_func(
 
 GColor launcher_app_glance_structured_get_highlight_color(
     LauncherAppGlanceStructured *structured_glance) {
-  return PBL_IF_COLOR_ELSE(GColorBlack,
-                           structured_glance->glance.is_highlighted ? GColorWhite : GColorBlack);
+  // When highlighted on a dark background, use white text for visibility
+  // When not highlighted, use black text (normal)
+  return structured_glance->glance.is_highlighted ? GColorWhite : GColorBlack;
 }
 
 void launcher_app_glance_structured_draw_icon(LauncherAppGlanceStructured *structured_glance,

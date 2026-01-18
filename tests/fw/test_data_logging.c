@@ -110,7 +110,7 @@ static void prv_transport_sent_data_cb(uint16_t endpoint_id,
 static void prv_init_fake_flash(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
-  pfs_format(false /* write erase headers */);
+  pfs_format(true /* write erase headers */);
 
   PBL_LOG(LOG_LEVEL_INFO, "\nFile system size: %d, avail: %d", (int)pfs_get_size(),
           (int)get_available_pfs_space());
@@ -208,6 +208,15 @@ void test_data_logging__initialize(void) {
 void test_data_logging__cleanup(void) {
   regular_timer_deinit();
   fake_comm_session_cleanup();
+  // Clean up DLS state before cleaning up filesystem
+  dls_clear();
+  // Reset PFS and FTL internal state to prevent stale pointers after flash cleanup
+  pfs_reset();
+  ftl_reset();
+  // Clean up fake modules to prevent state leakage between test modules
+  fake_spi_flash_cleanup();
+  stub_new_timer_cleanup();
+  fake_rtc_cleanup();
 }
 
 // ----------------------------------------------------------------------------------------

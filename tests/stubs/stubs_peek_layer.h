@@ -21,6 +21,9 @@ void WEAK peek_layer_set_frame(PeekLayer *peek_layer, const GRect *frame) {}
 
 void WEAK peek_layer_set_icon(PeekLayer *peek_layer, const TimelineResourceInfo *timeline_res) {}
 
+void WEAK peek_layer_set_icon_with_invert(PeekLayer *peek_layer,
+                                          const TimelineResourceInfo *timeline_res, bool invert) {}
+
 void WEAK peek_layer_set_icon_with_size(PeekLayer *peek_layer,
                                         const TimelineResourceInfo *timeline_res,
                                         TimelineResourceSize res_size, GRect icon_from) {}

@@ -200,3 +200,8 @@ void ftl_force_version(int version_idx) {
   extern void test_force_recalc_of_gc_region(void);
   test_force_recalc_of_gc_region();
 }
+
+void ftl_reset(void) {
+  s_next_region_idx = 0;
+  s_ftl_size = 0;
+}

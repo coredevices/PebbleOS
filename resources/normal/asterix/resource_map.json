@@ -184,6 +184,31 @@
       "file": "normal/silk/images/stride_shoe.png"
     },
     {
+      "type": "png",
+      "name": "STRIDE_SHOE_BLUE",
+      "file": "normal/getafix/images/stride_shoe_blue.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_SHOE_GREEN",
+      "file": "normal/getafix/images/stride_shoe_green.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_SHOE_BLUE_SMALL",
+      "file": "normal/getafix/images/stride_shoe_blue.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_SHOE_GREEN_SMALL",
+      "file": "normal/getafix/images/stride_shoe_green.png"
+    },
+    {
+      "type": "png",
+      "name": "STRIDE_HEART",
+      "file": "normal/getafix/images/stride_heart.png"
+    },
+    {
       "type": "pdc",
       "name": "EMOJI_BIG_OPEN_SMILE_LARGE",
       "file": "normal/snowy/images/Pebble_80x80_Emoji_big_open_smile.svg"
@@ -417,6 +442,42 @@
      "type": "pdc",
      "name": "MENU_ICON_HEALTH",
      "file": "normal/base/images/menu_icon_health.svg"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_36_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_36_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_46_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_46_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_60_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_60_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_60_THIN_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_60_THIN_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_88_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_88_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "AGENCY_FB_88_THIN_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/AGENCY_FB_88_THIN_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
     },
     {
      "type": "js",

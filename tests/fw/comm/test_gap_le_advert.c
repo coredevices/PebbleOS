@@ -25,6 +25,7 @@
 #include "stubs_bt_lock.h"
 #include "stubs_gatt_client_discovery.h"
 #include "stubs_gatt_client_subscriptions.h"
+#include "stubs_gap_le_advert.h"
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_passert.h"

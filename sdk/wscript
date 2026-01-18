@@ -161,12 +161,25 @@ def build(bld):
             target=common_folder_node.make_node(sdk_file.path_from(bld.path)))
 
     if bld.env.JS_ENGINE == 'rocky':
-        js_tooling_path = os.path.dirname(bld.env.JS_TOOLING_SCRIPT.relpath())
-        for js_tool in ('js_tooling.js', 'generate_snapshot.js'):
-            bld(rule=COPY,
-                source=bld.path.parent.get_bld().make_node(js_tooling_path).make_node(js_tool),
-                target=common_folder_node.make_node('tools').make_node(js_tool),
-                name='copy_rocky_tooling')
+        # JS_TOOLING_SCRIPT may be a single node, list of nodes, or None
+        js_tooling_script = bld.env.JS_TOOLING_SCRIPT
+        if js_tooling_script is None:
+            # No JS tooling available for this board
+            pass
+        else:
+            if isinstance(js_tooling_script, list):
+                if len(js_tooling_script) == 0:
+                    # Empty list, skip JS tooling
+                    pass
+                else:
+                    js_tooling_script = js_tooling_script[0]
+            if js_tooling_script:
+                js_tooling_path = os.path.dirname(js_tooling_script.relpath())
+                for js_tool in ('js_tooling.js', 'generate_snapshot.js'):
+                    bld(rule=COPY,
+                        source=bld.path.parent.get_bld().make_node(js_tooling_path).make_node(js_tool),
+                        target=common_folder_node.make_node('tools').make_node(js_tool),
+                        name='copy_rocky_tooling')
 
     template_folder_node = common_folder_node.make_node('templates')
     template_folder_node.parent.mkdir()

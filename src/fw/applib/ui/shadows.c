@@ -13,7 +13,7 @@ static const uint8_t s_shadow_top_data[] = {
   0x82, 0x20, 0x82, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x04,
 };
 
-static const GBitmap s_shadow_top_bitmap = {
+static const GBitmap __attribute__((aligned(8))) s_shadow_top_bitmap = {
   .addr = (uint8_t *)s_shadow_top_data,
   .row_size_bytes = 4,
   .info.format = GBitmapFormat1Bit,
@@ -32,7 +32,7 @@ static const uint8_t s_shadow_bottom_data[] = {
 };
 
 //! Bottom shadow, horizontally-tileable bitmap (32 x 19px):
-static const GBitmap s_shadow_bottom_bitmap = {
+static const GBitmap __attribute__((aligned(8))) s_shadow_bottom_bitmap = {
   .addr = (uint8_t *)s_shadow_bottom_data,
   .row_size_bytes = 4,
   .info.format = GBitmapFormat1Bit,

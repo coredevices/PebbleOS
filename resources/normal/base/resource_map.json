@@ -158,6 +158,11 @@
     },
     {
       "type": "font",
+      "name": "GOTHIC_18_COMPRESSED",
+      "file": "normal/base/pbf/GOTHIC_18_COMPRESSED.pbf"
+    },
+    {
+      "type": "font",
       "name": "GOTHIC_18_EMOJI",
       "file": "normal/base/pbf/EMOJI_18.pbf"
     },

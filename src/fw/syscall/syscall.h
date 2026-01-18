@@ -113,8 +113,8 @@ void sys_event_service_client_subscribe(EventServiceInfo *handler);
 void sys_event_service_client_unsubscribe(EventServiceInfo *state, EventServiceInfo *handler);
 void sys_event_service_cleanup(PebbleEvent *e);
 
-int sys_ble_scan_start(void);
-int sys_ble_scan_stop(void);
+bool sys_ble_scan_start(void);
+bool sys_ble_scan_stop(void);
 bool sys_ble_scan_is_scanning(void);
 bool sys_ble_consume_scan_results(uint8_t *buffer, uint16_t *size_in_out);
 int8_t sys_ble_get_advertising_tx_power(void);
@@ -127,7 +127,8 @@ uint8_t sys_ble_client_copy_services(BTDeviceInternal device,
                                      BLEService services[], uint8_t num_services);
 uint16_t sys_ble_client_get_maximum_value_length(BTDevice device);
 BTErrno sys_ble_client_read(BLECharacteristic characteristic);
-bool sys_ble_client_get_notification_value_length(uint16_t *value_length_out);
+bool sys_ble_client_get_notification_value_length(BLECharacteristic *characteristic_out,
+                                                     uint16_t *value_length_out);
 void sys_ble_client_consume_read(uintptr_t object_ref,
                                  uint8_t value_out[],
                                  uint16_t *value_length_in_out);

@@ -167,6 +167,10 @@ extern bool pfs_active(void);
 //! Returns true is pfs is active in the region
 extern bool pfs_active_in_region(uint32_t start_address, uint32_t ending_address);
 
+//! Resets PFS internal state.
+//! This should be called before re-initializing the filesystem in tests.
+extern void pfs_reset(void);
+
 //! In the case of a file which can actually make use of additional space
 //! beyond a certain minimum, this function will return the optimal size
 //! that should be used for such a file, in order to use no more sectors

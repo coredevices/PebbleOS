@@ -26,7 +26,7 @@ void kino_layer_set_reel(KinoLayer *kino_layer, KinoReel *reel, bool take_owners
 void kino_layer_set_reel_with_resource(KinoLayer *kino_layer, uint32_t resource_id) {
 }
 void kino_layer_set_reel_with_resource_system(KinoLayer *kino_layer, ResAppNum app_num,
-                                              uint32_t resource_id) {
+                                              uint32_t resource_id, bool invert) {
 }
 
 KinoReel *kino_layer_get_reel(KinoLayer *kino_layer) {

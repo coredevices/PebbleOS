@@ -34,6 +34,7 @@
 // Stubs
 #include "stubs_activity_insights.h"
 #include "stubs_alarm.h"
+#include "stubs_ambient_light.h"
 #include "stubs_app_manager.h"
 #include "stubs_analytics.h"
 #include "stubs_app_install_manager.h"

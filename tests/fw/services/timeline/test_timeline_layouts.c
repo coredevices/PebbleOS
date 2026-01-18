@@ -12,6 +12,7 @@
 /////////////////////
 
 #include "fake_content_indicator.h"
+#include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
 
 bool property_animation_init(PropertyAnimation *animation,
@@ -56,9 +57,11 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 /////////////////////
 
 #include "stubs_action_menu.h"
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
 #include "stubs_animation_timing.h"
 #include "stubs_app_install_manager.h"
+#include "stubs_app_state.h"
 #include "stubs_app_timer.h"
 #include "stubs_app_window_stack.h"
 #include "stubs_bootbits.h"
@@ -111,6 +114,9 @@ void test_timeline_layouts__initialize(void) {
   const GContextInitializationMode context_init_mode = GContextInitializationMode_System;
   graphics_context_init(&s_ctx, fb, context_init_mode);
 
+  // Set the app state graphics context for gbitmap_get_format() calls
+  s_app_state_get_graphics_context = &s_ctx;
+
   framebuffer_clear(fb);
 
   // Setup resources
@@ -128,6 +134,10 @@ void test_timeline_layouts__initialize(void) {
 
 void test_timeline_layouts__cleanup(void) {
   free(fb);
+  fb = NULL;
+  // Clean up fake modules to prevent state leakage between test modules
+  s_app_state_get_graphics_context = NULL;
+  fake_spi_flash_cleanup();
 }
 
 // Helpers

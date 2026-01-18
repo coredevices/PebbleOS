@@ -4,6 +4,7 @@
 #include "services/common/battery/battery_monitor.h"
 #include "services/common/battery/battery_state.h"
 #include "services/common/battery/battery_curve.h"
+#include "services/common/regular_timer.h"
 
 #include "clar.h"
 
@@ -122,9 +123,17 @@ void test_battery_monitor__initialize(void) {
   s_stop_mode_allowed = true;
   fake_rtc_init(0, 0);
   fake_rtc_auto_increment_ticks(0);
+
+  // Initialize regular timer service (required by battery_monitor_init)
+  regular_timer_init();
 }
 
 void test_battery_monitor__cleanup(void) {
+  // Clean up regular timer service
+  regular_timer_deinit();
+  // Clean up fake modules to prevent state leakage
+  stub_new_timer_cleanup();
+  fake_rtc_cleanup();
 }
 
 // Tests
@@ -276,6 +285,7 @@ typedef enum {
   PowerStateGood,
   PowerStateLowPower,
   PowerStateCritical,
+  PowerStatePluggedIn,
   PowerStateStandby
 } PowerStateID;
 extern PowerStateID s_power_state;
@@ -298,12 +308,12 @@ void test_battery_monitor__transitions(void) {
   cl_assert(s_in_low_power);
   cl_assert_equal_i(s_power_state, PowerStateLowPower);
 
-  // lpm -> good
+  // lpm -> plugged (USB connected exits low power mode)
   fake_battery_set_charging(true);
   fake_battery_set_connected(true);
   periodic_timer_trigger(1);
   cl_assert(!s_in_low_power);
-  cl_assert_equal_i(s_power_state, PowerStateGood);
+  cl_assert_equal_i(s_power_state, PowerStatePluggedIn);
 
   // good -> critical
   fake_battery_set_millivolts(critical_mv);
@@ -327,14 +337,14 @@ void test_battery_monitor__transitions(void) {
   cl_assert(s_in_low_power);
   cl_assert_equal_i(s_power_state, PowerStateCritical);
 
-  // critical -> good
+  // critical -> plugged (USB connected exits critical state)
   fake_battery_set_charging(true);
   fake_battery_set_connected(true);
   fake_battery_set_millivolts(good_mv);
   periodic_timer_trigger(20);
   cl_assert(!battery_monitor_critical_lockout());
   cl_assert(!s_in_low_power);
-  cl_assert_equal_i(s_power_state, PowerStateGood);
+  cl_assert_equal_i(s_power_state, PowerStatePluggedIn);
 }
 
 void test_battery_monitor__low_first_run(void) {

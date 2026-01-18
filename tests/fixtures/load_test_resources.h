@@ -21,7 +21,8 @@
 #define CHINESE_FIXTURE_NAME "zh_CN.pbpack"
 
 // We used to implicitly use the snowy pbpack for tintin and spalding unit tests; now it's explicit
-#if PLATFORM_TINTIN || PLATFORM_SPALDING
+// Robert also uses snowy's pbpack because the original robert pbpack fixture has incompatible resources
+#if PLATFORM_TINTIN || PLATFORM_SPALDING || PLATFORM_ROBERT
 #define SYSTEM_RESOURCES_FIXTURE_NAME "system_resources_snowy.pbpack"
 #else
 #define SYSTEM_RESOURCES_FIXTURE_NAME "system_resources_"PLATFORM_NAME".pbpack"
