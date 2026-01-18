@@ -1,4 +1,4 @@
-#if PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
 #include "shell/prefs.h"
 
 void orientation_handle_prefs_changed(void);
