@@ -35,6 +35,12 @@ static bool s_updating;
 static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
 
+#if DISPLAY_ORIENTATION_ROTATED_180
+static bool s_rotated_180 = true;
+#else
+static bool s_rotated_180 = false;
+#endif
+
 static void prv_power_cycle(void){
   OutputConfig cfg = {
     .gpio = hwp_gpio1,
@@ -135,14 +141,14 @@ static void prv_display_update_terminate(void *data) {
   for (uint16_t y = s_update_y0; y <= s_update_y1; y++) {
     uint8_t *row = &s_framebuffer[y * PBL_DISPLAY_WIDTH];
 
-#if DISPLAY_ORIENTATION_ROTATED_180
+  if (s_rotated_180) {
     // Undo HMirror before converting back
     for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
       uint8_t tmp = row[x];
       row[x] = row[PBL_DISPLAY_WIDTH - 1 - x];
       row[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
     }
-#endif
+  }
 
     // Convert this row in-place from 332 to 222 using word-level bit manipulation
     // 332 format: RR 0G GG BB (bits 7-6 R, 4-3 G, 1-0 B)
@@ -218,10 +224,7 @@ void display_init(void) {
   HAL_LCDC_LayerReset(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT);
   HAL_LCDC_LayerSetCmpr(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, 0);
   HAL_LCDC_LayerSetFormat(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, LCDC_PIXEL_FORMAT_RGB332);
-#if DISPLAY_ORIENTATION_ROTATED_180
-  // sf32lb52 hw only supports VMirror, do HMirror in software
-  HAL_LCDC_LayerVMirror(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, true);
-#endif
+  HAL_LCDC_LayerVMirror(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_rotated_180);
 
   HAL_NVIC_SetPriority(DISPLAY->irqn, DISPLAY->irq_priority, 0);
   HAL_NVIC_EnableIRQ(DISPLAY->irqn);
@@ -269,6 +272,18 @@ bool display_update_in_progress(void) {
   return s_updating;
 }
 
+void display_set_rotated(bool rotated) {
+  DisplayJDIState *state = DISPLAY->state;
+
+#if DISPLAY_ORIENTATION_ROTATED_180
+  s_rotated_180 = !rotated;
+#else
+  s_rotated_180 = rotated;
+#endif
+  HAL_LCDC_LayerVMirror(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_rotated_180);
+
+}
+
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   DisplayJDIState *state = DISPLAY->state;
   DisplayRow row;
@@ -298,15 +313,15 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
                  (p & 0x03030303);          // B: bits 0-1 stay
     }
 
-#if DISPLAY_ORIENTATION_ROTATED_180
-    // HMirror in software (VMirror is done by hardware)
-    uint8_t *row_data = row.data;
-    for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
-      uint8_t tmp = row_data[x];
-      row_data[x] = row_data[PBL_DISPLAY_WIDTH - 1 - x];
-      row_data[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
+    if (s_rotated_180) {
+      // HMirror in software (VMirror is done by hardware)
+      uint8_t *row_data = row.data;
+      for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
+        uint8_t tmp = row_data[x];
+        row_data[x] = row_data[PBL_DISPLAY_WIDTH - 1 - x];
+        row_data[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
+      }
     }
-#endif
   }
 
   if (first_row) {
@@ -326,17 +341,17 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 }
 
 void display_update_boot_frame(uint8_t *framebuffer) {
-#if DISPLAY_ORIENTATION_ROTATED_180
-  // HMirror in software (VMirror is done by hardware)
-  for (uint16_t y = 0; y < PBL_DISPLAY_HEIGHT; y++) {
-    uint8_t *row = &framebuffer[y * PBL_DISPLAY_WIDTH];
-    for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
-      uint8_t tmp = row[x];
-      row[x] = row[PBL_DISPLAY_WIDTH - 1 - x];
-      row[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
+  if (s_rotated_180) {
+    // HMirror in software (VMirror is done by hardware)
+    for (uint16_t y = 0; y < PBL_DISPLAY_HEIGHT; y++) {
+      uint8_t *row = &framebuffer[y * PBL_DISPLAY_WIDTH];
+      for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
+        uint8_t tmp = row[x];
+        row[x] = row[PBL_DISPLAY_WIDTH - 1 - x];
+        row[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
+      }
     }
   }
-#endif
 
   s_framebuffer = framebuffer;
   s_update_y0 = 0;
