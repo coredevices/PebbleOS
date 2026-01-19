@@ -365,37 +365,47 @@ static void prv_lis2dw12_process_interrupts(void) {
   // Wake-up (any-motion) event -> treat as shake. Axis & direction derived from wake_up_src.
   if (s_lis2dw12_state.shake_detection_enabled && all_sources.wake_up_src.wu_ia) {
     s_wake_event_count++;
-    s_last_wake_event_ms = now_ms;
-    
-    // Use wake_up_src already read by all_sources_get - don't re-read the register
-    // as that can clear flags and cause race conditions with pulsed interrupts
-    IMUCoordinateAxis axis = AXIS_X;
-    int32_t direction = 1;
-    
-    // Determine which axis triggered from already-read wake_up_src
-    const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
-    if (all_sources.wake_up_src.x_wu) {
-      axis = AXIS_X;
-    } else if (all_sources.wake_up_src.y_wu) {
-      axis = AXIS_Y;
-    } else if (all_sources.wake_up_src.z_wu) {
-      axis = AXIS_Z;
+
+    // Software debouncing: ignore shake events that occur within 500ms of the last one.
+    // This prevents double-triggering and queue flooding when the device is moving.
+    const uint64_t SHAKE_DEBOUNCE_MS = 500;
+    if (s_last_wake_event_ms != 0 && (now_ms - s_last_wake_event_ms) < SHAKE_DEBOUNCE_MS) {
+      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake debounced (delta=%lu ms)",
+              (unsigned long)(now_ms - s_last_wake_event_ms));
+    } else {
+      s_last_wake_event_ms = now_ms;
+
+      // Use wake_up_src already read by all_sources_get - don't re-read the register
+      // as that can clear flags and cause race conditions with pulsed interrupts
+      IMUCoordinateAxis axis = AXIS_X;
+      int32_t direction = 1;
+
+      // Determine which axis triggered from already-read wake_up_src
+      const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
+      if (all_sources.wake_up_src.x_wu) {
+        axis = AXIS_X;
+      } else if (all_sources.wake_up_src.y_wu) {
+        axis = AXIS_Y;
+      } else if (all_sources.wake_up_src.z_wu) {
+        axis = AXIS_Z;
+      }
+
+      // Use last known sample for direction instead of reading new data during interrupt
+      // Reading acceleration data here can interfere with FIFO operation
+      int16_t val = s_last_sample_mg[cfg->axes_offsets[axis]];
+      bool invert = cfg->axes_inverts[axis];
+      direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
+
+      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake detected; axis=%d, direction=%lu", axis, direction);
+      accel_cb_shake_detected(axis, direction);
     }
-    
-    // Use last known sample for direction instead of reading new data during interrupt
-    // Reading acceleration data here can interfere with FIFO operation
-    int16_t val = s_last_sample_mg[cfg->axes_offsets[axis]];
-    bool invert = cfg->axes_inverts[axis];
-    direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
-    
-    PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake detected; axis=%d, direction=%lu", axis, direction);
-    accel_cb_shake_detected(axis, direction);
 
     // The wake-up interrupt is latched - if the wake condition is still true (device still
     // moving above threshold), the flag immediately re-latches after reading, keeping INT1
     // asserted high and preventing new edge interrupts. To fix this, we temporarily disable
     // wake-up interrupt routing, clear the sources, then re-enable. This forces a clean reset.
-    if (s_fifo_in_use) {
+    // NOTE: This must happen regardless of FIFO state to prevent interrupt storms.
+    {
       // Disable wake-up interrupt routing temporarily
       lis2dw12_ctrl4_int1_pad_ctrl_t int1_routes;
       lis2dw12_pin_int1_route_get(&lis2dw12_ctx, &int1_routes);
