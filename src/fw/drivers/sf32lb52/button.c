@@ -10,7 +10,19 @@
 #include "kernel/events.h"
 #include "system/passert.h"
 
+static bool s_rotated_180 = false;
+
+void button_set_rotated(bool rotated_180) {
+  s_rotated_180 = rotated_180;
+}
+
 bool button_is_pressed(ButtonId id) {
+  if (s_rotated_180 && (id == BUTTON_ID_UP)) {
+    id = BUTTON_ID_DOWN;
+  } else if (s_rotated_180 && (id == BUTTON_ID_DOWN)) {
+    id = BUTTON_ID_UP;
+  }
+
   const InputConfig config = {
     .gpio = BOARD_CONFIG_BUTTON.buttons[id].port,
     .gpio_pin = BOARD_CONFIG_BUTTON.buttons[id].pin,

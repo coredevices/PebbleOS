@@ -35,6 +35,8 @@ static bool s_updating;
 static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
 
+static bool s_rotated_180 = false;
+
 static void prv_power_cycle(void){
   OutputConfig cfg = {
     .gpio = hwp_gpio1,
@@ -134,6 +136,15 @@ static void prv_display_update_terminate(void *data) {
   // Convert the updated region back from 332 to 222 format
   for (uint16_t y = s_update_y0; y <= s_update_y1; y++) {
     uint8_t *row = &s_framebuffer[y * PBL_DISPLAY_WIDTH];
+
+  if (s_rotated_180) {
+    // Undo HMirror before converting back
+    for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
+      uint8_t tmp = row[x];
+      row[x] = row[PBL_DISPLAY_WIDTH - 1 - x];
+      row[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
+    }
+  }
 
 #if DISPLAY_ORIENTATION_ROTATED_180
     // Undo HMirror before converting back
@@ -269,6 +280,13 @@ bool display_update_in_progress(void) {
   return s_updating;
 }
 
+void display_set_rotated(bool rotated) {
+  DisplayJDIState *state = DISPLAY->state;
+  s_rotated_180 = rotated;
+
+  HAL_LCDC_LayerVMirror(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, rotated);
+}
+
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   DisplayJDIState *state = DISPLAY->state;
   DisplayRow row;
@@ -296,6 +314,16 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
       row32[x] = ((p & 0x30303030) << 2) |  // R: bits 4-5 → 6-7
                  ((p & 0x0C0C0C0C) << 1) |  // G: bits 2-3 → 3-4
                  (p & 0x03030303);          // B: bits 0-1 stay
+    }
+
+    if (s_rotated_180) {
+      // HMirror in software (VMirror is done by hardware)
+      uint8_t *row_data = row.data;
+      for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
+        uint8_t tmp = row_data[x];
+        row_data[x] = row_data[PBL_DISPLAY_WIDTH - 1 - x];
+        row_data[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
+      }
     }
 
 #if DISPLAY_ORIENTATION_ROTATED_180
