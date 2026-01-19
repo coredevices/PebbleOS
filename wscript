@@ -758,6 +758,7 @@ def build(bld):
     bld.load('file_name_c_define', tooldir='waftools')
 
     bld.recurse('platform')
+    bld.recurse('third_party/nanopb')
     bld.recurse('src/idl')
 
     if bld.cmd == 'install':
