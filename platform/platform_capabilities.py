@@ -396,7 +396,7 @@ board_capability_dicts = [
         },
     },
     {
-        'boards': [ 'getafix_evt' ],
+        'boards': [ 'getafix_evt', 'getafix_dvt' ],
         'capabilities':
         {
             'HAS_APP_GLANCES',

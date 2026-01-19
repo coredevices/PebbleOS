@@ -78,7 +78,7 @@ typedef struct {
 #include "displays/display_robert.h"
 #elif BOARD_ROBERT_EVT
 #include "displays/display_robert_evt.h"
-#elif BOARD_GETAFIX_EVT
+#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
 #include "displays/display_getafix.h"
 #else
 #error "Unknown display definition for board"
