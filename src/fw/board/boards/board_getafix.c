@@ -274,7 +274,11 @@ IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
 
 static const I2CSlavePort s_i2c_lsm2dw12 = {
     .bus = &s_i2c_bus_1,
+#if BOARD_GETAFIX_EVT
     .address = 0x18,
+#else
+    .address = 0x19,
+#endif
 };
 
 I2CSlavePort *const I2C_LSM2DW12 = &s_i2c_lsm2dw12;
