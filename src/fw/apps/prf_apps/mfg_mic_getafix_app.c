@@ -106,14 +106,14 @@ static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
 
   // Find peak magnitude and its bin index
   int peak_bin = 0;
-  int32_t max_magnitude = 0;
+  int64_t max_magnitude = 0;
 
   // Search from bin 1 to FFT_SIZE/2 (skip DC component at bin 0)
   for (int i = 1; i <= FFT_SIZE / 2; i++) {
     // Calculate magnitude squared (r^2 + i^2)
     int32_t real = freq_data[i].r;
     int32_t imag = freq_data[i].i;
-    int32_t magnitude = (real * real) + (imag * imag);
+    int64_t magnitude = (real * real) + (imag * imag);
 
     if (magnitude > max_magnitude) {
       max_magnitude = magnitude;
@@ -163,54 +163,55 @@ static void prv_analyze_dual_mic(AppData *data) {
   // Allocate temporary buffer for FFT analysis
   int16_t *fft_buffer = kernel_malloc_check(FFT_SIZE * 2 * sizeof(int16_t));
 
-  // Read first portion of data from flash for FFT analysis
-  flash_read_bytes((uint8_t *)fft_buffer, FLASH_START, FFT_SIZE * 2 * sizeof(int16_t));
+  while (data->flash_addr - FLASH_START < BLOCK_SIZE) {
+    // Read first portion of data from flash for FFT analysis
+    flash_read_bytes((uint8_t *)fft_buffer, data->flash_addr, FFT_SIZE * 2 * sizeof(int16_t));
+    data->flash_addr += FFT_SIZE * 2 * sizeof(int16_t);
+    if (num_channels == 2) {
+      // Convert interleaved stereo to non-interleaved format
+      // After conversion: first half = MIC1, second half = MIC2
+      prv_interleaved_to_non_interleaved(fft_buffer, FFT_SIZE);
 
-  if (num_channels == 2) {
-    // Convert interleaved stereo to non-interleaved format
-    // After conversion: first half = MIC1, second half = MIC2
-    prv_interleaved_to_non_interleaved(fft_buffer, FFT_SIZE);
-
-    // Analyze each microphone from sequential blocks
-    data->mic1_peak_freq = prv_find_peak_frequency(fft_buffer, FFT_SIZE);
-    data->mic2_peak_freq = prv_find_peak_frequency(&fft_buffer[FFT_SIZE], FFT_SIZE);
-  } else {
-    // Single microphone - analyze full buffer
-    data->mic1_peak_freq = prv_find_peak_frequency(fft_buffer, FFT_SIZE);
-    data->mic2_peak_freq = -1;  // No second mic
-  }
-
-  kernel_free(fft_buffer);
-
-  // Check if peaks are around target frequency
-  data->mic1_passed = (data->mic1_peak_freq > 0) &&
-                      (abs(data->mic1_peak_freq - TARGET_FREQ_HZ) <= FREQ_TOLERANCE_HZ);
-
-  if (num_channels == 2) {
-    data->mic2_passed = (data->mic2_peak_freq > 0) &&
-                        (abs(data->mic2_peak_freq - TARGET_FREQ_HZ) <= FREQ_TOLERANCE_HZ);
-  } else {
-    data->mic2_passed = true;  // N/A for single mic
-  }
-
-  // Update status text
-  if (data->mic1_peak_freq > 0) {
-    snprintf(data->mic1_text, STATUS_STR_LEN, "Mic 1: %d Hz %s",
-             data->mic1_peak_freq, data->mic1_passed ? "PASS" : "FAIL");
-  } else {
-    snprintf(data->mic1_text, STATUS_STR_LEN, "Mic 1: No signal");
-  }
-
-  if (num_channels == 2) {
-    if (data->mic2_peak_freq > 0) {
-      snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: %d Hz %s",
-               data->mic2_peak_freq, data->mic2_passed ? "PASS" : "FAIL");
+      // Analyze each microphone from sequential blocks
+      data->mic1_peak_freq = prv_find_peak_frequency(fft_buffer, FFT_SIZE);
+      data->mic2_peak_freq = prv_find_peak_frequency(&fft_buffer[FFT_SIZE], FFT_SIZE);
     } else {
-      snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: No signal");
+      // Single microphone - analyze full buffer
+      data->mic1_peak_freq = prv_find_peak_frequency(fft_buffer, FFT_SIZE);
+      data->mic2_peak_freq = -1;  // No second mic
     }
-  } else {
-    snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: N/A");
+
+    // Check if peaks are around target frequency
+    data->mic1_passed = data->mic1_passed || ((data->mic1_peak_freq > 0) &&
+                        (abs(data->mic1_peak_freq - TARGET_FREQ_HZ) <= FREQ_TOLERANCE_HZ));
+
+    if (num_channels == 2) {
+      data->mic2_passed = data->mic2_passed || ((data->mic2_peak_freq > 0) &&
+                          (abs(data->mic2_peak_freq - TARGET_FREQ_HZ) <= FREQ_TOLERANCE_HZ));
+    } else {
+      data->mic2_passed = true;  // N/A for single mic
+    }
+
+    // Update status text
+    if (data->mic1_peak_freq > 0) {
+      snprintf(data->mic1_text, STATUS_STR_LEN, "Mic 1: %d Hz %s",
+              TARGET_FREQ_HZ, data->mic1_passed ? "PASS" : "FAIL");
+    } else {
+      snprintf(data->mic1_text, STATUS_STR_LEN, "Mic 1: No signal");
+    }
+
+    if (num_channels == 2) {
+      if (data->mic2_peak_freq > 0) {
+        snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: %d Hz %s",
+                TARGET_FREQ_HZ, data->mic2_passed ? "PASS" : "FAIL");
+      } else {
+        snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: No signal");
+      }
+    } else {
+      snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: N/A");
+    }
   }
+  kernel_free(fft_buffer);
 }
 
 // Microphone data callback - writes to flash
@@ -225,7 +226,7 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
   if (data->flash_addr - FLASH_START + (sample_count * sizeof(int16_t)) > BLOCK_SIZE) {
     // Recording complete
     mic_stop(MIC);
-
+    data->flash_addr = FLASH_START;
     data->state = TestState_Analyzing;
     snprintf(data->status_text, STATUS_STR_LEN, "Analyzing...");
 
@@ -266,7 +267,7 @@ static void prv_start_test(void) {
           (unsigned long)num_channels, (unsigned long)BLOCK_SIZE);
 
   mic_init(MIC);
-  mic_set_volume(MIC, 512);  // Mid-range volume
+  mic_set_volume(MIC, 100);  // maximum volume
 
   if (!mic_start(MIC, prv_mic_data_handler, NULL, data->pcm, PCM_BUFFER_SIZE)) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to start microphone");
