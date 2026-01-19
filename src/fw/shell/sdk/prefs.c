@@ -296,3 +296,8 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
   prv_pref_set(PREF_KEY_LEGACY_APP_RENDER_MODE, &mode_value, sizeof(mode_value));
 }
 #endif
+
+// Exported function used by blob_db API to handle settings events
+// Not used by the SDK shell
+void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
+}
