@@ -156,9 +156,8 @@ void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       uint32_t counter_elapsed = counter_stop - counter_start;
 
       // Calculate elapsed ticks and step FreeRTOS tick count
-      // Use calibrated RC10K frequency (measured against HXT48)
-      uint32_t rc10k_freq = lptim_systick_get_rc10k_freq();
-      uint32_t ticks_elapsed = (counter_elapsed * RTC_TICKS_HZ) / rc10k_freq;
+      uint32_t freq = lptim_systick_get_freq_hz();
+      uint32_t ticks_elapsed = (counter_elapsed * RTC_TICKS_HZ) / freq;
       if (ticks_elapsed > 0) {
         // Cap to xExpectedIdleTime to avoid FreeRTOS assertion
         if (ticks_elapsed > xExpectedIdleTime) {
