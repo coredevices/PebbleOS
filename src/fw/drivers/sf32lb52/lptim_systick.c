@@ -194,7 +194,7 @@ void lptim_systick_sync_after_wfi(void)
   lptim_systick_next_tick_setup();
 }
 
-uint32_t lptim_systick_get_rc10k_freq(void)
+uint32_t lptim_systick_get_freq_hz(void)
 {
   // s_one_tick_hz = rc10k_freq / RTC_TICKS_HZ
   // Therefore: rc10k_freq = s_one_tick_hz * RTC_TICKS_HZ
