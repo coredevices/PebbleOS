@@ -31,22 +31,22 @@
 #define DIV_A_FRAC 4608U
 #define DIV_B 256U
 
-// RC calibration clock cyles
-#define LXT_LP_CYCLE 200
+// Default RC10K cycles value on 48MHz clock
+#define RC10K_DEFAULT_CYCLES 1200000UL
 
 // The deviation limit of the current calibration value of RC10K relative to the average
 // calibration value.
-#define MAX_DELTA_BETWEEN_RTC_AVE (LXT_LP_CYCLE / 2)
+#define MAX_DELTA_BETWEEN_RTC_AVE (HAL_RC_CAL_GetLPCycle() / 2)
 
-// The number of RC10K calibrations required for one RTC calibration
-#define RC10K_CALS_PER_RTC_CAL 20
+// Calibration period in milliseconds
+#define RTC_CAL_PERIOD_MS 300000
 
 // Maximum reasonable correction in seconds. If the calculated correction exceeds this,
 // something is wrong and we should reset calibration state instead of applying it.
 // 60 seconds is generous - normal drift should be milliseconds per calibration cycle.
 #define MAX_REASONABLE_CORRECTION_SECS 60
 
-TimerID s_rc10k_cal_timer;
+static TimerID s_rtc_cal_timer;
 
 // Calibration state - must be reset when RTC time is set externally
 static uint32_t s_rtc_cycle_count_init = 0;
@@ -82,13 +82,12 @@ static RTC_HandleTypeDef RTC_Handler = {
 static uint32_t prv_rtc_get_lpcycle() {
   uint32_t value;
 
-  value = HAL_Get_backup(RTC_BACKUP_LPCYCLE_AVE);
-  if (value == 0) {
-    value = 1200000;
+  value = HAL_RC_CAL_get_average_cycle_on_48M();
+  if (value == 0UL) {
+    value = RC10K_DEFAULT_CYCLES;
   }
 
-  value += 1;  // Calibrate in initial with 8 cycle
-  HAL_Set_backup(RTC_BACKUP_LPCYCLE, (uint32_t)value);
+  HAL_Set_backup(RTC_BACKUP_LPCYCLE, value);
 
   return value;
 }
@@ -98,7 +97,7 @@ void prv_rtc_rc10_calculate_div(RTC_HandleTypeDef* hdl, uint32_t value) {
 
   // 1 seconds has total 1/(x/(48*8))/256=1.5M/x cycles, times 2^14 for DIVA
   uint32_t divider = RTC_Handler.Init.DivB * value;
-  value = ((uint64_t)48000000 * LXT_LP_CYCLE * (1 << 14) + (divider >> 1)) / divider;
+  value = (48000000ULL * HAL_RC_CAL_GetLPCycle() * (1 << 14) + (divider >> 1)) / divider;
   hdl->Init.DivAInt = (uint32_t)(value >> 14);
   hdl->Init.DivAFrac = (uint32_t)(value & ((1 << 14) - 1));
 }
@@ -111,10 +110,9 @@ static void prv_rtc_reconfig() {
 
   ret = HAL_RTC_Init(&RTC_Handler, RTC_INIT_REINIT);
   PBL_ASSERTN(ret == HAL_OK);
-  HAL_Set_backup(RTC_BACKUP_LPCYCLE, cur_ave);
 }
 
-static void prv_rtc_calibrate() {
+static void prv_rtc_cal_timer_cb(void* data) {
   if (s_rtc_cycle_count_init == 0) {
     uint16_t sub;
     time_t t;
@@ -135,7 +133,7 @@ static void prv_rtc_calibrate() {
     double rtc_b;
 
     rtc_get_time_ms(&t2, &sub2);
-    cur_ave = HAL_Get_backup(RTC_BACKUP_LPCYCLE_AVE);
+    cur_ave = HAL_RC_CAL_get_average_cycle_on_48M();
     ref_cycle = cur_ave;
     rtc_b = 1.0 * t2 + ((double)(1.0 * sub2)) / RC10K_SUB_SEC_DIVB;
 
@@ -181,24 +179,13 @@ static void prv_rtc_calibrate() {
       s_rtc_a = rtc_b;
     }
 
-    PBL_LOG(LOG_LEVEL_INFO,
+    PBL_LOG(LOG_LEVEL_DEBUG,
             "origin: f=%dHz,cycle=%d avr: f=%dHz cycle_ave=%d delta=%d, delta_sum=%d\n",
-            (int)((uint64_t)48000 * LXT_LP_CYCLE * 1000 / s_rtc_cycle_count_init),
-            (int)s_rtc_cycle_count_init, (int)((uint64_t)48000 * LXT_LP_CYCLE * 1000 / ref_cycle),
-            (int)ref_cycle, (int)(delta * 1000), (int)(s_delta_total * 1000));
-  }
-}
-
-void prv_rc10k_cal_timer_cb(void* data) {
-  static uint8_t s_rtc10k_cal_cnt;
-
-  s_rtc10k_cal_cnt++;
-
-  HAL_RC_CAL_update_reference_cycle_on_48M(LXT_LP_CYCLE);
-
-  if (s_rtc10k_cal_cnt == RC10K_CALS_PER_RTC_CAL) {
-    s_rtc10k_cal_cnt = 0U;
-    prv_rtc_calibrate();
+            (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / s_rtc_cycle_count_init),
+            (int)s_rtc_cycle_count_init,
+            (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / ref_cycle),
+            (int)ref_cycle,
+            (int)(delta * 1000), (int)(s_delta_total * 1000));
   }
 }
 #endif
@@ -453,12 +440,15 @@ bool rtc_is_timezone_set(void) {
 void rtc_enable_backup_regs(void) {}
 
 void rtc_calibrate_frequency(uint32_t frequency) {
-  prv_rtc_calibrate();
+#ifndef SF32LB52_USE_LXT
+  prv_rtc_cal_timer_cb(NULL);
 
-  s_rc10k_cal_timer = new_timer_create();
-  PBL_ASSERTN(s_rc10k_cal_timer != TIMER_INVALID_ID);
+  s_rtc_cal_timer = new_timer_create();
+  PBL_ASSERTN(s_rtc_cal_timer != TIMER_INVALID_ID);
 
-  bool success = new_timer_start(s_rc10k_cal_timer, 15000, prv_rc10k_cal_timer_cb, NULL,
+  bool success = new_timer_start(s_rtc_cal_timer, RTC_CAL_PERIOD_MS,
+                                 prv_rtc_cal_timer_cb, NULL,
                                  TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(success);
+#endif
 }
