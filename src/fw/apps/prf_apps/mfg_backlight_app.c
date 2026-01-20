@@ -105,7 +105,7 @@ static void s_main(void) {
 
   app_event_loop();
 
-  led_controller_rgb_set_color(LED_SOFT_WHITE);
+  led_controller_rgb_set_color(LED_WARM_WHITE);
   light_enable(false);
 }
 
@@ -119,4 +119,3 @@ const PebbleProcessMd* mfg_backlight_app_get_info(void) {
   };
   return (const PebbleProcessMd*) &s_app_info;
 }
-
