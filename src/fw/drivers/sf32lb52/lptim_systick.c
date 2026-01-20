@@ -21,8 +21,9 @@
 #error "lptim systick not compatible with LXT"
 #endif
 
-// RC calibration clock cyles
-#define LXT_LP_CYCLE 200U
+// Default RC10K cycles value on 48MHz clock
+#define RC10K_DEFAULT_CYCLES 1200000UL
+
 // Calibration period (ms)
 #define CAL_PERIOD_MS 60000
 
@@ -40,15 +41,12 @@ static uint16_t s_one_tick_hz;
 static void prv_cal_timer_cb(void* data) {
   uint32_t ref_cycle;
 
-  HAL_RC_CAL_update_reference_cycle_on_48M(LXT_LP_CYCLE);
-
-  // Use the averaged calibration value, not the boot-time value
-  ref_cycle = HAL_Get_backup(RTC_BACKUP_LPCYCLE_AVE);
-  if (ref_cycle == 0) {
-    // Fallback to prevent divide-by-zero
-    ref_cycle = 1200000;
+  ref_cycle = HAL_RC_CAL_get_average_cycle_on_48M();
+  if (ref_cycle == 0UL) {
+    ref_cycle = RC10K_DEFAULT_CYCLES;
   }
-  s_one_tick_hz = ((48000000ULL * LXT_LP_CYCLE) / ref_cycle) / RTC_TICKS_HZ;
+
+  s_one_tick_hz = ((48000000ULL * HAL_RC_CAL_GetLPCycle()) / ref_cycle) / RTC_TICKS_HZ;
 
   __HAL_LPTIM_COMPARE_SET(&s_lptim1_handle, s_one_tick_hz);
 }
