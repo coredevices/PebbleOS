@@ -7,6 +7,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "services/common/comm_session/session.h"
 #include "services/normal/notifications/alerts_preferences_private.h"
 #include "services/normal/settings/settings_file.h"
 #include "shell/prefs_private.h"
@@ -176,6 +177,12 @@ static bool prv_is_syncable(const uint8_t *key, int key_len) {
 //! This is coalesced - only one instance runs at a time.
 static void prv_deferred_sync_callback(void *data) {
   s_sync_callback_pending = false;
+
+  // Only sync if we have an active connection to the phone
+  if (!comm_session_get_system_session()) {
+    PBL_LOG(LOG_LEVEL_DEBUG, "No connection to phone, skipping settings sync");
+    return;
+  }
 
   // Only sync if the phone supports settings sync
   if (!settings_blob_db_phone_supports_sync()) {
