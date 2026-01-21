@@ -6,7 +6,6 @@
 #include "drivers/flash.h"
 #include "drivers/periph_config.h"
 #include "drivers/rtc.h"
-#include "drivers/lptim_systick.h"
 #include "drivers/task_watchdog.h"
 #include "os/tick.h"
 #include "kernel/util/stop.h"
