@@ -76,11 +76,10 @@ void firmware_storage_invalidate_firmware_slot(uint8_t slot) {
     slot_start = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
   }
 
-  FirmwareHeader hdr = firmware_storage_read_firmware_header(slot_start);
   flash_region_erase_optimal_range(slot_start,
                                    slot_start,
-                                   ROUND_TO_MOD_CEIL((slot_start + hdr.fw_start), SUBSECTOR_SIZE_BYTES),
-                                   ROUND_TO_MOD_CEIL((slot_start + hdr.fw_start), SUBSECTOR_SIZE_BYTES));
+                                   slot_start + SUBSECTOR_SIZE_BYTES,
+                                   slot_start + SUBSECTOR_SIZE_BYTES);
 }
 
 #endif
