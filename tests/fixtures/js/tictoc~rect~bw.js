@@ -1,1 +1,1 @@
-../../../resources/normal/base/js/tictoc~rect~bw.js
+../../../resources/normal/base/js/tictoc~bw.js

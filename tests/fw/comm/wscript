@@ -5,37 +5,52 @@ def build(bld):
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/kernel_le_client/ams/ams_util.c "
                            "src/fw/comm/ble/kernel_le_client/ams/ams.c "
+                           "src/fw/services/common/regular_timer.c "
+                           "src/fw/services/common/put_bytes/put_bytes.c "
+                           "src/fw/services/common/put_bytes/put_bytes_storage.c "
                            "src/fw/services/normal/music.c "
+                           "src/fw/services/normal/music_endpoint.c "
+                           "src/fw/util/buffer.c "
+                           "src/fw/util/legacy_checksum.c "
                            "tests/fakes/fake_events.c "
                            "tests/fakes/fake_gatt_client_operations.c "
                            "tests/fakes/fake_gatt_client_subscriptions.c "
-                           "tests/fakes/fake_rtc.c",
-        test_sources_ant_glob = "test_ams.c")
+                           "tests/fakes/fake_new_timer.c "
+                           "tests/fakes/fake_put_bytes_storage_mem.c "
+                           "tests/fakes/fake_queue.c "
+                           "tests/fakes/fake_rtc.c "
+                           "tests/fakes/fake_session.c",
+        test_sources_ant_glob = "test_ams.c",
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/kernel_le_client/ams/ams_util.c",
-        test_sources_ant_glob = "test_ams_util.c")
+        test_sources_ant_glob = "test_ams_util.c",
+        platforms=['snowy', 'spalding'])
 
     # TODO: the bt_driver calls here should really be a fake and not rely on
     # the cc2564 module
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/gap_le_advert.c "
                            "src/fw/comm/ble/gap_le_connection.c "
-                           "src/fw/services/common/regular_timer.c "
                            "src/fw/comm/internals/bt_conn_mgr.c "
+                           "src/fw/services/common/regular_timer.c "
                            "tests/fakes/fake_GAPAPI.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c "
-                           "tests/fakes/fake_HCIAPI.c "
                            "tests/fakes/fake_gap_le_connect_params.c ",
         test_sources_ant_glob = "test_gap_le_advert.c",
-        override_includes=['dummy_board'])
+        override_includes=['dummy_board'],
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/comm/internals/bt_conn_mgr.c "
                            "src/fw/services/common/regular_timer.c "
                            "tests/fakes/fake_gap_le_connect_params.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c ",
-        test_sources_ant_glob = "test_bt_conn_mgr.c")
+        test_sources_ant_glob = "test_bt_conn_mgr.c",
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
@@ -46,11 +61,15 @@ def build(bld):
                            "src/fw/comm/ble/gatt_service_changed.c "
                            "src/fw/comm/internals/bt_conn_mgr.c "
                            "tests/fakes/fake_events.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
-                           "tests/fakes/fake_gap_le_connect_params.c ",
-        test_sources_ant_glob = "test_gatt_client_accessors.c")
+                           "tests/fakes/fake_gap_le_connect_params.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
+        test_sources_ant_glob = "test_gatt_client_accessors.c",
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
@@ -62,28 +81,36 @@ def build(bld):
                            "src/fw/comm/internals/bt_conn_mgr.c "
                            "tests/fakes/fake_gap_le_connect_params.c "
                            "tests/fakes/fake_events.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_GATTAPI.c "
-                           "tests/fakes/fake_GATTAPI_test_vectors.c ",
-        test_sources_ant_glob = "test_gatt_client_discovery.c")
+                           "tests/fakes/fake_GATTAPI_test_vectors.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
+        test_sources_ant_glob = "test_gatt_client_discovery.c",
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
                            "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                            "src/fw/comm/ble/gap_le_connection.c "
-                           "src/fw/comm/ble/gap_le_task.c "
                            "src/fw/comm/ble/gatt_client_accessors.c "
                            "src/fw/comm/ble/gatt_client_discovery.c "
                            "src/fw/comm/ble/gatt_client_subscriptions.c "
                            "src/fw/comm/ble/gatt_service_changed.c "
                            "src/fw/comm/internals/bt_conn_mgr.c "
-                           "tests/fakes/fake_gap_le_connect_params.c "
+                           "src/fw/comm/ble/gap_le_task.c "
                            "tests/fakes/fake_events.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
+                           "tests/fakes/fake_gap_le_connect_params.c "
+                           "tests/fakes/fake_new_timer.c "
                            "tests/fakes/fake_queue.c "
-                           "tests/fakes/fake_rtc.c ",
-        test_sources_ant_glob = "test_gatt_client_subscriptions.c")
+                           "tests/fakes/fake_rtc.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
+        test_sources_ant_glob = "test_gatt_client_subscriptions.c",
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/util/rand/rand.c "
@@ -94,8 +121,12 @@ def build(bld):
                            "tests/fakes/fake_gap_le_connect_params.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
-                           "tests/fakes/fake_rtc.c",
-        test_sources_ant_glob = "test_gatt_service_changed_client.c")
+                           "tests/fakes/fake_new_timer.c "
+                           "tests/fakes/fake_rtc.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
+        test_sources_ant_glob = "test_gatt_service_changed_client.c",
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
          sources_ant_glob = "src/fw/util/rand/rand.c "
@@ -107,8 +138,12 @@ def build(bld):
                           "tests/fakes/fake_gap_le_connect_params.c "
                           "tests/fakes/fake_GATTAPI.c "
                           "tests/fakes/fake_GATTAPI_test_vectors.c "
-                          "tests/fakes/fake_rtc.c",
-          test_sources_ant_glob="test_gatt_service_changed_server.c")
+                          "tests/fakes/fake_new_timer.c "
+                          "tests/fakes/fake_rtc.c "
+                          "tests/stubs/stubs_bt_driver_gatt.c "
+                          "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
+          test_sources_ant_glob="test_gatt_service_changed_server.c",
+          platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/gap_le_connect.c "
@@ -122,7 +157,8 @@ def build(bld):
                            "tests/fakes/fake_HCIAPI.c "
                            "tests/fakes/fake_rtc.c ",
         test_sources_ant_glob = "test_gap_le_connect.c",
-        override_includes=['dummy_board'])
+        override_includes=['dummy_board'],
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/util/time/mktime.c " \
@@ -130,7 +166,8 @@ def build(bld):
         "src/fw/util/time/time.c " \
         "src/fw/comm/ble/kernel_le_client/ancs/ancs_util.c " \
         "tests/fakes/fake_rtc.c",
-        test_sources_ant_glob = "test_ancs_util.c")
+        test_sources_ant_glob = "test_ancs_util.c",
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
         sources_ant_glob = "src/fw/util/buffer.c " \
@@ -146,7 +183,9 @@ def build(bld):
         "tests/fakes/fake_events.c " \
         "tests/fakes/fake_kernel_services_notifications.c " \
         "tests/fakes/fake_gatt_client_subscriptions.c " \
+        "tests/fakes/fake_new_timer.c " \
         "tests/fakes/fake_rtc.c " \
+        "tests/fakes/fake_session.c " \
         "src/fw/services/normal/notifications/ancs/ancs_notifications.c " \
         " src/fw/services/normal/notifications/ancs/ancs_notifications_util.c " \
         "src/fw/services/normal/notifications/ancs/ancs_item.c " \
@@ -156,13 +195,15 @@ def build(bld):
         "src/fw/services/normal/timeline/attributes_actions.c " \
         "src/fw/services/normal/timeline/attribute_group.c " \
         "src/fw/services/normal/timeline/attribute.c",
-        test_sources_ant_glob = "test_ancs.c")
+        test_sources_ant_glob = "test_ancs.c",
+        platforms=['snowy', 'spalding'])
 
     clar(bld,
          sources_ant_glob="src/fw/comm/ble/kernel_le_client/kernel_le_client.c "
                            "src/fw/util/rand/rand.c "
                            "third_party/tinymt/TinyMT/tinymt/tinymt32.c",
-         test_sources_ant_glob="test_kernel_le_client.c")
+         test_sources_ant_glob="test_kernel_le_client.c",
+         platforms=['snowy', 'spalding'])
 
     for ppogatt_version in [ 0, 1]:
         clar(bld,
@@ -170,13 +211,15 @@ def build(bld):
                            "src/fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c " \
                            "src/fw/services/common/regular_timer.c " \
                            "src/fw/util/rand/rand.c "
-                           "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
+                           "third_party/tinymt/TinyMT/tinymt/tinymt32.c " \
                            "tests/fakes/fake_gatt_client_operations.c " \
                            "tests/fakes/fake_gatt_client_subscriptions.c " \
+                           "tests/fakes/fake_new_timer.c " \
                            "tests/fakes/fake_rtc.c " \
                            "tests/fakes/fake_session.c",
              defines=["USE_PPOGATT_VERSION=%d" % ppogatt_version],
              test_name='test_ppogatt_v%d' % ppogatt_version,
-             test_sources_ant_glob = "test_ppogatt.c")
+             test_sources_ant_glob = "test_ppogatt.c",
+             platforms=['snowy', 'spalding'])
 
 # vim:filetype=python

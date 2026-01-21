@@ -32,7 +32,7 @@ typedef struct Service {
 } Service;
 
 //! Simulates receiving the Bluetopia service discovery complete event
-void fake_gatt_put_discovery_complete_event(uint8_t status,
+void fake_gatt_put_discovery_complete_event(uint16_t status,
                                             unsigned int connection_id);
 
 // Health Thermometer Service 0x1809 : 0x11

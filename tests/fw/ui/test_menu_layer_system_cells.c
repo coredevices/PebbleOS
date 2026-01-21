@@ -17,6 +17,7 @@
 // Fakes
 /////////////////////
 
+#include "fake_gbitmap_get_data_row.h"
 #include "fake_resource_syscalls.h"
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
@@ -84,9 +85,24 @@ static GBitmap *s_dest_bitmap;
 static GBitmap s_tictoc_icon_bitmap;
 static GBitmap s_smart_alarm_icon_bitmap;
 
+static bool s_icons_initialized = false;
+
 static void prv_initialize_icons(void) {
+  // Deinit icons first to ensure clean state (but only if they were already initialized)
+  if (s_icons_initialized) {
+    gbitmap_deinit(&s_tictoc_icon_bitmap);
+    gbitmap_deinit(&s_smart_alarm_icon_bitmap);
+  }
+
+  // Zero out the bitmap structures to ensure clean state
+  memset(&s_tictoc_icon_bitmap, 0, sizeof(s_tictoc_icon_bitmap));
+  memset(&s_smart_alarm_icon_bitmap, 0, sizeof(s_smart_alarm_icon_bitmap));
+
+  // Now re-initialize from resources
   gbitmap_init_with_resource(&s_tictoc_icon_bitmap, RESOURCE_ID_MENU_ICON_TICTOC_WATCH);
   gbitmap_init_with_resource(&s_smart_alarm_icon_bitmap, RESOURCE_ID_SMART_ALARM_ICON_BLACK);
+
+  s_icons_initialized = true;
 }
 
 void test_menu_layer_system_cells__initialize(void) {
@@ -110,6 +126,10 @@ void test_menu_layer_system_cells__initialize(void) {
 }
 
 void test_menu_layer_system_cells__cleanup(void) {
+  // Reset fake state to prevent cross-test contamination
+  s_fake_data_row_handling = false;
+  s_fake_data_row_handling_disable_vertical_flip = false;
+
   free(fb);
   fb = NULL;
 
@@ -342,6 +362,9 @@ void test_menu_layer_system_cells__basic_cell_width_144_legacy2(void) {
 }
 
 void test_menu_layer_system_cells__basic_cell_width_144(void) {
+  // Re-initialize icons to ensure clean state (fixes corruption from previous tests)
+  prv_initialize_icons();
+
   const int16_t cell_width = 144;
   prv_prepare_canvas_and_render_cells(
       MenuCellType_Basic, cell_width,
@@ -352,6 +375,9 @@ void test_menu_layer_system_cells__basic_cell_width_144(void) {
 }
 
 void test_menu_layer_system_cells__basic_custom_cell_width_144(void) {
+  // Re-initialize icons to ensure clean state (fixes corruption from previous tests)
+  prv_initialize_icons();
+
   const int16_t cell_width = 144;
   prv_prepare_canvas_and_render_cells(
       MenuCellType_BasicCustom, cell_width,
@@ -363,6 +389,9 @@ void test_menu_layer_system_cells__basic_custom_cell_width_144(void) {
 
 void test_menu_layer_system_cells__cell_width_32(void) {
 #if PBL_ROUND
+  // Re-initialize icons to ensure clean state (fixes corruption from previous tests)
+  prv_initialize_icons();
+
   const int16_t cell_width = 32;
   prv_prepare_canvas_and_render_cells(
       MenuCellType_CellLayer, cell_width,
@@ -374,6 +403,9 @@ void test_menu_layer_system_cells__cell_width_32(void) {
 }
 
 void test_menu_layer_system_cells__cell_width_100(void) {
+  // Re-initialize icons to ensure clean state (fixes corruption from previous tests)
+  prv_initialize_icons();
+
   const int16_t cell_width = 100;
   prv_prepare_canvas_and_render_cells(
       MenuCellType_CellLayer, cell_width,
@@ -384,6 +416,9 @@ void test_menu_layer_system_cells__cell_width_100(void) {
 }
 
 void test_menu_layer_system_cells__cell_width_144(void) {
+  // Re-initialize icons to ensure clean state (fixes corruption from previous tests)
+  prv_initialize_icons();
+
   const int16_t cell_width = 144;
   prv_prepare_canvas_and_render_cells(
       MenuCellType_CellLayer, cell_width,
@@ -394,6 +429,9 @@ void test_menu_layer_system_cells__cell_width_144(void) {
 }
 
 void test_menu_layer_system_cells__cell_width_180(void) {
+  // Re-initialize icons to ensure clean state (fixes corruption from previous tests)
+  prv_initialize_icons();
+
   const int16_t cell_width = 180;
   prv_prepare_canvas_and_render_cells(
       MenuCellType_CellLayer, cell_width,

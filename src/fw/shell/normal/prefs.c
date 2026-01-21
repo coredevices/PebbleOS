@@ -761,15 +761,19 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 void shell_prefs_init(void) {
   s_backlight_intensity =
       prv_convert_backlight_percent_to_intensity(BOARD_CONFIG.backlight_on_percent);
+#ifdef BOARD_CONFIG_AMBIENT_LIGHT_DARK_THRESHOLD
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
+#endif
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
   s_dynamic_backlight_max_threshold = BOARD_CONFIG.dynamic_backlight_max_threshold;
 #endif
   // Use board-specific default motion sensitivity if provided (non-zero)
+#ifdef BOARD_CONFIG_ACCEL
   if (BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity != 0) {
     s_motion_sensitivity = BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity;
   }
+#endif
   s_mutex = mutex_create();
 
   SettingsFile file = {{0}};

@@ -20,6 +20,7 @@ static GContext s_ctx;
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
 #include "services/normal/timeline/timeline_resources.h"
+#include "stubs_shell_prefs.h"
 
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
 #define TIMELINE_RESOURCE_TEST_FAKE_PNG (9999 | 0x80000000)
@@ -246,6 +247,8 @@ void test_launcher_menu_layer__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
   pfs_format(true /* write erase headers */);
+  // Load PFS resources BEFORE loading flash resources (which calls resource_init_app internally)
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "pug");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
   resource_init();

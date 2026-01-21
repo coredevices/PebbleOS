@@ -64,10 +64,20 @@ bool resource_init_app(ResAppNum app_num, const ResourceVersion *expected_versio
 }
 
 void resource_init(void) {
+  // Clear any previously cached resources to ensure clean state between test runs
+  while (s_resource_list != NULL) {
+    CachedResource *node = s_resource_list;
+    s_resource_list = (CachedResource *)node->list_node.next;
+    kernel_free(node);
+  }
+
   // see if there's a system bank waiting to be loaded
   resource_storage_init();
 
-  s_resource_mutex = mutex_create_recursive();
+  // Create mutex if not already created (allows multiple resource_init calls in tests)
+  if (s_resource_mutex == NULL) {
+    s_resource_mutex = mutex_create_recursive();
+  }
 }
 
 uint32_t resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {

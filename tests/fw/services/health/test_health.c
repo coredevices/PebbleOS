@@ -69,6 +69,10 @@ bool sys_activity_prefs_heart_rate_is_enabled(void) {
   return s_activity_prefs_heart_rate_enabled;
 }
 
+bool sys_activity_is_initialized(void) {
+  return true;
+}
+
 bool sys_hrm_manager_get_subscription_info(HRMSessionRef session, AppInstallId *app_id,
                                            uint32_t *update_interval_s, uint16_t *expire_s,
                                            HRMFeature *features) {

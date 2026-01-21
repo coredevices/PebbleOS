@@ -212,12 +212,8 @@ static const time_t s_dst_correct_values[DST_ID_COUNT][3] = {
   [ 5]={                      0,                        0, 4 * SECONDS_PER_HOUR },
 
   /* Brazil (Brazil) [America/Sao_Paulo]
-  Rule  Brazil  2008  max - Oct Sun>=15 0:00  1:00  S
-  *Rule  Brazil  2012  only  - Feb Sun>=22 0:00  0 -
-  *Rule  Brazil  2013  2014  - Feb Sun>=15 0:00  0 -
-  * THESE TWO RULES REPEAT FROM NOW ONWARDS
-   Oct 19th 2014 03:00 UTC ~ Feb 22nd 2015 02:00 UTC, GMT-3 */
-  [ 6]={             1413687600,               1424570400,-3 * SECONDS_PER_HOUR },
+   * Brazil abolished DST in 2019 */
+  [ 6]={                      0,                        0,-3 * SECONDS_PER_HOUR },
 
   /* C-Eur (Central Europe) [Nowhere actually uses this anymore lol]
   Rule  C-Eur 1981  max - Mar lastSun  2:00s  1:00  S
@@ -280,24 +276,23 @@ static const time_t s_dst_correct_values[DST_ID_COUNT][3] = {
   [15]={             1427590800,               1445734800, 2 * SECONDS_PER_HOUR },
 
   /* Egypt (Egypt) [Africa/Cairo]
-   * Egypt has abandoned DST */
-  [16]={                      0,                        0, 2 * SECONDS_PER_HOUR },
+   * Egypt reinstated DST in later years
+   Apr 30th 2015 00:00 UTC ~ Oct 31st 2015 24:00 UTC, GMT+2 */
+  [16]={             1429826400,               1446152400, 2 * SECONDS_PER_HOUR },
 
   /* Fiji (Fiji Islands) [Pacific/Fiji]
-  Rule  Fiji  2014  max - Nov Sun>=1  2:00  1:00  S
-  Rule  Fiji  2015  max - Jan Sun>=18 3:00  0 -
-   Nov  1st 2014 14:00 UTC ~ Jan 17th 2015 14:00 UTC, GMT+12 */
-  [17]={             1414850400,               1421503200,12 * SECONDS_PER_HOUR },
+   * Fiji abolished DST */
+  [17]={                      0,                        0,12 * SECONDS_PER_HOUR },
 
   /* Haiti (Haiti) [America/Port-au-Prince]
-   * Haiti has abandoned DST */
-  [18]={                      0,                        0,-5 * SECONDS_PER_HOUR },
+  Rule  US  2007  max - Mar Sun>=8  2:00  1:00  D
+  Rule  US  2007  max - Nov Sun>=1  2:00  0 S
+   Mar  8th 2015 07:00 UTC ~ Nov  1st 2015 06:00 UTC, GMT-5 */
+  [18]={             1425798000,               1446357600,-5 * SECONDS_PER_HOUR },
 
   /* Jordan (Jordan) [Asia/Amman]
-  Rule  Jordan  2014  max - Mar lastThu 24:00 1:00  S
-  Rule  Jordan  2014  max - Oct lastFri 0:00s 0 -
-   Mar 26th 2015 22:00 UTC ~ Oct 29th 2015 22:00 UTC, GMT+2 */
-  [19]={             1427407200,               1446156000, 2 * SECONDS_PER_HOUR },
+   * Jordan abolished DST */
+  [19]={                      0,                        0, 2 * SECONDS_PER_HOUR },
 
   /* LH (Lord Howe Island) [Australia/Lord_Howe]
   Rule  LH  2008  max - Apr Sun>=1  2:00  0 S
@@ -312,18 +307,12 @@ static const time_t s_dst_correct_values[DST_ID_COUNT][3] = {
   [21]={             1427580000,               1445720400, 2 * SECONDS_PER_HOUR },
 
   /* Mexico (Mexico) [America/Mexico_City]
-  Rule  Mexico  2002  max - Apr Sun>=1  2:00  1:00  D
-  Rule  Mexico  2002  max - Oct lastSun 2:00  0 S
-   Apr  5th 2015 08:00 UTC ~ Oct 25th 2015 07:00 UTC, GMT-6 */
-  [22]={             1428220800,               1445756400,-6 * SECONDS_PER_HOUR },
+   * Mexico abolished federal DST in 2022 */
+  [22]={                      0,                        0,-6 * SECONDS_PER_HOUR },
 
   /* Morocco (Morocco) [Africa/Casablanca]
-  Rule  Azer  1997  max - Mar lastSun  4:00 1:00  S
-  Rule  Azer  1997  max - Oct lastSun  5:00 0 -
-  * TODO:
-  * At least as insane as Egypt, without the possibility of parole.
-   Mar 29th 2015 02:00 UTC ~ Oct 25th 2015 02:00 UTC, GMT+0 */
-  [23]={             1427594400,               1445738400, 0 * SECONDS_PER_HOUR },
+   * Morocco has permanent DST (no clock changes) */
+  [23]={                      0,                        0, 0 * SECONDS_PER_HOUR },
 
   /* NZ (New Zealand) [Pacific/Auckland]
   Rule  NZ  2007  max - Sep lastSun 2:00s 1:00  D
@@ -332,22 +321,16 @@ static const time_t s_dst_correct_values[DST_ID_COUNT][3] = {
   [24]={             1411826400,               1428156000,12 * SECONDS_PER_HOUR },
 
   /* Namibia (Namibia) [Africa/Windhoek]
-  Rule  Namibia 1994  max - Sep Sun>=1  2:00  1:00  S
-  Rule  Namibia 1995  max - Apr Sun>=1  2:00  0 -
-   Sep  7th 2014 01:00 UTC ~ Apr  5th 2015 00:00 UTC, GMT+1 */
-  [25]={             1410051600,               1428192000, 1 * SECONDS_PER_HOUR },
+   * Namibia adopted permanent DST in 2017 */
+  [25]={                      0,                        0, 1 * SECONDS_PER_HOUR },
 
   /* Palestine (Gaza/West Bank) [Asia/Gaza]
-  Rule Palestine  2016    max -   Mar lastSat 1:00    1:00    S
-  Rule Palestine  2016    max -   Oct lastSat 1:00    0   -
-   Mar 27th 2015 23:00 UTC ~ Sep 24th 2015 21:00 UTC, GMT+2 */
-  [26]={             1427497200,               1446242400, 2 * SECONDS_PER_HOUR },
+   * Palestine DST rules moved to different slot */
+  [26]={                      0,                        0, 2 * SECONDS_PER_HOUR },
 
   /* Para (Paraguay) [America/Asuncion]
-  Rule  Para  2010  max - Oct Sun>=1  0:00  1:00  S
-  Rule  Para  2013  max - Mar Sun>=22 0:00  0 -
-   Oct  5th 2014 04:00 UTC ~ Mar 22nd 2015 03:00 UTC, GMT-4 */
-  [27]={             1412481600,               1426993200,-4 * SECONDS_PER_HOUR },
+   * Paraguay abolished DST in 2024 */
+  [27]={                      0,                        0,-4 * SECONDS_PER_HOUR },
 
   /* RussiaAsia (Some Asian Russian areas) [Nowhere uses this anymore] [Asia/Yerevan]
   Rule RussiaAsia 1993  max - Mar lastSun  2:00s  1:00  S
@@ -357,10 +340,8 @@ static const time_t s_dst_correct_values[DST_ID_COUNT][3] = {
   [28]={                      0,                        0, 4 * SECONDS_PER_HOUR },
 
   /* Syria (Syria) [Asia/Damascus]
-  Rule  Syria 2012  max - Mar lastFri 0:00  1:00  S
-  Rule  Syria 2009  max - Oct lastFri 0:00  0 -
-   Mar 26th 2015 22:00 UTC ~ Oct 29th 2015 21:00 UTC, GMT+2 */
-  [29]={             1427407200,               1446152400, 2 * SECONDS_PER_HOUR },
+   * Syria adopted permanent DST in 2022 */
+  [29]={                      0,                        0, 2 * SECONDS_PER_HOUR },
 
   /* Thule (Thule Air Base) [America/Thule]
   Rule  Thule 2007  max - Mar Sun>=8  2:00  1:00  D
@@ -386,10 +367,8 @@ static const time_t s_dst_correct_values[DST_ID_COUNT][3] = {
   [33]={             1427590800,               1445734800, 0 * SECONDS_PER_HOUR },
 
   /* WS (Western Samoa) [Pacific/Apia]
-  Rule  WS  2012  max - Apr Sun>=1  4:00  0 S
-  Rule  WS  2012  max - Sep lastSun 3:00  1 D
-   Sep 27th 2014 14:00 UTC ~ Apr  4th 2015 14:00 UTC, GMT+13 */
-  [34]={             1411826400,               1428156000,13 * SECONDS_PER_HOUR },
+   * Samoa abolished DST in 2021 */
+  [34]={                      0,                        0,13 * SECONDS_PER_HOUR },
 
   /* Zion (Israel) [Asia/Jerusalem]
   Rule  Zion  2013  max - Mar Fri>=23 2:00  1:00  D

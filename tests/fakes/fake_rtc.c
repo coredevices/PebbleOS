@@ -141,3 +141,12 @@ void fake_rtc_increment_ticks(RtcTicks tick_increment) {
 void fake_rtc_auto_increment_ticks(RtcTicks auto_increment) {
   s_rtc_auto_increment = auto_increment;
 }
+
+void fake_rtc_cleanup(void) {
+  s_rtc_tick_count = 0;
+  s_rtc_auto_increment = 0;
+  s_time_base = 0;
+  s_time_ms_base = 0;
+  s_time_tick_base = 0;
+  memset(&s_tzinfo, 0, sizeof(s_tzinfo));
+}

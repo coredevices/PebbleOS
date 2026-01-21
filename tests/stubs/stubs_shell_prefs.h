@@ -53,3 +53,11 @@ void WEAK system_theme_set_content_size(PreferredContentSize content_size) {
 PreferredContentSize WEAK system_theme_get_content_size(void) {
   return (PreferredContentSize)s_content_size;
 }
+
+GColor WEAK shell_prefs_get_apps_menu_highlight_color(void) {
+  return GColorBlack;
+}
+
+void WEAK shell_prefs_set_apps_menu_highlight_color(GColor color) {
+  (void)color;
+}

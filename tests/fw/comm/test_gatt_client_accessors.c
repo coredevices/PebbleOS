@@ -31,6 +31,7 @@
 
 #include "stubs_bluetopia_interface.h"
 #include "stubs_bt_driver_gatt.h"
+#include "stubs_bt_driver_gatt_client_discovery.h"
 #include "stubs_bt_lock.h"
 #include "stubs_gatt_client_subscriptions.h"
 #include "stubs_logging.h"
@@ -73,7 +74,7 @@ static BTDeviceInternal prv_dummy_device(uint8_t octet) {
 
 static BTDeviceInternal prv_connected_dummy_device(uint8_t octet) {
   BTDeviceInternal device = prv_dummy_device(octet);
-  gap_le_connection_add(&device, NULL, true /* local_is_master */);
+  gap_le_connection_add(&device, NULL, true /* local_is_master */, TIMER_INVALID_ID);
   GAPLEConnection *connection = gap_le_connection_by_device(&device);
   connection->gatt_connection_id = TEST_GATT_CONNECTION_ID;
   return device;
@@ -99,6 +100,9 @@ void test_gatt_client_accessors__initialize(void) {
 
 void test_gatt_client_accessors__cleanup(void) {
   gap_le_connection_deinit();
+
+  // Clear any events that were sent during connection cleanup
+  fake_event_clear_last();
 }
 
 void test_gatt_client_accessors__copy_service_refs(void) {

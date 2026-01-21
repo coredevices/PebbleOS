@@ -121,6 +121,7 @@ def build(ctx):
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
             " tests/fakes/fake_clock.c" \
+            " tests/fakes/fake_new_timer.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c",
         test_sources_ant_glob = "test_alarm_smart.c",
@@ -129,11 +130,14 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob = \
-         " src/fw/services/common/battery/battery_state.c " \
-         " src/fw/services/common/battery/battery_curve.c " \
+         " src/fw/services/common/battery/voltage/battery_state.c " \
+         " src/fw/services/common/battery/voltage/battery_curve.c " \
          " src/fw/services/common/battery/battery_monitor.c " \
+         " src/fw/services/common/regular_timer.c " \
          " tests/fakes/fake_battery.c " \
-         " tests/fakes/fake_rtc.c ",
+         " tests/fakes/fake_new_timer.c " \
+         " tests/fakes/fake_rtc.c " \
+         " tests/stubs/stubs_mutex.c ",
          test_sources_ant_glob = "test_battery_monitor.c",
          defines=['PLATFORM_SNOWY'],
          override_includes=['dummy_board'])
@@ -189,6 +193,7 @@ def build(ctx):
              " src/fw/services/normal/data_logging/dls_syscalls.c" \
              " src/fw/services/common/regular_timer.c" \
              " src/fw/util/shared_circular_buffer.c" \
+             " tests/fakes/fake_new_timer.c" \
              " tests/fakes/fake_spi_flash.c" \
              " src/fw/util/crc8.c" \
              " src/fw/util/legacy_checksum.c" \
@@ -219,14 +224,17 @@ def build(ctx):
            " src/fw/process_management/pebble_process_md.c" \
            " src/fw/kernel/memory_layout.c" \
            " src/fw/kernel/util/segment.c" \
-           " tests/fakes/fake_rtc.c",
+           " tests/fakes/fake_new_timer.c" \
+           " tests/fakes/fake_rtc.c" \
+           " tests/stubs/stubs_watchface_metrics.c",
        test_sources_ant_glob = "test_app_manager.c",
        override_includes=['dummy_board'])
 
     clar(ctx,
        sources_ant_glob = \
            " src/fw/process_management/pebble_process_info.c" \
-           " src/fw/process_management/process_manager.c",
+           " src/fw/process_management/process_manager.c" \
+           " tests/stubs/stubs_watchface_metrics.c",
        test_sources_ant_glob = "test_process_manager.c",
        override_includes=['dummy_board'])
 
@@ -337,7 +345,8 @@ def build(ctx):
              platforms=[platform])
 
     clar(ctx,
-         sources_ant_glob="src/fw/apps/prf_apps/recovery_first_use_app/getting_started_button_combo.c ",
+         sources_ant_glob="src/fw/apps/prf_apps/recovery_first_use_app/getting_started_button_combo.c "
+                      "tests/fakes/fake_new_timer.c",
          test_sources_ant_glob="test_getting_started_button_combo.c",
          defines=["RECOVERY_FW"]) # Enable all combos
 

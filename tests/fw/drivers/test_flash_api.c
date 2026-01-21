@@ -4,6 +4,7 @@
 #include "clar.h"
 #include "fake_new_timer.h"
 #include "stubs_analytics.h"
+#include "stubs_flash_impl.h"
 #include "stubs_freertos.h"
 #include "stubs_logging.h"
 #include "stubs_mutex.h"

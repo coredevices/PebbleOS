@@ -99,9 +99,19 @@ static DivResult polar_div(int32_t numer, int32_t denom) {
 
 #if PBL_BW
 T_STATIC bool get_bitmap_bit(GBitmap *bmp, int x, int y) {
-  int byte_num = y * bmp->row_size_bytes + x / 8;
-  int bit_num = x % 8;
-  uint8_t byte = ((uint8_t*)(bmp->addr))[byte_num];
+  // Get the row info which provides the correct data pointer and bounds
+  const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bmp, y);
+
+  // For circular format, row_info.data points to the first valid pixel (at min_x),
+  // so x must be adjusted relative to the data pointer. For non-circular formats,
+  // row_info.data points to the row start (column 0), and min_x/max_x define the
+  // valid region for clipping purposes.
+  const GBitmapFormat format = gbitmap_get_format(bmp);
+  const int adjusted_x = (format == GBitmapFormat8BitCircular) ? (x - row_info.min_x) : x;
+
+  int byte_num = adjusted_x / 8;
+  int bit_num = adjusted_x % 8;
+  uint8_t byte = row_info.data[byte_num];
   return (byte & (1 << bit_num)) ? 1 : 0;
 }
 #elif PBL_COLOR
@@ -110,7 +120,14 @@ T_STATIC GColor get_bitmap_color(GBitmap *bmp, int x, int y) {
   const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bmp, y);
   const uint8_t *src = row_info.data;
   const uint8_t src_bpp = gbitmap_get_bits_per_pixel(format);
-  uint8_t cindex = raw_image_get_value_for_bitdepth(src, x,
+
+  // For circular format, row_info.data points to the first valid pixel (at min_x),
+  // so x must be adjusted relative to the data pointer. For non-circular formats,
+  // row_info.data points to the row start (column 0), and min_x/max_x define the
+  // valid region for clipping purposes.
+  const int adjusted_x = (format == GBitmapFormat8BitCircular) ? (x - row_info.min_x) : x;
+
+  uint8_t cindex = raw_image_get_value_for_bitdepth(src, adjusted_x,
                                                     0,  // y = 0 when using data_row
                                                     bmp->row_size_bytes,
                                                     src_bpp);

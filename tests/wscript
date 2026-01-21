@@ -55,7 +55,7 @@ def convert_png_to_pbi(task):
     dest_pbi = task.outputs[0].srcpath()
     bitdepth = None
 
-    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding', '~cutts', '~robert']):
+    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding', '~silk', '~cutts', '~robert']):
         img_fmt = 'color_raw'
     elif any(word in dest_pbi for word in ['.1bit.', '~tintin']):
         img_fmt = 'bw'
@@ -83,7 +83,7 @@ def convert_png_to_pblpng(task):
 
         if bit_suffix:
             bitdepth = int(bit_suffix.group(1))
-        elif any(word in dest_png for word in ['~snowy', '~spalding', '~cutts', '~robert']):
+        elif any(word in dest_png for word in ['~snowy', '~spalding', '~silk', '~cutts', '~robert']):
             bitdepth = 8
         elif any(word in dest_png for word in ['~tintin']):
             bitdepth = 1
@@ -105,7 +105,18 @@ def generate_test_pbis(ctx):
         dest_pbi = png_file.get_bld().change_ext('.pbi')
 
         # if the image contains Xbit in the name, then generate both 1bit and 8bit PBI images
+        # BUT skip if platform-specific .1bit.png and .8bit.png files already exist
         if ".Xbit." in str(dest_pbi):
+            # Check if platform-specific files exist - if so, skip Xbit processing
+            # Get the parent directory and base filename
+            parent = png_file.parent
+            name = png_file.name.replace('.Xbit.png', '')
+            bit1_file = parent.find_node(name + '.1bit.png')
+            bit8_file = parent.find_node(name + '.8bit.png')
+            if bit1_file and bit8_file:
+                # Platform-specific files exist, skip Xbit to avoid overwriting
+                continue
+
             dest_pbi = png_file.get_bld().change_ext('.1bit.pbi', '.Xbit.png')
             ctx(name='png_to_pbi', rule=convert_png_to_pbi, source=png_file, target=dest_pbi,
                 bmp_script=bitmapgen_path)
@@ -159,6 +170,21 @@ def copy_test_pngs_to_build_dir(ctx):
         test_image_pngs.append(dest_file)
 
     return test_image_pngs
+
+
+def copy_test_pbis_to_build_dir(ctx):
+    test_image_pbis = []
+
+    # copy over pre-generated PBI fixture files
+    copy_resources_list = []
+    copy_resources_list.extend(
+        ctx.path.find_node('test_images').ant_glob("test_graphics_draw_text_flow__*.pbi"))
+    for copy_file in copy_resources_list:
+        dest_file = copy_file.get_bld()
+        ctx(name='copy_pbi', rule='cp -f ${SRC} ${TGT}', source=copy_file, target=dest_file)
+        test_image_pbis.append(dest_file)
+
+    return test_image_pbis
 
 
 def copy_pdc_files_to_build_dir(ctx):
@@ -279,35 +305,19 @@ def build(bld):
     # clang on Linux errors on true == true or false == false compile-time assertions
     bld.env.CFLAGS.append('-Wno-tautological-compare')
 
+    # Disable DUMA on macOS ARM - it requires configuration that's not set up
+    import platform
+    if platform.system() == 'Darwin' and platform.processor() == 'arm':
+      bld.env.append_value('DEFINES', 'DUMA_DISABLED')
+
     # Any test in this list won't be compiled
     bld.env.BROKEN_TESTS = [
-        'test_app_fetch_endpoint.c',
-        'test_graphics_draw_text_flow.c',
-        'test_perimeter.c',
-        'test_ancs_pebble_actions.c',
-        'test_timeline_actions.c',
-        'test_bluetooth_persistent_storage_prf.c',
-        'test_bluetooth_persistent_storage.c',
-        'test_session.c',
-        'test_session_receive_router.c',
-        'test_compositor.c',
-        'test_floor.c',
-        'test_pow.c',
         'test_ams.c',
-        'test_ams_util.c',
-        'test_gap_le_advert.c',
-        'test_bt_conn_mgr.c',
-        'test_gatt_client_accessors.c',
-        'test_gatt_client_discovery.c',
-        'test_gatt_client_subscriptions.c',
-        'test_gatt_service_changed_client.c',
-        'test_gatt_service_changed_server.c',
+        # Tests with deep API mismatches that need significant test code rewrites:
         'test_gap_le_connect.c',
         'test_ancs_util.c',
-        'test_ancs.c',
-        'test_kernel_le_client.c',
-        'test_ppogatt.c',
-        'test_graphics_circle.c'
+        # Tests with incorrect function stub signatures:
+        'test_graphics_circle.c',
     ]
 
     # Don't run the python tool tests because they exercise a lot of old python2 code that still needs to be updated
@@ -323,9 +333,14 @@ def build(bld):
 
     # Set up the fail directory, and make it. This is used to output data from the tests for
     # comparison with the expected results.
-    fail_dir = test_images_dest_dir.parent.make_node('failed')
+    # Create platform-specific failure directory to prevent cross-platform test contamination
+    platform = bld.env.get_flat('PLATFORM_NAME') if 'PLATFORM_NAME' in bld.env else 'unknown'
+    fail_dir_name = f'failed_{platform}'
+    fail_dir = test_images_dest_dir.parent.make_node(fail_dir_name)
     fail_path = fail_dir.abspath().strip()
-    sh.rm('-rf', fail_path)
+    # Use subprocess instead of sh.rm to avoid Python 3.14 compatibility issues
+    import subprocess
+    subprocess.run(['rm', '-rf', fail_path], check=False, capture_output=True)
     fail_dir.mkdir()
 
     def convert_to_emscripten_fs_path_if_needed(node):
@@ -343,7 +358,7 @@ def build(bld):
 
     # Add test_pbis or test_pngs to runtime_deps for tests that require them
     if not bld.options.no_images:
-        bld.env.test_pbis = generate_test_pbis(bld)
+        bld.env.test_pbis = generate_test_pbis(bld) + copy_test_pbis_to_build_dir(bld)
         bld.env.test_pngs = copy_test_pngs_to_build_dir(bld)
         bld.env.test_pngs.extend(generate_test_pngs(bld))
         bld.env.test_pfos = copy_pfo_files_to_build_dir(bld)
@@ -355,6 +370,32 @@ def build(bld):
         bld.env.append_value('CFLAGS', '-fprofile-arcs')
         bld.env.append_value('CFLAGS', '-ftest-coverage')
         bld.env.append_value('LINKFLAGS', '--coverage')
+
+    # Add compiler normalization flags for consistent test results across platforms
+    # Different clang versions (macOS 14 vs 26+, Xcode 15-17) generate different code
+    # Use -O0 for tests to eliminate optimization differences
+    bld.env.append_value('CFLAGS', [
+        '-O0',                     # No optimization - eliminates most version-specific optimizations
+        '-g3',                     # Max debug info
+        '-fno-inline-functions',   # Don't inline functions
+        '-fno-unroll-loops',       # Don't unroll loops
+    ])
+
+    # Check for compiler-specific flags
+    if bld.env['CC'] and 'clang' in str(bld.env['CC']):
+        # Clang-specific floating-point consistency
+        # Use -ffp-model=precise instead of strict to avoid conflicts
+        bld.env.append_value('CFLAGS', [
+            '-ffp-model=precise',   # Precise floating-point (less aggressive than strict)
+            '-fno-fast-math',       # Disable aggressive math optimizations
+        ])
+    else:
+        # GCC-specific floating-point consistency
+        bld.env.append_value('CFLAGS', [
+            '-ffloat-store',        # Force float to memory (conservative rounding)
+            '-fno-math-errno',      # Don't set errno for math functions
+        ])
+
     test_wscript_dirs = [os.path.dirname(f.abspath()) for f in bld.path.ant_glob('**/wscript')]
     for dir in test_wscript_dirs:
         bld.recurse(dir)

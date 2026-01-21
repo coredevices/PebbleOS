@@ -184,18 +184,8 @@
     },
     {
       "type": "png",
-      "name": "STRIDE_SHOE_GREEN_SMALL",
-      "file": "normal/snowy/images/stride_shoe_green_small.png"
-    },
-    {
-      "type": "png",
       "name": "STRIDE_SHOE_BLUE",
       "file": "normal/robert/images/stride_shoe_blue.png"
-    },
-    {
-      "type": "png",
-      "name": "STRIDE_SHOE_BLUE_SMALL",
-      "file": "normal/snowy/images/stride_shoe_blue_small.png"
     },
     {
       "type": "vibe",

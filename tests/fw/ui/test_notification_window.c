@@ -20,6 +20,7 @@
 #include "stubs_action_menu.h"
 #include "stubs_alarm_layout.h"
 #include "stubs_alerts.h"
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
 #include "stubs_ancs_filtering.h"
 #include "stubs_app_install_manager.h"

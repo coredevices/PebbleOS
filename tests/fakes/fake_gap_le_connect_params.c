@@ -3,7 +3,28 @@
 
 #include "fake_gap_le_connect_params.h"
 
-#include "GAPAPI.h"
+#ifdef __has_include
+  #if __has_include("GAPAPI.h")
+    #include "GAPAPI.h"
+    #define GAPAPI_AVAILABLE
+  #endif
+#else
+  #ifdef COMPONENT_BTSTACK
+    #include "GAPAPI.h"
+    #define GAPAPI_AVAILABLE
+  #endif
+#endif
+
+// If GAPAPI.h is not available, provide dummy type definitions
+#ifndef GAPAPI_AVAILABLE
+typedef struct {
+  int dummy;
+} GAP_LE_Connection_Parameter_Updated_Event_Data_t;
+
+typedef struct {
+  int dummy;
+} GAP_LE_Connection_Parameter_Update_Response_Event_Data_t;
+#endif
 
 static ResponseTimeState s_last_requested_desired_state;
 

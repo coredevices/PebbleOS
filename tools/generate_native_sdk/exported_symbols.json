@@ -124,13 +124,15 @@
   "exports": [
     {
       "type": "define",
-      "name": "ARRAY_LENGTH"
+      "name": "ARRAY_LENGTH",
+      "skipDefinition": true
     }, {
       "type": "forward_struct",
       "name": "tm"
     }, {
       "type": "define",
-      "name": "IS_SIGNED"
+      "name": "IS_SIGNED",
+      "skipDefinition": true
     }, {
       "type": "group",
       "name": "UI",

@@ -110,8 +110,9 @@ def pbi_to_png(pbi, pixel_bytearray):
         for (idx, abyte) in enumerate(pixel_bytearray):
             pixel_bytearray[idx] = flip_byte(pixel_bytearray[idx])
 
+        # Use bytes() instead of buffer() for Python 3 compatibility
         png = Image.frombuffer('1', (pbi.bounds_w, pbi.bounds_h),
-                               buffer(pixel_bytearray), 'raw', '1', pbi.stride, 1)
+                               pixel_bytearray, 'raw', '1', pbi.stride, 1)
     else:
         print("Bad PBI")
         png = None

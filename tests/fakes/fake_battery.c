@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "drivers/battery.h"
 #include "fake_battery.h"
 #include "kernel/events.h"
 
@@ -46,4 +47,26 @@ bool battery_is_usb_connected(void) {
 
 bool battery_charge_controller_thinks_we_are_charging(void) {
   return s_charging;
+}
+
+int battery_get_constants(BatteryConstants *constants) {
+  if (!constants) {
+    return -1;
+  }
+  constants->v_mv = s_millivolts;
+  constants->i_ua = 100;
+  constants->t_mc = 25000;
+  return 0;
+}
+
+int battery_charge_status_get(BatteryChargeStatus *status) {
+  if (!status) {
+    return -1;
+  }
+  *status = s_charging ? BatteryChargeStatusCC : BatteryChargeStatusUnknown;
+  return 0;
+}
+
+bool battery_is_usb_connected_impl(void) {
+  return s_usb_connected;
 }

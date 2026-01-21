@@ -7,13 +7,14 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = " src/fw/shell/normal/battery_ui_fsm.c"
-                           " src/fw/services/common/battery/battery_curve.c",
+                           " src/fw/services/common/battery/nrf_fuel_gauge/battery_curve.c",
         test_sources_ant_glob = 'test_battery_ui_fsm.c',
         override_includes=['dummy_board'],
         platforms = ['snowy'])
 
     clar(ctx,
-        sources_ant_glob = " src/fw/shell/normal/display_calibration_prompt.c",
+        sources_ant_glob = " src/fw/shell/normal/display_calibration_prompt.c"
+                           " tests/fakes/fake_new_timer.c",
         test_sources_ant_glob = 'test_display_calibration_prompt.c',
         override_includes=['dummy_board'],
         platforms = ['spalding'])

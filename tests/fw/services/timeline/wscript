@@ -39,6 +39,7 @@ def build(ctx):
              "src/fw/util/crc8.c "
              "src/fw/util/time/time.c "
              "tests/fakes/fake_events.c "
+             "tests/fakes/fake_new_timer.c "
              "tests/fakes/fake_rtc.c "
              "tests/fakes/fake_settings_file.c "
          ),
@@ -59,6 +60,7 @@ def build(ctx):
              "src/fw/util/crc8.c "
              "src/fw/util/time/time.c "
              "tests/fakes/fake_events.c "
+             "tests/fakes/fake_new_timer.c "
              "tests/fakes/fake_rtc.c "
              "tests/fakes/fake_settings_file.c "
          ),
@@ -214,6 +216,7 @@ def build(ctx):
              " src/fw/services/normal/timeline/weather_layout.c"
              " src/fw/services/normal/weather/weather_types.c"
              " src/fw/shell/system_theme.c"
+             " tests/stubs/stubs_alerts_preferences.c"
              " tests/stubs/stubs_clock.c"
              " tests/stubs/stubs_timeline_layout.c"
          ),

@@ -2193,3 +2193,15 @@ void activity_insights_test_push_walk_run_sessions(void) {
 void activity_insights_test_push_nap_session(void) {
   system_task_add_callback(prv_test_push_nap_session, NULL);
 }
+
+void activity_insights_reset_for_tests(void) {
+  // Reset session pin state to allow re-triggering of activity session notifications
+  s_session_pin_state = (SessionPinState){0};
+  // Reset nap pin state
+  s_nap_pin_state = (NapPinState){0};
+  // Reset sleep pin state
+  s_sleep_pin_state = (SleepPinState){0};
+  // Reset metric history stats
+  s_sleep_stats = (ActivityInsightMetricHistoryStats){0};
+  s_activity_stats = (ActivityInsightMetricHistoryStats){0};
+}

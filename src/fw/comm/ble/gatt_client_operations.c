@@ -106,8 +106,8 @@ static BLEGATTError prv_handle_response(const GattClientOpReadReponse *resp,
 
 static bool prv_ctx_in_client_event_ctxs(GattClientEventContext *context) {
   const bool exists =
-      (list_contains(&s_client_event_ctxs[GAPLEClientApp]->node, &context->node) ||
-       list_contains(&s_client_event_ctxs[GAPLEClientKernel]->node, &context->node));
+      (list_contains((ListNode *)s_client_event_ctxs[GAPLEClientApp], &context->node) ||
+       list_contains((ListNode *)s_client_event_ctxs[GAPLEClientKernel], &context->node));
   return exists;
 }
 
@@ -175,7 +175,7 @@ static GattClientEventContext *prv_create_event_context(GAPLEClient client) {
   GattClientEventContext *evt_ctx = kernel_zalloc(sizeof(GattClientEventContext));
   if (evt_ctx) {
     s_client_event_ctxs[client] =
-        (GattClientEventContext *)list_prepend(&s_client_event_ctxs[client]->node, &evt_ctx->node);
+        (GattClientEventContext *)list_prepend((ListNode *)s_client_event_ctxs[client], &evt_ctx->node);
   }
 
   return evt_ctx;
@@ -361,7 +361,7 @@ void gatt_client_op_cleanup(GAPLEClient client) {
   bt_lock();
   {
     // Free all memory associated with outstanding operations
-    list_foreach(&s_client_event_ctxs[client]->node, prv_deinit_ctx_list, NULL);
+    list_foreach((ListNode *)s_client_event_ctxs[client], prv_deinit_ctx_list, NULL);
     s_client_event_ctxs[client] = NULL;
 
     ReadResponseData *read_response = s_read_responses[client];

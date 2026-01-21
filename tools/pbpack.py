@@ -96,8 +96,9 @@ class ResourcePack(object):
         return b"".join(serialized_content)
 
     @classmethod
-    def deserialize(cls, f_in, is_system=True):
+    def deserialize(cls, f_in, is_system=True, skip_crc_check=False):
         resource_pack = cls(is_system)
+        resource_pack.skip_crc_check = skip_crc_check
 
         # Parse manifest:
         manifest_data = f_in.read(cls.MANIFEST_SIZE_BYTES)
@@ -152,7 +153,7 @@ class ResourcePack(object):
 
             calculated_crc = stm32_crc.crc32(content)
 
-            if calculated_crc != entry.crc:
+            if not skip_crc_check and calculated_crc != entry.crc:
                 raise Exception("Entry %s does not match CRC of content (%u). "
                                 "Hint: try with%s the --app flag"
                                 % (entry, calculated_crc, "" if is_system else "out"))

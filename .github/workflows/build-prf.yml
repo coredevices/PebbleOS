@@ -1,19 +1,7 @@
 name: Build PRF
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/build-prf.yml'
-      - 'resources/**'
-      - 'src/**'
-      - 'tools/**'
-      - 'third_party/**'
-      - 'waftools/**'
-      - 'waf'
-      - 'wscript'
+  workflow_dispatch
 
 jobs:
   build:
@@ -23,8 +11,9 @@ jobs:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
 
     strategy:
+      fail-fast: false
       matrix:
-        board: ["asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
+        board: ["asterix", "obelix_evt", "obelix_dvt", "obelix_pvt", "obelix_bb2", "getafix_evt"]
         mode: ["normal", "mfg"]
 
     steps:
@@ -37,10 +26,43 @@ jobs:
           fetch-depth: 0
           submodules: true
 
+      - name: Setup cache directories
+        run: |
+          mkdir -p ${{ runner.temp }}/cache/pip
+          mkdir -p ${{ runner.temp }}/cache/ccache
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            .wafpickle-*
+          key: ${{ runner.os }}-waf-${{ matrix.board }}-${{ matrix.mode }}-${{ hashFiles('wscript', 'waftools/**', 'src/**.c', 'src/**.h', 'sdk/**.h') }}
+          restore-keys: |
+            ${{ runner.os }}-waf-${{ matrix.board }}-
+            ${{ runner.os }}-waf-
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/ccache
+          key: ${{ runner.os }}-ccache-${{ matrix.board }}-${{ hashFiles('src/**', 'waftools/**') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ matrix.board }}-
+            ${{ runner.os }}-ccache-
+
       - name: Install Python dependencies
         run: |
-          pip install -U pip
-          pip install -r requirements.txt
+          pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
+          pip install -r requirements.txt --cache-dir ${{ runner.temp }}/cache/pip
 
       - name: Get npm cache directory
         id: npm-cache-dir
@@ -57,6 +79,8 @@ jobs:
 
       - name: Configure
         run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
           if [ "${{ matrix.mode }}" == "mfg" ]; then
             OPTS="--mfg --nohash"
           fi
@@ -64,7 +88,10 @@ jobs:
           ./waf configure --board ${{ matrix.board }} $OPTS
 
       - name: Build
-        run: ./waf build_prf
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          ./waf build_prf
 
       - name: Bundle
         run: ./waf bundle_prf
@@ -82,15 +109,3 @@ jobs:
         id: build_id
         run: |
           echo "BUILD_ID=$(arm-none-eabi-readelf -n build/prf/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
-
-      - name: Upload log hash dictionary
-        uses: Noelware/s3-action@2.3.1
-        if: ${{ github.event_name == 'push' }}
-        with:
-          access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
-          bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
-          files: |
-            build/prf/src/fw/tintin_fw_loghash_dict.json
-          path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json

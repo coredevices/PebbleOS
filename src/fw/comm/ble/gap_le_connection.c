@@ -54,7 +54,7 @@ static bool prv_list_filter_by_gatt_id(ListNode *found_node, void *data) {
 }
 
 static GAPLEConnection * prv_find_connection_by_gatt_id(uintptr_t connection_id) {
-  return (GAPLEConnection *) list_find(&s_connections->node,
+  return (GAPLEConnection *) list_find((ListNode *)s_connections,
                                        prv_list_filter_by_gatt_id,
                                        (void *) connection_id);
 }
@@ -66,7 +66,7 @@ static bool prv_list_filter_for_addr(ListNode *found_node, void *data) {
 }
 
 static GAPLEConnection * prv_find_connection_by_addr(const BTDeviceAddress *addr) {
-  return (GAPLEConnection *) list_find(&s_connections->node,
+  return (GAPLEConnection *) list_find((ListNode *)s_connections,
                                        prv_list_filter_for_addr,
                                        (void *) addr);
 }
@@ -78,7 +78,7 @@ static bool prv_list_filter_for_device(ListNode *found_node, void *data) {
 }
 
 static GAPLEConnection * prv_find_connection(const BTDeviceInternal *device) {
-  return (GAPLEConnection *) list_find(&s_connections->node,
+  return (GAPLEConnection *) list_find((ListNode *)s_connections,
                                        prv_list_filter_for_device,
                                        (void *) device);
 }
@@ -135,7 +135,7 @@ GAPLEConnection *gap_le_connection_add(const BTDeviceInternal *device,
   };
   gap_le_connection_set_irk(connection, irk);
 
-  s_connections = (GAPLEConnection *) list_prepend(&s_connections->node,
+  s_connections = (GAPLEConnection *) list_prepend((ListNode *)s_connections,
                                                    &connection->node);
 
   gap_le_connect_params_setup_connection(connection, param_watchdog_timer);
@@ -251,7 +251,7 @@ static bool prv_valid_conn_filter(ListNode *found_node, void *data) {
 }
 
 bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
-  return (list_find(&s_connections->node, prv_valid_conn_filter, (void *)conn) != NULL);
+  return (list_find((ListNode *)s_connections, prv_valid_conn_filter, (void *)conn) != NULL);
 }
 
 //! @note !!! To access the returned context bt_lock MUST be held!!!
@@ -278,7 +278,7 @@ GAPLEConnection *gap_le_connection_by_gatt_id(unsigned int connection_id) {
 //! @note !!! To access the returned context bt_lock MUST be held!!!
 GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter,
                                         void *data) {
-  return (GAPLEConnection *) list_find(&s_connections->node,
+  return (GAPLEConnection *) list_find((ListNode *)s_connections,
                                        (ListFilterCallback) filter,
                                        data);
 }

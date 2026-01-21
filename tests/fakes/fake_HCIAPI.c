@@ -3,13 +3,41 @@
 
 #include "fake_HCIAPI.h"
 
-#include "bluetopia_interface.h"
+#include "stubs_bluetopia_interface.h"
 
-#include "HCIAPI.h"
+#ifdef __has_include
+  #if __has_include("HCIAPI.h")
+    #include "HCIAPI.h"
+    #define HCIAPI_AVAILABLE
+  #endif
+#else
+  #ifdef COMPONENT_BTSTACK
+    #include "HCIAPI.h"
+    #define HCIAPI_AVAILABLE
+  #endif
+#endif
+
+#ifndef HCIAPI_AVAILABLE
+// Define the types we need if HCIAPI is not available
+typedef uint32_t Board_Status_t;
+typedef uint8_t Byte_t;
+typedef uint16_t Word_t;
+typedef uint8_t BD_ADDR_t[6];
+typedef uint8_t Random_Number_t[8];
+
+// Helper macros
+#define COMPARE_BD_ADDR(addr1, addr2) (memcmp(addr1, addr2, sizeof(BD_ADDR_t)) == 0)
+
+// Helper function to convert BT device address to BD_ADDR
+static inline BD_ADDR_t *BTDeviceAddressToBDADDR(const uint8_t *address) {
+  return (BD_ADDR_t *)address;
+}
+#endif
 
 #include "util/list.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
   ListNode node;

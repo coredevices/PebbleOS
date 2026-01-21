@@ -19,18 +19,42 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
-
-    container:
-      image: ghcr.io/pebble-dev/pebbleos-docker:v1
-
     strategy:
+      fail-fast: false
       matrix:
-        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
+        board:
+          - snowy_bb2
+          - silk_bb2
+          - spalding_bb2
+          - asterix
+          - obelix_dvt
+          - obelix_pvt
+        platform:
+          - name: docker
+            runs-on: ubuntu-24.04
+            container: ghcr.io/pebble-dev/pebbleos-docker:v1
+            safe_directory: /__w/PebbleOS/PebbleOS
+          - name: linux
+            runs-on: ubuntu-24.04
+            safe_directory: /__w/PebbleOS/PebbleOS
+          - name: macos
+            runs-on: macos-14
+            safe_directory: /Users/runner/work/PebbleOS/PebbleOS
+
+    name: build ${{ matrix.board }} ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.runs-on }}
+    container: ${{ matrix.platform.container }}
 
     steps:
       - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+        run: |
+          if [ "${{ matrix.platform.name }}" = "linux" ]; then
+            sudo git config --global --add safe.directory "${{ matrix.platform.safe_directory }}"
+          elif [ "${{ matrix.platform.name }}" = "macos" ]; then
+            git config --global --add safe.directory "${{ matrix.platform.safe_directory }}"
+          else
+            git config --global --add safe.directory "${{ matrix.platform.safe_directory }}"
+          fi
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,10 +62,67 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Install Python dependencies
+      - name: Setup cache directories
         run: |
-          pip install -U pip
-          pip install -r requirements.txt
+          mkdir -p ${{ runner.temp }}/cache/pip
+          mkdir -p ${{ runner.temp }}/cache/ccache
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.platform.name }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.platform.name }}-
+            ${{ runner.os }}-pip-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            .wafpickle-*
+          key: ${{ runner.os }}-waf-${{ matrix.board }}-${{ matrix.platform.name }}-${{ hashFiles('wscript', 'waftools/**', 'src/**.c', 'src/**.h', 'sdk/**.h') }}
+          restore-keys: |
+            ${{ runner.os }}-waf-${{ matrix.board }}-${{ matrix.platform.name }}-
+            ${{ runner.os }}-waf-${{ matrix.board }}-
+            ${{ runner.os }}-waf-
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/cache/ccache
+          key: ${{ runner.os }}-ccache-${{ matrix.board }}-${{ matrix.platform.name }}-${{ hashFiles('src/**', 'waftools/**') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ matrix.board }}-${{ matrix.platform.name }}-
+            ${{ runner.os }}-ccache-${{ matrix.board }}-
+            ${{ runner.os }}-ccache-
+
+      # Native Linux: Install ARM toolchain and dependencies
+      - name: Install dependencies (native Linux)
+        if: matrix.platform.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi ninja-build gettext gcc-multilib g++-multilib libc6-dev-i386 ccache
+          pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
+          pip install -r requirements.txt --cache-dir ${{ runner.temp }}/cache/pip
+
+      # macOS: Install ARM toolchain and dependencies
+      - name: Install dependencies (macOS)
+        if: matrix.platform.name == 'macos'
+        run: |
+          brew install gcc-arm-embedded ninja llvm ccache
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
+          pip install -r requirements.txt --cache-dir ${{ runner.temp }}/cache/pip
+
+      # Docker: Already has dependencies, just update pip
+      - name: Install Python dependencies (Docker)
+        if: matrix.platform.name == 'docker'
+        run: |
+          pip install -U pip --cache-dir ${{ runner.temp }}/cache/pip
+          pip install -r requirements.txt --cache-dir ${{ runner.temp }}/cache/pip
 
       - name: Get npm cache directory
         id: npm-cache-dir
@@ -57,37 +138,40 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }}
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          if [ "${{ matrix.platform.name }}" = "macos" ]; then
+            export DYLD_LIBRARY_PATH=/opt/homebrew/opt/llvm/lib:$DYLD_LIBRARY_PATH
+            source .venv/bin/activate
+            ./waf configure --board ${{ matrix.board }} --js-engine=none --relax_toolchain_restrictions
+          elif [ "${{ matrix.platform.name }}" = "linux" ]; then
+            ./waf configure --board ${{ matrix.board }} --js-engine=none
+          else
+            ./waf configure --board ${{ matrix.board }}
+          fi
 
       - name: Build
-        run: ./waf build
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/cache/ccache"
+          export CCACHE_MAXSIZE="5G"
+          if [ "${{ matrix.platform.name }}" = "macos" ]; then
+            source .venv/bin/activate
+          fi
+          ./waf build
 
       - name: Bundle
-        run: ./waf bundle
+        run: |
+          if [ "${{ matrix.platform.name }}" = "macos" ]; then
+            source .venv/bin/activate
+          fi
+          ./waf bundle
 
       - name: Store
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.board }}
+          name: firmware-${{ matrix.board }}-${{ matrix.platform.name }}
           path: |
             build/**/*.elf
             build/**/*.pbz
             build/src/fw/tintin_fw_loghash_dict.json
-
-      - name: Get Build ID
-        id: build_id
-        run: |
-          echo "BUILD_ID=$(arm-none-eabi-readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
-
-      - name: Upload log hash dictionary
-        uses: Noelware/s3-action@2.3.1
-        if: ${{ github.event_name == 'push' }}
-        with:
-          access-key-id: ${{ secrets.LOG_HASH_BUCKET_KEY_ID }}
-          secret-key: ${{ secrets.LOG_HASH_BUCKET_SECRET }}
-          endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
-          bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
-          files: |
-            build/src/fw/tintin_fw_loghash_dict.json
-          path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json
-
