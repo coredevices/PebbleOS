@@ -981,12 +981,11 @@ static void prv_handle_init(void) {
 }
 
 static void prv_handle_deinit(void) {
+  tick_timer_service_unsubscribe();
   music_request_reduced_latency(false);
 
   MusicAppData *data = app_state_get_user_data();
   i18n_free_all(data);
-
-  // we'll be cleaned up properly by the system
 }
 
 static void prv_main(void) {
