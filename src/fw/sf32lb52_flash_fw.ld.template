@@ -54,7 +54,6 @@ SECTIONS
         *memset*.*.o          (.text*)      
         *memcpy*.*.o          (.text*)
 
-        *lptim_systick.*.o    (.text* .rodata*)
         *freertos.*.o (.text* .rodata*)
 
 
