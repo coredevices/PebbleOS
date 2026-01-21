@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "kernel/core_dump.h"
 #include "kernel/logging_private.h"
 #include "process_management/process_manager.h"
 #include "process_management/app_manager.h"
@@ -15,6 +16,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
+#include "system/reboot_reason.h"
 #include "syscall/syscall.h"
 
 #include <util/heap.h>
@@ -140,6 +142,9 @@ static void setup_log_app_crash_info(CrashInfo crash_info) {
 static NORETURN kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
   RebootReason reason = { .code = reason_code, .extra = { .value = lr } };
   reboot_reason_set(&reason);
+  if (reason_code == RebootReasonCode_Assert) {
+    core_dump_reset(false /* is_forced */);
+  }
   reset_due_to_software_failure();
 }
 
