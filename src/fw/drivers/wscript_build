@@ -229,7 +229,6 @@ elif bld.is_obelix():
             'driver_rc10k',
             'driver_rng',
             'driver_rtc',
-            'driver_lptim_systick',
             'driver_task_watchdog',
             'driver_temperature',
             'driver_touch',
@@ -265,7 +264,6 @@ elif bld.is_getafix():
             'driver_rc10k',
             'driver_rng',
             'driver_rtc',
-            'driver_lptim_systick',
             'driver_task_watchdog',
             'driver_temperature',
             'driver_touch',
@@ -1676,20 +1674,6 @@ elif mcu_family == 'SF32LB52':
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
-            'hal_sifli',
-        ],
-    )
-
-if mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_lptim_systick',
-        source=[
-            'sf32lb52/lptim_systick.c',
-        ],
-        use=[
-            'fw_includes',
-            'freertos',
             'root_includes',
             'hal_sifli',
         ],
