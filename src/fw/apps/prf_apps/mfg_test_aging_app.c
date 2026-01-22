@@ -14,6 +14,7 @@
 #include "drivers/accel.h"
 #include "drivers/ambient_light.h"
 #include "drivers/audio.h"
+#include "drivers/battery.h"
 #include "drivers/led_controller.h"
 #include "drivers/mag.h"
 #include "drivers/vibe.h"
@@ -27,6 +28,10 @@
 
 #define STATUS_STRING_LEN 128
 #define TEST_DURATION_SEC 10
+
+// Battery temperature range (in millicelsius)
+#define TEMP_MIN_MC 15000  // 15.0C
+#define TEMP_MAX_MC 35000  // 35.0C
 
 #if CAPABILITY_HAS_SPEAKER
 static const int16_t sine_wave_4k[] = {
@@ -61,6 +66,7 @@ typedef enum {
 #endif
   TestState_ALS,
   TestState_Vibe,
+  TestState_Battery,
   NumTestStates
 } TestState;
 
@@ -84,6 +90,7 @@ typedef struct {
 
   bool running;
   bool menu_active;
+  bool test_failed;
 #if CAPABILITY_HAS_SPEAKER
   bool audio_playing;
 #endif
@@ -223,6 +230,27 @@ static void prv_test_vibe(AppData *data) {
   vibes_long_pulse();
 }
 
+static void prv_test_battery(AppData *data) {
+  BatteryConstants battery_const;
+  battery_get_constants(&battery_const);
+  const BatteryChargeState charge_state = battery_get_charge_state();
+
+  char time_str[16];
+  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
+
+  int8_t temp_c = (int8_t)(battery_const.t_mc / 1000);
+  uint8_t temp_c_frac = ((battery_const.t_mc > 0 ? battery_const.t_mc : -battery_const.t_mc) % 1000) / 10;
+  int32_t current_ma = battery_const.i_ua / 1000;
+
+  sniprintf(data->status_string, sizeof(data->status_string),
+            "BATTERY TEST\nCycle: %"PRIu32"\nTime: %s\n\n%"PRId32"mV %"PRId32"mA\n%" PRId8 ".%02" PRIu8 "C (%"PRIu8"%%)\nUSB:%s Charging:%s",
+            data->cycle_count, time_str, battery_const.v_mv, current_ma,
+            temp_c, temp_c_frac, charge_state.charge_percent,
+            charge_state.is_plugged ? "Y" : "N",
+            charge_state.is_charging ? "Y" : "N");
+  text_layer_set_text(&data->status, data->status_string);
+}
+
 static void prv_advance_test(AppData *data) {
   data->test_elapsed_sec = 0;
 
@@ -295,12 +323,26 @@ static void prv_advance_test(AppData *data) {
 
 static void prv_update_display(AppData *data) {
   if (!data->running) {
-    // Display the finished message
-    char time_str[16];
-    prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "FINISHED\n\nTotal Time: %s\nCycles: %"PRIu32,
-              time_str, data->cycle_count);
+    if (data->test_failed) {
+      // Display failure message with battery % and temperature
+      BatteryConstants battery_const;
+      battery_get_constants(&battery_const);
+      const BatteryChargeState charge_state = battery_get_charge_state();
+
+      int8_t temp_c = (int8_t)(battery_const.t_mc / 1000);
+      uint8_t temp_c_frac = ((battery_const.t_mc > 0 ? battery_const.t_mc : -battery_const.t_mc) % 1000) / 10;
+
+      sniprintf(data->status_string, sizeof(data->status_string),
+                "TEST FAIL\n\nBattery: %"PRIu8"%% %"PRId8".%02"PRIu8"C\nCheck conditions",
+                charge_state.charge_percent, temp_c, temp_c_frac);
+    } else {
+      // Display the finished message
+      char time_str[16];
+      prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
+      sniprintf(data->status_string, sizeof(data->status_string),
+                "FINISHED\n\nTotal Time: %s\nCycles: %"PRIu32,
+                time_str, data->cycle_count);
+    }
     text_layer_set_text(&data->status, data->status_string);
     return;
   }
@@ -345,6 +387,9 @@ static void prv_update_display(AppData *data) {
     case TestState_Vibe:
       prv_test_vibe(data);
       break;
+    case TestState_Battery:
+      prv_test_battery(data);
+      break;
     default:
       break;
   }
@@ -352,6 +397,41 @@ static void prv_update_display(AppData *data) {
 
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
+
+  // Continuous battery charge management (always active)
+  BatteryChargeState charge_state = battery_get_charge_state();
+  BatteryConstants battery_const;
+  battery_get_constants(&battery_const);
+
+  // Disable charging if temperature is out of range
+  if (battery_const.t_mc < TEMP_MIN_MC || battery_const.t_mc > TEMP_MAX_MC) {
+    battery_set_charge_enable(false);
+  } else if (charge_state.charge_percent < 70) {
+    battery_set_charge_enable(true);
+  } else if (charge_state.charge_percent > 75) {
+    battery_set_charge_enable(false);
+  }
+
+  // Check battery temperature during test
+  if (data->running) {
+    if (battery_const.t_mc < TEMP_MIN_MC || battery_const.t_mc > TEMP_MAX_MC) {
+      data->test_failed = true;
+      data->running = false;
+      tick_timer_service_unsubscribe();
+      prv_update_display(data);
+      return;
+    }
+
+    // Check if battery drops below 70% while not charging
+    charge_state = battery_get_charge_state();
+    if (charge_state.charge_percent < 70 && !charge_state.is_charging) {
+      data->test_failed = true;
+      data->running = false;
+      tick_timer_service_unsubscribe();
+      prv_update_display(data);
+      return;
+    }
+  }
 
   if (!data->running) {
     return;
@@ -513,6 +593,9 @@ static void prv_start_tests(TestDuration duration) {
   data->saved_backlight_color = led_controller_rgb_get_color();
 #endif
 
+  // Initialize battery charge management
+  battery_set_charge_enable(true);
+
   switch (duration) {
     case Duration_2Hours:
       data->max_duration_sec = 2 * 3600;
@@ -549,6 +632,7 @@ static void prv_handle_init(void) {
   *data = (AppData) {
     .running = false,
     .menu_active = true,
+    .test_failed = false,
 #if CAPABILITY_HAS_SPEAKER
     .audio_playing = false,
 #endif
@@ -604,6 +688,9 @@ static void prv_handle_deinit(void) {
   if (data->running) {
     tick_timer_service_unsubscribe();
   }
+
+  // Disable charging when app is closing
+  battery_set_charge_enable(false);
 }
 
 static void s_main(void) {
