@@ -172,14 +172,13 @@ static void prv_select_program_color(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_program_color_app_get_info());
 }
 
+static void prv_select_test_aging(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_aging_app_get_info());
+}
+
 static void prv_extras_select_discharge(int index, void *context) {
   // Launch app and mark to return to extras menu when it exits
   launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_discharge_app_get_info());
-}
-
-static void prv_extras_select_test_aging(int index, void *context) {
-  // Launch app and mark to return to extras menu when it exits
-  launcher_task_add_callback(prv_launch_app_from_extras_cb, (void*) mfg_test_aging_app_get_info());
 }
 
 #ifdef MANUFACTURING_FW
@@ -228,7 +227,6 @@ static void prv_extras_window_load(Window *window) {
     { .title = "Test HRM",          .callback = prv_select_hrm },
 #endif
     { .title = "Test Discharge",    .callback = prv_extras_select_discharge },
-    { .title = "Test Aging",        .callback = prv_extras_select_test_aging },
 #ifdef MANUFACTURING_FW
     { .title = "Load PRF",          .callback = prv_extras_select_load_prf },
 #endif
@@ -358,6 +356,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Test HRM CTR/L",          .callback = prv_select_hrm_ctr_leakage_obelix },
 #endif
     { .title = "Program Color",     .callback = prv_select_program_color },
+    { .title = "Test Aging",        .callback = prv_select_test_aging },
     { .title = "Test Charge",       .callback = prv_select_charge },
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
