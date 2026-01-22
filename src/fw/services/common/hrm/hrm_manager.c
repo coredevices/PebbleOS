@@ -369,6 +369,19 @@ static void prv_system_task_hrm_handler(void *context) {
   time_t utc_now = rtc_get_time();
 
   mutex_lock_recursive(s_manager_state.lock);
+
+  // Check if there's data available in the circular buffer before attempting to read
+  const uint16_t available_bytes =
+      circular_buffer_get_read_space_remaining(&s_manager_state.system_task_event_buffer);
+  if (available_bytes < sizeof(PebbleHRMEvent)) {
+    // No event available to read - this can happen if system task callbacks are queued
+    // without corresponding events, or during concurrent access.
+    PBL_LOG(LOG_LEVEL_WARNING, "HRM: system task handler called with no event in buffer "
+            "(available=%u, needed=%u)", available_bytes, sizeof(PebbleHRMEvent));
+    mutex_unlock_recursive(s_manager_state.lock);
+    return;
+  }
+
   PebbleHRMEvent event;
   prv_read_event_from_buffer_and_consume(&s_manager_state.system_task_event_buffer,  &event);
 
