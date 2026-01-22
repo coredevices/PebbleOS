@@ -17,7 +17,8 @@ jobs:
 
     strategy:
       matrix:
-        board: ["asterix"]
+        board:
+          - asterix
 
     steps:
       - name: Mark Github workspace as safe
@@ -87,7 +88,12 @@ jobs:
 
     strategy:
       matrix:
-        board: ["asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
+        board:
+          - asterix
+          - obelix_dvt
+          - obelix_pvt
+          - getafix_evt
+          - getafix_dvt
 
     steps:
       - name: Mark Github workspace as safe
@@ -169,8 +175,15 @@ jobs:
 
     strategy:
       matrix:
-        board: ["asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
-        slot: [0, 1]
+        board:
+          - asterix
+          - obelix_dvt
+          - obelix_pvt
+          - getafix_evt
+          - getafix_dvt
+        slot:
+          - 0
+          - 1
 
         exclude:
           - board: "asterix"
@@ -211,7 +224,7 @@ jobs:
       - name: Set slot suffix
         id: slot_suffix
         run: |
-          NEEDS_SUFFIX="obelix_dvt obelix_pvt getafix_evt"
+          NEEDS_SUFFIX="obelix_dvt obelix_pvt getafix_evt getafix_dvt"
 
           if echo $NEEDS_SUFFIX | grep -wq "${{ matrix.board }}"; then
             echo "SLOT_SUFFIX=_slot${{ matrix.slot }}" >> "$GITHUB_OUTPUT"
@@ -292,7 +305,7 @@ jobs:
 
       - name: Merge slot-specific pbz files
         run: |
-          NEEDS_MERGE="obelix_dvt obelix_pvt getafix_evt"
+          NEEDS_MERGE="obelix_dvt obelix_pvt getafix_evt getafix_dvt"
 
           mkdir artifacts-merged
           for board in $NEEDS_MERGE; do
