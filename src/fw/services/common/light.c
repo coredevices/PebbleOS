@@ -115,6 +115,12 @@ static uint16_t prv_backlight_get_intensity(void) {
     const uint32_t min_light_threshold = backlight_get_dynamic_min_threshold();
     const uint32_t max_light_threshold = backlight_get_dynamic_max_threshold();
     
+    // If user max intensity is below low intensity, clamp to low intensity
+    // to prevent underflow in the calculation below
+    if (user_max_intensity < low_intensity) {
+      user_max_intensity = low_intensity;
+    }
+
     // If below minimum threshold, return low intensity
     if (light_level < min_light_threshold) {
       return low_intensity;
