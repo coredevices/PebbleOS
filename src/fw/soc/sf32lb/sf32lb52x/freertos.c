@@ -139,6 +139,22 @@ static void prv_enter_deepslep(void) {
   prv_restore_iser();
 }
 
+static uint32_t prv_calc_elapsed_ticks(uint32_t gtimer_cyc) {
+  static uint16_t s_err_milli_ticks;
+  uint32_t elapsed_milli_ticks;
+  uint32_t elapsed_ticks;
+
+  elapsed_milli_ticks = rc10k_cyc_to_milli_ticks(gtimer_cyc);
+  elapsed_ticks = elapsed_milli_ticks / 1000U;
+  s_err_milli_ticks += (elapsed_milli_ticks % 1000U);
+  if (s_err_milli_ticks >= 1000U) {
+    elapsed_ticks++;
+    s_err_milli_ticks -= 1000U;
+  }
+
+  return elapsed_ticks;
+}
+
 void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
   if (!sleep_mode_is_allowed() || !ipc_queue_check_idle()) {
     return;
@@ -185,7 +201,8 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
           gtimer_delta = gtimer_stop - gtimer_start;
         }
 
-        elapsed_ticks = (gtimer_delta * RTC_TICKS_HZ) / rc10k_get_freq_hz();
+        elapsed_ticks = prv_calc_elapsed_ticks(gtimer_delta);
+
         vTaskStepTick(elapsed_ticks);
 
         prv_wdt_feed(elapsed_ticks);
@@ -262,6 +279,10 @@ void SysTick_Handler(void) {
   xPortSysTickHandler();
 
   prv_wdt_feed(1U);
+
+  // TODO(SF32LB52): we may need to handle tick loss compensation when using
+  // SysTick due to flash erase times (runs with IRQs disabled to not interfere
+  // with XIP, and can easily span multiple ticks)
 }
 
 void dump_current_runtime_stats(void) {}
