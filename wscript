@@ -57,6 +57,7 @@ RUNNERS = {
     'obelix_pvt': ['sftool'],
     'obelix_bb2': ['sftool'],
     'getafix_evt': ['sftool'],
+    'getafix_dvt': ['sftool'],
 }
 
 def truncate(msg):
@@ -123,6 +124,7 @@ def options(opt):
                              'obelix_pvt',
                              'obelix_bb2',
                              'getafix_evt',
+                             'getafix_dvt',
                             ],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
