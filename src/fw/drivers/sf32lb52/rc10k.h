@@ -11,3 +11,10 @@ void rc10k_init(void);
  * @retval Frequency in Hz.
  */
 uint32_t rc10k_get_freq_hz(void);
+
+/**
+ * @brief Convert RC10K cycles to milli-ticks
+ * @param rc10k_cyc Number of RC10K cycles.
+ * @retval Corresponding milli-ticks.
+ */
+uint32_t rc10k_cyc_to_milli_ticks(uint32_t rc10k_cyc);
