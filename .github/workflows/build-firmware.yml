@@ -26,7 +26,15 @@ jobs:
 
     strategy:
       matrix:
-        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
+        board:
+          - snowy_bb2
+          - spalding_bb2
+          - silk_bb2
+          - asterix
+          - obelix_dvt
+          - obelix_pvt
+          - getafix_evt
+          - getafix_dvt
 
     steps:
       - name: Mark Github workspace as safe
