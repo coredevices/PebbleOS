@@ -9,6 +9,7 @@
 #include "drivers/gpio.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
+#include "kernel/pebble_tasks.h"
 #include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
@@ -17,6 +18,7 @@
 
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "task.h"
 
 #include "bf0_hal.h"
 #include "bf0_hal_lcdc.h"
@@ -131,6 +133,10 @@ static void prv_display_update_start(void) {
 }
 
 static void prv_display_update_terminate(void *data) {
+  TaskHandle_t app_task = xTaskGetCurrentTaskHandle();
+  UBaseType_t original_priority = uxTaskPriorityGet(app_task);
+  uint16_t rows_since_yield = 0;
+
   // Convert the updated region back from 332 to 222 format
   for (uint16_t y = s_update_y0; y <= s_update_y1; y++) {
     uint8_t *row = &s_framebuffer[y * PBL_DISPLAY_WIDTH];
@@ -153,6 +159,16 @@ static void prv_display_update_terminate(void *data) {
       row32[x] = ((p >> 2) & 0x30303030) |  // R: bits 6-7 → 4-5
                  ((p >> 1) & 0x0C0C0C0C) |  // G: bits 3-4 → 2-3
                  (p & 0x03030303);          // B: bits 0-1 stay
+    }
+
+    // Periodically yield to system task to allow I2C to run
+    // Briefly lower priority, yield, then restore
+    rows_since_yield++;
+    if (rows_since_yield >= 32) {
+      vTaskPrioritySet(app_task, tskIDLE_PRIORITY + 1);
+      taskYIELD();
+      vTaskPrioritySet(app_task, original_priority);
+      rows_since_yield = 0;
     }
   }
 
@@ -270,11 +286,14 @@ bool display_update_in_progress(void) {
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  DisplayJDIState *state = DISPLAY->state;
   DisplayRow row;
   bool first_row = true;
+  uint16_t rows_since_yield = 0;
 
   PBL_ASSERTN(!s_updating);
+
+  TaskHandle_t app_task = xTaskGetCurrentTaskHandle();
+  UBaseType_t original_priority = uxTaskPriorityGet(app_task);
 
   // Convert rows in-place from 222 to 332 format
   // We use the compositor's framebuffer directly to save RAM
@@ -307,6 +326,16 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
       row_data[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
     }
 #endif
+
+    // Periodically yield to system task to allow I2C to run
+    // Briefly lower priority, yield, then restore
+    rows_since_yield++;
+    if (rows_since_yield >= 32) {
+      vTaskPrioritySet(app_task, tskIDLE_PRIORITY + 1);
+      taskYIELD();
+      vTaskPrioritySet(app_task, original_priority);
+      rows_since_yield = 0;
+    }
   }
 
   if (first_row) {
