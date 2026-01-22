@@ -36,6 +36,16 @@ static const uint32_t MAX_DEEPSLEEP_TICKS = RTC_TICKS_HZ;
 
 static uint32_t s_iser_bak[16];
 
+static void prv_wdt_feed(uint16_t elapsed_ticks) {
+  static uint32_t wdt_feed_ticks;
+
+  wdt_feed_ticks += elapsed_ticks;
+  if (wdt_feed_ticks >= (RTC_TICKS_HZ / (1000 / TASK_WATCHDOG_FEED_PERIOD_MS))) {
+    wdt_feed_ticks = 0U;
+    task_watchdog_feed();
+  }
+}
+
 static void prv_save_iser(void) {
   uint32_t i;
   for (i = 0; i < 16; i++) {
@@ -178,12 +188,7 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
         elapsed_ticks = (gtimer_delta * RTC_TICKS_HZ) / rc10k_get_freq_hz();
         vTaskStepTick(elapsed_ticks);
 
-        // Update the task watchdog every time we come out of STOP mode (which is
-        // at least once/second) since the timer peripheral will not have been
-        // incremented. Set all watchdog bits first since the LPTIM ISR that would
-        // normally do this hasn't run yet (interrupts are still globally disabled).
-        task_watchdog_bit_set_all();
-        task_watchdog_step_elapsed_time_ms((elapsed_ticks * 1000) / RTC_TICKS_HZ);
+        prv_wdt_feed(elapsed_ticks);
 
         // stop LPTIM
         HAL_LPTIM_Counter_Stop_IT(&s_lptim);
@@ -250,6 +255,13 @@ void AON_IRQHandler(void)
     status = HAL_HPAON_GET_WSR();
     status &= ~HPSYS_AON_WSR_PIN_ALL;
     HAL_HPAON_CLEAR_WSR(status);
+}
+
+void SysTick_Handler(void) {
+  extern void xPortSysTickHandler(void);
+  xPortSysTickHandler();
+
+  prv_wdt_feed(1U);
 }
 
 void dump_current_runtime_stats(void) {}

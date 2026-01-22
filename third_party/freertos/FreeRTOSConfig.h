@@ -155,7 +155,11 @@ NVIC value of 255. */
 #define configLIBRARY_KERNEL_INTERRUPT_PRIORITY 15
 
 
+#if MICRO_FAMILY_SF32LB52
+#define xPortSysTickHandler RTOS_SysTick_Handler
+#else
 #define xPortSysTickHandler SysTick_Handler
+#endif
 #define xPortPendSVHandler  PendSV_Handler
 #define vPortSVCHandler     SVC_Handler
 
