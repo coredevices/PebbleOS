@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "drivers/rtc.h"
 #include "services/common/new_timer/new_timer.h"
 #include "system/passert.h"
 
 #include "bf0_hal.h"
 
-#define RC10K_DEFAULT_FREQ_HZ 9700UL
+#define RC10K_DEFAULT_FREQ_HZ 10000UL
 #define RC10K_CAL_PERIOD_MS 15000U
 
 static TimerID s_rc10k_cal_timer;
@@ -30,12 +31,23 @@ void rc10k_init(void) {
 }
 
 uint32_t rc10k_get_freq_hz(void) {
-  uint32_t cycle;
+  uint32_t hxt48_cyc;
   
-  cycle = HAL_RC_CAL_get_average_cycle_on_48M();
-  if (cycle == 0UL) {
+  hxt48_cyc = HAL_RC_CAL_get_average_cycle_on_48M();
+  if (hxt48_cyc == 0UL) {
     return RC10K_DEFAULT_FREQ_HZ;
   } else {
-    return (48000000ULL * HAL_RC_CAL_GetLPCycle()) / cycle;
+    return (48000000ULL * HAL_RC_CAL_GetLPCycle()) / hxt48_cyc;
+  }
+}
+
+uint32_t rc10k_cyc_to_milli_ticks(uint32_t rc10k_cyc) {
+  uint32_t hxt48_cyc;
+
+  hxt48_cyc = HAL_RC_CAL_get_average_cycle_on_48M();
+  if (hxt48_cyc == 0UL) {
+    return (1000ULL * RTC_TICKS_HZ * rc10k_cyc) / RC10K_DEFAULT_FREQ_HZ;
+  } else {
+    return (1000ULL * RTC_TICKS_HZ * rc10k_cyc * hxt48_cyc) / (48000000ULL * HAL_RC_CAL_GetLPCycle());
   }
 }
