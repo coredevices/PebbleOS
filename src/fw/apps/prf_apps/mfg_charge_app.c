@@ -110,12 +110,18 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
                 data->seconds_remaining);
       }
 
+      if (temp_mc < TEMP_MIN_MC || temp_mc > TEMP_MAX_MC) {
+        next_state = ChargeStateFail;
+        data->countdown_running = false;
+        battery_set_charge_enable(false);
+        break;
+      }
+
       if (charge_state.charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {
         // go slow for a bit
         battery_set_fast_charge(false);
         data->fastcharge_enabled = false;
-      } else if (charge_state.charge_percent > PASS_BATTERY_PERCENTAGE &&
-                 temp_mc >= TEMP_MIN_MC && temp_mc <= TEMP_MAX_MC) {
+      } else if (charge_state.charge_percent > PASS_BATTERY_PERCENTAGE) {
         // The reading can be a bit shaky in the short term (i.e. a flaky USB connection), or we
         // just started charging. Make sure we have settled before transitioning into the
         // ChargeStatePass state
