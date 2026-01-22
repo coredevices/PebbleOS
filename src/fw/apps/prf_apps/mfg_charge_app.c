@@ -34,18 +34,21 @@ static const char* status_text[] = {
 #ifdef PLATFORM_TINTIN
 static const int SLOW_THRESHOLD_PERCENTAGE = 42; // ~3850mv
 static const int PASS_BATTERY_PERCENTAGE = 84; // ~4050mv
+static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
 
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
 #elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
 static const int SLOW_THRESHOLD_PERCENTAGE = 0;
 static const int PASS_BATTERY_PERCENTAGE = 70;
+static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
 
 static const int TEMP_MIN_MC = 15000; // 15.0C
 static const int TEMP_MAX_MC = 35000; // 35.0C
 #else
 static const int SLOW_THRESHOLD_PERCENTAGE = 0; // Always go "slow" on snowy
 static const int PASS_BATTERY_PERCENTAGE = 60; // ~4190mv
+static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
 
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
@@ -81,6 +84,12 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
   switch (data->test_state) {
     case ChargeStateStart:
+      if (charge_state.charge_percent > MAX_START_BATTERY_PERCENTAGE) {
+        next_state = ChargeStateFail;
+        data->countdown_running = false;
+        battery_set_charge_enable(false);
+        break;
+      }
       if (charge_state.is_plugged && charge_state.is_charging) {
         next_state = ChargeStateRunning;
       } else {
