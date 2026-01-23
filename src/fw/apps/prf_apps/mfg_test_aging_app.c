@@ -91,6 +91,7 @@ typedef struct {
   bool running;
   bool menu_active;
   bool test_failed;
+  bool charging_enabled;
 #if CAPABILITY_HAS_SPEAKER
   bool audio_playing;
 #endif
@@ -401,30 +402,24 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   // Continuous battery charge management (always active)
   BatteryChargeState charge_state = battery_get_charge_state();
   BatteryConstants battery_const;
+
   battery_get_constants(&battery_const);
 
-  // Disable charging if temperature is out of range
-  if (battery_const.t_mc < TEMP_MIN_MC || battery_const.t_mc > TEMP_MAX_MC) {
+  // Disable charging if temperature is out of range or battery >75%
+  if ((battery_const.t_mc < TEMP_MIN_MC) || (battery_const.t_mc > TEMP_MAX_MC) ||
+      (charge_state.charge_percent > 75)) {
     battery_set_charge_enable(false);
-  } else if (charge_state.charge_percent < 70) {
+    data->charging_enabled = false;
+  } else if (charge_state.charge_percent < 70 && !data->charging_enabled) {
     battery_set_charge_enable(true);
-  } else if (charge_state.charge_percent > 75) {
-    battery_set_charge_enable(false);
+    data->charging_enabled = true;
   }
 
-  // Check battery temperature during test
+  // Check battery temperature and charge status during test
   if (data->running) {
-    if (battery_const.t_mc < TEMP_MIN_MC || battery_const.t_mc > TEMP_MAX_MC) {
-      data->test_failed = true;
-      data->running = false;
-      tick_timer_service_unsubscribe();
-      prv_update_display(data);
-      return;
-    }
-
-    // Check if battery drops below 70% while not charging
-    charge_state = battery_get_charge_state();
-    if (charge_state.charge_percent < 70 && !charge_state.is_charging) {
+    if ((battery_const.t_mc < TEMP_MIN_MC) || (battery_const.t_mc > TEMP_MAX_MC) ||
+        ((charge_state.charge_percent < 70) &&
+         !battery_charge_controller_thinks_we_are_charging())) {
       data->test_failed = true;
       data->running = false;
       tick_timer_service_unsubscribe();
@@ -593,8 +588,8 @@ static void prv_start_tests(TestDuration duration) {
   data->saved_backlight_color = led_controller_rgb_get_color();
 #endif
 
-  // Initialize battery charge management
   battery_set_charge_enable(true);
+  data->charging_enabled = true;
 
   switch (duration) {
     case Duration_2Hours:
@@ -633,6 +628,7 @@ static void prv_handle_init(void) {
     .running = false,
     .menu_active = true,
     .test_failed = false,
+    .charging_enabled = false,
 #if CAPABILITY_HAS_SPEAKER
     .audio_playing = false,
 #endif
@@ -690,7 +686,9 @@ static void prv_handle_deinit(void) {
   }
 
   // Disable charging when app is closing
-  battery_set_charge_enable(false);
+  if (data->charging_enabled) {
+    battery_set_charge_enable(false);
+  }
 }
 
 static void s_main(void) {
