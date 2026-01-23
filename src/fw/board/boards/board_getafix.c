@@ -348,6 +348,7 @@ static const TouchSensor s_touch_cst816 = {
     .reset = {
         .gpio = hwp_gpio1,
         .gpio_pin = 28,
+        .active_high = false,
     },
     .max_x = 260,
     .max_y = 260,
