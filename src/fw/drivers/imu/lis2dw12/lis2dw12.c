@@ -66,6 +66,8 @@ static uint32_t s_interrupt_count = 0;
 static uint32_t s_wake_event_count = 0;
 static uint32_t s_double_tap_event_count = 0;
 
+static bool s_rotated_180 = false;
+
 typedef enum {
   X_AXIS = 0,
   Y_AXIS = 1,
@@ -170,8 +172,10 @@ static uint8_t prv_lis2dw12_read_sample(AccelDriverSample *data) {
     return -1;
   }
 
-  data->x = prv_get_axis_projection_mg(X_AXIS, accel_raw);
-  data->y = prv_get_axis_projection_mg(Y_AXIS, accel_raw);
+  data->x = s_rotated_180 ? prv_get_axis_projection_mg(X_AXIS, accel_raw) * -1
+                          : prv_get_axis_projection_mg(X_AXIS, accel_raw);
+  data->y = s_rotated_180 ? prv_get_axis_projection_mg(Y_AXIS, accel_raw) * -1
+                          : prv_get_axis_projection_mg(Y_AXIS, accel_raw);
   data->z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
   data->timestamp_us = prv_get_timestamp_ms() * 1000;
 
@@ -907,4 +911,8 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
 bool accel_run_selftest(void) {
   //TODO: implement selftest function
   return true;
+}
+
+void imu_set_rotated(bool rotated) {
+  s_rotated_180 = rotated;
 }
