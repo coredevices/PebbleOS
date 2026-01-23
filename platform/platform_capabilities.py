@@ -54,6 +54,7 @@ master_capability_set = {
     'HAS_ACCEL_SENSITIVITY',
     'HAS_APP_SCALING',
     'HAS_FPGA_DISPLAY',
+    'HAS_ORIENTATION_MANAGER',
 }
 
 board_capability_dicts = [
@@ -362,6 +363,7 @@ board_capability_dicts = [
             'HAS_PMIC',
             'HAS_FLASH_OTP',
             'HAS_ACCEL_SENSITIVITY',
+            'HAS_ORIENTATION_MANAGER',
         },
     },
     {
@@ -392,7 +394,8 @@ board_capability_dicts = [
             'HAS_COLOR_BACKLIGHT',
             'HAS_SPEAKER',
             'HAS_ACCEL_SENSITIVITY',
-            'HAS_APP_SCALING'
+            'HAS_APP_SCALING',
+            'HAS_ORIENTATION_MANAGER'
         },
     },
     {
@@ -419,7 +422,8 @@ board_capability_dicts = [
             'HAS_MAGNETOMETER',
             'HAS_PBLBOOT',
             'HAS_ACCEL_SENSITIVITY',
-            'HAS_APP_SCALING'
+            'HAS_APP_SCALING',
+            'HAS_ORIENTATION_MANAGER'
         },
     },
 ]
