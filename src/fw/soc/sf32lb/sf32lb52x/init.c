@@ -21,6 +21,9 @@ void soc_early_init(void) {
   bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
   HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
 
+  // Disable default PA21 pull-down, causing leakage
+  HAL_PIN_Set(PAD_PA21, GPIO_A21, PIN_NOPULL, 1);
+
   if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
     HAL_HPAON_EnableXT48();
     HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HXT48);
