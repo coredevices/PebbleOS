@@ -45,6 +45,10 @@ void mic_init(const MicDevice *this) {
     return;
   }
 
+#if PDM_POWER_NPM1300_LDO2
+  (void)NPM1300_OPS.ldo2_set_enabled(false);
+#endif
+
   // Create mutex for thread safety
   state->mutex = mutex_create_recursive();
   PBL_ASSERTN(state->mutex);
