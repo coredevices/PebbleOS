@@ -23,7 +23,7 @@
 #include "services/common/accel_manager.h"
 #include "services/common/hrm/hrm_manager.h"
 #include "services/common/i18n/i18n.h"
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 #include "services/normal/orientation_manager.h"
 #endif
 #include "services/normal/bluetooth/ble_hrm.h"
@@ -85,7 +85,7 @@ static uint32_t s_dynamic_backlight_min_threshold = 0; // default set from board
 static uint32_t s_dynamic_backlight_max_threshold = 0; // default set from board config in shell_prefs_init()
 #endif
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 #define PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED "displayOrientationLeftHanded"
 static bool s_display_orientation_left = false;
 #endif 
@@ -367,7 +367,7 @@ static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
   return true;
 }
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 static bool prv_set_s_display_orientation_left(bool *left) {
   s_display_orientation_left = *left;
   orientation_handle_prefs_changed();
@@ -1150,7 +1150,7 @@ void backlight_set_dynamic_max_threshold(uint32_t threshold) {
 }
 #endif
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 bool display_orientation_is_left(void) {
   return s_display_orientation_left;
 }
