@@ -527,7 +527,7 @@ static HRMDevice s_hrm = {
 HRMDevice * const HRM = &s_hrm;
 
 const BoardConfigActuator BOARD_CONFIG_VIBE = {
-    .ctl = {hwp_gpio1, 1, true},
+    .ctl = {hwp_gpio1, 1, false},
 };
 
 // TODO(OBELIX): Adjust to final battery parameters

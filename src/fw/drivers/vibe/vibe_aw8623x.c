@@ -82,9 +82,9 @@ void vibe_init(void) {
 
   gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
 
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
-  psleep(AW8623X_PWR_OFF_TIME_MS);
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
+  psleep(AW8623X_PWR_OFF_TIME_MS);
+  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
   psleep(AW8623X_PWR_ON_TIME_MS);
 
   // Verify chip ID

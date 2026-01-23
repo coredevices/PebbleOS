@@ -424,7 +424,7 @@ static const I2CSlavePort s_i2c_aw8623x = {
 I2CSlavePort *const I2C_AW8623X = &s_i2c_aw8623x;
 
 const BoardConfigActuator BOARD_CONFIG_VIBE = {
-    .ctl = {hwp_gpio1, 20, true},
+    .ctl = {hwp_gpio1, 20, false},
 };
 
 const Npm1300Config NPM1300_CONFIG = {

@@ -150,9 +150,9 @@ static int prv_f0_detection(void)
 void vibe_init(void) {
   gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
 
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
-  psleep(AW862XX_PWR_OFF_TIME);
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
+  psleep(AW862XX_PWR_OFF_TIME);
+  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
   psleep(AW862XX_PWR_ON_TIME);
 
   uint8_t chip_id;
