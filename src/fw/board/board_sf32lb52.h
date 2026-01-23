@@ -155,7 +155,7 @@ typedef struct {
   //! Percentage for watch only mode
   const uint8_t low_power_threshold;
   //! Approximate hours of battery life
-  const uint8_t battery_capacity_hours;
+  const uint16_t battery_capacity_hours;
 } BoardConfigPower;
 
 typedef enum {
