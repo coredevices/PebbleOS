@@ -139,7 +139,7 @@ LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void);
 void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode);
 #endif
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 bool display_orientation_is_left(void);
 void display_orientation_set_left(bool left);
 #endif
