@@ -101,7 +101,6 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
 static void prv_start_playback() {
   AppData *app_data = app_state_get_user_data();
 
-  audio_init(AUDIO);
   audio_set_volume(AUDIO, 100);
   audio_start(AUDIO, prv_audio_trans_handler);
   app_data->audio_playing = true;
