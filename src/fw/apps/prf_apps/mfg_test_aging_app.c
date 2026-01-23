@@ -199,7 +199,6 @@ static void prv_test_audio(AppData *data) {
 
   // Start audio playback if not already playing
   if (!data->audio_playing) {
-    audio_init(AUDIO);
     audio_start(AUDIO, prv_audio_trans_handler);
     audio_set_volume(AUDIO, 100);
     data->audio_playing = true;

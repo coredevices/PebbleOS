@@ -31,7 +31,6 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
 }
 
 static void prv_play_audio(void) {
-  audio_init(AUDIO);
   audio_start(AUDIO, prv_audio_trans_handler);
   audio_set_volume(AUDIO, 100);
 }
