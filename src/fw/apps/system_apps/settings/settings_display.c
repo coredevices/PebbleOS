@@ -88,7 +88,7 @@ static void prv_intensity_menu_push(SettingsDisplayData *data) {
       true /* icons_enabled */, s_intensity_labels, data);
 }
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 // Orientation Settings
 /////////////////////////////
 static const char *s_display_orientation_labels[] = {
@@ -193,7 +193,7 @@ static void prv_legacy_app_mode_menu_push(SettingsDisplayData *data) {
 
 enum SettingsDisplayItem {
   SettingsDisplayLanguage,
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
   SettingsDisplayOrientation,
 #endif
   SettingsDisplayBacklightMode,
@@ -235,7 +235,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case SettingsDisplayLanguage:
       shell_prefs_toggle_language_english();
       break;
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
     case SettingsDisplayOrientation:
       prv_display_orientation_menu_push(data);
       break;
@@ -288,7 +288,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Language");
       subtitle = i18n_get_lang_name();
       break;
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
     case SettingsDisplayOrientation:
       title = i18n_noop("Orientation");
       subtitle = s_display_orientation_labels[prv_display_orientation_get_selection_index()];
