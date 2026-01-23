@@ -6,3 +6,5 @@
 extern void lis2dw12_init(void);
 extern void lis2dw12_power_up(void);
 extern void lis2dw12_power_down(void);
+
+void imu_set_rotated(bool rotated);
