@@ -193,9 +193,9 @@ static void cst816_hw_reset(void) {
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 1);
   psleep(CST816_POR_DELAY_TIME);
 #else
-  gpio_output_set(&CST816->reset, false);
-  psleep(CST816_RESET_CYCLE_TIME);
   gpio_output_set(&CST816->reset, true);
+  psleep(CST816_RESET_CYCLE_TIME);
+  gpio_output_set(&CST816->reset, false);
   psleep(CST816_POR_DELAY_TIME);
 #endif
 }
