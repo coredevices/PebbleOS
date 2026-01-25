@@ -4,14 +4,16 @@
 #pragma once
 
 #include "util/math.h"
+#include "board/display.h"
 
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+// Use display height to determine launcher cell height: larger displays use taller cells
+#if PBL_DISPLAY_HEIGHT >= 200
 #define LAUNCHER_MENU_LAYER_CELL_RECT_CELL_HEIGHT (53)
 #else
 #define LAUNCHER_MENU_LAYER_CELL_RECT_CELL_HEIGHT (42)
 #endif
 
-#if PLATFORM_GETAFIX
+#if PBL_ROUND && PBL_DISPLAY_HEIGHT >= 200
 #define LAUNCHER_MENU_LAYER_CELL_ROUND_FOCUSED_CELL_HEIGHT (55)
 #define LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT (45)
 #else
@@ -19,7 +21,7 @@
 #define LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT (38)
 #endif
 
-#if PLATFORM_GETAFIX
+#if PBL_ROUND && PBL_DISPLAY_HEIGHT >= 200
 //! Two "unfocused" cells above and below one centered "focused" cell (5 total for larger display)
 #define LAUNCHER_MENU_LAYER_NUM_UNFOCUSED_ROWS_PER_SIDE (2)
 #define LAUNCHER_MENU_LAYER_NUM_VISIBLE_ROWS (5)

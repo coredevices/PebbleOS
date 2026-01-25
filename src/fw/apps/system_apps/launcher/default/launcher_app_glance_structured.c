@@ -16,8 +16,10 @@
 #include "util/attributes.h"
 #include "util/string.h"
 #include "util/struct.h"
+#include "board/display.h"
 
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+// Use display height to determine icon margins: larger displays use more margin
+#if PBL_DISPLAY_HEIGHT >= 200
 #define LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN (9)
 #else
 #define LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN (5)
@@ -347,7 +349,7 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   // We require a valid title node
   PBL_ASSERTN(title_node);
   // Push the title node a little up or down to match the relevant design spec
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
   title_node->offset.y += 1;
 #else
   title_node->offset.y -= 1;
@@ -423,8 +425,7 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
   }
 
   GRect glance_frame = (GRect) { .origin = offset, .size = structured_glance->glance.size };
-#if PLATFORM_GETAFIX
-  // Create arc effect following the circular display edge
+#if PBL_ROUND && PBL_DISPLAY_HEIGHT >= 200
   // For a circle: x = R - sqrt(R^2 - (y - R)^2), where R = display_size / 2
   const int16_t radius = PBL_DISPLAY_HEIGHT / 2;
 
@@ -442,7 +443,7 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
   // Extra 2px shift for non-center rows to push content slightly more inward
   const int16_t base_inset = 10;
   const int16_t horizontal_inset = base_inset + circle_inset;
-#elif PLATFORM_ROBERT || PLATFORM_OBELIX
+#elif PBL_DISPLAY_HEIGHT >= 200 && PBL_RECT
   const int16_t horizontal_inset = 10;
 #else
   const int16_t horizontal_inset = PBL_IF_RECT_ELSE(6, 23);
