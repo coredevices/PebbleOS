@@ -166,7 +166,7 @@ static bool prv_is_upscaled_app(void) {
   if (app_framebuffer_size.h == DISP_ROWS) {
     return false;  // Native app, not upscaled
   }
-#if (PLATFORM_OBELIX || PLATFORM_GETAFIX) && !RECOVERY_FW
+#if CAPABILITY_HAS_APP_SCALING && !RECOVERY_FW
   // On platforms that support scaling mode, check the preference
   return shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling;
 #else
