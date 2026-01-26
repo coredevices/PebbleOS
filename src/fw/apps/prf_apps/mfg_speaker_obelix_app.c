@@ -7,6 +7,7 @@
 #include "applib/ui/window.h"
 #include "kernel/pbl_malloc.h"
 #include "board/board.h"
+#include "drivers/pmic/npm1300.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 #include "drivers/audio.h"
@@ -55,10 +56,14 @@ static void prv_handle_init(void) {
 }
 
 static void s_main(void) {
+    // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
+  (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
   prv_handle_init();
   prv_play_audio();
   app_event_loop();
   audio_stop(AUDIO);
+    // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
+  (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
 }
 
 const PebbleProcessMd *mfg_speaker_obelix_app_get_info(void) {
