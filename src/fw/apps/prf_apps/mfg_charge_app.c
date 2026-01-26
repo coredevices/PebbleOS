@@ -35,13 +35,17 @@ static const char* status_text[] = {
 static const int SLOW_THRESHOLD_PERCENTAGE = 42; // ~3850mv
 static const int PASS_BATTERY_PERCENTAGE = 84; // ~4050mv
 static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
+static const int KEEP_CHARGE_MAX_PERCENTAGE = 75; // Disable charging when above this
+static const int KEEP_CHARGE_MIN_PERCENTAGE = 70; // Re-enable charging when below this
 
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
 #elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
 static const int SLOW_THRESHOLD_PERCENTAGE = 0;
-static const int PASS_BATTERY_PERCENTAGE = 70;
+static const int PASS_BATTERY_PERCENTAGE = 75;
 static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
+static const int KEEP_CHARGE_MAX_PERCENTAGE = 75; // Disable charging when above this
+static const int KEEP_CHARGE_MIN_PERCENTAGE = 70; // Re-enable charging when below this
 
 static const int TEMP_MIN_MC = 15000; // 15.0C
 static const int TEMP_MAX_MC = 35000; // 35.0C
@@ -49,6 +53,8 @@ static const int TEMP_MAX_MC = 35000; // 35.0C
 static const int SLOW_THRESHOLD_PERCENTAGE = 0; // Always go "slow" on snowy
 static const int PASS_BATTERY_PERCENTAGE = 60; // ~4190mv
 static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
+static const int KEEP_CHARGE_MAX_PERCENTAGE = 75; // Disable charging when above this
+static const int KEEP_CHARGE_MIN_PERCENTAGE = 70; // Re-enable charging when below this
 
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
@@ -157,6 +163,13 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       }
       break;
     case ChargeStatePass:
+      // Maintain charge between KEEP_CHARGE_MIN and KEEP_CHARGE_MAX after test passes
+      if (charge_state.charge_percent > KEEP_CHARGE_MAX_PERCENTAGE) {
+        battery_set_charge_enable(false);
+      } else if (charge_state.charge_percent < KEEP_CHARGE_MIN_PERCENTAGE) {
+        battery_set_charge_enable(true);
+      }
+      break;
     case ChargeStateFail:
     default:
       break;
