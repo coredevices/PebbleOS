@@ -13,6 +13,7 @@
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 #include "drivers/audio.h"
+#include "drivers/pmic/npm1300.h"
 #include "flash_region/flash_region.h"
 #include "drivers/flash.h"
 #include "applib/ui/window_private.h"
@@ -188,6 +189,9 @@ static void prv_handle_init(void) {
 
   app_window_stack_push(window, true /* Animated */);
   app_timer_register(500, prv_timer_callback, NULL);
+
+  // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
+  (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
 }
 
 static void prv_handler_deinit(void) {
@@ -198,6 +202,9 @@ static void prv_handler_deinit(void) {
   if (data->audio_playing) {
     audio_stop(AUDIO);
   }
+
+  // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
+  (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
 }
 
 static void s_main(void) {
