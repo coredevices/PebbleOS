@@ -343,6 +343,7 @@ void audec_start(AudioDevice* audio_device, AudioTransCB cb) {
     prv_allocate_buffers(state);
 
     prv_bf0_audio_pll_config(audio_device, &codec_dac_clk_config[haudcodec->Init.samplerate_index]);
+    HAL_AUDCODEC_Config_TChanel(haudcodec, 0, &haudcodec->Init.dac_cfg);
     HAL_NVIC_SetPriority(audio_device->audec_dma_irq, audio_device->irq_priority, 0);
     HAL_AUDCODEC_Transmit_DMA(haudcodec, haudcodec->buf[HAL_AUDCODEC_DAC_CH0], haudcodec->bufSize, HAL_AUDCODEC_DAC_CH0);
     HAL_NVIC_EnableIRQ(audio_device->audec_dma_irq);
