@@ -384,9 +384,14 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent* e) {
           set_time_info->dst_changed ||
           ABS(set_time_info->utc_time_delta) > 15) {
         alarm_handle_clock_change();
-        wakeup_handle_clock_change();
         cron_service_handle_clock_change(set_time_info);
       }
+
+      // Always reschedule wakeup timers on any time change to prevent timers from
+      // firing early/late. Wakeup timers use tick-based relative scheduling, so even
+      // small time changes (or time resets from crashes) can cause significant skew.
+      // This is critical for app wakeup events that must fire at precise times.
+      wakeup_handle_clock_change();
 
       // TODO: evaluate if these need to change on every time update
       do_not_disturb_handle_clock_change();
