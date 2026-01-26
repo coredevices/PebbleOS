@@ -25,6 +25,7 @@
 #define ADC_POLL_DELAY_MS   5     // Delay between ADC poll iterations to reduce I2C traffic
 #define ADC_POLL_TIMEOUT_MS 100   // Max time to wait for ADC measurement
 static TimerID s_debounce_charger_timer = TIMER_INVALID_ID;
+static uint32_t s_dischg_limit_ma;
 
 typedef enum {
   PmicRegisters_MAIN_EVENTSADCCLR = 0x0003,
@@ -155,6 +156,7 @@ typedef enum {
 #define NPM1300_ADC_MSB_SHIFT 2U
 #define NPM1300_VBUS_CURRENT_DIVISOR 100U
 
+static bool dischg_limit_ma_set(uint32_t dischg_limit_ma);
 
 void battery_init(void) {
 }
@@ -336,20 +338,7 @@ bool pmic_init(void) {
   val = (NPM1300_CONFIG.chg_current_ma / 2U) % 2U;
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETLSB, val);
 
-  if (NPM1300_CONFIG.dischg_limit_ma == 200) {
-    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
-                             NPM1300_BCHGISETDISCHARGEMSB_200MA);
-    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
-                             NPM1300_BCHGISETDISCHARGELSB_200MA);
-  } else if (NPM1300_CONFIG.dischg_limit_ma == 1000) {
-    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
-			     NPM1300_BCHGISETDISCHARGEMSB_1000MA);
-    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
-			     NPM1300_BCHGISETDISCHARGELSB_1000MA);
-  } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid discharge limit: %d mA", NPM1300_CONFIG.dischg_limit_ma);
-    return false;
-  }
+  ok &= dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
 
   if (NPM1300_CONFIG.vbus_current_startup != 0) {
     ok &= prv_write_register(PmicRegisters_VBUSIN_VBUSINILIMSTARTUP,
@@ -508,7 +497,7 @@ int battery_get_constants(BatteryConstants *constants) {
         NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV;
   } else {
     full_scale_ua =
-        ((int32_t)NPM1300_CONFIG.dischg_limit_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
+        ((int32_t)s_dischg_limit_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
         NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV;
   }
 
@@ -767,7 +756,49 @@ static bool ldo2_set_enabled(bool enabled) {
   }
 }
 
+static bool dischg_limit_ma_set(uint32_t dischg_limit_ma) {
+  bool ret;
+
+  if (s_dischg_limit_ma == dischg_limit_ma) {
+    return true;
+  }
+
+  if (dischg_limit_ma == 200) {
+    ret = prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
+                             NPM1300_BCHGISETDISCHARGEMSB_200MA);
+    if (!ret) {
+      return ret;
+    }
+
+    ret = prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
+                             NPM1300_BCHGISETDISCHARGELSB_200MA);
+    if (!ret) {
+      return ret;
+    }
+  } else if (dischg_limit_ma == 1000) {
+    ret = prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
+                             NPM1300_BCHGISETDISCHARGEMSB_1000MA);
+    if (!ret) {
+      return ret;
+    }
+
+    ret = prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
+                             NPM1300_BCHGISETDISCHARGELSB_1000MA);
+    if (!ret) {
+      return ret;
+    }
+  } else {
+    PBL_LOG(LOG_LEVEL_ERROR, "Invalid discharge limit: %" PRIu32 " mA", dischg_limit_ma);
+    return false;
+  }
+
+  s_dischg_limit_ma = dischg_limit_ma;
+
+  return true;
+}
+
 Npm1300Ops_t NPM1300_OPS = {
   .gpio_set = gpio_set,
   .ldo2_set_enabled = ldo2_set_enabled,
+  .dischg_limit_ma_set = dischg_limit_ma_set,
 };

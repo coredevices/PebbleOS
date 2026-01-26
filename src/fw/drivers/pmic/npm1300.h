@@ -27,10 +27,14 @@ typedef enum {
   Npm1300_Gpio4,
 }Npm1300GpioId_t;
 
+//! Maximum discharge current in mA
+#define NPM1300_DISCHG_LIMIT_MA_MAX 1000UL
+
 //! nPM1300 ops
 typedef struct {
   bool (*gpio_set)(Npm1300GpioId_t id, bool is_high);
   bool (*ldo2_set_enabled)(bool enabled);
+  bool (*dischg_limit_ma_set)(uint32_t ilim_ma);
 }Npm1300Ops_t;
 
 extern Npm1300Ops_t NPM1300_OPS;
