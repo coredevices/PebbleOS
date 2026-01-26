@@ -429,6 +429,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
           prv_update_display(data);
           return;
         }
+      } else {
+        data->fail_cnt = 0U;
       }
     }
   }
