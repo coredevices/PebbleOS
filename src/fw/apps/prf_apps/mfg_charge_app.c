@@ -33,28 +33,22 @@ static const char* status_text[] = {
 
 #ifdef PLATFORM_TINTIN
 static const int SLOW_THRESHOLD_PERCENTAGE = 42; // ~3850mv
-static const int PASS_BATTERY_PERCENTAGE = 84; // ~4050mv
-static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
-static const int KEEP_CHARGE_MAX_PERCENTAGE = 75; // Disable charging when above this
-static const int KEEP_CHARGE_MIN_PERCENTAGE = 70; // Re-enable charging when below this
+static const int BATTERY_LOW_PERCENTAGE = 80; // Re-enable charging when below this
+static const int BATTERY_HIGH_PERCENTAGE = 84; // ~4050mv - Disable charging when above this
 
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
 #elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
 static const int SLOW_THRESHOLD_PERCENTAGE = 0;
-static const int PASS_BATTERY_PERCENTAGE = 75;
-static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
-static const int KEEP_CHARGE_MAX_PERCENTAGE = 75; // Disable charging when above this
-static const int KEEP_CHARGE_MIN_PERCENTAGE = 70; // Re-enable charging when below this
+static const int BATTERY_LOW_PERCENTAGE = 70; // Re-enable charging when below this
+static const int BATTERY_HIGH_PERCENTAGE = 75; // Disable charging when above this
 
 static const int TEMP_MIN_MC = 15000; // 15.0C
 static const int TEMP_MAX_MC = 35000; // 35.0C
 #else
 static const int SLOW_THRESHOLD_PERCENTAGE = 0; // Always go "slow" on snowy
-static const int PASS_BATTERY_PERCENTAGE = 60; // ~4190mv
-static const int MAX_START_BATTERY_PERCENTAGE = 75; // Fail if starting >75%
-static const int KEEP_CHARGE_MAX_PERCENTAGE = 75; // Disable charging when above this
-static const int KEEP_CHARGE_MIN_PERCENTAGE = 70; // Re-enable charging when below this
+static const int BATTERY_LOW_PERCENTAGE = 50; // Re-enable charging when below this
+static const int BATTERY_HIGH_PERCENTAGE = 60; // ~4190mv - Disable charging when above this
 
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
@@ -97,7 +91,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
   switch (data->test_state) {
     case ChargeStateStart:
-      if (charge_state.charge_percent > MAX_START_BATTERY_PERCENTAGE) {
+      if (charge_state.charge_percent > BATTERY_HIGH_PERCENTAGE) {
         next_state = ChargeStateFail;
         data->countdown_running = false;
         battery_set_charge_enable(false);
@@ -146,7 +140,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         // go slow for a bit
         battery_set_fast_charge(false);
         data->fastcharge_enabled = false;
-      } else if (charge_state.charge_percent > PASS_BATTERY_PERCENTAGE) {
+      } else if (charge_state.charge_percent > BATTERY_HIGH_PERCENTAGE) {
         // The reading can be a bit shaky in the short term (i.e. a flaky USB connection), or we
         // just started charging. Make sure we have settled before transitioning into the
         // ChargeStatePass state
@@ -163,10 +157,10 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       }
       break;
     case ChargeStatePass:
-      // Maintain charge between KEEP_CHARGE_MIN and KEEP_CHARGE_MAX after test passes
-      if (charge_state.charge_percent > KEEP_CHARGE_MAX_PERCENTAGE) {
+      // Maintain charge between BATTERY_LOW and BATTERY_HIGH after test passes
+      if (charge_state.charge_percent > BATTERY_HIGH_PERCENTAGE) {
         battery_set_charge_enable(false);
-      } else if (charge_state.charge_percent < KEEP_CHARGE_MIN_PERCENTAGE) {
+      } else if (charge_state.charge_percent < BATTERY_LOW_PERCENTAGE) {
         battery_set_charge_enable(true);
       }
       break;
