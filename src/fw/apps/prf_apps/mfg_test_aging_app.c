@@ -90,6 +90,7 @@ typedef struct {
 
   bool running;
   bool menu_active;
+  uint8_t fail_cnt;
   bool test_failed;
   bool charging_enabled;
 #if CAPABILITY_HAS_SPEAKER
@@ -397,33 +398,38 @@ static void prv_update_display(AppData *data) {
 
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
+  int ret;
 
   // Continuous battery charge management (always active)
   BatteryChargeState charge_state = battery_get_charge_state();
   BatteryConstants battery_const;
 
-  battery_get_constants(&battery_const);
-
-  // Disable charging if temperature is out of range or battery >75%
-  if ((battery_const.t_mc < TEMP_MIN_MC) || (battery_const.t_mc > TEMP_MAX_MC) ||
-      (charge_state.charge_percent > 75)) {
-    battery_set_charge_enable(false);
-    data->charging_enabled = false;
-  } else if (charge_state.charge_percent < 70 && !data->charging_enabled) {
-    battery_set_charge_enable(true);
-    data->charging_enabled = true;
-  }
-
-  // Check battery temperature and charge status during test
-  if (data->running) {
+  ret = battery_get_constants(&battery_const);
+  if (ret == 0) {
+    // Disable charging if temperature is out of range or battery >75%
     if ((battery_const.t_mc < TEMP_MIN_MC) || (battery_const.t_mc > TEMP_MAX_MC) ||
-        ((charge_state.charge_percent < 70) &&
-         !battery_charge_controller_thinks_we_are_charging())) {
-      data->test_failed = true;
-      data->running = false;
-      tick_timer_service_unsubscribe();
-      prv_update_display(data);
-      return;
+        (charge_state.charge_percent > 75)) {
+      battery_set_charge_enable(false);
+      data->charging_enabled = false;
+    } else if (charge_state.charge_percent < 70 && !data->charging_enabled) {
+      battery_set_charge_enable(true);
+      data->charging_enabled = true;
+    }
+
+    // Check battery temperature and charge status during test
+    if (data->running) {
+      if ((battery_const.t_mc < TEMP_MIN_MC) || (battery_const.t_mc > TEMP_MAX_MC) ||
+          ((charge_state.charge_percent < 70) &&
+          !battery_charge_controller_thinks_we_are_charging())) {
+        data->fail_cnt++;
+        if (data->fail_cnt >= 5U) {
+          data->test_failed = true;
+          data->running = false;
+          tick_timer_service_unsubscribe();
+          prv_update_display(data);
+          return;
+        }
+      }
     }
   }
 
@@ -627,6 +633,7 @@ static void prv_handle_init(void) {
     .running = false,
     .menu_active = true,
     .test_failed = false,
+    .fail_cnt = 0U,
     .charging_enabled = false,
 #if CAPABILITY_HAS_SPEAKER
     .audio_playing = false,
