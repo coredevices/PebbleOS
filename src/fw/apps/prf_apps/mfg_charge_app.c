@@ -69,15 +69,22 @@ typedef struct {
   bool fastcharge_enabled;
 
   int pass_count;
+  int batt_temp_fail_count;
 } AppData;
 
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
+  int ret;
 
   ChargeTestState next_state = data->test_state;
 
   BatteryConstants battery_const;
-  battery_get_constants(&battery_const);
+  ret = battery_get_constants(&battery_const);
+  if (ret < 0) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Skipping bad constants reading");
+    return;
+  }
+
   const int charge_mv = battery_const.v_mv;
   const int32_t temp_mc = battery_const.t_mc;
   const BatteryChargeState charge_state = battery_get_charge_state();
@@ -120,10 +127,13 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       }
 
       if (temp_mc < TEMP_MIN_MC || temp_mc > TEMP_MAX_MC) {
-        next_state = ChargeStateFail;
-        data->countdown_running = false;
-        battery_set_charge_enable(false);
-        break;
+        data->batt_temp_fail_count++;
+        if (data->batt_temp_fail_count >= 5) {
+          next_state = ChargeStateFail;
+          data->countdown_running = false;
+          battery_set_charge_enable(false);
+          break;
+        }
       }
 
       if (charge_state.charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {
@@ -219,6 +229,7 @@ static void app_init(void) {
     .seconds_remaining = 5400, //1.5h
     .fastcharge_enabled = true,
     .pass_count = 0,
+    .batt_temp_fail_count = 0,
   };
 
   battery_set_fast_charge(true);
