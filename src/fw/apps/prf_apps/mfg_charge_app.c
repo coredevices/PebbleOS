@@ -134,6 +134,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
           battery_set_charge_enable(false);
           break;
         }
+      } else {
+        data->batt_temp_fail_count = 0;
       }
 
       if (charge_state.charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {

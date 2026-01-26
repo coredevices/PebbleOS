@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include "applib/app.h"
 #include "applib/graphics/bitblt.h"
 #include "applib/ui/ui.h"
