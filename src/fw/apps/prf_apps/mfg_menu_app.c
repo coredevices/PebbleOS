@@ -235,8 +235,19 @@ static void prv_extras_window_load(Window *window) {
   SimpleMenuItem *menu_items = app_malloc(sizeof(extras_menu_items));
   memcpy(menu_items, extras_menu_items, sizeof(extras_menu_items));
 
+  size_t num_items = ARRAY_LENGTH(extras_menu_items);
+
+  // Add index numbers to each menu entry
+  for (size_t i = 0; i < num_items; i++) {
+    const char *original_title = menu_items[i].title;
+    size_t new_title_len = snprintf(NULL, 0, "%zu. %s", i + 1, original_title) + 1;
+    char *new_title = app_malloc(new_title_len);
+    snprintf(new_title, new_title_len, "%zu. %s", i + 1, original_title);
+    menu_items[i].title = new_title;
+  }
+
   data->menu_section = (SimpleMenuSection) {
-    .num_items = ARRAY_LENGTH(extras_menu_items),
+    .num_items = num_items,
     .items = menu_items
   };
 
@@ -367,6 +378,8 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   *out_menu_items = app_malloc(sizeof(s_menu_items));
   memcpy(*out_menu_items, s_menu_items, sizeof(s_menu_items));
 
+  size_t num_items = ARRAY_LENGTH(s_menu_items);
+
   // Now we're going to modify the first two elements in the menu to include data available only
   // at runtime. If it was available at compile time we could have just shoved it in the
   // s_menu_items array but it's not. Note that we allocate a few buffers here that we never
@@ -387,9 +400,20 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 
   (*out_menu_items)[1].subtitle = device_serial;
 
+  // Add index numbers to each menu entry
+  for (size_t i = 0; i < num_items; i++) {
+    const char *original_title = (*out_menu_items)[i].title;
+    // Allocate buffer for "N. " + original title + null terminator
+    // Max index is 99 (2 digits), so we need 4 chars for "99. " + strlen + 1
+    size_t new_title_len = snprintf(NULL, 0, "%zu. %s", i + 1, original_title) + 1;
+    char *new_title = app_malloc(new_title_len);
+    snprintf(new_title, new_title_len, "%zu. %s", i + 1, original_title);
+    (*out_menu_items)[i].title = new_title;
+  }
+
   // We've now populated out_menu_items with the correct data. Return the number of items by
   // looking at the original list of menu items.
-  return ARRAY_LENGTH(s_menu_items);
+  return num_items;
 }
 
 static void prv_window_load(Window *window) {
