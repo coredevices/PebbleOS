@@ -9,6 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
 #include "services/common/i18n/i18n.h"
+#include "shell/prefs.h"
 #include "system/logging.h"
 
 #include <stdio.h>
@@ -180,6 +181,9 @@ WorkoutSelectionWindow *workout_selection_push(SelectWorkoutCallback select_work
                                   PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack),
                                   PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
   menu_layer_set_click_config_onto_window(menu_layer, &selection_window->window);
+  menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
+  menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
   layer_add_child(&selection_window->window.layer, menu_layer_get_layer(menu_layer));
 
   app_window_stack_push(&selection_window->window, true);
