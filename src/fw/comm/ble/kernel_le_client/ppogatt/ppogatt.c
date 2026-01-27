@@ -10,6 +10,8 @@
 #include "comm/ble/gatt_client_operations.h"
 #include "comm/bt_lock.h"
 
+#include <bluetooth/gatt.h>
+
 #include "kernel/pbl_malloc.h"
 #include "services/common/analytics/analytics.h"
 #include "services/common/comm_session/session_transport.h"
@@ -152,6 +154,12 @@ static void prv_start_reset(PPoGATTClient *client);
 //! @return The connection or NULL in case it could not be found.
 //! @note The caller MUST own bt_lock()
 extern GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic characteristic);
+
+//! Gets the att_handle and connection for a characteristic.
+//! @return The att_handle or 0 if not found. Connection is returned via out parameter.
+//! @note The caller MUST own bt_lock()
+extern uint16_t gatt_client_characteristic_get_handle_and_connection(
+    BLECharacteristic characteristic_ref, GAPLEConnection **connection_out);
 
 
 // -------------------------------------------------------------------------------------------------
@@ -708,6 +716,8 @@ static void prv_handle_data_notification(PPoGATTClient *client,
 // -------------------------------------------------------------------------------------------------
 
 static void prv_retry_meta_read(PPoGATTClient *client) {
+  bt_lock_assert_held(true);
+
   if (!client || client->state != StateDisconnectedAwaitingMetaRetry) {
     return;
   }
@@ -717,7 +727,17 @@ static void prv_retry_meta_read(PPoGATTClient *client) {
 
   client->state = StateDisconnectedReadingMeta;
   BLECharacteristic meta = client->characteristics.meta;
-  if (gatt_client_op_read(meta, GAPLEClientKernel) != BTErrnoOK) {
+
+  // Release bt_lock before calling gatt_client_op_read to avoid recursive lock deadlock.
+  // gatt_client_op_read manages bt_lock internally.
+  bt_unlock();
+
+  BTErrno result = gatt_client_op_read(meta, GAPLEClientKernel);
+
+  // Re-acquire bt_lock before accessing client state again
+  bt_lock();
+
+  if (result != BTErrnoOK) {
     // Read failed to start, delete the client
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to initiate meta read retry");
     prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataReadFailure);
@@ -727,9 +747,7 @@ static void prv_retry_meta_read(PPoGATTClient *client) {
 static void prv_meta_read_retry_timer_cb(void *data) {
   PPoGATTClient *client = (PPoGATTClient *)data;
   bt_lock();
-  {
-    prv_retry_meta_read(client);
-  }
+  prv_retry_meta_read(client);
   bt_unlock();
 }
 
@@ -915,7 +933,17 @@ void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
     BLECharacteristic meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.data = characteristics[PPoGATTCharacteristicData];
-    if (gatt_client_op_read(meta, GAPLEClientKernel) != BTErrnoOK) {
+
+    // Release bt_lock before calling gatt_client_op_read to avoid recursive lock deadlock.
+    // gatt_client_op_read manages bt_lock internally.
+    bt_unlock();
+
+    BTErrno result = gatt_client_op_read(meta, GAPLEClientKernel);
+
+    // Re-acquire bt_lock before accessing client state again
+    bt_lock();
+
+    if (result != BTErrnoOK) {
       // Read failed, probably disconnected or insufficient resources
       prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataReadFailure);
     }
@@ -1178,10 +1206,57 @@ static void prv_send_next_packets(PPoGATTClient *client) {
   uint8_t loop_count = 0;
   while ((packet = prv_prepare_next_packet(client, &heap_packet, &payload_size))) {
     ++loop_count;
-    const BTErrno e = gatt_client_op_write_without_response(client->characteristics.data,
-                                                            (const uint8_t *) packet,
+
+    // Get the connection and handle while holding bt_lock
+    GAPLEConnection *connection;
+    uint16_t att_handle;
+    bool lock_was_held = bt_lock_is_held();
+
+    if (lock_was_held) {
+      att_handle = gatt_client_characteristic_get_handle_and_connection(
+          client->characteristics.data, &connection);
+      if (!att_handle) {
+        // Invalid characteristic, bail out
+        break;
+      }
+      // Release bt_lock BEFORE calling into NimBLE to avoid deadlock.
+      // See comment in gatt_client_op_write_without_response.
+      bt_unlock();
+    } else {
+      // If bt_lock wasn't held, we can call gatt_client_op_write_without_response directly
+      // (it will manage the lock itself)
+      const BTErrno e = gatt_client_op_write_without_response(client->characteristics.data,
+                                                              (const uint8_t *) packet,
+                                                              sizeof(PPoGATTPacket) + payload_size,
+                                                              GAPLEClientKernel);
+      if (e == BTErrnoNotEnoughResources) {
+        // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
+        break;
+      } else if (e != BTErrnoOK) {
+        // Most likely the LE connection got busted, don't think retrying will help.
+        PBL_LOG(LOG_LEVEL_ERROR, "Write failed %i", e);
+        break;
+      } else {
+        // Packet successfully queued
+        prv_finalize_queued_packet(client, payload_size);
+      }
+
+      const uint8_t max_loop_count = 10;
+      if (loop_count > max_loop_count) {
+        prv_send_next_packets_async(client);
+        break;
+      }
+      continue;
+    }
+
+    // Call into NimBLE without holding bt_lock
+    const BTErrno e = bt_driver_gatt_write_without_response(connection, (const uint8_t *) packet,
                                                             sizeof(PPoGATTPacket) + payload_size,
-                                                            GAPLEClientKernel);
+                                                            att_handle);
+
+    // Re-acquire bt_lock before accessing client state
+    bt_lock();
+
     if (e == BTErrnoNotEnoughResources) {
       // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
       break;
