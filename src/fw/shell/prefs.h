@@ -147,3 +147,16 @@ void shell_prefs_set_settings_menu_highlight_color(GColor color);
 
 GColor shell_prefs_get_apps_menu_highlight_color(void);
 void shell_prefs_set_apps_menu_highlight_color(GColor color);
+
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void);
+void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable);
+
+typedef enum MenuScrollVibeBehavior {
+  MenuScrollNoVibe,
+  MenuScrollVibeOnWrapAround,
+  MenuScrollVibeOnLocked,
+  MenuScrollVibeBehaviorsCount,
+} MenuScrollVibeBehavior;
+
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void);
+void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior);
