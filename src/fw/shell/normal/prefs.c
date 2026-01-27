@@ -224,6 +224,11 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 static GColor s_settings_menu_highlight_color = GColorCobaltBlue;
 static GColor s_apps_menu_highlight_color = GColorVividCerulean;
 
+#define PREF_KEY_MENU_SCROLL_WRAP_AROUND "menuScrollWrapAround"
+#define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR "menuScrollVibeBehavior"
+
+static bool s_menu_scroll_wrap_around = false;
+static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -676,6 +681,20 @@ static bool prv_set_s_apps_menu_highlight_color(GColor *color) {
 #else
   s_apps_menu_highlight_color = GColorBlack;
 #endif
+  return true;
+}
+
+static bool prv_set_s_menu_scroll_wrap_around(bool *enabled) {
+  s_menu_scroll_wrap_around = *enabled;
+  return true;
+}
+
+static bool prv_set_s_menu_scroll_vibe_behavior(MenuScrollVibeBehavior *new_behavior) {
+  if (*new_behavior >= MenuScrollVibeBehaviorsCount) {
+    s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
+    return false;
+  }
+  s_menu_scroll_vibe_behavior = *new_behavior;
   return true;
 }
   
@@ -1645,4 +1664,20 @@ GColor shell_prefs_get_apps_menu_highlight_color(void){
 
 void shell_prefs_set_apps_menu_highlight_color(GColor color) {
   prv_pref_set(PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR, &color, sizeof(GColor));
+}
+
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return s_menu_scroll_wrap_around;
+}
+
+void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
+  prv_pref_set(PREF_KEY_MENU_SCROLL_WRAP_AROUND, &enable, sizeof(bool));
+}
+
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return s_menu_scroll_vibe_behavior;
+}
+
+void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
+  prv_pref_set(PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR, &behavior, sizeof(MenuScrollVibeBehavior));
 }
