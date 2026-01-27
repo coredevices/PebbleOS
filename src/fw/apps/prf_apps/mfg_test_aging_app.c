@@ -29,9 +29,6 @@
 #define STATUS_STRING_LEN 128
 #define TEST_DURATION_SEC 10
 
-// Battery temperature range (in millicelsius)
-#define TEMP_MIN_MC 15000  // 15.0C
-#define TEMP_MAX_MC 35000  // 35.0C
 
 #if CAPABILITY_HAS_SPEAKER
 static const int16_t sine_wave_4k[] = {
@@ -49,6 +46,7 @@ typedef enum {
 
 typedef enum {
   TestState_Menu = 0,
+  TestState_PlugCharger,
   TestState_Accel,
 #if CAPABILITY_HAS_MAGNETOMETER
   TestState_Mag,
@@ -90,9 +88,7 @@ typedef struct {
 
   bool running;
   bool menu_active;
-  uint8_t fail_cnt;
   bool test_failed;
-  bool charging_enabled;
 #if CAPABILITY_HAS_SPEAKER
   bool audio_playing;
 #endif
@@ -124,6 +120,18 @@ static void prv_format_time(char *buffer, size_t size, uint32_t seconds) {
 }
 
 // Test implementations
+static void prv_test_plug_charger(AppData *data) {
+  const BatteryChargeState charge_state = battery_get_charge_state();
+
+  char time_str[16];
+  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
+
+  sniprintf(data->status_string, sizeof(data->status_string),
+            "PLUG CHARGER\n\nPlease plug in\nthe watch to\nstart testing\n\nPlugged: %s",
+            charge_state.is_plugged ? "YES" : "NO");
+  text_layer_set_text(&data->status, data->status_string);
+}
+
 static void prv_test_accel(AppData *data) {
   AccelDriverSample sample;
   int ret = accel_peek(&sample);
@@ -257,6 +265,8 @@ static void prv_advance_test(AppData *data) {
 
   // Move to next test
   if (data->current_test == TestState_Menu) {
+    data->current_test = TestState_PlugCharger;
+  } else if (data->current_test == TestState_PlugCharger) {
     data->current_test = TestState_Accel;
   } else {
     data->current_test++;
@@ -325,17 +335,9 @@ static void prv_advance_test(AppData *data) {
 static void prv_update_display(AppData *data) {
   if (!data->running) {
     if (data->test_failed) {
-      // Display failure message with battery % and temperature
-      BatteryConstants battery_const;
-      battery_get_constants(&battery_const);
-      const BatteryChargeState charge_state = battery_get_charge_state();
-
-      int8_t temp_c = (int8_t)(battery_const.t_mc / 1000);
-      uint8_t temp_c_frac = ((battery_const.t_mc > 0 ? battery_const.t_mc : -battery_const.t_mc) % 1000) / 10;
-
+      // Display failure message
       sniprintf(data->status_string, sizeof(data->status_string),
-                "TEST FAIL\n\nBattery: %"PRIu8"%% %"PRId8".%02"PRIu8"C\nCheck conditions",
-                charge_state.charge_percent, temp_c, temp_c_frac);
+                "TEST FAIL\n\nWatch unplugged\nduring test");
     } else {
       // Display the finished message
       char time_str[16];
@@ -350,6 +352,9 @@ static void prv_update_display(AppData *data) {
 
   switch (data->current_test) {
     case TestState_Menu:
+      break;
+    case TestState_PlugCharger:
+      prv_test_plug_charger(data);
       break;
     case TestState_Accel:
       prv_test_accel(data);
@@ -398,44 +403,34 @@ static void prv_update_display(AppData *data) {
 
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
-  int ret;
 
-  // Continuous battery charge management (always active)
-  BatteryChargeState charge_state = battery_get_charge_state();
-  BatteryConstants battery_const;
+  if (!data->running) {
+    return;
+  }
 
-  ret = battery_get_constants(&battery_const);
-  if (ret == 0) {
-    // Disable charging if temperature is out of range or battery >75%
-    if ((battery_const.t_mc < TEMP_MIN_MC) || (battery_const.t_mc > TEMP_MAX_MC) ||
-        (charge_state.charge_percent > 75)) {
-      battery_set_charge_enable(false);
-      data->charging_enabled = false;
-    } else if (charge_state.charge_percent < 70 && !data->charging_enabled) {
-      battery_set_charge_enable(true);
-      data->charging_enabled = true;
-    }
-
-    // Check battery temperature and charge status during test
-    if (data->running) {
-      if ((battery_const.t_mc < TEMP_MIN_MC) || (battery_const.t_mc > TEMP_MAX_MC) ||
-          ((charge_state.charge_percent < 70) &&
-          !battery_charge_controller_thinks_we_are_charging())) {
-        data->fail_cnt++;
-        if (data->fail_cnt >= 5U) {
-          data->test_failed = true;
-          data->running = false;
-          tick_timer_service_unsubscribe();
-          prv_update_display(data);
-          return;
-        }
-      } else {
-        data->fail_cnt = 0U;
-      }
+  // Check if watch is plugged (only after plug charger state)
+  if (data->current_test != TestState_PlugCharger) {
+    const BatteryChargeState charge_state = battery_get_charge_state();
+    if (!charge_state.is_plugged) {
+      data->test_failed = true;
+      data->running = false;
+      tick_timer_service_unsubscribe();
+      prv_update_display(data);
+      return;
     }
   }
 
-  if (!data->running) {
+  // Handle plug charger state - wait for watch to be plugged
+  if (data->current_test == TestState_PlugCharger) {
+    const BatteryChargeState charge_state = battery_get_charge_state();
+    if (charge_state.is_plugged) {
+      // Watch is plugged, advance to first real test
+      prv_advance_test(data);
+      prv_update_display(data);
+    } else {
+      // Still waiting for plug, just update display
+      prv_update_display(data);
+    }
     return;
   }
 
@@ -595,8 +590,8 @@ static void prv_start_tests(TestDuration duration) {
   data->saved_backlight_color = led_controller_rgb_get_color();
 #endif
 
-  battery_set_charge_enable(true);
-  data->charging_enabled = true;
+  // Disable charging during the test
+  battery_set_charge_enable(false);
 
   switch (duration) {
     case Duration_2Hours:
@@ -635,8 +630,6 @@ static void prv_handle_init(void) {
     .running = false,
     .menu_active = true,
     .test_failed = false,
-    .fail_cnt = 0U,
-    .charging_enabled = false,
 #if CAPABILITY_HAS_SPEAKER
     .audio_playing = false,
 #endif
@@ -691,11 +684,6 @@ static void prv_handle_deinit(void) {
 
   if (data->running) {
     tick_timer_service_unsubscribe();
-  }
-
-  // Disable charging when app is closing
-  if (data->charging_enabled) {
-    battery_set_charge_enable(false);
   }
 }
 
