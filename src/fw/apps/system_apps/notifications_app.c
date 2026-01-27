@@ -28,6 +28,7 @@
 #include "services/normal/blob_db/pin_db.h"
 #include "services/normal/notifications/notification_storage.h"
 #include "services/normal/timeline/notification_layout.h"
+#include "shell/prefs.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
 #include "util/date.h"
@@ -701,6 +702,9 @@ static void prv_window_load(Window *window) {
                                   GColorWhite);
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
+  menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
+  menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
 
   TextLayer *text_layer = &data->text_layer;
