@@ -410,15 +410,6 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
     VOICE_LOG("Starting system-initiated voice dictation session");
   }
 
-#if !defined(TARGET_QEMU)
-  // Set up communication session responsiveness for voice session
-  CommSession *comm_session = comm_session_get_system_session();
-  if (comm_session) {
-    comm_session_set_responsiveness(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMin,
-                                    MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
-  }
-#endif
-
   // Get Speex transfer info
   AudioTransferInfoSpeex transfer_info;
   voice_speex_get_transfer_info(&transfer_info);
