@@ -156,8 +156,6 @@ static void prv_log_battery_state(PreciseBatteryChargeState state) {
       (s_prev_batt_state.all != new_batt_state.all) ||
       s_first_run) {
         s_prev_batt_state.all = new_batt_state.all;
-        PBL_LOG_COLOR(LOG_LEVEL_INFO, BATT_LOG_COLOR, "Percent: %d Charging: %d Plugged: %d",
-                percent, state.is_charging, state.is_plugged);
       }
 }
 
