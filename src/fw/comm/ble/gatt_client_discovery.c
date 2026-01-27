@@ -81,6 +81,8 @@ void gatt_client_discovery_discover_range(GAPLEConnection *connection, ATTHandle
 
 // assumes bt lock is held
 static BTErrno prv_run_next_job(GAPLEConnection *connection) {
+  bt_lock_assert_held(true);
+
   DiscoveryJobQueue *node = connection->discovery_jobs;
   if (!node) {
     return BTErrnoOK; // no more jobs to run
@@ -97,7 +99,15 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection) {
     .end = node->hdl.end
   };
 
+  // Release bt_lock before calling into Nimble to avoid deadlock.
+  // bt_driver_gatt_start_discovery_range calls pebble_device_to_nimble_conn_handle
+  // which needs ble_hs_mutex.
+  bt_unlock();
+
   BTErrno rv = bt_driver_gatt_start_discovery_range(connection, &hdl);
+
+  // Re-acquire bt_lock before modifying connection state
+  bt_lock();
 
   if (rv == BTErrnoOK) {
     // if we are back here because a timeout occurred, let the
@@ -122,7 +132,14 @@ static bool prv_discovery_handle_timeout(GAPLEConnection *connection, BTErrno *e
       goto unlock;
     }
 
-    if (bt_driver_gatt_stop_discovery(connection) != BTErrnoOK) {
+    // Release bt_lock before calling into Nimble to avoid deadlock.
+    // bt_driver_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
+    // which needs ble_hs_mutex.
+    bt_unlock();
+    BTErrno stop_result = bt_driver_gatt_stop_discovery(connection);
+    bt_lock();
+
+    if (stop_result != BTErrnoOK) {
       // Handle the race: Bluetopia service discovery has stopped in the mean time, for example
       // because of a disconnection, internal error or it completed right when the timer fired.
       goto unlock;
@@ -460,7 +477,13 @@ BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device) {
         // Remove any partial jobs which may be pending
         // since we are going to rediscover everything
         gatt_client_cleanup_discovery_jobs(connection);
+
+        // Release bt_lock before calling into Nimble to avoid deadlock.
+        // bt_driver_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
+        // which needs ble_hs_mutex.
+        bt_unlock();
         bt_driver_gatt_stop_discovery(connection);
+        bt_lock();
       } else {
         // Queue up CCCD writes to unsubscribe all the subscriptions:
         gatt_client_subscriptions_cleanup_by_connection(connection, true /* should_unsubscribe */);
