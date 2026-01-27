@@ -8,6 +8,7 @@
 #include "drivers/rtc.h"
 #include "drivers/rtc_private.h"
 #include "flash_region/flash_region.h"
+#include "kernel/events.h"
 #include "mcu/interrupts.h"
 #include "system/passert.h"
 #include "util/time/time.h"
@@ -234,6 +235,9 @@ static RtcTicks get_ticks(void) {
 // Internal function to set RTC time without resetting calibration state.
 // Used by the calibration code when applying corrections.
 static void prv_rtc_set_time_no_cal_reset(time_t time) {
+  // Capture old time before changing it to send proper event
+  time_t old_time = rtc_get_time();
+
   struct tm t;
   gmtime_r(&time, &t);
 
@@ -255,6 +259,21 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
           rtc_time_struct.Hours, rtc_time_struct.Minutes, rtc_time_struct.Seconds,
           rtc_date_struct.Month, rtc_date_struct.Date, rtc_date_struct.Year,
           rtc_date_struct.WeekDay);
+
+  // Send clock change event to notify system components (e.g., DND timer scheduler)
+  // This ensures long-duration timers are properly rescheduled after calibration adjustments
+  int32_t time_delta = (int32_t)(time - old_time);
+  if (time_delta != 0) {
+    PebbleEvent e = {
+      .type = PEBBLE_SET_TIME_EVENT,
+      .set_time_info = {
+        .utc_time_delta = time_delta,
+        .gmt_offset_delta = 0,
+        .dst_changed = false,
+      }
+    };
+    event_put(&e);
+  }
 }
 
 void rtc_set_time(time_t time) {
