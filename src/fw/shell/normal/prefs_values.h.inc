@@ -56,3 +56,7 @@
 
   PREFS_MACRO(PREF_KEY_SETTINGS_MENU_HIGHLIGHT_COLOR, s_settings_menu_highlight_color)
   PREFS_MACRO(PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR, s_apps_menu_highlight_color)
+
+  PREFS_MACRO(PREF_KEY_MENU_SCROLL_WRAP_AROUND, s_menu_scroll_wrap_around)
+  PREFS_MACRO(PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR, s_menu_scroll_vibe_behavior)
+  

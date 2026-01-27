@@ -308,4 +308,21 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 // Exported function used by blob_db API to handle settings events
 // Not used by the SDK shell
 void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
+
+}
+
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return false;
+}
+
+void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
+  // Not used in SDK shell
+}
+
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return MenuScrollNoVibe;
+}
+
+void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
+  // Not used in SDK shell
 }
