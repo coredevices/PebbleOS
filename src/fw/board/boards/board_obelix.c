@@ -553,7 +553,7 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
     .peripheral = hwp_gpio1,
     .gpio_pin = 26,
   },
-  .low_power_threshold = 5U,
+  .low_power_threshold = 2U,
   .battery_capacity_hours = 480U,
 };
 
