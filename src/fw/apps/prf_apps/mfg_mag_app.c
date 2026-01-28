@@ -16,6 +16,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
 #include "services/common/evented_timer.h"
+#include "system/logging.h"
 #include "util/bitset.h"
 #include "util/size.h"
 
@@ -128,6 +129,10 @@ static void prv_update_display(void *context) {
     text_layer_set_text(&data->status, data->status_string);
     return;
   }
+
+  // Log raw magnetometer samples at debug level
+  PBL_LOG(LOG_LEVEL_DEBUG, "Mag (mG): X:%"PRIi16" Y:%"PRIi16" Z:%"PRIi16,
+          sample.x, sample.y, sample.z);
 
   uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->state_start_time);
 
