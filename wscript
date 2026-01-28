@@ -428,7 +428,6 @@ def _create_cm0_env(conf):
                '-Wno-enum-conversion']
 
     conf.find_program('arm-none-eabi-gcc', var='CC', mandatory=True)
-    conf.env.AS = conf.env.CC
     for tool in ['ar', 'objcopy']:
         conf.find_program('arm-none-eabi-' + tool, var=tool.upper(),
                           mandatory=True)
@@ -445,6 +444,7 @@ def _create_cm0_env(conf):
                             ] + CPU_FLAGS + OPT_FLAGS)
 
     conf.load('gcc gas objcopy ldscript')
+    conf.env.AS = conf.env.CC
     conf.load('file_name_c_define')
 
     conf.variant = prev_variant
