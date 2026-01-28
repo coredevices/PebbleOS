@@ -97,13 +97,14 @@ void test_ancs_filtering__record_app_no_action_needed(void) {
   // We don't need to insert anything
   iOSNotifPrefs prefs = {
     .attr_list = {
-      .num_attributes = 5,
+      .num_attributes = 6,
       .attributes = (Attribute[]) {
         { .id = AttributeIdTitle, .cstring = "Title" },
         { .id = AttributeIdBody, .cstring = "Body" },
         { .id = AttributeIdAppName, .cstring = "Awesome" },
         { .id = AttributeIdLastUpdated, .uint32 = s_now },
         { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_Always },
+        { .id = AttributeIdMuteExpiration, .uint32 = 0 },
       },
     },
   };
@@ -118,10 +119,11 @@ void test_ancs_filtering__record_app_no_prefs_yet(void) {
   iOSNotifPrefs *existing_prefs = NULL;
 
   AttributeList attr_list = {
-    .num_attributes = 3,
+    .num_attributes = 4,
     .attributes = (Attribute[]) {
       { .id = AttributeIdAppName, .cstring = "Awesome" },
       { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None },
+      { .id = AttributeIdMuteExpiration, .uint32 = 0 },
       { .id = AttributeIdLastUpdated, .uint32 = s_now },
     }
   };
@@ -153,12 +155,13 @@ void test_ancs_filtering__record_app_existing_mute(void) {
   iOSNotifPrefs *existing_prefs = &prefs;
 
   AttributeList expected_attributes = {
-    .num_attributes = 5,
+    .num_attributes = 6,
     .attributes = (Attribute[]) {
       { .id = AttributeIdTitle, .cstring = "Title" },
       { .id = AttributeIdBody, .cstring = "Body" },
       { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_Always },
       { .id = AttributeIdAppName, .cstring = "Awesome" },
+      { .id = AttributeIdMuteExpiration, .uint32 = 0 },
       { .id = AttributeIdLastUpdated, .uint32 = s_now },
     }
   };
@@ -187,10 +190,11 @@ void test_ancs_filtering__record_app_existing_display_name(void) {
   iOSNotifPrefs *existing_prefs = &prefs;
 
   AttributeList expected_attributes = {
-    .num_attributes = 3,
+    .num_attributes = 4,
     .attributes = (Attribute[]) {
       { .id = AttributeIdAppName, .cstring = "Awesome" },
       { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None },
+      { .id = AttributeIdMuteExpiration, .uint32 = 0 },
       { .id = AttributeIdLastUpdated, .uint32 = s_now },
     }
   };
@@ -211,10 +215,11 @@ void test_ancs_filtering__record_app_update_timestamp(void) {
   // notification from this source
   iOSNotifPrefs prefs = {
     .attr_list = {
-      .num_attributes = 3,
+      .num_attributes = 4,
       .attributes = (Attribute[]) {
         { .id = AttributeIdAppName, .cstring = "Awesome" },
         { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None },
+        { .id = AttributeIdMuteExpiration, .uint32 = 0 },
         { .id = AttributeIdLastUpdated, .uint32 = s_now },
       },
     },
@@ -227,10 +232,11 @@ void test_ancs_filtering__record_app_update_timestamp(void) {
 
   s_now += 2;
   AttributeList expected_attributes = {
-    .num_attributes = 3,
+    .num_attributes = 4,
     .attributes = (Attribute[]) {
       { .id = AttributeIdAppName, .cstring = "Awesome" },
       { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None },
+      { .id = AttributeIdMuteExpiration, .uint32 = 0 },
       { .id = AttributeIdLastUpdated, .uint32 = s_now },
     }
   };
@@ -295,15 +301,74 @@ void test_ancs_filtering__should_ignore_because_muted(void) {
   cl_assert(ancs_filtering_is_muted(&mute_weekdays));
 }
 
+void test_ancs_filtering__record_app_existing_mute_expiration(void) {
+  // We already have a mute expiration attribute, make sure it doesn't change
+  iOSNotifPrefs prefs = {
+    .attr_list = {
+      .num_attributes = 4,
+      .attributes = (Attribute[]) {
+        { .id = AttributeIdTitle, .cstring = "Title" },
+        { .id = AttributeIdBody, .cstring = "Body" },
+        { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None },
+        { .id = AttributeIdMuteExpiration, .uint32 = 12345678 },
+      },
+    },
+  };
+  iOSNotifPrefs *existing_prefs = &prefs;
+
+  AttributeList expected_attributes = {
+    .num_attributes = 6,
+    .attributes = (Attribute[]) {
+      { .id = AttributeIdTitle, .cstring = "Title" },
+      { .id = AttributeIdBody, .cstring = "Body" },
+      { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None },
+      { .id = AttributeIdMuteExpiration, .uint32 = 12345678 },
+      { .id = AttributeIdAppName, .cstring = "Awesome" },
+      { .id = AttributeIdLastUpdated, .uint32 = s_now },
+    }
+  };
+  s_expected_attributes = &expected_attributes;
+
+  ancs_filtering_record_app(&existing_prefs, s_app_id_attr, s_display_name_attr, s_title_attr);
+  cl_assert(s_performed_store);
+
+  // Make sure the our existing prefs got updated
+  iOSNotifPrefs expected_prefs = {
+    .attr_list = expected_attributes,
+  };
+  prv_compare_notif_prefs(existing_prefs, &expected_prefs);
+}
+
+void test_ancs_filtering__should_ignore_because_timed_muted(void) {
+  iOSNotifPrefs muted = {
+    .attr_list = {
+      .num_attributes = 1,
+      .attributes = (Attribute[]) {
+        { .id = AttributeIdMuteExpiration, .uint32 = 2000 },
+      }
+    }
+  };
+
+  s_now = 1000;
+  cl_assert(ancs_filtering_is_muted(&muted));
+
+  s_now = 2000;
+  cl_assert(!ancs_filtering_is_muted(&muted));
+
+  s_now = 3000;
+  cl_assert(!ancs_filtering_is_muted(&muted));
+}
+
 void test_ancs_filtering__record_app_no_display_name(void) {
   iOSNotifPrefs *existing_prefs = NULL;
 
   // No display name so we expect the app name to be the title
   AttributeList expected_attributes = {
-    .num_attributes = 3,
+    .num_attributes = 4,
     .attributes = (Attribute[]) {
       { .id = AttributeIdAppName, .cstring = "Apple Pay = :(" },
       { .id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None },
+      { .id = AttributeIdMuteExpiration, .uint32 = 0 },
       { .id = AttributeIdLastUpdated, .uint32 = s_now },
     }
   };
