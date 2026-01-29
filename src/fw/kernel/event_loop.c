@@ -384,6 +384,7 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent* e) {
           set_time_info->dst_changed ||
           ABS(set_time_info->utc_time_delta) > 15) {
         alarm_handle_clock_change();
+        wakeup_handle_significant_clock_change();
         cron_service_handle_clock_change(set_time_info);
       }
 
