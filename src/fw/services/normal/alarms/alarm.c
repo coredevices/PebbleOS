@@ -773,6 +773,8 @@ void alarm_set_enabled(AlarmId id, bool enable) {
     PBL_LOG(LOG_LEVEL_DEBUG, "Canceling snooze timer because alarm was disabled");
     // Harmless if the alarm is not currently snoozing - the snooze timer still exists to be stopped
     prv_clear_snooze_timer();
+    s_most_recent_alarm_id = ALARM_INVALID_ID;
+    s_smart_snooze_counter = 0;
   }
 
   prv_enable_alarm_config(&config, enable);
@@ -792,6 +794,8 @@ void alarm_delete(AlarmId id) {
   if (id == s_most_recent_alarm_id) {
     PBL_LOG(LOG_LEVEL_DEBUG, "Canceling snooze timer on delete");
     prv_clear_snooze_timer();
+    s_most_recent_alarm_id = ALARM_INVALID_ID;
+    s_smart_snooze_counter = 0;
   }
 
   AlarmStorageKey key = { .id = id, .type = ALARM_DATA_CONFIG };
@@ -1061,6 +1065,60 @@ void alarm_handle_clock_change(void) {
   SettingsFile file;
   if (!prv_file_open_and_lock(&file)) {
     return;
+  }
+
+  // If there's an active alarm (e.g., currently snoozing), we need to handle it carefully.
+  // For smart alarms near their deadline, we should trigger them before clearing state.
+  if (s_most_recent_alarm_id != ALARM_INVALID_ID) {
+    bool should_force_trigger = false;
+
+    // Only consider force-triggering for smart alarms that are in their smart snooze window
+    if (s_most_recent_alarm_config.is_smart && s_smart_snooze_counter > 0) {
+      // Check if we've used up most of our smart snooze attempts (within last 2 minutes)
+      if (s_smart_snooze_counter >= (SMART_ALARM_MAX_SMART_SNOOZE - 2)) {
+        should_force_trigger = true;
+        PBL_LOG(LOG_LEVEL_INFO, "Smart alarm %u at counter %d near deadline, forcing trigger",
+                s_most_recent_alarm_id, s_smart_snooze_counter);
+      } else {
+        // Also check if current time is within the smart alarm window past the deadline
+        // This handles cases where counter < 28 but we're legitimately past the alarm time
+        time_t now = rtc_get_time();
+        struct tm now_tm;
+        localtime_r(&now, &now_tm);
+        int current_minutes = now_tm.tm_hour * 60 + now_tm.tm_min;
+        int alarm_minutes = s_most_recent_alarm_config.hour * 60 + s_most_recent_alarm_config.minute;
+        int time_diff_minutes = current_minutes - alarm_minutes;
+
+        // Only trigger if we're 0-30 minutes past the alarm time (the smart window)
+        // This prevents false triggers when time >= alarm but we're not in the window
+        // (e.g., alarm at 5:35 AM, current time 11 PM would give time_diff = 1045 min)
+        if (time_diff_minutes >= 0 && time_diff_minutes <= (SMART_ALARM_RANGE_S / 60)) {
+          should_force_trigger = true;
+          PBL_LOG(LOG_LEVEL_INFO, "Smart alarm %u in window, %d min past deadline, forcing trigger",
+                  s_most_recent_alarm_id, time_diff_minutes);
+        }
+      }
+    }
+
+    if (should_force_trigger) {
+      // Trigger the alarm and let it follow its normal lifecycle (user can snooze/dismiss)
+      prv_put_alarm_event();
+      if (!s_most_recent_alarm_recorded) {
+        s_most_recent_alarm_recorded = true;
+        prv_alarm_operation(s_most_recent_alarm_id, prv_record_alarm_op, NULL);
+      }
+      PBL_LOG(LOG_LEVEL_INFO, "Clock change during alarm %u, triggered alarm", s_most_recent_alarm_id);
+    } else {
+      PBL_LOG(LOG_LEVEL_INFO, "Clock change during alarm %u, clearing snooze state",
+              s_most_recent_alarm_id);
+    }
+
+    // In either case, stop the smart snooze timer and reset the counter.
+    // We leave s_most_recent_alarm_id set because:
+    // - If we triggered: user needs it to snooze/dismiss
+    // - If we didn't trigger: it's harmless (timer stopped, will be overwritten by next alarm)
+    prv_clear_snooze_timer();
+    s_smart_snooze_counter = 0;
   }
 
   // Update the day for any just once alarms
