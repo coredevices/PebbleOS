@@ -18,6 +18,7 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "services/common/i18n/i18n.h"
+#include "shell/prefs.h"
 #include "system/passert.h"
 
 #include <stdio.h>
@@ -154,6 +155,9 @@ static void prv_window_load(Window *window) {
                                   PBL_IF_COLOR_ELSE(GColorJazzberryJam, GColorBlack),
                                   GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, window);
+  menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
+  menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
 }
 
