@@ -1984,6 +1984,21 @@
     },
     {
       "type": "pdc",
+      "name": "NOTIFICATION_AIRMAIL_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Airmail_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_AIRMAIL_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Airmail_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_AIRMAIL_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Airmail_80px.svg"
+    },
+    {
+      "type": "pdc",
       "name": "NOTIFICATION_BEEPER_TINY",
       "file": "../third_party/resources/iconography/brand-logos/Beeper_25px.svg"
     },
@@ -2251,6 +2266,51 @@
       "type": "pdc",
       "name": "NOTIFICATION_ZOOM_LARGE",
       "file": "../third_party/resources/iconography/brand-logos/Zoom_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_REDDIT_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Reddit_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_REDDIT_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Reddit_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_REDDIT_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Reddit_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SWARM_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Swarm_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SWARM_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Swarm_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SWARM_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Swarm_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TAPO_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Tapo_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TAPO_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Tapo_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TAPO_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Tapo_80px.svg"
     },
     {
       "type": "pdc",
@@ -3501,6 +3561,42 @@
         "tiny": "RESOURCE_ID_NOTIFICATION_TWITCH_TINY",
         "small": "RESOURCE_ID_NOTIFICATION_TWITCH_SMALL",
         "large": "RESOURCE_ID_NOTIFICATION_TWITCH_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_AIRMAIL",
+      "id": 137,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_AIRMAIL_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_AIRMAIL_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_AIRMAIL_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_REDDIT",
+      "id": 138,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_REDDIT_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_REDDIT_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_REDDIT_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_SWARM",
+      "id": 139,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_SWARM_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_SWARM_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_SWARM_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_TAPO",
+      "id": 140,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_TAPO_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_TAPO_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_TAPO_LARGE"
       }
     }
   ],
