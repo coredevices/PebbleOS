@@ -77,8 +77,8 @@
 static const GAPLEConnectRequestParams s_default_connection_params_table[NumResponseTimeState] = {
   [ResponseTimeMax] = {
     .slave_latency_events = 0,
-    .connection_interval_min_1_25ms = 480, // 600ms
-    .connection_interval_max_1_25ms = 504, // 630ms
+    .connection_interval_min_1_25ms = 120, // 150ms
+    .connection_interval_max_1_25ms = 144, // 180ms
     .supervision_timeout_10ms = 600, // 6s
   },
   [ResponseTimeMiddle] = {
