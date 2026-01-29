@@ -30,6 +30,7 @@
 
 #define TIMEOUT_SESSION_SETUP (8000)
 #define TIMEOUT_SESSION_RESULT  (15000)
+#define TIMEOUT_BLE_NEGOTIATION_MS (3500)  // Wait 3.5s for BLE to negotiate from 600ms->15ms
 
 // Buffer size
 #define MAX_ENCODED_FRAME_SIZE (200)
@@ -41,6 +42,7 @@ typedef enum {
   SessionState_StartSession,
   SessionState_VoiceEndpointSetupReceived,
   SessionState_AudioEndpointSetupReceived,
+  SessionState_WaitForBLE,  // Waiting for BLE connection to negotiate before starting mic
   SessionState_Recording,
   SessionState_WaitForSessionResult,
 } SessionState;
@@ -67,6 +69,7 @@ static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data);
 static void prv_session_result_timeout(void * data);
 static void prv_delayed_cleanup_timeout(void *data);
+static void prv_ble_negotiation_timer(void *data);
 
 #if defined(VOICE_DEBUG)
 // printf implemented here because the ADT Speex debug library calls printf for logging
@@ -269,18 +272,18 @@ static void prv_handle_subsystem_started(SessionState transition_to_state) {
     PBL_ASSERTN((s_state == SessionState_VoiceEndpointSetupReceived ||
                  s_state == SessionState_AudioEndpointSetupReceived) &&
                 (transition_to_state != s_state));
-    
-    VOICE_LOG("Both subsystems ready, transitioning to Recording state");
-    s_state = SessionState_Recording;
+
+    VOICE_LOG("Both subsystems ready, waiting %dms for BLE negotiation", TIMEOUT_BLE_NEGOTIATION_MS);
+    s_state = SessionState_WaitForBLE;
 
     new_timer_stop(s_timeout);
 
-    // Indicate to the UI that we have started recording
-    PBL_LOG(LOG_LEVEL_INFO, "Session setup successfully");
-    prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusSuccess, NULL);
-
-    VOICE_LOG("Starting recording now that both subsystems are ready");
-    prv_start_recording();
+    // Wait for BLE connection interval to negotiate from 600ms -> 15ms before showing mic icon.
+    // This prevents the user from seeing the mic icon, talking immediately, and having their
+    // speech cut off by frame drops during BLE negotiation.
+    // BLE negotiation typically takes 2-5 seconds. We wait 3.5s as a reasonable middle ground.
+    s_timeout_generation = s_session_generation;
+    new_timer_start(s_timeout, TIMEOUT_BLE_NEGOTIATION_MS, prv_ble_negotiation_timer, NULL, 0);
   }
 }
 
@@ -330,6 +333,31 @@ static void prv_session_setup_timeout(void * data) {
   PBL_LOG(LOG_LEVEL_WARNING, "Timeout waiting for session setup result ");
 
   prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusTimeout, NULL);
+
+  mutex_unlock(s_lock);
+}
+
+// Timer callback after waiting for BLE negotiation
+static void prv_ble_negotiation_timer(void *data) {
+  mutex_lock(s_lock);
+
+  if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
+    VOICE_LOG("Ignoring BLE negotiation timer (t_gen=%"PRIu32" cur=%"PRIu32" teardown=%d)",
+              s_timeout_generation, s_session_generation, s_teardown_in_progress);
+    mutex_unlock(s_lock);
+    return;
+  }
+
+  PBL_ASSERTN(s_state == SessionState_WaitForBLE);
+
+  VOICE_LOG("BLE negotiation wait complete, starting recording");
+  s_state = SessionState_Recording;
+
+  // Indicate to the UI that we have started recording (show mic icon)
+  PBL_LOG(LOG_LEVEL_INFO, "Session setup successfully");
+  prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusSuccess, NULL);
+
+  prv_start_recording();
 
   mutex_unlock(s_lock);
 }
@@ -412,6 +440,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
 
 #if !defined(TARGET_QEMU)
   // Set up communication session responsiveness for voice session
+  // We'll poll for the connection to reach 15ms instead of using callbacks
   CommSession *comm_session = comm_session_get_system_session();
   if (comm_session) {
     comm_session_set_responsiveness(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMin,
@@ -490,7 +519,8 @@ void voice_cancel_dictation(VoiceSessionId session_id) {
     s_teardown_in_progress = true;
     if (s_state == SessionState_StartSession ||
         s_state == SessionState_VoiceEndpointSetupReceived ||
-        s_state == SessionState_AudioEndpointSetupReceived) {
+        s_state == SessionState_AudioEndpointSetupReceived ||
+        s_state == SessionState_WaitForBLE) {
       prv_cancel_early_session();
       // Use delayed cleanup for early cancellation to avoid race conditions with phone/endpoint
       s_delayed_speex_cleanup = true;
