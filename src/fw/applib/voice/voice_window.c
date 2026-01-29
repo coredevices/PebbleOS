@@ -82,9 +82,6 @@ static const uint32_t UNFOLD_DURATION = 500;
 
 #define VOICE_LOG(fmt, args...)   PBL_LOG_D(LOG_DOMAIN_VOICE, LOG_LEVEL_DEBUG, fmt, ## args)
 
-// Track current voice window for granted handler callback
-static VoiceUiData *s_current_voice_window = NULL;
-
 static void prv_start_dictation(VoiceUiData *data);
 static void prv_stop_dictation(VoiceUiData *data);
 static void prv_cancel_dictation(VoiceUiData *data);
@@ -1327,51 +1324,11 @@ static void prv_mic_window_disappear(Window *window) {
   }
 }
 
-// Called when BLE responsiveness reaches ResponseTimeMin (fast mode)
-static void prv_responsiveness_granted_handler(void) {
-  VoiceUiData *data = s_current_voice_window;
-  if (!data) {
-    return;
-  }
-
-  VOICE_LOG("ResponseTimeMin granted, starting dictation");
-  data->responsiveness_granted = true;
-
-  // If window is visible and waiting to start, start dictation now
-  if ((data->state == StateStart) || (data->state == StateWaitForReady)) {
-    prv_start_dictation(data);
-  }
-}
-
 static void prv_mic_window_appear(Window *window) {
   VoiceUiData *data = window_get_user_data(window);
-  s_current_voice_window = data;
-
   if ((data->state == StateStart) || (data->state == StateFinished)) {
     sys_light_enable_respect_settings(true);
-
-#if !defined(TARGET_QEMU)
-    // Request low latency mode and wait for it to be granted before starting dictation
-    CommSession *comm_session = comm_session_get_system_session();
-    if (comm_session) {
-      VOICE_LOG("Requesting ResponseTimeMin with granted handler");
-      comm_session_set_responsiveness_ext(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMin,
-                                          MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS,
-                                          prv_responsiveness_granted_handler);
-    }
-
-    // If already granted (or QEMU), start immediately
-    if (data->responsiveness_granted) {
-      prv_start_dictation(data);
-    } else {
-      // Show pulsing dot while waiting for fast mode
-      VOICE_LOG("Waiting for ResponseTimeMin to be granted");
-      prv_set_mic_window_state(data, StateWaitForReady);
-    }
-#else
-    // On QEMU, just start immediately
     prv_start_dictation(data);
-#endif
   }
 }
 
@@ -1408,16 +1365,12 @@ VoiceWindow *voice_window_create(char *buffer, size_t buffer_size,
     .message = buffer,
     .buffer_size = buffer_size,
     .session_type = session_type,
-    .responsiveness_granted = false,
   };
 
   return data;
 }
 
 void voice_window_destroy(VoiceWindow *voice_window) {
-  if (s_current_voice_window == voice_window) {
-    s_current_voice_window = NULL;
-  }
   voice_window_pop(voice_window);
   applib_free(voice_window->message);
   applib_free(voice_window);
