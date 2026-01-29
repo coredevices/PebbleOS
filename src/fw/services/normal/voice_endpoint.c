@@ -184,6 +184,8 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
     AudioEndpointSessionId session_id, AudioTransferInfoSpeex *info, Uuid *app_uuid) {
 
   CommSession *comm_session = comm_session_get_system_session();
+  comm_session_set_responsiveness(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMin,
+                                  MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
 
   // We're only sending one attribute now: the speex audio transfer info packet
   size_t size = sizeof(SessionSetupMsg) + sizeof(GenericAttribute) +

@@ -86,7 +86,6 @@ typedef struct VoiceUiData {
 
   VoiceSessionId session_id;
   VoiceEndpointSessionType session_type;
-  bool responsiveness_granted;  // Track if ResponseTimeMin has been granted
 } VoiceUiData;
 
 void voice_window_lose_focus(VoiceWindow *voice_window);
