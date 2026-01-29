@@ -132,7 +132,6 @@ typedef struct {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   //dynamic backlight thresholds
   uint32_t dynamic_backlight_min_threshold;
-  uint32_t dynamic_backlight_max_threshold;
 #endif
 } BoardConfig;
 
@@ -231,4 +230,3 @@ void board_early_init(void);
 void board_init(void);
 
 #include "board_definitions.h"
-
