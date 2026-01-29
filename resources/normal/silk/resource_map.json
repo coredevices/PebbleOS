@@ -177,11 +177,6 @@
     },
     {
       "type": "png",
-      "name": "WEATHER_CHANNEL_LOGO",
-      "file": "normal/snowy/images/weather_channel_logo.png"
-    },
-    {
-      "type": "png",
       "name": "STRIDE_SHOE",
       "file": "normal/silk/images/stride_shoe.png"
     },
