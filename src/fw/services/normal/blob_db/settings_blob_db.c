@@ -64,7 +64,6 @@ static const char *s_syncable_settings[] = {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   "lightDynamicIntensity",
   "dynBacklightMinThreshold",
-  "dynBacklightMaxThreshold",
 #endif
 
   // Language preferences

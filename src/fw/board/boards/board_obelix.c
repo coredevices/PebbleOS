@@ -561,8 +561,7 @@ const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 45,
   .ambient_light_dark_threshold = 150,
   .ambient_k_delta_threshold = 25,
-  .dynamic_backlight_min_threshold = 15,
-  .dynamic_backlight_max_threshold = 50,
+  .dynamic_backlight_min_threshold = 5,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {

@@ -80,9 +80,6 @@ static bool s_backlight_dynamic_intensity_enabled = true;
 
 #define PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD "dynBacklightMinThreshold"
 static uint32_t s_dynamic_backlight_min_threshold = 0; // default set from board config in shell_prefs_init()
-
-#define PREF_KEY_DYNAMIC_BACKLIGHT_MAX_THRESHOLD "dynBacklightMaxThreshold"
-static uint32_t s_dynamic_backlight_max_threshold = 0; // default set from board config in shell_prefs_init()
 #endif
 
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
@@ -316,20 +313,6 @@ static bool prv_set_s_dynamic_backlight_min_threshold(uint32_t *threshold) {
     return false;
   }
   s_dynamic_backlight_min_threshold = *threshold;
-  return true;
-}
-
-static bool prv_set_s_dynamic_backlight_max_threshold(uint32_t *threshold) {
-  // Validate and constrain the threshold
-  if (*threshold > AMBIENT_LIGHT_LEVEL_MAX) {
-    s_dynamic_backlight_max_threshold = AMBIENT_LIGHT_LEVEL_MAX;
-    return false;
-  }
-  if (*threshold < 1) {
-    s_dynamic_backlight_max_threshold = 1;
-    return false;
-  }
-  s_dynamic_backlight_max_threshold = *threshold;
   return true;
 }
 #endif
@@ -764,7 +747,6 @@ void shell_prefs_init(void) {
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
-  s_dynamic_backlight_max_threshold = BOARD_CONFIG.dynamic_backlight_max_threshold;
 #endif
   // Use board-specific default motion sensitivity if provided (non-zero)
   if (BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity != 0) {
@@ -1123,31 +1105,11 @@ void backlight_set_dynamic_min_threshold(uint32_t threshold) {
   if (threshold < 0) {
     threshold = 0;
   }
-  // Ensure min threshold is less than max threshold
-  if (threshold >= s_dynamic_backlight_max_threshold && s_dynamic_backlight_max_threshold > 0) {
-    threshold = s_dynamic_backlight_max_threshold - 1;
-  }
+  // Note: Min threshold should be much smaller than ambient_light_dark_threshold (Zone 2 upper bound)
+  // Typically min_threshold is 0-5, while ambient_light_dark_threshold is ~150
   prv_pref_set(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD, &threshold, sizeof(threshold));
 }
 
-uint32_t backlight_get_dynamic_max_threshold(void) {
-  return s_dynamic_backlight_max_threshold;
-}
-
-void backlight_set_dynamic_max_threshold(uint32_t threshold) {
-  // Validate threshold is within acceptable range
-  if (threshold > AMBIENT_LIGHT_LEVEL_MAX) {
-    threshold = AMBIENT_LIGHT_LEVEL_MAX;
-  }
-  if (threshold < 1) {
-    threshold = 1;
-  }
-  // Ensure max threshold is greater than min threshold
-  if (threshold <= s_dynamic_backlight_min_threshold) {
-    threshold = s_dynamic_backlight_min_threshold + 1;
-  }
-  prv_pref_set(PREF_KEY_DYNAMIC_BACKLIGHT_MAX_THRESHOLD, &threshold, sizeof(threshold));
-}
 #endif
 
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
