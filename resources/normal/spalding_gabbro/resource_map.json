@@ -156,11 +156,6 @@
       "file": "normal/robert/images/stride_shoe_blue.png"
     },
     {
-      "type": "png",
-      "name": "WEATHER_CHANNEL_LOGO",
-      "file": "normal/snowy/images/weather_channel_logo.png"
-    },
-    {
       "type": "pbi",
       "name": "SYSTEM_FCC_MARK",
       "file": "normal/snowy/images/system_fcc_mark.png"

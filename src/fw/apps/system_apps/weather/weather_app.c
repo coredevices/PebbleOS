@@ -3,7 +3,6 @@
 
 #include "weather_app.h"
 #include "weather_app_layout.h"
-#include "weather_app_splash_screen.h"
 #include "weather_app_warning_dialog.h"
 
 #include "applib/app.h"
@@ -184,10 +183,7 @@ static NOINLINE void prv_init(void) {
   weather_service_destroy_default_forecast(default_forecast);
 
   // TODO PBL-38484: Consider using a different dialog for when data is stale but phone is connected
-  if (is_default_forecast_data_recent || connection_service_peek_pebble_app_connection()) {
-    const uint32_t splash_screen_timeout_ms = 500;
-    weather_app_splash_screen_push(splash_screen_timeout_ms);
-  } else {
+  if (!is_default_forecast_data_recent && !connection_service_peek_pebble_app_connection()) {
     /// Shown when there is no connection to the phone and the data that we have is not recent
     const char *warning_text = i18n_get("Unable to connect. Your weather data may be out of date; "\
                                         "try checking the connection on your phone.", data);
