@@ -36,10 +36,9 @@
           });
         in
         {
-          default = pkgs.mkShell {
+          default = pkgs.mkShellNoCC {
             hardeningDisable = [ "fortify" ]; # waf expects unoptimized builds
             buildInputs = with pkgs; [
-              clang_multi
               emscripten
               gcc
               gcc-arm-embedded-14_2r1
@@ -49,26 +48,39 @@
               openocd
               protobuf
               python313
+            ] ++ lib.optionals stdenv.isLinux [
+              clang_multi
             ];
             shellHook = ''
+            # Ensure that apple command line tools are installed on macOS
+            ${pkgs.lib.optionalString pkgs.stdenv.isDarwin ''
+                # Verify Apple Command Line Tools are installed
+                if ! /usr/bin/xcrun --find clang &> /dev/null; then
+                  echo "❌ Error: Apple Command Line Tools not found!"
+                  echo "   Please install with: xcode-select --install"
+                  exit 1
+                fi
+                echo "✓ Apple CLT found: $(/usr/bin/clang --version | head -1)"
+              ''}
+              # Disable pyenv to avoid conflicts
+              export PYENV_VERSION=system
+              unset PYENV_ROOT
+
               # Prepare the python venv
               export VENV_DIR=".venv"
               if [ ! -d "$VENV_DIR" ]; then
                 echo "Creating virtual environment..."
                 python -m venv "$VENV_DIR"
+                source "$VENV_DIR/bin/activate"
                 if [ -f "requirements.txt" ]; then
-                  source "$VENV_DIR/bin/activate"
+                  echo "Installing Python dependencies..."
                   pip install -r requirements.txt
                 fi
+              else
+                source "$VENV_DIR/bin/activate"
               fi
-
-              # Activate the python venv
-              source "$VENV_DIR/bin/activate"
+              
               echo "Python virtual environment activated."
-
-              # Allow waf to find the compilers it needs
-              export CC=
-              export CXX=
             '';
           };
         }
