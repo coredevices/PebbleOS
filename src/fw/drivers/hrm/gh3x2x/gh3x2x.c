@@ -51,12 +51,22 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 #endif
 }
 
+static void prv_conv_fs4g_mg_to_lsb512(AccelRawData* data) {
+  //hrm use 512lsb/g, so convert the mg data to lsb by coef 1.953f(1000/512)
+  data->x = (int16_t)data->x/1.953f;
+  data->y = (int16_t)data->y/1.953f;
+  data->z = (int16_t)data->z/1.953f;
+}
+
 void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_buffer_index) {
-  // TODO, clean the buffer now
-  GU16 count = *gsensor_buffer_index;
+  HRMAccelData* acc = hrm_manager_get_accel_data();
+  GU16 count = *gsensor_buffer_index = acc->num_samples;
+  if(count > __GSENSOR_DATA_BUFFER_SIZE__) count = __GSENSOR_DATA_BUFFER_SIZE__;
   for (uint16_t i = 0; i < count; ++i) {
-    memset(&gsensor_buffer[i], 0, sizeof(STGsensorRawdata));
+    prv_conv_fs4g_mg_to_lsb512(&acc->data[i]);
+    memcpy(&gsensor_buffer[i], &acc->data[i], sizeof(STGsensorRawdata));
   }
+  hrm_manager_release_accel_data();
 }
 
 static void gh3026_int_callback_function(void *context) {
@@ -185,8 +195,6 @@ static void gh3x2x_timer_stop_handle(void* arg) {
   if (HRM && HRM->state->timer) {
     app_timer_cancel(HRM->state->timer);
     HRM->state->timer = NULL;
-    HRM->state->timer_period_ms = 0;
-    s_hrm_timer_flag = false;
   }
 }
 
@@ -353,13 +361,19 @@ void gh3x2x_start_ft_leakage(void) {
   system_task_add_callback(gh3x2x_ft_leakage_start_handle, NULL);
 }
 
-void gh3x2x_factory_test_disable(HRMDevice *dev) {
+//shoud be called in system task
+static void gh3x2x_factory_test_disable_handle(void *data) {
+  HRMDevice *dev = (HRMDevice *)data;
   dev->state->enabled = false;
   Gh3x2xDemoStopSampling(0xFFFFFFFF);
   if (dev->state->factory != NULL) {
     free(dev->state->factory);
     dev->state->factory = NULL;
   }
+}
+
+void gh3x2x_factory_test_disable(void) {
+  system_task_add_callback(gh3x2x_factory_test_disable_handle, (void*)HRM);
 }
 
 uint8_t gh3x2x_factory_result_get(float* p_result)
@@ -399,11 +413,21 @@ bool gh3x2x_ble_data_recv(void* context) {
   }
   return true;
 }
+
+void gh3x2x_set_work_mode(int32_t mode) {
+  HRMDeviceState* state = HRM->state;
+  //always enable soft adt
+  state->work_mode = mode | GH3X2X_FUNCTION_SOFT_ADT_IR;
+}
 #endif // MANUFACTURING_FW
 
 // HRM interface
 
 void hrm_init(HRMDevice *dev) {
+#ifdef MANUFACTURING_FW
+  HRMDeviceState* state = HRM->state;
+  state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
+#endif
 }
 
 bool hrm_enable(HRMDevice *dev) {
@@ -424,7 +448,7 @@ bool hrm_enable(HRMDevice *dev) {
   GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_NEED_FORCE_READ_FIFO);
   Gh3x2xDemoFunctionSampleRateSet(GH3X2X_FUNCTION_HR, GH3X2X_HR_SAMPLING_RATE);
 #ifdef MANUFACTURING_FW
-  Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_ADT);
+  Gh3x2xDemoStartSampling(dev->state->work_mode);
 #else
   Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2);
 #endif

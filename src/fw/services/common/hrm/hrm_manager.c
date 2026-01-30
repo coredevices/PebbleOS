@@ -311,8 +311,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
 
       s_manager_state.accel_state = sys_accel_manager_data_subscribe(
           ACCEL_SAMPLING_25HZ, prv_handle_accel_data, NULL, PebbleTask_NewTimers);
-      accel_manager_set_jitterfree_sampling_rate(s_manager_state.accel_state,
-                                                 HRM_MANAGER_ACCEL_RATE_MILLIHZ);
+          
       sys_accel_manager_set_sample_buffer(
           s_manager_state.accel_state, s_manager_state.accel_manager_buffer,
           HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE);

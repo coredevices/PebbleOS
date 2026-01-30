@@ -157,7 +157,7 @@ static int16_t prv_get_axis_projection_mg(axis_t axis, int16_t *raw_vector) {
   uint8_t axis_offset = BOARD_CONFIG_ACCEL.accel_config.axes_offsets[axis];
   int axis_direction = BOARD_CONFIG_ACCEL.accel_config.axes_inverts[axis] ? -1 : 1;
 
-  return lis2dw12_from_fs2_lp1_to_mg(raw_vector[axis_offset] * axis_direction);
+  return lis2dw12_from_fs4_lp1_to_mg(raw_vector[axis_offset] * axis_direction);
 }
 
 static uint8_t prv_lis2dw12_read_sample(AccelDriverSample *data) {
@@ -233,7 +233,6 @@ static void prv_lis2dw12_read_samples(void) {
     // Approximate timestamp: assume fifo_level contiguous samples ending now
     uint32_t sample_index_from_end = (fifo_level - 1) - i;  // 0 for newest
     sample.timestamp_us = now_us - (sample_index_from_end * (uint64_t)interval_us);
-    accel_cb_new_sample(&sample);
     prv_note_new_sample(&sample);
   }
 }
@@ -466,11 +465,9 @@ static void prv_lis2dw12_configure_fifo(bool enable) {
     lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_MODE);
     psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS); // Allow time for FIFO to clear
 
-    // Put FIFO in bypass-to-stream mode instead of pure stream mode.
-    // Stream mode continuously fills the FIFO even during interrupt processing,
-    // which can cause overflow races and interfere with wake-up (shake) detection.
-    // Bypass-to-stream provides cleaner state transitions and prevents overflow loops.
-    if (lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_TO_STREAM_MODE)) {
+    // Always report realtime data, so use stream mode for fifo
+    // HRM needs feed realtime acc data
+    if (lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_STREAM_MODE)) {
       PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to enable FIFO bypass-to-stream mode");
     }
   } else {
@@ -597,7 +594,7 @@ static void prv_lis2dw12_configure_interrupts(void) {
   // Configure FIFO first, then set up interrupt routing
   if (use_fifo) {
     prv_lis2dw12_configure_fifo(true);
-    int1_routes.int1_diff5 = 1;
+    int1_routes.int1_diff5 = 0;
     int1_routes.int1_fth = 1;
     int1_routes.int1_drdy = 0;
   } else {
@@ -619,7 +616,6 @@ static void prv_lis2dw12_configure_interrupts(void) {
     // The LIS2DW12 needs a brief delay after CTRL4/CTRL7 register writes
     // before the wake-up interrupt logic is fully operational.
     psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS);
-    
     // Clear any pending interrupt sources before enabling external interrupt
     lis2dw12_all_sources_t all_sources;
     if (lis2dw12_all_sources_get(&lis2dw12_ctx, &all_sources)) {
@@ -681,7 +677,7 @@ void lis2dw12_init(void) {
   }
 
   /* full scale: +/- 2g */
-	if (lis2dw12_full_scale_set(&lis2dw12_ctx, LIS2DW12_2g)) {
+	if (lis2dw12_full_scale_set(&lis2dw12_ctx, LIS2DW12_4g)) {
 		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set accelerometer scale");
 		return;
 	}
