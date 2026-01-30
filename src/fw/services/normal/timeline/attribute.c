@@ -80,6 +80,7 @@ static AttributeType prv_attribute_type(AttributeId id) {
     case AttributeIdLaunchCode:
     case AttributeIdAncsId:
     case AttributeIdTimestamp:
+    case AttributeIdMuteExpiration:
       return AttributeTypeUint32;
     case AttributeIdCannedResponses:
     case AttributeIdHeadings:
