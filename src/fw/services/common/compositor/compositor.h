@@ -120,3 +120,13 @@ void compositor_freeze(void);
 //! Resuming allowing new frames to be pushed to the compositor, undoes the effects of
 //! compositor_freeze.
 void compositor_unfreeze(void);
+
+//! Copy app FB into the given region of the system framebuffer, scaling or centering the app
+//! framebuffer content in the destination as needed based on user preference.
+//! If the update_rect points off the edge of the screen, the region updated will be clipped as needed.
+//! If copy_relative_to_origin is false, update_rect will be copied/filled starting from the origin of the
+//! app framebuffer. If true, it is relative to the region being updated will be copied/filled.
+void compositor_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_to_origin);
+
+//! Extended version of compositor_scaled_app_fb_copy which allows an Y offset for the source to be specified.
+void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_relative_to_origin, int16_t offset_y);

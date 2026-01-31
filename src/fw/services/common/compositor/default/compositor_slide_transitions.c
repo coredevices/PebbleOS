@@ -12,6 +12,7 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/animation_interpolate.h"
 #include "popups/timeline/peek.h"
+#include "system/logging.h"
 
 // TODO: PBL-31388 Factor out vertical compositor slide animations
 // This does a similar transition to the legacy modal slide transition
@@ -48,7 +49,11 @@ static void prv_shift_framebuffer_rows(GBitmap *dest_bitmap, int16_t start_row, 
 
 static void prv_duplicate_framebuffer_row(GBitmap *dest_bitmap, int16_t start_row, int16_t end_row,
                                           GBitmap *src_bitmap, int16_t dupe_row) {
-  prv_copy_framebuffer_rows(dest_bitmap, src_bitmap, start_row, end_row, dupe_row, 0);
+  const int16_t delta = start_row > end_row ? -1 : 1;
+  for (int16_t dest_row = start_row; dest_row != end_row; dest_row += delta) {
+    int16_t offset_y = (dupe_row >= 0 ? dupe_row : dest_row) - dest_row;
+    compositor_scaled_app_fb_copy_offset(GRect(0, dest_row, DISP_COLS, 1), false /* copy_relative_to_origin */, offset_y);
+  }
 }
 
 static void prv_slide_transition_animation_update(GContext *ctx, Animation *animation,
@@ -117,10 +122,9 @@ static void prv_slide_transition_animation_update(GContext *ctx, Animation *anim
       graphics_fill_rect(ctx, &GRect(0, fill_offset_y, DISP_COLS, fill_height));
     }
   } else {
-    GBitmap app_bitmap = compositor_get_app_framebuffer_as_bitmap();
-    bitblt_bitmap_into_bitmap(&dest_bitmap, &app_bitmap, GPoint(0, app_offset_y),
-                              GCompOpAssign, GColorWhite);
+    compositor_scaled_app_fb_copy(GRect(0, app_offset_y, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
     if (app_should_dupe) {
+      GBitmap app_bitmap = compositor_get_app_framebuffer_as_bitmap();
       prv_duplicate_framebuffer_row(&dest_bitmap, app_dupe_row, app_offset_y + app_dupe_row,
                                     &app_bitmap, app_dupe_row);
     }
