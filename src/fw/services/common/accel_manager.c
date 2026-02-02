@@ -733,6 +733,18 @@ void accel_cb_shake_detected(void) {
   event_put(&e);
 }
 
+void accel_cb_tap_detected(IMUCoordinateAxis axis, int32_t direction) {
+  PebbleEvent e = {
+    .type = PEBBLE_ACCEL_TAP_EVENT,
+    .accel_tap = {
+      .axis = axis,
+      .direction = direction,
+    },
+  };
+
+  event_put(&e);
+}
+
 void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t direction) {
   PebbleEvent e = {
     .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
