@@ -85,10 +85,6 @@ bool accel_get_double_tap_detection_enabled(void) {
   return false;
 }
 
-bool accel_run_selftest(void) {
-  return true;
-}
-
 bool gyro_run_selftest(void) {
   return true;
 }
