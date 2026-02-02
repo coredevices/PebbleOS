@@ -43,5 +43,3 @@ void lsm6dso_power_down(void);
 
 //! Retrieve a snapshot of sensor diagnostics for telemetry.
 void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics);
-
-void imu_set_rotated(bool rotated);

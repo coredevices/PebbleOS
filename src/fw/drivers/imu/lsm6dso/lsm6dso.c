@@ -1262,6 +1262,6 @@ void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
   diagnostics->state_flags = flags;
 }
 
-void imu_set_rotated(bool rotated) {
+void accel_set_rotated(bool rotated) {
   s_rotated_180 = rotated;
 }
