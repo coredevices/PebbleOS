@@ -265,7 +265,3 @@ bool accel_get_double_tap_detection_enabled(void) {
 
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {
 }
-
-bool accel_run_selftest(void) {
-  return true;
-}
