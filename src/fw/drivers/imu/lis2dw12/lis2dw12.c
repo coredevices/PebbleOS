@@ -1,909 +1,769 @@
-/* SPDX-FileCopyrightText: 2025 Core Devices LLC */
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "board/board.h"
 #include "drivers/accel.h"
-#include "drivers/i2c.h"
 #include "drivers/exti.h"
-#include "kernel/util/sleep.h"
+#include "drivers/i2c.h"
+#include "drivers/rtc.h"
+#include "drivers/gpio.h"
+#include "services/imu/units.h"
+#include "services/common/regular_timer.h"
 #include "system/logging.h"
-#include "drivers/vibe.h"
-#include "services/common/vibe_pattern.h"
-#include "system/passert.h"
-#include "lis2dw12_reg.h"
+#include "system/status_codes.h"
+#include "kernel/util/delay.h"
+#include "util/math.h"
 
-// Error recovery thresholds and watchdog timeouts
-#define LIS2DW12_MAX_CONSECUTIVE_FAILURES 3
-#define LIS2DW12_INTERRUPT_GAP_LOG_THRESHOLD_MS 3000
-#define LIS2DW12_FIFO_MAX_WATERMARK 32
-// Delay after detecting a vibe before shake/tap interrupts should be processed again
-#define LIS2DW12_VIBE_COOLDOWN_MS (50)
-#define LIS2DW12_REG_OPS_WAIT_TIME_MS (1)
+// Implementation notes:
+//
+// - Single-shot mode is used to perform peeking measurements
+// - Low-power mode 1 (12-bit) is always used (minimum power mode)
+// - ODR is limited to the [12.5, 200] Hz range
+// - Shake detection uses 12.5Hz when no active sampling is ongoing
+// - Wake-up duration absolute time depends on the ODR, a parameter that can
+//   be changed depending on the sampling interval configuration. Value is NOT
+//   adjusted automatically when ODR changes (we just have 2 bits...), so it is
+//   possible to notice sensitivity changes when changing sampling interval.
+// - For some reason (needs more investigation), INT1 is sometimes left HIGH
+//   due to FIFO overruns, and without edge change, we cannot detect such
+//   events. To mitigate this, there is a watchdog timer that re-arms FIFO
+//   if no INT1 event is detected within the expected time window based on the
+//   ODR and FIFO threshold.
 
-static int32_t prv_lis2dw12_write(void* handler, uint8_t reg, const uint8_t* data, uint16_t len);
-static int32_t prv_lis2dw12_read(void* handler, uint8_t reg, uint8_t* data, uint16_t len);
+// Time to wait after reset (us)
+#define LIS2DW12_RESET_TIME_US 5
 
-static stmdev_ctx_t lis2dw12_ctx = {
-  .read_reg = prv_lis2dw12_read,
-  .write_reg = prv_lis2dw12_write,
-};
+// Scale range when in 12-bit mode (low-power mode 1)
+#define LIS2DW12_S12_SCALE_RANGE (1U << (12U - 1U))
 
-typedef struct {
-  lis2dw12_odr_t odr;
-  uint32_t interval_thr;
-  uint32_t interval;
-} lis2dw12_sample_rate_t;
+// Registers
+#define LIS2DW12_WHO_AM_I 0x0FU
+#define LIS2DW12_UNDOC 0x17U
+#define LIS2DW12_CTRL1 0x20U
+#define LIS2DW12_CTRL2 0x21U
+#define LIS2DW12_CTRL3 0x22U
+#define LIS2DW12_CTRL4_INT1_PAD_CTRL 0x23U
+#define LIS2DW12_CTRL5_INT2_PAD_CTRL 0x24U
+#define LIS2DW12_CTRL6 0x25U
+#define LIS2DW12_STATUS 0x27U
+#define LIS2DW12_OUT_X_L 0x28U
+#define LIS2DW12_FIFO_CTRL 0x2EU
+#define LIS2DW12_FIFO_SAMPLES 0x2FU
+#define LIS2DW12_WAKE_UP_THS 0x34U
+#define LIS2DW12_WAKE_UP_DUR 0x35U
+#define LIS2DW12_ALL_INT_SRC 0x3BU
+#define LIS2DW12_CTRL7 0x3FU
 
-static const lis2dw12_sample_rate_t s_lis2dw12_sample_rates[] = {
-  {LIS2DW12_XL_ODR_1Hz6_LP_ONLY, 200000, 625000},
-  {LIS2DW12_XL_ODR_12Hz5, 60000, 80000},
-  {LIS2DW12_XL_ODR_25Hz, 30000, 40000},
-  {LIS2DW12_XL_ODR_50Hz, 15000, 20000},
-  {LIS2DW12_XL_ODR_100Hz, 7500, 10000},
-  {LIS2DW12_XL_ODR_200Hz, 3750, 5000},
-  {LIS2DW12_XL_ODR_400Hz, 1875, 2500},
-  {LIS2DW12_XL_ODR_800Hz, 937, 1250},
-  {LIS2DW12_XL_ODR_1k6Hz, 468, 625},
-};
+// WHO_AM_I fields
+#define LIS2DW12_WHO_AM_I_VAL 0x44U
 
-static bool s_lis2dw12_enabled = true;
-static bool s_lis2dw12_running = false;
-static bool s_fifo_in_use = false;  // true when we have enabled FIFO batching
-static uint32_t s_last_vibe_detected = 0;
-// User-configured sensitivity percentage (0-100), where 100 = most sensitive
-// Default to 100% (maximum sensitivity) to maintain current behavior
-static uint8_t s_user_sensitivity_percent = 100;
-// Error tracking and recovery
-static uint32_t s_consecutive_errors = 0;
-static bool s_sensor_health_ok = true;
-static int16_t s_last_sample_mg[3] = {0};
-static uint64_t s_last_sample_timestamp_ms = 0;
-// Interrupt activity instrumentation so we can spot when the sensor stops firing INT1.
-static uint64_t s_last_interrupt_ms = 0;
-static uint64_t s_last_wake_event_ms = 0;
-static uint64_t s_last_double_tap_ms = 0;
-static uint32_t s_interrupt_count = 0;
-static uint32_t s_wake_event_count = 0;
-static uint32_t s_double_tap_event_count = 0;
+// UNDOC fields
+#define LIS2DW12_UNDOC_ADDR_PULLUP_DIS (1U << 6U)
 
-static bool s_rotated_180 = false;
+// CTRL1 fields
+#define LIS2DW12_CTRL1_LP_MODE1 (0U << 0U)
+#define LIS2DW12_CTRL1_MODE_LP (0U << 2U)
+#define LIS2DW12_CTRL1_MODE_SINGLE (2U << 2U)
+#define LIS2DW12_CTRL1_ODR_PD (0x0U << 4U)
+#define LIS2DW12_CTRL1_ODR_1HZ6_LP_ONLY (0x1U << 4U)
+#define LIS2DW12_CTRL1_ODR_12HZ5 (0x2U << 4U)
+#define LIS2DW12_CTRL1_ODR_25HZ (0x3U << 4U)
+#define LIS2DW12_CTRL1_ODR_50HZ (0x4U << 4U)
+#define LIS2DW12_CTRL1_ODR_100HZ (0x5U << 4U)
+#define LIS2DW12_CTRL1_ODR_200HZ (0x6U << 4U)
+#define LIS2DW12_CTRL1_ODR_400HZ_HP_ONLY (0x7U << 4U)
+#define LIS2DW12_CTRL1_ODR_800HZ_HP_ONLY (0x8U << 4U)
+#define LIS2DW12_CTRL1_ODR_1K6HZ_HP_ONLY (0x9U << 4U)
 
-typedef enum {
-  X_AXIS = 0,
-  Y_AXIS = 1,
-  Z_AXIS = 2,
-} axis_t;
+// CTRL2 fields
+#define LIS2DW12_CTRL2_SOFT_RESET (1U << 6U)
+#define LIS2DW12_CTRL2_BOOT (1U << 7U)
 
-typedef struct {
-  uint32_t sampling_interval_us;
-  uint32_t num_samples;
-  bool shake_detection_enabled;
-  bool shake_sensitivity_high;
-  bool double_tap_detection_enabled;
-} lis2dw12_state_t;
-lis2dw12_state_t s_lis2dw12_state = {0};
-lis2dw12_state_t s_lis2dw12_state_target = {0};
-static int32_t prv_lis2dw12_write(void* handler, uint8_t reg, const uint8_t* data, uint16_t len) {
-  i2c_use(I2C_LSM2DW12);
-  uint16_t data_len = len + sizeof(reg);
-  uint8_t data_w[data_len];
-  data_w[0] = reg;
-  memcpy(data_w+1, data, len);
-  bool rv = i2c_write_block(I2C_LSM2DW12, data_len, data_w);
-  i2c_release(I2C_LSM2DW12);
+// CTRL3 fields
+#define LIS2DW12_CTRL3_SLP_MODE_1 (1U << 0U)
+#define LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 (1U << 1U)
 
-  return !rv;
+// CTRL4_INT1_PAD_CTRL fields
+#define LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_WU (1U << 5U)
+#define LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_FTH (1U << 1U)
+
+// CTRL5_INT2_PAD_CTRL fields
+#define LIS2DW12_CTRL5_INT2_PAD_CTRL_INT2_OVR (1U << 3U)
+
+// CTRL6 fields
+#define LIS2DW12_CTRL6_FS_2G (0U << 4U)
+#define LIS2DW12_CTRL6_FS_4G (1U << 4U)
+#define LIS2DW12_CTRL6_FS_8G (2U << 4U)
+#define LIS2DW12_CTRL6_FS_16G (3U << 4U)
+
+// STATUS fields
+#define LIS2DW12_STATUS_DRDY (1U << 0U)
+
+// FIFO_CTRL fields
+#define LIS2DW12_FIFO_CTRL_FTH_POS 0U
+#define LIS2DW12_FIFO_CTRL_FTH_MASK 0x1FU
+#define LIS2DW12_FIFO_CTRL_FTH(val) \
+  (((val) << LIS2DW12_FIFO_CTRL_FTH_POS) & LIS2DW12_FIFO_CTRL_FTH_MASK)
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS (0x0U << 5U)
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_FIFO (0x1U << 5U)
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_CONT (0x6U << 5U)
+
+// FIFO_SAMPLES fields
+#define LIS2DW12_FIFO_SAMPLES_DIFF_POS 0U
+#define LIS2DW12_FIFO_SAMPLES_DIFF_MASK 0x3FU
+#define LIS2DW12_FIFO_SAMPLES_DIFF_GET(val) \
+  (((val) & LIS2DW12_FIFO_SAMPLES_DIFF_MASK) >> LIS2DW12_FIFO_SAMPLES_DIFF_POS)
+#define LIS2DW12_FIFO_SAMPLES_FIFO_OVR (1U << 6U)
+#define LIS2DW12_FIFO_SAMPLES_FIFO_FTH (1U << 7U)
+
+// WAKE_UP_THS fields
+#define LIS2DW12_WAKE_UP_THS_WK_THS_POS 0U
+#define LIS2DW12_WAKE_UP_THS_WK_THS_MASK 0x3FU
+#define LIS2DW12_WAKE_UP_THS_WK_THS_MIN 1U
+#define LIS2DW12_WAKE_UP_THS_WK_THS_MAX 63U
+#define LIS2DW12_WAKE_UP_THS_WK_THS(val) \
+  (((val) << LIS2DW12_WAKE_UP_THS_WK_THS_POS) & LIS2DW12_WAKE_UP_THS_WK_THS_MASK)
+
+// WAKE_UP_DUR fields
+#define LIS2DW12_WAKE_UP_DUR_WAKE_DUR_POS 5U
+#define LIS2DW12_WAKE_UP_DUR_WAKE_DUR_MASK 0x60U
+#define LIS2DW12_WAKE_UP_DUR_WAKE_DUR(val) \
+  (((val) << LIS2DW12_WAKE_UP_DUR_WAKE_DUR_POS) & LIS2DW12_WAKE_UP_DUR_WAKE_DUR_MASK)
+
+// ALL_INT_SRC fields
+#define LIS2DW12_ALL_INT_SRC_WU_IA (1U << 1U)
+
+// CTRL7 fields
+#define LIS2DW12_CTRL7_INTERRUPTS_ENABLE (1U << 5U)
+#define LIS2DW12_CTRL7_INT2_ON_INT1 (1U << 6U)
+
+////////////////////////////////////////////////////////////////////////////////
+// Private
+////////////////////////////////////////////////////////////////////////////////
+
+static bool prv_lis2dw12_write(uint8_t reg, const uint8_t *data, uint16_t len) {
+  bool ret;
+
+  i2c_use(&LIS2DW12->i2c);
+  ret = i2c_write_register_block(&LIS2DW12->i2c, reg, len, data);
+  i2c_release(&LIS2DW12->i2c);
+
+  return ret;
 }
 
-static int32_t prv_lis2dw12_read(void* handler, uint8_t reg, uint8_t* data, uint16_t len) {
-  i2c_use(I2C_LSM2DW12);
-  bool rv = i2c_write_block(I2C_LSM2DW12, sizeof(reg), &reg);
-  if (rv) {
-    rv = i2c_read_block(I2C_LSM2DW12, len, data);
+static bool prv_lis2dw12_read(uint8_t reg, uint8_t *data, uint16_t len) {
+  bool ret;
+
+  i2c_use(&LIS2DW12->i2c);
+  ret = i2c_read_register_block(&LIS2DW12->i2c, reg, len, data);
+  i2c_release(&LIS2DW12->i2c);
+
+  return ret;
+}
+
+static int16_t prv_raw_to_s12(const uint8_t *raw) {
+  uint16_t val;
+
+  val = ((raw[0] >> 4U) & 0xFU) | (raw[1] << 4U);
+  if (val & 0x0800U) {
+    val |= 0xF000U;
   }
-  i2c_release(I2C_LSM2DW12);
 
-  return !rv;
+  return (int16_t)val;
 }
-static uint64_t prv_get_timestamp_ms(void) {
+
+static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {
+  uint8_t offset;
+  int16_t val;
+
+  offset = LIS2DW12->axis_map[axis];
+
+  val = LIS2DW12->axis_dir[axis] *
+        (prv_raw_to_s12(&raw[offset * 2U]) * (int16_t)LIS2DW12->scale_mg) /
+        (int16_t)LIS2DW12_S12_SCALE_RANGE;
+
+  if (LIS2DW12->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
+    val *= -1;
+  }
+
+  return val;
+}
+
+static void prv_raw_to_mg(const uint8_t *raw, AccelDriverSample *sample) {
+  sample->x = prv_axis_raw_mg(AXIS_X, raw);
+  sample->y = prv_axis_raw_mg(AXIS_Y, raw);
+  sample->z = prv_axis_raw_mg(AXIS_Z, raw);
+}
+
+static uint64_t prv_get_curr_system_time_us(void) {
   time_t time_s;
   uint16_t time_ms;
+
   rtc_get_time_ms(&time_s, &time_ms);
-  return (((uint64_t)time_s) * 1000 + time_ms);
+
+  return (((uint64_t)time_s) * 1000 + time_ms) * 1000ULL;
 }
 
-static bool prv_is_vibing(void) {
-  if (vibes_get_vibe_strength() != VIBE_STRENGTH_OFF) {
-    s_last_vibe_detected = prv_get_timestamp_ms();
-    return true;
-  }
-  if (s_last_vibe_detected > 0) {
-    if (prv_get_timestamp_ms() - s_last_vibe_detected < LIS2DW12_VIBE_COOLDOWN_MS) {
-      return true;
-    } else {
-      s_last_vibe_detected = 0;  // reset if cooldown expired
-    }
-  }
-  return false;
-}
+static void prv_lis2dw12_read_samples(uint8_t num_samples) {
+  uint64_t timestamp_us;
 
-static void prv_note_new_sample(const AccelDriverSample *sample) {
-  if (!sample) {
+  if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, LIS2DW12->state->raw_sample_buf,
+                         num_samples * LIS2DW12_SAMPLE_SIZE_BYTES)) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read samples");
     return;
   }
 
-  s_last_sample_mg[0] = sample->x;
-  s_last_sample_mg[1] = sample->y;
-  s_last_sample_mg[2] = sample->z;
+  timestamp_us = prv_get_curr_system_time_us();
 
-  if (sample->timestamp_us != 0) {
-    s_last_sample_timestamp_ms = sample->timestamp_us / 1000ULL;
-  } else {
-    s_last_sample_timestamp_ms = prv_get_timestamp_ms();
-  }
-}
-
-static void prv_note_new_sample_mg(int16_t x_mg, int16_t y_mg, int16_t z_mg) {
-  AccelDriverSample sample = {
-      .x = x_mg,
-      .y = y_mg,
-      .z = z_mg,
-      .timestamp_us = prv_get_timestamp_ms() * 1000ULL,
-  };
-  prv_note_new_sample(&sample);
-}
-
-static int16_t prv_get_axis_projection_mg(axis_t axis, int16_t *raw_vector) {
-  uint8_t axis_offset = BOARD_CONFIG_ACCEL.accel_config.axes_offsets[axis];
-  int axis_direction = BOARD_CONFIG_ACCEL.accel_config.axes_inverts[axis] ? -1 : 1;
-
-  return lis2dw12_from_fs4_lp1_to_mg(raw_vector[axis_offset] * axis_direction);
-}
-
-static uint8_t prv_lis2dw12_read_sample(AccelDriverSample *data) {
-  if (!s_lis2dw12_enabled) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Not enabled, cannot read sample");
-    return -1;
-  }  
-
-  int16_t accel_raw[3];
-  if (lis2dw12_acceleration_raw_get(&lis2dw12_ctx, accel_raw) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to read accelerometer data");
-    return -1;
-  }
-
-  data->x = s_rotated_180 ? prv_get_axis_projection_mg(X_AXIS, accel_raw) * -1
-                          : prv_get_axis_projection_mg(X_AXIS, accel_raw);
-  data->y = s_rotated_180 ? prv_get_axis_projection_mg(Y_AXIS, accel_raw) * -1
-                          : prv_get_axis_projection_mg(Y_AXIS, accel_raw);
-  data->z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
-  data->timestamp_us = prv_get_timestamp_ms() * 1000;
-
-  prv_note_new_sample(data);
-
-  if (s_lis2dw12_state.num_samples > 0) { 
-    accel_cb_new_sample(data);
-  }
-
-  return 0;
-}
-
-// Accelerometer sample reading (and reporting)
-static void prv_lis2dw12_read_samples(void) {
-  if (s_lis2dw12_state.num_samples <= 1 || !s_fifo_in_use) {
-    // Single sample path
+  for (uint8_t i = 0U; i < num_samples; ++i) {
+    uint8_t *raw;
     AccelDriverSample sample;
-    prv_lis2dw12_read_sample(&sample);
-    return;
-  }
 
-  // Drain FIFO
-  uint8_t fifo_level = 0;
-  if (lis2dw12_fifo_data_level_get(&lis2dw12_ctx, &fifo_level) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to read FIFO level");
-    // Reset FIFO on communication error
-    lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_MODE);
-    if (s_fifo_in_use) {
-      lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_TO_STREAM_MODE);
-    }
-    return;
-  }
-  if (fifo_level == 0) {
-    return;  // nothing to do
-  }
+    raw = &LIS2DW12->state->raw_sample_buf[i * LIS2DW12_SAMPLE_SIZE_BYTES];
+    prv_raw_to_mg(raw, &sample);
+    sample.timestamp_us = timestamp_us + i * LIS2DW12->state->sampling_interval_us;
 
-  // Prevent infinite loops on stuck FIFO
-  if (fifo_level > LIS2DW12_FIFO_MAX_WATERMARK) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: FIFO level too high (%u), resetting", fifo_level);
-    // Reset FIFO on communication error
-    lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_MODE);
-    if (s_fifo_in_use) {
-      lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_TO_STREAM_MODE);
-    }
-    return;
-  }
-
-  const uint64_t now_us = prv_get_timestamp_ms() * 1000ULL;
-  const uint32_t interval_us = s_lis2dw12_state.sampling_interval_us ?: 1000;  // avoid div by zero
-
-  for (uint16_t i = 0; i < fifo_level; ++i) {
-    AccelDriverSample sample = {0};
-    prv_lis2dw12_read_sample(&sample);
-
-    // Approximate timestamp: assume fifo_level contiguous samples ending now
-    uint32_t sample_index_from_end = (fifo_level - 1) - i;  // 0 for newest
-    sample.timestamp_us = now_us - (sample_index_from_end * (uint64_t)interval_us);
-    prv_note_new_sample(&sample);
+    accel_cb_new_sample(&sample);
   }
 }
 
-static void prv_lis2dw12_process_interrupts(void) {
-  const uint64_t now_ms = prv_get_timestamp_ms();
-  const uint64_t previous_interrupt_ms = s_last_interrupt_ms;
-  s_last_interrupt_ms = now_ms;
-  s_interrupt_count++;
+static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
+  bool ret;
+  uint8_t val;
 
-  uint32_t gap_ms = 0;
-  if (previous_interrupt_ms == 0) {
-    PBL_LOG(LOG_LEVEL_INFO, "LIS2DW12: First INT1 service (count=%lu)",
-            (unsigned long)s_interrupt_count);
-  } else {
-    uint64_t raw_gap_ms = now_ms - previous_interrupt_ms;
-    gap_ms = (raw_gap_ms > UINT32_MAX) ? UINT32_MAX : (uint32_t)raw_gap_ms;
-    if (gap_ms >= LIS2DW12_INTERRUPT_GAP_LOG_THRESHOLD_MS) {
-      PBL_LOG(LOG_LEVEL_INFO,
-              "LIS2DW12: INT1 gap %lu ms (count=%lu wake=%lu tap=%lu)",
-              (unsigned long)gap_ms, (unsigned long)s_interrupt_count,
-              (unsigned long)s_wake_event_count, (unsigned long)s_double_tap_event_count);
-    }
+  val = LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS;
+  ret = prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write FIFO_CTRL register");
+    return ret;
   }
 
-  // Read and clear interrupt sources atomically to prevent loss
-  lis2dw12_all_sources_t all_sources;
-  
-  // Multiple attempts to read interrupt sources in case of transient I2C issues
-  int read_attempts = 0;
-  const int max_read_attempts = 2;
-  
-  do {
-    if (lis2dw12_all_sources_get(&lis2dw12_ctx, &all_sources) == 0) {
-      break; // Success
-    }
-    read_attempts++;
-    if (read_attempts < max_read_attempts) {
-      // Brief delay and retry - this prevents losing interrupts due to transient I2C glitches
-      psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS);
-    }
-  } while (read_attempts < max_read_attempts);
-  
-  if (read_attempts >= max_read_attempts) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to read interrupt sources after retries");
-    s_consecutive_errors++;
-    if (s_consecutive_errors >= LIS2DW12_MAX_CONSECUTIVE_FAILURES) {
-      s_sensor_health_ok = false;
-      PBL_LOG(LOG_LEVEL_WARNING, "LIS2DW12: Interrupt processing failed, sensor health degraded");
-    }
-    return;
-  }
-  
-  // Reset failure count on successful read
-  s_consecutive_errors = 0;
-
-  if (all_sources.status_dup.ovr) {
-    PBL_LOG(LOG_LEVEL_WARNING, "LIS2DW12: FIFO overflow/full detected, clearing FIFO");
-    
-    // Properly clear FIFO without losing configuration
-    uint8_t current_watermark;
-    
-    // Save current FIFO configuration
-    lis2dw12_fifo_watermark_get(&lis2dw12_ctx, &current_watermark);
-    
-    // Reset FIFO to bypass mode
-    lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_MODE);
-    
-    // Wait for FIFO to actually clear
-    psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS);
-    
-    // Clear all interrupt sources after FIFO reset to ensure clean state
-    lis2dw12_all_sources_t all_sources;
-	  lis2dw12_all_sources_get(&lis2dw12_ctx, &all_sources);
-
-    // Restore FIFO configuration if it was enabled
-    if (s_fifo_in_use) {
-      // Reduce watermark by half to prevent future overflow
-      uint8_t reduced_watermark = current_watermark / 2;
-      if (reduced_watermark == 0) reduced_watermark = 1;
-      
-      lis2dw12_fifo_watermark_set(&lis2dw12_ctx, reduced_watermark);
-      lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_TO_STREAM_MODE);
-
-      PBL_LOG(LOG_LEVEL_INFO, "LIS2DW12: Reduced FIFO watermark from %u to %u to prevent future overflow",
-              current_watermark, reduced_watermark);
-    }
-
-    // Force re-enable of external interrupt to ensure it's active
-    exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
-    psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS);
-    exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
+  val = LIS2DW12_FIFO_CTRL_FTH(num_samples) | LIS2DW12_FIFO_CTRL_FIFO_MODE_CONT;
+  ret = prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write FIFO_CTRL register");
+    return ret;
   }
 
-  // Collect accelerometer samples if requested
-  if (s_lis2dw12_state.num_samples > 0 && (all_sources.status_dup.drdy || all_sources.status_dup.ovr)) {
-    prv_lis2dw12_read_samples();
-  }
+  PBL_LOG(LOG_LEVEL_DEBUG, "FIFO enabled with threshold %" PRIu8, num_samples);
 
-  // If currently vibing, any additional events should be ignored (they are 
-  // likely spurious).
-  if (prv_is_vibing()) {
-    return;
-  }
-
-  // Process double tap events
-  if (all_sources.tap_src.double_tap) {
-    s_double_tap_event_count++;
-    s_last_double_tap_ms = now_ms;
-    PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Double tap interrupt triggered");
-    // Handle double tap detection
-    axis_t axis;
-    if (all_sources.tap_src.x_tap) {
-      axis = X_AXIS;
-    } else if (all_sources.tap_src.y_tap) {
-      axis = Y_AXIS;
-    } else if (all_sources.tap_src.z_tap) {
-      axis = Z_AXIS;
-    } else {
-      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: No tap axis detected");
-      return;  // No valid tap detected
-    }
-
-    uint8_t axis_offset = BOARD_CONFIG_ACCEL.accel_config.axes_offsets[axis];
-    uint8_t axis_direction = (BOARD_CONFIG_ACCEL.accel_config.axes_inverts[axis] ? -1 : 1) *
-                             (all_sources.tap_src.tap_sign ? -1 : 1);
-
-    PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Double tap interrupt triggered; axis=%d, direction=%d",
-            axis_offset, axis_direction);
-    accel_cb_double_tap_detected(axis_offset, axis_direction);
-  }
-
-  // Wake-up (any-motion) event -> treat as shake. Axis & direction derived from wake_up_src.
-  if (s_lis2dw12_state.shake_detection_enabled && all_sources.wake_up_src.wu_ia) {
-    s_wake_event_count++;
-
-    // Software debouncing: ignore shake events that occur within 500ms of the last one.
-    // This prevents double-triggering and queue flooding when the device is moving.
-    const uint64_t SHAKE_DEBOUNCE_MS = 500;
-    if (s_last_wake_event_ms != 0 && (now_ms - s_last_wake_event_ms) < SHAKE_DEBOUNCE_MS) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake debounced (delta=%lu ms)",
-              (unsigned long)(now_ms - s_last_wake_event_ms));
-    } else {
-      s_last_wake_event_ms = now_ms;
-
-      // Use wake_up_src already read by all_sources_get - don't re-read the register
-      // as that can clear flags and cause race conditions with pulsed interrupts
-      IMUCoordinateAxis axis = AXIS_X;
-      int32_t direction = 1;
-
-      // Determine which axis triggered from already-read wake_up_src
-      const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
-      if (all_sources.wake_up_src.x_wu) {
-        axis = AXIS_X;
-      } else if (all_sources.wake_up_src.y_wu) {
-        axis = AXIS_Y;
-      } else if (all_sources.wake_up_src.z_wu) {
-        axis = AXIS_Z;
-      }
-
-      // Use last known sample for direction instead of reading new data during interrupt
-      // Reading acceleration data here can interfere with FIFO operation
-      int16_t val = s_last_sample_mg[cfg->axes_offsets[axis]];
-      bool invert = cfg->axes_inverts[axis];
-      direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
-
-      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake detected; axis=%d, direction=%lu", axis, direction);
-      accel_cb_shake_detected(axis, direction);
-    }
-
-    // The wake-up interrupt is latched - if the wake condition is still true (device still
-    // moving above threshold), the flag immediately re-latches after reading, keeping INT1
-    // asserted high and preventing new edge interrupts. To fix this, we temporarily disable
-    // wake-up interrupt routing, clear the sources, then re-enable. This forces a clean reset.
-    // NOTE: This must happen regardless of FIFO state to prevent interrupt storms.
-    {
-      // Disable wake-up interrupt routing temporarily
-      lis2dw12_ctrl4_int1_pad_ctrl_t int1_routes;
-      lis2dw12_pin_int1_route_get(&lis2dw12_ctx, &int1_routes);
-      uint8_t saved_wu = int1_routes.int1_wu;
-      int1_routes.int1_wu = 0;
-      lis2dw12_pin_int1_route_set(&lis2dw12_ctx, &int1_routes);
-
-      // Clear interrupt sources while wake-up is disabled
-      lis2dw12_all_sources_t clear_sources;
-      lis2dw12_all_sources_get(&lis2dw12_ctx, &clear_sources);
-
-      // Re-enable wake-up interrupt routing
-      int1_routes.int1_wu = saved_wu;
-      lis2dw12_pin_int1_route_set(&lis2dw12_ctx, &int1_routes);
-    }
-  }
+  return true;
 }
 
-static void prv_lis2dw12_interrupt_handler(bool *should_context_switch) {
-  // Offload processing to a worker. The LIS2DW12 can miss events if interrupts
-  // are ignored due to pending flags, so it is important to process them
-  // quickly. The actual clearing of the interrupt flags will happen in the
-  // worker via an I2C transaction.
-  accel_offload_work_from_isr(prv_lis2dw12_process_interrupts, should_context_switch);
-}
+static void prv_lis2dw12_int1_work_handler(void) {
+  bool ret;
+  uint8_t val;
 
-static void prv_lis2dw12_configure_fifo(bool enable) {
-  // Always (re)program watermark and batch rates when enabling or already enabled,
-  // but only flip FIFO mode when the enabled/disabled state changes.
-  if (enable) {
-    // Proper FIFO watermark calculation to prevent overflow
-    // Setting watermark too high can cause overflow and sensor lockup
-    
-    uint32_t watermark = s_lis2dw12_state.num_samples;
-    
-    // Set watermark to 50% of requested samples to prevent overflow
-    // This provides more buffer for timing variations and prevents lockup
-    watermark = watermark / 2;
-    if (watermark == 0) watermark = 1;  // minimum
-    if (watermark > LIS2DW12_FIFO_MAX_WATERMARK) watermark = LIS2DW12_FIFO_MAX_WATERMARK;
-    
-    PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Setting FIFO watermark to %lu (requested %lu samples)", 
-            watermark, s_lis2dw12_state.num_samples);
-    
-    if (lis2dw12_fifo_watermark_set(&lis2dw12_ctx, (uint8_t)watermark)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to set FIFO watermark");
-    }
-
-    // Always clear and re-enable FIFO to ensure clean state after configuration changes.
-    // This is critical when watermark changes while FIFO is already enabled, as stale
-    // samples in the FIFO can prevent new watermark interrupts from being generated.
-    // For example, if FIFO has 25 samples and watermark is lowered to 3, the sensor
-    // won't generate an interrupt because the FIFO already exceeds the watermark.
-    lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_MODE);
-    psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS); // Allow time for FIFO to clear
-
-    // Always report realtime data, so use stream mode for fifo
-    // HRM needs feed realtime acc data
-    if (lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_STREAM_MODE)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to enable FIFO bypass-to-stream mode");
-    }
-  } else {
-    if (s_fifo_in_use) {
-      // Disable batching & return to bypass
-      if (lis2dw12_fifo_mode_set(&lis2dw12_ctx, LIS2DW12_BYPASS_MODE)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to disable FIFO");
-      }
-    }
-  }
-
-  s_fifo_in_use = enable;
-  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: FIFO %s (wm=%lu)", enable ? "enabled" : "disabled",
-          (unsigned long)s_lis2dw12_state.num_samples);
-}
-
-void prv_lis2dw12_configure_double_tap(bool enable) {
-  if (enable) {
-    // Enable tap detection on all axes
-    lis2dw12_tap_detection_on_x_set(&lis2dw12_ctx, PROPERTY_ENABLE);
-    lis2dw12_tap_detection_on_y_set(&lis2dw12_ctx, PROPERTY_ENABLE);
-    lis2dw12_tap_detection_on_z_set(&lis2dw12_ctx, PROPERTY_ENABLE);
-
-    // Configure tap timing
-    uint8_t tap_shock = BOARD_CONFIG_ACCEL.accel_config.tap_shock;
-    uint8_t tap_quiet = BOARD_CONFIG_ACCEL.accel_config.tap_quiet;
-    uint8_t tap_dur = BOARD_CONFIG_ACCEL.accel_config.tap_dur;
-
-    lis2dw12_tap_shock_set(&lis2dw12_ctx, tap_shock);  // Shock duration
-    lis2dw12_tap_quiet_set(&lis2dw12_ctx, tap_quiet);  // Quiet period
-    lis2dw12_tap_dur_set(&lis2dw12_ctx, tap_dur);      // Double tap window
-
-    // Enable double tap recognition
-    lis2dw12_tap_mode_set(&lis2dw12_ctx, LIS2DW12_BOTH_SINGLE_DOUBLE);
-  } else {
-    // Disable tap detection
-    lis2dw12_tap_detection_on_x_set(&lis2dw12_ctx, PROPERTY_DISABLE);
-    lis2dw12_tap_detection_on_y_set(&lis2dw12_ctx, PROPERTY_DISABLE);
-    lis2dw12_tap_detection_on_z_set(&lis2dw12_ctx, PROPERTY_DISABLE);
-  }
-}
-
-// Configure wake-up (any-motion) for shake detection using wake-up threshold & duration.
-static void prv_lis2dw12_configure_shake(bool enable, bool sensitivity_high) {
-  if (!enable) {
-    // Disable wake-up related routing by clearing threshold
-    lis2dw12_wkup_threshold_set(&lis2dw12_ctx, 0);
-    return;
-  }
-
-  // Duration: increase a bit to reduce spurious triggers
-  lis2dw12_wkup_dur_set(&lis2dw12_ctx, sensitivity_high ? 0 : 1);
-
-  // Threshold calculation:
-  // - Board config provides Low and High thresholds
-  // - sensitivity_high flag indicates stationary mode (use low threshold for any movement)
-  // - s_user_sensitivity_percent (0-100) controls normal mode threshold
-  //   * 100% = most sensitive = use Low threshold
-  //   * 50% = medium = interpolate between Low and High
-  //   * 0% = least sensitive = use High threshold
-  
-  uint32_t raw_high = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdHigh];
-  uint32_t raw_low = BOARD_CONFIG_ACCEL.accel_config.shake_thresholds[AccelThresholdLow];
-  uint32_t raw;
-  
-  if (sensitivity_high) {
-    // Stationary mode: always use low threshold for maximum sensitivity
-    raw = raw_low;
-  } else {
-    // Normal mode: interpolate based on user preference
-    // Invert the percentage: 100% sensitive = low threshold, 0% sensitive = high threshold
-    uint32_t inverted_percent = 100 - s_user_sensitivity_percent;
-    raw = raw_low + ((raw_high - raw_low) * inverted_percent) / 100;
-  }
-  
-  // Clamp to valid range
-  if (raw > 63) raw = 63;  // lis2dw12 wk_ths is 6 bits
-  if (raw < 2) raw = 2;     // Avoid noise storms with very low thresholds
-  
-  lis2dw12_wkup_threshold_set(&lis2dw12_ctx, (uint8_t)raw);
-  
-  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake threshold set to %lu (sensitivity_high=%d, user_percent=%u)", 
-          raw, sensitivity_high, s_user_sensitivity_percent);
-}
-
-static uint32_t prv_lis2dw12_set_sampling_interval(uint32_t target_interval) {
-  for (uint8_t i=0 ; i<sizeof(s_lis2dw12_sample_rates)/sizeof(lis2dw12_sample_rate_t); i++) {
-    if (target_interval >= s_lis2dw12_sample_rates[i].interval_thr) {
-      lis2dw12_odr_t odr = s_lis2dw12_sample_rates[i].odr;
-      lis2dw12_data_rate_set(&lis2dw12_ctx, odr);
-      return s_lis2dw12_sample_rates[i].interval;
-    }
-  }
-
-  PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12 can not get a suitable odr");
-  return UINT32_MAX;
-}
-
-static void prv_lis2dw12_configure_interrupts(void) {
-  // Disable interrupts during configuration to prevent race conditions
-  // and ensure atomic configuration updates
-
-  bool should_enable_interrupts = s_lis2dw12_enabled &&
-      (s_lis2dw12_state.num_samples || s_lis2dw12_state.shake_detection_enabled ||
-       s_lis2dw12_state.double_tap_detection_enabled);
-
-  // Always disable interrupts first to ensure clean state
-  exti_disable(BOARD_CONFIG_ACCEL.accel_ints[0]);
-
-  if (!should_enable_interrupts) {
-    // Also disable all interrupt sources in the sensor to prevent phantom interrupts
-    lis2dw12_ctrl4_int1_pad_ctrl_t route = {0};
-    if (lis2dw12_pin_int1_route_set(&lis2dw12_ctx, &route)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to disable INT1 routes while turning off sensor");
-    }
-    return;
-  }
-
-  bool routing_configured = true;
-
-  lis2dw12_ctrl4_int1_pad_ctrl_t int1_routes = {0};
-  bool use_fifo = s_lis2dw12_state.num_samples > 1;  // batching requested
-
-  // Configure FIFO first, then set up interrupt routing
-  if (use_fifo) {
-    prv_lis2dw12_configure_fifo(true);
-    int1_routes.int1_diff5 = 0;
-    int1_routes.int1_fth = 1;
-    int1_routes.int1_drdy = 0;
-  } else {
-    prv_lis2dw12_configure_fifo(false);
-    int1_routes.int1_diff5 = 0;
-    int1_routes.int1_fth = 0;
-    int1_routes.int1_drdy = s_lis2dw12_state.num_samples > 0;  // single-sample mode;
-  }
-
-  int1_routes.int1_tap = s_lis2dw12_state.double_tap_detection_enabled;
-  int1_routes.int1_wu = s_lis2dw12_state.shake_detection_enabled;  // use wake-up (any-motion)
-
-  // Configure interrupt routing atomically
-  if (lis2dw12_pin_int1_route_set(&lis2dw12_ctx, &int1_routes) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to configure INT1 routes; re-enabling external interrupt");
-    routing_configured = false;
-  } else {
-    // Allow time for interrupt routing configuration to take effect.
-    // The LIS2DW12 needs a brief delay after CTRL4/CTRL7 register writes
-    // before the wake-up interrupt logic is fully operational.
-    psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS);
-    // Clear any pending interrupt sources before enabling external interrupt
-    lis2dw12_all_sources_t all_sources;
-    if (lis2dw12_all_sources_get(&lis2dw12_ctx, &all_sources)) {
-      PBL_LOG(LOG_LEVEL_WARNING, "LIS2DW12: Failed to clear pending interrupt sources after routing update");
-    }
-  }
-
-  // Always re-enable the external interrupt so we do not lose future INT1 edges
-  exti_enable(BOARD_CONFIG_ACCEL.accel_ints[0]);
-
-  if (!routing_configured) {
-    PBL_LOG(LOG_LEVEL_WARNING, "LIS2DW12: INT1 routing not updated; external interrupt left enabled for recovery");
-  }
-}
-
-// default odr off
-void accel_init(void) {
-  uint8_t id;
-  int32_t ret = lis2dw12_device_id_get(&lis2dw12_ctx, &id);
-  if (ret || LIS2DW12_ID != id) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to get LIS2DW12 chip ID");
-    return;
-  }
-  
-  /* Restore default configuration */
-  ret = lis2dw12_reset_set(&lis2dw12_ctx, PROPERTY_ENABLE);
-  uint8_t rst;
-  int reset_timeout = 100; // 100ms max wait for reset
-  do {  // Wait for reset to complete with timeout
-    psleep(LIS2DW12_REG_OPS_WAIT_TIME_MS);
-    if (lis2dw12_reset_get(&lis2dw12_ctx, &rst) != 0) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Failed to read reset status");
+  if (LIS2DW12->state->num_samples > 0U) {
+    ret = prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1);
+    if (!ret) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not read FIFO_SAMPLES register");
       return;
     }
-    reset_timeout--;
-  } while (rst && reset_timeout > 0);
-  
-  if (reset_timeout == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LIS2DW12: Reset timeout - sensor may be unresponsive");
+
+    if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_OVR) != 0U) {
+      PBL_LOG(LOG_LEVEL_WARNING, "FIFO overrun detected, re-arming");
+      prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
+    } else if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_FTH) != 0U) {
+      uint8_t samples;
+
+      samples = LIS2DW12_FIFO_SAMPLES_DIFF_GET(val);
+      samples = MIN(samples, LIS2DW12->state->num_samples);
+      if (samples > 0U) {
+        prv_lis2dw12_read_samples(samples);
+      }
+    }
+  }
+
+  if (LIS2DW12->state->shake_detection_enabled) {
+    ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
+    if (!ret) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not read ALL_INT_SRC register");
+      return;
+    }
+
+    if ((val & LIS2DW12_ALL_INT_SRC_WU_IA) != 0U) {
+      PBL_LOG(LOG_LEVEL_DEBUG, "Shake detected");
+      // TODO: provide more info about the shake (axis, direction, etc.) or
+      // refactor shake to be non-dimensional
+      accel_cb_shake_detected(AXIS_Z, 0);
+    }
+  }
+}
+
+static void prv_lis2dw12_int1_irq_handler(bool *should_context_switch) {
+  LIS2DW12->state->last_int1_tick = rtc_get_ticks();
+  accel_offload_work_from_isr(prv_lis2dw12_int1_work_handler, should_context_switch);
+}
+
+static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detection_enabled) {
+  uint8_t val;
+  bool ret;
+
+  // If shake detection is enabled, ensure a minimum ODR of 12.5Hz (80ms)
+  if (shake_detection_enabled && (sampling_interval_us == 0UL)) {
+    sampling_interval_us = 80000UL;
+  }
+
+  val = LIS2DW12_CTRL1_LP_MODE1 | LIS2DW12_CTRL1_MODE_LP;
+
+  if (sampling_interval_us == 0U) {
+    val |= LIS2DW12_CTRL1_ODR_PD;
+    sampling_interval_us = 0UL;
+  } else if (sampling_interval_us >= 80000UL) {
+    val |= LIS2DW12_CTRL1_ODR_12HZ5;
+    sampling_interval_us = 80000UL;
+  } else if (sampling_interval_us >= 40000UL) {
+    val |= LIS2DW12_CTRL1_ODR_25HZ;
+    sampling_interval_us = 40000UL;
+  } else if (sampling_interval_us >= 20000UL) {
+    val |= LIS2DW12_CTRL1_ODR_50HZ;
+    sampling_interval_us = 20000UL;
+  } else if (sampling_interval_us >= 10000UL) {
+    val |= LIS2DW12_CTRL1_ODR_100HZ;
+    sampling_interval_us = 10000UL;
+  } else {
+    val |= LIS2DW12_CTRL1_ODR_200HZ;
+    sampling_interval_us = 5000UL;
+  }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)",
+          sampling_interval_us / 1000UL,
+          sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
+
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &val, 1);
+  if (!ret) {
+    return ret;
+  }
+
+  LIS2DW12->state->sampling_interval_us = sampling_interval_us;
+
+  return true;
+}
+
+static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) {
+  bool ret;
+  uint8_t ctrl4;
+  uint8_t ctrl5;
+  uint8_t ctrl7;
+
+  ctrl4 = 0U;
+  ctrl5 = 0U;
+
+  if (shake_detection_enabled) {
+    ctrl4 |= LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_WU;
+  }
+
+  if (fifo_enabled) {
+    ctrl4 |= LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_FTH;
+    ctrl5 |= LIS2DW12_CTRL5_INT2_PAD_CTRL_INT2_OVR;
+  }
+
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL4_INT1_PAD_CTRL, &ctrl4, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL4_INT1_PAD_CTRL register");
+    return ret;
+  }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "INT1 configured: %02" PRIx8, ctrl4);
+
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL5_INT2_PAD_CTRL, &ctrl5, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL5_INT2_PAD_CTRL register");
+    return ret;
+  }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "INT2 configured: %02" PRIx8, ctrl5);
+
+  ctrl7 = (ctrl4 == 0U && ctrl5 == 0U)
+              ? 0U
+              : LIS2DW12_CTRL7_INTERRUPTS_ENABLE | LIS2DW12_CTRL7_INT2_ON_INT1;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL7, &ctrl7, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL7 register");
+    return ret;
+  }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "Enabled interrupts: %u", ctrl7 != 0U);
+
+  return true;
+}
+
+static void prv_int1_wdt_cb(void *data) {
+  RtcTicks now_tick = rtc_get_ticks();
+  RtcTicks ticks_since_last_int1 = now_tick - LIS2DW12->state->last_int1_tick;
+  uint32_t ms_since_last_int1 = (ticks_since_last_int1 * 1000) / RTC_TICKS_HZ;
+
+  if (ms_since_last_int1 >= LIS2DW12->state->int1_period_ms) {
+    bool ret;
+    uint8_t val;
+
+    PBL_LOG(LOG_LEVEL_WARNING, "INT1 not received in %" PRIu32 " ms", ms_since_last_int1);
+
+    // Re-enable FIFO, and clear any event INT source
+    ret = prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
+    if (!ret) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Failed to re-enable FIFO");
+      return;
+    }
+
+    ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
+    if (!ret) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not read ALL_INT_SRC register");
+      return;
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Accelerometer interface
+////////////////////////////////////////////////////////////////////////////////
+
+void accel_init(void) {
+  bool ret;
+  uint8_t val;
+
+  // Check device ID
+  ret = prv_lis2dw12_read(LIS2DW12_WHO_AM_I, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not read WHO_AM_I register");
     return;
   }
 
-  // Fix ADDR pull-up current leak by disabling internal pull-up if address is 0x18
-  // (ADDR pin grounded). This is an undocumented register (provided by FAE).
-  if (I2C_LSM2DW12->address == 0x18U) {
-    uint8_t val = 0;
-    ret = prv_lis2dw12_read(NULL, 0x17, &val, 1);
-    if (ret != 0) {
+  if (val != LIS2DW12_WHO_AM_I_VAL) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Unexpected id: 0x%02X!=0x%02X", val, LIS2DW12_WHO_AM_I_VAL);
+    return;
+  }
+
+  // Perform a software reset (so we can rely on defaults)
+  val = LIS2DW12_CTRL2_SOFT_RESET;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL2, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL2 register");
+    return;
+  }
+
+  delay_us(LIS2DW12_RESET_TIME_US);
+
+  do {
+    ret = prv_lis2dw12_read(LIS2DW12_CTRL2, &val, 1);
+    if (!ret) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not read CTRL2 register");
+      return;
+    }
+  } while ((val & LIS2DW12_CTRL2_BOOT) != 0U);
+
+  // Disable ADDR pull-up if requested
+  // NOTE: This is an undocumented register (provided by FAE)
+  if (LIS2DW12->disable_addr_pullup) {
+    ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
+    if (!ret) {
       PBL_LOG(LOG_LEVEL_ERROR, "Failed to read LIS2DW12 register 0x17");
       return;
     }
 
-    val |= 0x40;
-    ret = prv_lis2dw12_write(NULL, 0x17, &val, 1);
-    if (ret != 0) {
+    val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
+    ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
+    if (!ret) {
       PBL_LOG(LOG_LEVEL_ERROR, "Failed to write LIS2DW12 register 0x17");
       return;
     }
   }
 
-  /* full scale: +/- 2g */
-	if (lis2dw12_full_scale_set(&lis2dw12_ctx, LIS2DW12_4g)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set accelerometer scale");
-		return;
-	}
-
-  /* low power normal mode (no HP) */
-	if (lis2dw12_power_mode_set(&lis2dw12_ctx, LIS2DW12_CONT_LOW_PWR_12bit)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set power mode");
-		return;
-	}
-
-  /* tap detection on all axis: X, Y, Z */
-	if (lis2dw12_tap_detection_on_x_set(&lis2dw12_ctx, PROPERTY_ENABLE)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to enable tap detection on X axis");
-		return;
-	}
-
-	if (lis2dw12_tap_detection_on_y_set(&lis2dw12_ctx, PROPERTY_ENABLE)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to enable tap detection on Y axis");
-		return;
-	}
-
-	if (lis2dw12_tap_detection_on_z_set(&lis2dw12_ctx, PROPERTY_ENABLE)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to enable tap detection on Z axis");
-		return;
-	}
-
-	/* X,Y,Z threshold: 1 * FS_XL / 2^5 = 1 * 2 / 32 = 62.5 mg */
-	if (lis2dw12_tap_threshold_x_set(&lis2dw12_ctx, 1)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set tap threshold on X axis");
-		return;
-	}
-
-	if (lis2dw12_tap_threshold_y_set(&lis2dw12_ctx, 1)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set tap threshold on Y axis");
-		return;
-	}
-
-	if (lis2dw12_tap_threshold_z_set(&lis2dw12_ctx, 1)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set tap threshold on Z axis");
-		return;
-	}
-
-	/* shock time: 2 / ODR_XL = 2 / 26 ~= 77 ms */
-	if (lis2dw12_tap_shock_set(&lis2dw12_ctx, 0)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set tap shock duration");
-		return;
-	}
-
-	/* quiet time: 2 / ODR_XL = 2 / 26 ~= 77 ms */
-	if (lis2dw12_tap_quiet_set(&lis2dw12_ctx, 0)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set tap quiet duration");
-		return;
-	}
-
-  /* route single rap to INT1 */
-	lis2dw12_ctrl4_int1_pad_ctrl_t route = {.int1_single_tap = 1};
-	if (lis2dw12_pin_int1_route_set(&lis2dw12_ctx, &route)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to route interrupt");
-		return;
-	}
-
-  /* data rate: default off */
-	if (lis2dw12_data_rate_set(&lis2dw12_ctx, LIS2DW12_XL_ODR_OFF)) {
-		PBL_LOG(LOG_LEVEL_ERROR, "Failed to set accelerometer data rate");
-		return;
-	}
-
-  exti_configure_pin(BOARD_CONFIG_ACCEL.accel_ints[0], ExtiTrigger_Rising,
-    prv_lis2dw12_interrupt_handler);
-
-  if (lis2dw12_data_ready_mode_set(&lis2dw12_ctx, LIS2DW12_DRDY_PULSED)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to set accelerometer data ready mode");
-		return;
-  }
-  if (lis2dw12_int_notification_set(&lis2dw12_ctx, LIS2DW12_INT_PULSED)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to set accelerometer int notification mode");
-		return;
-  }
-}
-
-//! Synchronize the LIS2DW12 state with the desired target state.
-static void prv_lis2dw12_chase_target_state(void) {
-  bool update_interrupts = false;
-
-  // Check whether we should be spinning up the accelerometer
-  bool should_be_running = s_lis2dw12_state_target.sampling_interval_us > 0 ||
-                           s_lis2dw12_state_target.num_samples > 0 ||
-                           s_lis2dw12_state_target.shake_detection_enabled ||
-                           s_lis2dw12_state_target.double_tap_detection_enabled;
-
-  if (!should_be_running || !s_lis2dw12_enabled) {
-    if (s_lis2dw12_running) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Stopping accelerometer");
-      lis2dw12_data_rate_set(&lis2dw12_ctx, LIS2DW12_XL_ODR_OFF);
-      s_lis2dw12_running = false;
-      s_lis2dw12_state = (lis2dw12_state_t){0};
-      prv_lis2dw12_configure_interrupts();
-    }
+  // Single-data conversion via SLP_MODE_1
+  val = LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL3, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL3 register");
     return;
-  } else if (!s_lis2dw12_running) {
-    s_lis2dw12_running = true;
-    update_interrupts = true;
   }
 
-  // Update number of samples
-  if (s_lis2dw12_state_target.num_samples != s_lis2dw12_state.num_samples) {
-    s_lis2dw12_state.num_samples = s_lis2dw12_state_target.num_samples;
-    update_interrupts = true;
+  // Configure scale
+  switch (LIS2DW12->scale_mg) {
+    case 2000U:
+      val = LIS2DW12_CTRL6_FS_2G;
+      break;
+    case 4000U:
+      val = LIS2DW12_CTRL6_FS_4G;
+      break;
+    case 8000U:
+      val = LIS2DW12_CTRL6_FS_8G;
+      break;
+    case 16000U:
+      val = LIS2DW12_CTRL6_FS_16G;
+      break;
+    default:
+      PBL_LOG(LOG_LEVEL_ERROR, "Invalid scale: %" PRIu16, LIS2DW12->scale_mg);
+      return;
   }
 
-  // Update shake detection
-  if (s_lis2dw12_state_target.shake_detection_enabled != s_lis2dw12_state.shake_detection_enabled ||
-      s_lis2dw12_state_target.shake_sensitivity_high != s_lis2dw12_state.shake_sensitivity_high) {
-    s_lis2dw12_state.shake_detection_enabled = s_lis2dw12_state_target.shake_detection_enabled;
-    s_lis2dw12_state.shake_sensitivity_high = s_lis2dw12_state_target.shake_sensitivity_high;
-    prv_lis2dw12_configure_shake(s_lis2dw12_state.shake_detection_enabled,
-                                s_lis2dw12_state.shake_sensitivity_high);
-    update_interrupts = true;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL6, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL6 register");
+    return;
   }
 
-  // Update double tap detection
-  if (s_lis2dw12_state_target.double_tap_detection_enabled !=
-      s_lis2dw12_state.double_tap_detection_enabled) {
-    prv_lis2dw12_configure_double_tap(s_lis2dw12_state_target.double_tap_detection_enabled);
-    s_lis2dw12_state.double_tap_detection_enabled =
-        s_lis2dw12_state_target.double_tap_detection_enabled;
-    update_interrupts = true;
+  // Configure wake-up threshold defaults
+  val = LIS2DW12_WAKE_UP_DUR_WAKE_DUR(LIS2DW12->wk_dur_default);
+  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_DUR, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_DUR register");
+    return;
   }
 
-  // Update sampling interval. Ensure ODR is enabled when event-only features are active.
-  if (update_interrupts ||
-      s_lis2dw12_state_target.sampling_interval_us != s_lis2dw12_state.sampling_interval_us) {
-    uint32_t requested_interval = s_lis2dw12_state_target.sampling_interval_us;
-
-    //default ODR to 100Hz
-    if(requested_interval == 0) requested_interval = 10 * 1000;
-    s_lis2dw12_state.sampling_interval_us = prv_lis2dw12_set_sampling_interval(requested_interval);
+  val = LIS2DW12_WAKE_UP_THS_WK_THS(LIS2DW12->wk_ths_default);
+  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_THS register");
+    return;
   }
 
-  // Update interrupts if necessary
-  if (update_interrupts) {
-    prv_lis2dw12_configure_interrupts();
-  }
+  // Enable INT1 external interrupt
+  exti_configure_pin(LIS2DW12->int1, ExtiTrigger_Rising, prv_lis2dw12_int1_irq_handler);
+  exti_enable(LIS2DW12->int1);
 
-  // Note: Do NOT reset target state here as it creates a race condition
-  // where new target changes during this function execution could be lost.
-  // Instead, only sync the fields that were actually processed.
-
-  PBL_LOG(LOG_LEVEL_DEBUG,
-          "LIS2DW12: Reached target state: sampling_interval_us=%lu, num_samples=%lu, "
-          "shake_detection_enabled=%d, shake_high_sensitivity=%d, double_tap_detection_enabled=%d",
-          s_lis2dw12_state.sampling_interval_us, s_lis2dw12_state.num_samples,
-          s_lis2dw12_state.shake_detection_enabled, s_lis2dw12_state.shake_sensitivity_high,
-          s_lis2dw12_state.double_tap_detection_enabled);
+  LIS2DW12->state->int1_wdt_timer.cb = prv_int1_wdt_cb;
+  LIS2DW12->state->initialized = true;
 }
 
 void accel_power_up(void) {
-  s_lis2dw12_enabled = true;
-  prv_lis2dw12_chase_target_state();
+  // Driver automatically keeps the sensor active as needed
 }
 
 void accel_power_down(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Powering down accelerometer");
-  s_lis2dw12_enabled = false;
-  prv_lis2dw12_chase_target_state();
+  // Driver automatically keeps the sensor in lowest power mode
 }
 
 uint32_t accel_set_sampling_interval(uint32_t interval_us) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Requesting update of sampling interval to %lu us",
-          interval_us);
-  s_lis2dw12_state_target.sampling_interval_us = interval_us;
-  prv_lis2dw12_chase_target_state();
-  return s_lis2dw12_state.sampling_interval_us;
+  if (!LIS2DW12->state->initialized) {
+    // Just pretend we can achieve any requested interval
+    LIS2DW12->state->sampling_interval_us = interval_us;
+  } else {
+    // FIXME: we should technically stop and drain the FIFO here, otherwise
+    // we may report existing samples in the FIFO buffer with an incorrect timestamp
+
+    if (!prv_configure_odr(interval_us, LIS2DW12->state->shake_detection_enabled)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not configure ODR");
+    }
+  }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "Set sampling interval to %" PRIu32 " us",
+          LIS2DW12->state->sampling_interval_us);
+
+  return LIS2DW12->state->sampling_interval_us;
 }
 
-uint32_t accel_get_sampling_interval(void) { return s_lis2dw12_state.sampling_interval_us; }
- 
+uint32_t accel_get_sampling_interval(void) {
+  return LIS2DW12->state->sampling_interval_us;
+}
+
 void accel_set_num_samples(uint32_t num_samples) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Setting number of samples to %lu", num_samples);
-  s_lis2dw12_state_target.num_samples = num_samples;
-  prv_lis2dw12_chase_target_state();
+  bool ret;
+  uint8_t val;
+
+  if (!LIS2DW12->state->initialized) {
+    return;
+  }
+
+  // Limit to FIFO threshold
+  if (num_samples > LIS2DW12->fifo_threshold) {
+    num_samples = LIS2DW12->fifo_threshold;
+  }
+
+  // Disable all INT1 before changing FIFO threshold
+  prv_configure_int1(false, false);
+
+  if (num_samples == 0U) {
+    // Bypass FIFO (disable)
+    val = LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS;
+    if (!prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1)) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not write FIFO_CTRL register");
+    }
+
+    regular_timer_remove_callback(&LIS2DW12->state->int1_wdt_timer);
+  } else {
+    // FIXME: we should ideally drain the FIFO here to not discard existing samples
+
+    // Configure FIFO in CONT mode with threshold
+    ret = prv_lis2dw12_enable_fifo((uint8_t)num_samples);
+    if (!ret) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not enable FIFO");
+      return;
+    }
+
+    LIS2DW12->state->last_int1_tick = rtc_get_ticks();
+    LIS2DW12->state->int1_period_ms = (LIS2DW12->state->sampling_interval_us * num_samples) / 1000;
+    regular_timer_add_multisecond_callback(&LIS2DW12->state->int1_wdt_timer,
+                                           DIVIDE_CEIL(LIS2DW12->state->int1_period_ms, 1000UL));
+  }
+
+  // Re-configure INT1
+  ret = prv_configure_int1(LIS2DW12->state->shake_detection_enabled, num_samples > 0U);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not configure INT1");
+    return;
+  }
+
+  LIS2DW12->state->num_samples = num_samples;
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "Set number of samples to %" PRIu32, num_samples);
 }
 
-int accel_peek(AccelDriverSample *data) { return prv_lis2dw12_read_sample(data); }
+int accel_peek(AccelDriverSample *data) {
+  bool ret;
+  uint8_t ctrl1;
+  uint8_t ctrl1_bck;
+  uint8_t ctrl3;
+  uint8_t status;
+  uint8_t raw[LIS2DW12_SAMPLE_SIZE_BYTES];
+
+  if (!LIS2DW12->state->initialized) {
+    return E_ERROR;
+  }
+
+  // Save CTRL1
+  ret = prv_lis2dw12_read(LIS2DW12_CTRL1, &ctrl1_bck, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not read CTRL1 register");
+    return E_ERROR;
+  }
+
+  // Configure single mode, ODR@50Hz (recommended ODR, see DT0102 rev1)
+  ctrl1 = LIS2DW12_CTRL1_MODE_SINGLE | LIS2DW12_CTRL1_ODR_50HZ;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL1 register");
+    return E_ERROR;
+  }
+
+  // Trigger single measurement by setting SLP_MODE_1 bit
+  ret = prv_lis2dw12_read(LIS2DW12_CTRL3, &ctrl3, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not read CTRL3 register");
+    return E_ERROR;
+  }
+
+  ctrl3 |= LIS2DW12_CTRL3_SLP_MODE_1;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL3, &ctrl3, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL3 register");
+    return E_ERROR;
+  }
+
+  // Poll for data ready
+  do {
+    ret = prv_lis2dw12_read(LIS2DW12_STATUS, &status, 1);
+    if (!ret) {
+      PBL_LOG(LOG_LEVEL_ERROR, "Could not read STATUS register");
+      return E_ERROR;
+    }
+  } while ((status & LIS2DW12_STATUS_DRDY) == 0U);
+
+  // Read sample
+  ret = prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw));
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read sample");
+    return E_ERROR;
+  }
+
+  // Restore CTRL1
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1_bck, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not restore CTRL1 register");
+    return E_ERROR;
+  }
+
+  // Convert to mg and populate timestamp
+  prv_raw_to_mg(raw, data);
+  data->timestamp_us = prv_get_curr_system_time_us();
+
+  return 0;
+}
 
 void accel_enable_shake_detection(bool on) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: %s shake detection.", on ? "Enabling" : "Disabling");
-  s_lis2dw12_state_target.shake_detection_enabled = on;
-    prv_lis2dw12_chase_target_state();
+  bool ret;
+  uint8_t val;
 
+  if (!LIS2DW12->state->initialized) {
+    return;
+  }
+
+  // Configure ODR (use current interval, will be adjusted if < 12.5Hz)
+  ret = prv_configure_odr(LIS2DW12->state->sampling_interval_us, on);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not configure ODR");
+    return;
+  }
+
+  // Configure INT1
+  ret = prv_configure_int1(on, LIS2DW12->state->num_samples > 0U);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not configure INT1");
+    return;
+  }
+
+  LIS2DW12->state->shake_detection_enabled = on;
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "%s shake detection", on ? "Enabled" : "Disabled");
 }
 
-bool accel_get_shake_detection_enabled(void) { return s_lis2dw12_state.shake_detection_enabled; }
-
-void accel_enable_double_tap_detection(bool on) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: %s double tap detection.", on ? "Enabling" : "Disabling");
-  s_lis2dw12_state_target.double_tap_detection_enabled = on;
-  prv_lis2dw12_chase_target_state();
-}
-
-bool accel_get_double_tap_detection_enabled(void) {
-  return s_lis2dw12_state.double_tap_detection_enabled;
+bool accel_get_shake_detection_enabled(void) {
+  return LIS2DW12->state->shake_detection_enabled;
 }
 
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Setting shake sensitivity to %s.",
+  bool ret;
+  uint8_t val;
+
+  if (!LIS2DW12->state->initialized) {
+    return;
+  }
+
+  val = LIS2DW12_WAKE_UP_DUR_WAKE_DUR(sensitivity_high ? 0U : LIS2DW12->wk_ths_default);
+  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_DUR, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_DUR register");
+    return;
+  }
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "Configured shake sensitivity to %s",
           sensitivity_high ? "high" : "normal");
-  s_lis2dw12_state_target.shake_sensitivity_high = sensitivity_high;
-  prv_lis2dw12_chase_target_state();
 }
 
 void accel_set_shake_sensitivity_percent(uint8_t percent) {
-  if (percent > 100) {
-    percent = 100; // Clamp to max
+  bool ret;
+  uint8_t val;
+  uint8_t raw;
+
+  if (!LIS2DW12->state->initialized) {
+    return;
   }
-  
-  s_user_sensitivity_percent = percent;
-  
-  // Reconfigure shake detection if it's currently enabled
-  if (s_lis2dw12_state.shake_detection_enabled) {
-    prv_lis2dw12_configure_shake(true, s_lis2dw12_state.shake_sensitivity_high);
+
+  // [0, 100] -> [LIS2DW12_WAKE_UP_THS_WK_THS_MIN, LIS2DW12_WAKE_UP_THS_WK_THS_MAX]
+  raw = (percent * (LIS2DW12_WAKE_UP_THS_WK_THS_MAX - LIS2DW12_WAKE_UP_THS_WK_THS_MIN)) / 100U +
+        LIS2DW12_WAKE_UP_THS_WK_THS_MIN;
+
+  val = LIS2DW12_WAKE_UP_THS_WK_THS(raw);
+  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
+  if (!ret) {
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_THS register");
+    return;
   }
-  
-  PBL_LOG(LOG_LEVEL_INFO, "LIS2DW12: User sensitivity set to %u percent", percent);
+
+  PBL_LOG(LOG_LEVEL_DEBUG, "Configured shake sensitivity to %" PRIu8 " (%" PRIu8 ")", percent, raw);
+}
+
+void accel_enable_double_tap_detection(bool on) {
+  // TODO: Implement
+  PBL_LOG(LOG_LEVEL_WARNING, "Double-tap detection not implemented");
+}
+
+bool accel_get_double_tap_detection_enabled(void) {
+  // TODO: Implement
+  return false;
 }
 
 void accel_set_rotated(bool rotated) {
-  s_rotated_180 = rotated;
+  LIS2DW12->state->rotated = rotated;
+  PBL_LOG(LOG_LEVEL_DEBUG, "Set rotated state to %s", rotated ? "true" : "false");
 }
