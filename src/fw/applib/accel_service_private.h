@@ -18,13 +18,15 @@ typedef struct AccelServiceState {
 
   // User-provided callbacks for various events
   AccelDataHandler data_handler;
-  AccelTapHandler shake_handler;
+  AccelShakeHandler shake_handler;
+  AccelTapHandler tap_handler;
   AccelTapHandler double_tap_handler;
   AccelRawDataHandler raw_data_handler;
   AccelRawDataHandler__deprecated raw_data_handler_deprecated;
 
   // Configuration for our other types of events
   EventServiceInfo accel_shake_info;
+  EventServiceInfo accel_tap_info;
   EventServiceInfo accel_double_tap_info;
 
 #if LOG_DOMAIN_ACCEL
@@ -56,12 +58,23 @@ void accel_session_delete(AccelServiceState *session);
 //! only.
 //! @param session An Accel session created by accel_session_create()
 //! @param handler A callback to be executed on shake event
-void accel_session_shake_subscribe(AccelServiceState *session, AccelTapHandler handler);
+void accel_session_shake_subscribe(AccelServiceState *session, AccelShakeHandler handler);
 
 //! Unsubscribe from the accelerometer shake event service by session ref. Used by kernel clients
 //! only.
 //! @param session An Accel session created by accel_session_create()
 void accel_session_shake_unsubscribe(AccelServiceState *session);
+
+//! Subscribe to the accelerometer tap event service by session ref. Used by kernel clients
+//! only.
+//! @param session An Accel session created by accel_session_create()
+//! @param handler A callback to be executed on tap event
+void accel_session_tap_subscribe(AccelServiceState *session, AccelTapHandler handler);
+
+//! Unsubscribe from the accelerometer tap event service by session ref. Used by kernel
+//! clients only.
+//! @param session An Accel session created by accel_session_create()
+void accel_session_tap_unsubscribe(AccelServiceState *session);
 
 //! Subscribe to the accelerometer double tap event service by session ref. Used by kernel clients
 //! only.

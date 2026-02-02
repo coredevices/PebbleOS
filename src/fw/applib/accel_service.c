@@ -69,7 +69,19 @@ static void prv_do_shake_handle(PebbleEvent *e, void *context) {
   if (task == PebbleTask_Worker || task == PebbleTask_App) {
     sys_analytics_inc(ANALYTICS_APP_METRIC_ACCEL_SHAKE_COUNT, AnalyticsClient_CurrentTask);
   }
-  state->shake_handler(e->accel_tap.axis, e->accel_tap.direction);
+  state->shake_handler();
+}
+
+
+// ----------------------------------------------------------------------------------------------
+static void prv_do_tap_handle(PebbleEvent *e, void *context) {
+  PebbleTask task = pebble_task_get_current();
+  AccelServiceState *state = (AccelServiceState *)accel_service_private_get_session(task);
+  PBL_ASSERTN(state->tap_handler != NULL);
+  // only kernel clients can subscribe to tap right now, so just increment tap count
+  // device analytic here
+  analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_TAP_COUNT, AnalyticsClient_System);
+  state->tap_handler(e->accel_tap.axis, e->accel_tap.direction);
 }
 
 
@@ -225,18 +237,30 @@ void accel_data_service_unsubscribe(void) {
   accel_session_data_unsubscribe(session);
 }
 
-
 // ----------------------------------------------------------------------------------------------
-void accel_tap_service_subscribe(AccelTapHandler handler) {
+void accel_shake_service_subscribe(AccelShakeHandler handler) {
   AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_shake_subscribe(session, handler);
 }
 
 
 // ----------------------------------------------------------------------------------------------
-void accel_tap_service_unsubscribe(void) {
+void accel_shake_service_unsubscribe(void) {
   AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_shake_unsubscribe(session);
+}
+
+// ----------------------------------------------------------------------------------------------
+void accel_tap_service_subscribe(AccelTapHandler handler) {
+  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  accel_session_tap_subscribe(session, handler);
+}
+
+
+// ----------------------------------------------------------------------------------------------
+void accel_tap_service_unsubscribe(void) {
+  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  accel_session_tap_unsubscribe(session);
 }
 
 
@@ -279,6 +303,10 @@ void accel_service_state_init(AccelServiceState *state) {
         .type = PEBBLE_ACCEL_SHAKE_EVENT,
         .handler = &prv_do_shake_handle,
     },
+    .accel_tap_info = {
+        .type = PEBBLE_ACCEL_TAP_EVENT,
+        .handler = &prv_do_tap_handle,
+    },
     .accel_double_tap_info = {
         .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
         .handler = &prv_do_double_tap_handle,
@@ -292,7 +320,17 @@ void accel_service_state_init(AccelServiceState *state) {
 static void prv_session_do_shake_handle(PebbleEvent *e, void *context) {
   AccelServiceState *state = context;
   if (state->shake_handler != NULL) {
-    state->shake_handler(e->accel_tap.axis, e->accel_tap.direction);
+    state->shake_handler();
+  }
+}
+
+
+// ----------------------------------------------------------------------------------------------
+// Event service handler for tap events
+static void prv_session_do_tap_handle(PebbleEvent *e, void *context) {
+  AccelServiceState *state = context;
+  if (state->tap_handler != NULL) {
+    state->tap_handler(e->accel_tap.axis, e->accel_tap.direction);
   }
 }
 
@@ -317,6 +355,11 @@ AccelServiceState * accel_session_create(void) {
     .accel_shake_info = {
         .type = PEBBLE_ACCEL_SHAKE_EVENT,
         .handler = &prv_session_do_shake_handle,
+        .context = state,
+    },
+    .accel_tap_info = {
+        .type = PEBBLE_ACCEL_TAP_EVENT,
+        .handler = &prv_session_do_tap_handle,
         .context = state,
     },
     .accel_double_tap_info = {
@@ -345,7 +388,7 @@ void accel_session_delete(AccelServiceState * session) {
 
 
 // ----------------------------------------------------------------------------------------------
-void accel_session_shake_subscribe(AccelServiceState * session, AccelTapHandler handler) {
+void accel_session_shake_subscribe(AccelServiceState * session, AccelShakeHandler handler) {
   AccelServiceState *state = (AccelServiceState *)session;
   state->shake_handler = handler;
   event_service_client_subscribe(&state->accel_shake_info);
@@ -356,6 +399,21 @@ void accel_session_shake_subscribe(AccelServiceState * session, AccelTapHandler 
 void accel_session_shake_unsubscribe(AccelServiceState *state) {
   event_service_client_unsubscribe(&state->accel_shake_info);
   state->shake_handler = NULL;
+}
+
+
+// ----------------------------------------------------------------------------------------------
+void accel_session_tap_subscribe(AccelServiceState * session, AccelTapHandler handler) {
+  AccelServiceState *state = (AccelServiceState *)session;
+  state->tap_handler = handler;
+  event_service_client_subscribe(&state->accel_tap_info);
+}
+
+
+// ----------------------------------------------------------------------------------------------
+void accel_session_tap_unsubscribe(AccelServiceState *state) {
+  event_service_client_unsubscribe(&state->accel_tap_info);
+  state->tap_handler = NULL;
 }
 
 
