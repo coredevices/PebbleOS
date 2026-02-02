@@ -72,8 +72,6 @@ bool sys_accel_manager_consume_samples(AccelManagerState *state, uint32_t sample
 // Functions for internal use
 ///////////////////////////////////////////////////////////
 
-bool gyro_manager_run_selftest(void);
-
 // Set whether the accelerometer should be in a sensitive state in order to trigger an accel tap
 // event from any small movements
 void accel_enable_high_sensitivity(bool high_sensitivity);
