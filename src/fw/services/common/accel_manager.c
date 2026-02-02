@@ -764,19 +764,6 @@ void accel_offload_work_from_isr(AccelOffloadCallback cb, bool *should_context_s
       new_timer_add_work_callback_from_isr(prv_handle_accel_driver_work_cb, cb);
 }
 
-#if !defined(PLATFORM_SILK) && !defined(PLATFORM_ASTERIX) && !defined(PLATFORM_OBELIX) && !defined(PLATFORM_GETAFIX)
-// Note: This selftest is only used for MFG today. When we start to build out a
-// gyro API, we will need to come up with a more generic way to handle locking
-// for a gyro only part vs gyro + accel part
-extern bool gyro_run_selftest(void);
-bool gyro_manager_run_selftest(void) {
-  mutex_lock_recursive(s_accel_manager_mutex);
-  bool rv = gyro_run_selftest();
-  mutex_unlock_recursive(s_accel_manager_mutex);
-  return rv;
-}
-#endif
-
 void command_accel_peek(void) {
   AccelData data;
 
