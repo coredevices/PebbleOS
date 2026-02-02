@@ -548,7 +548,6 @@ if bld.is_obelix() or bld.is_getafix():
             'imu/lis2dw12/lis2dw12.c',
         ],
         use=[
-            'hal_lis2dw12',
             'fw_includes',
         ],
     )
