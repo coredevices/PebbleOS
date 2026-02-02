@@ -186,10 +186,6 @@ extern void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t directi
 typedef void (*AccelOffloadCallback)(void);
 extern void accel_offload_work_from_isr(AccelOffloadCallback cb, bool *should_context_switch);
 
-//! Function runs a diagnostic test on the accelerometer hardware to confirm it
-//! works as expected
-extern bool accel_run_selftest(void);
-
 //! The accelerometer supports a changeable sensitivity for shake detection. This call will
 //! select whether we want the accelerometer to enter a highly sensitive state with a low
 //! threshold, where any minor amount of motion would trigger the system shake event.

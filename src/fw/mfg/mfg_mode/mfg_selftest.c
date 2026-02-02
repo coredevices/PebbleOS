@@ -33,7 +33,6 @@ struct SelfTestCase {
 bool bmi160_query_whoami(void) WEAK;
 bool bma255_query_whoami(void) WEAK;
 bool flash_check_whoami(void) WEAK;
-bool accel_manager_run_selftest(void) WEAK;
 bool gyro_manager_run_selftest(void) WEAK;
 bool mag3110_check_whoami(void) WEAK;
 bool snowy_mag3110_query_whoami(void) WEAK;
@@ -46,7 +45,6 @@ static const struct SelfTestCase s_test_cases[] = {
 #else
   { "IMU Comm", bmi160_query_whoami },
 #endif
-  { "Accel ST", accel_manager_run_selftest },
 #if !PLATFORM_SILK
   { "Gyro ST", gyro_manager_run_selftest },
   { "MAG3110 Comm", mag3110_check_whoami },

@@ -814,23 +814,6 @@ static bool prv_selftest_axis(BMA255Axis axis) {
   return true;
 }
 
-bool bma255_selftest(void) {
-  // calling selftest_axis resets the device
-  bool pass = true;
-  pass &= prv_selftest_axis(BMA255Axis_X);
-  pass &= prv_selftest_axis(BMA255Axis_Y);
-  pass &= prv_selftest_axis(BMA255Axis_Z);
-
-  // g-range should be 4g to copy the BMI160
-  bma255_set_scale(BMA255Scale_4G);
-
-  return pass;
-}
-
-bool accel_run_selftest(void) {
-  return bma255_selftest();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Debug Commands
 ////////////////////////////////////////////////////////////////////////////////
@@ -889,12 +872,6 @@ void command_accel_status(void) {
   prompt_send_response_fmt(buf, 64, "(0x0a) Int Status 1: 0x%"PRIx8, int_status_1);
   prompt_send_response_fmt(buf, 64, "(0x0b) Int Status 2: 0x%"PRIx8, int_status_2);
   prompt_send_response_fmt(buf, 64, "(0x0c) Int Status 3: 0x%"PRIx8, int_status_3);
-}
-
-void command_accel_selftest(void) {
-  const bool success = accel_run_selftest();
-  char *response = (success) ? "Pass" : "Fail";
-  prompt_send_response(response);
 }
 
 void command_accel_softreset(void) {
