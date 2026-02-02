@@ -3,20 +3,15 @@
 #include "system/passert.h"
 #include "shell/prefs.h"
 #include "drivers/display/display.h"
+#include "drivers/accel.h"
 #include "drivers/button.h"
 #include "drivers/imu/mmc5603nj/mmc5603nj.h"
-
-#if PLATFORM_ASTERIX
-#include "drivers/imu/lsm6dso/lsm6dso.h"
-#elif PLATFORM_OBELIX || PLATFORM_GETAFIX
-#include "drivers/imu/lis2dw12/lis2dw12.h"
-#endif
 
 
 void prv_change_orientation(bool rotated) {
   display_set_rotated(rotated);
   button_set_rotated(rotated);
-  imu_set_rotated(rotated);
+  accel_set_rotated(rotated);
   mag_set_rotated(rotated);
 }
 

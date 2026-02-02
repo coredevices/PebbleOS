@@ -66,6 +66,11 @@ typedef struct {
   int16_t z;
 } AccelDriverSample;
 
+//! Set the accelerometer axes to be rotated 180deg
+//!
+//! @param rotated Axes are rotated or not (true/false).
+void accel_set_rotated(bool rotated);
+
 //! Sets the accelerometer sampling interval.
 //!
 //! Not all sampling intervals are supported by all drivers. The driver must
