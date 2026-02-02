@@ -326,12 +326,7 @@ static void prv_handle_motion_interrupts(void) {
   // debug
   bool anymotion = ((int0_status & BMI160_INT_STATUS_0_ANYM_MASK) != 0);
   if (anymotion) {
-    int32_t direction;
-    IMUCoordinateAxis axis = prv_get_axis_direction(int0_status, int2_status,
-                                                    BMI160_INT_STATUS_2_ANYM_SIGN,
-                                                    BMI160_INT_STATUS_2_ANYM_FIRST_X, &direction);
-    BMI160_DBG("Anymotion on axis %"PRIu8" in direction %"PRId32, axis, direction);
-    accel_cb_shake_detected(axis, direction);
+    accel_cb_shake_detected();
   }
   bool double_tap = ((int0_status & BMI160_INT_STATUS_0_D_TAP_MASK) != 0);
   if (double_tap) {

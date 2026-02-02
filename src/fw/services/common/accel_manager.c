@@ -725,13 +725,9 @@ void accel_cb_new_sample(AccelDriverSample const *data) {
   prv_dispatch_data(true /* post_event */);
 }
 
-void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
+void accel_cb_shake_detected(void) {
   PebbleEvent e = {
     .type = PEBBLE_ACCEL_SHAKE_EVENT,
-    .accel_tap = {
-      .axis = axis,
-      .direction = direction,
-    },
   };
 
   event_put(&e);
