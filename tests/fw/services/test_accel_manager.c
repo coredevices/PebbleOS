@@ -85,10 +85,6 @@ bool accel_get_double_tap_detection_enabled(void) {
   return false;
 }
 
-bool gyro_run_selftest(void) {
-  return true;
-}
-
 bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
   return false;
 }

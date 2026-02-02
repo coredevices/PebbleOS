@@ -561,30 +561,6 @@ bool bmi160_query_whoami(void) {
   return (whoami == BMI160_CHIP_ID);
 }
 
-bool gyro_run_selftest(void) {
-  prv_update_accel_interrupts(false);
-
-  prv_run_command(BMI160_CMD_SOFTRESET);
-  psleep(50);
-
-  bmi160_enable_spi_mode();
-
-  bmi160_set_gyro_power_mode(BMI160_Gyro_Mode_Normal);
-
-  // Write the gyr_self_test_start bit
-  prv_write_reg(BMI160_REG_SELF_TEST, 0x10);
-  psleep(50);
-
-  const uint8_t status = bmi160_read_reg(BMI160_REG_SELF_TEST);
-
-  // power down the gyro
-  bmi160_set_gyro_power_mode(BMI160_Gyro_Mode_Suspend);
-  if (status | 0x2) {
-    return true;
-  }
-  return false;
-}
-
 void bmi160_set_accel_power_mode(BMI160AccelPowerMode mode) {
   uint8_t status = 0;
 
@@ -604,25 +580,6 @@ void bmi160_set_accel_power_mode(BMI160AccelPowerMode mode) {
   s_accel_power_mode = mode;
   BMI160_DBG("PMU_STATUS: 0x%x ACC_CONF: 0x%x",
     bmi160_read_reg(BMI160_REG_PMU_STATUS), bmi160_read_reg(BMI160_REG_ACC_CONF));
-}
-
-void bmi160_set_gyro_power_mode(BMI160GyroPowerMode mode) {
-  int retries = 20;
-  prv_run_command(BMI160_CMD_GYR_SET_PMU_MODE | mode);
-  while (retries--) {
-    uint8_t status = 0;
-    // can take up to 80ms to power up
-    status = bmi160_read_reg(BMI160_REG_PMU_STATUS) >> 2;
-    if (status == mode) {
-      break;
-    }
-    psleep(5);
-    BMI160_DBG("GYRO: want mode %d, actual %d", mode, status);
-  }
-  PBL_ASSERT(retries > 0, "Gyro: Could not set power mode to %d", mode);
-
-  s_gyro_power_mode = mode;
-  BMI160_DBG("PMU_STATUS: 0x%x", bmi160_read_reg(BMI160_REG_PMU_STATUS));
 }
 
 /*

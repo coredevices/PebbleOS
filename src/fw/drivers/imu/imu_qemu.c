@@ -18,7 +18,3 @@ void imu_power_up(void) {
 
 void imu_power_down(void) {
 }
-
-bool gyro_run_selftest(void) {
-  return true;
-}
