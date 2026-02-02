@@ -904,6 +904,6 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
   PBL_LOG(LOG_LEVEL_INFO, "LIS2DW12: User sensitivity set to %u percent", percent);
 }
 
-void imu_set_rotated(bool rotated) {
+void accel_set_rotated(bool rotated) {
   s_rotated_180 = rotated;
 }
