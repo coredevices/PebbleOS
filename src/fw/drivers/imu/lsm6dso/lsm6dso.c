@@ -143,14 +143,6 @@ void accel_power_down(void) {
 
 // accel.h implementation
 
-const AccelDriverInfo ACCEL_DRIVER_INFO = {
-    .sample_interval_max = 625000,       // 1.6 Hz
-    .sample_interval_low_power = 80000,  // 12.5Hz
-    .sample_interval_ui = 80000,         // 12.5Hz
-    .sample_interval_game = 19231,       // 52Hz
-    .sample_interval_min = 150,          // 6667Hz
-};
-
 uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Requesting update of sampling interval to %lu us",
           interval_us);
