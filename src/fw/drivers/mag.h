@@ -32,6 +32,9 @@ typedef enum {
   MagSampleRate5Hz
 } MagSampleRate;
 
+//! Initialize magnetometer
+void mag_init(void);
+
 //! Enable the mag hardware and increment the refcount. Must be matched with a call to
 //! mag_release.
 void mag_use(void);

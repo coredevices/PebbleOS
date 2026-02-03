@@ -18,6 +18,7 @@
 #include "drivers/flash.h"
 #include "drivers/debounced_button.h"
 
+#include "drivers/accel.h"
 #include "drivers/accessory.h"
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
@@ -25,8 +26,8 @@
 #include "drivers/display/display.h"
 #include "drivers/gpio.h"
 #include "drivers/hrm.h"
-#include "drivers/imu.h"
 #include "drivers/led_controller.h"
+#include "drivers/mag.h"
 #include "drivers/mic.h"
 #include "drivers/otp.h"
 #include "drivers/pmic.h"
@@ -321,7 +322,10 @@ static void init_drivers(void) {
 #endif
 #endif
 
-  imu_init();
+  accel_init();
+#if CAPABILITY_HAS_MAGNETOMETER
+  mag_init();
+#endif
 #if CAPABILITY_HAS_PRESSURE_SENSOR
   pressure_init();
 #endif

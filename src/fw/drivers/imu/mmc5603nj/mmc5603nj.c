@@ -51,7 +51,7 @@ static bool s_rotated_180 = false;
 
 // MMC5603NJ entrypoints
 
-void mmc5603nj_init(void) {
+void mag_init(void) {
   s_mag_mutex = mutex_create();
   if (prv_mmc5603nj_init()) {
     PBL_LOG(LOG_LEVEL_DEBUG, "MMC5603NJ: Initialization complete");

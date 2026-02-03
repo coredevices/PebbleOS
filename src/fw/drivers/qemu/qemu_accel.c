@@ -193,7 +193,7 @@ void qemu_accel_msg_callack(const uint8_t *data, uint32_t len) {
 }
 
 
-void qemu_accel_init(void) {
+void accel_init(void) {
   PBL_ASSERTN(!s_initialized);
   s_initialized = true;
   s_latest_reading = s_default_sample;
@@ -201,6 +201,11 @@ void qemu_accel_init(void) {
   s_timer_id = new_timer_create();
 }
 
+void accel_power_up(void) {
+}
+
+void accel_power_down(void) {
+}
 
 uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   mutex_lock(s_accel_mutex);

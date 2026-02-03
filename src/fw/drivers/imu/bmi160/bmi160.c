@@ -534,7 +534,7 @@ static void prv_update_accel_interrupts(bool enable) {
   }
 }
 
-void bmi160_init(void) {
+void accel_init(void) {
   gpio_input_init(&BOARD_CONFIG_ACCEL.accel_int_gpios[0]);
   gpio_input_init(&BOARD_CONFIG_ACCEL.accel_int_gpios[1]);
 
@@ -552,6 +552,14 @@ void bmi160_init(void) {
   }
 
   prv_set_accel_scale(BMI160_SCALE_4G);
+
+  bmi160_set_accel_power_mode(BMI160_Accel_Mode_Normal);
+}
+
+void accel_power_up(void) {
+}
+
+void accel_power_down(void) {
 }
 
 bool bmi160_query_whoami(void) {

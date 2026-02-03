@@ -103,7 +103,7 @@ static struct {
   },
 };
 
-void bma255_init(void) {
+void accel_init(void) {
   bma255_gpio_init();
   if (!bma255_query_whoami()) {
     PBL_LOG(LOG_LEVEL_ERROR, "Failed to query BMA255");
@@ -125,6 +125,12 @@ void bma255_init(void) {
 
   exti_configure_pin(BOARD_CONFIG_ACCEL.accel_ints[0], ExtiTrigger_Rising, prv_bma255_IRQ1_handler);
   exti_configure_pin(BOARD_CONFIG_ACCEL.accel_ints[1], ExtiTrigger_Rising, prv_bma255_IRQ2_handler);
+}
+
+void accel_power_up(void) {
+}
+
+void accel_power_down(void) {
 }
 
 bool bma255_query_whoami(void) {

@@ -66,6 +66,15 @@ typedef struct {
   int16_t z;
 } AccelDriverSample;
 
+//! Initialize accelerometer
+void accel_init(void);
+
+//! Power up the accelerometer hardware
+void accel_power_up(void);
+
+//! Power down the accelerometer hardware
+void accel_power_down(void);
+
 //! Set the accelerometer axes to be rotated 180deg
 //!
 //! @param rotated Axes are rotated or not (true/false).

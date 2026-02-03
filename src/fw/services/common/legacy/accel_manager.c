@@ -6,7 +6,7 @@
 #include "applib/accel_service.h"
 #include "applib/accel_service_private.h"
 #include "console/prompt.h"
-#include "drivers/imu.h"
+#include "drivers/accel.h"
 #include "drivers/legacy/accel.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
@@ -193,10 +193,10 @@ void accel_manager_enable(bool on) {
   bool prev = s_enabled;
   s_enabled = on;
   if (on && !prev) {
-    imu_power_up();
+    accel_power_up();
     prv_update_driver_config();
   } else if (!on && prev) {
-    imu_power_down();
+    accel_power_down();
   }
   mutex_unlock_recursive(s_mutex);
 }

@@ -125,17 +125,17 @@ static bool s_rotated_180 = false;
 
 // LSM6DSO configuration entrypoints
 
-void lsm6dso_init(void) {
+void accel_init(void) {
   // Initialize the LSM6DSO sensor to a powered down state.
   prv_lsm6dso_init();
 }
 
-void lsm6dso_power_up(void) {
+void accel_power_up(void) {
   s_lsm6dso_enabled = true;
   prv_lsm6dso_chase_target_state();
 }
 
-void lsm6dso_power_down(void) {
+void accel_power_down(void) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Powering down accelerometer");
   s_lsm6dso_enabled = false;
   prv_lsm6dso_chase_target_state();
