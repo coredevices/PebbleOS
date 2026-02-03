@@ -40,7 +40,6 @@ typedef enum {
   RebootReasonCode_EventQueueFull,
   RebootReasonCode_WorkerHardFault, // Off by default, compile in with WORKER_CRASH_CAUSES_RESET
   RebootReasonCode_OutOfMemory,
-  RebootReasonCode_DialogBootFault,
   RebootReasonCode_BtCoredump,
   RebootReasonCode_CoreDump,  // Core dump initiated without a more specific reason set
   RebootReasonCode_CoreDumpEntryFailed,

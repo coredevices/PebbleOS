@@ -54,8 +54,6 @@ static eMemfaultRebootReason prv_pbl_reboot_to_mflt_reboot(RebootReasonCode reas
       return kMfltRebootReason_OutOfMemory;
     case RebootReasonCode_FactoryResetReset:
       return kMfltRebootReason_FactoryResetReset;
-    case RebootReasonCode_DialogBootFault:
-      return kMfltRebootReason_DialogBootFault;
     case RebootReasonCode_BtCoredump:
       return kMfltRebootReason_BtCoredump;
     case RebootReasonCode_CoreDump:  // Core dump initiated without a more specific reason set
