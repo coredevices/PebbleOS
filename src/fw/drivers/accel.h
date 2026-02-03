@@ -37,23 +37,6 @@
  * and the higher-level code can work unmodified with different accelerometers.
  */
 
-//! Information which varies by accelerometer driver.
-typedef struct {
-  //! Highest sample interval (slowest rate) supported by the driver.
-  uint32_t sample_interval_max;
-  //! Recommended sample interval for low-power use, around 100,000 us.
-  uint32_t sample_interval_low_power;
-  //! Recommended sample interval for interactive use, around 250,000 us.
-  uint32_t sample_interval_ui;
-  //! Recommended sample interval for games and fast interactivity,
-  //! around 20,000 us.
-  uint32_t sample_interval_game;
-  //! Lowest sample interval (fastest rate) supported by the driver.
-  uint32_t sample_interval_min;
-} AccelDriverInfo;
-
-extern const AccelDriverInfo ACCEL_DRIVER_INFO;
-
 typedef struct {
   //! Timestamp of when the sample was taken in microseconds since the epoch.
   //! The precision of the timestamp is not guaranteed.
