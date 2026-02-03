@@ -107,7 +107,7 @@ bool mag3110_check_whoami(void) {
   return (whoami == COMPASS_WHOAMI_BYTE);
 }
 
-void mag3110_init(void) {
+void mag_init(void) {
   if (s_initialized) {
     return;
   }

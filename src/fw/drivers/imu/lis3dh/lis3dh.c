@@ -222,7 +222,7 @@ void accel_get_data(AccelRawData* data, int num_samples) {
   }
 }
 
-void lis3dh_init(void) {
+void accel_init(void) {
   PBL_ASSERTN(!s_initialized);
 
   lis3dh_init_mutex();
@@ -254,7 +254,7 @@ void lis3dh_init(void) {
   prv_accel_configure_interrupts();
 }
 
-void lis3dh_power_up(void) {
+void accel_power_up(void) {
   if (accel_start()) {
     uint8_t ctrl_reg1;
     if (prv_read_register(LIS3DH_CTRL_REG1, &ctrl_reg1)) {
@@ -268,7 +268,7 @@ void lis3dh_power_up(void) {
   PBL_LOG(LOG_LEVEL_ERROR, "Failed to exit low power mode");
 }
 
-void lis3dh_power_down(void) {
+void accel_power_down(void) {
   if (accel_start()) {
     uint8_t ctrl_reg1;
     if (prv_read_register(LIS3DH_CTRL_REG1, &ctrl_reg1)) {
