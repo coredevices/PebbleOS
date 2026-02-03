@@ -632,7 +632,7 @@ static void prv_lis2dw12_configure_interrupts(void) {
 }
 
 // default odr off
-void lis2dw12_init(void) {
+void accel_init(void) {
   uint8_t id;
   int32_t ret = lis2dw12_device_id_get(&lis2dw12_ctx, &id);
   if (ret || LIS2DW12_ID != id) {
@@ -834,12 +834,12 @@ static void prv_lis2dw12_chase_target_state(void) {
           s_lis2dw12_state.double_tap_detection_enabled);
 }
 
-void lis2dw12_power_up(void) {
+void accel_power_up(void) {
   s_lis2dw12_enabled = true;
   prv_lis2dw12_chase_target_state();
 }
 
-void lis2dw12_power_down(void) {
+void accel_power_down(void) {
   PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Powering down accelerometer");
   s_lis2dw12_enabled = false;
   prv_lis2dw12_chase_target_state();

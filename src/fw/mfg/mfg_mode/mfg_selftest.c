@@ -6,7 +6,6 @@
 #include "drivers/button.h"
 #include "drivers/flash.h"
 #include "drivers/i2c.h"
-#include "drivers/imu.h"
 #include "drivers/imu/bmi160/bmi160.h"
 #include "util/bitset.h"
 #include "util/size.h"

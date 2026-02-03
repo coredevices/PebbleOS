@@ -16,7 +16,8 @@ if bld.is_tintin():
             'driver_flash',
             'driver_gpio_defaults',
             'driver_hci_passthrough',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_led_controller',
             'driver_mcu',
             'driver_mpu',
@@ -49,7 +50,8 @@ elif bld.is_silk():
             'driver_gpio_defaults',
             'driver_hci_passthrough',
             'driver_hrm',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_led_controller',
             'driver_mcu',
             'driver_mic',
@@ -84,7 +86,8 @@ elif bld.is_snowy_compatible():
             'driver_fpc_pinstrap',
             'driver_gpio_defaults',
             'driver_hci_passthrough',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_led_controller',
             'driver_mcu',
             'driver_mic',
@@ -119,7 +122,8 @@ elif bld.is_cutts():
             'driver_flash',
             'driver_gpio_defaults',
             'driver_hci_passthrough',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_led_controller',
             'driver_mcu',
             'driver_mic',
@@ -155,7 +159,8 @@ elif bld.is_robert():
             'driver_gpio_defaults',
             'driver_hci_passthrough',
             'driver_hrm',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_led_controller',
             'driver_mcu',
             'driver_mic',
@@ -186,7 +191,8 @@ elif bld.is_asterix():
             'driver_display',
             'driver_flash',
             'driver_gpio_defaults',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_mcu',
             'driver_mic',
             'driver_mpu',
@@ -219,7 +225,8 @@ elif bld.is_obelix():
             'driver_gpio_defaults',
             'driver_hrm',
             'driver_i2c',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_mcu',
             'driver_mpu',
             'driver_otp',
@@ -254,7 +261,8 @@ elif bld.is_getafix():
             'driver_gpio',
             'driver_flash',
             'driver_gpio_defaults',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_mcu',
             'driver_mpu',
             'driver_otp',
@@ -494,7 +502,7 @@ else:
 
 if (bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert()) and not bld.env.QEMU:
     bld.objects(
-        name='driver_bmi160',
+        name='driver_accel',
         source=[
             'imu/bmi160/bmi160.c',
             'imu/bmi160/bmi160_spi.c',
@@ -510,7 +518,7 @@ if (bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert()) and not bld.
 
 if bld.is_silk() and not bld.env.QEMU:
     bld.objects(
-        name='driver_bma255',
+        name='driver_accel',
         source=[
             'imu/bma255/bma255.c',
             'imu/bma255/bma255_spi.c',
@@ -522,7 +530,7 @@ if bld.is_silk() and not bld.env.QEMU:
 
 if bld.is_asterix():
     bld.objects(
-        name='driver_lsm6dso',
+        name='driver_accel',
         source=[
             'imu/lsm6dso/lsm6dso.c',
         ],
@@ -535,7 +543,7 @@ if bld.is_asterix():
 # NOTE: enable LIS2DW12 by default on Obelix
 if bld.is_obelix() or bld.is_getafix():
     bld.objects(
-        name='driver_lis2dw12',
+        name='driver_accel',
         source=[
             'imu/lis2dw12/lis2dw12.c',
         ],
@@ -1034,99 +1042,31 @@ elif mcu_family == 'SF32LB52':
     )
 
 if bld.env.QEMU:
-    mag_driver = ('driver_mag3110' if bld.capability('HAS_MAGNETOMETER')
-                  else 'driver_mag_null')
     bld.objects(
-        name='driver_imu',
+        name='driver_accel',
         source=[
-            'imu/imu_qemu.c',
             'qemu/qemu_accel.c',
         ],
         use=[
-            mag_driver,
             'driver_qemu_serial',
             'fw_includes',
             'root_includes',
         ],
     )
-elif bld.is_tintin():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_tintin.c',
-        ],
-        use=[
-            'driver_lis3dh',
-            'driver_mag3110',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_snowy_evt2.c',
-        ],
-        use=[
-            'driver_bmi160',
-            'driver_mag3110',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_silk():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_silk.c',
-        ],
-        use=[
-            'driver_bma255',
-            'driver_mag_null',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_asterix():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_asterix.c',
-        ],
-        use=[
-            'driver_lsm6dso',
-            'driver_mmc5603nj',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_obelix():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_obelix.c',
-        ],
-        use=[
-          'driver_lis2dw12',
-          'driver_mmc5603nj',
-          'fw_includes',
-          'root_includes',
-        ]
-    )
-elif bld.is_getafix():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_getafix.c',
-        ],
-        use=[
-            'driver_lis2dw12',
-            'driver_mmc5603nj',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
+
+    if bld.capability('HAS_MAGNETOMETER'):
+        bld.objects(
+            name='driver_mag3110',
+            source=[
+                'imu/mag3110/mag3110.c',
+            ],
+            use=[
+                'driver_qemu_serial',
+                'fw_includes',
+                'root_includes',
+            ],
+        )
+
 
 if bld.env.BOARD == "v2_0":
     bld.objects(
@@ -1165,9 +1105,22 @@ elif bld.is_getafix():
         ],
     )
 
+if bld.env.QEMU:
+    bld.objects(
+        name='driver_accel',
+        source=[
+            'qemu/qemu_accel.c',
+        ],
+        use=[
+            'driver_qemu_serial',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+
 if bld.is_tintin() and not bld.env.QEMU:
     bld.objects(
-        name='driver_lis3dh',
+        name='driver_accel',
         source=[
             'imu/lis3dh/config.c',
             'imu/lis3dh/lis3dh.c',
@@ -1186,7 +1139,7 @@ if bld.is_tintin() and not bld.env.QEMU:
 
 if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert() or bld.env.BOARD == 'silk_flint':
     bld.objects(
-        name='driver_mag3110',
+        name='driver_mag',
         source=[
             'imu/mag3110/mag3110.c',
         ],
@@ -1203,7 +1156,7 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
 
 if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
     bld.objects(
-        name='driver_mmc5603nj',
+        name='driver_mag',
         source=[
             'imu/mmc5603nj/mmc5603nj.c',
         ],
@@ -1211,17 +1164,6 @@ if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
             'driver_i2c',
             'fw_includes',
             'root_includes',
-        ],
-    )
-
-if not bld.capability('HAS_MAGNETOMETER'):
-    bld.objects(
-        name='driver_mag_null',
-        source=[
-            'imu/mag_null.c',
-        ],
-        use=[
-            'fw_includes',
         ],
     )
 
