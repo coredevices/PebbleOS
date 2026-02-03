@@ -21,9 +21,6 @@ void pulse_start(void);
 //! End a PULSE session on dbgserial.
 void pulse_end(void);
 
-//! Terminate the PULSE session in preparation for the firmware to crash.
-void pulse_prepare_to_crash(void);
-
 //! PULSE ISR receive character handler.
 void pulse_handle_character(char c, bool *should_context_switch);
 

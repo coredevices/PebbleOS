@@ -66,15 +66,11 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
   }
 }
 
-void fw_prepare_for_reset(bool unsafe_reset) {
-  if (!unsafe_reset) {
-    // Tear down Bluetooth, to avoid confusing the phone:
-    services_set_runlevel(RunLevel_BareMinimum);
+void fw_prepare_for_reset(void) {
+  // Tear down Bluetooth, to avoid confusing the phone:
+  services_set_runlevel(RunLevel_BareMinimum);
 #if PULSE_EVERYWHERE
-    pulse_end();
+  pulse_end();
 #endif
-  } else {
-    pulse_prepare_to_crash();
-  }
 }
 

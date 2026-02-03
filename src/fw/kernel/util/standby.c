@@ -46,7 +46,7 @@ NORETURN enter_standby(RebootReasonCode reason) {
   display_clear();
   display_set_enabled(false);
 
-  system_reset_prepare(false);
+  system_reset_prepare();
   reboot_reason_set_restarted_safely();
 
   prv_enter_standby();

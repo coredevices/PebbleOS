@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-void fw_prepare_for_reset(bool skip_bt_teardown);
+void fw_prepare_for_reset(void);
 
 void fw_reset_into_prf(void);
 

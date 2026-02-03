@@ -157,9 +157,6 @@ void pulse_end(void) {
   serial_console_set_state(SERIAL_CONSOLE_STATE_LOGGING);
 }
 
-void pulse_prepare_to_crash(void) {
-}
-
 static void prv_process_received_frame(void *frame_ptr) {
   IncomingPulseFrame *frame = frame_ptr;
   uint32_t fcs;
