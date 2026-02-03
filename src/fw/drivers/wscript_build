@@ -194,6 +194,7 @@ elif bld.is_asterix():
             'driver_otp',
             'driver_periph_config',
             'driver_pmic',
+            'driver_pressure',
             'driver_pwr',
             'driver_rng',
             'driver_rtc',
@@ -1220,6 +1221,18 @@ if not bld.capability('HAS_MAGNETOMETER'):
             'imu/mag_null.c',
         ],
         use=[
+            'fw_includes',
+        ],
+    )
+
+if bld.is_asterix():
+    bld.objects(
+        name='driver_pressure',
+        source=[
+            'pressure/bmp390.c',
+        ],
+        use=[
+            'driver_i2c',
             'fw_includes',
         ],
     )
