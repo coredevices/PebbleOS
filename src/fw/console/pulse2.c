@@ -373,11 +373,6 @@ void pulse_end(void) {
   ppp_control_protocol_close(PULSE2_LCP, PPPCPCloseWait_WaitForClosed);
 }
 
-void pulse_prepare_to_crash(void) {
-  // We're crashing so it's not safe to use control_protocol APIs.
-  prv_forge_terminate_ack();
-}
-
 static void prv_assert_tx_buffer(void *buf) {
   // Ensure the buffer is actually a PULSE transmit buffer
   bool buf_valid = false;

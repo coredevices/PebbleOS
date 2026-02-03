@@ -8,7 +8,7 @@
 #include <stdbool.h>
 
 //! Shut down system services but don't actually reset.
-void system_reset_prepare(bool unsafe_reset);
+void system_reset_prepare(void);
 
 //! Reset nicely after shutting down system services. Does not set the reboot_reason other than
 //! calling reboot_reason_set_restarted_safely just before the reset occurs.
