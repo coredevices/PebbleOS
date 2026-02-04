@@ -22,6 +22,15 @@
 #include "util/net.h"
 #include "util/size.h"
 #include "util/string.h"
+#ifndef RECOVERY_FW
+#include "services/normal/notifications/do_not_disturb.h"
+#include "services/normal/notifications/alerts.h"
+#include "services/normal/notifications/alerts_preferences_private.h"
+#if CAPABILITY_HAS_VIBE_SCORES
+#include "services/normal/vibes/vibe_client.h"
+#include "services/normal/vibes/vibe_score.h"
+#endif
+#endif
 
 #include <stdio.h>
 
@@ -387,6 +396,23 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
 static void prv_watch_dst(void* user) {
   const bool was_dst = (bool)user;
   const bool is_dst = time_get_isdst(rtc_get_time());
+  
+#ifndef RECOVERY_FW
+  if (alerts_should_vibrate_for_type(AlertOther)) {
+#if CAPABILITY_HAS_VIBE_SCORES
+    if (time_utc_to_local(rtc_get_time()) % 3600 == 0) {
+      uint32_t vibe_id = vibe_score_info_get_resource_id(
+          alerts_preferences_get_vibe_score_for_client(VibeClient_Hourly)); 
+      VibeScore *score = vibe_score_create_with_resource_system(0, vibe_id);
+      if (score) {
+        vibe_score_do_vibe(score);
+        vibe_score_destroy(score);
+      }
+    }
+#endif
+  }
+#endif
+
   if (is_dst != was_dst) {
     PebbleEvent e = {
       .type = PEBBLE_SET_TIME_EVENT,
