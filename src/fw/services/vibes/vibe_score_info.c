@@ -13,7 +13,9 @@ typedef enum AlertType {
   AlertType_Calls = 1 << 1,
   AlertType_Alarms = 1 << 2,
   AlertType_AlarmsLPM = 1 << 3,
-  AlertType_All = AlertType_Notifications | AlertType_Calls | AlertType_Alarms,
+  AlertType_Hourly = 1 << 4,
+  AlertType_OnDisconnect = 1 << 5,
+  AlertType_All = AlertType_Notifications | AlertType_Calls | AlertType_Alarms | AlertType_Hourly | AlertType_OnDisconnect,
 } AlertType;
 
 typedef struct {
@@ -77,6 +79,14 @@ VibeScoreId vibe_score_info_cycle_next(VibeClient client, VibeScoreId curr_id) {
     }
     case VibeClient_Alarms: {
       alert_type = AlertType_Alarms;
+      break;
+    }
+    case VibeClient_Hourly: {
+      alert_type = AlertType_Hourly;
+      break;
+    }
+    case VibeClient_OnDisconnect: {
+      alert_type = AlertType_OnDisconnect;
       break;
     }
     default: {
