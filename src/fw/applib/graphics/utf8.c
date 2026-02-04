@@ -263,6 +263,29 @@ void utf8_iter_init(Iterator *utf8_iter, Utf8IterState *utf8_iter_state, Utf8Bou
   iter_init(utf8_iter, (IteratorCallback) utf8_iter_next, utf8_iter_prev, (IteratorState) utf8_iter_state);
 }
 
+size_t utf8_encode_codepoint(Codepoint codepoint, utf8_t *dest) {
+  if (codepoint < 0x80) {
+    dest[0] = (utf8_t)codepoint;
+    return 1;
+  } else if (codepoint < 0x800) {
+    dest[0] = (utf8_t)(0xC0 | (codepoint >> 6));
+    dest[1] = (utf8_t)(0x80 | (codepoint & 0x3F));
+    return 2;
+  } else if (codepoint < 0x10000) {
+    dest[0] = (utf8_t)(0xE0 | (codepoint >> 12));
+    dest[1] = (utf8_t)(0x80 | ((codepoint >> 6) & 0x3F));
+    dest[2] = (utf8_t)(0x80 | (codepoint & 0x3F));
+    return 3;
+  } else if (codepoint <= 0x10FFFF) {
+    dest[0] = (utf8_t)(0xF0 | (codepoint >> 18));
+    dest[1] = (utf8_t)(0x80 | ((codepoint >> 12) & 0x3F));
+    dest[2] = (utf8_t)(0x80 | ((codepoint >> 6) & 0x3F));
+    dest[3] = (utf8_t)(0x80 | (codepoint & 0x3F));
+    return 4;
+  }
+  return 0; // Invalid codepoint
+}
+
 size_t utf8_copy_character(utf8_t *dest, utf8_t *origin, size_t length) {
   utf8_t *next_char = utf8_get_next(origin);
   // If next_char is NULL, we were asked to copy the last character, so just take the end of the

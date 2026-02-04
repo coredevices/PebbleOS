@@ -39,3 +39,6 @@ bool codepoint_is_emoji(const Codepoint codepoint);
 // This is a least dirty hack to enable special rendering when a special codepoint is hit in the
 // text being rendered
 bool codepoint_is_special(const Codepoint codepoint);
+
+// Check if a codepoint is from a right-to-left script (Arabic, Hebrew)
+bool codepoint_is_rtl(const Codepoint codepoint);
