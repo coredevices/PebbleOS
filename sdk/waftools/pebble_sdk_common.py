@@ -7,6 +7,7 @@ import types
 
 from waflib import Logs
 from waflib.Configure import conf
+from waflib.Errors import WafError
 from waflib.Task import Task
 from waflib.TaskGen import after_method, before_method, feature
 from waflib.Tools import c, c_preproc
@@ -167,9 +168,33 @@ def setup_pebble_c(task_gen):
                 project_path = task_gen.bld.path
 
             lib_include_node = project_path.find_node(lib['path']).find_node('include')
+            lib_name_node = lib_include_node.find_node(str(lib['name']))
+            if lib_name_node is None:
+                raise WafError("Library '{}' not found at path: {}".format(
+                    lib['name'], lib_include_node.abspath()))
+
+            lib_platform_node = lib_name_node.find_node(platform)
+            if lib_platform_node is None:
+                # List available platforms
+                try:
+                    available = [d for d in os.listdir(lib_name_node.abspath())
+                                 if os.path.isdir(os.path.join(lib_name_node.abspath(), d)) and not d.startswith('.')]
+                    platforms_str = ', '.join(available) if available else 'none'
+                except:
+                    platforms_str = 'unknown'
+
+                raise WafError(
+                    "The Pebble package '{}' doesn't support the '{}' platform.\n"
+                    "Library location: {}\n"
+                    "Supported platforms: {}".format(
+                        lib['name'],
+                        platform,
+                        lib_name_node.abspath(),
+                        platforms_str
+                    ))
+
             append_to_attr(task_gen, 'includes',
-                           [lib_include_node.abspath(),
-                            lib_include_node.find_node(str(lib['name'])).find_node(platform).abspath()])
+                           [lib_include_node.abspath(), lib_platform_node.abspath()])
 
 
 @feature('c')
