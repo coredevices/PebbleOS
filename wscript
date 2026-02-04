@@ -358,7 +358,7 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'TINTIN_FORCE_FIT')
         print("Functionality is secondary to usability")
 
-    if (conf.is_snowy_compatible() and not conf.options.no_lto) or conf.options.lto:
+    if (conf.is_snowy_compatible() and not conf.options.no_lto and not conf.options.qemu) or conf.options.lto:
         conf.options.lto = True
         print("Turning on LTO.")
 
