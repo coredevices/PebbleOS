@@ -296,7 +296,12 @@ BatteryChargeState battery_get_charge_state(void) {
   // higher charge percent bin.
   int32_t rounding_factor = 5 + MAX(((percent - 50) / 10), 0);
   BatteryChargeState state = {
+#if defined(PLATFORM_SNOWY_EMERY) || defined(PLATFORM_SPALDING_GABBRO) || defined(BOARD_SILK_FLINT)
+    // These QEMU platforms can set exact battery percentages via QEMU controls, so use 1% steps
+    .charge_percent = MIN(percent_normalized, 100),
+#else
     .charge_percent = MIN(10 * ((percent_normalized + rounding_factor) / 10), 100),
+#endif
     .is_charging = is_plugged && percent_normalized < 100,
     .is_plugged = is_plugged,
   };
