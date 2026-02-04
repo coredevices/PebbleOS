@@ -42,6 +42,12 @@ uint32_t utf8_peek_codepoint(utf8_t *string, utf8_t **next_ptr);
 //! @return The number of bytes copied.
 size_t utf8_copy_character(utf8_t *dest, utf8_t *origin, size_t length);
 
+//! Encode a Unicode codepoint to UTF-8 bytes.
+//! @param codepoint The Unicode codepoint to encode
+//! @param dest Destination buffer (must have at least 4 bytes available)
+//! @return Number of bytes written (1-4), or 0 on error (invalid codepoint)
+size_t utf8_encode_codepoint(Codepoint codepoint, utf8_t *dest);
+
 //! Returns the length of the string if this length is less than \ref max_size bytes. Otherwise, it
 //! returns the length of the string up until the end of the last valid codepoint that fits into
 //! \ref max_size bytes and \ref truncated is set to true (it is set to false if the string is not

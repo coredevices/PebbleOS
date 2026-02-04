@@ -14,9 +14,11 @@
 #include "text.h"
 #include "text_layout_private.h"
 
+#include "arabic_shaping.h"
 #include "graphics.h"
 #include "graphics_private.h"
 #include "gtypes.h"
+#include "rtl_support.h"
 #include "text_render.h"
 #include "text_resources.h"
 #include "utf8.h"
@@ -461,7 +463,7 @@ void update_dimensions_char_visitor_cb(GContext* ctx, const TextBoxParams* const
       line, line->width_px + line->origin.x, text_box_params->box.size.w);
 }
 
-//! Call char_visitor_cb on each character in the line 
+//! Call char_visitor_cb on each character in the line
 //! Used to update line dimensions and render characters
 //! Traverse until end of line->width_px if rendering chars, else text_box_params width
 //! if updating line dimensions
@@ -496,10 +498,95 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     return NULL;
   }
 
-  // Set up iterator
+  // RTL support: check if this line contains RTL characters and reverse if rendering
+  // Arabic text also needs shaping (connecting letters) BEFORE reversal
+  // Use smaller buffers to reduce stack usage (max 16 codepoints * 4 bytes = 64)
+  utf8_t shaped_buffer[64];  // Buffer for Arabic shaping
+  utf8_t rtl_buffer[64];     // Buffer for RTL reversal
+  const utf8_t *render_start = line->start;
+  bool is_rtl = false;
+  bool is_rendering = (char_visitor_cb == render_chars_char_visitor_cb);
+
+  if (is_rendering && line->start != NULL && text_box_params->utf8_bounds != NULL &&
+      text_box_params->utf8_bounds->end != NULL &&
+      text_box_params->utf8_bounds->end > line->start) {
+    // Find line end by calculating byte length from width
+    // We need to find where the line actually ends
+    utf8_t *line_end = (utf8_t *)text_box_params->utf8_bounds->end;
+
+    // Check if this line contains RTL text
+    if (utf8_contains_rtl(line->start, line_end)) {
+      // Calculate the actual line length to reverse
+      // Use the line width to determine how much text fits
+      size_t src_len = 0;
+      utf8_t *ptr = (utf8_t *)line->start;
+      int width_so_far = 0;
+
+      while (ptr < line_end && *ptr != '\0' && *ptr != '\n') {
+        utf8_t *next = NULL;
+        Codepoint cp = utf8_peek_codepoint(ptr, &next);
+        if (cp == 0 || next == NULL) {
+          break;
+        }
+        int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
+            text_box_params->font, cp);
+        if (width_so_far + glyph_width > available_horiz_px) {
+          break;
+        }
+        width_so_far += glyph_width;
+        ptr = next;
+      }
+      src_len = ptr - line->start;
+
+      // Limit src_len to fit in our buffer (with room for UTF-8 expansion)
+      if (src_len > sizeof(rtl_buffer) - 4) {
+        src_len = sizeof(rtl_buffer) - 4;
+      }
+
+      if (src_len > 0) {
+        // Step 1: Shape Arabic text first (connect letters based on context)
+        // This must happen BEFORE RTL reversal to analyze letter positions correctly
+        const utf8_t *to_reverse = line->start;
+        size_t to_reverse_len = src_len;
+
+        if (utf8_contains_arabic(line->start, ptr)) {
+          size_t shaped_len = arabic_shape_text(line->start, src_len,
+                                                shaped_buffer, sizeof(shaped_buffer) - 1);
+          if (shaped_len > 0) {
+            shaped_buffer[shaped_len] = '\0';
+            to_reverse = shaped_buffer;
+            to_reverse_len = shaped_len;
+          }
+        }
+
+        // Step 2: Then reverse for RTL display
+        size_t reversed_len = utf8_reverse_for_rtl(to_reverse, to_reverse_len,
+                                                    rtl_buffer, sizeof(rtl_buffer) - 1);
+        if (reversed_len > 0) {
+          rtl_buffer[reversed_len] = '\0';
+          render_start = rtl_buffer;
+          is_rtl = true;
+        }
+      }
+    }
+  }
+
+  // Set up iterator - use reversed buffer for RTL rendering
   Iterator char_iter;
   CharIterState char_iter_state;
-  char_iter_init(&char_iter, &char_iter_state, text_box_params, line->start);
+  TextBoxParams rtl_text_box_params;
+  Utf8Bounds rtl_bounds;
+
+  if (is_rtl) {
+    // Create temporary bounds and params for the reversed text
+    rtl_bounds.start = (utf8_t *)render_start;
+    rtl_bounds.end = (utf8_t *)render_start + strlen((const char *)render_start);
+    rtl_text_box_params = *text_box_params;
+    rtl_text_box_params.utf8_bounds = &rtl_bounds;
+    char_iter_init(&char_iter, &char_iter_state, &rtl_text_box_params, (utf8_t *)render_start);
+  } else {
+    char_iter_init(&char_iter, &char_iter_state, text_box_params, line->start);
+  }
   Utf8IterState* utf8_iter_state = (Utf8IterState*) &char_iter_state.utf8_iter_state;
 
   bool is_newline_as_space = text_box_params->overflow_mode == GTextOverflowModeFill;
@@ -918,9 +1005,17 @@ static void prv_line_justify(Line* line, const TextBoxParams* const text_box_par
 
   int horiz_px_remaining = (line->max_width_px - line->width_px);
 
-  // [RTL] in addition to left, right and center alignment, you want a "primary"
-  // alignment that is left for LTR writing systems, and right for RTL.
-  switch (text_box_params->alignment) {
+  // Determine effective alignment - RTL text defaults to right alignment
+  GTextAlignment effective_alignment = text_box_params->alignment;
+
+  // If alignment is left (default) and text contains RTL, switch to right
+  if (effective_alignment == GTextAlignmentLeft && line->start != NULL) {
+    if (utf8_contains_rtl(line->start, text_box_params->utf8_bounds->end)) {
+      effective_alignment = GTextAlignmentRight;
+    }
+  }
+
+  switch (effective_alignment) {
     case GTextAlignmentCenter:
       line->origin.x = line->origin.x + (horiz_px_remaining / 2);
       break;

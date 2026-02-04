@@ -8,6 +8,10 @@
 #include <stddef.h>
 
 #define MAX_LATIN_CODEPOINT 0x02AF
+#define MIN_ARABIC_CODEPOINT 0x0600
+#define MAX_ARABIC_CODEPOINT 0x06FF
+#define MIN_HEBREW_CODEPOINT 0x0590
+#define MAX_HEBREW_CODEPOINT 0x05FF
 #define MIN_SOFTBANK_EMOJI_CODEPOINT 0xE000
 #define MAX_SOFTBANK_EMOJI_CODEPOINT 0xE537
 #define MIN_UNIFIED_EMOJI_CODEPOINT 0x1F300
@@ -131,4 +135,9 @@ bool codepoint_is_emoji(const Codepoint codepoint) {
 bool codepoint_is_special(const Codepoint codepoint) {
   return (codepoint >= MIN_SPECIAL_CODEPOINT &&
           codepoint <= MAX_SPECIAL_CODEPOINT);
+}
+
+bool codepoint_is_rtl(const Codepoint codepoint) {
+  return (codepoint >= MIN_ARABIC_CODEPOINT && codepoint <= MAX_ARABIC_CODEPOINT) ||
+         (codepoint >= MIN_HEBREW_CODEPOINT && codepoint <= MAX_HEBREW_CODEPOINT);
 }
