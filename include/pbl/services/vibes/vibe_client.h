@@ -9,7 +9,9 @@ typedef enum VibeClient {
   VibeClient_Notifications = 0,
   VibeClient_PhoneCalls,
   VibeClient_Alarms,
-  VibeClient_AlarmsLPM
+  VibeClient_AlarmsLPM,
+  VibeClient_Hourly,
+  VibeClient_OnDisconnect,
 } VibeClient;
 
 // Returns the appropriate vibe score for the client.
