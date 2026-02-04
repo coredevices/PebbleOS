@@ -44,7 +44,8 @@ def configure(conf):
                   '-Wno-error=builtin-declaration-mismatch',
                   '-Wno-error=format-truncation',
                   '-Wno-error=expansion-to-defined',
-                  '-Wno-error=zero-length-bounds',]
+                  '-Wno-error=zero-length-bounds',
+                  '-Wno-error=cast-function-type',]
 
     if (conf.env.SDK_VERSION_MAJOR == 5) and (conf.env.SDK_VERSION_MINOR > 19):
         pebble_cflags.append('-D_TIME_H_')
