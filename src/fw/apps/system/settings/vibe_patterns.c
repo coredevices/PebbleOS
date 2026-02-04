@@ -29,6 +29,8 @@ typedef enum VibeSettingsRow {
 #endif
   VibeSettingsRow_PhoneCalls,
   VibeSettingsRow_Alarms,
+  VibeSettingsRow_Hourly,
+  VibeSettingsRow_OnDisconnect,
   VibeSettingsRow_System,
   VibeSettingsRow_Count,
 } VibeSettingsRow;
@@ -77,6 +79,16 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       client = VibeClient_Alarms;
       break;
     }
+    case VibeSettingsRow_Hourly: {
+      title = i18n_noop("Hourly Notice");
+      client = VibeClient_Hourly;
+      break;
+    }
+    case VibeSettingsRow_OnDisconnect: {
+      title = i18n_noop("On Disconnect");
+      client = VibeClient_OnDisconnect;
+      break;
+    }
     case VibeSettingsRow_System: {
       /// Refers to the class of all non-score vibes, e.g. 3rd party app vibes
       title = i18n_noop("System");
@@ -123,6 +135,14 @@ static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_ro
       score = vibe_client_get_score(VibeClient_Alarms);
       break;
     }
+    case VibeSettingsRow_Hourly: {
+      score = vibe_client_get_score(VibeClient_Hourly);
+      break;
+    }
+    case VibeSettingsRow_OnDisconnect: {
+      score = vibe_client_get_score(VibeClient_OnDisconnect);
+      break;
+    }
     case VibeSettingsRow_System: {
       // Vibe a short pulse so the user can feel the current system default vibe intensity
       vibes_short_pulse();
@@ -164,6 +184,14 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     }
     case VibeSettingsRow_Alarms: {
       client = VibeClient_Alarms;
+      break;
+    }
+    case VibeSettingsRow_Hourly: {
+      client = VibeClient_Hourly;
+      break;
+    }
+    case VibeSettingsRow_OnDisconnect: {
+      client = VibeClient_OnDisconnect;
       break;
     }
     case VibeSettingsRow_System: {
