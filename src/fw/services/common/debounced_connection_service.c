@@ -7,6 +7,18 @@
 #include "services/common/regular_timer.h"
 #include "syscall/syscall_internal.h"
 
+#ifndef RECOVERY_FW
+#include "services/normal/notifications/do_not_disturb.h"
+#include "services/normal/notifications/alerts.h"
+#include "services/normal/notifications/alerts_preferences_private.h"
+#if CAPABILITY_HAS_VIBE_SCORES
+#include "services/normal/vibes/vibe_client.h"
+#include "services/normal/vibes/vibe_score.h"
+#endif
+#endif
+
+#include "system/logging.h"
+
 //! This module is responsible for propagating debounced connection events.
 //! Connection events are passed through right away to subscribers but
 //! disconnection events are only passed through if a re-connection did not
@@ -40,6 +52,19 @@ static void prv_handle_disconnection_debounced(void *data) {
   DebounceConnection conn_id = (DebounceConnection)data;
   s_debounced_state_is_connected[conn_id] = false;
   prv_put_debounced_connection_event(conn_id);
+#ifndef RECOVERY_FW
+  if (alerts_should_vibrate_for_type(AlertOther)) {
+#if CAPABILITY_HAS_VIBE_SCORES
+    uint32_t vibe_id = vibe_score_info_get_resource_id(
+        alerts_preferences_get_vibe_score_for_client(VibeClient_OnDisconnect));
+    VibeScore *score = vibe_score_create_with_resource_system(0, vibe_id);
+    if (score) {
+      vibe_score_do_vibe(score);
+      vibe_score_destroy(score);
+    }
+#endif
+  }
+#endif
   regular_timer_remove_callback(&s_debounce_timers[conn_id]);
 }
 
