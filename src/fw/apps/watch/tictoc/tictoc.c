@@ -13,9 +13,6 @@ const PebbleProcessMd* tictoc_get_app_info(void) {
                 0x91, 0xf5, 0x01, 0x60, 0x0c, 0x9b, 0xdc, 0x59 },
       .main_func = tictoc_main,
       .process_type = ProcessTypeWatchface,
-#if CAPABILITY_HAS_ROCKY_JS && !defined(PLATFORM_SPALDING)
-      .is_rocky_app = true,
-#endif
     },
     .icon_resource_id = RESOURCE_ID_MENU_ICON_TICTOC_WATCH,
     .name = "TicToc",

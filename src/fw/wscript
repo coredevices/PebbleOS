@@ -718,7 +718,12 @@ def _build_normal(bld):
         source_dirs.extend(('apps/%s/**' % d for d in ('system_apps', 'watch')))
         if bld.is_spalding() and bld.env.BOARD != 'spalding_gabbro':
             excludes.append('apps/watch/tictoc/default')
+            excludes.append('apps/watch/tictoc/bw')
+        elif bld.is_tintin() or bld.is_silk():
+            excludes.append('apps/watch/tictoc/default')
+            excludes.append('apps/watch/tictoc/spalding')
         else:
+            excludes.append('apps/watch/tictoc/bw')
             excludes.append('apps/watch/tictoc/spalding')
 
         if bld.is_cutts():
