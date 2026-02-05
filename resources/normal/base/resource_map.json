@@ -309,7 +309,7 @@
       "type": "font",
       "name": "LECO_36_BOLD_NUMBERS",
       "file": "normal/base/pbf/LECO_36_BOLD_NUMBERS.pbf",
-      "characterRegex": "[ 0-9:/.,°-%]"
+      "characterRegex": "[ 0-9:/.,°HM\\+\\-%]"
     },
     {
       "type": "font",
