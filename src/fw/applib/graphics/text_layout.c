@@ -43,6 +43,48 @@
 
 static bool prv_char_iter_next_start_of_word(Iterator* char_iter);
 
+//! Check if a codepoint is punctuation (should be ignored for RTL detection)
+static bool prv_codepoint_is_punctuation(Codepoint cp) {
+  // ASCII punctuation
+  if ((cp >= 0x21 && cp <= 0x2F) ||  // ! " # $ % & ' ( ) * + , - . /
+      (cp >= 0x3A && cp <= 0x40) ||  // : ; < = > ? @
+      (cp >= 0x5B && cp <= 0x60) ||  // [ \ ] ^ _ `
+      (cp >= 0x7B && cp <= 0x7E)) {  // { | } ~
+    return true;
+  }
+  // General punctuation block (U+2000-U+206F) - includes dashes, quotes, etc.
+  if (cp >= 0x2000 && cp <= 0x206F) {
+    return true;
+  }
+  return false;
+}
+
+//! Check if text starts with an RTL (right-to-left) character
+//! Skips leading whitespace, newlines, and punctuation to find the first letter
+static bool prv_utf8_starts_with_rtl(const utf8_t *start, const utf8_t *end) {
+  if (start == NULL || end == NULL || start >= end) {
+    return false;
+  }
+
+  utf8_t *ptr = (utf8_t *)start;
+  while (ptr < end && *ptr != '\0') {
+    utf8_t *next = NULL;
+    Codepoint cp = utf8_peek_codepoint(ptr, &next);
+    if (cp == 0 || next == NULL) {
+      break;
+    }
+    // Skip whitespace, newlines, and punctuation
+    if (cp == SPACE_CODEPOINT || cp == NEWLINE_CODEPOINT ||
+        codepoint_is_zero_width(cp) || prv_codepoint_is_punctuation(cp)) {
+      ptr = next;
+      continue;
+    }
+    // Found first letter character, check if RTL
+    return codepoint_is_rtl(cp);
+  }
+  return false;
+}
+
 // PBL-23045 Eventually remove perimeter debugging
 void graphics_text_perimeter_debugging_enable(bool enable) {
   app_state_set_text_perimeter_debugging_enabled(enable);
@@ -498,95 +540,206 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
     return NULL;
   }
 
-  // RTL support: check if this line contains RTL characters and reverse if rendering
-  // Arabic text also needs shaping (connecting letters) BEFORE reversal
-  // Use smaller buffers to reduce stack usage (max 16 codepoints * 4 bytes = 64)
-  utf8_t shaped_buffer[64];  // Buffer for Arabic shaping
-  utf8_t rtl_buffer[64];     // Buffer for RTL reversal
-  const utf8_t *render_start = line->start;
-  bool is_rtl = false;
+  // RTL support: segment-based rendering for mixed RTL/LTR text
+  // Each RTL segment is reversed individually, LTR segments render normally
   bool is_rendering = (char_visitor_cb == render_chars_char_visitor_cb);
 
+  // For segment-based RTL rendering during render pass
   if (is_rendering && line->start != NULL && text_box_params->utf8_bounds != NULL &&
       text_box_params->utf8_bounds->end != NULL &&
-      text_box_params->utf8_bounds->end > line->start) {
-    // Find line end by calculating byte length from width
-    // We need to find where the line actually ends
+      text_box_params->utf8_bounds->end > line->start &&
+      utf8_contains_rtl(line->start, text_box_params->utf8_bounds->end)) {
+
+    // Render using segment-based approach
+    utf8_t *ptr = (utf8_t *)line->start;
     utf8_t *line_end = (utf8_t *)text_box_params->utf8_bounds->end;
+    int walked_width_px = 0;
+    utf8_t* last_visited_char = NULL;
 
-    // Check if this line contains RTL text
-    if (utf8_contains_rtl(line->start, line_end)) {
-      // Calculate the actual line length to reverse
-      // Use the line width to determine how much text fits
-      size_t src_len = 0;
-      utf8_t *ptr = (utf8_t *)line->start;
-      int width_so_far = 0;
+    while (ptr < line_end && *ptr != '\0' && *ptr != '\n' &&
+           walked_width_px + suffix_width_px <= available_horiz_px) {
 
-      while (ptr < line_end && *ptr != '\0' && *ptr != '\n') {
-        utf8_t *next = NULL;
-        Codepoint cp = utf8_peek_codepoint(ptr, &next);
-        if (cp == 0 || next == NULL) {
+      // Find segment start and determine if RTL
+      utf8_t *segment_start = ptr;
+      utf8_t *next = NULL;
+      Codepoint first_cp = utf8_peek_codepoint(ptr, &next);
+      if (first_cp == 0 || next == NULL) break;
+
+      // Skip leading punctuation/spaces to determine segment type
+      bool segment_is_rtl = false;
+      utf8_t *check_ptr = ptr;
+      while (check_ptr < line_end && *check_ptr != '\0' && *check_ptr != '\n') {
+        utf8_t *check_next = NULL;
+        Codepoint check_cp = utf8_peek_codepoint(check_ptr, &check_next);
+        if (check_cp == 0 || check_next == NULL) break;
+        if (!prv_codepoint_is_punctuation(check_cp) &&
+            check_cp != SPACE_CODEPOINT && !codepoint_is_zero_width(check_cp)) {
+          segment_is_rtl = codepoint_is_rtl(check_cp);
           break;
         }
-        int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-            text_box_params->font, cp);
-        if (width_so_far + glyph_width > available_horiz_px) {
-          break;
-        }
-        width_so_far += glyph_width;
-        ptr = next;
-      }
-      src_len = ptr - line->start;
-
-      // Limit src_len to fit in our buffer (with room for UTF-8 expansion)
-      if (src_len > sizeof(rtl_buffer) - 4) {
-        src_len = sizeof(rtl_buffer) - 4;
+        check_ptr = check_next;
       }
 
-      if (src_len > 0) {
-        // Step 1: Shape Arabic text first (connect letters based on context)
-        // This must happen BEFORE RTL reversal to analyze letter positions correctly
-        const utf8_t *to_reverse = line->start;
-        size_t to_reverse_len = src_len;
+      // Collect segment (until we hit opposite script type or end)
+      utf8_t *segment_end = ptr;
+      utf8_t *segment_last_char = ptr;  // Track start of last character in segment
+      int segment_width_px = 0;  // Track width within this segment
+      while (segment_end < line_end && *segment_end != '\0' && *segment_end != '\n') {
+        utf8_t *seg_next = NULL;
+        Codepoint seg_cp = utf8_peek_codepoint(segment_end, &seg_next);
+        if (seg_cp == 0 || seg_next == NULL) break;
 
-        if (utf8_contains_arabic(line->start, ptr)) {
-          size_t shaped_len = arabic_shape_text(line->start, src_len,
-                                                shaped_buffer, sizeof(shaped_buffer) - 1);
-          if (shaped_len > 0) {
-            shaped_buffer[shaped_len] = '\0';
-            to_reverse = shaped_buffer;
-            to_reverse_len = shaped_len;
+        // Check if this character changes the segment type
+        if (!prv_codepoint_is_punctuation(seg_cp) &&
+            seg_cp != SPACE_CODEPOINT && !codepoint_is_zero_width(seg_cp)) {
+          bool char_is_rtl = codepoint_is_rtl(seg_cp);
+          if (char_is_rtl != segment_is_rtl) {
+            break;  // End of segment
           }
         }
 
-        // Step 2: Then reverse for RTL display
-        size_t reversed_len = utf8_reverse_for_rtl(to_reverse, to_reverse_len,
+        // For RTL segments: don't include trailing spaces before LTR text
+        // This prevents the space from being reversed to the wrong position
+        if (segment_is_rtl && seg_cp == SPACE_CODEPOINT) {
+          // Look ahead to see if next non-space char is LTR
+          utf8_t *look_ptr = seg_next;
+          while (look_ptr < line_end && *look_ptr != '\0' && *look_ptr != '\n') {
+            utf8_t *look_next = NULL;
+            Codepoint look_cp = utf8_peek_codepoint(look_ptr, &look_next);
+            if (look_cp == 0 || look_next == NULL) break;
+            if (look_cp != SPACE_CODEPOINT && !codepoint_is_zero_width(look_cp) &&
+                !prv_codepoint_is_punctuation(look_cp)) {
+              // Found a letter - if it's LTR, end segment before the space
+              if (!codepoint_is_rtl(look_cp)) {
+                goto end_segment;  // Break out of collection loop
+              }
+              break;
+            }
+            look_ptr = look_next;
+          }
+        }
+
+        // Check width constraint (must account for walked width + accumulated segment width)
+        int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
+            text_box_params->font, seg_cp);
+        if (walked_width_px + segment_width_px + glyph_width + suffix_width_px > available_horiz_px) {
+          break;
+        }
+
+        segment_width_px += glyph_width;
+        segment_last_char = segment_end;  // Track this as the last character before advancing
+        segment_end = seg_next;
+      }
+      end_segment:
+
+      size_t segment_len = segment_end - segment_start;
+      if (segment_len == 0) break;
+
+      // Render the segment
+      if (segment_is_rtl) {
+        // RTL segment: shape Arabic if needed, then reverse and render
+        utf8_t shaped_buffer[64];
+        utf8_t rtl_buffer[64];
+        const utf8_t *to_render = segment_start;
+        size_t render_len = segment_len;
+
+        // Limit to buffer size
+        if (render_len > sizeof(rtl_buffer) - 4) {
+          render_len = sizeof(rtl_buffer) - 4;
+        }
+
+        // Shape Arabic text first
+        if (utf8_contains_arabic(segment_start, segment_end)) {
+          size_t shaped_len = arabic_shape_text(segment_start, render_len,
+                                                shaped_buffer, sizeof(shaped_buffer) - 1);
+          if (shaped_len > 0) {
+            shaped_buffer[shaped_len] = '\0';
+            to_render = shaped_buffer;
+            render_len = shaped_len;
+          }
+        }
+
+        // Reverse for RTL display
+        size_t reversed_len = utf8_reverse_for_rtl(to_render, render_len,
                                                     rtl_buffer, sizeof(rtl_buffer) - 1);
         if (reversed_len > 0) {
           rtl_buffer[reversed_len] = '\0';
-          render_start = rtl_buffer;
-          is_rtl = true;
+
+          // Render reversed segment
+          utf8_t *rptr = rtl_buffer;
+          while (*rptr != '\0') {
+            utf8_t *rnext = NULL;
+            Codepoint rcp = utf8_peek_codepoint(rptr, &rnext);
+            if (rcp == 0 || rnext == NULL) break;
+
+            int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
+                text_box_params->font, rcp);
+
+            GRect cursor = {
+              .origin = line->origin,
+              .size.w = glyph_width,
+              .size.h = fonts_get_font_height(text_box_params->font)
+            };
+            cursor.origin.x += walked_width_px;
+
+            if (!codepoint_is_zero_width(rcp)) {
+              render_glyph(ctx, rcp, text_box_params->font, cursor);
+            }
+
+            walked_width_px += glyph_width;
+            rptr = rnext;
+          }
+        }
+      } else {
+        // LTR segment: render normally
+        utf8_t *sptr = segment_start;
+        while (sptr < segment_end) {
+          utf8_t *snext = NULL;
+          Codepoint scp = utf8_peek_codepoint(sptr, &snext);
+          if (scp == 0 || snext == NULL) break;
+
+          int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
+              text_box_params->font, scp);
+
+          GRect cursor = {
+            .origin = line->origin,
+            .size.w = glyph_width,
+            .size.h = fonts_get_font_height(text_box_params->font)
+          };
+          cursor.origin.x += walked_width_px;
+
+          if (!codepoint_is_zero_width(scp)) {
+            render_glyph(ctx, scp, text_box_params->font, cursor);
+          }
+
+          walked_width_px += glyph_width;
+          last_visited_char = sptr;
+          sptr = snext;
         }
       }
+
+      ptr = segment_end;
+      last_visited_char = segment_last_char;
     }
+
+    // Handle suffix if present
+    if (line->suffix_codepoint) {
+      GRect cursor = {
+        .origin = line->origin,
+        .size.w = suffix_width_px,
+        .size.h = fonts_get_font_height(text_box_params->font)
+      };
+      cursor.origin.x += walked_width_px;
+      render_glyph(ctx, line->suffix_codepoint, text_box_params->font, cursor);
+    }
+
+    return last_visited_char;
   }
 
-  // Set up iterator - use reversed buffer for RTL rendering
+  // Standard rendering path (no RTL or not rendering)
   Iterator char_iter;
   CharIterState char_iter_state;
-  TextBoxParams rtl_text_box_params;
-  Utf8Bounds rtl_bounds;
-
-  if (is_rtl) {
-    // Create temporary bounds and params for the reversed text
-    rtl_bounds.start = (utf8_t *)render_start;
-    rtl_bounds.end = (utf8_t *)render_start + strlen((const char *)render_start);
-    rtl_text_box_params = *text_box_params;
-    rtl_text_box_params.utf8_bounds = &rtl_bounds;
-    char_iter_init(&char_iter, &char_iter_state, &rtl_text_box_params, (utf8_t *)render_start);
-  } else {
-    char_iter_init(&char_iter, &char_iter_state, text_box_params, line->start);
-  }
+  char_iter_init(&char_iter, &char_iter_state, text_box_params, line->start);
   Utf8IterState* utf8_iter_state = (Utf8IterState*) &char_iter_state.utf8_iter_state;
 
   bool is_newline_as_space = text_box_params->overflow_mode == GTextOverflowModeFill;
@@ -1008,9 +1161,9 @@ static void prv_line_justify(Line* line, const TextBoxParams* const text_box_par
   // Determine effective alignment - RTL text defaults to right alignment
   GTextAlignment effective_alignment = text_box_params->alignment;
 
-  // If alignment is left (default) and text contains RTL, switch to right
+  // If alignment is left (default) and text starts with RTL, switch to right
   if (effective_alignment == GTextAlignmentLeft && line->start != NULL) {
-    if (utf8_contains_rtl(line->start, text_box_params->utf8_bounds->end)) {
+    if (prv_utf8_starts_with_rtl(line->start, text_box_params->utf8_bounds->end)) {
       effective_alignment = GTextAlignmentRight;
     }
   }
