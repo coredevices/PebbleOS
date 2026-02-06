@@ -283,26 +283,7 @@ static void prv_handle_motion_interrupts(void) {
 
   bool anymotion = (int0_status & BMA255_INT_STATUS_0_SLOPE_MASK);
   if (anymotion) {
-    const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
-    IMUCoordinateAxis axis = AXIS_X;
-    bool invert = false;
-
-    if (int2_status & BMA255_INT_STATUS_2_SLOPE_FIRST_X) {
-      axis = AXIS_X;
-      invert = cfg->axes_inverts[AXIS_X];
-    } else if (int2_status & BMA255_INT_STATUS_2_SLOPE_FIRST_Y) {
-      axis = AXIS_Y;
-      invert = cfg->axes_inverts[AXIS_Y];
-    } else if (int2_status & BMA255_INT_STATUS_2_SLOPE_FIRST_Z) {
-      axis = AXIS_Z;
-      invert = cfg->axes_inverts[AXIS_Z];
-    } else {
-      BMA255_DBG("No Axis?: 0x%"PRIx8" 0x%"PRIx8, int0_status, int2_status);
-    }
-    int32_t direction = ((int2_status & BMA255_INT_STATUS_2_SLOPE_SIGN) == 0) ? 1 : -1;
-    direction *= (invert ? -1 : 1);
-
-    accel_cb_shake_detected(axis, direction);
+    accel_cb_shake_detected();
   }
 }
 

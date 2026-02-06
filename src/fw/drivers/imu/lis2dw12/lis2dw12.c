@@ -377,30 +377,8 @@ static void prv_lis2dw12_process_interrupts(void) {
               (unsigned long)(now_ms - s_last_wake_event_ms));
     } else {
       s_last_wake_event_ms = now_ms;
-
-      // Use wake_up_src already read by all_sources_get - don't re-read the register
-      // as that can clear flags and cause race conditions with pulsed interrupts
-      IMUCoordinateAxis axis = AXIS_X;
-      int32_t direction = 1;
-
-      // Determine which axis triggered from already-read wake_up_src
-      const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
-      if (all_sources.wake_up_src.x_wu) {
-        axis = AXIS_X;
-      } else if (all_sources.wake_up_src.y_wu) {
-        axis = AXIS_Y;
-      } else if (all_sources.wake_up_src.z_wu) {
-        axis = AXIS_Z;
-      }
-
-      // Use last known sample for direction instead of reading new data during interrupt
-      // Reading acceleration data here can interfere with FIFO operation
-      int16_t val = s_last_sample_mg[cfg->axes_offsets[axis]];
-      bool invert = cfg->axes_inverts[axis];
-      direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
-
-      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake detected; axis=%d, direction=%lu", axis, direction);
-      accel_cb_shake_detected(axis, direction);
+      PBL_LOG(LOG_LEVEL_DEBUG, "LIS2DW12: Shake detected");
+      accel_cb_shake_detected();
     }
 
     // The wake-up interrupt is latched - if the wake condition is still true (device still

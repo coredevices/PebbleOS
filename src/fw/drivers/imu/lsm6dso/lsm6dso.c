@@ -840,31 +840,8 @@ static void prv_lsm6dso_process_interrupts(void) {
     s_last_wake_event_ms = now_ms;
     lsm6dso_wake_up_src_t wake_src;
     if (lsm6dso_read_reg(&lsm6dso_ctx, LSM6DSO_WAKE_UP_SRC, (uint8_t *)&wake_src, 1) == 0) {
-      IMUCoordinateAxis axis = AXIS_X;
-      int32_t direction = 1;  // LSM6DSO does not give sign directly for wake-up; approximate via
-                              // sign of latest sample on axis
-      // Determine which axis triggered: order X,Y,Z
-      const AccelConfig *cfg = &BOARD_CONFIG_ACCEL.accel_config;
-      if (wake_src.x_wu) {
-        axis = AXIS_X;
-      } else if (wake_src.y_wu) {
-        axis = AXIS_Y;
-      } else if (wake_src.z_wu) {
-        axis = AXIS_Z;
-      }
-      // Read current sample to infer direction
-      int16_t accel_raw[3];
-      if (lsm6dso_acceleration_raw_get(&lsm6dso_ctx, accel_raw) == 0) {
-        int16_t val = accel_raw[cfg->axes_offsets[axis]];
-        bool invert = cfg->axes_inverts[axis];
-        direction = (val >= 0 ? 1 : -1) * (invert ? -1 : 1);
-        int16_t mg_x = prv_get_axis_projection_mg(X_AXIS, accel_raw);
-        int16_t mg_y = prv_get_axis_projection_mg(Y_AXIS, accel_raw);
-        int16_t mg_z = prv_get_axis_projection_mg(Z_AXIS, accel_raw);
-        prv_note_new_sample_mg(mg_x, mg_y, mg_z);
-      }
-      PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Shake detected; axis=%d, direction=%lu", axis, direction);
-      accel_cb_shake_detected(axis, direction);
+      PBL_LOG(LOG_LEVEL_DEBUG, "LSM6DSO: Shake detected");
+      accel_cb_shake_detected();
     }
   }
 }

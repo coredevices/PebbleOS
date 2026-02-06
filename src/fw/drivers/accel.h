@@ -160,13 +160,16 @@ extern void accel_cb_new_sample(AccelDriverSample const *data);
 
 //! Function called by driver whenever shake is detected.
 //!
-//! @param axis      Axis which the shake was detected on
-//! @param direction The sign indicates whether the shake was on the positive or
-//!        negative axis
-//!
 //! @note It is up to the implementer to filter out shake events triggered by the
 //!       vibrate motor.
-extern void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction);
+extern void accel_cb_shake_detected(void);
+
+//! Function called by driver whenever a tap is detected.
+//!
+//! @param axis      Axis which the tap was detected on
+//! @param direction The sign indicates whether the tap was on the positive or
+//!        negative axis
+extern void accel_cb_tap_detected(IMUCoordinateAxis axis, int32_t direction);
 
 //! Function called by driver whenever a double tap is detected.
 //!

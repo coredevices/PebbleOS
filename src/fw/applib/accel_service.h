@@ -52,6 +52,9 @@ _Static_assert(ACCEL_AXIS_Z == (int)AXIS_Z,
 #define ACCEL_DEFAULT_SAMPLING_RATE ACCEL_SAMPLING_25HZ
 #define ACCEL_MINIMUM_SAMPLING_RATE ACCEL_SAMPLING_10HZ
 
+//! Callback type for accelerometer shake events
+typedef void (*AccelShakeHandler)(void);
+
 //! Callback type for accelerometer tap events
 //! @param axis the axis on which a tap was registered (x, y, or z)
 //! @param direction the direction (-1 or +1) of the tap
@@ -67,6 +70,15 @@ typedef void (*AccelDataHandler)(AccelData *data, uint32_t num_samples);
 //! @param num_samples the number of samples stored in data.
 //! @param timestamp the timestamp, in ms, of the first sample.
 typedef void (*AccelRawDataHandler)(AccelRawData *data, uint32_t num_samples, uint64_t timestamp);
+
+//! Subscribe to the accelerometer shake event service. Once subscribed, the handler
+//! gets called on every shake event emitted by the accelerometer.
+//! @param handler A callback to be executed on shake event
+void accel_shake_service_subscribe(AccelShakeHandler handler);
+
+//! Unsubscribe from the accelerometer shake event service. Once unsubscribed,
+//! the previously registered handler will no longer be called.
+void accel_shake_service_unsubscribe(void);
 
 //! Subscribe to the accelerometer tap event service. Once subscribed, the handler
 //! gets called on every tap event emitted by the accelerometer.

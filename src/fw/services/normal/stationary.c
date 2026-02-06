@@ -111,7 +111,7 @@ void stationary_handle_battery_connection_change_event(void) {
 
 //! A movement of the watch will make the watch wake up. In this state, the watch
 //! will have a low tap threshold, so it will be sensitive to motion
-static void prv_accel_tap_handler(AccelAxisType axis, int32_t direction) {
+static void prv_accel_shake_handler(void) {
   prv_handle_action(StationaryActionWakeUp);
 }
 
@@ -249,7 +249,7 @@ static void prv_exit_disabled_state(void) {
   s_stationary_count_down = STATIONARY_WAIT_BEFORE_ENGAGING_TIME_MINS;
   PBL_ASSERTN(s_accel_session == NULL);
   s_accel_session = accel_session_create();
-  accel_session_shake_subscribe(s_accel_session, prv_accel_tap_handler);
+  accel_session_shake_subscribe(s_accel_session, prv_accel_shake_handler);
   event_service_client_subscribe(&s_button_event_info);
 
 #if DEBUG_STATIONARY
