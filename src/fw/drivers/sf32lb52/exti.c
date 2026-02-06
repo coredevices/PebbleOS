@@ -19,6 +19,7 @@ typedef struct {
 } ExtiHandlerConfig_t;
 
 static ExtiHandlerConfig_t s_exti_gpio1_handler_configs[EXTI_MAX_GPIO1_PIN_NUM];
+static bool s_should_context_switch;
 
 static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pin,
                                            uint16_t *offset) {
@@ -119,48 +120,26 @@ void exti_disable(ExtiConfig cfg) {
 }
 
 void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
-  int index = 0;
   ExtiHandlerCallback cb = NULL;
-  if (hgpio == hwp_gpio1) {
-    while (index < EXTI_MAX_GPIO1_PIN_NUM && s_exti_gpio1_handler_configs[index].callback != NULL) {
-      if (s_exti_gpio1_handler_configs[index].gpio_pin == GPIO_Pin) {
-        cb = s_exti_gpio1_handler_configs[index].callback;
-        break;
-      }
-      index++;
+
+  for (uint8_t index = 0; index < EXTI_MAX_GPIO1_PIN_NUM; index++) {
+    if (s_exti_gpio1_handler_configs[index].callback != NULL &&
+        s_exti_gpio1_handler_configs[index].gpio_pin == GPIO_Pin) {
+      bool should_context_switch = false;
+
+      s_exti_gpio1_handler_configs[index].callback(&should_context_switch);
+      s_should_context_switch |= should_context_switch;
+      return;
     }
   }
 
-  if (cb != NULL) {
-    bool should_context_switch = false;
-    cb(&should_context_switch);
-    if (should_context_switch) {
-      portEND_SWITCHING_ISR(should_context_switch);
-    }
-  }
+  PBL_LOG(LOG_LEVEL_WARNING, "No handler found for GPIO pin %u", GPIO_Pin);
 }
 
 void GPIO1_IRQHandler(void) {
-  // Optimized interrupt handler to avoid looping through all 78 pins
-  // which causes an interrupt storm and blocks other tasks (e.g. I2C).
-  GPIO_TypeDef *base = hwp_gpio1;
-  // GPIO1 has pins 0-78, spanning 3 banks (32 pins each)
-  for (int i = 0; i < 3; i++) {
-    GPIO_TypeDef *gpiox = base + i;
-    uint32_t isr = gpiox->ISR;
-    uint32_t ier = gpiox->IER;
-    uint32_t pending = isr & ier;
-
-    while (pending) {
-      uint32_t bit = __builtin_ctz(pending);
-      uint32_t pin = (i * 32) + bit;
-
-      // Always call the HAL handler which will clear ISR and invoke callback
-      HAL_GPIO_EXTI_IRQHandler(hwp_gpio1, pin);
-
-      pending &= ~(1UL << bit);
-    }
-  }
+  s_should_context_switch = false;
+  HAL_GPIO_IRQHandler(hwp_gpio1);
+  portEND_SWITCHING_ISR(s_should_context_switch);
 }
 
 void exti_configure_other(ExtiLineOther exti_line, ExtiTrigger trigger) {}
