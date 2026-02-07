@@ -542,6 +542,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
 
   // RTL support: segment-based rendering for mixed RTL/LTR text
   // Each RTL segment is reversed individually, LTR segments render normally
+  // For RTL paragraphs, segment order is reversed (BiDi line-level reordering)
   bool is_rendering = (char_visitor_cb == render_chars_char_visitor_cb);
 
   // For segment-based RTL rendering during render pass
@@ -550,16 +551,26 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
       text_box_params->utf8_bounds->end > line->start &&
       utf8_contains_rtl(line->start, text_box_params->utf8_bounds->end)) {
 
-    // Render using segment-based approach
+    // Segment descriptor for BiDi reordering
+    #define MAX_BIDI_SEGMENTS 8
+    typedef struct {
+      utf8_t *start;
+      utf8_t *end;
+      bool is_rtl;
+    } BiDiSegment;
+
+    BiDiSegment segments[MAX_BIDI_SEGMENTS];
+    int num_segments = 0;
+
     utf8_t *ptr = (utf8_t *)line->start;
     utf8_t *line_end = (utf8_t *)text_box_params->utf8_bounds->end;
-    int walked_width_px = 0;
-    utf8_t* last_visited_char = NULL;
+    int total_width_px = 0;
 
+    // Pass 1: Collect all segments with their boundaries and directions
     while (ptr < line_end && *ptr != '\0' && *ptr != '\n' &&
-           walked_width_px + suffix_width_px <= available_horiz_px) {
+           total_width_px + suffix_width_px <= available_horiz_px &&
+           num_segments < MAX_BIDI_SEGMENTS) {
 
-      // Find segment start and determine if RTL
       utf8_t *segment_start = ptr;
       utf8_t *next = NULL;
       Codepoint first_cp = utf8_peek_codepoint(ptr, &next);
@@ -582,8 +593,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
 
       // Collect segment (until we hit opposite script type or end)
       utf8_t *segment_end = ptr;
-      utf8_t *segment_last_char = ptr;  // Track start of last character in segment
-      int segment_width_px = 0;  // Track width within this segment
+      int segment_width_px = 0;
       while (segment_end < line_end && *segment_end != '\0' && *segment_end != '\n') {
         utf8_t *seg_next = NULL;
         Codepoint seg_cp = utf8_peek_codepoint(segment_end, &seg_next);
@@ -599,9 +609,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         }
 
         // For RTL segments: don't include trailing spaces before LTR text
-        // This prevents the space from being reversed to the wrong position
         if (segment_is_rtl && seg_cp == SPACE_CODEPOINT) {
-          // Look ahead to see if next non-space char is LTR
           utf8_t *look_ptr = seg_next;
           while (look_ptr < line_end && *look_ptr != '\0' && *look_ptr != '\n') {
             utf8_t *look_next = NULL;
@@ -609,9 +617,8 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
             if (look_cp == 0 || look_next == NULL) break;
             if (look_cp != SPACE_CODEPOINT && !codepoint_is_zero_width(look_cp) &&
                 !prv_codepoint_is_punctuation(look_cp)) {
-              // Found a letter - if it's LTR, end segment before the space
               if (!codepoint_is_rtl(look_cp)) {
-                goto end_segment;  // Break out of collection loop
+                goto end_segment_collect;
               }
               break;
             }
@@ -619,38 +626,62 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
           }
         }
 
-        // Check width constraint (must account for walked width + accumulated segment width)
         int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
             text_box_params->font, seg_cp);
-        if (walked_width_px + segment_width_px + glyph_width + suffix_width_px > available_horiz_px) {
+        if (total_width_px + segment_width_px + glyph_width + suffix_width_px > available_horiz_px) {
           break;
         }
 
         segment_width_px += glyph_width;
-        segment_last_char = segment_end;  // Track this as the last character before advancing
         segment_end = seg_next;
       }
-      end_segment:
+      end_segment_collect:
 
       size_t segment_len = segment_end - segment_start;
       if (segment_len == 0) break;
 
-      // Render the segment
-      if (segment_is_rtl) {
+      segments[num_segments++] = (BiDiSegment){
+        .start = segment_start,
+        .end = segment_end,
+        .is_rtl = segment_is_rtl,
+      };
+      total_width_px += segment_width_px;
+      ptr = segment_end;
+    }
+
+    // Pass 2: Reorder segments for RTL paragraph direction
+    // When the line starts with RTL text, the visual order of segments must be
+    // reversed so the first logical segment appears on the right (reading start)
+    bool line_is_rtl = prv_utf8_starts_with_rtl(line->start, text_box_params->utf8_bounds->end);
+    if (line_is_rtl && num_segments > 1) {
+      for (int i = 0; i < num_segments / 2; i++) {
+        BiDiSegment temp = segments[i];
+        segments[i] = segments[num_segments - 1 - i];
+        segments[num_segments - 1 - i] = temp;
+      }
+    }
+
+    // Pass 3: Render segments in (possibly reordered) visual order
+    int walked_width_px = 0;
+    utf8_t *last_visited_char = NULL;
+
+    for (int seg_idx = 0; seg_idx < num_segments; seg_idx++) {
+      BiDiSegment *seg = &segments[seg_idx];
+      size_t seg_len = seg->end - seg->start;
+
+      if (seg->is_rtl) {
         // RTL segment: shape Arabic if needed, then reverse and render
         utf8_t shaped_buffer[64];
         utf8_t rtl_buffer[64];
-        const utf8_t *to_render = segment_start;
-        size_t render_len = segment_len;
+        const utf8_t *to_render = seg->start;
+        size_t render_len = seg_len;
 
-        // Limit to buffer size
         if (render_len > sizeof(rtl_buffer) - 4) {
           render_len = sizeof(rtl_buffer) - 4;
         }
 
-        // Shape Arabic text first
-        if (utf8_contains_arabic(segment_start, segment_end)) {
-          size_t shaped_len = arabic_shape_text(segment_start, render_len,
+        if (utf8_contains_arabic(seg->start, seg->end)) {
+          size_t shaped_len = arabic_shape_text(seg->start, render_len,
                                                 shaped_buffer, sizeof(shaped_buffer) - 1);
           if (shaped_len > 0) {
             shaped_buffer[shaped_len] = '\0';
@@ -659,13 +690,11 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
           }
         }
 
-        // Reverse for RTL display
         size_t reversed_len = utf8_reverse_for_rtl(to_render, render_len,
                                                     rtl_buffer, sizeof(rtl_buffer) - 1);
         if (reversed_len > 0) {
           rtl_buffer[reversed_len] = '\0';
 
-          // Render reversed segment
           utf8_t *rptr = rtl_buffer;
           while (*rptr != '\0') {
             utf8_t *rnext = NULL;
@@ -692,8 +721,8 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         }
       } else {
         // LTR segment: render normally
-        utf8_t *sptr = segment_start;
-        while (sptr < segment_end) {
+        utf8_t *sptr = seg->start;
+        while (sptr < seg->end) {
           utf8_t *snext = NULL;
           Codepoint scp = utf8_peek_codepoint(sptr, &snext);
           if (scp == 0 || snext == NULL) break;
@@ -713,13 +742,14 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
           }
 
           walked_width_px += glyph_width;
-          last_visited_char = sptr;
           sptr = snext;
         }
       }
 
-      ptr = segment_end;
-      last_visited_char = segment_last_char;
+      // Track last visited char (furthest position in original text)
+      if (last_visited_char == NULL || seg->start > last_visited_char) {
+        last_visited_char = seg->start;
+      }
     }
 
     // Handle suffix if present
