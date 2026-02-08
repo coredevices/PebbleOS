@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "89",
+  "revision" : "90",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -50,6 +50,7 @@
     "fw/applib/app_exit_reason.h",
     "fw/applib/app_launch_reason.h",
     "fw/applib/cpu_cache.h",
+    "fw/applib/event_service_client.h",
     "fw/applib/health_service.h",
     "fw/applib/platform.h",
     "fw/applib/tick_timer_service.h",
@@ -84,6 +85,7 @@
     "fw/services/common/ecompass.h",
     "fw/services/common/new_timer/new_timer.h",
     "fw/services/normal/wakeup.h",
+    "fw/services/normal/music.h",
     "fw/syscall/syscall.h",
     "fw/kernel/events.h",
     "fw/applib/preferred_content_size.h",
@@ -685,7 +687,153 @@
               "name": "health_service_get_measurement_system_for_display",
               "addedRevision": "80"
             }
-          ]}]
+          ]}, {
+          "type": "group",
+          "name": "MediaService",
+          "exports": [
+            {
+              "type": "type",
+              "name": "MusicPlayState",
+              "addedRevision": "90"
+            }, {
+              "type": "type",
+              "name": "MusicCommand",
+              "addedRevision": "90"
+            }, {
+              "type": "type",
+              "name": "PebbleMediaEventType",
+              "addedRevision": "90"
+            }, {
+              "type": "type",
+              "name": "PebbleMediaEvent",
+              "addedRevision": "90"
+            }, {
+              "type": "define",
+              "name": "MUSIC_BUFFER_LENGTH",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_get_now_playing",
+              "implName": "sys_music_get_now_playing",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_has_now_playing",
+              "implName": "sys_music_has_now_playing",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_get_player_name",
+              "implName": "sys_music_get_player_name",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_get_ms_since_pos_last_updated",
+              "implName": "sys_music_get_ms_since_pos_last_updated",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_get_pos",
+              "implName": "sys_music_get_pos",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_get_playback_rate_percent",
+              "implName": "sys_music_get_playback_rate_percent",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_get_volume_percent",
+              "implName": "sys_music_get_volume_percent",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_get_playback_state",
+              "implName": "sys_music_get_playback_state",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_is_playback_state_reporting_supported",
+              "implName": "sys_music_is_playback_state_reporting_supported",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_is_progress_reporting_supported",
+              "implName": "sys_music_is_progress_reporting_supported",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_is_volume_reporting_supported",
+              "implName": "sys_music_is_volume_reporting_supported",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_command_send",
+              "implName": "sys_music_command_send",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_is_command_supported",
+              "implName": "sys_music_is_command_supported",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_needs_user_to_start_playback_on_phone",
+              "implName": "sys_music_needs_user_to_start_playback_on_phone",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_request_reduced_latency",
+              "implName": "sys_music_request_reduced_latency",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_request_low_latency_for_period",
+              "implName": "sys_music_request_low_latency_for_period",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "music_get_connected_server_debug_name",
+              "implName": "sys_music_get_connected_server_debug_name",
+              "addedRevision": "90"
+            }
+          ]
+        }, {
+          "type": "group",
+          "name": "EventServiceClient",
+          "appOnly": true,
+          "exports": [
+            {
+              "type": "forward_struct",
+              "name": "PebbleEvent",
+              "addedRevision": "90"
+            }, {
+              "type": "type",
+              "name": "PebbleEventType",
+              "addedRevision": "90"
+            }, {
+              "type": "type",
+              "name": "ListNode",
+              "addedRevision": "90"
+            }, {
+              "type": "type",
+              "name": "EventServiceEventHandler",
+              "addedRevision": "90"
+            }, {
+              "type": "type",
+              "name": "EventServiceInfo",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "event_service_client_subscribe",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "event_service_client_unsubscribe",
+              "addedRevision": "90"
+            }
+          ]
+        }]
         }, {
           "type": "group",
           "name": "DataLogging",
