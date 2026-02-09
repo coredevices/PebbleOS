@@ -395,7 +395,7 @@ static const LIS2DW12Config s_lis2dw12_config = {
     .wk_dur_default = 1U,
     .wk_ths_default = 16U,
     .scale_mg = 4000U,
-    .fifo_threshold = 16U,
+    .fifo_threshold = 32U,
 #ifdef IS_BIGBOARD
     .axis_map = {
         [AXIS_X] = 0,
