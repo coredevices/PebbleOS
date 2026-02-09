@@ -75,30 +75,43 @@ static void prv_delete_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin) {
 }
 
 void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback cb) {
-  prv_insert_handler(cfg.peripheral, cfg.gpio_pin, cb);
+  GPIO_InitTypeDef init;
+  int flags;
 
-  uint16_t offset;
-  GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
+  init.Pin = cfg.gpio_pin;
 
-  switch (trigger) {
-    case ExtiTrigger_Rising:
-      gpiox->ITSR |= (1UL << offset);
-      gpiox->IPHSR = (1UL << offset);
-      gpiox->IPLCR = (1UL << offset);
+  switch (cfg.pull) {
+    case GPIO_PuPd_UP:
+      init.Pull = GPIO_PULLUP;
+      flags = PIN_PULLUP;
       break;
-    case ExtiTrigger_Falling:
-      gpiox->ITSR |= (1UL << offset);
-      gpiox->IPHCR = (1UL << offset);
-      gpiox->IPLSR = (1UL << offset);
+    case GPIO_PuPd_DOWN:
+      init.Pull = GPIO_PULLDOWN;
+      flags = PIN_PULLDOWN;
       break;
-    case ExtiTrigger_RisingFalling:
-      gpiox->ITSR |= (1UL << offset);
-      gpiox->IPHSR = (1UL << offset);
-      gpiox->IPLSR = (1UL << offset);
+    default:
+      init.Pull = GPIO_NOPULL;
+      flags = PIN_NOPULL;
       break;
   }
 
-  // Configure NVIC once during pin setup
+  switch (trigger) {
+    case ExtiTrigger_Rising:
+      init.Mode = GPIO_MODE_IT_RISING;
+      break;
+    case ExtiTrigger_Falling:
+      init.Mode = GPIO_MODE_IT_FALLING;
+      break;
+    case ExtiTrigger_RisingFalling:
+      init.Mode = GPIO_MODE_IT_RISING_FALLING;
+      break;
+  }
+
+  HAL_PIN_Set(PAD_PA00 + cfg.gpio_pin, GPIO_A0 + cfg.gpio_pin, flags, 1);
+  HAL_GPIO_Init(cfg.peripheral, &init);
+
+  prv_insert_handler(cfg.peripheral, cfg.gpio_pin, cb);
+
   HAL_NVIC_SetPriority(GPIO1_IRQn, 6, 0);
   HAL_NVIC_EnableIRQ(GPIO1_IRQn);
 }
@@ -106,15 +119,12 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
 void exti_enable(ExtiConfig cfg) {
   uint16_t offset;
   GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
-  // Enable the EXTI line for GPIO1
   gpiox->IESR = (1 << offset);
-  // Note: NVIC is configured once in exti_configure_pin, no need to set it here
 }
 
 void exti_disable(ExtiConfig cfg) {
   uint16_t offset;
   GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
-  // Disable the EXTI line for GPIO1
   gpiox->IECR = (1 << offset);
   gpiox->ISR = (1 << offset);
 }
