@@ -82,6 +82,7 @@
 // CTRL3 fields
 #define LIS2DW12_CTRL3_SLP_MODE_1 (1U << 0U)
 #define LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 (1U << 1U)
+#define LIS2DW12_CTRL3_LIR (1U << 4U)
 
 // CTRL4_INT1_PAD_CTRL fields
 #define LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_WU (1U << 5U)
@@ -475,8 +476,8 @@ void accel_init(void) {
     }
   }
 
-  // Single-data conversion via SLP_MODE_1
-  val = LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1;
+  // Single-data conversion via SLP_MODE_1, latch function IRQ
+  val = LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 | LIS2DW12_CTRL3_LIR;
   ret = prv_lis2dw12_write(LIS2DW12_CTRL3, &val, 1);
   if (!ret) {
     PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL3 register");
