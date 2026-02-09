@@ -9,77 +9,6 @@ env:
   MEMFAULT_CLI_VERSION: "1.6.0"
 
 jobs:
-  build-bootloader:
-    runs-on: ubuntu-24.04
-
-    container:
-      image: ghcr.io/pebble-dev/pebbleos-docker:v1
-
-    strategy:
-      matrix:
-        board:
-          - asterix
-
-    steps:
-      - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: true
-
-      - name: Fetch tags
-        run: |
-          git fetch --tags --force
-
-      - name: Install Python dependencies
-        run: |
-          pip install -U pip
-          pip install -r requirements.txt
-
-      - name: Obtain platform name
-        id: get-platform
-        run: |
-          BOARD=${{ matrix.board }}
-          PLATFORM=${BOARD%%_*}
-          echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
-
-      - name: Configure bootloader
-        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
-        run: ./waf configure --board ${{ matrix.board }}
-
-      - name: Build bootloader
-        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
-        run: ./waf build
-
-      - name: Copy bootloader artifacts
-        run: |
-          mkdir -p artifacts
-          cp platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.hex \
-             artifacts/bootloader_${{ matrix.board }}_${{github.ref_name}}.hex
-
-      - name: Configure bootloader (nowatchdog)
-        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
-        run: ./waf configure --board ${{ matrix.board }} --nowatchdog
-
-      - name: Build bootloader (nowatchdog)
-        working-directory: platform/${{ steps.get-platform.outputs.platform }}/boot
-        run: ./waf build
-
-      - name: Copy bootloader artifacts (nowatchdog)
-        run: |
-          mkdir -p artifacts
-          cp platform/${{ steps.get-platform.outputs.platform }}/boot/build/tintin_boot.hex \
-             artifacts/bootloader_nowatchdog_${{ matrix.board }}_${{github.ref_name}}.hex
-
-      - name: Store
-        uses: actions/upload-artifact@v4
-        with:
-          path: artifacts
-          name: artifacts-bootloader-${{ matrix.board }}
-
   build-prf:
     runs-on: ubuntu-24.04
 
@@ -287,7 +216,6 @@ jobs:
     runs-on: ubuntu-24.04
 
     needs:
-      - build-bootloader
       - build-prf
       - build-firmware
     permissions:
