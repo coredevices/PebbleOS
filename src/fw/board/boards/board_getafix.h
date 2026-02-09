@@ -43,7 +43,7 @@ static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
-    .default_motion_sensitivity = 40U, // Medium-Low
+    .default_motion_sensitivity = 70U, // Medium-High
   },
 };
 
