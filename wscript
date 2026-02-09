@@ -1709,28 +1709,6 @@ def flash_prf(ctx):
     flash_fw(ctx, ctx.get_tintin_fw_node_prf())
 
 
-class FlashBootCommand(BuildContext):
-    cmd = 'flash_boot'
-    fun = 'flash_boot'
-
-
-def flash_boot(ctx):
-    """flashes a bootloader"""
-    if not ctx.env.BOOTLOADER_HEX:
-        ctx.fatal("Target does not have a bootloader binary available")
-    if ctx.env.RUNNER == 'openocd':
-        waftools.openocd.run_command(ctx, 'init; reset halt; ' +
-                                    'program {} reset;'.format(ctx.env.BOOTLOADER_HEX),
-                                    expect=["Programming Finished"],
-                                    enforce_expect=True)
-    elif ctx.env.RUNNER == 'sftool':
-        waftools.sftool.write_flash(ctx, ctx.env.BOOTLOADER_HEX)
-    elif ctx.env.RUNNER == 'nrfutil':
-        waftools.nrfutil.program_and_reset(ctx, ctx.env.BOOTLOADER_HEX)
-    else:
-        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
-
-
 class FlashFirmware(BuildContext):
     """flashes a firmware"""
     cmd = 'flash_fw'
@@ -1758,7 +1736,7 @@ def flash_fw(ctx, fw_bin):
 
 
 def flash_everything(ctx, fw_bin):
-    """flashes a bootloader and firmware"""
+    """flashes firmware and any additional resources"""
     if ctx.env.QEMU:
         ctx.fatal("I'm sorry Dave, I can't let you do that.\n"
                   "QEMU firmwares do not work on physical hardware.\n"
@@ -1766,22 +1744,16 @@ def flash_everything(ctx, fw_bin):
 
     _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
 
-    if not ctx.env.BOOTLOADER_HEX:
-        ctx.fatal("Target does not have a bootloader binary available")
-
     hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
 
     if ctx.env.RUNNER == 'openocd':
         waftools.openocd.run_command(ctx, 'init; reset halt; '
-                                    'program {};'.format(ctx.env.BOOTLOADER_HEX) +
                                     'program {} reset;'.format(hex_path),
                                     expect=["Programming Finished", "Programming Finished", "shutdown"],
                                     enforce_expect=True)
     elif ctx.env.RUNNER == 'sftool':
-        waftools.sftool.write_flash(ctx, ctx.env.BOOTLOADER_HEX)
         waftools.sftool.write_flash(ctx, hex_path)
     elif ctx.env.RUNNER == 'nrfutil':
-        waftools.nrfutil.program(ctx, ctx.env.BOOTLOADER_HEX)
         waftools.nrfutil.program(ctx, hex_path)
         waftools.nrfutil.reset(ctx)
     else:
