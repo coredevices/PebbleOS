@@ -119,8 +119,6 @@
 // WAKE_UP_THS fields
 #define LIS2DW12_WAKE_UP_THS_WK_THS_POS 0U
 #define LIS2DW12_WAKE_UP_THS_WK_THS_MASK 0x3FU
-#define LIS2DW12_WAKE_UP_THS_WK_THS_MIN 1U
-#define LIS2DW12_WAKE_UP_THS_WK_THS_MAX 63U
 #define LIS2DW12_WAKE_UP_THS_WK_THS(val) \
   (((val) << LIS2DW12_WAKE_UP_THS_WK_THS_POS) & LIS2DW12_WAKE_UP_THS_WK_THS_MASK)
 
@@ -525,6 +523,8 @@ void accel_init(void) {
     return;
   }
 
+  LIS2DW12->state->wk_ths_curr = LIS2DW12->wk_ths_default;
+
   // Enable INT1 external interrupt
   exti_configure_pin(LIS2DW12->int1, ExtiTrigger_Rising, prv_lis2dw12_int1_irq_handler);
   exti_enable(LIS2DW12->int1);
@@ -726,10 +726,10 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
     return;
   }
 
-  val = LIS2DW12_WAKE_UP_DUR_WAKE_DUR(sensitivity_high ? 0U : LIS2DW12->wk_ths_default);
-  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_DUR, &val, 1);
+  val = LIS2DW12_WAKE_UP_THS_WK_THS(sensitivity_high ? LIS2DW12->wk_ths_min : LIS2DW12->state->wk_ths_curr);
+  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_DUR register");
+    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_THS register");
     return;
   }
 
@@ -746,9 +746,10 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
     return;
   }
 
-  // [0, 100] -> [LIS2DW12_WAKE_UP_THS_WK_THS_MIN, LIS2DW12_WAKE_UP_THS_WK_THS_MAX]
-  raw = (percent * (LIS2DW12_WAKE_UP_THS_WK_THS_MAX - LIS2DW12_WAKE_UP_THS_WK_THS_MIN)) / 100U +
-        LIS2DW12_WAKE_UP_THS_WK_THS_MIN;
+  // Reverse mapping: 0 = max sensitivity (MIN threshold), 100 = min sensitivity (MAX threshold)
+  // [0, 100] -> [wk_ths_max, wk_ths_min]
+  raw = LIS2DW12->wk_ths_max -
+        (percent * (LIS2DW12->wk_ths_max - LIS2DW12->wk_ths_min)) / 100U;
 
   val = LIS2DW12_WAKE_UP_THS_WK_THS(raw);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
@@ -756,6 +757,8 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
     PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_THS register");
     return;
   }
+
+  LIS2DW12->state->wk_ths_curr = raw;
 
   PBL_LOG(LOG_LEVEL_DEBUG, "Configured shake sensitivity to %" PRIu8 " (%" PRIu8 ")", percent, raw);
 }

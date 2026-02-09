@@ -25,6 +25,7 @@ typedef struct LIS2DW12State {
   RtcTicks last_int1_tick;
   uint32_t int1_period_ms;
   uint32_t num_recoveries;
+  uint8_t wk_ths_curr;
 } LIS2DW12State;
 
 typedef struct LIS2DW12Config {
@@ -38,8 +39,12 @@ typedef struct LIS2DW12Config {
   bool disable_addr_pullup;
   //! Default wake duration (0-3)
   uint8_t wk_dur_default;
-  //! Default wake threshold (1-63)
+  //! Default wake threshold (wk_ths_min, wk_ths_max)
   uint8_t wk_ths_default;
+  //! Minimum wake threshold (1-63)
+  uint8_t wk_ths_min;
+  //! Maximum wake threshold (1-63)
+  uint8_t wk_ths_max;
   //! Scale (+/-2000, 4000, 8000 or 16000 mg)
   uint16_t scale_mg;
   //! FIFO threshold (1-32)

@@ -292,6 +292,8 @@ static const LIS2DW12Config s_lis2dw12_config = {
     .disable_addr_pullup = true,
 #endif
     .wk_dur_default = 1U,
+    .wk_ths_min = 1U,
+    .wk_ths_max = 40U,
     .wk_ths_default = 16U,
     .scale_mg = 4000U,
     .fifo_threshold = 32U,
