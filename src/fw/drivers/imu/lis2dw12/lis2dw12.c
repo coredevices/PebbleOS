@@ -253,6 +253,7 @@ static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
 static void prv_lis2dw12_int1_work_handler(void) {
   bool ret;
   uint8_t val;
+  bool action_taken = false;
 
   if (LIS2DW12->state->num_samples > 0U) {
     ret = prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1);
@@ -264,12 +265,14 @@ static void prv_lis2dw12_int1_work_handler(void) {
     if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_OVR) != 0U) {
       PBL_LOG(LOG_LEVEL_WARNING, "FIFO overrun detected, re-arming");
       prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
+      action_taken = true;
     } else if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_FTH) != 0U) {
       uint8_t samples;
 
       samples = LIS2DW12_FIFO_SAMPLES_DIFF_GET(val);
       if (samples > 0U) {
         prv_lis2dw12_read_samples(samples);
+        action_taken = true;
       }
     }
   }
@@ -286,7 +289,12 @@ static void prv_lis2dw12_int1_work_handler(void) {
       // TODO: provide more info about the shake (axis, direction, etc.) or
       // refactor shake to be non-dimensional
       accel_cb_shake_detected(AXIS_Z, 0);
+      action_taken = true;
     }
+  }
+
+  if (!action_taken) {
+    PBL_LOG(LOG_LEVEL_WARNING, "INT1 triggered but no action taken");
   }
 }
 
