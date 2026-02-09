@@ -526,24 +526,24 @@ def _get_dbg_paths(bld):
 def _gen_fpga_bitstream_header(bld):
     if bld.env.BOARD == 'snowy_emery':
         # Snowy Emery uses robert display, so use robert FPGA bitstream
-        source_bitstream = '../../platform/robert/Robert_UL1K_framebuffer_bitmap.fpga'
+        source_bitstream = 'board/fpga/Robert_UL1K_framebuffer_bitmap.fpga'
     elif bld.env.BOARD == 'spalding_gabbro':
         # Spalding Gabbro uses getafix display, needs 260x260 round FPGA bitstream
-        source_bitstream = '../../platform/snowy/Spalding_Gabbro_260x260_framebuffer.fpga'
+        source_bitstream = 'board/fpga/Spalding_Gabbro_260x260_framebuffer.fpga'
     elif bld.is_snowy():
         if bld.env.BOARD in ('snowy_bb', 'snowy_evt'):
-            source_bitstream = '../../platform/snowy/snowy_framebuffer_evt.fpga'
+            source_bitstream = 'board/fpga/snowy_framebuffer_evt.fpga'
         else:
-            source_bitstream = '../../platform/snowy/Snowy_LP1K_framebuffer.fpga'
+            source_bitstream = 'board/fpga/Snowy_LP1K_framebuffer.fpga'
     elif bld.is_spalding():
         if bld.env.BOARD in ('spalding_bb2',):
-            source_bitstream = '../../platform/snowy/Spalding_LP1K_framebuffer.fpga'
+            source_bitstream = 'board/fpga/Spalding_LP1K_framebuffer.fpga'
         else:
-            source_bitstream = '../../platform/snowy/Spalding_UL1K_framebuffer.fpga'
+            source_bitstream = 'board/fpga/Spalding_UL1K_framebuffer.fpga'
     elif bld.is_cutts():
-        source_bitstream = '../../platform/robert/Cutts_UL1K_framebuffer_144x168_bitmap.fpga'
+        source_bitstream = 'board/fpga/Cutts_UL1K_framebuffer_144x168_bitmap.fpga'
     elif bld.is_robert():
-        source_bitstream = '../../platform/robert/Robert_UL1K_framebuffer_bitmap.fpga'
+        source_bitstream = 'board/fpga/Robert_UL1K_framebuffer_bitmap.fpga'
     else:
         bld.fatal('No FPGA available for {}'.format(bld.env.BOARD))
 
@@ -642,12 +642,12 @@ def _build_recovery(bld):
 
     if bld.is_snowy():
         bld(features='binary_header',
-            source='../../platform/snowy/snowy_boot.fpga',
+            source='board/fpga/snowy_boot.fpga',
             target='mfg/snowy/snowy_boot.fpga.auto.h',
             array_name='s_boot_fpga')
     elif bld.is_spalding():
         bld(features='binary_header',
-            source='../../platform/snowy/spalding_boot.fpga',
+            source='board/fpga/spalding_boot.fpga',
             target='mfg/spalding/spalding_boot.fpga.auto.h',
             array_name='s_boot_fpga')
 
@@ -782,12 +782,12 @@ def _build_normal(bld):
 
     if bld.is_snowy():
         bld(features='binary_header',
-            source='../../platform/snowy/snowy_boot.fpga',
+            source='board/fpga/snowy_boot.fpga',
             target='mfg/snowy/snowy_boot.fpga.auto.h',
             array_name='s_boot_fpga')
     elif bld.is_spalding():
         bld(features='binary_header',
-            source='../../platform/snowy/spalding_boot.fpga',
+            source='board/fpga/spalding_boot.fpga',
             target='mfg/spalding/spalding_boot.fpga.auto.h',
             array_name='s_boot_fpga')
 
