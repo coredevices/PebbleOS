@@ -124,8 +124,6 @@ typedef struct {
 typedef struct {
   uint8_t backlight_on_percent;
   uint8_t backlight_max_duty_cycle_percent;
-  ExtiConfig dbgserial_int;
-  InputConfig dbgserial_int_gpio;
   OutputConfig lcd_com;
   //ambient light config
   uint32_t ambient_light_dark_threshold;

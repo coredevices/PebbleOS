@@ -21,19 +21,23 @@
 
 #define STOP_MODE_TIMEOUT_MS (2000)
 
+#ifndef MICRO_FAMILY_SF32LB52
 static void dbgserial_interrupt_handler(bool *should_context_switch);
+#endif
 
 static DbgSerialCharacterCallback s_character_callback;
+#ifndef MICRO_FAMILY_SF32LB52
 static TimerID s_stop_mode_timeout_timer;
 //! Use a seperate variable so it's safe to check from the ISR.
 static bool s_stop_mode_inhibited = false;
+#endif
 
 //! We DMA into this buffer as a circular buffer
 #define DMA_BUFFER_LENGTH (200)
 static uint8_t DMA_BSS s_dma_buffer[DMA_BUFFER_LENGTH] __attribute__((aligned(4)));
 static bool s_dma_enabled = false;
 
-
+#ifndef MICRO_FAMILY_SF32LB52
 static void stop_mode_timeout_timer_callback(void* cb_data) {
   // re-enable stop mode
   if (s_stop_mode_inhibited) {
@@ -41,6 +45,7 @@ static void stop_mode_timeout_timer_callback(void* cb_data) {
     s_stop_mode_inhibited = false;
   }
 }
+#endif
 
 static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorFlags *err_flags) {
   bool should_context_switch = false;
@@ -51,31 +56,38 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErro
 }
 
 void dbgserial_input_init(void) {
+#ifndef MICRO_FAMILY_SF32LB52
   exti_configure_pin(BOARD_CONFIG.dbgserial_int, ExtiTrigger_Falling, dbgserial_interrupt_handler);
 
   // some platforms have a seperate pin for the EXTI int and the USART
   if (BOARD_CONFIG.dbgserial_int_gpio.gpio != NULL) {
     gpio_input_init(&BOARD_CONFIG.dbgserial_int_gpio);
   }
+#endif
 
   // set up the USART interrupt on RX
   uart_set_rx_interrupt_handler(DBG_UART, prv_uart_irq_handler);
   uart_set_rx_interrupt_enabled(DBG_UART, true);
 
+#ifndef MICRO_FAMILY_SF32LB52
   s_stop_mode_timeout_timer = new_timer_create();
 
   // Enable receive interrupts
   dbgserial_enable_rx_exti();
+#endif
 }
 
 void dbgserial_enable_rx_exti(void) {
+#ifndef MICRO_FAMILY_SF32LB52
   exti_enable(BOARD_CONFIG.dbgserial_int);
+#endif
 }
 
 void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {
   s_character_callback = callback;
 }
 
+#ifndef MICRO_FAMILY_SF32LB52
 // This callback gets installed by dbgserial_interrupt_handler()
 // using system_task_add_callback_from_isr().
 // It is used to start up our timer since doing so from an ISR is not allowed.
@@ -100,6 +112,7 @@ static void dbgserial_interrupt_handler(bool *should_context_switch) {
     s_stop_mode_inhibited = true;
   }
 }
+#endif
 
 void dbgserial_set_rx_dma_enabled(bool enabled) {
 #if TARGET_QEMU
