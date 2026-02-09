@@ -268,7 +268,6 @@ static void prv_lis2dw12_int1_work_handler(void) {
       uint8_t samples;
 
       samples = LIS2DW12_FIFO_SAMPLES_DIFF_GET(val);
-      samples = MIN(samples, LIS2DW12->state->num_samples);
       if (samples > 0U) {
         prv_lis2dw12_read_samples(samples);
       }
