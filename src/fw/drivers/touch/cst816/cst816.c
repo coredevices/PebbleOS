@@ -243,15 +243,6 @@ void touch_sensor_init(void) {
   }
 #endif
 
-#if PLATFORM_GETAFIX
-  // FIXME(GETAFIX): Disable default PD on Getafix, we need a proper GPIO API...
-  const InputConfig input_cfg = {
-    .gpio = CST816->int_exti.peripheral,
-    .gpio_pin = CST816->int_exti.gpio_pin,
-  };
-  gpio_input_init_pull_up_down(&input_cfg, GPIO_PuPd_NOPULL);
-#endif
-
   // initialize exti
   exti_configure_pin(CST816->int_exti, ExtiTrigger_Falling, prv_exti_cb);
   exti_enable(CST816->int_exti);
