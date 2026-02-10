@@ -909,6 +909,15 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
 }
 
 
+void prefs_private_lock(void) {
+  mutex_lock(s_mutex);
+}
+
+void prefs_private_unlock(void) {
+  mutex_unlock(s_mutex);
+}
+
+
 // ------------------------------------------------------------------------------------
 // Called from KernelMain when we get a blob DB event. We take this opportunity to update the state
 // of the given pref

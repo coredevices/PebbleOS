@@ -172,6 +172,24 @@ static bool prv_is_syncable(const uint8_t *key, int key_len) {
   return prv_is_shell_pref(key, key_len) || prv_is_notif_pref(key, key_len);
 }
 
+//! Lock the appropriate mutex for file access
+static void prv_lock_for_file(bool is_notif) {
+  if (is_notif) {
+    alerts_preferences_lock();
+  } else {
+    prefs_private_lock();
+  }
+}
+
+//! Unlock the appropriate mutex for file access
+static void prv_unlock_for_file(bool is_notif) {
+  if (is_notif) {
+    alerts_preferences_unlock();
+  } else {
+    prefs_private_unlock();
+  }
+}
+
 //! Kernel background callback to sync all dirty settings.
 //! This is coalesced - only one instance runs at a time.
 static void prv_deferred_sync_callback(void *data) {
@@ -262,9 +280,12 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
     return E_INVALID_OPERATION;
   }
 
+  prv_lock_for_file(is_notif_pref);
+
   SettingsFile file;
   status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
+    prv_unlock_for_file(is_notif_pref);
     return status;
   }
 
@@ -279,6 +300,9 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
     settings_file_mark_synced(&file, key, key_len);
   }
   settings_file_close(&file);
+
+  // Unlock before calling event handlers - they acquire the same mutex internally
+  prv_unlock_for_file(is_notif_pref);
 
   // Update the in-memory prefs state after successful write
   if (PASSED(status)) {
@@ -307,7 +331,8 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
   // Determine which file to use based on key type
   const char *file_name;
   int file_len;
-  if (prv_is_notif_pref(key, key_len)) {
+  bool is_notif = prv_is_notif_pref(key, key_len);
+  if (is_notif) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
   } else {
@@ -315,14 +340,19 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
     file_len = SHELL_PREFS_FILE_LEN;
   }
 
+  prv_lock_for_file(is_notif);
+
   SettingsFile file;
   status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
+    prv_unlock_for_file(is_notif);
     return status;
   }
 
   int len = settings_file_get_len(&file, key, key_len);
   settings_file_close(&file);
+
+  prv_unlock_for_file(is_notif);
   return len;
 }
 
@@ -335,7 +365,8 @@ status_t settings_blob_db_read(const uint8_t *key, int key_len,
   // Determine which file to use based on key type
   const char *file_name;
   int file_len;
-  if (prv_is_notif_pref(key, key_len)) {
+  bool is_notif = prv_is_notif_pref(key, key_len);
+  if (is_notif) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
   } else {
@@ -343,14 +374,19 @@ status_t settings_blob_db_read(const uint8_t *key, int key_len,
     file_len = SHELL_PREFS_FILE_LEN;
   }
 
+  prv_lock_for_file(is_notif);
+
   SettingsFile file;
   status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
+    prv_unlock_for_file(is_notif);
     return status;
   }
 
   status = settings_file_get(&file, key, key_len, val_out, val_len);
   settings_file_close(&file);
+
+  prv_unlock_for_file(is_notif);
   return status;
 }
 
@@ -362,7 +398,8 @@ status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
   // Determine which file to use based on key type
   const char *file_name;
   int file_len;
-  if (prv_is_notif_pref(key, key_len)) {
+  bool is_notif = prv_is_notif_pref(key, key_len);
+  if (is_notif) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
   } else if (prv_is_shell_pref(key, key_len)) {
@@ -373,14 +410,19 @@ status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
     return E_INVALID_OPERATION;
   }
 
+  prv_lock_for_file(is_notif);
+
   SettingsFile file;
   status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
+    prv_unlock_for_file(is_notif);
     return status;
   }
 
   status = settings_file_delete(&file, key, key_len);
   settings_file_close(&file);
+
+  prv_unlock_for_file(is_notif);
   return status;
 }
 
@@ -437,19 +479,23 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
   BuildDirtyListContext ctx = { .dirty_list = NULL, .dirty_list_tail = NULL };
 
   // Iterate shell prefs file
+  prefs_private_lock();
   SettingsFile file;
   status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
   if (PASSED(status)) {
     settings_file_each(&file, prv_build_dirty_list_callback, &ctx);
     settings_file_close(&file);
   }
+  prefs_private_unlock();
 
   // Iterate notif prefs file
+  alerts_preferences_lock();
   status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
   if (PASSED(status)) {
     settings_file_each(&file, prv_build_dirty_list_callback, &ctx);
     settings_file_close(&file);
   }
+  alerts_preferences_unlock();
 
   return ctx.dirty_list;
 }
@@ -462,7 +508,8 @@ status_t settings_blob_db_mark_synced(const uint8_t *key, int key_len) {
   // Determine which file to use based on key type
   const char *file_name;
   int file_len;
-  if (prv_is_notif_pref(key, key_len)) {
+  bool is_notif = prv_is_notif_pref(key, key_len);
+  if (is_notif) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
   } else {
@@ -470,14 +517,19 @@ status_t settings_blob_db_mark_synced(const uint8_t *key, int key_len) {
     file_len = SHELL_PREFS_FILE_LEN;
   }
 
+  prv_lock_for_file(is_notif);
+
   SettingsFile file;
   status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
+    prv_unlock_for_file(is_notif);
     return status;
   }
 
   status = settings_file_mark_synced(&file, key, key_len);
   settings_file_close(&file);
+
+  prv_unlock_for_file(is_notif);
   return status;
 }
 
@@ -513,20 +565,24 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
   IsDirtyContext ctx = { .found_dirty = false };
 
   // Check shell prefs file
+  prefs_private_lock();
   SettingsFile file;
   status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
   if (PASSED(status)) {
     settings_file_each(&file, is_dirty_callback, &ctx);
     settings_file_close(&file);
   }
+  prefs_private_unlock();
 
   // If already found dirty, no need to check notif prefs
   if (!ctx.found_dirty) {
+    alerts_preferences_lock();
     status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
     if (PASSED(status)) {
       settings_file_each(&file, is_dirty_callback, &ctx);
       settings_file_close(&file);
     }
+    alerts_preferences_unlock();
   }
 
   *is_dirty_out = ctx.found_dirty;
@@ -553,6 +609,7 @@ status_t settings_blob_db_mark_all_dirty(void) {
   status_t result = S_SUCCESS;
 
   // Mark shell prefs file dirty
+  prefs_private_lock();
   SettingsFile file;
   status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
   if (PASSED(status)) {
@@ -564,8 +621,10 @@ status_t settings_blob_db_mark_all_dirty(void) {
   } else {
     result = status;
   }
+  prefs_private_unlock();
 
   // Mark notif prefs file dirty
+  alerts_preferences_lock();
   status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
   if (PASSED(status)) {
     status = settings_file_mark_all_dirty(&file);
@@ -574,6 +633,7 @@ status_t settings_blob_db_mark_all_dirty(void) {
       result = status;
     }
   }
+  alerts_preferences_unlock();
 
   return result;
 }
@@ -628,9 +688,12 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     return E_INVALID_OPERATION;
   }
 
+  prv_lock_for_file(is_notif_pref);
+
   SettingsFile file;
   status_t status = settings_file_open(&file, file_name, file_len);
   if (FAILED(status)) {
+    prv_unlock_for_file(is_notif_pref);
     return status;
   }
 
@@ -646,6 +709,7 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   if (ctx.found && ctx.last_modified > timestamp) {
     // Watch data is newer - reject the insert
     settings_file_close(&file);
+    prv_unlock_for_file(is_notif_pref);
     PBL_LOG(LOG_LEVEL_DEBUG, "Rejecting stale data: watch=%lu phone=%lu",
             (unsigned long)ctx.last_modified, (unsigned long)timestamp);
     return E_INVALID_OPERATION;
@@ -663,6 +727,9 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     settings_file_mark_synced(&file, key, key_len);
   }
   settings_file_close(&file);
+
+  // Unlock before calling event handlers - they acquire the same mutex internally
+  prv_unlock_for_file(is_notif_pref);
 
   // Update the in-memory prefs state after successful write
   if (PASSED(status)) {
