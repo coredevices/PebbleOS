@@ -105,6 +105,8 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
       break;
   }
 
+  HAL_NVIC_DisableIRQ(GPIO1_IRQn);
+
   HAL_PIN_Set(PAD_PA00 + cfg.gpio_pin, GPIO_A0 + cfg.gpio_pin, flags, 1);
   HAL_GPIO_Init(cfg.peripheral, &init);
 
