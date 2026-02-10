@@ -79,18 +79,16 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
   int flags;
 
   init.Pin = cfg.gpio_pin;
+  init.Pull = GPIO_NOPULL;
 
   switch (cfg.pull) {
     case GPIO_PuPd_UP:
-      init.Pull = GPIO_PULLUP;
       flags = PIN_PULLUP;
       break;
     case GPIO_PuPd_DOWN:
-      init.Pull = GPIO_PULLDOWN;
       flags = PIN_PULLDOWN;
       break;
     default:
-      init.Pull = GPIO_NOPULL;
       flags = PIN_NOPULL;
       break;
   }
