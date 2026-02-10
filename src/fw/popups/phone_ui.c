@@ -204,7 +204,7 @@ static const PhoneStyle s_phone_style_default = {
 };
 
 static const PhoneStyle s_phone_style_large = {
-  .icon_size = PBL_IF_RECT_ELSE(TimelineResourceSizeSmall, TimelineResourceSizeLarge),
+  .icon_size = TimelineResourceSizeLarge,
   .icon_pos = { ICON_POSITION_X, PHONE_ICON_POS_Y_LARGE },
   .caller_id_pos_y = PHONE_CALLER_ID_POS_Y_LARGE,
   .caller_id_height = 60,
