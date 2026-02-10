@@ -54,7 +54,6 @@ typedef enum {
 typedef struct {
   GPIO_TypeDef* const peripheral; ///< One of GPIOX. For example, GPIOA.
   const uint32_t gpio_pin; ///< One of GPIO_Pin_X.
-  GPIOPuPd_TypeDef pull; ///< Pull-up / pull-down configuration for the pin
 } ExtiConfig;
 
 typedef struct {
