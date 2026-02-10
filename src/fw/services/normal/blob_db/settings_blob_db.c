@@ -45,7 +45,7 @@ static const char *s_syncable_settings[] = {
   "unitsDistance",
   "textStyle",
   "stationaryMode",
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
   "displayOrientationLeftHanded",
 #endif
 
