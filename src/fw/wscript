@@ -725,7 +725,7 @@ def _build_normal(bld):
         if bld.is_spalding() and bld.env.BOARD != 'spalding_gabbro':
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/bw')
-        elif bld.is_tintin() or bld.is_silk():
+        elif bld.is_tintin() or bld.is_silk() or bld.is_asterix():
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/spalding')
         else:
