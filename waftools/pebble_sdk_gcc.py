@@ -68,7 +68,7 @@ def configure(conf):
 
 # -----------------------------------------------------------------------------------
 def gen_inject_metadata_rule(bld, src_bin_file, dst_bin_file, elf_file, resource_file, timestamp,
-                             has_pkjs, has_worker):
+                             has_pkjs, has_worker, revision_map_path=None):
     """
     Copy from src_bin_file to dst_bin_file and inject the correct meta-data into the
     header of dst_bin_file
@@ -99,8 +99,14 @@ def gen_inject_metadata_rule(bld, src_bin_file, dst_bin_file, elf_file, resource
             raise BuildError("Failed to copy %s to %s!" % (bin_path, tgt_path))
 
         # Now actually inject the metadata into the new copy of the binary.
+        sdk_version_override = None
+        if revision_map_path:
+            from determine_min_sdk_version import determine_min_sdk_version
+            sdk_version_override = determine_min_sdk_version(elf_path, revision_map_path)
+
         inject_metadata.inject_metadata(tgt_path, elf_path, res_path, timestamp,
-                                        allow_js=has_pkjs, has_worker=has_worker)
+                                        allow_js=has_pkjs, has_worker=has_worker,
+                                        sdk_version_override=sdk_version_override)
 
     sources = [src_bin_file, elf_file]
     if resource_file is not None:

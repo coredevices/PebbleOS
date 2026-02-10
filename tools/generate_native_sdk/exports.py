@@ -40,6 +40,7 @@ class FunctionExport(FullExport):
         self.removed = False
         self.skip_definition = v.get('skipDefinition', False)
         self.added_revision = int(v['addedRevision'])
+        self.update_revision = int(v['updateRevision']) if 'updateRevision' in v else None
         self.sort_name = v.get('sortName', self.name)
 
         if v.get('removed', False):
@@ -125,7 +126,20 @@ def parse_export_file(filename, internal_sdk_build):
         current_revision = INTERNAL_REVISION if internal_sdk_build else file_revision
         exports = parse_exports_list(shim_defs['exports'], current_revision)
 
-    return shim_defs['files'], exports
+    default_update_revision = int(shim_defs.get('updateRevision', shim_defs['revision']))
+    return shim_defs['files'], exports, default_update_revision
+
+
+def get_effective_update_revision(func, default_update_revision):
+    """Return the effective update revision for a function.
+    For functions with explicit updateRevision, that value is used.
+    For functions with addedRevision > default, addedRevision wins (new API).
+    Otherwise, default_update_revision is used."""
+    if func.update_revision is not None:
+        return func.update_revision
+    if func.added_revision > default_update_revision:
+        return func.added_revision
+    return default_update_revision
 
 
 def walk_tree(exports_tree, func, include_groups = False):

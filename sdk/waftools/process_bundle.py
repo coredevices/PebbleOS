@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+import struct
 
 from waflib import Task
 from waflib.TaskGen import feature
@@ -62,6 +63,19 @@ class app_bundle(Task.Task):
     """
     Task class to generate an app bundle for distribution
     """
+
+    SDK_VERSION_OFFSET = 0x0a
+
+    def _read_sdk_version_from_binary(self, bin_path):
+        """Read the actual SDK version bytes from a compiled binary at offset 0x0a."""
+        with open(bin_path, 'rb') as f:
+            f.seek(self.SDK_VERSION_OFFSET)
+            data = f.read(2)
+            if len(data) == 2:
+                major, minor = struct.unpack('BB', data)
+                return {'major': major, 'minor': minor}
+        return None
+
     def run(self):
         """
         This method executes when the bundle task runs
@@ -70,6 +84,14 @@ class app_bundle(Task.Task):
         binaries = getattr(self, 'bin_files')
         js_files = getattr(self, 'js_files')
         outfile = self.outputs[0].abspath()
+
+        # Read actual SDK version from each binary so the manifest matches
+        # any post-link version patching
+        for binary in binaries:
+            if binary['watchapp']:
+                actual_version = self._read_sdk_version_from_binary(binary['watchapp'])
+                if actual_version:
+                    binary['sdk_version'] = actual_version
 
         mkbundle.make_watchapp_bundle(
             timestamp=self.generator.bld.env.TIMESTAMP,

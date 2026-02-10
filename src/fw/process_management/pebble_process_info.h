@@ -149,6 +149,8 @@ typedef enum {
 // sdk.major:0x5 .minor:0x54 -- Add PlatformType enum and defines (rev 87)
 // sdk.major:0x5 .minor:0x55 -- Preferred Content Size (rev 88)
 // sdk.major:0x5 .minor:0x56 -- Add PlatformType enum and defines (rev 89)
+// sdk.major:0x5 .minor:0x56 -- revision 89 (last historical mapping)
+// From revision 90 onward, minor = revision number (90 = 0x5A, 91 = 0x5B, ...)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x56

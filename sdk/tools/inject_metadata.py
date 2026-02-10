@@ -75,7 +75,7 @@ class InvalidBinaryError(Exception):
 
 
 def inject_metadata(target_binary, target_elf, resources_file, timestamp, allow_js=False,
-                    has_worker=False):
+                    has_worker=False, sdk_version_override=None):
 
     if target_binary[-4:] != '.bin':
         raise Exception("Invalid filename <%s>! The filename should end in .bin" % target_binary)
@@ -286,6 +286,10 @@ def inject_metadata(target_binary, target_elf, resources_file, timestamp, allow_
         write_value_at_offset(NUM_RELOC_ENTRIES_ADDR, '<L', len(reloc_entries))
 
         write_value_at_offset(VIRTUAL_SIZE_ADDR, "<H", app_virtual_size)
+
+        if sdk_version_override:
+            f.seek(SDK_VERSION_ADDR)
+            f.write(pack('BB', sdk_version_override[0], sdk_version_override[1]))
 
         # Write the reloc_entries past the end of the binary. This expands the size of the binary,
         # but this new stuff won't actually be loaded into ram.

@@ -5,6 +5,7 @@
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
   "revision" : "89",
+  "updateRevision" : "89",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",

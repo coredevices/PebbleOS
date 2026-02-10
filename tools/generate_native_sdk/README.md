@@ -40,6 +40,7 @@ The format of the config file is as follows:
     [
         {
             "revision" : "<exported symbols revision number>",
+            "updateRevision" : "<default update revision for existing APIs>",
             "version" : "x.x",
             "files" : [
                 <Files to parse/search>
@@ -50,14 +51,19 @@ The format of the config file is as follows:
         }
     ]
 
+The top-level `updateRevision` field specifies the default update revision for all existing APIs. When omitted, it defaults to `revision`. This is used by the post-link SDK version detection to determine the minimum firmware version an app requires based on which APIs it actually uses.
+
 Each exported symbol in the `exports` table is formatted as follows:
 
     {
         "type" : "<Export type",
         "name" : "<Symbol name>",
         "sortName" : "<sort order>",
-        "addedRevision" : "<Revision number>"
+        "addedRevision" : "<Revision number>",
+        "updateRevision" : "<Update revision number (optional)>"
     }
+
+The `updateRevision` field on individual functions overrides the top-level default. Use it when an existing function's signature or behavior changes in a way that requires newer firmware. New functions with `addedRevision` higher than the top-level `updateRevision` automatically require the revision they were added in.
 
 `Export type` type can be any of `function`, `define`, `type`, or `group`. A `group` type has the following structure:
 
@@ -71,8 +77,17 @@ Each exported symbol in the `exports` table is formatted as follows:
 
 *NB:* The generator sorts the order of the `functions` in order of addedRevision, and then alphabetically within a revision using sortName (if specified) or name. The `types` fields are left in the order in which they are entered in the types table. As well, Be sure to specify any typedefs with dependencies on other typedefs after their dependencies in the `types` list.
 
+### Revision-to-minor-byte conversion
+The build system converts API revision numbers to SDK minor bytes using the following scheme:
+- **Revision <= 89** → minor `0x56` (the historical cutoff, frozen)
+- **Revision >= 90** → minor byte = revision number (e.g., 90 = `0x5A`, 91 = `0x5B`, ...)
+
+After an app is linked, the build system analyzes the ELF binary to determine which SDK functions are used, computes the maximum `updateRevision` among them, converts it to a minor byte, and patches the binary's SDK version field. This means an app compiled with a newer SDK but using only older APIs can still run on older firmware.
+
 ### Important!
 When adding new functions, make sure to bump up the `revision` field, and use that value as the new functions' `addedRevision` field. This guarantees that new versions of TintinOS are backwards compatible when compiled against older `libpebble.a`. Seriously, ***make sure to do this***!!.
+
+When updating existing functions in a way that requires newer firmware, set an explicit `updateRevision` on the function entry. The top-level `updateRevision` should remain at the historical cutoff (`"89"`) unless all existing APIs need a firmware bump.
 
 ## Bugs
 + The script doesn't check the the resulting `pebble.h` file will compile, that is left as an exercise to the reader.

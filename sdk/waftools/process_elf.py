@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+
 import objcopy
 import pebble_sdk_gcc
 
@@ -27,6 +29,17 @@ def generate_bin_file(task_gen, bin_type, elf_file, has_pkjs, has_worker):
     raw_bin_file = platform_build_node.make_node('pebble-{}.raw.bin'.format(bin_type))
     bin_file = platform_build_node.make_node('pebble-{}.bin'.format(bin_type))
 
+    # Locate the API revision map for post-link SDK version detection.
+    # aplite is excluded — it uses a fixed older SDK version.
+    revision_map_path = None
+    platform_name = getattr(task_gen.bld.env, 'PLATFORM_NAME', None)
+    if platform_name != 'aplite':
+        sdk_platform_dir = getattr(task_gen.bld.env, 'PEBBLE_SDK_PLATFORM', None)
+        if sdk_platform_dir:
+            candidate = os.path.join(sdk_platform_dir, 'lib', 'api_update_revisions.json')
+            if os.path.isfile(candidate):
+                revision_map_path = candidate
+
     task_gen.bld(rule=objcopy.objcopy_bin, source=elf_file, target=raw_bin_file)
     pebble_sdk_gcc.gen_inject_metadata_rule(task_gen.bld,
                                             src_bin_file=raw_bin_file,
@@ -35,5 +48,6 @@ def generate_bin_file(task_gen, bin_type, elf_file, has_pkjs, has_worker):
                                             resource_file=resources_file,
                                             timestamp=task_gen.bld.env.TIMESTAMP,
                                             has_pkjs=has_pkjs,
-                                            has_worker=has_worker)
+                                            has_worker=has_worker,
+                                            revision_map_path=revision_map_path)
     return bin_file

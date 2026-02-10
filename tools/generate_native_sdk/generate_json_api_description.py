@@ -25,6 +25,8 @@ def gen_json_api_description(functions):
             "removed": f.removed,
             "addedRevision": f.added_revision,
         }
+        if f.update_revision is not None:
+            json_f["updateRevision"] = f.update_revision
         json_functions.append(json_f)
 
     output['functions'] = json_functions

@@ -6,6 +6,7 @@
 from __future__ import with_statement
 from __future__ import print_function
 
+import json
 import os
 import os.path as path
 import shutil
@@ -50,6 +51,20 @@ PEBBLE_APP_H_TEXT = """\
 """
 
 
+def generate_api_revision_map(sorted_functions, sdk_lib_dir, default_update_revision):
+    """Generate api_update_revisions.json mapping each non-removed function to its
+    effective update revision."""
+    revision_map = {}
+    for func in sorted_functions:
+        if func.removed:
+            continue
+        revision_map[func.name] = exports.get_effective_update_revision(
+            func, default_update_revision)
+    map_path = path.join(sdk_lib_dir, 'api_update_revisions.json')
+    with open(map_path, 'w') as f:
+        json.dump(revision_map, f, sort_keys=True, indent=2, separators=(',', ': '))
+
+
 def generate_shim_files(shim_def_path, pbl_src_dir, pbl_output_src_dir, sdk_include_dir,
                         sdk_lib_dir, platform_name, internal_sdk_build=False):
     if internal_sdk_build:
@@ -64,7 +79,8 @@ def generate_shim_files(shim_def_path, pbl_src_dir, pbl_output_src_dir, sdk_incl
     except KeyError:
         raise Exception("Unsupported platform: %s" % platform_name)
 
-    files, exports_tree = exports.parse_export_file(shim_def_path, internal_sdk_build)
+    files, exports_tree, default_update_revision = exports.parse_export_file(
+        shim_def_path, internal_sdk_build)
     files = [ os.path.join(pbl_src_dir, f) for f in files ]
 
     functions = []
@@ -126,6 +142,9 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
 
     # Build .json API description, used as input for static analysis tools:
     make_json_api_description(sorted_functions, pbl_output_src_dir)
+
+    # Generate API revision map for post-link SDK version detection:
+    generate_api_revision_map(sorted_functions, sdk_lib_dir, default_update_revision)
 
     for filename, functions in (('pebble_sdk_version.h',
                                  (f for f in functions if not f.worker_only)),
