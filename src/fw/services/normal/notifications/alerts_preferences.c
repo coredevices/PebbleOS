@@ -501,6 +501,14 @@ void alerts_preferences_dnd_set_smart_enabled(bool enable) {
   SET_PREF(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
 }
 
+void alerts_preferences_lock(void) {
+  mutex_lock(s_mutex);
+}
+
+void alerts_preferences_unlock(void) {
+  mutex_unlock(s_mutex);
+}
+
 void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   if (event->type != BlobDBEventTypeInsert) {
     return;

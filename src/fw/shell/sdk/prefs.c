@@ -100,6 +100,14 @@ void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
 }
 
 
+void prefs_private_lock(void) {
+  mutex_lock(s_mutex);
+}
+
+void prefs_private_unlock(void) {
+  mutex_unlock(s_mutex);
+}
+
 // Exported function used by blob_db API to set the backing store for a specific key.
 // Not used by the SDK shell
 bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void *value,

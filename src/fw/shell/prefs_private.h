@@ -37,6 +37,12 @@ int prefs_private_get_backing_len(const uint8_t *key, size_t key_len);
 //! @return true on success, false if failure
 bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value, int value_len);
 
+//! Lock the prefs mutex. Must be paired with prefs_private_unlock().
+void prefs_private_lock(void);
+
+//! Unlock the prefs mutex. Must be paired with prefs_private_lock().
+void prefs_private_unlock(void);
+
 //! Process a blobDB event issued for the prefs DB (BlobDBIdPrefs). For BlobDBEventTypeInsert
 //! events, this  method will update the internal global copy of that preference based on the
 //! new value that was placed into the backing store.
