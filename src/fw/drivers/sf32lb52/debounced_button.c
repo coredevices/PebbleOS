@@ -84,8 +84,7 @@ void debounced_button_init(void) {
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     const ExtiConfig config = {
       .peripheral = BOARD_CONFIG_BUTTON.buttons[i].port,
-      .gpio_pin = BOARD_CONFIG_BUTTON.buttons[i].pin,
-      .pull = BOARD_CONFIG_BUTTON.buttons[i].pull,
+      .gpio_pin = BOARD_CONFIG_BUTTON.buttons[i].pin
     };
     exti_configure_pin(config, ExtiTrigger_RisingFalling, prv_button_interrupt_handler);
     exti_enable(config);
