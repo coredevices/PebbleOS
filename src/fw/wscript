@@ -627,11 +627,6 @@ def _build_recovery(bld):
             target='mfg/spalding/spalding_boot.fpga.auto.h',
             array_name='s_boot_fpga')
 
-    if 'BOOTLOADER_TEST_STAGE1=1' in bld.env.DEFINES:
-        bld(features='binary_header',
-            source=bld.path.make_node('../../bootloader_test_stage2.bin'),
-            target='bootloader_test_bin.auto.h',
-            array_name='s_bootloader_test_stage2')
 
 
     if bld.env.DISABLE_PROMPT:

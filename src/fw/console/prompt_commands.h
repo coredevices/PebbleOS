@@ -171,8 +171,6 @@ extern void command_color_write(const char*);
 extern void command_disp_offset_write(const char*);
 extern void command_rtcfreq_write(const char*);
 extern void command_model_write(const char*);
-extern void command_bootloader_test(const char*);
-
 extern void command_version_info(void);
 
 extern void command_als_read(void);
@@ -419,8 +417,6 @@ static const Command s_prompt_commands[] = {
   { "rtcfreq write", command_rtcfreq_write, 1 },
   { "model write", command_model_write, 1 },
 #endif // MANUFACTURING_FW
-  { "bootloader test", command_bootloader_test, 1 },
-
   { "scheduler force active", command_scheduler_force_active, 0 },
   { "scheduler resume normal", command_scheduler_resume_normal, 0 },
 
