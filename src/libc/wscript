@@ -19,6 +19,5 @@ def build(bld):
 
     bld(export_includes=['include'], name='pblibc_includes')
     build_libc('pblibc', bld.env)
-    build_libc('pblibc-cm0', bld.all_envs['cortex-m0'])
 
 # vim:filetype=python
