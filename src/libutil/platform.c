@@ -32,5 +32,5 @@ WEAK NORETURN util_assertion_failed(const char *filename, int line) {
 }
 
 WEAK uint32_t rand32(void) {
-  return ((uint32_t)rand() << 1) + (uint32_t)rand;
+  return ((uint32_t)rand() << 1) + (uint32_t)rand();
 }
