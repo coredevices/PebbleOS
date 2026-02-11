@@ -205,10 +205,6 @@ def options(opt):
     opt.add_option('--no-pulse-everywhere',
                    action='store_true',
                    help='Disables PULSE everywhere, uses legacy logs and prompt')
-opt.add_option('--reboot_on_bt_crash', action='store_true', help='Forces a BT '
-                   'chip crash to immediately force a system reboot instead of just cycling airplane mode. '
-                   'This makes it easier for us to actually get crash info')
-
 
 def handle_configure_options(conf):
     if conf.options.noprompt:
@@ -274,9 +270,6 @@ def handle_configure_options(conf):
         conf.env.NO_WATCHDOG = True
         print("Watchdog reboot disabled")
 
-    if conf.options.reboot_on_bt_crash:
-        conf.env.append_value('DEFINES', 'REBOOT_ON_BT_CRASH=1')
-        print("BT now crash will trigger an MCU reboot")
 
     if conf.options.test_apps:
         conf.env.append_value('DEFINES', 'ENABLE_TEST_APPS')
