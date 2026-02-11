@@ -83,11 +83,7 @@ static void prv_app_fetch_launch_app(AppFetchUIData *data) {
     .common = data->next_app_args.common,
     .wakeup = data->next_app_args.wakeup_info
   };
-#if PLATFORM_TINTIN
-  ext->common.transition = compositor_app_slide_transition_get(true /* slide to right */);
-#else
   ext->common.transition = compositor_dot_transition_app_fetch_get();
-#endif
   if ((data->next_app_args.common.reason == APP_LAUNCH_WAKEUP) &&
       (data->next_app_args.common.args != NULL)) {
     ext->common.args = &data->next_app_args.wakeup_info;

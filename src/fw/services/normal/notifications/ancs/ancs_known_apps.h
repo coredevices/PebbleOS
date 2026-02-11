@@ -5,12 +5,7 @@
 // please don't change these values manually, they are derived from the spreadsheet
 // "Notification Colors"
 
-#if PLATFORM_TINTIN
-// Tintin does not have the color arg in its App Metadata. Remove it.
-#define APP(id, icon, color) { id, icon }
-#else
 #define APP(id, icon, color) { id, icon, color }
-#endif
 
     APP(IOS_CALENDAR_APP_ID, TIMELINE_RESOURCE_TIMELINE_CALENDAR, GColorRedARGB8),
     APP(IOS_FACETIME_APP_ID, TIMELINE_RESOURCE_NOTIFICATION_FACETIME, GColorIslamicGreenARGB8),
@@ -36,7 +31,6 @@
     APP("jp.naver.line", TIMELINE_RESOURCE_NOTIFICATION_LINE, GColorIslamicGreenARGB8),
     APP("net.whatsapp.WhatsApp", TIMELINE_RESOURCE_NOTIFICATION_WHATSAPP, GColorIslamicGreenARGB8),
     APP("ph.telegra.Telegraph", TIMELINE_RESOURCE_NOTIFICATION_TELEGRAM, GColorVividCeruleanARGB8),
-#if !PLATFORM_TINTIN
     APP("com.blackberry.bbm1", TIMELINE_RESOURCE_NOTIFICATION_BLACKBERRY_MESSENGER, GColorDarkGrayARGB8),
     APP("com.getpebble.pebbletime.enterprise", TIMELINE_RESOURCE_NOTIFICATION_FLAG, GColorOrangeARGB8),
     APP("com.google.GoogleMobile", TIMELINE_RESOURCE_NOTIFICATION_GENERIC, GColorBlueMoonARGB8),
@@ -77,6 +71,5 @@
     APP("com.transferwise.Transferwise", TIMELINE_RESOURCE_PAY_BILL, GColorGreenARGB8),
     APP("de.no26.Number26", TIMELINE_RESOURCE_PAY_BILL, GColorCadetBlueARGB8),
     APP("com.bunq.ios", TIMELINE_RESOURCE_PAY_BILL, GColorVividCeruleanARGB8),
-#endif
 
 #undef APP

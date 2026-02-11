@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if PLATFORM_TINTIN || PLATFORM_SNOWY || PLATFORM_SPALDING
+#if PLATFORM_SNOWY || PLATFORM_SPALDING
 enum {
   // ML/FL / 1.0 and later:
   OTP_SERIAL1 = 0,

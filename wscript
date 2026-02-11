@@ -29,21 +29,12 @@ import waftools.xcode_pebble
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
 
 RUNNERS = {
-    'bb2': ['openocd'],
-    'ev2_4': ['openocd'],
-    'v1_5': ['openocd'],
-    'v2_0': ['openocd'],
     'snowy_bb2': ['openocd'],
-    'snowy_evt2': ['openocd'],
     'snowy_dvt': ['openocd'],
-    'snowy_s3': ['openocd'],
     'snowy_emery': ['openocd'],
     'spalding_gabbro': ['openocd'],
     'spalding_bb2': ['openocd'],
-    'spalding_evt': ['openocd'],
     'spalding': ['openocd'],
-    'silk_evt': ['openocd'],
-    'silk_bb': ['openocd'],
     'silk': ['openocd'],
     'silk_bb2': ['openocd'],
     'silk_flint': ['openocd'],
@@ -91,21 +82,12 @@ def options(opt):
     opt.recurse('sdk')
     opt.recurse('third_party')
     opt.add_option('--board', action='store',
-                   choices=[ 'bb2',
-                             'ev2_4',
-                             'v1_5',
-                             'v2_0',
-                             'snowy_bb2',  # alias for snowy_dvt, but with #define IS_BIGBOARD
-                             'snowy_evt2',
+                   choices=[ 'snowy_bb2',  # alias for snowy_dvt, but with #define IS_BIGBOARD
                              'snowy_dvt',
-                             'snowy_s3',
                              'snowy_emery',  # snowy with robert screen and resources
                              'spalding_gabbro',  # spalding with getafix screen and resources
                              'spalding_bb2',  # snowy_bb2 with s4 display
-                             'spalding_evt',
                              'spalding',
-                             'silk_evt',
-                             'silk_bb',
                              'silk',
                              'silk_bb2',
                              'silk_flint', # "silk", but it has the flint apis for the emulator
@@ -117,7 +99,7 @@ def options(opt):
                              'getafix_dvt',
                             ],
                    help='Which board we are targeting '
-                        'bb2, snowy_dvt, spalding, silk...')
+                        'snowy_dvt, spalding, silk...')
     opt.add_option('--runner', default=None, choices=['openocd', 'sftool', 'nrfutil'],
                    help='Which runner we are using')
     opt.add_option('--openocd-jtag', action='store', default=None, dest='openocd_jtag',  # default is bb2 (below)
@@ -336,7 +318,7 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'BATTERY_DEBUG')
         print("Enabling higher battery charge voltage.")
 
-    if conf.options.future_ux and not conf.is_tintin():
+    if conf.options.future_ux:
         print("Future UX features enabled.")
         conf.env.FUTURE_UX = True
 
@@ -470,7 +452,7 @@ def configure(conf):
             conf.env.OPENOCD_JTAG = conf.options.openocd_jtag
         elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
             conf.env.OPENOCD_JTAG = 'jtag_ftdi'
-        elif conf.options.board in ('silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
+        elif conf.options.board in ('silk_bb2', 'silk'):
             conf.env.OPENOCD_JTAG = 'swd_ftdi'
         elif conf.options.board in ('asterix'):
             conf.env.OPENOCD_JTAG = 'swd_cmsisdap'
@@ -481,10 +463,7 @@ def configure(conf):
     conf.env.FLASH_ITCM = False
 
     # Set platform used for building the SDK
-    if conf.is_tintin():
-        conf.env.PLATFORM_NAME = 'aplite'
-        conf.env.MIN_SDK_VERSION = 2
-    elif conf.options.board == 'snowy_emery':
+    if conf.options.board == 'snowy_emery':
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.options.board == 'spalding_gabbro':
@@ -514,9 +493,7 @@ def configure(conf):
     # Save this for later
     conf.env.BOARD = conf.options.board
 
-    if conf.is_tintin():
-        conf.env.MICRO_FAMILY = 'STM32F2'
-    elif conf.is_snowy_compatible() or conf.is_silk():
+    if conf.is_snowy_compatible() or conf.is_silk():
         conf.env.MICRO_FAMILY = 'STM32F4'
     elif conf.is_asterix():
         conf.env.MICRO_FAMILY = 'NRF52840'
@@ -562,7 +539,7 @@ def configure(conf):
     if conf.env.QEMU:
         conf.env.bt_controller = 'qemu'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
-    elif conf.is_tintin() or conf.is_snowy() or conf.is_spalding():
+    elif conf.is_snowy() or conf.is_spalding():
         conf.env.bt_controller = 'cc2564x'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
     elif conf.is_asterix():
@@ -865,11 +842,7 @@ def size_fw(ctx):
     try:
         space_left = _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
     except FirmwareTooLargeException as e:
-        if ctx.env.MICRO_FAMILY == 'STM32F2' and ctx.env.QEMU:
-            # Let us off with a warning for now
-            Logs.warn(str(e))
-        else:
-            ctx.fatal(str(e))
+        ctx.fatal(str(e))
     else:
         Logs.pprint('CYAN', 'FW: ' + space_left)
 
@@ -1606,16 +1579,10 @@ def _check_firmware_image_size(ctx, path):
     BYTES_PER_K = 1024
     firmware_size = os.path.getsize(path)
     # Determine flash and bootloader size so we can calculate the max firmware size
-    if ctx.env.MICRO_FAMILY == 'STM32F2':
-        # 512k of flash and 16k bootloader
-        max_firmware_size = (512 - 16) * BYTES_PER_K
-    elif ctx.env.MICRO_FAMILY == 'STM32F4':
+    if ctx.env.MICRO_FAMILY == 'STM32F4':
         if ctx.env.BOARD.startswith('silk') and ctx.variant == 'prf':
             # silk PRF is limited to 512k to save on SPI flash space
             max_firmware_size = 512 * BYTES_PER_K
-        elif ctx.env.BOARD in ('snowy_evt', 'snowy_evt2', 'spalding_evt'):
-            # 1024k of flash and 64k bootloader
-            max_firmware_size = (1024 - 64) * BYTES_PER_K
         else:
             # 1024k of flash and 16k bootloader
             max_firmware_size = (1024 - 16) * BYTES_PER_K

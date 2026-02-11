@@ -150,7 +150,6 @@ static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
   }
 }
 
-#if !PLATFORM_TINTIN
 static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
   // These don't need to be initialized since settings_file_get will clear them on error
   uint8_t manual_dnd_first_use_complete;
@@ -172,7 +171,6 @@ static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
 
 #undef RESTORE_AND_DELETE_PREF
 }
-#endif
 
 #if CAPABILITY_HAS_VIBE_SCORES
 static void prv_save_all_vibe_scores_to_file(SettingsFile *file) {
@@ -292,10 +290,7 @@ void alerts_preferences_init(void) {
 
   prv_migrate_legacy_dnd_schedule(&file);
 
-  // tintin watches don't have these prefs, so we can pull this out to save on codespace
-#if !PLATFORM_TINTIN
   prv_migrate_legacy_first_use_settings(&file);
-#endif
 #if CAPABILITY_HAS_VIBE_SCORES
   prv_migrate_vibe_intensity_to_vibe_scores(&file);
   prv_ensure_valid_vibe_scores();

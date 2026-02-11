@@ -24,11 +24,6 @@
 #include "util/attributes.h"
 #include "util/math.h"
 #include "util/net.h"
-#if PLATFORM_TINTIN
-#include "system/version.h"
-#include "resource/resource_storage_flash.h"
-#endif
-
 #include <bluetooth/analytics.h>
 
 #include "FreeRTOS.h"

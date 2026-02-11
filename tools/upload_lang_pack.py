@@ -77,7 +77,7 @@ def pack_json_to_post_data(j):
     # pack[file]:https://language-packs-staging.s3.amazonaws.com/3TRBOAT-en_US.pbl
     # pack[name]:English
     # pack[localName]:English
-    # pack[hardware]:bb2
+    # pack[hardware]:snowy_dvt
     # pack[ISOLocal]:en_US
     # pack[version]:1
     # pack[firmware]:2.9.0

@@ -37,8 +37,7 @@
 // This is used to determine whether this app was launched as Timeline or Timeline Past.
 // See timeline_get_app_info, timeline_past_get_app_info, and the usage of sys_get_app_uuid.
 
-#if PBL_ROUND || PLATFORM_TINTIN
-// Tintin looks funny with the dot animation, but it results in less code space usage
+#if PBL_ROUND
 #define ANIMATION_DOT 1
 #define ANIMATION_SLIDE 0
 #else
@@ -155,15 +154,11 @@ static void prv_launch_watchface(void *data) {
   watchface_launch_default(NULL);
 #else
 
-#if PLATFORM_TINTIN
-  const CompositorTransition *transition = NULL;
-#else
   const bool is_future = (s_app_data->timeline_model.direction == TimelineIterDirectionFuture);
   const bool to_timeline = false;
   const CompositorTransition *transition = PBL_IF_RECT_ELSE(
       compositor_slide_transition_timeline_get(is_future, to_timeline, timeline_model_is_empty()),
       compositor_dot_transition_timeline_get(is_future, to_timeline));
-#endif
 
   watchface_launch_default(transition);
 #endif
@@ -306,12 +301,8 @@ static Animation *prv_create_peek_exit_anim(TimelineAppData *data, TimelineAppSt
   peek_layer_set_scale_to(peek_layer, icon_to);
   peek_layer_set_duration(peek_layer, duration);
 
-#if PLATFORM_TINTIN
-  return (Animation *)peek_layer_create_play_animation(&data->peek_layer);
-#else
   // Play only a section to reduce the duration to the scaling, ignoring the PDCS duration
   return (Animation *)peek_layer_create_play_section_animation(&data->peek_layer, 0, duration);
-#endif
 }
 #endif
 
@@ -437,10 +428,8 @@ static void prv_push_pin_window(TimelineAppData *data, TimelineIterState *state,
   window_set_background_color(&data->timeline_window, colors->bg_color);
 
   // animate the card from the right
-#if !PLATFORM_TINTIN
   TimelineLayout *card_timeline_layout = data->pin_window.item_detail_layer.timeline_layout;
   timeline_layout_transition_pin_to_card(timeline_layout, card_timeline_layout);
-#endif
 
   // animate the timeline to the left
   data->current_animation = prv_animate_to_pin_window(data);
@@ -954,12 +943,8 @@ static void prv_setup_first_pin_peek(TimelineAppData *data) {
 
   PeekLayer *peek_layer = &s_app_data->peek_layer;
 
-#if PLATFORM_TINTIN
-  const bool is_mini_peek = false;
-#else
   // if we are hiding the peek, we are in a mini peek
   const bool is_mini_peek = (data->state == TimelineAppStateHidePeek);
-#endif
 
   // set the text
   char number_buffer[TIME_STRING_REQUIRED_LENGTH] = {}; // "11"
@@ -1153,14 +1138,12 @@ Animation *timeline_animate_back_from_card(void) {
   window_set_background_color(&data->timeline_window, GColorWhite);
 
 
-#if !PLATFORM_TINTIN
   TimelineLayout *pin_timeline_layout = timeline_layer_get_current_layout(&data->timeline_layer);
   if (pin_timeline_layout) {
     // animation the pin icon
     TimelineItemLayer *item_layer = &data->pin_window.item_detail_layer;
     timeline_layout_transition_card_to_pin(item_layer->timeline_layout, pin_timeline_layout);
   }
-#endif
 
   // animate the timeline layer from the left
   Layer *layer = &data->timeline_layer.layer;

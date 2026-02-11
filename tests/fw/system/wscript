@@ -5,6 +5,6 @@ def build(ctx):
          sources_ant_glob = "src/fw/flash_region/flash_region.c",
          test_sources_ant_glob = "test_flash_region.c",
          override_includes=['dummy_board'],
-         platforms=['tintin'])
+         platforms=['silk'])
 
 # vim:filetype=python

@@ -104,16 +104,6 @@ static const CertificationIds s_certification_ids_snowy = {
   .usa_fcc_id = "RGQ-501",
 };
 
-static const CertificationIds s_certification_ids_bobby = {
-  .company_name = "Pebble Technology Corp.",
-  .canada_ic_id = "10805A-511",
-  .china_cmiit_id = "2015DJ3458",
-  .japan_telec_r_id = "201-150257",
-  .japan_telec_t_id = "D 15 0065 201",
-  .korea_kcc_id = "MSIP-CRM-PEB-WQ3",
-  .usa_fcc_id = "RGQ-511",
-};
-
 static const RegulatoryFlags s_regulatory_flags_spalding = {
   .has_canada_ic = true,
   .has_eu_ce = true,
@@ -196,12 +186,9 @@ static const RegulatoryFlags * prv_get_regulatory_flags(void) {
 
 //! Don't call this function directly. Use the prv_get_*_id functions instead.
 static const CertificationIds * prv_get_certification_ids(void) {
-#if defined(BOARD_SNOWY_S3)
-  return &s_certification_ids_bobby;
-#elif defined(BOARD_SNOWY_EVT) || defined(BOARD_SNOWY_EVT2) || \
-      defined(BOARD_SNOWY_DVT)
+#if defined(BOARD_SNOWY_DVT)
   return &s_certification_ids_snowy;
-#elif defined(BOARD_SPALDING) || defined(BOARD_SPALDING_EVT)
+#elif defined(BOARD_SPALDING)
   return &s_certification_ids_spalding;
 #elif PLATFORM_SILK && !defined(BOARD_SILK_FLINT)
   if (mfg_info_is_hrm_present()) {

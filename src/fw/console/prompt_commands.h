@@ -51,8 +51,6 @@ extern void command_dump_malloc_bt(void);
 
 extern void command_read_word(const char*);
 
-extern void command_power_2v5(const char*);
-
 extern void command_backlight_ctl(const char*);
 extern void command_rgb_set_color(const char*);
 
@@ -307,17 +305,7 @@ extern void command_mflt_metrics_dump(void);
 extern void command_mflt_device_info(void);
 #endif
 
-#if PLATFORM_TINTIN && !TARGET_QEMU
-// We don't have space for anything that's not absolutely required for firmware development
-// (imaging resources over PULSE). Rip it all out. Note that this breaks test automation on tintin,
-// but QEMU will be used as a placeholder. We plan on reintroducing test automation support through
-// continued space savings efforts and by introducing RPC commands over PULSE. Stay tuned.
-// For reference, this saves about 12k of space. If we leave just the test automation commands in
-// roughly 7k of space is saved.
-#define KEEP_NON_ESSENTIAL_COMMANDS 0
-#else
 #define KEEP_NON_ESSENTIAL_COMMANDS 1
-#endif
 static const Command s_prompt_commands[] = {
   // PULSE entry point, needed for anything PULSE-related to work
   { "PULSEv1", pulse_start, 0 },
@@ -442,9 +430,6 @@ static const Command s_prompt_commands[] = {
 
   { "als read", command_als_read, 0},
 
-#ifdef PLATFORM_TINTIN // TINTIN/BIANCA only
-  { "power 2.5", command_power_2v5, 1 },
-#else
   { "selftest", command_selftest, 0 },
 
   { "flash read", command_flash_read, 2},
@@ -476,8 +461,6 @@ static const Command s_prompt_commands[] = {
 #if MFG_INFO_RECORDS_TEST_RESULTS
   { "mfg ui test results", command_mfg_info_test_results, 0 },
 #endif // MFG_INFO_RECORDS_TEST_RESULTS
-
-#endif // PLATFORM_TINTIN
 #endif // RECOVERY_FW
 
 #if CAPABILITY_HAS_BUILTIN_HRM
@@ -584,9 +567,7 @@ static const Command s_prompt_commands[] = {
   { "dump flash", command_dump_flash, 2 },
   // { "format flash", command_format_flash, 0 },
 
-#if !PLATFORM_TINTIN
   { "flash unprotect", command_flash_unprotect, 0 },
-#endif
 
 #ifndef RECOVERY_FW
   { "worker launch", command_worker_launch, 1 },

@@ -12,9 +12,7 @@
 #include "util/time/time.h"
 #include "util/uuid.h"
 
-#if !PLATFORM_TINTIN
 #include "services/normal/vibes/vibe_score_info.h"
-#endif
 
 // Every analytics blob we send out (device blob, app blob, or event blob) starts out with
 // an 8-bit AnalyticsBlobKind followed by a 16-bit version. Here we define the format of the
@@ -477,11 +475,9 @@ void analytics_event_put_byte_stats(
 void analytics_event_app_crash(const Uuid *uuid, uint32_t pc, uint32_t lr, const uint8_t *build_id,
                                bool is_rocky_app);
 
-#if !PLATFORM_TINTIN
 //! Log the user's vibration pattern
 //! @param VibePatternFeature Notifications, Phone Calls, or Alarms
 void analytics_event_vibe_access(VibePatternFeature vibe_feature, VibeScoreId pattern_id);
-#endif
 
 typedef struct AlarmInfo AlarmInfo;
 

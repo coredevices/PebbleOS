@@ -38,10 +38,8 @@
 #include "services/normal/orientation_manager.h"
 #endif
 
-#ifndef PLATFORM_TINTIN
 #include "services/normal/activity/activity.h"
 #include "services/normal/voice/voice.h"
-#endif
 
 #include "util/size.h"
 

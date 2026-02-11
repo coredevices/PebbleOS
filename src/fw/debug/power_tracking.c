@@ -57,7 +57,7 @@ static DiscreteSystemProfile s_discrete_consumer_profiles[num_power_systems] = {
   [PowerSystemMcuI2C1] =          { "McuI2C1", 0, 0, false},
   [PowerSystemMcuI2C2] =          { "McuI2C2", 0, 0, false},
   [PowerSystemMcuSpi1] =          { "McuSpi1", 0, 0, false},
-#ifdef PLATFORM_TINTIN
+#if PLATFORM_SILK
   [PowerSystemMcuSpi2] =          { "McuSpi2", 0, 0, false},
 #else
   [PowerSystemMcuSpi6] =          { "McuSpi6", 0, 0, false},

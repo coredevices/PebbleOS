@@ -116,28 +116,16 @@ def _generate_memory_layout(bld):
         ldscript_template = bld.path.find_node('stm32f439_snowy_emery_flash_fw.ld.template')
     elif bld.is_snowy_compatible():
         ldscript_template = bld.path.find_node('stm32f439_flash_fw.ld.template')
-    elif bld.is_tintin():
-        ldscript_template = bld.path.find_node('stm32f2xx_flash_fw.ld.template')
     elif bld.is_asterix():
         ldscript_template = bld.path.find_node('nrf52840_flash_fw.ld.template')
     elif bld.is_obelix() or bld.is_getafix():
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
-    if bld.env.MICRO_FAMILY == 'STM32F2':
+    if bld.env.MICRO_FAMILY == 'STM32F4':
+        flash_size = 1024 * 1024
         # Bootloader
         offset_size = 16 * 1024
-        flash_size = 512 * 1024
-        fw_max_size = flash_size
-
-    elif bld.env.MICRO_FAMILY == 'STM32F4':
-        flash_size = 1024 * 1024
-        if bld.env.BOARD in ('snowy_evt', 'snowy_evt2', 'spalding_evt'):
-            # Bootloader
-            offset_size = 64 * 1024
-        else:
-            # Bootloader
-            offset_size = 16 * 1024
         if bld.is_silk() and bld.variant == 'prf':
             # silk PRF is limited to 512k to save on SPI flash space
             fw_max_size = flash_size // 2
@@ -194,18 +182,7 @@ def _generate_memory_layout(bld):
     fw_flash_length = '%(fw_max_size)d - %(firmware_offset)d' % locals()
     fw_flash_origin = '0x%(flash_origin)08x + %(offset_size)d + %(firmware_offset)d' % locals()
 
-    if bld.env.MICRO_FAMILY == 'STM32F2' and bld.variant == '':
-        # If we're building a tintin normal firmware make sure to plug in all the symbols that we
-        # want to use from the bootloader.
-
-        with open(bld.path.find_node('bootloader_symbols.json').abspath(), 'r') as f:
-            bootloader_symbols_json = json.load(f)
-
-        bootloader_symbols = bootloader_symbols_json['bootloader_symbols'].items()
-        bootloader_symbol_strings = ("%s = %s;" % (n, v) for n, v in bootloader_symbols)
-        bootloader_symbol_definitions = "\n    ".join(bootloader_symbol_strings)
-    else:
-        bootloader_symbol_definitions = ""
+    bootloader_symbol_definitions = ""
 
     # Determine ram layout
 
@@ -242,13 +219,7 @@ def _generate_memory_layout(bld):
     # hardware capabilities watch model itself - i.e. chalk vs basalt). We want to define
     # APP_RAM_*X_SIZE macros for each app execution environment supported by the model so we
     # don't need to hard-code these in the FW itself.
-    if bld.is_tintin():
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['aplite']
-        app_ram_size_4x = APP_UNSUPPORTED
-        # We have a 128k continuous block of RAM.
-        total_ram = (0x20000000, 128 * 1024)
-    elif bld.env.BOARD == 'snowy_emery':
+    if bld.env.BOARD == 'snowy_emery':
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['basalt']
         app_ram_size_4x = APP_RAM_SIZES['emery']
@@ -478,9 +449,7 @@ def _link_firmware(bld, sources):
 def _get_mfg_paths(bld):
     """Return a list of directories we want to build to support manufacturing on a platform"""
 
-    if bld.is_tintin():
-        return ('mfg/tintin',)
-    elif bld.is_snowy():
+    if bld.is_snowy():
         return ('mfg/snowy',)
     elif bld.is_spalding():
         return ('mfg/spalding',)
@@ -498,10 +467,7 @@ def _get_mfg_paths(bld):
 def _get_dbg_paths(bld):
     """Return a list of directories we want to build to support debug logging on a platform"""
 
-    if bld.is_tintin():
-        return ('debug/legacy',)
-    else:
-        return ('debug/default',)
+    return ('debug/default',)
 
 def _gen_fpga_bitstream_header(bld):
     if bld.env.BOARD == 'snowy_emery':
@@ -511,10 +477,7 @@ def _gen_fpga_bitstream_header(bld):
         # Spalding Gabbro uses getafix display, needs 260x260 round FPGA bitstream
         source_bitstream = 'board/fpga/Spalding_Gabbro_260x260_framebuffer.fpga'
     elif bld.is_snowy():
-        if bld.env.BOARD in ('snowy_bb', 'snowy_evt'):
-            source_bitstream = 'board/fpga/snowy_framebuffer_evt.fpga'
-        else:
-            source_bitstream = 'board/fpga/Snowy_LP1K_framebuffer.fpga'
+        source_bitstream = 'board/fpga/Snowy_LP1K_framebuffer.fpga'
     elif bld.is_spalding():
         if bld.env.BOARD in ('spalding_bb2',):
             source_bitstream = 'board/fpga/Spalding_LP1K_framebuffer.fpga'
@@ -647,10 +610,7 @@ def _get_launcher_globs_to_exclude(bld):
     default_launcher_glob = system_launchers_root_path + 'default/**'
     launcher_globs_to_exclude = [legacy_launcher_glob, default_launcher_glob]
 
-    if bld.is_tintin():
-        launcher_glob_to_use = legacy_launcher_glob
-    else:
-        launcher_glob_to_use = default_launcher_glob
+    launcher_glob_to_use = default_launcher_glob
 
     launcher_globs_to_exclude.remove(launcher_glob_to_use)
     return launcher_globs_to_exclude
@@ -701,7 +661,7 @@ def _build_normal(bld):
         if bld.is_spalding() and bld.env.BOARD != 'spalding_gabbro':
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/bw')
-        elif bld.is_tintin() or bld.is_silk() or bld.is_asterix():
+        elif bld.is_silk() or bld.is_asterix():
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/spalding')
         else:
@@ -713,7 +673,7 @@ def _build_normal(bld):
 
     if bld.env.BUILD_TEST_APPS:
         source_dirs.append('apps/demo_apps/**')
-        if bld.is_tintin() or bld.is_silk():
+        if bld.is_silk():
             excludes.append('apps/demo_apps/vibe_score_demo.c')
     elif bld.env.PERFORMANCE_TESTS:
         source_dirs.append('apps/demo_apps/gfx_tests')
@@ -722,12 +682,6 @@ def _build_normal(bld):
 
     if not bld.capability('HAS_BUILTIN_HRM'):
         excludes.append('popups/ble_hrm/**')
-
-    if bld.is_tintin():
-        excludes.append('apps/system_apps/health/**')
-        excludes.append('apps/system_apps/settings/settings_vibe_patterns.c')
-        excludes.append('apps/system_apps/weather/**')
-        excludes.append('apps/system_apps/workout/**')
 
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
     sources.extend(bld.path.make_node(x) for x in source_files)

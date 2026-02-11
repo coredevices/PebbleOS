@@ -7,7 +7,6 @@ from .ftdi_swd import FTDISerialWireDebug
 
 def get_device(board, reset=True, frequency=None):
     boards = {
-        'silk_bb': (0x7893, 10E6, STM32F4FlashProgrammer),
     }
 
     if board not in boards:

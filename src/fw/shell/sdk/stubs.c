@@ -86,8 +86,7 @@ const PebbleProcessMd* alarms_app_get_info(void) {
   return (const PebbleProcessMd*) &s_alarms_app_info;
 }
 
-// This stub isn't needed on tintin as it uses a different launcher
-#if !PLATFORM_TINTIN && !CAPABILITY_HAS_SDK_SHELL4
+#if !CAPABILITY_HAS_SDK_SHELL4
 #include "apps/system_apps/launcher/launcher_app.h"
 const LauncherDrawState *launcher_app_get_draw_state(void) {
   return NULL;

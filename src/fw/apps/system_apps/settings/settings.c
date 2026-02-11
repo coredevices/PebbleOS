@@ -137,8 +137,6 @@ const PebbleProcessMd *settings_get_app_info() {
     .name = i18n_noop("Settings"),
 #if CAPABILITY_HAS_APP_GLANCES
     .icon_resource_id = RESOURCE_ID_SETTINGS_TINY,
-#elif PLATFORM_TINTIN
-    .icon_resource_id = RESOURCE_ID_MENU_LAYER_SETTINGS_APP_ICON,
 #endif
   };
   return (const PebbleProcessMd*) &s_settings_app;

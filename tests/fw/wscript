@@ -325,8 +325,8 @@ def build(ctx):
         " src/fw/applib/graphics/graphics_circle.c" \
         " src/fw/applib/graphics/graphics_line.c"
 
-    for platform in ['tintin', 'snowy']:
-        bit_depth = 1 if platform == 'tintin' else 8
+    for platform in ['silk', 'snowy']:
+        bit_depth = 1 if platform == 'silk' else 8
         depth_dir = '{}_bit'.format(bit_depth)
         sources_ant_glob = templated_sources_ant_glob.format(depth_dir=depth_dir)
         clar(ctx,

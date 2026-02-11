@@ -28,18 +28,7 @@ def build(bld):
             excludes = []
 
             # Platform based excludes
-            if bld.is_tintin():
-                excludes.append('normal/activity/**')
-                excludes.append('normal/weather/**')
-                excludes.append('normal/voice/**')
-                excludes.append('normal/accessory/**')
-                excludes.append('prf/accessory/**')
-                excludes.append('common/compositor/default/**')
-                excludes.append('normal/vibes/vibe_client.c')
-                excludes.append('normal/vibes/vibe_score.c')
-                excludes.append('normal/vibes/vibe_score_info.c')
-                excludes.append('common/battery/nrf_fuel_gauge/**')
-            elif bld.is_asterix():
+            if bld.is_asterix():
                 excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/default/compositor_modal_transitions.*')
                 excludes.append('common/battery/voltage/**')
@@ -94,11 +83,7 @@ def build(bld):
         sources.extend(bld.path.ant_glob('*.c', excl=excludes))
 
         # This could really be based on what accel driver is in use
-        if bld.is_tintin():
-            accel_manager_to_remove = 'common/accel_manager.c'
-        else:
-            accel_manager_to_remove = 'legacy/accel_manager.c'
-
+        accel_manager_to_remove = 'legacy/accel_manager.c'
         sources = [x for x in sources if not x.abspath().endswith(accel_manager_to_remove)]
 
         _build_services(bld, sources)

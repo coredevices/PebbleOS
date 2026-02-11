@@ -60,52 +60,7 @@ master_capability_set = {
 
 board_capability_dicts = [
     {
-        'boards': ['bb2', 'ev2_4', 'v1_5'],
-        'capabilities':
-        {
-            'HAS_APPLE_MFI',
-            'HAS_DEFECTIVE_FW_CRC',
-            'HAS_MAGNETOMETER',
-        },
-    },
-    {
-        'boards': ['v2_0'],
-        'capabilities':
-        {
-            'HAS_APPLE_MFI',
-            'HAS_DEFECTIVE_FW_CRC',
-            'HAS_LED',
-            'HAS_MAGNETOMETER',
-        },
-    },
-    {
-        'boards': ['snowy_evt2'],
-        'capabilities':
-        {
-            'COMPOSITOR_USES_DMA',
-            'HAS_ACCESSORY_CONNECTOR',
-            'HAS_APPLE_MFI',
-            'HAS_APP_GLANCES',
-            'HAS_DEFECTIVE_FW_CRC',
-            'HAS_HEALTH_TRACKING',
-            'HAS_ROCKY_JS',
-            'HAS_LAUNCHER4',
-            'HAS_MAGNETOMETER',
-            'HAS_MAPPABLE_FLASH',
-            'HAS_MASKING',
-            'HAS_MICROPHONE',
-            'HAS_PMIC',
-            'HAS_SDK_SHELL4',
-            'HAS_TEMPERATURE',
-            'HAS_TIMELINE_PEEK',
-            'HAS_VIBE_SCORES',
-            'USE_PARALLEL_FLASH',
-            'HAS_WEATHER',
-            'HAS_FPGA_DISPLAY',
-        },
-    },
-    {
-        'boards': ['snowy_bb2', 'snowy_dvt', 'snowy_s3'],
+        'boards': ['snowy_bb2', 'snowy_dvt'],
         'capabilities':
         {
             'COMPOSITOR_USES_DMA',
@@ -187,7 +142,7 @@ board_capability_dicts = [
         },
     },
     {
-        'boards': ['spalding_evt', 'spalding'],
+        'boards': ['spalding'],
         'capabilities':
         {
             'COMPOSITOR_USES_DMA',
@@ -241,7 +196,7 @@ board_capability_dicts = [
         },
     },
     {
-        'boards': ['silk_bb', 'silk_evt', 'silk_bb2', 'silk'],
+        'boards': ['silk_bb2', 'silk'],
         'capabilities':
         {
             'HAS_ACCESSORY_CONNECTOR',
