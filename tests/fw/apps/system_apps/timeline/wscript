@@ -131,7 +131,7 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk', 'robert'])
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(ctx,
          sources_ant_glob=(
@@ -143,6 +143,6 @@ def build(ctx):
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
          # The no events is a builtin on silk and thus cannot be used in a unit test currently
-         platforms=['snowy', 'spalding', 'robert'])
+         platforms=['snowy', 'spalding'])
 
 # vim:filetype=python

@@ -51,7 +51,7 @@ static const VoltagePoint charge_curve[] = {
   {90,  4090},
   {100, 4130},
 };
-#elif BOARD_SNOWY_S3 || PLATFORM_ROBERT
+#elif BOARD_SNOWY_S3
 // When the voltage drops below these (mV), the watch will start heading for standby (after delay)
 #define BATTERY_CRITICAL_VOLTAGE_CHARGING 3700
 #define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3300
@@ -84,7 +84,7 @@ static const VoltagePoint charge_curve[] = {
   {60,  4225},
   {70,  4250},
 };
-#elif PLATFORM_SNOWY || PLATFORM_CALCULUS
+#elif PLATFORM_SNOWY
 // When the voltage drops below these (mV), the watch will start heading for standby (after delay)
 #define BATTERY_CRITICAL_VOLTAGE_CHARGING 3500
 #define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3300

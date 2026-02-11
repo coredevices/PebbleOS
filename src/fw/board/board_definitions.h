@@ -44,14 +44,6 @@
 #include "boards/board_silk.h"
 #elif BOARD_SILK_FLINT
 #include "boards/board_silk.h"
-#elif BOARD_CUTTS_BB
-#include "boards/board_robert.h" // prototypes for Cutts
-#elif BOARD_ROBERT_BB
-#include "boards/board_robert.h" // prototypes for Robert BB
-#elif BOARD_ROBERT_BB2
-#include "boards/board_robert.h" // prototypes for Robert BB2
-#elif BOARD_ROBERT_EVT
-#include "boards/board_robert.h" // prototypes for Robert EVT
 #elif BOARD_ASTERIX
 #include "boards/board_asterix.h"
 #elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2

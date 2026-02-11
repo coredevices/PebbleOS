@@ -227,7 +227,7 @@ def build_product_source_files(bld, test_dir, include_paths, defines, cflags, pr
     return product_objects
 
 def get_bitdepth_for_platform(bld, platform):
-    if platform in ('snowy', 'spalding', 'robert', 'obelix'):
+    if platform in ('snowy', 'spalding', 'obelix'):
         return 8
     elif platform in ('tintin', 'silk'):
         return 1
@@ -247,7 +247,7 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
         if not re.match(bld.options.regex, filename):
             return
 
-    platform_set = set(['default', 'tintin', 'snowy', 'spalding', 'silk', 'robert'])
+    platform_set = set(['default', 'tintin', 'snowy', 'spalding', 'silk'])
 
     #validate platforms specified
     if platform not in platform_set:
@@ -272,7 +272,7 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
       test_bin = test_dir.make_node('runme_' + platform)
       platform_defines.append('PLATFORM_DEFAULT=0')
 
-    if platform == 'silk' or platform == 'robert':
+    if platform == 'silk':
        platform_defines.append('CAPABILITY_HAS_PUTBYTES_PREACKING=1')
 
     def _generate_clar_harness(task):
@@ -323,7 +323,7 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
                      "third_party/nanopb/nanopb" ]
 
     # Use Snowy's resource headers as a fallback if we don't override it here
-    resource_override_dir_name = platform if platform in ('silk', 'robert') else 'snowy'
+    resource_override_dir_name = platform if platform in ('silk',) else 'snowy'
     src_includes.append("tests/overrides/default/resources/{}".format(resource_override_dir_name))
 
     override_includes = ['tests/overrides/' + f for f in override_includes]

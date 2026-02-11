@@ -276,15 +276,6 @@ static void prv_validate_memory(DMARequest *this, void *dst, const void *src, ui
                  (((uintptr_t)src & alignment_mask) == 0));
   }
 
-#if PLATFORM_ROBERT
-  // There is an erratum in the STM32F7xx MCUs in which causes DMA transfers
-  // that read from the DTCM to read corrupted data if the MCU enters sleep mode
-  // during the transfer. Note that writes to DTCM will not be corrupted.
-  extern const char __DTCM_RAM_size__[];
-  PBL_ASSERT((uintptr_t)src >= (RAMDTCM_BASE + (uintptr_t)__DTCM_RAM_size__) ||
-             ((uintptr_t)src + length) <= RAMDTCM_BASE,
-             "DMA transfer will be corrupted if MCU enters sleep mode");
-#endif
 }
 
 static void prv_request_start(DMARequest *this, void *dst, const void *src, uint32_t length,

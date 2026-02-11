@@ -47,11 +47,6 @@ RUNNERS = {
     'silk': ['openocd'],
     'silk_bb2': ['openocd'],
     'silk_flint': ['openocd'],
-    'cutts_bb': ['openocd'],
-    'robert_bb': ['openocd'],
-    'robert_bb2': ['openocd'],
-    'robert_evt': ['openocd'],
-    'robert_es': ['openocd'],
     'asterix': ['openocd', 'nrfutil'],
     'obelix_dvt': ['sftool'],
     'obelix_pvt': ['sftool'],
@@ -114,11 +109,6 @@ def options(opt):
                              'silk',
                              'silk_bb2',
                              'silk_flint', # "silk", but it has the flint apis for the emulator
-                             'cutts_bb',
-                             'robert_bb',
-                             'robert_bb2',
-                             'robert_evt',
-                             'robert_es',
                              'asterix',
                              'obelix_dvt',
                              'obelix_pvt',
@@ -465,12 +455,7 @@ def configure(conf):
     conf.env.QEMU = conf.options.qemu
     conf.env.JS_ENGINE = conf.options.js_engine
 
-    # The BT controller is the only thing different between robert_es and robert_evt, so just
-    # retend robert_es is robert_evt. We'll be removing robert_es fairly soon anyways.
     bt_board = None
-    if conf.options.board == 'robert_es':
-        bt_board = 'robert_es'
-        conf.options.board = 'robert_evt'
 
     if not conf.options.runner:
         conf.env.RUNNER = RUNNERS.get(conf.options.board, [None])[0]
@@ -485,8 +470,7 @@ def configure(conf):
             conf.env.OPENOCD_JTAG = conf.options.openocd_jtag
         elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
             conf.env.OPENOCD_JTAG = 'jtag_ftdi'
-        elif conf.options.board in ('cutts_bb', 'robert_bb', 'robert_bb2', 'robert_evt',
-                                    'silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
+        elif conf.options.board in ('silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
             conf.env.OPENOCD_JTAG = 'swd_ftdi'
         elif conf.options.board in ('asterix'):
             conf.env.OPENOCD_JTAG = 'swd_cmsisdap'
@@ -494,11 +478,7 @@ def configure(conf):
             # default to bb2
             conf.env.OPENOCD_JTAG = 'bb2'
 
-    # Cutts and Robert access flash through the ITCM bus (except in QEMU)
-    if (conf.is_cutts() or conf.is_robert()) and not conf.env.QEMU:
-        conf.env.FLASH_ITCM = True
-    else:
-        conf.env.FLASH_ITCM = False
+    conf.env.FLASH_ITCM = False
 
     # Set platform used for building the SDK
     if conf.is_tintin():
@@ -519,7 +499,7 @@ def configure(conf):
     elif conf.is_silk() and conf.options.board != 'silk_flint':
         conf.env.PLATFORM_NAME = 'diorite'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_cutts() or conf.is_robert() or conf.is_obelix():
+    elif conf.is_obelix():
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.is_asterix() or conf.options.board == 'silk_flint':
@@ -538,8 +518,6 @@ def configure(conf):
         conf.env.MICRO_FAMILY = 'STM32F2'
     elif conf.is_snowy_compatible() or conf.is_silk():
         conf.env.MICRO_FAMILY = 'STM32F4'
-    elif conf.is_cutts() or conf.is_robert():
-        conf.env.MICRO_FAMILY = 'STM32F7'
     elif conf.is_asterix():
         conf.env.MICRO_FAMILY = 'NRF52840'
     elif conf.is_obelix() or conf.is_getafix():
@@ -578,8 +556,6 @@ def configure(conf):
     handle_configure_options(conf)
 
 
-    # robert_es is the exact same as robert_evt, except for the BT chip, so gets converted to
-    # robert_evt above, but we need to handle it as robert_es here.
     if bt_board is None:
         bt_board = conf.get_board()
     # Select BT controller based on configuration:
@@ -592,7 +568,7 @@ def configure(conf):
     elif conf.is_asterix():
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
-    elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):
+    elif bt_board in ('silk_bb2', 'silk'):
         conf.env.bt_controller = 'da14681-01'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_DA14681'])
     elif conf.is_obelix() or conf.is_getafix():
@@ -678,11 +654,6 @@ def configure(conf):
     # Confirm that requirements-*.txt and requirements-osx-brew.txt have been satisfied.
     import tool_check
     tool_check.tool_check()
-
-    # Warn user not to use Cutts BB build with a Robert screen
-    if conf.options.board == 'cutts_bb':
-        Logs.warn('NOTE: Do not use this build with a C2/Robert display '
-                  '(6V6 rail will damage the display)')
 
 
 def _run_remote_suite(ctx, suite):
@@ -920,8 +891,6 @@ def size_resources(ctx):
 
     if ctx.env.MICRO_FAMILY == 'STM32F4':
         max_size = 512 * 1024
-    elif ctx.env.MICRO_FAMILY == 'STM32F7':
-        max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'NRF52840':
         max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'SF32LB52':
@@ -1212,9 +1181,6 @@ def qemu_image_spi(ctx):
     if ctx.env.BOARD.startswith('silk'):
         resources_begin = 0x100000
         image_size = 0x800000
-    elif ctx.env.BOARD.startswith('robert') or ctx.env.BOARD.startswith('cutts'):
-        resources_begin = 0x200000
-        image_size = 0x1000000
     elif ctx.env.MICRO_FAMILY == 'STM32F4':
         resources_begin = 0x380000
         image_size = 0x1000000
@@ -1316,10 +1282,8 @@ def ble_console(ctx):
     # path discovery should be able to use that (PBL-31111). For now, just make a best
     # guess at what the path should be
 
-    if ctx.is_silk() or ctx.is_robert():
+    if ctx.is_silk():
         tty_path = _get_ble_tty()
-    # if the bt_controller was chosen explicitly, assume we are using an eval board, which
-    # happens to match the path for cutts
     elif ctx.uses_dialog_bluetooth():
         tty_path = "ftdi://ftdi:2232:1/1"
     else:
@@ -1655,13 +1619,6 @@ def _check_firmware_image_size(ctx, path):
         else:
             # 1024k of flash and 16k bootloader
             max_firmware_size = (1024 - 16) * BYTES_PER_K
-    elif ctx.env.MICRO_FAMILY == 'STM32F7':
-        if ctx.variant == 'prf' and not ctx.env.IS_MFG:
-            # Robert PRF is limited to 512k to save on SPI flash space
-            max_firmware_size = 512 * BYTES_PER_K
-        else:
-            # 2048k of flash and 32k bootloader
-            max_firmware_size = (2048 - 32) * BYTES_PER_K
     elif ctx.env.MICRO_FAMILY == 'NRF52840':
         if ctx.variant == 'prf' and not ctx.env.IS_MFG:
             max_firmware_size = 512 * BYTES_PER_K

@@ -211,10 +211,6 @@ bool pmic_init(void) {
   prv_initialize_interrupts();
 
   prv_update_rail_state(PmicRail_LDO2, true);  // FW should bring this up
-#if BOARD_ROBERT_BB2
-  // On Robert BB2, the BLE chip is behind LDO3, which should always be on.
-  prv_update_rail_state(PmicRail_LDO3, true);
-#endif
 
   if (BOARD_CONFIG.mfi_reset_pin.gpio) {
     // We have access to the reset pin on the MFi. Need to hold it low before powering the 2V5

@@ -32,14 +32,6 @@ def is_silk(ctx):
     return ctx.get_board().startswith('silk')
 
 @conf
-def is_cutts(ctx):
-    return ctx.get_board().startswith('cutts')
-
-@conf
-def is_robert(ctx):
-    return ctx.get_board().startswith('robert')
-
-@conf
 def is_asterix(ctx):
     return ctx.get_board().startswith('asterix')
 
@@ -65,10 +57,6 @@ def get_platform_name(ctx):
         return "spalding"
     elif is_silk(ctx):
         return "silk"
-    elif is_cutts(ctx):
-        return "calculus"
-    elif is_robert(ctx):
-        return "robert"
     elif is_asterix(ctx):
         return "asterix"
     elif is_obelix(ctx):
@@ -101,10 +89,6 @@ def get_qemu_machine(ctx):
         return 'pebble-s4-bb'
     elif is_silk(ctx):
         return 'pebble-silk-bb'
-    elif is_cutts(ctx):
-        return 'pebble-cutts-bb'
-    elif is_robert(ctx):
-        return 'pebble-robert-bb'
     else:
         return 'unknown'
 
@@ -118,10 +102,6 @@ def get_qemu_cpu(ctx):
     elif is_spalding(ctx):
         return 'cortex-m4'
     elif is_silk(ctx):
-        return 'cortex-m4'
-    elif is_cutts(ctx):
-        return 'cortex-m4'
-    elif is_robert(ctx):
         return 'cortex-m4'
     elif is_asterix(ctx):
         return 'cortex-m4'
@@ -143,10 +123,6 @@ def get_qemu_extflash_device_type(ctx):
         return '-pflash'
     elif is_silk(ctx):
         return '-mtdblock'
-    elif is_cutts(ctx):
-        return '-pflash'
-    elif is_robert(ctx):
-        return '-pflash'
     else:
         return None
 
@@ -161,10 +137,6 @@ def has_touch(ctx):
         return False
     elif is_silk(ctx):
         return False
-    elif is_cutts(ctx):
-        return True
-    elif is_robert(ctx):
-        return False
     elif is_asterix(ctx):
         return False
     elif is_obelix(ctx):
@@ -177,9 +149,7 @@ def has_touch(ctx):
 
 @conf
 def get_hrm(ctx):
-    if is_robert(ctx):
-        return "AS7000"
-    elif is_silk(ctx):
+    if is_silk(ctx):
         return "AS7000"
     elif is_obelix(ctx):
         return "GH3X2X"
@@ -215,12 +185,6 @@ def add_platform_defines(ctx, env):
     elif ctx.is_silk():
         bit_depth = 1
         platform = 'SILK'
-    elif ctx.is_cutts():
-        bit_depth = 8
-        platform = 'CALCULUS'
-    elif ctx.is_robert():
-        bit_depth = 8
-        platform = 'ROBERT'
     elif ctx.is_asterix():
         bit_depth = 1
         platform = 'ASTERIX'

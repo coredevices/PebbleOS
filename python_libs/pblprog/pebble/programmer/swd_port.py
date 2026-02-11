@@ -209,7 +209,7 @@ class SerialWireDebugPort(object):
         # specified duration. This is generally used for profiling by reading the PC sampling
         # register.
 
-        NUM_READS = 510  # a magic number which gives us the best sample rate on Silk/Robert
+        NUM_READS = 510  # a magic number which gives us the best sample rate on Silk
 
         # don't auto-increment the address
         csw_value = self.MEM_AP_CSW_PRIVILEGED_MODE

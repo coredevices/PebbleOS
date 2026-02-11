@@ -287,60 +287,6 @@ board_capability_dicts = [
         },
     },
     {
-        'boards': ['robert_bb', 'robert_bb2', 'robert_evt'],
-        'capabilities':
-        {
-            'COMPOSITOR_USES_DMA',
-            'HAS_ACCESSORY_CONNECTOR',
-            'HAS_APP_GLANCES',
-            'HAS_BUILTIN_HRM',
-            'HAS_GLYPH_BITMAP_CACHING',
-            'HAS_HEALTH_TRACKING',
-            'HAS_ROCKY_JS',
-            'HAS_LAUNCHER4',
-            'HAS_MAGNETOMETER',
-            'HAS_MASKING',
-            'HAS_MICROPHONE',
-            'HAS_PMIC',
-            'HAS_SDK_SHELL4',
-            'HAS_SPRF_V3',
-            'HAS_TEMPERATURE',
-            'HAS_TIMELINE_PEEK',
-            'HAS_VIBE_SCORES',
-            'HAS_WEATHER',
-            'HAS_PUTBYTES_PREACKING',
-            'HAS_FPGA_DISPLAY',
-            'HAS_APP_SCALING'
-        }
-    },
-    {
-        'boards': ['cutts_bb'],
-        'capabilities':
-        {
-            'COMPOSITOR_USES_DMA',
-            'HAS_ACCESSORY_CONNECTOR',
-            'HAS_APP_GLANCES',
-            'HAS_GLYPH_BITMAP_CACHING',
-            'HAS_HEALTH_TRACKING',
-            'HAS_ROCKY_JS',
-            'HAS_LAUNCHER4',
-            'HAS_MAGNETOMETER',
-            'HAS_MASKING',
-            'HAS_MICROPHONE',
-            'HAS_PMIC',
-            'HAS_SDK_SHELL4',
-            'HAS_SPRF_V3',
-            'HAS_TEMPERATURE',
-            'HAS_TIMELINE_PEEK',
-            'HAS_VIBE_SCORES',
-            'HAS_WEATHER',
-            'HAS_PUTBYTES_PREACKING',
-            'HAS_TOUCHSCREEN',
-            'HAS_FPGA_DISPLAY',
-            'HAS_APP_SCALING'
-        }
-    },
-    {
         'boards': [ 'asterix' ],
         'capabilities':
         {

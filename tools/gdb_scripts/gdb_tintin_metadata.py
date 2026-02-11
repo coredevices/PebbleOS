@@ -34,8 +34,7 @@ class TintinMetadata(object):
                       "Snowy": "Snowy",
                       "Bobby": "Snowy",
                       "Spalding": "Spalding",
-                      "Silk": "Silk",
-                      "Robert": "Robert" }
+                      "Silk": "Silk" }
 
         platform_name = None
         for platform_key in platforms.keys():

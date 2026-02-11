@@ -70,14 +70,6 @@ typedef struct {
 #include "displays/display_silk.h"
 #elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
 #include "displays/display_obelix.h"
-#elif BOARD_CUTTS_BB
-#include "displays/display_snowy.h"
-#elif BOARD_ROBERT_BB
-#include "displays/display_robert.h"
-#elif BOARD_ROBERT_BB2
-#include "displays/display_robert.h"
-#elif BOARD_ROBERT_EVT
-#include "displays/display_robert_evt.h"
 #elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
 #include "displays/display_getafix.h"
 #else
