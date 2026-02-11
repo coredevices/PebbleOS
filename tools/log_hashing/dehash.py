@@ -110,7 +110,7 @@ Input File(s):
     Only one dictionary per core may be specified.
 
 Examples:
-    dehash.py pbl-123456.log tintin_fw.elf bt_da14681_main.elf > log.txt
+    dehash.py pbl-123456.log tintin_fw.elf > log.txt
     dehash.py normal_silk_v4.0-alpha11-20-g6661346.pbz < pbl-12345.log > log.txt
     gzcat crash_log.gz | dehash.py
     dehash.py --prf log_from_watch.log

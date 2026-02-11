@@ -42,7 +42,7 @@ def _product_of_tty_type(product, tty_type):
     table = {
         "primary": ['2232', '4232', 'silk'],
         "accessory": ['4232'],
-        "ble": ['da14681'],
+        "ble": [],
     }
 
     if product in table[tty_type]:
