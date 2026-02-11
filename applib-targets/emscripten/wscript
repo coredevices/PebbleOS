@@ -57,7 +57,7 @@ def configure(conf):
     conf.set_env(prev_env)
 
 
-def apply_config_for_applib_and_test_rocky_emx_builds(bld):
+def apply_config_for_applib_build(bld):
     bld.env.DEFINES.append("APPLIB_EMSCRIPTEN=1")
 
     # __builtin_return_address() doesn't seem to be supported by Emscripten,
@@ -73,8 +73,6 @@ def apply_config_for_applib_and_test_rocky_emx_builds(bld):
     # we can replace functions and wrap entire file without interfering with
     # --embed-file
     transform_js_node_and_args = [bld.path.make_node('transform_js.py')]
-    if bld.variant == 'test_rocky_emx':
-        transform_js_node_and_args.append(' --unittest')
     bld.env.EMX_TRANSFORM_JS_NODE_AND_ARGS = transform_js_node_and_args
 
 
@@ -86,17 +84,7 @@ def build(bld):
     # Extend waf's 'cprogram' feature with Emscripten-specific things:
     bld.load('emscripten')
 
-    apply_config_for_applib_and_test_rocky_emx_builds(bld)
-
-    # Fine to use 'stlib' here vs emscripten_program, because we're only
-    # invoking emcc to generate an archive file, so only 'standard' compiler
-    # flags need to be passed.
-    bld.objects(source=['emscripten_jerry_api.c'],
-                target='emscripten_jerry_api',
-                use=['jerry_port_includes'])
-
-    if bld.variant == 'test_rocky_emx':
-        return
+    apply_config_for_applib_build(bld)
 
     # Copy stuff from html folder:
     html_node = bld.path.find_dir('html')
