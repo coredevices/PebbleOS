@@ -152,8 +152,6 @@ extern void command_enter_standby(void);
 extern void command_enter_consumer_mode(void);
 extern void command_power_5v(const char*);
 
-extern void command_accessory_imaging_start(void);
-
 extern void command_serial_read(void);
 extern void command_hwver_read(void);
 extern void command_pcba_serial_read(void);
@@ -211,11 +209,6 @@ extern void command_pmic_read_registers(void);
 extern void command_ping_send(void);
 
 extern void command_display_set(const char *color);
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-extern void command_accessory_power_set(const char *on);
-extern void command_accessory_stress_test(void);
-extern void command_smartstrap_status(void);
-#endif
 extern void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
                               char *volume_str);
 extern void command_mic_read(void);
@@ -368,10 +361,6 @@ static const Command s_prompt_commands[] = {
   // we can only include these commands when we're building for PRF. Some of the commands are
   // specific to snowy manufacturing as well
 #ifdef RECOVERY_FW
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  { "accessory imaging start", command_accessory_imaging_start, 0 },
-#endif
-
   { "info", command_version_info, 0 },
 
   { "enter mfg", command_enter_mfg, 0 },
@@ -466,14 +455,6 @@ static const Command s_prompt_commands[] = {
   { "hrm freeze", command_hrm_freeze, 0},
 #endif // PLATFORM_SILK
 #endif
-
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  { "accessory power", command_accessory_power_set, 1 },
-  { "accessory stress", command_accessory_stress_test, 0 },
-#if !RELEASE && !RECOVERY_FW
-  { "smartstrap status", command_smartstrap_status, 0 },
-#endif // RELEASE
-#endif // CAPABILITY_HAS_ACCESSORY_CONNECTOR
 
 #if CAPABILITY_HAS_PMIC
   {"pmic regs", command_pmic_read_registers, 0},

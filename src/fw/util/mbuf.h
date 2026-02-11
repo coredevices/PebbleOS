@@ -37,7 +37,6 @@
 //! Consumers of MBufs which use mbuf_get() should add an enum value and add the maximum number of
 //! MBufs which may be allocated for that pool to the MBUF_POOL_MAX_ALLOCATED array within mbuf.c.
 typedef enum {
-  MBufPoolSmartstrap,
 #if UNITTEST
   MBufPoolUnitTest,
 #endif

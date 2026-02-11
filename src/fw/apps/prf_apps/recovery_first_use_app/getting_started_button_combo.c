@@ -11,9 +11,6 @@
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "process_management/process_manager.h"
 #include "services/common/system_task.h"
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-#include "services/prf/accessory/accessory_imaging.h"
-#endif
 #include "system/logging.h"
 #include "util/size.h"
 
@@ -44,9 +41,6 @@ static void prv_down_cb(void *data) {
 
 #ifdef RECOVERY_FW
 static void prv_mfg_mode_cb(void *data) {
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  accessory_imaging_enable();
-#endif
   mfg_enter_mfg_mode_and_launch_app();
 }
 #endif

@@ -457,3 +457,10 @@ bool mic_selftest(void) {
 
   return test_pass;
 }
+
+void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
+                       char *volume_str) {
+}
+
+void command_mic_read(void) {
+}

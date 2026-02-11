@@ -7,7 +7,6 @@ if bld.is_silk():
     bld(
         name='drivers',
         use=[
-            'driver_accessory',
             'driver_ambient_light',
             'driver_backlight',
             'driver_battery',
@@ -44,7 +43,6 @@ elif bld.is_snowy_compatible():
     bld(
         name='drivers',
         use=[
-            'driver_accessory',
             'driver_ambient_light',
             'driver_backlight',
             'driver_battery',
@@ -180,24 +178,6 @@ elif bld.is_getafix():
         ],
     )
 ## ----------
-
-if bld.is_snowy_compatible() or bld.is_silk():
-    bld.objects(
-        name='driver_accessory',
-        source=[
-            'accessory.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_exti',
-            'driver_gpio',
-            'driver_periph_config',
-            'freertos',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
 
 if bld.is_obelix():
     bld.objects(
@@ -1002,11 +982,9 @@ if bld.is_snowy_compatible():
     bld.objects(
         name='driver_mic',
         source=[
-            'mic/mic_command.c',
             'mic/stm32/pdm.c',
         ],
         use=[
-            'driver_accessory',
             'driver_dma',
             'driver_gpio',
             'driver_periph_config',
@@ -1021,11 +999,9 @@ elif bld.is_silk():
     bld.objects(
         name='driver_mic',
         source=[
-            'mic/mic_command.c',
             'mic/stm32/dfsdm.c',
         ],
         use=[
-            'driver_accessory',
             'driver_dma',
             'driver_gpio',
             'driver_periph_config',

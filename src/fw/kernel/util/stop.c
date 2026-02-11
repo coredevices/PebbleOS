@@ -212,7 +212,6 @@ void analytics_external_collect_stop_inhibitor_stats(RtcTicks now_ticks) {
   prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_COMM_TIME, InhibitorCommMode, now_ticks);
   prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_FLASH_TIME, InhibitorFlash, now_ticks);
   prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_I2C1_TIME, InhibitorI2C1, now_ticks);
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_ACCESSORY, InhibitorAccessory, now_ticks);
   prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_MIC, InhibitorMic, now_ticks);
   // TODO PBL-37941: Add analytics for InhibitorDMA
 }

@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "applib/app_smartstrap_private.h"
 #include "applib/graphics/graphics.h"
 #include "applib/ui/animation_private.h"
 #include "applib/ui/click_internal.h"
@@ -89,12 +88,6 @@ static WindowStack s_window_stack;
 
 WindowStack *app_state_get_window_stack(void) {
   return &s_window_stack;
-}
-
-static SmartstrapConnectionState s_smartstrap_state;
-
-SmartstrapConnectionState *app_state_get_smartstrap_state(void) {
-  return &s_smartstrap_state;
 }
 
 static ClickManager click_manager;

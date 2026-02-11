@@ -114,17 +114,6 @@ def build(ctx):
         override_includes=['dummy_board'])
 
     clar(ctx,
-        sources_ant_glob = "src/fw/applib/app_smartstrap.c" \
-            " src/fw/services/normal/accessory/smartstrap_attribute.c" \
-            " src/fw/util/mbuf.c" \
-            " tests/fakes/fake_smartstrap_connection.c" \
-            " tests/fakes/fake_smartstrap_profiles.c" \
-            " tests/fakes/fake_smartstrap_state.c",
-        test_sources_ant_glob = "test_app_smartstrap.c",
-        defines=["CAPABILITY_HAS_ACCESSORY_CONNECTOR=1"],
-        override_includes=['dummy_board'])
-
-    clar(ctx,
          sources_ant_glob=(
             "src/fw/applib/graphics/gtypes.c "
             "src/fw/applib/ui/layer.c "

@@ -301,12 +301,6 @@ typedef struct {
 } BoardConfigBacklight;
 
 typedef struct {
-  const OutputConfig power_en; //< Enable power supply to the accessory connector.
-  const InputConfig int_gpio;
-  const ExtiConfig exti;
-} BoardConfigAccessory;
-
-typedef struct {
   const BluetoothController controller;
 
   union {

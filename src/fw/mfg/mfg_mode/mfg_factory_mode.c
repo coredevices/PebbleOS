@@ -8,7 +8,6 @@
 #include "kernel/event_loop.h"
 #include "kernel/low_power.h"
 #include "process_management/app_manager.h"
-#include "services/prf/accessory/accessory_manager.h"
 #include "services/prf/idle_watchdog.h"
 
 static bool s_mfg_mode = false;
@@ -24,10 +23,6 @@ static void prv_launch_mfg_app(void *data) {
 void mfg_enter_mfg_mode(void) {
   if (!s_mfg_mode) {
     s_mfg_mode = true;
-
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-    accessory_manager_set_state(AccessoryInputStateMfg);
-#endif
 
     prf_idle_watchdog_stop();
 
