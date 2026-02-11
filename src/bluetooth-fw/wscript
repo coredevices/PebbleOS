@@ -3,19 +3,11 @@ import sys
 
 import waflib.Logs
 
-from waflib.Configure import conf
-
-
-@conf
-def uses_dialog_bluetooth(ctx):
-    return 'da14681' in ctx.env.bt_controller
-
 
 def _recurse(ctx):
     if ctx.env.bt_controller in ('cc2564x', 'nrf52', 'sf32lb52'):
         ctx.recurse('nimble')
-    elif ctx.uses_dialog_bluetooth():
-        # TODO: replace with real FW
+    elif ctx.env.bt_controller == 'stub':
         ctx.recurse('stub')
     elif ctx.env.bt_controller == 'qemu':
         ctx.recurse('qemu')
@@ -27,12 +19,11 @@ def options(opt):
     opt.add_option('--bt_controller', action='store', default=None,
                    help='Override Bluetooth controller to build for',
                    choices=[
-                       'da14681-01',
-                       'da14681-00',
                        'cc2564x',
                        'qemu',
                        'nrf52',
                        'sf32lb52',
+                       'stub',
                    ])
 
 

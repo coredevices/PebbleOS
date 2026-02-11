@@ -458,14 +458,12 @@ def configure(conf):
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
     elif bt_board in ('silk_bb2', 'silk'):
-        conf.env.bt_controller = 'da14681-01'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_DA14681'])
+        conf.env.bt_controller = 'stub'
     elif conf.is_obelix() or conf.is_getafix():
         conf.env.bt_controller = 'sf32lb52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_SF32LB52'])
     else:
-        conf.env.bt_controller = 'da14681-00'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_DA14681'])
+        conf.env.bt_controller = 'stub'
 
     conf.recurse('src/bluetooth-fw')
 
@@ -1156,8 +1154,6 @@ def ble_console(ctx):
 
     if ctx.is_silk():
         tty_path = _get_ble_tty()
-    elif ctx.uses_dialog_bluetooth():
-        tty_path = "ftdi://ftdi:2232:1/1"
     else:
         waflib.Logs.pprint('CYAN', 'Note: This platform does not have a BLE UART')
         tty_path = _get_dbgserial_tty()
