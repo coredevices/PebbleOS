@@ -27,15 +27,9 @@ typedef struct FSRegion {
 // time and are thus non-contiguous. For layouts with more than one region you will find their
 // header included below.
 
-#if PLATFORM_TINTIN
-#include "filesystem_regions_n25q.h"
-#else
-
 // Typical single region filesystem layout
 #define FILE_SYSTEM_REGIONS(MACRO_OPERATOR)                             \
   MACRO_OPERATOR(FLASH_REGION_FILESYSTEM_BEGIN, FLASH_REGION_FILESYSTEM_END)
-
-#endif
 
 // Notes:
 //   In this file we check that individual region entries are sector aligned at the beginning and

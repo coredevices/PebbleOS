@@ -3,11 +3,7 @@
 
 #pragma once
 
-#if PLATFORM_TINTIN
-#include "legacy/launcher_app.h"
-#else
 #include "default/launcher_app.h"
-#endif
 
 #include "process_management/pebble_process_md.h"
 

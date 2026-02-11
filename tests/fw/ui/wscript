@@ -261,7 +261,7 @@ def build(ctx):
          defines=ctx.env.test_image_defines,
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['tintin', 'snowy', 'spalding'])
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(ctx,
          sources_ant_glob=(
@@ -319,7 +319,7 @@ def build(ctx):
          defines=ctx.env.test_image_defines,
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['tintin', 'snowy', 'spalding'])
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(ctx,
          sources_ant_glob = menu_layer_system_cell_rendering_sources + \
@@ -381,7 +381,7 @@ def build(ctx):
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
         override_includes=['dummy_board'],
-        platforms=['tintin', 'snowy', 'spalding'])
+        platforms=['snowy', 'spalding', 'silk'])
 
     clar(ctx,
         sources_ant_glob = "  " \

@@ -33,11 +33,7 @@ static const BoardConfig BOARD_CONFIG = {
 #endif
   },
 
-#ifdef BOARD_SNOWY_S3
-  .ambient_light_dark_threshold = 3220,
-#else
   .ambient_light_dark_threshold = 3130,
-#endif
   .ambient_k_delta_threshold = 96,
   .photo_en = { GPIOA, GPIO_Pin_3, true },
 
@@ -117,13 +113,8 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
 #endif
   .charging_status_led_voltage_compensation = 0,
 
-#ifdef BOARD_SNOWY_S3
-  .low_power_threshold = 2,
-  .battery_capacity_hours = 204,
-#else
   .low_power_threshold = 3,
   .battery_capacity_hours = 144,
-#endif
 };
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {

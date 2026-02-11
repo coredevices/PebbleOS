@@ -19,7 +19,7 @@ class TestDeployPbzToPebbleFw(unittest.TestCase):
     DUMMY_MANIFEST_CONTENT = {
         'versionTag': 'v3.1',
         'timestamp': 1377981535,
-        'hwrev': 'bb2',
+        'hwrev': 'snowy_dvt',
         'type': 'normal'
     }
 
@@ -58,7 +58,7 @@ class TestDeployPbzToPebbleFw(unittest.TestCase):
         mock_open.assert_called_with(dummy_notes_path, 'r')
 
         mock_requests_get.assert_called_with(
-                'https://pebblefw-staging.s3.amazonaws.com/pebble/bb2/porksmoothie/latest.json')
+                'https://pebblefw-staging.s3.amazonaws.com/pebble/snowy_dvt/porksmoothie/latest.json')
 
         # We're using dry_run=True, we better not talk to s3
         assert not mock_boto_connect_s3.called
@@ -90,7 +90,7 @@ class TestDeployPbzToPebbleFw(unittest.TestCase):
         mock_latest_key = mock.MagicMock()
 
         def boto_key_func(boto_bucket, key):
-            if key == 'pebble/bb2/porksmoothie/latest.json':
+            if key == 'pebble/snowy_dvt/porksmoothie/latest.json':
                 # Only validate us uploading to latest.json and return unamed mocks for the other
                 # paths.
                 return mock_latest_key
@@ -111,12 +111,12 @@ class TestDeployPbzToPebbleFw(unittest.TestCase):
         mock_open.assert_called_with(dummy_notes_path, 'r')
 
         mock_requests_get.assert_called_with(
-                'https://pebblefw-staging.s3.amazonaws.com/pebble/bb2/porksmoothie/latest.json')
+                'https://pebblefw-staging.s3.amazonaws.com/pebble/snowy_dvt/porksmoothie/latest.json')
 
         assert mock_boto_connect_s3.called
         expected_new_latest_json = {
             'normal': {
-                'url': 'https://pebblefw-staging.s3.amazonaws.com/pebble/bb2/porksmoothie/pbz/' +
+                'url': 'https://pebblefw-staging.s3.amazonaws.com/pebble/snowy_dvt/porksmoothie/pbz/' +
                        os.path.basename(dummy_pbz_path),
                 'timestamp': self.DUMMY_MANIFEST_CONTENT['timestamp'],
                 'notes': dummy_notes,

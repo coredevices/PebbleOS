@@ -626,17 +626,3 @@ void analytics_external_collect_i2c_stats(void) {
   s_max_transfer_duration_ticks = 0;
 }
 
-/*------------------------COMMAND FUNCTIONS--------------------------*/
-// FIXME: Move to board-specific implementations
-// https://pebbletechnology.atlassian.net/browse/PBL-32232
-#if PLATFORM_TINTIN
-void command_power_2v5(char *arg) {
-  // Intentionally ignore the s_running_count and make it so!
-  // This is intended for low level electrical test only
-  if (!strcmp("on", arg)) {
-    prv_bus_rail_power_up(I2C_MFI->bus);
-  } else {
-    prv_bus_rail_power_down(I2C_MFI->bus);
-  }
-}
-#endif

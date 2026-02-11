@@ -250,9 +250,7 @@ static void handle_init(void) {
       .app_id = &notification->header.parent_id,
       .context =  &(NotificationLayoutInfo) {
         .item = notification,
-#if !PLATFORM_TINTIN
         .show_notification_timestamp = true,
-#endif
       },
     };
     LayoutLayer *layout = layout_create(notification->header.layout, &config);

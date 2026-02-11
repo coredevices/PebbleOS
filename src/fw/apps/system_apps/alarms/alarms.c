@@ -480,8 +480,6 @@ const PebbleProcessMd* alarms_app_get_info() {
     .name = i18n_noop("Alarms"),
 #if CAPABILITY_HAS_APP_GLANCES
     .icon_resource_id = RESOURCE_ID_ALARM_CLOCK_TINY,
-#elif PLATFORM_TINTIN
-    .icon_resource_id = RESOURCE_ID_MENU_LAYER_ALARMS_APP_ICON,
 #endif
   };
   return (const PebbleProcessMd*) &s_alarms_app_info;

@@ -107,11 +107,7 @@ static uint8_t *prv_add_action_msg_to_attribute(
 }
 
 static int prv_set_multimedia_action_msg(char *buffer, size_t length) {
-#if PLATFORM_TINTIN
-  const char *emoji_str = "";
-#else
   const char *emoji_str = PBL_IF_RECT_ELSE(" " MULTIMEDIA_EMOJI, "\n" MULTIMEDIA_EMOJI);
-#endif
   return snprintf(buffer, length, "%s%s", i18n_get("sent an attachment", __FILE__),
                   emoji_str);
 }

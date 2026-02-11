@@ -61,8 +61,7 @@ typedef enum PmicRail {
   PmicRail_LDO1, //!< 2.0V - Auto - RTC
   PmicRail_LDO2, //!< 3.2V - Manual - FPGA
 
-  //! snowy_bb: 2.5V - Manual - MFi, Magnetometer
-  //! snowy_evt: 1.8V - Manual - MFi
+  //! 1.8V - Manual - MFi
   PmicRail_LDO3
 } PmicRail;
 
@@ -91,11 +90,7 @@ static const PmicMonConfig MON_CONFIG[] = {
   { "+1V8",         2, 0b100 }, // 2:1, BUCK2
   { "+2V0_RTC",     2, 0b101 }, // 2:1, LDO1
   { "+3V2",         2, 0b110 }, // 2:1, LDO2
-#ifdef BOARD_SNOWY_BB
-  { "+2V5",         2, 0b111 }, // 2:1, LDO3
-#else
   { "+1V8_MFI_MIC", 2, 0b111 }, // 2:1, LDO3
-#endif // BOARD_SNOWY_BB
 #endif // RECOVERY_FW
 };
 

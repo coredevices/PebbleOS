@@ -229,7 +229,7 @@ def build_product_source_files(bld, test_dir, include_paths, defines, cflags, pr
 def get_bitdepth_for_platform(bld, platform):
     if platform in ('snowy', 'spalding', 'obelix'):
         return 8
-    elif platform in ('tintin', 'silk'):
+    elif platform in ('silk',):
         return 1
     else:
         bld.fatal('Unknown platform {}'.format(platform))
@@ -247,7 +247,7 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
         if not re.match(bld.options.regex, filename):
             return
 
-    platform_set = set(['default', 'tintin', 'snowy', 'spalding', 'silk'])
+    platform_set = set(['default', 'snowy', 'spalding', 'silk'])
 
     #validate platforms specified
     if platform not in platform_set:

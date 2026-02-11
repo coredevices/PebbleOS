@@ -81,9 +81,7 @@ typedef struct {
 
 typedef struct {
   TimelineItem *item;
-#if !PLATFORM_TINTIN
   bool show_notification_timestamp;
-#endif
 } NotificationLayoutInfo;
 
 typedef struct {
@@ -92,9 +90,7 @@ typedef struct {
   AppResourceInfo icon_res_info;
   LayoutColors colors;
   NotificationLayoutInfo info;
-#if !PLATFORM_TINTIN
   KinoLayer *detail_icon_layer; //!< Not common, so not inline with the layout
-#endif
   const NotificationStyle *style;
   GTextNode *view_node;
   GSize view_size;

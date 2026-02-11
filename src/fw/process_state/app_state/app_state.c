@@ -57,9 +57,7 @@ typedef struct {
 
   EventServiceInfo event_service_state;
 
-#if !defined(PLATFORM_TINTIN)
   BLEAppState ble_app_state;
-#endif
 
   AccelServiceState accel_state;
 
@@ -198,9 +196,7 @@ NOINLINE void app_state_init(void) {
                         &s_app_state_ptr->framebuffer, init_mode);
 
 
-#if !defined(PLATFORM_TINTIN)
   ble_init_app_state();
-#endif
 
   accel_service_state_init(app_state_get_accel_state());
 
@@ -274,11 +270,9 @@ AppMessageCtx *app_state_get_app_message_ctx(void) {
   return &s_app_state_ptr->app_message_ctx;
 }
 
-#if !defined(PLATFORM_TINTIN)
 BLEAppState* app_state_get_ble_app_state(void) {
   return &s_app_state_ptr->ble_app_state;
 }
-#endif
 
 ClickManager* app_state_get_click_manager() {
   return &s_app_state_ptr->click_manager;
@@ -391,11 +385,6 @@ EventServiceInfo *app_state_get_wakeup_event_info(void) {
 }
 
 GBitmap* app_state_legacy2_get_2bit_framebuffer(void) {
-#ifdef PLATFORM_TINTIN
-  // Tintin platforms have a native framebuffer type of 2bit, they shouldn't be calling this.
-  WTF;
-#endif
-
   PBL_ASSERTN(s_app_state_ptr->legacy2_framebuffer);
   return s_app_state_ptr->legacy2_framebuffer;
 }

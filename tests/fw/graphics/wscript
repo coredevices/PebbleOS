@@ -64,7 +64,7 @@ def build(ctx):
         "test_graphics_draw_stroke_precise.template.c"
     ]
 
-    for platform in ['tintin', 'snowy']:
+    for platform in ['silk', 'snowy']:
         bit_depth = get_bitdepth_for_platform(ctx, platform)
         defines = ctx.env.test_image_defines
         for test in graphics_test_sources:
@@ -147,8 +147,8 @@ def build(ctx):
         "test_graphics_draw_text.template.c"
     ]
 
-    for platform in ['tintin', 'snowy']:
-        bit_depth = 1 if platform == 'tintin' else 8
+    for platform in ['silk', 'snowy']:
+        bit_depth = 1 if platform == 'silk' else 8
         depth_dir = '{}_bit'.format(bit_depth)
         graphics_sources_ant_glob = templated_graphics_draw_text_sources_ant_glob.format(depth_dir=depth_dir)
 
@@ -181,7 +181,7 @@ def build(ctx):
         sources_ant_glob = \
             " src/fw/applib/graphics/gtypes.c",
         test_sources_ant_glob = "test_gtypes.c",
-        platforms=["tintin", "snowy", "spalding"])
+        platforms=["snowy", "spalding", "silk"])
 
     clar(ctx,
         sources_ant_glob = \
@@ -211,7 +211,7 @@ def build(ctx):
             " tests/fakes/fake_resource_syscalls.c" \
             " src/fw/applib/graphics/gbitmap.c",
         test_sources_ant_glob = "test_gbitmap_formats.c",
-        platforms=["tintin", "snowy", "spalding"])
+        platforms=["snowy", "spalding", "silk"])
 
     clar(ctx,
          sources_ant_glob = \
@@ -373,7 +373,7 @@ def build(ctx):
         test_sources_ant_glob="test_gbitmap_sequence.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=['tintin', 'spalding'])
+        platforms=['silk', 'spalding'])
 
     clar(ctx,
         sources_ant_glob =
@@ -454,7 +454,7 @@ def build(ctx):
         test_sources_ant_glob="test_graphics_draw_line.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=['tintin', 'snowy'])
+        platforms=['silk', 'snowy'])
 
     clar(ctx,
         sources_ant_glob =
@@ -476,7 +476,7 @@ def build(ctx):
         test_sources_ant_glob="test_bitblt_palette_1bit.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=['tintin'])
+        platforms=['silk'])
 
     clar(ctx,
         sources_ant_glob =
@@ -664,7 +664,7 @@ def build(ctx):
         test_sources_ant_glob="test_graphics_draw_rotated_bitmap.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=["tintin", "snowy"])
+        platforms=["silk", "snowy"])
 
     ###############################
     # 8-bit specific bitblt tests #

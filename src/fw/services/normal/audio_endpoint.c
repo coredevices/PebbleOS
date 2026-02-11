@@ -52,7 +52,6 @@ static void prv_session_deinit(bool call_stop_handler) {
   }
 }
 
-#ifndef PLATFORM_TINTIN
 void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t size) {
   MsgId msg_id = data[0];
   if (size >= sizeof(StopTransferMsg) && msg_id == MsgIdStopTransfer) {
@@ -66,10 +65,6 @@ void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
     }
   }
 }
-#else
-void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t size) {
-}
-#endif
 
 static void prv_start_active_mode(void *data) {
   CommSession *comm_session = comm_session_get_system_session();

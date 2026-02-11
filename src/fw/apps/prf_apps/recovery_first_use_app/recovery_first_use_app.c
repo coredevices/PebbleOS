@@ -188,7 +188,7 @@ static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
   }
 
   if (first_use_is_complete) {
-#if PBL_BW && !PLATFORM_TINTIN
+#if PBL_BW
     // Override the icon to use the fullscreen version
     icon_res_id = RESOURCE_ID_LAUNCH_APP;
     icon_x_offset = 0;

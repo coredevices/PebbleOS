@@ -93,36 +93,14 @@ _Static_assert(sizeof(struct FirmwareMetadata) == (sizeof(uint32_t) +
   #define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (false)
 #endif
 
-#if BOARD_BIGBOARD
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleOneBigboard)
-#elif BOARD_BB2
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleOneBigboard2)
-#elif BOARD_SNOWY_BB
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyBigboard)
-#elif BOARD_SNOWY_BB2
+#if BOARD_SNOWY_BB2
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyBigboard2)
-#elif BOARD_SNOWY_EVT2
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyEVT2)
 #elif BOARD_SNOWY_DVT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyDVT)
-#elif BOARD_SNOWY_S3
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleBobbyDVT)
-#elif BOARD_V2_0
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleTwoPointZero)
-#elif BOARD_V1_5
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleOnePointFive)
-#elif BOARD_EV2_4
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleOneEV2_4)
 #elif BOARD_SPALDING_BB2
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpaldingBigboard)
-#elif BOARD_SPALDING_EVT
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpaldingEVT)
 #elif BOARD_SPALDING
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpalding)
-#elif BOARD_SILK_EVT
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkEVT)
-#elif BOARD_SILK_BB
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkBigboard)
 #elif BOARD_SILK
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilk)
 #elif BOARD_SILK_BB2
