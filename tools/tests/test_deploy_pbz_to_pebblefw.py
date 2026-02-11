@@ -2,19 +2,26 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-import mock
-import nose
 import os
 import sys
 import unittest
 
-# Allow us to run even if not at the `tools` directory.
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-sys.path.insert(0, root_dir)
+try:
+    import mock
+    import nose
+    # Allow us to run even if not at the `tools` directory.
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+    sys.path.insert(0, root_dir)
+    import deploy_pbz_to_pebblefw
+    HAS_DEPS = True
+except ImportError:
+    HAS_DEPS = False
+    # Still need root_dir for other tests in the file
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+    sys.path.insert(0, root_dir)
 
-import deploy_pbz_to_pebblefw
 
-
+@unittest.skipUnless(HAS_DEPS, "requires mock, nose, boto, and libpebble2")
 class TestDeployPbzToPebbleFw(unittest.TestCase):
     DUMMY_MANIFEST_CONTENT = {
         'versionTag': 'v3.1',
