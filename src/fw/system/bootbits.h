@@ -29,8 +29,6 @@ typedef enum BootBitValue {
   BOOT_BIT_FORCE_PRF = 0x1 << 17,
   BOOT_BIT_NEW_PRF_AVAILABLE = 0x1 << 18,
   BOOT_BIT_SHUTDOWN_REQUESTED = 0x1 << 19, //!< Bootloader hard power-off instead of jumping to fw.
-  BOOT_BIT_BOOTLOADER_TEST_A = 0x1 << 30,
-  BOOT_BIT_BOOTLOADER_TEST_B = 0x1 << 31,
 } BootBitValue;
 
 void boot_bit_init();

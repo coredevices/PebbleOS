@@ -187,10 +187,7 @@ def options(opt):
     opt.add_option('--no-pulse-everywhere',
                    action='store_true',
                    help='Disables PULSE everywhere, uses legacy logs and prompt')
-    opt.add_option('--bootloader-test', action='store', default='none',
-                   choices=['none', 'stage1', 'stage2'],
-                   help='Build bootloader test (stage1 or stage2). Implies --mfg.')
-    opt.add_option('--reboot_on_bt_crash', action='store_true', help='Forces a BT '
+opt.add_option('--reboot_on_bt_crash', action='store_true', help='Forces a BT '
                    'chip crash to immediately force a system reboot instead of just cycling airplane mode. '
                    'This makes it easier for us to actually get crash info')
 
@@ -341,20 +338,6 @@ def handle_configure_options(conf):
     if conf.options.infinite_backlight and 'bb' in conf.options.board:
         conf.env.append_value('DEFINES', 'INFINITE_BACKLIGHT')
         print("Enabling infinite backlight.")
-
-    if conf.options.bootloader_test in ['stage1', 'stage2']:
-        print("Forcing MFG on for bootloader test build.")
-        conf.options.mfg = True
-
-    if conf.options.bootloader_test == 'stage1':
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE1=1')
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE2=0')
-    elif conf.options.bootloader_test == 'stage2':
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE1=0')
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE2=1')
-    else:
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE1=0')
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE2=0')
 
     if not conf.options.no_pulse_everywhere and (not conf.options.release or conf.options.mfg):
         conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
