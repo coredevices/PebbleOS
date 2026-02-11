@@ -15,7 +15,6 @@ def build(bld):
     bld(export_includes=['include'], name='libbtutil_includes')
 
     build_libutil('libbtutil', bld.env)
-    build_libutil('libbtutil-32bit', bld.all_envs['32bit'])
 
 
 # vim:filetype=python
