@@ -7,7 +7,6 @@
 #include "applib/app_focus_service.h"
 #include "applib/app_inbox.h"
 #include "applib/app_message/app_message_internal.h"
-#include "applib/app_smartstrap_private.h"
 #include "applib/app_wakeup.h"
 #include "applib/battery_state_service.h"
 #include "applib/battery_state_service_private.h"
@@ -119,8 +118,6 @@ TickTimerServiceState *app_state_get_tick_timer_service_state(void);
 ConnectionServiceState *app_state_get_connection_service_state(void);
 
 LocaleInfo *app_state_get_locale_info(void);
-
-SmartstrapConnectionState *app_state_get_smartstrap_state(void);
 
 ContentIndicatorsBuffer *app_state_get_content_indicators_buffer(void);
 

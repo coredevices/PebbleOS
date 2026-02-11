@@ -1174,24 +1174,6 @@ def ble_console_prf(ctx):
     ble_console(ctx)
 
 
-def accessory_console(ctx):
-    def _get_accessory_tty():
-        import pebble_tty
-        tty = pebble_tty.find_accessory_tty()
-
-        if tty is None:
-            return None
-
-        waflib.Logs.pprint('GREEN', 'No --tty argument specified, auto-selecting: %s' % tty)
-        return tty
-
-    """Starts miniterm with the accessory connector console."""
-    # miniterm is not made to be used as a python module, so just shell out:
-    tty = ctx.options.tty or _get_accessory_tty()
-    baudrate = ctx.options.baudrate or 115200
-    os.system("python ./tools/log_hashing/miniterm_co.py %s %d" % (tty, baudrate))
-
-
 def qemu(ctx):
     # Make sure the micro-flash image is up to date. By default, we don't rebuild the
     # SPI flash image in case you want to continue with the stored apps, etc. you had before.

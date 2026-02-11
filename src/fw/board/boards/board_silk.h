@@ -153,11 +153,6 @@ static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   },
 };
 
-#define ACCESSORY_UART_IS_SHARED_WITH_BT 1
-static const BoardConfigAccessory BOARD_CONFIG_ACCESSORY = {
-  .exti = { EXTI_PortSourceGPIOA, 11 },
-};
-
 static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
 };
 
@@ -222,8 +217,6 @@ extern DMARequest * const SHARP_SPI_TX_DMA;
 
 extern UARTDevice * const QEMU_UART;
 extern UARTDevice * const DBG_UART;
-extern UARTDevice * const ACCESSORY_UART;
-
 extern UARTDevice * const BT_TX_BOOTROM_UART;
 extern UARTDevice * const BT_RX_BOOTROM_UART;
 

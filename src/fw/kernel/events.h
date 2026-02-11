@@ -7,7 +7,6 @@
 #include "applib/app_launch_button.h"
 #include "applib/app_launch_reason.h"
 #include "applib/app_outbox.h"
-#include "applib/app_smartstrap.h"
 #include "applib/bluetooth/ble_client.h"
 #include "applib/health_service.h"
 #include "applib/plugin_service.h"
@@ -26,7 +25,6 @@
 #include "services/common/put_bytes/put_bytes.h"
 #include "services/common/touch/touch_event.h"
 #include "services/imu/units.h"
-#include "services/normal/accessory/smartstrap_profiles.h"
 #include "services/normal/blob_db/api.h"
 #include "services/normal/music.h"
 #include "services/normal/notifications/notifications.h"
@@ -106,7 +104,6 @@ typedef enum {
   PEBBLE_REMINDER_EVENT,
   PEBBLE_CALENDAR_EVENT,
   PEBBLE_PANIC_EVENT,
-  PEBBLE_SMARTSTRAP_EVENT,
   //! Event sent back to the app to let them know the result of their sent message.
   PEBBLE_APP_OUTBOX_SENT_EVENT,
   //! A request from the app to the outbox service to handle a message.
@@ -569,24 +566,6 @@ typedef struct PACKED { // 1 byte
   bool is_event_ongoing;
 } PebbleCalendarEvent;
 
-typedef enum {
-  SmartstrapConnectionEvent,
-  SmartstrapDataSentEvent,
-  SmartstrapDataReceivedEvent,
-  SmartstrapNotifyEvent
-} SmartstrapEventType;
-
-typedef struct PACKED { // 9 bytes
-  SmartstrapEventType type:4;
-  SmartstrapProfile profile:4;
-  SmartstrapResult result:8;
-  uint16_t read_length;
-  union {
-    SmartstrapServiceId service_id;
-    SmartstrapAttribute *attribute;
-  };
-} PebbleSmartstrapEvent;
-
 typedef struct PACKED { // 9 bytes
   int utc_time_delta;
   int gmt_offset_delta;
@@ -804,7 +783,6 @@ typedef struct PACKED {
     PebbleReminderEvent reminder;
     PebbleCalendarEvent calendar;
     PebbleHealthEvent health_event;
-    PebbleSmartstrapEvent smartstrap;
     PebbleTouchEvent touch;
     PebbleCapabilitiesChangedEvent capabilities;
     PebbleWeatherEvent weather;

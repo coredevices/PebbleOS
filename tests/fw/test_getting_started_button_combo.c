@@ -46,9 +46,6 @@ void process_manager_send_callback_event_to_process(PebbleTask task, void (*call
   callback(data);
 }
 
-void accessory_imaging_enable(bool enable) {
-}
-
 // Tests
 ///////////////////////////////////////////////////////////////////////////////
 

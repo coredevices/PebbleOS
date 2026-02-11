@@ -10,7 +10,6 @@
 #include "kernel/panic.h"
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "process_management/app_manager.h"
-#include "services/prf/accessory/accessory_imaging.h"
 
 const PebbleProcessMd* system_app_state_machine_system_start(void) {
   if (launcher_panic_get_current_error() != 0) {
@@ -18,7 +17,6 @@ const PebbleProcessMd* system_app_state_machine_system_start(void) {
   }
 
 #ifdef MANUFACTURING_FW
-  accessory_imaging_enable();
   mfg_enter_mfg_mode();
   return mfg_menu_app_get_info();
 #endif

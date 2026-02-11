@@ -200,12 +200,6 @@ static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
   },
 };
 
-static const BoardConfigAccessory BOARD_CONFIG_ACCESSORY = {
-  .power_en = { GPIOF, GPIO_Pin_13, true },
-  .int_gpio = { GPIOE, GPIO_Pin_0 },
-  .exti = { EXTI_PortSourceGPIOE, 0 },
-};
-
 #define BOARD_BT_USART_IRQ_HANDLER USART1_IRQHandler
 static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
   .controller = CC2564B,
@@ -235,7 +229,6 @@ extern DMARequest * const MIC_I2S_RX_DMA;
 
 extern UARTDevice * const QEMU_UART;
 extern UARTDevice * const DBG_UART;
-extern UARTDevice * const ACCESSORY_UART;
 extern UARTDevice * const BLUETOOTH_UART;
 
 extern SPISlavePort * const BMI160_SPI;
