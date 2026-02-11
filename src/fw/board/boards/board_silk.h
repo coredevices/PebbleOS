@@ -159,12 +159,6 @@ static const BoardConfigAccessory BOARD_CONFIG_ACCESSORY = {
 };
 
 static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
-  .controller = DA14681,
-  .reset = { GPIOC, GPIO_Pin_5, true },
-  .wakeup = {
-    .int_gpio = { GPIOC, GPIO_Pin_4 },
-    .int_exti = { EXTI_PortSourceGPIOC, 4 },
-  },
 };
 
 static const BoardConfigBTSPI BOARD_CONFIG_BT_SPI = {
@@ -199,7 +193,6 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .on_ctrl_otype = GPIO_OType_PP,
 };
 
-#define DIALOG_TIMER_IRQ_HANDLER TIM6_IRQHandler
 static const TimerIrqConfig BOARD_BT_WATCHDOG_TIMER = {
   .timer = {
     .peripheral = TIM6,
@@ -249,4 +242,3 @@ extern QSPIFlash * const QSPI_FLASH;
 
 extern MicDevice * const MIC;
 
-extern SPISlavePort * const DIALOG_SPI;

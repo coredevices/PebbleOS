@@ -174,7 +174,6 @@ typedef enum {
 typedef enum {
   CC2564A = 0,
   CC2564B,
-  DA14681,
 } BluetoothController;
 
 typedef struct {
@@ -311,10 +310,7 @@ typedef struct {
   const BluetoothController controller;
 
   union {
-    //! Used with CC2564x
     const OutputConfig shutdown;
-
-    //! Used with DA14681
     const OutputConfig reset;
   };
 
