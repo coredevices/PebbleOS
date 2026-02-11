@@ -3,7 +3,7 @@ import sh
 from waflib import Logs
 
 def build(bld):
-    pdc2png_env = bld.all_envs['32bit'].derive()
+    pdc2png_env = bld.all_envs['local'].derive().detach()
     output = bld.path.get_bld().parent.parent.make_node('pdc2png')
 
     sources = ["../../src/fw/applib/vendor/uPNG/upng.c",
@@ -26,7 +26,11 @@ def build(bld):
                "../../src/fw/applib/graphics/gdraw_command_list.c",
                "../../src/fw/applib/graphics/gdraw_command_image.c",
                "../../src/fw/applib/graphics/gdraw_command_frame.c",
-               "../../src/fw/applib/graphics/gdraw_command_sequence.c"]
+               "../../src/fw/applib/graphics/gdraw_command_sequence.c",
+               "../../src/libutil/trig.c",
+               "../../src/libutil/keyed_circular_cache.c",
+               "../../src/libutil/math.c",
+               "../../src/libutil/platform.c",]
 
     sources = [bld.path.find_node(s) for s in sources]
     sources.extend(bld.path.ant_glob('src/*.c'))
@@ -67,7 +71,6 @@ def build(bld):
                          'DISPLAY_FRAMEBUFFER_BYTES=%d' % (144 * 168),
                          'PBL_COLOR', 'PBL_RECT', 'PLATFORM_SNOWY=1',
                          'PBI2PNG_EXE="../../tools/pbi2png.py"'],
-                use=['libutil-32bit'],
                 env=pdc2png_env)
 
 
