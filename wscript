@@ -521,16 +521,6 @@ def configure(conf):
             source = conf.path.get_bld().make_node(filename)
             os.symlink(source.path_from(conf.path), filename)
 
-    prev_env = conf.env
-    Logs.pprint('CYAN', 'Configuring 32 bit host environment')
-    # Copy 'local' to serve as the basis for '32bit':
-    env_32bit = conf.env.derive().detach()
-    env_32bit.append_value('CFLAGS', '-m32')
-    env_32bit.append_value('LINKFLAGS', '-m32')
-    env_32bit.LINK_CC = 'gcc'
-    conf.all_envs['32bit'] = env_32bit
-    conf.set_env(prev_env)
-
     # Note: this will modify the 'local' conf when targeting emscripten:
     conf.recurse('applib-targets')
 

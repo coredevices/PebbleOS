@@ -15,7 +15,6 @@ def build(bld):
     bld(export_includes=['includes'], name='libutil_includes')
 
     build_libutil('libutil', bld.env)
-    build_libutil('libutil-32bit', bld.all_envs['32bit'])
 
 
 # vim:filetype=python

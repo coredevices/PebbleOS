@@ -15,7 +15,7 @@ def build(bld):
 
     bld(export_includes=['include'], name='libos_includes')
 
-    if bld.env in (bld.all_envs['local'], bld.all_envs['32bit']):
+    if bld.env in (bld.all_envs['local'],):
         # Skip building sources for local builds, like unit tests.
         return
 
