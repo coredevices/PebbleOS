@@ -184,13 +184,8 @@ static void prv_window_load_handler(Window* window) {
 
   const int16_t load_bar_length = 108;
   const int16_t x_offset = (window->layer.bounds.size.w - load_bar_length) / 2;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
-  const int16_t y_offset_progress = 123;
-  const int16_t y_offset_text = 85;
-#else
   const int16_t y_offset_progress = PBL_IF_RECT_ELSE(93, 99);
   const int16_t y_offset_text = PBL_IF_RECT_ELSE(55, 62);
-#endif
   const GRect progress_bounds = GRect(x_offset, y_offset_progress, load_bar_length, 8);
   ProgressLayer *progress_layer = &data->progress_layer;
   progress_layer_init(progress_layer, &progress_bounds);

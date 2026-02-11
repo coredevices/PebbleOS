@@ -455,7 +455,7 @@ static const Command s_prompt_commands[] = {
 #endif
   { "flash validate", command_flash_validate, 0},
   { "flash erased_sectors", command_flash_show_erased_sectors, 1},
-#if !RELEASE && (PLATFORM_SILK || PLATFORM_ROBERT || PLATFORM_CALCULUS)
+#if !RELEASE && PLATFORM_SILK
   { "flash apicheck", command_flash_apicheck, 1},
   //{ "flash signal test init", command_flash_signal_test_init, 0 },
   //{ "flash signal test run", command_flash_signal_test_run, 0 },
@@ -482,10 +482,10 @@ static const Command s_prompt_commands[] = {
 
 #if CAPABILITY_HAS_BUILTIN_HRM
   { "hrm read", command_hrm_read, 0},
-#if PLATFORM_SILK || PLATFORM_ROBERT
+#if PLATFORM_SILK
   { "hrm wipe", command_hrm_wipe, 0},
   { "hrm freeze", command_hrm_freeze, 0},
-#endif // PLATFORM_SILK || PLATFORM_ROBERT
+#endif // PLATFORM_SILK
 #endif
 
 #if CAPABILITY_HAS_ACCESSORY_CONNECTOR

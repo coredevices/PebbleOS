@@ -76,17 +76,6 @@ elif board in ('silk_evt', 'silk_bb', 'silk_bb2', 'silk', 'silk_flint'):
             'drivers',
         ],
     )
-elif board in ('cutts_bb','robert_bb','robert_bb2','robert_evt'):
-    bld.objects(
-        name='board',
-        source=[
-            'boards/board_robert.c',
-        ],
-        use=[
-            'fw_includes',
-            'drivers',
-        ],
-    )
 elif board in ('asterix'):
     bld.objects(
         name='board',

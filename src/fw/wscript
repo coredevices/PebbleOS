@@ -110,9 +110,7 @@ def configure(conf):
 
 def _generate_memory_layout(bld):
 
-    if bld.is_cutts() or bld.is_robert():
-        ldscript_template = bld.path.find_node('stm32f7xx_flash_fw.ld.template')
-    elif bld.is_silk():
+    if bld.is_silk():
         ldscript_template = bld.path.find_node('stm32f412_flash_fw.ld.template')
     elif bld.env.BOARD in ('snowy_emery', 'spalding_gabbro'):
         ldscript_template = bld.path.find_node('stm32f439_snowy_emery_flash_fw.ld.template')
@@ -145,12 +143,6 @@ def _generate_memory_layout(bld):
             fw_max_size = flash_size // 2
         else:
             fw_max_size = flash_size
-
-    elif bld.env.MICRO_FAMILY == 'STM32F7':
-        # Bootloader
-        offset_size = 32 * 1024
-        flash_size = 2048 * 1024
-        fw_max_size = flash_size
 
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
         flash_size = 32 * 1024 * 1024
@@ -291,13 +283,6 @@ def _generate_memory_layout(bld):
         app_ram_size_4x = APP_RAM_SIZES['diorite']
         # We have a 256k continuous block of RAM.
         total_ram = (0x20000000, 256 * 1024)
-    elif bld.is_cutts() or bld.is_robert():
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['basalt']
-        app_ram_size_4x = APP_RAM_SIZES['emery']
-        # We block off the 128k of DTCM for variables marked as DTCM_BSS. We use the remaining 384k
-        # of SRAM as a continuous block of RAM.
-        total_ram = (0x20020000, 384 * 1024)
     elif bld.is_asterix():
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['aplite']
@@ -501,11 +486,6 @@ def _get_mfg_paths(bld):
         return ('mfg/spalding',)
     elif bld.is_silk():
         return ('mfg/silk',)
-    elif bld.is_cutts():
-        # This probably should end up as 'mfg/cutts' if this comes back
-        return ('mfg/robert',)
-    elif bld.is_robert():
-        return ('mfg/robert',)
     elif bld.is_asterix():
         return ('mfg/asterix',)
     elif bld.is_obelix():
@@ -540,10 +520,6 @@ def _gen_fpga_bitstream_header(bld):
             source_bitstream = 'board/fpga/Spalding_LP1K_framebuffer.fpga'
         else:
             source_bitstream = 'board/fpga/Spalding_UL1K_framebuffer.fpga'
-    elif bld.is_cutts():
-        source_bitstream = 'board/fpga/Cutts_UL1K_framebuffer_144x168_bitmap.fpga'
-    elif bld.is_robert():
-        source_bitstream = 'board/fpga/Robert_UL1K_framebuffer_bitmap.fpga'
     else:
         bld.fatal('No FPGA available for {}'.format(bld.env.BOARD))
 
@@ -637,7 +613,7 @@ def _build_recovery(bld):
 
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
 
-    if bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
+    if bld.is_snowy_compatible():
         _gen_fpga_bitstream_header(bld)
 
     if bld.is_snowy():
@@ -732,9 +708,6 @@ def _build_normal(bld):
             excludes.append('apps/watch/tictoc/bw')
             excludes.append('apps/watch/tictoc/spalding')
 
-        if bld.is_cutts():
-            excludes.append('apps/watch/kickstart')
-
     source_dirs.extend(_get_mfg_paths(bld))
     source_dirs.extend(_get_dbg_paths(bld))
 
@@ -777,7 +750,7 @@ def _build_normal(bld):
             source='fw.pot services/services.pot applib/applib.pot',
             target='tintin.pot')
 
-    if bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
+    if bld.is_snowy_compatible():
         _gen_fpga_bitstream_header(bld)
 
     if bld.is_snowy():

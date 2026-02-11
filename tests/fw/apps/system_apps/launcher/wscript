@@ -104,6 +104,6 @@ def build(ctx):
         defines=ctx.env.test_image_defines,
         runtime_deps=(ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos),
         override_includes=["dummy_board"],
-        platforms=["silk", "snowy", "spalding", "robert"])
+        platforms=["silk", "snowy", "spalding"])
 
 # vim:filetype=python

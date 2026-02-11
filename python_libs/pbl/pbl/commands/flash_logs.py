@@ -44,10 +44,6 @@ class FlashLogsCommand(PebbleCommand):
             'diorite': (0x280000, 0x20000),
             'silk':    (0x280000, 0x20000),
             
-            # Robert / Calculus
-            'robert':  (0x480000, 0x20000),
-            'calculus': (0x480000, 0x20000),
-            
             # Asterix
             'asterix': (0x1FD0000, 0x20000),
             

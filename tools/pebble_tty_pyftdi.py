@@ -40,7 +40,7 @@ def _tty_get_port(num_ports, tty_type, product):
 
 def _product_of_tty_type(product, tty_type):
     table = {
-        "primary": ['2232', '4232', 'silk', 'robert'],
+        "primary": ['2232', '4232', 'silk'],
         "accessory": ['4232'],
         "ble": ['da14681'],
     }

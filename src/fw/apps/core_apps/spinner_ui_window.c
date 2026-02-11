@@ -50,7 +50,7 @@ static void prv_draw_spinner_circles(Layer *layer, GContext* ctx) {
   SpinnerUIData *data = window_get_user_data(layer_get_window(layer));
 
   // This is the background image's circle.
-  // Only applies to rectangular displays >= 200px height (ROBERT, CALCULUS, OBELIX)
+  // Only applies to rectangular displays >= 200px height
 #if PBL_DISPLAY_HEIGHT >= 200 && PBL_RECT
   const unsigned int center_of_circle_y_val = 103;
 #else

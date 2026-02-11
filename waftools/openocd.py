@@ -169,8 +169,6 @@ def write_cfg(conf):
         target = 'stm32f2x.cfg'
     elif conf.env.MICRO_FAMILY == 'STM32F4':
         target = 'stm32f4x.cfg'
-    elif conf.env.MICRO_FAMILY == 'STM32F7':
-        target = 'stm32f7x.cfg'
     elif conf.env.MICRO_FAMILY == 'NRF52840':
         target = 'nrf52.cfg'
 

@@ -79,12 +79,6 @@ static jerry_value_t prv_get_platform_name(void) {
 #  define OBELIX_MODEL(model_str) NULL
 #endif // PLATFORM_OBELIX
 
-#if PLATFORM_ROBERT
-#  define ROBERT_MODEL(model_str) model_str
-#else
-#  define ROBERT_MODEL(model_str) NULL
-#endif // PLATFORM_ROBERT
-
 #if PLATFORM_GETAFIX
 #  define GETAFIX_MODEL(model_str) model_str
 #else
@@ -182,13 +176,8 @@ static jerry_value_t prv_get_model_name(void) {
         model_name = SILK_MODEL("pebble_2_se_white");
         break;
       case WATCH_INFO_COLOR_PEBBLE_TIME_2_BLACK:
-        model_name = ROBERT_MODEL("pebble_time_2_black");
-        break;
       case WATCH_INFO_COLOR_PEBBLE_TIME_2_SILVER:
-        model_name = ROBERT_MODEL("pebble_time_2_silver");
-        break;
       case WATCH_INFO_COLOR_PEBBLE_TIME_2_GOLD:
-        model_name = ROBERT_MODEL("pebble_time_2_gold");
         break;
       case WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK:
         model_name = ASTERIX_MODEL("coredevices_p2d_black");
