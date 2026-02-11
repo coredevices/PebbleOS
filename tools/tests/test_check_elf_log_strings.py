@@ -25,7 +25,7 @@ class TestCheckLogStrings(unittest.TestCase):
 
         output = check_dict_log_strings(log_dict)
 
-        self.assertEquals(output, '')
+        self.assertEqual(output, '')
 
     def test_rule_no_backtick(self):
         log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test ` '}}

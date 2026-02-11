@@ -149,7 +149,7 @@ class MyTestCase(unittest.TestCase):
         bidirectional_lines = json2commands.parse_json_line_data(json_line_data)
 
         longest_path = json2commands.determine_longest_path(bidirectional_lines)
-        self.assertEqual(longest_path, [(1.0, 2.0), (1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 1.0)])
+        self.assertEqual(longest_path, [(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 1.0), (1.0, 2.0)])
         self.assertEqual(len(bidirectional_lines), 0)
 
         # Test connected segments with more than one path
@@ -166,11 +166,11 @@ class MyTestCase(unittest.TestCase):
         bidirectional_lines = json2commands.parse_json_line_data(json_line_data)
 
         longest_path = json2commands.determine_longest_path(bidirectional_lines)
-        self.assertEqual(longest_path, [(3.0, 1.0), (2.0, 1.0), (1.0, 1.0)])
-        self.assertEqual(bidirectional_lines, [((2.0, 2.0), (2.0, 1.0)), ((2.0, 1.0), (2.0, 2.0))])
+        self.assertEqual(longest_path, [(1.0, 1.0), (2.0, 1.0), (2.0, 2.0)])
+        self.assertEqual(bidirectional_lines, [((3.0, 1.0), (2.0, 1.0)), ((2.0, 1.0), (3.0, 1.0))])
 
         longest_path = json2commands.determine_longest_path(bidirectional_lines)
-        self.assertEqual(longest_path, [(2.0, 1.0), (2.0, 2.0)])
+        self.assertEqual(longest_path, [(3.0, 1.0), (2.0, 1.0)])
         self.assertEqual(len(bidirectional_lines), 0)
 
         # Test (ordered) unconnected segments (implicitly more than one path)
@@ -184,11 +184,11 @@ class MyTestCase(unittest.TestCase):
         bidirectional_lines = json2commands.parse_json_line_data(json_line_data)
 
         longest_path = json2commands.determine_longest_path(bidirectional_lines)
-        self.assertEqual(longest_path, [(1.0, 2.0), (2.0, 2.0)])
-        self.assertEqual(bidirectional_lines, [((1.0, 1.0), (2.0, 1.0)), ((2.0, 1.0), (1.0, 1.0))])
+        self.assertEqual(longest_path, [(1.0, 1.0), (2.0, 1.0)])
+        self.assertEqual(bidirectional_lines, [((1.0, 2.0), (2.0, 2.0)), ((2.0, 2.0), (1.0, 2.0))])
 
         longest_path = json2commands.determine_longest_path(bidirectional_lines)
-        self.assertEqual(longest_path, [(1.0, 1.0), (2.0, 1.0)])
+        self.assertEqual(longest_path, [(1.0, 2.0), (2.0, 2.0)])
         self.assertEqual(len(bidirectional_lines), 0)
 
     def test_process_fill(self):
@@ -362,8 +362,8 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(width_2_color_228_command.points), 2)
         self.assertEqual(width_2_color_228_command.fill_color, json2commands.parse_color([0, 0, 0, 0],
             truncate_color))
-        self.assertTrue(pebble_commands.compare_points(width_2_color_228_command.points[0], (11.0, 11.0)))
-        self.assertTrue(pebble_commands.compare_points(width_2_color_228_command.points[1], (10.0, 10.0)))
+        self.assertTrue(pebble_commands.compare_points(width_2_color_228_command.points[0], (10.0, 10.0)))
+        self.assertTrue(pebble_commands.compare_points(width_2_color_228_command.points[1], (11.0, 11.0)))
         self.assertTrue(width_2_color_228_command.open)
 
         width_3_color_192_command = open_path_commands[1]
@@ -374,9 +374,9 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(width_3_color_192_command.points), 3)
         self.assertEqual(width_3_color_192_command.fill_color, json2commands.parse_color([0, 0, 0, 0],
             truncate_color))
-        self.assertTrue(pebble_commands.compare_points(width_3_color_192_command.points[0], (1.0, 2.0)))
+        self.assertTrue(pebble_commands.compare_points(width_3_color_192_command.points[0], (1.0, 1.0)))
         self.assertTrue(pebble_commands.compare_points(width_3_color_192_command.points[1], (2.0, 2.0)))
-        self.assertTrue(pebble_commands.compare_points(width_3_color_192_command.points[2], (1.0, 1.0)))
+        self.assertTrue(pebble_commands.compare_points(width_3_color_192_command.points[2], (1.0, 2.0)))
         self.assertTrue(width_3_color_192_command.open)
 
         width_3_color_66_command = open_path_commands[2]
@@ -399,8 +399,8 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(width_5_color_65_command.points), 2)
         self.assertEqual(width_5_color_65_command.fill_color, json2commands.parse_color([0, 0, 0, 0],
             truncate_color))
-        self.assertTrue(pebble_commands.compare_points(width_5_color_65_command.points[0], (4.0, 4.0)))
-        self.assertTrue(pebble_commands.compare_points(width_5_color_65_command.points[1], (3.0, 3.0)))
+        self.assertTrue(pebble_commands.compare_points(width_5_color_65_command.points[0], (3.0, 3.0)))
+        self.assertTrue(pebble_commands.compare_points(width_5_color_65_command.points[1], (4.0, 4.0)))
         self.assertTrue(width_5_color_65_command.open)
 
         width_5_color_72_command = open_path_commands[4]
@@ -411,8 +411,8 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(width_5_color_72_command.points), 2)
         self.assertEqual(width_5_color_72_command.fill_color, json2commands.parse_color([0, 0, 0, 0],
             truncate_color))
-        self.assertTrue(pebble_commands.compare_points(width_5_color_72_command.points[0], (4.0, 5.0)))
-        self.assertTrue(pebble_commands.compare_points(width_5_color_72_command.points[1], (4.0, 4.0)))
+        self.assertTrue(pebble_commands.compare_points(width_5_color_72_command.points[0], (4.0, 4.0)))
+        self.assertTrue(pebble_commands.compare_points(width_5_color_72_command.points[1], (4.0, 5.0)))
         self.assertTrue(width_5_color_72_command.open)
 
         # Test that open with no stroke width has no stroke color

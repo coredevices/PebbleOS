@@ -3,10 +3,11 @@
 
 import struct
 import uuid
+from functools import reduce
 
 
 class PebbleAppHeader(object):
-    MAGIC = 'PBLAPP\x00\x00'
+    MAGIC = b'PBLAPP\x00\x00'
 
     # 10 bytes
     HEADER_STRUCT_DEFINITION = [
@@ -26,8 +27,8 @@ class PebbleAppHeader(object):
         ('H', 'app_size', None, None),
         ('I', 'offset', None, None),
         ('I', 'crc', None, None),
-        ('32s', 'app_name', lambda bytes: bytes.rstrip('\0'), None),
-        ('32s', 'company_name', lambda bytes: bytes.rstrip('\0'), None),
+        ('32s', 'app_name', lambda b: b.rstrip(b'\0'), None),
+        ('32s', 'company_name', lambda b: b.rstrip(b'\0'), None),
         ('I', 'icon_resource_id', None, None),
         ('I', 'symbol_table_addr', None, None),
         ('I', 'flags', None, None),

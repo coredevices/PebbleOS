@@ -130,7 +130,7 @@ class MyTestCase(unittest.TestCase):
                                     pebble_commands.convert_color(0xAA, 0xFF, 0x00, 0xFF))
         result = path.serialize()
         expected = path_example_output[:]
-        self.assertEqual(result, array.array('B', expected).tostring())
+        self.assertEqual(result, array.array('B', expected).tobytes())
 
         points = [(1.5, 6.5), (-3.5, 2.5)]
         path = pebble_commands.PathCommand(
@@ -142,7 +142,7 @@ class MyTestCase(unittest.TestCase):
                                     pebble_commands.convert_color(0xAA, 0xFF, 0x00, 0xFF))
         expected[5] = 0
         result = path.serialize()
-        self.assertEqual(result, array.array('B', expected).tostring())
+        self.assertEqual(result, array.array('B', expected).tobytes())
 
     def test_circle_serialize(self):
         center = (-5.5, 6.5)
@@ -155,7 +155,7 @@ class MyTestCase(unittest.TestCase):
                                     pebble_commands.convert_color(0xAA, 0xFF, 0x00, 0xFF))
         result = circle.serialize()
         expected = circle_example_output
-        self.assertEqual(result, array.array('B', expected).tostring())
+        self.assertEqual(result, array.array('B', expected).tobytes())
 
     def test_serialize_image(self):
         points = [(1.5, 6.5), (-3.5, 2.5)]
@@ -180,8 +180,8 @@ class MyTestCase(unittest.TestCase):
                     0,
                     0x0A, 0x00, 0x90, 0x01,
                     0x02, 0x00]
-        expected = array.array('B', expected + path_example_output + circle_example_output).tostring()
-        image_expected = 'PDCI' + pack('I', len(expected)) + expected
+        expected = array.array('B', expected + path_example_output + circle_example_output).tobytes()
+        image_expected = b'PDCI' + pack('I', len(expected)) + expected
 
         self.assertEqual(image, image_expected)
 
@@ -242,7 +242,7 @@ class MyTestCase(unittest.TestCase):
         expected += [0x21, 0x00,
                      0x02, 0x00]
         expected += path_ex2 + circle_ex2
-        seq_expected = 'PDCS' + pack('I', len(expected)) + array.array('B', expected).tostring()
+        seq_expected = b'PDCS' + pack('I', len(expected)) + array.array('B', expected).tobytes()
         self.assertEqual(seq, seq_expected)
 
 

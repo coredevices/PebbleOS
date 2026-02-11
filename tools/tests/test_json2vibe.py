@@ -50,41 +50,41 @@ class TestJsonToVibe(unittest.TestCase):
 
         to_test_byte_array = bytearray()
         to_test_byte_array.extend(b'VIBE')  # fourcc = 'VIBE'
-        to_test_byte_array.extend('\x01\x00')  # version = 1
-        to_test_byte_array.extend('\x00\x00\x00\x00')  # reserved
-        to_test_byte_array.extend('\x1E\x00')  # att_list_size = 25
+        to_test_byte_array.extend(b'\x01\x00')  # version = 1
+        to_test_byte_array.extend(b'\x00\x00\x00\x00')  # reserved
+        to_test_byte_array.extend(b'\x1E\x00')  # att_list_size = 25
 
         # GenericAttributeList
-        to_test_byte_array.extend('\x03')  # num_attributes = 3
+        to_test_byte_array.extend(b'\x03')  # num_attributes = 3
 
-        to_test_byte_array.extend('\x01')  # VibeAttributeIdVibeNotes
-        to_test_byte_array.extend('\x0C\x00')  # 3 notes * 4 bytes per note = 12 bytes
+        to_test_byte_array.extend(b'\x01')  # VibeAttributeIdVibeNotes
+        to_test_byte_array.extend(b'\x0C\x00')  # 3 notes * 4 bytes per note = 12 bytes
         # First note
-        to_test_byte_array.extend('\xD2\x04')  # vibe_duration_ms = 1234
-        to_test_byte_array.extend('\x63')  # brake_duration_ms = 99
-        to_test_byte_array.extend('\xDF')  # strength = -33
+        to_test_byte_array.extend(b'\xD2\x04')  # vibe_duration_ms = 1234
+        to_test_byte_array.extend(b'\x63')  # brake_duration_ms = 99
+        to_test_byte_array.extend(b'\xDF')  # strength = -33
         # Second note
-        to_test_byte_array.extend('\xE7\x03')  # vibe_duration_ms = 999
-        to_test_byte_array.extend('\x00')  # brake_duration_ms = 0
-        to_test_byte_array.extend('\x00')  # strength = 0
+        to_test_byte_array.extend(b'\xE7\x03')  # vibe_duration_ms = 999
+        to_test_byte_array.extend(b'\x00')  # brake_duration_ms = 0
+        to_test_byte_array.extend(b'\x00')  # strength = 0
         # Third note
-        to_test_byte_array.extend('\x37\x00')  # vibe_duration_ms = 55
-        to_test_byte_array.extend('\x13')  # brake_duration_ms =  19
-        to_test_byte_array.extend('\x4C')  # strength = 76
+        to_test_byte_array.extend(b'\x37\x00')  # vibe_duration_ms = 55
+        to_test_byte_array.extend(b'\x13')  # brake_duration_ms =  19
+        to_test_byte_array.extend(b'\x4C')  # strength = 76
 
-        to_test_byte_array.extend('\x02')  # VibeAttributeIdVibePattern
-        to_test_byte_array.extend('\x06\x00')  # pattern contains 6 items
-        to_test_byte_array.extend('\x00\x01\x02\x02\x01\x00')  # pattern = [0,1,2,2,1,0]
+        to_test_byte_array.extend(b'\x02')  # VibeAttributeIdVibePattern
+        to_test_byte_array.extend(b'\x06\x00')  # pattern contains 6 items
+        to_test_byte_array.extend(b'\x00\x01\x02\x02\x01\x00')  # pattern = [0,1,2,2,1,0]
 
-        to_test_byte_array.extend('\x03')  # VibeAttributeId_RepeatDelay
-        to_test_byte_array.extend('\x02\x00')  # uint16 size in bytes
-        to_test_byte_array.extend('\xF4\x01')  # pattern = [0,1,2,2,1,0]
+        to_test_byte_array.extend(b'\x03')  # VibeAttributeId_RepeatDelay
+        to_test_byte_array.extend(b'\x02\x00')  # uint16 size in bytes
+        to_test_byte_array.extend(b'\xF4\x01')  # pattern = [0,1,2,2,1,0]
 
-        self.assertEquals(bytearray(serialized_vibe_file), to_test_byte_array)
+        self.assertEqual(bytearray(serialized_vibe_file), to_test_byte_array)
 
     def check_proper_vibe_resource(self, serialized_data):
         parsed_vibe_file, parsed_length = VibeFile().parse(serialized_data)
-        self.assertEquals(parsed_length, 30)
+        self.assertEqual(parsed_length, 30)
         to_compare = VibeFile(fourcc='VIBE', score=VibeScore(
             version=1,
             reserved=None,
@@ -110,7 +110,7 @@ class TestJsonToVibe(unittest.TestCase):
                         length=3,
                         attribute=VibePattern(
                             indices=[0, 1, 0]))])))
-        self.assertEquals(parsed_vibe_file, to_compare)
+        self.assertEqual(parsed_vibe_file, to_compare)
 
     def test_proper_vibe_resource_string_ids(self):
         json_data = self.get_json_data('good_using_string_ids')
@@ -123,7 +123,7 @@ class TestJsonToVibe(unittest.TestCase):
     def test_vibe_resource_negative_strengths(self):
         json_data = self.get_json_data('good_negative_strength')
         parsed_vibe_file, parsed_length = VibeFile().parse(serialize(json_data))
-        self.assertEquals(parsed_length, 37)
+        self.assertEqual(parsed_length, 37)
         to_compare = VibeFile(fourcc='VIBE', score=VibeScore(
             version=1,
             reserved=None,
@@ -157,7 +157,7 @@ class TestJsonToVibe(unittest.TestCase):
     def test_nonzero_repeating_delay(self):
         json_data = self.get_json_data('nonzero_repeating_delay')
         parsed_vibe_file, parsed_length = VibeFile().parse(serialize(json_data))
-        self.assertEquals(parsed_length, 35)
+        self.assertEqual(parsed_length, 35)
         to_compare = VibeFile(fourcc='VIBE', score=VibeScore(
             version=1,
             reserved=None,
@@ -196,15 +196,15 @@ class TestJsonToVibe(unittest.TestCase):
             serialize(self.get_json_data('bad_reference_nonexistent_id'))
 
     def test_negative_vibe_duration_throws_error(self):
-        with self.assertRaisesRegexp(struct.error, 'integer out of range'):
+        with self.assertRaisesRegex(struct.error, r"(integer out of range|'H' format requires)"):
             serialize(self.get_json_data('bad_negative_vibe_duration'))
 
     def test_negative_brake_duration_throws_error(self):
-        with self.assertRaisesRegexp(struct.error, 'ubyte format requires 0 <= number <= 255'):
+        with self.assertRaisesRegex(struct.error, r"(ubyte format requires|'B' format requires)"):
             serialize(self.get_json_data('bad_negative_brake_duration'))
 
     def test_strength_above_100_throws_error(self):
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 ValueError,
                 '"strength" 150 out of bounds. Values between -100 and 100 only.'):
             serialize(self.get_json_data('bad_strength_greater_than_100'))
