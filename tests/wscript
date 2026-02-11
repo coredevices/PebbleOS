@@ -55,7 +55,7 @@ def convert_png_to_pbi(task):
     dest_pbi = task.outputs[0].srcpath()
     bitdepth = None
 
-    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding', '~cutts', '~robert']):
+    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding']):
         img_fmt = 'color_raw'
     elif any(word in dest_pbi for word in ['.1bit.', '~tintin']):
         img_fmt = 'bw'
@@ -83,7 +83,7 @@ def convert_png_to_pblpng(task):
 
         if bit_suffix:
             bitdepth = int(bit_suffix.group(1))
-        elif any(word in dest_png for word in ['~snowy', '~spalding', '~cutts', '~robert']):
+        elif any(word in dest_png for word in ['~snowy', '~spalding']):
             bitdepth = 8
         elif any(word in dest_png for word in ['~tintin']):
             bitdepth = 1

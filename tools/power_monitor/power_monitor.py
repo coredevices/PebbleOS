@@ -49,17 +49,6 @@ PowerRailMonitors = {
         'VUSB':     Ina226('VUSB',     0x8E,  100.0, 0.47),
         'HRM':      Ina226('HRM',      0x90,  200.0, 0.47),
     },
-    "robert": {
-        # TODO: [PBL-36477] These resolutions ought to be calibrated.
-        'VBAT':     Ina226('VBAT',     0x80,  200.0, 0.47),
-        '1V8':      Ina226('1V8',      0x82,  100.0, 0.47),
-        '1V2_MCU':  Ina226('1V2_MCU',  0x84,  100.0, 0.47),
-        '1V2_FPGA': Ina226('1V2_FPGA', 0x86,  100.0, 0.47),
-        '1V8_BT':   Ina226('1V8_BT',   0x88,  100.0, 0.47),
-        'SPARE1':   Ina226('SPARE1',   0x8A,  100.0, 0.47),
-        'SPARE2':   Ina226('SPARE2',   0x8C,  100.0, 0.47),
-        'VUSB':     Ina226('VUSB',     0x8E,  100.0, 0.47),
-    }
 }
 
 MCP = Mcp23009(0x4E)

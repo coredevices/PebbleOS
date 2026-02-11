@@ -26,8 +26,6 @@
 #include "flash_region_mx25u.h"
 #elif PLATFORM_ASTERIX
 #include "flash_region_gd25lq255e.h"
-#elif PLATFORM_CALCULUS || PLATFORM_ROBERT
-#include "flash_region_mt25q.h"
 #elif PLATFORM_SNOWY || PLATFORM_SPALDING
 #include "flash_region_s29vs.h"
 #elif PLATFORM_OBELIX || PLATFORM_GETAFIX

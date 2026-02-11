@@ -11,11 +11,7 @@ def configure(conf):
 def _autogen_applib_sources(bld):
     def applib_autogen(task):
         import applib_malloc
-        # disable size checks for cutts
-        if bld.is_cutts():
-            disable_size_checks = True
-        else:
-            disable_size_checks = False
+        disable_size_checks = False
         applib_malloc.generate_files(task.inputs[0].abspath(), task.outputs[0].abspath(),
                                      task.outputs[1].abspath(), bld.env.MIN_SDK_VERSION,
                                      disable_size_checks)
@@ -31,7 +27,7 @@ def _autogen_applib_sources(bld):
 
 def _get_bit_depth_excludes(bld):
     bit_depths = [1, 8]
-    if bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert() or bld.is_obelix() or bld.is_getafix():
+    if bld.is_snowy_compatible() or bld.is_obelix() or bld.is_getafix():
         depth = 8
     else:
         depth = 1

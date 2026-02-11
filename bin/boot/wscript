@@ -7,8 +7,6 @@ def configure(cfg):
         bootloader_board = 'snowy_dvt'
     elif cfg.is_silk():
         bootloader_board = 'silk'
-    elif cfg.is_cutts():
-        bootloader_board = 'robert_bb'
     else:
         bootloader_board = cfg.options.board
 

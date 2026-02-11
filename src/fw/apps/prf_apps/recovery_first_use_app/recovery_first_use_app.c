@@ -177,26 +177,14 @@ static void prv_update_background_image_and_url_text(RecoveryFUAppData *data) {
   if (first_use_is_complete || data->has_pebble_mobile_app_connected) {
     // If first use was completed, it means we're in recovery mode.
     icon_res_id = RESOURCE_ID_LAUNCH_APP;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
-    icon_x_offset = 41;
-    icon_y_offset = -21;
-    text_y_offset = 140;
-#else
     icon_x_offset = PBL_IF_RECT_ELSE(49, 67);
     icon_y_offset = 28;
     text_y_offset = 124;
-#endif
   } else {
     icon_res_id = RESOURCE_ID_MOBILE_APP_ICON;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
-    icon_x_offset = 74;
-    icon_y_offset = 56;
-    text_y_offset = 121;
-#else
     icon_x_offset = PBL_IF_RECT_ELSE(49, 67);
     icon_y_offset = 38;
     text_y_offset = 90;
-#endif
   }
 
   if (first_use_is_complete) {
@@ -271,7 +259,6 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
 
 #if !PLATFORM_ASTERIX && !PLATFORM_OBELIX && !PLATFORM_GETAFIX
   // Set the name font
-#if !PLATFORM_ROBERT && !PLATFORM_CALCULUS
   const bool first_use_is_complete = shared_prf_storage_get_getting_started_complete();
   const char *name_font_key;
   if (first_use_is_complete || data->has_pebble_mobile_app_connected || data->is_showing_version) {
@@ -280,7 +267,6 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
     name_font_key = FONT_KEY_GOTHIC_24;
   }
   text_layer_set_font(&data->name_text_layer, fonts_get_system_font(name_font_key));
-#endif
 
   // Update the size of the name text layer based on the new content.
 
@@ -302,11 +288,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
   // Actually set the frame centered on the screen and just below the url_text_layer.
   const int16_t window_width = data->launch_app_window.layer.frame.size.w;
   const int16_t text_x_offset = (window_width - content_size.w) / 2;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
-  const int16_t text_y_offset = 33;
-#else
   const int16_t text_y_offset = 22;
-#endif
   const GRect frame = { { text_x_offset, text_y_offset }, content_size };
   layer_set_frame(&data->name_text_layer.layer, &frame);
 #endif
@@ -367,15 +349,9 @@ static void prv_window_load(Window* window) {
   kino_layer_init(kino_layer, &window->layer.bounds);
   layer_add_child(&window->layer, &kino_layer->layer);
 
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS
-  const char *url_font_key = FONT_KEY_GOTHIC_28_BOLD;
-  const GColor name_bg_color = GColorClear;
-  const char *name_font_key = FONT_KEY_GOTHIC_24;
-#else
   const char *url_font_key = FONT_KEY_GOTHIC_18_BOLD;
   const GColor name_bg_color = GColorWhite;
   const char *name_font_key = FONT_KEY_GOTHIC_14;
-#endif
 
   TextLayer* url_text_layer = &data->url_text_layer;
   text_layer_init_with_parameters(url_text_layer,

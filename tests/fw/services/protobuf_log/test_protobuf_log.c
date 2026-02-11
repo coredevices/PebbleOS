@@ -109,7 +109,7 @@ const char* mfg_get_serial_number(void) {
 
 #define GIT_TAG_V_MAJOR 4
 #define GIT_TAG_V_MINOR 17
-#define GIT_TAG_V_PATCH "ROBERT-mfg4-6-gb91951a"
+#define GIT_TAG_V_PATCH "v4.17-6-gb91951a"
 void version_get_major_minor_patch(unsigned int *major, unsigned int *minor,
                                    const char **patch_ptr) {
   *major = GIT_TAG_V_MAJOR;

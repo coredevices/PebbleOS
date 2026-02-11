@@ -29,7 +29,7 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeChalk
   #elif PLATFORM_SILK
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeDiorite
-  #elif PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX
+  #elif PLATFORM_OBELIX
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
   #elif PLATFORM_ASTERIX
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint

@@ -1419,7 +1419,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
               "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
     .lengths = {
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
       [TestStringFont_Gothic18] = 204,
       [TestStringFont_Gothic24B] = 144,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
@@ -1442,7 +1442,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "をんアイウエオサシスセソタチツテトナニヌネノ"
               "ハヒフヘホマミムメモヤユヨラリルレロワヲン",
     .lengths = {
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
       [TestStringFont_Gothic18] = 579,
       [TestStringFont_Gothic24B] = 291,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
@@ -1460,7 +1460,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "FLASH access on Robe"
               "\xe2\x80\xa6",
     .lengths = {
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
       [TestStringFont_Gothic18] = 134,
       [TestStringFont_Gothic24B] = 134,
       [TestStringFont_Other] = STRING_LENGTH_MAX,

@@ -239,7 +239,7 @@ def build(ctx):
             " src/fw/process_management/pebble_process_info.c"
             " src/fw/process_management/pebble_process_md.c",
         test_sources_ant_glob = "test_pebble_process_md.c",
-        platforms=['snowy', 'spalding', 'silk', 'robert'])
+        platforms=['snowy', 'spalding', 'silk'])
 
     clar(ctx,
         sources_ant_glob = "src/fw/applib/graphics/utf8.c" \

@@ -62,7 +62,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description="Tool to test the bootloader's updating routines for firmware and PRF.")
     parser.add_argument('board', metavar='board',
-                        help='board type (such as snowy_bb2, robert_bb, robert_bb2)')
+                        help='board type (such as snowy_bb2)')
     parser.add_argument('-t', '--tty', metavar='TTY', default=None,
                         help='the target serial port')
     parser.add_argument('-v', '--verbose', action='store_true',

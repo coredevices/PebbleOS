@@ -82,6 +82,6 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk', 'robert'])
+         platforms=['snowy', 'spalding', 'silk'])
 
 # vim:filetype=python

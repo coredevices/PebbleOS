@@ -9,5 +9,3 @@ def build(bld):
         bld.recurse("stm32f2")
     elif bld.env.MICRO_FAMILY == "STM32F4":
         bld.recurse("stm32f4")
-    elif bld.env.MICRO_FAMILY == "STM32F7":
-        bld.recurse("stm32f7")
