@@ -4,7 +4,7 @@ from waflib import Logs
 
 
 def build(bld):
-    qemu_spi_cooker_env = bld.all_envs['32bit'].derive()
+    qemu_spi_cooker_env = bld.all_envs['local'].derive().detach()
     output = bld.path.get_bld().parent.parent.make_node('qemu_spi_cooker')
 
     sources = ["../../src/fw/services/normal/filesystem/flash_translation.c",
