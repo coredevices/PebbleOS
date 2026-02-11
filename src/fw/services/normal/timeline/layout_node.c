@@ -489,21 +489,13 @@ GTextNode *layout_create_text_node_from_config(const LayoutLayer *layout,
     case LayoutNodeType_Constructor:
       return prv_create_node_from_constructor_config(layout, (LayoutNodeConstructorConfig *)config);
     case LayoutNodeType_Icon:
-#if !PLATFORM_TINTIN
       return prv_create_icon_node_from_config(layout, (LayoutNodeIconConfig *)config);
-#else
-      return NULL;
-#endif
     case LayoutNodeType_TimelineIcon:
       return prv_create_timeline_icon_node_from_config(layout, (LayoutNodeExtentConfig *)config);
     case LayoutNodeType_TimelinePageBreak:
       return &timeline_layout_create_page_break_node((const TimelineLayout *)layout)->node;
     case LayoutNodeType_TimelineMetrics:
-#if !PLATFORM_TINTIN
       return prv_create_metrics_node(layout, config);
-#else
-      return NULL;
-#endif
     case LayoutNodeType_HeadingsParagraphs:
       return prv_create_headings_paragraphs_node(
           layout, (LayoutNodeHeadingsParagraphsConfig *)config);

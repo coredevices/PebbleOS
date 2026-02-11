@@ -17,7 +17,7 @@ def is_bigboard(ctx):
 
 @conf
 def is_tintin(ctx):
-    return ctx.get_board() in ('bigboard', 'bb2', 'ev2_4', 'v1_5', 'v2_0')
+    return False
 
 @conf
 def is_snowy(ctx):
@@ -45,9 +45,7 @@ def is_getafix(ctx):
 
 @conf
 def get_platform_name(ctx):
-    if is_tintin(ctx):
-        return "tintin"
-    elif ctx.get_board() == 'snowy_emery':
+    if ctx.get_board() == 'snowy_emery':
         return "snowy_emery"
     elif ctx.get_board() == 'spalding_gabbro':
         return "spalding_gabbro"
@@ -77,9 +75,7 @@ def is_snowy_compatible(ctx):
 
 @conf
 def get_qemu_machine(ctx):
-    if is_tintin(ctx):
-        return 'pebble-bb2'
-    elif ctx.get_board() == 'snowy_emery':
+    if ctx.get_board() == 'snowy_emery':
         return 'pebble-snowy-emery-bb'
     elif ctx.get_board() == 'spalding_gabbro':
         return 'pebble-spalding-gabbro-bb'
@@ -95,9 +91,7 @@ def get_qemu_machine(ctx):
 
 @conf
 def get_qemu_cpu(ctx):
-    if is_tintin(ctx):
-        return 'cortex-m3'
-    elif is_snowy(ctx):
+    if is_snowy(ctx):
         return 'cortex-m4'
     elif is_spalding(ctx):
         return 'cortex-m4'
@@ -115,9 +109,7 @@ def get_qemu_cpu(ctx):
 
 @conf
 def get_qemu_extflash_device_type(ctx):
-    if is_tintin(ctx):
-        return '-mtdblock'
-    elif is_snowy(ctx):
+    if is_snowy(ctx):
         return '-pflash'
     elif is_spalding(ctx):
         return '-pflash'
@@ -129,9 +121,7 @@ def get_qemu_extflash_device_type(ctx):
 
 @conf
 def has_touch(ctx):
-    if is_tintin(ctx):
-        return False
-    elif is_snowy(ctx):
+    if is_snowy(ctx):
         return False
     elif is_spalding(ctx):
         return False
@@ -173,10 +163,7 @@ def capability(ctx, capability_str):
 
 @conf
 def add_platform_defines(ctx, env):
-    if ctx.is_tintin():
-        bit_depth = 1
-        platform = 'TINTIN'
-    elif ctx.is_snowy():
+    if ctx.is_snowy():
         bit_depth = 8
         platform = 'SNOWY'
     elif ctx.is_spalding():

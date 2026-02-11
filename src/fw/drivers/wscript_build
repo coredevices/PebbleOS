@@ -3,38 +3,7 @@ if mcu_family not in ('STM32F2', 'STM32F4', 'NRF52840', 'SF32LB52'):
     bld.fatal('src/fw/drivers/wscript: '
               'Unknown MICRO_FAMILY {}'.format(mcu_family))
 
-if bld.is_tintin():
-    bld(
-        name='drivers',
-        use=[
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_clocksource',
-            'driver_display',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_hci_passthrough',
-            'driver_accel',
-            'driver_mag',
-            'driver_led_controller',
-            'driver_mcu',
-            'driver_mpu',
-            'driver_otp',
-            'driver_pwr',
-            'driver_rng',
-            'driver_rtc',
-            'driver_system_flash',
-            'driver_task_watchdog',
-            'driver_uart',
-            'driver_vibe',
-            'driver_voltage_monitor',
-            'driver_watchdog',
-        ],
-    )
-
-elif bld.is_silk():
+if bld.is_silk():
     bld(
         name='drivers',
         use=[
@@ -378,25 +347,6 @@ if bld.env.QEMU:
             'stm32_stdlib',
         ],
     )
-elif bld.is_tintin():
-    bld.objects(
-        name='driver_battery',
-        source=[
-            'battery/battery_adc_conversion.c',
-            'battery/battery_common.c',
-            'battery/battery_tintin.c',
-            'battery/battery_voltage_monitor.c',
-        ],
-        use=[
-            'driver_exti',
-            'driver_gpio',
-            'driver_otp',
-            'driver_periph_config',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
 elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_battery',
@@ -543,7 +493,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         ],
     )
 
-if bld.is_tintin() or bld.is_silk():
+if bld.is_silk():
     bld.objects(
         name='driver_display',
         source=[
@@ -657,27 +607,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if bld.is_tintin():
-    bld.objects(
-        name='driver_flash',
-        source=[
-            'flash/flash_crc.c',
-            'flash/micron_n25q/cd_flash_driver.c',
-            'flash/micron_n25q/flash.c',
-            'flash/micron_n25q/flash_core.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_spi',
-            'driver_watchdog',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_silk():
+if bld.is_silk():
     bld.objects(
         name='driver_flash',
         source=[
@@ -993,26 +923,7 @@ if bld.env.QEMU:
         ],
     )
 
-if bld.is_tintin() and not bld.env.QEMU:
-    bld.objects(
-        name='driver_accel',
-        source=[
-            'imu/lis3dh/config.c',
-            'imu/lis3dh/lis3dh.c',
-        ],
-        use=[
-            'driver_exti',
-            'driver_gpio',
-            'driver_i2c',
-            'driver_periph_config',
-            'driver_vibe',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
-
-if bld.is_tintin() or bld.is_snowy_compatible() or bld.env.BOARD == 'silk_flint':
+if bld.is_snowy_compatible() or bld.env.BOARD == 'silk_flint':
     bld.objects(
         name='driver_mag',
         source=[

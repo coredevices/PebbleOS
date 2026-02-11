@@ -18,7 +18,7 @@ def build(ctx):
         test_sources_ant_glob = "test_pfs.c",
         defines=['DUMA_DISABLED'],  # PBL-18355 Invalid memory read access
         override_includes=['dummy_board'],
-        platforms=['tintin'])
+        platforms=['silk'])
 
     clar(ctx,
         sources_ant_glob = \

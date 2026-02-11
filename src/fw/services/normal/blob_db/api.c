@@ -107,30 +107,20 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .flush = prefs_db_flush,
   },
   [BlobDBIdContacts] = {
-#if !PLATFORM_TINTIN
     .init = contacts_db_init,
     .insert = contacts_db_insert,
     .get_len = contacts_db_get_len,
     .read = contacts_db_read,
     .del = contacts_db_delete,
     .flush = contacts_db_flush,
-#else
-    // Disabled on tintin for code savings
-    .disabled = true,
-#endif
   },
   [BlobDBIdWatchAppPrefs] = {
-#if !PLATFORM_TINTIN
     .init = watch_app_prefs_db_init,
     .insert = watch_app_prefs_db_insert,
     .get_len = watch_app_prefs_db_get_len,
     .read = watch_app_prefs_db_read,
     .del = watch_app_prefs_db_delete,
     .flush = watch_app_prefs_db_flush,
-#else
-    // Disabled on tintin for code savings
-    .disabled = true,
-#endif
   },
   [BlobDBIdHealth] = {
 #if CAPABILITY_HAS_HEALTH_TRACKING

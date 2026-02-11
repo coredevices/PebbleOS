@@ -33,14 +33,10 @@ def _get_linux_tty(ttys, tty_type):
             tty_properties[name] = value
 
         if tty_properties['ID_MODEL'] == 'Quad_RS232-HS':
-            # snowy_bb2 uses interface 02 (0 indexed out of 4) for dbgserial
+            # Quad RS232-HS uses interface 02 (0 indexed out of 4) for dbgserial
             if not _is_accessory(tty_type) and tty_properties['ID_USB_INTERFACE_NUM'] == '02':
                 return t
             if _is_accessory(tty_type) and tty_properties['ID_USB_INTERFACE_NUM'] == '03':
-                return t
-        elif tty_properties['ID_MODEL'] == 'Dual_RS232-HS':
-            # bb2 uses interface 01 (0 indexed out of 2) for dbgserial
-            if not _is_accessory(tty_type) and tty_properties['ID_USB_INTERFACE_NUM'] == '01':
                 return t
 
     # We didn't find anything?
@@ -59,12 +55,11 @@ def _get_mac_tty(ttys, tty_type):
         if path.endswith('SLAB_USBtoUART'):
             tty_slab = path
 
-    # if we find C or D, we're on a snowy bb2
+    # if we find C or D, we're on a Quad RS232-HS FTDI
     if tty_c is not None and not _is_accessory(tty_type):
         return tty_c
     if tty_d is not None and _is_accessory(tty_type):
         return tty_d
-    # we're talking to tintin
     if tty_b is not None and not tty_c and not _is_accessory(tty_type):
         return tty_b
 

@@ -107,13 +107,7 @@ def gather_analytic_crash_stats(fw_version, error_code, error_code_name, use_eve
     elf_dict = dict()
 
     symbol_name_to_hw_model_lookup = {
-        "v2_0": [ "102V1" ],
-        "v1_5": [ "V3R1", "V3R2", "V3R3" ],
-        "ev2_4": [ "V2R2" ],
-        "snowy_evt2": [ "snowy20" ],
         "snowy_dvt": [ "snowy21", "snowy22", "snowy23" ],
-        "snowy_s3": ["smiles10", "smiles11", "smiles12", "smiles13"],
-        "spalding_evt" : [ "spauld10", "spauld11", "spauld12" ],
         "spalding" : [ "spauld13" ],
     }
     # Download the .elf associated with the core dump:

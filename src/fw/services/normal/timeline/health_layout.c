@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 
-#if !PLATFORM_TINTIN
 //////////////////////////////////////////
 //  Card Mode
 //////////////////////////////////////////
@@ -57,4 +56,3 @@ LayoutLayer *health_layout_create(const LayoutLayerConfig *config) {
 
   return (LayoutLayer *)layout;
 }
-#endif

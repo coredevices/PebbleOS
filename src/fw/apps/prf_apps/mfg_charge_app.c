@@ -31,13 +31,7 @@ static const char* status_text[] = {
   [ChargeStateFail] =        "Fail",
 };
 
-#ifdef PLATFORM_TINTIN
-static const int SLOW_THRESHOLD_PERCENTAGE = 42; // ~3850mv
-static const int BATTERY_PASS_PERCENTAGE = 84; // ~4050mv
-
-static const int TEMP_MIN_MC = 0;
-static const int TEMP_MAX_MC = 0;
-#elif defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
+#if defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
 static const int SLOW_THRESHOLD_PERCENTAGE = 0;
 static const int BATTERY_PASS_PERCENTAGE = 70;
 

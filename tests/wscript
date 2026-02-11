@@ -57,7 +57,7 @@ def convert_png_to_pbi(task):
 
     if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding']):
         img_fmt = 'color_raw'
-    elif any(word in dest_pbi for word in ['.1bit.', '~tintin']):
+    elif any(word in dest_pbi for word in ['.1bit.', '~silk']):
         img_fmt = 'bw'
     else:
         img_fmt = 'color'  # raw and palettized color images
@@ -85,7 +85,7 @@ def convert_png_to_pblpng(task):
             bitdepth = int(bit_suffix.group(1))
         elif any(word in dest_png for word in ['~snowy', '~spalding']):
             bitdepth = 8
-        elif any(word in dest_png for word in ['~tintin']):
+        elif any(word in dest_png for word in ['~silk']):
             bitdepth = 1
             palette_name = 'pebble2'
 
