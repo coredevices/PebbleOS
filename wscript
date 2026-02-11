@@ -625,7 +625,6 @@ def build(bld):
         raise Exception("install isn't a supported command. Did you mean flash?")
 
     if bld.variant == 'pdc2png':
-        bld.recurse('src/libutil')
         bld.recurse('tools')
         return
 

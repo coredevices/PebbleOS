@@ -119,7 +119,7 @@ void prv_convert_sequence(const char *filename, void *data, size_t size) {
   size_t len = prv_get_base_path(filename, output);
 
   // Write out each frame as a PNG
-  for (int i = 0; i < gdraw_command_sequence_get_num_frames(sequence); i++) {
+  for (uint32_t i = 0; i < gdraw_command_sequence_get_num_frames(sequence); i++) {
     // Set up the context for every frame
     GContext ctx;
     prv_setup_context(&ctx, gdraw_command_sequence_get_bounds_size(sequence));
@@ -128,7 +128,7 @@ void prv_convert_sequence(const char *filename, void *data, size_t size) {
     gdraw_command_frame_draw(&ctx, sequence, frame, GPoint(0, 0));
 
     // Write frames into new directory as a numbered sequence
-    sprintf(&output[len], "_%d.png", i + 1);
+    sprintf(&output[len], "_%d.png", (int)(i + 1));
     write_gbitmap_to_pbi(&ctx.dest_bitmap, output, s_pbi2png_path);
     prv_teardown_context(&ctx);
   }
@@ -175,8 +175,8 @@ static void prv_convert_pdc(const char *filename) {
     return;
   }
 
-  // Read size of data
-  size_t size;
+  // Read size of data (PDC format uses a 32-bit size field)
+  uint32_t size;
   if (fread(&size, sizeof(size), 1, f) != 1) {
     printf("Failed to read PDC size: %s\n", filename);
     fclose(f);
