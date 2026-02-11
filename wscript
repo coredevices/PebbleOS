@@ -335,70 +335,6 @@ def handle_configure_options(conf):
     if not conf.options.no_pulse_everywhere and (not conf.options.release or conf.options.mfg):
         conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
 
-def _create_cm0_env(conf):
-    prev_env = conf.env
-    prev_variant = conf.variant
-
-    # Create a new Cortex M0 environment that's used to build for the DA14681:
-    conf.setenv('cortex-m0')
-
-    # Copy the defines fron the stock env into our m0 env
-    conf.env.append_unique('DEFINES', prev_env.DEFINES)
-
-    Logs.pprint('CYAN', 'Configuring ARM cortex-m0 environment')
-
-    conf.env.append_unique('DEFINES', 'ARCH_NO_NATIVE_LONG_DIVIDE')
-
-    CPU_FLAGS = ['-mcpu=cortex-m0', '-mthumb']
-    OPT_FLAGS = [
-        '-fvar-tracking-assignments',  # Track variable locations better
-        '-fmessage-length=0', '-fsigned-char',
-        '-fbuiltin',
-        '-fno-builtin-itoa',
-        '-ffreestanding',
-        '-Os',
-    ]
-    if not conf.options.no_debug:
-        OPT_FLAGS += [
-            '-g3',
-            '-gdwarf-4',  # More detailed debug info
-        ]
-
-    C_FLAGS = ['-std=c11', '-ffunction-sections',
-               '-Wall', '-Wextra', '-Werror', '-Wpointer-arith',
-               '-Wno-unused-parameter', '-Wno-missing-field-initializers',
-               '-Wno-error=unused-parameter',
-               '-Wno-error=unused-const-variable',
-               '-Wno-packed-bitfield-compat',
-               '-Wno-address-of-packed-member',
-               '-Wno-expansion-to-defined',
-               '-Wno-enum-int-mismatch',
-               '-Wno-enum-conversion']
-
-    conf.find_program('arm-none-eabi-gcc', var='CC', mandatory=True)
-    for tool in ['ar', 'objcopy']:
-        conf.find_program('arm-none-eabi-' + tool, var=tool.upper(),
-                          mandatory=True)
-
-    conf.env.append_unique('CFLAGS', CPU_FLAGS + OPT_FLAGS + C_FLAGS)
-
-    ASFLAGS = ['-x', 'assembler-with-cpp']
-    conf.env.append_unique('ASFLAGS', ASFLAGS + CPU_FLAGS + OPT_FLAGS)
-
-    conf.env.append_unique('LINKFLAGS',
-                           ['-Wl,--cref',
-                            '-Wl,--gc-sections',
-                            '-nostdlib',
-                            ] + CPU_FLAGS + OPT_FLAGS)
-
-    conf.load('gcc gas objcopy ldscript')
-    conf.env.AS = conf.env.CC
-    conf.load('file_name_c_define')
-
-    conf.variant = prev_variant
-    conf.env = prev_env
-
-
 def configure(conf):
     if not conf.options.board:
         conf.fatal('No board selected! '
@@ -530,8 +466,6 @@ def configure(conf):
     else:
         conf.env.bt_controller = 'da14681-00'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_DA14681'])
-
-    _create_cm0_env(conf)
 
     conf.recurse('src/bluetooth-fw')
 
