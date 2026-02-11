@@ -57,7 +57,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --qemu
+        run: ./waf configure --board ${{ matrix.board }} --qemu --nohash
 
       - name: Build
         run: ./waf build qemu_image_micro qemu_image_spi
