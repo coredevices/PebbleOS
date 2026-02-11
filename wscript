@@ -600,7 +600,7 @@ def build(bld):
     bld.pbl_build_start_time = datetime.datetime.utcnow()
     bld.add_post_fun(stop_build_timer)
 
-    if bld.variant in ('test', 'test_rocky_emx', 'applib'):
+    if bld.variant in ('test', 'applib'):
         bld.set_env(bld.all_envs['local'])
 
     bld.load('file_name_c_define', tooldir='waftools')
@@ -648,8 +648,6 @@ def build(bld):
     if bld.variant == 'prf':
         bld.set_env(bld.all_envs['arm_prf_mode'])
     elif bld.variant == 'test':
-        if bld.env.APPLIB_TARGET == 'emscripten':
-            bld.fatal('Did you mean ./waf test_rocky_emx ?')
         bld.recurse('src/include')
         bld.recurse('third_party/jerryscript')
         bld.recurse('third_party/nanopb')
@@ -658,17 +656,6 @@ def build(bld):
         bld.recurse('src/libutil')
         bld.recurse('tests')
         bld.recurse('tools')
-        return
-    elif bld.variant == 'test_rocky_emx':
-        if bld.env.APPLIB_TARGET != 'emscripten':
-            bld.fatal('Make sure to ./waf configure with --target=emscripten')
-        bld.recurse('src/libutil')
-        bld.recurse('src/libos')
-        bld.recurse('third_party/jerryscript')
-        bld.recurse('third_party/nanopb')
-        bld.recurse('applib-targets')
-        bld.recurse('tools')
-        bld.recurse('tests')
         return
 
     if bld.variant == '':
@@ -795,11 +782,6 @@ class test(BuildContext):
     cmd = 'test'
     variant = 'test'
 
-
-class test_rocky_emx(BuildContext):
-    """builds and runs the tests"""
-    cmd = 'test_rocky_emx'
-    variant = 'test_rocky_emx'
 
 
 def docs(ctx):

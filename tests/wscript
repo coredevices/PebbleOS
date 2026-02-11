@@ -328,17 +328,9 @@ def build(bld):
     sh.rm('-rf', fail_path)
     fail_dir.mkdir()
 
-    def convert_to_emscripten_fs_path_if_needed(node):
-        real_fs_abspath = node.abspath()
-        if bld.variant != 'test_rocky_emx':
-            return real_fs_abspath
-        # When transpiling unittests with Emscripten, the host machine's
-        # filesystem is mounted at /node_fs, so we need to translate paths.
-        return '/node_fs' + real_fs_abspath
-
     bld.env.test_image_defines = [
-        'TEST_IMAGES_PATH="%s"' % convert_to_emscripten_fs_path_if_needed(test_images_dest_dir),
-        'TEST_OUTPUT_PATH="%s"' % convert_to_emscripten_fs_path_if_needed(fail_dir),
+        'TEST_IMAGES_PATH="%s"' % test_images_dest_dir.abspath(),
+        'TEST_OUTPUT_PATH="%s"' % fail_dir.abspath(),
         'PBI2PNG_EXE="%s"' % bld.path.find_node('../tools/pbi2png.py').abspath()]
 
     # Add test_pbis or test_pngs to runtime_deps for tests that require them

@@ -750,7 +750,7 @@ def build(bld):
         use=fw_includes_use,
         name='fw_includes')
 
-    if bld.variant in ('applib', 'test_rocky_emx'):
+    if bld.variant == 'applib':
         bld.set_env(bld.all_envs['local'])
         bld.env.DEFINES.extend(['UNITTEST', 'SCREEN_COLOR_DEPTH_BITS=8',
                                 'DISP_COLS=144', 'DISP_ROWS=168',

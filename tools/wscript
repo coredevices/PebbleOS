@@ -5,7 +5,7 @@ def configure(conf):
     pass
 
 def build(bld):
-    if bld.variant in ('test', 'test_rocky_emx', 'pdc2png'):
+    if bld.variant in ('test', 'pdc2png'):
         bld.recurse('pdc2png')
 
     if bld.variant == 'test':

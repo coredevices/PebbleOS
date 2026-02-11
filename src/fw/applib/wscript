@@ -65,7 +65,7 @@ def build(bld):
     else:
         excludes.append('compass_service.c')
 
-    if bld.variant in ('applib', 'test_rocky_emx'):
+    if bld.variant == 'applib':
         sources = bld.path.ant_glob('graphics/**/*.c', excl=excludes)
         sources.extend(bld.path.ant_glob('fonts/*.c', excl=excludes))
         sources.extend(bld.path.ant_glob('rockyjs/**/*.c', excl=excludes))

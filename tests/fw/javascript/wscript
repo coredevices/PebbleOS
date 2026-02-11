@@ -5,12 +5,8 @@ import sh
 
 
 def rocky_clar(ctx, **kwargs):
-    if ctx.variant == 'test_rocky_emx':
-        kwargs["sources_ant_glob"] += " applib-targets/emscripten/emscripten_jerry_port.c"
-        jerry_uses = ['emscripten_jerry_api', 'jerry_port_includes']
-    else:
-        kwargs["sources_ant_glob"] += " src/fw/applib/rockyjs/jerry_port.c"
-        jerry_uses = ['jerry_port_includes', 'jerry_core', 'jerry_libm']
+    kwargs["sources_ant_glob"] += " src/fw/applib/rockyjs/jerry_port.c"
+    jerry_uses = ['jerry_port_includes', 'jerry_core', 'jerry_libm']
 
     kwargs["use"] = jerry_uses + (kwargs["use"] if "use" in kwargs else [])
     jerry_defines = ['CAPABILITY_HAS_ROCKY_JS=1', 'CAPABILITY_JAVASCRIPT_BYTECODE_VERSION=1',
@@ -145,87 +141,79 @@ def build(ctx):
         " src/fw/applib/rockyjs/api/rocky_api_util_args.c",
         test_sources_ant_glob = "test_rocky_api_util_args.c")
 
-    # Tests that should be skipped when running unit tests with the fake
-    # JerryScript (emscripten_jerry_api.c):
-    if ctx.variant != 'test_rocky_emx':
-        rocky_clar(ctx,
-            sources_ant_glob =
-                " tests/fakes/fake_applib_resource.c" \
-                " tests/fakes/fake_clock.c" \
-                " src/fw/applib/graphics/gtypes.c" \
-                " src/fw/applib/rockyjs/rocky.c" \
-                " src/fw/applib/rockyjs/api/rocky_api.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_datetime.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_global.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_errors.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_tickservice.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_timers.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_graphics.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_graphics_path2d.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_graphics_color.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_graphics_text.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_memory.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_console.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_preferences.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_util.c" \
-                " src/fw/applib/rockyjs/api/rocky_api_util_args.c",
-             test_sources_ant_glob = "test_js.c")
-
-        # No snapshot support in emscripten_jerry_api.c :D
-        rocky_clar(ctx,
-             sources_ant_glob =
-             " tests/fakes/fake_applib_resource.c"
-             " src/fw/applib/rockyjs/rocky.c"
-             " src/fw/applib/rockyjs/rocky_res.c"
-             " src/fw/applib/rockyjs/api/rocky_api_errors.c"
-             " src/fw/applib/rockyjs/api/rocky_api_util.c",
-             test_sources_ant_glob = "test_rocky_res.c")
-
-        # When building unit tests with emscripten, skip this one because we're
-        # using the console.log/warn/error implementations of the browser/node.
-        rocky_clar(ctx,
-             sources_ant_glob =
-             " tests/fakes/fake_applib_resource.c"
-             " src/fw/applib/rockyjs/api/rocky_api_global.c"
-             " src/fw/applib/rockyjs/api/rocky_api_console.c"
-             " src/fw/applib/rockyjs/api/rocky_api_errors.c"
-             " src/fw/applib/rockyjs/api/rocky_api_util.c",
-             test_sources_ant_glob = "test_rocky_api_console.c")
-
-        rocky_clar(ctx,
-             sources_ant_glob =
-             " tests/fakes/fake_applib_resource.c"
-             " tests/fakes/fake_clock.c"
-             " src/fw/applib/rockyjs/api/rocky_api_global.c"
-             " src/fw/applib/rockyjs/api/rocky_api_datetime.c"
-             " src/fw/applib/rockyjs/api/rocky_api_errors.c"
-             " src/fw/applib/rockyjs/api/rocky_api_util.c",
-             test_sources_ant_glob = "test_rocky_api_datetime.c",
-             defines=['CAPABILITY_HAS_ROCKY_JS=1',
-                      'CAPABILITY_JAVASCRIPT_BYTECODE_VERSION=1'])
-
-        rocky_clar(ctx,
-             sources_ant_glob=" tests/fakes/fake_applib_resource.c"
-             " src/fw/applib/rockyjs/api/rocky_api_global.c"
-             " src/fw/applib/rockyjs/api/rocky_api_memory.c"
-             " src/fw/applib/rockyjs/api/rocky_api_errors.c"
-             " src/fw/applib/rockyjs/api/rocky_api_util.c",
-             test_sources_ant_glob = "test_rocky_api_memory.c")
-
-        # Currently we're leaving the browser/node's setTimeout + friends alone
-        rocky_clar(ctx,
-            sources_ant_glob =
+    rocky_clar(ctx,
+        sources_ant_glob =
+            " tests/fakes/fake_applib_resource.c"
+            " tests/fakes/fake_clock.c"
+            " src/fw/applib/graphics/gtypes.c"
+            " src/fw/applib/rockyjs/rocky.c"
+            " src/fw/applib/rockyjs/api/rocky_api.c"
+            " src/fw/applib/rockyjs/api/rocky_api_datetime.c"
+            " src/fw/applib/rockyjs/api/rocky_api_global.c"
             " src/fw/applib/rockyjs/api/rocky_api_errors.c"
+            " src/fw/applib/rockyjs/api/rocky_api_tickservice.c"
             " src/fw/applib/rockyjs/api/rocky_api_timers.c"
-            " src/fw/applib/rockyjs/api/rocky_api_util.c",
-            test_sources_ant_glob = "test_rocky_api_timers.c")
+            " src/fw/applib/rockyjs/api/rocky_api_graphics.c"
+            " src/fw/applib/rockyjs/api/rocky_api_graphics_path2d.c"
+            " src/fw/applib/rockyjs/api/rocky_api_graphics_color.c"
+            " src/fw/applib/rockyjs/api/rocky_api_graphics_text.c"
+            " src/fw/applib/rockyjs/api/rocky_api_memory.c"
+            " src/fw/applib/rockyjs/api/rocky_api_console.c"
+            " src/fw/applib/rockyjs/api/rocky_api_preferences.c"
+            " src/fw/applib/rockyjs/api/rocky_api_util.c"
+            " src/fw/applib/rockyjs/api/rocky_api_util_args.c",
+         test_sources_ant_glob = "test_js.c")
 
-        # Emscripten transpiled jerry-api uses UTF8 internally.
-        rocky_clar(ctx,
-            sources_ant_glob=
-            " src/fw/applib/rockyjs/api/rocky_api_errors.c"
-            " src/fw/applib/rockyjs/api/rocky_api_util.c",
-            test_sources_ant_glob = "test_rocky_text_encoding.c")
+    rocky_clar(ctx,
+         sources_ant_glob =
+         " tests/fakes/fake_applib_resource.c"
+         " src/fw/applib/rockyjs/rocky.c"
+         " src/fw/applib/rockyjs/rocky_res.c"
+         " src/fw/applib/rockyjs/api/rocky_api_errors.c"
+         " src/fw/applib/rockyjs/api/rocky_api_util.c",
+         test_sources_ant_glob = "test_rocky_res.c")
+
+    rocky_clar(ctx,
+         sources_ant_glob =
+         " tests/fakes/fake_applib_resource.c"
+         " src/fw/applib/rockyjs/api/rocky_api_global.c"
+         " src/fw/applib/rockyjs/api/rocky_api_console.c"
+         " src/fw/applib/rockyjs/api/rocky_api_errors.c"
+         " src/fw/applib/rockyjs/api/rocky_api_util.c",
+         test_sources_ant_glob = "test_rocky_api_console.c")
+
+    rocky_clar(ctx,
+         sources_ant_glob =
+         " tests/fakes/fake_applib_resource.c"
+         " tests/fakes/fake_clock.c"
+         " src/fw/applib/rockyjs/api/rocky_api_global.c"
+         " src/fw/applib/rockyjs/api/rocky_api_datetime.c"
+         " src/fw/applib/rockyjs/api/rocky_api_errors.c"
+         " src/fw/applib/rockyjs/api/rocky_api_util.c",
+         test_sources_ant_glob = "test_rocky_api_datetime.c",
+         defines=['CAPABILITY_HAS_ROCKY_JS=1',
+                  'CAPABILITY_JAVASCRIPT_BYTECODE_VERSION=1'])
+
+    rocky_clar(ctx,
+         sources_ant_glob=" tests/fakes/fake_applib_resource.c"
+         " src/fw/applib/rockyjs/api/rocky_api_global.c"
+         " src/fw/applib/rockyjs/api/rocky_api_memory.c"
+         " src/fw/applib/rockyjs/api/rocky_api_errors.c"
+         " src/fw/applib/rockyjs/api/rocky_api_util.c",
+         test_sources_ant_glob = "test_rocky_api_memory.c")
+
+    rocky_clar(ctx,
+        sources_ant_glob =
+        " src/fw/applib/rockyjs/api/rocky_api_errors.c"
+        " src/fw/applib/rockyjs/api/rocky_api_timers.c"
+        " src/fw/applib/rockyjs/api/rocky_api_util.c",
+        test_sources_ant_glob = "test_rocky_api_timers.c")
+
+    rocky_clar(ctx,
+        sources_ant_glob=
+        " src/fw/applib/rockyjs/api/rocky_api_errors.c"
+        " src/fw/applib/rockyjs/api/rocky_api_util.c",
+        test_sources_ant_glob = "test_rocky_text_encoding.c")
 
 
 # vim:filetype=python

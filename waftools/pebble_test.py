@@ -238,10 +238,6 @@ def get_bitdepth_for_platform(bld, platform):
 def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources, test_libs,
                   override_includes, add_includes, defines, runtime_deps, platform, use):
 
-    if not bld.options.regex and bld.variant == 'test_rocky_emx':
-        # Include tests starting with test_rocky... only!
-        bld.options.regex = 'test_rocky'
-
     if (bld.options.regex):
         filename = str(test_source).strip()
         if not re.match(bld.options.regex, filename):
@@ -260,10 +256,7 @@ def add_clar_test(bld, test_name, test_source, sources_ant_glob, product_sources
 
     if platform == 'default':
       test_dir = bld.path.get_bld().make_node(test_name)
-      node_name = 'runme'
-      if bld.variant == 'test_rocky_emx':
-        node_name += '.js'
-      test_bin = test_dir.make_node(node_name)
+      test_bin = test_dir.make_node('runme')
       platform = 'snowy'
       # add a default platform define so file selection can use non-platform pbi/png files
       platform_defines.append('PLATFORM_DEFAULT=1')
