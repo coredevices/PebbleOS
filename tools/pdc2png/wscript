@@ -42,7 +42,8 @@ def build(bld):
                 "../../src/fw/util/time",
                 "../../third_party/freertos",
                 "../../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/include",
-                "../../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3"]
+                "../../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/portable/GCC/ARM_CM3",
+                "../../src/libos/include"]
 
     includes = [bld.path.find_node(i).abspath() for i in includes]
 
@@ -66,7 +67,7 @@ def build(bld):
                          'DISPLAY_FRAMEBUFFER_BYTES=%d' % (144 * 168),
                          'PBL_COLOR', 'PBL_RECT', 'PLATFORM_SNOWY=1',
                          'PBI2PNG_EXE="../../tools/pbi2png.py"'],
-                use=['libutil-32bit', 'libos_includes'],
+                use=['libutil-32bit'],
                 env=pdc2png_env)
 
 
