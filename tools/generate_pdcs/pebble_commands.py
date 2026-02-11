@@ -12,6 +12,7 @@ There are two types of Draw Commands ('PathCommand' and 'CircleCommand') that ca
 The serialization of both types of commands is described in the 'Command' class below.
 '''
 
+import math
 import sys
 from struct import pack
 from pebble_image_routines import nearest_color_to_pebble64_palette, \
@@ -39,21 +40,28 @@ def subtract_points(p1, p2):
 
 
 def round_point(p):
-    # hack to get around the fact that python rounds negative
-    # numbers downwards
-    return round(p[0] + epsilon), round(p[1] + epsilon)
+    # Round half up (toward positive infinity) to match original behavior
+    return math.floor(p[0] + 0.5), math.floor(p[1] + 0.5)
 
 
 def scale_point(p, factor):
     return p[0] * factor, p[1] * factor
 
 
+def _round_half_away_from_zero(x):
+    """Round half away from zero (Python 2 behavior)."""
+    if x >= 0:
+        return math.floor(x + 0.5)
+    else:
+        return math.ceil(x - 0.5)
+
+
 def find_nearest_valid_point(p):
-    return (round(p[0] * 2.0) / 2.0), (round(p[1] * 2.0) / 2.0)
+    return (_round_half_away_from_zero(p[0] * 2.0) / 2.0), (_round_half_away_from_zero(p[1] * 2.0) / 2.0)
 
 
 def find_nearest_valid_precise_point(p):
-    return (round(p[0] * 8.0) / 8.0), (round(p[1] * 8.0) / 8.0)
+    return (_round_half_away_from_zero(p[0] * 8.0) / 8.0), (_round_half_away_from_zero(p[1] * 8.0) / 8.0)
 
 
 def convert_to_pebble_coordinates(point, verbose=False, precise=False):
