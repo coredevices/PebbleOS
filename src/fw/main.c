@@ -205,25 +205,6 @@ int main(void) {
 
   rtc_init();
 
-#if BOOTLOADER_TEST_STAGE2
-#define BLTEST_LOG(x...) pbl_log(LOG_LEVEL_ALWAYS, __FILE__, __LINE__, x)
-  BLTEST_LOG("BOOTLOADER TEST STAGE 2");
-  boot_bit_set(BOOT_BIT_FW_STABLE);
-
-  BLTEST_LOG("STAGE 2 -- Checking test boot bits");
-  if (boot_bit_test(BOOT_BIT_BOOTLOADER_TEST_A) && !boot_bit_test(BOOT_BIT_BOOTLOADER_TEST_B)) {
-    BLTEST_LOG("ALL BOOTLOADER TESTS PASSED");
-  } else {
-    BLTEST_LOG("STAGE 2 -- Boot bits incorrect!");
-    BLTEST_LOG("BOOTLOADER TEST FAILED");
-  }
-  boot_bit_clear(BOOT_BIT_BOOTLOADER_TEST_A | BOOT_BIT_BOOTLOADER_TEST_B);
-  psleep(10000);
-  system_hard_reset();
-  for (;;) {}
-  // won't get here, rest gets optimized out
-#endif
-
 #ifdef RECOVERY_FW
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
 #endif
