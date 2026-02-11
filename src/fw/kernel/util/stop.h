@@ -17,7 +17,6 @@ typedef enum {
   InhibitorI2C1,
   InhibitorI2C2,
   InhibitorMic,
-  InhibitorAccessory,
   InhibitorVibes,
   InhibitorCompositor,
   InhibitorI2C3,

@@ -450,17 +450,6 @@ def build(ctx):
         override_includes=['dummy_board'])
 
     clar(ctx,
-        sources_ant_glob = "src/fw/services/normal/accessory/smartstrap_comms.c" \
-            " src/fw/util/crc8.c" \
-            " src/fw/util/hdlc.c" \
-            " src/fw/util/mbuf.c" \
-            " src/fw/util/mbuf_iterator.c" \
-            " tests/fakes/fake_accessory.c" \
-            " tests/fakes/fake_smartstrap_profiles.c" \
-            " tests/fakes/fake_smartstrap_state.c",
-        test_sources_ant_glob = "test_smartstrap_comms.c")
-
-    clar(ctx,
         sources_ant_glob = "src/fw/services/common/vibe_pattern.c" \
             " src/fw/applib/ui/vibes.c" \
             " tests/fakes/fake_events.c" \

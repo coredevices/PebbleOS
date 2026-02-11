@@ -61,7 +61,6 @@
 #include "services/common/status_led.h"
 #include "services/common/system_task.h"
 #include "services/common/vibe_pattern.h"
-#include "services/normal/accessory/accessory_manager.h"
 #include "services/normal/alarms/alarm.h"
 #include "services/normal/app_fetch_endpoint.h"
 #include "services/normal/blob_db/api.h"
@@ -469,10 +468,6 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
   tick_timer_service_init();
   debounced_connection_service_init();
   event_service_system_init();
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  accessory_manager_init();
-#endif
-
   modal_manager_init();
 
   shell_event_loop_init();

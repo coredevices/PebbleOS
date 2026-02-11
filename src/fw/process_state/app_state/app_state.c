@@ -81,10 +81,6 @@ typedef struct {
 
   LocaleInfo locale_info;
 
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  SmartstrapConnectionState smartstrap_state;
-#endif
-
   ContentIndicatorsBuffer content_indicators_buffer;
 
   bool app_framebuffer_render_pending;
@@ -228,9 +224,6 @@ NOINLINE void app_state_init(void) {
 
 NOINLINE void app_state_deinit(void) {
   animation_private_state_deinit(&s_app_state_ptr->animation_state);
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  app_smartstrap_cleanup();
-#endif
 #if CAPABILITY_HAS_HEALTH_TRACKING
   health_service_state_deinit(app_state_get_health_service_state());
 #endif
@@ -333,12 +326,6 @@ ConnectionServiceState *app_state_get_connection_service_state(void) {
 #if CAPABILITY_HAS_HEALTH_TRACKING
 HealthServiceState *app_state_get_health_service_state(void) {
   return &s_app_state_ptr->health_service_state;
-}
-#endif
-
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-SmartstrapConnectionState *app_state_get_smartstrap_state(void) {
-  return &s_app_state_ptr->smartstrap_state;
 }
 #endif
 

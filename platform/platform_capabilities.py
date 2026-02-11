@@ -16,7 +16,6 @@ JAVASCRIPT_BYTECODE_VERSION = 1
 
 master_capability_set = {
     'COMPOSITOR_USES_DMA',
-    'HAS_ACCESSORY_CONNECTOR',
     'HAS_ALS_OPT3001',
     'HAS_ALS_W1160',
     'HAS_APPLE_MFI',
@@ -64,7 +63,6 @@ board_capability_dicts = [
         'capabilities':
         {
             'COMPOSITOR_USES_DMA',
-            'HAS_ACCESSORY_CONNECTOR',
             'HAS_APPLE_MFI',
             'HAS_APP_GLANCES',
             'HAS_DEFECTIVE_FW_CRC',
@@ -91,7 +89,6 @@ board_capability_dicts = [
         'capabilities':
         {
             'COMPOSITOR_USES_DMA',
-            'HAS_ACCESSORY_CONNECTOR',
             'HAS_APPLE_MFI',
             'HAS_APP_GLANCES',
             'HAS_DEFECTIVE_FW_CRC',
@@ -121,7 +118,6 @@ board_capability_dicts = [
         'capabilities':
         {
             'COMPOSITOR_USES_DMA',
-            'HAS_ACCESSORY_CONNECTOR',
             'HAS_APP_GLANCES',
             'HAS_DEFECTIVE_FW_CRC',
             'HAS_HARDWARE_PANIC_SCREEN',
@@ -146,7 +142,6 @@ board_capability_dicts = [
         'capabilities':
         {
             'COMPOSITOR_USES_DMA',
-            'HAS_ACCESSORY_CONNECTOR',
             'HAS_APP_GLANCES',
             'HAS_DEFECTIVE_FW_CRC',
             'HAS_HARDWARE_PANIC_SCREEN',
@@ -171,7 +166,6 @@ board_capability_dicts = [
         'capabilities':
         {
             'COMPOSITOR_USES_DMA',
-            'HAS_ACCESSORY_CONNECTOR',
             'HAS_APP_GLANCES',
             'HAS_DEFECTIVE_FW_CRC',
             'HAS_HARDWARE_PANIC_SCREEN',
@@ -199,7 +193,6 @@ board_capability_dicts = [
         'boards': ['silk_bb2', 'silk'],
         'capabilities':
         {
-            'HAS_ACCESSORY_CONNECTOR',
             'HAS_APP_GLANCES',
             'HAS_BUILTIN_HRM',
             'HAS_HEALTH_TRACKING',
@@ -367,10 +360,6 @@ def get_capability_dict(ctx, board):
     # Overrides
     # If you want the capabilities to change depending on the configure/build environment, add
     # them here.
-
-    if ctx.env.QEMU:
-        # Disable smartstraps on QEMU builds
-        capabilities_of_board.discard('HAS_ACCESSORY_CONNECTOR')
 
     if ctx.env.JS_ENGINE == 'none':
         capabilities_of_board.discard('HAS_ROCKY_JS')

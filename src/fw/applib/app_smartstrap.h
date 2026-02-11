@@ -11,12 +11,6 @@
 //! @{
 //!
 
-//! As long as the firmware maintains its current major version, attributes of this length or
-//! less will be allowed. Note that the maximum number of bytes which may be read from the
-//! smartstrap before a timeout occurs depends on the baud rate and implementation efficiency of the
-//! underlying UART protocol on the smartstrap.
-#define SMARTSTRAP_ATTRIBUTE_LENGTH_MAXIMUM 65535
-
 //! The default request timeout in milliseconds (see \ref smartstrap_set_timeout).
 #define SMARTSTRAP_TIMEOUT_DEFAULT 250
 
@@ -26,20 +20,9 @@
 //! The attribute_id to specify in order to read/write raw data to the smartstrap.
 #define SMARTSTRAP_RAW_DATA_ATTRIBUTE_ID 0
 
-// convenient macros to distinguish between smartstrap and no smartstrap.
-// TODO: PBL-21978 remove redundant comments as a workaround around for SDK generator
-#if defined(PBL_SMARTSTRAP)
-
-//! Convenience macro to switch between two expressions depending on smartstrap support.
-//! On platforms with a smartstrap the first expression will be chosen, the second otherwise.
-#define PBL_IF_SMARTSTRAP_ELSE(if_true, if_false) (if_true)
-
-#else
-
 //! Convenience macro to switch between two expressions depending on smartstrap support.
 //! On platforms with a smartstrap the first expression will be chosen, the second otherwise.
 #define PBL_IF_SMARTSTRAP_ELSE(if_true, if_false) (if_false)
-#endif
 
 //! Error values which may be returned from the smartstrap APIs.
 typedef enum {

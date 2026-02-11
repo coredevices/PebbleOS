@@ -27,7 +27,6 @@
 #include "services/common/hrm/hrm_manager.h"
 #include "services/normal/filesystem/pfs.h"
 #include "services/common/system_task.h"
-#include "services/normal/accessory/smartstrap_attribute.h"
 #include "services/normal/app_cache.h"
 #include "services/normal/data_logging/data_logging_service.h"
 #include "services/normal/persist.h"
@@ -546,9 +545,6 @@ void process_manager_process_cleanup(PebbleTask task) {
   dls_inactivate_sessions(task);
 
   if (task == PebbleTask_App) {
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-    smartstrap_attribute_unregister_all();
-#endif
   }
 #endif // RECOVERY_FW
 

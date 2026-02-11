@@ -19,7 +19,6 @@
 #include "drivers/debounced_button.h"
 
 #include "drivers/accel.h"
-#include "drivers/accessory.h"
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
 #include "drivers/battery.h"
@@ -276,10 +275,6 @@ static void init_drivers(void) {
 
   battery_init();
   vibe_init();
-
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  accessory_init();
-#endif
 
 #if CAPABILITY_HAS_PMIC
   pmic_init();

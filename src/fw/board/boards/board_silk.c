@@ -63,17 +63,6 @@ static DMARequest SHARP_SPI_TX_DMA_REQUEST = {
 };
 DMARequest * const SHARP_SPI_TX_DMA = &SHARP_SPI_TX_DMA_REQUEST;
 
-static DMARequestState s_accessory_uart_dma_request_state;
-static DMARequest ACCESSORY_UART_RX_DMA_REQUEST = {
-  .state = &s_accessory_uart_dma_request_state,
-  .stream = &DMA2_STREAM1_DEVICE,
-  .channel = 5,
-  .irq_priority = IRQ_PRIORITY_INVALID, // no interrupts
-  .priority = DMARequestPriority_VeryHigh,
-  .type = DMARequestType_PeripheralToMemory,
-  .data_size = DMARequestDataSize_Byte,
-};
-
 static DMARequestState s_dbg_uart_dma_request_state;
 static DMARequest DBG_UART_RX_DMA_REQUEST = {
   .state = &s_dbg_uart_dma_request_state,
@@ -168,25 +157,6 @@ static UARTDevice DBG_UART_DEVICE = {
 };
 UARTDevice * const DBG_UART = &DBG_UART_DEVICE;
 IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
-
-static UARTDeviceState s_accessory_uart_state;
-static UARTDevice ACCESSORY_UART_DEVICE = {
-  .state = &s_accessory_uart_state,
-  .half_duplex = true,
-  .tx_gpio = {
-    .gpio = GPIOA,
-    .gpio_pin = GPIO_Pin_11,
-    .gpio_pin_source = GPIO_PinSource11,
-    .gpio_af = GPIO_AF_USART6
-  },
-  .periph = USART6,
-  .irq_channel = USART6_IRQn,
-  .irq_priority = 0xb,
-  .rcc_apb_periph = RCC_APB2Periph_USART6,
-  .rx_dma = &ACCESSORY_UART_RX_DMA_REQUEST
-};
-UARTDevice * const ACCESSORY_UART = &ACCESSORY_UART_DEVICE;
-IRQ_MAP(USART6, uart_irq_handler, ACCESSORY_UART);
 
 
 // I2C DEVICES

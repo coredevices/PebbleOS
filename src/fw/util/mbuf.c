@@ -19,7 +19,6 @@ static PebbleMutex *s_free_list_lock;
 //! This array should be initialized with the maximum number of MBufs which may be allocated for
 //! each pool.
 static int s_mbuf_pool_space[] = {
-  [MBufPoolSmartstrap] = 2,
 #if UNITTEST
   [MBufPoolUnitTest] = 100,
 #endif

@@ -63,17 +63,6 @@ static DMARequest MIC_I2S_RX_DMA_REQUEST = {
 };
 DMARequest * const MIC_I2S_RX_DMA = &MIC_I2S_RX_DMA_REQUEST;
 
-static DMARequestState s_accessory_uart_dma_request_state;
-static DMARequest ACCESSORY_UART_RX_DMA_REQUEST = {
-  .state = &s_accessory_uart_dma_request_state,
-  .stream = &DMA1_STREAM6_DEVICE,
-  .channel = 5,
-  .irq_priority = IRQ_PRIORITY_INVALID, // no interrupts
-  .priority = DMARequestPriority_High,
-  .type = DMARequestType_PeripheralToMemory,
-  .data_size = DMARequestDataSize_Byte,
-};
-
 static DMARequestState s_compositor_dma_request_state;
 static DMARequest COMPOSITOR_DMA_REQUEST = {
   .state = &s_compositor_dma_request_state,
@@ -149,25 +138,6 @@ static UARTDevice DBG_UART_DEVICE = {
 };
 UARTDevice * const DBG_UART = &DBG_UART_DEVICE;
 IRQ_MAP(USART3, uart_irq_handler, DBG_UART);
-
-static UARTDeviceState s_accessory_uart_state;
-static UARTDevice ACCESSORY_UART_DEVICE = {
-  .state = &s_accessory_uart_state,
-  .half_duplex = true,
-  .tx_gpio = {
-    .gpio = GPIOE,
-    .gpio_pin = GPIO_Pin_1,
-    .gpio_pin_source = GPIO_PinSource1,
-    .gpio_af = GPIO_AF_UART8
-  },
-  .periph = UART8,
-  .irq_channel = UART8_IRQn,
-  .irq_priority = 0xb,
-  .rcc_apb_periph = RCC_APB1Periph_UART8,
-  .rx_dma = &ACCESSORY_UART_RX_DMA_REQUEST
-};
-UARTDevice * const ACCESSORY_UART = &ACCESSORY_UART_DEVICE;
-IRQ_MAP(UART8, uart_irq_handler, ACCESSORY_UART);
 
 static UARTDeviceState s_bluetooth_uart_state;
 static UARTDevice BLUETOOTH_UART_DEVICE = {
