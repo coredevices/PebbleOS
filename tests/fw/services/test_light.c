@@ -26,6 +26,9 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 
+void vTaskDelay(uint32_t ticks) {
+}
+
 // the time that the backlight remains on but there is zero user interaction
 extern const uint32_t INACTIVE_LIGHT_TIMEOUT_MS;
 // the time duration of the fade out

@@ -53,7 +53,7 @@ static struct {
   bool enabled;
 } s_hrm_state;
 
-void hrm_enable(HRMDevice *dev) { s_hrm_state.enabled = true; }
+bool hrm_enable(HRMDevice *dev) { s_hrm_state.enabled = true; return true; }
 void hrm_disable(HRMDevice *dev) { s_hrm_state.enabled = false; }
 bool hrm_is_enabled(HRMDevice *dev) { return s_hrm_state.enabled; }
 
@@ -107,8 +107,6 @@ bool battery_is_usb_connected(void) {
 #define TO_SESSION_REF(x) ((HRMSessionRef)(long)(x))
 
 static const HRMData s_hrm_event_data = {
-  .led_current_ua = 243,
-
   .hrm_bpm = 82,
   .hrm_quality = HRMQuality_Excellent,
 };
@@ -388,12 +386,10 @@ void test_hrm_manager__different_feature_callbacks(void) {
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
 
-  // Expect 4 events: 1 for BPM, 1 for LED, 2 for subscribing to all, none for no feature.
-  cl_assert_equal_i(s_event_count, 4);
+  // Expect 1 event: 1 for BPM, none for no feature.
+  cl_assert_equal_i(s_event_count, 1);
 
   sys_hrm_manager_unsubscribe(bpm_session);
-  sys_hrm_manager_unsubscribe(led_session);
-  sys_hrm_manager_unsubscribe(all_session);
   sys_hrm_manager_unsubscribe(no_session);
 }
 

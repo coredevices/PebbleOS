@@ -7,7 +7,7 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = " src/fw/shell/normal/battery_ui_fsm.c"
-                           " src/fw/services/common/battery/battery_curve.c",
+                           " src/fw/services/common/battery/voltage/battery_curve.c",
         test_sources_ant_glob = 'test_battery_ui_fsm.c',
         override_includes=['dummy_board'],
         platforms = ['snowy'])

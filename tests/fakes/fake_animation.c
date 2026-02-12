@@ -134,7 +134,7 @@ uint32_t animation_get_duration(Animation *animation, bool include_delay, bool i
   return ((AnimationPrivate *)animation)->duration_ms;
 }
 
-static void prv_call_started(AnimationPrivate *animation, uintptr_t UNUSED context) {
+static void prv_call_started(AnimationPrivate *animation, uintptr_t PBL_UNUSED context) {
   if (animation->implementation && animation->implementation->setup) {
     animation->implementation->setup((Animation *)animation);
   }

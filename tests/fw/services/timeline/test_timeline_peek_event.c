@@ -550,7 +550,7 @@ void test_timeline_peek_event__dismiss_event(void) {
 void test_timeline_peek_event__first_event_with_past_event(void) {
   TimelineItem item =
       DEFINE_EVENT( .id = 0x01, .timestamp  = 20 * SECONDS_PER_MINUTE, .duration = 70 );
-  TimelineItem UNUSED item2 =
+  TimelineItem PBL_UNUSED item2 =
       DEFINE_EVENT( .id = 0x02, .timestamp  = -50 * SECONDS_PER_MINUTE, .duration = 30 );
   unsigned int timeout_s = item.header.timestamp - TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S;
   CHECK_EVENT( .count = 3, .item_id = item.header.id, .num_concurrent = 0,
@@ -562,7 +562,7 @@ void test_timeline_peek_event__first_event_with_all_day_event_before(void) {
   // All day events show up if no timed event has yet passed
   TimelineItem item =
       DEFINE_EVENT( .id = 0x01, .timestamp  = 20 * SECONDS_PER_MINUTE, .duration = 70 );
-  TimelineItem UNUSED item2 =
+  TimelineItem PBL_UNUSED item2 =
       DEFINE_EVENT( .id = 0x02, .timestamp  = 0, .duration = MINUTES_PER_DAY, .all_day = true );
   unsigned int timeout_s = item.header.timestamp - TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S;
   CHECK_EVENT( .count = 3, .item_id = item.header.id, .num_concurrent = 0,
@@ -576,9 +576,9 @@ void test_timeline_peek_event__first_event_with_all_day_event_after(void) {
   TimelineItem item =
       DEFINE_EVENT( .id = 0x01, .timestamp  = SECONDS_PER_HOUR + 20 * SECONDS_PER_MINUTE,
                     .duration = 70 );
-  TimelineItem UNUSED item2 =
+  TimelineItem PBL_UNUSED item2 =
       DEFINE_EVENT( .id = 0x02, .timestamp  = 0, .duration = MINUTES_PER_DAY, .all_day = true );
-  TimelineItem UNUSED item3 =
+  TimelineItem PBL_UNUSED item3 =
       DEFINE_EVENT( .id = 0x03, .timestamp  = 0, .duration = 10 );
   unsigned int timeout_s = 600;
   CHECK_EVENT( .count = 4, .item_id = item.header.id, .num_concurrent = 0,

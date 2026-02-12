@@ -94,13 +94,13 @@
 
 #ifndef DO_NOT_STUB_LEGACY2
 
-UNUSED bool process_manager_compiled_with_legacy2_sdk(void) {
+PBL_UNUSED bool process_manager_compiled_with_legacy2_sdk(void) {
   return false;
 }
 
 #endif
 
-UNUSED static jerry_value_t prv_js_global_get_value(char *name) {
+PBL_UNUSED static jerry_value_t prv_js_global_get_value(char *name) {
   JS_VAR global_obj = jerry_get_global_object();
   cl_assert_equal_b(jerry_value_is_undefined(global_obj), false);
 
@@ -109,21 +109,21 @@ UNUSED static jerry_value_t prv_js_global_get_value(char *name) {
   return jerry_acquire_value(val);
 }
 
-UNUSED static bool prv_js_global_get_boolean(char *name) {
+PBL_UNUSED static bool prv_js_global_get_boolean(char *name) {
   JS_VAR val = prv_js_global_get_value(name);
   cl_assert(jerry_value_is_boolean(val));
   double rv = jerry_get_boolean_value(val);
   return rv;
 }
 
-UNUSED static double prv_js_global_get_double(char *name) {
+PBL_UNUSED static double prv_js_global_get_double(char *name) {
   JS_VAR val = prv_js_global_get_value(name);
   cl_assert(jerry_value_is_number(val));
   double rv = jerry_get_number_value(val);
   return rv;
 }
 
-UNUSED static void prv_js_global_get_string(char *name, char *buffer, size_t buffer_size) {
+PBL_UNUSED static void prv_js_global_get_string(char *name, char *buffer, size_t buffer_size) {
   JS_VAR val = prv_js_global_get_value(name);
   cl_assert(jerry_value_is_string(val));
   ssize_t num_bytes = jerry_string_to_char_buffer(val, (jerry_char_t *)buffer, buffer_size);

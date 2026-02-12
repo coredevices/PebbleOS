@@ -37,6 +37,7 @@
 #include "stubs_pbl_malloc.h"
 #include "stubs_reminders.h"
 #include "stubs_regular_timer.h"
+#include "stubs_settings_blob_db.h"
 
 
 CommSession *comm_session_get_system_session(void) {

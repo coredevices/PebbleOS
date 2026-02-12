@@ -153,6 +153,27 @@ status_t flash_impl_get_nvram_erase_status(bool *is_subsector,
   return S_FALSE;
 }
 
+status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
+  return S_SUCCESS;
+}
+
+status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked) {
+  *locked = false;
+  return S_SUCCESS;
+}
+
+status_t flash_impl_erase_security_register(uint32_t addr) {
+  return S_SUCCESS;
+}
+
+status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
+  return S_SUCCESS;
+}
+
+const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
+  return NULL;
+}
+
 void flash_erase_init(void) {
 }
 

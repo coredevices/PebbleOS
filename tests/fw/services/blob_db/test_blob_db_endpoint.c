@@ -38,6 +38,7 @@
 #include "stubs_pbl_malloc.h"
 #include "stubs_reminders.h"
 #include "stubs_regular_timer.h"
+#include "stubs_settings_blob_db.h"
 
 void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
   return;

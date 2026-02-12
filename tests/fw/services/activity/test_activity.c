@@ -52,6 +52,10 @@
 #include "stubs_task_watchdog.h"
 #include "stubs_worker_manager.h"
 #include "stubs_workout_service.h"
+#include "stubs_ambient_light.h"
+
+void prefs_sync_init(void) {
+}
 
 // Fakes
 #include "fake_accel_service.h"

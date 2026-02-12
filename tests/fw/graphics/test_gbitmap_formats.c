@@ -178,7 +178,7 @@ void test_gbitmap_formats__create_blank_with_palette(void) {
 }
 
 void test_gbitmap_formats__display_framebuffer_bytes(void) {
-#ifdef PLATFORM_TINTIN
+#if defined(PLATFORM_TINTIN) || defined(PLATFORM_SILK)
   const size_t expected = 20 * 168; // 20 * 8 == 144px + 2 bytes padding per scanline
 #endif
 #ifdef PLATFORM_SNOWY
