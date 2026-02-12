@@ -20,6 +20,10 @@
 #include "fake_rtc.h"
 #include "fake_pbl_std.h"
 
+bool sys_activity_is_initialized(void) {
+  return true;
+}
+
 static HealthServiceState s_health_service;
 
 // -----------------------------------

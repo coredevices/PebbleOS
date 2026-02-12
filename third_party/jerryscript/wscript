@@ -32,7 +32,7 @@ JERRY_CORE_DIRS = ['jerryscript/jerry-core',
 def _get_jerry_include_dirs(bld):
     include_dirs = JERRY_CORE_DIRS
     if bld.variant == 'test':
-        include_dirs.append('third-party/valgrind')
+        include_dirs.append('jerryscript/third-party/valgrind')
     return include_dirs
 
 def jerry_build_js_compiler(bld):

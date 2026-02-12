@@ -267,6 +267,20 @@ size_t sys_app_pp_app_message_inbox_size_maximum(void) {
 void sys_app_pp_app_message_analytics_count_drop(void) {
 }
 
+void sys_app_pp_app_message_analytics_count_sent(void) {
+}
+
+void sys_app_pp_app_message_analytics_count_received(void) {
+}
+
+uint32_t sys_app_pp_app_message_get_sent_count(void) {
+  return 0;
+}
+
+uint32_t sys_app_pp_app_message_get_received_count(void) {
+  return 0;
+}
+
 bool sys_get_current_app_is_js_allowed(void) {
   return false;
 }

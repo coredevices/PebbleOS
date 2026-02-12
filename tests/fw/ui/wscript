@@ -41,6 +41,8 @@ def build(ctx):
             " src/fw/applib/graphics/graphics_circle.c"
             " src/fw/applib/graphics/graphics_line.c"
             " src/fw/applib/graphics/text_layout.c"
+            " src/fw/applib/graphics/rtl_support.c"
+            " src/fw/applib/graphics/arabic_shaping.c"
             " src/fw/applib/graphics/utf8.c"
             " src/fw/applib/graphics/text_render.c"
             " src/fw/applib/graphics/text_resources.c"
@@ -195,6 +197,8 @@ def build(ctx):
         " src/fw/applib/graphics/gtypes.c" \
         " src/fw/applib/graphics/perimeter.c" \
         " src/fw/applib/graphics/text_layout.c" \
+        " src/fw/applib/graphics/rtl_support.c" \
+        " src/fw/applib/graphics/arabic_shaping.c" \
         " src/fw/applib/graphics/text_render.c" \
         " src/fw/applib/graphics/text_resources.c" \
         " src/fw/applib/graphics/utf8.c" \

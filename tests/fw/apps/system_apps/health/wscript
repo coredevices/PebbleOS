@@ -30,6 +30,8 @@ def build(ctx):
         " src/fw/applib/graphics/text_render.c" \
         " src/fw/applib/graphics/text_resources.c" \
         " src/fw/applib/graphics/utf8.c" \
+        " src/fw/applib/graphics/rtl_support.c" \
+        " src/fw/applib/graphics/arabic_shaping.c" \
         " src/fw/applib/ui/kino/kino_reel.c" \
         " src/fw/applib/ui/kino/kino_reel_gbitmap.c" \
         " src/fw/applib/ui/kino/kino_reel_gbitmap_sequence.c" \

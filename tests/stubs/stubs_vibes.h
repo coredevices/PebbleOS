@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "applib/ui/vibes.h"
 #include "util/attributes.h"
 
 void WEAK vibes_long_pulse(void) {}
@@ -12,3 +13,5 @@ void WEAK vibes_short_pulse(void) {}
 void WEAK vibes_double_pulse(void) {}
 
 void WEAK vibes_cancel(void) {}
+
+void WEAK vibes_enqueue_custom_pattern(VibePattern pattern) {}

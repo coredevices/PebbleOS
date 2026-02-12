@@ -216,6 +216,14 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 #include "stubs_workout_service.h"
 #include "stubs_workout_utils.h"
 
+GColor shell_prefs_get_apps_menu_highlight_color(void) {
+  return GColorWhite;
+}
+
+bool alerts_preferences_get_notification_alternative_design(void) {
+  return false;
+}
+
 // We can't include stubs_process_manager.h because it conflicts with the two helper includes below
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *),
                                                     void *data) {}

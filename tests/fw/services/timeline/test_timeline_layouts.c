@@ -56,6 +56,7 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 /////////////////////
 
 #include "stubs_action_menu.h"
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
 #include "stubs_animation_timing.h"
 #include "stubs_app_install_manager.h"

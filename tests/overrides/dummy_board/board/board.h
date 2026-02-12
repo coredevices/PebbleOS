@@ -12,6 +12,7 @@ typedef enum {
 
 typedef struct {
   const uint8_t backlight_on_percent; // percent of max possible brightness
+  const uint32_t ambient_light_dark_threshold;
 } BoardConfig;
 
 typedef struct {
@@ -37,6 +38,18 @@ static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
 static const BoardConfigPower BOARD_CONFIG_POWER = {
   .low_power_threshold = 5,
   .battery_capacity_hours = 144,
+};
+
+typedef struct {
+  uint8_t default_motion_sensitivity;
+} AccelConfig;
+
+typedef struct {
+  const AccelConfig accel_config;
+} BoardConfigAccel;
+
+static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
+  .accel_config = { .default_motion_sensitivity = 0 },
 };
 
 typedef const struct MicDevice MicDevice;
