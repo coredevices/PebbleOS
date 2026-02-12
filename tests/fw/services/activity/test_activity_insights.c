@@ -29,6 +29,10 @@
 #include "stubs_stringlist.h"
 #include "stubs_system_task.h"
 
+bool activity_is_initialized(void) {
+  return true;
+}
+
 // Fakes
 #include "fake_kernel_services_notifications.h"
 #include "fake_pbl_malloc.h"

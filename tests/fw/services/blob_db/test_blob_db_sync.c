@@ -57,7 +57,7 @@ BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id,
   BlobDBSyncSession *session = blob_db_sync_get_session_for_id(db_id);
   cl_assert(session != NULL);
   if (s_num_until_timeout != 0 && s_num_writebacks >= s_num_until_timeout) {
-    fake_regular_timer_trigger(&session->timeout_timer);
+    // Don't respond - simulates timeout (message lost/no response from phone)
   } else {
     system_task_add_callback(prv_handle_response_from_phone, session);
   }
@@ -246,6 +246,12 @@ void test_blob_db_sync__timeout_and_retry(void) {
   cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
   prv_generate_responses_from_phone();
   cl_assert_equal_i(s_num_writebacks, s_num_until_timeout);
+
+  // Cancel the timed-out session so we can start a fresh sync
+  BlobDBSyncSession *session = blob_db_sync_get_session_for_id(BlobDBIdTest);
+  cl_assert(session != NULL);
+  blob_db_sync_cancel(session);
+
   s_num_until_timeout = 0;
   cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
   prv_generate_responses_from_phone();

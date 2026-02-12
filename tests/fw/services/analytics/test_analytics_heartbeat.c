@@ -12,6 +12,10 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_rand_ptr.h"
 
+#include "services/common/analytics/analytics_metric.h"
+void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, int64_t val) {
+}
+
 void test_analytics_heartbeat__initialize(void) {
   analytics_metric_init();
 }
