@@ -152,8 +152,7 @@ static void prv_rtc_cal_timer_cb(void* data) {
     // changed externally. Reset calibration state instead of applying a bogus correction.
     if (s_delta_total > MAX_REASONABLE_CORRECTION_SECS ||
         s_delta_total < -MAX_REASONABLE_CORRECTION_SECS) {
-      PBL_LOG(LOG_LEVEL_WARNING,
-              "RTC calibration: delta_sum=%d exceeds max, resetting calibration state",
+      PBL_LOG_WRN("RTC calibration: delta_sum=%d exceeds max, resetting calibration state",
               (int)(s_delta_total * 1000));
       prv_reset_calibration_state();
       return;
@@ -180,8 +179,7 @@ static void prv_rtc_cal_timer_cb(void* data) {
       s_rtc_a = rtc_b;
     }
 
-    PBL_LOG(LOG_LEVEL_DEBUG,
-            "origin: f=%dHz,cycle=%d avr: f=%dHz cycle_ave=%d delta=%d, delta_sum=%d\n",
+    PBL_LOG_DBG("origin: f=%dHz,cycle=%d avr: f=%dHz cycle_ave=%d delta=%d, delta_sum=%d\n",
             (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / s_rtc_cycle_count_init),
             (int)s_rtc_cycle_count_init,
             (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / ref_cycle),
@@ -254,8 +252,8 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
   HAL_RTC_SetTime(&RTC_Handler, &rtc_time_struct, RTC_FORMAT_BIN);
   HAL_RTC_SetDate(&RTC_Handler, &rtc_date_struct, RTC_FORMAT_BIN);
 
-  PBL_LOG(LOG_LEVEL_INFO, "RTC set time to %lu", time);
-  PBL_LOG(LOG_LEVEL_INFO, "%u:%u:%u, %u/%u/%u (%u)",
+  PBL_LOG_INFO("RTC set time to %lu", time);
+  PBL_LOG_INFO("%u:%u:%u, %u/%u/%u (%u)",
           rtc_time_struct.Hours, rtc_time_struct.Minutes, rtc_time_struct.Seconds,
           rtc_date_struct.Month, rtc_date_struct.Date, rtc_date_struct.Year,
           rtc_date_struct.WeekDay);

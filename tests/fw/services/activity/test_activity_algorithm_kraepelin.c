@@ -138,7 +138,7 @@ void activity_sessions_prv_add_activity_session(ActivitySession *session) {
 
   // If no more room, fail
   if (s_activity_sessions_count >= ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No more room for additional activities");
+    PBL_LOG_WRN("No more room for additional activities");
     return;
   }
 

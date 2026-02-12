@@ -59,14 +59,14 @@ static void prv_event_service_unsubscribe(PebbleSubscriptionEvent *subscription)
 
   if (s_event_services[subscription->event_type] == NULL) {
     // service does not exist
-    PBL_LOG(LOG_LEVEL_WARNING, "Attempted to unsubscribe from %d, no service found",
+    PBL_LOG_WRN("Attempted to unsubscribe from %d, no service found",
         subscription->event_type);
     return;
   }
 
   if (service->subscribers[subscription->task] == NULL) {
     // not subscribed
-    PBL_LOG(LOG_LEVEL_WARNING, "Attempted to unsubscribe from %d, not subscribed",
+    PBL_LOG_WRN("Attempted to unsubscribe from %d, not subscribed",
         subscription->event_type);
     return;
   }
@@ -91,7 +91,7 @@ static void prv_event_service_subscribe(PebbleSubscriptionEvent *subscription) {
 
   if (service->subscribers[subscription->task]) {
     // already subscribed ?
-    PBL_LOG(LOG_LEVEL_DEBUG, "already subscribed");
+    PBL_LOG_DBG("already subscribed");
     return;
   }
 
@@ -220,7 +220,7 @@ void event_service_handle_event(PebbleEvent *e) {
         continue;
       } else {
         if (!prv_event_service_send_event(service->subscribers[i], e)) {
-          PBL_LOG(LOG_LEVEL_INFO, "Queue full! %d not delivered to task %d!",
+          PBL_LOG_INFO("Queue full! %d not delivered to task %d!",
                   (int)e->type, (int)i);
 #if !RELEASE
           // For 3rd party apps, just close them. For a 1st party app or other task, reboot
@@ -272,7 +272,7 @@ void* event_service_claim_buffer(PebbleEvent *e) {
   if (esb) {
     if (esb->intents_pending & CLAIMED_BIT) {
       // For now only 1 claim at a time is needed, so lets keep things simple and just support that
-      PBL_LOG(LOG_LEVEL_WARNING, "Buffer already claimed");
+      PBL_LOG_WRN("Buffer already claimed");
       return NULL;
     } else {
       esb->intents_pending |= CLAIMED_BIT;
@@ -337,7 +337,7 @@ static int16_t prv_get_plugin_index(const Uuid *uuid) {
 
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(uuid, uuid_buffer);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Registered plug-in service %s as index %d", uuid_buffer, result);
+  PBL_LOG_DBG("Registered plug-in service %s as index %d", uuid_buffer, result);
 
 unlock:
   mutex_unlock(s_plugin_list_mutex);

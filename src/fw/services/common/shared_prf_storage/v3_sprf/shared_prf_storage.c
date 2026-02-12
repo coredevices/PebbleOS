@@ -144,7 +144,7 @@ static void prv_erase_region_and_save(SharedPRFData *data) {
 }
 
 static void prv_invalidate_current_page(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Invalidating current page: #%"PRIu32, s_valid_page_idx);
+  PBL_LOG_DBG("Invalidating current page: #%"PRIu32, s_valid_page_idx);
   // First, check if the page is Unpopulated
   SprfMagic magic = prv_get_magic_for_page(s_valid_page_idx);
   if (magic == SprfMagic_UnpopulatedEntry) {
@@ -160,7 +160,7 @@ static void prv_invalidate_current_page(void) {
   // Sanity check to make sure that the page we are moving to is actually empty.
   if ((s_valid_page_idx >= SPRF_NUM_PAGES) ||
       (prv_get_magic_for_page(s_valid_page_idx) != SprfMagic_UnpopulatedEntry)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Ran out of pages or found corrupted next page, erasing region");
+    PBL_LOG_WRN("Ran out of pages or found corrupted next page, erasing region");
     // NOTE: This should not happen often. On boot, we delete and rewrite the region if >75% of
     // regions are filled. In the worst case, this will happen if the user pair/repairs
     // NUM_REGIONS * .25 times without rebooting in between. (e.g. 16 pages.
@@ -182,7 +182,7 @@ static void prv_fetch_struct(SharedPRFData *data_out) {
   flash_read_bytes((uint8_t *)data_out, prv_current_page_flash_addr(), sizeof(*data_out));
 
   if (!prv_valid_struct(data_out)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Shared PRF Storage sector # %"PRIu32" is corrupted. Invalidating"
+    PBL_LOG_WRN("Shared PRF Storage sector # %"PRIu32" is corrupted. Invalidating"
                                " and starting a new one", s_valid_page_idx);
     prv_invalidate_current_page();
     memset(data_out, 0xFF, sizeof(*data_out));
@@ -225,7 +225,7 @@ static void prv_persist_field(uint8_t *field, size_t offset, size_t field_size, 
     prv_write_to_current_page(data, true);
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Overwriting SPRF field at offset %d, size %d",
+  PBL_LOG_DBG("Overwriting SPRF field at offset %d, size %d",
           (int)offset, (int)field_size);
 
   // write the crc first so it's easier to detect a non empty field (we can just read if the CRC is
@@ -250,7 +250,7 @@ static bool prv_fetch_field(uint8_t *field_out, size_t offset, size_t field_size
   flash_read_bytes(field_out, prv_current_page_flash_addr() + offset, field_size);
   if (!prv_field_valid(field_out, field_size)) {
     // If corrupted field, delete entire page
-    PBL_LOG(LOG_LEVEL_WARNING, "Shared PRF Storage sector # %"PRIu32" is corrupted. Invalidating"
+    PBL_LOG_WRN("Shared PRF Storage sector # %"PRIu32" is corrupted. Invalidating"
                                " and starting a new one", s_valid_page_idx);
     prv_invalidate_current_page();
     return false;
@@ -482,7 +482,7 @@ void shared_prf_storage_store_ble_pairing_data(
     const SMPairingInfo *pairing_info, const char *name, bool requires_address_pinning,
     uint8_t flags) {
   if (!pairing_info || sm_is_pairing_info_empty(pairing_info)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "PRF Storage: Attempting to store an NULL or empty pairing info");
+    PBL_LOG_WRN("PRF Storage: Attempting to store an NULL or empty pairing info");
     return;
   }
 

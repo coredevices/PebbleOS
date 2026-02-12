@@ -22,7 +22,7 @@ static void prv_init(void) {
   uint8_t *buffer = app_malloc(30);
   pb_ostream_t s = pb_ostream_from_buffer(buffer, 30);
   pb_encode(&s, SimpleMessage_fields, &msg);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Encoded message, size: %u bytes", s.bytes_written);
+  PBL_LOG_DBG("Encoded message, size: %u bytes", s.bytes_written);
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, buffer, s.bytes_written);
   app_state_set_user_data(buffer);
 }
@@ -32,7 +32,7 @@ static void prv_deinit(void) {
   uint8_t *buffer = app_state_get_user_data();
   pb_istream_t s = pb_istream_from_buffer(buffer, 30);
   pb_decode(&s, SimpleMessage_fields, &msg);
-  PBL_LOG(LOG_LEVEL_DEBUG, "The lucky number is %"PRId32, msg.lucky_number);
+  PBL_LOG_DBG("The lucky number is %"PRId32, msg.lucky_number);
 }
 
 static void prv_app_main(void) {

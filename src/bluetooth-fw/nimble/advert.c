@@ -61,8 +61,7 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
 
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->connect.conn_handle, &desc) != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_handle_connection_event: Failed to find connection descriptor");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_handle_connection_event: Failed to find connection descriptor");
     return;
   }
 
@@ -128,8 +127,7 @@ static void prv_handle_disconnection_event(struct ble_gap_event *event) {
 static void prv_handle_enc_change_event(struct ble_gap_event *event) {
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->enc_change.conn_handle, &desc) != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_handle_enc_change_event: Failed to find connection descriptor");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_handle_enc_change_event: Failed to find connection descriptor");
     return;
   }
 
@@ -144,21 +142,18 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
 
 static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
   if (event->conn_update.status != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "Connection parameters update failed: 0x%04x",
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Connection parameters update failed: 0x%04x",
               (uint16_t)event->conn_update.status);
     return;
   }
 
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->conn_update.conn_handle, &desc) != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_handle_conn_params_updated_event: Failed to find connection descriptor");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_handle_conn_params_updated_event: Failed to find connection descriptor");
     return;
   }
 
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO,
-            "Connection parameters updated: "
+  PBL_LOG_D_INFO(LOG_DOMAIN_BT, "Connection parameters updated: "
             "itvl=%u ms, latency=%u, spvn timeout=%u ms",
             desc.conn_itvl * BLE_HCI_CONN_ITVL / 1000, desc.conn_latency,
             desc.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
@@ -175,8 +170,7 @@ static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
 static void prv_handle_conn_update_req_event(struct ble_gap_event *event) {
   *event->conn_update_req.self_params = *event->conn_update_req.peer_params;
 
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO,
-            "Connection update request: "
+  PBL_LOG_D_INFO(LOG_DOMAIN_BT, "Connection update request: "
             "itvl=(%u, %u) ms, latency=%u, spvn timeout=%u ms",
             event->conn_update_req.self_params->itvl_min * BLE_HCI_CONN_ITVL / 1000,
             event->conn_update_req.self_params->itvl_max * BLE_HCI_CONN_ITVL / 1000,
@@ -218,8 +212,7 @@ static void prv_handle_pairing_complete_event(struct ble_gap_event *event) {
 static void prv_handle_identity_resolved_event(struct ble_gap_event *event) {
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->identity_resolved.conn_handle, &desc) != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_handle_identity_resolved_event: Failed to find connection descriptor");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_handle_identity_resolved_event: Failed to find connection descriptor");
     return;
   }
 
@@ -232,8 +225,7 @@ static void prv_handle_identity_resolved_event(struct ble_gap_event *event) {
 static void prv_handle_mtu_change_event(struct ble_gap_event *event) {
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->mtu.conn_handle, &desc) != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_handle_mtu_change_event: Failed to find connection descriptor");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_handle_mtu_change_event: Failed to find connection descriptor");
     return;
   }
 
@@ -245,8 +237,7 @@ static void prv_handle_mtu_change_event(struct ble_gap_event *event) {
 extern int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_handle,
                                                                      uint16_t attr_handle);
 static void prv_handle_subscription_event(struct ble_gap_event *event) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG,
-            "prv_handle_subscription_event: connhandle: %d attr:%d notify:%d/%d indicate:%d/%d",
+  PBL_LOG_D_DBG(LOG_DOMAIN_BT, "prv_handle_subscription_event: connhandle: %d attr:%d notify:%d/%d indicate:%d/%d",
             event->subscribe.conn_handle, event->subscribe.attr_handle,
             event->subscribe.prev_notify, event->subscribe.cur_notify,
             event->subscribe.prev_indicate, event->subscribe.cur_indicate);
@@ -255,8 +246,7 @@ static void prv_handle_subscription_event(struct ble_gap_event *event) {
 static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->notify_rx.conn_handle, &desc) != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_handle_notification_rx_event: Failed to find connection descriptor");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_handle_notification_rx_event: Failed to find connection descriptor");
     return;
   }
 
@@ -275,8 +265,7 @@ static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
 }
 
 static void prv_handle_notification_tx_event(struct ble_gap_event *event) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG,
-            "notification tx event; status=%d attr_handle=%d indication=%d\n",
+  PBL_LOG_D_DBG(LOG_DOMAIN_BT, "notification tx event; status=%d attr_handle=%d indication=%d\n",
             event->notify_tx.status,
             event->notify_tx.attr_handle,
             event->notify_tx.indication);
@@ -300,63 +289,62 @@ static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
 
   return BLE_GAP_REPEAT_PAIRING_RETRY;
 #else
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_WARNING, "BLE_GAP_EVENT_REPEAT_PAIRING ignored");
+  PBL_LOG_D_WRN(LOG_DOMAIN_BT, "BLE_GAP_EVENT_REPEAT_PAIRING ignored");
   return BLE_GAP_REPEAT_PAIRING_IGNORE;
 #endif
 }
 
 static void prv_handle_phy_update_event(struct ble_gap_event *event) {
   if (event->phy_updated.status != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "PHY update failed: 0x%04x",
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "PHY update failed: 0x%04x",
               (uint16_t)event->phy_updated.status);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "PHY update complete; conn_handle=%d, tx_phy=%d, rx_phy=%d",
+  PBL_LOG_DBG("PHY update complete; conn_handle=%d, tx_phy=%d, rx_phy=%d",
           event->phy_updated.conn_handle, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
 }
 
 static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_CONNECT");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_CONNECT");
       prv_handle_connection_event(event);
       break;
     case BLE_GAP_EVENT_DISCONNECT:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_DISCONNECT");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_DISCONNECT");
       prv_handle_disconnection_event(event);
       break;
     case BLE_GAP_EVENT_ENC_CHANGE:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_ENC_CHANGE");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_ENC_CHANGE");
       prv_handle_enc_change_event(event);
       break;
     case BLE_GAP_EVENT_CONN_UPDATE:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_CONN_UPDATE");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_CONN_UPDATE");
       prv_handle_conn_params_updated_event(event);
       break;
     case BLE_GAP_EVENT_CONN_UPDATE_REQ:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_CONN_UPDATE_REQ");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_CONN_UPDATE_REQ");
       prv_handle_conn_update_req_event(event);
       break;
     case BLE_GAP_EVENT_PASSKEY_ACTION:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_PASSKEY_ACTION");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_PASSKEY_ACTION");
       prv_handle_passkey_event(event);
       break;
     case BLE_GAP_EVENT_IDENTITY_RESOLVED:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_IDENTITY_RESOLVED");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_IDENTITY_RESOLVED");
       prv_handle_identity_resolved_event(event);
       break;
     case BLE_GAP_EVENT_PAIRING_COMPLETE:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_PAIRING_COMPLETE");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_PAIRING_COMPLETE");
       prv_handle_pairing_complete_event(event);
       break;
     case BLE_GAP_EVENT_MTU:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_MTU");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_MTU");
       prv_handle_mtu_change_event(event);
       break;
     case BLE_GAP_EVENT_SUBSCRIBE:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_SUBSCRIBE");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_SUBSCRIBE");
       prv_handle_subscription_event(event);
       break;
     case BLE_GAP_EVENT_NOTIFY_RX:
@@ -364,18 +352,18 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
       prv_handle_notification_rx_event(event);
       break;
     case BLE_GAP_EVENT_NOTIFY_TX:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_NOTIFY_TX");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_NOTIFY_TX");
       prv_handle_notification_tx_event(event);
       break;
     case BLE_GAP_EVENT_REPEAT_PAIRING:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_REPEAT_PAIRING");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_REPEAT_PAIRING");
       return prv_handle_repeat_pairing_event(event);
     case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "BLE_GAP_EVENT_PHY_UPDATE_COMPLETE");
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT, "BLE_GAP_EVENT_PHY_UPDATE_COMPLETE");
       prv_handle_phy_update_event(event);
       break;
     default:
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_WARNING, "Unhandled GAP event: %d", event->type);
+      PBL_LOG_D_WRN(LOG_DOMAIN_BT, "Unhandled GAP event: %d", event->type);
       break;
   }
   return 0;
@@ -393,13 +381,13 @@ bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_
 
   rc = ble_hs_id_infer_auto(0, &own_addr_type);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to infer own address type (%d)", rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to infer own address type (%d)", rc);
     return false;
   }
 
   rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER, &advp, prv_handle_gap_event, NULL);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to start advertising (0x%04x)", (uint16_t)rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to start advertising (0x%04x)", (uint16_t)rc);
     return false;
   }
 

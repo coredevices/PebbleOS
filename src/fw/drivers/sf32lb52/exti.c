@@ -143,7 +143,7 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
     }
   }
 
-  PBL_LOG(LOG_LEVEL_WARNING, "No handler found for GPIO pin %u", GPIO_Pin);
+  PBL_LOG_WRN("No handler found for GPIO pin %u", GPIO_Pin);
 }
 
 void GPIO1_IRQHandler(void) {

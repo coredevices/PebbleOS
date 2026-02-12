@@ -306,7 +306,7 @@ static MagCalStatus check_correction_value(int16_t *solution,
       if (saved_sample_match == 3) {
         saved_sample_match = 0;
         calib_idx = 0;
-        PBL_LOG(LOG_LEVEL_INFO, "Persisting previous values!");
+        PBL_LOG_INFO("Persisting previous values!");
         return (MagCalStatusSavedSampleMatch); // locked
       }
     }
@@ -355,7 +355,7 @@ MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample,
       s_no_fit_strikes++;
     }
     if (s_no_fit_strikes == 2) {
-      PBL_LOG(LOG_LEVEL_INFO, "Lowering magnetometer distance threshold");
+      PBL_LOG_INFO("Lowering magnetometer distance threshold");
       thresh = THRESH_MIN;
     }
 
@@ -382,7 +382,7 @@ MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample,
   }
 
   // the sample has passed its distance threshold check so add it
-  PBL_LOG(LOG_LEVEL_DEBUG, "---> [%d] Adding %d %d %d \n",
+  PBL_LOG_DBG("---> [%d] Adding %d %d %d \n",
       s_sample_idx, (int)sample[0], (int)sample[1], (int)sample[2]);
   s_sample_idx++;
 

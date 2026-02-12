@@ -100,7 +100,7 @@ void bluetooth_analytics_handle_connection_disconnection_event(
     analytics_event_bt_connection_or_disconnection(type, reason);
   } else {
     if (!vers_info) { // We expect version info
-      PBL_LOG(LOG_LEVEL_WARNING, "Le Disconnect but no version info?");
+      PBL_LOG_WRN("Le Disconnect but no version info?");
     } else {
       analytics_event_bt_le_disconnection(reason, vers_info->version_number,
                                           vers_info->company_identifier,
@@ -124,7 +124,7 @@ void bluetooth_analytics_handle_connect(
   bool success = bt_driver_analytics_get_connection_quality(peer_addr, &link_quality, &rssi);
 
   if (success) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Link quality: %x, RSSI: %d", link_quality, rssi);
+    PBL_LOG_DBG("Link quality: %x, RSSI: %d", link_quality, rssi);
     analytics_add(ANALYTICS_DEVICE_METRIC_BLE_LINK_QUALITY_SUM,
                   link_quality, AnalyticsClient_System);
     analytics_add(ANALYTICS_DEVICE_METRIC_BLE_RSSI_SUM,
@@ -167,7 +167,7 @@ void bluetooth_analytics_handle_bt_classic_pairing_error(uint32_t error) {
 }
 
 void bluetooth_analytics_ble_mic_error(uint32_t num_sequential_mic_errors) {
-  PBL_LOG(LOG_LEVEL_INFO, "MIC Error detected ... %"PRIu32" packets", num_sequential_mic_errors);
+  PBL_LOG_INFO("MIC Error detected ... %"PRIu32" packets", num_sequential_mic_errors);
   analytics_event_bt_error(AnalyticsEvent_BtLeMicError, num_sequential_mic_errors);
 }
 
@@ -194,7 +194,7 @@ static bool prv_calc_stats_and_print(const SlaveConnEventStats *orig_stats,
     stats_buf->num_mic_errors =
         serial_distance32(orig_stats->num_mic_errors, stats_buf->num_mic_errors);
 
-    PBL_LOG(LOG_LEVEL_INFO, "%sBytes Conn Stats: Events: %"PRIu32", Sync Errs: %"PRIu32
+    PBL_LOG_INFO("%sBytes Conn Stats: Events: %"PRIu32", Sync Errs: %"PRIu32
       ", Skipped Events: %"PRIu32" Other Errs: %"PRIu32, is_putbytes ? "Put" : "Get",
             stats_buf->num_conn_events, stats_buf->num_sync_errors,
             stats_buf->num_conn_events_skipped, prv_calc_other_errors(stats_buf));

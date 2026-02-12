@@ -61,7 +61,7 @@ static void prv_send_all_sessions_system_task_cb(void *empty_all_data) {
 static void prv_check_all_sessions_timer_cb(void *data) {
   // If sends are not enabled, do nothing
   if (!prv_sends_enabled()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Not sending sessions beause sending is disabled");
+    PBL_LOG_INFO("Not sending sessions beause sending is disabled");
     return;
   }
 
@@ -71,7 +71,7 @@ static void prv_check_all_sessions_timer_cb(void *data) {
   // messages. However, occasionally we do want to flush everything out.
   static int check_counter = 0;
 
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "send all sessions: empty %s connected %s counter %u",
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "send all sessions: empty %s connected %s counter %u",
       bool_to_str(check_counter == 0),
       bool_to_str(comm_session_get_system_session() != NULL),
       check_counter);
@@ -96,7 +96,7 @@ static RegularTimerInfo prv_check_all_sessions_timer_info = {
 static void prv_remove_logging_session(DataLoggingSession *data) {
   DataLoggingSession *logging_session = (DataLoggingSession *)data;
 
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Removing session %d.",
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Removing session %d.",
             logging_session->comm.session_id);
 
   dls_endpoint_close_session(logging_session->comm.session_id);
@@ -112,7 +112,7 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
 
   // If sends are not enabled, ignore
   if (!prv_sends_enabled()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Not sending session beause sending is disabled");
+    PBL_LOG_INFO("Not sending session beause sending is disabled");
     return true;
   }
 
@@ -124,8 +124,7 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
   int32_t total_bytes = logging_session->storage.num_bytes;
   bool inactive = (dls_get_session_status(logging_session) == DataLoggingStatusInactive);
 
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG,
-            "de-logging session %"PRIu8", tag %"PRIu32
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "de-logging session %"PRIu8", tag %"PRIu32
             " (inactive %s tot_bytes %"PRIu32" empty %s)",
             logging_session->comm.session_id, logging_session->tag,
             bool_to_str(inactive), total_bytes, bool_to_str(empty));
@@ -152,7 +151,7 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
 
   unsigned int leftover_bytes = read_bytes % logging_session->item_size;
   if (leftover_bytes) {
-    PBL_LOG(LOG_LEVEL_ERROR, "leftover bytes in the session. Flushing...");
+    PBL_LOG_ERR("leftover bytes in the session. Flushing...");
     // remove the number of leftover bytes so we fall back on our feet
     read_bytes -= leftover_bytes;
     dls_storage_consume(logging_session, leftover_bytes);
@@ -245,7 +244,7 @@ static bool prv_inactivate_sessions_each_cb(DataLoggingSession *session, void *d
   Uuid system_uuid = UUID_SYSTEM;
   if (!uuid_equal(&session->app_uuid, &system_uuid)) {
     if (task == session->task) {
-      PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Inactivating session: %"PRIu8,
+      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Inactivating session: %"PRIu8,
                 session->comm.session_id);
 
       // Free the buffer if it's in kernel heap. If not in kernel heap we are intentionally not
@@ -275,7 +274,7 @@ static bool prv_inactivate_sessions_each_cb(DataLoggingSession *session, void *d
 void dls_send_all_sessions(void) {
   // If sends are not enabled, do nothing
   if (!prv_sends_enabled()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Not sending sessions beause sending is disabled");
+    PBL_LOG_INFO("Not sending sessions beause sending is disabled");
     return;
   }
   system_task_add_callback(prv_send_all_sessions_system_task_cb, (void*) true);
@@ -297,11 +296,11 @@ static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item
   // validate size parameter
   if (item_size == 0 || (buffered && item_size > DLS_SESSION_MAX_BUFFERED_ITEM_SIZE)
      || (!buffered && item_size > DLS_ENDPOINT_MAX_PAYLOAD)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "invalid logging_session item size, %d", item_size);
+    PBL_LOG_ERR("invalid logging_session item size, %d", item_size);
     return (NULL);
   } else if (item_type == DATA_LOGGING_UINT || item_type == DATA_LOGGING_INT) {
     if (item_size > 4 || item_size == 3) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid data width: integer types can be 1, 2, or 4 bytes");
+      PBL_LOG_ERR("Invalid data width: integer types can be 1, 2, or 4 bytes");
       return (NULL);
     }
   }
@@ -375,12 +374,12 @@ DataLoggingSession* dls_create_current_process(uint32_t tag, DataLoggingItemType
 void dls_finish(DataLoggingSession *logging_session) {
   PBL_ASSERTN(logging_session != NULL);
   if (uuid_is_system(&logging_session->app_uuid)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Finishing the system data logging session at %p", logging_session);
+    PBL_LOG_WRN("Finishing the system data logging session at %p", logging_session);
   }
 
   bool is_active = dls_lock_session(logging_session);
   if (!is_active) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Tried to close a non-active data logging session");
+    PBL_LOG_WRN("Tried to close a non-active data logging session");
     return;
   }
 
@@ -405,7 +404,7 @@ void dls_finish(DataLoggingSession *logging_session) {
   }
 
   if (timeout <= 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Timed out waiting for logging_session to write");
+    PBL_LOG_ERR("Timed out waiting for logging_session to write");
   }
   dls_unlock_session(logging_session, true /*inactivate*/);
 exit:
@@ -454,7 +453,7 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void* data, uint32_
     return (DATA_LOGGING_CLOSED);
   }
 
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "logging %d items of size %d to session %d",
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "logging %d items of size %d to session %d",
             (int)num_items, (int)session->item_size, session->comm.session_id);
 
   if (!session->data->buffer_storage) {

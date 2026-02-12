@@ -78,7 +78,7 @@ void led_controller_init(void) {
 
   // reset the LED controller
   if (!write_register(RegReset, 0xaa)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "LED Controller is MIA");
+    PBL_LOG_ERR("LED Controller is MIA");
     goto cleanup;
   } else {
     s_initialized = true;

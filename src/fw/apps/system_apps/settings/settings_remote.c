@@ -105,8 +105,8 @@ static void prv_forget_item(ActionMenu *action_menu,
     default:
       WTF;
   }
-  PBL_LOG(LOG_LEVEL_INFO, "User Forgot BT Pairing (%u)", remote->type);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Name: %s", remote->name);
+  PBL_LOG_INFO("User Forgot BT Pairing (%u)", remote->type);
+  PBL_LOG_DBG("Name: %s", remote->name);
   settings_bluetooth_update_remotes(remote_data->bt_data);
   prv_show_dialog(context);
 }
@@ -137,7 +137,7 @@ static void prv_stop_sharing_heart_rate(ActionMenu *action_menu,
 void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemote *stored_remote) {
   SettingsRemoteData *data = app_malloc_check(sizeof(SettingsRemoteData));
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "NAME: %s", stored_remote->name);
+  PBL_LOG_DBG("NAME: %s", stored_remote->name);
   *data = (SettingsRemoteData){};
   data->remote = *stored_remote;
   data->bt_data = bt_data;

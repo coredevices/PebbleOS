@@ -19,7 +19,7 @@
 #include "semphr.h"
 
 void app_window_stack_push(Window *window, bool animated) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Pushing window %p onto app window stack %p",
+  PBL_LOG_DBG("Pushing window %p onto app window stack %p",
       window, app_state_get_window_stack());
   window_stack_push(app_state_get_window_stack(), window, animated);
 }

@@ -216,7 +216,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
         // Log battery state every second during discharge
         int32_t current_ma = battery_const.i_ua / 1000;
-        PBL_LOG(LOG_LEVEL_INFO, "Discharging - V:%"PRId32"mV I:%"PRId32"mA T:%"PRId32"mC pct:%"PRIu8" Time:%"PRIu32"s",
+        PBL_LOG_INFO("Discharging - V:%"PRId32"mV I:%"PRId32"mA T:%"PRId32"mC pct:%"PRIu8" Time:%"PRIu32"s",
                 battery_const.v_mv, current_ma, battery_const.t_mc, charge_state.charge_percent,
                 data->seconds_remaining);
 

@@ -80,12 +80,12 @@ static int registry_get_next_available_index(Registry* registry) {
 int registry_private_add(const char* key, const uint8_t key_length, const uint8_t* uuid,
     uint8_t description, const uint8_t* value, uint8_t value_length, Registry* registry) {
   if (value_length >= MAX_VALUE_SIZE_BYTES) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Length of record value exceeds maximum length.");
+    PBL_LOG_WRN("Length of record value exceeds maximum length.");
     return -1;
   }
 
   if (key_length > MAX_KEY_SIZE_BYTES) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Length of record key exceeds maximum length.");
+    PBL_LOG_WRN("Length of record key exceeds maximum length.");
     return -1;
   }
 
@@ -95,10 +95,10 @@ int registry_private_add(const char* key, const uint8_t key_length, const uint8_
     if (r->value_length == value_length &&
         r->description == description &&
         memcmp(r->value, value, value_length) == 0) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Key & value already exist.");
+      PBL_LOG_DBG("Key & value already exist.");
       return 0;
     }
-    PBL_LOG(LOG_LEVEL_DEBUG, "Key already exists. Updating record.");
+    PBL_LOG_DBG("Key already exists. Updating record.");
     r->description = description;
     memcpy(r->value, value, value_length);
     r->value_length = value_length;
@@ -109,7 +109,7 @@ int registry_private_add(const char* key, const uint8_t key_length, const uint8_
   int idx = registry_get_next_available_index(registry);
 
   if (idx < 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Registry full.");
+    PBL_LOG_WRN("Registry full.");
     return -1;
   }
 
@@ -127,7 +127,7 @@ int registry_private_add(const char* key, const uint8_t key_length, const uint8_
   r->value_length = value_length;
   registry->is_different_from_flash = true;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Writing new key: %s", r->key);
+  PBL_LOG_DBG("Writing new key: %s", r->key);
 
   return 0;
 }
@@ -289,7 +289,7 @@ void registry_private_write_to_flash(Registry* registry) {
   if (registry->cursor->address == (unsigned)FLASH_CURSOR_UNINITIALIZED) {
     registry->cursor->address = registry->cursor->begin;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "Writing registry to flash...");
+  PBL_LOG_DBG("Writing registry to flash...");
 
   prv_assert_valid_cursor(registry->cursor);
 

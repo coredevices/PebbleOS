@@ -169,7 +169,7 @@ GRect window_calc_frame(bool fullscreen) {
 // an alternate function for initializing the window that takes a frame dimension too.
 void window_init(Window *window, const char* debug_name) {
   if (window == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Tried to init a NULL window");
+    PBL_LOG_ERR("Tried to init a NULL window");
     return;
   }
   *window = (Window){};
@@ -339,7 +339,7 @@ void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHan
 void window_raw_click_subscribe(ButtonId button_id, ClickHandler down_handler, ClickHandler up_handler, void *context) {
   prv_check_is_in_click_config_provider(window_manager_get_top_window(), "subscribe");
   if (button_id == BUTTON_ID_BACK) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Cannot register BUTTON_ID_BACK raw handler");
+    PBL_LOG_DBG("Cannot register BUTTON_ID_BACK raw handler");
     return;
   }
   ClickManager *mgr = prv_get_current_click_manager();

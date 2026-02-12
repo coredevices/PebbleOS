@@ -197,11 +197,11 @@ static int32_t prv_correct_for_roll_and_pitch(AccelRawData *accel_data,
 // Private handlers for compass service
 
 static void prv_calibration_time_expired_cb(void* data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Calibration time expired, complete, or app exit, "
+  PBL_LOG_DBG("Calibration time expired, complete, or app exit, "
           "dropping back to low frequency");
 
   if (!mag_change_sample_rate(MagSampleRate5Hz)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Forcing reset to enter low freq mode");
+    PBL_LOG_WRN("Forcing reset to enter low freq mode");
     mag_release();
     mag_start_sampling();
   }
@@ -256,7 +256,7 @@ static void prv_compass_data_service_stop(PebbleTask task) {
       mag_release();
     }
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "subscribers %"PRIu8, s_compass_subscribers_count);
+  PBL_LOG_DBG("subscribers %"PRIu8, s_compass_subscribers_count);
 }
 
 static void prv_compass_data_service_start(PebbleTask task) {
@@ -272,7 +272,7 @@ static void prv_compass_data_service_start(PebbleTask task) {
 
     mag_start_sampling();
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "subscribers %"PRIu8, s_compass_subscribers_count);
+  PBL_LOG_DBG("subscribers %"PRIu8, s_compass_subscribers_count);
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +288,7 @@ void ecompass_handle_battery_state_change_event(PreciseBatteryChargeState new_st
     // we have unplugged the charger, initiate recalibration
     s_charger_plugged = false;
     s_calib_run = false; // trigger a rerun of fast compass calibration
-    PBL_LOG(LOG_LEVEL_DEBUG, "Restarting calibration after charge event");
+    PBL_LOG_DBG("Restarting calibration after charge event");
   }
 }
 
@@ -318,7 +318,7 @@ void ecompass_service_handle(void) {
     if (rv == MagReadCommunicationFail) {
       // heavy hammer fix for now
       // FIXME: move the restart logic to driver
-      PBL_LOG(LOG_LEVEL_WARNING, "Read after %d samples failed, "
+      PBL_LOG_WRN("Read after %d samples failed, "
               "restarting compass", samples_collected);
       mag_release();
       mag_start_sampling();
@@ -363,7 +363,7 @@ void ecompass_service_handle(void) {
         (s_saved_corr_present) ? s_saved_corr : NULL, new_corr);
 
     if (cal_status != MagCalStatusNoSolution) {
-      PBL_LOG(LOG_LEVEL_INFO, "%s : %d %d %d (type = %d)", "Mag Corr",
+      PBL_LOG_INFO("%s : %d %d %d (type = %d)", "Mag Corr",
           (int)new_corr[0], (int)new_corr[1], (int)new_corr[2], (int)cal_status);
     }
 

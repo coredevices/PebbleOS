@@ -17,7 +17,7 @@ static PebbleMutex *s_mutex;
 static PebbleRecursiveMutex *s_rmutex;
 
 static void profile_mutexes(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "INITIALIZING PROFILER FOR MUTEXES!");
+  PBL_LOG_DBG("INITIALIZING PROFILER FOR MUTEXES!");
   PROFILER_INIT;
   PROFILER_START;
 

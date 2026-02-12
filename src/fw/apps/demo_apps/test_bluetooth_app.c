@@ -43,7 +43,7 @@ static void send_bluetooth(void* data) {
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "sending data");
+  PBL_LOG_INFO("sending data");
   comm_session_send_data(session, 2000, (uint8_t *)0x08000000,
                          comm_session_send_buffer_get_max_payload_length(session),
                          COMM_SESSION_DEFAULT_TIMEOUT);
@@ -54,7 +54,7 @@ static void send_bluetooth(void* data) {
 // =================================================================================
 // You can capture when the user selects a menu icon with a menu item select callback
 static void menu_select_callback(int index, void *ctx) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Hit menu item %d", index);
+  PBL_LOG_DBG("Hit menu item %d", index);
   
   // Here we just change the subtitle to a literal string
   s_app_data->menu_items[index].subtitle = "You've hit select here!";
@@ -75,10 +75,10 @@ static void menu_select_callback(int index, void *ctx) {
       s_pending_count++;
       system_task_add_callback(send_bluetooth, NULL);
     }
-    PBL_LOG(LOG_LEVEL_INFO, "Bluetooth disconnected");
+    PBL_LOG_INFO("Bluetooth disconnected");
 
   } else if (index == 1) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Not implemented");
+    PBL_LOG_DBG("Not implemented");
 
   }
 }

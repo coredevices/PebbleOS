@@ -20,9 +20,8 @@ static int pebble_pairing_service_get_connectivity_status(
   struct ble_gap_conn_desc desc;
   int rc = ble_gap_conn_find(conn_handle, &desc);
   if (rc != 0) {
-    PBL_LOG_D(
-        LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-        "Failed to find connection descriptor for %d when reading connection status, code: %d",
+    PBL_LOG_D_ERR(
+        LOG_DOMAIN_BT, "Failed to find connection descriptor for %d when reading connection status, code: %d",
         conn_handle, rc);
     return -1;
   }
@@ -41,16 +40,14 @@ int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_hand
   PebblePairingServiceConnectivityStatus status;
   int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "pebble_pairing_service_get_connectivity_status failed: %d", rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "pebble_pairing_service_get_connectivity_status failed: %d", rc);
     return rc;
   }
 
   struct os_mbuf *om = ble_hs_mbuf_from_flat(&status, sizeof(status));
   rc = ble_gatts_notify_custom(conn_handle, attr_handle, om);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "ble_gatts_notify_custom failed for attr %d: 0x%04x", attr_handle, (uint16_t)rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "ble_gatts_notify_custom failed for attr %d: 0x%04x", attr_handle, (uint16_t)rc);
     return rc;
   }
 
@@ -64,7 +61,7 @@ static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_hand
   PebblePairingServiceConnectivityStatus status;
   int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "prv_access_connection_status failed: %d", rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_access_connection_status failed: %d", rc);
     return 0;
   }
 
@@ -95,7 +92,7 @@ static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle
       return rc;
     }
 
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_INFO, "Trigger pairing flags 0x%x", flags);
+    PBL_LOG_D_INFO(LOG_DOMAIN_BT, "Trigger pairing flags 0x%x", flags);
 
     if ((((flags & TRIGGER_PAIRING_NO_SEC_REQ) == 0U) && !desc.sec_state.encrypted) ||
         ((flags & TRIGGER_PAIRING_FORCE_SEC_REQ) != 0U)) {
@@ -153,16 +150,14 @@ void prv_notify_chr_updated(const GAPLEConnection *connection, const ble_uuid_t 
   uint16_t conn_handle;
 
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_notify_chr_updated: failed to find connection handle");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_notify_chr_updated: failed to find connection handle");
     return;
   }
 
   uint16_t attr_handle;
   rc = ble_gatts_find_chr(pebble_pairing_svc[0].uuid, chr_uuid, NULL, &attr_handle);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_notify_chr_updated: failed to find characteristic handle");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_notify_chr_updated: failed to find characteristic handle");
     return;
   }
   pebble_pairing_service_get_connectivity_send_notification(conn_handle, attr_handle);

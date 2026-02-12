@@ -117,7 +117,7 @@ void test_ancs_app_storage__hash_collisions(void) {
       app_data.display_name = name;
       app_data.is_meta_changed = true;
       uint32_t key = get_key(name);
-      PBL_LOG(LOG_LEVEL_DEBUG, "name: %s, key: %u", name, (unsigned) key);
+      PBL_LOG_DBG("name: %s, key: %u", name, (unsigned) key);
       ancs_app_storage_save(&app_data);
     }
   }
@@ -164,7 +164,7 @@ void test_ancs_app_storage__iter(void) {
 
   ANCSAppData app_data_out = { 0 };
   for (unsigned int i = 0; i < ARRAY_LENGTH(apps); ++i) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "i: %d, name: %s", i, apps[i].bundle_id);
+    PBL_LOG_DBG("i: %d, name: %s", i, apps[i].bundle_id);
     ancs_app_storage_load(apps[i].bundle_id, &app_data_out);
 
     cl_assert_equal_s(apps[i].bundle_id, app_data_out.bundle_id);
@@ -176,7 +176,7 @@ void test_ancs_app_storage__iter(void) {
 
   ancs_app_storage_iter_begin();
   for (unsigned int i = 0; ancs_app_storage_next(&app_data_out); ++i) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "i: %d, name: %s, name_out: %s", i, apps[i].bundle_id, app_data_out.bundle_id);
+    PBL_LOG_DBG("i: %d, name: %s, name_out: %s", i, apps[i].bundle_id, app_data_out.bundle_id);
     cl_assert_equal_s(apps[i].bundle_id, app_data_out.bundle_id);
   }
 }

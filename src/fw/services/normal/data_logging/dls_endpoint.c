@@ -119,7 +119,7 @@ static bool check_ack_timeout_for_session(DataLoggingSession *session, void *dat
   RtcTicks *current_ticks = (RtcTicks*) data;
 
   if (session->comm.ack_timeout != 0 && session->comm.ack_timeout <= *current_ticks) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "session %"PRIu8" timeout", session->comm.session_id);
+    PBL_LOG_DBG("session %"PRIu8" timeout", session->comm.session_id);
 
     // Send timeout msg from system task because it could take a while and also require
     //  more stack space than provided by the timer task.
@@ -197,25 +197,25 @@ static void dls_endpoint_print_message(uint8_t *message, int num_bytes) {
     case DataLoggingEndpointCmdClose:
     {
       DataLoggingCloseSessionMessage *msg = (DataLoggingCloseSessionMessage *)message;
-      PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Closing session %d", msg->session_id);
+      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Closing session %d", msg->session_id);
       break;
     }
     case DataLoggingEndpointCmdOpen:
     {
       DataLoggingOpenSessionMessage *msg = (DataLoggingOpenSessionMessage *)message;
-      PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Opening session %u with tag %"PRIu32", type %u, size %hu",
+      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Opening session %u with tag %"PRIu32", type %u, size %hu",
           msg->session_id, msg->logging_session_tag, msg->data_item_type, msg->data_item_size);
       break;
     }
     case DataLoggingEndpointCmdData:
     {
       DataLoggingSendDataMessage *msg = (DataLoggingSendDataMessage *)message;
-      PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Sending data with session_id %"PRIu8", items remaining %"PRIu32", crc 0x%"PRIx32", num_bytes %d",
+      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Sending data with session_id %"PRIu8", items remaining %"PRIu32", crc 0x%"PRIx32", num_bytes %d",
         msg->session_id, msg->items_left_hereafter, msg->crc32, num_bytes);
       break;
     }
     default:
-      PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Message type 0x%x not recognized", message[0]);
+      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Message type 0x%x not recognized", message[0]);
   }
 }
 
@@ -324,17 +324,17 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
 static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
   DataLoggingSession *session = dls_list_find_by_session_id(session_id);
   if (session == NULL) {
-    PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_WARNING, "Received ack for non-existent session id: %"PRIu8, session_id);
+    PBL_LOG_D_WRN(LOG_DOMAIN_DATA_LOGGING, "Received ack for non-existent session id: %"PRIu8, session_id);
     return;
   }
 
   mutex_lock(s_endpoint_data.mutex);
 
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Received ACK for id: %"PRIu8" state: %u", session->comm.session_id, session->comm.state);
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Received ACK for id: %"PRIu8" state: %u", session->comm.session_id, session->comm.state);
 
   switch (session->comm.state) {
     case DataLoggingSessionCommStateIdle:
-      PBL_LOG(LOG_LEVEL_ERROR, "Unexpected ACK");
+      PBL_LOG_ERR("Unexpected ACK");
       break;
     case DataLoggingSessionCommStateOpening:
       update_session_state(session, DataLoggingSessionCommStateIdle, true /*reschedule*/);
@@ -358,11 +358,11 @@ static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
 }
 
 static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Received NACK for id: %"PRIu8, session_id);
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Received NACK for id: %"PRIu8, session_id);
 
   DataLoggingSession *logging_session = dls_list_find_by_session_id(session_id);
   if (!logging_session) {
-    PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_WARNING, "Received nack for non-existent session id: %"PRIu8, session_id);
+    PBL_LOG_D_WRN(LOG_DOMAIN_DATA_LOGGING, "Received nack for non-existent session id: %"PRIu8, session_id);
     return;
   }
 
@@ -371,11 +371,11 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
     case DataLoggingSessionCommStateIdle:
     case DataLoggingSessionCommStateOpening:
       //Currently, these messages never get NACK'd
-      PBL_LOG(LOG_LEVEL_ERROR, "Unexpected NACK");
+      PBL_LOG_ERR("Unexpected NACK");
       if (s_unexpected_nacks < MAX_UNEXPECTED_NACK_COUNT) {
         s_unexpected_nacks++;
         if (s_unexpected_nacks == MAX_UNEXPECTED_NACK_COUNT) {
-          PBL_LOG(LOG_LEVEL_ERROR, "I give up; I will not try to autonomously repair sessions anymore");
+          PBL_LOG_ERR("I give up; I will not try to autonomously repair sessions anymore");
         }
       }
       break;
@@ -383,7 +383,7 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
       //Maybe queue a resend
       logging_session->comm.num_bytes_pending = 0;
       if (++logging_session->comm.nack_count > MAX_NACK_COUNT) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Too many nacks. Flushing...");
+        PBL_LOG_ERR("Too many nacks. Flushing...");
         dls_storage_consume(logging_session, logging_session->storage.num_bytes);
         analytics_inc(ANALYTICS_DEVICE_METRIC_DATA_LOGGING_FLUSH_COUNT, AnalyticsClient_System);
         logging_session->comm.nack_count = 0;
@@ -416,7 +416,7 @@ static void prv_reopen_next_session_system_task_cb(void* data) {
       uuid_equal(&entry->app_uuid, &entry->session->app_uuid) &&
       entry->timestamp == entry->session->session_created_timestamp &&
       entry->tag == entry->session->tag) {
-    PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Reopening session %d",
+    PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Reopening session %d",
               entry->session->comm.session_id);
     success = (dls_endpoint_open_session(entry->session)
                && dls_private_send_session(entry->session, false));
@@ -439,7 +439,7 @@ static void prv_reopen_next_session_system_task_cb(void* data) {
   } else {
     s_endpoint_data.report_in_progress = false;
     // If we failed, give up on the remaining ones
-    PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Aborting all remaining open requests");
+    PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Aborting all remaining open requests");
     while (new_head) {
       DataLoggingReopenEntry *entry = new_head;
       new_head = (DataLoggingReopenEntry *)list_pop_head((ListNode *)new_head);
@@ -459,7 +459,7 @@ static bool dls_endpoint_add_reopen_sessions_cb(DataLoggingSession *session, voi
     .timestamp = session->session_created_timestamp,
     .tag = session->tag,
   };
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "adding session %d to reopen list", session->comm.session_id);
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "adding session %d to reopen list", session->comm.session_id);
   *head_ptr = (DataLoggingReopenEntry *)list_insert_before((ListNode *)(*head_ptr), &entry->list_node);
   return true;
 }
@@ -470,7 +470,7 @@ static void prv_handle_report_cmd(const uint8_t *session_ids, size_t num_session
 
     DataLoggingSession *logging_session = dls_list_find_by_session_id(session_id);
 
-    PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Phone reported session %u opened", session_id);
+    PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Phone reported session %u opened", session_id);
 
     // If the phone thinks we're open and we're not, send a close message.
     if (logging_session == NULL) {
@@ -489,7 +489,7 @@ static void prv_handle_report_cmd(const uint8_t *session_ids, size_t num_session
 
 //! Empty a session by session id
 static void prv_empty_session(uint8_t session_id) {
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Phone requested empty of session %u",
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Phone requested empty of session %u",
             session_id);
   DataLoggingSession *logging_session = dls_list_find_by_session_id(session_id);
   if (logging_session) {
@@ -507,7 +507,7 @@ void data_logging_protocol_msg_callback(CommSession *session, const uint8_t *dat
 
   // All commands from the phone have their high bit set.
   if ((command & ~DLS_ENDPOINT_CMD_MASK) == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid data logging endpoint command 0x%x", command);
+    PBL_LOG_ERR("Invalid data logging endpoint command 0x%x", command);
     // TODO: send some error code back?
     return;
   }
@@ -523,7 +523,7 @@ void data_logging_protocol_msg_callback(CommSession *session, const uint8_t *dat
 
     case (DataLoggingEndpointCmdReport):
       if (s_endpoint_data.report_in_progress) {
-        PBL_LOG(LOG_LEVEL_INFO, "Report already in progress");
+        PBL_LOG_INFO("Report already in progress");
       } else {
         s_endpoint_data.report_in_progress = true;
         prv_handle_report_cmd(&data[1], length);

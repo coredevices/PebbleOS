@@ -30,7 +30,7 @@ static bool prv_handle_result_common(VoiceEndpointResult result,
                                                                  VEAttributeIdAppUuid,
                                                                  attr_list_size);
   if (app_initiated && !uuid_attr) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No app UUID found for dictation response from app-initiated "
+    PBL_LOG_WRN("No app UUID found for dictation response from app-initiated "
         "session");
     voice_handle_dictation_result(VoiceEndpointResultFailInvalidMessage, session_id, NULL,
                                   app_initiated, NULL);
@@ -45,7 +45,7 @@ static bool prv_handle_result_common(VoiceEndpointResult result,
   }
 
   if (attr_list->num_attributes == 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No attributes in message");
+    PBL_LOG_WRN("No attributes in message");
     voice_handle_dictation_result(VoiceEndpointResultFailInvalidMessage, session_id, NULL,
                                   app_initiated, app_uuid);
     return false;
@@ -69,7 +69,7 @@ static void prv_handle_dictation_result(VoiceSessionResultMsg *msg, size_t size)
       VEAttributeIdTranscription, attr_list_size);
 
   if (!transcription_attr || transcription_attr->length == 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No transcription attribute found");
+    PBL_LOG_WRN("No transcription attribute found");
     voice_handle_dictation_result(VoiceEndpointResultFailInvalidMessage, msg->session_id, NULL,
                                   app_initiated, app_uuid);
     return;
@@ -79,7 +79,7 @@ static void prv_handle_dictation_result(VoiceSessionResultMsg *msg, size_t size)
   bool valid = transcription_validate(transcription, transcription_attr->length);
 
   if (!valid) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Unrecognized transcription format received");
+    PBL_LOG_WRN("Unrecognized transcription format received");
     voice_handle_dictation_result(VoiceEndpointResultFailInvalidRecognizerResponse,
                                   msg->session_id, NULL, app_initiated, app_uuid);
   }
@@ -97,7 +97,7 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
     return;
   }
   if (app_uuid) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Got an app UUID in a NLP result msg. Ignoring and continuing");
+    PBL_LOG_WRN("Got an app UUID in a NLP result msg. Ignoring and continuing");
   }
 
 
@@ -114,7 +114,7 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
       VEAttributeIdReminder, attr_list_size);
 
   if (!reminder_attr || reminder_attr->length == 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No reminder attribute found");
+    PBL_LOG_WRN("No reminder attribute found");
     voice_handle_nlp_result(VoiceEndpointResultFailInvalidMessage, msg->session_id, NULL, 0);
     return;
   }
@@ -138,7 +138,7 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
         // Validate result enum value to prevent crashes from invalid values
         VoiceEndpointResult result = msg->result;
         if (result > VoiceEndpointResultFailInvalidMessage) {
-          PBL_LOG(LOG_LEVEL_ERROR, "Invalid VoiceEndpointResult value: %d, treating as invalid message", 
+          PBL_LOG_ERR("Invalid VoiceEndpointResult value: %d, treating as invalid message", 
                   (int)result);
           result = VoiceEndpointResultFailInvalidMessage;
         }
@@ -146,7 +146,7 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
         bool app_initiated = (msg->flags.app_initiated == 1);
         voice_handle_session_setup_result(result, msg->session_type, app_initiated);
       } else {
-        PBL_LOG(LOG_LEVEL_WARNING, "Invalid size for session setup result message");
+        PBL_LOG_WRN("Invalid size for session setup result message");
       }
       break;
     }
@@ -155,7 +155,7 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
         VoiceSessionResultMsg *msg = (VoiceSessionResultMsg *) data;
         prv_handle_dictation_result(msg, size);
       } else {
-        PBL_LOG(LOG_LEVEL_WARNING, "Invalid size for dictation result message %zu", size);
+        PBL_LOG_WRN("Invalid size for dictation result message %zu", size);
       }
       break;
     }
@@ -164,13 +164,13 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
         VoiceSessionResultMsg *msg = (VoiceSessionResultMsg *) data;
         prv_handle_nlp_result(msg, size);
       } else {
-        PBL_LOG(LOG_LEVEL_WARNING, "Invalid size for dictation result message %zu", size);
+        PBL_LOG_WRN("Invalid size for dictation result message %zu", size);
       }
       break;
     }
     default:
       // Ignore invalid message ID
-      PBL_LOG(LOG_LEVEL_WARNING, "Invalid message ID");
+      PBL_LOG_WRN("Invalid message ID");
       break;
   }
 

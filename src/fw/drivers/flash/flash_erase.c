@@ -50,7 +50,7 @@ static void prv_async_erase_done_cb(void *ignored, status_t result) {
     // potential for a stack overflow) if the flash_erase_sector calls the
     // completion callback asynchronously.
     if (!new_timer_add_work_callback(prv_erase_next_async, NULL)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to enqueue callback; aborting erase");
+      PBL_LOG_ERR("Failed to enqueue callback; aborting erase");
       prv_unlock_erase_mutex();
       s_erase_state.on_complete(s_erase_state.on_complete_context, E_INTERNAL);
     }

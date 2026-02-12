@@ -133,7 +133,7 @@ static void prv_handle_movement_update(HealthEventMovementUpdateData *event) {
   const int32_t new_event_steps = event->steps;
   const time_t now_ts = time_get_uptime_seconds();
   if (new_event_steps < wrkt_data->last_event_step_count) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Working out through midnight, resetting last_event_step_count");
+    PBL_LOG_WRN("Working out through midnight, resetting last_event_step_count");
     wrkt_data->last_event_step_count = 0;
   }
 
@@ -352,7 +352,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
     }
 
     if (workout_service_is_workout_ongoing()) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Only 1 workout at a time is supported");
+      PBL_LOG_WRN("Only 1 workout at a time is supported");
       rv = false;
       goto unlock;
     }
@@ -391,7 +391,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
     // Finally tell our algorithm it should stop automatically tracking activities
     activity_algorithm_enable_activity_tracking(false /* disable */);
 
-    PBL_LOG(LOG_LEVEL_INFO, "Starting a workout with type: %d", type);
+    PBL_LOG_INFO("Starting a workout with type: %d", type);
     prv_put_event(PebbleWorkoutEvent_Started);
   }
 unlock:
@@ -407,7 +407,7 @@ bool workout_service_pause_workout(bool should_be_paused) {
   }
 
   if (!workout_service_is_workout_ongoing()) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Workout (un)pause requested but no workout in progress");
+    PBL_LOG_WRN("Workout (un)pause requested but no workout in progress");
     return false;
   }
 
@@ -427,7 +427,7 @@ bool workout_service_pause_workout(bool should_be_paused) {
 
     // Update the global duration since we have changed the pause state
     prv_update_duration();
-    PBL_LOG(LOG_LEVEL_INFO, "Paused a workout with type: %d", wrkt_data->type);
+    PBL_LOG_INFO("Paused a workout with type: %d", wrkt_data->type);
     prv_put_event(PebbleWorkoutEvent_Paused);
   }
   prv_unlock();
@@ -440,7 +440,7 @@ bool workout_service_stop_workout(void) {
   prv_lock();
   {
     if (!workout_service_is_workout_ongoing()) {
-      PBL_LOG(LOG_LEVEL_WARNING, "No workout in progress");
+      PBL_LOG_WRN("No workout in progress");
       rv = false;
       goto unlock;
     }
@@ -477,7 +477,7 @@ bool workout_service_stop_workout(void) {
     // Re-enable automatic activity tracking
     activity_algorithm_enable_activity_tracking(true /* enable */);
 
-    PBL_LOG(LOG_LEVEL_INFO, "Stopping a workout with type: %d",
+    PBL_LOG_INFO("Stopping a workout with type: %d",
             s_workout_data.current_workout->type);
     prv_put_event(PebbleWorkoutEvent_Stopped);
 

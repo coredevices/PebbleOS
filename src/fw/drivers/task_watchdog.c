@@ -89,11 +89,11 @@ static void prv_log_stuck_timer_task(RebootReason *reboot_reason) {
   void* current_cb = new_timer_debug_get_current_callback();
 
   if (!current_cb) {
-    PBL_LOG_SYNC(LOG_LEVEL_WARNING, "No timer in progress.");
+    PBL_LOG_SYNC_WRN("No timer in progress.");
     return;
   }
 
-  PBL_LOG_SYNC(LOG_LEVEL_WARNING, "Timer callback %p", current_cb);
+  PBL_LOG_SYNC_WRN("Timer callback %p", current_cb);
   reboot_reason->watchdog.stuck_task_callback = (uint32_t)current_cb;
 }
 
@@ -101,11 +101,11 @@ static void prv_log_stuck_system_task(RebootReason *reboot_reason) {
   void *current_cb = system_task_get_current_callback();
 
   if (!current_cb) {
-    PBL_LOG_SYNC(LOG_LEVEL_WARNING, "No system task callback in progress.");
+    PBL_LOG_SYNC_WRN("No system task callback in progress.");
     return;
   }
 
-  PBL_LOG_SYNC(LOG_LEVEL_WARNING, "System task callback: %p", current_cb);
+  PBL_LOG_SYNC_WRN("System task callback: %p", current_cb);
   reboot_reason->watchdog.stuck_task_callback = (uint32_t)current_cb;
 }
 
@@ -114,14 +114,13 @@ static void prv_log_stuck_task(RebootReason *reboot_reason, PebbleTask task) {
   void *current_lr = (void*) ulTaskDebugGetStackedLR(task_handle);
   void *current_pc = (void*) ulTaskDebugGetStackedPC(task_handle);
 
-  PBL_LOG_SYNC(LOG_LEVEL_WARNING, "Task <%s> stuck: LR: %p PC: %p", pebble_task_get_name(task), current_lr, current_pc);
+  PBL_LOG_SYNC_WRN("Task <%s> stuck: LR: %p PC: %p", pebble_task_get_name(task), current_lr, current_pc);
   reboot_reason->watchdog.stuck_task_pc = (uint32_t)current_pc;
   reboot_reason->watchdog.stuck_task_lr = (uint32_t)current_lr;
 }
 
 static void prv_log_failed_message(RebootReason *reboot_reason) {
-  PBL_LOG_SYNC(LOG_LEVEL_WARNING,
-      "Watchdog feed failed, last feed %dms ago, current status 0x%"PRIx16" mask 0x%"PRIx16,
+  PBL_LOG_SYNC_WRN("Watchdog feed failed, last feed %dms ago, current status 0x%"PRIx16" mask 0x%"PRIx16,
       (s_ticks_since_successful_feed * 1000) / TIMER_INTERRUPT_HZ,
       s_watchdog_bits, s_watchdog_mask);
 
@@ -167,7 +166,7 @@ void TIM2_IRQHandler(void) {
 static void prv_app_task_throttle_end(void *data) {
   vTaskPrioritySet(pebble_task_get_handle_for_task(PebbleTask_App),
       APP_TASK_PRIORITY | portPRIVILEGE_BIT);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Ending App Throttling");
+  PBL_LOG_DBG("Ending App Throttling");
 }
 
 static void prv_app_task_throttle_start(void) {
@@ -178,9 +177,9 @@ static void prv_app_task_throttle_start(void) {
   // once to aid in debug
   if (strcmp(last_throttled_task, curr_task) != 0) {
     strcpy(last_throttled_task, curr_task);
-    PBL_LOG(LOG_LEVEL_INFO, "Starting App Throttling for %s", curr_task);
+    PBL_LOG_INFO("Starting App Throttling for %s", curr_task);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Starting App Throttling for %s", curr_task);
+    PBL_LOG_DBG("Starting App Throttling for %s", curr_task);
   }
 
   analytics_inc(ANALYTICS_DEVICE_METRIC_APP_THROTTLED_COUNT, AnalyticsClient_System);
@@ -205,7 +204,7 @@ static void prv_system_task_starved_callback(void *data) {
 // This is a lower priority interrupt (at configMAX_SYSCALL_INTERRUPT_PRIORITY) that we trigger
 // when we need to perform logging.
 void WATCHDOG_FREERTOS_IRQHandler(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "WD: low priority ISR");
+  PBL_LOG_DBG("WD: low priority ISR");
 
   // Are we rebooting because of watch dog?
   RebootReason reason;
@@ -235,8 +234,7 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
     // CPU if not fed at least once every 7 seconds), then just coredump now
     if (s_ticks_since_successful_feed >= (6 * TIMER_INTERRUPT_HZ)) {
 #if defined(NO_WATCHDOG)
-      PBL_LOG(LOG_LEVEL_DEBUG,
-              "Would have coredumped if built with watchdogs ... enabling lowpowerdebug!");
+      PBL_LOG_DBG("Would have coredumped if built with watchdogs ... enabling lowpowerdebug!");
       enable_mcu_debugging();
 #else
       reset_due_to_software_failure();
@@ -245,7 +243,7 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
 
 
   } else if (reason.code == 0) {
-    PBL_LOG_SYNC(LOG_LEVEL_WARNING, "Recovered from task watchdog stall.");
+    PBL_LOG_SYNC_WRN("Recovered from task watchdog stall.");
   }
 }
 

@@ -42,7 +42,7 @@ static void timer_callback(void* data)
 {
   int idx = (int)data;
   PBL_ASSERTN(idx >= 0 && idx < NUM_MAX_TIMERS);
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT normal callback %d executed", idx);
+  PBL_LOG_DBG("STT normal callback %d executed", idx);
   s_app_data->fired_time[idx] = rtc_get_ticks();
   return;
 }
@@ -51,7 +51,7 @@ static void timer_callback(void* data)
 // =================================================================================
 static void stuck_timer_callback(void* data)
 {
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT entering infinite loop in callback");
+  PBL_LOG_DBG("STT entering infinite loop in callback");
   while (true) {
     psleep(100);
   }
@@ -63,7 +63,7 @@ static void long_timer_callback(void* data)
 {
   int idx = (int)data;
   PBL_ASSERTN(idx >= 0 && idx < NUM_MAX_TIMERS);
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT long running callback %d executed", idx);
+  PBL_LOG_DBG("STT long running callback %d executed", idx);
   s_app_data->fired_time[idx] = rtc_get_ticks();
 
   psleep(250);
@@ -74,9 +74,9 @@ static void long_timer_callback(void* data)
 // =================================================================================
 // Try and reschedule a regular timer from it's callback
 static void reg_timer_1_callback(void* data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT running reg_timer_1_callback");
+  PBL_LOG_DBG("STT running reg_timer_1_callback");
   if (s_app_data->reg_timers[0].cb != 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "STT reg_timer_1_callback rescheduling from callback for every 2 secs. ");
+    PBL_LOG_DBG("STT reg_timer_1_callback rescheduling from callback for every 2 secs. ");
     regular_timer_add_multisecond_callback(&s_app_data->reg_timers[0], 2);
   }
 }
@@ -85,9 +85,9 @@ static void reg_timer_1_callback(void* data) {
 // =================================================================================
 // Try and delete a regular timer from it's callback
 static void reg_timer_2_callback(void* data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT running reg_timer_2_callback");
+  PBL_LOG_DBG("STT running reg_timer_2_callback");
   if (s_app_data->reg_timers[0].cb != 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "STT reg_timer_2_callback deleting from callback");
+    PBL_LOG_DBG("STT reg_timer_2_callback deleting from callback");
     regular_timer_remove_callback(&s_app_data->reg_timers[0]);
   }
 }
@@ -98,9 +98,9 @@ static void reg_timer_2_callback(void* data) {
 static int s_reg_timer_3_callback_count = 0;
 static void reg_timer_3_callback(void* data) {
   s_reg_timer_3_callback_count++;
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT running reg_timer_3_callback");
+  PBL_LOG_DBG("STT running reg_timer_3_callback");
   if (s_app_data->reg_timers[0].cb != 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "STT reg_timer_3_callback deleting then adding from callback");
+    PBL_LOG_DBG("STT reg_timer_3_callback deleting then adding from callback");
     regular_timer_remove_callback(&s_app_data->reg_timers[0]);
     regular_timer_add_seconds_callback(&s_app_data->reg_timers[0]);
   }
@@ -109,7 +109,7 @@ static void reg_timer_3_callback(void* data) {
 
 // =================================================================================
 static void menu_callback_prefix(int index, void *ctx) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Hit menu item %d", index);
+  PBL_LOG_DBG("Hit menu item %d", index);
 
   // Mark the layer to be updated
   layer_mark_dirty(simple_menu_layer_get_layer(s_app_data->menu_layer));
@@ -118,7 +118,7 @@ static void menu_callback_prefix(int index, void *ctx) {
   for (int i=0; i<NUM_MAX_TIMERS; i++) {
     s_app_data->fired_time[i] = 0;
     if (s_app_data->timer[i] != TIMER_INVALID_ID) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "STT stopping and deleting previous timer %d", i);
+      PBL_LOG_DBG("STT stopping and deleting previous timer %d", i);
       new_timer_stop(s_app_data->timer[i]);
       new_timer_delete(s_app_data->timer[i]);
       s_app_data->timer[i] = TIMER_INVALID_ID;
@@ -133,7 +133,7 @@ static void menu_callback_prefix(int index, void *ctx) {
   // Cancel and delete old regular timers if present
   for (int i=0; i<NUM_MAX_TIMERS; i++) {
     if (s_app_data->reg_timers[i].cb != NULL) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "STT deleting previous regular timer %d", i);
+      PBL_LOG_DBG("STT deleting previous regular timer %d", i);
       regular_timer_remove_callback(&s_app_data->reg_timers[i]);
       s_app_data->reg_timers[i].cb = NULL;
     }
@@ -159,7 +159,7 @@ void single_shot_timer_menu_cb(int index, void *ctx) {
   // Make sure it's marked as scheduled
   scheduled = new_timer_scheduled(s_app_data->timer[timer_idx_0], &expire_ms);
   PBL_ASSERTN(scheduled && expire_ms <= 100);
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT firing in %d ms", (int)expire_ms);
+  PBL_LOG_DBG("STT firing in %d ms", (int)expire_ms);
 
   // Wait for it to fire
   psleep(300);
@@ -185,7 +185,7 @@ void repeating_timer_menu_cb(int index, void *ctx) {
   
   scheduled = new_timer_scheduled(s_app_data->timer[timer_idx_0], &expire_ms);
   PBL_ASSERTN(scheduled && expire_ms <= 500);
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT firing in %d ms", (int)expire_ms);
+  PBL_LOG_DBG("STT firing in %d ms", (int)expire_ms);
 }
 
 // =================================================================================
@@ -348,7 +348,7 @@ void reg_timer_delete_then_add_from_cb_menu_cb(int index, void *ctx) {
   regular_timer_add_seconds_callback(&s_app_data->reg_timers[0]);
 
   // Wait for timer to run at least twice
-  PBL_LOG(LOG_LEVEL_DEBUG, "waiting for callback to run 2 times");
+  PBL_LOG_DBG("waiting for callback to run 2 times");
   psleep(2200);
 
   PBL_ASSERT(s_reg_timer_3_callback_count >= 2, "Callback didn't run at least twice");

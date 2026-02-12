@@ -273,7 +273,7 @@ void mic_stop(MicDevice *this) {
   stop_mode_enable(InhibitorMic);
   s_running = false;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Stopped microphone, dropped samples: %d", s_overflow_cnt);
+  PBL_LOG_DBG("Stopped microphone, dropped samples: %d", s_overflow_cnt);
 
 unlock:
   mutex_unlock_recursive(s_mic_mutex);

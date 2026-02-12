@@ -435,7 +435,7 @@ static void prv_window_update_proc(Layer *layer, GContext *ctx) {
 
 //! Ring functionality
 static void prv_ring(void *unused) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "RING");
+  PBL_LOG_DBG("RING");
   if (alerts_should_vibrate_for_type(AlertPhoneCall)) {
 #if CAPABILITY_HAS_VIBE_SCORES
     if (!s_phone_ui_data || !s_phone_ui_data->vibe_score) {
@@ -1053,7 +1053,7 @@ static void prv_phone_ui_init(void) {
 
 static bool prv_check_popups_are_blocked(void) {
   if (launcher_popups_are_blocked()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring call event. Popups are blocked");
+    PBL_LOG_INFO("Ignoring call event. Popups are blocked");
     return true;
   }
   return false;
@@ -1136,7 +1136,7 @@ void phone_ui_handle_missed_call(void) {
 
 void phone_ui_handle_call_start(bool can_decline) {
   if (!s_phone_ui_data) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't handle call start, UI isn't setup");
+    PBL_LOG_ERR("Can't handle call start, UI isn't setup");
     return;
   }
 
@@ -1160,7 +1160,7 @@ void phone_ui_handle_call_start(bool can_decline) {
 
 void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
   if (!s_phone_ui_data) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't handle call end, UI isn't setup");
+    PBL_LOG_ERR("Can't handle call end, UI isn't setup");
     return;
   }
 
@@ -1195,7 +1195,7 @@ void phone_ui_handle_call_hide(void) {
 
 void phone_ui_handle_caller_id(PebblePhoneCaller *caller) {
   if (!s_phone_ui_data) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't update caller id, UI isn't setup");
+    PBL_LOG_ERR("Can't update caller id, UI isn't setup");
     return;
   }
 

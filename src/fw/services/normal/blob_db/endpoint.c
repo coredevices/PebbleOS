@@ -96,7 +96,7 @@ static BlobDBResponse prv_interpret_db_ret_val(status_t ret_val) {
     case E_INVALID_OPERATION:
       return BLOB_DB_DATA_STALE;
     default:
-      PBL_LOG(LOG_LEVEL_WARNING, "BlobDB return value caught by default case");
+      PBL_LOG_WRN("BlobDB return value caught by default case");
       return BLOB_DB_GENERAL_FAILURE;
   }
 }
@@ -106,7 +106,7 @@ static const uint8_t *prv_read_ptr(const uint8_t *iter, const uint8_t *iter_end,
 
   // >= because we will be reading more bytes after this point
   if ((buf_len == 0) || ((iter + buf_len) > iter_end)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "BlobDB: read invalid length");
+    PBL_LOG_WRN("BlobDB: read invalid length");
     return NULL;
   }
 
@@ -300,28 +300,28 @@ static void prv_blob_db_msg_decode_and_handle(
     CommSession *session, BlobDBCommand cmd, const uint8_t *data, size_t data_length) {
   switch (cmd) {
     case BLOB_DB_COMMAND_INSERT:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got INSERT");
+      PBL_LOG_DBG("Got INSERT");
       prv_handle_database_insert(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_DELETE:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got DELETE");
+      PBL_LOG_DBG("Got DELETE");
       prv_handle_database_delete(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_CLEAR:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got CLEAR");
+      PBL_LOG_DBG("Got CLEAR");
       prv_handle_database_clear(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_INSERT_WITH_TIMESTAMP:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got INSERT_WITH_TIMESTAMP");
+      PBL_LOG_DBG("Got INSERT_WITH_TIMESTAMP");
       prv_handle_database_insert_with_timestamp(session, data, data_length);
       break;
     // Commands not implemented.
     case BLOB_DB_COMMAND_READ:
     case BLOB_DB_COMMAND_UPDATE:
-      PBL_LOG(LOG_LEVEL_ERROR, "BlobDB Command not implemented");
+      PBL_LOG_ERR("BlobDB Command not implemented");
       // Fallthrough
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid BlobDB message received, cmd is %u", cmd);
+      PBL_LOG_ERR("Invalid BlobDB message received, cmd is %u", cmd);
       prv_send_response(session, prv_try_read_token(data, data_length), BLOB_DB_INVALID_OPERATION);
       break;
   }
@@ -337,7 +337,7 @@ void blob_db_protocol_msg_callback(CommSession *session, const uint8_t* data, si
   // Each BlobDB message is required to have at least a Command and a Token
   static const uint8_t MIN_RAW_DATA_LEN = sizeof(BlobDBCommand) + sizeof(BlobDBToken);
   if (length < MIN_RAW_DATA_LEN) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a blob_db message that was too short, len: %zu", length);
+    PBL_LOG_ERR("Got a blob_db message that was too short, len: %zu", length);
     prv_send_response(session, 0, BLOB_DB_INVALID_DATA);
     return;
   }

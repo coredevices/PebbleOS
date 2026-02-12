@@ -19,7 +19,7 @@
 static void prv_handle_transcription_result(PebbleEvent *e, void *context) {
   PBL_ASSERTN(context);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Exiting with status code: %"PRId8, e->dictation.result);
+  PBL_LOG_DBG("Exiting with status code: %"PRId8, e->dictation.result);
   DictationSession *session = context;
 
   session->callback(session, e->dictation.result, e->dictation.text, session->context);
@@ -66,7 +66,7 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
   bool from_app = (pebble_task_get_current() == PebbleTask_App) &&
                    !app_install_id_from_system(sys_process_manager_get_current_process_id());
   if (from_app && !sys_system_pp_has_capability(CommSessionVoiceApiSupport)) {
-    PBL_LOG(LOG_LEVEL_INFO, "No phone connected or phone app does not support app-initiated "
+    PBL_LOG_INFO("No phone connected or phone app does not support app-initiated "
         "dictation sessions");
     return NULL;
   }

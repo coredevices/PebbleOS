@@ -163,7 +163,7 @@ bool timeline_item_deserialize_item(TimelineItem *item_out,
                                              header->payload_length,
                                              &string_alloc_size,
                                              (uint8_t **) &buffer)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to get timeline item");
+    PBL_LOG_ERR("Failed to get timeline item");
     goto cleanup;
   }
 
@@ -174,7 +174,7 @@ bool timeline_item_deserialize_item(TimelineItem *item_out,
                                          string_alloc_size,
                                          payload,
                                          header->payload_length)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to deserialize payload");
+    PBL_LOG_ERR("Failed to deserialize payload");
     goto cleanup;
   }
 
@@ -265,12 +265,12 @@ bool timeline_item_verify_layout_serialized(const uint8_t *val, int val_len) {
   const uint8_t *cursor = val + sizeof(SerializedTimelineItemHeader);
   const uint8_t *val_end = val + val_len;
   if (!attribute_check_serialized_list(cursor, val_end, hdr->num_attributes, has_attribute)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not deserialize attributes to verify");
+    PBL_LOG_ERR("Could not deserialize attributes to verify");
     return false;
   }
   // verify that the layout of the item has the attribute it requires
   LayoutId layout = hdr->common.layout;
-  PBL_LOG(LOG_LEVEL_DEBUG, "Number of attributes: %d for layout: %d", hdr->num_attributes, layout);
+  PBL_LOG_DBG("Number of attributes: %d for layout: %d", hdr->num_attributes, layout);
   return layout_verify(has_attribute, layout);
 }
 

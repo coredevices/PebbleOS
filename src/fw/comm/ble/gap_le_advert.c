@@ -44,8 +44,6 @@
 //! - ble_discoverability/pairability.c
 //! - Use private addresses for privacy / harder tracebility.
 
-#define GAP_LE_ADVERT_LOG_LEVEL LOG_LEVEL_DEBUG
-
 typedef struct GAPLEAdvertisingJob {
   ListNode node;
 
@@ -250,7 +248,7 @@ unlock:
 //! bt_lock is expected to be taken!
 static void prv_timer_start(void) {
   if (regular_timer_is_scheduled(&s_cycle_regular_timer)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Advertising timer already started");
+    PBL_LOG_ERR("Advertising timer already started");
     regular_timer_remove_callback(&s_cycle_regular_timer);
   }
 
@@ -295,7 +293,7 @@ static void prv_perform_next_job(bool force_refresh) {
 
     if (s_is_advertising) {
       // Controller needs to stop advertising before we can start a new job:
-      PBL_LOG(GAP_LE_ADVERT_LOG_LEVEL, "Disable last Ad job");
+      PBL_LOG_DBG("Disable last Ad job");
       bt_driver_advert_advertising_disable();
       s_is_advertising = false;
     }
@@ -319,12 +317,11 @@ static void prv_perform_next_job(bool force_refresh) {
     const uint32_t min_interval_ms = ((next->terms[next->cur_term].min_interval_slots * 5) / 8);
     const uint32_t max_interval_ms = ((next->terms[next->cur_term].max_interval_slots * 5) / 8);
 
-    BLE_LOG_DEBUG("Enable Ad job %s",  prv_string_for_debug_tag(next->tag));
+    PBL_LOG_DBG("Enable Ad job %s",  prv_string_for_debug_tag(next->tag));
     bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms);
     if (result) {
       s_is_advertising = true;
-      PBL_LOG(GAP_LE_ADVERT_LOG_LEVEL, "Airing advertising job: %s ",
-              prv_string_for_debug_tag(next->tag));
+      PBL_LOG_DBG("Airing advertising job: %s ", prv_string_for_debug_tag(next->tag));
     }
   }
 
@@ -355,7 +352,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
     const bool is_loop_around = (terms[i].duration_secs == GAPLE_ADVERTISING_DURATION_LOOP_AROUND);
     if (is_loop_around) {
       if (i == 0) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Loop-around term cannot be the first term");
+        PBL_LOG_ERR("Loop-around term cannot be the first term");
         return NULL;
       }
       continue;
@@ -386,7 +383,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
   memcpy(job->payload.data, payload->data,
          payload->ad_data_length + payload->scan_resp_data_length);
 
-  PBL_LOG(LOG_LEVEL_INFO, "Scheduling advertising job: %s",
+  PBL_LOG_INFO("Scheduling advertising job: %s",
           prv_string_for_debug_tag(job->tag));
 
   // Schedule
@@ -423,7 +420,7 @@ void gap_le_advert_unschedule(GAPLEAdvertisingJobRef job) {
     is_registered = prv_is_registered_job(job);
 
     if (is_registered) {
-      PBL_LOG(LOG_LEVEL_INFO, "Unscheduling advertising job: %s",
+      PBL_LOG_INFO("Unscheduling advertising job: %s",
               prv_string_for_debug_tag(job->tag));
 
       prv_unlink_job(job);
@@ -506,7 +503,7 @@ void gap_le_advert_init(void) {
   bt_lock();
   {
     if (s_gap_le_advert_is_initialized) {
-      PBL_LOG(LOG_LEVEL_ERROR, "gap le advert has already been initialized");
+      PBL_LOG_ERR("gap le advert has already been initialized");
       goto unlock;
     }
 

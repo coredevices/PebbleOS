@@ -125,7 +125,7 @@ inline static Layer __attribute__((always_inline)) *prv_layer_tree_traverse_next
     if (*current_depth < stack_size-1) {
       return stack[++(*current_depth)] = top_of_stack->first_child;
     } else {
-      PBL_LOG(LOG_LEVEL_WARNING, "layer stack exceeded (%d). Will skip rendering.", stack_size);
+      PBL_LOG_WRN("layer stack exceeded (%d). Will skip rendering.", stack_size);
     }
   }
 
@@ -384,7 +384,7 @@ void layer_add_child(Layer *parent, Layer *child) {
     // Prevent setting the child to point to itself, causing infinite loop the next time this is
     // called
     if (sibling == child) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Layer has already been added to this parent!");
+      PBL_LOG_DBG("Layer has already been added to this parent!");
       return;
     }
 
@@ -471,7 +471,7 @@ bool layer_get_clips(const Layer *layer) {
 
 void* layer_get_data(const Layer *layer) {
   if (!layer->has_data) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Layer was not allocated with a data region.");
+    PBL_LOG_ERR("Layer was not allocated with a data region.");
     return NULL;
   }
   return ((DataLayer *)layer)->data;

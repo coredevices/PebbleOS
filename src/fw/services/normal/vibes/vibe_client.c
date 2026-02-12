@@ -23,7 +23,7 @@ VibeScore *vibe_client_get_score(VibeClient client) {
   }
   VibeScore *score = vibe_score_create_with_resource(vibe_score_info_get_resource_id(id));
   if (!score) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a null VibeScore resource!");
+    PBL_LOG_ERR("Got a null VibeScore resource!");
   }
   return score;
 }

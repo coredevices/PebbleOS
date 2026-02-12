@@ -21,7 +21,7 @@ static void prv_convert_pps_request_params(const PebblePairingServiceConnParamSe
       min_1_25ms + pps_params_in->interval_max_delta_1_25ms;
 #if RECOVERY_FW
   if (pps_params_in->slave_latency_events != 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Overriding requested slave latency with 0 because PRF");
+    PBL_LOG_DBG("Overriding requested slave latency with 0 because PRF");
   }
   params_out->slave_latency_events = 0;
 #else
@@ -36,7 +36,7 @@ static void prv_handle_set_remote_param_mgmt_settings(GAPLEConnection *connectio
       settings->is_remote_device_managing_connection_parameters;
   connection->is_remote_device_managing_connection_parameters =
       is_remote_device_managing_connection_parameters;
-  PBL_LOG(LOG_LEVEL_INFO, "PPS: is_remote_mgmt=%u",
+  PBL_LOG_INFO("PPS: is_remote_mgmt=%u",
           is_remote_device_managing_connection_parameters);
 
   if (settings_length >= PEBBLE_PAIRING_SERVICE_REMOTE_PARAM_MGTM_SETTINGS_SIZE_WITH_PARAM_SETS) {
@@ -50,8 +50,7 @@ static void prv_handle_set_remote_param_mgmt_settings(GAPLEConnection *connectio
           &settings->connection_parameter_sets[s];
       GAPLEConnectRequestParams *params = &connection->connection_parameter_sets[s];
       prv_convert_pps_request_params(pps_params, params);
-      PBL_LOG(LOG_LEVEL_INFO,
-              "PPS: Updated param set %u: %u-%u, slave lat: %u, supervision timeout: %u",
+      PBL_LOG_INFO("PPS: Updated param set %u: %u-%u, slave lat: %u, supervision timeout: %u",
               s, params->connection_interval_min_1_25ms, params->connection_interval_max_1_25ms,
               params->slave_latency_events, params->supervision_timeout_10ms);
     }
@@ -64,7 +63,7 @@ static void prv_handle_set_remote_param_mgmt_settings(GAPLEConnection *connectio
 static void prv_handle_set_remote_desired_state(GAPLEConnection *connection,
     const PebblePairingServiceRemoteDesiredState *desired_state) {
   const ResponseTimeState remote_desired_state = (ResponseTimeState)desired_state->state;
-  PBL_LOG(LOG_LEVEL_INFO, "PPS: desired_state=%u", remote_desired_state);
+  PBL_LOG_INFO("PPS: desired_state=%u", remote_desired_state);
 
   // "As a safety measure, the watch will reset it back to ResponseTimeMax after 5 minutes."
   const uint16_t max_period_secs = 5 * 60;
@@ -94,13 +93,13 @@ void bt_driver_cb_pebble_pairing_service_handle_connection_parameter_write(
         prv_handle_set_remote_desired_state(connection, &conn_params->remote_desired_state);
         break;
       case PebblePairingServiceConnParamsWriteCmd_EnablePacketLengthExtension:
-        PBL_LOG(LOG_LEVEL_INFO, "Enabling BLE Packet Length Extension");
+        PBL_LOG_INFO("Enabling BLE Packet Length Extension");
         break;
       case PebblePairingServiceConnParamsWriteCmd_InhibitBLESleep:
-        PBL_LOG(LOG_LEVEL_INFO, "BLE Sleep Mode inhibited!");
+        PBL_LOG_INFO("BLE Sleep Mode inhibited!");
         break;
       default:
-        PBL_LOG(LOG_LEVEL_ERROR, "Unknown write_cmd %d", conn_params->cmd);
+        PBL_LOG_ERR("Unknown write_cmd %d", conn_params->cmd);
         break;
     }
   }

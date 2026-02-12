@@ -537,7 +537,7 @@ status_t flash_impl_read_sync(void *buffer_ptr, FlashAddress start_addr, size_t 
     buffer[bytes_read++] = (uint8_t)(temp_buffer & 0xFF);
   } else if (buffer_size - bytes_read != 0) {
     // Should not reach here
-    PBL_LOG(LOG_LEVEL_DEBUG, "Invalid data length read");
+    PBL_LOG_DBG("Invalid data length read");
   }
 
   flash_impl_release();
@@ -875,7 +875,7 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr) {
 
 bool flash_check_whoami(void) {
   uint16_t manufacturer_id = prv_read_manufacturer_id();
-  PBL_LOG(LOG_LEVEL_DEBUG, "Flash Manufacturer ID: 0x%" PRIx16, manufacturer_id);
+  PBL_LOG_DBG("Flash Manufacturer ID: 0x%" PRIx16, manufacturer_id);
 
   return manufacturer_id == SPANSION_MANUFACTURER_ID || manufacturer_id == MACRONIX_MANUFACTURER_ID;
 }

@@ -78,7 +78,7 @@ static void update_test_case_status(struct FlashTestData *data) {
       break;
     default:
       snprintf(data->status_text, STATUS_TEXT_SIZE, "Unknown Status");
-      PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Unknown Test Case Selected");
+      PBL_LOG_DBG("ERROR: Unknown Test Case Selected");
       break;
   }
 
@@ -196,7 +196,7 @@ static void run_test(void* context) {
     data->test_case_status = FLASH_TEST_STATUS_PASSED;
   }
   else {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">>>>>FAILED TEST CASE<<<<<");
+    PBL_LOG_DBG(">>>>>FAILED TEST CASE<<<<<");
     data->test_case_status = FLASH_TEST_STATUS_FAILED;
   }
 

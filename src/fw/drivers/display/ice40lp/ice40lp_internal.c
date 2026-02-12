@@ -77,7 +77,7 @@ static bool prv_wait_programmed(void) {
   int timeout = 100 * 10;  // * 100 microseconds
   while (!gpio_input_read(&ICE40LP->cdone)) {
     if (timeout-- == 0) {
-      PBL_LOG(LOG_LEVEL_ERROR, "FPGA CDONE timeout expired!");
+      PBL_LOG_ERR("FPGA CDONE timeout expired!");
       return false;
     }
     delay_us(100);
@@ -139,7 +139,7 @@ static bool prv_try_program(const uint8_t *fpga_bitstream,
 #if !defined(TARGET_QEMU)
   prv_wait_programmed();
   if (!gpio_input_read(&ICE40LP->cdone)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "CDONE not high after programming");
+    PBL_LOG_ERR("CDONE not high after programming");
     return false;
   }
 #endif
@@ -189,24 +189,24 @@ void display_power_enable(void) {
   psleep(2);
 
   if (ICE40LP->use_6v6_rail) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Enabling 6v6 (Display VDDC)");
+    PBL_LOG_DBG("Enabling 6v6 (Display VDDC)");
     set_6V6_power_state(true);
 
     psleep(2);
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Enabling 4v5 (Display VDDP)");
+  PBL_LOG_DBG("Enabling 4v5 (Display VDDP)");
   set_4V5_power_state(true);
 }
 
 void display_power_disable(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Disabling 4v5 (Display VDDP)");
+  PBL_LOG_DBG("Disabling 4v5 (Display VDDP)");
   set_4V5_power_state(false);
 
   psleep(2);
 
   if (ICE40LP->use_6v6_rail) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Disabling 6v6 (Display VDDC)");
+    PBL_LOG_DBG("Disabling 6v6 (Display VDDC)");
     set_6V6_power_state(false);
 
     psleep(2);

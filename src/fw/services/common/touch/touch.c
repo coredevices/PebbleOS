@@ -11,7 +11,7 @@
 #include "system/passert.h"
 #include "util/size.h"
 
-#define TOUCH_DEBUG(fmt, args...) PBL_LOG_D(LOG_DOMAIN_TOUCH, LOG_LEVEL_DEBUG, fmt, ## args)
+#define TOUCH_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_TOUCH, fmt, ## args)
 
 #define TOUCH_QUEUE_LENGTH (2)
 

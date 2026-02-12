@@ -96,4 +96,4 @@ void i2c_init(I2CBus *bus);
 portBASE_TYPE i2c_handle_transfer_event(I2CBus *device, I2CTransferEvent event);
 
 #define I2C_DEBUG(fmt, args...) \
-  PBL_LOG_COLOR_D(LOG_DOMAIN_I2C, LOG_LEVEL_DEBUG, LOG_COLOR_LIGHT_MAGENTA, fmt, ## args)
+  PBL_LOG_D_DBG(LOG_DOMAIN_I2C, fmt, ## args)

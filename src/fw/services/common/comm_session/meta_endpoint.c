@@ -32,7 +32,7 @@ static void prv_send_meta_response_kernelbg_cb(void *data) {
 }
 
 void meta_endpoint_send_response_async(const MetaResponseInfo *meta_response_info) {
-  PBL_LOG(LOG_LEVEL_ERROR, "Meta protocol error: 0x%x (endpoint=%u)",
+  PBL_LOG_ERR("Meta protocol error: 0x%x (endpoint=%u)",
           meta_response_info->payload.error_code, meta_response_info->payload.endpoint_id);
 
   MetaResponseInfo *meta_response_info_heap_copy = kernel_zalloc_check(sizeof(*meta_response_info));
@@ -41,5 +41,5 @@ void meta_endpoint_send_response_async(const MetaResponseInfo *meta_response_inf
 }
 
 void meta_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
-  PBL_LOG(LOG_LEVEL_INFO, "Meta endpoint callback called");
+  PBL_LOG_INFO("Meta endpoint callback called");
 }

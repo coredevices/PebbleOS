@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "ancs.h"
 #include "ancs_app_name_storage.h"
 #include "ancs_types.h"
@@ -192,7 +190,7 @@ static void prv_notif_queue_reset(void) {
 static void prv_notif_queue_push_common(NotificationQueueNode *node) {
   if (prv_notif_queue_find(node)) {
     // already in the queue
-    PBL_LOG(LOG_LEVEL_WARNING, "ANCS item already in Queue");
+    PBL_LOG_WRN("ANCS item already in Queue");
     kernel_free(node);
     return;
   }
@@ -342,11 +340,11 @@ static void prv_resubscribe_to_ancs(void) {
 
   // Check if we have valid characteristic handles to re-subscribe to
   if (s_ancs_client->characteristics[ANCSCharacteristicNotification] == BLE_CHARACTERISTIC_INVALID) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Cannot resubscribe to ANCS: no valid characteristic handles");
+    PBL_LOG_WRN("Cannot resubscribe to ANCS: no valid characteristic handles");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "Re-subscribing to ANCS characteristics");
+  PBL_LOG_INFO("Re-subscribing to ANCS characteristics");
 
   // Re-subscribe to Data, then to Notification characteristics
   // (same order as in ancs_handle_service_discovered)
@@ -357,7 +355,7 @@ static void prv_resubscribe_to_ancs(void) {
                                                             BLESubscriptionNotifications,
                                                             GAPLEClientKernel);
       if (e != BTErrnoOK) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Failed to resubscribe to ANCS charx %d: %d", c, e);
+        PBL_LOG_ERR("Failed to resubscribe to ANCS charx %d: %d", c, e);
       }
     }
   }
@@ -380,14 +378,14 @@ static void prv_is_ancs_alive_response_timeout_launcher_task_cb(void *data) {
 }
 
 static void prv_is_ancs_alive_response_timeout(void *data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "ANCS isn't alive");
+  PBL_LOG_DBG("ANCS isn't alive");
   analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_CONNECT_TIME);
 
   launcher_task_add_callback(prv_is_ancs_alive_response_timeout_launcher_task_cb, data);
 }
 
 static void prv_ancs_is_alive(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "ANCS is alive!");
+  PBL_LOG_DBG("ANCS is alive!");
 
   // Restart analytics tracking (if it stopped) and the 'is alive' timer
   prv_ancs_is_alive_start_tracking();
@@ -541,7 +539,7 @@ static void prv_reassemble_ds_notification(uint32_t length, const uint8_t *data)
     // could also occur if the iPhone restarts after sending us an incomplete
     // message, then we re-subscribe and start over from a different state
     if (!is_success) {
-      PBL_LOG(LOG_LEVEL_ERROR, "ANCS reassembly buffer overflow; resetting ctx");
+      PBL_LOG_ERR("ANCS reassembly buffer overflow; resetting ctx");
       // TODO: separate analytics trackers instead of piling onto "parse error count"
       prv_reset_due_to_parse_error();
       return;
@@ -606,7 +604,7 @@ static void prv_handle_app_attributes_response(const uint8_t *data, size_t lengt
                                                 app_attrs,
                                                 &error);
   if (!complete || error) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Error parsing app attributes");
+    PBL_LOG_WRN("Error parsing app attributes");
     goto fail;
   }
 
@@ -692,7 +690,7 @@ static void prv_get_app_attributes(const ANCSAttribute *app_id) {
   kernel_free(request);
 
   if (!success) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to fetch app attributes for notification");
+    PBL_LOG_WRN("Failed to fetch app attributes for notification");
     ANCSAttribute *empty_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
     // we failed to fetch the app, but we got a notification
     prv_put_ancs_message(empty_attrs);
@@ -745,7 +743,7 @@ static void prv_handle_notification_attributes_response(const uint8_t *data, siz
                                                      s_ancs_client->attributes,
                                                      &error);
   if (!did_get_attrs || error) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error parsing attributes: %u, %u", did_get_attrs, error);
+    PBL_LOG_ERR("Error parsing attributes: %u, %u", did_get_attrs, error);
     prv_reset_and_next();
     return;
   }
@@ -806,14 +804,14 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
   analytics_inc(metric, AnalyticsClient_System);
 
   if (no_error) {
-    PBL_LOG(LOG_LEVEL_INFO, "Hurray! ANCS subscribed: %u", characteristic_id);
+    PBL_LOG_INFO("Hurray! ANCS subscribed: %u", characteristic_id);
 
     if (characteristic_id == ANCSCharacteristicData) {
       prv_ancs_is_alive_start_tracking();
       prv_start_temp_notification_connection_delay_timer();
     }
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to subscribe charx: %u (error=%u)", characteristic_id, error);
+    PBL_LOG_ERR("Failed to subscribe charx: %u (error=%u)", characteristic_id, error);
   }
 }
 
@@ -840,7 +838,7 @@ void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
   prv_ancs_is_alive_stop_timer();
 
   if (s_ancs_client->characteristics[0] != BLE_CHARACTERISTIC_INVALID) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Multiple ANCS services registered?!");
+    PBL_LOG_WRN("Multiple ANCS services registered?!");
     ancs_invalidate_all_references();
   }
 
@@ -879,7 +877,7 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
   analytics_add(ANALYTICS_DEVICE_METRIC_NOTIFICATION_BYTE_IN_COUNT, length, AnalyticsClient_System);
 
   if (length != sizeof(NSNotification)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Received invalid ANCS NS Notification length=<%"PRIu32">", length);
+    PBL_LOG_ERR("Received invalid ANCS NS Notification length=<%"PRIu32">", length);
     return;
   }
 
@@ -948,7 +946,7 @@ static void prv_handle_ds_notification(uint32_t length, const uint8_t *data) {
   analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_DS_COUNT, AnalyticsClient_System);
 
   if (length < 1) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Received ANCS DS notification of length 0");
+    PBL_LOG_ERR("Received ANCS DS notification of length 0");
     return;
   }
 
@@ -965,7 +963,7 @@ static void prv_handle_ds_notification(uint32_t length, const uint8_t *data) {
 void ancs_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
                                       size_t value_length, BLEGATTError error) {
   if (error != BLEGATTErrorSuccess) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Read or notification error: %d", error);
+    PBL_LOG_ERR("Read or notification error: %d", error);
     prv_reset_due_to_bt_error();
     return;
   }
@@ -1001,7 +999,7 @@ void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError e
   }
 
   if (error != BLEGATTErrorSuccess) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Control point error response: %d", error);
+    PBL_LOG_ERR("Control point error response: %d", error);
     prv_reset_due_to_bt_error();
     return;
   }
@@ -1052,7 +1050,7 @@ static void prv_perform_action(uint32_t notification_uid, ActionId action_id) {
 
 static void prv_serialize_action(const PerformNotificationActionMsg *action_msg) {
   if (!s_ancs_client) {
-    PBL_LOG(LOG_LEVEL_ERROR, "No ANCS client");
+    PBL_LOG_ERR("No ANCS client");
     return;
   }
 

@@ -147,7 +147,7 @@ void debug_db_init(void) {
 
   debug_db_determine_current_index(file_id, &s_current_file_index, &s_current_file_id);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Found files {%u, %u, %u, %u}, using file %u with new id %u",
+  PBL_LOG_DBG("Found files {%u, %u, %u, %u}, using file %u with new id %u",
         file_id[0], file_id[1], file_id[2], file_id[3], s_current_file_index, s_current_file_id);
 
   debug_db_reformat_header_section();
@@ -168,7 +168,7 @@ bool debug_db_is_generation_valid(int file_generation) {
   }
 
   if (file_header.file_id != (s_current_file_id - file_generation)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Id: %"PRIu8" Expected: %u", file_header.file_id, (s_current_file_id - file_generation));
+    PBL_LOG_DBG("Id: %"PRIu8" Expected: %u", file_header.file_id, (s_current_file_id - file_generation));
     return false;
   }
 

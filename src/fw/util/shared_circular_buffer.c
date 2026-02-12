@@ -86,7 +86,7 @@ bool shared_circular_buffer_write(SharedCircularBuffer* buffer, const uint8_t* d
 
   // If no clients, no need to write
   if (!buffer->clients) {
-    PBL_LOG(LOG_LEVEL_WARNING, "no readers");
+    PBL_LOG_WRN("no readers");
     return false;
   }
 

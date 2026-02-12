@@ -300,7 +300,7 @@ TickType_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
         if (next_timer->repeating
             && (int64_t)next_expiry_time < (int64_t)(current_time - next_timer->period_ticks
                                             - 5 * RTC_TICKS_HZ)) {
-          PBL_LOG(LOG_LEVEL_WARNING, "NT: Skipping some callbacks for %p because we fell behind",
+          PBL_LOG_WRN("NT: Skipping some callbacks for %p because we fell behind",
                   next_timer->cb);
         }
       } else {

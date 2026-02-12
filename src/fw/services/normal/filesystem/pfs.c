@@ -233,7 +233,7 @@ static void prv_flash_read(void *buffer, uint32_t size, uint32_t offset) {
   if ((offset + size) <= s_pfs_size) {
     ftl_read(buffer, size, offset);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "FS read out of bounds 0x%x", (int)offset);
+    PBL_LOG_ERR("FS read out of bounds 0x%x", (int)offset);
   }
 }
 
@@ -264,7 +264,7 @@ static void prv_flash_write(const void *buffer, uint32_t size, uint32_t offset) 
     ftl_write(buffer, size, offset);
     prv_invalidate_page_flags_cache(offset, size);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "FS write out of bounds 0x%x", (int)offset);
+    PBL_LOG_ERR("FS write out of bounds 0x%x", (int)offset);
   }
 }
 
@@ -275,7 +275,7 @@ static void prv_flash_erase_sector(uint16_t start_page) {
     ftl_erase_sector(PFS_PAGE_SIZE * PFS_PAGES_PER_ERASE_SECTOR, offset);
     prv_invalidate_page_flags_cache(offset, PFS_PAGE_SIZE * PFS_PAGES_PER_ERASE_SECTOR);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Erase out of bounds, 0x%x", (int)start_page);
+    PBL_LOG_ERR("Erase out of bounds, 0x%x", (int)start_page);
   }
 }
 
@@ -411,7 +411,7 @@ static ReadHeaderStatus read_header(uint16_t page, PageHeader *pg_hdr,
   }
 
   if (pg_hdr->version > PFS_CUR_VERSION) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unexpected Version Header, 0x%x",
+    PBL_LOG_ERR("Unexpected Version Header, 0x%x",
         (int)pg_hdr->version);
     return (HdrVersionCheckFail); // let caller handle
   }
@@ -478,7 +478,7 @@ static status_t locate_flash_file(const char *name, uint16_t *page) {
       if ((memcmp(name, file_name, namelen) == 0) && (!is_tmp_file(pg))) {
 
         if (read_header(pg, &pg_hdr, &file_hdr) == HdrCrcCorrupt) {
-          PBL_LOG(LOG_LEVEL_WARNING, "%d: CRC corrupt", pg);
+          PBL_LOG_WRN("%d: CRC corrupt", pg);
           continue;
         }
 
@@ -539,13 +539,13 @@ static void update_last_written_page(void) {
         prv_page_to_flash_offset(pg) + offsetof(PageHeader, last_written));
     if (hdr.last_written == LAST_WRITTEN_TAG) {
       s_last_page_written = pg;
-      PBL_LOG(LOG_LEVEL_INFO, "Last written page %d", (int)s_last_page_written);
+      PBL_LOG_INFO("Last written page %d", (int)s_last_page_written);
       return;
     }
   }
 
   // should only happen after a filesystem format
-  PBL_LOG(LOG_LEVEL_WARNING, "Couldn't resolve last written pg");
+  PBL_LOG_WRN("Couldn't resolve last written pg");
   s_last_page_written = s_pfs_page_count - 1;
 #if UNITTEST
   if (s_test_last_page_written_override != -1) {
@@ -1060,7 +1060,7 @@ int pfs_read(int fd, void *buf_ptr, size_t size) {
   }
 
   if ((file->offset + size) > file->file_size) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Out of bound read at %d",
+    PBL_LOG_DBG("Out of bound read at %d",
         (int)(file->offset + size));
     res = E_RANGE;
     goto cleanup;
@@ -1090,7 +1090,7 @@ int pfs_read(int fd, void *buf_ptr, size_t size) {
 
     pg_offset = 0; // first usable byte next page
     if (get_next_page(file->curr_page, &file->curr_page) != S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_WARNING, "R:Couldn't find next page for %d",
+      PBL_LOG_WRN("R:Couldn't find next page for %d",
           file->curr_page);
       res = E_INTERNAL;
       goto cleanup;
@@ -1180,7 +1180,7 @@ int pfs_write(int fd, const void *buf_ptr, size_t size) {
 
     pg_offset = 0; // first usable byte next page
     if (get_next_page(file->curr_page, &file->curr_page) != S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_WARNING, "W:Couldn't find next page for %d",
+      PBL_LOG_WRN("W:Couldn't find next page for %d",
           file->curr_page);
       res = E_INTERNAL;
       goto cleanup;
@@ -1231,7 +1231,7 @@ bool pfs_active_in_region(uint32_t start_address, uint32_t ending_address) {
     }
 
     if (hdr.version > PFS_CUR_VERSION) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Incompatible version of PFS active, 0x%x",
+      PBL_LOG_WRN("Incompatible version of PFS active, 0x%x",
           hdr.version);
 
       // pfs filesystem is a newer version than we support
@@ -1269,16 +1269,16 @@ void pfs_reboot_cleanup(void) {
 
     if (IS_PAGE_TYPE(page_flags, PAGE_FLAG_START_PAGE)) {
       if (!is_create_complete(curr_pg)) { // make sure file creation completed
-        PBL_LOG(LOG_LEVEL_WARNING, "File at %d creation did not complete ",
+        PBL_LOG_WRN("File at %d creation did not complete ",
             curr_pg);
         unlink_flash_file(curr_pg);
       } else if (is_tmp_file(curr_pg)) { // make sure this isn't a temp file
-        PBL_LOG(LOG_LEVEL_WARNING, "Removing temp file at %d", curr_pg);
+        PBL_LOG_WRN("Removing temp file at %d", curr_pg);
         unlink_flash_file(curr_pg);
       }
     } else if (page_type_bits_set(page_flags, DELETED_START_PAGE_MASK) &&
         !is_delete_complete(curr_pg)) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Delete of %d did not complete", curr_pg);
+      PBL_LOG_WRN("Delete of %d did not complete", curr_pg);
       unlink_flash_file(curr_pg);
     }
   }
@@ -1328,7 +1328,7 @@ static bool prv_update_gc_reserved_region(void) {
         .block_writes = 0,
         .gc_start_page = free_region_start
       };
-      PBL_LOG(LOG_LEVEL_DEBUG, "New Erase Region: %d", s_gc_block.gc_start_page);
+      PBL_LOG_DBG("New Erase Region: %d", s_gc_block.gc_start_page);
       return (true);
     }
 
@@ -1529,7 +1529,7 @@ PFSFileListEntry *pfs_create_file_list(PFSFilenameTestCallback callback) {
     // filename filter call because it requires more flash reads and is likely slower than the
     // filter call.
     if (read_header(pg, &pg_hdr, &file_hdr) != PageAndFileHdrValid) {
-      PBL_LOG(LOG_LEVEL_WARNING, "%d: Invalid page/file header", pg);
+      PBL_LOG_WRN("%d: Invalid page/file header", pg);
       continue;
     }
 
@@ -1586,7 +1586,7 @@ void pfs_remove_files(PFSFilenameTestCallback callback) {
     // filename filter call because it requires more flash reads and is likely slower than the
     // filter call.
     if (read_header(pg, &pg_hdr, &file_hdr) != PageAndFileHdrValid) {
-      PBL_LOG(LOG_LEVEL_WARNING, "%d: Invalid page/file header", pg);
+      PBL_LOG_WRN("%d: Invalid page/file header", pg);
       continue;
     }
 
@@ -1802,7 +1802,7 @@ static NOINLINE status_t pfs_open_handle_read_request(int fd, uint16_t page) {
     return (S_SUCCESS);
   }
 
-  PBL_LOG(LOG_LEVEL_WARNING, "Could not read header %d", hdr_rv);
+  PBL_LOG_WRN("Could not read header %d", hdr_rv);
   return (E_INTERNAL);
 }
 
@@ -2076,7 +2076,7 @@ status_t pfs_init(bool run_filesystem_check) {
   if (run_filesystem_check) {
     if (!pfs_active()) {
       // either we have downgraded or there is no data on the flash
-      PBL_LOG(LOG_LEVEL_INFO, "PFS not active ... formatting");
+      PBL_LOG_INFO("PFS not active ... formatting");
       pfs_format(true /* write erase headers */);
     }
   }
@@ -2087,13 +2087,13 @@ status_t pfs_init(bool run_filesystem_check) {
   int fd;
   if ((fd = pfs_open_gc_file(0, false)) >= S_SUCCESS) {
     // we rebooted while we were in the middle of a garbage collection
-    PBL_LOG(LOG_LEVEL_INFO, "Recovering flash region from GC file");
+    PBL_LOG_INFO("Recovering flash region from GC file");
     recover_region_from_file(fd);
   }
 
   // find a free region
   if (!prv_update_gc_reserved_region()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "No free flash erase units!");
+    PBL_LOG_ERR("No free flash erase units!");
     // Note: It should not be possible for this to happen since start of day no
     // files will be written on then flash. We could also try to force apps to
     // be flushed out of the FS in an attempt to free up space since they are
@@ -2105,7 +2105,7 @@ status_t pfs_init(bool run_filesystem_check) {
   // the filesystem. We do a lot of initialization from different threads early
   // during boot flow. This prevents those threads from blocking each other
   uint32_t bytes_to_free = ((s_pfs_page_count * PFS_PAGE_SIZE) * 4) / 100;
-  PBL_LOG(LOG_LEVEL_DEBUG, "Preparing %"PRIu32" bytes of flash for filesystem use",
+  PBL_LOG_DBG("Preparing %"PRIu32" bytes of flash for filesystem use",
           bytes_to_free);
 
   pfs_prepare_for_file_creation(bytes_to_free, 15 * RTC_TICKS_HZ);
@@ -2114,7 +2114,7 @@ status_t pfs_init(bool run_filesystem_check) {
 }
 
 void pfs_format(bool write_erase_headers) {
-  PBL_LOG(LOG_LEVEL_INFO, "FS-Format Start");
+  PBL_LOG_INFO("FS-Format Start");
   mutex_lock_recursive(s_pfs_mutex);
 
   for (int i = FD_INDEX_OFFSET; i < FD_INDEX_OFFSET+PFS_FD_SET_SIZE; i++) {
@@ -2130,7 +2130,7 @@ void pfs_format(bool write_erase_headers) {
   }
 
   mutex_unlock_recursive(s_pfs_mutex);
-  PBL_LOG(LOG_LEVEL_INFO, "FS-Format Done");
+  PBL_LOG_INFO("FS-Format Done");
 }
 
 

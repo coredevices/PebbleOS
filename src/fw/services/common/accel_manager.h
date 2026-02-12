@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 
-#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D(LOG_DOMAIN_ACCEL, LOG_LEVEL_DEBUG, fmt, ## args)
+#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_ACCEL, fmt, ## args)
 
 typedef void (*AccelDataReadyCallback)(void *context);
 

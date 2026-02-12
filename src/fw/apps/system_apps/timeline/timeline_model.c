@@ -102,13 +102,13 @@ static int prv_find_item_by_uuid(Uuid *id) {
 
 #ifdef TIMELINE_DEBUG
 static void prv_log_all_items(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "First item: %d, last item: %d", s_model_data->first_index,
+  PBL_LOG_DBG("First item: %d, last item: %d", s_model_data->first_index,
     s_model_data->last_index);
   for (int i = 0; i < TIMELINE_NUM_VISIBLE_ITEMS; i++) {
     TimelineItem *item = &timeline_model_get_iter_state(i)->pin;
-    PBL_LOG(LOG_LEVEL_DEBUG, "ID first byte: 0x%x", item->header.id.byte0);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Address of node: %p", timeline_model_get_iter_state(i)->node);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Timestamp: %ld", item->header.timestamp);
+    PBL_LOG_DBG("ID first byte: 0x%x", item->header.id.byte0);
+    PBL_LOG_DBG("Address of node: %p", timeline_model_get_iter_state(i)->node);
+    PBL_LOG_DBG("Timestamp: %ld", item->header.timestamp);
   }
 }
 #endif
@@ -116,7 +116,7 @@ static void prv_log_all_items(void) {
 static void prv_move_first_index(int delta) {
   s_model_data->first_index = positive_modulo(
       s_model_data->first_index + delta, TIMELINE_NUM_ITEMS_IN_MODEL);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Set origin, initial item: %d, final item: %d",
+  PBL_LOG_DBG("Set origin, initial item: %d, final item: %d",
       s_model_data->first_index, s_model_data->last_index);
 }
 
@@ -204,7 +204,7 @@ void timeline_model_init(time_t timestamp, TimelineModel *model) {
     rv = timeline_iter_init(prv_get_iter(i), timeline_model_get_iter_state(i),
       &s_model_data->timeline, s_model_data->direction, timestamp);
     if (FAILED(rv)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Timeline iterator failed to init!");
+      PBL_LOG_ERR("Timeline iterator failed to init!");
     }
     if (FAILED(rv) || rv == S_NO_MORE_ITEMS) {
       timeline_model_get_iter_state(i)->node = NULL;
@@ -248,7 +248,7 @@ static void prv_remove_index_gracefully(int idx) {
             timeline_model_get_iter_state(i - 1)->node));
     }
     timeline_iter_remove_node(&s_model_data->timeline, node);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Item to delete in view, iterating next");
+    PBL_LOG_DBG("Item to delete in view, iterating next");
   } else if (iter_prev(prv_get_iter(idx))) {
     // prv_get_iter(idx) is at the end, so we have to move prev-wards
     // if prv_get_iter(idx) is at the end, all iters > idx must also be at the end
@@ -257,11 +257,11 @@ static void prv_remove_index_gracefully(int idx) {
       iter_prev(prv_get_iter(i));
     }
     timeline_iter_remove_node(&s_model_data->timeline, node);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Item to delete in view, iterating prev");
+    PBL_LOG_DBG("Item to delete in view, iterating prev");
   } else {
     // if we can't iterate next or prev, we've deleted the only item
     timeline_model_deinit();
-    PBL_LOG(LOG_LEVEL_DEBUG, "Item to delete in view, deiniting ");
+    PBL_LOG_DBG("Item to delete in view, deiniting ");
   }
 }
 

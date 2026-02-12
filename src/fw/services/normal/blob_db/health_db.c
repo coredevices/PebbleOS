@@ -93,7 +93,7 @@ static status_t prv_file_open_and_lock(SettingsFile *file) {
 
   status_t rv = settings_file_open(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE);
   if (rv != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to open settings file");
+    PBL_LOG_ERR("Failed to open settings file");
     mutex_unlock(s_mutex);
   }
 
@@ -150,7 +150,7 @@ static void prv_notify_health_listeners(const char *key,
     if (!prv_is_last_processed_timestamp_valid(data->last_processed_timestamp)) {
       return;
     }
-    PBL_LOG(LOG_LEVEL_INFO, "Got MovementData for wday: %d, cur_wday: %d, steps: %"PRIu32"",
+    PBL_LOG_INFO("Got MovementData for wday: %d, cur_wday: %d, steps: %"PRIu32"",
             wday, cur_wday, data->steps);
     activity_metrics_prv_set_metric(ActivityMetricStepCount, wday, data->steps);
     activity_metrics_prv_set_metric(ActivityMetricActiveSeconds, wday, data->active_seconds);
@@ -162,7 +162,7 @@ static void prv_notify_health_listeners(const char *key,
     if (!prv_is_last_processed_timestamp_valid(data->last_processed_timestamp)) {
       return;
     }
-    PBL_LOG(LOG_LEVEL_INFO, "Got SleepData for wday: %d, cur_wday: %d, sleep: %"PRIu32"",
+    PBL_LOG_INFO("Got SleepData for wday: %d, cur_wday: %d, sleep: %"PRIu32"",
             wday, cur_wday, data->sleep_duration);
     activity_metrics_prv_set_metric(ActivityMetricSleepTotalSeconds, wday, data->sleep_duration);
     activity_metrics_prv_set_metric(ActivityMetricSleepRestfulSeconds, wday,
@@ -178,7 +178,7 @@ static void prv_notify_health_listeners(const char *key,
     if (data->num_zones != HRZone_Max) {
       return;
     }
-    PBL_LOG(LOG_LEVEL_INFO, "Got HeartRateZoneData for wday: %d, cur_wday: %d, zone1: %"PRIu32"",
+    PBL_LOG_INFO("Got HeartRateZoneData for wday: %d, cur_wday: %d, zone1: %"PRIu32"",
             wday, cur_wday, data->minutes_in_zone[0]);
     activity_metrics_prv_set_metric(ActivityMetricHeartRateZone1Minutes, wday,
                                     data->minutes_in_zone[0]);
@@ -247,7 +247,7 @@ bool health_db_get_typical_value(ActivityMetric metric,
     case ActivityMetricHeartRateZone1Minutes:
     case ActivityMetricHeartRateZone2Minutes:
     case ActivityMetricHeartRateZone3Minutes:
-      PBL_LOG(LOG_LEVEL_WARNING, "Health DB doesn't know about typical metric %d", metric);
+      PBL_LOG_WRN("Health DB doesn't know about typical metric %d", metric);
       return false;
   }
 
@@ -257,7 +257,7 @@ bool health_db_get_typical_value(ActivityMetric metric,
 bool health_db_get_monthly_average_value(ActivityMetric metric,
                                          int32_t *value_out) {
   if (metric != ActivityMetricStepCount && metric != ActivityMetricSleepTotalSeconds) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Health DB doesn't store an average for metric %d", metric);
+    PBL_LOG_WRN("Health DB doesn't store an average for metric %d", metric);
     return false;
   }
 
@@ -325,18 +325,18 @@ void health_db_init(void) {
 
 status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!prv_key_is_valid(key, key_len)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid health db key");
+    PBL_LOG_ERR("Invalid health db key");
     PBL_HEXDUMP(LOG_LEVEL_ERROR, key, key_len);
     return E_INVALID_ARGUMENT;
   } else if (!prv_value_is_valid(key, key_len, val, val_len)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid health db value. Length %d", val_len);
+    PBL_LOG_ERR("Invalid health db value. Length %d", val_len);
     return E_INVALID_ARGUMENT;
   }
 
 #if HEALTH_DB_DEBUG
-  PBL_LOG(LOG_LEVEL_DEBUG, "New health db entry key:");
+  PBL_LOG_DBG("New health db entry key:");
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, key, key_len);
-  PBL_LOG(LOG_LEVEL_DEBUG, "val: ");
+  PBL_LOG_DBG("val: ");
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, val, val_len);
 #endif
 

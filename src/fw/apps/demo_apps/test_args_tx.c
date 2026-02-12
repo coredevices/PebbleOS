@@ -23,7 +23,7 @@ static void prv_launch_receiver_callback(void *data) {
 
 static void s_main(void) {
   s_data.data = 0x43;
-  PBL_LOG(LOG_LEVEL_DEBUG, "Launching again with argument: 0x%x", s_data.data);
+  PBL_LOG_DBG("Launching again with argument: 0x%x", s_data.data);
   launcher_task_add_callback(prv_launch_receiver_callback, &s_data);
 }
 

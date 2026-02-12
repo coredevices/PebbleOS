@@ -58,7 +58,7 @@ static bool prv_weather_db_for_each_cb(SettingsFile *file, SettingsRecordInfo *i
   WeatherDBEntry *entry = task_zalloc_check(info->val_len);
   info->get_val(file, entry, info->val_len);
   if (entry->version != WEATHER_DB_CURRENT_VERSION) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Version mismatch! Entry version: %" PRIu8 ", WeatherDB version: %u",
+    PBL_LOG_WRN("Version mismatch! Entry version: %" PRIu8 ", WeatherDB version: %u",
             entry->version, WEATHER_DB_CURRENT_VERSION);
     goto cleanup;
   }
@@ -125,8 +125,7 @@ status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, 
 
   const WeatherDBEntry *entry = (WeatherDBEntry *)val;
   if (entry->version != WEATHER_DB_CURRENT_VERSION) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Version mismatch on insert! Entry version: %" PRIu8 ", WeatherDB version: %u",
+    PBL_LOG_WRN("Version mismatch on insert! Entry version: %" PRIu8 ", WeatherDB version: %u",
             entry->version, WEATHER_DB_CURRENT_VERSION);
     return E_INVALID_ARGUMENT;
   }
@@ -167,7 +166,7 @@ status_t weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int 
   rv = settings_file_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len);
   if (((WeatherDBEntry*)val_out)->version != WEATHER_DB_CURRENT_VERSION) {
     // We might as well clear out the stale entry
-    PBL_LOG(LOG_LEVEL_WARNING, "Read an old weather DB entry");
+    PBL_LOG_WRN("Read an old weather DB entry");
     settings_file_delete(&s_weather_db.settings_file, key, key_len);
     rv = E_DOES_NOT_EXIST;
   }

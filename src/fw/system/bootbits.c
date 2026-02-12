@@ -37,7 +37,7 @@ void boot_bit_init(void) {
   // in-memory value is probably scrambled and should be reset.
   uint32_t crc32_computed = crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
   if (crc32_computed != retained[NRF_RETAINED_REGISTER_CRC]) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!", crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
+    PBL_LOG_WRN("Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!", crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
     memset(retained, 0, sizeof(retained));
   }
 
@@ -64,7 +64,7 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "0x%"PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%"PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
@@ -113,7 +113,7 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "0x%"PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%"PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
@@ -164,7 +164,7 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "0x%"PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%"PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {

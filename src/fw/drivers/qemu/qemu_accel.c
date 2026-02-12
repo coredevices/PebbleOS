@@ -56,7 +56,7 @@
 #include <string.h>
 
 
-#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D(LOG_DOMAIN_ACCEL, LOG_LEVEL_DEBUG, fmt, ## args)
+#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_ACCEL, fmt, ## args)
 
 
 static bool s_initialized;
@@ -154,7 +154,7 @@ void qemu_accel_msg_callack(const uint8_t *data, uint32_t len) {
   // Validate the packet
   uint32_t data_bytes = hdr->num_samples * sizeof(AccelRawData);
   if (data_bytes != len - sizeof(QemuProtocolAccelHeader)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid packet received");
+    PBL_LOG_ERR("Invalid packet received");
     return;
   }
   ACCEL_LOG_DEBUG("Got accel msg from host: num samples: %d", hdr->num_samples);

@@ -42,7 +42,7 @@ Pebble App roject.
 #include "kraepelin_algorithm.h"
 
 #define KALG_LOG_DEBUG(fmt, args...) \
-        PBL_LOG_D(LOG_DOMAIN_ACTIVITY, LOG_LEVEL_DEBUG, fmt, ## args)
+        PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY, fmt, ## args)
 
 // Set this to 1 to get text graphs of the overall FFT magnitudes
 #define KALG_LOG_OVERALL_MAGNITUDES 0
@@ -1626,7 +1626,7 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
       // We reached the end of it last_deep_run_size minutes ago
       end_time = sample_time - (last_deep_run_size * SECONDS_PER_MINUTE);
       uint16_t len_m = MAX((end_time - start_time) / SECONDS_PER_MINUTE, 0);
-      PBL_LOG(LOG_LEVEL_DEBUG, "Detected deep sleep of %"
+      PBL_LOG_DBG("Detected deep sleep of %"
         PRIu16
         " minutes starting at %s ",
               len_m, prv_log_time(alg_state, start_time));
@@ -1638,7 +1638,7 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
         state->len_m[state->num_sessions] = len_m;
         state->num_sessions++;
       } else {
-        PBL_LOG(LOG_LEVEL_WARNING, "No more room for another deep sleep session");
+        PBL_LOG_WRN("No more room for another deep sleep session");
       }
       // Wait for another session
       state->deep_start_time = KALG_START_TIME_NONE;
@@ -1891,7 +1891,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
 
     // If we got a valid sleep cycle, add it to the totals
     if (!reject_session) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Detected valid sleep cycle of len %d, starting at %s",
+      PBL_LOG_DBG("Detected valid sleep cycle of len %d, starting at %s",
               session_len_m, prv_log_time(alg_state, state->current_stats.start_time));
 
       sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
@@ -2088,7 +2088,7 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
   // state
   if ((utc_now < state->last_activity_update_utc)
       || (utc_now > (state->last_activity_update_utc + (5 * SECONDS_PER_MINUTE)))) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Resetting state due to time travel");
+    PBL_LOG_WRN("Resetting state due to time travel");
     prv_reset_state(state);
   };
   state->last_activity_update_utc = utc_now;

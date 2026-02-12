@@ -191,7 +191,7 @@ static void prv_handle_outbox_message(AppOutboxMessage *message) {
 
   const AppMessageSenderError err = prv_sanity_check_msg_and_fill_header(message);
   if (AppMessageSenderErrorSuccess != err) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Outbound app message corrupted %u", err);
+    PBL_LOG_ERR("Outbound app message corrupted %u", err);
     app_outbox_service_consume_message(message, (AppOutboxStatus)err);
     return;
   }

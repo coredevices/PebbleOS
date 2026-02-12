@@ -140,7 +140,7 @@ static void layer_update_proc(Layer *layer, GContext* ctx) {
   if (first_non_zero_idx < 0) {
     return;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "min temp: %d, max temp: %d", data->min_temp, data->max_temp);
+  PBL_LOG_DBG("min temp: %d, max temp: %d", data->min_temp, data->max_temp);
   int temp_range = data->max_temp - data->min_temp;
   temp_range = MAX(10, temp_range);
 

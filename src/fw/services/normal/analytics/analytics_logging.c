@@ -96,10 +96,10 @@ static DataLoggingSessionRef prv_create_dls(AnalyticsBlobKind kind, uint32_t ite
   DataLoggingSessionRef dls_session = dls_create(
       tag, DATA_LOGGING_BYTE_ARRAY, item_length, buffered, resume, &system_uuid);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "%s HB Session: %p", kind_str, dls_session);
+  PBL_LOG_DBG("%s HB Session: %p", kind_str, dls_session);
   if (!dls_session) {
     // Data logging full at boot. Reset it and try again 5s later
-    PBL_LOG(LOG_LEVEL_WARNING, "Data logging full at boot. Clearing...");
+    PBL_LOG_WRN("Data logging full at boot. Clearing...");
     // We reset all data logging here, including data logging for applications,
     // because an inability to allocate a new session means all 200+ session
     // IDs are exhausted, likely caused by a misbehaving app_hb. See discussion at:
@@ -219,7 +219,7 @@ static void prv_create_event_session_cb(void *ignored) {
 
 static void prv_handle_log_event(AnalyticsEventBlob *event_blob) {
   if (!s_event_session) {
-    PBL_LOG(LOG_LEVEL_INFO, "Event dropped because session not created yet");
+    PBL_LOG_INFO("Event dropped because session not created yet");
     return;
   }
 

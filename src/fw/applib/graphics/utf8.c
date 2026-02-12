@@ -74,12 +74,12 @@ void utf8_print_code_points(utf8_t *s) {
 
   for (; *s; ++s) {
     if (!utf8_decode(&state, &codepoint, *s)) {
-      PBL_LOG(LOG_LEVEL_ALWAYS, "U+%04"PRIX32, codepoint);
+      PBL_LOG_ALWAYS("U+%04"PRIX32, codepoint);
     }
   }
 
   if (state != VALID_UTF8) {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "String is not well-formed");
+    PBL_LOG_ALWAYS("String is not well-formed");
   }
 }
 

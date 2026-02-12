@@ -34,7 +34,7 @@
 // Buffer size
 #define MAX_ENCODED_FRAME_SIZE (200)
 
-#define VOICE_LOG(fmt, args...)   PBL_LOG_D(LOG_DOMAIN_VOICE, LOG_LEVEL_DEBUG, fmt, ## args)
+#define VOICE_LOG(fmt, args...)   PBL_LOG_D_DBG(LOG_DOMAIN_VOICE, fmt, ## args)
 
 typedef enum {
   SessionState_Idle = 0,
@@ -141,7 +141,7 @@ static void prv_stop_recording(void) {
   mic_stop(MIC);
 #endif
 
-  PBL_LOG(LOG_LEVEL_INFO, "Stop recording audio");
+  PBL_LOG_INFO("Stop recording audio");
   prv_teardown_session();
   
   // Speex cleanup will be handled by delayed cleanup to avoid race conditions
@@ -154,7 +154,7 @@ static void prv_cancel_recording(void) {
 #endif
 
   audio_endpoint_cancel_transfer(s_session_id);
-  PBL_LOG(LOG_LEVEL_INFO, "Cancel audio recording");
+  PBL_LOG_INFO("Cancel audio recording");
   prv_teardown_session();
 }
 
@@ -162,7 +162,7 @@ static void prv_cancel_early_session(void) {
   // For early cancellation, only cancel the audio endpoint transfer
   // Don't call mic_stop() since the microphone was never started
   audio_endpoint_cancel_transfer(s_session_id);
-  PBL_LOG(LOG_LEVEL_INFO, "Cancel audio recording");
+  PBL_LOG_INFO("Cancel audio recording");
   prv_teardown_session();
 }
 
@@ -194,13 +194,13 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
             session_id, s_session_id);
   
   if (s_session_id != session_id) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Received audio transfer message when no session was in progress ("
+    PBL_LOG_WRN("Received audio transfer message when no session was in progress ("
             "%d)", session_id);
     return;
   }
 
   if (s_state != SessionState_Recording) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Received stop message from phone after audio session "
+    PBL_LOG_WRN("Received stop message from phone after audio session "
         "stopped/cancelled");
     return;
   }
@@ -227,7 +227,7 @@ static void prv_start_recording(void) {
     PBL_ASSERTN(mic_start(MIC, &prv_audio_data_handler, NULL, frame_buffer, frame_size_samples));
     VOICE_LOG("Microphone started successfully");
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid Speex frame buffer");
+    PBL_LOG_ERR("Invalid Speex frame buffer");
     return;
   }
 #else
@@ -276,7 +276,7 @@ static void prv_handle_subsystem_started(SessionState transition_to_state) {
     new_timer_stop(s_timeout);
 
     // Indicate to the UI that we have started recording
-    PBL_LOG(LOG_LEVEL_INFO, "Session setup successfully");
+    PBL_LOG_INFO("Session setup successfully");
     prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusSuccess, NULL);
 
     VOICE_LOG("Starting recording now that both subsystems are ready");
@@ -297,7 +297,7 @@ static void prv_session_result_timeout(void * data) {
   PBL_ASSERTN(s_state == SessionState_WaitForSessionResult);
 
   prv_reset();
-  PBL_LOG(LOG_LEVEL_WARNING, "Timeout waiting for session result");
+  PBL_LOG_WRN("Timeout waiting for session result");
 
   prv_send_event(VoiceEventTypeSessionResult, VoiceStatusTimeout, NULL);
 
@@ -327,7 +327,7 @@ static void prv_session_setup_timeout(void * data) {
               s_state == SessionState_AudioEndpointSetupReceived);
 
   prv_cancel_session();
-  PBL_LOG(LOG_LEVEL_WARNING, "Timeout waiting for session setup result ");
+  PBL_LOG_WRN("Timeout waiting for session setup result ");
 
   prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusTimeout, NULL);
 
@@ -372,7 +372,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   // Lazily initialize Speex encoder to avoid baseline memory usage when voice not used
   if (!voice_speex_is_initialized()) {
     if (!voice_speex_init()) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize Speex encoder");
+      PBL_LOG_ERR("Failed to initialize Speex encoder");
       mutex_unlock(s_lock);
       return VOICE_SESSION_ID_INVALID;
     }
@@ -405,7 +405,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
     s_app_uuid = app_manager_get_current_app_md()->uuid;
     char uuid_str[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&s_app_uuid, uuid_str);
-    PBL_LOG(LOG_LEVEL_INFO, "Starting app-initiated voice dictation session for app %s", uuid_str);
+    PBL_LOG_INFO("Starting app-initiated voice dictation session for app %s", uuid_str);
   } else {
     VOICE_LOG("Starting system-initiated voice dictation session");
   }
@@ -431,7 +431,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   VOICE_LOG("Audio endpoint transfer setup complete with session_id=%d", s_session_id);
 
 
-  PBL_LOG(LOG_LEVEL_INFO, "Send session setup message. Session type: %d", session_type);
+  PBL_LOG_INFO("Send session setup message. Session type: %d", session_type);
   VOICE_LOG("Calling voice_endpoint_setup_session");
   voice_endpoint_setup_session(session_type, s_session_id, &transfer_info,
       s_from_app ? &s_app_uuid : NULL);
@@ -538,7 +538,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
 
   if (s_state != SessionState_StartSession &&
       s_state != SessionState_AudioEndpointSetupReceived) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Session setup result received when not expected, state=%d",
+    PBL_LOG_WRN("Session setup result received when not expected, state=%d",
             (int)s_state);
     prv_cancel_session();
     VoiceEventType event_type = (s_state <= SessionState_StartSession) ?
@@ -548,7 +548,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
   }
 
   if (session_type >= VoiceEndpointSessionTypeCount) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Session setup result for invalid session type received");
+    PBL_LOG_WRN("Session setup result for invalid session type received");
     goto done;
   }
 
@@ -556,7 +556,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
     VOICE_LOG("ERROR: Session setup failed with result %d", result);
     prv_cancel_session();
     VoiceStatus status = prv_get_status_from_result(result);
-    PBL_LOG(LOG_LEVEL_WARNING, "Error occurred setting up session: %d", result);
+    PBL_LOG_WRN("Error occurred setting up session: %d", result);
     prv_send_event(VoiceEventTypeSessionSetup, status, NULL);
     goto done;
   }
@@ -565,10 +565,10 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
     VOICE_LOG("ERROR: App initiated mismatch - received=%d, expected=%d", app_initiated, s_from_app);
     prv_cancel_session();
     if (app_initiated) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Received session setup result for app initiated session when it "
+      PBL_LOG_WRN("Received session setup result for app initiated session when it "
               "was not expected");
     } else {
-      PBL_LOG(LOG_LEVEL_WARNING, "Received session setup result for non-app session when an app "
+      PBL_LOG_WRN("Received session setup result for non-app session when an app "
               "session result was expected");
     }
     prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusErrorGeneric, NULL);
@@ -627,7 +627,7 @@ static bool prv_handle_dictation_nlp_result_common(VoiceEndpointResult result,
   if (s_state != SessionState_WaitForSessionResult) {
     // This handles erroneous replies from the phone app (sometimes the phone app sends a session
     // result immediately after we start streaming
-    PBL_LOG(LOG_LEVEL_WARNING, "Session result when not expected (result: %d, "
+    PBL_LOG_WRN("Session result when not expected (result: %d, "
         "session_id: %d)", result, session_id);
     if (s_state == SessionState_Recording) {
       prv_stop_recording();
@@ -641,7 +641,7 @@ static bool prv_handle_dictation_nlp_result_common(VoiceEndpointResult result,
   }
 
   if (s_session_id != session_id) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Received session result for wrong session (Expected: "
+    PBL_LOG_WRN("Received session result for wrong session (Expected: "
         "%"PRIu16"; Received: %"PRIu16, s_session_id, session_id);
     prv_send_event(VoiceEventTypeSessionResult, VoiceStatusErrorGeneric, NULL);
     return false;
@@ -649,7 +649,7 @@ static bool prv_handle_dictation_nlp_result_common(VoiceEndpointResult result,
 
   if (result != VoiceEndpointResultSuccess) {
     VoiceStatus status = prv_get_status_from_result(result);
-    PBL_LOG(LOG_LEVEL_WARNING, "Error occurred processing result: %d", result);
+    PBL_LOG_WRN("Error occurred processing result: %d", result);
     prv_send_event(VoiceEventTypeSessionResult, status, NULL);
     return false;
   }
@@ -659,10 +659,10 @@ static bool prv_handle_dictation_nlp_result_common(VoiceEndpointResult result,
   // expected UUID
   if ((app_initiated != s_from_app) || (s_from_app && !uuid_equal(&s_app_uuid, app_uuid))) {
     if (app_initiated) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Received session result for app initiated session when a "
+      PBL_LOG_WRN("Received session result for app initiated session when a "
               "non-app session result was expected");
     } else {
-      PBL_LOG(LOG_LEVEL_WARNING, "Received session result for non-app session when an app "
+      PBL_LOG_WRN("Received session result for non-app session when an app "
               "session result was expected");
     }
     prv_send_event(VoiceEventTypeSessionResult, VoiceStatusErrorGeneric, NULL);
@@ -699,10 +699,10 @@ void voice_handle_dictation_result(VoiceEndpointResult result, AudioEndpointSess
   if (app_initiated) {
     char uuid_str[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(app_uuid, uuid_str);
-    PBL_LOG(LOG_LEVEL_INFO, "Transcription received (%"PRIu32" B) for app %s",
+    PBL_LOG_INFO("Transcription received (%"PRIu32" B) for app %s",
         (uint32_t)sentence_size, uuid_str);
   } else {
-    PBL_LOG(LOG_LEVEL_INFO, "Transcription received (%"PRIu32" B)", (uint32_t)sentence_size);
+    PBL_LOG_INFO("Transcription received (%"PRIu32" B)", (uint32_t)sentence_size);
   }
 
   prv_send_event(VoiceEventTypeSessionResult, VoiceStatusSuccess, event_data);

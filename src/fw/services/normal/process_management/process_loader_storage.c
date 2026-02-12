@@ -27,7 +27,7 @@ static bool prv_verify_checksum(const PebbleProcessInfo* app_info, const uint8_t
                                                              app_size);
 
   if (app_info->crc != calculated_crc) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Calculated App CRC is 0x%"PRIx32", expected 0x%"PRIx32"!",
+    PBL_LOG_WRN("Calculated App CRC is 0x%"PRIx32", expected 0x%"PRIx32"!",
             calculated_crc, app_info->crc);
     return false;
   } else {
@@ -43,7 +43,7 @@ static void * prv_offset_to_address(MemorySegment *segment, size_t offset) {
 static bool prv_intialize_sdk_process(PebbleTask task, const PebbleProcessInfo *info,
                                       MemorySegment *destination) {
   if (!prv_verify_checksum(info, destination->start)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Calculated CRC does not match, aborting...");
+    PBL_LOG_DBG("Calculated CRC does not match, aborting...");
     return false;
   }
 
@@ -92,8 +92,7 @@ static bool prv_load_from_flash(const PebbleProcessMd *app_md, PebbleTask task,
   const size_t load_size = app_storage_get_process_load_size(&info);
 
   if (load_size > memory_segment_get_size(destination)) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
+    PBL_LOG_ERR("App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
             info.load_size, info.num_reloc_entries, load_size);
     return false;
   }
@@ -104,12 +103,12 @@ static bool prv_load_from_flash(const PebbleProcessMd *app_md, PebbleTask task,
   app_storage_get_file_name(process_name, sizeof(process_name), app_id, task);
 
   if ((fd = pfs_open(process_name, OP_FLAG_READ, 0, 0)) < S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Process open failed for process %s, fd = %d", process_name, fd);
+    PBL_LOG_ERR("Process open failed for process %s, fd = %d", process_name, fd);
     return (false);
   }
 
   if (pfs_read(fd, destination->start, load_size) != (int)load_size) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Process read failed for process %s, fd = %d", process_name, fd);
+    PBL_LOG_ERR("Process read failed for process %s, fd = %d", process_name, fd);
     pfs_close(fd);
     return (false);
   }
@@ -132,8 +131,7 @@ static bool prv_load_from_resource(const PebbleProcessMdResource *app_md,
   const size_t load_size = app_storage_get_process_load_size(&info);
 
   if (load_size > memory_segment_get_size(destination)) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-        "App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
+    PBL_LOG_ERR("App/Worker exceeds available program space: %"PRIu16" + (%"PRIu32" * 4) = %zu",
         info.load_size, info.num_reloc_entries, load_size);
     return false;
   }

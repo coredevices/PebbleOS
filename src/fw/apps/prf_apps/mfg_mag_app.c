@@ -131,7 +131,7 @@ static void prv_update_display(void *context) {
   }
 
   // Log raw magnetometer samples at debug level
-  PBL_LOG(LOG_LEVEL_DEBUG, "Mag (mG): X:%"PRIi16" Y:%"PRIi16" Z:%"PRIi16,
+  PBL_LOG_DBG("Mag (mG): X:%"PRIi16" Y:%"PRIi16" Z:%"PRIi16,
           sample.x, sample.y, sample.z);
 
   uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->state_start_time);

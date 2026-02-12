@@ -185,7 +185,7 @@ void test_alarm_smart__trigger_15_min_early_light_sleep(void) {
     s_sleep_state_seconds += 5 * SECONDS_PER_MINUTE;
     s_last_vmc = i == 2 ? 1 : 0;
     prv_set_time(s_current_day, 10, (i + 1) * 5);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Iteration #%d, sleep %d seconds", i, s_sleep_state_seconds);
+    PBL_LOG_DBG("Iteration #%d, sleep %d seconds", i, s_sleep_state_seconds);
     stub_new_timer_invoke(1);
     if (i < num_checks - 1) {
       // Smart alarm non-trigger checks
@@ -229,7 +229,7 @@ void test_alarm_smart__trigger_at_timeout(void) {
     s_sleep_state_seconds = (i + 1) * 5 * SECONDS_PER_MINUTE;
     s_last_vmc = (i == 5);
     prv_set_time(s_current_day, 10, i * 5);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Iteration #%d, sleep %d seconds", i, s_sleep_state_seconds);
+    PBL_LOG_DBG("Iteration #%d, sleep %d seconds", i, s_sleep_state_seconds);
     stub_new_timer_invoke(1);
     if (i < num_checks - 1) {
       // Smart alarm non-trigger checks

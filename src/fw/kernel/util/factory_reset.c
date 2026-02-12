@@ -31,7 +31,7 @@
 static bool s_in_factory_reset = false;
 
 static void prv_factory_reset_non_pfs_data() {
-  PBL_LOG_SYNC(LOG_LEVEL_INFO, "Factory resetting...");
+  PBL_LOG_SYNC_INFO("Factory resetting...");
 
   // This function can block the system task for a long time.
   // Prevent callbacks being added to the system task so it doesn't overflow.

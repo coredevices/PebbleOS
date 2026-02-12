@@ -64,7 +64,7 @@ static int prv_file_open_by_name(const char *name, uint8_t op_flags) {
   int fd = pfs_open(name, op_flags, FILE_TYPE_STATIC, 0);
 
   if ((fd < 0) && (fd != E_DOES_NOT_EXIST)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not open resource pfs file <%s>, fd: %d", name, fd);
+    PBL_LOG_WRN("Could not open resource pfs file <%s>, fd: %d", name, fd);
   }
 
   return fd;
@@ -143,14 +143,14 @@ static void resource_storage_file_init(void) {
     const int fd = prv_file_open_by_name(name, op_flags);
 
     const uint32_t file_length = prv_file_common_get_length_and_close(fd);
-    PBL_LOG(LOG_LEVEL_INFO, "File %s has length %"PRIu32, name, file_length);
+    PBL_LOG_INFO("File %s has length %"PRIu32, name, file_length);
 
     // Now check each entry in the file
     for (uint32_t resource_id = g_file_resource_stores[i].first_resource_id;
          resource_id <= g_file_resource_stores[i].last_resource_id; resource_id++) {
       // TODO PBL-21402
       if (!resource_storage_check(SYSTEM_APP, resource_id, NULL)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "System resource file %"PRIu32" corrupt!!!", resource_id);
+        PBL_LOG_ERR("System resource file %"PRIu32" corrupt!!!", resource_id);
       }
 
       const uint32_t large_file_size_threshold = 200 * 1024;
@@ -198,7 +198,7 @@ static int prv_app_file_open(ResourceStoreEntry *entry, uint8_t op_flags) {
   int fd = pfs_open(filename, op_flags, FILE_TYPE_STATIC, 0);
 
   if ((fd < 0) && (fd != E_DOES_NOT_EXIST)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not open resource pfs file <%s>, fd: %d", filename, fd);
+    PBL_LOG_WRN("Could not open resource pfs file <%s>, fd: %d", filename, fd);
   }
 
   return fd;

@@ -93,10 +93,10 @@ static bool prv_pfs_read(int fd, void *buf, size_t size) {
   int bytes_read;
   bytes_read = pfs_read(fd, buf, size);
   if (bytes_read < S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Err %d while reading", (int)bytes_read);
+    PBL_LOG_ERR("Err %d while reading", (int)bytes_read);
     return false;
   } else if (bytes_read < (int)size) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Read only %d bytes, expected %d", (int)bytes_read, (int)size);
+    PBL_LOG_ERR("Read only %d bytes, expected %d", (int)bytes_read, (int)size);
     return false;
   }
   return true;
@@ -108,10 +108,10 @@ static bool prv_pfs_read(int fd, void *buf, size_t size) {
 static bool prv_pfs_write(int fd, void *buf, size_t size) {
   int bytes_wrote = pfs_write(fd, buf, size);
   if (bytes_wrote < S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Err %d while writing", (int)bytes_wrote);
+    PBL_LOG_ERR("Err %d while writing", (int)bytes_wrote);
     return false;
   } else if (bytes_wrote < (int)size) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Wrote only %d bytes, expected %d", (int)bytes_wrote, (int)size);
+    PBL_LOG_ERR("Wrote only %d bytes, expected %d", (int)bytes_wrote, (int)size);
     return false;
   }
   return true;
@@ -124,7 +124,7 @@ static bool prv_pfs_seek(int fd, int offset, FSeekType seek_type) {
   int result;
   result = pfs_seek(fd, offset, seek_type);
   if (result < S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Err %d while seeking", result);
+    PBL_LOG_ERR("Err %d while seeking", result);
     return false;
   }
   return true;
@@ -136,7 +136,7 @@ static bool prv_pfs_seek(int fd, int offset, FSeekType seek_type) {
 static size_t prv_pfs_get_file_size(int fd) {
   size_t result = pfs_get_file_size(fd);
   if (result == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Err getting size");
+    PBL_LOG_ERR("Err getting size");
   }
   return result;
 }
@@ -182,7 +182,7 @@ static bool prv_accumulate_size_cb(DataLoggingSession* session, void *data) {
 static uint32_t prv_get_total_file_system_bytes(void) {
   uint32_t size = 0;
   dls_list_for_each_session(prv_accumulate_size_cb, &size);
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Total used space: %d", (int)size);
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Total used space: %d", (int)size);
   return size;
 }
 
@@ -248,7 +248,7 @@ static bool prv_open_file(DataLoggingSessionStorage *storage, uint8_t op_flags,
 
   int fd = pfs_open(name, op_flags, FILE_TYPE_STATIC, size);
   if (fd < S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not open/create DLS file %s", name);
+    PBL_LOG_ERR("Could not open/create DLS file %s", name);
     return false;
   }
 
@@ -280,7 +280,7 @@ static bool prv_open_file(DataLoggingSessionStorage *storage, uint8_t op_flags,
     .read_offset = sizeof(hdr)
   };
 
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Created session-storage: "
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Created session-storage: "
       "id %"PRIu8", filename: %s, fd: %d, size: %d", session->comm.session_id, name, fd,
       (int)size);
   return true;
@@ -294,7 +294,7 @@ static void prv_release_session_file(DataLoggingSession *session) {
 
   status_t status = pfs_close(session->storage.fd);
   if (status != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error %d closing file for session %d", (int)status,
+    PBL_LOG_ERR("Error %d closing file for session %d", (int)status,
             session->comm.session_id);
   }
   session->storage.fd = DLS_INVALID_FILE;
@@ -457,9 +457,8 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
   // Must be called with the file closed
   PBL_ASSERTN(session->storage.fd == DLS_INVALID_FILE);
 
-  PBL_LOG(LOG_LEVEL_INFO, "Compacting storage for session %d", session->comm.session_id);
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG,
-            "Before compaction: num_bytes: %"PRIu32", write_offset:%"PRIu32,
+  PBL_LOG_INFO("Compacting storage for session %d", session->comm.session_id);
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Before compaction: num_bytes: %"PRIu32", write_offset:%"PRIu32,
             session->storage.num_bytes, session->storage.write_offset);
 
   // Init a storage struct and create a new file for the compacted data
@@ -469,7 +468,7 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
   success = prv_open_file(&new_storage, OP_FLAG_OVERWRITE | OP_FLAG_READ, new_size,
                           session);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not create temporary file to migrate storage file");
+    PBL_LOG_ERR("Could not create temporary file to migrate storage file");
     goto exit;
   }
 
@@ -488,7 +487,7 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
       break;
     }
     if (max_chunk_size < 256) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory for reallocation");
+      PBL_LOG_ERR("Not enough memory for reallocation");
       goto exit;
     }
     max_chunk_size /= 2;
@@ -527,8 +526,7 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
   // Plug in the new storage info into the session
   session->storage = new_storage;
 
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG,
-            "After compaction: size: %d, num_bytes: %d, write_offset:%d",
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "After compaction: size: %d, num_bytes: %d, write_offset:%d",
             (int)new_size, (int)session->storage.num_bytes, (int)session->storage.write_offset);
   success = true;
 
@@ -539,7 +537,7 @@ exit:
   }
 
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Migration failed of session file %d", session->comm.session_id);
+    PBL_LOG_ERR("Migration failed of session file %d", session->comm.session_id);
     dls_storage_delete_logging_storage(session);
   }
   return success;
@@ -563,7 +561,7 @@ void dls_storage_delete_logging_storage(DataLoggingSession *session) {
   prv_get_filename(name, session);
   status_t status = pfs_remove(name);
   if (status != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error %d removing file", (int) status);
+    PBL_LOG_ERR("Error %d removing file", (int) status);
   }
 
   // Clear out storage info
@@ -593,7 +591,7 @@ exit:
   }
 
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Nuking storage for session %d", session->comm.session_id);
+    PBL_LOG_ERR("Nuking storage for session %d", session->comm.session_id);
     dls_storage_delete_logging_storage(session);
   }
   return success;
@@ -659,7 +657,7 @@ exit:
   }
 
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Nuking storage for session %d", session->comm.session_id);
+    PBL_LOG_ERR("Nuking storage for session %d", session->comm.session_id);
     dls_storage_delete_logging_storage(session);
   }
   return success;
@@ -752,7 +750,7 @@ exit:
   }
 
   if (last_whole_items_read_bytes < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Nuking storage for session %d", logging_session->comm.session_id);
+    PBL_LOG_ERR("Nuking storage for session %d", logging_session->comm.session_id);
     dls_storage_delete_logging_storage(logging_session);
   }
 
@@ -813,7 +811,7 @@ int32_t dls_storage_consume(DataLoggingSession *logging_session, int32_t num_byt
       }
       if (chunk_hdr.num_bytes > num_bytes) {
         // Somehow the caller tried to consume less than they read?
-        PBL_LOG(LOG_LEVEL_WARNING, "Read/consume out of sync");
+        PBL_LOG_WRN("Read/consume out of sync");
         goto exit;
       }
       // Invalidate the chunk, now that we have consumed it
@@ -828,7 +826,7 @@ int32_t dls_storage_consume(DataLoggingSession *logging_session, int32_t num_byt
         goto exit;
       }
       if (logging_session->storage.num_bytes < chunk_hdr.num_bytes) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Inconsistent tracking of num_bytes");
+        PBL_LOG_ERR("Inconsistent tracking of num_bytes");
         consumed_bytes = -1;    // error
         goto exit;
       }
@@ -841,8 +839,7 @@ int32_t dls_storage_consume(DataLoggingSession *logging_session, int32_t num_byt
 
 exit:
   if (consumed_bytes > 0) {
-    PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG,
-              "Consumed %d bytes from session %d", (int)consumed_bytes,
+    PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Consumed %d bytes from session %d", (int)consumed_bytes,
               logging_session->comm.session_id);
   }
 
@@ -851,7 +848,7 @@ exit:
   }
 
   if (consumed_bytes < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Nuking storage for session %d", logging_session->comm.session_id);
+    PBL_LOG_ERR("Nuking storage for session %d", logging_session->comm.session_id);
     dls_storage_delete_logging_storage(logging_session);
   }
   return consumed_bytes;
@@ -880,7 +877,7 @@ void dls_storage_rebuild(void) {
     int fd = pfs_open(head->name, OP_FLAG_READ | OP_FLAG_WRITE, FILE_TYPE_STATIC,
                       DLS_FILE_INIT_SIZE_BYTES);
     if (fd < S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error %d opening file %s", fd, head->name);
+      PBL_LOG_ERR("Error %d opening file %s", fd, head->name);
       pfs_remove(head->name);
       goto bad_session;
     }
@@ -909,7 +906,7 @@ void dls_storage_rebuild(void) {
     // Make sure the filename is what we expect
     prv_get_filename(name, session);
     if (strncmp(name, head->name, DLS_FILE_NAME_MAX_LEN)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Expected name of %s, got %s", head->name, name);
+      PBL_LOG_ERR("Expected name of %s, got %s", head->name, name);
       pfs_remove(head->name);
       goto bad_session;
     }
@@ -930,8 +927,7 @@ void dls_storage_rebuild(void) {
       goto bad_session;
     }
 
-    PBL_LOG(LOG_LEVEL_INFO,
-            "Restored session %"PRIu8
+    PBL_LOG_INFO("Restored session %"PRIu8
             " num_bytes:%"PRIu32", read_offset:%"PRIu32", write_offset:%"PRIu32,
             session->comm.session_id, session->storage.num_bytes,
             session->storage.read_offset, session->storage.write_offset);
@@ -959,7 +955,7 @@ bad_session:
     head = (PFSFileListEntry *)head->list_node.next;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "Restored %d sessions. Total %"PRIu32" bytes allocated",
+  PBL_LOG_INFO("Restored %d sessions. Total %"PRIu32" bytes allocated",
           num_sessions_restored, prv_get_total_file_system_bytes());
 
   // Free the directory list

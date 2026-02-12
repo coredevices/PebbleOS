@@ -138,29 +138,29 @@ typedef struct AppData {
 static void log_state(AppData *data) {
   switch (data->state_index) {
     case APP_STATE_FILL_NON_AA:
-      PBL_LOG(LOG_LEVEL_DEBUG, "State: Fill Non-Antialiased; SW: N/A (but currently: %d)",
+      PBL_LOG_DBG("State: Fill Non-Antialiased; SW: N/A (but currently: %d)",
               data->stroke_width);
       break;
     case APP_STATE_FILL_AA:
-      PBL_LOG(LOG_LEVEL_DEBUG, "State: Fill Antialiased; SW: N/A (but currently: %d)",
+      PBL_LOG_DBG("State: Fill Antialiased; SW: N/A (but currently: %d)",
               data->stroke_width);
       break;
     case APP_STATE_DRAW_NON_AA_NO_SW:
-      PBL_LOG(LOG_LEVEL_DEBUG, "State: Draw Non-Antialiased; SW: N/A (but currently: %d)",
+      PBL_LOG_DBG("State: Draw Non-Antialiased; SW: N/A (but currently: %d)",
               data->stroke_width);
       break;
     case APP_STATE_DRAW_AA_NO_SW:
-      PBL_LOG(LOG_LEVEL_DEBUG, "State: Draw Antialiased; SW: N/A (but currently: %d)",
+      PBL_LOG_DBG("State: Draw Antialiased; SW: N/A (but currently: %d)",
               data->stroke_width);
       break;
     case APP_STATE_DRAW_NON_AA_SW:
-      PBL_LOG(LOG_LEVEL_DEBUG, "State: Draw Non-Antialiased; SW: %d", data->stroke_width);
+      PBL_LOG_DBG("State: Draw Non-Antialiased; SW: %d", data->stroke_width);
       break;
     case APP_STATE_DRAW_AA_SW:
-      PBL_LOG(LOG_LEVEL_DEBUG, "State: Draw Antialiased; SW: %d", data->stroke_width);
+      PBL_LOG_DBG("State: Draw Antialiased; SW: %d", data->stroke_width);
       break;
     default:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Unknown State");
+      PBL_LOG_DBG("Unknown State");
       break;
   }
 }
@@ -410,8 +410,8 @@ static void layer_update_proc(Layer *layer, GContext* ctx) {
   } else {
     int64_t time_rendered = prv_time_64() - data->time_started;
     if ((data->rendered_frames % 64) == 0) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "## %d frames rendered", (int)data->rendered_frames);
-      PBL_LOG(LOG_LEVEL_DEBUG, "## at %"PRIu32" FPS",
+      PBL_LOG_DBG("## %d frames rendered", (int)data->rendered_frames);
+      PBL_LOG_DBG("## at %"PRIu32" FPS",
               (uint32_t)((uint64_t)data->rendered_frames*1000/time_rendered));
     }
   }

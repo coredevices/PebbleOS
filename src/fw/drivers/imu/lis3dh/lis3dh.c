@@ -198,7 +198,7 @@ void accel_get_last_data(AccelRawData* data) {
 
 void accel_get_data(AccelRawData* data, int num_samples) {
   if (!s_running) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Accel Not Running");
+    PBL_LOG_ERR("Accel Not Running");
     return;
   }
 
@@ -265,7 +265,7 @@ void accel_power_up(void) {
       }
     }
   }
-  PBL_LOG(LOG_LEVEL_ERROR, "Failed to exit low power mode");
+  PBL_LOG_ERR("Failed to exit low power mode");
 }
 
 void accel_power_down(void) {
@@ -280,7 +280,7 @@ void accel_power_down(void) {
       }
     }
   }
-  PBL_LOG(LOG_LEVEL_ERROR, "Failed to enter low power mode");
+  PBL_LOG_ERR("Failed to enter low power mode");
 }
 
 bool accel_running(void) {
@@ -289,7 +289,7 @@ bool accel_running(void) {
 
 bool accel_start(void) {
   if (!s_initialized) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to start accel, not yet initialized");
+    PBL_LOG_ERR("Failed to start accel, not yet initialized");
     return false;
   }
 
@@ -412,7 +412,7 @@ static void prv_read_samples(void *data) {
 
   AccelRawData accel_raw_data[num_samples];
   if (src_reg & FIFO_OVRN) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Fifo overrun");
+    PBL_LOG_ERR("Fifo overrun");
     analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_FIFO_OVERRUN_COUNT, AnalyticsClient_System);
   }
 
@@ -606,7 +606,7 @@ bool accel_self_test(void) {
   AccelRawData data_st;
 
   if (!accel_start()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Self test failed, could not start accel");
+    PBL_LOG_ERR("Self test failed, could not start accel");
     return false;
   }
 

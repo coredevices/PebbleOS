@@ -141,7 +141,7 @@ bool attributes_actions_deep_copy(AttributeList *src_attr_list,
     rv = attribute_list_copy(dest_attr_list, src_attr_list,
                              buffer, MIN(buffer + attr_list_size, buf_end));
     if (!rv) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error deep-copying pin attribute list");
+      PBL_LOG_ERR("Error deep-copying pin attribute list");
       return false;
     }
   }
@@ -149,7 +149,7 @@ bool attributes_actions_deep_copy(AttributeList *src_attr_list,
     rv = prv_action_group_copy(dest_action_group, src_action_group,
                                buffer + attr_list_size, buf_end);
     if (!rv) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error deep-copying pin action group");
+      PBL_LOG_ERR("Error deep-copying pin action group");
       return false;
     }
   }

@@ -65,7 +65,7 @@ AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_i
        app_info->sdk_version.minor <= PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
 
   if (is_sdk_compatible == false) {
-    PBL_LOG(LOG_LEVEL_WARNING, "App requires support for SDK version (%u.%u), we only support version (%u.%u).",
+    PBL_LOG_WRN("App requires support for SDK version (%u.%u), we only support version (%u.%u).",
             app_info->sdk_version.major, app_info->sdk_version.minor,
             PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
 
@@ -74,7 +74,7 @@ AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_i
   }
 
   if (app_info->virtual_size > APP_MAX_SIZE) {
-    PBL_LOG(LOG_LEVEL_WARNING, "App size (%u) larger than bank size; invalid app.", app_info->virtual_size);
+    PBL_LOG_WRN("App size (%u) larger than bank size; invalid app.", app_info->virtual_size);
     // The app's metadata indicates an app larger than the maximum bank size
     return GET_APP_INFO_APP_TOO_LARGE;
   }

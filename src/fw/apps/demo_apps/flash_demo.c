@@ -18,32 +18,32 @@ static Window *window;
 static void test_write_short(void) {
   uint16_t buffer;
   flash_read_bytes((uint8_t*) &buffer, BASE_ADDRESS, sizeof(buffer));
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Addr 0x%x is 0x%"PRIx16, BASE_ADDRESS, buffer);
+  PBL_LOG_DBG(">> Addr 0x%x is 0x%"PRIx16, BASE_ADDRESS, buffer);
 
   buffer = 0x0505;
   flash_write_bytes((uint8_t*) &buffer, BASE_ADDRESS, sizeof(buffer));
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Addr 0x%x Written to 0x%x", BASE_ADDRESS, buffer);
+  PBL_LOG_DBG(">> Addr 0x%x Written to 0x%x", BASE_ADDRESS, buffer);
 
   uint8_t read_buffer = 0x0;
   flash_read_bytes((uint8_t*) &read_buffer, BASE_ADDRESS, sizeof(read_buffer));
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Addr 0x%x is (8) 0x%"PRIx8, BASE_ADDRESS, read_buffer);
+  PBL_LOG_DBG(">> Addr 0x%x is (8) 0x%"PRIx8, BASE_ADDRESS, read_buffer);
 
   buffer = 0x0;
   flash_read_bytes((uint8_t*) &buffer, BASE_ADDRESS, sizeof(buffer));
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Addr 0x%x is (16) 0x%"PRIx16, BASE_ADDRESS, buffer);
+  PBL_LOG_DBG(">> Addr 0x%x is (16) 0x%"PRIx16, BASE_ADDRESS, buffer);
 }
 
 static void test_write_bytes(void) {
   for (int i = 1; i < 127; ++i) {
     uint8_t data = i;
     flash_write_bytes((uint8_t*) &data, BASE_ADDRESS + i, sizeof(data));
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Wrote Addr 0x%x is 0x%"PRIx8, i, data);
+    PBL_LOG_DBG(">> Wrote Addr 0x%x is 0x%"PRIx8, i, data);
   }
 
   for (int i = 0; i < 128; ++i) {
     uint8_t data = 0;
     flash_read_bytes((uint8_t*) &data, BASE_ADDRESS + i, sizeof(data));
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Read Addr 0x%x is (8) 0x%"PRIx8, i, data);
+    PBL_LOG_DBG(">> Read Addr 0x%x is (8) 0x%"PRIx8, i, data);
   }
 }
 
@@ -59,21 +59,21 @@ static void test_write_block(void) {
   for (int i = 0; i < 128; ++i) {
     uint8_t data = 0;
     flash_read_bytes((uint8_t*) &data, BASE_ADDRESS + i, sizeof(data));
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Read Addr 0x%x is (8) 0x%"PRIx8, i, data);
+    PBL_LOG_DBG(">> Read Addr 0x%x is (8) 0x%"PRIx8, i, data);
   }
 }
 
 static void do_flash_operation(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Flash operation time!");
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Flash operation time!");
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Flash operation time!");
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Flash operation time!");
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Flash operation time!");
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Flash operation time!");
+  PBL_LOG_DBG(">> Flash operation time!");
+  PBL_LOG_DBG(">> Flash operation time!");
+  PBL_LOG_DBG(">> Flash operation time!");
+  PBL_LOG_DBG(">> Flash operation time!");
+  PBL_LOG_DBG(">> Flash operation time!");
+  PBL_LOG_DBG(">> Flash operation time!");
 
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Erasing 0x%x", BASE_ADDRESS);
+  PBL_LOG_DBG(">> Erasing 0x%x", BASE_ADDRESS);
   flash_erase_sector_blocking(BASE_ADDRESS);
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Erasing 0x%x Done", BASE_ADDRESS);
+  PBL_LOG_DBG(">> Erasing 0x%x Done", BASE_ADDRESS);
 
   test_write_short();
 }

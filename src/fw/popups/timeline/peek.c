@@ -495,7 +495,7 @@ void timeline_peek_dismiss(void) {
   } else {
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&item->header.id, uuid_buffer);
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to dismiss Timeline Peek event %s (status: %"PRIi32")",
+    PBL_LOG_WRN("Failed to dismiss Timeline Peek event %s (status: %"PRIi32")",
             uuid_buffer, rv);
   }
 }

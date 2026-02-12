@@ -38,11 +38,11 @@ status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, in
   // If the notification already exists, only update the status flags
   if (notification_storage_notification_exists(&notification.header.id)) {
     notification_storage_set_status(&notification.header.id, notification.header.status);
-    PBL_LOG(LOG_LEVEL_INFO, "Notification modified: %s", uuid_string);
+    PBL_LOG_INFO("Notification modified: %s", uuid_string);
     notifications_handle_notification_acted_upon(id);
   } else if (!has_status_bits) {
     notification_storage_store(&notification);
-    PBL_LOG(LOG_LEVEL_INFO, "Notification added: %s", uuid_string);
+    PBL_LOG_INFO("Notification added: %s", uuid_string);
     notifications_handle_notification_added(id);
   }
 

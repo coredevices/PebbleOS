@@ -71,11 +71,11 @@ static uint32_t prv_calc_timeout(const TimelineItem *item) {
 
 static void prv_set_timer(unsigned int timeout_ms) {
   if (!timeout_ms) {
-    PBL_LOG(LOG_LEVEL_INFO, "Not setting timer.");
+    PBL_LOG_INFO("Not setting timer.");
   } else if (new_timer_start(s_timer, timeout_ms, prv_new_timer_callback, NULL, 0)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Set timer for %u", timeout_ms);
+    PBL_LOG_DBG("Set timer for %u", timeout_ms);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not start timer.");
+    PBL_LOG_ERR("Could not start timer.");
   }
 }
 
@@ -130,7 +130,7 @@ static void prv_update_status(void) {
   uint32_t timeout_ms = 0;
   if ((rv != S_SUCCESS) && (rv != S_NO_MORE_ITEMS)) {
     // A failure occurred. Call the update functions with a NULL item
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to find next event.");
+    PBL_LOG_ERR("Failed to find next event.");
   } else if (rv != S_NO_MORE_ITEMS) {
     // Calculate the timeout before the item buffer is re-used
     timeout_ms = prv_calc_timeout(&item);

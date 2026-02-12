@@ -207,7 +207,7 @@ static bool prv_get_metric_daily_history(HealthServiceState *state, HealthMetric
   // Read in the metric history
   if (!sys_activity_get_metric(prv_get_activity_metric(metric),
                                ARRAY_LENGTH(daily->totals), daily->totals)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error fetching metric data");
+    PBL_LOG_ERR("Error fetching metric data");
     return false;
   }
 
@@ -674,14 +674,14 @@ static HealthValue prv_compute_aggregate_using_minute_history(
   bool more_data = true;
   while (more_data && (time_start < time_end)) {
     uint32_t num_records = ARRAY_LENGTH(state->cache->minute_data);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Fetching %"PRIu32" minute records for %d to %d...", num_records,
+    PBL_LOG_DBG("Fetching %"PRIu32" minute records for %d to %d...", num_records,
             (int)time_start, (int)time_end);
     bool success = sys_activity_get_minute_history(minute_data, &num_records, &time_start);
     if (!success) {
       APP_LOG(APP_LOG_LEVEL_WARNING, "Error fetching minute history");
       break;
     }
-    PBL_LOG(LOG_LEVEL_DEBUG, "   Got %"PRIu32" minute records for %d", num_records,
+    PBL_LOG_DBG("   Got %"PRIu32" minute records for %d", num_records,
             (int)time_start);
     if (num_records == 0) {
       // No more data available
@@ -1263,7 +1263,7 @@ bool health_service_set_heart_rate_sample_period(uint16_t interval_sec) {
   HRMSessionRef hrm_session = sys_hrm_manager_app_subscribe(app_id, interval_sec, 0 /*expire_sec*/,
                                                             HRMFeature_BPM);
   if (hrm_session == HRM_INVALID_SESSION_REF) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error subscribing");
+    PBL_LOG_ERR("Error subscribing");
     return false;
   }
 

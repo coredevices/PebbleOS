@@ -121,7 +121,7 @@ static void prv_open_action_menu(SendTextAppData *data, const char *number) {
       item, TimelineItemActionTypeResponse);
 
   if (!reply_action) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not opening response menu - unable to load reply action");
+    PBL_LOG_ERR("Not opening response menu - unable to load reply action");
     timeline_item_destroy(item);
     return;
   }

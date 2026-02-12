@@ -652,7 +652,7 @@ static bool prv_is_valid_apps_theme_color(GColor color) {
 static bool prv_set_s_settings_menu_highlight_color(GColor *color) {
 #if PBL_COLOR
   if (!prv_is_valid_settings_theme_color(*color)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid settings menu highlight color 0x%02x, using default",
+    PBL_LOG_WRN("Invalid settings menu highlight color 0x%02x, using default",
             color->argb);
     s_settings_menu_highlight_color = GColorCobaltBlue;
     return false;  // Reject invalid value
@@ -667,7 +667,7 @@ static bool prv_set_s_settings_menu_highlight_color(GColor *color) {
 static bool prv_set_s_apps_menu_highlight_color(GColor *color) {
 #if PBL_COLOR
   if (!prv_is_valid_apps_theme_color(*color)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid apps menu highlight color 0x%02x, using default",
+    PBL_LOG_WRN("Invalid apps menu highlight color 0x%02x, using default",
             color->argb);
     s_apps_menu_highlight_color = GColorVividCerulean;
     return false;  // Reject invalid value
@@ -797,7 +797,7 @@ static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len
       return entry;
     }
   }
-  PBL_LOG(LOG_LEVEL_WARNING, "Unrecognized key: %s", (const char *)key);
+  PBL_LOG_WRN("Unrecognized key: %s", (const char *)key);
   return NULL;
 }
 
@@ -806,7 +806,7 @@ static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len
 // Set the backing store for a pref
 static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value, int value_len) {
   if (value_len != entry->value_len) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Attempt to set %s using invalid value_len of %"PRIu32"",
+    PBL_LOG_WRN("Attempt to set %s using invalid value_len of %"PRIu32"",
             entry->key, (uint32_t)value_len);
     return false;
   }
@@ -819,7 +819,7 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
       // Keys in the backing store include the null terminator, so we add 1 to key_len
       rv = settings_file_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
       if (rv != S_SUCCESS) {
-        PBL_LOG(LOG_LEVEL_WARNING, "Failed to set pref '%s' (%"PRIi32")", entry->key, (int32_t)rv);
+        PBL_LOG_WRN("Failed to set pref '%s' (%"PRIi32")", entry->key, (int32_t)rv);
       }
       settings_file_close(&file);
     }
@@ -886,7 +886,7 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   }
 
   if (value_len != entry->value_len) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Attempt to read %s using invalid value_len of %"PRIu32"",
+    PBL_LOG_WRN("Attempt to read %s using invalid value_len of %"PRIu32"",
             entry->key, (uint32_t)value_len);
     return false;
   }
@@ -1369,7 +1369,7 @@ AppInstallId watchface_get_default_install_id(void) {
 
 void system_theme_set_content_size(PreferredContentSize content_size) {
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Ignoring attempt to set content size to invalid size %d",
+    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d",
             content_size);
     return;
   }

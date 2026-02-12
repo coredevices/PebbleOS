@@ -62,7 +62,7 @@ static void prv_ensure_open(void) {
     status_t status = settings_file_open(&s_settings_file, WATCHFACE_METRICS_FILE,
                                          WATCHFACE_METRICS_MAX_SIZE);
     if (status != S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to open watchface metrics file: %d", (int)status);
+      PBL_LOG_ERR("Failed to open watchface metrics file: %d", (int)status);
       return;
     }
     s_initialized = true;
@@ -131,7 +131,7 @@ static void prv_save_data_system_task_cb(void *context) {
                                       WATCHFACE_METRICS_KEY, strlen(WATCHFACE_METRICS_KEY),
                                       &data, sizeof(data));
   if (status != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to save watchface metrics: %d", (int)status);
+    PBL_LOG_ERR("Failed to save watchface metrics: %d", (int)status);
   }
 
   mutex_unlock(s_mutex);
@@ -165,7 +165,7 @@ static void prv_periodic_save_callback(void *data) {
   if (s_state.current_total_secs != s_state.last_saved_secs) {
     prv_save_data(&s_state.current_uuid, s_state.current_total_secs);
     s_state.last_saved_secs = s_state.current_total_secs;
-    PBL_LOG(LOG_LEVEL_DEBUG, "Watchface metrics: periodic save, total: %lu secs",
+    PBL_LOG_DBG("Watchface metrics: periodic save, total: %lu secs",
             (unsigned long)s_state.current_total_secs);
   }
 
@@ -207,11 +207,11 @@ void watchface_metrics_start(const Uuid *uuid) {
   uint32_t previous_time = 0;
   if (prv_load_data(uuid, &previous_time)) {
     s_state.current_total_secs = previous_time;
-    PBL_LOG(LOG_LEVEL_DEBUG, "Watchface metrics: resuming, previous total: %lu secs",
+    PBL_LOG_DBG("Watchface metrics: resuming, previous total: %lu secs",
             (unsigned long)previous_time);
   } else {
     s_state.current_total_secs = 0;
-    PBL_LOG(LOG_LEVEL_DEBUG, "Watchface metrics: new watchface, starting from 0");
+    PBL_LOG_DBG("Watchface metrics: new watchface, starting from 0");
   }
 
   s_state.last_saved_secs = s_state.current_total_secs;
@@ -234,7 +234,7 @@ void watchface_metrics_stop(void) {
   prv_save_data(&s_state.current_uuid, s_state.current_total_secs);
   s_state.last_saved_secs = s_state.current_total_secs;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Watchface metrics: stopped, session: %lu secs, total: %lu secs",
+  PBL_LOG_DBG("Watchface metrics: stopped, session: %lu secs, total: %lu secs",
           (unsigned long)elapsed_secs, (unsigned long)s_state.current_total_secs);
 
   s_state.tracking = false;

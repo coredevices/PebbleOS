@@ -85,7 +85,7 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
 
     case PEBBLE_ALARM_CLOCK_EVENT:
       analytics_inc(ANALYTICS_DEVICE_METRIC_ALARM_SOUNDED_COUNT, AnalyticsClient_System);
-      PBL_LOG(LOG_LEVEL_INFO, "Alarm event in the shell event loop");
+      PBL_LOG_INFO("Alarm event in the shell event loop");
       stationary_wake_up();
       alarm_popup_push_window(&e->alarm_clock);
       return;

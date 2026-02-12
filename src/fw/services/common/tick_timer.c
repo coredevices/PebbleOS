@@ -28,7 +28,7 @@ static RegularTimerInfo s_tick_timer_info = {
 void tick_timer_add_subscriber(PebbleTask task) {
   ++s_num_subscribers;
   if (s_num_subscribers == 1) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "starting tick timer");
+    PBL_LOG_DBG("starting tick timer");
     regular_timer_add_seconds_callback(&s_tick_timer_info);
   }
 }
@@ -37,7 +37,7 @@ void tick_timer_remove_subscriber(PebbleTask task) {
   PBL_ASSERTN(s_num_subscribers > 0);
   --s_num_subscribers;
   if (s_num_subscribers == 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "stopping tick timer");
+    PBL_LOG_DBG("stopping tick timer");
     regular_timer_remove_callback(&s_tick_timer_info);
   }
 }

@@ -117,7 +117,7 @@ static void prv_update_state(void *force_update) {
 
   ret = battery_charge_status_get(&chg_status);
   if (ret < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not obtain charge status, skipping update (%d)", ret);
+    PBL_LOG_ERR("Could not obtain charge status, skipping update (%d)", ret);
     return;
   }
 
@@ -135,7 +135,7 @@ static void prv_update_state(void *force_update) {
 
   ret = battery_get_constants(&constants);
   if (ret < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not obtain constants, skipping update (%d)", ret);
+    PBL_LOG_ERR("Could not obtain constants, skipping update (%d)", ret);
     return;
   }
 
@@ -176,14 +176,13 @@ static void prv_update_state(void *force_update) {
     s_last_ttf = 0U;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG_VERBOSE,
-          "Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td: %lu, soc: %u, tte: %lu, ttf: %lu",
+  PBL_LOG_VERBOSE("Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td: %lu, soc: %u, tte: %lu, ttf: %lu",
           constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta,
           s_last_battery_charge_state.pct, s_last_tte, s_last_ttf);
 
   if (update || (((now - s_last_log) / RTC_TICKS_HZ > LOG_MIN_SEC) &&
                  (s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)))) {
-    PBL_LOG(LOG_LEVEL_INFO, "Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32 " uA, "
+    PBL_LOG_INFO("Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32 " uA, "
             "T: %" PRId32 " mC, charging: %s, plugged: %s",
             s_last_battery_charge_state.pct, constants.v_mv, constants.i_ua, constants.t_mc,
             s_last_battery_charge_state.is_charging ? "yes" : "no",

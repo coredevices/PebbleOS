@@ -26,7 +26,7 @@ DEFINE_SYSCALL(void, sys_data_logging_finish, DataLoggingSessionRef session_ref)
   DataLoggingSession* session = (DataLoggingSession*)session_ref;
 
   if (!dls_is_session_valid(session)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "finish: Invalid session %p", session);
+    PBL_LOG_WRN("finish: Invalid session %p", session);
     return; // TODO: Return error code?
   }
 
@@ -38,11 +38,11 @@ DEFINE_SYSCALL(DataLoggingResult, sys_data_logging_log,
   DataLoggingSession* session = (DataLoggingSession*)session_ref;
 
   if (!dls_is_session_valid(session)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "log: Invalid session %p", session);
+    PBL_LOG_WRN("log: Invalid session %p", session);
     return DATA_LOGGING_INVALID_PARAMS;
   }
   if (data == NULL) {
-    PBL_LOG(LOG_LEVEL_WARNING, "log: NULL data pointer");
+    PBL_LOG_WRN("log: NULL data pointer");
     return DATA_LOGGING_INVALID_PARAMS;
   }
 

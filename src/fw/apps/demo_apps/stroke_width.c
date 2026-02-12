@@ -89,13 +89,13 @@ static void up_handler(ClickRecognizerRef recognizer, void *context) {
       data->p2.y++;
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid operation type: %d", data->operation);
+      PBL_LOG_ERR("Invalid operation type: %d", data->operation);
       break;
   }
 
   layer_mark_dirty(data->canvas_layer);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "line(p1(%d, %d), p2(%d, %d), width=%d), angle=%d)",
+  PBL_LOG_DBG("line(p1(%d, %d), p2(%d, %d), width=%d), angle=%d)",
           data->p1.x, data->p1.y, data->p2.x, data->p2.y, data->stroke_width,
           (int)(data->rotation_angle * 360 / TRIG_MAX_ANGLE));
 }
@@ -132,13 +132,13 @@ static void down_handler(ClickRecognizerRef recognizer, void *context) {
       data->p2.y--;
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid operation type: %d", data->operation);
+      PBL_LOG_ERR("Invalid operation type: %d", data->operation);
       break;
   }
 
   layer_mark_dirty(data->canvas_layer);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "line(p1(%d, %d), p2(%d, %d), width=%d), angle=%d)",
+  PBL_LOG_DBG("line(p1(%d, %d), p2(%d, %d), width=%d), angle=%d)",
           data->p1.x, data->p1.y, data->p2.x, data->p2.y, data->stroke_width,
           (int)(data->rotation_angle * 360 / TRIG_MAX_ANGLE));
 }
@@ -152,7 +152,7 @@ static void select_handler(ClickRecognizerRef recognizer, void *context) {
 
   layer_mark_dirty(data->canvas_layer);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "current operation type: %d", data->operation);
+  PBL_LOG_DBG("current operation type: %d", data->operation);
 }
 
 static void click_config_provider(void *context) {

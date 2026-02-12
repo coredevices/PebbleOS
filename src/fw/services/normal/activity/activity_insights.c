@@ -39,7 +39,7 @@
 #include <stdio.h>
 
 #define INSIGHTS_LOG_DEBUG(fmt, args...) \
-        PBL_LOG_D(LOG_DOMAIN_ACTIVITY_INSIGHTS, LOG_LEVEL_DEBUG, fmt, ## args)
+        PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY_INSIGHTS, fmt, ## args)
 
 #define SUBTITLE_BUFFER_LENGTH 18
 #define TIME_BUFFER_LENGTH 9
@@ -697,7 +697,7 @@ static bool prv_validate_history_stats(const ActivityInsightMetricHistoryStats *
   // We want to look at the x days before today (which is always index 0), so add 1
   uint32_t history_len = insight_settings->reward.target_qualifying_days + 1;
   if (history_len > ACTIVITY_HISTORY_DAYS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Insight qualifying history length is too long: %"PRIu32,
+    PBL_LOG_ERR("Insight qualifying history length is too long: %"PRIu32,
             history_len);
     return false;
   }

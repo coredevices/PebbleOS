@@ -40,7 +40,7 @@ static void push_window(struct AppState *data) {
 // App boilerplate
 
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Try to kill the BT:%d", s_progress_count);
+  PBL_LOG_DBG("Try to kill the BT:%d", s_progress_count);
   s_progress_count += 1;
 
   bt_ctl_reset_bluetooth();

@@ -386,7 +386,7 @@ static void prv_pulse_done_command(void) {
 
 void pulse2_prompt_packet_handler(void *packet, size_t length) {
   if (prompt_command_is_executing()) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring prompt command as another command is "
+    PBL_LOG_DBG("Ignoring prompt command as another command is "
             "currently executing");
     return;
   }

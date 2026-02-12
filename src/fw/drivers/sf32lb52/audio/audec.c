@@ -265,7 +265,7 @@ static bool prv_allocate_buffers(AudioDeviceState *state) {
     // Allocate circular buffer storage
     state->circ_buffer_storage = kernel_malloc(CIRCULAR_BUF_SIZE_BYTES);
     if (!state->circ_buffer_storage) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate circular buffer storage");
+        PBL_LOG_ERR("Failed to allocate circular buffer storage");
         return false;
     }
 
@@ -429,7 +429,7 @@ static void prv_dma_request_processing(AudioDeviceState* state) {
     uint32_t available_data = circular_buffer_get_read_space_remaining(&state->circ_buffer);
     uint32_t trans_size = CFG_AUDIO_PLAYBACK_PIPE_SIZE;
     if (available_data < CFG_AUDIO_PLAYBACK_PIPE_SIZE) {
-        PBL_LOG(LOG_LEVEL_DEBUG, "audio data not enough remain:%" PRIu32 "", available_data);
+        PBL_LOG_DBG("audio data not enough remain:%" PRIu32 "", available_data);
         memset(state->queue_buf[HAL_AUDCODEC_DAC_CH0], 0, CFG_AUDIO_PLAYBACK_PIPE_SIZE);
         trans_size = available_data;
     }

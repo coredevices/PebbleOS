@@ -76,7 +76,7 @@ static void prv_health_service_event_handler(HealthEventType event, void *contex
 
 static void prv_sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error,
                                 void *context) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Sports error! dict: %u, app msg: %u", dict_error,
+  PBL_LOG_DBG("Sports error! dict: %u, app msg: %u", dict_error,
           app_message_error);
 }
 

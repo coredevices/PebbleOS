@@ -60,7 +60,7 @@ static void save_rtc_time_state(RtcIntervalTicks current_rtc_ticks);
 void rtc_calibrate_frequency(uint32_t frequency) {
   RTCCalibConfig config = rtc_calibration_get_config(frequency, LSE_FREQUENCY_HZ * 1000);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Calibrating RTC by %s%"PRIu32" units",
+  PBL_LOG_DBG("Calibrating RTC by %s%"PRIu32" units",
           (config.sign == RTC_CalibSign_Positive) ? "+" : "-", config.units);
 
   // This is a no-op if RTC_CALIBRATION_TESTING is undefined.
@@ -176,7 +176,7 @@ void rtc_init(void) {
 
 #ifdef PBL_LOG_ENABLED
   char buffer[TIME_STRING_BUFFER_SIZE];
-  PBL_LOG(LOG_LEVEL_DEBUG, "Current time is <%s>", rtc_get_time_string(buffer));
+  PBL_LOG_DBG("Current time is <%s>", rtc_get_time_string(buffer));
 #endif
 }
 
@@ -237,7 +237,7 @@ static RtcTicks get_ticks(void) {
 void rtc_set_time(time_t time) {
 #ifdef PBL_LOG_ENABLED
   char buffer[TIME_STRING_BUFFER_SIZE];
-  PBL_LOG(LOG_LEVEL_INFO, "Setting time to %lu <%s>", time, time_t_to_string(buffer, time));
+  PBL_LOG_INFO("Setting time to %lu <%s>", time, time_t_to_string(buffer, time));
 #endif
 
   s_time_base = time;

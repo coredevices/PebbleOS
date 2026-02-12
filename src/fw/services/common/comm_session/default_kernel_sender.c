@@ -202,8 +202,7 @@ SendBuffer * comm_session_send_buffer_begin_write(CommSession *session, uint16_t
     return NULL;
   }
   if (required_payload_length > DEFAULT_KERNEL_SENDER_MAX_PAYLOAD_SIZE) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Message for endpoint_id %u exceeds maximum length (length=%"PRIu32")",
+    PBL_LOG_WRN("Message for endpoint_id %u exceeds maximum length (length=%"PRIu32")",
             endpoint_id, (uint32_t)required_payload_length);
     return NULL;
   }
@@ -251,8 +250,7 @@ SendBuffer * comm_session_send_buffer_begin_write(CommSession *session, uint16_t
       analytics_inc(ANALYTICS_DEVICE_METRIC_BT_COMM_SESSION_SEND_DATA_FAIL_COUNT,
                     AnalyticsClient_System);
 
-      PBL_LOG(LOG_LEVEL_WARNING,
-              "Failed to get send buffer (bytes=%"PRIu32", endpoint_id=%"PRIu16", to=%"PRIu32")",
+      PBL_LOG_WRN("Failed to get send buffer (bytes=%"PRIu32", endpoint_id=%"PRIu16", to=%"PRIu32")",
               (uint32_t)required_payload_length, endpoint_id, (uint32_t)is_timeout);
       return NULL;
     }

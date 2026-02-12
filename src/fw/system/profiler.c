@@ -24,7 +24,7 @@
 #define PROF_LOG(buf, sz, fmt, ...) \
   do {                                        \
     snprintf(buf, sz, fmt, ## __VA_ARGS__); \
-    PBL_LOG(LOG_LEVEL_DEBUG, "%s", buf);      \
+    PBL_LOG_DBG("%s", buf);      \
   } while (0)
 #else
 #define PROF_LOG(buf, sz, fmt, ...) dbgserial_putstr_fmt(buf, sz, fmt, ## __VA_ARGS__)

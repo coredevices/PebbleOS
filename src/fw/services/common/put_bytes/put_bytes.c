@@ -268,7 +268,7 @@ static void prv_pre_ack_if_space_in_put_job_queue(void) {
   if (pre_ack) {
     prv_send_response(ResponseAck, s_pb_state.token);
   } else if (put_jobs->enable_preack) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Not enough buffer room to pre-ack PB packet");
+    PBL_LOG_DBG("Not enough buffer room to pre-ack PB packet");
   }
 }
 
@@ -301,11 +301,11 @@ static bool prv_init_put_job_queue_if_necessary(void) {
     uint8_t *buffer = (uint8_t *) kernel_zalloc(PUT_BYTES_PP_BUFFER_SIZE);
     if (!buffer) {
       if (i == 0) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory to service PB request, abort!");
+        PBL_LOG_ERR("Not enough memory to service PB request, abort!");
         prv_deinit_put_job_queue();
         return false;
       } if (i == 1) {
-        PBL_LOG(LOG_LEVEL_INFO, "Not enough memory for PB pre-ack, falling back to legacy mode");
+        PBL_LOG_INFO("Not enough memory for PB pre-ack, falling back to legacy mode");
         put_jobs->enable_preack = false;
         break;
       } else {
@@ -337,7 +337,7 @@ static void prv_add_nack_no_token_system_callback(void) {
 }
 
 static void prv_cleanup(void) {
-  PBL_LOG(LOG_LEVEL_INFO, "Put bytes cleanup. Tok: %"PRIu32, s_pb_state.token);
+  PBL_LOG_INFO("Put bytes cleanup. Tok: %"PRIu32, s_pb_state.token);
 
   prv_deinit_put_job_queue();
   s_pb_state.receiver = (__typeof__(s_pb_state.receiver)) {};
@@ -395,7 +395,7 @@ static void prv_fail(uint32_t token) {
 }
 
 static void prv_timer_callback(void* data) {
-  PBL_LOG(LOG_LEVEL_WARNING, "Put bytes Tok: %"PRIu32" timed out after %"PRIu32"ms, cleaning up.",
+  PBL_LOG_WRN("Put bytes Tok: %"PRIu32" timed out after %"PRIu32"ms, cleaning up.",
       s_pb_state.token, PUT_TIMEOUT_MS);
   prv_cleanup_async();
 }
@@ -407,7 +407,7 @@ static bool prv_has_valid_fw_update_state_for_object_type(PutBytesObjectType typ
                                 type == ObjectRecovery ||
                                 type == ObjectSysResources);
     if (is_fw_update_object) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Cannot handle object type=<0x%x> when not in FW update mode", type);
+      PBL_LOG_ERR("Cannot handle object type=<0x%x> when not in FW update mode", type);
       return false;
     }
   }
@@ -442,7 +442,7 @@ static void prv_send_response(ResponseCode code, uint32_t token) {
   bool success = comm_session_send_data(comm_session_get_system_session(), PB_ENDPOINT_ID,
                                         (uint8_t*) &msg, sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_WARNING, "PutBytes timeout sending response");
+    PBL_LOG_WRN("PutBytes timeout sending response");
   }
 }
 
@@ -489,7 +489,7 @@ static void prv_finish_fw_update_if_completed(void) {
       s_ready_to_install[ObjectSysResources - 1].type != ObjectSysResources) {
     return;  // Haven't received both FW and System Resources yet
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got both FW bin and sys resources!");
+  PBL_LOG_DBG("Got both FW bin and sys resources!");
 
   s_ready_to_install[ObjectFirmware - 1].type = 0;
   s_ready_to_install[ObjectSysResources - 1].type = 0;
@@ -513,12 +513,12 @@ static void prv_do_install(uint32_t token) {
   }
 
   if (token == 0 || o == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Token does not exist; got 0x%" PRIx32, token);
+    PBL_LOG_ERR("Token does not exist; got 0x%" PRIx32, token);
     prv_cleanup_and_send_response(ResponseNack);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "PutBytes install CB. Tok: %"PRIu32", type: %d", token, o->type);
+  PBL_LOG_INFO("PutBytes install CB. Tok: %"PRIu32", type: %d", token, o->type);
 
   switch (o->type) {
   case ObjectFirmware:
@@ -542,7 +542,7 @@ static void prv_do_install(uint32_t token) {
 }
 
 static void prv_do_abort(void) {
-  PBL_LOG(LOG_LEVEL_INFO, "PutBytes abort CB. Tok: %"PRIu32".", s_pb_state.token);
+  PBL_LOG_INFO("PutBytes abort CB. Tok: %"PRIu32".", s_pb_state.token);
   prv_mark_pb_jobs_complete(1);
   prv_cleanup_and_send_response(ResponseAck);
 }
@@ -553,7 +553,7 @@ static bool prv_has_invalid_token(const PutBytesCommand command, uint32_t reques
     return false;
   }
   if (s_pb_state.token != request_token) {
-    PBL_LOG(LOG_LEVEL_ERROR, "%d: Token does not match; got 0x%" PRIx32 ", expected 0x%" PRIx32,
+    PBL_LOG_ERR("%d: Token does not match; got 0x%" PRIx32 ", expected 0x%" PRIx32,
             command, request_token, s_pb_state.token);
     return true;
   }
@@ -581,8 +581,7 @@ static bool prv_has_invalid_request_length(const PutBytesCommand command, uint32
   const size_t expected_length = prv_expected_minimum_length_by_command(command);
   const bool has_invalid_length = (actual_length < expected_length);
   if (has_invalid_length) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Invalid message length for command %"PRIu32"; expected=%"PRIu32", actual=%"PRIu32,
+    PBL_LOG_ERR("Invalid message length for command %"PRIu32"; expected=%"PRIu32", actual=%"PRIu32,
             (uint32_t)command, (uint32_t)expected_length, (uint32_t)actual_length);
   }
   return has_invalid_length;
@@ -595,7 +594,7 @@ static bool prv_is_object_allowed(PutBytesObjectType type) {
     case ObjectSysResources:
       return true;
     default:
-      PBL_LOG(LOG_LEVEL_WARNING, "Can't update Object Type %u from PRF!", type);
+      PBL_LOG_WRN("Can't update Object Type %u from PRF!", type);
       return false;
   }
 #else
@@ -605,14 +604,14 @@ static bool prv_is_object_allowed(PutBytesObjectType type) {
 
 static bool prv_is_init_object_type_invalid(PutBytesObjectType type) {
   if (type == 0 || type >= NumObjects) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid object type, got 0x%x", type);
+    PBL_LOG_ERR("Invalid object type, got 0x%x", type);
     return true;
   }
   if (!prv_is_object_allowed(type)) {
     return true;
   }
   if (!prv_has_valid_fw_update_state_for_object_type(type)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not in FW update state");
+    PBL_LOG_ERR("Not in FW update state");
     return true;
   }
   return false;
@@ -628,7 +627,7 @@ static bool prv_parse_init_index(const InitRequest *init_request, uint32_t *inde
   } else {
     // legacy putbytes requests, bank numbers
     if (init_request->index >= MAX_APP_BANKS) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Attempting to put byte in invalid bank #%d", init_request->index);
+      PBL_LOG_ERR("Attempting to put byte in invalid bank #%d", init_request->index);
       return false;
     }
 
@@ -723,7 +722,7 @@ static void prv_do_init(void) {
     const uint32_t append_offset_magic = 0xBE4354EF;
     if (ntohl(info->init_req_magic) == append_offset_magic) {
       append_offset = ntohl(info->append_offset);
-      PBL_LOG(LOG_LEVEL_INFO, "Restarting FW Update at offset %"PRIu32, append_offset);
+      PBL_LOG_INFO("Restarting FW Update at offset %"PRIu32, append_offset);
     }
   }
 
@@ -742,8 +741,7 @@ static void prv_do_init(void) {
   const uint32_t r = rand();
   s_pb_state.token = MAX(1, r);
 
-  PBL_LOG(LOG_LEVEL_INFO,
-          "PutBytes Init CB. Type: %d, Idx: %"PRIu32", Size: %"PRIu32" Tok: %"PRIu32,
+  PBL_LOG_INFO("PutBytes Init CB. Type: %d, Idx: %"PRIu32", Size: %"PRIu32" Tok: %"PRIu32,
           (int) s_pb_state.type, s_pb_state.index,
           s_pb_state.total_size, s_pb_state.token);
 
@@ -753,7 +751,7 @@ static void prv_do_init(void) {
   bt_driver_analytics_get_conn_event_stats(&s_pb_state.conn_event_stats);
 
   if (!success) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to init storage");
+    PBL_LOG_WRN("Failed to init storage");
     goto exit;
   }
 
@@ -800,7 +798,7 @@ static bool prv_do_put(const PutRequest *request, uint32_t request_size, uint32_
     return false;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "PutBytes put CB. type: %"PRIu32", length: %"PRIu32,
+  PBL_LOG_DBG("PutBytes put CB. type: %"PRIu32", length: %"PRIu32,
           (uint32_t)s_pb_state.type, data_length);
 
   pb_storage_append(&s_pb_state.storage, request->data, data_length);
@@ -823,7 +821,7 @@ static void prv_do_commit(void) {
 
   if (elapsed_time_ms > 0) {
     int bytes_per_sec = (int)((s_pb_state.total_size * 1000) / elapsed_time_ms);
-    PBL_LOG(LOG_LEVEL_DEBUG, "PutBytes pushed %d bytes/sec", bytes_per_sec);
+    PBL_LOG_DBG("PutBytes pushed %d bytes/sec", bytes_per_sec);
   }
 
   bluetooth_analytics_handle_put_bytes_stats(
@@ -832,11 +830,11 @@ static void prv_do_commit(void) {
 
   if (commit_succeeded) {
     s_pb_state.is_success = true;
-    PBL_LOG(LOG_LEVEL_DEBUG, "PutBytes commit CB. CRC matches! Calculated CRC is 0x%"PRIx32
+    PBL_LOG_DBG("PutBytes commit CB. CRC matches! Calculated CRC is 0x%"PRIx32
             " expected 0x%"PRIx32, calculated_crc, crc);
     prv_commit_object(crc);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "PutBytes commit CB. Calculated CRC is 0x%"PRIx32" expected 0x%"PRIx32,
+    PBL_LOG_ERR("PutBytes commit CB. Calculated CRC is 0x%"PRIx32" expected 0x%"PRIx32,
             calculated_crc, crc);
   }
 
@@ -863,7 +861,7 @@ static bool prv_is_valid_command_for_current_state(PutBytesCommand command) {
 
 static bool prv_is_invalid_command_for_current_state(PutBytesCommand command) {
   if (!prv_is_valid_command_for_current_state(command)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "PutBytes command 0x%x not permitted in current state 0x%x",
+    PBL_LOG_ERR("PutBytes command 0x%x not permitted in current state 0x%x",
             command, s_pb_state.current_command);
     return true;
   }
@@ -891,7 +889,7 @@ static bool prv_check_putrequest_for_errors(const PutRequest *request_hdr,
   uint32_t req_size = tot_request_size - sizeof(PutRequest);
   uint32_t data_length = ntohl(request_hdr->length);
   if (data_length > req_size) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Length value longer than buffer");
+    PBL_LOG_ERR("Length value longer than buffer");
     return true;
   }
 
@@ -985,7 +983,7 @@ static void prv_process_msg_system_task_callback(void *unused) {
 
   if (!s_pb_state.receiver.buffer ||
       s_pb_state.receiver.length == 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No message pending, PutBytes cancelled in the mean time?");
+    PBL_LOG_WRN("No message pending, PutBytes cancelled in the mean time?");
     prv_send_response(ResponseNack, s_pb_state.token);
     goto finally;
   }
@@ -1039,20 +1037,20 @@ void put_bytes_cancel(void) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
 
   if (xSemaphoreTake(s_pb_semaphore, portMAX_DELAY) != pdTRUE) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to acquire the put-bytes semaphore");
+    PBL_LOG_ERR("Failed to acquire the put-bytes semaphore");
     return;
   }
 
   if (s_pb_state.current_command == PutBytesIdle) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Attempted to cancel put_bytes while idle, %d",
+    PBL_LOG_DBG("Attempted to cancel put_bytes while idle, %d",
             s_pb_state.current_command);
   } else if (s_pb_state.type == ObjectWatchApp ||
              s_pb_state.type == ObjectAppResources ||
              s_pb_state.type == ObjectWatchWorker) {
-    PBL_LOG(LOG_LEVEL_INFO, "Forcefully cancelling put_bytes transfer of app binaries");
+    PBL_LOG_INFO("Forcefully cancelling put_bytes transfer of app binaries");
     prv_cleanup();
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Attempted to cancel put_bytes with a non desired type, %d",
+    PBL_LOG_DBG("Attempted to cancel put_bytes with a non desired type, %d",
             s_pb_state.type);
   }
 
@@ -1101,7 +1099,7 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
   xSemaphoreTake(s_pb_semaphore, portMAX_DELAY);
 
   if (s_pb_state.current_command != PutBytesIdle) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Called put_bytes_expect while put_bytes is not idle");
+    PBL_LOG_ERR("Called put_bytes_expect while put_bytes is not idle");
     xSemaphoreGive(s_pb_semaphore);
     return;
   }
@@ -1143,7 +1141,7 @@ static bool prv_take_lock_with_short_timeout(void) {
   // probably a Put Bytes session going on already anyway.
   const TickType_t SEMAPHORE_TIMEOUT_TICKS = milliseconds_to_ticks(25);
   if (xSemaphoreTake(s_pb_semaphore, SEMAPHORE_TIMEOUT_TICKS) != pdTRUE) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to acquire the put-bytes semaphore, retry");
+    PBL_LOG_ERR("Failed to acquire the put-bytes semaphore, retry");
     return false;
   }
   return true;
@@ -1151,7 +1149,7 @@ static bool prv_take_lock_with_short_timeout(void) {
 
 static bool prv_prepare(size_t total_payload_length) {
   if (total_payload_length > PUT_BYTES_PP_BUFFER_SIZE) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Put Bytes message too big");
+    PBL_LOG_ERR("Put Bytes message too big");
     return false;
   }
 
@@ -1223,7 +1221,7 @@ void prv_receiver_write(Receiver *receiver, const uint8_t *data, size_t length) 
   }
   if (!prv_is_message_pending_processing()) {
     // Could happen if put_bytes_cancel() was called after "prepare"
-    PBL_LOG(LOG_LEVEL_WARNING, "No message pending, PutBytes cancelled? Will NACK.");
+    PBL_LOG_WRN("No message pending, PutBytes cancelled? Will NACK.");
     s_pb_state.receiver.should_nack = true;
     goto finally;
   }
@@ -1251,7 +1249,7 @@ void prv_receiver_cleanup(Receiver *receiver) {
 
 void prv_receiver_finish(Receiver *receiver) {
   if (s_pb_state.receiver.should_nack) {
-    PBL_LOG(LOG_LEVEL_WARNING, "NACK'ing from ..._finish");
+    PBL_LOG_WRN("NACK'ing from ..._finish");
     prv_add_nack_no_token_system_callback();
     prv_receiver_reset();
     return;

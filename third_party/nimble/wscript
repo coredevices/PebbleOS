@@ -128,7 +128,6 @@ def build(bld):
     bld.objects(
         source=nimble_sources,
         target='nimble',
-        defines=['FILE_LOG_COLOR=LOG_COLOR_BLUE'],
         use=nimble_use,
         includes=nimble_includes,
         export_includes=nimble_includes,

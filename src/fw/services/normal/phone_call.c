@@ -71,14 +71,14 @@ static void prv_schedule_call_watchdog(int poll_interval_ms) {
     // Schedule/reschedule the watchdog
     if (!new_timer_start(s_call_watchdog, poll_interval_ms, prv_timer_callback,
                          NULL, TIMER_START_FLAG_REPEATING)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not start the phone call watchdog timer");
+      PBL_LOG_ERR("Could not start the phone call watchdog timer");
       prv_handle_call_end(true /* Treat this as a disconnection */);
     } else {
-      PBL_LOG(LOG_LEVEL_INFO, "Phone call watchdog timer started");
+      PBL_LOG_INFO("Phone call watchdog timer started");
       pp_get_phone_state_set_enabled(true);
     }
   } else {
-    PBL_LOG(LOG_LEVEL_INFO, "Not starting phone call watchdog, this isn't iOS 8: %d",
+    PBL_LOG_INFO("Not starting phone call watchdog, this isn't iOS 8: %d",
             s_call_source);
   }
 }
@@ -114,14 +114,14 @@ static void prv_call_end_common(void) {
 static void prv_handle_incoming_call(const PebblePhoneEvent *event) {
   // Only 1 call at a time is supported
   if (s_call_in_progress) {
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring incoming call. A call is already in progress");
+    PBL_LOG_INFO("Ignoring incoming call. A call is already in progress");
     return;
   }
 
   // If we're not on iOS9+, we need to be connected to the mobile app since it tells us when
   // the phone has stopped ringing
   if ((event->source != PhoneCallSource_ANCS) && !s_mobile_app_is_connected) {
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring incoming call. Mobile app is not connected. Call source: %d ",
+    PBL_LOG_INFO("Ignoring incoming call. Mobile app is not connected. Call source: %d ",
             event->source);
     return;
   }
@@ -144,7 +144,7 @@ static void prv_handle_outgoing_call(PebblePhoneEvent *event) {
     phone_ui_handle_outgoing_call(event->caller);
     analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_OUTGOING_COUNT, AnalyticsClient_System);
   } else {
-    // PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring outgoing call. A call is already in progress: %d, "
+    // PBL_LOG_DBG("Ignoring outgoing call. A call is already in progress: %d, "
     //     "the mobile app is connected: %d", s_call_in_progress, s_mobile_app_is_connected);
   }
 }
@@ -155,7 +155,7 @@ static void prv_handle_missed_call(PebblePhoneEvent *event) {
     phone_ui_handle_missed_call();
     analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_INCOMING_COUNT, AnalyticsClient_System);
   } else {
-    // PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring missed call. A call is not in progress");
+    // PBL_LOG_DBG("Ignoring missed call. A call is not in progress");
   }
 }
 
@@ -171,7 +171,7 @@ static void prv_handle_call_start(void) {
     }
     analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_START_COUNT, AnalyticsClient_System);
   } else {
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring start call. A call is not in progress");
+    PBL_LOG_INFO("Ignoring start call. A call is not in progress");
   }
 }
 
@@ -182,7 +182,7 @@ static void prv_handle_call_hide(PebblePhoneEvent *event) {
 
   // Make sure this wasn't caused due to an unrelated ANCS removal
   if (prv_call_is_ancs() && (s_call_identifier != event->call_identifier)) {
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring hide call. Call identifier %"PRIu32" doesn't match %"PRIu32,
+    PBL_LOG_INFO("Ignoring hide call. Call identifier %"PRIu32" doesn't match %"PRIu32,
             s_call_identifier, event->call_identifier);
     return;
   }
@@ -201,7 +201,7 @@ static void prv_handle_call_end(bool disconnected) {
     prv_call_end_common();
     phone_ui_handle_call_end(false /*call accepted*/, disconnected);
   } else if (!disconnected) {
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring end call. A call is not in progress");
+    PBL_LOG_INFO("Ignoring end call. A call is not in progress");
   }
 }
 
@@ -209,7 +209,7 @@ static void prv_handle_caller_id(PebblePhoneEvent *event) {
   if (s_call_in_progress) {
     phone_ui_handle_caller_id(event->caller);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring caller id. A call is not in progress");
+    PBL_LOG_DBG("Ignoring caller id. A call is not in progress");
   }
 }
 
@@ -224,7 +224,7 @@ T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
 
   if (!(event.type == PhoneEventType_Incoming && new_timer_scheduled(s_call_watchdog, NULL))) {
     // Be careful not to spam the logs with the new iOS polling implementation
-    PBL_LOG(LOG_LEVEL_INFO, "PebblePhoneEvent: %d, Call in progress: %s, Connected: %s",
+    PBL_LOG_INFO("PebblePhoneEvent: %d, Call in progress: %s, Connected: %s",
       event.type, s_call_in_progress ? "T": "F", s_mobile_app_is_connected ? "T": "F");
   }
 
@@ -312,7 +312,7 @@ void phone_call_service_init() {
 
 void phone_call_answer(void) {
   analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_ANSWER_COUNT, AnalyticsClient_System);
-  PBL_LOG(LOG_LEVEL_INFO, "Call accepted");
+  PBL_LOG_INFO("Call accepted");
 
   if (prv_call_is_ancs()) {
     ancs_perform_action(s_call_identifier, ActionIDPositive);
@@ -327,7 +327,7 @@ void phone_call_answer(void) {
 
 void phone_call_decline(void) {
   analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_DECLINE_COUNT, AnalyticsClient_System);
-  PBL_LOG(LOG_LEVEL_INFO, "Call declined");
+  PBL_LOG_INFO("Call declined");
 
   if (prv_call_is_ancs()) {
     ancs_perform_action(s_call_identifier, ActionIDNegative);

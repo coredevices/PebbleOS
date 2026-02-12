@@ -158,7 +158,7 @@ void vibe_init(void) {
   uint8_t chip_id;
   bool ret = prv_read_register(AW862XX_REG_CHIPID, &chip_id);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read AW86225 chip ID");
+    PBL_LOG_ERR("Failed to read AW86225 chip ID");
     return;
   }
 
@@ -173,7 +173,7 @@ void vibe_init(void) {
   prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_VBAT_MODE_MASK, AW862XX_SYSCTRL1_VBAT_MODE_EN);
 
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize AW86225");
+    PBL_LOG_ERR("Failed to initialize AW86225");
     return;
   }
 

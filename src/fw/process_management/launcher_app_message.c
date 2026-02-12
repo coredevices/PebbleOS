@@ -62,7 +62,7 @@ void launcher_app_message_send_app_state_deprecated(const Uuid *uuid, bool runni
 
 static bool prv_has_invalid_length(size_t expected, size_t actual) {
   if (actual < expected) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Too short");
+    PBL_LOG_ERR("Too short");
     return true;
   }
   return false;

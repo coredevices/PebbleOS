@@ -157,7 +157,7 @@ void vibe_ctl(bool on) {
   }
   s_on = on;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Vibe status <%s>", on ? "on" : "off");
+  PBL_LOG_DBG("Vibe status <%s>", on ? "on" : "off");
 
   prv_vibe_raw_ctl(on);
 }

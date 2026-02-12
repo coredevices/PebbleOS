@@ -120,7 +120,7 @@ static void prv_crumbs_layer_update_proc_round(Layer *layer, GContext *ctx) {
 void crumbs_layer_set_level(CrumbsLayer *crumbs_layer, int level) {
   const int max_crumbs = prv_crumb_maximum_count();
   if (level > max_crumbs) {
-    PBL_LOG(LOG_LEVEL_WARNING, "exceeded max number of crumbs");
+    PBL_LOG_WRN("exceeded max number of crumbs");
     level = max_crumbs;
   }
   crumbs_layer->level = level;

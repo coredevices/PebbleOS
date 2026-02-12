@@ -121,7 +121,7 @@ static void prv_check_valid_app_fetch_request(uint16_t endpoint_id, const uint8_
     unsigned int data_length) {
 
   // AppFetchRequest request = *(AppFetchRequest *)data;
-  PBL_LOG(LOG_LEVEL_DEBUG, "sizeof: %lu length: %u", sizeof(AppFetchRequest), data_length);
+  PBL_LOG_DBG("sizeof: %lu length: %u", sizeof(AppFetchRequest), data_length);
   AppFetchRequest request = *(AppFetchRequest *)data;
 
   cl_assert_equal_i(endpoint_id, APP_FETCH_ENDPOINT_ID);

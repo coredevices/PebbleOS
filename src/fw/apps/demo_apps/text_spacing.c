@@ -47,7 +47,7 @@ static void click_handler(ClickRecognizerRef recognizer, Window *window) {
 
   GSize size_used = text_layer_get_content_size(app_get_current_graphics_context(),
                                                 &data->text_layer);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Line Delta: %d, Size %d x %d, Overflow: %d", data->line_spacing_delta,
+  PBL_LOG_DBG("Line Delta: %d, Size %d x %d, Overflow: %d", data->line_spacing_delta,
           size_used.w, size_used.h, data->overflow_mode);
 }
 
@@ -80,7 +80,7 @@ static void prv_window_load(Window *window) {
 
   GSize size_used = text_layer_get_content_size(app_get_current_graphics_context(),
                                                 &data->text_layer);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Max size used %d %d", size_used.w, size_used.h);
+  PBL_LOG_DBG("Max size used %d %d", size_used.w, size_used.h);
 }
 
 static void push_window(struct AppState *data) {

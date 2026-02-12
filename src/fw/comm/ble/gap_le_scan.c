@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "bluetooth/gap_le_scan.h"
 #include "kernel/pbl_malloc.h"
 #include "comm/bt_lock.h"
@@ -78,7 +76,7 @@ bool gap_le_stop_scan(void) {
       s_is_scanning = false;
 
       if (s_dropped_reports) {
-        PBL_LOG(LOG_LEVEL_INFO, "LE Scan -- Dropped reports: %" PRIu32, s_dropped_reports);
+        PBL_LOG_INFO("LE Scan -- Dropped reports: %" PRIu32, s_dropped_reports);
       }
     }
   }

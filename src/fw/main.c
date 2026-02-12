@@ -123,19 +123,19 @@ static void print_splash_screen(void)
 {
 
 #if defined(MANUFACTURING_FW)
-  PBL_LOG(LOG_LEVEL_ALWAYS, "PebbleOS - MANUFACTURING MODE");
+  PBL_LOG_ALWAYS("PebbleOS - MANUFACTURING MODE");
 #elif defined(RECOVERY_FW)
-  PBL_LOG(LOG_LEVEL_ALWAYS, "PebbleOS - RECOVERY MODE");
+  PBL_LOG_ALWAYS("PebbleOS - RECOVERY MODE");
 #else
-  PBL_LOG(LOG_LEVEL_ALWAYS, "PebbleOS");
+  PBL_LOG_ALWAYS("PebbleOS");
 #endif
-  PBL_LOG(LOG_LEVEL_ALWAYS, "%s%s",
+  PBL_LOG_ALWAYS("%s%s",
           TINTIN_METADATA.version_tag,
           (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware) ?
             (TINTIN_METADATA.is_slot_0 ? " (slot0)" : " (slot1)") :
             "");
-  PBL_LOG(LOG_LEVEL_ALWAYS, "(c) 2013-2025 The PebbleOS contributors");
-  PBL_LOG(LOG_LEVEL_ALWAYS, " ");
+  PBL_LOG_ALWAYS("(c) 2013-2025 The PebbleOS contributors");
+  PBL_LOG_ALWAYS(" ");
 }
 
 #ifdef DUMP_GPIO_CFG_STATE
@@ -372,7 +372,7 @@ static void prv_test_sjlj(void) {
   else
     prv_sjlj_main(r);
   PBL_ASSERT(s_sjlj_num == 3, "SJLJ TRACK INCORRECT @ END");
-  PBL_LOG(LOG_LEVEL_ALWAYS, "sjlj works \\o/");
+  PBL_LOG_ALWAYS("sjlj works \\o/");
 }
 #endif
 
@@ -467,7 +467,7 @@ static NOINLINE void prv_main_task_init(void) {
   GPoint mfg_offset = mfg_info_get_disp_offsets();
   display_set_offset(mfg_offset);
   // Log display offsets for use in contact support logs
-  PBL_LOG(LOG_LEVEL_INFO, "MFG Display Offsets (%"PRIi16",%"PRIi16").", mfg_offset.x, mfg_offset.y);
+  PBL_LOG_INFO("MFG Display Offsets (%"PRIi16",%"PRIi16").", mfg_offset.x, mfg_offset.y);
   
   // Stop boot splash before initializing compositor
   boot_splash_stop();

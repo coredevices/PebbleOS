@@ -37,7 +37,7 @@ static void prv_dismiss_notification(const TimelineItem *notification) {
   } else {
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&notification->header.id, uuid_buffer);
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to load action for dismissal from %s", uuid_buffer);
+    PBL_LOG_ERR("Failed to load action for dismissal from %s", uuid_buffer);
   }
 }
 
@@ -51,8 +51,7 @@ static void prv_handle_ancs_update(TimelineItem *notification,
                                    CommonTimelineItemHeader *existing_header) {
   if (existing_header->dismissed) {
     // this should be dismissed from iOS. Dismiss it again
-    PBL_LOG(LOG_LEVEL_DEBUG,
-            "ANCS notification already dismissed, dismissing again: %"PRIu32,
+    PBL_LOG_DBG("ANCS notification already dismissed, dismissing again: %"PRIu32,
             notification->header.ancs_uid);
     prv_dismiss_notification(notification);
   }
@@ -80,7 +79,7 @@ static time_t prv_get_timestamp_from_ancs_date(const ANCSAttribute *date,
     // copy out app ID to a char buffer
     char app_id_buffer[app_id->length + 1];
     pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
-    PBL_LOG(LOG_LEVEL_WARNING, "No valid date. Offending iOS app: %s", app_id_buffer);
+    PBL_LOG_WRN("No valid date. Offending iOS app: %s", app_id_buffer);
   }
 
   return timestamp;
@@ -217,7 +216,7 @@ static bool prv_should_ignore_because_stale(time_t timestamp) {
   // PBL-12726: Added a check to see if the timstamp is coming from a location based reminder
   // This work-around is causing more trouble than the problem it was solving...
   if (timestamp < (now - MAXIMUM_NOTIFY_TIME) && timestamp != INVALID_TIME) {
-    PBL_LOG(LOG_LEVEL_INFO, "Not presenting stale notif (ts=%ld)", timestamp);
+    PBL_LOG_INFO("Not presenting stale notif (ts=%ld)", timestamp);
     return true;
   }
 
@@ -242,7 +241,7 @@ static bool prv_should_ignore_notification(uint32_t uid,
     char app_id_buffer[app_id->length + 1];
     pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
 
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring notification from <%s>: Muted", app_id_buffer);
+    PBL_LOG_INFO("Ignoring notification from <%s>: Muted", app_id_buffer);
     analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_FILTERED_BECAUSE_MUTED_COUNT,
                   AnalyticsClient_System);
     return true;
@@ -250,7 +249,7 @@ static bool prv_should_ignore_notification(uint32_t uid,
 
   // filter out mail buggy mail messages
   if (prv_should_ignore_because_apple_mail_dot_app_bug(app_id, message)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Ignoring ANCS notification because Mail.app bug");
+    PBL_LOG_ERR("Ignoring ANCS notification because Mail.app bug");
     return true;
   }
 
@@ -260,14 +259,14 @@ static bool prv_should_ignore_notification(uint32_t uid,
 
   // filter out extraneous calendar messages
   if (prv_should_ignore_because_calendar_reminder(app_id, timestamp, title)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring ANCS calendar notification because reminders are set");
+    PBL_LOG_DBG("Ignoring ANCS calendar notification because reminders are set");
     return true;
   }
 
   // filter out time based reminder notifications
   if (prv_should_ignore_because_time_reminder(app_id, timestamp, title, uid,
                                               negative_action)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring ANCS reminders notification because existing "
+    PBL_LOG_DBG("Ignoring ANCS reminders notification because existing "
             "time-based reminder was found in db");
     return true;
   }
@@ -288,7 +287,7 @@ void ancs_notifications_handle_message(uint32_t uid,
 
   const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
   if (!app_id || app_id->length == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't handle notifications without an app id");
+    PBL_LOG_ERR("Can't handle notifications without an app id");
     return;
   }
 
@@ -327,7 +326,7 @@ void ancs_notifications_handle_message(uint32_t uid,
     // When declining a phone call from the Phone UI we still get a missed call notification
     // with a different UID. We don't want to show a missed call notification / pin in this case.
     if (has_missed_call_property && ancs_phone_call_should_ignore_missed_calls()) {
-      PBL_LOG(LOG_LEVEL_INFO, "Ignoring missed call");
+      PBL_LOG_INFO("Ignoring missed call");
       goto cleanup;
     }
   }
@@ -358,15 +357,15 @@ void ancs_notifications_handle_message(uint32_t uid,
   CommonTimelineItemHeader existing_header;
   if (prv_find_existing_notification(notification, &existing_header)) {
     if (prv_should_ignore_because_duplicate(notification, &existing_header)) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Duplicate ANCS notification: %"PRIu32, uid);
+      PBL_LOG_DBG("Duplicate ANCS notification: %"PRIu32, uid);
       timeline_item_destroy(notification);
       notification_storage_unlock();
       goto cleanup;
     }
-    PBL_LOG(LOG_LEVEL_INFO, "Updating ANCS notification: %"PRIu32, uid);
+    PBL_LOG_INFO("Updating ANCS notification: %"PRIu32, uid);
     prv_handle_ancs_update(notification, &existing_header);
   } else {
-    PBL_LOG(LOG_LEVEL_INFO, "New ANCS notification: %"PRIu32, uid);
+    PBL_LOG_INFO("New ANCS notification: %"PRIu32, uid);
     prv_handle_new_ancs_notif(notification);
   }
 
@@ -397,7 +396,7 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
   Uuid *notification_id = kernel_malloc_check(sizeof(Uuid));
 
   if (notification_storage_find_ancs_notification_id(ancs_uid, notification_id)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Notification removed from notification centre: (UID: %"PRIu32")",
+    PBL_LOG_DBG("Notification removed from notification centre: (UID: %"PRIu32")",
             ancs_uid);
     notification_storage_set_status(notification_id, TimelineItemStatusDismissed);
 

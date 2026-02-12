@@ -122,7 +122,7 @@ static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_ro
       WTF;
   }
   if (!score) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Null VibeScore!");
+    PBL_LOG_ERR("Null VibeScore!");
     return;
   }
   vibe_score_do_vibe(score);

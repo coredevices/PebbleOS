@@ -36,14 +36,14 @@ static TestTimersAppData *s_app_data = 0;
 // =================================================================================
 static void stuck_timer_callback(void* data)
 {
-  PBL_LOG(LOG_LEVEL_DEBUG, "STT: Entering infinite loop in timer callback");
+  PBL_LOG_DBG("STT: Entering infinite loop in timer callback");
   while (true) {
     psleep(100);
   }
 }
 
 static void stuck_system_task_callback(void *data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Entering infinite loop in system task callback");
+  PBL_LOG_DBG("Entering infinite loop in system task callback");
   while (true) {
     psleep(100);
   }
@@ -64,7 +64,7 @@ void OTG_FS_WKUP_IRQHandler(void) {
 // =================================================================================
 // You can capture when the user selects a menu icon with a menu item select callback
 static void menu_select_callback(int index, void *ctx) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Selected menu item %d", index);
+  PBL_LOG_DBG("Selected menu item %d", index);
   
   // Here we just change the subtitle to a literal string
   s_app_data->menu_items[index].subtitle = "You've hit select here!";
@@ -84,7 +84,7 @@ static void menu_select_callback(int index, void *ctx) {
 
     // stuck timer callback
     TimerID timer = new_timer_create();
-    PBL_LOG(LOG_LEVEL_INFO, "Entering infinite loop in Timer callback");
+    PBL_LOG_INFO("Entering infinite loop in Timer callback");
     bool success = new_timer_start(timer, 100, stuck_timer_callback, NULL, 0 /*flags*/);
     PBL_ASSERTN(success);
 
@@ -96,12 +96,12 @@ static void menu_select_callback(int index, void *ctx) {
   } else if (index == 3) {
 
     // stuck app
-    PBL_LOG(LOG_LEVEL_INFO, "Entering infinite loop in App Task");
+    PBL_LOG_INFO("Entering infinite loop in App Task");
     while (true) ;
 
   } else if (index == 4) {
 
-    PBL_LOG(LOG_LEVEL_INFO, "Entering infinite loop in FreeRTOS ISR");
+    PBL_LOG_INFO("Entering infinite loop in FreeRTOS ISR");
 
     NVIC_InitTypeDef NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_WKUP_IRQn;
@@ -117,7 +117,7 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 5) {
 
-    PBL_LOG(LOG_LEVEL_INFO, "Entering infinite loop in non-FreeRTOS ISR.");
+    PBL_LOG_INFO("Entering infinite loop in non-FreeRTOS ISR.");
 
     NVIC_InitTypeDef NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_WKUP_IRQn;
@@ -133,25 +133,25 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 6) {
 
-    PBL_LOG(LOG_LEVEL_INFO, "Forcing bus fault during core dump");
+    PBL_LOG_INFO("Forcing bus fault during core dump");
     core_dump_test_force_bus_fault();
     core_dump_reset(false /* don't force overwrite */);
 
   } else if (index == 7) {
 
-    PBL_LOG(LOG_LEVEL_INFO, "Forcing inf loop during core dump");
+    PBL_LOG_INFO("Forcing inf loop during core dump");
     core_dump_test_force_inf_loop();
     core_dump_reset(false /* don't force overwrite */);
 
   } else if (index == 8) {
 
-    PBL_LOG(LOG_LEVEL_INFO, "Forcing assert loop during core dump");
+    PBL_LOG_INFO("Forcing assert loop during core dump");
     core_dump_test_force_assert();
     core_dump_reset(false /* don't force overwrite */);
 
   } else if (index == 9) {
 
-    PBL_LOG(LOG_LEVEL_INFO, "Calling core_dump FreeRTOS ISR");
+    PBL_LOG_INFO("Calling core_dump FreeRTOS ISR");
     s_call_core_dump_from_isr = true;
 
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -168,17 +168,17 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 10) {
 
-    PBL_LOG(LOG_LEVEL_INFO, "Causing bus fault in app");
+    PBL_LOG_INFO("Causing bus fault in app");
     typedef void (*KaboomCallback)(void);
     KaboomCallback kaboom = 0;
     kaboom();
 
   } else if (index == 11) {
-    PBL_LOG(LOG_LEVEL_INFO, "Infinite Loop on system task");
+    PBL_LOG_INFO("Infinite Loop on system task");
     system_task_add_callback(stuck_system_task_callback, NULL);
 
   } else if (index == 12) {
-    PBL_LOG(LOG_LEVEL_INFO, "Generate hard-fault");
+    PBL_LOG_INFO("Generate hard-fault");
 
     // Modify behavior of the ARM so that bus faults generate a hard fault
     SCB->SHCSR &= ~SCB_SHCSR_MEMFAULTENA_Msk;

@@ -78,7 +78,7 @@ static bool prv_reminder_filter(SerializedTimelineItemHeader *hdr, void *context
 }
 
 status_t reminder_db_next_item_header(TimelineItem *next_item_out) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Finding next item in queue.");
+  PBL_LOG_DBG("Finding next item in queue.");
   TimelineItemId id;
   status_t rv = timeline_item_storage_next_item(&s_storage, &id, prv_reminder_filter);
   if (rv) {
@@ -151,7 +151,7 @@ static status_t prv_insert_reminder(const uint8_t *key, int key_len,
 
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string((Uuid *)key, uuid_buffer);
-  PBL_LOG(LOG_LEVEL_INFO, "Reminder added: %s", uuid_buffer);
+  PBL_LOG_INFO("Reminder added: %s", uuid_buffer);
 
   if (rv == S_SUCCESS) {
     if (has_reminded) {
@@ -266,6 +266,6 @@ BlobDBDirtyItem* reminder_db_get_dirty_list(void) {
 }
 
 status_t reminder_db_mark_synced(const uint8_t *key, int key_len) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "reminder_db_mark_synced");
+  PBL_LOG_DBG("reminder_db_mark_synced");
   return timeline_item_storage_mark_synced(&s_storage, key, key_len);
 }

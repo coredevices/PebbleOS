@@ -152,7 +152,7 @@ void comm_poll_remote_protocol_msg_callback(CommSession *session, const uint8_t*
       break;
     }
     default: {
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid command.");
+      PBL_LOG_ERR("Invalid command.");
       return;
     }
   }

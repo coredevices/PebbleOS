@@ -49,7 +49,7 @@ void event_service_client_subscribe(EventServiceInfo *handler) {
   EventServiceInfo *state = prv_get_state();
   ListNode *list = &state->list_node;
   if (list_contains(list, &handler->list_node)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Event service handler already subscribed");
+    PBL_LOG_DBG("Event service handler already subscribed");
     return;
   }
   // Add to handlers list
@@ -62,7 +62,7 @@ void event_service_client_unsubscribe(EventServiceInfo *handler) {
   EventServiceInfo *state = prv_get_state();
   ListNode *list = &state->list_node;
   if (!list_contains(list, &handler->list_node)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Event service handler not subscribed");
+    PBL_LOG_DBG("Event service handler not subscribed");
     return;
   }
   sys_event_service_client_unsubscribe(state, handler);

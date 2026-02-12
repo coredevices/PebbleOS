@@ -560,7 +560,7 @@ int16_t calc_stepc_5sec(int16_t *work_ary, int16_t dlen_smp, int16_t dlenpwr_ary
       // stepc_tmp = max_mag_hz - ((uint16_t) (rand()%2));
       stepc_tmp = max_mag_hz;
     }
-  PBL_LOG(LOG_LEVEL_DEBUG, "steps: %d, freq: %d, vmc: %d, score: %d", stepc_tmp, max_mag_hz,
+  PBL_LOG_DBG("steps: %d, freq: %d, vmc: %d, score: %d", stepc_tmp, max_mag_hz,
           real_vmc_5s, score0);
   return stepc_tmp;
 }

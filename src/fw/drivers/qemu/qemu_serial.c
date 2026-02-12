@@ -41,7 +41,7 @@ static QemuSerialGlobals s_qemu_state;
 static void prv_tap_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolTapHeader *hdr = (QemuProtocolTapHeader *)data;
   if (len != sizeof(*hdr)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid packet length");
+    PBL_LOG_ERR("Invalid packet length");
     return;
   }
 
@@ -63,7 +63,7 @@ static void prv_tap_msg_callback(const uint8_t *data, uint32_t len) {
 static void prv_bluetooth_connection_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolBluetoothConnectionHeader *hdr = (QemuProtocolBluetoothConnectionHeader *)data;
   if (len != sizeof(*hdr)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid packet length");
+    PBL_LOG_ERR("Invalid packet length");
     return;
   }
 
@@ -85,7 +85,7 @@ static void prv_bluetooth_connection_msg_callback(const uint8_t *data, uint32_t 
 static void prv_compass_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolCompassHeader *hdr = (QemuProtocolCompassHeader *)data;
   if (len != sizeof(*hdr)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid packet length");
+    PBL_LOG_ERR("Invalid packet length");
     return;
   }
 
@@ -108,11 +108,11 @@ static void prv_compass_msg_callback(const uint8_t *data, uint32_t len) {
 static void prv_time_format_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolTimeFormatHeader *hdr = (QemuProtocolTimeFormatHeader *)data;
   if (len != sizeof(*hdr)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid packet length");
+    PBL_LOG_ERR("Invalid packet length");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got time format msg: is 24 hour: %d", hdr->is_24_hour);
+  PBL_LOG_DBG("Got time format msg: is 24 hour: %d", hdr->is_24_hour);
   clock_set_24h_style(hdr->is_24_hour);
 }
 
@@ -122,11 +122,11 @@ static void prv_time_format_msg_callback(const uint8_t *data, uint32_t len) {
 static void prv_timeline_peek_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolTimelinePeekHeader *hdr = (QemuProtocolTimelinePeekHeader *)data;
   if (len != sizeof(*hdr)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid packet length");
+    PBL_LOG_ERR("Invalid packet length");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got timeline peek msg: enabled: %d", hdr->enabled);
+  PBL_LOG_DBG("Got timeline peek msg: enabled: %d", hdr->enabled);
 #if !RECOVERY_FW && CAPABILITY_HAS_TIMELINE_PEEK
   timeline_peek_set_enabled(hdr->enabled);
 #endif
@@ -136,11 +136,11 @@ static void prv_timeline_peek_msg_callback(const uint8_t *data, uint32_t len) {
 static void prv_content_size_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolContentSizeHeader *hdr = (QemuProtocolContentSizeHeader *)data;
   if (len != sizeof(*hdr)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid packet length");
+    PBL_LOG_ERR("Invalid packet length");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got content size msg: size: %d", hdr->size);
+  PBL_LOG_DBG("Got content size msg: size: %d", hdr->size);
 #if !RECOVERY_FW
   system_theme_set_content_size(hdr->size);
 
@@ -221,11 +221,11 @@ static void prv_process_receive_buffer(void *context) {
     }
 
     // Dispatch the received message
-    PBL_LOG(LOG_LEVEL_DEBUG, "Dispatching msg of len %"PRIu32" for protocol %d", msg_bytes,
+    PBL_LOG_DBG("Dispatching msg of len %"PRIu32" for protocol %d", msg_bytes,
               protocol);
     const QemuMessageHandler* handler = prv_find_handler(protocol);
     if (!handler) {
-      PBL_LOG(LOG_LEVEL_WARNING, "No handler for protocol: %d", protocol);
+      PBL_LOG_WRN("No handler for protocol: %d", protocol);
     } else {
       handler->callback(msg_ptr, msg_bytes);
     }
@@ -247,7 +247,7 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
   bool success = shared_circular_buffer_write(&s_qemu_state.isr_buffer, &byte, 1,
                                               false/*advance_slackers*/);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "ISR buf too small 0x%x", byte);
+    PBL_LOG_ERR("ISR buf too small 0x%x", byte);
     s_qemu_state.recv_error_count++;
   }
 

@@ -13,7 +13,7 @@ static void set_compositing(RotBmpPairLayer *pair) {
 void rotbmp_pair_layer_init(RotBmpPairLayer *pair, GBitmap *white, GBitmap *black) {
   if (white->bounds.size.w != black->bounds.size.w
       && white->bounds.size.h != black->bounds.size.h) {
-    PBL_LOG(LOG_LEVEL_ERROR, "rotbmp_pair inited with unmatching bitmaps");
+    PBL_LOG_ERR("rotbmp_pair inited with unmatching bitmaps");
     return;
   }
 

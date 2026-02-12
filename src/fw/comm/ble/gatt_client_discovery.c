@@ -92,7 +92,7 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection) {
   // has finished or error'ed out. That way the watchdog retry mechanism
   // can simply call this routine again to kick off another discovery attempt
 
-  PBL_LOG(LOG_LEVEL_INFO, "Starting BLE Service Discovery: 0x%x to 0x%x",
+  PBL_LOG_INFO("Starting BLE Service Discovery: 0x%x to 0x%x",
           node->hdl.start, node->hdl.end);
   ATTHandleRange hdl = {
     .start = node->hdl.start,
@@ -125,7 +125,7 @@ static bool prv_discovery_handle_timeout(GAPLEConnection *connection, BTErrno *e
   bool retry_started = false;
   BTErrno finalize_result = BTErrnoOK;
   // Executing on NewTimer task, so need to bt_lock():
-  PBL_LOG(LOG_LEVEL_WARNING, "Service Discovery Watchdog Timeout");
+  PBL_LOG_WRN("Service Discovery Watchdog Timeout");
   bt_lock();
   {
     if (!gap_le_connection_is_valid(connection)) {
@@ -201,7 +201,7 @@ static void prv_send_services_added_event(
       list_count(&connection->gatt_remote_services->node) : 0;
 
   if (num_services_changed > BLE_GATT_MAX_SERVICES_CHANGED) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Remote has %u services, more than we can handle.",
+    PBL_LOG_ERR("Remote has %u services, more than we can handle.",
             num_services_changed);
     num_services_changed = BLE_GATT_MAX_SERVICES_CHANGED;
   }

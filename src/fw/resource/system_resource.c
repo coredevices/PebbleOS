@@ -31,7 +31,7 @@ void system_resource_init(void) {
         "System resources are missing or corrupt, time to sad watch");
     launcher_panic(ERROR_BAD_RESOURCES);
 #else
-    PBL_LOG(LOG_LEVEL_ERROR, "System resources are missing or corrupt! Going to PRF");
+    PBL_LOG_ERR("System resources are missing or corrupt! Going to PRF");
     fw_reset_into_prf();
 #endif
   }
@@ -48,7 +48,7 @@ FontInfo s_system_fonts_info_table[NUM_SYSTEM_FONTS + 1] KERNEL_READONLY_DATA;
 
 static GFont prv_load_system_font(const char *font_key) {
   if (font_key == NULL) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "GETTING FALLBACK FONT");
+    PBL_LOG_DBG("GETTING FALLBACK FONT");
     // load fallback font
     if (!s_system_fonts_info_table[NUM_SYSTEM_FONTS].loaded) {
       PBL_ASSERTN(text_resources_init_font(SYSTEM_APP, RESOURCE_ID_FONT_FALLBACK_INTERNAL, 0,
@@ -89,7 +89,7 @@ DEFINE_SYSCALL(GFont, sys_font_get_system_font, const char *font_key) {
   if (font_key && PRIVILEGE_WAS_ELEVATED) {
     if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), font_key, 100) &&
         !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), font_key, 100)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Pointer %p not in app or microflash region", font_key);
+      PBL_LOG_ERR("Pointer %p not in app or microflash region", font_key);
       syscall_failed();
     }
   }

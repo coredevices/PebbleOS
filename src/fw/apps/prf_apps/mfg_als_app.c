@@ -82,7 +82,7 @@ static void prv_update_display(void *context) {
         data->state_start_time = rtc_get_ticks();
         data->als_sum = 0;
         data->als_sample_count = 0;
-        PBL_LOG(LOG_LEVEL_INFO, "ALS sampling started");
+        PBL_LOG_INFO("ALS sampling started");
       }
       break;
 
@@ -101,16 +101,16 @@ static void prv_update_display(void *context) {
         // Calculate average and determine pass/fail
         data->als_average = (uint32_t)(data->als_sum / data->als_sample_count);
 
-        PBL_LOG(LOG_LEVEL_INFO, "ALS test complete - Average: %"PRIu32" (samples: %"PRIu32")",
-                data->als_average, data->als_sample_count);
+        PBL_LOG_INFO("ALS test complete - Average: %"PRIu32" (samples: %"PRIu32")",
+                     data->als_average, data->als_sample_count);
 
         if (data->als_average >= ALS_MIN_VALUE && data->als_average <= ALS_MAX_VALUE) {
           data->test_state = ALSStatePass;
-          PBL_LOG(LOG_LEVEL_INFO, "ALS test PASSED");
+          PBL_LOG_INFO("ALS test PASSED");
         } else {
           data->test_state = ALSStateFail;
-          PBL_LOG(LOG_LEVEL_ERROR, "ALS test FAILED - Average %"PRIu32" outside range %d-%d",
-                  data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
+          PBL_LOG_ERR("ALS test FAILED - Average %"PRIu32" outside range %d-%d",
+                      data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
         }
       }
       break;
@@ -147,7 +147,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
     data->test_state = ALSStateCountdown;
     data->state_start_time = rtc_get_ticks();
 
-    PBL_LOG(LOG_LEVEL_INFO, "ALS test started - countdown %d ms", COUNTDOWN_MS);
+    PBL_LOG_INFO("ALS test started - countdown %d ms", COUNTDOWN_MS);
   } else if (data->test_state == ALSStatePass || data->test_state == ALSStateFail) {
     // Exit app on second press
     app_window_stack_pop(true);
@@ -200,7 +200,7 @@ static void prv_handle_init(void) {
   // Register evented timer for 100ms updates
   s_timer = evented_timer_register(SAMPLE_INTERVAL_MS, true /* repeating */, prv_update_display, data);
 
-  PBL_LOG(LOG_LEVEL_INFO, "ALS test initialized - range: %d-%d", ALS_MIN_VALUE, ALS_MAX_VALUE);
+  PBL_LOG_INFO("ALS test initialized - range: %d-%d", ALS_MIN_VALUE, ALS_MAX_VALUE);
 }
 
 static void prv_handle_deinit(void) {

@@ -18,7 +18,7 @@ void system_flash_erase(uint16_t sector) {
                   FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR|FLASH_FLAG_PGSERR);
 
   if (FLASH_EraseSector(sector, VoltageRange_1) != FLASH_COMPLETE) {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "failed to erase sector %u", sector);
+    PBL_LOG_ALWAYS("failed to erase sector %u", sector);
     return;
   }
 }
@@ -29,7 +29,7 @@ void system_flash_write_byte(uint32_t address, uint8_t data) {
                   FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR|FLASH_FLAG_PGSERR);
 
   if (FLASH_ProgramByte(address, data) != FLASH_COMPLETE) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "failed to write address %p", (void*) address);
+    PBL_LOG_DBG("failed to write address %p", (void*) address);
     return;
   }
 }

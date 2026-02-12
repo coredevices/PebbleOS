@@ -119,7 +119,7 @@ void comm_session_reset(CommSession *session) {
   bt_lock();
   {
     if (!comm_session_is_valid(session)) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Already closed!");
+      PBL_LOG_WRN("Already closed!");
       goto unlock;
     }
     session->transport_imp->reset(session->transport);
@@ -153,7 +153,7 @@ static const char *prv_string_for_destination(TransportDestination destination) 
 static void prv_log_session_event(CommSession *session, bool is_open) {
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(prv_get_uuid(session), uuid_string);
-  PBL_LOG(LOG_LEVEL_INFO, "Session event: is_open=%d, destination=%s, app_uuid=%s",
+  PBL_LOG_INFO("Session event: is_open=%d, destination=%s, app_uuid=%s",
           is_open, prv_string_for_destination(session->destination), uuid_string);
 }
 
@@ -181,7 +181,7 @@ CommSession * comm_session_open(Transport *transport, const TransportImplementat
            && !prv_is_transport_type(transport, implementation, CommSessionTransportType_PULSE)) {
         if (!existing_system_session->transport_imp->close) {
           // iAP sessions cannot be closed from the watch' side :(
-          PBL_LOG(LOG_LEVEL_ERROR, "System session already exists and cannot be closed");
+          PBL_LOG_ERR("System session already exists and cannot be closed");
           return NULL;
         }
         // Last system session to connect wins:
@@ -190,7 +190,7 @@ CommSession * comm_session_open(Transport *transport, const TransportImplementat
         // is running over PPoGATT. If the app launches again, it will have no state of what was the
         // previously used transport was, prior to getting killed. Often, iAP ends up winning.
         // However, to the firmware, PPoGATT still appears connected, so we'd end up here.
-        PBL_LOG(LOG_LEVEL_INFO, "System session already exists, closing it now");
+        PBL_LOG_INFO("System session already exists, closing it now");
         existing_system_session->transport_imp->close(existing_system_session->transport);
       }
     }
@@ -198,7 +198,7 @@ CommSession * comm_session_open(Transport *transport, const TransportImplementat
 
   CommSession *session = kernel_malloc(sizeof(CommSession));
   if (!session) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory for new CommSession");
+    PBL_LOG_ERR("Not enough memory for new CommSession");
     return NULL;
   }
   *session = (const CommSession) {
@@ -332,7 +332,7 @@ void comm_session_send_next(CommSession *session) {
   if (schedule_func(session)) {
     session->is_send_next_call_pending = true;
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to schedule comm_session_send_next callback");
+    PBL_LOG_ERR("Failed to schedule comm_session_send_next callback");
   }
 }
 
@@ -358,7 +358,7 @@ bool comm_session_send_data(CommSession *session, uint16_t endpoint_id,
   }
   SendBuffer *sb = comm_session_send_buffer_begin_write(session, endpoint_id, length, timeout_ms);
   if (!sb) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not acquire send buffer for %x", endpoint_id);
+    PBL_LOG_WRN("Could not acquire send buffer for %x", endpoint_id);
     return false;
   }
   comm_session_send_buffer_write(sb, data, length);
@@ -392,7 +392,7 @@ static bool prv_find_session_by_app_uuid_comparator(ListNode *found_node, void *
     // On iOS + iAP, we can expect at most one App session, so we assume that the found session is
     // the app one.
     if (ctx->fallback_session) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Fallback session already set!?");
+      PBL_LOG_ERR("Fallback session already set!?");
     }
     ctx->fallback_session = session;
   }
@@ -559,7 +559,7 @@ DEFINE_SYSCALL(void, sys_app_comm_set_responsiveness, SniffInterval interval) {
                                       ResponseTimeMax, 0);
       return;
   }
-  PBL_LOG(LOG_LEVEL_WARNING, "Invalid sniff interval");
+  PBL_LOG_WRN("Invalid sniff interval");
   syscall_failed();
 }
 

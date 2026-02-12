@@ -96,7 +96,7 @@ static status_t prv_try_restart_interrupted_erase(bool is_subsector,
   status_t status = is_subsector? flash_impl_erase_subsector_begin(addr)
                                 : flash_impl_erase_sector_begin(addr);
   if (FAILED(status)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got error trying to reissue interrupted erase: "
+    PBL_LOG_ERR("Got error trying to reissue interrupted erase: "
             "%"PRIi32, status);
     return status;
   }
@@ -132,7 +132,7 @@ void flash_init(void) {
         &is_subsector, &erase_in_progress_address) == S_TRUE) {
     // An erase was interrupted by e.g. a crash. Retry the erase so the
     // incompletely-erased sector doesn't cause us trouble later on.
-    PBL_LOG(LOG_LEVEL_WARNING, "Flash erase to 0x%"PRIx32" was interrupted "
+    PBL_LOG_WRN("Flash erase to 0x%"PRIx32" was interrupted "
             "last boot. Restarting the erase...", erase_in_progress_address);
 
     // When an erase is interrupted, subsequent erases of the same sector tend to
@@ -145,12 +145,12 @@ void flash_init(void) {
       if (PASSED(status)) {
         break;
       }
-      PBL_LOG(LOG_LEVEL_ERROR, "Flash erase failed, status %"PRIi32, status);
+      PBL_LOG_ERR("Flash erase failed, status %"PRIi32, status);
       if (attempt++ >= MAX_ERASE_RETRIES) {
         // We've tried all we can. No point in croaking; it's not like a reboot
         // is going to fix anything. Best we can do is pretend like nothing is
         // wrong and hope for the best.
-        PBL_LOG(LOG_LEVEL_ERROR, "Giving up on restarting the flash erase.");
+        PBL_LOG_ERR("Giving up on restarting the flash erase.");
         break;
       }
     }
@@ -379,7 +379,7 @@ static uint32_t prv_flash_erase_poll(void) {
   xSemaphoreGive(s_erase_semphr);
   if (status == E_ERROR && saved_ctx.retries < MAX_ERASE_RETRIES) {
     // Try issuing the erase again. It might succeed this time around.
-    PBL_LOG(LOG_LEVEL_DEBUG, "Erase of 0x%"PRIx32" failed (attempt %d)."
+    PBL_LOG_DBG("Erase of 0x%"PRIx32" failed (attempt %d)."
             " Trying again...", saved_ctx.address, saved_ctx.retries);
     return prv_flash_erase_start(
         saved_ctx.address, saved_ctx.on_complete_cb, saved_ctx.cb_context,

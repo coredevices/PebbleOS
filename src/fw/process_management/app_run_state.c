@@ -33,10 +33,10 @@ static void prv_send_response(void *data) {
                                             COMM_SESSION_DEFAULT_TIMEOUT);
 
       uuid_to_string(&app_run_state->uuid, uuid_buffer);
-      PBL_LOG(LOG_LEVEL_DEBUG, "AppRunState(0x34) %s sending status: %s - %u",
+      PBL_LOG_DBG("AppRunState(0x34) %s sending status: %s - %u",
               (success ? "success" : "failed"), uuid_buffer, app_run_state->state);
     } else {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Using deprecated launcher_app_message");
+      PBL_LOG_DBG("Using deprecated launcher_app_message");
       const bool is_running = ((app_run_state->state == RUNNING) ? true : false);
       launcher_app_message_send_app_state_deprecated(&app_run_state->uuid, is_running);
     }
@@ -54,7 +54,7 @@ void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const U
   if (install_id == INSTALL_ID_INVALID && cmd != APP_RUN_STATE_STATUS_COMMAND) {
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(uuid, uuid_buffer);
-    PBL_LOG(LOG_LEVEL_DEBUG, "No app found with uuid %s", uuid_buffer);
+    PBL_LOG_DBG("No app found with uuid %s", uuid_buffer);
     return;
   }
 
@@ -89,7 +89,7 @@ void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const U
       }
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Unknown command: %d", cmd);
+      PBL_LOG_ERR("Unknown command: %d", cmd);
   }
 }
 
@@ -103,7 +103,7 @@ void app_run_state_protocol_msg_callback(CommSession *session, const uint8_t *da
 
   if (msg->command != APP_RUN_STATE_STATUS_COMMAND) {
     if (length < sizeof(AppStateMessage)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "length mismatch, expected %"PRIu32" byte(s), got %"PRIu32" bytes",
+      PBL_LOG_ERR("length mismatch, expected %"PRIu32" byte(s), got %"PRIu32" bytes",
               (uint32_t) sizeof(AppStateMessage), (uint32_t) length);
       return;
     }

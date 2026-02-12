@@ -37,7 +37,7 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &layer->bounds);
 
-  PBL_LOG(LOG_LEVEL_INFO, "backlight id:%d", app_data->test_pattern);
+  PBL_LOG_INFO("backlight id:%d", app_data->test_pattern);
   switch (app_data->test_pattern) {
   case TestPattern_White:
     led_controller_rgb_set_color(BACKLIGHT_COLOR_WHITE);

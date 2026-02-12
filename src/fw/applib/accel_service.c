@@ -145,7 +145,7 @@ static void prv_do_data_handle(void *context) {
 
   if (state->manager_state == NULL) {
     if (state->deferred_free) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Deferred free");
+      PBL_LOG_DBG("Deferred free");
       kernel_free(state);
     }
     // event queue is handled kernel-side, so an event may fire after we've unsubscribed

@@ -16,7 +16,7 @@ static size_t prv_allocate_crc_buffer(void **buffer) {
   unsigned int chunk_size = 1024;
   *buffer = kernel_malloc(chunk_size);
   if (!*buffer) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Insufficient memory for a large CRC buffer, going slow");
+    PBL_LOG_WRN("Insufficient memory for a large CRC buffer, going slow");
 
     chunk_size = 128;
     *buffer = kernel_malloc_check(chunk_size);

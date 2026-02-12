@@ -32,7 +32,7 @@ static void logging_handle_character(char c, bool* should_context_switch) {
 
   if (c == 0x3) { // CTRL-C
     if (!s_prompt_enabled) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring prompt request, not yet ready!");
+      PBL_LOG_DBG("Ignoring prompt request, not yet ready!");
       return;
     }
     console_switch_to_prompt();

@@ -35,7 +35,7 @@ static void prv_rediscover_kernelbg_cb(void *data) {
   const BTErrno e = gatt_client_discovery_rediscover_all(device);
   kernel_free(device);
   if (e != BTErrnoOK) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Service Changed couldn't restart discovery: %i", e);
+    PBL_LOG_ERR("Service Changed couldn't restart discovery: %i", e);
   }
 }
 
@@ -47,13 +47,13 @@ bool gatt_service_changed_client_handle_indication(struct GAPLEConnection *conne
     return false;
   }
   if (value_length != sizeof(ATTHandleRange)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Service Changed Indication incorrect length: %u", value_length);
+    PBL_LOG_ERR("Service Changed Indication incorrect length: %u", value_length);
       // Pretend we ate the indication. There will be no GAPLECharacteristic in the system that will
       // match this ATT handle anyway.
     return true;
   }
   ATTHandleRange *range = (ATTHandleRange *) value;
-  PBL_LOG(LOG_LEVEL_DEBUG, "Service Changed Indication: %x - %x", range->start, range->end);
+  PBL_LOG_DBG("Service Changed Indication: %x - %x", range->start, range->end);
 
   // Initiate rediscovery on KernelBG if the Server is asking us to rediscover everything
   // (See "2.5.2 Attribute Caching" in BT Core Specification)
@@ -108,7 +108,7 @@ void gatt_service_changed_server_handle_fw_update(void) {
 void bt_driver_cb_gatt_service_changed_server_confirmation(
     const GattServerChangedConfirmationEvent *event) {
   if (event->status_code != HciStatusCode_Success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Service Changed indication confirmation failure (timed out?) %"PRIu32,
+    PBL_LOG_ERR("Service Changed indication confirmation failure (timed out?) %"PRIu32,
             (uint32_t)event->status_code);
   }
 }
@@ -145,7 +145,7 @@ void bt_driver_cb_gatt_service_changed_server_subscribe(
   bt_lock();
   {
     if (subscribed) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Remote subscribed to Service Changed characteristic");
+      PBL_LOG_DBG("Remote subscribed to Service Changed characteristic");
 
       GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
       if (!connection || connection->has_sent_gatt_service_changed_indication) {
@@ -160,7 +160,7 @@ void bt_driver_cb_gatt_service_changed_server_subscribe(
       }
 #endif
 
-      PBL_LOG(LOG_LEVEL_INFO, "Indicating Service Changed to remote device");
+      PBL_LOG_INFO("Indicating Service Changed to remote device");
 
       // Work-around for iOS issue (see comment above), send the indication after a short delay:
       connection->gatt_service_changed_indication_timer = timer;

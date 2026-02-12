@@ -222,10 +222,10 @@ static void prv_print_heartbeat(AnalyticsHeartbeat *heartbeat, AnalyticsMetric s
     if (!analytics_metric_is_array(metric)) {
       int64_t val = analytics_heartbeat_get(heartbeat, metric);
       if (val >= 0) {
-        PBL_LOG(LOG_LEVEL_DEBUG, "%3" PRIu32 ": %s: %" PRIu32 " (0x%" PRIx32")",
+        PBL_LOG_DBG("%3" PRIu32 ": %s: %" PRIu32 " (0x%" PRIx32")",
             analytics_metric_offset(metric), name, (uint32_t)val, (uint32_t)val);
       } else {
-        PBL_LOG(LOG_LEVEL_DEBUG, "%3" PRIu32 ": %s: %" PRId32 " (0x%" PRIx32")",
+        PBL_LOG_DBG("%3" PRIu32 ": %s: %" PRId32 " (0x%" PRIx32")",
             analytics_metric_offset(metric), name, (int32_t)val, (int32_t)val);
       }
       continue;
@@ -235,7 +235,7 @@ static void prv_print_heartbeat(AnalyticsHeartbeat *heartbeat, AnalyticsMetric s
     uint32_t written = 0;
     for (uint32_t i = 0; i < analytics_metric_num_elements(metric); i++) {
       if (written > BUF_LENGTH) {
-        PBL_LOG(LOG_LEVEL_DEBUG, "print buffer overflow by %lu bytes",
+        PBL_LOG_DBG("print buffer overflow by %lu bytes",
             BUF_LENGTH - written);
         continue;
       }
@@ -249,30 +249,30 @@ static void prv_print_heartbeat(AnalyticsHeartbeat *heartbeat, AnalyticsMetric s
             "%s%" PRId32 " (0x%" PRIx32 ")", sep, (int32_t)val, (int32_t)val);
       }
     }
-    PBL_LOG(LOG_LEVEL_DEBUG, "%3" PRIu32 ": %s: %s", analytics_metric_offset(metric), name, buf);
+    PBL_LOG_DBG("%3" PRIu32 ": %s: %s", analytics_metric_offset(metric), name, buf);
   }
 }
 
 void analytics_heartbeat_print(AnalyticsHeartbeat *heartbeat) {
   switch (heartbeat->kind) {
   case ANALYTICS_HEARTBEAT_KIND_DEVICE:
-    PBL_LOG(LOG_LEVEL_DEBUG, "Device heartbeat:");
+    PBL_LOG_DBG("Device heartbeat:");
     prv_print_heartbeat(heartbeat, ANALYTICS_DEVICE_METRIC_START, ANALYTICS_DEVICE_METRIC_END);
     break;
   case ANALYTICS_HEARTBEAT_KIND_APP: {
     const Uuid *uuid = analytics_heartbeat_get_uuid(heartbeat);
     char uuid_buf[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(uuid, uuid_buf);
-    PBL_LOG(LOG_LEVEL_DEBUG, "App heartbeat for %s:", uuid_buf);
+    PBL_LOG_DBG("App heartbeat for %s:", uuid_buf);
     prv_print_heartbeat(heartbeat, ANALYTICS_APP_METRIC_START, ANALYTICS_APP_METRIC_END);
     break;
   }
   default:
-    PBL_LOG(LOG_LEVEL_DEBUG, "Unable to print heartbeat: Unrecognized kind %d", heartbeat->kind);
+    PBL_LOG_DBG("Unable to print heartbeat: Unrecognized kind %d", heartbeat->kind);
   }
 }
 #else
 void analytics_heartbeat_print(AnalyticsHeartbeat *heartbeat) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Turn on ANALYTICS_DEBUG to get heartbeat printing support.");
+  PBL_LOG_DBG("Turn on ANALYTICS_DEBUG to get heartbeat printing support.");
 }
 #endif

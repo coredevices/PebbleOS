@@ -23,7 +23,7 @@ void bt_local_addr_pause_cycling(void) {
   bt_lock();
   {
     if (s_pra_cycling_pause_count == 0) {
-      PBL_LOG(LOG_LEVEL_INFO, "Pausing address cycling (pinned_addr="BT_DEVICE_ADDRESS_FMT")",
+      PBL_LOG_INFO("Pausing address cycling (pinned_addr="BT_DEVICE_ADDRESS_FMT")",
               BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
       prv_allow_cycling(false);
     }
@@ -38,7 +38,7 @@ void bt_local_addr_resume_cycling(void) {
     PBL_ASSERTN(s_pra_cycling_pause_count);
     --s_pra_cycling_pause_count;
     if (s_pra_cycling_pause_count == 0) {
-      PBL_LOG(LOG_LEVEL_INFO, "Resuming address cycling (pinned_addr="BT_DEVICE_ADDRESS_FMT")",
+      PBL_LOG_INFO("Resuming address cycling (pinned_addr="BT_DEVICE_ADDRESS_FMT")",
               BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
       prv_allow_cycling(true);
     }
@@ -66,8 +66,7 @@ void bt_local_addr_pin(const BTDeviceAddress *addr) {
   bool addresses_match = bt_device_address_equal(addr, &s_pinned_addr);
   bt_unlock();
 
-  PBL_LOG(LOG_LEVEL_INFO,
-          "Requested to pin address to "BT_DEVICE_ADDRESS_FMT " match=%u",
+  PBL_LOG_INFO("Requested to pin address to "BT_DEVICE_ADDRESS_FMT " match=%u",
           BT_DEVICE_ADDRESS_XPLODE_PTR(addr), addresses_match);
 }
 
@@ -92,22 +91,22 @@ void bt_local_addr_init(void) {
     if (bt_driver_id_generate_private_resolvable_address(&s_pinned_addr)) {
       bt_persistent_storage_set_ble_pinned_address(&s_pinned_addr);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to generate PRA... :(");
+      PBL_LOG_ERR("Failed to generate PRA... :(");
     }
   }
-  PBL_LOG(LOG_LEVEL_INFO, "Pinned address: " BT_DEVICE_ADDRESS_FMT,
+  PBL_LOG_INFO("Pinned address: " BT_DEVICE_ADDRESS_FMT,
           BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
 
   if (bt_persistent_storage_has_pinned_ble_pairings()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Bonding that requires address pinning exists, applying pinned addr!");
+    PBL_LOG_INFO("Bonding that requires address pinning exists, applying pinned addr!");
     bt_local_addr_pause_cycling();
     s_cycling_paused_due_to_dependent_bondings = true;
   } else {
 #if RECOVERY_FW
-    PBL_LOG(LOG_LEVEL_INFO, "Pausing address cycling because PRF!");
+    PBL_LOG_INFO("Pausing address cycling because PRF!");
     bt_local_addr_pause_cycling();
 #else
-    PBL_LOG(LOG_LEVEL_INFO, "No bondings found that require address pinning!");
+    PBL_LOG_INFO("No bondings found that require address pinning!");
     bt_driver_set_local_address(true /* allow_cycling */, NULL);
 #endif
   }

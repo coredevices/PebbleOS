@@ -250,7 +250,7 @@ static void prv_dismiss_all(void *data, ActionMenu *action_menu) {
     notif_list[i].type = notifications_presented_list_get_type(id);
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Dismissing %d notifications", num_notifications);
+  PBL_LOG_DBG("Dismissing %d notifications", num_notifications);
   window_data->window_frozen = true;
   timeline_actions_dismiss_all(notif_list,
                                num_notifications,
@@ -503,14 +503,14 @@ T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_p
 
   if (type == NotificationMobile) {
     if (!notification_storage_get(id, item)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read notification");
+      PBL_LOG_ERR("Failed to read notification");
       goto cleanup;
     }
   } else if (type == NotificationReminder) {
     // validate reminder
     int rv = reminder_db_read_item(item, id);
     if (rv != S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read reminder");
+      PBL_LOG_ERR("Failed to read reminder");
       goto cleanup;
     }
   }
@@ -628,7 +628,7 @@ static void prv_clear_if_stale_reminder(Uuid *id, NotificationType type, void *c
   const time_t now = rtc_get_time();
 
   if (stale_time <= now && window_data->is_modal) {
-    PBL_LOG(LOG_LEVEL_INFO, "Removing stale reminder from notification popup window");
+    PBL_LOG_INFO("Removing stale reminder from notification popup window");
     prv_remove_notification(window_data, id, true /* close am */);
   }
 }
@@ -756,7 +756,7 @@ static void prv_mute_notification(const ActionMenuItem *action_menu_item,
 
   const char *app_id = attribute_get_string(&item->attr_list, AttributeIdiOSAppIdentifier, "");
   if (!*app_id) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not mute notification. Unknown app_id");
+    PBL_LOG_ERR("Could not mute notification. Unknown app_id");
     return;
   }
 
@@ -777,7 +777,7 @@ static void prv_mute_notification(const ActionMenuItem *action_menu_item,
     // This is a very unlikely case. We store some default prefs which includes the mute
     // attribute when we receive the notification so either someone deleted the entry
     // in the DB or the mute attribute (neither of which should happen)
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not mute notification. No prefs or mute attribute");
+    PBL_LOG_WRN("Could not mute notification. No prefs or mute attribute");
   }
 
   ios_notif_pref_db_free_prefs(notif_prefs);
@@ -974,7 +974,7 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
 
   config.root_level = prv_create_action_menu_for_item(item, window_data, source);
   if (config.root_level == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Couldn't create notification action menu");
+    PBL_LOG_ERR("Couldn't create notification action menu");
     return;
   }
 

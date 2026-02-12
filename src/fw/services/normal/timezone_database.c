@@ -179,7 +179,7 @@ bool timezone_database_load_dst_rule(uint8_t dst_id, TimezoneDSTRule *start, Tim
   // First half of the DST rule pair
   if (!prv_database_read(dst_rule_pair_offset, start, DST_RULE_BYTES) ||
       !prv_database_read(dst_rule_pair_offset + DST_RULE_BYTES, end, DST_RULE_BYTES)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to load timezone for DST ID %"PRIu8, dst_id);
+    PBL_LOG_WRN("Failed to load timezone for DST ID %"PRIu8, dst_id);
     return false;
   }
 

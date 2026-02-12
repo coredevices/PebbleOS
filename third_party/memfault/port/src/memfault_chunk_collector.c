@@ -34,7 +34,7 @@ static void prv_create_dls_session() {
 static void prv_memfault_gather_chunks() {
   if (!dls_initialized()) {
     // We need to wait until data logging is initialized before we can add chunks
-    PBL_LOG(LOG_LEVEL_ERROR, "!dls_initialized");
+    PBL_LOG_ERR("!dls_initialized");
     return;
   }
 
@@ -42,7 +42,7 @@ static void prv_memfault_gather_chunks() {
   // yet, so do it here.
   prv_create_dls_session();
   if (s_chunks_session == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "!s_chunks_session");
+    PBL_LOG_ERR("!s_chunks_session");
     return;
   }
 

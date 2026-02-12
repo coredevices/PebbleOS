@@ -269,7 +269,7 @@ void test_persist__legacy2_max_usage(void) {
 
   PBL_LOG_VERBOSE("n = %d", n);
   for (int i = 0; i < n; ++i) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "i = %d", i);
+    PBL_LOG_DBG("i = %d", i);
     cl_assert_equal_i(persist_write_data(i, &buffer, sizeof(buffer)), sizeof(buffer));
   }
 

@@ -16,7 +16,7 @@ static bool prv_get_state(void *context) {
 }
 
 static void prv_set_state(bool enabled, void *context) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Manual DND toggle: %s", enabled ? "enabled" : "disabled");
+  PBL_LOG_DBG("Manual DND toggle: %s", enabled ? "enabled" : "disabled");
   do_not_disturb_set_manually_enabled(enabled);
 }
 

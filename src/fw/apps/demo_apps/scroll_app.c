@@ -18,14 +18,14 @@ typedef struct {
 } ScrollAppData;
 
 static void select_click_handler(ClickRecognizerRef recognizer, ScrollAppData *data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "SELECT clicked!");
+  PBL_LOG_DBG("SELECT clicked!");
   (void)data;
   (void)recognizer;
 }
 
 #if 0
 static void select_long_click_handler(ClickRecognizerRef recognizer, ScrollAppData *data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "SELECT long clicked!");
+  PBL_LOG_DBG("SELECT long clicked!");
   (void)data;
   (void)recognizer;
 }

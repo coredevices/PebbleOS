@@ -39,7 +39,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
 
   int fd;
   if ((fd = pfs_open(ORDER_FILE, OP_FLAG_READ, 0, 0)) < 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "App menu order file does not exist");
+    PBL_LOG_DBG("App menu order file does not exist");
     s_data.file_known_missing = true;
     mutex_unlock(s_data.order_mutex);
     return NULL;
@@ -47,7 +47,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
 
   // Check if it is an valid file
   if ((pfs_get_file_size(fd) % sizeof(AppInstallId)) != sizeof(uint8_t)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid order storage file");
+    PBL_LOG_ERR("Invalid order storage file");
     delete_file = true;
     goto cleanup;
   }
@@ -55,7 +55,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   // Read the number of AppInstallId's listed in the file
   uint8_t list_length;
   if (pfs_read(fd, &list_length, sizeof(uint8_t)) != sizeof(uint8_t)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not read app menu order file");
+    PBL_LOG_ERR("Could not read app menu order file");
     delete_file = true;
     goto cleanup;
   }
@@ -63,7 +63,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   // Allocate room for the order list array. Free'd by the caller of the function.
   storage = app_malloc(sizeof(AppMenuOrderStorage) + list_length * sizeof(AppInstallId));
   if (!storage) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to malloc stored order install_id list");
+    PBL_LOG_ERR("Failed to malloc stored order install_id list");
     goto cleanup;
   }
 
@@ -71,7 +71,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   const int read_size = list_length * sizeof(AppInstallId);
   int rd_sz;
   if ((rd_sz = pfs_read(fd, (uint8_t *)storage->id_list, read_size)) != read_size) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Corrupted ordered install_id list (Rd %d of %d bytes)",
+    PBL_LOG_ERR("Corrupted ordered install_id list (Rd %d of %d bytes)",
         rd_sz, read_size);
     app_free(storage);
     storage = NULL;
@@ -105,7 +105,7 @@ static void prv_app_order_write_order(AppMenuOrderStorage *storage) {
   }
 
   if (fd < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not create app menu order file");
+    PBL_LOG_ERR("Could not create app menu order file");
     goto cleanup;
   }
 
@@ -113,7 +113,7 @@ static void prv_app_order_write_order(AppMenuOrderStorage *storage) {
   int wrote_storage_bytes = pfs_write(fd, (uint8_t *)storage, storage_size);
 
   if (wrote_storage_bytes != storage_size) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write all bytes of order list");
+    PBL_LOG_ERR("Failed to write all bytes of order list");
   }
 
   pfs_close(fd);

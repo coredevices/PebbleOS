@@ -14,7 +14,7 @@ T_STATIC char* NEXMO_REAUTH_STRING = "Pebble check-in code:";
 bool nexmo_is_reauth_sms(const ANCSAttribute *app_id, const ANCSAttribute *message) {
   if (ancs_notifications_util_is_sms(app_id)) {
     if (strstr((const char *)message->value, NEXMO_REAUTH_STRING)) {
-      PBL_LOG(LOG_LEVEL_INFO, "Got Nexmo Reauth SMS");
+      PBL_LOG_INFO("Got Nexmo Reauth SMS");
       return true;
     }
   }

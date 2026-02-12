@@ -45,7 +45,7 @@ NORETURN syscall_failed(void) {
 
   PBL_ASSERT(mcu_state_is_privileged(), "Insufficient Privileges!");
 
-  PBL_LOG(LOG_LEVEL_WARNING, "Bad syscall!");
+  PBL_LOG_WRN("Bad syscall!");
 
   sys_app_fault(saved_lr);
 
@@ -65,7 +65,7 @@ void syscall_assert_userspace_buffer(const void* buf, size_t num_bytes) {
   }
 
   APP_LOG(APP_LOG_LEVEL_ERROR, "syscall failure! %p..%p is not in app space.", buf, (char *)buf + num_bytes);
-  PBL_LOG(LOG_LEVEL_ERROR, "syscall failure! %p..%p is not in app space.", buf, (char *)buf + num_bytes);
+  PBL_LOG_ERR("syscall failure! %p..%p is not in app space.", buf, (char *)buf + num_bytes);
   syscall_failed();
 }
 

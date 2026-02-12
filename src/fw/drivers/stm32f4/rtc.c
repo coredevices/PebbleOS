@@ -51,7 +51,7 @@ void rtc_init(void) {
 
 #ifdef PBL_LOG_ENABLED
   char buffer[TIME_STRING_BUFFER_SIZE];
-  PBL_LOG(LOG_LEVEL_DEBUG, "Current time is <%s>", rtc_get_time_string(buffer));
+  PBL_LOG_DBG("Current time is <%s>", rtc_get_time_string(buffer));
 #endif
 }
 

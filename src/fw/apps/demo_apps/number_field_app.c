@@ -15,7 +15,7 @@ typedef struct {
 } AppData;
 
 static void selected(NumberWindow *nw, void *ctx) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "selected: %"PRId32, number_window_get_value(nw));
+  PBL_LOG_DBG("selected: %"PRId32, number_window_get_value(nw));
 
   const bool animated = true;
   app_window_stack_pop(animated);

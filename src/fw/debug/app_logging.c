@@ -63,7 +63,7 @@ void app_log_protocol_msg_callback(CommSession *session, const uint8_t *data, co
     s_app_logging_mode = AppLoggingDisabled;
     break;
   default:
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid app log command 0x%x", command->commandType);
+    PBL_LOG_WRN("Invalid app log command 0x%x", command->commandType);
   }
 }
 

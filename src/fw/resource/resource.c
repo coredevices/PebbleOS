@@ -122,7 +122,7 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
     // We want to stop the FW from doing this, so we added an assert
     // but in the name of backwards compatibility, we let the app misbehave
     num_bytes = resource.length - offset;
-    PBL_LOG(LOG_LEVEL_DEBUG, "Tried to read past end of resource, reading %d bytes",
+    PBL_LOG_DBG("Tried to read past end of resource, reading %d bytes",
             (int)num_bytes);
   }
 

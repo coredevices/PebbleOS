@@ -87,14 +87,14 @@ typedef struct {
 // FFT analysis function
 static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
   if (sample_count < FFT_SIZE) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Not enough samples for FFT: %zu", sample_count);
+    PBL_LOG_WRN("Not enough samples for FFT: %zu", sample_count);
     return -1;
   }
 
   // Allocate FFT configuration
   kiss_fftr_cfg fft_cfg = kiss_fftr_alloc(FFT_SIZE, 0, NULL, NULL);
   if (!fft_cfg) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate FFT configuration");
+    PBL_LOG_ERR("Failed to allocate FFT configuration");
     return -1;
   }
 
@@ -125,7 +125,7 @@ static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
   // Frequency = (bin * sample_rate) / FFT_SIZE
   int peak_freq = (peak_bin * SAMPLE_RATE_HZ) / FFT_SIZE;
 
-  PBL_LOG(LOG_LEVEL_INFO, "Peak found at bin %d, frequency %d Hz, magnitude %ld",
+  PBL_LOG_INFO("Peak found at bin %d, frequency %d Hz, magnitude %ld",
           peak_bin, peak_freq, (long)max_magnitude);
 
   // Clean up
@@ -134,7 +134,7 @@ static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
 
   // Check if magnitude is above threshold
   if (max_magnitude < MIN_PEAK_MAGNITUDE) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Peak magnitude too low: %ld", (long)max_magnitude);
+    PBL_LOG_WRN("Peak magnitude too low: %ld", (long)max_magnitude);
     return -1;
   }
 
@@ -263,14 +263,14 @@ static void prv_start_test(void) {
 
   snprintf(data->status_text, STATUS_STR_LEN, "Recording...");
 
-  PBL_LOG(LOG_LEVEL_INFO, "Starting microphone test (channels=%lu, block_size=%lu)",
+  PBL_LOG_INFO("Starting microphone test (channels=%lu, block_size=%lu)",
           (unsigned long)num_channels, (unsigned long)BLOCK_SIZE);
 
   mic_init(MIC);
   mic_set_volume(MIC, 100);  // maximum volume
 
   if (!mic_start(MIC, prv_mic_data_handler, NULL, data->pcm, PCM_BUFFER_SIZE)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to start microphone");
+    PBL_LOG_ERR("Failed to start microphone");
     data->state = TestState_Failed;
     snprintf(data->status_text, STATUS_STR_LEN, "Mic start failed");
   }

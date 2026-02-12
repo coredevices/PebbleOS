@@ -31,12 +31,12 @@ static void prv_finalize_create_bonding(BTBondingID bonding_id,
     connection->is_gateway = is_gateway;
 
     if (!connection->is_gateway) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "New bonding is not gateway?");
+      PBL_LOG_DBG("New bonding is not gateway?");
     }
 
     gap_le_device_name_request(&connection->device);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Couldn't find connection for bonding!");
+    PBL_LOG_ERR("Couldn't find connection for bonding!");
   }
   bt_unlock();
 }
@@ -49,7 +49,7 @@ static void prv_finalize_create_bonding_cb(void *data) {
 
 void bt_driver_cb_handle_create_bonding(const BleBonding *bonding,
                                         const BTDeviceAddress *addr) {
-  PBL_LOG(LOG_LEVEL_INFO, "Creating new bonding for "BT_DEVICE_ADDRESS_FMT,
+  PBL_LOG_INFO("Creating new bonding for "BT_DEVICE_ADDRESS_FMT,
           BT_DEVICE_ADDRESS_XPLODE(bonding->pairing_info.identity.address));
   const bool should_pin_address = bonding->should_pin_address;
   if (should_pin_address) {
@@ -57,7 +57,7 @@ void bt_driver_cb_handle_create_bonding(const BleBonding *bonding,
   }
   const uint8_t flags = bonding->flags;
   if (flags) {
-    PBL_LOG(LOG_LEVEL_INFO, "flags: 0x02%x", flags);
+    PBL_LOG_INFO("flags: 0x02%x", flags);
   }
   BTBondingID bonding_id = bt_persistent_storage_store_ble_pairing(&bonding->pairing_info,
                                                                    bonding->is_gateway, NULL,

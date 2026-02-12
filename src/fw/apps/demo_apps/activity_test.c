@@ -685,7 +685,7 @@ static void prv_test_steps(void *context) {
   steps = health_service_sum_today(HealthMetricStepCount);
   steps -= before;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "steps: %"PRId32, steps);
+  PBL_LOG_DBG("steps: %"PRId32, steps);
   if (steps >= 27 && steps <= 33) {
     passed = true;
   }
@@ -719,7 +719,7 @@ static void prv_test_30_min_walk(void *context) {
   int32_t steps;
   steps = health_service_sum_today(HealthMetricStepCount);
   steps -= before;
-  PBL_LOG(LOG_LEVEL_DEBUG, "steps: %"PRId32, steps);
+  PBL_LOG_DBG("steps: %"PRId32, steps);
   if (steps >= ((8 * k_steps_per_minute * k_num_minutes) / 10)) {
     passed = true;
   }
@@ -745,7 +745,7 @@ static void prv_test_sleep(void *context) {
   int32_t before_total, before_deep;
   activity_get_metric(ActivityMetricSleepTotalSeconds, 1, &before_total);
   activity_get_metric(ActivityMetricSleepRestfulSeconds, 1, &before_deep);
-  PBL_LOG(LOG_LEVEL_DEBUG, "start total: %d, start deep: %d", (int)before_total, (int)before_deep);
+  PBL_LOG_DBG("start total: %d, start deep: %d", (int)before_total, (int)before_deep);
 
   // Capture steps before sleep
   int32_t steps_before;
@@ -758,7 +758,7 @@ static void prv_test_sleep(void *context) {
 
   // Capture steps before sleep
   activity_get_metric(ActivityMetricSleepState, 1, &value);
-  PBL_LOG(LOG_LEVEL_DEBUG, "sleep state: %d", (int)value);
+  PBL_LOG_DBG("sleep state: %d", (int)value);
 
   // See how many steps we took during sleep. The light sleep simulator ends up providing about
   // 12 steps every 10 minutes, so without the "no steps during sleep" logic in the activity
@@ -766,9 +766,9 @@ static void prv_test_sleep(void *context) {
   // "no steps during sleep" logic in place, we should get close to 0 steps
   int32_t steps_after;
   activity_get_metric(ActivityMetricStepCount, 1, &steps_after);
-  PBL_LOG(LOG_LEVEL_DEBUG, "steps taken during sleep:: %d", (int)(steps_after - steps_before));
+  PBL_LOG_DBG("steps taken during sleep:: %d", (int)(steps_after - steps_before));
   if (steps_after - steps_before > 16) {
-    PBL_LOG(LOG_LEVEL_ERROR, "too many steps during sleep: test FAILED");
+    PBL_LOG_ERR("too many steps during sleep: test FAILED");
     passed = false;
   }
 
@@ -782,7 +782,7 @@ static void prv_test_sleep(void *context) {
   activity_get_metric(ActivityMetricSleepRestfulSeconds, 1, &deep_sleep);
   deep_sleep -= before_deep;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "total: %d, deep: %d", (int)total_sleep / SECONDS_PER_MINUTE,
+  PBL_LOG_DBG("total: %d, deep: %d", (int)total_sleep / SECONDS_PER_MINUTE,
           (int)deep_sleep / SECONDS_PER_MINUTE);
   const int k_min_total_sleep_min = 240;
   const int k_max_total_sleep_min = 280;
@@ -799,16 +799,16 @@ static void prv_test_sleep(void *context) {
 
   // Check other sleep metrics
   activity_get_metric(ActivityMetricSleepEnterAtSeconds, 1, &value);
-  PBL_LOG(LOG_LEVEL_DEBUG, "entry minute: %d", (int)(value / SECONDS_PER_MINUTE));
+  PBL_LOG_DBG("entry minute: %d", (int)(value / SECONDS_PER_MINUTE));
 
   activity_get_metric(ActivityMetricSleepExitAtSeconds, 1, &value);
-  PBL_LOG(LOG_LEVEL_DEBUG, "exit minute: %d", (int)(value / SECONDS_PER_MINUTE));
+  PBL_LOG_DBG("exit minute: %d", (int)(value / SECONDS_PER_MINUTE));
 
   activity_get_metric(ActivityMetricSleepState, 1, &value);
-  PBL_LOG(LOG_LEVEL_DEBUG, "sleep state: %d", (int)value);
+  PBL_LOG_DBG("sleep state: %d", (int)value);
 
   activity_get_metric(ActivityMetricSleepStateSeconds, 1, &value);
-  PBL_LOG(LOG_LEVEL_DEBUG, "sleep state minutes: %d", (int)(value / SECONDS_PER_MINUTE));
+  PBL_LOG_DBG("sleep state minutes: %d", (int)(value / SECONDS_PER_MINUTE));
 
   prv_test_end(context, passed);
 }
@@ -828,7 +828,7 @@ static void prv_test_sleep_time_change(void *context) {
 
   // Get us into sleep mode
   time_t start_sleep_time = rtc_get_time();
-  PBL_LOG(LOG_LEVEL_DEBUG, "Start sleep: %d", (int)start_sleep_time);
+  PBL_LOG_DBG("Start sleep: %d", (int)start_sleep_time);
   prv_feed_light_sleep_min(80);
   prv_feed_steps_min(2);
   prv_feed_light_sleep_min(1);
@@ -849,7 +849,7 @@ static void prv_test_sleep_time_change(void *context) {
   // Make sure we registered sleep
   int32_t value;
   activity_get_metric(ActivityMetricSleepTotalSeconds, 1, &value);
-  PBL_LOG(LOG_LEVEL_DEBUG, "sleep total: %"PRIi32" ", value);
+  PBL_LOG_DBG("sleep total: %"PRIi32" ", value);
   if (value < (60 * SECONDS_PER_MINUTE) || value > (100 * SECONDS_PER_MINUTE)) {
     passed = false;
   }
@@ -870,14 +870,14 @@ static void prv_count_sleep_sessions(time_t after_time, int *num_sleep, int *num
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Looking for sessions...");
+  PBL_LOG_DBG("Looking for sessions...");
   for (uint32_t i = 0; i < session_entries; i++) {
     ActivitySession *session = &sessions[i];
-    PBL_LOG(LOG_LEVEL_DEBUG, "  Found session type: %d, start_min: %d, length_min: %"PRIu16" ",
+    PBL_LOG_DBG("  Found session type: %d, start_min: %d, length_min: %"PRIu16" ",
             (int)session->type, time_util_get_minute_of_day(session->start_utc),
             session->length_min);
     if (session->start_utc < after_time) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "  Ignoring because too old");
+      PBL_LOG_DBG("  Ignoring because too old");
       continue;
     }
     if ((session->type == ActivitySessionType_Sleep)
@@ -889,7 +889,7 @@ static void prv_count_sleep_sessions(time_t after_time, int *num_sleep, int *num
       (*num_nap)++;
     }
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "Done looking for sessions");
+  PBL_LOG_DBG("Done looking for sessions");
 }
 
 
@@ -900,7 +900,7 @@ static void prv_test_nap(void *context) {
   activity_prefs_sleep_insights_set_enabled(true);
 
   const time_t now_utc = rtc_get_time();
-  PBL_LOG(LOG_LEVEL_DEBUG, "test start time: %d", (int)now_utc);
+  PBL_LOG_DBG("test start time: %d", (int)now_utc);
 
   const time_t midnight_utc = time_util_get_midnight_of(now_utc);
   const time_t nap_time_start = midnight_utc + (ALG_PRIMARY_MORNING_MINUTE * SECONDS_PER_MINUTE);
@@ -914,7 +914,7 @@ static void prv_test_nap(void *context) {
   }
 
   time_t test_start_utc = rtc_get_time();
-  PBL_LOG(LOG_LEVEL_DEBUG, "test start time changed to: %d", (int)test_start_utc);
+  PBL_LOG_DBG("test start time changed to: %d", (int)test_start_utc);
 
   // Reset all stored data
   activity_test_reset(false /* reset_settings */, true /*tracking_on*/, NULL, NULL);
@@ -933,9 +933,9 @@ static void prv_test_nap(void *context) {
   int nap_count = 0;
   int sleep_count = 0;
   prv_count_sleep_sessions(test_start_utc, &sleep_count, &nap_count);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Found %d sleep sessions and %d nap sessions", sleep_count, nap_count);
+  PBL_LOG_DBG("Found %d sleep sessions and %d nap sessions", sleep_count, nap_count);
   if (nap_count > 0 || sleep_count == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "FAILED: expected only sleep but got %d naps and %d sleep", nap_count,
+    PBL_LOG_ERR("FAILED: expected only sleep but got %d naps and %d sleep", nap_count,
             sleep_count);
     prv_test_end(context, false);
     return;
@@ -946,9 +946,9 @@ static void prv_test_nap(void *context) {
 
   // We should have only nap sessions now
   prv_count_sleep_sessions(test_start_utc, &sleep_count, &nap_count);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Found %d sleep sessions and %d nap sessions", sleep_count, nap_count);
+  PBL_LOG_DBG("Found %d sleep sessions and %d nap sessions", sleep_count, nap_count);
   if (nap_count == 0 || sleep_count > 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "FAILED: expected only naps but got %d nap and %d sleep", nap_count,
+    PBL_LOG_ERR("FAILED: expected only naps but got %d nap and %d sleep", nap_count,
             sleep_count);
     prv_test_end(context, false);
     return;
@@ -1229,7 +1229,7 @@ static TestEntry s_test_entries[] = {
 static void prv_test_begin(int index, void *context) {
   ActivityTestAppData *data = (ActivityTestAppData *)context;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Running test: '%s'...", data->menu_items[index].title);
+  PBL_LOG_DBG("Running test: '%s'...", data->menu_items[index].title);
   data->menu_items[index].subtitle = "Running...";
   layer_mark_dirty(simple_menu_layer_get_layer(data->menu_layer));
 
@@ -1244,7 +1244,7 @@ static void prv_test_end(void *context, bool passed) {
   ActivityTestAppData *data = (ActivityTestAppData *)context;
 
   const char *result_str =  passed ? "PASS" : "FAIL";
-  PBL_LOG(LOG_LEVEL_DEBUG, "Test result: %s", result_str);
+  PBL_LOG_DBG("Test result: %s", result_str);
 
   data->menu_items[data->test_index].subtitle = result_str;
   layer_mark_dirty(simple_menu_layer_get_layer(data->menu_layer));

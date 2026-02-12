@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
 #include "services/common/bluetooth/bluetooth_ctl.h"
 
 #include <bluetooth/init.h>
@@ -60,7 +59,7 @@ static void prv_put_disconnection_event(void) {
                                         .is_ble = true,
                                         .state = PebbleBluetoothConnectionEventStateDisconnected,
                                     }};
-  PBL_LOG(LOG_LEVEL_DEBUG, "New BT Conn change event, We are now disconnected");
+  PBL_LOG_DBG("New BT Conn change event, We are now disconnected");
   event_put(&event);
 }
 
@@ -74,7 +73,7 @@ static void prv_comm_start(void) {
   dis_get_info(&config->dis_info);
 #if CAPABILITY_HAS_BUILTIN_HRM
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing prefs: is_enabled=%u",
+  PBL_LOG_INFO("BLE HRM sharing prefs: is_enabled=%u",
           config->is_hrm_supported_and_enabled);
 #endif
 #ifdef BT_REQUIRE_EARLY_BONDINGS
@@ -98,7 +97,7 @@ static void prv_comm_start(void) {
     bt_pairability_init();
     analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BT_OFF_TIME);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "BT driver failed to start!");
+    PBL_LOG_ERR("BT driver failed to start!");
     // FIXME: PBL-36163 -- handle this better
   }
 
@@ -127,7 +126,7 @@ static void prv_comm_stop(void) {
 }
 
 static void prv_send_state_change_event(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "----> Sending a BT state event");
+  PBL_LOG_DBG("----> Sending a BT state event");
   PebbleEvent event = {
       .type = PEBBLE_BT_STATE_EVENT,
       .bluetooth =
@@ -168,7 +167,7 @@ static void prv_comm_state_change(void *context) {
       prv_send_state_change_event();
     }
   } else if (!s_comm_is_running && s_first_run) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Shutting down the BT stack on boot");
+    PBL_LOG_DBG("Shutting down the BT stack on boot");
     bt_driver_power_down_controller_on_boot();
   }
 
@@ -178,7 +177,7 @@ static void prv_comm_state_change(void *context) {
 
 void bt_ctl_set_enabled(bool enabled) {
   if (!s_comm_initialized) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error: Bluetooth isn't initialized yet");
+    PBL_LOG_ERR("Error: Bluetooth isn't initialized yet");
     return;
   }
   mutex_lock(s_comm_state_change_mutex);
@@ -189,7 +188,7 @@ void bt_ctl_set_enabled(bool enabled) {
 
 void bt_ctl_set_override_mode(BtCtlModeOverride override) {
   if (!s_comm_initialized) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error: Bluetooth isn't initialized yet");
+    PBL_LOG_ERR("Error: Bluetooth isn't initialized yet");
     return;
   }
   mutex_lock(s_comm_state_change_mutex);
@@ -205,7 +204,7 @@ static void prv_track_quick_airplane_mode_toggles(bool is_airplane_mode_currentl
   const uint64_t max_interval_secs = 30;
   if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * RTC_TICKS_HZ)) &&
       is_airplane_mode_currently_on) {
-    PBL_LOG(LOG_LEVEL_INFO, "Quick airplane mode toggle detected!");
+    PBL_LOG_INFO("Quick airplane mode toggle detected!");
     analytics_inc(ANALYTICS_DEVICE_METRIC_BT_AIRPLANE_MODE_QUICK_TOGGLE_COUNT,
                   AnalyticsClient_System);
   }
@@ -214,7 +213,7 @@ static void prv_track_quick_airplane_mode_toggles(bool is_airplane_mode_currentl
 
 void bt_ctl_set_airplane_mode_async(bool enabled) {
   if (!s_comm_initialized) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error: Bluetooth isn't initialized yet");
+    PBL_LOG_ERR("Error: Bluetooth isn't initialized yet");
     return;
   }
   mutex_lock(s_comm_state_change_mutex);
@@ -243,7 +242,7 @@ void bt_ctl_init(void) {
 }
 
 static void prv_bt_ctl_reset_bluetooth_callback(void *context) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Resetting Bluetooth");
+  PBL_LOG_DBG("Resetting Bluetooth");
   mutex_lock(s_comm_state_change_mutex);
 
   bool was_already_running = s_comm_is_running;
@@ -265,7 +264,7 @@ void bt_ctl_reset_bluetooth(void) {
   if (bt_ctl_is_bluetooth_active()) {
     system_task_add_callback(prv_bt_ctl_reset_bluetooth_callback, NULL);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Bluetooth is disabled, reset aborted");
+    PBL_LOG_DBG("Bluetooth is disabled, reset aborted");
   }
 }
 

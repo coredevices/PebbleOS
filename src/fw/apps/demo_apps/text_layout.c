@@ -29,7 +29,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void* callback_p
   (void) recognizer;
   struct AppState* data = (struct AppState*) callback_param;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "I should be changing the font!");
+  PBL_LOG_DBG("I should be changing the font!");
   if (++s_font_selection > 7) {
     s_font_selection = 0;
   }
@@ -52,7 +52,7 @@ static void select_long_click_handler(ClickRecognizerRef recognizer, struct AppS
   (void) data;
   (void) recognizer;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "SELECT loooong clicked!");
+  PBL_LOG_DBG("SELECT loooong clicked!");
 }
 #endif
 

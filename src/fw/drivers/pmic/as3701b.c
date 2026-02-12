@@ -182,14 +182,14 @@ static void prv_init_pmic_gpio_outputs(void) {
   // Sync the state of the PMIC GPIO output register with the value that we
   // think it has.
   if (!prv_set_pmic_gpio_outputs(0, 0)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not initialize PMIC GPIO outputs");
+    PBL_LOG_ERR("Could not initialize PMIC GPIO outputs");
   }
 }
 
 static void prv_handle_charge_state_change(void *null) {
   const bool is_charging = pmic_is_charging();
   const bool is_connected = pmic_is_usb_connected();
-  PBL_LOG(LOG_LEVEL_DEBUG, "AS3701b Interrupt: Charging? %s Plugged? %s",
+  PBL_LOG_DBG("AS3701b Interrupt: Charging? %s Plugged? %s",
       is_charging ? "YES" : "NO", is_connected ? "YES" : "NO");
 
   PebbleEvent event = {
@@ -265,7 +265,7 @@ static void prv_configure_charging(void) {
     }
   }
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not set pmic charge current.");
+    PBL_LOG_ERR("Could not set pmic charge current.");
   }
 
   // Set EOC current to 5% of ConstantCurrent
@@ -290,7 +290,7 @@ static void prv_configure_battery_measure(void) {
   bool success = prv_write_register(PmicRegisters_GPIO5_CNTL, 0b10100000) &&
                  prv_set_pmic_gpio_outputs(0, PmicGpio5);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not configure the battery measure control GPIO");
+    PBL_LOG_ERR("Could not configure the battery measure control GPIO");
   }
 }
 
@@ -301,9 +301,9 @@ static bool prv_is_alive(void) {
   }
   const bool found = (chip_id == AS3701B_CHIP_ID);
   if (found) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Found the as3701b");
+    PBL_LOG_DBG("Found the as3701b");
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Error: read as3701b whoami byte 0x%x, expecting 0x11", chip_id);
+    PBL_LOG_DBG("Error: read as3701b whoami byte 0x%x, expecting 0x11", chip_id);
   }
   return found;
 }
@@ -325,7 +325,7 @@ static uint8_t s_last_reset_reason = 0;
 static void prv_stash_last_reset_reason(void) {
   uint8_t reset_cntl;
   if (!prv_read_register(PmicRegisters_RESET_CNTL, &reset_cntl)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read the RESET_CNTL register");
+    PBL_LOG_ERR("Failed to read the RESET_CNTL register");
     return;
   }
 
@@ -433,7 +433,7 @@ bool pmic_is_charging(void) {
     // i2c read means we are charging
     return true;
 #else
-    PBL_LOG(LOG_LEVEL_DEBUG, "Failed to read charging status 1 register.");
+    PBL_LOG_DBG("Failed to read charging status 1 register.");
     return false;
 #endif
   }
@@ -453,7 +453,7 @@ bool pmic_is_usb_connected(void) {
     // i2c read means we are connected to a USB cable
     return true;
 #endif
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to read charging status 2 register.");
+    PBL_LOG_WRN("Failed to read charging status 2 register.");
     return false;
   }
   // ChargerStatus2 (Fig. 98)
@@ -501,11 +501,11 @@ void command_pmic_read_registers(void) {
 void command_pmic_status(void) {
   uint8_t id, rev, buck1;
   pmic_read_chip_info(&id, &rev, &buck1);
-  PBL_LOG(LOG_LEVEL_DEBUG, "ID: 0x%"PRIx8" REV: 0x%"PRIx8" BUCK1: 0x%"PRIx8, id, rev, buck1);
+  PBL_LOG_DBG("ID: 0x%"PRIx8" REV: 0x%"PRIx8" BUCK1: 0x%"PRIx8, id, rev, buck1);
   bool connected = pmic_is_usb_connected();
-  PBL_LOG(LOG_LEVEL_DEBUG, "USB Status: %s", (connected) ? "Connected" : "Disconnected");
+  PBL_LOG_DBG("USB Status: %s", (connected) ? "Connected" : "Disconnected");
   bool charging = pmic_is_charging();
-  PBL_LOG(LOG_LEVEL_DEBUG, "Charging? %s", (charging) ? "true" : "false");
+  PBL_LOG_DBG("Charging? %s", (charging) ? "true" : "false");
 }
 
 void command_pmic_rails(void) {

@@ -125,7 +125,7 @@ static void prv_results_window_load(Window *window) {
       "Units per frame @ 30fps:\n%"PRIu32".%"PRIu32,
       test->name, avg_us / 10, avg_us % 10, fps / 10, fps % 10, per_frame / 10, per_frame % 10,
       unit_per_frame / 10, unit_per_frame % 10);
-  PBL_LOG(LOG_LEVEL_DEBUG, "results: %s", app_data->results_str);
+  PBL_LOG_DBG("results: %s", app_data->results_str);
   text_layer_set_text(&app_data->results_text, app_data->results_str);
 }
 

@@ -201,7 +201,7 @@ void vApplicationStackOverflowHook(TaskHandle_t task_handle, signed char *name) 
   // area in fault_handling.c has the logic to safely kill those user tasks without forcing
   // a reboot.
   if ((task != PebbleTask_App) && (task != PebbleTask_Worker)) {
-    PBL_LOG_SYNC(LOG_LEVEL_ERROR, "Stack overflow [task: %s]", name);
+    PBL_LOG_SYNC_ERR("Stack overflow [task: %s]", name);
     RebootReason reason = {
       .code = RebootReasonCode_StackOverflow,
       .data8[0] = task

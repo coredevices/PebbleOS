@@ -72,7 +72,7 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
   SendBuffer *sb = comm_session_send_buffer_begin_write(session, ENDPOINT_ID, required_length,
                                                         COMM_SESSION_DEFAULT_TIMEOUT);
   if (!sb) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Failed to get send buffer");
+    PBL_LOG_DBG("Failed to get send buffer");
     return false;
   }
 
@@ -118,7 +118,7 @@ static void prv_flash_logging_bluetooth_dump(
     CommSession *session, int generation, uint32_t cookie) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
   if (s_bt_dump_chunk_callback_data.in_progress) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Already in the middle of dumping logs");
+    PBL_LOG_ERR("Already in the middle of dumping logs");
     return;
   }
 
@@ -142,7 +142,7 @@ void dump_log_protocol_msg_callback(CommSession *session, const uint8_t* data, s
   int generation = 0;
   if (data[0] == 0x10 || data[0] == 0x11) {
     if (length != 6) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid dump log message received -- length %u", length);
+      PBL_LOG_ERR("Invalid dump log message received -- length %u", length);
       return;
     }
 
@@ -150,7 +150,7 @@ void dump_log_protocol_msg_callback(CommSession *session, const uint8_t* data, s
     cookie = *((uint32_t*) (data + 2));
   } else {
     if (length != 5) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid dump log message received -- length %u", length);
+      PBL_LOG_ERR("Invalid dump log message received -- length %u", length);
       return;
     }
 
@@ -178,20 +178,19 @@ void debug_init(McuRebootReason mcu_reboot_reason) {
   advanced_logging_init();
 
   // Log the firmware version in the first flash log line:
-  DEBUG_LOG(LOG_LEVEL_INFO, "%s (platform: %u, hw: %s, sn: %s, pcba: %s)",
-      TINTIN_METADATA.version_tag,
-      TINTIN_METADATA.hw_platform,
-      mfg_get_hw_version(),
-      mfg_get_serial_number(),
-      mfg_get_pcba_serial_number());
+  PBL_LOG_ALWAYS("Firmware version: %s", TINTIN_METADATA.version_tag);
+  PBL_LOG_ALWAYS("Platform: %u, hw: %s, sn: %s",
+                 TINTIN_METADATA.hw_platform,
+                 mfg_get_hw_version(),
+                 mfg_get_serial_number());
 
   // Log the firmware build id to flash:
   char build_id_string[64];
   version_copy_current_build_id_hex_string(build_id_string, 64);
-  DEBUG_LOG(LOG_LEVEL_INFO, "BUILD ID: %s", build_id_string);
+  PBL_LOG_ALWAYS("BUILD ID: %s", build_id_string);
 
 #if CAPABILITY_HAS_PBLBOOT
-  DEBUG_LOG(LOG_LEVEL_INFO, "Boot slot: %d", TINTIN_METADATA.is_slot_0 ? 0 : 1);
+  PBL_LOG_ALWAYS("Boot slot: %d", TINTIN_METADATA.is_slot_0 ? 0 : 1);
 #endif
 
   #if MEMFAULT
@@ -209,7 +208,7 @@ void debug_print_last_launched_app(void) {
 
   // check if last app launched was a system app
   if (last_launched_app_slot == (uint32_t)SYSTEM_APP_BANK_ID) {
-    DEBUG_LOG(LOG_LEVEL_INFO, "Last launched app: <System_App>");
+    PBL_LOG_INFO("Last launched app: <System_App>");
   } else if ((last_launched_app_slot != (uint32_t)INVALID_BANK_ID)) {
     PebbleProcessInfo last_launched_app;
     uint8_t build_id[BUILD_ID_EXPECTED_LEN];
@@ -219,7 +218,7 @@ void debug_print_last_launched_app(void) {
                                                                      PebbleTask_App);
 
     if (result == GET_APP_INFO_SUCCESS) {
-      DEBUG_LOG(LOG_LEVEL_INFO, "Last launched app: %s", last_launched_app.name);
+      PBL_LOG_INFO("Last launched app: %s", last_launched_app.name);
       PBL_HEXDUMP(LOG_LEVEL_INFO, build_id, sizeof(build_id));
     }
   }

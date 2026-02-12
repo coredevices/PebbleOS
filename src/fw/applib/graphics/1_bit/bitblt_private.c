@@ -134,8 +134,7 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(GBitmap* dest_bitmap,
             *dest_block = (*dest_block & ~mask) | (look_up.palette_pattern[cindex] & mask);
             break;
           default:
-            PBL_LOG(LOG_LEVEL_DEBUG,
-                    "Only the assign, set and tint modes are allowed for palettized bitmaps");
+            PBL_LOG_DBG("Only the assign, set and tint modes are allowed for palettized bitmaps");
             return;
         }
         dest_x++;

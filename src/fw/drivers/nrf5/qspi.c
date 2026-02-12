@@ -294,8 +294,7 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   // QSPI clock is 32MHz, we have dividers from 1 to 16
   PBL_ASSERTN(dev->qspi->clk_freq_hz <= 32000000UL && dev->qspi->clk_freq_hz >= 200000UL);
   if (dev->qspi->clk_freq_hz > 8000000UL) {
-    PBL_LOG(
-        LOG_LEVEL_WARNING,
+    PBL_LOG_WRN(
         "QSPI initialized at %lu Hz, which may cause data corruption if HF clock source switches "
         "(anomaly 244)",
         dev->qspi->clk_freq_hz);

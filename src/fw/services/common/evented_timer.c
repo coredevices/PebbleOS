@@ -256,7 +256,7 @@ bool evented_timer_reschedule(EventedTimerID timer_id, uint32_t timeout_ms) {
   //  already
   EventedTimer* timer = prv_find_timer(timer_id);
   if (!timer) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Attempting to reschedule an invalid timer (id=%u)",
+    PBL_LOG_DBG("Attempting to reschedule an invalid timer (id=%u)",
             (unsigned)timer_id);
     mutex_unlock(s_mutex);
     return false;
@@ -299,7 +299,7 @@ void evented_timer_cancel(EventedTimerID timer_id) {
   // Find this timer and validate it
   EventedTimer* timer = prv_find_timer(timer_id);
   if (!timer) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Attempting to cancel an invalid timer (id=%u)", (unsigned)timer_id);
+    PBL_LOG_DBG("Attempting to cancel an invalid timer (id=%u)", (unsigned)timer_id);
     mutex_unlock(s_mutex);
     return;
   }

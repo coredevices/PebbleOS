@@ -73,7 +73,7 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
                                         sizeof(rsp),
                                         COMM_SESSION_DEFAULT_TIMEOUT);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "GET_BYTES: aborted");
+    PBL_LOG_ERR("GET_BYTES: aborted");
     s_get_bytes_in_progress = false;
     return false;
   }
@@ -90,7 +90,7 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
 static void prv_gather_and_record_stats(GetBytesState *state) {
   uint32_t elapsed_time_ms = ticks_to_milliseconds(rtc_get_ticks() - state->start_ticks);
   uint32_t bytes_per_sec = ((state->num_bytes * MS_PER_SECOND) / elapsed_time_ms);
-  PBL_LOG(LOG_LEVEL_DEBUG, "GET_BYTES: Done sending data. Pushed %"PRIu32" bytes/sec",
+  PBL_LOG_DBG("GET_BYTES: Done sending data. Pushed %"PRIu32" bytes/sec",
           bytes_per_sec);
   bluetooth_analytics_handle_get_bytes_stats(
     state->object_type, state->num_bytes, elapsed_time_ms, &state->conn_event_stats);
@@ -111,7 +111,7 @@ static void prv_protocol_send_next_chunk(void* raw_state) {
       goto cleanup;
     }
     state->num_bytes = size;
-    PBL_LOG(LOG_LEVEL_DEBUG, "GET_BYTES: total bytes: %ld", state->num_bytes);
+    PBL_LOG_DBG("GET_BYTES: total bytes: %ld", state->num_bytes);
   }
 
   // -------------------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ static void prv_protocol_send_next_chunk(void* raw_state) {
 
     comm_session_send_buffer_write(sb, (const uint8_t *) rsp, packet_len);
     kernel_free(rsp);
-    PBL_LOG(LOG_LEVEL_DEBUG, "GET_BYTES: sending next %d bytes. %d remaining", (int)data_len,
+    PBL_LOG_DBG("GET_BYTES: sending next %d bytes. %d remaining", (int)data_len,
             (int)(remaining_bytes-data_len));
   } else {
     // Send image info response
@@ -219,12 +219,12 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state,
       // copy the filename
       GetBytesFileHeader *hdr = (GetBytesFileHeader *)data;
       if ((hdr->filename_len + sizeof(GetBytesFileHeader) + 1) < len) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Filename len does not match message length %d",
+        PBL_LOG_ERR("Filename len does not match message length %d",
                 hdr->filename_len);
         return false;
       }
       if (hdr->filename[hdr->filename_len] != '\0') {
-        PBL_LOG(LOG_LEVEL_ERROR, "Non NULL terminated filename");
+        PBL_LOG_ERR("Non NULL terminated filename");
         return false;
       }
       info.filename = hdr->filename;
@@ -236,7 +236,7 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state,
       GetBytesFlashHeader *hdr = (GetBytesFlashHeader *)data;
       info.flash_start_addr = ntohl(hdr->start_addr);
       info.flash_len = ntohl(hdr->len);
-      PBL_LOG(LOG_LEVEL_DEBUG, "Fetching %d bytes starting at %d", (int)info.flash_len,
+      PBL_LOG_DBG("Fetching %d bytes starting at %d", (int)info.flash_len,
               (int)info.flash_start_addr);
       bool rv = gb_storage_setup(&state->storage, state->object_type, &info);
       return rv;
@@ -252,7 +252,7 @@ void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t* msg_da
                                     uint32_t msg_len) {
   // at least have a cmd and a transaction_id
   if (msg_len < 2) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid length %"PRIu32, msg_len);
+    PBL_LOG_ERR("Invalid length %"PRIu32, msg_len);
     prv_protocol_send_err_response(session, 0 /*transaction_id*/,
                                          GET_BYTES_MALFORMED_COMMAND);
     return;
@@ -266,14 +266,14 @@ void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t* msg_da
     case GET_BYTES_CMD_GET_NEW_COREDUMP:
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "first byte can't be %u", hdr->cmd_id);
+      PBL_LOG_ERR("first byte can't be %u", hdr->cmd_id);
       prv_protocol_send_err_response(session, hdr->transaction_id,
                                          GET_BYTES_MALFORMED_COMMAND);
       return;
   }
 
   if (s_get_bytes_in_progress == true) {
-    PBL_LOG(LOG_LEVEL_ERROR, "already in progress.");
+    PBL_LOG_ERR("already in progress.");
     prv_protocol_send_err_response(session, hdr->transaction_id,
                                          GET_BYTES_ALREADY_IN_PROGRESS);
     return;

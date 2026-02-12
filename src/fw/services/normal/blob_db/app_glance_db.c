@@ -209,8 +209,7 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
       attribute_get_buffer_size_for_serialized_attributes(num_attributes, &buffer_size_cursor,
                                                           serialized_attr_list_end);
   if (buffer_size < 0) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Failed to measure the buffer size required for deserializing an AttributeList from a "
+    PBL_LOG_WRN("Failed to measure the buffer size required for deserializing an AttributeList from a "
             "serialized slice");
     return false;
   }
@@ -219,8 +218,7 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
     // Allocate buffer for the data attached to the attributes
     *attr_list_data_buffer_out = kernel_zalloc(buffer_size);
     if (!*attr_list_data_buffer_out) {
-      PBL_LOG(LOG_LEVEL_ERROR,
-              "Failed to alloc memory for the Attributes' data buffer while deserializing an "
+      PBL_LOG_ERR("Failed to alloc memory for the Attributes' data buffer while deserializing an "
               "AttributeList from a serialized slice");
       return false;
     }
@@ -235,8 +233,7 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
   // client calling `attribute_list_destroy_list()` on `attr_list_out`
   Attribute *attribute_buffer = kernel_zalloc(num_attributes * sizeof(*attribute_buffer));
   if (!attribute_buffer) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Failed to alloc memory for the buffer of Attribute's while deserializing an "
+    PBL_LOG_ERR("Failed to alloc memory for the buffer of Attribute's while deserializing an "
             "AttributeList from a serialized slice");
     // Free the `*attr_list_data_buffer_out` we might have allocated above
     kernel_free(*attr_list_data_buffer_out);
@@ -377,8 +374,7 @@ static status_t prv_serialize_glance(const AppGlance *glance,
     const AppGlanceSliceInternal *current_slice = &glance->slices[slice_index];
     // Check the slice's type, fail the entire serialization if it's invalid
     if (!prv_is_slice_type_valid(current_slice->type)) {
-      PBL_LOG(LOG_LEVEL_WARNING,
-              "Tried to serialize a glance containing a slice with invalid type: %d",
+      PBL_LOG_WRN("Tried to serialize a glance containing a slice with invalid type: %d",
               current_slice->type);
       rv = E_INVALID_ARGUMENT;
       goto cleanup;
@@ -480,8 +476,7 @@ static bool prv_is_serialized_slice_valid(const SerializedAppGlanceSliceHeader *
   AttributeList attr_list = {};
   char *attr_list_data_buffer = NULL;
   if (!prv_deserialize_attribute_list(serialized_slice, &attr_list, &attr_list_data_buffer)) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Failed to deserialize an AttributeList from a serialized slice");
+    PBL_LOG_WRN("Failed to deserialize an AttributeList from a serialized slice");
     return false;
   }
 
@@ -489,7 +484,7 @@ static bool prv_is_serialized_slice_valid(const SerializedAppGlanceSliceHeader *
   const bool is_attr_list_valid = prv_is_slice_attribute_list_valid(serialized_slice->type,
                                                                     &attr_list);
   if (!is_attr_list_valid) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Serialized slice AttributeList is invalid");
+    PBL_LOG_WRN("Serialized slice AttributeList is invalid");
   }
 
   attribute_list_destroy_list(&attr_list);
@@ -641,8 +636,7 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
   // Change this block if we support multiple app glance versions in the future
   // For now report an error if the glance's version isn't the current database version
   if (serialized_glance->version != APP_GLANCE_DB_CURRENT_VERSION) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Tried to insert AppGlanceDB entry with invalid version!"
+    PBL_LOG_WRN("Tried to insert AppGlanceDB entry with invalid version!"
             " Entry version: %"PRIu8", AppGlanceDB version: %u",
             serialized_glance->version, APP_GLANCE_DB_CURRENT_VERSION);
     return E_INVALID_ARGUMENT;
@@ -653,8 +647,7 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
   status_t rv = app_glance_db_read((uint8_t *)app_uuid, UUID_SIZE, (uint8_t *)&existing_glance,
                                    sizeof(existing_glance));
   if ((rv == S_SUCCESS) && (serialized_glance->creation_time <= existing_glance.creation_time)) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Tried to insert AppGlanceDB entry with older creation_time (%"PRIu32")"
+    PBL_LOG_WRN("Tried to insert AppGlanceDB entry with older creation_time (%"PRIu32")"
             " than existing entry (%"PRIu32")", serialized_glance->creation_time,
             existing_glance.creation_time);
     return E_INVALID_ARGUMENT;
@@ -670,12 +663,10 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
       prv_slice_for_each((SerializedAppGlanceHeader *)serialized_glance, *len,
                          prv_validate_slice, &validation_context);
   if (!iteration_succeeded) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Tried to insert AppGlanceDB entry but failed to iterate over the serialized slices");
+    PBL_LOG_WRN("Tried to insert AppGlanceDB entry but failed to iterate over the serialized slices");
     return E_INVALID_ARGUMENT;
   } else if (validation_context.is_at_least_one_slice_invalid) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Tried to insert AppGlanceDB entry with at least one invalid slice");
+    PBL_LOG_WRN("Tried to insert AppGlanceDB entry with at least one invalid slice");
     return E_INVALID_ARGUMENT;
   }
 
@@ -686,8 +677,7 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
   // slices as they can fit in a BlobDB packet. We just take as many slices as we support and trim
   // the excess.
   if (validation_context.validated_size < *len) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Trimming AppGlanceDB entry of excess slices before insertion");
+    PBL_LOG_WRN("Trimming AppGlanceDB entry of excess slices before insertion");
     *len = validation_context.validated_size;
   }
   return S_SUCCESS;
@@ -732,8 +722,7 @@ status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *va
     // String initialized on the heap to reduce stack usage
     char *app_uuid_string = kernel_malloc_check(UUID_STRING_BUFFER_LENGTH);
     uuid_to_string(app_uuid, app_uuid_string);
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Attempted app glance insert for an app that's not installed. UUID: %s",
+    PBL_LOG_WRN("Attempted app glance insert for an app that's not installed. UUID: %s",
             app_uuid_string);
     kernel_free(app_uuid_string);
     return E_DOES_NOT_EXIST;
@@ -787,7 +776,7 @@ status_t app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, i
     // Change this block if we support multiple app glance versions in the future
     if (serialized_app_glance->version != APP_GLANCE_DB_CURRENT_VERSION) {
       // Clear out the stale entry
-      PBL_LOG(LOG_LEVEL_WARNING, "Read a AppGlanceDB entry with an outdated version; deleting it");
+      PBL_LOG_WRN("Read a AppGlanceDB entry with an outdated version; deleting it");
       settings_file_delete(&s_app_glance_db.settings_file, key, (size_t)key_len);
       rv = E_DOES_NOT_EXIST;
     }

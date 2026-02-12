@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
 #include "system/logging.h"
 #include "system/passert.h"
 
@@ -35,7 +34,7 @@ static void evaluate_pairing_refcount(void *data) {
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Pairabilty state: LE=%u, Classic=%u",
+  PBL_LOG_DBG("Pairabilty state: LE=%u, Classic=%u",
           s_allow_ble_pairing_refcount, s_allow_bt_pairing_refcount);
 
   bool is_ble_pairable_and_discoverable = (s_allow_ble_pairing_refcount > 0);

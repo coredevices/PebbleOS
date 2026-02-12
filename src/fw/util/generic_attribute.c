@@ -14,7 +14,7 @@ GenericAttribute *generic_attribute_find_attribute(GenericAttributeList *attr_li
 
     // Check that we do not read past the end of the buffer
     if ((cursor + sizeof(GenericAttribute) >= end) || (attribute->data + attribute->length > end)) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Attribute list is invalid");
+      PBL_LOG_WRN("Attribute list is invalid");
       return NULL;
     }
 

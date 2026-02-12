@@ -189,9 +189,9 @@ void prv_dump_start_app_info(const PebbleProcessMd *app_md) {
 
   char *const sdk_platform = platform_type_get_name(process_metadata_get_app_sdk_platform(app_md));
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Starting %s app <%s>", app_type, process_metadata_get_name(app_md));
+  PBL_LOG_DBG("Starting %s app <%s>", app_type, process_metadata_get_name(app_md));
   // new logging only allows for 2 %s per format string...
-  PBL_LOG(LOG_LEVEL_DEBUG, "Starting app with sdk platform %s", sdk_platform);
+  PBL_LOG_DBG("Starting app with sdk platform %s", sdk_platform);
 }
 
 #define APP_STACK_ROCKY_SIZE (8 * 1024)
@@ -308,7 +308,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   void *entry_point = process_loader_load(app_md, PebbleTask_App, &app_segment);
   s_app_task_context.load_end = app_segment.start;
   if (!entry_point) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Tried to launch an invalid app in bank %u!",
+    PBL_LOG_WRN("Tried to launch an invalid app in bank %u!",
         process_metadata_get_code_bank_num(app_md));
     return false;
   }
@@ -334,7 +334,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
 
   // The rest of app_ram is available for app_state to use as it sees fit.
   if (!app_state_configure(&app_ram, sdk_type, timeline_peek_get_obstruction_origin_y())) {
-    PBL_LOG(LOG_LEVEL_ERROR, "App state configuration failed");
+    PBL_LOG_ERR("App state configuration failed");
     return false;
   }
   // The remaining space in app_segment is assigned to the app's heap.
@@ -344,7 +344,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   // Don't fuzz 3rd party app heaps because likely many of them rely on accessing free'd memory
   bool enable_heap_fuzzing = (sdk_type == ProcessAppSDKType_System);
   Heap *app_heap = app_state_get_heap();
-  PBL_LOG(LOG_LEVEL_DEBUG, "App heap init %p %p",
+  PBL_LOG_DBG("App heap init %p %p",
           app_segment.start, app_segment.end);
   heap_init(app_heap, app_segment.start, app_segment.end, enable_heap_fuzzing);
   heap_set_lock_impl(app_heap, (HeapLockImpl) {
@@ -360,7 +360,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
     AppInstallEntry entry;
     if (!app_install_get_entry_for_install_id(s_app_task_context.install_id, &entry)) {
       // cant retrieve app install entry for id
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to get entry for id %"PRId32, s_app_task_context.install_id);
+      PBL_LOG_ERR("Failed to get entry for id %"PRId32, s_app_task_context.install_id);
       return false;
     }
     if (app_install_entry_is_watchface(&entry) && !app_install_entry_is_hidden(&entry)) {
@@ -388,7 +388,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
     .puxStackBuffer = stack,
   };
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Starting %s", task_name);
+  PBL_LOG_DBG("Starting %s", task_name);
 
   // Store slot of launched app for reboot support (flash apps only)
   reboot_set_slot_of_last_launched_app(
@@ -518,7 +518,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 
   i18n_free_all(crash_dialog);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Watchface crashed, launching default.");
+  PBL_LOG_DBG("Watchface crashed, launching default.");
 
   crash_info = (AppCrashInfo) { 0 };
 
@@ -543,7 +543,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 static bool prv_app_switch(bool gracefully) {
   ProcessContext *app_task_ctx = &s_app_task_context;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Switching from '%s' to '%s', graceful=%d...",
+  PBL_LOG_DBG("Switching from '%s' to '%s', graceful=%d...",
           process_metadata_get_name(app_task_ctx->app_md),
           process_metadata_get_name(s_next_app.md),
           (int)gracefully);
@@ -590,7 +590,7 @@ static bool prv_app_switch(bool gracefully) {
     if (s_next_app.md->process_storage != ProcessStorageFlash) {
       PBL_CROAK("Failed to start system app <%s>!", process_metadata_get_name(s_next_app.md));
     }
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to start app <%s>! Restarting launcher",
+    PBL_LOG_WRN("Failed to start app <%s>! Restarting launcher",
             process_metadata_get_name(s_next_app.md));
 
     prv_app_start(system_app_state_machine_system_start(), NULL, APP_LAUNCH_SYSTEM);
@@ -654,7 +654,7 @@ bool app_manager_launch_new_app(const AppLaunchConfig *config) {
   const AppInstallId new_app_id = app_install_get_id_for_uuid(&app_md->uuid);
 
   if (!config->restart && uuid_equal(&(app_md->uuid), &(s_app_task_context.app_md->uuid))) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Ignoring launch for app <%s>, app is already running",
+    PBL_LOG_WRN("Ignoring launch for app <%s>, app is already running",
             process_metadata_get_name(app_md));
 
     app_install_release_md(app_md);
@@ -662,8 +662,7 @@ bool app_manager_launch_new_app(const AppLaunchConfig *config) {
   }
 
   if (process_metadata_get_run_level(app_md) < s_minimum_run_level) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-        "Ignoring launch for app <%s>, minimum run level %d, app run level %d",
+    PBL_LOG_WRN("Ignoring launch for app <%s>, minimum run level %d, app run level %d",
         process_metadata_get_name(app_md), s_minimum_run_level,
         process_metadata_get_run_level(app_md));
 
@@ -711,8 +710,7 @@ static AppInstallId prv_get_app_exit_reason_destination_install_id_override(void
     case APP_EXIT_NOT_SPECIFIED:
       return INSTALL_ID_INVALID;
     case APP_EXIT_ACTION_PERFORMED_SUCCESSFULLY:
-      PBL_LOG(LOG_LEVEL_INFO,
-              "Next app overridden with watchface because action was performed successfully");
+      PBL_LOG_INFO("Next app overridden with watchface because action was performed successfully");
       return watchface_get_default_install_id();
     // Handling this case specifically instead of providing a default case ensures that the addition
     // of future exit reason values will cause compilation to fail until the new case is handled

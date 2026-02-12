@@ -21,14 +21,14 @@
 
 #define DEBUG_ROCKY_APPMESSAGE 1
 #if DEBUG_ROCKY_APPMESSAGE
-#define DBG(fmt, ...) PBL_LOG(LOG_LEVEL_DEBUG, fmt, ## __VA_ARGS__)
+#define DBG(fmt, ...) PBL_LOG_DBG(fmt, ## __VA_ARGS__)
 #else
 #define DBG(fmt, ...)
 #endif
 
 #define DEBUG_VERBOSE_ROCKY_APPMESSAGE 1
 #if DEBUG_VERBOSE_ROCKY_APPMESSAGE
-#define DBG_VERBOSE(fmt, ...) PBL_LOG(LOG_LEVEL_DEBUG, fmt, ## __VA_ARGS__)
+#define DBG_VERBOSE(fmt, ...) PBL_LOG_DBG(fmt, ## __VA_ARGS__)
 #else
 #define DBG_VERBOSE(fmt, ...)
 #endif
@@ -215,7 +215,7 @@ static void prv_object_queue_send_current_chunk(void) {
   DictionaryIterator *it = NULL;
   app_message_outbox_begin(&it);
   if (!it) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to outbox_begin");
+    PBL_LOG_ERR("Failed to outbox_begin");
     return;
   }
 
@@ -276,20 +276,20 @@ static void prv_cleanup_inbound_reassembly_buffer(void) {
 
 static bool prv_handle_chunk_received(Tuple *tuple) {
   if (tuple->type != TUPLE_BYTE_ARRAY) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Chunk tuple not a byte array!");
+    PBL_LOG_ERR("Chunk tuple not a byte array!");
     return false;
   }
 
   const PostMessageChunkPayload *const chunk = (const PostMessageChunkPayload *) tuple->value;
   if (tuple->length <= sizeof(PostMessageChunkPayload)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Chunk tuple too short to be valid!");
+    PBL_LOG_ERR("Chunk tuple too short to be valid!");
     return false;
   }
   const size_t payload_size = (tuple->length - sizeof(PostMessageChunkPayload));
 
   const bool is_expecting_first = (s_state.in.reassembly_buffer == NULL);
   if (chunk->is_first != is_expecting_first) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Chunk reassembly out of sync! is_first=%u, is_expecting_first=%u",
+    PBL_LOG_ERR("Chunk reassembly out of sync! is_first=%u, is_expecting_first=%u",
             chunk->is_first, is_expecting_first);
     return false;
   }
@@ -311,14 +311,12 @@ static bool prv_handle_chunk_received(Tuple *tuple) {
   } else {
     // If this is not the first message, sanity check the chunk:
     if (s_state.in.received_size_bytes != chunk->offset_bytes) {
-      PBL_LOG(LOG_LEVEL_ERROR,
-              "Chunk reassembly out of sync! received_size_bytes=%"PRIu32", offset_bytes=%"PRIu32,
+      PBL_LOG_ERR("Chunk reassembly out of sync! received_size_bytes=%"PRIu32", offset_bytes=%"PRIu32,
               (uint32_t) s_state.in.received_size_bytes, (uint32_t) chunk->offset_bytes);
       return false;
     }
     if (s_state.in.received_size_bytes + payload_size > s_state.in.total_size_bytes) {
-      PBL_LOG(LOG_LEVEL_ERROR,
-              "Chunk reassembly out of sync! recv_size=%"PRIu32", payload_size=%"PRIu32
+      PBL_LOG_ERR("Chunk reassembly out of sync! recv_size=%"PRIu32", payload_size=%"PRIu32
               ", total_size=%"PRIu32,
               (uint32_t) s_state.in.received_size_bytes, (uint32_t) payload_size,
               (uint32_t) s_state.in.total_size_bytes);
@@ -340,7 +338,7 @@ static bool prv_handle_chunk_received(Tuple *tuple) {
     if (rocky_global_has_event_handlers(ROCKY_EVENT_MESSAGE)) {
       // Last chunk MUST be zero terminated:
       if (s_state.in.reassembly_buffer[s_state.in.total_size_bytes - 1] != '\0') {
-        PBL_LOG(LOG_LEVEL_ERROR, "Last Chunk MUST be zero-terminated! Dropping msg.");
+        PBL_LOG_ERR("Last Chunk MUST be zero-terminated! Dropping msg.");
       } else {
         // Try to parse the received JSON string:
         JS_VAR object = prv_json_parse((const char *)s_state.in.reassembly_buffer);
@@ -449,7 +447,7 @@ static void prv_handle_outbox_result(AppMessageResult reason) {
       } else {
         if (s_state.out.failure_count >= CONTROL_MESSAGE_MAX_FAILURES) {
           MessageNode *node = s_state.out.control_msg_queue;
-          PBL_LOG(LOG_LEVEL_ERROR, "Failed to send msg with key %"PRIu32, node ? node->key : 0);
+          PBL_LOG_ERR("Failed to send msg with key %"PRIu32, node ? node->key : 0);
           prv_control_message_queue_pop_head();
         } else {
           // Retry happens below by calling prv_control_message_queue_send_head()
@@ -473,7 +471,7 @@ static void prv_handle_outbox_result(AppMessageResult reason) {
     }
 
     case OutboxMsgTypeNone: {
-      PBL_LOG(LOG_LEVEL_WARNING, "Got (N)ACK while not expecting any. %u", reason);
+      PBL_LOG_WRN("Got (N)ACK while not expecting any. %u", reason);
       break;
     }
 
@@ -513,7 +511,7 @@ static bool prv_is_version_supported(const PostMessageResetCompletePayload *rc) 
                                rc->max_supported_version < POSTMESSAGE_PROTOCOL_MIN_VERSION);
   if (is_unsupported) {
     // We don't support any of the same versions
-    PBL_LOG(LOG_LEVEL_ERROR, "Protocol version unsupported! min=%"PRIu8", max=%"PRIu8,
+    PBL_LOG_ERR("Protocol version unsupported! min=%"PRIu8", max=%"PRIu8,
             rc->min_supported_version, rc->max_supported_version);
     return false;
   }
@@ -593,14 +591,14 @@ static void prv_session_open__inbox_received(DictionaryIterator *it, void *conte
   Tuple *tuple = dict_find(it, PostMessageKeyChunk);
   if (tuple) {
     if (!prv_handle_chunk_received(tuple)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Resetting because bad Chunk!");
+      PBL_LOG_ERR("Resetting because bad Chunk!");
       prv_session_open__exit_and_initiate_reset();
     }
   } else if (dict_find(it, PostMessageKeyResetRequest)) {
     prv_awaiting_reset_complete_remote_initiated_enter();
     prv_session_open__after_exit();
   } else if (dict_find(it, PostMessageKeyResetComplete)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Resetting because got RC while open");
+    PBL_LOG_ERR("Resetting because got RC while open");
     prv_session_open__exit_and_initiate_reset();
   }
 }
@@ -647,13 +645,13 @@ static void prv_awaiting_reset_complete_remote_initiated_enter(void) {
 
 static bool prv_is_tuple_valid_reset_complete(Tuple *reset_complete) {
   if (reset_complete->type != TUPLE_BYTE_ARRAY) {
-    PBL_LOG(LOG_LEVEL_ERROR, "ResetComplete not a byte array! %u", reset_complete->type);
+    PBL_LOG_ERR("ResetComplete not a byte array! %u", reset_complete->type);
     return false;
   }
   if (reset_complete->length >= sizeof(PostMessageResetCompletePayload)) {
     return true;
   }
-  PBL_LOG(LOG_LEVEL_ERROR, "ResetComplete too small! %"PRIu16, reset_complete->length);
+  PBL_LOG_ERR("ResetComplete too small! %"PRIu16, reset_complete->length);
   return false;
 }
 
@@ -776,7 +774,7 @@ static void prv_inbox_received(DictionaryIterator *it, void *context) {
 static void prv_inbox_dropped(AppMessageResult reason, void *context) {
   // Q: We don't know what got dropped here. Should we send/initiate a ResetRequest?
   // A: No, a drop will be a NACK to the other side, so the other side should retry.
-  PBL_LOG(LOG_LEVEL_WARNING, "inbox dropped msg in state %u because %u", s_state.state, reason);
+  PBL_LOG_WRN("inbox dropped msg in state %u because %u", s_state.state, reason);
 }
 
 

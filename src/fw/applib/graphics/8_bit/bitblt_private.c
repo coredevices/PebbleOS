@@ -119,7 +119,7 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_8bit(GBitmap* dest_bitmap,
           break;
         }
         default:
-          PBL_LOG(LOG_LEVEL_DEBUG, "OP: %d NYI", (int)compositing_mode);
+          PBL_LOG_DBG("OP: %d NYI", (int)compositing_mode);
           return;
       }
     }
@@ -453,7 +453,7 @@ void bitblt_bitmap_into_bitmap_tiled(GBitmap* dest_bitmap, const GBitmap* src_bi
           break;
       }
     } else {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Only blitting to 8-bit supported.");
+      PBL_LOG_DBG("Only blitting to 8-bit supported.");
     }
   }
 }

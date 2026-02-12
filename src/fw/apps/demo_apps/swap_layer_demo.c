@@ -91,7 +91,7 @@ typedef struct SwapLayerDemoData {
 
 static LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_position,
                                            void *context) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "getting layer %d", rel_position);
+  PBL_LOG_DBG("getting layer %d", rel_position);
   SwapLayerDemoData *data = context;
 
 

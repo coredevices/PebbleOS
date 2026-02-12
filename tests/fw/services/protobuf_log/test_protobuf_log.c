@@ -35,7 +35,7 @@
 #define WRITE_TO_FILE 0
 
 #define LOG(fmt, args...) \
-        PBL_LOG(LOG_LEVEL_DEBUG, fmt, ## args)
+        PBL_LOG_DBG(fmt, ## args)
 
 extern uint32_t prv_hr_quality_int(HRMQuality quality);
 

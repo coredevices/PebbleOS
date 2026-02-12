@@ -22,7 +22,7 @@
 // External Speex mode declarations
 extern const SpeexMode speex_wb_mode;
 
-#define VOICE_SPEEX_LOG(fmt, args...) PBL_LOG_D(LOG_DOMAIN_VOICE, LOG_LEVEL_DEBUG, fmt, ## args)
+#define VOICE_SPEEX_LOG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_VOICE, fmt, ## args)
 
 // Speex bitstream version
 #define SPEEX_BITSTREAM_VERSION 4

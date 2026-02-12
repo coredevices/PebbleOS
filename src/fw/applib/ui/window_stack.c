@@ -223,7 +223,7 @@ static void prv_insert_with_function(WindowStack *window_stack_to, Window *windo
     prv_transition_to(window_from, window, transition_insert);
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "(+) %s=%p <%s>", is_app_window ? "window" : "modal window",
+  PBL_LOG_DBG("(+) %s=%p <%s>", is_app_window ? "window" : "modal window",
       window, window_get_debug_name(window));
 }
 
@@ -266,7 +266,7 @@ static Window *prv_remove_item(WindowStackItem *pop_item,
   // Store the window here, as we're potentially free'ing the item later on.
   Window *pop_item_window = pop_item->window;
   bool is_app_window = window_manager_is_app_window(pop_item_window);
-  PBL_LOG(LOG_LEVEL_DEBUG, "(-) %s=%p <%s>", is_app_window ? "window" : "modal window",
+  PBL_LOG_DBG("(-) %s=%p <%s>", is_app_window ? "window" : "modal window",
       pop_item_window, window_get_debug_name(pop_item_window));
 
   // Only animate if the window was previously at the top of the stack and there's a
@@ -339,7 +339,7 @@ Window *window_stack_pop(WindowStack *window_stack, bool animated) {
 Window *window_stack_pop_with_transition(WindowStack *window_stack,
                                          const WindowTransitionImplementation *transition) {
   if (window_stack->list_head == NULL) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Nothing to pop.");
+    PBL_LOG_DBG("Nothing to pop.");
     return NULL;
   }
 
@@ -455,7 +455,7 @@ bool window_transition_context_has_legacy_window_to(WindowStack *stack, Window *
 void window_transition_context_disappear(WindowTransitioningContext *context) {
   Window *window_from = context->window_from;
   if (!window_from || window_manager_is_window_visible(window_from)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "No windows to unload from stack.");
+    PBL_LOG_DBG("No windows to unload from stack.");
     context->window_from = NULL;
     return;
   }

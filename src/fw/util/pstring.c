@@ -164,16 +164,16 @@ PascalString16 *pstring_get_pstring16_from_list(PascalString16List *pstring16_li
 }
 
 void pstring_print_pstring(PascalString16 *pstring) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Length: %i ", pstring->str_length);
+  PBL_LOG_DBG("Length: %i ", pstring->str_length);
   char *buffer = task_malloc_check(sizeof(char) * (pstring->str_length + 1));
   pstring_pstring16_to_string(pstring, buffer);
-  PBL_LOG(LOG_LEVEL_DEBUG, "%s", buffer);
+  PBL_LOG_DBG("%s", buffer);
   task_free(buffer);
   buffer = NULL;
 }
 
 void pstring_print_pstring16list(PascalString16List *list) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Data size: %i ", (list->pstrings)->data_size);
+  PBL_LOG_DBG("Data size: %i ", (list->pstrings)->data_size);
   PascalString16 *pstring;
   for (int i = 0; i < list->count; i++) {
     pstring = pstring_get_pstring16_from_list(list, i);

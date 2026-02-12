@@ -32,7 +32,7 @@
 #include "nanopb/payload.pb.h"
 
 #define PROTOBUF_LOG_DEBUG(fmt, args...) \
-            PBL_LOG_D(LOG_DOMAIN_PROTOBUF, LOG_LEVEL_DEBUG, fmt, ## args)
+            PBL_LOG_D_DBG(LOG_DOMAIN_PROTOBUF, fmt, ## args)
 
 #define MLOG_MAX_VARINT_ENCODED_SIZE 5
 
@@ -58,7 +58,7 @@ static DataLoggingSession *prv_get_dls_session(void) {
       // This can happen when you are not connected to the phone and have rebooted a number of
       // times because each time you reboot, you get new sessions created and reach the limit
       // of the max # of sessions allowed.
-      PBL_LOG(LOG_LEVEL_WARNING, "Error creating activity logging session");
+      PBL_LOG_WRN("Error creating activity logging session");
       return NULL;
     }
   }
@@ -85,7 +85,7 @@ static bool prv_dls_transport(uint8_t *buffer, size_t buf_size) {
     if (result == DATA_LOGGING_SUCCESS) {
       success = true;
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error %d while logging data", (int)result);
+      PBL_LOG_ERR("Error %d while logging data", (int)result);
     }
   }
 unlock:
@@ -167,11 +167,11 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
 
   bool success = pb_encode(stream, &pebble_pipeline_Payload_msg, &payload);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error encoding payload");
+    PBL_LOG_ERR("Error encoding payload");
   }
 
   // PBL-43622: Will revert later
-  PBL_LOG(LOG_LEVEL_INFO, "Logged protobuf payload type: %d, utc:%"PRIu32, config->type,
+  PBL_LOG_INFO("Logged protobuf payload type: %d, utc:%"PRIu32, config->type,
           payload.send_time_utc);
   return success;
 }
@@ -336,7 +336,7 @@ ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config,
   // Start a new encoding
   const bool success = prv_session_encode_start(session);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error encoding msg");
+    PBL_LOG_ERR("Error encoding msg");
     prv_session_free(session);
     session = NULL;
   }
@@ -376,7 +376,7 @@ static bool prv_log_struct(PLogSession *session, uint32_t field_number,
   // Encode the struct into the message
   bool success = prv_encode_struct(&session->data_stream, field_number, fields, msg);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error adding sample, resetting session");
+    PBL_LOG_ERR("Error adding sample, resetting session");
     return prv_session_encode_start(session);
   }
 
@@ -461,7 +461,7 @@ bool protobuf_log_session_flush(ProtobufLogRef session_ref) {
   bool success = prv_populate_payload(&session->config, session->data_stream.bytes_written,
                                       session->data_buffer, &stream);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error encoding payload");
+    PBL_LOG_ERR("Error encoding payload");
     goto exit;
   }
 
@@ -475,7 +475,7 @@ bool protobuf_log_session_flush(ProtobufLogRef session_ref) {
   PROTOBUF_LOG_DEBUG("Session: 0x%x - Flushing %d bytes", (int)session_ref, hdr->msg_size);
   success = (session->transport)(session->msg_buffer, hdr->msg_size + sizeof(PLogMessageHdr));
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failure when sending encoded message, resetting session");
+    PBL_LOG_ERR("Failure when sending encoded message, resetting session");
   }
 
   // TODO: Call a success callback so the clients know exactly which data has been sent.

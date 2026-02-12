@@ -16,7 +16,7 @@ void battery_init(void) {
 
 int battery_get_millivolts(void) {
   if (!pmic_enable_battery_measure()) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to enable battery measure. "
+    PBL_LOG_WRN("Failed to enable battery measure. "
             "Battery voltage reading will be bogus.");
   }
   ADCVoltageMonitorReading info = battery_read_voltage_monitor();

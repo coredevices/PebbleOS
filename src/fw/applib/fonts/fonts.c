@@ -45,7 +45,7 @@ GFont fonts_get_system_font(const char *font_key) {
   }
 
   if (NULL == res) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Getting fallback font instead");
+    PBL_LOG_DBG("Getting fallback font instead");
     res = fonts_get_fallback_font();
     PBL_ASSERTN(res);
   }
@@ -56,7 +56,7 @@ GFont fonts_get_system_font(const char *font_key) {
 GFont fonts_load_custom_font(ResHandle handle) {
   GFont res = fonts_load_custom_font_system(sys_get_current_resource_num(), (uint32_t)handle);
   if (res == NULL) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Getting fallback font instead");
+    PBL_LOG_WRN("Getting fallback font instead");
     res = sys_font_get_system_font("RESOURCE_ID_GOTHIC_14");
   }
   return res;
@@ -64,13 +64,13 @@ GFont fonts_load_custom_font(ResHandle handle) {
 
 GFont fonts_load_custom_font_system(ResAppNum app_num, uint32_t resource_id) {
   if (resource_id == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Tried to load a font from a NULL resource");
+    PBL_LOG_ERR("Tried to load a font from a NULL resource");
     return NULL;
   }
 
   FontInfo *font_info = applib_type_malloc(FontInfo);
   if (font_info == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Couldn't malloc space for new font");
+    PBL_LOG_ERR("Couldn't malloc space for new font");
     return NULL;
   }
 

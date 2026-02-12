@@ -249,7 +249,7 @@ void mic_stop(MicDevice *this) {
   stop_mode_enable(InhibitorMic);
   this->state->running = false;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Stopped microphone, dropped samples: %"PRIu32" bytes received: %"PRIu32,
+  PBL_LOG_DBG("Stopped microphone, dropped samples: %"PRIu32" bytes received: %"PRIu32,
           this->state->overflow_cnt,
           this->state->bytes_received);
 

@@ -20,7 +20,7 @@ void app_message_init(void) {
 
 static bool prv_has_invalid_header_length(size_t length) {
   if (length < sizeof(AppMessageHeader)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Too short");
+    PBL_LOG_ERR("Too short");
     return true;
   }
   return false;
@@ -56,7 +56,7 @@ void app_message_app_protocol_msg_callback(CommSession *session,
       return;
 
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Unknown Cmd 0x%x", message->command);
+      PBL_LOG_ERR("Unknown Cmd 0x%x", message->command);
       return;
   }
 }

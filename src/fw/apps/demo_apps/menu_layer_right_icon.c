@@ -77,7 +77,7 @@ static int16_t menu_get_cell_height_callback(struct MenuLayer *menu_layer, MenuI
 }
 
 static void prv_window_load(Window *window) {
-  PBL_LOG(LOG_LEVEL_INFO, "WINDOW LOADING");
+  PBL_LOG_INFO("WINDOW LOADING");
   AppData *data = window_get_user_data(window);
   gbitmap_init_with_resource(&data->checked_icon, RESOURCE_ID_CHECKBOX_ICON_CHECKED);
 
@@ -96,7 +96,7 @@ static void prv_window_load(Window *window) {
 }
 
 static void push_window(AppData *data) {
-  PBL_LOG(LOG_LEVEL_INFO, "PUSHING WINDOW");
+  PBL_LOG_INFO("PUSHING WINDOW");
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Demo Menu"));
   window_set_user_data(window, data);

@@ -49,14 +49,13 @@ static bool prv_fill_forecast_from_entry(WeatherDBEntry *entry,
   const uint16_t location_pstring_length = location_pstring->str_length;
 
   if (!is_valid_entry_update_time || (location_pstring_length == 0)) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Invalid entry. Valid UT: %u, location length: %"PRIu16,
+    PBL_LOG_ERR("Invalid entry. Valid UT: %u, location length: %"PRIu16,
             is_valid_entry_update_time, location_pstring_length);
     return false;
   }
 
   if (prv_entry_update_time_too_old_to_be_valid(entry->last_update_time_utc)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Weather entry too old to fill forecast");
+    PBL_LOG_WRN("Weather entry too old to fill forecast");
     return false;
   }
 
@@ -106,7 +105,7 @@ static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry,
 
   if (!prv_get_location_index(key, prefs, &location_index)) {
     uuid_to_string(key, key_string_buffer);
-    PBL_LOG(LOG_LEVEL_WARNING, "Weather location %s has no known ordering! Skipping",
+    PBL_LOG_WRN("Weather location %s has no known ordering! Skipping",
             key_string_buffer);
     return; // location not found in ordering list, skip over
   }
@@ -117,7 +116,7 @@ static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry,
 
   if (!prv_fill_forecast_from_entry(entry, forecast)) {
     uuid_to_string(key, key_string_buffer);
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not create forecast from %s's entry", key_string_buffer);
+    PBL_LOG_WRN("Could not create forecast from %s's entry", key_string_buffer);
     task_free(node);
     return;
   }
@@ -137,7 +136,7 @@ static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry,
 static bool prv_get_default_location_key(WeatherDBKey *key_out) {
   SerializedWeatherAppPrefs *prefs = watch_app_prefs_get_weather();
   if (!prefs) {
-    PBL_LOG(LOG_LEVEL_ERROR, "No SerializedWeatherAppPrefs available!");
+    PBL_LOG_ERR("No SerializedWeatherAppPrefs available!");
     return false;
   }
 
@@ -295,7 +294,7 @@ bool weather_service_supported_by_phone(void) {
   PebbleProtocolCapabilities capabilities;
   bt_persistent_storage_get_cached_system_capabilities(&capabilities);
   if (!capabilities.weather_app_support) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No weather support on phone");
+    PBL_LOG_WRN("No weather support on phone");
   }
   return capabilities.weather_app_support;
 }

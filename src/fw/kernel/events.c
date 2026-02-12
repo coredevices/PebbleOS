@@ -50,9 +50,9 @@ uint32_t s_current_event;
 #if EVENT_DEBUG
 static void prv_queue_dump(QueueHandle_t queue) {
   PebbleEvent event;
-  PBL_LOG(LOG_LEVEL_DEBUG, "Dumping queue:");
+  PBL_LOG_DBG("Dumping queue:");
   while (xQueueReceive(queue, &event, 0) == pdTRUE) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Event type: %u", event.type);
+    PBL_LOG_DBG("Event type: %u", event.type);
   }
   for(;;);
 }
@@ -63,7 +63,7 @@ void events_init(void) {
 
   // This assert is to make sure we don't accidentally bloat our PebbleEvent unecessarily. If you hit this
   // assert and you have a good reason for making the event bigger, feel free to relax the restriction.
-  //PBL_LOG(LOG_LEVEL_DEBUG, "PebbleEvent size is %u", sizeof(PebbleEvent));
+  //PBL_LOG_DBG("PebbleEvent size is %u", sizeof(PebbleEvent));
   // FIXME:
   _Static_assert(sizeof(PebbleEvent) <= 12,
                  "You made the PebbleEvent bigger! It should be no more than 12");
@@ -114,7 +114,7 @@ static uint32_t prv_get_fancy_type_from_event(const PebbleEvent *event) {
 }
 
 static void prv_log_event_put_failure(const char *queue_name, uintptr_t saved_lr, const PebbleEvent *event) {
-  PBL_LOG(LOG_LEVEL_ERROR, "Error, %s queue full. Type %u", queue_name, event->type);
+  PBL_LOG_ERR("Error, %s queue full. Type %u", queue_name, event->type);
 
   RebootReason reason = {
     .code = RebootReasonCode_EventQueueFull,

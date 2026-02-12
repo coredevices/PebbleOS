@@ -34,7 +34,7 @@ static void do_timed_read(NumberWindow *nw, void *data) {
   uint32_t num_bytes = nw->value;
   uint32_t predicted_time = num_bytes * 8 / 16000;
   uint32_t time = timed_read_bytes(num_bytes);
-  PBL_LOG(LOG_LEVEL_DEBUG, "time to read %lu bytes: predicted %lu, actual %lu", num_bytes, predicted_time, time);
+  PBL_LOG_DBG("time to read %lu bytes: predicted %lu, actual %lu", num_bytes, predicted_time, time);
   window_stack_remove(&number_window.window, false);
   app_window_stack_push(&number_window.window, true);
 }

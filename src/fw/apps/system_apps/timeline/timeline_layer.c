@@ -676,7 +676,7 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
 
 // when we create a new next or previous item, we want it out of view so we can animate it in
 void timeline_layer_set_next_item(TimelineLayer *layer, int index) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Setting next item with index %d", index);
+  PBL_LOG_DBG("Setting next item with index %d", index);
   TimelineIterState *iter_state = timeline_model_get_iter_state_with_timeline_idx(index);
   if (!iter_state) {
     return;
@@ -688,7 +688,7 @@ void timeline_layer_set_next_item(TimelineLayer *layer, int index) {
 }
 
 void timeline_layer_set_prev_item(TimelineLayer *layer, int index) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Setting prev item with index %d", index);
+  PBL_LOG_DBG("Setting prev item with index %d", index);
   TimelineIterState *iter_state = timeline_model_get_iter_state_with_timeline_idx(index);
   if (!iter_state) {
     return;

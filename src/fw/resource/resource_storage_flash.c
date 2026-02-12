@@ -47,9 +47,9 @@ static void resource_storage_system_bank_init(void) {
   // Increment s_active_bank and call resource_storage_generic_check for each value to find
   // a bank that's valid.
   for (s_active_bank = 0; s_active_bank < ARRAY_LENGTH(s_resource_banks); ++s_active_bank) {
-    PBL_LOG(LOG_LEVEL_INFO, "Checking bank %u for system resources", s_active_bank);
+    PBL_LOG_INFO("Checking bank %u for system resources", s_active_bank);
     if (resource_storage_generic_check(SYSTEM_APP, 0, &entry, &SYSTEM_RESOURCE_VERSION)) {
-      PBL_LOG(LOG_LEVEL_INFO, "Valid system resources found!");
+      PBL_LOG_INFO("Valid system resources found!");
       s_valid_resources_found = true;
       return;
     }
@@ -103,7 +103,7 @@ static uint32_t resource_storage_system_bank_get_crc(ResourceStoreEntry *entry, 
       uint8_t status_reg = pbl_28517_flash_impl_get_status_register(addr);
       uint32_t crc = flash_calculate_legacy_defective_checksum(addr, SECTOR_SIZE_BYTES);
 
-      PBL_LOG(LOG_LEVEL_DEBUG, "PBL-28517 Sector 0x%"PRIx32" Status 0x%"PRIx8" CRC 0x%"PRIx32,
+      PBL_LOG_DBG("PBL-28517 Sector 0x%"PRIx32" Status 0x%"PRIx8" CRC 0x%"PRIx32,
               addr, status_reg, crc);
     }
   }
