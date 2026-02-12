@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "gap_le_connect_params.h"
 #include "gap_le_connection.h"
 
@@ -157,7 +155,7 @@ static void prv_request_params_update(GAPLEConnection *connection,
     // [MT]: I've hit this once now. When this happened the TI CC2564B became unresponsive.
     // From the iOS side, it appeared as a connection timeout. A little while after this happened,
     // the BT chip auto-reset work-around kicked in.
-    PBL_LOG(LOG_LEVEL_ERROR, "Max attempts reached, giving up. desired_state=%u", state);
+    PBL_LOG_ERR("Max attempts reached, giving up. desired_state=%u", state);
     bluetooth_analytics_handle_param_update_failed();
     return;
   }
@@ -197,7 +195,7 @@ static void prv_watchdog_timer_callback(void *ctx) {
     // Retry with most recently requested latency:
     const ResponseTimeState state = conn_mgr_get_latency_for_le_connection(connection, NULL);
     if (connection->param_update_info.attempts > 0) {
-      PBL_LOG(LOG_LEVEL_INFO, "Conn param request timed out: re-requesting %u", state);
+      PBL_LOG_INFO("Conn param request timed out: re-requesting %u", state);
     }
     prv_request_params_update(connection, state);
   }
@@ -243,7 +241,7 @@ static void prv_evaluate(GAPLEConnection *connection, ResponseTimeState desired_
 
   // Connection parameters are updated, but they don't match the desired parameters.
   // (Re)request a parameter update:
-  PBL_LOG(LOG_LEVEL_INFO, "Connection parameters do not match desired state: %u", desired_state);
+  PBL_LOG_INFO("Connection parameters do not match desired state: %u", desired_state);
   prv_request_params_update(connection, desired_state);
 }
 
@@ -272,7 +270,7 @@ void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompl
 
   GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
   if (!connection) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Receiving conn param update but connection is no longer open");
+    PBL_LOG_DBG("Receiving conn param update but connection is no longer open");
     goto unlock;
   }
 

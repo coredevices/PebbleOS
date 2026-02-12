@@ -57,7 +57,7 @@ static bool prv_fwd_prepare(AppMessageReceiver *rcv, CommSession *session,
                                            &kernel_nack_endpoint,
                                            header_bytes_remaining);
   if (!kernel_receiver) {
-    PBL_LOG(LOG_LEVEL_ERROR, "System receiver wasn't able to prepare");
+    PBL_LOG_ERR("System receiver wasn't able to prepare");
     return false;
   }
   rcv->kernel_receiver = kernel_receiver;

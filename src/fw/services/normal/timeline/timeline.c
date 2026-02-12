@@ -342,15 +342,15 @@ bool timeline_item_should_show(CommonTimelineItemHeader *header, TimelineIterDir
 #ifdef TIMELINE_SERVICE_DEBUG
 static void prv_debug_print_pins(TimelineNode *node0) {
   TimelineNode *node = (TimelineNode *)list_get_head((ListNode *)node0);
-  PBL_LOG(LOG_LEVEL_DEBUG, "= = = = = = = =");
+  PBL_LOG_DBG("= = = = = = = =");
   while (node) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "======");
-    PBL_LOG(LOG_LEVEL_DEBUG, "Node with id %x%x...", node->id.byte0, node->id.byte1);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Index %d", node->index);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Timestamp %ld", node->timestamp);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Duration %hu", node->duration);
-    PBL_LOG(LOG_LEVEL_DEBUG, "All day? %s", node->all_day ? "True": "False");
-    PBL_LOG(LOG_LEVEL_DEBUG, "Address %p", node);
+    PBL_LOG_DBG("======");
+    PBL_LOG_DBG("Node with id %x%x...", node->id.byte0, node->id.byte1);
+    PBL_LOG_DBG("Index %d", node->index);
+    PBL_LOG_DBG("Timestamp %ld", node->timestamp);
+    PBL_LOG_DBG("Duration %hu", node->duration);
+    PBL_LOG_DBG("All day? %s", node->all_day ? "True": "False");
+    PBL_LOG_DBG("Address %p", node);
     node = (TimelineNode *)node->node.next;
   }
 }
@@ -463,11 +463,11 @@ static void prv_put_outgoing_call_event(uint32_t call_identifier, const char *ca
 //////////////////////////////////////////////////
 
 status_t timeline_init(TimelineNode **timeline) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Starting to build list.");
+  PBL_LOG_DBG("Starting to build list.");
   status_t rv = pin_db_each(prv_each, timeline);
   prv_prune_ordered_timeline_list(timeline);
   prv_set_indices(*timeline);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Finished building list.");
+  PBL_LOG_DBG("Finished building list.");
 #ifdef TIMELINE_SERVICE_DEBUG
   prv_debug_print_pins(*timeline);
 #endif
@@ -736,7 +736,7 @@ static void prv_perform_ancs_negative_action(const TimelineItem *item,
   uint32_t ancs_uid = attribute_get_uint32(&action->attr_list, AttributeIdAncsId,
                                            item->header.ancs_uid);
 
-  PBL_LOG(LOG_LEVEL_INFO, "Perform ancs notification action (%"PRIu32", %"PRIu8")", ancs_uid,
+  PBL_LOG_INFO("Perform ancs notification action (%"PRIu32", %"PRIu8")", ancs_uid,
           action_id);
   ancs_perform_action(ancs_uid, action_id);
 
@@ -762,7 +762,7 @@ static void prv_get_pin_and_push_pin_window(void *data) {
   if (pin && pin_db_get(parent_id, pin) == S_SUCCESS) {
     timeline_pin_window_push_modal(pin);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to fetch parent pin");
+    PBL_LOG_ERR("Failed to fetch parent pin");
   }
   kernel_free(parent_id);
 }
@@ -828,7 +828,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       AppInstallId install_id = app_install_get_id_for_uuid(&item->header.parent_id);
       if (install_id == INSTALL_ID_INVALID) {
         // This should never happen... but we're not quite there yet
-        PBL_LOG(LOG_LEVEL_ERROR, "Could not find parent app %s for pin", uuid_buffer);
+        PBL_LOG_ERR("Could not find parent app %s for pin", uuid_buffer);
         return;
       }
       // fetch the relevant attribute
@@ -839,7 +839,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
         .common.args = (void *)(uintptr_t)launch_code,
         .common.reason = APP_LAUNCH_TIMELINE_ACTION,
       });
-      PBL_LOG(LOG_LEVEL_INFO, "Opening watch app %s", uuid_buffer);
+      PBL_LOG_INFO("Opening watch app %s", uuid_buffer);
 
       // Wait for the app we just launched to have something to render before hiding all modals.
       // If we don't we'll end up with flashing in a blank framebuffer.
@@ -861,7 +861,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       if (parent_id) {
         *parent_id = item->header.parent_id;
         launcher_task_add_callback(prv_get_pin_and_push_pin_window, parent_id);
-        PBL_LOG(LOG_LEVEL_INFO, "Opening parent pin %s", uuid_buffer);
+        PBL_LOG_INFO("Opening parent pin %s", uuid_buffer);
       }
       break;
     }
@@ -920,7 +920,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       prv_perform_health_response_action(item, action);
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Action type not implemented: %d", action->type);
+      PBL_LOG_ERR("Action type not implemented: %d", action->type);
       break;
   }
 }

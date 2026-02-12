@@ -125,7 +125,7 @@ static bool prv_prepare_receiver(const uint32_t payload_length,
     // - Look into SPP flow control
     // - With PPoGATT: drop packet and rely on automatic retransmission?
 
-    PBL_LOG(LOG_LEVEL_ERROR, "No receiver for endpoint=%"PRIu16" len=%"PRIu32,
+    PBL_LOG_ERR("No receiver for endpoint=%"PRIu16" len=%"PRIu32,
             endpoint_id, payload_length);
     prv_skip_message(rtr, payload_length);
     return true;
@@ -185,8 +185,7 @@ void comm_session_receive_router_write(CommSession *session,
         continue;  // while (data_size)
       }
 
-      PBL_LOG_D(LOG_DOMAIN_COMM, LOG_LEVEL_DEBUG,
-                "Receiving message:  endpoint_id 0x%"PRIx16" (%"PRIu16"), payload_length %"PRIu32,
+      PBL_LOG_D_DBG(LOG_DOMAIN_COMM, "Receiving message:  endpoint_id 0x%"PRIx16" (%"PRIu16"), payload_length %"PRIu32,
                 endpoint_id, endpoint_id, payload_length);
 
       if (prv_prepare_receiver(payload_length, endpoint, endpoint_id, session, rtr)) {

@@ -222,7 +222,7 @@ static void prv_progress_ui_window_push(void) {
 
 static void prv_main(void) {
   if (!app_manager_get_task_context()->args) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Progress UI App must be launched with args");
+    PBL_LOG_WRN("Progress UI App must be launched with args");
     return;
   }
 

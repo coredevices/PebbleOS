@@ -74,9 +74,9 @@ void vibe_init(void) {
   uint8_t rv;
   bool found = prv_read_register(DRV2604_STATUS, &rv);
   if (found) {
-    PBL_LOG(LOG_LEVEL_INFO, "Found DRV2604 with STATUS register %02x", rv);
+    PBL_LOG_INFO("Found DRV2604 with STATUS register %02x", rv);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read the STATUS register");
+    PBL_LOG_ERR("Failed to read the STATUS register");
   }
   
   /* calibration table maybe should live in the board file? */
@@ -94,7 +94,7 @@ void vibe_init(void) {
 
   for (size_t i = 0; i < sizeof(regs) / sizeof(regs[0]); i++) {
     if (!prv_write_register(regs[i][0], regs[i][1])) {
-      PBL_LOG(LOG_LEVEL_ERROR, "failed to write register %02x on DRV2604", regs[i][0]);
+      PBL_LOG_ERR("failed to write register %02x on DRV2604", regs[i][0]);
       gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
       return;
     }
@@ -140,7 +140,7 @@ void vibe_ctl(bool on) {
   }
   s_on = on;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Vibe status <%s>", on ? "on" : "off");
+  PBL_LOG_DBG("Vibe status <%s>", on ? "on" : "off");
 
   if (!on) {
     prv_write_register(DRV2604_MODE, DRV2604_MODE_STANDBY | DRV2604_MODE_RTP); /* enter standby even if the enable GPIO is not hooked up */

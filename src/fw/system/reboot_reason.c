@@ -29,7 +29,7 @@ void reboot_reason_set(RebootReason *reason) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
     if (!mcu_state_is_isr() && __get_BASEPRI() == 0
             && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Reboot reason is already set");
+      PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
   }
@@ -45,7 +45,7 @@ void reboot_reason_set(RebootReason *reason) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
     if (!mcu_state_is_isr() && __get_BASEPRI() == 0
             && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Reboot reason is already set");
+      PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
   }
@@ -61,7 +61,7 @@ void reboot_reason_set(RebootReason *reason) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
     if (!mcu_state_is_isr() && __get_BASEPRI() == 0
             && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Reboot reason is already set");
+      PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
   }

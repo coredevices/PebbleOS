@@ -1156,7 +1156,7 @@ void menu_layer_set_selected_index(MenuLayer *menu_layer, MenuIndex index, MenuR
   }
   // check to make sure this callback has been set, return early if not
   if (menu_layer->callbacks.get_num_rows == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Please set menu layer callbacks before running menu_layer_set_selected_index.");
+    PBL_LOG_ERR("Please set menu layer callbacks before running menu_layer_set_selected_index.");
     return;
   }
 

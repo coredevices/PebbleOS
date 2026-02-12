@@ -308,7 +308,7 @@ void light_button_pressed(void) {
 
   s_num_buttons_down++;
   if (s_num_buttons_down > 4) {
-    PBL_LOG(LOG_LEVEL_ERROR, "More buttons were pressed than have been released.");
+    PBL_LOG_ERR("More buttons were pressed than have been released.");
     s_num_buttons_down = 0;
   }
 
@@ -325,7 +325,7 @@ void light_button_released(void) {
 
   s_num_buttons_down--;
   if (s_num_buttons_down < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "More buttons were released than have been pressed.");
+    PBL_LOG_ERR("More buttons were released than have been pressed.");
     s_num_buttons_down = 0;
   }
 

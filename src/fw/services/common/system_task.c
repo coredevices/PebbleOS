@@ -124,7 +124,7 @@ static void handle_system_task_send_failure(SystemTaskEventCallback cb) {
   register uintptr_t lr __asm("lr");
   uintptr_t saved_lr = lr;
 
-  PBL_LOG(LOG_LEVEL_ERROR, "System task queue full. Dropped cb: %p, current cb: %p", cb, s_current_cb);
+  PBL_LOG_ERR("System task queue full. Dropped cb: %p, current cb: %p", cb, s_current_cb);
 
   RebootReason reason = {
     .code = RebootReasonCode_EventQueueFull,

@@ -34,9 +34,9 @@ void pressure_init(void) {
 
   rv = prv_read_register(I2C_BMP390, BMP390_CHIP_ID, &result);
   if (!rv || result != BMP390_CHIP_ID_VALUE) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "BMP390 probe failed; rv %d, result 0x%02x", rv, result);
+    PBL_LOG_DBG("BMP390 probe failed; rv %d, result 0x%02x", rv, result);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "found the BMP390, setting to low power");
+    PBL_LOG_DBG("found the BMP390, setting to low power");
     (void) prv_write_register(I2C_BMP390, BMP390_PWR_CTRL, 0);
   }
 }

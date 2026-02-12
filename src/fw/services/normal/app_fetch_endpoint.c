@@ -143,7 +143,7 @@ static void prv_cleanup(AppFetchResult result) {
 
   s_fetch_state.in_progress = false;
 
-  PBL_LOG(LOG_LEVEL_INFO, "App fetch cleanup with result %d", result);
+  PBL_LOG_INFO("App fetch cleanup with result %d", result);
 }
 
 //! System task callback triggered by app_fetch_put_bytes_event_handler() when we are receiving
@@ -159,10 +159,10 @@ void prv_put_bytes_event_system_task_cb(void *data) {
   if (pb_event->failed == true) {
     AppFetchResult error;
     if (s_fetch_state.cancelling) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Put bytes cancelled by user");
+      PBL_LOG_WRN("Put bytes cancelled by user");
       error = AppFetchResultUserCancelled;
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Put bytes failure");
+      PBL_LOG_ERR("Put bytes failure");
       error = AppFetchResultPutBytesFailure;
     }
 
@@ -171,13 +171,13 @@ void prv_put_bytes_event_system_task_cb(void *data) {
   }
 
   if (pb_event->type == PebblePutBytesEventTypeInitTimeout) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Timed out waiting for putbytes request from phone");
+    PBL_LOG_WRN("Timed out waiting for putbytes request from phone");
     prv_cleanup(AppFetchResultTimeoutError);
   }
 
   // If this is an object that doesn't have a cookie, then we won't care about it.
   if (pb_event->has_cookie == false) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring non cookie put_bytes event");
+    PBL_LOG_DBG("Ignoring non cookie put_bytes event");
     goto finally;
   }
 
@@ -201,7 +201,7 @@ void prv_put_bytes_event_system_task_cb(void *data) {
         s_fetch_state.resources = true;
         break;
       default:
-        PBL_LOG(LOG_LEVEL_ERROR, "Got a PutBytes Object that we shouldn't have gotten");
+        PBL_LOG_ERR("Got a PutBytes Object that we shouldn't have gotten");
         prv_cleanup(AppFetchResultGeneralFailure);
         goto finally;
     }
@@ -212,7 +212,7 @@ void prv_put_bytes_event_system_task_cb(void *data) {
 
   if (s_fetch_state.app && s_fetch_state.worker && s_fetch_state.resources) {
     // if everything has finished being transferred
-    PBL_LOG(LOG_LEVEL_DEBUG, "All pieces (%"PRIu32" bytes) have been sent over put_bytes",
+    PBL_LOG_DBG("All pieces (%"PRIu32" bytes) have been sent over put_bytes",
         s_fetch_state.total_size);
 
     // signify in the app cache that the app binaries are now loaded
@@ -220,7 +220,7 @@ void prv_put_bytes_event_system_task_cb(void *data) {
     if (added == S_SUCCESS) {
       const PebbleProcessMd *md = app_install_get_md(s_fetch_state.app_id, false);
       if (rocky_app_validate_resources(md) == RockyResourceValidation_Invalid) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Received app contains invalid JS bytecode");
+        PBL_LOG_ERR("Received app contains invalid JS bytecode");
         prv_put_event_error(AppFetchResultIncompatibleJSFailure);
       } else {
         // Set prev_error as a Success.
@@ -229,7 +229,7 @@ void prv_put_bytes_event_system_task_cb(void *data) {
       }
       app_install_release_md(md);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to insert into app cache: %"PRId32, added);
+      PBL_LOG_ERR("Failed to insert into app cache: %"PRId32, added);
       prv_put_event_error(AppFetchResultGeneralFailure);
     }
     prv_cleanup(AppFetchResultSuccess);
@@ -272,7 +272,7 @@ static void prv_app_fetch_binaries_system_task_cb(void *data) {
   // log it
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(&request->uuid, uuid_buffer);
-  PBL_LOG(LOG_LEVEL_INFO, "%s request for app with uuid: %s and app_id: %"PRIu32"",
+  PBL_LOG_INFO("%s request for app with uuid: %s and app_id: %"PRIu32"",
       successful ? "Sent" : "Failed to send", uuid_buffer, request->app_id);
 
   // free before error checking
@@ -295,20 +295,20 @@ static void prv_app_fetch_binaries_system_task_cb(void *data) {
 void prv_handle_app_fetch_install_response(uint8_t result_code) {
   switch (result_code) {
     case APP_FETCH_RESPONSE_STARTING:
-      PBL_LOG(LOG_LEVEL_INFO, "Phone confirmed it will start sending data");
+      PBL_LOG_INFO("Phone confirmed it will start sending data");
       prv_put_event_simple(AppFetchEventTypeStart);
       put_bytes_expect_init(FETCH_TIMEOUT_MS);
       break;
     case APP_FETCH_RESPONSE_BUSY:
-      PBL_LOG(LOG_LEVEL_WARNING, "Error: Phone is currently busy");
+      PBL_LOG_WRN("Error: Phone is currently busy");
       prv_cleanup(AppFetchResultPhoneBusy);
       break;
     case APP_FETCH_RESPONSE_UUID_INVALID:
-      PBL_LOG(LOG_LEVEL_WARNING, "Error: UUID Invalid");
+      PBL_LOG_WRN("Error: UUID Invalid");
       prv_cleanup(AppFetchResultUUIDInvalid);
       break;
     case APP_FETCH_RESPONSE_NO_DATA:
-      PBL_LOG(LOG_LEVEL_WARNING, "Error: No data on phone");
+      PBL_LOG_WRN("Error: No data on phone");
       prv_cleanup(AppFetchResultNoData);
       break;
   }
@@ -321,7 +321,7 @@ void prv_handle_app_fetch_install_response(uint8_t result_code) {
 //! Called by the system that triggers an app fetch install request
 void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) {
   if (s_fetch_state.in_progress) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Already an app fetch in progress. Ignoring request");
+    PBL_LOG_WRN("Already an app fetch in progress. Ignoring request");
     return;
   }
 
@@ -362,12 +362,12 @@ static void prv_cancel_fetch_from_system_task(void *data) {
 
   if ((!s_fetch_state.in_progress) ||
       ((s_fetch_state.app_id != app_id) && (app_id != INSTALL_ID_INVALID))) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Attempted to cancel an app that is currently not being"
+    PBL_LOG_DBG("Attempted to cancel an app that is currently not being"
             " fetched: %"PRId32, app_id);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Cancelling app fetch from system task");
+  PBL_LOG_DBG("Cancelling app fetch from system task");
   s_fetch_state.cancelling = true;
   put_bytes_cancel();
 }
@@ -404,7 +404,7 @@ static void prv_app_fetch_protocol_handle_msg(AppFetchResponseData *response_dat
       prv_handle_app_fetch_install_response(response_data->result_code);
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid message received, command: %u result: %u",
+      PBL_LOG_ERR("Invalid message received, command: %u result: %u",
           response_data->command, response_data->result_code);
       prv_cleanup(AppFetchResultGeneralFailure);
       break;
@@ -415,13 +415,13 @@ static void prv_app_fetch_protocol_handle_msg(AppFetchResponseData *response_dat
 //! callback as all commands are originally sent to the phone.
 void app_fetch_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   if (length < sizeof(AppFetchResponseData)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid message length %"PRIu32"", (uint32_t)length);
+    PBL_LOG_ERR("Invalid message length %"PRIu32"", (uint32_t)length);
     prv_cleanup(AppFetchResultGeneralFailure);
     return;
   }
 
   if (!s_fetch_state.in_progress) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Got a message but app fetch not in progress. Ignoring");
+    PBL_LOG_WRN("Got a message but app fetch not in progress. Ignoring");
     return;
   }
 

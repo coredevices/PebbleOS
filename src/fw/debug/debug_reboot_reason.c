@@ -125,15 +125,15 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   // Error occurred
   case RebootReasonCode_Watchdog:
     show_reset_alert = true;
-    DEBUG_LOG(LOG_LEVEL_INFO, "%s%sWatchdog: Bits 0x%" PRIx8 ", Mask 0x%" PRIx8,
+    PBL_LOG_WRN("%s%sWatchdog: Bits 0x%" PRIx8 ", Mask 0x%" PRIx8,
               restarted_safely_string, rebooted_due_to, reason.data8[0], reason.data8[1]);
 
     if (reason.watchdog.stuck_task_pc != 0) {
-      DEBUG_LOG(LOG_LEVEL_INFO, "Stuck task PC: 0x%" PRIx32 ", LR: 0x%" PRIx32,
+      PBL_LOG_WRN("Stuck task PC: 0x%" PRIx32 ", LR: 0x%" PRIx32,
                 reason.watchdog.stuck_task_pc, reason.watchdog.stuck_task_lr);
 
       if (reason.watchdog.stuck_task_callback) {
-        DEBUG_LOG(LOG_LEVEL_INFO, "Stuck callback: 0x%" PRIx32,
+        PBL_LOG_WRN("Stuck callback: 0x%" PRIx32,
                   reason.watchdog.stuck_task_callback);
       }
     }
@@ -141,13 +141,13 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   case RebootReasonCode_StackOverflow:
     show_reset_alert = true;
     PebbleTask task = (PebbleTask) reason.data8[0];
-    DEBUG_LOG(LOG_LEVEL_INFO, "%s%sStackOverflow: Task #%d (%s)", restarted_safely_string,
-              rebooted_due_to, task, pebble_task_get_name(task));
+    PBL_LOG_WRN("%s%sStackOverflow: Task #%d", restarted_safely_string,
+              rebooted_due_to, task);
     break;
   case RebootReasonCode_EventQueueFull:
     show_reset_alert = true;
-    DEBUG_LOG(LOG_LEVEL_INFO, "%s%sEvent Queue Full", restarted_safely_string, rebooted_due_to);
-    DEBUG_LOG(LOG_LEVEL_INFO, "LR: 0x%"PRIx32" Current: 0x%"PRIx32" Dropped: 0x%"PRIx32,
+    PBL_LOG_WRN("%s%sEvent Queue Full", restarted_safely_string, rebooted_due_to);
+    PBL_LOG_WRN("LR: 0x%"PRIx32" Current: 0x%"PRIx32" Dropped: 0x%"PRIx32,
               reason.event_queue.push_lr,
               reason.event_queue.current_event,
               reason.event_queue.dropped_event);
@@ -155,8 +155,8 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   }
   // Generic reason string
   if (reason_string) {
-    DEBUG_LOG(LOG_LEVEL_INFO, reason_string, restarted_safely_string, rebooted_due_to,
-              reason.extra.value);
+    pbl_log(LOG_LEVEL_WARNING, __FILE__, __LINE__, restarted_safely_string,
+            rebooted_due_to, reason.extra.value);
   }
 
   analytics_set(ANALYTICS_DEVICE_METRIC_SYSTEM_CRASH_LR, lr, AnalyticsClient_System);
@@ -170,14 +170,14 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   launcher_task_add_callback(log_reboot_reason_cb, crash_report);
 
   if (is_unread_coredump_available()) {
-    DEBUG_LOG(LOG_LEVEL_INFO, "Unread coredump file is present!");
+    PBL_LOG_INFO("Unread coredump file is present!");
   }
 
-  DEBUG_LOG(LOG_LEVEL_INFO, "MCU reset reason mask: 0x%x", (int)mcu_reboot_reason.reset_mask);
+  PBL_LOG_INFO("MCU reset reason mask: 0x%x", (int)mcu_reboot_reason.reset_mask);
 #if CAPABILITY_HAS_PMIC
   uint32_t pmic_reset_reason = pmic_get_last_reset_reason();
   if (pmic_reset_reason != 0) {
-    DEBUG_LOG(LOG_LEVEL_INFO, "PMIC reset reason mask: 0x%x", (int)pmic_reset_reason);
+    PBL_LOG_INFO("PMIC reset reason mask: 0x%x", (int)pmic_reset_reason);
   }
 #endif
 

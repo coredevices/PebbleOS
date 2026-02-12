@@ -197,7 +197,7 @@ static void prv_deferred_sync_callback(void *data) {
 
   // Only sync if we have an active connection to the phone
   if (!comm_session_get_system_session()) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "No connection to phone, skipping settings sync");
+    PBL_LOG_DBG("No connection to phone, skipping settings sync");
     return;
   }
 
@@ -249,7 +249,7 @@ void settings_blob_db_init(void) {
   settings_file_set_change_callback(prv_settings_change_callback);
 
   s_initialized = true;
-  PBL_LOG(LOG_LEVEL_INFO, "Settings BlobDB initialized (%u whitelisted settings)",
+  PBL_LOG_INFO("Settings BlobDB initialized (%u whitelisted settings)",
           (unsigned int) s_num_syncable_settings);
 }
 
@@ -276,7 +276,7 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
                       (size_t)key_len : sizeof(key_str) - 1;
     memcpy(key_str, key, copy_len);
     key_str[copy_len] = '\0';
-    PBL_LOG(LOG_LEVEL_WARNING, "Rejecting non-whitelisted setting: %s", key_str);
+    PBL_LOG_WRN("Rejecting non-whitelisted setting: %s", key_str);
     return E_INVALID_OPERATION;
   }
 
@@ -595,7 +595,7 @@ status_t settings_blob_db_flush(void) {
   }
 
   // SettingsFile writes are already atomic, no explicit flush needed
-  PBL_LOG(LOG_LEVEL_DEBUG, "Settings BlobDB flush (no-op for SettingsFile)");
+  PBL_LOG_DBG("Settings BlobDB flush (no-op for SettingsFile)");
   return S_SUCCESS;
 }
 
@@ -604,7 +604,7 @@ status_t settings_blob_db_mark_all_dirty(void) {
     return E_INTERNAL;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "Marking all settings as dirty for full sync");
+  PBL_LOG_INFO("Marking all settings as dirty for full sync");
 
   status_t result = S_SUCCESS;
 
@@ -710,7 +710,7 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     // Watch data is newer - reject the insert
     settings_file_close(&file);
     prv_unlock_for_file(is_notif_pref);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Rejecting stale data: watch=%lu phone=%lu",
+    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu",
             (unsigned long)ctx.last_modified, (unsigned long)timestamp);
     return E_INVALID_OPERATION;
   }

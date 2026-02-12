@@ -122,10 +122,10 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
 
 static const char *prv_get_font_for_size(PreferredContentSize content_size, TextStyleFont font) {
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Requested a content size that is out of bounds (%d)", content_size);
+    PBL_LOG_ERR("Requested a content size that is out of bounds (%d)", content_size);
     goto fail;
   } else if (font >= TextStyleFontCount) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Requested a style font that is out of bounds (%d)", font);
+    PBL_LOG_ERR("Requested a style font that is out of bounds (%d)", font);
     goto fail;
   }
   return s_text_styles[content_size].fonts[font];

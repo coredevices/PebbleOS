@@ -30,20 +30,20 @@ static FlashTestErrorType prv_read_verify_byte(uint32_t read_addr,
   flash_read_bytes((uint8_t *)&read_buffer, read_addr, sizeof(read_buffer));
 
   if (disp_logs) {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx8,
+    PBL_LOG_DBG(">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx8,
             read_addr, read_buffer);
   }
 
   if (read_buffer != expected_val) {
     switch (err_code) {
       case FLASH_TEST_ERR_ERASE:
-        PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Did not successfully erase the sector");
+        PBL_LOG_DBG("ERROR: Did not successfully erase the sector");
         break;
       case FLASH_TEST_ERR_STUCK_AT_HIGH:
-        PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Address bit %d stuck at high", bitpos);
+        PBL_LOG_DBG("ERROR: Address bit %d stuck at high", bitpos);
         break;
       case FLASH_TEST_ERR_STUCK_AT_LOW:
-        PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Address bit %d stuck at low or shorted", bitpos);
+        PBL_LOG_DBG("ERROR: Address bit %d stuck at low or shorted", bitpos);
         break;
       default:
         break;
@@ -62,17 +62,17 @@ static FlashTestErrorType prv_read_verify_halfword(uint32_t read_addr,
   flash_read_bytes((uint8_t *)&read_buffer, read_addr, sizeof(read_buffer));
 
   if (disp_logs) {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx16,
+    PBL_LOG_DBG(">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx16,
             read_addr, read_buffer);
   }
 
   if (read_buffer != expected_val) {
     switch (err_code) {
       case FLASH_TEST_ERR_ERASE:
-        PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Did not successfully erase the sector");
+        PBL_LOG_DBG("ERROR: Did not successfully erase the sector");
         break;
       case FLASH_TEST_ERR_DATA_WRITE:
-        PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Did not successfully write the data");
+        PBL_LOG_DBG("ERROR: Did not successfully write the data");
         break;
       default:
         break;
@@ -91,7 +91,7 @@ static FlashTestErrorType prv_write_read_verify_byte(uint32_t write_addr,
   uint8_t read_buffer = 0;
   // Write test pattern
   if (disp_logs) {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Writing Addr 0x%"PRIx32" to value 0x%"PRIx8,
+    PBL_LOG_DBG(">> Writing Addr 0x%"PRIx32" to value 0x%"PRIx8,
             write_addr, write_val);
   }
   flash_write_bytes((uint8_t *)&write_buffer, write_addr, sizeof(write_buffer));
@@ -101,12 +101,12 @@ static FlashTestErrorType prv_write_read_verify_byte(uint32_t write_addr,
   flash_read_bytes((uint8_t*) &read_buffer, write_addr, sizeof(read_buffer));
 
   if (disp_logs) {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx8,
+    PBL_LOG_DBG(">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx8,
             write_addr, read_buffer);
   }
 
   if (read_buffer != expected_val) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Did not successfully write the data");
+    PBL_LOG_DBG("ERROR: Did not successfully write the data");
     return FLASH_TEST_ERR_DATA_WRITE;
   }
 
@@ -122,7 +122,7 @@ static FlashTestErrorType prv_write_read_verify_halfword(uint32_t write_addr,
 
   // Write test pattern
   if (disp_logs) {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Writing Addr 0x%"PRIx32" to value 0x%"PRIx16,
+    PBL_LOG_DBG(">> Writing Addr 0x%"PRIx32" to value 0x%"PRIx16,
             write_addr, write_val);
   }
 
@@ -133,12 +133,12 @@ static FlashTestErrorType prv_write_read_verify_halfword(uint32_t write_addr,
   flash_read_bytes((uint8_t*) &read_buffer, write_addr, sizeof(read_buffer));
 
   if (disp_logs) {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx16,
+    PBL_LOG_DBG(">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx16,
             write_addr, read_buffer);
   }
 
   if (read_buffer != expected_val) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Did not successfully write the data");
+    PBL_LOG_DBG("ERROR: Did not successfully write the data");
     return FLASH_TEST_ERR_DATA_WRITE;
   }
 
@@ -157,7 +157,7 @@ static FlashTestErrorType prv_run_data_test(void) {
   FlashTestErrorType status = FLASH_TEST_SUCCESS;
   
   // Test each data bit using walking 1's method by toggling each data line
-  PBL_LOG(LOG_LEVEL_DEBUG, ">START - DATA TEST 1: Data bus test");
+  PBL_LOG_DBG(">START - DATA TEST 1: Data bus test");
 
   // Initialize region that is to be written
   uint16_t data_buffer = 0x0;
@@ -172,27 +172,27 @@ static FlashTestErrorType prv_run_data_test(void) {
   for (data_buffer = 1; data_buffer != 0; data_buffer <<= 1) {
     read_buffer = 0;
     flash_read_bytes((uint8_t*) &read_buffer, addr_region, sizeof(read_buffer));
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx16,
+    PBL_LOG_DBG(">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx16,
             addr_region, read_buffer);
 
     if (read_buffer != 0xFFFF) {
       // Erase sector only if necessary
       flash_erase_sector_blocking(addr_region);
       flash_read_bytes((uint8_t*) &read_buffer, addr_region, sizeof(read_buffer));
-      PBL_LOG(LOG_LEVEL_DEBUG, ">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx16,
+      PBL_LOG_DBG(">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx16,
               addr_region, read_buffer);
     }
 
     // All data should be set to 0xFFFF upon erase
     if (read_buffer != 0xFFFF) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Did not successfully erase the sector");
+      PBL_LOG_DBG("ERROR: Did not successfully erase the sector");
       return FLASH_TEST_ERR_ERASE;
     }
 
     // Read and compare data that was written
     status = prv_write_read_verify_halfword(addr_region, data_buffer, data_buffer, true);
     if (status != 0) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Data bit %d not returning correct data value", bitpos);
+      PBL_LOG_DBG("ERROR: Data bit %d not returning correct data value", bitpos);
       return status;
     }
 
@@ -200,7 +200,7 @@ static FlashTestErrorType prv_run_data_test(void) {
     addr_region += 4; // increment to the next address to avoid extra erases
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, ">PASS - DATA TEST 1: Data bus test");
+  PBL_LOG_DBG(">PASS - DATA TEST 1: Data bus test");
   return status;
 }
 
@@ -220,12 +220,12 @@ static FlashTestErrorType write_initial_pattern(bool display_logs, bool skip_bas
   uint8_t read_buffer = 0;
   uint32_t bit_offset;
 
-  if (display_logs) { PBL_LOG(LOG_LEVEL_DEBUG, ">>> Initializing data patterns..."); }
-  if (display_logs) { PBL_LOG(LOG_LEVEL_DEBUG, ">>> Erasing sectors..."); }
+  if (display_logs) { PBL_LOG_DBG(">>> Initializing data patterns..."); }
+  if (display_logs) { PBL_LOG_DBG(">>> Erasing sectors..."); }
   if (erase_addr) {
     // only erase the specific erase address
     if (display_logs) {
-      PBL_LOG(LOG_LEVEL_DEBUG, ">> Erasing Addr 0x%"PRIx32, *erase_addr);
+      PBL_LOG_DBG(">> Erasing Addr 0x%"PRIx32, *erase_addr);
     }
     flash_erase_sector_blocking(*erase_addr);
   } else {
@@ -249,11 +249,11 @@ static FlashTestErrorType write_initial_pattern(bool display_logs, bool skip_bas
         // Always erase base address
 
         flash_read_bytes((uint8_t*)&read_buffer, test_addr, sizeof(read_buffer));
-        PBL_LOG(LOG_LEVEL_DEBUG, ">> Testing Addr 0x%"PRIx32", value:0x%x", test_addr, read_buffer);
+        PBL_LOG_DBG(">> Testing Addr 0x%"PRIx32", value:0x%x", test_addr, read_buffer);
 
         if (((read_buffer != 0xFF) && (read_buffer != 0xAA)) || (test_addr == base_addr)) {
           if (display_logs) {
-            PBL_LOG(LOG_LEVEL_DEBUG, ">> Erasing Addr 0x%"PRIx32, test_addr);
+            PBL_LOG_DBG(">> Erasing Addr 0x%"PRIx32, test_addr);
           }
           flash_erase_sector_blocking(test_addr);
 
@@ -270,7 +270,7 @@ static FlashTestErrorType write_initial_pattern(bool display_logs, bool skip_bas
     }
   }
 
-  if (display_logs) { PBL_LOG(LOG_LEVEL_DEBUG, ">>> Erasing sectors...complete"); }
+  if (display_logs) { PBL_LOG_DBG(">>> Erasing sectors...complete"); }
 
   // Write default data pattern to each power-of-two offset within the test region
   for (bit_offset = 1; (bit_offset & addr_mask) != 0; bit_offset <<= 1) {
@@ -299,7 +299,7 @@ static FlashTestErrorType write_initial_pattern(bool display_logs, bool skip_bas
     read_buffer = 0;
     flash_read_bytes((uint8_t*) &read_buffer, test_addr, sizeof(read_buffer));
     if (display_logs) {
-      PBL_LOG(LOG_LEVEL_DEBUG, ">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx8,
+      PBL_LOG_DBG(">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx8,
               test_addr, read_buffer);
     }
 
@@ -308,7 +308,7 @@ static FlashTestErrorType write_initial_pattern(bool display_logs, bool skip_bas
     VERIFY_TEST_STATUS(status);
   }
 
-  if (display_logs) { PBL_LOG(LOG_LEVEL_DEBUG, ">>> Initializing data patterns...complete"); }
+  if (display_logs) { PBL_LOG_DBG(">>> Initializing data patterns...complete"); }
 
   return FLASH_TEST_SUCCESS;
 }
@@ -325,7 +325,7 @@ static FlashTestErrorType prv_run_addr_test (void) {
   ///////////////////////////////////////////////////
   /// Test 1: Check for address bits stuck at high
   ///////////////////////////////////////////////////
-  PBL_LOG(LOG_LEVEL_DEBUG, ">START - ADDR TEST 1: Check for address bits stuck at high");
+  PBL_LOG_DBG(">START - ADDR TEST 1: Check for address bits stuck at high");
 
   // Write data pattern (0xAA) to each power-of-2 offset within the flash
   status = write_initial_pattern(true /*display_logs*/, false /*skip_base_addr*/,
@@ -338,7 +338,7 @@ static FlashTestErrorType prv_run_addr_test (void) {
   // Read initial value
   read_buffer = 0;
   flash_read_bytes((uint8_t*) &read_buffer, test_addr, sizeof(read_buffer));
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx8,
+  PBL_LOG_DBG(">> Reading Addr 0x%"PRIx32" value is 0x%"PRIx8,
           test_addr, read_buffer);
 
   // Write test pattern to address 0
@@ -358,7 +358,7 @@ static FlashTestErrorType prv_run_addr_test (void) {
     } else if (bit_offset == base_addr) {
       base_addr_pos = bitpos;
       // Skip base address check - that is done later
-      PBL_LOG(LOG_LEVEL_DEBUG, "Skip base address bit position %d", bitpos);
+      PBL_LOG_DBG("Skip base address bit position %d", bitpos);
       bitpos++;
       continue;
     } else {
@@ -366,7 +366,7 @@ static FlashTestErrorType prv_run_addr_test (void) {
     }
 
     if (test_addr >= FLASH_TEST_ADDR_END) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Skipping test address 0x%"PRIx32" which is out of range",
+      PBL_LOG_DBG("Skipping test address 0x%"PRIx32" which is out of range",
               test_addr);
       break;
     }
@@ -383,12 +383,12 @@ static FlashTestErrorType prv_run_addr_test (void) {
   
   // Special case - test bit for base address 
   // - Use an address between FLASH_TEST_ADDR_START and base_addr
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Testing special case for base address bit %d", base_addr_pos);
+  PBL_LOG_DBG(">> Testing special case for base address bit %d", base_addr_pos);
   // Read initial value
   test_addr = FLASH_REGION_FILESYSTEM_BEGIN;
   uint32_t special_case_addr = test_addr | base_addr;
   if ((test_addr >= base_addr) || (special_case_addr > FLASH_TEST_ADDR_END)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Cannot test address bit for base_addr");
+    PBL_LOG_DBG("ERROR: Cannot test address bit for base_addr");
     return FLASH_TEST_ERR_ADDR_RANGE;
   }
 
@@ -424,14 +424,14 @@ static FlashTestErrorType prv_run_addr_test (void) {
     return FLASH_TEST_ERR_STUCK_AT_HIGH; 
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, ">PASS - ADDR TEST 1: Check for address bits stuck at high");
+  PBL_LOG_DBG(">PASS - ADDR TEST 1: Check for address bits stuck at high");
 
 
 
   /////////////////////////////////////////////////////////////
   /// Test 2: Check for address bits stuck at low or shorted
   /////////////////////////////////////////////////////////////
-  PBL_LOG(LOG_LEVEL_DEBUG, ">START - ADDR TEST 2: Check for address bits stuck at low or shorted");
+  PBL_LOG_DBG(">START - ADDR TEST 2: Check for address bits stuck at low or shorted");
 
   // NOTE that the previous test only modified the data at base_addr and left all other
   // power-of-2 addresses with the data pattern in them. The write_initial_pattern() method
@@ -457,7 +457,7 @@ static FlashTestErrorType prv_run_addr_test (void) {
     if (test_addr == base_addr) {
       continue;
     }
-    PBL_LOG(LOG_LEVEL_DEBUG, ">> Testing Stuck at Low at Addr 0x%"PRIx32, test_addr);
+    PBL_LOG_DBG(">> Testing Stuck at Low at Addr 0x%"PRIx32, test_addr);
 
     // After we write test_pattern, data should be set to 0x00 since existing data should be 0xAA
     // and we are writing 0x55
@@ -513,7 +513,7 @@ static FlashTestErrorType prv_run_addr_test (void) {
     return FLASH_TEST_ERR_STUCK_AT_LOW;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, ">PASS - ADDR TEST 2: Check for address bits stuck at low or shorted");
+  PBL_LOG_DBG(">PASS - ADDR TEST 2: Check for address bits stuck at low or shorted");
 
   return FLASH_TEST_SUCCESS;
 }
@@ -538,13 +538,13 @@ static FlashTestErrorType setup_stress_addr_test(void) {
 
   if ((stress_addr1 < FLASH_REGION_FILESYSTEM_BEGIN) ||
       (stress_addr1 >= FLASH_REGION_FILESYSTEM_END)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Invalid range");
+    PBL_LOG_DBG("ERROR: Invalid range");
     return FLASH_TEST_ERR_ADDR_RANGE;
   }
 
   if ((stress_addr2 < FLASH_REGION_FILESYSTEM_BEGIN) ||
       (stress_addr2 >= FLASH_REGION_FILESYSTEM_END)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Invalid range");
+    PBL_LOG_DBG("ERROR: Invalid range");
     return FLASH_TEST_ERR_ADDR_RANGE;
   }
 
@@ -557,11 +557,11 @@ static FlashTestErrorType setup_stress_addr_test(void) {
   VERIFY_TEST_STATUS(status);
 
   // Write data to stress address locations
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Writing Addr 0x%"PRIx32" to value 0x%"PRIx16,
+  PBL_LOG_DBG(">> Writing Addr 0x%"PRIx32" to value 0x%"PRIx16,
           stress_addr1, stress_data1);
   flash_write_bytes((uint8_t *)&stress_data1, stress_addr1, sizeof(stress_data1));
 
-  PBL_LOG(LOG_LEVEL_DEBUG, ">> Writing Addr 0x%"PRIx32" to value 0x%"PRIx16,
+  PBL_LOG_DBG(">> Writing Addr 0x%"PRIx32" to value 0x%"PRIx16,
           stress_addr2, stress_data2);
   flash_write_bytes((uint8_t *)&stress_data2, stress_addr2, sizeof(stress_data2));
 
@@ -571,7 +571,7 @@ static FlashTestErrorType setup_stress_addr_test(void) {
 // Run address read/write stess test - if iterations is 0, then stop only when button is pushed; 
 //   else go until iterations hit
 static FlashTestErrorType prv_run_stress_addr_test(uint32_t iterations) {
-  PBL_LOG(LOG_LEVEL_DEBUG, ">START - STRESS TEST 1");
+  PBL_LOG_DBG(">START - STRESS TEST 1");
 
   uint16_t halfwordcount = 0;
   unsigned int iteration_count = 0;
@@ -605,18 +605,18 @@ static FlashTestErrorType prv_run_stress_addr_test(uint32_t iterations) {
     if (halfwordcount*2 % (256*1024) == 0) {
       // Reading flash words (which are 16 bits) hence double
       if (iterations) {
-        PBL_LOG(LOG_LEVEL_DEBUG, ">> Read 256KB, iteration: %d of %"PRId32,
+        PBL_LOG_DBG(">> Read 256KB, iteration: %d of %"PRId32,
                 iteration_count, iterations);
       } else {
-        PBL_LOG(LOG_LEVEL_DEBUG, ">> Read 256KB, iteration: %d", iteration_count);
+        PBL_LOG_DBG(">> Read 256KB, iteration: %d", iteration_count);
       }
     }
 
     iteration_count++;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Ran %d iterations", iteration_count);
-  PBL_LOG(LOG_LEVEL_DEBUG, ">PASS - STRESS TEST 1");
+  PBL_LOG_DBG("Ran %d iterations", iteration_count);
+  PBL_LOG_DBG(">PASS - STRESS TEST 1");
 
   return FLASH_TEST_SUCCESS;
 }
@@ -637,7 +637,7 @@ static FlashTestErrorType prv_run_stress_addr_test(uint32_t iterations) {
     } else {                               \
      _tot += (UINT32_MAX - _start) + _end; \
     }                                      \
-    PBL_LOG(LOG_LEVEL_DEBUG, "Read %lu bytes %lu ticks %lu us", x, _tot, _tot / 64); \
+    PBL_LOG_DBG("Read %lu bytes %lu ticks %lu us", x, _tot, _tot / 64); \
 } while (0)
 
 #define SWAP(a, b)     \
@@ -654,7 +654,7 @@ static FlashTestErrorType prv_run_stress_addr_test(uint32_t iterations) {
 static FlashTestErrorType prv_run_perf_data_test(void) {
   uint8_t *read_buffer = (uint8_t *) app_malloc(MAX_READ_BUFF_SIZE);
   if (!read_buffer) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "ERROR: Not enough memory to run test");
+    PBL_LOG_DBG("ERROR: Not enough memory to run test");
     return FLASH_TEST_ERR_OOM;
   }
 
@@ -685,7 +685,7 @@ static FlashTestErrorType prv_run_perf_data_test(void) {
       }
     }
     
-    PBL_LOG(LOG_LEVEL_DEBUG, "Read %lu bytes, median throughput %lu KBps", num_bytes, (num_bytes * 1000 * 64 / ticks[1]));
+    PBL_LOG_DBG("Read %lu bytes, median throughput %lu KBps", num_bytes, (num_bytes * 1000 * 64 / ticks[1]));
   }
   
   app_free(read_buffer);
@@ -737,10 +737,10 @@ FlashTestErrorType run_flash_test_case(FlashTestCaseType test_case_num, uint32_t
   enable_flash_test = false;
 
   if (status == FLASH_TEST_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">>>>>PASS FLASH TEST CASE %d<<<<<", test_case_num);
+    PBL_LOG_DBG(">>>>>PASS FLASH TEST CASE %d<<<<<", test_case_num);
   }
   else {
-    PBL_LOG(LOG_LEVEL_DEBUG, ">>>>>FAIL FLASH TEST CASE %d, Status: %d<<<<<", test_case_num, status);
+    PBL_LOG_DBG(">>>>>FAIL FLASH TEST CASE %d, Status: %d<<<<<", test_case_num, status);
   }
   
   // Re-enable watchdog state if previously enabled

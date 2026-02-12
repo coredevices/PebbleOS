@@ -24,7 +24,7 @@ AppInbox *app_inbox_create_and_register(size_t buffer_size, uint32_t min_num_mes
   buffer_size += (min_num_messages * sizeof(AppInboxMessageHeader));
   uint8_t *buffer = applib_zalloc(buffer_size);
   if (!buffer) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory to allocate App Inbox of size %"PRIu32,
+    PBL_LOG_ERR("Not enough memory to allocate App Inbox of size %"PRIu32,
             (uint32_t)buffer_size);
     return NULL;
   }

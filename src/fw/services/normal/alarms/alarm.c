@@ -307,7 +307,7 @@ static void prv_assign_alarm(Alarm *alarm, CronJob *cron) {
   s_next_alarm_cron.cb_data = (void*)(intptr_t)alarm->id;
   s_next_alarm = *alarm;
   s_next_alarm_time = cron_job_schedule(&s_next_alarm_cron);
-  PBL_LOG(LOG_LEVEL_INFO, "Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)",
+  PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)",
           alarm->id, alarm->config.hour, alarm->config.minute, s_next_alarm_time,
           alarm->config.is_smart);
 }
@@ -431,7 +431,7 @@ static void prv_snooze_kernel_bg_callback(void *unused) {
 
 // ----------------------------------------------------------------------------------------------
 static void prv_snooze_timer_callback(void *unused) {
-  PBL_LOG(LOG_LEVEL_INFO, "Snooze timeout");
+  PBL_LOG_INFO("Snooze timeout");
   system_task_add_callback(prv_snooze_kernel_bg_callback, NULL);
 }
 
@@ -469,7 +469,7 @@ cleanup:
   kernel_free(file);
 
 
-  PBL_LOG(LOG_LEVEL_INFO, "Alarm %u timeout", id);
+  PBL_LOG_INFO("Alarm %u timeout", id);
   s_most_recent_alarm_recorded = false;
   s_most_recent_alarm_id = rv ? id : ALARM_INVALID_ID;
   prv_clear_snooze_timer();
@@ -514,7 +514,7 @@ static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig* co
   const int load_size = MIN(size, (int)sizeof(config));
   if (settings_file_get(file, &key, sizeof(key), &config, load_size) == S_SUCCESS) {
     if (config.hour > 23 || config.minute > 59) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Invalid config for id %u! Blowing it out! "
+      PBL_LOG_DBG("Invalid config for id %u! Blowing it out! "
               "Hours %u Minutes %u Kind %u", id, config.hour, config.minute,
               config.kind);
       settings_file_delete(file, &key, sizeof(key));
@@ -770,7 +770,7 @@ void alarm_set_enabled(AlarmId id, bool enable) {
   }
 
   if (id == s_most_recent_alarm_id && !enable) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Canceling snooze timer because alarm was disabled");
+    PBL_LOG_DBG("Canceling snooze timer because alarm was disabled");
     // Harmless if the alarm is not currently snoozing - the snooze timer still exists to be stopped
     prv_clear_snooze_timer();
     s_most_recent_alarm_id = ALARM_INVALID_ID;
@@ -792,7 +792,7 @@ void alarm_delete(AlarmId id) {
   }
 
   if (id == s_most_recent_alarm_id) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Canceling snooze timer on delete");
+    PBL_LOG_DBG("Canceling snooze timer on delete");
     prv_clear_snooze_timer();
     s_most_recent_alarm_id = ALARM_INVALID_ID;
     s_smart_snooze_counter = 0;
@@ -932,7 +932,7 @@ cleanup:
 
 static void prv_snooze_alarm(int snooze_delay_s) {
   prv_clear_snooze_timer();
-  PBL_LOG(LOG_LEVEL_INFO, "Snoozing for %d minutes", snooze_delay_s / SECONDS_PER_MINUTE);
+  PBL_LOG_INFO("Snoozing for %d minutes", snooze_delay_s / SECONDS_PER_MINUTE);
   bool success = new_timer_start(s_snooze_timer_id, snooze_delay_s * MS_PER_SECOND,
                                  prv_snooze_timer_callback, NULL, 0 /* flags*/);
   PBL_ASSERTN(success);
@@ -1077,7 +1077,7 @@ void alarm_handle_clock_change(void) {
       // Check if we've used up most of our smart snooze attempts (within last 2 minutes)
       if (s_smart_snooze_counter >= (SMART_ALARM_MAX_SMART_SNOOZE - 2)) {
         should_force_trigger = true;
-        PBL_LOG(LOG_LEVEL_INFO, "Smart alarm %u at counter %d near deadline, forcing trigger",
+        PBL_LOG_INFO("Smart alarm %u at counter %d near deadline, forcing trigger",
                 s_most_recent_alarm_id, s_smart_snooze_counter);
       } else {
         // Also check if current time is within the smart alarm window past the deadline
@@ -1094,7 +1094,7 @@ void alarm_handle_clock_change(void) {
         // (e.g., alarm at 5:35 AM, current time 11 PM would give time_diff = 1045 min)
         if (time_diff_minutes >= 0 && time_diff_minutes <= (SMART_ALARM_RANGE_S / 60)) {
           should_force_trigger = true;
-          PBL_LOG(LOG_LEVEL_INFO, "Smart alarm %u in window, %d min past deadline, forcing trigger",
+          PBL_LOG_INFO("Smart alarm %u in window, %d min past deadline, forcing trigger",
                   s_most_recent_alarm_id, time_diff_minutes);
         }
       }
@@ -1107,9 +1107,9 @@ void alarm_handle_clock_change(void) {
         s_most_recent_alarm_recorded = true;
         prv_alarm_operation(s_most_recent_alarm_id, prv_record_alarm_op, NULL);
       }
-      PBL_LOG(LOG_LEVEL_INFO, "Clock change during alarm %u, triggered alarm", s_most_recent_alarm_id);
+      PBL_LOG_INFO("Clock change during alarm %u, triggered alarm", s_most_recent_alarm_id);
     } else {
-      PBL_LOG(LOG_LEVEL_INFO, "Clock change during alarm %u, clearing snooze state",
+      PBL_LOG_INFO("Clock change during alarm %u, clearing snooze state",
               s_most_recent_alarm_id);
     }
 

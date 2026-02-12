@@ -32,8 +32,7 @@ static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
     contents = kernel_calloc(1, read_size);
   }
   if (contents == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Could not allocate %d bytes for corrupt file of size %d.",
+    PBL_LOG_ERR("Could not allocate %d bytes for corrupt file of size %d.",
             read_size, file_size);
     return NULL;
   }
@@ -44,27 +43,25 @@ static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
   int start_offset = end_offset - read_size;
   int status = pfs_seek(iter->fd, start_offset, FSeekSet);
   if (status < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Debug seek failed: %d", status);
+    PBL_LOG_ERR("Debug seek failed: %d", status);
     kernel_free(contents);
     return NULL;
   }
   int actual_read_size = pfs_read(iter->fd, contents, read_size);
-  PBL_LOG(LOG_LEVEL_INFO,
-          "Read %d (expected %d) bytes of file %s (size %d), around offset %d.",
+  PBL_LOG_INFO("Read %d (expected %d) bytes of file %s (size %d), around offset %d.",
           actual_read_size, read_size, iter->file_name, file_size, pos);
   return contents;
 }
 
 static NORETURN fatal_logic_error(SettingsRawIter *iter) {
-  PBL_LOG(LOG_LEVEL_ERROR,
-          "settings_raw_iter logic error. "
+  PBL_LOG_ERR("settings_raw_iter logic error. "
           "Attempting to read affected file into RAM for easier debugging...");
   uint8_t *contents = read_file_into_ram(iter);
-  PBL_LOG(LOG_LEVEL_INFO, "Removing affected file %s...", iter->file_name);
+  PBL_LOG_INFO("Removing affected file %s...", iter->file_name);
   // Remove the file that caused us to get into this state before we reboot,
   // that way we should be able to avoid getting into a reboot loop.
   pfs_close_and_remove(iter->fd);
-  PBL_LOG(LOG_LEVEL_INFO, "Data at address %p. Rebooting...", contents);
+  PBL_LOG_INFO("Data at address %p. Rebooting...", contents);
   PBL_CROAK("Internal logic error.");
 }
 
@@ -75,7 +72,7 @@ static int sfs_seek(SettingsRawIter *iter, int amount, int whence) {
   }
 
   int pos = pfs_seek(iter->fd, 0, FSeekCur);
-  PBL_LOG(LOG_LEVEL_ERROR, "Could not seek by %d from whence %d at pos %d: %"PRId32,
+  PBL_LOG_ERR("Could not seek by %d from whence %d at pos %d: %"PRId32,
           amount, whence, pos, status);
   fatal_logic_error(iter);
 }
@@ -91,7 +88,7 @@ static int sfs_read(SettingsRawIter *iter, uint8_t *data, int data_len) {
   }
 
   int pos = pfs_seek(iter->fd, 0, FSeekCur);
-  PBL_LOG(LOG_LEVEL_ERROR, "Could not read data to %p of length %d at pos %d: %"PRId32,
+  PBL_LOG_ERR("Could not read data to %p of length %d at pos %d: %"PRId32,
           data, data_len, pos, status);
   fatal_logic_error(iter);
 }
@@ -103,7 +100,7 @@ static int sfs_write(SettingsRawIter *iter, const uint8_t *data, int data_len) {
   }
 
   int pos = pfs_seek(iter->fd, 0, FSeekCur);
-  PBL_LOG(LOG_LEVEL_ERROR, "Could not write from %p, %d bytes at pos %d: %"PRId32,
+  PBL_LOG_ERR("Could not write from %p, %d bytes at pos %d: %"PRId32,
           data, data_len, pos, status);
   fatal_logic_error(iter);
 }
@@ -215,7 +212,7 @@ void settings_raw_iter_write_byte(SettingsRawIter *iter, int offset, uint8_t byt
 void settings_raw_iter_deinit(SettingsRawIter *iter) {
   int status = pfs_close(iter->fd);
   if (status < 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not close settings file");
+    PBL_LOG_WRN("Could not close settings file");
   }
 }
 

@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "ancs_util.h"
 #include "ancs_types.h"
 
@@ -61,7 +59,7 @@ bool ancs_util_get_attr_ptrs(const uint8_t* data, const size_t length, const Fet
 
   const uint8_t* iter = data;
   if (length < sizeof(ANCSAttribute)) {
-    PBL_LOG(LOG_LEVEL_INFO, "ANCS data length is too small. Length: %d, sizeof(ANCSAttribute): %d",
+    PBL_LOG_INFO("ANCS data length is too small. Length: %d, sizeof(ANCSAttribute): %d",
                                                           (int)length, (int)sizeof(ANCSAttribute));
     *out_error = true;
     return false;
@@ -84,7 +82,7 @@ bool ancs_util_get_attr_ptrs(const uint8_t* data, const size_t length, const Fet
         // Check that attribute length is valid
         bool attr_length_invalid = (attr_list[i].max_length != 0) && (attr->length > attr_list[i].max_length);
         if (attr_length_invalid) {
-          PBL_LOG(LOG_LEVEL_INFO, "Length of ANCS attribute %d is invalid: length: %d, max_length: %d",
+          PBL_LOG_INFO("Length of ANCS attribute %d is invalid: length: %d, max_length: %d",
                                                     attr->id, attr->length, attr_list[i].max_length);
           *out_error = true;
           return false;
@@ -100,7 +98,7 @@ bool ancs_util_get_attr_ptrs(const uint8_t* data, const size_t length, const Fet
 
     if (!is_found) {
       // The attribute was unexpected, the dictionary is malformed
-      PBL_LOG(LOG_LEVEL_INFO, "Unexpected ANCS attribute. ID = %d. The dictionary is malformed",
+      PBL_LOG_INFO("Unexpected ANCS attribute. ID = %d. The dictionary is malformed",
               attr->id);
       *out_error = true;
       return false;

@@ -267,7 +267,7 @@ void shared_prf_storage_store_ble_pairing_data(
     const SMPairingInfo *pairing_info, const char *name, bool requires_address_pinning,
     uint8_t flags) {
   if (!pairing_info || sm_is_pairing_info_empty(pairing_info)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "PRF Storage: Attempting to store an NULL or empty pairing info");
+    PBL_LOG_WRN("PRF Storage: Attempting to store an NULL or empty pairing info");
     return;
   }
 
@@ -308,7 +308,7 @@ bool shared_prf_storage_get_bt_classic_pairing_data(BTDeviceAddress *addr_out,
   bool result = false;
   const BTDeviceAddress invalid_address = (BTDeviceAddress) {};
   if (memcmp(&data.bt_classic_data.address, &invalid_address, sizeof(invalid_address)) == 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid pairing stored");
+    PBL_LOG_WRN("Invalid pairing stored");
     goto done;
   }
 
@@ -362,7 +362,7 @@ static void prv_shared_prf_storage_store_bt_classic_pairing_data(
 void shared_prf_storage_store_bt_classic_pairing_data(
     BTDeviceAddress *addr, const char *device_name, SM128BitKey *link_key, uint8_t platform_bits) {
   if (!addr || !device_name) {
-    PBL_LOG(LOG_LEVEL_WARNING, "PRF Storage: Can't store this BT classic pairing");
+    PBL_LOG_WRN("PRF Storage: Can't store this BT classic pairing");
     return;
   }
 
@@ -423,7 +423,7 @@ void shared_prf_storage_wipe_all(void) {
 }
 
 static void prv_system_task_prf_update_cb(void *unused) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Syncing pairing information to SPRF");
+  PBL_LOG_DBG("Syncing pairing information to SPRF");
   prv_lock_pending_bonding();
   {
     bool le_bonding_update = s_pending_bondings.has_ble_pairing_pending;

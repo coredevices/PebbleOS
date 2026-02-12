@@ -216,7 +216,7 @@ const Npm1300Config NPM1300_CONFIG = {
 };
 
 void board_early_init(void) {
-  PBL_LOG(LOG_LEVEL_ERROR, "asterix early init");
+  PBL_LOG_ERR("asterix early init");
 
   NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 

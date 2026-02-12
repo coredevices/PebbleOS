@@ -49,7 +49,7 @@ static bool prv_wait_busy(void) {
   int timeout = 50 * 10;
   while (display_busy()) {
     if (timeout-- == 0) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Display busy-wait timeout expired!");
+      PBL_LOG_ERR("Display busy-wait timeout expired!");
       return false;
     }
     delay_us(100);

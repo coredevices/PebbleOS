@@ -18,7 +18,7 @@ static bool s_progress_reporting_supported = true;
 static void prv_send_music_command_to_handset(MusicEndpointCmdID cmd) {
   CommSession *session = comm_session_get_system_session();
   if (!session) {
-    PBL_LOG(LOG_LEVEL_ERROR, "No system session");
+    PBL_LOG_ERR("No system session");
     return;
   }
   comm_session_send_data(session, MUSIC_CTRL_ENDPOINT,
@@ -38,7 +38,7 @@ static const uint8_t* prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
 
   iter += 1 + *out_length;
   if (iter > iter_end) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid music message");
+    PBL_LOG_WRN("Invalid music message");
     return NULL;
   }
   return iter;
@@ -181,7 +181,7 @@ void music_protocol_msg_callback(CommSession *session, const uint8_t* msg, size_
       prv_update_player_info(session, msg, length);
       break;
     default:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Invalid command 0x%"PRIx8, msg[0]);
+      PBL_LOG_DBG("Invalid command 0x%"PRIx8, msg[0]);
   }
 }
 

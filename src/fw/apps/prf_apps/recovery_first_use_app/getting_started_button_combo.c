@@ -46,7 +46,7 @@ static void prv_mfg_mode_cb(void *data) {
 #endif
 
 static void prv_timeout_expired(void *data) {
-  PBL_LOG(LOG_LEVEL_INFO, "Button combo timeout expired!");
+  PBL_LOG_INFO("Button combo timeout expired!");
 
   // Timeout expired, jump over the app thread to do the thing.
   void (*real_callback)(void*) = data;
@@ -70,7 +70,7 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
 
   for (unsigned int i = 0; i < ARRAY_LENGTH(BUTTON_COMBOS); ++i) {
     if (state->buttons_held_bitset == BUTTON_COMBOS[i].desired_bitset) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Starting timer for combo #%d", i);
+      PBL_LOG_DBG("Starting timer for combo #%d", i);
 
       new_timer_start(state->combo_timer, COMBO_HOLD_MS, prv_timeout_expired,
                       BUTTON_COMBOS[i].callback, 0);
@@ -78,7 +78,7 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
     }
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Stopping combo timer");
+  PBL_LOG_DBG("Stopping combo timer");
 
   // No combo found, cancel the timer. It's harmless to call this if the timer isn't running.
   new_timer_stop(state->combo_timer);

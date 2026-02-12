@@ -81,11 +81,11 @@ static void prv_pop_all_windows_cb(void *cb_data) {
   AppData *data = app_state_get_user_data();
   int64_t time_rendered = prv_time_64() - data->time_started;
 
-  PBL_LOG(LOG_LEVEL_INFO, "## %d frames rendered", (int)data->rendered_frames);
+  PBL_LOG_INFO("## %d frames rendered", (int)data->rendered_frames);
   if (time_rendered) {
     int frame_period = time_rendered/(int64_t)data->rendered_frames;
     int fps = (int64_t)data->rendered_frames*1000/time_rendered;
-    PBL_LOG(LOG_LEVEL_INFO, "## at %d FPS (%d ms/frame)", fps, frame_period);
+    PBL_LOG_INFO("## at %d FPS (%d ms/frame)", fps, frame_period);
   }
 
   app_window_stack_pop_all(false);
@@ -186,8 +186,8 @@ static void prv_window_load(Window *window) {
   bitmap_layer_init(&data->topleft_layer, &GRect(0, 0, navbar_width, navbar_width));
   bitmap_layer_set_background_color_2bit(&data->topleft_layer, GColor2White);
   bitmap_layer_set_bitmap(&data->topleft_layer, &s_fps_topleft_bitmap);
-  // PBL_LOG(LOG_LEVEL_DEBUG, "heap_allocated: %d", s_fps_topleft_bitmap.is_heap_allocated);
-  // PBL_LOG(LOG_LEVEL_DEBUG, "bitmapformat: %d", s_fps_topleft_bitmap.format);
+  // PBL_LOG_DBG("heap_allocated: %d", s_fps_topleft_bitmap.is_heap_allocated);
+  // PBL_LOG_DBG("bitmapformat: %d", s_fps_topleft_bitmap.format);
 
   layer_add_child(&window->layer, &data->topleft_layer.layer);
 

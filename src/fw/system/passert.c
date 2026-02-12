@@ -55,7 +55,7 @@ NORETURN passert_failed(const char* filename, int line_number, const char* messa
 
 NORETURN passert_failed_hashed(uint32_t packed_loghash, ...) {
   uintptr_t saved_lr = (uintptr_t) __builtin_return_address(0);
-  PBL_LOG(LOG_LEVEL_ALWAYS, "ASSERTION at LR 0x%x", saved_lr);
+  PBL_LOG_ALWAYS("ASSERTION at LR 0x%x", saved_lr);
 
   va_list fmt_args;
   va_start(fmt_args, packed_loghash);
@@ -68,7 +68,7 @@ NORETURN passert_failed_hashed(uint32_t packed_loghash, ...) {
 }
 
 NORETURN passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_loghash, ...) {
-  PBL_LOG(LOG_LEVEL_ALWAYS, "ASSERTION at LR 0x%"PRIx32, lr);
+  PBL_LOG_ALWAYS("ASSERTION at LR 0x%"PRIx32, lr);
 
   va_list fmt_args;
   va_start(fmt_args, packed_loghash);
@@ -81,7 +81,7 @@ NORETURN passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_loghash, ...
 }
 
 NORETURN passert_failed_hashed_no_message_with_lr(uint32_t lr) {
-  PBL_LOG(LOG_LEVEL_ALWAYS, "ASSERTION at LR 0x%"PRIx32, lr);
+  PBL_LOG_ALWAYS("ASSERTION at LR 0x%"PRIx32, lr);
 
   trigger_fault(RebootReasonCode_Assert, lr);
 }
@@ -101,7 +101,7 @@ NORETURN passert_failed_no_message(const char* filename, int line_number) {
 
 NORETURN wtf(void) {
   uintptr_t saved_lr = (uintptr_t) __builtin_return_address(0);
-  PBL_LOG(LOG_LEVEL_ALWAYS, "*** WTF %p", (void *)saved_lr);
+  PBL_LOG_ALWAYS("*** WTF %p", (void *)saved_lr);
   trigger_fault(RebootReasonCode_Assert, saved_lr);
 }
 
@@ -109,7 +109,7 @@ void passert_check_task(PebbleTask expected_task) {
   uintptr_t saved_lr = (uintptr_t) __builtin_return_address(0);
 
   if (pebble_task_get_current() != expected_task) {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "LR: %p. Incorrect task! Expected <%s> got <%s>",
+    PBL_LOG_ALWAYS("LR: %p. Incorrect task! Expected <%s> got <%s>",
             (void*) saved_lr, pebble_task_get_name(expected_task),
             pebble_task_get_name(pebble_task_get_current()));
     trigger_fault(RebootReasonCode_Assert, saved_lr);
@@ -120,7 +120,7 @@ void passert_check_not_task(PebbleTask unexpected_task) {
   uintptr_t saved_lr = (uintptr_t) __builtin_return_address(0);
 
   if (pebble_task_get_current() == unexpected_task) {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "LR: %p. Incorrect task! Can't be <%s>",
+    PBL_LOG_ALWAYS("LR: %p. Incorrect task! Can't be <%s>",
             (void*) saved_lr, pebble_task_get_name(unexpected_task));
     trigger_fault(RebootReasonCode_Assert, saved_lr);
   }
@@ -138,7 +138,7 @@ void assert_failed(uint8_t* file, uint32_t line) {
 extern void command_dump_malloc_kernel(void);
 
 NORETURN croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
-  PBL_LOG(LOG_LEVEL_ALWAYS, "CROAK OOM: Failed to alloc %d bytes at LR: 0x%x",
+  PBL_LOG_ALWAYS("CROAK OOM: Failed to alloc %d bytes at LR: 0x%x",
                bytes, saved_lr);
 
 #ifdef MALLOC_INSTRUMENTATION
@@ -150,7 +150,7 @@ NORETURN croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
 
 #if MICRO_FAMILY_NRF52840
 NORETURN app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
-  PBL_LOG(LOG_LEVEL_ALWAYS, "nRF error %ld (pc %ld, info %ld)", id, pc, info);
+  PBL_LOG_ALWAYS("nRF error %ld (pc %ld, info %ld)", id, pc, info);
   trigger_fault(RebootReasonCode_Assert, pc);
 }
 

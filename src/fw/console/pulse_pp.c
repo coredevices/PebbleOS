@@ -78,7 +78,7 @@ static void prv_send_next(Transport *transport) {
 }
 
 static void prv_reset(Transport *transport) {
-  PBL_LOG(LOG_LEVEL_INFO, "Unimplemented");
+  PBL_LOG_INFO("Unimplemented");
 }
 
 static void prv_granted_kernel_main_cb(void *ctx) {
@@ -142,7 +142,7 @@ void pulse_transport_set_connected(bool is_connected) {
                                             &s_pulse_transport_implementation,
                                             TransportDestinationHybrid);
     if (!s_transport.session) {
-      PBL_LOG(LOG_LEVEL_ERROR, "CommSession couldn't be opened");
+      PBL_LOG_ERR("CommSession couldn't be opened");
       send_event = false;
     }
 
@@ -183,7 +183,7 @@ static void prv_pulse_pp_handle_data(void *data, size_t length) {
   bt_lock();
 
   if (!s_transport.session) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Received PULSE serial data, but session not connected!");
+    PBL_LOG_ERR("Received PULSE serial data, but session not connected!");
     goto unlock;
   }
   comm_session_receive_router_write(s_transport.session, data, length);

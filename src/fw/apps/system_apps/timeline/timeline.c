@@ -134,7 +134,7 @@ static bool prv_can_transition_state(TimelineAppData *data, TimelineAppState nex
 
 static bool prv_set_state(TimelineAppData *data, TimelineAppState next_state) {
   const bool can_transition = prv_can_transition_state(data, next_state);
-  PBL_LOG(LOG_LEVEL_DEBUG, "state transition %d->%d valid:%d",
+  PBL_LOG_DBG("state transition %d->%d valid:%d",
           data->state, next_state, can_transition);
   if (can_transition) {
     data->state = next_state;
@@ -1230,7 +1230,7 @@ static bool NOINLINE prv_setup_timeline_app(void) {
         // for some reason we can't find the pin we were asked to launch into
         char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
         uuid_to_string(&args->pin_id, uuid_buffer);
-        PBL_LOG(LOG_LEVEL_ERROR, "Asked to launch into pin but can't find it %s", uuid_buffer);
+        PBL_LOG_ERR("Asked to launch into pin but can't find it %s", uuid_buffer);
         launch_into_pin = false;
         data->launch_into_deep_pin = false;
         // we couldn't find the launch pin, go back to the present

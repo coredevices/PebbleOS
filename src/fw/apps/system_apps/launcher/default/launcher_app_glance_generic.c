@@ -276,7 +276,7 @@ static void prv_generic_glance_dynamic_text_node_update(PBL_UNUSED GContext *ctx
   if (!structured_glance) {
     return;
   } else if (structured_glance->glance.current_slice.type != AppGlanceSliceType_IconAndSubtitle) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Generic glance doesn't know how to handle slice type %d",
+    PBL_LOG_WRN("Generic glance doesn't know how to handle slice type %d",
             structured_glance->glance.current_slice.type);
     return;
   }
@@ -296,7 +296,7 @@ static void prv_generic_glance_dynamic_text_node_update(PBL_UNUSED GContext *ctx
   if (template_string_error.status != TemplateStringErrorStatus_Success) {
     // Zero out the buffer and return
     buffer[0] = '\0';
-    PBL_LOG(LOG_LEVEL_WARNING, "Error at index %zu in evaluating template string: %s",
+    PBL_LOG_WRN("Error at index %zu in evaluating template string: %s",
             template_string_error.index_in_string, subtitle_template_string);
     return;
   }

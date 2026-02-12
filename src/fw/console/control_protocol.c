@@ -80,7 +80,7 @@ static void prv_send_configure_ack(PPPControlProtocol *this,
                                    struct LCPPacket *triggering_packet) {
   if (ntoh16(triggering_packet->length) > pulse_link_max_send_size()) {
     // Too big to send and truncation will corrupt the packet.
-    PBL_LOG(LOG_LEVEL_ERROR, "Configure-Request too large to Ack");
+    PBL_LOG_ERR("Configure-Request too large to Ack");
     return;
   }
   struct LCPPacket *packet = pulse_link_send_begin(this->protocol_number);
@@ -94,7 +94,7 @@ static void prv_send_configure_reject(PPPControlProtocol *this,
   if (ntoh16(bad_packet->length) > pulse_link_max_send_size()) {
     // Too big to send and truncation will corrupt the packet.
     // There isn't really anything we can do.
-    PBL_LOG(LOG_LEVEL_ERROR, "Configure-Request too large to Reject");
+    PBL_LOG_ERR("Configure-Request too large to Reject");
     return;
   }
   struct LCPPacket *packet = pulse_link_send_begin(this->protocol_number);
@@ -240,8 +240,7 @@ static void prv_on_configure_ack(PPPControlProtocol *this,
     // If the length is greater than four, there are options in the Ack
     // which means that the Ack'ed options list does not match the
     // options list from the request. The Ack packet is invalid.
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Configure-Ack received with options list which differs from "
+    PBL_LOG_WRN("Configure-Ack received with options list which differs from "
             "the sent Configure-Request. Discarding.");
     return;
   }
@@ -261,7 +260,7 @@ static void prv_on_configure_ack(PPPControlProtocol *this,
       break;
     case LinkState_AckReceived:
     case LinkState_Opened:
-      PBL_LOG(LOG_LEVEL_WARNING, "Unexpected duplicate Configure-Ack");
+      PBL_LOG_WRN("Unexpected duplicate Configure-Ack");
       prv_send_configure_request(this);
       prv_transition_to(this, LinkState_RequestSent);
       break;
@@ -302,8 +301,7 @@ static void prv_on_configure_nak_or_reject(PPPControlProtocol *this,
       // fallthrough
     case LinkState_AckReceived:
     case LinkState_Opened:
-      PBL_LOG(LOG_LEVEL_WARNING,
-              "Unexpected Configure-Nak/Rej received after Ack");
+      PBL_LOG_WRN("Unexpected Configure-Nak/Rej received after Ack");
       prv_handle_nak_or_reject(this, packet);
       prv_transition_to(this, LinkState_RequestSent);
       break;
@@ -337,7 +335,7 @@ static void prv_on_terminate_ack(PPPControlProtocol *this,
   } else if (this->state->link_state == LinkState_AckReceived) {
     prv_transition_to(this, LinkState_RequestSent);
   } else if (this->state->link_state == LinkState_Opened) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Terminate-Ack received on an open connection");
+    PBL_LOG_WRN("Terminate-Ack received on an open connection");
     prv_send_configure_request(this);
     prv_transition_to(this, LinkState_RequestSent);
   }

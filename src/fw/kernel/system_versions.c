@@ -108,7 +108,7 @@ static void prv_send_watch_versions(CommSession *session) {
   strncpy(versions_msg.iso_locale, i18n_get_locale(), ISO_LOCALE_LENGTH - 1);
   versions_msg.iso_locale[ISO_LOCALE_LENGTH - 1] = '\0';
   versions_msg.lang_version = htons(i18n_get_version());
-  PBL_LOG(LOG_LEVEL_DEBUG, "Sending lang version: %d", versions_msg.lang_version);
+  PBL_LOG_DBG("Sending lang version: %d", versions_msg.lang_version);
 
   // Set the capabilities as zero, effectively saying that we don't support anything.
   versions_msg.capabilities.flags = 0;
@@ -168,7 +168,7 @@ void system_version_protocol_msg_callback(CommSession *session, const uint8_t* d
     break;
   }
   default:
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid message received. First byte is %u", data[0]);
+    PBL_LOG_ERR("Invalid message received. First byte is %u", data[0]);
     break;
   }
 }

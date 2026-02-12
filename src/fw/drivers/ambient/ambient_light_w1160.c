@@ -97,12 +97,12 @@ void ambient_light_init(void) {
 
   rv = prv_read_register(W1160_PDT_ID_REG, &chip_id);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not read W1160 chip ID");
+    PBL_LOG_ERR("Could not read W1160 chip ID");
     return;
   }
 
   if (chip_id != W1160_CHIP_ID) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unexpected W1160 chip ID: 0x%02x", chip_id);
+    PBL_LOG_ERR("Unexpected W1160 chip ID: 0x%02x", chip_id);
     return;
   }
 
@@ -133,14 +133,14 @@ uint32_t ambient_light_get_light_level(void) {
 
   rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not enable W1160 sampling");
+    PBL_LOG_ERR("Could not enable W1160 sampling");
     return 0UL;
   }
 
   do {
     rv = prv_read_register(W1160_FLAG1_REG, &result[0]);
     if (!rv) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not read W1160 FLAG1");
+      PBL_LOG_ERR("Could not read W1160 FLAG1");
       return 0UL;
     }
   } while ((result[0] & W1160_FLG_ALS_DR) == 0U);
@@ -148,13 +148,13 @@ uint32_t ambient_light_get_light_level(void) {
   rv = prv_read_register(W1160_DATA1_ALS_REG, &result[1]);
   rv &= prv_read_register(W1160_DATA2_ALS_REG, &result[0]);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not obtain W1160 data");
+    PBL_LOG_ERR("Could not obtain W1160 data");
     return 0UL;
   }
 
   rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not disable W1160 sampling");
+    PBL_LOG_ERR("Could not disable W1160 sampling");
     return 0UL;
   }
 

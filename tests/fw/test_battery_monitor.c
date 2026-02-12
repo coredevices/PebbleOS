@@ -406,12 +406,12 @@ void test_battery_monitor__increase_discharging(void) {
 
   // Should be stable by now
   // Shouldn't update percent (actually, shouldn't even send events.)
-  PBL_LOG(LOG_LEVEL_DEBUG, "Shouldn't be any updates");
-  PBL_LOG(LOG_LEVEL_DEBUG, "▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼");
+  PBL_LOG_DBG("Shouldn't be any updates");
+  PBL_LOG_DBG("▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼");
   fake_battery_set_millivolts(high_mv);
   periodic_timer_trigger(20);
   cl_assert_equal_i(battery_get_charge_state().charge_percent, 50);
-  PBL_LOG(LOG_LEVEL_DEBUG, "▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲");
+  PBL_LOG_DBG("▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲");
 
   // Should still update if it goes lower
   fake_battery_set_millivolts(lower_mv);

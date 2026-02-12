@@ -43,7 +43,7 @@ void notification_storage_init(void) {
   // Create a new file and close it (removes delay when receiving first notification after boot)
   int fd = pfs_open(FILENAME, OP_FLAG_WRITE, FILE_TYPE_STATIC, NOTIFICATION_STORAGE_FILE_SIZE);
   if (fd < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error opening file %d", fd);
+    PBL_LOG_ERR("Error opening file %d", fd);
   } else {
     pfs_close(fd);
   }
@@ -68,7 +68,7 @@ static int prv_file_open(uint8_t op_flags) {
     bool read_only =
         ((op_flags & (OP_FLAG_WRITE | OP_FLAG_OVERWRITE | OP_FLAG_READ)) == OP_FLAG_READ);
     if ((!read_only) || (fd != E_DOES_NOT_EXIST)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error opening file %d", fd);
+      PBL_LOG_ERR("Error opening file %d", fd);
       // Remove file so next open will create a new one (notification storage trashed)
       pfs_remove(FILENAME);
     }
@@ -97,7 +97,7 @@ static int prv_write_notification(TimelineItem *notification,
   header->common.status = ~header->common.status;
 
   if (result < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error writing notification header %d", result);
+    PBL_LOG_ERR("Error writing notification header %d", result);
     return result;
   }
   bytes_written += result;
@@ -111,7 +111,7 @@ static int prv_write_notification(TimelineItem *notification,
   timeline_item_serialize_payload(notification, write_buffer, header->payload_length);
   result = pfs_write(fd, write_buffer, header->payload_length);
   if (result < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error writing notification payload %d", result);
+    PBL_LOG_ERR("Error writing notification payload %d", result);
     kernel_free(write_buffer);
     return result;
   }
@@ -139,7 +139,7 @@ static void prv_reclaim_space(size_t size_needed, int fd) {
       // Mark for deletion
       char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
       uuid_to_string(&iter_state.header.common.id, uuid_buffer);
-      PBL_LOG(LOG_LEVEL_WARNING, "Storage full: marking notification %s as deleted (ANCS UID: %"PRIu32")", 
+      PBL_LOG_WRN("Storage full: marking notification %s as deleted (ANCS UID: %"PRIu32")", 
               uuid_buffer, iter_state.header.common.ancs_uid);
       prv_set_header_status(&iter_state.header, TimelineItemStatusDeleted, fd);
       size_available += sizeof(SerializedTimelineItemHeader) + iter_state.header.payload_length;
@@ -186,7 +186,7 @@ static bool prv_compress(size_t size_needed, int *fd) {
   int new_fd = pfs_open(FILENAME, OP_FLAG_OVERWRITE, FILE_TYPE_STATIC,
       NOTIFICATION_STORAGE_FILE_SIZE);
   if (new_fd < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error opening new file for compression %d", new_fd);
+    PBL_LOG_ERR("Error opening new file for compression %d", new_fd);
     return false;
   }
 
@@ -220,7 +220,7 @@ static bool prv_compress(size_t size_needed, int *fd) {
       // Error occurred
       char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
       uuid_to_string(&iter_state.header.common.id, uuid_buffer);
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read notification %s during compression. Resetting all notifications.", uuid_buffer);
+      PBL_LOG_ERR("Failed to read notification %s during compression. Resetting all notifications.", uuid_buffer);
       goto cleanup;
     }
     int result = prv_write_notification(&notification, &iter_state.header, new_fd);
@@ -228,7 +228,7 @@ static bool prv_compress(size_t size_needed, int *fd) {
       // Error occurred
       char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
       uuid_to_string(&iter_state.header.common.id, uuid_buffer);
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write notification %s during compression (error %d). Resetting all notifications.", uuid_buffer, result);
+      PBL_LOG_ERR("Failed to write notification %s during compression (error %d). Resetting all notifications.", uuid_buffer, result);
       kernel_free(notification.allocated_buffer);
       goto cleanup;
     }
@@ -244,7 +244,7 @@ static bool prv_compress(size_t size_needed, int *fd) {
   *fd = pfs_open(FILENAME, OP_FLAG_READ | OP_FLAG_WRITE, FILE_TYPE_STATIC,
       NOTIFICATION_STORAGE_FILE_SIZE);
   if (*fd < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error re-opening after compression %d", new_fd);
+    PBL_LOG_ERR("Error re-opening after compression %d", new_fd);
     return false;
   }
 
@@ -271,7 +271,7 @@ void notification_storage_store(TimelineItem* notification) {
   if (size_needed > (NOTIFICATION_STORAGE_FILE_SIZE - s_write_offset)) {
     if (!prv_compress(size_needed, &fd)) {
       // Notification storage compression failed. Clear notifications storage
-      PBL_LOG(LOG_LEVEL_ERROR, "Notification storage compression failed! Resetting all notifications.");
+      PBL_LOG_ERR("Notification storage compression failed! Resetting all notifications.");
       goto reset_storage;
     }
   }
@@ -283,7 +283,7 @@ void notification_storage_store(TimelineItem* notification) {
     // [AS] TODO: Write failure: reset storage, compression or reset watch?
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&notification->header.id, uuid_buffer);
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write notification %s (error %d). Resetting all notifications.", uuid_buffer, result);
+    PBL_LOG_ERR("Failed to write notification %s (error %d). Resetting all notifications.", uuid_buffer, result);
     goto reset_storage;
   }
 
@@ -318,7 +318,7 @@ static bool prv_find_next_notification(SerializedTimelineItemHeader* header,
         (header->common.layout >= NumLayoutIds)) {
       pfs_close(fd);
       notification_storage_reset_and_init();
-      PBL_LOG(LOG_LEVEL_ERROR, "Notification storage corrupt. Resetting...");
+      PBL_LOG_ERR("Notification storage corrupt. Resetting...");
       break;
     }
 
@@ -397,7 +397,7 @@ size_t notification_storage_get_len(const Uuid *uuid) {
   if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *) uuid, fd)) {
     size = header.payload_length + sizeof(SerializedTimelineItemHeader);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "notification not found");
+    PBL_LOG_DBG("notification not found");
   }
 
   prv_file_close(fd);
@@ -418,12 +418,12 @@ bool notification_storage_get(const Uuid *id, TimelineItem *item_out) {
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(id, uuid_string);
   if (!prv_find_next_notification(&header, prv_uuid_equal_func, (void *) id, fd)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "notification not found, %s", uuid_string);
+    PBL_LOG_DBG("notification not found, %s", uuid_string);
     rv = false;
   } else {
 
     if (!prv_get_notification(item_out, &header, fd)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not retrieve notification with id %s and size %u",
+      PBL_LOG_ERR("Could not retrieve notification with id %s and size %u",
           uuid_string, header.payload_length);
       rv = false;
     }
@@ -447,7 +447,7 @@ static bool prv_iter_next(NotificationIterState *iter_state) {
     //End iteration if we have reached the end of the file or the header ID is invalid (erased flash)
     return false;
   } else if (result < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error reading notification header while iterating %d", result);
+    PBL_LOG_ERR("Error reading notification header while iterating %d", result);
     return false;
   }
 
@@ -466,7 +466,7 @@ static bool prv_rewrite_iter_next(NotificationIterState *iter_state) {
   if ((result == E_RANGE) || (uuid_is_invalid(&iter_state->header.common.id))) {
     return false;
   } else if (result < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error reading notification header while iterating %d", result);
+    PBL_LOG_ERR("Error reading notification header while iterating %d", result);
     return false;
   }
 
@@ -487,7 +487,7 @@ static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t 
 
   int result = pfs_write(fd, (uint8_t *)&status, sizeof(header->common.status));
   if (result < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error writing status to notification header %d", result);
+    PBL_LOG_ERR("Error writing status to notification header %d", result);
   }
 
   // Seek to the end of the header

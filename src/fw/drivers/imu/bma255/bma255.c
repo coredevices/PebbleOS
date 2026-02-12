@@ -28,7 +28,7 @@
 #if BMA255_DEBUG
 #define BMA255_DBG(msg, ...) \
   do { \
-    PBL_LOG(LOG_LEVEL_DEBUG, msg, __VA_ARGS__); \
+    PBL_LOG_DBG(msg, __VA_ARGS__); \
   } while (0);
 #else
 #define BMA255_DBG(msg, ...)
@@ -106,14 +106,14 @@ static struct {
 void accel_init(void) {
   bma255_gpio_init();
   if (!bma255_query_whoami()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to query BMA255");
+    PBL_LOG_ERR("Failed to query BMA255");
     return;
   }
   const bool pass = bma255_selftest();
   if (pass) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "BMA255 self test pass, all 3 axis");
+    PBL_LOG_DBG("BMA255 self test pass, all 3 axis");
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "BMA255 self test failed one or more axis");
+    PBL_LOG_ERR("BMA255 self test failed one or more axis");
   }
 
   // Workaround to fix FIFO Frame Leakage: Disable temperature sensor (we're not using it anyways)
@@ -135,7 +135,7 @@ void accel_power_down(void) {
 
 bool bma255_query_whoami(void) {
   const uint8_t chip_id = bma255_read_register(BMA255Register_BGW_CHIP_ID);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Read BMA255 whoami byte 0x%"PRIx8", expecting 0x%"PRIx8,
+  PBL_LOG_DBG("Read BMA255 whoami byte 0x%"PRIx8", expecting 0x%"PRIx8,
           chip_id, BMA255_CHIP_ID);
   return (chip_id == BMA255_CHIP_ID);
 }
@@ -259,7 +259,7 @@ static void prv_drain_fifo(void) {
     s_fifo_overrun_detected = true;
     // We don't clear the interrupt here because you are only supposed to touch the fifo config
     // registers while in standby mode.
-    PBL_LOG(LOG_LEVEL_WARNING, "bma255 fifo overrun detected: 0x%x!", fifo_status);
+    PBL_LOG_WRN("bma255 fifo overrun detected: 0x%x!", fifo_status);
   }
 }
 
@@ -519,12 +519,12 @@ static void prv_configure_operating_mode(void) {
                            tsleep << BMA255_LPW_SLEEP_DUR_SHIFT,
                            BMA255_LPW_SLEEP_DUR_MASK);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Set sampling rate to %"PRIu32, (uint32_t)(1000000/interval_us));
+  PBL_LOG_DBG("Set sampling rate to %"PRIu32, (uint32_t)(1000000/interval_us));
 
   if (s_accel_power_mode == BMA255PowerMode_Normal) {
     // This should only execute on startup or if the power mode
     // is left in normal power mode for some reason
-    PBL_LOG(LOG_LEVEL_DEBUG, "Enable low power mode");
+    PBL_LOG_DBG("Enable low power mode");
     prv_set_accel_power_mode(BMA255PowerMode_LowPower1);
   }
 }
@@ -550,7 +550,7 @@ static void prv_program_fifo_register(uint8_t address, uint8_t data) {
     if (value == data) {
       return; // Write took, we are good
     }
-    PBL_LOG(LOG_LEVEL_DEBUG, "FIFO config write failed, initiating workaround ...");
+    PBL_LOG_DBG("FIFO config write failed, initiating workaround ...");
 
     // FIXME: Sometimes writes to the FIFO registers fail. I am suspicious that the bma255 enters
     // suspend mode instead of standby mode. (The datasheet states that FIFO_CONFIG registers
@@ -561,7 +561,7 @@ static void prv_program_fifo_register(uint8_t address, uint8_t data) {
     prv_set_accel_power_mode(BMA255PowerMode_Standby);
   }
 
-  PBL_LOG(LOG_LEVEL_WARNING, "Failed to program fifo reg, 0x%"PRIx8" = 0x%"PRIx8, address, data);
+  PBL_LOG_WRN("Failed to program fifo reg, 0x%"PRIx8" = 0x%"PRIx8, address, data);
 }
 
 static void prv_set_fifo_mode(BMA255FifoMode mode) {
@@ -621,12 +621,12 @@ void accel_set_num_samples(uint32_t num_samples) {
   const bool use_fifo = (num_samples > 0);
 
   if (use_fifo) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Enabling FIFO");
+    PBL_LOG_DBG("Enabling FIFO");
     // Watermark is the number of samples to be collected
     prv_program_fifo_register(BMA255Register_FIFO_CONFIG_0, num_samples);
     prv_set_fifo_mode(BMA255FifoMode_Fifo);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Disabling FIFO");
+    PBL_LOG_DBG("Disabling FIFO");
     prv_set_fifo_mode(BMA255FifoMode_Bypass);
   }
 
@@ -671,7 +671,7 @@ void accel_enable_shake_detection(bool enable) {
     // the requested change matches what we already have!
     return;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "%s shake detection", enable ? "Enabling" : "Disabling");
+  PBL_LOG_DBG("%s shake detection", enable ? "Enabling" : "Disabling");
 
   prv_update_accel_interrupts(enable, AccelOperatingMode_ShakeDetection);
   if (enable) {
@@ -801,19 +801,18 @@ static bool prv_selftest_axis(BMA255Axis axis) {
   int delta = positive - negative;
   delta = abs(delta);
 
-  PBL_LOG(LOG_LEVEL_DEBUG,
-          "Self test axis %c: %d Pos: %d Neg: %d Delta: %d (required %d)",
+  PBL_LOG_DBG("Self test axis %c: %d Pos: %d Neg: %d Delta: %d (required %d)",
           AXIS_NAMES[axis], before, positive,
           negative, delta, SELFTEST_THRESHOLDS[axis]);
 
   if (delta < SELFTEST_THRESHOLDS[axis]) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Self test failed for axis %c: %d < %d",
+    PBL_LOG_ERR("Self test failed for axis %c: %d < %d",
             AXIS_NAMES[axis], delta, SELFTEST_THRESHOLDS[axis]);
     return false;
   }
 
   if ((new_data + new_negative + new_positive) != 3) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Self test problem? Not logging data? %d %d %d",
+    PBL_LOG_ERR("Self test problem? Not logging data? %d %d %d",
             new_data, new_positive, new_negative);
   }
 

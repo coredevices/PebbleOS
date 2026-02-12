@@ -97,8 +97,7 @@ static void timer_callback(void* data) {
     // Keep the logging to detect large time jumps (multiple minutes skipped)
     const time_t now_ts = rtc_get_ticks() / configTICK_RATE_HZ;
     if ((now_ts - s_last_minute_fire_ts) > MISSING_MINUTE_CB_LOG_THRESHOLD_S) {
-      PBL_LOG(LOG_LEVEL_WARNING,
-              "Large time jump detected. Previous ts: %lu, Now ts: %lu",
+      PBL_LOG_WRN("Large time jump detected. Previous ts: %lu, Now ts: %lu",
               s_last_minute_fire_ts, now_ts);
     }
     s_last_minute_fire_ts = now_ts;
@@ -219,7 +218,7 @@ bool regular_timer_remove_callback(RegularTimerInfo* cb) {
   mutex_lock(s_callback_list_semaphore);
 
   if (!prv_regular_timer_is_scheduled(cb)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Timer not registered");
+    PBL_LOG_WRN("Timer not registered");
   } else {
     // If currently executing, mark for deletion. do_callbacks will delete it for us once
     // it completes.

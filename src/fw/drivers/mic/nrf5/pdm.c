@@ -39,7 +39,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
   // Allocate circular buffer storage
   state->circ_buffer_storage = kernel_malloc(CIRCULAR_BUF_SIZE_BYTES);
   if (!state->circ_buffer_storage) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate circular buffer storage");
+    PBL_LOG_ERR("Failed to allocate circular buffer storage");
     return false;
   }
 
@@ -48,7 +48,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
     size_t buffer_size = PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t);
     state->pdm_buffers[i] = kernel_malloc(buffer_size);
     if (!state->pdm_buffers[i]) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate PDM buffer %d", i);
+      PBL_LOG_ERR("Failed to allocate PDM buffer %d", i);
       // Free any previously allocated buffers
       prv_free_buffers(state);
       return false;
@@ -82,19 +82,19 @@ static void prv_free_buffers(MicDeviceState *state) {
 static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
   // Ensure we're still running and have valid state
   if (!state->is_running) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "prv_process_pdm_buffer: Not running, ignoring data");
+    PBL_LOG_DBG("prv_process_pdm_buffer: Not running, ignoring data");
     return;
   }
   
   // Ensure circular buffer storage is allocated
   if (!state->circ_buffer_storage) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "prv_process_pdm_buffer: No circular buffer storage, ignoring data");
+    PBL_LOG_DBG("prv_process_pdm_buffer: No circular buffer storage, ignoring data");
     return;
   }
   
   // Ensure we have valid audio buffer info
   if (!state->audio_buffer || state->audio_buffer_len == 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "prv_process_pdm_buffer: No audio buffer configured, ignoring data");
+    PBL_LOG_DBG("prv_process_pdm_buffer: No audio buffer configured, ignoring data");
     return;
   }
   
@@ -126,10 +126,10 @@ static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
     if (dropped_samples > 0) {
       // Calculate percentage using integer arithmetic (x10 for one decimal place)
       uint32_t percent_x10 = (dropped_samples * 1000) / total_samples;
-      PBL_LOG(LOG_LEVEL_DEBUG, "Audio dropouts: %"PRIu32"/%"PRIu32" samples dropped (%"PRIu32".%"PRIu32" percent), buffer util: %"PRIu16,
+      PBL_LOG_DBG("Audio dropouts: %"PRIu32"/%"PRIu32" samples dropped (%"PRIu32".%"PRIu32" percent), buffer util: %"PRIu16,
               dropped_samples, total_samples, percent_x10 / 10, percent_x10 % 10, buffer_utilization);
     } else {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Audio buffer utilization: %"PRIu16" (%"PRIu16"/%"PRIu16" bytes)",
+      PBL_LOG_DBG("Audio buffer utilization: %"PRIu16" (%"PRIu16"/%"PRIu16" bytes)",
               buffer_utilization, buffer_used, buffer_total);
     }
     log_counter = 0;
@@ -158,7 +158,7 @@ static void prv_pdm_event_handler(nrfx_pdm_evt_t const *p_evt) {
   
   // Don't assert on is_running during shutdown - the PDM might send final events
   if (!state->is_running) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "prv_pdm_event_handler: Microphone stopped, ignoring event");
+    PBL_LOG_DBG("prv_pdm_event_handler: Microphone stopped, ignoring event");
     return;
   }
   
@@ -208,7 +208,7 @@ void mic_init(const MicDevice *this) {
   // Initialize PDM driver once during init
   nrfx_err_t err = nrfx_pdm_init(&this->pdm_instance, &state->pdm_config, prv_pdm_event_handler);
   if (err != NRFX_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize PDM: %d", err);
+    PBL_LOG_ERR("Failed to initialize PDM: %d", err);
     return;
   }
   
@@ -294,7 +294,7 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
   MicDeviceState *state = this->state;
   
   if (state->is_running) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Cannot set volume while microphone is running");
+    PBL_LOG_WRN("Cannot set volume while microphone is running");
     return;
   }
   
@@ -327,7 +327,7 @@ static bool prv_start_pdm_capture(const MicDevice *this) {
   
   // Check if buffers are valid
   if (!state->pdm_buffers[0] || !state->pdm_buffers[1]) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid PDM buffers: [0]=%p [1]=%p", 
+    PBL_LOG_ERR("Invalid PDM buffers: [0]=%p [1]=%p", 
             state->pdm_buffers[0], state->pdm_buffers[1]);
     return false;
   }
@@ -335,7 +335,7 @@ static bool prv_start_pdm_capture(const MicDevice *this) {
   // Try starting PDM first, then set buffer in event handler
   nrfx_err_t err = nrfx_pdm_start(&this->pdm_instance);
   if (err != NRFX_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to start PDM: %d", err);
+    PBL_LOG_ERR("Failed to start PDM: %d", err);
     return false;
   }
   
@@ -355,20 +355,20 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   mutex_lock_recursive(state->mutex);
   
   if (state->is_running) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Microphone is already running");
+    PBL_LOG_WRN("Microphone is already running");
     mutex_unlock_recursive(state->mutex);
     return false;
   }
   
   if (!state->is_initialized) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Microphone not initialized");
+    PBL_LOG_ERR("Microphone not initialized");
     mutex_unlock_recursive(state->mutex);
     return false;
   }
   
   // Allocate buffers dynamically
   if (!prv_allocate_buffers(state)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate microphone buffers");
+    PBL_LOG_ERR("Failed to allocate microphone buffers");
     mutex_unlock_recursive(state->mutex);
     return false;
   }
@@ -396,7 +396,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     return false;
   }
   
-  PBL_LOG(LOG_LEVEL_INFO, "Microphone started");
+  PBL_LOG_INFO("Microphone started");
   
   mutex_unlock_recursive(state->mutex);
   return true;
@@ -438,7 +438,7 @@ void mic_stop(const MicDevice *this) {
   state->audio_buffer_len = 0;
   state->main_pending = false;
   
-  PBL_LOG(LOG_LEVEL_INFO, "Microphone stopped");
+  PBL_LOG_INFO("Microphone stopped");
   
   mutex_unlock_recursive(state->mutex);
 }

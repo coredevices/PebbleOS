@@ -68,7 +68,7 @@ static void prv_set_progress(AppFetchUIData *data, int16_t progress) {
 // Launch the desired app
 static void prv_app_fetch_launch_app(AppFetchUIData *data) {
   // Let's launch the application we just fetched.
-  PBL_LOG(LOG_LEVEL_DEBUG, "App Fetch: Putting launch event");
+  PBL_LOG_DBG("App Fetch: Putting launch event");
 
   // if this was launched by the phone, it's probably a new install
   if ((data->next_app_args.common.reason == APP_LAUNCH_PHONE) &&
@@ -172,14 +172,14 @@ static void prv_progress_window_finished(ProgressWindow *window, bool success, v
 
 //! Used to clean up the application's data before exiting
 static void prv_app_fetch_cleanup(AppFetchUIData *data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "App Fetch: prv_app_fetch_cleanup");
+  PBL_LOG_DBG("App Fetch: prv_app_fetch_cleanup");
   event_service_client_unsubscribe(&data->fetch_event_info);
   event_service_client_unsubscribe(&data->connect_event_info);
 }
 
 //! Used when the app fetch process has failed
 static void prv_app_fetch_failure(AppFetchUIData *data, uint8_t error_code) {
-  PBL_LOG(LOG_LEVEL_WARNING, "App Fetch: prv_app_fetch_failure: %d", error_code);
+  PBL_LOG_WRN("App Fetch: prv_app_fetch_failure: %d", error_code);
 
   if (error_code == AppFetchResultUserCancelled) {
     app_window_stack_pop(true);
@@ -190,13 +190,13 @@ static void prv_app_fetch_failure(AppFetchUIData *data, uint8_t error_code) {
       app_install_entry_is_watchface(&data->install_entry)) {
     // We failed to fetch a watchface and it was our default.
     // Invalidate it and it will be reassigned to one that exists next time around.
-    PBL_LOG(LOG_LEVEL_WARNING, "Default watchface fetch failed, setting INVALID as default");
+    PBL_LOG_WRN("Default watchface fetch failed, setting INVALID as default");
     watchface_set_default_install_id(INSTALL_ID_INVALID);
   } else if ((worker_manager_get_default_install_id() == data->install_entry.install_id) &&
              app_install_entry_has_worker(&data->install_entry)) {
     // We failed to fetch a worker and it was our default.
     // Invalidate it and it will be reassigned to one that is launched next.
-    PBL_LOG(LOG_LEVEL_WARNING, "Default worker fetch failed, setting INVALID as default");
+    PBL_LOG_WRN("Default worker fetch failed, setting INVALID as default");
     worker_manager_set_default_install_id(INSTALL_ID_INVALID);
   }
 
@@ -212,7 +212,7 @@ static void prv_app_fetch_event_handler(PebbleEvent *event, void *context) {
 
   // We have starting the App Fetch Process
   if (af_event->type == AppFetchEventTypeStart) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "App Fetch: Got the start event");
+    PBL_LOG_DBG("App Fetch: Got the start event");
 
   // We have received a new progress event
   } else if (af_event->type == AppFetchEventTypeProgress) {
@@ -265,7 +265,7 @@ static void handle_init(void) {
 
   // retrieve data about the AppInstallId given
   if (!app_install_get_entry_for_install_id(data->next_app_args.app_id, &data->install_entry)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "App Fetch: Error getting entry for id: %"PRIu32"",
+    PBL_LOG_ERR("App Fetch: Error getting entry for id: %"PRIu32"",
         data->next_app_args.app_id);
     return;
   }

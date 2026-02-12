@@ -285,7 +285,7 @@ static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx) {
     dev->state->rx_dma_index = (dev->state->rx_dma_index + 1) % DMA_BUFFERS;
     nrfx_uarte_rx_buffer_set(&dev->periph, GET_SUBBUF_P(dev, dev->state->rx_dma_index), dev->state->rx_dma_length);
 #ifdef DEBUG_UART
-    PBL_LOG(LOG_LEVEL_INFO, "rxbuf req %p", GET_SUBBUF_P(dev, dev->state->rx_dma_index));
+    PBL_LOG_INFO("rxbuf req %p", GET_SUBBUF_P(dev, dev->state->rx_dma_index));
 #endif
     break;
   case NRFX_UARTE_EVT_RX_BYTE:
@@ -294,7 +294,7 @@ static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx) {
   case NRFX_UARTE_EVT_RX_DONE: {
 #ifdef DEBUG_UART
     uint8_t *buf = event->data.rx.p_buffer;
-    PBL_LOG(LOG_LEVEL_INFO, "rxbuf done %p (hopefully %p)", buf, GET_SUBBUF_P(dev, dev->state->rx_prod_index));
+    PBL_LOG_INFO("rxbuf done %p (hopefully %p)", buf, GET_SUBBUF_P(dev, dev->state->rx_prod_index));
 #endif
     dev->state->rx_prod_index = (dev->state->rx_prod_index + 1) % DMA_BUFFERS;
     break;
@@ -314,7 +314,7 @@ static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx) {
 
 #ifdef DEBUG_UART
     uint8_t *bufx = buf + ofs;
-    PBL_LOG(LOG_LEVEL_INFO, "consume complete %p with %lu bytes left: : %02x %02x %02x %02x %02x %02x %02x %02x", buf, dev->state->rx_dma_length - ofs,
+    PBL_LOG_INFO("consume complete %p with %lu bytes left: : %02x %02x %02x %02x %02x %02x %02x %02x", buf, dev->state->rx_dma_length - ofs,
       bufx[0], bufx[1], bufx[2], bufx[3], bufx[4], bufx[5], bufx[6], bufx[7]);
 #endif
 
@@ -332,7 +332,7 @@ static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx) {
 
 #ifdef DEBUG_UART
     uint8_t *bufx = buf + dev->state->rx_cons_pos;
-    PBL_LOG(LOG_LEVEL_INFO, "consume %ld bytes: %02x %02x %02x %02x %02x %02x %02x %02x", curpos - dev->state->rx_cons_pos,
+    PBL_LOG_INFO("consume %ld bytes: %02x %02x %02x %02x %02x %02x %02x %02x", curpos - dev->state->rx_cons_pos,
       bufx[0], bufx[1], bufx[2], bufx[3], bufx[4], bufx[5], bufx[6], bufx[7]);
 #endif
 
@@ -355,7 +355,7 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
    */
   PBL_ASSERTN((((uint32_t) buffer) & 3) == 0);
 #ifdef DEBUG_UART
-  PBL_LOG(LOG_LEVEL_INFO, "start_rx_dma");
+  PBL_LOG_INFO("start_rx_dma");
 #endif
   dev->state->rx_dma_buffer = buffer;
   dev->state->rx_dma_length = length / DMA_BUFFERS;
@@ -376,7 +376,7 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
 
 void uart_stop_rx_dma(UARTDevice *dev) {
 #ifdef DEBUG_UART
-  PBL_LOG(LOG_LEVEL_INFO, "stop_rx_dma");
+  PBL_LOG_INFO("stop_rx_dma");
 #endif
   nrfx_uarte_rx_abort(&dev->periph, true, true);
   nrfx_timer_disable(&dev->counter);

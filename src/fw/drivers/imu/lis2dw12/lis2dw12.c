@@ -208,7 +208,7 @@ static void prv_lis2dw12_read_samples(uint8_t num_samples) {
 
   if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, LIS2DW12->state->raw_sample_buf,
                          num_samples * LIS2DW12_SAMPLE_SIZE_BYTES)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read samples");
+    PBL_LOG_ERR("Failed to read samples");
     return;
   }
 
@@ -233,18 +233,18 @@ static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
   val = LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS;
   ret = prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write FIFO_CTRL register");
+    PBL_LOG_ERR("Could not write FIFO_CTRL register");
     return ret;
   }
 
   val = LIS2DW12_FIFO_CTRL_FTH(num_samples) | LIS2DW12_FIFO_CTRL_FIFO_MODE_CONT;
   ret = prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write FIFO_CTRL register");
+    PBL_LOG_ERR("Could not write FIFO_CTRL register");
     return ret;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "FIFO enabled with threshold %" PRIu8, num_samples);
+  PBL_LOG_DBG("FIFO enabled with threshold %" PRIu8, num_samples);
 
   return true;
 }
@@ -257,12 +257,12 @@ static void prv_lis2dw12_int1_work_handler(void) {
   if (LIS2DW12->state->num_samples > 0U) {
     ret = prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not read FIFO_SAMPLES register");
+      PBL_LOG_ERR("Could not read FIFO_SAMPLES register");
       return;
     }
 
     if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_OVR) != 0U) {
-      PBL_LOG(LOG_LEVEL_WARNING, "FIFO overrun detected, re-arming");
+      PBL_LOG_WRN("FIFO overrun detected, re-arming");
       prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
       action_taken = true;
     } else if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_FTH) != 0U) {
@@ -279,12 +279,12 @@ static void prv_lis2dw12_int1_work_handler(void) {
   if (LIS2DW12->state->shake_detection_enabled) {
     ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not read ALL_INT_SRC register");
+      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
       return;
     }
 
     if ((val & LIS2DW12_ALL_INT_SRC_WU_IA) != 0U) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Shake detected");
+      PBL_LOG_DBG("Shake detected");
       // TODO: provide more info about the shake (axis, direction, etc.) or
       // refactor shake to be non-dimensional
       accel_cb_shake_detected(AXIS_Z, 0);
@@ -293,7 +293,7 @@ static void prv_lis2dw12_int1_work_handler(void) {
   }
 
   if (!action_taken) {
-    PBL_LOG(LOG_LEVEL_WARNING, "INT1 triggered but no action taken");
+    PBL_LOG_WRN("INT1 triggered but no action taken");
   }
 }
 
@@ -333,7 +333,7 @@ static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detectio
     sampling_interval_us = 5000UL;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)",
+  PBL_LOG_DBG("Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)",
           sampling_interval_us / 1000UL,
           sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
 
@@ -367,30 +367,30 @@ static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) 
 
   ret = prv_lis2dw12_write(LIS2DW12_CTRL4_INT1_PAD_CTRL, &ctrl4, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL4_INT1_PAD_CTRL register");
+    PBL_LOG_ERR("Could not write CTRL4_INT1_PAD_CTRL register");
     return ret;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "INT1 configured: %02" PRIx8, ctrl4);
+  PBL_LOG_DBG("INT1 configured: %02" PRIx8, ctrl4);
 
   ret = prv_lis2dw12_write(LIS2DW12_CTRL5_INT2_PAD_CTRL, &ctrl5, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL5_INT2_PAD_CTRL register");
+    PBL_LOG_ERR("Could not write CTRL5_INT2_PAD_CTRL register");
     return ret;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "INT2 configured: %02" PRIx8, ctrl5);
+  PBL_LOG_DBG("INT2 configured: %02" PRIx8, ctrl5);
 
   ctrl7 = (ctrl4 == 0U && ctrl5 == 0U)
               ? 0U
               : LIS2DW12_CTRL7_INTERRUPTS_ENABLE | LIS2DW12_CTRL7_INT2_ON_INT1;
   ret = prv_lis2dw12_write(LIS2DW12_CTRL7, &ctrl7, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL7 register");
+    PBL_LOG_ERR("Could not write CTRL7 register");
     return ret;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Enabled interrupts: %u", ctrl7 != 0U);
+  PBL_LOG_DBG("Enabled interrupts: %u", ctrl7 != 0U);
 
   return true;
 }
@@ -404,18 +404,18 @@ static void prv_int1_wdt_cb(void *data) {
     bool ret;
     uint8_t val;
 
-    PBL_LOG(LOG_LEVEL_WARNING, "INT1 not received in %" PRIu32 " ms", ms_since_last_int1);
+    PBL_LOG_WRN("INT1 not received in %" PRIu32 " ms", ms_since_last_int1);
 
     // Re-enable FIFO, and clear any event INT source
     ret = prv_lis2dw12_enable_fifo(LIS2DW12->state->num_samples);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to re-enable FIFO");
+      PBL_LOG_ERR("Failed to re-enable FIFO");
       return;
     }
 
     ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not read ALL_INT_SRC register");
+      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
       return;
     }
   }
@@ -432,12 +432,12 @@ void accel_init(void) {
   // Check device ID
   ret = prv_lis2dw12_read(LIS2DW12_WHO_AM_I, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not read WHO_AM_I register");
+    PBL_LOG_ERR("Could not read WHO_AM_I register");
     return;
   }
 
   if (val != LIS2DW12_WHO_AM_I_VAL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unexpected id: 0x%02X!=0x%02X", val, LIS2DW12_WHO_AM_I_VAL);
+    PBL_LOG_ERR("Unexpected id: 0x%02X!=0x%02X", val, LIS2DW12_WHO_AM_I_VAL);
     return;
   }
 
@@ -445,7 +445,7 @@ void accel_init(void) {
   val = LIS2DW12_CTRL2_SOFT_RESET;
   ret = prv_lis2dw12_write(LIS2DW12_CTRL2, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL2 register");
+    PBL_LOG_ERR("Could not write CTRL2 register");
     return;
   }
 
@@ -454,7 +454,7 @@ void accel_init(void) {
   do {
     ret = prv_lis2dw12_read(LIS2DW12_CTRL2, &val, 1);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not read CTRL2 register");
+      PBL_LOG_ERR("Could not read CTRL2 register");
       return;
     }
   } while ((val & LIS2DW12_CTRL2_BOOT) != 0U);
@@ -464,14 +464,14 @@ void accel_init(void) {
   if (LIS2DW12->disable_addr_pullup) {
     ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read LIS2DW12 register 0x17");
+      PBL_LOG_ERR("Failed to read LIS2DW12 register 0x17");
       return;
     }
 
     val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
     ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write LIS2DW12 register 0x17");
+      PBL_LOG_ERR("Failed to write LIS2DW12 register 0x17");
       return;
     }
   }
@@ -480,7 +480,7 @@ void accel_init(void) {
   val = LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 | LIS2DW12_CTRL3_LIR;
   ret = prv_lis2dw12_write(LIS2DW12_CTRL3, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL3 register");
+    PBL_LOG_ERR("Could not write CTRL3 register");
     return;
   }
 
@@ -499,13 +499,13 @@ void accel_init(void) {
       val = LIS2DW12_CTRL6_FS_16G;
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid scale: %" PRIu16, LIS2DW12->scale_mg);
+      PBL_LOG_ERR("Invalid scale: %" PRIu16, LIS2DW12->scale_mg);
       return;
   }
 
   ret = prv_lis2dw12_write(LIS2DW12_CTRL6, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL6 register");
+    PBL_LOG_ERR("Could not write CTRL6 register");
     return;
   }
 
@@ -513,14 +513,14 @@ void accel_init(void) {
   val = LIS2DW12_WAKE_UP_DUR_WAKE_DUR(LIS2DW12->wk_dur_default);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_DUR, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_DUR register");
+    PBL_LOG_ERR("Could not write WAKE_UP_DUR register");
     return;
   }
 
   val = LIS2DW12_WAKE_UP_THS_WK_THS(LIS2DW12->wk_ths_default);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_THS register");
+    PBL_LOG_ERR("Could not write WAKE_UP_THS register");
     return;
   }
 
@@ -551,11 +551,11 @@ uint32_t accel_set_sampling_interval(uint32_t interval_us) {
     // we may report existing samples in the FIFO buffer with an incorrect timestamp
 
     if (!prv_configure_odr(interval_us, LIS2DW12->state->shake_detection_enabled)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not configure ODR");
+      PBL_LOG_ERR("Could not configure ODR");
     }
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Set sampling interval to %" PRIu32 " us",
+  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us",
           LIS2DW12->state->sampling_interval_us);
 
   return LIS2DW12->state->sampling_interval_us;
@@ -585,7 +585,7 @@ void accel_set_num_samples(uint32_t num_samples) {
     // Bypass FIFO (disable)
     val = LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS;
     if (!prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not write FIFO_CTRL register");
+      PBL_LOG_ERR("Could not write FIFO_CTRL register");
     }
 
     regular_timer_remove_callback(&LIS2DW12->state->int1_wdt_timer);
@@ -595,7 +595,7 @@ void accel_set_num_samples(uint32_t num_samples) {
     // Configure FIFO in CONT mode with threshold
     ret = prv_lis2dw12_enable_fifo((uint8_t)num_samples);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not enable FIFO");
+      PBL_LOG_ERR("Could not enable FIFO");
       return;
     }
 
@@ -608,13 +608,13 @@ void accel_set_num_samples(uint32_t num_samples) {
   // Re-configure INT1
   ret = prv_configure_int1(LIS2DW12->state->shake_detection_enabled, num_samples > 0U);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not configure INT1");
+    PBL_LOG_ERR("Could not configure INT1");
     return;
   }
 
   LIS2DW12->state->num_samples = num_samples;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Set number of samples to %" PRIu32, num_samples);
+  PBL_LOG_DBG("Set number of samples to %" PRIu32, num_samples);
 }
 
 int accel_peek(AccelDriverSample *data) {
@@ -632,7 +632,7 @@ int accel_peek(AccelDriverSample *data) {
   // Save CTRL1
   ret = prv_lis2dw12_read(LIS2DW12_CTRL1, &ctrl1_bck, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not read CTRL1 register");
+    PBL_LOG_ERR("Could not read CTRL1 register");
     return E_ERROR;
   }
 
@@ -640,21 +640,21 @@ int accel_peek(AccelDriverSample *data) {
   ctrl1 = LIS2DW12_CTRL1_MODE_SINGLE | LIS2DW12_CTRL1_ODR_50HZ;
   ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL1 register");
+    PBL_LOG_ERR("Could not write CTRL1 register");
     return E_ERROR;
   }
 
   // Trigger single measurement by setting SLP_MODE_1 bit
   ret = prv_lis2dw12_read(LIS2DW12_CTRL3, &ctrl3, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not read CTRL3 register");
+    PBL_LOG_ERR("Could not read CTRL3 register");
     return E_ERROR;
   }
 
   ctrl3 |= LIS2DW12_CTRL3_SLP_MODE_1;
   ret = prv_lis2dw12_write(LIS2DW12_CTRL3, &ctrl3, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write CTRL3 register");
+    PBL_LOG_ERR("Could not write CTRL3 register");
     return E_ERROR;
   }
 
@@ -662,7 +662,7 @@ int accel_peek(AccelDriverSample *data) {
   do {
     ret = prv_lis2dw12_read(LIS2DW12_STATUS, &status, 1);
     if (!ret) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not read STATUS register");
+      PBL_LOG_ERR("Could not read STATUS register");
       return E_ERROR;
     }
   } while ((status & LIS2DW12_STATUS_DRDY) == 0U);
@@ -670,14 +670,14 @@ int accel_peek(AccelDriverSample *data) {
   // Read sample
   ret = prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw));
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read sample");
+    PBL_LOG_ERR("Failed to read sample");
     return E_ERROR;
   }
 
   // Restore CTRL1
   ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1_bck, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not restore CTRL1 register");
+    PBL_LOG_ERR("Could not restore CTRL1 register");
     return E_ERROR;
   }
 
@@ -699,20 +699,20 @@ void accel_enable_shake_detection(bool on) {
   // Configure ODR (use current interval, will be adjusted if < 12.5Hz)
   ret = prv_configure_odr(LIS2DW12->state->sampling_interval_us, on);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not configure ODR");
+    PBL_LOG_ERR("Could not configure ODR");
     return;
   }
 
   // Configure INT1
   ret = prv_configure_int1(on, LIS2DW12->state->num_samples > 0U);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not configure INT1");
+    PBL_LOG_ERR("Could not configure INT1");
     return;
   }
 
   LIS2DW12->state->shake_detection_enabled = on;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "%s shake detection", on ? "Enabled" : "Disabled");
+  PBL_LOG_DBG("%s shake detection", on ? "Enabled" : "Disabled");
 }
 
 bool accel_get_shake_detection_enabled(void) {
@@ -730,11 +730,11 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
   val = LIS2DW12_WAKE_UP_THS_WK_THS(sensitivity_high ? LIS2DW12->wk_ths_min : LIS2DW12->state->wk_ths_curr);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_THS register");
+    PBL_LOG_ERR("Could not write WAKE_UP_THS register");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Configured shake sensitivity to %s",
+  PBL_LOG_DBG("Configured shake sensitivity to %s",
           sensitivity_high ? "high" : "normal");
 }
 
@@ -755,18 +755,18 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
   val = LIS2DW12_WAKE_UP_THS_WK_THS(raw);
   ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not write WAKE_UP_THS register");
+    PBL_LOG_ERR("Could not write WAKE_UP_THS register");
     return;
   }
 
   LIS2DW12->state->wk_ths_curr = raw;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Configured shake sensitivity to %" PRIu8 " (%" PRIu8 ")", percent, raw);
+  PBL_LOG_DBG("Configured shake sensitivity to %" PRIu8 " (%" PRIu8 ")", percent, raw);
 }
 
 void accel_enable_double_tap_detection(bool on) {
   // TODO: Implement
-  PBL_LOG(LOG_LEVEL_WARNING, "Double-tap detection not implemented");
+  PBL_LOG_WRN("Double-tap detection not implemented");
 }
 
 bool accel_get_double_tap_detection_enabled(void) {
@@ -776,5 +776,5 @@ bool accel_get_double_tap_detection_enabled(void) {
 
 void accel_set_rotated(bool rotated) {
   LIS2DW12->state->rotated = rotated;
-  PBL_LOG(LOG_LEVEL_DEBUG, "Set rotated state to %s", rotated ? "true" : "false");
+  PBL_LOG_DBG("Set rotated state to %s", rotated ? "true" : "false");
 }

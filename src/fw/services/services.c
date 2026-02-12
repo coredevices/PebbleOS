@@ -31,7 +31,7 @@ void services_init(void) {
 
 void services_set_runlevel(RunLevel runlevel) {
   PBL_ASSERT(runlevel < RunLevel_COUNT, "Unknown runlevel %d", runlevel);
-  PBL_LOG(LOG_LEVEL_INFO, "Setting runlevel to %d", runlevel);
+  PBL_LOG_INFO("Setting runlevel to %d", runlevel);
   services_common_set_runlevel(runlevel);
 #ifndef RECOVERY_FW
   services_normal_set_runlevel(runlevel);

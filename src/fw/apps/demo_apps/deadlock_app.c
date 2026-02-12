@@ -19,9 +19,9 @@ static PebbleMutex *s_mutex;
 static PebbleMutex *s_mutex2;
 
 static void callback(void *data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Locking mutex 2 (new timer)");
+  PBL_LOG_DBG("Locking mutex 2 (new timer)");
   mutex_lock(s_mutex2);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Locking mutex 1 (new timer)");
+  PBL_LOG_DBG("Locking mutex 1 (new timer)");
   mutex_lock(s_mutex);
 }
 
@@ -31,10 +31,10 @@ static void deadlock(void) {
   TimerID timer = new_timer_create();
   new_timer_start(timer, 10, callback, NULL, 0);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Locking mutex 1");
+  PBL_LOG_DBG("Locking mutex 1");
   mutex_lock(s_mutex);
   psleep(20);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Locking mutex 2");
+  PBL_LOG_DBG("Locking mutex 2");
   mutex_lock(s_mutex2);
 }
 

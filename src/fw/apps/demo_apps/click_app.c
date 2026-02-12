@@ -43,9 +43,9 @@ static void raw_click_handler(ClickRecognizerRef recognizer, Window *window, con
   ClickAppData *data = window_get_user_data(window);
   sniprintf(data->text_buffer, TEXT_BUFFER_SIZE, up ? "Raw UP" : "Raw DOWN");
   if (up) {  // PBL_LOG requires a fixed const string, so can't use ternary
-    PBL_LOG(LOG_LEVEL_DEBUG, "Raw UP");
+    PBL_LOG_DBG("Raw UP");
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Raw DOWN");
+    PBL_LOG_DBG("Raw DOWN");
   }
   text_layer_set_text(&data->text, data->text_buffer);
   toggle_color(window);
@@ -64,7 +64,7 @@ static void select_multi_click_handler(ClickRecognizerRef recognizer, Window *wi
   ClickAppData *data = window_get_user_data(window);
   const uint16_t count = click_number_of_clicks_counted(recognizer);
   sniprintf(data->text_buffer, TEXT_BUFFER_SIZE, "Multi Click! (%u)\nMin: 2, Max: 10", count);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Multi Click! (%u)", click_number_of_clicks_counted(recognizer));
+  PBL_LOG_DBG("Multi Click! (%u)", click_number_of_clicks_counted(recognizer));
   text_layer_set_text(&data->text, data->text_buffer);
   toggle_color(window);
 }
@@ -73,7 +73,7 @@ static void select_single_click_handler(ClickRecognizerRef recognizer, Window *w
   ClickAppData *data = window_get_user_data(window);
   const uint16_t count = click_number_of_clicks_counted(recognizer);
   sniprintf(data->text_buffer, TEXT_BUFFER_SIZE, "Single Click! (%u)", count);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Single Click! (%u)", click_number_of_clicks_counted(recognizer));
+  PBL_LOG_DBG("Single Click! (%u)", click_number_of_clicks_counted(recognizer));
   text_layer_set_text(&data->text, data->text_buffer);
   toggle_color(window);
 
@@ -85,7 +85,7 @@ static void select_single_click_handler(ClickRecognizerRef recognizer, Window *w
 static void select_long_click_handler(ClickRecognizerRef recognizer, Window *window) {
   ClickAppData *data = window_get_user_data(window);
   sniprintf(data->text_buffer, TEXT_BUFFER_SIZE, "Long Click!");
-  PBL_LOG(LOG_LEVEL_DEBUG, "Long Click!");
+  PBL_LOG_DBG("Long Click!");
   text_layer_set_text(&data->text, data->text_buffer);
   toggle_color(window);
   (void)recognizer;
@@ -94,7 +94,7 @@ static void select_long_click_handler(ClickRecognizerRef recognizer, Window *win
 static void select_long_click_release_handler(ClickRecognizerRef recognizer, Window *window) {
   ClickAppData *data = window_get_user_data(window);
   sniprintf(data->text_buffer, TEXT_BUFFER_SIZE, "Long Click Released!");
-  PBL_LOG(LOG_LEVEL_DEBUG, "Long Click Released!");
+  PBL_LOG_DBG("Long Click Released!");
   text_layer_set_text(&data->text, data->text_buffer);
   toggle_color(window);
   (void)recognizer;

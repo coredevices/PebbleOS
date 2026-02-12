@@ -250,7 +250,7 @@ void app_db_init(void) {
     s_next_unique_flash_app_id = (data.max_id + 1);
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "Found %"PRIu32" apps. Next ID: %"PRIu32" ", data.num_apps,
+  PBL_LOG_INFO("Found %"PRIu32" apps. Next ID: %"PRIu32" ", data.num_apps,
           s_next_unique_flash_app_id);
 
   prv_close_file_and_unlock_mutex();
@@ -276,7 +276,7 @@ status_t app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int 
     new_install = true;
     app_id = s_next_unique_flash_app_id++;
   } else if (app_fetch_in_progress()) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Got an insert for an app that is currently being fetched, %"PRId32,
+    PBL_LOG_WRN("Got an insert for an app that is currently being fetched, %"PRId32,
             app_id);
     rv = prv_cancel_app_fetch(app_id);
   }
@@ -354,7 +354,7 @@ status_t app_db_delete(const uint8_t *key, int key_len) {
   if (app_id == INSTALL_ID_INVALID) {
     rv = E_DOES_NOT_EXIST;
   } else if (app_fetch_in_progress()) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Tried to delete an app that is currently being fetched, %"PRId32,
+    PBL_LOG_WRN("Tried to delete an app that is currently being fetched, %"PRId32,
             app_id);
     rv = prv_cancel_app_fetch(app_id);
   }
@@ -377,7 +377,7 @@ status_t app_db_delete(const uint8_t *key, int key_len) {
 }
 
 status_t app_db_flush(void) {
-  PBL_LOG(LOG_LEVEL_WARNING, "AppDB Flush initiated");
+  PBL_LOG_WRN("AppDB Flush initiated");
 
   if (app_fetch_in_progress()) {
     // cancels any app fetch
@@ -397,7 +397,7 @@ status_t app_db_flush(void) {
   pfs_remove(SETTINGS_FILE_NAME);
 
   mutex_unlock(s_app_db.mutex);
-  PBL_LOG(LOG_LEVEL_WARNING, "AppDB Flush finished");
+  PBL_LOG_WRN("AppDB Flush finished");
   return S_SUCCESS;
 }
 

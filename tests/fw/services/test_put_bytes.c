@@ -170,7 +170,7 @@ static void prv_receive_data(CommSession *session, const uint8_t* data, size_t l
     g_put_bytes_receiver_impl.write(r, data, length);
     g_put_bytes_receiver_impl.finish(r);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "No receiver returned!");
+    PBL_LOG_ERR("No receiver returned!");
   }
 }
 

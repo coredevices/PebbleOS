@@ -313,7 +313,7 @@ bool attribute_deserialize_list(char **buffer, char *const buf_end,
   for (int i = 0; i < attr_list.num_attributes; i++) {
     if (!prv_deserialize_attribute(buffer, buf_end, cursor, payload_end,
                                    &attr_list.attributes[i])) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Encountered unknown attribute");
+      PBL_LOG_WRN("Encountered unknown attribute");
       break;
     }
   }
@@ -418,14 +418,14 @@ size_t attribute_list_get_string_buffer_size(const AttributeList *list) {
 
 void attribute_list_add_cstring(AttributeList *list, AttributeId id, const char *cstring) {
   if (prv_attribute_type(id) != AttributeTypeString) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Adding attribute with type cstring for non-cstring attribute");
+    PBL_LOG_WRN("Adding attribute with type cstring for non-cstring attribute");
   }
   prv_add_attribute(list, id)->cstring = (char*) cstring;
 }
 
 void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uint32) {
   if (prv_attribute_type(id) != AttributeTypeUint32) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Adding attribute with type uint32 for non-uint32_t attribute");
+    PBL_LOG_WRN("Adding attribute with type uint32 for non-uint32_t attribute");
   }
   prv_add_attribute(list, id)->uint32 = uint32;
 }
@@ -433,7 +433,7 @@ void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uin
 void attribute_list_add_resource_id(AttributeList *list, AttributeId id,
                                     uint32_t resource_id) {
   if (prv_attribute_type(id) != AttributeTypeResourceId) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Adding attribute with type ResourceId for non-ResourceId " \
+    PBL_LOG_WRN("Adding attribute with type ResourceId for non-ResourceId " \
             "attribute");
   }
   prv_add_attribute(list, id)->uint32 = resource_id;
@@ -441,7 +441,7 @@ void attribute_list_add_resource_id(AttributeList *list, AttributeId id,
 
 void attribute_list_add_uint8(AttributeList *list, AttributeId id, uint8_t uint8) {
   if (prv_attribute_type(id) != AttributeTypeUint8) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Adding attribute with type uint8 for non-uint8_t attribute");
+    PBL_LOG_WRN("Adding attribute with type uint8 for non-uint8_t attribute");
   }
   prv_add_attribute(list, id)->uint8 = uint8;
 }

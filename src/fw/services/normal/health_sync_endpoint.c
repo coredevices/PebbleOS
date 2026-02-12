@@ -58,11 +58,11 @@ static void prv_sync_health_system_task_cb(void *unused) {
 
 static void prv_handle_sync(const uint8_t *msg, size_t len) {
   if (len < sizeof(HealthSyncEndpointSyncMsg)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid SYNC msg received, length: %u", len);
+    PBL_LOG_ERR("Invalid SYNC msg received, length: %u", len);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Received health SYNC request");
+  PBL_LOG_DBG("Received health SYNC request");
 
   system_task_add_callback(prv_sync_health_system_task_cb, NULL);
 }
@@ -72,7 +72,7 @@ static void prv_handle_sync(const uint8_t *msg, size_t len) {
 void health_sync_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t len) {
 #if CAPABILITY_HAS_HEALTH_TRACKING
   if (len < 1) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid message received, length: %u", len);
+    PBL_LOG_ERR("Invalid message received, length: %u", len);
   }
 
   HealthSyncEndpointCmd cmd = *msg;
@@ -82,7 +82,7 @@ void health_sync_protocol_msg_callback(CommSession *session, const uint8_t *msg,
       break;
 
     default:
-      PBL_LOG(LOG_LEVEL_WARNING, "Unexpected command received, 0x%x", cmd);
+      PBL_LOG_WRN("Unexpected command received, 0x%x", cmd);
       return;
   }
 #else

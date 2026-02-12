@@ -90,13 +90,13 @@ void vibe_init(void) {
   // Verify chip ID
   ret = prv_read_register(AW8623X_IDH, &val);
   if (!ret || val != AW8623X_IDH_CHIPID_H) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read AW8623X chip ID high byte");
+    PBL_LOG_ERR("Failed to read AW8623X chip ID high byte");
     return;
   }
 
   ret = prv_read_register(AW8623X_IDL, &val);
   if (!ret || val != AW8623X_IDL_CHIPID_L) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read AW8623X chip ID low byte");
+    PBL_LOG_ERR("Failed to read AW8623X chip ID low byte");
     return;
   }
 

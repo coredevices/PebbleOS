@@ -44,7 +44,7 @@ bool rocky_is_snapshot(const uint8_t *buffer, size_t buffer_size) {
   const uint8_t actual_version = buffer[offsetof(RockySnapshotHeader, version)];
   const uint8_t expected_version = ROCKY_EXPECTED_SNAPSHOT_HEADER.version;
   if (expected_version != actual_version) {
-    PBL_LOG(LOG_LEVEL_WARNING, "incompatible JS snapshot version %"PRIu8" (expected: %"PRIu8")",
+    PBL_LOG_WRN("incompatible JS snapshot version %"PRIu8" (expected: %"PRIu8")",
             actual_version, expected_version);
     return false;
   }
@@ -63,7 +63,7 @@ static bool prv_rocky_eval_buffer(const uint8_t *buffer, size_t buffer_size) {
     PBL_ASSERTN((uintptr_t)buffer % 8 == 0);
     rv = jerry_exec_snapshot(buffer, buffer_size, false);
   } else {
-    PBL_LOG(LOG_LEVEL_INFO, "Not a snapshot, interpreting buffer as JS source code");
+    PBL_LOG_INFO("Not a snapshot, interpreting buffer as JS source code");
     rv = jerry_eval((jerry_char_t *) buffer, buffer_size, false);
   }
 

@@ -90,7 +90,7 @@ static uint32_t s_prev_send_data_bytes;
 
 static void prv_transport_sent_data_cb(uint16_t endpoint_id,
                                        const uint8_t* data, unsigned int data_length) {
-  PBL_LOG(LOG_LEVEL_INFO, "Received %d bytes of data from watch", data_length);
+  PBL_LOG_INFO("Received %d bytes of data from watch", data_length);
   if (data_length >= sizeof(s_prev_send_data_hdr)) {
     memcpy(&s_prev_send_data_hdr, data, sizeof(s_prev_send_data_hdr));
     data_length -= sizeof(s_prev_send_data_hdr);
@@ -112,7 +112,7 @@ static void prv_init_fake_flash(void) {
   pfs_init(false);
   pfs_format(false /* write erase headers */);
 
-  PBL_LOG(LOG_LEVEL_INFO, "\nFile system size: %d, avail: %d", (int)pfs_get_size(),
+  PBL_LOG_INFO("\nFile system size: %d, avail: %d", (int)pfs_get_size(),
           (int)get_available_pfs_space());
 }
 
@@ -168,7 +168,7 @@ static void prv_check_session_data(DataLoggingSessionRef logging_session, uint32
 // log some random data, return its crc32
 static uint32_t prv_log_random_data(DataLoggingSessionRef logging_session, int item_size,
                                     int num_items) {
-  PBL_LOG(LOG_LEVEL_INFO, "Logging %d bytes", item_size * num_items);
+  PBL_LOG_INFO("Logging %d bytes", item_size * num_items);
   uint8_t *random_buf;
   uint32_t random_crc = prv_get_random_buffer(&random_buf, item_size * num_items);
 
@@ -323,11 +323,11 @@ void test_data_logging__fill_quota(void) {
   int total_bytes = 0;
   for (int i = 0; i < num_sessions; i++) {
     uint32_t size = dls_test_get_num_bytes(logging_sessions[i]);
-    PBL_LOG(LOG_LEVEL_INFO, "Size of session %d: %d", i, size);
+    PBL_LOG_INFO("Size of session %d: %d", i, size);
     total_bytes += size;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "total bytes: %d", total_bytes);
+  PBL_LOG_INFO("total bytes: %d", total_bytes);
   cl_assert(total_bytes < DLS_TOTAL_STORAGE_BYTES);
 
   // We should still be able to create more sessions up to the max
@@ -342,11 +342,11 @@ void test_data_logging__fill_quota(void) {
   total_bytes = 0;
   for (int i = 0; i < num_sessions; i++) {
     uint32_t size = dls_test_get_num_bytes(logging_sessions[i]);
-    PBL_LOG(LOG_LEVEL_INFO, "Size of session %d: %d", i, size);
+    PBL_LOG_INFO("Size of session %d: %d", i, size);
     total_bytes += size;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "total bytes: %d", total_bytes);
+  PBL_LOG_INFO("total bytes: %d", total_bytes);
   cl_assert(total_bytes < DLS_TOTAL_STORAGE_BYTES);
 }
 

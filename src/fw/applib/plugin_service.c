@@ -73,14 +73,14 @@ bool plugin_service_subscribe(Uuid *uuid, PluginServiceHandler handler) {
 
   ListNode *list = &state->subscribed_services;
   if (list_find(list, prv_service_filter, (void*)(uintptr_t)service_index)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Plug service handler already subscribed");
+    PBL_LOG_DBG("Plug service handler already subscribed");
     return false;
   }
 
   // Add to handlers list
   PluginServiceEntry *entry = applib_type_zalloc(PluginServiceEntry);
   if (!entry) {
-    PBL_LOG(LOG_LEVEL_ERROR, "OOM in plugin_service_subscribe");
+    PBL_LOG_ERR("OOM in plugin_service_subscribe");
     return false;
   }
   entry->service_index = service_index;
@@ -106,7 +106,7 @@ bool plugin_service_unsubscribe(Uuid *uuid) {
   ListNode *list = &state->subscribed_services;
   found = list_find(list, prv_service_filter, (void*)(uintptr_t)service_index);
   if (!found) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Plug service handler already unsubscribed");
+    PBL_LOG_DBG("Plug service handler already unsubscribed");
     return true;
   }
 

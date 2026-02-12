@@ -433,9 +433,9 @@ static bool prv_init_with_pbi_data(GBitmap *bitmap, uint8_t *data, size_t data_s
 
   if (data_size != required_total_size_bytes ||
       required_row_size_bytes > bitmap->row_size_bytes) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Bitmap metadata is inconsistent! data_size %u",
+    PBL_LOG_WRN("Bitmap metadata is inconsistent! data_size %u",
             (unsigned int) data_size);
-    PBL_LOG(LOG_LEVEL_WARNING, "format %u row_size_bytes %"PRIu16" width %"PRId16" height %"PRId16,
+    PBL_LOG_WRN("format %u row_size_bytes %"PRIu16" width %"PRId16" height %"PRId16,
             format, bitmap->row_size_bytes, bitmap->bounds.size.w, bitmap->bounds.size.h);
     return false;
   }

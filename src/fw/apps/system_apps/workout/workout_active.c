@@ -903,7 +903,7 @@ WorkoutActiveWindow *workout_active_create_single_layout(WorkoutMetricType metri
                                                          void *workout_data,
                                                          WorkoutController *workout_controller) {
   if (metric == WorkoutMetricType_None) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid argument");
+    PBL_LOG_ERR("Invalid argument");
     return NULL;
   }
 
@@ -923,7 +923,7 @@ WorkoutActiveWindow *workout_active_create_double_layout(WorkoutMetricType top_m
                                                          void *workout_data,
                                                          WorkoutController *workout_controller) {
   if (top_metric == WorkoutMetricType_None || num_scrollable_metrics == 0 || !scrollable_metrics) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid argument(s)");
+    PBL_LOG_ERR("Invalid argument(s)");
     return NULL;
   }
 
@@ -946,7 +946,7 @@ WorkoutActiveWindow *workout_active_create_tripple_layout(WorkoutMetricType top_
                                                           WorkoutController *workout_controller) {
   if (top_metric == WorkoutMetricType_None || middle_metric == WorkoutMetricType_None ||
       (num_scrollable_metrics != 0 && !scrollable_metrics)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid argument(s)");
+    PBL_LOG_ERR("Invalid argument(s)");
     return NULL;
   }
 

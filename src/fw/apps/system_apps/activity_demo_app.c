@@ -531,7 +531,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
       prv_display_alert(data->debug_card.dialog_text);
       goto exit;
     }
-    PBL_LOG(LOG_LEVEL_DEBUG, "Got %d minutes with UTC of %d (delta of %d min)", (int)chunk,
+    PBL_LOG_DBG("Got %d minutes with UTC of %d (delta of %d min)", (int)chunk,
             (int)utc_start, (int)(utc_start - prior_start) / SECONDS_PER_MINUTE);
     num_records += chunk;
     utc_start += chunk * SECONDS_PER_MINUTE;
@@ -547,7 +547,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
 
   // Print detail on the last few minutes
   const int k_print_batch_size = k_size;
-  PBL_LOG(LOG_LEVEL_DEBUG, "Fetching last %d minutes", k_print_batch_size);
+  PBL_LOG_DBG("Fetching last %d minutes", k_print_batch_size);
   utc_start = rtc_get_time() - (k_print_batch_size * SECONDS_PER_MINUTE);
   time_t prior_start = utc_start;
   uint32_t chunk = k_print_batch_size;
@@ -559,7 +559,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
     goto exit;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got last %d minutes with UTC of %d (delta of %d min)", (int)chunk,
+  PBL_LOG_DBG("Got last %d minutes with UTC of %d (delta of %d min)", (int)chunk,
           (int)utc_start, (int)(utc_start - prior_start) / SECONDS_PER_MINUTE);
 
   const unsigned int k_num_last_minutes = 6;

@@ -127,7 +127,7 @@ void health_data_update(HealthData *health_data) {
   health_data->num_activity_sessions = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
   if (!activity_get_sessions(&health_data->num_activity_sessions,
                              health_data->activity_sessions)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Fetching activity sessions failed");
+    PBL_LOG_ERR("Fetching activity sessions failed");
   } else {
     ActivitySession *previous_session = NULL;
     for (unsigned int i = 0; i < health_data->num_activity_sessions; i++) {

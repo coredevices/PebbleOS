@@ -38,16 +38,16 @@ static DisInfo s_dis_info;
 static struct ble_hs_stop_listener s_listener;
 
 static void prv_sync_cb(void) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "NimBLE host synchronized");
+  PBL_LOG_D_DBG(LOG_DOMAIN_BT, "NimBLE host synchronized");
   xSemaphoreGive(s_host_started);
 }
 
 static void prv_reset_cb(int reason) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_WARNING, "NimBLE reset (reason: %d)", reason);
+  PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE reset (reason: %d)", reason);
 }
 
 static void prv_host_task_main(void *unused) {
-  PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_DEBUG, "NimBLE host task started");
+  PBL_LOG_D_DBG(LOG_DOMAIN_BT, "NimBLE host task started");
 
   ble_hs_cfg.sync_cb = prv_sync_cb;
   ble_hs_cfg.reset_cb = prv_reset_cb;
@@ -118,13 +118,13 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_hs_sched_start();
   f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Host synchronization timed out");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Host synchronization timed out");
     return false;
   }
 
   rc = ble_hs_util_ensure_addr(0);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "Failed to ensure address: 0x%04x", (uint16_t)rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to ensure address: 0x%04x", (uint16_t)rc);
     return false;
   }
 

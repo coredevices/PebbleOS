@@ -101,8 +101,8 @@ static void prv_log_app_lr_and_pc_system_task(void *data) {
 
   APP_LOG(APP_LOG_LEVEL_ERROR, "%s fault! %s PC: %s LR: %s", process_string, buffer, pc_str, lr_str);
 
-  PBL_LOG(LOG_LEVEL_ERROR, "%s fault! %s", process_string, buffer);
-  PBL_LOG(LOG_LEVEL_ERROR, " --> PC: %s LR: %s", pc_str, lr_str);
+  PBL_LOG_ERR("%s fault! %s", process_string, buffer);
+  PBL_LOG_ERR(" --> PC: %s LR: %s", pc_str, lr_str);
 
   analytics_event_app_crash(&crash_info->app_uuid,
                             (crash_info->pc_known) ? crash_info->pc : 0,
@@ -262,7 +262,7 @@ static void prv_return_to_landing_zone(uintptr_t stacked_pc, uintptr_t stacked_l
 
 static void attempt_handle_stack_overflow(unsigned int* stacked_args) {
   PebbleTask task = pebble_task_get_current();
-  PBL_LOG_SYNC(LOG_LEVEL_ERROR, "Stack overflow [task: %s]", pebble_task_get_name(task));
+  PBL_LOG_SYNC_ERR("Stack overflow [task: %s]", pebble_task_get_name(task));
 
   if (mcu_state_is_thread_privileged()) {
     // We're hosed! We can't recover so just reboot everything.

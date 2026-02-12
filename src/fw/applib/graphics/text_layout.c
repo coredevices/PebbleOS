@@ -1326,7 +1326,7 @@ static void prv_graphics_text_layout_update(GContext* ctx, const char* text, GFo
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, text);
   if (!success) {
     layout->max_used_size = GSizeZero;
-    PBL_LOG(LOG_LEVEL_DEBUG, "Invalid UTF8");
+    PBL_LOG_DBG("Invalid UTF8");
     return;
   }
 
@@ -1418,7 +1418,7 @@ void graphics_draw_text(GContext* ctx, const char* text, GFont const font,
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, text);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Invalid UTF8");
+    PBL_LOG_DBG("Invalid UTF8");
     return;
   }
 

@@ -193,13 +193,13 @@ static bool prv_get_metadata(struct DomainBinding *db) {
   // all metadata is in the "" header entry
   prv_lookup("", db, &header_len, header, HEADER_BUFFER_SIZE);
   if (!header_len) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not find header in language pack");
+    PBL_LOG_WRN("Could not find header in language pack");
     goto cleanup;
   }
 
   // Isolate the language substring
   if (!prv_get_property(header, "Language: ", db->iso_locale, ISO_LOCALE_LENGTH)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not parse a language from language pack");
+    PBL_LOG_WRN("Could not parse a language from language pack");
     goto cleanup;
   }
 
@@ -211,18 +211,18 @@ static bool prv_get_metadata(struct DomainBinding *db) {
   // Isolate the version value
   char version_str[10] = {0};
   if (!prv_get_property(header, "Project-Id-Version: ", version_str, 10)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not parse a version from language pack");
+    PBL_LOG_WRN("Could not parse a version from language pack");
     goto cleanup;
   }
   char *version_end;
   db->lang_version = strtol(version_str, &version_end, 0);
   if (version_end == version_str) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not parse a version from language pack");
+    PBL_LOG_WRN("Could not parse a version from language pack");
     goto cleanup;
   }
 
   success = true;
-  PBL_LOG(LOG_LEVEL_INFO, "language: %s, version %d", db->iso_locale, db->lang_version);
+  PBL_LOG_INFO("language: %s, version %d", db->iso_locale, db->lang_version);
 
 cleanup:
   kernel_free(header);
@@ -248,7 +248,7 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
     return (db->version.crc != 0);
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "New language detected!");
+  PBL_LOG_DBG("New language detected!");
   db->need_reload = false;
 
   /* save version */
@@ -437,7 +437,7 @@ const char *i18n_get(const char *msgid, const void *owner) {
   size_t len = 0;
   prv_lookup(msgid, db, &len, translated, sizeof(translated));
   if (len >= sizeof(translated)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Truncated string: <%s>", msgid);
+    PBL_LOG_WRN("Truncated string: <%s>", msgid);
   }
 
   if (len) {
@@ -465,7 +465,7 @@ void i18n_get_with_buffer(const char *msgid, char *buffer, size_t length) {
   size_t len = 0;
   prv_lookup(msgid, db, &len, buffer, length);
   if (len >= length) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Truncated string: <%s>", msgid);
+    PBL_LOG_WRN("Truncated string: <%s>", msgid);
   }
 
   if (len) {
@@ -523,7 +523,7 @@ void i18n_free_all(const void *owner) {
 static void prv_resource_changed_handler(void *data) {
   struct DomainBinding *db = (struct DomainBinding *)data;
   // Mark as invalid
-  PBL_LOG(LOG_LEVEL_DEBUG, "lang resource file reloading");
+  PBL_LOG_DBG("lang resource file reloading");
   shell_prefs_set_language_english(false);
   db->need_reload = true;
 
@@ -535,7 +535,7 @@ static void prv_resource_changed_handler(void *data) {
 static void prv_resource_changed_callback(void *data) {
   // We want to not actually handle the reload here, because the PFS lock is still held here.
   // So instead we throw in the reload as an event callback.
-  PBL_LOG(LOG_LEVEL_DEBUG, "lang resource file was modified");
+  PBL_LOG_DBG("lang resource file was modified");
   launcher_task_add_callback(prv_resource_changed_handler, data);
 }
 

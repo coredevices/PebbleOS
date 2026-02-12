@@ -99,7 +99,7 @@ static void prv_shake_add_subscriber_cb(PebbleTask task) {
   mutex_lock_recursive(s_accel_manager_mutex);
   {
     if (++s_shake_subscribers_count == 1) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Starting accel shake service");
+      PBL_LOG_DBG("Starting accel shake service");
       accel_enable_shake_detection(true);
       prv_setup_subsampling(accel_get_sampling_interval());
     }
@@ -112,7 +112,7 @@ static void prv_shake_remove_subscriber_cb(PebbleTask task) {
   {
     PBL_ASSERTN(s_shake_subscribers_count > 0);
     if (--s_shake_subscribers_count == 0) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Stopping accel shake service");
+      PBL_LOG_DBG("Stopping accel shake service");
       accel_enable_shake_detection(false);
       prv_setup_subsampling(accel_get_sampling_interval());
     }
@@ -124,7 +124,7 @@ static void prv_double_tap_add_subscriber_cb(PebbleTask task) {
   mutex_lock_recursive(s_accel_manager_mutex);
 
   if (++s_double_tap_subscribers_count == 1) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Starting accel double tap service");
+    PBL_LOG_DBG("Starting accel double tap service");
     accel_enable_double_tap_detection(true);
     prv_setup_subsampling(accel_get_sampling_interval());
   }
@@ -137,7 +137,7 @@ static void prv_double_tap_remove_subscriber_cb(PebbleTask task) {
 
   PBL_ASSERTN(s_double_tap_subscribers_count > 0);
   if (--s_double_tap_subscribers_count == 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Stopping accel double tap service");
+    PBL_LOG_DBG("Stopping accel double tap service");
     accel_enable_double_tap_detection(false);
     prv_setup_subsampling(accel_get_sampling_interval());
   }
@@ -202,8 +202,7 @@ static void prv_setup_subsampling(uint32_t sampling_interval) {
     // Protect against divide-by-zero if gcd returns 0 (when either input is 0)
     // This can happen if the accelerometer driver is not initialized properly
     if (interval_gcd == 0) {
-      PBL_LOG(LOG_LEVEL_ERROR,
-              "Invalid sampling interval (sampling_interval=%" PRIu32 ", state->sampling_interval_us=%" PRIu32 "), skipping session %p",
+      PBL_LOG_ERR("Invalid sampling interval (sampling_interval=%" PRIu32 ", state->sampling_interval_us=%" PRIu32 "), skipping session %p",
               sampling_interval, state->sampling_interval_us, state);
       state = (AccelManagerState *)state->list_node.next;
       continue;
@@ -212,8 +211,7 @@ static void prv_setup_subsampling(uint32_t sampling_interval) {
     uint32_t numerator = sampling_interval / interval_gcd;
     uint32_t denominator = state->sampling_interval_us / interval_gcd;
 
-    PBL_LOG(LOG_LEVEL_DEBUG,
-            "set subsampling for session %p to %" PRIu32 "/%" PRIu32,
+    PBL_LOG_DBG("set subsampling for session %p to %" PRIu32 "/%" PRIu32,
             state, numerator, denominator);
     subsampled_shared_circular_buffer_client_set_ratio(
         &state->buffer_client, numerator, denominator);
@@ -237,7 +235,7 @@ static void prv_update_driver_config(void) {
 
   prv_setup_subsampling(interval_us);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "setting accel rate:%"PRIu32", num_samples:%"PRIu32,
+  PBL_LOG_DBG("setting accel rate:%"PRIu32", num_samples:%"PRIu32,
           US_PER_SECOND / interval_us, max_batch);
 
   accel_set_num_samples(max_batch);
@@ -332,7 +330,7 @@ static void prv_dispatch_data(bool post_event) {
       ACCEL_LOG_DEBUG("full set of %d samples for session %p", state->num_samples, state);
 
       if (!state->event_posted) {
-        PBL_LOG(LOG_LEVEL_INFO, "Failed to post accel event to task: 0x%x", (int) state->task);
+        PBL_LOG_INFO("Failed to post accel event to task: 0x%x", (int) state->task);
       }
     }
     state = (AccelManagerState *)state->list_node.next;
@@ -344,12 +342,12 @@ static void prv_dispatch_data(bool post_event) {
 #ifdef TEST_KERNEL_SUBSCRIPTION
 static void prv_kernel_data_subscription_handler(AccelData *accel_data,
     uint32_t num_samples) {
-  PBL_LOG(LOG_LEVEL_INFO, "Received %" PRIu32 " accel samples for KernelMain.", num_samples);
+  PBL_LOG_INFO("Received %" PRIu32 " accel samples for KernelMain.", num_samples);
 }
 
 static void prv_kernel_tap_subscription_handler(AccelAxisType axis,
     int32_t direction) {
-  PBL_LOG(LOG_LEVEL_INFO, "Received a tap event for KernelMain, axis: %d, "
+  PBL_LOG_INFO("Received a tap event for KernelMain, axis: %d, "
       "direction: %" PRId32, axis, direction);
 }
 #endif
@@ -405,7 +403,7 @@ void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
   accel_set_shake_sensitivity_percent(sensitivity_percent);
   mutex_unlock_recursive(s_accel_manager_mutex);
   
-  PBL_LOG(LOG_LEVEL_INFO, "Motion sensitivity updated to %u percent", sensitivity_percent);
+  PBL_LOG_INFO("Motion sensitivity updated to %u percent", sensitivity_percent);
 }
 
 void accel_manager_init(void) {
@@ -432,7 +430,7 @@ void accel_manager_init(void) {
   extern uint8_t shell_prefs_get_motion_sensitivity(void);
   uint8_t saved_sensitivity = shell_prefs_get_motion_sensitivity();
   accel_manager_update_sensitivity(saved_sensitivity);
-  PBL_LOG(LOG_LEVEL_INFO, "Initialized motion sensitivity to %u percent", saved_sensitivity);
+  PBL_LOG_INFO("Initialized motion sensitivity to %u percent", saved_sensitivity);
   #endif
 }
 
@@ -620,11 +618,11 @@ DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples,
   mutex_lock_recursive(s_accel_manager_mutex);
 
   if (samples > state->num_samples) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Consuming more samples than exist %d vs %d!",
+    PBL_LOG_ERR("Consuming more samples than exist %d vs %d!",
             (int)samples, (int)state->num_samples);
     success = false;
   } else if (samples != state->num_samples) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Dropping %d accel samples", (int)(state->num_samples - samples));
+    PBL_LOG_DBG("Dropping %d accel samples", (int)(state->num_samples - samples));
     success = false;
   }
 
@@ -715,7 +713,7 @@ void accel_cb_new_sample(AccelDriverSample const *data) {
   bool rv = shared_circular_buffer_write(&s_buffer, (uint8_t *)&accel_buffer_data,
                                          sizeof(accel_buffer_data), false /*advance_slackers*/);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Accel subscriber fell behind, truncating data");
+    PBL_LOG_WRN("Accel subscriber fell behind, truncating data");
     rv = shared_circular_buffer_write(&s_buffer, (uint8_t *)&accel_buffer_data,
                                       sizeof(accel_buffer_data), true /*advance_slackers*/);
   }
@@ -768,7 +766,7 @@ void command_accel_peek(void) {
   AccelData data;
 
   int result = sys_accel_manager_peek(&data);
-  PBL_LOG(LOG_LEVEL_DEBUG, "result: %d", result);
+  PBL_LOG_DBG("result: %d", result);
 
   char buffer[20];
   prompt_send_response_fmt(buffer, sizeof(buffer), "X: %"PRId16, data.x);

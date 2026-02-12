@@ -102,7 +102,7 @@ static void prv_handle_phone_versions_response(CommSession *session,
   } else if (length >= sizeof(struct VersionsPhoneResponseV1)) {
     request_version = 1;
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid version request");
+    PBL_LOG_ERR("Invalid version request");
     return;
   }
 
@@ -117,7 +117,7 @@ static void prv_handle_phone_versions_response(CommSession *session,
   // response_version field. That is why we only accept when this field is exactly 2, otherwise we
   // treat it as a V1 response.
   if (request_version >= 2) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Connected to Mobile App %"PRIu8 ".%"PRIu8 "-%"PRIu8,
+    PBL_LOG_DBG("Connected to Mobile App %"PRIu8 ".%"PRIu8 "-%"PRIu8,
             response->major_version, response->minor_version, response->bugfix_version);
 
     // For 3.X mobile applications, they will return additional bits in their response to correspond
@@ -133,8 +133,7 @@ static void prv_handle_phone_versions_response(CommSession *session,
   bt_driver_reconnect_notify_platform_bitfield(platform_bits);
 
   const bool is_system = comm_session_is_system(session);
-  PBL_LOG(LOG_LEVEL_INFO,
-          "Phone app: is_system=%u, plf=0x%"PRIx32", capabilities=0x%"PRIx32,
+  PBL_LOG_INFO("Phone app: is_system=%u, plf=0x%"PRIx32", capabilities=0x%"PRIx32,
           is_system, platform_bits, (uint32_t)capability_flags);
 
   // Only emit for the Pebble app, not 3rd party companion apps:
@@ -158,8 +157,7 @@ void session_remote_version_protocol_msg_callback(CommSession *session_ref,
     }
 
     default:
-      PBL_LOG_D(LOG_DOMAIN_COMM, LOG_LEVEL_ERROR,
-                "Invalid message received. First byte is %u", data[0]);
+      PBL_LOG_D_ERR(LOG_DOMAIN_COMM, "Invalid message received. First byte is %u", data[0]);
       break;
   }
 }

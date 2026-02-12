@@ -525,7 +525,7 @@ void ref_minute_stats(uint8_t *orientation, uint8_t *vmc) {
   }
   uint32_t kcals_min = calc_x1000_kcal(r_c_ary);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "minute_stats vmc: %d, orientation:0x%x, calories: %d",
+  PBL_LOG_DBG("minute_stats vmc: %d, orientation:0x%x, calories: %d",
           (int)*vmc, (int)*orientation, (int)kcals_min);
 
   reset_summ_metrics();

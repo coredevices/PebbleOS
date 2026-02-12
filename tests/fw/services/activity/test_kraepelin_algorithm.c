@@ -469,7 +469,7 @@ static uint32_t prv_feed_reference_samples(AccelRawData *data, int num_samples) 
   steps = ref_finish_epoch();
   ref_minute_stats(&orientation, &vmc);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "processed %d samples (%d seconds) of data: %d steps",
+  PBL_LOG_DBG("processed %d samples (%d seconds) of data: %d steps",
           num_samples, num_samples / KALG_SAMPLE_HZ, steps);
   return steps;
 }

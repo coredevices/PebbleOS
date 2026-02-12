@@ -135,7 +135,7 @@ void power_tracking_start(PowerSystem system) {
   DiscreteSystemProfile *current_profile = &s_discrete_consumer_profiles[system];
 
   if (current_profile->start_ticks != 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "repeat call to start ticks without stopping from %s", current_profile->name);
+    PBL_LOG_WRN("repeat call to start ticks without stopping from %s", current_profile->name);
     // Someone was careless: two cases:
     // 1) someone forgot to call stop
     // 2) someone re-enters a function that calls start before stop is called.
@@ -156,7 +156,7 @@ void power_tracking_stop(PowerSystem system) {
   DiscreteSystemProfile *current_profile = &s_discrete_consumer_profiles[system];
 
   if (current_profile->start_ticks == 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Stop ticks before start called: probably losing profile accuracy in %s", current_profile->name);
+    PBL_LOG_WRN("Stop ticks before start called: probably losing profile accuracy in %s", current_profile->name);
     // Someone was careless: two cases:
     // 1) someone forgot to call start
     // 2) someone re-entered a function that called stop already, so it is called twice.

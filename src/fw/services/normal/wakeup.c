@@ -182,7 +182,7 @@ static void prv_wakeup_timer_next_pending(void) {
       settings_file_each(&wakeup_settings, prv_find_next_wakeup_id_callback, NULL);
       settings_file_close(&wakeup_settings);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open APP_WAKEUP settings");
+      PBL_LOG_ERR("Error: could not open APP_WAKEUP settings");
     }
   }
   mutex_unlock(s_mutex);
@@ -321,7 +321,7 @@ void wakeup_init(void) {
 
   SettingsFile wakeup_settings;
   if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open wakeup settings");
+    PBL_LOG_ERR("Error: could not open wakeup settings");
     return;
   }
 
@@ -330,11 +330,11 @@ void wakeup_init(void) {
   bool event_found = false;
   settings_file_each(&wakeup_settings, prv_check_for_events, &event_found);
   if (event_found) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Rewriting wakeup file");
+    PBL_LOG_DBG("Rewriting wakeup file");
     // Update settings file removing expired events
     settings_file_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Not rewriting wakeup file because no entries were found");
+    PBL_LOG_DBG("Not rewriting wakeup file because no entries were found");
   }
   settings_file_close(&wakeup_settings);
 
@@ -625,7 +625,7 @@ void wakeup_migrate_timezone(int utc_diff) {
       settings_file_rewrite(&wakeup_settings, prv_migrate_events_callback, (void*)&utc_diff);
       settings_file_close(&wakeup_settings);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open wakeup settings");
+      PBL_LOG_ERR("Error: could not open wakeup settings");
     }
   }
   mutex_unlock(s_mutex);
@@ -643,7 +643,7 @@ static void prv_wakeup_rewrite_kernel_bg_cb(void *data) {
       settings_file_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
       settings_file_close(&wakeup_settings);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open wakeup settings");
+      PBL_LOG_ERR("Error: could not open wakeup settings");
     }
   }
   mutex_unlock(s_mutex);

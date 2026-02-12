@@ -103,7 +103,7 @@ static void da7212_register_write(uint8_t reg, uint8_t value) {
   bool ret;
 
   i2c_use(I2C_DA7212);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Writing DA7212 register 0x%02x with value 0x%02x", reg, value);
+  PBL_LOG_DBG("Writing DA7212 register 0x%02x with value 0x%02x", reg, value);
 
   ret = i2c_write_block(I2C_DA7212, 2, data);
   PBL_ASSERTN(ret);
