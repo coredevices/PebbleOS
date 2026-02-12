@@ -37,7 +37,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   // TODO: Dynamically sized files?
   int fd = pfs_open(name, flags, FILE_TYPE_STATIC, max_space_total);
   if (fd < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not open settings file '%s', %d", name, fd);
+    PBL_LOG_ERR("Could not open settings file '%s', %d", name, fd);
     if (fd == E_BUSY) {
       // This is very bad. Someone didn't use a mutex. There could already be
       // silent corruption, so it's better to crash now rather than let things
@@ -64,14 +64,13 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   }
 
   if (memcmp(&file_hdr.magic, SETTINGS_FILE_MAGIC, sizeof(file_hdr.magic)) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Attempted to open %s, not a settings file.", name);
+    PBL_LOG_ERR("Attempted to open %s, not a settings file.", name);
     pfs_close_and_remove(fd);
     return E_INVALID_OPERATION;
   }
 
   if (file_hdr.version > SETTINGS_FILE_VERSION) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Unrecognized version %d for file %s, removing...",
+    PBL_LOG_WRN("Unrecognized version %d for file %s, removing...",
             file_hdr.version, name);
     pfs_close_and_remove(fd);
     return prv_open(file, name, flags, max_used_space);
@@ -79,8 +78,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
 
   status_t status = bootup_check(file);
   if (status < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Bootup check failed (%"PRId32"), not good. "
+    PBL_LOG_ERR("Bootup check failed (%"PRId32"), not good. "
             "Attempting to recover by deleting %s...", status, name);
     pfs_close_and_remove(fd);
     return prv_open(file, name, flags, max_used_space);
@@ -92,13 +90,13 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   // size.
   int actual_size = pfs_get_file_size(file->iter.fd);
   if (actual_size < max_space_total) {
-    PBL_LOG(LOG_LEVEL_INFO, "Re-writing settings file %s to increase its size from %d to %d.",
+    PBL_LOG_INFO("Re-writing settings file %s to increase its size from %d to %d.",
             name, actual_size, max_space_total);
     // The settings_file_rewrite_filtered call creates a new file based on file->max_used_space
     // and copies the contents of the existing file into it.
     status = settings_file_rewrite_filtered(file, NULL, NULL);
     if (status < 0) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not resize file %s (error %"PRId32"). Creating new one",
+      PBL_LOG_ERR("Could not resize file %s (error %"PRId32"). Creating new one",
               name, status);
       return prv_open(file, name, flags, max_used_space);
     }
@@ -196,8 +194,7 @@ status_t settings_file_rewrite_filtered(
   status_t status = prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ,
                              file->max_used_space);
   if (status < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Could not open temporary file to compact settings file. Error %"PRIi32".",
+    PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %"PRIi32".",
             status);
     return status;
   }

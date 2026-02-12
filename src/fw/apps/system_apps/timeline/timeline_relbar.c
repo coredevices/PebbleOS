@@ -481,7 +481,7 @@ static void prv_update_rel_bars(TimelineLayer *layer) {
   }
   layer->relbar_layer.curr_rel_bar.rel_bar_type = rel_bar_types[1];
   if (layer->layouts_info[1]) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Current rel bar %d, duration %"PRIu32, rel_bar_types[1],
+    PBL_LOG_DBG("Current rel bar %d, duration %"PRIu32, rel_bar_types[1],
             layer->layouts_info[1]->duration_s);
   }
 }

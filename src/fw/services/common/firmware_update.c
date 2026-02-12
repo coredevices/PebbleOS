@@ -100,7 +100,7 @@ static bool prv_legacy_handle_progress(PebblePutBytesEvent *event) {
       break;
 
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Unexpected Object type %u", event->object_type);
+      PBL_LOG_ERR("Unexpected Object type %u", event->object_type);
       break;
   }
 
@@ -285,7 +285,7 @@ void firmware_update_pb_event_handler(PebblePutBytesEvent *event) {
       break;
 
     case PebblePutBytesEventTypeInitTimeout:
-      PBL_LOG(LOG_LEVEL_WARNING, "Timed out waiting for putbytes request from phone");
+      PBL_LOG_WRN("Timed out waiting for putbytes request from phone");
       prv_firmware_update_finish(true /* failed */);
       break;
 

@@ -77,7 +77,7 @@ static ProcessContext *prv_get_context(void) {
 // This timer callback gets called if the process doesn't finish it's deinit within the required timeout (currently
 // 3 seconds).
 static void prv_graceful_close_timer_callback(void* data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "deinit timeout expired, killing app forcefully");
+  PBL_LOG_DBG("deinit timeout expired, killing app forcefully");
   PebbleTask task = (PebbleTask)data;
 
   process_manager_put_kill_process_event(task, false /*gracefully*/);
@@ -118,7 +118,7 @@ EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
   ProcessContext *context = prv_get_context_for_task(task);
 
   if (context->closing_state == ProcessRunState_ForceClosing) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Hit syscall exit trap!");
+    PBL_LOG_DBG("Hit syscall exit trap!");
     context->safe_to_kill = true;
     process_manager_put_kill_process_event(task, false);
 
@@ -200,7 +200,7 @@ bool process_manager_check_SDK_compatible(const AppInstallId id) {
     return true;
   }
 
-  PBL_LOG(LOG_LEVEL_WARNING, "App requires support for SDK version (%"PRIu8".%"PRIu8"), "
+  PBL_LOG_WRN("App requires support for SDK version (%"PRIu8".%"PRIu8"), "
                              "we only support version (%"PRIu8".%"PRIu8").",
           entry.sdk_version.major, entry.sdk_version.minor,
           (uint8_t) PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
@@ -227,14 +227,14 @@ static bool prv_needs_fetch(AppInstallId id, const PebbleProcessMd **md, bool is
   PBL_ASSERTN(md);
 
   if (!app_cache_entry_exists(id)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Cache entry did not exist on launch attempt");
+    PBL_LOG_DBG("Cache entry did not exist on launch attempt");
     return true;
   }
 
   *md = app_install_get_md(id, is_worker);
 
   if (!is_worker && rocky_app_validate_resources(*md) == RockyResourceValidation_Invalid) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "App has incompatible JavaScript bytecode");
+    PBL_LOG_DBG("App has incompatible JavaScript bytecode");
     //  TODO: do we need to purge the app cache here?
     return true;
   }
@@ -250,7 +250,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
   const bool is_worker = config->worker;
 
   if (id == INSTALL_ID_INVALID) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Invalid ID");
+    PBL_LOG_DBG("Invalid ID");
     return;
   }
 
@@ -263,7 +263,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 
     // This is a third party flash 3.0 app install
     if (prv_needs_fetch(id, &md, is_worker)) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Cache entry did not exist on launch attempt");
+      PBL_LOG_DBG("Cache entry did not exist on launch attempt");
 
       // Freed in app_fetch_ui.c
       AppFetchUIArgs *fetch_args = kernel_malloc_check(sizeof(AppFetchUIArgs));
@@ -301,7 +301,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
   }
 
   if (!md) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Tried to launch non-existant app!");
+    PBL_LOG_ERR("Tried to launch non-existant app!");
     return;
   }
 
@@ -309,11 +309,11 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
   if (!is_worker) {
     // Check if the app ram size is valid in order to determine if its SDK version is supported.
     if (!app_manager_is_app_supported(md)) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Tried to launch an app with an unsupported SDK version.");
+      PBL_LOG_WRN("Tried to launch an app with an unsupported SDK version.");
       AppInstallEntry entry;
       if (!app_install_get_entry_for_install_id(id, &entry)) {
         // can't retrieve app install entry for id
-        PBL_LOG(LOG_LEVEL_ERROR, "Failed to get entry for id %"PRId32, id);
+        PBL_LOG_ERR("Failed to get entry for id %"PRId32, id);
       } else if (app_install_entry_is_watchface(&entry)) {
         // If the watchface is for an unsupported SDK version, we need to switch the default
         // watchface back to tictoc. Otherwise, we will be stuck in the launcher forever.
@@ -404,14 +404,14 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
     return true;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "make %s process safe to kill: state %u", pebble_task_get_name(task),
+  PBL_LOG_DBG("make %s process safe to kill: state %u", pebble_task_get_name(task),
                               context->closing_state);
 
   if (gracefully) {
     if (context->closing_state == ProcessRunState_Running) {
       context->closing_state = ProcessRunState_GracefullyClosing;
 
-      PBL_LOG(LOG_LEVEL_DEBUG, "Attempting to gracefully deinit %s", pebble_task_get_name(task));
+      PBL_LOG_DBG("Attempting to gracefully deinit %s", pebble_task_get_name(task));
 
       // Send deinit event to app:
       PebbleEvent deinit_event = {
@@ -429,10 +429,10 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
     // Else we're already in the gracefully closing state, just let the timer run out or the
     // app to mark itself as safe_to_kill.
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Check if we can force stop the %s task", pebble_task_get_name(task));
+    PBL_LOG_DBG("Check if we can force stop the %s task", pebble_task_get_name(task));
 
     if (prv_force_stop_task_if_unprivileged(context)) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got it");
+      PBL_LOG_DBG("Got it");
       prv_handle_app_stop_analytics(context, task, gracefully);
       return true;
     }
@@ -447,7 +447,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
       // the process safe to kill if its state is set to ForceClosing.
       // All we have to do is set the state and wait.
       context->closing_state = ProcessRunState_ForceClosing;
-      PBL_LOG(LOG_LEVEL_DEBUG, "task is privileged, setting the syscall exit trap");
+      PBL_LOG_DBG("task is privileged, setting the syscall exit trap");
 
       bool success = new_timer_start(s_deinit_timer_id, 3 * 1000, prv_force_close_timer_callback, (void*)task,
               0 /*flags*/);
@@ -523,7 +523,7 @@ void process_manager_process_cleanup(PebbleTask task) {
   ProcessContext *context = prv_get_context_for_task(task);
   PBL_ASSERTN(context->safe_to_kill);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "%s is getting cleaned up", pebble_task_get_name(task));
+  PBL_LOG_DBG("%s is getting cleaned up", pebble_task_get_name(task));
 
   // Shutdown services that may be running. Do this before we destory the task and clear the queue
   // just in case other services are still in flight.
@@ -567,7 +567,7 @@ void process_manager_process_cleanup(PebbleTask task) {
 
   if (context->to_process_event_queue &&
       pdFAIL == event_queue_cleanup_and_reset(context->to_process_event_queue)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "The to processs queue could not be reset!");
+    PBL_LOG_ERR("The to processs queue could not be reset!");
   }
   context->to_process_event_queue = NULL;
 }
@@ -594,13 +594,13 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e) {
   ProcessContext *context = prv_get_context_for_task(task);
 
   if (context->to_process_event_queue == 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Dropped app event! Type: %u", e->type);
+    PBL_LOG_WRN("Dropped app event! Type: %u", e->type);
     return false;
   }
 
   // Put on app's own queue:
   if (!xQueueSend(context->to_process_event_queue, e, milliseconds_to_ticks(1000))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to send event %u to app! Closing it!", e->type);
+    PBL_LOG_ERR("Failed to send event %u to app! Closing it!", e->type);
     // We could be called from a timer task callback, so post a kill event rather than call
     //  process_manager_close_process directly.
     process_manager_put_kill_process_event(task, false);
@@ -616,7 +616,7 @@ uint32_t process_manager_process_events_waiting(PebbleTask task) {
   ProcessContext *context = prv_get_context_for_task(task);
 
   if (context->to_process_event_queue == 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "no event queue");
+    PBL_LOG_WRN("no event queue");
     return 0;
   }
 

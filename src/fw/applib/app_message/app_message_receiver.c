@@ -24,7 +24,7 @@ void app_message_receiver_dropped_handler(uint32_t num_dropped_messages) {
 bool app_message_receiver_open(size_t buffer_size) {
   AppInbox **app_message_inbox = app_state_get_app_message_inbox();
   if (*app_message_inbox) {
-    PBL_LOG(LOG_LEVEL_INFO, "App PP receiver already open, not opening again");
+    PBL_LOG_INFO("App PP receiver already open, not opening again");
     return true;
   }
 
@@ -48,7 +48,7 @@ bool app_message_receiver_open(size_t buffer_size) {
 void app_message_receiver_close(void) {
   AppInbox **inbox = app_state_get_app_message_inbox();
   if (!(*inbox)) {
-    PBL_LOG(LOG_LEVEL_INFO, "App PP receiver already closed");
+    PBL_LOG_INFO("App PP receiver already closed");
     return;
   }
 

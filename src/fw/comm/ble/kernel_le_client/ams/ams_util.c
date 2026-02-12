@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
 #include "system/logging.h"
 
 #include "ams_util.h"

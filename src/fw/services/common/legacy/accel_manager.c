@@ -159,7 +159,7 @@ static void prv_update_driver_config(void) {
       state->subsample_denominator = new_den;
     }
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "set subsampling for session %d to %d/%d", (int)state->session_ref,
+    PBL_LOG_DBG("set subsampling for session %d to %d/%d", (int)state->session_ref,
             state->subsample_numerator, state->subsample_denominator);
 
     state = (AccelSubscriberState *)state->list_node.next;
@@ -182,7 +182,7 @@ static void prv_update_driver_config(void) {
   accel_set_num_samples(num_samples);
   s_accel_samples_per_update = num_samples;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "setting accel rate:%d, num_samples:%"PRIu32, highest_rate, num_samples);
+  PBL_LOG_DBG("setting accel rate:%d, num_samples:%"PRIu32, highest_rate, num_samples);
 }
 
 // Switch accelerometer into and out of low power mode. This function is
@@ -386,7 +386,7 @@ DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_num_samples, AccelSessionRef sess
   {
     AccelSubscriberState* state = prv_subscriber_state(session);
     if (!state) {
-      PBL_LOG(LOG_LEVEL_WARNING, "not subscribed");
+      PBL_LOG_WRN("not subscribed");
       goto unlock;
     }
     result = state->num_samples;
@@ -405,11 +405,11 @@ DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples, AccelSessionRef session,
   {
     AccelSubscriberState* state = prv_subscriber_state(session);
     if (!state) {
-      PBL_LOG(LOG_LEVEL_WARNING, "not subscribed");
+      PBL_LOG_WRN("not subscribed");
       goto unlock;
     }
     if (samples != state->num_samples) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Wrong number of samples");
+      PBL_LOG_WRN("Wrong number of samples");
       success = false;
     } else {
       // Default timestamp for next chunk
@@ -436,7 +436,7 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sampling_rate, AccelSessionRef session
   {
     AccelSubscriberState* state = prv_subscriber_state(session);
     if (!state) {
-      PBL_LOG(LOG_LEVEL_WARNING, "not subscribed");
+      PBL_LOG_WRN("not subscribed");
       goto unlock;
     }
     state->sampling_rate = rate;
@@ -465,7 +465,7 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer, AccelSessionRef session
 
   // The buffer must be big enough to hold at least 1 more item to support 2/5 subsampling
   if (buffer_size < samples_per_update + 1) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid buffer size");
+    PBL_LOG_ERR("Invalid buffer size");
     return -1;
   }
 
@@ -477,7 +477,7 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer, AccelSessionRef session
   {
     AccelSubscriberState* state = prv_subscriber_state(session);
     if (!state) {
-      PBL_LOG(LOG_LEVEL_WARNING, "not subscribed");
+      PBL_LOG_WRN("not subscribed");
       result = -1;
       goto unlock;
     }
@@ -500,10 +500,10 @@ static void prv_tap_add_subscriber_cb(PebbleTask task) {
   mutex_lock_recursive(s_mutex);
   {
     if (++s_tap_subscribers_count == 1 && !s_data_subscribers) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Starting accel service");
+      PBL_LOG_DBG("Starting accel service");
       accel_set_sampling_rate(ACCEL_SAMPLING_25HZ);
       if (!accel_start()) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Failed to start accel service");
+        PBL_LOG_ERR("Failed to start accel service");
       }
     }
   }
@@ -518,7 +518,7 @@ static void prv_tap_remove_subscriber_cb(PebbleTask task) {
   {
     PBL_ASSERTN(s_tap_subscribers_count > 0);
     if (--s_tap_subscribers_count == 0 && !s_data_subscribers) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Stopping accel service");
+      PBL_LOG_DBG("Stopping accel service");
       if (accel_running()) {
         accel_stop();
       }
@@ -599,13 +599,13 @@ DEFINE_SYSCALL(void, sys_accel_manager_data_subscribe, AccelSessionRef session,
 #ifdef TEST_KERNEL_SUBSCRIPTION
 // -----------------------------------------------------------------------------------------------
 static void prv_kernel_data_subscription_handler(AccelData *accel_data, uint32_t num_samples) {
-  PBL_LOG(LOG_LEVEL_INFO, "Received %d accel samples for KernelMain.", num_samples);
+  PBL_LOG_INFO("Received %d accel samples for KernelMain.", num_samples);
 }
 
 
 // -----------------------------------------------------------------------------------------------
 static void prv_kernel_tap_subscription_handler(AccelAxisType axis, int32_t direction) {
-  PBL_LOG(LOG_LEVEL_INFO, "Received tap event for KernelMain, axis: %d, direction: %d", axis,
+  PBL_LOG_INFO("Received tap event for KernelMain, axis: %d, direction: %d", axis,
           direction);
 }
 #endif
@@ -637,7 +637,7 @@ void command_accel_peek(void) {
 
   AccelData data;
   int result = sys_accel_manager_peek(&data);
-  PBL_LOG(LOG_LEVEL_DEBUG, "result: %d", result);
+  PBL_LOG_DBG("result: %d", result);
 
   char buffer[20];
   prompt_send_response_fmt(buffer, sizeof(buffer), "X: %"PRId16, data.x);

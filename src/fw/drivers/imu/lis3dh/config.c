@@ -99,7 +99,7 @@ void lis3dh_set_interrupt_axis(AccelAxisType axis, bool double_click) {
       click_cfg = 0x10;
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Unknown axis");
+      PBL_LOG_ERR("Unknown axis");
   }
 
   if (double_click) {
@@ -108,7 +108,7 @@ void lis3dh_set_interrupt_axis(AccelAxisType axis, bool double_click) {
 
   if ((!prv_write_reg(LIS3DH_CTRL_REG1, reg_1))
       || (!prv_write_reg(LIS3DH_CLICK_CFG, click_cfg))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write axis selection");
+    PBL_LOG_ERR("Failed to write axis selection");
   }
 }
 
@@ -117,7 +117,7 @@ uint8_t lis3dh_get_click_window() {
 }
 void lis3dh_set_click_window(uint8_t window) {
   if (!prv_write_reg(LIS3DH_TIME_WINDOW, MIN(window, LIS3DH_MAX_CLICK_WINDOW))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write click latency");
+    PBL_LOG_ERR("Failed to write click latency");
   }
 }
 
@@ -126,7 +126,7 @@ uint8_t lis3dh_get_click_latency() {
 }
 void lis3dh_set_click_latency(uint8_t latency) {
   if (!prv_write_reg(LIS3DH_TIME_LATENCY, MIN(latency, LIS3DH_MAX_CLICK_LATENCY))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write click latency");
+    PBL_LOG_ERR("Failed to write click latency");
   }
 }
 
@@ -135,7 +135,7 @@ uint8_t lis3dh_get_interrupt_threshold() {
 }
 void lis3dh_set_interrupt_threshold(uint8_t threshold) {
   if (!prv_write_reg(LIS3DH_CLICK_THS, MIN(threshold, LIS3DH_MAX_THRESHOLD))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to set interrupt threshold");
+    PBL_LOG_ERR("Failed to set interrupt threshold");
   }
 }
 
@@ -144,7 +144,7 @@ uint8_t lis3dh_get_interrupt_time_limit() {
 }
 void lis3dh_set_interrupt_time_limit(uint8_t time_limit) {
   if (!prv_write_reg(LIS3DH_TIME_LIMIT, MIN(time_limit, LIS3DH_MAX_TIME_LIMIT))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to set interrupt time limit");
+    PBL_LOG_ERR("Failed to set interrupt time limit");
   }
 }
 
@@ -173,7 +173,7 @@ AccelSamplingRate accel_get_sampling_rate(void) {
   } else if (odr == (ODR1)) {
     return (ACCEL_SAMPLING_10HZ);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unrecognized ODR value %d", odr);
+    PBL_LOG_ERR("Unrecognized ODR value %d", odr);
     return (0);
   }
 }
@@ -195,7 +195,7 @@ bool accel_set_sampling_rate(AccelSamplingRate rate) {
       odr = ODR1;
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Unsupported sampling rate %d", rate);
+      PBL_LOG_ERR("Unsupported sampling rate %d", rate);
       return (false);
   }
 
@@ -209,20 +209,20 @@ bool accel_set_sampling_rate(AccelSamplingRate rate) {
   // Update the click limit based on sampling frequency
   uint8_t time_limit = rate * LIS3DH_TIME_LIMIT_MULT / LIS3DH_TIME_LIMIT_DIV;
   lis3dh_set_interrupt_time_limit(time_limit);
-  PBL_LOG(LOG_LEVEL_DEBUG, "setting click time limit to 0x%x",
+  PBL_LOG_DBG("setting click time limit to 0x%x",
               lis3dh_get_interrupt_time_limit());
 
   // Update click latency
   uint8_t time_latency = rate * LIS3DH_TIME_LATENCY_MULT / LIS3DH_TIME_LATENCY_DIV;
   lis3dh_set_click_latency(time_latency);
-  PBL_LOG(LOG_LEVEL_DEBUG, "setting click time latency to 0x%x",
+  PBL_LOG_DBG("setting click time latency to 0x%x",
               lis3dh_get_click_latency());
   
   // Update click window
   uint32_t time_window = rate * LIS3DH_TIME_WINDOW_MULT / LIS3DH_TIME_WINDOW_DIV;
   time_window = MIN(time_window, 0xff);
   lis3dh_set_click_window(time_window);
-  PBL_LOG(LOG_LEVEL_DEBUG, "setting click time window to 0x%x",
+  PBL_LOG_DBG("setting click time window to 0x%x",
               lis3dh_get_click_window());
   
 
@@ -241,7 +241,7 @@ Lis3dhScale accel_get_scale(void) {
   } else if (fs == 0) {
     return (LIS3DH_SCALE_2G);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unrecognized FS value %d", fs);
+    PBL_LOG_ERR("Unrecognized FS value %d", fs);
     return (LIS3DH_SCALE_UNKNOWN);
   }
 }
@@ -263,7 +263,7 @@ bool accel_set_scale(Lis3dhScale scale) {
       fs = 0;
       break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Unsupported scale %d", scale);
+      PBL_LOG_ERR("Unsupported scale %d", scale);
       return (false);
   }
 
@@ -274,7 +274,7 @@ bool accel_set_scale(Lis3dhScale scale) {
 
   lis3dh_set_interrupt_threshold(scale * LIS3DH_THRESHOLD_MULT
                                 / LIS3DH_THRESHOLD_DIV);
-  PBL_LOG(LOG_LEVEL_DEBUG, "setting click threshold to 0x%x",
+  PBL_LOG_DBG("setting click threshold to 0x%x",
               lis3dh_get_interrupt_threshold());
   return (res);
 }
@@ -327,7 +327,7 @@ void lis3dh_exit_self_test_mode(void) {
 //! factory. Useful as a sanity check to make sure everything came up properly.
 bool lis3dh_sanity_check(void) {
   uint8_t whoami = prv_read_reg(LIS3DH_WHO_AM_I);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Read accel whomai byte 0x%x, expecting 0x%x", whoami, LIS3DH_WHOAMI_BYTE);
+  PBL_LOG_DBG("Read accel whomai byte 0x%x, expecting 0x%x", whoami, LIS3DH_WHOAMI_BYTE);
   return (whoami == LIS3DH_WHOAMI_BYTE);
 }
 
@@ -369,7 +369,7 @@ bool lis3dh_config_set_defaults() {
 
   if (!send_i2c_commands(accel_init_commands, ARRAY_LENGTH(accel_init_commands))) {
     accel_stop();
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to initialize accelerometer");
+    PBL_LOG_WRN("Failed to initialize accelerometer");
     return false;
   }
 

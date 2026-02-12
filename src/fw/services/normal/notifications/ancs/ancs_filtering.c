@@ -59,7 +59,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
       pstring_pstring16_to_string(&app_name_attr->pstr, app_name_buff);
       attribute_list_add_cstring(&new_attr_list, AttributeIdAppName, app_name_buff);
       list_dirty = true;
-      PBL_LOG(LOG_LEVEL_INFO, "Adding app name to app prefs: <%s>", app_name_buff);
+      PBL_LOG_INFO("Adding app name to app prefs: <%s>", app_name_buff);
     }
   }
 
@@ -83,7 +83,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
       (last_updated && now > (last_updated->uint32 + SECONDS_PER_DAY))) {
     attribute_list_add_uint32(&new_attr_list, AttributeIdLastUpdated, now);
     list_dirty = true;
-    PBL_LOG(LOG_LEVEL_INFO, "Updating / adding timestamp to app prefs");
+    PBL_LOG_INFO("Updating / adding timestamp to app prefs");
   }
 
   if (list_dirty) {

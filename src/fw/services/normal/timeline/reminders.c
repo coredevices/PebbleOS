@@ -80,25 +80,25 @@ static status_t prv_set_timer(Reminder *item) {
   s_next_reminder_id = item->header.id;
   if (new_timer_start(s_reminder_timer, timeout_ms, prv_new_timer_callback,
                       &s_next_reminder_id, 0)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Set timer for %"PRIu32, timeout_ms);
+    PBL_LOG_DBG("Set timer for %"PRIu32, timeout_ms);
     return S_SUCCESS;
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Could not set timer.");
+    PBL_LOG_DBG("Could not set timer.");
     return E_ERROR;
   }
 }
 
 status_t reminders_update_timer(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Attempting to update timer.");
+  PBL_LOG_DBG("Attempting to update timer.");
   if (!new_timer_stop(s_reminder_timer)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Updated timer while callback running.");
+    PBL_LOG_DBG("Updated timer while callback running.");
     return S_SUCCESS;
   }
 
   TimelineItem item = {{{0}}};
   status_t rv = reminder_db_next_item_header(&item);
   if (rv == S_NO_MORE_ITEMS) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "No more reminders to add to queue.");
+    PBL_LOG_DBG("No more reminders to add to queue.");
     return S_SUCCESS;
   } else if (rv) {
     return rv;

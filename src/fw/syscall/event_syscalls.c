@@ -13,7 +13,7 @@
 
 static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
   if (!event_try_put_from_process(task, event)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "%s: From app queue is full! Dropped %p! Killing App",
+    PBL_LOG_WRN("%s: From app queue is full! Dropped %p! Killing App",
         (task == PebbleTask_App ? "App" : "Worker"), event);
     syscall_failed();
   }

@@ -63,7 +63,7 @@ static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
     time_t t0 = rtc_get_time();
     time_t t1 = prv_migrate_local_time_to_UTC(t0);
     rtc_sanitize_time_t(&t1);
-    PBL_LOG(LOG_LEVEL_INFO, "Pivot RTC from localtime to UTC (%lu -> %lu)", t0, t1);
+    PBL_LOG_INFO("Pivot RTC from localtime to UTC (%lu -> %lu)", t0, t1);
     rtc_set_time(t1);  // Pivot RTC from localtime to UTC
     prv_migrate_timezone_info(tz_info->tm_gmtoff);
   }
@@ -313,7 +313,7 @@ static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
   if (tz_data->region_name_len == 0) {
     region_name = "[N/A]";
   }
-  PBL_LOG(LOG_LEVEL_INFO, "set_timezone utc_time: %u offset: %d region_name: %s",
+  PBL_LOG_INFO("set_timezone utc_time: %u offset: %d region_name: %s",
           (int) tz_data->utc_time, (int) tz_data->utc_offset_min, region_name);
 
   TimezoneInfo tz_info = prv_get_timezone_info_from_data(tz_data);
@@ -326,7 +326,7 @@ static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
 }
 
 static void prv_handle_set_time_msg(time_t new_time) {
-  PBL_LOG(LOG_LEVEL_WARNING, "Mobile app calling deprecated API, time = %d",
+  PBL_LOG_WRN("Mobile app calling deprecated API, time = %d",
           (int)new_time);
   if (clock_is_timezone_set()) {
     new_time = prv_migrate_local_time_to_UTC(new_time);
@@ -369,7 +369,7 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
       const size_t header_size = offsetof(TimezoneCBData, region_name);
       const uint8_t *timezone_length_ptr = data + offsetof(TimezoneCBData, region_name_len);
       if (length != (sizeof(uint8_t) + header_size + *timezone_length_ptr)) {
-        PBL_LOG(LOG_LEVEL_WARNING, "Set timezone message invalid length");
+        PBL_LOG_WRN("Set timezone message invalid length");
         return;
       }
 
@@ -378,7 +378,7 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
       break;
     }
     default:
-      PBL_LOG(LOG_LEVEL_WARNING, "Invalid message received. First byte is %u", data[0]);
+      PBL_LOG_WRN("Invalid message received. First byte is %u", data[0]);
       break;
   }
 }
@@ -651,7 +651,7 @@ int16_t clock_get_timezone_region_id(void) {
 void clock_set_timezone_by_region_id(uint16_t region_id) {
   TimezoneInfo tz_info;
   prv_clock_get_timezone_info_from_region_id(region_id, rtc_get_time(), &tz_info);
-  PBL_LOG(LOG_LEVEL_INFO, "Set timezone by region id (%u)", region_id);
+  PBL_LOG_INFO("Set timezone by region id (%u)", region_id);
   prv_update_time_info_and_generate_event(NULL, &tz_info);
 }
 

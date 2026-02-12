@@ -122,7 +122,7 @@ static bool prv_flash_log_line_dump(uint8_t *msg, uint32_t tot_len) {
 bool s_completed = false;
 bool s_completed_success = false;
 static void prv_flash_log_dump_completed_cb(bool success) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Called prv_flash_log_dump_completed_cb(%d)", (int)success);
+  PBL_LOG_DBG("Called prv_flash_log_dump_completed_cb(%d)", (int)success);
   s_completed = true;
   s_completed_success = success;
 }
@@ -310,7 +310,7 @@ static bool flash_log_line_dump_long_lived(uint8_t *msg, uint32_t tot_len) {
   memcpy(&buf, (char*)msg, tot_len);
   buf[tot_len] = '\0';
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "flash_log_line_dump_long_lived: got %s", buf);
+  PBL_LOG_DBG("flash_log_line_dump_long_lived: got %s", buf);
 
   int curr_val;
   int filled = sscanf(buf, "Loop Counter %d", &curr_val);
@@ -321,7 +321,7 @@ static bool flash_log_line_dump_long_lived(uint8_t *msg, uint32_t tot_len) {
   }
 
   s_long_lived_last_val = curr_val;
-  PBL_LOG(LOG_LEVEL_DEBUG, "flash_log_line_dump_long_lived: got %s, last_val:%d", buf,
+  PBL_LOG_DBG("flash_log_line_dump_long_lived: got %s, last_val:%d", buf,
           s_long_lived_last_val);
 
   return (true);

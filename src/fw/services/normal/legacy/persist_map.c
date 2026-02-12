@@ -87,7 +87,7 @@ static int seek_map(int fd, SearchCallback callback, void *data) {
       if (PASSED(read_result) || read_result == E_RANGE) {
         return E_DOES_NOT_EXIST;
       }
-      PBL_LOG(LOG_LEVEL_WARNING, "seek_map failed: %d", read_result);
+      PBL_LOG_WRN("seek_map failed: %d", read_result);
       return read_result;
     } else  if (field.id == EOF_PERSIST_ID_TAG) {
       break;
@@ -103,7 +103,7 @@ static int seek_map(int fd, SearchCallback callback, void *data) {
 static int search_map(SearchCallback callback, void *data) {
   int fd = prv_pmap_open_debug_wrapper(s_map_filename, OP_FLAG_READ, 0, 0);
   if (fd < 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "pmap search (open) failed: %d", fd);
+    PBL_LOG_WRN("pmap search (open) failed: %d", fd);
     return (fd);
   }
 
@@ -134,11 +134,11 @@ static status_t enlarge_pmap_file(int *fd, size_t new_size) {
   if (buf == NULL) {
     return (E_OUT_OF_MEMORY);
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "Growing pmap to %d bytes", (int)new_size);
+  PBL_LOG_DBG("Growing pmap to %d bytes", (int)new_size);
   int new_fd = prv_pmap_open_debug_wrapper(s_map_filename, OP_FLAG_OVERWRITE, FILE_TYPE_STATIC,
       new_size);
   if (new_fd < 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "pmap enlarge (overwrite) failed: %d", new_fd);
+    PBL_LOG_WRN("pmap enlarge (overwrite) failed: %d", new_fd);
     kernel_free(buf);
     return (new_fd);
   }
@@ -164,7 +164,7 @@ static status_t enlarge_pmap_file(int *fd, size_t new_size) {
 
   *fd = prv_pmap_open_debug_wrapper(s_map_filename, OP_FLAG_READ | OP_FLAG_WRITE, 0, 0);
   if (*fd < 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "pmap enlarge (re-open) failed: %d", *fd);
+    PBL_LOG_WRN("pmap enlarge (re-open) failed: %d", *fd);
   }
   kernel_free(buf);
   return (rv);
@@ -176,7 +176,7 @@ int persist_map_add_uuid(const Uuid *uuid) {
   int fd = prv_pmap_open_debug_wrapper(s_map_filename, OP_FLAG_READ | OP_FLAG_WRITE,
       FILE_TYPE_STATIC, 0);
   if (fd < 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "pmap add uuid (open) failed: %d", fd);
+    PBL_LOG_WRN("pmap add uuid (open) failed: %d", fd);
     return (fd);
   }
 
@@ -195,7 +195,7 @@ int persist_map_add_uuid(const Uuid *uuid) {
     // user can take is to factory-reset
     if (file_sz > (PMAP_FILE_SIZE * 3)) {
       pfs_close(fd);
-      PBL_LOG(LOG_LEVEL_WARNING, "pmap file is larger than expected, 0x%x 0x%x",
+      PBL_LOG_WRN("pmap file is larger than expected, 0x%x 0x%x",
           (int)file_sz, (int)end_offset);
       return (E_INTERNAL);
     }
@@ -208,7 +208,7 @@ int persist_map_add_uuid(const Uuid *uuid) {
 
   int seek_to;
   if ((seek_to = pfs_seek(fd, end_offset, FSeekSet)) != end_offset) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Bad seek to %d, got %d", end_offset, seek_to);
+    PBL_LOG_WRN("Bad seek to %d, got %d", end_offset, seek_to);
     pfs_close(fd);
     return (seek_to);
   }
@@ -281,13 +281,13 @@ static bool prv_dump_callback(PersistMapIdField *field, void *data) {
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(&field->uuid, uuid_string);
 
-  PBL_LOG(LOG_LEVEL_INFO, "%s -> %d", uuid_string, field->id);
+  PBL_LOG_INFO("%s -> %d", uuid_string, field->id);
 
   return false;
 }
 
 void persist_map_dump(void) {
-  PBL_LOG(LOG_LEVEL_INFO, "Dumping persist map:");
+  PBL_LOG_INFO("Dumping persist map:");
   search_map(prv_dump_callback, NULL);
 }
 
@@ -300,7 +300,7 @@ status_t persist_map_init() {
   if (fd < 0) {
     if ((fd = prv_pmap_open_debug_wrapper(name, OP_FLAG_WRITE, FILE_TYPE_STATIC,
         PMAP_FILE_SIZE)) < 0) {
-      PBL_LOG(LOG_LEVEL_WARNING, "pmap create failed: %d", fd);
+      PBL_LOG_WRN("pmap create failed: %d", fd);
       return (fd);
     }
 

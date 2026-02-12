@@ -62,7 +62,7 @@ bool dls_lock_session(DataLoggingSession *session) {
 // ---------------------------------------------------------------------------------------
 // Callback used to free a storage buffer from unprivileged mode.
 static void prv_free_storage_buffer_cb(void *p) {
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Freeing buffer storage ptr: %p", p);
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Freeing buffer storage ptr: %p", p);
   task_free(p);
 }
 
@@ -168,7 +168,7 @@ DataLoggingSession *dls_list_find_active_session(uint32_t tag, const Uuid *app_u
 
 void dls_list_remove_session(DataLoggingSession *logging_session) {
   if (uuid_is_system(&logging_session->app_uuid)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Deleting the system data logging session with tag %"PRIu32,
+    PBL_LOG_WRN("Deleting the system data logging session with tag %"PRIu32,
             logging_session->tag);
   }
 
@@ -229,7 +229,7 @@ void dls_list_insert_session(DataLoggingSession *logging_session) {
   logging_session->next = *iter;
   *iter = logging_session;
 
-  PBL_LOG_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, "Created session: %p id %"PRIu8
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Created session: %p id %"PRIu8
       " tag %"PRIu32, logging_session, logging_session->comm.session_id, logging_session->tag);
 
   mutex_unlock_recursive(s_list_mutex);
@@ -274,7 +274,7 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
 
   uint32_t num_sessions = prv_get_num_sessions();
   if (num_sessions >= DLS_MAX_NUM_SESSIONS) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not allocate additional DataLoggingSession objects");
+    PBL_LOG_WRN("Could not allocate additional DataLoggingSession objects");
     return NULL;
   }
 

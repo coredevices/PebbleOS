@@ -266,7 +266,7 @@ static void prv_timeout_handler(void *context) {
   // we failed to perform action since we timed out.
   const char *msg = i18n_noop("Failed");
   const bool succeeded = false;
-  PBL_LOG(LOG_LEVEL_INFO, "Timed out waiting for action result");
+  PBL_LOG_INFO("Timed out waiting for action result");
   prv_show_result_window_with_progress(data, TIMELINE_RESOURCE_GENERIC_WARNING, msg, succeeded);
 }
 
@@ -352,7 +352,7 @@ static void prv_handle_chaining_response(ActionResultData *data, PebbleEvent *ev
 
   TimelineItem *item = timeline_item_copy(data->chaining_data.notif);
   if (!item) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No notification in chaining data");
+    PBL_LOG_WRN("No notification in chaining data");
     prv_cleanup_action_result(data, false /* succeeded */);
     return;
   }
@@ -390,7 +390,7 @@ static void prv_cleanup_do_response_menu(ActionMenu *action_menu, const ActionMe
 static void prv_handle_do_response_response(ActionResultData *data) {
   TimelineItem *item = timeline_item_copy(data->chaining_data.notif);
   if (!item) {
-    PBL_LOG(LOG_LEVEL_WARNING, "No notification in chaining data");
+    PBL_LOG_WRN("No notification in chaining data");
     prv_cleanup_action_result(data, false /* succeeded */);
     return;
   }
@@ -435,7 +435,7 @@ static void prv_action_handle_response(PebbleEvent *e, void *context) {
 
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(&action_result->id, uuid_string);
-  PBL_LOG(LOG_LEVEL_INFO, "Received action result: Item ID - %s; type - %"
+  PBL_LOG_INFO("Received action result: Item ID - %s; type - %"
           PRIu8, uuid_string, (uint8_t)action_result->type);
 
   // Each action result can only service one response event
@@ -481,7 +481,7 @@ static void prv_action_handle_response(PebbleEvent *e, void *context) {
       break;
     default:
       prv_cleanup_action_result(data, false /* success */);
-      PBL_LOG(LOG_LEVEL_WARNING, "Unknown Action Response");
+      PBL_LOG_WRN("Unknown Action Response");
       break;
   }
 }
@@ -693,7 +693,7 @@ T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
 #endif
   }
 
-  PBL_LOG(LOG_LEVEL_ERROR, "Unsupported action type %d", action->type);
+  PBL_LOG_ERR("Unsupported action type %d", action->type);
   if (action_menu) {
     action_menu_close(action_menu, true);
   }
@@ -750,7 +750,7 @@ static void prv_action_menu_cb(ActionMenu *action_menu, const ActionMenuItem *it
     case TimelineItemTypeUnknown:
     case TimelineItemTypeOutOfRange:
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Performing action on invalid TimelineItem with type: %d",
+      PBL_LOG_ERR("Performing action on invalid TimelineItem with type: %d",
               pin->header.type);
       action_menu_close(action_menu, true);
       return;
@@ -921,7 +921,7 @@ static bool prv_is_reply_option_supported(ReplyOption option, TimelineItemAction
       // If this attribute isn't found, we want to support emoji by default
       return attribute_get_uint8(&action->attr_list, AttributeIdEmojiSupported, true);
     default:
-      PBL_LOG(LOG_LEVEL_WARNING, "Unknown reply option");
+      PBL_LOG_WRN("Unknown reply option");
       return false;
   }
 }
@@ -1210,12 +1210,12 @@ void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifica
     TimelineItem item;
     if (notif_list[i].type == NotificationReminder) {
       if (reminder_db_read_item(&item, &notif_list[i].id) != S_SUCCESS) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Trying to dismiss all an invalid reminder");
+        PBL_LOG_ERR("Trying to dismiss all an invalid reminder");
         continue;
       }
     } else if (notif_list[i].type == NotificationMobile) {
       if (!notification_storage_get(&notif_list[i].id, &item)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Trying to dismiss all an invalid notification");
+        PBL_LOG_ERR("Trying to dismiss all an invalid notification");
         continue;
       }
     }
@@ -1238,7 +1238,7 @@ void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifica
   timeline_enable_ancs_bulk_action_mode(false);
 
   if (!performed_actions) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Didn't take any actions, cleaning up");
+    PBL_LOG_DBG("Didn't take any actions, cleaning up");
     const bool success = false;
     prv_cleanup_action_result(data, success);
   }

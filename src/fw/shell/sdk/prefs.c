@@ -174,7 +174,7 @@ void system_theme_set_content_size(PreferredContentSize content_size) {
   mutex_lock(s_mutex);
   const uint8_t content_size_uint = content_size;
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Ignoring attempt to set content size to invalid size %d",
+    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d",
             content_size);
   } else if (prv_pref_set(PREF_KEY_CONTENT_SIZE, &content_size_uint, sizeof(content_size_uint))) {
     s_content_size = content_size;

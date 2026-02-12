@@ -87,13 +87,13 @@ DEFINE_SYSCALL(void, sys_app_outbox_send, const uint8_t *data, size_t length,
 
   const AppOutboxSenderDef *def = prv_find_def_and_tag_by_handler(sent_handler, NULL);
   if (!def) {
-    PBL_LOG(LOG_LEVEL_ERROR, "AppOutbox sent_handler not allowed <%p>", sent_handler);
+    PBL_LOG_ERR("AppOutbox sent_handler not allowed <%p>", sent_handler);
     syscall_failed();
   }
 
   const size_t max_length = def->max_length;
   if (length > max_length) {
-    PBL_LOG(LOG_LEVEL_ERROR, "AppOutbox max_length exceeded %"PRIu32" vs %"PRIu32,
+    PBL_LOG_ERR("AppOutbox max_length exceeded %"PRIu32" vs %"PRIu32,
             (uint32_t)length, (uint32_t)max_length);
     syscall_failed();
   }

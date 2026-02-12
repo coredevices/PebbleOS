@@ -99,7 +99,7 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
   va_start(ap, fmt);
   vsniprintf(buffer, sizeof(buffer), fmt, ap);
   va_end(ap);
-  PBL_LOG(LOG_LEVEL_ALWAYS, "%s", buffer);
+  PBL_LOG_ALWAYS("%s", buffer);
 #endif
 }
 
@@ -107,7 +107,7 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
   if (type == 1) {
     HRMData hrm_data = {0};
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "GH3X2X BPM %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
+    PBL_LOG_DBG("GH3X2X BPM %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
 
     hrm_data.features = HRMFeature_BPM;
     hrm_data.hrm_bpm = val & 0xff;
@@ -132,7 +132,7 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
   } else if (type == 2) {
     HRMData hrm_data = {0};
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "GH3X2X SpO2 %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
+    PBL_LOG_DBG("GH3X2X SpO2 %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
 
     hrm_data.features = HRMFeature_SpO2;
     hrm_data.spo2_percent = val & 0xff;
@@ -156,7 +156,7 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
 
     hrm_manager_new_data_cb(&hrm_data);
   } else {
-    PBL_LOG(LOG_LEVEL_WARNING, "GH3X2X unexpected report type (%" PRIu8 ")", type);
+    PBL_LOG_WRN("GH3X2X unexpected report type (%" PRIu8 ")", type);
   }
 }
 
@@ -219,7 +219,7 @@ void gh3x2x_wear_evt_notify(bool is_wear) {
   if (p_dev) {
     p_dev->state->is_wear = is_wear;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "wear notify: %d", is_wear);
+  PBL_LOG_DBG("wear notify: %d", is_wear);
 }
 
 // GH3X2X calibration/factory testing
@@ -322,7 +322,7 @@ void gh3x2x_factory_test_enable(HRMDevice *dev, GH3x2xFTType test_type) {
   uint32_t* ppg_data;
   GH3x2xFTData* p_factory = (GH3x2xFTData*)malloc(sizeof(GH3x2xFTData) + sizeof(uint32_t)*HRM_PPG_FACTORY_TEST_FIFO_LEN*HRM_PPG_CH_NUM);
   if (p_factory == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "malloc failed.");
+    PBL_LOG_ERR("malloc failed.");
     return;
   }
   memset(p_factory, 0, sizeof(GH3x2xFTData));
@@ -437,7 +437,7 @@ bool hrm_enable(HRMDevice *dev) {
 
   ret = Gh3x2xDemoInit();
   if (ret != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "GH3X2X failed to initialize");
+    PBL_LOG_ERR("GH3X2X failed to initialize");
     gh3026_reset_pin_ctrl(0);
     return false;
   }

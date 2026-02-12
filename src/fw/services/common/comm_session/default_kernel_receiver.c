@@ -56,7 +56,7 @@ static Receiver *prv_default_kernel_receiver_prepare(
   DefaultReceiverImpl *receiver = kernel_zalloc(size_needed);
 
   if (!receiver) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not allocate receiver, handler:%p size:%d",
+    PBL_LOG_WRN("Could not allocate receiver, handler:%p size:%d",
             endpoint->handler, (int)size_needed);
     return NULL;
   }
@@ -103,7 +103,7 @@ static void prv_default_kernel_receiver_finish(Receiver *receiver) {
   impl->handler_scheduled = true;
 
   if ((int)impl->total_payload_size != impl->curr_pos) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Got fewer bytes than expected for handler %p",
+    PBL_LOG_WRN("Got fewer bytes than expected for handler %p",
             impl->endpoint->handler);
   }
 

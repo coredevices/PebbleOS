@@ -110,7 +110,7 @@ void* new_timer_debug_get_current_callback(void) {
 //=========================================================================================
 // Initialize the timer service
 void new_timer_service_init(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "NT: Initializing");
+  PBL_LOG_DBG("NT: Initializing");
 
   vSemaphoreCreateBinary(s_wake_srv_loop);
 

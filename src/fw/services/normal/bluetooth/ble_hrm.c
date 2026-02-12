@@ -117,7 +117,7 @@ void ble_hrm_handle_activity_prefs_heart_rate_is_enabled(bool is_enabled) {
   if (!prv_hw_and_sw_supports_hrm()) {
     return;
   }
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing prefs updated: is_enabled=%u", is_enabled);
+  PBL_LOG_INFO("BLE HRM sharing prefs updated: is_enabled=%u", is_enabled);
 
   if (!is_enabled) {
     prv_reset_subscriptions();
@@ -193,7 +193,7 @@ static void prv_ble_hrm_handle_hrm_data(PebbleEvent *e, void *context) {
 }
 
 static void prv_start_hrm_kernel_main(void *unused) {
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing started");
+  PBL_LOG_INFO("BLE HRM sharing started");
   s_ble_hrm_session.service_info = (EventServiceInfo) {
     .type = PEBBLE_HRM_EVENT,
     .handler = prv_ble_hrm_handle_hrm_data,
@@ -207,7 +207,7 @@ static void prv_start_hrm_kernel_main(void *unused) {
 }
 
 static void prv_stop_hrm_kernel_main(void *unused) {
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing stopped");
+  PBL_LOG_INFO("BLE HRM sharing stopped");
   sys_hrm_manager_unsubscribe(s_ble_hrm_session.manager_session);
   event_service_client_unsubscribe(&s_ble_hrm_session.service_info);
 
@@ -227,7 +227,7 @@ static void prv_push_sharing_request_window_kernel_main_cb(void *ctx) {
 }
 
 static void prv_request_sharing_permission(GAPLEConnection *const connection) {
-  PBL_LOG(LOG_LEVEL_INFO, "Requesting BLE HRM sharing permission");
+  PBL_LOG_INFO("Requesting BLE HRM sharing permission");
   BLEHRMSharingRequest *const sharing_request = kernel_zalloc_check(sizeof(*sharing_request));
   sharing_request->connection = connection;
   launcher_task_add_callback(prv_push_sharing_request_window_kernel_main_cb, sharing_request);
@@ -263,7 +263,7 @@ static void prv_push_reminder_popup_kernel_main_cb(void *unused) {
   ble_hrm_push_reminder_popup();
 
   analytics_event_ble_hrm(BleHrmEventSubtype_SharingTimeoutPopupPresented);
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing timeout fired!");
+  PBL_LOG_INFO("BLE HRM sharing timeout fired!");
 }
 
 //! @note executes on timer task
@@ -332,7 +332,7 @@ static void prv_disconnect_to_kill_subscription(GAPLEConnection *connection) {
 }
 
 void ble_hrm_revoke_sharing_permission_for_connection(GAPLEConnection *connection) {
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing: revoked for conn %p", connection);
+  PBL_LOG_INFO("BLE HRM sharing: revoked for conn %p", connection);
   bt_lock();
   if (gap_le_connection_is_valid(connection)) {
     prv_update_permission(connection, HrmSharingPermission_Declined);
@@ -355,7 +355,7 @@ void ble_hrm_revoke_all(void) {
 
   // Counting as one -- it's one user action.
   analytics_event_ble_hrm(BleHrmEventSubtype_SharingRevoked);
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing: all revoked");
+  PBL_LOG_INFO("BLE HRM sharing: all revoked");
 }
 
 static void prv_update_subscription(GAPLEConnection *connection, bool is_subscribed) {
@@ -363,7 +363,7 @@ static void prv_update_subscription(GAPLEConnection *connection, bool is_subscri
   if (connection->hrm_service_is_subscribed == is_subscribed) {
     return;
   }
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing: conn <%p> is_subscribed=%u", connection, is_subscribed);
+  PBL_LOG_INFO("BLE HRM sharing: conn <%p> is_subscribed=%u", connection, is_subscribed);
 
   const bool prev_is_sharing = prv_is_sharing(connection);
   connection->hrm_service_is_subscribed = is_subscribed;
@@ -402,7 +402,7 @@ static void prv_reset_subscriptions(void) {
 
 void ble_hrm_handle_sharing_request_response(bool is_granted,
                                              BLEHRMSharingRequest *sharing_request) {
-  PBL_LOG(LOG_LEVEL_INFO, "BLE HRM sharing permission is_granted=%u", is_granted);
+  PBL_LOG_INFO("BLE HRM sharing permission is_granted=%u", is_granted);
 
   bt_lock();
   GAPLEConnection *connection = sharing_request->connection;
@@ -427,7 +427,7 @@ void bt_driver_cb_hrm_service_update_subscription(const BTDeviceInternal *device
   }
   GAPLEConnection *connection = gap_le_connection_by_device(device);
   if (!connection) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Subscription update but no connection?");
+    PBL_LOG_ERR("Subscription update but no connection?");
     goto unlock;
   }
   prv_update_subscription(connection, is_subscribed);

@@ -70,13 +70,13 @@ typedef struct {
 
 
 static bool check_region_erased(struct Region region) {
-  PBL_LOG_SYNC(LOG_LEVEL_INFO, "Checking Erase ...");
+  PBL_LOG_SYNC_INFO("Checking Erase ...");
   bool success = true;
   for (uint32_t i = region.begin; i < region.end; i += sizeof(uint32_t)) {
     uint32_t read = 0;
     flash_read_bytes((uint8_t *)&read, i, sizeof(read));
     if (read != 0xffffffff) {
-      PBL_LOG_SYNC(LOG_LEVEL_INFO, ">>>> Address 0x%lx failed to erase: 0x%lx", i, read);
+      PBL_LOG_SYNC_INFO(">>>> Address 0x%lx failed to erase: 0x%lx", i, read);
       success = false;
     }
   }
@@ -92,7 +92,7 @@ static bool check_region_write(struct Region region, bool use_rand,
   bool success = true;
   uint32_t write_rand = (use_rand && perform_writes) ? rand() : 0;
 
-  PBL_LOG_SYNC(LOG_LEVEL_INFO, "%sChecking 0x%lx over 0x%lx 0x%lx",
+  PBL_LOG_SYNC_INFO("%sChecking 0x%lx over 0x%lx 0x%lx",
       (perform_writes) ? "Writing and " : "", write_rand, region.begin,
       region.end);
 
@@ -104,7 +104,7 @@ static bool check_region_write(struct Region region, bool use_rand,
     }
     flash_read_bytes((uint8_t *)&read, i, sizeof(read));
     if (read != write) {
-      PBL_LOG_SYNC(LOG_LEVEL_INFO, ">>>> Address 0x%lx failed to write: 0x%lx 0x%lx",
+      PBL_LOG_SYNC_INFO(">>>> Address 0x%lx failed to write: 0x%lx 0x%lx",
           i, read, write);
       success = false;
     }
@@ -121,7 +121,7 @@ static bool check_subsector_bitflip(struct Region region) {
   bool success = true;
 
   if (((region.end - region.begin) % (64 * 1024)) != 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Test only works on 64k aligned regions");
+    PBL_LOG_WRN("Test only works on 64k aligned regions");
     return (false);
   }
 
@@ -147,7 +147,7 @@ static bool check_subsector_bitflip(struct Region region) {
         subsec += subsector_size) {
       uint32_t erase = subsec + i;
       PBL_ASSERTN((erase % (4 * 1024)) == 0);
-      PBL_LOG_SYNC(LOG_LEVEL_INFO, "Subsector Erase of 0x%lx", erase);
+      PBL_LOG_SYNC_INFO("Subsector Erase of 0x%lx", erase);
       flash_erase_subsector_blocking(erase);
     }
 
@@ -160,20 +160,20 @@ static bool check_subsector_bitflip(struct Region region) {
 
   return (success);
 #else
-  PBL_LOG_SYNC(LOG_LEVEL_INFO, "Test not supported for parallel flash");
+  PBL_LOG_SYNC_INFO("Test not supported for parallel flash");
   return (false);
 #endif
 }
 
 static void menu_select_callback(int index, void *data) {
   struct Region region = s_flash_regions[index];
-  PBL_LOG(LOG_LEVEL_INFO, ">>>> Erase %s", region.name);
+  PBL_LOG_INFO(">>>> Erase %s", region.name);
   flash_region_erase_optimal_range(region.begin, region.begin, region.end, region.end);
-  PBL_LOG(LOG_LEVEL_INFO, ">>>> Checking '%s' is erased", region.name);
+  PBL_LOG_INFO(">>>> Checking '%s' is erased", region.name);
   check_region_erased(region);
-  PBL_LOG(LOG_LEVEL_INFO, ">>>> Checking '%s' can write", region.name);
+  PBL_LOG_INFO(">>>> Checking '%s' can write", region.name);
   check_region_write(region, false, true);
-  PBL_LOG(LOG_LEVEL_INFO, ">>>> Done!");
+  PBL_LOG_INFO(">>>> Done!");
 }
 
 FlashStressWindow stress_data;
@@ -189,9 +189,9 @@ static void update_text(int iter, int tot, bool failed) {
 static void app_timer_cb(void *data) {
   static const int num_stress_iters = 1000;
   struct Region region = s_flash_regions[2];
-  PBL_LOG(LOG_LEVEL_INFO, ">>>> %s %d", "Test Loop", stress_data.stress_iteration);
+  PBL_LOG_INFO(">>>> %s %d", "Test Loop", stress_data.stress_iteration);
 
-  PBL_LOG(LOG_LEVEL_INFO, "Erasing 0x%lx to 0x%lx", region.begin, region.end);
+  PBL_LOG_INFO("Erasing 0x%lx to 0x%lx", region.begin, region.end);
   flash_region_erase_optimal_range(region.begin, region.begin, region.end, region.end);
 
   bool failed = true;
@@ -200,7 +200,7 @@ static void app_timer_cb(void *data) {
   } else if (stress_data.stress_index == FILE_SUBSECTOR_STRESS) {
     failed = (!check_region_erased(region) || !check_subsector_bitflip(region));
   } else {
-    PBL_LOG(LOG_LEVEL_WARNING, "Unknown stress test %d!", stress_data.stress_index);
+    PBL_LOG_WRN("Unknown stress test %d!", stress_data.stress_index);
   }
 
   if (!abort_stress_test) {

@@ -97,7 +97,7 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
 void comm_session_receive_router_write(CommSession *session,
                                        const uint8_t *received_data,
                                        size_t num_bytes_to_copy) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Received Data:");
+  PBL_LOG_DBG("Received Data:");
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, received_data, num_bytes_to_copy);
 }
 
@@ -340,7 +340,7 @@ static void prv_fake_transport_send_next(Transport *transport) {
     if (fake_transport->sent_cb) {
       fake_transport->sent_cb(pp_header.endpoint_id, buffer, pp_header.length);
     } else {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Sending Data to PP endpoint %u (0x%x):",
+      PBL_LOG_DBG("Sending Data to PP endpoint %u (0x%x):",
               pp_header.endpoint_id, pp_header.endpoint_id);
       PBL_HEXDUMP(LOG_LEVEL_DEBUG, buffer, pp_header.length);
 

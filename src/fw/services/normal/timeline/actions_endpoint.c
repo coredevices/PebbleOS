@@ -114,7 +114,7 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
   PebbleSysNotificationActionResult *action_result =
       kernel_zalloc(sizeof(PebbleSysNotificationActionResult) + alloc_size);
   if (!action_result) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to allocate memory for action result");
+    PBL_LOG_WRN("Failed to allocate memory for action result");
     return NULL;
   }
 
@@ -165,7 +165,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
 
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(id, uuid_string);
-  PBL_LOG(LOG_LEVEL_INFO, "Send action to phone (Item ID: %s; Action ID: %d)",
+  PBL_LOG_INFO("Send action to phone (Item ID: %s; Action ID: %d)",
       uuid_string, action_id);
 
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, (uint8_t *)&invoke_action_data->msg, invoke_action_data->length);
@@ -183,22 +183,22 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
 void timeline_action_endpoint_protocol_msg_callback(CommSession *session,
     const uint8_t* data, size_t length) {
   if (length < sizeof(ResponseHeader)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid phone response message length %d", (int) length);
+    PBL_LOG_WRN("Invalid phone response message length %d", (int) length);
     return;
   }
 
   ResponseHeader *header = (ResponseHeader *) data;
   if (header->command != CommandPhoneResponse && header->command != CommandPhoneActionResponse) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid command id");
+    PBL_LOG_WRN("Invalid command id");
     return;
   }
 
   if (uuid_is_system(&header->item_id)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Automatic SMS msg response: 0x%02X", header->response);
+    PBL_LOG_DBG("Automatic SMS msg response: 0x%02X", header->response);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Action Endpoint Response: 0x%02X", header->response);
+  PBL_LOG_DBG("Action Endpoint Response: 0x%02X", header->response);
 
   PebbleSysNotificationActionResult *action_result = NULL;
 

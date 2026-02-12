@@ -155,7 +155,7 @@ void analytics_stopwatch_start_at_rate(AnalyticsMetric metric, uint32_t count_pe
   if (prv_find_stopwatch(metric)) {
     // TODO: Increment this back up to LOG_LEVEL_WARNING when it doesn't happen
     // on every bootup (PBL-5393)
-    PBL_LOG(LOG_LEVEL_DEBUG, "Analytics stopwatch for metric %d already started!", metric);
+    PBL_LOG_DBG("Analytics stopwatch for metric %d already started!", metric);
     goto unlock;
   }
 
@@ -181,7 +181,7 @@ void analytics_stopwatch_stop(AnalyticsMetric metric) {
   if (!stopwatch) {
     // TODO: Incerement this back up to LOG_LEVEL_WARNING when it doesn't happen
     // on every bootup (PBL-5393)
-    PBL_LOG(LOG_LEVEL_DEBUG, "Analytics stopwatch for metric %d already stopped!", metric);
+    PBL_LOG_DBG("Analytics stopwatch for metric %d already stopped!", metric);
     goto unlock;
   }
 

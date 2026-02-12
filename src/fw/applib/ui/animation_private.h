@@ -6,7 +6,7 @@
 #include "animation.h"
 
 #define ANIMATION_LOG_DEBUG(fmt, args...) \
-            PBL_LOG_D(LOG_DOMAIN_ANIMATION, LOG_LEVEL_DEBUG, fmt, ## args)
+            PBL_LOG_D_DBG(LOG_DOMAIN_ANIMATION, fmt, ## args)
 
 #define ANIMATION_MAX_CHILDREN  256
 #define ANIMATION_PLAY_COUNT_INFINITE_STORED ((uint16_t)~0)

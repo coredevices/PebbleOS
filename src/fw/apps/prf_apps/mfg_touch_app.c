@@ -100,8 +100,8 @@ static void prv_touch_envent_handler(const TouchEvent *event, void *context) {
 
   data->touch_mark |= 1<<touch_id;
 #if TOUCH_SUPPORT_DEBUG
-  PBL_LOG(LOG_LEVEL_INFO, "start_x:%d start_y:%d off_x:%d off_y:%d", x, y, offset_x, offset_y);
-  PBL_LOG(LOG_LEVEL_INFO, "x:%d y:%d id:%d", (x+offset_x), (y+offset_y), touch_id);
+  PBL_LOG_INFO("start_x:%d start_y:%d off_x:%d off_y:%d", x, y, offset_x, offset_y);
+  PBL_LOG_INFO("x:%d y:%d id:%d", (x+offset_x), (y+offset_y), touch_id);
 #endif
   layer_mark_dirty(&data->window.layer);
 }

@@ -548,7 +548,7 @@ void accel_init(void) {
     prv_run_command(BMI160_CMD_SOFTRESET);
     bmi160_enable_spi_mode();
   } else {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to query BMI160");
+    PBL_LOG_WRN("Failed to query BMI160");
   }
 
   prv_set_accel_scale(BMI160_SCALE_4G);
@@ -564,7 +564,7 @@ void accel_power_down(void) {
 
 bool bmi160_query_whoami(void) {
   uint8_t whoami = bmi160_read_reg(BMI160_REG_CHIP_ID);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Read BMI160 whoami byte 0x%"PRIx8", expecting 0x%"PRIx8,
+  PBL_LOG_DBG("Read BMI160 whoami byte 0x%"PRIx8", expecting 0x%"PRIx8,
           whoami, BMI160_CHIP_ID);
   return (whoami == BMI160_CHIP_ID);
 }
@@ -901,7 +901,7 @@ static void prv_disable_double_tap_detection(void) {
 }
 
 void accel_enable_shake_detection(bool on) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "enable shake detection %d", on);
+  PBL_LOG_DBG("enable shake detection %d", on);
   if (s_shake_detection_enabled == on) {
     // the requested change matches what we already have!
     return;
@@ -918,7 +918,7 @@ void accel_enable_shake_detection(bool on) {
 }
 
 void accel_enable_double_tap_detection(bool on) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "enable double tap detection %d", on);
+  PBL_LOG_DBG("enable double tap detection %d", on);
   if (s_double_tap_detection_enabled == on) {
     // the requested change matches what we already have!
     return;

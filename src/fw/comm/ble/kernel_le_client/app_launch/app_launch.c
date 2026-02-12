@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "app_launch.h"
 
 #include "comm/ble/gatt_client_operations.h"
@@ -25,7 +23,7 @@ void app_launch_handle_service_discovered(BLECharacteristic *characteristics) {
   PBL_ASSERTN(characteristics);
 
   if (s_app_launch_characteristic != BLE_CHARACTERISTIC_INVALID) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Multiple app launch services!? Will use most recent one.");
+    PBL_LOG_WRN("Multiple app launch services!? Will use most recent one.");
   }
 
   s_app_launch_characteristic = *characteristics;
@@ -56,7 +54,7 @@ bool app_launch_can_handle_characteristic(BLECharacteristic characteristic) {
 void app_launch_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
                                             size_t value_length, BLEGATTError error) {
   // If error is BLEGATTErrorSuccess, it means the Pebble app responded.
-  PBL_LOG(LOG_LEVEL_INFO, "App relaunch result: %u", error);
+  PBL_LOG_INFO("App relaunch result: %u", error);
   if (error == BLEGATTErrorSuccess) {
     analytics_inc(ANALYTICS_DEVICE_METRIC_BT_PEBBLE_APP_LAUNCH_SUCCESS_COUNT,
                   AnalyticsClient_System);
@@ -79,6 +77,6 @@ void app_launch_trigger(void) {
   }
   BTErrno err = gatt_client_op_read(s_app_launch_characteristic, GAPLEClientKernel);
   if (err != BTErrnoOK) {
-    PBL_LOG(LOG_LEVEL_ERROR, "App relaunch failed: %u", err);
+    PBL_LOG_ERR("App relaunch failed: %u", err);
   }
 }

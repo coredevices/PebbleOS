@@ -17,7 +17,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
                                          struct ble_gatt_attr *attr, void *arg) {
   if (error->status != 0) {
     if (error->status != BLE_HS_EDONE) {
-      PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR, "prv_device_name_read_event_cb error=%d",
+      PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_device_name_read_event_cb error=%d",
                 error->status);
     }
     return 0;
@@ -46,16 +46,14 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
 static void prv_gap_le_device_name_request(GAPLEConnection *connection) {
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_gap_le_device_name_request: Failed to find connection handle");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_gap_le_device_name_request: Failed to find connection handle");
     return;
   }
 
   int rc = ble_gattc_read_by_uuid(conn_handle, 1, UINT16_MAX, (ble_uuid_t *)&device_name_chr_uuid,
                                   prv_device_name_read_event_cb, (void *)connection);
   if (rc != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "prv_gap_le_device_name_request ble_gattc_read_by_uuid rc=0x%04x", (uint16_t)rc);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "prv_gap_le_device_name_request ble_gattc_read_by_uuid rc=0x%04x", (uint16_t)rc);
   }
 }
 
@@ -66,8 +64,7 @@ static void prv_request_device_name_cb(GAPLEConnection *connection, void *data) 
 void bt_driver_gap_le_device_name_request(const BTDeviceInternal *device) {
   GAPLEConnection *connection = gap_le_connection_by_device(device);
   if (connection == NULL) {
-    PBL_LOG_D(LOG_DOMAIN_BT, LOG_LEVEL_ERROR,
-              "bt_driver_gap_le_device_name_request gap_le_connection_by_device returned NULL");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "bt_driver_gap_le_device_name_request gap_le_connection_by_device returned NULL");
     return;
   }
   prv_gap_le_device_name_request(connection);

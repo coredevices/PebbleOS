@@ -65,7 +65,7 @@ static void prv_send_ping_kernel_bg_cb(void *unused) {
       s_last_send_time = rtc_get_time();
       analytics_inc(ANALYTICS_DEVICE_METRIC_PING_SENT_COUNT, AnalyticsClient_System);
     }
-    PBL_LOG(LOG_LEVEL_DEBUG, "Sent ping idle=%d, success=%d", (int)idle, (int)success);
+    PBL_LOG_DBG("Sent ping idle=%d, success=%d", (int)idle, (int)success);
   }
 
   s_is_ping_kernel_bg_callback_scheduled = false;
@@ -108,13 +108,13 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t* data, size_
   case 0:
   {
     if (length != sizeof(PingMsgV1) && length != sizeof(PingMsgV2) /* idle boolean is optional */) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid Ping, l=%u", length);
+      PBL_LOG_ERR("Invalid Ping, l=%u", length);
       return;
     }
 
     // Ping message
     uint32_t cookie = ntohl(ping->hdr.cookie);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Ping c=%"PRIu32"", cookie);
+    PBL_LOG_DBG("Ping c=%"PRIu32"", cookie);
     launcher_task_add_callback(prv_push_window, NULL);
 
     // Send the pong response
@@ -130,17 +130,17 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t* data, size_
 
   case 1:
     if (length != sizeof(PongMsg)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid Pong, l=%u", length);
+      PBL_LOG_ERR("Invalid Pong, l=%u", length);
       return;
     }
 
     PongMsg *pong = (PongMsg *)data;
-    PBL_LOG(LOG_LEVEL_DEBUG, "Pong c=%"PRIu32, ntohl(pong->hdr.cookie));
+    PBL_LOG_DBG("Pong c=%"PRIu32, ntohl(pong->hdr.cookie));
     analytics_inc(ANALYTICS_DEVICE_METRIC_PONG_RECEIVED_COUNT, AnalyticsClient_System);
     break;
 
   default:
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid message received. First byte is %u", ping->hdr.cmd);
+    PBL_LOG_ERR("Invalid message received. First byte is %u", ping->hdr.cmd);
     break;
   }
 }

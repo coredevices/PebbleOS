@@ -21,7 +21,7 @@ const char *s_strings[] = {
 };
 
 static void prv_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Option Menu Demo: selected %d", selection);
+  PBL_LOG_DBG("Option Menu Demo: selected %d", selection);
 }
 
 static uint16_t prv_menu_get_num_rows(OptionMenu *option_menu, void *context) {

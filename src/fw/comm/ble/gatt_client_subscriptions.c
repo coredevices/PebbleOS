@@ -159,7 +159,7 @@ static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
     prv_unlock();
     if (LIKELY(write_space >= required_length)) {
       if (UNLIKELY(did_stall)) {
-        PBL_LOG(LOG_LEVEL_DEBUG, "GATT notification stalled for %d ms...",
+        PBL_LOG_DBG("GATT notification stalled for %d ms...",
                 (int)(timeout_ms - ticks_to_milliseconds(timeout_end_ticks - rtc_get_ticks())));
         analytics_inc(ANALYTICS_DEVICE_METRIC_BLE_GATT_STALLED_NOTIFICATIONS_COUNT,
                       AnalyticsClient_System);
@@ -207,7 +207,7 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
       // Only log the same handle once. Logging to flash adds enough of a delay to cause the
       // Bluetopia Mailbox to get backed up quicker when running at a 15ms connection interval.
       s_last_logged_handle = att_handle;
-      PBL_LOG(LOG_LEVEL_ERROR, "No subscription found for ATT handle %u", att_handle);
+      PBL_LOG_ERR("No subscription found for ATT handle %u", att_handle);
     }
     goto unlock;
   }
@@ -237,8 +237,7 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
 
     bt_lock();
     if (!consumed) {
-      PBL_LOG(LOG_LEVEL_ERROR,
-              "Subscription buffer full. Dropping GATT notification of %u bytes (bt_lock held: %s)",
+      PBL_LOG_ERR("Subscription buffer full. Dropping GATT notification of %u bytes (bt_lock held: %s)",
               length, bt_lock_is_held() ? "yes" : "no");
       analytics_inc(ANALYTICS_DEVICE_METRIC_BLE_GATT_DROPPED_NOTIFICATIONS_COUNT,
                     AnalyticsClient_System);
@@ -287,8 +286,7 @@ void gatt_client_subscriptions_handle_write_cccd_response(BLEDescriptor cccd, BL
                                    prv_find_subscription_and_connection_for_cccd(cccd, &connection);
   if (!subscription || !connection) {
     // FIXME: When unsubscribing, the GATTClientSubscriptionNode is already removed at this point
-    PBL_LOG(LOG_LEVEL_DEBUG,
-            "No subscription and/or connection found for CCCD write response (%u)", error);
+    PBL_LOG_DBG("No subscription and/or connection found for CCCD write response (%u)", error);
     return;
   }
 
@@ -329,7 +327,7 @@ void gatt_client_subscriptions_handle_write_cccd_response(BLEDescriptor cccd, BL
 
 static bool prv_check_buffer(GAPLEClient client) {
   if (s_circular_buffer[client] == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "App attempted to consume notifications without buffer.");
+    PBL_LOG_ERR("App attempted to consume notifications without buffer.");
     return false;
   }
   return true;
@@ -400,13 +398,13 @@ uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *chara
                                           value_out,
                                           header.value_length);
         if (UNLIKELY(copied_length != header.value_length)) {
-          PBL_LOG(LOG_LEVEL_ERROR, "Couldn't copy the number of requested byes (%u vs %u)",
+          PBL_LOG_ERR("Couldn't copy the number of requested byes (%u vs %u)",
                   header.value_length, copied_length);
         }
         *characteristic_ref_out = header.characteristic;
         *value_length_in_out = copied_length;
       } else {
-        PBL_LOG(LOG_LEVEL_ERROR, "Client didn't provide buffer that was big enough (%u vs %u)",
+        PBL_LOG_ERR("Client didn't provide buffer that was big enough (%u vs %u)",
                 *value_length_in_out, header.value_length);
         *characteristic_ref_out = BLE_CHARACTERISTIC_INVALID;
         *value_length_in_out = 0;
@@ -415,7 +413,7 @@ uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *chara
       circular_buffer_consume(s_circular_buffer[client],
                               sizeof(header) + header.value_length);
     } else {
-      PBL_LOG(LOG_LEVEL_WARNING, "Consume called while no notifications in buffer");
+      PBL_LOG_WRN("Consume called while no notifications in buffer");
       *characteristic_ref_out = BLE_CHARACTERISTIC_INVALID;
       *value_length_in_out = 0;
     }
@@ -624,7 +622,7 @@ static BTErrno prv_subscribe(BLECharacteristic characteristic_ref,
     connection->gatt_subscriptions =
                              (GATTClientSubscriptionNode *) list_prepend(head, &subscription->node);
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "Added BLE subscription for handle 0x%x", att_handle);
+    PBL_LOG_DBG("Added BLE subscription for handle 0x%x", att_handle);
     did_create_new_subscription = true;
   }
 

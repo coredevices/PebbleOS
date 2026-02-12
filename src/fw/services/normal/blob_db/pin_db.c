@@ -63,8 +63,7 @@ static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, cons
       // String initialized on the heap to reduce stack usage
       char *parent_id_string = kernel_malloc_check(UUID_STRING_BUFFER_LENGTH);
       uuid_to_string(&parent_id, parent_id_string);
-      PBL_LOG(LOG_LEVEL_ERROR,
-              "Pin insert for a pin with no app installed, parent id: %s",
+      PBL_LOG_ERR("Pin insert for a pin with no app installed, parent id: %s",
               parent_id_string);
       kernel_free(parent_id_string);
       goto done;

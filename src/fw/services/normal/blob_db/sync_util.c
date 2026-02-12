@@ -27,7 +27,7 @@ bool sync_util_build_dirty_list_cb(SettingsFile *file, SettingsRecordInfo *info,
 
     BlobDBDirtyItem *new_node = kernel_zalloc(sizeof(BlobDBDirtyItem) + info->key_len);
     if (!new_node) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Ran out of memory while building a dirty list");
+      PBL_LOG_WRN("Ran out of memory while building a dirty list");
       return false;
     }
 

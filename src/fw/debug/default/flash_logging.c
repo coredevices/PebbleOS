@@ -506,7 +506,7 @@ static void prv_dump_log_system_cb(void *context) {
       status = DumpStatus_DoneSuccess;
     } else {
       status = DumpStatus_InProgress;
-      PBL_LOG(LOG_LEVEL_DEBUG, "Dumping page %d of %d", state->page_index, state->num_pages-1);
+      PBL_LOG_DBG("Dumping page %d of %d", state->page_index, state->num_pages-1);
     }
   }
 
@@ -527,7 +527,7 @@ bool flash_dump_log_file(int generation, DumpLineCallback line_cb,
 
   uint32_t log_start_addr;
   int num_log_pages = prv_get_start_of_log_file(log_file_id, &log_start_addr);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Dumping generation %d, %d pages", generation, num_log_pages);
+  PBL_LOG_DBG("Dumping generation %d, %d pages", generation, num_log_pages);
 
   if (num_log_pages == 0) {
     completed_cb(false);

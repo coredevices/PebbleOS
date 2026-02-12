@@ -440,7 +440,7 @@ void flash_write_bytes(const uint8_t* buffer, uint32_t start_addr, uint32_t buff
 void flash_erase_subsector_blocking(uint32_t subsector_addr) {
   assert_usable_state();
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Erasing subsector 0x%"PRIx32" (0x%"PRIx32" - 0x%"PRIx32")",
+  PBL_LOG_DBG("Erasing subsector 0x%"PRIx32" (0x%"PRIx32" - 0x%"PRIx32")",
       subsector_addr,
       subsector_addr & SUBSECTOR_ADDR_MASK,
       (subsector_addr & SUBSECTOR_ADDR_MASK) + SUBSECTOR_SIZE_BYTES);
@@ -478,13 +478,13 @@ void flash_erase_subsector_blocking(uint32_t subsector_addr) {
 void flash_erase_sector_blocking(uint32_t sector_addr) {
   assert_usable_state();
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Erasing sector 0x%"PRIx32" (0x%"PRIx32" - 0x%"PRIx32")",
+  PBL_LOG_DBG("Erasing sector 0x%"PRIx32" (0x%"PRIx32" - 0x%"PRIx32")",
           sector_addr,
           sector_addr & SECTOR_ADDR_MASK,
           (sector_addr & SECTOR_ADDR_MASK) + SECTOR_SIZE_BYTES);
 
   if (flash_sector_is_erased(sector_addr)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Sector %#"PRIx32" already erased", sector_addr);
+    PBL_LOG_DBG("Sector %#"PRIx32" already erased", sector_addr);
     return;
   }
 
@@ -614,11 +614,11 @@ void debug_flash_dump_registers(void) {
   disable_flash_spi_clock();
   flash_unlock();
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Status Register: 0x%x", status_register);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Lock Register: 0x%x", lock_register);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Flag Status Register: 0x%x", flag_status_register);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Nonvolatile Configuration Register: 0x%x", nonvolatile_config_register);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Volatile Configuration Register: 0x%x", volatile_config_register);
+  PBL_LOG_DBG("Status Register: 0x%x", status_register);
+  PBL_LOG_DBG("Lock Register: 0x%x", lock_register);
+  PBL_LOG_DBG("Flag Status Register: 0x%x", flag_status_register);
+  PBL_LOG_DBG("Nonvolatile Configuration Register: 0x%x", nonvolatile_config_register);
+  PBL_LOG_DBG("Volatile Configuration Register: 0x%x", volatile_config_register);
 #endif
 }
 

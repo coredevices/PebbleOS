@@ -46,7 +46,7 @@ void analytics_storage_take_lock(void) {
 bool analytics_storage_has_lock(void) {
   bool has_lock = mutex_is_owned_recursive(s_analytics_storage_mutex);
   if (!has_lock) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Analytics lock is not held when it should be!");
+    PBL_LOG_ERR("Analytics lock is not held when it should be!");
   }
   return has_lock;
 }

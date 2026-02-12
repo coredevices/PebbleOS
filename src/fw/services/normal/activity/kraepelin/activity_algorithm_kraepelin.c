@@ -86,7 +86,7 @@ static AlgState *s_alg_state = NULL;
 static bool prv_lock(void) {
   if (!s_alg_state) {
 #if RELEASE
-    PBL_LOG(LOG_LEVEL_ERROR, "Trying to use the activity algorithm but it hasn't been initialized");
+    PBL_LOG_ERR("Trying to use the activity algorithm but it hasn't been initialized");
     return false;
 #else
     WTF;
@@ -106,7 +106,7 @@ static void prv_unlock(void) {
 static NOINLINE SettingsFile *prv_minute_data_file_open(void) {
   SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
   if (settings_file_open(file, ALG_MINUTE_DATA_FILE_NAME, ALG_MINUTE_DATA_FILE_LEN) != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "No minute data file");
+    PBL_LOG_ERR("No minute data file");
     return NULL;
   }
   return file;
@@ -371,19 +371,19 @@ static SettingsFile *prv_validate_and_trim_minute_file(SettingsFile *file, uint1
   };
 
   // Rewrite the settings file, keeping only the keys we need
-  PBL_LOG(LOG_LEVEL_DEBUG, "Compacting minute file down to %"PRIu16" records", max_records);
+  PBL_LOG_DBG("Compacting minute file down to %"PRIu16" records", max_records);
   status_t status = settings_file_rewrite_filtered(file, prv_minute_file_rewrite_cb, &context);
 
   // Error re-writing?
   if (status != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Encountered error %"PRIi32" rewriting settings file",
+    PBL_LOG_ERR("Encountered error %"PRIi32" rewriting settings file",
             (int32_t)status);
     nuke_file = true;
   } else {
     s_alg_state->num_minute_records = context.num_keys_kept;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Compaction done, ended up with %"PRIu16" records",
+  PBL_LOG_DBG("Compaction done, ended up with %"PRIu16" records",
           s_alg_state->num_minute_records);
 
 exit:
@@ -393,7 +393,7 @@ exit:
   }
 
   if (nuke_file) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Detected invalid minute data file, deleting it");
+    PBL_LOG_WRN("Detected invalid minute data file, deleting it");
     pfs_remove(ALG_MINUTE_DATA_FILE_NAME);
   }
   return file;
@@ -444,7 +444,7 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
 
   SettingsFile *minute_file = prv_minute_data_file_open();
   if (!minute_file) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not open minute file for saving minute stats");
+    PBL_LOG_ERR("Could not open minute file for saving minute stats");
     goto exit;
   }
 
@@ -453,7 +453,7 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
                                       sizeof(*file_record));
   if (status == E_OUT_OF_STORAGE) {
     uint16_t max_records = s_alg_state->num_minute_records / 2;
-    PBL_LOG(LOG_LEVEL_INFO, "Compacting minute file from %"PRIu16" records to %"PRIu16"",
+    PBL_LOG_INFO("Compacting minute file from %"PRIu16" records to %"PRIu16"",
             s_alg_state->num_minute_records, max_records);
     minute_file = prv_validate_and_trim_minute_file(minute_file, max_records);
     if (!minute_file) {
@@ -465,7 +465,7 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
 
   // Was there an error writing the value out?
   if (status != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error %"PRIi32" writing out minute data to minute file",
+    PBL_LOG_ERR("Error %"PRIi32" writing out minute data to minute file",
             (int32_t)status);
   } else {
     s_alg_state->num_minute_records++;
@@ -496,7 +496,7 @@ static DataLoggingSession *prv_get_dls_minute_session(void) {
       // This can happen when you are not connected to the phone and have rebooted a number of
       // times because each time you reboot, you get new sessions created and reach the limit
       // of the max # of sessions allowed.
-      PBL_LOG(LOG_LEVEL_WARNING, "Error creating activity logging session");
+      PBL_LOG_WRN("Error creating activity logging session");
       return NULL;
     }
   }
@@ -520,7 +520,7 @@ static void NOINLINE prv_set_dls_minute_record_entry(AlgMinuteDLSRecord *dls_rec
   if (was_sleeping && (dls_record->samples[sample_idx].base.steps != 0)) {
     // Subtract from our total steps since we decided we were definitely sleeping during
     // this minute
-    PBL_LOG(LOG_LEVEL_DEBUG, "Subtracting %"PRIu8" steps that occurred during sleep",
+    PBL_LOG_DBG("Subtracting %"PRIu8" steps that occurred during sleep",
             dls_record->samples[sample_idx].base.steps);
     s_alg_state->steps -= dls_record->samples[sample_idx].base.steps;
     s_alg_state->steps = MAX(0, s_alg_state->steps);
@@ -630,10 +630,10 @@ static void prv_send_minute_data(uint16_t uncertain_m, time_t sleep_start_utc,
       // Handle writing the record out to data logging
       DataLoggingResult result = dls_log(dls_session, dls_record, 1);
       // PBL-43622: Will revert later
-      PBL_LOG(LOG_LEVEL_DEBUG, "Logging %"PRIu8" MLD Records, First UTC: %"PRIu32,
+      PBL_LOG_DBG("Logging %"PRIu8" MLD Records, First UTC: %"PRIu32,
               dls_record->hdr.num_samples, dls_record->hdr.time_utc);
       if (result != DATA_LOGGING_SUCCESS) {
-        PBL_LOG(LOG_LEVEL_WARNING, "Error %"PRIi32" while logging activity data", (int32_t) result);
+        PBL_LOG_WRN("Error %"PRIi32" while logging activity data", (int32_t) result);
         return;
       }
     }
@@ -653,7 +653,7 @@ static void prv_log_minute_data(time_t utc_now, AlgMinuteRecord *minute_rec) {
     // Although unlikely, we could get buffer overruns if we failed to open up the data logging
     // session after a number of retries. In that case, we will start dropping the oldest
     // minute data from data logging.
-    PBL_LOG(LOG_LEVEL_ERROR, "Circular buffer overrun");
+    PBL_LOG_ERR("Circular buffer overrun");
     success = shared_circular_buffer_write(&s_alg_state->minute_data_cbuf, (uint8_t *)minute_rec,
                                            sizeof(*minute_rec), true /*advance_slackers*/);
   }
@@ -671,7 +671,7 @@ static void prv_log_minute_data(time_t utc_now, AlgMinuteRecord *minute_rec) {
     uncertain_m = (utc_now - sleep_stats.uncertain_start_utc) / SECONDS_PER_MINUTE;
   }
   if (uncertain_m > KALG_MAX_UNCERTAIN_SLEEP_M) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unexpectedly large number of uncertain minutes");
+    PBL_LOG_ERR("Unexpectedly large number of uncertain minutes");
     uncertain_m = KALG_MAX_UNCERTAIN_SLEEP_M;
   }
 
@@ -784,12 +784,12 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
 
     // Label it as a nap
     if (session->type == ActivitySessionType_Sleep) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Found nap - start_utc: %d, start_min: %u, len: %"PRIu16" ",
+      PBL_LOG_DBG("Found nap - start_utc: %d, start_min: %u, len: %"PRIu16" ",
               (int)session->start_utc, start_minute, session->length_min);
       session->type = ActivitySessionType_Nap;
       most_recent_nap_session = session;
     } else if (session->type == ActivitySessionType_RestfulSleep) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Found restful nap - start_utc: %d, start_min: %u, len: %"PRIu16" ",
+      PBL_LOG_DBG("Found restful nap - start_utc: %d, start_min: %u, len: %"PRIu16" ",
               (int)session->start_utc, start_minute, session->length_min);
       session->type = ActivitySessionType_RestfulNap;
     }
@@ -807,7 +807,7 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
     s_alg_state = kernel_zalloc(sizeof(AlgState));
   }
   if (!s_alg_state) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory");
+    PBL_LOG_ERR("Not enough memory");
     kernel_free(k_state);
     return false;
   }
@@ -835,7 +835,7 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   activity_algorithm_minute_file_info(false /*compact_first*/, &num_records, &data_bytes, &minutes);
   s_alg_state->num_minute_records = num_records;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Found %"PRIu16" records in minute file",
+  PBL_LOG_DBG("Found %"PRIu16" records in minute file",
           s_alg_state->num_minute_records);
 
   // Reset all metrics
@@ -1345,7 +1345,7 @@ bool activity_algorithm_test_fill_minute_file(void) {
   uint32_t secs_per_record = ALG_MINUTES_PER_FILE_RECORD * SECONDS_PER_MINUTE;
   time_t start_utc = utc_sec - ALG_MINUTE_FILE_MAX_ENTRIES * secs_per_record;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Writing %"PRIu32" records", (uint32_t) ALG_MINUTE_FILE_MAX_ENTRIES);
+  PBL_LOG_DBG("Writing %"PRIu32" records", (uint32_t) ALG_MINUTE_FILE_MAX_ENTRIES);
 
   // Fill up the minute file to capacity, starting from back in time
   uint8_t heart_rate = 50;
@@ -1372,11 +1372,11 @@ bool activity_algorithm_test_fill_minute_file(void) {
     }
     system_task_watchdog_feed();
     if ((i % 25) == 0) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "wrote %"PRIu32" records...", i);
+      PBL_LOG_DBG("wrote %"PRIu32" records...", i);
     }
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Done. End # of records: %"PRIu16, s_alg_state->num_minute_records);
+  PBL_LOG_DBG("Done. End # of records: %"PRIu16, s_alg_state->num_minute_records);
   return success;
 }
 

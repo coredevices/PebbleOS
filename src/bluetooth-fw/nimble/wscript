@@ -12,7 +12,6 @@ def build(bld):
     bld.objects(
         source=driver_source,
         target='bt_driver',
-        defines=['FILE_LOG_COLOR=LOG_COLOR_BLUE'],
         use=[
           'nimble',
           'freertos',

@@ -61,7 +61,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
   if (state->recv_state != QemuRecvState_WaitingHdrSignatureMSB
       && cur_time > state->start_recv_packet_time + QEMU_RECV_PACKET_TIMEOUT_SEC) {
     state->recv_state = QemuRecvState_WaitingHdrSignatureMSB;
-    PBL_LOG(LOG_LEVEL_WARNING, "Resetting receive state - max packet time expired");
+    PBL_LOG_WRN("Resetting receive state - max packet time expired");
   }
 
   state->callback_pending = false;
@@ -73,7 +73,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
 
   // Log message if we detected any receive errors
   if (state->recv_error_count) {
-    PBL_LOG(LOG_LEVEL_ERROR, "%"PRIu32" receive errors detected", state->recv_error_count);
+    PBL_LOG_ERR("%"PRIu32" receive errors detected", state->recv_error_count);
     state->recv_error_count = 0;
   }
 
@@ -123,7 +123,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
 
         // Validity checking
         if (state->hdr.len > QEMU_MAX_DATA_LEN) {
-          PBL_LOG(LOG_LEVEL_ERROR, "Invalid header data size %d", state->hdr.len);
+          PBL_LOG_ERR("Invalid header data size %d", state->hdr.len);
           state->recv_state = QemuRecvState_WaitingHdrSignatureMSB;
         } else {
           QEMU_LOG_DEBUG("got header: protocol: %d, len: %d", state->hdr.protocol, state->hdr.len);
@@ -162,7 +162,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
           bytes_avail -= bytes_read;
           footer.signature = ntohs(footer.signature);
           if (footer.signature != QEMU_FOOTER_SIGNATURE) {
-            PBL_LOG(LOG_LEVEL_WARNING, "Invalid footer signature");
+            PBL_LOG_WRN("Invalid footer signature");
           }
           state->recv_state = QemuRecvState_WaitingHdrSignatureMSB;
         }

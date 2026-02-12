@@ -108,17 +108,17 @@ static void prv_send_msg(void) {
   if (result == APP_MSG_OK) {
     app_data->ready_to_send = false;
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Error sending message: %s", prv_translate_error(result));
+    PBL_LOG_DBG("Error sending message: %s", prv_translate_error(result));
   }
 }
 
 static void prv_send_status_and_version(void) {
   AppData *app_data = app_state_get_user_data();
-  PBL_LOG(LOG_LEVEL_DEBUG, "Sending status and version to mobile app");
+  PBL_LOG_DBG("Sending status and version to mobile app");
 
   AppMessageResult result = app_message_outbox_begin(&app_data->out_iter);
   if (result != APP_MSG_OK) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Failed to begin outbox - reason %i %s",
+    PBL_LOG_DBG("Failed to begin outbox - reason %i %s",
             result, prv_translate_error(result));
     return;
   }
@@ -178,7 +178,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
       bpm = hrm->bpm.bpm;
       bpm_quality = hrm->bpm.quality;
     } else if (hrm->event_type == HRMEvent_SubscriptionExpiring) {
-      PBL_LOG(LOG_LEVEL_INFO, "Got subscription expiring event");
+      PBL_LOG_INFO("Got subscription expiring event");
       // Subscribe again if our subscription is expiring
       const uint32_t update_time_s = 1;
       app_data->session = sys_hrm_manager_app_subscribe(APP_ID_HRM_DEMO, update_time_s,
@@ -241,7 +241,7 @@ static void prv_message_sent_cb(DictionaryIterator *iterator, void *context) {
 
 static void prv_message_failed_cb(DictionaryIterator *iterator,
                                AppMessageResult reason, void *context) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Out message send failed - reason %i %s",
+  PBL_LOG_DBG("Out message send failed - reason %i %s",
           reason, prv_translate_error(reason));
   AppData *app_data = app_state_get_user_data();
   app_data->ready_to_send = true;
@@ -285,10 +285,10 @@ static void prv_init(void) {
   const uint32_t outbox_size = 256;
   AppMessageResult result = app_message_open(inbox_size, outbox_size);
   if (result != APP_MSG_OK) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unable to open app message! %i %s",
+    PBL_LOG_ERR("Unable to open app message! %i %s",
             result, prv_translate_error(result));
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Successfully opened app message");
+    PBL_LOG_DBG("Successfully opened app message");
   }
 
   if (!sys_hrm_manager_is_hrm_present()) {

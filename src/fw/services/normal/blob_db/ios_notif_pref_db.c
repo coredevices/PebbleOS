@@ -107,7 +107,7 @@ iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     char buffer[key_len + 1];
     strncpy(buffer, (const char *)app_id, key_len);
     buffer[key_len] = '\0';
-    PBL_LOG(LOG_LEVEL_DEBUG, "No prefs found for <%s>", buffer);
+    PBL_LOG_DBG("No prefs found for <%s>", buffer);
     prv_file_close_and_unlock(&file);
     return NULL;
   }
@@ -129,7 +129,7 @@ iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     char buffer[key_len + 1];
     strncpy(buffer, (const char *)app_id, key_len);
     buffer[key_len] = '\0';
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not parse serial data for <%s>", buffer);
+    PBL_LOG_ERR("Could not parse serial data for <%s>", buffer);
     prv_free_serialzed_prefs(serialized_prefs);
     return NULL;
   }
@@ -158,7 +158,7 @@ iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     char buffer[key_len + 1];
     strncpy(buffer, (const char *)app_id, key_len);
     buffer[key_len] = '\0';
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not deserialize data for <%s>", buffer);
+    PBL_LOG_ERR("Could not deserialize data for <%s>", buffer);
     prv_free_serialzed_prefs(serialized_prefs);
     kernel_free(notif_prefs);
     return NULL;
@@ -197,7 +197,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
     char buffer[length + 1];
     strncpy(buffer, (const char *)app_id, length);
     buffer[length] = '\0';
-    PBL_LOG(LOG_LEVEL_INFO, "Added <%s> to the notif pref db", buffer);
+    PBL_LOG_INFO("Added <%s> to the notif pref db", buffer);
 
     blob_db_sync_record(BlobDBIdiOSNotifPref, app_id, length, rtc_get_time());
   }
@@ -227,7 +227,7 @@ status_t ios_notif_pref_db_insert(const uint8_t *key, int key_len,
     char buffer[key_len + 1];
     strncpy(buffer, (const char *)key, key_len);
     buffer[key_len] = '\0';
-    PBL_LOG(LOG_LEVEL_INFO, "iOS notif pref insert <%s>", buffer);
+    PBL_LOG_INFO("iOS notif pref insert <%s>", buffer);
 
     // All records inserted from the phone are not dirty (the phone is the source of truth)
     rv = settings_file_mark_synced(&file, key, key_len);

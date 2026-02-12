@@ -135,7 +135,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
   const bool is_valid_reminder_key = prv_is_key_valid(key, key_len, PREF_KEY_REMINDER_APP);
 
   if (!is_valid_send_text_key && !is_valid_weather_key && !is_valid_reminder_key) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error inserting app_prefs: invalid key");
+    PBL_LOG_ERR("Error inserting app_prefs: invalid key");
     return E_INVALID_ARGUMENT;
   }
 
@@ -143,7 +143,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
       !prv_validate_received_pref(val_len, sizeof(SerializedSendTextPrefs),
                                   ((SerializedSendTextPrefs *)val)->num_contacts,
                                   sizeof(SerializedSendTextContact))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error inserting app_prefs: invalid send text contact list");
+    PBL_LOG_ERR("Error inserting app_prefs: invalid send text contact list");
     return E_INVALID_ARGUMENT;
   }
 
@@ -151,7 +151,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
       !prv_validate_received_pref(val_len, sizeof(SerializedWeatherAppPrefs),
                                   ((SerializedWeatherAppPrefs *)val)->num_locations,
                                   sizeof(Uuid))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error inserting app_prefs: invalid weather list");
+    PBL_LOG_ERR("Error inserting app_prefs: invalid weather list");
     return E_INVALID_ARGUMENT;
   }
 

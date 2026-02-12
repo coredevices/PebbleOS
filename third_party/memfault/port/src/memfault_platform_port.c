@@ -81,7 +81,7 @@ void memfault_platform_log_raw(const char *fmt, ...) {
   va_start(args, fmt);
 
   vsnprintf(log_buf, sizeof(log_buf), fmt, args);
-  PBL_LOG(LOG_LEVEL_DEBUG, "%s", log_buf);
+  PBL_LOG_DBG("%s", log_buf);
 
   va_end(args);
 }

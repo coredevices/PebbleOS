@@ -70,7 +70,7 @@ static void prv_battery_set_charge_enable(bool charging_enabled) {
     GPIO_WriteBit(BOARD_CONFIG_POWER.chg_en.gpio, BOARD_CONFIG_POWER.chg_en.gpio_pin, charging_enabled?Bit_SET:Bit_RESET);
 
     gpio_release(BOARD_CONFIG_POWER.chg_en.gpio);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Charging:%s", charging_enabled?"enabled":"disabled");
+    PBL_LOG_DBG("Charging:%s", charging_enabled?"enabled":"disabled");
   }
 }
 
@@ -82,7 +82,7 @@ static void prv_battery_set_fast_charge(bool fast_charge_enabled) {
     GPIO_WriteBit(BOARD_CONFIG_POWER.chg_fast.gpio, BOARD_CONFIG_POWER.chg_fast.gpio_pin, fast_charge_enabled?Bit_RESET:Bit_SET);
 
     gpio_release(BOARD_CONFIG_POWER.chg_fast.gpio);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Fastcharge %s", fast_charge_enabled?"enabled":"disabled");
+    PBL_LOG_DBG("Fastcharge %s", fast_charge_enabled?"enabled":"disabled");
   }
 }
 

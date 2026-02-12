@@ -81,7 +81,7 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
   MicDeviceState *state = this->state;
   PDM_HandleTypeDef* hpdm = state->hpdm;
   if (state->is_running) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Cannot set volume while microphone is running");
+    PBL_LOG_WRN("Cannot set volume while microphone is running");
     return;
   }
   volume = volume * PDM_AUDIO_RECORD_GAIN_MAX/100;
@@ -94,7 +94,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
   // Allocate circular buffer storage
   state->circ_buffer_storage = kernel_malloc(PDM_CIRCULAR_BUF_SIZE_BYTES);
   if (!state->circ_buffer_storage) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to allocate circular buffer storage");
+    PBL_LOG_ERR("Failed to allocate circular buffer storage");
     return false;
   }
   
@@ -182,19 +182,19 @@ static void prv_dma_data_processing(uint8_t* data, uint16_t size)
 {
   // Don't assert on is_running during shutdown - the PDM might send final events
   if (!s_state->is_running) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Microphone stopped, ignoring event");
+    PBL_LOG_ERR("Microphone stopped, ignoring event");
     return;
   }
 
    // Ensure circular buffer storage is allocated
    if (!s_state->circ_buffer_storage) {
-    PBL_LOG(LOG_LEVEL_ERROR, "No circular buffer storage, ignoring data");
+    PBL_LOG_ERR("No circular buffer storage, ignoring data");
     return;
   }
   
   // Ensure we have valid audio buffer info
   if (!s_state->audio_buffer || s_state->audio_buffer_len == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "No audio buffer configured, ignoring data");
+    PBL_LOG_ERR("No audio buffer configured, ignoring data");
     return;
   }
   
@@ -204,7 +204,7 @@ static void prv_dma_data_processing(uint8_t* data, uint16_t size)
   if (write_space < size) {
     uint16_t to_drop = size - write_space;
     circular_buffer_consume(&s_state->circ_buffer, to_drop);
-    PBL_LOG(LOG_LEVEL_WARNING, "Dropping %u bytes of old audio", to_drop);
+    PBL_LOG_WRN("Dropping %u bytes of old audio", to_drop);
   }
   circular_buffer_write(&s_state->circ_buffer, data, size);
 
@@ -289,7 +289,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     return false;
   }
   if (!state->is_initialized) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Microphone not initialized");
+    PBL_LOG_ERR("Microphone not initialized");
     mutex_unlock_recursive(state->mutex);
     return false;
   }

@@ -385,7 +385,7 @@ bool pmic_is_charging(void) {
     // i2c read means we are charging
     return true;
 #else
-    PBL_LOG(LOG_LEVEL_DEBUG, "Failed to read charging status A register");
+    PBL_LOG_DBG("Failed to read charging status A register");
     return false;
 #endif
   }
@@ -410,7 +410,7 @@ bool pmic_is_usb_connected(void) {
     // i2c read means we are connected to a USB cable
     return true;
 #else
-    PBL_LOG(LOG_LEVEL_DEBUG, "Failed to read charging status B register");
+    PBL_LOG_DBG("Failed to read charging status B register");
     return false;
 #endif
   }
@@ -440,18 +440,18 @@ static void prv_log_status_registers(const char *preamble) {
 
   if (!prv_read_register(PmicRegisters_STATUSA, &status_a) ||
       !prv_read_register(PmicRegisters_STATUSB, &status_b)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to read status registers");
+    PBL_LOG_WRN("Failed to read status registers");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "%s: StatusA = 0x%"PRIx8"; StatusB = 0x%"PRIx8, preamble, status_a,
+  PBL_LOG_INFO("%s: StatusA = 0x%"PRIx8"; StatusB = 0x%"PRIx8, preamble, status_a,
       status_b);
 }
 
 static void prv_debounce_callback(void* data) {
   bool is_connected = pmic_is_usb_connected();
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got PMIC debounced interrupt, plugged?: %s bounces: %u",
+  PBL_LOG_DBG("Got PMIC debounced interrupt, plugged?: %s bounces: %u",
           is_connected ? "YES" : "NO", s_interrupt_bounce_count);
   s_interrupt_bounce_count = 0;
 
@@ -493,11 +493,10 @@ static bool prv_is_alive(void) {
   prv_read_register(0x00, &val);
 
   if (val == 0x01) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Found the max14690");
+    PBL_LOG_DBG("Found the max14690");
     return true;
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG,
-            "Error: read max14690 whomai byte 0x%x, expecting 0x%x", val, 0x01);
+    PBL_LOG_DBG("Error: read max14690 whomai byte 0x%x, expecting 0x%x", val, 0x01);
     return false;
   }
 }

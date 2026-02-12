@@ -78,12 +78,12 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
         snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling... %d", HRM->state->is_wear);
         memset(app_data->ctr_string, 0, CTR_STRING_LEN);
         snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d Q:%d", e->hrm.bpm.bpm, e->hrm.bpm.quality);
-        PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->ctr_string);
+        PBL_LOG_DBG("%s", app_data->ctr_string);
       } else if (e->hrm.event_type == HRMEvent_SpO2) {
         snprintf(app_data->status_string, STATUS_STRING_LEN, "SPO2 Sampling... %d", HRM->state->is_wear);
         memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
         snprintf(app_data->leak_string, CTR_STRING_LEN, "SPO2:%d Q:%d", e->hrm.spo2.percent, e->hrm.spo2.quality);
-        PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->leak_string);
+        PBL_LOG_DBG("%s", app_data->leak_string);
       }
     }
     else {
@@ -101,7 +101,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
                 (int)e->hrm.ctr->ctr[1], (int)(e->hrm.ctr->ctr[1]*100)%100, 
                 (int)e->hrm.ctr->ctr[3], (int)(e->hrm.ctr->ctr[3]*100)%100, 
                 (int)e->hrm.ctr->ctr[5], (int)(e->hrm.ctr->ctr[5]*100)%100);
-        PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->ctr_string);
+        PBL_LOG_DBG("%s", app_data->ctr_string);
       } else if (e->hrm.event_type == HRMEvent_Leakage) {
         bool rst = (e->hrm.leakage->leakage[0] <= PPG_GR_LEAK_THS0) && (e->hrm.leakage->leakage[1] <= PPG_GR_LEAK_THS1) 
                 && (e->hrm.leakage->leakage[2] <= PPG_IR_LEAK_THS0) && (e->hrm.leakage->leakage[3] <= PPG_IR_LEAK_THS1)
@@ -116,7 +116,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
                 (int)e->hrm.leakage->leakage[1], (int)(e->hrm.leakage->leakage[1]*100)%100, 
                 (int)e->hrm.leakage->leakage[3], (int)(e->hrm.leakage->leakage[3]*100)%100, 
                 (int)e->hrm.leakage->leakage[5], (int)(e->hrm.leakage->leakage[5]*100)%100);
-        PBL_LOG(LOG_LEVEL_DEBUG, "%s", app_data->leak_string);
+        PBL_LOG_DBG("%s", app_data->leak_string);
       }
     }
     layer_mark_dirty(&app_data->window.layer);

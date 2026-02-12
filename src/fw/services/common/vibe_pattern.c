@@ -199,7 +199,7 @@ void vibe_service_set_enabled(bool enable) {
 
 static void prv_timer_callback(void* data) {
   if (s_vibe_queue_head == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Tried to handle a vibe event with a null vibe queue");
+    PBL_LOG_ERR("Tried to handle a vibe event with a null vibe queue");
     return;
   }
 
@@ -246,14 +246,14 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
   mutex_lock(s_vibe_pattern_mutex);
 
   if (s_pattern_in_progress) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Pattern is in progress");
+    PBL_LOG_DBG("Pattern is in progress");
     mutex_unlock(s_vibe_pattern_mutex);
     return false;
   }
 
   VibePatternStep *step = kernel_malloc(sizeof(VibePatternStep));
   if (step == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Couldn't malloc for a vibe step");
+    PBL_LOG_ERR("Couldn't malloc for a vibe step");
     mutex_unlock(s_vibe_pattern_mutex);
     return false;
   }

@@ -114,19 +114,19 @@ static bool prv_is_valid_activity_session(ActivitySession *session) {
       break;
     case ActivitySessionType_None:
     case ActivitySessionTypeCount:
-      PBL_LOG(LOG_LEVEL_WARNING, "Invalid activity type: %d", (int)session->type);
+      PBL_LOG_WRN("Invalid activity type: %d", (int)session->type);
       return false;
   }
 
   // The length must be reasonable
   if (session->length_min > ACTIVITY_SESSION_MAX_LENGTH_MIN) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid duration: %"PRIu16" ", session->length_min);
+    PBL_LOG_WRN("Invalid duration: %"PRIu16" ", session->length_min);
     return false;
   }
 
   // The flags must be valid
   if (session->reserved != 0) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid flags: %d", (int)session->reserved);
+    PBL_LOG_WRN("Invalid flags: %d", (int)session->reserved);
     return false;
   }
 
@@ -184,12 +184,12 @@ void activity_sessions_prv_add_activity_session(ActivitySession *session) {
 
     // If no more room, fail
     if (state->activity_sessions_count >= ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT) {
-      PBL_LOG(LOG_LEVEL_WARNING, "No more room for additional activities");
+      PBL_LOG_WRN("No more room for additional activities");
       goto unlock;
     }
 
     // Add this activity in
-    PBL_LOG(LOG_LEVEL_INFO, "Adding activity session %d, start_time: %"PRIu32,
+    PBL_LOG_INFO("Adding activity session %d, start_time: %"PRIu32,
             (int)session->type, (uint32_t)session->start_utc);
     state->activity_sessions[state->activity_sessions_count++] = *session;
   }
@@ -217,7 +217,7 @@ void activity_sessions_prv_delete_activity_session(ActivitySession *session) {
 
     // If session not found, do nothing
     if (found_session_idx < 0) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Session to delete not found");
+      PBL_LOG_WRN("Session to delete not found");
       goto unlock;
     }
 
@@ -269,7 +269,7 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
         DlsSystemTagActivitySession, DATA_LOGGING_BYTE_ARRAY, sizeof(dls_record),
         buffered, resume, &system_uuid);
     if (!state->activity_dls_session) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Error creating activity DLS session");
+      PBL_LOG_WRN("Error creating activity DLS session");
       return;
     }
   }
@@ -277,9 +277,9 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
   // Log the record
   DataLoggingResult result = dls_log(state->activity_dls_session, &dls_record, 1);
   if (result != DATA_LOGGING_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Error %"PRIi32" while logging activity to DLS", (int32_t)result);
+    PBL_LOG_WRN("Error %"PRIi32" while logging activity to DLS", (int32_t)result);
   }
-  PBL_LOG(LOG_LEVEL_INFO, "Logging activity event %d, start_time: %"PRIu32", "
+  PBL_LOG_INFO("Logging activity event %d, start_time: %"PRIu32", "
           "elapsed_min: %"PRIu16", end_time: %"PRIu32" ",
           (int)session->type, (uint32_t)session->start_utc, session->length_min,
           (uint32_t)session->start_utc + (session->length_min * SECONDS_PER_MINUTE));
@@ -577,7 +577,7 @@ static void prv_log_activities(time_t now_utc) {
         status_t result = settings_file_set(file, &params->key, sizeof(params->key),
                                             params->exit_utc, sizeof(*params->exit_utc));
         if (result != S_SUCCESS) {
-          PBL_LOG(LOG_LEVEL_ERROR, "Error saving last event time");
+          PBL_LOG_ERR("Error saving last event time");
         }
       }
       activity_private_settings_close(file);
@@ -597,7 +597,7 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
   // for less than the value size
   int stored_len = settings_file_get_len(file, &key, sizeof(key));
   if (stored_len != sizeof(state->activity_sessions)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Stored activities not found or incompatible");
+    PBL_LOG_WRN("Stored activities not found or incompatible");
     return;
   }
 
@@ -622,7 +622,7 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
       // flash got corrupted, as in PBL-37848
       PBL_HEXDUMP(LOG_LEVEL_INFO, (void *)state->activity_sessions,
                   sizeof(state->activity_sessions));
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid activity session detected - could be flash corrruption");
+      PBL_LOG_ERR("Invalid activity session detected - could be flash corrruption");
 
       // Zero out flash so that we don't get into a reboot loop
       memset(state->activity_sessions, 0, sizeof(state->activity_sessions));
@@ -636,7 +636,7 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
   // Remove any activities that don't belong to "today" or that are ongoing
   activity_sessions_prv_remove_out_of_range_activity_sessions(utc_now, true /*remove_ongoing*/);
 
-  PBL_LOG(LOG_LEVEL_INFO, "Restored %"PRIu16" activities from storage",
+  PBL_LOG_INFO("Restored %"PRIu16" activities from storage",
           state->activity_sessions_count);
 }
 

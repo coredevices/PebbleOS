@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "settings_bluetooth.h"
 #include "settings_menu.h"
 #include "settings_remote.h"
@@ -290,7 +288,7 @@ void settings_bluetooth_update_remotes(SettingsBluetoothData *data) {
 
 static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *context) {
   SettingsBluetoothData* settings_data = (SettingsBluetoothData *) context;
-  PBL_LOG_COLOR(LOG_LEVEL_DEBUG, LOG_COLOR_BLUE, "BT EVENT");
+  PBL_LOG_DBG("BT EVENT");
   switch (event->type) {
     case PEBBLE_BT_CONNECTION_EVENT:
       // If BT Settings is open, update BLE device name upon connecting device:
@@ -317,14 +315,14 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
         if (!settings_data->did_enable_pairability) {
           bt_pairability_use();
           settings_data->did_enable_pairability = true;
-          PBL_LOG(LOG_LEVEL_INFO, "Enabled advertising - no paired devices");
+          PBL_LOG_INFO("Enabled advertising - no paired devices");
         }
       } else if (!had_remotes && has_remotes) {
         // Device was added, disable advertising
         if (settings_data->did_enable_pairability) {
           bt_pairability_release();
           settings_data->did_enable_pairability = false;
-          PBL_LOG(LOG_LEVEL_INFO, "Disabled advertising - device paired");
+          PBL_LOG_INFO("Disabled advertising - device paired");
         }
       }
       

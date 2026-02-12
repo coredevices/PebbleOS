@@ -121,7 +121,7 @@ DEFINE_SYSCALL(bool, sys_app_inbox_service_register, uint8_t *storage, size_t st
   const AppInboxServiceTag service_tag = prv_tag_for_event_handlers(message_handler,
                                                                     dropped_handler);
   if (AppInboxServiceTagInvalid == service_tag) {
-    PBL_LOG(LOG_LEVEL_ERROR, "AppInbox event handlers not allowed <0x%"PRIx32", 0x%"PRIx32">",
+    PBL_LOG_ERR("AppInbox event handlers not allowed <0x%"PRIx32", 0x%"PRIx32">",
             // Ugh.. no more format signature slots free for %p %p...
             (uint32_t)(uintptr_t)message_handler, (uint32_t)(uintptr_t)dropped_handler);
     syscall_failed();
@@ -190,7 +190,7 @@ static AppInboxNode *prv_find_inbox_by_tag(AppInboxServiceTag tag) {
 static AppInboxNode *prv_find_inbox_by_tag_and_log_if_not_found(AppInboxServiceTag tag) {
   AppInboxNode *inbox = prv_find_inbox_by_tag(tag);
   if (!inbox) {
-    PBL_LOG(LOG_LEVEL_ERROR, "No AppInbox for tag <%d>", tag);
+    PBL_LOG_ERR("No AppInbox for tag <%d>", tag);
   }
   return inbox;
 }
@@ -211,7 +211,7 @@ static void prv_consume(AppInboxConsumerInfo *consumer_info) {
     uint8_t * const completed_messages_end = (inbox->buffer.storage + inbox->buffer.write_index);
     if (consumed_up_to_ptr < inbox->buffer.storage ||
         consumed_up_to_ptr > completed_messages_end) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Out of bounds");
+      PBL_LOG_ERR("Out of bounds");
       goto unlock;
     }
     const size_t bytes_consumed = (consumed_up_to_ptr - inbox->buffer.storage);
@@ -279,12 +279,12 @@ static void prv_callback_event_handler(void *ctx) {
   }
   if (!info.message_handler) {
     // Shouldn't ever happen, but better not PBL_ASSERTN on app task
-    PBL_LOG(LOG_LEVEL_ERROR, "No AppInbox message handler!");
+    PBL_LOG_ERR("No AppInbox message handler!");
     return;
   }
   if (!info.num_success && !info.num_failed) {
     // Shouldn't ever happen, but better not PBL_ASSERTN on app task
-    PBL_LOG(LOG_LEVEL_ERROR, "Got callback, but zero messages!?");
+    PBL_LOG_ERR("Got callback, but zero messages!?");
     // fall-through
   }
 
@@ -300,7 +300,7 @@ static void prv_callback_event_handler(void *ctx) {
     if (msg->data + msg->length <= info.end) {
       info.message_handler(msg->data, msg->length, &info);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Corrupted AppInbox message!");
+      PBL_LOG_ERR("Corrupted AppInbox message!");
     }
     ++num_message_consumed;
   }
@@ -309,7 +309,7 @@ static void prv_callback_event_handler(void *ctx) {
     if (info.dropped_handler) {
       info.dropped_handler(info.num_failed);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Dropped %"PRIu32" messages but no dropped_handler",
+      PBL_LOG_ERR("Dropped %"PRIu32" messages but no dropped_handler",
               info.num_failed);
     }
   }
@@ -323,7 +323,7 @@ bool app_inbox_service_register(uint8_t *storage, size_t storage_size,
                                 AppInboxDroppedHandler dropped_handler, AppInboxServiceTag tag) {
   AppInboxNode *new_node = (AppInboxNode *)kernel_zalloc(sizeof(AppInboxNode));
   if (!new_node) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory to allocate AppInboxNode");
+    PBL_LOG_ERR("Not enough memory to allocate AppInboxNode");
     return false;
   }
 
@@ -332,14 +332,14 @@ bool app_inbox_service_register(uint8_t *storage, size_t storage_size,
     bool has_error = false;
 
     if (prv_find_inbox_by_storage(storage)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "AppInbox already registered for storage <%p>", storage);
+      PBL_LOG_ERR("AppInbox already registered for storage <%p>", storage);
       has_error = true;
     }
 
     // This check effectively caps the kernel RAM impact of this service,
     // so it's not possible to abuse the syscall and cause kernel OOM.
     if (prv_find_inbox_by_tag(tag)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "AppInbox already registered for tag <%d>", tag);
+      PBL_LOG_ERR("AppInbox already registered for tag <%d>", tag);
       has_error = true;
     }
 
@@ -402,7 +402,7 @@ static size_t prv_get_space_remaining(AppInboxNode *inbox) {
 bool prv_check_space_remaining(AppInboxNode *inbox, size_t required_free_length) {
   const size_t space_remaining = prv_get_space_remaining(inbox);
   if (required_free_length > space_remaining) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Dropping data, not enough space %"PRIu32" vs %"PRIu32,
+    PBL_LOG_ERR("Dropping data, not enough space %"PRIu32" vs %"PRIu32,
             (uint32_t)required_free_length, (uint32_t)space_remaining);
     return false;
   }
@@ -423,7 +423,7 @@ static void prv_send_event_if_needed(AppInboxNode *inbox) {
   const bool is_event_enqueued = process_manager_send_event_to_process(inbox->event_handler_task,
                                                                        &event);
   if (!is_event_enqueued) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Event queue full");
+    PBL_LOG_ERR("Event queue full");
   }
   inbox->has_pending_event = is_event_enqueued;
 }
@@ -450,7 +450,7 @@ bool app_inbox_service_begin(AppInboxServiceTag tag, size_t required_free_length
     }
     if (prv_is_inbox_being_written(inbox)) {
       ++inbox->num_failed;
-      PBL_LOG(LOG_LEVEL_ERROR, "Dropping data, already written by <%p>", inbox->writer);
+      PBL_LOG_ERR("Dropping data, already written by <%p>", inbox->writer);
       // Don't send event here, when the current write finishes, the drop(s) will be reported too.
       goto unlock;
     }

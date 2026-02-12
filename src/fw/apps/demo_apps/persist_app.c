@@ -101,7 +101,7 @@ static void select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, AppDat
     case 1: {
       int num_beers = persist_read_int(COUNT_PKEY);
       int status = persist_write_int(COUNT_PKEY, num_beers+1);
-      PBL_LOG(LOG_LEVEL_DEBUG, "argh %d %d", num_beers, status);
+      PBL_LOG_DBG("argh %d %d", num_beers, status);
       menu_layer_reload_data(menu_layer);
       break;
     }
@@ -170,9 +170,9 @@ static void handle_init() {
   push_window(data);
 
   const int exist_result = persist_exists(COUNT_PKEY);
-  PBL_LOG(LOG_LEVEL_DEBUG, "- exist_result %d", exist_result);
+  PBL_LOG_DBG("- exist_result %d", exist_result);
   if (exist_result == false) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "- writing...");
+    PBL_LOG_DBG("- writing...");
     persist_write_int(COUNT_PKEY, 10);
   }
 }

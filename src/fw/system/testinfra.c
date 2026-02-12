@@ -25,7 +25,7 @@ void notify_system_ready_for_communication(void) {
 
 #if IS_BIGBOARD
 NORETURN test_infra_quarantine_board(const char *quarantine_reason) {
-  PBL_LOG(LOG_LEVEL_INFO, "Quarantine Board: %s", quarantine_reason);
+  PBL_LOG_INFO("Quarantine Board: %s", quarantine_reason);
   boot_bit_set(BOOT_BIT_FORCE_PRF);
   core_dump_reset(true /* is_forced */);
 }

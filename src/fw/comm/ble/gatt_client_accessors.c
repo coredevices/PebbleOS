@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
 #include "system/logging.h"
 
 #include "gatt_client_accessors.h"
@@ -153,7 +152,7 @@ static bool prv_iter_service_node(const GATTServiceNode *service_node,
       if (inc_service_node) {
         callbacks->included_services_iterator(inc_service_node, cb_data);
       } else {
-        PBL_LOG(LOG_LEVEL_DEBUG, "Included Service with handle %u not found!", handle[h]);
+        PBL_LOG_DBG("Included Service with handle %u not found!", handle[h]);
       }
     }
   }
@@ -351,7 +350,7 @@ uint8_t gatt_client_copy_service_refs_by_discovery_generation(
   {
     GAPLEConnection *connection = gap_le_connection_by_device(device);
     if (!connection) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Disconnected in the mean time...");
+      PBL_LOG_ERR("Disconnected in the mean time...");
       goto unlock;
     }
     GATTServiceNode *node = connection->gatt_remote_services;
@@ -382,7 +381,7 @@ uint8_t gatt_client_copy_service_refs_matching_uuid(const BTDeviceInternal *devi
   {
     GAPLEConnection *connection = gap_le_connection_by_device(device);
     if (!connection) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Disconnected in the mean time...");
+      PBL_LOG_ERR("Disconnected in the mean time...");
       goto unlock;
     }
     GATTServiceNode *node = connection->gatt_remote_services;

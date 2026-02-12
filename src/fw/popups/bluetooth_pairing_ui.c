@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "bluetooth_pairing_ui.h"
 
 #include "applib/fonts/fonts.h"
@@ -484,7 +482,7 @@ static void prv_show_failure_kernel_main_cb(void *unused) {
 }
 
 static void prv_pairing_timeout_timer_callback(void *unused) {
-  PBL_LOG(LOG_LEVEL_WARNING, "SSP timeout fired!");
+  PBL_LOG_WRN("SSP timeout fired!");
   launcher_task_add_callback(prv_show_failure_kernel_main_cb, NULL);
 }
 
@@ -566,7 +564,7 @@ static void prv_handle_confirmation_request(const PairingUserConfirmationCtx *ct
 
 static void prv_handle_pairing_complete(bool success) {
   if (!s_data_ptr) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Dialog was not present, but got complete (%u) event", success);
+    PBL_LOG_WRN("Dialog was not present, but got complete (%u) event", success);
     return;
   }
 
@@ -574,19 +572,18 @@ static void prv_handle_pairing_complete(bool success) {
   if (data->ui_state == BTPairingUIStateAwaitingUserConfirmation) {
     prv_exit_awaiting_user_confirmation(data);
   } else if (data->ui_state != BTPairingUIStateAwaitingResult) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Got completion (%u) but not right state", success);
+    PBL_LOG_WRN("Got completion (%u) but not right state", success);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got Completion! %u", success);
+  PBL_LOG_DBG("Got Completion! %u", success);
   data->ui_state = success ? BTPairingUIStateSuccess : BTPairingUIStateFailed;
   prv_adjust_background_frame_for_state(data);
 
   if (!new_timer_stop(data->timer)) {
     // Timer was already executing...
     if (success) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Timeout cb executing while received successful completion event");
+      PBL_LOG_WRN("Timeout cb executing while received successful completion event");
     }
   }
 
@@ -611,7 +608,7 @@ void bluetooth_pairing_ui_handle_event(PebbleBluetoothPairEvent *event) {
       if (s_data_ptr && s_data_ptr->ctx == event->ctx) {
         prv_handle_pairing_complete(event->success);
       } else {
-        PBL_LOG(LOG_LEVEL_ERROR, "Got complete event for unknown process %p vs %p",
+        PBL_LOG_ERR("Got complete event for unknown process %p vs %p",
                 event->ctx, s_data_ptr ? s_data_ptr->ctx : NULL);
       }
       break;

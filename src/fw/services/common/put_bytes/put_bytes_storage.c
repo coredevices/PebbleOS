@@ -70,7 +70,7 @@ bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type,
 
   if (object_type >= ARRAY_LENGTH(IMPL_FOR_OBJECT_TYPE) ||
       IMPL_FOR_OBJECT_TYPE[object_type] == NULL) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Unsupported PutBytesObjectType %u", object_type);
+    PBL_LOG_WRN("Unsupported PutBytesObjectType %u", object_type);
     return false;
   }
 
@@ -78,7 +78,7 @@ bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type,
 
   uint32_t max_size = impl->get_max_size(object_type);
   if (total_size > max_size) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid size for type %u, size: %"PRIu32", max_size: %"PRIu32,
+    PBL_LOG_WRN("Invalid size for type %u, size: %"PRIu32", max_size: %"PRIu32,
             object_type, total_size, max_size);
     return false;
   }

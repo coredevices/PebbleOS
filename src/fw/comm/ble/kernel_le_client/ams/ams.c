@@ -261,7 +261,7 @@ static void prv_register_next_entity(void *unused) {
       launcher_task_add_callback(&prv_register_next_entity, NULL);
     } else {
       // Most likely the LE connection got busted, don't think retrying will help.
-      PBL_LOG(LOG_LEVEL_ERROR, "Write failed %i", e);
+      PBL_LOG_ERR("Write failed %i", e);
     }
     prv_analytics_log_event_with_info(AMSAnalyticsEventErrorRegisterEntityWrite, e);
   }
@@ -275,7 +275,7 @@ static bool prv_set_connected(bool connected) {
   const bool has_error = !music_set_connected_server(&s_ams_music_implementation, connected);
   if (has_error) {
     s_ams_client->connected = false;
-    PBL_LOG(LOG_LEVEL_ERROR, "AMS could not (dis)connect to music service (%u)", connected);
+    PBL_LOG_ERR("AMS could not (dis)connect to music service (%u)", connected);
     prv_analytics_log_event_with_info(AMSAnalyticsEventErrorMusicServiceConnect, connected ? 1 : 2);
   }
   return !has_error;
@@ -317,12 +317,12 @@ static bool prv_handle_player_playback_info_value(const char *value, uint32_t va
   };
   if (value_length && !ams_util_float_string_parse(value, value_length,
                                                    multiplier[idx], &value_out)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "AMS playback info value failed to parse: %s", value);
+    PBL_LOG_ERR("AMS playback info value failed to parse: %s", value);
     prv_analytics_log_event_with_info(AMSAnalyticsEventErrorPlayerPlaybackInfoFloatParse, idx);
     return false /* should_continue */;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Playback info value update %"PRId32"=%"PRId32, idx, value_out);
+  PBL_LOG_DBG("Playback info value update %"PRId32"=%"PRId32, idx, value_out);
 
   MusicPlayerStateUpdate *state = (MusicPlayerStateUpdate *)context;
   switch (idx) {
@@ -354,7 +354,7 @@ static void prv_handle_player_playback_info_update(const AMSEntityUpdateNotifica
   if (success) {
     music_update_player_playback_state(&state);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Expected CSV with 3 values:");
+    PBL_LOG_ERR("Expected CSV with 3 values:");
     PBL_HEXDUMP(LOG_LEVEL_ERROR, (const uint8_t *) update->value_str, value_length);
     prv_analytics_log_event_with_info(AMSAnalyticsEventErrorPlayerPlaybackInfoUpdate, num_results);
   }
@@ -364,7 +364,7 @@ static bool prv_float_string_parse(const char *value, const uint16_t value_lengt
                                    int32_t multiplier, int32_t *value_in_out) {
   if (value_length &&
       !ams_util_float_string_parse(value, value_length, multiplier, value_in_out)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "AMS float failed to parse:");
+    PBL_LOG_ERR("AMS float failed to parse:");
     PBL_HEXDUMP(LOG_LEVEL_ERROR, (const uint8_t *)value, value_length);
     return false;
   }
@@ -394,28 +394,28 @@ static int32_t prv_parse_queue_value(const char *value, const uint16_t value_len
 static void prv_handle_queue_index_update(const AMSEntityUpdateNotification *update,
                                           const uint16_t value_length) {
   const int32_t idx = prv_parse_queue_value(update->value_str, value_length);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Queue index update: %"PRId32, idx);
+  PBL_LOG_DBG("Queue index update: %"PRId32, idx);
   // TODO: Do something with this info
 }
 
 static void prv_handle_queue_count_update(const AMSEntityUpdateNotification *update,
                                           const uint16_t value_length) {
   const int32_t count = prv_parse_queue_value(update->value_str, value_length);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Queue count update: %"PRId32, count);
+  PBL_LOG_DBG("Queue count update: %"PRId32, count);
   // TODO: Do something with this info
 }
 
 static void prv_handle_queue_shuffle_mode_update(const AMSEntityUpdateNotification *update,
                                                  const uint16_t value_length) {
   const AMSShuffleMode shuffle_mode = prv_parse_queue_value(update->value_str, value_length);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Queue shuffle mode update: %d", shuffle_mode);
+  PBL_LOG_DBG("Queue shuffle mode update: %d", shuffle_mode);
   // TODO: Do something with this info
 }
 
 static void prv_handle_queue_repeat_mode_update(const AMSEntityUpdateNotification *update,
                                                 const uint16_t value_length) {
   const AMSRepeatMode repeat_mode = prv_parse_queue_value(update->value_str, value_length);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Queue repeat mode update: %d", repeat_mode);
+  PBL_LOG_DBG("Queue repeat mode update: %d", repeat_mode);
   // TODO: Do something with this info
 }
 
@@ -446,7 +446,7 @@ static void prv_handle_track_duration_update(const AMSEntityUpdateNotification *
   if (success) {
     music_update_track_duration(duration_ms);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "AMS duration failed to parse");
+    PBL_LOG_ERR("AMS duration failed to parse");
     prv_analytics_log_event_with_info(AMSAnalyticsEventErrorTrackDurationUpdate, value_length);
   }
 }
@@ -523,7 +523,7 @@ static void prv_handle_update(const AMSEntityUpdateNotification *update,
       break;
   }
 
-  PBL_LOG(LOG_LEVEL_ERROR, "Unknown EntityID:%u + AttrID:%u",
+  PBL_LOG_ERR("Unknown EntityID:%u + AttrID:%u",
           update->entity_id, update->attribute_id);
 }
 
@@ -561,7 +561,7 @@ void ams_handle_service_discovered(BLECharacteristic *characteristics) {
   PBL_ASSERTN(characteristics);
 
   if (s_ams_client->characteristics[0] != BLE_CHARACTERISTIC_INVALID) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Multiple AMS instances registered!?");
+    PBL_LOG_WRN("Multiple AMS instances registered!?");
     return;
   }
 
@@ -599,12 +599,12 @@ void ams_handle_subscribe(BLECharacteristic subscribed_characteristic,
 
   if (error != BLEGATTErrorSuccess) {
     prv_analytics_log_event_with_info(AMSAnalyticsEventErrorSubscribe, error);
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to subscribe AMS");
+    PBL_LOG_ERR("Failed to subscribe AMS");
     return;
   }
-  PBL_LOG(LOG_LEVEL_INFO, "Hurray! AMS subscribed");
+  PBL_LOG_INFO("Hurray! AMS subscribed");
   if (!prv_set_connected(true)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Another music service was already connected. Aborting AMS setup.");
+    PBL_LOG_ERR("Another music service was already connected. Aborting AMS setup.");
     return;
   }
   prv_register_next_entity(NULL);
@@ -632,12 +632,12 @@ void ams_handle_write_response(BLECharacteristic characteristic, BLEGATTError er
   }
   const AMSEntityID entity_id = s_ams_client->next_entity_to_register;
   if (has_error) {
-    PBL_LOG(LOG_LEVEL_ERROR, "AMS Failed to register entity_id=%u: %u", entity_id, error);
+    PBL_LOG_ERR("AMS Failed to register entity_id=%u: %u", entity_id, error);
     // TODO: Log error event
     // Don't retry here, chances of succeeding are slim.
     return;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "AMS Registered for entity_id=%u", entity_id);
+  PBL_LOG_DBG("AMS Registered for entity_id=%u", entity_id);
   ++s_ams_client->next_entity_to_register;
   prv_register_next_entity(NULL);
 }
@@ -646,7 +646,7 @@ void ams_handle_read_or_notification(BLECharacteristic characteristic, const uin
                                      size_t value_length, BLEGATTError error) {
   if (!s_ams_client ||
       s_ams_client->characteristics[AMSCharacteristicEntityUpdate] != characteristic) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unexpected characteristic (s_ams_client=%p)", s_ams_client);
+    PBL_LOG_ERR("Unexpected characteristic (s_ams_client=%p)", s_ams_client);
     return;
   }
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, value, value_length);
@@ -674,7 +674,7 @@ static void prv_send_command_kernel_main_task_cb(void *data) {
                                        (const uint8_t *) &command_id, 1, GAPLEClientKernel);
   const bool has_error = (error != BTErrnoOK);
   if (has_error) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Couldn't write command: %d", error);
+    PBL_LOG_ERR("Couldn't write command: %d", error);
     prv_analytics_log_event_with_info(AMSAnalyticsEventErrorSendRemoteCommand, error);
   }
 }

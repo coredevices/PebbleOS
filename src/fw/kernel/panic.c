@@ -17,7 +17,7 @@ void launcher_panic(uint32_t error_code) {
 
   s_current_error = error_code;
 
-  PBL_LOG(LOG_LEVEL_ERROR, "!!!SAD WATCH 0x%"PRIX32" SAD WATCH!!!", error_code);
+  PBL_LOG_ERR("!!!SAD WATCH 0x%"PRIX32" SAD WATCH!!!", error_code);
 
   if (modal_manager_get_top_window()) {
     modal_manager_pop_all();

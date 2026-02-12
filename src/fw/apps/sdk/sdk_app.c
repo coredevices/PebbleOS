@@ -89,7 +89,7 @@ static void prv_handle_tick_timer(struct tm *tick_time, TimeUnits units_changed)
 static void prv_launch_last_installed_app(ClickRecognizerRef recognizer, void *data) {
   const AppInstallId app_id = shell_sdk_get_last_installed_app();
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Last installed app is %"PRId32, app_id);
+  PBL_LOG_DBG("Last installed app is %"PRId32, app_id);
 
   if (app_id != INSTALL_ID_INVALID) {
     app_manager_put_launch_app_event(&(AppLaunchEventConfig) { .id = app_id });
@@ -104,10 +104,10 @@ static void prv_launch_timeline(ClickRecognizerRef recognizer, void *data) {
 
   const bool is_up = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
   if (is_up) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Launching timeline in past mode.");
+    PBL_LOG_DBG("Launching timeline in past mode.");
     s_timeline_args.direction = TimelineIterDirectionPast;
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Launching timeline in future mode.");
+    PBL_LOG_DBG("Launching timeline in future mode.");
     s_timeline_args.direction = TimelineIterDirectionFuture;
   }
 

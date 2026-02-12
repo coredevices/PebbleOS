@@ -20,12 +20,12 @@ typedef struct {
 static void callback_a(int index, void *ctx) {
   (void)index;
   (void)ctx;
-  PBL_LOG(LOG_LEVEL_DEBUG, "A called back");
+  PBL_LOG_DBG("A called back");
 }
 
 static void other_callback(int index, void *ctx) {
   (void)ctx;
-  PBL_LOG(LOG_LEVEL_DEBUG, "other callback: %d", index);
+  PBL_LOG_DBG("other callback: %d", index);
 }
 
 static void poll_callback(int index, void *ctx) {

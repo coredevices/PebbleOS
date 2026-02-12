@@ -184,7 +184,7 @@ static bool prv_write_register(uint16_t register_address, uint8_t datum) {
 static void prv_handle_charge_state_change(void *null) {
   const bool is_charging = pmic_is_charging();
   const bool is_connected = pmic_is_usb_connected();
-  PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 Interrupt: Charging? %s Plugged? %s",
+  PBL_LOG_DBG("nPM1300 Interrupt: Charging? %s Plugged? %s",
       is_charging ? "YES" : "NO", is_connected ? "YES" : "NO");
 
   if (is_connected && NPM1300_CONFIG.vbus_current_lim0 != 0) {
@@ -193,7 +193,7 @@ static void prv_handle_charge_state_change(void *null) {
     ok &= prv_write_register(PmicRegisters_VBUSIN_TASKUPDATELIMSW,
       PmicRegisters_VBUSIN_TASKUPDATELIMSW__EN);
     if (!ok) {
-      PBL_LOG(LOG_LEVEL_ERROR, "config vbus limite0 failed");
+      PBL_LOG_ERR("config vbus limite0 failed");
     }
   }
 
@@ -238,10 +238,10 @@ bool pmic_init(void) {
 #if PLATFORM_ASTERIX
   uint8_t buck_out;
   if (!prv_read_register(PmicRegisters_BUCK_BUCK1NORMVOUT, &buck_out)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "failed to read BUCK1NORMVOUT");
+    PBL_LOG_ERR("failed to read BUCK1NORMVOUT");
     return false;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "found the nPM1300, BUCK1NORMVOUT = 0x%x", buck_out);
+  PBL_LOG_DBG("found the nPM1300, BUCK1NORMVOUT = 0x%x", buck_out);
   
   // work around erratum 27 for nPM1300 rev1, which we tripped in the bootloader (oops)
   ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, 9 /* 1.9V */);
@@ -252,7 +252,7 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, 3 /* both of them, load */);
   
   if (!prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &val)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "failed to read LDSWSTATUS");
+    PBL_LOG_ERR("failed to read LDSWSTATUS");
     return false;
   }
 
@@ -294,7 +294,7 @@ bool pmic_init(void) {
 
   if ((NPM1300_CONFIG.chg_current_ma < 32U) || (NPM1300_CONFIG.chg_current_ma > 800U) ||
       (NPM1300_CONFIG.chg_current_ma % 2U != 0U)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid charge current: %d mA", NPM1300_CONFIG.chg_current_ma);
+    PBL_LOG_ERR("Invalid charge current: %d mA", NPM1300_CONFIG.chg_current_ma);
     return false;
   }
 
@@ -352,7 +352,7 @@ bool pmic_init(void) {
     ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
                              PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid termination current: %d", NPM1300_CONFIG.term_current_pct);
+    PBL_LOG_ERR("Invalid termination current: %d", NPM1300_CONFIG.term_current_pct);
     return false;
   }
 
@@ -375,7 +375,7 @@ bool pmic_init(void) {
   prv_configure_interrupts();
 
   if (!ok) {
-    PBL_LOG(LOG_LEVEL_ERROR, "one or more PMIC transactions failed");
+    PBL_LOG_ERR("one or more PMIC transactions failed");
   }
 
   return ok;
@@ -384,12 +384,12 @@ bool pmic_init(void) {
 bool pmic_power_off(void) {
   // TODO: review implementation, see GH-238
   if (pmic_is_usb_connected()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "USB is connected, cannot power off");
+    PBL_LOG_ERR("USB is connected, cannot power off");
     return false;
   }
 
   if (!prv_write_register(PmicRegisters_SHIP_TASKENTERSHIPMODE, 1)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to enter ship mode");
+    PBL_LOG_ERR("Failed to enter ship mode");
     return false;
   }
 
@@ -788,7 +788,7 @@ static bool dischg_limit_ma_set(uint32_t dischg_limit_ma) {
       return ret;
     }
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid discharge limit: %" PRIu32 " mA", dischg_limit_ma);
+    PBL_LOG_ERR("Invalid discharge limit: %" PRIu32 " mA", dischg_limit_ma);
     return false;
   }
 

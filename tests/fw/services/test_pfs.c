@@ -683,7 +683,7 @@ void test_pfs__migration(void) {
   int original_page_count = num_pages();
   ftl_populate_region_list();
   // make sure something was added
-  PBL_LOG(LOG_LEVEL_DEBUG, "original pages %u, num pages: %u", original_page_count, num_pages());
+  PBL_LOG_DBG("original pages %u, num pages: %u", original_page_count, num_pages());
   cl_assert(original_page_count < num_pages());
 
   for (int i = 0; i < original_page_count; i++) {

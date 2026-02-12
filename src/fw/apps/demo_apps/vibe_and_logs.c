@@ -19,7 +19,7 @@ TimerID s_sys_timer = TIMER_INVALID_ID;
 
 static void app_timer_callback(void *data) {
   for (int i=0; i<40; i++) {
-    PBL_LOG(LOG_LEVEL_INFO, "%d Running app timer callback", i);
+    PBL_LOG_INFO("%d Running app timer callback", i);
     vibes_short_pulse();
   }
   s_app_timer = app_timer_register(100 /* milliseconds */, app_timer_callback, NULL);
@@ -28,7 +28,7 @@ static void app_timer_callback(void *data) {
 #if 0
 static void sys_timer_callback(void* data) {
   for (int i=0; i<1; i++) {
-    PBL_LOG(LOG_LEVEL_INFO, "%d Running sys timer callback", i);
+    PBL_LOG_INFO("%d Running sys timer callback", i);
     vibes_short_pulse();
   }
   new_timer_start(s_sys_timer, 20, sys_timer_callback, NULL, 0);

@@ -27,7 +27,7 @@
 // Helpers
 
 static void fw_update_reboot(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Rebooting to apply new firmware!");
+  PBL_LOG_DBG("Rebooting to apply new firmware!");
 
   boot_bit_set(BOOT_BIT_NEW_FW_AVAILABLE);
 
@@ -90,7 +90,7 @@ static void set_text(Window *window, char *message) {
   AppData *data = window_get_user_data(window);
   TextLayer *text = &data->text;
   text_layer_set_text(text, message);
-  PBL_LOG(LOG_LEVEL_DEBUG, "%s", message);
+  PBL_LOG_DBG("%s", message);
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, Window *window) {

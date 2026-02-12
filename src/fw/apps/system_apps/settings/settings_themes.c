@@ -136,7 +136,7 @@ static void prv_push_apps_color_menu(SettingsThemesData *data) {
   if (selected < 0) {
     // Invalid color stored - fall back to default instead of crashing
     // This can happen if an invalid color was synced from the phone
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid apps menu color, using default");
+    PBL_LOG_WRN("Invalid apps menu color, using default");
     selected = 0;
   }
   OptionMenu * const option_menu = settings_option_menu_create(
@@ -198,7 +198,7 @@ static void prv_push_settings_color_menu(SettingsThemesData *data) {
   if (selected < 0) {
     // Invalid color stored - fall back to default instead of crashing
     // This can happen if an invalid color was synced from the phone
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid settings menu color, using default");
+    PBL_LOG_WRN("Invalid settings menu color, using default");
     selected = 0;
   }
   OptionMenu * const option_menu = settings_option_menu_create(

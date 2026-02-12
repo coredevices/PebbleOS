@@ -76,7 +76,7 @@ void app_message_inbox_receive(CommSession *session, AppMessagePush *push_messag
                                AppInboxConsumerInfo *consumer_info) {
   // Test if the data is long enough to contain a push message:
   if (length < sizeof(AppMessagePush)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Too short");
+    PBL_LOG_ERR("Too short");
     return;
   }
 

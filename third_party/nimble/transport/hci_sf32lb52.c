@@ -78,7 +78,7 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
     break;
   }
 
-  PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, "%s, %s %" PRIu16, type_str,
+  PBL_LOG_D_DBG(LOG_DOMAIN_BT_STACK, "%s, %s %" PRIu16, type_str,
             (h4tl_packet == H4TL_PACKET_HOST) ? "TX" : "RX", len);
   PBL_HEXDUMP_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, data, len);
 }
@@ -163,13 +163,13 @@ static int prv_config_ipc(void) {
 
   s_ipc_port = ipc_queue_init(&q_cfg);
   if (s_ipc_port == IPC_QUEUE_INVALID_HANDLE) {
-    PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_ERROR, "ipc_queue_init failed");
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT_STACK, "ipc_queue_init failed");
     return -1;
   }
 
   ret = ipc_queue_open(s_ipc_port);
   if (ret != 0) {
-    PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_ERROR, "ipc_queue_open failed (%" PRId32 ")", ret);
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT_STACK, "ipc_queue_open failed (%" PRId32 ")", ret);
     return -1;
   }
 
@@ -190,7 +190,7 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
     cmd_complete = (void *)ev->data;
 
     if (ev->opcode == BLE_HCI_EVCODE_COMMAND_COMPLETE) {
-      PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, "CMD complete %x", cmd_complete->opcode);
+      PBL_LOG_D_DBG(LOG_DOMAIN_BT_STACK, "CMD complete %x", cmd_complete->opcode);
       // NOTE: do not confuse NimBLE with SF32LB52 vendor specific command
       if (cmd_complete->opcode == BLE_HCI_EXT_SF32LB52_BLE_READY) {
         break;
@@ -281,7 +281,7 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI CMD header");
+    PBL_LOG_ERR("Failed to write HCI CMD header");
     err = BLE_ERR_MEM_CAPACITY;
     goto exit;
   }
@@ -289,7 +289,7 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
   written = ipc_queue_write(s_ipc_port, cmd, sizeof(*cmd) + cmd->length,
                             IPC_TIMEOUT_TICKS);
   if (written != sizeof(*cmd) + cmd->length) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI CMD data");
+    PBL_LOG_ERR("Failed to write HCI CMD data");
     err = BLE_ERR_MEM_CAPACITY;
     goto exit;
   }
@@ -310,7 +310,7 @@ int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1U, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ACL header");
+    PBL_LOG_ERR("Failed to write HCI ACL header");
     err = BLE_ERR_MEM_CAPACITY;
     goto exit;
   }
@@ -319,7 +319,7 @@ int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   while (x != NULL) {
     written = ipc_queue_write(s_ipc_port, x->om_data, x->om_len, IPC_TIMEOUT_TICKS);
     if (written != x->om_len) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ACL data");
+      PBL_LOG_ERR("Failed to write HCI ACL data");
       err = BLE_ERR_MEM_CAPACITY;
       goto exit;
     }
@@ -343,7 +343,7 @@ int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ISO header");
+    PBL_LOG_ERR("Failed to write HCI ISO header");
     err = BLE_ERR_MEM_CAPACITY;
     goto exit;
   }
@@ -352,7 +352,7 @@ int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   while (x != NULL) {
     written = ipc_queue_write(s_ipc_port, x->om_data, x->om_len, IPC_TIMEOUT_TICKS);
     if (written != x->om_len) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to write HCI ISO data");
+      PBL_LOG_ERR("Failed to write HCI ISO data");
       err = BLE_ERR_MEM_CAPACITY;
       goto exit;
     }

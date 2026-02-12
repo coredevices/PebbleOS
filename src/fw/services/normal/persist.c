@@ -63,7 +63,7 @@ static status_t prv_get_file_name(char *name, size_t buf_len, const Uuid *uuid) 
   int pid = persist_map_auto_id(uuid);
   if (FAILED(pid)) {
     // Attempting to debug persist map failure
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to get pid! %d", pid);
+    PBL_LOG_WRN("Failed to get pid! %d", pid);
     persist_map_dump();
     return pid;
   }

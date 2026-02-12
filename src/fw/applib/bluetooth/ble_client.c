@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "ble_client.h"
 
 #include "ble_app_support.h"
@@ -174,7 +172,7 @@ static void prv_handle_characteristic_write(const PebbleBLEGATTClientEvent *e) {
 }
 
 static void prv_handle_characteristic_subscribe(const PebbleBLEGATTClientEvent *e) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "TODO: GATT Client Event, subtype=%u", e->subtype);
+  PBL_LOG_DBG("TODO: GATT Client Event, subtype=%u", e->subtype);
 }
 
 static void prv_handle_descriptor_read(const PebbleBLEGATTClientEvent *e) {

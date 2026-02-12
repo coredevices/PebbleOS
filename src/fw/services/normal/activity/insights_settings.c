@@ -170,7 +170,7 @@ void activity_insights_settings_init(void) {
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_ERROR, "Failed to create activity insights settings file");
+  PBL_LOG_ERR("Failed to create activity insights settings file");
 }
 
 uint16_t activity_insights_settings_get_version(void) {
@@ -203,13 +203,13 @@ bool activity_insights_settings_read(const char *insight_name,
     if (settings_file_get(&file,
                           insight_name, strlen(insight_name),
                           settings_out, sizeof(*settings_out)) != S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Didn't find insight with key %s", insight_name);
+      PBL_LOG_DBG("Didn't find insight with key %s", insight_name);
       goto close;
     }
 
     if (settings_out->version != ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION) {
       // versions don't match, bail out!
-      PBL_LOG(LOG_LEVEL_WARNING, "activity insights struct version mismatch");
+      PBL_LOG_WRN("activity insights struct version mismatch");
       goto close;
     }
 
@@ -222,7 +222,7 @@ close:
     // Use default value if we didn't find anything else
     for (unsigned i = 0; i < ARRAY_LENGTH(AIS_DEFAULTS); ++i) {
       if (strcmp(insight_name, AIS_DEFAULTS[i].key) == 0) {
-        PBL_LOG(LOG_LEVEL_DEBUG, "Using default for insight %s", insight_name);
+        PBL_LOG_DBG("Using default for insight %s", insight_name);
         *settings_out = AIS_DEFAULTS[i].default_val;
         rv = true;
       }
@@ -243,7 +243,7 @@ bool activity_insights_settings_write(const char *insight_name,
     if (settings_file_set(&file,
                           insight_name, strlen(insight_name),
                           settings, sizeof(*settings)) != S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Unable to save insight setting with key %s", insight_name);
+      PBL_LOG_WRN("Unable to save insight setting with key %s", insight_name);
     } else {
       rv = true;
     }
