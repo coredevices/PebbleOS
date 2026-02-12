@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 DBGSERIAL_PORT_SETTINGS = dict(baudrate=1000000, timeout=0.1,
-                               interCharTimeout=0.0001)
+                               interCharTimeout=0.0001, rtscts=False)
 
 
 def get_dbgserial_tty():
@@ -83,6 +83,8 @@ class Interface(object):
         elif url == 'qemu':
             url = 'socket://localhost:12345'
         ser = serial.serial_for_url(url, **DBGSERIAL_PORT_SETTINGS)
+        # do not assert RTS, it is used on some programmers to reset chip
+        ser.rts = False
 
         if url.startswith('socket://'):
             # interCharTimeout doesn't apply to sockets, so shrink the receive
