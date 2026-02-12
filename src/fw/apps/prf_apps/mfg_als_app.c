@@ -5,13 +5,14 @@
 #include "mfg_als_app.h"
 
 #include "applib/app.h"
-#include "applib/tick_timer_service.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window_private.h"
+#include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
+#include "services/common/evented_timer.h"
 #include "services/common/light.h"
 #include "system/logging.h"
 
@@ -32,8 +33,9 @@
 #endif
 
 // Test parameters
-#define COUNTDOWN_SECONDS 5
-#define SAMPLE_DURATION_SECONDS 5
+#define COUNTDOWN_MS 5000
+#define SAMPLE_DURATION_MS 5000
+#define SAMPLE_INTERVAL_MS 100
 
 typedef enum {
   ALSStateWaitForStart = 0,
@@ -44,6 +46,9 @@ typedef enum {
 } ALSTestState;
 
 #define AMBIENT_READING_STR_LEN 64
+
+static EventedTimerID s_timer;
+
 typedef struct {
   Window *window;
   TextLayer *status_text_layer;
@@ -52,14 +57,16 @@ typedef struct {
   char ambient_reading[AMBIENT_READING_STR_LEN];
 
   ALSTestState test_state;
-  uint32_t countdown_remaining;
-  uint32_t samples_remaining;
+  RtcTicks state_start_time;
   uint64_t als_sum;
   uint32_t als_sample_count;
   uint32_t als_average;
 } AmbientLightAppData;
 
-static void prv_update_display(AmbientLightAppData *data) {
+static void prv_update_display(void *context) {
+  AmbientLightAppData *data = context;
+  uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->state_start_time);
+
   switch (data->test_state) {
     case ALSStateWaitForStart:
       snprintf(data->status_text, AMBIENT_READING_STR_LEN, "ALS Test\nPress CENTER\nto start");
@@ -69,15 +76,44 @@ static void prv_update_display(AmbientLightAppData *data) {
     case ALSStateCountdown:
       snprintf(data->status_text, AMBIENT_READING_STR_LEN, "Place in\nlight box");
       snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN, "Starting in: %"PRIu32"s",
-               data->countdown_remaining);
+               (COUNTDOWN_MS - elapsed) / 1000 + 1);
+      if (elapsed >= COUNTDOWN_MS) {
+        // Start sampling
+        data->test_state = ALSStateSampling;
+        data->state_start_time = rtc_get_ticks();
+        data->als_sum = 0;
+        data->als_sample_count = 0;
+        PBL_LOG(LOG_LEVEL_INFO, "ALS sampling started");
+      }
       break;
 
     case ALSStateSampling: {
-      uint32_t current_level = ambient_light_get_light_level();
+      // Take a sample
+      uint32_t level = ambient_light_get_light_level();
+      data->als_sum += level;
+      data->als_sample_count++;
+
       snprintf(data->status_text, AMBIENT_READING_STR_LEN, "Sampling...");
       snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN,
                "Time: %"PRIu32"s\nCurrent: %"PRIu32"\nSamples: %"PRIu32,
-               data->samples_remaining, current_level, data->als_sample_count);
+               (SAMPLE_DURATION_MS - elapsed) / 1000 + 1, level, data->als_sample_count);
+
+      if (elapsed >= SAMPLE_DURATION_MS) {
+        // Calculate average and determine pass/fail
+        data->als_average = (uint32_t)(data->als_sum / data->als_sample_count);
+
+        PBL_LOG(LOG_LEVEL_INFO, "ALS test complete - Average: %"PRIu32" (samples: %"PRIu32")",
+                data->als_average, data->als_sample_count);
+
+        if (data->als_average >= ALS_MIN_VALUE && data->als_average <= ALS_MAX_VALUE) {
+          data->test_state = ALSStatePass;
+          PBL_LOG(LOG_LEVEL_INFO, "ALS test PASSED");
+        } else {
+          data->test_state = ALSStateFail;
+          PBL_LOG(LOG_LEVEL_ERROR, "ALS test FAILED - Average %"PRIu32" outside range %d-%d",
+                  data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
+        }
+      }
       break;
     }
 
@@ -100,64 +136,6 @@ static void prv_update_display(AmbientLightAppData *data) {
   text_layer_set_text(data->reading_text_layer, data->ambient_reading);
 }
 
-static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-  AmbientLightAppData *data = app_state_get_user_data();
-
-  switch (data->test_state) {
-    case ALSStateCountdown:
-      if (data->countdown_remaining > 0) {
-        data->countdown_remaining--;
-        if (data->countdown_remaining == 0) {
-          // Start sampling
-          data->test_state = ALSStateSampling;
-          data->samples_remaining = SAMPLE_DURATION_SECONDS;
-          data->als_sum = 0;
-          data->als_sample_count = 0;
-          PBL_LOG(LOG_LEVEL_INFO, "ALS sampling started");
-        }
-      }
-      break;
-
-    case ALSStateSampling: {
-      // Take a sample
-      uint32_t level = ambient_light_get_light_level();
-      data->als_sum += level;
-      data->als_sample_count++;
-      PBL_LOG(LOG_LEVEL_INFO, "ALS sample %"PRIu32": %"PRIu32,
-              data->als_sample_count, level);
-
-      if (data->samples_remaining > 0) {
-        data->samples_remaining--;
-        if (data->samples_remaining == 0) {
-          // Calculate average and determine pass/fail
-          data->als_average = (uint32_t)(data->als_sum / data->als_sample_count);
-
-          PBL_LOG(LOG_LEVEL_INFO, "ALS test complete - Average: %"PRIu32" (samples: %"PRIu32")",
-                  data->als_average, data->als_sample_count);
-
-          if (data->als_average >= ALS_MIN_VALUE && data->als_average <= ALS_MAX_VALUE) {
-            data->test_state = ALSStatePass;
-            PBL_LOG(LOG_LEVEL_INFO, "ALS test PASSED");
-          } else {
-            data->test_state = ALSStateFail;
-            PBL_LOG(LOG_LEVEL_ERROR, "ALS test FAILED - Average %"PRIu32" outside range %d-%d",
-                    data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
-          }
-        }
-      }
-      break;
-    }
-
-    case ALSStateWaitForStart:
-    case ALSStatePass:
-    case ALSStateFail:
-    default:
-      // No action needed
-      break;
-  }
-
-  prv_update_display(data);
-}
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   AmbientLightAppData *data = app_state_get_user_data();
@@ -168,10 +146,9 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
 
     // Start countdown
     data->test_state = ALSStateCountdown;
-    data->countdown_remaining = COUNTDOWN_SECONDS;
+    data->state_start_time = rtc_get_ticks();
 
-    PBL_LOG(LOG_LEVEL_INFO, "ALS test started - countdown %d seconds", COUNTDOWN_SECONDS);
-    prv_update_display(data);
+    PBL_LOG(LOG_LEVEL_INFO, "ALS test started - countdown %d ms", COUNTDOWN_MS);
   } else if (data->test_state == ALSStatePass || data->test_state == ALSStateFail) {
     // Exit app on second press
     app_window_stack_pop(true);
@@ -210,13 +187,10 @@ static void prv_handle_init(void) {
 
   // Initialize state
   data->test_state = ALSStateWaitForStart;
-  data->countdown_remaining = 0;
-  data->samples_remaining = 0;
+  data->state_start_time = rtc_get_ticks();
   data->als_sum = 0;
   data->als_sample_count = 0;
   data->als_average = 0;
-
-  prv_update_display(data);
 
   // Set up click handlers
   window_set_click_config_provider(data->window, prv_config_provider);
@@ -224,8 +198,8 @@ static void prv_handle_init(void) {
   app_state_set_user_data(data);
   app_window_stack_push(data->window, true);
 
-  // Subscribe to second tick for timing
-  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
+  // Register evented timer for 100ms updates
+  s_timer = evented_timer_register(SAMPLE_INTERVAL_MS, true /* repeating */, prv_update_display, data);
 
   PBL_LOG(LOG_LEVEL_INFO, "ALS test initialized - range: %d-%d", ALS_MIN_VALUE, ALS_MAX_VALUE);
 }
@@ -233,8 +207,8 @@ static void prv_handle_init(void) {
 static void prv_handle_deinit(void) {
   AmbientLightAppData *data = app_state_get_user_data();
 
-  // Unsubscribe from tick timer
-  tick_timer_service_unsubscribe();
+  // Cancel evented timer
+  evented_timer_cancel(s_timer);
 
   text_layer_destroy(data->status_text_layer);
   text_layer_destroy(data->reading_text_layer);
