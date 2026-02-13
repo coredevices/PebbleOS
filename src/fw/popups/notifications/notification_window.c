@@ -1389,48 +1389,50 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
 }
 
 static void prv_handle_notification_added_common(Uuid *id, NotificationType type) {
+  NotificationWindowData *data = &s_notification_window_data;
+
   if (!alerts_should_notify_for_type(prv_alert_type_for_notification_type(type))) {
     return;
   }
 
+  alerts_incoming_alert_analytics();
+
   if (do_not_disturb_is_active() && 
       alerts_preferences_dnd_get_show_notifications() == DndNotificationModeHide) {
-    alerts_incoming_alert_analytics();
     return;
   }
-
-  NotificationWindowData *data = &s_notification_window_data;
 
   // will fail and return early if already init'ed.
   prv_init_notification_window(true /*is_modal*/);
 
-  if (data->is_modal) {
-    WindowStack *window_stack = modal_manager_get_window_stack(NOTIFICATION_PRIORITY);
-    bool is_new = !window_stack_contains_window(window_stack, &data->window);
-    bool in_view = window_is_on_screen(&data->window);
+  if (!data->is_modal) {
+    return;
+  }
 
-    prv_notification_window_add_notification(id, type);
+  WindowStack *window_stack = modal_manager_get_window_stack(NOTIFICATION_PRIORITY);
+  bool is_new = !window_stack_contains_window(window_stack, &data->window);
+  bool in_view = window_is_on_screen(&data->window);
 
-    if (is_new) {
-      data->first_notif_loaded = false;
-      prv_show_peek_for_notification(data, id, true /* is_first_notification */);
-      modal_window_push(&data->window, NOTIFICATION_PRIORITY, true /* animated */);
-    } else if (in_view) {
-      // Only focus the new notification if it becomes the new front of the list.
-      // In DND mode notifications can get inserted into the middle of the list and we don't
-      // want to change focus in this use case
-      if (notifications_presented_list_current() != notifications_presented_list_first()) {
-        const bool should_animate = !do_not_disturb_is_active();
-        notification_window_focus_notification(id, should_animate);
-      } else {
-        // If we are inserting into the middle of this list, just reaload the swap layer so the
-        // number of notifications displayed is correct
-        prv_reload_swap_layer(data);
-      }
+  prv_notification_window_add_notification(id, type);
+
+  if (is_new) {
+    data->first_notif_loaded = false;
+    prv_show_peek_for_notification(data, id, true /* is_first_notification */);
+    modal_window_push(&data->window, NOTIFICATION_PRIORITY, true /* animated */);
+  } else if (in_view) {
+    // Only focus the new notification if it becomes the new front of the list.
+    // In DND mode notifications can get inserted into the middle of the list and we don't
+    // want to change focus in this use case
+    if (notifications_presented_list_current() != notifications_presented_list_first()) {
+      const bool should_animate = !do_not_disturb_is_active();
+      notification_window_focus_notification(id, should_animate);
+    } else {
+      // If we are inserting into the middle of this list, just reaload the swap layer so the
+      // number of notifications displayed is correct
+      prv_reload_swap_layer(data);
     }
   }
 
-  alerts_incoming_alert_analytics();
   if (alerts_should_vibrate_for_type(prv_alert_type_for_notification_type(type))) {
     // Check if we should delay the vibration until the animation completes
     if (alerts_preferences_get_notification_vibe_delay() && data->peek_layer) {
