@@ -10,7 +10,6 @@
 #include "drivers/nrf5/i2c_hal_definitions.h"
 #include "drivers/nrf5/spi_definitions.h"
 #include "drivers/nrf5/uart_definitions.h"
-#include "drivers/pmic/npm1300.h"
 #include "drivers/pwm.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/rtc.h"
@@ -213,6 +212,7 @@ const Npm1300Config NPM1300_CONFIG = {
   .dischg_limit_ma = 200,
   .term_current_pct = 10,
   .thermistor_beta = 3380,
+  .vterm_setting = NPM1300_VTERM_4V20,
 };
 
 void board_early_init(void) {

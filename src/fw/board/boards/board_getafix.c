@@ -463,6 +463,7 @@ const Npm1300Config NPM1300_CONFIG = {
   .thermistor_beta = 3380,
   .vbus_current_lim0 = 500,
   .vbus_current_startup = 500,
+  .vterm_setting = NPM1300_VTERM_4V45,
 };
 
 const BoardConfigPower BOARD_CONFIG_POWER = {

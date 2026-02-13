@@ -580,6 +580,7 @@ const Npm1300Config NPM1300_CONFIG = {
   .thermistor_beta = 3380,
   .vbus_current_lim0 = 500,
   .vbus_current_startup = 500,
+  .vterm_setting = NPM1300_VTERM_4V35,
 };
 
 static const I2CSlavePort s_i2c_w1160 = {
