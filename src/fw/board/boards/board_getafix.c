@@ -372,6 +372,7 @@ static const TouchSensor s_touch_cst816 = {
     .int_exti = {
         .peripheral = hwp_gpio1,
         .gpio_pin = 38,
+        .pull = GPIO_PuPd_UP,
     },
     .reset = {
         .gpio = hwp_gpio1,
