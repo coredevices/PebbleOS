@@ -3,8 +3,27 @@
 
 #pragma once
 
+//! Vterm setting
+typedef enum {
+  NPM1300_VTERM_4V00 = 0x4U,
+  NPM1300_VTERM_4V20 = 0x8U,
+  NPM1300_VTERM_4V35 = 0xBU,
+  NPM1300_VTERM_4V45 = 0xDU,
+} Npm1300Vterm_t;
+
+//! LDO2 mode
+typedef enum {
+  NPM1300_LDO2_MODE_LDSW = 0,
+  NPM1300_LDO2_MODE_LDO = 1,
+} Npm1300Ldo2Mode_t;
+
+
 //! nPM1300 configuration
 typedef struct {
+  
+  //! Vterm setting
+  Npm1300Vterm_t vterm_setting;
+
   //! Charge current (32-800mA, 2mA steps)
   uint16_t chg_current_ma;
   //! Discharge limit (200mA or 1000mA)
