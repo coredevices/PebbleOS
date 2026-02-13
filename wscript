@@ -1099,7 +1099,12 @@ def console(ctx):
         os.system("python ./tools/pulse_console.py -t %s" % tty)
     else:
         baudrate = ctx.options.baudrate or 230400
-        os.system("python ./tools/log_hashing/miniterm_co.py %s %d" % (tty, baudrate))
+        # NOTE: force RTS to be de-asserted, as on some boards (e.g.
+        # pblprog-sifli) RTS is used to reset the board SoC. On some OS and/or
+        # drivers, RTS may activate automatically, as soon as the port is
+        # opened. There may be a glitch on RTS when rts is set differently from
+        # their default value.
+        os.system("python ./tools/log_hashing/miniterm_co.py %s %d --rts 0" % (tty, baudrate))
 
 
 class ConsoleCommand(BuildContext):
