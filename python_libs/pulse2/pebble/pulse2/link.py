@@ -82,9 +82,14 @@ class Interface(object):
             url = get_dbgserial_tty()
         elif url == 'qemu':
             url = 'socket://localhost:12345'
-        ser = serial.serial_for_url(url, **DBGSERIAL_PORT_SETTINGS)
-        # do not assert RTS, it is used on some programmers to reset chip
+        # NOTE: force RTS to be de-asserted, as on some boards (e.g.
+        # pblprog-sifli) RTS is used to reset the board SoC. On some OS and/or
+        # drivers, RTS may activate automatically, as soon as the port is
+        # opened. There may be a glitch on RTS when rts is set differently from
+        # their default value.
+        ser = serial.serial_for_url(url, **DBGSERIAL_PORT_SETTINGS, do_not_open=True)
         ser.rts = False
+        ser.open()
 
         if url.startswith('socket://'):
             # interCharTimeout doesn't apply to sockets, so shrink the receive
