@@ -22,14 +22,17 @@ extern uint8_t __retm_ro_load_start[];
 extern uint8_t __retm_ro_start[];
 extern uint8_t __retm_ro_end[];
 
+extern uint8_t __isr_stack_start__[];
+
 extern int main(void);
 
 NAKED_FUNC NORETURN Reset_Handler(void) {
   SCB_EnableICache();
   SCB_EnableDCache();
 
-  // FIXME(SF32LB52): Set stack limits
-  __set_MSPLIM((uint32_t)(0));
+  // Set MSPLIM to protect the ISR stack
+  __set_MSPLIM((uint32_t)__isr_stack_start__);
+  // PSPLIM is set per-task by FreeRTOS during context switches
   __set_PSPLIM((uint32_t)(0));
 
   // Copy data section from flash to RAM
