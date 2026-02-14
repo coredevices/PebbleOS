@@ -87,6 +87,11 @@
       "md_fn": "timeline_get_app_info"
     },
     {
+      "id": -11,
+      "enum": "TWO_CLICKS",
+      "md_fn": "two_clicks_launcher_get_app_info"
+    },
+    {
       "id": -12,
       "enum": "BOUNCING_BOX_DEMO",
       "md_fn": "bouncing_box_demo_get_app_info",
