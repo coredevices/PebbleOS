@@ -100,6 +100,10 @@ static const char *s_syncable_settings[] = {
   "heartRatePreferences",
 #endif
 
+  // Menu wrap around preferences
+  "menuScrollWrapAround",
+  "menuScrollVibeBehavior",
+
   // Worker preferences
   "workerId",
 };
