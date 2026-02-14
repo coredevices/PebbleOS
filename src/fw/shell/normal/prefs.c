@@ -154,6 +154,149 @@ static QuickLaunchPreference s_quick_launch_single_click_down = {
   .uuid = TIMELINE_UUID_INIT,
 };
 
+// --- All the Quicklaunch 2-Clicks prefs ---
+// X then Y
+// - X : up, down, hold-back, hold-up, hold-select, hold-down ('hold' is long press)
+// - Y : up, select, down
+
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_UP_UP "ql2cUpUp"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_UP_SELECT "ql2cUpSelect"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_UP_DOWN "ql2cUpDown"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_DOWN_UP "ql2cDownUp"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_DOWN_SELECT "ql2cDownSelect"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_DOWN_DOWN "ql2cDownDown"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HBACK_UP "ql2cHBackUp"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HBACK_SELECT "ql2cHBackSelect"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HBACK_DOWN "ql2cHBackDown"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HUP_UP "ql2cHUpUp"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HUP_SELECT "ql2cHUpSelect"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HUP_DOWN "ql2cHUpDown"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HSELECT_UP "ql2cHSelectUp"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HSELECT_SELECT "ql2cHSelectSelect"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HSELECT_DOWN "ql2cHSelectDown"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HDOWN_UP "ql2cHDownUp"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HDOWN_SELECT "ql2cHDownSelect"
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HDOWN_DOWN "ql2cHDownDown"
+
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_TAP(first_button, second_button)             \
+(first_button == BUTTON_ID_UP ?                                                       \
+(second_button == BUTTON_ID_UP ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_UP_UP :             \
+  (second_button == BUTTON_ID_SELECT ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_UP_SELECT :   \
+    PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_UP_DOWN)) :                                      \
+(second_button == BUTTON_ID_UP ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_DOWN_UP :           \
+  (second_button == BUTTON_ID_SELECT ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_DOWN_SELECT : \
+    PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_DOWN_DOWN))                                      \
+)
+#define PREF_KEY_QUICK_LAUNCH_TWO_CLICKS(first_button, second_button) \
+(first_button == BUTTON_ID_BACK ? \
+(second_button == BUTTON_ID_UP ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HBACK_UP :             \
+  (second_button == BUTTON_ID_SELECT ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HBACK_SELECT :   \
+    PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HBACK_DOWN)) :                                      \
+(first_button == BUTTON_ID_UP ? \
+(second_button == BUTTON_ID_UP ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HUP_UP :             \
+  (second_button == BUTTON_ID_SELECT ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HUP_SELECT :   \
+    PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HUP_DOWN)) :                                      \
+(first_button == BUTTON_ID_SELECT ? \
+(second_button == BUTTON_ID_UP ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HSELECT_UP :             \
+  (second_button == BUTTON_ID_SELECT ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HSELECT_SELECT :   \
+    PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HSELECT_DOWN)) :                                      \
+(second_button == BUTTON_ID_UP ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HDOWN_UP :           \
+  (second_button == BUTTON_ID_SELECT ? PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HDOWN_SELECT : \
+    PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_HDOWN_DOWN))                                       \
+)))
+
+static QuickLaunchPreference s_quick_launch_two_clicks_up_up = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_up_select = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_up_down = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_down_up = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_down_select = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_down_down = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hback_up = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hback_select = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hback_down = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hup_up = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hup_select = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hup_down = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hselect_up = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hselect_select = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hselect_down = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hdown_up = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hdown_select = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_two_clicks_hdown_down = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+// ---------
+
 #define PREF_KEY_QUICK_LAUNCH_SETUP_OPENED "qlSetupOpened"
 static uint8_t s_quick_launch_setup_opened = 0;
 
@@ -424,6 +567,114 @@ static bool prv_set_s_quick_launch_single_click_up(QuickLaunchPreference *pref) 
 static bool prv_set_s_quick_launch_single_click_down(QuickLaunchPreference *pref) {
   prv_normalize_quick_launch_pref(pref);
   s_quick_launch_single_click_down = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_up_up(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_up_up = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_up_select(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_up_select = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_up_down(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_up_down = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_down_up(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_down_up = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_down_select(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_down_select = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_down_down(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_down_down = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hback_up(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hback_up = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hback_select(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hback_select = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hback_down(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hback_down = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hup_up(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hup_up = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hup_select(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hup_select = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hup_down(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hup_down = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hselect_up(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hselect_up = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hselect_select(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hselect_select = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hselect_down(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hselect_down = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hdown_up(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hdown_up = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hdown_select(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hdown_select = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_two_clicks_hdown_down(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_two_clicks_hdown_down = *pref;
   return true;
 }
 
@@ -1345,6 +1596,133 @@ void quick_launch_single_click_set_enabled(ButtonId button, bool enabled) {
   pref.enabled = enabled;
   prv_pref_set(key, &pref, sizeof(pref));
 }
+
+// --- 2-Clicks, first is long pressed ---
+
+static QuickLaunchPreference* s_ql_two_clicks_matrix[NUM_BUTTONS][NUM_BUTTONS] = {
+  { NULL, &s_quick_launch_two_clicks_hback_up, &s_quick_launch_two_clicks_hback_select, &s_quick_launch_two_clicks_hback_down },
+  { NULL, &s_quick_launch_two_clicks_hup_up, &s_quick_launch_two_clicks_hup_select, &s_quick_launch_two_clicks_hup_down },
+  { NULL, &s_quick_launch_two_clicks_hselect_up, &s_quick_launch_two_clicks_hselect_select, &s_quick_launch_two_clicks_hselect_down },
+  { NULL, &s_quick_launch_two_clicks_hdown_up, &s_quick_launch_two_clicks_hdown_select, &s_quick_launch_two_clicks_hdown_down },
+};
+
+bool quick_launch_two_clicks_is_enabled(ButtonId first_button, ButtonId second_button) {
+  if (second_button == BUTTON_ID_BACK || first_button >= NUM_BUTTONS || second_button >= NUM_BUTTONS) {
+    return false;
+  }
+
+  return s_ql_two_clicks_matrix[first_button][second_button]->enabled;
+}
+
+AppInstallId quick_launch_two_clicks_get_app(ButtonId first_button, ButtonId second_button) {
+  if (second_button == BUTTON_ID_BACK || first_button >= NUM_BUTTONS || second_button >= NUM_BUTTONS) {
+    PBL_ASSERTN(0); // Should not reach here: invalid button id
+    return app_install_get_id_for_uuid(NULL);
+  }
+
+  Uuid *uuid = &(s_ql_two_clicks_matrix[first_button][second_button]->uuid);
+
+  return app_install_get_id_for_uuid(uuid);
+}
+
+void quick_launch_two_clicks_set_app(ButtonId first_button, ButtonId second_button, AppInstallId app_id) {
+  if (second_button == BUTTON_ID_BACK || first_button >= NUM_BUTTONS || second_button >= NUM_BUTTONS) {
+    PBL_ASSERTN(0); // Should not reach here: invalid button id
+    return;
+  }
+
+  QuickLaunchPreference pref = (QuickLaunchPreference) {
+    .enabled = true,
+  };
+  app_install_get_uuid_for_install_id(app_id, &pref.uuid);
+
+  char *key = PREF_KEY_QUICK_LAUNCH_TWO_CLICKS(first_button, second_button);
+  prv_pref_set(key, &pref, sizeof(pref));
+}
+
+void quick_launch_two_clicks_set_enabled(ButtonId first_button, ButtonId second_button, bool enabled) {
+  if (second_button == BUTTON_ID_BACK || first_button >= NUM_BUTTONS || second_button >= NUM_BUTTONS) {
+    PBL_ASSERTN(0); // Should not reach here: invalid button id
+    return;
+  }
+
+  QuickLaunchPreference pref = *(s_ql_two_clicks_matrix[first_button][second_button]);
+
+  char *key = PREF_KEY_QUICK_LAUNCH_TWO_CLICKS(first_button, second_button);
+  pref.enabled = enabled;
+  prv_pref_set(key, &pref, sizeof(pref));
+}
+
+// ------
+// --- 2-Clicks, first is tap ---
+
+static QuickLaunchPreference* s_ql_two_clicks_tap_matrix[NUM_BUTTONS][NUM_BUTTONS] = {
+  { NULL, NULL, NULL, NULL },
+  { NULL, &s_quick_launch_two_clicks_up_up, &s_quick_launch_two_clicks_up_select, &s_quick_launch_two_clicks_up_down },
+  { NULL, NULL, NULL, NULL },
+  { NULL, &s_quick_launch_two_clicks_down_up, &s_quick_launch_two_clicks_down_select, &s_quick_launch_two_clicks_down_down },
+};
+
+bool quick_launch_two_clicks_tap_is_enabled(ButtonId first_tap_button, ButtonId second_button) {
+  if (second_button == BUTTON_ID_BACK ||
+    first_tap_button == BUTTON_ID_BACK ||
+    first_tap_button == BUTTON_ID_SELECT ||
+    first_tap_button >= NUM_BUTTONS || second_button >= NUM_BUTTONS) {
+    return false;
+  }
+
+  return s_ql_two_clicks_tap_matrix[first_tap_button][second_button]->enabled;
+}
+
+AppInstallId quick_launch_two_clicks_tap_get_app(ButtonId first_tap_button, ButtonId second_button) {
+  if (second_button == BUTTON_ID_BACK ||
+    first_tap_button == BUTTON_ID_BACK ||
+    first_tap_button == BUTTON_ID_SELECT ||
+    first_tap_button >= NUM_BUTTONS || second_button >= NUM_BUTTONS) {
+    PBL_ASSERTN(0); // Should not reach here: invalid button id
+    return app_install_get_id_for_uuid(NULL);
+  }
+
+  Uuid *uuid = &(s_ql_two_clicks_tap_matrix[first_tap_button][second_button]->uuid);
+
+  return app_install_get_id_for_uuid(uuid);
+}
+
+void quick_launch_two_clicks_tap_set_app(ButtonId first_tap_button, ButtonId second_button, AppInstallId app_id) {
+  if (second_button == BUTTON_ID_BACK ||
+    first_tap_button == BUTTON_ID_BACK ||
+    first_tap_button == BUTTON_ID_SELECT ||
+    first_tap_button >= NUM_BUTTONS || second_button >= NUM_BUTTONS) {
+    PBL_ASSERTN(0); // Should not reach here: invalid button id
+    return;
+  }
+
+  QuickLaunchPreference pref = (QuickLaunchPreference) {
+    .enabled = true,
+  };
+  app_install_get_uuid_for_install_id(app_id, &pref.uuid);
+
+  char *key = PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_TAP(first_tap_button, second_button);
+  prv_pref_set(key, &pref, sizeof(pref));
+}
+
+void quick_launch_two_clicks_tap_set_enabled(ButtonId first_tap_button, ButtonId second_button, bool enabled) {
+  if (second_button == BUTTON_ID_BACK ||
+    first_tap_button == BUTTON_ID_BACK ||
+    first_tap_button == BUTTON_ID_SELECT ||
+    first_tap_button >= NUM_BUTTONS || second_button >= NUM_BUTTONS) {
+    PBL_ASSERTN(0); // Should not reach here: invalid button id
+    return;
+  }
+
+  QuickLaunchPreference pref = *(s_ql_two_clicks_tap_matrix[first_tap_button][second_button]);
+
+  char *key = PREF_KEY_QUICK_LAUNCH_TWO_CLICKS_TAP(first_tap_button, second_button);
+  pref.enabled = enabled;
+  prv_pref_set(key, &pref, sizeof(pref));
+}
+
+// ------
 
 void watchface_set_default_install_id(AppInstallId app_id) {
   Uuid uuid;
