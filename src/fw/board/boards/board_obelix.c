@@ -573,14 +573,35 @@ const BoardConfigActuator BOARD_CONFIG_VIBE = {
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {
-  // 190mA = 1C (rapid charge, max limit from datasheet)
-  .chg_current_ma = 190,
-  .dischg_limit_ma = 200,
-  .term_current_pct = 10,
-  .thermistor_beta = 3380,
-  .vbus_current_lim0 = 500,
-  .vbus_current_startup = 500,
-  .vterm_setting = NPM1300_VTERM_4V35,
+    .chg_current_ma = 190,        // 190mA = 1C (rapid charge, max limit from datasheet)
+    .dischg_limit_ma = 200,       // ~1.05C burst, hardware protection floor
+    .term_current_pct = 10,       // 19mA
+    .thermistor_beta = 3380,      // 10kΩ
+    .vbus_current_lim0 = 500,     // USB 2.0 max
+    .vbus_current_startup = 500,  // Match steady-state, avoid re-negotiation
+    .vterm_setting = NPM1300_VTERM_4V35,
+
+    // Buck1 disabled (but configured to 1.8V before disable in legacy code)
+    .buck1_enable = false,
+    .buck1_voltage_sel = 8,       // 1.8V (don't-care, disabled)
+    // Buck2 disabled (unused?)
+    .buck2_enable = false,
+    .buck2_voltage_sel = 0,
+    .buck_sw_ctrl_sel = 0,        // No SW-controlled switching
+
+    .configure_buck_sw_ctrl = true,
+
+    // LDSW1 enabled: 1.8V LDO
+    .ldsw1_enable = true,
+    .ldsw1_mode = NPM1300_LDO2_MODE_LDO,
+    .ldsw1_voltage_sel = 8,       // 1.8V
+    
+    // LDSW2 disabled: 3.3V LDO configured but disabled
+    .ldsw2_enable = false,
+    .ldsw2_mode = NPM1300_LDO2_MODE_LDO,
+    .ldsw2_voltage_sel = 23,      // 3.3V
+
+    .apply_erratum_27_workaround = false,
 };
 
 static const I2CSlavePort s_i2c_w1160 = {

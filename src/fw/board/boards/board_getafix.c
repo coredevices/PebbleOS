@@ -456,14 +456,36 @@ const BoardConfigActuator BOARD_CONFIG_VIBE = {
 };
 
 const Npm1300Config NPM1300_CONFIG = {
-  // 70mA = 1C (max limit from datasheet)
-  .chg_current_ma = 70,
-  .dischg_limit_ma = 200,
-  .term_current_pct = 10,
-  .thermistor_beta = 3380,
-  .vbus_current_lim0 = 500,
-  .vbus_current_startup = 500,
-  .vterm_setting = NPM1300_VTERM_4V45,
+
+    .chg_current_ma = 70,         // 70mA = 1C (max limit from datasheet)
+    .dischg_limit_ma = 200,       // ~2.8C burst, hardware protection floor
+    .term_current_pct = 10,       // 7mA 
+    .thermistor_beta = 3380,      // 10kΩ 
+    .vbus_current_lim0 = 500,     // USB 2.0 max
+    .vbus_current_startup = 500,  // Match steady-state, avoid re-negotiation
+    .vterm_setting = NPM1300_VTERM_4V45,
+
+    // Buck1 disabled
+    .buck1_enable = false,
+    .buck1_voltage_sel = 8,       // 1.8V
+
+    // Buck2 disabled
+    .buck2_enable = false,
+    .buck2_voltage_sel = 0,
+    .buck_sw_ctrl_sel = 0,        // No SW-controlled switching
+    .configure_buck_sw_ctrl = true,
+
+    // LDSW1 (1.8V LDO)
+    .ldsw1_enable = true,
+    .ldsw1_mode = NPM1300_LDO2_MODE_LDO,
+    .ldsw1_voltage_sel = 8,       // 1.8V
+
+    // LDSW2 (3.3V LDSW for PDM, initially disabled)
+    .ldsw2_enable = false,
+    .ldsw2_mode = NPM1300_LDO2_MODE_LDSW,
+    .ldsw2_voltage_sel = 0,
+
+    .apply_erratum_27_workaround = false,
 };
 
 const BoardConfigPower BOARD_CONFIG_POWER = {

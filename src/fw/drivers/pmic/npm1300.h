@@ -36,6 +36,37 @@ typedef struct {
   uint16_t vbus_current_lim0;
   //! Vbus current limite startup
   uint16_t vbus_current_startup;
+
+  //! Buck1 voltage (0 = disabled)
+  uint8_t buck1_voltage_sel;
+  //! Buck2 voltage (0 = disabled)
+  uint8_t buck2_voltage_sel;
+  //! Buck SW control selection
+  uint8_t buck_sw_ctrl_sel;
+  //! Configure Buck SW control (even if 0)
+  bool configure_buck_sw_ctrl;
+  //! Enable Buck1
+  bool buck1_enable;
+  //! Enable Buck2
+  bool buck2_enable;
+
+  //! Apply Erratum 27 workaround
+  //: I assume this is a specific sequence on startup
+  bool apply_erratum_27_workaround;
+
+  //! LDSW1 mode (LDO or Load Switch)
+  Npm1300Ldo2Mode_t ldsw1_mode;
+  //! LDSW1 voltage selection
+  uint8_t ldsw1_voltage_sel;
+  //! Enable LDSW1
+  bool ldsw1_enable;
+
+  //! LDSW2 mode (LDO or Load Switch)
+  Npm1300Ldo2Mode_t ldsw2_mode;
+  //! LDSW2 voltage selection
+  uint8_t ldsw2_voltage_sel;
+  //! Enable LDSW2
+  bool ldsw2_enable;
 } Npm1300Config;
 
 typedef enum {

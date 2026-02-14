@@ -207,12 +207,32 @@ IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
 IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
 
 const Npm1300Config NPM1300_CONFIG = {
-  // 128mA = ~1C (rapid charge)
-  .chg_current_ma = 128,
-  .dischg_limit_ma = 200,
-  .term_current_pct = 10,
-  .thermistor_beta = 3380,
-  .vterm_setting = NPM1300_VTERM_4V20,
+    .chg_current_ma = 128,        // 128mA = ~1C (rapid charge)
+    .dischg_limit_ma = 200,       // ~1.6C burst, hardware protection floor
+    .term_current_pct = 10,       // 12.8mA
+    .thermistor_beta = 3380,      // 10kΩ
+    .vterm_setting = NPM1300_VTERM_4V20,
+
+    // Buck1 (1.8V)
+    .buck1_enable = true,
+    .buck1_voltage_sel = 8,       // 1.8V
+
+    // Buck2 (3.0V)
+    .buck2_enable = true,
+    .buck2_voltage_sel = 20,      // 3.0V
+    .buck_sw_ctrl_sel = 3,        // both of them, load
+    .configure_buck_sw_ctrl = false, // Already configured by Erratum 27 workaround
+
+    // LDSW1 disabled (not used)
+    .ldsw1_enable = false,
+    .ldsw1_voltage_sel = 0,
+
+    // LDSW2 (1.8V LDO)
+    .ldsw2_enable = true,
+    .ldsw2_mode = NPM1300_LDO2_MODE_LDO,
+    .ldsw2_voltage_sel = 8,       // 1.8V
+
+    .apply_erratum_27_workaround = true,
 };
 
 void board_early_init(void) {
