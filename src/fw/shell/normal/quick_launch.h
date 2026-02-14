@@ -23,3 +23,13 @@ bool quick_launch_combo_back_up_is_enabled(void);
 AppInstallId quick_launch_combo_back_up_get_app(void);
 void quick_launch_combo_back_up_set_app(AppInstallId app_id);
 void quick_launch_combo_back_up_set_enabled(bool enabled);
+
+bool quick_launch_two_clicks_is_enabled(ButtonId first_button, ButtonId second_button);
+AppInstallId quick_launch_two_clicks_get_app(ButtonId first_button, ButtonId second_button);
+void quick_launch_two_clicks_set_app(ButtonId first_button, ButtonId second_button, AppInstallId app_id);
+void quick_launch_two_clicks_set_enabled(ButtonId first_button, ButtonId second_button, bool enabled);
+
+bool quick_launch_two_clicks_tap_is_enabled(ButtonId first_button, ButtonId second_button);
+AppInstallId quick_launch_two_clicks_tap_get_app(ButtonId first_button, ButtonId second_button);
+void quick_launch_two_clicks_tap_set_app(ButtonId first_button, ButtonId second_button, AppInstallId app_id);
+void quick_launch_two_clicks_tap_set_enabled(ButtonId first_button, ButtonId second_button, bool enabled);
