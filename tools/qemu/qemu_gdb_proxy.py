@@ -76,6 +76,26 @@ class PebbleThread(object):
         ]
     thread_state_size_v2 = 0x48
 
+    stack_offset_to_reg_index_v3 = [      # CM33 with PSPLIM
+            (0x2C, 0),    # r0
+            (0x30, 1),    # r1
+            (0x34, 2),    # r2
+            (0x38, 3),    # r3
+            (0x04, 4),    # r4
+            (0x08, 5),    # r5
+            (0x0C, 6),    # r6
+            (0x10, 7),    # r7
+            (0x14, 8),    # r8
+            (0x18, 9),    # r9
+            (0x1C, 10),   # r10
+            (0x20, 11),   # r11
+            (0x3C, 12),   # r12
+            (0x40, 14),   # lr
+            (0x44, 15),   # pc
+            (0x48, 16),   # xpsr
+        ]
+    thread_state_size_v3 = 0x4C
+
     stack_offset_to_reg_index_v1 = [      # Used in Tintin, Cortex-M3
             (0x24, 0),    # r0
             (0x28, 1),    # r1
@@ -329,6 +349,9 @@ class QemuGdbProxy(object):
         elif reg_stacking_version == 2:
               stack_offset_to_reg_index = PebbleThread.stack_offset_to_reg_index_v2
               thread_state_size = PebbleThread.thread_state_size_v2
+        elif reg_stacking_version == 3:
+              stack_offset_to_reg_index = PebbleThread.stack_offset_to_reg_index_v3
+              thread_state_size = PebbleThread.thread_state_size_v3
         else:
               raise QemuGdbError("Unsupported uxFreeRTOSRegisterStackingVersion of %d" %
                                     reg_stacking_version)

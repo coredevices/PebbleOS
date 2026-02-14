@@ -395,8 +395,30 @@ void BusFault_Handler(void) {
         "b %0\n" :: "i" (busfault_handler_c));
 }
 
-static void usagefault_handler_c(unsigned int* stacked_args) {
+// STKOF = bit 4 of UFSR = bit 20 of CFSR (ARMv8-M only, reads as 0 on CM3/CM4)
+#ifndef SCB_CFSR_STKOF_Msk
+#define SCB_CFSR_STKOF_Msk (1UL << 20)
+#endif
+
+static void usagefault_handler_c(unsigned int* stacked_args, unsigned int lr) {
   PBL_LOG_FROM_FAULT_HANDLER("\r\n\r\n[UsageFault_Handler!]");
+
+  const uint32_t cfsr = SCB->CFSR;
+
+  // STKOF: stack limit violation (PSPLIM/MSPLIM)
+  if (cfsr & SCB_CFSR_STKOF_Msk) {
+    SCB->CFSR = SCB_CFSR_STKOF_Msk;  // Clear by writing 1
+
+    stacked_args += 256;  // Back up SP to give landing zone room (see mem_manage_handler_c)
+    if (lr & 0x04) {
+      __set_PSP((uint32_t)stacked_args);
+    } else {
+      __set_MSP((uint32_t)stacked_args);
+    }
+    attempt_handle_stack_overflow(stacked_args);
+    return;
+  }
+
   prv_save_debug_registers(stacked_args);
 
   char buffer[80];
@@ -412,6 +434,7 @@ void UsageFault_Handler(void) {
         "ite eq\n"
         "mrseq r0, msp\n"
         "mrsne r0, psp\n"
+        "mov r1, lr\n"
         "b %0\n" :: "i" (usagefault_handler_c));
 }
 
