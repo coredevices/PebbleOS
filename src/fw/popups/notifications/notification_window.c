@@ -807,7 +807,7 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, 
 
   const char *app_id = attribute_get_string(&item->attr_list, AttributeIdiOSAppIdentifier, "");
   if (!app_id || !*app_id) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not mute notification. Unknown app_id");
+    PBL_LOG_ERR("Could not mute notification. Unknown app_id");
     return;
   }
 
@@ -829,7 +829,7 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, 
     prv_push_muted_dialog();
     analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_MUTED_COUNT, AnalyticsClient_System);
   } else {
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not mute notification. No prefs or mute attribute");
+    PBL_LOG_WRN("Could not mute notification. No prefs or mute attribute");
   }
 
   ios_notif_pref_db_free_prefs(notif_prefs);
