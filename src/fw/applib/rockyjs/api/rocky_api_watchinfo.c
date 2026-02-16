@@ -197,14 +197,17 @@ static jerry_value_t prv_get_model_name(void) {
       case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY:
         model_name = OBELIX_MODEL("coredevices_pt2_silver_grey");
         break;
-      case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK:
-        model_name = GETAFIX_MODEL("coredevices_pr2_black");
+      case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20:
+        model_name = GETAFIX_MODEL("coredevices_pr2_black_20");
         break;
-      case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER:
-        model_name = GETAFIX_MODEL("coredevices_pr2_silver");
+      case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14:
+        model_name = GETAFIX_MODEL("coredevices_pr2_silver_14");
         break;
-      case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD:
-        model_name = GETAFIX_MODEL("coredevices_pr2_gold");
+      case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20:
+        model_name = GETAFIX_MODEL("coredevices_pr2_silver_20");
+        break;
+      case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14:
+        model_name = GETAFIX_MODEL("coredevices_pr2_gold_14");
         break;
       case WATCH_INFO_COLOR_UNKNOWN:
       case WATCH_INFO_COLOR__MAX:

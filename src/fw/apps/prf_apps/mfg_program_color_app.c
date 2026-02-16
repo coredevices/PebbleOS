@@ -73,19 +73,24 @@ const ColorTable s_color_table[] = {
   },
 #elif PLATFORM_GETAFIX
   {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK,
-    .name = "BLACK",
-    .short_name = "BK",
+    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20,
+    .name = "BLACK-20MM",
+    .short_name = "BK20",
   },
   {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER,
-    .name = "SILVER",
-    .short_name = "SV",
+    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14,
+    .name = "SILVER-14MM",
+    .short_name = "SV14",
   },
   {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD,
-    .name = "GOLD",
-    .short_name = "GD",
+    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20,
+    .name = "SILVER-20MM",
+    .short_name = "SV20",
+  },
+  {
+    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14,
+    .name = "GOLD-14MM",
+    .short_name = "GD14",
   },
 #endif
 };
@@ -145,15 +150,19 @@ static void prv_get_display_colors(WatchInfoColor watch_color, GColor *color1, G
       break;
 
     // PR2
-    case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK:
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20:
       *color1 = GColorBlack;
       *color2 = GColorBlack;
       break;
-    case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER:
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14:
       *color1 = GColorLightGray;  // Silver approximation
       *color2 = GColorLightGray;
       break;
-    case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD:
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20:
+      *color1 = GColorLightGray;  // Silver approximation
+      *color2 = GColorLightGray;
+      break;
+    case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14:
       *color1 = GColorYellow;  // Gold approximation
       *color2 = GColorYellow;
       break;
