@@ -105,6 +105,14 @@ def pbl_suppress_newer_gcc_warnings(conf):
         '-Wno-error=pointer-sign',
         '-Wno-error=dangling-pointer',
         '-Wno-error=nonnull',
+        '-Wno-error=duplicate-decl-specifier',
+        '-Wno-error=absolute-value',
+        '-Wno-error=aggressive-loop-optimizations',
+        '-Wno-error=address',
+        '-Wno-error=sizeof-pointer-memaccess',
+        '-Wno-error=zero-length-bounds',
+        '-Wno-error=builtin-declaration-mismatch',
+        '-Wno-error=expansion-to-defined',
     ]
     for platform in conf.env.TARGET_PLATFORMS:
         conf.all_envs[platform].append_value('CFLAGS', workaround_flags)
