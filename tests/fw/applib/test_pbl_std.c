@@ -33,7 +33,7 @@ time_t sys_time_utc_to_local(time_t t) {
   return t;
 }
 
-int localized_strftime(char* s, size_t maxsize, const char* format,
+size_t localized_strftime(char* s, size_t maxsize, const char* format,
     const struct tm* tim_p, char *locale) { return 0; }
 
 const char *get_timezone_abbr(void) {

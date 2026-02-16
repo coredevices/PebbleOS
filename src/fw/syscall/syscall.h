@@ -176,7 +176,7 @@ void sys_data_logging_finish(DataLoggingSessionRef logging_session);
 DataLoggingResult sys_data_logging_log(DataLoggingSessionRef logging_session, const void *data, uint32_t num_items);
 
 bool sys_clock_is_24h_style(void);
-int sys_strftime(char* s, size_t maxsize, const char* format, const struct tm* tim_p, char *locale);
+size_t sys_strftime(char* s, size_t maxsize, const char* format, const struct tm* tim_p, char *locale);
 
 BatteryChargeState sys_battery_get_charge_state(void);
 
