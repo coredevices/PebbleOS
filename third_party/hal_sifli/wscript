@@ -11,8 +11,7 @@ def configure(conf):
 
 
 def build(bld):
-    micro_sources = ['hal_glue.c']
-    micro_sources += bld.path.ant_glob('SiFli-SDK/drivers/hal/*.c', excl=['**/bf0_hal_audcodec.c'])
+    micro_sources = bld.path.ant_glob('SiFli-SDK/drivers/hal/*.c', excl=['**/bf0_hal_audcodec.c'])
 
     micro_sources += [
         'SiFli-SDK/middleware/ipc_queue/common/circular_buf.c',
