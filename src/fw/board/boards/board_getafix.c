@@ -540,9 +540,4 @@ void board_init(void) {
   i2c_init(I2C3_BUS);
 
   mic_init(MIC);
-
-#ifdef RECOVERY_FW
-  // FIXME(GETAFIX): Remove once stable
-  stop_mode_disable(InhibitorMain);
-#endif
 }
