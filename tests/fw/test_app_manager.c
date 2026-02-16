@@ -297,6 +297,9 @@ void system_app_state_machine_register_app_launch(const PebbleProcessMd* app) {
 void sys_vibe_history_stop_collecting(void) {
 }
 
+void sys_vibe_pattern_clear(void) {
+}
+
 Heap *worker_state_get_heap(void) {
   return NULL;
 }
