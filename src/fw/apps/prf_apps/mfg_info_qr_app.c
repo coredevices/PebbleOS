@@ -40,9 +40,10 @@ static const ColorTable s_color_table[] = {
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE, .short_name = "SB" },
   { .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY, .short_name = "SG" },
 #elif PLATFORM_GETAFIX
-  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK, .short_name = "BK" },
-  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER, .short_name = "SV" },
-  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD, .short_name = "GD" },
+  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20, .short_name = "BK20" },
+  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14, .short_name = "SV14" },
+  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20, .short_name = "SV20" },
+  { .color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14, .short_name = "GD14" },
 #endif
 };
 
