@@ -40,7 +40,7 @@
 #define MAX_DELTA_BETWEEN_RTC_AVE (HAL_RC_CAL_GetLPCycle() / 2)
 
 // Calibration period in milliseconds
-#define RTC_CAL_PERIOD_MS 300000
+#define RTC_CAL_PERIOD_MS 60000
 
 // Maximum reasonable correction in seconds. If the calculated correction exceeds this,
 // something is wrong and we should reset calibration state instead of applying it.
