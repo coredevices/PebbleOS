@@ -116,6 +116,9 @@ def pbl_suppress_newer_gcc_warnings(conf):
     ]
     for platform in conf.env.TARGET_PLATFORMS:
         conf.all_envs[platform].append_value('CFLAGS', workaround_flags)
+    # Also apply to the default env so that any task generators using a
+    # non-platform env (or envs derived after this point) inherit the flags
+    conf.env.append_value('CFLAGS', workaround_flags)
 
 
 # -----------------------------------------------------------------------------------
