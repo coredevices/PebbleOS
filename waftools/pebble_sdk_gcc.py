@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+from waflib.Configure import conf
 from waflib.Errors import BuildError
 
 import inject_metadata
@@ -64,6 +65,49 @@ def configure(conf):
     conf.env.prepend_value('LINKFLAGS', pebble_linkflags)
     conf.env.SHLIB_MARKER = None
     conf.env.STLIB_MARKER = None
+
+
+@conf
+def pbl_suppress_newer_gcc_warnings(conf):
+    """Call from your wscript's configure() to suppress warnings that newer
+    GCC versions (11+/14+) treat as errors. This is a workaround -- consider
+    fixing the underlying issues in your code instead."""
+    workaround_flags = [
+        '-Wno-error=unused-but-set-variable',
+        '-Wno-error=unused-const-variable',
+        # Newer GCC got stricter about these common patterns
+        '-Wno-error=format-overflow',
+        '-Wno-error=stringop-truncation',
+        '-Wno-error=stringop-overflow',
+        '-Wno-error=array-bounds',
+        '-Wno-error=restrict',
+        # GCC 14 promoted these from warnings to errors
+        '-Wno-error=implicit-function-declaration',
+        '-Wno-error=implicit-int',
+        '-Wno-error=int-conversion',
+        '-Wno-error=incompatible-pointer-types',
+        '-Wno-error=return-mismatch',
+        # Common in embedded code with packed structs
+        '-Wno-error=address-of-packed-member',
+        '-Wno-error=packed-not-aligned',
+        # Old code patterns
+        '-Wno-error=maybe-uninitialized',
+        '-Wno-error=misleading-indentation',
+        '-Wno-error=implicit-fallthrough',
+        '-Wno-error=enum-conversion',
+        '-Wno-error=enum-int-mismatch',
+        '-Wno-error=sign-compare',
+        '-Wno-error=type-limits',
+        '-Wno-error=missing-field-initializers',
+        '-Wno-error=override-init',
+        '-Wno-error=missing-braces',
+        '-Wno-error=old-style-declaration',
+        '-Wno-error=pointer-sign',
+        '-Wno-error=dangling-pointer',
+        '-Wno-error=nonnull',
+    ]
+    for platform in conf.env.TARGET_PLATFORMS:
+        conf.all_envs[platform].append_value('CFLAGS', workaround_flags)
 
 
 # -----------------------------------------------------------------------------------
