@@ -11,3 +11,5 @@ syscfg.vals:
     # Value measured to be found _okay_ when doing firmware update related
     # activites (maximum usage observed to be 14). This may need further tuning.
     BLE_TRANSPORT_ACL_COUNT: 20
+    # Increased to prevent HCI event buffer exhaustion causing assert in hci_h4_sm_rx
+    BLE_TRANSPORT_EVT_DISCARDABLE_COUNT: 32
