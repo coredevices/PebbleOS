@@ -87,6 +87,7 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 #include "stubs_timeline_item.h"
 #include "stubs_timeline_layer.h"
 #include "stubs_timeline_peek.h"
+#include "stubs_vibes.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 

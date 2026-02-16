@@ -42,6 +42,7 @@
 #include "stubs_status_bar_layer.h"
 #include "stubs_syscalls.h"
 #include "stubs_task_watchdog.h"
+#include "stubs_vibes.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 

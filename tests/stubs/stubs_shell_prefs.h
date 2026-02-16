@@ -53,3 +53,23 @@ void WEAK system_theme_set_content_size(PreferredContentSize content_size) {
 PreferredContentSize WEAK system_theme_get_content_size(void) {
   return (PreferredContentSize)s_content_size;
 }
+
+static bool s_menu_scroll_enable = false;
+
+bool WEAK shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return s_menu_scroll_enable;
+}
+
+void WEAK shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
+  s_menu_scroll_enable = enable;
+}
+
+static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
+
+MenuScrollVibeBehavior WEAK shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return s_menu_scroll_vibe_behavior;
+}
+
+void WEAK shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
+  s_menu_scroll_vibe_behavior = behavior;
+}
