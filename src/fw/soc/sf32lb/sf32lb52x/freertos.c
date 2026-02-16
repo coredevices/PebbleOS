@@ -23,6 +23,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+// HAL tick counter (milliseconds) - used by HAL timeout functions
+extern __IO uint32_t uwTick;
+
 static LPTIM_HandleTypeDef s_lptim = {
     .Instance = LPTIM1,
 };
@@ -205,6 +208,9 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
 
         vTaskStepTick(elapsed_ticks);
 
+        // increment HAL tick counter by elapsed ticks
+        uwTick += elapsed_ticks;
+
         prv_wdt_feed(elapsed_ticks);
 
         // stop LPTIM
@@ -277,6 +283,8 @@ void AON_IRQHandler(void)
 void SysTick_Handler(void) {
   extern void xPortSysTickHandler(void);
   xPortSysTickHandler();
+
+  HAL_IncTick();
 
   prv_wdt_feed(1U);
 
