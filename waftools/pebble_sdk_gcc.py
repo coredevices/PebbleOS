@@ -41,11 +41,43 @@ def configure(conf):
                   '-Wno-unused-parameter',
                   '-Wno-error=unused-function',
                   '-Wno-error=unused-variable',
+                  '-Wno-error=unused-but-set-variable',
+                  '-Wno-error=unused-const-variable',
+                  # Newer GCC got stricter about these common patterns
                   '-Wno-error=builtin-declaration-mismatch',
                   '-Wno-error=format-truncation',
+                  '-Wno-error=format-overflow',
                   '-Wno-error=expansion-to-defined',
                   '-Wno-error=zero-length-bounds',
-                  '-Wno-error=cast-function-type',]
+                  '-Wno-error=cast-function-type',
+                  '-Wno-error=stringop-truncation',
+                  '-Wno-error=stringop-overflow',
+                  '-Wno-error=array-bounds',
+                  '-Wno-error=restrict',
+                  # GCC 14 promoted these from warnings to errors
+                  '-Wno-error=implicit-function-declaration',
+                  '-Wno-error=implicit-int',
+                  '-Wno-error=int-conversion',
+                  '-Wno-error=incompatible-pointer-types',
+                  '-Wno-error=return-mismatch',
+                  # Common in embedded code with packed structs
+                  '-Wno-error=address-of-packed-member',
+                  '-Wno-error=packed-not-aligned',
+                  # Old code patterns
+                  '-Wno-error=maybe-uninitialized',
+                  '-Wno-error=misleading-indentation',
+                  '-Wno-error=implicit-fallthrough',
+                  '-Wno-error=enum-conversion',
+                  '-Wno-error=enum-int-mismatch',
+                  '-Wno-error=sign-compare',
+                  '-Wno-error=type-limits',
+                  '-Wno-error=missing-field-initializers',
+                  '-Wno-error=override-init',
+                  '-Wno-error=missing-braces',
+                  '-Wno-error=old-style-declaration',
+                  '-Wno-error=pointer-sign',
+                  '-Wno-error=dangling-pointer',
+                  '-Wno-error=nonnull',]
 
     if (conf.env.SDK_VERSION_MAJOR == 5) and (conf.env.SDK_VERSION_MINOR > 19):
         pebble_cflags.append('-D_TIME_H_')
