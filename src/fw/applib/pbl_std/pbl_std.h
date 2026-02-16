@@ -80,7 +80,7 @@ uint16_t pbl_override_time_ms_legacy(time_t *t_loc, uint16_t *out_ms);
 //! @param tm_p A pointer to a struct tm containing a broken out time value
 //! @return The number of bytes placed in the array s, not including the null byte,
 //!   0 if the value does not fit.
-int pbl_strftime(char* s, size_t maxsize, const char* format, const struct tm* tm_p);
+size_t pbl_strftime(char* s, size_t maxsize, const char* format, const struct tm* tm_p);
 
 //! Returns the current UTC time in Unix Timestamp Format with Milliseconds
 //!     @param t_utc if provided receives current UTC Unix Time seconds portion
