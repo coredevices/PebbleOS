@@ -50,3 +50,18 @@ void vibes_enqueue_custom_pattern(VibePattern pattern) {
   sys_vibe_pattern_trigger_start();
 }
 
+void vibes_enqueue_custom_pattern_with_amplitudes(VibePatternWithAmplitudes pattern) {
+  if (pattern.durations == NULL || pattern.amplitudes == NULL) {
+    PBL_LOG_ERR("tried to enqueue a null pattern");
+    return;
+  }
+
+  for (uint32_t i = 0; i < pattern.num_segments; ++i) {
+    uint32_t amp = pattern.amplitudes[i];
+    int32_t strength = (int32_t)(amp > 100 ? 100 : amp);
+    sys_vibe_pattern_enqueue_step_raw(pattern.durations[i], strength);
+  }
+
+  sys_vibe_pattern_trigger_start();
+}
+

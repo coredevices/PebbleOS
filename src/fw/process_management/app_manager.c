@@ -435,6 +435,7 @@ static void prv_app_cleanup(void) {
 #endif
   light_reset_user_controlled();
   sys_vibe_history_stop_collecting();
+  sys_vibe_pattern_clear();
   ble_app_cleanup();
 #if CAPABILITY_HAS_MAPPABLE_FLASH
   resource_mapped_release_all(PebbleTask_App);
