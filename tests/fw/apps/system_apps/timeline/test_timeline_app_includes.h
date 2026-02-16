@@ -75,6 +75,7 @@
 #include "stubs_timeline_layout_animations.h"
 #include "stubs_timeline_peek.h"
 #include "stubs_timezone_database.h"
+#include "stubs_vibes.h"
 #include "stubs_wakeup.h"
 #include "stubs_watchface.h"
 #include "stubs_window_manager.h"
