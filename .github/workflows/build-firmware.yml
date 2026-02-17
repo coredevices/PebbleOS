@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  changes:
+  changes-firmware:
     runs-on: ubuntu-24.04
     permissions:
       pull-requests: read
@@ -31,9 +31,9 @@ jobs:
               - 'waf'
               - 'wscript'
 
-  build:
-    needs: changes
-    if: needs.changes.outputs.should-build == 'true'
+  build-firmware:
+    needs: changes-firmware
+    if: needs.changes-firmware.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
 
     container:
@@ -111,11 +111,11 @@ jobs:
             build/src/fw/tintin_fw_loghash_dict.json
           path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json
 
-  build-status:
-    needs: [changes, build]
+  build-firmware-status:
+    needs: [changes-firmware, build-firmware]
     if: always()
     runs-on: ubuntu-24.04
     steps:
-      - if: needs.build.result == 'failure' || needs.build.result == 'cancelled'
+      - if: needs.build-firmware.result == 'failure' || needs.build-firmware.result == 'cancelled'
         run: exit 1
 

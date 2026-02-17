@@ -10,7 +10,7 @@ env:
   TEST_BOARD: 'snowy_bb2'
 
 jobs:
-  changes:
+  changes-test:
     runs-on: ubuntu-24.04
     permissions:
       pull-requests: read
@@ -34,9 +34,9 @@ jobs:
               - 'waf'
               - 'wscript'
 
-  build:
-    needs: changes
-    if: needs.changes.outputs.should-test == 'true'
+  build-test:
+    needs: changes-test
+    if: needs.changes-test.outputs.should-test == 'true'
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
@@ -76,9 +76,9 @@ jobs:
           path: build/test/tests/failed/*-diff.png
 
   test-status:
-    needs: [changes, build]
+    needs: [changes-test, build-test]
     if: always()
     runs-on: ubuntu-24.04
     steps:
-      - if: needs.build.result == 'failure' || needs.build.result == 'cancelled'
+      - if: needs.build-test.result == 'failure' || needs.build-test.result == 'cancelled'
         run: exit 1
