@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  changes:
+  changes-prf:
     runs-on: ubuntu-24.04
     permissions:
       pull-requests: read
@@ -29,9 +29,9 @@ jobs:
               - 'waf'
               - 'wscript'
 
-  build:
-    needs: changes
-    if: needs.changes.outputs.should-build == 'true'
+  build-prf:
+    needs: changes-prf
+    if: needs.changes-prf.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
 
     container:
@@ -117,10 +117,10 @@ jobs:
             build/prf/src/fw/tintin_fw_loghash_dict.json
           path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
 
-  build-status:
-    needs: [changes, build]
+  build-prf-status:
+    needs: [changes-prf, build-prf]
     if: always()
     runs-on: ubuntu-24.04
     steps:
-      - if: needs.build.result == 'failure' || needs.build.result == 'cancelled'
+      - if: needs.build-prf.result == 'failure' || needs.build-prf.result == 'cancelled'
         run: exit 1
