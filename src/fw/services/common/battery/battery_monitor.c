@@ -81,6 +81,10 @@ static void prv_resume_normal_operation(void) {
 }
 
 static void prv_exit_critical(void) {
+  // Cancel the standby timer so we don't enter standby if we're no longer critical
+  // (e.g. charger was plugged in before the timer expired).
+  new_timer_stop(s_standby_timer_id);
+
   // Checking the state here is a bit of a hack because the state machine does not have proper
   // transition actions, only entry/exit actions.
   // We check that the state is PowerStateGood because the state machine does not transition through
