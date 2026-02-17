@@ -5,20 +5,35 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    paths:
-      - '.github/workflows/build-qemu-sdkshell.yml'
-      - 'resources/**'
-      - 'sdk/**'
-      - 'src/**'
-      - 'stored_apps/**'
-      - 'tools/**'
-      - 'third_party/**'
-      - 'waftools/**'
-      - 'waf'
-      - 'wscript'
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-build: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            src:
+              - '.github/workflows/build-qemu-sdkshell.yml'
+              - 'resources/**'
+              - 'sdk/**'
+              - 'src/**'
+              - 'stored_apps/**'
+              - 'tools/**'
+              - 'third_party/**'
+              - 'waftools/**'
+              - 'waf'
+              - 'wscript'
+
   build:
+    needs: changes
+    if: needs.changes.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
 
     container:
@@ -69,3 +84,11 @@ jobs:
           path: |
             build/qemu_micro_flash.bin
             build/qemu_spi_flash.bin
+
+  build-status:
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.build.result == 'failure' || needs.build.result == 'cancelled'
+        run: exit 1

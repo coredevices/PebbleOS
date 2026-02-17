@@ -5,18 +5,33 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    paths:
-      - '.github/workflows/build-prf.yml'
-      - 'resources/**'
-      - 'src/**'
-      - 'tools/**'
-      - 'third_party/**'
-      - 'waftools/**'
-      - 'waf'
-      - 'wscript'
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-build: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            src:
+              - '.github/workflows/build-prf.yml'
+              - 'resources/**'
+              - 'src/**'
+              - 'tools/**'
+              - 'third_party/**'
+              - 'waftools/**'
+              - 'waf'
+              - 'wscript'
+
   build:
+    needs: changes
+    if: needs.changes.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
 
     container:
@@ -101,3 +116,11 @@ jobs:
           files: |
             build/prf/src/fw/tintin_fw_loghash_dict.json
           path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
+
+  build-status:
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.build.result == 'failure' || needs.build.result == 'cancelled'
+        run: exit 1

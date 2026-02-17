@@ -5,23 +5,38 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    paths:
-      - '.github/workflows/test.yml'
-      - 'resources/**'
-      - 'sdk/**'
-      - 'src/**'
-      - 'stored_apps/**'
-      - 'tools/**'
-      - 'third_party/**'
-      - 'waftools/**'
-      - 'waf'
-      - 'wscript'
 
 env:
   TEST_BOARD: 'snowy_bb2'
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-test: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            src:
+              - '.github/workflows/test.yml'
+              - 'resources/**'
+              - 'sdk/**'
+              - 'src/**'
+              - 'stored_apps/**'
+              - 'tools/**'
+              - 'third_party/**'
+              - 'waftools/**'
+              - 'waf'
+              - 'wscript'
+
   build:
+    needs: changes
+    if: needs.changes.outputs.should-test == 'true'
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pebble-dev/pebbleos-docker:v1
@@ -59,3 +74,11 @@ jobs:
         with:
           name: failed_diff_images
           path: build/test/tests/failed/*-diff.png
+
+  test-status:
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.build.result == 'failure' || needs.build.result == 'cancelled'
+        run: exit 1
