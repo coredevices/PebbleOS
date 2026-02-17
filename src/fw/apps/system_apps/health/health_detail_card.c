@@ -228,7 +228,7 @@ static void prv_draw_zones(HealthDetailCard *detail_card, GContext *ctx) {
   for (int i = 0; i < detail_card->num_zones; i++) {
     HealthDetailZone *zone = &detail_card->zones[i];
 
-    graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
+    graphics_context_set_text_color(ctx, gcolor_legible_over(detail_card->bg_color));
     graphics_draw_text(ctx, zone->label, detail_card->subtitle_font, zone_rect,
                        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
@@ -285,7 +285,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer,
   if (!menu_layer_is_index_selected(&detail_card->menu_layer, cell_index)) {
     label_rect.origin.y = (cell_index->row < selected_index.row) ? 3 : 22;
 
-    graphics_context_set_text_color(ctx, GColorWhite);
+    graphics_context_set_text_color(ctx, gcolor_legible_over(detail_card->bg_color));
     graphics_draw_text(ctx, zone->label, detail_card->subtitle_font, label_rect,
                        GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
   } else {
