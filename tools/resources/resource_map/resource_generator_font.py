@@ -45,9 +45,9 @@ class FontResourceGenerator(ResourceGenerator):
     def generate_object(cls, task, definition):
         font_path = task.inputs[0].abspath()
         font_ext = os.path.splitext(font_path)[-1]
-        if font_ext in (".ttf", ".otf", ".bdf"):
+        if font_ext.lower() in (".ttf", ".otf", ".bdf"):
             font_data = cls.build_font_data(font_path, definition)
-        elif font_ext == ".pbf":
+        elif font_ext.lower() == ".pbf":
             font_data = open(font_path, "rb").read()
         else:
             raise Exception(f"Unsupported font format: {font_ext}")
