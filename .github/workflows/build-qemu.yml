@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  changes:
+  changes-qemu:
     runs-on: ubuntu-24.04
     permissions:
       pull-requests: read
@@ -31,9 +31,9 @@ jobs:
               - 'waf'
               - 'wscript'
 
-  build:
-    needs: changes
-    if: needs.changes.outputs.should-build == 'true'
+  build-qemu:
+    needs: changes-qemu
+    if: needs.changes-qemu.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
 
     container:
@@ -85,10 +85,10 @@ jobs:
             build/qemu_micro_flash.bin
             build/qemu_spi_flash.bin
 
-  build-status:
-    needs: [changes, build]
+  build-qemu-status:
+    needs: [changes-qemu, build-qemu]
     if: always()
     runs-on: ubuntu-24.04
     steps:
-      - if: needs.build.result == 'failure' || needs.build.result == 'cancelled'
+      - if: needs.build-qemu.result == 'failure' || needs.build-qemu.result == 'cancelled'
         run: exit 1
