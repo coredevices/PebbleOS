@@ -78,7 +78,7 @@ Window *health_hr_detail_card_create(HealthData *health_data) {
     /// Resting HR
     .primary_label = (char *)i18n_get("TIME IN ZONES", card_data),
     .primary_value = app_zalloc_check(buffer_size),
-    .fill_color = GColorWhite,
+    .fill_color = PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorWhite),
     .outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack),
   };
 
@@ -89,7 +89,7 @@ Window *health_hr_detail_card_create(HealthData *health_data) {
     .num_headings = card_data->num_headings,
     .headings = card_data->headings,
     .weekly_max = max_progress,
-    .bg_color = PBL_IF_COLOR_ELSE(GColorBulgarianRose, GColorWhite),
+    .bg_color = GColorWhite,
     .num_zones = card_data->num_zones,
     .zones = card_data->zones,
     .data = card_data,
