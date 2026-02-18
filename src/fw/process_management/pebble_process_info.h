@@ -34,6 +34,9 @@ typedef enum {
 
   //! Bitmask, to store compile time platform
   PROCESS_INFO_PLATFORM_MASK    = 0xf << 6,
+  
+  //! True, if process uses Moddable XS APIs
+  PROCESS_INFO_MODDABLE_APP = 1 << 10,
   //! SDK older than 4.2 doesn't store any value
   PROCESS_INFO_PLATFORM_UNKNOWN = 0x0 << 6,
   PROCESS_INFO_PLATFORM_APLITE  = 0x1 << 6,
@@ -149,9 +152,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x54 -- Add PlatformType enum and defines (rev 87)
 // sdk.major:0x5 .minor:0x55 -- Preferred Content Size (rev 88)
 // sdk.major:0x5 .minor:0x56 -- Add PlatformType enum and defines (rev 89)
+// sdk.major:0x5 .minor:0x57 -- Add moddable_createMachine (rev 90)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x56
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x57
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
