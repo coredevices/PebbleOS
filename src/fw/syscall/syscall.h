@@ -25,6 +25,7 @@
 #include "kernel/events.h"
 #include "kernel/logging_private.h"
 #include "services/normal/wakeup.h"
+#include "services/normal/music.h"
 #include "services/common/analytics/analytics.h"
 #include "services/common/analytics/analytics_event.h"
 #include "services/common/comm_session/session.h"
@@ -179,6 +180,24 @@ bool sys_clock_is_24h_style(void);
 size_t sys_strftime(char* s, size_t maxsize, const char* format, const struct tm* tim_p, char *locale);
 
 BatteryChargeState sys_battery_get_charge_state(void);
+
+void sys_music_get_now_playing(char *title, char *artist, char *album);
+bool sys_music_has_now_playing(void);
+bool sys_music_get_player_name(char *player_name_out);
+uint32_t sys_music_get_ms_since_pos_last_updated(void);
+void sys_music_get_pos(uint32_t *track_pos_ms, uint32_t *track_length_ms);
+int32_t sys_music_get_playback_rate_percent(void);
+uint8_t sys_music_get_volume_percent(void);
+MusicPlayState sys_music_get_playback_state(void);
+bool sys_music_is_playback_state_reporting_supported(void);
+bool sys_music_is_progress_reporting_supported(void);
+bool sys_music_is_volume_reporting_supported(void);
+void sys_music_command_send(MusicCommand command);
+bool sys_music_is_command_supported(MusicCommand command);
+bool sys_music_needs_user_to_start_playback_on_phone(void);
+void sys_music_request_reduced_latency(bool reduced_latency);
+void sys_music_request_low_latency_for_period(uint32_t period_seconds);
+const char * sys_music_get_connected_server_debug_name(void);
 
 bool sys_activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history);
 bool sys_activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,

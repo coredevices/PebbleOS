@@ -149,9 +149,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x54 -- Add PlatformType enum and defines (rev 87)
 // sdk.major:0x5 .minor:0x55 -- Preferred Content Size (rev 88)
 // sdk.major:0x5 .minor:0x56 -- Add PlatformType enum and defines (rev 89)
+// sdk.major:0x5 .minor:0x57 -- Add MediaService API for volume control (rev 90)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x56
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x57
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
