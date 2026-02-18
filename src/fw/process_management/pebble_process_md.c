@@ -96,6 +96,7 @@ static void prv_init_from_info_common(PebbleProcessMd *common, const PebbleProce
   common->allow_js = process_metadata_flags_allow_js(info->flags);
   common->has_worker = process_metadata_flags_has_worker(info->flags);
   common->is_rocky_app = process_metadata_flags_rocky_app(info->flags);
+  common->is_moddable_app = process_metadata_flags_moddable_app(info->flags);
   common->stored_sdk_platform = process_metadata_flags_stored_sdk_platform(info->flags);
   common->is_unprivileged = true;
   // We don't know the load address of the process until the process is
@@ -190,6 +191,10 @@ bool process_metadata_flags_has_worker(PebbleProcessInfoFlags flags) {
 
 bool process_metadata_flags_rocky_app(PebbleProcessInfoFlags flags) {
   return ((flags & PROCESS_INFO_ROCKY_APP) != 0);
+}
+
+bool process_metadata_flags_moddable_app(PebbleProcessInfoFlags flags) {
+  return ((flags & PROCESS_INFO_MODDABLE_APP) != 0);
 }
 
 uint16_t process_metadata_flags_stored_sdk_platform(PebbleProcessInfoFlags flags) {

@@ -55,6 +55,7 @@ master_capability_set = {
     'HAS_FPGA_DISPLAY',
     'HAS_ORIENTATION_MANAGER',
     'HAS_PRESSURE_SENSOR',
+    'HAS_MODDABLE_XS',
 }
 
 board_capability_dicts = [
@@ -81,7 +82,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
-            'HAS_FPGA_DISPLAY',
+            'HAS_FPGA_DISPLAY'
         },
     },
     {
@@ -110,7 +111,8 @@ board_capability_dicts = [
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
             'HAS_FPGA_DISPLAY',
-            'HAS_APP_SCALING'
+            'HAS_APP_SCALING',
+            'HAS_MODDABLE_XS'
         }
     },
     {
@@ -134,7 +136,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
-            'HAS_FPGA_DISPLAY',
+            'HAS_FPGA_DISPLAY'
         },
     },
     {
@@ -158,7 +160,7 @@ board_capability_dicts = [
             'HAS_VIBE_SCORES',
             'USE_PARALLEL_FLASH',
             'HAS_WEATHER',
-            'HAS_FPGA_DISPLAY',
+            'HAS_FPGA_DISPLAY'
         },
     },
     {
@@ -186,7 +188,8 @@ board_capability_dicts = [
             'HAS_WEATHER',
             'HAS_PUTBYTES_PREACKING',
             'HAS_FPGA_DISPLAY',
-            'HAS_APP_SCALING'
+            'HAS_APP_SCALING',
+            'HAS_MODDABLE_XS'
         },
     },
     {
@@ -231,7 +234,7 @@ board_capability_dicts = [
             'HAS_PUTBYTES_PREACKING',
             'HAS_MAGNETOMETER',
             'HAS_PMIC',
-            'HAS_FLASH_OTP',
+            'HAS_FLASH_OTP'
         },
     },
     {
@@ -259,7 +262,7 @@ board_capability_dicts = [
             'HAS_FLASH_OTP',
             'HAS_ACCEL_SENSITIVITY',
             'HAS_ORIENTATION_MANAGER',
-            'HAS_PRESSURE_SENSOR',
+            'HAS_PRESSURE_SENSOR'
         },
     },
     {
@@ -291,7 +294,8 @@ board_capability_dicts = [
             'HAS_SPEAKER',
             'HAS_ACCEL_SENSITIVITY',
             'HAS_APP_SCALING',
-            'HAS_ORIENTATION_MANAGER'
+            'HAS_ORIENTATION_MANAGER',
+            'HAS_MODDABLE_XS'
         },
     },
     {
@@ -319,7 +323,8 @@ board_capability_dicts = [
             'HAS_PBLBOOT',
             'HAS_ACCEL_SENSITIVITY',
             'HAS_APP_SCALING',
-            'HAS_ORIENTATION_MANAGER'
+            'HAS_ORIENTATION_MANAGER',
+            'HAS_MODDABLE_XS'
         },
     },
 ]
@@ -363,6 +368,11 @@ def get_capability_dict(ctx, board):
 
     if ctx.env.JS_ENGINE == 'none':
         capabilities_of_board.discard('HAS_ROCKY_JS')
+        capabilities_of_board.discard('HAS_MODDABLE_XS')
+    elif ctx.env.JS_ENGINE == 'moddable':
+        capabilities_of_board.discard('HAS_ROCKY_JS')
+    elif ctx.env.JS_ENGINE == 'rocky':
+        capabilities_of_board.discard('HAS_MODDABLE_XS')
 
     # End overrides section
 

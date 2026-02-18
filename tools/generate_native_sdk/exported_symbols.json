@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "89",
+  "revision" : "90",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -51,6 +51,7 @@
     "fw/applib/app_launch_reason.h",
     "fw/applib/cpu_cache.h",
     "fw/applib/health_service.h",
+    "fw/applib/moddable/moddable.h",
     "fw/applib/platform.h",
     "fw/applib/tick_timer_service.h",
     "fw/applib/pbl_std/pbl_std.h",
@@ -1492,6 +1493,14 @@
               "type": "function",
               "name": "app_event_loop",
               "addedRevision": "0"
+            }, {
+              "type": "type",
+              "name": "ModdableCreationRecord",
+              "addedRevision": "90"
+            }, {
+              "type": "function",
+              "name": "moddable_createMachine",
+              "addedRevision": "90"
             }
           ]
         }, {

@@ -95,9 +95,12 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
         icon_resource_id = 'DEFAULT_MENU_ICON'
 
     try:
-        is_rocky = app_info['projectType'] == 'rocky'
+        project_type = app_info['projectType']
+        is_rocky = project_type == 'rocky'
+        is_moddable = project_type == 'moddable'
     except KeyError:
         is_rocky = False
+        is_moddable = False
 
     flags = []
     if is_watchface:
@@ -108,6 +111,8 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
         flags.append('PROCESS_INFO_VISIBILITY_HIDDEN')
     if is_rocky:
         flags.append('PROCESS_INFO_ROCKY_APP')
+    if is_moddable:
+        flags.append('PROCESS_INFO_MODDABLE_APP')
     if platform_name:
         flags.append('PROCESS_INFO_PLATFORM_{}'.format(platform_name.upper()))
 
