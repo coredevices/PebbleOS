@@ -2,10 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "health_hr_summary_card.h"
+#include "health_hr_summary_card_segments.h"
 #include "health_hr_detail_card.h"
+#include "health_progress.h"
 #include "services/normal/activity/health_util.h"
 
-#include "applib/graphics/graphics_circle.h"
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/ui/kino/kino_reel.h"
 #include "applib/ui/text_layer.h"
@@ -18,7 +19,6 @@
 #include "system/logging.h"
 #include "util/size.h"
 #include "util/string.h"
-#include "util/trig.h"
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
@@ -26,6 +26,7 @@
 
 typedef struct HealthHrSummaryCardData {
   HealthData *health_data;
+  HealthProgressBar progress_bar;
   GDrawCommandSequence *pulsing_heart;
   uint32_t pulsing_heart_frame_index;
   AppTimer *pulsing_heart_timer;
@@ -40,13 +41,8 @@ typedef struct HealthHrSummaryCardData {
 
 #define PULSING_HEART_TIMEOUT (30 * MS_PER_SECOND)
 
-#define CIRCLE_COLOR (PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack))
-// Outer radius, inner radius and center of the ring around the heart icon.
-// The center is in layer coordinates (legacy 144x168 base, before display offset).
-#define CIRCLE_RADIUS_OUTER 43
-#define CIRCLE_RADIUS_INNER 33
-#define CIRCLE_CENTER_X (71 + HEALTH_X_OFFSET)
-#define CIRCLE_CENTER_Y (58 + HEALTH_Y_OFFSET)
+#define PROGRESS_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack))
+#define PROGRESS_OUTLINE_COLOR (PBL_IF_COLOR_ELSE(GColorClear, GColorBlack))
 
 #define TEXT_COLOR (PBL_IF_COLOR_ELSE(GColorBulgarianRose, GColorBlack))
 #define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite))
@@ -77,12 +73,11 @@ static void prv_pulsing_heart_timer_cb(void *context) {
   layer_mark_dirty(base_layer);
 }
 
-static void prv_render_circle(GContext *ctx) {
-  graphics_context_set_fill_color(ctx, CIRCLE_COLOR);
-  graphics_fill_radial_internal(ctx,
-                                GPoint(CIRCLE_CENTER_X, CIRCLE_CENTER_Y),
-                                CIRCLE_RADIUS_INNER, CIRCLE_RADIUS_OUTER,
-                                0, TRIG_MAX_ANGLE);
+static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
+  HealthHrSummaryCardData *data = layer_get_data(base_layer);
+
+  health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_BACKGROUND_COLOR,
+                           0, HEALTH_PROGRESS_BAR_MAX_VALUE);
 }
 
 static void prv_render_icon(GContext *ctx, Layer *base_layer) {
@@ -175,9 +170,9 @@ static void prv_base_layer_update_proc(Layer *base_layer, GContext *ctx) {
   data->now_bpm = health_data_hr_get_current_bpm(data->health_data);
   data->last_updated = health_data_hr_get_last_updated_timestamp(data->health_data);
 
-  prv_render_circle(ctx);
-
   prv_render_icon(ctx, base_layer);
+
+  prv_render_progress_bar(ctx, base_layer);
 
   if (!activity_prefs_heart_rate_is_enabled()) {
     prv_render_hrm_disabled(ctx, base_layer);
@@ -207,6 +202,10 @@ Layer *health_hr_summary_card_create(HealthData *health_data) {
     .health_data = health_data,
     .pulsing_heart =
         gdraw_command_sequence_create_with_resource(RESOURCE_ID_HEALTH_APP_PULSING_HEART),
+    .progress_bar = {
+      .num_segments = ARRAY_LENGTH(s_hr_summary_progress_segments),
+      .segments = s_hr_summary_progress_segments,
+    },
     .now_bpm = health_data_hr_get_current_bpm(health_data),
     .resting_bpm = health_data_hr_get_resting_bpm(health_data),
     .last_updated = health_data_hr_get_last_updated_timestamp(health_data),
