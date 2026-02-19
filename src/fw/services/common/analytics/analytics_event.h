@@ -238,6 +238,8 @@ typedef enum VibePatternFeature {
   VibePatternFeature_Notifications = 1 << 0,
   VibePatternFeature_PhoneCalls = 1 << 1,
   VibePatternFeature_Alarms = 1 << 2,
+  VibePatternFeature_Hourly = 1 << 3,
+  VibePatternFeature_OnDisconnect = 1 << 4,
 } VibePatternFeature;
 
 typedef struct PACKED {
