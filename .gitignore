@@ -64,4 +64,4 @@ waflib.zip
 docs/_build
 artifacts/
 
-.claude
+.claude/settings.local.json
