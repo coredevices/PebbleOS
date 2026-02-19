@@ -24,7 +24,7 @@ struct __jmp_buf_struct {
 typedef struct __jmp_buf_struct jmp_buf[1];
 
 int setjmp(jmp_buf env);
-void longjmp(jmp_buf buf, int value);
+void longjmp(jmp_buf buf, int value) __attribute__((noreturn));
 #else
 // other implementations either use system setjmp or don't have it.
 # include_next <setjmp.h>
