@@ -627,7 +627,8 @@ static void prv_handle_notification_removed(Uuid *id) {
 }
 
 static void prv_handle_notification_acted_upon(Uuid *id) {
-  app_notification_window_handle_notification_acted_upon_by_id(id);
+  prv_remove_notification(s_data, id);
+  app_notification_window_remove_notification_by_id(id);
 }
 
 static void prv_handle_notification_added(Uuid *id) {
@@ -658,6 +659,16 @@ static void prv_handle_notification(PebbleEvent *e, void *context) {
       case NotificationActedUpon:
         prv_handle_notification_acted_upon(id);
         break;
+      case NotificationActionResult: {
+        PebbleSysNotificationActionResult *action_result = e->sys_notification.action_result;
+        if (action_result &&
+            (action_result->type == ActionResultTypeSuccess ||
+             action_result->type == ActionResultTypeSuccessANCSDismiss)) {
+          prv_remove_notification(s_data, &action_result->id);
+          app_notification_window_remove_notification_by_id(&action_result->id);
+        }
+        break;
+      }
       default:
         break;
         // Not implemented
