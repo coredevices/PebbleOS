@@ -370,8 +370,11 @@ static PPoGATTClient *prv_create_client(TimerID timer) {
 static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, DeleteReason reason) {
   // Unsubscribe from Data characteristic:
   if (client->state > StateDisconnectedSubscribingData && !is_disconnected) {
-    gatt_client_subscriptions_subscribe(client->characteristics.data,
-                                        BLESubscriptionNone, GAPLEClientKernel);
+    BLECharacteristic data_char = client->characteristics.data;
+    // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
+    bt_unlock();
+    gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNone, GAPLEClientKernel);
+    bt_lock();
   }
 
   if (client->state == StateConnectedOpen) {
@@ -791,22 +794,44 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
     session_type = meta_v1->pp_session_type;
   }
 
-  BTErrno e = gatt_client_subscriptions_subscribe(client->characteristics.data,
+  // Save data needed across the bt_lock release
+  BLECharacteristic data_char = client->characteristics.data;
+  Uuid app_uuid = meta->app_uuid;
+
+  // Release bt_lock before calling gatt_client_subscriptions_subscribe, which
+  // eventually calls into NimBLE. Holding bt_lock when calling into NimBLE
+  // creates a lock ordering deadlock with ble_hs_mutex (NimBLE store callbacks
+  // acquire bt_lock while holding ble_hs_mutex).
+  // See prv_retry_meta_read for the same pattern.
+  bt_unlock();
+
+  BTErrno e = gatt_client_subscriptions_subscribe(data_char,
                                                   BLESubscriptionNotifications,
                                                   GAPLEClientKernel);
+
+  // Re-acquire bt_lock before accessing client state
+  bt_lock();
+
+  // Re-validate client pointer after releasing lock, as it may have been removed
+  bool is_data_unused;
+  client = prv_find_client_with_characteristic(data_char, &is_data_unused);
+  if (!client) {
+    return;
+  }
+
   if (e == BTErrnoOK) {
     // Delete any existing client with this UUID, last one wins.
     // iOS behavior is a bit strange when it comes to service persistence. When an app crashes or
     // gets killed through Xcode, the service records persist. When the app is relaunched again,
     // a new service will get added again. The old one remains when it was killed through Xcode
     // before. The old one seems to go away *after* the new one gets added in the crash scenario.
-    PPoGATTClient *existing_client = prv_find_client_with_uuid(&meta->app_uuid);
+    PPoGATTClient *existing_client = prv_find_client_with_uuid(&app_uuid);
     if (existing_client) {
       PBL_LOG_ERR("Found PPoGATT server with same UUID. Keeping only the last one.");
       prv_delete_client(existing_client, true /* is_disconnected */, DeleteReason_DuplicateServer);
     }
     client->state = StateDisconnectedSubscribingData;
-    client->app_uuid = meta->app_uuid;
+    client->app_uuid = app_uuid;
     // Reset retry counter on success
     client->meta_read_retries = 0;
 
@@ -967,8 +992,11 @@ void ppogatt_handle_subscribe(BLECharacteristic characteristic,
     PPoGATTClient *client = prv_find_client_with_characteristic(characteristic, NULL);
     if (!client && is_subscribed) {
       PBL_LOG_ERR("PPoGATT Client could be found, unsubscribing");
-      // Attempt to unsubscribe to avoid wasting bandwidth:
+      // Attempt to unsubscribe to avoid wasting bandwidth.
+      // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
+      bt_unlock();
       gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone, GAPLEClientKernel);
+      bt_lock();
       goto unlock;
     }
     PBL_ASSERTN(client->state == StateDisconnectedSubscribingData);
