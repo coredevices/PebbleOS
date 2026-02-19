@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-import os, sys
+import sys
 from ctypes import *
 from PIL import Image
 

@@ -7,7 +7,6 @@ import re
 import sys
 import argparse
 
-from elftools.elf.elffile import ELFFile
 from .newlogging import get_log_dict_from_file
 
 

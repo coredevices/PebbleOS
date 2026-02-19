@@ -12,7 +12,6 @@ extras_dir = os.path.dirname(os.path.abspath(__file__))
 if extras_dir not in sys.path:
     sys.path.insert(0, extras_dir)
 
-import sdk_paths
 
 from process_sdk_resources import generate_resources
 from sdk_helpers import (configure_libraries, configure_platform, get_target_platforms,

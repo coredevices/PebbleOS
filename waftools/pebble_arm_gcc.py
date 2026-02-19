@@ -4,7 +4,6 @@
 import os
 import re
 import waflib
-from waflib import Utils
 from waflib.Configure import conf
 
 def find_clang_path(conf):

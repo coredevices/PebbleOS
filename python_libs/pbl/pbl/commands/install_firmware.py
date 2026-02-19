@@ -3,16 +3,13 @@
 
 from __future__ import absolute_import, print_function
 
-import datetime
 from progressbar import ProgressBar, Bar, FileTransferSpeed, Timer, Percentage, FormatLabel
 
 from libpebble2.protocol.system import SystemMessage
 from libpebble2.services.putbytes import PutBytes, PutBytesType
-from libpebble2.exceptions import GetBytesError
 from libpebble2.util.bundle import PebbleBundle
 
 from pebble_tool.commands.base import PebbleCommand
-from pebble_tool.exceptions import ToolError
 
 class InstallFirmwareCommand(PebbleCommand):
     """Install a .pbz onto the watch."""

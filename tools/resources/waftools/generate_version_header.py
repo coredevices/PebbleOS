@@ -1,9 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-from waflib import Node, Task, TaskGen
+from waflib import Task, TaskGen
 
-from resources.types.resource_ball import ResourceBall
 
 from pbpack import ResourcePack
 

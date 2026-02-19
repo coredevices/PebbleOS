@@ -10,7 +10,7 @@ except ImportError:
 
 from datetime import datetime
 
-from gdb_symbols import get_static_variable, get_static_function
+from gdb_symbols import get_static_variable
 
 
 class TintinMetadata(object):

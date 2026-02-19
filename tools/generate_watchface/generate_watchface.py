@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-import argparse, os, sys
+import argparse
+import os
 import shutil
 
 import watch_templates as temps

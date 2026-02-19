@@ -1,6 +1,6 @@
 # coding=utf-8
 from xml.etree import ElementTree
-from pdc import extend_bounding_box, bounding_box_around_points
+from pdc import bounding_box_around_points
 
 NS_ANNOTATION = "http://www.pebble.com/2015/pdc"
 PREFIX_ANNOTATION = "pdc"

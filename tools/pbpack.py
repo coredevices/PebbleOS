@@ -6,7 +6,6 @@
 import argparse
 import stm32_crc
 import struct
-import time
 
 
 class ResourcePackTableEntry(object):

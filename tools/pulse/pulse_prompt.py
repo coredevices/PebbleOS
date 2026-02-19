@@ -107,7 +107,6 @@ class PromptCommand(object):
         return cookie
 
 if __name__ == '__main__':
-    import readline
 
     with socket.Connection.open_dbgserial('ftdi://ftdi:4232:1/3') as connection:
         inputCommand = raw_input('>')

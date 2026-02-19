@@ -10,7 +10,6 @@ try:
 except ImportError:
     import mock
 
-import construct
 
 from pebble.pulse2 import ppp, exceptions
 

@@ -5,10 +5,7 @@
 # Generate sample health activity blob
 ##################################################################################################
 import argparse
-import os
-import sys
 import logging
-import math
 import time
 import struct
 

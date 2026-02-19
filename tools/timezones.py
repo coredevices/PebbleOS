@@ -6,9 +6,7 @@
 from __future__ import print_function
 
 import argparse
-import os
 import re
-import string
 import struct
 import sys
 from collections import namedtuple

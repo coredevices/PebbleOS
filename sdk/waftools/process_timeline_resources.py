@@ -3,7 +3,7 @@
 
 import json
 import struct
-from waflib import Node, Task, TaskGen
+from waflib import Node, Task
 from waflib.TaskGen import before_method, feature
 
 from resources.types.resource_definition import ResourceDefinition

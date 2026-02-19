@@ -732,7 +732,7 @@ class ControlProtocol(object):
 
         try:
             encapsulation = LCPEncapsulation.parse(packet)
-        except ParseError as e:
+        except ParseError:
             self.logger.exception('Packet parsing failed')
             return
 
@@ -757,7 +757,7 @@ class ControlProtocol(object):
                 return
             try:
                 options = OptionList.parse(encapsulation.data)
-            except ParseError as e:
+            except ParseError:
                 self.logger.exception('Parsing option list failed')
                 return
 
@@ -799,7 +799,7 @@ class ControlProtocol(object):
         elif code == ControlCode.Code_Reject:
             try:
                 rejected_packet = LCPEncapsulation.parse(encapsulation.data)
-            except ParseError as e:
+            except ParseError:
                 # Invalid packet
                 self.logger.exception('Error parsing Code-Reject response')
                 return

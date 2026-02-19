@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-from waflib import Errors
 
 # Each set of boards and their capabilities.
 # To use these, import as follows:

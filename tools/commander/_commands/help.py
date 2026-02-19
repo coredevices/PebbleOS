@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import inspect
-import sys
 
-from .. import PebbleCommander, exceptions, parsers
+from .. import PebbleCommander, exceptions
 
 
 def trim_docstring(var):

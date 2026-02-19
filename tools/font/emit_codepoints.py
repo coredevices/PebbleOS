@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import freetype
-import argparse
-import os, sys, re
-from math import ceil
+import os
+import sys
+import re
 
 MIN_CODEPOINT = 0x20
 MAX_CODEPOINT = 0xffff

@@ -79,7 +79,7 @@ def configure(conf):
 
     combined_key_list = key_list + list(key_dict.keys())
     for lib in conf.env.LIB_JSON:
-        if not 'pebble' in lib or not 'messageKeys' in lib['pebble']:
+        if 'pebble' not in lib or 'messageKeys' not in lib['pebble']:
             continue
         lib_keys = lib['pebble']['messageKeys']
         if isinstance(lib_keys, list):

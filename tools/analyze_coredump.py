@@ -143,7 +143,7 @@ class CoredumpAnalyzer:
             # Prepare output
             output_lines = []
             output_lines.append("=" * 80)
-            output_lines.append(f"COREDUMP ANALYSIS REPORT")
+            output_lines.append("COREDUMP ANALYSIS REPORT")
             output_lines.append(
                 f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             )

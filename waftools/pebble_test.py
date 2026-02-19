@@ -1,13 +1,11 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-from waflib.TaskGen import before, after, feature, taskgen_method
-from waflib import Errors, Logs, Options, Task, Utils, Node
+from waflib.TaskGen import after, feature, taskgen_method
+from waflib import Errors, Logs, Task, Utils
 from waftools import junit_xml
 from string import Template
 import hashlib
-import json
-import lcov_info_parser
 import os
 import re
 import unicodedata as ud
@@ -15,7 +13,7 @@ import unicodedata as ud
 @feature('pebble_test')
 @after('apply_link')
 def make_test(self):
-    if not 'cprogram' in self.features and not 'cxxprogram' in self.features:
+    if 'cprogram' not in self.features and 'cxxprogram' not in self.features:
         Logs.error('test cannot be executed %s'%self)
         return
 

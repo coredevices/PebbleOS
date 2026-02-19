@@ -9,7 +9,6 @@ Module for dehashing NewLog input
 """
 
 import os
-import re
 import string
 import struct
 from pebble.loghashing.constants import (NEWLOG_LINE_CONSOLE_PATTERN, 

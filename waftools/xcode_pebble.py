@@ -17,8 +17,8 @@ $ waf configure xcode
 
 # TODO: support iOS projects
 
-from waflib import Context, TaskGen, Build, Utils
-import os, sys, random, time
+from waflib import Context, Build, Utils
+import os
 
 HEADERS_GLOB = '**/(*.h|*.hpp|*.H|*.inl)'
 
@@ -270,7 +270,7 @@ class PBXProject(XCodeNode):
         XCodeNode.__init__(self)
         self.buildConfigurationList = XCConfigurationList([XCBuildConfiguration('waf', {})])
         self.compatibilityVersion = version[0]
-        self.hasScannedForEncodings = 1;
+        self.hasScannedForEncodings = 1
         self.mainGroup = PBXGroup(name)
         self.projectRoot = ""
         self.projectDirPath = ""

@@ -7,10 +7,9 @@ import subprocess
 from string import Template
 from waflib.Errors import WafError
 from waflib.TaskGen import before_method, feature
-from waflib import Context, Logs, Node, Task
+from waflib import Context, Logs, Task
 
-from sdk_helpers import find_sdk_component, get_node_from_abspath
-from sdk_helpers import process_package
+from sdk_helpers import find_sdk_component
 
 
 @feature('rockyjs')

@@ -210,9 +210,9 @@ def svg_color(surface, node, opacity, attribute, default=None):
 def svg(surface, node, original=None):
     original(surface, node)
     width, height, viewbox = node_format(surface, node)
-    if not "width" in node:
+    if "width" not in node:
         width = None if viewbox is None else viewbox[2]
-    if not "height" in node:
+    if "height" not in node:
         height = None if viewbox is None else viewbox[3]
     if (width is not None) and (height is not None):
         surface.stored_size = (width, height)
@@ -325,7 +325,7 @@ class PathSurfaceContext(cairo.Context):
         self.grouped_annotations = {}
 
     def get_grouped_description(self, description, *args, **kwargs):
-        if not description in self.grouped_annotations:
+        if description not in self.grouped_annotations:
             self.grouped_annotations[description] = self.add_annotation(description, *args, **kwargs)
 
         return self.grouped_annotations[description]

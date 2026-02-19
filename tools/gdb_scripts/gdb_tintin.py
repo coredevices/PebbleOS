@@ -35,7 +35,6 @@ except ImportError:
 import gdb.printing
 import ctypes
 import datetime
-import itertools
 import re
 import struct
 
@@ -49,7 +48,7 @@ import gdb_utils
 import gdb_parser
 from gdb_heap import Heap
 from gdb_tintin_metadata import TintinMetadata
-from gdb_symbols import get_static_variable, get_static_function
+from gdb_symbols import get_static_variable
 
 
 class PblCommand(gdb.Command):
@@ -95,7 +94,6 @@ class FreeRTOSMutex(object):
     """ Convenience class to access FreeRTOS mutex structure """
 
     def __init__(self, mutex):
-        from pprint import pprint
         self.address = mutex
         self.mutex = mutex.cast(gdb.lookup_type("LightMutex_t").pointer())
 
@@ -674,7 +672,7 @@ class LockStats(gdb.Command):
 
         for mutex in mutexes:
             message.append("Mutex Addr: {} Owner: {}".format(mutex.address, mutex.owner_name()))
-            message.append("Last locked: {}".format(mutex_lrs.get(str(mutex.address)), 0))
+            message.append("Last locked: {}".format(mutex_lrs.get(str(mutex.address)), ))
 
             for waiter in mutex.waiter_task_list():
                 message.append("\t{} waiting for lock".expandtabs(2).format(waiter))

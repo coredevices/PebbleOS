@@ -10,10 +10,7 @@ from serial.serialutil import SerialException
 # Stuff we need
 import os
 import sys
-import threading
-import operator
 import time
-import unicodedata as ud
 import socket
 
 from logdehash import LogDehash

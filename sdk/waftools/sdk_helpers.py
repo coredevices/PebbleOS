@@ -4,12 +4,11 @@
 import json
 import os
 import struct
-import re
 
 from waflib import Logs
 
 from pebble_package import LibraryPackage
-from pebble_sdk_platform import pebble_platforms, maybe_import_internal
+from pebble_sdk_platform import pebble_platforms
 from pebble_sdk_version import set_env_sdk_version
 from resources.types.resource_object import ResourceObject
 
@@ -246,7 +245,7 @@ def process_package(ctx, package, root_lib_node=None):
                     with open(package.abspath()) as f:
                         info = json.load(f)
                     if not dict(ctx.env.PROJECT_INFO).get('enableMultiJS', False):
-                        if not 'pebble' in info:
+                        if 'pebble' not in info:
                             continue
                     packages_str += "      '{}': '{}'\n".format(info['name'], info['version'])
                 if packages_str:

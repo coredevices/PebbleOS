@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 from waflib.Configure import conf
 from waflib.Errors import BuildError
 

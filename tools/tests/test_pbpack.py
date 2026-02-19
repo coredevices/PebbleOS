@@ -11,7 +11,6 @@ root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.insert(0, root_dir)
 
 from pbpack import ResourcePack
-import stm32_crc
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 

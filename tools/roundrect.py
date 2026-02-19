@@ -2,18 +2,17 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import math
 
 # Little tool to generate rounded rect insets, stored as 4 bit uints, packed together into a uint32.
 
 def calc_lookup(radius, is_bottom):
     insets = [0] * (radius + 1)
     
-    f = 1 - radius;
-    ddF_x = 1;
-    ddF_y = -2 * radius;
-    x = 0;
-    y = radius;
+    f = 1 - radius
+    ddF_x = 1
+    ddF_y = -2 * radius
+    x = 0
+    y = radius
     while(x < y):
         if(f >= 0):
             y -= 1

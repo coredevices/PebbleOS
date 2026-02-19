@@ -1,7 +1,11 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import json, argparse, codecs, re, os
+import json
+import argparse
+import codecs
+import re
+import os
 
 def generate_codepoint_requirements(path, encoding='utf-8', controlchars=False):
     latin_start = 0x20

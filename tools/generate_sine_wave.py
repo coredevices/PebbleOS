@@ -17,7 +17,7 @@ def generate_sine_wave_c_file(sample_rate, frequency, output_file, array_name="s
     max_value = 32767
     scaled_amplitude = int(max_value * amplitude)
     
-    print(f"Generating sine wave:")
+    print("Generating sine wave:")
     print(f"  Sample rate: {sample_rate} Hz")
     print(f"  Requested frequency: {frequency} Hz")
     print(f"  Actual frequency: {actual_frequency:.2f} Hz")

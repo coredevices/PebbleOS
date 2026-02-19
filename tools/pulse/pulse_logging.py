@@ -3,10 +3,8 @@
 
 import collections
 import json
-import re
 import struct
 import threading
-import time
 from datetime import datetime
 
 from . import socket
@@ -50,7 +48,6 @@ class LoggingProtocol(object):
         return LogMessage.parse(self.socket.receive(block, timeout))
 
 if __name__ == '__main__':
-    import readline
     import sys
     from log_hashing import log_dehash
 

@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-import argparse
 import freetype
 import os
 import re
@@ -11,10 +10,8 @@ import struct
 import sys
 import itertools
 import json
-from math import ceil
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-import generate_c_byte_array
 
 # Font v3 -- https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Resource+Pack+Format
 #   FontInfo
@@ -156,7 +153,7 @@ class Font:
         if regex_string != ".*":
             try:
                 self.regex = re.compile(regex_string)
-            except Exception as e:
+            except Exception:
                 raise Exception("Supplied filter argument was not a valid regular expression."
                                 "Font: {}".format(self.ttf_path))
         else:

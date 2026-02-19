@@ -4,9 +4,7 @@
 
 
 import logging
-import math
 from struct import unpack, pack
-from array import array as Array
 
 REG_CONFIG = 0x00
 REG_SHUNT_V = 0x01

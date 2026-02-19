@@ -1,6 +1,5 @@
 from __future__ import print_function
 import imghdr
-import io
 import os
 import subprocess
 import sys

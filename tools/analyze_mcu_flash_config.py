@@ -3,7 +3,6 @@
 
 import binutils
 import os.path
-import sh
 
 
 class Config(object):
