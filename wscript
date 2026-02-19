@@ -132,8 +132,9 @@ def options(opt):
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
     opt.add_option('--qemu', action='store_true',
                    help='Build an image for qemu instead of a real board.')
-    opt.add_option('--js-engine', action='store', default='rocky', choices=['rocky', 'moddable', 'none'],
-                   help='Specify JavaScript engine (rocky, moddable or none)')
+    opt.add_option('--js-engine', action='store', default=None, choices=['rocky', 'moddable', 'none'],
+                   help='Specify JavaScript engine (rocky, moddable or none). '
+                        'Defaults to moddable for boards with HAS_MODDABLE_XS, none otherwise.')
     opt.add_option('--sdkshell', action='store_true',
                    help='Use the sdk shell instead of the normal shell')
     opt.add_option('--nolog', action='store_true',
@@ -347,7 +348,22 @@ def configure(conf):
     conf.recurse('platform')
 
     conf.env.QEMU = conf.options.qemu
-    conf.env.JS_ENGINE = conf.options.js_engine
+
+    # Auto-detect JS engine from board capabilities if not explicitly specified
+    if conf.options.js_engine is not None:
+        conf.env.JS_ENGINE = conf.options.js_engine
+    else:
+        from platform_capabilities import board_capability_dicts
+        board = conf.options.board
+        board_caps = set()
+        for cap_dict in board_capability_dicts:
+            if board in cap_dict['boards']:
+                board_caps = cap_dict['capabilities']
+                break
+        if 'HAS_MODDABLE_XS' in board_caps:
+            conf.env.JS_ENGINE = 'moddable'
+        else:
+            conf.env.JS_ENGINE = 'none'
 
     bt_board = None
 
@@ -473,6 +489,7 @@ def configure(conf):
 
     conf.setenv('arm_prf_mode', env=conf.env)
     conf.env.append_value('DEFINES', ['RECOVERY_FW'])
+    conf.env.JS_ENGINE = 'none' #Disable JS engine for PRF builds to save space, as PRF doesn't support JS anyway
 
     Logs.pprint('CYAN', 'Configuring unit test environment')
     conf.setenv('local', unit_test_env)
@@ -620,6 +637,9 @@ def build(bld):
         bld.recurse('tools')
         return
 
+    if bld.variant == 'prf':
+        bld.set_env(bld.all_envs['arm_prf_mode'])
+
     if bld.variant in ('', 'applib', 'prf'):
         # Dependency for SDK
         bld.recurse('third_party/jerryscript')
@@ -646,9 +666,7 @@ def build(bld):
     if (bld.variant != 'prf' and not bld.env.QEMU and bld.env.NORMAL_SHELL != 'sdk'):
         bld.env.append_value('DEFINES', 'STATIONARY_MODE')
 
-    if bld.variant == 'prf':
-        bld.set_env(bld.all_envs['arm_prf_mode'])
-    elif bld.variant == 'test':
+    if bld.variant == 'test':
         bld.recurse('src/include')
         bld.recurse('third_party/jerryscript')
         bld.recurse('third_party/nanopb')
