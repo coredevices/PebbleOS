@@ -114,12 +114,12 @@ bool dialog_init_icon_layer(Dialog *dialog, KinoReel *image,
   layer_set_clips(&icon_layer->layer, false);
 
   GRect from = icon_rect;
-  // Animate from off screen. We need to be at least -80, since that is our largest icon size.
-  const int16_t DISP_OFFSET = 80;
+  // Animate from off screen. Use display width to ensure icon starts fully off-screen
+  // on all display sizes (e.g. 200px wide on obelix/robert).
   if (dialog->icon_anim_direction == DialogIconAnimationFromLeft) {
-    from.origin.x = -DISP_OFFSET;
+    from.origin.x = -icon_rect.size.w;
   } else if (dialog->icon_anim_direction == DialogIconAnimationFromRight) {
-    from.origin.x = DISP_OFFSET;
+    from.origin.x = DISP_COLS;
   }
 
   const int16_t ICON_TARGET_PT_X = icon_rect.size.w;
