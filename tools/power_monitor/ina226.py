@@ -20,6 +20,7 @@ HIGH_BYTES_MULTIPLIER = 256
 
 ACK = 0
 
+
 class Ina226:
     # micro{amps,watts,volts}
     UNITS_SCALING = 10**3
@@ -49,7 +50,7 @@ class Ina226:
 
         # use pack to split uShort sized regValue into 2 char sized
 
-        writeString = pack('>BBH', self.i2cAddress, regAddress, regValue)
+        writeString = pack(">BBH", self.i2cAddress, regAddress, regValue)
         self.i2cBus.Write(writeString)
 
         if self.i2cBus.GetAck() != ACK:
@@ -61,7 +62,7 @@ class Ina226:
     def _i2cSetReadPointer(self, regAddress):
         self.i2cBus.Start()
 
-        writeString = pack('>BB', self.i2cAddress, regAddress)
+        writeString = pack(">BB", self.i2cAddress, regAddress)
         self.i2cBus.Write(writeString)
 
         if self.i2cBus.GetAck() != ACK:
@@ -73,7 +74,7 @@ class Ina226:
     def _i2cReadCurrent16Bits(self):
         self.i2cBus.Start()
 
-        writeString = pack('>B', self.i2cAddress + 1)
+        writeString = pack(">B", self.i2cAddress + 1)
         self.i2cBus.Write(writeString)
 
         if self.i2cBus.GetAck() != ACK:
@@ -103,21 +104,21 @@ class Ina226:
         self._i2cWrite16BitReg(REG_ALERT_LIM, 0x1400)
 
     def read_value(self, reg, scale_factor):
-        value = unpack('!h', self._i2cRead16BitReg(reg))[0]
+        value = unpack("!h", self._i2cRead16BitReg(reg))[0]
         return value * scale_factor * self.UNITS_SCALING
 
     def readShuntVoltage(self):
-        """ Returns shunt voltage in uV. """
+        """Returns shunt voltage in uV."""
         return self.read_value(REG_SHUNT_V, self.SHUNT_LSB)
 
     def readBusVoltage(self):
-        """ Returns bus voltage in uV. """
+        """Returns bus voltage in uV."""
         return self.read_value(REG_BUS_V, self.BUS_LSB)
 
     def readPower(self):
-        """ Returns power in uW. """
+        """Returns power in uW."""
         return self.read_value(REG_POWER, self.power_lsb)
 
     def readCurrent(self):
-        """ Returns current in uA. """
+        """Returns current in uA."""
         return self.read_value(REG_CURRENT, self.current_lsb)

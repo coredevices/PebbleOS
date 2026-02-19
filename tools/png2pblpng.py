@@ -13,33 +13,43 @@ import pebble_image_routines
 TRUNCATE = "truncate"
 NEAREST = "nearest"
 COLOR_REDUCTION_CHOICES = [TRUNCATE, NEAREST]
-SUPPORTED_PALETTES = ('pebble2', 'pebble64')
+SUPPORTED_PALETTES = ("pebble2", "pebble64")
 DEFAULT_COLOR_REDUCTION = NEAREST
 
+
 # Public APIs
-def convert_png_to_pebble_png(input_filename, output_filename,
-                              palette_name, color_reduction_method=DEFAULT_COLOR_REDUCTION,
-                              bitdepth=None):
+def convert_png_to_pebble_png(
+    input_filename,
+    output_filename,
+    palette_name,
+    color_reduction_method=DEFAULT_COLOR_REDUCTION,
+    bitdepth=None,
+):
     """
     Convert a png to a pblpng and write it to output_filename
     """
 
     output_png_writer, image_data = _convert_png_to_pebble_png_writer(
-        input_filename, palette_name, color_reduction_method, force_bitdepth=bitdepth)
+        input_filename, palette_name, color_reduction_method, force_bitdepth=bitdepth
+    )
 
-    with open(output_filename, 'wb') as output_file:
+    with open(output_filename, "wb") as output_file:
         output_png_writer.write_array(output_file, image_data)
 
 
-def convert_png_to_pebble_png_bytes(input_filename, palette_name,
-                                    color_reduction_method=DEFAULT_COLOR_REDUCTION,
-                                    bitdepth=None):
+def convert_png_to_pebble_png_bytes(
+    input_filename,
+    palette_name,
+    color_reduction_method=DEFAULT_COLOR_REDUCTION,
+    bitdepth=None,
+):
     """
     Convert a png to a pblpng and return a string with the raw data
     """
 
     output_png, image_data = _convert_png_to_pebble_png_writer(
-        input_filename, palette_name, color_reduction_method, force_bitdepth=bitdepth)
+        input_filename, palette_name, color_reduction_method, force_bitdepth=bitdepth
+    )
 
     output_str = BytesIO()
     output_png.write_array(output_str, image_data)
@@ -48,8 +58,9 @@ def convert_png_to_pebble_png_bytes(input_filename, palette_name,
 
 
 # Implementation
-def _convert_png_to_pebble_png_writer(input_filename, palette_name, color_reduction_method,
-                                      force_bitdepth=None):
+def _convert_png_to_pebble_png_writer(
+    input_filename, palette_name, color_reduction_method, force_bitdepth=None
+):
     input_png = png.Reader(filename=input_filename)
 
     # sbit breaks pypngs convert_rgb_to_rgba routine
@@ -64,16 +75,20 @@ def _convert_png_to_pebble_png_writer(input_filename, palette_name, color_reduct
     # convert RGBA 32-bit boxed rows to list for output
     rgba32_list = grouper(itertools.chain.from_iterable(pixels), 4)
 
-    color_reduction_func = pebble_image_routines.get_reduction_func(palette_name,
-                                                                    color_reduction_method)
-    is_grey, has_alpha, bitdepth, palette = get_palette_for_png(input_filename,
-                                                                palette_name,
-                                                                color_reduction_method)
+    color_reduction_func = pebble_image_routines.get_reduction_func(
+        palette_name, color_reduction_method
+    )
+    is_grey, has_alpha, bitdepth, palette = get_palette_for_png(
+        input_filename, palette_name, color_reduction_method
+    )
 
     if force_bitdepth is not None:
         if bitdepth > force_bitdepth:
-            raise Exception("Tried to force {} bits; need at least {}."
-                            .format(force_bitdepth, bitdepth))
+            raise Exception(
+                "Tried to force {} bits; need at least {}.".format(
+                    force_bitdepth, bitdepth
+                )
+            )
 
         # If we're forcing a particular bitdepth, and it's not the one we were going
         # to use, skip the greyscale dance.
@@ -98,7 +113,7 @@ def _convert_png_to_pebble_png_writer(input_filename, palette_name, color_reduct
 
     # second pass of pixel data, converts rgba32 pixels to greyscale or palettized output
     image = []
-    for (r, g, b, a) in rgba32_list:
+    for r, g, b, a in rgba32_list:
         # operating on original pixel values, need to do the same color reduction
         # as when the palette was generated
         (r, g, b, a) = color_reduction_func(r, g, b, a)
@@ -121,8 +136,15 @@ def _convert_png_to_pebble_png_writer(input_filename, palette_name, color_reduct
         # remove the palette for greyscale output with writer
         palette = None
 
-    output_png = png.Writer(width=width, height=height, compression=9, bitdepth=bitdepth,
-                            palette=palette, greyscale=is_grey, transparent=transparent_grey)
+    output_png = png.Writer(
+        width=width,
+        height=height,
+        compression=9,
+        bitdepth=bitdepth,
+        palette=palette,
+        greyscale=is_grey,
+        transparent=transparent_grey,
+    )
 
     return (output_png, image)
 
@@ -140,7 +162,9 @@ def get_palette_for_png(input_filename, palette_name, color_reduction_method):
     width, height, pixels, metadata = input_png.asRGBA8()
 
     palette = []  # rgba32 image palette
-    is_grey = True  # does the image only contain greyscale pixels (and only full or opaque)
+    is_grey = (
+        True  # does the image only contain greyscale pixels (and only full or opaque)
+    )
     has_alpha = False  # does the image contain alpha
 
     # iterators are one shot, so make a copy of just the iterator and not the data
@@ -150,20 +174,23 @@ def get_palette_for_png(input_filename, palette_name, color_reduction_method):
     pixels, pixels2 = itertools.tee(pixels)
 
     # Figure out what color reduction algorithm we should be using.
-    color_reduction_func = pebble_image_routines.get_reduction_func(palette_name,
-                                                                    color_reduction_method)
+    color_reduction_func = pebble_image_routines.get_reduction_func(
+        palette_name, color_reduction_method
+    )
 
     # convert RGBA 32-bit image colors to pebble color table
-    for (r, g, b, a) in grouper(itertools.chain.from_iterable(pixels2), 4):
+    for r, g, b, a in grouper(itertools.chain.from_iterable(pixels2), 4):
         (r, g, b, a) = color_reduction_func(r, g, b, a)
 
         if (r, g, b, a) not in palette:
             palette.append((r, g, b, a))
             # Check if image contains any transparent pixels
-            if (a != 0xFF):
+            if a != 0xFF:
                 has_alpha = True
             # greyscale only if rgb is gray and opaque or fully transparent
-            if is_grey and not (((r == g == b) and a == 255) or (r, g, b, a) == (0, 0, 0, 0)):
+            if is_grey and not (
+                ((r == g == b) and a == 255) or (r, g, b, a) == (0, 0, 0, 0)
+            ):
                 is_grey = False
 
     # Calculate required bit depth
@@ -190,7 +217,6 @@ def get_palette_for_png(input_filename, palette_name, color_reduction_method):
         else:
             bitdepth = grey_bitdepth
 
-
     # update data for RGB output format
     if not has_alpha:
         # recreate the palette without an alpha channel to support RGB PNG
@@ -208,31 +234,48 @@ def grouper(iterable, n, fillvalue=None):
 
 def get_ideal_palette(is_color=False):
     if is_color:
-        return 'pebble64'
+        return "pebble64"
     else:
-        return 'pebble2'
+        return "pebble2"
 
 
 def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='Convert PNG to 64-color palettized or grayscale PNG')
-    parser.add_argument('input_filename', type=str, help='png file to convert')
-    parser.add_argument('output_filename', type=str, help='converted file output')
-    parser.add_argument('--palette', type=str, required=False,
-                        choices=SUPPORTED_PALETTES, default='pebble64',
-                        help="Specify the standard palette of the resulting png. Colors will be "
-                             "converted to this lower bit depth using the color_reduction_method "
-                             "arg.")
-    parser.add_argument('--color_reduction_method', metavar='method', required=False,
-                        nargs=1, default=NEAREST, choices=COLOR_REDUCTION_CHOICES,
-                        help="Method used to convert colors to Pebble's color palette, "
-                             "options are [{}, {}]".format(NEAREST, TRUNCATE))
+        description="Convert PNG to 64-color palettized or grayscale PNG"
+    )
+    parser.add_argument("input_filename", type=str, help="png file to convert")
+    parser.add_argument("output_filename", type=str, help="converted file output")
+    parser.add_argument(
+        "--palette",
+        type=str,
+        required=False,
+        choices=SUPPORTED_PALETTES,
+        default="pebble64",
+        help="Specify the standard palette of the resulting png. Colors will be "
+        "converted to this lower bit depth using the color_reduction_method "
+        "arg.",
+    )
+    parser.add_argument(
+        "--color_reduction_method",
+        metavar="method",
+        required=False,
+        nargs=1,
+        default=NEAREST,
+        choices=COLOR_REDUCTION_CHOICES,
+        help="Method used to convert colors to Pebble's color palette, "
+        "options are [{}, {}]".format(NEAREST, TRUNCATE),
+    )
     args = parser.parse_args()
 
-    convert_png_to_pebble_png(args.input_filename, args.output_filename,
-                              args.palette, args.color_reduction_method)
+    convert_png_to_pebble_png(
+        args.input_filename,
+        args.output_filename,
+        args.palette,
+        args.color_reduction_method,
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

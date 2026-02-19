@@ -19,13 +19,13 @@ from ..util import stm32_crc
 class PebbleFirmwareBinaryInfo(object):
     V1_STRUCT_VERSION = 1
     V1_STRUCT_DEFINTION = [
-        ('20s', 'build_id'),
-        ('L', 'version_timestamp'),
-        ('32s', 'version_tag'),
-        ('8s', 'version_short'),
-        ('?', 'is_recovery_firmware'),
-        ('B', 'hw_platform'),
-        ('B', 'metadata_version')
+        ("20s", "build_id"),
+        ("L", "version_timestamp"),
+        ("32s", "version_tag"),
+        ("8s", "version_short"),
+        ("?", "is_recovery_firmware"),
+        ("B", "hw_platform"),
+        ("B", "metadata_version"),
     ]
     # The platforms which use a legacy defective crc32
     LEGACY_CRC_PLATFORMS = [
@@ -41,17 +41,17 @@ class PebbleFirmwareBinaryInfo(object):
         9,  # SpaldingEVT
         10,  # BobbyDVT
         11,  # Spalding
-        0xff,  # OneBigboard
-        0xfe,  # OneBigboard2
-        0xfd,  # SnowyBigboard
-        0xfc,  # SnowyBigboard2
-        0xfb,  # SpaldingBigboard
+        0xFF,  # OneBigboard
+        0xFE,  # OneBigboard2
+        0xFD,  # SnowyBigboard
+        0xFC,  # SnowyBigboard2
+        0xFB,  # SpaldingBigboard
     ]
 
     def get_crc(self):
         _, ext = os.path.splitext(self.path)
-        assert ext == '.bin', 'Can only calculate crc for .bin files'
-        with open(self.path, 'rb') as f:
+        assert ext == ".bin", "Can only calculate crc for .bin files"
+        with open(self.path, "rb") as f:
             image = f.read()
         if self.hw_platform in self.LEGACY_CRC_PLATFORMS:
             # use the legacy defective crc
@@ -61,27 +61,30 @@ class PebbleFirmwareBinaryInfo(object):
             return crc32(image) & 0xFFFFFFFF
 
     def _get_footer_struct(self):
-        fmt = '<' + reduce(lambda s, t: s + t[0],
-                           PebbleFirmwareBinaryInfo.V1_STRUCT_DEFINTION, '')
+        fmt = "<" + reduce(
+            lambda s, t: s + t[0], PebbleFirmwareBinaryInfo.V1_STRUCT_DEFINTION, ""
+        )
         return struct.Struct(fmt)
 
     def _get_footer_data_from_bin(self, path):
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             struct_size = self.struct.size
             f.seek(-struct_size, 2)
             footer_data = f.read()
             return footer_data
 
     def _parse_footer_data(self, footer_data):
-        z = zip(PebbleFirmwareBinaryInfo.V1_STRUCT_DEFINTION,
-                self.struct.unpack(footer_data))
+        z = zip(
+            PebbleFirmwareBinaryInfo.V1_STRUCT_DEFINTION,
+            self.struct.unpack(footer_data),
+        )
         return {entry[1]: data for entry, data in z}
 
     def __init__(self, bin_path):
         self.path = bin_path
         self.struct = self._get_footer_struct()
         _, ext = os.path.splitext(bin_path)
-        if ext != '.bin':
+        if ext != ".bin":
             raise ValueError('Unexpected extension. Must be ".bin"')
         footer_data = self._get_footer_data_from_bin(bin_path)
         self.info = self._parse_footer_data(footer_data)
@@ -107,7 +110,7 @@ class PebbleFirmwareBinaryInfo(object):
 #   uint32_t firmware_length;
 #   uint32_t checksum;
 # } FirmwareDescription;
-FW_DESCR_FORMAT = '<III'
+FW_DESCR_FORMAT = "<III"
 FW_DESCR_SIZE = struct.calcsize(FW_DESCR_FORMAT)
 
 
@@ -117,7 +120,7 @@ def _generate_firmware_description_struct(firmware_length, firmware_crc):
 
 def insert_firmware_description_struct(input_binary, output_binary=None):
     fw_bin_info = PebbleFirmwareBinaryInfo(input_binary)
-    with open(input_binary, 'rb') as inf:
+    with open(input_binary, "rb") as inf:
         fw_bin = inf.read()
         fw_crc = fw_bin_info.get_crc()
     return _generate_firmware_description_struct(len(fw_bin), fw_crc) + fw_bin
@@ -128,33 +131,33 @@ def _load(connection, image, progress, verbose, address):
 
     progress_cb = None
     if progress or verbose:
+
         def progress_cb(acked):
-            print('.' if acked else 'R', end='')
+            print("." if acked else "R", end="")
             sys.stdout.flush()
 
     if progress or verbose:
-        print('Erasing... ', end='')
+        print("Erasing... ", end="")
         sys.stdout.flush()
     try:
         connection.flash.erase(address, len(image))
     except pebble.pulse2.exceptions.PulseException as e:
-        detail = ''.join(traceback.format_exception_only(type(e), e))
+        detail = "".join(traceback.format_exception_only(type(e), e))
         if verbose:
-            detail = '\n' + traceback.format_exc()
-        print('Erase failed! ' + detail)
+            detail = "\n" + traceback.format_exc()
+        print("Erase failed! " + detail)
         return False
     if progress or verbose:
-        print('done.')
+        print("done.")
         sys.stdout.flush()
 
     try:
-        retries = connection.flash.write(address, image,
-                                         progress_cb=progress_cb)
+        retries = connection.flash.write(address, image, progress_cb=progress_cb)
     except pebble.pulse2.exceptions.PulseException as e:
-        detail = ''.join(traceback.format_exception_only(type(e), e))
+        detail = "".join(traceback.format_exception_only(type(e), e))
         if verbose:
-            detail = '\n' + traceback.format_exc()
-        print('Write failed! ' + detail)
+            detail = "\n" + traceback.format_exc()
+        print("Write failed! " + detail)
         return False
 
     result_crc = connection.flash.crc(address, len(image))
@@ -162,10 +165,10 @@ def _load(connection, image, progress, verbose, address):
     if progress or verbose:
         print()
     if verbose:
-        print('Retries: %d' % retries)
+        print("Retries: %d" % retries)
 
     if result_crc != image_crc:
-        print('CRC mismatch, got 0x%08X but expected %08X' % (result_crc, image_crc))
+        print("CRC mismatch, got 0x%08X but expected %08X" % (result_crc, image_crc))
 
     return result_crc == image_crc
 
@@ -174,44 +177,48 @@ def load_firmware(connection, fin, progress, verbose, address=None):
     if address is None:
         # If address is unspecified, assume we want the prf address
         _, address, length = connection.flash.query_region_geometry(
-                connection.flash.REGION_PRF)
+            connection.flash.REGION_PRF
+        )
     address = int(address)
 
     image = insert_firmware_description_struct(fin)
     if _load(connection, image, progress, verbose, address):
-        connection.flash.finalize_region(
-            connection.flash.REGION_PRF)
+        connection.flash.finalize_region(connection.flash.REGION_PRF)
         return True
     return False
 
 
 def load_resources(connection, fin, progress, verbose):
     _, address, length = connection.flash.query_region_geometry(
-            connection.flash.REGION_SYSTEM_RESOURCES)
+        connection.flash.REGION_SYSTEM_RESOURCES
+    )
 
-    with open(fin, 'rb') as f:
+    with open(fin, "rb") as f:
         data = f.read()
     assert len(data) <= length
     if _load(connection, data, progress, verbose, address):
-        connection.flash.finalize_region(
-                connection.flash.REGION_SYSTEM_RESOURCES)
+        connection.flash.finalize_region(connection.flash.REGION_SYSTEM_RESOURCES)
         return True
     return False
 
 
 @PebbleCommander.command()
-def image_resources(cmdr, pack='build/system_resources.pbpack'):
-    """ Image resources.
-    """
-    load_resources(cmdr.connection, pack,
-                   progress=cmdr.interactive, verbose=cmdr.interactive)
+def image_resources(cmdr, pack="build/system_resources.pbpack"):
+    """Image resources."""
+    load_resources(
+        cmdr.connection, pack, progress=cmdr.interactive, verbose=cmdr.interactive
+    )
 
 
 @PebbleCommander.command()
-def image_firmware(cmdr, firm='build/prf/src/fw/tintin_fw.bin', address=None):
-    """ Image recovery firmware.
-    """
+def image_firmware(cmdr, firm="build/prf/src/fw/tintin_fw.bin", address=None):
+    """Image recovery firmware."""
     if address is not None:
         address = int(str(address), 0)
-    load_firmware(cmdr.connection, firm, progress=cmdr.interactive,
-                  verbose=cmdr.interactive, address=address)
+    load_firmware(
+        cmdr.connection,
+        firm,
+        progress=cmdr.interactive,
+        verbose=cmdr.interactive,
+        address=address,
+    )

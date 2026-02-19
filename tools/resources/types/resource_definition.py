@@ -12,8 +12,15 @@ class StorageType(object):
 
 
 class ResourceDefinition(ResourceDeclaration):
-    def __init__(self, type, name, file, storage=StorageType.pbpack,
-                 target_platforms=None, aliases=()):
+    def __init__(
+        self,
+        type,
+        name,
+        file,
+        storage=StorageType.pbpack,
+        target_platforms=None,
+        aliases=(),
+    ):
         self.type = type
         self.name = name
 
@@ -34,7 +41,9 @@ class ResourceDefinition(ResourceDeclaration):
         return bld.env.PLATFORM_NAME in self.target_platforms
 
     def find_specific_filename(self, task_gen):
-        return find_most_specific_filename(task_gen.bld, task_gen.env, task_gen.bld.path, self.file)
+        return find_most_specific_filename(
+            task_gen.bld, task_gen.env, task_gen.bld.path, self.file
+        )
 
     def __repr__(self):
-        return '<ResourceDefinition %r>' % self.__dict__
+        return "<ResourceDefinition %r>" % self.__dict__

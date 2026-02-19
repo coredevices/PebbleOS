@@ -6,9 +6,11 @@ import uuid
 try:
     import gdb
 except ImportError:
-    raise Exception("This file is a GDB script.\n"
-                    "It is not intended to be run outside of GDB.\n"
-                    "Hint: to load a script in GDB, use `source this_file.py`")
+    raise Exception(
+        "This file is a GDB script.\n"
+        "It is not intended to be run outside of GDB.\n"
+        "Hint: to load a script in GDB, use `source this_file.py`"
+    )
 import gdb.printing
 
 
@@ -19,14 +21,15 @@ class grectPrinter:
         self.val = val
 
     def to_string(self):
-        code = ("(GRect) { "
-                ".origin = { .x = %i, .y = %i }, "
-                ".size = { .w = %i, .h = %i } "
-                "}")
-        return code % (int(self.val["origin"]["x"]),
-                       int(self.val["origin"]["y"]),
-                       int(self.val["size"]["w"]),
-                       int(self.val["size"]["h"]))
+        code = (
+            "(GRect) { .origin = { .x = %i, .y = %i }, .size = { .w = %i, .h = %i } }"
+        )
+        return code % (
+            int(self.val["origin"]["x"]),
+            int(self.val["origin"]["y"]),
+            int(self.val["size"]["w"]),
+            int(self.val["size"]["h"]),
+        )
 
 
 class gpathInfoPrinter:
@@ -41,13 +44,10 @@ class gpathInfoPrinter:
         array_val = self.val["points"]
         for i in xrange(0, num_points):
             point_val = array_val[i]
-            if (points_code):
+            if points_code:
                 points_code += ", "
             points_code += "{ %i, %i }" % (point_val["x"], point_val["y"])
-        outer_code_fmt = ("(GPathInfo) { "
-                          ".num_points = %i, "
-                          ".points = (GPoint[]) {%s} "
-                          "}")
+        outer_code_fmt = "(GPathInfo) { .num_points = %i, .points = (GPoint[]) {%s} }"
         return outer_code_fmt % (num_points, points_code)
 
 
@@ -55,15 +55,16 @@ class UuidPrinter(object):
     """Print a UUID."""
 
     def __init__(self, val):
-        bytes = ''.join(chr(int(val['byte%d' % n])) for n in xrange(16))
+        bytes = "".join(chr(int(val["byte%d" % n])) for n in xrange(16))
         self.uuid = uuid.UUID(bytes=bytes)
 
     def to_string(self):
-        return '{%s}' % self.uuid
+        return "{%s}" % self.uuid
 
-pp = gdb.printing.RegexpCollectionPrettyPrinter('tintin')
-pp.add_printer('GRect', '^GRect$', grectPrinter)
-pp.add_printer('GPathInfo', '^GPathInfo$', gpathInfoPrinter)
-pp.add_printer('Uuid', '^Uuid$', UuidPrinter)
+
+pp = gdb.printing.RegexpCollectionPrettyPrinter("tintin")
+pp.add_printer("GRect", "^GRect$", grectPrinter)
+pp.add_printer("GPathInfo", "^GPathInfo$", gpathInfoPrinter)
+pp.add_printer("Uuid", "^Uuid$", UuidPrinter)
 # Register the pretty-printer globally
 gdb.printing.register_pretty_printer(None, pp, replace=True)

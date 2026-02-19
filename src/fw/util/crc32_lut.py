@@ -14,13 +14,14 @@ def crc_table(bits):
         rr = i * 16
         for x in xrange(8):
             rr = (rr >> 1) ^ (-(rr & 1) & CRC_POLY)
-        lookup_table.append(rr & 0xffffffff)
+        lookup_table.append(rr & 0xFFFFFFFF)
     return lookup_table
 
-table = ['0x{:08x},'.format(entry) for entry in crc_table(4)]
-chunks = zip(*[iter(table)]*4)
 
-print('static const uint32_t s_lookup_table[] = {')
+table = ["0x{:08x},".format(entry) for entry in crc_table(4)]
+chunks = zip(*[iter(table)] * 4)
+
+print("static const uint32_t s_lookup_table[] = {")
 for chunk in chunks:
-    print('  ' + ' '.join(chunk))
-print('};')
+    print("  " + " ".join(chunk))
+print("};")

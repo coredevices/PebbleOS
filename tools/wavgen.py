@@ -16,7 +16,7 @@ def main(port, output, channels):
         print("Switching to prompt")
 
         # switch to prompt (Ctrl+C)
-        ser.write(b'\x03')
+        ser.write(b"\x03")
         ser.reset_input_buffer()
 
         print("Start test on the watch now")
@@ -46,7 +46,7 @@ def main(port, output, channels):
         wav.setframerate(16000)
 
         for value in raw_sound:
-            data = struct.pack('<h', value)
+            data = struct.pack("<h", value)
             wav.writeframesraw(data)
 
 

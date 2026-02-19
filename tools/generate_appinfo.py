@@ -11,45 +11,49 @@ import uuid
 # See http://wiki.hq.getpebble.com/wiki/index.php/Software/Formats/AppinfoJson
 # for details on the format.
 
+
 def generate_appinfo(input_filename, output_filename):
-    with open(input_filename, 'r') as json_file:
+    with open(input_filename, "r") as json_file:
         try:
             app_info = json.load(json_file)
         except ValueError as e:
-            raise Exception('Could not parse appinfo.json file: '+ str(e))
+            raise Exception("Could not parse appinfo.json file: " + str(e))
     generate_appinfo_c(app_info, output_filename)
 
 
 def generate_appinfo_c(app_info, output_filename, platform_name=None):
     # Handle top level options
     try:
-        app_uuid = uuid.UUID(app_info['uuid'])
+        app_uuid = uuid.UUID(app_info["uuid"])
     except KeyError:
-        raise Exception('Could not find $.uuid in appinfo.json')
-    uuid_initializer_string = '{ %s }' % ", ".join(["0x%02X" % b for b in app_uuid.bytes])
+        raise Exception("Could not find $.uuid in appinfo.json")
+    uuid_initializer_string = "{ %s }" % ", ".join(
+        ["0x%02X" % b for b in app_uuid.bytes]
+    )
 
     try:
-        name = app_info['shortName']
+        name = app_info["shortName"]
     except KeyError:
-        raise Exception('Could not find $.shortName in appinfo.json')
+        raise Exception("Could not find $.shortName in appinfo.json")
 
     try:
-        company_name = app_info['companyName']
+        company_name = app_info["companyName"]
     except KeyError:
-        raise Exception('Could not find $.companyName in appinfo.json')
-
+        raise Exception("Could not find $.companyName in appinfo.json")
 
     try:
-        version_label = app_info['versionLabel']
+        version_label = app_info["versionLabel"]
         version_label_major = 0
         version_label_minor = 0
-        version_label_list = version_label.split('.')
+        version_label_list = version_label.split(".")
         if len(version_label_list) >= 1:
             version_label_major = version_label_list[0]
         if len(version_label_list) >= 2:
             version_label_minor = version_label_list[1]
         if len(version_label_list) > 2:
-            raise Exception('appinfo.json versionLabel format for app revision must be "Major" or "Major.Minor"')
+            raise Exception(
+                'appinfo.json versionLabel format for app revision must be "Major" or "Major.Minor"'
+            )
 
         # validate versionLabel range [0-255] and int-characters
         try:
@@ -58,80 +62,86 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
             if int(version_label_minor) < 0 or int(version_label_minor) > 255:
                 raise ValueError
         except ValueError:
-            raise Exception('appinfo.json versionLabel contains invalid or out of range values [0-255]')
+            raise Exception(
+                "appinfo.json versionLabel contains invalid or out of range values [0-255]"
+            )
 
-            
     except KeyError:
-        raise Exception('Could not find $.versionLabel in appinfo.json')
+        raise Exception("Could not find $.versionLabel in appinfo.json")
 
     # Handle 'watchapp' options
     try:
-        is_watchface = app_info['watchapp']['watchface']
+        is_watchface = app_info["watchapp"]["watchface"]
     except KeyError:
         is_watchface = False
 
     try:
-        only_shown_on_communication = app_info['watchapp']['onlyShownOnCommunication']
+        only_shown_on_communication = app_info["watchapp"]["onlyShownOnCommunication"]
     except KeyError:
         only_shown_on_communication = False
 
     try:
-        is_hidden = app_info['watchapp']['hiddenApp']
+        is_hidden = app_info["watchapp"]["hiddenApp"]
     except KeyError:
         is_hidden = False
 
     # Handle 'resources' options
     icon_resource_id = None
     try:
-        for r in app_info['resources']['media']:
-            if 'menuIcon' in r and r['menuIcon']:
+        for r in app_info["resources"]["media"]:
+            if "menuIcon" in r and r["menuIcon"]:
                 if icon_resource_id is not None:
-                    raise Exception('More than one resource is set to be your menuIcon!')
-                icon_resource_id = 'RESOURCE_ID_' + r['name']
+                    raise Exception(
+                        "More than one resource is set to be your menuIcon!"
+                    )
+                icon_resource_id = "RESOURCE_ID_" + r["name"]
     except KeyError:
         pass
     if icon_resource_id is None:
-        icon_resource_id = 'DEFAULT_MENU_ICON'
+        icon_resource_id = "DEFAULT_MENU_ICON"
 
     try:
-        project_type = app_info['projectType']
-        is_rocky = project_type == 'rocky'
-        is_moddable = project_type == 'moddable'
+        project_type = app_info["projectType"]
+        is_rocky = project_type == "rocky"
+        is_moddable = project_type == "moddable"
     except KeyError:
         is_rocky = False
         is_moddable = False
 
     flags = []
     if is_watchface:
-        flags.append('PROCESS_INFO_WATCH_FACE')
+        flags.append("PROCESS_INFO_WATCH_FACE")
     if only_shown_on_communication:
-        flags.append('PROCESS_INFO_VISIBILITY_SHOWN_ON_COMMUNICATION')
+        flags.append("PROCESS_INFO_VISIBILITY_SHOWN_ON_COMMUNICATION")
     if is_hidden:
-        flags.append('PROCESS_INFO_VISIBILITY_HIDDEN')
+        flags.append("PROCESS_INFO_VISIBILITY_HIDDEN")
     if is_rocky:
-        flags.append('PROCESS_INFO_ROCKY_APP')
+        flags.append("PROCESS_INFO_ROCKY_APP")
     if is_moddable:
-        flags.append('PROCESS_INFO_MODDABLE_APP')
+        flags.append("PROCESS_INFO_MODDABLE_APP")
     if platform_name:
-        flags.append('PROCESS_INFO_PLATFORM_{}'.format(platform_name.upper()))
+        flags.append("PROCESS_INFO_PLATFORM_{}".format(platform_name.upper()))
 
     if len(flags):
-        flags_string = ' | '.join(flags)
+        flags_string = " | ".join(flags)
     else:
-        flags_string = '0'
+        flags_string = "0"
 
-
-    with open(output_filename, 'w') as f:
+    with open(output_filename, "w") as f:
         f.write('#include "pebble_process_info.h"\n')
         f.write('#include "src/resource_ids.auto.h"\n')
-        f.write(PEBBLE_APP_INFO_TEMPLATE.substitute(
-            version_major=version_label_major,
-            version_minor=version_label_minor,
-            name=name,
-            company=company_name,
-            icon_resource_id=icon_resource_id,
-            flags=flags_string,
-            uuid=uuid_initializer_string))
+        f.write(
+            PEBBLE_APP_INFO_TEMPLATE.substitute(
+                version_major=version_label_major,
+                version_minor=version_label_minor,
+                name=name,
+                company=company_name,
+                icon_resource_id=icon_resource_id,
+                flags=flags_string,
+                uuid=uuid_initializer_string,
+            )
+        )
+
 
 PEBBLE_APP_INFO_TEMPLATE = string.Template("""
 const PebbleProcessInfo __pbl_app_info __attribute__ ((section (".pbl_header"))) = {
@@ -152,4 +162,3 @@ const PebbleProcessInfo __pbl_app_info __attribute__ ((section (".pbl_header")))
   .virtual_size = 0xb6b6
 };
 """)
-

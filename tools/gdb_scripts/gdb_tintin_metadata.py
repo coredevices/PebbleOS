@@ -4,9 +4,11 @@
 try:
     import gdb
 except ImportError:
-    raise Exception("This file is a GDB script.\n"
-                    "It is not intended to be run outside of GDB.\n"
-                    "Hint: to load a script in GDB, use `source this_file.py`")
+    raise Exception(
+        "This file is a GDB script.\n"
+        "It is not intended to be run outside of GDB.\n"
+        "Hint: to load a script in GDB, use `source this_file.py`"
+    )
 
 from datetime import datetime
 
@@ -14,7 +16,7 @@ from gdb_symbols import get_static_variable
 
 
 class TintinMetadata(object):
-    """ Convenience Metadata struct for a tintin firmware """
+    """Convenience Metadata struct for a tintin firmware"""
 
     def parse_hw_version(self, hw_version_num):
         board_name = None
@@ -29,12 +31,13 @@ class TintinMetadata(object):
                 board_name = k
 
         platforms = {
-                      "One": "Tintin",
-                      "Two": "Tintin",
-                      "Snowy": "Snowy",
-                      "Bobby": "Snowy",
-                      "Spalding": "Spalding",
-                      "Silk": "Silk" }
+            "One": "Tintin",
+            "Two": "Tintin",
+            "Snowy": "Snowy",
+            "Bobby": "Snowy",
+            "Spalding": "Spalding",
+            "Silk": "Silk",
+        }
 
         platform_name = None
         for platform_key in platforms.keys():
@@ -43,7 +46,7 @@ class TintinMetadata(object):
         return platform_name, board_name
 
     def __init__(self):
-        self.metadata = gdb.parse_and_eval(get_static_variable('TINTIN_METADATA'))
+        self.metadata = gdb.parse_and_eval(get_static_variable("TINTIN_METADATA"))
 
     def version_timestamp(self, convert=True):
         val = int(self.metadata["version_timestamp"])

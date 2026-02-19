@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-'''
+"""
 JSON2COMMANDS creates Pebble Draw Commands (the Python Objects, _not_ a serialized .pdc) from a JSON file.
 Currently only the PathCommand is supported.
 
@@ -14,7 +14,7 @@ The created list should have the length of the lowest number of commands possibl
 Currently, there is no support for a JSON to contain the viewbox size or fill colors.
 The viewbox size is currently passed in as a parameter.
 The fill color is currently defaulted to solid white.
-'''
+"""
 
 import os
 import argparse
@@ -47,10 +47,12 @@ def parse_json_line_data(json_line_data, viewbox_size=(DISPLAY_DIM_X, DISPLAY_DI
 
     for line_data in json_line_data:
         # Skip invisible lines
-        if abs(line_data['startPoint'][0]) > INVISIBLE_POINT_THRESHOLD or \
-           abs(line_data['startPoint'][1]) > INVISIBLE_POINT_THRESHOLD or \
-           abs(line_data['endPoint'][0]) > INVISIBLE_POINT_THRESHOLD or \
-           abs(line_data['endPoint'][1]) > INVISIBLE_POINT_THRESHOLD:
+        if (
+            abs(line_data["startPoint"][0]) > INVISIBLE_POINT_THRESHOLD
+            or abs(line_data["startPoint"][1]) > INVISIBLE_POINT_THRESHOLD
+            or abs(line_data["endPoint"][0]) > INVISIBLE_POINT_THRESHOLD
+            or abs(line_data["endPoint"][1]) > INVISIBLE_POINT_THRESHOLD
+        ):
             continue
 
         # Center the viewbox of all lines (by moving the lines' absolute
@@ -76,10 +78,10 @@ def parse_json_line_data(json_line_data, viewbox_size=(DISPLAY_DIM_X, DISPLAY_DI
 
 
 def determine_longest_path(bidirectional_lines):
-    '''
+    """
     Returns the longest path in 'bidirectional_lines', and removes all its segments from 'bidirectional_lines'
     If 'bidirectional_lines' contains more than one possible longest path, only one will be returned.
-    '''
+    """
     # Construct graph out of bidirectional_lines
     g = graph.Graph({})
     for line in bidirectional_lines:
@@ -117,13 +119,23 @@ def determine_longest_path(bidirectional_lines):
     return longest_path
 
 
-def process_unique_group_of_lines(unique_group_data, translate, viewbox_size, path_open, stroke_width, stroke_color, fill_color, precise, raise_error):
-    '''
+def process_unique_group_of_lines(
+    unique_group_data,
+    translate,
+    viewbox_size,
+    path_open,
+    stroke_width,
+    stroke_color,
+    fill_color,
+    precise,
+    raise_error,
+):
+    """
     Creates a list of commands that draw out a unique group of lines.
 
     A unique group of lines is defined as having a unique stroke width, stroke color, and fill.
     Note that this does _not_ guarantee the group may be described by a single Pebble Draw Command.
-    '''
+    """
 
     unique_group_commands = []
 
@@ -135,14 +147,16 @@ def process_unique_group_of_lines(unique_group_data, translate, viewbox_size, pa
         longest_path = determine_longest_path(bidirectional_lines)
 
         try:
-            c = pebble_commands.PathCommand(longest_path,
-                                            path_open,
-                                            translate,
-                                            stroke_width,
-                                            stroke_color,
-                                            fill_color,
-                                            precise,
-                                            raise_error)
+            c = pebble_commands.PathCommand(
+                longest_path,
+                path_open,
+                translate,
+                stroke_width,
+                stroke_color,
+                fill_color,
+                precise,
+                raise_error,
+            )
 
             if c is not None:
                 unique_group_commands.append(c)
@@ -152,14 +166,22 @@ def process_unique_group_of_lines(unique_group_data, translate, viewbox_size, pa
     return unique_group_commands
 
 
-def process_fill(fillGroup_data, translate, viewbox_size, path_open, precise, raise_error, truncate_color):
+def process_fill(
+    fillGroup_data,
+    translate,
+    viewbox_size,
+    path_open,
+    precise,
+    raise_error,
+    truncate_color,
+):
     fill_command = []
     error = False
 
     # A fill is implicitly a unique group of lines - all line segments must have the same stroke width, stroke color
     # Get line style from first line segment
-    stroke_width = fillGroup_data[0]['thickness']
-    stroke_color = parse_color(fillGroup_data[0]['color'], truncate_color)
+    stroke_width = fillGroup_data[0]["thickness"]
+    stroke_color = parse_color(fillGroup_data[0]["color"], truncate_color)
     # Fill color should be solid white until it can be inserted in the JSON
     fill_color = parse_color([1, 1, 1, 1], truncate_color)
     if stroke_color == 0:
@@ -169,15 +191,16 @@ def process_fill(fillGroup_data, translate, viewbox_size, path_open, precise, ra
 
     try:
         unique_group_commands = process_unique_group_of_lines(
-                                    fillGroup_data,
-                                    translate,
-                                    viewbox_size,
-                                    path_open,
-                                    stroke_width,
-                                    stroke_color,
-                                    fill_color, 
-                                    precise,
-                                    raise_error)
+            fillGroup_data,
+            translate,
+            viewbox_size,
+            path_open,
+            stroke_width,
+            stroke_color,
+            fill_color,
+            precise,
+            raise_error,
+        )
 
         if unique_group_commands:
             fill_command += unique_group_commands
@@ -187,20 +210,32 @@ def process_fill(fillGroup_data, translate, viewbox_size, path_open, precise, ra
     return fill_command, error
 
 
-def process_open_paths(fillGroup_data, translate, viewbox_size, path_open, precise, raise_error, truncate_color):
+def process_open_paths(
+    fillGroup_data,
+    translate,
+    viewbox_size,
+    path_open,
+    precise,
+    raise_error,
+    truncate_color,
+):
     open_paths_commands = []
     error = False
 
     fill_color = parse_color([0, 0, 0, 0], truncate_color)  # No fill color
 
     # These open paths are part of the same fillGroup, but may have varied stroke width
-    fillGroup_data = sorted(fillGroup_data, key=lambda a: a['thickness'])
-    for stroke_width, unique_width_group in groupby(fillGroup_data, lambda c: c['thickness']):
+    fillGroup_data = sorted(fillGroup_data, key=lambda a: a["thickness"])
+    for stroke_width, unique_width_group in groupby(
+        fillGroup_data, lambda c: c["thickness"]
+    ):
         unique_width_data = list(unique_width_group)
 
         # These open paths have the same width, but may have varied color
-        unique_width_data = sorted(unique_width_data, key=lambda d: d['color'])
-        for stroke_color_raw, unique_width_and_color_group in groupby(unique_width_data, lambda e: e['color']):
+        unique_width_data = sorted(unique_width_data, key=lambda d: d["color"])
+        for stroke_color_raw, unique_width_and_color_group in groupby(
+            unique_width_data, lambda e: e["color"]
+        ):
             # These are a unique group of lines
             unique_width_and_color_data = list(unique_width_and_color_group)
 
@@ -212,15 +247,16 @@ def process_open_paths(fillGroup_data, translate, viewbox_size, path_open, preci
 
             try:
                 unique_group_commands = process_unique_group_of_lines(
-                                            unique_width_and_color_data,
-                                            translate,
-                                            viewbox_size,
-                                            path_open,
-                                            stroke_width,
-                                            stroke_color,
-                                            fill_color,
-                                            precise,
-                                            raise_error)
+                    unique_width_and_color_data,
+                    translate,
+                    viewbox_size,
+                    path_open,
+                    stroke_width,
+                    stroke_color,
+                    fill_color,
+                    precise,
+                    raise_error,
+                )
 
                 if unique_group_commands:
                     open_paths_commands += unique_group_commands
@@ -230,46 +266,59 @@ def process_open_paths(fillGroup_data, translate, viewbox_size, path_open, preci
     return open_paths_commands, error
 
 
-def get_commands(translate, viewbox_size, frame_data, precise=False, raise_error=False, truncate_color=True):
+def get_commands(
+    translate,
+    viewbox_size,
+    frame_data,
+    precise=False,
+    raise_error=False,
+    truncate_color=True,
+):
     commands = []
     errors = []
 
-    fillGroups_data = frame_data['lineData']
+    fillGroups_data = frame_data["lineData"]
 
     # The 'fillGroup' property describes the type of group: A unique letter
     # (e.g. "A", "B", "C" etc.) for a unique fill, and a special identifier
     # for ALL open paths (non-fills)
     only_fills = list([d for d in fillGroups_data if d["fillGroup"] != OPEN_PATH_TAG])
-    only_fills = sorted(only_fills, key=lambda f: f["fillGroup"])  # Don't assume data is sorted
-    only_open_paths = list([d for d in fillGroups_data if d["fillGroup"] == OPEN_PATH_TAG])
+    only_fills = sorted(
+        only_fills, key=lambda f: f["fillGroup"]
+    )  # Don't assume data is sorted
+    only_open_paths = list(
+        [d for d in fillGroups_data if d["fillGroup"] == OPEN_PATH_TAG]
+    )
     # Fills must be drawn before open paths, so place them first
     ordered_fill_groups = only_fills + only_open_paths
 
     # Process fillGroups
-    for path_type, fillGroup in groupby(ordered_fill_groups, lambda b: b['fillGroup']):
+    for path_type, fillGroup in groupby(ordered_fill_groups, lambda b: b["fillGroup"]):
         fillGroup_data = list(fillGroup)
 
-        path_open = path_type == '_'
+        path_open = path_type == "_"
         if not path_open:
             # Filled fillGroup
             fillGroup_commands, error = process_fill(
-                                            fillGroup_data,
-                                            translate,
-                                            viewbox_size,
-                                            path_open,
-                                            precise,
-                                            raise_error,
-                                            truncate_color)
+                fillGroup_data,
+                translate,
+                viewbox_size,
+                path_open,
+                precise,
+                raise_error,
+                truncate_color,
+            )
         else:
             # Open path fillGroup
             fillGroup_commands, error = process_open_paths(
-                                            fillGroup_data,
-                                            translate,
-                                            viewbox_size,
-                                            path_open,
-                                            precise,
-                                            raise_error,
-                                            truncate_color)
+                fillGroup_data,
+                translate,
+                viewbox_size,
+                path_open,
+                precise,
+                raise_error,
+                truncate_color,
+            )
 
         if error:
             errors += str(path_type)
@@ -278,12 +327,9 @@ def get_commands(translate, viewbox_size, frame_data, precise=False, raise_error
 
     if not commands:
         # Insert one 'invisible' command so the frame is valid
-        c = pebble_commands.PathCommand([((0.0), (0.0)), ((0.0), (0.0))],
-                                        True,
-                                        translate,
-                                        0,
-                                        0,
-                                        0)
+        c = pebble_commands.PathCommand(
+            [((0.0), (0.0)), ((0.0), (0.0))], True, translate, 0, 0, 0
+        )
         commands.append(c)
 
     return commands, errors
@@ -298,18 +344,15 @@ def parse_json_sequence(filename, viewbox_size, precise=False, raise_error=False
         try:
             data = json.load(json_file)
         except ValueError:
-            print('Invalid JSON format')
+            print("Invalid JSON format")
             return frames, 0, 0
 
-        frames_data = data['lineData']
-        frame_duration = int(data['compData']['frameDuration'] * 1000)
+        frames_data = data["lineData"]
+        frame_duration = int(data["compData"]["frameDuration"] * 1000)
         for idx, frame_data in enumerate(frames_data):
             cmd_list, frame_errors = get_commands(
-                                        translate,
-                                        viewbox_size,
-                                        frame_data,
-                                        precise,
-                                        raise_error)
+                translate, viewbox_size, frame_data, precise, raise_error
+            )
 
             if frame_errors:
                 errors.append((idx, frame_errors))
@@ -318,9 +361,10 @@ def parse_json_sequence(filename, viewbox_size, precise=False, raise_error=False
 
     return frames, errors, frame_duration
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('path', type=str, help="Path to json file")
+    parser.add_argument("path", type=str, help="Path to json file")
     args = parser.parse_args()
     path = os.path.abspath(args.path)
     parse_json_sequence(path)

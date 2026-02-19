@@ -4,24 +4,25 @@
 import struct
 import time
 
+
 class SerialWireDebugPort(object):
     # debug port registers
     DP_IDCODE_ADDR = 0x00
     DP_ABORT_ADDR = 0x00
     DP_CTRLSTAT_ADDR = 0x04
     DP_SELECT_ADDR = 0x08
-    DP_RDBUFF_ADDR = 0x0c
+    DP_RDBUFF_ADDR = 0x0C
 
     # MEM-AP register
     MEM_AP_CSW_ADDR = 0x0
-    MEM_AP_CSW_MASTER_DEBUG = (1 << 29)
-    MEM_AP_CSW_PRIVILEGED_MODE = (1 << 25)
-    MEM_AP_CSW_ADDRINCWORD = (1 << 4)
-    MEM_AP_CSW_SIZE8BITS = (0 << 1)
-    MEM_AP_CSW_SIZE32BITS = (1 << 1)
+    MEM_AP_CSW_MASTER_DEBUG = 1 << 29
+    MEM_AP_CSW_PRIVILEGED_MODE = 1 << 25
+    MEM_AP_CSW_ADDRINCWORD = 1 << 4
+    MEM_AP_CSW_SIZE8BITS = 0 << 1
+    MEM_AP_CSW_SIZE32BITS = 1 << 1
 
     MEM_AP_TAR_ADDR = 0x4
-    MEM_AP_DRW_ADDR = 0xc
+    MEM_AP_DRW_ADDR = 0xC
     MEM_AP_IDR_VALUES = [0x24770011, 0x74770001]
 
     def __init__(self, driver, reset=True):
@@ -43,7 +44,7 @@ class SerialWireDebugPort(object):
 
     @staticmethod
     def _fatal(message):
-        raise Exception('FATAL ERROR: {}'.format(message))
+        raise Exception("FATAL ERROR: {}".format(message))
 
     def _get_request_header(self, addr, is_read, is_access_port):
         # the header consists of the following fields
@@ -57,7 +58,7 @@ class SerialWireDebugPort(object):
         header = 0x1
         header |= (1 << 1) if is_access_port else 0
         header |= (1 << 2) if is_read else 0
-        header |= ((addr & 0xf) >> 2) << 3
+        header |= ((addr & 0xF) >> 2) << 3
         parity = 0
         for i in range(1, 5):
             parity += (header >> i) & 0x1
@@ -66,7 +67,9 @@ class SerialWireDebugPort(object):
         return header
 
     def _send_request_header(self, addr, is_read, is_access_port):
-        self._driver.write_bytes_cmd([self._get_request_header(addr, is_read, is_access_port)])
+        self._driver.write_bytes_cmd(
+            [self._get_request_header(addr, is_read, is_access_port)]
+        )
 
     def _check_write_acks(self):
         if not self._pending_acks:
@@ -75,7 +78,7 @@ class SerialWireDebugPort(object):
         # the ACK is in the top 3 bits that we get from the FTDI read, so shift right by 5
         for ack in [x >> 5 for x in self._driver.get_read_bytes(self._pending_acks)]:
             if ack != 0x1:
-                self._fatal('ACK=0x{:02x}'.format(ack))
+                self._fatal("ACK=0x{:02x}".format(ack))
         self._pending_acks = 0
 
     def _read(self, addr, is_access_port):
@@ -95,22 +98,22 @@ class SerialWireDebugPort(object):
         # check the ACK
         ack = result[0] >> 5
         if ack != 0x1:
-            self._fatal('ACK=0x{:02x}'.format(ack))
+            self._fatal("ACK=0x{:02x}".format(ack))
 
         # grab the response
-        response = struct.unpack('<I', result[1:5])[0]
+        response = struct.unpack("<I", result[1:5])[0]
 
         # read two more bits: the parity and another for some reason I don't understand
         # check that the parity is correct
         parity = (result[5] >> 6) & 0x1
         if parity != sum((response >> i) & 0x1 for i in range(32)) & 0x1:
-            self._fatal('Bad parity')
+            self._fatal("Bad parity")
 
         return response
 
     def _write(self, addr, data, is_access_port, no_ack=False):
-        if data > 0xffffffff:
-            self._fatal('Bad data')
+        if data > 0xFFFFFFFF:
+            self._fatal("Bad data")
 
         # send the write request
         self._send_request_header(addr, is_read=False, is_access_port=is_access_port)
@@ -124,8 +127,8 @@ class SerialWireDebugPort(object):
         #               We can combine this into a single FTDI write by sending it as 5 bytes, so
         #               let's shift everything such that the extra 6 bits are at the end where they
         #               will be properly ignored as trailing bits.
-        temp = ((data << 1) & 0xfffffffe)
-        data_bytes = [(temp >> (i * 8)) & 0xff for i in range(4)]
+        temp = (data << 1) & 0xFFFFFFFE
+        data_bytes = [(temp >> (i * 8)) & 0xFF for i in range(4)]
         data_bytes += [(data >> 31) | (parity << 1)]
         self._driver.write_bytes_cmd(data_bytes)
 
@@ -146,10 +149,11 @@ class SerialWireDebugPort(object):
         # - 2 low bits for unknown reasons (maybe padding to nibbles?)
         def line_reset():
             # a line reset is 50 high bits (6 bytes + 2 bits)
-            self._driver.write_bytes_cmd([0xff] * 6)
+            self._driver.write_bytes_cmd([0xFF] * 6)
             self._driver.write_bits_cmd(0x3, 2)
+
         line_reset()
-        self._driver.write_bytes_cmd([0x9e, 0xe7])
+        self._driver.write_bytes_cmd([0x9E, 0xE7])
         line_reset()
         self._driver.write_bits_cmd(0x0, 2)
 
@@ -163,11 +167,20 @@ class SerialWireDebugPort(object):
 
         # check the MEM-AP IDR
         # the IDR register is has the same address as the DRW register but on the 0xf bank
-        self._write(self.DP_SELECT_ADDR, 0xf0, is_access_port=False)  # select the 0xf bank
-        self._read(self.MEM_AP_DRW_ADDR, is_access_port=True)  # read the value register (twice)
-        if self._read(self.DP_RDBUFF_ADDR, is_access_port=False) not in self.MEM_AP_IDR_VALUES:
-            self._fatal('Invalid MEM-AP IDR')
-        self._write(self.DP_SELECT_ADDR, 0x0, is_access_port=False)  # return to the 0x0 bank
+        self._write(
+            self.DP_SELECT_ADDR, 0xF0, is_access_port=False
+        )  # select the 0xf bank
+        self._read(
+            self.MEM_AP_DRW_ADDR, is_access_port=True
+        )  # read the value register (twice)
+        if (
+            self._read(self.DP_RDBUFF_ADDR, is_access_port=False)
+            not in self.MEM_AP_IDR_VALUES
+        ):
+            self._fatal("Invalid MEM-AP IDR")
+        self._write(
+            self.DP_SELECT_ADDR, 0x0, is_access_port=False
+        )  # return to the 0x0 bank
 
         # enable privileged access to the MEM-AP with 32 bit data accesses and auto-incrementing
         csw_value = self.MEM_AP_CSW_PRIVILEGED_MODE
@@ -195,13 +208,18 @@ class SerialWireDebugPort(object):
         # we can write before we need to explicitly set it again.
         WORD_SIZE = 4
         BURST_LENGTH = 4096 / WORD_SIZE
-        assert(base_addr % BURST_LENGTH == 0 and len(data) % WORD_SIZE == 0)
+        assert base_addr % BURST_LENGTH == 0 and len(data) % WORD_SIZE == 0
         for i in range(0, len(data), WORD_SIZE):
             if i % BURST_LENGTH == 0:
                 # set the target address
-                self._write(self.MEM_AP_TAR_ADDR, base_addr + i, is_access_port=True, no_ack=True)
+                self._write(
+                    self.MEM_AP_TAR_ADDR,
+                    base_addr + i,
+                    is_access_port=True,
+                    no_ack=True,
+                )
             # write the word
-            word = sum(data[i+j] << (j * 8) for j in range(WORD_SIZE))
+            word = sum(data[i + j] << (j * 8) for j in range(WORD_SIZE))
             self._write(self.MEM_AP_DRW_ADDR, word, is_access_port=True, no_ack=True)
 
     def continuous_read(self, addr, duration):
@@ -225,7 +243,9 @@ class SerialWireDebugPort(object):
         # flush everything
         self._check_write_acks()
 
-        header = self._get_request_header(self.MEM_AP_DRW_ADDR, is_read=True, is_access_port=True)
+        header = self._get_request_header(
+            self.MEM_AP_DRW_ADDR, is_read=True, is_access_port=True
+        )
         self._driver.start_sequence()
         for i in range(NUM_READS):
             self._driver.write_bits_cmd(header, 8)
@@ -246,8 +266,9 @@ class SerialWireDebugPort(object):
             for o in range(len(b)):
                 result |= b[o] << o
             return result
+
         values = []
-        for raw_result in [raw_data[i:i+5] for i in range(0, len(raw_data), 5)]:
+        for raw_result in [raw_data[i : i + 5] for i in range(0, len(raw_data), 5)]:
             result = raw_result
             # The result is read as 5 bytes, with the first one containing 6 bits (shifted in from
             # the left as they are read). Let's convert this into an array of bits, and then
@@ -262,15 +283,14 @@ class SerialWireDebugPort(object):
 
             # check the ACK
             if ack != 0x1:
-                self._fatal('ACK=0x{:02x}'.format(ack))
+                self._fatal("ACK=0x{:02x}".format(ack))
 
             # read two more bits: the parity and another for some reason I don't understand
             # check that the parity is correct
             if parity != sum((response >> i) & 0x1 for i in range(32)) & 0x1:
-                self._fatal('Bad parity')
+                self._fatal("Bad parity")
 
             # store the response
             values.append(response)
 
         return values
-

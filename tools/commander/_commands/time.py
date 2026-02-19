@@ -6,7 +6,7 @@ from .. import PebbleCommander, exceptions
 
 @PebbleCommander.command()
 def set_time(cmdr, new_time):
-    """ Set the time.
+    """Set the time.
 
     `new_time` should be in epoch seconds.
     """
@@ -21,8 +21,7 @@ def set_time(cmdr, new_time):
 
 @PebbleCommander.command()
 def timezone_clear(cmdr):
-    """ Clear timezone settings.
-    """
+    """Clear timezone settings."""
     ret = cmdr.send_prompt_command("timezone clear")
     if ret:
         raise exceptions.PromptResponseError(ret)

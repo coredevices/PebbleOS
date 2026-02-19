@@ -10,13 +10,23 @@ from libpebble2.exceptions import GetBytesError
 from pebble_tool.commands.base import PebbleCommand
 from pebble_tool.exceptions import ToolError
 
+
 class CoredumpCommand(PebbleCommand):
     """Takes a screenshot from the watch."""
-    command = 'coredump'
+
+    command = "coredump"
 
     def __init__(self):
-        self.progress_bar = ProgressBar(widgets=[Percentage(), Bar(marker='=', left='[', right=']'), ' ',
-                                                 FileTransferSpeed(), ' ', Timer(format='%s')])
+        self.progress_bar = ProgressBar(
+            widgets=[
+                Percentage(),
+                Bar(marker="=", left="[", right="]"),
+                " ",
+                FileTransferSpeed(),
+                " ",
+                Timer(format="%s"),
+            ]
+        )
         self.started = False
 
     def __call__(self, args):
@@ -29,7 +39,7 @@ class CoredumpCommand(PebbleCommand):
             core_data = get_bytes.get_coredump(args.fresh)
         except GetBytesError as ex:
             if ex.code == GetBytesInfoResponse.ErrorCode.DoesNotExist:
-                raise ToolError('No coredump on device')
+                raise ToolError("No coredump on device")
             else:
                 raise
 
@@ -48,11 +58,17 @@ class CoredumpCommand(PebbleCommand):
 
     @classmethod
     def _generate_filename(cls):
-        return datetime.datetime.now().strftime("pebble_coredump_%Y-%m-%d_%H-%M-%S.core")
+        return datetime.datetime.now().strftime(
+            "pebble_coredump_%Y-%m-%d_%H-%M-%S.core"
+        )
 
     @classmethod
     def add_parser(cls, parser):
         parser = super(CoredumpCommand, cls).add_parser(parser)
-        parser.add_argument('filename', nargs='?', type=str, help="Filename of coredump")
-        parser.add_argument('--fresh', action="store_true", help="Require a fresh coredump")
+        parser.add_argument(
+            "filename", nargs="?", type=str, help="Filename of coredump"
+        )
+        parser.add_argument(
+            "--fresh", action="store_true", help="Require a fresh coredump"
+        )
         return parser

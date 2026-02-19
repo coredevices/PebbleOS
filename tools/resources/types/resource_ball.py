@@ -5,7 +5,7 @@ import pickle
 
 
 class ResourceBall(object):
-    """ A object meant to be serialized to the filesystem that represents the complete set of
+    """A object meant to be serialized to the filesystem that represents the complete set of
     resources for a firmware variant. Resources that are distributed with the firmware are present
     as ResourceObject instances where resources that are not (such as language packs) are present
     as ResourceDeclaration instances. This data structure is ordered, with the resource_objects
@@ -17,28 +17,33 @@ class ResourceBall(object):
         self.resource_declarations = resource_declarations
 
     def get_all_declarations(self):
-        return [o.definition for o in self.resource_objects] + self.resource_declarations
+        return [
+            o.definition for o in self.resource_objects
+        ] + self.resource_declarations
 
     def dump(self, output_node):
         output_node.parent.mkdir()
-        with open(output_node.abspath(), 'wb') as f:
+        with open(output_node.abspath(), "wb") as f:
             pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
 
     @classmethod
     def load(cls, path):
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             return pickle.load(f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('resball')
+    parser.add_argument("resball")
 
     args = parser.parse_args()
 
     rb = ResourceBall.load(args.resball)
 
     for i, o in enumerate(rb.resource_objects, start=1):
-        print("%4u: %-50s %-10s %6u" % (i, o.definition.name, o.definition.type, len(o.data)))
+        print(
+            "%4u: %-50s %-10s %6u"
+            % (i, o.definition.name, o.definition.type, len(o.data))
+        )

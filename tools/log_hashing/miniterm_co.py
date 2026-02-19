@@ -16,6 +16,8 @@ import socket
 from logdehash import LogDehash
 
 line_buffer = []
+
+
 def dehash_read(self, size, plain_read):
     global line_buffer
     # Most of the time, we pass through the results of their read command (if rather reconstituted)
@@ -36,6 +38,7 @@ def dehash_read(self, size, plain_read):
             line_buffer.append(read_char)
             read_data.append(read_char)
     return "".join(read_data).encode()
+
 
 def socket_serial_read(self, size=1):
     """
@@ -80,31 +83,39 @@ def socket_serial_read(self, size=1):
             continue
         except socket.error as e:
             # connection fails -> terminate loop
-            raise SerialException('connection failed (%s)' % e)
+            raise SerialException("connection failed (%s)" % e)
     return bytes(data)
+
 
 # Insert ourselves in the serial read routine
 #  (could also copy-paste the entire miniterm reader() method in here, which would be meh)
 #  (or patch sys.stdout, which would just suck, because who knows what else that'd break)
 plain_read = Serial.read
+
+
 def dehash_serial_read(self, size):
     return dehash_read(self, size, plain_read)
+
 
 def dehash_socket_read(self, size):
     return dehash_read(self, size, socket_serial_read)
 
+
 try:
     from pyftdi.serialext.protocol_ftdi import FtdiSerial
+
     plain_pyftdi_read = FtdiSerial.read
+
     def dehash_pyftdi_serial_read(self, size):
         return dehash_read(self, size, plain_pyftdi_read)
+
     FtdiSerial.read = dehash_pyftdi_serial_read
 except ImportError:
     pass
 
 
 def yes_no_to_bool(arg):
-    return True if arg == 'yes' else False
+    return True if arg == "yes" else False
 
 
 # Process "arguments"
@@ -113,16 +124,16 @@ arg_color = True
 arg_bold = -1
 arg_core = False
 
-dict_path = os.getenv('PBL_CONSOLE_DICT_PATH')
+dict_path = os.getenv("PBL_CONSOLE_DICT_PATH")
 if not dict_path:
-    dict_path = 'build/src/fw/loghash_dict.json'
+    dict_path = "build/src/fw/loghash_dict.json"
 
 arglist = os.getenv("PBL_CONSOLE_ARGS")
 if arglist:
     for arg in arglist.split(","):
         if not arg:
             break
-        key, value = arg.split('=')
+        key, value = arg.split("=")
         if key == "--justify":
             arg_justify = value
         elif key == "--color":
@@ -134,18 +145,21 @@ if arglist:
         elif key == "--core":
             arg_core = yes_no_to_bool(value)
         else:
-            raise Exception("Unknown console argument '{}'. Choices are ({})".
-                            format(key, ['--justify', '--color', '--bold',
-                                         '--dict', '--core']))
+            raise Exception(
+                "Unknown console argument '{}'. Choices are ({})".format(
+                    key, ["--justify", "--color", "--bold", "--dict", "--core"]
+                )
+            )
 
-dehasher = LogDehash(dict_path, justify=arg_justify,
-                     color=arg_color, bold=arg_bold, print_core=arg_core)
+dehasher = LogDehash(
+    dict_path, justify=arg_justify, color=arg_color, bold=arg_bold, print_core=arg_core
+)
 
 Serial.read = dehash_serial_read
 SocketSerial.read = dehash_socket_read
 
 # Make sure that the target is set
-if sys.argv[1] == 'None':
+if sys.argv[1] == "None":
     raise Exception("No tty specified. Do you have a device attached?")
 
 # Fire it up as usual

@@ -64,7 +64,7 @@ def _insert_header_bin(fin, fout, offset):
     # Write output binary file
     with open(fout, "wb") as f:
         f.write(fwdesc)
-        f.write(b"\xFF" * (offset - len(fwdesc)))
+        f.write(b"\xff" * (offset - len(fwdesc)))
         f.write(content)
 
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.input.endswith('.bin'):
+    if args.input.endswith(".bin"):
         _insert_header_bin(args.input, args.output, args.offset)
     else:
         _insert_header_hex(args.input, args.output, args.offset)

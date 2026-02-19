@@ -10,15 +10,20 @@ RECORD_MODE = False
 
 
 class RenderExamplesTest(unittest.TestCase):
-
     def all_examples(self):
         result = []
-        directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples")
+        directory = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "examples"
+        )
 
         for root, dirs, files in os.walk(directory):
             for f in files:
-                if f.endswith(".svg") and not f.endswith(".annotated.svg") \
-                        and not root.endswith(".actual") and not root.endswith(".expected"):
+                if (
+                    f.endswith(".svg")
+                    and not f.endswith(".annotated.svg")
+                    and not root.endswith(".actual")
+                    and not root.endswith(".expected")
+                ):
                     svg_file = os.path.join(root, f)
                     result.append(svg_file)
 
@@ -53,7 +58,7 @@ class RenderExamplesTest(unittest.TestCase):
                 et = surface.element_tree()
                 et.write(f, pretty_print=True)
 
-            annotated_png_path = os.path.splitext(annotated_path)[0]+'.png'
+            annotated_png_path = os.path.splitext(annotated_path)[0] + ".png"
             with open(annotated_png_path, "wb") as f:
                 annotated_png_data = surface.render_annoations_on_top(png_path)
                 f.write(annotated_png_data)
@@ -68,14 +73,25 @@ class RenderExamplesTest(unittest.TestCase):
 
     def assertContainsSameFiles(self, actual_dir, expected_dir):
         cmp = dircmp(actual_dir, expected_dir, ignore=[".DS_Store"])
-        self.assertTrue(len(cmp.left_only) == 0,
-                        "'%s' missing in %s" % (",".join(cmp.left_only), cmp.right))
-        self.assertTrue(len(cmp.right_only) == 0,
-                        "'%s' unexpected in %s" % (",".join(cmp.right_only), cmp.left))
-        self.assertTrue(len(cmp.diff_files) == 0,
-                        "'%s' different between %s and %s" % (",".join(cmp.diff_files), cmp.left, cmp.right))
-        self.assertTrue(len(cmp.funny_files) == 0,
-                        "'%s' funny between %s and %s" % (",".join(cmp.funny_files), cmp.left, cmp.right))
+        self.assertTrue(
+            len(cmp.left_only) == 0,
+            "'%s' missing in %s" % (",".join(cmp.left_only), cmp.right),
+        )
+        self.assertTrue(
+            len(cmp.right_only) == 0,
+            "'%s' unexpected in %s" % (",".join(cmp.right_only), cmp.left),
+        )
+        self.assertTrue(
+            len(cmp.diff_files) == 0,
+            "'%s' different between %s and %s"
+            % (",".join(cmp.diff_files), cmp.left, cmp.right),
+        )
+        self.assertTrue(
+            len(cmp.funny_files) == 0,
+            "'%s' funny between %s and %s"
+            % (",".join(cmp.funny_files), cmp.left, cmp.right),
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

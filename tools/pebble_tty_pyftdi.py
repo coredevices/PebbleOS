@@ -10,6 +10,7 @@ from string import printable as printablechars
 
 pebble_ftdi_custom_pids.configure_pids()
 
+
 def _get_vps():
     vps = set()
     for vendor, pids in list(Ftdi.PRODUCT_IDS.items()):
@@ -40,8 +41,8 @@ def _tty_get_port(num_ports, tty_type, product):
 
 def _product_of_tty_type(product, tty_type):
     table = {
-        "primary": ['2232', '4232', 'silk'],
-        "accessory": ['4232'],
+        "primary": ["2232", "4232", "silk"],
+        "accessory": ["4232"],
         "ble": [],
     }
 
@@ -73,7 +74,7 @@ def _tty_to_uri(tty, tty_type):
         if not (_product_of_tty_type(product, tty_type)):
             return False
 
-    return 'ftdi://%s:%s:%s/%d' % (vendor, product, serial, port)
+    return "ftdi://%s:%s:%s/%d" % (vendor, product, serial, port)
 
 
 def _get_all_ttys(tty_type):
@@ -87,8 +88,8 @@ def _get_all_ttys(tty_type):
         serial = device.sn
         ikey = (vid, pid)
         indices[ikey] = indices.get(ikey, 0) + 1
-        if not serial or [c for c in serial if c not in printablechars or c == '?']:
-            serial = '%d' % indices[ikey]
+        if not serial or [c for c in serial if c not in printablechars or c == "?"]:
+            serial = "%d" % indices[ikey]
         tty = _tty_to_uri((vid, pid, product, serial, num_ports), tty_type)
         if tty:
             ttys.append(tty)
@@ -100,9 +101,10 @@ def _get_tty(tty_type="primary"):
     ttys = _get_all_ttys(tty_type)
 
     if len(ttys) > 1:
-        raise Exception('Multiple devices detected, please specify!\n\n%s' % '\n'.join(ttys))
+        raise Exception(
+            "Multiple devices detected, please specify!\n\n%s" % "\n".join(ttys)
+        )
     elif len(ttys) == 0:
         return None
 
     return ttys[0]
-

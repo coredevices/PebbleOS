@@ -10,14 +10,15 @@ import os
 
 
 class ResourceGeneratorPdc(ResourceGenerator):
-    type = 'pdc'
+    type = "pdc"
 
     @staticmethod
     def definitions_from_dict(bld, definition_dict, resource_source_path):
-        definitions = ResourceGenerator.definitions_from_dict(bld, definition_dict,
-                                                              resource_source_path)
+        definitions = ResourceGenerator.definitions_from_dict(
+            bld, definition_dict, resource_source_path
+        )
 
-        source_root = bld.path.make_node('.')
+        source_root = bld.path.make_node(".")
 
         for d in definitions:
             node = bld.path.find_node(d.file)
@@ -36,19 +37,21 @@ class ResourceGeneratorPdc(ResourceGenerator):
 
         if os.path.isdir(node.abspath()):
             output, errors = pdc_gen.create_pdc_data_from_path(
-                    node.abspath(),
-                    viewbox_size=(0, 0),
-                    verbose=False,
-                    duration=33,
-                    play_count=1,
-                    precise=False)
+                node.abspath(),
+                viewbox_size=(0, 0),
+                verbose=False,
+                duration=33,
+                play_count=1,
+                precise=False,
+            )
         else:
             output, errors = pdc_gen.create_pdc_data_from_path(
-                    task.inputs[0].abspath(),
-                    viewbox_size=(0, 0),
-                    verbose=False,
-                    duration=0,
-                    play_count=0,
-                    precise=True)
+                task.inputs[0].abspath(),
+                viewbox_size=(0, 0),
+                verbose=False,
+                duration=0,
+                play_count=0,
+                precise=True,
+            )
 
         return ResourceObject(definition, output)

@@ -8,16 +8,34 @@ chalk_platform = {
     "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
     "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
     "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
-    "DEFINES": ["PBL_PLATFORM_CHALK", "PBL_COLOR", "PBL_ROUND",
-                "PBL_MICROPHONE", "PBL_SMARTSTRAP", "PBL_HEALTH",
-                "PBL_COMPASS", "PBL_SMARTSTRAP_POWER",
-                "PBL_DISPLAY_WIDTH=180", "PBL_DISPLAY_HEIGHT=180"],
+    "DEFINES": [
+        "PBL_PLATFORM_CHALK",
+        "PBL_COLOR",
+        "PBL_ROUND",
+        "PBL_MICROPHONE",
+        "PBL_SMARTSTRAP",
+        "PBL_HEALTH",
+        "PBL_COMPASS",
+        "PBL_SMARTSTRAP_POWER",
+        "PBL_DISPLAY_WIDTH=180",
+        "PBL_DISPLAY_HEIGHT=180",
+    ],
     "BUILD_DIR": "chalk",
     "BUNDLE_BIN_DIR": "chalk",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
     "MAX_FONT_GLYPH_SIZE": 256,
-    "TAGS": ["chalk", "color", "round", "mic", "strap", "strappower",
-             "compass", "health", "180w", "180h"]
+    "TAGS": [
+        "chalk",
+        "color",
+        "round",
+        "mic",
+        "strap",
+        "strappower",
+        "compass",
+        "health",
+        "180w",
+        "180h",
+    ],
 }
 
 basalt_platform = {
@@ -27,16 +45,34 @@ basalt_platform = {
     "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
     "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
     "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
-    "DEFINES": ["PBL_PLATFORM_BASALT", "PBL_COLOR", "PBL_RECT",
-                "PBL_MICROPHONE", "PBL_SMARTSTRAP", "PBL_HEALTH",
-                "PBL_COMPASS", "PBL_SMARTSTRAP_POWER",
-                "PBL_DISPLAY_WIDTH=144", "PBL_DISPLAY_HEIGHT=168"],
+    "DEFINES": [
+        "PBL_PLATFORM_BASALT",
+        "PBL_COLOR",
+        "PBL_RECT",
+        "PBL_MICROPHONE",
+        "PBL_SMARTSTRAP",
+        "PBL_HEALTH",
+        "PBL_COMPASS",
+        "PBL_SMARTSTRAP_POWER",
+        "PBL_DISPLAY_WIDTH=144",
+        "PBL_DISPLAY_HEIGHT=168",
+    ],
     "BUILD_DIR": "basalt",
     "BUNDLE_BIN_DIR": "basalt",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
     "MAX_FONT_GLYPH_SIZE": 256,
-    "TAGS": ["basalt", "color", "rect", "mic", "strap", "strappower",
-             "compass", "health", "144w", "168h"],
+    "TAGS": [
+        "basalt",
+        "color",
+        "rect",
+        "mic",
+        "strap",
+        "strappower",
+        "compass",
+        "health",
+        "144w",
+        "168h",
+    ],
 }
 
 aplite_platform = {
@@ -47,8 +83,14 @@ aplite_platform = {
     "MAX_RESOURCES_SIZE_APPSTORE": 0x20000,  # 128K
     "MAX_RESOURCES_SIZE_APPSTORE_2_X": 0x18000,  # 96K
     "MAX_RESOURCES_SIZE": 0x80000,  # 512K
-    "DEFINES": ["PBL_PLATFORM_APLITE", "PBL_BW", "PBL_RECT", "PBL_COMPASS",
-                "PBL_DISPLAY_WIDTH=144", "PBL_DISPLAY_HEIGHT=168"],
+    "DEFINES": [
+        "PBL_PLATFORM_APLITE",
+        "PBL_BW",
+        "PBL_RECT",
+        "PBL_COMPASS",
+        "PBL_DISPLAY_WIDTH=144",
+        "PBL_DISPLAY_HEIGHT=168",
+    ],
     "BUILD_DIR": "aplite",
     "BUNDLE_BIN_DIR": "aplite",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
@@ -63,14 +105,21 @@ diorite_platform = {
     "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
     "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
     "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
-    "DEFINES": ["PBL_PLATFORM_DIORITE", "PBL_BW", "PBL_RECT",
-                "PBL_MICROPHONE", "PBL_HEALTH", "PBL_SMARTSTRAP",
-                "PBL_DISPLAY_WIDTH=144", "PBL_DISPLAY_HEIGHT=168"],
+    "DEFINES": [
+        "PBL_PLATFORM_DIORITE",
+        "PBL_BW",
+        "PBL_RECT",
+        "PBL_MICROPHONE",
+        "PBL_HEALTH",
+        "PBL_SMARTSTRAP",
+        "PBL_DISPLAY_WIDTH=144",
+        "PBL_DISPLAY_HEIGHT=168",
+    ],
     "BUILD_DIR": "diorite",
     "BUNDLE_BIN_DIR": "diorite",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
     "MAX_FONT_GLYPH_SIZE": 256,
-    "TAGS": ["diorite", "bw", "rect", "mic", "strap", "health", "144w", "168h"]
+    "TAGS": ["diorite", "bw", "rect", "mic", "strap", "health", "144w", "168h"],
 }
 
 emery_platform = {
@@ -80,16 +129,34 @@ emery_platform = {
     "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
     "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
     "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
-    "DEFINES": ["PBL_PLATFORM_EMERY", "PBL_COLOR", "PBL_RECT",
-                "PBL_MICROPHONE", "PBL_SMARTSTRAP", "PBL_HEALTH",
-                "PBL_SMARTSTRAP_POWER", "PBL_COMPASS",
-                "PBL_DISPLAY_WIDTH=200", "PBL_DISPLAY_HEIGHT=228"],
+    "DEFINES": [
+        "PBL_PLATFORM_EMERY",
+        "PBL_COLOR",
+        "PBL_RECT",
+        "PBL_MICROPHONE",
+        "PBL_SMARTSTRAP",
+        "PBL_HEALTH",
+        "PBL_SMARTSTRAP_POWER",
+        "PBL_COMPASS",
+        "PBL_DISPLAY_WIDTH=200",
+        "PBL_DISPLAY_HEIGHT=228",
+    ],
     "BUILD_DIR": "emery",
     "BUNDLE_BIN_DIR": "emery",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
     "MAX_FONT_GLYPH_SIZE": 512,
-    "TAGS": ["emery", "color", "rect", "mic", "strap", "health", "strappower",
-             "compass", "200w", "228h"]
+    "TAGS": [
+        "emery",
+        "color",
+        "rect",
+        "mic",
+        "strap",
+        "health",
+        "strappower",
+        "compass",
+        "200w",
+        "228h",
+    ],
 }
 
 flint_platform = {
@@ -99,9 +166,16 @@ flint_platform = {
     "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
     "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
     "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
-    "DEFINES": ["PBL_PLATFORM_FLINT", "PBL_BW", "PBL_RECT",
-                "PBL_MICROPHONE", "PBL_HEALTH", "PBL_COMPASS",
-                "PBL_DISPLAY_WIDTH=144", "PBL_DISPLAY_HEIGHT=168"],
+    "DEFINES": [
+        "PBL_PLATFORM_FLINT",
+        "PBL_BW",
+        "PBL_RECT",
+        "PBL_MICROPHONE",
+        "PBL_HEALTH",
+        "PBL_COMPASS",
+        "PBL_DISPLAY_WIDTH=144",
+        "PBL_DISPLAY_HEIGHT=168",
+    ],
     "BUILD_DIR": "flint",
     "BUNDLE_BIN_DIR": "flint",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
@@ -116,14 +190,21 @@ gabbro_platform = {
     "MAX_WORKER_MEMORY_SIZE": 0x2800,  # 10K
     "MAX_RESOURCES_SIZE_APPSTORE": 0x40000,  # 256K
     "MAX_RESOURCES_SIZE": 0x100000,  # 1024K
-    "DEFINES": ["PBL_PLATFORM_GABBRO", "PBL_COLOR", "PBL_ROUND",
-                "PBL_MICROPHONE", "PBL_HEALTH", "PBL_COMPASS",
-                "PBL_DISPLAY_WIDTH=260", "PBL_DISPLAY_HEIGHT=260"],
+    "DEFINES": [
+        "PBL_PLATFORM_GABBRO",
+        "PBL_COLOR",
+        "PBL_ROUND",
+        "PBL_MICROPHONE",
+        "PBL_HEALTH",
+        "PBL_COMPASS",
+        "PBL_DISPLAY_WIDTH=260",
+        "PBL_DISPLAY_HEIGHT=260",
+    ],
     "BUILD_DIR": "gabbro",
     "BUNDLE_BIN_DIR": "gabbro",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
     "MAX_FONT_GLYPH_SIZE": 512,
-    "TAGS": ["gabbro", "color", "round", "mic", "health", "compass", "260w", "260h"]
+    "TAGS": ["gabbro", "color", "round", "mic", "health", "compass", "260w", "260h"],
 }
 
 pebble_platforms = {
@@ -142,7 +223,7 @@ pebble_platforms = {
 # If INTERNAL_SDK_BUILD doesn't exist at all, then we're in an SDK build and can assume
 # that we should use the file if it exists, so try importing unconditionally.
 def maybe_import_internal(env):
-    if 'INTERNAL_SDK_BUILD' in env:
+    if "INTERNAL_SDK_BUILD" in env:
         if env.INTERNAL_SDK_BUILD:
             import pebble_sdk_platform_internal
     else:

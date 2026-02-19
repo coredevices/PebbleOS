@@ -16,7 +16,7 @@ from fw_binary_info import PebbleFirmwareBinaryInfo
 #   uint32_t firmware_length;
 #   uint32_t checksum;
 # } FirmwareDescription;
-FW_DESCR_FORMAT = '<III'
+FW_DESCR_FORMAT = "<III"
 FW_DESCR_SIZE = struct.calcsize(FW_DESCR_FORMAT)
 
 
@@ -26,12 +26,12 @@ def _generate_firmware_description_struct(firmware_length, firmware_crc):
 
 def insert_firmware_description_struct(input_binary, output_binary=None):
     fw_bin_info = PebbleFirmwareBinaryInfo(input_binary)
-    with open(input_binary, 'rb') as inf:
+    with open(input_binary, "rb") as inf:
         fw_bin = inf.read()
         fw_crc = fw_bin_info.get_crc()
 
     if output_binary:
-        with open(output_binary, 'wb') as outf:
+        with open(output_binary, "wb") as outf:
             outf.write(_generate_firmware_description_struct(len(fw_bin), fw_crc))
             outf.write(fw_bin)
     else:
@@ -43,7 +43,7 @@ def usage_and_exit():
     sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) < 3:
         usage_and_exit()
     input_binary = sys.argv[1]

@@ -23,15 +23,14 @@ def generate_resource_object(olson_database):
     dstrule_list = tools.timezones.dstrules_parse(olson_database)
     zonelink_list = tools.timezones.zonelink_parse(olson_database)
 
-    print("{} {} {}".format(len(zoneinfo_list),
-                            len(dstrule_list),
-                            len(zonelink_list)))
+    print("{} {} {}".format(len(zoneinfo_list), len(dstrule_list), len(zonelink_list)))
 
     data_file = BytesIO()
-    tools.timezones.zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, data_file)
+    tools.timezones.zoneinfo_to_bin(
+        zoneinfo_list, dstrule_list, zonelink_list, data_file
+    )
 
     reso = ResourceObject(
-            ResourceDefinition('raw', 'TIMEZONE_DATABASE', None),
-            data_file.getvalue())
+        ResourceDefinition("raw", "TIMEZONE_DATABASE", None), data_file.getvalue()
+    )
     return reso
-

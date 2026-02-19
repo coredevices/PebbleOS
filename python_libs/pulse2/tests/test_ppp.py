@@ -18,178 +18,171 @@ from . import timer_helper
 
 
 class TestPPPEncapsulation(unittest.TestCase):
-
     def test_ppp_encapsulate(self):
-        self.assertEqual(ppp.encapsulate(0xc021, b'Information'),
-                         b'\xc0\x21Information')
+        self.assertEqual(
+            ppp.encapsulate(0xC021, b"Information"), b"\xc0\x21Information"
+        )
 
 
 class TestPPPUnencapsulate(unittest.TestCase):
-
     def test_ppp_unencapsulate(self):
-        protocol, information = ppp.unencapsulate(b'\xc0\x21Information')
-        self.assertEqual((protocol, information), (0xc021, b'Information'))
+        protocol, information = ppp.unencapsulate(b"\xc0\x21Information")
+        self.assertEqual((protocol, information), (0xC021, b"Information"))
 
     def test_unencapsulate_empty_frame(self):
         with self.assertRaises(ppp.UnencapsulationError):
-            ppp.unencapsulate(b'')
+            ppp.unencapsulate(b"")
 
     def test_unencapsulate_too_short_frame(self):
         with self.assertRaises(ppp.UnencapsulationError):
-            ppp.unencapsulate(b'\x21')
+            ppp.unencapsulate(b"\x21")
 
     def test_unencapsulate_empty_information(self):
-        protocol, information = ppp.unencapsulate(b'\xc0\x21')
-        self.assertEqual((protocol, information), (0xc021, b''))
+        protocol, information = ppp.unencapsulate(b"\xc0\x21")
+        self.assertEqual((protocol, information), (0xC021, b""))
 
 
 class TestConfigurationOptionsParser(unittest.TestCase):
-
     def test_no_options(self):
-        options = ppp.OptionList.parse(b'')
+        options = ppp.OptionList.parse(b"")
         self.assertEqual(len(options), 0)
 
     def test_one_empty_option(self):
-        options = ppp.OptionList.parse(b'\xaa\x02')
+        options = ppp.OptionList.parse(b"\xaa\x02")
         self.assertEqual(len(options), 1)
-        self.assertEqual(options[0].type, 0xaa)
-        self.assertEqual(options[0].data, b'')
+        self.assertEqual(options[0].type, 0xAA)
+        self.assertEqual(options[0].data, b"")
 
     def test_one_option_with_length(self):
-        options = ppp.OptionList.parse(b'\xab\x07Data!')
-        self.assertEqual((0xab, b'Data!'), options[0])
+        options = ppp.OptionList.parse(b"\xab\x07Data!")
+        self.assertEqual((0xAB, b"Data!"), options[0])
 
     def test_multiple_options_empty_first(self):
-        options = ppp.OptionList.parse(b'\x22\x02\x23\x03a\x21\x04ab')
-        self.assertEqual([(0x22, b''), (0x23, b'a'), (0x21, b'ab')], options)
+        options = ppp.OptionList.parse(b"\x22\x02\x23\x03a\x21\x04ab")
+        self.assertEqual([(0x22, b""), (0x23, b"a"), (0x21, b"ab")], options)
 
     def test_multiple_options_dataful_first(self):
-        options = ppp.OptionList.parse(b'\x31\x08option\x32\x02')
-        self.assertEqual([(0x31, b'option'), (0x32, b'')], options)
+        options = ppp.OptionList.parse(b"\x31\x08option\x32\x02")
+        self.assertEqual([(0x31, b"option"), (0x32, b"")], options)
 
     def test_option_with_length_too_short(self):
         with self.assertRaises(ppp.ParseError):
-            ppp.OptionList.parse(b'\x41\x01')
+            ppp.OptionList.parse(b"\x41\x01")
 
     def test_option_list_with_malformed_option(self):
         with self.assertRaises(ppp.ParseError):
-            ppp.OptionList.parse(b'\x0a\x02\x0b\x01\x0c\x03a')
+            ppp.OptionList.parse(b"\x0a\x02\x0b\x01\x0c\x03a")
 
     def test_truncated_terminal_option(self):
         with self.assertRaises(ppp.ParseError):
-            ppp.OptionList.parse(b'\x61\x02\x62\x03a\x63\x0ccandleja')
+            ppp.OptionList.parse(b"\x61\x02\x62\x03a\x63\x0ccandleja")
 
 
 class TestConfigurationOptionsBuilder(unittest.TestCase):
-
     def test_no_options(self):
         serialized = ppp.OptionList.build([])
-        self.assertEqual(b'', serialized)
+        self.assertEqual(b"", serialized)
 
     def test_one_empty_option(self):
-        serialized = ppp.OptionList.build([ppp.Option(0xaa, b'')])
-        self.assertEqual(b'\xaa\x02', serialized)
+        serialized = ppp.OptionList.build([ppp.Option(0xAA, b"")])
+        self.assertEqual(b"\xaa\x02", serialized)
 
     def test_one_option_with_length(self):
-        serialized = ppp.OptionList.build([ppp.Option(0xbb, b'Data!')])
-        self.assertEqual(b'\xbb\x07Data!', serialized)
+        serialized = ppp.OptionList.build([ppp.Option(0xBB, b"Data!")])
+        self.assertEqual(b"\xbb\x07Data!", serialized)
 
     def test_two_options(self):
-        serialized = ppp.OptionList.build([
-            ppp.Option(0xcc, b'foo'), ppp.Option(0xdd, b'xyzzy')])
-        self.assertEqual(b'\xcc\x05foo\xdd\x07xyzzy', serialized)
+        serialized = ppp.OptionList.build(
+            [ppp.Option(0xCC, b"foo"), ppp.Option(0xDD, b"xyzzy")]
+        )
+        self.assertEqual(b"\xcc\x05foo\xdd\x07xyzzy", serialized)
 
 
 class TestLCPEnvelopeParsing(unittest.TestCase):
-
     def test_packet_no_padding(self):
-        parsed = ppp.LCPEncapsulation.parse(b'\x01\xab\x00\x0aabcdef')
+        parsed = ppp.LCPEncapsulation.parse(b"\x01\xab\x00\x0aabcdef")
         self.assertEqual(parsed.code, 1)
-        self.assertEqual(parsed.identifier, 0xab)
-        self.assertEqual(parsed.data, b'abcdef')
-        self.assertEqual(parsed.padding, b'')
+        self.assertEqual(parsed.identifier, 0xAB)
+        self.assertEqual(parsed.data, b"abcdef")
+        self.assertEqual(parsed.padding, b"")
 
     def test_padding(self):
-        parsed = ppp.LCPEncapsulation.parse(b'\x01\xab\x00\x0aabcdefpadding')
-        self.assertEqual(parsed.data, b'abcdef')
-        self.assertEqual(parsed.padding, b'padding')
+        parsed = ppp.LCPEncapsulation.parse(b"\x01\xab\x00\x0aabcdefpadding")
+        self.assertEqual(parsed.data, b"abcdef")
+        self.assertEqual(parsed.padding, b"padding")
 
     def test_truncated_packet(self):
         with self.assertRaises(ppp.ParseError):
-            ppp.LCPEncapsulation.parse(b'\x01\xab\x00\x0aabcde')
+            ppp.LCPEncapsulation.parse(b"\x01\xab\x00\x0aabcde")
 
     def test_bogus_length(self):
         with self.assertRaises(ppp.ParseError):
-            ppp.LCPEncapsulation.parse(b'\x01\xbc\x00\x03')
+            ppp.LCPEncapsulation.parse(b"\x01\xbc\x00\x03")
 
     def test_empty_data(self):
-        parsed = ppp.LCPEncapsulation.parse(b'\x03\x01\x00\x04')
-        self.assertEqual((3, 1, b'', b''), parsed)
+        parsed = ppp.LCPEncapsulation.parse(b"\x03\x01\x00\x04")
+        self.assertEqual((3, 1, b"", b""), parsed)
 
 
 class TestLCPEnvelopeBuilder(unittest.TestCase):
-
     def test_build_empty_data(self):
-        serialized = ppp.LCPEncapsulation.build(1, 0xfe, b'')
-        self.assertEqual(b'\x01\xfe\x00\x04', serialized)
+        serialized = ppp.LCPEncapsulation.build(1, 0xFE, b"")
+        self.assertEqual(b"\x01\xfe\x00\x04", serialized)
 
     def test_build_with_data(self):
-        serialized = ppp.LCPEncapsulation.build(3, 0x2a, b'Hello, world!')
-        self.assertEqual(b'\x03\x2a\x00\x11Hello, world!', serialized)
+        serialized = ppp.LCPEncapsulation.build(3, 0x2A, b"Hello, world!")
+        self.assertEqual(b"\x03\x2a\x00\x11Hello, world!", serialized)
 
 
 class TestProtocolRejectParsing(unittest.TestCase):
-
     def test_protocol_and_info(self):
-        self.assertEqual((0xabcd, b'asdfasdf'),
-                         ppp.ProtocolReject.parse(b'\xab\xcdasdfasdf'))
+        self.assertEqual(
+            (0xABCD, b"asdfasdf"), ppp.ProtocolReject.parse(b"\xab\xcdasdfasdf")
+        )
 
     def test_empty_info(self):
-        self.assertEqual((0xf00d, b''),
-                         ppp.ProtocolReject.parse(b'\xf0\x0d'))
+        self.assertEqual((0xF00D, b""), ppp.ProtocolReject.parse(b"\xf0\x0d"))
 
     def test_truncated_packet(self):
         with self.assertRaises(ppp.ParseError):
-            ppp.ProtocolReject.parse(b'\xab')
+            ppp.ProtocolReject.parse(b"\xab")
 
 
 class TestMagicNumberAndDataParsing(unittest.TestCase):
-
     def test_magic_and_data(self):
         self.assertEqual(
-                (0xabcdef01, b'datadata'),
-                ppp.MagicNumberAndData.parse(b'\xab\xcd\xef\x01datadata'))
+            (0xABCDEF01, b"datadata"),
+            ppp.MagicNumberAndData.parse(b"\xab\xcd\xef\x01datadata"),
+        )
 
     def test_magic_no_data(self):
         self.assertEqual(
-                (0xfeedface, b''),
-                ppp.MagicNumberAndData.parse(b'\xfe\xed\xfa\xce'))
+            (0xFEEDFACE, b""), ppp.MagicNumberAndData.parse(b"\xfe\xed\xfa\xce")
+        )
 
     def test_truncated_packet(self):
         with self.assertRaises(ppp.ParseError):
-            ppp.MagicNumberAndData.parse(b'abc')
+            ppp.MagicNumberAndData.parse(b"abc")
 
 
 class TestMagicNumberAndDataBuilder(unittest.TestCase):
-
     def test_build_empty_data(self):
-        serialized = ppp.MagicNumberAndData.build(0x12345678, b'')
-        self.assertEqual(b'\x12\x34\x56\x78', serialized)
+        serialized = ppp.MagicNumberAndData.build(0x12345678, b"")
+        self.assertEqual(b"\x12\x34\x56\x78", serialized)
 
     def test_build_with_data(self):
-        serialized = ppp.MagicNumberAndData.build(0xabcdef01, b'foobar')
-        self.assertEqual(b'\xab\xcd\xef\x01foobar', serialized)
+        serialized = ppp.MagicNumberAndData.build(0xABCDEF01, b"foobar")
+        self.assertEqual(b"\xab\xcd\xef\x01foobar", serialized)
 
     def test_build_with_named_attributes(self):
-        serialized = ppp.MagicNumberAndData.build(magic_number=0, data=b'abc')
-        self.assertEqual(b'\0\0\0\0abc', serialized)
+        serialized = ppp.MagicNumberAndData.build(magic_number=0, data=b"abc")
+        self.assertEqual(b"\0\0\0\0abc", serialized)
 
 
 class TestControlProtocolRestartTimer(unittest.TestCase):
-
     def setUp(self):
         FakeTimer.clear_timer_list()
-        timer_patcher = mock.patch('threading.Timer', new=FakeTimer)
+        timer_patcher = mock.patch("threading.Timer", new=FakeTimer)
         timer_patcher.start()
         self.addCleanup(timer_patcher.stop)
 
@@ -232,12 +225,12 @@ class TestControlProtocolRestartTimer(unittest.TestCase):
 
 
 class InstrumentedControlProtocol(ppp.ControlProtocol):
-
     methods_to_mock = (
-            'this_layer_up this_layer_down this_layer_started '
-            'this_layer_finished send_packet start_restart_timer '
-            'stop_restart_timer').split()
-    attributes_to_mock = ('restart_timer',)
+        "this_layer_up this_layer_down this_layer_started "
+        "this_layer_finished send_packet start_restart_timer "
+        "stop_restart_timer"
+    ).split()
+    attributes_to_mock = ("restart_timer",)
 
     def __init__(self):
         ppp.ControlProtocol.__init__(self)
@@ -248,7 +241,6 @@ class InstrumentedControlProtocol(ppp.ControlProtocol):
 
 
 class ControlProtocolTestMixin(object):
-
     CONTROL_CODE_ENUM = ppp.ControlCode
 
     def _map_control_code(self, code):
@@ -257,20 +249,19 @@ class ControlProtocolTestMixin(object):
         except ValueError:
             return self.CONTROL_CODE_ENUM[code].value
 
-    def assert_packet_sent(self, code, identifier, body=b''):
+    def assert_packet_sent(self, code, identifier, body=b""):
         self.fsm.send_packet.assert_called_once_with(
-                ppp.LCPEncapsulation.build(
-                    self._map_control_code(code), identifier, body))
+            ppp.LCPEncapsulation.build(self._map_control_code(code), identifier, body)
+        )
         self.fsm.send_packet.reset_mock()
 
-    def incoming_packet(self, code, identifier, body=b''):
+    def incoming_packet(self, code, identifier, body=b""):
         self.fsm.packet_received(
-                ppp.LCPEncapsulation.build(self._map_control_code(code),
-                                           identifier, body))
+            ppp.LCPEncapsulation.build(self._map_control_code(code), identifier, body)
+        )
 
 
 class TestControlProtocolFSM(ControlProtocolTestMixin, unittest.TestCase):
-
     def setUp(self):
         self.addCleanup(timer_helper.cancel_all_timers)
         self.fsm = InstrumentedControlProtocol()
@@ -292,11 +283,11 @@ class TestControlProtocolFSM(ControlProtocolTestMixin, unittest.TestCase):
     def test_trivial_handshake(self):
         self.fsm.open()
         self.fsm.up(mock.Mock())
-        self.assert_packet_sent('Configure_Request', 0)
-        self.incoming_packet('Configure_Ack', 0)
-        self.incoming_packet('Configure_Request', 17)
-        self.assert_packet_sent('Configure_Ack', 17)
-        self.assertEqual('Opened', self.fsm.state)
+        self.assert_packet_sent("Configure_Request", 0)
+        self.incoming_packet("Configure_Ack", 0)
+        self.incoming_packet("Configure_Request", 17)
+        self.assert_packet_sent("Configure_Ack", 17)
+        self.assertEqual("Opened", self.fsm.state)
         self.assertTrue(self.fsm.this_layer_up.called)
         self.assertEqual(self.fsm.restart_count, self.fsm.max_configure)
 
@@ -304,53 +295,52 @@ class TestControlProtocolFSM(ControlProtocolTestMixin, unittest.TestCase):
         self.test_trivial_handshake()
         self.fsm.close()
         self.fsm.this_layer_down.assert_called_once_with()
-        self.assert_packet_sent('Terminate_Request', 42)
+        self.assert_packet_sent("Terminate_Request", 42)
 
     def test_remote_terminate(self):
         self.test_trivial_handshake()
-        self.incoming_packet('Terminate_Request', 42)
-        self.assert_packet_sent('Terminate_Ack', 42)
+        self.incoming_packet("Terminate_Request", 42)
+        self.assert_packet_sent("Terminate_Ack", 42)
         self.assertTrue(self.fsm.this_layer_down.called)
         self.assertTrue(self.fsm.start_restart_timer.called)
         self.fsm.this_layer_finished.assert_not_called()
         self.fsm.restart_timer_expired(self.fsm.restart_timer_generation_id)
         self.assertTrue(self.fsm.this_layer_finished.called)
-        self.assertEqual('Stopped', self.fsm.state)
+        self.assertEqual("Stopped", self.fsm.state)
 
     def test_remote_rejects_configure_request_code(self):
         self.fsm.open()
         self.fsm.up(mock.Mock())
         received_packet = self.fsm.send_packet.call_args[0][0]
-        self.assert_packet_sent('Configure_Request', 0)
-        self.incoming_packet('Code_Reject', 3, received_packet)
-        self.assertEqual('Stopped', self.fsm.state)
+        self.assert_packet_sent("Configure_Request", 0)
+        self.incoming_packet("Code_Reject", 3, received_packet)
+        self.assertEqual("Stopped", self.fsm.state)
         self.assertTrue(self.fsm.this_layer_finished.called)
 
     def test_receive_extended_code(self):
         self.fsm.handle_unknown_code = mock.Mock()
         self.test_trivial_handshake()
-        self.incoming_packet(42, 11, b'Life, the universe and everything')
+        self.incoming_packet(42, 11, b"Life, the universe and everything")
         self.fsm.handle_unknown_code.assert_called_once_with(
-        42, 11, b'Life, the universe and everything')
+            42, 11, b"Life, the universe and everything"
+        )
 
     def test_receive_unimplemented_code(self):
         self.test_trivial_handshake()
         self.incoming_packet(0x55, 0)
-        self.assert_packet_sent('Code_Reject', 0, b'\x55\0\0\x04')
+        self.assert_packet_sent("Code_Reject", 0, b"\x55\0\0\x04")
 
     def test_code_reject_truncates_rejected_packet(self):
         self.test_trivial_handshake()
-        self.incoming_packet(0xaa, 0x20, b'a'*1496)  # 1500-byte Info
-        self.assert_packet_sent('Code_Reject', 0,
-                                b'\xaa\x20\x05\xdc' + b'a'*1492)
+        self.incoming_packet(0xAA, 0x20, b"a" * 1496)  # 1500-byte Info
+        self.assert_packet_sent("Code_Reject", 0, b"\xaa\x20\x05\xdc" + b"a" * 1492)
 
     def test_code_reject_identifier_changes(self):
         self.test_trivial_handshake()
-        self.incoming_packet(0xaa, 0)
-        self.assert_packet_sent('Code_Reject', 0, b'\xaa\0\0\x04')
-        self.incoming_packet(0xaa, 0)
-        self.assert_packet_sent('Code_Reject', 1, b'\xaa\0\0\x04')
-
+        self.incoming_packet(0xAA, 0)
+        self.assert_packet_sent("Code_Reject", 0, b"\xaa\0\0\x04")
+        self.incoming_packet(0xAA, 0)
+        self.assert_packet_sent("Code_Reject", 1, b"\xaa\0\0\x04")
 
     # Local events: up, down, open, close
     # Option negotiation: reject, nak
@@ -363,65 +353,64 @@ class TestControlProtocolFSM(ControlProtocolTestMixin, unittest.TestCase):
 
 
 class TestLCPReceiveEchoRequest(ControlProtocolTestMixin, unittest.TestCase):
-
     CONTROL_CODE_ENUM = ppp.LCPCode
 
     def setUp(self):
         self.addCleanup(timer_helper.cancel_all_timers)
         self.fsm = ppp.LinkControlProtocol(mock.Mock())
         self.fsm.send_packet = mock.Mock()
-        self.fsm.state = 'Opened'
+        self.fsm.state = "Opened"
 
-    def send_echo_request(self, identifier=0, data=b'\0\0\0\0'):
+    def send_echo_request(self, identifier=0, data=b"\0\0\0\0"):
         result = self.fsm.handle_unknown_code(
-                ppp.LCPCode.Echo_Request.value, identifier, data)
+            ppp.LCPCode.Echo_Request.value, identifier, data
+        )
         self.assertIsNot(result, NotImplemented)
 
     def test_echo_request_is_dropped_when_not_in_opened_state(self):
-        self.fsm.state = 'Ack-Sent'
+        self.fsm.state = "Ack-Sent"
         self.send_echo_request()
         self.fsm.send_packet.assert_not_called()
 
     def test_echo_request_elicits_reply(self):
         self.send_echo_request()
-        self.assert_packet_sent('Echo_Reply', 0, b'\0\0\0\0')
+        self.assert_packet_sent("Echo_Reply", 0, b"\0\0\0\0")
 
     def test_echo_request_with_data_is_echoed_in_reply(self):
-        self.send_echo_request(5, b'\0\0\0\0datadata')
-        self.assert_packet_sent('Echo_Reply', 5, b'\0\0\0\0datadata')
+        self.send_echo_request(5, b"\0\0\0\0datadata")
+        self.assert_packet_sent("Echo_Reply", 5, b"\0\0\0\0datadata")
 
     def test_echo_request_missing_magic_number_field_is_dropped(self):
-        self.send_echo_request(data=b'')
+        self.send_echo_request(data=b"")
         self.fsm.send_packet.assert_not_called()
 
     def test_echo_request_with_nonzero_magic_number_is_dropped(self):
-        self.send_echo_request(data=b'\0\0\0\x01')
+        self.send_echo_request(data=b"\0\0\0\x01")
         self.fsm.send_packet.assert_not_called()
 
 
 class TestLCPPing(ControlProtocolTestMixin, unittest.TestCase):
-
     CONTROL_CODE_ENUM = ppp.LCPCode
 
     def setUp(self):
         FakeTimer.clear_timer_list()
-        timer_patcher = mock.patch('threading.Timer', new=FakeTimer)
+        timer_patcher = mock.patch("threading.Timer", new=FakeTimer)
         timer_patcher.start()
         self.addCleanup(timer_patcher.stop)
 
         self.fsm = ppp.LinkControlProtocol(mock.Mock())
         self.fsm.send_packet = mock.Mock()
-        self.fsm.state = 'Opened'
+        self.fsm.state = "Opened"
 
     def respond_to_ping(self):
         [echo_request_packet], _ = self.fsm.send_packet.call_args
-        self.assertEqual(b'\x09'[0], echo_request_packet[0])
-        echo_response_packet = b'\x0a' + echo_request_packet[1:]
+        self.assertEqual(b"\x09"[0], echo_request_packet[0])
+        echo_response_packet = b"\x0a" + echo_request_packet[1:]
         self.fsm.packet_received(echo_response_packet)
 
     def test_ping_when_lcp_is_not_opened_is_an_error(self):
         cb = mock.Mock()
-        self.fsm.state = 'Ack-Rcvd'
+        self.fsm.state = "Ack-Rcvd"
         with self.assertRaises(ppp.LinkStateError):
             self.fsm.ping(cb)
         cb.assert_not_called()
@@ -496,7 +485,7 @@ class TestLCPPing(ControlProtocolTestMixin, unittest.TestCase):
         self.fsm.ping(cb, attempts=1)
         [echo_request_packet], _ = self.fsm.send_packet.call_args
         echo_response_packet = bytearray(echo_request_packet)
-        echo_response_packet[0] = 0x0a
+        echo_response_packet[0] = 0x0A
         echo_response_packet[1] += 1
         self.fsm.packet_received(bytes(echo_response_packet))
         cb.assert_not_called()
@@ -511,8 +500,10 @@ class TestLCPPing(ControlProtocolTestMixin, unittest.TestCase):
         # identifier but completely different data.
         identifier = bytearray(echo_request_packet)[1]
         echo_response_packet = bytes(
-                b'\x0a' + bytearray([identifier]) +
-                b'\0\x26\0\0\0\0bad reply bad reply bad reply.')
+            b"\x0a"
+            + bytearray([identifier])
+            + b"\0\x26\0\0\0\0bad reply bad reply bad reply."
+        )
         self.fsm.packet_received(bytes(echo_response_packet))
         cb.assert_not_called()
         FakeTimer.TIMERS[-1].expire()
@@ -529,13 +520,13 @@ class TestLCPPing(ControlProtocolTestMixin, unittest.TestCase):
         self.assertNotEqual(identifier_1, identifier_2)
 
     def test_unsolicited_echo_reply_doesnt_break_anything(self):
-        self.fsm.packet_received(b'\x0a\0\0\x08\0\0\0\0')
+        self.fsm.packet_received(b"\x0a\0\0\x08\0\0\0\0")
 
     def test_malformed_echo_reply(self):
         cb = mock.Mock()
         self.fsm.ping(cb, attempts=1)
         # Only three bytes of Magic-Number
-        self.fsm.packet_received(b'\x0a\0\0\x07\0\0\0')
+        self.fsm.packet_received(b"\x0a\0\0\x07\0\0\0")
         cb.assert_not_called()
 
     # Trying to start a second ping while the first ping is still happening

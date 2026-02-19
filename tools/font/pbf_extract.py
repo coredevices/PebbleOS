@@ -25,7 +25,7 @@ FONT_VERSION_3 = 3
 FEATURE_OFFSET_16 = 0x01
 FEATURE_RLE4 = 0x02
 
-GLYPH_MD_STRUCT = 'BBbbb'
+GLYPH_MD_STRUCT = "BBbbb"
 
 
 def decompress_rle4(rle_stream, num_units, width):
@@ -33,7 +33,7 @@ def decompress_rle4(rle_stream, num_units, width):
     bitmap = []
     units_remaining = num_units
 
-    for b in array.array('B', rle_stream):
+    for b in array.array("B", rle_stream):
         for _ in range(2):
             if units_remaining == 0:
                 break
@@ -49,35 +49,44 @@ def decompress_rle4(rle_stream, num_units, width):
 
 def extract_pbf(pbf_path, output_dir):
     """Extract all glyphs from a PBF file."""
-    with open(pbf_path, 'rb') as f:
+    with open(pbf_path, "rb") as f:
         font_data = f.read()
 
     # Parse header (assume v3, then adjust)
-    font_md_format_v3 = '<BBHHBBBB'
-    font_md_format_v2 = '<BBHHBB'
+    font_md_format_v3 = "<BBHHBBBB"
+    font_md_format_v2 = "<BBHHBB"
 
     font_md_size = struct.calcsize(font_md_format_v3)
     header = struct.unpack(font_md_format_v3, font_data[:font_md_size])
-    (version, max_height, num_glyphs, wildcard_cp, table_size, cp_bytes,
-     struct_size, features) = header
+    (
+        version,
+        max_height,
+        num_glyphs,
+        wildcard_cp,
+        table_size,
+        cp_bytes,
+        struct_size,
+        features,
+    ) = header
 
     if version == FONT_VERSION_3:
         pass
     elif version == FONT_VERSION_2:
         font_md_size = struct.calcsize(font_md_format_v2)
-        (version, max_height, num_glyphs, wildcard_cp, table_size, cp_bytes) = \
+        (version, max_height, num_glyphs, wildcard_cp, table_size, cp_bytes) = (
             struct.unpack(font_md_format_v2, font_data[:font_md_size])
+        )
         features = 0
     else:
-        raise ValueError(f'Unsupported font version: {version}')
+        raise ValueError(f"Unsupported font version: {version}")
 
     # Build offset entry format
-    offset_table_format = '<'
-    offset_table_format += 'L' if cp_bytes == 4 else 'H'
-    offset_table_format += 'H' if features & FEATURE_OFFSET_16 else 'L'
+    offset_table_format = "<"
+    offset_table_format += "L" if cp_bytes == 4 else "H"
+    offset_table_format += "H" if features & FEATURE_OFFSET_16 else "L"
     offset_entry_size = struct.calcsize(offset_table_format)
 
-    hash_entry_format = '<BBH'
+    hash_entry_format = "<BBH"
     hash_entry_size = struct.calcsize(hash_entry_format)
 
     # Parse hash table
@@ -85,8 +94,9 @@ def extract_pbf(pbf_path, output_dir):
     hash_table_start = font_md_size
     for i in range(table_size):
         entry_start = hash_table_start + i * hash_entry_size
-        entry = struct.unpack(hash_entry_format,
-                             font_data[entry_start:entry_start + hash_entry_size])
+        entry = struct.unpack(
+            hash_entry_format, font_data[entry_start : entry_start + hash_entry_size]
+        )
         hash_table.append(entry)
 
     offset_tables_start = font_md_size + hash_entry_size * table_size
@@ -95,7 +105,7 @@ def extract_pbf(pbf_path, output_dir):
 
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
-    glyphs_dir = os.path.join(output_dir, 'glyphs')
+    glyphs_dir = os.path.join(output_dir, "glyphs")
     os.makedirs(glyphs_dir, exist_ok=True)
 
     # Extract all glyphs
@@ -105,7 +115,7 @@ def extract_pbf(pbf_path, output_dir):
             entry_start = offset_tables_start + offset + i * offset_entry_size
             codepoint, glyph_offset = struct.unpack(
                 offset_table_format,
-                font_data[entry_start:entry_start + offset_entry_size]
+                font_data[entry_start : entry_start + offset_entry_size],
             )
 
             # Read glyph header
@@ -115,7 +125,9 @@ def extract_pbf(pbf_path, output_dir):
             if len(header_data) < struct.calcsize(GLYPH_MD_STRUCT):
                 continue
 
-            (width, height_or_rle, left, top, advance) = struct.unpack(GLYPH_MD_STRUCT, header_data)
+            (width, height_or_rle, left, top, advance) = struct.unpack(
+                GLYPH_MD_STRUCT, header_data
+            )
 
             # Read bitmap data
             if features & FEATURE_RLE4:
@@ -124,7 +136,9 @@ def extract_pbf(pbf_path, output_dir):
                 bitmap_length = ((height_or_rle * width) + 7) // 8
 
             bitmap_length_aligned = ((bitmap_length + 3) // 4) * 4
-            bitmap_data = glyph_table[bitmap_offset_bytes:bitmap_offset_bytes + bitmap_length_aligned]
+            bitmap_data = glyph_table[
+                bitmap_offset_bytes : bitmap_offset_bytes + bitmap_length_aligned
+            ]
 
             # Convert to bitlist
             if width == 0 or (height_or_rle == 0 and not (features & FEATURE_RLE4)):
@@ -134,16 +148,16 @@ def extract_pbf(pbf_path, output_dir):
                 bitlist, height = decompress_rle4(bitmap_data, height_or_rle, width)
             else:
                 bitlist = []
-                for w in array.array('I', bitmap_data):
+                for w in array.array("I", bitmap_data):
                     bitlist.extend(((w & (1 << bit)) != 0 for bit in range(32)))
                 height = height_or_rle
 
             # Create and save image
-            filename = f'U+{codepoint:04X}.png'
+            filename = f"U+{codepoint:04X}.png"
             filepath = os.path.join(glyphs_dir, filename)
 
             if width > 0 and height > 0 and bitlist:
-                img = Image.new('1', (width, height), 0)  # 1-bit image, white bg
+                img = Image.new("1", (width, height), 0)  # 1-bit image, white bg
                 pixels = img.load()
                 for y in range(height):
                     for x in range(width):
@@ -152,37 +166,39 @@ def extract_pbf(pbf_path, output_dir):
                             pixels[x, y] = 1  # Black pixel
                 img.save(filepath)
 
-            glyphs.append({
-                'codepoint': codepoint,
-                'char': chr(codepoint) if 0x20 <= codepoint <= 0x10FFFF else None,
-                'file': f'glyphs/{filename}',
-                'width': width,
-                'height': height,
-                'left_offset': left,
-                'top_offset': top,
-                'advance': advance,
-            })
+            glyphs.append(
+                {
+                    "codepoint": codepoint,
+                    "char": chr(codepoint) if 0x20 <= codepoint <= 0x10FFFF else None,
+                    "file": f"glyphs/{filename}",
+                    "width": width,
+                    "height": height,
+                    "left_offset": left,
+                    "top_offset": top,
+                    "advance": advance,
+                }
+            )
 
     # Sort glyphs by codepoint
-    glyphs.sort(key=lambda g: g['codepoint'])
+    glyphs.sort(key=lambda g: g["codepoint"])
 
     # Build manifest
     manifest = {
-        'source': os.path.basename(pbf_path),
-        'version': version,
-        'max_height': max_height,
-        'wildcard_codepoint': wildcard_cp,
-        'hash_table_size': table_size,
-        'codepoint_bytes': cp_bytes,
-        'features': {
-            'offset_16': bool(features & FEATURE_OFFSET_16),
-            'rle4': bool(features & FEATURE_RLE4),
+        "source": os.path.basename(pbf_path),
+        "version": version,
+        "max_height": max_height,
+        "wildcard_codepoint": wildcard_cp,
+        "hash_table_size": table_size,
+        "codepoint_bytes": cp_bytes,
+        "features": {
+            "offset_16": bool(features & FEATURE_OFFSET_16),
+            "rle4": bool(features & FEATURE_RLE4),
         },
-        'glyphs': glyphs,
+        "glyphs": glyphs,
     }
 
-    manifest_path = os.path.join(output_dir, 'font.json')
-    with open(manifest_path, 'w') as f:
+    manifest_path = os.path.join(output_dir, "font.json")
+    with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
     print(f"Extracted {len(glyphs)} glyphs to {output_dir}/")
@@ -198,9 +214,9 @@ def extract_pbf(pbf_path, output_dir):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Extract PBF font to editable format')
-    parser.add_argument('pbf_file', help='Input PBF font file')
-    parser.add_argument('-o', '--output', required=True, help='Output directory')
+    parser = argparse.ArgumentParser(description="Extract PBF font to editable format")
+    parser.add_argument("pbf_file", help="Input PBF font file")
+    parser.add_argument("-o", "--output", required=True, help="Output directory")
     args = parser.parse_args()
 
     if not os.path.exists(args.pbf_file):
@@ -211,5 +227,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

@@ -13,11 +13,10 @@ from .. import exceptions
 
 
 class Prompt(object):
-
-    PORT_NUMBER = 0x3e20
+    PORT_NUMBER = 0x3E20
 
     def __init__(self, link):
-        self.socket = link.open_socket('reliable', self.PORT_NUMBER)
+        self.socket = link.open_socket("reliable", self.PORT_NUMBER)
 
     def command_and_response(self, command_string, timeout=20):
         log = []
@@ -26,8 +25,7 @@ class Prompt(object):
         is_done = False
         while not is_done:
             try:
-                response = PromptResponse.parse(
-                        self.socket.receive(timeout=timeout))
+                response = PromptResponse.parse(self.socket.receive(timeout=timeout))
                 if response.is_done_response:
                     is_done = True
                 elif response.is_message_response:
@@ -40,13 +38,13 @@ class Prompt(object):
         self.socket.close()
 
 
-class PromptResponse(collections.namedtuple('PromptResponse',
-                     'response_type timestamp message')):
-
+class PromptResponse(
+    collections.namedtuple("PromptResponse", "response_type timestamp message")
+):
     DONE_RESPONSE = 101
     MESSAGE_RESPONSE = 102
 
-    response_struct = struct.Struct('<BQ')
+    response_struct = struct.Struct("<BQ")
 
     @property
     def is_done_response(self):
@@ -58,10 +56,10 @@ class PromptResponse(collections.namedtuple('PromptResponse',
 
     @classmethod
     def parse(cls, response):
-        result = cls.response_struct.unpack(response[:cls.response_struct.size])
+        result = cls.response_struct.unpack(response[: cls.response_struct.size])
 
         response_type = result[0]
         timestamp = datetime.fromtimestamp(result[1] / 1000.0)
-        message = response[cls.response_struct.size:]
+        message = response[cls.response_struct.size :]
 
         return cls(response_type, timestamp, message)

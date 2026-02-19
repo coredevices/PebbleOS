@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-
 # globally used functions to put other templates in
 class FileScope:
     header = """
@@ -40,7 +39,7 @@ static void {watch_name}_update(Layer *me) {{
 }}
 """
 
-# TODO: make the app number an actual function call
+    # TODO: make the app number an actual function call
     defs_file = """
 #pragma once
 
@@ -52,6 +51,7 @@ static void {watch_name}_update(Layer *me) {{
 
 """
 
+
 # non-moving image (like a background)
 class StaticImage:
     static_defs = """
@@ -61,6 +61,7 @@ static BmpContainer s_{name};
   bmp_init_container({res_def_name}, &s_{name});
   layer_add_child(window, &s_{name}.layer.layer);
 """
+
 
 # formatted textual date strings
 class TimeText:
@@ -82,6 +83,7 @@ static char s_{name}_buffer[{buffer_length}] = "";
   string_format_time(s_{name}_buffer, sizeof(s_{name}_buffer), "{date_format_string}", &t);
   text_layer_set_text(&s_{name}, s_{name}_buffer);
 """
+
 
 # common analog hands
 class Hand:

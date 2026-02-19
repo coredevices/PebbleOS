@@ -27,8 +27,11 @@ def find_board_config(board_name):
 def dump_qspi(board_name, output_file):
     """Dump QSPI contents to a file using nrfjprog."""
 
-    if output_file.suffix.lower() != '.hex':
-        print(f"Error: output file must have .hex extension: {output_file}", file=sys.stderr)
+    if output_file.suffix.lower() != ".hex":
+        print(
+            f"Error: output file must have .hex extension: {output_file}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     print(f"Dumping QSPI contents to: {output_file}")
@@ -50,8 +53,11 @@ def dump_qspi(board_name, output_file):
 def program_qspi(board_name, input_file):
     """Program QSPI contents from a file using nrfjprog."""
 
-    if input_file.suffix.lower() != '.hex':
-        print(f"Error: output file must have .hex extension: {input_file}", file=sys.stderr)
+    if input_file.suffix.lower() != ".hex":
+        print(
+            f"Error: output file must have .hex extension: {input_file}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     print(f"Programming QSPI contents from: {input_file}")

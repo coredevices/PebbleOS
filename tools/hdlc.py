@@ -7,8 +7,8 @@ except ImportError:
     # Py3 support
     import queue as Queue
 
-HDLC_FRAME_START = 0x7e
-HDLC_ESCAPE = 0x7d
+HDLC_FRAME_START = 0x7E
+HDLC_ESCAPE = 0x7D
 HDLC_ESCAPE_MASK = 0x20
 
 
@@ -47,7 +47,7 @@ class HDLCDecoder(object):
                     self._buffer.append(b ^ HDLC_ESCAPE_MASK)
                 self._state = self._STATE_DATA
             else:
-                assert False, 'Invalid state!'
+                assert False, "Invalid state!"
 
     def get_frame(self):
         try:

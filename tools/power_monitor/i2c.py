@@ -8,6 +8,7 @@
 from pyftdi.pyftdi import ftdi
 from array import array as Array
 
+
 class MPSSE(ftdi.Ftdi):
     I2C = 5
     CMD_SIZE = 3
@@ -40,7 +41,7 @@ class MPSSE(ftdi.Ftdi):
     GPIO2 = 64
     GPIO3 = 128
 
-    DEFAULT_TRIS = (SK | DO | GPIO0 | GPIO1 | GPIO2 | GPIO3)
+    DEFAULT_TRIS = SK | DO | GPIO0 | GPIO1 | GPIO2 | GPIO3
     DEFAULT_PORT = SK
 
     MAX_SETUP_COMMANDS = 10
@@ -55,8 +56,7 @@ class MPSSE(ftdi.Ftdi):
         super(MPSSE, self).__init__()
 
     #  Init, will open the mpsse and setup the pins
-    def Open(self, vid, pid, mode=0, interface=1,
-                 index=0, frequency=1.0E5):
+    def Open(self, vid, pid, mode=0, interface=1, index=0, frequency=1.0e5):
         self.usb_read_timeout = 5000
         #  Ack property
         self.rack = 0
@@ -64,11 +64,13 @@ class MPSSE(ftdi.Ftdi):
         self.status = self.STOPPED
 
         #  Open the mpsse
-        self.open_mpsse(vendor=vid,
-                        product=pid,
-                        interface=interface,
-                        index=index,
-                        frequency=frequency)
+        self.open_mpsse(
+            vendor=vid,
+            product=pid,
+            interface=interface,
+            index=index,
+            frequency=frequency,
+        )
 
         #  Finish setup
         self._set_mode()
@@ -110,7 +112,7 @@ class MPSSE(ftdi.Ftdi):
         size = len(data)
 
         while n < size:
-            buf = self._build_block_buffer(self.tx, data[n:n+txsize], txsize)
+            buf = self._build_block_buffer(self.tx, data[n : n + txsize], txsize)
 
             retval = self._ftdi_raw_write(buf)
             n += txsize
@@ -119,7 +121,7 @@ class MPSSE(ftdi.Ftdi):
                 break
 
             #  Read in the ACK bit and store it in self.rack
-            buf = Array('B')
+            buf = Array("B")
             t, buf = self._ftdi_raw_read(buf, 1)
             self.rack = buf[0]
 
@@ -157,7 +159,7 @@ class MPSSE(ftdi.Ftdi):
 
     #  Set the low bit pins high/low
     def _set_bits_low(self, port):
-        buf = Array('B')
+        buf = Array("B")
 
         buf.append(self.SET_BITS_LOW)
         buf.append(port)
@@ -168,7 +170,7 @@ class MPSSE(ftdi.Ftdi):
     #  Part of the setup
     def _set_mode(self):
         retval = self.MPSSE_OK
-        setup_commands = Array('B')
+        setup_commands = Array("B")
 
         self.write_data_set_chunksize(65535)
 
@@ -208,7 +210,7 @@ class MPSSE(ftdi.Ftdi):
         setup_commands_size = len(setup_commands)
 
         #  Send any setup commands to the chip
-        if(retval == self.MPSSE_OK) and (setup_commands_size > 0):
+        if (retval == self.MPSSE_OK) and (setup_commands_size > 0):
             retval = self._ftdi_raw_write(setup_commands)
 
         if retval == self.MPSSE_OK:
@@ -219,7 +221,7 @@ class MPSSE(ftdi.Ftdi):
             self.trish = 0xFF
             self.gpioh = 0x00
 
-            buf = Array('B')
+            buf = Array("B")
             buf.append(self.SET_BITS_HIGH)
             buf.append(self.gpioh)
             buf.append(self.trish)
@@ -228,7 +230,7 @@ class MPSSE(ftdi.Ftdi):
 
     # Package to send to chip
     def _build_block_buffer(self, cmd, data, size):
-        buf = Array('B')
+        buf = Array("B")
         k = 0
         for j in range(0, size):
             #  Clock pin set low prior to clocking data
@@ -270,7 +272,7 @@ class MPSSE(ftdi.Ftdi):
 
     def _internal_read(self, size):
         n = 0
-        buf = Array('B')
+        buf = Array("B")
         while n < size:
             rxsize = size - n
             rxsize - min(self.I2C_TRANSFER_SIZE, rxsize)

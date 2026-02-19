@@ -14,18 +14,19 @@ from pbpack import ResourcePack
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
+
 class TestResourcePack(unittest.TestCase):
     def test_deserialize_serialize_v2(self):
-        filename = os.path.join(SCRIPT_DIR, 'app_resources_v2.pbpack')
+        filename = os.path.join(SCRIPT_DIR, "app_resources_v2.pbpack")
         self._test_deserialize_serialize_file(filename, is_system=False)
 
     def test_deserialize_serialize_duplicate_resources(self):
         is_system = False
 
         pack = ResourcePack(is_system)
-        pack.add_resource(b'asdf')
-        pack.add_resource(b'xyz')
-        pack.add_resource(b'asdf')
+        pack.add_resource(b"asdf")
+        pack.add_resource(b"xyz")
+        pack.add_resource(b"asdf")
 
         after_pack = self._test_deserialize_serialize_pack(pack, is_system)
 
@@ -39,9 +40,9 @@ class TestResourcePack(unittest.TestCase):
         is_system = False
 
         pack = ResourcePack(is_system)
-        pack.add_resource(b'asdf')
-        pack.add_resource(b'asdf')
-        pack.add_resource(b'asdf')
+        pack.add_resource(b"asdf")
+        pack.add_resource(b"asdf")
+        pack.add_resource(b"asdf")
 
         after_pack = self._test_deserialize_serialize_pack(pack, is_system)
 
@@ -55,36 +56,50 @@ class TestResourcePack(unittest.TestCase):
         is_system = False
 
         pack = ResourcePack(is_system)
-        pack.add_resource(b'1')
-        pack.add_resource(b'22')
-        pack.add_resource(b'333')
-        pack.add_resource(b'22')
+        pack.add_resource(b"1")
+        pack.add_resource(b"22")
+        pack.add_resource(b"333")
+        pack.add_resource(b"22")
 
         after_pack = self._test_deserialize_serialize_pack(pack, is_system)
 
         # Verify the content of the table
         self.assertEqual(len(after_pack.contents), 3)
-        self.assertEqual(after_pack.contents[after_pack.table_entries[0].content_index], b'1')
-        self.assertEqual(after_pack.contents[after_pack.table_entries[1].content_index], b'22')
-        self.assertEqual(after_pack.contents[after_pack.table_entries[2].content_index], b'333')
-        self.assertEqual(after_pack.contents[after_pack.table_entries[3].content_index], b'22')
+        self.assertEqual(
+            after_pack.contents[after_pack.table_entries[0].content_index], b"1"
+        )
+        self.assertEqual(
+            after_pack.contents[after_pack.table_entries[1].content_index], b"22"
+        )
+        self.assertEqual(
+            after_pack.contents[after_pack.table_entries[2].content_index], b"333"
+        )
+        self.assertEqual(
+            after_pack.contents[after_pack.table_entries[3].content_index], b"22"
+        )
         self.assertEqual(len(after_pack.table_entries), 4)
 
     def test_add_empty_resources(self):
         is_system = False
 
         pack = ResourcePack(is_system)
-        pack.add_resource(b'')
-        pack.add_resource(b'asdf')
-        pack.add_resource(b'')
+        pack.add_resource(b"")
+        pack.add_resource(b"asdf")
+        pack.add_resource(b"")
 
         after_pack = self._test_deserialize_serialize_pack(pack, is_system)
 
         # Make sure we deduped an empty resource
         self.assertEqual(len(after_pack.contents), 2)
-        self.assertEqual(after_pack.contents[after_pack.table_entries[0].content_index], b'')
-        self.assertEqual(after_pack.contents[after_pack.table_entries[1].content_index], b'asdf')
-        self.assertEqual(after_pack.contents[after_pack.table_entries[2].content_index], b'')
+        self.assertEqual(
+            after_pack.contents[after_pack.table_entries[0].content_index], b""
+        )
+        self.assertEqual(
+            after_pack.contents[after_pack.table_entries[1].content_index], b"asdf"
+        )
+        self.assertEqual(
+            after_pack.contents[after_pack.table_entries[2].content_index], b""
+        )
         self.assertEqual(len(after_pack.table_entries), 3)
 
     def _test_deserialize_serialize_pack(self, pack, is_system):
@@ -113,7 +128,7 @@ class TestResourcePack(unittest.TestCase):
         """
 
         # Read in our test file and deserialize it
-        with open(f_in_name, 'rb') as f_in:
+        with open(f_in_name, "rb") as f_in:
             resource_pack = ResourcePack.deserialize(f_in, is_system)
 
         try:
@@ -124,7 +139,7 @@ class TestResourcePack(unittest.TestCase):
 
             # Read the input and output files into buffers and make sure they're equal
             def read_all(filename):
-                with open(filename, 'rb') as f:
+                with open(filename, "rb") as f:
                     f.seek(0)
                     return f.read()
 
@@ -138,6 +153,5 @@ class TestResourcePack(unittest.TestCase):
         return resource_pack
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

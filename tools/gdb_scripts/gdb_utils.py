@@ -4,9 +4,11 @@
 try:
     import gdb
 except ImportError:
-    raise Exception("This file is a GDB script.\n"
-                    "It is not intended to be run outside of GDB.\n"
-                    "Hint: to load a script in GDB, use `source this_file.py`")
+    raise Exception(
+        "This file is a GDB script.\n"
+        "It is not intended to be run outside of GDB.\n"
+        "Hint: to load a script in GDB, use `source this_file.py`"
+    )
 import argparse
 import re
 
@@ -23,7 +25,7 @@ class GdbArgumentParser(argparse.ArgumentParser):
         raise gdb.GdbError(msg)
 
 
-class AddressInfo(namedtuple('AddressInfo', 'filename line addr')):
+class AddressInfo(namedtuple("AddressInfo", "filename line addr")):
     def __new__(cls, filename, line, addr):
         return cls._make([filename, line, addr])
 
@@ -32,7 +34,7 @@ class AddressInfo(namedtuple('AddressInfo', 'filename line addr')):
 
 
 def addr2line(addr_value):
-    """ Convenience function to return a string with code line for an address.
+    """Convenience function to return a string with code line for an address.
     The function takes an int or a gdb.Value that can be converted to an int.
     The format used is: `file_name:line_number (0xhex_address)`
 
@@ -52,12 +54,13 @@ def addr2line(addr_value):
 
 
 class Address(int):
-    """ Convenience subclass of `int` that accepts a hexadecimal string in its
+    """Convenience subclass of `int` that accepts a hexadecimal string in its
     constructor. It also accepts a gdb.Value in its constructor, in which case
     the address of the value will be attempted to be used to create the object.
     Its `__repr__` prints its value formatted as hexadecimal.
 
     """
+
     ADDR_REGEX = re.compile(r"^\s*(0x[a-fA-F0-9]{7,8})")
 
     def __new__(cls, *args, **kwargs):
@@ -110,18 +113,22 @@ class ActionBreakpoint(gdb.Breakpoint):
     bp = ActionBreakpoint(window_stack_push)
 
     """
+
     def stop_handler(event):
         if isinstance(event, gdb.BreakpointEvent):
             for breakpoint in event.breakpoints:
                 if isinstance(breakpoint, ActionBreakpoint):
                     breakpoint.handle_break()
+
     gdb.events.stop.connect(stop_handler)  # Register with gdb module
 
-    def __init__(self, action_callable, symbol_name=None, addr=None,
-                 auto_continue=True):
+    def __init__(
+        self, action_callable, symbol_name=None, addr=None, auto_continue=True
+    ):
         if addr and symbol_name:
-            raise Exception("Can't use arguments `symbol_name` and "
-                            "`addr` simultaneously!")
+            raise Exception(
+                "Can't use arguments `symbol_name` and `addr` simultaneously!"
+            )
         if addr:
             # When an address is specified, the expression must be prepended
             # with an `*` (not to be confused with a dereference...):
@@ -157,10 +164,10 @@ class MonkeyPatch(ActionBreakpoint):
     patch = MonkeyPatch(my_function_override, "my_existing_function")
 
     """
+
     def handle_break(self):
         return_value_str = self.action_callable(self)
-        gdb.write("Hit monkey patch %s, returning `%s`" %
-                  (self, return_value_str))
+        gdb.write("Hit monkey patch %s, returning `%s`" % (self, return_value_str))
         if return_value_str:
             gdb.execute("return (%s)" % return_value_str)
         else:

@@ -7,12 +7,12 @@ import time
 
 
 def find_gdb_path():
-    """ Find the first arm gdb on our path"""
-    prioritized_names = ['pebble-gdb', 'arm-none-eabi-gdb-py', 'arm-none-eabi-gdb']
+    """Find the first arm gdb on our path"""
+    prioritized_names = ["pebble-gdb", "arm-none-eabi-gdb-py", "arm-none-eabi-gdb"]
     for name in prioritized_names:
         try:
-            which_all_cmd = 'which %s' % name
-            out = subprocess.check_output(which_all_cmd, shell=True, encoding='utf-8')
+            which_all_cmd = "which %s" % name
+            out = subprocess.check_output(which_all_cmd, shell=True, encoding="utf-8")
         except subprocess.CalledProcessError as e:
             if e.returncode == 1:
                 continue  # `which` returns with 1 when nothing is found
@@ -27,8 +27,10 @@ class GDBDriver(object):
     def __init__(self, elf_path, gdb_path=None, server_port=1234):
         self.gdb_path = gdb_path or find_gdb_path()
         if not self.gdb_path:
-            raise Exception("pebble-gdb not found on your path, nor"
-                            " was it specified using the `gdb_path` argument")
+            raise Exception(
+                "pebble-gdb not found on your path, nor"
+                " was it specified using the `gdb_path` argument"
+            )
         self.elf_path = elf_path
         self.server_port = server_port
         self.pipe = None
@@ -37,7 +39,7 @@ class GDBDriver(object):
     def _gdb_command(self):
         cmd = self.gdb_path
         cmd += " %s" % self.elf_path
-        cmd += " -ex=\"target remote :%u\"" % self.server_port
+        cmd += ' -ex="target remote :%u"' % self.server_port
         return cmd
 
     def start(self):
@@ -47,8 +49,7 @@ class GDBDriver(object):
         # Run GDB:
         cmd = self._gdb_command()
         try:
-            self.pipe = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                                         shell=True)
+            self.pipe = subprocess.Popen(cmd, stdin=subprocess.PIPE, shell=True)
         except:
             logging.error("Failed to start GDB.\nCommand: `%s`" % cmd)
             return

@@ -36,11 +36,13 @@ Notes when using this tool:
 
 """
 
+
 class protoc(Task):
     # protoc expects the input proto file to be an absolute path.
-    run_str = '${NANOPB_GENERATOR} -I ${SRC[0].parent.abspath()} -D ${TGT[0].parent.abspath()} ${SRC[0].abspath()}'
-    color   = 'BLUE'
-    ext_out = ['.h', 'pb.c']
+    run_str = "${NANOPB_GENERATOR} -I ${SRC[0].parent.abspath()} -D ${TGT[0].parent.abspath()} ${SRC[0].abspath()}"
+    color = "BLUE"
+    ext_out = [".h", "pb.c"]
+
     def scan(self):
         """
         Scan .proto dependencies
@@ -51,7 +53,8 @@ class protoc(Task):
         names = []
         seen = []
 
-        if not node: return (nodes, names)
+        if not node:
+            return (nodes, names)
 
         def parse_node(node):
             if node in seen:
@@ -73,16 +76,18 @@ class protoc(Task):
         parse_node(node)
         return (nodes, names)
 
-@extension('.proto')
+
+@extension(".proto")
 def process_protoc(self, node):
-    c_node = node.change_ext('.pb.c')
-    h_node = node.change_ext('.pb.h')
-    self.create_task('protoc', node, [c_node, h_node])
+    c_node = node.change_ext(".pb.c")
+    h_node = node.change_ext(".pb.h")
+    self.create_task("protoc", node, [c_node, h_node])
     self.source.append(c_node)
 
-    use = getattr(self, 'use', '')
-    if 'PROTOBUF' not in use:
-        self.use = self.to_list(use) + ['PROTOBUF']
+    use = getattr(self, "use", "")
+    if "PROTOBUF" not in use:
+        self.use = self.to_list(use) + ["PROTOBUF"]
+
 
 def configure(conf):
     missing_nanopb = """
@@ -90,4 +95,4 @@ def configure(conf):
 
     Follow the instructions on the wiki for installing it: https://pebbletechnology.atlassian.net/wiki/display/DEV/Getting+Started+with+Firmware
     """
-    conf.find_program('nanopb_generator', var='NANOPB_GENERATOR', errmsg=missing_nanopb)
+    conf.find_program("nanopb_generator", var="NANOPB_GENERATOR", errmsg=missing_nanopb)

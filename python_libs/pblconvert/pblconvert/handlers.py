@@ -54,8 +54,9 @@ class SvgHandler(Handler):
 
     def read(self, in_obj):
         try:
-            surface = surface_from_svg(bytestring=in_obj.read(),
-                                       approximate_bezier=True)
+            surface = surface_from_svg(
+                bytestring=in_obj.read(), approximate_bezier=True
+            )
         except Svg2PdcFormatError as e:
             raise PblConvertFormatError(e.args[0])
         return surface
