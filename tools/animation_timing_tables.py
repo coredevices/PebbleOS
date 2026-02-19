@@ -12,29 +12,36 @@ d = ANIMATION_NORMALIZED_MAX
 b = ANIMATION_NORMALIZED_MIN
 c = ANIMATION_NORMALIZED_MAX
 
+
 def easeInOut(t):
     t = t / (d / 2)
-    if (t < 1.0):
-        return c/2*t*t + b
+    if t < 1.0:
+        return c / 2 * t * t + b
     t -= 1
-    return -c/2 * (t*(t-2) - 1) + b
+    return -c / 2 * (t * (t - 2) - 1) + b
+
 
 def easeOut(t):
     t /= d
     return -c * t * (t - 2) + b
 
+
 def easeIn(t):
     t /= d
-    return c*t*t + b
+    return c * t * t + b
+
 
 def print_table(name, func):
     nums_per_row = 4
     table = [func(float(t)) for t in xrange(0, 65537, 2048)]
-    print "static const uint16_t %s_table[33] = {" % name
+    print("static const uint16_t %s_table[33] = {" % name)
     for i in xrange(0, len(table), nums_per_row):
-        print '    ' + ', '.join(str(int(n)) for n in table[i:i+nums_per_row]) + ','
-    print '};\n'
+        print(
+            "    " + ", ".join(str(int(n)) for n in table[i : i + nums_per_row]) + ","
+        )
+    print("};\n")
 
-print_table('ease_in', easeIn)
-print_table('ease_out', easeOut)
-print_table('ease_in_out', easeInOut)
+
+print_table("ease_in", easeIn)
+print_table("ease_out", easeOut)
+print_table("ease_in_out", easeInOut)

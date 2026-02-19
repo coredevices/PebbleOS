@@ -14,8 +14,10 @@ import subprocess
 from collections import OrderedDict
 from triage import download_path, load_user_settings, download_elf_by_sw_hw_version
 
+
 def crash_analytic_path(fw_version):
     return os.path.join(download_path(), fw_version + "_reboot_reasons")
+
 
 def run_td_query_on_event_analytics(fw_version, error_code):
     query = """
@@ -48,21 +50,35 @@ def run_td_query_on_event_analytics(fw_version, error_code):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    output_csv_file = crash_analytic_path(fw_version) + "/0x%x-crashcodes.csv" % error_code
+    output_csv_file = (
+        crash_analytic_path(fw_version) + "/0x%x-crashcodes.csv" % error_code
+    )
 
-    cmd = 'td query -d pebble_restricted -P 2 -T presto -c -f csv -w -o %s "%s"' % (output_csv_file, query)
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    cmd = 'td query -d pebble_restricted -P 2 -T presto -c -f csv -w -o %s "%s"' % (
+        output_csv_file,
+        query,
+    )
+    p = subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
     retval = p.wait()
     logging.info("Query Complete, Result = %d" % retval)
     return 0, output_csv_file
 
+
 def run_td_query_on_hourly_analytics(fw_version, error_code):
 
-    if (subprocess.call("type td", shell=True, \
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE) != 0):
-        logging.error("You need to install the td toolbelt for this query to work!\n"
-                      "Please see http://docs.treasuredata.com/articles/command-"
-                      "line#step-1-installation-amp-update")
+    if (
+        subprocess.call(
+            "type td", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        != 0
+    ):
+        logging.error(
+            "You need to install the td toolbelt for this query to work!\n"
+            "Please see http://docs.treasuredata.com/articles/command-"
+            "line#step-1-installation-amp-update"
+        )
         exit(0)
 
     query = """
@@ -94,21 +110,29 @@ def run_td_query_on_hourly_analytics(fw_version, error_code):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    output_csv_file = crash_analytic_path(fw_version) + "/0x%x-crashcodes.csv" % error_code
+    output_csv_file = (
+        crash_analytic_path(fw_version) + "/0x%x-crashcodes.csv" % error_code
+    )
 
-    cmd = 'td query -d pebble_restricted -P 2 -T presto -c -f csv -w -o %s "%s"' % (output_csv_file, query)
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    cmd = 'td query -d pebble_restricted -P 2 -T presto -c -f csv -w -o %s "%s"' % (
+        output_csv_file,
+        query,
+    )
+    p = subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
     retval = p.wait()
     logging.info("Query Complete, Result = %d" % retval)
     return 0, output_csv_file
+
 
 def gather_analytic_crash_stats(fw_version, error_code, error_code_name, use_events):
 
     elf_dict = dict()
 
     symbol_name_to_hw_model_lookup = {
-        "snowy_dvt": [ "snowy21", "snowy22", "snowy23" ],
-        "spalding" : [ "spauld13" ],
+        "snowy_dvt": ["snowy21", "snowy22", "snowy23"],
+        "spalding": ["spauld13"],
     }
     # Download the .elf associated with the core dump:
     for elf_name in symbol_name_to_hw_model_lookup.iterkeys():
@@ -137,7 +161,7 @@ def gather_analytic_crash_stats(fw_version, error_code, error_code_name, use_eve
         try:
             lr = hex(int(line[0]))
         except ValueError:
-            continue # Analytic is empty for some reason
+            continue  # Analytic is empty for some reason
 
         hw_rev = line[1]
         found = False
@@ -152,11 +176,13 @@ def gather_analytic_crash_stats(fw_version, error_code, error_code_name, use_eve
                     break
 
         if not found:
-            print "Unhandled HW Version %s" % hw_rev
+            print("Unhandled HW Version %s" % hw_rev)
             continue
 
-        cmd = 'arm-none-eabi-addr2line --exe=%s %s' % (fw_symbols_name, str(lr))
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        cmd = "arm-none-eabi-addr2line --exe=%s %s" % (fw_symbols_name, str(lr))
+        p = subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
         result = p.stdout.readlines()
         retval = p.wait()
 
@@ -165,24 +191,27 @@ def gather_analytic_crash_stats(fw_version, error_code, error_code_name, use_eve
             logging.debug("%s %s" % (lr, line_info))
             # Try to pretty print the path but if its not something in our build directory
             # just print the whole path
-            idx = line_info.find('build/..')
-            if (idx != -1):
+            idx = line_info.find("build/..")
+            if idx != -1:
                 line_info = line_info[idx:]
             if line_info in line_dict:
                 line_dict[line_info] += int(line[2])
             else:
                 line_dict[line_info] = int(line[2])
 
-    line_dict_sorted = OrderedDict(sorted(line_dict.items(), key=lambda x: x[1], reverse=True))
+    line_dict_sorted = OrderedDict(
+        sorted(line_dict.items(), key=lambda x: x[1], reverse=True)
+    )
 
     result_text = "Results for %s:\n" % error_code_name
     asserts_analyzed = 0
     for k, v in line_dict_sorted.items():
         asserts_analyzed += v
-        result_text += '%6d: %s\n' % (v, k)
+        result_text += "%6d: %s\n" % (v, k)
 
     result_text += "%d %s analyzed\n" % (asserts_analyzed, error_code_name)
     return result_text
+
 
 def analyze_analytics(fw_version, use_events):
     if use_events:
@@ -193,21 +222,33 @@ def analyze_analytics(fw_version, use_events):
         HARDFAULT_CRASH_CODE = 0xDEAD0013
 
     result = "=======\n"
-    result = gather_analytic_crash_stats(fw_version, ASSERT_CRASH_CODE, "Asserts", use_events)
+    result = gather_analytic_crash_stats(
+        fw_version, ASSERT_CRASH_CODE, "Asserts", use_events
+    )
     result += "\n"
-    result += gather_analytic_crash_stats(fw_version, HARDFAULT_CRASH_CODE, "Hard Faults", use_events)
+    result += gather_analytic_crash_stats(
+        fw_version, HARDFAULT_CRASH_CODE, "Hard Faults", use_events
+    )
 
-    print result
+    print(result)
 
-if (__name__ == '__main__'):
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('fw_tag',  type=str, help="Analyzes "
-                        "crashes seen in the field by line for the specified "
-                        "build, for example v2.9-beta6")
-    parser.add_argument('--debug', action='store_true',
-                        help="Turn on debug logging")
-    parser.add_argument('--use_event', action='store_true', help="Look at crash information "
-                        "using event analytics instead of the default hourly analytics")
+    parser.add_argument(
+        "fw_tag",
+        type=str,
+        help="Analyzes "
+        "crashes seen in the field by line for the specified "
+        "build, for example v2.9-beta6",
+    )
+    parser.add_argument("--debug", action="store_true", help="Turn on debug logging")
+    parser.add_argument(
+        "--use_event",
+        action="store_true",
+        help="Look at crash information "
+        "using event analytics instead of the default hourly analytics",
+    )
 
     args = parser.parse_args()
 
@@ -220,4 +261,4 @@ if (__name__ == '__main__'):
 
     logging.info("Analyzing crash stats for %s" % args.fw_tag)
     if args.fw_tag:
-      analyze_analytics(args.fw_tag, args.use_event)
+        analyze_analytics(args.fw_tag, args.use_event)

@@ -1344,7 +1344,7 @@ class FilesInfo(gdb.Command):
         memory_ranges.sort()
 
         for memory_range in memory_ranges:
-            print(("\t%s" % str(memory_range)))
+            print("\t%s" % str(memory_range))
 
 
 FilesInfo()

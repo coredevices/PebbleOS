@@ -34,10 +34,12 @@ tasks_by_thread = {}
 class Task(object):
     pass
 
+
 # process all lines
-with open('pdebug.dat') as f:
+with open("pdebug.dat") as f:
     import csv
-    reader = csv.reader(f, delimiter=' ')
+
+    reader = csv.reader(f, delimiter=" ")
     for row in reader:
         t = Task()
         t.thread_id = int(row[0])
@@ -56,7 +58,9 @@ with open('pdebug.dat') as f:
 # assign durations
 for thread_tasks in tasks_by_thread.values():
     for i in xrange(len(thread_tasks) - 1):
-        thread_tasks[i].duration = thread_tasks[i+1].start_time - thread_tasks[i].start_time
+        thread_tasks[i].duration = (
+            thread_tasks[i + 1].start_time - thread_tasks[i].start_time
+        )
 
     # Can't guess the duration for the final task because the values only have start times :(
     thread_tasks[-1].duration = 0
@@ -68,16 +72,16 @@ tasks_by_task_type = {}
 for t in all_tasks:
     task_type_name = t.task_name
 
-    if task_type_name.endswith('.pbi'):
-        task_type_name = '.pbi'
-    elif task_type_name.endswith('.png'):
-        task_type_name = '.png'
-    elif task_type_name.endswith('.apng'):
-        task_type_name = '.apng'
-    elif task_type_name.endswith('.pdc'):
-        task_type_name = '.pdc'
-    elif task_type_name.endswith('.c'):
-        task_type_name = '.c'
+    if task_type_name.endswith(".pbi"):
+        task_type_name = ".pbi"
+    elif task_type_name.endswith(".png"):
+        task_type_name = ".png"
+    elif task_type_name.endswith(".apng"):
+        task_type_name = ".apng"
+    elif task_type_name.endswith(".pdc"):
+        task_type_name = ".pdc"
+    elif task_type_name.endswith(".c"):
+        task_type_name = ".c"
 
     task_type_tasks = tasks_by_task_type.setdefault(task_type_name, [])
     task_type_tasks.append(t)
@@ -86,13 +90,16 @@ for t in all_tasks:
 class TaskType(object):
     pass
 
+
 task_types = []
 total_duration = 0.0
 for task_type_name, tasks in tasks_by_task_type.items():
     tt = TaskType()
 
     tt.name = task_type_name
-    tt.total_duration = reduce(lambda accumulated, x: accumulated + x.duration, tasks, 0.0)
+    tt.total_duration = reduce(
+        lambda accumulated, x: accumulated + x.duration, tasks, 0.0
+    )
     tt.average_duration = tt.total_duration / len(tasks)
     tt.count = len(tasks)
 
@@ -105,5 +112,13 @@ task_types.sort(key=lambda x: -x.total_duration)
 for tt in task_types:
     percentage_of_total = (tt.total_duration / total_duration) * 100
 
-    print "%-60s %5u  %05.2f%% %7.2fs %6.2fs" % \
-        (tt.name[:58], tt.count, percentage_of_total, tt.total_duration, tt.average_duration)
+    print(
+        "%-60s %5u  %05.2f%% %7.2fs %6.2fs"
+        % (
+            tt.name[:58],
+            tt.count,
+            percentage_of_total,
+            tt.total_duration,
+            tt.average_duration,
+        )
+    )

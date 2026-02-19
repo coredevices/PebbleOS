@@ -5,20 +5,21 @@
 
 import math
 
+
 def print_sin_table():
-    print "{"
-    for a in xrange(0, 0xffff + 1, 0xff):
-        print str(int(round(math.sin(a*math.pi/0xffff/2.0) * 0xffff))) + ','
-    print '}'
+    print("{")
+    for a in xrange(0, 0xFFFF + 1, 0xFF):
+        print(str(int(round(math.sin(a * math.pi / 0xFFFF / 2.0) * 0xFFFF))) + ",")
+    print("}")
+
 
 def print_atan_table():
-    print '{'
-    for a in xrange(0, 0xffff + 1, 0xff):
-        b = float(a) / float(0xffff)
-        print str(int(round(math.atan(b) * 0x8000 / math.pi))*8) + ','
-    print '}'
+    print("{")
+    for a in xrange(0, 0xFFFF + 1, 0xFF):
+        b = float(a) / float(0xFFFF)
+        print(str(int(round(math.atan(b) * 0x8000 / math.pi)) * 8) + ",")
+    print("}")
+
 
 print_sin_table()
 print_atan_table()
-
-

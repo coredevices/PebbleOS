@@ -10,62 +10,65 @@ sys.path.append(os.path.dirname(__file__))
 import analyze_static_memory_usage
 from binutils import nm_generator, analyze_elf
 
+
 def cleanup_path(f):
     f = os.path.normpath(f)
 
     # Check for .c.3.o style suffixes and strip them back to just .c
-    if len(f) > 6 and f[-6:-3] == '.c.' and f[-2:] == '.o':
+    if len(f) > 6 and f[-6:-3] == ".c." and f[-2:] == ".o":
         f = f[:-4]
 
-    if f.startswith('src/'):
+    if f.startswith("src/"):
         f = f[4:]
 
-    newlib_index = f.rfind('/newlib/libc')
+    newlib_index = f.rfind("/newlib/libc")
     if newlib_index != -1:
-        f = f[newlib_index+1:]
+        f = f[newlib_index + 1 :]
 
-    libgcc_index = f.rfind('/libgcc/')
+    libgcc_index = f.rfind("/libgcc/")
     if libgcc_index != -1:
-        f = f[libgcc_index+1:]
+        f = f[libgcc_index + 1 :]
 
-    libc_index = f.rfind('/arm-none-eabi/lib/')
+    libc_index = f.rfind("/arm-none-eabi/lib/")
     if libc_index != -1:
-        f = f[libc_index+1:]
+        f = f[libc_index + 1 :]
 
-    tintin_index = f.rfind('/tintin/src/')
+    tintin_index = f.rfind("/tintin/src/")
     if tintin_index != -1:
-        f = f[tintin_index + len('/tintin/src/'):]
+        f = f[tintin_index + len("/tintin/src/") :]
 
-    tintin_build_index = f.rfind('/tintin/build/src/')
+    tintin_build_index = f.rfind("/tintin/build/src/")
     if tintin_build_index != -1:
-        f = f[tintin_build_index + len('/tintin/'):]
+        f = f[tintin_build_index + len("/tintin/") :]
 
     return f
 
+
 analyze_static_memory_usage.cleanup_path_func = cleanup_path
+
 
 def analyze_map(map_file, sections):
     # Now that we have a list of all the symbols listed in the nm output, we need to go back
     # and dig through the map file to find filenames for the symbols with an "Unknown" filename
 
     # We only care about the .text section here
-    if not 't' in sections:
+    if not "t" in sections:
         return
 
-    text_section = sections['t']
+    text_section = sections["t"]
 
     def line_generator(map_file):
-        with open(map_file, 'r') as f:
+        with open(map_file, "r") as f:
             for line in f:
                 yield line
 
     lines = line_generator(map_file)
     for line in lines:
-        if line.startswith('Linker script and memory map'):
+        if line.startswith("Linker script and memory map"):
             break
 
     for line in lines:
-        if line.startswith('.text'):
+        if line.startswith(".text"):
             break
 
     # We're looking for groups of lines like the following...
@@ -94,9 +97,12 @@ def analyze_map(map_file, sections):
             continue
         text_section.add_entry(symbol, filename, symbol_with_unknown_file.size)
 
+
 def analyze_libs(root_directory, sections, use_fast):
     def analyze_lib(lib_filename):
-        for (_, section, symbol_name, filename, line, size) in nm_generator(lib_filename, use_fast):
+        for _, section, symbol_name, filename, line, size in nm_generator(
+            lib_filename, use_fast
+        ):
             if not section in sections:
                 continue
 
@@ -108,26 +114,27 @@ def analyze_libs(root_directory, sections, use_fast):
 
             section_info.add_entry(symbol_name, lib_filename, size)
 
-    for (dirpath, dirnames, filenames) in os.walk(root_directory):
+    for dirpath, dirnames, filenames in os.walk(root_directory):
         for f in filenames:
-            if f.endswith('.a'):
+            if f.endswith(".a"):
                 analyze_lib(os.path.join(dirpath, f))
+
 
 def print_groups(text_section, verbose):
     mappings = [
-        ('third_party/freertos/FreeRTOS-Kernel/', 'FreeRTOS'),
-        ('core/vendor/STM32F2xx_StdPeriph_Lib_V1.0.0', 'STM32'),
-        ('newlib/', 'newlib'),
-        ('libgcc/', 'libgcc'),
-        ('arm-none-eabi/lib/', 'libc'),
-        ('fw/applib/', 'FW Applib'),
-        ('fw/apps/', 'FW Apps'),
-        ('fw/comm/ble/', 'FW Comm LE'),
-        ('fw/comm/', 'FW Comm'),
-        ('fw/kernel/services/', 'FW Kernel Services'),
-        ('fw/', 'FW Other'),
-        ('core/', 'FW Other'),
-        ('build/src/fw', 'FW Other')
+        ("third_party/freertos/FreeRTOS-Kernel/", "FreeRTOS"),
+        ("core/vendor/STM32F2xx_StdPeriph_Lib_V1.0.0", "STM32"),
+        ("newlib/", "newlib"),
+        ("libgcc/", "libgcc"),
+        ("arm-none-eabi/lib/", "libc"),
+        ("fw/applib/", "FW Applib"),
+        ("fw/apps/", "FW Apps"),
+        ("fw/comm/ble/", "FW Comm LE"),
+        ("fw/comm/", "FW Comm"),
+        ("fw/kernel/services/", "FW Kernel Services"),
+        ("fw/", "FW Other"),
+        ("core/", "FW Other"),
+        ("build/src/fw", "FW Other"),
     ]
 
     class Group(object):
@@ -154,42 +161,40 @@ def print_groups(text_section, verbose):
                 break
 
         if not found:
-            if not 'Unknown' in group_sizes:
-                group_sizes['Unknown'] = Group(f.filename)
-            group_sizes['Unknown'].add_file(f)
+            if not "Unknown" in group_sizes:
+                group_sizes["Unknown"] = Group(f.filename)
+            group_sizes["Unknown"].add_file(f)
 
     sorted_items = sorted(group_sizes.iteritems(), key=lambda x: -x[1].total_size)
     for group_name, group in sorted_items:
-        print "%-20s %u" % (group_name, group.total_size)
+        print("%-20s %u" % (group_name, group.total_size))
         if verbose:
             sorted_files = sorted(group.files, key=lambda x: -x.size)
             for f in sorted_files:
-                print "  %6u %-20s" % (f.size, f.filename)
+                print("  %6u %-20s" % (f.size, f.filename))
 
 
-
-if (__name__ == '__main__'):
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--text_groups', action='store_true')
-    parser.add_argument('--verbose', action='store_true')
-    parser.add_argument('--summary', action='store_true')
-    parser.add_argument('--sections', default='bdt')
-    parser.add_argument('--fast', action='store_true')
+    parser.add_argument("--text_groups", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--summary", action="store_true")
+    parser.add_argument("--sections", default="bdt")
+    parser.add_argument("--fast", action="store_true")
     args = parser.parse_args()
 
     if args.text_groups:
-        args.sections = 't'
+        args.sections = "t"
 
-    tintin_dir = os.path.join(os.path.dirname(__file__), '..')
-    elf_path = os.path.join(tintin_dir, 'build', 'src', 'fw', 'tintin_fw.elf')
+    tintin_dir = os.path.join(os.path.dirname(__file__), "..")
+    elf_path = os.path.join(tintin_dir, "build", "src", "fw", "tintin_fw.elf")
 
     sections = analyze_elf(elf_path, args.sections, args.fast)
 
-    analyze_map(os.path.join(tintin_dir, 'build', 'tintin_fw.map'), sections)
+    analyze_map(os.path.join(tintin_dir, "build", "tintin_fw.map"), sections)
 
     if args.text_groups:
-        print_groups(sections['t'], args.verbose)
+        print_groups(sections["t"], args.verbose)
     else:
         for s in args.sections:
             sections[s].pprint(args.summary, args.verbose)
-

@@ -11,10 +11,10 @@ import argparse
 
 from elftools.elf.elffile import ELFFile
 
-EXCLUDED_SECTIONS = ['.log_strings']
+EXCLUDED_SECTIONS = [".log_strings"]
 
-BT_DIALOG_SECTION_START = ('** RAM Start **', 0x7FC0000, 0)
-BT_DIALOG_SECTION_END = ('** RAM End **',   0x7FE3FFF, 0)
+BT_DIALOG_SECTION_START = ("** RAM Start **", 0x7FC0000, 0)
+BT_DIALOG_SECTION_END = ("** RAM End **", 0x7FE3FFF, 0)
 
 
 # Return a list of sections as a tuple (name, start address, size)
@@ -23,16 +23,19 @@ def _get_sections(elf, all_sections):
 
     for nsec, section in enumerate(elf.iter_sections()):
         if not all_sections:
-            if section['sh_addr'] == 0 or section['sh_size'] == 0 or \
-                    section.name in EXCLUDED_SECTIONS:
+            if (
+                section["sh_addr"] == 0
+                or section["sh_size"] == 0
+                or section.name in EXCLUDED_SECTIONS
+            ):
                 continue
-        headers.append((section.name, section['sh_addr'], section['sh_size']))
+        headers.append((section.name, section["sh_addr"], section["sh_size"]))
 
     return headers
 
 
 def _process_elf(filename, verbose=False, all_sections=False, bt=False):
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         elffile = ELFFile(f)
 
         # Sort by the second element (start address)
@@ -41,8 +44,10 @@ def _process_elf(filename, verbose=False, all_sections=False, bt=False):
             sections.insert(0, BT_DIALOG_SECTION_START)
             sections.append(BT_DIALOG_SECTION_END)
 
-        print '%-20s   %10s   %7s   %16s\n' % \
-            ('Section Name', 'Start Addr', 'Size', 'Gap Before Section')
+        print(
+            "%-20s   %10s   %7s   %16s\n"
+            % ("Section Name", "Start Addr", "Size", "Gap Before Section")
+        )
         previous_section_end_addr = None
         for s in sections:
             # Handle the first sections
@@ -53,23 +58,28 @@ def _process_elf(filename, verbose=False, all_sections=False, bt=False):
                 gap = s[1] - previous_section_end_addr - 1
 
             if gap == 0:
-                print '%-20s   0x%08X   0x%05X' % (s[0], s[1], s[2])
+                print("%-20s   0x%08X   0x%05X" % (s[0], s[1], s[2]))
             elif gap > 0:
-                print '%-20s   0x%08X   0x%05X             0x%06X' % (s[0], s[1], s[2], gap)
+                print(
+                    "%-20s   0x%08X   0x%05X             0x%06X"
+                    % (s[0], s[1], s[2], gap)
+                )
             elif gap < 0:
                 gap *= -1
-                print '%-20s   0x%08X   0x%05X             0x%06X *** OVERLAP ***' % \
-                    (s[0], s[1], s[2], gap)
+                print(
+                    "%-20s   0x%08X   0x%05X             0x%06X *** OVERLAP ***"
+                    % (s[0], s[1], s[2], gap)
+                )
 
             previous_section_end_addr = s[1] + s[2] - 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbose', action='store_true')
-    parser.add_argument('-a', '--all', action='store_true', help='Show all sections')
-    parser.add_argument('-b', '--bt', action='store_true', help='Dialog BT .elf')
-    parser.add_argument('elf_file', help='Extracts section info from elf file.')
+    parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("-a", "--all", action="store_true", help="Show all sections")
+    parser.add_argument("-b", "--bt", action="store_true", help="Dialog BT .elf")
+    parser.add_argument("elf_file", help="Extracts section info from elf file.")
     args = parser.parse_args()
 
     _process_elf(args.elf_file, verbose=args.verbose, all_sections=args.all, bt=args.bt)
