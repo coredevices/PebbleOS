@@ -91,6 +91,7 @@ development/options.md
 development/building_fw.md
 development/prf.md
 development/qemu.md
+development/moddable.md
 ```
 
 ```{toctree}
