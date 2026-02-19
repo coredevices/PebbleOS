@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.abspath('..'))
 from pblconvert.svg2pdc import pdc
-from pblconvert.svg2pdc.svg import PDCSurface, surface_from_svg
+from pblconvert.svg2pdc.svg import surface_from_svg
 
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.insert(0, root_dir)

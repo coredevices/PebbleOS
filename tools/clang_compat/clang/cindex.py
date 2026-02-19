@@ -652,7 +652,7 @@ class BaseEnumeration(object):
     @staticmethod
     def get_all_kinds():
         """Return all CursorKind enumeration instances."""
-        return [x for x in CursorKind._kinds if not x is None]
+        return [x for x in CursorKind._kinds if x is not None]
 
     def is_declaration(self):
         """Test if this is a declaration kind."""
@@ -3264,7 +3264,7 @@ class CompilationDatabase(ClangObject):
         try:
             cdb = conf.lib.clang_CompilationDatabase_fromDirectory(fspath(buildDir),
                 byref(errorCode))
-        except CompilationDatabaseError as e:
+        except CompilationDatabaseError:
             raise CompilationDatabaseError(int(errorCode.value),
                                            "CompilationDatabase loading failed")
         return cdb

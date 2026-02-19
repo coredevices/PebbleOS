@@ -5,7 +5,6 @@ import contextlib
 import pexpect
 import re
 import string
-import subprocess
 import sys
 import waflib
 

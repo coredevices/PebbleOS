@@ -2,9 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import re
-import sys
 import json
-import argparse
 
 from elftools.elf.elffile import ELFFile
 from elftools.elf.segments import NoteSegment

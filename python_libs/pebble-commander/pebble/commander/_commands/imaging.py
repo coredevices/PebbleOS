@@ -12,7 +12,7 @@ from functools import reduce
 
 import pebble.pulse2.exceptions
 
-from .. import PebbleCommander, exceptions, parsers
+from .. import PebbleCommander
 from ..util import stm32_crc
 
 

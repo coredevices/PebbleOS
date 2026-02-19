@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-import sys
 import unittest
-import array
-from struct import pack
 
 from generate_pdcs import json2commands, pebble_commands
 

@@ -36,7 +36,6 @@ import logging
 import os
 import re
 import struct
-import sys
 
 
 # Create a ~/.triage JSON file and override/configure these keys:

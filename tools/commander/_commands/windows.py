@@ -6,7 +6,7 @@ import tempfile
 import png
 from bitarray import bitarray
 
-from .. import PebbleCommander, exceptions, parsers
+from .. import PebbleCommander
 
 
 def chunks(l, n):

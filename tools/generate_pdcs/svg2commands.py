@@ -49,11 +49,11 @@ def get_translate(group):
 
 
 def parse_color(color, opacity, truncate):
-    if not color is None and color[0] == '#':
+    if color is not None and color[0] == '#':
         hex_color = color[1:7]
         if len(hex_color) != 6:
             hex_color = ''.join([hex_color[0], hex_color[0], hex_color[1], hex_color[1], hex_color[2], hex_color[2]])
-    elif not color is None and color.lower() in WEB_COLORS:
+    elif color is not None and color.lower() in WEB_COLORS:
         hex_color = WEB_COLORS[color]
     else:
         return 0
@@ -95,7 +95,6 @@ def get_points_from_str(point_str):
 
 def parse_path(element, translate, stroke_width, stroke_color, fill_color, verbose, precise,
                raise_error):
-    import svg.path
     d = element.get('d')
     if d is not None:
         path = svg.path.parse_path(d)

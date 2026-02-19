@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
-import os
 
 def fail(msg, waf_bld=None):
     ''' Convenience function to fail with `exit(-1)` or, if available, waf's `bld.fatal()`. '''

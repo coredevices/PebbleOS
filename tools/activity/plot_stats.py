@@ -7,12 +7,7 @@ unit test (when STATS_FILE_NAME is defined).
 
 import argparse
 import csv
-import datetime
-import json
 import logging
-import os
-import struct
-import sys
 import matplotlib.pyplot as pyplot
 
 

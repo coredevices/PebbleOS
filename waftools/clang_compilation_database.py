@@ -10,7 +10,7 @@ see http://clang.llvm.org/docs/JSONCompilationDatabase.html"""
 
 import json
 import os
-from waflib import Logs, TaskGen, Task
+from waflib import Logs, TaskGen
 from waflib.Tools import c, cxx
 
 @TaskGen.feature('*')

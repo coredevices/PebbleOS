@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 
 from resources.types.resource_declaration import ResourceDeclaration
 

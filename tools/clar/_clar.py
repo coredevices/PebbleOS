@@ -5,7 +5,9 @@
 
 from __future__ import with_statement
 from string import Template
-import re, fnmatch, os
+import re
+import fnmatch
+import os
 
 VERSION = "0.10.0"
 
@@ -257,7 +259,9 @@ static const char *_clar_cat_${suite_name}[] = { "${categories}", NULL };
                 return cfile.read()
 
         else:
-            import zlib, base64, sys
+            import zlib
+            import base64
+            import sys
             content = CLAR_FILES[filename]
 
             if sys.version_info >= (3, 0):

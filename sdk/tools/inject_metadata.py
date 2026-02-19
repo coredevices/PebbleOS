@@ -9,12 +9,9 @@ from struct import pack, unpack
 import os
 import os.path
 import sys
-import time
 
 from subprocess import Popen, PIPE
 from shutil import copy2
-from binascii import crc32
-from struct import pack
 from pbpack import ResourcePack
 
 
@@ -135,7 +132,7 @@ def inject_metadata(target_binary, target_elf, resources_file, timestamp, allow_
 
             # Carve off the first column, since it sometimes has a space in it which screws up the
             # split.
-            if not ']' in line:
+            if ']' not in line:
                 continue
             line = line[line.index(']') + 1:]
 

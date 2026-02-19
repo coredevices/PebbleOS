@@ -3,7 +3,6 @@
 
 import os
 import sys
-import tempfile
 import unittest
 
 # Allow us to run even if not at the `tools` directory.

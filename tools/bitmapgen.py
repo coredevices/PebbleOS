@@ -9,7 +9,6 @@ import os
 import struct
 import sys
 import png
-import itertools
 
 import generate_c_byte_array
 from pebble_image_routines import (rgba32_triplet_to_argb8, num_colors_to_bitdepth,
