@@ -5,6 +5,7 @@ from pebble_sdk_platform import pebble_platforms, maybe_import_internal
 
 import os
 import os.path
+import sys
 from glob import glob
 
 __author__ = "katharine"

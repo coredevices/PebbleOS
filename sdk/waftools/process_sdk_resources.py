@@ -7,6 +7,12 @@ from waflib import Node
 from resources.find_resource_filename import find_most_specific_filename
 from resources.types.resource_object import ResourceObject
 from resources.resource_map import resource_generator
+import resources.resource_map.resource_generator_bitmap
+import resources.resource_map.resource_generator_font
+import resources.resource_map.resource_generator_js
+import resources.resource_map.resource_generator_pbi
+import resources.resource_map.resource_generator_png
+import resources.resource_map.resource_generator_raw
 from sdk_helpers import is_sdk_2x, validate_resource_not_larger_than
 
 

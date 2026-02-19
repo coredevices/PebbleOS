@@ -8,10 +8,12 @@ from waflib.TaskGen import after_method, feature
 from binutils import size
 from memory_reports import (
     app_memory_report,
+    app_resource_memory_error,
     app_appstore_resource_memory_error,
     bytecode_memory_report,
     simple_memory_report,
 )
+from sdk_helpers import is_sdk_2x
 
 
 class memory_usage_report(Task.Task):
