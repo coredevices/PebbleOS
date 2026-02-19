@@ -124,7 +124,7 @@ class LogDehash(object):
         print("Supported Cores:")
         for key in sorted(self.loghash_dict, key=self.loghash_dict.get):
             if key.startswith(LOG_DICT_KEY_CORE_ID):
-                print(("    {}: {}".format(key, self.loghash_dict[key])))
+                print("    {}: {}".format(key, self.loghash_dict[key]))
 
     def update_log_string_metrics(self):
         if not self.loghash_dict:

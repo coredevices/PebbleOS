@@ -17,6 +17,7 @@ COLORS_JSON_PREFIX = splitext(basename(__file__))[0]
 COLORLOVERS_COLORS_JSON = COLORS_JSON_PREFIX + "_colorlovers.json"
 WIKIPEDIA_COLORS_JSON = COLORS_JSON_PREFIX + "_wikipedia.json"
 
+
 def download_values_from_color_lovers(r, g, b):
     """
     Returns values for a single color from colourlovers.com
@@ -26,11 +27,11 @@ def download_values_from_color_lovers(r, g, b):
 
     url = "http://www.colourlovers.com/api/color/%02x%02x%02x?format=json" % (r, g, b)
     opener = urllib2.build_opener()
-    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+    opener.addheaders = [("User-agent", "Mozilla/5.0")]
     response = opener.open(url)
     s = response.read()
     values = json.loads(s)
-    print "r: %03d, g:%03d, b:%03d: %s" % (r, g, b, values)
+    print("r: %03d, g:%03d, b:%03d: %s" % (r, g, b, values))
     return values
 
 
@@ -42,10 +43,11 @@ def download_all_colors_from_color_lovers():
     for r2 in range(0, 4):
         for g2 in range(0, 4):
             for b2 in range(0, 4):
-                colors += download_values_from_color_lovers(r2*85, g2*85, b2*85)
+                colors += download_values_from_color_lovers(r2 * 85, g2 * 85, b2 * 85)
 
     with open(COLORLOVERS_COLORS_JSON, "w") as f:
         json.dump({"colors": colors}, f, indent=2)
+
 
 def load_cached_colorlovers_colors():
     """
@@ -53,7 +55,16 @@ def load_cached_colorlovers_colors():
     """
     with open(COLORLOVERS_COLORS_JSON) as f:
         colors = json.load(f)["colors"]
-        return [{"r": c["rgb"]["red"], "g": c["rgb"]["green"], "b": c["rgb"]["blue"], "name": c["title"], "source": c["url"]} for c in colors]
+        return [
+            {
+                "r": c["rgb"]["red"],
+                "g": c["rgb"]["green"],
+                "b": c["rgb"]["blue"],
+                "name": c["title"],
+                "source": c["url"],
+            }
+            for c in colors
+        ]
 
 
 def parse_colors_from_wikipedia_html(html):
@@ -69,9 +80,9 @@ def parse_colors_from_wikipedia_html(html):
         tds = tr.find_all("td")
         if len(tds) == 9:
             hex = tds[0].text.strip()
-            r = int(hex[1:1+2], 16)
-            g = int(hex[3:3+2], 16)
-            b = int(hex[5:5+2], 16)
+            r = int(hex[1 : 1 + 2], 16)
+            g = int(hex[3 : 3 + 2], 16)
+            b = int(hex[5 : 5 + 2], 16)
             color = {"r": r, "g": g, "b": b}
 
             th_a = tr.find("th").find("a")
@@ -82,7 +93,7 @@ def parse_colors_from_wikipedia_html(html):
                 color["name"] = th_a.text.strip()
                 color["url"] = url_base + th_a["href"]
 
-            print color
+            print(color)
             colors.append(color)
 
     return colors
@@ -117,21 +128,109 @@ def hardwired_colors():
     """
     result = []
 
-    result.append({'r':   0, 'g':  85, 'b': 255, 'name': u'Blue Moon', 'url': 'http://en.wikipedia.org/wiki/Blue_Moon_(beer)'})
-    result.append({'r':   0, 'g': 170, 'b':  85, 'name': u'Jaeger Green', 'url': 'http://en.wikipedia.org/wiki/Jägermeister'})
+    result.append(
+        {
+            "r": 0,
+            "g": 85,
+            "b": 255,
+            "name": "Blue Moon",
+            "url": "http://en.wikipedia.org/wiki/Blue_Moon_(beer)",
+        }
+    )
+    result.append(
+        {
+            "r": 0,
+            "g": 170,
+            "b": 85,
+            "name": "Jaeger Green",
+            "url": "http://en.wikipedia.org/wiki/Jägermeister",
+        }
+    )
 
-    result.append({'r':   0, 'g': 255, 'b':   0, 'name': u'Green', 'url': 'http://en.wikipedia.org/wiki/Green'})
-    result.append({'r':   0, 'g': 255, 'b': 255, 'name': u'Cyan', 'url': 'http://en.wikipedia.org/wiki/Cyan'})
-    result.append({'r': 255, 'g':   0, 'b': 255, 'name': u'Magenta', 'url': 'http://en.wikipedia.org/wiki/Magenta'})
-    result.append({'r': 255, 'g':   0, 'b': 170, 'name': u'Fashion Magenta', 'url': 'http://en.wikipedia.org/wiki/Fuchsia_(color)#Fashion_fuchsia'})
-    result.append({'r': 255, 'g': 255, 'b':   0, 'name': u'Yellow', 'url': 'http://en.wikipedia.org/wiki/Yellow'})
-    result.append({'r': 255, 'g':  85, 'b':   0, 'name': u'Orange', 'url': 'http://en.wikipedia.org/wiki/Orange_(colour)'}) # verify with display
-    result.append({'r': 170, 'g':   0, 'b': 170, 'name': u'Purple', 'url': 'http://en.wikipedia.org/wiki/Purple'}) # verify with display
+    result.append(
+        {
+            "r": 0,
+            "g": 255,
+            "b": 0,
+            "name": "Green",
+            "url": "http://en.wikipedia.org/wiki/Green",
+        }
+    )
+    result.append(
+        {
+            "r": 0,
+            "g": 255,
+            "b": 255,
+            "name": "Cyan",
+            "url": "http://en.wikipedia.org/wiki/Cyan",
+        }
+    )
+    result.append(
+        {
+            "r": 255,
+            "g": 0,
+            "b": 255,
+            "name": "Magenta",
+            "url": "http://en.wikipedia.org/wiki/Magenta",
+        }
+    )
+    result.append(
+        {
+            "r": 255,
+            "g": 0,
+            "b": 170,
+            "name": "Fashion Magenta",
+            "url": "http://en.wikipedia.org/wiki/Fuchsia_(color)#Fashion_fuchsia",
+        }
+    )
+    result.append(
+        {
+            "r": 255,
+            "g": 255,
+            "b": 0,
+            "name": "Yellow",
+            "url": "http://en.wikipedia.org/wiki/Yellow",
+        }
+    )
+    result.append(
+        {
+            "r": 255,
+            "g": 85,
+            "b": 0,
+            "name": "Orange",
+            "url": "http://en.wikipedia.org/wiki/Orange_(colour)",
+        }
+    )  # verify with display
+    result.append(
+        {
+            "r": 170,
+            "g": 0,
+            "b": 170,
+            "name": "Purple",
+            "url": "http://en.wikipedia.org/wiki/Purple",
+        }
+    )  # verify with display
     # TODO: find brown value, core graphics says: r:0.6,g:0.4,b:0.2
 
     # colors to match CoreGraphics names
-    result.append({'r':  85, 'g':  85, 'b':  85, 'name': u'Dark Gray', 'url': 'http://en.wikipedia.org/wiki/Shades_of_gray#Dark_medium_gray_.28dark_gray_.28X11.29.29'})
-    result.append({'r': 170, 'g': 170, 'b': 170, 'name': u'Light Gray', 'url': 'http://en.wikipedia.org/wiki/Shades_of_gray#Light_gray'})
+    result.append(
+        {
+            "r": 85,
+            "g": 85,
+            "b": 85,
+            "name": "Dark Gray",
+            "url": "http://en.wikipedia.org/wiki/Shades_of_gray#Dark_medium_gray_.28dark_gray_.28X11.29.29",
+        }
+    )
+    result.append(
+        {
+            "r": 170,
+            "g": 170,
+            "b": 170,
+            "name": "Light Gray",
+            "url": "http://en.wikipedia.org/wiki/Shades_of_gray#Light_gray",
+        }
+    )
 
     return result
 
@@ -162,7 +261,9 @@ def enhanced_color(color):
     Add additional, derived data to a color used for json output, c header file generation, etc.
     """
     result = copy.copy(color)
-    result["identifier"] = re.sub(r"\([^\)]+\)|[\s_'-]", " ", color["name"]).title().replace(" ", "")
+    result["identifier"] = (
+        re.sub(r"\([^\)]+\)|[\s_'-]", " ", color["name"]).title().replace(" ", "")
+    )
     result["name"] = result["name"].title()
     r = result["r"]
     g = result["g"]
@@ -182,11 +283,29 @@ def enhanced_color(color):
 
     result["literals"] = [
         {"id": "define", "description": "SDK Constant", "value": c_identifier},
-        {"id": "rgb", "description": "Code (RGB)", "value": "GColorFromRGB(%d, %d, %d)" % (r, g, b)},
-        {"id": "hex", "description": "Code (Hex)", "value": "GColorFromHEX(%s)" % hex_value},
+        {
+            "id": "rgb",
+            "description": "Code (RGB)",
+            "value": "GColorFromRGB(%d, %d, %d)" % (r, g, b),
+        },
+        {
+            "id": "hex",
+            "description": "Code (Hex)",
+            "value": "GColorFromHEX(%s)" % hex_value,
+        },
         {"id": "html", "description": "HTML code", "value": html_value},
-        {"id": "gcolor_argb", "description": "GColor (argb)", "value": "(GColor){.argb=%s}" % binary},
-        {"id": "gcolor_fields", "description": "GColor (components)", "value": "(GColor){{.a=0b11, .r=0b{0:02b}, .g=0b{1:02b}, .b=0b{2:02b}}}".format(r2, g2, b2)},
+        {
+            "id": "gcolor_argb",
+            "description": "GColor (argb)",
+            "value": "(GColor){.argb=%s}" % binary,
+        },
+        {
+            "id": "gcolor_fields",
+            "description": "GColor (components)",
+            "value": "(GColor){{.a=0b11, .r=0b{0:02b}, .g=0b{1:02b}, .b=0b{2:02b}}}".format(
+                r2, g2, b2
+            ),
+        },
     ]
 
     return result
@@ -197,7 +316,10 @@ def validate_colors(colors):
     Some sanity checks on the set of colors.
     """
     if len(colors) != 64:
-        raise Exception("Number of derived colors (%d) is different from expectation (64)", len(colors))
+        raise Exception(
+            "Number of derived colors (%d) is different from expectation (64)",
+            len(colors),
+        )
 
     for c in colors:
         if len([cc for cc in colors if cc["identifier"] == c["identifier"]]) != 1:
@@ -216,7 +338,9 @@ def all_colors_with_names():
         # color lovers code can be deleted as soon as we agreed on final color names
         # candidates += load_colorlovers_colors()
     except IOError, e:
-        raise IOError("%s\n\n%s" % (e, "make sure you called --download_wikipedia once"))
+        raise IOError(
+            "%s\n\n%s" % (e, "make sure you called --download_wikipedia once")
+        )
 
     result = []
     for r2 in range(0, 4):
@@ -243,11 +367,14 @@ def render_header(colors):
     """
     color_value_maxlen = max([len(c["c_value_identifier"]) for c in colors])
     color_value_defines = []
-    color_value_defines.append("//%s AARRGGBB" % "".ljust(color_value_maxlen + len("#define (uint_8_t)")))
+    color_value_defines.append(
+        "//%s AARRGGBB" % "".ljust(color_value_maxlen + len("#define (uint_8_t)"))
+    )
     for c in colors:
         identifier = c["c_value_identifier"]
         color_value_defines.append(
-            "#define %s ((uint8_t)%s)" % (identifier.ljust(color_value_maxlen), c["binary"])
+            "#define %s ((uint8_t)%s)"
+            % (identifier.ljust(color_value_maxlen), c["binary"])
         )
 
     color_define_maxlen = max([len(c["c_identifier"]) for c in colors])
@@ -258,10 +385,12 @@ def render_header(colors):
         hex_value = "#%0.2X%0.2X%0.2X" % (c["r"], c["g"], c["b"])
         color_defines.append("")
         color_defines.append(
-            "//! <span class=\"gcolor_sample\" style=\"background-color: %s;\"></span> <a href=\"https://developer.getpebble.com/tools/color-picker/%s\">%s</a>"
-                % (hex_value, hex_value, identifier))
+            '//! <span class="gcolor_sample" style="background-color: %s;"></span> <a href="https://developer.getpebble.com/tools/color-picker/%s">%s</a>'
+            % (hex_value, hex_value, identifier)
+        )
         color_defines.append(
-            "#define %s (GColor8){.argb=%s}" % (identifier.ljust(color_define_maxlen), value_identifier)
+            "#define %s (GColor8){.argb=%s}"
+            % (identifier.ljust(color_define_maxlen), value_identifier)
         )
 
     file_content = """#pragma once
@@ -325,7 +454,12 @@ def render_header(colors):
 
 //! @} // group Graphics
 
-""" % ("generated", basename(__file__), "\n".join(color_value_defines), "\n".join(color_defines))
+""" % (
+        "generated",
+        basename(__file__),
+        "\n".join(color_value_defines),
+        "\n".join(color_defines),
+    )
 
     return file_content
 
@@ -336,39 +470,64 @@ def render_html(colors):
     """
     html = '<table style="border-spacing:0"><thead>'
     html += '<tr><th colspan="4">Closest</th><th colspan="7">Actual Color</th></tr>'
-    html += "<tr>%s</tr>" % "".join(["<th>%s</th>" % s for s in ["r", "g", "b", "color", "color", "&Delta;", "r", "g", "b", "c code", "name", "identifier"]])
+    html += "<tr>%s</tr>" % "".join(
+        [
+            "<th>%s</th>" % s
+            for s in [
+                "r",
+                "g",
+                "b",
+                "color",
+                "color",
+                "&Delta;",
+                "r",
+                "g",
+                "b",
+                "c code",
+                "name",
+                "identifier",
+            ]
+        ]
+    )
     html += "</thead><tbody>"
     for c in colors:
+
         def rgb(c):
-            return '<td>%d</td><td>%d</td><td>%d</td>' % (c["r"], c["g"], c["b"])
+            return "<td>%d</td><td>%d</td><td>%d</td>" % (c["r"], c["g"], c["b"])
 
         def color(c):
-            return '<td style="background-color:rgb(%d,%d,%d); width:4em;"></td>' % (c["r"], c["g"], c["b"])
+            return '<td style="background-color:rgb(%d,%d,%d); width:4em;"></td>' % (
+                c["r"],
+                c["g"],
+                c["b"],
+            )
 
         def c_code(c):
-            return "(GColor){{.rgba=0b{:02b}{:02b}{:02b}11}}".format(c["r"] / 64, c["g"] / 64, c["b"] / 64)
+            return "(GColor){{.rgba=0b{:02b}{:02b}{:02b}11}}".format(
+                c["r"] / 64, c["g"] / 64, c["b"] / 64
+            )
 
-        html += '<tr>'
+        html += "<tr>"
         html += rgb(c["closest"])
         html += color(c["closest"])
         html += color(c)
-        html += '<td><strong>%d</strong></td>' % c["dist"]
+        html += "<td><strong>%d</strong></td>" % c["dist"]
         html += rgb(c)
-        html += '<td><pre>'+c_code(c)+'</pre></td>'
+        html += "<td><pre>" + c_code(c) + "</pre></td>"
 
-        html += '<td>'
+        html += "<td>"
         if "url" in c:
             html += '<a href="%s">%s</a>' % (c["url"], c["name"])
         else:
             html += c["name"]
-        html += '<td>%s</td>' % c["identifier"]
+        html += "<td>%s</td>" % c["identifier"]
 
         html += "</tr>"
-
 
     html += "</tbody></table>"
 
     return html
+
 
 def render_json(colors):
     """
@@ -392,18 +551,27 @@ def render_svg(colors=None):
     dd = 300
     for r in range(4):
         yy = r * dd
-        xx = -742-dd
+        xx = -742 - dd
         for g in range(4):
             for b in range(4):
                 xx += dd
-                points = [(850,75), (958,137.5), (958,262.5), (850,325), (742,262.6), (742,137.5)]
-                points = [(p[0]+xx, p[1]+yy) for p in points]
+                points = [
+                    (850, 75),
+                    (958, 137.5),
+                    (958, 262.5),
+                    (850, 325),
+                    (742, 262.6),
+                    (742, 137.5),
+                ]
+                points = [(p[0] + xx, p[1] + yy) for p in points]
 
                 points_attr = " ".join(["%f,%f" % (p[0], p[1]) for p in points])
                 color_attr = "#%0.2X%0.2X%0.2X" % (r * 85, g * 85, b * 85)
-                polygon = """<polygon fill="%s" stroke="black" stroke-width=".1" points="%s" />""" % (color_attr, points_attr)
+                polygon = (
+                    """<polygon fill="%s" stroke="black" stroke-width=".1" points="%s" />"""
+                    % (color_attr, points_attr)
+                )
                 polygons.append(polygon)
-
 
     xml = """<?xml version="1.0" standalone="no"?>
     <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
@@ -418,13 +586,29 @@ def render_svg(colors=None):
 
 if __name__ == "__main__":
     # e.g. --download_wikipedia --json snowy_colors.json --header ../src/fw/applib/graphics/gcolor_definitions.h
-    parser = argparse.ArgumentParser(description="Generate various files that contain Snowy's 64 colors")
-    parser.add_argument("--download_wikipedia", action='store_true', help="loads and caches colors from wikipedia")
-    parser.add_argument("--download_colorlovers", action='store_true', help="loads and caches colors from colourlovers.com")
+    parser = argparse.ArgumentParser(
+        description="Generate various files that contain Snowy's 64 colors"
+    )
+    parser.add_argument(
+        "--download_wikipedia",
+        action="store_true",
+        help="loads and caches colors from wikipedia",
+    )
+    parser.add_argument(
+        "--download_colorlovers",
+        action="store_true",
+        help="loads and caches colors from colourlovers.com",
+    )
     parser.add_argument("--html", help="generates HTML file for test purposes")
-    parser.add_argument("--json", help="generates JSON used by awesome Pebble color picker(tm)")
-    parser.add_argument("--header", help="generates C header file that can replace color_definitions.h")
-    parser.add_argument("--svg", help="generates SVG file with hexagons of all supported colors")
+    parser.add_argument(
+        "--json", help="generates JSON used by awesome Pebble color picker(tm)"
+    )
+    parser.add_argument(
+        "--header", help="generates C header file that can replace color_definitions.h"
+    )
+    parser.add_argument(
+        "--svg", help="generates SVG file with hexagons of all supported colors"
+    )
 
     if len(sys.argv) <= 1:
         parser.print_usage()
@@ -438,7 +622,12 @@ if __name__ == "__main__":
         download_all_colors_from_color_lovers()
 
     colors = all_colors_with_names()
-    for k, v in {"html": render_html, "json": render_json, "header": render_header, "svg": render_svg}.items():
+    for k, v in {
+        "html": render_html,
+        "json": render_json,
+        "header": render_header,
+        "svg": render_svg,
+    }.items():
         file_name = getattr(args, k)
         if file_name is not None:
             with open(file_name, "w") as f:
