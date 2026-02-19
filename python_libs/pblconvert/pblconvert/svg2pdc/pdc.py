@@ -5,8 +5,11 @@ import tempfile
 from struct import pack
 import sys
 from subprocess import Popen, PIPE
-from pebble_image_routines import truncate_color_to_pebble64_palette, nearest_color_to_pebble64_palette, \
-    rgba32_triplet_to_argb8
+from pebble_image_routines import (
+    truncate_color_to_pebble64_palette,
+    nearest_color_to_pebble64_palette,
+    rgba32_triplet_to_argb8,
+)
 
 DRAW_COMMAND_VERSION = 1
 DRAW_COMMAND_TYPE_PATH = 1
@@ -15,16 +18,25 @@ DRAW_COMMAND_TYPE_PRECISE_PATH = 3
 
 epsilon = sys.float_info.epsilon
 
+
 def valid_color(r, g, b, a):
-    return  (r <= 0xFF) and (g <= 0xFF) and (b <= 0xFF) and (a <= 0xFF) and \
-            (r >= 0x00) and (g >= 0x00) and (b >= 0x00) and (a >= 0x00)
+    return (
+        (r <= 0xFF)
+        and (g <= 0xFF)
+        and (b <= 0xFF)
+        and (a <= 0xFF)
+        and (r >= 0x00)
+        and (g >= 0x00)
+        and (b >= 0x00)
+        and (a >= 0x00)
+    )
 
 
 def convert_color(r, g, b, a, truncate=True):
 
     valid = valid_color(r, g, b, a)
     if not valid:
-        print "Invalid color: ({}, {}, {}, {})".format(r, g, b, a)
+        print("Invalid color: ({}, {}, {}, {})".format(r, g, b, a))
         return 0
 
     if truncate:
@@ -33,6 +45,7 @@ def convert_color(r, g, b, a, truncate=True):
         (r, g, b, a) = nearest_color_to_pebble64_palette(r, g, b, a)
 
     return rgba32_triplet_to_argb8(r, g, b, a)
+
 
 def sum_points(p1, p2):
     return p1[0] + p2[0], p1[1] + p2[1]
@@ -43,8 +56,10 @@ def subtract_points(p1, p2):
 
 
 def round_point(p):
-    return round(p[0] + epsilon), round(p[1] + epsilon)  # hack to get around the fact that python rounds negative
-                                                         # numbers downwards
+    return round(p[0] + epsilon), round(
+        p[1] + epsilon
+    )  # hack to get around the fact that python rounds negative
+    # numbers downwards
 
 
 def scale_point(p, factor):
@@ -64,14 +79,21 @@ def convert_to_pebble_coordinates(point, precise=False):
     # both
 
     if not precise:
-        nearest = find_nearest_valid_point(point)  # used to give feedback to user if the point shifts considerably
+        nearest = find_nearest_valid_point(
+            point
+        )  # used to give feedback to user if the point shifts considerably
     else:
         nearest = find_nearest_valid_precise_point(point)
 
-    problem = None if compare_points(point, nearest) else "Invalid point: ({:.2f}, {:.2f}). Used closest supported coordinate: ({}, {})".format(
-        point[0], point[1], nearest[0], nearest[1])
+    problem = (
+        None
+        if compare_points(point, nearest)
+        else "Invalid point: ({:.2f}, {:.2f}). Used closest supported coordinate: ({}, {})".format(
+            point[0], point[1], nearest[0], nearest[1]
+        )
+    )
 
-    translated = sum_points(point, (-0.5, -0.5))   # translate point by (-0.5, -0.5)
+    translated = sum_points(point, (-0.5, -0.5))  # translate point by (-0.5, -0.5)
     if precise:
         translated = scale_point(translated, 8)  # scale point for precise coordinates
     rounded = round_point(translated)
@@ -123,7 +145,7 @@ def convert_to_png(pdc_data):
         with open(pdc_path, "wb") as pdc_file:
             pdc_file.write(pdc_data)
 
-        cmd = '%s %s' % (PDC2PNG, pdc_path)
+        cmd = "%s %s" % (PDC2PNG, pdc_path)
         p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         if p.returncode != 0:
@@ -137,7 +159,7 @@ def convert_to_png(pdc_data):
 
 
 class Command:
-    '''
+    """
     Draw command serialized structure:
     | Bytes | Field
     | 1     | Draw command type
@@ -156,10 +178,11 @@ class Command:
     Point:
     | 2     | x
     | 2     | y
-    '''
+    """
 
-    def __init__(self, points, stroke_width=0, stroke_color=0, fill_color=0,
-                 raise_error=False):
+    def __init__(
+        self, points, stroke_width=0, stroke_color=0, fill_color=0, raise_error=False
+    ):
         # for i in range(len(points)):
         #     points[i], valid = convert_to_pebble_coordinates(points[i], precise)
         #     if not valid and raise_error:
@@ -184,9 +207,11 @@ class Command:
             if problem is not None:
                 if grid_annotation is None:
                     link = "https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-pixelgrid"
-                    grid_annotation = annotator.add_annotation("Element is expressed with unsupported coordinate(s).", link=link)
+                    grid_annotation = annotator.add_annotation(
+                        "Element is expressed with unsupported coordinate(s).",
+                        link=link,
+                    )
                 grid_annotation.add_highlight(p[0], p[1], details=problem)
-
 
         pass
 
@@ -197,55 +222,77 @@ class Command:
         return result
 
     def serialize_common(self):
-        return pack('<BBBB',
-                    0,                  #reserved byte
-                    self.stroke_color,
-                    self.stroke_width,
-                    self.fill_color)
+        return pack(
+            "<BBBB",
+            0,  # reserved byte
+            self.stroke_color,
+            self.stroke_width,
+            self.fill_color,
+        )
 
     def serialize_points(self):
-        s = pack('H', len(self.points))  # number of points (16-bit)
+        s = pack("H", len(self.points))  # number of points (16-bit)
         for p in self.points:
             converted, _ = convert_to_pebble_coordinates(p, self.is_precise())
-            s += pack('<hh',
-                      int(converted[0]),        # x (16-bit)
-                      int(converted[1]))        # y (16-bit)
+            s += pack(
+                "<hh",
+                int(converted[0]),  # x (16-bit)
+                int(converted[1]),
+            )  # y (16-bit)
         return s
 
 
 class PathCommand(Command):
-    def __init__(self, points, path_open, stroke_width=0, stroke_color=0, fill_color=0, precise=False,
-                 raise_error=False):
+    def __init__(
+        self,
+        points,
+        path_open,
+        stroke_width=0,
+        stroke_color=0,
+        fill_color=0,
+        precise=False,
+        raise_error=False,
+    ):
         self.open = path_open
-        self.type = DRAW_COMMAND_TYPE_PATH if not precise else DRAW_COMMAND_TYPE_PRECISE_PATH
-        Command.__init__(self, points, stroke_width, stroke_color, fill_color, raise_error)
+        self.type = (
+            DRAW_COMMAND_TYPE_PATH if not precise else DRAW_COMMAND_TYPE_PRECISE_PATH
+        )
+        Command.__init__(
+            self, points, stroke_width, stroke_color, fill_color, raise_error
+        )
 
     def is_precise(self):
         return self.type == DRAW_COMMAND_TYPE_PRECISE_PATH
 
     def serialize(self):
-        s = pack('B', self.type)   # command type
+        s = pack("B", self.type)  # command type
         s += self.serialize_common()
-        s += pack('<BB',
-                  int(self.open),   # open path boolean
-                  0)                # unused byte in path
+        s += pack(
+            "<BB",
+            int(self.open),  # open path boolean
+            0,
+        )  # unused byte in path
         s += self.serialize_points()
         return s
 
     def __str__(self):
         points = self.points[:]
         if self.type == DRAW_COMMAND_TYPE_PRECISE_PATH:
-            type = 'P'
+            type = "P"
             for i in range(len(points)):
                 points[i] = scale_point(points[i], 0.125)
         else:
-            type = ''
-        return "Path: [fill color:{}; stroke color:{}; stroke width:{}] {} {} {}".format(self.fill_color,
-                                                                                         self.stroke_color,
-                                                                                         self.stroke_width,
-                                                                                         points,
-                                                                                         self.open,
-                                                                                         type)
+            type = ""
+        return (
+            "Path: [fill color:{}; stroke color:{}; stroke width:{}] {} {} {}".format(
+                self.fill_color,
+                self.stroke_color,
+                self.stroke_width,
+                points,
+                self.open,
+                type,
+            )
+        )
 
 
 class CircleCommand(object, Command):
@@ -260,44 +307,49 @@ class CircleCommand(object, Command):
         (dx, dy) = transformer.transform_distance(self.radius, self.radius)
         self.radius = min(dx, dy)
         if dx != dy:
-            annotation = transformer.add_annotation("Only rigid transformations for circles are supported.",
-                                                    transformed=True)
+            annotation = transformer.add_annotation(
+                "Only rigid transformations for circles are supported.",
+                transformed=True,
+            )
             center = self.points[0]
             annotation.add_highlight(center[0] - dx, center[1] - dy, dx * 2, dy * 2)
 
-
-
     def serialize(self):
-        s = pack('B', DRAW_COMMAND_TYPE_CIRCLE)  # command type
+        s = pack("B", DRAW_COMMAND_TYPE_CIRCLE)  # command type
         s += self.serialize_common()
-        s += pack('H', self.radius)  # circle radius (16-bit)
+        s += pack("H", self.radius)  # circle radius (16-bit)
         s += self.serialize_points()
         return s
 
     def __str__(self):
-        return "Circle: [fill color:{}; stroke color:{}; stroke width:{}] {} {}".format(self.fill_color,
-                                                                                        self.stroke_color,
-                                                                                        self.stroke_width,
-                                                                                        self.points[0],
-                                                                                        self.radius)
+        return "Circle: [fill color:{}; stroke color:{}; stroke width:{}] {} {}".format(
+            self.fill_color,
+            self.stroke_color,
+            self.stroke_width,
+            self.points[0],
+            self.radius,
+        )
 
 
 def serialize_header(size):
-    return pack('<BBhh', DRAW_COMMAND_VERSION, 0, int(round(size[0])), int(round(size[1])))
+    return pack(
+        "<BBhh", DRAW_COMMAND_VERSION, 0, int(round(size[0])), int(round(size[1]))
+    )
 
 
 def serialize(commands):
-    output = pack('H', len(commands))   # number of commands in list
+    output = pack("H", len(commands))  # number of commands in list
     for c in commands:
         output += c.serialize()
 
     return output
+
 
 def serialize_image(commands, size):
     s = serialize_header(size)
     s += serialize(commands)
 
     output = "PDCI"
-    output += pack('I', len(s))
+    output += pack("I", len(s))
     output += s
     return output
