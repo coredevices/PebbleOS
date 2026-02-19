@@ -642,7 +642,18 @@ static BTErrno prv_subscribe(BLECharacteristic characteristic_ref,
     // Write to the Client Configuration Characteristic Descriptor on the
     // remote to change the subscription:
     const uint16_t value = subscription_type;
+
+    // Release bt_lock before writing CCCD, as this calls into NimBLE.
+    // prv_write() (gatt_client_operations.c) releases its own bt_lock level before
+    // calling NimBLE, but if callers hold bt_lock recursively, the recursive mutex
+    // won't actually release. Dropping our level here ensures the lock is fully
+    // released when NimBLE is called, avoiding a lock ordering deadlock with
+    // ble_hs_mutex.
+    bt_unlock();
+
     ret_val = gatt_client_op_write_descriptor_cccd(cccd_ref, &value);
+
+    bt_lock();
 
     if (ret_val != BTErrnoOK) {
       // Write failed, bail out!
