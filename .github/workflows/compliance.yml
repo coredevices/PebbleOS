@@ -19,6 +19,43 @@ jobs:
       - name: Run GitLint
         run: gitlint --commits "${{ github.event.pull_request.base.sha }}..HEAD"
 
+  ruff:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff format check
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+
+          # collect submodule paths to skip
+          submodules=$(git config --file .gitmodules --get-regexp '\.path$' \
+            | awk '{print $2}')
+
+          files=()
+          for file in $(git diff --name-only --diff-filter=d "$base"...HEAD -- '*.py'); do
+            skip=false
+            for sm in $submodules; do
+              case "$file" in "$sm"/*) skip=true; break ;; esac
+            done
+            if $skip; then continue; fi
+            files+=("$file")
+          done
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No Python files changed."
+            exit 0
+          fi
+
+          ruff format --check "${files[@]}"
+
   license:
     runs-on: ubuntu-24.04
     steps:
