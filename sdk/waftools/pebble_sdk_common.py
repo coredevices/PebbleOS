@@ -12,7 +12,6 @@ from waflib.Task import Task
 from waflib.TaskGen import after_method, before_method, feature
 from waflib.Tools import c, c_preproc
 
-import ldscript, process_bundle, process_headers, process_js, report_memory_usage, xcode_pebble
 from pebble_sdk_platform import maybe_import_internal
 from sdk_helpers import (append_to_attr, find_sdk_component, get_node_from_abspath,
                          wrap_task_name_with_platform)
@@ -241,7 +240,7 @@ def setup_pebble_cprogram(task_gen):
 
     for lib in task_gen.bld.env.LIB_JSON:
         # Skip binary check for non-Pebble libs
-        if not 'pebble' in lib:
+        if 'pebble' not in lib:
             continue
 
         if hasattr(task_gen.bld, 'conf') and hasattr(task_gen.bld.conf, 'srcnode'):

@@ -6,7 +6,7 @@
 
 import re
 from waflib.Task import Task
-from waflib.TaskGen import extension, after_method
+from waflib.TaskGen import extension
 
 """
 A simple tool to integrate protocol buffers into your build system.
@@ -81,7 +81,7 @@ def process_protoc(self, node):
     self.source.append(c_node)
 
     use = getattr(self, 'use', '')
-    if not 'PROTOBUF' in use:
+    if 'PROTOBUF' not in use:
         self.use = self.to_list(use) + ['PROTOBUF']
 
 def configure(conf):

@@ -28,7 +28,7 @@ try:
     from ..pebble_sdk_platform import pebble_platforms, maybe_import_internal
 except ImportError:
     os.sys.path.append(path.dirname(path.dirname(__file__)))
-    from pebble_sdk_platform import pebble_platforms, maybe_import_internal
+    from pebble_sdk_platform import pebble_platforms
 
 SRC_DIR = 'src'
 INCLUDE_DIR = 'include'
@@ -54,10 +54,9 @@ def generate_shim_files(shim_def_path, pbl_src_dir, pbl_output_src_dir, sdk_incl
                         sdk_lib_dir, platform_name, internal_sdk_build=False):
     if internal_sdk_build:
         try:
-            from .. import pebble_sdk_platform_internal
+            pass
         except ValueError:
             os.sys.path.append(path.dirname(path.dirname(__file__)))
-            import pebble_sdk_platform_internal
 
     try:
         platform_info = pebble_platforms.get(platform_name)

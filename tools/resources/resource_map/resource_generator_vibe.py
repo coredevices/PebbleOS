@@ -4,7 +4,6 @@
 from resources.types.resource_object import ResourceObject
 from resources.resource_map.resource_generator import ResourceGenerator
 
-from pebble_sdk_platform import pebble_platforms
 
 import json2vibe
 

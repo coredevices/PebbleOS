@@ -6,7 +6,6 @@
 # this script parses the bss data and text firmware sizes and generates an XML file for consumption by jenkins plot plugin
 
 import argparse
-import os
 import analyze_static_memory_usage 
 import xml.etree.cElementTree as ET 
 

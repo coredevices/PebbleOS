@@ -4,7 +4,9 @@
 
 
 from __future__ import with_statement
-import base64, zlib, re, sys
+import base64
+import zlib
+import sys
 
 def compress_file(filename):
     with open(filename) as f:

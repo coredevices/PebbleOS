@@ -8,7 +8,7 @@ import glob
 
 
 def _is_accessory(tty_type):
-    return tty_type is "accessory"
+    return tty_type == "accessory"
 
 
 def _get_linux_tty(ttys, tty_type):

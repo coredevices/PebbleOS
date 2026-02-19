@@ -5,8 +5,6 @@ import os
 import sys
 import unittest
 import xml.etree.ElementTree as ET
-import array
-from struct import pack
 
 # Allow us to run even if not at the `tools` directory.
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))

@@ -8,8 +8,6 @@ import sys
 import struct
 import array
 import pprint
-import math
-import json
 import itertools
 from PIL import Image
 

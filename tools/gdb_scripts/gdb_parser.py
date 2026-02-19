@@ -14,9 +14,9 @@ import string
 import types
 import datetime
 
-from collections import namedtuple, defaultdict, OrderedDict
+from collections import namedtuple, OrderedDict
 from gdb_tintin import FreeRTOSMutex, Tasks, LinkedList
-from gdb_symbols import get_static_variable, get_static_function
+from gdb_symbols import get_static_variable
 from gdb_tintin_metadata import TintinMetadata
 
 logger = logging.getLogger(__name__)

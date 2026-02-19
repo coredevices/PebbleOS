@@ -21,10 +21,8 @@ be launched whenever QEMU is launched and likewise taken down whenever QEMU exit
 we exit this process whenever we detect that the QEMU gdb server connection has closed.
 """
 
-import logging, socket
-from struct import unpack
-from time import sleep
-import sys
+import logging
+import socket
 import time
 import argparse
 import select

@@ -4,7 +4,6 @@
 from waflib import Node, Task, TaskGen
 
 from resources.resource_map import resource_generator
-from resources.resource_map.resource_generator_js import JsResourceGenerator
 from resources.types.resource_definition import StorageType
 from resources.types.resource_object import ResourceObject
 from resources.types.resource_ball import ResourceBall

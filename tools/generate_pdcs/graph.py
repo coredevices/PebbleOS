@@ -68,7 +68,7 @@ class Graph(object):
         vertex1 = edge[0]
         vertex2 = edge[1]
         if vertex1 in self.__graph_dict:
-            if not (vertex2 in self.get_neighbours(vertex1)):
+            if vertex2 not in self.get_neighbours(vertex1):
                 self.__graph_dict[vertex1].append(vertex2)
         else:
             self.__graph_dict[vertex1] = [vertex2]
