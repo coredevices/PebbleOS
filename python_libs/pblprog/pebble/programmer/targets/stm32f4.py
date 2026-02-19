@@ -3,6 +3,7 @@
 
 from .stm32 import STM32FlashProgrammer
 
+
 class STM32F4FlashProgrammer(STM32FlashProgrammer):
     IDCODE = 0x2BA01477
     CPUID_VALUE = 0x410FC241

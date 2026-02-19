@@ -7,7 +7,7 @@ from .. import PebbleCommander, exceptions
 
 
 def trim_docstring(var):
-    return inspect.getdoc(var) or ''
+    return inspect.getdoc(var) or ""
 
 
 def get_help_short(cmdr, cmd_name, help_output=None):
@@ -35,7 +35,7 @@ def get_help_short(cmdr, cmd_name, help_output=None):
         else:
             output = cmdstr
     else:  # Prompt command
-        if cmd_name[0] == '!':  # Strip the bang if it's there
+        if cmd_name[0] == "!":  # Strip the bang if it's there
             cmd_name = cmd_name[1:]
 
         # Get the output if it wasn't provided
@@ -44,9 +44,9 @@ def get_help_short(cmdr, cmd_name, help_output=None):
 
         for prompt_cmd in help_output[1:]:
             # Match, even with argument count provided
-            if prompt_cmd == cmd_name or prompt_cmd.startswith(cmd_name+" "):
+            if prompt_cmd == cmd_name or prompt_cmd.startswith(cmd_name + " "):
                 # Output should be the full argument string with the bang
-                output = '!' + prompt_cmd
+                output = "!" + prompt_cmd
                 break
 
     return output
@@ -72,13 +72,15 @@ def get_help_long(cmdr, cmd_name):
             if spec.defaults is not None:
                 minargs = len(spec.args[1:]) - len(spec.defaults)
                 if i >= minargs:
-                    specstr.append(help_arginfo_default(arg, spec.defaults[i - minargs]))
+                    specstr.append(
+                        help_arginfo_default(arg, spec.defaults[i - minargs])
+                    )
                 else:
                     specstr.append(help_arginfo_nodefault(arg))
             else:
                 specstr.append(help_arginfo_nodefault(arg))
 
-        specstr = ' '.join(specstr)
+        specstr = " ".join(specstr)
         cmdstr = func.name + " " + specstr
         if func.__doc__ is None:
             output = "%s\n\nNo help available." % cmdstr
@@ -95,7 +97,7 @@ def get_help_long(cmdr, cmd_name):
 
 @PebbleCommander.command()
 def help(cmdr, cmd=None):
-    """ Show help.
+    """Show help.
 
     You're lookin' at it, dummy!
     """
@@ -114,7 +116,7 @@ def help(cmdr, cmd=None):
 
         out.append("\n===Prompt commands===")
         ret = cmdr.send_prompt_command("help")
-        if ret[0] != 'Available Commands:':
+        if ret[0] != "Available Commands:":
             raise exceptions.PromptResponseError("'help' prompt command output invalid")
         for cmd_name in ret[1:]:
             out.append(get_help_short(cmdr, "!" + cmd_name, ret))

@@ -9,15 +9,17 @@ PEBBLE_BAUD_RATE = 230400
 SERIAL_READ_TIMEOUT = 0.1
 SERIAL_WRAPPER_READ_TIMEOUT = 0.5
 
+
 class SerialPortWrapperException(Exception):
     pass
 
+
 class SerialPortWrapper(threading.Thread):
-    def __init__(self, tty, logfile='serial_dump.txt', baud_rate=PEBBLE_BAUD_RATE):
+    def __init__(self, tty, logfile="serial_dump.txt", baud_rate=PEBBLE_BAUD_RATE):
         threading.Thread.__init__(self)
 
         self.tty = tty
-        if tty.startswith('ftdi://'):
+        if tty.startswith("ftdi://"):
             pass
 
         self.s = serial.serial_for_url(tty, baud_rate, timeout=SERIAL_READ_TIMEOUT)
@@ -28,19 +30,20 @@ class SerialPortWrapper(threading.Thread):
         # is provided log to the descriptor but do not close the descriptor.
         if logfile is not None:
             if isinstance(logfile, basestring):
-                self.debug_out = open(logfile, 'wb')
+                self.debug_out = open(logfile, "wb")
                 self._close_debug = True
             elif isinstance(logfile, file):
                 self.debug_out = logfile
                 self._close_debug = False
             else:
-                raise ValueError('logfile must be a filename or an open file '
-                                 'descriptor.')
+                raise ValueError(
+                    "logfile must be a filename or an open file descriptor."
+                )
 
         # This signal is used to protect and signal changes in the below
         # self.data member variable
         self.signal = threading.Condition()
-        self.data = ''
+        self.data = ""
 
         self.die = False
         self.daemon = True
@@ -50,7 +53,7 @@ class SerialPortWrapper(threading.Thread):
         while not self.die:
             data = self.s.read(self.read_size)
             if len(data):
-                #print 'received data <(%s)>' % data
+                # print 'received data <(%s)>' % data
 
                 self.signal.acquire()
                 try:
@@ -65,7 +68,7 @@ class SerialPortWrapper(threading.Thread):
                     self.signal.release()
 
     def write_fast(self, data):
-        #print 'writing <(%s)>' % strip_unprintable_chars(data)
+        # print 'writing <(%s)>' % strip_unprintable_chars(data)
         rv = self.s.write(data)
         return rv
 
@@ -78,32 +81,32 @@ class SerialPortWrapper(threading.Thread):
         self.write_slow(data)
 
     def readline(self, timeout=SERIAL_WRAPPER_READ_TIMEOUT):
-        result = ''
+        result = ""
 
         self.signal.acquire()
         try:
             # Try to find a newline character. If we don't have one, wait until we
             # receive more data before checking again. If we hit the timeout without
             # receiving anything just return what we have.
-            idx = self.data.find('\n')
+            idx = self.data.find("\n")
             while idx == -1:
                 prev_data_len = len(self.data)
 
                 self.signal.wait(timeout)
-                if (prev_data_len != len(self.data)):
-                    idx = self.data.find('\n')
+                if prev_data_len != len(self.data):
+                    idx = self.data.find("\n")
                 else:
                     idx = len(self.data) - 1
 
                 if len(self.data) == 0:
-                  break
+                    break
 
             idx += 1
 
             result = self.data[:idx].strip()
             self.data = self.data[idx:]
 
-            #print 'returning <(%s)>, %u remaining' % (result, len(self.data))
+            # print 'returning <(%s)>, %u remaining' % (result, len(self.data))
 
         finally:
             self.signal.release()
@@ -118,12 +121,12 @@ class SerialPortWrapper(threading.Thread):
 
             self.signal.wait(timeout)
 
-            if (prev_data_len == len(self.data)):
+            if prev_data_len == len(self.data):
                 # No new data available after our timeout, assume we're done
                 break
 
         result = self.data
-        self.data = ''
+        self.data = ""
 
         self.signal.release()
 
@@ -137,7 +140,7 @@ class SerialPortWrapper(threading.Thread):
 
     def clear(self):
         self.signal.acquire()
-        self.data = ''
+        self.data = ""
         self.signal.release()
 
     def close(self):

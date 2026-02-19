@@ -17,7 +17,8 @@ FONT_VERSION_3 = 3
 # Features
 FEATURE_OFFSET_16 = 0x01
 FEATURE_RLE4 = 0x02
-GLYPH_MD_STRUCT = 'BBbbb'
+GLYPH_MD_STRUCT = "BBbbb"
+
 
 def dec_and_hex(i):
     return "0x{:x} ({:d})".format(i, i)
@@ -31,28 +32,32 @@ def grouper(n, iterable, fillvalue=None):
 
 def get_glyph(features, tbl, offset_bytes):
     bitmap_offset_bytes = offset_bytes + struct.calcsize(GLYPH_MD_STRUCT)
-    header = tbl[offset_bytes: bitmap_offset_bytes]
+    header = tbl[offset_bytes:bitmap_offset_bytes]
     (width, height, left, top, adv) = struct.unpack(GLYPH_MD_STRUCT, header)
 
-    if (features & FEATURE_RLE4):
+    if features & FEATURE_RLE4:
         bitmap_length_bytes = (height + 1) // 2  # RLE4 stores 2 rle_units per byte
     else:
         bitmap_length_bytes = ((height * width) + 7) // 8
 
     bitmap_length_bytes_word_aligned = ((bitmap_length_bytes + 3) // 4) * 4
-    data = tbl[bitmap_offset_bytes: bitmap_offset_bytes + bitmap_length_bytes_word_aligned]
+    data = tbl[
+        bitmap_offset_bytes : bitmap_offset_bytes + bitmap_length_bytes_word_aligned
+    ]
     return {
-        'offset_bytes' : dec_and_hex(offset_bytes),
-        'top' : top,
-        'left' : left,
-        'height' : height,
-        'width' : width,
-        'advance' : adv,
-        'bitmap' : data
-        }, header
+        "offset_bytes": dec_and_hex(offset_bytes),
+        "top": top,
+        "left": left,
+        "height": height,
+        "width": width,
+        "advance": adv,
+        "bitmap": data,
+    }, header
+
 
 def hasher(codepoint, table_size):
-    return (codepoint % table_size)
+    return codepoint % table_size
+
 
 def print_hash_table(hash_table):
     print("index\tcount\toffset")
@@ -65,42 +70,42 @@ def print_glyph(features, glyph_table, offset, raw, show_image):
     def decompress_glyph_RLE4(rle_stream, num_units, width):
         bitmap = []
 
-        for b in array.array('B', rle_stream):
+        for b in array.array("B", rle_stream):
             # There are two RLE4 units per byte. LSNibble first.
             for i in range(2):
                 # Handle the padding by skipping whatever remains
-                if (num_units == 0):
+                if num_units == 0:
                     break
                 num_units -= 1
 
                 # Each unit is <xyyy> where x is the symbol and yyy is (length - 1)
                 length = (b & 0x7) + 1
                 symbol = 1 if ((b >> 3) & 1) == 1 else 0
-                bitmap.extend([symbol]*length)
+                bitmap.extend([symbol] * length)
                 b >>= 4
 
         # Correct the height, now that we know the decompressed size
-        height = len(bitmap)/width
+        height = len(bitmap) / width
 
         return bitmap, height
 
     def glyph_bitmap_to_bitlist(g):
-        height = g['height']
+        height = g["height"]
 
-        if not g['bitmap']:
+        if not g["bitmap"]:
             return None, height
 
-        if (features & FEATURE_RLE4):
-            b, height = decompress_glyph_RLE4(g['bitmap'], height, g['width'])
+        if features & FEATURE_RLE4:
+            b, height = decompress_glyph_RLE4(g["bitmap"], height, g["width"])
         else:
             b = []
-            for w in array.array('I', g['bitmap']):
+            for w in array.array("I", g["bitmap"]):
                 b.extend(((w & (1 << bit)) != 0 for bit in range(0, 32)))
 
         return b, height
 
     def draw_glyph_image(bitlist, width, height):
-        img = Image.new('RGB', (width, height), "black")
+        img = Image.new("RGB", (width, height), "black")
         pixels = img.load()
         for i in range(img.size[0]):
             for j in range(img.size[1]):
@@ -111,23 +116,23 @@ def print_glyph(features, glyph_table, offset, raw, show_image):
         for y in range(height):
             for x in range(width):
                 if bitlist[y * width + x]:
-                    sys.stdout.write('X')
+                    sys.stdout.write("X")
                 else:
-                    sys.stdout.write(' ')
+                    sys.stdout.write(" ")
             print()
 
     def draw_glyph_raw(header, bitlist, width, height):
         # Header:
         for byte in header:
-            print('{:02x}'.format(ord(byte)), end=' ')
-        print(' - ', end=' ')
+            print("{:02x}".format(ord(byte)), end=" ")
+        print(" - ", end=" ")
         # Repack the glyph data. This is required because the glyph may have been compressed
         for byte in range(height * width / 8):
             w = 0
             for bit in range(8):
                 if bitlist[byte * 8 + bit]:
                     w |= 1 << bit
-            print('{:02x}'.format(w), end=' ')
+            print("{:02x}".format(w), end=" ")
         print()
 
     g, header = get_glyph(features, glyph_table, offset)
@@ -137,24 +142,24 @@ def print_glyph(features, glyph_table, offset, raw, show_image):
 
     if raw:
         header_offset = offset + struct.calcsize(GLYPH_MD_STRUCT)
-        draw_glyph_raw(header, bitlist, g['width'], height)
+        draw_glyph_raw(header, bitlist, g["width"], height)
     else:
         output = []
-        output.append("offset bytes: {}".format(g['offset_bytes']))
-        output.append("top: {}".format(g['top']))
-        output.append("left: {}".format(g['left']))
+        output.append("offset bytes: {}".format(g["offset_bytes"]))
+        output.append("top: {}".format(g["top"]))
+        output.append("left: {}".format(g["left"]))
         output.append("height: {}".format(height))
-        output.append("width: {}".format(g['width']))
-        output.append("advance: {}".format(g['advance']))
+        output.append("width: {}".format(g["width"]))
+        output.append("advance: {}".format(g["advance"]))
         output.append("bitmap:")
-        print('\n'.join(output))
+        print("\n".join(output))
         print()
 
         if bitlist:
             if show_image:
-                draw_glyph_image(bitlist, g['width'], height)
+                draw_glyph_image(bitlist, g["width"], height)
             else:
-                draw_glyph_ascii(bitlist, g['width'], height)
+                draw_glyph_ascii(bitlist, g["width"], height)
 
 
 # Allow extended codepoint encoding for 'narrow Python builds'
@@ -162,31 +167,42 @@ def my_unichr(i):
     try:
         return chr(i)
     except ValueError:
-        return struct.pack('i', i).decode('utf-32')
+        return struct.pack("i", i).decode("utf-32")
 
 
 # Attempt to print unicode characters. Do the best we can when redirecting output.
 # (See PYTHONIOENCODING)
 def print_glyph_header(codepoint, offset, raw=False):
     if raw:
-        print('{:08X}:'.format(codepoint), end=' ')
+        print("{:08X}:".format(codepoint), end=" ")
     else:
         print()
-        print('{}\t({})\t{}'.format(dec_and_hex(codepoint), my_unichr(codepoint),
-                                     dec_and_hex(offset)).encode('utf-8', 'replace'))
+        print(
+            "{}\t({})\t{}".format(
+                dec_and_hex(codepoint), my_unichr(codepoint), dec_and_hex(offset)
+            ).encode("utf-8", "replace")
+        )
         print()
 
 
 def main(pfo_path, show_hash_table, offset_table, glyph, all_glyphs, show_image, raw):
-    with open(pfo_path, 'rb') as f:
+    with open(pfo_path, "rb") as f:
         font = f.read()
 
     # Assume version 3 to start
     version = 3
-    font_md_format = ['', '<BBHH', '<BBHHBB', '<BBHHBBBB']
+    font_md_format = ["", "<BBHH", "<BBHHBB", "<BBHHBBBB"]
     font_md_size = struct.calcsize(font_md_format[version])
-    (version, max_height, num_glyphs, wildcard_cp, table_size, cp_bytes,
-     struct_size, features) = struct.unpack(font_md_format[version], font[:font_md_size])
+    (
+        version,
+        max_height,
+        num_glyphs,
+        wildcard_cp,
+        table_size,
+        cp_bytes,
+        struct_size,
+        features,
+    ) = struct.unpack(font_md_format[version], font[:font_md_size])
     if version == 3:
         pass
     elif version == 2:
@@ -194,61 +210,68 @@ def main(pfo_path, show_hash_table, offset_table, glyph, all_glyphs, show_image,
         font_md_size = struct.calcsize(font_md_format[version])
         features = 0
     else:
-        raise Exception('Error: Unexpected font file version {}'.format(version))
+        raise Exception("Error: Unexpected font file version {}".format(version))
 
     # Build up the offset entry struct
-    offset_table_format = '<'
-    offset_table_format += 'L' if cp_bytes == 4 else 'H'
-    offset_table_format += 'H' if features & FEATURE_OFFSET_16 else 'L'
+    offset_table_format = "<"
+    offset_table_format += "L" if cp_bytes == 4 else "H"
+    offset_table_format += "H" if features & FEATURE_OFFSET_16 else "L"
     offset_entry_size = struct.calcsize(offset_table_format)
 
-    hash_entry_format = '<BBH'
+    hash_entry_format = "<BBH"
     hash_entry_size = struct.calcsize(hash_entry_format)
 
     def hash_iterator(tbl, num):
         for i in range(0, num * hash_entry_size, hash_entry_size):
-            yield struct.unpack(hash_entry_format, tbl[i:i + hash_entry_size])
+            yield struct.unpack(hash_entry_format, tbl[i : i + hash_entry_size])
 
     def offset_iterator(tbl, num):
         for i in range(0, num * offset_entry_size, offset_entry_size):
-            yield struct.unpack(offset_table_format, tbl[i:i + offset_entry_size])
+            yield struct.unpack(offset_table_format, tbl[i : i + offset_entry_size])
 
-    hash_table = [(a,b,c) for (a,b,c) in hash_iterator(font[font_md_size:], table_size)]
+    hash_table = [
+        (a, b, c) for (a, b, c) in hash_iterator(font[font_md_size:], table_size)
+    ]
     offset_tables_start = font_md_size + hash_entry_size * table_size
-    glyph_table_start = offset_tables_start +  offset_entry_size * (num_glyphs)
+    glyph_table_start = offset_tables_start + offset_entry_size * (num_glyphs)
     glyph_table = font[glyph_table_start:]
 
     if not raw:
-        print('Font info')
+        print("Font info")
         pprint.pprint(
-            {'version': version,
-             'max_height': max_height,
-             'num_glyphs': num_glyphs,
-             'offset_table_size': num_glyphs * offset_entry_size,
-             'glyph_table_start': dec_and_hex(glyph_table_start),
-             'wildcard_cp': dec_and_hex(wildcard_cp),
-             'codepoint bytes': cp_bytes,
-             'hash_table_size': table_size,
-             'font_header_size': font_md_size,
-             'features': features,
-             'features - offset size': 16 if (features & FEATURE_OFFSET_16) else 32,
-             'features - RLE4': True if (features & FEATURE_RLE4) else False})
+            {
+                "version": version,
+                "max_height": max_height,
+                "num_glyphs": num_glyphs,
+                "offset_table_size": num_glyphs * offset_entry_size,
+                "glyph_table_start": dec_and_hex(glyph_table_start),
+                "wildcard_cp": dec_and_hex(wildcard_cp),
+                "codepoint bytes": cp_bytes,
+                "hash_table_size": table_size,
+                "font_header_size": font_md_size,
+                "features": features,
+                "features - offset size": 16 if (features & FEATURE_OFFSET_16) else 32,
+                "features - RLE4": True if (features & FEATURE_RLE4) else False,
+            }
+        )
 
         print()
-        print('Hash Table start:   {}'.format(font_md_size))
-        print('Offset Table start: {}'.format(offset_tables_start))
-        print('Glyph Table start:  {}'.format(glyph_table_start))
-        print('--------------------------')
+        print("Hash Table start:   {}".format(font_md_size))
+        print("Offset Table start: {}".format(offset_tables_start))
+        print("Glyph Table start:  {}".format(glyph_table_start))
+        print("--------------------------")
 
     if all_glyphs:
-        for _,sz,off in hash_table:
-          off_table = dict([x for x in offset_iterator(font[(offset_tables_start + off):], sz)])
-          for k,v in sorted(off_table.items()):
-            print_glyph_header(k, v, raw)
-            print_glyph(features, glyph_table, v, raw, False)
-            if not raw:
-                print()
-                print()
+        for _, sz, off in hash_table:
+            off_table = dict(
+                [x for x in offset_iterator(font[(offset_tables_start + off) :], sz)]
+            )
+            for k, v in sorted(off_table.items()):
+                print_glyph_header(k, v, raw)
+                print_glyph(features, glyph_table, v, raw, False)
+                if not raw:
+                    print()
+                    print()
         return
 
     if show_hash_table:
@@ -257,11 +280,17 @@ def main(pfo_path, show_hash_table, offset_table, glyph, all_glyphs, show_image,
 
     if offset_table:
         offset_table = int(offset_table)
-        _,sz,off = hash_table[offset_table]
+        _, sz, off = hash_table[offset_table]
         if not raw:
-            print('Offset Table {} offset: {}'.format(offset_table, offset_tables_start + off))
-        off_table = dict([x for x in offset_iterator(font[(offset_tables_start + off):], sz)])
-        for k,v in sorted(off_table.items()):
+            print(
+                "Offset Table {} offset: {}".format(
+                    offset_table, offset_tables_start + off
+                )
+            )
+        off_table = dict(
+            [x for x in offset_iterator(font[(offset_tables_start + off) :], sz)]
+        )
+        for k, v in sorted(off_table.items()):
             print_glyph_header(k, v, raw)
             print_glyph(features, glyph_table, v, raw, show_image)
             if not raw:
@@ -271,10 +300,12 @@ def main(pfo_path, show_hash_table, offset_table, glyph, all_glyphs, show_image,
     if glyph:
         codepoint = int(glyph, 16)
         glyph_hash = hasher(codepoint, table_size)
-        _,sz,off = hash_table[glyph_hash]
-        off_table = dict([x for x in offset_iterator(font[(offset_tables_start + off):], sz)])
+        _, sz, off = hash_table[glyph_hash]
+        off_table = dict(
+            [x for x in offset_iterator(font[(offset_tables_start + off) :], sz)]
+        )
         glyph_off = 0
-        for (cp, off) in list(off_table.items()):
+        for cp, off in list(off_table.items()):
             if cp == codepoint:
                 glyph_off = off_table[codepoint]
                 break
@@ -284,18 +315,28 @@ def main(pfo_path, show_hash_table, offset_table, glyph, all_glyphs, show_image,
         print_glyph_header(codepoint, glyph_off, raw)
         print_glyph(features, glyph_table, glyph_off, raw, show_image)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--offsets', help='print hash table')
-    parser.add_argument('-t', '--hashes', action='store_true', help='print hash table')
-    parser.add_argument('-g', '--glyph', help='draw glyph in external image viewer')
-    parser.add_argument('-G', '--ascii_glyph', help='draw glyph in ASCII')
-    parser.add_argument('-a', '--all_glyphs', action='store_true', help='print all glyphs')
-    parser.add_argument('-r', '--raw', action='store_true')
-    parser.add_argument('pebble_font')
+    parser.add_argument("-o", "--offsets", help="print hash table")
+    parser.add_argument("-t", "--hashes", action="store_true", help="print hash table")
+    parser.add_argument("-g", "--glyph", help="draw glyph in external image viewer")
+    parser.add_argument("-G", "--ascii_glyph", help="draw glyph in ASCII")
+    parser.add_argument(
+        "-a", "--all_glyphs", action="store_true", help="print all glyphs"
+    )
+    parser.add_argument("-r", "--raw", action="store_true")
+    parser.add_argument("pebble_font")
     args = parser.parse_args()
 
     codepoint = args.ascii_glyph if args.ascii_glyph else args.glyph
 
-    main(args.pebble_font, args.hashes, args.offsets, codepoint, args.all_glyphs,
-         args.ascii_glyph is None, args.raw)
+    main(
+        args.pebble_font,
+        args.hashes,
+        args.offsets,
+        codepoint,
+        args.all_glyphs,
+        args.ascii_glyph is None,
+        args.raw,
+    )

@@ -19,25 +19,28 @@ class FontResourceGenerator(ResourceGenerator):
     ResourceGenerator for the 'font' type
     """
 
-    type = 'font'
+    type = "font"
     lock = Lock()
 
     @staticmethod
     def definitions_from_dict(bld, definition_dict, resource_source_path):
         maybe_import_internal(bld.env)
 
-        definitions = ResourceGenerator.definitions_from_dict(bld, definition_dict,
-                                                              resource_source_path)
+        definitions = ResourceGenerator.definitions_from_dict(
+            bld, definition_dict, resource_source_path
+        )
 
         # Parse additional font specific fields
         for d in definitions:
-            d.max_glyph_size = pebble_platforms[bld.env.PLATFORM_NAME]['MAX_FONT_GLYPH_SIZE']
-            d.character_list = definition_dict.get('characterList')
-            d.character_regex = definition_dict.get('characterRegex')
-            d.compatibility = definition_dict.get('compatibility')
-            d.compress = definition_dict.get('compress')
-            d.extended = bool(definition_dict.get('extended'))
-            d.tracking_adjust = definition_dict.get('trackingAdjust')
+            d.max_glyph_size = pebble_platforms[bld.env.PLATFORM_NAME][
+                "MAX_FONT_GLYPH_SIZE"
+            ]
+            d.character_list = definition_dict.get("characterList")
+            d.character_regex = definition_dict.get("characterRegex")
+            d.compatibility = definition_dict.get("compatibility")
+            d.compress = definition_dict.get("compress")
+            d.extended = bool(definition_dict.get("extended"))
+            d.tracking_adjust = definition_dict.get("trackingAdjust")
 
         return definitions
 
@@ -63,7 +66,9 @@ class FontResourceGenerator(ResourceGenerator):
             is_legacy = definition.compatibility == "2.7"
             max_glyphs = MAX_GLYPHS_EXTENDED if definition.extended else MAX_GLYPHS
 
-            font = Font(ttf_path, height, max_glyphs, definition.max_glyph_size, is_legacy)
+            font = Font(
+                ttf_path, height, max_glyphs, definition.max_glyph_size, is_legacy
+            )
 
             if definition.character_regex is not None:
                 font.set_regex_filter(definition.character_regex)
@@ -80,7 +85,6 @@ class FontResourceGenerator(ResourceGenerator):
             font.build_tables()
             return font.bitstring()
 
-
     @staticmethod
     def _get_font_height_from_name(name):
         """
@@ -88,11 +92,11 @@ class FontResourceGenerator(ResourceGenerator):
         pixel height of the generated font
         """
 
-        match = re.search('([0-9]+)', name)
+        match = re.search("([0-9]+)", name)
 
         if match is None:
-            if name != 'FONT_FALLBACK' and name != 'FONT_FALLBACK_INTERNAL':
-                raise ValueError('Font {0}: no height found in name\n'.format(name))
+            if name != "FONT_FALLBACK" and name != "FONT_FALLBACK_INTERNAL":
+                raise ValueError("Font {0}: no height found in name\n".format(name))
 
             return 14
 

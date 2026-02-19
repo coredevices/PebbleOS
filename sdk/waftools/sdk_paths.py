@@ -12,6 +12,8 @@ import os
 import sys
 
 # Go up 3 levels from extras/sdk_paths.py to SDK root
-sdk_root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-sys.path.append(os.path.join(sdk_root_dir, 'common/waftools'))
-sys.path.append(os.path.join(sdk_root_dir, 'common/tools'))
+sdk_root_dir = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..")
+)
+sys.path.append(os.path.join(sdk_root_dir, "common/waftools"))
+sys.path.append(os.path.join(sdk_root_dir, "common/tools"))

@@ -72,7 +72,7 @@ def encode(source):
                 yield bytes([escape])
                 yield bytes([count])
             elif count < 0:
-                raise Exception('Encoding malfunctioned')
+                raise Exception("Encoding malfunctioned")
         else:
             # simply insert the characters (and escape the escape character)
             for _ in g:
@@ -82,6 +82,7 @@ def encode(source):
 
     yield bytes([escape])
     yield bytes([0x00])
+
 
 def decode(stream):
     stream = iter(stream)
@@ -109,70 +110,71 @@ def decode(stream):
             yield bytes([char])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     if len(sys.argv) == 1:
         # run unit tests
         import unittest
 
         class TestSparseLengthEncoding(unittest.TestCase):
             def test_empty(self):
-                raw_data = b''
-                encoded_data = b''.join(encode(raw_data))
-                decoded_data = b''.join(decode(encoded_data))
-                self.assertEqual(encoded_data, b'\x01\x01\x00')
+                raw_data = b""
+                encoded_data = b"".join(encode(raw_data))
+                decoded_data = b"".join(decode(encoded_data))
+                self.assertEqual(encoded_data, b"\x01\x01\x00")
 
             def test_no_zeros(self):
-                raw_data = b'\x02\xff\xef\x99'
-                encoded_data = b''.join(encode(raw_data))
-                decoded_data = b''.join(decode(encoded_data))
-                self.assertEqual(encoded_data, b'\x01\x02\xff\xef\x99\x01\x00')
+                raw_data = b"\x02\xff\xef\x99"
+                encoded_data = b"".join(encode(raw_data))
+                decoded_data = b"".join(decode(encoded_data))
+                self.assertEqual(encoded_data, b"\x01\x02\xff\xef\x99\x01\x00")
 
             def test_one_zero(self):
-                raw_data = b'\x00'
-                encoded_data = b''.join(encode(raw_data))
-                decoded_data = b''.join(decode(encoded_data))
-                self.assertEqual(encoded_data, b'\x01\x00\x01\x00')
+                raw_data = b"\x00"
+                encoded_data = b"".join(encode(raw_data))
+                decoded_data = b"".join(decode(encoded_data))
+                self.assertEqual(encoded_data, b"\x01\x00\x01\x00")
 
             def test_small_number_of_zeros(self):
                 # under 0x80 zeros
-                raw_data = b'\0' * 0x0040
-                encoded_data = b''.join(encode(raw_data))
-                decoded_data = b''.join(decode(encoded_data))
-                self.assertEqual(encoded_data, b'\x01\x01\x40\x01\x00')
+                raw_data = b"\0" * 0x0040
+                encoded_data = b"".join(encode(raw_data))
+                decoded_data = b"".join(decode(encoded_data))
+                self.assertEqual(encoded_data, b"\x01\x01\x40\x01\x00")
                 self.assertEqual(decoded_data, raw_data)
 
             def test_medium_number_of_zeros(self):
                 # between 0x80 and 0x807f zeros
-                raw_data = b'\0' * 0x1800
-                encoded_data = b''.join(encode(raw_data))
-                decoded_data = b''.join(decode(encoded_data))
-                self.assertEqual(encoded_data, b'\x01\x01\x97\x80\x01\x00')
+                raw_data = b"\0" * 0x1800
+                encoded_data = b"".join(encode(raw_data))
+                decoded_data = b"".join(decode(encoded_data))
+                self.assertEqual(encoded_data, b"\x01\x01\x97\x80\x01\x00")
                 self.assertEqual(decoded_data, raw_data)
 
             def test_remainder_one(self):
                 # leaves a remainder of 1 zero
-                raw_data = b'\0' * (0x807f + 1)
-                encoded_data = b''.join(encode(raw_data))
-                decoded_data = b''.join(decode(encoded_data))
-                self.assertEqual(encoded_data, b'\x01\x01\xff\xff\x00\x01\x00')
+                raw_data = b"\0" * (0x807F + 1)
+                encoded_data = b"".join(encode(raw_data))
+                decoded_data = b"".join(decode(encoded_data))
+                self.assertEqual(encoded_data, b"\x01\x01\xff\xff\x00\x01\x00")
                 self.assertEqual(decoded_data, raw_data)
 
             def test_remainder_under_128(self):
                 # leaves a remainder of 100 zeros
-                raw_data = b'\0' * (0x807f + 100)
-                encoded_data = b''.join(encode(raw_data))
-                decoded_data = b''.join(decode(encoded_data))
-                self.assertEqual(encoded_data, b'\x01\x01\xff\xff\x01\x64\x01\x00')
+                raw_data = b"\0" * (0x807F + 100)
+                encoded_data = b"".join(encode(raw_data))
+                decoded_data = b"".join(decode(encoded_data))
+                self.assertEqual(encoded_data, b"\x01\x01\xff\xff\x01\x64\x01\x00")
                 self.assertEqual(decoded_data, raw_data)
 
         unittest.main()
     elif len(sys.argv) == 2:
         # encode the specified file
-        data = open(sys.argv[1], 'rb').read()
-        encoded = ''.join(encode(data))
-        if ''.join(decode(encoded)) != data:
-            raise Exception('Invalid encoding')
-        sys.stdout.write(''.join(encode(f)))
+        data = open(sys.argv[1], "rb").read()
+        encoded = "".join(encode(data))
+        if "".join(decode(encoded)) != data:
+            raise Exception("Invalid encoding")
+        sys.stdout.write("".join(encode(f)))
     else:
-        raise Exception('Invalid arguments')
+        raise Exception("Invalid arguments")

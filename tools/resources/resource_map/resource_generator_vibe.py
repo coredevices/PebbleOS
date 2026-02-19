@@ -11,7 +11,7 @@ from io import BytesIO
 
 
 class VibeResourceGenerator(ResourceGenerator):
-    type = 'vibe'
+    type = "vibe"
 
     @staticmethod
     def generate_object(task, definition):

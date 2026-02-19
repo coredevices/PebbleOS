@@ -4,9 +4,11 @@
 try:
     import gdb
 except ImportError:
-    raise Exception("This file is a GDB module.\n"
-                    "It is not intended to be run outside of GDB.\n"
-                    "Hint: to load a script in GDB, use `source this_file.py`")
+    raise Exception(
+        "This file is a GDB module.\n"
+        "It is not intended to be run outside of GDB.\n"
+        "Hint: to load a script in GDB, use `source this_file.py`"
+    )
 
 import gdb_utils
 import itertools
@@ -29,14 +31,19 @@ class HeapException(Exception):
     pass
 
 
-class HeapBlock(namedtuple('HeapBlock', 'info data size allocated corruption_code')):
+class HeapBlock(namedtuple("HeapBlock", "info data size allocated corruption_code")):
     def __new__(cls, info, data, size, allocated=False, corruption_code=None):
         return cls._make([info, data, size, allocated, corruption_code])
 
     def cast(self, obj_type, clone=False):
         if clone:
-            return HeapBlock(self.info, self.cast(obj_type), self.size,
-                             self.allocated, self.corruption_code)
+            return HeapBlock(
+                self.info,
+                self.cast(obj_type),
+                self.size,
+                self.allocated,
+                self.corruption_code,
+            )
         else:
             if obj_type:
                 return self.data.cast(gdb.lookup_type(obj_type).pointer())
@@ -45,9 +52,9 @@ class HeapBlock(namedtuple('HeapBlock', 'info data size allocated corruption_cod
 
 
 class Heap(object):
-    BlockSizeZero = CorruptionCode('Block size is zero')
-    PrevSizeZero = CorruptionCode('Prev size is zero')
-    WrongPrevSize = CorruptionCode('PrevSize is less than the size of the last block')
+    BlockSizeZero = CorruptionCode("Block size is zero")
+    PrevSizeZero = CorruptionCode("Prev size is zero")
+    WrongPrevSize = CorruptionCode("PrevSize is less than the size of the last block")
 
     def __init__(self, heap, show_progress=False):
         self.heap_ptr = gdb.parse_and_eval(heap)
@@ -63,7 +70,9 @@ class Heap(object):
         self.high_water_mark = self.heap_ptr["high_water_mark"]
 
         self.heap_info_type = gdb.lookup_type("HeapInfo_t")
-        self.size = gdb_utils.Address(str(self.end)) - gdb_utils.Address(str(self.start))
+        self.size = gdb_utils.Address(str(self.end)) - gdb_utils.Address(
+            str(self.start)
+        )
 
         self.malloc_instrumentation = "pc" in list(self.heap_info_type.keys())
         self.corrupted = False
@@ -82,7 +91,7 @@ class Heap(object):
         loop_count = itertools.count()
         while segment_ptr < self.end:
             if self.show_progress:
-                gdb.write('.')
+                gdb.write(".")
                 gdb.flush()
             if next(loop_count) > 10000 or self.corrupted:
                 print("ERROR: heap corrupted")
@@ -107,16 +116,23 @@ class Heap(object):
             if corruption_code:
                 self.corrupted = True
 
-            block = HeapBlock(segment_ptr, segment_ptr["Data"].address,
-                              size_bytes, is_allocated, corruption_code)
+            block = HeapBlock(
+                segment_ptr,
+                segment_ptr["Data"].address,
+                size_bytes,
+                is_allocated,
+                corruption_code,
+            )
             self.block_list.append(block)
 
-            segment_ptr = (segment_ptr.cast(self.alignment_type.pointer()) +
-                           block_size).cast(self.heap_info_type.pointer())
+            segment_ptr = (
+                segment_ptr.cast(self.alignment_type.pointer()) + block_size
+            ).cast(self.heap_info_type.pointer())
 
     def block_size(self, bytes):
-        offset = (int(gdb.lookup_type("HeapInfo_t").sizeof) -
-                  int(gdb.lookup_type("AlignmentStruct_t").sizeof))
+        offset = int(gdb.lookup_type("HeapInfo_t").sizeof) - int(
+            gdb.lookup_type("AlignmentStruct_t").sizeof
+        )
         offset_blocks = offset // self.alignment_size
 
         blocks = (bytes + self.alignment_size - 1) // self.alignment_size
@@ -124,7 +140,9 @@ class Heap(object):
 
         # Heap blocks with less than one block's worth of space between it
         # and the next will grow to take up that space.
-        return frozenset(common_size + x * self.alignment_size for x in range(offset_blocks+1))
+        return frozenset(
+            common_size + x * self.alignment_size for x in range(offset_blocks + 1)
+        )
 
     def object_size(self, obj_type):
         bytes = int(gdb.lookup_type(obj_type).sizeof)
