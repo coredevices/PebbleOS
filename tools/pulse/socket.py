@@ -24,8 +24,7 @@ try:
 except ImportError:
     pass
 
-DBGSERIAL_PORT_SETTINGS = dict(baudrate=230400, timeout=0.1,
-                               interCharTimeout=0.01)
+DBGSERIAL_PORT_SETTINGS = dict(baudrate=230400, timeout=0.1, interCharTimeout=0.01)
 
 
 def get_dbgserial_tty():
@@ -34,24 +33,25 @@ def get_dbgserial_tty():
     # so we don't want it to be required.
     try:
         import pebble_tty
+
         return pebble_tty.find_dbgserial_tty()
     except ImportError:
         raise exceptions.TTYAutodetectionUnavailable
 
 
-def frame_splitter(istream, size=1024, timeout=1, delimiter='\0'):
-    '''Returns an iterator which yields complete frames.'''
+def frame_splitter(istream, size=1024, timeout=1, delimiter="\0"):
+    """Returns an iterator which yields complete frames."""
     partial = []
     start_time = time.time()
     while not istream.closed:
         data = istream.read(size)
-        logger.debug('frame_splitter: received %r', data)
+        logger.debug("frame_splitter: received %r", data)
         while True:
             left, delim, data = data.partition(delimiter)
             if left:
                 partial.append(left)
             if delim:
-                frame = ''.join(partial)
+                frame = "".join(partial)
                 partial = []
                 if frame:
                     yield frame
@@ -60,44 +60,46 @@ def frame_splitter(istream, size=1024, timeout=1, delimiter='\0'):
         if timeout > 0 and time.time() > start_time + timeout:
             yield
 
+
 def decode_frame(frame):
-    '''Decodes a PULSE frame.
+    """Decodes a PULSE frame.
 
     Returns a tuple (protocol, payload) of the decoded frame.
     Raises FrameDecodeError if the frame is not valid.
-    '''
+    """
     try:
         data = cobs.decode(frame)
     except cobs.DecodeError as e:
         raise exceptions.FrameDecodeError(e.message)
     if len(data) < 5:
-        raise exceptions.FrameDecodeError('frame too short')
-    fcs = struct.unpack('<I', data[-4:])[0]
+        raise exceptions.FrameDecodeError("frame too short")
+    fcs = struct.unpack("<I", data[-4:])[0]
     crc = stm32_crc.crc32(data[:-4])
     if fcs != crc:
-        raise exceptions.FrameDecodeError('FCS 0x%.08x != CRC 0x%.08x' % (fcs, crc))
+        raise exceptions.FrameDecodeError("FCS 0x%.08x != CRC 0x%.08x" % (fcs, crc))
     protocol = ord(data[0])
     return (protocol, data[1:-4])
 
+
 def encode_frame(protocol, payload):
-    frame = struct.pack('<B', protocol)
+    frame = struct.pack("<B", protocol)
     frame += payload.encode()
     fcs = stm32_crc.crc32(frame)
-    frame += struct.pack('<I', fcs)
+    frame += struct.pack("<I", fcs)
     return cobs.encode(frame)
 
 
 class Connection(object):
-    '''A socket for sending and receiving datagrams over the PULSE serial
+    """A socket for sending and receiving datagrams over the PULSE serial
     protocol.
-    '''
+    """
 
     PROTOCOL_LLC = 0x01
 
-    LLC_LINK_OPEN_REQUEST = '\x01\x03\x08\x08\x08PULSEv1\r\n'
-    LLC_LINK_CLOSE_REQUEST = '\x03'
-    LLC_ECHO_REQUEST = '\x05'
-    LLC_CHANGE_BAUD = '\x07'
+    LLC_LINK_OPEN_REQUEST = "\x01\x03\x08\x08\x08PULSEv1\r\n"
+    LLC_LINK_CLOSE_REQUEST = "\x03"
+    LLC_ECHO_REQUEST = "\x05"
+    LLC_CHANGE_BAUD = "\x07"
 
     LLC_LINK_OPENED = 0x02
     LLC_LINK_CLOSED = 0x04
@@ -129,8 +131,7 @@ class Connection(object):
         self.receive_thread.start()
         self._open_link()
 
-        self.keepalive_thread = threading.Thread(
-                target=self.run_keepalive_thread)
+        self.keepalive_thread = threading.Thread(target=self.run_keepalive_thread)
         self.keepalive_thread.daemon = True
         self.keepalive_thread.start()
 
@@ -140,28 +141,29 @@ class Connection(object):
 
     @classmethod
     def register_extension(cls, name, factory):
-        '''Register a PULSE connection extension.
+        """Register a PULSE connection extension.
 
         When a Connection object is instantiated, the object returned by
         factory(connection_object) is assigned to connection_object.<name>.
-        '''
+        """
         try:
             getattr(cls, name)
         except AttributeError:
             cls.EXTENSIONS[name] = factory
         else:
-            raise ValueError('extension name %r clashes with existing attribute'
-                    % (name,))
+            raise ValueError(
+                "extension name %r clashes with existing attribute" % (name,)
+            )
 
     @classmethod
     def open_dbgserial(cls, url=None, infinite_reconnect=False):
         if url is None:
             url = get_dbgserial_tty()
         if url == "qemu":
-            url = 'socket://localhost:12345'
+            url = "socket://localhost:12345"
         ser = serial.serial_for_url(url, **DBGSERIAL_PORT_SETTINGS)
 
-        if url.startswith('socket://'):
+        if url.startswith("socket://"):
             # Socket class for PySerial does some pointless buffering
             # setting a very small timeout effectively negates it
             ser._timeout = 0.00001
@@ -179,14 +181,14 @@ class Connection(object):
 
     def send(self, protocol, payload):
         if self.closed:
-            raise exceptions.PulseError('I/O operation on closed connection')
-        frame = b''.join((b'\0', encode_frame(protocol, payload), b'\0'))
-        logger.debug('Connection: sending %r', frame)
+            raise exceptions.PulseError("I/O operation on closed connection")
+        frame = b"".join((b"\0", encode_frame(protocol, payload), b"\0"))
+        logger.debug("Connection: sending %r", frame)
         with self.send_lock:
             self.iostream.write(frame)
 
     def run_receive_thread(self):
-        logger.debug('Connection: receive thread started')
+        logger.debug("Connection: receive thread started")
         receiver = frame_splitter(self.iostream, timeout=0)
         while True:
             try:
@@ -197,11 +199,16 @@ class Connection(object):
                 # Probably a PySerial exception complaining about reading from a
                 # closed port. Eat the exception and shut down the thread; users
                 # don't need to see the stack trace.
-                logger.debug('Connection: exception in receive thread:\n%s',
-                             traceback.format_exc())
+                logger.debug(
+                    "Connection: exception in receive thread:\n%s",
+                    traceback.format_exc(),
+                )
                 break
-            logger.debug('Connection:run_receive_thread: '
-                    'protocol=%d payload=%r', protocol, payload)
+            logger.debug(
+                "Connection:run_receive_thread: protocol=%d payload=%r",
+                protocol,
+                payload,
+            )
             if protocol == self.PROTOCOL_LLC:  # LLC can't be overridden
                 self.llc_handler(payload)
                 continue
@@ -211,21 +218,24 @@ class Connection(object):
                 self.default_receiver(protocol, payload)
             else:
                 handler.on_receive(payload)
-        logger.debug('Connection: receive thread exiting')
+        logger.debug("Connection: receive thread exiting")
 
     def default_receiver(self, protocol, frame):
-        logger.info('Connection:default_receiver: received frame '
-                'with protocol %d: %r', protocol, frame)
+        logger.info(
+            "Connection:default_receiver: received frame with protocol %d: %r",
+            protocol,
+            frame,
+        )
 
     def register_protocol_handler(self, protocol, handler):
-        '''Register a handler for frames bearing the specified protocol number.
+        """Register a handler for frames bearing the specified protocol number.
 
         handler.on_receive(payload) is called for each frame received with the
         protocol number.
 
         Protocol handlers can be unregistered by calling this function with a
         handler of None.
-        '''
+        """
         if not handler:
             try:
                 del self.protocol_handlers[protocol]
@@ -234,10 +244,11 @@ class Connection(object):
             return
         if protocol in self.protocol_handlers:
             raise exceptions.ProtocolAlreadyRegistered(
-            'Protocol %d is already registered by %r' % (
-                protocol, self.protocol_handlers[protocol]))
-        if not hasattr(handler, 'on_receive'):
-            raise ValueError('%r does not have an on_receive method')
+                "Protocol %d is already registered by %r"
+                % (protocol, self.protocol_handlers[protocol])
+            )
+        if not hasattr(handler, "on_receive"):
+            raise ValueError("%r does not have an on_receive method")
         self.protocol_handlers[protocol] = handler
 
     def llc_handler(self, frame):
@@ -245,7 +256,7 @@ class Connection(object):
         if opcode == self.LLC_LINK_OPENED:
             # MTU and MRU are from the perspective of this side of the
             # connection
-            version, mru, mtu, timeout = struct.unpack('<xBHHB', frame)
+            version, mru, mtu, timeout = struct.unpack("<xBHHB", frame)
             self.version = version
             # The server reports the MTU inclusive of protocol number and FCS,
             # but we only care about the maximum payload length.
@@ -256,18 +267,16 @@ class Connection(object):
             self._link_closed.clear()
             self._link_open.set()
         elif opcode == self.LLC_LINK_CLOSED:
-            logger.info('PULSE connection closed.')
+            logger.info("PULSE connection closed.")
             self._link_closed.set()
         elif opcode == self.LLC_ECHO_REPLY:
             self._on_echo_reply(frame[1:])
         else:
-            logger.warning('Received LLC frame with unknown type %d: %r',
-                           opcode, frame)
+            logger.warning("Received LLC frame with unknown type %d: %r", opcode, frame)
 
     def run_keepalive_thread(self):
-        '''The keepalive thread monitors the link, reopening it if necessary.
-        '''
-        logger.debug('Connection: keepalive thread started')
+        """The keepalive thread monitors the link, reopening it if necessary."""
+        logger.debug("Connection: keepalive thread started")
         OPEN, TEST_LIVENESS, RECONNECT = range(3)
         state = OPEN
         next_state = state
@@ -292,10 +301,11 @@ class Connection(object):
                     if self.ping(ping_wait):
                         next_state = OPEN
                     else:
-                        logger.info('No response to keepalive ping -- '
-                                    'strike %d', ping_attempts)
+                        logger.info(
+                            "No response to keepalive ping -- strike %d", ping_attempts
+                        )
                 else:
-                    logger.info('Connection: keepalive timed out.')
+                    logger.info("Connection: keepalive timed out.")
                     next_state = RECONNECT
             elif state == RECONNECT:
                 # Lock out everyone from sending so that applications don't send
@@ -307,24 +317,26 @@ class Connection(object):
                         # we try to reconnect at the default baud rate but the
                         # server is listening at a different rate, which is
                         # practically guaranteed to fail.
-                        logger.info('Letting connection time out before '
-                                    'attempting to reconnect.')
+                        logger.info(
+                            "Letting connection time out before "
+                            "attempting to reconnect."
+                        )
                         time.sleep(self.timeout + self.rtt)
                     self._link_open.clear()
                     while not self._link_open.is_set():
                         try:
                             self._open_link()
                         except exceptions.PulseError as e:
-                            logger.warning('Connection: reconnect failed. %s', e)
+                            logger.warning("Connection: reconnect failed. %s", e)
                             if not self.infinite_reconnect:
                                 break
-                            logger.warning('Will try again.')
-                            logger.info('Backing off for a while before retrying.')
+                            logger.warning("Will try again.")
+                            logger.info("Backing off for a while before retrying.")
                             time.sleep(self.timeout + self.rtt)
                         else:
                             next_state = OPEN
             else:
-                assert False, 'Invalid state %d' % state
+                assert False, "Invalid state %d" % state
 
             if next_state != state:
                 if next_state == TEST_LIVENESS:
@@ -337,17 +349,22 @@ class Connection(object):
         if self.initial_port_settings:
             self.iostream.applySettingsDict(self.initial_port_settings)
         for attempt in range(5):
-            logger.info('Opening link (attempt %d)...', attempt)
+            logger.info("Opening link (attempt %d)...", attempt)
             self.send(self.PROTOCOL_LLC, self.LLC_LINK_OPEN_REQUEST)
             if self._link_open.wait(self.rtt):
-                logger.info('Established PULSE connection!')
-                logger.info('Version=%d  MTU=%d  MRU=%d  Timeout=%.1f',
-                            self.version, self.mtu, self.mru, self.timeout)
+                logger.info("Established PULSE connection!")
+                logger.info(
+                    "Version=%d  MTU=%d  MRU=%d  Timeout=%.1f",
+                    self.version,
+                    self.mtu,
+                    self.mru,
+                    self.timeout,
+                )
                 break
         else:
             self._link_closed.set()
             self.closed = True
-            raise exceptions.PulseError('Could not establish connection')
+            raise exceptions.PulseError("Could not establish connection")
 
     def close(self):
         self._link_open.clear()
@@ -357,7 +374,7 @@ class Connection(object):
                 if self._link_closed.wait(self.rtt):
                     break
             else:
-                logger.warning('Could not confirm link close.')
+                logger.warning("Could not confirm link close.")
                 self._link_closed.set()
         self.iostream.close()
         self.closed = True
@@ -381,8 +398,7 @@ class Connection(object):
     def change_baud_rate(self, new_baud):
         # Fail fast if the IO object doesn't support changing the baud rate
         old_baud = self.iostream.baudrate
-        self.send(self.PROTOCOL_LLC,
-                  self.LLC_CHANGE_BAUD + struct.pack('<I', new_baud))
+        self.send(self.PROTOCOL_LLC, self.LLC_CHANGE_BAUD + struct.pack("<I", new_baud))
         # Be extra sure that the message has been sent and it's safe to adjust
         # the baud rate on the port.
         time.sleep(0.1)
@@ -391,11 +407,11 @@ class Connection(object):
 
 
 class ProtocolSocket(object):
-    '''A socket for sending and receiving datagrams of a single protocol over a
+    """A socket for sending and receiving datagrams of a single protocol over a
     PULSE connection.
 
     It is also an example of a Connection protocol handler implementation.
-    '''
+    """
 
     def __init__(self, connection, protocol):
         self.connection = connection
@@ -420,7 +436,7 @@ class ProtocolSocket(object):
         return self.connection.mtu
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     with Connection.open_dbgserial(sys.argv[1]) as sock:
         sock.change_baud_rate(921600)

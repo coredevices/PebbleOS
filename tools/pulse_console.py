@@ -13,13 +13,14 @@ from pebble import pulse2, commander
 from log_hashing.logdehash import LogDehash
 
 import pebble_ftdi_custom_pids
+
 pebble_ftdi_custom_pids.configure_pids()
 
-PROMPT_STRING = '> '
+PROMPT_STRING = "> "
 
 
 def erase_current_line():
-    sys.stdout.write('\r'+' '*(len(readline.get_line_buffer())+2)+'\r')
+    sys.stdout.write("\r" + " " * (len(readline.get_line_buffer()) + 2) + "\r")
     sys.stdout.flush()
 
 
@@ -63,14 +64,16 @@ def start_logging_thread(*args):
 
 def generate_dehash_arguments():
     def yes_no_to_bool(arg):
-        return True if arg == 'yes' else False
+        return True if arg == "yes" else False
 
     args = {
-        'justify': 'small',
-        'color': True,
-        'bold': -1,
-        'print_core': False,
-        'dict_path': os.environ.get('PBL_CONSOLE_DICT_PATH', 'build/src/fw/loghash_dict.json')
+        "justify": "small",
+        "color": True,
+        "bold": -1,
+        "print_core": False,
+        "dict_path": os.environ.get(
+            "PBL_CONSOLE_DICT_PATH", "build/src/fw/loghash_dict.json"
+        ),
     }
 
     arglist = os.getenv("PBL_CONSOLE_ARGS")
@@ -78,29 +81,36 @@ def generate_dehash_arguments():
         for arg in arglist.split(","):
             if not arg:
                 break
-            key, value = arg.split('=')
+            key, value = arg.split("=")
             if key == "--justify":
-                args['justify'] = value
+                args["justify"] = value
             elif key == "--color":
-                args['color'] = yes_no_to_bool(value)
+                args["color"] = yes_no_to_bool(value)
             elif key == "--bold":
-                args['bold'] = int(value)
+                args["bold"] = int(value)
             elif key == "--dict":
-                args['dict_path'] = value
+                args["dict_path"] = value
             elif key == "--core":
-                args['print_core'] = yes_no_to_bool(value)
+                args["print_core"] = yes_no_to_bool(value)
             else:
-                raise Exception("Unknown console argument '{}'. Choices are ({})".
-                                format(key, ['--justify', '--color', '--bold',
-                                             '--dict', '--core']))
+                raise Exception(
+                    "Unknown console argument '{}'. Choices are ({})".format(
+                        key, ["--justify", "--color", "--bold", "--dict", "--core"]
+                    )
+                )
 
     return args
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Pebble Console')
-    parser.add_argument('-t', '--tty', help='serial port (defaults to auto-detect)', metavar='TTY',
-                        default=None)
+    parser = argparse.ArgumentParser(description="Pebble Console")
+    parser.add_argument(
+        "-t",
+        "--tty",
+        help="serial port (defaults to auto-detect)",
+        metavar="TTY",
+        default=None,
+    )
 
     args = parser.parse_args()
     interface = pulse2.Interface.open_dbgserial(url=args.tty)
@@ -109,8 +119,8 @@ def main():
 
     start_logging_thread(interface, dehasher)
 
-    print('--- PULSE terminal on %s ---' % args.tty)
-    print('--- Ctrl-C or Ctrl-D to exit ---')
+    print("--- PULSE terminal on %s ---" % args.tty)
+    print("--- Ctrl-C or Ctrl-D to exit ---")
 
     try:
         while True:
@@ -121,5 +131,5 @@ def main():
         interface.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

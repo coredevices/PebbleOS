@@ -11,15 +11,16 @@ class generate_version_header(Task.Task):
     def run(self):
         if len(self.inputs):
             # is_system=True because only firmwares use version headers
-            with open(self.inputs[0].abspath(), 'rb') as f:
+            with open(self.inputs[0].abspath(), "rb") as f:
                 pbpack = ResourcePack.deserialize(f, is_system=True)
             resource_crc = pbpack.get_content_crc()
         else:
             resource_crc = 0
 
         self.outputs[0].parent.mkdir()  # Make sure the output directory exists
-        with open(self.outputs[0].abspath(), 'w') as output_file:
-            output_file.write("""
+        with open(self.outputs[0].abspath(), "w") as output_file:
+            output_file.write(
+                """
 #pragma once
 
 //
@@ -31,12 +32,13 @@ static const ResourceVersion SYSTEM_RESOURCE_VERSION = {{
   .crc = {},
   .timestamp = 0
 }};
-""".format(resource_crc))
+""".format(resource_crc)
+            )
 
 
-@TaskGen.feature('generate_version_header')
-@TaskGen.before_method('process_source', 'process_rule')
+@TaskGen.feature("generate_version_header")
+@TaskGen.before_method("process_source", "process_rule")
 def process_generate_version_header(self):
-    task = self.create_task('generate_version_header',
-                            self.pbpack,
-                            self.version_header_target)
+    task = self.create_task(
+        "generate_version_header", self.pbpack, self.version_header_target
+    )

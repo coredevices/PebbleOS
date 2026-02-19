@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
+
 class PulseException(Exception):
     pass
 
@@ -22,5 +23,4 @@ class SocketClosed(PulseException):
 
 
 class AlreadyInProgressError(PulseException):
-    '''Another operation is already in progress.
-    '''
+    """Another operation is already in progress."""

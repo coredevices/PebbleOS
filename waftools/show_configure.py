@@ -16,9 +16,11 @@ def load_lockfile(env, basepath):
     try:
         env.load(lockfile_path)
     except IOError:
-        raise ValueError('{} is not configured yet'.format(os.path.basename(os.getcwd())))
+        raise ValueError(
+            "{} is not configured yet".format(os.path.basename(os.getcwd()))
+        )
     except Exception:
-        raise ValueError('Could not load {}'.format(lockfile_path))
+        raise ValueError("Could not load {}".format(lockfile_path))
 
 
 @conf
@@ -39,7 +41,8 @@ def get_lockfile(ctx):
 
 class show_configure(BuildContext):
     """shows the last used configure command"""
-    cmd = 'show_configure'
+
+    cmd = "show_configure"
 
     def execute_build(ctx):
         env = ctx.get_lockfile()
@@ -49,15 +52,15 @@ class show_configure(BuildContext):
         argv = env.argv
 
         # Configure time environment vars
-        for var in ['CFLAGS']:
+        for var in ["CFLAGS"]:
             if var in env.environ:
-                argv = ['{}={}'.format(var, quote(env.environ[var]))] + argv
+                argv = ["{}={}".format(var, quote(env.environ[var]))] + argv
 
         # Persistent environment vars
-        for var in ['WAFLOCK']:
+        for var in ["WAFLOCK"]:
             if var in env.environ:
-                argv = ['export {}={};'.format(var, quote(env.environ[var]))] + argv
+                argv = ["export {}={};".format(var, quote(env.environ[var]))] + argv
 
         # Print and force waf to complete without further output
-        print(' '.join(argv))
+        print(" ".join(argv))
         exit()

@@ -10,7 +10,6 @@ from . import socket
 
 
 class PromptProtocol(object):
-
     PROTOCOL_NUMBER = 0x04
 
     def __init__(self, connection):
@@ -38,7 +37,9 @@ class PromptProtocol(object):
 
             while not is_done and retries < 3:
                 try:
-                    response = PromptResponse.parse(self.socket.receive(timeout=timeout))
+                    response = PromptResponse.parse(
+                        self.socket.receive(timeout=timeout)
+                    )
 
                     if response.is_done_response():
                         is_done = True
@@ -52,21 +53,21 @@ class PromptProtocol(object):
                     retries += 1
 
             if retries == 3:
-                raise exceptions.CommandTimedOut('Lost connection while waiting')
+                raise exceptions.CommandTimedOut("Lost connection while waiting")
 
             return log
 
-        raise exceptions.CommandTimedOut('Command not acknowledged')
+        raise exceptions.CommandTimedOut("Command not acknowledged")
 
 
-class PromptResponse(collections.namedtuple('PromptResponse',
-                     'response_type timestamp message')):
-
+class PromptResponse(
+    collections.namedtuple("PromptResponse", "response_type timestamp message")
+):
     ACK_RESPONSE = 100
     DONE_RESPONSE = 101
     MESSAGE_RESPONSE = 102
 
-    response_struct = struct.Struct('<BQ')
+    response_struct = struct.Struct("<BQ")
 
     def is_ack_response(self):
         return self.response_type == self.ACK_RESPONSE
@@ -79,17 +80,16 @@ class PromptResponse(collections.namedtuple('PromptResponse',
 
     @classmethod
     def parse(cls, response):
-        result = cls.response_struct.unpack(response[:cls.response_struct.size])
+        result = cls.response_struct.unpack(response[: cls.response_struct.size])
 
         response_type = result[0]
         timestamp = datetime.fromtimestamp(result[1] / 1000.0)
-        message = response[cls.response_struct.size:]
+        message = response[cls.response_struct.size :]
 
         return cls(response_type, timestamp, message)
 
 
 class PromptCommand(object):
-
     _cookie = 0
 
     def __init__(self, body):
@@ -106,11 +106,11 @@ class PromptCommand(object):
         cls._cookie = (cls._cookie + 1) % 256
         return cookie
 
-if __name__ == '__main__':
 
-    with socket.Connection.open_dbgserial('ftdi://ftdi:4232:1/3') as connection:
-        inputCommand = raw_input('>')
+if __name__ == "__main__":
+    with socket.Connection.open_dbgserial("ftdi://ftdi:4232:1/3") as connection:
+        inputCommand = raw_input(">")
         while inputCommand:
             for message in connection.prompt.command_and_response(inputCommand):
                 print(message)
-            inputCommand = raw_input('>')
+            inputCommand = raw_input(">")

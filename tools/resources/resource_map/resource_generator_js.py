@@ -9,7 +9,7 @@ from resources.resource_map.resource_generator import ResourceGenerator
 
 
 class JsResourceGenerator(ResourceGenerator):
-    type = 'js'
+    type = "js"
 
     @staticmethod
     def generate_object(task, definition):
@@ -25,35 +25,37 @@ class JsResourceGenerator(ResourceGenerator):
             node_command = node_command[0]
 
         script_node = task.generator.env.JS_TOOLING_SCRIPT
-        bytecode = task.outputs[0].change_ext('.bytecode')
+        bytecode = task.outputs[0].change_ext(".bytecode")
         bytecode.parent.mkdir()
-        memory_usage_output = (
-            task.generator.bld.path.get_bld().make_node("{}_snapshot_size.json".
-                                                        format(task.generator.env.PLATFORM_NAME)))
+        memory_usage_output = task.generator.bld.path.get_bld().make_node(
+            "{}_snapshot_size.json".format(task.generator.env.PLATFORM_NAME)
+        )
 
-        cmd = [node_command,
-               script_node.abspath(),
-               task.inputs[0].abspath(),
-               bytecode.abspath(),
-               memory_usage_output.abspath()]
+        cmd = [
+            node_command,
+            script_node.abspath(),
+            task.inputs[0].abspath(),
+            bytecode.abspath(),
+            memory_usage_output.abspath(),
+        ]
 
-        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, encoding='utf-8')
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, encoding="utf-8")
         out, err = proc.communicate()
 
         if proc.returncode != 0:
-            task.generator.bld.fatal("JS compilation failed.\n"
-                                     "STDOUT: {}\n"
-                                     "STDERR: {}".format(out, err))
+            task.generator.bld.fatal(
+                "JS compilation failed.\nSTDOUT: {}\nSTDERR: {}".format(out, err)
+            )
 
         # Save bytecode computed size and max size for SDK memory report
         if task.generator.env.PLATFORM_NAME in task.generator.bld.all_envs:
             env = task.generator.bld.all_envs[task.generator.env.PLATFORM_NAME]
 
-            with open(memory_usage_output.abspath(), 'r') as f:
+            with open(memory_usage_output.abspath(), "r") as f:
                 content = json.load(f)
-            env.SNAPSHOT_SIZE = content['size']
-            env.SNAPSHOT_MAX = content['max']
+            env.SNAPSHOT_SIZE = content["size"]
+            env.SNAPSHOT_MAX = content["max"]
 
-        with open(bytecode.abspath(), 'rb') as f:
+        with open(bytecode.abspath(), "rb") as f:
             data = f.read()
         return ResourceObject(definition, data)

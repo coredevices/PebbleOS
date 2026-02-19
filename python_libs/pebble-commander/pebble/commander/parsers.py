@@ -19,9 +19,9 @@ def str2bool(s, also_true=[], also_false=[]):
 
 def str2mac(s):
     s = str(s)
-    if not re.match(r'[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}', s):
-        raise exceptions.ParameterError('%s is not a valid MAC address' % s)
+    if not re.match(r"[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}", s):
+        raise exceptions.ParameterError("%s is not a valid MAC address" % s)
     mac = []
-    for byte in str(s).split(':'):
+    for byte in str(s).split(":"):
         mac.append(int(byte, 16))
     return tuple(mac)

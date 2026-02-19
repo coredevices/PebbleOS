@@ -41,15 +41,24 @@ Based on the following understanding of what Jenkins can parse for JUnit XML fil
 
 class TestSuite(object):
     """Suite of test cases"""
-    def __init__(self, name, test_cases=None, hostname=None, id=None, \
-        package=None, timestamp=None, properties=None):
+
+    def __init__(
+        self,
+        name,
+        test_cases=None,
+        hostname=None,
+        id=None,
+        package=None,
+        timestamp=None,
+        properties=None,
+    ):
         self.name = name
         if not test_cases:
             test_cases = []
         try:
             iter(test_cases)
         except TypeError:
-            raise Exception('test_cases must be a list of test cases')
+            raise Exception("test_cases must be a list of test cases")
         self.test_cases = test_cases
         self.hostname = hostname
         self.id = id
@@ -61,19 +70,23 @@ class TestSuite(object):
         """Builds the XML document for the JUnit test suite"""
         # build the test suite element
         test_suite_attributes = dict()
-        test_suite_attributes['name'] = str(self.name)
-        test_suite_attributes['failures'] = str(len([c for c in self.test_cases if c.is_failure()]))
-        test_suite_attributes['errors'] = str(len([c for c in self.test_cases if c.is_error()]))
-        test_suite_attributes['tests'] = str(len(self.test_cases))
+        test_suite_attributes["name"] = str(self.name)
+        test_suite_attributes["failures"] = str(
+            len([c for c in self.test_cases if c.is_failure()])
+        )
+        test_suite_attributes["errors"] = str(
+            len([c for c in self.test_cases if c.is_error()])
+        )
+        test_suite_attributes["tests"] = str(len(self.test_cases))
 
         if self.hostname:
-            test_suite_attributes['hostname'] = str(self.hostname)
+            test_suite_attributes["hostname"] = str(self.hostname)
         if self.id:
-            test_suite_attributes['id'] = str(self.id)
+            test_suite_attributes["id"] = str(self.id)
         if self.package:
-            test_suite_attributes['package'] = str(self.package)
+            test_suite_attributes["package"] = str(self.package)
         if self.timestamp:
-            test_suite_attributes['timestamp'] = str(self.timestamp)
+            test_suite_attributes["timestamp"] = str(self.timestamp)
 
         xml_element = ET.Element("testsuite", test_suite_attributes)
 
@@ -81,25 +94,27 @@ class TestSuite(object):
         if self.properties:
             props_element = ET.SubElement(xml_element, "properties")
             for k, v in self.properties.items():
-                attrs = { 'name' : str(k), 'value' : str(v) }
+                attrs = {"name": str(k), "value": str(v)}
                 ET.SubElement(props_element, "property", attrs)
 
         # test cases
         for case in self.test_cases:
             test_case_attributes = dict()
-            test_case_attributes['name'] = str(case.name)
+            test_case_attributes["name"] = str(case.name)
             if case.elapsed_sec:
-                test_case_attributes['time'] = "%f" % case.elapsed_sec
+                test_case_attributes["time"] = "%f" % case.elapsed_sec
             if case.classname:
-                test_case_attributes['classname'] = str(case.classname)
+                test_case_attributes["classname"] = str(case.classname)
 
-            test_case_element = ET.SubElement(xml_element, "testcase", test_case_attributes)
+            test_case_element = ET.SubElement(
+                xml_element, "testcase", test_case_attributes
+            )
 
             # failures
             if case.is_failure():
-                attrs = { 'type' : 'failure' }
+                attrs = {"type": "failure"}
                 if case.failure_message:
-                    attrs['message'] = case.failure_message
+                    attrs["message"] = case.failure_message
                 failure_element = ET.Element("failure", attrs)
                 if case.failure_output:
                     failure_element.text = case.failure_output
@@ -107,9 +122,9 @@ class TestSuite(object):
 
             # errors
             if case.is_error():
-                attrs = { 'type' : 'error' }
+                attrs = {"type": "error"}
                 if case.error_message:
-                    attrs['message'] = case.error_message
+                    attrs["message"] = case.error_message
                 error_element = ET.Element("error", attrs)
                 if case.error_output:
                     error_element.text = case.error_output
@@ -126,7 +141,7 @@ class TestSuite(object):
                 stderr_element = ET.Element("system-err")
                 stderr_element.text = case.stderr
                 test_case_element.append(stderr_element)
-                
+
         return xml_element
 
     @staticmethod
@@ -135,12 +150,12 @@ class TestSuite(object):
         try:
             iter(test_suites)
         except TypeError:
-            raise Exception('test_suites must be a list of test suites')
-            
+            raise Exception("test_suites must be a list of test suites")
+
         xml_element = ET.Element("testsuites")
         for ts in test_suites:
             xml_element.append(ts.build_xml_doc())
-        
+
         xml_string = ET.tostring(xml_element)
         if prettyprint:
             try:
@@ -157,7 +172,10 @@ class TestSuite(object):
 
 class TestCase(object):
     """A JUnit test case with a result and possibly some stdout or stderr"""
-    def __init__(self, name, classname=None, elapsed_sec=None, stdout=None, stderr=None):
+
+    def __init__(
+        self, name, classname=None, elapsed_sec=None, stdout=None, stderr=None
+    ):
         self.name = name
         self.elapsed_sec = elapsed_sec
         self.stdout = stdout

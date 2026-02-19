@@ -15,7 +15,7 @@ def _get_linux_tty(ttys, tty_type):
     for t in ttys:
         import sh
 
-        cmd_stdout = sh.udevadm('info', query='property', name=t)
+        cmd_stdout = sh.udevadm("info", query="property", name=t)
         # Build our dictionary of the tty values. The output looks something like this:
         #
         # DEVLINKS=/dev/serial/by-id/usb-FTDI_Quad_RS232-HS-if01-port0 /dev/serial/by-path/pci-0000:00:1d.0-usb-0:1.5.3:1.1-port0
@@ -29,14 +29,20 @@ def _get_linux_tty(ttys, tty_type):
         # ...
         tty_properties = {}
         for line in cmd_stdout.splitlines():
-            name, value = line.split('=')
+            name, value = line.split("=")
             tty_properties[name] = value
 
-        if tty_properties['ID_MODEL'] == 'Quad_RS232-HS':
+        if tty_properties["ID_MODEL"] == "Quad_RS232-HS":
             # Quad RS232-HS uses interface 02 (0 indexed out of 4) for dbgserial
-            if not _is_accessory(tty_type) and tty_properties['ID_USB_INTERFACE_NUM'] == '02':
+            if (
+                not _is_accessory(tty_type)
+                and tty_properties["ID_USB_INTERFACE_NUM"] == "02"
+            ):
                 return t
-            if _is_accessory(tty_type) and tty_properties['ID_USB_INTERFACE_NUM'] == '03':
+            if (
+                _is_accessory(tty_type)
+                and tty_properties["ID_USB_INTERFACE_NUM"] == "03"
+            ):
                 return t
 
     # We didn't find anything?
@@ -46,13 +52,13 @@ def _get_linux_tty(ttys, tty_type):
 def _get_mac_tty(ttys, tty_type):
     tty_b = tty_c = tty_d = tty_slab = None
     for path in ttys:
-        if path.endswith('B'):
+        if path.endswith("B"):
             tty_b = path
-        if path.endswith('C'):
+        if path.endswith("C"):
             tty_c = path
-        if path.endswith('D'):
+        if path.endswith("D"):
             tty_d = path
-        if path.endswith('SLAB_USBtoUART'):
+        if path.endswith("SLAB_USBtoUART"):
             tty_slab = path
 
     # if we find C or D, we're on a Quad RS232-HS FTDI
@@ -71,10 +77,10 @@ def _get_mac_tty(ttys, tty_type):
 
 def _find_all_ttys():
     pattern = None
-    if sys.platform == 'darwin':
-        pattern = '/dev/cu.*[uU][sS][bB]*'
-    elif sys.platform == 'linux2':
-        pattern = '/dev/ttyUSB*'
+    if sys.platform == "darwin":
+        pattern = "/dev/cu.*[uU][sS][bB]*"
+    elif sys.platform == "linux2":
+        pattern = "/dev/ttyUSB*"
     else:
         raise Exception("No TTY auto-selection for this platform!")
 
@@ -86,9 +92,9 @@ def _get_tty(tty_type="primary"):
     if not ttys:
         return None
 
-    if sys.platform == 'darwin':
+    if sys.platform == "darwin":
         tty = _get_mac_tty(ttys, tty_type)
-    elif sys.platform == 'linux2':
+    elif sys.platform == "linux2":
         tty = _get_linux_tty(ttys, tty_type)
 
     return tty

@@ -6,6 +6,5 @@ from . import link, transports
 # Public aliases for the classes that users will interact with directly.
 from .link import Interface
 
-link.Link.register_transport(
-        'best-effort', transports.BestEffortApplicationTransport)
-link.Link.register_transport('reliable', transports.ReliableTransport)
+link.Link.register_transport("best-effort", transports.BestEffortApplicationTransport)
+link.Link.register_transport("reliable", transports.ReliableTransport)

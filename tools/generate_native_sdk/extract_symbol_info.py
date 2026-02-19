@@ -11,11 +11,12 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from generate_native_sdk import parse_c_decl
 import clang
 
+
 def extract_exported_functions(node, functions=[], types=[], defines=[]):
     def update_matching_export(exports, node):
         spelling = parse_c_decl.get_node_spelling(node)
         for e in exports:
-            impl_name = e.impl_name if hasattr(e, 'impl_name') else ""
+            impl_name = e.impl_name if hasattr(e, "impl_name") else ""
 
             definition_name = impl_name if impl_name else e.name
             if spelling == definition_name:
@@ -23,7 +24,9 @@ def extract_exported_functions(node, functions=[], types=[], defines=[]):
                 # than the one we may already have. This is to handle the case where we have typedef and
                 # a struct as part of the same definition, we want to make sure we get the outer typedef.
                 definition = parse_c_decl.get_string_from_file(node.extent)
-                if e.full_definition is None or len(definition) > len(e.full_definition):
+                if e.full_definition is None or len(definition) > len(
+                    e.full_definition
+                ):
                     if node.kind == clang.cindex.CursorKind.MACRO_DEFINITION:
                         e.full_definition = "#define " + definition
                     else:
@@ -43,36 +46,49 @@ def extract_exported_functions(node, functions=[], types=[], defines=[]):
     if node.kind == clang.cindex.CursorKind.FUNCTION_DECL:
         update_matching_export(functions, node)
 
-    elif node.kind == clang.cindex.CursorKind.STRUCT_DECL or \
-         node.kind == clang.cindex.CursorKind.ENUM_DECL or \
-         node.kind == clang.cindex.CursorKind.TYPEDEF_DECL:
-
+    elif (
+        node.kind == clang.cindex.CursorKind.STRUCT_DECL
+        or node.kind == clang.cindex.CursorKind.ENUM_DECL
+        or node.kind == clang.cindex.CursorKind.TYPEDEF_DECL
+    ):
         update_matching_export(types, node)
 
     elif node.kind == clang.cindex.CursorKind.MACRO_DEFINITION:
-
         update_matching_export(defines, node)
 
 
-def extract_symbol_info(filenames, functions, types, defines, output_dir, internal_sdk_build=False,
-                        compiler_flags=None):
+def extract_symbol_info(
+    filenames,
+    functions,
+    types,
+    defines,
+    output_dir,
+    internal_sdk_build=False,
+    compiler_flags=None,
+):
 
     # Parse all the headers at the same time since that is much faster than
     # parsing each one individually
     all_headers_file = os.path.join(output_dir, "all_sdk_headers.h")
-    with open(all_headers_file, 'w') as outfile:
+    with open(all_headers_file, "w") as outfile:
         for f in filenames:
             outfile.write('#include "%s"\n' % f)
 
-    parse_c_decl.parse_file(all_headers_file, filenames,
-                            functools.partial(extract_exported_functions,
-                                              functions=functions,
-                                              types=types,
-                                              defines=defines),
-                            internal_sdk_build=internal_sdk_build,
-                            compiler_flags=compiler_flags)
+    parse_c_decl.parse_file(
+        all_headers_file,
+        filenames,
+        functools.partial(
+            extract_exported_functions,
+            functions=functions,
+            types=types,
+            defines=defines,
+        ),
+        internal_sdk_build=internal_sdk_build,
+        compiler_flags=compiler_flags,
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parse_c_decl.dump_tree = True
 
     class Export(object):
@@ -82,7 +98,6 @@ if __name__ == '__main__':
             self.full_definition = None
             self.comment = None
 
-    #clang.cindex.Config.library_file = "/home/brad/src/llvmbuild/Debug+Asserts/lib/libclang.so"
+    # clang.cindex.Config.library_file = "/home/brad/src/llvmbuild/Debug+Asserts/lib/libclang.so"
 
     extract_symbol_info((sys.argv[1],), [], [], [])
-

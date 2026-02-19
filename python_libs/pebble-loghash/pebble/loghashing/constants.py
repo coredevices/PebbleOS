@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-#/usr/bin/env python
+# /usr/bin/env python
 """
 Constants used in this module
 """
@@ -12,20 +12,28 @@ import re
 HASH_MASK = 0x00FFFFFF
 
 # Regular Expressions
-LOG_LINE_CONSOLE_REGEX = r"^(?P<re_level>.)\s+(?P<task>.)\s+(?P<time>.*)\s+(?P<msg>.*:.*>\s+LH.*)$"
+LOG_LINE_CONSOLE_REGEX = (
+    r"^(?P<re_level>.)\s+(?P<task>.)\s+(?P<time>.*)\s+(?P<msg>.*:.*>\s+LH.*)$"
+)
 LOG_LINE_SUPPORT_REGEX = r"^(?P<date>.*)\s+(?P<time>.*)\s+(?P<msg>.*:.*\s+LH.*)$"
-LOG_MSG_REGEX = r"^(?P<f>\w*\.?\w*):(?P<l>\d*)>?\s+(?:LH:)?(?P<h>(?:0x)?[a-f0-9]{1,8}\s?.*)$"
+LOG_MSG_REGEX = (
+    r"^(?P<f>\w*\.?\w*):(?P<l>\d*)>?\s+(?:LH:)?(?P<h>(?:0x)?[a-f0-9]{1,8}\s?.*)$"
+)
 DEHASHED_MSG_REGEX = r"^(\w+\.?\w?):(\d+)?:?(.*)$"
 HASHED_INFO_REGEX = r"^(?P<hash_key>(?:0x)?[a-f0-9]{1,8})\s?(?P<arg_list>.+)?$"
 FORMAT_TAG_REGEX = r"%(\.\*)?#?[0-9]{0,3}[Xdilupcszxh]+"
-STR_LITERAL_REGEX = r"^(.*?)(\".*\"\s*(?:(?:PRI[A-z](?:\d{1,2}|PTR))|B[DT]_.*_FMT)*)(.*)$"
+STR_LITERAL_REGEX = (
+    r"^(.*?)(\".*\"\s*(?:(?:PRI[A-z](?:\d{1,2}|PTR))|B[DT]_.*_FMT)*)(.*)$"
+)
 FORMAT_SPECIFIER_REGEX = r"(%#?[0-9]{0,3}[Xdilupcszxh]+)"
 # New Logging Regular Expressions
-NEWLOG_LINE_CONSOLE_REGEX = LOG_LINE_CONSOLE_REGEX.replace('LH', 'NL')
-NEWLOG_LINE_SUPPORT_REGEX = LOG_LINE_SUPPORT_REGEX.replace('LH', 'NL')
-NEWLOG_HASHED_INFO_REGEX = r"^(?::0[>]? NL:)(?P<hash_key>(?:0x)?[a-f0-9]{1,8})\s?(?P<arg_list>.+)?$"
+NEWLOG_LINE_CONSOLE_REGEX = LOG_LINE_CONSOLE_REGEX.replace("LH", "NL")
+NEWLOG_LINE_SUPPORT_REGEX = LOG_LINE_SUPPORT_REGEX.replace("LH", "NL")
+NEWLOG_HASHED_INFO_REGEX = (
+    r"^(?::0[>]? NL:)(?P<hash_key>(?:0x)?[a-f0-9]{1,8})\s?(?P<arg_list>.+)?$"
+)
 POINTER_FORMAT_TAG_REGEX = r"(?P<format>%-?[0-9]*)p"
-HEX_FORMAT_SPECIFIER_REGEX =  r"%[- +#0]*\d*(\.\d+)?(hh|h|l|ll|j|z|t|L)?(x|X)"
+HEX_FORMAT_SPECIFIER_REGEX = r"%[- +#0]*\d*(\.\d+)?(hh|h|l|ll|j|z|t|L)?(x|X)"
 
 # re patterns
 STR_LITERAL_PATTERN = re.compile(STR_LITERAL_REGEX)
@@ -44,9 +52,9 @@ POINTER_FORMAT_TAG_PATTERN = re.compile(POINTER_FORMAT_TAG_REGEX)
 HEX_FORMAT_SPECIFIER_PATTERN = re.compile(HEX_FORMAT_SPECIFIER_REGEX)
 
 # Output file lines
-FORMAT_IDENTIFIER_STRING_FMT = "char *format_string_{} = \"{}\";\n"
+FORMAT_IDENTIFIER_STRING_FMT = 'char *format_string_{} = "{}";\n'
 LOOKUP_RESULT_STRING_FMT = "if (loghash == {}) fmt = format_string_{};\n"
-LOOKUP_DEFAULT_STRING = "fmt = \"\";\n"
+LOOKUP_DEFAULT_STRING = 'fmt = "";\n'
 
 FILE_IGNORE_LIST = []
 
@@ -54,10 +62,17 @@ FILE_IGNORE_LIST = []
 GENERIC_LOG_TYPES = ["PBL_LOG", "PBL_ASSERT", "PBL_CROAK"]
 BT_LOG_TYPES = ["BLE_LOG_DEBUG", "BT_LOG_ERROR", "BT_LOG_DEBUG"]
 QEMU_LOG_TYPES = ["QEMU_LOG_DEBUG", "QEMU_LOG_ERROR"]
-MISC_LOG_TYPES = ["ACCEL_LOG_DEBUG", "ANIMATION_LOG_DEBUG", "VOICE_LOG",
-                  "ISPP_LOG_DEBUG", "ISPP_LOG_DEBUG_VERBOSE",
-                  "RECONNECT_IOS_DEBUG", "SDP_LOG_DEBUG", "SDP_LOG_ERROR",
-                  "ANALYTICS_LOG_DEBUG"]
+MISC_LOG_TYPES = [
+    "ACCEL_LOG_DEBUG",
+    "ANIMATION_LOG_DEBUG",
+    "VOICE_LOG",
+    "ISPP_LOG_DEBUG",
+    "ISPP_LOG_DEBUG_VERBOSE",
+    "RECONNECT_IOS_DEBUG",
+    "SDP_LOG_DEBUG",
+    "SDP_LOG_ERROR",
+    "ANALYTICS_LOG_DEBUG",
+]
 
 LINES_TO_HASH = GENERIC_LOG_TYPES + BT_LOG_TYPES + QEMU_LOG_TYPES + MISC_LOG_TYPES
 

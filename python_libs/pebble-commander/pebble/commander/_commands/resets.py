@@ -6,21 +6,19 @@ from .. import PebbleCommander, exceptions, parsers
 
 @PebbleCommander.command()
 def reset(cmdr):
-    """ Reset the device.
-    """
+    """Reset the device."""
     cmdr.send_prompt_command("reset")
 
 
 @PebbleCommander.command()
 def crash(cmdr):
-    """ Crash the device.
-    """
+    """Crash the device."""
     cmdr.send_prompt_command("crash")
 
 
 @PebbleCommander.command()
 def factory_reset(cmdr, fast=False):
-    """ Perform a factory reset.
+    """Perform a factory reset.
 
     If `fast` is specified as true or "fast", do a fast factory reset.
     """

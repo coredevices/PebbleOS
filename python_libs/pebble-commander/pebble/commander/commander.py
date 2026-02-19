@@ -14,13 +14,13 @@ from . import apps
 
 
 class Pulse2ConnectionAdapter(object):
-    '''An adapter for the pulse2 API to look enough like pulse.Connection
+    """An adapter for the pulse2 API to look enough like pulse.Connection
     to make PebbleCommander work...ish.
 
     Prompt will break spectacularly if the firmware reboots or the link
     state otherwise changes. Commander itself needs to be modified to be
     link-state aware.
-    '''
+    """
 
     def __init__(self, interface):
         self.interface = interface
@@ -34,14 +34,15 @@ class Pulse2ConnectionAdapter(object):
 
 
 class PebbleCommander(object):
-    """ Pebble Commander.
-        Implements everything for interfacing with PULSE things.
+    """Pebble Commander.
+    Implements everything for interfacing with PULSE things.
     """
 
     def __init__(self, tty=None, interactive=False, capfile=None):
         if capfile is not None:
             interface = pulse2.Interface.open_dbgserial(
-                    url=tty, capture_stream=open(capfile, 'wb'))
+                url=tty, capture_stream=open(capfile, "wb")
+            )
         else:
             interface = pulse2.Interface.open_dbgserial(url=tty)
 
@@ -69,20 +70,21 @@ class PebbleCommander(object):
 
     @classmethod
     def command(cls, name=None):
-        """ Registers a command.
-            `name` is the command name. If `name` is unspecified, name will be the function name
-            with underscores converted to hyphens.
+        """Registers a command.
+        `name` is the command name. If `name` is unspecified, name will be the function name
+        with underscores converted to hyphens.
 
-            The convention for `name` is to separate words with a hyphen. The function name
-            will be the same as `name` with hyphens replaced with underscores.
-            Example: `click-short` will result in a PebbleCommander.click_short function existing.
+        The convention for `name` is to separate words with a hyphen. The function name
+        will be the same as `name` with hyphens replaced with underscores.
+        Example: `click-short` will result in a PebbleCommander.click_short function existing.
 
-            `fn` should return an array of strings (or None), and take the current
-            `PebbleCommander` as the first argument, and the rest of the argument strings
-            as subsequent arguments. For errors, `fn` should throw an exception.
+        `fn` should return an array of strings (or None), and take the current
+        `PebbleCommander` as the first argument, and the rest of the argument strings
+        as subsequent arguments. For errors, `fn` should throw an exception.
 
-            # TODO: Probably make the return something structured instead of stringly typed.
+        # TODO: Probably make the return something structured instead of stringly typed.
         """
+
         def decorator(fn):
             # Story time:
             # <cory> Things are fine as long as you only read from `name`, but assigning to `name`
@@ -92,26 +94,28 @@ class PebbleCommander(object):
             #        `name_` in the `decorator` scope
             cmdname = name
             if not cmdname:
-                cmdname = fn.__name__.replace('_', '-')
-            funcname = cmdname.replace('-', '_')
-            if not re.match(tokenize.Name + '$', funcname):
+                cmdname = fn.__name__.replace("_", "-")
+            funcname = cmdname.replace("-", "_")
+            if not re.match(tokenize.Name + "$", funcname):
                 raise ValueError("command name %s isn't a valid name" % funcname)
             if hasattr(cls, funcname):
-                raise ValueError('function name %s clashes with existing attribute' % funcname)
+                raise ValueError(
+                    "function name %s clashes with existing attribute" % funcname
+                )
             fn.is_command = True
             fn.name = cmdname
             method = types.MethodType(fn, cls)
             setattr(cls, funcname, method)
 
             return fn
+
         return decorator
 
     def close(self):
         self.connection.close()
 
     def _start_logging(self):
-        """ Thread to handle logging messages.
-        """
+        """Thread to handle logging messages."""
         while True:
             try:
                 msg = self.connection.logging.receive()
@@ -126,27 +130,26 @@ class PebbleCommander(object):
                         pass
 
     def attach_log_listener(self, listener):
-        """ Attaches a listener for log messages.
-            Function takes message and returns are ignored.
+        """Attaches a listener for log messages.
+        Function takes message and returns are ignored.
         """
         with self.log_listeners_lock:
             self.log_listeners.append(listener)
 
     def detach_log_listener(self, listener):
-        """ Removes a listener that was added with `attach_log_listener`
-        """
+        """Removes a listener that was added with `attach_log_listener`"""
         with self.log_listeners_lock:
             self.log_listeners.remove(listener)
 
     def send_prompt_command(self, cmd):
-        """ Send a prompt command string.
-            Unfortunately this is indeed stringly typed, a better solution is necessary.
+        """Send a prompt command string.
+        Unfortunately this is indeed stringly typed, a better solution is necessary.
         """
         return self.connection.prompt.command_and_response(cmd)
 
     def get_command(self, command):
         try:
-            fn = getattr(self, command.replace('-', '_'))
+            fn = getattr(self, command.replace("-", "_"))
             if fn.is_command:
                 return fn
         except AttributeError:

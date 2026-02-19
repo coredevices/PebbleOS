@@ -16,25 +16,42 @@ from pebble.loghashing import newlogging
 sys.path.insert(0, os.path.dirname(__file__))
 from newlogging import get_log_dict_from_file
 
-LOG_DICT_KEY_CORE_ID = 'core_'
+LOG_DICT_KEY_CORE_ID = "core_"
 
 COLOR_DICT = {
-               "BLACK":         "\x1b[30m",    "0":  "\x1b[30m",        # Not the most useful
-               "RED":           "\x1b[31m",    "1":  "\x1b[31m",
-               "GREEN":         "\x1b[32m",    "2":  "\x1b[32m",
-               "YELLOW":        "\x1b[33m",    "3":  "\x1b[33m",
-               "BLUE":          "\x1b[34m",    "4":  "\x1b[34m",
-               "MAGENTA":       "\x1b[35m",    "5":  "\x1b[35m",
-               "CYAN":          "\x1b[36m",    "6":  "\x1b[36m",
-               "GREY":          "\x1b[37m",    "7":  "\x1b[37m",
-               "LIGHT_GREY":    "\x1b[1m;30m", "8":  "\x1b[1m;30m",
-               "LIGHT_RED":     "\x1b[1m;31m", "9":  "\x1b[1m;31m",
-               "LIGHT_GREEN":   "\x1b[1m;32m", "10": "\x1b[1m;32m",
-               "LIGHT_YELLOW":  "\x1b[1m;33m", "11": "\x1b[1m;33m",
-               "LIGHT_BLUE":    "\x1b[1m;34m", "12": "\x1b[1m;34m",
-               "LIGHT_MAGENTA": "\x1b[1m;35m", "13": "\x1b[1m;35m",
-               "LIGHT_CYAN":    "\x1b[1m;36m", "14": "\x1b[1m;36m",
-               "WHITE":         "\x1b[1m;37m", "15": "\x1b[1m;37m"}
+    "BLACK": "\x1b[30m",
+    "0": "\x1b[30m",  # Not the most useful
+    "RED": "\x1b[31m",
+    "1": "\x1b[31m",
+    "GREEN": "\x1b[32m",
+    "2": "\x1b[32m",
+    "YELLOW": "\x1b[33m",
+    "3": "\x1b[33m",
+    "BLUE": "\x1b[34m",
+    "4": "\x1b[34m",
+    "MAGENTA": "\x1b[35m",
+    "5": "\x1b[35m",
+    "CYAN": "\x1b[36m",
+    "6": "\x1b[36m",
+    "GREY": "\x1b[37m",
+    "7": "\x1b[37m",
+    "LIGHT_GREY": "\x1b[1m;30m",
+    "8": "\x1b[1m;30m",
+    "LIGHT_RED": "\x1b[1m;31m",
+    "9": "\x1b[1m;31m",
+    "LIGHT_GREEN": "\x1b[1m;32m",
+    "10": "\x1b[1m;32m",
+    "LIGHT_YELLOW": "\x1b[1m;33m",
+    "11": "\x1b[1m;33m",
+    "LIGHT_BLUE": "\x1b[1m;34m",
+    "12": "\x1b[1m;34m",
+    "LIGHT_MAGENTA": "\x1b[1m;35m",
+    "13": "\x1b[1m;35m",
+    "LIGHT_CYAN": "\x1b[1m;36m",
+    "14": "\x1b[1m;36m",
+    "WHITE": "\x1b[1m;37m",
+    "15": "\x1b[1m;37m",
+}
 COLOR_BOLD_RESET = "\x1b[0m"
 BOLD = "\x1b[1m"
 # Control code to clear the current line
@@ -42,10 +59,17 @@ CLEAR_LINE = "\x1b[2K"
 
 
 class LogDehash(object):
-    """ Dehashing helper with a file update watch thread
-    """
-    def __init__(self, dict_path, justify="small", color=False, bold=-1, print_core=False,
-                 monitor_dict_file=True):
+    """Dehashing helper with a file update watch thread"""
+
+    def __init__(
+        self,
+        dict_path,
+        justify="small",
+        color=False,
+        bold=-1,
+        print_core=False,
+        monitor_dict_file=True,
+    ):
         self.path = dict_path
         self.dict_mtime = None
 
@@ -69,8 +93,9 @@ class LogDehash(object):
 
     def run(self):
         while self.running:
-            if os.path.lexists(self.path) and (not self.dict_mtime or
-                                               os.path.getmtime(self.path) > self.dict_mtime):
+            if os.path.lexists(self.path) and (
+                not self.dict_mtime or os.path.getmtime(self.path) > self.dict_mtime
+            ):
                 # We don't need to worry about thread safety here because the dict is getting
                 # replaced entirely. If anyone has a reference to the old one, it will stay
                 # alive until they're done.
@@ -96,10 +121,10 @@ class LogDehash(object):
         if not self.loghash_dict:
             return
 
-        print('Supported Cores:')
+        print("Supported Cores:")
         for key in sorted(self.loghash_dict, key=self.loghash_dict.get):
             if key.startswith(LOG_DICT_KEY_CORE_ID):
-                print(('    {}: {}'.format(key, self.loghash_dict[key])))
+                print(("    {}: {}".format(key, self.loghash_dict[key])))
 
     def update_log_string_metrics(self):
         if not self.loghash_dict:
@@ -110,26 +135,29 @@ class LogDehash(object):
         max_basename = 0
         max_linenum = 0
         for line_dict in self.loghash_dict.values():
-            if 'file' in line_dict and 'line' in line_dict:
-                max_basename = max(max_basename, len(os.path.basename(line_dict['file'])))
-                max_linenum = max(max_basename, len(os.path.basename(line_dict['line'])))
+            if "file" in line_dict and "line" in line_dict:
+                max_basename = max(
+                    max_basename, len(os.path.basename(line_dict["file"]))
+                )
+                max_linenum = max(
+                    max_basename, len(os.path.basename(line_dict["line"]))
+                )
         justify_width = max_basename + 1 + max_linenum  # Include the ':'
 
-        if self.arg_justify == 'small':
+        if self.arg_justify == "small":
             self.justify_size = 0
-        elif self.arg_justify == 'right':
+        elif self.arg_justify == "right":
             self.justify_size = justify_width * -1
-        elif self.arg_justify == 'left':
+        elif self.arg_justify == "left":
             self.justify_size = justify_width
         else:
             self.justify_size = int(self.arg_justify)
 
     def dehash(self, msg):
-        """ Dehashes a logging message.
-        """
+        """Dehashes a logging message."""
         string = str(msg)
         if "NL:" in string:  # Newlogging
-            safe_line = ud.normalize('NFKD', string)
+            safe_line = ud.normalize("NFKD", string)
             line_dict = newlogging.dehash_line_unformatted(safe_line, self.loghash_dict)
             return line_dict
         else:
@@ -138,38 +166,40 @@ class LogDehash(object):
     def basic_format_line(self, line_dict):
         output = []
 
-        if 'support' not in line_dict and 're_level' in line_dict:
-            output.append(line_dict['re_level'])
-        if self.print_core and 'core_number' in line_dict:
-            output.append(line_dict['core_number'])
-        if 'task' in line_dict:
-            output.append(line_dict['task'])
-        if 'date' in line_dict:
-            output.append(line_dict['date'])
-        if 'time' in line_dict:
-            output.append(line_dict['time'])
-        elif 'support' not in line_dict:
+        if "support" not in line_dict and "re_level" in line_dict:
+            output.append(line_dict["re_level"])
+        if self.print_core and "core_number" in line_dict:
+            output.append(line_dict["core_number"])
+        if "task" in line_dict:
+            output.append(line_dict["task"])
+        if "date" in line_dict:
+            output.append(line_dict["date"])
+        if "time" in line_dict:
+            output.append(line_dict["time"])
+        elif "support" not in line_dict:
             # Use the current time if one isn't provided by the system
             now = datetime.now()
-            output.append('%02d:%02d:%02d.%03d' % (now.hour, now.minute, now.second,
-                                                   now.microsecond/1000))
+            output.append(
+                "%02d:%02d:%02d.%03d"
+                % (now.hour, now.minute, now.second, now.microsecond / 1000)
+            )
 
-        pre_padding = ''
-        post_padding = ''
+        pre_padding = ""
+        post_padding = ""
 
-        if 'file' in line_dict and 'line' in line_dict:
-            filename = os.path.basename(line_dict['file'])
-            file_line = '{}:{}>'.format(filename, line_dict['line'])
+        if "file" in line_dict and "line" in line_dict:
+            filename = os.path.basename(line_dict["file"])
+            file_line = "{}:{}>".format(filename, line_dict["line"])
             if self.justify_size < 0:
                 output.append(file_line.rjust(abs(self.justify_size)))
             else:
                 output.append(file_line.ljust(abs(self.justify_size)))
 
-        output.append(line_dict['formatted_msg'])
+        output.append(line_dict["formatted_msg"])
         try:
-            return ' '.join(output)
+            return " ".join(output)
         except UnicodeDecodeError:
-            return ''
+            return ""
 
     def minicom_format_line(self, line_dict):
         """This routine reformats a line already printed to the console if it was
@@ -179,34 +209,34 @@ class LogDehash(object):
         newline character to print
 
         """
-        if 'unhashed' in line_dict:
-            return '\n'
+        if "unhashed" in line_dict:
+            return "\n"
 
         output = []
-        if self.arg_color and 'color' in line_dict:
-            color = line_dict['color']
+        if self.arg_color and "color" in line_dict:
+            color = line_dict["color"]
             if color in COLOR_DICT:
                 output.append(COLOR_DICT[color])
-        if 'level' in line_dict:
-            if int(line_dict['level']) <= self.arg_bold:
+        if "level" in line_dict:
+            if int(line_dict["level"]) <= self.arg_bold:
                 output.append(BOLD)
         output.append(CLEAR_LINE)
         output.append(self.basic_format_line(line_dict))
-        output.append('\n')
+        output.append("\n")
         output.append(COLOR_BOLD_RESET)
 
-        return ''.join(output)
+        return "".join(output)
 
     def commander_format_line(self, line_dict):
         output = []
-        if self.arg_color and 'color' in line_dict:
-            color = line_dict['color']
+        if self.arg_color and "color" in line_dict:
+            color = line_dict["color"]
             if color in COLOR_DICT:
                 output.append(COLOR_DICT[color])
-        if 'level' in line_dict:
-            if int(line_dict['level']) <= self.arg_bold:
+        if "level" in line_dict:
+            if int(line_dict["level"]) <= self.arg_bold:
                 output.append(BOLD)
         output.append(self.basic_format_line(line_dict))
         output.append(COLOR_BOLD_RESET)
 
-        return ''.join(output)
+        return "".join(output)

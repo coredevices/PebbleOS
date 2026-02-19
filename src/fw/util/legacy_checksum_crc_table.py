@@ -18,10 +18,11 @@ def precompute_table(bits):
                 rr = (rr << 1) ^ CRC_POLY
             else:
                 rr <<= 1
-        lookup_table.append(rr & 0xffffffff)
+        lookup_table.append(rr & 0xFFFFFFFF)
     return lookup_table
 
-print('static const uint32_t s_lookup_table[] = {')
+
+print("static const uint32_t s_lookup_table[] = {")
 for entry in precompute_table(4):
-    print('  0x{:08x},'.format(entry))
-print('};')
+    print("  0x{:08x},".format(entry))
+print("};")

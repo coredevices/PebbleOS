@@ -14,7 +14,9 @@ from pebble import pulse2, commander
 from pebble.commander._commands.imaging import load_firmware, load_resources
 
 import pebble_ftdi_custom_pids
+
 pebble_ftdi_custom_pids.configure_pids()
+
 
 class FakeCommander(object):
     def __init__(self, flash):
@@ -23,29 +25,35 @@ class FakeCommander(object):
 
 def main():
     parser = argparse.ArgumentParser(
-            description="A factory tool to load binary data into Pebble's "
-                        "external flash storage.")
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='print verbose status output')
-    parser.add_argument('-p', '--progress', action='store_true',
-                        help='print progress output')
-    parser.add_argument('-t', '--tty', metavar='TTY', default=None,
-                        help='the target serial port')
+        description="A factory tool to load binary data into Pebble's "
+        "external flash storage."
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="print verbose status output"
+    )
+    parser.add_argument(
+        "-p", "--progress", action="store_true", help="print progress output"
+    )
+    parser.add_argument(
+        "-t", "--tty", metavar="TTY", default=None, help="the target serial port"
+    )
 
-    subparsers = parser.add_subparsers(help='commands', dest='which')
+    subparsers = parser.add_subparsers(help="commands", dest="which")
 
     fw_parser = subparsers.add_parser(
-            'firmware', help='load a recovery firmware into flash')
+        "firmware", help="load a recovery firmware into flash"
+    )
     fw_parser.add_argument(
-            'file', metavar='FILE',
-            help='a bin containing the recovery firmware to be loaded')
+        "file",
+        metavar="FILE",
+        help="a bin containing the recovery firmware to be loaded",
+    )
     fw_parser.set_defaults(func=load_firmware)
 
-    res_parser = subparsers.add_parser('resources',
-                                       help='load firmware resources')
+    res_parser = subparsers.add_parser("resources", help="load firmware resources")
     res_parser.add_argument(
-            'file', metavar='FILE',
-            help='a pbpack containing the resources to be loaded')
+        "file", metavar="FILE", help="a pbpack containing the resources to be loaded"
+    )
     res_parser.set_defaults(func=load_resources)
 
     args = parser.parse_args()
@@ -64,16 +72,17 @@ def main():
     try:
         success = args.func(connection, args.file, args.progress, args.verbose)
     except pulse2.exceptions.PulseException as e:
-        detail = ''.join(traceback.format_exception_only(type(e), e))
+        detail = "".join(traceback.format_exception_only(type(e), e))
         if args.verbose:
             detail = traceback.format_exc()
         print(detail)
 
     if success:
-        print('Success!')
+        print("Success!")
     else:
-        print('Fail!')
+        print("Fail!")
         sys.exit(-1)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

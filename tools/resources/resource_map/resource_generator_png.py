@@ -8,15 +8,17 @@ from pebble_sdk_platform import pebble_platforms
 
 import png2pblpng
 
+
 class PngResourceGenerator(ResourceGenerator):
-    type = 'png'
+    type = "png"
 
     @staticmethod
     def generate_object(task, definition):
         env = task.generator.env
 
-        is_color = 'color' in pebble_platforms[env.PLATFORM_NAME]['TAGS']
+        is_color = "color" in pebble_platforms[env.PLATFORM_NAME]["TAGS"]
         palette_name = png2pblpng.get_ideal_palette(is_color=is_color)
-        image_bytes = png2pblpng.convert_png_to_pebble_png_bytes(task.inputs[0].abspath(),
-                                                                 palette_name)
+        image_bytes = png2pblpng.convert_png_to_pebble_png_bytes(
+            task.inputs[0].abspath(), palette_name
+        )
         return ResourceObject(definition, image_bytes)

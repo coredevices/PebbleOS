@@ -9,7 +9,7 @@ import struct
 
 
 class ResourcePackTableEntry(object):
-    TABLE_ENTRY_FMT = '<IIII'
+    TABLE_ENTRY_FMT = "<IIII"
 
     def __init__(self, content_index, offset, length, crc):
         # The index into the contents array that holds our data in the ResourcePack object
@@ -41,18 +41,17 @@ class ResourcePackTableEntry(object):
         return str(self.__dict__)
 
 
-
 class ResourcePack(object):
-    """ Pebble resource pack file format (de)serialization tools.
+    """Pebble resource pack file format (de)serialization tools.
 
-        An instance of this class is an in-memory representation of a resource
-        pack. The class has a number of methods to facilitate (de)serialization
-        of .pbpack files.
+    An instance of this class is an in-memory representation of a resource
+    pack. The class has a number of methods to facilitate (de)serialization
+    of .pbpack files.
 
     """
 
     TABLE_ENTRY_SIZE_BYTES = 16
-    MANIFEST_FMT = '<III'
+    MANIFEST_FMT = "<III"
     MANIFEST_SIZE_BYTES = 12
 
     def get_content_crc(self):
@@ -67,7 +66,7 @@ class ResourcePack(object):
     def serialize_table(self):
         # Serialize these entries into table_data
         cur_file_id = 1
-        table_data = b''
+        table_data = b""
         for cur_file_id, table_entry in enumerate(self.table_entries, start=1):
             table_data += table_entry.serialize(cur_file_id)
 
@@ -116,14 +115,17 @@ class ResourcePack(object):
                 break
 
             if file_id != n + 1:
-                raise Exception("File ID is expected to be %u, but was %u" %
-                                (n + 1, file_id))
+                raise Exception(
+                    "File ID is expected to be %u, but was %u" % (n + 1, file_id)
+                )
 
             resource_pack.table_entries.append(entry)
 
         if len(resource_pack.table_entries) != num_files:
-            raise Exception("Number of files in manifest is %u, but actual"
-                            "number is %u" % (num_files, n))
+            raise Exception(
+                "Number of files in manifest is %u, but actual"
+                "number is %u" % (num_files, n)
+            )
 
         # Figure out which content_index to assign to each table entry. Find all unique offset and
         # length combinations and then assign content indexes appropriately. We need to include the
@@ -152,9 +154,11 @@ class ResourcePack(object):
             calculated_crc = stm32_crc.crc32(content)
 
             if calculated_crc != entry.crc:
-                raise Exception("Entry %s does not match CRC of content (%u). "
-                                "Hint: try with%s the --app flag"
-                                % (entry, calculated_crc, "" if is_system else "out"))
+                raise Exception(
+                    "Entry %s does not match CRC of content (%u). "
+                    "Hint: try with%s the --app flag"
+                    % (entry, calculated_crc, "" if is_system else "out")
+                )
 
             resource_pack.contents.append(content)
 
@@ -168,9 +172,11 @@ class ResourcePack(object):
         a pack is finalized no more resources may be added.
         """
 
-        if (len(self.table_entries) > self.table_size):
-            raise Exception("Exceeded max number of resources. Must have %d or "
-                            "fewer" % self.table_size)
+        if len(self.table_entries) > self.table_size:
+            raise Exception(
+                "Exceeded max number of resources. Must have %d or "
+                "fewer" % self.table_size
+            )
 
         # Assign offsets to each of the entries in reverse order. The reason we do this in reverse
         # is so that the resource at the end is guaranteed to be at the end of the pack.
@@ -208,8 +214,10 @@ class ResourcePack(object):
 
     def add_resource(self, content):
         if self.finalized:
-            raise Exception("Cannot add additional resource, " +
-                            "resource pack has already been finalized")
+            raise Exception(
+                "Cannot add additional resource, "
+                + "resource pack has already been finalized"
+            )
 
         # If resource already is present, add to table only
         try:
@@ -224,22 +232,29 @@ class ResourcePack(object):
         crc = stm32_crc.crc32(content)
 
         # Use -1 as the offset as we don't assign offsets until serialize_table
-        self.table_entries.append(ResourcePackTableEntry(content_index, -1, len(content), crc))
+        self.table_entries.append(
+            ResourcePackTableEntry(content_index, -1, len(content), crc)
+        )
 
     def dump(self):
         """
         Dump a bunch of information about this pbpack to stdout
         """
 
-        print('Manifest CRC: 0x%x' % self.crc)
-        print('Calculated CRC: 0x%x' % self.get_content_crc())
-        print('Num Items: %u' % len(self.table_entries))
+        print("Manifest CRC: 0x%x" % self.crc)
+        print("Calculated CRC: 0x%x" % self.get_content_crc())
+        print("Num Items: %u" % len(self.table_entries))
         for i, entry in enumerate(self.table_entries, start=1):
-            print('  %u: Offset %u Length %u CRC 0x%x' % (i, entry.offset, entry.length, entry.crc))
+            print(
+                "  %u: Offset %u Length %u CRC 0x%x"
+                % (i, entry.offset, entry.length, entry.crc)
+            )
 
     def __init__(self, is_system):
         self.table_size = 768 if is_system else 256
-        self.content_start = self.MANIFEST_SIZE_BYTES + self.table_size * self.TABLE_ENTRY_SIZE_BYTES
+        self.content_start = (
+            self.MANIFEST_SIZE_BYTES + self.table_size * self.TABLE_ENTRY_SIZE_BYTES
+        )
 
         # Note that we never actually set the timestamp in newly generated pbpacks. The timestamp
         # field in the manifest is unused in practice and we'll probably reuse that field for
@@ -263,17 +278,20 @@ class ResourcePack(object):
         self.finalized = False
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='dump pbpack metadata')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="dump pbpack metadata")
 
-    parser.add_argument('pbpack_path', help='path to pbpack to dump')
-    parser.add_argument('--app', default=False, action='store_true',
-                        help='Indicate this pbpack is an app pbpack')
+    parser.add_argument("pbpack_path", help="path to pbpack to dump")
+    parser.add_argument(
+        "--app",
+        default=False,
+        action="store_true",
+        help="Indicate this pbpack is an app pbpack",
+    )
 
     args = parser.parse_args()
 
-    with open(args.pbpack_path, 'rb') as f:
+    with open(args.pbpack_path, "rb") as f:
         pack = ResourcePack.deserialize(f, is_system=not args.app)
 
     pack.dump()
-
