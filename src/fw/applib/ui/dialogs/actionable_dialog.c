@@ -29,19 +29,14 @@ static void prv_actionable_dialog_load(Window *window) {
   const GSize icon_size = icon ? kino_reel_get_size(icon) : GSizeZero;
 
   const GRect *bounds = &window_root_layer->bounds;
-  const uint16_t icon_single_line_text_offset_px = 13;
   const uint16_t left_margin_px = PBL_IF_RECT_ELSE(5, 0);
   const uint16_t content_and_action_bar_horizontal_spacing = PBL_IF_RECT_ELSE(5, 7);
   const uint16_t right_margin_px = ACTION_BAR_WIDTH +
                                               content_and_action_bar_horizontal_spacing;
-  const uint16_t text_single_line_text_offset_px = icon_single_line_text_offset_px - 1;
   const GFont dialog_text_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-  const int single_line_text_height_px = fonts_get_font_height(dialog_text_font);
-  const int max_text_line_height_px = 2 * single_line_text_height_px + 8;
+  const int max_text_line_height_px = 2 * fonts_get_font_height(dialog_text_font) + 8;
+  const uint16_t icon_text_spacing_px = 4;
 
-  const uint16_t status_layer_offset = dialog->show_status_layer ? 6 : 0;
-  uint16_t text_top_margin_px = icon ? icon_size.h + 22 : 6;
-  uint16_t icon_top_margin_px = 18;
   uint16_t x = 0;
   uint16_t y = 0;
   uint16_t w = PBL_IF_RECT_ELSE(bounds->size.w - ACTION_BAR_WIDTH, bounds->size.w);
@@ -62,30 +57,26 @@ static void prv_actionable_dialog_load(Window *window) {
   text_attributes = graphics_text_attributes_create();
   graphics_text_attributes_enable_screen_text_flow(text_attributes, 8);
 #endif
-  // Check if the text takes up more than one line. If the dialog has a single line of text,
-  // the icon and line of text are positioned lower so as to be more vertically centered.
+
+  // Probe text height to vertically center icon + text in the available space
   GContext *ctx = graphics_context_get_current_context();
   const GTextAlignment text_alignment = PBL_IF_RECT_ELSE(GTextAlignmentCenter, GTextAlignmentRight);
-  {
-    // do all this in a block so we enforce that nobody uses these variables outside of the block
-    // when dealing with round displays, sizes change depending on location.
-    const GRect probe_rect = GRect(x, y + text_single_line_text_offset_px,
-                                   w, max_text_line_height_px);
-    const uint16_t text_height = graphics_text_layout_get_max_used_size(ctx,
-                                                                        dialog->buffer,
-                                                                        dialog_text_font,
-                                                                        probe_rect,
-                                                                        GTextOverflowModeWordWrap,
-                                                                        text_alignment,
-                                                                        text_attributes).h;
-    if (text_height <= single_line_text_height_px) {
-      text_top_margin_px += text_single_line_text_offset_px;
-      icon_top_margin_px += icon_single_line_text_offset_px;
-    } else {
-      text_top_margin_px += status_layer_offset;
-      icon_top_margin_px += status_layer_offset;
-    }
-  }
+  const GRect probe_rect = GRect(x, 0, w, max_text_line_height_px);
+  const uint16_t text_height = graphics_text_layout_get_max_used_size(ctx,
+                                                                      dialog->buffer,
+                                                                      dialog_text_font,
+                                                                      probe_rect,
+                                                                      GTextOverflowModeWordWrap,
+                                                                      text_alignment,
+                                                                      text_attributes).h;
+
+  const uint16_t status_bar_height = dialog->show_status_layer ? STATUS_BAR_LAYER_HEIGHT : 0;
+  const uint16_t available_height = bounds->size.h - status_bar_height;
+  const uint16_t spacing = icon ? icon_text_spacing_px : 0;
+  const uint16_t content_height = icon_size.h + spacing + text_height;
+  uint16_t icon_top_margin_px = status_bar_height +
+      (available_height > content_height ? (available_height - content_height) / 2 : 0);
+  uint16_t text_top_margin_px = icon_top_margin_px + icon_size.h + spacing;
 
   y = text_top_margin_px;
   h = bounds->size.h - y;
