@@ -1364,6 +1364,25 @@ unlock:
 
 // -------------------------------------------------------------------------------------------------
 
+void ppogatt_reset_all(void) {
+  bt_lock();
+  {
+    PPoGATTClient *client = s_ppogatt_head;
+    while (client) {
+      if (client->state >= StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset) {
+        // Clear counters since this is an explicit re-init request from the phone
+        client->resets_counter = 0;
+        s_disconnect_counter = 0;
+        prv_start_reset(client);
+      }
+      client = (PPoGATTClient *) client->node.next;
+    }
+  }
+  bt_unlock();
+}
+
+// -------------------------------------------------------------------------------------------------
+
 void ppogatt_destroy(void) {
   bt_lock();
   {
