@@ -67,7 +67,7 @@ def build(ctx):
         " src/fw/applib/ui/shadows.c" \
         " src/fw/applib/ui/text_layer.c" \
         " src/fw/applib/ui/window.c" \
-        " src/fw/apps/system_apps/timeline/text_node.c" \
+        " src/fw/apps/system/timeline/text_node.c" \
         " src/fw/services/normal/activity/health_util.c" \
         " src/fw/util/buffer.c" \
         " src/fw/util/stats.c" \

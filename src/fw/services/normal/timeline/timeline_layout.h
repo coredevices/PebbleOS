@@ -13,7 +13,7 @@
 #include "applib/graphics/text.h"
 #include "applib/ui/status_bar_layer.h"
 #include "applib/ui/kino/kino_layer.h"
-#include "apps/system_apps/timeline/text_node.h"
+#include "apps/system/timeline/text_node.h"
 #include "services/common/clock.h"
 #include "services/normal/timeline/timeline.h"
 #include "services/normal/timeline/timeline_resources.h"

@@ -4,7 +4,7 @@
 #include "clar.h"
 
 #include "applib/ui/window_private.h"
-#include "apps/system_apps/launcher/default/launcher_menu_layer.h"
+#include "apps/system/launcher/default/launcher_menu_layer.h"
 #include "resource/resource_ids.auto.h"
 #include "services/normal/app_glances/app_glance_service.h"
 #include "services/normal/blob_db/app_glance_db.h"

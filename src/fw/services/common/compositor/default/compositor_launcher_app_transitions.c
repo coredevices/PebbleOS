@@ -6,7 +6,7 @@
 #include "applib/graphics/bitblt.h"
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/graphics_private.h"
-#include "apps/system_apps/launcher/default/launcher_app.h"
+#include "apps/system/launcher/default/launcher.h"
 #include "services/common/compositor/compositor_transitions.h"
 #include "system/passert.h"
 #include "util/attributes.h"

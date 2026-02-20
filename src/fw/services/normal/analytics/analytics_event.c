@@ -9,7 +9,7 @@
 #include "services/common/analytics/analytics_logging.h"
 #include "services/common/analytics/analytics_storage.h"
 
-#include "apps/system_apps/launcher/launcher_app.h"
+#include "apps/system/launcher/launcher.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/bt_lock.h"
 #include "comm/ble/gap_le_connection.h"

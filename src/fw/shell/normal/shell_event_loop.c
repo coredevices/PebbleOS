@@ -6,9 +6,9 @@
 #include "shell/prefs_private.h"
 
 #include "apps/system_app_ids.h"
-#include "apps/system_apps/app_fetch_ui.h"
-#include "apps/system_apps/settings/settings_quick_launch.h"
-#include "apps/system_apps/timeline/timeline.h"
+#include "apps/system/app_fetch_ui.h"
+#include "apps/system/settings/quick_launch.h"
+#include "apps/system/timeline/timeline.h"
 #include "kernel/low_power.h"
 #include "kernel/pbl_malloc.h"
 #include "popups/alarm_popup.h"

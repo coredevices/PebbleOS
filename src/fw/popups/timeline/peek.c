@@ -7,7 +7,7 @@
 #include "process_management/app_manager.h"
 #include "applib/ui/window_stack.h"
 #include "applib/unobstructed_area_service.h"
-#include "apps/system_apps/timeline/timeline_common.h"
+#include "apps/system/timeline/common.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"

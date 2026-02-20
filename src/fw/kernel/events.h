@@ -13,7 +13,7 @@
 #include "applib/tick_timer_service.h"
 #include "applib/voice/dictation_session.h"
 #include "applib/ui/click.h"
-#include "apps/system_apps/app_fetch_ui.h"
+#include "apps/system/app_fetch_ui.h"
 #include "drivers/battery.h"
 #include "drivers/button_id.h"
 #include "process_management/app_install_types.h"

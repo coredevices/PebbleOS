@@ -3,10 +3,10 @@
 
 #include "shell_sdk.h"
 
-#include "apps/core_apps/panic_window_app.h"
-#include "apps/sdk/sdk_app.h"
+#include "apps/core/panic_window.h"
+#include "apps/sdk/app.h"
 #include "apps/system_app_ids.h"
-#include "apps/system_apps/launcher/launcher_app.h"
+#include "apps/system/launcher/launcher.h"
 #include "kernel/panic.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"

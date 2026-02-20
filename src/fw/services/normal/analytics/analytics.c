@@ -4,7 +4,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "apps/system_apps/launcher/launcher_app.h"
+#include "apps/system/launcher/launcher.h"
 #include "kernel/pbl_malloc.h"
 #include "os/tick.h"
 #include "process_management/worker_manager.h"

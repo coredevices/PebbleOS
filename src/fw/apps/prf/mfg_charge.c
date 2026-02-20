@@ -1,0 +1,275 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include "mfg_charge.h"
+
+#include "applib/app.h"
+#include "applib/tick_timer_service.h"
+#include "applib/ui/ui.h"
+#include "applib/ui/window_private.h"
+#include "drivers/battery.h"
+#include "kernel/pbl_malloc.h"
+#include "process_state/app_state/app_state.h"
+#include "services/common/battery/battery_curve.h"
+#include "system/logging.h"
+
+#include <stdio.h>
+
+typedef enum {
+  ChargeStateStart = 0,
+  ChargeStatePlugCharger,
+  ChargeStateRunning,
+  ChargeStatePass,
+  ChargeStateFail,
+} ChargeTestState;
+
+static const char* status_text[] = {
+  [ChargeStateStart] =       "Start",
+  [ChargeStatePlugCharger] = "Plug Charger",
+  [ChargeStateRunning] =     "Running...",
+  [ChargeStatePass] =        "Pass",
+  [ChargeStateFail] =        "Fail",
+};
+
+#if defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
+static const int SLOW_THRESHOLD_PERCENTAGE = 0;
+static const int BATTERY_PASS_PERCENTAGE = 70;
+
+static const int TEMP_MIN_MC = 15000; // 15.0C
+static const int TEMP_MAX_MC = 35000; // 35.0C
+#else
+static const int SLOW_THRESHOLD_PERCENTAGE = 0; // Always go "slow" on snowy
+static const int BATTERY_PASS_PERCENTAGE = 60; // ~4190mv
+
+static const int TEMP_MIN_MC = 0;
+static const int TEMP_MAX_MC = 0;
+#endif
+
+typedef struct {
+  Window window;
+
+  TextLayer status;
+  char status_string[20];
+
+  TextLayer details;
+  char details_string[64];
+
+  ChargeTestState test_state;
+  uint32_t seconds_remaining;
+  bool countdown_running;
+  bool fastcharge_enabled;
+
+  int pass_count;
+  int batt_temp_fail_count;
+} AppData;
+
+static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+  AppData *data = app_state_get_user_data();
+  int ret;
+
+  ChargeTestState next_state = data->test_state;
+
+  BatteryConstants battery_const;
+  ret = battery_get_constants(&battery_const);
+  if (ret < 0) {
+    PBL_LOG_ERR("Skipping bad constants reading");
+    return;
+  }
+
+  const int charge_mv = battery_const.v_mv;
+  const int32_t temp_mc = battery_const.t_mc;
+  const BatteryChargeState charge_state = battery_get_charge_state();
+
+  switch (data->test_state) {
+    case ChargeStateStart:
+      if (charge_state.charge_percent > BATTERY_PASS_PERCENTAGE) {
+        next_state = ChargeStateFail;
+        data->countdown_running = false;
+        battery_set_charge_enable(false);
+        break;
+      }
+      if (charge_state.is_plugged && charge_state.is_charging) {
+        next_state = ChargeStateRunning;
+      } else {
+        next_state = ChargeStatePlugCharger;
+      }
+      break;
+    case ChargeStatePlugCharger:
+      if (charge_state.is_plugged && charge_state.is_charging) {
+        next_state = ChargeStateRunning;
+      }
+      break;
+    case ChargeStateRunning:
+      if (!data->countdown_running) {
+        data->countdown_running = true;
+      }
+      if (!charge_state.is_plugged || !charge_state.is_charging) {
+        data->pass_count = 0;
+        next_state = ChargeStatePlugCharger;
+        break;
+      }
+
+      // Log battery state every second during charging
+      {
+        int32_t current_ma = battery_const.i_ua / 1000;
+        PBL_LOG_INFO("Charging - V:%"PRId32"mV I:%"PRId32"mA T:%"PRId32"mC pct:%"PRIu8" Time:%"PRIu32"s",
+                battery_const.v_mv, current_ma, battery_const.t_mc, charge_state.charge_percent,
+                data->seconds_remaining);
+      }
+
+      if (temp_mc < TEMP_MIN_MC || temp_mc > TEMP_MAX_MC) {
+        data->batt_temp_fail_count++;
+        if (data->batt_temp_fail_count >= 5) {
+          next_state = ChargeStateFail;
+          data->countdown_running = false;
+          battery_set_charge_enable(false);
+          break;
+        }
+      } else {
+        data->batt_temp_fail_count = 0;
+      }
+
+      if (charge_state.charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {
+        // go slow for a bit
+        battery_set_fast_charge(false);
+        data->fastcharge_enabled = false;
+      } else if (charge_state.charge_percent >= BATTERY_PASS_PERCENTAGE) {
+        // The reading can be a bit shaky in the short term (i.e. a flaky USB connection), or we
+        // just started charging. Make sure we have settled before transitioning into the
+        // ChargeStatePass state
+        if (data->pass_count > 5) {
+          next_state = ChargeStatePass;
+
+          data->countdown_running = false;
+          // disable the charger so that we don't overcharge the battery
+          battery_set_charge_enable(false);
+        }
+        data->pass_count++;
+      } else {
+        data->pass_count = 0;
+      }
+      break;
+    case ChargeStatePass:
+      // Keep charging disabled after test passes
+      break;
+    case ChargeStateFail:
+    default:
+      break;
+  }
+
+  if (data->countdown_running) {
+    --data->seconds_remaining;
+    if (data->seconds_remaining == 0) {
+      // Time's up!
+      next_state = ChargeStateFail;
+      data->countdown_running = false;
+      PBL_LOG_ERR("Failed charge testing");
+    }
+  }
+
+  data->test_state = next_state;
+
+  sniprintf(data->status_string, sizeof(data->status_string),
+            "CHARGE\n%s", status_text[data->test_state]);
+  text_layer_set_text(&data->status, data->status_string);
+
+  int mins_remaining = data->seconds_remaining / 60;
+  int secs_remaining = data->seconds_remaining % 60;
+  int8_t temp_c = (int8_t)(temp_mc / 1000);
+  uint8_t temp_c_frac = ((temp_mc > 0 ? temp_mc : -temp_mc) % 1000) / 10;
+  sniprintf(data->details_string, sizeof(data->details_string),
+            "Time:%02u:%02u\r\n%umV %" PRId8 ".%02" PRIu8 "C (%"PRIu8"%%)\r\nUSB: %s\r\nCharging: %s",
+            mins_remaining, secs_remaining, charge_mv,
+            temp_c, temp_c_frac,
+            charge_state.charge_percent,
+            charge_state.is_plugged ? "yes" : "no",
+            charge_state.is_charging ? "yes" : "no");
+  text_layer_set_text(&data->details, data->details_string);
+}
+
+static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
+  AppData *app_data = app_state_get_user_data();
+
+  if (!app_data->countdown_running &&
+      (app_data->test_state == ChargeStateStart ||
+       app_data->test_state == ChargeStatePlugCharger)) {
+
+    // if the test has not yet started, it is ok to push the back button to leave.
+    app_window_stack_pop(true);
+  }
+}
+
+static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
+  AppData *app_data = app_state_get_user_data();
+
+  if (app_data->test_state == ChargeStateFail || app_data->test_state == ChargeStatePass) {
+    // we've finished the charge test - long-press to close the app
+    app_window_stack_pop(true);
+  }
+}
+
+static void prv_config_provider(void *data) {
+  window_long_click_subscribe(BUTTON_ID_SELECT, 3000, NULL, prv_select_click_handler);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
+}
+
+static void app_init(void) {
+  AppData *data = app_malloc_check(sizeof(AppData));
+
+  app_state_set_user_data(data);
+
+  *data = (AppData) {
+    .test_state = ChargeStateStart,
+    .countdown_running = false,
+    .seconds_remaining = 5400, //1.5h
+    .fastcharge_enabled = true,
+    .pass_count = 0,
+    .batt_temp_fail_count = 0,
+  };
+
+  battery_set_fast_charge(true);
+  battery_set_charge_enable(true);
+
+  Window *window = &data->window;
+  window_init(window, "Charge Test");
+
+  TextLayer *status = &data->status;
+  text_layer_init(status, &window->layer.bounds);
+  text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_text_alignment(status, GTextAlignmentCenter);
+  text_layer_set_text(status, status_text[data->test_state]);
+  layer_add_child(&window->layer, &status->layer);
+
+  TextLayer *details = &data->details;
+  text_layer_init(details,
+                  &GRect(0, 65, window->layer.bounds.size.w, window->layer.bounds.size.h - 65));
+  text_layer_set_font(details, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_text_alignment(details, GTextAlignmentCenter);
+  layer_add_child(&window->layer, &details->layer);
+
+  window_set_click_config_provider(window, prv_config_provider);
+  window_set_fullscreen(window, true);
+
+  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
+
+  app_window_stack_push(window, true /* Animated */);
+}
+
+static void s_main(void) {
+  app_init();
+
+  app_event_loop();
+}
+
+const PebbleProcessMd* mfg_charge_app_get_info(void) {
+  static const PebbleProcessMdSystem s_app_info = {
+    .common.main_func = &s_main,
+    // UUID: fbb6d0e6-2d7d-40bc-8b01-f2f8beb9c394
+    .common.uuid = { 0xfb, 0xb6, 0xd0, 0xe6, 0x2d, 0x7d, 0x40, 0xbc,
+                     0x8b, 0x01, 0xf2, 0xf8, 0xbe, 0xb9, 0xc3, 0x94 },
+    .name = "Charge App",
+  };
+
+  return (PebbleProcessMd*) &s_app_info;
+}
+

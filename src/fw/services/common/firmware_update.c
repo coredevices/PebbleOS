@@ -3,7 +3,7 @@
 
 #include "services/common/firmware_update.h"
 
-#include "apps/core_apps/progress_ui_app.h"
+#include "apps/core/progress_ui.h"
 #include "flash_region/flash_region.h"
 #include "kernel/event_loop.h"
 #include "kernel/system_message.h"
