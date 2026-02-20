@@ -11,9 +11,12 @@ if extras_dir not in sys.path:
     sys.path.insert(0, extras_dir)
 
 from waflib.Configure import conf
+from waflib.Errors import ConfigurationError
 from waflib import Logs
+import sdk_paths
 from generate_appinfo import generate_appinfo_c
 from process_sdk_resources import generate_resources
+import report_memory_usage
 from sdk_helpers import (
     configure_libraries,
     configure_platform,

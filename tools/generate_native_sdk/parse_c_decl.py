@@ -13,7 +13,7 @@ dump_tree = False
 
 def add_clang_compat_module_to_sys_path_if_needed():
     try:
-        pass
+        import clang.cindex
     except:
         sys.path.append(os.path.join(os.path.dirname(__file__), "clang_compat"))
         logging.info("Importing clang python compatibility module")

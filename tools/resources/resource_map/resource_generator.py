@@ -84,7 +84,7 @@ class ResourceGenerator(ResourceGeneratorBase):
         """
         Stub implementation of generate_object. Subclasses must override this method.
         """
-        raise NotImplementedError("%r missing a generate_object implementation" % cls)
+        raise NotImplemented("%r missing a generate_object implementation" % cls)
 
 
 def definitions_from_dict(bld, definition_dict, resource_source_path):
