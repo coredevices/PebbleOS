@@ -9,7 +9,7 @@
 
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/text.h"
-#include "apps/system_apps/timeline/text_node.h"
+#include "apps/system/timeline/text_node.h"
 
 typedef enum {
   WeatherTimeType_None = 0,

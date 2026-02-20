@@ -7,7 +7,7 @@
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/animation_interpolate.h"
-#include "apps/system_apps/timeline/timeline_common.h"
+#include "apps/system/timeline/common.h"
 #include "popups/timeline/peek.h"
 #include "popups/timeline/peek_animations.h"
 #include "services/common/compositor/compositor_private.h"

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "apps/system_app_ids.h"
-#include "apps/system_apps/timeline/timeline.h"
+#include "apps/system/timeline/timeline.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "popups/notifications/notification_window.h"

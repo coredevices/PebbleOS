@@ -9,7 +9,7 @@
 #include "applib/graphics/text.h"
 #include "applib/preferred_content_size.h"
 #include "applib/ui/ui.h"
-#include "apps/system_apps/timeline/text_node.h"
+#include "apps/system/timeline/text_node.h"
 #include "drivers/rtc.h"
 #include "font_resource_keys.auto.h"
 #include "kernel/pbl_malloc.h"

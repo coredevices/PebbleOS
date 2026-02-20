@@ -14,7 +14,7 @@
 #include "system/passert.h"
 #include "util/size.h"
 
-#include "apps/system_apps/activity_demo_app.h"
+#include "apps/system/activity_demo.h"
 #include "shell/prefs.h"
 
 #include <string.h>

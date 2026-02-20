@@ -4,7 +4,7 @@
 #pragma once
 
 #include "services/normal/timeline/item.h"
-#include "apps/system_apps/timeline/timeline.h"
+#include "apps/system/timeline/timeline.h"
 #include "util/attributes.h"
 
 void WEAK timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *action,

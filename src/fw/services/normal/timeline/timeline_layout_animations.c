@@ -10,7 +10,7 @@
 #include "applib/ui/kino/kino_reel/transform.h"
 #include "applib/ui/kino/kino_reel_pdci.h"
 #include "applib/ui/ui.h"
-#include "apps/system_apps/timeline/timeline_animations.h"
+#include "apps/system/timeline/animations.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/app_install_manager.h"

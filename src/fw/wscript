@@ -507,8 +507,8 @@ def _get_comm_sources(bld, is_recovery):
 
 
 def _build_recovery(bld):
-    source_dirs = ['apps/core_apps/**',
-                   'apps/prf_apps/**',
+    source_dirs = ['apps/core/**',
+                   'apps/prf/**',
                    'process_management',
                    'process_state/**',
                    'console',
@@ -538,30 +538,30 @@ def _build_recovery(bld):
 
     if not bld.is_asterix():
         excludes.extend([
-            'apps/prf_apps/mfg_speaker_asterix_app.c',
-            'apps/prf_apps/mfg_mic_asterix_app.c',
+            'apps/prf/mfg_speaker_asterix.c',
+            'apps/prf/mfg_mic_asterix.c',
         ])
     
     if not bld.is_obelix():
         excludes.extend([
-            'apps/prf_apps/mfg_speaker_obelix_app.c',
-            'apps/prf_apps/mfg_mic_obelix_app.c',
+            'apps/prf/mfg_speaker_obelix.c',
+            'apps/prf/mfg_mic_obelix.c',
         ])
 
     if not bld.is_obelix() or not bld.env.IS_MFG:
         excludes.extend([
-            'apps/prf_apps/mfg_hrm_ctr_leakage_obelix_app.c',
+            'apps/prf/mfg_hrm_ctr_leakage_obelix.c',
         ])
 
     if not bld.is_getafix():
         excludes.extend([
-            'apps/prf_apps/mfg_mic_getafix_app.c',
+            'apps/prf/mfg_mic_getafix.c',
         ])
 
     # Exclude magnetometer test for platforms without magnetometer
     if not bld.capability('HAS_MAGNETOMETER'):
         excludes.extend([
-            'apps/prf_apps/mfg_mag_app.c',
+            'apps/prf/mfg_mag.c',
         ])
 
     if bld.is_silk():
@@ -600,7 +600,7 @@ def _build_recovery(bld):
 
 
 def _get_launcher_globs_to_exclude(bld):
-    system_launchers_root_path = 'apps/system_apps/launcher/'
+    system_launchers_root_path = 'apps/system/launcher/'
     legacy_launcher_glob = system_launchers_root_path + 'legacy/**'
     default_launcher_glob = system_launchers_root_path + 'default/**'
     launcher_globs_to_exclude = [legacy_launcher_glob, default_launcher_glob]
@@ -642,17 +642,17 @@ def _build_normal(bld):
     source_files = []
     excludes = []
 
-    source_dirs.append('apps/core_apps/**')
+    source_dirs.append('apps/core/**')
     if bld.env.NORMAL_SHELL == 'sdk':
         source_dirs.append('apps/sdk/**')
-        source_dirs.append('apps/system_apps/timeline')
+        source_dirs.append('apps/system/timeline')
         if bld.capability('HAS_SDK_SHELL4'):
-            source_dirs.append('apps/system_apps/launcher/default/**')
+            source_dirs.append('apps/system/launcher/default/**')
         else:
             excludes.append('process_management/app_custom_icon.c')
             excludes.append('process_management/app_menu_data_source.c')
     else:
-        source_dirs.extend(('apps/%s/**' % d for d in ('system_apps', 'watch')))
+        source_dirs.extend(('apps/%s/**' % d for d in ('system', 'watch')))
         if bld.is_spalding() and bld.env.BOARD != 'spalding_gabbro':
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/bw')
@@ -667,11 +667,11 @@ def _build_normal(bld):
     source_dirs.extend(_get_dbg_paths(bld))
 
     if bld.env.BUILD_TEST_APPS:
-        source_dirs.append('apps/demo_apps/**')
+        source_dirs.append('apps/demo/**')
         if bld.is_silk():
-            excludes.append('apps/demo_apps/vibe_score_demo.c')
+            excludes.append('apps/demo/vibe_score_demo.c')
     elif bld.env.PERFORMANCE_TESTS:
-        source_dirs.append('apps/demo_apps/gfx_tests')
+        source_dirs.append('apps/demo/gfx_tests')
 
     excludes.extend(_get_launcher_globs_to_exclude(bld))
 
@@ -685,9 +685,9 @@ def _build_normal(bld):
     sources.extend(bld.path.ant_glob('*.[sS]'))
 
     if bld.env.NORMAL_SHELL == 'sdk':
-        sources.append('apps/system_apps/app_fetch_ui.c')
+        sources.append('apps/system/app_fetch_ui.c')
         if bld.capability('HAS_SDK_SHELL4'):
-            sources.append('apps/system_apps/watchfaces.c')
+            sources.append('apps/system/watchfaces.c')
 
     gettexts = []
     gettexts.extend(sources)

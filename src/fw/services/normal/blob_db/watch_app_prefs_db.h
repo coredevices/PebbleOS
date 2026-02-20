@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "apps/system_apps/send_text/send_text_app_prefs.h"
-#include "apps/system_apps/reminders/reminder_app_prefs.h"
+#include "apps/system/send_text/prefs.h"
+#include "apps/system/reminders/reminder_prefs.h"
 #include "services/normal/weather/weather_service_private.h"
 #include "system/status_codes.h"
 

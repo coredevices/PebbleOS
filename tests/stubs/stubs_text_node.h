@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "apps/system_apps/timeline/text_node.h"
+#include "apps/system/timeline/text_node.h"
 
 void graphics_text_node_destroy(GTextNode *node) { }
 

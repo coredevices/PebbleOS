@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system_apps/workout/workout_selection.h"
+#include "apps/system/workout/selection.h"
 
 #include "test_workout_app_includes.h"
 

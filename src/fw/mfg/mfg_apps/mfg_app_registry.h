@@ -5,10 +5,10 @@
 
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "mfg/mfg_apps/mfg_display_burnin.h"
-#include "mfg/mfg_apps/mfg_button_app.h"
+#include "apps/prf/mfg_button.h"
 #include "mfg/mfg_apps/mfg_bt_test_app.h"
-#include "mfg/mfg_apps/mfg_display_app.h"
-#include "mfg/mfg_apps/mfg_runin_app.h"
+#include "apps/prf/mfg_display.h"
+#include "apps/prf/mfg_charge.h"
 #include "mfg/mfg_apps/mfg_func_test.h"
 
 typedef const struct PebbleProcessMd* (*MfgInitFuncType)(void);

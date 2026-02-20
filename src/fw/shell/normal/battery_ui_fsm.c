@@ -7,7 +7,7 @@
 
 #include "applib/ui/vibes.h"
 #include "apps/system_app_ids.h"
-#include "apps/system_apps/battery_critical_app.h"
+#include "apps/system/battery_critical.h"
 #include "kernel/low_power.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/standby.h"

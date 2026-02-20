@@ -87,7 +87,7 @@ const PebbleProcessMd* alarms_app_get_info(void) {
 }
 
 #if !CAPABILITY_HAS_SDK_SHELL4
-#include "apps/system_apps/launcher/launcher_app.h"
+#include "apps/system/launcher/launcher.h"
 const LauncherDrawState *launcher_app_get_draw_state(void) {
   return NULL;
 }

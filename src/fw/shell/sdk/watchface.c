@@ -5,8 +5,8 @@
 
 #include "applib/ui/dialogs/expandable_dialog.h"
 #include "apps/system_app_ids.h"
-#include "apps/system_apps/launcher/launcher_app.h"
-#include "apps/system_apps/timeline/timeline.h"
+#include "apps/system/launcher/launcher.h"
+#include "apps/system/timeline/timeline.h"
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "popups/timeline/peek.h"

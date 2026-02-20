@@ -5,7 +5,7 @@
 
 #include "services/common/compositor/compositor.h"
 
-#include "apps/system_apps/launcher/launcher_app.h"
+#include "apps/system/launcher/launcher.h"
 
 //! @file compositor_launcher_app_transitions.h
 //! Allows a user to create and configure compositor transition animations between the launcher

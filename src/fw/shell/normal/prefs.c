@@ -9,8 +9,8 @@
 #include "shell/prefs_private.h"
 #include "shell/system_theme.h"
 
-#include "apps/system_apps/timeline/timeline.h"
-#include "apps/system_apps/toggle/quiet_time.h"
+#include "apps/system/timeline/timeline.h"
+#include "apps/system/toggle/quiet_time.h"
 #include "board/board.h"
 #include "applib/graphics/gtypes.h"
 #include "drivers/ambient_light.h"

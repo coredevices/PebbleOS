@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/graphics/graphics.h"
-#include "apps/system_apps/timeline/text_node.h"
+#include "apps/system/timeline/text_node.h"
 
 int health_util_format_hours_and_minutes(char *buffer, size_t buffer_size, int duration_s,
                                          void *i18n_owner) {

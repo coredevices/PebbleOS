@@ -8,7 +8,7 @@
 #include "services/common/regular_timer.h"
 #include "services/normal/blob_db/pin_db.h"
 #include "services/normal/timeline/timeline.h"
-#include "apps/system_apps/timeline/timeline_model.h"
+#include "apps/system/timeline/model.h"
 #include "util/size.h"
 
 // Fixture

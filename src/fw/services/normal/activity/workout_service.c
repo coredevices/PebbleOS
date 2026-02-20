@@ -9,7 +9,7 @@
 #include "activity_private.h"
 #include "hr_util.h"
 
-#include "apps/system_apps/workout/workout_utils.h"
+#include "apps/system/workout/utils.h"
 #include "applib/app.h"
 #include "applib/health_service.h"
 #include "kernel/events.h"

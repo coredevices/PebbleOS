@@ -3,7 +3,7 @@
 
 #include "music_internal.h"
 
-#include "apps/system_apps/music_app.h"
+#include "apps/system/music.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
 #include "process_management/app_manager.h"

@@ -3,7 +3,7 @@
 
 #include "kernel/low_power.h"
 
-#include "apps/prf_apps/prf_low_power_app.h"
+#include "apps/prf/low_power.h"
 #include "drivers/rtc.h"
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"

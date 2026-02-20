@@ -6,8 +6,8 @@
 #include "services/common/compositor/compositor_private.h"
 #include "services/common/compositor/compositor_transitions.h"
 
-#include "apps/system_apps/launcher/launcher_app.h"
-#include "apps/system_apps/timeline/timeline_common.h"
+#include "apps/system/launcher/launcher.h"
+#include "apps/system/timeline/common.h"
 #include "applib/ui/animation_interpolate.h"
 #include "applib/ui/animation_timing.h"
 #include "applib/graphics/bitblt.h"

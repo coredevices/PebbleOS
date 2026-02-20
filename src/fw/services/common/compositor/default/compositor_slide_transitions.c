@@ -6,7 +6,7 @@
 #include "services/common/compositor/compositor_private.h"
 #include "services/common/compositor/compositor_transitions.h"
 
-#include "apps/system_apps/timeline/timeline_common.h"
+#include "apps/system/timeline/common.h"
 #include "applib/graphics/bitblt.h"
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/gtypes.h"

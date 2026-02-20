@@ -3,11 +3,11 @@
 
 #include "shell/system_app_state_machine.h"
 
-#include "apps/core_apps/panic_window_app.h"
-#include "apps/system_apps/battery_critical_app.h"
+#include "apps/core/panic_window.h"
+#include "apps/system/battery_critical.h"
 #include "apps/system_app_ids.h"
-#include "apps/system_apps/launcher/launcher_app.h"
-#include "apps/watch/low_power/low_power_face.h"
+#include "apps/system/launcher/launcher.h"
+#include "apps/watch/low_power/face.h"
 #include "shell/normal/watchface.h"
 #include "kernel/low_power.h"
 #include "kernel/panic.h"

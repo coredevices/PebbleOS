@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/ui/layer.h"
-#include "apps/system_apps/timeline/text_node.h"
+#include "apps/system/timeline/text_node.h"
 
 #include <stddef.h>
 #include <stdint.h>

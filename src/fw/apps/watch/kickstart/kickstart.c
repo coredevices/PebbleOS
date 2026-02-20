@@ -8,7 +8,7 @@
 #include "applib/tick_timer_service.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/ui.h"
-#include "apps/system_apps/timeline/text_node.h"
+#include "apps/system/timeline/text_node.h"
 #include "kernel/pbl_malloc.h"
 #include "applib/pbl_std/pbl_std.h"
 #include "process_state/app_state/app_state.h"

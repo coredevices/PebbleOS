@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system_apps/health/health_detail_card.h"
-#include "apps/system_apps/health/health_progress.h"
+#include "apps/system/health/detail_card.h"
+#include "apps/system/health/progress.h"
 
 #include "test_health_app_includes.h"
 

@@ -3,7 +3,7 @@
 
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/graphics.h"
-#include "apps/system_apps/weather/weather_app_layout.h"
+#include "apps/system/weather/layout.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/content_indicator.h"
 #include "applib/ui/content_indicator_private.h"

@@ -5,7 +5,7 @@
 
 #include "applib/preferred_content_size.h"
 #include "applib/ui/window_private.h"
-#include "apps/system_apps/settings/settings_notifications_private.h"
+#include "apps/system/settings/notifications_private.h"
 #include "popups/notifications/notification_window.h"
 #include "popups/notifications/notification_window_private.h"
 #include "resource/timeline_resource_ids.auto.h"

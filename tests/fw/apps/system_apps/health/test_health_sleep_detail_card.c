@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system_apps/health/health_sleep_detail_card.h"
-#include "apps/system_apps/health/health_detail_card.h"
-#include "apps/system_apps/health/health_data.h"
-#include "apps/system_apps/health/health_data_private.h"
+#include "apps/system/health/sleep_detail_card.h"
+#include "apps/system/health/detail_card.h"
+#include "apps/system/health/data.h"
+#include "apps/system/health/data_private.h"
 
 #include "test_health_app_includes.h"
 
