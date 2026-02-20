@@ -597,43 +597,15 @@ static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
 #endif
 
 #if PBL_COLOR
-// Valid theme colors for Settings menu (dark variants)
+// Valid theme colors (unified scheme)
 // Must match s_color_definitions in settings_themes.h
-static bool prv_is_valid_settings_theme_color(GColor color) {
+static bool prv_is_valid_theme_color(GColor color) {
   // GColorClear means "use default"
   if (color.argb == GColorClear.argb) {
     return true;
   }
-  // Valid dark colors from settings_themes.h
-  static const uint8_t valid_dark[] = {
-    GColorDarkCandyAppleRedARGB8,  // Red
-    GColorWindsorTanARGB8,          // Orange
-    GColorArmyGreenARGB8,           // Yellow
-    GColorDarkGreenARGB8,           // Green
-    GColorMidnightGreenARGB8,       // Cyan
-    GColorCobaltBlueARGB8,          // Light Blue
-    GColorDukeBlueARGB8,            // Royal Blue
-    GColorIndigoARGB8,              // Purple
-    GColorPurpleARGB8,              // Magenta
-    GColorJazzberryJamARGB8,        // Pink
-  };
-  for (size_t i = 0; i < ARRAY_LENGTH(valid_dark); i++) {
-    if (color.argb == valid_dark[i]) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// Valid theme colors for Apps menu (light variants)
-// Must match s_color_definitions in settings_themes.h
-static bool prv_is_valid_apps_theme_color(GColor color) {
-  // GColorClear means "use default"
-  if (color.argb == GColorClear.argb) {
-    return true;
-  }
-  // Valid light colors from settings_themes.h
-  static const uint8_t valid_light[] = {
+  // Valid colors from settings_themes.h
+  static const uint8_t valid_colors[] = {
     GColorSunsetOrangeARGB8,        // Red
     GColorChromeYellowARGB8,        // Orange
     GColorYellowARGB8,              // Yellow
@@ -645,8 +617,8 @@ static bool prv_is_valid_apps_theme_color(GColor color) {
     GColorMagentaARGB8,             // Magenta
     GColorBrilliantRoseARGB8,       // Pink
   };
-  for (size_t i = 0; i < ARRAY_LENGTH(valid_light); i++) {
-    if (color.argb == valid_light[i]) {
+  for (size_t i = 0; i < ARRAY_LENGTH(valid_colors); i++) {
+    if (color.argb == valid_colors[i]) {
       return true;
     }
   }
@@ -656,10 +628,10 @@ static bool prv_is_valid_apps_theme_color(GColor color) {
 
 static bool prv_set_s_settings_menu_highlight_color(GColor *color) {
 #if PBL_COLOR
-  if (!prv_is_valid_settings_theme_color(*color)) {
-    PBL_LOG_WRN("Invalid settings menu highlight color 0x%02x, using default",
+  if (!prv_is_valid_theme_color(*color)) {
+    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
             color->argb);
-    s_settings_menu_highlight_color = GColorCobaltBlue;
+    s_settings_menu_highlight_color = GColorVividCerulean;
     return false;  // Reject invalid value
   }
   s_settings_menu_highlight_color = *color;
@@ -671,8 +643,8 @@ static bool prv_set_s_settings_menu_highlight_color(GColor *color) {
 
 static bool prv_set_s_apps_menu_highlight_color(GColor *color) {
 #if PBL_COLOR
-  if (!prv_is_valid_apps_theme_color(*color)) {
-    PBL_LOG_WRN("Invalid apps menu highlight color 0x%02x, using default",
+  if (!prv_is_valid_theme_color(*color)) {
+    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
             color->argb);
     s_apps_menu_highlight_color = GColorVividCerulean;
     return false;  // Reject invalid value
