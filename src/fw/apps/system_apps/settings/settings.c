@@ -50,22 +50,19 @@ static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, vo
   settings_menu_push(cell_index->row);
 }
 
+#if PBL_ROUND
 static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer,
                                             MenuIndex *cell_index, void *context) {
   PBL_ASSERTN(cell_index->row < SettingsMenuItem_Count);
 
-#if PBL_RECT
-  const int16_t category_title_height = 37;
-  return category_title_height;
-#else
   const int16_t focused_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT;
   const int16_t unfocused_cell_height =
       ((DISP_ROWS - focused_cell_height) / 2) -
           SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING;
   return menu_layer_is_index_selected(menu_layer, cell_index) ? focused_cell_height :
                                                                 unfocused_cell_height;
-#endif
 }
+#endif
 
 static int16_t prv_get_separator_height_callback(MenuLayer *menu_layer,
                                                  MenuIndex *cell_index,
@@ -86,7 +83,9 @@ static void prv_window_load(Window *window) {
   menu_layer_init(menu_layer, &bounds);
   menu_layer_set_callbacks(menu_layer, data, &(MenuLayerCallbacks) {
     .get_num_rows = prv_get_num_rows_callback,
+#if PBL_ROUND
     .get_cell_height = prv_get_cell_height_callback,
+#endif
     .draw_row = prv_draw_row_callback,
     .select_click = prv_select_callback,
     .get_separator_height = prv_get_separator_height_callback
