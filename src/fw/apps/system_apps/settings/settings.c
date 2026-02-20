@@ -90,9 +90,6 @@ static void prv_window_load(Window *window) {
     .select_click = prv_select_callback,
     .get_separator_height = prv_get_separator_height_callback
   });
-  menu_layer_set_normal_colors(menu_layer,
-                               PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite),
-                               PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
   menu_layer_set_highlight_colors(menu_layer,
                                   shell_prefs_get_settings_menu_highlight_color(),
                                   GColorWhite);
