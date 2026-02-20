@@ -28,6 +28,7 @@ jobs:
               - 'sdk/**'
               - 'src/**'
               - 'stored_apps/**'
+              - 'tests/**'
               - 'tools/**'
               - 'third_party/**'
               - 'waftools/**'
