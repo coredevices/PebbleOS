@@ -329,7 +329,6 @@ def build(bld):
         'test_launcher_menu_layer.c',
         'test_pfs.c',
         'test_selection_windows.c',
-        'test_simple_dialog.c',
         'test_system_theme.c',
         'test_timeline_peek_event.c',
         'test_timezone_database.c',
