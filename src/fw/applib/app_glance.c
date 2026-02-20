@@ -4,7 +4,7 @@
 #include "app_glance.h"
 
 #include "applib/template_string.h"
-#include "apps/system_apps/launcher/default/launcher_app_glance_generic.h"
+#include "apps/system/launcher/default/app_glance_generic.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "services/normal/blob_db/app_glance_db_private.h"

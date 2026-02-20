@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system_apps/workout/workout_dialog.h"
+#include "apps/system/workout/dialog.h"
 
 #include "resource/resource_ids.auto.h"
 

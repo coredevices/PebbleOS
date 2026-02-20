@@ -8,7 +8,7 @@
 #include "applib/fonts/fonts.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/text.h"
-#include "apps/system_apps/timeline/peek_layer.h"
+#include "apps/system/timeline/peek_layer.h"
 #include "font_resource_keys.auto.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"

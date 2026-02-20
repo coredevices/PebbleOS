@@ -3,7 +3,7 @@
 
 #include "mfg_factory_mode.h"
 
-#include "apps/prf_apps/mfg_menu_app.h"
+#include "apps/prf/mfg_menu.h"
 #include "board/board.h"
 #include "kernel/event_loop.h"
 #include "kernel/low_power.h"

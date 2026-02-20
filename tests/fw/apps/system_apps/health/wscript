@@ -82,10 +82,10 @@ def build(ctx):
         " src/fw/applib/ui/text_layer.c" \
         " src/fw/applib/ui/text_layer_flow.c" \
         " src/fw/applib/ui/window.c" \
-        " src/fw/apps/system_apps/health/health_data.c" \
-        " src/fw/apps/system_apps/health/health_progress.c" \
-        " src/fw/apps/system_apps/health/health_ui.c" \
-        " src/fw/apps/system_apps/timeline/text_node.c" \
+        " src/fw/apps/system/health/data.c" \
+        " src/fw/apps/system/health/progress.c" \
+        " src/fw/apps/system/health/ui.c" \
+        " src/fw/apps/system/timeline/text_node.c" \
         " src/fw/services/normal/activity/health_util.c" \
         " src/fw/services/normal/timeline/timeline_resources.c" \
         " src/fw/util/buffer.c" \
@@ -99,14 +99,14 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = rendering_sources + \
                             health_app_sources + \
-                            " src/fw/apps/system_apps/health/health_activity_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_activity_summary_card.c" \
-                            " src/fw/apps/system_apps/health/health_hr_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_hr_summary_card.c" \
-                            " src/fw/apps/system_apps/health/health_sleep_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_sleep_summary_card.c" \
-                            " src/fw/apps/system_apps/health/health_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_card_view.c",
+                            " src/fw/apps/system/health/activity_detail_card.c" \
+                            " src/fw/apps/system/health/activity_summary_card.c" \
+                            " src/fw/apps/system/health/hr_detail_card.c" \
+                            " src/fw/apps/system/health/hr_summary_card.c" \
+                            " src/fw/apps/system/health/sleep_detail_card.c" \
+                            " src/fw/apps/system/health/sleep_summary_card.c" \
+                            " src/fw/apps/system/health/detail_card.c" \
+                            " src/fw/apps/system/health/card_view.c",
          test_sources_ant_glob = "test_health_card_view.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -116,9 +116,9 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = rendering_sources + \
                             health_app_sources + \
-                            " src/fw/apps/system_apps/health/health_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_activity_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_activity_summary_card.c",
+                            " src/fw/apps/system/health/detail_card.c" \
+                            " src/fw/apps/system/health/activity_detail_card.c" \
+                            " src/fw/apps/system/health/activity_summary_card.c",
          test_sources_ant_glob = "test_health_activity_summary_card.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -128,9 +128,9 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = rendering_sources + \
                             health_app_sources + \
-                            " src/fw/apps/system_apps/health/health_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_sleep_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_sleep_summary_card.c",
+                            " src/fw/apps/system/health/detail_card.c" \
+                            " src/fw/apps/system/health/sleep_detail_card.c" \
+                            " src/fw/apps/system/health/sleep_summary_card.c",
          test_sources_ant_glob = "test_health_sleep_summary_card.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -140,9 +140,9 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = rendering_sources + \
                             health_app_sources + \
-                            " src/fw/apps/system_apps/health/health_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_hr_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_hr_summary_card.c",
+                            " src/fw/apps/system/health/detail_card.c" \
+                            " src/fw/apps/system/health/hr_detail_card.c" \
+                            " src/fw/apps/system/health/hr_summary_card.c",
          test_sources_ant_glob = "test_health_hr_summary_card.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -152,8 +152,8 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = rendering_sources + \
                             health_app_sources + \
-                            " src/fw/apps/system_apps/health/health_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_activity_detail_card.c",
+                            " src/fw/apps/system/health/detail_card.c" \
+                            " src/fw/apps/system/health/activity_detail_card.c",
          test_sources_ant_glob = "test_health_activity_detail_card.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -163,8 +163,8 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = rendering_sources + \
                             health_app_sources + \
-                            " src/fw/apps/system_apps/health/health_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_sleep_detail_card.c",
+                            " src/fw/apps/system/health/detail_card.c" \
+                            " src/fw/apps/system/health/sleep_detail_card.c",
          test_sources_ant_glob = "test_health_sleep_detail_card.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -174,8 +174,8 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = rendering_sources + \
                             health_app_sources + \
-                            " src/fw/apps/system_apps/health/health_detail_card.c" \
-                            " src/fw/apps/system_apps/health/health_hr_detail_card.c",
+                            " src/fw/apps/system/health/detail_card.c" \
+                            " src/fw/apps/system/health/hr_detail_card.c",
          test_sources_ant_glob = "test_health_hr_detail_card.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -185,7 +185,7 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = rendering_sources + \
                             health_app_sources + \
-                            " src/fw/apps/system_apps/health/health_detail_card.c",
+                            " src/fw/apps/system/health/detail_card.c",
          test_sources_ant_glob = "test_health_detail_card.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,

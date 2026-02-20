@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system_apps/workout/workout.h"
-#include "apps/system_apps/workout/workout_active.h"
-#include "apps/system_apps/workout/workout_data.h"
-#include "apps/system_apps/workout/workout_dialog.h"
+#include "apps/system/workout/workout.h"
+#include "apps/system/workout/active.h"
+#include "apps/system/workout/data.h"
+#include "apps/system/workout/dialog.h"
 
 #include "services/normal/activity/health_util.h"
 

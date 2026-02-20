@@ -4,7 +4,7 @@
 #include "system_theme.h"
 
 #include "applib/fonts/fonts.h"
-#include "apps/system_apps/settings/settings_notifications_private.h"
+#include "apps/system/settings/notifications_private.h"
 #include "process_management/process_manager.h"
 #include "services/common/analytics/analytics.h"
 #include "shell/prefs.h"

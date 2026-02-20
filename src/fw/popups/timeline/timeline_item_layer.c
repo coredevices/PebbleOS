@@ -7,7 +7,7 @@
 #include "applib/ui/action_menu_window.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_manager.h"
-#include "apps/system_apps/timeline/timeline.h"
+#include "apps/system/timeline/timeline.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "kernel/ui/kernel_ui.h"

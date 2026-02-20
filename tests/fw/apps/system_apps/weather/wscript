@@ -38,7 +38,7 @@ def build(ctx):
         " src/fw/applib/ui/kino/kino_reel_pdci.c" \
         " src/fw/applib/ui/kino/kino_reel_pdcs.c" \
         " src/fw/applib/ui/layer.c" \
-        " src/fw/apps/system_apps/timeline/text_node.c" \
+        " src/fw/apps/system/timeline/text_node.c" \
         " src/fw/board/displays/display_spalding.c" \
         " src/fw/drivers/flash/flash_crc.c" \
         " src/fw/flash_region/filesystem_regions.c" \
@@ -80,7 +80,7 @@ def build(ctx):
                             " src/fw/applib/ui/content_indicator.c" \
                             " tests/fakes/fake_fonts.c" \
                             " src/fw/applib/ui/shadows.c" \
-                            " src/fw/apps/system_apps/weather/weather_app_layout.c" \
+                            " src/fw/apps/system/weather/layout.c" \
                             " src/fw/services/normal/timeline/timeline_resources.c" \
                             " src/fw/services/normal/weather/weather_types.c" \
                             " src/fw/util/buffer.c" \

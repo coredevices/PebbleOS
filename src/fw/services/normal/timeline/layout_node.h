@@ -5,7 +5,7 @@
 
 #include "applib/graphics/text.h"
 #include "applib/ui/kino/kino_layer.h"
-#include "apps/system_apps/timeline/text_node.h"
+#include "apps/system/timeline/text_node.h"
 #include "resource/resource_ids.auto.h"
 #include "services/normal/timeline/attribute.h"
 #include "services/normal/timeline/layout_layer.h"

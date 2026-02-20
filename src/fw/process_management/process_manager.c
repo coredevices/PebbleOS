@@ -46,7 +46,7 @@
 
 #include "syscall/syscall_internal.h"
 
-#include "apps/system_apps/app_fetch_ui.h"
+#include "apps/system/app_fetch_ui.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

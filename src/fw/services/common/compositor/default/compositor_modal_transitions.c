@@ -10,7 +10,7 @@
 #include "util/trig.h"
 #include "applib/ui/animation_interpolate.h"
 #include "applib/graphics/gdraw_command_sequence.h"
-#include "apps/system_apps/timeline/timeline_common.h"
+#include "apps/system/timeline/common.h"
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "resource/resource_ids.auto.h"

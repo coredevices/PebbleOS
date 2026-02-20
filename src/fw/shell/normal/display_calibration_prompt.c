@@ -6,7 +6,7 @@
 #include "display_calibration_prompt.h"
 
 #include "applib/ui/dialogs/confirmation_dialog.h"
-#include "apps/system_apps/settings/settings_display_calibration.h"
+#include "apps/system/settings/display_calibration.h"
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "mfg/mfg_info.h"
