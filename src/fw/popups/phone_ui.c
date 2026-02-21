@@ -118,7 +118,8 @@ typedef struct {
 typedef enum {
   ACCEPTED,
   DECLINED,
-  DISCONNECTED
+  DISCONNECTED,
+  ENDED
 } CallStatus;
 
 typedef struct {
@@ -515,6 +516,9 @@ static void prv_update_call_time(void *unused) {
   if (s_phone_ui_data == NULL) {
     return;
   }
+  if (s_phone_ui_data->call_start_time == 0) {
+    return;
+  }
 
   if (layer_get_hidden(&s_phone_ui_data->call_status_text_layer.layer)) {
     prv_show_call_status();
@@ -550,6 +554,7 @@ static void prv_start_call_duration_timer(void) {
 static void prv_stop_call_duration_timer(void) {
   evented_timer_cancel(s_phone_ui_data->call_duration_timer);
   s_phone_ui_data->call_duration_timer = EVENTED_TIMER_INVALID_ID;
+  s_phone_ui_data->call_start_time = 0;
 }
 
 static void prv_set_status_text(CallStatus status) {
@@ -559,14 +564,12 @@ static void prv_set_status_text(CallStatus status) {
   } else if (status == DISCONNECTED) {
     i18n_get_with_buffer("Disconnected", s_phone_ui_data->call_status_text_buf,
                          CALL_STATUS_BUFFER_LENGTH);
+  } else if (status == ENDED) {
+    i18n_get_with_buffer("Call Ended", s_phone_ui_data->call_status_text_buf,
+                         CALL_STATUS_BUFFER_LENGTH);
   } else {
-    if (s_phone_ui_data->call_start_time) {
-      i18n_get_with_buffer("Call Ended", s_phone_ui_data->call_status_text_buf,
-                           CALL_STATUS_BUFFER_LENGTH);
-    } else {
-      i18n_get_with_buffer("Call Declined", s_phone_ui_data->call_status_text_buf,
-                           CALL_STATUS_BUFFER_LENGTH);
-    }
+    i18n_get_with_buffer("Call Declined", s_phone_ui_data->call_status_text_buf,
+                         CALL_STATUS_BUFFER_LENGTH);
   }
 
   text_layer_set_text(&s_phone_ui_data->call_status_text_layer,
@@ -1174,7 +1177,7 @@ void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
   if (call_accepted) {
     prv_set_icon_resource(TIMELINE_RESOURCE_DURING_PHONE_CALL);
     prv_set_window_color(ACCEPT_COLOR, true);
-    prv_set_status_text(ACCEPTED);
+    prv_set_status_text(ENDED);
   } else {
     prv_set_icon_resource(TIMELINE_RESOURCE_DISMISSED_PHONE_CALL);
     prv_set_window_color(DECLINE_COLOR, true);
@@ -1189,7 +1192,6 @@ void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
 }
 
 void phone_ui_handle_call_hide(void) {
-  // Just pop the window - it'll handle all the cleanup
   prv_window_pop();
 }
 
