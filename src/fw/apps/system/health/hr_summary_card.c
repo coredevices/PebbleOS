@@ -42,10 +42,10 @@ typedef struct HealthHrSummaryCardData {
 #define PULSING_HEART_TIMEOUT (30 * MS_PER_SECOND)
 
 #define PROGRESS_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack))
-#define PROGRESS_OUTLINE_COLOR (PBL_IF_COLOR_ELSE(GColorClear, GColorBlack))
+#define PROGRESS_OUTLINE_COLOR GColorBlack
 
-#define TEXT_COLOR (PBL_IF_COLOR_ELSE(GColorBulgarianRose, GColorBlack))
-#define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite))
+#define TEXT_COLOR GColorBlack
+#define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite))
 
 
 static void prv_pulsing_heart_timer_cb(void *context) {

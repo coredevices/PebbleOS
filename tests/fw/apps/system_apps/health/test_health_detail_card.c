@@ -6,7 +6,7 @@
 
 #include "test_health_app_includes.h"
 
-#define BG_COLOR PBL_IF_COLOR_ELSE(GColorBlueMoon, GColorWhite)
+#define BG_COLOR PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite)
 #define FILL_COLOR PBL_IF_COLOR_ELSE(GColorKellyGreen, GColorDarkGray)
 #define TODAY_FILL_COLOR PBL_IF_COLOR_ELSE(GColorMediumAquamarine, GColorDarkGray)
 
