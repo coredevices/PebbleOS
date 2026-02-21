@@ -79,7 +79,7 @@ Window *health_hr_detail_card_create(HealthData *health_data) {
     .primary_label = (char *)i18n_get("TIME IN ZONES", card_data),
     .primary_value = app_zalloc_check(buffer_size),
     .fill_color = PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorWhite),
-    .outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack),
+    .outline_color = GColorBlack,
   };
 
   prv_set_heading_value(heading->primary_value, buffer_size,

@@ -35,18 +35,17 @@ typedef struct HealthSleepSummaryCardData {
 } HealthSleepSummaryCardData;
 
 #define PROGRESS_CURRENT_COLOR (PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorDarkGray))
-#define PROGRESS_SECONDARY_COLOR (PBL_IF_COLOR_ELSE(GColorVeryLightBlue, GColorClear))
+#define PROGRESS_SECONDARY_COLOR (PBL_IF_COLOR_ELSE(GColorBlue, GColorBlack))
 #define PROGRESS_TYPICAL_COLOR (PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack))
 #define PROGRESS_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorDarkGray, GColorClear))
-#define PROGRESS_OUTLINE_COLOR (PBL_IF_COLOR_ELSE(GColorClear, GColorBlack))
+#define PROGRESS_OUTLINE_COLOR (PBL_IF_COLOR_ELSE(GColorBlack, GColorBlack))
 
-#define CURRENT_TEXT_COLOR (PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack))
-#define TYPICAL_TEXT_COLOR (PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite))
-#define NO_DATA_TEXT_COLOR (PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack))
-#define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorOxfordBlue, GColorWhite))
+#define CURRENT_TEXT_COLOR GColorBlack
+#define TYPICAL_TEXT_COLOR GColorBlack
+#define NO_DATA_TEXT_COLOR GColorBlack
+#define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite))
 
 #define TWELVE_HOURS (SECONDS_PER_HOUR * 12)
-
 
 static void prv_render_sleep_sessions(GContext *ctx, HealthSleepSummaryCardData *data) {
   const int num_sessions = health_data_sleep_get_num_sessions(data->health_data);
@@ -68,9 +67,8 @@ static void prv_render_sleep_sessions(GContext *ctx, HealthSleepSummaryCardData 
     struct tm local_tm;
     localtime_r(&session->start_utc, &local_tm);
 
-    const int session_start_24h = (local_tm.tm_sec +
-                                  local_tm.tm_min * SECONDS_PER_MINUTE +
-                                  local_tm.tm_hour * SECONDS_PER_HOUR);
+    const int session_start_24h = (local_tm.tm_sec + local_tm.tm_min * SECONDS_PER_MINUTE +
+                                   local_tm.tm_hour * SECONDS_PER_HOUR);
     const int session_end_24h = session_start_24h + (session->length_min * SECONDS_PER_MINUTE);
 
     const int session_start_12h = session_start_24h % TWELVE_HOURS;
@@ -92,11 +90,11 @@ static void prv_render_typical_markers(GContext *ctx, HealthSleepSummaryCardData
 
   if (sleep_start_24h || sleep_end_24h) {
 #if PBL_COLOR
-    const int time_fuzz = (2 * SECONDS_PER_MINUTE);
-    const int sleep_start_12h = (sleep_start_24h) % TWELVE_HOURS;
-    const int sleep_end_12h = (sleep_end_24h - time_fuzz) % TWELVE_HOURS;
-    const int sleep_start = (sleep_start_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
-    const int sleep_end = (sleep_end_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
+    // const int time_fuzz = (2 * SECONDS_PER_MINUTE);
+    // const int sleep_start_12h = (sleep_start_24h) % TWELVE_HOURS;
+    // const int sleep_end_12h = (sleep_end_24h - time_fuzz) % TWELVE_HOURS;
+    // const int sleep_start = (sleep_start_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
+    // const int sleep_end = (sleep_end_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
 #endif
 
     const int typical_sleep_start_24h = health_data_sleep_get_typical_start_time(data->health_data);
@@ -106,29 +104,10 @@ static void prv_render_typical_markers(GContext *ctx, HealthSleepSummaryCardData
 
     const int typical_start =
         (typical_sleep_start_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
-    const int typical_end =
-        (typical_sleep_end_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
+    const int typical_end = (typical_sleep_end_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);
 
-#if PBL_COLOR
-    const bool fell_asleep_late = (typical_sleep_start_24h < sleep_start_24h);
-    if (fell_asleep_late) {
-      health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_TYPICAL_COLOR,
-                               typical_start, sleep_start);
-    } else {
-      health_progress_bar_mark(ctx, &data->progress_bar, PROGRESS_TYPICAL_COLOR, typical_start);
-    }
-
-    const bool woke_up_early = (typical_sleep_end_24h > sleep_end_24h);
-    if (woke_up_early) {
-      health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_TYPICAL_COLOR,
-                               sleep_end, typical_end);
-    } else {
-      health_progress_bar_mark(ctx, &data->progress_bar, PROGRESS_TYPICAL_COLOR, typical_end);
-    }
-#else
     health_progress_bar_mark(ctx, &data->progress_bar, PROGRESS_TYPICAL_COLOR, typical_start);
     health_progress_bar_mark(ctx, &data->progress_bar, PROGRESS_TYPICAL_COLOR, typical_end);
-#endif
   }
 }
 
@@ -136,17 +115,12 @@ static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
   HealthSleepSummaryCardData *data = layer_get_data(base_layer);
 
   // Renders the background
-  health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_BACKGROUND_COLOR,
-                           0, HEALTH_PROGRESS_BAR_MAX_VALUE);
+  health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_BACKGROUND_COLOR, 0,
+                           HEALTH_PROGRESS_BAR_MAX_VALUE);
 
   prv_render_sleep_sessions(ctx, data);
 
   prv_render_typical_markers(ctx, data);
-
-  // This is required to get the rounded corners on the outside of the rectangle
-  graphics_context_set_stroke_width(ctx, 2);
-  graphics_context_set_stroke_color(ctx, CARD_BACKGROUND_COLOR);
-  graphics_draw_round_rect(ctx, &s_sleep_summary_masking_rect, 5);
 
   // This needs to be done after drawing the progress bars or else the progress fill
   // overlaps the outline and things look weird
@@ -156,7 +130,7 @@ static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
 static void prv_render_icon(GContext *ctx, Layer *base_layer) {
   HealthSleepSummaryCardData *data = layer_get_data(base_layer);
 
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(37, 32), 39) + HEALTH_Y_OFFSET;
+  const int y = PBL_IF_RECT_ELSE(37, 39) + HEALTH_Y_OFFSET;
   const int x_center_offset = 17;
   kino_reel_draw(data->icon, ctx, GPoint(base_layer->bounds.size.w / 2 - x_center_offset, y));
 }
@@ -164,7 +138,7 @@ static void prv_render_icon(GContext *ctx, Layer *base_layer) {
 static void prv_render_current_sleep_text(GContext *ctx, Layer *base_layer) {
   HealthSleepSummaryCardData *data = layer_get_data(base_layer);
 
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88) + HEALTH_Y_OFFSET;
+  const int y = PBL_IF_RECT_ELSE(85, 88) + HEALTH_Y_OFFSET;
   const GRect rect = GRect(0, y, base_layer->bounds.size.w, 40);
 
   const int current_sleep = health_data_current_sleep_get(data->health_data);
@@ -174,8 +148,7 @@ static void prv_render_current_sleep_text(GContext *ctx, Layer *base_layer) {
     GTextNodeContainer *container = &horiz_container->container;
     horiz_container->horizontal_alignment = GTextAlignmentCenter;
     health_util_duration_to_hours_and_minutes_text_node(current_sleep, base_layer,
-                                                        data->number_font,
-                                                        data->unit_font,
+                                                        data->number_font, data->unit_font,
                                                         CURRENT_TEXT_COLOR, container);
     graphics_text_node_draw(&container->node, ctx, &rect, NULL, NULL);
     graphics_text_node_destroy(&container->node);
@@ -213,8 +186,8 @@ static void prv_render_no_sleep_data_text(GContext *ctx, Layer *base_layer) {
   const char *text = i18n_get("No sleep data,\nwear your watch\nto sleep", base_layer);
 
   graphics_context_set_text_color(ctx, NO_DATA_TEXT_COLOR);
-  graphics_draw_text(ctx, text, data->typical_font,
-                     rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, text, data->typical_font, rect, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
 }
 
 static bool prv_has_sleep_data(HealthData *health_data) {
@@ -254,22 +227,23 @@ Layer *health_sleep_summary_card_create(HealthData *health_data) {
   HealthSleepSummaryCardData *health_sleep_summary_card_data = layer_get_data(base_layer);
   layer_set_update_proc(base_layer, prv_base_layer_update_proc);
   // set health data
-  *health_sleep_summary_card_data = (HealthSleepSummaryCardData) {
-    .icon = kino_reel_create_with_resource(RESOURCE_ID_HEALTH_APP_SLEEP),
-    .progress_bar = {
-      .num_segments = ARRAY_LENGTH(s_sleep_summary_progress_segments),
-      .segments = s_sleep_summary_progress_segments,
-    },
-    .health_data = health_data,
+  *health_sleep_summary_card_data = (HealthSleepSummaryCardData){
+      .icon = kino_reel_create_with_resource(RESOURCE_ID_HEALTH_APP_SLEEP),
+      .progress_bar =
+          {
+              .num_segments = ARRAY_LENGTH(s_sleep_summary_progress_segments),
+              .segments = s_sleep_summary_progress_segments,
+          },
+      .health_data = health_data,
 #if DISP_ROWS > LEGACY_2X_DISP_ROWS
-    .number_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS),
-    .unit_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+      .number_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS),
+      .unit_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
 #else
-    .number_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
-    .unit_font = fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
+      .number_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+      .unit_font = fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
 #endif
-    .typical_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
-    .em_dash_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+      .typical_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+      .em_dash_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
   };
   return base_layer;
 }
@@ -279,9 +253,9 @@ void health_sleep_summary_card_select_click_handler(Layer *layer) {
   HealthData *health_data = health_sleep_summary_card_data->health_data;
   if (prv_has_sleep_data(health_data)) {
     Window *window = health_sleep_detail_card_create(health_data);
-    window_set_window_handlers(window, &(WindowHandlers) {
-      .unload = prv_sleep_detail_card_unload_callback,
-    });
+    window_set_window_handlers(window, &(WindowHandlers){
+                                           .unload = prv_sleep_detail_card_unload_callback,
+                                       });
     app_window_stack_push(window, true);
   }
 }

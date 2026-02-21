@@ -141,7 +141,7 @@ static void prv_draw_progress_bar(GContext *ctx, HealthProgressBar *progress_bar
     GColor fill_color, int current_progress, int typical_progress, int max_progress,
     bool hide_typical) {
   const GColor typical_color = PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack);
-  const GColor outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack);
+  const GColor outline_color = GColorBlack;
 
   health_progress_bar_fill(ctx, progress_bar, bg_color, 0, HEALTH_PROGRESS_BAR_MAX_VALUE);
 
