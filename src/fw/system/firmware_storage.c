@@ -27,7 +27,7 @@ bool firmware_storage_check_valid_firmware_description(
   }
 
   // Log around this operation, as it can take some time (hundreds of ms)
-  PBL_LOG(LOG_LEVEL_DEBUG, "CRCing recovery...");
+  PBL_LOG_DBG("CRCing recovery...");
 
   start_address += sizeof(FirmwareDescription);
 #if CAPABILITY_HAS_DEFECTIVE_FW_CRC
@@ -37,7 +37,7 @@ bool firmware_storage_check_valid_firmware_description(
   const uint32_t calculated_crc = flash_crc32(start_address, firmware_description->firmware_length);
 #endif
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "CRCing recovery... done");
+  PBL_LOG_DBG("CRCing recovery... done");
 
   return calculated_crc == firmware_description->checksum;
 }
@@ -58,11 +58,11 @@ bool firmware_storage_check_valid_firmware_header(
   }
 
   // Log around this operation, as it can take some time (hundreds of ms)
-  PBL_LOG(LOG_LEVEL_DEBUG, "CRCing recovery...");
+  PBL_LOG_DBG("CRCing recovery...");
 
   const uint32_t calculated_crc = flash_crc32(address + header->fw_start, header->fw_length);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "CRCing recovery... done");
+  PBL_LOG_DBG("CRCing recovery... done");
 
   return calculated_crc == header->fw_crc;
 }
@@ -76,11 +76,10 @@ void firmware_storage_invalidate_firmware_slot(uint8_t slot) {
     slot_start = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
   }
 
-  FirmwareHeader hdr = firmware_storage_read_firmware_header(slot_start);
   flash_region_erase_optimal_range(slot_start,
                                    slot_start,
-                                   ROUND_TO_MOD_CEIL((slot_start + hdr.fw_start), SUBSECTOR_SIZE_BYTES),
-                                   ROUND_TO_MOD_CEIL((slot_start + hdr.fw_start), SUBSECTOR_SIZE_BYTES));
+                                   slot_start + SUBSECTOR_SIZE_BYTES,
+                                   slot_start + SUBSECTOR_SIZE_BYTES);
 }
 
 #endif

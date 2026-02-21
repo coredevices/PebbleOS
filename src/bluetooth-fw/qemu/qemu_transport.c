@@ -60,7 +60,7 @@ static void prv_send_next(Transport *transport) {
 // -----------------------------------------------------------------------------------------
 // bt_lock() is held by caller
 static void prv_reset(Transport *transport) {
-  PBL_LOG(LOG_LEVEL_INFO, "Unimplemented");
+  PBL_LOG_INFO("Unimplemented");
 }
 
 static void prv_granted_kernel_main_cb(void *ctx) {
@@ -71,7 +71,7 @@ static void prv_granted_kernel_main_cb(void *ctx) {
 static void prv_set_connection_responsiveness(
     Transport *transport, BtConsumer consumer, ResponseTimeState state, uint16_t max_period_secs,
     ResponsivenessGrantedHandler granted_handler) {
-  PBL_LOG(LOG_LEVEL_INFO, "Consumer %d: requesting change to %d for %" PRIu16 "seconds",
+  PBL_LOG_INFO("Consumer %d: requesting change to %d for %" PRIu16 "seconds",
           consumer, state, max_period_secs);
 
   // it's qemu, our request to bump the speed is always granted!
@@ -119,12 +119,12 @@ void qemu_transport_set_connected(bool is_connected) {
   bool send_event = true;
 
   if (is_connected && !s_transport.session) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Opening new QemuTransport CommSession");
+    PBL_LOG_DBG("Opening new QemuTransport CommSession");
     s_transport.session = comm_session_open((Transport *) &s_transport,
                                             &s_qemu_transport_implementation,
                                             TransportDestinationHybrid);
     if (!s_transport.session) {
-      PBL_LOG(LOG_LEVEL_ERROR, "CommSession couldn't be opened");
+      PBL_LOG_ERR("CommSession couldn't be opened");
       send_event = false;
     }
 
@@ -152,7 +152,7 @@ void qemu_transport_set_connected(bool is_connected) {
   }
 
   if (s_emulated_session_connected != is_connected) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Toggling emulated session connection state --> %s", is_connected ? "connecting" : "disconnecting");
+    PBL_LOG_DBG("Toggling emulated session connection state --> %s", is_connected ? "connecting" : "disconnecting");
 
     // Only send PEBBLE_COMM_SESSION_EVENT without opening or terminating a session
     // Apps will get notified in both case but the rest of the firmware will still
@@ -197,7 +197,7 @@ bool qemu_transport_is_connected(void) {
 void qemu_transport_handle_received_data(const uint8_t *data, uint32_t length) {
   bt_lock();
   if (!s_transport.session) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Received QEMU serial data, but session not connected!");
+    PBL_LOG_ERR("Received QEMU serial data, but session not connected!");
     goto unlock;
   }
   comm_session_receive_router_write(s_transport.session, data, length);

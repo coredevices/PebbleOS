@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-from waflib import Utils, Errors, Node
+from waflib import Utils, Errors
 from waflib.TaskGen import after, feature
 
 
-@after('apply_link')
-@feature('cprogram', 'cshlib')
+@after("apply_link")
+@feature("cprogram", "cshlib")
 def process_ldscript(self):
-    if not getattr(self, 'ldscript', None) or self.env.CC_NAME != 'gcc':
+    if not getattr(self, "ldscript", None) or self.env.CC_NAME != "gcc":
         return
 
     def convert_to_node(node_or_path_str):
@@ -17,8 +17,7 @@ def process_ldscript(self):
         else:
             return node_or_path_str
 
-    if isinstance(self.ldscript, str) or \
-       isinstance(self.ldscript, list):
+    if isinstance(self.ldscript, str) or isinstance(self.ldscript, list):
         ldscripts = Utils.to_list(self.ldscript)
     else:  # Assume Nod3
         ldscripts = [self.ldscript]
@@ -26,6 +25,6 @@ def process_ldscript(self):
 
     for node in nodes:
         if not node:
-            raise Errors.WafError('could not find %r' % self.ldscript)
-        self.link_task.env.append_value('LINKFLAGS', '-T%s' % node.abspath())
+            raise Errors.WafError("could not find %r" % self.ldscript)
+        self.link_task.env.append_value("LINKFLAGS", "-T%s" % node.abspath())
         self.link_task.dep_nodes.append(node)

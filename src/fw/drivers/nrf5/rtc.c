@@ -136,7 +136,7 @@ static time_t prv_ticks_to_time(RtcTicks ticks) {
 void rtc_set_time(time_t time) {
 #ifdef PBL_LOG_ENABLED
   char buffer[TIME_STRING_BUFFER_SIZE];
-  PBL_LOG(LOG_LEVEL_INFO, "Setting time to %lu <%s>", time, time_t_to_string(buffer, time));
+  PBL_LOG_INFO("Setting time to %lu <%s>", time, time_t_to_string(buffer, time));
 #endif
 
   s_time_base = time;
@@ -174,19 +174,19 @@ static void prv_restore_rtc_time_state(void) {
      * last time we saved.  */
     s_time_base = last_save_time;
     s_time_tick_base = 0;
-    PBL_LOG(LOG_LEVEL_INFO, "Restore RTC: we are on our way up with amnesia");
+    PBL_LOG_INFO("Restore RTC: we are on our way up with amnesia");
   } else {
     RtcIntervalTicks current_ticks = prv_get_rtc_interval_ticks();
     const int32_t ticks_since_last_save = prv_elapsed_ticks(last_save_time_ticks * RTC_TICKS_HZ, current_ticks);
     s_time_base = last_save_time + (ticks_since_last_save / RTC_TICKS_HZ);
     s_time_tick_base = -(((int64_t)current_ticks) % RTC_TICKS_HZ);
-    PBL_LOG(LOG_LEVEL_INFO, "Restore RTC: we are on our way up with interval_ticks = %"PRIu32, current_ticks);
-    PBL_LOG(LOG_LEVEL_INFO, "Restore RTC: saved: %"PRIu32" diff: %"PRIu32, last_save_time_ticks, ticks_since_last_save);
+    PBL_LOG_INFO("Restore RTC: we are on our way up with interval_ticks = %"PRIu32, current_ticks);
+    PBL_LOG_INFO("Restore RTC: saved: %"PRIu32" diff: %"PRIu32, last_save_time_ticks, ticks_since_last_save);
   }
 
   char buffer[TIME_STRING_BUFFER_SIZE];
-  PBL_LOG(LOG_LEVEL_INFO, "Restore RTC: saved_time: %s raw: %lu", time_t_to_string(buffer, last_save_time), last_save_time);
-  PBL_LOG(LOG_LEVEL_INFO, "Restore RTC: current time: %s", time_t_to_string(buffer, s_time_base));
+  PBL_LOG_INFO("Restore RTC: saved_time: %s raw: %lu", time_t_to_string(buffer, last_save_time), last_save_time);
+  PBL_LOG_INFO("Restore RTC: current time: %s", time_t_to_string(buffer, s_time_base));
 }
 
 static RtcIntervalTicks prv_get_last_save_time_ticks(void) {
@@ -319,7 +319,7 @@ void rtc_init(void) {
 #endif
   if (prv_get_rtc_interval_ticks() == 0) {
     s_had_amnesia_on_boot = true;
-    PBL_LOG(LOG_LEVEL_INFO, "RTC appears to have been reset :( hope you have your phone connected");
+    PBL_LOG_INFO("RTC appears to have been reset :( hope you have your phone connected");
   }
 
   nrf_rtc_prescaler_set(BOARD_RTC_INST, NRF_RTC_FREQ_TO_PRESCALER(RTC_TICKS_HZ));
@@ -350,7 +350,7 @@ void rtc_init(void) {
     uint32_t iters = 0;
     while (nrf_rtc_counter_get(BOARD_RTC_INST) != ctr0)
       iters++;
-    PBL_LOG(LOG_LEVEL_INFO, "RTC: 100 RTC ticks took %"PRIu32" iters", iters);
+    PBL_LOG_INFO("RTC: 100 RTC ticks took %"PRIu32" iters", iters);
   }
 #endif
 }

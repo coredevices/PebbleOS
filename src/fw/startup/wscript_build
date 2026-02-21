@@ -1,13 +1,7 @@
 sources = []
-if bld.is_tintin():
-    sources.append(bld.path.make_node("startup_stm32.c"))
-    sources.append(bld.path.make_node("system_stm32f2xx.c"))
-elif bld.is_snowy_compatible() or bld.is_silk():
+if bld.is_snowy_compatible() or bld.is_silk():
     sources.append(bld.path.make_node("startup_stm32.c"))
     sources.append(bld.path.make_node("system_stm32f4xx.c"))
-elif bld.is_cutts() or bld.is_robert():
-    sources.append(bld.path.make_node("startup_stm32.c"))
-    sources.append(bld.path.make_node("system_stm32f7xx.c"))
 elif bld.is_asterix():
     sources.append(bld.path.make_node("../../../third_party/hal_nordic/nrfx/mdk/system_nrf52840.c"))
     sources.append(bld.path.make_node("startup_stm32.c")) # good enough

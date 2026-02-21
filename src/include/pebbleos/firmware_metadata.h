@@ -43,6 +43,7 @@ typedef enum FirmwareMetadataPlatform {
   FirmwareMetadataPlatformPebbleObelixDVT = 17,
   FirmwareMetadataPlatformPebbleObelixPVT = 18,
   FirmwareMetadataPlatformPebbleGetafixEVT = 19,
+  FirmwareMetadataPlatformPebbleGetafixDVT = 20,
 
   FirmwareMetadataPlatformPebbleOneBigboard = 0xff,
   FirmwareMetadataPlatformPebbleOneBigboard2 = 0xfe,
@@ -57,6 +58,7 @@ typedef enum FirmwareMetadataPlatform {
   FirmwareMetadataPlatformPebbleSnowyEmery = 0xf5,
   FirmwareMetadataPlatformPebbleObelixBigboard = 0xf4,
   FirmwareMetadataPlatformPebbleObelixBigboard2 = 0xf3,
+  FirmwareMetadataPlatformPebbleSpaldingGabbro = 0xf2,
 } FirmwareMetadataPlatform;
 
 // WARNING: changes in this struct must be reflected in:
@@ -91,58 +93,36 @@ _Static_assert(sizeof(struct FirmwareMetadata) == (sizeof(uint32_t) +
   #define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (false)
 #endif
 
-#if BOARD_BIGBOARD
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleOneBigboard)
-#elif BOARD_BB2
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleOneBigboard2)
-#elif BOARD_SNOWY_BB
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyBigboard)
-#elif BOARD_SNOWY_BB2
+#if BOARD_SNOWY_BB2
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyBigboard2)
-#elif BOARD_SNOWY_EVT2
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyEVT2)
 #elif BOARD_SNOWY_DVT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyDVT)
-#elif BOARD_SNOWY_S3
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleBobbyDVT)
-#elif BOARD_V2_0
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleTwoPointZero)
-#elif BOARD_V1_5
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleOnePointFive)
-#elif BOARD_EV2_4
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleOneEV2_4)
 #elif BOARD_SPALDING_BB2
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpaldingBigboard)
-#elif BOARD_SPALDING_EVT
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpaldingEVT)
 #elif BOARD_SPALDING
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpalding)
-#elif BOARD_SILK_EVT
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkEVT)
-#elif BOARD_SILK_BB
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkBigboard)
 #elif BOARD_SILK
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilk)
 #elif BOARD_SILK_BB2
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkBigboard2)
-#elif BOARD_ROBERT_BB
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleRobertBigboard)
-#elif BOARD_ROBERT_BB2
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleRobertBigboard2)
-#elif BOARD_ROBERT_EVT
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleRobertEVT)
 #elif BOARD_ASTERIX
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleAsterix)
 #elif BOARD_OBELIX_DVT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixDVT)
+#elif BOARD_OBELIX_PVT
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixPVT)
 #elif BOARD_OBELIX_BB2
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixBigboard2)
 #elif BOARD_SILK_FLINT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkFlint)
 #elif BOARD_SNOWY_EMERY
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyEmery)
+#elif BOARD_SPALDING_GABBRO
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpaldingGabbro)
 #elif BOARD_GETAFIX_EVT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixEVT)
+#elif BOARD_GETAFIX_DVT
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT)
 #else
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformUnknown)
 #endif

@@ -11,7 +11,7 @@ NUM_SUBREGIONS = 8
 
 
 def round_up_to_power_of_two(x):
-    """ Find the next power of two that is eqaul to or greater than x
+    """Find the next power of two that is eqaul to or greater than x
 
     >>> round_up_to_power_of_two(4)
     4
@@ -19,14 +19,14 @@ def round_up_to_power_of_two(x):
     8
     """
 
-    return 2**((x-1).bit_length())
+    return 2 ** ((x - 1).bit_length())
 
 
-MpuRegion = namedtuple('MpuRegion', ['address', 'size', 'disabled_subregion'])
+MpuRegion = namedtuple("MpuRegion", ["address", "size", "disabled_subregion"])
 
 
 def find_subregions_for_region(address, size):
-    """ Find a MPU region configuration that will exactly match the provided combination of
+    """Find a MPU region configuration that will exactly match the provided combination of
         address and size.
 
         This is non trivial, as the MPU only supports regions that are power of 2 sized and
@@ -50,7 +50,9 @@ def find_subregions_for_region(address, size):
     # Find the range of sizes to attempt to match against. Anything smaller than the size of the
     # region itself wont work, and anything where a single subregion is too big won't work either.
     smallest_block_size = max(round_up_to_power_of_two(size), MIN_REGION_SIZE)
-    largest_block_size = min(round_up_to_power_of_two(size * NUM_SUBREGIONS), MAX_REGION_SIZE)
+    largest_block_size = min(
+        round_up_to_power_of_two(size * NUM_SUBREGIONS), MAX_REGION_SIZE
+    )
 
     # Iterate over the potentional candidates from smallest to largest
     current_block_size = smallest_block_size
@@ -60,10 +62,11 @@ def find_subregions_for_region(address, size):
         start_in_block = address % current_block_size
         end_in_block = start_in_block + size
 
-        if (start_in_block % subregion_size == 0 and
-                end_in_block % subregion_size == 0 and
-                end_in_block <= current_block_size):
-
+        if (
+            start_in_block % subregion_size == 0
+            and end_in_block % subregion_size == 0
+            and end_in_block <= current_block_size
+        ):
             # This region fits in the provided region and both the start and end are aligned with
             # subregion boundries. This will work!
 
@@ -72,19 +75,23 @@ def find_subregions_for_region(address, size):
             start_enabled_subregion = start_in_block // subregion_size
             end_enabled_subregion = end_in_block // subregion_size
 
-            disabled_subregions = bitarray(8, endian='little')
+            disabled_subregions = bitarray(8, endian="little")
             disabled_subregions.setall(True)
             disabled_subregions[start_enabled_subregion:end_enabled_subregion] = False
 
             disabled_subregions_bytes = disabled_subregions.tobytes()
-            disabled_subregions_int, = struct.unpack('B', disabled_subregions_bytes)
+            (disabled_subregions_int,) = struct.unpack("B", disabled_subregions_bytes)
 
-            return MpuRegion(block_start_addresss, current_block_size, disabled_subregions_int)
+            return MpuRegion(
+                block_start_addresss, current_block_size, disabled_subregions_int
+            )
 
         current_block_size *= 2
     else:
         raise Exception("No solution found")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

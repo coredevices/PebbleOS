@@ -182,7 +182,7 @@ void text_layer_set_should_cache_layout(TextLayer *text_layer, bool should_cache
   text_layer->should_cache_layout = should_cache_layout;
 
   if (text_layer->should_cache_layout) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Init layout");
+    PBL_LOG_DBG("Init layout");
     graphics_text_layout_cache_init(&text_layer->layout_cache);
   } else {
     graphics_text_layout_cache_deinit(&text_layer->layout_cache);

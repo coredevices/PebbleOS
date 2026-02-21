@@ -7,14 +7,13 @@
 #include "applib/app_launch_button.h"
 #include "applib/app_launch_reason.h"
 #include "applib/app_outbox.h"
-#include "applib/app_smartstrap.h"
 #include "applib/bluetooth/ble_client.h"
 #include "applib/health_service.h"
 #include "applib/plugin_service.h"
 #include "applib/tick_timer_service.h"
 #include "applib/voice/dictation_session.h"
 #include "applib/ui/click.h"
-#include "apps/system_apps/app_fetch_ui.h"
+#include "apps/system/app_fetch_ui.h"
 #include "drivers/battery.h"
 #include "drivers/button_id.h"
 #include "process_management/app_install_types.h"
@@ -26,7 +25,6 @@
 #include "services/common/put_bytes/put_bytes.h"
 #include "services/common/touch/touch_event.h"
 #include "services/imu/units.h"
-#include "services/normal/accessory/smartstrap_profiles.h"
 #include "services/normal/blob_db/api.h"
 #include "services/normal/music.h"
 #include "services/normal/notifications/notifications.h"
@@ -106,7 +104,6 @@ typedef enum {
   PEBBLE_REMINDER_EVENT,
   PEBBLE_CALENDAR_EVENT,
   PEBBLE_PANIC_EVENT,
-  PEBBLE_SMARTSTRAP_EVENT,
   //! Event sent back to the app to let them know the result of their sent message.
   PEBBLE_APP_OUTBOX_SENT_EVENT,
   //! A request from the app to the outbox service to handle a message.
@@ -127,6 +124,7 @@ typedef enum {
   PEBBLE_APP_CACHE_EVENT,
   PEBBLE_ACTIVITY_EVENT,
   PEBBLE_WORKOUT_EVENT,
+  PEBBLE_PREF_CHANGE_EVENT,
 
   PEBBLE_NUM_EVENTS
 } PebbleEventType;
@@ -481,6 +479,11 @@ typedef struct PACKED { // 7 bytes
   uint8_t key_len;
 } PebbleBlobDBEvent;
 
+typedef struct PACKED { // 5 bytes
+  const char *key;  //!< The preference key that changed (null-terminated)
+  uint8_t key_len;  //!< Length of the key including null terminator
+} PebblePrefChangeEvent;
+
 typedef enum {
   VoiceEventTypeSessionSetup,
   VoiceEventTypeSessionResult,
@@ -562,24 +565,6 @@ typedef struct PACKED { // 9 bytes
 typedef struct PACKED { // 1 byte
   bool is_event_ongoing;
 } PebbleCalendarEvent;
-
-typedef enum {
-  SmartstrapConnectionEvent,
-  SmartstrapDataSentEvent,
-  SmartstrapDataReceivedEvent,
-  SmartstrapNotifyEvent
-} SmartstrapEventType;
-
-typedef struct PACKED { // 9 bytes
-  SmartstrapEventType type:4;
-  SmartstrapProfile profile:4;
-  SmartstrapResult result:8;
-  uint16_t read_length;
-  union {
-    SmartstrapServiceId service_id;
-    SmartstrapAttribute *attribute;
-  };
-} PebbleSmartstrapEvent;
 
 typedef struct PACKED { // 9 bytes
   int utc_time_delta;
@@ -798,7 +783,6 @@ typedef struct PACKED {
     PebbleReminderEvent reminder;
     PebbleCalendarEvent calendar;
     PebbleHealthEvent health_event;
-    PebbleSmartstrapEvent smartstrap;
     PebbleTouchEvent touch;
     PebbleCapabilitiesChangedEvent capabilities;
     PebbleWeatherEvent weather;
@@ -809,6 +793,7 @@ typedef struct PACKED {
     PebbleAppCacheEvent app_cache_event;
     PebbleActivityEvent activity_event;
     PebbleWorkoutEvent workout;
+    PebblePrefChangeEvent pref_change;
   };
   PebbleTaskBitset task_mask;  // 1 == filter out, 0 == leave in
   // NOTE: we put this 8 bit field at the end so that we can pack this structure and still keep the

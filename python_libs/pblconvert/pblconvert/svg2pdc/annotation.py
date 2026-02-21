@@ -1,6 +1,6 @@
 # coding=utf-8
 from xml.etree import ElementTree
-from pdc import extend_bounding_box, bounding_box_around_points
+from pdc import bounding_box_around_points
 
 NS_ANNOTATION = "http://www.pebble.com/2015/pdc"
 PREFIX_ANNOTATION = "pdc"
@@ -8,10 +8,12 @@ PREFIX_ANNOTATION = "pdc"
 TAG_HIGHLIGHT = "{%s}highlight" % NS_ANNOTATION
 TAG_ANNOTATION = "{%s}annotation" % NS_ANNOTATION
 
+
 def to_str(value):
     return "%.2f" % float(value)
 
-class Annotation():
+
+class Annotation:
     def __init__(self, node, text, transformed=False, link=None):
         self.node = node
         self.text = text
@@ -27,7 +29,9 @@ class Annotation():
 
     def add_highlight(self, x, y, width=None, height=None, details=None):
         highlight = ElementTree.SubElement(self.element, TAG_HIGHLIGHT)
-        self.set_highlight(highlight, x=x, y=y, width=width, height=height, details=details)
+        self.set_highlight(
+            highlight, x=x, y=y, width=width, height=height, details=details
+        )
         self.highlights.append(highlight)
         return highlight
 
@@ -59,7 +63,9 @@ class Annotation():
             bottom_right = transformer.transform_point(bottom_right)
             bottom_left = transformer.transform_point(bottom_left)
 
-            box = bounding_box_around_points([top_left, top_right, bottom_right, bottom_left])
-            self.set_highlight(highlight, x=box[0], y=box[1], width=box[2], height=box[3])
-
-
+            box = bounding_box_around_points(
+                [top_left, top_right, bottom_right, bottom_left]
+            )
+            self.set_highlight(
+                highlight, x=box[0], y=box[1], width=box[2], height=box[3]
+            )

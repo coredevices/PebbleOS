@@ -26,6 +26,7 @@
 #include "system/passert.h"
 #include "system/profiler.h"
 #include "util/size.h"
+#include "util/math.h"
 
 // The number of pixels for a given row which get set to black to round the corner. These numbers
 // are for the top-left corner, but can easily be translated to the other corners. This is used by
@@ -120,15 +121,13 @@ void compositor_app_framebuffer_fill_callback(GContext *ctx, int16_t y,
                                               Fixed_S16_3 delta_begin, Fixed_S16_3 delta_end,
                                               void *user_data) {
   const GPoint *offset = user_data ?: &GPointZero; // User data has left the building
-
-  GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
-  src_bitmap.bounds = GRect(x_range_begin.integer - offset->x, y - offset->y,
-                            x_range_end.integer - x_range_begin.integer, 1);
-
-  GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
-
-  bitblt_bitmap_into_bitmap(&dest_bitmap, &src_bitmap, GPoint(x_range_begin.integer, y),
-                            GCompOpAssign, GColorWhite);
+  compositor_scaled_app_fb_copy(
+    GRect(
+      x_range_begin.integer - offset->x, y - offset->y,
+      x_range_end.integer - x_range_begin.integer, 1
+    ),
+    true /* copy_relative_to_origin */
+  );
 }
 
 #if PBL_COLOR
@@ -158,167 +157,21 @@ void compositor_render_app(void) {
   GSize app_framebuffer_size;
   app_manager_get_framebuffer_size(&app_framebuffer_size);
 
-  const FrameBuffer *app_framebuffer = app_state_get_framebuffer();
 
-  if (gsize_equal(&app_framebuffer_size, &s_framebuffer.size)) {
 #if CAPABILITY_COMPOSITOR_USES_DMA && !TARGET_QEMU && !UNITTEST
+  if (gsize_equal(&app_framebuffer_size, &s_framebuffer.size)) {
+    const FrameBuffer *app_framebuffer = app_state_get_framebuffer();
     compositor_dma_run(s_framebuffer.buffer, app_framebuffer->buffer, FRAMEBUFFER_SIZE_BYTES);
-#else
-    GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
-    GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
-
-    bitblt_bitmap_into_bitmap(&dest_bitmap, &src_bitmap, GPointZero, GCompOpAssign, GColorWhite);
-#endif
   } else {
-#if PBL_COLOR
-    const int16_t app_width = app_framebuffer_size.w;
-    const int16_t app_height = app_framebuffer_size.h;
-    const int16_t disp_width = DISP_COLS;
-    const int16_t disp_height = DISP_ROWS;
-
-#if (PLATFORM_OBELIX || PLATFORM_GETAFIX) && !RECOVERY_FW
-    // Check if we should use scaling mode for legacy apps
-    if (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) {
-      // Scale legacy apps to fill the display using nearest-neighbor scaling
-
-      // Fill entire framebuffer with black first to avoid artifacts
-      memset(s_framebuffer.buffer, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
-
-      // Calculate scaling factors using fixed-point arithmetic (16.16 format)
-      // This gives us sub-pixel precision for better scaling
-      const uint32_t scale_x = ((uint32_t)app_width << 16) / disp_width;
-      const uint32_t scale_y = ((uint32_t)app_height << 16) / disp_height;
-
-      GBitmap dst_bitmap = compositor_get_framebuffer_as_bitmap();
-      GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
-
-      // Perform nearest-neighbor scaling
-      for (int16_t dst_y = 0; dst_y < disp_height; dst_y++) {
-        // Calculate source Y coordinate
-        const uint32_t src_y_fixed = (uint32_t)dst_y * scale_y;
-        const int16_t src_y = src_y_fixed >> 16;  // Get integer part
-
-        // Ensure we don't go out of bounds
-        if (src_y >= app_height) continue;
-
-        // Get the line pointers using framebuffer_get_line for proper platform handling
-        uint8_t *dst_line = framebuffer_get_line(&s_framebuffer, dst_y);
-        const uint8_t *src_line = framebuffer_get_line((FrameBuffer *)app_framebuffer, src_y);
-
-#if PBL_ROUND
-        // Get valid pixel ranges for both source and destination rows on round displays
-        const GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, dst_y);
-        const GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, src_y);
-        const int16_t dst_x_start = dst_row_info.min_x;
-        const int16_t dst_x_end = dst_row_info.max_x;
-#else
-        const int16_t dst_x_start = 0;
-        const int16_t dst_x_end = disp_width - 1;
 #endif
+    // Fill entire framebuffer with black first to avoid artifacts
+    GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
+    memset(dest_bitmap.addr, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
 
-        for (int16_t dst_x = dst_x_start; dst_x <= dst_x_end; dst_x++) {
-          // Calculate source X coordinate
-          const uint32_t src_x_fixed = (uint32_t)dst_x * scale_x;
-          const int16_t src_x = src_x_fixed >> 16;  // Get integer part
-
-          // Ensure we don't go out of bounds
-          if (src_x >= app_width) continue;
-
-#if PBL_ROUND
-          // On round displays, also check if the source pixel is within valid range
-          if (src_x < src_row_info.min_x || src_x > src_row_info.max_x) {
-            // Source pixel is outside circular mask, leave destination black
-            continue;
-          }
-#endif
-
-          // Copy the pixel from source to destination
-          dst_line[dst_x] = src_line[src_x];
-        }
-      }
-    } else
-#endif
-    {
-      // Original bezel mode - center with black bezel
-      // On Robert, we support running older apps which have a smaller framebuffer in "bezel mode"
-      // where we center them and draw a black bezel around them. Using memset to set the bezel to
-      // black and using memcpy to copy the app framebuffer into the center is the fastest method
-      // (significantly faster than DMA even). We only support the app framebuffer being smaller than
-      // the system framebuffer and we assume the system framebuffer is always DISP_COLS x DISP_ROWS.
-
-      const int16_t bezel_width = (DISP_COLS - app_width) / 2;
-      const int16_t bezel_height = (DISP_ROWS - app_height) / 2;
-      const int16_t app_peek_offset_y = timeline_peek_get_origin_y() - app_height;
-      const int16_t app_offset_y = CLIP(app_peek_offset_y, 0, bezel_height);
-      PBL_ASSERTN((bezel_width > 0) && (bezel_height > 0));
-
-#if PBL_ROUND
-      // For round displays, use bitmap row info to only copy valid pixels
-      GBitmap dst_bitmap = compositor_get_framebuffer_as_bitmap();
-      GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
-
-      // Fill entire framebuffer with black
-      memset(s_framebuffer.buffer, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
-
-      for (int app_row = 0; app_row < app_height; ++app_row) {
-        const int16_t dst_y = app_offset_y + app_row;
-
-        // Get row info for both source and destination to use min_x/max_x bounds
-        const GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, app_row);
-        const GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, dst_y);
-
-        // Calculate the effective range to copy based on row bounds
-        const int16_t src_start = src_row_info.min_x;
-        const int16_t src_end = src_row_info.max_x + 1; // max_x is inclusive
-        const int16_t copy_width = src_end - src_start;
-
-        // Copy only the valid pixel range to the centered position
-        memcpy(&dst_row_info.data[bezel_width + src_start],
-               &src_row_info.data[src_start],
-               copy_width);
-      }
-#else
-      uint8_t *dst = (uint8_t *)s_framebuffer.buffer;
-      uint8_t *app_buffer = (uint8_t *)app_framebuffer->buffer;
-
-      // Set all the black pixels from the start, which is the sum of the following:
-      // - app_offset_y * DISP_COLS - the top part of the bezel
-      // - bezel_width - the left bezel for the first row of the app
-      // - corner_pixels - the top-left corner for the first row
-      const int top_bezel_length =
-          app_offset_y * DISP_COLS + bezel_width + s_rounded_corner_width[0];
-      memset(dst, GColorBlack.argb, top_bezel_length);
-      dst += top_bezel_length;
-
-      // Starting from the origin for the app (bezel_width, bezel_height), copy one row of the app
-      // framebuffer and set two bezel_width's worth of pixels to black. This will set the right-most
-      // bezel pixels of the current row to black, and the left-most bezel pixels of the next row to
-      // black.
-      int corner_width = prv_get_rounded_corner_width(0, app_height);
-      for (int app_row = 0; app_row < app_height; ++app_row) {
-        const int row_width = app_width - corner_width * 2;
-        // Copy the row of the app framebuffer (advance past the corner pixels on the left)
-        const uint8_t *src = &app_buffer[app_row * app_width + corner_width];
-        memcpy(dst, src, row_width);
-        dst += row_width;
-
-        // Set the right-side corner and bezel of this row and left-size corner and bezel of the next.
-        const int next_corner_width = prv_get_rounded_corner_width(app_row + 1, app_height);
-        const int bezel_length = corner_width + bezel_width * 2 + next_corner_width;
-        memset(dst, GColorBlack.argb, bezel_length);
-        dst += bezel_length;
-        corner_width = next_corner_width;
-      }
-
-      // Set the remaining pixels to black.
-      size_t framebuffer_size = framebuffer_get_size_bytes(&s_framebuffer);
-      const int bottom_bezel_length = (uintptr_t)&s_framebuffer.buffer[framebuffer_size] -
-                                      (uintptr_t)dst;
-      memset(dst, GColorBlack.argb, bottom_bezel_length);
-#endif
-    }
-#endif
+    compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
+#if CAPABILITY_COMPOSITOR_USES_DMA && !TARGET_QEMU && !UNITTEST
   }
+#endif
 
   if (s_state == CompositorState_AppAndModal) {
     compositor_render_modal();
@@ -330,7 +183,6 @@ void compositor_render_app(void) {
 }
 
 void compositor_render_modal(void) {
-
   GContext *ctx = kernel_ui_get_graphics_context();
 
   // We make this GDrawState static to save stack space, thus the declaration and init must be
@@ -550,7 +402,7 @@ static void prv_animation_teardown(Animation *animation) {
 
 void compositor_transition(const CompositorTransition *compositor_animation) {
   if (s_animation_state.animation != NULL) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Animation <%u> in progress, cancelling",
+    PBL_LOG_DBG("Animation <%u> in progress, cancelling",
             (int) s_animation_state.animation);
 
     animation_destroy(s_animation_state.animation);
@@ -663,4 +515,133 @@ void compositor_unfreeze(void) {
   s_framebuffer_frozen = false;
 
   launcher_task_add_callback(prv_compositor_unfreeze_cb, NULL);
+}
+
+static bool prv_app_framebuffer_matches_display(void) {
+  GSize app_framebuffer_size;
+  app_manager_get_framebuffer_size(&app_framebuffer_size);
+  return gsize_equal(&app_framebuffer_size, &s_framebuffer.size);
+}
+
+uint16_t prv_scale_coordinate(const uint32_t scale_factor, uint16_t val) {
+  const uint32_t val_fixed = (uint32_t)val * scale_factor;
+  return val_fixed >> 16;  // Get integer part
+}
+
+void compositor_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_to_origin) {
+  compositor_scaled_app_fb_copy_offset(update_rect, copy_relative_to_origin, 0 /* offset_y */);
+}
+
+void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_relative_to_origin, int16_t offset_y) {
+  GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
+  GBitmap dst_bitmap = compositor_get_framebuffer_as_bitmap();
+
+  if (prv_app_framebuffer_matches_display()) {
+    GBitmap sub_bitmap;
+    gbitmap_init_as_sub_bitmap(&sub_bitmap, &src_bitmap, update_rect);
+    bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, update_rect.origin, GCompOpAssign, GColorWhite);
+    return;
+  }
+
+#if PBL_COLOR
+  const int16_t app_width = src_bitmap.bounds.size.w;
+  const int16_t app_height = src_bitmap.bounds.size.h;
+  const int16_t disp_width = dst_bitmap.bounds.size.w;
+  const int16_t disp_height = dst_bitmap.bounds.size.h;
+
+#if CAPABILITY_HAS_APP_SCALING && !RECOVERY_FW
+  // Check if we should use scaling mode for legacy apps
+  if (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) {
+    // Scale legacy apps to fill the display using nearest-neighbor scaling
+
+    // Calculate scaling factors using fixed-point arithmetic (16.16 format)
+    // This gives us sub-pixel precision for better scaling
+    const uint32_t scale_x = ((uint32_t)app_width << 16) / disp_width;
+    const uint32_t scale_y = ((uint32_t)app_height << 16) / disp_height;
+
+    // Perform nearest-neighbor scaling
+    for (int16_t dst_y = 0; dst_y < update_rect.size.h; dst_y++) {
+      const int16_t dst_y_offset = dst_y + update_rect.origin.y + offset_y;
+      const int16_t src_y = prv_scale_coordinate(scale_y, copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y);
+
+      // Ensure we don't go out of bounds
+      if (src_y < 0 || src_y >= app_height) continue;
+      if (dst_y_offset < 0 || dst_y_offset >= disp_height) continue;
+
+      GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, dst_y_offset);
+      GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, src_y);
+      uint8_t *dst_line = dst_row_info.data;
+      uint8_t *src_line = src_row_info.data;
+
+      for (int16_t dst_x = 0; dst_x < update_rect.size.w; dst_x++) {
+        int16_t dst_x_offset = dst_x + update_rect.origin.x;
+        const int16_t src_x = prv_scale_coordinate(scale_x, copy_relative_to_origin ? CLIP(dst_x_offset, 0, disp_width - 1) : dst_x);
+
+        // Check if the source pixel is within valid range
+        if (src_x < src_row_info.min_x || src_x > src_row_info.max_x) {
+          // Source pixel is outside circular mask, leave destination black
+          continue;
+        }
+
+        if (dst_x_offset < dst_row_info.min_x || dst_x_offset > dst_row_info.max_x) {
+          continue;
+        }
+
+        // Copy the pixel from source to destination
+        dst_line[dst_x_offset] = src_line[src_x];
+      }
+    }
+  } else
+#endif
+  {
+    // Original bezel mode - center with black bezel
+    const int16_t bezel_width = (DISP_COLS - app_width) / 2;
+    const int16_t bezel_height = (DISP_ROWS - app_height) / 2;
+    const int16_t app_peek_offset_y = timeline_peek_get_origin_y() - app_height;
+    const int16_t app_offset_y = CLIP(app_peek_offset_y, 0, bezel_height);
+    PBL_ASSERTN((bezel_width > 0) && (bezel_height > 0));
+
+    // memset the entire region to be updated to black
+    int16_t first_row = CLIP(update_rect.origin.y, 0, DISP_ROWS - 1);
+    int16_t last_row = CLIP(update_rect.origin.y + update_rect.size.h, first_row, DISP_ROWS);
+    for (int16_t y = first_row; y < last_row; y++) {
+      GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
+      const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
+      const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
+      memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+    }
+
+    // bitblt the region of the app framebuffer into the display framebuffer
+    GPoint dst_offset;
+    GRect src_rect;
+
+    if (copy_relative_to_origin) {
+      GRect centered_region = GRect(bezel_width, app_offset_y, app_width, app_height);
+      GRect clipped_update_region = update_rect;
+      grect_clip(&clipped_update_region, &centered_region);
+
+      src_rect = GRect(
+        clipped_update_region.origin.x - bezel_width,
+        clipped_update_region.origin.y - app_offset_y + offset_y,
+        clipped_update_region.size.w,
+        clipped_update_region.size.h
+      );
+      dst_offset = clipped_update_region.origin;
+    } else {
+      src_rect = GRect(
+        0,
+        offset_y,
+        update_rect.size.w - bezel_width,
+        update_rect.size.h - app_offset_y
+      );
+      dst_offset = GPoint(bezel_width - update_rect.origin.x, app_offset_y - update_rect.origin.y);
+    }
+
+    if (src_rect.size.w > 0 && src_rect.size.h > 0) {
+      GBitmap sub_bitmap;
+      gbitmap_init_as_sub_bitmap(&sub_bitmap, &src_bitmap, src_rect);
+      bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, dst_offset, GCompOpAssign, GColorWhite);
+    }
+  }
+#endif
 }

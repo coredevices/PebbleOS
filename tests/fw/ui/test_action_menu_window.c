@@ -10,7 +10,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/content_indicator.h"
 #include "applib/ui/content_indicator_private.h"
-#include "apps/system_apps/settings/settings_notifications_private.h"
+#include "apps/system/settings/settings_notifications_private.h"
 #include "resource/resource.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"

@@ -1,17 +1,23 @@
 # SPDX-FileCopyrightText: 2025 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-#/usr/bin/env python
+# /usr/bin/env python
 """
 Module for de-hashing log strings
 """
 
-from pebble.loghashing.constants import (LOG_LINE_CONSOLE_PATTERN, LOG_LINE_SUPPORT_PATTERN,
-                                         LOG_MSG_PATTERN, DEHASHED_MSG_PATTERN, HASHED_INFO_PATTERN,
-                                         FORMAT_TAG_PATTERN)
+from pebble.loghashing.constants import (
+    LOG_LINE_CONSOLE_PATTERN,
+    LOG_LINE_SUPPORT_PATTERN,
+    LOG_MSG_PATTERN,
+    DEHASHED_MSG_PATTERN,
+    HASHED_INFO_PATTERN,
+    FORMAT_TAG_PATTERN,
+)
 
 from pebble.loghashing.newlogging import dehash_line as newlogging_dehash_line
 from pebble.loghashing.newlogging import LOG_DICT_KEY_VERSION
+
 
 def dehash_file(file_name, lookup_dict):
     """
@@ -25,13 +31,14 @@ def dehash_file(file_name, lookup_dict):
     :returns: A list containing the dehashed lines
     """
     # Grab the lines from the file
-    with open(file_name, 'r') as fp:
+    with open(file_name, "r") as fp:
         lines = fp.readlines()
 
     # Dehash the lines
     lines = [dehash_line(x, lookup_dict) + "\n" for x in lines]
 
     return lines
+
 
 def dehash_line(line, lookup_dict):
     """
@@ -50,7 +57,10 @@ def dehash_line(line, lookup_dict):
     if LOG_DICT_KEY_VERSION in lookup_dict:
         return newlogging_dehash_line(line, lookup_dict)
 
-    return parse_line(line, lookup_dict) or parse_support_line(line, lookup_dict) or line
+    return (
+        parse_line(line, lookup_dict) or parse_support_line(line, lookup_dict) or line
+    )
+
 
 def parse_line(line, lookup_dict):
     """
@@ -68,13 +78,19 @@ def parse_line(line, lookup_dict):
     output = ""
 
     if match:
-        parsed = parse_message(match.group('msg'), lookup_dict)
+        parsed = parse_message(match.group("msg"), lookup_dict)
 
-        output = "{} {} {} {}:{}> {}".format(match.group('re_level'), match.group('task'),
-                                             match.group('time'), parsed['file'],
-                                             parsed['line'], parsed['msg'])
+        output = "{} {} {} {}:{}> {}".format(
+            match.group("re_level"),
+            match.group("task"),
+            match.group("time"),
+            parsed["file"],
+            parsed["line"],
+            parsed["msg"],
+        )
 
     return output
+
 
 def parse_support_line(line, lookup_dict):
     """
@@ -92,12 +108,18 @@ def parse_support_line(line, lookup_dict):
     output = ""
 
     if match:
-        parsed = parse_message(match.group('msg'), lookup_dict)
+        parsed = parse_message(match.group("msg"), lookup_dict)
 
-        output = "{} {} {}:{}> {}".format(match.group('date'), match.group('time'),
-                                          parsed['file'], parsed['line'], parsed['msg'])
+        output = "{} {} {}:{}> {}".format(
+            match.group("date"),
+            match.group("time"),
+            parsed["file"],
+            parsed["line"],
+            parsed["msg"],
+        )
 
     return output
+
 
 def parse_message(msg, lookup_dict):
     """
@@ -110,27 +132,28 @@ def parse_message(msg, lookup_dict):
 
     :returns: A dictionary containing the parsed message, file name, and line number
     """
-    output = {'msg':msg, 'file':"", 'line':""}
+    output = {"msg": msg, "file": "", "line": ""}
 
     match = LOG_MSG_PATTERN.search(msg)
 
     if match:
-        output['file'] = match.group('f')
-        output['line'] = match.group('l')
-        hashed = match.group('h')
+        output["file"] = match.group("f")
+        output["line"] = match.group("l")
+        hashed = match.group("h")
 
         dehashed_str = dehash_str(hashed, lookup_dict)
 
-        output['msg'] = "LH:{}".format(dehashed_str)
+        output["msg"] = "LH:{}".format(dehashed_str)
 
         match2 = DEHASHED_MSG_PATTERN.search(dehashed_str)
 
         if match2:
-            output['file'] = match2.group(1) or output['file']
-            output['line'] = match2.group(2) or output['line']
-            output['msg'] = match2.group(3) or dehashed_str
+            output["file"] = match2.group(1) or output["file"]
+            output["line"] = match2.group(2) or output["line"]
+            output["msg"] = match2.group(3) or dehashed_str
 
     return output
+
 
 def dehash_str(hashed_info, lookup_dict):
     """
@@ -149,21 +172,24 @@ def dehash_str(hashed_info, lookup_dict):
     if match:
         # Look for the hex value in the dictionary keys
         # If we can't find a match, set formatted string to hashed_info
-        formatted_string = lookup_dict.get(str(match.group('hash_key')), hashed_info)
+        formatted_string = lookup_dict.get(str(match.group("hash_key")), hashed_info)
 
         # If we couldn't find a match, try converting to base 10 to find a match
         # If we can't find a match, set formatted string to hashed_info
         if formatted_string == hashed_info:
-            formatted_string = lookup_dict.get(str(int(match.group('hash_key'), 16)), hashed_info)
+            formatted_string = lookup_dict.get(
+                str(int(match.group("hash_key"), 16)), hashed_info
+            )
 
         # For each argument, substitute a C-style format specififier in the string
-        for arg in parse_args(match.group('arg_list')):
+        for arg in parse_args(match.group("arg_list")):
             formatted_string = FORMAT_TAG_PATTERN.sub(arg, formatted_string, 1)
 
         # Return the filename, and log message
         output = formatted_string
 
     return output
+
 
 def parse_args(raw_args):
     """

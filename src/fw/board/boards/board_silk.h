@@ -153,18 +153,7 @@ static const BoardConfigActuator BOARD_CONFIG_BACKLIGHT = {
   },
 };
 
-#define ACCESSORY_UART_IS_SHARED_WITH_BT 1
-static const BoardConfigAccessory BOARD_CONFIG_ACCESSORY = {
-  .exti = { EXTI_PortSourceGPIOA, 11 },
-};
-
 static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
-  .controller = DA14681,
-  .reset = { GPIOC, GPIO_Pin_5, true },
-  .wakeup = {
-    .int_gpio = { GPIOC, GPIO_Pin_4 },
-    .int_exti = { EXTI_PortSourceGPIOC, 4 },
-  },
 };
 
 static const BoardConfigBTSPI BOARD_CONFIG_BT_SPI = {
@@ -199,7 +188,6 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .on_ctrl_otype = GPIO_OType_PP,
 };
 
-#define DIALOG_TIMER_IRQ_HANDLER TIM6_IRQHandler
 static const TimerIrqConfig BOARD_BT_WATCHDOG_TIMER = {
   .timer = {
     .peripheral = TIM6,
@@ -229,8 +217,6 @@ extern DMARequest * const SHARP_SPI_TX_DMA;
 
 extern UARTDevice * const QEMU_UART;
 extern UARTDevice * const DBG_UART;
-extern UARTDevice * const ACCESSORY_UART;
-
 extern UARTDevice * const BT_TX_BOOTROM_UART;
 extern UARTDevice * const BT_RX_BOOTROM_UART;
 
@@ -249,4 +235,3 @@ extern QSPIFlash * const QSPI_FLASH;
 
 extern MicDevice * const MIC;
 
-extern SPISlavePort * const DIALOG_SPI;

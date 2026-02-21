@@ -15,6 +15,7 @@
 #include "pin_db.h"
 #include "prefs_db.h"
 #include "reminder_db.h"
+#include "settings_blob_db.h"
 #include "watch_app_prefs_db.h"
 #include "weather_db.h"
 
@@ -106,30 +107,20 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .flush = prefs_db_flush,
   },
   [BlobDBIdContacts] = {
-#if !PLATFORM_TINTIN
     .init = contacts_db_init,
     .insert = contacts_db_insert,
     .get_len = contacts_db_get_len,
     .read = contacts_db_read,
     .del = contacts_db_delete,
     .flush = contacts_db_flush,
-#else
-    // Disabled on tintin for code savings
-    .disabled = true,
-#endif
   },
   [BlobDBIdWatchAppPrefs] = {
-#if !PLATFORM_TINTIN
     .init = watch_app_prefs_db_init,
     .insert = watch_app_prefs_db_insert,
     .get_len = watch_app_prefs_db_get_len,
     .read = watch_app_prefs_db_read,
     .del = watch_app_prefs_db_delete,
     .flush = watch_app_prefs_db_flush,
-#else
-    // Disabled on tintin for code savings
-    .disabled = true,
-#endif
   },
   [BlobDBIdHealth] = {
 #if CAPABILITY_HAS_HEALTH_TRACKING
@@ -154,6 +145,17 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
 #else
     .disabled = true,
 #endif
+  },
+  [BlobDBIdSettings] = {
+    .init = settings_blob_db_init,
+    .insert = settings_blob_db_insert,
+    .get_len = settings_blob_db_get_len,
+    .read = settings_blob_db_read,
+    .del = settings_blob_db_delete,
+    .flush = settings_blob_db_flush,
+    .is_dirty = settings_blob_db_is_dirty,
+    .get_dirty_list = settings_blob_db_get_dirty_list,
+    .mark_synced = settings_blob_db_mark_synced,
   },
 };
 
@@ -277,7 +279,7 @@ status_t blob_db_flush(BlobDBId db_id) {
   if (db->flush) {
     status_t rv = db->flush();
     if (rv == S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_INFO, "Flushing BlobDB with Id %d", db_id);
+      PBL_LOG_INFO("Flushing BlobDB with Id %d", db_id);
       blob_db_event_put(BlobDBEventTypeFlush, db_id, NULL, 0);
     }
     return rv;

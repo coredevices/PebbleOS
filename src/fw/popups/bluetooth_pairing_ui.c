@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "bluetooth_pairing_ui.h"
 
 #include "applib/fonts/fonts.h"
@@ -117,7 +115,7 @@ static void prv_update_text_layer_with_translation(TextLayer *text_layer,
 }
 
 static void prv_update_prf_info_text_layers_text(BTPairingUIData *data) {
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
   const char *font_key_default = FONT_KEY_GOTHIC_28_BOLD;
   const char *font_key_japanese = FONT_KEY_MINCHO_24_PAIR;
 #else
@@ -262,7 +260,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
   switch (data->ui_state) {
     case BTPairingUIStateAwaitingUserConfirmation:
       alignment = GAlignTopLeft;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
       x_offset = 39;
       y_offset = 85;
 #else
@@ -273,7 +271,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
       break;
     case BTPairingUIStateAwaitingResult:
       alignment = GAlignLeft;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
       x_offset = 76;
       y_offset = 30;
 #else
@@ -285,7 +283,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
     case BTPairingUIStateFailed:
     case BTPairingUIStateSuccess:
       alignment = GAlignTop;
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
       x_offset = 0;
       y_offset = 59;
 #else
@@ -373,7 +371,7 @@ static void prv_window_load(Window *window) {
   const int32_t width_of_action_bar_with_padding = ACTION_BAR_WIDTH + PBL_IF_RECT_ELSE(2, -4);
   const int32_t width = window->layer.bounds.size.w - width_of_action_bar_with_padding;
   const int32_t x_offset = PBL_IF_RECT_ELSE(0, 22);
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
   const int32_t info_text_y_offset = 36;
 #else
   const int32_t info_text_y_offset = PBL_IF_RECT_ELSE(10, 12);
@@ -383,13 +381,13 @@ static void prv_window_load(Window *window) {
   kino_layer_init(kino_layer, &window->layer.bounds);
   layer_add_child(&window->layer, &kino_layer->layer);
 
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
   GRect pair_text_area = GRect(0, -2, width, 44);
 #else
   GRect pair_text_area = GRect(0, -2, width, 30);
 #endif
 
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
   layer_set_frame(&data->info_text_mask_layer, &GRect(x_offset, info_text_y_offset, width, 30));
 #else
   layer_set_frame(&data->info_text_mask_layer, &GRect(x_offset, info_text_y_offset, width, 26));
@@ -401,7 +399,7 @@ static void prv_window_load(Window *window) {
   text_layer_init_with_parameters(info_text_layer,
                                   &pair_text_area,
                                   data->info_text_layer_buffer,
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
                                   fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
 #else
                                   fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
@@ -423,7 +421,7 @@ static void prv_window_load(Window *window) {
 
   prv_add_prf_layers(pair_text_area, data);
 
-#if PLATFORM_ROBERT || PLATFORM_CALCULUS || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PBL_DISPLAY_HEIGHT >= 200
   const int16_t y_offset = 55;
 #else
   const int16_t y_offset = PBL_IF_RECT_ELSE(0, 2);
@@ -484,7 +482,7 @@ static void prv_show_failure_kernel_main_cb(void *unused) {
 }
 
 static void prv_pairing_timeout_timer_callback(void *unused) {
-  PBL_LOG(LOG_LEVEL_WARNING, "SSP timeout fired!");
+  PBL_LOG_WRN("SSP timeout fired!");
   launcher_task_add_callback(prv_show_failure_kernel_main_cb, NULL);
 }
 
@@ -566,7 +564,7 @@ static void prv_handle_confirmation_request(const PairingUserConfirmationCtx *ct
 
 static void prv_handle_pairing_complete(bool success) {
   if (!s_data_ptr) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Dialog was not present, but got complete (%u) event", success);
+    PBL_LOG_WRN("Dialog was not present, but got complete (%u) event", success);
     return;
   }
 
@@ -574,19 +572,18 @@ static void prv_handle_pairing_complete(bool success) {
   if (data->ui_state == BTPairingUIStateAwaitingUserConfirmation) {
     prv_exit_awaiting_user_confirmation(data);
   } else if (data->ui_state != BTPairingUIStateAwaitingResult) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Got completion (%u) but not right state", success);
+    PBL_LOG_WRN("Got completion (%u) but not right state", success);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got Completion! %u", success);
+  PBL_LOG_DBG("Got Completion! %u", success);
   data->ui_state = success ? BTPairingUIStateSuccess : BTPairingUIStateFailed;
   prv_adjust_background_frame_for_state(data);
 
   if (!new_timer_stop(data->timer)) {
     // Timer was already executing...
     if (success) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Timeout cb executing while received successful completion event");
+      PBL_LOG_WRN("Timeout cb executing while received successful completion event");
     }
   }
 
@@ -611,7 +608,7 @@ void bluetooth_pairing_ui_handle_event(PebbleBluetoothPairEvent *event) {
       if (s_data_ptr && s_data_ptr->ctx == event->ctx) {
         prv_handle_pairing_complete(event->success);
       } else {
-        PBL_LOG(LOG_LEVEL_ERROR, "Got complete event for unknown process %p vs %p",
+        PBL_LOG_ERR("Got complete event for unknown process %p vs %p",
                 event->ctx, s_data_ptr ? s_data_ptr->ctx : NULL);
       }
       break;

@@ -302,7 +302,7 @@ static void prv_process_pending_messages(void *context) {
       // TODO: PBL-29944 handle this gracefully by re-initializing - should "never" happen
       PBL_CROAK("Touch controller reset!");
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Got unexpected packet (%"PRIx8")", message.packet_id);
+      PBL_LOG_ERR("Got unexpected packet (%"PRIx8")", message.packet_id);
     }
   }
 }
@@ -365,5 +365,5 @@ void touch_sensor_init(void) {
   // initialize exti
   exti_configure_pin(EWD1000->int_exti, ExtiTrigger_Falling, prv_exti_cb);
   exti_enable(EWD1000->int_exti);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Initialized eWD1000 touch controller");
+  PBL_LOG_DBG("Initialized eWD1000 touch controller");
 }

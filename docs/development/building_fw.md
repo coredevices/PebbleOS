@@ -32,7 +32,7 @@ You can flash the built firmware (including pre-compiled bootloader) by running:
 where `$SERIAL_ADAPTER` is the path for your serial adapter, e.g. `/dev/ttyACM0`, `/dev/tty.usbmodem1102`, etc.
 If using a board with a built-in FTDI programmer, the `--tty` argument can be removed.
 
-If flashing for the first time, your watch will reboot into PRF or a _sad watch_ state if PRF is missing, indicating that resources need to be flashed:
+If flashing for the first time, your watch will reboot into PRF or a _sad watch_ state if PRF is missing, indicating that resources need to be flashed. This may also occur if resources have been added or modified:
 
 ```shell
 ./waf image_resources --tty $SERIAL_ADAPTER

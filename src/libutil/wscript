@@ -14,11 +14,7 @@ def build(bld):
 
     bld(export_includes=['includes'], name='libutil_includes')
 
-    if (bld.variant not in ('test', 'test_rocky_emx')):
-        build_libutil('libutil-cm0', bld.all_envs['cortex-m0'])
-
     build_libutil('libutil', bld.env)
-    build_libutil('libutil-32bit', bld.all_envs['32bit'])
 
 
 # vim:filetype=python

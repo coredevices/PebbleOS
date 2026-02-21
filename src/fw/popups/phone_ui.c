@@ -123,7 +123,6 @@ typedef enum {
 
 typedef struct {
   Window window;
-#if !PLATFORM_TINTIN
   struct {
     GColor left;
     GColor right;
@@ -133,7 +132,6 @@ typedef struct {
   Animation *action_bar_animation;
   Animation *bg_color_animation;
   Animation *call_status_animation;
-#endif
 
   ActionBarLayer action_bar;
   Layer core_ui_container;
@@ -204,7 +202,7 @@ static const PhoneStyle s_phone_style_default = {
 };
 
 static const PhoneStyle s_phone_style_large = {
-  .icon_size = PBL_IF_RECT_ELSE(TimelineResourceSizeSmall, TimelineResourceSizeLarge),
+  .icon_size = TimelineResourceSizeLarge,
   .icon_pos = { ICON_POSITION_X, PHONE_ICON_POS_Y_LARGE },
   .caller_id_pos_y = PHONE_CALLER_ID_POS_Y_LARGE,
   .caller_id_height = 60,
@@ -250,7 +248,6 @@ static void prv_set_icon_resource(TimelineResourceId timeline_res_id) {
   }
 
   KinoReel *new_image = kino_reel_create_with_resource(resource);
-#if !PLATFORM_TINTIN
   KinoReel *old_image = s_phone_ui_data->current_icon;
   kino_layer_pause(&s_phone_ui_data->icon_layer);
 
@@ -262,11 +259,6 @@ static void prv_set_icon_resource(TimelineResourceId timeline_res_id) {
   kino_layer_play(&s_phone_ui_data->icon_layer);
   s_phone_ui_data->current_icon = new_image;
   s_phone_ui_data->current_icon_id = resource;
-#else
-  kino_layer_set_reel(&s_phone_ui_data->icon_layer, new_image, true);
-  s_phone_ui_data->current_icon = new_image;
-  s_phone_ui_data->current_icon_id = resource;
-#endif
 }
 
 // This will do the wrong thing if called after the action bar is removed, due to the absolute
@@ -280,7 +272,6 @@ static void prv_unfold_icon_resource(TimelineResourceId timeline_res_id) {
   const ResourceId resource = icon_res_info.res_id;
 
   KinoReel *image = kino_reel_create_with_resource(resource);
-#if !PLATFORM_TINTIN
   GRect layer_frame = s_phone_ui_data->icon_layer.layer.frame;
   GSize size = kino_reel_get_size(image);
   GRect icon_from = {
@@ -304,14 +295,8 @@ static void prv_unfold_icon_resource(TimelineResourceId timeline_res_id) {
   kino_layer_play(&s_phone_ui_data->icon_layer);
   s_phone_ui_data->current_icon = image;
   s_phone_ui_data->current_icon_id = resource;
-#else
-  kino_layer_set_reel(&s_phone_ui_data->icon_layer, image, true);
-  s_phone_ui_data->current_icon = image;
-  s_phone_ui_data->current_icon_id = resource;
-#endif
 }
 
-#if !PLATFORM_TINTIN
 static void prv_update_color_boundary(void *subject, int16_t boundary) {
   s_phone_ui_data->bg_color.boundary = boundary;
   layer_mark_dirty(&s_phone_ui_data->window.layer);
@@ -330,10 +315,8 @@ static const PropertyAnimationImplementation s_color_slide_animation_impl = {
         .setter = { .int16 = (const Int16Setter)prv_update_color_boundary, },
     },
 };
-#endif
 
 static void prv_set_window_color(GColor color, bool left_to_right) {
-#if !PLATFORM_TINTIN
   Animation *color_animation;
   int16_t width = s_phone_ui_data->window.layer.bounds.size.w;
   int16_t zero = 0;
@@ -362,9 +345,6 @@ static void prv_set_window_color(GColor color, bool left_to_right) {
   animation_set_duration(color_animation, COLOUR_ANIMATION_FRAMES * ANIMATION_FRAME_MS);
   animation_set_curve(color_animation, AnimationCurveEaseIn);
   animation_schedule(color_animation);
-#else
-  layer_mark_dirty(&s_phone_ui_data->window.layer);
-#endif
 }
 
 // Names can sometimes actually be phone numbers. We're assuming that phone numbers will always
@@ -446,21 +426,16 @@ static void prv_set_caller_id_text(PebblePhoneCaller *caller) {
 
 //! Window background rendering
 static void prv_window_update_proc(Layer *layer, GContext *ctx) {
-#if !PLATFORM_TINTIN
   graphics_context_set_fill_color(ctx, s_phone_ui_data->bg_color.left);
   graphics_fill_rect(ctx, &GRect(0, 0, s_phone_ui_data->bg_color.boundary, layer->bounds.size.h));
   graphics_context_set_fill_color(ctx, s_phone_ui_data->bg_color.right);
   graphics_fill_rect(ctx, &GRect(s_phone_ui_data->bg_color.boundary, 0, layer->bounds.size.w,
                                  layer->bounds.size.h));
-#else
-  graphics_context_set_fill_color(ctx, DEFAULT_COLOR);
-  graphics_fill_rect(ctx, &layer->bounds);
-#endif
 }
 
 //! Ring functionality
 static void prv_ring(void *unused) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "RING");
+  PBL_LOG_DBG("RING");
   if (alerts_should_vibrate_for_type(AlertPhoneCall)) {
 #if CAPABILITY_HAS_VIBE_SCORES
     if (!s_phone_ui_data || !s_phone_ui_data->vibe_score) {
@@ -516,7 +491,6 @@ static void prv_stop_ringing(void) {
 //! Call duration related functions
 static void prv_show_call_status(void) {
   layer_set_hidden(&s_phone_ui_data->call_status_text_layer.layer, false);
-#if !PLATFORM_TINTIN
   s_phone_ui_data->call_status_text_layer.layer.bounds.origin.y = DURATION_ANIMATION_START_OFFSET;
   Animation *upward = property_animation_get_animation(
       property_animation_create_bounds_origin(&s_phone_ui_data->call_status_text_layer.layer,
@@ -535,9 +509,6 @@ static void prv_show_call_status(void) {
   Animation *animation = animation_sequence_create(upward, bounceback, NULL);
   s_phone_ui_data->call_status_animation = animation;
   animation_schedule(animation);
-#else
-  s_phone_ui_data->call_status_text_layer.layer.bounds.origin = GPointZero;
-#endif
 }
 
 static void prv_update_call_time(void *unused) {
@@ -730,7 +701,6 @@ static void prv_hide_action_bar(void) {
   }
   s_phone_ui_data->hid_action_bar = true;
 
-#if !PLATFORM_TINTIN
   const GRect window_bounds = s_phone_ui_data->window.layer.bounds;
   GRect offscreen = GRect(window_bounds.size.w, 0, PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, 0),
                           window_bounds.size.h);
@@ -763,14 +733,6 @@ static void prv_hide_action_bar(void) {
   text_layer_set_text_alignment(&s_phone_ui_data->call_status_text_layer, GTextAlignmentCenter);
   // Center the kino icon
   s_phone_ui_data->icon_layer.layer.frame.origin.x = ICON_POSITION_CENTERED_X;
-#endif
-
-#else
-  const GRect container_bounds = s_phone_ui_data->core_ui_container.bounds;
-  const GRect onscreen = GRect(ACTION_BAR_WIDTH / 2, 0,
-                               container_bounds.size.w, container_bounds.size.h);
-  layer_set_hidden(&s_phone_ui_data->action_bar.layer, true /* hide */);
-  layer_set_bounds(&s_phone_ui_data->core_ui_container, &onscreen);
 #endif
 }
 
@@ -926,16 +888,13 @@ static void prv_phone_ui_deinit(void) {
 
   kino_layer_pause(&s_phone_ui_data->icon_layer);
   kino_layer_deinit(&s_phone_ui_data->icon_layer);
-#if !PLATFORM_TINTIN
   // The reels will destroy intermediate images, but not the one currently on screen
-  // clean it up here.  Note that we don't have to do this on Tintin/Bianca as we
-  // do not create an intermediary reel for animating.
+  // clean it up here.
   kino_reel_destroy(s_phone_ui_data->current_icon);
 
   animation_unschedule(s_phone_ui_data->bg_color_animation);
   animation_unschedule(s_phone_ui_data->action_bar_animation);
   animation_unschedule(s_phone_ui_data->call_status_animation);
-#endif
   s_phone_ui_data->current_icon = NULL;
   s_phone_ui_data->current_icon_id = 0;
 
@@ -1029,11 +988,9 @@ static void prv_phone_ui_init(void) {
     .unload = prv_handle_window_unload,
   });
   window_set_overrides_back_button(window, true);
-#if !PLATFORM_TINTIN
   s_phone_ui_data->bg_color.left = DEFAULT_COLOR;
   s_phone_ui_data->bg_color.right = DEFAULT_COLOR;
   s_phone_ui_data->bg_color.boundary = 0;
-#endif
 
   const int16_t width = window->layer.bounds.size.w - (TEXT_MARGIN_WIDTH * 2);
 
@@ -1096,7 +1053,7 @@ static void prv_phone_ui_init(void) {
 
 static bool prv_check_popups_are_blocked(void) {
   if (launcher_popups_are_blocked()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring call event. Popups are blocked");
+    PBL_LOG_INFO("Ignoring call event. Popups are blocked");
     return true;
   }
   return false;
@@ -1179,7 +1136,7 @@ void phone_ui_handle_missed_call(void) {
 
 void phone_ui_handle_call_start(bool can_decline) {
   if (!s_phone_ui_data) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't handle call start, UI isn't setup");
+    PBL_LOG_ERR("Can't handle call start, UI isn't setup");
     return;
   }
 
@@ -1203,7 +1160,7 @@ void phone_ui_handle_call_start(bool can_decline) {
 
 void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
   if (!s_phone_ui_data) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't handle call end, UI isn't setup");
+    PBL_LOG_ERR("Can't handle call end, UI isn't setup");
     return;
   }
 
@@ -1238,7 +1195,7 @@ void phone_ui_handle_call_hide(void) {
 
 void phone_ui_handle_caller_id(PebblePhoneCaller *caller) {
   if (!s_phone_ui_data) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't update caller id, UI isn't setup");
+    PBL_LOG_ERR("Can't update caller id, UI isn't setup");
     return;
   }
 

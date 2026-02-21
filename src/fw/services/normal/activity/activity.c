@@ -112,7 +112,7 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 
     const bool should_be_sampling = !s_activity_state.hr.currently_sampling && !watch_is_flat;
     if (!s_activity_state.hr.currently_sampling && watch_is_flat) {
-      PBL_LOG(LOG_LEVEL_INFO, "Not subscribing to HRM: watch is flat(ish)");
+      PBL_LOG_INFO("Not subscribing to HRM: watch is flat(ish)");
     }
 
     // Pick the subscription rate (essentially ON and OFF)
@@ -126,7 +126,7 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
     // Update history
     s_activity_state.hr.currently_sampling = should_be_sampling;
     s_activity_state.hr.toggled_sampling_at_ts = now_ts;
-    PBL_LOG(LOG_LEVEL_DEBUG, "Changed HR sampling period to %"PRIu32" sec", desired_interval_sec);
+    PBL_LOG_DBG("Changed HR sampling period to %"PRIu32" sec", desired_interval_sec);
   }
 #endif // CAPABILITY_HAS_BUILTIN_HRM
 }
@@ -242,7 +242,7 @@ SettingsFile *activity_private_settings_open(void) {
   if (settings_file_open(file, ACTIVITY_SETTINGS_FILE_NAME,
                          ACTIVITY_SETTINGS_FILE_LEN) != S_SUCCESS) {
     kernel_free(file);
-    PBL_LOG(LOG_LEVEL_ERROR, "No settings file");
+    PBL_LOG_ERR("No settings file");
     return NULL;
   }
   return file;
@@ -263,7 +263,7 @@ void activity_private_settings_close(SettingsFile *file) {
 static void prv_settings_rewrite_cb(SettingsFile *old_file, SettingsFile *new_file,
                                     SettingsRecordInfo *info, void *context) {
   if (info->key_len != sizeof(ActivitySettingsKey)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Unexpected key len: %"PRIu32" ", (uint32_t)info->key_len);
+    PBL_LOG_WRN("Unexpected key len: %"PRIu32" ", (uint32_t)info->key_len);
     return;
   }
 
@@ -304,7 +304,7 @@ static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_
     return file;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "Performing settings file migration from verison %"PRIu16"", version);
+  PBL_LOG_INFO("Performing settings file migration from verison %"PRIu16"", version);
 
   // Perform migration
   if (version == 1) {
@@ -312,11 +312,11 @@ static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_
     // size is different. We need to re-create it using the new, bigger size.
     result = settings_file_rewrite(file, prv_settings_rewrite_cb, NULL);
     if (result != S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failure %"PRIi32" while re-writing setting file", (int32_t)result);
+      PBL_LOG_ERR("Failure %"PRIi32" while re-writing setting file", (int32_t)result);
     }
   } else {
     // If the version is totally unexpected, remove the file and create a new one
-    PBL_LOG(LOG_LEVEL_ERROR, "Unknown settings file verison %"PRIu16"", version);
+    PBL_LOG_ERR("Unknown settings file verison %"PRIu16"", version);
   }
 
   if (result != S_SUCCESS) {
@@ -434,7 +434,7 @@ static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
 
   // Send the history update event now if history has changed
   if (need_history_update_event) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Sending history update event");
+    PBL_LOG_DBG("Sending history update event");
     PebbleEvent e = {
       .type = PEBBLE_HEALTH_SERVICE_EVENT,
       .health_event = {
@@ -532,7 +532,7 @@ static void prv_collect_raw_samples(AccelRawData *accel_data, uint32_t num_sampl
         DlsSystemTagActivityAccelSamples, DATA_LOGGING_BYTE_ARRAY, sizeof(ActivityRawSamplesRecord),
         true /*buffered*/, false /*resume*/, &system_uuid);
     if (data->dls_session == NULL) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Unable to create DLS session");
+      PBL_LOG_ERR("Unable to create DLS session");
       return;
     }
   }
@@ -607,7 +607,7 @@ static void prv_collect_raw_samples(AccelRawData *accel_data, uint32_t num_sampl
       }
       DataLoggingResult result = dls_log(data->dls_session, &data->record, 1);
       if (result != DATA_LOGGING_SUCCESS) {
-        PBL_LOG(LOG_LEVEL_WARNING, "Error %"PRIi32" while logging raw sample data",
+        PBL_LOG_WRN("Error %"PRIi32" while logging raw sample data",
                 (int32_t)result);
       }
 
@@ -729,7 +729,7 @@ static void prv_stop_tracking_early(void) {
   s_activity_state.update_settings_counter = -1;
   prv_update_storage(rtc_get_time());
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Updated and persisted sessions before stopping activity tracking");
+  PBL_LOG_DBG("Updated and persisted sessions before stopping activity tracking");
 }
 
 
@@ -747,7 +747,7 @@ static void prv_start_tracking_cb(void *context) {
 
   AccelSamplingRate sampling_rate;
   if (activity_algorithm_init(&sampling_rate)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Starting activity tracking...");
+    PBL_LOG_DBG("Starting activity tracking...");
 
     // Subscribe to the accelerometer from KernelBG
     s_activity_state.test_mode = test_mode;
@@ -776,7 +776,7 @@ static void prv_start_tracking_cb(void *context) {
     // Register our minutes callback
     cron_job_schedule(&s_activity_job);
     s_activity_state.started = true;
-    PBL_LOG(LOG_LEVEL_INFO, "Activity tracking started");
+    PBL_LOG_INFO("Activity tracking started");
 
     PebbleEvent event = {
       .type = PEBBLE_ACTIVITY_EVENT,
@@ -809,7 +809,7 @@ static void prv_stop_tracking_cb(void *context) {
 
   PBL_ASSERTN(activity_algorithm_deinit());
   s_activity_state.started = false;
-  PBL_LOG(LOG_LEVEL_INFO, "activity tracking stopped");
+  PBL_LOG_INFO("activity tracking stopped");
 
   PebbleEvent event = {
     .type = PEBBLE_ACTIVITY_EVENT,
@@ -1285,7 +1285,7 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
     return false;
   }
   if (!s_activity_state.test_mode) {
-    PBL_LOG(LOG_LEVEL_ERROR, "not in test mode");
+    PBL_LOG_ERR("not in test mode");
     return false;
   }
 
@@ -1302,7 +1302,7 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
     uint16_t req_size = sizeof(ActivityFeedSamples) + chunk_size * sizeof(AccelRawData);
     ActivityFeedSamples *context = kernel_malloc(req_size);
     if (!context) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Not enough memory");
+      PBL_LOG_ERR("Not enough memory");
       return false;
     }
 

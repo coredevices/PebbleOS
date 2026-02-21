@@ -155,12 +155,12 @@ struct tm *pbl_override_localtime(const time_t *timep) {
 }
 
 
-int pbl_strftime(char* s, size_t maxsize, const char* format, const struct tm* tim_p) {
+size_t pbl_strftime(char* s, size_t maxsize, const char* format, const struct tm* tim_p) {
   char *locale = app_state_get_locale_info()->app_locale_time;
   return sys_strftime(s, maxsize, format, tim_p, locale);
 }
 
-DEFINE_SYSCALL(int, sys_strftime, char* s, size_t maxsize, const char* format,
+DEFINE_SYSCALL(size_t, sys_strftime, char* s, size_t maxsize, const char* format,
                                   const struct tm* tim_p, char *locale) {
 
   if (PRIVILEGE_WAS_ELEVATED) {

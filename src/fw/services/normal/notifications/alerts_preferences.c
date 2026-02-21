@@ -150,7 +150,6 @@ static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
   }
 }
 
-#if !PLATFORM_TINTIN
 static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
   // These don't need to be initialized since settings_file_get will clear them on error
   uint8_t manual_dnd_first_use_complete;
@@ -172,7 +171,6 @@ static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
 
 #undef RESTORE_AND_DELETE_PREF
 }
-#endif
 
 #if CAPABILITY_HAS_VIBE_SCORES
 static void prv_save_all_vibe_scores_to_file(SettingsFile *file) {
@@ -292,10 +290,7 @@ void alerts_preferences_init(void) {
 
   prv_migrate_legacy_dnd_schedule(&file);
 
-  // tintin watches don't have these prefs, so we can pull this out to save on codespace
-#if !PLATFORM_TINTIN
   prv_migrate_legacy_first_use_settings(&file);
-#endif
 #if CAPABILITY_HAS_VIBE_SCORES
   prv_migrate_vibe_intensity_to_vibe_scores(&file);
   prv_ensure_valid_vibe_scores();
@@ -499,6 +494,92 @@ bool alerts_preferences_dnd_is_smart_enabled(void) {
 void alerts_preferences_dnd_set_smart_enabled(bool enable) {
   s_do_not_disturb_smart_dnd_enabled = enable;
   SET_PREF(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
+}
+
+void alerts_preferences_lock(void) {
+  mutex_lock(s_mutex);
+}
+
+void alerts_preferences_unlock(void) {
+  mutex_unlock(s_mutex);
+}
+
+void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
+  if (event->type != BlobDBEventTypeInsert) {
+    return;
+  }
+
+  const uint8_t *key = event->key;
+  int key_len = event->key_len;
+  const char *matched_key = NULL;
+
+  mutex_lock(s_mutex);
+
+  SettingsFile file = {{0}};
+  if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
+    mutex_unlock(s_mutex);
+    return;
+  }
+
+  // Helper macro to reload a single preference from file if key matches
+  // key_len may or may not include the null terminator depending on BlobDB protocol
+  // IMPORTANT: settings_file_get uses exact key_len matching, so we must use the same
+  // key_len that was used when writing the record (i.e., key_len from the event)
+#define RELOAD_IF_MATCH(pref_key, var) \
+  do { \
+    size_t _pref_strlen = strlen(pref_key); \
+    if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) && \
+        memcmp(key, pref_key, _pref_strlen) == 0) { \
+      __typeof__(var) _tmp; \
+      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
+        var = _tmp; \
+        matched_key = pref_key; \
+      } \
+      goto done; \
+    } \
+  } while (0)
+
+  RELOAD_IF_MATCH(PREF_KEY_MASK, s_mask);
+  RELOAD_IF_MATCH(PREF_KEY_DND_INTERRUPTIONS_MASK, s_dnd_interruptions_mask);
+  RELOAD_IF_MATCH(PREF_KEY_DND_SHOW_NOTIFICATIONS, s_dnd_show_notifications);
+  RELOAD_IF_MATCH(PREF_KEY_VIBE_INTENSITY, s_vibe_intensity);
+#if CAPABILITY_HAS_VIBE_SCORES
+  RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications);
+  RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_INCOMING_CALLS, s_vibe_score_incoming_calls);
+  RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms);
+#endif
+  RELOAD_IF_MATCH(PREF_KEY_DND_MANUALLY_ENABLED, s_do_not_disturb_manually_enabled);
+  RELOAD_IF_MATCH(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
+  RELOAD_IF_MATCH(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
+                  s_dnd_schedule[WeekdaySchedule].schedule);
+  RELOAD_IF_MATCH(s_dnd_schedule_keys[WeekdaySchedule].enabled_pref_key,
+                  s_dnd_schedule[WeekdaySchedule].enabled);
+  RELOAD_IF_MATCH(s_dnd_schedule_keys[WeekendSchedule].schedule_pref_key,
+                  s_dnd_schedule[WeekendSchedule].schedule);
+  RELOAD_IF_MATCH(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key,
+                  s_dnd_schedule[WeekendSchedule].enabled);
+  RELOAD_IF_MATCH(PREF_KEY_NOTIF_WINDOW_TIMEOUT, s_notif_window_timeout_ms);
+  RELOAD_IF_MATCH(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
+  RELOAD_IF_MATCH(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
+  RELOAD_IF_MATCH(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+
+#undef RELOAD_IF_MATCH
+
+done:
+  settings_file_close(&file);
+  mutex_unlock(s_mutex);
+
+  // Notify UI that a preference changed so it can refresh
+  if (matched_key) {
+    PebbleEvent pref_event = {
+      .type = PEBBLE_PREF_CHANGE_EVENT,
+      .pref_change = {
+        .key = matched_key,
+        .key_len = strlen(matched_key) + 1,
+      },
+    };
+    event_put(&pref_event);
+  }
 }
 
 void analytics_external_collect_alerts_preferences(void) {

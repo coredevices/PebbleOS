@@ -18,18 +18,19 @@
 #include "drivers/flash.h"
 #include "drivers/debounced_button.h"
 
-#include "drivers/accessory.h"
+#include "drivers/accel.h"
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
 #include "drivers/battery.h"
 #include "drivers/display/display.h"
 #include "drivers/gpio.h"
 #include "drivers/hrm.h"
-#include "drivers/imu.h"
 #include "drivers/led_controller.h"
+#include "drivers/mag.h"
 #include "drivers/mic.h"
 #include "drivers/otp.h"
 #include "drivers/pmic.h"
+#include "drivers/pressure.h"
 #include "drivers/pwr.h"
 #include "drivers/spi.h"
 #include "drivers/system_flash.h"
@@ -39,7 +40,7 @@
 #include "drivers/vibe.h"
 #include "drivers/voltage_monitor.h"
 #include "drivers/watchdog.h"
-#include "drivers/lptim_systick.h"
+#include "drivers/sf32lb52/rc10k.h"
 
 #include "resource/resource.h"
 #include "resource/system_resource.h"
@@ -54,6 +55,7 @@
 #include "kernel/panic.h"
 #include "kernel/pulse_logging.h"
 #include "services/services.h"
+#include "services/common/boot_splash.h"
 #include "services/common/clock.h"
 #include "services/common/compositor/compositor.h"
 #include "services/common/regular_timer.h"
@@ -107,6 +109,8 @@
 
 #include <string.h>
 
+void soc_early_init(void);
+
 /* here is as good as anywhere else ... */
 const int __attribute__((used)) uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
@@ -119,19 +123,19 @@ static void print_splash_screen(void)
 {
 
 #if defined(MANUFACTURING_FW)
-  PBL_LOG(LOG_LEVEL_ALWAYS, "PebbleOS - MANUFACTURING MODE");
+  PBL_LOG_ALWAYS("PebbleOS - MANUFACTURING MODE");
 #elif defined(RECOVERY_FW)
-  PBL_LOG(LOG_LEVEL_ALWAYS, "PebbleOS - RECOVERY MODE");
+  PBL_LOG_ALWAYS("PebbleOS - RECOVERY MODE");
 #else
-  PBL_LOG(LOG_LEVEL_ALWAYS, "PebbleOS");
+  PBL_LOG_ALWAYS("PebbleOS");
 #endif
-  PBL_LOG(LOG_LEVEL_ALWAYS, "%s%s",
+  PBL_LOG_ALWAYS("%s%s",
           TINTIN_METADATA.version_tag,
           (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware) ?
             (TINTIN_METADATA.is_slot_0 ? " (slot0)" : " (slot1)") :
             "");
-  PBL_LOG(LOG_LEVEL_ALWAYS, "(c) 2013-2025 The PebbleOS contributors");
-  PBL_LOG(LOG_LEVEL_ALWAYS, " ");
+  PBL_LOG_ALWAYS("(c) 2013-2025 The PebbleOS contributors");
+  PBL_LOG_ALWAYS(" ");
 }
 
 #ifdef DUMP_GPIO_CFG_STATE
@@ -166,9 +170,7 @@ static void dump_gpio_configuration_state(void) {
 #endif /* DUMP_GPIO_CFG_STATE */
 
 int main(void) {
-#if defined(MICRO_FAMILY_SF32LB52)
-  board_early_init();
-#endif
+  soc_early_init();
 
   gpio_init_all();
 
@@ -201,28 +203,6 @@ int main(void) {
   print_splash_screen();
 
   rtc_init();
-#ifdef MICRO_FAMILY_SF32LB52
-  lptim_systick_init();
-#endif
-
-#if BOOTLOADER_TEST_STAGE2
-#define BLTEST_LOG(x...) pbl_log(LOG_LEVEL_ALWAYS, __FILE__, __LINE__, x)
-  BLTEST_LOG("BOOTLOADER TEST STAGE 2");
-  boot_bit_set(BOOT_BIT_FW_STABLE);
-
-  BLTEST_LOG("STAGE 2 -- Checking test boot bits");
-  if (boot_bit_test(BOOT_BIT_BOOTLOADER_TEST_A) && !boot_bit_test(BOOT_BIT_BOOTLOADER_TEST_B)) {
-    BLTEST_LOG("ALL BOOTLOADER TESTS PASSED");
-  } else {
-    BLTEST_LOG("STAGE 2 -- Boot bits incorrect!");
-    BLTEST_LOG("BOOTLOADER TEST FAILED");
-  }
-  boot_bit_clear(BOOT_BIT_BOOTLOADER_TEST_A | BOOT_BIT_BOOTLOADER_TEST_B);
-  psleep(10000);
-  system_hard_reset();
-  for (;;) {}
-  // won't get here, rest gets optimized out
-#endif
 
 #ifdef RECOVERY_FW
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
@@ -296,10 +276,6 @@ static void init_drivers(void) {
   battery_init();
   vibe_init();
 
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  accessory_init();
-#endif
-
 #if CAPABILITY_HAS_PMIC
   pmic_init();
 #endif // CAPABILITY_HAS_PMIC
@@ -322,7 +298,13 @@ static void init_drivers(void) {
 #endif
 #endif
 
-  imu_init();
+  accel_init();
+#if CAPABILITY_HAS_MAGNETOMETER
+  mag_init();
+#endif
+#if CAPABILITY_HAS_PRESSURE_SENSOR
+  pressure_init();
+#endif
 
   backlight_init();
   ambient_light_init();
@@ -333,10 +315,6 @@ static void init_drivers(void) {
 
   rtc_init_timers();
   rtc_alarm_init();
-
-#ifdef MICRO_FAMILY_SF32LB52
-  lptim_calibrate_init();
-#endif
 
   power_tracking_init();
 }
@@ -394,7 +372,7 @@ static void prv_test_sjlj(void) {
   else
     prv_sjlj_main(r);
   PBL_ASSERT(s_sjlj_num == 3, "SJLJ TRACK INCORRECT @ END");
-  PBL_LOG(LOG_LEVEL_ALWAYS, "sjlj works \\o/");
+  PBL_LOG_ALWAYS("sjlj works \\o/");
 }
 #endif
 
@@ -416,11 +394,9 @@ static NOINLINE void prv_main_task_init(void) {
 
   memory_layout_setup_mpu();
 
-#if !defined(MICRO_FAMILY_SF32LB52)
   board_early_init();
-#endif
 
-  display_show_splash_screen();
+  boot_splash_start();
 
   kernel_applib_init();
 
@@ -491,8 +467,10 @@ static NOINLINE void prv_main_task_init(void) {
   GPoint mfg_offset = mfg_info_get_disp_offsets();
   display_set_offset(mfg_offset);
   // Log display offsets for use in contact support logs
-  PBL_LOG(LOG_LEVEL_INFO, "MFG Display Offsets (%"PRIi16",%"PRIi16").", mfg_offset.x, mfg_offset.y);
-
+  PBL_LOG_INFO("MFG Display Offsets (%"PRIi16",%"PRIi16").", mfg_offset.x, mfg_offset.y);
+  
+  // Stop boot splash before initializing compositor
+  boot_splash_stop();
   // Can't use the compositor framebuffer until the compositor is initialized
   compositor_init();
   kernel_ui_init();
@@ -503,6 +481,9 @@ static NOINLINE void prv_main_task_init(void) {
 
   // The RTC needs be calibrated after the mfg registry service has been initialized so we can
   // load the measured frequency.
+#if defined(MICRO_FAMILY_SF32LB52) && !defined(SF32LB52_USE_LXT)
+  rc10k_init();
+#endif
   rtc_calibrate_frequency(mfg_info_get_rtc_freq());
 
   clear_reset_loop_detection_bits();

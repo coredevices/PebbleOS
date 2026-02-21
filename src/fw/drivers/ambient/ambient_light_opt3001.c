@@ -57,16 +57,16 @@ void ambient_light_init(void) {
   uint16_t mf, id;
   bool ok = prv_read_register(OPT3001_MFGID, &mf) && prv_read_register(OPT3001_DEVID, &id);
   if (!ok) {
-    PBL_LOG(LOG_LEVEL_ERROR, "failed to read OPT3001 ID registers");
+    PBL_LOG_ERR("failed to read OPT3001 ID registers");
     return;
   }
 
   if (mf != OPT3001_MFGID_VAL || id != OPT3001_DEVID_VAL) {
-    PBL_LOG(LOG_LEVEL_INFO, "OPT3001 read successfully, but had incorrect manuf %04x, id %04x", mf, id);
+    PBL_LOG_INFO("OPT3001 read successfully, but had incorrect manuf %04x, id %04x", mf, id);
     return;
   }
   
-  PBL_LOG(LOG_LEVEL_INFO, "found OPT3001 with manuf %04x, id %04x", mf, id);
+  PBL_LOG_INFO("found OPT3001 with manuf %04x, id %04x", mf, id);
 
   if (BOARD_CONFIG.als_always_on) {
     prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC | OPT3001_CONFIG_MODE_CONTINUOUS);

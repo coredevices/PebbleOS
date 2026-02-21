@@ -93,7 +93,7 @@ def build(ctx):
          " src/fw/services/normal/timeline/attribute_group.c" \
          " src/fw/services/normal/timeline/timeline.c" \
          " src/fw/services/normal/blob_db/pin_db.c" \
-         " src/fw/apps/system_apps/timeline/timeline_model.c",
+         " src/fw/apps/system/timeline/model.c",
       test_sources_ant_glob = "test_timeline_model.c",
       override_includes=['dummy_board'])
 
@@ -142,6 +142,8 @@ def build(ctx):
         " src/fw/applib/graphics/gtypes.c" \
         " src/fw/applib/graphics/perimeter.c" \
         " src/fw/applib/graphics/text_layout.c" \
+        " src/fw/applib/graphics/rtl_support.c" \
+        " src/fw/applib/graphics/arabic_shaping.c" \
         " src/fw/applib/graphics/text_render.c" \
         " src/fw/applib/graphics/text_resources.c" \
         " src/fw/applib/graphics/utf8.c" \
@@ -169,7 +171,7 @@ def build(ctx):
         " src/fw/applib/ui/window.c" \
         " src/fw/applib/vendor/tinflate/tinflate.c" \
         " src/fw/applib/vendor/uPNG/upng.c" \
-        " src/fw/apps/system_apps/timeline/text_node.c" \
+        " src/fw/apps/system/timeline/text_node.c" \
         " src/fw/board/displays/display_spalding.c" \
         " src/fw/drivers/flash/flash_crc.c" \
         " src/fw/flash_region/filesystem_regions.c" \
@@ -203,7 +205,7 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob=(
              rendering_sources +
-             " src/fw/apps/system_apps/timeline/pin_window.c"
+             " src/fw/apps/system/timeline/pin_window.c"
              " src/fw/popups/timeline/timeline_item_layer.c"
              " src/fw/services/normal/timeline/attribute.c"
              " src/fw/services/normal/timeline/generic_layout.c"
@@ -221,6 +223,6 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk', 'robert'])
+         platforms=['snowy', 'spalding', 'silk'])
 
 # vim:filetype=python

@@ -15,8 +15,11 @@
 
 
 #define SYNC_TIMEOUT_SECONDS 30
+#define SYNC_ABANDON_TIMEOUT_SECONDS (5 * 60)  // 5 minutes to fully abandon
 
 static BlobDBSyncSession *s_sync_sessions = NULL;
+
+static void prv_send_writeback(BlobDBSyncSession *session);
 
 static bool prv_session_id_filter_callback(ListNode *node, void *data) {
   BlobDBId db_id = (BlobDBId)data;
@@ -33,10 +36,28 @@ static bool prv_session_token_filter_callback(ListNode *node, void *data) {
   return session->current_token == token;
 }
 
-static void prv_timeout_kernelbg_callback(void *data) {
-  PBL_LOG(LOG_LEVEL_INFO, "Blob DB Sync timeout");
+static void prv_abandon_kernelbg_callback(void *data) {
+  PBL_LOG_INFO("Blob DB Sync abandoned after extended timeout");
   BlobDBSyncSession *session = data;
   blob_db_sync_cancel(session);
+}
+
+static void prv_abandon_timer_callback(void *data) {
+  system_task_add_callback(prv_abandon_kernelbg_callback, data);
+}
+
+static void prv_timeout_kernelbg_callback(void *data) {
+  BlobDBSyncSession *session = data;
+
+  // Start the abandon timer if not already running
+  if (!regular_timer_is_scheduled(&session->abandon_timer)) {
+    regular_timer_add_multisecond_callback(&session->abandon_timer, SYNC_ABANDON_TIMEOUT_SECONDS);
+  }
+
+  // Retry sending the current item
+  PBL_LOG_INFO("Blob DB Sync timeout, retrying (db %d)", session->db_id);
+  session->state = BlobDBSyncSessionStateIdle;
+  prv_send_writeback(session);
 }
 
 static void prv_timeout_timer_callback(void *data) {
@@ -54,7 +75,7 @@ static void prv_send_writeback(BlobDBSyncSession *session) {
   }
 
   if (!comm_session_get_system_session()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Cancelling sync: No route to phone");
+    PBL_LOG_INFO("Cancelling sync: No route to phone");
     blob_db_sync_cancel(session);
     return;
   }
@@ -72,7 +93,7 @@ static void prv_send_writeback(BlobDBSyncSession *session) {
     blob_db_sync_next(session);
   } else {
     // something went terribly wrong
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read blob DB during sync. Error code: 0x%"PRIx32, status);
+    PBL_LOG_ERR("Failed to read blob DB during sync. Error code: 0x%"PRIx32, status);
     blob_db_sync_cancel(session);
   }
 
@@ -110,6 +131,10 @@ BlobDBSyncSession* prv_create_sync_session(BlobDBId db_id, BlobDBDirtyItem *dirt
     .cb = prv_timeout_timer_callback,
     .cb_data = session,
   };
+  session->abandon_timer = (const RegularTimerInfo) {
+    .cb = prv_abandon_timer_callback,
+    .cb_data = session,
+  };
   s_sync_sessions = (BlobDBSyncSession *)list_prepend((ListNode *)s_sync_sessions,
                                                       (ListNode *)session);
 
@@ -133,7 +158,7 @@ status_t blob_db_sync_db(BlobDBId db_id) {
   if (db_id >= NumBlobDBs) {
     return E_INVALID_ARGUMENT;
   }
-  PBL_LOG(LOG_LEVEL_INFO, "Starting BlobDB db sync: %d", db_id);
+  PBL_LOG_INFO("Starting BlobDB db sync: %d", db_id);
 
   BlobDBDirtyItem *dirty_list = blob_db_get_dirty_list(db_id);
   if (!dirty_list) {
@@ -168,7 +193,7 @@ status_t blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_
   char buffer[key_len + 1];
   strncpy(buffer, (const char *)key, key_len);
   buffer[key_len] = '\0';
-  PBL_LOG(LOG_LEVEL_INFO, "Starting BlobDB record sync: <%s>", buffer);
+  PBL_LOG_INFO("Starting BlobDB record sync: <%s>", buffer);
 
   BlobDBDirtyItem *dirty_list = kernel_zalloc_check(sizeof(BlobDBDirtyItem) + key_len);
   list_init((ListNode *)dirty_list);
@@ -184,9 +209,12 @@ status_t blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_
 }
 
 void blob_db_sync_cancel(BlobDBSyncSession *session) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Cancelling session %d sync", session->db_id);
+  PBL_LOG_DBG("Cancelling session %d sync", session->db_id);
   if (regular_timer_is_scheduled(&session->timeout_timer)) {
     regular_timer_remove_callback(&session->timeout_timer);
+  }
+  if (regular_timer_is_scheduled(&session->abandon_timer)) {
+    regular_timer_remove_callback(&session->abandon_timer);
   }
   blob_db_util_free_dirty_list(session->dirty_list);
   list_remove((ListNode *)session, (ListNode **)&s_sync_sessions, NULL);
@@ -194,7 +222,13 @@ void blob_db_sync_cancel(BlobDBSyncSession *session) {
 }
 
 void blob_db_sync_next(BlobDBSyncSession *session) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "blob_db_sync_next");
+  PBL_LOG_DBG("blob_db_sync_next");
+
+  // Cancel abandon timer - we got a successful response, so connection is working
+  if (regular_timer_is_scheduled(&session->abandon_timer)) {
+    regular_timer_remove_callback(&session->abandon_timer);
+  }
+
   BlobDBDirtyItem *dirty_item = session->dirty_list;
   blob_db_mark_synced(session->db_id, dirty_item->key, dirty_item->key_len);
 
@@ -212,10 +246,13 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
     if (session->dirty_list) {
       prv_send_writeback(session);
     } else {
-      PBL_LOG(LOG_LEVEL_INFO, "Finished syncing db %d, session type: %d", session->db_id,
+      PBL_LOG_INFO("Finished syncing db %d, session type: %d", session->db_id,
                                                                           session->session_type);
       if (regular_timer_is_scheduled(&session->timeout_timer)) {
         regular_timer_remove_callback(&session->timeout_timer);
+      }
+      if (regular_timer_is_scheduled(&session->abandon_timer)) {
+        regular_timer_remove_callback(&session->abandon_timer);
       }
       if (session->session_type == BlobDBSyncSessionTypeDB) {
         // Only send the sync done when syncing an entire db
@@ -226,3 +263,4 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
     }
   }
 }
+

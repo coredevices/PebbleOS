@@ -7,56 +7,63 @@ import sparse_length_encoding
 
 from waflib import Task, TaskGen, Utils, Node, Errors
 
+
 class binary_header(Task.Task):
     """
     Create a header file containing an array with contents from a binary file.
     """
 
     def run(self):
-        if getattr(self.generator, 'hex', False):
+        if getattr(self.generator, "hex", False):
             # Input file is hexadecimal ASCII characters with whitespace
             text = self.inputs[0].read(
-                    encoding=getattr(self.generator, 'encoding', 'ISO8859-1'))
+                encoding=getattr(self.generator, "encoding", "ISO8859-1")
+            )
             # Strip all whitespace so that binascii is happy
-            text = ''.join(text.split())
+            text = "".join(text.split())
             code = binascii.unhexlify(text)
         else:
-            code = self.inputs[0].read('rb')
+            code = self.inputs[0].read("rb")
 
-        array_name = getattr(self.generator, 'array_name', None)
+        array_name = getattr(self.generator, "array_name", None)
         if not array_name:
-            array_name = re.sub(r'[^A-Za-z0-9]', '_', self.inputs[0].name)
+            array_name = re.sub(r"[^A-Za-z0-9]", "_", self.inputs[0].name)
 
-        if getattr(self.generator, 'compressed', False):
-            encoded_code = b''.join(sparse_length_encoding.encode(code))
+        if getattr(self.generator, "compressed", False):
+            encoded_code = b"".join(sparse_length_encoding.encode(code))
             # verify that it was encoded correctly
-            if b''.join(sparse_length_encoding.decode(encoded_code)) != code:
-                raise Errors.WafError('encoding error')
+            if b"".join(sparse_length_encoding.decode(encoded_code)) != code:
+                raise Errors.WafError("encoding error")
             code = encoded_code
 
-        output = ['#pragma once', '#include <stdint.h>']
-        output += ['static const uint8_t %s[] = {' % array_name]
+        output = ["#pragma once", "#include <stdint.h>"]
+        output += ["static const uint8_t %s[] = {" % array_name]
         line = []
         for n, b in enumerate(code):
-            line += ['0x%.2x,' % b]
+            line += ["0x%.2x," % b]
             if n % 16 == 15:
-                output += [''.join(line)]
+                output += ["".join(line)]
                 line = []
         if line:
-            output += [''.join(line)]
-        output += ['};', '']
+            output += ["".join(line)]
+        output += ["};", ""]
 
         self.outputs[0].write(
-                '\n'.join(output),
-                encoding=getattr(self.generator, 'encoding', 'ISO8859-1'))
-        self.generator.bld.raw_deps[self.uid()] = self.dep_vars = 'array_name'
+            "\n".join(output), encoding=getattr(self.generator, "encoding", "ISO8859-1")
+        )
+        self.generator.bld.raw_deps[self.uid()] = self.dep_vars = "array_name"
 
-        if getattr(self.generator, 'chmod', None):
+        if getattr(self.generator, "chmod", None):
             os.chmod(self.outputs[0].abspath(), self.generator.chmod)
 
     def sig_vars(self):
-        dependent_generator_vars = ['hex', 'encoding', 'array_name',
-                                    'compressed', 'chmod']
+        dependent_generator_vars = [
+            "hex",
+            "encoding",
+            "array_name",
+            "compressed",
+            "chmod",
+        ]
         vars = []
         for k in dependent_generator_vars:
             try:
@@ -67,8 +74,8 @@ class binary_header(Task.Task):
         return self.m.digest()
 
 
-@TaskGen.feature('binary_header')
-@TaskGen.before_method('process_source', 'process_rule')
+@TaskGen.feature("binary_header")
+@TaskGen.before_method("process_source", "process_rule")
 def process_binary_header(self):
     """
     Define a transformation that substitutes the contents of *source* files to
@@ -105,18 +112,18 @@ def process_binary_header(self):
     :py:meth:`waflib.TaskGen.process_source`.
     """
 
-    src = Utils.to_list(getattr(self, 'source', []))
+    src = Utils.to_list(getattr(self, "source", []))
     if isinstance(src, Node.Node):
         src = [src]
-    tgt = Utils.to_list(getattr(self, 'target', []))
+    tgt = Utils.to_list(getattr(self, "target", []))
     if isinstance(tgt, Node.Node):
         tgt = [tgt]
     if len(src) != len(tgt):
-        raise Errors.WafError('invalid number of source/target for %r' % self)
+        raise Errors.WafError("invalid number of source/target for %r" % self)
 
     for x, y in zip(src, tgt):
         if not x or not y:
-            raise Errors.WafError('null source or target for %r' % self)
+            raise Errors.WafError("null source or target for %r" % self)
         a, b = None, None
 
         if isinstance(x, str) and isinstance(y, str) and x == y:
@@ -136,17 +143,16 @@ def process_binary_header(self):
                 b = y
 
         if not a:
-            raise Errors.WafError('could not find %r for %r' % (x, self))
+            raise Errors.WafError("could not find %r for %r" % (x, self))
 
         has_constraints = False
-        tsk = self.create_task('binary_header', a, b)
-        for k in ('after', 'before', 'ext_in', 'ext_out'):
+        tsk = self.create_task("binary_header", a, b)
+        for k in ("after", "before", "ext_in", "ext_out"):
             val = getattr(self, k, None)
             if val:
                 has_constraints = True
                 setattr(tsk, k, val)
 
-        tsk.before = [k for k in ('c', 'cxx') if k in Task.classes]
+        tsk.before = [k for k in ("c", "cxx") if k in Task.classes]
 
     self.source = []
-

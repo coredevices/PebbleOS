@@ -37,23 +37,6 @@
  * and the higher-level code can work unmodified with different accelerometers.
  */
 
-//! Information which varies by accelerometer driver.
-typedef struct {
-  //! Highest sample interval (slowest rate) supported by the driver.
-  uint32_t sample_interval_max;
-  //! Recommended sample interval for low-power use, around 100,000 us.
-  uint32_t sample_interval_low_power;
-  //! Recommended sample interval for interactive use, around 250,000 us.
-  uint32_t sample_interval_ui;
-  //! Recommended sample interval for games and fast interactivity,
-  //! around 20,000 us.
-  uint32_t sample_interval_game;
-  //! Lowest sample interval (fastest rate) supported by the driver.
-  uint32_t sample_interval_min;
-} AccelDriverInfo;
-
-extern const AccelDriverInfo ACCEL_DRIVER_INFO;
-
 typedef struct {
   //! Timestamp of when the sample was taken in microseconds since the epoch.
   //! The precision of the timestamp is not guaranteed.
@@ -65,6 +48,20 @@ typedef struct {
   //! Acceleration along the z axis.
   int16_t z;
 } AccelDriverSample;
+
+//! Initialize accelerometer
+void accel_init(void);
+
+//! Power up the accelerometer hardware
+void accel_power_up(void);
+
+//! Power down the accelerometer hardware
+void accel_power_down(void);
+
+//! Set the accelerometer axes to be rotated 180deg
+//!
+//! @param rotated Axes are rotated or not (true/false).
+void accel_set_rotated(bool rotated);
 
 //! Sets the accelerometer sampling interval.
 //!
@@ -185,10 +182,6 @@ extern void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t directi
 //! @param data Data to be passed to the callback, NULL if none
 typedef void (*AccelOffloadCallback)(void);
 extern void accel_offload_work_from_isr(AccelOffloadCallback cb, bool *should_context_switch);
-
-//! Function runs a diagnostic test on the accelerometer hardware to confirm it
-//! works as expected
-extern bool accel_run_selftest(void);
 
 //! The accelerometer supports a changeable sensitivity for shake detection. This call will
 //! select whether we want the accelerometer to enter a highly sensitive state with a low

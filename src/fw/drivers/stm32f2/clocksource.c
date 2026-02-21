@@ -30,13 +30,13 @@ void clocksource_lse_configure(void) {
   // will normally be running even during standby mode to keep the RTC ticking;
   // it is only disabled when the microcontroller completely loses power.
   if (clocksource_is_lse_started()) {
-    PBL_LOG(LOG_LEVEL_INFO, "LSE oscillator already running");
+    PBL_LOG_INFO("LSE oscillator already running");
   } else {
-    PBL_LOG(LOG_LEVEL_INFO, "Starting LSE oscillator");
+    PBL_LOG_INFO("Starting LSE oscillator");
     RCC_LSEConfig(BOARD_LSE_MODE);
     for (int i = 0; i < LSE_READY_TIMEOUT_MS; ++i) {
       if (RCC_GetFlagStatus(RCC_FLAG_LSERDY) != RESET) {
-        PBL_LOG(LOG_LEVEL_INFO, "LSE oscillator started after %d ms", i);
+        PBL_LOG_INFO("LSE oscillator started after %d ms", i);
         break;
       }
 
@@ -44,7 +44,7 @@ void clocksource_lse_configure(void) {
       watchdog_feed();
     }
     if (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET) {
-      PBL_LOG(LOG_LEVEL_ERROR, "LSE oscillator did not start");
+      PBL_LOG_ERR("LSE oscillator did not start");
     }
   }
 }
@@ -71,7 +71,7 @@ void clocksource_MCO1_enable(bool on) {
     PBL_ASSERTN(s_refcount > 0);
     --s_refcount;
     if (s_refcount == 0) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Disabling MCO1");
+      PBL_LOG_DBG("Disabling MCO1");
       gpio_analog_init(&BOARD_CONFIG_MCO1.an_cfg);
     }
   }

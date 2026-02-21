@@ -16,75 +16,7 @@ typedef struct VoltagePoint {
 
 // TODO: Move these curves somewhere else. Related: PBL-21049
 
-#ifdef PLATFORM_TINTIN
-// When the voltage drops below these (mV), the watch will start heading for standby (after delay)
-#define BATTERY_CRITICAL_VOLTAGE_CHARGING 3200
-#define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3100
-// Battery Tables for non-Snowy
-static VoltagePoint discharge_curve[] = {
-  {0,   BATTERY_CRITICAL_VOLTAGE_DISCHARGING},
-  {2,   3410},
-  {5,   3600},
-  {10,  3670},
-  {20,  3710},
-  {30,  3745},
-  {40,  3775},
-  {50,  3810},
-  {60,  3860},
-  {70,  3925},
-  {80,  4000},
-  {90,  4080},
-  {100, 4120},
-};
-
-static const VoltagePoint charge_curve[] = {
-  {0,   BATTERY_CRITICAL_VOLTAGE_CHARGING},
-  {5,   3725},
-  {10,  3750},
-  {20,  3790},
-  {30,  3830},
-  {40,  3845},
-  {50,  3870},
-  {60,  3905},
-  {70,  3970},
-  {80,  4025},
-  {90,  4090},
-  {100, 4130},
-};
-#elif BOARD_SNOWY_S3 || PLATFORM_ROBERT
-// When the voltage drops below these (mV), the watch will start heading for standby (after delay)
-#define BATTERY_CRITICAL_VOLTAGE_CHARGING 3700
-#define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3300
-// Battery Tables for Bobby Smiles
-static VoltagePoint discharge_curve[] = {
-  {0,   BATTERY_CRITICAL_VOLTAGE_DISCHARGING},
-  {2,   3465},
-  {5,   3615},
-  {10,  3685},
-  {20,  3725},
-  {30,  3760},
-  {40,  3795},
-  {50,  3830},
-  {60,  3885},
-  {70,  3955},
-  {80,  4065},
-  {90,  4160},
-  {100, 4250},
-};
-
-static const VoltagePoint charge_curve[] = {
-  {0,   BATTERY_CRITICAL_VOLTAGE_CHARGING},
-  {2,   3850},
-  {5,   3935},
-  {10,  4000},
-  {20,  4040},
-  {30,  4090},
-  {40,  4145},
-  {50,  4175},
-  {60,  4225},
-  {70,  4250},
-};
-#elif PLATFORM_SNOWY || PLATFORM_CALCULUS
+#if PLATFORM_SNOWY
 // When the voltage drops below these (mV), the watch will start heading for standby (after delay)
 #define BATTERY_CRITICAL_VOLTAGE_CHARGING 3500
 #define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3300

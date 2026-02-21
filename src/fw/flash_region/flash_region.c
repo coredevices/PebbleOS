@@ -34,7 +34,7 @@ static void prv_erase_upkeep(int *erase_count, bool feed_watchdog) {
 
 static void prv_erase_optimal_range(uint32_t min_start, uint32_t max_start,
                                     uint32_t min_end, uint32_t max_end, bool feed_watchdog) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "flash_region_erase_optimal_range, 0x%"PRIx32" 0x%"PRIx32" 0x%"PRIx32" 0x%"PRIx32,
+  PBL_LOG_DBG("flash_region_erase_optimal_range, 0x%"PRIx32" 0x%"PRIx32" 0x%"PRIx32" 0x%"PRIx32,
       min_start, max_start, min_end, max_end);
 
   PBL_ASSERTN(((min_start & (~SUBSECTOR_ADDR_MASK)) == 0) &&

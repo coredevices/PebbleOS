@@ -20,8 +20,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-void system_reset_prepare(bool unsafe_reset) {
-  fw_prepare_for_reset(unsafe_reset);
+void system_reset_prepare(void) {
+  fw_prepare_for_reset();
   flash_stop();
 }
 
@@ -38,7 +38,7 @@ NORETURN system_reset(void) {
   // if we're in a critical section, interrupt or if the scheduler has been suspended
   if (!already_failed && !mcu_state_is_isr() && !portIN_CRITICAL() &&
       (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)) {
-    system_reset_prepare(failure_occurred /* skip BT teardown if failure occured */);
+    system_reset_prepare();
     reboot_reason_set_restarted_safely();
   }
 

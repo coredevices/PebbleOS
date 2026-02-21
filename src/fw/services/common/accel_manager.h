@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 
-#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D(LOG_DOMAIN_ACCEL, LOG_LEVEL_DEBUG, fmt, ## args)
+#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_ACCEL, fmt, ## args)
 
 typedef void (*AccelDataReadyCallback)(void *context);
 
@@ -71,9 +71,6 @@ bool sys_accel_manager_consume_samples(AccelManagerState *state, uint32_t sample
 
 // Functions for internal use
 ///////////////////////////////////////////////////////////
-
-bool accel_manager_run_selftest(void);
-bool gyro_manager_run_selftest(void);
 
 // Set whether the accelerometer should be in a sensitive state in order to trigger an accel tap
 // event from any small movements

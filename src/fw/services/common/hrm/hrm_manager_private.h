@@ -52,11 +52,14 @@ typedef struct HRMSubscriberState {
 #define NUM_EVENTS_TO_QUEUE (8)
 #define EVENT_STORAGE_SIZE  (sizeof(PebbleHRMEvent) * NUM_EVENTS_TO_QUEUE)
 
-#define HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE 2
+#define HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE 4
 
 // After every HRM_CHECK_SENSOR_DISABLE_COUNT calls to hrm_manager_new_data_cb(), we check to see
 // if we should disable the sensor.
 #define HRM_CHECK_SENSOR_DISABLE_COUNT 10
+
+// After this many consecutive hrm_enable failures, stop trying until reboot
+#define HRM_MAX_ENABLE_FAILURES 3
 
 struct HRMManagerState {
   PebbleRecursiveMutex *lock;
@@ -78,6 +81,7 @@ struct HRMManagerState {
   TimerID update_enable_timer_id;  // used for re-enabling the HRM sensor
 
   uint8_t check_disable_counter;   // increments to HRM_CHECK_SENSOR_DISABLE_COUNT
+  uint8_t enable_failure_count;    // counts consecutive hrm_enable failures, stops retrying after max
 
   bool enabled_run_level;          // True if the current run_level (LowPower, Stationary,
                                    // Normal, etc.) allows the sensor to be turned on

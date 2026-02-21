@@ -48,11 +48,10 @@ static void prv_session_deinit(bool call_stop_handler) {
   bt_unlock();
 
   if (s_dropped_frames > 0) {
-    PBL_LOG(LOG_LEVEL_INFO, "Dropped %"PRIu32" frames during audio transfer", s_dropped_frames);
+    PBL_LOG_INFO("Dropped %"PRIu32" frames during audio transfer", s_dropped_frames);
   }
 }
 
-#ifndef PLATFORM_TINTIN
 void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t size) {
   MsgId msg_id = data[0];
   if (size >= sizeof(StopTransferMsg) && msg_id == MsgIdStopTransfer) {
@@ -61,15 +60,11 @@ void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
     if (msg->session_id == s_session.id) {
       prv_session_deinit(true /* call_stop_handler */);
     } else {
-      PBL_LOG(LOG_LEVEL_WARNING, "Received mismatching session id: %u vs %u",
+      PBL_LOG_WRN("Received mismatching session id: %u vs %u",
               msg->session_id, s_session.id);
     }
   }
 }
-#else
-void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t size) {
-}
-#endif
 
 static void prv_start_active_mode(void *data) {
   CommSession *comm_session = comm_session_get_system_session();
@@ -116,7 +111,7 @@ void audio_endpoint_add_frame(AudioEndpointSessionId session_id, uint8_t *frame,
                                                         0 /* timeout_ms, never block */);
   if (!sb) {
     s_dropped_frames++;
-    PBL_LOG(LOG_LEVEL_DEBUG, "Dropping a frame...");
+    PBL_LOG_DBG("Dropping a frame...");
     return;
   }
 

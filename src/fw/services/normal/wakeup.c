@@ -182,7 +182,7 @@ static void prv_wakeup_timer_next_pending(void) {
       settings_file_each(&wakeup_settings, prv_find_next_wakeup_id_callback, NULL);
       settings_file_close(&wakeup_settings);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open APP_WAKEUP settings");
+      PBL_LOG_ERR("Error: could not open APP_WAKEUP settings");
     }
   }
   mutex_unlock(s_mutex);
@@ -321,7 +321,7 @@ void wakeup_init(void) {
 
   SettingsFile wakeup_settings;
   if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open wakeup settings");
+    PBL_LOG_ERR("Error: could not open wakeup settings");
     return;
   }
 
@@ -330,11 +330,11 @@ void wakeup_init(void) {
   bool event_found = false;
   settings_file_each(&wakeup_settings, prv_check_for_events, &event_found);
   if (event_found) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Rewriting wakeup file");
+    PBL_LOG_DBG("Rewriting wakeup file");
     // Update settings file removing expired events
     settings_file_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Not rewriting wakeup file because no entries were found");
+    PBL_LOG_DBG("Not rewriting wakeup file because no entries were found");
   }
   settings_file_close(&wakeup_settings);
 
@@ -625,7 +625,7 @@ void wakeup_migrate_timezone(int utc_diff) {
       settings_file_rewrite(&wakeup_settings, prv_migrate_events_callback, (void*)&utc_diff);
       settings_file_close(&wakeup_settings);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open wakeup settings");
+      PBL_LOG_ERR("Error: could not open wakeup settings");
     }
   }
   mutex_unlock(s_mutex);
@@ -643,7 +643,7 @@ static void prv_wakeup_rewrite_kernel_bg_cb(void *data) {
       settings_file_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
       settings_file_close(&wakeup_settings);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Error: could not open wakeup settings");
+      PBL_LOG_ERR("Error: could not open wakeup settings");
     }
   }
   mutex_unlock(s_mutex);
@@ -657,14 +657,25 @@ static void prv_wakeup_rewrite_kernel_bg_cb(void *data) {
   prv_wakeup_timer_next_pending();
 }
 
-void wakeup_handle_clock_change(void) {
-  // Offload the rewrite of the wakeup file to KernelBG as it may take a while
-  //
-  // TODO: The flash burden of this routine could also be reduced by not doing
-  // rewrites and instead updating records in place
+void wakeup_handle_significant_clock_change(void) {
+  // Handle significant time changes (>15s, timezone changes, DST changes).
+  // Performs a full rewrite of the wakeup file to:
+  // 1. Delete events that are now in the past
+  // 2. Show "missed event" popups for events with notify_if_missed=true
+  // 3. Reschedule the next wakeup timer
+
   if (pebble_task_get_current() == PebbleTask_KernelBackground) {
     prv_wakeup_rewrite_kernel_bg_cb(NULL);
   } else {
     system_task_add_callback(prv_wakeup_rewrite_kernel_bg_cb, NULL);
   }
+}
+
+void wakeup_handle_clock_change(void) {
+  // Handle all time changes (including small RTC calibrations).
+  // Just reschedule the wakeup timer without deleting events or showing popups.
+  // Wakeup timers use tick-based scheduling, so even small time changes can cause drift.
+  // Events that become past-due will be caught up via the catchup logic in
+  // prv_wakeup_timer_next_pending() (schedules them with a small delay).
+  prv_wakeup_timer_next_pending();
 }

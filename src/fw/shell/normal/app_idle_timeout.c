@@ -24,7 +24,7 @@ static void prv_kernel_callback_watchface_launch(void* data) {
 }
 
 static void prv_timeout_expired(void *cb_data) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "App idle timeout hit! launching watchface");
+  PBL_LOG_DBG("App idle timeout hit! launching watchface");
   launcher_task_add_callback(prv_kernel_callback_watchface_launch, NULL);
 }
 

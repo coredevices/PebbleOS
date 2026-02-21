@@ -33,6 +33,13 @@
 #include "stubs_sleep.h"
 #include "stubs_system_theme.h"
 #include "stubs_task_watchdog.h"
+#include "stubs_ambient_light.h"
+
+void prefs_sync_init(void) {
+}
+
+void event_put(PebbleEvent *event) {
+}
 
 void i18n_enable(bool enable) {
 }

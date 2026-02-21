@@ -6,7 +6,6 @@
 #include "drivers/button.h"
 #include "drivers/flash.h"
 #include "drivers/i2c.h"
-#include "drivers/imu.h"
 #include "drivers/imu/bmi160/bmi160.h"
 #include "util/bitset.h"
 #include "util/size.h"
@@ -33,8 +32,6 @@ struct SelfTestCase {
 bool bmi160_query_whoami(void) WEAK;
 bool bma255_query_whoami(void) WEAK;
 bool flash_check_whoami(void) WEAK;
-bool accel_manager_run_selftest(void) WEAK;
-bool gyro_manager_run_selftest(void) WEAK;
 bool mag3110_check_whoami(void) WEAK;
 bool snowy_mag3110_query_whoami(void) WEAK;
 bool mic_selftest(void) WEAK;
@@ -46,9 +43,7 @@ static const struct SelfTestCase s_test_cases[] = {
 #else
   { "IMU Comm", bmi160_query_whoami },
 #endif
-  { "Accel ST", accel_manager_run_selftest },
 #if !PLATFORM_SILK
-  { "Gyro ST", gyro_manager_run_selftest },
   { "MAG3110 Comm", mag3110_check_whoami },
 #endif
 #if CAPABILITY_HAS_APPLE_MFI

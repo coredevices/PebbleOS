@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if PLATFORM_TINTIN || PLATFORM_SNOWY || PLATFORM_SPALDING
+#if PLATFORM_SNOWY || PLATFORM_SPALDING
 enum {
   // ML/FL / 1.0 and later:
   OTP_SERIAL1 = 0,
@@ -22,7 +22,7 @@ enum {
 
   NUM_OTP_SLOTS = 16,
 };
-#elif PLATFORM_SILK || PLATFORM_CALCULUS || PLATFORM_ROBERT
+#elif PLATFORM_SILK
 enum {
   OTP_HWVER1 = 0,
   OTP_HWVER2 = 1,

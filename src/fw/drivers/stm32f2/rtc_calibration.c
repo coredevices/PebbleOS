@@ -12,7 +12,7 @@
 
 RTCCalibConfig rtc_calibration_get_config(uint32_t frequency, uint32_t target) {
   if (frequency == 0) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "RTC frequency invalid - Skipping calibration");
+    PBL_LOG_DBG("RTC frequency invalid - Skipping calibration");
     return (RTCCalibConfig) {
       .sign = RTC_CalibSign_Positive,
       .units = 0
@@ -106,7 +106,7 @@ static void prv_delta_ticks(void) {
   static uint64_t last_tick = 0;
 
   uint64_t rtc_ticks = rtc_get_ticks();
-  PBL_LOG(LOG_LEVEL_INFO, "RTC tick delta: %d", rtc_ticks - last_tick);
+  PBL_LOG_INFO("RTC tick delta: %d", rtc_ticks - last_tick);
 
   last_tick = rtc_ticks;
 }

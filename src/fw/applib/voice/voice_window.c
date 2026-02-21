@@ -80,7 +80,7 @@
 
 static const uint32_t UNFOLD_DURATION = 500;
 
-#define VOICE_LOG(fmt, args...)   PBL_LOG_D(LOG_DOMAIN_VOICE, LOG_LEVEL_DEBUG, fmt, ## args)
+#define VOICE_LOG(fmt, args...)   PBL_LOG_D_DBG(LOG_DOMAIN_VOICE, fmt, ## args)
 
 static void prv_start_dictation(VoiceUiData *data);
 static void prv_stop_dictation(VoiceUiData *data);
@@ -547,7 +547,7 @@ static void prv_start_dictation(VoiceUiData *data) {
   PBL_ASSERTN(data->session_id == VOICE_SESSION_ID_INVALID);
   data->session_id = sys_voice_start_dictation(data->session_type);
   if (data->session_id == VOICE_SESSION_ID_INVALID) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Dictation session failed to start");
+    PBL_LOG_ERR("Dictation session failed to start");
     prv_exit_and_send_result_event(data, DictationSessionStatusFailureInternalError);
     return;
   }

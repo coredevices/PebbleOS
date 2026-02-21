@@ -27,6 +27,8 @@ def build(ctx):
         " src/fw/applib/graphics/gtypes.c" \
         " src/fw/applib/graphics/perimeter.c" \
         " src/fw/applib/graphics/text_layout.c" \
+        " src/fw/applib/graphics/rtl_support.c" \
+        " src/fw/applib/graphics/arabic_shaping.c" \
         " src/fw/applib/graphics/text_render.c" \
         " src/fw/applib/graphics/text_resources.c" \
         " src/fw/applib/graphics/utf8.c" \
@@ -82,7 +84,7 @@ def build(ctx):
         " src/fw/applib/ui/text_layer.c" \
         " src/fw/applib/ui/text_layer_flow.c" \
         " src/fw/applib/ui/window.c" \
-        " src/fw/apps/system_apps/timeline/text_node.c" \
+        " src/fw/apps/system/timeline/text_node.c" \
         " src/fw/services/normal/activity/health_util.c" \
         " src/fw/services/normal/activity/hr_util.c" \
         " src/fw/services/normal/timeline/timeline_resources.c" \
@@ -99,11 +101,11 @@ def build(ctx):
          sources_ant_glob = rendering_sources + \
                             workout_app_sources + \
                             " src/fw/applib/ui/menu_layer.c" \
-                            " src/fw/apps/system_apps/workout/workout_countdown.c" + \
-                            " src/fw/apps/system_apps/workout/workout_selection.c" + \
-                            " src/fw/apps/system_apps/workout/workout_dialog.c" + \
-                            " src/fw/apps/system_apps/workout/workout_utils.c" + \
-                            " src/fw/apps/system_apps/workout/workout_summary.c",
+                            " src/fw/apps/system/workout/countdown.c" + \
+                            " src/fw/apps/system/workout/selection.c" + \
+                            " src/fw/apps/system/workout/dialog.c" + \
+                            " src/fw/apps/system/workout/utils.c" + \
+                            " src/fw/apps/system/workout/summary.c",
          test_sources_ant_glob = "test_workout_summary.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -114,9 +116,9 @@ def build(ctx):
          sources_ant_glob = rendering_sources + \
                             workout_app_sources + \
                             " src/fw/applib/ui/menu_layer.c" \
-                            " src/fw/apps/system_apps/workout/workout_data.c" + \
-                            " src/fw/apps/system_apps/workout/workout_dialog.c" + \
-                            " src/fw/apps/system_apps/workout/workout_active.c",
+                            " src/fw/apps/system/workout/data.c" + \
+                            " src/fw/apps/system/workout/dialog.c" + \
+                            " src/fw/apps/system/workout/active.c",
          test_sources_ant_glob = "test_workout_active.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -127,8 +129,8 @@ def build(ctx):
          sources_ant_glob = rendering_sources + \
                             workout_app_sources + \
                             " src/fw/applib/ui/menu_layer.c" \
-                            " src/fw/apps/system_apps/workout/workout_data.c" + \
-                            " src/fw/apps/system_apps/workout/workout_dialog.c",
+                            " src/fw/apps/system/workout/data.c" + \
+                            " src/fw/apps/system/workout/dialog.c",
          test_sources_ant_glob = "test_workout_dialog.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -139,8 +141,8 @@ def build(ctx):
          sources_ant_glob = rendering_sources + \
                             workout_app_sources + \
                             " src/fw/applib/ui/menu_layer.c" \
-                            " src/fw/apps/system_apps/workout/workout_utils.c" + \
-                            " src/fw/apps/system_apps/workout/workout_selection.c",
+                            " src/fw/apps/system/workout/utils.c" + \
+                            " src/fw/apps/system/workout/selection.c",
          test_sources_ant_glob = "test_workout_selection.c",
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
@@ -148,7 +150,7 @@ def build(ctx):
          platforms=['snowy', 'spalding', 'silk'])
 
     clar(ctx,
-         sources_ant_glob = " src/fw/apps/system_apps/workout/workout_utils.c",
+         sources_ant_glob = " src/fw/apps/system/workout/utils.c",
          test_sources_ant_glob = "test_workout_utils.c",
          override_includes=['dummy_board'])
 

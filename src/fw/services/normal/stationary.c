@@ -99,8 +99,7 @@ static void prv_update_stationary_enabled(void *data) {
 }
 
 void stationary_handle_battery_connection_change_event(void) {
-  PBL_LOG_D(DEBUG_STATIONARY, LOG_LEVEL_DEBUG,
-            "Stationary mode battery state change event received");
+  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary mode battery state change event received");
   if (battery_is_usb_connected()) {
     analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsEnterCharging);
   } else {
@@ -123,8 +122,7 @@ static void prv_button_down_handler(PebbleEvent *event, void *data) {
 static void prv_watch_is_motionless(void) {
   // Check if we should enable stationary mode and disabled unneeded features
   if (s_stationary_count_down > 0) {
-    PBL_LOG_D(DEBUG_STATIONARY, LOG_LEVEL_DEBUG,
-              "Countdown to stationary: %d", s_stationary_count_down);
+    PBL_LOG_D_DBG(DEBUG_STATIONARY, "Countdown to stationary: %d", s_stationary_count_down);
     s_stationary_count_down--;
   } else {
     analytics_inc(ANALYTICS_DEVICE_METRIC_STATIONARY_TIME_MINUTES, AnalyticsClient_System);
@@ -200,7 +198,7 @@ static void prv_reset_stationary_counter(void) {
 }
 
 static void prv_enter_awake_state(void) {
-  PBL_LOG(LOG_LEVEL_INFO, "Exiting stationary: Setting run level to normal");
+  PBL_LOG_INFO("Exiting stationary: Setting run level to normal");
   analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsExitNormally);
   prv_reset_stationary_counter();
   s_current_state = StationaryStateAwake;
@@ -209,7 +207,7 @@ static void prv_enter_awake_state(void) {
 //! The accelerometer tap threshold will be set very low, so a small motion will wake
 //! the watch back up
 static void prv_enter_stationary_state(void) {
-  PBL_LOG(LOG_LEVEL_INFO, "Entering stationary: Changing run level");
+  PBL_LOG_INFO("Entering stationary: Changing run level");
   if (s_current_state == StationaryStatePeeking) {
     analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsEnterFromPeek);
   } else if (s_current_state == StationaryStateAwake) {
@@ -339,7 +337,7 @@ static void prv_handle_action(StationaryAction action) {
   // we need to be on kernel main so that we subscribe to event services
   // for kernel main
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
-  PBL_LOG_D(DEBUG_STATIONARY, LOG_LEVEL_DEBUG, "Stationary: state %d action %d",
+  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary: state %d action %d",
             s_current_state, action);
 
   static StationaryActionHandler const prv_action_jump_table[] = {

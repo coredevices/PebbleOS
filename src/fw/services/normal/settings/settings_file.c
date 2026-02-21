@@ -14,6 +14,9 @@
 #include <string.h>
 #include <time.h>
 
+// Callback for settings changes (used by settings_sync)
+static SettingsFileChangeCallback s_change_callback = NULL;
+
 static status_t bootup_check(SettingsFile *file);
 static void compute_stats(SettingsFile *file);
 
@@ -34,7 +37,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   // TODO: Dynamically sized files?
   int fd = pfs_open(name, flags, FILE_TYPE_STATIC, max_space_total);
   if (fd < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not open settings file '%s', %d", name, fd);
+    PBL_LOG_ERR("Could not open settings file '%s', %d", name, fd);
     if (fd == E_BUSY) {
       // This is very bad. Someone didn't use a mutex. There could already be
       // silent corruption, so it's better to crash now rather than let things
@@ -61,14 +64,13 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   }
 
   if (memcmp(&file_hdr.magic, SETTINGS_FILE_MAGIC, sizeof(file_hdr.magic)) != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Attempted to open %s, not a settings file.", name);
+    PBL_LOG_ERR("Attempted to open %s, not a settings file.", name);
     pfs_close_and_remove(fd);
     return E_INVALID_OPERATION;
   }
 
   if (file_hdr.version > SETTINGS_FILE_VERSION) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Unrecognized version %d for file %s, removing...",
+    PBL_LOG_WRN("Unrecognized version %d for file %s, removing...",
             file_hdr.version, name);
     pfs_close_and_remove(fd);
     return prv_open(file, name, flags, max_used_space);
@@ -76,8 +78,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
 
   status_t status = bootup_check(file);
   if (status < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Bootup check failed (%"PRId32"), not good. "
+    PBL_LOG_ERR("Bootup check failed (%"PRId32"), not good. "
             "Attempting to recover by deleting %s...", status, name);
     pfs_close_and_remove(fd);
     return prv_open(file, name, flags, max_used_space);
@@ -89,13 +90,13 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   // size.
   int actual_size = pfs_get_file_size(file->iter.fd);
   if (actual_size < max_space_total) {
-    PBL_LOG(LOG_LEVEL_INFO, "Re-writing settings file %s to increase its size from %d to %d.",
+    PBL_LOG_INFO("Re-writing settings file %s to increase its size from %d to %d.",
             name, actual_size, max_space_total);
     // The settings_file_rewrite_filtered call creates a new file based on file->max_used_space
     // and copies the contents of the existing file into it.
     status = settings_file_rewrite_filtered(file, NULL, NULL);
     if (status < 0) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not resize file %s (error %"PRId32"). Creating new one",
+      PBL_LOG_ERR("Could not resize file %s (error %"PRId32"). Creating new one",
               name, status);
       return prv_open(file, name, flags, max_used_space);
     }
@@ -193,8 +194,7 @@ status_t settings_file_rewrite_filtered(
   status_t status = prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ,
                              file->max_used_space);
   if (status < 0) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Could not open temporary file to compact settings file. Error %"PRIi32".",
+    PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %"PRIi32".",
             status);
     return status;
   }
@@ -250,6 +250,10 @@ status_t settings_file_rewrite_filtered(
   status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, file->max_used_space);
   kernel_free(name);
   return status;
+}
+
+void settings_file_set_change_callback(SettingsFileChangeCallback callback) {
+  s_change_callback = callback;
 }
 
 T_STATIC status_t settings_file_compact(SettingsFile *file) {
@@ -401,13 +405,15 @@ status_t settings_file_set_byte(SettingsFile *file, const void *key,
   return S_SUCCESS;
 }
 
+// Internal implementation that takes a timestamp parameter
 // Note that this operation is designed to be atomic from the perspective of
 // an outside observer. That is, either the new value will be completely
 // written and returned for all future queries, or, if we reboot/loose power/
 // run into an error, then we will continue to return the previous value.
 // We should never run into a case where neither value exists.
-status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len,
-                           const void *val, size_t val_len) {
+static status_t prv_settings_file_set_internal(SettingsFile *file, const void *key, size_t key_len,
+                                               const void *val, size_t val_len,
+                                               uint32_t timestamp) {
   // Cannot set keys while iterating (Try settings_file_rewrite)
   PBL_ASSERTN(file->cur_record_pos == 0);
   if (key_len > SETTINGS_KEY_MAX_LEN) {
@@ -446,7 +452,7 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len,
   // flipped from a 1 to a 0 in order for the header to be valid.
   SettingsRecordHeader new_hdr;
   memset(&new_hdr, 0xff, sizeof(new_hdr));
-  new_hdr.last_modified = utc_time();
+  new_hdr.last_modified = timestamp;
   new_hdr.key_hash = crc8_calculate_bytes(key, key_len, true /* big_endian */);
   new_hdr.key_len = key_len;
   new_hdr.val_len = val_len;
@@ -470,7 +476,22 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len,
     file->used_space -= record_size(&file->iter.hdr);
   }
 
+  // Notify change callback if registered (for settings sync)
+  if (s_change_callback) {
+    s_change_callback(file, key, key_len, new_hdr.last_modified);
+  }
+
   return S_SUCCESS;
+}
+
+status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len,
+                           const void *val, size_t val_len) {
+  return prv_settings_file_set_internal(file, key, key_len, val, val_len, utc_time());
+}
+
+status_t settings_file_set_with_timestamp(SettingsFile *file, const void *key, size_t key_len,
+                                          const void *val, size_t val_len, uint32_t timestamp) {
+  return prv_settings_file_set_internal(file, key, key_len, val, val_len, timestamp);
 }
 
 status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t key_len) {
@@ -489,6 +510,29 @@ status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t k
   }
 
   return E_DOES_NOT_EXIST;
+}
+
+static void prv_mark_all_dirty_rewrite_cb(SettingsFile *old_file, SettingsFile *new_file,
+                                          SettingsRecordInfo *info, void *context) {
+  // Read key and value from old file
+  uint8_t key[SETTINGS_KEY_MAX_LEN];
+  info->get_key(old_file, key, info->key_len);
+
+  uint8_t *val = kernel_malloc(info->val_len);
+  if (!val) {
+    return; // Skip this record on OOM
+  }
+  info->get_val(old_file, val, info->val_len);
+
+  // Write to new file with original timestamp - records are dirty by default (no SYNCED flag)
+  // Preserving the timestamp ensures sync conflict resolution works correctly
+  settings_file_set_with_timestamp(new_file, key, info->key_len, val, info->val_len,
+                                   info->last_modified);
+  kernel_free(val);
+}
+
+status_t settings_file_mark_all_dirty(SettingsFile *file) {
+  return settings_file_rewrite(file, prv_mark_all_dirty_rewrite_cb, NULL);
 }
 
 status_t settings_file_delete(SettingsFile *file,

@@ -4,9 +4,10 @@
 #include "peek_private.h"
 
 #include "applib/ui/property_animation.h"
+#include "process_management/app_manager.h"
 #include "applib/ui/window_stack.h"
 #include "applib/unobstructed_area_service.h"
-#include "apps/system_apps/timeline/timeline_common.h"
+#include "apps/system/timeline/common.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
@@ -158,10 +159,43 @@ static void prv_unschedule_animation(TimelinePeek *peek) {
   peek->animation = NULL;
 }
 
-static bool prv_should_use_unobstructed_area() {
+//! Returns true if we're running an upscaled legacy app in scaling mode.
+static bool prv_is_upscaled_app(void) {
   GSize app_framebuffer_size;
   app_manager_get_framebuffer_size(&app_framebuffer_size);
+  if (app_framebuffer_size.h == DISP_ROWS) {
+    return false;  // Native app, not upscaled
+  }
+#if CAPABILITY_HAS_APP_SCALING && !RECOVERY_FW
+  // On platforms that support scaling mode, check the preference
+  return shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling;
+#else
+  return false;  // Other platforms use bezel mode only
+#endif
+}
+
+static bool prv_should_use_unobstructed_area(void) {
+  GSize app_framebuffer_size;
+  app_manager_get_framebuffer_size(&app_framebuffer_size);
+  // For upscaled apps in scaling mode, the peek always covers part of the scaled content,
+  // so we need to notify the app.
+  // For bezel mode or native apps, check if the gap is less than peek height.
+  if (prv_is_upscaled_app()) {
+    return true;
+  }
   return (DISP_ROWS - app_framebuffer_size.h) < TIMELINE_PEEK_HEIGHT;
+}
+
+//! Scales a display Y coordinate to framebuffer coordinates for upscaled apps.
+//! For native apps or bezel mode, returns the coordinate unchanged.
+static int16_t prv_scale_y_to_framebuffer(int16_t display_y) {
+  if (!prv_is_upscaled_app()) {
+    return display_y;
+  }
+  GSize app_framebuffer_size;
+  app_manager_get_framebuffer_size(&app_framebuffer_size);
+  // Scale from display coordinates to framebuffer coordinates
+  return (display_y * app_framebuffer_size.h) / DISP_ROWS;
 }
 
 static void prv_peek_frame_setup(Animation *animation) {
@@ -173,7 +207,8 @@ static void prv_peek_frame_setup(Animation *animation) {
   GRect to_frame;
   property_animation_get_to_grect(prop_anim, &to_frame);
   if (prv_should_use_unobstructed_area()) {
-    unobstructed_area_service_will_change(from_frame.origin.y, to_frame.origin.y);
+    unobstructed_area_service_will_change(prv_scale_y_to_framebuffer(from_frame.origin.y),
+                                          prv_scale_y_to_framebuffer(to_frame.origin.y));
   }
 }
 
@@ -185,8 +220,10 @@ static void prv_peek_frame_update(Animation *animation, AnimationProgress progre
   GRect to_frame;
   property_animation_get_to_grect(prop_anim, &to_frame);
   if (prv_should_use_unobstructed_area()) {
-    unobstructed_area_service_change(peek->layout_layer.frame.origin.y, to_frame.origin.y,
-                                     progress);
+    unobstructed_area_service_change(
+        prv_scale_y_to_framebuffer(peek->layout_layer.frame.origin.y),
+        prv_scale_y_to_framebuffer(to_frame.origin.y),
+        progress);
   }
 }
 
@@ -195,7 +232,7 @@ static void prv_peek_frame_teardown(Animation *animation) {
   GRect to_frame;
   property_animation_get_to_grect(prop_anim, &to_frame);
   if (prv_should_use_unobstructed_area()) {
-    unobstructed_area_service_did_change(to_frame.origin.y);
+    unobstructed_area_service_did_change(prv_scale_y_to_framebuffer(to_frame.origin.y));
   }
 }
 
@@ -458,7 +495,7 @@ void timeline_peek_dismiss(void) {
   } else {
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&item->header.id, uuid_buffer);
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to dismiss Timeline Peek event %s (status: %"PRIi32")",
+    PBL_LOG_WRN("Failed to dismiss Timeline Peek event %s (status: %"PRIi32")",
             uuid_buffer, rv);
   }
 }
@@ -469,7 +506,13 @@ int16_t timeline_peek_get_origin_y(void) {
 }
 
 int16_t timeline_peek_get_obstruction_origin_y(void) {
-  return prv_should_use_unobstructed_area() ? timeline_peek_get_origin_y() : DISP_ROWS;
+  if (prv_should_use_unobstructed_area()) {
+    return prv_scale_y_to_framebuffer(timeline_peek_get_origin_y());
+  }
+  // Not using unobstructed area - return framebuffer height to indicate no obstruction
+  GSize app_framebuffer_size;
+  app_manager_get_framebuffer_size(&app_framebuffer_size);
+  return app_framebuffer_size.h;
 }
 
 void timeline_peek_get_item_id(TimelineItemId *item_id_out) {

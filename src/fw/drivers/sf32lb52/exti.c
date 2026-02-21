@@ -12,7 +12,6 @@
 #include "system/passert.h"
 
 #define EXTI_MAX_GPIO1_PIN_NUM 16
-#define EXTI_MAX_GPIO2_PIN_NUM 1
 
 typedef struct {
   uint32_t gpio_pin;
@@ -20,23 +19,16 @@ typedef struct {
 } ExtiHandlerConfig_t;
 
 static ExtiHandlerConfig_t s_exti_gpio1_handler_configs[EXTI_MAX_GPIO1_PIN_NUM];
-static ExtiHandlerConfig_t s_exti_gpio2_handler_configs[EXTI_MAX_GPIO2_PIN_NUM];
+static bool s_should_context_switch;
 
 static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pin,
                                            uint16_t *offset) {
-  uint16_t max_num;
   uint16_t inst_idx;
   GPIO_TypeDef *gpiox;
 
-  if ((GPIO_TypeDef *)hwp_gpio1 == hgpio) {
-    max_num = GPIO1_PIN_NUM;
-  } else {
-    max_num = GPIO2_PIN_NUM;
-  }
+  HAL_ASSERT(gpio_pin < GPIO1_PIN_NUM);
 
-  HAL_ASSERT(gpio_pin < max_num);
-
-  if (gpio_pin >= max_num) {
+  if (gpio_pin >= GPIO1_PIN_NUM) {
     return (GPIO_TypeDef *)NULL;
   }
 
@@ -52,11 +44,11 @@ static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pi
 static void prv_insert_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin, ExtiHandlerCallback cb) {
   // Find the handler index for this pin
   uint8_t index = 0;
-  while (index < (hgpio == hwp_gpio1 ? EXTI_MAX_GPIO1_PIN_NUM : EXTI_MAX_GPIO2_PIN_NUM) &&
+  while (index < EXTI_MAX_GPIO1_PIN_NUM &&
          s_exti_gpio1_handler_configs[index].callback != NULL) {
     index++;
   }
-  if (index >= (hgpio == hwp_gpio1 ? EXTI_MAX_GPIO1_PIN_NUM : EXTI_MAX_GPIO2_PIN_NUM)) {
+  if (index >= EXTI_MAX_GPIO1_PIN_NUM) {
     // No available slot
     return;
   }
@@ -68,12 +60,12 @@ static void prv_insert_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin, ExtiHandle
 static void prv_delete_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin) {
   // Find the handler index for this pin
   uint8_t index = 0;
-  while (index < (hgpio == hwp_gpio1 ? EXTI_MAX_GPIO1_PIN_NUM : EXTI_MAX_GPIO2_PIN_NUM) &&
+  while (index < EXTI_MAX_GPIO1_PIN_NUM &&
          s_exti_gpio1_handler_configs[index].callback != NULL &&
          s_exti_gpio1_handler_configs[index].gpio_pin != gpio_pin) {
     index++;
   }
-  if (index >= (hgpio == hwp_gpio1 ? EXTI_MAX_GPIO1_PIN_NUM : EXTI_MAX_GPIO2_PIN_NUM)) {
+  if (index >= EXTI_MAX_GPIO1_PIN_NUM) {
     // Handler not found
     return;
   }
@@ -83,83 +75,81 @@ static void prv_delete_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin) {
 }
 
 void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback cb) {
-  prv_insert_handler(cfg.peripheral, cfg.gpio_pin, cb);
+  GPIO_InitTypeDef init;
+  int flags;
 
-  uint16_t offset;
-  GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
+  init.Pin = cfg.gpio_pin;
+  init.Pull = GPIO_NOPULL;
+
+  switch (cfg.pull) {
+    case GPIO_PuPd_UP:
+      flags = PIN_PULLUP;
+      break;
+    case GPIO_PuPd_DOWN:
+      flags = PIN_PULLDOWN;
+      break;
+    default:
+      flags = PIN_NOPULL;
+      break;
+  }
 
   switch (trigger) {
     case ExtiTrigger_Rising:
-      gpiox->ITSR |= (1UL << offset);
-      gpiox->IPHSR = (1UL << offset);
-      gpiox->IPLCR = (1UL << offset);
+      init.Mode = GPIO_MODE_IT_RISING;
       break;
     case ExtiTrigger_Falling:
-      gpiox->ITSR |= (1UL << offset);
-      gpiox->IPHCR = (1UL << offset);
-      gpiox->IPLSR = (1UL << offset);
+      init.Mode = GPIO_MODE_IT_FALLING;
       break;
     case ExtiTrigger_RisingFalling:
-      gpiox->ITSR |= (1UL << offset);
-      gpiox->IPHSR = (1UL << offset);
-      gpiox->IPLSR = (1UL << offset);
+      init.Mode = GPIO_MODE_IT_RISING_FALLING;
       break;
   }
-}
 
-void exti_enable(ExtiConfig cfg) {
-  uint16_t offset;
-  GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
-  if (cfg.peripheral == hwp_gpio1) {
-    // Enable the EXTI line for GPIO1
-    gpiox->IESR |= (1 << offset);
-  } else {
-    gpiox->IESR_EXT |= (1 << offset);
-  }
+  HAL_NVIC_DisableIRQ(GPIO1_IRQn);
+
+  HAL_PIN_Set(PAD_PA00 + cfg.gpio_pin, GPIO_A0 + cfg.gpio_pin, flags, 1);
+  HAL_GPIO_Init(cfg.peripheral, &init);
+
+  prv_insert_handler(cfg.peripheral, cfg.gpio_pin, cb);
 
   HAL_NVIC_SetPriority(GPIO1_IRQn, 6, 0);
   HAL_NVIC_EnableIRQ(GPIO1_IRQn);
 }
 
+void exti_enable(ExtiConfig cfg) {
+  uint16_t offset;
+  GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
+  gpiox->IESR = (1 << offset);
+}
+
 void exti_disable(ExtiConfig cfg) {
   uint16_t offset;
   GPIO_TypeDef *gpiox = prv_gpio_get_instance(cfg.peripheral, cfg.gpio_pin, &offset);
-  if (cfg.peripheral == hwp_gpio1) {
-    // Disable the EXTI line for GPIO1
-    gpiox->IECR |= (1 << offset);
-  } else {
-    gpiox->IECR_EXT |= (1 << offset);
-  }
+  gpiox->IECR = (1 << offset);
+  gpiox->ISR = (1 << offset);
 }
 
 void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
-  int index = 0;
   ExtiHandlerCallback cb = NULL;
-  if (hgpio == hwp_gpio1) {
-    while (index < EXTI_MAX_GPIO1_PIN_NUM && s_exti_gpio1_handler_configs[index].callback != NULL) {
-      if (s_exti_gpio1_handler_configs[index].gpio_pin == GPIO_Pin) {
-        cb = s_exti_gpio1_handler_configs[index].callback;
-        break;
-      }
-      index++;
+
+  for (uint8_t index = 0; index < EXTI_MAX_GPIO1_PIN_NUM; index++) {
+    if (s_exti_gpio1_handler_configs[index].callback != NULL &&
+        s_exti_gpio1_handler_configs[index].gpio_pin == GPIO_Pin) {
+      bool should_context_switch = false;
+
+      s_exti_gpio1_handler_configs[index].callback(&should_context_switch);
+      s_should_context_switch |= should_context_switch;
+      return;
     }
   }
 
-  if (cb != NULL) {
-    bool should_context_switch = false;
-    cb(&should_context_switch);
-    if (should_context_switch) {
-      portEND_SWITCHING_ISR(should_context_switch);
-    }
-  }
+  PBL_LOG_WRN("No handler found for GPIO pin %u", GPIO_Pin);
 }
 
-void GPIO1_IRQHandler(void) { HAL_GPIO_IRQHandler(hwp_gpio1); }
-
-void GPIO2_IRQHandler(
-    void)  // Define the interrupt siervice routine (ISR) according to the interrupt vector table
-{
-  HAL_GPIO_IRQHandler(hwp_gpio2);
+void GPIO1_IRQHandler(void) {
+  s_should_context_switch = false;
+  HAL_GPIO_IRQHandler(hwp_gpio1);
+  portEND_SWITCHING_ISR(s_should_context_switch);
 }
 
 void exti_configure_other(ExtiLineOther exti_line, ExtiTrigger trigger) {}

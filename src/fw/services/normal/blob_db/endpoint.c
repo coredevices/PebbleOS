@@ -3,6 +3,7 @@
 
 #include "sync.h"
 #include "endpoint_private.h"
+#include "settings_blob_db.h"
 
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/comm_session/session.h"
@@ -43,6 +44,15 @@
 //! \code{.c}
 //! 0x05 <uint16_t token> <uint8_t DatabaseId>
 //! \endcode
+//!
+//! <b>INSERT_WITH_TIMESTAMP:</b> Insert with timestamp for conflict resolution.
+//! If watch data is newer, returns BLOB_DB_DATA_STALE and phone should resync.
+//!
+//! \code{.c}
+//! 0x0D <uint16_t token> <uint8_t DatabaseId> <uint32_t timestamp>
+//! <uint8_t key_size M> <uint8_t[M] key_bytes>
+//! <uint16_t value_size N> <uint8_t[N] value_bytes>
+//! \endcode
 
 //! BlobDB Endpoint ID
 static const uint16_t BLOB_DB_ENDPOINT_ID = 0xb1db;
@@ -52,6 +62,7 @@ static const uint8_t VALUE_DATA_LENGTH = (sizeof(uint16_t) + sizeof(uint8_t));
 
 //! Message Length Constants
 static const uint8_t MIN_INSERT_LENGTH = 8;
+static const uint8_t MIN_INSERT_WITH_TIMESTAMP_LENGTH = 12; // + 4 bytes for timestamp
 static const uint8_t MIN_DELETE_LENGTH = 6;
 static const uint8_t MIN_CLEAR_LENGTH  = 3;
 
@@ -85,7 +96,7 @@ static BlobDBResponse prv_interpret_db_ret_val(status_t ret_val) {
     case E_INVALID_OPERATION:
       return BLOB_DB_DATA_STALE;
     default:
-      PBL_LOG(LOG_LEVEL_WARNING, "BlobDB return value caught by default case");
+      PBL_LOG_WRN("BlobDB return value caught by default case");
       return BLOB_DB_GENERAL_FAILURE;
   }
 }
@@ -95,7 +106,7 @@ static const uint8_t *prv_read_ptr(const uint8_t *iter, const uint8_t *iter_end,
 
   // >= because we will be reading more bytes after this point
   if ((buf_len == 0) || ((iter + buf_len) > iter_end)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "BlobDB: read invalid length");
+    PBL_LOG_WRN("BlobDB: read invalid length");
     return NULL;
   }
 
@@ -174,6 +185,64 @@ static void prv_handle_database_insert(CommSession *session, const uint8_t *data
 }
 
 
+static void prv_handle_database_insert_with_timestamp(CommSession *session, const uint8_t *data,
+                                                      uint32_t length) {
+  if (length < MIN_INSERT_WITH_TIMESTAMP_LENGTH) {
+    prv_send_response(session, prv_try_read_token(data, length), BLOB_DB_INVALID_DATA);
+    return;
+  }
+
+  const uint8_t *iter = data;
+  BlobDBToken token;
+  BlobDBId db_id;
+
+  // Read token and db_id
+  iter = endpoint_private_read_token_db_id(iter, &token, &db_id);
+
+  // Read timestamp (4 bytes, little-endian)
+  uint32_t timestamp = *(uint32_t *)iter;
+  iter += sizeof(uint32_t);
+
+  // read key length and key bytes ptr
+  uint8_t key_size;
+  const uint8_t *key_bytes = NULL;
+  iter = prv_read_key_size(iter, data + length, &key_size);
+  iter = prv_read_ptr(iter, data + length, &key_bytes, key_size);
+
+  // If read past end or there is not enough data left in buffer for a value size and data to exist
+  if (!iter || (iter > (data + length - VALUE_DATA_LENGTH))) {
+    prv_send_response(session, token, BLOB_DB_INVALID_DATA);
+    return;
+  }
+
+  // read value length and value bytes ptr
+  uint16_t value_size;
+  const uint8_t *value_bytes = NULL;
+  iter = prv_read_value_size(iter, data + length, &value_size);
+  iter = prv_read_ptr(iter, data + length, &value_bytes, value_size);
+
+  // If we read too many bytes or didn't read all the bytes (2nd test)
+  if (!iter || (iter != (data + length))) {
+    prv_send_response(session, token, BLOB_DB_INVALID_DATA);
+    return;
+  }
+
+  // Only Settings BlobDB supports timestamped insert
+  if (db_id != BlobDBIdSettings) {
+    // Fall back to regular insert for other databases
+    status_t ret = blob_db_insert(db_id, key_bytes, key_size, value_bytes, value_size);
+    prv_send_response(session, token, prv_interpret_db_ret_val(ret));
+    return;
+  }
+
+  // Use timestamped insert for Settings - will reject if watch data is newer
+  status_t ret = settings_blob_db_insert_with_timestamp(key_bytes, key_size,
+                                                        value_bytes, value_size,
+                                                        (time_t)timestamp);
+  prv_send_response(session, token, prv_interpret_db_ret_val(ret));
+}
+
+
 static void prv_handle_database_delete(CommSession *session, const uint8_t *data, uint32_t length) {
   if (length < MIN_DELETE_LENGTH) {
     prv_send_response(session, prv_try_read_token(data, length), BLOB_DB_INVALID_DATA);
@@ -231,24 +300,28 @@ static void prv_blob_db_msg_decode_and_handle(
     CommSession *session, BlobDBCommand cmd, const uint8_t *data, size_t data_length) {
   switch (cmd) {
     case BLOB_DB_COMMAND_INSERT:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got INSERT");
+      PBL_LOG_DBG("Got INSERT");
       prv_handle_database_insert(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_DELETE:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got DELETE");
+      PBL_LOG_DBG("Got DELETE");
       prv_handle_database_delete(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_CLEAR:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got CLEAR");
+      PBL_LOG_DBG("Got CLEAR");
       prv_handle_database_clear(session, data, data_length);
+      break;
+    case BLOB_DB_COMMAND_INSERT_WITH_TIMESTAMP:
+      PBL_LOG_DBG("Got INSERT_WITH_TIMESTAMP");
+      prv_handle_database_insert_with_timestamp(session, data, data_length);
       break;
     // Commands not implemented.
     case BLOB_DB_COMMAND_READ:
     case BLOB_DB_COMMAND_UPDATE:
-      PBL_LOG(LOG_LEVEL_ERROR, "BlobDB Command not implemented");
+      PBL_LOG_ERR("BlobDB Command not implemented");
       // Fallthrough
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid BlobDB message received, cmd is %u", cmd);
+      PBL_LOG_ERR("Invalid BlobDB message received, cmd is %u", cmd);
       prv_send_response(session, prv_try_read_token(data, data_length), BLOB_DB_INVALID_OPERATION);
       break;
   }
@@ -264,7 +337,7 @@ void blob_db_protocol_msg_callback(CommSession *session, const uint8_t* data, si
   // Each BlobDB message is required to have at least a Command and a Token
   static const uint8_t MIN_RAW_DATA_LEN = sizeof(BlobDBCommand) + sizeof(BlobDBToken);
   if (length < MIN_RAW_DATA_LEN) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a blob_db message that was too short, len: %zu", length);
+    PBL_LOG_ERR("Got a blob_db message that was too short, len: %zu", length);
     prv_send_response(session, 0, BLOB_DB_INVALID_DATA);
     return;
   }

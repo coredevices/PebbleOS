@@ -46,6 +46,7 @@ int32_t sys_vibe_get_vibe_strength(void) {
   return 0;
 }
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
+void accel_set_shake_sensitivity_percent(uint8_t percent) {}
 QueueHandle_t pebble_task_get_to_queue(PebbleTask task) {
   return NULL;
 }
@@ -83,14 +84,6 @@ void accel_enable_double_tap_detection(bool on) {
 }
 bool accel_get_double_tap_detection_enabled(void) {
   return false;
-}
-
-bool accel_run_selftest(void) {
-  return true;
-}
-
-bool gyro_run_selftest(void) {
-  return true;
 }
 
 bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {

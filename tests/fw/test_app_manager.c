@@ -55,6 +55,7 @@
 #include "stubs_task.h"
 #include "stubs_tick.h"
 #include "stubs_timeline_peek.h"
+#include "stubs_watchface_metrics.h"
 #include "stubs_worker_manager.h"
 
 // Fake "Apps"

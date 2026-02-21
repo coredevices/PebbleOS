@@ -187,7 +187,7 @@ static void prv_set_active_gateway_and_disconn_bt_classic(const BTDeviceInternal
   if (bonding_id != BT_BONDING_ID_INVALID) {
     bt_persistent_storage_set_active_gateway(bonding_id);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not bonded or disconnected (%p)", connection);
+    PBL_LOG_ERR("Not bonded or disconnected (%p)", connection);
   }
 
   bt_lock();
@@ -213,7 +213,7 @@ static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *serv
 #if !RELEASE
     char uuid_string[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&service_remove_info->uuid, uuid_string);
-    PBL_LOG(LOG_LEVEL_INFO, "%s removed: %d", uuid_string, (int)removed);
+    PBL_LOG_INFO("%s removed: %d", uuid_string, (int)removed);
 #endif
     int num_hdls = service_remove_info->num_descriptors +
         service_remove_info->num_characteristics;
@@ -253,7 +253,7 @@ static void prv_handle_services_added(
               client->num_characteristics);
 
       if (num_characteristics != client->num_characteristics) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Found %s, but only %u characteristics...",
+        PBL_LOG_ERR("Found %s, but only %u characteristics...",
                 client->debug_name, num_characteristics);
         continue;
       }
@@ -269,10 +269,10 @@ static void prv_handle_services_added(
       if (c == KernelLEClientPPoGATT) {
         // We are trying to track down an issue on iOS where PPoGATT doesn't get opened (PBL-40084)
         // This message should help us determine if iOS is publishing the service
-        PBL_LOG(LOG_LEVEL_INFO, "Found an instance of %s at 0x%"PRIx16"-0x%"PRIx16"!",
+        PBL_LOG_INFO("Found an instance of %s at 0x%"PRIx16"-0x%"PRIx16"!",
                 client->debug_name, range.start, range.end);
       } else {
-        PBL_LOG(LOG_LEVEL_DEBUG, "Found an instance of %s at 0x%"PRIx16"-0x%"PRIx16"!",
+        PBL_LOG_DBG("Found an instance of %s at 0x%"PRIx16"-0x%"PRIx16"!",
                 client->debug_name, range.start, range.end);
       }
 #endif
@@ -296,7 +296,7 @@ static void prv_handle_gatt_service_discovery_event(const PebbleBLEGATTClientSer
 
   if (event_info->type != PebbleServicesRemoved) {
     // For removals, we log info in the handler routine
-    PBL_LOG(LOG_LEVEL_INFO, "Service changed Indication: type: %d status: %d",
+    PBL_LOG_INFO("Service changed Indication: type: %d status: %d",
             event_info->type, event_info->status);
   }
 
@@ -341,7 +341,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
     // TODO: https://pebbletechnology.atlassian.net/browse/PBL-14164
     buffer = (uint8_t *) kernel_malloc(value_length);
     if (UNLIKELY(!buffer)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "OOM for GATT read response - %d bytes", (int)value_length);
+      PBL_LOG_ERR("OOM for GATT read response - %d bytes", (int)value_length);
       return;
     }
     gatt_client_consume_read_response(event->object_ref,
@@ -376,7 +376,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
     // TODO: https://pebbletechnology.atlassian.net/browse/PBL-14164
     uint8_t *buffer = (uint8_t *) kernel_malloc(header.value_length);
     if (UNLIKELY(header.value_length && !buffer)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "OOM for GATT notification");
+      PBL_LOG_ERR("OOM for GATT notification");
       return;
     }
 
@@ -390,7 +390,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
       client->handle_read_or_notification(header.characteristic, buffer, header.value_length,
                                           BLEGATTErrorSuccess);
     } else {
-      PBL_LOG(LOG_LEVEL_DEBUG, "No client to handle GATT notification from characteristic %p",
+      PBL_LOG_DBG("No client to handle GATT notification from characteristic %p",
               (void*) header.characteristic);
     }
     kernel_free(buffer);
@@ -445,8 +445,7 @@ static void prv_handle_gatt_event(const PebbleBLEGATTClientEvent *event) {
   }
 
 log_error:
-  PBL_LOG(LOG_LEVEL_ERROR,
-          "Unhandled GATT event:%u ref:%"PRIu32" err:%"PRIu16" len:%"PRIu16" cl:%p",
+  PBL_LOG_ERR("Unhandled GATT event:%u ref:%"PRIu32" err:%"PRIu16" len:%"PRIu16" cl:%p",
           event->subtype,
           (uint32_t)event->object_ref,
           (uint16_t)event->gatt_error,
@@ -455,7 +454,7 @@ log_error:
 }
 
 static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u, bond=%u",
+  PBL_LOG_DBG("PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u, bond=%u",
           event->hci_reason, event->connected, event->bonding_id);
 
   const bool connected = event->connected;
@@ -469,7 +468,7 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 
   const BTDeviceInternal device = PebbleEventToBTDeviceInternal(event);
   if (connected) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Connected to Gateway!");
+    PBL_LOG_DBG("Connected to Gateway!");
 
     ancs_create();
     ams_create();
@@ -486,7 +485,7 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
       bt_driver_reconnect_try_now(false /*ignore_paused*/);
     }
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Disconnected from Gateway!");
+    PBL_LOG_DBG("Disconnected from Gateway!");
     ppogatt_destroy();
     ams_destroy();
     ancs_destroy();
@@ -500,7 +499,7 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 void kernel_le_client_handle_event(const PebbleEvent *e) {
   switch (e->type) {
     case PEBBLE_BLE_SCAN_EVENT:
-      PBL_LOG(LOG_LEVEL_DEBUG, "PEBBLE_BLE_SCAN_EVENT");
+      PBL_LOG_DBG("PEBBLE_BLE_SCAN_EVENT");
       return;
 
     case PEBBLE_BLE_CONNECTION_EVENT:

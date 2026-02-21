@@ -249,7 +249,7 @@ void mic_stop(MicDevice *this) {
   stop_mode_enable(InhibitorMic);
   this->state->running = false;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Stopped microphone, dropped samples: %"PRIu32" bytes received: %"PRIu32,
+  PBL_LOG_DBG("Stopped microphone, dropped samples: %"PRIu32" bytes received: %"PRIu32,
           this->state->overflow_cnt,
           this->state->bytes_received);
 
@@ -456,4 +456,11 @@ bool mic_selftest(void) {
   stop_mode_enable(InhibitorMic);
 
   return test_pass;
+}
+
+void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
+                       char *volume_str) {
+}
+
+void command_mic_read(void) {
 }

@@ -8,6 +8,10 @@
 #include "services/normal/settings/settings_file.h"
 #include "system/status_codes.h"
 
+#include "stubs_logging.h"
+#include "stubs_mutex.h"
+#include "stubs_passert.h"
+
 static const CommSessionCapability s_live_capabilities = (CommSessionInfiniteLogDumping);
 
 // Fakes & Stubs

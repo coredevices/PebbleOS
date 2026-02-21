@@ -76,7 +76,7 @@ GetBytesInfoErrorCode gb_storage_coredump_get_size(GetBytesStorage *storage, uin
 
   // Get the base address in flash
   uint32_t flash_base = prv_coredump_flash_base(data->only_get_new_coredump);
-  PBL_LOG(LOG_LEVEL_DEBUG, "GET_BYTES: checking image %p", (void *)flash_base);
+  PBL_LOG_DBG("GET_BYTES: checking image %p", (void *)flash_base);
   if (flash_base != CORE_DUMP_FLASH_INVALID_ADDR) {
     flash_read_bytes((uint8_t *)&image_hdr, flash_base + sizeof(CoreDumpFlashRegionHeader),
                      sizeof(image_hdr));

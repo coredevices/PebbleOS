@@ -55,9 +55,9 @@ def convert_png_to_pbi(task):
     dest_pbi = task.outputs[0].srcpath()
     bitdepth = None
 
-    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding', '~cutts', '~robert']):
+    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding']):
         img_fmt = 'color_raw'
-    elif any(word in dest_pbi for word in ['.1bit.', '~tintin']):
+    elif any(word in dest_pbi for word in ['.1bit.', '~silk']):
         img_fmt = 'bw'
     else:
         img_fmt = 'color'  # raw and palettized color images
@@ -83,9 +83,9 @@ def convert_png_to_pblpng(task):
 
         if bit_suffix:
             bitdepth = int(bit_suffix.group(1))
-        elif any(word in dest_png for word in ['~snowy', '~spalding', '~cutts', '~robert']):
+        elif any(word in dest_png for word in ['~snowy', '~spalding']):
             bitdepth = 8
-        elif any(word in dest_png for word in ['~tintin']):
+        elif any(word in dest_png for word in ['~silk']):
             bitdepth = 1
             palette_name = 'pebble2'
 
@@ -307,7 +307,33 @@ def build(bld):
         'test_ancs.c',
         'test_kernel_le_client.c',
         'test_ppogatt.c',
-        'test_graphics_circle.c'
+        'test_graphics_circle.c',
+        'test_action_menu_window.c',
+        'test_activity_insights.c',
+        'test_app_menu_data_source.c',
+        'test_battery_monitor.c',
+        'test_battery_ui_fsm.c',
+        'test_data_logging.c',
+        'test_emoji_fonts.c',
+        'test_graphics_draw_circle_1bit.c',
+        'test_graphics_draw_circle_8bit.c',
+        'test_graphics_draw_line.c',
+        'test_graphics_draw_rotated_bitmap.c',
+        'test_graphics_fill_circle_1bit.c',
+        'test_graphics_fill_circle_8bit.c',
+        'test_graphics_gtransform_1bit.c',
+        'test_graphics_gtransform_8bit.c',
+        'test_hrm_manager.c',
+        'test_js.c',
+        'test_kickstart.c',
+        'test_launcher_menu_layer.c',
+        'test_pfs.c',
+        'test_selection_windows.c',
+        'test_system_theme.c',
+        'test_timeline_peek_event.c',
+        'test_timezone_database.c',
+        'test_wakeup.c',
+        'test_blob_db2_endpoint.c'
     ]
 
     # Don't run the python tool tests because they exercise a lot of old python2 code that still needs to be updated
@@ -328,17 +354,9 @@ def build(bld):
     sh.rm('-rf', fail_path)
     fail_dir.mkdir()
 
-    def convert_to_emscripten_fs_path_if_needed(node):
-        real_fs_abspath = node.abspath()
-        if bld.variant != 'test_rocky_emx':
-            return real_fs_abspath
-        # When transpiling unittests with Emscripten, the host machine's
-        # filesystem is mounted at /node_fs, so we need to translate paths.
-        return '/node_fs' + real_fs_abspath
-
     bld.env.test_image_defines = [
-        'TEST_IMAGES_PATH="%s"' % convert_to_emscripten_fs_path_if_needed(test_images_dest_dir),
-        'TEST_OUTPUT_PATH="%s"' % convert_to_emscripten_fs_path_if_needed(fail_dir),
+        'TEST_IMAGES_PATH="%s"' % test_images_dest_dir.abspath(),
+        'TEST_OUTPUT_PATH="%s"' % fail_dir.abspath(),
         'PBI2PNG_EXE="%s"' % bld.path.find_node('../tools/pbi2png.py').abspath()]
 
     # Add test_pbis or test_pngs to runtime_deps for tests that require them

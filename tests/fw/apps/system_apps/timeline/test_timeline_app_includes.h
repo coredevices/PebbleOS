@@ -23,6 +23,7 @@
 
 #include "stubs_action_menu.h"
 #include "stubs_activity.h"
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
 #include "stubs_ancs.h"
 #include "stubs_animation_timing.h"
@@ -74,6 +75,7 @@
 #include "stubs_timeline_layout_animations.h"
 #include "stubs_timeline_peek.h"
 #include "stubs_timezone_database.h"
+#include "stubs_vibes.h"
 #include "stubs_wakeup.h"
 #include "stubs_watchface.h"
 #include "stubs_window_manager.h"

@@ -93,7 +93,7 @@ static void prv_update_done_charging(void) {
 
   // Amount in mV to drop the "Full" voltage by to briefly stay at 100% once unplugged
   const uint16_t BATTERY_FULL_FUDGE_AMOUNT = 10;
-  PBL_LOG(LOG_LEVEL_DEBUG, "Done charging - Updating curve");
+  PBL_LOG_DBG("Done charging - Updating curve");
   battery_curve_set_full_voltage(s_last_battery_state.voltage - BATTERY_FULL_FUDGE_AMOUNT);
 }
 
@@ -145,7 +145,7 @@ static ConnectionStateID prv_get_connection_state(void) {
     if (charging) {
       // Since we can't be charging and disconnected,
       // just log a warning and pretend we aren't charging.
-      PBL_LOG(LOG_LEVEL_WARNING, "PMIC reported charging while unplugged - ignoring");
+      PBL_LOG_WRN("PMIC reported charging while unplugged - ignoring");
     }
     return ConnectionStateDischargingUnplugged;
   }
@@ -212,7 +212,7 @@ static void prv_update_state(void *force_update) {
 
   s_last_battery_state.percent = new_charge_percent;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "mV Raw: %"PRIu16" Ratio: %"PRIu32" Percent: %"PRIu32,
+  PBL_LOG_DBG("mV Raw: %"PRIu16" Ratio: %"PRIu32" Percent: %"PRIu32,
           s_last_battery_state.voltage, s_last_battery_state.percent,
           ratio32_to_percent(s_last_battery_state.percent));
 
@@ -296,7 +296,12 @@ BatteryChargeState battery_get_charge_state(void) {
   // higher charge percent bin.
   int32_t rounding_factor = 5 + MAX(((percent - 50) / 10), 0);
   BatteryChargeState state = {
+#if defined(PLATFORM_SNOWY_EMERY) || defined(PLATFORM_SPALDING_GABBRO) || defined(BOARD_SILK_FLINT)
+    // These QEMU platforms can set exact battery percentages via QEMU controls, so use 1% steps
+    .charge_percent = MIN(percent, 100),
+#else
     .charge_percent = MIN(10 * ((percent_normalized + rounding_factor) / 10), 100),
+#endif
     .is_charging = is_plugged && percent_normalized < 100,
     .is_plugged = is_plugged,
   };

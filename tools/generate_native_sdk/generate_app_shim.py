@@ -55,56 +55,64 @@ pbl_table_addr:
 
 """
 
+
 def gen_shim_asm(functions):
     output = []
 
     output.append(SHIM_PREAMBLE)
     for idx, fun in enumerate(functions):
         if not fun.removed:
-            output.append(SHIM_TEMPLATE % {'function_name': fun.name, 'offset': idx * 4})
+            output.append(
+                SHIM_TEMPLATE % {"function_name": fun.name, "offset": idx * 4}
+            )
     output.append(SHIM_FOOTER)
 
-    return '\n'.join(output)
+    return "\n".join(output)
+
 
 class CompilationFailedError(Exception):
     pass
 
+
 def build_shim(shim_s, dest_dir):
-    shim_a = os.path.join(dest_dir, 'libpebble.a')
+    shim_a = os.path.join(dest_dir, "libpebble.a")
     # Delete any existing archive, otherwise `ar` will append/insert to it:
     if os.path.exists(shim_a):
         os.remove(shim_a)
-    shim_o = tempfile.NamedTemporaryFile(suffix='pebble.o').name
-    gcc_process = subprocess.Popen(['arm-none-eabi-gcc',
-                                    '-mcpu=cortex-m3',
-                                    '-mthumb',
-                                    '-fPIC',
-                                    '-c',
-                                    '-o',
-                                    shim_o,
-                                    shim_s],
-                                   stdout = subprocess.PIPE,
-                                   stderr = subprocess.PIPE)
+    shim_o = tempfile.NamedTemporaryFile(suffix="pebble.o").name
+    gcc_process = subprocess.Popen(
+        [
+            "arm-none-eabi-gcc",
+            "-mcpu=cortex-m3",
+            "-mthumb",
+            "-fPIC",
+            "-c",
+            "-o",
+            shim_o,
+            shim_s,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     output = gcc_process.communicate()
-    if (gcc_process.returncode != 0):
+    if gcc_process.returncode != 0:
         print(output[1])
         raise CompilationFailedError()
 
-    ar_process = subprocess.Popen(['arm-none-eabi-ar',
-                                   'rcs',
-                                   shim_a,
-                                   shim_o],
-                                  stdout = subprocess.PIPE,
-                                  stderr = subprocess.PIPE)
+    ar_process = subprocess.Popen(
+        ["arm-none-eabi-ar", "rcs", shim_a, shim_o],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     output = ar_process.communicate()
-    if (ar_process.returncode != 0):
+    if ar_process.returncode != 0:
         print(output[1])
         raise CompilationFailedError()
+
 
 def make_app_shim_lib(functions, sdk_lib_dir):
-    temp_asm_file = tempfile.NamedTemporaryFile(suffix='pbl_shim.s').name
-    with open(temp_asm_file, 'w') as shim_s:
+    temp_asm_file = tempfile.NamedTemporaryFile(suffix="pbl_shim.s").name
+    with open(temp_asm_file, "w") as shim_s:
         shim_s.write(gen_shim_asm(functions))
 
     build_shim(temp_asm_file, sdk_lib_dir)
-

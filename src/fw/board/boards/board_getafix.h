@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "drivers/imu/lis2dw12/lis2dw12.h"
 #include "drivers/led_controller/aw9364e.h"
 #include "drivers/pmic/npm1300.h"
 #include "drivers/touch/cst816/touch_sensor_definitions.h"
@@ -20,7 +21,7 @@ extern QSPIFlash * const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern I2CBus *const I2C2_BUS;
 extern I2CBus *const I2C3_BUS;
-extern I2CSlavePort *const I2C_LSM2DW12;
+extern const LIS2DW12Config *const LIS2DW12;
 extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort *const I2C_W1160;
@@ -42,21 +43,7 @@ static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
-    .axes_offsets[AXIS_X] = 0,
-    .axes_offsets[AXIS_Y] = 1,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = true,
-    .axes_inverts[AXIS_Y] = false,
-    .axes_inverts[AXIS_Z] = false,
-    .shake_thresholds[AccelThresholdHigh] = 64U,
-    .shake_thresholds[AccelThresholdLow] = 15U,
-    .double_tap_threshold = 12500U,
-    .tap_shock = 0x03U,
-    .tap_quiet = 0x02U,
-    .tap_dur = 0x08U,
-  },
-  .accel_ints = {
-    [0] = { .peripheral = hwp_gpio1, .gpio_pin = 26 },
+    .default_motion_sensitivity = 70U, // Medium-High
   },
 };
 

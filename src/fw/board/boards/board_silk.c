@@ -18,10 +18,6 @@
 #include "flash_region/flash_region.h"
 #include "util/units.h"
 
-#define DIALOG_SPI_DMA_PRIORITY (0x0b)
-// Make sure that the DMA IRQ is handled before EXTI:
-// See comments in host/host_transport.c prv_int_exti_cb()
-_Static_assert(DIALOG_SPI_DMA_PRIORITY < EXTI_PRIORITY, "Dialog SPI DMA priority too low!");
 
 // DMA Controllers
 
@@ -44,19 +40,16 @@ static DMAController DMA2_DEVICE = {
 CREATE_DMA_STREAM(1, 4); // DMA2_STREAM2_DEVICE - Sharp SPI TX
 CREATE_DMA_STREAM(2, 1); // DMA1_STREAM2_DEVICE - Accessory UART RX
 CREATE_DMA_STREAM(2, 2); // DMA1_STREAM1_DEVICE - Debug UART RX
-CREATE_DMA_STREAM(2, 3); // DMA2_STREAM0_DEVICE - Dialog SPI RX
-CREATE_DMA_STREAM(2, 5); // DMA2_STREAM1_DEVICE - Dialog SPI TX
 CREATE_DMA_STREAM(2, 6); // DMA2_STREAM4_DEVICE - DFSDM
 CREATE_DMA_STREAM(2, 7); // DMA2_STREAM7_DEVICE - QSPI
 
 // DMA Requests
 // - On DMA1 we just have have "Sharp SPI TX" so just set its priority to "High" since it doesn't
 //   matter.
-// - On DMA2 we have "Accessory UART RX", "Debug UART RX", "Dialog SPI RX", "DIALOG SPI TX",
-//   "DFSDM", and "QSPI". We want "DFSDM", "Accessory UART RX", "Debug UART RX", and "Dialog SPI RX"
-//   to have a very high priority because their peripheral buffers may overflow if the DMA stream
-//   doesn't read from them in a while. After that, give the remaining "Dialog SPI TX" and "QSPI"
-//   both a high priority.
+// - On DMA2 we have "Accessory UART RX", "Debug UART RX", "DFSDM", and "QSPI". We want "DFSDM",
+//   "Accessory UART RX", and "Debug UART RX" to have a very high priority because their peripheral
+//   buffers may overflow if the DMA stream doesn't read from them in a while. After that, give the
+//   remaining "QSPI" a high priority.
 
 static DMARequestState s_sharp_spi_tx_dma_request_state;
 static DMARequest SHARP_SPI_TX_DMA_REQUEST = {
@@ -70,17 +63,6 @@ static DMARequest SHARP_SPI_TX_DMA_REQUEST = {
 };
 DMARequest * const SHARP_SPI_TX_DMA = &SHARP_SPI_TX_DMA_REQUEST;
 
-static DMARequestState s_accessory_uart_dma_request_state;
-static DMARequest ACCESSORY_UART_RX_DMA_REQUEST = {
-  .state = &s_accessory_uart_dma_request_state,
-  .stream = &DMA2_STREAM1_DEVICE,
-  .channel = 5,
-  .irq_priority = IRQ_PRIORITY_INVALID, // no interrupts
-  .priority = DMARequestPriority_VeryHigh,
-  .type = DMARequestType_PeripheralToMemory,
-  .data_size = DMARequestDataSize_Byte,
-};
-
 static DMARequestState s_dbg_uart_dma_request_state;
 static DMARequest DBG_UART_RX_DMA_REQUEST = {
   .state = &s_dbg_uart_dma_request_state,
@@ -89,28 +71,6 @@ static DMARequest DBG_UART_RX_DMA_REQUEST = {
   .irq_priority = IRQ_PRIORITY_INVALID, // no interrupts
   .priority = DMARequestPriority_VeryHigh,
   .type = DMARequestType_PeripheralToMemory,
-  .data_size = DMARequestDataSize_Byte,
-};
-
-static DMARequestState s_dialog_spi_rx_dma_request_state;
-static DMARequest DIALOG_SPI_RX_DMA_REQUEST = {
-  .state = &s_dialog_spi_rx_dma_request_state,
-  .stream = &DMA2_STREAM3_DEVICE,
-  .channel = 2,
-  .irq_priority = DIALOG_SPI_DMA_PRIORITY,
-  .priority = DMARequestPriority_VeryHigh,
-  .type = DMARequestType_PeripheralToMemory,
-  .data_size = DMARequestDataSize_Byte,
-};
-
-static DMARequestState s_dialog_spi_tx_dma_request_state;
-static DMARequest DIALOG_SPI_TX_DMA_REQUEST = {
-  .state = &s_dialog_spi_tx_dma_request_state,
-  .stream = &DMA2_STREAM5_DEVICE,
-  .channel = 5,
-  .irq_priority = DIALOG_SPI_DMA_PRIORITY,
-  .priority = DMARequestPriority_High,
-  .type = DMARequestType_MemoryToPeripheral,
   .data_size = DMARequestDataSize_Byte,
 };
 
@@ -197,25 +157,6 @@ static UARTDevice DBG_UART_DEVICE = {
 };
 UARTDevice * const DBG_UART = &DBG_UART_DEVICE;
 IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
-
-static UARTDeviceState s_accessory_uart_state;
-static UARTDevice ACCESSORY_UART_DEVICE = {
-  .state = &s_accessory_uart_state,
-  .half_duplex = true,
-  .tx_gpio = {
-    .gpio = GPIOA,
-    .gpio_pin = GPIO_Pin_11,
-    .gpio_pin_source = GPIO_PinSource11,
-    .gpio_af = GPIO_AF_USART6
-  },
-  .periph = USART6,
-  .irq_channel = USART6_IRQn,
-  .irq_priority = 0xb,
-  .rcc_apb_periph = RCC_APB2Periph_USART6,
-  .rx_dma = &ACCESSORY_UART_RX_DMA_REQUEST
-};
-UARTDevice * const ACCESSORY_UART = &ACCESSORY_UART_DEVICE;
-IRQ_MAP(USART6, uart_irq_handler, ACCESSORY_UART);
 
 
 // I2C DEVICES
@@ -320,43 +261,6 @@ AnalogTemperatureSensor const TEMPERATURE_SENSOR_DEVICE = {
 };
 
 AnalogTemperatureSensor * const TEMPERATURE_SENSOR = &TEMPERATURE_SENSOR_DEVICE;
-
-
-//
-// SPI Bus configuration
-//
-
-static SPIBusState DIALOG_SPI_BUS_STATE = { };
-static const SPIBus DIALOG_SPI_BUS = {
-  .state = &DIALOG_SPI_BUS_STATE,
-  .spi = SPI5,
-  .spi_sclk =  { GPIOB, GPIO_Pin_0, GPIO_PinSource0, GPIO_AF6_SPI5 },
-  .spi_miso = { GPIOA, GPIO_Pin_12, GPIO_PinSource12, GPIO_AF6_SPI5 },
-  .spi_mosi = { GPIOA, GPIO_Pin_10, GPIO_PinSource10, GPIO_AF6_SPI5 },
-  .spi_sclk_speed = GPIO_Speed_50MHz,
-  // DA14680_FS v1.4 page 89:
-  // "In slave mode the internal SPI clock must be more than four times the SPIx_CLK"
-  // The system clock is 16MHz, so don't use more than 4MHz.
-  .spi_clock_speed_hz = MHZ_TO_HZ(4)
-};
-
-//
-// SPI Slave port configuration
-//
-
-static SPISlavePortState DIALOG_SPI_SLAVE_PORT_STATE = {};
-static SPISlavePort DIALOG_SPI_SLAVE_PORT = {
-  .slave_state = &DIALOG_SPI_SLAVE_PORT_STATE,
-  .spi_bus = &DIALOG_SPI_BUS,
-  .spi_scs = { GPIOB, GPIO_Pin_1, false },
-  .spi_direction = SpiDirection_2LinesFullDuplex,
-  .spi_cpol = SpiCPol_Low,
-  .spi_cpha = SpiCPha_1Edge,
-  .spi_first_bit = SpiFirstBit_MSB,
-  .rx_dma = &DIALOG_SPI_RX_DMA_REQUEST,
-  .tx_dma = &DIALOG_SPI_TX_DMA_REQUEST
-};
-SPISlavePort * const DIALOG_SPI = &DIALOG_SPI_SLAVE_PORT;
 
 
 // HRM DEVICE

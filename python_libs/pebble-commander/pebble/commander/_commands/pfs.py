@@ -1,16 +1,15 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-from .. import PebbleCommander, exceptions, parsers
+from .. import PebbleCommander, exceptions
 
 
 @PebbleCommander.command()
 def pfs_prepare(cmdr, size):
-    """ Prepare for file creation.
-    """
+    """Prepare for file creation."""
     size = int(str(size), 0)
     if size <= 0:
-        raise exceptions.ParameterError('size out of range: %d' % size)
+        raise exceptions.ParameterError("size out of range: %d" % size)
     # TODO: I guess catch errors
     ret = cmdr.send_prompt_command("pfs prepare %d" % size)
     if not ret[0].startswith("Success"):
@@ -23,7 +22,7 @@ def pfs_prepare(cmdr, size):
 
 @PebbleCommander.command()
 def pfs_litter(cmdr):
-    """ Fragment the filesystem.
+    """Fragment the filesystem.
 
     Creates a bunch of fragmentation in the filesystem by creating a large
     number of small files and only deleting a small number of them.

@@ -4,7 +4,7 @@ from waflib import Logs
 
 
 def build(bld):
-    qemu_spi_cooker_env = bld.all_envs['32bit'].derive()
+    qemu_spi_cooker_env = bld.all_envs['local'].derive().detach()
     output = bld.path.get_bld().parent.parent.make_node('qemu_spi_cooker')
 
     sources = ["../../src/fw/services/normal/filesystem/flash_translation.c",
@@ -41,12 +41,15 @@ def build(bld):
     # # so just force the defined type for testing time
     # qemu_spi_cooker_env.CFLAGS.append('-Dtime_t=__SYSCALL_SLONG_TYPE')
 
-    platform_define = "PLATFORM_%s" % bld.get_platform_name().upper()
+    defines = ['UNITTEST', 'DUMA_DISABLED', 'PBL_COLOR', 'PBL_RECT']
+    defines.append("PLATFORM_%s" % bld.get_platform_name().upper())
+    if bld.capability('HAS_PBLBOOT'):
+        defines.append('CAPABILITY_HAS_PBLBOOT')
 
     bld.program(source=sources,
                 target=output,
                 includes=includes,
-                defines=['UNITTEST', 'DUMA_DISABLED', 'PBL_COLOR', 'PBL_RECT', platform_define],
+                defines=defines,
                 cflags='-Wno-format-security',
                 env=qemu_spi_cooker_env)
 

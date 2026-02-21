@@ -28,7 +28,7 @@ DEFINE_SYSCALL(void, sys_i18n_get_with_buffer, const char *string,
     }
     if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), string, 100) &&
         !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), string, 100)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Pointer %p not in app or microflash region", string);
+      PBL_LOG_ERR("Pointer %p not in app or microflash region", string);
       syscall_failed();
     }
     syscall_assert_userspace_buffer(buffer, length);
@@ -45,7 +45,7 @@ DEFINE_SYSCALL(size_t, sys_i18n_get_length, const char *string) {
     }
     if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), string, 100) &&
         !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), string, 100)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Pointer %p not in app or microflash region", string);
+      PBL_LOG_ERR("Pointer %p not in app or microflash region", string);
       syscall_failed();
     }
   }

@@ -5,10 +5,7 @@
 # Generate sample health activity blob
 ##################################################################################################
 import argparse
-import os
-import sys
 import logging
-import math
 import time
 import struct
 
@@ -33,11 +30,10 @@ typedef struct {
 """
 
 ###################################################################################################
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # Collect our command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--debug', action='store_true', help="Turn on debug logging")
+    parser.add_argument("--debug", action="store_true", help="Turn on debug logging")
     args = parser.parse_args()
 
     level = logging.INFO
@@ -45,8 +41,8 @@ if __name__ == '__main__':
         level = logging.DEBUG
     logging.basicConfig(level=level)
 
-    sample_format = '<BBB'
-    header_format = '<HHIIH'
+    sample_format = "<BBB"
+    header_format = "<HHIIH"
 
     num_samples = 10
     blob = struct.pack(
@@ -55,13 +51,11 @@ if __name__ == '__main__':
         struct.calcsize(header_format) + num_samples * struct.calcsize(sample_format),
         int(time.time()),
         int(time.time()),
-        num_samples)
+        num_samples,
+    )
 
     for i in range(num_samples):
-        blob += struct.pack(sample_format,
-                            30 + (i % 5),
-                            4,
-                            50 + (i % 4))
+        blob += struct.pack(sample_format, 30 + (i % 5), 4, 50 + (i % 4))
 
-    with open('health_blob.bin', "w") as out:
+    with open("health_blob.bin", "w") as out:
         out.write(blob)

@@ -381,7 +381,7 @@ bool qspi_poll_bit(QSPIPort *dev, uint8_t instruction, uint8_t bit_mask, bool sh
   uint32_t loops = 0;
   while (QSPI_GetFlagStatus(QSPI_FLAG_SM) == RESET) {
     if ((timeout_us != QSPI_NO_TIMEOUT) && (++loops > timeout_us)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Timeout waiting for a bit!?!?");
+      PBL_LOG_ERR("Timeout waiting for a bit!?!?");
       return false;
     }
     delay_us(1);

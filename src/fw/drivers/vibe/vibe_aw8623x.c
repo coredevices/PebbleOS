@@ -82,21 +82,21 @@ void vibe_init(void) {
 
   gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
 
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
-  psleep(AW8623X_PWR_OFF_TIME_MS);
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
+  psleep(AW8623X_PWR_OFF_TIME_MS);
+  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
   psleep(AW8623X_PWR_ON_TIME_MS);
 
   // Verify chip ID
   ret = prv_read_register(AW8623X_IDH, &val);
   if (!ret || val != AW8623X_IDH_CHIPID_H) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read AW8623X chip ID high byte");
+    PBL_LOG_ERR("Failed to read AW8623X chip ID high byte");
     return;
   }
 
   ret = prv_read_register(AW8623X_IDL, &val);
   if (!ret || val != AW8623X_IDL_CHIPID_L) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read AW8623X chip ID low byte");
+    PBL_LOG_ERR("Failed to read AW8623X chip ID low byte");
     return;
   }
 

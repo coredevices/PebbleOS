@@ -135,7 +135,7 @@ void command_dump_flash(const char* address_str, const char* length_str) {
     uint32_t chunk_size = MIN(length, 128);
     flash_read_bytes(buffer, address, chunk_size);
 
-    PBL_LOG(LOG_LEVEL_ALWAYS, "Data at address 0x%"PRIx32, address);
+    PBL_LOG_ALWAYS("Data at address 0x%"PRIx32, address);
     hexdump_log(LOG_LEVEL_ALWAYS, buffer, chunk_size);
 
     address += chunk_size;
@@ -513,14 +513,14 @@ static void prv_flash_stress_callback(void *data) {
   int iters = (int)data;
 
   if (iters == 0) {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test complete");
+    PBL_LOG_ALWAYS("flash stress test complete");
     return;
   }
   
   int bufsz = rand32() % 1024;
   uint8_t *buf = kernel_malloc(bufsz);
   if (!buf) {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: malloc of size %d failed", bufsz);
+    PBL_LOG_ALWAYS("flash stress test: malloc of size %d failed", bufsz);
     system_task_add_callback(prv_flash_stress_callback, (void *)(iters - 1));
     return;
   }
@@ -540,11 +540,11 @@ static void prv_flash_stress_callback(void *data) {
  
   uint32_t sector_address = flash_get_sector_base_address(flash_addr + bufsz); // the beginning has already been erased, since we are always smaller than a sector
   if (sector_address != s_flash_stress_last_sector) {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: erasing flash address %lx", sector_address);
+    PBL_LOG_ALWAYS("flash stress test: erasing flash address %lx", sector_address);
     flash_erase_sector_blocking(sector_address);
     s_flash_stress_last_sector = sector_address;
     if (!prv_is_really_erased(sector_address, 0)) {
-      PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: flash address %lx erase failed!", sector_address);
+      PBL_LOG_ALWAYS("flash stress test: flash address %lx erase failed!", sector_address);
       miscompare = -1;
       goto bailout;
     }
@@ -566,7 +566,7 @@ static void prv_flash_stress_callback(void *data) {
 
     for (int i = 0; i < bufsz; i++) {
       if (buf[i] != (lfsr_cur & 0xFF)) {
-        PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: readback %d: miscompare at offset %d (%lx): expected 0x%02lx, found 0x%02x", j, i, flash_addr + i, lfsr_cur & 0xFF, buf[i]);
+        PBL_LOG_ALWAYS("flash stress test: readback %d: miscompare at offset %d (%lx): expected 0x%02lx, found 0x%02x", j, i, flash_addr + i, lfsr_cur & 0xFF, buf[i]);
         miscompare++;
       }
       lfsr_cur = prv_xorshift32(lfsr_cur);
@@ -579,9 +579,9 @@ bailout:
   kernel_free(buf);
 
   if (miscompare) {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: %d miscompares on %d byte chunk at address %lx!  giving up", miscompare, bufsz, flash_addr);
+    PBL_LOG_ALWAYS("flash stress test: %d miscompares on %d byte chunk at address %lx!  giving up", miscompare, bufsz, flash_addr);
   } else {
-    PBL_LOG(LOG_LEVEL_ALWAYS, "flash stress test: %d bytes at address %lx OK; %d to go", bufsz, flash_addr, iters - 1);
+    PBL_LOG_ALWAYS("flash stress test: %d bytes at address %lx OK; %d to go", bufsz, flash_addr, iters - 1);
     system_task_add_callback(prv_flash_stress_callback, (void *)(iters - 1));
   }
 }
@@ -1131,13 +1131,14 @@ void command_audit_delay_us(void) {
   __enable_irq();
 }
 
+#if !MICRO_FAMILY_SF32LB52
 // Simply parks the chip permanently in stop mode in whatever state it's currently in. This can be
 // pretty handy when trying to profile power of the chip under certains states
 // NOTE: If you did not configure with `--nowatchdog`, the HW watchdog will reboot you in ~8s
 void command_enter_stop(void) {
   dbgserial_putstr("Entering stop mode indefinitely ... reboot your board to get out!!");
   __disable_irq();
-#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF5
   RTC_ITConfig(RTC_IT_WUT, DISABLE);
   RTC_WakeUpCmd(DISABLE);
 #endif
@@ -1154,6 +1155,7 @@ void command_enter_stop(void) {
   dbgserial_putstr("woah, failed to enter stop mode");
   while (1) { }
 }
+#endif
 
 #ifndef RECOVERY_FW
 // Create a bunch of fragmentation in the filesystem by creating a large number
@@ -1164,14 +1166,14 @@ void command_litter_filesystem(const char *s_number, const char *s_size) {
   size_t size = (size_t)atoi(s_size);
   for (int i = 0; i < number; i++) {
     snprintf(name, sizeof(name), "litter%d", i);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Creating %s", name);
+    PBL_LOG_DBG("Creating %s", name);
     int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, size);
     if (i % 5 == 0) {
       pfs_close_and_remove(fd);
-      PBL_LOG(LOG_LEVEL_DEBUG, "Removed %s", name);
+      PBL_LOG_DBG("Removed %s", name);
     } else {
       pfs_close(fd);
-      PBL_LOG(LOG_LEVEL_DEBUG, "Closed %s", name);
+      PBL_LOG_DBG("Closed %s", name);
     }
 
     task_watchdog_bit_set(pebble_task_get_current());
@@ -1417,7 +1419,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
               "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
     .lengths = {
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
       [TestStringFont_Gothic18] = 204,
       [TestStringFont_Gothic24B] = 144,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
@@ -1440,7 +1442,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "をんアイウエオサシスセソタチツテトナニヌネノ"
               "ハヒフヘホマミムメモヤユヨラリルレロワヲン",
     .lengths = {
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
       [TestStringFont_Gothic18] = 579,
       [TestStringFont_Gothic24B] = 291,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
@@ -1458,7 +1460,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "FLASH access on Robe"
               "\xe2\x80\xa6",
     .lengths = {
-#if PLATFORM_ROBERT || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
       [TestStringFont_Gothic18] = 134,
       [TestStringFont_Gothic24B] = 134,
       [TestStringFont_Other] = STRING_LENGTH_MAX,

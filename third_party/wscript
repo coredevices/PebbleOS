@@ -12,6 +12,8 @@ def configure(conf):
 
     if conf.capability('HAS_ROCKY_JS'):
         conf.recurse('jerryscript')
+    if conf.capability('HAS_MODDABLE_XS'):
+        conf.recurse('moddable')
 
 def build(bld):
     bld.recurse('cmsis_core')
@@ -21,6 +23,9 @@ def build(bld):
     bld.recurse('qr_code_generator')
     bld.recurse('speex')
     bld.recurse('nonfree')
+    
+    if bld.capability('HAS_MODDABLE_XS'):
+        bld.recurse('moddable')
 
     if bld.env.MICRO_FAMILY.startswith('STM32'):
         bld.recurse('hal_stm32')
@@ -37,8 +42,5 @@ def build(bld):
 
     if bld.is_asterix():
         bld.recurse('hal_lsm6dso')
-
-    if bld.is_obelix() or bld.is_getafix():
-        bld.recurse('hal_lis2dw12')
 
     bld.recurse('memfault')

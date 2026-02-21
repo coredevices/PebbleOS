@@ -201,7 +201,7 @@ static void prv_receive_test_data(uint8_t transaction_id, const bool oversized) 
   message->transaction_id = transaction_id;
   message->payload->push.uuid = s_remote_app_uuid;
   memcpy(&message->payload->push.dictionary, s_expected_buffer, dict_length);
-  PBL_LOG(LOG_LEVEL_DEBUG, "message->transaction_id = %"PRIu32, message->transaction_id);
+  PBL_LOG_DBG("message->transaction_id = %"PRIu32, message->transaction_id);
 
   CommSession *session = s_fake_app_comm_session;
   app_message_app_protocol_msg_callback(session, buffer, message_length, NULL);
@@ -211,7 +211,7 @@ static void prv_receive_ack_nack_callback(uint16_t endpoint_id,
 					  const uint8_t* data, unsigned int length) {
   AppMessage *message = (AppMessage*)data;
   cl_assert(length == sizeof(AppMessage));
-  PBL_LOG(LOG_LEVEL_DEBUG, "message %"PRIu32", id1 %"PRIu32", id2 %"PRIu32, message->transaction_id,
+  PBL_LOG_DBG("message %"PRIu32", id1 %"PRIu32", id2 %"PRIu32, message->transaction_id,
       TEST_TRANSACTION_ID_1, TEST_TRANSACTION_ID_2);
   if (message->transaction_id == TEST_TRANSACTION_ID_1) {
     cl_assert_equal_b(s_ack_received_for_id_1, false);
@@ -265,6 +265,20 @@ size_t sys_app_pp_app_message_inbox_size_maximum(void) {
 }
 
 void sys_app_pp_app_message_analytics_count_drop(void) {
+}
+
+void sys_app_pp_app_message_analytics_count_sent(void) {
+}
+
+void sys_app_pp_app_message_analytics_count_received(void) {
+}
+
+uint32_t sys_app_pp_app_message_get_sent_count(void) {
+  return 0;
+}
+
+uint32_t sys_app_pp_app_message_get_received_count(void) {
+  return 0;
 }
 
 bool sys_get_current_app_is_js_allowed(void) {

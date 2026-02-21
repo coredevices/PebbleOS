@@ -6,7 +6,6 @@
 #include "debug/power_tracking.h"
 #include "drivers/mcu.h"
 #include "drivers/rtc.h"
-#include "drivers/lptim_systick.h"
 #include "drivers/task_watchdog.h"
 
 #include "console/prompt.h"
@@ -19,10 +18,6 @@
 #include "services/common/analytics/analytics.h"
 #include "system/logging.h"
 #include "util/math.h"
-
-#if defined(MICRO_FAMILY_SF32LB52)
-#include <ipc_queue.h>
-#endif
 
 #define STM32F2_COMPATIBLE
 #define STM32F4_COMPATIBLE
@@ -69,13 +64,6 @@ static const RtcTicks MIN_STOP_TICKS = 8;
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 5;
-#elif defined(MICRO_FAMILY_SF32LB52)
-//! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks EARLY_WAKEUP_TICKS = 4;
-//! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks MIN_STOP_TICKS = 8;
-#else
-#error "Unknown micro family"
 #endif
 
 // 1 second ticks so that we only wake up once every regular timer interval.
@@ -203,116 +191,6 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
   __enable_irq();
 }
-
-#else
-extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
-  if (!lptim_systick_is_initialized() || !sleep_mode_is_allowed() ||
-      !ipc_queue_check_idle()) {
-    // To avoid LCPU enter incorrect state, make sure ipc queue is empty before enter stop mode.
-    return;
-  }
-
-  // Note: all tasks are suspended at this point, but we can still be interrupted
-  // so the critical section is necessary. taskENTER_CRITICAL() is not used here
-  // as that method would mask interrupts that should exit the low-power mode.
-  // The __disable_irq() function sets the PRIMASK bit which globally prevents
-  // interrupt execution while still allowing interrupts to wake the processor
-  // from WFI.
-  // Conversely, taskEnter_CRITICAL() sets the BASEPRI register, which masks
-  // interrupts with priorities lower than configMAX_SYSCALL_INTERRUPT_PRIORITY
-  // from executing and from waking the processor.
-  // See: http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABGGICD.html#BGBHDHAI
-  __disable_irq();
-
-  power_tracking_stop(PowerSystemMcuCoreRun);
-
-  if (eTaskConfirmSleepModeStatus() != eAbortSleep) {
-    if (xExpectedIdleTime < MIN_STOP_TICKS || !stop_mode_is_allowed()) {
-      uint32_t counter_start = LPTIM1->CNT;
-
-      power_tracking_start(PowerSystemMcuCoreSleep);
-      // HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, false);
-  
-      __DSB();  // Drain any pending memory writes before entering sleep.
-
-      __WFI();
-      __NOP();
-      __NOP();
-      __NOP();
-      __NOP();
-      __NOP();
-      __NOP();
-      __NOP();
-      __NOP();
-      __NOP();
-      __NOP();
-
-      __ISB();  // Let the pipeline catch up (force the WFI to activate before moving on).
-
-      // HAL_GPIO_WritePin(DEBUG_PIN_CONFIG.gpio, DEBUG_PIN_CONFIG.gpio_pin, true);
-      power_tracking_stop(PowerSystemMcuCoreSleep);
-
-      uint32_t counter_stop = LPTIM1->CNT;
-      if (counter_stop < counter_start) {
-        counter_stop += 0x10000;
-      }
-      uint32_t counter_elapsed = counter_stop - counter_start;
-
-      // Calculate elapsed ticks and step FreeRTOS tick count
-      // Use calibrated RC10K frequency (measured against HXT48)
-      uint32_t rc10k_freq = lptim_systick_get_rc10k_freq();
-      uint32_t ticks_elapsed = (counter_elapsed * RTC_TICKS_HZ) / rc10k_freq;
-      if (ticks_elapsed > 0) {
-        // Cap to xExpectedIdleTime to avoid FreeRTOS assertion
-        if (ticks_elapsed > xExpectedIdleTime) {
-          ticks_elapsed = xExpectedIdleTime;
-        }
-        vTaskStepTick(ticks_elapsed);
-        // Clear pending LPTIM interrupt and set up next tick to avoid double-counting
-        lptim_systick_sync_after_wfi();
-      }
-
-      s_analytics_device_sleep_cpu_cycles += ticks_elapsed;
-      s_analytics_app_sleep_cpu_cycles += ticks_elapsed;
-    } else {
-      const RtcTicks stop_duration = MIN(xExpectedIdleTime - EARLY_WAKEUP_TICKS, MAX_STOP_TICKS);
-
-      // Go into stop mode until the wakeup_tick.
-      s_last_ticks_commanded_in_stop = stop_duration;
-
-      lptim_systick_tickless_idle((uint32_t)stop_duration);
-
-      enter_stop_mode();
-
-      lptim_systick_tickless_exit();
-
-      uint32_t ticks_elapsed = lptim_systick_get_elapsed_ticks();
-
-      // Cap ticks_elapsed to xExpectedIdleTime to avoid FreeRTOS assertion failure
-      // in vTaskStepTick() when we oversleep due to wake-up latency or RC oscillator drift
-      if (ticks_elapsed > xExpectedIdleTime) {
-        ticks_elapsed = xExpectedIdleTime;
-      }
-
-      s_last_ticks_elapsed_in_stop = ticks_elapsed;
-      vTaskStepTick(ticks_elapsed);
-
-      // Update the task watchdog every time we come out of STOP mode (which is
-      // at least once/second) since the timer peripheral will not have been
-      // incremented. Set all watchdog bits first since the LPTIM ISR that would
-      // normally do this hasn't run yet (interrupts are still globally disabled).
-      task_watchdog_bit_set_all();
-      task_watchdog_step_elapsed_time_ms((ticks_elapsed * 1000) / RTC_TICKS_HZ);
-
-      s_analytics_device_stop_ticks += ticks_elapsed;
-      s_analytics_app_stop_ticks += ticks_elapsed;
-    }
-  }
-
-  power_tracking_start(PowerSystemMcuCoreRun);
-
-  __enable_irq();
-}
 #endif
 
 void vApplicationStackOverflowHook(TaskHandle_t task_handle, signed char *name) {
@@ -323,7 +201,7 @@ void vApplicationStackOverflowHook(TaskHandle_t task_handle, signed char *name) 
   // area in fault_handling.c has the logic to safely kill those user tasks without forcing
   // a reboot.
   if ((task != PebbleTask_App) && (task != PebbleTask_Worker)) {
-    PBL_LOG_SYNC(LOG_LEVEL_ERROR, "Stack overflow [task: %s]", name);
+    PBL_LOG_SYNC_ERR("Stack overflow [task: %s]", name);
     RebootReason reason = {
       .code = RebootReasonCode_StackOverflow,
       .data8[0] = task
@@ -362,7 +240,7 @@ void* pvPortMalloc(size_t xSize) {
   return kernel_malloc(xSize);
 }
 
-
+#if !defined(MICRO_FAMILY_SF32LB52)
 // Called from the SysTick handler ISR to adjust ticks for situations where the CPU might
 // occasionally fall behind and miss some tick interrupts (like when running under emulation).
 bool vPortCorrectTicks(void) {
@@ -404,23 +282,25 @@ bool vPortCorrectTicks(void) {
   }
   return need_context_switch;
 }
+#endif
 
+#if !defined(MICRO_FAMILY_SF32LB52)
 bool vPortEnableTimer() {
 #if defined(MICRO_FAMILY_NRF5)
   rtc_enable_synthetic_systick();
-  return true;
-#elif defined(MICRO_FAMILY_SF32LB52)
-  lptim_systick_enable();
   return true;
 #else
   return false;
 #endif
 }
+#endif
 
 // CPU analytics
 ///////////////////////////////////////////////////////////
 
 static uint32_t s_last_ticks = 0;
+
+#if !defined(MICRO_FAMILY_SF32LB52)
 void dump_current_runtime_stats(void) {
   uint32_t stop_ms = ticks_to_milliseconds(s_analytics_device_stop_ticks);
   uint32_t sleep_ms = mcu_cycles_to_milliseconds(s_analytics_device_sleep_cpu_cycles);
@@ -450,6 +330,7 @@ void dump_current_runtime_stats(void) {
                              rtc_ticks, rtos_ticks, s_ticks_corrected, s_last_ticks_elapsed_in_stop, s_last_ticks_commanded_in_stop);
   prompt_send_response(buf);
 }
+#endif
 
 void analytics_external_collect_cpu_stats(void) {
   uint32_t stop_ms = ticks_to_milliseconds(s_analytics_device_stop_ticks);

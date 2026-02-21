@@ -98,10 +98,10 @@ static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
       remaining_framebuffer_row_bytes = remaining_chunk_bytes;
     }
 
-#if PLATFORM_SPALDING || PLATFORM_GETAFIX
-#if PLATFORM_SPALDING
+#if PLATFORM_SPALDING || PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
     const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_spalding_data_row_infos;
-#elif PLATFORM_GETAFIX
+#elif PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
     const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_getafix_data_row_infos;
 #endif
     const size_t framebuffer_row_min_pixel = row_infos[state->row].min_x;
@@ -145,7 +145,7 @@ void screenshot_send_next_chunk(void* raw_state) {
 
   void *buffer = kernel_zalloc(max_buf_len);
   if (!buffer) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Screenshot aborted, OOM.");
+    PBL_LOG_WRN("Screenshot aborted, OOM.");
     prv_send_error_response(session, SCREENSHOT_OOM_ERROR);
     prv_finish(state);
   }
@@ -162,7 +162,7 @@ void screenshot_send_next_chunk(void* raw_state) {
   if (max_buf_len == 0 /* disconnected */ ||
       !(sb = comm_session_send_buffer_begin_write(session, SCREENSHOT_ENDPOINT_ID,
                                                   session_len, COMM_SESSION_DEFAULT_TIMEOUT))) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Terminating screenshot send early: %"PRIu32, max_buf_len);
+    PBL_LOG_WRN("Terminating screenshot send early: %"PRIu32, max_buf_len);
     prv_finish(state);
     return;
   }
@@ -200,13 +200,13 @@ void screenshot_send_next_chunk(void* raw_state) {
 void screenshot_protocol_msg_callback(CommSession *session, const uint8_t* msg_data, unsigned int msg_len) {
   uint8_t sub_command = msg_data[0];
   if (sub_command != 0x00) {
-    PBL_LOG(LOG_LEVEL_ERROR, "first byte can't be %u", sub_command);
+    PBL_LOG_ERR("first byte can't be %u", sub_command);
     prv_send_error_response(session, SCREENSHOT_MALFORMED_COMMAND);
     return;
   }
 
   if (s_screenshot_in_progress) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Screenshot already in progress.");
+    PBL_LOG_ERR("Screenshot already in progress.");
     // Use a low timeout, if we are already in screenshot_send_next_chunk with the send buffer locked, then this
     // would block for a long time, causing the comm_protocol_dispatch_message()'s 150ms max timeout to trip.
     prv_send_error_response(session, SCREENSHOT_ALREADY_IN_PROGRESS);

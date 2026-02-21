@@ -5,24 +5,24 @@ import contextlib
 import pexpect
 import re
 import string
-import subprocess
 import sys
 import waflib
 
 from waflib import Logs
 
 
-JTAG_OPTIONS = {'olimex': 'source [find interface/ftdi/olimex-arm-usb-ocd-h.cfg]',
-                'fixture': 'source [find interface/flossjtag-noeeprom.cfg]',
-                'bb2': 'source waftools/openocd_bb2_ftdi.cfg',
-                'bb2-legacy': 'source waftools/openocd_bb2_ft2232.cfg',
-                'jtag_ftdi': 'source waftools/openocd_jtag_ftdi.cfg',
-                'swd_ftdi': 'source waftools/openocd_swd_ftdi.cfg',
-                'swd_jlink': 'source waftools/openocd_swd_jlink.cfg',
-                'swd_tigard': 'source waftools/openocd_swd_tigard.cfg',
-                'swd_stlink': 'source [find interface/stlink-v2.cfg]',
-                'swd_cmsisdap': 'source waftools/openocd_swd_cmsisdap.cfg',
-                }
+JTAG_OPTIONS = {
+    "olimex": "source [find interface/ftdi/olimex-arm-usb-ocd-h.cfg]",
+    "fixture": "source [find interface/flossjtag-noeeprom.cfg]",
+    "bb2": "source waftools/openocd_bb2_ftdi.cfg",
+    "bb2-legacy": "source waftools/openocd_bb2_ft2232.cfg",
+    "jtag_ftdi": "source waftools/openocd_jtag_ftdi.cfg",
+    "swd_ftdi": "source waftools/openocd_swd_ftdi.cfg",
+    "swd_jlink": "source waftools/openocd_swd_jlink.cfg",
+    "swd_tigard": "source waftools/openocd_swd_tigard.cfg",
+    "swd_stlink": "source [find interface/stlink-v2.cfg]",
+    "swd_cmsisdap": "source waftools/openocd_swd_cmsisdap.cfg",
+}
 
 OPENOCD_TELNET_PORT = 4444
 
@@ -33,7 +33,9 @@ def daemon(ctx, cfg_file, use_swd=False):
         yield
     else:
         expect_str = "Listening on port"
-        proc = pexpect.spawn('openocd', ['-f', cfg_file], encoding='utf-8', logfile=sys.stdout)
+        proc = pexpect.spawn(
+            "openocd", ["-f", cfg_file], encoding="utf-8", logfile=sys.stdout
+        )
         # Wait for OpenOCD to connect to the board:
         result = proc.expect([expect_str, pexpect.TIMEOUT], timeout=10)
         if result == 0:
@@ -45,7 +47,7 @@ def daemon(ctx, cfg_file, use_swd=False):
 
 def _has_openocd(ctx):
     try:
-        ctx.cmd_and_log(['which', 'openocd'], quiet=waflib.Context.BOTH)
+        ctx.cmd_and_log(["which", "openocd"], quiet=waflib.Context.BOTH)
         return True
     except:
         return False
@@ -54,9 +56,10 @@ def _has_openocd(ctx):
 def _is_openocd_running():
     import socket
     import errno
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        s.bind(('', OPENOCD_TELNET_PORT))
+        s.bind(("", OPENOCD_TELNET_PORT))
         s.close()
     except socket.error as e:
         s.close()
@@ -64,11 +67,20 @@ def _is_openocd_running():
     return False
 
 
-def run_command(ctx, cmd, ignore_fail=False, expect=[], timeout=40,
-                shutdown=True, enforce_expect=False, cfg_file="openocd.cfg"):
+def run_command(
+    ctx,
+    cmd,
+    ignore_fail=False,
+    expect=[],
+    timeout=40,
+    shutdown=True,
+    enforce_expect=False,
+    cfg_file="openocd.cfg",
+):
     if _is_openocd_running():
         import telnetlib
-        t = telnetlib.Telnet('', OPENOCD_TELNET_PORT)
+
+        t = telnetlib.Telnet("", OPENOCD_TELNET_PORT)
         Logs.info("Sending commands to OpenOCD daemon:\n%s\n..." % cmd)
         t.write("%s\n" % cmd)
         for regex in expect:
@@ -78,19 +90,26 @@ def run_command(ctx, cmd, ignore_fail=False, expect=[], timeout=40,
                 ctx.fatal("OpenOCD expectation '%s' unfulfilled" % regex)
         t.close()
     else:
-        fail_handling = ' || true ' if ignore_fail else ''
+        fail_handling = " || true " if ignore_fail else ""
         if shutdown:
             # append 'shutdown' to make openocd exit
-            if getattr(ctx, 'env', None) and ctx.env.MICRO_FAMILY == 'NRF52840':
+            if getattr(ctx, "env", None) and ctx.env.MICRO_FAMILY == "NRF52840":
                 # on nRF5, shut down the tracing modules in DEMCR, take the
                 # core out of debug in DHCSR, and then shut down the AP to
                 # get us back down to baseline power.  note that 'env' might
                 # be none here if this is not a BuildContext
-                cmd = "%s ; mww 0xe000edfc 0x0; mww 0xe000edf0 0xa05f0000 ; nrf52.dap dpreg 4 0 ; shutdown" % cmd
+                cmd = (
+                    "%s ; mww 0xe000edfc 0x0; mww 0xe000edf0 0xa05f0000 ; nrf52.dap dpreg 4 0 ; shutdown"
+                    % cmd
+                )
             else:
                 cmd = "%s ; shutdown" % cmd
-        ctx.exec_command('openocd -f %s -c "%s" 2>&1 | tee .waf.openocd.log %s' %
-                         (cfg_file, cmd, fail_handling), stdout=None, stderr=None)
+        ctx.exec_command(
+            'openocd -f %s -c "%s" 2>&1 | tee .waf.openocd.log %s'
+            % (cfg_file, cmd, fail_handling),
+            stdout=None,
+            stderr=None,
+        )
         if enforce_expect:
             # Read the result
             with open(".waf.openocd.log", "r") as result_file:
@@ -103,15 +122,16 @@ def run_command(ctx, cmd, ignore_fail=False, expect=[], timeout=40,
                     match_start = expect_match.end()
 
 
-
 def _get_supported_interfaces(ctx):
     if not _has_openocd(ctx):
         return []
     # Ugh, openocd exits with status 1 when not specifying an interface...
     try:
-        ctx.cmd_and_log(['openocd', '-c', '"interface_list"'],
-                        quiet=waflib.Context.BOTH,
-                        output=waflib.Context.STDERR)
+        ctx.cmd_and_log(
+            ["openocd", "-c", '"interface_list"'],
+            quiet=waflib.Context.BOTH,
+            output=waflib.Context.STDERR,
+        )
     except Exception as e:
         # Ugh, openocd prints the output to stderr...
         out = e.stderr
@@ -125,33 +145,37 @@ def _get_supported_interfaces(ctx):
 
 
 def get_flavor(conf):
-    """ Returns a if OpenOCD is Pebble flavor """
+    """Returns a if OpenOCD is Pebble flavor"""
 
     try:
-        version_string = conf.cmd_and_log(['openocd', '--version'],
-                                          quiet=waflib.Context.BOTH,
-                                          output=waflib.Context.STDERR)
+        version_string = conf.cmd_and_log(
+            ["openocd", "--version"],
+            quiet=waflib.Context.BOTH,
+            output=waflib.Context.STDERR,
+        )
         version_string = version_string.splitlines()[0]
-        return 'pebble' in version_string
+        return "pebble" in version_string
     except Exception:
         Logs.error("Couldn't parse openocd version")
         return (False, False)
 
 
 def _get_reset_conf(conf, should_connect_assert_srst):
-    if conf.env.MICRO_FAMILY.startswith('STM32'):
-        options = ['trst_and_srst', 'srst_nogate']
+    if conf.env.MICRO_FAMILY.startswith("STM32"):
+        options = ["trst_and_srst", "srst_nogate"]
         if should_connect_assert_srst:
-            options.append('connect_assert_srst')
-        return ' '.join(options)
-    elif conf.env.MICRO_FAMILY.startswith('NRF52'):
-        return 'none'
+            options.append("connect_assert_srst")
+        return " ".join(options)
+    elif conf.env.MICRO_FAMILY.startswith("NRF52"):
+        return "none"
     else:
-        raise Exception("Unsupported microcontroller family: %s" % conf.env.MICRO_FAMILY)
+        raise Exception(
+            "Unsupported microcontroller family: %s" % conf.env.MICRO_FAMILY
+        )
 
 
 def _get_adapter_speed(conf):
-    if conf.env.OPENOCD_JTAG == 'swd_cmsisdap' and conf.env.MICRO_FAMILY == 'NRF52840':
+    if conf.env.OPENOCD_JTAG == "swd_cmsisdap" and conf.env.MICRO_FAMILY == "NRF52840":
         return 10000
 
     return None
@@ -159,20 +183,20 @@ def _get_adapter_speed(conf):
 
 def write_cfg(conf):
     jtag = conf.env.OPENOCD_JTAG
-    if jtag == 'bb2':
-        if 'ftdi' not in _get_supported_interfaces(conf):
-            jtag = 'bb2-legacy'
-            Logs.warn('OpenOCD is not compiled with --enable-ftdi, falling'
-                      ' back to legacy ft2232 driver.')
+    if jtag == "bb2":
+        if "ftdi" not in _get_supported_interfaces(conf):
+            jtag = "bb2-legacy"
+            Logs.warn(
+                "OpenOCD is not compiled with --enable-ftdi, falling"
+                " back to legacy ft2232 driver."
+            )
 
-    if conf.env.MICRO_FAMILY == 'STM32F2':
-        target = 'stm32f2x.cfg'
-    elif conf.env.MICRO_FAMILY == 'STM32F4':
-        target = 'stm32f4x.cfg'
-    elif conf.env.MICRO_FAMILY == 'STM32F7':
-        target = 'stm32f7x.cfg'
-    elif conf.env.MICRO_FAMILY == 'NRF52840':
-        target = 'nrf52.cfg'
+    if conf.env.MICRO_FAMILY == "STM32F2":
+        target = "stm32f2x.cfg"
+    elif conf.env.MICRO_FAMILY == "STM32F4":
+        target = "stm32f4x.cfg"
+    elif conf.env.MICRO_FAMILY == "NRF52840":
+        target = "nrf52.cfg"
 
     is_pebble_flavor = get_flavor(conf)
 
@@ -191,9 +215,9 @@ def write_cfg(conf):
         jtag=JTAG_OPTIONS[jtag],
         target=target,
         reset_config=reset_config,
-        adapter_speed_cfg=adapter_speed_cfg
+        adapter_speed_cfg=adapter_speed_cfg,
     )
-    waflib.Utils.writef('./openocd.cfg', openocd_cfg)
+    waflib.Utils.writef("./openocd.cfg", openocd_cfg)
 
 
 OPENOCD_CFG_TEMPLATE = string.Template("""

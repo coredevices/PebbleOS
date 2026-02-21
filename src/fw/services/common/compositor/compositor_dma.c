@@ -29,7 +29,7 @@ void compositor_dma_run(void *to, const void *from, uint32_t size) {
   dma_request_start_direct(COMPOSITOR_DMA, to, from, size, prv_dma_complete_handler, NULL);
 
   if (xSemaphoreTake(s_dma_in_progress, 10) != pdTRUE) {
-    PBL_LOG_SYNC(LOG_LEVEL_ERROR, "DMA Compositing never completed.");
+    PBL_LOG_SYNC_ERR("DMA Compositing never completed.");
     // TODO: This should never be hit, but do we want to queue up a new render
     // event so that there is no visible breakage in low-fps situations?
     dma_request_stop(COMPOSITOR_DMA);

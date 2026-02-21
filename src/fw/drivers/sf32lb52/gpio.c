@@ -84,5 +84,9 @@ bool gpio_input_read(const InputConfig *input_cfg) {
 }
 
 void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
+  if (!pin_config->active_high) {
+    asserted = !asserted;
+  }
+
   HAL_GPIO_WritePin(pin_config->gpio, pin_config->gpio_pin, asserted);
 }

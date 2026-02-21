@@ -57,9 +57,7 @@ typedef struct {
 
   EventServiceInfo event_service_state;
 
-#if !defined(PLATFORM_TINTIN)
   BLEAppState ble_app_state;
-#endif
 
   AccelServiceState accel_state;
 
@@ -82,10 +80,6 @@ typedef struct {
 #endif
 
   LocaleInfo locale_info;
-
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  SmartstrapConnectionState smartstrap_state;
-#endif
 
   ContentIndicatorsBuffer content_indicators_buffer;
 
@@ -198,9 +192,7 @@ NOINLINE void app_state_init(void) {
                         &s_app_state_ptr->framebuffer, init_mode);
 
 
-#if !defined(PLATFORM_TINTIN)
   ble_init_app_state();
-#endif
 
   accel_service_state_init(app_state_get_accel_state());
 
@@ -232,9 +224,6 @@ NOINLINE void app_state_init(void) {
 
 NOINLINE void app_state_deinit(void) {
   animation_private_state_deinit(&s_app_state_ptr->animation_state);
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  app_smartstrap_cleanup();
-#endif
 #if CAPABILITY_HAS_HEALTH_TRACKING
   health_service_state_deinit(app_state_get_health_service_state());
 #endif
@@ -274,11 +263,9 @@ AppMessageCtx *app_state_get_app_message_ctx(void) {
   return &s_app_state_ptr->app_message_ctx;
 }
 
-#if !defined(PLATFORM_TINTIN)
 BLEAppState* app_state_get_ble_app_state(void) {
   return &s_app_state_ptr->ble_app_state;
 }
-#endif
 
 ClickManager* app_state_get_click_manager() {
   return &s_app_state_ptr->click_manager;
@@ -342,12 +329,6 @@ HealthServiceState *app_state_get_health_service_state(void) {
 }
 #endif
 
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-SmartstrapConnectionState *app_state_get_smartstrap_state(void) {
-  return &s_app_state_ptr->smartstrap_state;
-}
-#endif
-
 ContentIndicatorsBuffer *app_state_get_content_indicators_buffer(void) {
   return &s_app_state_ptr->content_indicators_buffer;
 }
@@ -391,11 +372,6 @@ EventServiceInfo *app_state_get_wakeup_event_info(void) {
 }
 
 GBitmap* app_state_legacy2_get_2bit_framebuffer(void) {
-#ifdef PLATFORM_TINTIN
-  // Tintin platforms have a native framebuffer type of 2bit, they shouldn't be calling this.
-  WTF;
-#endif
-
   PBL_ASSERTN(s_app_state_ptr->legacy2_framebuffer);
   return s_app_state_ptr->legacy2_framebuffer;
 }

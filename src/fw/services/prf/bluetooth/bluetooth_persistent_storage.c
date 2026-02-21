@@ -86,7 +86,7 @@ BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *new_pai
       // Treat re-pairing an existing device as an "update" instead of deletion+addition,
       // because there is only one bonding ID that gets re-used, a deletion would otherwise cause a
       // disconnection to happen. See PBL-24737.
-      PBL_LOG(LOG_LEVEL_INFO, "Re-pairing previously paired LE device");
+      PBL_LOG_INFO("Re-pairing previously paired LE device");
       is_updating_existing = true;
     } else {
       // Since we only have one slot, this means we are about to delete what was
@@ -108,7 +108,7 @@ bool bt_persistent_storage_update_ble_device_name(BTBondingID bonding, const cha
   bool requires_address_pinning = false;
   uint8_t flags = 0;
   if (!shared_prf_storage_get_ble_pairing_data(&data, NULL, &requires_address_pinning, &flags)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Tried to store device name, but pairing no longer around.");
+    PBL_LOG_ERR("Tried to store device name, but pairing no longer around.");
     return false;
   }
   // In PRF, only the gateway should get paired, so default to "true":

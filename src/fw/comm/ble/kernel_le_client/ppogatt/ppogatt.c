@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "ppogatt.h"
 #include "ppogatt_internal.h"
 
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gatt_client_operations.h"
 #include "comm/bt_lock.h"
+
+#include <bluetooth/gatt.h>
 
 #include "kernel/pbl_malloc.h"
 #include "services/common/analytics/analytics.h"
@@ -153,6 +153,12 @@ static void prv_start_reset(PPoGATTClient *client);
 //! @note The caller MUST own bt_lock()
 extern GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic characteristic);
 
+//! Gets the att_handle and connection for a characteristic.
+//! @return The att_handle or 0 if not found. Connection is returned via out parameter.
+//! @note The caller MUST own bt_lock()
+extern uint16_t gatt_client_characteristic_get_handle_and_connection(
+    BLECharacteristic characteristic_ref, GAPLEConnection **connection_out);
+
 
 // -------------------------------------------------------------------------------------------------
 void ppogatt_reset_disconnect_counter(void) {
@@ -276,12 +282,12 @@ static void prv_reset_ack_timeout(PPoGATTClient *client) {
 
 static void prv_roll_back(PPoGATTClient *client, uint32_t sn) {
   if (++client->out.timeouts_counter >= PPOGATT_TIMEOUT_COUNT_MAX) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Resetting because max timeouts reached...");
+    PBL_LOG_ERR("Resetting because max timeouts reached...");
     prv_start_reset(client);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_WARNING, "Rolling back from (%u, %u) to %"PRIu32,
+  PBL_LOG_WRN("Rolling back from (%u, %u) to %"PRIu32,
           client->out.next_data_sn, client->out.next_expected_ack_sn, sn);
 
   // Go back and send again:
@@ -311,7 +317,7 @@ static void prv_check_timeouts(PPoGATTClient *client) {
       client->state == StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset) {
     if (prv_has_timeout(client)) {
       // We've timed out waiting for a reset to be completed, start over:
-      PBL_LOG(LOG_LEVEL_INFO, "Timed out waiting for Reset Complete, Resetting again...");
+      PBL_LOG_INFO("Timed out waiting for Reset Complete, Resetting again...");
       prv_start_reset(client);
     }
     return;
@@ -364,8 +370,11 @@ static PPoGATTClient *prv_create_client(TimerID timer) {
 static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, DeleteReason reason) {
   // Unsubscribe from Data characteristic:
   if (client->state > StateDisconnectedSubscribingData && !is_disconnected) {
-    gatt_client_subscriptions_subscribe(client->characteristics.data,
-                                        BLESubscriptionNone, GAPLEClientKernel);
+    BLECharacteristic data_char = client->characteristics.data;
+    // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
+    bt_unlock();
+    gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNone, GAPLEClientKernel);
+    bt_lock();
   }
 
   if (client->state == StateConnectedOpen) {
@@ -509,11 +518,11 @@ static void prv_start_reset(PPoGATTClient *client) {
       // If we have disconnected too many times, do not disconnect and leave the client in a
       // "stalled" state, so that we have the option to "unstall" by sending a remote reset
       client->state = StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled;
-      PBL_LOG(LOG_LEVEL_WARNING, "Reset request stalled, not disconnecting");
+      PBL_LOG_WRN("Reset request stalled, not disconnecting");
       return;
     }
 
-    PBL_LOG(LOG_LEVEL_ERROR, "Disconnecting because max resets reached...");
+    PBL_LOG_ERR("Disconnecting because max resets reached...");
 
     // Record the time of this disconnect request
     analytics_event_PPoGATT_disconnect(rtc_get_time(), false);
@@ -536,13 +545,13 @@ static void prv_start_reset(PPoGATTClient *client) {
 static void prv_handle_reset_request(PPoGATTClient *client) {
   if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset) {
     // Already in self-initated reset procedure, client should ignore the request from the server.
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring reset request because local client already requested.");
+    PBL_LOG_INFO("Ignoring reset request because local client already requested.");
     return;
   }
   if (client->state == StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset) {
     // Already in remote-initiated reset procedure, server retrying?
     // See https://pebbletechnology.atlassian.net/browse/PBL-12424
-    PBL_LOG(LOG_LEVEL_INFO, "Ignoring reset request because remote server already requested.");
+    PBL_LOG_INFO("Ignoring reset request because remote server already requested.");
     return;
   }
   prv_enter_awaiting_reset_complete(client, false /* self_initiated */);
@@ -580,14 +589,14 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
 
   if (prv_client_supports_enhanced_throughput_features(client)) {
     if (payload_length < sizeof(PPoGATTResetCompleteClientIDPayloadV1)) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Unexpected PPoGatt Reset Complete Payload Size: %"PRIu16,
+      PBL_LOG_WRN("Unexpected PPoGatt Reset Complete Payload Size: %"PRIu16,
               payload_length);
       // Be defensive, and use the original window size
       client->out.tx_window_size = client->out.rx_window_size = PPOGATT_V0_WINDOW_SIZE;
     } else {
       PPoGATTResetCompleteClientIDPayloadV1 *payload =
           (PPoGATTResetCompleteClientIDPayloadV1 *)&packet->payload[0];
-      PBL_LOG(LOG_LEVEL_DEBUG, "PPoGATT Remote RxWindow: %d TxWindow %d",
+      PBL_LOG_DBG("PPoGATT Remote RxWindow: %d TxWindow %d",
               payload->ppogatt_max_rx_window, payload->ppogatt_max_tx_window);
 
       client->out.tx_window_size = MIN(client->out.tx_window_size, payload->ppogatt_max_rx_window);
@@ -595,7 +604,7 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
     }
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Hurray! PPoGATT Session is opened (Vers: %d TXW: %d RXW: %d)!",
+  PBL_LOG_DBG("Hurray! PPoGATT Session is opened (Vers: %d TXW: %d RXW: %d)!",
           client->version, client->out.tx_window_size, client->out.rx_window_size);
 }
 
@@ -634,9 +643,9 @@ static void prv_handle_ack(PPoGATTClient *client, uint32_t sn) {
     // Don't roll back directly to avoid creating an Sorcerer's Apprentice bug
     // https://en.wikipedia.org/wiki/Sorcerer%27s_Apprentice_Syndrome
     // We'll rely on the ACK timeout for the next data packet to fire and roll back.
-    PBL_LOG(LOG_LEVEL_WARNING, "Received retransmitted Ack for sn:%"PRIu32". Ignoring it.", sn);
+    PBL_LOG_WRN("Received retransmitted Ack for sn:%"PRIu32". Ignoring it.", sn);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Ack'd packet out of range %"PRIu32", [%u-%u].",
+    PBL_LOG_ERR("Ack'd packet out of range %"PRIu32", [%u-%u].",
             sn, client->out.next_expected_ack_sn, client->out.next_data_sn);
     prv_start_reset(client);
   }
@@ -655,9 +664,9 @@ static void prv_handle_data(PPoGATTClient *client,
 
     client->in.next_expected_data_sn = prv_next_sn(client->in.next_expected_data_sn);
     comm_session_receive_router_write(client->session, packet->payload, payload_length);
-//    PBL_LOG(LOG_LEVEL_DEBUG, "Got PP data (sn=%u, %u bytes)", packet->sn, payload_length);
+//    PBL_LOG_DBG("Got PP data (sn=%u, %u bytes)", packet->sn, payload_length);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "packet->sn != next_expected_data_sn (%u != %u)",
+    PBL_LOG_DBG("packet->sn != next_expected_data_sn (%u != %u)",
             packet->sn, client->in.next_expected_data_sn);
     // Rely on the server retransmitting on Ack time-out
   }
@@ -667,20 +676,20 @@ static void prv_handle_data(PPoGATTClient *client,
 
 static void prv_handle_data_notification(PPoGATTClient *client,
                                          const uint8_t *value, uint16_t value_length) {
-//  PBL_LOG(LOG_LEVEL_DEBUG, "IN:");
+//  PBL_LOG_DBG("IN:");
 //  PBL_HEXDUMP(LOG_LEVEL_DEBUG, value, value_length);
 
   if (UNLIKELY(value_length == 0)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Zero length packet");
+    PBL_LOG_ERR("Zero length packet");
     return;
   }
   const PPoGATTPacket *packet = (const PPoGATTPacket *) value;
   if (UNLIKELY(packet->type >= PPoGATTPacketTypeInvalidRangeStart)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid type %u", packet->type);
+    PBL_LOG_ERR("Invalid type %u", packet->type);
     return;
   }
   if (UNLIKELY(packet->type) == PPoGATTPacketTypeResetRequest) {
-    PBL_LOG(LOG_LEVEL_INFO, "Got reset request!");
+    PBL_LOG_INFO("Got reset request!");
     prv_handle_reset_request(client);
     return;
   }
@@ -690,7 +699,7 @@ static void prv_handle_data_notification(PPoGATTClient *client,
     } else if (LIKELY(packet->type == PPoGATTPacketTypeAck)) {
       prv_handle_ack(client, packet->sn);
     } else if (UNLIKELY(packet->type == PPoGATTPacketTypeResetComplete)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Got reset complete while open!?");
+      PBL_LOG_ERR("Got reset complete while open!?");
     }
   } else if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset ||
              client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled ||
@@ -698,28 +707,40 @@ static void prv_handle_data_notification(PPoGATTClient *client,
     if (LIKELY(packet->type == PPoGATTPacketTypeResetComplete)) {
       prv_handle_reset_complete(client, packet, value_length - sizeof(PPoGATTPacket));
     } else {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Resetting, ignoring data/ack packets (%u)", packet->type);
+      PBL_LOG_DBG("Resetting, ignoring data/ack packets (%u)", packet->type);
     }
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Ignoring all packets in state %u", client->state);
+    PBL_LOG_DBG("Ignoring all packets in state %u", client->state);
   }
 }
 
 // -------------------------------------------------------------------------------------------------
 
 static void prv_retry_meta_read(PPoGATTClient *client) {
+  bt_lock_assert_held(true);
+
   if (!client || client->state != StateDisconnectedAwaitingMetaRetry) {
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "Retrying PPoGATT meta read (attempt %u/%u)",
+  PBL_LOG_INFO("Retrying PPoGATT meta read (attempt %u/%u)",
           client->meta_read_retries + 1, PPOGATT_META_READ_RETRY_COUNT_MAX);
 
   client->state = StateDisconnectedReadingMeta;
   BLECharacteristic meta = client->characteristics.meta;
-  if (gatt_client_op_read(meta, GAPLEClientKernel) != BTErrnoOK) {
+
+  // Release bt_lock before calling gatt_client_op_read to avoid recursive lock deadlock.
+  // gatt_client_op_read manages bt_lock internally.
+  bt_unlock();
+
+  BTErrno result = gatt_client_op_read(meta, GAPLEClientKernel);
+
+  // Re-acquire bt_lock before accessing client state again
+  bt_lock();
+
+  if (result != BTErrnoOK) {
     // Read failed to start, delete the client
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initiate meta read retry");
+    PBL_LOG_ERR("Failed to initiate meta read retry");
     prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataReadFailure);
   }
 }
@@ -727,9 +748,7 @@ static void prv_retry_meta_read(PPoGATTClient *client) {
 static void prv_meta_read_retry_timer_cb(void *data) {
   PPoGATTClient *client = (PPoGATTClient *)data;
   bt_lock();
-  {
-    prv_retry_meta_read(client);
-  }
+  prv_retry_meta_read(client);
   bt_unlock();
 }
 
@@ -751,12 +770,12 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
     goto handle_error;
   }
   if (uuid_is_invalid(&meta->app_uuid)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid UUID");
+    PBL_LOG_ERR("Invalid UUID");
     goto handle_error;
   }
 #if RECOVERY_FW
   if (!uuid_is_system(&meta->app_uuid)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Found PPoGATT server from non-Pebble app, not connecting in PRF..");
+    PBL_LOG_ERR("Found PPoGATT server from non-Pebble app, not connecting in PRF..");
     goto handle_error;
   }
 #endif
@@ -769,29 +788,50 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
   if (/*meta->ppogatt_max_version >= 0x01 &&*/ value_length >= sizeof(PPoGATTMetaV1)) {
     const PPoGATTMetaV1 *meta_v1 = (const PPoGATTMetaV1 *)value;
     if (meta_v1->pp_session_type >= PPoGATTSessionTypeCount) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid session type %u", meta_v1->pp_session_type);
+      PBL_LOG_ERR("Invalid session type %u", meta_v1->pp_session_type);
       goto handle_error;
     }
     session_type = meta_v1->pp_session_type;
   }
 
-  BTErrno e = gatt_client_subscriptions_subscribe(client->characteristics.data,
+  // Save data needed across the bt_lock release
+  BLECharacteristic data_char = client->characteristics.data;
+  Uuid app_uuid = meta->app_uuid;
+
+  // Release bt_lock before calling gatt_client_subscriptions_subscribe, which
+  // eventually calls into NimBLE. Holding bt_lock when calling into NimBLE
+  // creates a lock ordering deadlock with ble_hs_mutex (NimBLE store callbacks
+  // acquire bt_lock while holding ble_hs_mutex).
+  // See prv_retry_meta_read for the same pattern.
+  bt_unlock();
+
+  BTErrno e = gatt_client_subscriptions_subscribe(data_char,
                                                   BLESubscriptionNotifications,
                                                   GAPLEClientKernel);
+
+  // Re-acquire bt_lock before accessing client state
+  bt_lock();
+
+  // Re-validate client pointer after releasing lock, as it may have been removed
+  bool is_data_unused;
+  client = prv_find_client_with_characteristic(data_char, &is_data_unused);
+  if (!client) {
+    return;
+  }
+
   if (e == BTErrnoOK) {
     // Delete any existing client with this UUID, last one wins.
     // iOS behavior is a bit strange when it comes to service persistence. When an app crashes or
     // gets killed through Xcode, the service records persist. When the app is relaunched again,
     // a new service will get added again. The old one remains when it was killed through Xcode
     // before. The old one seems to go away *after* the new one gets added in the crash scenario.
-    PPoGATTClient *existing_client = prv_find_client_with_uuid(&meta->app_uuid);
+    PPoGATTClient *existing_client = prv_find_client_with_uuid(&app_uuid);
     if (existing_client) {
-      PBL_LOG(LOG_LEVEL_ERROR,
-              "Found PPoGATT server with same UUID. Keeping only the last one.");
+      PBL_LOG_ERR("Found PPoGATT server with same UUID. Keeping only the last one.");
       prv_delete_client(existing_client, true /* is_disconnected */, DeleteReason_DuplicateServer);
     }
     client->state = StateDisconnectedSubscribingData;
-    client->app_uuid = meta->app_uuid;
+    client->app_uuid = app_uuid;
     // Reset retry counter on success
     client->meta_read_retries = 0;
 
@@ -807,19 +847,19 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
 handle_retriable_error:
   // GATT read failed - schedule a retry if we haven't exceeded the max retry count
   if (++client->meta_read_retries < PPOGATT_META_READ_RETRY_COUNT_MAX) {
-    PBL_LOG(LOG_LEVEL_WARNING, "PPoGATT meta read failed (err=%x), scheduling retry %u/%u",
+    PBL_LOG_WRN("PPoGATT meta read failed (err=%x), scheduling retry %u/%u",
             error, client->meta_read_retries, PPOGATT_META_READ_RETRY_COUNT_MAX);
     client->state = StateDisconnectedAwaitingMetaRetry;
     new_timer_start(client->rx_ack_timer, PPOGATT_META_READ_RETRY_DELAY_MS,
                     prv_meta_read_retry_timer_cb, client, 0);
     return;
   }
-  PBL_LOG(LOG_LEVEL_ERROR, "PPoGATT meta read failed after %u retries",
+  PBL_LOG_ERR("PPoGATT meta read failed after %u retries",
           PPOGATT_META_READ_RETRY_COUNT_MAX);
   // Fall through to handle_error
 
 handle_error:
-  PBL_LOG(LOG_LEVEL_ERROR, "Failed handling PPoGATT meta: len=%u ver=%x err=%x",
+  PBL_LOG_ERR("Failed handling PPoGATT meta: len=%u ver=%x err=%x",
           (unsigned int) value_length, value_length ? value[0] : ~0, error);
   prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataInvalid);
 }
@@ -876,7 +916,7 @@ void ppogatt_handle_service_removed(
       BLECharacteristic char1 = num_characteristics > 0 ? characteristics[0] : 0;
       BLECharacteristic char2 = num_characteristics > 1 ? characteristics[1] : 0;
 
-      PBL_LOG(LOG_LEVEL_WARNING, "No ppog client removed? 0x%x 0x%x vs 0x%x 0x%x",
+      PBL_LOG_WRN("No ppog client removed? 0x%x 0x%x vs 0x%x 0x%x",
               (int)meta, (int)data, (int)char1, (int)char2);
     }
   }
@@ -915,7 +955,17 @@ void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
     BLECharacteristic meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.data = characteristics[PPoGATTCharacteristicData];
-    if (gatt_client_op_read(meta, GAPLEClientKernel) != BTErrnoOK) {
+
+    // Release bt_lock before calling gatt_client_op_read to avoid recursive lock deadlock.
+    // gatt_client_op_read manages bt_lock internally.
+    bt_unlock();
+
+    BTErrno result = gatt_client_op_read(meta, GAPLEClientKernel);
+
+    // Re-acquire bt_lock before accessing client state again
+    bt_lock();
+
+    if (result != BTErrnoOK) {
       // Read failed, probably disconnected or insufficient resources
       prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataReadFailure);
     }
@@ -941,14 +991,17 @@ void ppogatt_handle_subscribe(BLECharacteristic characteristic,
     const bool is_subscribed = (subscription_type != BLESubscriptionNone);
     PPoGATTClient *client = prv_find_client_with_characteristic(characteristic, NULL);
     if (!client && is_subscribed) {
-      PBL_LOG(LOG_LEVEL_ERROR, "PPoGATT Client could be found, unsubscribing");
-      // Attempt to unsubscribe to avoid wasting bandwidth:
+      PBL_LOG_ERR("PPoGATT Client could be found, unsubscribing");
+      // Attempt to unsubscribe to avoid wasting bandwidth.
+      // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
+      bt_unlock();
       gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone, GAPLEClientKernel);
+      bt_lock();
       goto unlock;
     }
     PBL_ASSERTN(client->state == StateDisconnectedSubscribingData);
     if (error) {
-      PBL_LOG(LOG_LEVEL_ERROR, "PPoGATT Client failed to subscribe to Data");
+      PBL_LOG_ERR("PPoGATT Client failed to subscribe to Data");
       prv_delete_client(client, false /* is_disconnected */, DeleteReason_SubscribeFailure);
       goto unlock;
     }
@@ -971,7 +1024,7 @@ void ppogatt_handle_read_or_notification(BLECharacteristic characteristic, const
     bool is_data = false;
     PPoGATTClient *client = prv_find_client_with_characteristic(characteristic, &is_data);
     if (!client) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got notification/read for unknown client");
+      PBL_LOG_DBG("Got notification/read for unknown client");
       goto unlock;
     }
     if (is_data) {
@@ -1178,19 +1231,66 @@ static void prv_send_next_packets(PPoGATTClient *client) {
   uint8_t loop_count = 0;
   while ((packet = prv_prepare_next_packet(client, &heap_packet, &payload_size))) {
     ++loop_count;
-    const BTErrno e = gatt_client_op_write_without_response(client->characteristics.data,
-                                                            (const uint8_t *) packet,
+
+    // Get the connection and handle while holding bt_lock
+    GAPLEConnection *connection;
+    uint16_t att_handle;
+    bool lock_was_held = bt_lock_is_held();
+
+    if (lock_was_held) {
+      att_handle = gatt_client_characteristic_get_handle_and_connection(
+          client->characteristics.data, &connection);
+      if (!att_handle) {
+        // Invalid characteristic, bail out
+        break;
+      }
+      // Release bt_lock BEFORE calling into NimBLE to avoid deadlock.
+      // See comment in gatt_client_op_write_without_response.
+      bt_unlock();
+    } else {
+      // If bt_lock wasn't held, we can call gatt_client_op_write_without_response directly
+      // (it will manage the lock itself)
+      const BTErrno e = gatt_client_op_write_without_response(client->characteristics.data,
+                                                              (const uint8_t *) packet,
+                                                              sizeof(PPoGATTPacket) + payload_size,
+                                                              GAPLEClientKernel);
+      if (e == BTErrnoNotEnoughResources) {
+        // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
+        break;
+      } else if (e != BTErrnoOK) {
+        // Most likely the LE connection got busted, don't think retrying will help.
+        PBL_LOG_ERR("Write failed %i", e);
+        break;
+      } else {
+        // Packet successfully queued
+        prv_finalize_queued_packet(client, payload_size);
+      }
+
+      const uint8_t max_loop_count = 10;
+      if (loop_count > max_loop_count) {
+        prv_send_next_packets_async(client);
+        break;
+      }
+      continue;
+    }
+
+    // Call into NimBLE without holding bt_lock
+    const BTErrno e = bt_driver_gatt_write_without_response(connection, (const uint8_t *) packet,
                                                             sizeof(PPoGATTPacket) + payload_size,
-                                                            GAPLEClientKernel);
+                                                            att_handle);
+
+    // Re-acquire bt_lock before accessing client state
+    bt_lock();
+
     if (e == BTErrnoNotEnoughResources) {
       // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
       break;
     } else if (e != BTErrnoOK) {
       // Most likely the LE connection got busted, don't think retrying will help.
-      PBL_LOG(LOG_LEVEL_ERROR, "Write failed %i", e);
+      PBL_LOG_ERR("Write failed %i", e);
       break;
     } else {
-//     PBL_LOG(LOG_LEVEL_DEBUG, "OUT:");
+//     PBL_LOG_DBG("OUT:");
 //     PBL_HEXDUMP(LOG_LEVEL_DEBUG, (const uint8_t *) packet, sizeof(PPoGATTPacket) + payload_size);
 
       // Packet successfully queued

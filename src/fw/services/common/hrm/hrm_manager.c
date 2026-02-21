@@ -30,7 +30,7 @@
 #if HRM_DEBUG
 #define HRM_LOG(fmt, ...) \
   do { \
-    PBL_LOG(LOG_LEVEL_DEBUG, fmt, ## __VA_ARGS__); \
+    PBL_LOG_DBG(fmt, ## __VA_ARGS__); \
   } while (0)
 #define HRM_HEXDUMP(data, length) \
   do { \
@@ -295,22 +295,45 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       turn_sensor_on = (remaining_ms <= 0);
     }
 
-    if (turn_sensor_on && !hrm_is_enabled(HRM)) {
+    // Check if we've permanently failed to enable HRM
+    bool hrm_permanently_failed = (s_manager_state.enable_failure_count >= HRM_MAX_ENABLE_FAILURES);
+
+    if (turn_sensor_on && !hrm_is_enabled(HRM) && !hrm_permanently_failed) {
       // Turn on the sensor now
       HRM_LOG("Turning on HR sensor");
 
+      // Only subscribe if not already subscribed (prevents leak if hrm_is_enabled is out of sync)
+      if (s_manager_state.accel_state) {
+        PBL_LOG_WRN("HRM: accel already subscribed, unsubscribing first");
+        sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
+        s_manager_state.accel_state = NULL;
+      }
+
       s_manager_state.accel_state = sys_accel_manager_data_subscribe(
           ACCEL_SAMPLING_25HZ, prv_handle_accel_data, NULL, PebbleTask_NewTimers);
-      accel_manager_set_jitterfree_sampling_rate(s_manager_state.accel_state,
-                                                 HRM_MANAGER_ACCEL_RATE_MILLIHZ);
+          
       sys_accel_manager_set_sample_buffer(
           s_manager_state.accel_state, s_manager_state.accel_manager_buffer,
           HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE);
 
-      hrm_enable(HRM);
-
-      // Don't need the re-enable timer to fire
-      new_timer_stop(s_manager_state.update_enable_timer_id);
+      if (!hrm_enable(HRM)) {
+        // HRM failed to enable, clean up the accel subscription
+        s_manager_state.enable_failure_count++;
+        if (s_manager_state.enable_failure_count >= HRM_MAX_ENABLE_FAILURES) {
+          PBL_LOG_ERR("HRM failed to enable %d times, giving up until reboot",
+                  HRM_MAX_ENABLE_FAILURES);
+        } else {
+          PBL_LOG_ERR("HRM failed to enable (attempt %d/%d)",
+                  s_manager_state.enable_failure_count, HRM_MAX_ENABLE_FAILURES);
+        }
+        sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
+        s_manager_state.accel_state = NULL;
+      } else {
+        // Success - reset failure counter
+        s_manager_state.enable_failure_count = 0;
+        // Don't need the re-enable timer to fire
+        new_timer_stop(s_manager_state.update_enable_timer_id);
+      }
 
     } else if (!turn_sensor_on && hrm_is_enabled(HRM)) {
       // Turn off the sensor now
@@ -345,6 +368,19 @@ static void prv_system_task_hrm_handler(void *context) {
   time_t utc_now = rtc_get_time();
 
   mutex_lock_recursive(s_manager_state.lock);
+
+  // Check if there's data available in the circular buffer before attempting to read
+  const uint16_t available_bytes =
+      circular_buffer_get_read_space_remaining(&s_manager_state.system_task_event_buffer);
+  if (available_bytes < sizeof(PebbleHRMEvent)) {
+    // No event available to read - this can happen if system task callbacks are queued
+    // without corresponding events, or during concurrent access.
+    PBL_LOG_WRN("HRM: system task handler called with no event in buffer "
+            "(available=%u, needed=%u)", available_bytes, sizeof(PebbleHRMEvent));
+    mutex_unlock_recursive(s_manager_state.lock);
+    return;
+  }
+
   PebbleHRMEvent event;
   prv_read_event_from_buffer_and_consume(&s_manager_state.system_task_event_buffer,  &event);
 
@@ -580,7 +616,7 @@ void hrm_manager_new_data_cb(const HRMData *data) {
 
     // If the prior subscription expired, remove it now
     if (expired_state) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Subscription %"PRIu32" expired", expired_state->session_ref);
+      PBL_LOG_DBG("Subscription %"PRIu32" expired", expired_state->session_ref);
       prv_remove_and_free_subscription(expired_state);
     }
   }
@@ -646,7 +682,7 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
     HRMSubscriberState * state = prv_get_subscriber_state_from_app_id(current_task, app_id);
     if (state != NULL) {
       session_ref = state->session_ref;
-      PBL_LOG(LOG_LEVEL_DEBUG, "Removing existing subscription for this app");
+      PBL_LOG_DBG("Removing existing subscription for this app");
       prv_remove_and_free_subscription(state);
     }
   }
@@ -828,7 +864,7 @@ void hrm_manager_process_cleanup(PebbleTask task, AppInstallId app_id) {
   }
 
   // Set an expiration time now
-  PBL_LOG(LOG_LEVEL_DEBUG, "Setting expiration time on session for app_id %d", (int)app_id);
+  PBL_LOG_DBG("Setting expiration time on session for app_id %d", (int)app_id);
   sys_hrm_manager_set_update_interval(state->session_ref, state->update_interval_s,
                                       HRM_MANAGER_APP_EXIT_EXPIRATION_SEC);
 }

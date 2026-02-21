@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system_apps/timeline/pin_window.h"
+#include "apps/system/timeline/pin_window.h"
 #include "services/normal/timeline/weather_layout.h"
 
 #include "clar.h"
@@ -56,6 +56,7 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 /////////////////////
 
 #include "stubs_action_menu.h"
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
 #include "stubs_animation_timing.h"
 #include "stubs_app_install_manager.h"
@@ -86,6 +87,7 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 #include "stubs_timeline_item.h"
 #include "stubs_timeline_layer.h"
 #include "stubs_timeline_peek.h"
+#include "stubs_vibes.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 

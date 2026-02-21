@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "kernel/core_dump.h"
 #include "kernel/logging_private.h"
 #include "process_management/process_manager.h"
 #include "process_management/app_manager.h"
@@ -15,6 +16,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
+#include "system/reboot_reason.h"
 #include "syscall/syscall.h"
 
 #include <util/heap.h>
@@ -99,8 +101,8 @@ static void prv_log_app_lr_and_pc_system_task(void *data) {
 
   APP_LOG(APP_LOG_LEVEL_ERROR, "%s fault! %s PC: %s LR: %s", process_string, buffer, pc_str, lr_str);
 
-  PBL_LOG(LOG_LEVEL_ERROR, "%s fault! %s", process_string, buffer);
-  PBL_LOG(LOG_LEVEL_ERROR, " --> PC: %s LR: %s", pc_str, lr_str);
+  PBL_LOG_ERR("%s fault! %s", process_string, buffer);
+  PBL_LOG_ERR(" --> PC: %s LR: %s", pc_str, lr_str);
 
   analytics_event_app_crash(&crash_info->app_uuid,
                             (crash_info->pc_known) ? crash_info->pc : 0,
@@ -140,6 +142,9 @@ static void setup_log_app_crash_info(CrashInfo crash_info) {
 static NORETURN kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
   RebootReason reason = { .code = reason_code, .extra = { .value = lr } };
   reboot_reason_set(&reason);
+  if (reason_code == RebootReasonCode_Assert) {
+    core_dump_reset(false /* is_forced */);
+  }
   reset_due_to_software_failure();
 }
 
@@ -257,7 +262,7 @@ static void prv_return_to_landing_zone(uintptr_t stacked_pc, uintptr_t stacked_l
 
 static void attempt_handle_stack_overflow(unsigned int* stacked_args) {
   PebbleTask task = pebble_task_get_current();
-  PBL_LOG_SYNC(LOG_LEVEL_ERROR, "Stack overflow [task: %s]", pebble_task_get_name(task));
+  PBL_LOG_SYNC_ERR("Stack overflow [task: %s]", pebble_task_get_name(task));
 
   if (mcu_state_is_thread_privileged()) {
     // We're hosed! We can't recover so just reboot everything.
@@ -390,8 +395,30 @@ void BusFault_Handler(void) {
         "b %0\n" :: "i" (busfault_handler_c));
 }
 
-static void usagefault_handler_c(unsigned int* stacked_args) {
+// STKOF = bit 4 of UFSR = bit 20 of CFSR (ARMv8-M only, reads as 0 on CM3/CM4)
+#ifndef SCB_CFSR_STKOF_Msk
+#define SCB_CFSR_STKOF_Msk (1UL << 20)
+#endif
+
+static void usagefault_handler_c(unsigned int* stacked_args, unsigned int lr) {
   PBL_LOG_FROM_FAULT_HANDLER("\r\n\r\n[UsageFault_Handler!]");
+
+  const uint32_t cfsr = SCB->CFSR;
+
+  // STKOF: stack limit violation (PSPLIM/MSPLIM)
+  if (cfsr & SCB_CFSR_STKOF_Msk) {
+    SCB->CFSR = SCB_CFSR_STKOF_Msk;  // Clear by writing 1
+
+    stacked_args += 256;  // Back up SP to give landing zone room (see mem_manage_handler_c)
+    if (lr & 0x04) {
+      __set_PSP((uint32_t)stacked_args);
+    } else {
+      __set_MSP((uint32_t)stacked_args);
+    }
+    attempt_handle_stack_overflow(stacked_args);
+    return;
+  }
+
   prv_save_debug_registers(stacked_args);
 
   char buffer[80];
@@ -407,6 +434,7 @@ void UsageFault_Handler(void) {
         "ite eq\n"
         "mrseq r0, msp\n"
         "mrsne r0, psp\n"
+        "mov r1, lr\n"
         "b %0\n" :: "i" (usagefault_handler_c));
 }
 

@@ -4,12 +4,13 @@
 #include "quick_launch.h"
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
+#include "shell/normal/prefs_sync.h"
 #include "shell/prefs.h"
 #include "shell/prefs_private.h"
 #include "shell/system_theme.h"
 
-#include "apps/system_apps/timeline/timeline.h"
-#include "apps/system_apps/toggle/quiet_time.h"
+#include "apps/system/timeline/timeline.h"
+#include "apps/system/toggle/quiet_time.h"
 #include "board/board.h"
 #include "applib/graphics/gtypes.h"
 #include "drivers/ambient_light.h"
@@ -22,12 +23,14 @@
 #include "services/common/accel_manager.h"
 #include "services/common/hrm/hrm_manager.h"
 #include "services/common/i18n/i18n.h"
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 #include "services/normal/orientation_manager.h"
 #endif
 #include "services/normal/bluetooth/ble_hrm.h"
 #include "services/normal/settings/settings_file.h"
 #include "services/normal/timeline/peek.h"
+#include "kernel/events.h"
+#include "kernel/event_loop.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/size.h"
@@ -77,12 +80,9 @@ static bool s_backlight_dynamic_intensity_enabled = true;
 
 #define PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD "dynBacklightMinThreshold"
 static uint32_t s_dynamic_backlight_min_threshold = 0; // default set from board config in shell_prefs_init()
-
-#define PREF_KEY_DYNAMIC_BACKLIGHT_MAX_THRESHOLD "dynBacklightMaxThreshold"
-static uint32_t s_dynamic_backlight_max_threshold = 0; // default set from board config in shell_prefs_init()
 #endif
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 #define PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED "displayOrientationLeftHanded"
 static bool s_display_orientation_left = false;
 #endif 
@@ -215,11 +215,11 @@ static uint16_t s_timeline_peek_before_time_m =
 #endif
 
 #define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if CAPABILITY_HAS_APP_SCALING
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
 #endif
 static bool s_coredump_on_request_enabled = false;
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if CAPABILITY_HAS_APP_SCALING
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
@@ -230,6 +230,11 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 static GColor s_settings_menu_highlight_color = GColorCobaltBlue;
 static GColor s_apps_menu_highlight_color = GColorVividCerulean;
 
+#define PREF_KEY_MENU_SCROLL_WRAP_AROUND "menuScrollWrapAround"
+#define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR "menuScrollVibeBehavior"
+
+static bool s_menu_scroll_wrap_around = false;
+static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -321,20 +326,6 @@ static bool prv_set_s_dynamic_backlight_min_threshold(uint32_t *threshold) {
   s_dynamic_backlight_min_threshold = *threshold;
   return true;
 }
-
-static bool prv_set_s_dynamic_backlight_max_threshold(uint32_t *threshold) {
-  // Validate and constrain the threshold
-  if (*threshold > AMBIENT_LIGHT_LEVEL_MAX) {
-    s_dynamic_backlight_max_threshold = AMBIENT_LIGHT_LEVEL_MAX;
-    return false;
-  }
-  if (*threshold < 1) {
-    s_dynamic_backlight_max_threshold = 1;
-    return false;
-  }
-  s_dynamic_backlight_max_threshold = *threshold;
-  return true;
-}
 #endif
 
 static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
@@ -370,7 +361,7 @@ static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
   return true;
 }
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 static bool prv_set_s_display_orientation_left(bool *left) {
   s_display_orientation_left = *left;
   orientation_handle_prefs_changed();
@@ -582,9 +573,16 @@ static uint8_t prv_set_s_timeline_settings_opened(uint8_t *version) {
   return true;
 }
 
+// Callback to run timeline_peek_set_enabled on KernelMain task.
+// This is needed because animation scheduling requires running on KernelMain or App task,
+// but settings sync runs from a different task context.
+static void prv_timeline_peek_set_enabled_callback(void *data) {
+  timeline_peek_set_enabled(s_timeline_peek_enabled);
+}
+
 static bool prv_set_s_timeline_peek_enabled(bool *enabled) {
   s_timeline_peek_enabled = *enabled;
-  timeline_peek_set_enabled(*enabled);
+  launcher_task_add_callback(prv_timeline_peek_set_enabled_callback, NULL);
   return true;
 }
 
@@ -600,7 +598,7 @@ static bool prv_set_s_coredump_on_request_enabled(bool *enabled) {
   return true;
 }
 
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if CAPABILITY_HAS_APP_SCALING
 static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
   if (*mode >= LegacyAppRenderModeCount) {
     return false;  // Invalid value
@@ -610,8 +608,44 @@ static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
 }
 #endif
 
+#if PBL_COLOR
+// Valid theme colors (unified scheme)
+// Must match s_color_definitions in settings_themes.h
+static bool prv_is_valid_theme_color(GColor color) {
+  // GColorClear means "use default"
+  if (color.argb == GColorClear.argb) {
+    return true;
+  }
+  // Valid colors from settings_themes.h
+  static const uint8_t valid_colors[] = {
+    GColorSunsetOrangeARGB8,        // Red
+    GColorChromeYellowARGB8,        // Orange
+    GColorYellowARGB8,              // Yellow
+    GColorGreenARGB8,               // Green
+    GColorCyanARGB8,                // Cyan
+    GColorVividCeruleanARGB8,       // Light Blue
+    GColorVeryLightBlueARGB8,       // Royal Blue
+    GColorLavenderIndigoARGB8,      // Purple
+    GColorMagentaARGB8,             // Magenta
+    GColorBrilliantRoseARGB8,       // Pink
+  };
+  for (size_t i = 0; i < ARRAY_LENGTH(valid_colors); i++) {
+    if (color.argb == valid_colors[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
 static bool prv_set_s_settings_menu_highlight_color(GColor *color) {
 #if PBL_COLOR
+  if (!prv_is_valid_theme_color(*color)) {
+    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
+            color->argb);
+    s_settings_menu_highlight_color = GColorVividCerulean;
+    return false;  // Reject invalid value
+  }
   s_settings_menu_highlight_color = *color;
 #else
   s_settings_menu_highlight_color = GColorBlack;
@@ -621,10 +655,30 @@ static bool prv_set_s_settings_menu_highlight_color(GColor *color) {
 
 static bool prv_set_s_apps_menu_highlight_color(GColor *color) {
 #if PBL_COLOR
+  if (!prv_is_valid_theme_color(*color)) {
+    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
+            color->argb);
+    s_apps_menu_highlight_color = GColorVividCerulean;
+    return false;  // Reject invalid value
+  }
   s_apps_menu_highlight_color = *color;
 #else
   s_apps_menu_highlight_color = GColorBlack;
 #endif
+  return true;
+}
+
+static bool prv_set_s_menu_scroll_wrap_around(bool *enabled) {
+  s_menu_scroll_wrap_around = *enabled;
+  return true;
+}
+
+static bool prv_set_s_menu_scroll_vibe_behavior(MenuScrollVibeBehavior *new_behavior) {
+  if (*new_behavior >= MenuScrollVibeBehaviorsCount) {
+    s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
+    return false;
+  }
+  s_menu_scroll_vibe_behavior = *new_behavior;
   return true;
 }
   
@@ -696,7 +750,6 @@ void shell_prefs_init(void) {
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
-  s_dynamic_backlight_max_threshold = BOARD_CONFIG.dynamic_backlight_max_threshold;
 #endif
   // Use board-specific default motion sensitivity if provided (non-zero)
   if (BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity != 0) {
@@ -726,6 +779,9 @@ void shell_prefs_init(void) {
   
   // Update the ambient light driver with the loaded threshold value
   ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
+  
+  // Initialize prefs sync (must be after prefs are loaded)
+  prefs_sync_init();
 
   // Update accelerometer sensitivity with the loaded value
 #if CAPABILITY_HAS_ACCEL_SENSITIVITY
@@ -744,7 +800,7 @@ static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len
       return entry;
     }
   }
-  PBL_LOG(LOG_LEVEL_WARNING, "Unrecognized key: %s", (const char *)key);
+  PBL_LOG_WRN("Unrecognized key: %s", (const char *)key);
   return NULL;
 }
 
@@ -753,7 +809,7 @@ static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len
 // Set the backing store for a pref
 static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value, int value_len) {
   if (value_len != entry->value_len) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Attempt to set %s using invalid value_len of %"PRIu32"",
+    PBL_LOG_WRN("Attempt to set %s using invalid value_len of %"PRIu32"",
             entry->key, (uint32_t)value_len);
     return false;
   }
@@ -766,7 +822,7 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
       // Keys in the backing store include the null terminator, so we add 1 to key_len
       rv = settings_file_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
       if (rv != S_SUCCESS) {
-        PBL_LOG(LOG_LEVEL_WARNING, "Failed to set pref '%s' (%"PRIi32")", entry->key, (int32_t)rv);
+        PBL_LOG_WRN("Failed to set pref '%s' (%"PRIi32")", entry->key, (int32_t)rv);
       }
       settings_file_close(&file);
     }
@@ -833,7 +889,7 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   }
 
   if (value_len != entry->value_len) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Attempt to read %s using invalid value_len of %"PRIu32"",
+    PBL_LOG_WRN("Attempt to read %s using invalid value_len of %"PRIu32"",
             entry->key, (uint32_t)value_len);
     return false;
   }
@@ -843,14 +899,25 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   {
     SettingsFile file = {{0}};
     if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
-      // Keys in the backing store include the null terminator, so we add 1 to key_len
-      success = (settings_file_get(&file, entry->key, key_len + 1, value, value_len)
+      // Keys in the backing store include the null terminator
+      // Use strlen(entry->key) + 1 to match how it was written, since key_len from
+      // BlobDB may or may not include the null terminator
+      success = (settings_file_get(&file, entry->key, strlen(entry->key) + 1, value, value_len)
                                    == S_SUCCESS);
       settings_file_close(&file);
     }
   }
   mutex_unlock(s_mutex);
   return success;
+}
+
+
+void prefs_private_lock(void) {
+  mutex_lock(s_mutex);
+}
+
+void prefs_private_unlock(void) {
+  mutex_unlock(s_mutex);
 }
 
 
@@ -878,6 +945,16 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
       // so we should write the new value to the backing
       prefs_private_write_backing(event->key, event->key_len, entry->value, entry->value_len);
     }
+
+    // Notify UI that a preference changed so it can refresh
+    PebbleEvent pref_event = {
+      .type = PEBBLE_PREF_CHANGE_EVENT,
+      .pref_change = {
+        .key = entry->key,
+        .key_len = strlen(entry->key) + 1,
+      },
+    };
+    event_put(&pref_event);
   }
 }
 
@@ -1040,34 +1117,14 @@ void backlight_set_dynamic_min_threshold(uint32_t threshold) {
   if (threshold < 0) {
     threshold = 0;
   }
-  // Ensure min threshold is less than max threshold
-  if (threshold >= s_dynamic_backlight_max_threshold && s_dynamic_backlight_max_threshold > 0) {
-    threshold = s_dynamic_backlight_max_threshold - 1;
-  }
+  // Note: Min threshold should be much smaller than ambient_light_dark_threshold (Zone 2 upper bound)
+  // Typically min_threshold is 0-5, while ambient_light_dark_threshold is ~150
   prv_pref_set(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD, &threshold, sizeof(threshold));
 }
 
-uint32_t backlight_get_dynamic_max_threshold(void) {
-  return s_dynamic_backlight_max_threshold;
-}
-
-void backlight_set_dynamic_max_threshold(uint32_t threshold) {
-  // Validate threshold is within acceptable range
-  if (threshold > AMBIENT_LIGHT_LEVEL_MAX) {
-    threshold = AMBIENT_LIGHT_LEVEL_MAX;
-  }
-  if (threshold < 1) {
-    threshold = 1;
-  }
-  // Ensure max threshold is greater than min threshold
-  if (threshold <= s_dynamic_backlight_min_threshold) {
-    threshold = s_dynamic_backlight_min_threshold + 1;
-  }
-  prv_pref_set(PREF_KEY_DYNAMIC_BACKLIGHT_MAX_THRESHOLD, &threshold, sizeof(threshold));
-}
 #endif
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 bool display_orientation_is_left(void) {
   return s_display_orientation_left;
 }
@@ -1337,7 +1394,7 @@ AppInstallId watchface_get_default_install_id(void) {
 
 void system_theme_set_content_size(PreferredContentSize content_size) {
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Ignoring attempt to set content size to invalid size %d",
+    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d",
             content_size);
     return;
   }
@@ -1580,7 +1637,7 @@ void shell_prefs_set_coredump_on_request(bool enabled) {
   prv_pref_set(PREF_KEY_COREDUMP_ON_REQUEST, &enabled, sizeof(enabled));
 }
 
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if CAPABILITY_HAS_APP_SCALING
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
   return (LegacyAppRenderMode)s_legacy_app_render_mode;
 }
@@ -1613,4 +1670,20 @@ GColor shell_prefs_get_apps_menu_highlight_color(void){
 
 void shell_prefs_set_apps_menu_highlight_color(GColor color) {
   prv_pref_set(PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR, &color, sizeof(GColor));
+}
+
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return s_menu_scroll_wrap_around;
+}
+
+void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
+  prv_pref_set(PREF_KEY_MENU_SCROLL_WRAP_AROUND, &enable, sizeof(bool));
+}
+
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return s_menu_scroll_vibe_behavior;
+}
+
+void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
+  prv_pref_set(PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR, &behavior, sizeof(MenuScrollVibeBehavior));
 }

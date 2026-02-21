@@ -1162,8 +1162,9 @@
 #define MYNEWT_VAL_BLE_TRANSPORT_EVT_COUNT (4)
 #endif
 
+/* Overridden by targets/sf32lb52 (defined by @apache-mynewt-nimble/nimble/transport) */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_EVT_DISCARDABLE_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_EVT_DISCARDABLE_COUNT (16)
+#define MYNEWT_VAL_BLE_TRANSPORT_EVT_DISCARDABLE_COUNT (32)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_EVT_SIZE

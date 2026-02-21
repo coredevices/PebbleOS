@@ -262,7 +262,7 @@ void i2c_release(I2CSlavePort *slave) {
   mutex_lock(slave->bus->state->bus_mutex);
 
   if (slave->bus->state->user_count == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Attempted release of disabled bus %s", slave->bus->name);
+    PBL_LOG_ERR("Attempted release of disabled bus %s", slave->bus->name);
     mutex_unlock(slave->bus->state->bus_mutex);
     return;
   }
@@ -282,13 +282,13 @@ void i2c_reset(I2CSlavePort *slave) {
   mutex_lock(slave->bus->state->bus_mutex);
 
   if (slave->bus->state->user_count == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Attempted reset of disabled bus %s when still in use by "
+    PBL_LOG_ERR("Attempted reset of disabled bus %s when still in use by "
         "another bus", slave->bus->name);
     mutex_unlock(slave->bus->state->bus_mutex);
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_WARNING, "Resetting I2C bus %s", slave->bus->name);
+  PBL_LOG_WRN("Resetting I2C bus %s", slave->bus->name);
 
   // decrement user count for reset so that if this user is the only user, the
   // bus will be powered down during the reset
@@ -314,7 +314,7 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
   mutex_lock(slave->bus->state->bus_mutex);
 
   if (slave->bus->state->user_count == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Attempted bitbang recovery on disabled bus %s", slave->bus->name);
+    PBL_LOG_ERR("Attempted bitbang recovery on disabled bus %s", slave->bus->name);
     mutex_unlock(slave->bus->state->bus_mutex);
     return false;
   }
@@ -346,9 +346,9 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
     }
   }
   if (recovered) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "I2C Bus %s recovered", slave->bus->name);
+    PBL_LOG_DBG("I2C Bus %s recovered", slave->bus->name);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "I2C Bus %s still hung after bitbang reset", slave->bus->name);
+    PBL_LOG_ERR("I2C Bus %s still hung after bitbang reset", slave->bus->name);
   }
 
   prv_bus_pins_cfg_i2c(slave->bus);
@@ -360,7 +360,7 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
 }
 #else
 bool i2c_bitbang_recovery(I2CSlavePort *slave) {
-  PBL_LOG(LOG_LEVEL_ERROR, "I2C bitbang recovery not supported on this platform");
+  PBL_LOG_ERR("I2C bitbang recovery not supported on this platform");
   return false;
 }
 #endif
@@ -374,7 +374,7 @@ static bool prv_wait_for_not_busy(I2CBus *bus) {
   if (i2c_hal_is_busy(bus)) {
     psleep(WAIT_DELAY);
     if (i2c_hal_is_busy(bus)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Timed out waiting for bus %s to become non-busy", bus->name);
+      PBL_LOG_ERR("Timed out waiting for bus %s to become non-busy", bus->name);
       return false;
     }
   }
@@ -384,20 +384,14 @@ static bool prv_wait_for_not_busy(I2CBus *bus) {
 
 //! Set up and start a transfer to a bus, wait for it to finish and clean up after the transfer
 //! has completed
-static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t device_address,
-                            uint8_t register_address, uint32_t size, uint8_t *data,
-                            TransferType type) {
-  // Take control of bus; only one task may use bus at a time
-  mutex_lock(bus->state->bus_mutex);
-
+//! Caller must hold bus mutex
+static bool prv_do_transfer_locked(I2CBus *bus, TransferDirection direction, uint16_t device_address,
+                                   uint8_t register_address, uint32_t size, uint8_t *data,
+                                   TransferType type) {
   if (bus->state->user_count == 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Attempted access to disabled bus %s", bus->name);
-    mutex_unlock(bus->state->bus_mutex);
+    PBL_LOG_ERR("Attempted access to disabled bus %s", bus->name);
     return false;
   }
-
-  // Disable stop mode while the I2C transfer is in progress - stop mode disables I2C peripheral
-  stop_mode_disable(bus->stop_mode_inhibitor);
 
   // If bus is busy (it shouldn't be as this function waits for the bus to report a non-idle state
   // before exiting) reset the bus and wait for it to become not-busy
@@ -407,9 +401,7 @@ static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t d
 
     if (!prv_wait_for_not_busy(bus)) {
       // Bus did not recover after reset
-      stop_mode_enable(bus->stop_mode_inhibitor);
-      mutex_unlock(bus->state->bus_mutex);
-      PBL_LOG(LOG_LEVEL_ERROR, "I2C bus did not recover after reset (%s)", bus->name);
+      PBL_LOG_ERR("I2C bus did not recover after reset (%s)", bus->name);
       prv_analytics_track_i2c_error();
       return false;
     }
@@ -450,7 +442,7 @@ static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t d
         }
 
         if (bus->state->transfer_event == I2CTransferEvent_Error) {
-          PBL_LOG(LOG_LEVEL_ERROR, "I2C Error on bus %s", bus->name);
+          PBL_LOG_ERR("I2C Error on bus %s", bus->name);
         }
         complete = true;
         result = (bus->state->transfer_event == I2CTransferEvent_TransferComplete);
@@ -470,7 +462,7 @@ static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t d
         // Too many NACKs received, abort transfer
         i2c_hal_abort_transfer(bus);
         complete = true;
-        PBL_LOG(LOG_LEVEL_ERROR, "I2C Error: too many NACKs received on bus %s", bus->name);
+        PBL_LOG_ERR("I2C Error: too many NACKs received on bus %s", bus->name);
         break;
       }
 
@@ -478,7 +470,7 @@ static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t d
       // Timeout, abort transfer
       i2c_hal_abort_transfer(bus);
       complete = true;
-      PBL_LOG(LOG_LEVEL_ERROR, "Transfer timed out on bus %s", bus->name);
+      PBL_LOG_ERR("Transfer timed out on bus %s", bus->name);
       break;
     }
   } while (!complete);
@@ -494,13 +486,25 @@ static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t d
     prv_bus_reset(bus);
   }
 
-  stop_mode_enable(bus->stop_mode_inhibitor);
-
-  mutex_unlock(bus->state->bus_mutex);
-
   if (!result) {
     prv_analytics_track_i2c_error();
   }
+  return result;
+}
+
+//! Wrapper that manages locking for prv_do_transfer_locked
+static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t device_address,
+                            uint8_t register_address, uint32_t size, uint8_t *data,
+                            TransferType type) {
+  mutex_lock(bus->state->bus_mutex);
+  stop_mode_disable(bus->stop_mode_inhibitor);
+
+  bool result = prv_do_transfer_locked(bus, direction, device_address, register_address, size,
+                                       data, type);
+
+  stop_mode_enable(bus->stop_mode_inhibitor);
+  mutex_unlock(bus->state->bus_mutex);
+
   return result;
 }
 
@@ -517,7 +521,7 @@ bool i2c_read_register_block(I2CSlavePort *slave,  uint8_t register_address_star
                                 result_buffer, SendRegisterAddress);
 
   if (!result) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Read failed on bus %s", slave->bus->name);
+    PBL_LOG_ERR("Read failed on bus %s", slave->bus->name);
   }
 
   return result;
@@ -531,7 +535,7 @@ bool i2c_read_block(I2CSlavePort *slave, uint32_t read_size, uint8_t* result_buf
                             NoRegisterAddress);
 
   if (!result) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Block read failed on bus %s", slave->bus->name);
+    PBL_LOG_ERR("Block read failed on bus %s", slave->bus->name);
   }
 
   return result;
@@ -550,7 +554,7 @@ bool i2c_write_register_block(I2CSlavePort *slave, uint8_t register_address_star
                                 write_size, (uint8_t*)buffer, SendRegisterAddress);
 
   if (!result) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Write failed on bus %s", slave->bus->name);
+    PBL_LOG_ERR("Write failed on bus %s", slave->bus->name);
   }
 
   return result;
@@ -565,7 +569,39 @@ bool i2c_write_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* bu
                                 NoRegisterAddress);
 
   if (!result) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Block write failed on bus %s", slave->bus->name);
+    PBL_LOG_ERR("Block write failed on bus %s", slave->bus->name);
+  }
+
+  return result;
+}
+
+bool i2c_write_read_block(I2CSlavePort *slave, uint32_t write_size, const uint8_t* write_buffer,
+                          uint32_t read_size, uint8_t* read_buffer) {
+  PBL_ASSERTN(slave);
+  PBL_ASSERTN(write_buffer);
+  PBL_ASSERTN(read_buffer);
+
+  I2CBus *bus = slave->bus;
+
+  // Take control of bus; only one task may use bus at a time
+  mutex_lock(bus->state->bus_mutex);
+  stop_mode_disable(bus->stop_mode_inhibitor);
+
+  // Perform write transfer
+  bool result = prv_do_transfer_locked(bus, Write, slave->address, 0, write_size,
+                                       (uint8_t*)write_buffer, NoRegisterAddress);
+
+  // Only proceed with read if write succeeded
+  if (result) {
+    result = prv_do_transfer_locked(bus, Read, slave->address, 0, read_size,
+                                    read_buffer, NoRegisterAddress);
+  }
+
+  stop_mode_enable(bus->stop_mode_inhibitor);
+  mutex_unlock(bus->state->bus_mutex);
+
+  if (!result) {
+    PBL_LOG_ERR("Write-read block failed on bus %s", bus->name);
   }
 
   return result;
@@ -590,17 +626,3 @@ void analytics_external_collect_i2c_stats(void) {
   s_max_transfer_duration_ticks = 0;
 }
 
-/*------------------------COMMAND FUNCTIONS--------------------------*/
-// FIXME: Move to board-specific implementations
-// https://pebbletechnology.atlassian.net/browse/PBL-32232
-#if PLATFORM_TINTIN
-void command_power_2v5(char *arg) {
-  // Intentionally ignore the s_running_count and make it so!
-  // This is intended for low level electrical test only
-  if (!strcmp("on", arg)) {
-    prv_bus_rail_power_up(I2C_MFI->bus);
-  } else {
-    prv_bus_rail_power_down(I2C_MFI->bus);
-  }
-}
-#endif

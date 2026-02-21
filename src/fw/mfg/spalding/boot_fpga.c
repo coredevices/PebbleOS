@@ -28,7 +28,7 @@ bool mfg_info_is_boot_fpga_bitstream_written(void) {
   if (header.fpga_len != expected_fpga_header.fpga_len ||
       header.fpga_len_complemented != expected_fpga_header.fpga_len_complemented) {
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "Boot FPGA length invalid, needs a rewrite");
+    PBL_LOG_DBG("Boot FPGA length invalid, needs a rewrite");
 
     // The length doesn't even match, we definitely need to update.
     return false;
@@ -40,7 +40,7 @@ bool mfg_info_is_boot_fpga_bitstream_written(void) {
   uint32_t stored_crc = flash_crc32(
       BOOT_FPGA_FLASH_ADDR + sizeof(BootFPGAHeader), sizeof(s_boot_fpga));
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Comparing boot FPGA CRCs, expected 0x%"PRIx32" found 0x%"PRIx32,
+  PBL_LOG_DBG("Comparing boot FPGA CRCs, expected 0x%"PRIx32" found 0x%"PRIx32,
           expected_crc, stored_crc);
 
   return expected_crc == stored_crc;

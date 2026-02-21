@@ -14,8 +14,6 @@
 
 #include <stdint.h>
 
-#define BATT_LOG_COLOR LOG_COLOR_YELLOW
-
 // State machine stuff
 
 typedef void (*Action)(void);
@@ -74,15 +72,19 @@ static void prv_enter_lpm(void) {
     low_power_enter();
   }
 #endif
-  PBL_LOG_COLOR(LOG_LEVEL_INFO, BATT_LOG_COLOR, "Battery low: enter low power mode");
+  PBL_LOG_INFO("Battery low: enter low power mode");
 }
 
 static void prv_resume_normal_operation(void) {
   low_power_exit();
-  PBL_LOG_COLOR(LOG_LEVEL_INFO, BATT_LOG_COLOR, "Battery good: resume normal operation");
+  PBL_LOG_INFO("Battery good: resume normal operation");
 }
 
 static void prv_exit_critical(void) {
+  // Cancel the standby timer so we don't enter standby if we're no longer critical
+  // (e.g. charger was plugged in before the timer expired).
+  new_timer_stop(s_standby_timer_id);
+
   // Checking the state here is a bit of a hack because the state machine does not have proper
   // transition actions, only entry/exit actions.
   // We check that the state is PowerStateGood because the state machine does not transition through
@@ -112,7 +114,7 @@ static void prv_standby_timer_callback(void* data) {
 }
 
 static void prv_begin_standby_timer(void) {
-  PBL_LOG_COLOR(LOG_LEVEL_INFO, BATT_LOG_COLOR, "Battery critical: begin standby timer");
+  PBL_LOG_INFO("Battery critical: begin standby timer");
   // If the watch was already running, give them 30s, otherwise just 2s.
   uint32_t standby_timeout = (s_first_run) ? 2000: 30000;
   new_timer_start(s_standby_timer_id, standby_timeout,
@@ -120,7 +122,7 @@ static void prv_begin_standby_timer(void) {
 }
 
 static void system_task_handle_battery_critical(void* data) {
-  PBL_LOG_COLOR(LOG_LEVEL_INFO, BATT_LOG_COLOR, "Battery critical: go to standby mode");
+  PBL_LOG_INFO("Battery critical: go to standby mode");
   if (low_power_is_active()) {
     low_power_standby();
   } else {
@@ -156,8 +158,6 @@ static void prv_log_battery_state(PreciseBatteryChargeState state) {
       (s_prev_batt_state.all != new_batt_state.all) ||
       s_first_run) {
         s_prev_batt_state.all = new_batt_state.all;
-        PBL_LOG_COLOR(LOG_LEVEL_INFO, BATT_LOG_COLOR, "Percent: %d Charging: %d Plugged: %d",
-                percent, state.is_charging, state.is_plugged);
       }
 }
 

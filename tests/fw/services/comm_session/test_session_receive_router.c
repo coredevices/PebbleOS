@@ -184,7 +184,7 @@ static void prv_system_test_receiver_write(Receiver *receiver,
   memcpy(s_write_buffer + s_write_length, data, length);
   s_write_length += length;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Wrote %zu bytes", length);
+  PBL_LOG_DBG("Wrote %zu bytes", length);
 }
 
 static void prv_system_test_receiver_finish(Receiver *receiver) {

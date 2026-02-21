@@ -4,13 +4,12 @@
 #include "shell/system_app_state_machine.h"
 
 #include "apps/system_app_ids.h"
-#include "apps/core_apps/panic_window_app.h"
-#include "apps/prf_apps/mfg_menu_app.h"
-#include "apps/prf_apps/recovery_first_use_app/recovery_first_use_app.h"
+#include "apps/core/panic_window.h"
+#include "apps/prf/mfg_menu.h"
+#include "apps/prf/recovery_first_use/recovery_first_use.h"
 #include "kernel/panic.h"
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "process_management/app_manager.h"
-#include "services/prf/accessory/accessory_imaging.h"
 
 const PebbleProcessMd* system_app_state_machine_system_start(void) {
   if (launcher_panic_get_current_error() != 0) {
@@ -18,7 +17,6 @@ const PebbleProcessMd* system_app_state_machine_system_start(void) {
   }
 
 #ifdef MANUFACTURING_FW
-  accessory_imaging_enable();
   mfg_enter_mfg_mode();
   return mfg_menu_app_get_info();
 #endif

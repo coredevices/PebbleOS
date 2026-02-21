@@ -4,7 +4,6 @@
 #include "drivers/mic.h"
 
 #include "board/board.h"
-#include "drivers/accessory.h"
 #include "drivers/dma.h"
 #include "drivers/gpio.h"
 #include "drivers/periph_config.h"
@@ -14,11 +13,6 @@
 #include "kernel/util/stop.h"
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "services/common/system_task.h"
-#if RECOVERY_FW
-#include "services/prf/accessory/accessory_manager.h"
-#else
-#include "services/normal/accessory/accessory_manager.h"
-#endif
 #include "system/logging.h"
 #include "os/mutex.h"
 #include "system/passert.h"
@@ -279,7 +273,7 @@ void mic_stop(MicDevice *this) {
   stop_mode_enable(InhibitorMic);
   s_running = false;
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Stopped microphone, dropped samples: %d", s_overflow_cnt);
+  PBL_LOG_DBG("Stopped microphone, dropped samples: %d", s_overflow_cnt);
 
 unlock:
   mutex_unlock_recursive(s_mic_mutex);
@@ -409,4 +403,11 @@ static bool prv_dma_handler(DMARequest *request, void *context, bool is_complete
 
   PROFILER_NODE_STOP(mic);
   return main_switch_context || system_task_switch_context;
+}
+
+void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
+                       char *volume_str) {
+}
+
+void command_mic_read(void) {
 }

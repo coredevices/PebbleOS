@@ -29,33 +29,21 @@ import waftools.xcode_pebble
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
 
 RUNNERS = {
-    'bb2': ['openocd'],
-    'ev2_4': ['openocd'],
-    'v1_5': ['openocd'],
-    'v2_0': ['openocd'],
     'snowy_bb2': ['openocd'],
-    'snowy_evt2': ['openocd'],
     'snowy_dvt': ['openocd'],
-    'snowy_s3': ['openocd'],
     'snowy_emery': ['openocd'],
+    'spalding_gabbro': ['openocd'],
     'spalding_bb2': ['openocd'],
-    'spalding_evt': ['openocd'],
     'spalding': ['openocd'],
-    'silk_evt': ['openocd'],
-    'silk_bb': ['openocd'],
     'silk': ['openocd'],
     'silk_bb2': ['openocd'],
     'silk_flint': ['openocd'],
-    'cutts_bb': ['openocd'],
-    'robert_bb': ['openocd'],
-    'robert_bb2': ['openocd'],
-    'robert_evt': ['openocd'],
-    'robert_es': ['openocd'],
     'asterix': ['openocd', 'nrfutil'],
     'obelix_dvt': ['sftool'],
     'obelix_pvt': ['sftool'],
     'obelix_bb2': ['sftool'],
     'getafix_evt': ['sftool'],
+    'getafix_dvt': ['sftool'],
 }
 
 def truncate(msg):
@@ -94,36 +82,24 @@ def options(opt):
     opt.recurse('sdk')
     opt.recurse('third_party')
     opt.add_option('--board', action='store',
-                   choices=[ 'bb2',
-                             'ev2_4',
-                             'v1_5',
-                             'v2_0',
-                             'snowy_bb2',  # alias for snowy_dvt, but with #define IS_BIGBOARD
-                             'snowy_evt2',
+                   choices=[ 'snowy_bb2',  # alias for snowy_dvt, but with #define IS_BIGBOARD
                              'snowy_dvt',
-                             'snowy_s3',
                              'snowy_emery',  # snowy with robert screen and resources
+                             'spalding_gabbro',  # spalding with getafix screen and resources
                              'spalding_bb2',  # snowy_bb2 with s4 display
-                             'spalding_evt',
                              'spalding',
-                             'silk_evt',
-                             'silk_bb',
                              'silk',
                              'silk_bb2',
                              'silk_flint', # "silk", but it has the flint apis for the emulator
-                             'cutts_bb',
-                             'robert_bb',
-                             'robert_bb2',
-                             'robert_evt',
-                             'robert_es',
                              'asterix',
                              'obelix_dvt',
                              'obelix_pvt',
                              'obelix_bb2',
                              'getafix_evt',
+                             'getafix_dvt',
                             ],
                    help='Which board we are targeting '
-                        'bb2, snowy_dvt, spalding, silk...')
+                        'snowy_dvt, spalding, silk...')
     opt.add_option('--runner', default=None, choices=['openocd', 'sftool', 'nrfutil'],
                    help='Which runner we are using')
     opt.add_option('--openocd-jtag', action='store', default=None, dest='openocd_jtag',  # default is bb2 (below)
@@ -156,8 +132,9 @@ def options(opt):
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
     opt.add_option('--qemu', action='store_true',
                    help='Build an image for qemu instead of a real board.')
-    opt.add_option('--js-engine', action='store', default='rocky', choices=['rocky', 'none'],
-                   help='Specify JavaScript engine (rocky or none)')
+    opt.add_option('--js-engine', action='store', default=None, choices=['rocky', 'moddable', 'none'],
+                   help='Specify JavaScript engine (rocky, moddable or none). '
+                        'Defaults to moddable for boards with HAS_MODDABLE_XS, none otherwise.')
     opt.add_option('--sdkshell', action='store_true',
                    help='Use the sdk shell instead of the normal shell')
     opt.add_option('--nolog', action='store_true',
@@ -211,13 +188,6 @@ def options(opt):
     opt.add_option('--no-pulse-everywhere',
                    action='store_true',
                    help='Disables PULSE everywhere, uses legacy logs and prompt')
-    opt.add_option('--bootloader-test', action='store', default='none',
-                   choices=['none', 'stage1', 'stage2'],
-                   help='Build bootloader test (stage1 or stage2). Implies --mfg.')
-    opt.add_option('--reboot_on_bt_crash', action='store_true', help='Forces a BT '
-                   'chip crash to immediately force a system reboot instead of just cycling airplane mode. '
-                   'This makes it easier for us to actually get crash info')
-
 
 def handle_configure_options(conf):
     if conf.options.noprompt:
@@ -283,9 +253,6 @@ def handle_configure_options(conf):
         conf.env.NO_WATCHDOG = True
         print("Watchdog reboot disabled")
 
-    if conf.options.reboot_on_bt_crash:
-        conf.env.append_value('DEFINES', 'REBOOT_ON_BT_CRASH=1')
-        print("BT now crash will trigger an MCU reboot")
 
     if conf.options.test_apps:
         conf.env.append_value('DEFINES', 'ENABLE_TEST_APPS')
@@ -342,7 +309,7 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'BATTERY_DEBUG')
         print("Enabling higher battery charge voltage.")
 
-    if conf.options.future_ux and not conf.is_tintin():
+    if conf.options.future_ux:
         print("Future UX features enabled.")
         conf.env.FUTURE_UX = True
 
@@ -354,7 +321,7 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'TINTIN_FORCE_FIT')
         print("Functionality is secondary to usability")
 
-    if (conf.is_snowy_compatible() and not conf.options.no_lto) or conf.options.lto:
+    if (conf.is_snowy_compatible() and not conf.options.no_lto and not conf.options.qemu) or conf.options.lto:
         conf.options.lto = True
         print("Turning on LTO.")
 
@@ -366,86 +333,8 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'INFINITE_BACKLIGHT')
         print("Enabling infinite backlight.")
 
-    if conf.options.bootloader_test in ['stage1', 'stage2']:
-        print("Forcing MFG on for bootloader test build.")
-        conf.options.mfg = True
-
-    if conf.options.bootloader_test == 'stage1':
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE1=1')
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE2=0')
-    elif conf.options.bootloader_test == 'stage2':
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE1=0')
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE2=1')
-    else:
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE1=0')
-        conf.env.append_value('DEFINES', 'BOOTLOADER_TEST_STAGE2=0')
-
     if not conf.options.no_pulse_everywhere and (not conf.options.release or conf.options.mfg):
         conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
-
-def _create_cm0_env(conf):
-    prev_env = conf.env
-    prev_variant = conf.variant
-
-    # Create a new Cortex M0 environment that's used to build for the DA14681:
-    conf.setenv('cortex-m0')
-
-    # Copy the defines fron the stock env into our m0 env
-    conf.env.append_unique('DEFINES', prev_env.DEFINES)
-
-    Logs.pprint('CYAN', 'Configuring ARM cortex-m0 environment')
-
-    conf.env.append_unique('DEFINES', 'ARCH_NO_NATIVE_LONG_DIVIDE')
-
-    CPU_FLAGS = ['-mcpu=cortex-m0', '-mthumb']
-    OPT_FLAGS = [
-        '-fvar-tracking-assignments',  # Track variable locations better
-        '-fmessage-length=0', '-fsigned-char',
-        '-fbuiltin',
-        '-fno-builtin-itoa',
-        '-ffreestanding',
-        '-Os',
-    ]
-    if not conf.options.no_debug:
-        OPT_FLAGS += [
-            '-g3',
-            '-gdwarf-4',  # More detailed debug info
-        ]
-
-    C_FLAGS = ['-std=c11', '-ffunction-sections',
-               '-Wall', '-Wextra', '-Werror', '-Wpointer-arith',
-               '-Wno-unused-parameter', '-Wno-missing-field-initializers',
-               '-Wno-error=unused-parameter',
-               '-Wno-error=unused-const-variable',
-               '-Wno-packed-bitfield-compat',
-               '-Wno-address-of-packed-member',
-               '-Wno-expansion-to-defined',
-               '-Wno-enum-int-mismatch',
-               '-Wno-enum-conversion']
-
-    conf.find_program('arm-none-eabi-gcc', var='CC', mandatory=True)
-    conf.env.AS = conf.env.CC
-    for tool in ['ar', 'objcopy']:
-        conf.find_program('arm-none-eabi-' + tool, var=tool.upper(),
-                          mandatory=True)
-
-    conf.env.append_unique('CFLAGS', CPU_FLAGS + OPT_FLAGS + C_FLAGS)
-
-    ASFLAGS = ['-x', 'assembler-with-cpp']
-    conf.env.append_unique('ASFLAGS', ASFLAGS + CPU_FLAGS + OPT_FLAGS)
-
-    conf.env.append_unique('LINKFLAGS',
-                           ['-Wl,--cref',
-                            '-Wl,--gc-sections',
-                            '-nostdlib',
-                            ] + CPU_FLAGS + OPT_FLAGS)
-
-    conf.load('gcc gas objcopy ldscript')
-    conf.load('file_name_c_define')
-
-    conf.variant = prev_variant
-    conf.env = prev_env
-
 
 def configure(conf):
     if not conf.options.board:
@@ -459,14 +348,24 @@ def configure(conf):
     conf.recurse('platform')
 
     conf.env.QEMU = conf.options.qemu
-    conf.env.JS_ENGINE = conf.options.js_engine
 
-    # The BT controller is the only thing different between robert_es and robert_evt, so just
-    # retend robert_es is robert_evt. We'll be removing robert_es fairly soon anyways.
+    # Auto-detect JS engine from board capabilities if not explicitly specified
+    if conf.options.js_engine is not None:
+        conf.env.JS_ENGINE = conf.options.js_engine
+    else:
+        from platform_capabilities import board_capability_dicts
+        board = conf.options.board
+        board_caps = set()
+        for cap_dict in board_capability_dicts:
+            if board in cap_dict['boards']:
+                board_caps = cap_dict['capabilities']
+                break
+        if 'HAS_MODDABLE_XS' in board_caps:
+            conf.env.JS_ENGINE = 'moddable'
+        else:
+            conf.env.JS_ENGINE = 'none'
+
     bt_board = None
-    if conf.options.board == 'robert_es':
-        bt_board = 'robert_es'
-        conf.options.board = 'robert_evt'
 
     if not conf.options.runner:
         conf.env.RUNNER = RUNNERS.get(conf.options.board, [None])[0]
@@ -481,8 +380,7 @@ def configure(conf):
             conf.env.OPENOCD_JTAG = conf.options.openocd_jtag
         elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
             conf.env.OPENOCD_JTAG = 'jtag_ftdi'
-        elif conf.options.board in ('cutts_bb', 'robert_bb', 'robert_bb2', 'robert_evt',
-                                    'silk_evt', 'silk_bb', 'silk_bb2', 'silk'):
+        elif conf.options.board in ('silk_bb2', 'silk'):
             conf.env.OPENOCD_JTAG = 'swd_ftdi'
         elif conf.options.board in ('asterix'):
             conf.env.OPENOCD_JTAG = 'swd_cmsisdap'
@@ -490,21 +388,17 @@ def configure(conf):
             # default to bb2
             conf.env.OPENOCD_JTAG = 'bb2'
 
-    # Cutts and Robert access flash through the ITCM bus (except in QEMU)
-    if (conf.is_cutts() or conf.is_robert()) and not conf.env.QEMU:
-        conf.env.FLASH_ITCM = True
-    else:
-        conf.env.FLASH_ITCM = False
+    conf.env.FLASH_ITCM = False
 
     # Set platform used for building the SDK
-    if conf.is_tintin():
-        conf.env.PLATFORM_NAME = 'aplite'
-        conf.env.MIN_SDK_VERSION = 2
+    if conf.options.board == 'snowy_emery':
+        conf.env.PLATFORM_NAME = 'emery'
+        conf.env.MIN_SDK_VERSION = 3
+    elif conf.options.board == 'spalding_gabbro':
+        conf.env.PLATFORM_NAME = 'gabbro'
+        conf.env.MIN_SDK_VERSION = 4
     elif conf.is_spalding():
         conf.env.PLATFORM_NAME = 'chalk'
-        conf.env.MIN_SDK_VERSION = 3
-    elif conf.options.board == 'snowy_emery':
-        conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.is_snowy_compatible():
         conf.env.PLATFORM_NAME = 'basalt'
@@ -512,7 +406,7 @@ def configure(conf):
     elif conf.is_silk() and conf.options.board != 'silk_flint':
         conf.env.PLATFORM_NAME = 'diorite'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_cutts() or conf.is_robert() or conf.is_obelix():
+    elif conf.is_obelix():
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.is_asterix() or conf.options.board == 'silk_flint':
@@ -527,12 +421,8 @@ def configure(conf):
     # Save this for later
     conf.env.BOARD = conf.options.board
 
-    if conf.is_tintin():
-        conf.env.MICRO_FAMILY = 'STM32F2'
-    elif conf.is_snowy_compatible() or conf.is_silk():
+    if conf.is_snowy_compatible() or conf.is_silk():
         conf.env.MICRO_FAMILY = 'STM32F4'
-    elif conf.is_cutts() or conf.is_robert():
-        conf.env.MICRO_FAMILY = 'STM32F7'
     elif conf.is_asterix():
         conf.env.MICRO_FAMILY = 'NRF52840'
     elif conf.is_obelix() or conf.is_getafix():
@@ -571,31 +461,25 @@ def configure(conf):
     handle_configure_options(conf)
 
 
-    # robert_es is the exact same as robert_evt, except for the BT chip, so gets converted to
-    # robert_evt above, but we need to handle it as robert_es here.
     if bt_board is None:
         bt_board = conf.get_board()
     # Select BT controller based on configuration:
     if conf.env.QEMU:
         conf.env.bt_controller = 'qemu'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
-    elif conf.is_tintin() or conf.is_snowy() or conf.is_spalding():
+    elif conf.is_snowy() or conf.is_spalding():
         conf.env.bt_controller = 'cc2564x'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
     elif conf.is_asterix():
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
-    elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):
-        conf.env.bt_controller = 'da14681-01'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_DA14681'])
+    elif bt_board in ('silk_bb2', 'silk'):
+        conf.env.bt_controller = 'stub'
     elif conf.is_obelix() or conf.is_getafix():
         conf.env.bt_controller = 'sf32lb52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_SF32LB52'])
     else:
-        conf.env.bt_controller = 'da14681-00'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_DA14681'])
-
-    _create_cm0_env(conf)
+        conf.env.bt_controller = 'stub'
 
     conf.recurse('src/bluetooth-fw')
 
@@ -605,6 +489,7 @@ def configure(conf):
 
     conf.setenv('arm_prf_mode', env=conf.env)
     conf.env.append_value('DEFINES', ['RECOVERY_FW'])
+    conf.env.JS_ENGINE = 'none' #Disable JS engine for PRF builds to save space, as PRF doesn't support JS anyway
 
     Logs.pprint('CYAN', 'Configuring unit test environment')
     conf.setenv('local', unit_test_env)
@@ -651,16 +536,6 @@ def configure(conf):
             source = conf.path.get_bld().make_node(filename)
             os.symlink(source.path_from(conf.path), filename)
 
-    prev_env = conf.env
-    Logs.pprint('CYAN', 'Configuring 32 bit host environment')
-    # Copy 'local' to serve as the basis for '32bit':
-    env_32bit = conf.env.derive().detach()
-    env_32bit.append_value('CFLAGS', '-m32')
-    env_32bit.append_value('LINKFLAGS', '-m32')
-    env_32bit.LINK_CC = 'gcc'
-    conf.all_envs['32bit'] = env_32bit
-    conf.set_env(prev_env)
-
     # Note: this will modify the 'local' conf when targeting emscripten:
     conf.recurse('applib-targets')
 
@@ -671,11 +546,6 @@ def configure(conf):
     # Confirm that requirements-*.txt and requirements-osx-brew.txt have been satisfied.
     import tool_check
     tool_check.tool_check()
-
-    # Warn user not to use Cutts BB build with a Robert screen
-    if conf.options.board == 'cutts_bb':
-        Logs.warn('NOTE: Do not use this build with a C2/Robert display '
-                  '(6V6 rail will damage the display)')
 
 
 def _run_remote_suite(ctx, suite):
@@ -747,19 +617,19 @@ def build(bld):
     bld.pbl_build_start_time = datetime.datetime.utcnow()
     bld.add_post_fun(stop_build_timer)
 
-    if bld.variant in ('test', 'test_rocky_emx', 'applib'):
+    if bld.variant in ('test', 'applib'):
         bld.set_env(bld.all_envs['local'])
 
     bld.load('file_name_c_define', tooldir='waftools')
 
     bld.recurse('platform')
+    bld.recurse('third_party/nanopb')
     bld.recurse('src/idl')
 
     if bld.cmd == 'install':
         raise Exception("install isn't a supported command. Did you mean flash?")
 
     if bld.variant == 'pdc2png':
-        bld.recurse('src/libutil')
         bld.recurse('tools')
         return
 
@@ -767,9 +637,13 @@ def build(bld):
         bld.recurse('tools')
         return
 
+    if bld.variant == 'prf':
+        bld.set_env(bld.all_envs['arm_prf_mode'])
+
     if bld.variant in ('', 'applib', 'prf'):
         # Dependency for SDK
         bld.recurse('third_party/jerryscript')
+        bld.recurse('third_party/moddable')
 
     if bld.variant == '':
         # sdk generation
@@ -792,11 +666,7 @@ def build(bld):
     if (bld.variant != 'prf' and not bld.env.QEMU and bld.env.NORMAL_SHELL != 'sdk'):
         bld.env.append_value('DEFINES', 'STATIONARY_MODE')
 
-    if bld.variant == 'prf':
-        bld.set_env(bld.all_envs['arm_prf_mode'])
-    elif bld.variant == 'test':
-        if bld.env.APPLIB_TARGET == 'emscripten':
-            bld.fatal('Did you mean ./waf test_rocky_emx ?')
+    if bld.variant == 'test':
         bld.recurse('src/include')
         bld.recurse('third_party/jerryscript')
         bld.recurse('third_party/nanopb')
@@ -805,17 +675,6 @@ def build(bld):
         bld.recurse('src/libutil')
         bld.recurse('tests')
         bld.recurse('tools')
-        return
-    elif bld.variant == 'test_rocky_emx':
-        if bld.env.APPLIB_TARGET != 'emscripten':
-            bld.fatal('Make sure to ./waf configure with --target=emscripten')
-        bld.recurse('src/libutil')
-        bld.recurse('src/libos')
-        bld.recurse('third_party/jerryscript')
-        bld.recurse('third_party/nanopb')
-        bld.recurse('applib-targets')
-        bld.recurse('tools')
-        bld.recurse('tests')
         return
 
     if bld.variant == '':
@@ -886,11 +745,7 @@ def size_fw(ctx):
     try:
         space_left = _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
     except FirmwareTooLargeException as e:
-        if ctx.env.MICRO_FAMILY == 'STM32F2' and ctx.env.QEMU:
-            # Let us off with a warning for now
-            Logs.warn(str(e))
-        else:
-            ctx.fatal(str(e))
+        ctx.fatal(str(e))
     else:
         Logs.pprint('CYAN', 'FW: ' + space_left)
 
@@ -912,8 +767,6 @@ def size_resources(ctx):
 
     if ctx.env.MICRO_FAMILY == 'STM32F4':
         max_size = 512 * 1024
-    elif ctx.env.MICRO_FAMILY == 'STM32F7':
-        max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'NRF52840':
         max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'SF32LB52':
@@ -948,11 +801,6 @@ class test(BuildContext):
     cmd = 'test'
     variant = 'test'
 
-
-class test_rocky_emx(BuildContext):
-    """builds and runs the tests"""
-    cmd = 'test_rocky_emx'
-    variant = 'test_rocky_emx'
 
 
 def docs(ctx):
@@ -1204,9 +1052,6 @@ def qemu_image_spi(ctx):
     if ctx.env.BOARD.startswith('silk'):
         resources_begin = 0x100000
         image_size = 0x800000
-    elif ctx.env.BOARD.startswith('robert') or ctx.env.BOARD.startswith('cutts'):
-        resources_begin = 0x200000
-        image_size = 0x1000000
     elif ctx.env.MICRO_FAMILY == 'STM32F4':
         resources_begin = 0x380000
         image_size = 0x1000000
@@ -1273,7 +1118,12 @@ def console(ctx):
         os.system("python ./tools/pulse_console.py -t %s" % tty)
     else:
         baudrate = ctx.options.baudrate or 230400
-        os.system("python ./tools/log_hashing/miniterm_co.py %s %d" % (tty, baudrate))
+        # NOTE: force RTS to be de-asserted, as on some boards (e.g.
+        # pblprog-sifli) RTS is used to reset the board SoC. On some OS and/or
+        # drivers, RTS may activate automatically, as soon as the port is
+        # opened. There may be a glitch on RTS when rts is set differently from
+        # their default value.
+        os.system("python ./tools/log_hashing/miniterm_co.py %s %d --rts 0" % (tty, baudrate))
 
 
 class ConsoleCommand(BuildContext):
@@ -1308,12 +1158,8 @@ def ble_console(ctx):
     # path discovery should be able to use that (PBL-31111). For now, just make a best
     # guess at what the path should be
 
-    if ctx.is_silk() or ctx.is_robert():
+    if ctx.is_silk():
         tty_path = _get_ble_tty()
-    # if the bt_controller was chosen explicitly, assume we are using an eval board, which
-    # happens to match the path for cutts
-    elif ctx.uses_dialog_bluetooth():
-        tty_path = "ftdi://ftdi:2232:1/1"
     else:
         waflib.Logs.pprint('CYAN', 'Note: This platform does not have a BLE UART')
         tty_path = _get_dbgserial_tty()
@@ -1332,24 +1178,6 @@ class BleConsolePrfCommand(BuildContext):
 def ble_console_prf(ctx):
     os.putenv("PBL_CONSOLE_DICT_PATH", "build/prf/src/fw/loghash_dict.json")
     ble_console(ctx)
-
-
-def accessory_console(ctx):
-    def _get_accessory_tty():
-        import pebble_tty
-        tty = pebble_tty.find_accessory_tty()
-
-        if tty is None:
-            return None
-
-        waflib.Logs.pprint('GREEN', 'No --tty argument specified, auto-selecting: %s' % tty)
-        return tty
-
-    """Starts miniterm with the accessory connector console."""
-    # miniterm is not made to be used as a python module, so just shell out:
-    tty = ctx.options.tty or _get_accessory_tty()
-    baudrate = ctx.options.baudrate or 115200
-    os.system("python ./tools/log_hashing/miniterm_co.py %s %d" % (tty, baudrate))
 
 
 def qemu(ctx):
@@ -1583,8 +1411,18 @@ def image_resources(ctx):
         waflib.Logs.pprint('RED', 'Error: --tty not specified')
         return
 
-    tool_name = _get_pulse_flash_tool(ctx)
     pbpack_path = ctx.get_pbpack_node().abspath()
+
+    # Use sftool for Sifli-based boards
+    if ctx.env.MICRO_FAMILY == 'SF32LB52':
+        waflib.Logs.pprint('CYAN', 'Writing pbpack "%s" to tty %s using sftool' % (pbpack_path, tty))
+        from waftools import sftool
+        # FIXME(SF32LB52): Make this configurable!
+        # FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN is 0x12620000
+        sftool.write_flash(ctx, f'{pbpack_path}@0x12620000')
+        return
+
+    tool_name = _get_pulse_flash_tool(ctx)
     waflib.Logs.pprint('CYAN', 'Writing pbpack "%s" to tty %s' % (pbpack_path, tty))
 
     ret = os.system("python ./tools/%s.py -t %s -p resources %s" % (tool_name, tty, pbpack_path))
@@ -1624,26 +1462,13 @@ def _check_firmware_image_size(ctx, path):
     BYTES_PER_K = 1024
     firmware_size = os.path.getsize(path)
     # Determine flash and bootloader size so we can calculate the max firmware size
-    if ctx.env.MICRO_FAMILY == 'STM32F2':
-        # 512k of flash and 16k bootloader
-        max_firmware_size = (512 - 16) * BYTES_PER_K
-    elif ctx.env.MICRO_FAMILY == 'STM32F4':
+    if ctx.env.MICRO_FAMILY == 'STM32F4':
         if ctx.env.BOARD.startswith('silk') and ctx.variant == 'prf':
             # silk PRF is limited to 512k to save on SPI flash space
             max_firmware_size = 512 * BYTES_PER_K
-        elif ctx.env.BOARD in ('snowy_evt', 'snowy_evt2', 'spalding_evt'):
-            # 1024k of flash and 64k bootloader
-            max_firmware_size = (1024 - 64) * BYTES_PER_K
         else:
             # 1024k of flash and 16k bootloader
             max_firmware_size = (1024 - 16) * BYTES_PER_K
-    elif ctx.env.MICRO_FAMILY == 'STM32F7':
-        if ctx.variant == 'prf' and not ctx.env.IS_MFG:
-            # Robert PRF is limited to 512k to save on SPI flash space
-            max_firmware_size = 512 * BYTES_PER_K
-        else:
-            # 2048k of flash and 32k bootloader
-            max_firmware_size = (2048 - 32) * BYTES_PER_K
     elif ctx.env.MICRO_FAMILY == 'NRF52840':
         if ctx.variant == 'prf' and not ctx.env.IS_MFG:
             max_firmware_size = 512 * BYTES_PER_K
@@ -1691,28 +1516,6 @@ def flash_prf(ctx):
     flash_fw(ctx, ctx.get_tintin_fw_node_prf())
 
 
-class FlashBootCommand(BuildContext):
-    cmd = 'flash_boot'
-    fun = 'flash_boot'
-
-
-def flash_boot(ctx):
-    """flashes a bootloader"""
-    if not ctx.env.BOOTLOADER_HEX:
-        ctx.fatal("Target does not have a bootloader binary available")
-    if ctx.env.RUNNER == 'openocd':
-        waftools.openocd.run_command(ctx, 'init; reset halt; ' +
-                                    'program {} reset;'.format(ctx.env.BOOTLOADER_HEX),
-                                    expect=["Programming Finished"],
-                                    enforce_expect=True)
-    elif ctx.env.RUNNER == 'sftool':
-        waftools.sftool.write_flash(ctx, ctx.env.BOOTLOADER_HEX)
-    elif ctx.env.RUNNER == 'nrfutil':
-        waftools.nrfutil.program_and_reset(ctx, ctx.env.BOOTLOADER_HEX)
-    else:
-        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
-
-
 class FlashFirmware(BuildContext):
     """flashes a firmware"""
     cmd = 'flash_fw'
@@ -1740,7 +1543,7 @@ def flash_fw(ctx, fw_bin):
 
 
 def flash_everything(ctx, fw_bin):
-    """flashes a bootloader and firmware"""
+    """flashes firmware and any additional resources"""
     if ctx.env.QEMU:
         ctx.fatal("I'm sorry Dave, I can't let you do that.\n"
                   "QEMU firmwares do not work on physical hardware.\n"
@@ -1748,22 +1551,16 @@ def flash_everything(ctx, fw_bin):
 
     _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
 
-    if not ctx.env.BOOTLOADER_HEX:
-        ctx.fatal("Target does not have a bootloader binary available")
-
     hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
 
     if ctx.env.RUNNER == 'openocd':
         waftools.openocd.run_command(ctx, 'init; reset halt; '
-                                    'program {};'.format(ctx.env.BOOTLOADER_HEX) +
                                     'program {} reset;'.format(hex_path),
                                     expect=["Programming Finished", "Programming Finished", "shutdown"],
                                     enforce_expect=True)
     elif ctx.env.RUNNER == 'sftool':
-        waftools.sftool.write_flash(ctx, ctx.env.BOOTLOADER_HEX)
         waftools.sftool.write_flash(ctx, hex_path)
     elif ctx.env.RUNNER == 'nrfutil':
-        waftools.nrfutil.program(ctx, ctx.env.BOOTLOADER_HEX)
         waftools.nrfutil.program(ctx, hex_path)
         waftools.nrfutil.reset(ctx)
     else:

@@ -20,4 +20,3 @@ typedef enum {
 void bmi160_init(void);
 bool bmi160_query_whoami(void);
 void bmi160_set_accel_power_mode(BMI160AccelPowerMode mode);
-void bmi160_set_gyro_power_mode(BMI160GyroPowerMode mode);

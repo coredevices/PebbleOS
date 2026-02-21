@@ -3,7 +3,7 @@
 
 #include "music_internal.h"
 
-#include "apps/system_apps/music_app.h"
+#include "apps/system/music.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
 #include "process_management/app_manager.h"
@@ -93,9 +93,9 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
     if (s_music_ctx.implementation == NULL) {
       change_type = Connected;
       s_music_ctx.implementation = implementation;
-      PBL_LOG(LOG_LEVEL_INFO, "Music server connected: %s", implementation->debug_name);
+      PBL_LOG_INFO("Music server connected: %s", implementation->debug_name);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Server <0x%p> connected, but another <0x%p> is already registered",
+      PBL_LOG_ERR("Server <0x%p> connected, but another <0x%p> is already registered",
               implementation, s_music_ctx.implementation);
     }
 
@@ -104,9 +104,9 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
       // Previously registered server got disconnected
       change_type = Disconnected;
       s_music_ctx.implementation = NULL;
-      PBL_LOG(LOG_LEVEL_INFO, "Music server disconnected: %s", implementation->debug_name);
+      PBL_LOG_INFO("Music server disconnected: %s", implementation->debug_name);
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Unknown server <%p> disconnected", implementation);
+      PBL_LOG_ERR("Unknown server <%p> disconnected", implementation);
     }
   }
 

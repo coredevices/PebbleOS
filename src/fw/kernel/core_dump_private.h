@@ -13,14 +13,10 @@
 
 // Size of RAM
 // TODO: Do we have an equate for the total size of RAM somewhere else?
-#if PLATFORM_CALCULUS || PLATFORM_ROBERT
-#define COREDUMP_RAM_SIZE (384 * 1024)
-#elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
 #define COREDUMP_RAM_SIZE (256 * 1024)
 #elif PLATFORM_SNOWY || PLATFORM_SPALDING
 #define COREDUMP_RAM_SIZE (192 * 1024)
-#elif PLATFORM_TINTIN
-#define COREDUMP_RAM_SIZE (128 * 1024)
 #endif
 
 // Max number of core dump images we can fit in our allocated space

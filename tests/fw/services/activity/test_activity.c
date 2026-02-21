@@ -52,6 +52,10 @@
 #include "stubs_task_watchdog.h"
 #include "stubs_worker_manager.h"
 #include "stubs_workout_service.h"
+#include "stubs_ambient_light.h"
+
+void prefs_sync_init(void) {
+}
 
 // Fakes
 #include "fake_accel_service.h"
@@ -925,7 +929,7 @@ static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, 
   local_tm = localtime(&time_end);
   strftime(time_end_text, sizeof(time_end_text),  "%F %r", local_tm);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got activity: %d %s to %s (%d min)", (int)activity, time_start_text,
+  PBL_LOG_DBG("Got activity: %d %s to %s (%d min)", (int)activity, time_start_text,
           time_end_text, (int)((time_end - time_start) / SECONDS_PER_MINUTE));
 
 
@@ -961,7 +965,7 @@ static void prv_sleep_sessions_using_health_service(uint32_t *session_entries,
   health_service_activities_iterate(HealthActivityMaskAll, now - (2 * SECONDS_PER_DAY), now,
                                     direction, prv_activity_iterate_cb,
                                     NULL);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Found %"PRIu32" activities", s_health_sessions_count);
+  PBL_LOG_DBG("Found %"PRIu32" activities", s_health_sessions_count);
   *session_entries = s_health_sessions_count;
 }
 

@@ -5,28 +5,48 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    paths:
-      - '.github/workflows/build-firmware.yml'
-      - 'resources/**'
-      - 'sdk/**'
-      - 'src/**'
-      - 'stored_apps/**'
-      - 'tools/**'
-      - 'third_party/**'
-      - 'waftools/**'
-      - 'waf'
-      - 'wscript'
 
 jobs:
-  build:
+  changes-firmware:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-build: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            src:
+              - '.github/workflows/build-firmware.yml'
+              - 'resources/**'
+              - 'sdk/**'
+              - 'src/**'
+              - 'stored_apps/**'
+              - 'tools/**'
+              - 'third_party/**'
+              - 'waftools/**'
+              - 'waf'
+              - 'wscript'
+
+  build-firmware:
+    needs: changes-firmware
+    if: needs.changes-firmware.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
 
     container:
-      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+      image: ghcr.io/pebble-dev/pebbleos-docker:v2
 
     strategy:
       matrix:
-        board: ["snowy_bb2", "spalding_bb2", "silk_bb2", "asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
+        board:
+          - asterix
+          - obelix_dvt
+          - obelix_pvt
+          - getafix_evt
+          - getafix_dvt
 
     steps:
       - name: Mark Github workspace as safe
@@ -90,4 +110,12 @@ jobs:
           files: |
             build/src/fw/tintin_fw_loghash_dict.json
           path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json
+
+  build-firmware-status:
+    needs: [changes-firmware, build-firmware]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.build-firmware.result == 'failure' || needs.build-firmware.result == 'cancelled'
+        run: exit 1
 

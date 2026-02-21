@@ -64,7 +64,7 @@ static AppInstallId s_pending_app_deletion;
 static AppInstallId s_pending_worker_deletion;
 
 // PBL-31769: This should be moved to send_text.c
-#if !PLATFORM_TINTIN && defined(APP_ID_SEND_TEXT)
+#if defined(APP_ID_SEND_TEXT)
 static EventServiceInfo s_capabilities_event_info;
 #endif
 
@@ -321,7 +321,7 @@ static void prv_app_install_delete(AppInstallId id, Uuid *uuid, bool app_upgrade
   if (delete_cache) {
     // only log when we actually delete the cache entry. This is so we don't print out 100 logs
     // during an app cache clear
-    PBL_LOG(LOG_LEVEL_INFO, "Deleting app with id %"PRId32"", id);
+    PBL_LOG_INFO("Deleting app with id %"PRId32"", id);
     app_cache_remove_entry(id);
   }
 }
@@ -337,7 +337,7 @@ static void prv_delete_pending_id(AppInstallId *app_id) {
 static void prv_process_pending_deletions(void) {
   prv_delete_pending_id(&s_pending_app_deletion);
   prv_delete_pending_id(&s_pending_worker_deletion);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Finished processing pending deletions");
+  PBL_LOG_DBG("Finished processing pending deletions");
 }
 
 typedef struct InstallCallbackData {
@@ -386,7 +386,7 @@ static void app_install_launcher_task_callback(void *context) {
       if (prv_ids_equal(cur_app_id, to_kill) ||
             ((s_install_callback_data.install_type == APP_DB_CLEARED) &&
              (app_install_id_from_app_db(cur_app_id)))) {
-        PBL_LOG(LOG_LEVEL_DEBUG, "close and delay callbacks for app closing");
+        PBL_LOG_DBG("close and delay callbacks for app closing");
 
         s_install_callback_data.callback_paused_for_app = true;
         s_pending_app_deletion = cur_app_id;
@@ -401,7 +401,7 @@ static void app_install_launcher_task_callback(void *context) {
       if (prv_ids_equal(cur_worker_id, to_kill) ||
           ((s_install_callback_data.install_type == APP_DB_CLEARED) &&
            (app_install_id_from_app_db(cur_worker_id)))) {
-        PBL_LOG(LOG_LEVEL_DEBUG, "close and delay callbacks for worker closing");
+        PBL_LOG_DBG("close and delay callbacks for worker closing");
 
         s_install_callback_data.callback_paused_for_worker = true;
         s_pending_worker_deletion = cur_worker_id;
@@ -418,7 +418,7 @@ static void app_install_launcher_task_callback(void *context) {
     }
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "app_install_invoke_callbacks");
+  PBL_LOG_DBG("app_install_invoke_callbacks");
   app_install_invoke_callbacks(s_install_callback_data.install_type,
                                s_install_callback_data.install_id);
 
@@ -461,7 +461,7 @@ static void app_install_launcher_task_callback(void *context) {
 bool app_install_do_callbacks(InstallEventType event_type, AppInstallId install_id,
     Uuid *uuid, InstallCallbackDoneCallback done_callback, void* callback_data) {
   if (s_install_callback_data.callback_in_progress) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to do app callbacks, already in progress");
+    PBL_LOG_ERR("Failed to do app callbacks, already in progress");
     return false;
   }
 
@@ -546,7 +546,7 @@ static int prv_cmp_recent_apps(void *a, void *b) {
 }
 
 // PBL-31769: This should be moved to send_text.c
-#if !PLATFORM_TINTIN && defined(APP_ID_SEND_TEXT)
+#if defined(APP_ID_SEND_TEXT)
 static void prv_capabilities_changed_event_handler(PebbleEvent *event, void *context) {
   // We only care if send text support changed right now
   if (!event->capabilities.flags_diff.send_text_support) {
@@ -566,7 +566,7 @@ void app_install_manager_init(void) {
   s_recent_apps.mutex = mutex_create_recursive();
 
   // PBL-31769: This should be moved to send_text.c
-#if !PLATFORM_TINTIN && defined(APP_ID_SEND_TEXT)
+#if defined(APP_ID_SEND_TEXT)
   s_capabilities_event_info = (EventServiceInfo) {
     .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
     .handler = prv_capabilities_changed_event_handler,
@@ -586,7 +586,7 @@ bool app_install_id_from_app_db(AppInstallId id) {
 static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
 
   // Remove this from Recovery FW for code size savings.
-#if !defined(RECOVERY_FW) && !defined(PLATFORM_TINTIN)
+#if !defined(RECOVERY_FW)
 
   // this is a temporary solution to enable custom colors for 3rd-party apps
   // please replace this, once PBL-19673 landed
@@ -612,7 +612,7 @@ static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
 
 
 static GColor prv_valid_color_from_uuid(GColor color, Uuid *uuid) {
-#if PLATFORM_TINTIN || PLATFORM_SILK || PLATFORM_ASTERIX
+#if PLATFORM_SILK || PLATFORM_ASTERIX
   return GColorClear;
 #endif
 
@@ -664,7 +664,7 @@ static bool prv_app_install_entry_from_resource_registry_entry(const AppRegistry
 
   if (resource_load_byte_range_system(SYSTEM_APP, reg_entry->bin_resource_id, 0,
         (uint8_t *)app_header, sizeof(*app_header)) != sizeof(*app_header)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Stored app with resource id %d not found in resources",
+    PBL_LOG_WRN("Stored app with resource id %d not found in resources",
             reg_entry->bin_resource_id);
     goto done;
   }
@@ -733,7 +733,7 @@ bool app_install_get_entry_for_install_id(AppInstallId install_id, AppInstallEnt
         break;
       case AppInstallStorageInvalid:
       case AppInstallStorageFlash:
-        PBL_LOG(LOG_LEVEL_DEBUG, "Invalid app registry type %d", reg_entry->type);
+        PBL_LOG_DBG("Invalid app registry type %d", reg_entry->type);
         break;
     }
     if (rv) {
@@ -750,7 +750,7 @@ bool app_install_get_entry_for_install_id(AppInstallId install_id, AppInstallEnt
     return rv;
   }
 
-  PBL_LOG(LOG_LEVEL_ERROR, "Failed to get entry for id %"PRId32, install_id);
+  PBL_LOG_ERR("Failed to get entry for id %"PRId32, install_id);
   return false;
 }
 
@@ -784,7 +784,7 @@ static const PebbleProcessMd *prv_get_md_for_reg_entry(const AppRegistryEntry *r
       PebbleProcessInfo app_header;
       if (resource_load_byte_range_system(SYSTEM_APP, reg_entry->bin_resource_id, 0,
             (uint8_t *)&app_header, sizeof(app_header)) != sizeof(app_header)) {
-        PBL_LOG(LOG_LEVEL_WARNING, "Stored app with resource id %d not found in resources",
+        PBL_LOG_WRN("Stored app with resource id %d not found in resources",
                 reg_entry->bin_resource_id);
         return NULL;
       }
@@ -813,7 +813,7 @@ static const PebbleProcessMd *prv_get_md_for_flash_id(AppInstallId id, bool work
   const PebbleTask task = worker ? PebbleTask_Worker : PebbleTask_App;
   if (GET_APP_INFO_SUCCESS !=
       app_storage_get_process_info(&app_header, build_id_buffer, id, task)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to get app from flash with id %"PRIu32, id);
+    PBL_LOG_WRN("Failed to get app from flash with id %"PRIu32, id);
     return NULL;
   }
 
@@ -835,7 +835,7 @@ const PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
   }
 
   // Not a registered app, fail.
-  PBL_LOG(LOG_LEVEL_ERROR, "Can't get PebbleProcessMd for app id %"PRId32, id);
+  PBL_LOG_ERR("Can't get PebbleProcessMd for app id %"PRId32, id);
   return NULL;
 }
 

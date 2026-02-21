@@ -54,15 +54,25 @@ static int prv_erase_nor(QSPIFlash *dev, uint32_t addr, uint32_t size) {
 
   while (remain > 0) {
     portENTER_CRITICAL();
-    res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
-    portEXIT_CRITICAL();
-    if (res != 0) {
-      res = -1;
-      goto end;
+    if ((taddr & (SECTOR_SIZE_BYTES - 1)) == 0 && remain >= SECTOR_SIZE_BYTES) {
+      res = HAL_QSPIEX_BLK64_ERASE(hflash, taddr);
+      portEXIT_CRITICAL();
+      if (res != 0) {
+        res = -1;
+        goto end;
+      }
+      remain -= SECTOR_SIZE_BYTES;
+      taddr += SECTOR_SIZE_BYTES;
+    } else {
+      res = HAL_QSPIEX_SECT_ERASE(hflash, taddr);
+      portEXIT_CRITICAL();
+      if (res != 0) {
+        res = -1;
+        goto end;
+      }
+      remain -= SUBSECTOR_SIZE_BYTES;
+      taddr += SUBSECTOR_SIZE_BYTES;
     }
-
-    remain -= SUBSECTOR_SIZE_BYTES;
-    taddr += SUBSECTOR_SIZE_BYTES;
   }
 
 end:
@@ -151,10 +161,10 @@ bool qspi_flash_check_whoami(QSPIFlash *dev) {
   uint32_t id = ctx->dev_id;
 
   if (id == dev->state->part->qspi_id_value) {
-    PBL_LOG(LOG_LEVEL_INFO, "Flash is %s", dev->state->part->name);
+    PBL_LOG_INFO("Flash is %s", dev->state->part->name);
     return true;
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Flash isn't expected %s (whoami: 0x%" PRIx32 ")",
+    PBL_LOG_ERR("Flash isn't expected %s (whoami: 0x%" PRIx32 ")",
             dev->state->part->name, id);
     return false;
   }
@@ -232,7 +242,11 @@ status_t qspi_flash_get_write_status(QSPIFlash *dev) {
   return S_SUCCESS;
 }
 
-void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {}
+void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
+  if (active) {
+    HAL_FLASH_NOP_CMD(&dev->qspi->state->ctx.handle);
+  }
+}
 
 status_t qspi_flash_blank_check(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
   return prv_blank_check_poll(addr, is_subsector);

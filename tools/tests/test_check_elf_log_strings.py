@@ -13,122 +13,150 @@ from log_hashing.check_elf_log_strings import check_dict_log_strings
 
 
 class TestCheckLogStrings(unittest.TestCase):
-
     def test_some_acceptible_strings(self):
         log_dict = {
-                       1: {'file': 'test.c', 'line': '1', 'msg': 'test %s'},
-                       2: {'file': 'test.c', 'line': '2', 'msg': 'test %-2hx'},
-                       3: {'file': 'test.c', 'line': '3', 'msg': 'test %08X'},
-                       4: {'file': 'test.c', 'line': '4', 'msg': 'test %14d'},
-                       5: {'file': 'test.c', 'line': '5', 'msg': 'test %p %d %02X %x'}
-                   }
+            1: {"file": "test.c", "line": "1", "msg": "test %s"},
+            2: {"file": "test.c", "line": "2", "msg": "test %-2hx"},
+            3: {"file": "test.c", "line": "3", "msg": "test %08X"},
+            4: {"file": "test.c", "line": "4", "msg": "test %14d"},
+            5: {"file": "test.c", "line": "5", "msg": "test %p %d %02X %x"},
+        }
 
         output = check_dict_log_strings(log_dict)
 
-        self.assertEquals(output, '')
+        self.assertEqual(output, "")
 
     def test_rule_no_backtick(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test ` '}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test ` "}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
         self.assertTrue(file_line in output and "PBL_LOG contains '`'" in output)
 
     def test_rule_no_percent(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test 10%%'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test 10%%"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
         self.assertTrue(file_line in output and "PBL_LOG contains '%%'" in output)
 
     def test_rule_no_64_bit(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test %llu'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test %llu"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and "PBL_LOG contains 64 bit value" in output)
+        self.assertTrue(
+            file_line in output and "PBL_LOG contains 64 bit value" in output
+        )
 
     def test_rule_no_floats(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test %6.2f'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test %6.2f"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains floating point specifier" in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains floating point specifier" in output
+        )
 
     def test_rule_no_formatted_strings(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test %.*s'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test %.*s"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains a formatted string conversion" in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains a formatted string conversion" in output
+        )
 
     def test_rule_dynamic_width(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test %*d'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test %*d"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains a dynamic width" in output)
+        self.assertTrue(
+            file_line in output and "PBL_LOG contains a dynamic width" in output
+        )
 
     def test_rule_no_flagged_strings(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test %-10s'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test %-10s"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains a formatted string conversion" in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains a formatted string conversion" in output
+        )
 
     def test_rule_7_conversions(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test %s %d %0d %x %08X %s %p %ul'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {
+            1: {
+                "file": "test.c",
+                "line": "1",
+                "msg": "test %s %d %0d %x %08X %s %p %ul",
+            }
+        }
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains more than 7 format conversions" in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains more than 7 format conversions" in output
+        )
 
     def test_rule_2_string_conversions(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test %s %08X %s %s %ul'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test %s %08X %s %s %ul"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains more than 2 string conversions" in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains more than 2 string conversions" in output
+        )
 
     def test_rule_unknown_specifier(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': 'test %Z'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "test %Z"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains unknown format specifier" in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains unknown format specifier" in output
+        )
 
     def test_rule_no_specifier(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': '%'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "%"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains unknown format specifier" in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains unknown format specifier" in output
+        )
 
     def test_valid_level_number(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': '%', 'level': '69'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {1: {"file": "test.c", "line": "1", "msg": "%", "level": "69"}}
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains a non-constant LOG_LEVEL_ value '69'" in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains a non-constant LOG_LEVEL_ value '69'" in output
+        )
 
     def test_valid_level_line(self):
-        log_dict = {1: {'file': 'test.c', 'line': '1', 'msg': '%', 'level': 'variable_name'}}
-        file_line = ':'.join((log_dict[1]['file'], log_dict[1]['line']))
+        log_dict = {
+            1: {"file": "test.c", "line": "1", "msg": "%", "level": "variable_name"}
+        }
+        file_line = ":".join((log_dict[1]["file"], log_dict[1]["line"]))
 
         output = check_dict_log_strings(log_dict)
-        self.assertTrue(file_line in output and
-                        "PBL_LOG contains a non-constant LOG_LEVEL_ value 'variable_name'"
-                        in output)
+        self.assertTrue(
+            file_line in output
+            and "PBL_LOG contains a non-constant LOG_LEVEL_ value 'variable_name'"
+            in output
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

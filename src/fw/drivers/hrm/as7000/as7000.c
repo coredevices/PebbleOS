@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_GREEN
 #include "as7000.h"
 
 #include "board/board.h"
@@ -37,7 +36,7 @@
 #if PPG_DEBUG
 #define PPG_DBG(...) \
   do { \
-    PBL_LOG(LOG_LEVEL_DEBUG, __VA_ARGS__); \
+    PBL_LOG_DBG(__VA_ARGS__); \
   } while (0);
 #else
 #define PPG_DBG(...)
@@ -360,7 +359,7 @@ static void prv_handle_handshake_pulse(void *unused_data) {
 
   if (num_samples == 0 && should_expect_samples) {
     analytics_inc(ANALYTICS_DEVICE_METRIC_HRM_ACCEL_DATA_MISSING, AnalyticsClient_System);
-    PBL_LOG(LOG_LEVEL_WARNING, "Falling behind: HRM got 0 accel samples");
+    PBL_LOG_WRN("Falling behind: HRM got 0 accel samples");
   }
 
 }
@@ -385,27 +384,27 @@ static void prv_interrupts_enable(HRMDevice *dev, bool enable) {
 static void prv_log_running_apps(HRMDevice *dev) {
   uint8_t app_ids = 0;
   if (!prv_read_register(dev, ADDR_APP_IDS, &app_ids)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to get running apps");
+    PBL_LOG_ERR("Failed to get running apps");
     return;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "Running applications:");
+  PBL_LOG_DBG("Running applications:");
   if (app_ids == AS7000AppId_Idle) {
-    PBL_LOG(LOG_LEVEL_DEBUG, " - None (idle)");
+    PBL_LOG_DBG(" - None (idle)");
   } else {
     if (app_ids & AS7000AppId_Loader) {
-      PBL_LOG(LOG_LEVEL_DEBUG, " - Loader");
+      PBL_LOG_DBG(" - Loader");
     }
     if (app_ids & AS7000AppId_HRM) {
-      PBL_LOG(LOG_LEVEL_DEBUG, " - HRM");
+      PBL_LOG_DBG(" - HRM");
     }
     if (app_ids & AS7000AppId_PRV) {
-      PBL_LOG(LOG_LEVEL_DEBUG, " - PRV");
+      PBL_LOG_DBG(" - PRV");
     }
     if (app_ids & AS7000AppId_GSR) {
-      PBL_LOG(LOG_LEVEL_DEBUG, " - GSR");
+      PBL_LOG_DBG(" - GSR");
     }
     if (app_ids & AS7000AppId_NTC) {
-      PBL_LOG(LOG_LEVEL_DEBUG, " - NTC");
+      PBL_LOG_DBG(" - NTC");
     }
   }
 }
@@ -419,7 +418,7 @@ static bool prv_get_and_log_device_info(HRMDevice *dev, AS7000InfoRecord *info,
 
   if (log_version) {
     // print out the version information
-    PBL_LOG(LOG_LEVEL_INFO, "AS7000 enabled! Protocol v%" PRIu8 ".%" PRIu8
+    PBL_LOG_INFO("AS7000 enabled! Protocol v%" PRIu8 ".%" PRIu8
       ", SW v%" PRIu8 ".%" PRIu8 ".%" PRIu8 ", HW Rev %" PRIu8,
             info->protocol_version_major, info->protocol_version_minor,
             HRM_SW_VERSION_PART_MAJOR(info->sw_version_major),
@@ -435,7 +434,7 @@ static bool prv_is_app_running(HRMDevice *dev, AS7000AppId app) {
   if (!prv_read_register(dev, ADDR_APP_IDS, &running_apps)) {
     return false;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "Apps running: 0x%"PRIx8, running_apps);
+  PBL_LOG_DBG("Apps running: 0x%"PRIx8, running_apps);
   if (app == AS7000AppId_Idle) {
     // no apps should be running
     return running_apps == AS7000AppId_Idle;
@@ -493,7 +492,7 @@ static void prv_disable(HRMDevice *dev) {
   // Put the INT pin back into a low power state that won't interfere with jtag using the pin
   gpio_analog_init(&dev->int_gpio);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Shutting down device.");
+  PBL_LOG_DBG("Shutting down device.");
   switch (dev->state->enabled_state) {
     case HRMEnabledState_PoweringOn:
       new_timer_stop(dev->state->timer);
@@ -522,7 +521,7 @@ static void prv_disable(HRMDevice *dev) {
 static void prv_enable(HRMDevice *dev) {
   mutex_assert_held_by_curr_task(dev->state->lock, true);
   if (dev->state->enabled_state == HRMEnabledState_Uninitialized) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Trying to enable HRM before initialization.");
+    PBL_LOG_ERR("Trying to enable HRM before initialization.");
 
   } else if (dev->state->enabled_state == HRMEnabledState_Disabled) {
     led_enable(LEDEnablerHRM);
@@ -537,7 +536,7 @@ static void prv_enable(HRMDevice *dev) {
 
     interval_timer_init(&s_handshake_interval_timer, 900, 1100, 8);
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "Enabling AS7000...");
+    PBL_LOG_DBG("Enabling AS7000...");
   }
 }
 
@@ -552,7 +551,7 @@ static void prv_watchdog_timer_system_cb(void *data) {
 
   // If we have gone too long without getting an interrupt, let's reset the device
   if (s_missing_interrupt_count >= AS7000_MAX_WATCHDOG_INTERRUPTS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Watchdog logic detected frozen sensor. Resetting now.");
+    PBL_LOG_ERR("Watchdog logic detected frozen sensor. Resetting now.");
     analytics_inc(ANALYTICS_DEVICE_METRIC_HRM_WATCHDOG_TIMEOUT, AnalyticsClient_System);
     prv_disable(dev);
     psleep(SHUT_DOWN_DELAY_MS);
@@ -570,7 +569,7 @@ static void prv_watchdog_timer_cb(void *data) {
     system_task_add_callback(prv_watchdog_timer_system_cb, (void *)dev);
   }
   if (s_missing_interrupt_count > 1) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Missing interrupt count: %"PRIu8" ", s_missing_interrupt_count);
+    PBL_LOG_DBG("Missing interrupt count: %"PRIu8" ", s_missing_interrupt_count);
   }
 }
 
@@ -595,7 +594,7 @@ static void prv_disable_watchdog(HRMDevice *dev) {
 static bool prv_start_loader(HRMDevice *dev) {
   // check if the loader is already running
   if (!prv_is_app_running(dev, AS7000AppId_Loader)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Switching to loader");
+    PBL_LOG_DBG("Switching to loader");
     // we need to start the loader
     if (!prv_set_running_apps(dev, AS7000AppId_Loader)) {
       return false;
@@ -624,7 +623,7 @@ static bool prv_wait_for_loader_ready(HRMDevice *dev) {
   do {
     uint8_t status = 0;
     if (!prv_read_register(dev, ADDR_LOADER_STATUS, &status)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed reading status");
+      PBL_LOG_ERR("Failed reading status");
       return false;
     }
 
@@ -633,34 +632,33 @@ static bool prv_wait_for_loader_ready(HRMDevice *dev) {
       return true;
     } else if ((status != AS7000LoaderStatus_Busy1) && (status != AS7000LoaderStatus_Busy2)) {
       // error
-      PBL_LOG(LOG_LEVEL_ERROR, "Error status: %"PRIx8, status);
+      PBL_LOG_ERR("Error status: %"PRIx8, status);
       return false;
     }
     psleep(1);
   } while (prv_get_time_ms() < end_time_ms);
 
-  PBL_LOG(LOG_LEVEL_ERROR, "Timed out waiting for the loader to be ready!");
+  PBL_LOG_ERR("Timed out waiting for the loader to be ready!");
   return false;
 }
 
 static bool prv_flash_fw(HRMDevice *dev) {
   // switch to the loader
   if (!prv_start_loader(dev)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to start loader");
+    PBL_LOG_ERR("Failed to start loader");
     return false;
   }
 
   // wait for the loader to be ready
   if (!prv_wait_for_loader_ready(dev)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Loader not ready");
+    PBL_LOG_ERR("Loader not ready");
     return false;
   }
 
   const uint32_t image_length =
     resource_size(SYSTEM_APP, RESOURCE_ID_AS7000_FW_IMAGE);
   PBL_ASSERTN(image_length);
-  PBL_LOG(LOG_LEVEL_DEBUG,
-          "Loading FW image (%"PRIu32" bytes encoded)", image_length);
+  PBL_LOG_DBG("Loading FW image (%"PRIu32" bytes encoded)", image_length);
   // Skip over the image header.
   uint32_t cursor = sizeof(AS7000FWUpdateHeader);
   while (cursor < image_length) {
@@ -674,7 +672,7 @@ static bool prv_flash_fw(HRMDevice *dev) {
           SYSTEM_APP, RESOURCE_ID_AS7000_FW_IMAGE, cursor,
           (uint8_t *)&segment_header, sizeof(segment_header)) !=
         sizeof(segment_header)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read FW image! "
+      PBL_LOG_ERR("Failed to read FW image! "
               "(segment header @ 0x%" PRIx32 ")", cursor);
       return false;
     }
@@ -688,7 +686,7 @@ static bool prv_flash_fw(HRMDevice *dev) {
       if (resource_load_byte_range_system(
             SYSTEM_APP, RESOURCE_ID_AS7000_FW_IMAGE, cursor, chunk, load_length)
           != load_length) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Failed to read FW image! "
+        PBL_LOG_ERR("Failed to read FW image! "
                 "(segment data @ 0x%" PRIx32 ")", cursor);
         return false;
       }
@@ -700,14 +698,14 @@ static bool prv_flash_fw(HRMDevice *dev) {
                   chunk, load_length);
       if (!prv_write_register_block(dev, ADDR_LOADER_STATUS, data_record,
                                     IHEX_RECORD_LENGTH(load_length))) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Failed to write hex record");
+        PBL_LOG_ERR("Failed to write hex record");
         return false;
       }
 
       // Wait for the loader to be ready, indicating that the last
       // record was successfully written.
       if (!prv_wait_for_loader_ready(dev)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Loader not ready");
+        PBL_LOG_ERR("Loader not ready");
         return false;
       }
 
@@ -725,7 +723,7 @@ static bool prv_flash_fw(HRMDevice *dev) {
   ihex_encode(eof_record, IHEX_TYPE_EOF, 0, NULL, 0);
   if (!prv_write_register_block(dev, ADDR_LOADER_STATUS,
                                 eof_record, IHEX_RECORD_LENGTH(0))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to write EOF record");
+    PBL_LOG_ERR("Failed to write EOF record");
     return false;
   }
 
@@ -746,49 +744,47 @@ static void prv_enable_system_task_cb(void *context) {
     // Enable was cancelled before this callback fired.
     goto done;
   } else if (dev->state->enabled_state != HRMEnabledState_PoweringOn) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Enable KernelBG callback fired while HRM was in "
+    PBL_LOG_ERR("Enable KernelBG callback fired while HRM was in "
             "an unexpected state: %u", (unsigned int)dev->state->enabled_state);
     WTF;
   }
 
   AS7000InfoRecord info;
   if (!prv_get_and_log_device_info(dev, &info, false /* log_version */)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to query AS7000 device info");
+    PBL_LOG_ERR("Failed to query AS7000 device info");
     goto failed;
   }
 
   if (info.application_id == AS7000AppId_Loader) {
     // This shouldn't happen. The application firmware should have been
     // flashed during boot.
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "AS7000 booted into loader! Something is very wrong.");
+    PBL_LOG_ERR("AS7000 booted into loader! Something is very wrong.");
     goto failed;
   }
 
   // check that we can communicate with this chip
   if (info.protocol_version_major != EXPECTED_PROTOCOL_VERSION_MAJOR) {
     // we don't know how to talk with this chip, so bail
-    PBL_LOG(LOG_LEVEL_ERROR, "Unexpected protocol version!");
+    PBL_LOG_ERR("Unexpected protocol version!");
     goto failed;
   }
 
   if (info.application_id != AS7000AppId_Idle) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Unexpected application running: 0x%" PRIx8, info.application_id);
+    PBL_LOG_ERR("Unexpected application running: 0x%" PRIx8, info.application_id);
     goto failed;
   }
 
   // the INT line should be low
   if (gpio_input_read(&dev->int_gpio)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "INT line is not low!");
+    PBL_LOG_ERR("INT line is not low!");
     goto failed;
   }
 
   // Set the accelerometer sample frequency
-  PBL_LOG(LOG_LEVEL_DEBUG, "Setting accel frequency");
+  PBL_LOG_DBG("Setting accel frequency");
   PBL_ASSERTN(HRM_MANAGER_ACCEL_RATE_MILLIHZ >= 10000 && HRM_MANAGER_ACCEL_RATE_MILLIHZ <= 20000);
   if (!prv_set_accel_sample_frequency(dev, HRM_MANAGER_ACCEL_RATE_MILLIHZ)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to set accel frequency");
+    PBL_LOG_ERR("Failed to set accel frequency");
     goto failed;
   }
 
@@ -810,14 +806,14 @@ static void prv_enable_system_task_cb(void *context) {
       break;
   }
   if (!prv_write_register(dev, ADDR_PRES_DETECT_THRSH, pres_detect_thrsh)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to set presence detection threshold");
+    PBL_LOG_ERR("Failed to set presence detection threshold");
     goto failed;
   }
 
   // start the HRM app
-  PBL_LOG(LOG_LEVEL_DEBUG, "Starting HRM app");
+  PBL_LOG_DBG("Starting HRM app");
   if (!prv_set_running_apps(dev, AS7000AppId_HRM)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to start HRM app!");
+    PBL_LOG_ERR("Failed to start HRM app!");
     goto failed;
   }
 
@@ -827,7 +823,7 @@ static void prv_enable_system_task_cb(void *context) {
 
   // wait for the INT line to go high indicating the Idle app has ended
   if (!prv_wait_int_high(dev)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Timed-out waiting for the Idle app to end but we "
+    PBL_LOG_ERR("Timed-out waiting for the Idle app to end but we "
             "probably just missed it");
     // TODO: The line only goes high for a few ms. If there is any kind of context switch while we
     // wait for the line to go high we will miss this. Let's fix this the right way in PBL-41812
@@ -836,7 +832,7 @@ static void prv_enable_system_task_cb(void *context) {
 
   // wait for the INT line to go low indicating the HRM app is ready
   if (!prv_wait_int_low(dev)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Timed-out waiting for the HRM app to be ready");
+    PBL_LOG_ERR("Timed-out waiting for the HRM app to be ready");
     goto failed;
   }
 
@@ -880,7 +876,7 @@ void hrm_init(HRMDevice *dev) {
   if (update_length == 0) {
     // We don't have a firmware to write so there's no point in booting
     // the HRM.
-    PBL_LOG(LOG_LEVEL_DEBUG, "No HRM FW update available");
+    PBL_LOG_DBG("No HRM FW update available");
     return;
   }
 
@@ -888,10 +884,10 @@ void hrm_init(HRMDevice *dev) {
   if (resource_load_byte_range_system(
         SYSTEM_APP, RESOURCE_ID_AS7000_FW_IMAGE, 0, (uint8_t *)&image_header,
         sizeof(image_header)) != sizeof(image_header)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read HRM FW image header!");
+    PBL_LOG_ERR("Failed to read HRM FW image header!");
     return;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "FW update image is v%" PRIu8 ".%" PRIu8 ".%" PRIu8,
+  PBL_LOG_DBG("FW update image is v%" PRIu8 ".%" PRIu8 ".%" PRIu8,
           HRM_SW_VERSION_PART_MAJOR(image_header.sw_version_major),
           HRM_SW_VERSION_PART_MINOR(image_header.sw_version_major),
           image_header.sw_version_minor);
@@ -899,7 +895,7 @@ void hrm_init(HRMDevice *dev) {
   // Now that we know what version the image is, actually boot up the
   // HRM so we can read off the version.
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Booting AS7000...");
+  PBL_LOG_DBG("Booting AS7000...");
 
   gpio_output_init(&dev->en_gpio, GPIO_OType_PP, GPIO_Speed_2MHz);
 #if HRM_FORCE_FLASH
@@ -921,7 +917,7 @@ void hrm_init(HRMDevice *dev) {
 
   AS7000InfoRecord hrm_info;
   if (!prv_get_and_log_device_info(dev, &hrm_info, true /* log_version */)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read AS7000 version info!");
+    PBL_LOG_ERR("Failed to read AS7000 version info!");
     goto cleanup;
   }
 
@@ -932,9 +928,9 @@ void hrm_init(HRMDevice *dev) {
     // minor version in the chip is newer than in the update image, but
     // for sanity's sake let's always make sure the HRM firmware is in
     // sync with the version shipped with the Pebble firmware.
-    PBL_LOG(LOG_LEVEL_DEBUG, "AS7000 firmware version mismatch. Flashing...");
+    PBL_LOG_DBG("AS7000 firmware version mismatch. Flashing...");
     if (!prv_flash_fw(dev)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to flash firmware");
+      PBL_LOG_ERR("Failed to flash firmware");
       goto cleanup;
     }
     // We need to wait for the HRM to reboot into the application before
@@ -942,16 +938,15 @@ void hrm_init(HRMDevice *dev) {
     // during boot, it will activate "force loader mode" and fall back
     // into the loader. Since we're waiting anyway, we might as well
     // query the version info again to make sure the update took.
-    PBL_LOG(LOG_LEVEL_DEBUG, "Firmware flashed! Waiting for reboot...");
+    PBL_LOG_DBG("Firmware flashed! Waiting for reboot...");
     gpio_output_set(&dev->en_gpio, true);
     psleep(LOADER_REBOOT_DELAY_MS);
     if (!prv_get_and_log_device_info(dev, &hrm_info, true /* log_version */)) {
-      PBL_LOG(LOG_LEVEL_ERROR,
-              "Failed to read AS7000 version info after flashing!");
+      PBL_LOG_ERR("Failed to read AS7000 version info after flashing!");
       goto cleanup;
     }
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "AS7000 firmware is up to date.");
+    PBL_LOG_DBG("AS7000 firmware is up to date.");
   }
 
 cleanup:
@@ -962,20 +957,21 @@ cleanup:
   gpio_output_set(&dev->en_gpio, false);
 }
 
-void hrm_enable(HRMDevice *dev) {
+bool hrm_enable(HRMDevice *dev) {
   if (!dev->state->lock) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Not an HRM Device.");
-    return;
+    PBL_LOG_DBG("Not an HRM Device.");
+    return false;
   }
 
   mutex_lock(dev->state->lock);
   prv_enable(dev);
   mutex_unlock(dev->state->lock);
+  return true;  // AS7000 init is async, errors handled via state machine
 }
 
 void hrm_disable(HRMDevice *dev) {
   if (!dev->state->lock) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Not an HRM Device.");
+    PBL_LOG_DBG("Not an HRM Device.");
     return;
   }
 
@@ -991,13 +987,13 @@ bool hrm_is_enabled(HRMDevice *dev) {
 
 void as7000_get_version_info(HRMDevice *dev, AS7000InfoRecord *info_out) {
   if (!dev->state->lock) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Not an HRM Device.");
+    PBL_LOG_DBG("Not an HRM Device.");
     return;
   }
 
   mutex_lock(dev->state->lock);
   if (!prv_get_and_log_device_info(dev, info_out, true /* log_version */)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to read AS7000 version info");
+    PBL_LOG_WRN("Failed to read AS7000 version info");
   }
   mutex_unlock(dev->state->lock);
 }

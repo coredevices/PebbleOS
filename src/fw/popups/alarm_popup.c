@@ -23,10 +23,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#if !PLATFORM_TINTIN
 #include "services/normal/vibes/vibe_client.h"
 #include "services/normal/vibes/vibe_score.h"
-#endif
 
 #if !TINTIN_FORCE_FIT
 #define DIALOG_TIMEOUT_SNOOZE 2000

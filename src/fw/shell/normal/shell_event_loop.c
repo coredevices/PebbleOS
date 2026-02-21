@@ -6,9 +6,9 @@
 #include "shell/prefs_private.h"
 
 #include "apps/system_app_ids.h"
-#include "apps/system_apps/app_fetch_ui.h"
-#include "apps/system_apps/settings/settings_quick_launch.h"
-#include "apps/system_apps/timeline/timeline.h"
+#include "apps/system/app_fetch_ui.h"
+#include "apps/system/settings/quick_launch.h"
+#include "apps/system/timeline/timeline.h"
 #include "kernel/low_power.h"
 #include "kernel/pbl_malloc.h"
 #include "popups/alarm_popup.h"
@@ -46,7 +46,9 @@ void shell_event_loop_init(void) {
   shell_prefs_init();
 #if PLATFORM_SPALDING
   shell_prefs_display_offset_init();
+#if !PLATFORM_SPALDING_GABBRO
   display_calibration_prompt_show_if_needed();
+#endif
 #endif
   notification_window_service_init();
   app_inbox_service_init();
@@ -83,7 +85,7 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
 
     case PEBBLE_ALARM_CLOCK_EVENT:
       analytics_inc(ANALYTICS_DEVICE_METRIC_ALARM_SOUNDED_COUNT, AnalyticsClient_System);
-      PBL_LOG(LOG_LEVEL_INFO, "Alarm event in the shell event loop");
+      PBL_LOG_INFO("Alarm event in the shell event loop");
       stationary_wake_up();
       alarm_popup_push_window(&e->alarm_clock);
       return;

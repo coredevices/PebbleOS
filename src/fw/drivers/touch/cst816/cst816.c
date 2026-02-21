@@ -137,13 +137,13 @@ static bool cst816_fw_update(void) {
     uint16_t fw_offset = 6;
     
     while (length) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "fw start_addr:%d length:%d", start_addr, length);
+      PBL_LOG_DBG("fw start_addr:%d length:%d", start_addr, length);
       uint8_t addr[2] = {start_addr&0xff, start_addr>>8};
       bool rv = prv_write_data(CST816_FW_START_ADDR_REG, addr, 2, 0);
       psleep(CST816_REG_WR_DELAY_TIME);
       if(!prv_write_data(CST816_FW_PAGE_REG, app_bin+fw_offset,
                         length>=CST816_FW_PAGE_SIZE?CST816_FW_PAGE_SIZE:length , 0)) {
-        PBL_LOG(LOG_LEVEL_ERROR, "cst816 update fw error by iic");
+        PBL_LOG_ERR("cst816 update fw error by iic");
         return false;
       }
       psleep(CST816_REG_WR_DELAY_TIME);
@@ -152,7 +152,7 @@ static bool cst816_fw_update(void) {
       psleep(CST816_FW_WR_TIME);
       for (int t=0;; t++) {
         if(t > 50) {
-          PBL_LOG(LOG_LEVEL_ERROR, "cst816 update fw error by writing timeout");
+          PBL_LOG_ERR("cst816 update fw error by writing timeout");
           return false;
         }
         psleep(CST816_RESET_CYCLE_TIME);
@@ -172,14 +172,14 @@ static bool cst816_fw_update(void) {
       uint8_t boot_exit_cmd = CST816_BOOT_EXIT_VAL;
       bool rv = prv_write_data(CST816_BOOT_EXIT_REG, &boot_exit_cmd, 1, 0);
       if (!rv) {
-        PBL_LOG(LOG_LEVEL_ERROR, "exit boot failed");
+        PBL_LOG_ERR("exit boot failed");
         return false;
       }
 
       cst816_hw_reset();
       return true;
     }
-    PBL_LOG(LOG_LEVEL_ERROR, "cst816 update fw error by checksum:%x read:%x", checksum, checksum_read);
+    PBL_LOG_ERR("cst816 update fw error by checksum:%x read:%x", checksum, checksum_read);
   }
 
   return false;
@@ -193,9 +193,9 @@ static void cst816_hw_reset(void) {
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 1);
   psleep(CST816_POR_DELAY_TIME);
 #else
-  gpio_output_set(&CST816->reset, false);
-  psleep(CST816_RESET_CYCLE_TIME);
   gpio_output_set(&CST816->reset, true);
+  psleep(CST816_RESET_CYCLE_TIME);
+  gpio_output_set(&CST816->reset, false);
   psleep(CST816_POR_DELAY_TIME);
 #endif
 }
@@ -215,17 +215,17 @@ void touch_sensor_init(void) {
 
   rv = prv_read_data(CST816_CHIP_ID_REG, &chip_id, 1, 1);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not read CST816 chip ID");
+    PBL_LOG_ERR("Could not read CST816 chip ID");
     return;
   }
 
   rv = prv_read_data(CST816_FW_VERSION_REG, &fw_version, 1, 1);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not read CST816 firmware version");
+    PBL_LOG_ERR("Could not read CST816 firmware version");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "CST816 firmware: 0x%02X", fw_version);
+  PBL_LOG_DBG("CST816 firmware: 0x%02X", fw_version);
 
 #if PLATFORM_OBELIX
   uint8_t target_ver = app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX];
@@ -237,19 +237,10 @@ void touch_sensor_init(void) {
         return;
       }
     } else {
-      PBL_LOG(LOG_LEVEL_ERROR, "Could not enter CST816 boot mode");
+      PBL_LOG_ERR("Could not enter CST816 boot mode");
       return;
     }
   }
-#endif
-
-#if PLATFORM_GETAFIX
-  // FIXME(GETAFIX): Disable default PD on Getafix, we need a proper GPIO API...
-  const InputConfig input_cfg = {
-    .gpio = CST816->int_exti.peripheral,
-    .gpio_pin = CST816->int_exti.gpio_pin,
-  };
-  gpio_input_init_pull_up_down(&input_cfg, GPIO_PuPd_NOPULL);
 #endif
 
   // initialize exti
@@ -296,12 +287,5 @@ static void prv_exti_cb(bool *should_context_switch) {
 }
 
 void touch_sensor_set_enabled(bool enabled) {
-  if (enabled) {
-    cst816_hw_reset();
-    exti_enable(CST816->int_exti);
-  } else {
-    uint8_t data = CST816_POWER_MODE_SLEEP;
-    bool rv = prv_write_data(CST816_POWER_MODE_REG, &data, 1, 1);
-    exti_disable(CST816->int_exti);
-  }
+  // TODO(CST816): provide implementation (old had some issues)
 }

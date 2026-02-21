@@ -52,7 +52,7 @@ static void prv_layout_version_add_all_regions(bool revert) {
     s_ftl_size += prv_region_size(i);
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Filesystem: Temporary size - %"PRId32" Kb", (s_ftl_size / 1024));
+  PBL_LOG_DBG("Filesystem: Temporary size - %"PRId32" Kb", (s_ftl_size / 1024));
   pfs_set_size(s_ftl_size, false /* don't erase regions */);
 }
 
@@ -92,8 +92,7 @@ void ftl_add_region(uint32_t region_start, uint32_t region_end, bool erase_new_r
     s_next_region_idx++;
   // failure, should never happen
   } else {
-    PBL_LOG(LOG_LEVEL_WARNING,
-        "Filesystem: Uh oh, we somehow added regions in the wrong order, %"PRIu32" %"PRIu32,
+    PBL_LOG_WRN("Filesystem: Uh oh, we somehow added regions in the wrong order, %"PRIu32" %"PRIu32,
         region_start, region_end);
     return;
   }
@@ -112,7 +111,7 @@ void ftl_add_region(uint32_t region_start, uint32_t region_end, bool erase_new_r
 
 void ftl_populate_region_list(void) {
   uint8_t flash_layout_version = prv_ftl_get_layout_version();
-  PBL_LOG(LOG_LEVEL_INFO, "Filesystem: Old Flash Layout Version: %u", flash_layout_version);
+  PBL_LOG_INFO("Filesystem: Old Flash Layout Version: %u", flash_layout_version);
 
   for (unsigned int i = s_next_region_idx; i < flash_layout_version; i++) {
     ftl_add_region(s_region_list[i].start, s_region_list[i].end, false);
@@ -126,7 +125,7 @@ void ftl_populate_region_list(void) {
     ftl_add_region(s_region_list[i].start, s_region_list[i].end, true);
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Filesystem: New size - %"PRId32" Kb", (s_ftl_size / 1024));
+  PBL_LOG_DBG("Filesystem: New size - %"PRId32" Kb", (s_ftl_size / 1024));
 }
 
 uint32_t ftl_get_size(void) {

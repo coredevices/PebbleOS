@@ -28,6 +28,8 @@ def build(ctx):
         "src/fw/applib/graphics/gtypes.c "
         "src/fw/applib/graphics/perimeter.c "
         "src/fw/applib/graphics/text_layout.c "
+        "src/fw/applib/graphics/rtl_support.c "
+        "src/fw/applib/graphics/arabic_shaping.c "
         "src/fw/applib/graphics/text_render.c "
         "src/fw/applib/graphics/text_resources.c "
         "src/fw/applib/graphics/utf8.c "
@@ -88,14 +90,14 @@ def build(ctx):
         "src/fw/applib/ui/text_layer.c "
         "src/fw/applib/ui/text_layer_flow.c "
         "src/fw/applib/ui/window.c "
-        "src/fw/apps/system_apps/timeline/peek_layer.c "
-        "src/fw/apps/system_apps/timeline/pin_window.c "
-        "src/fw/apps/system_apps/timeline/text_node.c "
-        "src/fw/apps/system_apps/timeline/timeline.c "
-        "src/fw/apps/system_apps/timeline/timeline_animations.c "
-        "src/fw/apps/system_apps/timeline/timeline_layer.c "
-        "src/fw/apps/system_apps/timeline/timeline_model.c "
-        "src/fw/apps/system_apps/timeline/timeline_relbar.c "
+        "src/fw/apps/system/timeline/peek_layer.c "
+        "src/fw/apps/system/timeline/pin_window.c "
+        "src/fw/apps/system/timeline/text_node.c "
+        "src/fw/apps/system/timeline/timeline.c "
+        "src/fw/apps/system/timeline/animations.c "
+        "src/fw/apps/system/timeline/layer.c "
+        "src/fw/apps/system/timeline/model.c "
+        "src/fw/apps/system/timeline/relbar.c "
         "src/fw/popups/timeline/timeline_item_layer.c "
         "src/fw/services/common/clock.c "
         "src/fw/services/normal/blob_db/pin_db.c "
@@ -131,7 +133,7 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk', 'robert'])
+         platforms=['snowy', 'spalding', 'silk'])
 
     clar(ctx,
          sources_ant_glob=(
@@ -143,6 +145,6 @@ def build(ctx):
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
          # The no events is a builtin on silk and thus cannot be used in a unit test currently
-         platforms=['snowy', 'spalding', 'robert'])
+         platforms=['snowy', 'spalding'])
 
 # vim:filetype=python

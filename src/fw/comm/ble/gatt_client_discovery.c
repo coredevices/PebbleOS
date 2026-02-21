@@ -81,6 +81,8 @@ void gatt_client_discovery_discover_range(GAPLEConnection *connection, ATTHandle
 
 // assumes bt lock is held
 static BTErrno prv_run_next_job(GAPLEConnection *connection) {
+  bt_lock_assert_held(true);
+
   DiscoveryJobQueue *node = connection->discovery_jobs;
   if (!node) {
     return BTErrnoOK; // no more jobs to run
@@ -90,14 +92,22 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection) {
   // has finished or error'ed out. That way the watchdog retry mechanism
   // can simply call this routine again to kick off another discovery attempt
 
-  PBL_LOG(LOG_LEVEL_INFO, "Starting BLE Service Discovery: 0x%x to 0x%x",
+  PBL_LOG_INFO("Starting BLE Service Discovery: 0x%x to 0x%x",
           node->hdl.start, node->hdl.end);
   ATTHandleRange hdl = {
     .start = node->hdl.start,
     .end = node->hdl.end
   };
 
+  // Release bt_lock before calling into Nimble to avoid deadlock.
+  // bt_driver_gatt_start_discovery_range calls pebble_device_to_nimble_conn_handle
+  // which needs ble_hs_mutex.
+  bt_unlock();
+
   BTErrno rv = bt_driver_gatt_start_discovery_range(connection, &hdl);
+
+  // Re-acquire bt_lock before modifying connection state
+  bt_lock();
 
   if (rv == BTErrnoOK) {
     // if we are back here because a timeout occurred, let the
@@ -115,14 +125,21 @@ static bool prv_discovery_handle_timeout(GAPLEConnection *connection, BTErrno *e
   bool retry_started = false;
   BTErrno finalize_result = BTErrnoOK;
   // Executing on NewTimer task, so need to bt_lock():
-  PBL_LOG(LOG_LEVEL_WARNING, "Service Discovery Watchdog Timeout");
+  PBL_LOG_WRN("Service Discovery Watchdog Timeout");
   bt_lock();
   {
     if (!gap_le_connection_is_valid(connection)) {
       goto unlock;
     }
 
-    if (bt_driver_gatt_stop_discovery(connection) != BTErrnoOK) {
+    // Release bt_lock before calling into Nimble to avoid deadlock.
+    // bt_driver_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
+    // which needs ble_hs_mutex.
+    bt_unlock();
+    BTErrno stop_result = bt_driver_gatt_stop_discovery(connection);
+    bt_lock();
+
+    if (stop_result != BTErrnoOK) {
       // Handle the race: Bluetopia service discovery has stopped in the mean time, for example
       // because of a disconnection, internal error or it completed right when the timer fired.
       goto unlock;
@@ -184,7 +201,7 @@ static void prv_send_services_added_event(
       list_count(&connection->gatt_remote_services->node) : 0;
 
   if (num_services_changed > BLE_GATT_MAX_SERVICES_CHANGED) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Remote has %u services, more than we can handle.",
+    PBL_LOG_ERR("Remote has %u services, more than we can handle.",
             num_services_changed);
     num_services_changed = BLE_GATT_MAX_SERVICES_CHANGED;
   }
@@ -460,7 +477,13 @@ BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device) {
         // Remove any partial jobs which may be pending
         // since we are going to rediscover everything
         gatt_client_cleanup_discovery_jobs(connection);
+
+        // Release bt_lock before calling into Nimble to avoid deadlock.
+        // bt_driver_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
+        // which needs ble_hs_mutex.
+        bt_unlock();
         bt_driver_gatt_stop_discovery(connection);
+        bt_lock();
       } else {
         // Queue up CCCD writes to unsubscribe all the subscriptions:
         gatt_client_subscriptions_cleanup_by_connection(connection, true /* should_unsubscribe */);

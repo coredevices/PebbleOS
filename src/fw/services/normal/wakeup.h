@@ -56,5 +56,11 @@ WakeupId wakeup_get_next_scheduled(void);
 void wakeup_migrate_timezone(int utc_diff);
 
 //! @internal
-////! This function is used for updating wakeup events after a time change
+//! This function is called for significant time changes (>15s, timezone, DST).
+//! It rewrites the wakeup file to delete past events and show missed event popups.
+void wakeup_handle_significant_clock_change(void);
+
+//! @internal
+//! This function is called for all time changes (including small RTC calibrations).
+//! It reschedules the wakeup timer without deleting events or showing popups.
 void wakeup_handle_clock_change(void);

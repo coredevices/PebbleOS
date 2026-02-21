@@ -155,7 +155,7 @@ void pulse2_reliable_transport_on_command_packet(
   }
 
   if (length < sizeof((ReliablePacket){0}.s)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Received malformed command packet");
+    PBL_LOG_DBG("Received malformed command packet");
     prv_bounce_ncp_state();
     return;
   }
@@ -164,7 +164,7 @@ void pulse2_reliable_transport_on_command_packet(
   if (packet->is_supervisory) {
     if (packet->s.kind != SupervisoryKind_ReceiveReady &&
         packet->s.kind != SupervisoryKind_Reject) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Received a command packet of type %" PRIu8
+      PBL_LOG_DBG("Received a command packet of type %" PRIu8
               " which is not supported by this implementation.",
               (uint8_t)packet->s.kind);
       // Pretend it is an RR packet
@@ -176,7 +176,7 @@ void pulse2_reliable_transport_on_command_packet(
     }
   } else {  // Information transfer packet
     if (length < sizeof(ReliablePacket)) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "Received malformed Information packet");
+      PBL_LOG_DBG("Received malformed Information packet");
       prv_bounce_ncp_state();
       return;
     }
@@ -214,7 +214,7 @@ void pulse2_reliable_transport_on_command_packet(
           }
         }
       } else {
-        PBL_LOG(LOG_LEVEL_DEBUG, "Received truncated or corrupt info packet "
+        PBL_LOG_DBG("Received truncated or corrupt info packet "
                 "field (expeced %" PRIu16 ", got %" PRIu16 " data bytes). "
                 "Discarding.", ntoh16(packet->i.length), (uint16_t)length);
         return;
@@ -231,14 +231,14 @@ void pulse2_reliable_transport_on_response_packet(
   }
 
   if (length < sizeof((ReliablePacket){0}.s)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Received malformed response packet");
+    PBL_LOG_DBG("Received malformed response packet");
     prv_bounce_ncp_state();
     return;
   }
   ReliablePacket *packet = raw_packet;
 
   if (!packet->is_supervisory) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Received Information packet response; this is "
+    PBL_LOG_DBG("Received Information packet response; this is "
             "not permitted by the protocol (Information packets can only be "
             "commands). Discarding.");
     return;
@@ -248,7 +248,7 @@ void pulse2_reliable_transport_on_response_packet(
 
   if (packet->s.kind != SupervisoryKind_ReceiveReady &&
       packet->s.kind != SupervisoryKind_Reject) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Received a command packet of type %" PRIu8
+    PBL_LOG_DBG("Received a command packet of type %" PRIu8
             " which is not supported by this implementation.",
             (uint8_t)packet->s.kind);
   }
@@ -270,7 +270,7 @@ void pulse2_reliable_retransmit_timer_expired_handler(
                              s_tx_buffer->length);
     prv_start_retransmit_timer(retransmit_sequence_number);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Reached maximum number of retransmit attempts.");
+    PBL_LOG_DBG("Reached maximum number of retransmit attempts.");
     prv_bounce_ncp_state();
   }
 }
@@ -296,7 +296,7 @@ void *pulse_reliable_send_begin(const uint16_t app_protocol) {
   xSemaphoreTake(s_tx_lock, portMAX_DELAY);
   if (!s_layer_up) {
     // Transport went down while waiting for the lock
-    PBL_LOG(LOG_LEVEL_DEBUG, "Transport went down while waiting for lock");
+    PBL_LOG_DBG("Transport went down while waiting for lock");
     xSemaphoreGive(s_tx_lock);
     return NULL;
   }
@@ -311,7 +311,7 @@ void pulse_reliable_send_cancel(void *buf) {
 
 void pulse_reliable_send(void *buf, const size_t length) {
   if (!s_layer_up) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Transport went down before send");
+    PBL_LOG_DBG("Transport went down before send");
     return;
   }
   prv_assert_reliable_buffer(buf);

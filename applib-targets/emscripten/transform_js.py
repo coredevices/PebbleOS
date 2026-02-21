@@ -4,13 +4,12 @@
 
 import argparse
 import re
-import sys
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('js_file')
-    parser.add_argument('--unittest', action='store_true')
+    parser.add_argument("js_file")
+    parser.add_argument("--unittest", action="store_true")
     args = parser.parse_args()
 
     # load file to be processed
@@ -20,7 +19,12 @@ def main():
     # remove all known functions for memory access
     # note: this implementation uses a weak heuristic: only the closing } of a
     # given function has no indentation
-    for func in ["SAFE_HEAP_LOAD", "SAFE_HEAP_LOAD_D", "SAFE_HEAP_STORE", "SAFE_HEAP_STORE_D"]:
+    for func in [
+        "SAFE_HEAP_LOAD",
+        "SAFE_HEAP_LOAD_D",
+        "SAFE_HEAP_STORE",
+        "SAFE_HEAP_STORE_D",
+    ]:
         source = re.sub("function %s\([^\)]*\)\s*{(.*\n)+?}" % func, "", source)
 
     # applies the same patch as seen at
@@ -28,8 +32,10 @@ def main():
     # which is part of the fix for https://github.com/kripken/emscripten/issues/3945
     # TODO: fix after PBL-32521 is done
     orig_source = source
-    source = source.replace("funcstr += arg + '=' + convertCode.returnValue + ';';",
-                            "funcstr += arg + '=(' + convertCode.returnValue + ');';")
+    source = source.replace(
+        "funcstr += arg + '=' + convertCode.returnValue + ';';",
+        "funcstr += arg + '=(' + convertCode.returnValue + ');';",
+    )
     # assert source != orig_source, "Emscripten output does not match expected output of 1.35.0"
 
     # we're not using emscripten's --pre-js and --post-js as it interferes
@@ -42,6 +48,7 @@ def main():
         f.write(EPILOGUE)
         if args.unittest:
             f.write("new RockySimulator();\n")
+
 
 PROLOGUE = """
 RockySimulator = function(options) {

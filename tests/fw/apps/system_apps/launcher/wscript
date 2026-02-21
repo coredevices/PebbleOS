@@ -23,6 +23,8 @@ def build(ctx):
         " src/fw/applib/graphics/graphics_private_raw.c"
         " src/fw/applib/graphics/gtypes.c"
         " src/fw/applib/graphics/text_layout.c"
+        " src/fw/applib/graphics/rtl_support.c"
+        " src/fw/applib/graphics/arabic_shaping.c"
         " src/fw/applib/graphics/text_render.c"
         " src/fw/applib/graphics/text_resources.c"
         " src/fw/applib/graphics/utf8.c"
@@ -71,20 +73,20 @@ def build(ctx):
             " src/fw/applib/ui/menu_layer_system_cells.c"
             " src/fw/applib/vendor/tinflate/tinflate.c"
             " src/fw/applib/vendor/uPNG/upng.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_alarms.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_generic.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_music.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_notifications.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_private.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_service.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_settings.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_structured.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_watchfaces.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_weather.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_app_glance_workout.c"
-            " src/fw/apps/system_apps/launcher/default/launcher_menu_layer.c"
-            " src/fw/apps/system_apps/timeline/text_node.c"
+            " src/fw/apps/system/launcher/default/app_glance.c"
+            " src/fw/apps/system/launcher/default/app_glance_alarms.c"
+            " src/fw/apps/system/launcher/default/app_glance_generic.c"
+            " src/fw/apps/system/launcher/default/app_glance_music.c"
+            " src/fw/apps/system/launcher/default/app_glance_notifications.c"
+            " src/fw/apps/system/launcher/default/app_glance_private.c"
+            " src/fw/apps/system/launcher/default/app_glance_service.c"
+            " src/fw/apps/system/launcher/default/app_glance_settings.c"
+            " src/fw/apps/system/launcher/default/app_glance_structured.c"
+            " src/fw/apps/system/launcher/default/app_glance_watchfaces.c"
+            " src/fw/apps/system/launcher/default/app_glance_weather.c"
+            " src/fw/apps/system/launcher/default/app_glance_workout.c"
+            " src/fw/apps/system/launcher/default/menu_layer.c"
+            " src/fw/apps/system/timeline/text_node.c"
             " src/fw/board/displays/display_spalding.c"
             " src/fw/services/normal/app_glances/app_glance_service.c"
             " src/fw/services/normal/blob_db/app_glance_db.c"
@@ -104,6 +106,6 @@ def build(ctx):
         defines=ctx.env.test_image_defines,
         runtime_deps=(ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos),
         override_includes=["dummy_board"],
-        platforms=["silk", "snowy", "spalding", "robert"])
+        platforms=["silk", "snowy", "spalding"])
 
 # vim:filetype=python

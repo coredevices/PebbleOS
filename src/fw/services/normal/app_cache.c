@@ -51,7 +51,7 @@
 
 //! Keep enough room for the maximum sized application based on platform, plus a little more room.
 //! Source: https://pebbletechnology.atlassian.net/wiki/display/DEV/PBW+3.0
-#if PLATFORM_TINTIN || PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || UNITTEST
+#if PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || UNITTEST
 #define APP_SPACE_BUFFER KiBYTES(300)
 #else
 #define APP_SPACE_BUFFER MiBYTES(4)
@@ -138,7 +138,7 @@ static void prv_cleanup_app_cache_if_needed(void *data) {
 
   if (pfs_space < APP_SPACE_BUFFER) {
     const uint32_t to_free = (APP_SPACE_BUFFER - pfs_space);
-    PBL_LOG(LOG_LEVEL_DEBUG, "Cache OOS: Need to free %"PRIu32" bytes, PFS avail space: %"PRIu32"",
+    PBL_LOG_DBG("Cache OOS: Need to free %"PRIu32" bytes, PFS avail space: %"PRIu32"",
         to_free, pfs_space);
     app_cache_free_up_space(to_free);
   }
@@ -169,8 +169,7 @@ static bool prv_is_in_list(AppInstallId id, const AppInstallId list[], uint8_t l
 static bool prv_each_free_up_space(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   // check entry is valid
   if ((info->key_len != sizeof(AppInstallId)) || (info->val_len != sizeof(AppCacheEntry))) {
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Invalid cache entry with key_len: %u and val_len: %u, flushing",
+    PBL_LOG_WRN("Invalid cache entry with key_len: %u and val_len: %u, flushing",
             info->key_len, info->val_len);
     system_task_add_callback(prv_delete_cache_callback, NULL);
     return false; // stop iterating, delete the file and binaries
@@ -288,7 +287,7 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
     EvictListNode *node = evict_data.list;
     while (node) {
       EvictListNode *temp = node;
-      PBL_LOG(LOG_LEVEL_DEBUG, "Deleting application binaries for app id: %"PRIu32", size: %"PRIu32,
+      PBL_LOG_DBG("Deleting application binaries for app id: %"PRIu32", size: %"PRIu32,
           node->id, node->size);
       app_cache_remove_entry(node->id);
       node = (EvictListNode *)list_pop_head((ListNode *)node);
@@ -355,7 +354,7 @@ static void prv_app_cache_find_and_delete_orphans(PFSFileListEntry **resource_li
   // entries in the app cache. We can safely delete these files.
   PFSFileListEntry *iter = *resource_list;
   while (iter) {
-    PBL_LOG(LOG_LEVEL_INFO, "Orphaned resource file removed: %s", iter->name);
+    PBL_LOG_INFO("Orphaned resource file removed: %s", iter->name);
     pfs_remove(iter->name);
     iter = (PFSFileListEntry *)iter->list_node.next;
   }

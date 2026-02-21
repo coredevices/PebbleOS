@@ -11,7 +11,7 @@
 
 
 #define ANALYTICS_LOG_DEBUG(fmt, args...) \
-            PBL_LOG_D(LOG_DOMAIN_ANALYTICS, LOG_LEVEL_DEBUG, fmt, ## args)
+            PBL_LOG_D_DBG(LOG_DOMAIN_ANALYTICS, fmt, ## args)
 
 //! Possible values for the client argument when setting/updating a metric. This tells the
 //! analytics code under which "blob" to put the metric. For device metrics, the client argument

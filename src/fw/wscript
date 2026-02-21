@@ -87,6 +87,7 @@ def configure(conf):
     conf.load('binary_header')
     conf.recurse('applib')
     conf.recurse('services')
+    conf.recurse('soc')
 
     if conf.is_silk():
         conf.env.append_value('DEFINES', ['MFG_INFO_RECORDS_TEST_RESULTS'])
@@ -109,45 +110,27 @@ def configure(conf):
 
 def _generate_memory_layout(bld):
 
-    if bld.is_cutts() or bld.is_robert():
-        ldscript_template = bld.path.find_node('stm32f7xx_flash_fw.ld.template')
-    elif bld.is_silk():
+    if bld.is_silk():
         ldscript_template = bld.path.find_node('stm32f412_flash_fw.ld.template')
+    elif bld.env.BOARD in ('snowy_emery', 'spalding_gabbro'):
+        ldscript_template = bld.path.find_node('stm32f439_snowy_emery_flash_fw.ld.template')
     elif bld.is_snowy_compatible():
         ldscript_template = bld.path.find_node('stm32f439_flash_fw.ld.template')
-    elif bld.is_tintin():
-        ldscript_template = bld.path.find_node('stm32f2xx_flash_fw.ld.template')
     elif bld.is_asterix():
         ldscript_template = bld.path.find_node('nrf52840_flash_fw.ld.template')
     elif bld.is_obelix() or bld.is_getafix():
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
-    if bld.env.MICRO_FAMILY == 'STM32F2':
+    if bld.env.MICRO_FAMILY == 'STM32F4':
+        flash_size = 1024 * 1024
         # Bootloader
         offset_size = 16 * 1024
-        flash_size = 512 * 1024
-        fw_max_size = flash_size
-
-    elif bld.env.MICRO_FAMILY == 'STM32F4':
-        flash_size = 1024 * 1024
-        if bld.env.BOARD in ('snowy_evt', 'snowy_evt2', 'spalding_evt'):
-            # Bootloader
-            offset_size = 64 * 1024
-        else:
-            # Bootloader
-            offset_size = 16 * 1024
         if bld.is_silk() and bld.variant == 'prf':
             # silk PRF is limited to 512k to save on SPI flash space
             fw_max_size = flash_size // 2
         else:
             fw_max_size = flash_size
-
-    elif bld.env.MICRO_FAMILY == 'STM32F7':
-        # Bootloader
-        offset_size = 32 * 1024
-        flash_size = 2048 * 1024
-        fw_max_size = flash_size
 
     elif bld.env.MICRO_FAMILY == 'SF32LB52':
         flash_size = 32 * 1024 * 1024
@@ -199,18 +182,7 @@ def _generate_memory_layout(bld):
     fw_flash_length = '%(fw_max_size)d - %(firmware_offset)d' % locals()
     fw_flash_origin = '0x%(flash_origin)08x + %(offset_size)d + %(firmware_offset)d' % locals()
 
-    if bld.env.MICRO_FAMILY == 'STM32F2' and bld.variant == '':
-        # If we're building a tintin normal firmware make sure to plug in all the symbols that we
-        # want to use from the bootloader.
-
-        with open(bld.path.find_node('bootloader_symbols.json').abspath(), 'r') as f:
-            bootloader_symbols_json = json.load(f)
-
-        bootloader_symbols = bootloader_symbols_json['bootloader_symbols'].items()
-        bootloader_symbol_strings = ("%s = %s;" % (n, v) for n, v in bootloader_symbols)
-        bootloader_symbol_definitions = "\n    ".join(bootloader_symbol_strings)
-    else:
-        bootloader_symbol_definitions = ""
+    bootloader_symbol_definitions = ""
 
     # Determine ram layout
 
@@ -247,19 +219,20 @@ def _generate_memory_layout(bld):
     # hardware capabilities watch model itself - i.e. chalk vs basalt). We want to define
     # APP_RAM_*X_SIZE macros for each app execution environment supported by the model so we
     # don't need to hard-code these in the FW itself.
-    if bld.is_tintin():
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['aplite']
-        app_ram_size_4x = APP_UNSUPPORTED
-        # We have a 128k continuous block of RAM.
-        total_ram = (0x20000000, 128 * 1024)
-    elif bld.env.BOARD == 'snowy_emery':
+    if bld.env.BOARD == 'snowy_emery':
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['basalt']
         app_ram_size_4x = APP_RAM_SIZES['emery']
         # Snowy Emery has STM32F4 with 512K RAM like Silk but with robert capabilities.
         # We allocate more RAM than standard snowy to support robert features (HRM, caching, etc).
         # 512k continuous block of RAM (256k more than standard snowy), plus a separate 64k of CCM.
+        total_ram = (0x20000000, 512 * 1024)
+    elif bld.env.BOARD == 'spalding_gabbro':
+        app_ram_size_2x = APP_UNSUPPORTED
+        app_ram_size_3x = APP_RAM_SIZES['chalk']
+        app_ram_size_4x = APP_RAM_SIZES['gabbro']
+        # Spalding Gabbro needs STM32F4 with 512K RAM (like snowy_emery) for the larger 260x260 display.
+        # 512k continuous block of RAM, plus a separate 64k of CCM.
         total_ram = (0x20000000, 512 * 1024)
     elif bld.is_snowy():
         app_ram_size_2x = APP_RAM_SIZES['aplite']
@@ -281,13 +254,6 @@ def _generate_memory_layout(bld):
         app_ram_size_4x = APP_RAM_SIZES['diorite']
         # We have a 256k continuous block of RAM.
         total_ram = (0x20000000, 256 * 1024)
-    elif bld.is_cutts() or bld.is_robert():
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['basalt']
-        app_ram_size_4x = APP_RAM_SIZES['emery']
-        # We block off the 128k of DTCM for variables marked as DTCM_BSS. We use the remaining 384k
-        # of SRAM as a continuous block of RAM.
-        total_ram = (0x20020000, 384 * 1024)
     elif bld.is_asterix():
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['aplite']
@@ -326,6 +292,12 @@ def _generate_memory_layout(bld):
     worker_ram_size = 12 * 1024  # The worker always gets 12k of RAM.
     worker_ram = (ram_end - app_ram_size - worker_ram_size, worker_ram_size)
     kernel_ram_size = total_ram[1] - app_ram_size - worker_ram_size
+    # On snowy_emery the excess RAM results in a kernel heap far larger than real
+    # hardware (~131K vs ~106K), which is further capped by the heap allocator's
+    # 15-bit segment size field to 131068 bytes. Reduce kernel RAM to match real
+    # hardware heap pressure and avoid masking memory-related bugs in QEMU.
+    if bld.env.BOARD in ('snowy_emery', 'spalding_gabbro'):
+        kernel_ram_size = min(kernel_ram_size, 172 * 1024)
     kernel_ram = (total_ram[0], kernel_ram_size)
 
     # As a basic sanity check, make sure we're giving the kernel at least 64k.
@@ -374,10 +346,10 @@ def _generate_memory_layout(bld):
 
 
 def _link_firmware(bld, sources):
-    if bld.is_spalding():
-        sources += ['board/displays/display_spalding.c']
-    elif bld.is_getafix():
+    if bld.is_getafix() or bld.env.BOARD == 'spalding_gabbro':
         sources += ['board/displays/display_getafix.c']
+    elif bld.is_spalding():
+        sources += ['board/displays/display_spalding.c']
 
     fw_linkflags = ['-Wl,--cref',
                     '-Wl,-Map=tintin_fw.map',
@@ -412,6 +384,7 @@ def _link_firmware(bld, sources):
             'nanopb',
             'pblibc',
             'root_includes',
+            'soc',
             'speex',
             'startup',
             'tinymt32',
@@ -476,19 +449,12 @@ def _link_firmware(bld, sources):
 def _get_mfg_paths(bld):
     """Return a list of directories we want to build to support manufacturing on a platform"""
 
-    if bld.is_tintin():
-        return ('mfg/tintin',)
-    elif bld.is_snowy():
+    if bld.is_snowy():
         return ('mfg/snowy',)
     elif bld.is_spalding():
         return ('mfg/spalding',)
     elif bld.is_silk():
         return ('mfg/silk',)
-    elif bld.is_cutts():
-        # This probably should end up as 'mfg/cutts' if this comes back
-        return ('mfg/robert',)
-    elif bld.is_robert():
-        return ('mfg/robert',)
     elif bld.is_asterix():
         return ('mfg/asterix',)
     elif bld.is_obelix():
@@ -501,29 +467,22 @@ def _get_mfg_paths(bld):
 def _get_dbg_paths(bld):
     """Return a list of directories we want to build to support debug logging on a platform"""
 
-    if bld.is_tintin():
-        return ('debug/legacy',)
-    else:
-        return ('debug/default',)
+    return ('debug/default',)
 
 def _gen_fpga_bitstream_header(bld):
     if bld.env.BOARD == 'snowy_emery':
         # Snowy Emery uses robert display, so use robert FPGA bitstream
-        source_bitstream = '../../platform/robert/Robert_UL1K_framebuffer_bitmap.fpga'
+        source_bitstream = 'board/fpga/Robert_UL1K_framebuffer_bitmap.fpga'
+    elif bld.env.BOARD == 'spalding_gabbro':
+        # Spalding Gabbro uses getafix display, needs 260x260 round FPGA bitstream
+        source_bitstream = 'board/fpga/Spalding_Gabbro_260x260_framebuffer.fpga'
     elif bld.is_snowy():
-        if bld.env.BOARD in ('snowy_bb', 'snowy_evt'):
-            source_bitstream = '../../platform/snowy/snowy_framebuffer_evt.fpga'
-        else:
-            source_bitstream = '../../platform/snowy/Snowy_LP1K_framebuffer.fpga'
+        source_bitstream = 'board/fpga/Snowy_LP1K_framebuffer.fpga'
     elif bld.is_spalding():
         if bld.env.BOARD in ('spalding_bb2',):
-            source_bitstream = '../../platform/snowy/Spalding_LP1K_framebuffer.fpga'
+            source_bitstream = 'board/fpga/Spalding_LP1K_framebuffer.fpga'
         else:
-            source_bitstream = '../../platform/snowy/Spalding_UL1K_framebuffer.fpga'
-    elif bld.is_cutts():
-        source_bitstream = '../../platform/robert/Cutts_UL1K_framebuffer_144x168_bitmap.fpga'
-    elif bld.is_robert():
-        source_bitstream = '../../platform/robert/Robert_UL1K_framebuffer_bitmap.fpga'
+            source_bitstream = 'board/fpga/Spalding_UL1K_framebuffer.fpga'
     else:
         bld.fatal('No FPGA available for {}'.format(bld.env.BOARD))
 
@@ -548,8 +507,8 @@ def _get_comm_sources(bld, is_recovery):
 
 
 def _build_recovery(bld):
-    source_dirs = ['apps/core_apps/**',
-                   'apps/prf_apps/**',
+    source_dirs = ['apps/core/**',
+                   'apps/prf/**',
                    'process_management',
                    'process_state/**',
                    'console',
@@ -579,30 +538,30 @@ def _build_recovery(bld):
 
     if not bld.is_asterix():
         excludes.extend([
-            'apps/prf_apps/mfg_speaker_asterix_app.c',
-            'apps/prf_apps/mfg_mic_asterix_app.c',
+            'apps/prf/mfg_speaker_asterix.c',
+            'apps/prf/mfg_mic_asterix.c',
         ])
     
     if not bld.is_obelix():
         excludes.extend([
-            'apps/prf_apps/mfg_speaker_obelix_app.c',
-            'apps/prf_apps/mfg_mic_obelix_app.c',
+            'apps/prf/mfg_speaker_obelix.c',
+            'apps/prf/mfg_mic_obelix.c',
         ])
 
     if not bld.is_obelix() or not bld.env.IS_MFG:
         excludes.extend([
-            'apps/prf_apps/mfg_hrm_ctr_leakage_obelix_app.c',
+            'apps/prf/mfg_hrm_ctr_leakage_obelix.c',
         ])
 
     if not bld.is_getafix():
         excludes.extend([
-            'apps/prf_apps/mfg_mic_getafix_app.c',
+            'apps/prf/mfg_mic_getafix.c',
         ])
 
     # Exclude magnetometer test for platforms without magnetometer
     if not bld.capability('HAS_MAGNETOMETER'):
         excludes.extend([
-            'apps/prf_apps/mfg_mag_app.c',
+            'apps/prf/mfg_mag.c',
         ])
 
     if bld.is_silk():
@@ -617,25 +576,20 @@ def _build_recovery(bld):
 
     sources.append(bld.path.get_bld().make_node('builtin_resources.auto.c'))
 
-    if bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
+    if bld.is_snowy_compatible():
         _gen_fpga_bitstream_header(bld)
 
     if bld.is_snowy():
         bld(features='binary_header',
-            source='../../platform/snowy/snowy_boot.fpga',
+            source='board/fpga/snowy_boot.fpga',
             target='mfg/snowy/snowy_boot.fpga.auto.h',
             array_name='s_boot_fpga')
     elif bld.is_spalding():
         bld(features='binary_header',
-            source='../../platform/snowy/spalding_boot.fpga',
+            source='board/fpga/spalding_boot.fpga',
             target='mfg/spalding/spalding_boot.fpga.auto.h',
             array_name='s_boot_fpga')
 
-    if 'BOOTLOADER_TEST_STAGE1=1' in bld.env.DEFINES:
-        bld(features='binary_header',
-            source=bld.path.make_node('../../bootloader_test_stage2.bin'),
-            target='bootloader_test_bin.auto.h',
-            array_name='s_bootloader_test_stage2')
 
 
     if bld.env.DISABLE_PROMPT:
@@ -646,15 +600,12 @@ def _build_recovery(bld):
 
 
 def _get_launcher_globs_to_exclude(bld):
-    system_launchers_root_path = 'apps/system_apps/launcher/'
+    system_launchers_root_path = 'apps/system/launcher/'
     legacy_launcher_glob = system_launchers_root_path + 'legacy/**'
     default_launcher_glob = system_launchers_root_path + 'default/**'
     launcher_globs_to_exclude = [legacy_launcher_glob, default_launcher_glob]
 
-    if bld.is_tintin():
-        launcher_glob_to_use = legacy_launcher_glob
-    else:
-        launcher_glob_to_use = default_launcher_glob
+    launcher_glob_to_use = default_launcher_glob
 
     launcher_globs_to_exclude.remove(launcher_glob_to_use)
     return launcher_globs_to_exclude
@@ -691,45 +642,41 @@ def _build_normal(bld):
     source_files = []
     excludes = []
 
-    source_dirs.append('apps/core_apps/**')
+    source_dirs.append('apps/core/**')
     if bld.env.NORMAL_SHELL == 'sdk':
         source_dirs.append('apps/sdk/**')
-        source_dirs.append('apps/system_apps/timeline')
+        source_dirs.append('apps/system/timeline')
         if bld.capability('HAS_SDK_SHELL4'):
-            source_dirs.append('apps/system_apps/launcher/default/**')
+            source_dirs.append('apps/system/launcher/default/**')
         else:
             excludes.append('process_management/app_custom_icon.c')
             excludes.append('process_management/app_menu_data_source.c')
     else:
-        source_dirs.extend(('apps/%s/**' % d for d in ('system_apps', 'watch')))
-        if bld.is_spalding():
+        source_dirs.extend(('apps/%s/**' % d for d in ('system', 'watch')))
+        if bld.is_spalding() and bld.env.BOARD != 'spalding_gabbro':
             excludes.append('apps/watch/tictoc/default')
-        else:
+            excludes.append('apps/watch/tictoc/bw')
+        elif bld.is_silk() or bld.is_asterix():
+            excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/spalding')
-
-        if bld.is_cutts():
-            excludes.append('apps/watch/kickstart')
+        else:
+            excludes.append('apps/watch/tictoc/bw')
+            excludes.append('apps/watch/tictoc/spalding')
 
     source_dirs.extend(_get_mfg_paths(bld))
     source_dirs.extend(_get_dbg_paths(bld))
 
     if bld.env.BUILD_TEST_APPS:
-        source_dirs.append('apps/demo_apps/**')
-        if bld.is_tintin() or bld.is_silk():
-            excludes.append('apps/demo_apps/vibe_score_demo.c')
+        source_dirs.append('apps/demo/**')
+        if bld.is_silk():
+            excludes.append('apps/demo/vibe_score_demo.c')
     elif bld.env.PERFORMANCE_TESTS:
-        source_dirs.append('apps/demo_apps/gfx_tests')
+        source_dirs.append('apps/demo/gfx_tests')
 
     excludes.extend(_get_launcher_globs_to_exclude(bld))
 
     if not bld.capability('HAS_BUILTIN_HRM'):
         excludes.append('popups/ble_hrm/**')
-
-    if bld.is_tintin():
-        excludes.append('apps/system_apps/health/**')
-        excludes.append('apps/system_apps/settings/settings_vibe_patterns.c')
-        excludes.append('apps/system_apps/weather/**')
-        excludes.append('apps/system_apps/workout/**')
 
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
     sources.extend(bld.path.make_node(x) for x in source_files)
@@ -738,9 +685,9 @@ def _build_normal(bld):
     sources.extend(bld.path.ant_glob('*.[sS]'))
 
     if bld.env.NORMAL_SHELL == 'sdk':
-        sources.append('apps/system_apps/app_fetch_ui.c')
+        sources.append('apps/system/app_fetch_ui.c')
         if bld.capability('HAS_SDK_SHELL4'):
-            sources.append('apps/system_apps/watchfaces.c')
+            sources.append('apps/system/watchfaces.c')
 
     gettexts = []
     gettexts.extend(sources)
@@ -752,17 +699,17 @@ def _build_normal(bld):
             source='fw.pot services/services.pot applib/applib.pot',
             target='tintin.pot')
 
-    if bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
+    if bld.is_snowy_compatible():
         _gen_fpga_bitstream_header(bld)
 
     if bld.is_snowy():
         bld(features='binary_header',
-            source='../../platform/snowy/snowy_boot.fpga',
+            source='board/fpga/snowy_boot.fpga',
             target='mfg/snowy/snowy_boot.fpga.auto.h',
             array_name='s_boot_fpga')
     elif bld.is_spalding():
         bld(features='binary_header',
-            source='../../platform/snowy/spalding_boot.fpga',
+            source='board/fpga/spalding_boot.fpga',
             target='mfg/spalding/spalding_boot.fpga.auto.h',
             array_name='s_boot_fpga')
 
@@ -803,7 +750,7 @@ def build(bld):
         use=fw_includes_use,
         name='fw_includes')
 
-    if bld.variant in ('applib', 'test_rocky_emx'):
+    if bld.variant == 'applib':
         bld.set_env(bld.all_envs['local'])
         bld.env.DEFINES.extend(['UNITTEST', 'SCREEN_COLOR_DEPTH_BITS=8',
                                 'DISP_COLS=144', 'DISP_ROWS=168',
@@ -832,6 +779,7 @@ def build(bld):
     bld.recurse('shell')
     bld.recurse('services')
     bld.recurse('applib')
+    bld.recurse('soc')
 
     # We can't use DMA until we root cause PBL-37278
     if bld.is_silk():

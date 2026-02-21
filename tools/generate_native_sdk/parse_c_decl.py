@@ -13,38 +13,41 @@ dump_tree = False
 
 def add_clang_compat_module_to_sys_path_if_needed():
     try:
-        import clang.cindex
+        pass
     except:
-        sys.path.append(os.path.join(os.path.dirname(__file__),
-                        'clang_compat'))
+        sys.path.append(os.path.join(os.path.dirname(__file__), "clang_compat"))
         logging.info("Importing clang python compatibility module")
+
+
 add_clang_compat_module_to_sys_path_if_needed()
 import clang.cindex
 
 
 def get_homebrew_llvm_lib_path():
     try:
-        o = subprocess.check_output(['brew', 'ls', 'llvm'])
+        o = subprocess.check_output(["brew", "ls", "llvm"])
     except subprocess.CalledProcessError:
         # No brew llvm installed
         return None
 
     # Brittleness alert! Grepping output of `brew info llvm` for llvm bin path:
-    m = re.search('.*/llvm-config', o.decode("utf8"))
+    m = re.search(".*/llvm-config", o.decode("utf8"))
     if m:
         llvm_config_path = m.group(0)
 
-        o = subprocess.check_output([llvm_config_path, '--libdir'])
+        o = subprocess.check_output([llvm_config_path, "--libdir"])
         llvm_lib_path = o.decode("utf8").strip()
 
         # Make sure --enable-clang and --enable-python options were used:
-        if os.path.exists(os.path.join(llvm_lib_path, 'libclang.dylib')) and \
-           glob.glob(os.path.join(llvm_lib_path,
-                                  'python*', 'site-packages', 'clang')):
+        if os.path.exists(os.path.join(llvm_lib_path, "libclang.dylib")) and glob.glob(
+            os.path.join(llvm_lib_path, "python*", "site-packages", "clang")
+        ):
             return llvm_lib_path
         else:
-            logging.info("Found llvm from homebrew, but not installed with"
-                         " --with-clang --with-python")
+            logging.info(
+                "Found llvm from homebrew, but not installed with"
+                " --with-clang --with-python"
+            )
 
 
 def load_library():
@@ -57,21 +60,24 @@ def load_library():
     else:
         return
 
-    if sys.platform == 'darwin':
+    if sys.platform == "darwin":
         libclang_path = get_homebrew_llvm_lib_path()
         if not libclang_path:
             # Try using Xcode's libclang:
-            logging.info("llvm from homebrew not found,"
-                         " trying Xcode's instead")
-            xcode_path = subprocess.check_output(['xcode-select',
-                                                  '--print-path']).decode("utf8").strip()
-            libclang_path = \
-                os.path.join(xcode_path,
-                             'Toolchains/XcodeDefault.xctoolchain/usr/lib')
+            logging.info("llvm from homebrew not found, trying Xcode's instead")
+            xcode_path = (
+                subprocess.check_output(["xcode-select", "--print-path"])
+                .decode("utf8")
+                .strip()
+            )
+            libclang_path = os.path.join(
+                xcode_path, "Toolchains/XcodeDefault.xctoolchain/usr/lib"
+            )
         clang.cindex.conf.set_library_path(libclang_path)
-    elif sys.platform == 'linux2':
-        libclang_path = subprocess.check_output(['llvm-config',
-                                                 '--libdir']).decode("utf8").strip()
+    elif sys.platform == "linux2":
+        libclang_path = (
+            subprocess.check_output(["llvm-config", "--libdir"]).decode("utf8").strip()
+        )
         clang.cindex.conf.set_library_path(libclang_path)
 
     libclang_lib = clang.cindex.conf.lib
@@ -81,21 +87,28 @@ def do_libclang_setup():
     load_library()
 
     functions = (
-        ("clang_Cursor_getCommentRange",
-         [clang.cindex.Cursor],
-         clang.cindex.SourceRange),
+        (
+            "clang_Cursor_getCommentRange",
+            [clang.cindex.Cursor],
+            clang.cindex.SourceRange,
+        ),
     )
 
     for f in functions:
         clang.cindex.register_function(clang.cindex.conf.lib, f, False)
 
+
 def is_node_kind_a_type_decl(kind):
-    return kind == clang.cindex.CursorKind.STRUCT_DECL or \
-           kind == clang.cindex.CursorKind.ENUM_DECL or \
-           kind == clang.cindex.CursorKind.TYPEDEF_DECL
+    return (
+        kind == clang.cindex.CursorKind.STRUCT_DECL
+        or kind == clang.cindex.CursorKind.ENUM_DECL
+        or kind == clang.cindex.CursorKind.TYPEDEF_DECL
+    )
+
 
 def get_node_spelling(node):
     return clang.cindex.conf.lib.clang_getCursorSpelling(node)
+
 
 def get_comment_range(node):
     source_range = clang.cindex.conf.lib.clang_Cursor_getCommentRange(node)
@@ -104,15 +117,20 @@ def get_comment_range(node):
 
     return source_range
 
+
 def get_comment_range_for_decl(node):
     source_range = get_comment_range(node)
     if source_range is None:
         if node.kind == clang.cindex.CursorKind.TYPEDEF_DECL:
             for child in node.get_children():
-                if is_node_kind_a_type_decl(child.kind) and len(get_node_spelling(child)) == 0:
+                if (
+                    is_node_kind_a_type_decl(child.kind)
+                    and len(get_node_spelling(child)) == 0
+                ):
                     source_range = get_comment_range(child)
 
     return source_range
+
 
 def get_comment_string_for_decl(node):
     comment_range = get_comment_range_for_decl(node)
@@ -120,11 +138,12 @@ def get_comment_string_for_decl(node):
     if comment_string is None:
         return None
 
-    if '@addtogroup' in comment_string:
+    if "@addtogroup" in comment_string:
         # This is actually a block comment, not a comment specifically for this type. Ignore it.
         return None
 
     return comment_string
+
 
 def get_string_from_file(source_range):
     if source_range is None:
@@ -136,8 +155,10 @@ def get_string_from_file(source_range):
 
     with open(source_range_file.name, "rb") as f:
         f.seek(source_range.start.offset)
-        return f.read(source_range.end.offset -
-                      source_range.start.offset).decode("utf8")
+        return f.read(source_range.end.offset - source_range.start.offset).decode(
+            "utf8"
+        )
+
 
 def dump_node(node, indent_level=0):
     spelling = node.spelling
@@ -146,10 +167,15 @@ def dump_node(node, indent_level=0):
 
     print("%*s%s> %s" % (indent_level * 2, "", node.kind, spelling))
     print("%*sRange:   %s" % (4 + (indent_level * 2), "", str(node.extent)))
-    print("%*sComment: %s" % (4 + (indent_level * 2), "", str(get_comment_range_for_decl(node))))
+    print(
+        "%*sComment: %s"
+        % (4 + (indent_level * 2), "", str(get_comment_range_for_decl(node)))
+    )
+
 
 def return_true(node):
     return True
+
 
 def for_each_node(node, func, level=0, filter_func=return_true):
     if not filter_func(node):
@@ -168,6 +194,7 @@ def for_each_node(node, func, level=0, filter_func=return_true):
 
 def extract_declarations(tu, filenames, func):
     matching_basenames = {os.path.basename(f) for f in filenames}
+
     def filename_filter_func(node):
         node_file = node.location.file
         if node_file is None:
@@ -183,29 +210,35 @@ def extract_declarations(tu, filenames, func):
     for_each_node(tu.cursor, func, filter_func=filename_filter_func)
 
 
-def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_flags=None):
+def parse_file(
+    filename, filenames, func, internal_sdk_build=False, compiler_flags=None
+):
     root_dir = os.path.join(os.path.dirname(__file__), "../..")
     src_dir = os.path.join(root_dir, "src")
 
-    args = [ "-I%s/core" % src_dir,
-             "-I%s/include" % src_dir,
-             "-I%s/fw" % src_dir,
-             "-I%s/fw/applib/vendor/uPNG" % src_dir,
-             "-I%s/fw/applib/vendor/tinflate" % src_dir,
-             "-I%s/third_party/jerryscript/jerryscript/jerry-core" % root_dir,
-             "-I%s/libbtutil/include" % src_dir,
-             "-I%s/libos/include" % src_dir,
-             "-I%s/libutil/includes" % src_dir,
-             "-I%s/libc/include" % src_dir,
-             "-I%s/../build/src/fw" % src_dir,
-             "-I%s/include" % src_dir,
-             "-DSDK",
-             "-fno-builtin-itoa"]
+    args = [
+        "-I%s/core" % src_dir,
+        "-I%s/include" % src_dir,
+        "-I%s/fw" % src_dir,
+        "-I%s/fw/applib/vendor/uPNG" % src_dir,
+        "-I%s/fw/applib/vendor/tinflate" % src_dir,
+        "-I%s/third_party/jerryscript/jerryscript/jerry-core" % root_dir,
+        "-I%s/libbtutil/include" % src_dir,
+        "-I%s/libos/include" % src_dir,
+        "-I%s/libutil/includes" % src_dir,
+        "-I%s/libc/include" % src_dir,
+        "-I%s/../build/src/fw" % src_dir,
+        "-I%s/include" % src_dir,
+        "-DSDK",
+        "-fno-builtin-itoa",
+    ]
 
     # Add header search paths, recursing subdirs:
-    for inc_sub_dir in ['fw/util']:
+    for inc_sub_dir in ["fw/util"]:
         args += [inc_sub_dir]
-        args += ["-I%s" % d for d in glob.glob(os.path.join(src_dir, "%s/*/" % inc_sub_dir))]
+        args += [
+            "-I%s" % d for d in glob.glob(os.path.join(src_dir, "%s/*/" % inc_sub_dir))
+        ]
 
     if internal_sdk_build:
         args.append("-DINTERNAL_SDK_BUILD")
@@ -217,16 +250,18 @@ def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_fla
     # Check Clang for unsigned types being undefined
     # https://sourceware.org/ml/newlib/2014/msg00082.html
     # this workaround should be removed when fixed in newlib
-    cmd = ['clang'] + ['-dM', '-E', '-']
+    cmd = ["clang"] + ["-dM", "-E", "-"]
     try:
-        out = subprocess.check_output(cmd, stdin=open('/dev/null')).decode("utf8").strip()
+        out = (
+            subprocess.check_output(cmd, stdin=open("/dev/null")).decode("utf8").strip()
+        )
         if not isinstance(out, str):
-            out = out.decode(sys.stdout.encoding or 'iso8859-1')
+            out = out.decode(sys.stdout.encoding or "iso8859-1")
     except Exception as err:
-        print('Could not run clang type checking %r' % err)
+        print("Could not run clang type checking %r" % err)
         raise
 
-    if '__UINT8_TYPE__' not in out:
+    if "__UINT8_TYPE__" not in out:
         args.insert(0, r"-D__UINT8_TYPE__=unsigned __INT8_TYPE__")
         args.insert(0, r"-D__UINT16_TYPE__=unsigned __INT16_TYPE__")
         args.insert(0, r"-D__UINT32_TYPE__=unsigned __INT32_TYPE__")
@@ -238,32 +273,49 @@ def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_fla
     args.insert(0, r"-D_TIME_H_")
 
     # Try and find our arm toolchain and use the headers from that.
-    gcc_path = subprocess.check_output(['which', 'arm-none-eabi-gcc']).decode("utf8").strip()
-    include_path = os.path.join(os.path.dirname(gcc_path), '../arm-none-eabi/include')
+    gcc_path = (
+        subprocess.check_output(["which", "arm-none-eabi-gcc"]).decode("utf8").strip()
+    )
+    include_path = os.path.join(os.path.dirname(gcc_path), "../arm-none-eabi/include")
     args.append("-I%s" % include_path)
 
     # Find the arm-none-eabi-gcc libgcc path including stdbool.h
-    cmd = ['arm-none-eabi-gcc'] + ['-E', '-v', '-xc', '-']
+    cmd = ["arm-none-eabi-gcc"] + ["-E", "-v", "-xc", "-"]
     try:
-        out = subprocess.check_output(cmd, stdin=open('/dev/null'), stderr=subprocess.STDOUT).decode("utf8").strip().splitlines()
-        if '#include <...> search starts here:' in out:
-            libgcc_include_path = out[out.index('#include <...> search starts here:') + 1].strip()
+        out = (
+            subprocess.check_output(
+                cmd, stdin=open("/dev/null"), stderr=subprocess.STDOUT
+            )
+            .decode("utf8")
+            .strip()
+            .splitlines()
+        )
+        if "#include <...> search starts here:" in out:
+            libgcc_include_path = out[
+                out.index("#include <...> search starts here:") + 1
+            ].strip()
             args.append("-I%s" % libgcc_include_path)
     except Exception as err:
-        print('Could not run arm-none-eabi-gcc path detection %r' % err)
+        print("Could not run arm-none-eabi-gcc path detection %r" % err)
 
     if not os.path.isfile(filename):
         raise Exception("Invalid filename: " + filename)
 
     args.append("-ffreestanding")
     index = clang.cindex.Index.create()
-    tu = index.parse(filename, args=args, options=clang.cindex.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD)
+    tu = index.parse(
+        filename,
+        args=args,
+        options=clang.cindex.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD,
+    )
 
     extract_declarations(tu, filenames, func)
 
     for d in tu.diagnostics:
-        if d.severity >= clang.cindex.Diagnostic.Error \
-                and d.spelling != "conflicting types for 'itoa'":
+        if (
+            d.severity >= clang.cindex.Diagnostic.Error
+            and d.spelling != "conflicting types for 'itoa'"
+        ):
             if d.severity == clang.cindex.Diagnostic.Error:
                 error_str = "Error: %s" % d.__repr__()
             elif d.severity == clang.cindex.Diagnostic.Fatal:
@@ -274,5 +326,5 @@ def parse_file(filename, filenames, func, internal_sdk_build=False, compiler_fla
 
             raise ParsingException(error_str)
 
-do_libclang_setup()
 
+do_libclang_setup()

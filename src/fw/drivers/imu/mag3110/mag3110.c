@@ -101,13 +101,13 @@ bool mag3110_check_whoami(void) {
   mag3110_read(WHO_AM_I_REG, 1, &whoami);
   mag_release();
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Read compass whoami byte 0x%x, expecting 0x%x",
+  PBL_LOG_DBG("Read compass whoami byte 0x%x, expecting 0x%x",
       whoami, COMPASS_WHOAMI_BYTE);
 
   return (whoami == COMPASS_WHOAMI_BYTE);
 }
 
-void mag3110_init(void) {
+void mag_init(void) {
   if (s_initialized) {
     return;
   }
@@ -116,7 +116,7 @@ void mag3110_init(void) {
   s_initialized = true;
 
   if (!mag3110_check_whoami()) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to query Mag");
+    PBL_LOG_WRN("Failed to query Mag");
   }
   gpio_input_init(&BOARD_CONFIG_MAG.mag_int_gpio);
 
@@ -191,7 +191,7 @@ MagReadStatus mag_read_data(MagData *data) {
   // TODO: shouldn't happen at low sample rate, but handle case where some data
   // is overwritten
   if ((raw_data[0] & 0xf0) != 0) {
-    PBL_LOG(LOG_LEVEL_INFO, "Some Mag Sample Data was overwritten, "
+    PBL_LOG_INFO("Some Mag Sample Data was overwritten, "
             "dr_status=0x%x", raw_data[0]);
     rv = MagReadClobbered; // we still need to read the data to clear the int
   }

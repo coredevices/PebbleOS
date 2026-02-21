@@ -6,28 +6,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if PLATFORM_TINTIN
-// v2_0 and v1_5 have 8MB flash chips instead of 4MB. In the following definition,
-// BOARD_NOR_FLASH_SIZE is set to allow 6MB of the flash chip to be used. The extra 2MB tacked
-// onto the end will be used for the filesystem and is being added to help with storing large
-// language packs (ex. Chinese). If the entire 8MB needs to be used, this variable will have to
-// be changed. Migrations are likely as well.
-//
-// On watches with only 4MB of flash, the region will have a size of zero and be ignored by the
-// fileystem.
-#if defined(BOARD_V2_0) || defined(BOARD_V1_5) || defined(LARGE_SPI_FLASH)
-#define BOARD_NOR_FLASH_SIZE 0x600000
-#else
-#define BOARD_NOR_FLASH_SIZE 0x400000
-#endif
-
-#include "flash_region_n25q.h"
-#elif PLATFORM_SILK
+#if PLATFORM_SILK
 #include "flash_region_mx25u.h"
 #elif PLATFORM_ASTERIX
 #include "flash_region_gd25lq255e.h"
-#elif PLATFORM_CALCULUS || PLATFORM_ROBERT
-#include "flash_region_mt25q.h"
 #elif PLATFORM_SNOWY || PLATFORM_SPALDING
 #include "flash_region_s29vs.h"
 #elif PLATFORM_OBELIX || PLATFORM_GETAFIX

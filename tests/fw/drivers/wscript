@@ -24,10 +24,6 @@ def build(ctx):
          override_includes=['rtc_calibration'])
 
     clar(ctx,
-         sources_ant_glob = ('src/fw/drivers/stm32f7/i2c_timingr.c'),
-         test_sources_ant_glob = 'test_i2c_timingr.c')
-
-    clar(ctx,
          sources_ant_glob = ('src/fw/drivers/flash/flash_api.c'),
          test_sources_ant_glob = 'test_flash_api.c',
          override_includes=['dummy_board'])
@@ -36,6 +32,6 @@ def build(ctx):
          sources_ant_glob=('src/fw/drivers/flash/flash_erase.c'),
          test_sources_ant_glob='test_flash_erase.c',
          override_includes=['dummy_board'],
-         platforms=['tintin'])
+         platforms=['silk'])
 
 # vim:filetype=python

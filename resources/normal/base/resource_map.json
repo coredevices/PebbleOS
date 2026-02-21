@@ -309,7 +309,7 @@
       "type": "font",
       "name": "LECO_36_BOLD_NUMBERS",
       "file": "normal/base/pbf/LECO_36_BOLD_NUMBERS.pbf",
-      "characterRegex": "[ 0-9:/.,°-%]"
+      "characterRegex": "[ 0-9:/.,°-%+HM]"
     },
     {
       "type": "font",
@@ -321,7 +321,7 @@
       "type": "font",
       "name": "LECO_42_NUMBERS",
       "file": "normal/base/pbf/LECO_42_NUMBERS.pbf",
-      "characterRegex" : "[ 0-9:/.,°-]"
+      "characterRegex": "[ 0-9:/.,°-]"
     },
     {
       "type": "font",
@@ -419,27 +419,33 @@
       "name": "ACTION_BAR_ICON_CHECK",
       "file": "common/base/images/action_bar_icon_check.png",
       "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "_comment": [
+        "Built into firmware to ensure that voice API memory contract is not violated",
+        "Ensure that if this is moved to resources, images are allocated up front when",
+        "a dictation session is started"
+      ]
     },
     {
       "type": "pbi8",
       "name": "ACTION_BAR_ICON_UP",
       "file": "normal/base/images/action_bar_icon_up.png",
       "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "_comment": [
+        "Built into firmware to ensure that voice API memory contract is not violated",
+        "Ensure that if this is moved to resources, images are allocated up front when",
+        "a dictation session is started"
+      ]
     },
     {
       "type": "pbi8",
       "name": "ACTION_BAR_ICON_DOWN",
       "file": "normal/base/images/action_bar_icon_down.png",
       "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "_comment": [
+        "Built into firmware to ensure that voice API memory contract is not violated",
+        "Ensure that if this is moved to resources, images are allocated up front when",
+        "a dictation session is started"
+      ]
     },
     {
       "type": "pbi8",
@@ -478,7 +484,7 @@
     },
     {
       "type": "png",
-     "name": "ACTION_MENU_FADE_BOTTOM",
+      "name": "ACTION_MENU_FADE_BOTTOM",
       "file": "normal/base/images/action_menu_fade_bottom.png"
     },
     {
@@ -706,9 +712,11 @@
       "name": "GENERIC_WARNING_TINY",
       "file": "normal/base/images/Pebble_25x25_Generic_warning.svg",
       "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "_comment": [
+        "Built into firmware to ensure that voice API memory contract is not violated",
+        "Ensure that if this is moved to resources, images are allocated up front when",
+        "a dictation session is started"
+      ]
     },
     {
       "type": "pdc",
@@ -1105,9 +1113,11 @@
       "name": "CHECK_INTERNET_CONNECTION_LARGE",
       "file": "normal/base/images/Pebble_80x80_Check_internet_connection.svg",
       "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "_comment": [
+        "Built into firmware to ensure that voice API memory contract is not violated",
+        "Ensure that if this is moved to resources, images are allocated up front when",
+        "a dictation session is started"
+      ]
     },
     {
       "type": "pdc",
@@ -1209,9 +1219,11 @@
       "name": "GENERIC_WARNING_LARGE",
       "file": "common/base/images/Pebble_80x80_Generic_warning.svg",
       "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "_comment": [
+        "Built into firmware to ensure that voice API memory contract is not violated",
+        "Ensure that if this is moved to resources, images are allocated up front when",
+        "a dictation session is started"
+      ]
     },
     {
       "type": "pdc",
@@ -1378,9 +1390,11 @@
       "name": "WATCH_DISCONNECTED_LARGE",
       "file": "normal/base/images/Pebble_80x80_Watch_disconnected.svg",
       "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "_comment": [
+        "Built into firmware to ensure that voice API memory contract is not violated",
+        "Ensure that if this is moved to resources, images are allocated up front when",
+        "a dictation session is started"
+      ]
     },
     {
       "type": "pdc",
@@ -1411,21 +1425,6 @@
       "type": "pdc",
       "name": "GENERIC_QUESTION_LARGE",
       "file": "normal/base/images/Pebble_80x80_Generic_question.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_OUTLOOK_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Outlook.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_OUTLOOK_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Outlook.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_OUTLOOK_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Outlook.svg"
     },
     {
       "type": "pdc",
@@ -1985,258 +1984,333 @@
     },
     {
       "type": "pdc",
+      "name": "NOTIFICATION_AIRMAIL_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Airmail_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_AIRMAIL_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Airmail_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_AIRMAIL_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Airmail_80px.svg"
+    },
+    {
+      "type": "pdc",
       "name": "NOTIFICATION_BEEPER_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Beeper.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Beeper_25px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_BEEPER_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Beeper.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Beeper_50px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_BEEPER_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Beeper.svg"
-    },    
+      "file": "../third_party/resources/iconography/brand-logos/Beeper_80px.svg"
+    },
     {
       "type": "pdc",
       "name": "NOTIFICATION_BLUESKY_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Bluesky.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Bluesky_25px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_BLUESKY_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Bluesky.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Bluesky_50px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_BLUESKY_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Bluesky.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Bluesky_80px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_DISCORD_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Discord.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Discord_25px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_DISCORD_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Discord.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Discord_50px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_DISCORD_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Discord.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Discord_80px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_DUOLINGO_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Duolingo.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Duolingo_25px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_DUOLINGO_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Duolingo.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Duolingo_50px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_DUOLINGO_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Duolingo.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_ELEMENT_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Element.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_ELEMENT_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Element.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_ELEMENT_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Element.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_GOOGLE_CHAT_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Google_Chat.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_GOOGLE_CHAT_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Google_Chat.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_GOOGLE_CHAT_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Google_Chat.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_GOOGLE_TASKS_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Google_Tasks.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_GOOGLE_TASKS_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Google_Tasks.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_GOOGLE_TASKS_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Google_Tasks.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_HOME_ASSISTANT_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Home_Assistant.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_HOME_ASSISTANT_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Home_Assistant.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_HOME_ASSISTANT_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Home_Assistant.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_STEAM_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Steam.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_STEAM_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Steam.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_STEAM_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Steam.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_TEAMS_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Teams.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_TEAMS_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Teams.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_TEAMS_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Teams.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_THREADS_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Threads.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_THREADS_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Threads.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_THREADS_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Threads.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_UNIFI_PROTECT_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Unifi_Protect.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_UNIFI_PROTECT_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Unifi_Protect.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_UNIFI_PROTECT_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Unifi_Protect.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_ZOOM_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Zoom.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_ZOOM_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Zoom.svg"
-    },
-    {
-      "type": "pdc",
-      "name": "NOTIFICATION_ZOOM_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Zoom.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Duolingo_80px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_EBAY_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_eBay.svg"
+      "file": "../third_party/resources/iconography/brand-logos/eBay_25px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_EBAY_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_eBay.svg"
+      "file": "../third_party/resources/iconography/brand-logos/eBay_50px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_EBAY_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_eBay.svg"
+      "file": "../third_party/resources/iconography/brand-logos/eBay_80px.svg"
     },
     {
       "type": "pdc",
-      "name": "NOTIFICATION_YOUTUBE_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Youtube.svg"
+      "name": "NOTIFICATION_ELEMENT_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Element_25px.svg"
     },
     {
       "type": "pdc",
-      "name": "NOTIFICATION_YOUTUBE_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Youtube.svg"
+      "name": "NOTIFICATION_ELEMENT_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Element_50px.svg"
     },
     {
       "type": "pdc",
-      "name": "NOTIFICATION_YOUTUBE_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Youtube.svg"
+      "name": "NOTIFICATION_ELEMENT_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Element_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_GOOGLE_CHAT_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Google_Chat_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_GOOGLE_CHAT_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Google_Chat_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_GOOGLE_CHAT_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Google_Chat_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_GOOGLE_TASKS_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Google_Tasks_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_GOOGLE_TASKS_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Google_Tasks_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_GOOGLE_TASKS_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Google_Tasks_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_HOME_ASSISTANT_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Home_Assistant_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_HOME_ASSISTANT_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Home_Assistant_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_HOME_ASSISTANT_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Home_Assistant_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_OUTLOOK_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Outlook_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_OUTLOOK_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Outlook_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_OUTLOOK_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Outlook_80px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_SIGNAL_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Signal.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Signal_25px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_SIGNAL_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Signal.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Signal_50px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_SIGNAL_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Signal.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Signal_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_STEAM_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Steam_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_STEAM_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Steam_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_STEAM_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Steam_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TEAMS_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Teams_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TEAMS_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Teams_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TEAMS_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Teams_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_THREADS_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Threads_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_THREADS_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Threads_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_THREADS_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Threads_80px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_TWITCH_TINY",
-      "file": "../third_party/resources/iconography/brand-logos/25px_Twitch.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Twitch_25px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_TWITCH_SMALL",
-      "file": "../third_party/resources/iconography/brand-logos/50px_Twitch.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Twitch_50px.svg"
     },
     {
       "type": "pdc",
       "name": "NOTIFICATION_TWITCH_LARGE",
-      "file": "../third_party/resources/iconography/brand-logos/80px_Twitch.svg"
+      "file": "../third_party/resources/iconography/brand-logos/Twitch_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_UNIFI_PROTECT_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Unifi_Protect_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_UNIFI_PROTECT_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Unifi_Protect_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_UNIFI_PROTECT_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Unifi_Protect_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_YOUTUBE_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Youtube_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_YOUTUBE_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Youtube_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_YOUTUBE_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Youtube_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_ZOOM_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Zoom_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_ZOOM_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Zoom_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_ZOOM_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Zoom_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_REDDIT_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Reddit_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_REDDIT_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Reddit_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_REDDIT_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Reddit_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SWARM_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Swarm_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SWARM_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Swarm_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_SWARM_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Swarm_80px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TAPO_TINY",
+      "file": "../third_party/resources/iconography/brand-logos/Tapo_25px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TAPO_SMALL",
+      "file": "../third_party/resources/iconography/brand-logos/Tapo_50px.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "NOTIFICATION_TAPO_LARGE",
+      "file": "../third_party/resources/iconography/brand-logos/Tapo_80px.svg"
     },
     {
       "type": "pdc",
@@ -3487,6 +3561,42 @@
         "tiny": "RESOURCE_ID_NOTIFICATION_TWITCH_TINY",
         "small": "RESOURCE_ID_NOTIFICATION_TWITCH_SMALL",
         "large": "RESOURCE_ID_NOTIFICATION_TWITCH_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_AIRMAIL",
+      "id": 137,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_AIRMAIL_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_AIRMAIL_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_AIRMAIL_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_REDDIT",
+      "id": 138,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_REDDIT_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_REDDIT_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_REDDIT_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_SWARM",
+      "id": 139,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_SWARM_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_SWARM_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_SWARM_LARGE"
+      }
+    },
+    {
+      "name": "NOTIFICATION_TAPO",
+      "id": 140,
+      "sizes": {
+        "tiny": "RESOURCE_ID_NOTIFICATION_TAPO_TINY",
+        "small": "RESOURCE_ID_NOTIFICATION_TAPO_SMALL",
+        "large": "RESOURCE_ID_NOTIFICATION_TAPO_LARGE"
       }
     }
   ],

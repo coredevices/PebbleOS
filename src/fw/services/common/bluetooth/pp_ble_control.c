@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "pp_ble_control.h"
 #include "services/common/bluetooth/pairability.h"
 #include "system/logging.h"
@@ -25,7 +23,7 @@ typedef struct PACKED {
 static void prv_handle_set_discoverable_pairable(
     BLEControlCommandSetDiscoverablePairable *cmd_data) {
   bt_pairability_use_ble_for_period(cmd_data->duration);
-  PBL_LOG(LOG_LEVEL_INFO, "Set Discoverable Pairable: %u, %u",
+  PBL_LOG_INFO("Set Discoverable Pairable: %u, %u",
           cmd_data->discoverable_pairable, cmd_data->duration);
 }
 
@@ -36,14 +34,14 @@ void pp_ble_control_protocol_msg_callback(
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 
   if (length < sizeof(BLEControlCommandSetDiscoverablePairable)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Invalid pp_ble_control_protocol_msg_callback message: %d", length);
+    PBL_LOG_WRN("Invalid pp_ble_control_protocol_msg_callback message: %d", length);
     return;
   }
 
   const uint8_t opcode = *(const uint8_t *) data;
   switch (opcode) {
     case 0 ... 3:
-      PBL_LOG(LOG_LEVEL_INFO, "Deprecated & unsupported opcode: %u", opcode);
+      PBL_LOG_INFO("Deprecated & unsupported opcode: %u", opcode);
       break;
 
     case BLEControlCommandTypeSetDiscoverablePairable: {
@@ -53,7 +51,7 @@ void pp_ble_control_protocol_msg_callback(
       break;
     }
     default:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Unknown opcode %u", opcode);
+      PBL_LOG_DBG("Unknown opcode %u", opcode);
       break;
   }
 }

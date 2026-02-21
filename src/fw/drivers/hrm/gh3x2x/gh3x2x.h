@@ -28,6 +28,7 @@ typedef struct {
 typedef struct HRMDeviceState {
   bool enabled;
   bool is_wear;
+  int32_t work_mode;
   uint16_t timer_period_ms;
   AppTimer *timer;
   GH3x2xFTData* factory;
@@ -57,4 +58,6 @@ typedef enum {
 
 void gh3x2x_start_ft_ctr(void);
 void gh3x2x_start_ft_leakage(void);
+void gh3x2x_factory_test_disable();
+void gh3x2x_set_work_mode(int32_t mode);
 

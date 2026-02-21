@@ -5,7 +5,7 @@
 
 #include "applib/preferred_content_size.h"
 #include "applib/ui/window_private.h"
-#include "apps/system_apps/settings/settings_notifications_private.h"
+#include "apps/system/settings/notifications_private.h"
 #include "popups/notifications/notification_window.h"
 #include "popups/notifications/notification_window_private.h"
 #include "resource/timeline_resource_ids.auto.h"
@@ -20,6 +20,7 @@
 #include "stubs_action_menu.h"
 #include "stubs_alarm_layout.h"
 #include "stubs_alerts.h"
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
 #include "stubs_ancs_filtering.h"
 #include "stubs_app_install_manager.h"

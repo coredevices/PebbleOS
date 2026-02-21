@@ -35,11 +35,11 @@ void system_message_send(SystemMessageType type) {
   uint8_t buffer[2] = { 0x00, type };
   CommSession *system_session = comm_session_get_system_session();
   comm_session_send_data(system_session, ENDPOINT_ID, buffer, sizeof(buffer), COMM_SESSION_DEFAULT_TIMEOUT);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Sending sysmsg: %u", type);
+  PBL_LOG_DBG("Sending sysmsg: %u", type);
 }
 
 static void prv_reset_kernel_bg_cb(void *unused) {
-  PBL_LOG(LOG_LEVEL_ALWAYS, "Rebooting to install firmware...");
+  PBL_LOG_ALWAYS("Rebooting to install firmware...");
   RebootReason reason = { RebootReasonCode_SoftwareUpdate, 0 };
   reboot_reason_set(&reason);
   system_reset();
@@ -53,7 +53,7 @@ static void prv_handle_firmware_complete_msg(void) {
   uint32_t timeout = 3000;
 
   // Wait 3 seconds before rebooting so there is time to show the update complete screen
-  PBL_LOG(LOG_LEVEL_ALWAYS, "Delaying reset by 3s so the UI can update...");
+  PBL_LOG_ALWAYS("Delaying reset by 3s so the UI can update...");
   TimerID timer = new_timer_create();  // Don't bother cleaning up this timer, we're going to reset
   PBL_ASSERTN(timer != TIMER_INVALID_ID);
   new_timer_start(timer, timeout, prv_ui_update_reset_delay_timer_callback, NULL, 0);
@@ -86,7 +86,7 @@ static void prv_handle_firmware_status_request(CommSession *session) {
     fw_status_resp.resource_crc = status.crc_of_bytes;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "FW Status Resp: res %"PRIu32" : 0x%x fw %"PRIu32" : 0x%x",
+  PBL_LOG_INFO("FW Status Resp: res %"PRIu32" : 0x%x fw %"PRIu32" : 0x%x",
           fw_status_resp.resource_bytes_written, (int)fw_status_resp.resource_crc,
           fw_status_resp.firmware_bytes_written, (int)fw_status_resp.firmware_crc);
 
@@ -99,11 +99,11 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t* data, si
 
   SystemMessageType t = data[1];
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Received sysmsg: %u", t);
+  PBL_LOG_DBG("Received sysmsg: %u", t);
 
   switch (t) {
   case SysMsgFirmwareAvailable_Deprecated: {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Deprecated available message received.");
+    PBL_LOG_DBG("Deprecated available message received.");
     break;
   }
 
@@ -121,7 +121,7 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t* data, si
       SysMsgSmoothFirmwareStartPayload *payload = (SysMsgSmoothFirmwareStartPayload *)data;
       bytes_transferred = payload->bytes_already_transferred;
       total_size = bytes_transferred + payload->bytes_to_transfer;
-      PBL_LOG(LOG_LEVEL_INFO, "Starting FW update, %"PRIu32" of %"PRIu32" bytes already "
+      PBL_LOG_INFO("Starting FW update, %"PRIu32" of %"PRIu32" bytes already "
               "transferred", bytes_transferred, total_size);
     }
 
@@ -174,7 +174,7 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t* data, si
   }
 
   default:
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid message received, type is %u", data[1]);
+    PBL_LOG_ERR("Invalid message received, type is %u", data[1]);
     break;
   }
 }

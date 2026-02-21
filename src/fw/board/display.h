@@ -22,61 +22,29 @@ typedef struct {
 // used by waftools/pebble_test.py to define these includes per test
 #else
 
-#if BOARD_BIGBOARD
-#include "displays/display_tintin.h"
-#elif BOARD_EV2_4
-#include "displays/display_tintin.h"
-#elif BOARD_BB2
-#include "displays/display_tintin.h"
-#elif BOARD_V1_5
-#include "displays/display_tintin.h"
-#elif BOARD_V2_0
-#include "displays/display_tintin.h"
-#elif BOARD_SNOWY_BB
-#include "displays/display_snowy.h"
-#elif BOARD_SNOWY_EVT
-#include "displays/display_snowy.h"
-#elif BOARD_SNOWY_EVT2
-#include "displays/display_snowy.h"
-#elif BOARD_SNOWY_BB2
+#if BOARD_SNOWY_BB2
 #include "displays/display_snowy.h"
 #elif BOARD_SNOWY_DVT
 #include "displays/display_snowy.h"
-#elif BOARD_SNOWY_S3
-#include "displays/display_snowy.h"
 #elif BOARD_SNOWY_EMERY
 #include "displays/display_robert.h"
+#elif BOARD_SPALDING_GABBRO
+#include "displays/display_getafix.h"
 #elif BOARD_SPALDING_BB2
-#include "displays/display_spalding.h"
-#elif BOARD_SPALDING_EVT
 #include "displays/display_spalding.h"
 #elif BOARD_SPALDING
 #include "displays/display_spalding.h"
-#elif BOARD_SILK_EVT
-#include "displays/display_silk.h"
-#elif BOARD_SILK_BB
-#include "displays/display_silk.h"
 #elif BOARD_SILK_BB2
 #include "displays/display_silk.h"
 #elif BOARD_SILK
 #include "displays/display_silk.h"
 #elif BOARD_SILK_FLINT
 #include "displays/display_silk.h"
-#elif BOARD_CALVIN_BB
-#include "displays/display_silk.h"
 #elif BOARD_ASTERIX
 #include "displays/display_silk.h"
 #elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
 #include "displays/display_obelix.h"
-#elif BOARD_CUTTS_BB
-#include "displays/display_snowy.h"
-#elif BOARD_ROBERT_BB
-#include "displays/display_robert.h"
-#elif BOARD_ROBERT_BB2
-#include "displays/display_robert.h"
-#elif BOARD_ROBERT_EVT
-#include "displays/display_robert_evt.h"
-#elif BOARD_GETAFIX_EVT
+#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
 #include "displays/display_getafix.h"
 #else
 #error "Unknown display definition for board"

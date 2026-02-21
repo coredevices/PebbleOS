@@ -7,7 +7,6 @@ from pblconvert.pblconvert import logic
 
 
 class LogicTests(unittest.TestCase):
-
     def setUp(self):
         super(LogicTests, self).setUp()
 
@@ -51,5 +50,6 @@ class LogicTests(unittest.TestCase):
         handler.read.assert_called_once_with(parsed.infile)
         handler.write_annotated_png.assert_called_once_with(parsed.outfile, "surface")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

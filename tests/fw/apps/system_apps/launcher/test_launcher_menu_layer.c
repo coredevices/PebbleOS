@@ -4,7 +4,7 @@
 #include "clar.h"
 
 #include "applib/ui/window_private.h"
-#include "apps/system_apps/launcher/default/launcher_menu_layer.h"
+#include "apps/system/launcher/default/launcher_menu_layer.h"
 #include "resource/resource_ids.auto.h"
 #include "services/normal/app_glances/app_glance_service.h"
 #include "services/normal/blob_db/app_glance_db.h"
@@ -215,6 +215,14 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 #include "stubs_window_stack.h"
 #include "stubs_workout_service.h"
 #include "stubs_workout_utils.h"
+
+GColor shell_prefs_get_apps_menu_highlight_color(void) {
+  return GColorWhite;
+}
+
+bool alerts_preferences_get_notification_alternative_design(void) {
+  return false;
+}
 
 // We can't include stubs_process_manager.h because it conflicts with the two helper includes below
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *),

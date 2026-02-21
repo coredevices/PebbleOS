@@ -15,19 +15,18 @@ import logdehash
 import newlogging
 
 
-DICT_FIRMWARE = 'build/src/fw/loghash_dict.json'
-DICT_PRF = 'build/prf/src/fw/loghash_dict.json'
+DICT_FIRMWARE = "build/src/fw/loghash_dict.json"
+DICT_PRF = "build/prf/src/fw/loghash_dict.json"
 
-BUILD_ID_STR = 'BUILD ID: '
+BUILD_ID_STR = "BUILD ID: "
 HASH_STR_LEN = 40
 
 
 SETTINGS = {
     # Hagen Daas stuff:
-    'files': 'https://files.pebblecorp.com/dict/',
-
+    "files": "https://files.pebblecorp.com/dict/",
     # Go to https://auth.pebblecorp.com/show to get this value:
-    'hd_session': None,
+    "hd_session": None,
 }
 
 
@@ -36,22 +35,26 @@ class AuthException(Exception):
 
 
 def load_user_settings():
-    settings_path = '~/.triage'
+    settings_path = "~/.triage"
     try:
-        user_settings_file = open(os.path.expanduser(settings_path), 'rb')
+        user_settings_file = open(os.path.expanduser(settings_path), "rb")
         user_settings = json.load(user_settings_file)
     except IOError as e:
         if e.errno == 2:
-            logging.error("""Please create %s with credentials: """
-                          """'{ "user": "$USER", "password": "$PASSWORD" }'""",
-                          settings_path)
+            logging.error(
+                """Please create %s with credentials: """
+                """'{ "user": "$USER", "password": "$PASSWORD" }'""",
+                settings_path,
+            )
         return
     SETTINGS.update(user_settings)
 
     if not SETTINGS["hd_session"]:
-        msg = "Missing 'hd_session' token in user settings.\n" \
-              "1. Get the cookie from https://auth.pebblecorp.com/show\n" \
-              "2. Add as value with key 'hd_session' to %s" % settings_path
+        msg = (
+            "Missing 'hd_session' token in user settings.\n"
+            "1. Get the cookie from https://auth.pebblecorp.com/show\n"
+            "2. Add as value with key 'hd_session' to %s" % settings_path
+        )
         logging.error(msg)
         sys.exit(-1)
 
@@ -59,14 +62,16 @@ def load_user_settings():
 def get_loghash_dict_from_hagen_daas_files(hash):
     load_user_settings()
 
-    url = SETTINGS['files'] + hash
-    r = requests.get(url, headers={'Cookie': 'hd_session=%s' % SETTINGS['hd_session']})
-    if (r.status_code > 400):
+    url = SETTINGS["files"] + hash
+    r = requests.get(url, headers={"Cookie": "hd_session=%s" % SETTINGS["hd_session"]})
+    if r.status_code > 400:
         r.raise_for_status()
     if "accounts.google.com" in r.url:
-        raise AuthException("Not authenticated, see instructions at the top of %s" %
-                            "https://pebbletechnology.atlassian.net/wiki/"
-                            "display/DEV/Quickly+triaging+JIRA+FW+issues+with+pbldebug")
+        raise AuthException(
+            "Not authenticated, see instructions at the top of %s"
+            % "https://pebbletechnology.atlassian.net/wiki/"
+            "display/DEV/Quickly+triaging+JIRA+FW+issues+with+pbldebug"
+        )
     return r.text
 
 
@@ -86,14 +91,15 @@ class Log(object):
 def get_dict_from_pbz(filename):
     if zipfile.is_zipfile(filename):
         with zipfile.ZipFile(filename) as dict_zip:
-            return dict_zip.read('loghash_dict.json')
+            return dict_zip.read("loghash_dict.json")
     return None
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Dehash a log',
-                                     formatter_class=argparse.RawTextHelpFormatter,
-                                     epilog='''
+    parser = argparse.ArgumentParser(
+        description="Dehash a log",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="""
 Description:
     dehash.py is a script that tries to dehash whatever log is provided, however
     it is provided. 'Files' on Hagen-Daas will be consulted if a loghash
@@ -110,20 +116,25 @@ Input File(s):
     Only one dictionary per core may be specified.
 
 Examples:
-    dehash.py pbl-123456.log tintin_fw.elf bt_da14681_main.elf > log.txt
+    dehash.py pbl-123456.log tintin_fw.elf > log.txt
     dehash.py normal_silk_v4.0-alpha11-20-g6661346.pbz < pbl-12345.log > log.txt
     gzcat crash_log.gz | dehash.py
     dehash.py --prf log_from_watch.log
-''')
+""",
+    )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--fw', action='store_true',
-                       help='Use the fw loghash_dict from your build. Default.')
-    group.add_argument('--prf', action='store_true',
-                       help='Use the prf loghash_dict from your build.')
-    parser.add_argument('-v', action='store_true',
-                        help='Verbose debug to stderr')
-    parser.add_argument('file', nargs='*',
-                        help='Input file(s). See below for more info.')
+    group.add_argument(
+        "--fw",
+        action="store_true",
+        help="Use the fw loghash_dict from your build. Default.",
+    )
+    group.add_argument(
+        "--prf", action="store_true", help="Use the prf loghash_dict from your build."
+    )
+    parser.add_argument("-v", action="store_true", help="Verbose debug to stderr")
+    parser.add_argument(
+        "file", nargs="*", help="Input file(s). See below for more info."
+    )
     args = parser.parse_args()
 
     logger = Log(args.v)
@@ -139,33 +150,33 @@ Examples:
 
     # Examine the file list
     for f in filelist:
-        if f.endswith('.json') or f.endswith('.elf'):
-            logger.debug('Loading dictionary from %s', f)
+        if f.endswith(".json") or f.endswith(".elf"):
+            logger.debug("Loading dictionary from %s", f)
             d = newlogging.get_log_dict_from_file(f)
             loghash_dict = newlogging.merge_dicts(loghash_dict, d)
-        elif f.endswith('.pbz'):
-            logger.debug('Loading dictionary from %s', f)
+        elif f.endswith(".pbz"):
+            logger.debug("Loading dictionary from %s", f)
             d = get_dict_from_pbz(f)
             if not d:
                 raise Exception("Unable to load loghash_dict.json from %s" % f)
             loghash_dict = newlogging.merge_dicts(loghash_dict, json.loads(d))
         else:
-            logger.debug('Log file %s', f)
+            logger.debug("Log file %s", f)
             if log:
                 raise Exception("More than one log file specified")
             log = f
 
     # Now consider the --fw option. Don't fail unless it was explicitly specified
     if args.fw or (not args.prf and not loghash_dict):
-        logger.debug('Loading dictionary from %s', DICT_FIRMWARE)
+        logger.debug("Loading dictionary from %s", DICT_FIRMWARE)
         if os.path.isfile(DICT_FIRMWARE) or args.fw:
             d = newlogging.get_log_dict_from_file(DICT_FIRMWARE)
             loghash_dict = newlogging.merge_dicts(loghash_dict, d)
         else:
-            logger.debug('Ignoring default fw dict -- %s not found', DICT_FIRMWARE)
+            logger.debug("Ignoring default fw dict -- %s not found", DICT_FIRMWARE)
 
     # Create the dehasher
-    dehash = logdehash.LogDehash('', monitor_dict_file=False)
+    dehash = logdehash.LogDehash("", monitor_dict_file=False)
     dehash.load_log_strings_from_dict(loghash_dict)
 
     # Input file or stdin?
@@ -174,12 +185,12 @@ Examples:
     # Dehash the log
     for line in infile:
         line_dict = dehash.dehash(line)
-        if 'unhashed' in line_dict:
-            dhl = line_dict['formatted_msg']
+        if "unhashed" in line_dict:
+            dhl = line_dict["formatted_msg"]
         else:
             dhl = dehash.basic_format_line(line_dict)
         sys.stdout.write(dhl.strip())
-        sys.stdout.write('\r\n')
+        sys.stdout.write("\r\n")
         sys.stdout.flush()
 
         # If we have a dictionary, continue
@@ -191,14 +202,21 @@ Examples:
         if index == -1:
             continue
 
-        build_id = dhl[index + len(BUILD_ID_STR):(index + len(BUILD_ID_STR) + HASH_STR_LEN)]
+        build_id = dhl[
+            index + len(BUILD_ID_STR) : (index + len(BUILD_ID_STR) + HASH_STR_LEN)
+        ]
 
         try:
-            logger.debug('Loading dictionary from Hagen-Daas for ID %s', build_id)
+            logger.debug("Loading dictionary from Hagen-Daas for ID %s", build_id)
             d = get_loghash_dict_from_hagen_daas_files(build_id)
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.HTTPError, AuthException) as error:
-            sys.stderr.write("Could not get build id %s from files. %s\r\n" % (build_id, error))
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+            AuthException,
+        ) as error:
+            sys.stderr.write(
+                "Could not get build id %s from files. %s\r\n" % (build_id, error)
+            )
             continue
 
         if d:
@@ -210,5 +228,6 @@ Examples:
     if infile is not sys.stdin:
         infile.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

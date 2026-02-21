@@ -6,6 +6,6 @@
 
 #include "system/logging.h"
 
-#define console_printf(_fmt, ...) PBL_LOG_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_INFO, _fmt, ##__VA_ARGS__)
+#define console_printf(_fmt, ...) PBL_LOG_D_INFO(LOG_DOMAIN_BT_STACK, _fmt, ##__VA_ARGS__)
 
 #endif /* __CONSOLE_H__ */

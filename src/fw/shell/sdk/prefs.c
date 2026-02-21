@@ -29,6 +29,11 @@ _Static_assert(sizeof(PreferredContentSize) == sizeof(s_content_size),
                "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
 #endif
 
+#if CAPABILITY_HAS_APP_SCALING
+#define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
+static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
+#endif
+
 void shell_prefs_init(void) {
   s_mutex = mutex_create();
   mutex_lock(s_mutex);
@@ -94,6 +99,14 @@ int16_t shell_prefs_get_automatic_timezone_id(void) {
 void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
 }
 
+
+void prefs_private_lock(void) {
+  mutex_lock(s_mutex);
+}
+
+void prefs_private_unlock(void) {
+  mutex_unlock(s_mutex);
+}
 
 // Exported function used by blob_db API to set the backing store for a specific key.
 // Not used by the SDK shell
@@ -161,7 +174,7 @@ void system_theme_set_content_size(PreferredContentSize content_size) {
   mutex_lock(s_mutex);
   const uint8_t content_size_uint = content_size;
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Ignoring attempt to set content size to invalid size %d",
+    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d",
             content_size);
   } else if (prv_pref_set(PREF_KEY_CONTENT_SIZE, &content_size_uint, sizeof(content_size_uint))) {
     s_content_size = content_size;
@@ -278,5 +291,38 @@ GColor shell_prefs_get_apps_menu_highlight_color(void) {
 }
 
 void shell_prefs_set_apps_menu_highlight_color(GColor color) {
+  // Not used in SDK shell
+}
+
+#if CAPABILITY_HAS_APP_SCALING
+LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
+  return (LegacyAppRenderMode)s_legacy_app_render_mode;
+}
+
+void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
+  uint8_t mode_value = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_LEGACY_APP_RENDER_MODE, &mode_value, sizeof(mode_value));
+}
+#endif
+
+// Exported function used by blob_db API to handle settings events
+// Not used by the SDK shell
+void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
+
+}
+
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
+  return false;
+}
+
+void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
+  // Not used in SDK shell
+}
+
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
+  return MenuScrollNoVibe;
+}
+
+void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
   // Not used in SDK shell
 }

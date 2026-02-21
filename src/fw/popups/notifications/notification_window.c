@@ -17,7 +17,7 @@
 #include "applib/ui/window.h"
 #include "applib/ui/window_manager.h"
 #include "applib/ui/window_stack.h"
-#include "apps/system_apps/timeline/peek_layer.h"
+#include "apps/system/timeline/peek_layer.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
@@ -250,7 +250,7 @@ static void prv_dismiss_all(void *data, ActionMenu *action_menu) {
     notif_list[i].type = notifications_presented_list_get_type(id);
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Dismissing %d notifications", num_notifications);
+  PBL_LOG_DBG("Dismissing %d notifications", num_notifications);
   window_data->window_frozen = true;
   timeline_actions_dismiss_all(notif_list,
                                num_notifications,
@@ -302,23 +302,31 @@ static void prv_peek_anim_stopped(Animation *animation, bool finished, void *con
   layer_set_hidden((Layer *)&data->action_button_layer,
                    !prv_should_provide_action_menu_for_item(data, item));
 
-  // Fallback: if a pending vibe wasn't triggered in prv_hide_peek_layer (e.g., a new
+  // Fallback: if a pending vibe/backlight wasn't triggered in prv_hide_peek_layer (e.g., a new
   // notification arrived after prv_hide_peek_layer ran but before this callback),
   // trigger it now
   if (data->pending_vibe) {
     data->pending_vibe = false;
     prv_do_notification_vibe(data, &data->pending_vibe_id);
   }
+  if (data->pending_backlight) {
+    data->pending_backlight = false;
+    light_enable_interaction();
+  }
 }
 
 static void prv_hide_peek_layer(void *context) {
   NotificationWindowData *data = context;
 
-  // Execute pending vibration if delayed vibe was requested - do it as the notification
-  // starts sliding up to reveal the text
+  // Execute pending vibration and backlight if delayed vibe was requested - do it as the
+  // notification starts sliding up to reveal the text
   if (data->pending_vibe) {
     data->pending_vibe = false;
     prv_do_notification_vibe(data, &data->pending_vibe_id);
+  }
+  if (data->pending_backlight) {
+    data->pending_backlight = false;
+    light_enable_interaction();
   }
 
   // get the frame of the swap_layer and set its destination
@@ -495,14 +503,14 @@ T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_p
 
   if (type == NotificationMobile) {
     if (!notification_storage_get(id, item)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read notification");
+      PBL_LOG_ERR("Failed to read notification");
       goto cleanup;
     }
   } else if (type == NotificationReminder) {
     // validate reminder
     int rv = reminder_db_read_item(item, id);
     if (rv != S_SUCCESS) {
-      PBL_LOG(LOG_LEVEL_ERROR, "Failed to read reminder");
+      PBL_LOG_ERR("Failed to read reminder");
       goto cleanup;
     }
   }
@@ -620,7 +628,7 @@ static void prv_clear_if_stale_reminder(Uuid *id, NotificationType type, void *c
   const time_t now = rtc_get_time();
 
   if (stale_time <= now && window_data->is_modal) {
-    PBL_LOG(LOG_LEVEL_INFO, "Removing stale reminder from notification popup window");
+    PBL_LOG_INFO("Removing stale reminder from notification popup window");
     prv_remove_notification(window_data, id, true /* close am */);
   }
 }
@@ -748,7 +756,7 @@ static void prv_mute_notification(const ActionMenuItem *action_menu_item,
 
   const char *app_id = attribute_get_string(&item->attr_list, AttributeIdiOSAppIdentifier, "");
   if (!*app_id) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Could not mute notification. Unknown app_id");
+    PBL_LOG_ERR("Could not mute notification. Unknown app_id");
     return;
   }
 
@@ -769,7 +777,7 @@ static void prv_mute_notification(const ActionMenuItem *action_menu_item,
     // This is a very unlikely case. We store some default prefs which includes the mute
     // attribute when we receive the notification so either someone deleted the entry
     // in the DB or the mute attribute (neither of which should happen)
-    PBL_LOG(LOG_LEVEL_WARNING, "Could not mute notification. No prefs or mute attribute");
+    PBL_LOG_WRN("Could not mute notification. No prefs or mute attribute");
   }
 
   ios_notif_pref_db_free_prefs(notif_prefs);
@@ -791,6 +799,56 @@ static void prv_mute_notification_weekends(ActionMenu *action_menu,
                                            const ActionMenuItem *action_menu_item,
                                            void *context) {
   prv_mute_notification(action_menu_item, MuteBitfield_Weekends);
+}
+
+static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, int duration_seconds) {
+  NotificationWindowData *window_data = action_menu_item->action_data;
+  TimelineItem *item = prv_get_current_notification(window_data);
+
+  const char *app_id = attribute_get_string(&item->attr_list, AttributeIdiOSAppIdentifier, "");
+  if (!app_id || !*app_id) {
+    PBL_LOG_ERR("Could not mute notification. Unknown app_id");
+    return;
+  }
+
+  const int app_id_len = strlen(app_id);
+  iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)app_id, app_id_len);
+  if (notif_prefs && attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration)) {
+    const uint32_t expiration_time = rtc_get_time() + duration_seconds;
+    
+    Attribute *existing_attr = attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration);
+    existing_attr->uint32 = expiration_time;
+
+    ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len,
+                                  &notif_prefs->attr_list, &notif_prefs->action_group);
+
+    TimelineItemAction *dismiss = timeline_item_find_dismiss_action(item);
+    if (dismiss) {
+      timeline_invoke_action(item, dismiss, NULL);
+    }
+    prv_push_muted_dialog();
+    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_MUTED_COUNT, AnalyticsClient_System);
+  } else {
+    PBL_LOG_WRN("Could not mute notification. No prefs or mute attribute");
+  }
+
+  ios_notif_pref_db_free_prefs(notif_prefs);
+}
+
+static void prv_mute_notification_1_hour(ActionMenu *action_menu,
+                                         const ActionMenuItem *action_menu_item,
+                                         void *context) {
+  prv_mute_notification_timed(action_menu_item, 3600);
+}
+
+static void prv_mute_notification_today(ActionMenu *action_menu,
+                                        const ActionMenuItem *action_menu_item,
+                                        void *context) {
+  time_t now = rtc_get_time();
+  struct tm now_tm;
+  localtime_r(&now, &now_tm);
+  const int seconds_until_midnight = (24 * 3600) - (now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec);
+  prv_mute_notification_timed(action_menu_item, seconds_until_midnight);
 }
 
 static bool prv_has_mute_action(TimelineItem *item) {
@@ -894,12 +952,22 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
                                    prv_mute_notification_always,
                                    window_data);
     } else {
-      const uint8_t number_mute_actions = 3;
+      const uint8_t number_mute_actions = 5;
       ActionMenuLevel *mute_level = action_menu_level_create(number_mute_actions);
 
       action_menu_level_add_child(root_level,
                                   mute_level,
                                   mute_label_buf);
+
+      action_menu_level_add_action(mute_level,
+                                   i18n_get("Mute 1 Hour", root_level),
+                                   prv_mute_notification_1_hour,
+                                   window_data);
+
+      action_menu_level_add_action(mute_level,
+                                   i18n_get("Mute Today", root_level),
+                                   prv_mute_notification_today,
+                                   window_data);
 
       action_menu_level_add_action(mute_level,
                                    i18n_get("Mute Always", root_level),
@@ -966,7 +1034,7 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
 
   config.root_level = prv_create_action_menu_for_item(item, window_data, source);
   if (config.root_level == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Couldn't create notification action menu");
+    PBL_LOG_ERR("Couldn't create notification action menu");
     return;
   }
 
@@ -1381,48 +1449,50 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
 }
 
 static void prv_handle_notification_added_common(Uuid *id, NotificationType type) {
+  NotificationWindowData *data = &s_notification_window_data;
+
   if (!alerts_should_notify_for_type(prv_alert_type_for_notification_type(type))) {
     return;
   }
 
+  alerts_incoming_alert_analytics();
+
   if (do_not_disturb_is_active() && 
       alerts_preferences_dnd_get_show_notifications() == DndNotificationModeHide) {
-    alerts_incoming_alert_analytics();
     return;
   }
-
-  NotificationWindowData *data = &s_notification_window_data;
 
   // will fail and return early if already init'ed.
   prv_init_notification_window(true /*is_modal*/);
 
-  if (data->is_modal) {
-    WindowStack *window_stack = modal_manager_get_window_stack(NOTIFICATION_PRIORITY);
-    bool is_new = !window_stack_contains_window(window_stack, &data->window);
-    bool in_view = window_is_on_screen(&data->window);
+  if (!data->is_modal) {
+    return;
+  }
 
-    prv_notification_window_add_notification(id, type);
+  WindowStack *window_stack = modal_manager_get_window_stack(NOTIFICATION_PRIORITY);
+  bool is_new = !window_stack_contains_window(window_stack, &data->window);
+  bool in_view = window_is_on_screen(&data->window);
 
-    if (is_new) {
-      data->first_notif_loaded = false;
-      prv_show_peek_for_notification(data, id, true /* is_first_notification */);
-      modal_window_push(&data->window, NOTIFICATION_PRIORITY, true /* animated */);
-    } else if (in_view) {
-      // Only focus the new notification if it becomes the new front of the list.
-      // In DND mode notifications can get inserted into the middle of the list and we don't
-      // want to change focus in this use case
-      if (notifications_presented_list_current() != notifications_presented_list_first()) {
-        const bool should_animate = !do_not_disturb_is_active();
-        notification_window_focus_notification(id, should_animate);
-      } else {
-        // If we are inserting into the middle of this list, just reaload the swap layer so the
-        // number of notifications displayed is correct
-        prv_reload_swap_layer(data);
-      }
+  prv_notification_window_add_notification(id, type);
+
+  if (is_new) {
+    data->first_notif_loaded = false;
+    prv_show_peek_for_notification(data, id, true /* is_first_notification */);
+    modal_window_push(&data->window, NOTIFICATION_PRIORITY, true /* animated */);
+  } else if (in_view) {
+    // Only focus the new notification if it becomes the new front of the list.
+    // In DND mode notifications can get inserted into the middle of the list and we don't
+    // want to change focus in this use case
+    if (notifications_presented_list_current() != notifications_presented_list_first()) {
+      const bool should_animate = !do_not_disturb_is_active();
+      notification_window_focus_notification(id, should_animate);
+    } else {
+      // If we are inserting into the middle of this list, just reaload the swap layer so the
+      // number of notifications displayed is correct
+      prv_reload_swap_layer(data);
     }
   }
 
-  alerts_incoming_alert_analytics();
   if (alerts_should_vibrate_for_type(prv_alert_type_for_notification_type(type))) {
     // Check if we should delay the vibration until the animation completes
     if (alerts_preferences_get_notification_vibe_delay() && data->peek_layer) {
@@ -1436,7 +1506,12 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
   }
 
   if (alerts_should_enable_backlight_for_type(prv_alert_type_for_notification_type(type))) {
-    light_enable_interaction();
+    // Check if we should delay the backlight until the animation completes (same as vibe delay)
+    if (alerts_preferences_get_notification_vibe_delay() && data->peek_layer) {
+      data->pending_backlight = true;
+    } else {
+      light_enable_interaction();
+    }
   }
 
   prv_refresh_pop_timer(data);

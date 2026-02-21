@@ -61,8 +61,7 @@ typedef enum PmicRail {
   PmicRail_LDO1, //!< 2.0V - Auto - RTC
   PmicRail_LDO2, //!< 3.2V - Manual - FPGA
 
-  //! snowy_bb: 2.5V - Manual - MFi, Magnetometer
-  //! snowy_evt: 1.8V - Manual - MFi
+  //! 1.8V - Manual - MFi
   PmicRail_LDO3
 } PmicRail;
 
@@ -91,11 +90,7 @@ static const PmicMonConfig MON_CONFIG[] = {
   { "+1V8",         2, 0b100 }, // 2:1, BUCK2
   { "+2V0_RTC",     2, 0b101 }, // 2:1, LDO1
   { "+3V2",         2, 0b110 }, // 2:1, LDO2
-#ifdef BOARD_SNOWY_BB
-  { "+2V5",         2, 0b111 }, // 2:1, LDO3
-#else
   { "+1V8_MFI_MIC", 2, 0b111 }, // 2:1, LDO3
-#endif // BOARD_SNOWY_BB
 #endif // RECOVERY_FW
 };
 
@@ -211,10 +206,6 @@ bool pmic_init(void) {
   prv_initialize_interrupts();
 
   prv_update_rail_state(PmicRail_LDO2, true);  // FW should bring this up
-#if BOARD_ROBERT_BB2
-  // On Robert BB2, the BLE chip is behind LDO3, which should always be on.
-  prv_update_rail_state(PmicRail_LDO3, true);
-#endif
 
   if (BOARD_CONFIG.mfi_reset_pin.gpio) {
     // We have access to the reset pin on the MFi. Need to hold it low before powering the 2V5
@@ -394,7 +385,7 @@ bool pmic_is_charging(void) {
     // i2c read means we are charging
     return true;
 #else
-    PBL_LOG(LOG_LEVEL_DEBUG, "Failed to read charging status A register");
+    PBL_LOG_DBG("Failed to read charging status A register");
     return false;
 #endif
   }
@@ -419,7 +410,7 @@ bool pmic_is_usb_connected(void) {
     // i2c read means we are connected to a USB cable
     return true;
 #else
-    PBL_LOG(LOG_LEVEL_DEBUG, "Failed to read charging status B register");
+    PBL_LOG_DBG("Failed to read charging status B register");
     return false;
 #endif
   }
@@ -449,18 +440,18 @@ static void prv_log_status_registers(const char *preamble) {
 
   if (!prv_read_register(PmicRegisters_STATUSA, &status_a) ||
       !prv_read_register(PmicRegisters_STATUSB, &status_b)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to read status registers");
+    PBL_LOG_WRN("Failed to read status registers");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_INFO, "%s: StatusA = 0x%"PRIx8"; StatusB = 0x%"PRIx8, preamble, status_a,
+  PBL_LOG_INFO("%s: StatusA = 0x%"PRIx8"; StatusB = 0x%"PRIx8, preamble, status_a,
       status_b);
 }
 
 static void prv_debounce_callback(void* data) {
   bool is_connected = pmic_is_usb_connected();
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Got PMIC debounced interrupt, plugged?: %s bounces: %u",
+  PBL_LOG_DBG("Got PMIC debounced interrupt, plugged?: %s bounces: %u",
           is_connected ? "YES" : "NO", s_interrupt_bounce_count);
   s_interrupt_bounce_count = 0;
 
@@ -502,11 +493,10 @@ static bool prv_is_alive(void) {
   prv_read_register(0x00, &val);
 
   if (val == 0x01) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Found the max14690");
+    PBL_LOG_DBG("Found the max14690");
     return true;
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG,
-            "Error: read max14690 whomai byte 0x%x, expecting 0x%x", val, 0x01);
+    PBL_LOG_DBG("Error: read max14690 whomai byte 0x%x, expecting 0x%x", val, 0x01);
     return false;
   }
 }

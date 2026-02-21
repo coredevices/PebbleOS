@@ -42,17 +42,17 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
 
   switch (cmd) {
     case ResetCmdNormal:
-      PBL_LOG(LOG_LEVEL_WARNING, "Rebooting");
+      PBL_LOG_WRN("Rebooting");
       system_reset();
       break;
 
     case ResetCmdCoreDump:
-      PBL_LOG(LOG_LEVEL_INFO, "Core dump + Reboot triggered");
+      PBL_LOG_INFO("Core dump + Reboot triggered");
       core_dump_reset(true /* force overwrite any existing core dump */);
       break;
 
     case ResetCmdIntoRecovery:
-      PBL_LOG(LOG_LEVEL_WARNING, "Rebooting into PRF");
+      PBL_LOG_WRN("Rebooting into PRF");
       prv_reset_into_prf();
       break;
 
@@ -61,20 +61,16 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
       break;
 
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid reset msg, data[0] %u", data[0]);
+      PBL_LOG_ERR("Invalid reset msg, data[0] %u", data[0]);
       break;
   }
 }
 
-void fw_prepare_for_reset(bool unsafe_reset) {
-  if (!unsafe_reset) {
-    // Tear down Bluetooth, to avoid confusing the phone:
-    services_set_runlevel(RunLevel_BareMinimum);
+void fw_prepare_for_reset(void) {
+  // Tear down Bluetooth, to avoid confusing the phone:
+  services_set_runlevel(RunLevel_BareMinimum);
 #if PULSE_EVERYWHERE
-    pulse_end();
+  pulse_end();
 #endif
-  } else {
-    pulse_prepare_to_crash();
-  }
 }
 

@@ -3,14 +3,13 @@
 
 import binutils
 import os.path
-import sh
 
 
 class Config(object):
     def abs_path(self, script_relative_path):
         return os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            script_relative_path)
+            os.path.dirname(os.path.realpath(__file__)), script_relative_path
+        )
 
     def default_elf_abs_path(self):
         return self.abs_path(self.rel_elf_path())
@@ -29,8 +28,7 @@ class Config(object):
             nm = binutils.nm_generator(object_path)
             return set([s for _, _, s, _, _, _ in nm])
 
-        return {path: extract_symbols(path)
-                for path in lib_paths}
+        return {path: extract_symbols(path) for path in lib_paths}
 
     def memory_region_to_analyze(self):
         raise Exception("Implement me!")
@@ -41,7 +39,7 @@ class Config(object):
 
 class TintinElfConfig(Config):
     def rel_elf_path(self):
-        return '../build/src/fw/tintin_fw.elf'
+        return "../build/src/fw/tintin_fw.elf"
 
     def memory_region_to_analyze(self):
         FLASH_START = 0x8008000
@@ -69,5 +67,5 @@ class DialogElfConfig(Config):
 
 
 CONFIG_CLASSES = {
-    'tintin': TintinElfConfig,
+    "tintin": TintinElfConfig,
 }

@@ -32,7 +32,7 @@ JERRY_CORE_DIRS = ['jerryscript/jerry-core',
 def _get_jerry_include_dirs(bld):
     include_dirs = JERRY_CORE_DIRS
     if bld.variant == 'test':
-        include_dirs.append('third-party/valgrind')
+        include_dirs.append('jerryscript/third-party/valgrind')
     return include_dirs
 
 def jerry_build_js_compiler(bld):
@@ -164,6 +164,10 @@ def configure(conf):
 
 
 def build(bld):
+    # Skip build configuration during clean command
+    if bld.cmd == 'clean':
+        return
+
     def run_cmd(cmd):
         try:
             return bld.cmd_and_log(cmd, quiet=Context.BOTH).strip()
@@ -210,7 +214,7 @@ def build(bld):
 
     # If the current build doesn't want javascript, just build a header-only library so the
     # headers will continue to be available
-    if not bld.capability('HAS_ROCKY_JS') or bld.variant in ('prf', 'applib', 'test_rocky_emx'):
+    if not bld.capability('HAS_ROCKY_JS') or bld.variant in ('prf', 'applib'):
         bld(export_includes=['jerryscript/jerry-core'], name='jerry_core')
         return
 

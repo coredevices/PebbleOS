@@ -61,7 +61,6 @@
 #include "services/common/status_led.h"
 #include "services/common/system_task.h"
 #include "services/common/vibe_pattern.h"
-#include "services/normal/accessory/accessory_manager.h"
 #include "services/normal/alarms/alarm.h"
 #include "services/normal/app_fetch_endpoint.h"
 #include "services/normal/blob_db/api.h"
@@ -160,17 +159,17 @@ static void launcher_force_quit_app(void *data) {
   if (s_force_quit_was_cancelled) {
     // If you see this in logs after FIRM-556 (general system sluggishness)
     // is fixed, please file a bug!
-    PBL_LOG(LOG_LEVEL_ERROR, "NewTimer event fired for force quit, but the back button was released before we went to deal with it!  Wow, we must have been really slow!  Please file a bug!");
+    PBL_LOG_ERR("NewTimer event fired for force quit, but the back button was released before we went to deal with it!  Wow, we must have been really slow!  Please file a bug!");
     metric_firm_425_back_button_long_presses_cancelled++;
     return;
   }
 
   if (low_power_is_active() || factory_reset_ongoing()) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Forcekill disabled due to low-power or factory-reset");
+    PBL_LOG_DBG("Forcekill disabled due to low-power or factory-reset");
     return;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Force killing app.");
+  PBL_LOG_DBG("Force killing app.");
   app_manager_force_quit_to_launcher();
 }
 
@@ -210,7 +209,7 @@ static void launcher_handle_button_event(PebbleEvent* e) {
       s_back_quickpress_last = now;
       s_back_quickpress_count++;
       if (s_back_quickpress_count >= BACK_QUICKPRESS_COREDUMP_PRESSES && shell_prefs_can_coredump_on_request()) {
-        PBL_LOG(LOG_LEVEL_INFO, "triggering core dump because you asked for it!");
+        PBL_LOG_INFO("triggering core dump because you asked for it!");
         core_dump_reset(true /* is_forced */);
       }
     }
@@ -384,9 +383,15 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent* e) {
           set_time_info->dst_changed ||
           ABS(set_time_info->utc_time_delta) > 15) {
         alarm_handle_clock_change();
-        wakeup_handle_clock_change();
+        wakeup_handle_significant_clock_change();
         cron_service_handle_clock_change(set_time_info);
       }
+
+      // Always reschedule wakeup timers on any time change to prevent timers from
+      // firing early/late. Wakeup timers use tick-based relative scheduling, so even
+      // small time changes (or time resets from crashes) can cause significant skew.
+      // This is critical for app wakeup events that must fire at precise times.
+      wakeup_handle_clock_change();
 
       // TODO: evaluate if these need to change on every time update
       do_not_disturb_handle_clock_change();
@@ -463,10 +468,6 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
   tick_timer_service_init();
   debounced_connection_service_init();
   event_service_system_init();
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  accessory_manager_init();
-#endif
-
   modal_manager_init();
 
   shell_event_loop_init();
@@ -495,11 +496,11 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
   // Launch the default worker. If any of the buttons are down, or we hit 2 strikes already,
   // skip this. This insures that we don't enter PRF for a bad worker.
   if (launcher_panic_get_current_error()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Not launching worker because launcher panic");
+    PBL_LOG_INFO("Not launching worker because launcher panic");
   } else if (button_get_state_bits() != 0) {
-    PBL_LOG(LOG_LEVEL_INFO, "Not launching worker because button held");
+    PBL_LOG_INFO("Not launching worker because button held");
   } else if (boot_bit_test(BOOT_BIT_FW_START_FAIL_STRIKE_TWO)) {
-    PBL_LOG(LOG_LEVEL_INFO, "Not launching worker because of 2 strikes");
+    PBL_LOG_INFO("Not launching worker because of 2 strikes");
   } else {
     process_manager_launch_process(&(ProcessLaunchConfig) {
       .id = worker_manager_get_default_install_id(),
@@ -513,7 +514,7 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
 }
 
 void launcher_main_loop(void) {
-  PBL_LOG(LOG_LEVEL_ALWAYS, "Starting Launcher");
+  PBL_LOG_ALWAYS("Starting Launcher");
 
   prv_launcher_main_loop_init();
 

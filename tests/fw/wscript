@@ -44,6 +44,8 @@ def build(ctx):
             " src/fw/applib/graphics/framebuffer.c" \
             " src/fw/applib/graphics/gtypes.c" \
             " src/fw/applib/graphics/text_layout.c" \
+            " src/fw/applib/graphics/rtl_support.c" \
+            " src/fw/applib/graphics/arabic_shaping.c" \
             " src/fw/applib/fonts/codepoint.c" \
             " tests/fakes/fake_gbitmap_png.c",
         test_sources_ant_glob = "test_char_iterator.c")
@@ -53,6 +55,8 @@ def build(ctx):
             " src/fw/applib/graphics/framebuffer.c" \
             " src/fw/applib/graphics/gtypes.c" \
             " src/fw/applib/graphics/text_layout.c" \
+            " src/fw/applib/graphics/rtl_support.c" \
+            " src/fw/applib/graphics/arabic_shaping.c" \
             " src/fw/applib/fonts/codepoint.c" \
             " tests/fakes/fake_gbitmap_png.c",
         test_sources_ant_glob = "test_word_iterator.c")
@@ -70,6 +74,8 @@ def build(ctx):
             " src/fw/applib/graphics/framebuffer.c" \
             " src/fw/applib/graphics/gtypes.c" \
             " src/fw/applib/graphics/text_layout.c" \
+            " src/fw/applib/graphics/rtl_support.c" \
+            " src/fw/applib/graphics/arabic_shaping.c" \
             " src/fw/applib/fonts/codepoint.c" \
             " tests/fakes/fake_gbitmap_png.c",
         test_sources_ant_glob = "test_line_layout.c")
@@ -129,8 +135,8 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob = \
-         " src/fw/services/common/battery/battery_state.c " \
-         " src/fw/services/common/battery/battery_curve.c " \
+         " src/fw/services/common/battery/voltage/battery_state.c " \
+         " src/fw/services/common/battery/voltage/battery_curve.c " \
          " src/fw/services/common/battery/battery_monitor.c " \
          " tests/fakes/fake_battery.c " \
          " tests/fakes/fake_rtc.c ",
@@ -239,7 +245,7 @@ def build(ctx):
             " src/fw/process_management/pebble_process_info.c"
             " src/fw/process_management/pebble_process_md.c",
         test_sources_ant_glob = "test_pebble_process_md.c",
-        platforms=['snowy', 'spalding', 'silk', 'robert'])
+        platforms=['snowy', 'spalding', 'silk'])
 
     clar(ctx,
         sources_ant_glob = "src/fw/applib/graphics/utf8.c" \
@@ -318,6 +324,8 @@ def build(ctx):
         " src/fw/applib/graphics/bitblt.c" \
         " src/fw/applib/graphics/{depth_dir}/bitblt_private.c" \
         " src/fw/applib/graphics/text_layout.c" \
+        " src/fw/applib/graphics/rtl_support.c" \
+        " src/fw/applib/graphics/arabic_shaping.c" \
         " tests/fakes/fake_gbitmap_png.c" \
         " src/fw/applib/fonts/codepoint.c" \
         " src/fw/applib/graphics/graphics_private.c" \
@@ -325,8 +333,8 @@ def build(ctx):
         " src/fw/applib/graphics/graphics_circle.c" \
         " src/fw/applib/graphics/graphics_line.c"
 
-    for platform in ['tintin', 'snowy']:
-        bit_depth = 1 if platform == 'tintin' else 8
+    for platform in ['silk', 'snowy']:
+        bit_depth = 1 if platform == 'silk' else 8
         depth_dir = '{}_bit'.format(bit_depth)
         sources_ant_glob = templated_sources_ant_glob.format(depth_dir=depth_dir)
         clar(ctx,
@@ -337,7 +345,7 @@ def build(ctx):
              platforms=[platform])
 
     clar(ctx,
-         sources_ant_glob="src/fw/apps/prf_apps/recovery_first_use_app/getting_started_button_combo.c ",
+         sources_ant_glob="src/fw/apps/prf/recovery_first_use/getting_started_button_combo.c ",
          test_sources_ant_glob="test_getting_started_button_combo.c",
          defines=["RECOVERY_FW"]) # Enable all combos
 

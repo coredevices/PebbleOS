@@ -80,9 +80,9 @@ static bool get_call_info_from_msg(const uint8_t* msg, unsigned int length,
 
 // MJZ: This has been left here for future debugging
 static void print_call_info(PebbleCallInfo* i) {
-  // PBL_LOG(LOG_LEVEL_DEBUG, "Call Cookie: 0x%"PRIx32, i->cookie);
-  // PBL_LOG(LOG_LEVEL_DEBUG, "Caller Number: %s", i->caller_number);
-  // PBL_LOG(LOG_LEVEL_DEBUG, "Caller Name: %s", i->caller_name);
+  // PBL_LOG_DBG("Call Cookie: 0x%"PRIx32, i->cookie);
+  // PBL_LOG_DBG("Caller Number: %s", i->caller_number);
+  // PBL_LOG_DBG("Caller Name: %s", i->caller_name);
 }
 
 static void prv_put_call_disconnect_event(void) {
@@ -117,11 +117,11 @@ static void prv_send_phone_command_to_handset(uint8_t cmd, uint8_t *data, unsign
   *buffer = cmd;
   memcpy(buffer + sizeof(cmd), data, length);
 
-  // PBL_LOG(LOG_LEVEL_DEBUG, "Sending PhoneCmd: %d", cmd);
+  // PBL_LOG_DBG("Sending PhoneCmd: %d", cmd);
   CommSession *session = comm_session_get_system_session();
   if (!session) {
     // Looks like we disconnected...
-    PBL_LOG(LOG_LEVEL_ERROR, "No CommSession for phone command, ending call");
+    PBL_LOG_ERR("No CommSession for phone command, ending call");
     prv_put_call_disconnect_event();
   } else {
     comm_session_send_data(session, PHONE_CTRL_ENDPOINT, buffer,
@@ -167,7 +167,7 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length,
       }
       bool result = get_call_info_from_msg(iter, length, &call_info);
       if (!result) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Failed to read caller information from 'Incoming' phone event");
+        PBL_LOG_ERR("Failed to read caller information from 'Incoming' phone event");
         return false;
       }
 
@@ -222,7 +222,7 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length,
     };
   } else {
     // Try to catch potentially malformed messages.
-    PBL_LOG(LOG_LEVEL_ERROR, "Error parsing phone msg");
+    PBL_LOG_ERR("Error parsing phone msg");
     PBL_HEXDUMP(LOG_LEVEL_INFO, iter, length);
   }
 
@@ -257,7 +257,7 @@ void phone_protocol_msg_callback(CommSession *session, const uint8_t* iter, size
       --length;
       ++num_items;
       if (length < item_length) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Malformed message");
+        PBL_LOG_ERR("Malformed message");
         break;
       }
       prv_parse_msg_and_emit_event(iter, item_length, true /* is_state_response */);

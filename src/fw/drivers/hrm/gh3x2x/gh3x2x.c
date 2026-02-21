@@ -51,12 +51,22 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 #endif
 }
 
+static void prv_conv_fs4g_mg_to_lsb512(AccelRawData* data) {
+  //hrm use 512lsb/g, so convert the mg data to lsb by coef 1.953f(1000/512)
+  data->x = (int16_t)data->x/1.953f;
+  data->y = (int16_t)data->y/1.953f;
+  data->z = (int16_t)data->z/1.953f;
+}
+
 void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_buffer_index) {
-  // TODO, clean the buffer now
-  GU16 count = *gsensor_buffer_index;
+  HRMAccelData* acc = hrm_manager_get_accel_data();
+  GU16 count = *gsensor_buffer_index = acc->num_samples;
+  if(count > __GSENSOR_DATA_BUFFER_SIZE__) count = __GSENSOR_DATA_BUFFER_SIZE__;
   for (uint16_t i = 0; i < count; ++i) {
-    memset(&gsensor_buffer[i], 0, sizeof(STGsensorRawdata));
+    prv_conv_fs4g_mg_to_lsb512(&acc->data[i]);
+    memcpy(&gsensor_buffer[i], &acc->data[i], sizeof(STGsensorRawdata));
   }
+  hrm_manager_release_accel_data();
 }
 
 static void gh3026_int_callback_function(void *context) {
@@ -89,7 +99,7 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
   va_start(ap, fmt);
   vsniprintf(buffer, sizeof(buffer), fmt, ap);
   va_end(ap);
-  PBL_LOG(LOG_LEVEL_ALWAYS, "%s", buffer);
+  PBL_LOG_ALWAYS("%s", buffer);
 #endif
 }
 
@@ -97,7 +107,7 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
   if (type == 1) {
     HRMData hrm_data = {0};
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "GH3X2X BPM %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
+    PBL_LOG_DBG("GH3X2X BPM %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
 
     hrm_data.features = HRMFeature_BPM;
     hrm_data.hrm_bpm = val & 0xff;
@@ -122,7 +132,7 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
   } else if (type == 2) {
     HRMData hrm_data = {0};
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "GH3X2X SpO2 %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
+    PBL_LOG_DBG("GH3X2X SpO2 %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
 
     hrm_data.features = HRMFeature_SpO2;
     hrm_data.spo2_percent = val & 0xff;
@@ -146,7 +156,7 @@ void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
 
     hrm_manager_new_data_cb(&hrm_data);
   } else {
-    PBL_LOG(LOG_LEVEL_WARNING, "GH3X2X unexpected report type (%" PRIu8 ")", type);
+    PBL_LOG_WRN("GH3X2X unexpected report type (%" PRIu8 ")", type);
   }
 }
 
@@ -185,8 +195,6 @@ static void gh3x2x_timer_stop_handle(void* arg) {
   if (HRM && HRM->state->timer) {
     app_timer_cancel(HRM->state->timer);
     HRM->state->timer = NULL;
-    HRM->state->timer_period_ms = 0;
-    s_hrm_timer_flag = false;
   }
 }
 
@@ -211,7 +219,7 @@ void gh3x2x_wear_evt_notify(bool is_wear) {
   if (p_dev) {
     p_dev->state->is_wear = is_wear;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "wear notify: %d", is_wear);
+  PBL_LOG_DBG("wear notify: %d", is_wear);
 }
 
 // GH3X2X calibration/factory testing
@@ -314,7 +322,7 @@ void gh3x2x_factory_test_enable(HRMDevice *dev, GH3x2xFTType test_type) {
   uint32_t* ppg_data;
   GH3x2xFTData* p_factory = (GH3x2xFTData*)malloc(sizeof(GH3x2xFTData) + sizeof(uint32_t)*HRM_PPG_FACTORY_TEST_FIFO_LEN*HRM_PPG_CH_NUM);
   if (p_factory == NULL) {
-    PBL_LOG(LOG_LEVEL_ERROR, "malloc failed.");
+    PBL_LOG_ERR("malloc failed.");
     return;
   }
   memset(p_factory, 0, sizeof(GH3x2xFTData));
@@ -353,13 +361,19 @@ void gh3x2x_start_ft_leakage(void) {
   system_task_add_callback(gh3x2x_ft_leakage_start_handle, NULL);
 }
 
-void gh3x2x_factory_test_disable(HRMDevice *dev) {
+//shoud be called in system task
+static void gh3x2x_factory_test_disable_handle(void *data) {
+  HRMDevice *dev = (HRMDevice *)data;
   dev->state->enabled = false;
   Gh3x2xDemoStopSampling(0xFFFFFFFF);
   if (dev->state->factory != NULL) {
     free(dev->state->factory);
     dev->state->factory = NULL;
   }
+}
+
+void gh3x2x_factory_test_disable(void) {
+  system_task_add_callback(gh3x2x_factory_test_disable_handle, (void*)HRM);
 }
 
 uint8_t gh3x2x_factory_result_get(float* p_result)
@@ -399,22 +413,33 @@ bool gh3x2x_ble_data_recv(void* context) {
   }
   return true;
 }
+
+void gh3x2x_set_work_mode(int32_t mode) {
+  HRMDeviceState* state = HRM->state;
+  //always enable soft adt
+  state->work_mode = mode | GH3X2X_FUNCTION_SOFT_ADT_IR;
+}
 #endif // MANUFACTURING_FW
 
 // HRM interface
 
 void hrm_init(HRMDevice *dev) {
+#ifdef MANUFACTURING_FW
+  HRMDeviceState* state = HRM->state;
+  state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
+#endif
 }
 
-void hrm_enable(HRMDevice *dev) {
+bool hrm_enable(HRMDevice *dev) {
   int ret;
 
   gh3026_reset_pin_ctrl(1);
 
   ret = Gh3x2xDemoInit();
   if (ret != 0) {
-    PBL_LOG(LOG_LEVEL_ERROR, "GH3X2X failed to initialize");
-    return;
+    PBL_LOG_ERR("GH3X2X failed to initialize");
+    gh3026_reset_pin_ctrl(0);
+    return false;
   }
 
   s_hrm_int_flag = false;
@@ -423,12 +448,13 @@ void hrm_enable(HRMDevice *dev) {
   GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_NEED_FORCE_READ_FIFO);
   Gh3x2xDemoFunctionSampleRateSet(GH3X2X_FUNCTION_HR, GH3X2X_HR_SAMPLING_RATE);
 #ifdef MANUFACTURING_FW
-  Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_ADT);
+  Gh3x2xDemoStartSampling(dev->state->work_mode);
 #else
   Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2);
 #endif
 
   dev->state->enabled = true;
+  return true;
 }
 
 void hrm_disable(HRMDevice *dev) {

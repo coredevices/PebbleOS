@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/graphics/gtypes.h"
-#include "apps/system_apps/timeline/peek_layer.h"
+#include "apps/system/timeline/peek_layer.h"
 #include "util/attributes.h"
 
 PeekLayer * WEAK peek_layer_create(GRect frame) {
@@ -72,3 +72,6 @@ void WEAK peek_layer_set_subtitle_font(PeekLayer *peek_layer, GFont font, int16_
 void WEAK peek_layer_set_dot_diameter(PeekLayer *peek_layer, uint8_t dot_diameter) {}
 
 void WEAK peek_layer_set_icon_offset_y(PeekLayer *peek_layer, int16_t icon_offset_y) {}
+
+void WEAK peek_layer_set_icon_with_invert(PeekLayer *peek_layer,
+                                          const TimelineResourceInfo *timeline_res, bool invert) {}

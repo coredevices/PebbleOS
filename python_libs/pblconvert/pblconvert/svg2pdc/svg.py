@@ -8,9 +8,17 @@ from cairosvg.parser import Tree
 from cairosvg.surface import size, node_format, normalize, gradient_or_pattern, color
 from cairosvg.surface.helpers import point, paint
 import io
-from pdc import PathCommand, CircleCommand, extend_bounding_box, bounding_box_around_points
+from pdc import (
+    PathCommand,
+    CircleCommand,
+    extend_bounding_box,
+    bounding_box_around_points,
+)
 from annotation import Annotation, NS_ANNOTATION, PREFIX_ANNOTATION, TAG_HIGHLIGHT
-from pebble_image_routines import truncate_color_to_pebble64_palette, rgba32_triplet_to_argb8
+from pebble_image_routines import (
+    truncate_color_to_pebble64_palette,
+    rgba32_triplet_to_argb8,
+)
 
 try:
     import cairocffi as cairo
@@ -33,14 +41,14 @@ class PDCContext(cairo.Context):
 
 # http://effbot.org/zone/element-lib.htm#prettyprint
 def indent(elem, level=0):
-    i = "\n" + level*"  "
+    i = "\n" + level * "  "
     if len(elem):
         if not elem.text or not elem.text.strip():
             elem.text = i + "  "
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
         for elem in elem:
-            indent(elem, level+1)
+            indent(elem, level + 1)
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
     else:
@@ -50,7 +58,9 @@ def indent(elem, level=0):
 
 class PDCSurface(cairosvg.surface.PNGSurface):
     # noinspection PyMissingConstructor
-    def __init__(self, tree, output, dpi, parent_surface=None, approximate_bezier=False):
+    def __init__(
+        self, tree, output, dpi, parent_surface=None, approximate_bezier=False
+    ):
         self.svg_tree = tree
         self.cairo = None
         self.cairosvg_tags = []
@@ -94,12 +104,14 @@ class PDCSurface(cairosvg.surface.PNGSurface):
         # Actual surface dimensions: may be rounded on raster surfaces types
         self.cairo, self.width, self.height = self._create_surface(
             width * self.device_units_per_user_units,
-            height * self.device_units_per_user_units)
+            height * self.device_units_per_user_units,
+        )
         self.page_sizes.append((self.width, self.height))
         self.context = PDCContext(self.cairo)
         # We must scale the context as the surface size is using physical units
         self.context.scale(
-            self.device_units_per_user_units, self.device_units_per_user_units)
+            self.device_units_per_user_units, self.device_units_per_user_units
+        )
 
         # SVG spec says "viewbox of size 0 means 'don't render'"
         if viewbox is not None and viewbox[2] <= 0 and viewbox[3] <= 0:
@@ -117,7 +129,9 @@ class PDCSurface(cairosvg.surface.PNGSurface):
         # remove all PDC elements (annotations in case we're processing an annotated SVG)
         def remove_pdc_elements(elem):
             for child in elem:
-                if isinstance(child.tag, str) and child.tag.startswith("{%s}" % NS_ANNOTATION):
+                if isinstance(child.tag, str) and child.tag.startswith(
+                    "{%s}" % NS_ANNOTATION
+                ):
                     elem.remove(child)
                 else:
                     remove_pdc_elements(child)
@@ -145,16 +159,25 @@ class PDCSurface(cairosvg.surface.PNGSurface):
 
     def cairo_tags_push_and_wrap(self):
         self.cairosvg_tags.append(cairosvg.surface.TAGS.copy())
-        custom_impl = {"polyline": polyline, "polygon": polygon, "line": line, "rect": rect, "circle": circle,
-                       "path": path, "svg": svg}
-        for k,v in custom_impl.iteritems():
+        custom_impl = {
+            "polyline": polyline,
+            "polygon": polygon,
+            "line": line,
+            "rect": rect,
+            "circle": circle,
+            "path": path,
+            "svg": svg,
+        }
+        for k, v in custom_impl.iteritems():
             original = self.cairo_tag_func(k)
             cairosvg.surface.TAGS[k] = partial(custom_impl[k], original=original)
 
     def draw_root(self, node):
-        if node.get("display", "").upper() == 'NONE':
+        if node.get("display", "").upper() == "NONE":
             node.annotations = []
-            Annotation(node, 'Attribute display="none" for root element will be ignored.')
+            Annotation(
+                node, 'Attribute display="none" for root element will be ignored.'
+            )
             node.pop("display")
 
         super(PDCSurface, self).draw_root(node)
@@ -202,7 +225,9 @@ def svg_color(surface, node, opacity, attribute, default=None):
     if gradient_or_pattern(surface, node, paint_source):
         return 0
     (r, g, b, a) = color(paint_color, opacity)
-    color256 = truncate_color_to_pebble64_palette(int(r*255), int(g*255), int(b*255), int(a*255))
+    color256 = truncate_color_to_pebble64_palette(
+        int(r * 255), int(g * 255), int(b * 255), int(a * 255)
+    )
     gcolor8 = rgba32_triplet_to_argb8(*color256)
     return gcolor8 if gcolor8_is_visible(gcolor8) else 0
 
@@ -210,9 +235,9 @@ def svg_color(surface, node, opacity, attribute, default=None):
 def svg(surface, node, original=None):
     original(surface, node)
     width, height, viewbox = node_format(surface, node)
-    if not "width" in node:
+    if "width" not in node:
         width = None if viewbox is None else viewbox[2]
-    if not "height" in node:
+    if "height" not in node:
         height = None if viewbox is None else viewbox[3]
     if (width is not None) and (height is not None):
         surface.stored_size = (width, height)
@@ -221,12 +246,14 @@ def svg(surface, node, original=None):
 def line(surface, node, original=None):
     x1, y1, x2, y2 = tuple(
         size(surface, node.get(position), position[0])
-        for position in ("x1", "y1", "x2", "y2"))
+        for position in ("x1", "y1", "x2", "y2")
+    )
     points = [(x1, y1), (x2, y2)]
     command = PathCommand(points, path_open=True, precise=True)
     handle_command(surface, node, command)
 
     return original(surface, node)
+
 
 def polygon(surface, node, original=None):
     return poly_element(surface, node, open=False, original=original)
@@ -292,16 +319,18 @@ def circle(surface, node, original=None):
 
 def cubicbezier_mid(p0, p1, p2, p3, min_dist, l, r):
     t = (r[0] + l[0]) / 2
-    a = (1. - t)**3
-    b = 3. * t * (1. - t)**2
+    a = (1.0 - t) ** 3
+    b = 3.0 * t * (1.0 - t) ** 2
     c = 3.0 * t**2 * (1.0 - t)
     d = t**3
 
-    p = (a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0],
-         a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1])
+    p = (
+        a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0],
+        a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1],
+    )
 
     def pt_dist(p1, p2):
-        return ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)**0.5
+        return ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5
 
     if pt_dist(l[1], p) <= min_dist or pt_dist(r[1], p) <= min_dist:
         return []
@@ -310,6 +339,7 @@ def cubicbezier_mid(p0, p1, p2, p3, min_dist, l, r):
     right = cubicbezier_mid(p0, p1, p2, p3, min_dist=min_dist, l=(t, p), r=r)
 
     return left + [p] + right
+
 
 def cubicbezier(p0, p1, p2, p3, min_dist):
     return [p0] + cubicbezier_mid(p0, p1, p2, p3, min_dist, (0.0, p0), (1.0, p3)) + [p3]
@@ -325,8 +355,10 @@ class PathSurfaceContext(cairo.Context):
         self.grouped_annotations = {}
 
     def get_grouped_description(self, description, *args, **kwargs):
-        if not description in self.grouped_annotations:
-            self.grouped_annotations[description] = self.add_annotation(description, *args, **kwargs)
+        if description not in self.grouped_annotations:
+            self.grouped_annotations[description] = self.add_annotation(
+                description, *args, **kwargs
+            )
 
         return self.grouped_annotations[description]
 
@@ -368,8 +400,9 @@ class PathSurfaceContext(cairo.Context):
             self.add_current_point()
 
         link = "https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-bezier"
-        self.get_grouped_description("Element contains unsupported curved command(s).", link=link).add_highlight(*box)
-
+        self.get_grouped_description(
+            "Element contains unsupported curved command(s).", link=link
+        ).add_highlight(*box)
 
     def rel_curve_to(self, dx1, dy1, dx2, dy2, dx3, dy3):
         cur = self.get_current_point()
@@ -396,13 +429,15 @@ class PathSurfaceContext(cairo.Context):
     def add_annotation_arc_unsupported(self, xc, yc, radius):
         # caller uses context transforms to express arcs
         points = [
-            (xc-radius, yc-radius), # top-left
-            (xc+radius, yc-radius), # top-right
-            (xc+radius, yc+radius), # bottom-right
-            (xc-radius, yc+radius), # bottom-left
+            (xc - radius, yc - radius),  # top-left
+            (xc + radius, yc - radius),  # top-right
+            (xc + radius, yc + radius),  # bottom-right
+            (xc - radius, yc + radius),  # bottom-left
         ]
         box = bounding_box_around_points([self.user_to_device(*p) for p in points])
-        self.get_grouped_description("Element contains unsupported arc command(s).").add_highlight(*box)
+        self.get_grouped_description(
+            "Element contains unsupported arc command(s)."
+        ).add_highlight(*box)
 
 
 class PathSurface:
@@ -439,6 +474,7 @@ class Transformer:
     def add_annotation(self, *args, **kwargs):
         return Annotation(self.node, *args, **kwargs)
 
+
 def handle_command(surface, node, command):
     opacity = float(node.get("opacity", 1))
     # Get stroke and fill opacity
@@ -460,7 +496,9 @@ def handle_command(surface, node, command):
     command.transform(transformer)
     if command.stroke_width and node.get("vector-effect") != "non-scaling-stroke":
         transformed_stroke = transformer.transform_distance(command.stroke_width, 0)
-        transformed_stroke_width = (transformed_stroke[0]**2 + transformed_stroke[1]**2)**0.5
+        transformed_stroke_width = (
+            transformed_stroke[0] ** 2 + transformed_stroke[1] ** 2
+        ) ** 0.5
         command.stroke_width = transformed_stroke_width
     for annotation in node.annotations:
         annotation.transform(transformer)
@@ -469,8 +507,14 @@ def handle_command(surface, node, command):
 
     # Manage display and visibility
     display = node.get("display", "inline") != "none"
-    visible = display and (node.get("visibility", "visible") != "hidden") and \
-              (gcolor8_is_visible(command.fill_color) or gcolor8_is_visible(command.stroke_color))
+    visible = (
+        display
+        and (node.get("visibility", "visible") != "hidden")
+        and (
+            gcolor8_is_visible(command.fill_color)
+            or gcolor8_is_visible(command.stroke_color)
+        )
+    )
 
     if visible:
         surface.pdc_commands.append(command)

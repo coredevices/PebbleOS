@@ -6,8 +6,7 @@ from .. import PebbleCommander, exceptions, parsers
 
 @PebbleCommander.command()
 def battery_force_charge(cmdr, charging=True):
-    """ Force the device to believe it is or isn't charging.
-    """
+    """Force the device to believe it is or isn't charging."""
     if parsers.str2bool(charging):
         charging = "enable"
     else:
@@ -19,6 +18,5 @@ def battery_force_charge(cmdr, charging=True):
 
 @PebbleCommander.command()
 def battery_status(cmdr):
-    """ Get current battery status.
-    """
+    """Get current battery status."""
     return cmdr.send_prompt_command("battery status")

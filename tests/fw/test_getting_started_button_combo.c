@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/prf_apps/recovery_first_use_app/getting_started_button_combo.h"
+#include "apps/prf/recovery_first_use/getting_started_button_combo.h"
 
 #include "clar.h"
 
@@ -44,9 +44,6 @@ void system_task_add_callback(void (*callback)(void *data), void *data) {
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *data),
                                                     void *data) {
   callback(data);
-}
-
-void accessory_imaging_enable(bool enable) {
 }
 
 // Tests

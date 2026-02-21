@@ -17,7 +17,7 @@
 
 #if PERIPH_CONFIG_DEBUG
 #define PERIPH_CONFIG_LOG(fmt, args...) \
-        PBL_LOG(LOG_LEVEL_DEBUG, fmt, ## args)
+        PBL_LOG_DBG(fmt, ## args)
 #else
 #define PERIPH_CONFIG_LOG(fmt, args...)
 #endif

@@ -39,37 +39,6 @@ void test_mfg_serials__hw_version(void) {
   hw_version = mfg_get_hw_version();
   cl_assert(strcmp(written_hw_version1, hw_version) == 0);
 
-#if (BOARD_SILK_BB || BOARD_CALCULUS)
-  // Write a second time, too long.
-  const char* written_hw_version2_long = "abcdefghijkxyz";
-  command_hwver_write(written_hw_version2_long);
-  hw_version = mfg_get_hw_version();
-  cl_assert_equal_s(written_hw_version1, hw_version);
-
-  // Write second time
-  const char* written_hw_version2 = "HIJKLMN";
-  command_hwver_write(written_hw_version2);
-  hw_version = mfg_get_hw_version();
-  cl_assert_equal_s(written_hw_version2, hw_version);
-
-  // Write third time
-  const char* written_hw_version3 = "OPQRSTU";
-  command_hwver_write(written_hw_version3);
-  hw_version = mfg_get_hw_version();
-  cl_assert_equal_s(written_hw_version3, hw_version);
-
-  // Write fourth time
-  const char* written_hw_version4 = "VWXYZ12";
-  command_hwver_write(written_hw_version4);
-  hw_version = mfg_get_hw_version();
-  cl_assert_equal_s(written_hw_version4, hw_version);
-
-  // Write fifth time
-  const char* written_hw_version5 = "3456789";
-  command_hwver_write(written_hw_version5);
-  hw_version = mfg_get_hw_version();
-  cl_assert_equal_s(written_hw_version5, hw_version);
-#endif // BOARD_SILK || BOARD_CALCULUS
 }
 
 void test_mfg_serials__serial_number_console(void) {

@@ -150,15 +150,15 @@ static int prv_f0_detection(void)
 void vibe_init(void) {
   gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
 
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
-  psleep(AW862XX_PWR_OFF_TIME);
   gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
+  psleep(AW862XX_PWR_OFF_TIME);
+  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
   psleep(AW862XX_PWR_ON_TIME);
 
   uint8_t chip_id;
   bool ret = prv_read_register(AW862XX_REG_CHIPID, &chip_id);
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to read AW86225 chip ID");
+    PBL_LOG_ERR("Failed to read AW86225 chip ID");
     return;
   }
 
@@ -173,7 +173,7 @@ void vibe_init(void) {
   prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_VBAT_MODE_MASK, AW862XX_SYSCTRL1_VBAT_MODE_EN);
 
   if (!ret) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to initialize AW86225");
+    PBL_LOG_ERR("Failed to initialize AW86225");
     return;
   }
 

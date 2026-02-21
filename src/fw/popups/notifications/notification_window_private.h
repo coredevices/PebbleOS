@@ -5,7 +5,7 @@
 
 #include "applib/ui/action_menu_window.h"
 #include "applib/ui/status_bar_layer.h"
-#include "apps/system_apps/timeline/peek_layer.h"
+#include "apps/system/timeline/peek_layer.h"
 #include "services/common/evented_timer.h"
 #include "services/normal/timeline/swap_layer.h"
 
@@ -52,4 +52,5 @@ typedef struct NotificationWindowData {
   // Delayed vibration support - vibe at end of animation instead of immediately
   bool pending_vibe;
   Uuid pending_vibe_id;
+  bool pending_backlight;
 } NotificationWindowData;

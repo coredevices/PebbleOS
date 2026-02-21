@@ -257,7 +257,7 @@ static bool prv_wait_busy(void) {
   TickType_t max_wait_time_ticks = milliseconds_to_ticks(40);
   bool busy_on_exit = false;
   if (xSemaphoreTake(s_fpga_busy, max_wait_time_ticks) != pdTRUE) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Display not coming out of a busy state.");
+    PBL_LOG_ERR("Display not coming out of a busy state.");
     // Nothing needs to be done to recover the FPGA from a bad state. The
     // falling edge of SCS (to start a new frame) resets the FPGA logic,
     // clearing the error state.
@@ -277,12 +277,10 @@ static void prv_reprogram_display(void) {
 }
 
 static void prv_cdone_low_handler(void *context) {
-  PBL_LOG(LOG_LEVEL_ERROR,
-          "CDONE has gone low. The FPGA has lost its configuration.");
+  PBL_LOG_ERR("CDONE has gone low. The FPGA has lost its configuration.");
 
   if (!mutex_lock_with_timeout(s_display_update_mutex, 200)) {
-    PBL_LOG(LOG_LEVEL_DEBUG,
-            "Couldn't lock out display driver to reprogram FPGA.");
+    PBL_LOG_DBG("Couldn't lock out display driver to reprogram FPGA.");
     return;
   }
   prv_reprogram_display();
@@ -361,7 +359,7 @@ bool display_update_in_progress(void) {
 static void prv_do_display_update(void) {
 
   if (!mutex_lock_with_timeout(s_display_update_mutex, 0)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Couldn't start update.");
+    PBL_LOG_DBG("Couldn't start update.");
     return;
   }
   if (s_panic_screen_lockout) {
@@ -388,13 +386,12 @@ static void prv_do_display_update(void) {
     // should get it unstuck. If BUSY is still asserted, the FPGA might be
     // unprogrammed or malfunctioning. Either way, reprogramming it should get
     // it back into working order.
-    PBL_LOG(LOG_LEVEL_WARNING,
-            "Reprogramming FPGA because busy is stuck asserted");
+    PBL_LOG_WRN("Reprogramming FPGA because busy is stuck asserted");
     prv_reprogram_display();
     bool is_busy = display_busy();
 #ifdef TARGET_QEMU
     // Bold light-red text on a black background
-#define M(s) PBL_LOG(LOG_LEVEL_ALWAYS, "\033[1;91;40m" s "\033[0m")
+#define M(s) PBL_LOG_ALWAYS("\033[1;91;40m" s "\033[0m")
     if (is_busy) {
       M("################################################");
       M("#             THIS IS A QEMU BUILD             #");
@@ -541,7 +538,7 @@ static void prv_start_dma_transfer(uint8_t *addr, uint32_t length) {
 void display_show_panic_screen(uint32_t error_code) {
   // Lock out display driver from performing further updates
   if (!mutex_lock_with_timeout(s_display_update_mutex, 200)) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Couldn't lock out display driver.");
+    PBL_LOG_DBG("Couldn't lock out display driver.");
     return;
   }
   s_panic_screen_lockout = true;
@@ -559,7 +556,7 @@ void display_show_panic_screen(uint32_t error_code) {
     if (boot_display_show_error_code(error_code)) {
       // Success!
       if (retries > 0) {
-        PBL_LOG(LOG_LEVEL_WARNING, "Took %d retries to display panic screen.",
+        PBL_LOG_WRN("Took %d retries to display panic screen.",
                 retries);
       }
       break;
@@ -570,13 +567,8 @@ void display_show_panic_screen(uint32_t error_code) {
   mutex_unlock(s_display_update_mutex);
 }
 
-void display_show_splash_screen(void) {
-  // Assumes that the FPGA is already in bootloader mode but the SPI peripheral
-  // and GPIOs are not yet configured; exactly the state that the system is
-  // expected to be in before display_init() is called.
-  display_start();
-  display_spi_configure_default();
-  boot_display_show_boot_splash();
+void display_update_boot_frame(uint8_t *framebuffer) {
+  // On ice40lp, there is only one splash screen, and we handle that in the boot splash service.
 }
 
 void display_set_offset(GPoint offset) {

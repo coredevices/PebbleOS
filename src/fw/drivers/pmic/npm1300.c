@@ -15,14 +15,17 @@
 #include "drivers/periph_config.h"
 #include "kernel/events.h"
 #include "kernel/util/delay.h"
+#include "kernel/util/sleep.h"
 #include "os/mutex.h"
 #include "services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
 #define CHARGER_DEBOUNCE_MS 400
+#define ADC_POLL_DELAY_MS   5     // Delay between ADC poll iterations to reduce I2C traffic
+#define ADC_POLL_TIMEOUT_MS 100   // Max time to wait for ADC measurement
 static TimerID s_debounce_charger_timer = TIMER_INVALID_ID;
-static PebbleMutex *s_i2c_lock;
+static uint32_t s_dischg_limit_ma;
 
 typedef enum {
   PmicRegisters_MAIN_EVENTSADCCLR = 0x0003,
@@ -153,6 +156,7 @@ typedef enum {
 #define NPM1300_ADC_MSB_SHIFT 2U
 #define NPM1300_VBUS_CURRENT_DIVISOR 100U
 
+static bool dischg_limit_ma_set(uint32_t dischg_limit_ma);
 
 void battery_init(void) {
 }
@@ -162,31 +166,25 @@ uint32_t pmic_get_last_reset_reason(void) {
 }
 
 static bool prv_read_register(uint16_t register_address, uint8_t *result) {
-  mutex_lock(s_i2c_lock);
   i2c_use(I2C_NPM1300);
   uint8_t regad[2] = { register_address >> 8, register_address & 0xFF };
-  bool rv = i2c_write_block(I2C_NPM1300, 2, regad);
-  if (rv)
-    rv = i2c_read_block(I2C_NPM1300, 1, result);
+  bool rv = i2c_write_read_block(I2C_NPM1300, 2, regad, 1, result);
   i2c_release(I2C_NPM1300);
-  mutex_unlock(s_i2c_lock);
   return rv;
 }
 
 static bool prv_write_register(uint16_t register_address, uint8_t datum) {
-  mutex_lock(s_i2c_lock);
   i2c_use(I2C_NPM1300);
   uint8_t d[3] = { register_address >> 8, register_address & 0xFF, datum };
   bool rv = i2c_write_block(I2C_NPM1300, 3, d);
   i2c_release(I2C_NPM1300);
-  mutex_unlock(s_i2c_lock);
   return rv;
 }
 
 static void prv_handle_charge_state_change(void *null) {
   const bool is_charging = pmic_is_charging();
   const bool is_connected = pmic_is_usb_connected();
-  PBL_LOG(LOG_LEVEL_DEBUG, "nPM1300 Interrupt: Charging? %s Plugged? %s",
+  PBL_LOG_DBG("nPM1300 Interrupt: Charging? %s Plugged? %s",
       is_charging ? "YES" : "NO", is_connected ? "YES" : "NO");
 
   if (is_connected && NPM1300_CONFIG.vbus_current_lim0 != 0) {
@@ -195,7 +193,7 @@ static void prv_handle_charge_state_change(void *null) {
     ok &= prv_write_register(PmicRegisters_VBUSIN_TASKUPDATELIMSW,
       PmicRegisters_VBUSIN_TASKUPDATELIMSW__EN);
     if (!ok) {
-      PBL_LOG(LOG_LEVEL_ERROR, "config vbus limite0 failed");
+      PBL_LOG_ERR("config vbus limite0 failed");
     }
   }
 
@@ -234,17 +232,16 @@ bool pmic_init(void) {
   bool ok = true;
   uint8_t val;
 
-  s_i2c_lock = mutex_create();
   s_debounce_charger_timer = new_timer_create();
 
   // TODO(NPM1300): This needs to be configurable at board level
 #if PLATFORM_ASTERIX
   uint8_t buck_out;
   if (!prv_read_register(PmicRegisters_BUCK_BUCK1NORMVOUT, &buck_out)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "failed to read BUCK1NORMVOUT");
+    PBL_LOG_ERR("failed to read BUCK1NORMVOUT");
     return false;
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "found the nPM1300, BUCK1NORMVOUT = 0x%x", buck_out);
+  PBL_LOG_DBG("found the nPM1300, BUCK1NORMVOUT = 0x%x", buck_out);
   
   // work around erratum 27 for nPM1300 rev1, which we tripped in the bootloader (oops)
   ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, 9 /* 1.9V */);
@@ -255,7 +252,7 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, 3 /* both of them, load */);
   
   if (!prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &val)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "failed to read LDSWSTATUS");
+    PBL_LOG_ERR("failed to read LDSWSTATUS");
     return false;
   }
 
@@ -297,7 +294,7 @@ bool pmic_init(void) {
 
   if ((NPM1300_CONFIG.chg_current_ma < 32U) || (NPM1300_CONFIG.chg_current_ma > 800U) ||
       (NPM1300_CONFIG.chg_current_ma % 2U != 0U)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid charge current: %d mA", NPM1300_CONFIG.chg_current_ma);
+    PBL_LOG_ERR("Invalid charge current: %d mA", NPM1300_CONFIG.chg_current_ma);
     return false;
   }
 
@@ -341,20 +338,7 @@ bool pmic_init(void) {
   val = (NPM1300_CONFIG.chg_current_ma / 2U) % 2U;
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETLSB, val);
 
-  if (NPM1300_CONFIG.dischg_limit_ma == 200) {
-    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
-                             NPM1300_BCHGISETDISCHARGEMSB_200MA);
-    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
-                             NPM1300_BCHGISETDISCHARGELSB_200MA);
-  } else if (NPM1300_CONFIG.dischg_limit_ma == 1000) {
-    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
-			     NPM1300_BCHGISETDISCHARGEMSB_1000MA);
-    ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
-			     NPM1300_BCHGISETDISCHARGELSB_1000MA);
-  } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid discharge limit: %d mA", NPM1300_CONFIG.dischg_limit_ma);
-    return false;
-  }
+  ok &= dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
 
   if (NPM1300_CONFIG.vbus_current_startup != 0) {
     ok &= prv_write_register(PmicRegisters_VBUSIN_VBUSINILIMSTARTUP,
@@ -368,7 +352,7 @@ bool pmic_init(void) {
     ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
                              PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20);
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid termination current: %d", NPM1300_CONFIG.term_current_pct);
+    PBL_LOG_ERR("Invalid termination current: %d", NPM1300_CONFIG.term_current_pct);
     return false;
   }
 
@@ -391,7 +375,7 @@ bool pmic_init(void) {
   prv_configure_interrupts();
 
   if (!ok) {
-    PBL_LOG(LOG_LEVEL_ERROR, "one or more PMIC transactions failed");
+    PBL_LOG_ERR("one or more PMIC transactions failed");
   }
 
   return ok;
@@ -400,12 +384,12 @@ bool pmic_init(void) {
 bool pmic_power_off(void) {
   // TODO: review implementation, see GH-238
   if (pmic_is_usb_connected()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "USB is connected, cannot power off");
+    PBL_LOG_ERR("USB is connected, cannot power off");
     return false;
   }
 
   if (!prv_write_register(PmicRegisters_SHIP_TASKENTERSHIPMODE, 1)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to enter ship mode");
+    PBL_LOG_ERR("Failed to enter ship mode");
     return false;
   }
 
@@ -429,9 +413,17 @@ uint16_t pmic_get_vsys(void) {
     return 0;
   }
   uint8_t reg = 0;
+  uint32_t elapsed = 0;
   while ((reg & 0x08) == 0) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return 0;  // Timeout waiting for ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return 0;
+    }
+    if ((reg & 0x08) == 0) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
   
@@ -457,9 +449,17 @@ int battery_get_millivolts(void) {
     return 0;
   }
   uint8_t reg = 0;
+  uint32_t elapsed = 0;
   while ((reg & 0x01) == 0) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return 0;  // Timeout waiting for ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return 0;
+    }
+    if ((reg & 0x01) == 0) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
   
@@ -497,7 +497,7 @@ int battery_get_constants(BatteryConstants *constants) {
         NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV;
   } else {
     full_scale_ua =
-        ((int32_t)NPM1300_CONFIG.dischg_limit_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
+        ((int32_t)s_dischg_limit_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
         NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV;
   }
 
@@ -521,9 +521,17 @@ int battery_get_constants(BatteryConstants *constants) {
 
   // Process the VBAT measurement
   reg = 0U;
+  uint32_t elapsed = 0;
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCVBATRDY) == 0U) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return -1;  // Timeout waiting for VBAT ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return -1;
+    }
+    if ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCVBATRDY) == 0U) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
 
@@ -542,9 +550,17 @@ int battery_get_constants(BatteryConstants *constants) {
   constants->v_mv = (int32_t)(raw * NPM1300_ADC_VFS_VBAT_MV) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
 
   // Process the IBAT measurement
+  elapsed = 0;
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY) == 0U) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return -1;  // Timeout waiting for IBAT ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return -1;
+    }
+    if ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCIBATRDY) == 0U) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
 
@@ -563,9 +579,17 @@ int battery_get_constants(BatteryConstants *constants) {
   constants->i_ua = ((int32_t)raw * full_scale_ua) / NPM1300_BCHARGER_ADC_BITS_RESOLUTION;
 
   // Process the NTC measurement
+  elapsed = 0;
   while ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY) == 0U) {
+    if (elapsed >= ADC_POLL_TIMEOUT_MS) {
+      return -1;  // Timeout waiting for NTC ADC
+    }
     if (!prv_read_register(PmicRegisters_MAIN_EVENTSADCCLR, &reg)) {
       return -1;
+    }
+    if ((reg & PmicRegisters_MAIN_EVENTSADCCLR__EVENTADCNTCRDY) == 0U) {
+      psleep(ADC_POLL_DELAY_MS);
+      elapsed += ADC_POLL_DELAY_MS;
     }
   }
 
@@ -732,7 +756,49 @@ static bool ldo2_set_enabled(bool enabled) {
   }
 }
 
+static bool dischg_limit_ma_set(uint32_t dischg_limit_ma) {
+  bool ret;
+
+  if (s_dischg_limit_ma == dischg_limit_ma) {
+    return true;
+  }
+
+  if (dischg_limit_ma == 200) {
+    ret = prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
+                             NPM1300_BCHGISETDISCHARGEMSB_200MA);
+    if (!ret) {
+      return ret;
+    }
+
+    ret = prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
+                             NPM1300_BCHGISETDISCHARGELSB_200MA);
+    if (!ret) {
+      return ret;
+    }
+  } else if (dischg_limit_ma == 1000) {
+    ret = prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGEMSB,
+                             NPM1300_BCHGISETDISCHARGEMSB_1000MA);
+    if (!ret) {
+      return ret;
+    }
+
+    ret = prv_write_register(PmicRegisters_BCHARGER_BCHGISETDISCHARGELSB,
+                             NPM1300_BCHGISETDISCHARGELSB_1000MA);
+    if (!ret) {
+      return ret;
+    }
+  } else {
+    PBL_LOG_ERR("Invalid discharge limit: %" PRIu32 " mA", dischg_limit_ma);
+    return false;
+  }
+
+  s_dischg_limit_ma = dischg_limit_ma;
+
+  return true;
+}
+
 Npm1300Ops_t NPM1300_OPS = {
   .gpio_set = gpio_set,
   .ldo2_set_enabled = ldo2_set_enabled,
+  .dischg_limit_ma_set = dischg_limit_ma_set,
 };

@@ -174,7 +174,6 @@ typedef enum {
 typedef enum {
   CC2564A = 0,
   CC2564B,
-  DA14681,
 } BluetoothController;
 
 typedef struct {
@@ -302,19 +301,10 @@ typedef struct {
 } BoardConfigBacklight;
 
 typedef struct {
-  const OutputConfig power_en; //< Enable power supply to the accessory connector.
-  const InputConfig int_gpio;
-  const ExtiConfig exti;
-} BoardConfigAccessory;
-
-typedef struct {
   const BluetoothController controller;
 
   union {
-    //! Used with CC2564x
     const OutputConfig shutdown;
-
-    //! Used with DA14681
     const OutputConfig reset;
   };
 

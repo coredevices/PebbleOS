@@ -6,9 +6,7 @@
 from __future__ import print_function
 
 import argparse
-import os
 import re
-import string
 import struct
 import sys
 from collections import namedtuple
@@ -19,67 +17,70 @@ from functools import cmp_to_key
 # US Mar Sun>=8 2:00 D
 # so need starting day_of_month (mday), direction (increment or decrement)
 # as well as dst_start or dst_end (D or S)
-dstrule = namedtuple('dstrule', 'dstzone ds month wday flag mday hour minute')
+dstrule = namedtuple("dstrule", "dstzone ds month wday flag mday hour minute")
 
-tz_continent_list = ("Africa",
-                     "America",
-                     "Antarctica",
-                     "Asia",
-                     "Atlantic",
-                     "Australia",
-                     "Europe",
-                     "Indian",
-                     "Pacific",
-                     "Etc")
+tz_continent_list = (
+    "Africa",
+    "America",
+    "Antarctica",
+    "Asia",
+    "Atlantic",
+    "Australia",
+    "Europe",
+    "Indian",
+    "Pacific",
+    "Etc",
+)
 tz_continent_dict = {name: index for index, name in enumerate(tz_continent_list)}
 
 # This dictionary contains all of the daylight_savings_time zones, including No-DST ('-')
 # Note the order of list matters, as it shouldn't change from release to release or else you'll
 # have a very confused watch after an upgrade until the timezone is set again. We also hardcode
 # certain indexes in the firmware, see the assertions below.
-dstzone_list = ("-",
-                "AN",
-                "AS",
-                "AT",
-                "AV",
-                "Azer",
-                "Brazil",
-                "C-Eur",
-                "Canada",
-                "Chatham",
-                "ChileAQ",
-                "Cuba",
-                "E-Eur",
-                "E-EurAsia",
-                "EU",
-                "EUAsia",
-                "Egypt",
-                "Fiji",
-                "Haiti",
-                "Jordan",
-                "LH",
-                "Lebanon",
-                "Mexico",
-                "Morocco",
-                "NZ",
-                "Namibia",
-                "Palestine",
-                "Para",
-                "RussiaAsia",
-                "Syria",
-                "Thule",
-                "US",
-                "Uruguay",
-                "W-Eur",
-                "WS",
-                "Zion",
-                "Mongol",
-                "Moldova",
-                "Iran",
-                "Chile",
-                "Tonga",
-                "Eire",
-                )
+dstzone_list = (
+    "-",
+    "AN",
+    "AS",
+    "AT",
+    "AV",
+    "Azer",
+    "Brazil",
+    "C-Eur",
+    "Canada",
+    "Chatham",
+    "ChileAQ",
+    "Cuba",
+    "E-Eur",
+    "E-EurAsia",
+    "EU",
+    "EUAsia",
+    "Egypt",
+    "Fiji",
+    "Haiti",
+    "Jordan",
+    "LH",
+    "Lebanon",
+    "Mexico",
+    "Morocco",
+    "NZ",
+    "Namibia",
+    "Palestine",
+    "Para",
+    "RussiaAsia",
+    "Syria",
+    "Thule",
+    "US",
+    "Uruguay",
+    "W-Eur",
+    "WS",
+    "Zion",
+    "Mongol",
+    "Moldova",
+    "Iran",
+    "Chile",
+    "Tonga",
+    "Eire",
+)
 dstzone_dict = {name: index for index, name in enumerate(dstzone_list)}
 
 # Make sure some of these values don't move around, because the firmware code in
@@ -97,18 +98,18 @@ def dstrule_cmp(a, b):
     2) So that for each pair of dstzones, the 'DS' field has the following order D, S, -
     """
 
-    if (a.dstzone < b.dstzone):
+    if a.dstzone < b.dstzone:
         return -1
-    elif (a.dstzone > b.dstzone):
+    elif a.dstzone > b.dstzone:
         return 1
     else:
-        if a.ds == 'D':
+        if a.ds == "D":
             return -1
-        elif b.ds == 'D':
+        elif b.ds == "D":
             return 1
-        elif a.ds == 'S':
+        elif a.ds == "S":
             return -1
-        elif b.ds == 'S':
+        elif b.ds == "S":
             return 1
         else:
             return 0
@@ -124,34 +125,62 @@ def dstrules_parse(tzfile):
     dstrule_list = []
 
     # struct tm->tm_mon is 0 indexed
-    month_dict = {'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                  'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11}
+    month_dict = {
+        "Jan": 0,
+        "Feb": 1,
+        "Mar": 2,
+        "Apr": 3,
+        "May": 4,
+        "Jun": 5,
+        "Jul": 6,
+        "Aug": 7,
+        "Sep": 8,
+        "Oct": 9,
+        "Nov": 10,
+        "Dec": 11,
+    }
 
     # days in months for leapyear (feb is 1 day more)
     month_days = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
     # we need an 'any' wday for rules that enact on a specific day
     # the number picked is meaningless. Corresponds to DSTRULE_WDAY_ANY in clock.c
-    wday_dict = {'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6,
-                 'Any': 255}
+    wday_dict = {
+        "Sun": 0,
+        "Mon": 1,
+        "Tue": 2,
+        "Wed": 3,
+        "Thu": 4,
+        "Fri": 5,
+        "Sat": 6,
+        "Any": 255,
+    }
 
-    with open(tzfile, 'r') as infile:
+    with open(tzfile, "r") as infile:
         lines = infile.readlines()
         for line_num, line in enumerate(lines):
-            match_list = re.finditer(r"^Rule\s+(?P<dstzone>[-A-Za-z]+)\s+[0-9]+\s+max\s+-\s+"
-                                     r"(?P<month>[A-Za-z]+)\s+(?P<wday_stuff>[>=A-Za-z0-9]+)\s+"
-                                     r"(?P<time>[:0-9]+)(?P<timemode>[swugz]*)\s+(?P<save>[:0-9]+)[su]*\s+"
-                                     r"(?P<DS>[DS-])", line)
+            match_list = re.finditer(
+                r"^Rule\s+(?P<dstzone>[-A-Za-z]+)\s+[0-9]+\s+max\s+-\s+"
+                r"(?P<month>[A-Za-z]+)\s+(?P<wday_stuff>[>=A-Za-z0-9]+)\s+"
+                r"(?P<time>[:0-9]+)(?P<timemode>[swugz]*)\s+(?P<save>[:0-9]+)[su]*\s+"
+                r"(?P<DS>[DS-])",
+                line,
+            )
             if match_list:
                 for match in match_list:
                     try:
                         dstzone = dstzone_dict[match.group("dstzone")]
                     except KeyError:
-                        print("ERROR: Unknown dstzone found on line {}: {}"
-                              .format(line_num, match.group("dstzone")),
-                              file=sys.stderr)
-                        print("You'll need to add this new dstzone to the dstzone_list.",
-                              file=sys.stderr)
+                        print(
+                            "ERROR: Unknown dstzone found on line {}: {}".format(
+                                line_num, match.group("dstzone")
+                            ),
+                            file=sys.stderr,
+                        )
+                        print(
+                            "You'll need to add this new dstzone to the dstzone_list.",
+                            file=sys.stderr,
+                        )
                         raise
 
                     # Determine DS from SAVE field: SAVE > 0 means entering DST ('D'),
@@ -159,42 +188,52 @@ def dstrules_parse(tzfile):
                     # a reliable indicator (e.g., EU uses 'S' for Summer time which is DST).
                     save = match.group("save")
                     # Parse SAVE field (can be "0", "1:00", "0:30", etc.)
-                    if ':' in save:
-                        save_hours, save_mins = save.split(':')
+                    if ":" in save:
+                        save_hours, save_mins = save.split(":")
                         save_total = int(save_hours) * 60 + int(save_mins)
                     else:
                         save_total = int(save) * 60
-                    ds = 'D' if save_total > 0 else 'S'
+                    ds = "D" if save_total > 0 else "S"
                     wday_stuff = match.group("wday_stuff")
                     month = month_dict[match.group("month")]
-                    hour, minute = match.group("time").split(':')
+                    hour, minute = match.group("time").split(":")
                     flag = 0
                     for modech in match.group("timemode"):
-                        if modech == 's':  # Standard time (not wall time)
+                        if modech == "s":  # Standard time (not wall time)
                             flag |= 2
-                        elif modech == 'u' or modech == 'g' or modech == 'z':  # UTC time
+                        elif (
+                            modech == "u" or modech == "g" or modech == "z"
+                        ):  # UTC time
                             flag |= 4
-                        elif modech == 'w':  # Wall time
+                        elif modech == "w":  # Wall time
                             flag |= 8
                         else:
                             raise Exception("hurf char")
 
-                    if 'last' in wday_stuff:  # Last wday of the month
+                    if "last" in wday_stuff:  # Last wday of the month
                         # pick the last day of the month
                         mday = month_days[month]
                         wday = wday_dict[wday_stuff[4:]]
                         flag |= 1
-                    elif '>=' in wday_stuff:  # wday after mday
+                    elif ">=" in wday_stuff:  # wday after mday
                         # get the number after '>='
-                        mday = wday_stuff.split('=')[1]
+                        mday = wday_stuff.split("=")[1]
                         # get the dayname before '>='
-                        wday = wday_dict[wday_stuff.split('>')[0]]
+                        wday = wday_dict[wday_stuff.split(">")[0]]
                     else:  # specific mday
                         mday = int(wday_stuff)
-                        wday = wday_dict['Any']
+                        wday = wday_dict["Any"]
 
-                    new_rule = dstrule(dstzone, ds, month, wday, int(flag),
-                                       int(mday), int(hour), int(minute))
+                    new_rule = dstrule(
+                        dstzone,
+                        ds,
+                        month,
+                        wday,
+                        int(flag),
+                        int(mday),
+                        int(hour),
+                        int(minute),
+                    )
                     dstrule_list.append(new_rule)
 
     dstrule_list.sort(key=cmp_to_key(dstrule_cmp))
@@ -212,7 +251,7 @@ def build_zoneinfo_list(tzfile):
 
     zoneinfo_list = []
 
-    with open(tzfile, 'r') as infile:
+    with open(tzfile, "r") as infile:
         lines = infile.readlines()
         region = ""
         continent = ""
@@ -231,65 +270,84 @@ def build_zoneinfo_list(tzfile):
             # information.
 
             if line.startswith("Zone"):
-                match = re.match(r"^Zone\s+"
-                                 r"(?P<continent>[A-Za-z]+)\/(?P<region>[-_\/A-Za-z]+)", line)
+                match = re.match(
+                    r"^Zone\s+"
+                    r"(?P<continent>[A-Za-z]+)\/(?P<region>[-_\/A-Za-z]+)",
+                    line,
+                )
                 if match:
                     continent = match.group("continent")
                     region = match.group("region")
                     # fixup regions with an extra specifier, such as America/Indiana/Indianapolis
-                    region = region.split('/')[-1]
+                    region = region.split("/")[-1]
 
                     full_region = continent + "/" + region
 
                     # Don't include Troll, Antarctica as their DST is 2 hours and overlapping rules
                     # not even a city, actually just a station :
                     # http://mm.icann.org/pipermail/tz/2014-February/020605.html
-                    if (full_region == "Antarctica/Troll"):
+                    if full_region == "Antarctica/Troll":
                         region = ""
                     # Don't include Egypt because our rules for handling its DST are broken!
-                    elif (full_region == "Africa/Cairo"):
+                    elif full_region == "Africa/Cairo":
                         region = ""
                     # Don't include Morocco because our rules for handling its DST are broken!
-                    elif (full_region == "Africa/Casablanca"):
+                    elif full_region == "Africa/Casablanca":
                         region = ""
-                    elif (full_region == "Africa/El_Aaiun"):
+                    elif full_region == "Africa/El_Aaiun":
                         region = ""
                     # Don't include Lord Howe Island because our rules for handling its DST are broken!
-                    elif (full_region == "Australia/Lord_Howe"):
+                    elif full_region == "Australia/Lord_Howe":
                         region = ""
 
             # Now look to see if we've found the final line of the block
-            match = re.match(r"^(Zone\s+[-_\/A-Za-z]+\s+|\s+)"  # Leading spaces or zone name
-                             # The gmt offset (like 4:00 or -3:30)
-                             r"(?P<offset>[-0-9:]+)\s+"
-                             # The name of the dstrule, such as US, or - if no DST
-                             r"(?P<dst_name>[-A-Za-z]+)\s+"
-                             # The short name of the timezone, like E%sT (EST or EDT), %z or VET
-                             # Or a GMT offset like +06
-                             r"(?P<tz_abbr>([A-Z%sz\/]+)|\+\d+)"
-                             # Trailing spaces and comments, no year or dates allowed
-                             r"(\s+\#.*)?$",
-                             line, re.VERBOSE)
+            match = re.match(
+                r"^(Zone\s+[-_\/A-Za-z]+\s+|\s+)"  # Leading spaces or zone name
+                # The gmt offset (like 4:00 or -3:30)
+                r"(?P<offset>[-0-9:]+)\s+"
+                # The name of the dstrule, such as US, or - if no DST
+                r"(?P<dst_name>[-A-Za-z]+)\s+"
+                # The short name of the timezone, like E%sT (EST or EDT), %z or VET
+                # Or a GMT offset like +06
+                r"(?P<tz_abbr>([A-Z%sz\/]+)|\+\d+)"
+                # Trailing spaces and comments, no year or dates allowed
+                r"(\s+\#.*)?$",
+                line,
+                re.VERBOSE,
+            )
 
             if match and region:
                 tz_abbr = match.group("tz_abbr")
-                if tz_abbr == '%z':
-                    m = re.match(r"(?P<sign>[-+]?)(?P<hours>\d+):(?P<minutes>\d+)",
-                                 match.group("offset"))
+                if tz_abbr == "%z":
+                    m = re.match(
+                        r"(?P<sign>[-+]?)(?P<hours>\d+):(?P<minutes>\d+)",
+                        match.group("offset"),
+                    )
                     if not m:
-                        raise Exception(f"Unsupported offset {match.group('offset')} for region {region}")
+                        raise Exception(
+                            f"Unsupported offset {match.group('offset')} for region {region}"
+                        )
 
                     sign = m.group("sign") or "+"
                     hours = int(m.group("hours"))
                     minutes = int(m.group("minutes"))
                     tz_abbr = f"{sign}{hours:02d}{minutes:02d}"
                 else:
-                    tz_abbr = match.group("tz_abbr").replace('%s', '*')
-                    if tz_abbr.startswith('GMT/') or tz_abbr.startswith('IST/'):
+                    tz_abbr = match.group("tz_abbr").replace("%s", "*")
+                    if tz_abbr.startswith("GMT/") or tz_abbr.startswith("IST/"):
                         tz_abbr = tz_abbr[4:]
 
-                zoneinfo_list.append(continent + " " + region + " " + match.group("offset") +
-                                     " " + tz_abbr + " " + match.group("dst_name"))
+                zoneinfo_list.append(
+                    continent
+                    + " "
+                    + region
+                    + " "
+                    + match.group("offset")
+                    + " "
+                    + tz_abbr
+                    + " "
+                    + match.group("dst_name")
+                )
                 region = ""
 
     # return the list, alphabetically sorted
@@ -307,7 +365,7 @@ def zonelink_parse(tzfile):
 
     zonelink_list = []
 
-    with open(tzfile, 'r') as infile:
+    with open(tzfile, "r") as infile:
         lines = infile.readlines()
         for line in lines:
             # Parse blocks that look like this
@@ -315,13 +373,16 @@ def zonelink_parse(tzfile):
 
             # It's a link!
             if line.startswith("Link"):
-                match = re.match(r"^Link\s+(?P<target>[-_\/A-Za-z]+)\s+"
-                                 r"(?P<linkname>[-_\/A-Za-z]+)\s*", line)
+                match = re.match(
+                    r"^Link\s+(?P<target>[-_\/A-Za-z]+)\s+"
+                    r"(?P<linkname>[-_\/A-Za-z]+)\s*",
+                    line,
+                )
                 if match:
                     target = match.group("target")
                     linkname = match.group("linkname")
                     # fixup regions with an extra specifier, such as America/Indiana/Indianapolis
-                    target_parts = target.split('/')
+                    target_parts = target.split("/")
                     target = target_parts[0]
                     if len(target_parts) != 1:
                         target += "/" + target_parts[-1]
@@ -343,28 +404,30 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
     # Continent_index City gmt_offset_minutes tz_abbr dst_id
 
     # Unsigned short - count of entries
-    output_bin.write(struct.pack('H', len(zoneinfo_list)))
+    output_bin.write(struct.pack("H", len(zoneinfo_list)))
     # Unsigned short - count of DST rules
-    output_bin.write(struct.pack('H', len(dstzone_dict.values())))
+    output_bin.write(struct.pack("H", len(dstzone_dict.values())))
     # Unsigned short - count of links
-    output_bin.write(struct.pack('H', len(zonelink_list)))
+    output_bin.write(struct.pack("H", len(zonelink_list)))
 
     region_id_list = []
     # write all the timezones to file
     for line in zoneinfo_list:
-        continent, region, gmt_offset_minutes, tz_abbr, dst_zone = line.split(' ')
+        continent, region, gmt_offset_minutes, tz_abbr, dst_zone = line.split(" ")
 
         # output the timezone continent index
         continent_index = tz_continent_dict[continent]
-        output_bin.write(struct.pack('B', continent_index))
-        region_id_list.append(continent+"/"+region)
+        output_bin.write(struct.pack("B", continent_index))
+        region_id_list.append(continent + "/" + region)
 
         # fixup and output the timezone region name
-        output_bin.write(region.ljust(15, '\0').encode("utf8"))  # 15-character region zero padded
+        output_bin.write(
+            region.ljust(15, "\0").encode("utf8")
+        )  # 15-character region zero padded
 
         # fixup the gmt offset to be integer minutes
-        if ':' in gmt_offset_minutes:
-            hours, minutes = gmt_offset_minutes.split(':')
+        if ":" in gmt_offset_minutes:
+            hours, minutes = gmt_offset_minutes.split(":")
         else:
             hours = gmt_offset_minutes
             minutes = 0
@@ -374,21 +437,25 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
         else:
             gmt_offset_minutes = int(hours) * 60 + int(minutes)
         # signed short, for negative gmtoffsets
-        output_bin.write(struct.pack('h', gmt_offset_minutes))
+        output_bin.write(struct.pack("h", gmt_offset_minutes))
 
         # fix timezone abbreviations that no longer have a DST mode
         if dst_zone not in dstzone_dict:
-            tz_abbr.replace('*', 'S')  # remove
+            tz_abbr.replace("*", "S")  # remove
         if len(tz_abbr) > 5:
             raise Exception(f"Timezone abbreviation too long: {tz_abbr}")
-        output_bin.write(tz_abbr.ljust(5, '\0').encode("utf8"))  # 5-character region zero padded
+        output_bin.write(
+            tz_abbr.ljust(5, "\0").encode("utf8")
+        )  # 5-character region zero padded
 
         # dst table entry, 0 for NONE (ie. dash '-')
         if dst_zone in dstzone_dict:
             dstzone_index = dstzone_dict[dst_zone]
         else:
-            dstzone_index = 0  # Includes '-', 'SA', 'CR', ... that no longer support DST
-        output_bin.write(struct.pack('B', dstzone_index))
+            dstzone_index = (
+                0  # Includes '-', 'SA', 'CR', ... that no longer support DST
+            )
+        output_bin.write(struct.pack("B", dstzone_index))
 
     # Write all the dstrules we know about
     for id in sorted(dstzone_dict.values()):
@@ -405,32 +472,32 @@ def zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, output_bin):
             output_bin.write(bytearray(16))
         else:
             for dstrule in dstrules:
-                output_bin.write(struct.pack('c', dstrule.ds.encode("utf8")))
-                output_bin.write(struct.pack('B', dstrule.wday))
-                output_bin.write(struct.pack('B', dstrule.flag))
-                output_bin.write(struct.pack('B', dstrule.month))
-                output_bin.write(struct.pack('B', dstrule.mday))
-                output_bin.write(struct.pack('B', dstrule.hour))
-                output_bin.write(struct.pack('B', dstrule.minute))
-                output_bin.write(struct.pack('B', 0))
+                output_bin.write(struct.pack("c", dstrule.ds.encode("utf8")))
+                output_bin.write(struct.pack("B", dstrule.wday))
+                output_bin.write(struct.pack("B", dstrule.flag))
+                output_bin.write(struct.pack("B", dstrule.month))
+                output_bin.write(struct.pack("B", dstrule.mday))
+                output_bin.write(struct.pack("B", dstrule.hour))
+                output_bin.write(struct.pack("B", dstrule.minute))
+                output_bin.write(struct.pack("B", 0))
 
     # write all the timezone links to file
     for line in zonelink_list:
-        target, linkname = line.split(' ')
+        target, linkname = line.split(" ")
         try:
             region_id = region_id_list.index(target)
         except ValueError as e:
             print("Couldn't find region, skipping:", e)
             continue
-        output_bin.write(struct.pack('H', region_id))
-        output_bin.write(linkname.ljust(TIMEZONE_LINK_NAME_LENGTH, '\0').encode("utf8"))
+        output_bin.write(struct.pack("H", region_id))
+        output_bin.write(linkname.ljust(TIMEZONE_LINK_NAME_LENGTH, "\0").encode("utf8"))
 
 
 def build_and_create_tzdata(olson_database, output_text, output_bin):
     zoneinfo_list = build_zoneinfo_list(olson_database)
 
     # save output as text for reference
-    with open(output_text, 'wb') as output_txt:
+    with open(output_text, "wb") as output_txt:
         for zoneinfo in zoneinfo_list:
             output_txt.write(f"{zoneinfo}\n".encode())
 
@@ -438,19 +505,20 @@ def build_and_create_tzdata(olson_database, output_text, output_bin):
 
     zonelink_list = zonelink_parse(olson_database)
 
-    with open(output_bin, 'wb') as f:
+    with open(output_bin, "wb") as f:
         zoneinfo_to_bin(zoneinfo_list, dstrule_list, zonelink_list, f)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Parse olson timezone database.')
+    parser = argparse.ArgumentParser(description="Parse olson timezone database.")
 
-    parser.add_argument('olson_database', type=str)
-    parser.add_argument('tzdata_text', type=str)
-    parser.add_argument('tzdata_binary', type=str)
+    parser.add_argument("olson_database", type=str)
+    parser.add_argument("tzdata_text", type=str)
+    parser.add_argument("tzdata_binary", type=str)
 
     args = parser.parse_args()
     build_and_create_tzdata(args.olson_database, args.tzdata_text, args.tzdata_binary)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -125,7 +125,7 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
 
   // If workers are disabled, don't launch
   if (!s_workers_enabled) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Workers disabled");
+    PBL_LOG_WRN("Workers disabled");
     return false;
   }
 
@@ -148,7 +148,7 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
 
   // Error if a worker already launched
   if (pebble_task_get_handle_for_task(PebbleTask_Worker) != NULL) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Worker already launched");
+    PBL_LOG_WRN("Worker already launched");
     return false;
   }
 
@@ -186,21 +186,21 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
                                           &worker_segment);
   s_worker_task_context.load_end = worker_segment.start;
   if (!entry_point) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Tried to launch an invalid worker in bank %u!",
+    PBL_LOG_WRN("Tried to launch an invalid worker in bank %u!",
             process_metadata_get_code_bank_num(app_md));
     return false;
   }
 
   // The rest of worker_ram is available for worker state to use as it sees fit.
   if (!worker_state_configure(&worker_ram)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Worker state configuration failed");
+    PBL_LOG_ERR("Worker state configuration failed");
     return false;
   }
   // The remaining space in worker_segment is assigned to the worker's
   // heap. Worker state needs to be configured before initializing the
   // heap as the WorkerState struct holds the worker heap's Heap object.
   Heap *worker_heap = worker_state_get_heap();
-  PBL_LOG(LOG_LEVEL_DEBUG, "Worker heap init %p %p",
+  PBL_LOG_DBG("Worker heap init %p %p",
           worker_segment.start, worker_segment.end);
   heap_init(worker_heap, worker_segment.start, worker_segment.end,
             /* enable_heap_fuzzing */ false);
@@ -224,7 +224,7 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
     .puxStackBuffer = stack,
   };
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Starting %s", task_name);
+  PBL_LOG_DBG("Starting %s", task_name);
 
   pebble_task_create(PebbleTask_Worker, &task_params, &s_worker_task_context.task_handle);
 
@@ -282,7 +282,7 @@ void worker_manager_close_current_worker(bool gracefully) {
   // to post another KILL event in a few seconds, thus giving the process a chance to clean up.
   if (!process_manager_make_process_safe_to_kill(PebbleTask_Worker, gracefully)) {
     // Maybe next time...
-    PBL_LOG(LOG_LEVEL_DEBUG, "Worker not ready to exit");
+    PBL_LOG_DBG("Worker not ready to exit");
     return;
   }
 

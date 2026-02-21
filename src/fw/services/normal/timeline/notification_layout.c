@@ -8,7 +8,7 @@
 #include "applib/fonts/fonts.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/text.h"
-#include "apps/system_apps/timeline/peek_layer.h"
+#include "apps/system/timeline/peek_layer.h"
 #include "font_resource_keys.auto.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
@@ -160,7 +160,6 @@ static void prv_notification_timestamp_update(const LayoutLayer *layout_ref,
   clock_get_since_time(buffer, config->buffer_size, layout->info.item->header.timestamp);
 }
 
-#if !PLATFORM_TINTIN
 static const EmojiEntry s_emoji_table[] = JUMBOJI_TABLE(EMOJI_ENTRY);
 
 static bool prv_each_emoji_codepoint(int index, Codepoint codepoint, void *context) {
@@ -212,7 +211,6 @@ static bool prv_should_enlarge_emoji(NotificationLayout *layout) {
   return (!layout->info.show_notification_timestamp &&
           prv_get_emoji_icon(layout) != INVALID_RESOURCE);
 }
-#endif
 
 //! Creates a GTextNode view node representing the inner content of the notification
 //! @param layout NotificationLayout of the notification
@@ -261,7 +259,6 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
     .text.extent.offset.y = style->subtitle_upper_padding,
     .text.extent.margin.h = style->subtitle_upper_padding + style->subtitle_lower_padding,
   };
-#if !PLATFORM_TINTIN
   const LayoutNodeIconConfig body_icon_config = {
     .extent.node.type = LayoutNodeType_Icon,
     .res_info = &(AppResourceInfo) {
@@ -273,7 +270,6 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
     .extent.offset.y = style->body_icon_offset,
     .extent.margin.h = style->body_icon_margin,
   };
-#endif
   const LayoutNodeTextAttributeConfig location_config = {
     .attr_id = AttributeIdLocationName,
     .text.style_font = TextStyleFont_Footer,
@@ -306,11 +302,9 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
     notification_timestamp_node_config = &notification_timestamp_config.text.extent.node;
     header_node_config = &header_config.text.extent.node;
   }
-#if !PLATFORM_TINTIN
   if (!layout->info.show_notification_timestamp && PBL_IF_RECT_ELSE(use_body_icon, true)) {
     notification_timestamp_node_config = NULL;
   }
-#endif
   const LayoutNodeConfig * const vertical_config_nodes[] = {
     reminder_timestamp_node_config,
 #if PBL_ROUND
@@ -320,12 +314,8 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
     &title_config.text.extent.node,
     &subtitle_config.text.extent.node,
     &location_config.text.extent.node,
-#if PLATFORM_TINTIN
-    &body_config.text.extent.node,
-#else
     use_body_icon ? &body_icon_config.extent.node :
                     &body_config.text.extent.node,
-#endif
     &headings_paragraphs_node.extent.node,
 #if PBL_RECT
     notification_timestamp_node_config,
@@ -343,10 +333,8 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
 static void prv_destroy_view(NotificationLayout *layout) {
   graphics_text_node_destroy(layout->view_node);
   layout->view_node = NULL;
-#if !PLATFORM_TINTIN
   kino_layer_destroy(layout->detail_icon_layer);
   layout->detail_icon_layer = NULL;
-#endif
 }
 
 //! Do common init related tasks
@@ -381,9 +369,6 @@ static void prv_card_init(NotificationLayout *layout, AttributeList *attributes,
 }
 
 static void NOINLINE prv_init_view(NotificationLayout *layout) {
-#if PLATFORM_TINTIN
-  layout->view_node = prv_create_view(layout, false /* use_body_icon */);
-#else
   const bool use_body_icon = prv_should_enlarge_emoji(layout);
   layout->view_node = prv_create_view(layout, use_body_icon);
 
@@ -399,7 +384,6 @@ static void NOINLINE prv_init_view(NotificationLayout *layout) {
       analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_JUMBOJI_COUNT, AnalyticsClient_System);
     }
   }
-#endif
 }
 
 #if PBL_ROUND

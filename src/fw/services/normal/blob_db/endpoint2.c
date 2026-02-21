@@ -4,6 +4,7 @@
 #include "api.h"
 #include "sync.h"
 #include "endpoint_private.h"
+#include "settings_blob_db.h"
 
 #include "services/common/comm_session/session.h"
 #include "services/common/comm_session/session_send_buffer.h"
@@ -21,6 +22,9 @@
 
 //! BlobDB Endpoint ID
 static const uint16_t BLOB_DB2_ENDPOINT_ID = 0xb2db;
+
+//! BlobDB Protocol Version - increment when adding new features
+static const uint8_t BLOB_DB_PROTOCOL_VERSION = 1;
 
 //! Message Length Constants
 static const uint8_t DIRTY_DATABASES_LENGTH = 2;
@@ -56,7 +60,7 @@ static void prv_handle_get_dirty_databases(CommSession *session,
                                            const uint8_t *data,
                                            uint32_t length) {
   if (length < DIRTY_DATABASES_LENGTH) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a dirty databases with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a dirty databases with an invalid length: %"PRIu32"", length);
     return;
   }
 
@@ -84,7 +88,7 @@ static void prv_handle_start_sync(CommSession *session,
                                   const uint8_t *data,
                                   uint32_t length) {
   if (length < START_SYNC_LENGTH) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a start sync with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a start sync with an invalid length: %"PRIu32"", length);
     return;
   }
 
@@ -128,14 +132,20 @@ static void prv_handle_wb_write_response(const uint8_t *data,
 
   BlobDBSyncSession *sync_session = blob_db_sync_get_session_for_token(token);
   if (sync_session) {
-    if (response_code == BLOB_DB_SUCCESS) {
-      blob_db_sync_next(sync_session);
-    } else {
-      blob_db_sync_cancel(sync_session);
+    if (response_code != BLOB_DB_SUCCESS) {
+      // Log rejected items but still mark synced to avoid spamming phone on every sync
+      BlobDBDirtyItem *dirty_item = sync_session->dirty_list;
+      char key_str[32];
+      int copy_len = (dirty_item->key_len < (int)sizeof(key_str) - 1) ?
+                      dirty_item->key_len : (int)sizeof(key_str) - 1;
+      memcpy(key_str, dirty_item->key, copy_len);
+      key_str[copy_len] = '\0';
+      PBL_LOG_WRN("Writeback rejected: key=%s response=%d", key_str, response_code);
     }
+    blob_db_sync_next(sync_session);
   } else {
     // No session
-    PBL_LOG(LOG_LEVEL_WARNING, "received blob db wb response with an invalid token: %d", token);
+    PBL_LOG_WRN("received blob db wb response with an invalid token: %d", token);
   }
 }
 
@@ -143,7 +153,7 @@ static void prv_handle_write_response(CommSession *session,
                                       const uint8_t *data,
                                       uint32_t length) {
   if (length < WRITE_RESPONSE_LENGTH) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a write response with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a write response with an invalid length: %"PRIu32"", length);
     return;
   }
 
@@ -154,7 +164,7 @@ static void prv_handle_wb_response(CommSession *session,
                                    const uint8_t *data,
                                    uint32_t length) {
   if (length < WRITEBACK_RESPONSE_LENGTH) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a writeback response with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a writeback response with an invalid length: %"PRIu32"", length);
     return;
   }
 
@@ -165,7 +175,7 @@ static void prv_handle_sync_done_response(CommSession *session,
                                           const uint8_t *data,
                                           uint32_t length) {
   if (length < SYNC_DONE_RESPONSE_LENGTH) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a sync done response with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a sync done response with an invalid length: %"PRIu32"", length);
     return;
   }
 
@@ -175,9 +185,62 @@ static void prv_handle_sync_done_response(CommSession *session,
   prv_read_token_and_response(data, &token, &response_code);
 
   if (response_code != BLOB_DB_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Sync Done response error: %d", response_code);
+    PBL_LOG_ERR("Sync Done response error: %d", response_code);
   }
 }
+
+static void prv_handle_version(CommSession *session, const uint8_t *data, uint32_t length) {
+  BlobDBToken token = *(BlobDBToken *)data;
+
+  struct PACKED BlobDBVersionResponseMsg {
+    BlobDBCommand command;
+    BlobDBToken token;
+    BlobDBResponse result;
+    uint8_t version;
+  } response = {
+    .command = BLOB_DB_COMMAND_VERSION_RESPONSE,
+    .token = token,
+    .result = BLOB_DB_SUCCESS,
+    .version = BLOB_DB_PROTOCOL_VERSION,
+  };
+
+  prv_send_response(session, (uint8_t *)&response, sizeof(response));
+}
+
+
+static void prv_handle_dirty_all(CommSession *session, const uint8_t *data, uint32_t length) {
+  // Message format: [token (2 bytes)] [db_id (1 byte)]
+  static const uint8_t MIN_DIRTY_ALL_LENGTH = sizeof(BlobDBToken) + sizeof(BlobDBId);
+  if (length < MIN_DIRTY_ALL_LENGTH) {
+    PBL_LOG_ERR("Got a dirty_all with an invalid length: %"PRIu32"", length);
+    return;
+  }
+
+  BlobDBToken token;
+  BlobDBId db_id;
+  endpoint_private_read_token_db_id(data, &token, &db_id);
+
+  struct PACKED DirtyAllResponseMsg {
+    BlobDBCommand cmd;
+    BlobDBToken token;
+    BlobDBResponse result;
+  } response = {
+    .cmd = BLOB_DB_COMMAND_DIRTY_ALL | RESPONSE_MASK,
+    .token = token,
+  };
+
+  // Currently only Settings BlobDB supports mark_all_dirty
+  if (db_id != BlobDBIdSettings) {
+    response.result = BLOB_DB_DB_NOT_SUPPORTED;
+    prv_send_response(session, (uint8_t *)&response, sizeof(response));
+    return;
+  }
+
+  status_t ret = settings_blob_db_mark_all_dirty();
+  response.result = (ret == S_SUCCESS) ? BLOB_DB_SUCCESS : BLOB_DB_GENERAL_FAILURE;
+  prv_send_response(session, (uint8_t *)&response, sizeof(response));
+}
+
 
 static void prv_send_error_response(CommSession *session,
                                     BlobDBCommand cmd,
@@ -200,27 +263,35 @@ static void prv_blob_db_msg_decode_and_handle(
     CommSession *session, BlobDBCommand cmd, const uint8_t *data, size_t data_length) {
   switch (cmd) {
     case BLOB_DB_COMMAND_DIRTY_DBS:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got DIRTY DBs");
+      PBL_LOG_DBG("Got DIRTY DBs");
       prv_handle_get_dirty_databases(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_START_SYNC:
-      PBL_LOG(LOG_LEVEL_DEBUG, "Got SYNC");
+      PBL_LOG_DBG("Got SYNC");
       prv_handle_start_sync(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_WRITE_RESPONSE:
-      PBL_LOG(LOG_LEVEL_DEBUG, "WRITE Response");
+      PBL_LOG_DBG("WRITE Response");
       prv_handle_write_response(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_WRITEBACK_RESPONSE:
-      PBL_LOG(LOG_LEVEL_DEBUG, "WRITEBACK Response");
+      PBL_LOG_DBG("WRITEBACK Response");
       prv_handle_wb_response(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_SYNC_DONE_RESPONSE:
-      PBL_LOG(LOG_LEVEL_DEBUG, "SYNC DONE Response");
+      PBL_LOG_DBG("SYNC DONE Response");
       prv_handle_sync_done_response(session, data, data_length);
       break;
+    case BLOB_DB_COMMAND_VERSION:
+      PBL_LOG_DBG("Got VERSION");
+      prv_handle_version(session, data, data_length);
+      break;
+    case BLOB_DB_COMMAND_DIRTY_ALL:
+      PBL_LOG_DBG("Got DIRTY_ALL");
+      prv_handle_dirty_all(session, data, data_length);
+      break;
     default:
-      PBL_LOG(LOG_LEVEL_ERROR, "Invalid BlobDB2 message received, cmd is %u", cmd);
+      PBL_LOG_ERR("Invalid BlobDB2 message received, cmd is %u", cmd);
       prv_send_error_response(session, cmd, data, BLOB_DB_INVALID_OPERATION);
       break;
   }
@@ -302,7 +373,7 @@ void blob_db_endpoint_send_sync_done(BlobDBId db_id) {
     .db_id = db_id,
   };
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "Sending sync done for db: %d", db_id);
+  PBL_LOG_DBG("Sending sync done for db: %d", db_id);
 
   comm_session_send_data(comm_session_get_system_session(),
                          BLOB_DB2_ENDPOINT_ID,
@@ -320,7 +391,7 @@ void blob_db2_protocol_msg_callback(CommSession *session, const uint8_t* data, s
   static const uint8_t MIN_RAW_DATA_LEN = sizeof(BlobDBCommand) + sizeof(BlobDBToken);
   if (length < MIN_RAW_DATA_LEN) {
     // We don't send failure responses for too short messages in endpoint2
-    PBL_LOG(LOG_LEVEL_ERROR, "Got a blob_db2 message that was too short, len: %zu", length);
+    PBL_LOG_ERR("Got a blob_db2 message that was too short, len: %zu", length);
     return;
   }
 

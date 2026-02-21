@@ -67,7 +67,7 @@ void cron_service_handle_clock_change(PebbleSetTimeEvent *set_time_info) {
     if (must_recalc || change_diff >= job->clock_change_tolerance) {
       job->cached_execute_time = cron_job_get_execute_time(job);
     }
-    PBL_LOG(LOG_LEVEL_INFO, "Cron job rescheduled for %ld", job->cached_execute_time);
+    PBL_LOG_INFO("Cron job rescheduled for %ld", job->cached_execute_time);
 
     newlist = list_sorted_add(newlist, &job->list_node, prv_sort, true);
   }
@@ -103,7 +103,7 @@ time_t cron_job_schedule(CronJob *job) {
   if (!prv_is_scheduled(job)) {
     s_scheduled_jobs = list_sorted_add(s_scheduled_jobs, &job->list_node, prv_sort, true);
   }
-  PBL_LOG(LOG_LEVEL_DEBUG, "Cron job scheduled for %ld (%+ld)", job->cached_execute_time,
+  PBL_LOG_DBG("Cron job scheduled for %ld (%+ld)", job->cached_execute_time,
           (job->cached_execute_time - now));
 
   mutex_unlock(s_list_mutex);
@@ -131,7 +131,7 @@ time_t cron_job_schedule_after(CronJob *job, CronJob *new_job) {
 
   // insert after in the list, which guarantees it gets executed after
   list_insert_after(&job->list_node, &new_job->list_node);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Cron job scheduled for %ld", job->cached_execute_time);
+  PBL_LOG_DBG("Cron job scheduled for %ld", job->cached_execute_time);
 
   mutex_unlock(s_list_mutex);
 

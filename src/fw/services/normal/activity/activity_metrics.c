@@ -241,7 +241,7 @@ unlock:
 // We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
 static void NOINLINE prv_shift_history(time_t utc_now) {
   ActivityState *state = activity_private_state();
-  PBL_LOG(LOG_LEVEL_INFO, "resetting metrics for new day");
+  PBL_LOG_INFO("resetting metrics for new day");
   mutex_lock_recursive(state->mutex);
   {
     SettingsFile *file = activity_private_settings_open();
@@ -737,7 +737,7 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
       ActivitySettingsValueHistory setting_history = {};
       SettingsFile *file = activity_private_settings_open();
       if (!file) {
-        PBL_LOG(LOG_LEVEL_ERROR, "Settings file DNE. No need to continue getting metric");
+        PBL_LOG_ERR("Settings file DNE. No need to continue getting metric");
         success = false;
         goto unlock;
       }

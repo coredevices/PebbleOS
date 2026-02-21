@@ -51,8 +51,6 @@ extern void command_dump_malloc_bt(void);
 
 extern void command_read_word(const char*);
 
-extern void command_power_2v5(const char*);
-
 extern void command_backlight_ctl(const char*);
 extern void command_rgb_set_color(const char*);
 
@@ -154,8 +152,6 @@ extern void command_enter_standby(void);
 extern void command_enter_consumer_mode(void);
 extern void command_power_5v(const char*);
 
-extern void command_accessory_imaging_start(void);
-
 extern void command_serial_read(void);
 extern void command_hwver_read(void);
 extern void command_pcba_serial_read(void);
@@ -171,8 +167,6 @@ extern void command_color_write(const char*);
 extern void command_disp_offset_write(const char*);
 extern void command_rtcfreq_write(const char*);
 extern void command_model_write(const char*);
-extern void command_bootloader_test(const char*);
-
 extern void command_version_info(void);
 
 extern void command_als_read(void);
@@ -215,11 +209,6 @@ extern void command_pmic_read_registers(void);
 extern void command_ping_send(void);
 
 extern void command_display_set(const char *color);
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-extern void command_accessory_power_set(const char *on);
-extern void command_accessory_stress_test(void);
-extern void command_smartstrap_status(void);
-#endif
 extern void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
                               char *volume_str);
 extern void command_mic_read(void);
@@ -307,17 +296,7 @@ extern void command_mflt_metrics_dump(void);
 extern void command_mflt_device_info(void);
 #endif
 
-#if PLATFORM_TINTIN && !TARGET_QEMU
-// We don't have space for anything that's not absolutely required for firmware development
-// (imaging resources over PULSE). Rip it all out. Note that this breaks test automation on tintin,
-// but QEMU will be used as a placeholder. We plan on reintroducing test automation support through
-// continued space savings efforts and by introducing RPC commands over PULSE. Stay tuned.
-// For reference, this saves about 12k of space. If we leave just the test automation commands in
-// roughly 7k of space is saved.
-#define KEEP_NON_ESSENTIAL_COMMANDS 0
-#else
 #define KEEP_NON_ESSENTIAL_COMMANDS 1
-#endif
 static const Command s_prompt_commands[] = {
   // PULSE entry point, needed for anything PULSE-related to work
   { "PULSEv1", pulse_start, 0 },
@@ -353,7 +332,9 @@ static const Command s_prompt_commands[] = {
   { "battery status", command_print_battery_status, 0 },
 #ifndef RELEASE
   { "audit delay", command_audit_delay_us, 0 },
+#if !MICRO_FAMILY_SF32LB52
   { "enter stop", command_enter_stop, 0},
+#endif
 #endif
 #ifndef RECOVERY_FW
   { "app list", command_app_list, 0 },
@@ -380,10 +361,6 @@ static const Command s_prompt_commands[] = {
   // we can only include these commands when we're building for PRF. Some of the commands are
   // specific to snowy manufacturing as well
 #ifdef RECOVERY_FW
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  { "accessory imaging start", command_accessory_imaging_start, 0 },
-#endif
-
   { "info", command_version_info, 0 },
 
   { "enter mfg", command_enter_mfg, 0 },
@@ -417,8 +394,6 @@ static const Command s_prompt_commands[] = {
   { "rtcfreq write", command_rtcfreq_write, 1 },
   { "model write", command_model_write, 1 },
 #endif // MANUFACTURING_FW
-  { "bootloader test", command_bootloader_test, 1 },
-
   { "scheduler force active", command_scheduler_force_active, 0 },
   { "scheduler resume normal", command_scheduler_resume_normal, 0 },
 
@@ -440,9 +415,6 @@ static const Command s_prompt_commands[] = {
 
   { "als read", command_als_read, 0},
 
-#ifdef PLATFORM_TINTIN // TINTIN/BIANCA only
-  { "power 2.5", command_power_2v5, 1 },
-#else
   { "selftest", command_selftest, 0 },
 
   { "flash read", command_flash_read, 2},
@@ -453,7 +425,7 @@ static const Command s_prompt_commands[] = {
 #endif
   { "flash validate", command_flash_validate, 0},
   { "flash erased_sectors", command_flash_show_erased_sectors, 1},
-#if !RELEASE && (PLATFORM_SILK || PLATFORM_ROBERT || PLATFORM_CALCULUS)
+#if !RELEASE && PLATFORM_SILK
   { "flash apicheck", command_flash_apicheck, 1},
   //{ "flash signal test init", command_flash_signal_test_init, 0 },
   //{ "flash signal test run", command_flash_signal_test_run, 0 },
@@ -474,25 +446,15 @@ static const Command s_prompt_commands[] = {
 #if MFG_INFO_RECORDS_TEST_RESULTS
   { "mfg ui test results", command_mfg_info_test_results, 0 },
 #endif // MFG_INFO_RECORDS_TEST_RESULTS
-
-#endif // PLATFORM_TINTIN
 #endif // RECOVERY_FW
 
 #if CAPABILITY_HAS_BUILTIN_HRM
   { "hrm read", command_hrm_read, 0},
-#if PLATFORM_SILK || PLATFORM_ROBERT
+#if PLATFORM_SILK
   { "hrm wipe", command_hrm_wipe, 0},
   { "hrm freeze", command_hrm_freeze, 0},
-#endif // PLATFORM_SILK || PLATFORM_ROBERT
+#endif // PLATFORM_SILK
 #endif
-
-#if CAPABILITY_HAS_ACCESSORY_CONNECTOR
-  { "accessory power", command_accessory_power_set, 1 },
-  { "accessory stress", command_accessory_stress_test, 0 },
-#if !RELEASE && !RECOVERY_FW
-  { "smartstrap status", command_smartstrap_status, 0 },
-#endif // RELEASE
-#endif // CAPABILITY_HAS_ACCESSORY_CONNECTOR
 
 #if CAPABILITY_HAS_PMIC
   {"pmic regs", command_pmic_read_registers, 0},
@@ -582,9 +544,7 @@ static const Command s_prompt_commands[] = {
   { "dump flash", command_dump_flash, 2 },
   // { "format flash", command_format_flash, 0 },
 
-#if !PLATFORM_TINTIN
   { "flash unprotect", command_flash_unprotect, 0 },
-#endif
 
 #ifndef RECOVERY_FW
   { "worker launch", command_worker_launch, 1 },

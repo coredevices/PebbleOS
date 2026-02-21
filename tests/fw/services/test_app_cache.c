@@ -485,7 +485,7 @@ void test_app_cache__free_up_space_save_defaults(void) {
   prv_cleanup();
   to_free = SIZE_SUM - after_free;
   before_size = app_cache_get_size();
-  PBL_LOG(LOG_LEVEL_DEBUG, "%d %d %d", to_free, after_free, before_size);
+  PBL_LOG_DBG("%d %d %d", to_free, after_free, before_size);
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
   fake_system_task_callbacks_invoke_pending();

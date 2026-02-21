@@ -40,7 +40,7 @@ static bool prv_each_first_item(SettingsFile *file, SettingsRecordInfo *info,
   if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) ||
       info->key_len != UUID_SIZE) { // deleted or malformed values
     if (info->key_len != UUID_SIZE) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Found reminder with invalid key size %d; ignoring.",
+      PBL_LOG_WRN("Found reminder with invalid key size %d; ignoring.",
         info->key_len);
     }
     return true;
@@ -91,7 +91,7 @@ static bool prv_each_find_children(SettingsFile *file, SettingsRecordInfo *info,
       info->key_len != UUID_SIZE) {
     // malformed values; deleted values have their lengths set to 0
     if (info->key_len != UUID_SIZE) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Found malformed item with invalid key/val sizes; ignoring.");
+      PBL_LOG_WRN("Found malformed item with invalid key/val sizes; ignoring.");
     }
     return true;
   }
@@ -236,7 +236,7 @@ void timeline_item_storage_init(TimelineItemStorage *storage,
   };
   status_t rv = settings_file_open(&storage->file, storage->name, storage->max_size);
   if (FAILED(rv)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Unable to create settings file %s, rv = %"PRId32 "!",
+    PBL_LOG_ERR("Unable to create settings file %s, rv = %"PRId32 "!",
             filename, rv);
   }
 }
@@ -255,7 +255,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage,
 
   // Check that the layout has the correct items
   if (!timeline_item_verify_layout_serialized(val, val_len)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Timeline item does not have the correct attributes");
+    PBL_LOG_WRN("Timeline item does not have the correct attributes");
     return E_INVALID_ARGUMENT;
   }
 
@@ -265,7 +265,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage,
   time_t timestamp = timeline_item_get_tz_timestamp(&hdr->common);
   time_t end_timestamp = timestamp + hdr->common.duration * SECONDS_PER_MINUTE;
   if (end_timestamp < (int)(now - storage->max_item_age)) {
-    PBL_LOG(LOG_LEVEL_WARNING, "Rejecting stale timeline item %ld seconds old",
+    PBL_LOG_WRN("Rejecting stale timeline item %ld seconds old",
       now - timestamp);
     return E_INVALID_OPERATION;
   }

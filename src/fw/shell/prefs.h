@@ -84,8 +84,6 @@ void backlight_set_dynamic_intensity_enabled(bool enable);
 // Dynamic backlight thresholds (for debug menu)
 uint32_t backlight_get_dynamic_min_threshold(void);
 void backlight_set_dynamic_min_threshold(uint32_t threshold);
-uint32_t backlight_get_dynamic_max_threshold(void);
-void backlight_set_dynamic_max_threshold(uint32_t threshold);
 #endif
 
 // Motion sensitivity for accelerometer shake detection (0-100, lower = less sensitive)
@@ -127,7 +125,7 @@ uint16_t timeline_peek_prefs_get_before_time(void);
 bool shell_prefs_can_coredump_on_request(void);
 void shell_prefs_set_coredump_on_request(bool enabled);
 
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if CAPABILITY_HAS_APP_SCALING
 // Legacy app rendering mode - whether to use bezel or scaling for legacy apps
 typedef enum LegacyAppRenderMode {
   LegacyAppRenderMode_Bezel = 0,    // Center with black bezel (original behavior)
@@ -139,7 +137,7 @@ LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void);
 void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode);
 #endif
 
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 bool display_orientation_is_left(void);
 void display_orientation_set_left(bool left);
 #endif
@@ -149,3 +147,16 @@ void shell_prefs_set_settings_menu_highlight_color(GColor color);
 
 GColor shell_prefs_get_apps_menu_highlight_color(void);
 void shell_prefs_set_apps_menu_highlight_color(GColor color);
+
+bool shell_prefs_get_menu_scroll_wrap_around_enable(void);
+void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable);
+
+typedef enum MenuScrollVibeBehavior {
+  MenuScrollNoVibe,
+  MenuScrollVibeOnWrapAround,
+  MenuScrollVibeOnLocked,
+  MenuScrollVibeBehaviorsCount,
+} MenuScrollVibeBehavior;
+
+MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void);
+void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior);

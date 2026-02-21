@@ -9,7 +9,7 @@
 #include "services/common/analytics/analytics_logging.h"
 #include "services/common/analytics/analytics_storage.h"
 
-#include "apps/system_apps/launcher/launcher_app.h"
+#include "apps/system/launcher/launcher.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/bt_lock.h"
 #include "comm/ble/gap_le_connection.h"
@@ -591,7 +591,6 @@ void analytics_event_put_byte_stats(
 }
 
 // ------------------------------------------------------------------------------------------
-#if !PLATFORM_TINTIN
 void analytics_event_vibe_access(VibePatternFeature vibe_feature, VibeScoreId pattern_id) {
   AnalyticsEventBlob event_blob = {
     .event = AnalyticsEvent_VibeAccess,
@@ -603,7 +602,6 @@ void analytics_event_vibe_access(VibePatternFeature vibe_feature, VibeScoreId pa
 
   analytics_logging_log_event(&event_blob);
 }
-#endif
 
 // ------------------------------------------------------------------------------------------
 void analytics_event_alarm(AnalyticsEvent event_type, const AlarmInfo *info) {

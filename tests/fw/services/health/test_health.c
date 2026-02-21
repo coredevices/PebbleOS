@@ -20,6 +20,10 @@
 #include "fake_rtc.h"
 #include "fake_pbl_std.h"
 
+bool sys_activity_is_initialized(void) {
+  return true;
+}
+
 static HealthServiceState s_health_service;
 
 // -----------------------------------
@@ -754,7 +758,7 @@ void test_health__metric_hr_averaged_accessible(void) {
                                                            test->in.time_start,
                                                            test->in.time_end,
                                                            test->in.scope);
-    PBL_LOG(LOG_LEVEL_DEBUG, "%s\nMetric: %d, start: %d, end: %d, Scope: %d",
+    PBL_LOG_DBG("%s\nMetric: %d, start: %d, end: %d, Scope: %d",
             test->desc, (int)test->in.metric, (int)test->in.time_start,
             (int)test->in.time_end, (int)test->in.scope);
     cl_assert_equal_i(accessible, tests[i].out.accessible);
@@ -840,7 +844,7 @@ void test_health__metric_hr_aggregate_averaged_accessible(void) {
                                                                      test->in.time_end,
                                                                      test->in.aggregation,
                                                                      test->in.scope);
-    PBL_LOG(LOG_LEVEL_DEBUG, "%s\nMetric: %d, start: %d, end: %d, Aggregation: %d, Scope: %d",
+    PBL_LOG_DBG("%s\nMetric: %d, start: %d, end: %d, Aggregation: %d, Scope: %d",
             test->desc, (int)test->in.metric, (int)test->in.time_start,
             (int)test->in.time_end, (int)test->in.aggregation, (int)test->in.scope);
     cl_assert_equal_i(accessible, tests[i].out.accessible);
@@ -1534,7 +1538,7 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
   bool yesterday_was_weekend = (yesterday_day_in_week == Sunday)
                                || (yesterday_day_in_week == Saturday);
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "yesterday day in week: %d", yesterday_day_in_week);
+  PBL_LOG_DBG("yesterday day in week: %d", yesterday_day_in_week);
 
   // ----------------------------------------
   // Let's fill in some known data for the daily totals and accumulate the stats
@@ -1565,7 +1569,7 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
     HealthValue value = 1000 + (i * 50);
     s_sys_activity_get_metric_values.out.history[i] = value;
 
-    PBL_LOG(LOG_LEVEL_DEBUG, "Day #%d, day_of_week: %d, value: %"PRIi32" ", i, day_in_week,
+    PBL_LOG_DBG("Day #%d, day_of_week: %d, value: %"PRIi32" ", i, day_in_week,
              value);
     // Day 0 is not included in the stats
     if (i == 0) {
@@ -1586,7 +1590,7 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
     // Update stats
     if (day_in_week == yesterday_day_in_week) {
       prv_update_stats(&weekly_stats, value);
-      PBL_LOG(LOG_LEVEL_DEBUG, "Updating weekly stats with %"PRIi32": sum: %"PRIi32", "
+      PBL_LOG_DBG("Updating weekly stats with %"PRIi32": sum: %"PRIi32", "
                "avg: %"PRIi32" ", value, weekly_stats.sum, weekly_stats.avg);
     }
     if (day_in_week == Sunday || day_in_week == Saturday) {
@@ -1663,7 +1667,7 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
       HealthValue result;
       result = health_service_aggregate_averaged(HealthMetricHeartRateBPM,
                                                  time_start, time_end, agg, scope);
-      PBL_LOG(LOG_LEVEL_INFO, "Testing %-16s %-16s exp_value: %5"PRIi32", act_value: "
+      PBL_LOG_INFO("Testing %-16s %-16s exp_value: %5"PRIi32", act_value: "
               "%5"PRIi32" " , scope_str, agg_str, exp_value, result);
 
       if (scope != HealthServiceTimeScopeOnce) {
@@ -1734,7 +1738,7 @@ void test_health__heart_rate_scope_once(void) {
 
     s_sys_activity_get_minute_history_values.stage = 0;
     if (agg == HealthAggregationMin) {
-      PBL_LOG(LOG_LEVEL_DEBUG, "foo");
+      PBL_LOG_DBG("foo");
     }
     HealthValue result = health_service_aggregate_averaged(HealthMetricHeartRateBPM,
                                                            time_start, time_end,

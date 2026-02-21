@@ -13,10 +13,13 @@ import math
 def _get_pebble64_palette():
     pebble_palette = []
     for i in xrange(0, 64):
-        pebble_palette.append((
-            ((i >> 4) & 0x3) * 85,   # R
-            ((i >> 2) & 0x3) * 85,   # G
-            ((i     ) & 0x3) * 85))  # B
+        pebble_palette.append(
+            (
+                ((i >> 4) & 0x3) * 85,  # R
+                ((i >> 2) & 0x3) * 85,  # G
+                ((i) & 0x3) * 85,
+            )
+        )  # B
     return pebble_palette
 
 
@@ -46,10 +49,10 @@ def nearest_color_to_pebble2_palette(r, g, b, a):
     """
 
     # these constants come from ITU-R recommendation BT.709
-    luma = (r * 0.2126 + g * 0.7152 + b * 0.11)
+    luma = r * 0.2126 + g * 0.7152 + b * 0.11
 
     def round_to_1_bit(value):
-        """ Round a [0-255] value to either 0 or 255 """
+        """Round a [0-255] value to either 0 or 255"""
         if value > (255 / 2):
             return 255
         return 0
@@ -104,7 +107,7 @@ def rgba32_triplet_to_argb8(r, g, b, a):
 
 # convert 32-bit color (r, g, b, a) to 32-bit RGBA word
 def rgba32_triplet_to_rgba32(r, g, b, a):
-    return (((r & 0xFF) << 24) | ((g & 0xFF) << 16) | ((b & 0xFF) << 8) | (a & 0xFF))
+    return ((r & 0xFF) << 24) | ((g & 0xFF) << 16) | ((b & 0xFF) << 8) | (a & 0xFF)
 
 
 # takes number of colors and outputs PNG & PBI compatible bit depths for paletted images

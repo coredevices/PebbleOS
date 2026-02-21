@@ -92,9 +92,9 @@ void mfg_info_set_disp_offsets(GPoint p) {
 
 void mfg_info_update_constant_data(void) {
   if (mfg_info_is_boot_fpga_bitstream_written()) {
-    PBL_LOG(LOG_LEVEL_INFO, "Boot FPGA bitstream already in flash.");
+    PBL_LOG_INFO("Boot FPGA bitstream already in flash.");
   } else {
-    PBL_LOG(LOG_LEVEL_INFO, "Writing boot FPGA bitstream to flash...");
+    PBL_LOG_INFO("Writing boot FPGA bitstream to flash...");
     mfg_info_write_boot_fpga_bitstream();
   }
 }

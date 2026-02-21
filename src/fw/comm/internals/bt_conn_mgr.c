@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include <bluetooth/responsiveness.h>
 
 #include "comm/ble/gap_le_connect_params.h"
@@ -145,7 +143,7 @@ static void prv_handle_response_latency_for_le_conn(GAPLEConnection *hdl) {
 
   // actually request the mode if it has changed:
   if (hdl->conn_mgr_info->curr_requested_state != state) {
-    PBL_LOG(LOG_LEVEL_INFO, "LE: Requesting state %d for %d secs, due to %u",
+    PBL_LOG_INFO("LE: Requesting state %d for %d secs, due to %u",
             state, secs_til_max_latency, responsible_consumer);
     gap_le_connect_params_request(hdl, state);
   }
@@ -236,7 +234,7 @@ void conn_mgr_set_ble_conn_response_time_ext(
     uint16_t max_period_secs, ResponsivenessGrantedHandler granted_handler) {
   ConnectionMgrInfo *conn_mgr_info;
   if (!hdl || !((conn_mgr_info = hdl->conn_mgr_info))) {
-    PBL_LOG(LOG_LEVEL_ERROR, "GAP Handle not properly intialized");
+    PBL_LOG_ERR("GAP Handle not properly intialized");
     return;
   }
 

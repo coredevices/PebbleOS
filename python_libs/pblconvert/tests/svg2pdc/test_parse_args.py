@@ -1,5 +1,4 @@
 import os
-import tempfile
 import unittest
 import sys
 import argparse
@@ -7,27 +6,30 @@ import argparse
 from pblconvert.pblconvert import parse_args
 from pblconvert import pblconvert
 
-class FakeFile():
+
+class FakeFile:
     def __init__(self, name):
         self.name = name
 
+
 class FakeFileType(object):
-    def __init__(self, mode='r', bufsize=-1):
+    def __init__(self, mode="r", bufsize=-1):
         self._mode = mode
         self._bufsize = bufsize
 
     def __call__(self, string):
         # the special argument "-" means sys.std{in,out}
-        if string == '-':
-            if 'r' in self._mode:
+        if string == "-":
+            if "r" in self._mode:
                 return sys.stdin
-            elif 'w' in self._mode:
+            elif "w" in self._mode:
                 return sys.stdout
             else:
                 msg = _('argument "-" with mode %r') % self._mode
                 raise ValueError(msg)
 
         return FakeFile(string)
+
 
 class ParseArgsTests(unittest.TestCase):
     def fake_path_exists(self, path):
@@ -37,7 +39,7 @@ class ParseArgsTests(unittest.TestCase):
             return False
 
     def setUp(self):
-        self.files = [] 
+        self.files = []
         argparse.FileType = FakeFileType
         os.path.exists = self.fake_path_exists
         self.files.append("temp.svg")
@@ -92,5 +94,6 @@ class ParseArgsTests(unittest.TestCase):
         finally:
             pblconvert.LIMIT_WHEN_AVOIDING_OVERRIDE = old_value
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

@@ -175,11 +175,6 @@
     },
     {
       "type": "png",
-      "name": "WEATHER_CHANNEL_LOGO",
-      "file": "normal/snowy/images/weather_channel_logo.png"
-    },
-    {
-      "type": "png",
       "name": "STRIDE_SHOE",
       "file": "normal/silk/images/stride_shoe.png"
     },
@@ -417,12 +412,6 @@
      "type": "pdc",
      "name": "MENU_ICON_HEALTH",
      "file": "normal/base/images/menu_icon_health.svg"
-    },
-    {
-     "type": "js",
-     "name": "JS_TICTOC",
-     "file": "normal/base/js/tictoc.js",
-     "builtin": true
     }
   ]
 }

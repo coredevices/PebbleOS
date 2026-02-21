@@ -1,43 +1,12 @@
 mcu_family = bld.env.MICRO_FAMILY
-if mcu_family not in ('STM32F2', 'STM32F4', 'STM32F7', 'NRF52840', 'SF32LB52'):
+if mcu_family not in ('STM32F2', 'STM32F4', 'NRF52840', 'SF32LB52'):
     bld.fatal('src/fw/drivers/wscript: '
               'Unknown MICRO_FAMILY {}'.format(mcu_family))
 
-if bld.is_tintin():
+if bld.is_silk():
     bld(
         name='drivers',
         use=[
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_clocksource',
-            'driver_display',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_hci_passthrough',
-            'driver_imu',
-            'driver_led_controller',
-            'driver_mcu',
-            'driver_mpu',
-            'driver_otp',
-            'driver_pwr',
-            'driver_rng',
-            'driver_rtc',
-            'driver_system_flash',
-            'driver_task_watchdog',
-            'driver_uart',
-            'driver_vibe',
-            'driver_voltage_monitor',
-            'driver_watchdog',
-        ],
-    )
-
-elif bld.is_silk():
-    bld(
-        name='drivers',
-        use=[
-            'driver_accessory',
             'driver_ambient_light',
             'driver_backlight',
             'driver_battery',
@@ -49,7 +18,8 @@ elif bld.is_silk():
             'driver_gpio_defaults',
             'driver_hci_passthrough',
             'driver_hrm',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_led_controller',
             'driver_mcu',
             'driver_mic',
@@ -73,7 +43,6 @@ elif bld.is_snowy_compatible():
     bld(
         name='drivers',
         use=[
-            'driver_accessory',
             'driver_ambient_light',
             'driver_backlight',
             'driver_battery',
@@ -84,7 +53,8 @@ elif bld.is_snowy_compatible():
             'driver_fpc_pinstrap',
             'driver_gpio_defaults',
             'driver_hci_passthrough',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_led_controller',
             'driver_mcu',
             'driver_mic',
@@ -98,76 +68,6 @@ elif bld.is_snowy_compatible():
             'driver_task_watchdog',
             'driver_temperature',
             'driver_touch',
-            'driver_uart',
-            'driver_vibe',
-            'driver_voltage_monitor',
-            'driver_watchdog',
-        ],
-    )
-
-elif bld.is_cutts():
-    bld(
-        name='drivers',
-        use=[
-            'driver_accessory',
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_clocksource',
-            'driver_display',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_hci_passthrough',
-            'driver_imu',
-            'driver_led_controller',
-            'driver_mcu',
-            'driver_mic',
-            'driver_mpu',
-            'driver_otp',
-            'driver_pmic',
-            'driver_pwr',
-            'driver_rng',
-            'driver_rtc',
-            'driver_system_flash',
-            'driver_task_watchdog',
-            'driver_temperature',
-            'driver_touch',
-            'driver_uart',
-            'driver_vibe',
-            'driver_voltage_monitor',
-            'driver_watchdog',
-        ],
-    )
-
-elif bld.is_robert():
-    bld(
-        name='drivers',
-        use=[
-            'driver_accessory',
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_clocksource',
-            'driver_display',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_hci_passthrough',
-            'driver_hrm',
-            'driver_imu',
-            'driver_led_controller',
-            'driver_mcu',
-            'driver_mic',
-            'driver_mpu',
-            'driver_otp',
-            'driver_pmic',
-            'driver_pwr',
-            'driver_rng',
-            'driver_rtc',
-            'driver_system_flash',
-            'driver_task_watchdog',
-            'driver_temperature',
             'driver_uart',
             'driver_vibe',
             'driver_voltage_monitor',
@@ -186,7 +86,8 @@ elif bld.is_asterix():
             'driver_display',
             'driver_flash',
             'driver_gpio_defaults',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_mcu',
             'driver_mic',
             'driver_mpu',
@@ -194,6 +95,7 @@ elif bld.is_asterix():
             'driver_otp',
             'driver_periph_config',
             'driver_pmic',
+            'driver_pressure',
             'driver_pwr',
             'driver_rng',
             'driver_rtc',
@@ -218,7 +120,8 @@ elif bld.is_obelix():
             'driver_gpio_defaults',
             'driver_hrm',
             'driver_i2c',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_mcu',
             'driver_mpu',
             'driver_otp',
@@ -226,9 +129,9 @@ elif bld.is_obelix():
             'driver_pmic',
             'driver_pwr',
             'driver_qspi',
+            'driver_rc10k',
             'driver_rng',
             'driver_rtc',
-            'driver_lptim_systick',
             'driver_task_watchdog',
             'driver_temperature',
             'driver_touch',
@@ -253,7 +156,8 @@ elif bld.is_getafix():
             'driver_gpio',
             'driver_flash',
             'driver_gpio_defaults',
-            'driver_imu',
+            'driver_accel',
+            'driver_mag',
             'driver_mcu',
             'driver_mpu',
             'driver_otp',
@@ -261,9 +165,9 @@ elif bld.is_getafix():
             'driver_pmic',
             'driver_pwr',
             'driver_qspi',
+            'driver_rc10k',
             'driver_rng',
             'driver_rtc',
-            'driver_lptim_systick',
             'driver_task_watchdog',
             'driver_temperature',
             'driver_touch',
@@ -274,24 +178,6 @@ elif bld.is_getafix():
         ],
     )
 ## ----------
-
-if bld.is_snowy_compatible() or bld.is_silk() or bld.is_cutts() or bld.is_robert():
-    bld.objects(
-        name='driver_accessory',
-        source=[
-            'accessory.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_exti',
-            'driver_gpio',
-            'driver_periph_config',
-            'freertos',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
 
 if bld.is_obelix():
     bld.objects(
@@ -332,7 +218,7 @@ elif bld.capability('HAS_ALS_W1160'):
             'root_includes',
         ],
     )
-elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+elif mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_ambient_light',
         source=[
@@ -347,7 +233,7 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
         ],
     )
 
-if mcu_family in ('STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F4',):
     bld.objects(
         name='driver_temperature',
         source=[
@@ -384,7 +270,7 @@ elif mcu_family in ('SF32LB52'):
     )
 
 # FIXME: break dependency on driver_led_controller when not needed
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_backlight',
         source=[
@@ -441,25 +327,6 @@ if bld.env.QEMU:
             'stm32_stdlib',
         ],
     )
-elif bld.is_tintin():
-    bld.objects(
-        name='driver_battery',
-        source=[
-            'battery/battery_adc_conversion.c',
-            'battery/battery_common.c',
-            'battery/battery_tintin.c',
-            'battery/battery_voltage_monitor.c',
-        ],
-        use=[
-            'driver_exti',
-            'driver_gpio',
-            'driver_otp',
-            'driver_periph_config',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
 elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_battery',
@@ -491,9 +358,9 @@ else:
         ],
     )
 
-if (bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert()) and not bld.env.QEMU:
+if bld.is_snowy_compatible() and not bld.env.QEMU:
     bld.objects(
-        name='driver_bmi160',
+        name='driver_accel',
         source=[
             'imu/bmi160/bmi160.c',
             'imu/bmi160/bmi160_spi.c',
@@ -509,7 +376,7 @@ if (bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert()) and not bld.
 
 if bld.is_silk() and not bld.env.QEMU:
     bld.objects(
-        name='driver_bma255',
+        name='driver_accel',
         source=[
             'imu/bma255/bma255.c',
             'imu/bma255/bma255_spi.c',
@@ -521,7 +388,7 @@ if bld.is_silk() and not bld.env.QEMU:
 
 if bld.is_asterix():
     bld.objects(
-        name='driver_lsm6dso',
+        name='driver_accel',
         source=[
             'imu/lsm6dso/lsm6dso.c',
         ],
@@ -534,17 +401,16 @@ if bld.is_asterix():
 # NOTE: enable LIS2DW12 by default on Obelix
 if bld.is_obelix() or bld.is_getafix():
     bld.objects(
-        name='driver_lis2dw12',
+        name='driver_accel',
         source=[
             'imu/lis2dw12/lis2dw12.c',
         ],
         use=[
-            'hal_lis2dw12',
             'fw_includes',
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_button',
         source=[
@@ -593,7 +459,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_clocksource',
         source=[
@@ -607,7 +473,7 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
         ],
     )
 
-if bld.is_tintin() or bld.is_silk():
+if bld.is_silk():
     bld.objects(
         name='driver_display',
         source=[
@@ -623,7 +489,7 @@ if bld.is_tintin() or bld.is_silk():
             'stm32_stdlib',
         ],
     )
-elif bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
+elif bld.is_snowy_compatible():
     bld.objects(
         name='driver_display',
         source=[
@@ -672,7 +538,7 @@ elif bld.is_obelix() or bld.is_getafix():
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_dma',
         source=[
@@ -683,7 +549,7 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_exti',
         source=[
@@ -721,27 +587,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if bld.is_tintin():
-    bld.objects(
-        name='driver_flash',
-        source=[
-            'flash/flash_crc.c',
-            'flash/micron_n25q/cd_flash_driver.c',
-            'flash/micron_n25q/flash.c',
-            'flash/micron_n25q/flash_core.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_spi',
-            'driver_watchdog',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_silk():
+if bld.is_silk():
     bld.objects(
         name='driver_flash',
         source=[
@@ -750,30 +596,6 @@ elif bld.is_silk():
             'flash/flash_crc.c',
             'flash/flash_erase.c',
             'flash/mx25u.c',
-            'flash/nvram_bkp.c',
-            'flash/qspi_flash.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_qspi',
-            'driver_task_watchdog',
-            'driver_watchdog',
-            'freertos',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_cutts() or bld.is_robert():
-    bld.objects(
-        name='driver_flash',
-        source=[
-            'flash/cd_flash_driver.c',
-            'flash/flash_api.c',
-            'flash/flash_crc.c',
-            'flash/flash_erase.c',
-            'flash/mt25q.c',
             'flash/nvram_bkp.c',
             'flash/qspi_flash.c',
         ],
@@ -860,7 +682,7 @@ if bld.is_snowy_compatible():
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_gpio',
         source=[
@@ -896,17 +718,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family == 'STM32F7':
-    bld.objects(
-        name='driver_pwr',
-        source=[
-            'stm32f7/pwr.c',
-        ],
-        use=[
-            'fw_includes',
-        ],
-    )
-elif mcu_family == 'STM32F4':
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_pwr',
         source=[
@@ -950,7 +762,7 @@ if mcu_family == 'STM32F2':
             'driver_gpio',
         ],
     )
-elif mcu_family in ('STM32F4', 'STM32F7'):
+elif mcu_family in ('STM32F4',):
     bld.objects(
         name='driver_gpio_defaults',
         source=[
@@ -986,24 +798,6 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         ],
     )
 
-elif mcu_family in ('STM32F7',):
-    bld.objects(
-        name='driver_i2c',
-        source=[
-            'i2c.c',
-            'stm32f7/i2c_hal.c',
-            'stm32f7/i2c_timingr.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_rtc',
-            'freertos',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
 elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_i2c',
@@ -1033,99 +827,31 @@ elif mcu_family == 'SF32LB52':
     )
 
 if bld.env.QEMU:
-    mag_driver = ('driver_mag3110' if bld.capability('HAS_MAGNETOMETER')
-                  else 'driver_mag_null')
     bld.objects(
-        name='driver_imu',
+        name='driver_accel',
         source=[
-            'imu/imu_qemu.c',
             'qemu/qemu_accel.c',
         ],
         use=[
-            mag_driver,
             'driver_qemu_serial',
             'fw_includes',
             'root_includes',
         ],
     )
-elif bld.is_tintin():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_tintin.c',
-        ],
-        use=[
-            'driver_lis3dh',
-            'driver_mag3110',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_snowy_evt2.c',
-        ],
-        use=[
-            'driver_bmi160',
-            'driver_mag3110',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_silk():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_silk.c',
-        ],
-        use=[
-            'driver_bma255',
-            'driver_mag_null',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_asterix():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_asterix.c',
-        ],
-        use=[
-            'driver_lsm6dso',
-            'driver_mmc5603nj',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
-elif bld.is_obelix():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_obelix.c',
-        ],
-        use=[
-          'driver_lis2dw12',
-          'driver_mmc5603nj',
-          'fw_includes',
-          'root_includes',
-        ]
-    )
-elif bld.is_getafix():
-    bld.objects(
-        name='driver_imu',
-        source=[
-            'imu/imu_getafix.c',
-        ],
-        use=[
-            'driver_lis2dw12',
-            'driver_mmc5603nj',
-            'fw_includes',
-            'root_includes',
-        ],
-    )
+
+    if bld.capability('HAS_MAGNETOMETER'):
+        bld.objects(
+            name='driver_mag3110',
+            source=[
+                'imu/mag3110/mag3110.c',
+            ],
+            use=[
+                'driver_qemu_serial',
+                'fw_includes',
+                'root_includes',
+            ],
+        )
+
 
 if bld.env.BOARD == "v2_0":
     bld.objects(
@@ -1164,28 +890,22 @@ elif bld.is_getafix():
         ],
     )
 
-if bld.is_tintin() and not bld.env.QEMU:
+if bld.env.QEMU:
     bld.objects(
-        name='driver_lis3dh',
+        name='driver_accel',
         source=[
-            'imu/lis3dh/config.c',
-            'imu/lis3dh/lis3dh.c',
+            'qemu/qemu_accel.c',
         ],
         use=[
-            'driver_exti',
-            'driver_gpio',
-            'driver_i2c',
-            'driver_periph_config',
-            'driver_vibe',
+            'driver_qemu_serial',
             'fw_includes',
             'root_includes',
-            'stm32_stdlib',
         ],
     )
 
-if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert() or bld.env.BOARD == 'silk_flint':
+if bld.is_snowy_compatible() or bld.env.BOARD == 'silk_flint':
     bld.objects(
-        name='driver_mag3110',
+        name='driver_mag',
         source=[
             'imu/mag3110/mag3110.c',
         ],
@@ -1202,7 +922,7 @@ if bld.is_tintin() or bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robe
 
 if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
     bld.objects(
-        name='driver_mmc5603nj',
+        name='driver_mag',
         source=[
             'imu/mmc5603nj/mmc5603nj.c',
         ],
@@ -1213,18 +933,19 @@ if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
         ],
     )
 
-if not bld.capability('HAS_MAGNETOMETER'):
+if bld.is_asterix():
     bld.objects(
-        name='driver_mag_null',
+        name='driver_pressure',
         source=[
-            'imu/mag_null.c',
+            'pressure/bmp390.c',
         ],
         use=[
+            'driver_i2c',
             'fw_includes',
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_mcu',
         source=[
@@ -1261,11 +982,9 @@ if bld.is_snowy_compatible():
     bld.objects(
         name='driver_mic',
         source=[
-            'mic/mic_command.c',
             'mic/stm32/pdm.c',
         ],
         use=[
-            'driver_accessory',
             'driver_dma',
             'driver_gpio',
             'driver_periph_config',
@@ -1276,15 +995,13 @@ if bld.is_snowy_compatible():
             'stm32_stdlib',
         ],
     )
-elif bld.is_silk() or bld.is_cutts() or bld.is_robert():
+elif bld.is_silk():
     bld.objects(
         name='driver_mic',
         source=[
-            'mic/mic_command.c',
             'mic/stm32/dfsdm.c',
         ],
         use=[
-            'driver_accessory',
             'driver_dma',
             'driver_gpio',
             'driver_periph_config',
@@ -1323,7 +1040,7 @@ elif bld.is_obelix() or bld.is_getafix():
 
 
 # FIXME: make generic to Cortex-M
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7', 'NRF52840', 'SF32LB52'):
+if mcu_family in ('STM32F2', 'STM32F4', 'NRF52840', 'SF32LB52'):
     bld.objects(
         name='driver_mpu',
         source=[
@@ -1337,7 +1054,7 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7', 'NRF52840', 'SF32LB52'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_otp',
         source=[
@@ -1361,7 +1078,7 @@ elif bld.capability('HAS_FLASH_OTP'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_periph_config',
         source=[
@@ -1385,7 +1102,7 @@ elif mcu_family in ('NRF52840', 'SF32LB52'):
         ],
     )
 
-if bld.is_snowy_compatible() or bld.is_cutts() or bld.is_robert():
+if bld.is_snowy_compatible():
     bld.objects(
         name='driver_pmic',
         source=[
@@ -1472,20 +1189,6 @@ if mcu_family in ('STM32F2', 'STM32F4'):
             'stm32_stdlib',
         ]
     )
-elif mcu_family in ('STM32F7',):
-    bld.objects(
-        name='driver_pwm',
-        source=[
-            'stm32f7/pwm.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ]
-    )
 elif mcu_family == 'NRF52840':
     bld.objects(
         name='driver_pwm',
@@ -1510,7 +1213,7 @@ elif mcu_family == 'SF32LB52':
          ]
     )
 
-if 'STM32F412xG' in bld.env.DEFINES or mcu_family in ('STM32F7',):
+if 'STM32F412xG' in bld.env.DEFINES:
     bld.objects(
         name='driver_qspi',
         source=[
@@ -1566,7 +1269,7 @@ if 'STM32F412xG' in bld.env.DEFINES:
             'stm32_stdlib',
         ]
     )
-elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+elif mcu_family in ('STM32F2', 'STM32F4'):
     bld.env.DEFINES.append('HAS_DRIVER_VOLTAGE_MONITOR')
     bld.objects(
         name='driver_voltage_monitor',
@@ -1583,7 +1286,7 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     )
 
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_rng',
         source=[
@@ -1637,7 +1340,7 @@ if mcu_family == 'STM32F2':
             'stm32_stdlib',
         ],
     )
-elif mcu_family in ('STM32F4', 'STM32F7'):
+elif mcu_family in ('STM32F4',):
     bld.objects(
         name='driver_rtc',
         source=[
@@ -1679,21 +1382,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_lptim_systick',
-        source=[
-            'sf32lb52/lptim_systick.c',
-        ],
-        use=[
-            'fw_includes',
-            'freertos',
-            'root_includes',
-            'hal_sifli',
-        ],
-    )
-
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_spi',
         source=[
@@ -1707,18 +1396,7 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
         ],
     )
 
-if mcu_family == 'STM32F7':
-    bld.objects(
-        name='driver_spi',
-        source=[
-            'stm32f2/spi.c',
-        ],
-        use=[
-            'fw_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family == 'NRF52840':
+if mcu_family == 'NRF52840':
     bld.objects(
         name='driver_spi',
         source=[
@@ -1730,7 +1408,7 @@ elif mcu_family == 'NRF52840':
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_system_flash',
         source=[
@@ -1744,7 +1422,7 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
     )
 
 # FIXME: not really a driver
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_task_watchdog',
         source=[
@@ -1787,7 +1465,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_timer',
         source=[
@@ -1821,16 +1499,6 @@ if bld.capability('HAS_TOUCHSCREEN'):
                 'driver_gpio',
             ],
         )
-    elif bld.is_cutts():
-        bld.objects(
-            name='driver_touch',
-            source=bld.path.ant_glob('touch/ewd1000/*.c'),
-            use=[
-                'freertos',
-                'fw_includes',
-                'root_includes',
-            ],
-        )
 
 
 if mcu_family in ('STM32F2', 'STM32F4'):
@@ -1838,20 +1506,6 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         name='driver_uart',
         source=[
             'stm32f2/uart.c',
-        ],
-        use=[
-            'driver_gpio',
-            'freertos',
-            'fw_includes',
-            'root_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family == 'STM32F7':
-    bld.objects(
-        name='driver_uart',
-        source=[
-            'stm32f7/uart.c',
         ],
         use=[
             'driver_gpio',
@@ -1926,7 +1580,7 @@ if bld.capability('HAS_VIBE_AW8623X'):
             'driver_gpio',
         ],
     )
-elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+elif mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_vibe',
         source=[
@@ -1942,7 +1596,7 @@ elif mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
+if mcu_family in ('STM32F2', 'STM32F4'):
     bld.objects(
         name='driver_watchdog',
         source=[
@@ -2039,4 +1693,15 @@ if mcu_family == 'NRF52840':
         ],
     )
 
+if mcu_family == 'SF32LB52':
+    bld.objects(
+        name='driver_rc10k',
+        source=[
+            'sf32lb52/rc10k.c',
+        ],
+        use=[
+            'fw_includes',
+            'hal_sifli',
+        ],
+    )
 # vim:filetype=python

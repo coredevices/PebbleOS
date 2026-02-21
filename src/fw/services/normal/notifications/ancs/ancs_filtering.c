@@ -59,7 +59,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
       pstring_pstring16_to_string(&app_name_attr->pstr, app_name_buff);
       attribute_list_add_cstring(&new_attr_list, AttributeIdAppName, app_name_buff);
       list_dirty = true;
-      PBL_LOG(LOG_LEVEL_INFO, "Adding app name to app prefs: <%s>", app_name_buff);
+      PBL_LOG_INFO("Adding app name to app prefs: <%s>", app_name_buff);
     }
   }
 
@@ -69,6 +69,17 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
       app_notif_prefs && attribute_find(&app_notif_prefs->attr_list, AttributeIdMuteDayOfWeek);
   if (!already_has_mute) {
     attribute_list_add_uint8(&new_attr_list, AttributeIdMuteDayOfWeek, MuteBitfield_None);
+    list_dirty = true;
+  }
+
+  // Add the mute expiration attribute if we don't have one already
+  // Default to no expiration (0 means not muted by time)
+  if (!attribute_find(&new_attr_list, AttributeIdMuteExpiration)) {
+    uint32_t expiration_value = 0;
+    if (app_notif_prefs) {
+      expiration_value = attribute_get_uint32(&app_notif_prefs->attr_list, AttributeIdMuteExpiration, 0);
+    }
+    attribute_list_add_uint32(&new_attr_list, AttributeIdMuteExpiration, expiration_value);
     list_dirty = true;
   }
 
@@ -83,7 +94,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
       (last_updated && now > (last_updated->uint32 + SECONDS_PER_DAY))) {
     attribute_list_add_uint32(&new_attr_list, AttributeIdLastUpdated, now);
     list_dirty = true;
-    PBL_LOG(LOG_LEVEL_INFO, "Updating / adding timestamp to app prefs");
+    PBL_LOG_INFO("Updating / adding timestamp to app prefs");
   }
 
   if (list_dirty) {
@@ -121,12 +132,22 @@ uint8_t ancs_filtering_get_mute_type(const iOSNotifPrefs *app_notif_prefs) {
   return MuteBitfield_None;
 }
 
+uint32_t ancs_filtering_get_mute_expiration(const iOSNotifPrefs *app_notif_prefs) {
+  if (app_notif_prefs) {
+    return attribute_get_uint32(&app_notif_prefs->attr_list,
+                                 AttributeIdMuteExpiration, 0);
+  }
+
+  return 0;
+}
+
 bool ancs_filtering_is_muted(const iOSNotifPrefs *app_notif_prefs) {
   uint8_t mute_type = ancs_filtering_get_mute_type(app_notif_prefs);
+  uint32_t expiration_ts = ancs_filtering_get_mute_expiration(app_notif_prefs);
 
   struct tm now_tm;
   time_t now = rtc_get_time();
   localtime_r(&now, &now_tm);
 
-  return mute_type & (1 << now_tm.tm_wday);
+  return (mute_type & (1 << now_tm.tm_wday)) || (expiration_ts > (uint32_t)now);
 }

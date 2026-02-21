@@ -1,16 +1,17 @@
-#if PLATFORM_ASTERIX
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
 #include "services/normal/orientation_manager.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
 #include "drivers/display/display.h"
+#include "drivers/accel.h"
 #include "drivers/button.h"
-#include "drivers/imu/lsm6dso/lsm6dso.h"
 #include "drivers/imu/mmc5603nj/mmc5603nj.h"
+
 
 void prv_change_orientation(bool rotated) {
   display_set_rotated(rotated);
   button_set_rotated(rotated);
-  imu_set_rotated(rotated);
+  accel_set_rotated(rotated);
   mag_set_rotated(rotated);
 }
 

@@ -157,7 +157,7 @@ static uint8_t prv_get_next_log_file_id(uint8_t file_id) {
 static uint32_t prv_get_unit_base_address(uint32_t addr) {
 #if PLATFORM_SNOWY || PLATFORM_SPALDING
   return flash_get_sector_base_address(addr);
-#elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_CALCULUS || PLATFORM_ROBERT
+#elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
   return flash_get_subsector_base_address(addr);
 #else
 #error "Invalid platform!"
@@ -167,7 +167,7 @@ static uint32_t prv_get_unit_base_address(uint32_t addr) {
 static void prv_erase_unit(uint32_t addr) {
 #if PLATFORM_SNOWY || PLATFORM_SPALDING
   flash_erase_sector_blocking(addr);
-#elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_CALCULUS || PLATFORM_ROBERT
+#elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
   flash_erase_subsector_blocking(addr);
 #else
 #error "Invalid platform!"
@@ -506,7 +506,7 @@ static void prv_dump_log_system_cb(void *context) {
       status = DumpStatus_DoneSuccess;
     } else {
       status = DumpStatus_InProgress;
-      PBL_LOG(LOG_LEVEL_DEBUG, "Dumping page %d of %d", state->page_index, state->num_pages-1);
+      PBL_LOG_DBG("Dumping page %d of %d", state->page_index, state->num_pages-1);
     }
   }
 
@@ -527,7 +527,7 @@ bool flash_dump_log_file(int generation, DumpLineCallback line_cb,
 
   uint32_t log_start_addr;
   int num_log_pages = prv_get_start_of_log_file(log_file_id, &log_start_addr);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Dumping generation %d, %d pages", generation, num_log_pages);
+  PBL_LOG_DBG("Dumping generation %d, %d pages", generation, num_log_pages);
 
   if (num_log_pages == 0) {
     completed_cb(false);

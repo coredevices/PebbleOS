@@ -4,12 +4,12 @@
 #include "watchface.h"
 
 #include "apps/system_app_ids.h"
-#include "apps/system_apps/launcher/launcher_app.h"
-#include "apps/system_apps/settings/settings_quick_launch.h"
-#include "apps/system_apps/settings/settings_quick_launch_app_menu.h"
-#include "apps/system_apps/settings/settings_quick_launch_setup_menu.h"
-#include "apps/system_apps/timeline/timeline.h"
-#include "apps/watch/low_power/low_power_face.h"
+#include "apps/system/launcher/launcher.h"
+#include "apps/system/settings/quick_launch.h"
+#include "apps/system/settings/quick_launch_app_menu.h"
+#include "apps/system/settings/quick_launch_setup_menu.h"
+#include "apps/system/timeline/timeline.h"
+#include "apps/watch/low_power/face.h"
 #include "kernel/event_loop.h"
 #include "kernel/low_power.h"
 #include "kernel/ui/modals/modal_manager.h"
@@ -135,11 +135,11 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   static TimelineArgs s_timeline_args;
   const bool is_up = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
   if (is_up) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Launching timeline in past mode.");
+    PBL_LOG_DBG("Launching timeline in past mode.");
     s_timeline_args.direction = TimelineIterDirectionPast;
     analytics_inc(ANALYTICS_DEVICE_METRIC_TIMELINE_PAST_LAUNCH_COUNT, AnalyticsClient_System);
   } else {
-    PBL_LOG(LOG_LEVEL_DEBUG, "Launching timeline in future mode.");
+    PBL_LOG_DBG("Launching timeline in future mode.");
     s_timeline_args.direction = TimelineIterDirectionFuture;
     analytics_inc(ANALYTICS_DEVICE_METRIC_TIMELINE_FUTURE_LAUNCH_COUNT, AnalyticsClient_System);
   }
@@ -221,7 +221,7 @@ void watchface_handle_button_event(PebbleEvent *e) {
 }
 
 static void prv_watchface_launch_low_power(void) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "Switching default watchface to low_power_mode watchface");
+  PBL_LOG_DBG("Switching default watchface to low_power_mode watchface");
   app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
     .id = APP_ID_LOW_POWER_FACE,
   });

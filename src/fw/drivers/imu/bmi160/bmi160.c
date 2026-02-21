@@ -534,7 +534,7 @@ static void prv_update_accel_interrupts(bool enable) {
   }
 }
 
-void bmi160_init(void) {
+void accel_init(void) {
   gpio_input_init(&BOARD_CONFIG_ACCEL.accel_int_gpios[0]);
   gpio_input_init(&BOARD_CONFIG_ACCEL.accel_int_gpios[1]);
 
@@ -548,140 +548,25 @@ void bmi160_init(void) {
     prv_run_command(BMI160_CMD_SOFTRESET);
     bmi160_enable_spi_mode();
   } else {
-    PBL_LOG(LOG_LEVEL_WARNING, "Failed to query BMI160");
+    PBL_LOG_WRN("Failed to query BMI160");
   }
 
   prv_set_accel_scale(BMI160_SCALE_4G);
+
+  bmi160_set_accel_power_mode(BMI160_Accel_Mode_Normal);
+}
+
+void accel_power_up(void) {
+}
+
+void accel_power_down(void) {
 }
 
 bool bmi160_query_whoami(void) {
   uint8_t whoami = bmi160_read_reg(BMI160_REG_CHIP_ID);
-  PBL_LOG(LOG_LEVEL_DEBUG, "Read BMI160 whoami byte 0x%"PRIx8", expecting 0x%"PRIx8,
+  PBL_LOG_DBG("Read BMI160 whoami byte 0x%"PRIx8", expecting 0x%"PRIx8,
           whoami, BMI160_CHIP_ID);
   return (whoami == BMI160_CHIP_ID);
-}
-
-// TODO/NOTE: The accel & gyro self test routines changes some of the BMI160
-// configuration state. In the future we could update them so they do not
-// destroy the state
-
-bool accel_run_selftest(void) {
-  prv_update_accel_interrupts(false);
-
-  prv_run_command(BMI160_CMD_SOFTRESET);
-  psleep(50);
-
-  bmi160_enable_spi_mode();
-
-  bmi160_set_accel_power_mode(BMI160_Accel_Mode_Normal);
-  psleep(10);
-
-  // Set to 8g range, as required for the self test mode
-  prv_set_accel_scale(BMI160_SCALE_8G);
-
-  // Set ODR to 1600Hz
-  accel_set_sampling_interval(BMI160SampleRate_1600_HZ);
-  prv_accel_enable_undersampling(false);
-
-  PBL_LOG(LOG_LEVEL_DEBUG, "Self Test: Negative offset");
-
-  // Enable self test with high amplitude in the negative direction
-  prv_write_reg(BMI160_REG_SELF_TEST, 0x8 | 0b01);
-  psleep(50);
-
-  struct {
-    char axis_name;
-
-    uint8_t register_address;
-    int pass_threshold;
-
-    int16_t negative_value;
-    int16_t positive_value;
-  } accel_test_axis[] = {
-    {
-      .axis_name = 'X',
-      .register_address = BMI160_REG_ACC_X_LSB,
-      .pass_threshold = 3277
-    }, {
-      .axis_name = 'Y',
-      .register_address = BMI160_REG_ACC_Y_LSB,
-      .pass_threshold = 3277
-    }, {
-      .axis_name = 'Z',
-      .register_address = BMI160_REG_ACC_Z_LSB,
-      .pass_threshold = 1639
-    }
-  };
-
-  // Collect data with the negative offset applied
-  for (unsigned int i = 0; i < ARRAY_LENGTH(accel_test_axis); ++i) {
-    accel_test_axis[i].negative_value = bmi160_read_16bit_reg(accel_test_axis[i].register_address);
-    PBL_LOG(LOG_LEVEL_DEBUG, "- %c: %"PRId16,
-            accel_test_axis[i].axis_name, accel_test_axis[i].negative_value);
-  }
-
-  PBL_LOG(LOG_LEVEL_DEBUG, "Self Test: Positive offset");
-
-  // Flip sign bit from negative to positive while leaving self test mode on at high amplitude
-  prv_write_reg(BMI160_REG_SELF_TEST, 0x8 | 0x4 | 0b01);
-
-  psleep(50);
-
-  // Collect data with the positive offset applied
-  for (unsigned int i = 0; i < ARRAY_LENGTH(accel_test_axis); ++i) {
-    accel_test_axis[i].positive_value = bmi160_read_16bit_reg(accel_test_axis[i].register_address);
-    PBL_LOG(LOG_LEVEL_DEBUG, "+ %c: %"PRId16,
-            accel_test_axis[i].axis_name, accel_test_axis[i].positive_value);
-  }
-
-  // Verify each axis saw a big enough delta in response to the self test mode.
-  // NOTE! For some reason, applying a "positive" force makes the number go lower and applying
-  // a "negative" force makes the number go higher. And then, for some reason, we abs() it when
-  // calculating a delta to hide the fact that it's backwards. This is all documented in a
-  // document called "How to perform BMI160 accelerometer self-test" provided by Bosch, so I guess
-  // it's the right thing to do. This document is attached to PBL-10951.
-  bool pass = true;
-  for (unsigned int i = 0; i < ARRAY_LENGTH(accel_test_axis); ++i) {
-    int axis_delta = accel_test_axis[i].positive_value - accel_test_axis[i].negative_value;
-    axis_delta = abs(axis_delta);
-
-    if (axis_delta < accel_test_axis[i].pass_threshold) {
-      PBL_LOG(LOG_LEVEL_WARNING, "Self test failed for axis %c: %d < %d",
-              accel_test_axis[i].axis_name, axis_delta, accel_test_axis[i].pass_threshold);
-      pass = false;
-    }
-  }
-
-  prv_run_command(BMI160_CMD_SOFTRESET);
-  psleep(50);
-
-  bmi160_enable_spi_mode();
-
-  return pass;
-}
-
-bool gyro_run_selftest(void) {
-  prv_update_accel_interrupts(false);
-
-  prv_run_command(BMI160_CMD_SOFTRESET);
-  psleep(50);
-
-  bmi160_enable_spi_mode();
-
-  bmi160_set_gyro_power_mode(BMI160_Gyro_Mode_Normal);
-
-  // Write the gyr_self_test_start bit
-  prv_write_reg(BMI160_REG_SELF_TEST, 0x10);
-  psleep(50);
-
-  const uint8_t status = bmi160_read_reg(BMI160_REG_SELF_TEST);
-
-  // power down the gyro
-  bmi160_set_gyro_power_mode(BMI160_Gyro_Mode_Suspend);
-  if (status | 0x2) {
-    return true;
-  }
-  return false;
 }
 
 void bmi160_set_accel_power_mode(BMI160AccelPowerMode mode) {
@@ -703,25 +588,6 @@ void bmi160_set_accel_power_mode(BMI160AccelPowerMode mode) {
   s_accel_power_mode = mode;
   BMI160_DBG("PMU_STATUS: 0x%x ACC_CONF: 0x%x",
     bmi160_read_reg(BMI160_REG_PMU_STATUS), bmi160_read_reg(BMI160_REG_ACC_CONF));
-}
-
-void bmi160_set_gyro_power_mode(BMI160GyroPowerMode mode) {
-  int retries = 20;
-  prv_run_command(BMI160_CMD_GYR_SET_PMU_MODE | mode);
-  while (retries--) {
-    uint8_t status = 0;
-    // can take up to 80ms to power up
-    status = bmi160_read_reg(BMI160_REG_PMU_STATUS) >> 2;
-    if (status == mode) {
-      break;
-    }
-    psleep(5);
-    BMI160_DBG("GYRO: want mode %d, actual %d", mode, status);
-  }
-  PBL_ASSERT(retries > 0, "Gyro: Could not set power mode to %d", mode);
-
-  s_gyro_power_mode = mode;
-  BMI160_DBG("PMU_STATUS: 0x%x", bmi160_read_reg(BMI160_REG_PMU_STATUS));
 }
 
 /*
@@ -1035,7 +901,7 @@ static void prv_disable_double_tap_detection(void) {
 }
 
 void accel_enable_shake_detection(bool on) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "enable shake detection %d", on);
+  PBL_LOG_DBG("enable shake detection %d", on);
   if (s_shake_detection_enabled == on) {
     // the requested change matches what we already have!
     return;
@@ -1052,7 +918,7 @@ void accel_enable_shake_detection(bool on) {
 }
 
 void accel_enable_double_tap_detection(bool on) {
-  PBL_LOG(LOG_LEVEL_DEBUG, "enable double tap detection %d", on);
+  PBL_LOG_DBG("enable double tap detection %d", on);
   if (s_double_tap_detection_enabled == on) {
     // the requested change matches what we already have!
     return;

@@ -155,7 +155,7 @@ AppMessageResult app_message_outbox_begin(DictionaryIterator **iterator) {
   AppMessagePhaseOut phase = outbox->phase;
   *iterator = NULL;
   if (prv_is_message_pending(phase)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't call app_message_outbox_begin() now, wait for sent_callback!");
+    PBL_LOG_ERR("Can't call app_message_outbox_begin() now, wait for sent_callback!");
 
     // See https://pebbletechnology.atlassian.net/browse/PBL-10146
     // Workaround for apps that sit in a while() loop waiting on app_message_outbox_begin().
@@ -164,12 +164,10 @@ AppMessageResult app_message_outbox_begin(DictionaryIterator **iterator) {
 
     return APP_MSG_BUSY;
   } else if (phase == OUT_WRITING) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Must call app_message_outbox_send() before calling app_message_outbox_begin() again!");
+    PBL_LOG_ERR("Must call app_message_outbox_send() before calling app_message_outbox_begin() again!");
     return APP_MSG_INVALID_STATE;
   } else if (phase == OUT_CLOSED) {
-    PBL_LOG(LOG_LEVEL_ERROR,
-            "Must call app_message_open() before calling app_message_outbox_begin()!");
+    PBL_LOG_ERR("Must call app_message_open() before calling app_message_outbox_begin()!");
     return APP_MSG_INVALID_STATE;
   }
 
@@ -200,7 +198,7 @@ void app_message_outbox_handle_app_outbox_message_sent(AppOutboxStatus status, v
   AppMessageSenderError e = (AppMessageSenderError)status;
   if (e != AppMessageSenderErrorSuccess) {
     if (e != AppMessageSenderErrorDisconnected) {
-      PBL_LOG(LOG_LEVEL_ERROR, "App message corrupted outbox? %"PRIu8, (uint8_t)e);
+      PBL_LOG_ERR("App message corrupted outbox? %"PRIu8, (uint8_t)e);
     }
 
     // Sleep a bit to prevent apps that hammer app_message_outbox_begin() when disconnected to
@@ -230,7 +228,7 @@ void app_message_outbox_handle_app_outbox_message_sent(AppOutboxStatus status, v
 AppMessageResult app_message_outbox_send(void) {
   AppMessageCtxOutbox *outbox = &app_state_get_app_message_ctx()->outbox;
   if (prv_is_message_pending(outbox->phase)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Can't call app_message_outbox_send() now, wait for sent_callback!");
+    PBL_LOG_ERR("Can't call app_message_outbox_send() now, wait for sent_callback!");
     return APP_MSG_BUSY;
   }
   if (outbox->phase != OUT_WRITING) {
@@ -271,12 +269,12 @@ void app_message_out_handle_ack_nack_received(const AppMessageHeader *header) {
   AppMessageCtxOutbox *outbox = &app_state_get_app_message_ctx()->outbox;
 
   if (!prv_is_awaiting_ack(outbox->phase)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Received (n)ack, but was not expecting one");
+    PBL_LOG_ERR("Received (n)ack, but was not expecting one");
     return;
   }
 
   if (outbox->transaction_id != header->transaction_id) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Tx ID mismatch: %"PRIu8" != %"PRIu8,
+    PBL_LOG_ERR("Tx ID mismatch: %"PRIu8" != %"PRIu8,
             outbox->transaction_id, header->transaction_id);
     return;
   }

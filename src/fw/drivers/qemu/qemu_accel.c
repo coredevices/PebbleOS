@@ -56,7 +56,7 @@
 #include <string.h>
 
 
-#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D(LOG_DOMAIN_ACCEL, LOG_LEVEL_DEBUG, fmt, ## args)
+#define ACCEL_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_ACCEL, fmt, ## args)
 
 
 static bool s_initialized;
@@ -154,7 +154,7 @@ void qemu_accel_msg_callack(const uint8_t *data, uint32_t len) {
   // Validate the packet
   uint32_t data_bytes = hdr->num_samples * sizeof(AccelRawData);
   if (data_bytes != len - sizeof(QemuProtocolAccelHeader)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Invalid packet received");
+    PBL_LOG_ERR("Invalid packet received");
     return;
   }
   ACCEL_LOG_DEBUG("Got accel msg from host: num samples: %d", hdr->num_samples);
@@ -193,7 +193,7 @@ void qemu_accel_msg_callack(const uint8_t *data, uint32_t len) {
 }
 
 
-void qemu_accel_init(void) {
+void accel_init(void) {
   PBL_ASSERTN(!s_initialized);
   s_initialized = true;
   s_latest_reading = s_default_sample;
@@ -201,6 +201,11 @@ void qemu_accel_init(void) {
   s_timer_id = new_timer_create();
 }
 
+void accel_power_up(void) {
+}
+
+void accel_power_down(void) {
+}
 
 uint32_t accel_set_sampling_interval(uint32_t interval_us) {
   mutex_lock(s_accel_mutex);
@@ -264,8 +269,4 @@ bool accel_get_double_tap_detection_enabled(void) {
 
 
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {
-}
-
-bool accel_run_selftest(void) {
-  return true;
 }

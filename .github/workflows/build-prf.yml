@@ -5,27 +5,49 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    paths:
-      - '.github/workflows/build-prf.yml'
-      - 'resources/**'
-      - 'src/**'
-      - 'tools/**'
-      - 'third_party/**'
-      - 'waftools/**'
-      - 'waf'
-      - 'wscript'
 
 jobs:
-  build:
+  changes-prf:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-build: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            src:
+              - '.github/workflows/build-prf.yml'
+              - 'resources/**'
+              - 'src/**'
+              - 'tools/**'
+              - 'third_party/**'
+              - 'waftools/**'
+              - 'waf'
+              - 'wscript'
+
+  build-prf:
+    needs: changes-prf
+    if: needs.changes-prf.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
 
     container:
-      image: ghcr.io/pebble-dev/pebbleos-docker:v1
+      image: ghcr.io/pebble-dev/pebbleos-docker:v2
 
     strategy:
       matrix:
-        board: ["asterix", "obelix_dvt", "obelix_pvt", "getafix_evt"]
-        mode: ["normal", "mfg"]
+        board:
+          - asterix
+          - obelix_dvt
+          - obelix_pvt
+          - getafix_evt
+          - getafix_dvt
+        mode:
+          - normal
+          - mfg
 
     steps:
       - name: Mark Github workspace as safe
@@ -94,3 +116,11 @@ jobs:
           files: |
             build/prf/src/fw/tintin_fw_loghash_dict.json
           path-format: ${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
+
+  build-prf-status:
+    needs: [changes-prf, build-prf]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - if: needs.build-prf.result == 'failure' || needs.build-prf.result == 'cancelled'
+        run: exit 1

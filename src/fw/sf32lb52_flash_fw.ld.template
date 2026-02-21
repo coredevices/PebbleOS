@@ -54,9 +54,7 @@ SECTIONS
         *memset*.*.o          (.text*)      
         *memcpy*.*.o          (.text*)
 
-        *lptim_systick.*.o    (.text* .rodata*)
-        *stop.*.o             (.text* .rodata*)
-        *freertos_application.*.o (.text* .rodata*)
+        *freertos.*.o (.text* .rodata*)
 
 
         . = ALIGN(4);

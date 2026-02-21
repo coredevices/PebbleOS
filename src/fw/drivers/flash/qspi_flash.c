@@ -46,10 +46,10 @@ static bool prv_check_whoami(QSPIFlash *dev) {
                     whoami_length);
 
   if (read_whoami == dev->state->part->qspi_id_value) {
-    PBL_LOG(LOG_LEVEL_INFO, "Flash is %s", dev->state->part->name);
+    PBL_LOG_INFO("Flash is %s", dev->state->part->name);
     return true;
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "Flash isn't expected %s (whoami: 0x%" PRIx32 ")",
+    PBL_LOG_ERR("Flash isn't expected %s (whoami: 0x%" PRIx32 ")",
             dev->state->part->name, read_whoami);
     return false;
   }
@@ -373,7 +373,7 @@ status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
   prv_write_enable(dev);
   const bool already_enabled = prv_protection_is_enabled(dev);
   if (already_enabled == false) {
-    PBL_LOG(LOG_LEVEL_INFO, "Enabling flash protection");
+    PBL_LOG_INFO("Enabling flash protection");
     // Enable write protection
     prv_write_cmd_no_addr(dev, dev->state->part->instructions.write_protection_enable);
 

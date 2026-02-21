@@ -54,6 +54,7 @@ typedef enum {
 typedef struct {
   GPIO_TypeDef* const peripheral; ///< One of GPIOX. For example, GPIOA.
   const uint32_t gpio_pin; ///< One of GPIO_Pin_X.
+  GPIOPuPd_TypeDef pull; ///< Pull-up / pull-down configuration for the pin
 } ExtiConfig;
 
 typedef struct {
@@ -123,8 +124,6 @@ typedef struct {
 typedef struct {
   uint8_t backlight_on_percent;
   uint8_t backlight_max_duty_cycle_percent;
-  ExtiConfig dbgserial_int;
-  InputConfig dbgserial_int_gpio;
   OutputConfig lcd_com;
   //ambient light config
   uint32_t ambient_light_dark_threshold;
@@ -132,7 +131,6 @@ typedef struct {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   //dynamic backlight thresholds
   uint32_t dynamic_backlight_min_threshold;
-  uint32_t dynamic_backlight_max_threshold;
 #endif
 } BoardConfig;
 
@@ -155,7 +153,7 @@ typedef struct {
   //! Percentage for watch only mode
   const uint8_t low_power_threshold;
   //! Approximate hours of battery life
-  const uint8_t battery_capacity_hours;
+  const uint16_t battery_capacity_hours;
 } BoardConfigPower;
 
 typedef enum {
@@ -231,4 +229,3 @@ void board_early_init(void);
 void board_init(void);
 
 #include "board_definitions.h"
-

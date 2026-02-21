@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#define FILE_LOG_COLOR LOG_COLOR_BLUE
-
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage_debug.h"
 
@@ -236,8 +234,7 @@ static GapBondingFileSetStatus prv_file_set(
 
       if (do_perform_update) {
         s_bt_persistent_storage_updates++;
-        PBL_LOG_D(LOG_DOMAIN_BT_PAIRING_INFO, LOG_LEVEL_DEBUG,
-                  "Updating GAP Bonding DB Value <key, val>!");
+        PBL_LOG_D_DBG(LOG_DOMAIN_BT_PAIRING_INFO, "Updating GAP Bonding DB Value <key, val>!");
         PBL_HEXDUMP_D(LOG_DOMAIN_BT_PAIRING_INFO, LOG_LEVEL_DEBUG, (uint8_t *)key, key_len);
         PBL_HEXDUMP_D(LOG_DOMAIN_BT_PAIRING_INFO, LOG_LEVEL_DEBUG, (uint8_t *)data_in, data_len);
         rv = settings_file_set(&fd, key, key_len, (uint8_t*) data_in, data_len);
@@ -250,7 +247,7 @@ static GapBondingFileSetStatus prv_file_set(
 cleanup:
   prv_unlock();
   if (rv != S_SUCCESS) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to update gap bonding db, rv = %"PRId32, rv);
+    PBL_LOG_ERR("Failed to update gap bonding db, rv = %"PRId32, rv);
     return GapBondingFileSetFail;
   }
 
@@ -393,8 +390,8 @@ static void prv_load_local_data_from_prf(void) {
   SM128BitKey keys[SMRootKeyTypeNum];
   if (shared_prf_storage_get_root_key(SMRootKeyTypeEncryption, &keys[SMRootKeyTypeEncryption]) &&
       shared_prf_storage_get_root_key(SMRootKeyTypeIdentity, &keys[SMRootKeyTypeIdentity])) {
-#if !defined(RELEASE) && !defined(PLATFORM_TINTIN)
-    PBL_LOG(LOG_LEVEL_INFO, "Loading Root Keys from PRF storage:");
+#if !defined(RELEASE)
+    PBL_LOG_INFO("Loading Root Keys from PRF storage:");
     PBL_HEXDUMP(LOG_LEVEL_INFO, (const uint8_t *) keys, sizeof(keys));
 #endif
     bt_persistent_storage_set_root_keys(keys);
@@ -406,7 +403,7 @@ static void prv_load_local_data_from_prf(void) {
   // reboot while saving new information to shared PRF
   if (bt_persistent_storage_get_root_key(SMRootKeyTypeEncryption, &keys[SMRootKeyTypeEncryption]) &&
       bt_persistent_storage_get_root_key(SMRootKeyTypeIdentity, &keys[SMRootKeyTypeIdentity])) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Storing Root Keys to PRF storage");
+    PBL_LOG_ERR("Storing Root Keys to PRF storage");
     shared_prf_storage_set_root_keys(keys);
   }
 }
@@ -493,7 +490,7 @@ bool prv_delete_pairing_with_type_by_id(BTBondingID bonding, BtPersistBondingTyp
   }
 
   if (data_out->type != type) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Type mismatch: not deleting pairing. Is the bonding db corrupted?");
+    PBL_LOG_ERR("Type mismatch: not deleting pairing. Is the bonding db corrupted?");
     return false;
   }
 
@@ -671,7 +668,7 @@ bool bt_persistent_storage_set_ble_pinned_address(const BTDeviceAddress *addr) {
                                             addr, addr ? sizeof(*addr) : 0);
   bool success = (rv != GapBondingFileSetFail);
   if (!success) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Failed to store pinned address");
+    PBL_LOG_ERR("Failed to store pinned address");
   } else if (rv == GapBondingFileSetUpdated) {
     shared_prf_storage_set_ble_pinned_address(addr);
   }
@@ -751,7 +748,7 @@ bool bt_persistent_storage_update_ble_device_name(BTBondingID bonding, const cha
   }
 
   if (data.type != BtPersistBondingTypeBLE) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not getting BLE id %d. Type mismatch", bonding);
+    PBL_LOG_ERR("Not getting BLE id %d. Type mismatch", bonding);
     return false;
   }
 
@@ -930,7 +927,7 @@ bool bt_persistent_storage_get_ble_pairing_by_id(BTBondingID bonding,
   }
 
   if (data.type != BtPersistBondingTypeBLE) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not getting BT Classic id %d. Type mismatch", bonding);
+    PBL_LOG_ERR("Not getting BT Classic id %d. Type mismatch", bonding);
     return false;
   }
 
@@ -949,7 +946,7 @@ static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(
   }
 
   if (data.type != BtPersistBondingTypeBLE) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not getting BLE id %d. Type mismatch", bonding);
+    PBL_LOG_ERR("Not getting BLE id %d. Type mismatch", bonding);
     return false;
   }
 
@@ -1424,7 +1421,7 @@ bool bt_persistent_storage_get_bt_classic_pairing_by_id(BTBondingID bonding,
   }
 
   if (data.type != BtPersistBondingTypeBTClassic) {
-    PBL_LOG(LOG_LEVEL_ERROR, "Not getting BT Classic id %d. Type mismatch", bonding);
+    PBL_LOG_ERR("Not getting BT Classic id %d. Type mismatch", bonding);
     return false;
   }
 
@@ -1551,7 +1548,7 @@ bool bt_persistent_storage_is_unfaithful(void) {
 }
 
 void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
-  PBL_LOG(LOG_LEVEL_INFO, "Marking the watch as %s", is_unfaithful ? "unfaithful" : "faithful");
+  PBL_LOG_INFO("Marking the watch as %s", is_unfaithful ? "unfaithful" : "faithful");
   prv_file_set(&IS_UNFAITHFUL_KEY, sizeof(IS_UNFAITHFUL_KEY),
                &is_unfaithful, sizeof(is_unfaithful));
 }

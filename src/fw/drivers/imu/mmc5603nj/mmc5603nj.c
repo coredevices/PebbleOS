@@ -51,12 +51,12 @@ static bool s_rotated_180 = false;
 
 // MMC5603NJ entrypoints
 
-void mmc5603nj_init(void) {
+void mag_init(void) {
   s_mag_mutex = mutex_create();
   if (prv_mmc5603nj_init()) {
-    PBL_LOG(LOG_LEVEL_DEBUG, "MMC5603NJ: Initialization complete");
+    PBL_LOG_DBG("MMC5603NJ: Initialization complete");
   } else {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Initialization failed");
+    PBL_LOG_ERR("MMC5603NJ: Initialization failed");
   }
 }
 
@@ -80,7 +80,7 @@ void mag_release(void) {
   --s_use_refcount;
   if (s_use_refcount == 0) {
     if (!prv_mmc5603nj_set_sample_rate_hz(0)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to disable sensor on release");
+      PBL_LOG_ERR("MMC5603NJ: Failed to disable sensor on release");
     }
   }
   mutex_unlock(s_mag_mutex);
@@ -126,11 +126,11 @@ static bool prv_mmc5603nj_read(uint8_t reg_addr, uint8_t data_len, uint8_t *data
   i2c_use(I2C_MMC5603NJ);
   bool rv = i2c_write_block(I2C_MMC5603NJ, 1, &reg_addr);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: I2C write failed for register 0x%02x", reg_addr);
+    PBL_LOG_ERR("MMC5603NJ: I2C write failed for register 0x%02x", reg_addr);
   }
   rv = i2c_read_block(I2C_MMC5603NJ, data_len, data);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: I2C data read failed for register 0x%02x", reg_addr);
+    PBL_LOG_ERR("MMC5603NJ: I2C data read failed for register 0x%02x", reg_addr);
   }
   i2c_release(I2C_MMC5603NJ);
   return rv;
@@ -141,7 +141,7 @@ static bool prv_mmc5603nj_write(uint8_t reg_addr, uint8_t data) {
   uint8_t d[2] = {reg_addr, data};
   bool rv = i2c_write_block(I2C_MMC5603NJ, 2, d);
   if (!rv) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: I2C write failed for register 0x%02x", reg_addr);
+    PBL_LOG_ERR("MMC5603NJ: I2C write failed for register 0x%02x", reg_addr);
   }
   i2c_release(I2C_MMC5603NJ);
   return rv;
@@ -155,13 +155,13 @@ static bool prv_mmc5603nj_init(void) {
   }
 
   if (!prv_mmc5603nj_check_whoami()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: WHO_AM_I check failed. Wrong device?");
+    PBL_LOG_ERR("MMC5603NJ: WHO_AM_I check failed. Wrong device?");
     return false;
   }
 
   // Reset the device
   if (!prv_mmc5603nj_reset()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to reset");
+    PBL_LOG_ERR("MMC5603NJ: Failed to reset");
     return false;
   }
 
@@ -183,21 +183,21 @@ static bool prv_mmc5603nj_reset(void) {
   // Software reset
   if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL1,
                            MMC5603NJ_CTRL1_BANDWIDTH_6ms6 | MMC5603NJ_CTRL1_SW_RESET)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to reset device.");
+    PBL_LOG_ERR("MMC5603NJ: Failed to reset device.");
     return false;
   }
   psleep(MMC5603NJ_SW_RESET_DELAY_MS);
 
   // Set operation
   if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_SET)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to set coils.");
+    PBL_LOG_ERR("MMC5603NJ: Failed to set coils.");
     return false;
   }
   psleep(MMC5603NJ_SET_DELAY_MS);
 
   // Reset operation
   if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_RESET)) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to reset coils.");
+    PBL_LOG_ERR("MMC5603NJ: Failed to reset coils.");
     return false;
   }
   psleep(MMC5603NJ_SET_DELAY_MS);
@@ -211,7 +211,7 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
     return true;
   }
 
-  PBL_LOG(LOG_LEVEL_DEBUG, "MMC5603NJ: Setting sample rate to %d Hz", rate_hz);
+  PBL_LOG_DBG("MMC5603NJ: Setting sample rate to %d Hz", rate_hz);
 
   // Reset device runtime status (disabling continuous mode/etc)
   if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL2, 0x00)) {
@@ -225,14 +225,14 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
   if (rate_hz > 0) {
     // Set new sampling rate
     if (!prv_mmc5603nj_write(MMC5603NJ_REG_ODR, rate_hz)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to update ODR.");
+      PBL_LOG_ERR("MMC5603NJ: Failed to update ODR.");
       return false;
     }
 
     // Retrigger calculation of measurements rates
     if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL0,
                              MMC5603NJ_CTRL0_AUTO_SR_EN | MMC5603NJ_CTRL0_CMM_FREQ_EN)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to trigger measurement calculation update.");
+      PBL_LOG_ERR("MMC5603NJ: Failed to trigger measurement calculation update.");
       return false;
     }
 
@@ -240,7 +240,7 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
     if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL2, MMC5603NJ_CTRL2_AUTOSET_PRD_100 |
                                                       MMC5603NJ_CTRL2_PRD_SET_EN |
                                                       MMC5603NJ_CTRL2_CMM_EN)) {
-      PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to start continuous mode.");
+      PBL_LOG_ERR("MMC5603NJ: Failed to start continuous mode.");
       return false;
     }
   }
@@ -249,7 +249,7 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
 
 #ifndef RECOVERY_FW
   if (!prv_configure_polling()) {
-    PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to configure polling");
+    PBL_LOG_ERR("MMC5603NJ: Failed to configure polling");
     return false;
   }
 #endif
@@ -276,7 +276,7 @@ static bool prv_configure_polling(void) {
   if (polling_interval_ms > 0) {
     s_polling_timer = new_timer_create();
     if (s_polling_timer == TIMER_INVALID_ID) {
-      PBL_LOG(LOG_LEVEL_ERROR, "MMC5603NJ: Failed to create polling timer");
+      PBL_LOG_ERR("MMC5603NJ: Failed to create polling timer");
       return false;
     }
     new_timer_start(s_polling_timer, polling_interval_ms, prv_mmc5603nj_polling_callback, NULL,

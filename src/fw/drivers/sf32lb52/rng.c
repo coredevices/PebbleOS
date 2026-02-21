@@ -30,7 +30,7 @@ bool rng_rand(uint32_t *rand_out) {
 
   status = HAL_RNG_GenerateRandomNumber(&s_rng_hdl, rand_out);
   if (status != HAL_OK) {
-    PBL_LOG(LOG_LEVEL_ERROR, "HAL_RNG_GenerateRandomNumber failed: %d", status);
+    PBL_LOG_ERR("HAL_RNG_GenerateRandomNumber failed: %d", status);
   }
 
   HAL_RCC_DisableModule(RCC_MOD_TRNG);

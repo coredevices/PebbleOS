@@ -1,21 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "bf0_hal.h"
-#include "bf0_hal_efuse.h"
-#include "bf0_hal_hlp.h"
-#include "bf0_hal_lcpu_config.h"
-#include "bf0_hal_pmu.h"
-#include "bf0_hal_rcc.h"
 #include "board/board.h"
 #include "board/splash.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
 #include "drivers/watchdog.h"
 #include "system/passert.h"
 
-
-#define HCPU_FREQ_MHZ 240
-#define PWRKEY_RESET_CNT (32000 * 15)
+#include "bf0_hal.h"
 
 static UARTDeviceState s_dbg_uart_state = {
   .huart = {
@@ -216,7 +208,7 @@ static DisplayJDIDevice s_display = {
         },
     },
     .vddp = {hwp_gpio1, 0, true},
-    .vlcd = {hwp_gpio1, 9, true},
+    .vlcd = {hwp_gpio1, 9, false},
     .splash = {
         .data = splash_bits,
         .width = splash_width,
@@ -280,12 +272,44 @@ I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
 IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
 
-static const I2CSlavePort s_i2c_lsm2dw12 = {
-    .bus = &s_i2c_bus_1,
-    .address = 0x18,
+static LIS2DW12State s_lis2dw12_state;
+
+static const LIS2DW12Config s_lis2dw12_config = {
+    .state = &s_lis2dw12_state,
+    .i2c = {
+        .bus = &s_i2c_bus_1,
+#if BOARD_GETAFIX_EVT
+        .address = 0x18,
+#else
+        .address = 0x19,
+#endif
+    },
+    .int1 = {
+      .peripheral = hwp_gpio1,
+      .gpio_pin = 26,
+    },
+#if BOARD_GETAFIX_EVT
+    .disable_addr_pullup = true,
+#endif
+    .wk_dur_default = 1U,
+    .wk_ths_min = 1U,
+    .wk_ths_max = 40U,
+    .wk_ths_default = 16U,
+    .scale_mg = 4000U,
+    .fifo_threshold = 32U,
+    .axis_map = {
+        [AXIS_X] = 0,
+        [AXIS_Y] = 1,
+        [AXIS_Z] = 2,
+    },
+    .axis_dir = {
+        [AXIS_X] = -1,
+        [AXIS_Y] = 1,
+        [AXIS_Z] = 1,
+    },
 };
 
-I2CSlavePort *const I2C_LSM2DW12 = &s_i2c_lsm2dw12;
+const LIS2DW12Config *const LIS2DW12 = &s_lis2dw12_config;
 
 static const I2CSlavePort s_i2c_mmc5603nj = {
     .bus = &s_i2c_bus_1,
@@ -348,10 +372,12 @@ static const TouchSensor s_touch_cst816 = {
     .int_exti = {
         .peripheral = hwp_gpio1,
         .gpio_pin = 38,
+        .pull = GPIO_PuPd_UP,
     },
     .reset = {
         .gpio = hwp_gpio1,
         .gpio_pin = 28,
+        .active_high = false,
     },
     .max_x = 260,
     .max_y = 260,
@@ -427,7 +453,7 @@ static const I2CSlavePort s_i2c_aw8623x = {
 I2CSlavePort *const I2C_AW8623X = &s_i2c_aw8623x;
 
 const BoardConfigActuator BOARD_CONFIG_VIBE = {
-    .ctl = {hwp_gpio1, 20, true},
+    .ctl = {hwp_gpio1, 20, false},
 };
 
 const Npm1300Config NPM1300_CONFIG = {
@@ -505,91 +531,7 @@ uint32_t BSP_GetOtpBase(void) {
 }
 
 void board_early_init(void) {
-  HAL_StatusTypeDef ret;
-  uint32_t bootopt;
 
-  // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
-  // that the flash is properly power cycled on reset. A flash power cycle is
-  // needed if left in 4-byte addressing mode, as bootrom does not support it.
-  bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
-  bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
-  bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
-  HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
-
-  if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
-    HAL_HPAON_EnableXT48();
-    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HXT48);
-  }
-
-  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_PERI, RCC_CLK_PERI_HXT48);
-
-  // Halt LCPU first to avoid LCPU in running state
-  HAL_HPAON_WakeCore(CORE_ID_LCPU);
-  HAL_RCC_Reset_and_Halt_LCPU(1);
-
-  // Load system configuration from EFUSE
-  BSP_System_Config();
-
-  HAL_HPAON_StartGTimer();
-
-  HAL_PMU_EnableRC32K(1);
-
-  // Stop and restart WDT in case it was clocked by RC10K before
-  watchdog_stop();
-
-  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
-
-  watchdog_init();
-  watchdog_start();
-
-  HAL_PMU_EnableDLL(1);
-#ifdef SF32LB52_USE_LXT
-  HAL_PMU_EnableXTAL32();
-  ret = HAL_PMU_LXTReady();
-  PBL_ASSERTN(ret == HAL_OK);
-
-  HAL_RTC_ENABLE_LXT();
-#endif
-
-  HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
-
-  HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
-
-  HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
-
-  // Reset sysclk used by HAL_Delay_us
-  HAL_Delay_us(0);
-
-  ret = HAL_RCC_CalibrateRC48();
-  PBL_ASSERTN(ret == HAL_OK);
-
-  HAL_RCC_Init();
-  HAL_PMU_Init();
-
-  __HAL_SYSCFG_CLEAR_SECURITY();
-  HAL_EFUSE_Init();
-
-  //set Sifli chipset pwrkey reset time to 15s, so it always use PMIC cold reboot for long press 
-  hwp_pmuc->PWRKEY_CNT = PWRKEY_RESET_CNT;
-
-  // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
-  hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
-  hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
-
-  // Set all PSRAM pins as analog (low-power)
-  HAL_PIN_Set_Analog(PAD_SA00, 1);
-  HAL_PIN_Set_Analog(PAD_SA01, 1);
-  HAL_PIN_Set_Analog(PAD_SA02, 1);
-  HAL_PIN_Set_Analog(PAD_SA03, 1);
-  HAL_PIN_Set_Analog(PAD_SA04, 1);
-  HAL_PIN_Set_Analog(PAD_SA05, 1);
-  HAL_PIN_Set_Analog(PAD_SA06, 1);
-  HAL_PIN_Set_Analog(PAD_SA07, 1);
-  HAL_PIN_Set_Analog(PAD_SA08, 1);
-  HAL_PIN_Set_Analog(PAD_SA09, 1);
-  HAL_PIN_Set_Analog(PAD_SA10, 1);
-  HAL_PIN_Set_Analog(PAD_SA11, 1);
-  HAL_PIN_Set_Analog(PAD_SA12, 1);
 }
 
 void board_init(void) {
@@ -598,9 +540,4 @@ void board_init(void) {
   i2c_init(I2C3_BUS);
 
   mic_init(MIC);
-
-#ifdef RECOVERY_FW
-  // FIXME(GETAFIX): Remove once stable
-  stop_mode_disable(InhibitorMain);
-#endif
 }
