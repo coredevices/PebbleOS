@@ -365,6 +365,10 @@ void click_manager_clear(ClickManager* click_manager) {
   }
 }
 
+void click_recognizer_reset(ClickRecognizer *recognizer) {
+  prv_click_reset(recognizer);
+}
+
 void click_manager_reset(ClickManager* click_manager) {
   for (unsigned int button_id = 0; button_id < NUM_BUTTONS; button_id++) {
     prv_click_reset(&click_manager->recognizers[button_id]);
