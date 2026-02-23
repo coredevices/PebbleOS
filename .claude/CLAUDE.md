@@ -34,8 +34,16 @@ PebbleOS is the operating system running on Pebble smartwatches.
 
 ## Git rules
 
-- Include Signed-Off-By
+Main rules:
+
+- Commit using `-s` git option, so commits have `Signed-Off-By`
+- Always indicate commit is co-authored by Claude
 - Commit in small chunks, trying to preserve bisectability
 - Commit format is `area: short description`, with longer description in the
   body if necessary
-- `gitlint` can be used to verify
+- Run `gitlint` on every commit to verify rules are followed
+
+Others:
+
+- If fixing Linear or GitHub issues, include in the commit body a line with
+  `Fixes XXX`, where XXX is the issue number.
