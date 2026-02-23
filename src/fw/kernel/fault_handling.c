@@ -143,9 +143,11 @@ static NORETURN kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
   RebootReason reason = { .code = reason_code, .extra = { .value = lr } };
   reboot_reason_set(&reason);
   if (reason_code == RebootReasonCode_Assert) {
+    prepare_for_software_failure();
     core_dump_reset(false /* is_forced */);
+  } else {
+    reset_due_to_software_failure();
   }
-  reset_due_to_software_failure();
 }
 
 // TODO: Can we tell if it was the worker and not the app?
