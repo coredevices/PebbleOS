@@ -18,10 +18,16 @@
 #include "debug/setup.h"
 #endif
 
-NORETURN reset_due_to_software_failure(void) {
+void prepare_for_software_failure(void) {
 #if PULSE_EVERYWHERE
   pulse_logging_log_buffer_flush();
 #endif
+
+  boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
+}
+
+NORETURN reset_due_to_software_failure(void) {
+  prepare_for_software_failure();
 
 #if defined(NO_WATCHDOG)
   // Don't reset right away, leave it in a state we can inspect
@@ -34,6 +40,5 @@ NORETURN reset_due_to_software_failure(void) {
 #endif
 
   PBL_LOG_FROM_FAULT_HANDLER("Resetting!");
-  boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
   system_reset();
 }
