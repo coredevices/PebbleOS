@@ -1,14 +1,15 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "math.h"
-
 #include "gh3x2x.h"
 
 #include "drivers/hrm.h"
 #include "board/board.h"
-#include "kernel/events.h"
 #include "kernel/util/sleep.h"
+
+#ifdef HRM_USE_GH3X2X
+#include "math.h"
+#include "kernel/events.h"
 #include "services/common/system_task.h"
 #include "services/common/hrm/hrm_manager.h"
 #include "system/logging.h"
@@ -16,6 +17,16 @@
 #include "gh_demo.h"
 #include "gh_demo_inner.h"
 #include "gh3x2x_demo_mp.h"
+#endif // HRM_USE_GH3X2X
+
+void gh3026_reset_pin_ctrl(uint8_t pin_level) {
+#if GH3X2X_RESET_PIN_CTRLBY_NPM1300
+  NPM1300_OPS.gpio_set(Npm1300_Gpio3, pin_level);
+  psleep(10);
+#endif
+}
+
+#ifdef HRM_USE_GH3X2X
 
 #define GH3X2X_LOG_ENABLE 0
 #define GH3X2X_FIFO_WATERMARK_CONFIG 80
@@ -25,6 +36,8 @@ static volatile uint32_t s_hrm_int_flag = false;
 static volatile uint32_t s_hrm_timer_flag = false;
 
 // GH3X2X library glue code
+
+void gh3026_reset_pin_init(void) {}
 
 void gh3026_i2c_init(void) {}
 
@@ -40,15 +53,6 @@ void gh3026_i2c_read(uint8_t device_id, const uint8_t write_buffer[], uint16_t w
   i2c_write_block(HRM->i2c, write_length, write_buffer);
   i2c_read_block(HRM->i2c, read_length, read_buffer);
   i2c_release(HRM->i2c);
-}
-
-void gh3026_reset_pin_init(void) {}
-
-void gh3026_reset_pin_ctrl(uint8_t pin_level) {
-#if GH3X2X_RESET_PIN_CTRLBY_NPM1300
-  NPM1300_OPS.gpio_set(Npm1300_Gpio3, pin_level);
-  psleep(10);
-#endif
 }
 
 static void prv_conv_fs4g_mg_to_lsb512(AccelRawData* data) {
@@ -421,16 +425,24 @@ void gh3x2x_set_work_mode(int32_t mode) {
 }
 #endif // MANUFACTURING_FW
 
+#endif // HRM_USE_GH3X2X
+
 // HRM interface
 
 void hrm_init(HRMDevice *dev) {
+#ifdef HRM_USE_GH3X2X
 #ifdef MANUFACTURING_FW
   HRMDeviceState* state = HRM->state;
   state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
 #endif
+#else
+  // Put HRM sensor into reset on startup
+  gh3026_reset_pin_ctrl(0);
+#endif
 }
 
 bool hrm_enable(HRMDevice *dev) {
+#ifdef HRM_USE_GH3X2X
   int ret;
 
   gh3026_reset_pin_ctrl(1);
@@ -455,12 +467,16 @@ bool hrm_enable(HRMDevice *dev) {
 
   dev->state->enabled = true;
   return true;
+#else
+  return false;
+#endif
 }
 
 void hrm_disable(HRMDevice *dev) {
+#ifdef HRM_USE_GH3X2X
   Gh3x2xDemoStopSampling(0xFFFFFFFF);
+#endif
   gh3026_reset_pin_ctrl(0);
-
   dev->state->enabled = false;
 }
 
