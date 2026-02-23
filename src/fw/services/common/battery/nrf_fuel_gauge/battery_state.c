@@ -16,6 +16,10 @@
 #include "system/passert.h"
 #include "util/ratio.h"
 
+#ifndef RECOVERY_FW
+#include "services/normal/settings/settings_file.h"
+#endif
+
 #include "nrf_fuel_gauge.h"
 
 #define ALWAYS_UPDATE_PCT 10.0f
@@ -50,6 +54,65 @@ static uint8_t s_analytics_last_pct;
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;
+
+#ifndef RECOVERY_FW
+#define FUEL_GAUGE_SETTINGS_FILE_NAME "fgs"
+#define FUEL_GAUGE_SAVE_INTERVAL_S 300
+#define FUEL_GAUGE_SETTINGS_MAX_SIZE 512
+
+static const uint32_t FUEL_GAUGE_STATE_KEY = 1;
+static uint32_t s_save_counter;
+
+static bool prv_load_state(void *state, size_t size) {
+  SettingsFile file;
+  status_t ret;
+
+  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME,
+                           FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  if (ret != S_SUCCESS) {
+    return false;
+  }
+
+  int len = settings_file_get_len(&file, &FUEL_GAUGE_STATE_KEY,
+                                  sizeof(FUEL_GAUGE_STATE_KEY));
+  if (len != (int)size) {
+    settings_file_close(&file);
+    return false;
+  }
+
+  ret = settings_file_get(&file, &FUEL_GAUGE_STATE_KEY,
+                          sizeof(FUEL_GAUGE_STATE_KEY), state, size);
+  settings_file_close(&file);
+
+  return (ret == S_SUCCESS);
+}
+
+static void prv_save_state(void) {
+  uint8_t buf[nrf_fuel_gauge_state_size];
+  SettingsFile file;
+  status_t ret;
+
+  if (nrf_fuel_gauge_state_get(buf, sizeof(buf)) != 0) {
+    PBL_LOG_ERR("Failed to get fuel gauge state");
+    return;
+  }
+
+  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME,
+                           FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  if (ret != S_SUCCESS) {
+    PBL_LOG_ERR("Failed to open fuel gauge settings file");
+    return;
+  }
+
+  ret = settings_file_set(&file, &FUEL_GAUGE_STATE_KEY,
+                          sizeof(FUEL_GAUGE_STATE_KEY), buf, sizeof(buf));
+  settings_file_close(&file);
+
+  if (ret != S_SUCCESS) {
+    PBL_LOG_ERR("Failed to save fuel gauge state");
+  }
+}
+#endif
 
 static void prv_schedule_update(uint32_t delay, bool force_update);
 
@@ -176,6 +239,13 @@ static void prv_update_state(void *force_update) {
     s_last_ttf = 0U;
   }
 
+#ifndef RECOVERY_FW
+  if (++s_save_counter >= FUEL_GAUGE_SAVE_INTERVAL_S) {
+    s_save_counter = 0;
+    prv_save_state();
+  }
+#endif
+
   PBL_LOG_VERBOSE("Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td: %lu, soc: %u, tte: %lu, ttf: %lu",
           constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta,
           s_last_battery_charge_state.pct, s_last_tte, s_last_ttf);
@@ -229,8 +299,28 @@ void battery_state_init(void) {
 
   prv_ref_time = rtc_get_ticks();
 
+#ifndef RECOVERY_FW
+  {
+    uint8_t saved_state[nrf_fuel_gauge_state_size];
+    if (prv_load_state(saved_state, sizeof(saved_state))) {
+      parameters.state = saved_state;
+      ret = nrf_fuel_gauge_init(&parameters, NULL);
+      if (ret == 0) {
+        PBL_LOG_INFO("Fuel gauge state restored from flash");
+        goto init_done;
+      }
+      PBL_LOG_WRN("Fuel gauge init with saved state failed (%d), reinitializing", ret);
+      parameters.state = NULL;
+    }
+  }
+#endif
+
   ret = nrf_fuel_gauge_init(&parameters, NULL);
   PBL_ASSERTN(ret == 0);
+
+#ifndef RECOVERY_FW
+init_done:
+#endif
 
   ret = nrf_fuel_gauge_ext_state_update(
       NRF_FUEL_GAUGE_EXT_STATE_INFO_CHARGE_CURRENT_LIMIT,
