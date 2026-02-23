@@ -9,34 +9,13 @@
 #include "process_management/app_manager.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "kernel/util/sleep.h"
 
 static uint16_t s_num_subscribers;
-static time_t s_last_tick_seconds = -1;
 
 static void timer_tick_event_publisher(void* data) {
-  time_t seconds;
-  uint16_t ms;
-
-  rtc_get_time_ms(&seconds, &ms);
-
-  // If we haven't advanced to the next second yet, sleep until we do.
-  // This prevents missing second updates when FreeRTOS timer and RTC drift
-  // relative to each other. If this happens too often, we may want to calibrate
-  // more often...
-  if ((s_last_tick_seconds != -1) && (seconds == s_last_tick_seconds)) {
-    do {
-      PBL_LOG_WRN("Sleeping until next second (remaining ms: %d)", 1000 - ms);
-      psleep(1000 - ms);
-      rtc_get_time_ms(&seconds, &ms);
-    } while (seconds == s_last_tick_seconds);
-  }
-
-  s_last_tick_seconds = seconds;
-
   PebbleEvent e = {
     .type = PEBBLE_TICK_EVENT,
-    .clock_tick.tick_time = seconds,
+    .clock_tick.tick_time = rtc_get_time(),
   };
 
   event_put(&e);
