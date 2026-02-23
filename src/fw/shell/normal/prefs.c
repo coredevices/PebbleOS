@@ -143,6 +143,7 @@ static QuickLaunchPreference s_quick_launch_back = {
 
 #define PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP "qlSingleClickUp"
 #define PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_DOWN "qlSingleClickDown"
+#define PREF_KEY_QUICK_LAUNCH_COMBO_BACK_UP "qlComboBackUp"
 
 static QuickLaunchPreference s_quick_launch_single_click_up = {
   .enabled = true,
@@ -152,6 +153,11 @@ static QuickLaunchPreference s_quick_launch_single_click_up = {
 static QuickLaunchPreference s_quick_launch_single_click_down = {
   .enabled = true,
   .uuid = TIMELINE_UUID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_combo_back_up = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
 };
 
 #define PREF_KEY_QUICK_LAUNCH_SETUP_OPENED "qlSetupOpened"
@@ -424,6 +430,12 @@ static bool prv_set_s_quick_launch_single_click_up(QuickLaunchPreference *pref) 
 static bool prv_set_s_quick_launch_single_click_down(QuickLaunchPreference *pref) {
   prv_normalize_quick_launch_pref(pref);
   s_quick_launch_single_click_down = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_combo_back_up(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_combo_back_up = *pref;
   return true;
 }
 
@@ -1316,6 +1328,28 @@ void quick_launch_single_click_set_enabled(ButtonId button, bool enabled) {
   }
   pref.enabled = enabled;
   prv_pref_set(key, &pref, sizeof(pref));
+}
+
+bool quick_launch_combo_back_up_is_enabled(void) {
+  return s_quick_launch_combo_back_up.enabled;
+}
+
+AppInstallId quick_launch_combo_back_up_get_app(void) {
+  return app_install_get_id_for_uuid(&s_quick_launch_combo_back_up.uuid);
+}
+
+void quick_launch_combo_back_up_set_app(AppInstallId app_id) {
+  QuickLaunchPreference pref = (QuickLaunchPreference) {
+    .enabled = true,
+  };
+  app_install_get_uuid_for_install_id(app_id, &pref.uuid);
+  prv_pref_set(PREF_KEY_QUICK_LAUNCH_COMBO_BACK_UP, &pref, sizeof(pref));
+}
+
+void quick_launch_combo_back_up_set_enabled(bool enabled) {
+  QuickLaunchPreference pref = s_quick_launch_combo_back_up;
+  pref.enabled = enabled;
+  prv_pref_set(PREF_KEY_QUICK_LAUNCH_COMBO_BACK_UP, &pref, sizeof(pref));
 }
 
 void watchface_set_default_install_id(AppInstallId app_id) {
