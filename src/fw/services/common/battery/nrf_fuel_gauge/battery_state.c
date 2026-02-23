@@ -14,6 +14,7 @@
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
+#include "util/math.h"
 #include "util/ratio.h"
 
 #ifndef RECOVERY_FW
@@ -27,6 +28,9 @@
 // TODO: Adjust sample rate based on activity periods once we have good
 // power consumption profiles
 #define BATTERY_SAMPLE_RATE_S 1
+// Use fake current data for the first N seconds to improve model accuracy
+#define FAKE_CURRENT_DURATION_S 10
+#define FAKE_CURRENT_UA 100
 
 #define LOG_MIN_SEC 30
 
@@ -47,6 +51,7 @@ static TimerID s_periodic_timer_id = TIMER_INVALID_ID;
 
 static BatteryChargeStatus s_last_chg_status;
 static uint64_t prv_ref_time;
+static uint32_t s_sample_count;
 static int32_t s_last_voltage_mv;
 static int32_t s_last_temp_mc;
 static int32_t s_analytics_last_voltage_mv;
@@ -209,7 +214,14 @@ static void prv_update_state(void *force_update) {
   delta = (now - prv_ref_time) / RTC_TICKS_HZ;
   prv_ref_time = now;
 
-  pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f, (float)constants.i_ua / 1000000.0f,
+  // Use fake current data for the first N seconds to improve model accuracy
+  int32_t current_ua = constants.i_ua;
+  if (s_sample_count < DIVIDE_CEIL(FAKE_CURRENT_DURATION_S, BATTERY_SAMPLE_RATE_S)) {
+    current_ua = FAKE_CURRENT_UA;
+    s_sample_count++;
+  }
+
+  pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f, (float)current_ua / 1000000.0f,
                                (float)constants.t_mc / 1000.0f, (float)delta, NULL);
 
   pct_int = (uint8_t)ceilf(pct);
@@ -292,7 +304,7 @@ void battery_state_init(void) {
   PBL_ASSERTN(ret == 0);
 
   parameters.v0 = (float)constants.v_mv / 1000.0f;
-  parameters.i0 = (float)constants.i_ua / 1000000.0f;
+  parameters.i0 = (float)FAKE_CURRENT_UA / 1000000.0f;
   parameters.t0 = (float)constants.t_mc / 1000.0f;
 
   s_last_voltage_mv = constants.v_mv;
