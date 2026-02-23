@@ -35,7 +35,7 @@
 //! retrieve values from the phone, it provides you with a much faster way to restore state.
 //! In addition, it draws less power from the battery.
 //!
-//! Note that the size of all persisted values cannot exceed 4K per app.
+//! Note that the size of all persisted values cannot exceed 1MB per app.
 //!   @{
 
 //! The maximum size of a persist value in bytes
