@@ -45,9 +45,9 @@ NORETURN system_reset(void) {
   // If a software failure occcured, do a core dump before resetting
   if (failure_occurred) {
     core_dump_reset(false /* don't force overwrite */);
+  } else {
+    system_hard_reset();
   }
-
-  system_hard_reset();
 }
 
 void system_reset_callback(void *data) {
