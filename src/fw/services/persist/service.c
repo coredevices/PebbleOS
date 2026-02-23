@@ -19,7 +19,7 @@
 #include "util/list.h"
 #include "util/units.h"
 
-#define PERSIST_STORAGE_MAX_SPACE KiBYTES(6)
+#define PERSIST_STORAGE_MAX_SPACE MiBYTES(1)
 #define PERSIST_STORAGE_INITIAL_ALLOC KiBYTES(4)
 
 typedef struct PersistStore {
