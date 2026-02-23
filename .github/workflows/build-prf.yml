@@ -21,6 +21,7 @@ jobs:
           filters: |
             src:
               - '.github/workflows/build-prf.yml'
+              - 'platform/**'
               - 'resources/**'
               - 'src/**'
               - 'tools/**'
