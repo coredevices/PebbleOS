@@ -115,7 +115,8 @@ void soc_early_init(void);
 const int __attribute__((used)) uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
 static TimerID s_lowpower_timer = TIMER_INVALID_ID;
-static TimerID s_uptime_timer = TIMER_INVALID_ID;
+static TimerID s_uptime30s_timer = TIMER_INVALID_ID;
+static TimerID s_uptime15m_timer = TIMER_INVALID_ID;
 
 static void main_task(void *parameter);
 
@@ -319,15 +320,17 @@ static void init_drivers(void) {
   power_tracking_init();
 }
 
-static void clear_reset_loop_detection_bits(void) {
+static void prv_uptime_30s_callback(void *data) {
+  PBL_LOG_VERBOSE("Uptime reached 30 seconds, clearing reset loop detection bits.");
+  new_timer_delete(s_uptime30s_timer);
   boot_bit_clear(BOOT_BIT_RESET_LOOP_DETECT_ONE);
   boot_bit_clear(BOOT_BIT_RESET_LOOP_DETECT_TWO);
   boot_bit_clear(BOOT_BIT_RESET_LOOP_DETECT_THREE);
 }
 
-static void uptime_callback(void* data) {
+static void prv_uptime_15m_callback(void* data) {
   PBL_LOG_VERBOSE("Uptime reached 15 minutes, set stable bit.");
-  new_timer_delete(s_uptime_timer);
+  new_timer_delete(s_uptime15m_timer);
   boot_bit_set(BOOT_BIT_FW_STABLE);
 }
 
@@ -486,8 +489,6 @@ static NOINLINE void prv_main_task_init(void) {
 #endif
   rtc_calibrate_frequency(mfg_info_get_rtc_freq());
 
-  clear_reset_loop_detection_bits();
-
   task_watchdog_mask_set(PebbleTask_KernelMain);
 
   stop_mode_enable(InhibitorMain);
@@ -499,8 +500,11 @@ static NOINLINE void prv_main_task_init(void) {
   new_timer_start(s_lowpower_timer,
                   10 * 1000, prv_low_power_debug_config_callback, NULL, 0 /*flags*/);
 
-  s_uptime_timer = new_timer_create();
-  new_timer_start(s_uptime_timer, 15 * 60 * 1000, uptime_callback, NULL, 0 /*flags*/);
+  s_uptime30s_timer = new_timer_create();
+  new_timer_start(s_uptime30s_timer, 30 * 1000, prv_uptime_30s_callback, NULL, 0 /*flags*/);
+
+  s_uptime15m_timer = new_timer_create();
+  new_timer_start(s_uptime15m_timer, 15 * 60 * 1000, prv_uptime_15m_callback, NULL, 0 /*flags*/);
 
   // Initialize button driver at the last moment to prevent "system on" button press from
   // entering the kernel event queue.
