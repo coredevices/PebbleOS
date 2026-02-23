@@ -20,6 +20,7 @@
 #include "util/units.h"
 
 #define PERSIST_STORAGE_MAX_SPACE MiBYTES(1)
+#define PERSIST_STORAGE_INITIAL_ALLOC KiBYTES(4)
 
 typedef struct PersistStore {
   ListNode  list_node;
@@ -124,7 +125,9 @@ SettingsFile * persist_service_lock_and_get_store(const Uuid *uuid) {
   if (!store->file_open) {
     char filename[PERSIST_FILE_NAME_MAX_LENGTH];
     PBL_ASSERTN(PASSED(prv_get_file_name(filename, sizeof(filename), uuid)));
-    PBL_ASSERTN(PASSED(settings_file_open(&store->file, filename, PERSIST_STORAGE_MAX_SPACE)));
+    PBL_ASSERTN(PASSED(settings_file_open_growable(&store->file, filename,
+                                                   PERSIST_STORAGE_MAX_SPACE,
+                                                   PERSIST_STORAGE_INITIAL_ALLOC)));
     store->file_open = true;
   }
   return &store->file;
