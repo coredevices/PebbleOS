@@ -21,6 +21,7 @@ jobs:
           filters: |
             src:
               - '.github/workflows/build-qemu.yml'
+              - 'platform/**'
               - 'resources/**'
               - 'sdk/**'
               - 'src/**'
