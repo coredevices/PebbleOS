@@ -163,7 +163,7 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
   {
     .set_enable_fn = orientation_manager_enable,
-    .enable_mask = R_Stationary | R_Normal,
+    .enable_mask = R_LowPower | R_Stationary | R_Normal,
   }
 #endif
 };
