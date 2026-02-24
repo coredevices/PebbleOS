@@ -24,7 +24,6 @@ import waftools.ldscript
 import waftools.openocd
 import waftools.sftool
 import waftools.nrfutil
-import waftools.xcode_pebble
 
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
 
