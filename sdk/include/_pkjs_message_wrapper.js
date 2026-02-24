@@ -133,7 +133,7 @@
   // to test for support.
   Pebble["sendAppMessage"] = undefined;
 
-  // The rocky implementation!
+  // The postMessage implementation!
 
   function _scheduleAsyncPostMessageError(jsonString, reason) {
     _callHandlersForEvent('postmessageerror', JSON.parse(jsonString));

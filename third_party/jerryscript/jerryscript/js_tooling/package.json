@@ -1,9 +1,0 @@
-{
-  "__comment": "Only needed for the node.js-based version of this compiler if we want to do CLI-based compiling",
-  "name": "js_compiler",
-  "version": "0.0.1",
-  "devDependencies": {
-    "node-zip": "^1.1.1",
-    "yargs": "^4.7.1"
-  }
-}

@@ -1,8 +1,0 @@
-// SPDX-FileCopyrightText: 2014 Samsung Electronics Co., Ltd.
-// SPDX-License-Identifier: Apache-2.0
-
-object = new String()
-
-var b = 1
-
-assert(object + b === "1")

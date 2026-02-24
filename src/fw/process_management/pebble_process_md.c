@@ -95,7 +95,6 @@ static void prv_init_from_info_common(PebbleProcessMd *common, const PebbleProce
   common->visibility = process_metadata_flags_visibility(info->flags);
   common->allow_js = process_metadata_flags_allow_js(info->flags);
   common->has_worker = process_metadata_flags_has_worker(info->flags);
-  common->is_rocky_app = process_metadata_flags_rocky_app(info->flags);
   common->is_moddable_app = process_metadata_flags_moddable_app(info->flags);
   common->stored_sdk_platform = process_metadata_flags_stored_sdk_platform(info->flags);
   common->is_unprivileged = true;
@@ -187,10 +186,6 @@ bool process_metadata_flags_allow_js(PebbleProcessInfoFlags flags) {
 
 bool process_metadata_flags_has_worker(PebbleProcessInfoFlags flags) {
   return ((flags & PROCESS_INFO_HAS_WORKER) != 0);
-}
-
-bool process_metadata_flags_rocky_app(PebbleProcessInfoFlags flags) {
-  return ((flags & PROCESS_INFO_ROCKY_APP) != 0);
 }
 
 bool process_metadata_flags_moddable_app(PebbleProcessInfoFlags flags) {

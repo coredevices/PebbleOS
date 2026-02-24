@@ -9,7 +9,6 @@ from binutils import size
 from memory_reports import (
     app_memory_report,
     app_appstore_resource_memory_error,
-    bytecode_memory_report,
     simple_memory_report,
 )
 
@@ -26,13 +25,6 @@ class memory_usage_report(Task.Task):
         """
         bin_type = self.bin_type
         platform = self.generator.env.PLATFORM_NAME
-
-        if bin_type == "rocky":
-            env = self.generator.bld.all_envs[self.env.PLATFORM_NAME]
-            Logs.pprint(
-                *bytecode_memory_report(platform, env.SNAPSHOT_SIZE, env.SNAPSHOT_MAX)
-            )
-            return
 
         bin_path = self.inputs[0].abspath()
         resources_path = self.inputs[1].abspath() if len(self.inputs) > 1 else None
@@ -77,7 +69,7 @@ class memory_usage_report(Task.Task):
 
 
 @feature("memory_usage")
-@after_method("cprogram", "cstlib", "process_rocky_js")
+@after_method("cprogram", "cstlib")
 def generate_memory_usage_report(task_gen):
     """
     Generates and prints a report of the project's memory usage (binary + resources, if applicable).
@@ -117,7 +109,3 @@ def generate_memory_usage_report(task_gen):
         )
         lib_task.max_sizes = (None, None, None)
         lib_task.bin_type = "lib"
-    if getattr(task_gen, "bin_type", None) == "rocky":
-        rocky_task = task_gen.create_task("memory_usage_report", task_gen.env.JS_RESO)
-        rocky_task.bin_type = "rocky"
-        rocky_task.vars = ["PLATFORM_NAME"]

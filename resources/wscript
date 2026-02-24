@@ -121,21 +121,6 @@ def build(bld):
 
     resource_dependencies = resource_definition_sources
 
-    if not bld.capability('HAS_ROCKY_JS') or bld.variant == 'applib':
-        # If JS is not enabled, then strip out any js resource objects
-        # listed. The resources should be ifdef'ed out in the code
-        for r in resource_definitions:
-            if r.type == 'js':
-                resource_definitions.remove(r)
-    elif any((r.type == 'js' for r in resource_definitions)):
-        # Make sure our tools for processing js resources are available before processing
-        # resources if we have js resources to process
-        js_tooling_scripts = [
-            bld.path.parent.get_bld().make_node('third_party/jerryscript/jerryscript/js_tooling/{}.js'.
-                                                format(script))
-            for script in ('generate_snapshot', 'js_tooling')]
-        resource_dependencies.extend(js_tooling_scripts)
-
     # Build the resource ball
     fw_bld_node = bld.bldnode
     resource_ball = fw_bld_node.make_node('system_resources.resball')
