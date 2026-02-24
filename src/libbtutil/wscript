@@ -9,7 +9,7 @@ def build(bld):
         bld.stlib(source=sources,
                   target=target,
                   includes=['.', 'include/btutil'],
-                  use=['pblibc_includes', 'libutil_includes', 'root_includes'],
+                  use=['pblibc_includes', 'libutil_includes', 'pbl_includes'],
                   env=env.derive())
 
     bld(export_includes=['include'], name='libbtutil_includes')

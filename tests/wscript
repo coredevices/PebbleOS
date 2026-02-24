@@ -274,7 +274,7 @@ def build(bld):
         bld.env.append_value('DEFINES', 'UNITTEST_DEBUG')
 
     bld.env.CFLAGS.append('-I' + bld.path.abspath() + '/../src/fw/util/time')
-    bld.env.CFLAGS.append('-I' + bld.path.abspath() + '/../src/include')
+    bld.env.CFLAGS.append('-I' + bld.path.abspath() + '/../include')
 
     # clang on Linux errors on true == true or false == false compile-time assertions
     bld.env.CFLAGS.append('-Wno-tautological-compare')

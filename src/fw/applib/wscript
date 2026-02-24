@@ -93,6 +93,6 @@ def build(bld):
                    'jerry_core',
                    'libxs',
                    'freertos_includes',
-                   'root_includes'])
+                   'pbl_includes'])
 
 # vim:filetype=python

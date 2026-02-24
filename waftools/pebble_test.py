@@ -330,7 +330,7 @@ def add_clar_test(
         "tests/fakes",
         "tests/test_includes",
         "tests",
-        "src/include",
+        "include",
         "src/core",
         "src/fw",
         "src/libbtutil/include",

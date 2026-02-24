@@ -71,7 +71,13 @@ def generate_shim_files(
         raise Exception("Unsupported platform: %s" % platform_name)
 
     files, exports_tree = exports.parse_export_file(shim_def_path, internal_sdk_build)
-    files = [os.path.join(pbl_src_dir, f) for f in files]
+    root_dir = os.path.dirname(pbl_src_dir)
+    files = [
+        os.path.join(pbl_src_dir, f)
+        if os.path.exists(os.path.join(pbl_src_dir, f))
+        else os.path.join(root_dir, f)
+        for f in files
+    ]
 
     functions = []
     exports.walk_tree(

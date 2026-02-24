@@ -383,7 +383,7 @@ def _link_firmware(bld, sources):
             'libutil',
             'nanopb',
             'pblibc',
-            'root_includes',
+            'pbl_includes',
             'soc',
             'speex',
             'startup',
@@ -729,7 +729,7 @@ def build(bld):
     fw_includes_use=['libbtutil_includes',
                      'libos_includes',
                      'libutil_includes',
-                     'root_includes',
+                     'pbl_includes',
                      'freertos_includes',
                      'idl_includes',
                      'nanopb_includes']

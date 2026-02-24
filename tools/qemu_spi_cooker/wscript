@@ -26,7 +26,7 @@ def build(bld):
                 "../../tests/fakes",
                 "../../tests/test_includes",
                 "../../tests/overrides/default/",
-                "../../src/include",
+                "../../include",
                 "../../src/fw",
                 "../../src/libos/include",
                 "../../src/libutil/includes",

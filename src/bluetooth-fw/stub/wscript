@@ -12,7 +12,7 @@ def build(bld):
               use=[
                 'fw_includes',
                 'freertos',
-                'root_includes',
+                'pbl_includes',
               ])
 
 
