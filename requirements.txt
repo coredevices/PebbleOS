@@ -31,7 +31,6 @@ libpebble2>=0.0.16
 pyftdi==0.56.0
 pathlib
 
--e python_libs/pblprog
 -e python_libs/pebble-commander
 -e python_libs/pulse2
 -e python_libs/pebble-loghash
