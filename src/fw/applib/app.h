@@ -18,8 +18,7 @@
 void app_request_render(void);
 
 //! @internal
-//! Event loop that is shared between Rocky.js and C apps. This is called by both app_event_loop()
-//! as well as rocky_event_loop_with_...().
+//! Common event loop called by app_event_loop().
 void app_event_loop_common(void);
 
 //! The event loop for C apps, to be used in app's main().

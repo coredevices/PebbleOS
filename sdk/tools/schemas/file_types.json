@@ -38,7 +38,6 @@
         "type": "object",
         "oneOf": [
           { "$ref": "project_types.json#/native-app" },
-          { "$ref": "project_types.json#/rocky-app" },
           { "$ref": "project_types.json#/package" }
         ]
       }

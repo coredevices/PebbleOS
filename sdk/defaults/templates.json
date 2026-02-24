@@ -2,14 +2,6 @@
     "default": {
         ".gitignore": "gitignore"
     },
-    "rocky": {
-        "default": {
-            "src/pkjs/index.js": "rocky/app.js",
-            "src/rocky/index.js": "rocky/index.js",
-            "wscript": "rocky/wscript",
-            "package.json": "rocky/package.json"
-        }
-    },
     "app": {
         "default": {
             "src/c/${project_name}.c": "app/main.c",

@@ -1,6 +1,6 @@
 # Moddable JS Engine
 
-PebbleOS supports the [Moddable SDK](https://github.com/pebble-dev/moddable)'s XS JavaScript engine as an alternative to the default RockyJS engine. The Moddable integration provides a lightweight sandbox for running JavaScript applications and watchfaces on Pebble hardware.
+PebbleOS supports the [Moddable SDK](https://github.com/pebble-dev/moddable)'s XS JavaScript engine. The Moddable integration provides a lightweight sandbox for runningJavaScript applications and watchfaces on Pebble hardware.
 
 ## Building with Moddable
 
@@ -22,7 +22,7 @@ To build PebbleOS with the Moddable JS engine, pass `--js-engine moddable` to `.
 
 ## Installable applications
 
-Installable applications — those built with `pebble build` — follow the same basic pattern as RockyJS apps. The JavaScript is stored in a resource. A small native C application bootstraps JavaScript execution by calling `moddable_createMachine`.
+The JavaScript is stored in a resource. A small native C application bootstraps JavaScript execution by calling `moddable_createMachine`.
 
 The JavaScript itself is a Moddable SDK **mod**, which is a precompiled collection of modules. The modules are compiled using the `mcrun` tool in the Moddable SDK. See Moddable's [Pebble Examples repository](https://github.com/moddable-OpenSource/pebble-examples) for further details. The Pebble resource containing the precompiled mod is currently loaded into RAM for execution; eventually, it should be executed directly from flash (this is what the Moddable SDK does on most platforms).
 

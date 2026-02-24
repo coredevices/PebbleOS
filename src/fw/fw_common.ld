@@ -28,10 +28,6 @@ ASSERT(ORIGIN(KERNEL_RAM) != ORIGIN(WORKER_RAM),
 ASSERT(ORIGIN(APP_RAM) != ORIGIN(WORKER_RAM),
        "APP_RAM cannot alias WORKER_RAM");
 
-/* PBL-40376: Temp hack: put .rocky_bss at end of APP_RAM:
-   Interim solution until all statics are removed from applib & jerry */
-__ROCKY_BSS_size__ = 1512;
-
 __SRAM_size__ = LENGTH(KERNEL_RAM) + LENGTH(WORKER_RAM) + LENGTH(APP_RAM);
 
 __WORKER_RAM__ = ORIGIN(WORKER_RAM);
@@ -115,17 +111,6 @@ SECTIONS {
 
         . = ALIGN(8);
     } >FLASH
-
-    /* PBL-40376: Temp hack: put .rocky_bss at end of APP_RAM:
-       Interim solution until all statics are removed from applib & jerry */
-    .app_ram (NOLOAD) : {
-        . = . + LENGTH(APP_RAM) - __ROCKY_BSS_size__;
-        . = ALIGN(4);
-        __ROCKY_BSS__ = ABSOLUTE(.);
-        third_party/jerryscript/jerryscript/libjerry_core.a:(.bss .bss.*)
-        . = ALIGN(4);
-        *(.rocky_bss)
-    } >APP_RAM
 
     .kernel_data : ALIGN(8) {
         __data_start = .; /* This is used by the startup in order to initialize the .data secion */

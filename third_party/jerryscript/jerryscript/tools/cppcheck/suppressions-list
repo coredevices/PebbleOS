@@ -1,3 +1,0 @@
-wrongmathcall:tests/unit/test-libm.inc.h
-variableScope:jerry-libm/*.c
-invalidPointerCast:jerry-libm/*.c

@@ -174,24 +174,7 @@ def make_pbl_bundle(task_gen):
 
     cached_env = task_gen.bld.env
 
-    if hasattr(task_gen, "bin_type") and task_gen.bin_type == "rocky":
-        binaries = []
-        for platform in task_gen.bld.env.TARGET_PLATFORMS:
-            binaries.append(
-                {
-                    "platform": platform,
-                    "app_elf": "{}/pebble-app.elf".format(
-                        task_gen.bld.all_envs[platform].BUILD_DIR
-                    ),
-                }
-            )
-        rocky_source_node = task_gen.bld.path.get_bld().make_node(
-            "resources/rocky-app.js"
-        )
-        js_files.append(rocky_source_node)
-        bundle_sources.append(rocky_source_node)
-    else:
-        binaries = task_gen.binaries
+    binaries = task_gen.binaries
 
     for binary in binaries:
         task_gen.bld.env = task_gen.bld.all_envs[binary["platform"]]

@@ -139,11 +139,7 @@ static void prv_app_task_main(void *entry_point) {
   // Enter unprivileged mode!
   const bool is_unprivileged = s_app_task_context.app_md->is_unprivileged;
 
-  // There are currently no Rocky.js APIs that need to be called while in privileged mode, so run
-  // in unprivileged mode for the built-in Rocky.js apps (Tictoc) as well:
-  const bool is_rocky_app = s_app_task_context.app_md->is_rocky_app;
-
-  if (is_unprivileged || is_rocky_app) {
+  if (is_unprivileged) {
     mcu_state_set_thread_privilege(false);
   }
 
@@ -194,7 +190,7 @@ void prv_dump_start_app_info(const PebbleProcessMd *app_md) {
   PBL_LOG_DBG("Starting app with sdk platform %s", sdk_platform);
 }
 
-#define APP_STACK_ROCKY_SIZE (8 * 1024)
+#define APP_STACK_JS_SIZE (8 * 1024)
 #define APP_STACK_NORMAL_SIZE (2 * 1024)
 
 static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
@@ -204,16 +200,9 @@ static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
     case ProcessAppSDKType_Legacy3x:
       return APP_RAM_3X_SIZE;
     case ProcessAppSDKType_4x:
-#if CAPABILITY_HAS_ROCKY_JS || CAPABILITY_HAS_MODDABLE_XS
-      if (app_md->is_rocky_app || app_md->is_moddable_app) {
-        // on Spalding, we didn't have enough applib padding to guarantee both,
-        // 4.x native app heap + JerryScript statis + increased stack for Rocky.
-        // For now, we just decrease the amount of available heap as we don't use it.
-        // In the future, we will move the JS stack to the heap PBL-35783,
-        // make byte code swappable PBL-37937,and remove JerryScript's static PBL-40400.
-        // All of the above will work to our advantage so it's safe to make this simple
-        // change now.
-        return APP_RAM_4X_SIZE - (APP_STACK_ROCKY_SIZE - APP_STACK_NORMAL_SIZE);
+#if CAPABILITY_HAS_MODDABLE_XS
+      if (app_md->is_moddable_app) {
+        return APP_RAM_4X_SIZE - (APP_STACK_JS_SIZE - APP_STACK_NORMAL_SIZE);
       }
 #endif
       return APP_RAM_4X_SIZE;
@@ -225,9 +214,9 @@ static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
 }
 
 static size_t prv_get_app_stack_size(const PebbleProcessMd *app_md) {
-#if CAPABILITY_HAS_ROCKY_JS || CAPABILITY_HAS_MODDABLE_XS
-  if (app_md->is_rocky_app || app_md->is_moddable_app) {
-    return APP_STACK_ROCKY_SIZE;
+#if CAPABILITY_HAS_MODDABLE_XS
+  if (app_md->is_moddable_app) {
+    return APP_STACK_JS_SIZE;
   }
 #endif
   return APP_STACK_NORMAL_SIZE;
@@ -268,27 +257,6 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
 
   MemorySegment app_ram = prv_get_app_ram_segment();
 
-#if !UNITTEST
-  if (app_md->is_rocky_app) {
-    /* PBL-40376: Temp hack: put .rocky_bss at end of APP_RAM:
-       Interim solution until all statics are removed from applib & jerry.
-       These statics are only used for rocky apps, so it's OK that this overlaps/overlays with the
-       app heap for non-rocky apps.
-     */
-    extern char __ROCKY_BSS_size__[];
-    extern char __ROCKY_BSS__[];
-    memset(__ROCKY_BSS__, 0, (size_t)__ROCKY_BSS_size__);
-
-    // ROCKY_BSS is inside APP_RAM to make the syscall buffer checks pass.
-    // However, we want to avoid overlapping with any splits we're about to make:
-    app_ram.end = __ROCKY_BSS__;
-
-    // Reduce the size available for the code + app heap, on Spalding the "padding" we had left
-    // isn't enough to fit Rocky + Jerry's .bss:
-    app_segment_size -= 1400;
-  }
-#endif
-
   memset((char *)app_ram.start + stack_guard_size, 0,
          memory_segment_get_size(&app_ram) - stack_guard_size);
 
@@ -316,13 +284,10 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   const ResAppNum res_bank_num = process_metadata_get_res_bank_num(app_md);
   if (res_bank_num != SYSTEM_APP) {
     const ResourceVersion res_version = process_metadata_get_res_version(app_md);
-    // for RockyJS apps, we initialize without checking the for a match between
-    // binary's copy of the resource CRC and the actual CRC as it could be outdated
-    const ResourceVersion *const res_version_ptr = app_md->is_rocky_app ? NULL : &res_version;
-    if (!resource_init_app(res_bank_num, res_version_ptr)) {
+    if (!resource_init_app(res_bank_num, &res_version)) {
       // The resources are busted! Abort starting this app.
       APP_LOG(APP_LOG_LEVEL_ERROR,
-              "Checksum for resources differs or insufficient meta data for JavaScript app.");
+              "Checksum for resources differs.");
       return false;
     }
   }
@@ -892,11 +857,6 @@ static void prv_handle_app_start_analytics(const PebbleProcessMd *app_md,
   ResourceVersion resource_version = process_metadata_get_res_version(app_md);
   analytics_set(ANALYTICS_APP_METRIC_RESOURCE_TIMESTAMP, resource_version.timestamp, AnalyticsClient_App);
 
-  if (app_md->is_rocky_app) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_APP_ROCKY_LAUNCH_COUNT, AnalyticsClient_System);
-    analytics_inc(ANALYTICS_APP_METRIC_ROCKY_LAUNCH_COUNT, AnalyticsClient_App);
-  }
-
   if (launch_reason == APP_LAUNCH_QUICK_LAUNCH) {
     analytics_inc(ANALYTICS_DEVICE_METRIC_APP_QUICK_LAUNCH_COUNT, AnalyticsClient_System);
     analytics_inc(ANALYTICS_APP_METRIC_QUICK_LAUNCH_COUNT, AnalyticsClient_App);
@@ -936,10 +896,6 @@ DEFINE_SYSCALL(Version, sys_get_current_app_sdk_version, void) {
 
 DEFINE_SYSCALL(bool, sys_get_current_app_is_js_allowed, void) {
   return (app_manager_get_current_app_md()->allow_js);
-}
-
-DEFINE_SYSCALL(bool, sys_get_current_app_is_rocky_app, void) {
-  return (app_manager_get_current_app_md()->is_rocky_app);
 }
 
 DEFINE_SYSCALL(PlatformType, sys_get_current_app_sdk_platform, void) {

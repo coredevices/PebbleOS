@@ -19,7 +19,6 @@ import report_memory_usage  # noqa: F401
 from sdk_helpers import (
     configure_libraries,
     configure_platform,
-    find_sdk_component,
     get_target_platforms,
     truncate_to_32_bytes,
     validate_message_keys_object,
@@ -197,9 +196,7 @@ def configure(conf):
 
     conf.env.PROJECT_INFO = project_info
     project_type = project_info.get("projectType", None)
-    if project_type == "rocky":
-        conf.env.BUILD_TYPE = "rocky"
-    elif project_type == "moddable":
+    if project_type == "moddable":
         conf.env.BUILD_TYPE = "moddable"
     else:
         conf.env.BUILD_TYPE = "app"
@@ -211,24 +208,6 @@ def configure(conf):
                 "Please set enableMultiJS to false, or reinstall the SDK.".format(
                     conf.env.NODE_PATH
                 )
-            )
-
-    if conf.env.BUILD_TYPE == "rocky":
-        conf.find_program(
-            "node nodejs",
-            var="NODE",
-            errmsg="Unable to locate the Node command. "
-            "Please check your Node installation and try again.",
-        )
-        c_files = [
-            c_file.path_from(conf.path.find_node("src"))
-            for c_file in conf.path.ant_glob("src/**/*.c")
-        ]
-        if c_files:
-            Logs.pprint(
-                "YELLOW",
-                "WARNING: C source files are not supported for Rocky.js "
-                "projects. The following C files are being skipped: {}".format(c_files),
             )
 
     if "resources" in project_info and "media" in project_info["resources"]:
@@ -305,51 +284,8 @@ def build(bld):
             except AttributeError:
                 bld.fatal("Unable to locate resources at resources/")
 
-        # Adding the Rocky.js source file needs to happen before the setup of the Resource
-        # Generators
-        if bld.env.BUILD_TYPE == "rocky":
-            rocky_js_file = bld.path.find_or_declare("resources/rocky-app.js")
-            rocky_js_file.parent.mkdir()
-            bld.pbl_js_build(
-                source=bld.path.ant_glob(["src/rocky/**/*.js", "src/common/**/*.js"]),
-                target=rocky_js_file,
-            )
-
-            resource_node = bld.path.get_bld().make_node("resources")
-            bld.env.RESOURCES_JSON = [
-                {
-                    "type": "js",
-                    "name": "JS_SNAPSHOT",
-                    "file": rocky_js_file.path_from(resource_node),
-                }
-            ]
-
         resource_path = resource_node.path_from(bld.path) if resource_node else None
         generate_resources(bld, resource_path)
-
-        # Running `pbl_build` needs to happen after the setup of the Resource Generators so
-        # `report_memory_usage` is aware of the existence of the JS bytecode file
-        if bld.env.BUILD_TYPE == "rocky":
-            rocky_c_file = build_node.make_node("src/rocky.c")
-            bld(
-                rule='cp "${SRC}" "${TGT}"',
-                source=find_sdk_component(bld, bld.env, "include/rocky.c"),
-                target=rocky_c_file,
-            )
-
-            # Check for rocky script (This is done in `build` to preserve the script as a node
-            # instead of as an absolute path as would be required in `configure`. This is to keep
-            # the signatures the same for both FW builds and SDK builds.
-            if not bld.env.JS_TOOLING_SCRIPT:
-                bld.fatal(
-                    "Unable to locate tooling for this Rocky.js app build. Please "
-                    "try re-installing this version of the SDK."
-                )
-            bld.pbl_build(
-                source=[rocky_c_file],
-                target=build_node.make_node("pebble-app.elf"),
-                bin_type="rocky",
-            )
 
     # bld.env is set back to a shallow copy of the original ConfigSet that was set when this `build`
     # method was invoked
