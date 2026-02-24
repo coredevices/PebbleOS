@@ -51,9 +51,6 @@ def build(bld):
                      'ui/time_range_selection_window.c',
                      'voice/*']
 
-    if not bld.capability('HAS_ROCKY_JS') or bld.variant == 'prf':
-        excludes += ['rockyjs/*']
-
     if not bld.is_spalding() and not bld.is_getafix():
         excludes.append('ui/window_stack_animation_round*')
 
@@ -68,7 +65,6 @@ def build(bld):
     if bld.variant == 'applib':
         sources = bld.path.ant_glob('graphics/**/*.c', excl=excludes)
         sources.extend(bld.path.ant_glob('fonts/*.c', excl=excludes))
-        sources.extend(bld.path.ant_glob('rockyjs/**/*.c', excl=excludes))
         sources.append('ui/layer.c')
         sources.append('ui/window.c')
     else:
@@ -87,10 +83,6 @@ def build(bld):
                    'fw_includes',
                    'upng',
                    'qr_code_generator',
-                   'jerry_port_includes',
-                   'jerry_runtime_config',
-                   'jerry_common_config',
-                   'jerry_core',
                    'libxs',
                    'freertos_includes',
                    'root_includes'])

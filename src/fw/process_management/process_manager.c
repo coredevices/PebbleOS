@@ -9,7 +9,6 @@
 #include "applib/app_logging.h"
 #include "applib/accel_service_private.h"
 #include "applib/platform.h"
-#include "applib/rockyjs/rocky_res.h"
 #include "applib/ui/dialogs/dialog.h"
 #include "applib/ui/dialogs/expandable_dialog.h"
 
@@ -233,12 +232,6 @@ static bool prv_needs_fetch(AppInstallId id, const PebbleProcessMd **md, bool is
 
   *md = app_install_get_md(id, is_worker);
 
-  if (!is_worker && rocky_app_validate_resources(*md) == RockyResourceValidation_Invalid) {
-    PBL_LOG_DBG("App has incompatible JavaScript bytecode");
-    //  TODO: do we need to purge the app cache here?
-    return true;
-  }
-
   return false;
 }
 
@@ -347,15 +340,9 @@ static void prv_handle_app_stop_analytics(const ProcessContext *const context,
                                           PebbleTask task, bool gracefully) {
   if (!gracefully) {
     if (task == PebbleTask_App) {
-      if (context->app_md->is_rocky_app) {
-        analytics_inc(ANALYTICS_APP_METRIC_ROCKY_CRASHED_COUNT, AnalyticsClient_App);
-      }
       analytics_inc(ANALYTICS_APP_METRIC_CRASHED_COUNT, AnalyticsClient_App);
     } else if (task == PebbleTask_Worker) {
       analytics_inc(ANALYTICS_APP_METRIC_BG_CRASHED_COUNT, AnalyticsClient_Worker);
-    }
-    if (context->app_md->is_rocky_app) {
-      analytics_inc(ANALYTICS_DEVICE_METRIC_APP_ROCKY_CRASHED_COUNT, AnalyticsClient_System);
     }
     analytics_inc(ANALYTICS_DEVICE_METRIC_APP_CRASHED_COUNT, AnalyticsClient_System);
   }

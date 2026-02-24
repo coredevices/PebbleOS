@@ -21,14 +21,14 @@ static void startMachine(void *data)
 
 void moddable_cleanup(void)
 {
-	ModdablePebbleAppState state = (ModdablePebbleAppState)app_state_get_rocky_memory_api_context();
+	ModdablePebbleAppState state = (ModdablePebbleAppState)app_state_get_js_memory_api_context();
 
 	xsDeleteMachine(state->the);
 
 	extern void modTimerExit(void);
 	modTimerExit();
 
-	app_state_set_rocky_memory_api_context(NULL);
+	app_state_set_js_memory_api_context(NULL);
 	task_free(state);
 }
 
@@ -83,7 +83,7 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 	ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
 	state->the = the;
 	state->eventedTimer = EVENTED_TIMER_INVALID_ID;
-	app_state_set_rocky_memory_api_context((void *)state);
+	app_state_set_js_memory_api_context((void *)state);
 
 	evented_timer_register(2, false, startMachine, the);
 

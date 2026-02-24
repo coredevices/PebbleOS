@@ -3,69 +3,12 @@
 
 import json
 import os
-import subprocess
 from string import Template
 from waflib.Errors import WafError
 from waflib.TaskGen import before_method, feature
 from waflib import Context, Logs, Task
 
 from sdk_helpers import find_sdk_component
-
-
-@feature("rockyjs")
-@before_method("process_sdk_resources")
-def process_rocky_js(task_gen):
-    """
-    Lint the JS source files using a Rocky-specific linter
-
-    Keyword arguments:
-    js -- a list of JS files to process for the build
-
-    :param task_gen: the task generator instance
-    :return: N/A
-    """
-    bld = task_gen.bld
-    task_gen.mappings = {"": (lambda task_gen, node: None)}
-    js_nodes = task_gen.to_nodes(task_gen.source)
-    target = task_gen.to_nodes(task_gen.target)
-    if not js_nodes:
-        task_gen.bld.fatal("Project does not contain any source code.")
-    js_nodes.append(find_sdk_component(bld, task_gen.env, "include/rocky.js"))
-
-    # This locates the available node_modules folders and performs a search for the rocky-lint
-    # module. This code remains in this file un-abstracted because similar functionality is not yet
-    # needed elsewhere.
-    node_modules = []
-    rocky_linter = None
-    if bld.path.find_node("node_modules"):
-        node_modules.append(bld.path.find_node("node_modules"))
-    if bld.env.NODE_PATH:
-        node_modules.append(bld.root.find_node(bld.env.NODE_PATH))
-    for node_modules_node in node_modules:
-        rocky_linter = node_modules_node.ant_glob("rocky-lint/**/rocky-lint.js")
-        if rocky_linter:
-            rocky_linter = rocky_linter[0]
-            break
-
-    rocky_definitions = find_sdk_component(
-        bld, task_gen.env, "tools/rocky-lint/rocky.d.ts"
-    )
-    if rocky_linter and rocky_definitions:
-        lintable_nodes = [node for node in js_nodes if node.is_child_of(bld.path)]
-        lint_task = task_gen.create_task("lint_js", src=lintable_nodes)
-        lint_task.linter = [
-            task_gen.env.NODE,
-            rocky_linter.path_from(bld.path),
-            "-d",
-            rocky_definitions.path_from(bld.path),
-        ]
-    else:
-        Logs.pprint("YELLOW", "Rocky JS linter not present - skipping lint task")
-
-    # Create JS merge task for Rocky.js files
-    merge_task = task_gen.create_task("merge_js", src=js_nodes, tgt=target)
-    merge_task.js_entry_file = task_gen.js_entry_file
-    merge_task.js_build_type = "rocky"
 
 
 @feature("js")
@@ -195,9 +138,6 @@ class merge_js(Task.Task):
             # NOTE: The order is critical here.
             # _pkjs_shared_additions.js MUST be the first in the `entry` array!
             entry.insert(0, "_pkjs_shared_additions.js")
-            if self.env.BUILD_TYPE == "rocky":
-                entry.insert(1, "_pkjs_message_wrapper.js")
-
         common_node = bld.root.find_node(self.generator.env.PEBBLE_SDK_COMMON)
         tools_webpack_node = common_node.find_node("tools").find_node("webpack")
         webpack_config_template_node = tools_webpack_node.find_node(
@@ -256,29 +196,3 @@ class merge_js(Task.Task):
         else:
             if self.env.VERBOSE > 0:
                 Logs.pprint("WHITE", out)
-
-
-class lint_js(Task.Task):
-    """
-    Task class for linting JS source files with a specified linter script.
-    """
-
-    def run(self):
-        """
-        This method executes when the JS lint task runs
-        :return: N/A
-        """
-        self.name = "lint_js"
-        js_nodes = self.inputs
-        for js_node in js_nodes:
-            cmd = self.linter + [js_node.path_from(self.generator.bld.path)]
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = proc.communicate()
-            if err:
-                Logs.pprint(
-                    "CYAN", "\n========== Lint Results: {} ==========\n".format(js_node)
-                )
-                Logs.pprint("WHITE", "{}\n{}\n".format(out, err))
-
-                if proc.returncode != 0:
-                    self.generator.bld.fatal("Project failed linting.")

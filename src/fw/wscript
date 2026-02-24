@@ -376,8 +376,6 @@ def _link_firmware(bld, sources):
             'fw_services',
             'gcc',
             'proto_schemas',
-            'jerry_core',
-            'jerry_libm',
             'libbtutil',
             'libos',
             'libutil',

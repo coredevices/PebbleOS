@@ -132,8 +132,8 @@ def options(opt):
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
     opt.add_option('--qemu', action='store_true',
                    help='Build an image for qemu instead of a real board.')
-    opt.add_option('--js-engine', action='store', default=None, choices=['rocky', 'moddable', 'none'],
-                   help='Specify JavaScript engine (rocky, moddable or none). '
+    opt.add_option('--js-engine', action='store', default=None, choices=['moddable', 'none'],
+                   help='Specify JavaScript engine (moddable or none). '
                         'Defaults to moddable for boards with HAS_MODDABLE_XS, none otherwise.')
     opt.add_option('--sdkshell', action='store_true',
                    help='Use the sdk shell instead of the normal shell')
@@ -642,7 +642,6 @@ def build(bld):
 
     if bld.variant in ('', 'applib', 'prf'):
         # Dependency for SDK
-        bld.recurse('third_party/jerryscript')
         bld.recurse('third_party/moddable')
 
     if bld.variant == '':
@@ -668,7 +667,6 @@ def build(bld):
 
     if bld.variant == 'test':
         bld.recurse('src/include')
-        bld.recurse('third_party/jerryscript')
         bld.recurse('third_party/nanopb')
         bld.recurse('src/libbtutil')
         bld.recurse('src/libos')
@@ -878,11 +876,6 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
 
     # make sure ctx.capability is available
     ctx.recurse('platform', mandatory=False)
-
-    if ctx.capability('HAS_ROCKY_JS'):
-        js_tooling = ctx.path.get_bld().find_node('third_party/jerryscript/jerryscript/js_tooling/js_tooling.js')
-        if js_tooling is not None:
-            b.add_jstooling(js_tooling.path_from(ctx.path), ctx.capability('JAVASCRIPT_BYTECODE_VERSION'))
 
     if fw_type == 'normal':
         layouts_node = ctx.path.get_bld().find_node('resources/layouts.json.auto')

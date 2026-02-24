@@ -17,19 +17,6 @@
     },
     "required": [ "displayName", "uuid", "sdkVersion" ]
   },
-  "rocky-app": {
-    "properties": {
-      "displayName": { "type": "string" },
-      "uuid": { "$ref": "attributes.json#/uuid" },
-      "sdkVersion": { "$ref": "attributes.json#/sdkVersion" },
-      "projectType": { "enum": [ "rocky" ] },
-      "enableMultiJS": { "type": "boolean" },
-      "targetPlatforms": { "$ref": "attributes.json#/targetPlatforms" },
-      "watchapp": { "$ref": "attributes.json#/watchapp" },
-      "capabilities": { "$ref": "attributes.json#/capabilities" }
-    },
-    "required": [ "displayName", "uuid", "sdkVersion", "projectType" ]
-  },
   "package": {
     "properties": {
       "sdkVersion": { "$ref": "attributes.json#/sdkVersion" },

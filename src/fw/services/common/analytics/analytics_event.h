@@ -66,9 +66,7 @@ typedef enum {
   AnalyticsEvent_PPoGATTDisconnect,
   AnalyticsEvent_BtChipBoot,
   AnalyticsEvent_GetBytesStats,
-  AnalyticsEvent_RockyAppCrash,
   AnalyticsEvent_AppOOMNative,
-  AnalyticsEvent_AppOOMRocky,
   AnalyticsEvent_BtLeMicError,
   AnalyticsEvent_BleHrmEvent,
 } AnalyticsEvent;
@@ -226,7 +224,7 @@ typedef struct PACKED {
   uint16_t other_errors;
 } AnalyticsEvent_PutByteTimeData;
 
-//! Used for both AnalyticsEvent_AppCrash and AnalyticsEvent_RockyAppCrash event types!
+//! Used for AnalyticsEvent_AppCrash event type.
 typedef struct PACKED {
   Uuid uuid;
   uint32_t pc;
@@ -329,7 +327,7 @@ typedef struct PACKED {
   };
 } AnalyticsEventBlob;
 
-//! @param type AnalyticsEvent_AppOOMNative or AnalyticsEvent_AppOOMRocky
+//! @param type AnalyticsEvent_AppOOMNative
 //! @param total_free Sum of free bytes
 //! @param largest_free_block The largest, contiguous, free block of memory.
 //! @note Intended to be called from the app/worker task (calls sys_analytics_logging_log_event).
@@ -472,8 +470,8 @@ void analytics_event_put_byte_stats(
 //! @param pc Current running function before crash
 //! @param lr Last running function before crash
 //! @param build_id Pointer to the build_id buffer of the application (can be NULL)
-void analytics_event_app_crash(const Uuid *uuid, uint32_t pc, uint32_t lr, const uint8_t *build_id,
-                               bool is_rocky_app);
+void analytics_event_app_crash(const Uuid *uuid, uint32_t pc, uint32_t lr,
+                               const uint8_t *build_id);
 
 //! Log the user's vibration pattern
 //! @param VibePatternFeature Notifications, Phone Calls, or Alarms

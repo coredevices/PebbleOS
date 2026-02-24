@@ -119,7 +119,6 @@
     "fw/applib/app_smartstrap.h",
     "fw/applib/voice/dictation_session.h",
     "fw/applib/ui/content_indicator.h",
-    "fw/applib/rockyjs/rocky.h",
     "fw/applib/unobstructed_area_service.h"
   ],
   "exports": [
@@ -152,20 +151,6 @@
       "type": "group",
       "name": "Foundation",
       "exports" : [
-        {
-          "type": "group",
-          "name": "Rocky",
-          "appOnly": true,
-          "exports": [
-            {
-              "_comment": "Marked as deprecated so that the function it self won't appear in pebble.h",
-              "type": "function",
-              "name": "rocky_event_loop_with_resource",
-              "deprecated": true,
-              "addedRevision": "85"
-            }
-          ]
-        },
         {
           "type": "group",
           "name": "Internationalization",

@@ -267,5 +267,5 @@ void app_event_loop_common(void) {
 
 void app_event_loop(void) {
   app_event_loop_common();
-  app_heap_analytics_log_stats_to_app_heartbeat(false /* is_rocky_app */);
+  app_heap_analytics_log_stats_to_app_heartbeat();
 }

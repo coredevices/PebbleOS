@@ -52,20 +52,6 @@ def configure(conf):
         "messageKeys", conf.env.PROJECT_INFO.get("appKeys", [])
     )
 
-    if conf.env.BUILD_TYPE == "rocky":
-        if keys:
-            conf.fatal(
-                "Custom messageKeys are not supported for Rocky.js projects. Please "
-                "remove any messageKeys listed in your package.json file."
-            )
-        else:
-            keys = {
-                "ControlKeyResetRequest": 1,
-                "ControlKeyResetComplete": 2,
-                "ControlKeyChunk": 3,
-                "ControlKeyUnsupportedError": 4,
-            }
-
     key_list = []
     key_dict = {}
     block_message_keys = []

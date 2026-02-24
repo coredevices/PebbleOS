@@ -139,10 +139,6 @@ static void prv_send_watch_versions(CommSession *session) {
 #ifdef APP_ID_WORKOUT
   versions_msg.capabilities.workout_app_support = (APP_ID_WORKOUT != INSTALL_ID_INVALID) ? 1 : 0;
 #endif
-#if CAPABILITY_HAS_ROCKY_JS
-  versions_msg.capabilities.javascript_bytecode_version_appended = 0x1;
-  versions_msg.javascript_bytecode_version = hton16(CAPABILITY_JAVASCRIPT_BYTECODE_VERSION);
-#endif
   versions_msg.capabilities.continue_fw_install_across_disconnect_support = 1;
   versions_msg.capabilities.smooth_fw_install_progress_support = 1;
   versions_msg.capabilities.custom_vibe_pattern_support = 1;
