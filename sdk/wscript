@@ -28,7 +28,6 @@ def _generate_sdk_waf(ctx):
         "waftools/objcopy.py",
         "waftools/pebble_sdk_gcc.py",
         "waftools/pebble_sdk_version.py",
-        "waftools/xcode_pebble.py"
     ]
 
     pebble_waf_tools = []
