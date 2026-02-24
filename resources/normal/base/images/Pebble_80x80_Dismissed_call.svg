@@ -3,10 +3,10 @@
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 80 80" enable-background="new 0 0 80 80" xml:space="preserve">
 <g id="Backdrop" display="none">
-	<rect x="-32" y="-44" display="inline" fill="#FFE1A1" width="144" height="168"/>
+	<rect x="-32" y="-44" fill="#FFE1A1" width="144" height="168"/>
 </g>
 <g id="Format" display="none">
-	<rect display="inline" fill="#FFFFFF" width="80" height="80"/>
+	<rect fill="#FFFFFF" width="80" height="80"/>
 </g>
 <g id="Design">
 
@@ -45,7 +45,7 @@
 </g>
 <g id="Mockup" display="none">
 
-		<image display="inline" overflow="visible" width="417" height="564" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaEAAAI0CAYAAAC065avAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ
+		<image overflow="visible" width="417" height="564" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaEAAAI0CAYAAAC065avAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ
 bWFnZVJlYWR5ccllPAAAA4ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdp
 bj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6
 eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMDE0IDc5LjE1

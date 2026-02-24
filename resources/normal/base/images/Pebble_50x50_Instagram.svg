@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <svg version="1.1" id="Comments" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 50 50" enable-background="new 0 0 50 50" display="none" xml:space="preserve">
-<rect x="5.5" y="6.5" display="inline" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-miterlimit="10" width="38" height="38"/>
-<line display="inline" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="5.5" y1="22.5" x2="43.5" y2="22.5"/>
-<polygon display="inline" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
+	 viewBox="0 0 50 50" enable-background="new 0 0 50 50" xml:space="preserve">
+<rect x="5.5" y="6.5" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-miterlimit="10" width="38" height="38"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="5.5" y1="22.5" x2="43.5" y2="22.5"/>
+<polygon fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
 	13.5,32.5 13.5,22.5 19.5,16.5 29.5,16.5 35.5,22.5 35.5,32.5 29.5,38.5 19.5,38.5 "/>
-<line display="inline" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="39.5" y1="12.5" x2="33.5" y2="12.5"/>
+<line fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-miterlimit="10" x1="39.5" y1="12.5" x2="33.5" y2="12.5"/>
 </svg>

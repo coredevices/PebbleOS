@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <svg version="1.1" id="Comments" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 50 50" enable-background="new 0 0 50 50" display="none" xml:space="preserve">
-<line display="inline" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="4.5" y1="10.5" x2="45.5" y2="10.5"/>
-<line display="inline" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="4.5" y1="25.5" x2="45.5" y2="25.5"/>
-<line display="inline" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="4.5" y1="40.5" x2="45.5" y2="40.5"/>
-<rect x="35.5" y="35.5" display="inline" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10" height="10"/>
-<rect x="10.5" y="20.5" display="inline" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10" height="10"/>
-<rect x="23.5" y="5.5" display="inline" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10" height="10"/>
+	 viewBox="0 0 50 50" enable-background="new 0 0 50 50" xml:space="preserve">
+<line fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="4.5" y1="10.5" x2="45.5" y2="10.5"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="4.5" y1="25.5" x2="45.5" y2="25.5"/>
+<line fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="4.5" y1="40.5" x2="45.5" y2="40.5"/>
+<rect x="35.5" y="35.5" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10" height="10"/>
+<rect x="10.5" y="20.5" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10" height="10"/>
+<rect x="23.5" y="5.5" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="10" height="10"/>
 </svg>

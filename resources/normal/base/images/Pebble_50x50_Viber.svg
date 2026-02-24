@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <svg version="1.1" id="Comments" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 50 50" enable-background="new 0 0 50 50" display="none" xml:space="preserve">
-<polygon display="inline" fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
+	 viewBox="0 0 50 50" enable-background="new 0 0 50 50" xml:space="preserve">
+<polygon fill="#FFFFFF" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
 	13.5,26.5 19.5,20.5 9.5,10.5 3.5,16.5 3.5,29.5 20.5,46.5 33.5,46.5 39.5,40.5 29.5,30.5 23.5,36.5 13.5,26.5 "/>
-<line display="inline" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="27.5" y1="18.5" x2="31.5" y2="22.5"/>
-<polyline display="inline" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
+<line fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="27.5" y1="18.5" x2="31.5" y2="22.5"/>
+<polyline fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
 	24.5,11.5 30.5,11.5 38.5,19.5 38.5,25.5 "/>
-<polyline display="inline" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
+<polyline fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
 	21.5,4.5 33.5,4.5 45.5,16.5 45.5,28.5 "/>
 </svg>
