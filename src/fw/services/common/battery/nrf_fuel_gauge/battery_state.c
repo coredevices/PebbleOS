@@ -63,12 +63,14 @@ static RtcTicks s_last_log;
 #ifndef RECOVERY_FW
 #define FUEL_GAUGE_SETTINGS_FILE_NAME "fgs"
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
+#define FUEL_GAUGE_STATE_BUF_SIZE 512
 #define FUEL_GAUGE_SETTINGS_MAX_SIZE 2048
 
 static const uint32_t FUEL_GAUGE_STATE_KEY = 1;
 static uint32_t s_save_counter;
+static uint8_t s_state[FUEL_GAUGE_STATE_BUF_SIZE];
 
-static bool prv_load_state(void *state, size_t size) {
+static bool prv_load_state(void) {
   SettingsFile file;
   status_t ret;
 
@@ -80,24 +82,23 @@ static bool prv_load_state(void *state, size_t size) {
 
   int len = settings_file_get_len(&file, &FUEL_GAUGE_STATE_KEY,
                                   sizeof(FUEL_GAUGE_STATE_KEY));
-  if (len != (int)size) {
+  if (len != (int)sizeof(s_state)) {
     settings_file_close(&file);
     return false;
   }
 
   ret = settings_file_get(&file, &FUEL_GAUGE_STATE_KEY,
-                          sizeof(FUEL_GAUGE_STATE_KEY), state, size);
+                          sizeof(FUEL_GAUGE_STATE_KEY), s_state, sizeof(s_state));
   settings_file_close(&file);
 
   return (ret == S_SUCCESS);
 }
 
 static void prv_save_state(void) {
-  uint8_t buf[nrf_fuel_gauge_state_size];
   SettingsFile file;
   status_t ret;
 
-  if (nrf_fuel_gauge_state_get(buf, sizeof(buf)) != 0) {
+  if (nrf_fuel_gauge_state_get(s_state, sizeof(s_state)) != 0) {
     PBL_LOG_ERR("Failed to get fuel gauge state");
     return;
   }
@@ -110,7 +111,7 @@ static void prv_save_state(void) {
   }
 
   ret = settings_file_set(&file, &FUEL_GAUGE_STATE_KEY,
-                          sizeof(FUEL_GAUGE_STATE_KEY), buf, sizeof(buf));
+                          sizeof(FUEL_GAUGE_STATE_KEY), s_state, sizeof(s_state));
   settings_file_close(&file);
 
   if (ret != S_SUCCESS) {
@@ -313,9 +314,8 @@ void battery_state_init(void) {
 
 #ifndef RECOVERY_FW
   {
-    uint8_t saved_state[nrf_fuel_gauge_state_size];
-    if (prv_load_state(saved_state, sizeof(saved_state))) {
-      parameters.state = saved_state;
+    if (prv_load_state()) {
+      parameters.state = s_state;
       ret = nrf_fuel_gauge_init(&parameters, NULL);
       if (ret == 0) {
         PBL_LOG_INFO("Fuel gauge state restored from flash");
