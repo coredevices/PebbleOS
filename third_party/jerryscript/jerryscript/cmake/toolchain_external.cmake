@@ -1,9 +1,0 @@
-# SPDX-FileCopyrightText: 2015 Samsung Electronics Co., Ltd.
-# SPDX-License-Identifier: Apache-2.0
-
-include(CMakeForceCompiler)
-
-set(CMAKE_SYSTEM_NAME EXTERNAL)
-set(CMAKE_SYSTEM_PROCESSOR "${EXTERNAL_CMAKE_SYSTEM_PROCESSOR}")
-
-CMAKE_FORCE_C_COMPILER(${EXTERNAL_CMAKE_C_COMPILER} ${EXTERNAL_CMAKE_C_COMPILER_ID})

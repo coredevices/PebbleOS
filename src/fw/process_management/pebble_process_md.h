@@ -77,11 +77,11 @@ typedef struct PebbleProcessMd {
   //! This process has a sister worker process in flash.
   bool has_worker;
 
-  //! Process is allowed to call RockyJS APIs
-  bool is_rocky_app;
-  
   //! Process is allowed to call Moddable APIs
   bool is_moddable_app;
+
+  //! Deprecated: Process was built as a RockyJS app (no longer supported)
+  bool is_rocky_app;
 
   //! Bits of the sdk_platform as they were stored in the binary, or 0 if undefined
   uint16_t stored_sdk_platform;
@@ -174,9 +174,9 @@ bool process_metadata_flags_allow_js(PebbleProcessInfoFlags flags);
 
 bool process_metadata_flags_has_worker(PebbleProcessInfoFlags flags);
 
-bool process_metadata_flags_rocky_app(PebbleProcessInfoFlags flags);
-
 bool process_metadata_flags_moddable_app(PebbleProcessInfoFlags flags);
+
+bool process_metadata_flags_rocky_app(PebbleProcessInfoFlags flags);
 
 uint16_t process_metadata_flags_stored_sdk_platform(PebbleProcessInfoFlags flags);
 

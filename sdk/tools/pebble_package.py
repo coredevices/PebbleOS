@@ -61,25 +61,6 @@ class PebblePackage(object):
             zip_file.extractall(package_path)
 
 
-class RockyPackage(PebblePackage):
-    def __init__(self, package_filename):
-        super(RockyPackage, self).__init__(package_filename)
-
-    def add_files(self, rockyjs, binaries, resources, pkjs, platforms):
-        for platform in platforms:
-            self.add_file(os.path.join(platform, rockyjs[platform]), rockyjs[platform])
-            self.add_file(
-                os.path.join(platform, binaries[platform]), binaries[platform]
-            )
-            self.add_file(
-                os.path.join(platform, resources[platform]), resources[platform]
-            )
-        self.add_file(pkjs, pkjs)
-
-    def write_manifest(self):
-        pass
-
-
 class LibraryPackage(PebblePackage):
     def __init__(self, package_filename="dist.zip"):
         super(LibraryPackage, self).__init__(package_filename)

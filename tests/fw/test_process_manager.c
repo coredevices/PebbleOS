@@ -3,7 +3,6 @@
 
 #include "clar.h"
 
-#include "applib/rockyjs/rocky_res.h"
 #include "process_management/process_manager.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_info.h"
@@ -169,11 +168,6 @@ int process_metadata_get_res_bank_num(const PebbleProcessMd *md) {
   return s_process_metadata_get_res_bank_num__result;
 }
 
-static RockyResourceValidation s_rocky_app_validate_resources__result;
-RockyResourceValidation rocky_app_validate_resources(const PebbleProcessMd *md) {
-  return s_rocky_app_validate_resources__result;
-}
-
 static PebbleEvent* s_event_put__event;
 void event_put(PebbleEvent* event) {
   s_event_put__event = event;
@@ -188,7 +182,6 @@ void event_reset_from_process_queue(PebbleTask task) { cl_fail("unexpected"); }
 void test_process_manager__initialize(void) {
   s_app_install_get_md__result = NULL;
   s_process_metadata_get_res_bank_num__result = 123;
-  s_rocky_app_validate_resources__result = RockyResourceValidation_NotRocky;
   s_app_manager_launch_new_app__callcount = 0;
   s_app_manager_launch_new_app__config = (__typeof__(s_app_manager_launch_new_app__config)){};
   s_event_put__event = NULL;
@@ -201,25 +194,3 @@ void test_process_manager__check_SDK_compatible(void) {
   }
 }
 
-void test_process_manager__launch_valid_rocky_app(void) {
-  s_app_install_get_md__result = &(PebbleProcessMd){.is_rocky_app = true};
-  s_rocky_app_validate_resources__result = RockyResourceValidation_Valid;
-  process_manager_launch_process(&(ProcessLaunchConfig){.id=1});
-
-  // app was launched, no events (especially no fetch event) on the queue
-  cl_assert_equal_b(1, s_app_manager_launch_new_app__callcount);
-  cl_assert_equal_p(s_app_install_get_md__result,
-                    s_app_manager_launch_new_app__config.md);
-  cl_assert(s_event_put__event == NULL);
-}
-
-void test_process_manager__launch_invalid_rocky_app(void) {
-  s_app_install_get_md__result = &(PebbleProcessMd){.is_rocky_app = true};
-  s_rocky_app_validate_resources__result = RockyResourceValidation_Invalid;
-  process_manager_launch_process(&(ProcessLaunchConfig){.id=1});
-
-  // app wasn't launched, instead we see a fetch request
-  cl_assert_equal_b(0, s_app_manager_launch_new_app__callcount);
-  cl_assert(s_event_put__event != NULL);
-  cl_assert_equal_i(PEBBLE_APP_FETCH_REQUEST_EVENT, s_event_put__event->type);
-}
