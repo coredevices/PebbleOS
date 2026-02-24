@@ -81,13 +81,7 @@ void uart_write_byte(UARTDevice *dev, uint8_t data) {
 }
 
 uint8_t uart_read_byte(UARTDevice *dev) {
-  HAL_StatusTypeDef ret;
-  uint8_t data;
-
-  ret = HAL_UART_Receive(&dev->state->huart, &data, 1, HAL_MAX_DELAY);
-  // PBL_ASSERTN(ret == HAL_OK);
-
-  return data;
+  return __HAL_UART_GETC(&dev->state->huart);
 }
 
 bool uart_is_rx_ready(UARTDevice *dev) {
