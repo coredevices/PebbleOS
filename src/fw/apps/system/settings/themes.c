@@ -101,9 +101,9 @@ static void prv_option_menu_selection_will_change(OptionMenu *option_menu,
   }
   GColor color = s_color_definitions[new_row].color;
   if (color.argb != GColorClear.argb) {
-    option_menu_set_highlight_colors(option_menu, color, GColorWhite);
+    option_menu_set_highlight_colors(option_menu, color, gcolor_legible_over(color));
   } else {
-    option_menu_set_highlight_colors(option_menu, DEFAULT_THEME_HIGHLIGHT_COLOR, GColorWhite);
+    option_menu_set_highlight_colors(option_menu, DEFAULT_THEME_HIGHLIGHT_COLOR, gcolor_legible_over(DEFAULT_THEME_HIGHLIGHT_COLOR));
   }
 }
 
@@ -127,9 +127,11 @@ static OptionMenu *prv_push_color_menu(void) {
 
   if (option_menu) {
     if (selected == 0) {
-      option_menu_set_highlight_colors(option_menu, DEFAULT_THEME_HIGHLIGHT_COLOR, GColorWhite);
+      option_menu_set_highlight_colors(option_menu, DEFAULT_THEME_HIGHLIGHT_COLOR,
+                                       gcolor_legible_over(DEFAULT_THEME_HIGHLIGHT_COLOR));
     } else {
-      option_menu_set_highlight_colors(option_menu, s_color_definitions[selected].color, GColorWhite);
+      option_menu_set_highlight_colors(option_menu, s_color_definitions[selected].color,
+                                       gcolor_legible_over(s_color_definitions[selected].color));
     }
   }
 

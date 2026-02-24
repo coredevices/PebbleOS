@@ -12,6 +12,7 @@
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"
 #include "services/normal/timeline/attribute.h"
+#include "shell/prefs.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/string.h"
@@ -86,14 +87,27 @@ static void prv_structured_glance_icon_bitmap_processor_post_func(
 
 GColor launcher_app_glance_structured_get_highlight_color(
     LauncherAppGlanceStructured *structured_glance) {
+#if PBL_COLOR
+  if (structured_glance->glance.is_highlighted) {
+    GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+    return gcolor_legible_over(highlight_bg);
+  } else {
+    return GColorBlack;
+  }
+#else
+  return structured_glance->glance.is_highlighted ? GColorWhite : GColorBlack;
+#endif
+}
+
+static GColor prv_get_icon_tint_color(LauncherAppGlanceStructured *structured_glance) {
+  // Icons should always be tinted black on color displays, white on B&W when highlighted
   return PBL_IF_COLOR_ELSE(GColorBlack,
                            structured_glance->glance.is_highlighted ? GColorWhite : GColorBlack);
 }
 
 void launcher_app_glance_structured_draw_icon(LauncherAppGlanceStructured *structured_glance,
                                               GContext *ctx, KinoReel *icon, GPoint origin) {
-  const GColor desired_tint_color =
-      launcher_app_glance_structured_get_highlight_color(structured_glance);
+  const GColor desired_tint_color = prv_get_icon_tint_color(structured_glance);
 
   GenericGlanceIconBitmapProcessor structured_glance_icon_bitmap_processor = {
     .bitmap_processor = {

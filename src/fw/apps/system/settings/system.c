@@ -299,7 +299,8 @@ static void prv_information_window_load(Window *window) {
     .draw_row = prv_information_draw_row_callback,
     .select_click = prv_information_select_callback,
   });
-  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_theme_highlight_color(), GColorWhite);
+  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
@@ -667,7 +668,8 @@ static void prv_debugging_window_load(Window *window) {
     .draw_row = prv_debugging_draw_row_callback,
     .select_click = prv_debugging_select_callback,
   });
-  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_theme_highlight_color(), GColorWhite);
+  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
@@ -1192,7 +1194,8 @@ static void prv_certification_window_load(Window *window) {
     .draw_row = prv_certification_draw_row_callback,
     .select_click = prv_certification_select_callback,
   });
-  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_theme_highlight_color(), GColorWhite);
+  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);

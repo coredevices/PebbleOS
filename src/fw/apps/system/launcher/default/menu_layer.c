@@ -200,9 +200,10 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 
   MenuLayer *menu_layer = &launcher_menu_layer->menu_layer;
   menu_layer_init(menu_layer, &menu_layer_frame);
+  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   menu_layer_set_highlight_colors(menu_layer,
-                                  shell_prefs_get_theme_highlight_color(),
-                                  PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+                                  highlight_bg,
+                                  gcolor_legible_over(highlight_bg));
   menu_layer_pad_bottom_enable(menu_layer, false);
   menu_layer_set_callbacks(menu_layer, launcher_menu_layer, &(MenuLayerCallbacks) {
     .get_num_rows = prv_menu_layer_get_num_rows,
