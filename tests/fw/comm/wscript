@@ -1,5 +1,4 @@
 from waftools.pebble_test import clar
-import waftools.ragel
 
 def build(bld):
     clar(bld,
