@@ -107,6 +107,66 @@
     },
     {
       "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_BLUETOOTH",
+      "file": "../third_party/resources/iconography/icons/25px_Connect_to_watch.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_NOTIFICATIONS",
+      "file": "../third_party/resources/iconography/icons/25px_SMS.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_VIBRATIONS",
+      "file": "../third_party/resources/iconography/icons/25px_Vibrating_watch.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_QUIET_TIME",
+      "file": "../third_party/resources/iconography/icons/25px_Sleep.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_TIMELINE",
+      "file": "../third_party/resources/iconography/icons/25px_Timeline_weather.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_QUICK_LAUNCH",
+      "file": "../third_party/resources/iconography/icons/25px_Rocket.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_DATE_TIME",
+      "file": "../third_party/resources/iconography/icons/25px_Calendar.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_DISPLAY",
+      "file": "../third_party/resources/iconography/icons/25px_Send_to_watch_unchecked.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_HEALTH",
+      "file": "../third_party/resources/iconography/icons/25px_Heart_empty.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_THEMES",
+      "file": "normal/base/images/Pebble_25x25_Paint_brush.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_BACKGROUND_APP",
+      "file": "../third_party/resources/iconography/icons/25px_Locker.svg"
+    },
+    {
+      "type": "pbi",
+      "name": "SETTINGS_MENU_ICON_SYSTEM",
+      "file": "../third_party/resources/iconography/icons/25px_About.svg"
+    },
+    {
+      "type": "pbi",
       "name": "SETTINGS_ICON_BLUETOOTH_ALT",
       "file": "normal/base/images/settings_icon_bluetooth_alt.png"
     },
