@@ -36,7 +36,7 @@ sudo apt update
 2. Install required dependencies
 
 ```shell
-sudo apt install clang gcc gcc-multilib git gettext librsvg2-bin python3-dev python3-venv iopenocd
+sudo apt install bison clang flex gcc gcc-multilib gperf git gettext libfreetype6-dev libglib2.0-dev libgtk-3-dev libncurses-dev librsvg2-bin make python3-dev python3-venv iopenocd
 ```
 
 ::::
