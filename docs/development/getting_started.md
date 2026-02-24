@@ -36,7 +36,7 @@ sudo apt update
 2. Install required dependencies
 
 ```shell
-sudo apt install clang gcc gcc-multilib git gettext python3-dev python3-venv openocd
+sudo apt install clang gcc gcc-multilib git gettext librsvg2-bin python3-dev python3-venv iopenocd
 ```
 
 ::::
@@ -49,7 +49,7 @@ sudo apt install clang gcc gcc-multilib git gettext python3-dev python3-venv ope
 2. Install dependencies:
 
 ```shell
-brew install python openocd
+brew install librsvg python openocd
 ```
 
 3. Link `brew` Python:
