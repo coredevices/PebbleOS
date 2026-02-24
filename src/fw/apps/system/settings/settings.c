@@ -14,13 +14,39 @@
 #include "services/common/i18n/i18n.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
+#include "util/size.h"
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
+
+// Icon resource IDs for each settings menu item (RESOURCE_ID_INVALID means no icon)
+static const uint32_t SETTINGS_MENU_ICON_RESOURCES[SettingsMenuItem_Count] = {
+  [SettingsMenuItemBluetooth] = RESOURCE_ID_SETTINGS_MENU_ICON_BLUETOOTH,
+  [SettingsMenuItemNotifications] = RESOURCE_ID_SETTINGS_MENU_ICON_NOTIFICATIONS,
+#if CAPABILITY_HAS_VIBE_SCORES
+  [SettingsMenuItemVibrations] = RESOURCE_ID_SETTINGS_MENU_ICON_VIBRATIONS,
+#endif
+  [SettingsMenuItemQuietTime] = RESOURCE_ID_SETTINGS_MENU_ICON_QUIET_TIME,
+#if CAPABILITY_HAS_TIMELINE_PEEK
+  [SettingsMenuItemTimeline] = RESOURCE_ID_SETTINGS_MENU_ICON_TIMELINE,
+#endif
+  [SettingsMenuItemQuickLaunch] = RESOURCE_ID_SETTINGS_MENU_ICON_QUICK_LAUNCH,
+  [SettingsMenuItemDateTime] = RESOURCE_ID_SETTINGS_MENU_ICON_DATE_TIME,
+  [SettingsMenuItemDisplay] = RESOURCE_ID_SETTINGS_MENU_ICON_DISPLAY,
+#if CAPABILITY_HAS_HEALTH_TRACKING
+  [SettingsMenuItemHealth] = RESOURCE_ID_SETTINGS_MENU_ICON_HEALTH,
+#endif
+#if PBL_COLOR
+  [SettingsMenuItemThemes] = RESOURCE_ID_SETTINGS_MENU_ICON_THEMES,
+#endif
+  [SettingsMenuItemActivity] = RESOURCE_ID_SETTINGS_MENU_ICON_BACKGROUND_APP,
+  [SettingsMenuItemSystem] = RESOURCE_ID_SETTINGS_MENU_ICON_SYSTEM,
+};
 
 typedef struct {
   Window window;
   StatusBarLayer status_layer;
   MenuLayer menu_layer;
+  GBitmap *icons[SettingsMenuItem_Count];
 } SettingsAppData;
 
 static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer,
@@ -45,7 +71,9 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer,
                                 shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
   menu_layer_set_scroll_vibe_on_blocked(&(data->menu_layer),
                                 shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
-  menu_cell_basic_draw(ctx, cell_layer, title, NULL, NULL);
+
+  GBitmap *icon = data->icons[cell_index->row];
+  menu_cell_basic_draw(ctx, cell_layer, title, NULL, icon);
 }
 
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {
@@ -74,6 +102,15 @@ static int16_t prv_get_separator_height_callback(MenuLayer *menu_layer,
 
 static void prv_window_load(Window *window) {
   SettingsAppData *data = window_get_user_data(window);
+
+  // Load icons
+  for (size_t i = 0; i < ARRAY_LENGTH(data->icons); i++) {
+    if (SETTINGS_MENU_ICON_RESOURCES[i] != RESOURCE_ID_INVALID) {
+      data->icons[i] = gbitmap_create_with_resource(SETTINGS_MENU_ICON_RESOURCES[i]);
+    } else {
+      data->icons[i] = NULL;
+    }
+  }
 
   // Create the status bar with title
   StatusBarLayer *status_layer = &data->status_layer;
@@ -116,6 +153,14 @@ static void prv_window_load(Window *window) {
 
 static void prv_window_unload(Window *window) {
   SettingsAppData *data = window_get_user_data(window);
+
+  // Free icons
+  for (size_t i = 0; i < ARRAY_LENGTH(data->icons); i++) {
+    if (data->icons[i]) {
+      gbitmap_destroy(data->icons[i]);
+    }
+  }
+
   status_bar_layer_deinit(&data->status_layer);
   menu_layer_deinit(&data->menu_layer);
   app_free(data);
