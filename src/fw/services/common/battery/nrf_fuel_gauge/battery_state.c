@@ -63,7 +63,7 @@ static RtcTicks s_last_log;
 #ifndef RECOVERY_FW
 #define FUEL_GAUGE_SETTINGS_FILE_NAME "fgs"
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
-#define FUEL_GAUGE_SETTINGS_MAX_SIZE 2048
+#define FUEL_GAUGE_SETTINGS_MAX_SIZE 512
 
 static const uint32_t FUEL_GAUGE_STATE_KEY = 1;
 static uint32_t s_save_counter;
