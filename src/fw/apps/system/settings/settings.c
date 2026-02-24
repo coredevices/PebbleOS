@@ -126,7 +126,7 @@ static void prv_window_load(Window *window) {
   // Create the menu
   GRect bounds = grect_inset(data->window.layer.bounds, (GEdgeInsets) {
     .top = STATUS_BAR_LAYER_HEIGHT,
-    .bottom = PBL_IF_RECT_ELSE(0, STATUS_BAR_LAYER_HEIGHT),
+    .bottom = 0,
   });
 #if PBL_ROUND
   bounds = grect_inset_internal(bounds, 0,
