@@ -216,7 +216,7 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 #include "stubs_workout_service.h"
 #include "stubs_workout_utils.h"
 
-GColor shell_prefs_get_apps_menu_highlight_color(void) {
+GColor shell_prefs_get_theme_highlight_color(void) {
   return GColorWhite;
 }
 

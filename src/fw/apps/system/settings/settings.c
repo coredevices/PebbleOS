@@ -63,7 +63,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer,
   const char *category_title = settings_menu_get_submodule_info(cell_index->row)->name;
   const char *title = i18n_get(category_title, data);
   menu_layer_set_highlight_colors(&(data->menu_layer),
-                                shell_prefs_get_settings_menu_highlight_color(),
+                                shell_prefs_get_theme_highlight_color(),
                                 GColorBlack);
   menu_layer_set_scroll_wrap_around(&(data->menu_layer),
                                 shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -141,7 +141,7 @@ static void prv_window_load(Window *window) {
     .get_separator_height = prv_get_separator_height_callback
   });
   menu_layer_set_highlight_colors(menu_layer,
-                                  shell_prefs_get_settings_menu_highlight_color(),
+                                  shell_prefs_get_theme_highlight_color(),
                                   GColorBlack);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());

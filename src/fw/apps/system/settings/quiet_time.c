@@ -196,7 +196,7 @@ static void prv_scheduled_dnd_menu_push(DoNotDisturbScheduleType type,
                                         SettingsQuietTimeData *data) {
   data->action_menu = (ActionMenuConfig) {
     .context = data,
-    .colors.background = shell_prefs_get_settings_menu_highlight_color(),
+    .colors.background = shell_prefs_get_theme_highlight_color(),
     .did_close = prv_scheduled_dnd_menu_cleanup,
   };
 

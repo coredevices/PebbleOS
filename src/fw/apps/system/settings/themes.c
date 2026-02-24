@@ -86,9 +86,8 @@ static void prv_color_menu_select(OptionMenu *option_menu, int selection, void *
     color = s_color_definitions[selection].color;
   }
 
-  /* Set the same color for both apps and settings menus */
-  shell_prefs_set_apps_menu_highlight_color(color);
-  shell_prefs_set_settings_menu_highlight_color(color);
+  /* Set the theme highlight color */
+  shell_prefs_set_theme_highlight_color(color);
 
   app_window_stack_remove(&option_menu->window, true /* animated */);
 }
@@ -110,7 +109,7 @@ static void prv_option_menu_selection_will_change(OptionMenu *option_menu,
 
 static OptionMenu *prv_push_color_menu(void) {
   const char *title = i18n_noop("Accent Color");
-  int selected = prv_color_to_index(shell_prefs_get_apps_menu_highlight_color(), DEFAULT_THEME_HIGHLIGHT_COLOR);
+  int selected = prv_color_to_index(shell_prefs_get_theme_highlight_color(), DEFAULT_THEME_HIGHLIGHT_COLOR);
   const char** color_names = prv_get_color_names(false);
   const OptionMenuCallbacks callbacks = {
     .select = prv_color_menu_select,

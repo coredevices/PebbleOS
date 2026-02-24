@@ -142,11 +142,8 @@ bool display_orientation_is_left(void);
 void display_orientation_set_left(bool left);
 #endif
 
-GColor shell_prefs_get_settings_menu_highlight_color(void);
-void shell_prefs_set_settings_menu_highlight_color(GColor color);
-
-GColor shell_prefs_get_apps_menu_highlight_color(void);
-void shell_prefs_set_apps_menu_highlight_color(GColor color);
+GColor shell_prefs_get_theme_highlight_color(void);
+void shell_prefs_set_theme_highlight_color(GColor color);
 
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void);
 void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable);

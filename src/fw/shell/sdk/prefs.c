@@ -278,19 +278,11 @@ UnitsDistance shell_prefs_get_units_distance(void) {
 
 #endif
 
-GColor shell_prefs_get_settings_menu_highlight_color(void) {
-  return PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack);
-}
-
-void shell_prefs_set_settings_menu_highlight_color(GColor color) {
-  // Not used in SDK shell
-}
-
-GColor shell_prefs_get_apps_menu_highlight_color(void) {
+GColor shell_prefs_get_theme_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
 }
 
-void shell_prefs_set_apps_menu_highlight_color(GColor color) {
+void shell_prefs_set_theme_highlight_color(GColor color) {
   // Not used in SDK shell
 }
 
