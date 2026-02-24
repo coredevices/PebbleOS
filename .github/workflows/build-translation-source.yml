@@ -16,7 +16,7 @@ jobs:
       BOARD_NAME: "asterix"
 
     container:
-      image: ghcr.io/pebble-dev/pebbleos-docker:v2
+      image: ghcr.io/coredevices/pebbleos-docker:v3
 
     steps:
       - name: Mark Github workspace as safe
