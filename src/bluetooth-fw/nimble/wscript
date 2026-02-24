@@ -16,6 +16,6 @@ def build(bld):
           'nimble',
           'freertos',
           'fw_includes',
-          'root_includes',
+          'pbl_includes',
         ],
     )

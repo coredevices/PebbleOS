@@ -1,6 +1,0 @@
-def build(bld):
-    bld(export_includes=['.'],
-        use=['libc_includes', 'libutil_includes'],
-        name='root_includes')
-
-# vim:filetype=python

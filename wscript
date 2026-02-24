@@ -617,7 +617,7 @@ def build(bld):
     bld.pbl_build_start_time = datetime.datetime.utcnow()
     bld.add_post_fun(stop_build_timer)
 
-    bld(export_includes=['include'], name='pbl_include')
+    bld(export_includes=['include'], name='pbl_includes')
 
     if bld.variant in ('test', 'applib'):
         bld.set_env(bld.all_envs['local'])
@@ -656,7 +656,6 @@ def build(bld):
         bld.recurse('src/libutil')
         bld.recurse('src/fw')
         bld.recurse('third_party/nanopb')
-        bld.recurse('src/include')
         bld.recurse('applib-targets')
         return
 
@@ -669,7 +668,6 @@ def build(bld):
         bld.env.append_value('DEFINES', 'STATIONARY_MODE')
 
     if bld.variant == 'test':
-        bld.recurse('src/include')
         bld.recurse('third_party/jerryscript')
         bld.recurse('third_party/nanopb')
         bld.recurse('src/libbtutil')
@@ -683,7 +681,6 @@ def build(bld):
         bld.recurse('stored_apps')
 
     bld.recurse('third_party')
-    bld.recurse('src/include')
     bld.recurse('src/libbtutil')
     bld.recurse('src/bluetooth-fw')
     bld.recurse('src/libc')

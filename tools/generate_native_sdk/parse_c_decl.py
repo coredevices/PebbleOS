@@ -218,7 +218,7 @@ def parse_file(
 
     args = [
         "-I%s/core" % src_dir,
-        "-I%s/include" % src_dir,
+        "-I%s/include" % root_dir,
         "-I%s/fw" % src_dir,
         "-I%s/fw/applib/vendor/uPNG" % src_dir,
         "-I%s/fw/applib/vendor/tinflate" % src_dir,
@@ -228,7 +228,6 @@ def parse_file(
         "-I%s/libutil/includes" % src_dir,
         "-I%s/libc/include" % src_dir,
         "-I%s/../build/src/fw" % src_dir,
-        "-I%s/include" % src_dir,
         "-DSDK",
         "-fno-builtin-itoa",
     ]

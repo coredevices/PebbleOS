@@ -40,7 +40,7 @@ def build(bld):
                 "../../src/fw/applib/vendor/uPNG",
                 "../../src/fw/applib/vendor/tinflate",
                 "../../tests/overrides/default/",
-                "../../src/include",
+                "../../include",
                 "../../src/fw",
                 "../../src/libutil/includes",
                 "../../src/fw/util/time",
@@ -54,7 +54,7 @@ def build(bld):
     # We are overriding the gcc toolchain include/time.h with our own
     pdc2png_env.CFLAGS.append('-D_TIME_H_')  # just to check/force our version of <time.h>
     pdc2png_env.CFLAGS.append('-I' + bld.path.abspath() + '/../src/fw/util/time')
-    pdc2png_env.CFLAGS.append('-I' + bld.path.abspath() + '/src/include')
+    pdc2png_env.CFLAGS.append('-I' + bld.path.abspath() + '/include')
 
     pdc2png_env.CFLAGS.append('-Wno-gnu-variable-sized-type-not-at-end')
 

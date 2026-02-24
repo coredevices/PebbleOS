@@ -188,7 +188,7 @@ if bld.is_obelix():
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'driver_gpio',
             'hal_sifli',
         ],
@@ -203,7 +203,7 @@ if bld.capability('HAS_ALS_OPT3001'):
         use=[
             'driver_i2c',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif bld.capability('HAS_ALS_W1160'):
@@ -215,7 +215,7 @@ elif bld.capability('HAS_ALS_W1160'):
         use=[
             'driver_i2c',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif mcu_family in ('STM32F2', 'STM32F4'):
@@ -228,7 +228,7 @@ elif mcu_family in ('STM32F2', 'STM32F4'):
             'driver_gpio',
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -243,7 +243,7 @@ if mcu_family in ('STM32F4',):
             'driver_gpio',
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -281,7 +281,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
             'driver_gpio',
             'driver_led_controller',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif mcu_family == 'NRF52840':
@@ -294,7 +294,7 @@ elif mcu_family == 'NRF52840':
             'driver_pwm',
             'driver_gpio',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif bld.is_obelix() or bld.is_getafix():
@@ -305,7 +305,7 @@ elif bld.is_obelix() or bld.is_getafix():
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'driver_led_controller',
         ],
     )
@@ -323,7 +323,7 @@ if bld.env.QEMU:
             'driver_qemu_serial',
             'driver_qemu_settings',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -336,7 +336,7 @@ elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 else:
@@ -353,7 +353,7 @@ else:
             'driver_periph_config',
             'driver_pmic',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -369,7 +369,7 @@ if bld.is_snowy_compatible() and not bld.env.QEMU:
             'driver_exti',
             'driver_rtc',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -424,7 +424,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
             'driver_timer',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -439,7 +439,7 @@ elif mcu_family == 'NRF52840':
             'driver_exti',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )
@@ -468,7 +468,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -485,7 +485,7 @@ if bld.is_silk():
             'driver_periph_config',
             'driver_spi',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -506,7 +506,7 @@ elif bld.is_snowy_compatible():
             'driver_spi',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -521,7 +521,7 @@ elif bld.is_asterix():
             'driver_gpio',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )
@@ -559,7 +559,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
             'driver_periph_config',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -572,7 +572,7 @@ elif mcu_family == 'NRF52840':
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )
@@ -607,7 +607,7 @@ if bld.is_silk():
             'driver_watchdog',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -629,7 +629,7 @@ elif bld.is_snowy_compatible():
             'driver_watchdog',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -647,7 +647,7 @@ elif bld.is_asterix():
             'driver_qspi',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif bld.is_obelix() or bld.is_getafix():
@@ -664,7 +664,7 @@ elif bld.is_obelix() or bld.is_getafix():
             'driver_qspi',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 
@@ -677,7 +677,7 @@ if bld.is_snowy_compatible():
         use=[
             'driver_gpio',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -691,7 +691,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -703,7 +703,7 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )
@@ -726,7 +726,7 @@ if mcu_family == 'STM32F4':
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif mcu_family == 'STM32F2':
@@ -737,7 +737,7 @@ elif mcu_family == 'STM32F2':
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif mcu_family in ('NRF52840', 'SF32LB52'):
@@ -793,7 +793,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
             'driver_rtc',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -808,7 +808,7 @@ elif mcu_family == 'NRF52840':
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )
@@ -835,7 +835,7 @@ if bld.env.QEMU:
         use=[
             'driver_qemu_serial',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 
@@ -848,7 +848,7 @@ if bld.env.QEMU:
             use=[
                 'driver_qemu_serial',
                 'fw_includes',
-                'root_includes',
+                'pbl_includes',
             ],
         )
 
@@ -865,7 +865,7 @@ if bld.env.BOARD == "v2_0":
             'driver_periph_config',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -899,7 +899,7 @@ if bld.env.QEMU:
         use=[
             'driver_qemu_serial',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 
@@ -915,7 +915,7 @@ if bld.is_snowy_compatible() or bld.env.BOARD == 'silk_flint':
             'driver_i2c',
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -929,7 +929,7 @@ if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
         use=[
             'driver_i2c',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 
@@ -990,7 +990,7 @@ if bld.is_snowy_compatible():
             'driver_periph_config',
             'driver_pmic',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'freertos',
             'stm32_stdlib',
         ],
@@ -1007,7 +1007,7 @@ elif bld.is_silk():
             'driver_periph_config',
             'driver_pmic',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'freertos',
             'stm32_stdlib',
         ],
@@ -1020,7 +1020,7 @@ elif bld.is_asterix():
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'freertos',
             'hal_nordic',
         ],
@@ -1033,7 +1033,7 @@ elif bld.is_obelix() or bld.is_getafix():
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_sifli',
         ],
     )
@@ -1049,7 +1049,7 @@ if mcu_family in ('STM32F2', 'STM32F4', 'NRF52840', 'SF32LB52'):
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1062,7 +1062,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1087,7 +1087,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1115,7 +1115,7 @@ if bld.is_snowy_compatible():
             'driver_periph_config',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1129,7 +1129,7 @@ elif bld.is_silk():
             'driver_gpio',
             'driver_i2c',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
@@ -1141,7 +1141,7 @@ elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
         use=[
             'driver_i2c',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 
@@ -1156,9 +1156,9 @@ if bld.env.QEMU:
             'driver_gpio',
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 
@@ -1170,7 +1170,7 @@ if bld.env.QEMU:
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1185,7 +1185,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
             'driver_gpio',
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ]
     )
@@ -1197,7 +1197,7 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ]
     )
@@ -1224,7 +1224,7 @@ if 'STM32F412xG' in bld.env.DEFINES:
             'driver_periph_config',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1237,7 +1237,7 @@ elif mcu_family == 'NRF52840':
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )
@@ -1249,7 +1249,7 @@ elif mcu_family == 'SF32LB52':
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_sifli',
         ],
     )
@@ -1265,7 +1265,7 @@ if 'STM32F412xG' in bld.env.DEFINES:
             'driver_gpio',
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ]
     )
@@ -1280,7 +1280,7 @@ elif mcu_family in ('STM32F2', 'STM32F4'):
             'driver_gpio',
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ]
     )
@@ -1295,7 +1295,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         use=[
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1336,7 +1336,7 @@ if mcu_family == 'STM32F2':
             'driver_pwr',
             'driver_periph_config',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1352,7 +1352,7 @@ elif mcu_family in ('STM32F4',):
             'driver_clocksource',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1365,7 +1365,7 @@ elif mcu_family == 'NRF52840':
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 elif mcu_family == 'SF32LB52':
@@ -1377,7 +1377,7 @@ elif mcu_family == 'SF32LB52':
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_sifli',
         ],
     )
@@ -1391,7 +1391,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1416,7 +1416,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1433,7 +1433,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
             'driver_watchdog',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1447,7 +1447,7 @@ elif mcu_family == 'NRF52840':
             'driver_watchdog',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )
@@ -1461,7 +1461,7 @@ elif mcu_family == 'SF32LB52':
             'driver_watchdog',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 
@@ -1473,7 +1473,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1494,7 +1494,7 @@ if bld.capability('HAS_TOUCHSCREEN'):
                 'cst816_fw',
                 'freertos',
                 'fw_includes',
-                'root_includes',
+                'pbl_includes',
                 'driver_i2c',
                 'driver_gpio',
             ],
@@ -1511,7 +1511,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
             'driver_gpio',
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1524,7 +1524,7 @@ elif mcu_family == 'NRF52840':
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )
@@ -1537,7 +1537,7 @@ elif mcu_family == 'SF32LB52':
         use=[
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_sifli',
         ],
     )
@@ -1553,7 +1553,7 @@ if bld.capability('HAS_VIBE_DRV2604'):
             'driver_periph_config',
             'driver_i2c'
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 if bld.capability('HAS_VIBE_AW86225'):
@@ -1592,7 +1592,7 @@ elif mcu_family in ('STM32F2', 'STM32F4'):
             'driver_pwm'
             'freertos',
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
         ],
     )
 
@@ -1604,7 +1604,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'stm32_stdlib',
         ],
     )
@@ -1616,7 +1616,7 @@ elif mcu_family == 'NRF52840':
         ],
         use=[
             'fw_includes',
-            'root_includes',
+            'pbl_includes',
             'hal_nordic',
         ],
     )

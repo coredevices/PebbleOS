@@ -11,7 +11,7 @@ def build(bld):
             'fw_includes',
             'freertos_includes',
             'bt_driver',
-            'root_includes',
+            'pbl_includes',
             'speex_includes',
         ]
 

@@ -216,10 +216,12 @@ def build(bld):
         bld.path.parent.find_node('tools/generate_native_sdk/generate_pebble_native_sdk_files.py'))
     export_symbols = bld.path.parent.find_node('tools/generate_native_sdk/exported_symbols.json')
     source_dir = bld.path.parent.find_node('src')
+    top_dir = bld.path.parent
     output_source_dir = source_dir.get_bld()
     with open(export_symbols.abspath()) as f:
         native_generator_sources = (
-            [source_dir.find_node(str(header)) for header in json.load(f)['files']])
+            [source_dir.find_node(str(header)) or top_dir.find_node(str(header))
+             for header in json.load(f)['files']])
     native_generator_sources.append(export_symbols)
     native_generator_targets = [bld.path.parent.make_node('src/fw/pebble.auto.c').get_bld(),
                                 platform_folder_node.make_node('include/pebble.h'),
