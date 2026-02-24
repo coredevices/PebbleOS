@@ -73,7 +73,7 @@ static SettingsCallbacks *prv_get_current_callbacks(SettingsData *data) {
 
 static void prv_set_sub_menu_colors(GContext *ctx, const Layer *cell_layer, bool highlight) {
   if (highlight) {
-    graphics_context_set_fill_color(ctx, shell_prefs_get_settings_menu_highlight_color());
+    graphics_context_set_fill_color(ctx, shell_prefs_get_theme_highlight_color());
     graphics_context_set_text_color(ctx, GColorWhite);
   } else {
     graphics_context_set_fill_color(ctx, GColorWhite);
@@ -193,7 +193,7 @@ static void prv_settings_window_load(Window *window) {
     .selection_will_change = prv_selection_will_change_callback,
   });
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_settings_menu_highlight_color(), GColorWhite);
+  menu_layer_set_highlight_colors(menu_layer, shell_prefs_get_theme_highlight_color(), GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);

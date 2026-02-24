@@ -118,7 +118,7 @@ static void prv_window_unload(Window *window) {
     .valid = true,
     .leave_time = rtc_get_ticks(),
     .draw_state.selection_vertical_range = launcher_selection_vertical_range,
-    .draw_state.selection_background_color = shell_prefs_get_apps_menu_highlight_color(),
+    .draw_state.selection_background_color = shell_prefs_get_theme_highlight_color(),
   };
   launcher_menu_layer_get_selection_state(&data->launcher_menu_layer,
                                           &s_launcher_app_persisted_data.selection_state);

@@ -223,12 +223,10 @@ static bool s_coredump_on_request_enabled = false;
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
-#define PREF_KEY_SETTINGS_MENU_HIGHLIGHT_COLOR "settingsMenuHighlightColor"
-#define PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR "appsMenuHighlightColor"
+#define PREF_KEY_THEME_HIGHLIGHT_COLOR "themeHighlightColor"
 
 
-static GColor s_settings_menu_highlight_color = GColorCobaltBlue;
-static GColor s_apps_menu_highlight_color = GColorVividCerulean;
+static GColor s_theme_highlight_color = GColorVividCerulean;
 
 #define PREF_KEY_MENU_SCROLL_WRAP_AROUND "menuScrollWrapAround"
 #define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR "menuScrollVibeBehavior"
@@ -638,32 +636,17 @@ static bool prv_is_valid_theme_color(GColor color) {
 }
 #endif
 
-static bool prv_set_s_settings_menu_highlight_color(GColor *color) {
+static bool prv_set_s_theme_highlight_color(GColor *color) {
 #if PBL_COLOR
   if (!prv_is_valid_theme_color(*color)) {
     PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
             color->argb);
-    s_settings_menu_highlight_color = GColorVividCerulean;
+    s_theme_highlight_color = GColorVividCerulean;
     return false;  // Reject invalid value
   }
-  s_settings_menu_highlight_color = *color;
+  s_theme_highlight_color = *color;
 #else
-  s_settings_menu_highlight_color = GColorBlack;
-#endif
-  return true;
-}
-
-static bool prv_set_s_apps_menu_highlight_color(GColor *color) {
-#if PBL_COLOR
-  if (!prv_is_valid_theme_color(*color)) {
-    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
-            color->argb);
-    s_apps_menu_highlight_color = GColorVividCerulean;
-    return false;  // Reject invalid value
-  }
-  s_apps_menu_highlight_color = *color;
-#else
-  s_apps_menu_highlight_color = GColorBlack;
+  s_theme_highlight_color = GColorBlack;
 #endif
   return true;
 }
@@ -1648,28 +1631,15 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 }
 #endif
 
-GColor shell_prefs_get_settings_menu_highlight_color(void){
+GColor shell_prefs_get_theme_highlight_color(void){
   #if !PBL_COLOR
     return GColorBlack;
   #endif
-  return s_settings_menu_highlight_color;
+  return s_theme_highlight_color;
 }
 
-void shell_prefs_set_settings_menu_highlight_color(GColor color) {
-  prv_pref_set(PREF_KEY_SETTINGS_MENU_HIGHLIGHT_COLOR, &color, sizeof(GColor));
-}
-
-
-
-GColor shell_prefs_get_apps_menu_highlight_color(void){
-  #if !PBL_COLOR
-    return GColorBlack;
-  #endif
-  return s_apps_menu_highlight_color;
-}
-
-void shell_prefs_set_apps_menu_highlight_color(GColor color) {
-  prv_pref_set(PREF_KEY_APPS_MENU_HIGHLIGHT_COLOR, &color, sizeof(GColor));
+void shell_prefs_set_theme_highlight_color(GColor color) {
+  prv_pref_set(PREF_KEY_THEME_HIGHLIGHT_COLOR, &color, sizeof(GColor));
 }
 
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
