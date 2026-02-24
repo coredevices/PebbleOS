@@ -68,7 +68,7 @@ jobs:
       - name: Check SPDX license headers
         run: |
           base="${{ github.event.pull_request.base.sha }}"
-          errors=0
+          failed_files=()
 
           # collect submodule paths to skip
           submodules=$(git config --file .gitmodules --get-regexp '\.path$' \
@@ -85,13 +85,17 @@ jobs:
 
             if ! head -10 "$file" | grep -q "SPDX-License-Identifier: Apache-2.0"; then
               echo "::error file=$file::Missing 'SPDX-License-Identifier: Apache-2.0' header"
-              errors=$((errors + 1))
+              failed_files+=("$file")
             fi
           done
 
-          if [ "$errors" -ne 0 ]; then
+          if [ ${#failed_files[@]} -ne 0 ]; then
             echo ""
-            echo "$errors file(s) missing Apache-2.0 SPDX license header."
+            echo "${#failed_files[@]} file(s) missing Apache-2.0 SPDX license header:"
+            for f in "${failed_files[@]}"; do
+              echo "  - $f"
+            done
+            echo ""
             echo "Expected within the first 10 lines:"
             echo "  /* SPDX-License-Identifier: Apache-2.0 */"
             exit 1
