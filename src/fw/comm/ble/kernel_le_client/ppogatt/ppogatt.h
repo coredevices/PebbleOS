@@ -44,9 +44,5 @@ void ppogatt_reset(struct Transport *transport);
 
 void ppogatt_destroy(void);
 
-//! Resets all active PPoGATT clients. Called when the phone explicitly requests
-//! PPoG session re-initialization (e.g. after the phone app has restarted).
-void ppogatt_reset_all(void);
-
 //! Interface for analytics
 void ppogatt_reset_disconnect_counter(void);

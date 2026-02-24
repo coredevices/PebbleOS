@@ -6,7 +6,6 @@
 #include "comm/ble/gap_le_connect_params.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/kernel_le_client/app_launch/app_launch.h"
-#include "comm/ble/kernel_le_client/ppogatt/ppogatt.h"
 #include "comm/bt_conn_mgr.h"
 #include "comm/bt_lock.h"
 #include "kernel/pbl_malloc.h"
@@ -110,8 +109,4 @@ unlock:
 
 void bt_driver_cb_pebble_pairing_service_handle_ios_app_termination_detected(void) {
   app_launch_trigger();
-}
-
-void bt_driver_cb_pebble_pairing_service_handle_ppog_reinit(void) {
-  ppogatt_reset_all();
 }

@@ -12,7 +12,6 @@
 // Note: UUID 4 was used by the 3.14-rc Android App for V0 of the Connection Param characteristic
 // but never shipped externally
 #define PEBBLE_BT_PAIRING_SERVICE_CONNECTION_PARAMETERS_UUID PEBBLE_BT_UUID_EXPAND(5)
-#define PEBBLE_BT_PAIRING_SERVICE_PPOG_REINIT_UUID PEBBLE_BT_UUID_EXPAND(6)
 
 typedef enum {
   PebblePairingServiceGATTError_UnknownCommandID =
@@ -227,8 +226,3 @@ extern void bt_driver_cb_pebble_pairing_service_handle_connection_parameter_writ
     const BTDeviceInternal *device,
     const PebblePairingServiceConnParamsWrite *conn_params,
     size_t conn_params_length);
-
-//! Indicate to the FW that the phone has requested a PPoG session re-initialization.
-//! This is used when the phone app has restarted and needs the watch to re-initialize
-//! the PPoG session.
-extern void bt_driver_cb_pebble_pairing_service_handle_ppog_reinit(void);
