@@ -5,3 +5,4 @@ cmake
 lcov
 node
 emscripten
+librsvg
