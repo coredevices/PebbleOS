@@ -37,12 +37,13 @@ OptionMenu *settings_option_menu_create(
   if (!option_menu) {
     return NULL;
   }
+  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   const OptionMenuConfig config = {
     .title = i18n_get(i18n_title_key, option_menu),
     .content_type = content_type,
     .choice = choice,
     .status_colors = { GColorWhite, GColorBlack },
-    .highlight_colors = { shell_prefs_get_theme_highlight_color(), GColorWhite },
+    .highlight_colors = { highlight_bg, gcolor_legible_over(highlight_bg) },
     .icons_enabled = icons_enabled,
   };
   option_menu_configure(option_menu, &config);
