@@ -165,8 +165,7 @@
               "addedRevision": "85"
             }
           ]
-        },
-        {
+        }, {
           "type": "group",
           "name": "Internationalization",
           "appOnly": true,

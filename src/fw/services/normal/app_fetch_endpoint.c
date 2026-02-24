@@ -6,7 +6,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "applib/rockyjs/rocky_res.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_info.h"
 #include "services/common/comm_session/session.h"
@@ -218,16 +217,9 @@ void prv_put_bytes_event_system_task_cb(void *data) {
     // signify in the app cache that the app binaries are now loaded
     status_t added = app_cache_add_entry(s_fetch_state.app_id, s_fetch_state.total_size);
     if (added == S_SUCCESS) {
-      const PebbleProcessMd *md = app_install_get_md(s_fetch_state.app_id, false);
-      if (rocky_app_validate_resources(md) == RockyResourceValidation_Invalid) {
-        PBL_LOG_ERR("Received app contains invalid JS bytecode");
-        prv_put_event_error(AppFetchResultIncompatibleJSFailure);
-      } else {
-        // Set prev_error as a Success.
-        s_fetch_state.prev_error = AppFetchResultSuccess;
-        prv_put_event_simple(AppFetchEventTypeFinish);
-      }
-      app_install_release_md(md);
+      // Set prev_error as a Success.
+      s_fetch_state.prev_error = AppFetchResultSuccess;
+      prv_put_event_simple(AppFetchEventTypeFinish);
     } else {
       PBL_LOG_ERR("Failed to insert into app cache: %"PRId32, added);
       prv_put_event_error(AppFetchResultGeneralFailure);

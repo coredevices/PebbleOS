@@ -7,7 +7,6 @@
 
 #include "applib/app_comm.h"
 #include "applib/graphics/framebuffer.h"
-#include "applib/rockyjs/rocky_res.h"
 #include "applib/ui/window_stack.h"
 #include "applib/ui/window_stack_private.h"
 #include "drivers/mpu.h"
@@ -275,10 +274,6 @@ void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
 }
 
 void sys_exit(int status) {
-}
-
-RockyResourceValidation rocky_app_validate_resources(const PebbleProcessMd *md) {
-  return RockyResourceValidation_NotRocky;
 }
 
 status_t app_cache_app_launched(AppInstallId id) {

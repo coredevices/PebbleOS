@@ -222,7 +222,6 @@ def parse_file(
         "-I%s/fw" % src_dir,
         "-I%s/fw/applib/vendor/uPNG" % src_dir,
         "-I%s/fw/applib/vendor/tinflate" % src_dir,
-        "-I%s/third_party/jerryscript/jerryscript/jerry-core" % root_dir,
         "-I%s/libbtutil/include" % src_dir,
         "-I%s/libos/include" % src_dir,
         "-I%s/libutil/includes" % src_dir,

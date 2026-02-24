@@ -29,7 +29,7 @@ typedef enum {
   PROCESS_INFO_ALLOW_JS = 1 << 3,
   //! Use to indicate the process should have a worker.bin installed as well.
   PROCESS_INFO_HAS_WORKER = 1 << 4,
-  //! True, if process uses RockyJS APIs
+  //! Deprecated: was RockyJS, kept for ABI compatibility (bit 5)
   PROCESS_INFO_ROCKY_APP = 1 << 5,
 
   //! Bitmask, to store compile time platform

@@ -172,12 +172,6 @@ void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, in
       break;
 
     // App Usage
-    case ANALYTICS_DEVICE_METRIC_APP_ROCKY_LAUNCH_COUNT:
-      MEMFAULT_METRIC_SET_UNSIGNED(app_rocky_launch_count, val);
-      break;
-    case ANALYTICS_DEVICE_METRIC_APP_ROCKY_CRASHED_COUNT:
-      MEMFAULT_METRIC_SET_UNSIGNED(app_rocky_crashed_count, val);
-      break;
     case ANALYTICS_DEVICE_METRIC_APP_USER_LAUNCH_COUNT:
       MEMFAULT_METRIC_SET_UNSIGNED(app_user_launch_count, val);
       break;

@@ -105,8 +105,6 @@ Version sys_get_current_app_sdk_version(void);
 PlatformType sys_get_current_app_sdk_platform(void);
 
 bool sys_get_current_app_is_js_allowed(void);
-bool sys_get_current_app_is_rocky_app(void);
-
 void sys_app_log(size_t length, void *log_buffer);
 
 void sys_event_service_client_subscribe(EventServiceInfo *handler);

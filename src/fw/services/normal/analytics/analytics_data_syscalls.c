@@ -37,7 +37,6 @@ DEFINE_SYSCALL(void, sys_analytics_stopwatch_stop, AnalyticsMetric metric) {
 static bool prv_is_event_allowed(const AnalyticsEventBlob *const event_blob) {
   switch (event_blob->event) {
     case AnalyticsEvent_AppOOMNative:
-    case AnalyticsEvent_AppOOMRocky:
       return true;
 
     default:

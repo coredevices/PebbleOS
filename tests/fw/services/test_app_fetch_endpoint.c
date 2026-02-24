@@ -3,7 +3,6 @@
 
 #include "clar.h"
 
-#include "applib/rockyjs/rocky_res.h"
 #include "services/common/comm_session/session.h"
 #include "services/normal/app_fetch_endpoint.h"
 #include "system/logging.h"
@@ -45,17 +44,6 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
 void app_storage_delete_bank(uint32_t bank) {
 }
 
-const PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
-  return NULL;
-}
-
-void app_install_release_md(const PebbleProcessMd *md) {
-}
-
-RockyResourceValidation s_rocky_app_validate_resources__result;
-RockyResourceValidation rocky_app_validate_resources(const PebbleProcessMd *md) {
-  return s_rocky_app_validate_resources__result;
-}
 
 typedef struct PACKED {
   uint16_t length;
@@ -165,21 +153,10 @@ static void prv_fetch_complete_app() {
   fake_system_task_callbacks_invoke_pending();
 }
 
-void test_app_fetch_endpoint__no_incompatible_js(void) {
-  s_rocky_app_validate_resources__result = RockyResourceValidation_Valid;
+void test_app_fetch_endpoint__fetch_complete(void) {
   prv_fetch_complete_app();
 
   const PebbleEvent e = fake_event_get_last();
   cl_assert_equal_i(PEBBLE_APP_FETCH_EVENT, e.type);
   cl_assert_equal_i(AppFetchEventTypeFinish, e.app_fetch.type);
-}
-
-void test_app_fetch_endpoint__incompatible_js(void) {
-  s_rocky_app_validate_resources__result = RockyResourceValidation_Invalid;
-  prv_fetch_complete_app();
-
-  const PebbleEvent e = fake_event_get_last();
-  cl_assert_equal_i(PEBBLE_APP_FETCH_EVENT, e.type);
-  cl_assert_equal_i(AppFetchEventTypeError, e.app_fetch.type);
-  cl_assert_equal_i(AppFetchResultIncompatibleJSFailure, e.app_fetch.error_code);
 }

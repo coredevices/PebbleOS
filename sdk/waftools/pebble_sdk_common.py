@@ -135,12 +135,6 @@ def build(bld):
             **bld.env.PLATFORM,
         )
 
-        # Locate Rocky JS tooling script
-        js_tooling_script = find_sdk_component(
-            bld, bld.env, "tools/generate_snapshot.js"
-        )
-        bld.env.JS_TOOLING_SCRIPT = js_tooling_script if js_tooling_script else None
-
     # bld.env is set back to a shallow copy of the original ConfigSet that was set when this
     # `build` method was invoked
     bld.env = cached_env
@@ -362,7 +356,7 @@ def _get_entry_point(ctx, js_type, waf_js_entry_point):
     Returns the appropriate JS entry point, extracted from a project's package.json file,
     wscript or common SDK default
     :param ctx: the BuildContext
-    :param js_type: type of JS build, pkjs or rockyjs
+    :param js_type: type of JS build, pkjs
     :param waf_js_entry_point: the JS entry point specified by waftools
     :return: the JS entry point for the bundled JS file
     """
@@ -373,9 +367,6 @@ def _get_entry_point(ctx, js_type, waf_js_entry_point):
                 fallback_entry_point = "src/pkjs/index.js"
             else:
                 fallback_entry_point = "src/js/app.js"
-        if js_type == "rockyjs":
-            fallback_entry_point = "src/rocky/index.js"
-
     project_info = ctx.env.PROJECT_INFO
 
     if not project_info.get("main"):
@@ -403,10 +394,6 @@ def pbl_bundle(self, *k, **kw):
     if kw.get("bin_type", "app") == "lib":
         kw["features"] = "headers js package"
     else:
-        if self.env.BUILD_TYPE == "rocky":
-            kw["js_entry_file"] = _get_entry_point(
-                self, "pkjs", kw.get("js_entry_file")
-            )
         kw["features"] = "js bundle"
     return self(*k, **kw)
 
@@ -425,7 +412,7 @@ def pbl_build(self, *k, **kw):
         target - the destination binary file for the compiled source
     :return: a task generator instance with keyword arguments specified
     """
-    valid_bin_types = ("app", "worker", "lib", "rocky")
+    valid_bin_types = ("app", "worker", "lib")
     bin_type = kw.get("bin_type", None)
     if bin_type not in valid_bin_types:
         self.fatal(
@@ -433,9 +420,7 @@ def pbl_build(self, *k, **kw):
             "Valid options are {}".format(valid_bin_types)
         )
 
-    if bin_type == "rocky":
-        kw["features"] = "c cprogram pebble_cprogram memory_usage"
-    elif bin_type in ("app", "worker"):
+    if bin_type in ("app", "worker"):
         kw["features"] = "c cprogram pebble_cprogram memory_usage"
         kw[bin_type] = kw["target"]
     elif bin_type == "lib":
@@ -452,24 +437,4 @@ def pbl_build(self, *k, **kw):
                 "app_resources.pbpack"
             )
         )
-    return self(*k, **kw)
-
-
-@conf
-def pbl_js_build(self, *k, **kw):
-    """
-    This method is bound to the build context and is called by specifying `bld.pbl_cross_compile()`.
-    When this method is invoked, we set the custom feature `rockyjs` to run, which handles
-    processing of JS files in preparation for Rocky.js bytecode compilation (this actually
-    happens during resource generation)
-    :param self: the BuildContext object
-    :param k: none expected
-    :param kw:
-        source - the source JS files that will eventually be compiled into bytecode
-        target - the destination JS file that will be specified as the source file for the
-        bytecode compilation process
-    :return: a task generator instance with keyword arguments specified
-    """
-    kw["js_entry_file"] = _get_entry_point(self, "rockyjs", kw.get("js_entry_file"))
-    kw["features"] = "rockyjs"
     return self(*k, **kw)

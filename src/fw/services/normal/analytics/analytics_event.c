@@ -54,7 +54,7 @@ static bool prv_send_uuid(AnalyticsEvent event_enum, const Uuid *uuid) {
 void analytics_event_app_oom(AnalyticsEvent type,
                              uint32_t requested_size, uint32_t total_size, uint32_t total_free,
                              uint32_t largest_free_block) {
-  PBL_ASSERTN(type == AnalyticsEvent_AppOOMNative || type == AnalyticsEvent_AppOOMRocky);
+  PBL_ASSERTN(type == AnalyticsEvent_AppOOMNative);
 
   AnalyticsEventBlob event_blob = {
     .event = type,
@@ -71,9 +71,8 @@ void analytics_event_app_oom(AnalyticsEvent type,
   }
 
 #if LOG_DOMAIN_ANALYTICS
-  ANALYTICS_LOG_DEBUG("app oom: is_rocky=%u, req_sz=%"PRIu32" tot_sz=%"PRIu32" free=%"PRIu32
+  ANALYTICS_LOG_DEBUG("app oom: req_sz=%"PRIu32" tot_sz=%"PRIu32" free=%"PRIu32
                       " max_free=%"PRIu32,
-                      (type == AnalyticsEvent_AppOOMRocky),
                       requested_size, total_size, total_free, largest_free_block);
 #endif
 
@@ -496,9 +495,9 @@ void analytics_event_health_insight_response(time_t timestamp, ActivityInsightTy
 // ------------------------------------------------------------------------------------------
 // Log an App Crash event
 void analytics_event_app_crash(const Uuid *uuid, uint32_t pc, uint32_t lr,
-                               const uint8_t *build_id, bool is_rocky_app) {
+                               const uint8_t *build_id) {
   AnalyticsEventBlob event_blob = {
-    .event = (is_rocky_app ? AnalyticsEvent_RockyAppCrash : AnalyticsEvent_AppCrash),
+    .event = AnalyticsEvent_AppCrash,
     .app_crash_report = {
       .uuid = *uuid,
       .pc = pc,

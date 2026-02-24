@@ -236,7 +236,7 @@ FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
 }
 
 void analytics_event_app_crash(const Uuid *uuid, uint32_t pc, uint32_t lr,
-                               const uint8_t *build_id, bool is_rocky_app) {
+                               const uint8_t *build_id) {
 }
 
 void analytics_event_bt_chip_boot(uint8_t build_id[BUILD_ID_EXPECTED_LEN],

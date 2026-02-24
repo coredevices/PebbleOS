@@ -1,33 +1,12 @@
 def options(opt):
-    opt.add_option('--target', action='store',
-                   choices=['sdl', 'emscripten'],
-                   help='What backend we are compiling applib against (#rockyJS)')
+    pass
 
 
 def configure(conf):
-    if conf.options.target is None:
-        return
-    else:
-        conf.env.APPLIB_TARGET = conf.options.target
-        conf.recurse(conf.options.target)
+    pass
 
 
 def build(bld):
-    if bld.variant == 'test':
-        bld.recurse('emscripten')
-        return
-
-    if bld.env.APPLIB_TARGET is None:
-        bld(export_includes=[], name='target_includes')
-        return
-
-    bld.set_env(bld.all_envs['local'])
-
-    # time_t is defined in sys/types in newlib, and time.h on recent Linux
-    # so just force the defined type for testing time
-    bld.env.CFLAGS.append('-Dtime_t=__SYSCALL_SLONG_TYPE')
-
-    bld(export_includes=['overrides'], name='target_includes')
-    bld.recurse(bld.env.APPLIB_TARGET)
+    bld(export_includes=[], name='target_includes')
 
 # vim:filetype=python

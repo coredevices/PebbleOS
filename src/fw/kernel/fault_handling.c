@@ -59,7 +59,6 @@ typedef struct CrashInfo {
   uintptr_t pc;
   bool lr_known;
   bool pc_known;
-  bool is_rocky_app;
 } CrashInfo;
 
 CrashInfo make_crash_info_pc(uintptr_t pc) {
@@ -107,7 +106,7 @@ static void prv_log_app_lr_and_pc_system_task(void *data) {
   analytics_event_app_crash(&crash_info->app_uuid,
                             (crash_info->pc_known) ? crash_info->pc : 0,
                             (crash_info->lr_known) ? crash_info->lr : 0,
-                            crash_info->build_id, crash_info->is_rocky_app);
+                            crash_info->build_id);
 }
 
 //! Converts an address from an absolute address in our memory space to one that's relative to the start
@@ -126,7 +125,6 @@ static void setup_log_app_crash_info(CrashInfo crash_info) {
 
   const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
   s_current_app_crash_info.app_uuid = md->uuid;
-  s_current_app_crash_info.is_rocky_app = md->is_rocky_app;
 
   const uint8_t *build_id = process_metadata_get_build_id(md);
   if (build_id) {

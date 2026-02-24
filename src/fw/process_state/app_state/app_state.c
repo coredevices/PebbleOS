@@ -99,12 +99,10 @@ typedef struct {
   RecognizerList recognizer_list;
 #endif
 
-  //! Potentially un-aligned w.r.t. JerryScript's requirements:
-  uint8_t *rocky_runtime_context_buffer;
-  //! Aligned w.r.t. JerryScript's requirements, pointing into rocky_runtime_context_buffer.
-  RockyRuntimeContext *rocky_runtime_context;
+  uint8_t *js_runtime_context_buffer;
+  JsRuntimeContext *js_runtime_context;
 
-  RockyMemoryAPIContext *rocky_memory_api_context;
+  JsMemoryAPIContext *js_memory_api_context;
 
 #if CAPABILITY_HAS_APP_GLANCES
   AppGlance glance;
@@ -382,26 +380,26 @@ RecognizerList *app_state_get_recognizer_list(void) {
 }
 #endif
 
-RockyRuntimeContext *app_state_get_rocky_runtime_context(void) {
-  return s_app_state_ptr->rocky_runtime_context;
+JsRuntimeContext *app_state_get_js_runtime_context(void) {
+  return s_app_state_ptr->js_runtime_context;
 }
 
-uint8_t *app_state_get_rocky_runtime_context_buffer(void) {
-  return s_app_state_ptr->rocky_runtime_context_buffer;
+uint8_t *app_state_get_js_runtime_context_buffer(void) {
+  return s_app_state_ptr->js_runtime_context_buffer;
 }
 
-void app_state_set_rocky_runtime_context(uint8_t *unaligned_buffer,
-                                         RockyRuntimeContext *rocky_runtime_context) {
-  s_app_state_ptr->rocky_runtime_context_buffer = unaligned_buffer;
-  s_app_state_ptr->rocky_runtime_context = rocky_runtime_context;
+void app_state_set_js_runtime_context(uint8_t *unaligned_buffer,
+                                         JsRuntimeContext *js_runtime_context) {
+  s_app_state_ptr->js_runtime_context_buffer = unaligned_buffer;
+  s_app_state_ptr->js_runtime_context = js_runtime_context;
 }
 
-RockyMemoryAPIContext *app_state_get_rocky_memory_api_context(void) {
-  return s_app_state_ptr->rocky_memory_api_context;
+JsMemoryAPIContext *app_state_get_js_memory_api_context(void) {
+  return s_app_state_ptr->js_memory_api_context;
 }
 
-void app_state_set_rocky_memory_api_context(RockyMemoryAPIContext *context) {
-  s_app_state_ptr->rocky_memory_api_context = context;
+void app_state_set_js_memory_api_context(JsMemoryAPIContext *context) {
+  s_app_state_ptr->js_memory_api_context = context;
 }
 
 ApplibInternalEventsInfo *app_state_get_applib_internal_events_info(void) {

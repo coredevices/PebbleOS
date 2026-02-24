@@ -95,13 +95,7 @@ void test_analytics_event__analytics_event_app_crash(void) {
     },
   };
 
-  // Non-Rocky.js app:
-  analytics_event_app_crash(&app_uuid, pc, lr, build_id, false /* is_rocky_app */);
+  analytics_event_app_crash(&app_uuid, pc, lr, build_id);
   expected_blob.event = AnalyticsEvent_AppCrash;
-  cl_assert_equal_last_blob(expected_blob);
-
-  // Rocky.js app:
-  expected_blob.event = AnalyticsEvent_RockyAppCrash;
-  analytics_event_app_crash(&app_uuid, pc, lr, build_id, true /* is_rocky_app */);
   cl_assert_equal_last_blob(expected_blob);
 }

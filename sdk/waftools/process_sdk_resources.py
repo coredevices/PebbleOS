@@ -266,7 +266,7 @@ def generate_resources(bld, resource_source_path):
         published_media=published_media_json,
     )
 
-    if not bld.env.BUILD_TYPE or bld.env.BUILD_TYPE in ("app", "rocky", "moddable"):
+    if not bld.env.BUILD_TYPE or bld.env.BUILD_TYPE in ("app", "moddable"):
         # Create a resource pack for distribution with an application binary
         pbpack = bld_dir.make_node("app_resources.pbpack")
         bld(

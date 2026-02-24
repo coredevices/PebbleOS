@@ -64,8 +64,8 @@ typedef struct AppStateInitParams {
 
 typedef struct MemorySegment MemorySegment;
 
-typedef struct RockyRuntimeContext RockyRuntimeContext;
-typedef struct RockyMemoryAPIContext RockyMemoryAPIContext;
+typedef struct JsRuntimeContext JsRuntimeContext;
+typedef struct JsMemoryAPIContext JsMemoryAPIContext;
 
 //! Allocate memory in the process' address space for AppState data and
 //! perform initial configuration.
@@ -125,16 +125,16 @@ HealthServiceState *app_state_get_health_service_state(void);
 
 RecognizerList *app_state_get_recognizer_list(void);
 
-RockyRuntimeContext *app_state_get_rocky_runtime_context(void);
+JsRuntimeContext *app_state_get_js_runtime_context(void);
 
-uint8_t *app_state_get_rocky_runtime_context_buffer(void);
+uint8_t *app_state_get_js_runtime_context_buffer(void);
 
-void app_state_set_rocky_runtime_context(uint8_t *unaligned_buffer,
-                                         RockyRuntimeContext *rocky_runtime_context);
+void app_state_set_js_runtime_context(uint8_t *unaligned_buffer,
+                                         JsRuntimeContext *js_runtime_context);
 
-RockyMemoryAPIContext *app_state_get_rocky_memory_api_context(void);
+JsMemoryAPIContext *app_state_get_js_memory_api_context(void);
 
-void app_state_set_rocky_memory_api_context(RockyMemoryAPIContext *context);
+void app_state_set_js_memory_api_context(JsMemoryAPIContext *context);
 
 bool *app_state_get_framebuffer_render_pending();
 

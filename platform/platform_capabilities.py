@@ -11,8 +11,6 @@
 # Master key set. Any capabilities that are added to any platform have to be added here.
 # Once added, add the capability to ALL capability dictionaries with the appropriate value.
 
-JAVASCRIPT_BYTECODE_VERSION = 1
-
 master_capability_set = {
     "COMPOSITOR_USES_DMA",
     "HAS_ALS_OPT3001",
@@ -24,7 +22,6 @@ master_capability_set = {
     "HAS_GLYPH_BITMAP_CACHING",
     "HAS_HARDWARE_PANIC_SCREEN",
     "HAS_HEALTH_TRACKING",
-    "HAS_ROCKY_JS",
     "HAS_LAUNCHER4",
     "HAS_LED",
     "HAS_MAGNETOMETER",
@@ -69,7 +66,6 @@ board_capability_dicts = [
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
@@ -94,7 +90,6 @@ board_capability_dicts = [
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
@@ -122,7 +117,6 @@ board_capability_dicts = [
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
@@ -145,7 +139,6 @@ board_capability_dicts = [
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
@@ -168,7 +161,6 @@ board_capability_dicts = [
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
@@ -193,7 +185,6 @@ board_capability_dicts = [
             "HAS_APP_GLANCES",
             "HAS_BUILTIN_HRM",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
@@ -213,7 +204,6 @@ board_capability_dicts = [
         "capabilities": {
             "HAS_APP_GLANCES",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
@@ -237,7 +227,6 @@ board_capability_dicts = [
             "HAS_ALS_OPT3001",
             "HAS_APP_GLANCES",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
@@ -263,7 +252,6 @@ board_capability_dicts = [
         "capabilities": {
             "HAS_APP_GLANCES",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             "HAS_PMIC",
             "HAS_SDK_SHELL4",
@@ -295,7 +283,6 @@ board_capability_dicts = [
         "capabilities": {
             "HAS_APP_GLANCES",
             "HAS_HEALTH_TRACKING",
-            "HAS_ROCKY_JS",
             "HAS_LAUNCHER4",
             "HAS_PMIC",
             "HAS_SDK_SHELL4",
@@ -364,11 +351,6 @@ def get_capability_dict(ctx, board):
     # them here.
 
     if ctx.env.JS_ENGINE == "none":
-        capabilities_of_board.discard("HAS_ROCKY_JS")
-        capabilities_of_board.discard("HAS_MODDABLE_XS")
-    elif ctx.env.JS_ENGINE == "moddable":
-        capabilities_of_board.discard("HAS_ROCKY_JS")
-    elif ctx.env.JS_ENGINE == "rocky":
         capabilities_of_board.discard("HAS_MODDABLE_XS")
 
     # End overrides section
@@ -376,9 +358,5 @@ def get_capability_dict(ctx, board):
     false_capabilities = master_capability_set - capabilities_of_board
     cp_dict = {key: True for key in capabilities_of_board}
     cp_dict.update({key: False for key in false_capabilities})
-
-    # inject expected JS bytecode version
-    if cp_dict.get("HAS_ROCKY_JS", False):
-        cp_dict["JAVASCRIPT_BYTECODE_VERSION"] = JAVASCRIPT_BYTECODE_VERSION
 
     return cp_dict

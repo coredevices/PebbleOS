@@ -9,7 +9,6 @@
 #include "applib/app_logging.h"
 #include "applib/accel_service_private.h"
 #include "applib/platform.h"
-#include "applib/rockyjs/rocky_res.h"
 #include "applib/ui/dialogs/dialog.h"
 #include "applib/ui/dialogs/expandable_dialog.h"
 
@@ -233,12 +232,6 @@ static bool prv_needs_fetch(AppInstallId id, const PebbleProcessMd **md, bool is
 
   *md = app_install_get_md(id, is_worker);
 
-  if (!is_worker && rocky_app_validate_resources(*md) == RockyResourceValidation_Invalid) {
-    PBL_LOG_DBG("App has incompatible JavaScript bytecode");
-    //  TODO: do we need to purge the app cache here?
-    return true;
-  }
-
   return false;
 }
 
@@ -326,6 +319,32 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 
       return;
     }
+
+    // RockyJS is no longer supported. Show a dialog to the user and, if it's a watchface,
+    // revert to the default watchface so the user isn't stuck in the launcher.
+    if (md->is_rocky_app) {
+      PBL_LOG_WRN("Tried to launch an unsupported RockyJS app.");
+      AppInstallEntry entry;
+      if (app_install_get_entry_for_install_id(id, &entry) &&
+          app_install_entry_is_watchface(&entry)) {
+        watchface_set_default_install_id(INSTALL_ID_INVALID);
+        watchface_launch_default(NULL);
+      }
+
+      ExpandableDialog *expandable_dialog = expandable_dialog_create("Unsupported App");
+      Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
+      const char *error_text =
+          i18n_noop("This app uses RockyJS which is no longer supported.");
+      dialog_set_text(dialog, i18n_get(error_text, expandable_dialog));
+      dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
+      i18n_free(error_text, expandable_dialog);
+
+      WindowStack *window_stack = modal_manager_get_window_stack(ModalPriorityAlert);
+      expandable_dialog_push(expandable_dialog, window_stack);
+
+      app_install_release_md(md);
+      return;
+    }
   }
 #endif
 
@@ -347,15 +366,9 @@ static void prv_handle_app_stop_analytics(const ProcessContext *const context,
                                           PebbleTask task, bool gracefully) {
   if (!gracefully) {
     if (task == PebbleTask_App) {
-      if (context->app_md->is_rocky_app) {
-        analytics_inc(ANALYTICS_APP_METRIC_ROCKY_CRASHED_COUNT, AnalyticsClient_App);
-      }
       analytics_inc(ANALYTICS_APP_METRIC_CRASHED_COUNT, AnalyticsClient_App);
     } else if (task == PebbleTask_Worker) {
       analytics_inc(ANALYTICS_APP_METRIC_BG_CRASHED_COUNT, AnalyticsClient_Worker);
-    }
-    if (context->app_md->is_rocky_app) {
-      analytics_inc(ANALYTICS_DEVICE_METRIC_APP_ROCKY_CRASHED_COUNT, AnalyticsClient_System);
     }
     analytics_inc(ANALYTICS_DEVICE_METRIC_APP_CRASHED_COUNT, AnalyticsClient_System);
   }

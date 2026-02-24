@@ -102,10 +102,8 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
 
     try:
         project_type = app_info["projectType"]
-        is_rocky = project_type == "rocky"
         is_moddable = project_type == "moddable"
     except KeyError:
-        is_rocky = False
         is_moddable = False
 
     flags = []
@@ -115,8 +113,6 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
         flags.append("PROCESS_INFO_VISIBILITY_SHOWN_ON_COMMUNICATION")
     if is_hidden:
         flags.append("PROCESS_INFO_VISIBILITY_HIDDEN")
-    if is_rocky:
-        flags.append("PROCESS_INFO_ROCKY_APP")
     if is_moddable:
         flags.append("PROCESS_INFO_MODDABLE_APP")
     if platform_name:

@@ -105,29 +105,29 @@ void *app_state_get_user_data(void) {
   return s_user_data;
 }
 
-static RockyRuntimeContext *s_rocky_runtime_context = NULL;
+static JsRuntimeContext *s_js_runtime_context = NULL;
 static uint8_t *s_runtime_context_buffer = NULL;
-void app_state_set_rocky_runtime_context(uint8_t *unaligned_buffer,
-                                         RockyRuntimeContext *rocky_runtime_context) {
-  s_rocky_runtime_context = rocky_runtime_context;
+void app_state_set_js_runtime_context(uint8_t *unaligned_buffer,
+                                         JsRuntimeContext *js_runtime_context) {
+  s_js_runtime_context = js_runtime_context;
   s_runtime_context_buffer = unaligned_buffer;
 }
 
-uint8_t *app_state_get_rocky_runtime_context_buffer(void) {
+uint8_t *app_state_get_js_runtime_context_buffer(void) {
   return s_runtime_context_buffer;
 }
 
-RockyRuntimeContext *app_state_get_rocky_runtime_context(void) {
-  return s_rocky_runtime_context;
+JsRuntimeContext *app_state_get_js_runtime_context(void) {
+  return s_js_runtime_context;
 }
 
-static RockyMemoryAPIContext *s_rocky_memory_api_context = NULL;
-void app_state_set_rocky_memory_api_context(RockyMemoryAPIContext *context) {
-  s_rocky_memory_api_context = context;
+static JsMemoryAPIContext *s_js_memory_api_context = NULL;
+void app_state_set_js_memory_api_context(JsMemoryAPIContext *context) {
+  s_js_memory_api_context = context;
 }
 
-RockyMemoryAPIContext *app_state_get_rocky_memory_api_context(void) {
-  return s_rocky_memory_api_context;
+JsMemoryAPIContext *app_state_get_js_memory_api_context(void) {
+  return s_js_memory_api_context;
 }
 
 UnobstructedAreaState s_stub_unobstructed_area_state;

@@ -61,7 +61,7 @@ def _get_png_size(data):
     return width, height
 
 
-def _get_supported_platforms(ctx, has_rocky=False):
+def _get_supported_platforms(ctx):
     """
     This method returns all of the supported SDK platforms, based off of SDK requirements found on
     the filesystem
@@ -92,8 +92,6 @@ def _get_supported_platforms(ctx, has_rocky=False):
                     break
     for platform in invalid_platforms:
         supported_platforms.remove(platform)
-    if has_rocky and "aplite" in supported_platforms:
-        supported_platforms.remove("aplite")
 
     ctx.env.SUPPORTED_PLATFORMS = supported_platforms
     return supported_platforms
@@ -192,7 +190,7 @@ def get_target_platforms(ctx):
     :param ctx: the Context object
     :return: list of target platforms for the build
     """
-    supported_platforms = _get_supported_platforms(ctx, ctx.env.BUILD_TYPE == "rocky")
+    supported_platforms = _get_supported_platforms(ctx)
     if not ctx.env.REQUESTED_PLATFORMS:
         target_platforms = supported_platforms
     else:
@@ -275,13 +273,6 @@ def process_package(ctx, package, root_lib_node=None):
                 libinfo = json.load(f)
 
             if "pebble" in libinfo:
-                if ctx.env.BUILD_TYPE == "rocky":
-                    ctx.fatal(
-                        "Packages containing C binaries are not compatible with Rocky.js "
-                        "projects. Please remove '{}' from the `dependencies` object in "
-                        "package.json".format(libinfo["name"])
-                    )
-
                 libinfo["path"] = lib_node.make_node("dist").path_from(ctx.path)
                 if "resources" in libinfo["pebble"]:
                     if "media" in libinfo["pebble"]["resources"]:

@@ -61,7 +61,6 @@ class PebbleBundle(object):
         self.has_children = False
         self.has_license = False
         self.has_jstooling = False
-        self.rocky_info = {}
 
     def add_firmware(
         self,
@@ -175,34 +174,6 @@ class PebbleBundle(object):
         self.has_jstooling = True
         return True
 
-    def add_rockyjs(self, rocky_path, parent_bundle=None):
-        """
-        Add a rocky-app.js source file to the PBW bundle
-        :param rocky_path: the path to the source rocky-app.js file in the project build folder
-        :param parent_bundle: the parent PebbleBundle to write rocky-app.js to, or None if
-        rocky-app.js should be written to the current platform subfolder
-        :return: boolean indicating success or failure of addition
-        """
-        if self.rocky_info:
-            raise Exception("PBW already has a rocky-app.js file")
-
-        # Check to see that rocky-app.js source file exists in the build folder
-        check_paths(rocky_path)
-
-        if parent_bundle:
-            # If rocky-app.js should be written to the parent_bundle (PBW root) of this
-            # platform/bundle, construct a relative path for 'source_path' in manifest.json
-            if rocky_path not in parent_bundle.bundle_files:
-                parent_bundle.bundle_files.append(rocky_path)
-            rocky_relative_path = "../" + os.path.basename(rocky_path)
-        else:
-            # If rocky-app.js should be written to this platform/subfolder, use the rocky-app.js
-            # basename for 'source_path' in manifest.json
-            self.bundle_files.append(rocky_path)
-            rocky_relative_path = os.path.basename(rocky_path)
-        self.rocky_info = {"source_path": rocky_relative_path}
-        return True
-
     def add_appinfo(self, appinfo_path):
         if self.has_appinfo:
             raise Exception("Added multiple appinfo to a single bundle")
@@ -301,8 +272,6 @@ class PebbleBundle(object):
                     for bf in f.bundle_files:
                         z.write(bf, os.path.join(f.subfolder, os.path.basename(bf)))
                     f.bundle_manifest["type"] = f.type
-                    if f.rocky_info:
-                        f.bundle_manifest["rocky"] = f.rocky_info
                     z.writestr(
                         os.path.join(f.subfolder, "manifest.json"),
                         json.dumps(f.bundle_manifest),
@@ -381,16 +350,6 @@ def make_watchapp_bundle(timestamp, appinfo, binaries, js, outfile=None, verbose
     appinfo_path = os.path.expanduser(appinfo)
     bundle.add_appinfo(appinfo_path)
 
-    rocky_files = {}
-
-    for js_file in js:
-        if js_file.endswith("rocky-app.js"):
-            platform = os.path.dirname(os.path.relpath(js_file, "build")).split("/", 1)[
-                0
-            ]
-            rocky_files[platform] = js_file
-            js.remove(js_file)
-            continue
     bundle.add_jsapp(js)
 
     if len(binaries) < 1:
@@ -399,12 +358,6 @@ def make_watchapp_bundle(timestamp, appinfo, binaries, js, outfile=None, verbose
     for binary in binaries:
         bundle.has_children = True
         platform_bundle = PebbleBundle(subfolder=binary["subfolder"])
-
-        if rocky_files:
-            rocky_file = rocky_files.get(
-                platform_bundle.subfolder, rocky_files.get("resources", None)
-            )
-            platform_bundle.add_rockyjs(rocky_file, bundle)
 
         if binary["watchapp"]:
             watchapp_path = os.path.expanduser(binary["watchapp"])
