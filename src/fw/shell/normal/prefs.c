@@ -223,10 +223,11 @@ static bool s_coredump_on_request_enabled = false;
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
+#if CAPABILITY_HAS_THEMING
 #define PREF_KEY_THEME_HIGHLIGHT_COLOR "themeHighlightColor"
 
-
 static GColor s_theme_highlight_color = GColorVividCerulean;
+#endif
 
 #define PREF_KEY_MENU_SCROLL_WRAP_AROUND "menuScrollWrapAround"
 #define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR "menuScrollVibeBehavior"
@@ -606,7 +607,7 @@ static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
 }
 #endif
 
-#if PBL_COLOR
+#if CAPABILITY_HAS_THEMING
 // Valid theme colors (unified scheme)
 // Must match s_color_definitions in settings_themes.h
 static bool prv_is_valid_theme_color(GColor color) {
@@ -634,10 +635,8 @@ static bool prv_is_valid_theme_color(GColor color) {
   }
   return false;
 }
-#endif
 
 static bool prv_set_s_theme_highlight_color(GColor *color) {
-#if PBL_COLOR
   if (!prv_is_valid_theme_color(*color)) {
     PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
             color->argb);
@@ -645,11 +644,9 @@ static bool prv_set_s_theme_highlight_color(GColor *color) {
     return false;  // Reject invalid value
   }
   s_theme_highlight_color = *color;
-#else
-  s_theme_highlight_color = GColorBlack;
-#endif
   return true;
 }
+#endif
 
 static bool prv_set_s_menu_scroll_wrap_around(bool *enabled) {
   s_menu_scroll_wrap_around = *enabled;
@@ -1631,15 +1628,18 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 }
 #endif
 
-GColor shell_prefs_get_theme_highlight_color(void){
-  #if !PBL_COLOR
-    return GColorBlack;
-  #endif
+GColor shell_prefs_get_theme_highlight_color(void) {
+#if CAPABILITY_HAS_THEMING
   return s_theme_highlight_color;
+#else
+  return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+#endif
 }
 
 void shell_prefs_set_theme_highlight_color(GColor color) {
+#if CAPABILITY_HAS_THEMING
   prv_pref_set(PREF_KEY_THEME_HIGHLIGHT_COLOR, &color, sizeof(GColor));
+#endif
 }
 
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {

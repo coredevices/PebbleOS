@@ -139,7 +139,7 @@ static OptionMenu *prv_push_color_menu(void) {
 }
 
 static Window *prv_create_color_menu(void) {
-#if PBL_COLOR
+#if CAPABILITY_HAS_THEMING
   OptionMenu *option_menu = prv_push_color_menu();
   return option_menu ? &option_menu->window : NULL;
 #else
