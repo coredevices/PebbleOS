@@ -9,7 +9,6 @@ from waflib.TaskGen import before_method, feature
 from waflib.Tools.ccroot import link_task
 
 import tools.mpu_calc
-import waftools.asm
 import waftools.compress
 import waftools.generate_log_strings_json
 import waftools.generate_timezone_data
