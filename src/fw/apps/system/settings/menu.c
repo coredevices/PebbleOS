@@ -12,7 +12,9 @@
 #include "system.h"
 #include "time.h"
 #include "timeline.h"
+#if CAPABILITY_HAS_THEMING
 #include "themes.h"
+#endif
 #if CAPABILITY_HAS_HEALTH_TRACKING
 #include "health.h"
 #endif
@@ -49,7 +51,7 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemDateTime]      = settings_system_get_info,
 #endif
   [SettingsMenuItemDisplay]       = settings_display_get_info,
-#if PBL_COLOR
+#if CAPABILITY_HAS_THEMING
   [SettingsMenuItemThemes]        = settings_themes_get_info,
 #endif
   [SettingsMenuItemSystem]        = settings_system_get_info,

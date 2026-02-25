@@ -27,7 +27,7 @@ typedef enum {
 #if CAPABILITY_HAS_HEALTH_TRACKING
   SettingsMenuItemHealth,
 #endif
-#if PBL_COLOR
+#if CAPABILITY_HAS_THEMING
   SettingsMenuItemThemes,
 #endif
   SettingsMenuItemActivity,
