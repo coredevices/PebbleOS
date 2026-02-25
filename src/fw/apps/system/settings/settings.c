@@ -139,6 +139,9 @@ static void prv_window_load(Window *window) {
     .get_separator_height = prv_get_separator_height_callback
   });
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+  menu_layer_set_normal_colors(menu_layer,
+                               PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite),
+                               PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
   menu_layer_set_highlight_colors(menu_layer,
                                   highlight_bg,
                                   gcolor_legible_over(highlight_bg));
@@ -176,7 +179,7 @@ static void handle_init(void) {
     .load = prv_window_load,
     .unload = prv_window_unload,
   });
-  window_set_background_color(window, GColorWhite);
+  window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
   app_window_stack_push(window, true);
 }
 
