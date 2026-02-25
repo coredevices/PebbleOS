@@ -7,7 +7,6 @@
 
 #include "applib/app.h"
 #include "applib/ui/app_window_stack.h"
-#include "applib/ui/status_bar_layer.h"
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
@@ -46,7 +45,6 @@ static const uint32_t SETTINGS_MENU_ICON_RESOURCES[SettingsMenuItem_Count] = {
 
 typedef struct {
   Window window;
-  StatusBarLayer status_layer;
   MenuLayer menu_layer;
 #if CAPABILITY_HAS_SETTINGS_ICONS
   GBitmap *icons[SettingsMenuItem_Count];
@@ -125,19 +123,8 @@ static void prv_window_load(Window *window) {
   }
 #endif
 
-  // Create the status bar with title
-  StatusBarLayer *status_layer = &data->status_layer;
-  status_bar_layer_init(status_layer);
-  status_bar_layer_set_title(status_layer, i18n_get("Settings", data), false, false);
-  status_bar_layer_set_colors(status_layer, GColorWhite, GColorBlack);
-  status_bar_layer_set_separator_mode(status_layer, StatusBarLayerSeparatorModeDotted);
-  layer_add_child(&data->window.layer, status_bar_layer_get_layer(status_layer));
-
   // Create the menu
-  GRect bounds = grect_inset(data->window.layer.bounds, (GEdgeInsets) {
-    .top = STATUS_BAR_LAYER_HEIGHT,
-    .bottom = 0,
-  });
+  GRect bounds = data->window.layer.bounds;
 #if PBL_ROUND
   bounds = grect_inset_internal(bounds, 0,
                                 SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING);
@@ -175,7 +162,6 @@ static void prv_window_unload(Window *window) {
   }
 #endif
 
-  status_bar_layer_deinit(&data->status_layer);
   menu_layer_deinit(&data->menu_layer);
   app_free(data);
 }
