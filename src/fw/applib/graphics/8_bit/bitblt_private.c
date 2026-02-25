@@ -289,7 +289,7 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(GBitmap* dest_bitmap,
       MIN(32, src_bitmap->bounds.size.w + src_line_start_idx - (src_origin_offset.x % 32));
     const uint8_t src_line_wrap_end_idx = MIN(32, src_bitmap->bounds.size.w + src_line_wrap_idx);
 
-    uint8_t row_bits_left = dest_rect.size.w;
+    int16_t row_bits_left = dest_rect.size.w;
     uint32_t * const src_block_begin =
         (uint32_t *)src_block_x_begin + (src_y * src_row_length_words);
     uint32_t *src_block = src_block_begin;

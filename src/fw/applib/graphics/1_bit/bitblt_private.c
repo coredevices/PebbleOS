@@ -108,7 +108,7 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(GBitmap* dest_bitmap,
     RowLookUp look_up = look_ups[dest_y % 2];
 
     int16_t src_x = src_begin_x + src_origin_offset.x;
-    uint8_t row_bits_left = dest_rect.size.w;
+    int16_t row_bits_left = dest_rect.size.w;
     uint32_t *dest_block = (uint32_t *)dest_block_x_begin + (dest_y * dest_row_length_words);
 
     const uint32_t *dest_block_end = dest_block + num_dest_blocks_per_row;

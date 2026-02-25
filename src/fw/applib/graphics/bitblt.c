@@ -59,7 +59,7 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_1bit(GBitmap* dest_bitmap,
 
     int8_t src_dest_shift = 32 + dest_shift_at_line_begin - src_shift_at_line_begin;
     uint8_t dest_shift = dest_shift_at_line_begin;
-    uint8_t row_bits_left = dest_rect.size.w;
+    int16_t row_bits_left = dest_rect.size.w;
     uint32_t *dest_block = (uint32_t *)dest_block_x_begin + (dest_y * dest_row_length_words);
     uint32_t * const src_block_begin = (uint32_t *)src_block_x_begin + (src_y * src_row_length_words);
     uint32_t *src_block = src_block_begin;
