@@ -148,6 +148,7 @@ def configure(conf):
     conf.env.LINK_CC = conf.env.CC
 
     conf.load("gcc")
+    conf.load("asm")
 
     conf.env.append_value(
         "CFLAGS",

@@ -18,7 +18,6 @@ sys.path.append(os.path.join(waf_dir, 'tools/log_hashing'))
 sys.path.append(os.path.join(waf_dir, 'sdk/tools/'))
 sys.path.append(os.path.join(waf_dir, 'waftools'))
 
-import waftools.asm
 import waftools.gitinfo
 import waftools.ldscript
 import waftools.openocd
