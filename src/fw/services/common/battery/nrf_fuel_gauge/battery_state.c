@@ -21,7 +21,14 @@
 #include "services/normal/settings/settings_file.h"
 #endif
 
+#ifdef MANUFACTURING_FW
+#include "drivers/flash.h"
+#include "flash_region/flash_region.h"
+#endif
+
 #include "nrf_fuel_gauge.h"
+
+#define FUEL_GAUGE_STATEFUL (!defined(RECOVERY_FW) || defined(MANUFACTURING_FW))
 
 #define ALWAYS_UPDATE_PCT 10.0f
 #define RECONNECTION_DELAY_MS (1 * 1000)
@@ -60,13 +67,55 @@ static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;
 
-#ifndef RECOVERY_FW
-#define FUEL_GAUGE_SETTINGS_FILE_NAME "fgs"
+#if FUEL_GAUGE_STATEFUL
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
+
+static uint32_t s_save_counter;
+
+#ifdef MANUFACTURING_FW
+// In manufacturing firmware, use dedicated MFG_STATE flash region
+static bool prv_load_state(void *state, size_t size) {
+  if (size > (FLASH_REGION_MFG_STATE_END - FLASH_REGION_MFG_STATE_BEGIN)) {
+    return false;
+  }
+
+  flash_read_bytes(state, FLASH_REGION_MFG_STATE_BEGIN, size);
+
+  // Check if the flash region contains valid data (not all 0xFF)
+  uint8_t *bytes = (uint8_t *)state;
+  bool all_erased = true;
+  for (size_t i = 0; i < size; i++) {
+    if (bytes[i] != 0xFF) {
+      all_erased = false;
+      break;
+    }
+  }
+
+  return !all_erased;
+}
+
+static void prv_save_state(void) {
+  uint8_t buf[nrf_fuel_gauge_state_size];
+
+  if (nrf_fuel_gauge_state_get(buf, sizeof(buf)) != 0) {
+    PBL_LOG_ERR("Failed to get fuel gauge state");
+    return;
+  }
+
+  if (sizeof(buf) > (FLASH_REGION_MFG_STATE_END - FLASH_REGION_MFG_STATE_BEGIN)) {
+    PBL_LOG_ERR("Fuel gauge state too large for MFG_STATE region");
+    return;
+  }
+
+  flash_erase_subsector_blocking(FLASH_REGION_MFG_STATE_BEGIN);
+  flash_write_bytes(buf, FLASH_REGION_MFG_STATE_BEGIN, sizeof(buf));
+}
+#else
+// In normal firmware, use settings file
+#define FUEL_GAUGE_SETTINGS_FILE_NAME "fgs"
 #define FUEL_GAUGE_SETTINGS_MAX_SIZE 2048
 
 static const uint32_t FUEL_GAUGE_STATE_KEY = 1;
-static uint32_t s_save_counter;
 
 static bool prv_load_state(void *state, size_t size) {
   SettingsFile file;
@@ -117,7 +166,8 @@ static void prv_save_state(void) {
     PBL_LOG_ERR("Failed to save fuel gauge state");
   }
 }
-#endif
+#endif // MANUFACTURING_FW
+#endif // FUEL_GAUGE_STATEFUL
 
 static void prv_schedule_update(uint32_t delay, bool force_update);
 
@@ -251,7 +301,7 @@ static void prv_update_state(void *force_update) {
     s_last_ttf = 0U;
   }
 
-#ifndef RECOVERY_FW
+#if FUEL_GAUGE_STATEFUL
   if (++s_save_counter >= FUEL_GAUGE_SAVE_INTERVAL_S) {
     s_save_counter = 0;
     prv_save_state();
@@ -311,7 +361,7 @@ void battery_state_init(void) {
 
   prv_ref_time = rtc_get_ticks();
 
-#ifndef RECOVERY_FW
+#if FUEL_GAUGE_STATEFUL
   {
     uint8_t saved_state[nrf_fuel_gauge_state_size];
     if (prv_load_state(saved_state, sizeof(saved_state))) {
@@ -330,7 +380,7 @@ void battery_state_init(void) {
   ret = nrf_fuel_gauge_init(&parameters, NULL);
   PBL_ASSERTN(ret == 0);
 
-#ifndef RECOVERY_FW
+#if FUEL_GAUGE_STATEFUL
 init_done:
 #endif
 
