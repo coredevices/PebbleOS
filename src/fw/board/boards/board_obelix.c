@@ -687,9 +687,4 @@ void board_init(void) {
 
   mic_init(MIC);
   audio_init(AUDIO);
-
-#ifdef RECOVERY_FW
-  // FIXME(OBELIX): Remove once stable
-  stop_mode_disable(InhibitorMain);
-#endif
 }
