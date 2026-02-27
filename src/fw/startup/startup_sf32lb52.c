@@ -27,9 +27,6 @@ extern uint8_t __isr_stack_start__[];
 extern int main(void);
 
 NAKED_FUNC NORETURN Reset_Handler(void) {
-  SCB_EnableICache();
-  SCB_EnableDCache();
-
   // Set MSPLIM to protect the ISR stack
   __set_MSPLIM((uint32_t)__isr_stack_start__);
   // PSPLIM is set per-task by FreeRTOS during context switches
