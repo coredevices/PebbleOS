@@ -6,12 +6,17 @@
 
 #include <bf0_hal.h>
 
-#define HCPU_FREQ_MHZ 240
+#define HCPU_FREQ_HZ 240000000UL
 #define PWRKEY_RESET_CNT (32000 * 15)
+
+extern uint32_t SystemCoreClock;
 
 void soc_early_init(void) {
   HAL_StatusTypeDef ret;
   uint32_t bootopt;
+
+  SystemCoreClock = HCPU_FREQ_HZ;
+  HAL_Delay_us(0);
 
   // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
   // that the flash is properly power cycled on reset. A flash power cycle is
@@ -23,13 +28,6 @@ void soc_early_init(void) {
 
   // Disable default PA21 pull-down, causing leakage
   HAL_PIN_Set(PAD_PA21, GPIO_A21, PIN_NOPULL, 1);
-
-  if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
-    HAL_HPAON_EnableXT48();
-    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HXT48);
-  }
-
-  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_PERI, RCC_CLK_PERI_HXT48);
 
   // Halt LCPU first to avoid LCPU in running state
   HAL_HPAON_WakeCore(CORE_ID_LCPU);
@@ -50,7 +48,6 @@ void soc_early_init(void) {
   watchdog_init();
   watchdog_start();
 
-  HAL_PMU_EnableDLL(1);
 #ifdef SF32LB52_USE_LXT
   HAL_PMU_EnableXTAL32();
   ret = HAL_PMU_LXTReady();
@@ -62,11 +59,6 @@ void soc_early_init(void) {
   HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
 
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
-
-  HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
-
-  // Reset sysclk used by HAL_Delay_us
-  HAL_Delay_us(0);
 
   ret = HAL_RCC_CalibrateRC48();
   PBL_ASSERTN(ret == HAL_OK);
