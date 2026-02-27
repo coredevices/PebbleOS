@@ -30,9 +30,6 @@ enum {
 static void prv_mpu_config(void) {
   uint32_t rbar, rlar;
 
-  SCB_InvalidateDCache();
-  SCB_InvalidateICache();
-
   ARM_MPU_Disable();
 
   for (uint8_t i = 0U; i < MPU_REGION_NUM; i++) {
@@ -114,4 +111,7 @@ void SystemInit(void) {
 #endif
 
   prv_mpu_config();
+
+  SCB_EnableICache();
+  SCB_EnableDCache();
 }
