@@ -5,6 +5,7 @@
 
 #include "board/board.h"
 #include "drivers/battery.h"
+#include "drivers/pmic.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
 #include "services/common/analytics/analytics.h"
@@ -66,6 +67,7 @@ static RtcTicks s_last_log;
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
 
 static uint32_t s_save_counter;
+static bool s_charger_enabled;
 
 #ifdef MANUFACTURING_FW
 // In manufacturing firmware, use dedicated MFG_STATE flash region
@@ -309,6 +311,12 @@ static void prv_update_state(void *force_update) {
             s_last_battery_charge_state.is_plugged ? "yes" : "no");
     prv_battery_state_put_change_event(s_last_battery_charge_state);
     s_last_log = now;
+  }
+
+  // Enable battery charging after fuel gauge state has been updated for the first time
+  if (!s_charger_enabled) {
+    s_charger_enabled = true;
+    pmic_set_charger_state(true);
   }
 }
 
