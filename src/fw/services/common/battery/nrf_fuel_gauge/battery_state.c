@@ -62,12 +62,12 @@ static uint8_t s_analytics_last_pct;
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;
+static bool s_charger_enabled;
 
 #if FUEL_GAUGE_STATEFUL
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
 
 static uint32_t s_save_counter;
-static bool s_charger_enabled;
 
 #ifdef MANUFACTURING_FW
 // In manufacturing firmware, use dedicated MFG_STATE flash region
@@ -292,7 +292,7 @@ static void prv_update_state(void *force_update) {
   }
 
 #if FUEL_GAUGE_STATEFUL
-  if (++s_save_counter >= FUEL_GAUGE_SAVE_INTERVAL_S) {
+  if (update || (++s_save_counter >= FUEL_GAUGE_SAVE_INTERVAL_S)) {
     s_save_counter = 0;
     prv_save_state();
   }
