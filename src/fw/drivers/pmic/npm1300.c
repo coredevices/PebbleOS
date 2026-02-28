@@ -370,8 +370,6 @@ bool pmic_init(void) {
 
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVBATLOWCHARGE, 1);
 
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGENABLESET, 1);
-
   prv_configure_interrupts();
 
   if (!ok) {
