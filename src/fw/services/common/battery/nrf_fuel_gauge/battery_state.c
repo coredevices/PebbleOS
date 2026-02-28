@@ -135,6 +135,8 @@ static bool prv_load_state(void *state, size_t size) {
                           sizeof(FUEL_GAUGE_STATE_KEY), state, size);
   settings_file_close(&file);
 
+  PBL_LOG_DBG("Fuel gauge state loaded");
+
   return (ret == S_SUCCESS);
 }
 
@@ -161,6 +163,8 @@ static void prv_save_state(void) {
 
   if (ret != S_SUCCESS) {
     PBL_LOG_ERR("Failed to save fuel gauge state");
+  } else {
+    PBL_LOG_DBG("Fuel gauge state saved");
   }
 }
 #endif // MANUFACTURING_FW
