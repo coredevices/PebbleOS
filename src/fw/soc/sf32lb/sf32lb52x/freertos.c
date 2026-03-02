@@ -85,7 +85,6 @@ static void prv_enter_deepwfi(void) {
 
 static void prv_enter_deepslep(void) {
   uint32_t dll1_freq;
-  uint32_t dll2_freq;
   int clk_src;
 
   prv_save_iser();
@@ -97,7 +96,6 @@ static void prv_enter_deepslep(void) {
   clk_src = HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS);
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
   dll1_freq = HAL_RCC_HCPU_GetDLL1Freq();
-  dll2_freq = HAL_RCC_HCPU_GetDLL2Freq();
 
   HAL_RCC_HCPU_DisableDLL1();
   HAL_RCC_HCPU_DisableDLL2();
@@ -136,7 +134,6 @@ static void prv_enter_deepslep(void) {
   // Switch back to original clock source
   HAL_RCC_HCPU_EnableDLL1(dll1_freq);
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
-  HAL_RCC_HCPU_EnableDLL2(dll2_freq);
   HAL_Delay_us(0);
 
   prv_restore_iser();
