@@ -253,7 +253,7 @@ static QSPIPortState s_qspi_port_state = {
 
 static QSPIPort QSPI_PORT = {
     .state = &s_qspi_port_state,
-    .clk_div = 5U,
+    .clk_div = 0U,
 };
 QSPIPort *const QSPI = &QSPI_PORT;
 
