@@ -24,6 +24,8 @@ typedef struct QSPIPortState {
 #elif MICRO_FAMILY_SF32LB52
   QSPI_FLASH_CTX_T ctx;
   DMA_HandleTypeDef hdma;
+  qspi_configure_t cfg;
+  struct dma_config dma;
   bool initialized;
 #else
   SemaphoreHandle_t dma_semaphore;
@@ -39,9 +41,7 @@ typedef const struct QSPIPort {
   uint32_t clk_gpio;
   uint32_t data_gpio[QSPI_NUM_DATA_PINS];
 #elif MICRO_FAMILY_SF32LB52
-  qspi_configure_t cfg;
   uint16_t clk_div;
-  struct dma_config dma;
 #else
   uint16_t auto_polling_interval;
   uint32_t clock_speed_hz;
