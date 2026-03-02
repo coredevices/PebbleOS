@@ -31,7 +31,7 @@ typedef struct QSPIPortState {
 #endif
 } QSPIPortState;
 
-typedef const struct QSPIPort {
+typedef struct QSPIPort {
   QSPIPortState *state;
 #if MICRO_FAMILY_NRF5
   uint32_t clk_freq_hz;

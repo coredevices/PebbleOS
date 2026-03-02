@@ -30,7 +30,7 @@ typedef enum QSPIFlashWriteMode {
   QSPI_FLASH_WRITE_PP4IO,
 } QSPIFlashWriteMode;
 
-typedef const struct QSPIFlash {
+typedef struct QSPIFlash {
   QSPIFlashState *state;
   QSPIPort *qspi;
   bool default_fast_read_ddr_enabled;
