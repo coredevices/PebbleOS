@@ -1424,6 +1424,10 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
   Uint32List *vibeDurations = attribute_get_uint32_list(&item->attr_list, AttributeIdVibrationPattern);
   if (vibeDurations && vibeDurations->num_values > 0) {
     VibePattern patt;
+
+    PBL_LOG_INFO("Notification vibe: using CUSTOM pattern from phone, %" PRIu16 " segments",
+                 vibeDurations->num_values);
+
     patt.durations = vibeDurations->values;
     patt.num_segments = vibeDurations->num_values;
     vibes_enqueue_custom_pattern(patt);
@@ -1432,11 +1436,16 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
 #if CAPABILITY_HAS_VIBE_SCORES
     VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
     if (score) {
+      VibeScoreId id = alerts_preferences_get_vibe_score_for_client(VibeClient_Notifications);
+      PBL_LOG_INFO("Notification vibe: using alerts preferences (%d, %s)",
+                   (int)id, vibe_score_info_get_name(id));
+
       vibe_score_do_vibe(score);
       vibe_score_destroy(score);
       did_vibrate = true;
     }
 #else
+    PBL_LOG_INFO("Notification vibe: short pulse");
     vibes_short_pulse();
     did_vibrate = true;
 #endif
