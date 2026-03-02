@@ -596,7 +596,6 @@ if bld.is_silk():
             'flash/flash_crc.c',
             'flash/flash_erase.c',
             'flash/mx25u.c',
-            'flash/nvram_bkp.c',
             'flash/qspi_flash.c',
         ],
         use=[
@@ -619,7 +618,6 @@ elif bld.is_snowy_compatible():
             'flash/flash_api.c',
             'flash/flash_crc.c',
             'flash/flash_erase.c',
-            'flash/nvram_bkp.c',
             'flash/spansion_s29vs.c',
         ],
         use=[

@@ -268,43 +268,6 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr);
 //!          sector is not erased fully before it is written to.
 status_t flash_impl_blank_check_sector(FlashAddress addr);
 
-//! Save the address of an erase in progress to a nonvolatile location. The
-//! erase address, along with the fact that an erase is in progress, must be
-//! able to survive a system crash and reboot.
-//!
-//! @note Writing this data to the same flash array that is being erased is
-//!       almost certainly a bad idea.
-//!
-//! @param is_subsector True if the erase is a subsector.
-//!
-//! @param addr The address being erased.
-//!
-//! @return S_SUCCESS if the data was successfully stored.
-status_t flash_impl_set_nvram_erase_status(bool is_subsector,
-                                           FlashAddress addr);
-
-//! Save to a nonvolatile location the fact that no erase is in progress.
-//!
-//! @return S_SUCCESS if the status was successfully stored.
-status_t flash_impl_clear_nvram_erase_status(void);
-
-//! Retrieve the erase status previously set by
-//! flash_impl_set_nvram_erase_status or flash_impl_clear_nvram_erase_status.
-//!
-//! @param [out] is_subsector The value of is_subsector passed to the most
-//!   most recent call to flash_impl_set_nvram_erase_status if the status was
-//!   not subsequently cleared by flash_impl_clear_nvram_erase_status. The
-//!   pointer should not be written to if the erase status was cleared.
-//!
-//! @param [out] addr The address passed to the most recent call to
-//!   flash_impl_set_nvram_erase_status if the status was not subsequently
-//!   cleared by flash_impl_clear_nvram_erase_status. The address should not be
-//!   written to if the erase status was cleared.
-//!
-//! @return S_TRUE if an erase was in progress; S_FALSE otherwise.
-status_t flash_impl_get_nvram_erase_status(bool *is_subsector,
-                                           FlashAddress *addr);
-
 void flash_impl_use(void);
 void flash_impl_release(void);
 void flash_impl_release_many(uint32_t num_locks);
