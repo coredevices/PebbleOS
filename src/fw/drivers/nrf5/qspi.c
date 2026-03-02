@@ -785,18 +785,3 @@ status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) {
 status_t qspi_flash_unlock_all(QSPIFlash *dev) {
   return S_SUCCESS;
 }
-
-// -----------------------------------------------------------------------------
-// Flash implementation interface stubs
-
-status_t flash_impl_set_nvram_erase_status(bool is_subsector, FlashAddress addr) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_clear_nvram_erase_status(void) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_get_nvram_erase_status(bool *is_subsector, FlashAddress *addr) {
-  return S_FALSE;
-}

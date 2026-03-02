@@ -252,16 +252,6 @@ status_t qspi_flash_blank_check(QSPIFlash *dev, uint32_t addr, bool is_subsector
   return prv_blank_check_poll(addr, is_subsector);
 }
 
-status_t flash_impl_set_nvram_erase_status(bool is_subsector, FlashAddress addr) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_clear_nvram_erase_status(void) { return S_SUCCESS; }
-
-status_t flash_impl_get_nvram_erase_status(bool *is_subsector, FlashAddress *addr) {
-  return S_FALSE;
-}
-
 status_t prv_qspi_security_register_check(QSPIFlash *dev, uint32_t addr) {
   bool addr_valid = false;
 
