@@ -40,7 +40,7 @@ typedef const struct QSPIPort {
   uint32_t data_gpio[QSPI_NUM_DATA_PINS];
 #elif MICRO_FAMILY_SF32LB52
   qspi_configure_t cfg;
-  uint16_t clk_div;
+  uint32_t frequency;
   struct dma_config dma;
 #else
   uint16_t auto_polling_interval;

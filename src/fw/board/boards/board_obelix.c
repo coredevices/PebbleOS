@@ -246,7 +246,7 @@ static QSPIPort QSPI_PORT = {
       .msize = 16,
       .SpiMode = SPI_MODE_NOR,
     },
-    .clk_div = 5U,
+    .frequency = 48000000UL,
     .dma = {
       .Instance = DMA1_Channel2,
       .dma_irq = DMAC1_CH2_IRQn,

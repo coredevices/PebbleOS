@@ -178,6 +178,7 @@ status_t qspi_flash_unlock_all(QSPIFlash *dev) { return S_SUCCESS; }
 
 void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   HAL_StatusTypeDef res;
+  uint8_t clk_div;
 
   if (dev->qspi->state->initialized) {
     if (coredump_mode) {
@@ -192,9 +193,24 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   dev->state->part = part;
   dev->qspi->state->ctx.dual_mode = 1;
 
+  switch (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_FLASH2)) {
+    case RCC_CLK_SRC_SYS:
+      clk_div = 48000000UL / dev->qspi->frequency;
+      break;
+    case RCC_CLK_SRC_DLL1:
+      clk_div = HAL_RCC_HCPU_GetDLL1Freq() / dev->qspi->frequency;
+      break;
+    case RCC_CLK_SRC_DLL2:
+      clk_div = HAL_RCC_HCPU_GetDLL2Freq() / dev->qspi->frequency;
+      break;
+    default:
+      WTF;
+      break;
+  }
+
   res = HAL_FLASH_Init(&dev->qspi->state->ctx, (qspi_configure_t *)&dev->qspi->cfg,
                        &dev->qspi->state->hdma, (struct dma_config *)&dev->qspi->dma,
-                       dev->qspi->clk_div);
+                       clk_div);
 
   PBL_ASSERT(res == HAL_OK, "HAL_FLASH_Init failed");
 
