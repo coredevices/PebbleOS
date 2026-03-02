@@ -1,3 +1,6 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
 /* Because nPM1300 also has the battery monitor, we implement both the
  * pmic_* and the battery_* API here.  */
 
