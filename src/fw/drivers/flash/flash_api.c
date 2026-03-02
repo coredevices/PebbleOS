@@ -122,38 +122,6 @@ void flash_init(void) {
   s_erase_suspend_timer = new_timer_create();
 
   flash_erase_init();
-
-  uint32_t erase_in_progress_address = 0;
-  bool is_subsector = false;
-  if (flash_impl_get_nvram_erase_status(
-        &is_subsector, &erase_in_progress_address) == S_TRUE) {
-    // An erase was interrupted by e.g. a crash. Retry the erase so the
-    // incompletely-erased sector doesn't cause us trouble later on.
-    PBL_LOG_WRN("Flash erase to 0x%"PRIx32" was interrupted "
-            "last boot. Restarting the erase...", erase_in_progress_address);
-
-    // When an erase is interrupted, subsequent erases of the same sector tend to
-    // take an exceptionally long time and may even outright fail. Try the erase a
-    // few times before giving up.
-    int attempt = 1;
-    while (true) {
-      status_t status = prv_try_restart_interrupted_erase(
-          is_subsector, erase_in_progress_address);
-      if (PASSED(status)) {
-        break;
-      }
-      PBL_LOG_ERR("Flash erase failed, status %"PRIi32, status);
-      if (attempt++ >= MAX_ERASE_RETRIES) {
-        // We've tried all we can. No point in croaking; it's not like a reboot
-        // is going to fix anything. Best we can do is pretend like nothing is
-        // wrong and hope for the best.
-        PBL_LOG_ERR("Giving up on restarting the flash erase.");
-        break;
-      }
-    }
-  }
-
-  flash_impl_clear_nvram_erase_status();
 }
 
 #if UNITTEST
@@ -326,7 +294,6 @@ static uint32_t prv_flash_erase_start(uint32_t addr,
                        : flash_impl_erase_sector_begin(addr);
 
   if (PASSED(status)) {
-    flash_impl_set_nvram_erase_status(is_subsector, addr);
     mutex_unlock(s_flash_lock);
     return (s_erase.expected_duration * 7 / 8);
   } else {
@@ -364,7 +331,6 @@ static uint32_t prv_flash_erase_poll(void) {
   if (erase_finished) {
     stop_mode_enable(InhibitorFlash);
     s_erase.in_progress = false;
-    flash_impl_clear_nvram_erase_status();
   }
   mutex_unlock(s_flash_lock);
 
