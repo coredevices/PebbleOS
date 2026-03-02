@@ -192,8 +192,8 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   dev->state->part = part;
   dev->qspi->state->ctx.dual_mode = 1;
 
-  res = HAL_FLASH_Init(&dev->qspi->state->ctx, (qspi_configure_t *)&dev->qspi->cfg,
-                       &dev->qspi->state->hdma, (struct dma_config *)&dev->qspi->dma,
+  res = HAL_FLASH_Init(&dev->qspi->state->ctx, &dev->qspi->state->cfg,
+                       &dev->qspi->state->hdma, &dev->qspi->state->dma,
                        dev->qspi->clk_div);
 
   PBL_ASSERT(res == HAL_OK, "HAL_FLASH_Init failed");
