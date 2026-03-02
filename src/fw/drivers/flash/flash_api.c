@@ -113,18 +113,15 @@ static status_t prv_try_restart_interrupted_erase(bool is_subsector,
 }
 
 void flash_init(void) {
-  if (s_flash_lock) {
-    return; // Already initialized
-  }
+  flash_impl_init(false /* coredump_mode */);
+
   s_flash_lock = mutex_create();
   s_erase_semphr = xSemaphoreCreateBinary();
   xSemaphoreGive(s_erase_semphr);
   s_erase_poll_timer = new_timer_create();
   s_erase_suspend_timer = new_timer_create();
-  flash_erase_init();
 
-  mutex_lock(s_flash_lock);
-  flash_impl_init(false /* coredump_mode */);
+  flash_erase_init();
 
   uint32_t erase_in_progress_address = 0;
   bool is_subsector = false;
@@ -157,7 +154,6 @@ void flash_init(void) {
   }
 
   flash_impl_clear_nvram_erase_status();
-  mutex_unlock(s_flash_lock);
 }
 
 #if UNITTEST
