@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "console/prompt.h"
-#include "drivers/fpc_pinstrap.h"
 #include "drivers/mcu.h"
 #include "drivers/pmic.h"
 #include "mfg/mfg_info.h"
@@ -235,23 +234,4 @@ void command_version_info(void) {
   prompt_send_response_fmt(buffer, sizeof(buffer),
                            "System Resources:\n  CRC:0x%"PRIx32"\n  Valid:%s",
                            system_resources_version.crc, bool_to_str(system_resource_is_valid()));
-
-#if CAPABILITY_HAS_PMIC
-  uint8_t chip_id;
-  uint8_t chip_revision;
-  uint8_t buck1_vset;
-  pmic_read_chip_info(&chip_id, &chip_revision, &buck1_vset);
-  prompt_send_response_fmt(buffer,
-                           sizeof(buffer),
-                           "PMIC Chip Id: 0x%"PRIx8" Chip Rev: 0x%"PRIx8" Buck1 VSET: 0x%"PRIx8,
-                           chip_id, chip_revision, buck1_vset);
-#endif // CAPABILITY_HAS_PMIC
-
-#ifdef PLATFORM_SNOWY
-  const uint8_t fpc_pinstrap = fpc_pinstrap_get_value();
-  if (fpc_pinstrap != FPC_PINSTRAP_NOT_AVAILABLE) {
-    // + 1 since variants are documented as being between 1-9 instead of 0-based
-    prompt_send_response_fmt(buffer, sizeof(buffer), "FPC Variant: %"PRIu8, fpc_pinstrap + 1);
-  }
-#endif
 }

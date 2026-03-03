@@ -37,13 +37,3 @@ typedef struct {
   GPIO_TypeDef* const gpio; ///< One of GPIOX. For example, GPIOA.
   const uint32_t gpio_pin; ///< One of GPIO_Pin_X.
 } InputConfig;
-
-typedef struct {
-  const InputConfig fpc_pinstrap_1;
-  const InputConfig fpc_pinstrap_2;
-} BoardConfig;
-
-static const BoardConfig BOARD_CONFIG = {
-  .fpc_pinstrap_1 = { GPIOA, GPIO_Pin_1 },
-  .fpc_pinstrap_2 = { GPIOA, GPIO_Pin_2 },
-};

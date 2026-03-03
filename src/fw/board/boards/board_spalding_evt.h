@@ -42,9 +42,6 @@ static const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
   .backlight_max_duty_cycle_percent = 100,
 
-  .fpc_pinstrap_1 = { GPIOB, GPIO_Pin_0 },
-  .fpc_pinstrap_2 = { GPIOC, GPIO_Pin_5 },
-
   .num_avail_gpios = 114,
 };
 
