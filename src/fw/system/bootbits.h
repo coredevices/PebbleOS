@@ -40,5 +40,4 @@ bool boot_bit_test(BootBitValue bit);
 void boot_bit_dump(void);
 uint32_t boot_bits_get(void);
 
-void boot_version_write(void);
 uint32_t boot_version_read(void);
