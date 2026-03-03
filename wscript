@@ -1,5 +1,6 @@
 import json
 import os
+import shlex
 import subprocess
 import sys
 import pexpect
@@ -1223,7 +1224,7 @@ def qemu_launch(ctx):
         qemu_bin = 'qemu-system-arm'
         
     cmd_line = (
-        qemu_bin + " "
+        shlex.quote(qemu_bin) + " "
         "-rtc base=localtime "
         "-monitor stdio "
         "-s "
