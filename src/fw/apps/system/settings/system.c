@@ -1306,12 +1306,6 @@ static void prv_push_kcc_window(SystemCertificationData *data) {
 // Callbacks for the main settings filter list menu.
 ////////////////////////////////////////////////////
 
-#define SHUTDOWN_MIN_BOOT_VERSION 1354647953
-
-static bool prv_shutdown_enabled(void) {
-  return boot_version_read() >= SHUTDOWN_MIN_BOOT_VERSION;
-}
-
 static void prv_shutdown_confirm_cb(ClickRecognizerRef recognizer, void *context) {
   actionable_dialog_pop((ActionableDialog *) context);
   battery_ui_handle_shut_down();
@@ -1358,11 +1352,6 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = stationary_get_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
     case SystemMenuItemShutDown:
-      if (!prv_shutdown_enabled()) {
-        // XXX: For now, gray out the Shut Down item if unusable.
-        graphics_context_set_text_color(ctx, GColorDarkGray);
-      }
-      break;
     case SystemMenuItemInformation:
     case SystemMenuItemCertification:
     case SystemMenuItemDebugging:
@@ -1393,9 +1382,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       stationary_set_enabled(!stationary_get_enabled());
       break;
     case SystemMenuItemShutDown:
-      if (prv_shutdown_enabled()) {
-        launcher_task_add_callback(prv_shutdown_cb, 0);
-      }
+      launcher_task_add_callback(prv_shutdown_cb, 0);
       break;
     case SystemMenuItemDebugging:
       prv_debugging_interstitial_trigger(data);
