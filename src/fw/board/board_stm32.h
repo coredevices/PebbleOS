@@ -212,11 +212,6 @@ typedef struct {
                     // tolerance) is identical across all platforms. >100% isn't possible, so
                     // future backlights must be at least as bright as Tintin's.
 
-  // FPC Pinstrap Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const InputConfig fpc_pinstrap_1;
-  const InputConfig fpc_pinstrap_2;
-
   // GPIO Configuration
   /////////////////////////////////////////////////////////////////////////////
   const uint16_t num_avail_gpios;

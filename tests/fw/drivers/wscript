@@ -10,11 +10,6 @@ def build(ctx):
         override_includes=['dummy_board'])
 
     clar(ctx,
-        sources_ant_glob="src/fw/drivers/fpc_pinstrap/fpc_pinstrap_snowy.c ",
-        test_sources_ant_glob="test_fpc_pinstrap.c",
-        override_includes=['fpc_pinstrap_board'])
-
-    clar(ctx,
          sources_ant_glob = "src/fw/drivers/battery/battery_adc_conversion.c",
          test_sources_ant_glob = "test_battery.c")
 

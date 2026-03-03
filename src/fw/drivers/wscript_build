@@ -50,7 +50,6 @@ elif bld.is_snowy_compatible():
             'driver_clocksource',
             'driver_display',
             'driver_flash',
-            'driver_fpc_pinstrap',
             'driver_gpio_defaults',
             'driver_hci_passthrough',
             'driver_accel',
@@ -663,20 +662,6 @@ elif bld.is_obelix() or bld.is_getafix():
             'freertos',
             'fw_includes',
             'pbl_includes',
-        ],
-    )
-
-if bld.is_snowy_compatible():
-    bld.objects(
-        name='driver_fpc_pinstrap',
-        source=[
-            'fpc_pinstrap/fpc_pinstrap_snowy.c',
-        ],
-        use=[
-            'driver_gpio',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
         ],
     )
 
