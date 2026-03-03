@@ -228,7 +228,7 @@ void command_version_info(void) {
     prompt_send_response_fmt(buffer, sizeof(buffer), "MCU Serial: %s", serial_str);
   }
 
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Boot:%"PRIu32"\nHW:%s\nSN:%s",
+  prompt_send_response_fmt(buffer, sizeof(buffer), "Boot:0x%08"PRIx32"\nHW:%s\nSN:%s",
                            boot_version_read(), hw_version, serial_number);
 
   ResourceVersion system_resources_version = resource_get_system_version();
