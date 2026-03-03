@@ -76,13 +76,6 @@ void command_boot_bits_get(void) {
   dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
 }
 
-void boot_version_write(void) {
-  if (boot_version_read() == TINTIN_METADATA.version_timestamp) {
-    return;
-  }
-  retained_write(BOOTLOADER_VERSION_REGISTER, TINTIN_METADATA.version_timestamp);
-}
-
 uint32_t boot_version_read(void) {
   return retained_read(BOOTLOADER_VERSION_REGISTER);
 }
@@ -123,13 +116,6 @@ uint32_t boot_bits_get(void) {
 void command_boot_bits_get(void) {
   char buffer[32];
   dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
-}
-
-void boot_version_write(void) {
-  if (boot_version_read() == TINTIN_METADATA.version_timestamp) {
-    return;
-  }
-  /* RTC_WriteBackupRegister(BOOTLOADER_VERSION_REGISTER, TINTIN_METADATA.version_timestamp); */
 }
 
 uint32_t boot_version_read(void) {
@@ -174,13 +160,6 @@ uint32_t boot_bits_get(void) {
 void command_boot_bits_get(void) {
   char buffer[32];
   dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
-}
-
-void boot_version_write(void) {
-  if (boot_version_read() == TINTIN_METADATA.version_timestamp) {
-    return;
-  }
-  RTC_WriteBackupRegister(BOOTLOADER_VERSION_REGISTER, TINTIN_METADATA.version_timestamp);
 }
 
 uint32_t boot_version_read(void) {
