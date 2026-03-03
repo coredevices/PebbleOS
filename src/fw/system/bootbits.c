@@ -3,7 +3,9 @@
 
 #include "system/bootbits.h"
 
+#include "drivers/flash.h"
 #include "drivers/rtc.h"
+#include "flash_region/flash_region.h"
 #include "system/logging.h"
 #include "system/version.h"
 #include "util/crc32.h"
@@ -118,8 +120,36 @@ void command_boot_bits_get(void) {
   dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
 }
 
+#define PB_VERSION_MAGIC 0x50425652UL
+
+struct pb_version {
+  uint32_t magic;
+  uint8_t major;
+  uint8_t minor;
+  uint8_t patch;
+  uint8_t tweak;
+} __attribute__((packed));
+
+_Static_assert(sizeof(struct pb_version) == 8, "pb_version struct must be 8 bytes");
+
 uint32_t boot_version_read(void) {
-  return 0xABCD1234;
+  struct pb_version version_data;
+  uint32_t version;
+
+  flash_read_bytes((uint8_t *)&version_data,
+                   FLASH_REGION_BOOTLOADER_END - sizeof(struct pb_version),
+                   sizeof(struct pb_version));
+
+  if (version_data.magic != PB_VERSION_MAGIC) {
+    return 0UL;
+  }
+
+  version = ((uint32_t)version_data.major << 24) |
+            ((uint32_t)version_data.minor << 16) |
+            ((uint32_t)version_data.patch << 8) |
+            (uint32_t)version_data.tweak;
+
+  return version;
 }
 
 #else
