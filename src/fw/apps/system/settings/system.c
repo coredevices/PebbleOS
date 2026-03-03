@@ -326,7 +326,7 @@ static void prv_information_window_push(SettingsSystemData *data) {
   }
 
   sniprintf(info->boot_version_string, sizeof(info->boot_version_string),
-            "0x%" PRIx32, boot_version_read());
+            "0x%08" PRIx32, boot_version_read());
   bt_local_id_copy_address_mac_string(info->bt_mac_addr);
 
   // Ensure OTP strings are null-terminated
