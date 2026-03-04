@@ -200,7 +200,7 @@ static DisplayJDIDevice s_display = {
         },
     },
     .vddp = {hwp_gpio1, 28, true},
-    .vlcd = {hwp_gpio1, 29, true},
+    .vlcd = {hwp_gpio1, 29, false},
     .splash = {
         .data = splash_bits,
         .width = splash_width,
