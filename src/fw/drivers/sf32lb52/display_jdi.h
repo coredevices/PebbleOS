@@ -41,9 +41,8 @@ typedef const struct DisplayJDIDevice {
     Pinmux g2;
     Pinmux b1;
     Pinmux b2;
-    Pinmux vcom;
-    Pinmux va;
-    Pinmux vb;
+    Pinmux vcom_frp;
+    Pinmux xfrp;
   } pinmux;
   OutputConfig vddp;
   OutputConfig vlcd;
