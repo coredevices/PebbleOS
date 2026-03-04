@@ -77,7 +77,7 @@ static void prv_power_cycle(void){
 }
 
 static void prv_display_on() {
-  gpio_output_set(&DISPLAY->vlcd, false);
+  gpio_output_set(&DISPLAY->vlcd, true);
   psleep(POWER_SEQ_DELAY_TIME);
   gpio_output_set(&DISPLAY->vddp, true);
   psleep(POWER_SEQ_DELAY_TIME);
@@ -103,7 +103,7 @@ static void prv_display_off() {
   psleep(POWER_SEQ_DELAY_TIME);
   gpio_output_set(&DISPLAY->vddp, false);
   psleep(POWER_SEQ_DELAY_TIME);
-  gpio_output_set(&DISPLAY->vlcd, true);
+  gpio_output_set(&DISPLAY->vlcd, false);
 }
 
 static void prv_display_update_start(void) {
