@@ -26,6 +26,8 @@ typedef struct QSPIPortState {
   DMA_HandleTypeDef hdma;
   qspi_configure_t cfg;
   struct dma_config dma;
+  uint32_t t_enter_deep_us;
+  uint32_t t_exit_deep_us;
   bool initialized;
 #else
   SemaphoreHandle_t dma_semaphore;

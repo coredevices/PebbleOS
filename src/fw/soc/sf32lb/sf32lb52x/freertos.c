@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#include "board/board.h"
 #include "console/prompt.h"
 #include "drivers/flash.h"
 #include "drivers/mcu.h"
@@ -84,12 +85,17 @@ static void prv_enter_deepwfi(void) {
 }
 
 static void prv_enter_deepslep(void) {
+  QSPIPortState *flash_state;
   uint32_t dll1_freq;
   int clk_src;
 
+  flash_state = QSPI_FLASH->qspi->state;
+
   prv_save_iser();
 
-  flash_power_down_for_stop_mode();
+  HAL_FLASH_NOP_CMD(&flash_state->ctx.handle);
+  HAL_FLASH_DEEP_PWRDOWN(&flash_state->ctx.handle);
+  HAL_Delay_us(flash_state->t_enter_deep_us);
 
   NVIC_EnableIRQ(AON_IRQn);
 
@@ -134,6 +140,9 @@ static void prv_enter_deepslep(void) {
   HAL_RCC_HCPU_EnableDLL1(dll1_freq);
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
   HAL_Delay_us(0);
+
+  HAL_FLASH_RELEASE_DPD(&flash_state->ctx.handle);
+  HAL_Delay_us(flash_state->t_exit_deep_us);
 
   prv_restore_iser();
 }

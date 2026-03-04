@@ -249,6 +249,8 @@ static QSPIPortState s_qspi_port_state = {
       .dma_irq = DMAC1_CH2_IRQn,
       .request = DMA_REQUEST_1,
     },
+    .t_enter_deep_us = 3,
+    .t_exit_deep_us = 20,
 };
 
 static QSPIPort QSPI_PORT = {
