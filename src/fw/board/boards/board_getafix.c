@@ -198,14 +198,14 @@ static DisplayJDIDevice s_display = {
             .func = LCDC1_JDI_B2,
             .flags = PIN_NOPULL,
             },
-        .vcom = {
+        .vcom_frp = {
             .pad = PAD_PA24,
-            .func = GPIO_A24,
+            .func = PBR_LPTIM2_OUT,
             .flags = PIN_NOPULL,
         },
-        .va = {
+        .xfrp = {
             .pad = PAD_PA25,
-            .func = GPIO_A25,
+            .func = PBR_LPTIM2_INV_OUT,
             .flags = PIN_NOPULL,
         },
     },
