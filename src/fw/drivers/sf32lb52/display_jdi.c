@@ -9,7 +9,7 @@
 #include "drivers/gpio.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
+#include "kernel/util/delay.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "system/logging.h"
@@ -23,8 +23,8 @@
 #include "bf0_hal_lptim.h"
 #include "bf0_hal_rtc.h"
 
-#define POWER_SEQ_DELAY_TIME  (11)
-#define POWER_RESET_CYCLE_DELAY_TIME (500)
+#define POWER_SEQ_DELAY_TIME_US  11000
+#define POWER_RESET_CYCLE_DELAY_TIME_US 500000
 
 // Pointer to the compositor's framebuffer - we convert in-place to save 44KB RAM
 static uint8_t *s_framebuffer;
@@ -73,14 +73,14 @@ static void prv_power_cycle(void){
   gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP, GPIO_Speed_2MHz);
   gpio_output_set(&cfg, false);
 
-  psleep(POWER_RESET_CYCLE_DELAY_TIME);
+  delay_us(POWER_RESET_CYCLE_DELAY_TIME_US);
 }
 
 static void prv_display_on() {
   gpio_output_set(&DISPLAY->vlcd, true);
-  psleep(POWER_SEQ_DELAY_TIME);
+  delay_us(POWER_SEQ_DELAY_TIME_US);
   gpio_output_set(&DISPLAY->vddp, true);
-  psleep(POWER_SEQ_DELAY_TIME);
+  delay_us(POWER_SEQ_DELAY_TIME_US);
 
   LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
 
@@ -100,9 +100,9 @@ static void prv_display_off() {
   lptim->CR &= ~LPTIM_CR_ENABLE;
   lptim->CR &= ~LPTIM_CR_CNTSTRT;
 
-  psleep(POWER_SEQ_DELAY_TIME);
+  delay_us(POWER_SEQ_DELAY_TIME_US);
   gpio_output_set(&DISPLAY->vddp, false);
-  psleep(POWER_SEQ_DELAY_TIME);
+  delay_us(POWER_SEQ_DELAY_TIME_US);
   gpio_output_set(&DISPLAY->vlcd, false);
 }
 
