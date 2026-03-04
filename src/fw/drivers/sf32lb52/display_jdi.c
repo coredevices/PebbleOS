@@ -70,8 +70,8 @@ static void prv_power_cycle(void){
   gpio_output_init(&cfg, GPIO_OType_PP, GPIO_Speed_2MHz);
   gpio_output_set(&cfg, false);
 
-  gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP, GPIO_Speed_2MHz);
-  gpio_output_set(&cfg, false);
+  gpio_output_set(&DISPLAY->vddp, false);
+  gpio_output_set(&DISPLAY->vlcd, false);
 
   delay_us(POWER_RESET_CYCLE_DELAY_TIME_US);
 }
@@ -179,10 +179,10 @@ void display_init(void) {
 
   DisplayJDIState *state = DISPLAY->state;
 
-  prv_power_cycle();
-
   gpio_output_init(&DISPLAY->vddp, GPIO_OType_PP, GPIO_Speed_2MHz);
   gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP, GPIO_Speed_2MHz);
+
+  prv_power_cycle();
 
   HAL_PIN_Set(DISPLAY->pinmux.xrst.pad, DISPLAY->pinmux.xrst.func, DISPLAY->pinmux.xrst.flags, 1);
   HAL_PIN_Set(DISPLAY->pinmux.vst.pad, DISPLAY->pinmux.vst.func, DISPLAY->pinmux.vst.flags, 1);
