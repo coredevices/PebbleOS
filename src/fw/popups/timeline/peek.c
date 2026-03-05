@@ -413,7 +413,7 @@ static void prv_push_timeline_peek(void *unused) {
 void timeline_peek_init(void) {
   TimelinePeek *peek = &s_peek;
   *peek = (TimelinePeek) {
-#if CAPABILITY_HAS_TIMELINE_PEEK && !SHELL_SDK
+#if CAPABILITY_HAS_TIMELINE_PEEK && !SHELL_SDK && !TARGET_QEMU
     .enabled = timeline_peek_prefs_get_enabled(),
 #endif
   };
@@ -450,7 +450,7 @@ static bool prv_can_animate(void) {
 
 void timeline_peek_set_visible(bool visible, bool animated) {
   TimelinePeek *peek = &s_peek;
-#if !SHELL_SDK
+#if !SHELL_SDK && !TARGET_QEMU
   if (!peek->exists) {
     visible = false;
   }
