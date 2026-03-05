@@ -9,6 +9,7 @@
 
 #ifdef HRM_USE_GH3X2X
 #include "math.h"
+#include "kernel/util/delay.h"
 #include "kernel/events.h"
 #include "services/common/system_task.h"
 #include "services/common/hrm/hrm_manager.h"
@@ -93,6 +94,10 @@ static void gh3026_int_irq_callback(bool *should_context_switch) {
 
 void gh3026_int_pin_init(void) {
 
+}
+
+void gh3x2x_delay_us(uint16_t us) {
+  delay_us(us);
 }
 
 void gh3x2x_print_fmt(const char *fmt, ...) {
@@ -437,11 +442,16 @@ void hrm_init(HRMDevice *dev) {
   HRMDeviceState* state = HRM->state;
   state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
 #endif
-  // Put HRM sensor into reset on startup
+#ifdef HRM_USE_GH3X2X
+  GH3X2X_RegisterResetPinControlFunc(gh3026_reset_pin_ctrl);
+  GH3X2X_RegisterDelayUsCallback(gh3x2x_delay_us);
+  GH3X2X_HardReset();
+
+  exti_configure_pin(HRM->int_exti, ExtiTrigger_Rising, gh3026_int_irq_callback);
+  exti_enable(HRM->int_exti);
+#else
   gh3026_reset_pin_ctrl(0);
   exti_configure_pin(HRM->int_exti, ExtiTrigger_Rising, gh3026_int_irq_callback);
-#ifdef HRM_USE_GH3X2X
-  exti_enable(HRM->int_exti);
 #endif
 }
 
@@ -449,12 +459,9 @@ bool hrm_enable(HRMDevice *dev) {
 #ifdef HRM_USE_GH3X2X
   int ret;
 
-  gh3026_reset_pin_ctrl(1);
-
   ret = Gh3x2xDemoInit();
   if (ret != 0) {
     PBL_LOG_ERR("GH3X2X failed to initialize");
-    gh3026_reset_pin_ctrl(0);
     return false;
   }
 
@@ -480,7 +487,6 @@ void hrm_disable(HRMDevice *dev) {
 #ifdef HRM_USE_GH3X2X
   Gh3x2xDemoStopSampling(0xFFFFFFFF);
 #endif
-  gh3026_reset_pin_ctrl(0);
   dev->state->enabled = false;
 }
 
