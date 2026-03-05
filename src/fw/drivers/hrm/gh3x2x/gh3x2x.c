@@ -92,8 +92,7 @@ static void gh3026_int_irq_callback(bool *should_context_switch) {
 }
 
 void gh3026_int_pin_init(void) {
-  exti_configure_pin(HRM->int_exti, ExtiTrigger_Rising, gh3026_int_irq_callback);
-  exti_enable(HRM->int_exti);
+
 }
 
 void gh3x2x_print_fmt(const char *fmt, ...) {
@@ -425,19 +424,24 @@ void gh3x2x_set_work_mode(int32_t mode) {
 }
 #endif // MANUFACTURING_FW
 
+#else
+static void gh3026_int_irq_callback(bool *should_context_switch) {
+  *should_context_switch = false;
+}
 #endif // HRM_USE_GH3X2X
 
 // HRM interface
 
 void hrm_init(HRMDevice *dev) {
-#ifdef HRM_USE_GH3X2X
 #ifdef MANUFACTURING_FW
   HRMDeviceState* state = HRM->state;
   state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
 #endif
-#else
   // Put HRM sensor into reset on startup
   gh3026_reset_pin_ctrl(0);
+  exti_configure_pin(HRM->int_exti, ExtiTrigger_Rising, gh3026_int_irq_callback);
+#ifdef HRM_USE_GH3X2X
+  exti_enable(HRM->int_exti);
 #endif
 }
 
