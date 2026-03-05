@@ -76,6 +76,10 @@ typedef enum {
 //!   @}
 //! @}
 
+// @internal
+// Returns true if app logging over Bluetooth is enabled (someone is listening)
+bool app_log_is_bt_enabled(void);
+
 typedef enum AppLoggingMode {
   AppLoggingDisabled = 0,
   AppLoggingEnabled = 1,
