@@ -12,6 +12,7 @@ from waflib.Task import Task
 from waflib.TaskGen import after_method, before_method, feature
 from waflib.Tools import c, c_preproc
 
+import ldscript, process_bundle, process_headers, process_js, report_memory_usage  # noqa: F401
 from pebble_sdk_platform import maybe_import_internal
 from sdk_helpers import (
     append_to_attr,

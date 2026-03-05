@@ -9,7 +9,8 @@ from waflib.Errors import WafError
 from waflib.TaskGen import before_method, feature
 from waflib import Context, Logs, Task
 
-from sdk_helpers import find_sdk_component
+from sdk_helpers import find_sdk_component, get_node_from_abspath  # noqa: F401
+from sdk_helpers import process_package  # noqa: F401
 
 
 @feature("rockyjs")
