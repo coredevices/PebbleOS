@@ -7,6 +7,8 @@
 #include "applib/app_logging.h"
 #include "applib/moddable/moddable.h"
 
+#include <stddef.h>
+
 #if CAPABILITY_HAS_MODDABLE_XS && !defined(RECOVERY_FW)
 #include "xsmc.h"
 #include "xsHost.h"
@@ -32,17 +34,25 @@ void moddable_cleanup(void)
 	task_free(state);
 }
 
+// Minimum recordSize for the original struct (without flags field)
+#define kModdableCreationRecordMinSize offsetof(ModdableCreationRecord, flags)
+
 DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 {
 	xsMachine *the;
+	uint32_t flags = 0;
 
 	if (NULL == cr)
 		the = modCloneMachine(NULL, NULL);
 	else {
-		if (cr->recordSize < sizeof(ModdableCreationRecord)) {
+		if (cr->recordSize < kModdableCreationRecordMinSize) {
 			PBL_LOG_ERR("invalid recordSize");
 			return;
 		}
+
+		// Read flags if the record is large enough to include them
+		if (cr->recordSize >= sizeof(ModdableCreationRecord))
+			flags = cr->flags;
 
 		uint32_t stack = cr->stack, slot = cr->slot, chunk = cr->chunk;
 		if (!stack && !slot && !chunk)
@@ -80,9 +90,14 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 		return;
 	}
 
+	// Don't log instrumentation if nobody is listening to APP_LOG over BT
+	if (!app_log_is_bt_enabled())
+		flags &= ~kModdableCreationFlagLogInstrumentation;
+
 	ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
 	state->the = the;
 	state->eventedTimer = EVENTED_TIMER_INVALID_ID;
+	state->creationFlags = flags;
 	app_state_set_rocky_memory_api_context((void *)state);
 
 	evented_timer_register(2, false, startMachine, the);

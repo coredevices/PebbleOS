@@ -154,9 +154,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x56 -- Add PlatformType enum and defines (rev 89)
 // sdk.major:0x5 .minor:0x57 -- Add moddable_createMachine (rev 90)
 // sdk.major:0x5 .minor:0x58 -- Add size 60 LECO font (rev 91)
+// sdk.major:0x5 .minor:0x59 -- Add flags to ModdableCreationRecord (rev 92)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x58
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x59
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
