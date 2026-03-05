@@ -24,8 +24,6 @@ void watchdog_init(void) {
 
   HAL_PMU_SetWdt((uint32_t)hwdt.Instance);
   __HAL_SYSCFG_Enable_WDT_REBOOT(1);
-
-  PBL_LOG_DBG("Initializing WDT with timeout %u seconds", WDT_TIMEOUT_S);
 }
 
 void watchdog_start(void) {
