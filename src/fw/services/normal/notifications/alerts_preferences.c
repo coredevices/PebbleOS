@@ -34,6 +34,9 @@ static AlertMask s_dnd_interruptions_mask = AlertMaskAllOff;
 #define PREF_KEY_DND_SHOW_NOTIFICATIONS "dndShowNotifications"
 static DndNotificationMode s_dnd_show_notifications = DndNotificationModeShow;
 
+#define PREF_KEY_DND_MOTION_BACKLIGHT "dndMotionBacklight"
+static bool s_dnd_motion_backlight = true;
+
 #define PREF_KEY_VIBE "vibe"
 static bool s_vibe_on_notification = true;
 
@@ -271,6 +274,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
   RESTORE_PREF(PREF_KEY_DND_INTERRUPTIONS_MASK, s_dnd_interruptions_mask);
   RESTORE_PREF(PREF_KEY_DND_SHOW_NOTIFICATIONS, s_dnd_show_notifications);
+  RESTORE_PREF(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
   RESTORE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE, s_legacy_dnd_schedule);
   RESTORE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE_ENABLED, s_legacy_dnd_schedule_enabled);
   RESTORE_PREF(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
@@ -446,6 +450,15 @@ void alerts_preferences_dnd_set_show_notifications(DndNotificationMode mode) {
 
 DndNotificationMode alerts_preferences_dnd_get_show_notifications(void) {
   return s_dnd_show_notifications;
+}
+
+void alerts_preferences_dnd_set_motion_backlight(bool enable) {
+  s_dnd_motion_backlight = enable;
+  SET_PREF(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
+}
+
+bool alerts_preferences_dnd_get_motion_backlight(void) {
+  return s_dnd_motion_backlight;
 }
 
 bool alerts_preferences_dnd_is_manually_enabled(void) {
