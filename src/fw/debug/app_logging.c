@@ -17,6 +17,10 @@ static const uint16_t APP_LOGGING_ENDPOINT = 2006;
 
 static AppLoggingMode s_app_logging_mode = AppLoggingDisabled;
 
+bool app_log_is_bt_enabled(void) {
+  return s_app_logging_mode == AppLoggingEnabled;
+}
+
 static const uint32_t MIN_STACK_FOR_SEND_DATA = 400;
 
 DEFINE_SYSCALL(void, sys_app_log, size_t length, void *log_buffer) {
