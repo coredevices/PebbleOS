@@ -3,6 +3,7 @@
 
 from waflib import Task, TaskGen
 
+from resources.types.resource_ball import ResourceBall  # noqa: F401
 
 from pbpack import ResourcePack
 

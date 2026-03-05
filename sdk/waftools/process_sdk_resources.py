@@ -8,6 +8,12 @@ from resources.find_resource_filename import find_most_specific_filename
 from resources.types.resource_definition import ResourceDefinition
 from resources.types.resource_object import ResourceObject
 from resources.resource_map import resource_generator
+import resources.resource_map.resource_generator_bitmap  # noqa: F401
+import resources.resource_map.resource_generator_font  # noqa: F401
+import resources.resource_map.resource_generator_js  # noqa: F401
+import resources.resource_map.resource_generator_pbi  # noqa: F401
+import resources.resource_map.resource_generator_png  # noqa: F401
+import resources.resource_map.resource_generator_raw  # noqa: F401
 from sdk_helpers import is_sdk_2x, validate_resource_not_larger_than
 
 
