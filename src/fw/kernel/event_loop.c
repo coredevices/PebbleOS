@@ -64,6 +64,7 @@
 #include "services/normal/alarms/alarm.h"
 #include "services/normal/app_fetch_endpoint.h"
 #include "services/normal/blob_db/api.h"
+#include "services/normal/notifications/alerts_preferences.h"
 #include "services/normal/notifications/do_not_disturb.h"
 #include "services/normal/stationary.h"
 #include "services/normal/timeline/reminders.h"
@@ -288,7 +289,14 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
     case PEBBLE_ACCEL_SHAKE_EVENT:
       analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_SHAKE_COUNT, AnalyticsClient_System);
       if (backlight_is_motion_enabled()) {
-        light_enable_interaction();
+#ifndef RECOVERY_FW
+        const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
+                                             !alerts_preferences_dnd_get_motion_backlight();
+        if (!dnd_suppresses_backlight)
+#endif
+        {
+          light_enable_interaction();
+        }
       }
       return;
 

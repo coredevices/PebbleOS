@@ -33,6 +33,13 @@ void alerts_preferences_dnd_set_show_notifications(DndNotificationMode mode);
 //! @return The notification display mode when DND is active
 DndNotificationMode alerts_preferences_dnd_get_show_notifications(void);
 
+//! Set whether the backlight should turn on with motion when DND is active
+//! @param enable true to allow motion backlight, false to suppress it
+void alerts_preferences_dnd_set_motion_backlight(bool enable);
+
+//! @return Whether motion backlight is enabled when DND is active
+bool alerts_preferences_dnd_get_motion_backlight(void);
+
 //! Checks whether a given "first use" dialog has been shown and sets it as complete
 //! @param source The "first use" bit to check
 //! @return true if the dialog has already been shown, false otherwise
