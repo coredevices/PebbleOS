@@ -6,6 +6,8 @@
 #include "drivers/accel.h"
 #include "drivers/button.h"
 #include "drivers/imu/mmc5603nj/mmc5603nj.h"
+#include "kernel/events.h"
+#include "process_management/process_manager.h"
 
 
 void prv_change_orientation(bool rotated) {
@@ -17,6 +19,14 @@ void prv_change_orientation(bool rotated) {
 
 void orientation_handle_prefs_changed(void) {
   prv_change_orientation(display_orientation_is_left());
+
+  // Force the running app to re-render so the display reflects the new orientation immediately.
+  // Without this, phone-originated orientation changes (via settings blob DB sync) would not
+  // be visible until the next natural redraw (e.g. button press or watchface tick).
+  PebbleEvent event = {
+    .type = PEBBLE_RENDER_REQUEST_EVENT,
+  };
+  process_manager_send_event_to_process(PebbleTask_App, &event);
 }
 
 void orientation_manager_enable(bool on) {
