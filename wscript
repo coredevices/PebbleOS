@@ -187,6 +187,9 @@ def options(opt):
     opt.add_option('--no-pulse-everywhere',
                    action='store_true',
                    help='Disables PULSE everywhere, uses legacy logs and prompt')
+    opt.add_option('--force-pulse',
+                   action='store_true',
+                   help='Force PULSE-based flashing even on SF32LB52 (default: sftool)')
 
 def handle_configure_options(conf):
     if conf.options.noprompt:
@@ -1397,10 +1400,11 @@ def _is_pulse_everywhere(ctx):
 
 
 def _get_pulse_flash_tool(ctx):
+    if ctx.env.MICRO_FAMILY == 'SF32LB52' and not ctx.options.force_pulse:
+        return "sftool_flash_imaging"
     if _is_pulse_everywhere(ctx):
         return "pulse_flash_imaging"
-    else:
-        return "pulse_legacy_flash_imaging"
+    return "pulse_legacy_flash_imaging"
 
 
 def image_resources(ctx):
@@ -1410,16 +1414,6 @@ def image_resources(ctx):
         return
 
     pbpack_path = ctx.get_pbpack_node().abspath()
-
-    # Use sftool for Sifli-based boards
-    if ctx.env.MICRO_FAMILY == 'SF32LB52':
-        waflib.Logs.pprint('CYAN', 'Writing pbpack "%s" to tty %s using sftool' % (pbpack_path, tty))
-        from waftools import sftool
-        # FIXME(SF32LB52): Make this configurable!
-        # FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN is 0x12620000
-        sftool.write_flash(ctx, f'{pbpack_path}@0x12620000')
-        return
-
     tool_name = _get_pulse_flash_tool(ctx)
     waflib.Logs.pprint('CYAN', 'Writing pbpack "%s" to tty %s' % (pbpack_path, tty))
 
