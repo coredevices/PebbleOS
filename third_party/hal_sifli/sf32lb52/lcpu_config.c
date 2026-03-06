@@ -9,11 +9,16 @@
 
 #define NVDS_BUFF_START 0x2040FE00
 
-static const uint8_t s_ble_slp_default_rc10k[] = {
+static const uint8_t s_ble_slp_default[] = {
     // Control pre-wakeup time for the sleep of BT subsysm in LCPU.
-    // The value is different in RC10K and LXT32K
-    // FIXME(SF32LB52): Adjust depending on the configured board clock source!
-    0x0D, 0x02, 0x64, 0x19,
+    // See SiFli-SDK EXT_WAKEUP_TIME_LXT32K/EXT_WAKEUP_TIME_RC10K for details.
+    // RC10K -> 4500us (0x1194)
+    // LXT32K -> 3500us (0x0DAC)
+#ifdef LXT_DISABLE
+    0x0D, 0x02, 0x19, 0x11,
+#else
+    0x0D, 0x02, 0xAC, 0x0D,
+#endif
     // Control maximum sleep duration of BT subsystem.
     // The last 0x01 means 10s in BLE only and 30s in dual mode. 0 means 500ms
     0x12, 0x01, 0x01,
@@ -68,12 +73,12 @@ void lcpu_custom_nvds_config(void) {
   assert(res);
 
   *(uint32_t *)nvds_addr = 0x4E564453;
-  *(uint16_t *)(nvds_addr + 4) = sizeof(s_ble_slp_default_rc10k) + 8U;
+  *(uint16_t *)(nvds_addr + 4) = sizeof(s_ble_slp_default) + 8U;
   *(uint16_t *)(nvds_addr + 6) = 0;
 
   *(uint8_t *)(nvds_addr + 8) = 0x01;
   *(uint8_t *)(nvds_addr + 9) = 0x06;
   memcpy(nvds_addr + 10, mac_addr, 6);
 
-  memcpy(nvds_addr + 16, s_ble_slp_default_rc10k, sizeof(s_ble_slp_default_rc10k));
+  memcpy(nvds_addr + 16, s_ble_slp_default, sizeof(s_ble_slp_default));
 }
