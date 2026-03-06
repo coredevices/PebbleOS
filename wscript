@@ -187,6 +187,9 @@ def options(opt):
     opt.add_option('--no-pulse-everywhere',
                    action='store_true',
                    help='Disables PULSE everywhere, uses legacy logs and prompt')
+    opt.add_option('--force-pulse',
+                   action='store_true',
+                   help='Force PULSE-based flashing even on SF32LB52 (default: sftool)')
 
 def handle_configure_options(conf):
     if conf.options.noprompt:
@@ -1397,7 +1400,7 @@ def _is_pulse_everywhere(ctx):
 
 
 def _get_pulse_flash_tool(ctx):
-    if ctx.env.MICRO_FAMILY == 'SF32LB52':
+    if ctx.env.MICRO_FAMILY == 'SF32LB52' and not ctx.options.force_pulse:
         return "sftool_flash_imaging"
     if _is_pulse_everywhere(ctx):
         return "pulse_flash_imaging"
