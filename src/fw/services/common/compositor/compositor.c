@@ -634,7 +634,7 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
         update_rect.size.w - bezel_width,
         update_rect.size.h - app_offset_y
       );
-      dst_offset = GPoint(bezel_width - update_rect.origin.x, app_offset_y - update_rect.origin.y);
+      dst_offset = GPoint(bezel_width + update_rect.origin.x, app_offset_y + update_rect.origin.y);
     }
 
     if (src_rect.size.w > 0 && src_rect.size.h > 0) {
