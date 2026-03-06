@@ -32,12 +32,14 @@ typedef struct HRMDeviceState {
   uint16_t timer_period_ms;
   AppTimer *timer;
   GH3x2xFTData* factory;
+  bool initialized;
 } HRMDeviceState;
 
 typedef const struct HRMDevice {
   HRMDeviceState *state;
   I2CSlavePort *i2c;
   ExtiConfig int_exti;
+  InputConfig int_input;
   OutputConfig reset_gpio;
 } HRMDevice;
 
