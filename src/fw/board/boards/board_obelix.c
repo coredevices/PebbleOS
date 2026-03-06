@@ -568,6 +568,10 @@ static HRMDevice s_hrm = {
         .peripheral = hwp_gpio1,
         .gpio_pin = 44,
     },
+    .int_input = {
+        .gpio = hwp_gpio1,
+        .gpio_pin = 44,
+    },
 };
 
 HRMDevice * const HRM = &s_hrm;
