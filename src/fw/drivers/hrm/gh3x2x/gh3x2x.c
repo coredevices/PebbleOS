@@ -23,7 +23,6 @@
 void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 #if GH3X2X_RESET_PIN_CTRLBY_NPM1300
   NPM1300_OPS.gpio_set(Npm1300_Gpio3, pin_level);
-  psleep(10);
 #endif
 }
 
@@ -93,11 +92,8 @@ static void gh3026_int_irq_callback(bool *should_context_switch) {
 }
 
 void gh3026_int_pin_init(void) {
-
-}
-
-void gh3x2x_delay_us(uint16_t us) {
-  delay_us(us);
+  exti_configure_pin(HRM->int_exti, ExtiTrigger_Falling, gh3026_int_irq_callback);
+  exti_enable(HRM->int_exti);
 }
 
 void gh3x2x_print_fmt(const char *fmt, ...) {
@@ -438,43 +434,39 @@ static void gh3026_int_irq_callback(bool *should_context_switch) {
 // HRM interface
 
 void hrm_init(HRMDevice *dev) {
-#ifdef MANUFACTURING_FW
-  HRMDeviceState* state = HRM->state;
-  state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
-#endif
-#ifdef HRM_USE_GH3X2X
-  GH3X2X_RegisterResetPinControlFunc(gh3026_reset_pin_ctrl);
-  GH3X2X_RegisterDelayUsCallback(gh3x2x_delay_us);
-  GH3X2X_HardReset();
-
-  exti_configure_pin(HRM->int_exti, ExtiTrigger_Rising, gh3026_int_irq_callback);
-  exti_enable(HRM->int_exti);
-#else
-  gh3026_reset_pin_ctrl(0);
-  exti_configure_pin(HRM->int_exti, ExtiTrigger_Rising, gh3026_int_irq_callback);
-#endif
-}
-
-bool hrm_enable(HRMDevice *dev) {
 #ifdef HRM_USE_GH3X2X
   int ret;
 
   ret = Gh3x2xDemoInit();
   if (ret != 0) {
     PBL_LOG_ERR("GH3X2X failed to initialize");
+    return;
+  }
+#else
+  gh3026_reset_pin_ctrl(0);
+  gpio_input_init_pull_up_down(&dev->int_input, GPIO_PuPd_DOWN);
+#endif
+
+  dev->state->initialized = true;
+}
+
+bool hrm_enable(HRMDevice *dev) {
+#ifdef HRM_USE_GH3X2X
+  if (!dev->state->initialized) {
     return false;
   }
 
   s_hrm_int_flag = false;
 
+  dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2;
+#ifdef MANUFACTURING_FW
+  dev->state->work_mode |= GH3X2X_FUNCTION_SOFT_ADT_IR;
+#endif
+
   GH3X2X_FifoWatermarkThrConfig(GH3X2X_FIFO_WATERMARK_CONFIG);
   GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_NEED_FORCE_READ_FIFO);
   Gh3x2xDemoFunctionSampleRateSet(GH3X2X_FUNCTION_HR, GH3X2X_HR_SAMPLING_RATE);
-#ifdef MANUFACTURING_FW
   Gh3x2xDemoStartSampling(dev->state->work_mode);
-#else
-  Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2);
-#endif
 
   dev->state->enabled = true;
   return true;
@@ -485,6 +477,10 @@ bool hrm_enable(HRMDevice *dev) {
 
 void hrm_disable(HRMDevice *dev) {
 #ifdef HRM_USE_GH3X2X
+  if (!dev->state->initialized) {
+    return;
+  }
+
   Gh3x2xDemoStopSampling(0xFFFFFFFF);
 #endif
   dev->state->enabled = false;
