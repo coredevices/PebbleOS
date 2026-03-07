@@ -18,7 +18,7 @@
 #include "system/logging.h"
 #include "util/time/time.h"
 
-#define SELECT_INDICATOR_COLOR (PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack))
+#define SELECT_INDICATOR_COLOR GColorBlack
 #define BACK_TO_WATCHFACE (-1)
 
 // Enum for different card types

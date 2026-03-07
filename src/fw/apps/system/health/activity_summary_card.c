@@ -39,21 +39,19 @@ typedef struct HealthActivitySummaryCardData {
   int32_t daily_average_steps;
 } HealthActivitySummaryCardData;
 
-
 #define PROGRESS_CURRENT_COLOR (PBL_IF_COLOR_ELSE(GColorIslamicGreen, GColorDarkGray))
 #define PROGRESS_TYPICAL_COLOR (PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack))
 #define PROGRESS_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorDarkGray, GColorClear))
-#define PROGRESS_OUTLINE_COLOR (PBL_IF_COLOR_ELSE(GColorClear, GColorBlack))
+#define PROGRESS_OUTLINE_COLOR GColorBlack
 
-#define CURRENT_TEXT_COLOR PROGRESS_CURRENT_COLOR
-#define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite))
-
+#define CURRENT_TEXT_COLOR GColorBlack
+#define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite))
 
 static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
   HealthActivitySummaryCardData *data = layer_get_data(base_layer);
 
-  health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_BACKGROUND_COLOR,
-                           0, HEALTH_PROGRESS_BAR_MAX_VALUE);
+  health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_BACKGROUND_COLOR, 0,
+                           HEALTH_PROGRESS_BAR_MAX_VALUE);
 
   const int32_t progress_max = MAX(data->current_steps, data->daily_average_steps);
   if (!progress_max) {
@@ -103,7 +101,7 @@ static void prv_render_current_steps(GContext *ctx, Layer *base_layer) {
   GFont font;
   if (data->current_steps) {
     font = fonts_get_system_font(HEALTH_STEPS_FONT);
-    snprintf(buffer, sizeof(buffer), "%"PRIu32"", data->current_steps);
+    snprintf(buffer, sizeof(buffer), "%" PRIu32 "", data->current_steps);
   } else {
     font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
     snprintf(buffer, sizeof(buffer), EM_DASH);
@@ -111,8 +109,7 @@ static void prv_render_current_steps(GContext *ctx, Layer *base_layer) {
 
   const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88) + HEALTH_Y_OFFSET;
   graphics_context_set_text_color(ctx, CURRENT_TEXT_COLOR);
-  graphics_draw_text(ctx, buffer, font,
-                     GRect(0, y, base_layer->bounds.size.w, 40),
+  graphics_draw_text(ctx, buffer, font, GRect(0, y, base_layer->bounds.size.w, 40),
                      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
@@ -121,7 +118,7 @@ static void prv_render_typical_steps(GContext *ctx, Layer *base_layer) {
 
   char steps_buffer[12];
   if (data->typical_steps) {
-    snprintf(steps_buffer, sizeof(steps_buffer), "%"PRId32, data->typical_steps);
+    snprintf(steps_buffer, sizeof(steps_buffer), "%" PRId32, data->typical_steps);
   } else {
     snprintf(steps_buffer, sizeof(steps_buffer), EM_DASH);
   }
@@ -159,13 +156,14 @@ Layer *health_activity_summary_card_create(HealthData *health_data) {
   HealthActivitySummaryCardData *health_activity_summary_card_data = layer_get_data(base_layer);
   layer_set_update_proc(base_layer, prv_base_layer_update_proc);
   // set health data
-  *health_activity_summary_card_data = (HealthActivitySummaryCardData) {
-    .health_data = health_data,
-    .icon = kino_reel_create_with_resource(RESOURCE_ID_HEALTH_APP_ACTIVITY),
-    .progress_bar = {
-      .num_segments = ARRAY_LENGTH(s_activity_summary_progress_segments),
-      .segments = s_activity_summary_progress_segments,
-    },
+  *health_activity_summary_card_data = (HealthActivitySummaryCardData){
+      .health_data = health_data,
+      .icon = kino_reel_create_with_resource(RESOURCE_ID_HEALTH_APP_ACTIVITY),
+      .progress_bar =
+          {
+              .num_segments = ARRAY_LENGTH(s_activity_summary_progress_segments),
+              .segments = s_activity_summary_progress_segments,
+          },
   };
 
   return base_layer;
@@ -175,9 +173,9 @@ void health_activity_summary_card_select_click_handler(Layer *layer) {
   HealthActivitySummaryCardData *health_activity_summary_card_data = layer_get_data(layer);
   HealthData *health_data = health_activity_summary_card_data->health_data;
   Window *window = health_activity_detail_card_create(health_data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .unload = prv_activity_detail_card_unload_callback,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .unload = prv_activity_detail_card_unload_callback,
+                                     });
   app_window_stack_push(window, true);
 }
 
