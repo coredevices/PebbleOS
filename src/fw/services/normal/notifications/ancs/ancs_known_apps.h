@@ -62,6 +62,7 @@
     APP("us.zoom.videomeetings", TIMELINE_RESOURCE_NOTIFICATION_ZOOM, GColorVividCeruleanARGB8),
     APP("com.ebay.iphone", TIMELINE_RESOURCE_NOTIFICATION_EBAY, GColorRedARGB8),
     APP("org.whispersystems.signal", TIMELINE_RESOURCE_NOTIFICATION_SIGNAL, GColorBlueMoonARGB8),
+    APP("im.molly.app", TIMELINE_RESOURCE_NOTIFICATION_SIGNAL, GColorVividVioletARGB8),
     APP("tv.twitch", TIMELINE_RESOURCE_NOTIFICATION_TWITCH, GColorVividVioletARGB8),
     APP("com.airmailapp.iphone", TIMELINE_RESOURCE_NOTIFICATION_AIRMAIL, GColorBlueMoonARGB8),
     APP("com.reddit.Reddit", TIMELINE_RESOURCE_NOTIFICATION_REDDIT, GColorOrangeARGB8),
