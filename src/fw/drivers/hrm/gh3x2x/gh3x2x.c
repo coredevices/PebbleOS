@@ -119,13 +119,13 @@ void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
   } else {
     hrm_data.hrm_bpm = bpm;
 
-    if (quality >= 80U) {
+    if (quality >= 98U) {
       hrm_data.hrm_quality = HRMQuality_Excellent;
-    } else if (quality >= 70U) {
+    } else if (quality >= 90U) {
       hrm_data.hrm_quality = HRMQuality_Good;
-    } else if (quality >= 60U) {
+    } else if (quality >= 80U) {
       hrm_data.hrm_quality = HRMQuality_Acceptable;
-    } else if (quality >= 50U) {
+    } else if (quality >= 70U) {
       hrm_data.hrm_quality = HRMQuality_Poor;
     } else {
       hrm_data.hrm_quality = HRMQuality_Worst;
@@ -147,13 +147,13 @@ void gh3x2x_spo2_result_report(uint8_t pct, uint8_t quality) {
   } else {
     hrm_data.spo2_percent = pct;
 
-    if (quality >= 80U) {
+    if (quality >= 98U) {
       hrm_data.spo2_quality = HRMQuality_Excellent;
-    } else if (quality >= 70U) {
+    } else if (quality >= 90U) {
       hrm_data.spo2_quality = HRMQuality_Good;
-    } else if (quality >= 60U) {
+    } else if (quality >= 80U) {
       hrm_data.spo2_quality = HRMQuality_Acceptable;
-    } else if (quality >= 50U) {
+    } else if (quality >= 70U) {
       hrm_data.spo2_quality = HRMQuality_Poor;
     } else {
       hrm_data.spo2_quality = HRMQuality_Worst;
