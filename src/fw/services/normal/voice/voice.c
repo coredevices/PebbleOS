@@ -190,18 +190,21 @@ static void prv_start_result_timeout(void) {
 }
 
 static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id) {
-    VOICE_LOG("prv_audio_transfer_stopped_handler called with session_id=%d (current=%d)", 
+  mutex_lock(s_lock);
+  VOICE_LOG("prv_audio_transfer_stopped_handler called with session_id=%d (current=%d)", 
             session_id, s_session_id);
   
   if (s_session_id != session_id) {
     PBL_LOG_WRN("Received audio transfer message when no session was in progress ("
             "%d)", session_id);
+    mutex_unlock(s_lock);
     return;
   }
 
   if (s_state != SessionState_Recording) {
     PBL_LOG_WRN("Received stop message from phone after audio session "
         "stopped/cancelled");
+    mutex_unlock(s_lock);
     return;
   }
 
@@ -211,6 +214,7 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
   prv_stop_recording();
   s_timeout_generation = s_session_generation;
   prv_start_result_timeout();
+  mutex_unlock(s_lock);
 }
 
 static void prv_start_recording(void) {
