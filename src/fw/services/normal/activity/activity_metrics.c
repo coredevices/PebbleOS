@@ -575,7 +575,8 @@ void activity_metrics_prv_reset_hr_stats(void) {
   mutex_lock_recursive(state->mutex);
   {
     state->hr.num_samples = 0;
-    state->hr.num_quality_samples = 0;
+    state->hr.num_good_quality_samples = 0;
+    state->hr.num_excellent_samples = 0;
     memset(state->hr.samples, 0, sizeof(state->hr.samples));
     memset(state->hr.weights, 0, sizeof(state->hr.weights));
 
@@ -599,8 +600,11 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
       state->hr.samples[state->hr.num_samples] = hrm_event->bpm.bpm;
       state->hr.weights[state->hr.num_samples] =
           prv_get_hr_quality_weight(hrm_event->bpm.quality);
-      if (hrm_event->bpm.quality >= ACTIVITY_MIN_HR_QUALITY_THRESH) {
-        state->hr.num_quality_samples++;
+      if (hrm_event->bpm.quality >= HRMQuality_Good) {
+        state->hr.num_good_quality_samples++;
+      }
+      if (hrm_event->bpm.quality >= HRMQuality_Excellent) {
+        state->hr.num_excellent_samples++;
       }
 
       state->hr.num_samples++;

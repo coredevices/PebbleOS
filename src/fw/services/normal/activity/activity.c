@@ -87,13 +87,14 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
   if (s_activity_state.hr.currently_sampling) {
     // If we are currently sampling, turn off when:
     // - We reach the end of our maximum time on, ACTIVITY_DEFAULT_HR_ON_TIME_SEC
-    // - We get ACTIVITY_MIN_NUM_SAMPLES_SHORT_CIRCUIT samples before the time runs out
-    //     - e.g. We get X samples >= ACTIVITY_MIN_HR_QUALITY_THRESH in our current minute,
-    //       go ahead and turn off the sensor
+    // - We get ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT good quality samples
+    // - We get ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT excellent quality samples
     const uint32_t turn_off_at = last_toggled_ts + ACTIVITY_DEFAULT_HR_ON_TIME_SEC;
-    const bool samples_req_met =
-        (s_activity_state.hr.num_quality_samples >= ACTIVITY_MIN_NUM_SAMPLES_SHORT_CIRCUIT);
-    if ((turn_off_at <= now_ts) || samples_req_met) {
+    const bool good_samples_req_met =
+        (s_activity_state.hr.num_good_quality_samples >= ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT);
+    const bool excellent_samples_req_met =
+        (s_activity_state.hr.num_excellent_samples >= ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT);
+    if ((turn_off_at <= now_ts) || good_samples_req_met || excellent_samples_req_met) {
       should_toggle = true;
     }
   } else {

@@ -2372,9 +2372,16 @@ void test_activity__hrm_sampling_period(void) {
   prv_advance_time_hr(ACTIVITY_DEFAULT_HR_PERIOD_SEC, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
   cl_assert(s_hrm_manager_update_interval > SECONDS_PER_HOUR);
 
-  // Advance to our next sampling period, the watch is no longer flat so we should be sampling
+  // Advance to our next sampling period, the watch is no longer flat so we should be sampling.
+  // The period has already expired during the flat advance above, so just advance until
+  // the next minute boundary triggers the subscription update and starts sampling.
   s_test_alg_state.orientation = 0x22; // Not flat
-  prv_advance_time_hr(ACTIVITY_DEFAULT_HR_PERIOD_SEC, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
+  for (uint32_t i = 0; i < ACTIVITY_DEFAULT_HR_PERIOD_SEC; i++) {
+    prv_advance_time_hr(1, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
+    if (s_hrm_manager_update_interval == 1) {
+      break;
+    }
+  }
   cl_assert_equal_i(s_hrm_manager_update_interval, 1);
 }
 
