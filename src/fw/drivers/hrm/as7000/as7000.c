@@ -514,7 +514,6 @@ static void prv_disable(HRMDevice *dev) {
       WTF;
   }
   led_disable(LEDEnablerHRM);
-  analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_HRM_ON_TIME);
 }
 
 // NOTE: the caller must hold the device's state lock
@@ -525,7 +524,6 @@ static void prv_enable(HRMDevice *dev) {
 
   } else if (dev->state->enabled_state == HRMEnabledState_Disabled) {
     led_enable(LEDEnablerHRM);
-    analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_HRM_ON_TIME, AnalyticsClient_System);
 
     // Enable the device and schedule a timer callback for when we can start communicating with it.
     gpio_output_set(&dev->en_gpio, true);

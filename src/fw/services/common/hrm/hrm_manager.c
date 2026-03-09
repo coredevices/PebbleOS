@@ -333,12 +333,16 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         s_manager_state.enable_failure_count = 0;
         // Don't need the re-enable timer to fire
         new_timer_stop(s_manager_state.update_enable_timer_id);
+        // Track HRM on-time
+        analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_HRM_ON_TIME, AnalyticsClient_System);
       }
 
     } else if (!turn_sensor_on && hrm_is_enabled(HRM)) {
       // Turn off the sensor now
       HRM_LOG("Turning off HR sensor");
       hrm_disable(HRM);
+      // Stop tracking HRM on-time
+      analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_HRM_ON_TIME);
 
       sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
       s_manager_state.accel_state = NULL;
