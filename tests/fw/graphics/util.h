@@ -58,11 +58,11 @@ static const char *namecat(const char* str1, const char* str2){
     printf("filename and filename_xbit %s : %s\n", filename, filename_xbit);
   } else {
 #if !PLATFORM_DEFAULT
-    // On macOS, append ~platform-darwin suffix to allow different fixtures for local dev
-    // Linux (CI) uses the base fixture name without any platform suffix
-#if defined(__APPLE__)
+    // Append platform suffix for non-default platforms
     strcat(filename, "~");
     strcat(filename, PLATFORM_NAME);
+#if defined(__APPLE__)
+    // On macOS, also append -darwin to differentiate local dev fixtures from CI
     strcat(filename, "-darwin");
 #endif
 #endif
