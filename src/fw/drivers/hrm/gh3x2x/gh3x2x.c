@@ -110,21 +110,26 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
 void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
   HRMData hrm_data = {0};
 
-  PBL_LOG_DBG("GH3X2X BPM %" PRIu8 " (quality=%" PRIu8 ")", bpm, quality);
+  PBL_LOG_DBG("GH3X2X BPM %" PRIu8 " (quality=%" PRIu8 ", wear=%u)", bpm, quality, HRM->state->is_wear);
 
   hrm_data.features = HRMFeature_BPM;
-  hrm_data.hrm_bpm = bpm;
 
-  if (quality >= 80U) {
-    hrm_data.hrm_quality = HRMQuality_Excellent;
-  } else if (quality >= 70U) {
-    hrm_data.hrm_quality = HRMQuality_Good;
-  } else if (quality >= 60U) {
-    hrm_data.hrm_quality = HRMQuality_Acceptable;
-  } else if (quality >= 50U) {
-    hrm_data.hrm_quality = HRMQuality_Poor;
+  if (!HRM->state->is_wear) {
+    hrm_data.hrm_quality = HRMQuality_OffWrist;
   } else {
-    hrm_data.hrm_quality = HRMQuality_Worst;
+    hrm_data.hrm_bpm = bpm;
+
+    if (quality >= 80U) {
+      hrm_data.hrm_quality = HRMQuality_Excellent;
+    } else if (quality >= 70U) {
+      hrm_data.hrm_quality = HRMQuality_Good;
+    } else if (quality >= 60U) {
+      hrm_data.hrm_quality = HRMQuality_Acceptable;
+    } else if (quality >= 50U) {
+      hrm_data.hrm_quality = HRMQuality_Poor;
+    } else {
+      hrm_data.hrm_quality = HRMQuality_Worst;
+    }
   }
 
   hrm_manager_new_data_cb(&hrm_data);
@@ -133,24 +138,35 @@ void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
 void gh3x2x_spo2_result_report(uint8_t pct, uint8_t quality) {
   HRMData hrm_data = {0};
 
-  PBL_LOG_DBG("GH3X2X SpO2 %" PRIu8 " (quality=%" PRIu8 ")", pct, quality);
+  PBL_LOG_DBG("GH3X2X SpO2 %" PRIu8 " (quality=%" PRIu8 ", wear=%u)", pct, quality, HRM->state->is_wear);
 
   hrm_data.features = HRMFeature_SpO2;
-  hrm_data.spo2_percent = pct;
 
-  if (quality >= 80U) {
-    hrm_data.spo2_quality = HRMQuality_Excellent;
-  } else if (quality >= 70U) {
-    hrm_data.spo2_quality = HRMQuality_Good;
-  } else if (quality >= 60U) {
-    hrm_data.spo2_quality = HRMQuality_Acceptable;
-  } else if (quality >= 50U) {
-    hrm_data.spo2_quality = HRMQuality_Poor;
+  if (!HRM->state->is_wear) {
+    hrm_data.spo2_quality = HRMQuality_OffWrist;
   } else {
-    hrm_data.spo2_quality = HRMQuality_Worst;
+    hrm_data.spo2_percent = pct;
+
+    if (quality >= 80U) {
+      hrm_data.spo2_quality = HRMQuality_Excellent;
+    } else if (quality >= 70U) {
+      hrm_data.spo2_quality = HRMQuality_Good;
+    } else if (quality >= 60U) {
+      hrm_data.spo2_quality = HRMQuality_Acceptable;
+    } else if (quality >= 50U) {
+      hrm_data.spo2_quality = HRMQuality_Poor;
+    } else {
+      hrm_data.spo2_quality = HRMQuality_Worst;
+    }
   }
 
   hrm_manager_new_data_cb(&hrm_data);
+}
+
+void gh3x2x_wear_evt_notify(bool is_wear) {
+  PBL_LOG_DBG("GH3X2X wear state: %d", is_wear);
+
+  HRM->state->is_wear = is_wear;
 }
 
 void gh3x2x_timer_init(uint32_t period_ms) {
@@ -205,14 +221,6 @@ void gh3x2x_timer_stop(void) {
     .callback.callback = gh3x2x_timer_stop_handle,
   };
   event_put(&e);
-}
-
-void gh3x2x_wear_evt_notify(bool is_wear) {
-  HRMDevice* p_dev = HRM;
-  if (p_dev) {
-    p_dev->state->is_wear = is_wear;
-  }
-  PBL_LOG_DBG("wear notify: %d", is_wear);
 }
 
 // GH3X2X calibration/factory testing
@@ -436,6 +444,7 @@ void hrm_init(HRMDevice *dev) {
   gpio_input_init_pull_up_down(&dev->int_input, GPIO_PuPd_DOWN);
 #endif
 
+  dev->state->is_wear = false;
   dev->state->initialized = true;
 }
 
@@ -447,9 +456,9 @@ bool hrm_enable(HRMDevice *dev) {
 
   s_hrm_int_flag = false;
 
-  dev->state->work_mode = GH3X2X_FUNCTION_HR;
+  dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SOFT_ADT_GREEN;
 #ifdef MANUFACTURING_FW
-  dev->state->work_mode |= GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
+  dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
 #endif
 
   GH3X2X_FifoWatermarkThrConfig(GH3X2X_FIFO_WATERMARK_CONFIG);
