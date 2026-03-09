@@ -124,7 +124,11 @@ void mpu_enable(void) {
                      s_cache_settings[MpuCachePolicy_WriteBackNoWriteAllocate]);
 #endif
 
+#ifdef MICRO_FAMILY_SF32LB52
+  ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk | MPU_CTRL_HFNMIENA_Msk);
+#else
   ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk);
+#endif
 }
 
 void mpu_disable(void) {
@@ -269,18 +273,16 @@ void mpu_set_task_configurable_regions(MemoryRegion_t *memory_regions,
     // If not region defined, use unused
     if (mpu_region == NULL) {
       mpu_region = &unused_region;
+      base_reg = 0;
       attr_reg = 0; // Has a 0 in the enable bit, so this region won't be enabled.
     } else {
       // Make sure that the region numbers passed in jive with the configurable region numbers.
       PBL_ASSERTN(mpu_region->region_num == region_num);
-      // Our FreeRTOS port makes the assumption that the ulParameters field contains exactly what
-      // should be placed into the MPU_RASR register. It will figure out the MPU_RBAR from the
-      // pvBaseAddress field.
       mpu_get_register_settings(mpu_region, &base_reg, &attr_reg);
     }
 
     memory_regions[region_idx] = (MemoryRegion_t) {
-      .pvBaseAddress = (void *)mpu_region->base_address,
+      .pvBaseAddress = (void *)(uintptr_t)base_reg,
       .ulLengthInBytes = mpu_region->size,
       .ulParameters = attr_reg,
     };
