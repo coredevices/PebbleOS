@@ -56,15 +56,16 @@ typedef uint16_t ActivityScalarStore;
 
 // Default HeartRate sampling ON time (Stays on for X seconds every
 // ACTIVITY_DEFAULT_HR_PERIOD_SEC seconds)
-#define ACTIVITY_DEFAULT_HR_ON_TIME_SEC (SECONDS_PER_MINUTE)
+#define ACTIVITY_DEFAULT_HR_ON_TIME_SEC (60)
 
-// Turn off the HR device after we've received X number of thresholded samples
-#define ACTIVITY_MIN_NUM_SAMPLES_SHORT_CIRCUIT (15)
+// Turn off the HR device after we've received X good quality samples
+#define ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT (10)
+
+// Turn off the HR device after we've received X excellent quality samples
+#define ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT (5)
 
 // The minimum number of samples needed before we can approximate the user's HR zone
-#define ACTIVITY_MIN_NUM_SAMPLES_FOR_HR_ZONE (10)
-
-#define ACTIVITY_MIN_HR_QUALITY_THRESH (HRMQuality_Good)
+#define ACTIVITY_MIN_NUM_SAMPLES_FOR_HR_ZONE (5)
 
 // HRM Subscription values during ON and OFF periods
 #define ACTIVITY_HRM_SUBSCRIPTION_ON_PERIOD_SEC  (1)
@@ -307,10 +308,8 @@ typedef struct {
                                       // (from time_get_uptime_seconds)
 
   uint16_t num_samples;               // number of samples in the past minute
-  uint16_t num_quality_samples;       // number of samples in the past minute that have met our
-                                      // quality threshold ACTIVITY_MIN_HR_QUALITY_THRESH
-                                      // NOTE: Used to short circuit
-                                      //   our HR polling when enough samples have been taken
+  uint16_t num_good_quality_samples;  // number of samples in the past minute with good quality
+  uint16_t num_excellent_samples;     // number of samples in the past minute with excellent quality
   uint8_t  samples[ACTIVITY_MAX_HR_SAMPLES]; // HR Samples stored
   uint8_t  weights[ACTIVITY_MAX_HR_SAMPLES]; // HR Sample Weights
 } ActivityHRSupport;
