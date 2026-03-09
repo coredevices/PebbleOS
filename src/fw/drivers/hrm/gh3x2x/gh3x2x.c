@@ -33,7 +33,6 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 #define GH3X2X_HR_SAMPLING_RATE 25
 
 static volatile uint32_t s_hrm_int_flag = false;
-static volatile uint32_t s_hrm_timer_flag = false;
 
 // GH3X2X library glue code
 
@@ -167,60 +166,6 @@ void gh3x2x_wear_evt_notify(bool is_wear) {
   PBL_LOG_DBG("GH3X2X wear state: %d", is_wear);
 
   HRM->state->is_wear = is_wear;
-}
-
-void gh3x2x_timer_init(uint32_t period_ms) {
-  if (HRM) {
-    HRM->state->timer_period_ms = period_ms;
-  }
-}
-
-static void gh3x2x_timer_callback(void* data) {
-  uint32_t param = (uint32_t)data;
-  if (param != 0x87965421) {
-    // Coalesce repeated timer firings - only queue one callback at a time
-    if (s_hrm_timer_flag == false) {
-      if (system_task_add_callback(gh3x2x_timer_callback, (void*)0x87965421)) {
-        s_hrm_timer_flag = true;
-      }
-    }
-    return;
-  }
-  s_hrm_timer_flag = false;
-  Gh3x2xSerialSendTimerHandle();
-}
-
-static void gh3x2x_timer_start_handle(void* arg) {
-  if (HRM == NULL || HRM->state->timer != NULL) {
-    return;
-  }
-  if (HRM->state->timer_period_ms == 0) {
-    return;
-  }
-  HRM->state->timer = app_timer_register_repeatable(HRM->state->timer_period_ms, gh3x2x_timer_callback, NULL, true);
-}
-
-static void gh3x2x_timer_stop_handle(void* arg) {
-  if (HRM && HRM->state->timer) {
-    app_timer_cancel(HRM->state->timer);
-    HRM->state->timer = NULL;
-  }
-}
-
-void gh3x2x_timer_start(void) { 
-  PebbleEvent e = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback.callback = gh3x2x_timer_start_handle,
-  };
-  event_put(&e);
-}
-
-void gh3x2x_timer_stop(void) { 
-  PebbleEvent e = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback.callback = gh3x2x_timer_stop_handle,
-  };
-  event_put(&e);
 }
 
 // GH3X2X calibration/factory testing
@@ -467,6 +412,7 @@ bool hrm_enable(HRMDevice *dev) {
   Gh3x2xDemoStartSampling(dev->state->work_mode);
 
   dev->state->enabled = true;
+
   return true;
 #else
   return false;

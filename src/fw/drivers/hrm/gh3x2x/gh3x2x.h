@@ -7,7 +7,6 @@
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
 #include "drivers/i2c_definitions.h"
-#include "applib/app_timer.h"
 
 #if PLATFORM_OBELIX
 // FIXME(OBELIX): Provide proper GPIO layer abstraction
@@ -29,8 +28,6 @@ typedef struct HRMDeviceState {
   bool enabled;
   bool is_wear;
   int32_t work_mode;
-  uint16_t timer_period_ms;
-  AppTimer *timer;
   GH3x2xFTData* factory;
   bool initialized;
 } HRMDeviceState;
