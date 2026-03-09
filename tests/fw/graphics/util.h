@@ -59,8 +59,13 @@ static const char *namecat(const char* str1, const char* str2){
   } else {
 #if !PLATFORM_DEFAULT
     // Add ~platform to files with unit-tests built for a specific platform
+    // On macOS, append -darwin suffix to allow different fixtures for local dev
+    // Linux (CI) uses the standard ~platform naming to match existing fixtures
     strcat(filename, "~");
     strcat(filename, PLATFORM_NAME);
+#if defined(__APPLE__)
+    strcat(filename, "-darwin");
+#endif
 #endif
   }
 
