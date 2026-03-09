@@ -107,61 +107,50 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
 #endif
 }
 
-void gh3x2x_result_report(uint8_t type, uint32_t val, uint8_t quality) {
-  if (type == 1) {
-    HRMData hrm_data = {0};
+void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
+  HRMData hrm_data = {0};
 
-    PBL_LOG_DBG("GH3X2X BPM %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
+  PBL_LOG_DBG("GH3X2X BPM %" PRIu8 " (quality=%" PRIu8 ")", bpm, quality);
 
-    hrm_data.features = HRMFeature_BPM;
-    hrm_data.hrm_bpm = val & 0xff;
+  hrm_data.features = HRMFeature_BPM;
+  hrm_data.hrm_bpm = bpm;
 
-    if (quality == 254U) {
-      hrm_data.hrm_quality = HRMQuality_OffWrist;
-    } else if (quality >= 80U) {
-      hrm_data.hrm_quality = HRMQuality_Excellent;
-    } else if (quality >= 70U) {
-      hrm_data.hrm_quality = HRMQuality_Good;
-    } else if (quality >= 60U) {
-      hrm_data.hrm_quality = HRMQuality_Acceptable;
-    } else if (quality >= 50U) {
-      hrm_data.hrm_quality = HRMQuality_Poor;
-    } else if (quality >= 30U) {
-      hrm_data.hrm_quality = HRMQuality_Worst;
-    } else {
-      hrm_data.hrm_quality = HRMQuality_NoSignal;
-    }
-
-    hrm_manager_new_data_cb(&hrm_data);
-  } else if (type == 2) {
-    HRMData hrm_data = {0};
-
-    PBL_LOG_DBG("GH3X2X SpO2 %" PRIu32 " (quality=%" PRIu8 ")", val, quality);
-
-    hrm_data.features = HRMFeature_SpO2;
-    hrm_data.spo2_percent = val & 0xff;
-
-    // FIXME(GH3X2X): This mapping is wrong, we need to understand the actual quality values
-    if (quality == 254U) {
-      hrm_data.spo2_quality = HRMQuality_OffWrist;
-    } else if (quality >= 80U) {
-      hrm_data.spo2_quality = HRMQuality_Excellent;
-    } else if (quality >= 70U) {
-      hrm_data.spo2_quality = HRMQuality_Good;
-    } else if (quality >= 60U) {
-      hrm_data.spo2_quality = HRMQuality_Acceptable;
-    } else if (quality >= 50U) {
-      hrm_data.spo2_quality = HRMQuality_Poor;
-    } else if (quality >= 30U) {
-      hrm_data.spo2_quality = HRMQuality_Worst;
-    } else {
-      hrm_data.spo2_quality = HRMQuality_NoSignal;
-    }
-
-    hrm_manager_new_data_cb(&hrm_data);
+  if (quality >= 80U) {
+    hrm_data.hrm_quality = HRMQuality_Excellent;
+  } else if (quality >= 70U) {
+    hrm_data.hrm_quality = HRMQuality_Good;
+  } else if (quality >= 60U) {
+    hrm_data.hrm_quality = HRMQuality_Acceptable;
+  } else if (quality >= 50U) {
+    hrm_data.hrm_quality = HRMQuality_Poor;
   } else {
-    PBL_LOG_WRN("GH3X2X unexpected report type (%" PRIu8 ")", type);
+    hrm_data.hrm_quality = HRMQuality_Worst;
   }
+
+  hrm_manager_new_data_cb(&hrm_data);
+}
+
+void gh3x2x_spo2_result_report(uint8_t pct, uint8_t quality) {
+  HRMData hrm_data = {0};
+
+  PBL_LOG_DBG("GH3X2X SpO2 %" PRIu8 " (quality=%" PRIu8 ")", pct, quality);
+
+  hrm_data.features = HRMFeature_SpO2;
+  hrm_data.spo2_percent = pct;
+
+  if (quality >= 80U) {
+    hrm_data.spo2_quality = HRMQuality_Excellent;
+  } else if (quality >= 70U) {
+    hrm_data.spo2_quality = HRMQuality_Good;
+  } else if (quality >= 60U) {
+    hrm_data.spo2_quality = HRMQuality_Acceptable;
+  } else if (quality >= 50U) {
+    hrm_data.spo2_quality = HRMQuality_Poor;
+  } else {
+    hrm_data.spo2_quality = HRMQuality_Worst;
+  }
+
+  hrm_manager_new_data_cb(&hrm_data);
 }
 
 void gh3x2x_timer_init(uint32_t period_ms) {
