@@ -447,9 +447,9 @@ bool hrm_enable(HRMDevice *dev) {
 
   s_hrm_int_flag = false;
 
-  dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2;
+  dev->state->work_mode = GH3X2X_FUNCTION_HR;
 #ifdef MANUFACTURING_FW
-  dev->state->work_mode |= GH3X2X_FUNCTION_SOFT_ADT_IR;
+  dev->state->work_mode |= GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
 #endif
 
   GH3X2X_FifoWatermarkThrConfig(GH3X2X_FIFO_WATERMARK_CONFIG);
