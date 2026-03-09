@@ -138,6 +138,9 @@ void bt_pairability_update_due_to_bonding_change(void) {
 }
 
 void bt_pairability_init(void) {
+  // Reset cached discoverable state: the advertising infrastructure was torn down
+  // before this init, so we must re-drive gap_le_slave_set_discoverable() if needed.
+  s_last_ble_discoverable_state = false;
   bt_pairability_update_due_to_bonding_change();
   prv_schedule_evaluation();
 }
