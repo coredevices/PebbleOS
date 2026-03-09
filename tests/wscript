@@ -325,7 +325,6 @@ def build(bld):
         'test_graphics_gtransform_8bit.c',
         'test_hrm_manager.c',
         'test_js.c',
-        'test_kickstart.c',
         'test_launcher_menu_layer.c',
         'test_pfs.c',
         'test_selection_windows.c',
