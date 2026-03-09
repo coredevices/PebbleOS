@@ -14,7 +14,7 @@
 
 // BD_ADDR_t is typically a pointer to uint8_t or uint8_t array
 // This helper converts BTDeviceAddress to the expected format
-static const uint8_t *BTDeviceAddressToBDADDR(BTDeviceAddress addr) {
+static const uint8_t *prv_addr_to_bdaddr(BTDeviceAddress addr) {
   return addr.octets;
 }
 

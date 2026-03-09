@@ -413,7 +413,13 @@ void compositor_transition(const CompositorTransition *compositor_animation) {
   }
 
   if (!prv_should_render() || s_deferred_render.animation.pending) {
-    if (s_deferred_render.app.pending) {
+    // If we're transitioning to a modal, cancel any deferred app render since the modal
+    // will cover the app framebuffer. Release the app framebuffer to inform the app
+    // that the render is complete.
+    const ModalProperty properties = modal_manager_get_properties();
+    const bool is_modal_existing = (properties & ModalProperty_Exists);
+    const bool is_modal_transparent = (properties & ModalProperty_Transparent);
+    if (is_modal_existing && !is_modal_transparent && s_deferred_render.app.pending) {
       s_deferred_render.app.pending = false;
       prv_release_app_framebuffer();
     }
@@ -460,6 +466,15 @@ void compositor_transition(const CompositorTransition *compositor_animation) {
 
     // We can start animating immediately if we're going to a modal window. This is because
     // modal window content is drawn on demand so it's always available.
+
+    // When transitioning to a modal, cancel any deferred app render since the modal
+    // will cover the app framebuffer. Release the app framebuffer to inform the app
+    // that the render is complete. Only do this if there's actually a deferred render.
+    if (s_deferred_render.app.pending) {
+      s_deferred_render.app.pending = false;
+      prv_release_app_framebuffer();
+    }
+
     if (compositor_animation) {
       s_state = CompositorState_Transitioning;
       animation_schedule(s_animation_state.animation);
