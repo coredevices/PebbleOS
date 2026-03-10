@@ -15,8 +15,9 @@ typedef struct DiscoveryJobQueue {
   ATTHandleRange hdl;
 } DiscoveryJobQueue;
 
-static inline void gatt_client_discovery_cleanup_by_connection(struct GAPLEConnection *connection,
-                                                                BTErrno reason) {
+// NOTE: These are not static inline to allow linking from compiled source files
+void gatt_client_discovery_cleanup_by_connection(struct GAPLEConnection *connection,
+                                                 BTErrno reason) {
   // Stub implementation: clean up discovery jobs to prevent memory leaks
   // Manually walk the list and free each node
   if (!connection) {
@@ -33,7 +34,7 @@ static inline void gatt_client_discovery_cleanup_by_connection(struct GAPLEConne
 
 // Stub for gatt_client_cleanup_discovery_jobs
 // This is needed for tests that don't include gatt_client_discovery.c
-static inline void gatt_client_cleanup_discovery_jobs(struct GAPLEConnection *connection) {
+void gatt_client_cleanup_discovery_jobs(struct GAPLEConnection *connection) {
   // Just call gatt_client_discovery_cleanup_by_connection to clean up
   gatt_client_discovery_cleanup_by_connection(connection, BTErrnoOK);
 }
