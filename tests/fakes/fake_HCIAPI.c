@@ -39,9 +39,8 @@ static inline BD_ADDR_t *BTDeviceAddressToBDADDR(const uint8_t *address) {
 #include <stdlib.h>
 #include <string.h>
 
-// BD_ADDR_t is typically a pointer to uint8_t or uint8_t array
-// This helper converts BTDeviceAddress to the expected format
-static const uint8_t *BTDeviceAddressToBDADDR(BTDeviceAddress addr) {
+// Helper to get the octets from a BTDeviceAddress
+static const uint8_t *prv_get_addr_octets(BTDeviceAddress addr) {
   return addr.octets;
 }
 
