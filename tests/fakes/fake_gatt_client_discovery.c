@@ -4,8 +4,9 @@
 #include "comm/ble/gatt_client_discovery.h"
 
 #include "comm/ble/gap_le_connection.h"
+#include "bluetooth/bluetooth_types.h"
 
-void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connection) { }
+void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connection, BTErrno reason) { }
 
 void gatt_client_subscription_cleanup_by_att_handle_range(
     struct GAPLEConnection *connection, ATTHandleRange *range) { }
