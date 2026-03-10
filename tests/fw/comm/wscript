@@ -25,7 +25,8 @@ def build(bld):
                            "tests/fakes/fake_GAPAPI.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_HCIAPI.c "
-                           "tests/fakes/fake_gap_le_connect_params.c ",
+                           "tests/fakes/fake_gap_le_connect_params.c "
+                           "tests/stubs/stubs_gap_le_advert.c ",
         test_sources_ant_glob = "test_gap_le_advert.c",
         override_includes=['dummy_board'])
 
@@ -48,7 +49,9 @@ def build(bld):
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_GATTAPI.c "
                            "tests/fakes/fake_GATTAPI_test_vectors.c "
-                           "tests/fakes/fake_gap_le_connect_params.c ",
+                           "tests/fakes/fake_gap_le_connect_params.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
         test_sources_ant_glob = "test_gatt_client_accessors.c")
 
     clar(bld,
@@ -63,7 +66,9 @@ def build(bld):
                            "tests/fakes/fake_events.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_GATTAPI.c "
-                           "tests/fakes/fake_GATTAPI_test_vectors.c ",
+                           "tests/fakes/fake_GATTAPI_test_vectors.c "
+                           "tests/stubs/stubs_bt_driver_gatt.c "
+                           "tests/stubs/stubs_bt_driver_gatt_client_discovery.c ",
         test_sources_ant_glob = "test_gatt_client_discovery.c")
 
     clar(bld,
