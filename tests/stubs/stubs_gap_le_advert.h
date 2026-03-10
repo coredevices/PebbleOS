@@ -32,14 +32,7 @@ bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
 }
 
 void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
-  // Call the GAP LE API functions to set advertising data in tests
-  // Functions are declared at top of this file
-  GAP_LE_Set_Advertising_Data(0, ad_data->ad_data_length,
-                             (Advertising_Data_t *)ad_data->data);
-
-  if (ad_data->scan_resp_data_length > 0) {
-    GAP_LE_Set_Scan_Response_Data(0, ad_data->scan_resp_data_length,
-                                   (Scan_Response_Data_t *)(ad_data->data + ad_data->ad_data_length));
-  }
+  // Stub implementation - no-op
+  (void)ad_data;
 }
 
