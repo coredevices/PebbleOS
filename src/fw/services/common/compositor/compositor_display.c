@@ -24,14 +24,17 @@ static uint8_t s_line_buffer[FRAMEBUFFER_BYTES_PER_ROW];
 #endif
 
 #if PLATFORM_OBELIX
-static const uint8_t s_corner_shape[] = { 12, 9, 7, 6, 5, 4, 3, 2, 2, 1, 1, 1 };
+// Rounded corner mask for Obelix — radius 3 quarter-circle.
+// Each entry is the number of pixels to mask from the left/right edge.
+// Shape follows a quarter-circle: at row y, mask pixels where x < sqrt(r² - y²)
+static const uint8_t s_corner_shape[] = { 3, 3, 2, 1 };
+
 // For Obelix, we modify the framebuffer directly because the display driver
 // does in-place pixel format conversion and expects row.data to point into
 // the compositor's framebuffer. We save original corner pixels here to restore later.
-// Max corner pixels per row = 12, rows with corners = 12 top + 12 bottom = 24,
-// 2 corners per row (left+right), so 12 * 24 * 2 = 576 bytes
 #define CORNER_SAVE_ROWS ARRAY_LENGTH(s_corner_shape)
-static uint8_t s_saved_corners[CORNER_SAVE_ROWS * 2][12 * 2]; // [row][left+right pixels]
+#define CORNER_MAX_WIDTH 3
+static uint8_t s_saved_corners[CORNER_SAVE_ROWS * 2][CORNER_MAX_WIDTH * 2]; // [row][left+right pixels]
 static uint8_t s_dirty_y0;
 static uint8_t s_dirty_y1;
 #endif
@@ -80,9 +83,9 @@ static bool prv_flush_get_next_line_cb(DisplayRow* row) {
       // Save original corner pixels
       for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
         s_saved_corners[save_idx][pixel] = line[pixel];
-        s_saved_corners[save_idx][12 + pixel] = line[DISP_COLS - pixel - 1];
+        s_saved_corners[save_idx][CORNER_MAX_WIDTH + pixel] = line[DISP_COLS - pixel - 1];
       }
-      // Draw black corners
+      // Mask corner pixels to black (rounded corner effect)
       for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
         line[pixel] = GColorBlackARGB8;
         line[DISP_COLS - pixel - 1] = GColorBlackARGB8;
@@ -111,7 +114,7 @@ static void prv_flush_complete_cb(void) {
       uint8_t *top_line = framebuffer_get_line(fb, i);
       for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
         top_line[pixel] = s_saved_corners[i][pixel];
-        top_line[DISP_COLS - pixel - 1] = s_saved_corners[i][12 + pixel];
+        top_line[DISP_COLS - pixel - 1] = s_saved_corners[i][CORNER_MAX_WIDTH + pixel];
       }
     }
     // Bottom corners (only if row was in dirty region)
@@ -120,7 +123,7 @@ static void prv_flush_complete_cb(void) {
       uint8_t *bottom_line = framebuffer_get_line(fb, bottom_row);
       for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
         bottom_line[pixel] = s_saved_corners[CORNER_SAVE_ROWS + i][pixel];
-        bottom_line[DISP_COLS - pixel - 1] = s_saved_corners[CORNER_SAVE_ROWS + i][12 + pixel];
+        bottom_line[DISP_COLS - pixel - 1] = s_saved_corners[CORNER_SAVE_ROWS + i][CORNER_MAX_WIDTH + pixel];
       }
     }
   }
