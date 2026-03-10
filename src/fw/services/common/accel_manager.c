@@ -762,6 +762,10 @@ void accel_offload_work_from_isr(AccelOffloadCallback cb, bool *should_context_s
       new_timer_add_work_callback_from_isr(prv_handle_accel_driver_work_cb, cb);
 }
 
+void accel_offload_work(AccelOffloadCallback cb) {
+  new_timer_add_work_callback(prv_handle_accel_driver_work_cb, cb);
+}
+
 void command_accel_peek(void) {
   AccelData data;
 
