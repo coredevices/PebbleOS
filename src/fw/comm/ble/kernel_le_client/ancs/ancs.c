@@ -346,11 +346,18 @@ static void prv_resubscribe_to_ancs(void) {
 
   PBL_LOG_INFO("Re-subscribing to ANCS characteristics");
 
-  // Re-subscribe to Data, then to Notification characteristics
-  // (same order as in ancs_handle_service_discovered)
+  // Unsubscribe first to clear local subscription state, then re-subscribe.
+  // Without this, gatt_client_subscriptions_subscribe() sees the existing local
+  // subscription and returns BTErrnoInvalidState without writing the CCCD to
+  // the remote device. iOS may have silently dropped its subscription state
+  // (e.g. during a PPoGATT reset), so we must re-write the CCCD to restore it.
   for (int c = ANCSCharacteristicData; c >= ANCSCharacteristicNotification; --c) {
     BLECharacteristic charx = s_ancs_client->characteristics[c];
     if (charx != BLE_CHARACTERISTIC_INVALID) {
+      // Unsubscribe to clear the local state (ignore errors -- the subscription
+      // may already have been cleaned up)
+      gatt_client_subscriptions_subscribe(charx, BLESubscriptionNone, GAPLEClientKernel);
+
       const BTErrno e = gatt_client_subscriptions_subscribe(charx,
                                                             BLESubscriptionNotifications,
                                                             GAPLEClientKernel);
