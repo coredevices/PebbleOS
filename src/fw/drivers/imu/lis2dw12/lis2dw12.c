@@ -395,7 +395,7 @@ static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) 
   return true;
 }
 
-static void prv_int1_wdt_cb(void *data) {
+static void prv_int1_wdt_work_cb(void) {
   RtcTicks now_tick = rtc_get_ticks();
   RtcTicks ticks_since_last_int1 = now_tick - LIS2DW12->state->last_int1_tick;
   uint32_t ms_since_last_int1 = (ticks_since_last_int1 * 1000) / RTC_TICKS_HZ;
@@ -419,6 +419,10 @@ static void prv_int1_wdt_cb(void *data) {
       return;
     }
   }
+}
+
+static void prv_int1_wdt_cb(void *data) {
+  accel_offload_work(prv_int1_wdt_work_cb);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
