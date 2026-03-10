@@ -390,6 +390,18 @@
       "characterRegex": "[ 0-9:/.,°-]"
     },
     {
+      "type": "font",
+      "name": "LECO_60_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/LECO_60_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "LECO_60_BOLD_NUMBERS_AM_PM",
+      "file": "normal/base/pbf/LECO_60_BOLD_NUMBERS_AM_PM.pbf",
+      "characterRegex": "[ 0-9:/.,°ABPMHIK\\+\\-\\%]"
+    },
+    {
       "type": "pbi8",
       "name": "MUSIC_ICON_SKIP_FORWARD",
       "file": "normal/base/images/music_icon_skip_forward.png"
