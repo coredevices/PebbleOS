@@ -35,7 +35,7 @@ typedef struct HealthSleepSummaryCardData {
 } HealthSleepSummaryCardData;
 
 #define PROGRESS_CURRENT_COLOR (PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorDarkGray))
-#define PROGRESS_SECONDARY_COLOR (PBL_IF_COLOR_ELSE(GColorVeryLightBlue, GColorClear))
+#define PROGRESS_SECONDARY_COLOR (PBL_IF_COLOR_ELSE(GColorVeryLightBlue, GColorBlack))
 #define PROGRESS_TYPICAL_COLOR (PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack))
 #define PROGRESS_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorDarkGray, GColorClear))
 #define PROGRESS_OUTLINE_COLOR (PBL_IF_COLOR_ELSE(GColorClear, GColorBlack))
