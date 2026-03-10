@@ -115,10 +115,8 @@ Window *health_sleep_detail_card_create(HealthData *health_data) {
   *heading = (HealthDetailHeading) {
     .primary_label = (char *)i18n_get("DEEP SLEEP", card_data),
     .primary_value = app_zalloc_check(buffer_len),
-    .fill_color = PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorWhite),
-#if PBL_BW
+    .fill_color = GColorElectricBlue,
     .outline_color = GColorBlack,
-#endif
   };
 
   prv_set_deep_sleep(heading->primary_value, buffer_len,
@@ -140,7 +138,7 @@ Window *health_sleep_detail_card_create(HealthData *health_data) {
     .subtitles = card_data->subtitles,
     .daily_avg = card_data->daily_avg,
     .weekly_max = card_data->weekly_max,
-    .bg_color = PBL_IF_COLOR_ELSE(GColorOxfordBlue, GColorWhite),
+    .bg_color = PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite),
     .num_zones = card_data->num_zones,
     .zones = card_data->zones,
     .data = card_data,

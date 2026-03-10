@@ -115,7 +115,7 @@ Window *health_activity_detail_card_create(HealthData *health_data) {
     .subtitles = card_data->subtitles,
     .daily_avg = card_data->daily_avg,
     .weekly_max = card_data->weekly_max,
-    .bg_color = PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite),
+    .bg_color = PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite),
     .num_zones = card_data->num_zones,
     .zones = card_data->zones,
     .data = card_data,
