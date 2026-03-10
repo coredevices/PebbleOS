@@ -1,0 +1,1 @@
+test_kickstart__render_hr_bpm.pbi
