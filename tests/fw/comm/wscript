@@ -25,8 +25,7 @@ def build(bld):
                            "tests/fakes/fake_GAPAPI.c "
                            "tests/fakes/fake_rtc.c "
                            "tests/fakes/fake_HCIAPI.c "
-                           "tests/fakes/fake_gap_le_connect_params.c "
-                           "tests/stubs/stubs_gap_le_advert.c ",
+                           "tests/fakes/fake_gap_le_connect_params.c ",
         test_sources_ant_glob = "test_gap_le_advert.c",
         override_includes=['dummy_board'])
 
