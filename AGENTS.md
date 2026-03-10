@@ -37,7 +37,7 @@ PebbleOS is the operating system running on Pebble smartwatches.
 Main rules:
 
 - Commit using `-s` git option, so commits have `Signed-Off-By`
-- Always indicate commit is co-authored by Claude
+- Always indicate commit is co-authored by the current AI model
 - Commit in small chunks, trying to preserve bisectability
 - Commit format is `area: short description`, with longer description in the
   body if necessary
