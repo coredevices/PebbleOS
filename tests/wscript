@@ -308,7 +308,6 @@ def build(bld):
         'test_kernel_le_client.c',
         'test_ppogatt.c',
         'test_graphics_circle.c',
-        'test_action_menu_window.c',
         'test_activity_insights.c',
         'test_app_menu_data_source.c',
         'test_battery_monitor.c',
