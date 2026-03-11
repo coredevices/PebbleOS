@@ -162,6 +162,8 @@ void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) 
 
 void dbgserial_set_rx_dma_enabled(bool enabled) {}
 
+void dbgserial_set_input_enabled(bool enabled) {}
+
 #if MICRO_FAMILY_NRF5
 void dbgserial_disable_rx_dma_before_stop() {}
 
