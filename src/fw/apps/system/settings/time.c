@@ -12,6 +12,7 @@
 #include "applib/graphics/text.h"
 #include "applib/ui/action_menu_window_private.h"
 #include "applib/ui/app_window_stack.h"
+#include "applib/ui/date_selection_window.h"
 #include "applib/ui/option_menu_window.h"
 #include "applib/ui/time_selection_window.h"
 #include "applib/ui/ui.h"
@@ -53,9 +54,15 @@ typedef struct {
   ActionMenuConfig action_menu;
 
   Window *continent_window;
+
+  // Manual time / date picker windows
+  TimeSelectionWindowData time_picker;
+  DateSelectionWindowData date_picker;
 } SettingsTimeData;
 
 typedef enum {
+  TimeRow_SetTime,
+  TimeRow_SetDate,
   TimeRow_Format,
   TimeRow_TimezoneSource,
   TimeRow_Timezone,
@@ -186,11 +193,90 @@ static void prv_cycle_clock_timezone_source(void) {
   }
 }
 
+// Set Time
+/////////////////////////
+
+static void prv_time_picker_complete(TimeSelectionWindowData *picker, void *context) {
+  // Build a new UTC timestamp: keep today's local date, update hours/minutes.
+  // Seconds are reset to zero when manually setting the time.
+  struct tm now;
+  clock_get_time_tm(&now);
+  now.tm_hour = picker->time_data.hour;
+  now.tm_min = picker->time_data.minute;
+  now.tm_sec = 0;
+  // mktime interprets struct tm as local time and returns a UTC epoch
+  time_t new_utc = mktime(&now);
+  clock_set_time(new_utc);
+
+  const bool animated = true;
+  app_window_stack_remove(&picker->window, animated);
+}
+
+static void prv_time_picker_push(SettingsTimeData *data) {
+  TimeSelectionWindowData *picker = &data->time_picker;
+
+  // Deinit any previous state before re-initializing (safe on zeroed struct)
+  time_selection_window_deinit(picker);
+
+  const TimeSelectionWindowConfig config = {
+    .label = i18n_noop("Set Time"),
+    .color = PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack),
+    .range = { .update = true, .enabled = false },
+    .callback = {
+      .update = true,
+      .complete = prv_time_picker_complete,
+      .context = data,
+    },
+  };
+  time_selection_window_init(picker, &config);
+  time_selection_window_set_to_current_time(picker);
+
+  app_window_stack_push(&picker->window, true /* animated */);
+}
+
+// Set Date
+/////////////////////////
+
+static void prv_date_picker_complete(DateSelectionWindowData *picker, void *context) {
+  // Build a new UTC timestamp: keep today's local time-of-day (hour/min/sec), update year/month/day
+  struct tm now;
+  clock_get_time_tm(&now);
+  now.tm_year = picker->date.year;
+  now.tm_mon = picker->date.month;
+  now.tm_mday = picker->date.day;
+  // mktime normalises any out-of-range fields and converts local → UTC
+  time_t new_utc = mktime(&now);
+  clock_set_time(new_utc);
+
+  const bool animated = true;
+  app_window_stack_remove(&picker->window, animated);
+}
+
+static void prv_date_picker_push(SettingsTimeData *data) {
+  DateSelectionWindowData *picker = &data->date_picker;
+
+  // Deinit any previous state before re-initializing (safe on zeroed struct)
+  date_selection_window_deinit(picker);
+
+  date_selection_window_init(picker, i18n_noop("Set Date"),
+                             PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack),
+                             prv_date_picker_complete, data);
+  date_selection_window_set_to_current_date(picker);
+
+  app_window_stack_push(&picker->window, true /* animated */);
+}
+
 // Date & Time Menu
 ////////////////////////////
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   SettingsTimeData *data = (SettingsTimeData*) context;
   switch (row) {
+    case TimeRow_SetTime:
+      prv_time_picker_push(data);
+      return;  // mark dirty happens via window unload callback
+    case TimeRow_SetDate:
+      prv_date_picker_push(data);
+      return;  // mark dirty happens via window unload callback
     case TimeRow_Format:
       // Set Time Display
       prv_cycle_clock_style();
@@ -215,8 +301,27 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   const char *title = NULL;
   const char *subtitle = NULL;
   char current_timezone_region[TIMEZONE_NAME_LENGTH];
+  char time_buf[TIME_STRING_TIME_LENGTH];
+  char date_buf[16];
 
   switch (row) {
+    case TimeRow_SetTime: {
+      title = i18n_noop("Set Time");
+      struct tm local_now;
+      clock_get_time_tm(&local_now);
+      clock_format_time(time_buf, sizeof(time_buf),
+                        local_now.tm_hour, local_now.tm_min, true);
+      subtitle = time_buf;
+      break;
+    }
+    case TimeRow_SetDate: {
+      title = i18n_noop("Set Date");
+      struct tm local_now;
+      clock_get_time_tm(&local_now);
+      strftime(date_buf, sizeof(date_buf), "%Y-%m-%d", &local_now);
+      subtitle = date_buf;
+      break;
+    }
     case TimeRow_Format: {
       title = i18n_noop("Time Format");
       subtitle = clock_is_24h_style() ? i18n_noop("24h") : i18n_noop("12h");
@@ -256,6 +361,8 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
   app_free(data->continent_names);
   app_free(data->region_names);
   app_free(data->region_names_buffer);
+  time_selection_window_deinit(&data->time_picker);
+  date_selection_window_deinit(&data->date_picker);
   app_free(data);
 }
 
