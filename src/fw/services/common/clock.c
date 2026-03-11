@@ -655,6 +655,10 @@ void clock_set_timezone_by_region_id(uint16_t region_id) {
   prv_update_time_info_and_generate_event(NULL, &tz_info);
 }
 
+void clock_set_time(time_t utc_time) {
+  prv_update_time_info_and_generate_event(&utc_time, NULL);
+}
+
 void clock_get_friendly_date(char *buffer, int buf_size, time_t timestamp) {
   const time_t now = rtc_get_time();
 

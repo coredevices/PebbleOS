@@ -54,9 +54,6 @@ void test_clock__initialize(void) {
 }
 
 extern void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *tz_info);
-void clock_set_time(time_t t) {
-  prv_update_time_info_and_generate_event(&t, NULL);
-}
 
 static void prv_clock_reset(int32_t gmtoff) {
   TimezoneInfo tzinfo = {{0}};
