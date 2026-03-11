@@ -25,6 +25,7 @@ def options(opt):
                        'sf32lb52',
                        'stub',
                    ])
+    opt.recurse('nimble')
 
 
 def configure(conf):

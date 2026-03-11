@@ -169,6 +169,88 @@ void gh3x2x_wear_evt_notify(bool is_wear) {
   HRM->state->is_wear = is_wear;
 }
 
+#ifdef GH3X2X_TUNING_SERVICE_ENABLED
+void gh3x2x_timer_init(uint32_t period_ms) {
+  if (HRM) {
+    HRM->state->timer_period_ms = period_ms;
+  }
+}
+
+static void gh3x2x_timer_callback(void* data) {
+  uint32_t param = (uint32_t)data;
+  if (param != 0x87965421) {
+    // Coalesce repeated timer firings - only queue one callback at a time
+    if (s_hrm_timer_flag == false) {
+      if (system_task_add_callback(gh3x2x_timer_callback, (void*)0x87965421)) {
+        s_hrm_timer_flag = true;
+      }
+    }
+    return;
+  }
+  s_hrm_timer_flag = false;
+  Gh3x2xSerialSendTimerHandle();
+}
+
+static void gh3x2x_timer_start_handle(void* arg) {
+  if (HRM == NULL || HRM->state->timer != NULL) {
+    return;
+  }
+  if (HRM->state->timer_period_ms == 0) {
+    return;
+  }
+  HRM->state->timer = app_timer_register_repeatable(HRM->state->timer_period_ms, gh3x2x_timer_callback, NULL, true);
+}
+
+static void gh3x2x_timer_stop_handle(void* arg) {
+  if (HRM && HRM->state->timer) {
+    app_timer_cancel(HRM->state->timer);
+    HRM->state->timer = NULL;
+  }
+}
+
+void gh3x2x_timer_start(void) {
+  return;
+  PebbleEvent e = {
+    .type = PEBBLE_CALLBACK_EVENT,
+    .callback.callback = gh3x2x_timer_start_handle,
+  };
+  event_put(&e);
+}
+
+void gh3x2x_timer_stop(void) {
+  return;
+  PebbleEvent e = {
+    .type = PEBBLE_CALLBACK_EVENT,
+    .callback.callback = gh3x2x_timer_stop_handle,
+  };
+  event_put(&e);
+}
+
+static void gh3x2x_ble_data_recv_handle(void *context) {
+  if (context == NULL) {
+    return;
+  }
+
+  uint32_t data_len;
+  uint8_t *p_data = (uint8_t*)context;
+  memcpy(&data_len, p_data, sizeof(uint32_t));
+  p_data += sizeof(uint32_t);
+  Gh3x2xDemoProtocolProcess((GU8*)p_data, data_len);
+  free(context);
+}
+
+bool gh3x2x_ble_data_recv(void* context) {
+  if (context == NULL) {
+    return false;
+  }
+
+  if (!system_task_add_callback(gh3x2x_ble_data_recv_handle, context)) {
+    return false;
+  }
+  return true;
+}
+#endif
+
 // GH3X2X calibration/factory testing
 
 void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
@@ -254,60 +336,6 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
 }
 
 #ifdef MANUFACTURING_FW
-void gh3x2x_timer_init(uint32_t period_ms) {
-  if (HRM) {
-    HRM->state->timer_period_ms = period_ms;
-  }
-}
-
-static void gh3x2x_timer_callback(void* data) {
-  uint32_t param = (uint32_t)data;
-  if (param != 0x87965421) {
-    // Coalesce repeated timer firings - only queue one callback at a time
-    if (s_hrm_timer_flag == false) {
-      if (system_task_add_callback(gh3x2x_timer_callback, (void*)0x87965421)) {
-        s_hrm_timer_flag = true;
-      }
-    }
-    return;
-  }
-  s_hrm_timer_flag = false;
-  Gh3x2xSerialSendTimerHandle();
-}
-
-static void gh3x2x_timer_start_handle(void* arg) {
-  if (HRM == NULL || HRM->state->timer != NULL) {
-    return;
-  }
-  if (HRM->state->timer_period_ms == 0) {
-    return;
-  }
-  HRM->state->timer = app_timer_register_repeatable(HRM->state->timer_period_ms, gh3x2x_timer_callback, NULL, true);
-}
-
-static void gh3x2x_timer_stop_handle(void* arg) {
-  if (HRM && HRM->state->timer) {
-    app_timer_cancel(HRM->state->timer);
-    HRM->state->timer = NULL;
-  }
-}
-
-void gh3x2x_timer_start(void) {
-  PebbleEvent e = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback.callback = gh3x2x_timer_start_handle,
-  };
-  event_put(&e);
-}
-
-void gh3x2x_timer_stop(void) {
-  PebbleEvent e = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback.callback = gh3x2x_timer_stop_handle,
-  };
-  event_put(&e);
-}
-
 void gh3x2x_factory_test_enable(HRMDevice *dev, GH3x2xFTType test_type) {
   uint32_t mode = 0;
   if (test_type == HRM_FACTORY_TEST_CTR) {                    // CTR
@@ -390,39 +418,11 @@ uint8_t gh3x2x_factory_result_get(float* p_result)
   return 0;
 }
 
-//for ppg raw data collection
-static void gh3x2x_ble_data_recv_handle(void *context) {
-  if (context == NULL) {
-    return;
-  }
-
-  uint32_t data_len;
-  uint8_t *p_data = (uint8_t*)context;
-  memcpy(&data_len, p_data, sizeof(uint32_t));
-  p_data += sizeof(uint32_t);
-  Gh3x2xDemoProtocolProcess((GU8*)p_data, data_len);
-  free(context);
-}
-
-bool gh3x2x_ble_data_recv(void* context) {
-  if (context == NULL) {
-    return false;
-  }
-
-  if (!system_task_add_callback(gh3x2x_ble_data_recv_handle, context)) {
-    return false;
-  }
-  return true;
-}
-
 void gh3x2x_set_work_mode(int32_t mode) {
   HRMDeviceState* state = HRM->state;
   //always enable soft adt
   state->work_mode = mode | GH3X2X_FUNCTION_SOFT_ADT_IR;
 }
-#else
-void gh3x2x_timer_init(uint32_t period_ms) {}
-void gh3x2x_timer_start(void) {}
 #endif // MANUFACTURING_FW
 
 #else
