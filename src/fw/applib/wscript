@@ -47,6 +47,7 @@ def build(bld):
                      'ui/option_menu_window.c',
                      'ui/progress_window.c',
                      'ui/selection_layer.c',
+                     'ui/date_selection_window.c',
                      'ui/time_selection_window.c',
                      'ui/time_range_selection_window.c',
                      'voice/*']
