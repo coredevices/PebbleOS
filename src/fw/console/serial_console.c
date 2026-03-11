@@ -139,3 +139,8 @@ SerialConsoleState serial_console_get_state(void) {
   return state;
 }
 
+void serial_console_set_rx_enabled(bool enabled) {
+  portENTER_CRITICAL();
+  dbgserial_set_input_enabled(enabled);
+  portEXIT_CRITICAL();
+}
