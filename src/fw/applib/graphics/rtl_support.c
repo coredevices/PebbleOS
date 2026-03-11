@@ -9,8 +9,9 @@
 #include <string.h>
 
 // Maximum number of codepoints we can handle in a single reversal
-// Keep small for stack safety on embedded systems (16 codepoints * 4 bytes = 64 bytes)
-#define MAX_RTL_CODEPOINTS 16
+// Keep small for stack safety on embedded systems (32 codepoints * 4 bytes = 128 bytes)
+// 32 is sufficient for all real Hebrew words including long morphological forms
+#define MAX_RTL_CODEPOINTS 32
 
 bool utf8_contains_rtl(const utf8_t *start, const utf8_t *end) {
   if (start == NULL || end == NULL || start >= end) {
