@@ -111,7 +111,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   pebble_pairing_service_init();
   ble_svc_bas_init();
   
-#if defined(MANUFACTURING_FW) && defined(HRM_USE_GH3X2X)
+#ifdef GH3X2X_TUNING_SERVICE_ENABLED
   gh3x2x_tuning_service_init();
 #endif
 

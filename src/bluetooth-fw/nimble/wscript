@@ -1,10 +1,18 @@
+def options(opt):
+    opt.add_option('--enable-gh3x2x-tuning-service', action='store_true',
+                   help='Enable the GH3X2X tuning service')
+
+
 def configure(conf):
     conf.env.append_value('DEFINES', 'BT_REQUIRE_EARLY_BONDINGS')
+    if conf.options.enable_gh3x2x_tuning_service:
+        conf.env.GH3X2X_TUNING_SERVICE_ENABLED = 1
+        conf.env.append_value('DEFINES', 'GH3X2X_TUNING_SERVICE_ENABLED')
 
 
 def build(bld):
     excludes = []
-    if not bld.is_obelix() or not bld.env.IS_MFG:
+    if not bld.env.GH3X2X_TUNING_SERVICE_ENABLED:
         excludes.extend(['gh3x2x_tuning_service.c'])
 
     driver_source = bld.path.ant_glob(['*.c'], excl=excludes)
