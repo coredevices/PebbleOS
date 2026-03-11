@@ -59,7 +59,13 @@ void uart_init_tx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_TX); }
 
 void uart_init_rx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_RX); }
 
-void uart_deinit(UARTDevice *dev) { HAL_UART_DeInit(&dev->state->huart); }
+void uart_deinit(UARTDevice *dev) {
+  HAL_UART_DeInit(&dev->state->huart);
+  if ((dev->state->huart.Init.Mode == UART_MODE_TX_RX) ||
+      (dev->state->huart.Init.Mode == UART_MODE_RX)) {
+    stop_mode_enable(InhibitorDbgSerial);
+  }
+}
 
 void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
   HAL_StatusTypeDef ret;
