@@ -25,14 +25,12 @@ static void prv_init(UARTDevice *dev, uint32_t mode) {
     case UART_MODE_TX_RX:
       HAL_PIN_Set(dev->tx.pad, dev->tx.func, dev->tx.flags, 1);
       HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
-      stop_mode_disable(InhibitorDbgSerial);
       break;
     case UART_MODE_TX:
       HAL_PIN_Set(dev->tx.pad, dev->tx.func, dev->tx.flags, 1);
       break;
     case UART_MODE_RX:
       HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
-      stop_mode_disable(InhibitorDbgSerial);
       break;
     default:
       WTF;
@@ -61,10 +59,6 @@ void uart_init_rx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_RX); }
 
 void uart_deinit(UARTDevice *dev) {
   HAL_UART_DeInit(&dev->state->huart);
-  if ((dev->state->huart.Init.Mode == UART_MODE_TX_RX) ||
-      (dev->state->huart.Init.Mode == UART_MODE_RX)) {
-    stop_mode_enable(InhibitorDbgSerial);
-  }
 }
 
 void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
@@ -140,6 +134,7 @@ void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_h
 void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
   PBL_ASSERTN(dev->state->initialized);
   if (enabled) {
+    stop_mode_disable(InhibitorUARTRX);
     dev->state->rx_int_enabled = true;
     SET_BIT(dev->state->huart.Instance->CR1, USART_CR1_RXNEIE);
     prv_set_interrupt_enabled(dev, true);
@@ -148,6 +143,7 @@ void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
     prv_set_interrupt_enabled(dev, dev->state->tx_int_enabled);
     CLEAR_BIT(dev->state->huart.Instance->CR1, USART_CR1_RXNEIE);
     dev->state->rx_int_enabled = false;
+    stop_mode_enable(InhibitorUARTRX);
   }
 }
 
