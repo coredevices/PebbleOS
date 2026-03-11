@@ -70,6 +70,9 @@
 #define W1160_RESULT_MANTISSA_MASK  (0x0FFF)
 #define W1160_ADC2LUX_COEF          (3U)
 
+#define W1160_ALS_POLL_DELAY_MS     (5)    /* ms between data-ready polls */
+#define W1160_ALS_POLL_TIMEOUT_MS   (1000) /* max wait for ALS data-ready */
+
 static bool s_initialized;
 static uint32_t s_sensor_light_dark_threshold;
 
@@ -137,11 +140,20 @@ uint32_t ambient_light_get_light_level(void) {
     return 0UL;
   }
 
+  uint32_t elapsed = 0;
   do {
     rv = prv_read_register(W1160_FLAG1_REG, &result[0]);
     if (!rv) {
       PBL_LOG_ERR("Could not read W1160 FLAG1");
       return 0UL;
+    }
+    if ((result[0] & W1160_FLG_ALS_DR) == 0U) {
+      if (elapsed >= W1160_ALS_POLL_TIMEOUT_MS) {
+        PBL_LOG_ERR("W1160 ALS data-ready timeout");
+        return 0UL;
+      }
+      psleep(W1160_ALS_POLL_DELAY_MS);
+      elapsed += W1160_ALS_POLL_DELAY_MS;
     }
   } while ((result[0] & W1160_FLG_ALS_DR) == 0U);
 
