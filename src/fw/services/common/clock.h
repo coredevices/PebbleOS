@@ -119,6 +119,11 @@ int16_t clock_get_timezone_region_id(void);
 //! @param region_id the index of the selected timezone in terms of the timezone database
 void clock_set_timezone_by_region_id(uint16_t region_id);
 
+//! @internal
+//! Sets the current UTC time and fires a time-change event.
+//! @param utc_time the new UTC epoch timestamp to set
+void clock_set_time(time_t utc_time);
+
 //! Converts a (day, hour, minute) specification to a UTC timestamp occurring in the future
 //! Always returns a timestamp for the next occurring instance,
 //! example: specifying TODAY@14:30 when it is 14:40 will return a timestamp for 7 days from
