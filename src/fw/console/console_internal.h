@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 typedef enum SerialConsoleState {
   SERIAL_CONSOLE_STATE_PROMPT,
   SERIAL_CONSOLE_STATE_LOGGING,
@@ -19,3 +21,5 @@ typedef enum SerialConsoleState {
 void serial_console_set_state(SerialConsoleState new_state);
 
 SerialConsoleState serial_console_get_state(void);
+
+void serial_console_set_rx_enabled(bool enabled);
