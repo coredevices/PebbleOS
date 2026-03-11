@@ -23,7 +23,9 @@ void prepare_for_software_failure(void) {
   pulse_logging_log_buffer_flush();
 #endif
 
+#ifndef MANUFACTURING_FW
   boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
+#endif
 }
 
 NORETURN reset_due_to_software_failure(void) {
