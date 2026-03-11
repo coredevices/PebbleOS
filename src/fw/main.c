@@ -115,8 +115,9 @@ void soc_early_init(void);
 const int __attribute__((used)) uxTopUsedPriority = configMAX_PRIORITIES - 1;
 
 static TimerID s_lowpower_timer = TIMER_INVALID_ID;
+#ifndef MANUFACTURING_FW
 static TimerID s_uptime_timer = TIMER_INVALID_ID;
-
+#endif
 static void main_task(void *parameter);
 
 static void print_splash_screen(void)
@@ -325,11 +326,13 @@ static void clear_reset_loop_detection_bits(void) {
   boot_bit_clear(BOOT_BIT_RESET_LOOP_DETECT_THREE);
 }
 
+#ifndef MANUFACTURING_FW
 static void uptime_callback(void* data) {
   PBL_LOG_VERBOSE("Uptime reached 15 minutes, set stable bit.");
   new_timer_delete(s_uptime_timer);
   boot_bit_set(BOOT_BIT_FW_STABLE);
 }
+#endif
 
 static void prv_low_power_debug_config_callback(void* data) {
   new_timer_delete(s_lowpower_timer);
@@ -499,8 +502,12 @@ static NOINLINE void prv_main_task_init(void) {
   new_timer_start(s_lowpower_timer,
                   10 * 1000, prv_low_power_debug_config_callback, NULL, 0 /*flags*/);
 
+#ifndef MANUFACTURING_FW
   s_uptime_timer = new_timer_create();
   new_timer_start(s_uptime_timer, 15 * 60 * 1000, uptime_callback, NULL, 0 /*flags*/);
+#else
+  boot_bit_set(BOOT_BIT_FW_STABLE);
+#endif
 
   // Initialize button driver at the last moment to prevent "system on" button press from
   // entering the kernel event queue.
