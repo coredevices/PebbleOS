@@ -43,6 +43,11 @@
 
 static bool prv_char_iter_next_start_of_word(Iterator* char_iter);
 
+//! Check if a codepoint is invisible: formatting indicator or should-skip (no direction, no width).
+static bool prv_codepoint_is_invisible(Codepoint cp) {
+  return codepoint_is_formatting_indicator(cp) || codepoint_should_skip(cp);
+}
+
 //! Check if a codepoint is punctuation (should be ignored for RTL detection)
 static bool prv_codepoint_is_punctuation(Codepoint cp) {
   // ASCII punctuation
@@ -73,9 +78,10 @@ static bool prv_utf8_starts_with_rtl(const utf8_t *start, const utf8_t *end) {
     if (cp == 0 || next == NULL) {
       break;
     }
-    // Skip whitespace, newlines, and punctuation
+    // Skip whitespace, newlines, punctuation, and invisible codepoints
     if (cp == SPACE_CODEPOINT || cp == NEWLINE_CODEPOINT ||
-        codepoint_is_zero_width(cp) || prv_codepoint_is_punctuation(cp)) {
+        codepoint_is_zero_width(cp) || prv_codepoint_is_punctuation(cp) ||
+        prv_codepoint_is_invisible(cp)) {
       ptr = next;
       continue;
     }
@@ -599,6 +605,12 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
         Codepoint seg_cp = utf8_peek_codepoint(segment_end, &seg_next);
         if (seg_cp == 0 || seg_next == NULL) break;
 
+        // Skip invisible codepoints (ZWJ, variation selectors, skin tone modifiers)
+        if (prv_codepoint_is_invisible(seg_cp)) {
+          segment_end = seg_next;
+          continue;
+        }
+
         // Check if this character changes the segment type
         if (!prv_codepoint_is_punctuation(seg_cp) &&
             seg_cp != SPACE_CODEPOINT && !codepoint_is_zero_width(seg_cp)) {
@@ -700,6 +712,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
             utf8_t *rnext = NULL;
             Codepoint rcp = utf8_peek_codepoint(rptr, &rnext);
             if (rcp == 0 || rnext == NULL) break;
+            if (prv_codepoint_is_invisible(rcp)) { rptr = rnext; continue; }
 
             int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
                 text_box_params->font, rcp);
@@ -726,6 +739,7 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
           utf8_t *snext = NULL;
           Codepoint scp = utf8_peek_codepoint(sptr, &snext);
           if (scp == 0 || snext == NULL) break;
+          if (prv_codepoint_is_invisible(scp)) { sptr = snext; continue; }
 
           int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
               text_box_params->font, scp);
