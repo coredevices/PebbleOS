@@ -130,6 +130,10 @@ void dbgserial_set_rx_dma_enabled(bool enabled) {
   }
 }
 
+void dbgserial_set_input_enabled(bool enabled) {
+  uart_set_rx_interrupt_enabled(DBG_UART, enabled);
+}
+
 #if MICRO_FAMILY_NRF5
 
 void dbgserial_disable_rx_dma_before_stop() {
