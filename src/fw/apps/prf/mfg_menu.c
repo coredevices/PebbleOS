@@ -64,7 +64,6 @@ typedef struct {
 } ExtrasMenuData;
 
 static uint16_t s_menu_position = 0;
-static uint16_t s_extras_menu_position = 0;
 static bool s_show_extras_on_launch = false;
 
 #if MFG_INFO_RECORDS_TEST_RESULTS
@@ -255,16 +254,10 @@ static void prv_extras_window_load(Window *window) {
 
   data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
-
-  // Restore the previous selection position
-  simple_menu_layer_set_selected_index(data->menu_layer, s_extras_menu_position, false);
 }
 
 static void prv_extras_window_unload(Window *window) {
   ExtrasMenuData *data = window_get_user_data(window);
-
-  // Save the current selection position
-  s_extras_menu_position = simple_menu_layer_get_selected_index(data->menu_layer);
 
   simple_menu_layer_destroy(data->menu_layer);
   app_free(data);
