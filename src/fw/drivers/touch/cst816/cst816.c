@@ -253,7 +253,10 @@ static void prv_process_pending_messages(void* context) {
 
   uint8_t data[CST816_TOUCH_DATA_SIZE] = {0};
   bool rv = prv_read_data(CST816_TOUCH_DATA_REG, data, CST816_TOUCH_DATA_SIZE, 1);
-  PBL_ASSERT(rv, "get touch data error");
+  if (!rv) {
+    PBL_LOG_ERR("Failed to read touch data, dropping event");
+    return;
+  }
 
   const uint64_t current_time_ms = ticks_to_milliseconds(rtc_get_ticks());
   uint8_t press = data[0] & 0x0F;
