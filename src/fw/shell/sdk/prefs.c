@@ -91,6 +91,14 @@ bool shell_prefs_is_timezone_source_manual(void) {
 void shell_prefs_set_timezone_source_manual(bool manual) {
 }
 
+bool shell_prefs_is_time_source_manual(void) {
+  // Force things to automatic
+  return false;
+}
+
+void shell_prefs_set_time_source_manual(bool manual) {
+}
+
 int16_t shell_prefs_get_automatic_timezone_id(void) {
   // Invalid
   return -1;

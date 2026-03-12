@@ -26,6 +26,16 @@ void WEAK shell_prefs_set_timezone_source_manual(bool manual) {
   s_clock_timeezone_manual = manual;
 }
 
+static bool s_clock_time_source_manual;
+
+bool WEAK shell_prefs_is_time_source_manual(void) {
+  return s_clock_time_source_manual;
+}
+
+void WEAK shell_prefs_set_time_source_manual(bool manual) {
+  s_clock_time_source_manual = manual;
+}
+
 static int16_t s_timezone_id;
 
 int16_t shell_prefs_get_automatic_timezone_id(void) {
