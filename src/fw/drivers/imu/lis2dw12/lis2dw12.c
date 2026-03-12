@@ -12,6 +12,7 @@
 #include "system/logging.h"
 #include "system/status_codes.h"
 #include "kernel/util/delay.h"
+#include "kernel/util/sleep.h"
 #include "util/math.h"
 
 // Implementation notes:
@@ -32,6 +33,10 @@
 
 // Time to wait after reset (us)
 #define LIS2DW12_RESET_TIME_US 5
+
+// DRDY polling parameters for accel_peek single-shot mode
+#define LIS2DW12_DRDY_POLL_DELAY_MS   (5)   /* ms between data-ready polls */
+#define LIS2DW12_DRDY_POLL_TIMEOUT_MS (100) /* max wait (~5x 20ms at 50Hz ODR) */
 
 // Scale range when in 12-bit mode (low-power mode 1)
 #define LIS2DW12_S12_SCALE_RANGE (1U << (12U - 1U))
@@ -662,12 +667,23 @@ int accel_peek(AccelDriverSample *data) {
     return E_ERROR;
   }
 
-  // Poll for data ready
+  // Poll for data ready (timeout after 100ms, ~5x the expected 20ms at 50Hz ODR)
+  uint32_t elapsed_ms = 0;
   do {
     ret = prv_lis2dw12_read(LIS2DW12_STATUS, &status, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read STATUS register");
       return E_ERROR;
+    }
+    if ((status & LIS2DW12_STATUS_DRDY) == 0U) {
+      if (elapsed_ms >= LIS2DW12_DRDY_POLL_TIMEOUT_MS) {
+        PBL_LOG_ERR("DRDY timeout after %" PRIu32 " ms", elapsed_ms);
+        // Restore CTRL1 before returning
+        prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1_bck, 1);
+        return E_ERROR;
+      }
+      psleep(LIS2DW12_DRDY_POLL_DELAY_MS);
+      elapsed_ms += LIS2DW12_DRDY_POLL_DELAY_MS;
     }
   } while ((status & LIS2DW12_STATUS_DRDY) == 0U);
 
