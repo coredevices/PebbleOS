@@ -541,7 +541,8 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
   bool has_error = true;
 
   if (s_state != SessionState_StartSession &&
-      s_state != SessionState_AudioEndpointSetupReceived) {
+      s_state != SessionState_AudioEndpointSetupReceived &&
+      s_state != SessionState_VoiceEndpointSetupReceived) {
     PBL_LOG_WRN("Session setup result received when not expected, state=%d",
             (int)s_state);
     prv_cancel_session();
@@ -549,6 +550,13 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
         VoiceEventTypeSessionSetup : VoiceEventTypeSessionResult;
     prv_send_event(event_type, VoiceStatusErrorGeneric, NULL);
     goto done;
+  }
+
+  // If we already received the voice endpoint setup, a duplicate is unexpected.
+  // Log a warning and ignore it rather than asserting in prv_handle_subsystem_started().
+  if (s_state == SessionState_VoiceEndpointSetupReceived) {
+    PBL_LOG_WRN("Duplicate voice endpoint setup result received, ignoring");
+    goto unlock;
   }
 
   if (session_type >= VoiceEndpointSessionTypeCount) {
