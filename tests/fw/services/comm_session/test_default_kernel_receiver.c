@@ -52,6 +52,13 @@ typedef struct {
 } ExpectedData;
 
 static ExpectedData s_expected_data;
+static bool s_skip_data_assert;
+
+//! Record of data received by handlers, for verifying batched delivery order.
+#define MAX_RECORDED_CALLS 16
+static uint8_t s_recorded_data[MAX_RECORDED_CALLS];
+static size_t s_recorded_lens[MAX_RECORDED_CALLS];
+static int s_recorded_count;
 
 static void prv_set_expected_data(void *data, size_t len) {
   s_expected_data.buf = data;
@@ -59,6 +66,9 @@ static void prv_set_expected_data(void *data, size_t len) {
 }
 
 static void prv_assert_data_matches_expected(const void *data, size_t len) {
+  if (s_skip_data_assert) {
+    return;
+  }
   cl_assert_equal_i(len, s_expected_data.len);
   cl_assert(memcmp(s_expected_data.buf, data, len) == 0);
 }
@@ -72,6 +82,11 @@ static void prv_assert_no_handler_calls(void) {
 static void prv_endpoint_handler_a(
     CommSession *session, const uint8_t *data, size_t length) {
   s_handler_call_count[HandlerA]++;
+  if (s_recorded_count < MAX_RECORDED_CALLS) {
+    s_recorded_data[s_recorded_count] = data[0];
+    s_recorded_lens[s_recorded_count] = length;
+    s_recorded_count++;
+  }
   prv_assert_data_matches_expected(data, length);
 }
 
@@ -108,6 +123,8 @@ static const PebbleProtocolEndpoint s_endpoints[NumHandlers] = {
 void test_default_kernel_receiver__cleanup(void) {
   memset(s_handler_call_count, 0x0, sizeof(s_handler_call_count));
   s_kernel_main_schedule_count = 0;
+  s_skip_data_assert = false;
+  s_recorded_count = 0;
 }
 
 
@@ -185,7 +202,8 @@ void test_default_kernel_receiver__prepare_write_finish_multiple_sessions(void) 
 
 //! It's possible the same session can receiver multiple messages before any
 //! are processed on kernel BG. Make sure they do not interfere with one
-//! another
+//! another. With coalesced callbacks, a single system_task callback drains
+//! all pending messages in order.
 void test_default_kernel_receiver__same_session_batched(void) {
   const int batch_num = 10;
   char data = 'a';
@@ -204,12 +222,17 @@ void test_default_kernel_receiver__same_session_batched(void) {
 
   prv_assert_no_handler_calls();
 
-  char expected_data = 'a';
+  // All 10 messages are coalesced into a single system_task callback.
+  // Skip per-handler expected_data assertion; verify order via recording.
+  s_skip_data_assert = true;
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(s_handler_call_count[HandlerA], batch_num);
+
+  // Verify that handlers were called in the correct order with correct data
+  cl_assert_equal_i(s_recorded_count, batch_num);
   for (int i = 0; i < batch_num; i++) {
-    prv_set_expected_data(&expected_data, 1);
-    fake_system_task_callbacks_invoke(1);
-    cl_assert_equal_i(s_handler_call_count[HandlerA], i + 1);
-    expected_data += 1;
+    cl_assert_equal_i(s_recorded_data[i], 'a' + i);
+    cl_assert_equal_i(s_recorded_lens[i], 1);
   }
 
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
