@@ -19,6 +19,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"
 #include "util/date.h"
+#include "util/size.h"
 #include "util/time/time.h"
 #include "util/string.h"
 
@@ -70,6 +71,14 @@ typedef enum {
   TimeRowNum,
 } TimeRow;
 
+//! Rows that remain visible when time source is automatic (Set Time and Set Date are hidden).
+static const TimeRow s_auto_visible_rows[] = {
+  TimeRow_TimeSource,
+  TimeRow_Format,
+  TimeRow_TimezoneSource,
+  TimeRow_Timezone,
+};
+
 //! Map a visible row index to its TimeRow enum value.
 //! When time source is automatic, Set Time and Set Date rows are hidden.
 static TimeRow prv_row_for_index(uint16_t index) {
@@ -77,21 +86,18 @@ static TimeRow prv_row_for_index(uint16_t index) {
     // All rows visible
     return (TimeRow)index;
   }
-  // Automatic mode: skip SetTime and SetDate
-  switch (index) {
-    case 0: return TimeRow_TimeSource;
-    case 1: return TimeRow_Format;
-    case 2: return TimeRow_TimezoneSource;
-    case 3: return TimeRow_Timezone;
-    default: return TimeRowNum;
+  // Automatic mode: map through the reduced row list
+  if (index < ARRAY_LENGTH(s_auto_visible_rows)) {
+    return s_auto_visible_rows[index];
   }
+  return TimeRowNum;
 }
 
 static uint16_t prv_visible_row_count(void) {
   if (clock_time_source_is_manual()) {
     return TimeRowNum;
   }
-  return TimeRowNum - 2;  // Hide SetTime and SetDate
+  return ARRAY_LENGTH(s_auto_visible_rows);
 }
 
 
