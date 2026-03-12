@@ -365,6 +365,18 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
                       (uint32_t)t);
       break;
     }
+    // Get time response (from phone after we sent 0x00):
+    case 0x01: {
+      if (length < sizeof(uint8_t) + sizeof(uint32_t)) {
+        PBL_LOG_WRN("Get time response too short");
+        return;
+      }
+      time_t phone_time = ntohl(*(uint32_t*)data);
+      if (!clock_time_source_is_manual()) {
+        prv_update_time_info_and_generate_event(&phone_time, NULL);
+      }
+      break;
+    }
     // Set time:
     case 0x02: {
       time_t new_time = ntohl(*(uint32_t*)data);
@@ -592,7 +604,7 @@ void clock_request_time_from_phone(void) {
     return;
   }
   // Send a "get time" request (sub-command 0x00) to the phone.
-  // The companion app responds by sending a set-time (0x02) or set-timezone (0x03) message.
+  // The companion app responds with a get-time response (0x01) containing its UTC time.
   const uint8_t request[] = { 0x00 };
   comm_session_send_data(session, protocol_time_endpoint_id,
                          request, sizeof(request), COMM_SESSION_DEFAULT_TIMEOUT);
