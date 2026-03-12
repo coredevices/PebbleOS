@@ -215,30 +215,6 @@ void display_init(void) {
   s_initialized = true;
 }
 
-void display_clear(void) {
-  DisplayJDIState *state = DISPLAY->state;
-
-  // Allocate temporary framebuffer for clear operation
-  // This is only called during boot when heap has plenty of space
-  uint8_t *temp_fb = kernel_malloc(DISPLAY_FRAMEBUFFER_BYTES);
-  if (!temp_fb) {
-    return;
-  }
-  
-  memset(temp_fb, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
-  s_framebuffer = temp_fb;
-  s_update_y0 = 0;
-  s_update_y1 = PBL_DISPLAY_HEIGHT - 1;
-
-  stop_mode_disable(InhibitorDisplay);
-  prv_display_update_start();
-  xSemaphoreTake(s_sem, portMAX_DELAY);
-  stop_mode_enable(InhibitorDisplay);
-  
-  kernel_free(temp_fb);
-  s_framebuffer = NULL;
-}
-
 void display_set_enabled(bool enabled) {
   if (enabled) {
     prv_display_on();
@@ -341,6 +317,8 @@ void display_update_boot_frame(uint8_t *framebuffer) {
   xSemaphoreTake(s_sem, portMAX_DELAY);
   stop_mode_enable(InhibitorDisplay);
 }
+
+void display_clear(void) {}
 
 void display_pulse_vcom(void) {}
 
