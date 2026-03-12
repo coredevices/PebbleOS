@@ -217,7 +217,13 @@ static void prv_cycle_clock_style(void) {
 }
 
 static void prv_cycle_clock_time_source(void) {
-  clock_set_manual_time_source(!clock_time_source_is_manual());
+  const bool was_manual = clock_time_source_is_manual();
+  clock_set_manual_time_source(!was_manual);
+
+  if (was_manual) {
+    // Switching from manual to automatic: ask the phone to send its current time
+    clock_request_time_from_phone();
+  }
 }
 
 static void prv_cycle_clock_timezone_source(void) {
