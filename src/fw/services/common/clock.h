@@ -117,6 +117,11 @@ bool clock_time_source_is_manual(void);
 void clock_set_manual_time_source(bool manual);
 
 //! @internal
+//! Sends a "get time" request to the connected phone.
+//! If a phone is connected, the companion app will respond by sending a time update.
+void clock_request_time_from_phone(void);
+
+//! @internal
 //! If timezone is set, copies the current timezone long name (e.g. America/Chicago)
 //! to buffer region_name.
 //! @param timezone A pointer to the buffer to copy the timezone long name into

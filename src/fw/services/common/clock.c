@@ -586,6 +586,18 @@ void clock_set_manual_time_source(bool manual) {
   shell_prefs_set_time_source_manual(manual);
 }
 
+void clock_request_time_from_phone(void) {
+  CommSession *session = comm_session_get_system_session();
+  if (!session) {
+    return;
+  }
+  // Send a "get time" request (sub-command 0x00) to the phone.
+  // The companion app responds by sending a set-time (0x02) or set-timezone (0x03) message.
+  const uint8_t request[] = { 0x00 };
+  comm_session_send_data(session, protocol_time_endpoint_id,
+                         request, sizeof(request), COMM_SESSION_DEFAULT_TIMEOUT);
+}
+
 time_t clock_to_timestamp(WeekDay day, int hour, int minute) {
   time_t t = sys_get_time();
   struct tm cal;
