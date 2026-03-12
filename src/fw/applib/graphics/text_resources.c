@@ -622,7 +622,9 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
 
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, const Codepoint codepoint,
                                               FontInfo *font_info) {
-  const GlyphData *g = prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */);
+  // Pre-load the bitmap so the subsequent render_glyph() call finds it cached in glyph_buffer,
+  // avoiding deep flash I/O calls from within the render call chain (prevents app stack overflow).
+  const GlyphData *g = prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */);
   if (!g) {
     return 0;
   }
