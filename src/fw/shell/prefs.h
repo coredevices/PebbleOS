@@ -29,6 +29,11 @@ void shell_prefs_set_clock_24h_style(bool is24h);
 bool shell_prefs_is_timezone_source_manual(void);
 void shell_prefs_set_timezone_source_manual(bool manual);
 
+// The time source setting is required by services/common/clock.c.
+// When the source is manual, we don't override our time with the phone's time info
+bool shell_prefs_is_time_source_manual(void);
+void shell_prefs_set_time_source_manual(bool manual);
+
 // The timezone id setting is required by services/common/clock.c.
 // The automatic timezone id is what we get from the phone
 int16_t shell_prefs_get_automatic_timezone_id(void);

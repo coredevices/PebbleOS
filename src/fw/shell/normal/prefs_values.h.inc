@@ -1,6 +1,7 @@
 // Included by prefs.c to declare the list of preferences and their keys
   PREFS_MACRO(PREF_KEY_CLOCK_24H, s_clock_24h)
   PREFS_MACRO(PREF_KEY_CLOCK_TIMEZONE_SOURCE_IS_MANUAL, s_clock_timezone_source_is_manual)
+  PREFS_MACRO(PREF_KEY_CLOCK_TIME_SOURCE_IS_MANUAL, s_clock_time_source_is_manual)
   PREFS_MACRO(PREF_KEY_CLOCK_PHONE_TIMEZONE_ID, s_clock_phone_timezone_id)
   PREFS_MACRO(PREF_KEY_UNITS_DISTANCE, s_units_distance)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_ENABLED, s_backlight_enabled)

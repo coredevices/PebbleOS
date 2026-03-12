@@ -51,6 +51,9 @@ static bool s_clock_24h = false;
 #define PREF_KEY_CLOCK_TIMEZONE_SOURCE_IS_MANUAL "timezoneSource"
 static bool s_clock_timezone_source_is_manual = false;
 
+#define PREF_KEY_CLOCK_TIME_SOURCE_IS_MANUAL "timeSource"
+static bool s_clock_time_source_is_manual = false;
+
 #define PREF_KEY_CLOCK_PHONE_TIMEZONE_ID "automaticTimezoneID"
 static int16_t s_clock_phone_timezone_id = -1;
 
@@ -257,6 +260,11 @@ static bool prv_set_s_clock_24h(bool *new_value) {
 
 static bool prv_set_s_clock_timezone_source_is_manual(bool *new_value) {
   s_clock_timezone_source_is_manual = *new_value;
+  return true;
+}
+
+static bool prv_set_s_clock_time_source_is_manual(bool *new_value) {
+  s_clock_time_source_is_manual = *new_value;
   return true;
 }
 
@@ -968,6 +976,14 @@ bool shell_prefs_is_timezone_source_manual(void) {
 
 void shell_prefs_set_timezone_source_manual(bool manual) {
   prv_pref_set(PREF_KEY_CLOCK_TIMEZONE_SOURCE_IS_MANUAL, &manual, sizeof(manual));
+}
+
+bool shell_prefs_is_time_source_manual(void) {
+  return s_clock_time_source_is_manual;
+}
+
+void shell_prefs_set_time_source_manual(bool manual) {
+  prv_pref_set(PREF_KEY_CLOCK_TIME_SOURCE_IS_MANUAL, &manual, sizeof(manual));
 }
 
 void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {

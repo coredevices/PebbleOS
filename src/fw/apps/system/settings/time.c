@@ -19,6 +19,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"
 #include "util/date.h"
+#include "util/size.h"
 #include "util/time/time.h"
 #include "util/string.h"
 
@@ -61,6 +62,7 @@ typedef struct {
 } SettingsTimeData;
 
 typedef enum {
+  TimeRow_TimeSource,
   TimeRow_SetTime,
   TimeRow_SetDate,
   TimeRow_Format,
@@ -68,6 +70,35 @@ typedef enum {
   TimeRow_Timezone,
   TimeRowNum,
 } TimeRow;
+
+//! Rows that remain visible when time source is automatic (Set Time and Set Date are hidden).
+static const TimeRow s_auto_visible_rows[] = {
+  TimeRow_TimeSource,
+  TimeRow_Format,
+  TimeRow_TimezoneSource,
+  TimeRow_Timezone,
+};
+
+//! Map a visible row index to its TimeRow enum value.
+//! When time source is automatic, Set Time and Set Date rows are hidden.
+static TimeRow prv_row_for_index(uint16_t index) {
+  if (clock_time_source_is_manual()) {
+    // All rows visible
+    return (TimeRow)index;
+  }
+  // Automatic mode: map through the reduced row list
+  if (index < ARRAY_LENGTH(s_auto_visible_rows)) {
+    return s_auto_visible_rows[index];
+  }
+  return TimeRowNum;
+}
+
+static uint16_t prv_visible_row_count(void) {
+  if (clock_time_source_is_manual()) {
+    return TimeRowNum;
+  }
+  return ARRAY_LENGTH(s_auto_visible_rows);
+}
 
 
 // Timezone Window Setup
@@ -185,6 +216,10 @@ static void prv_cycle_clock_style(void) {
   clock_set_24h_style(!clock_is_24h_style());
 }
 
+static void prv_cycle_clock_time_source(void) {
+  clock_set_manual_time_source(!clock_time_source_is_manual());
+}
+
 static void prv_cycle_clock_timezone_source(void) {
   clock_set_manual_timezone_source(!clock_timezone_source_is_manual());
 
@@ -270,7 +305,11 @@ static void prv_date_picker_push(SettingsTimeData *data) {
 ////////////////////////////
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   SettingsTimeData *data = (SettingsTimeData*) context;
-  switch (row) {
+  switch (prv_row_for_index(row)) {
+    case TimeRow_TimeSource:
+      // Toggle automatic / manual time
+      prv_cycle_clock_time_source();
+      break;
     case TimeRow_SetTime:
       prv_time_picker_push(data);
       return;  // mark dirty happens via window unload callback
@@ -290,6 +329,8 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       PBL_ASSERTN(clock_timezone_source_is_manual());
       prv_continent_menu_push(data);
       break;
+    default:
+      break;
   }
   settings_menu_mark_dirty(SettingsMenuItemDateTime);
 }
@@ -304,7 +345,13 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   char time_buf[TIME_STRING_TIME_LENGTH];
   char date_buf[16];
 
-  switch (row) {
+  switch (prv_row_for_index(row)) {
+    case TimeRow_TimeSource: {
+      title = i18n_noop("Time Source");
+      subtitle = clock_time_source_is_manual() ? i18n_noop("Manual") :
+                                                 i18n_noop("Automatic");
+      break;
+    }
     case TimeRow_SetTime: {
       title = i18n_noop("Set Time");
       struct tm local_now;
@@ -339,6 +386,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = current_timezone_region;
       break;
     }
+    default:
+      break;
   }
 
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
@@ -346,13 +395,14 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 
 static void prv_selection_will_change_cb(SettingsCallbacks *context, uint16_t *new_row,
                                          uint16_t old_row) {
-  if (!clock_timezone_source_is_manual() && *new_row == TimeRow_Timezone) {
+  if (!clock_timezone_source_is_manual() &&
+      prv_row_for_index(*new_row) == TimeRow_Timezone) {
     *new_row = old_row;
   }
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
-  return TimeRowNum;
+  return prv_visible_row_count();
 }
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
