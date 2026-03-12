@@ -117,6 +117,12 @@ bool clock_time_source_is_manual(void);
 void clock_set_manual_time_source(bool manual);
 
 //! @internal
+//! Sends a request to the phone to send its current time.
+//! The phone should respond with a set UTC + timezone message (sub-command 0x03).
+//! Does nothing if there is no active system session (phone not connected).
+void clock_request_time_from_phone(void);
+
+//! @internal
 //! If timezone is set, copies the current timezone long name (e.g. America/Chicago)
 //! to buffer region_name.
 //! @param timezone A pointer to the buffer to copy the timezone long name into
