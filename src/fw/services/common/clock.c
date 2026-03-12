@@ -318,6 +318,10 @@ static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
 
   TimezoneInfo tz_info = prv_get_timezone_info_from_data(tz_data);
   shell_prefs_set_automatic_timezone_id(tz_info.timezone_id);
+  if (clock_time_source_is_manual()) {
+    // Manual time mode: ignore time set from phone entirely
+    return;
+  }
   if (clock_timezone_source_is_manual()) {
     prv_update_time_info_and_generate_event(&tz_data->utc_time, NULL);
   } else {
@@ -328,6 +332,10 @@ static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
 static void prv_handle_set_time_msg(time_t new_time) {
   PBL_LOG_WRN("Mobile app calling deprecated API, time = %d",
           (int)new_time);
+  if (clock_time_source_is_manual()) {
+    // Manual time mode: ignore time set from phone
+    return;
+  }
   if (clock_is_timezone_set()) {
     new_time = prv_migrate_local_time_to_UTC(new_time);
   }
@@ -568,6 +576,14 @@ bool clock_timezone_source_is_manual(void) {
 
 void clock_set_manual_timezone_source(bool manual) {
   shell_prefs_set_timezone_source_manual(manual);
+}
+
+bool clock_time_source_is_manual(void) {
+  return shell_prefs_is_time_source_manual();
+}
+
+void clock_set_manual_time_source(bool manual) {
+  shell_prefs_set_time_source_manual(manual);
 }
 
 time_t clock_to_timestamp(WeekDay day, int hour, int minute) {

@@ -104,6 +104,19 @@ bool clock_timezone_source_is_manual(void);
 void clock_set_manual_timezone_source(bool manual);
 
 //! @internal
+//! Checks the time source. If the source is manual, the user must set the time from
+//! the settings menu, if the source is automatic the time will be set by the phone.
+//! @return true if time is set manually, false if the time is set by the phone
+bool clock_time_source_is_manual(void);
+
+//! @internal
+//! Sets the time source. If the source is manual, the user must set the time from
+//! the settings menu, if the source is automatic the time will be set by the phone.
+//! @param manual True means time is set manually on the watch,
+//!               false means the phone's time will be used
+void clock_set_manual_time_source(bool manual);
+
+//! @internal
 //! If timezone is set, copies the current timezone long name (e.g. America/Chicago)
 //! to buffer region_name.
 //! @param timezone A pointer to the buffer to copy the timezone long name into
