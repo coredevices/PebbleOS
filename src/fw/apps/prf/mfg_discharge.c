@@ -15,6 +15,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "services/common/bluetooth/bluetooth_ctl.h"
+#include "services/common/light.h"
 #include "system/logging.h"
 
 typedef enum {
@@ -51,48 +52,38 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
   // Get battery state
   BatteryConstants battery_const;
+  BatteryChargeState charge_state;
+
   battery_get_constants(&battery_const);
-  const BatteryChargeState charge_state = battery_get_charge_state();
+  charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
     case DischargeStateWaitUnplug:
-      // Wait for user to unplug the watch
       if (!charge_state.is_plugged) {
-        // Watch unplugged, record initial state and start discharging
-        data->test_state = DischargeStateDischarging;
-        data->initial_voltage_mv = battery_const.v_mv;
-        data->initial_percent = charge_state.charge_percent;
-        data->elapsed_seconds = 0;
-
-        // Disable serial console input (RX) may consume too much power on some systems
+        // Disable sources of power consumption to minimize impact on discharge test results
+        light_enable(false);
         serial_console_set_rx_enabled(false);
-
-        // Disable Bluetooth
         bt_ctl_set_enabled(false);
+
+        data->test_state = DischargeStateDischarging;
+        data->elapsed_seconds = 0;
+      } else {
+        sniprintf(data->details_string, sizeof(data->details_string), "Unplug charger\nto begin test");
       }
       break;
 
-    case DischargeStateDischarging:
-      // Increment elapsed time
-      data->elapsed_seconds++;
-      break;
-  }
-
-  // Update status display
-  sniprintf(data->status_string, sizeof(data->status_string), "DISCHARGE\n%s",
-            status_text[data->test_state]);
-  text_layer_set_text(&data->status, data->status_string);
-
-  // Update details display based on state
-  switch (data->test_state) {
-    case DischargeStateWaitUnplug:
-      sniprintf(data->details_string, sizeof(data->details_string), "Unplug charger\nto begin test");
-      break;
-
     case DischargeStateDischarging: {
+      if (data->elapsed_seconds == 0) {
+        data->initial_voltage_mv = battery_const.v_mv;
+        data->initial_percent = charge_state.charge_percent;
+      }
+
+      data->elapsed_seconds++;
+
       int hours = data->elapsed_seconds / 3600;
       int mins = (data->elapsed_seconds % 3600) / 60;
       int secs = data->elapsed_seconds % 60;
+
       int32_t voltage_delta = battery_const.v_mv - data->initial_voltage_mv;
       int8_t percent_delta = (int8_t)charge_state.charge_percent - (int8_t)data->initial_percent;
 
@@ -105,18 +96,18 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
                 hours, mins, secs,
                 battery_const.v_mv, charge_state.charge_percent,
                 voltage_delta, percent_delta);
-      break;
-    }
+    } break;
   }
 
+  // Update status display
+  sniprintf(data->status_string, sizeof(data->status_string), "DISCHARGE\n%s",
+            status_text[data->test_state]);
+  text_layer_set_text(&data->status, data->status_string);
   text_layer_set_text(&data->details, data->details_string);
 }
 
 static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
-  // Restore serial console RX
   serial_console_set_rx_enabled(true);
-
-  // Re-enable Bluetooth
   bt_ctl_set_enabled(true);
 
   app_window_stack_pop(true);
