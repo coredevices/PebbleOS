@@ -17,7 +17,8 @@
 
 // Implementation notes:
 //
-// - Single-shot mode is used to perform peeking measurements
+// - Peeking returns the last FIFO sample when sampling is active, otherwise
+//   single-shot mode is used to perform the measurement
 // - Low-power mode 1 (12-bit) is always used (minimum power mode)
 // - ODR is limited to the [12.5, 200] Hz range
 // - Shake detection uses 12.5Hz when no active sampling is ongoing
@@ -219,9 +220,10 @@ static void prv_lis2dw12_read_samples(uint8_t num_samples) {
 
   timestamp_us = prv_get_curr_system_time_us();
 
+  AccelDriverSample sample = {0};
+
   for (uint8_t i = 0U; i < num_samples; ++i) {
     uint8_t *raw;
-    AccelDriverSample sample;
 
     raw = &LIS2DW12->state->raw_sample_buf[i * LIS2DW12_SAMPLE_SIZE_BYTES];
     prv_raw_to_mg(raw, &sample);
@@ -229,6 +231,9 @@ static void prv_lis2dw12_read_samples(uint8_t num_samples) {
 
     accel_cb_new_sample(&sample);
   }
+
+  LIS2DW12->state->last_sample = sample;
+  LIS2DW12->state->last_sample_valid = true;
 }
 
 static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
@@ -608,6 +613,7 @@ void accel_set_num_samples(uint32_t num_samples) {
       return;
     }
 
+    LIS2DW12->state->last_sample_valid = false;
     LIS2DW12->state->last_int1_tick = rtc_get_ticks();
     LIS2DW12->state->int1_period_ms = (LIS2DW12->state->sampling_interval_us * num_samples) / 1000;
     regular_timer_add_multisecond_callback(&LIS2DW12->state->int1_wdt_timer,
@@ -627,6 +633,7 @@ void accel_set_num_samples(uint32_t num_samples) {
 }
 
 int accel_peek(AccelDriverSample *data) {
+  int err = 0;
   bool ret;
   uint8_t ctrl1;
   uint8_t ctrl1_bck;
@@ -636,6 +643,15 @@ int accel_peek(AccelDriverSample *data) {
 
   if (!LIS2DW12->state->initialized) {
     return E_ERROR;
+  }
+
+  // If sampling is active, return the last obtained sample
+  if (LIS2DW12->state->num_samples > 0U) {
+    if (!LIS2DW12->state->last_sample_valid) {
+      return E_ERROR;
+    }
+    *data = LIS2DW12->state->last_sample;
+    return 0;
   }
 
   // Save CTRL1
@@ -673,14 +689,14 @@ int accel_peek(AccelDriverSample *data) {
     ret = prv_lis2dw12_read(LIS2DW12_STATUS, &status, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read STATUS register");
-      return E_ERROR;
+      err = E_ERROR;
+      goto end;
     }
     if ((status & LIS2DW12_STATUS_DRDY) == 0U) {
       if (elapsed_ms >= LIS2DW12_DRDY_POLL_TIMEOUT_MS) {
         PBL_LOG_ERR("DRDY timeout after %" PRIu32 " ms", elapsed_ms);
-        // Restore CTRL1 before returning
-        prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1_bck, 1);
-        return E_ERROR;
+        err = E_ERROR;
+        goto end;
       }
       psleep(LIS2DW12_DRDY_POLL_DELAY_MS);
       elapsed_ms += LIS2DW12_DRDY_POLL_DELAY_MS;
@@ -691,21 +707,19 @@ int accel_peek(AccelDriverSample *data) {
   ret = prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw));
   if (!ret) {
     PBL_LOG_ERR("Failed to read sample");
-    return E_ERROR;
-  }
-
-  // Restore CTRL1
-  ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1_bck, 1);
-  if (!ret) {
-    PBL_LOG_ERR("Could not restore CTRL1 register");
-    return E_ERROR;
+    err = E_ERROR;
+    goto end;
   }
 
   // Convert to mg and populate timestamp
   prv_raw_to_mg(raw, data);
   data->timestamp_us = prv_get_curr_system_time_us();
 
-  return 0;
+end:
+  // Restore CTRL1 (back to previous state, e.g. power-down or shake ODR)
+  (void)prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1_bck, 1);
+
+  return err;
 }
 
 void accel_enable_shake_detection(bool on) {
