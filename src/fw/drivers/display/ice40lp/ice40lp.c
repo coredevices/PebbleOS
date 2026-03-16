@@ -269,8 +269,6 @@ static bool prv_wait_busy(void) {
 static void prv_reprogram_display(void) {
   // CDONE is expected to go low during reprogramming. Don't pollute the logs
   // with "CDONE has gone low" messages.
-  analytics_inc(ANALYTICS_DEVICE_METRIC_FPGA_REPROGRAM_COUNT,
-                AnalyticsClient_System);
   exti_disable(ICE40LP->cdone_exti);
   display_program(s_fpga_bitstream, sizeof(s_fpga_bitstream));
   exti_enable(ICE40LP->cdone_exti);
