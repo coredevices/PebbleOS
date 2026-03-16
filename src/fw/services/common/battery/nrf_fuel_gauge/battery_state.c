@@ -38,6 +38,9 @@
 
 #define LOG_MIN_SEC 30
 
+// Minimum valid battery voltage for battery swap detection (mV)
+#define BATTERY_MIN_VALID_VOLTAGE_MV 3300
+
 static const struct battery_model prv_battery_model = {
 #if PLATFORM_ASTERIX
 #include "battery_asterix.inc"
@@ -68,6 +71,7 @@ static bool s_charger_enabled;
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
 
 static uint32_t s_save_counter;
+static bool s_first_update_done;
 
 #ifdef MANUFACTURING_FW
 // In manufacturing firmware, use dedicated MFG_STATE flash region
@@ -205,6 +209,40 @@ static void prv_save_state(void) {
 
 static void prv_schedule_update(uint32_t delay, bool force_update);
 
+static int prv_fuel_gauge_init_common(const BatteryConstants *constants, bool load_state) {
+  struct nrf_fuel_gauge_init_parameters parameters = {0};
+  int ret;
+
+  parameters.model = &prv_battery_model;
+  parameters.v0 = (float)constants->v_mv / 1000.0f;
+  parameters.i0 = (float)constants->i_ua / 1000000.0f;
+  parameters.t0 = (float)constants->t_mc / 1000.0f;
+
+#if FUEL_GAUGE_STATEFUL
+  uint8_t saved_state[nrf_fuel_gauge_state_size];
+
+  if (load_state) {
+    if (prv_load_state(saved_state, sizeof(saved_state))) {
+      parameters.state = saved_state;
+    }
+  }
+#endif
+
+  ret = nrf_fuel_gauge_init(&parameters, NULL);
+#if FUEL_GAUGE_STATEFUL
+  if (ret != 0 && parameters.state != NULL) {
+    PBL_LOG_WRN("Failed to initialize fuel gauge with saved state, erasing");
+
+    prv_erase_state();
+
+    parameters.state = NULL;
+    ret = nrf_fuel_gauge_init(&parameters, NULL);
+  }
+#endif
+
+  return ret;
+}
+
 static void prv_charge_status_inform(BatteryChargeStatus chg_status) {
   union nrf_fuel_gauge_ext_state_info_data state_info;
   int ret;
@@ -256,6 +294,30 @@ static void prv_update_state(void *force_update) {
 
   update = force_update != NULL;
 
+  ret = battery_get_constants(&constants);
+  if (ret < 0) {
+    PBL_LOG_ERR("Could not obtain constants, skipping update (%d)", ret);
+    return;
+  }
+
+#if FUEL_GAUGE_STATEFUL
+  // Detect invalid state on first update
+  if (!s_first_update_done) {
+      pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f,
+                                   (float)constants.i_ua / 1000000.0f,
+                                   (float)constants.t_mc / 1000.0f, 0.0f, NULL);
+      pct_int = (uint8_t)ceilf(pct);
+
+      if (pct_int == 0 && constants.v_mv >= BATTERY_MIN_VALID_VOLTAGE_MV) {
+        PBL_LOG_WRN("Invalid state detected, reloading without state");
+        prv_erase_state();
+        (void)prv_fuel_gauge_init_common(&constants, false);
+      }
+
+      s_first_update_done = true;
+  }
+#endif
+
   is_plugged = battery_is_usb_connected_impl();
   if (is_plugged != s_last_battery_charge_state.is_plugged) {
     ret = nrf_fuel_gauge_ext_state_update(is_plugged
@@ -283,12 +345,6 @@ static void prv_update_state(void *force_update) {
   if (is_charging != s_last_battery_charge_state.is_charging) {
     s_last_battery_charge_state.is_charging = is_charging;
     update = true;
-  }
-
-  ret = battery_get_constants(&constants);
-  if (ret < 0) {
-    PBL_LOG_ERR("Could not obtain constants, skipping update (%d)", ret);
-    return;
   }
 
   s_last_voltage_mv = constants.v_mv;
@@ -377,41 +433,17 @@ void battery_state_force_update(void) { prv_schedule_update(0, true); }
 
 void battery_state_init(void) {
   int ret;
-  struct nrf_fuel_gauge_init_parameters parameters = {0};
   struct nrf_fuel_gauge_runtime_parameters runtime_parameters = {0};
   BatteryConstants constants;
 
-  parameters.model = &prv_battery_model;
-
   ret = battery_get_constants(&constants);
   PBL_ASSERTN(ret == 0);
-
-  parameters.v0 = (float)constants.v_mv / 1000.0f;
-  parameters.i0 = (float)constants.i_ua / 1000000.0f;
-  parameters.t0 = (float)constants.t_mc / 1000.0f;
 
   s_last_voltage_mv = constants.v_mv;
 
   prv_ref_time = rtc_get_ticks();
 
-#if FUEL_GAUGE_STATEFUL
-  uint8_t saved_state[nrf_fuel_gauge_state_size];
-  if (prv_load_state(saved_state, sizeof(saved_state))) {
-    parameters.state = saved_state;
-  }
-#endif
-
-  ret = nrf_fuel_gauge_init(&parameters, NULL);
-#if FUEL_GAUGE_STATEFUL
-  if (ret != 0 && parameters.state != NULL) {
-    PBL_LOG_WRN("Fuel gauge init with saved state failed (%d), reinitializing", ret);
-
-    prv_erase_state();
-
-    parameters.state = NULL;
-    ret = nrf_fuel_gauge_init(&parameters, NULL);
-  }
-#endif
+  ret = prv_fuel_gauge_init_common(&constants, true);
   PBL_ASSERTN(ret == 0);
 
   ret = nrf_fuel_gauge_ext_state_update(
