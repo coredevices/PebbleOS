@@ -1287,6 +1287,11 @@ void command_mflt_export(void) {
   memfault_data_export_dump_chunks();
 }
 
+void command_mflt_collect(void) {
+  void memfault_chunk_collect(void);
+  memfault_chunk_collect();
+}
+
 void command_mflt_heartbeat(void) {
   memfault_metrics_heartbeat_debug_trigger();
 }
