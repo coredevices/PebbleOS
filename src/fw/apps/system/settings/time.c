@@ -315,7 +315,8 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case TimeRow_TimeSource:
       // Toggle automatic / manual time
       prv_cycle_clock_time_source();
-      break;
+      settings_menu_reload_data(SettingsMenuItemDateTime);
+      return;
     case TimeRow_SetTime:
       prv_time_picker_push(data);
       return;  // mark dirty happens via window unload callback
