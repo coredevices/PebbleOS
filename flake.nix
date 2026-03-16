@@ -38,18 +38,26 @@
         {
           default = pkgs.mkShellNoCC {
             hardeningDisable = [ "fortify" ]; # waf expects unoptimized builds
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+            ];
             buildInputs = with pkgs; [
               emscripten
               gcc
               gcc-arm-embedded-14_2r1
               gettext
               git
+              librsvg
               nodejs
               openocd
               protobuf
               python313
             ] ++ lib.optionals stdenv.isLinux [
               clang_multi
+              # Required for Moddable build
+              dash
+              glib
+              gtk3
             ];
             shellHook = ''
             # Ensure that apple command line tools are installed on macOS
