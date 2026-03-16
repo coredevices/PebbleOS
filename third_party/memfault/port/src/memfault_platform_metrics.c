@@ -103,12 +103,6 @@ void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, in
     case ANALYTICS_DEVICE_METRIC_ACCEL_SAMPLE_COUNT:
       MEMFAULT_METRIC_SET_UNSIGNED(accel_sample_count, val);
       break;
-    case ANALYTICS_DEVICE_METRIC_ACCEL_RESET_COUNT:
-      MEMFAULT_METRIC_SET_UNSIGNED(accel_reset_count, val);
-      break;
-    case ANALYTICS_DEVICE_METRIC_ACCEL_FIFO_OVERRUN_COUNT:
-      MEMFAULT_METRIC_SET_UNSIGNED(accel_fifo_overrun_count, val);
-      break;
     case ANALYTICS_DEVICE_METRIC_ACCEL_SHAKE_COUNT:
       MEMFAULT_METRIC_SET_UNSIGNED(accel_shake_count, val);
       break;
@@ -220,19 +214,10 @@ void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, in
     case ANALYTICS_DEVICE_METRIC_DISPLAY_UPDATES_PER_HOUR:
       MEMFAULT_METRIC_SET_UNSIGNED(display_updates_per_hour, val);
       break;
-    case ANALYTICS_DEVICE_METRIC_FPGA_REPROGRAM_COUNT:
-      MEMFAULT_METRIC_SET_UNSIGNED(fpga_reprogram_count, val);
-      break;
 
     // Health/HRM
-    case ANALYTICS_DEVICE_METRIC_HRM_ACCEL_DATA_MISSING:
-      MEMFAULT_METRIC_SET_UNSIGNED(hrm_accel_data_missing, val);
-      break;
     case ANALYTICS_DEVICE_METRIC_HRM_ON_TIME:
       MEMFAULT_METRIC_SET_UNSIGNED(hrm_on_time, val);
-      break;
-    case ANALYTICS_DEVICE_METRIC_HRM_WATCHDOG_TIMEOUT:
-      MEMFAULT_METRIC_SET_UNSIGNED(hrm_watchdog_timeout, val);
       break;
     case ANALYTICS_DEVICE_METRIC_ALARM_SOUNDED_COUNT:
       MEMFAULT_METRIC_SET_UNSIGNED(alarm_sounded_count, val);

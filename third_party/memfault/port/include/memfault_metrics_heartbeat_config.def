@@ -39,8 +39,6 @@ MEMFAULT_METRICS_KEY_DEFINE(stationary_time_minutes, kMemfaultMetricType_Unsigne
 
 // Accelerometer Health & Activity
 MEMFAULT_METRICS_KEY_DEFINE(accel_sample_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_reset_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_fifo_overrun_count, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(accel_shake_count, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(accel_double_tap_count, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(accel_peek_count, kMemfaultMetricType_Unsigned)
@@ -86,7 +84,6 @@ MEMFAULT_METRICS_KEY_DEFINE(setting_vibration_strength, kMemfaultMetricType_Unsi
 // Display & UI
 MEMFAULT_METRICS_KEY_DEFINE(watch_only_time, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(display_updates_per_hour, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(fpga_reprogram_count, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_STRING_KEY_DEFINE(active_watchface_name, 96)
 
 // Watchface usage metrics (per-watchface, tracked for current/default watchface)
@@ -94,7 +91,5 @@ MEMFAULT_METRICS_KEY_DEFINE(watchface_total_time_secs, kMemfaultMetricType_Unsig
 MEMFAULT_METRICS_KEY_DEFINE(watchface_launch_count, kMemfaultMetricType_Unsigned)
 
 // Health/HRM
-MEMFAULT_METRICS_KEY_DEFINE(hrm_accel_data_missing, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(hrm_on_time, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(hrm_watchdog_timeout, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(alarm_sounded_count, kMemfaultMetricType_Unsigned)
