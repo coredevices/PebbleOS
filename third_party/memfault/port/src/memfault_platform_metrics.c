@@ -270,7 +270,6 @@ void memfault_metrics_heartbeat_collect_data(void) {
   MEMFAULT_METRIC_SET_UNSIGNED(app_message_sent_count, app_message_outbox_get_sent_count());
   MEMFAULT_METRIC_SET_UNSIGNED(app_message_received_count, app_message_inbox_get_received_count());
   
-#if !RECOVERY_FW
   // Active watchface name and usage time
   AppInstallId watchface_id = watchface_get_default_install_id();
   AppInstallEntry watchface_entry;
@@ -283,5 +282,4 @@ void memfault_metrics_heartbeat_collect_data(void) {
 
   // Update Pebble analytics and forward curated metrics to Memfault
   analytics_external_update();
-#endif
 }
