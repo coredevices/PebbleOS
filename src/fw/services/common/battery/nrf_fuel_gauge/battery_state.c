@@ -71,6 +71,11 @@ static uint32_t s_save_counter;
 
 #ifdef MANUFACTURING_FW
 // In manufacturing firmware, use dedicated MFG_STATE flash region
+static void prv_erase_state(void) {
+  flash_erase_subsector_blocking(FLASH_REGION_MFG_STATE_BEGIN);
+  PBL_LOG_DBG("Fuel gauge state erased");
+}
+
 static bool prv_load_state(void *state, size_t size) {
   if (size > (FLASH_REGION_MFG_STATE_END - FLASH_REGION_MFG_STATE_BEGIN)) {
     return false;
@@ -88,7 +93,13 @@ static bool prv_load_state(void *state, size_t size) {
     }
   }
 
-  return !all_erased;
+  if (all_erased) {
+    return false;
+  }
+
+  PBL_LOG_DBG("Fuel gauge state loaded");
+
+  return true;
 }
 
 static void prv_save_state(void) {
@@ -106,6 +117,8 @@ static void prv_save_state(void) {
 
   flash_erase_subsector_blocking(FLASH_REGION_MFG_STATE_BEGIN);
   flash_write_bytes(buf, FLASH_REGION_MFG_STATE_BEGIN, sizeof(buf));
+
+  PBL_LOG_DBG("Fuel gauge state saved");
 }
 #else
 // In normal firmware, use settings file
@@ -113,6 +126,22 @@ static void prv_save_state(void) {
 #define FUEL_GAUGE_SETTINGS_MAX_SIZE 2048
 
 static const uint32_t FUEL_GAUGE_STATE_KEY = 1;
+
+static void prv_erase_state(void) {
+  SettingsFile file;
+  status_t ret;
+
+  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME,
+                           FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  if (ret != S_SUCCESS) {
+    return;
+  }
+
+  settings_file_delete(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
+  settings_file_close(&file);
+
+  PBL_LOG_DBG("Fuel gauge state erased");
+}
 
 static bool prv_load_state(void *state, size_t size) {
   SettingsFile file;
@@ -135,9 +164,13 @@ static bool prv_load_state(void *state, size_t size) {
                           sizeof(FUEL_GAUGE_STATE_KEY), state, size);
   settings_file_close(&file);
 
+  if (ret != S_SUCCESS) {
+    return false;
+  }
+
   PBL_LOG_DBG("Fuel gauge state loaded");
 
-  return (ret == S_SUCCESS);
+  return true;
 }
 
 static void prv_save_state(void) {
@@ -362,27 +395,24 @@ void battery_state_init(void) {
   prv_ref_time = rtc_get_ticks();
 
 #if FUEL_GAUGE_STATEFUL
-  {
-    uint8_t saved_state[nrf_fuel_gauge_state_size];
-    if (prv_load_state(saved_state, sizeof(saved_state))) {
-      parameters.state = saved_state;
-      ret = nrf_fuel_gauge_init(&parameters, NULL);
-      if (ret == 0) {
-        PBL_LOG_INFO("Fuel gauge state restored from flash");
-        goto init_done;
-      }
-      PBL_LOG_WRN("Fuel gauge init with saved state failed (%d), reinitializing", ret);
-      parameters.state = NULL;
-    }
+  uint8_t saved_state[nrf_fuel_gauge_state_size];
+  if (prv_load_state(saved_state, sizeof(saved_state))) {
+    parameters.state = saved_state;
   }
 #endif
 
   ret = nrf_fuel_gauge_init(&parameters, NULL);
-  PBL_ASSERTN(ret == 0);
-
 #if FUEL_GAUGE_STATEFUL
-init_done:
+  if (ret != 0 && parameters.state != NULL) {
+    PBL_LOG_WRN("Fuel gauge init with saved state failed (%d), reinitializing", ret);
+
+    prv_erase_state();
+
+    parameters.state = NULL;
+    ret = nrf_fuel_gauge_init(&parameters, NULL);
+  }
 #endif
+  PBL_ASSERTN(ret == 0);
 
   ret = nrf_fuel_gauge_ext_state_update(
       NRF_FUEL_GAUGE_EXT_STATE_INFO_CHARGE_CURRENT_LIMIT,
