@@ -70,6 +70,10 @@ static void prv_memfault_gather_chunks_cb() {
     system_task_add_callback(prv_memfault_gather_chunks, NULL);
 }
 
+void memfault_chunk_collect(void) {
+  prv_memfault_gather_chunks_cb();
+}
+
 void init_memfault_chunk_collection() {
     s_memfault_chunks_timer = new_timer_create();
     new_timer_start(s_memfault_chunks_timer, MEMFAULT_CHUNK_COLLECTION_INTERVAL_SECS * 1000, 
