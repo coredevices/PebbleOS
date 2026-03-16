@@ -1402,7 +1402,7 @@ def _is_pulse_everywhere(ctx):
 def _get_pulse_flash_tool(ctx):
     if ctx.env.MICRO_FAMILY == 'SF32LB52' and not ctx.options.force_pulse:
         return "sftool_flash_imaging"
-    if _is_pulse_everywhere(ctx):
+    if _is_pulse_everywhere(ctx) or ctx.options.force_pulse:
         return "pulse_flash_imaging"
     return "pulse_legacy_flash_imaging"
 
