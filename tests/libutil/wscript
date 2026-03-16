@@ -12,6 +12,10 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob=None,
+         test_sources_ant_glob="test_slist.c")
+
+    clar(ctx,
+         sources_ant_glob=None,
          test_sources_ant_glob="test_math.c",
          test_libs=['m'])
 
