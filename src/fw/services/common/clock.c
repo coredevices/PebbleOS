@@ -414,7 +414,16 @@ static void prv_watch_dst(void* user) {
   }
 }
 
+// Minimum valid time: January 1, 2010 00:00:00 UTC
+// On RTC loss, Asterix boots to 1970 and Obelix to 2000 
+// Snap forward so time isnt *that* off
+#define MIN_VALID_BOOT_TIMESTAMP 1262304000
+
 void clock_init(void) {
+  if (rtc_get_time() < MIN_VALID_BOOT_TIMESTAMP) {
+    rtc_set_time(MIN_VALID_BOOT_TIMESTAMP);
+  }
+
   if (clock_is_timezone_set()) {
     TimezoneInfo tz_info;
     rtc_get_timezone(&tz_info);
