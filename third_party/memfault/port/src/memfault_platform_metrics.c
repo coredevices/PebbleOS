@@ -266,9 +266,6 @@ void memfault_metrics_heartbeat_collect_data(void) {
 
   MEMFAULT_METRIC_SET_UNSIGNED(memory_pct_max, kernel_heap_pct);
 
-  extern uint32_t metric_firm_425_back_button_long_presses_cancelled;
-  MEMFAULT_METRIC_SET_UNSIGNED(firm_425_back_button_long_presses_cancelled, metric_firm_425_back_button_long_presses_cancelled);
-
   // AppMessage metrics
   MEMFAULT_METRIC_SET_UNSIGNED(app_message_sent_count, app_message_outbox_get_sent_count());
   MEMFAULT_METRIC_SET_UNSIGNED(app_message_received_count, app_message_inbox_get_received_count());
