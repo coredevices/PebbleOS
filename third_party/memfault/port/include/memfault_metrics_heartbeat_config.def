@@ -6,22 +6,6 @@ MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(memory_pct_max, kMemfaultMetricType
 
 #include "ports/freertos/config/memfault_metrics_heartbeat_freertos_config.def"
 
-// LSM6DSO accelerometer diagnostics
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_last_x_mg, kMemfaultMetricType_Signed)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_last_y_mg, kMemfaultMetricType_Signed)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_last_z_mg, kMemfaultMetricType_Signed)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_sample_age_ms, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_read_age_ms, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_interrupt_age_ms, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_wake_age_ms, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_double_tap_age_ms, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_state_flags, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_i2c_error_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_consecutive_errors, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_interrupt_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_wake_events, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_lsm6dso_double_tap_events, kMemfaultMetricType_Unsigned)
-
 // Number of times that the user has pressed the back button, and it would
 // have caused a force quit but we realized that the KernelMain task had
 // just gone out to lunch and the user didn't ask for that at all
