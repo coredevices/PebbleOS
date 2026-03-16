@@ -57,14 +57,11 @@ void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, in
       break;
 
     // Battery & Power
-    case ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT:
-      MEMFAULT_METRIC_SET_UNSIGNED(BATTERY_PERCENT, val);
+    case ANALYTICS_DEVICE_METRIC_BATTERY_VOLTAGE:
+      MEMFAULT_METRIC_SET_UNSIGNED(BATTERY_VOLTAGE, val);
       break;
     case ANALYTICS_DEVICE_METRIC_BATTERY_VOLTAGE_DELTA:
       MEMFAULT_METRIC_SET_SIGNED(BATTERY_VOLTAGE_DELTA, val);
-      break;
-    case ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT_DELTA:
-      MEMFAULT_METRIC_SET_SIGNED(BATTERY_PERCENT_DELTA, val);
       break;
     case ANALYTICS_DEVICE_METRIC_BATTERY_CHARGE_TIME:
       MEMFAULT_METRIC_SET_UNSIGNED(BATTERY_CHARGE_TIME, val);
@@ -249,10 +246,6 @@ void memfault_metric_set_device_from_pebble_analytics(AnalyticsMetric metric, in
 
 // Record some metrics.
 void memfault_metrics_heartbeat_collect_data(void) {
-  // battery_state_get_voltage() actually returns the voltage in millivolts,
-  // which is the unit for the battery_v metric as recorded on device.
-  MEMFAULT_METRIC_SET_UNSIGNED(battery_v, battery_state_get_voltage());
-
   // Kernel heap usage
   Heap *kernel_heap = kernel_heap_get();
   const uint32_t kernel_heap_size = heap_size(kernel_heap);
