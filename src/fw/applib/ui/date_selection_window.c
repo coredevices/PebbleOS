@@ -151,9 +151,14 @@ static void prv_text_layer_init(Layer *window_layer, TextLayer *text_layer, cons
 void date_selection_window_set_to_current_date(DateSelectionWindowData *window) {
   struct tm now;
   clock_get_time_tm(&now);
-  window->date.year = now.tm_year;
+  // Clamp the year to the selectable range so that dates outside the valid
+  // window (e.g. year 2000 after an RTC reset) are snapped to the nearest
+  // valid value instead of displaying an out-of-range year that jumps on
+  // the first button press.
+  window->date.year = date_time_selection_step_year(now.tm_year, 0);
   window->date.month = now.tm_mon;
-  window->date.day = now.tm_mday;
+  window->date.day = date_time_selection_truncate_date(
+      window->date.year, window->date.month, now.tm_mday);
 }
 
 void date_selection_window_init(DateSelectionWindowData *window, const char *label,
