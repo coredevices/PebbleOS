@@ -153,15 +153,11 @@ void launcher_cancel_force_quit(void) {
   new_timer_stop(s_back_hold_timer);
 }
 
-// Export the count of how many times this has happened to Memfault.
-uint32_t metric_firm_425_back_button_long_presses_cancelled = 0;
-
 static void launcher_force_quit_app(void *data) {
   if (s_force_quit_was_cancelled) {
     // If you see this in logs after FIRM-556 (general system sluggishness)
     // is fixed, please file a bug!
     PBL_LOG_ERR("NewTimer event fired for force quit, but the back button was released before we went to deal with it!  Wow, we must have been really slow!  Please file a bug!");
-    metric_firm_425_back_button_long_presses_cancelled++;
     return;
   }
 
