@@ -358,7 +358,6 @@ static void prv_handle_handshake_pulse(void *unused_data) {
   hrm_manager_new_data_cb(&data);
 
   if (num_samples == 0 && should_expect_samples) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_HRM_ACCEL_DATA_MISSING, AnalyticsClient_System);
     PBL_LOG_WRN("Falling behind: HRM got 0 accel samples");
   }
 
@@ -550,7 +549,6 @@ static void prv_watchdog_timer_system_cb(void *data) {
   // If we have gone too long without getting an interrupt, let's reset the device
   if (s_missing_interrupt_count >= AS7000_MAX_WATCHDOG_INTERRUPTS) {
     PBL_LOG_ERR("Watchdog logic detected frozen sensor. Resetting now.");
-    analytics_inc(ANALYTICS_DEVICE_METRIC_HRM_WATCHDOG_TIMEOUT, AnalyticsClient_System);
     prv_disable(dev);
     psleep(SHUT_DOWN_DELAY_MS);
     prv_enable(dev);

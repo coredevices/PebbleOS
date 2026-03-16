@@ -143,7 +143,6 @@ static void prv_reset(void) {
     prv_clear_fifo();
   }
   lis3dh_unlock();
-  analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_RESET_COUNT, AnalyticsClient_System);
 }
 
 bool lis3dh_read(uint8_t register_address, uint8_t read_size, uint8_t *buffer) {
@@ -413,7 +412,6 @@ static void prv_read_samples(void *data) {
   AccelRawData accel_raw_data[num_samples];
   if (src_reg & FIFO_OVRN) {
     PBL_LOG_ERR("Fifo overrun");
-    analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_FIFO_OVERRUN_COUNT, AnalyticsClient_System);
   }
 
   if (src_reg & FIFO_WTM) {
