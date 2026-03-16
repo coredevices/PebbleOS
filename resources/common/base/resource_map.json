@@ -38,11 +38,6 @@
       "file": "common/base/images/Pebble_80x80_Generic_warning.svg"
     },
     {
-      "type": "png",
-      "name": "SPINNER_BACKGROUND",
-      "file": "common/base/images/spinner_background.png"
-    },
-    {
       "type": "font",
       "name": "FONT_FALLBACK_INTERNAL",
       "file": "common/base/pbf/GOTHIC_14.pbf",

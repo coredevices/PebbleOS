@@ -5,13 +5,12 @@
 
 #include "applib/graphics/gpath_builder.h"
 #include "applib/graphics/graphics.h"
+#include "applib/graphics/gtypes.h"
 #include "util/trig.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/property_animation.h"
-#include "applib/ui/bitmap_layer.h"
 #include "kernel/pbl_malloc.h"
-#include "resource/resource_ids.auto.h"
 #include "system/passert.h"
 
 #include "string.h"
@@ -21,9 +20,7 @@
 
 typedef struct {
   Window window;
-  GBitmap *bitmap;
-  bool bitmap_inited;
-  BitmapLayer bitmap_layer;
+  Layer background_layer;
   Layer anim_layer;
   PropertyAnimation *spinner_animation;
   AnimationImplementation spinner_anim_impl;
@@ -41,6 +38,23 @@ typedef struct {
 // This means that the the lag occurs once less frequently and is less noticable
 #define LOOPS_PER_ANIMATION 10
 #define LOOP_DURATION_MS 1500
+#define SPINNER_CIRCLE_RADIUS 9
+
+static int prv_get_background_circle_radius(const GRect *bounds) {
+  const int min_dimension = MIN(bounds->size.w, bounds->size.h);
+  return (min_dimension * 3) / (4 * 2); // 3/4 of min dimension is diameter
+}
+
+static void prv_draw_background_circle(Layer *layer, GContext* ctx) {
+  graphics_context_set_antialiased(ctx, false);
+  const GPoint center = grect_center_point(&layer->bounds);
+  const int radius = prv_get_background_circle_radius(&layer->bounds);
+
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_circle(ctx, center, radius);
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_draw_circle(ctx, center, radius);
+}
 
 static void prv_draw_spinner_circles(Layer *layer, GContext* ctx) {
   // Drawing the circles with aa is just too slow and we end up backing up the rest of the system.
@@ -49,16 +63,10 @@ static void prv_draw_spinner_circles(Layer *layer, GContext* ctx) {
 
   SpinnerUIData *data = window_get_user_data(layer_get_window(layer));
 
-  // This is the background image's circle.
-  // Only applies to rectangular displays >= 200px height
-#if PBL_DISPLAY_HEIGHT >= 200 && PBL_RECT
-  const unsigned int center_of_circle_y_val = 103;
-#else
-  const unsigned int center_of_circle_y_val = PBL_IF_RECT_ELSE(72, layer->bounds.size.h / 2);
-#endif
-  const unsigned int radius_of_path = 37;
-  const unsigned int radius_of_spinner_circles = 9;
-  const GPoint circle_center_point = GPoint(layer->bounds.size.w / 2, center_of_circle_y_val);
+  const int bg_radius = prv_get_background_circle_radius(&layer->bounds);
+  const unsigned int radius_of_path = bg_radius - SPINNER_CIRCLE_RADIUS;
+  const unsigned int radius_of_spinner_circles = SPINNER_CIRCLE_RADIUS;
+  const GPoint circle_center_point = grect_center_point(&layer->bounds);
   const unsigned int angle = (TRIG_MAX_ANGLE * data->cur_distance_normalized *
                               LOOPS_PER_ANIMATION) / ANIMATION_NORMALIZED_MAX;
 
@@ -109,7 +117,6 @@ static void prv_anim_stopped(Animation *animation, bool finished, void *context)
 static void prv_window_unload_handler(Window* window) {
   SpinnerUIData *data = window_get_user_data(window);
   if (data) {
-    gbitmap_destroy(data->bitmap);
     data->should_cancel_animation = true;
     property_animation_destroy(data->spinner_animation);
     kernel_free(data);
@@ -118,20 +125,16 @@ static void prv_window_unload_handler(Window* window) {
 
 static void prv_window_load_handler(Window* window) {
   SpinnerUIData *data = window_get_user_data(window);
-  GRect spinner_bounds = window->layer.bounds;
-  spinner_bounds.origin.y += PBL_IF_RECT_ELSE(0, 10);
 
   window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
 
-  BitmapLayer *bitmap_layer = &data->bitmap_layer;
-  bitmap_layer_init(bitmap_layer, &window->layer.bounds);
-  bitmap_layer_set_alignment(bitmap_layer, PBL_IF_RECT_ELSE(GAlignTopLeft, GAlignCenter));
-  layer_set_frame(&bitmap_layer->layer, &spinner_bounds);
-  data->bitmap = gbitmap_create_with_resource(RESOURCE_ID_SPINNER_BACKGROUND);
-  bitmap_layer_set_bitmap(bitmap_layer, data->bitmap);
-  layer_add_child(&window->layer, &bitmap_layer->layer);
+  // Background circle layer
+  Layer *background_layer = &data->background_layer;
+  layer_set_bounds(background_layer, &window->layer.bounds);
+  layer_set_update_proc(background_layer, prv_draw_background_circle);
+  layer_add_child(&window->layer, background_layer);
 
-  // Animation setup
+  // Animation layer
   Layer *anim_layer = &data->anim_layer;
   layer_set_bounds(anim_layer, &window->layer.bounds);
   layer_set_update_proc(anim_layer, prv_draw_spinner_circles);
