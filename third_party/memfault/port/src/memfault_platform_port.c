@@ -1,7 +1,5 @@
-//! @file
-//!
-//! Copyright (c) Memfault, Inc.
-//! See LICENSE for details
+/* SPDX-CopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
 
 #include <stdio.h>
 #include <time.h>
