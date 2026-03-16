@@ -224,6 +224,10 @@ static bool prv_is_sensor_bpm_stable(const HRMData *data) {
     // Once we receive at least one good reading, we are stable
     s_manager_state.sensor_bpm_stable = true;
     s_manager_state.off_wrist_when_stable = false;
+  } else if (quality == HRMQuality_OffWrist) {
+    // Once received off wrist event, we are stable
+    s_manager_state.sensor_bpm_stable = true;
+    s_manager_state.off_wrist_when_stable = true;
   } else {
     // We haven't yet received a good reading yet. Wait for a timeout...
     RtcTicks elapased_ticks = rtc_get_ticks() - s_manager_state.sensor_bpm_start_ticks;
