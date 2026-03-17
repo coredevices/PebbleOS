@@ -3,12 +3,14 @@
 
 #pragma once
 
+#include <stddef.h>  // For NULL
+
 typedef struct BTContext BTContext;
 
-unsigned int bt_stack_id(void) {
+static unsigned int bt_stack_id(void) {
   return 1;
 }
 
-BTContext *bluetopia_get_context(void) {
+static BTContext *bluetopia_get_context(void) {
   return NULL;
 }

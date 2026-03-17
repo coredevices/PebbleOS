@@ -46,12 +46,31 @@ uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *chara
 }
 
 void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client) {
-
+  // Remove and free all subscriptions for this client
+  Subscribe **current = &s_subscribe_head;
+  while (*current) {
+    Subscribe *subscribe = *current;
+    if (subscribe->client == client) {
+      *current = (Subscribe *) subscribe->node.next;
+      free(subscribe);
+    } else {
+      current = (Subscribe **) &subscribe->node.next;
+    }
+  }
 }
 
 void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *connection,
                                                      bool should_unsubscribe) {
-
+  // Remove all subscriptions (connection cleanup)
+  // Note: In this fake, we don't track connection, so we just clean everything
+  // A more sophisticated fake would track connection per subscription
+  Subscribe *subscribe = s_subscribe_head;
+  while (subscribe) {
+    Subscribe *next = (Subscribe *) subscribe->node.next;
+    free(subscribe);
+    subscribe = next;
+  }
+  s_subscribe_head = NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

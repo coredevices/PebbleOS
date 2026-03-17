@@ -3,13 +3,46 @@
 
 #include "fake_HCIAPI.h"
 
-#include "bluetopia_interface.h"
+#include "stubs_bluetopia_interface.h"
 
-#include "HCIAPI.h"
+#ifdef __has_include
+  #if __has_include("HCIAPI.h")
+    #include "HCIAPI.h"
+    #define HCIAPI_AVAILABLE
+  #endif
+#else
+  #ifdef COMPONENT_BTSTACK
+    #include "HCIAPI.h"
+    #define HCIAPI_AVAILABLE
+  #endif
+#endif
+
+#ifndef HCIAPI_AVAILABLE
+// Define the types we need if HCIAPI is not available
+typedef uint32_t Board_Status_t;
+typedef uint8_t Byte_t;
+typedef uint16_t Word_t;
+typedef uint8_t BD_ADDR_t[6];
+typedef uint8_t Random_Number_t[8];
+
+// Helper macros
+#define COMPARE_BD_ADDR(addr1, addr2) (memcmp(addr1, addr2, sizeof(BD_ADDR_t)) == 0)
+
+// Helper function to convert BT device address to BD_ADDR
+static inline BD_ADDR_t *BTDeviceAddressToBDADDR(const uint8_t *address) {
+  return (BD_ADDR_t *)address;
+}
+#endif
 
 #include "util/list.h"
 
 #include <stdlib.h>
+#include <string.h>
+
+// Helper to get the octets from a BTDeviceAddress
+static const uint8_t *prv_get_addr_octets(BTDeviceAddress addr) {
+  return addr.octets;
+}
 
 typedef struct {
   ListNode node;
@@ -63,10 +96,9 @@ int HCI_LE_Add_Device_To_White_List(unsigned int BluetoothStackID,
     return -1;
   }
 
-  const WhitelistEntry model = {
-    .Address_Type = Address_Type,
-    .Address = Address,
-  };
+  WhitelistEntry model;
+  model.Address_Type = Address_Type;
+  memcpy(model.Address, Address, sizeof(BD_ADDR_t));
 
   {
     WhitelistEntry *e = prv_find_whitelist_entry(&model);
@@ -78,10 +110,8 @@ int HCI_LE_Add_Device_To_White_List(unsigned int BluetoothStackID,
   }
 
   WhitelistEntry *e = (WhitelistEntry *) malloc(sizeof(WhitelistEntry));
-  *e = (const WhitelistEntry) {
-    .Address_Type = Address_Type,
-    .Address = Address,
-  };
+  e->Address_Type = Address_Type;
+  memcpy(e->Address, Address, sizeof(BD_ADDR_t));
   s_head = (WhitelistEntry *) list_prepend(&s_head->node, &e->node);
   return 0;
 }
@@ -90,10 +120,9 @@ int HCI_LE_Remove_Device_From_White_List(unsigned int BluetoothStackID,
                                          Byte_t Address_Type,
                                          BD_ADDR_t Address,
                                          Byte_t *StatusResult) {
-  const WhitelistEntry model = {
-    .Address_Type = Address_Type,
-    .Address = Address,
-  };
+  WhitelistEntry model;
+  model.Address_Type = Address_Type;
+  memcpy(model.Address, Address, sizeof(BD_ADDR_t));
   WhitelistEntry *e = prv_find_whitelist_entry(&model);
   if (e) {
     list_remove(&e->node, (ListNode **) &s_head, NULL);
@@ -107,10 +136,9 @@ int HCI_LE_Remove_Device_From_White_List(unsigned int BluetoothStackID,
 }
 
 bool fake_HCIAPI_whitelist_contains(const BTDeviceInternal *device) {
-  const WhitelistEntry model = {
-    .Address_Type = device->is_random_address ? 0x01 : 0x00,
-    .Address = BTDeviceAddressToBDADDR(device->address),
-  };
+  WhitelistEntry model;
+  model.Address_Type = device->is_random_address ? 0x01 : 0x00;
+  memcpy(model.Address, device->address.octets, sizeof(BD_ADDR_t));
   return (prv_find_whitelist_entry(&model) != NULL);
 }
 

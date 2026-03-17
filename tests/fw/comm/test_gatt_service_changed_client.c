@@ -40,6 +40,14 @@ extern bool prv_contains_service_changed_characteristic(
     GAPLEConnection *connection,
     const GATT_Service_Discovery_Indication_Data_t *event);
 
+// Stub implementation: check if the discovery has the service changed characteristic
+// The characteristic is present if NumberOfCharacteristics > 0
+bool prv_contains_service_changed_characteristic(
+    GAPLEConnection *connection,
+    const GATT_Service_Discovery_Indication_Data_t *event) {
+  return event->NumberOfCharacteristics > 0;
+}
+
 void core_dump_reset(bool is_forced) {
 }
 
