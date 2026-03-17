@@ -39,12 +39,26 @@ static const Codepoint NONSTANDARD_EMOJI_CODEPOINTS[] = {
 };
 
 // Note: Please keep these sorted
+// Unicode TR14 line break classes: spaces with class BA (Break After) allow line breaks.
+// Non-breaking spaces (class GL): U+00A0, U+2007, U+202F are intentionally excluded.
 static const Codepoint END_OF_WORD_CODEPOINTS[] = {
   NULL_CODEPOINT, // 0x0
   NEWLINE_CODEPOINT, // 0xa
   SPACE_CODEPOINT, // 0x20
   HYPHEN_CODEPOINT, // 0x2d
-  ZERO_WIDTH_SPACE_CODEPOINT // 0x200b
+  EN_QUAD_CODEPOINT, // 0x2000 (BA)
+  EM_QUAD_CODEPOINT, // 0x2001 (BA)
+  EN_SPACE_CODEPOINT, // 0x2002 (BA)
+  EM_SPACE_CODEPOINT, // 0x2003 (BA)
+  THREE_PER_EM_SPACE_CODEPOINT, // 0x2004 (BA)
+  FOUR_PER_EM_SPACE_CODEPOINT, // 0x2005 (BA)
+  SIX_PER_EM_SPACE_CODEPOINT, // 0x2006 (BA)
+  PUNCTUATION_SPACE_CODEPOINT, // 0x2008 (BA)
+  THIN_SPACE_CODEPOINT, // 0x2009 (BA)
+  HAIR_SPACE_CODEPOINT, // 0x200a (BA)
+  ZERO_WIDTH_SPACE_CODEPOINT, // 0x200b
+  MEDIUM_MATHEMATICAL_SPACE_CODEPOINT, // 0x205f (BA)
+  IDEOGRAPHIC_SPACE_CODEPOINT, // 0x3000 (BA)
 };
 
 //  Note: Please keep these sorted
@@ -78,6 +92,29 @@ static bool codepoint_in_list(const Codepoint codepoint, const Codepoint *codepo
   return false;
 }
 
+bool codepoint_is_unicode_space(const Codepoint codepoint) {
+  switch (codepoint) {
+    case NO_BREAK_SPACE_CODEPOINT:
+    case EN_QUAD_CODEPOINT:
+    case EM_QUAD_CODEPOINT:
+    case EN_SPACE_CODEPOINT:
+    case EM_SPACE_CODEPOINT:
+    case THREE_PER_EM_SPACE_CODEPOINT:
+    case FOUR_PER_EM_SPACE_CODEPOINT:
+    case SIX_PER_EM_SPACE_CODEPOINT:
+    case FIGURE_SPACE_CODEPOINT:
+    case PUNCTUATION_SPACE_CODEPOINT:
+    case THIN_SPACE_CODEPOINT:
+    case HAIR_SPACE_CODEPOINT:
+    case NARROW_NO_BREAK_SPACE_CODEPOINT:
+    case MEDIUM_MATHEMATICAL_SPACE_CODEPOINT:
+    case IDEOGRAPHIC_SPACE_CODEPOINT:
+      return true;
+    default:
+      return false;
+  }
+}
+
 bool codepoint_is_formatting_indicator(const Codepoint codepoint) {
   return codepoint_in_list(codepoint, FORMATTING_CODEPOINTS, ARRAY_LENGTH(FORMATTING_CODEPOINTS));
 }
@@ -94,7 +131,8 @@ bool codepoint_is_ideograph(const Codepoint codepoint) {
 
 // see http://www.unicode.org/reports/tr14/ for the whole enchilada
 bool codepoint_is_end_of_word(const Codepoint codepoint) {
-  return codepoint_in_list(codepoint, END_OF_WORD_CODEPOINTS, ARRAY_LENGTH(END_OF_WORD_CODEPOINTS));
+  return codepoint_in_list(codepoint, END_OF_WORD_CODEPOINTS,
+                           ARRAY_LENGTH(END_OF_WORD_CODEPOINTS));
 }
 
 // see http://unicode.org/reports/tr51/ section 2.2 "Diversity"

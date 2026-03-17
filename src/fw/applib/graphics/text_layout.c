@@ -96,15 +96,64 @@ void graphics_text_perimeter_debugging_enable(bool enable) {
   app_state_set_text_perimeter_debugging_enabled(enable);
 }
 
+// Return the advance width for a Unicode space codepoint, computed from the font's em size
+// (max_height) and the reference glyph widths. Widths follow the Unicode standard, see
+// https://jkorpela.fi/chars/spaces.html
+// Returns -1 if the codepoint is not a Unicode space.
+static int8_t prv_unicode_space_advance(FontCache *font_cache, const GFont font,
+                                        const Codepoint codepoint) {
+  if (!codepoint_is_unicode_space(codepoint)) {
+    return -1;
+  }
+
+  const int em = font->max_height;
+
+  switch (codepoint) {
+    case EM_QUAD_CODEPOINT:
+    case EM_SPACE_CODEPOINT:
+    case IDEOGRAPHIC_SPACE_CODEPOINT:
+      return em;
+    case EN_QUAD_CODEPOINT:
+    case EN_SPACE_CODEPOINT:
+      return em / 2;
+    case THREE_PER_EM_SPACE_CODEPOINT:
+      return em / 3;
+    case FOUR_PER_EM_SPACE_CODEPOINT:
+      return em / 4;
+    case SIX_PER_EM_SPACE_CODEPOINT:
+      return em / 6;
+    case THIN_SPACE_CODEPOINT:
+    case NARROW_NO_BREAK_SPACE_CODEPOINT:
+      return em / 5;
+    case HAIR_SPACE_CODEPOINT:
+      return MAX(em / 12, 1);
+    case MEDIUM_MATHEMATICAL_SPACE_CODEPOINT:
+      return (em * 4) / 18;
+    case FIGURE_SPACE_CODEPOINT:
+      return text_resources_get_glyph_horiz_advance(font_cache, '0', font);
+    case PUNCTUATION_SPACE_CODEPOINT:
+      return text_resources_get_glyph_horiz_advance(font_cache, '.', font);
+    case NO_BREAK_SPACE_CODEPOINT:
+      return text_resources_get_glyph_horiz_advance(font_cache, ' ', font);
+    default:
+      return -1;
+  }
+}
+
 // [CTX] processing individual codepoints doesn't work for contextual writing systems.
 static int8_t prv_codepoint_get_horizontal_advance(FontCache* const font_cache,
                                                    const GFont font,
                                                    const Codepoint codepoint) {
   PBL_ASSERTN(font_cache);
   int8_t horiz_advance = 0;
-  if (!codepoint_is_zero_width(codepoint)) {
-    horiz_advance = text_resources_get_glyph_horiz_advance(font_cache, codepoint, font);
+  if (codepoint_is_zero_width(codepoint)) {
+    return 0;
   }
+  const int8_t space_advance = prv_unicode_space_advance(font_cache, font, codepoint);
+  if (space_advance >= 0) {
+    return space_advance;
+  }
+  horiz_advance = text_resources_get_glyph_horiz_advance(font_cache, codepoint, font);
   return MAX(horiz_advance, 0);
 }
 
@@ -488,7 +537,7 @@ typedef void (*CharVisitorCallback)(GContext* ctx, const TextBoxParams* const te
 
 void render_chars_char_visitor_cb(GContext* ctx, const TextBoxParams* const text_box_params,
                                   Line* line, GRect cursor, const Codepoint codepoint) {
-  if (codepoint_is_zero_width(codepoint)) {
+  if (codepoint_is_zero_width(codepoint) || codepoint_is_unicode_space(codepoint)) {
     return;
   }
 
