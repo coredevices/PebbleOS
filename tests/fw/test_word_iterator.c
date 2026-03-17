@@ -171,6 +171,53 @@ void test_word_iterator__test_string_consecutive_newlines(void) {
   cl_assert(!iter_next(&word_iter));
 }
 
+void test_word_iterator__test_em_space_word_break(void) {
+  // EM SPACE (U+2003, UTF-8: \xe2\x80\x83) should act as a word break,
+  // so the first word is "AB" (not "AB<em space>CD").
+  Iterator word_iter = (Iterator) { 0 };
+  WordIterState word_iter_state = (WordIterState) { 0 };
+  FontInfo font_info = { .max_height = 10 };
+
+  bool success = false;
+  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "AB\xe2\x80\x83" "CD");
+  cl_assert(success);
+
+  const TextBoxParams text_box_params = (TextBoxParams) {
+    .utf8_bounds = &utf8_bounds,
+    .font = &font_info,
+  };
+
+  word_iter_init(&word_iter, &word_iter_state, &s_ctx, &text_box_params, utf8_bounds.start);
+
+  // First word is "AB" — EM SPACE breaks the word
+  cl_assert(*word_iter_state.current.start == 'A');
+  cl_assert_equal_i(word_iter_state.current.width_px, 2 * HORIZ_ADVANCE_PX);
+  // end points to the EM SPACE byte, not past "CD"
+  cl_assert((unsigned char)*word_iter_state.current.end == 0xe2);
+}
+
+void test_word_iterator__test_no_break_space_no_word_break(void) {
+  // NO-BREAK SPACE (U+00A0, UTF-8: \xc2\xa0) should NOT act as a word break
+  Iterator word_iter = (Iterator) { 0 };
+  WordIterState word_iter_state = (WordIterState) { 0 };
+  FontInfo font_info = { .max_height = 10 };
+
+  bool success = false;
+  const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "AB\xc2\xa0" "CD");
+  cl_assert(success);
+
+  const TextBoxParams text_box_params = (TextBoxParams) {
+    .utf8_bounds = &utf8_bounds,
+    .font = &font_info,
+  };
+
+  word_iter_init(&word_iter, &word_iter_state, &s_ctx, &text_box_params, utf8_bounds.start);
+
+  // Should be a single word (NO-BREAK SPACE doesn't break)
+  cl_assert(*word_iter_state.current.start == 'A');
+  cl_assert(!iter_next(&word_iter));
+}
+
 void test_word_iterator__test_string_terminating_newlines(void) {
   // Allocate mutable types
   Iterator word_iter = (Iterator) { 0 };
