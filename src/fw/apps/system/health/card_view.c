@@ -18,7 +18,6 @@
 #include "system/logging.h"
 #include "util/time/time.h"
 
-#define SELECT_INDICATOR_COLOR (PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack))
 #define BACK_TO_WATCHFACE (-1)
 
 // Enum for different card types
@@ -43,6 +42,7 @@ typedef struct HealthCardView {
   Layer up_arrow_layer;
   ContentIndicator down_indicator;
   ContentIndicator up_indicator;
+  GColor select_indicator_color;
 } HealthCardView;
 
 static Layer* (*s_card_view_create[CardCount])(HealthData *health_data) = {
@@ -106,7 +106,8 @@ static int prv_get_next_card_idx(Card current, bool up) {
 }
 
 static void prv_select_indicator_layer_update_proc(Layer *layer, GContext *ctx) {
-  action_button_draw(ctx, layer, SELECT_INDICATOR_COLOR);
+  HealthCardView *health_card_view = window_get_user_data(layer_get_window(layer));
+  action_button_draw(ctx, layer, health_card_view->select_indicator_color);
 }
 
 static void prv_refresh_select_indicator(HealthCardView *health_card_view) {
@@ -114,6 +115,9 @@ static void prv_refresh_select_indicator(HealthCardView *health_card_view) {
 
   const bool is_hidden = !s_card_view_show_select_indicator[health_card_view->current_card_index](
       card_layer);
+
+  GColor card_bg_color = s_card_view_get_bg_color[health_card_view->current_card_index](card_layer);
+  health_card_view->select_indicator_color = gcolor_legible_over(card_bg_color);
 
   layer_set_hidden(&health_card_view->select_indicator_layer, is_hidden);
 }
@@ -313,6 +317,7 @@ HealthCardView *health_card_view_create(HealthData *health_data) {
     .health_data = health_data,
   };
   window_init(&health_card_view->window, "Health Card View");
+  window_set_user_data(&health_card_view->window, health_card_view);
   window_set_click_config_provider_with_context(&health_card_view->window,
                                                 prv_click_config_provider, health_card_view);
   Layer *window_root = window_get_root_layer(&health_card_view->window);
@@ -356,6 +361,7 @@ HealthCardView *health_card_view_create(HealthData *health_data) {
   layer_add_child(window_root, &health_card_view->up_arrow_layer);
   content_indicator_init(&health_card_view->up_indicator);
 
+  prv_refresh_select_indicator(health_card_view);
   prv_refresh_content_indicators(health_card_view);
 
   return health_card_view;
