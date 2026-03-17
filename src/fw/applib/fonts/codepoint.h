@@ -20,6 +20,8 @@ typedef uint32_t Codepoint;
 #define ZERO_WIDTH_SPACE_CODEPOINT 0x200B
 #define WORD_JOINER_CODEPOINT 0x2060
 
+Codepoint codepoint_normalize_whitespace(const Codepoint codepoint);
+
 bool codepoint_is_formatting_indicator(const Codepoint codepoint);
 
 bool codepoint_is_skin_tone_modifier(const Codepoint codepoint);

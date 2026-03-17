@@ -6,6 +6,7 @@
 
 #include "syscall/syscall.h"
 
+#include "applib/fonts/codepoint.h"
 #include "applib/fonts/fonts.h"
 #include "applib/fonts/fonts_private.h"
 #include "resource/resource_ids.auto.h"
@@ -600,6 +601,10 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
   if (!font_info->loaded) {
     sys_font_reload_font(font_info);
   }
+
+  // Normalize Unicode whitespace variants (e.g. EM SPACE, NO-BREAK SPACE) to
+  // regular ASCII space so they render instead of showing as tofu.
+  codepoint = codepoint_normalize_whitespace(codepoint);
 
   // if we cannot find the codepoint we are looking for, we should always be
   // able to find the wildcard (square box) or ' ' character to display. We use

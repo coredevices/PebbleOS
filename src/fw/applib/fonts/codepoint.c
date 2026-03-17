@@ -78,6 +78,31 @@ static bool codepoint_in_list(const Codepoint codepoint, const Codepoint *codepo
   return false;
 }
 
+Codepoint codepoint_normalize_whitespace(const Codepoint codepoint) {
+  // Map Unicode whitespace variants to regular ASCII space so that they render
+  // as spaces instead of showing as "tofu" (missing glyph boxes).
+  switch (codepoint) {
+    case 0x00A0: // NO-BREAK SPACE
+    case 0x2000: // EN QUAD
+    case 0x2001: // EM QUAD
+    case 0x2002: // EN SPACE
+    case 0x2003: // EM SPACE
+    case 0x2004: // THREE-PER-EM SPACE
+    case 0x2005: // FOUR-PER-EM SPACE
+    case 0x2006: // SIX-PER-EM SPACE
+    case 0x2007: // FIGURE SPACE
+    case 0x2008: // PUNCTUATION SPACE
+    case 0x2009: // THIN SPACE
+    case 0x200A: // HAIR SPACE
+    case 0x202F: // NARROW NO-BREAK SPACE
+    case 0x205F: // MEDIUM MATHEMATICAL SPACE
+    case 0x3000: // IDEOGRAPHIC SPACE
+      return SPACE_CODEPOINT;
+    default:
+      return codepoint;
+  }
+}
+
 bool codepoint_is_formatting_indicator(const Codepoint codepoint) {
   return codepoint_in_list(codepoint, FORMATTING_CODEPOINTS, ARRAY_LENGTH(FORMATTING_CODEPOINTS));
 }
@@ -94,7 +119,9 @@ bool codepoint_is_ideograph(const Codepoint codepoint) {
 
 // see http://www.unicode.org/reports/tr14/ for the whole enchilada
 bool codepoint_is_end_of_word(const Codepoint codepoint) {
-  return codepoint_in_list(codepoint, END_OF_WORD_CODEPOINTS, ARRAY_LENGTH(END_OF_WORD_CODEPOINTS));
+  return codepoint_in_list(codepoint, END_OF_WORD_CODEPOINTS,
+                           ARRAY_LENGTH(END_OF_WORD_CODEPOINTS)) ||
+         (codepoint_normalize_whitespace(codepoint) == SPACE_CODEPOINT);
 }
 
 // see http://unicode.org/reports/tr51/ section 2.2 "Diversity"
