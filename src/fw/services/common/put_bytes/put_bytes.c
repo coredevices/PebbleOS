@@ -10,7 +10,6 @@
 #include "kernel/system_message.h"
 #include "os/tick.h"
 #include "resource/resource_storage_file.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/comm_session/session.h"
 #include "services/common/comm_session/session_receive_router.h"
 #include "services/common/firmware_update.h"
@@ -748,7 +747,6 @@ static void prv_do_init(void) {
   success = prv_setup_storage_for_init_request(request, index);
 
   s_pb_state.start_ticks = rtc_get_ticks();
-  bt_driver_analytics_get_conn_event_stats(&s_pb_state.conn_event_stats);
 
   if (!success) {
     PBL_LOG_WRN("Failed to init storage");

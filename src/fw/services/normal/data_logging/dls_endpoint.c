@@ -291,9 +291,6 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
     return false;
   }
 
-  analytics_inc(ANALYTICS_DEVICE_METRIC_DATA_LOGGING_ENDPOINT_SENDS,
-                AnalyticsClient_System);
-
   const DataLoggingSendDataMessage header = (const DataLoggingSendDataMessage) {
     .command = DataLoggingEndpointCmdData,
     .session_id = logging_session->comm.session_id,
@@ -314,10 +311,6 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
   mutex_unlock(s_endpoint_data.mutex);
 
   unsigned int data_buffer_length = sizeof(DataLoggingSendDataMessage) + num_bytes;
-  if (!uuid_is_system(&logging_session->app_uuid)) {
-    analytics_inc_for_uuid(ANALYTICS_APP_METRIC_LOG_OUT_COUNT, &logging_session->app_uuid);
-    analytics_add_for_uuid(ANALYTICS_APP_METRIC_LOG_BYTE_OUT_COUNT, data_buffer_length, &logging_session->app_uuid);
-  }
   return true;
 }
 
@@ -385,7 +378,6 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
       if (++logging_session->comm.nack_count > MAX_NACK_COUNT) {
         PBL_LOG_ERR("Too many nacks. Flushing...");
         dls_storage_consume(logging_session, logging_session->storage.num_bytes);
-        analytics_inc(ANALYTICS_DEVICE_METRIC_DATA_LOGGING_FLUSH_COUNT, AnalyticsClient_System);
         logging_session->comm.nack_count = 0;
       }
       break;

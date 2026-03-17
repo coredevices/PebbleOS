@@ -477,9 +477,3 @@ const SettingsModuleMetadata *settings_notifications_get_info(void) {
 
   return &s_module_info;
 }
-
-void analytics_external_collect_notification_settings(void) {
-  const uint8_t strength = get_strength_for_intensity(vibe_intensity_get());
-  analytics_set(ANALYTICS_DEVICE_METRIC_SETTING_VIBRATION_STRENGTH,
-                strength, AnalyticsClient_System);
-}

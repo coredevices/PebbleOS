@@ -17,7 +17,6 @@
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "semphr.h"
-#include "services/common/analytics/analytics.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/size.h"
@@ -52,10 +51,6 @@ typedef enum {
   SendRegisterAddress,      // Send a register address, followed by a repeat start for reads
   NoRegisterAddress         // Do not send a register address
 } TransferType;
-
-static uint32_t s_max_transfer_duration_ticks;
-
-static void prv_analytics_track_i2c_error(void);
 
 /*----------------SEMAPHORE/LOCKING FUNCTIONS--------------------------*/
 
@@ -402,7 +397,6 @@ static bool prv_do_transfer_locked(I2CBus *bus, TransferDirection direction, uin
     if (!prv_wait_for_not_busy(bus)) {
       // Bus did not recover after reset
       PBL_LOG_ERR("I2C bus did not recover after reset (%s)", bus->name);
-      prv_analytics_track_i2c_error();
       return false;
     }
   }
@@ -435,12 +429,6 @@ static bool prv_do_transfer_locked(I2CBus *bus, TransferDirection direction, uin
     if (prv_semaphore_wait(bus->state)) {
       if ((bus->state->transfer_event == I2CTransferEvent_TransferComplete) ||
           (bus->state->transfer_event == I2CTransferEvent_Error)) {
-        // Track the max transfer duration so we can keep tabs on the MFi chip's nacking behavior
-        const uint32_t duration_ticks = rtc_get_ticks() - bus->state->transfer_start_ticks;
-        if (duration_ticks > s_max_transfer_duration_ticks) {
-          s_max_transfer_duration_ticks = duration_ticks;
-        }
-
         if (bus->state->transfer_event == I2CTransferEvent_Error) {
           PBL_LOG_ERR("I2C Error on bus %s", bus->name);
         }
@@ -486,9 +474,6 @@ static bool prv_do_transfer_locked(I2CBus *bus, TransferDirection direction, uin
     prv_bus_reset(bus);
   }
 
-  if (!result) {
-    prv_analytics_track_i2c_error();
-  }
   return result;
 }
 
@@ -613,16 +598,3 @@ portBASE_TYPE i2c_handle_transfer_event(I2CBus *bus, I2CTransferEvent event) {
   bus->state->transfer_event = event;
   return prv_semaphore_give_from_isr(bus->state);
 }
-
-/*------------------------ANALYTICS----------------------------------*/
-
-static void prv_analytics_track_i2c_error(void) {
-  analytics_inc(ANALYTICS_DEVICE_METRIC_I2C_ERROR_COUNT, AnalyticsClient_System);
-}
-
-void analytics_external_collect_i2c_stats(void) {
-  analytics_set(ANALYTICS_DEVICE_METRIC_I2C_MAX_TRANSFER_DURATION_TICKS,
-                s_max_transfer_duration_ticks, AnalyticsClient_System);
-  s_max_transfer_duration_ticks = 0;
-}
-

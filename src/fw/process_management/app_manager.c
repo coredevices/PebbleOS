@@ -42,13 +42,7 @@
 #include "services/normal/app_outbox_service.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/watchface.h"
-#if !RECOVERY_FW
-#include "shell/normal/watchface_metrics.h"
-#endif
 #include "shell/shell.h"
-#if MEMFAULT
-#include "memfault/components.h"
-#endif
 #include "shell/system_app_state_machine.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
@@ -101,9 +95,6 @@ typedef struct {
 } AppCrashInfo;
 
 static NextApp s_next_app;
-
-static void prv_handle_app_start_analytics(const PebbleProcessMd *app_md,
-                                           const AppLaunchReason launch_reason);
 
 // ---------------------------------------------------------------------------------------------
 void app_manager_init(void) {
@@ -367,7 +358,13 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
 
   system_app_state_machine_register_app_launch(s_app_task_context.install_id);
 
-  prv_handle_app_start_analytics(app_md, launch_reason);
+  // Track per-watchface usage metrics
+#if !RECOVERY_FW && !SHELL_SDK
+  if (app_md->process_type == ProcessTypeWatchface) {
+    PBL_ANALYTICS_TIMER_START(watchface_time_ms);
+    PBL_ANALYTICS_SET_STRING(watchface_name, process_metadata_get_name(app_md));
+  }
+#endif
 
 #if CAPABILITY_HAS_HEALTH_TRACKING && !defined(RECOVERY_FW)
   health_tracking_ui_register_app_launch(s_app_task_context.install_id);
@@ -834,46 +831,6 @@ void command_get_active_app_metadata(void) {
   } else {
     prompt_send_response("metadata lookup failed: no app running");
   }
-}
-
-
-// Analytics
-//////////////////////////////////////////////////////////////
-
-static void prv_handle_app_start_analytics(const PebbleProcessMd *app_md,
-    const AppLaunchReason launch_reason) {
-  analytics_event_app_launch(&app_md->uuid);
-  analytics_inc(ANALYTICS_APP_METRIC_LAUNCH_COUNT, AnalyticsClient_App);
-  analytics_stopwatch_start(ANALYTICS_APP_METRIC_FRONT_MOST_TIME, AnalyticsClient_App);
-
-  Version app_sdk_version = process_metadata_get_sdk_version(app_md);
-  analytics_set(ANALYTICS_APP_METRIC_SDK_MAJOR_VERSION, app_sdk_version.major, AnalyticsClient_App);
-  analytics_set(ANALYTICS_APP_METRIC_SDK_MINOR_VERSION, app_sdk_version.minor, AnalyticsClient_App);
-
-  Version app_version = process_metadata_get_process_version(app_md);
-  analytics_set(ANALYTICS_APP_METRIC_APP_MAJOR_VERSION, app_version.major, AnalyticsClient_App);
-  analytics_set(ANALYTICS_APP_METRIC_APP_MINOR_VERSION, app_version.minor, AnalyticsClient_App);
-
-  ResourceVersion resource_version = process_metadata_get_res_version(app_md);
-  analytics_set(ANALYTICS_APP_METRIC_RESOURCE_TIMESTAMP, resource_version.timestamp, AnalyticsClient_App);
-
-  if (launch_reason == APP_LAUNCH_QUICK_LAUNCH) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_APP_QUICK_LAUNCH_COUNT, AnalyticsClient_System);
-    analytics_inc(ANALYTICS_APP_METRIC_QUICK_LAUNCH_COUNT, AnalyticsClient_App);
-  } else if (launch_reason == APP_LAUNCH_USER) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_APP_USER_LAUNCH_COUNT, AnalyticsClient_System);
-    analytics_inc(ANALYTICS_APP_METRIC_USER_LAUNCH_COUNT, AnalyticsClient_App);
-  }
-
-  // Track per-watchface usage metrics
-#if !RECOVERY_FW && !SHELL_SDK
-  if (app_md->process_type == ProcessTypeWatchface) {
-    watchface_metrics_start(&app_md->uuid);
-#if MEMFAULT
-    MEMFAULT_METRIC_ADD(watchface_launch_count, 1);
-#endif
-  }
-#endif
 }
 
 

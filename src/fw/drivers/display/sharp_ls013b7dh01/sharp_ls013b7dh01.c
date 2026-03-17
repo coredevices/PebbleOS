@@ -210,8 +210,6 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   PBL_ASSERTN(uccb != NULL);
   stop_mode_disable(InhibitorDisplay);
   xSemaphoreTake(s_dma_update_in_progress_semaphore, portMAX_DELAY);
-  analytics_stopwatch_start(ANALYTICS_APP_METRIC_DISPLAY_WRITE_TIME, AnalyticsClient_App);
-  analytics_inc(ANALYTICS_DEVICE_METRIC_DISPLAY_UPDATES_PER_HOUR, AnalyticsClient_System);
 
   prv_enable_display_spi_clock();
   power_tracking_start(PowerSystemMcuDma1);
@@ -240,7 +238,6 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
   xSemaphoreGive(s_dma_update_in_progress_semaphore);
   stop_mode_enable(InhibitorDisplay);
-  analytics_stopwatch_stop(ANALYTICS_APP_METRIC_DISPLAY_WRITE_TIME);
 }
 
 // Static mode is entered by sending 0x00 to the panel

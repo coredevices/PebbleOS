@@ -25,8 +25,6 @@
 #include "kernel/events.h"
 #include "kernel/logging_private.h"
 #include "services/normal/wakeup.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/comm_session/session.h"
 #include "services/common/evented_timer.h"
 #include "services/normal/activity/activity.h"
@@ -210,12 +208,6 @@ void sys_app_inbox_service_consume(AppInboxConsumerInfo *consumer_info);
 void sys_app_outbox_send(const uint8_t *data, size_t length,
                          AppOutboxSentHandler sent_handler, void *cb_ctx);
 
-void sys_app_pp_app_message_analytics_count_drop(void);
-void sys_app_pp_app_message_analytics_count_sent(void);
-void sys_app_pp_app_message_analytics_count_received(void);
-uint32_t sys_app_pp_app_message_get_sent_count(void);
-uint32_t sys_app_pp_app_message_get_received_count(void);
-
 bool sys_app_pp_send_data(CommSession *session, uint16_t endpoint_id,
                           const uint8_t* data, uint16_t length);
 
@@ -230,15 +222,6 @@ bool sys_app_glance_update(const Uuid *uuid, const AppGlance *glance);
 //! Waits for a certain amount of milliseconds
 //! @param millis The number of milliseconds to wait for
 void sys_psleep(int millis);
-
-void sys_analytics_set(AnalyticsMetric metric, uint64_t value, AnalyticsClient client);
-void sys_analytics_set_entire_array(AnalyticsMetric metric, const void *value, AnalyticsClient client);
-void sys_analytics_add(AnalyticsMetric metric, uint64_t increment, AnalyticsClient client);
-void sys_analytics_inc(AnalyticsMetric metric, AnalyticsClient client);
-void sys_analytics_max(AnalyticsMetric metric, int64_t val, AnalyticsClient client);
-void sys_analytics_stopwatch_start(AnalyticsMetric metric, AnalyticsClient client);
-void sys_analytics_stopwatch_stop(AnalyticsMetric metric);
-void sys_analytics_logging_log_event(AnalyticsEventBlob *event_blob);
 
 bool sys_app_worker_is_running(void);
 AppWorkerResult sys_app_worker_launch(void);

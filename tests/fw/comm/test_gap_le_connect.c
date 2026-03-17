@@ -88,14 +88,8 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
-void analytics_event_bt_error(AnalyticsEvent type, uint32_t error) {
-}
-
 void bluetooth_analytics_handle_connection_disconnection_event(
     AnalyticsEvent type, uint8_t reason, const BleRemoteVersionInfo *vers_info) {
-}
-
-void analytics_inc(AnalyticsMetric metric, AnalyticsClient client) {
 }
 
 // Helpers

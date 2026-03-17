@@ -6,6 +6,7 @@
 #include "endpoint_private.h"
 #include "settings_blob_db.h"
 
+#include "kernel/pebble_tasks.h"
 #include "services/common/comm_session/session.h"
 #include "services/common/comm_session/session_send_buffer.h"
 #include "services/common/analytics/analytics.h"
@@ -384,8 +385,6 @@ void blob_db_endpoint_send_sync_done(BlobDBId db_id) {
 
 void blob_db2_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
-
-  analytics_inc(ANALYTICS_DEVICE_METRIC_BLOB_DB_EVENT_COUNT, AnalyticsClient_System);
 
   // Each BlobDB message is required to have at least a Command and a Token
   static const uint8_t MIN_RAW_DATA_LEN = sizeof(BlobDBCommand) + sizeof(BlobDBToken);

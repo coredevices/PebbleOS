@@ -18,13 +18,13 @@
 #include "stubs_print.h"
 #include "stubs_passert.h"
 #include "stubs_analytics.h"
-#include "stubs_analytics_external.h"
 #include "stubs_ambient_light.h"
 #include "stubs_battery_monitor.h"
 #include "stubs_low_power.h"
 #include "stubs_serial.h"
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
+#include "stubs_rtc.h"
 
 void vTaskDelay(uint32_t ticks) {
 }

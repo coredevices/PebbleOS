@@ -66,9 +66,6 @@ static void prv_do_shake_handle(PebbleEvent *e, void *context) {
   AccelServiceState *state = (AccelServiceState *)accel_service_private_get_session(task);
   PBL_ASSERTN(state->shake_handler != NULL);
 
-  if (task == PebbleTask_Worker || task == PebbleTask_App) {
-    sys_analytics_inc(ANALYTICS_APP_METRIC_ACCEL_SHAKE_COUNT, AnalyticsClient_CurrentTask);
-  }
   state->shake_handler(e->accel_tap.axis, e->accel_tap.direction);
 }
 
@@ -80,7 +77,6 @@ static void prv_do_double_tap_handle(PebbleEvent *e, void *context) {
   PBL_ASSERTN(state->double_tap_handler != NULL);
   // only kernel clients can subscribe to double tap right now, so just increment double tap count
   // device analytic here
-  analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_DOUBLE_TAP_COUNT, AnalyticsClient_System);
   state->double_tap_handler(e->accel_tap.axis, e->accel_tap.direction);
 }
 
@@ -161,8 +157,6 @@ static void prv_do_data_handle(void *context) {
   uint32_t num_processed;
   do {
     num_processed = prv_do_data_handle_chunk(state, time_interval_ms);
-
-    sys_analytics_add(ANALYTICS_APP_METRIC_ACCEL_SAMPLE_COUNT, num_processed, AnalyticsClient_CurrentTask);
   } while (num_processed);
 
 }

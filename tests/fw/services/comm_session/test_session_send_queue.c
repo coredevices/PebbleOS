@@ -21,9 +21,6 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 static CommSession s_session;
 static CommSession *s_valid_session;
 
-void comm_session_analytics_inc_bytes_sent(CommSession *session, uint16_t length) {
-}
-
 bool comm_session_is_valid(const CommSession *session) {
   if (!session) {
     return false;

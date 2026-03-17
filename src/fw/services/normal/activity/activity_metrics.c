@@ -8,7 +8,6 @@
 #include "os/mutex.h"
 #include "os/tick.h"
 #include "popups/health_tracking_ui.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/normal/protobuf_log/protobuf_log.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"

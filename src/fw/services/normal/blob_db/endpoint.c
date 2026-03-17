@@ -5,6 +5,7 @@
 #include "endpoint_private.h"
 #include "settings_blob_db.h"
 
+#include "kernel/pebble_tasks.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/comm_session/session.h"
 #include "services/common/analytics/analytics.h"
@@ -329,8 +330,6 @@ static void prv_blob_db_msg_decode_and_handle(
 
 void blob_db_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
-
-  analytics_inc(ANALYTICS_DEVICE_METRIC_BLOB_DB_EVENT_COUNT, AnalyticsClient_System);
 
   PBL_HEXDUMP_D(LOG_DOMAIN_BLOBDB, LOG_LEVEL_DEBUG, data, length);
 

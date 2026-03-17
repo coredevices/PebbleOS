@@ -121,8 +121,6 @@ static size_t prv_send_job_impl_get_read_pointer(const SessionSendQueueJob *send
 static void prv_send_job_impl_consume(const SessionSendQueueJob *send_job, size_t length) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
   app_message_send_job->consumed_length += length;
-
-  analytics_add(ANALYTICS_APP_METRIC_MSG_BYTE_OUT_COUNT, length, AnalyticsClient_App);
 }
 
 static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
@@ -132,8 +130,6 @@ static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
   if (is_completed) {
     const AppInstallId app_id = app_manager_get_current_app_id();
     app_install_mark_prioritized(app_id, true /* can_expire */);
-
-    analytics_inc(ANALYTICS_APP_METRIC_MSG_OUT_COUNT, AnalyticsClient_App);
   }
   // The outbox_message is owned by app_outbox_service, calling consume will free it as well:
   const AppOutboxStatus status =

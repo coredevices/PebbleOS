@@ -85,8 +85,6 @@ static uint8_t s_buffer_storage[200 * sizeof(AccelManagerBufferData)];
 
 static uint64_t s_last_empty_timestamp_ms = 0;
 
-static uint32_t s_accel_samples_collected_count = 0;
-
 // Accel Idle
 #define ACCEL_MAX_IDLE_DELTA 100
 static bool s_is_idle = false;
@@ -362,29 +360,6 @@ static uint32_t prv_compute_delta_pos(AccelData *cur_pos, AccelData *last_pos) {
  * Exported APIs
  */
 
-// we expect this to get called once by accel_manager_init() so we have a default
-// starting position.
-void analytics_external_collect_accel_xyz_delta(void) {
-  AccelData accel_data;
-
-  if (sys_accel_manager_peek(&accel_data) == 0) {
-    uint32_t delta = prv_compute_delta_pos(&accel_data, &s_last_analytics_position);
-    s_is_idle = (delta < ACCEL_MAX_IDLE_DELTA);
-    s_last_analytics_position = accel_data;
-    analytics_set(ANALYTICS_DEVICE_METRIC_ACCEL_XYZ_DELTA, delta, AnalyticsClient_System);
-  }
-}
-
-void analytics_external_collect_accel_samples_received(void) {
-  mutex_lock_recursive(s_accel_manager_mutex);
-  uint32_t samps_collected = s_accel_samples_collected_count;
-  s_accel_samples_collected_count = 0;
-  mutex_unlock_recursive(s_accel_manager_mutex);
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_ACCEL_SAMPLE_COUNT, samps_collected,
-                AnalyticsClient_System);
-}
-
 // Update the motion sensitivity based on user preference (0-100%)
 // This is called by the preferences system when the user changes the setting
 void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
@@ -421,8 +396,6 @@ void accel_manager_init(void) {
   // we always listen for motion events to decide whether or not to enable the backlight
   // TODO: KernelMain could probably subscribe to the motion service to accomplish this?
   prv_shake_add_subscriber_cb(PebbleTask_KernelMain);
-
-  analytics_external_collect_accel_xyz_delta();
   
   // Apply saved motion sensitivity preference for Asterix/Obelix
   // Only available in normal shell (not PRF)
@@ -454,12 +427,7 @@ DEFINE_SYSCALL(int, sys_accel_manager_peek, AccelData *accel_data) {
     syscall_assert_userspace_buffer(accel_data, sizeof(*accel_data));
   }
 
-  // bump peek analytics
-  analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_PEEK_COUNT, AnalyticsClient_System);
-  PebbleTask task = pebble_task_get_current();
-  if (task == PebbleTask_Worker || task == PebbleTask_App) {
-    analytics_inc(ANALYTICS_APP_METRIC_ACCEL_PEEK_COUNT, AnalyticsClient_CurrentTask);
-  }
+  PBL_ANALYTICS_ADD(accel_peek_count, 1);
 
   mutex_lock_recursive(s_accel_manager_mutex);
 
@@ -688,7 +656,7 @@ static bool prv_shared_buffer_empty(void) {
 void accel_cb_new_sample(AccelDriverSample const *data) {
   prv_update_last_accel_data(data);
 
-  s_accel_samples_collected_count++;
+  PBL_ANALYTICS_ADD(accel_sample_count, 1);
 
   if (!s_buffer.clients) {
     return; // no clients so don't buffer any data
@@ -733,6 +701,8 @@ void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
   };
 
   event_put(&e);
+
+  PBL_ANALYTICS_ADD(accel_shake_count, 1);
 }
 
 void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t direction) {
@@ -745,6 +715,8 @@ void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t direction) {
   };
 
   event_put(&e);
+
+  PBL_ANALYTICS_ADD(accel_double_tap_count, 1);
 }
 
 static void prv_handle_accel_driver_work_cb(void *data) {

@@ -6,6 +6,7 @@
 #include "board/board.h"
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
+#include "drivers/rtc.h"
 #include "kernel/low_power.h"
 #include "services/common/analytics/analytics.h"
 #include "services/common/battery/battery_monitor.h"
@@ -87,6 +88,12 @@ static uint16_t s_fade_step_size = 0;
 //! Mutex to guard all the above state. We have a pattern of taking the lock in the public functions and assuming
 //! it's already taken in the prv_ functions.
 static PebbleMutex *s_mutex;
+
+//! Analytics: Track time-weighted average intensity
+static uint64_t s_intensity_time_product_sum; // Sum of (intensity_pct × time_ms)
+static RtcTicks s_last_intensity_sample_ticks; // Timestamp of last sample
+static uint8_t s_last_sampled_intensity_pct; // Last intensity percentage sampled
+static uint32_t s_total_on_time_ms; // Total backlight on time tracked internally
 
 static void prv_change_state(BacklightState new_state);
 
@@ -183,27 +190,49 @@ static uint16_t prv_backlight_get_intensity(void) {
   return backlight_get_intensity();
 }
 
+static void prv_update_intensity_analytics(uint8_t new_intensity_pct) {
+  RtcTicks now_ticks = rtc_get_ticks();
+
+  // Calculate time delta in ms since last sample
+  if (s_last_intensity_sample_ticks > 0) {
+    uint32_t time_delta_ms = ((now_ticks - s_last_intensity_sample_ticks) * 1000) / RTC_TICKS_HZ;
+
+    // Accumulate intensity × time for weighted average calculation
+    // Use last sampled intensity for the period that just elapsed
+    s_intensity_time_product_sum += (uint64_t)s_last_sampled_intensity_pct * time_delta_ms;
+
+    // Track total on-time when intensity is above zero
+    if (s_last_sampled_intensity_pct > 0) {
+      s_total_on_time_ms += time_delta_ms;
+    }
+  }
+
+  // Update tracking variables
+  s_last_intensity_sample_ticks = now_ticks;
+  s_last_sampled_intensity_pct = new_intensity_pct;
+}
+
 static void prv_change_brightness(int32_t new_brightness) {
   // Use fade start intensity during fading, otherwise get current intensity
-  uint16_t reference_intensity = (s_light_state == LIGHT_STATE_ON_FADING && s_fade_start_intensity > 0) 
-                                  ? s_fade_start_intensity 
+  uint16_t reference_intensity = (s_light_state == LIGHT_STATE_ON_FADING && s_fade_start_intensity > 0)
+                                  ? s_fade_start_intensity
                                   : prv_backlight_get_intensity();
   const uint16_t HALF_BRIGHTNESS = (reference_intensity - BACKLIGHT_BRIGHTNESS_OFF) / 2;
 
   // update the debug stats
   if (new_brightness > HALF_BRIGHTNESS && s_current_brightness <= HALF_BRIGHTNESS) {
     // getting brighter and have now transitioned past half brightness
-    analytics_stopwatch_start(ANALYTICS_APP_METRIC_BACKLIGHT_ON_TIME, AnalyticsClient_App);
-    analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_BACKLIGHT_ON_TIME, AnalyticsClient_System);
-    analytics_inc(ANALYTICS_APP_METRIC_BACKLIGHT_ON_COUNT, AnalyticsClient_App);
-    analytics_inc(ANALYTICS_DEVICE_METRIC_BACKLIGHT_ON_COUNT, AnalyticsClient_System);
+    PBL_ANALYTICS_TIMER_START(backlight_on_time_ms);
   }
 
   if (new_brightness <= HALF_BRIGHTNESS && s_current_brightness > HALF_BRIGHTNESS) {
     // getting dimmer and have now transitioned past half brightness
-    analytics_stopwatch_stop(ANALYTICS_APP_METRIC_BACKLIGHT_ON_TIME);
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BACKLIGHT_ON_TIME);
+    PBL_ANALYTICS_TIMER_STOP(backlight_on_time_ms);
   }
+
+  // Track intensity for analytics (convert to percentage)
+  uint8_t new_intensity_pct = (new_brightness * 100) / BACKLIGHT_BRIGHTNESS_MAX;
+  prv_update_intensity_analytics(new_intensity_pct);
 
   backlight_set_brightness(new_brightness);
   s_current_brightness = new_brightness;
@@ -301,6 +330,12 @@ void light_init(void) {
   for (uint8_t i = 0; i < ALS_SAMPLE_BUFFER_SIZE; i++) {
     s_als_sample_buffer[i] = 0;
   }
+
+  // Initialize intensity analytics tracking
+  s_intensity_time_product_sum = 0;
+  s_last_intensity_sample_ticks = 0;
+  s_last_sampled_intensity_pct = 0;
+  s_total_on_time_ms = 0;
 }
 
 void light_button_pressed(void) {
@@ -476,17 +511,26 @@ uint8_t light_get_current_brightness_percent(void) {
   return percent;
 }
 
-void analytics_external_collect_backlight_settings(void) {
-  BacklightBehaviour behaviour = backlight_get_behaviour();
-  bool is_motion_enabled = backlight_is_motion_enabled();
-  uint8_t backlight_intensity_pct = backlight_get_intensity_percent();
-  uint8_t backlight_timeout_sec = backlight_get_timeout_ms() / 1000;
-  analytics_set(ANALYTICS_DEVICE_METRIC_SETTING_BACKLIGHT, behaviour,
-                AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_SETTING_SHAKE_TO_LIGHT,
-                is_motion_enabled, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_SETTING_BACKLIGHT_INTENSITY_PCT,
-                backlight_intensity_pct, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_SETTING_BACKLIGHT_TIMEOUT_SEC,
-                backlight_timeout_sec, AnalyticsClient_System);
+void analytics_external_collect_backlight_stats(void) {
+  mutex_lock(s_mutex);
+
+  // Capture one final sample to account for time since last brightness change
+  uint8_t current_intensity_pct = (s_current_brightness * 100) / BACKLIGHT_BRIGHTNESS_MAX;
+  prv_update_intensity_analytics(current_intensity_pct);
+
+  // Calculate time-weighted average intensity using internally tracked on-time
+  uint32_t avg_intensity_pct = 0;
+  if (s_total_on_time_ms > 0) {
+    // Calculate weighted average: sum(intensity × time) / total_time
+    avg_intensity_pct = s_intensity_time_product_sum / s_total_on_time_ms;
+  }
+
+  PBL_ANALYTICS_SET_UNSIGNED(backlight_avg_intensity_pct, avg_intensity_pct);
+
+  // Reset accumulators for next period
+  s_intensity_time_product_sum = 0;
+  s_total_on_time_ms = 0;
+  s_last_intensity_sample_ticks = rtc_get_ticks();
+
+  mutex_unlock(s_mutex);
 }

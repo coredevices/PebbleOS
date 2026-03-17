@@ -13,6 +13,7 @@
 #include "process_management/worker_manager.h"
 #include "services/common/analytics/analytics.h"
 #include "services/common/system_task.h"
+#include "services/normal/activity/activity.h"
 #include "syscall/syscall_internal.h"
 #include "system/hexdump.h"
 #include "system/passert.h"
@@ -333,7 +334,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         // Don't need the re-enable timer to fire
         new_timer_stop(s_manager_state.update_enable_timer_id);
         // Track HRM on-time
-        analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_HRM_ON_TIME, AnalyticsClient_System);
+        PBL_ANALYTICS_TIMER_START(hrm_on_time_ms);
       }
 
     } else if (!turn_sensor_on && hrm_is_enabled(HRM)) {
@@ -341,7 +342,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       HRM_LOG("Turning off HR sensor");
       hrm_disable(HRM);
       // Stop tracking HRM on-time
-      analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_HRM_ON_TIME);
+      PBL_ANALYTICS_TIMER_STOP(hrm_on_time_ms);
 
       sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
       s_manager_state.accel_state = NULL;

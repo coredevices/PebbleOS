@@ -192,30 +192,6 @@ static RtcTicks prv_get_nostop_ticks(StopModeInhibitor inhibitor, RtcTicks now_t
     return total_ticks;
 }
 
-static void prv_collect(AnalyticsMetric metric, StopModeInhibitor inhibitor, RtcTicks now_ticks) {
-  // operating on 64 bit values so the load/stores will _not_ be atomic
-  portENTER_CRITICAL();
-  RtcTicks ticks = prv_get_nostop_ticks(inhibitor, now_ticks);
-  s_inhibitor_profile[inhibitor].total_ticks_while_disabled = 0;
-  portEXIT_CRITICAL();
-  analytics_set(metric, ticks_to_milliseconds(ticks), AnalyticsClient_System);
-}
-
-void analytics_external_collect_stop_inhibitor_stats(RtcTicks now_ticks) {
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_MAIN_TIME, InhibitorMain, now_ticks);
-  // We don't care about the serial console nostop time, it should always
-  // be zero on watches in the field anyway. (InhibitorDbgSerial skipped)
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_BUTTON_TIME, InhibitorButton, now_ticks);
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_BLUETOOTH_TIME, InhibitorBluetooth, now_ticks);
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_DISPLAY_TIME, InhibitorDisplay, now_ticks);
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_BACKLIGHT_TIME, InhibitorBacklight, now_ticks);
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_COMM_TIME, InhibitorCommMode, now_ticks);
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_FLASH_TIME, InhibitorFlash, now_ticks);
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_I2C1_TIME, InhibitorI2C1, now_ticks);
-  prv_collect(ANALYTICS_DEVICE_METRIC_CPU_NOSTOP_MIC, InhibitorMic, now_ticks);
-  // TODO PBL-37941: Add analytics for InhibitorDMA
-}
-
 void command_scheduler_force_active(void) {
   sleep_mode_enable(false);
 }

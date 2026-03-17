@@ -30,9 +30,6 @@
 #include "stubs_serial.h"
 #include "stubs_tick.h"
 
-void analytics_event_ams(uint8_t type, int32_t aux_info) {
-}
-
 struct {
   ResponseTimeState state;
   uint16_t max_period_secs;

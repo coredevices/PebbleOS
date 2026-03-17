@@ -5,12 +5,14 @@
 
 #include "drivers/vibe.h"
 #include "drivers/battery.h"
+#include "drivers/rtc.h"
 
 #include "util/list.h"
 #include "util/math.h"
 
 #include "os/mutex.h"
 
+#include "services/common/analytics/analytics.h"
 #include "services/common/accel_manager.h"
 #include "services/common/new_timer/new_timer.h"
 #include "kernel/events.h"
@@ -154,11 +156,45 @@ static int32_t s_vibe_strength_default = VIBE_STRENGTH_MAX;
 static PebbleMutex *s_vibe_pattern_mutex = NULL;
 static VibePatternStep *s_vibe_queue_head = NULL;
 
+//! Analytics: Track time-weighted average strength
+static uint64_t s_strength_time_product_sum; // Sum of (strength_pct × time_ms)
+static RtcTicks s_last_strength_sample_ticks; // Timestamp of last sample
+static uint8_t s_last_sampled_strength_pct; // Last strength percentage sampled
+static uint32_t s_total_vibe_on_time_ms; // Total vibe on time tracked internally
+
 void vibes_init() {
   s_vibe_history_mutex = mutex_create();
   s_vibe_pattern_mutex = mutex_create();
   s_pattern_in_progress = false;
   s_pattern_timer = new_timer_create();
+
+  // Initialize strength analytics tracking
+  s_strength_time_product_sum = 0;
+  s_last_strength_sample_ticks = 0;
+  s_last_sampled_strength_pct = 0;
+  s_total_vibe_on_time_ms = 0;
+}
+
+static void prv_update_strength_analytics(uint8_t new_strength_pct) {
+  RtcTicks now_ticks = rtc_get_ticks();
+
+  // Calculate time delta in ms since last sample
+  if (s_last_strength_sample_ticks > 0) {
+    uint32_t time_delta_ms = ((now_ticks - s_last_strength_sample_ticks) * 1000) / RTC_TICKS_HZ;
+
+    // Accumulate strength × time for weighted average calculation
+    // Use last sampled strength for the period that just elapsed
+    s_strength_time_product_sum += (uint64_t)s_last_sampled_strength_pct * time_delta_ms;
+
+    // Track total on-time when strength is above zero
+    if (s_last_sampled_strength_pct > 0) {
+      s_total_vibe_on_time_ms += time_delta_ms;
+    }
+  }
+
+  // Update tracking variables
+  s_last_strength_sample_ticks = now_ticks;
+  s_last_sampled_strength_pct = new_strength_pct;
 }
 
 //! Turn the vibe motor on or off.
@@ -172,15 +208,25 @@ static void prv_vibes_set_vibe_strength(int32_t new_strength) {
     PBL_ASSERTN(s_vibe_strength == VIBE_STRENGTH_OFF);
     return;
   }
+
+  // Track strength for analytics (convert to percentage: -100..100 -> 0..100%)
+  // Take absolute value since we care about vibration intensity, not direction
+  uint8_t new_strength_pct = (ABS(new_strength) * 100) / VIBE_STRENGTH_MAX;
+  prv_update_strength_analytics(new_strength_pct);
+
   if (new_strength != VIBE_STRENGTH_OFF) {
     vibe_set_strength(new_strength);
     vibe_ctl(true /* on */);
     if (s_vibe_strength == VIBE_STRENGTH_OFF) {
+      // Transitioning from off to on
+      PBL_ANALYTICS_TIMER_START(vibrator_on_time_ms);
       prv_vibe_history_start_event();
     }
   } else {
     vibe_ctl(false /* on */);
     if (s_vibe_strength != VIBE_STRENGTH_OFF) {
+      // Transitioning from on to off
+      PBL_ANALYTICS_TIMER_STOP(vibrator_on_time_ms);
       prv_vibe_history_end_event();
     }
   }
@@ -290,10 +336,6 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
     return;
   }
 
-  if (pebble_task_get_current() == PebbleTask_App) {
-    analytics_inc(ANALYTICS_APP_METRIC_VIBRATOR_ON_COUNT, AnalyticsClient_App);
-  }
-
   prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
   s_pattern_in_progress = true;
   bool success = new_timer_start(s_pattern_timer, s_vibe_queue_head->duration_ms,
@@ -312,5 +354,29 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_clear, void) {
   }
   prv_vibes_set_vibe_strength(VIBE_STRENGTH_OFF);
   s_pattern_in_progress = false;
+  mutex_unlock(s_vibe_pattern_mutex);
+}
+
+void analytics_external_collect_vibe_stats(void) {
+  mutex_lock(s_vibe_pattern_mutex);
+
+  // Capture one final sample to account for time since last strength change
+  uint8_t current_strength_pct = (ABS(s_vibe_strength) * 100) / VIBE_STRENGTH_MAX;
+  prv_update_strength_analytics(current_strength_pct);
+
+  // Calculate time-weighted average strength using internally tracked on-time
+  uint32_t avg_strength_pct = 0;
+  if (s_total_vibe_on_time_ms > 0) {
+    // Calculate weighted average: sum(strength × time) / total_time
+    avg_strength_pct = s_strength_time_product_sum / s_total_vibe_on_time_ms;
+  }
+
+  PBL_ANALYTICS_SET_UNSIGNED(vibrator_avg_strength_pct, avg_strength_pct);
+
+  // Reset accumulators for next period
+  s_strength_time_product_sum = 0;
+  s_total_vibe_on_time_ms = 0;
+  s_last_strength_sample_ticks = rtc_get_ticks();
+
   mutex_unlock(s_vibe_pattern_mutex);
 }

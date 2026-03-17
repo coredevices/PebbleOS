@@ -95,7 +95,6 @@ static void prv_comm_start(void) {
 #endif
     ble_bas_init();
     bt_pairability_init();
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BT_OFF_TIME);
   } else {
     PBL_LOG_ERR("BT driver failed to start!");
     // FIXME: PBL-36163 -- handle this better
@@ -118,7 +117,6 @@ static void prv_comm_stop(void) {
   // Should be the last thing to happen that touches the Bluetooth controller directly
   bt_driver_stop();
   stop_mode_enable(InhibitorCommMode);
-  analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_BT_OFF_TIME, AnalyticsClient_System);
   s_comm_is_running = false;
 
   // This is a legacy event used to update the Settings app.
@@ -205,8 +203,6 @@ static void prv_track_quick_airplane_mode_toggles(bool is_airplane_mode_currentl
   if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * RTC_TICKS_HZ)) &&
       is_airplane_mode_currently_on) {
     PBL_LOG_INFO("Quick airplane mode toggle detected!");
-    analytics_inc(ANALYTICS_DEVICE_METRIC_BT_AIRPLANE_MODE_QUICK_TOGGLE_COUNT,
-                  AnalyticsClient_System);
   }
   s_airplane_mode_last_toggle_ticks = now_ticks;
 }
@@ -236,7 +232,6 @@ void bt_ctl_init(void) {
 
   s_comm_airplane_mode_on = bt_persistent_storage_get_airplane_mode_enabled();
   s_comm_initialized = true;
-  analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_BT_OFF_TIME, AnalyticsClient_System);
 
   gatt_client_subscription_boot();
 }

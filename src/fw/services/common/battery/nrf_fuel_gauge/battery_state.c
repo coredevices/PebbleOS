@@ -544,18 +544,11 @@ void command_print_battery_status(void) {
 void analytics_external_collect_battery(void) {
   // This should not be called for an hour after bootup
   int32_t d_mv;
-  uint8_t d_pct;
 
   d_mv = s_last_voltage_mv - s_analytics_last_voltage_mv;
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_VOLTAGE, s_last_voltage_mv, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_VOLTAGE_DELTA, d_mv, AnalyticsClient_System);
+  PBL_ANALYTICS_SET_UNSIGNED(battery_voltage, s_last_voltage_mv);
+  PBL_ANALYTICS_SET_SIGNED(battery_voltage_delta, d_mv);
   s_analytics_last_voltage_mv = s_last_voltage_mv;
-
-  d_pct = s_last_battery_charge_state.pct - s_analytics_last_pct;
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT_DELTA, d_pct, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT, s_last_battery_charge_state.pct,
-                AnalyticsClient_System);
-  s_analytics_last_pct = s_last_battery_charge_state.pct;
 }
 
 static void prv_set_forced_charge_state(bool is_charging) {

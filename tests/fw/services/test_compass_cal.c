@@ -76,12 +76,6 @@ static SampleData s_sample_data[6] = {
 
 static int16_t expected_final_solution[3] = { 3017, -1948, -1668 };
 
-void test_analytics__initialize(void) {
-}
-
-void test_analytics__cleanup(void) {
-}
-
 int32_t integer_sqrt(int64_t x) {
   if (x < 0) {
     return 0;

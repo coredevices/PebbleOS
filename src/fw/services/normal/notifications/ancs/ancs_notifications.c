@@ -242,8 +242,6 @@ static bool prv_should_ignore_notification(uint32_t uid,
     pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
 
     PBL_LOG_INFO("Ignoring notification from <%s>: Muted", app_id_buffer);
-    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_FILTERED_BECAUSE_MUTED_COUNT,
-                  AnalyticsClient_System);
     return true;
   }
 
@@ -329,16 +327,6 @@ void ancs_notifications_handle_message(uint32_t uid,
       PBL_LOG_INFO("Ignoring missed call");
       goto cleanup;
     }
-  }
-
-  const bool is_sms = ancs_notifications_util_is_sms(app_id);
-  if (is_sms) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_SMS_COUNT,
-                  AnalyticsClient_System);
-  }
-  if (ancs_notifications_util_is_group_sms(app_id, subtitle)) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_GROUP_SMS_COUNT,
-                  AnalyticsClient_System);
   }
 
   // add a notification
