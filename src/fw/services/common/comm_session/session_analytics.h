@@ -29,7 +29,3 @@ CommSessionTransportType comm_session_analytics_get_transport_type(CommSession *
 void comm_session_analytics_open_session(CommSession *session);
 
 void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason);
-
-void comm_session_analytics_inc_bytes_sent(CommSession *session, uint16_t length);
-
-void comm_session_analytics_inc_bytes_received(CommSession *session, uint16_t length);

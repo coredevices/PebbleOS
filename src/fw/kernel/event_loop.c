@@ -183,7 +183,7 @@ static void launcher_handle_button_event(PebbleEvent* e) {
 
   // trigger the backlight on any button down event
   if (e->type == PEBBLE_BUTTON_DOWN_EVENT) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_BUTTON_PRESSED_COUNT, AnalyticsClient_System);
+    PBL_ANALYTICS_ADD(button_pressed_count, 1);
 
     if (button_id == BUTTON_ID_BACK && !watchface_running &&
         process_metadata_get_run_level(
@@ -283,7 +283,6 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       return;
 
     case PEBBLE_ACCEL_SHAKE_EVENT:
-      analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_SHAKE_COUNT, AnalyticsClient_System);
       if (backlight_is_motion_enabled()) {
 #ifndef RECOVERY_FW
         const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&

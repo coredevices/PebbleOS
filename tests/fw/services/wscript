@@ -38,20 +38,6 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = \
-            " src/fw/services/normal/analytics/analytics.c" \
-            " src/fw/services/normal/analytics/analytics_heartbeat.c" \
-            " src/fw/services/normal/analytics/analytics_metric.c" \
-            " src/fw/services/normal/analytics/analytics_storage.c" \
-            " src/fw/services/normal/analytics/analytics_logging.c" \
-            " src/fw/services/normal/analytics/analytics_event.c" \
-            " tests/fakes/fake_rtc.c" \
-            " src/fw/util/rand/rand.c" \
-            " third_party/tinymt/TinyMT/tinymt/tinymt32.c",
-        test_sources_ant_glob = "test_analytics.c",
-        override_includes=['dummy_board'])
-
-    clar(ctx,
-        sources_ant_glob = \
             " tests/fakes/fake_rtc.c" \
             " src/fw/services/common/cron.c" \
             " src/fw/util/time/time.c" \

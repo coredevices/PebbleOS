@@ -41,7 +41,6 @@
 #include "process_state/app_state/app_state.h"
 #include "process_management/app_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/comm_session/session.h"
 #include "services/normal/voice/voice.h"
 #include "syscall/syscall.h"
@@ -94,9 +93,6 @@ static void prv_handle_stop_transition(VoiceUiData *data);
 static void prv_voice_window_push(VoiceUiData *data);
 char *sys_voice_get_transcription_from_event(PebbleVoiceServiceEvent *e, char *buffer,
                                              size_t buffer_size, size_t *sentence_len);
-void sys_voice_analytics_log_event(AnalyticsEvent event_type, uint16_t response_size,
-                                   uint16_t response_len_chars, uint32_t response_len_ms,
-                                   uint8_t error_count, uint8_t num_sessions);
 
 
 
@@ -107,31 +103,6 @@ static WindowStack *prv_get_window_stack(void) {
   return modal_manager_get_window_stack(ModalPriorityVoice);
 }
 
-static void prv_put_analytics_event(VoiceUiData *data, bool success) {
-  size_t response_size = 0;
-  uint16_t response_len_chars = 0;
-  if (data->message) {
-    // If an error occurred and the owner of the voice window did not specify a buffer,
-    // data->message might be NULL
-    response_size = strlen(data->message);
-    utf8_t *cursor = (utf8_t *) data->message;
-    while ((cursor = utf8_get_next(cursor))) {
-      response_len_chars++;
-    }
-  }
-
-  AnalyticsEvent event_type;
-  if (!data->show_confirmation_dialog) {
-    event_type = AnalyticsEvent_VoiceTranscriptionAutomaticallyAccepted;
-  } else if (success) {
-    event_type = AnalyticsEvent_VoiceTranscriptionAccepted;
-  } else {
-    event_type = AnalyticsEvent_VoiceTranscriptionRejected;
-  }
-
-  sys_voice_analytics_log_event(event_type, response_size, response_len_chars, data->elapsed_ms,
-      data->error_count, data->num_sessions);
-}
 
 static void prv_window_push(Window *window) {
   window_stack_push(prv_get_window_stack(), window, true /* animated */);
@@ -168,10 +139,6 @@ static void prv_exit_and_send_result_event(VoiceUiData *data, DictationSessionSt
     }
   };
   sys_send_pebble_event_to_kernel(&event);
-
-  if (data->num_sessions > 0) {
-    prv_put_analytics_event(data, (result == DictationSessionStatusSuccess));
-  }
 
   sys_light_reset_to_timed_mode();
 
@@ -1497,22 +1464,3 @@ DEFINE_SYSCALL(char *, sys_voice_get_transcription_from_event, PebbleVoiceServic
   return sentence;
 }
 
-DEFINE_SYSCALL(void, sys_voice_analytics_log_event, AnalyticsEvent event_type,
-               uint16_t response_size, uint16_t response_len_chars, uint32_t response_len_ms,
-               uint8_t error_count, uint8_t num_sessions) {
-
-  if ((event_type < AnalyticsEvent_VoiceTranscriptionAccepted) &&
-      (event_type > AnalyticsEvent_VoiceTranscriptionAutomaticallyAccepted)) {
-    return;
-  }
-
-  Uuid uuid;
-  if (pebble_task_get_current() == PebbleTask_App) {
-    uuid = app_manager_get_current_app_md()->uuid;
-  } else {
-    uuid = (Uuid)UUID_SYSTEM;
-  }
-
-  analytics_event_voice_response(event_type, response_size, response_len_chars, response_len_ms,
-                                 error_count, num_sessions, &uuid);
-}

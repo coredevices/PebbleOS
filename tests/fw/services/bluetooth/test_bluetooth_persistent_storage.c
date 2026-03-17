@@ -119,12 +119,6 @@ void analytics_set(AnalyticsMetric metric, int64_t val, AnalyticsClient client) 
   }
 }
 
-void analytics_event_bt_error(AnalyticsEvent type, uint32_t error) {
-}
-
-void analytics_inc(AnalyticsMetric metric, AnalyticsClient client) {
-}
-
 void gap_update_bt_classic_connectability(void) {
 }
 

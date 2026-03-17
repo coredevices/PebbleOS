@@ -71,8 +71,6 @@ static void prv_write(const uint8_t *data, size_t length) {
 static Receiver *prv_app_message_receiver_prepare(CommSession *session,
                                                   const PebbleProtocolEndpoint *endpoint,
                                                   size_t total_payload_size) {
-  analytics_inc(ANALYTICS_APP_METRIC_MSG_IN_COUNT, AnalyticsClient_App);
-
   // FIXME: Find a better solution for this.
   // https://pebbletechnology.atlassian.net/browse/PBL-21538
   if (total_payload_size > 500) {
@@ -127,8 +125,6 @@ static void prv_app_message_receiver_write(Receiver *receiver, const uint8_t *da
   comm_session_set_responsiveness(rcv->session, BtConsumerPpAppMessage, ResponseTimeMin,
                                   MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 
-  analytics_add(ANALYTICS_APP_METRIC_MSG_BYTE_IN_COUNT, length, AnalyticsClient_App);
-
   if (rcv->header_bytes_remaining > 0) {
     const size_t header_bytes_to_write = MIN(rcv->header_bytes_remaining, length);
     g_default_kernel_receiver_implementation.write(rcv->kernel_receiver,
@@ -157,8 +153,6 @@ static void prv_app_message_receiver_finish(Receiver *receiver) {
     if (app_inbox_service_end(AppInboxServiceTagAppMessageReceiver)) {
       // The write was successful, cancel processing the header for nacking:
       kernel_receiver_finally_cb = g_default_kernel_receiver_implementation.cleanup;
-    } else {
-      analytics_inc(ANALYTICS_APP_METRIC_MSG_DROP_COUNT, AnalyticsClient_App);
     }
   }
 

@@ -14,6 +14,7 @@
 #include "kernel/util/stop.h"
 #include "kernel/util/wfi.h"
 #include "os/tick.h"
+#include "services/common/analytics/analytics.h"
 #include "util/math.h"
 
 #define SF32LB52_COMPATIBLE
@@ -30,6 +31,12 @@ extern __IO uint32_t uwTick;
 static LPTIM_HandleTypeDef s_lptim = {
     .Instance = LPTIM1,
 };
+
+// CPU analytics tracking
+static RtcTicks s_analytics_wfi_ticks = 0;        // WFI (light sleep)
+static RtcTicks s_analytics_deepwfi_ticks = 0;    // Deep WFI (stop mode)
+static RtcTicks s_analytics_deepsleep_ticks = 0;  // Deep sleep
+static RtcTicks s_last_ticks = 0;
 
 //! Early wake-up ticks (to avoid over-sleeping due to wake-up latency)
 static const uint32_t EARLY_WAKEUP_TICKS = 4;
@@ -70,10 +77,15 @@ static void prv_restore_iser(void) {
 }
 
 static inline void prv_enter_wfi(void) {
+  RtcTicks start_ticks = rtc_get_ticks();
   __WFI();
+  RtcTicks end_ticks = rtc_get_ticks();
+  s_analytics_wfi_ticks += (end_ticks - start_ticks);
 }
 
 static void prv_enter_deepwfi(void) {
+  RtcTicks start_ticks = rtc_get_ticks();
+
   flash_power_down_for_stop_mode();
 
   __DSB();
@@ -82,6 +94,9 @@ static void prv_enter_deepwfi(void) {
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
   __WFI();
   SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
+
+  RtcTicks end_ticks = rtc_get_ticks();
+  s_analytics_deepwfi_ticks += (end_ticks - start_ticks);
 }
 
 static void prv_enter_deepslep(void) {
@@ -218,6 +233,9 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
 
         prv_wdt_feed(elapsed_ticks);
 
+        // Track deep sleep time for analytics
+        s_analytics_deepsleep_ticks += elapsed_ticks;
+
         // stop LPTIM
         HAL_LPTIM_Counter_Stop_IT(&s_lptim);
 
@@ -299,3 +317,38 @@ void SysTick_Handler(void) {
 }
 
 void dump_current_runtime_stats(void) {}
+
+void analytics_external_collect_cpu_stats(void) {
+  uint32_t wfi_ms = ticks_to_milliseconds(s_analytics_wfi_ticks);
+  uint32_t deepwfi_ms = ticks_to_milliseconds(s_analytics_deepwfi_ticks);
+  uint32_t deepsleep_ms = ticks_to_milliseconds(s_analytics_deepsleep_ticks);
+
+  uint32_t now_ticks = rtc_get_ticks();
+  uint32_t total_ticks = now_ticks - s_last_ticks;
+  uint32_t total_ms = ticks_to_milliseconds(total_ticks);
+  uint32_t ms_running = total_ms - wfi_ms - deepwfi_ms - deepsleep_ms;
+
+  // Calculate percentages
+  uint32_t running_pct = 0;
+  uint32_t wfi_pct = 0;
+  uint32_t deepwfi_pct = 0;
+  uint32_t deepsleep_pct = 0;
+
+  if (total_ms > 0) {
+    running_pct = (ms_running * 100) / total_ms;
+    wfi_pct = (wfi_ms * 100) / total_ms;
+    deepwfi_pct = (deepwfi_ms * 100) / total_ms;
+    deepsleep_pct = (deepsleep_ms * 100) / total_ms;
+  }
+
+  // SF32LB52: sleep0 = WFI, sleep1 = Deep WFI, sleep2 = Deep sleep
+  PBL_ANALYTICS_SET_UNSIGNED(cpu_running_pct, running_pct);
+  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep0_pct, wfi_pct);
+  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep1_pct, deepwfi_pct);
+  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep2_pct, deepsleep_pct);
+
+  s_last_ticks = now_ticks;
+  s_analytics_wfi_ticks = 0;
+  s_analytics_deepwfi_ticks = 0;
+  s_analytics_deepsleep_ticks = 0;
+}

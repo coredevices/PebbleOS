@@ -51,10 +51,7 @@ static void prv_set_schedule_mode_timer();
 
 static void prv_update_active_time(bool is_active) {
   if (is_active) {
-    analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_ALERTS_DND_ACTIVE_TIME,
-                              AnalyticsClient_System);
   } else {
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_ALERTS_DND_ACTIVE_TIME);
   }
 }
 

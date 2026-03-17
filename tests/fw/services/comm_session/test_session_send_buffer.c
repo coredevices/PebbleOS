@@ -31,9 +31,6 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 #include "stubs_passert.h"
 #include "stubs_analytics.h"
 
-void comm_session_analytics_inc_bytes_sent(CommSession *session, uint16_t length) {
-}
-
 // Fakes
 ///////////////////////////////////////////////////////////
 

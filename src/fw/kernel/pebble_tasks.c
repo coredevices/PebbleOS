@@ -8,7 +8,6 @@
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "services/common/analytics/analytics.h"
-#include "services/common/analytics/analytics_metric.h"
 #include "system/passert.h"
 #include "util/size.h"
 
@@ -103,20 +102,9 @@ void pebble_task_suspend(PebbleTask task) {
 }
 
 void analytics_external_collect_stack_free(void) {
-  analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_KERNEL_MAIN,
-    prv_task_get_stack_free(PebbleTask_KernelMain), AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_KERNEL_BACKGROUND,
-    prv_task_get_stack_free(PebbleTask_KernelBackground), AnalyticsClient_System);
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_BLUETOPIA_BIG,
-    prv_task_get_stack_free(PebbleTask_BTHost), AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_BLUETOPIA_MEDIUM,
-    prv_task_get_stack_free(PebbleTask_BTController), AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_BLUETOPIA_SMALL,
-    prv_task_get_stack_free(PebbleTask_BTHCI), AnalyticsClient_System);
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_STACK_FREE_NEWTIMERS,
-    prv_task_get_stack_free(PebbleTask_NewTimers), AnalyticsClient_System);
+  PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_main_bytes, prv_task_get_stack_free(PebbleTask_KernelMain));
+  PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_background_bytes, prv_task_get_stack_free(PebbleTask_KernelBackground));
+  PBL_ANALYTICS_SET_UNSIGNED(stack_free_newtimers_bytes, prv_task_get_stack_free(PebbleTask_NewTimers));
 }
 
 QueueHandle_t pebble_task_get_to_queue(PebbleTask task) {

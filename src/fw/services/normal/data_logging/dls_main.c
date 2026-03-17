@@ -155,7 +155,6 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
     // remove the number of leftover bytes so we fall back on our feet
     read_bytes -= leftover_bytes;
     dls_storage_consume(logging_session, leftover_bytes);
-    analytics_inc(ANALYTICS_DEVICE_METRIC_DATA_LOGGING_FLUSH_COUNT, AnalyticsClient_System);
   }
 
   success = dls_endpoint_send_data(logging_session, buffer, read_bytes);

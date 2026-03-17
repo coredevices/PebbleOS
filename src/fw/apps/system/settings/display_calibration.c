@@ -187,7 +187,6 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
   if (data->state == DisplayCalibrationState_Confirm) {
     // set a new user offset
     shell_prefs_set_display_offset(data->offset);
-    analytics_inc(ANALYTICS_DEVICE_METRIC_DISPLAY_OFFSET_MODIFIED_COUNT, AnalyticsClient_System);
     window_stack_remove(&data->window, true /* animated */);
     return;
   }

@@ -11,6 +11,7 @@
 
 #include "console/prompt.h"
 #include "drivers/flash.h"
+#include "drivers/rtc.h"
 #include "drivers/task_watchdog.h"
 #include "flash_region/filesystem_regions.h"
 #include "flash_region/flash_region.h"
@@ -2203,8 +2204,7 @@ uint32_t pfs_crc_calculate_file(int fd, uint32_t offset, uint32_t num_bytes) {
 
 void analytics_external_collect_pfs_stats(void) {
   uint16_t avail_kilobytes = (uint16_t)(get_available_pfs_space() / 1024);
-  analytics_set(ANALYTICS_DEVICE_METRIC_PFS_SPACE_FREE_KB,
-                avail_kilobytes, AnalyticsClient_System);
+  PBL_ANALYTICS_SET_UNSIGNED(pfs_space_free_kb, avail_kilobytes);
 }
 
 /*

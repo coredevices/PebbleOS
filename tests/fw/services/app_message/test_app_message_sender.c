@@ -65,9 +65,6 @@ void app_outbox_service_cleanup_all_pending_messages(void) {
   s_is_message_cancelled = true;
 }
 
-void comm_session_analytics_inc_bytes_sent(CommSession *session, uint16_t length) {
-}
-
 static CommSession s_system_session;
 static CommSession *s_system_session_ptr;
 CommSession *comm_session_get_system_session(void) {

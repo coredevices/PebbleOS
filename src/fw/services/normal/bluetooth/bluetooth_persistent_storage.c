@@ -1160,17 +1160,6 @@ void bt_persistent_storage_register_existing_ble_bondings(void) {
   prv_file_each(prv_ble_cccd_internal_for_each_itr, &internal_itr_data_cccd);
 }
 
-void analytics_external_collect_ble_pairing_info(void) {
-  unsigned int ble_pairings_count = prv_get_num_pairings_by_type(BtPersistBondingTypeBLE);
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_BLE_PAIRING_RECORDS_COUNT,
-                ble_pairings_count, AnalyticsClient_System);
-
-  analytics_set(ANALYTICS_DEVICE_BT_PERSISTENT_STORAGE_UPDATES, s_bt_persistent_storage_updates,
-                AnalyticsClient_System);
-  s_bt_persistent_storage_updates = 0;
-}
-
 typedef struct {
   const BTDeviceInternal *peer;
   uint16_t chr_val_handle;
@@ -1496,14 +1485,6 @@ void bt_persistent_storage_for_each_bt_classic_pairing(BtPersistBondingDBEachBTC
   };
   prv_file_each(bt_persistent_storage_bt_classic_pairing_for_each_itr, &itr_data);
 }
-
-void analytics_external_collect_bt_pairing_info(void) {
-  unsigned int ble_pairings_count = prv_get_num_pairings_by_type(BtPersistBondingTypeBTClassic);
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_BT_PAIRING_RECORDS_COUNT,
-                ble_pairings_count, AnalyticsClient_System);
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Local Device Info

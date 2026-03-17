@@ -135,7 +135,6 @@ static void prv_cleanup_action_result(ActionResultData *data, bool succeeded) {
   // report to analytics the result of the action
   if (data->response.attribute.id == AttributeIdTitle &&
       data->response.attribute.cstring) {
-    analytics_event_canned_response(data->response.attribute.cstring, succeeded);
   }
 
   if (data->action_complete.callback) {
@@ -621,22 +620,17 @@ static void prv_do_action_analytics(const TimelineItem *pin, const ActionMenuIte
 
   // Record action in the analytics
   if (action->type == TimelineItemActionTypeOpenWatchApp) {
-    analytics_event_pin_app_launch(pin->header.timestamp, &pin->header.parent_id);
   } else {
     Uuid app_uuid;
     timeline_get_originator_id(pin, &app_uuid);
-    analytics_event_pin_action(pin->header.timestamp, &app_uuid, action->type);
   }
 
-  AnalyticsMetric metric = ANALYTICS_DEVICE_METRIC_ACTION_INVOKED_FROM_TIMELINE_COUNT;
   const TimelineItemActionSource current_item_source =
       kernel_ui_get_current_timeline_item_action_source();
   if (current_item_source == TimelineItemActionSourceModalNotification) {
-    metric = ANALYTICS_DEVICE_METRIC_ACTION_INVOKED_FROM_MODAL_NOTIFICATION_COUNT;
   } else if (current_item_source == TimelineItemActionSourceNotificationApp) {
-    metric = ANALYTICS_DEVICE_METRIC_ACTION_INVOKED_FROM_NOTIFICATION_APP_COUNT;
+  } else {
   }
-  analytics_inc(metric, AnalyticsClient_System);
 }
 
 #if CAPABILITY_HAS_BUILTIN_HRM
@@ -1184,7 +1178,6 @@ void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifica
   }
 
   data->action_menu = action_menu;
-  analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_DISMISS_ALL_COUNT, AnalyticsClient_System);
 
   data->action_complete.callback = dismiss_all_complete_callback;
   data->action_complete.callback_data = dismiss_all_cb_data;

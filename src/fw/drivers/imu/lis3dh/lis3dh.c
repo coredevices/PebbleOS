@@ -583,19 +583,6 @@ static bool prv_get_accel_data(AccelRawData *accel_data) {
   return true;
 }
 
-// Analytics Metrics
-//////////////////////////////////////////////////////////////////////
-void analytics_external_collect_accel_xyz_delta(void) {
-  AccelRawData accel_data;
-  if (prv_get_accel_data(&accel_data)) {
-    uint32_t delta = prv_compute_delta_pos(&accel_data, &s_last_analytics_position);
-    s_is_idle = (delta < ACCEL_MAX_IDLE_DELTA);
-    s_last_analytics_position = accel_data;
-    analytics_set(ANALYTICS_DEVICE_METRIC_ACCEL_XYZ_DELTA, delta, AnalyticsClient_System);
-  }
-}
-
-
 // Self Test
 //////////////////////////////////////////////////////////////////////
 

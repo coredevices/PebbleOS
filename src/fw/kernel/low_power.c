@@ -27,12 +27,11 @@ static void prv_low_power_launcher_task_callback(void *unused) {
   }
 
   if (s_low_power_active) {
-    analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_WATCH_ONLY_TIME,
-                              AnalyticsClient_System);
+    PBL_ANALYTICS_TIMER_START(low_power_time_ms);
     worker_manager_disable();
     services_set_runlevel(RunLevel_LowPower);
   } else {
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_WATCH_ONLY_TIME);
+    PBL_ANALYTICS_TIMER_STOP(low_power_time_ms);
     worker_manager_enable();
     services_set_runlevel(RunLevel_Normal);
   }
@@ -73,7 +72,7 @@ static void prv_low_power_transition(bool active) {
 }
 
 void low_power_standby(void) {
-  analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_WATCH_ONLY_TIME);
+  PBL_ANALYTICS_TIMER_STOP(low_power_time_ms);
   enter_standby(RebootReasonCode_LowBattery);
 }
 

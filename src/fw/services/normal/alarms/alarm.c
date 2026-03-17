@@ -258,9 +258,7 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
         prv_add_pin(alarm->id, &alarm->config, alarm_time, pinid);
 
         if (updated) {
-          analytics_event_pin_updated(alarm_time, &entry->uuid);
         } else {
-          analytics_event_pin_created(alarm_time, &entry->uuid);
         }
       }
     }
@@ -385,8 +383,6 @@ static bool prv_record_alarm_op(AlarmId id, AlarmConfig *config, void *context) 
   // Add a pin to the timeline (will show up in the past)
   prv_add_pin(id, config, rtc_get_time(), NULL);
 
-  // Send one triggered event for the alarm
-  prv_analytics_op(id, config, (void *)(uintptr_t)AnalyticsEvent_AlarmTriggered);
   return false;
 }
 
@@ -627,7 +623,6 @@ AlarmId alarm_create(const AlarmInfo *info) {
   prv_add_and_schedule_alarm(&file, &alarm);
   prv_file_close_and_unlock(&file);
 
-  analytics_event_alarm(AnalyticsEvent_AlarmCreated, info);
 
   return id;
 }
@@ -974,16 +969,12 @@ static bool prv_analytics_op(AlarmId id, AlarmConfig *config, void *context) {
     .scheduled_days = &config->scheduled_days,
   };
 
-  analytics_event_alarm((intptr_t)context, &info);
   return false;
 }
 
 void alarm_dismiss_alarm(void) {
   prv_clear_snooze_timer();
 
-  // Read from flash since the in-memory cache can be modified
-  prv_alarm_operation(s_most_recent_alarm_id, prv_analytics_op,
-                      (void *)(intptr_t)AnalyticsEvent_AlarmDismissed);
 }
 
 // ----------------------------------------------------------------------------------------------

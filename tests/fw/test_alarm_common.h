@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "services/normal/activity/activity.h"
 #include "services/normal/alarms/alarm.h"
 #include "services/normal/alarms/alarm_pin.h"
 

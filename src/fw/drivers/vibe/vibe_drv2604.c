@@ -132,17 +132,6 @@ void vibe_ctl(bool on) {
     on = false;
   }
 
-  static bool s_on = false;
-  if (on && !s_on) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_VIBRATOR_ON_COUNT, AnalyticsClient_System);
-    analytics_stopwatch_start(ANALYTICS_APP_METRIC_VIBRATOR_ON_TIME, AnalyticsClient_App);
-    analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_VIBRATOR_ON_TIME, AnalyticsClient_System);
-  } else if (!on && s_on) {
-    analytics_stopwatch_stop(ANALYTICS_APP_METRIC_VIBRATOR_ON_TIME);
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_VIBRATOR_ON_TIME);
-  }
-  s_on = on;
-
   PBL_LOG_DBG("Vibe status <%s>", on ? "on" : "off");
 
   if (!on) {

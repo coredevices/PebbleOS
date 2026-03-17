@@ -10,7 +10,6 @@
 #include "fake_system_task.h"
 
 #include "stubs_analytics.h"
-#include "stubs_analytics_external.h"
 #include "stubs_gettext.h"
 #include "stubs_logging.h"
 #include "stubs_logging.h"

@@ -208,10 +208,3 @@ PreferredContentSize system_theme_convert_host_content_size_to_runtime_platform(
   return prv_convert_content_size_between_platforms(size, PBL_PLATFORM_TYPE_CURRENT,
                                                     runtime_platform);
 }
-
-void analytics_external_collect_system_theme_settings(void) {
-  const SettingsContentSize content_size =
-      settings_content_size_from_preferred_size(system_theme_get_content_size());
-  analytics_set(ANALYTICS_DEVICE_METRIC_SYSTEM_THEME_TEXT_STYLE, content_size,
-                AnalyticsClient_System);
-}

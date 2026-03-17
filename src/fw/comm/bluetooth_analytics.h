@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 #include "bluetooth/gap_le_connect.h"
-#include "services/common/analytics/analytics_event.h"
 
 typedef struct SlaveConnEventStats SlaveConnEventStats;
 
@@ -35,7 +34,7 @@ void bluetooth_analytics_handle_ble_pairing_error(uint32_t error);
 void bluetooth_analytics_handle_bt_classic_pairing_error(uint32_t error);
 
 void bluetooth_analytics_handle_connection_disconnection_event(
-    AnalyticsEvent type, uint8_t reason, const BleRemoteVersionInfo *vers_info);
+    uint8_t reason, const BleRemoteVersionInfo *vers_info);
 
 void bluetooth_analytics_handle_put_bytes_stats(bool successful, uint8_t type, uint32_t total_size,
                                                 uint32_t elapsed_time_ms,

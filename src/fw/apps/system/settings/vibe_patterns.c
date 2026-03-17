@@ -6,7 +6,6 @@
 
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/i18n/i18n.h"
 #include "services/normal/notifications/alerts_preferences_private.h"
 #include "services/normal/vibes/vibe_client.h"
@@ -32,19 +31,9 @@ typedef struct SettingsVibePatternsData {
   unsigned int toggled_vibes_mask;
 } SettingsVibePatternsData;
 
-static void prv_log_analytic_if_toggled(VibePatternFeature feature, VibeClient client,
-                                        SettingsVibePatternsData *data) {
-  if ((data->toggled_vibes_mask & feature) == feature) {
-    analytics_event_vibe_access(feature, alerts_preferences_get_vibe_score_for_client(client));
-  }
-}
-
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsVibePatternsData *data = (SettingsVibePatternsData *)context;
   i18n_free_all(data);
-  prv_log_analytic_if_toggled(VibePatternFeature_Notifications, VibeClient_Notifications, data);
-  prv_log_analytic_if_toggled(VibePatternFeature_PhoneCalls, VibeClient_PhoneCalls, data);
-  prv_log_analytic_if_toggled(VibePatternFeature_Alarms, VibeClient_Alarms, data);
   app_free(data);
 }
 
@@ -136,17 +125,14 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   VibeClient client;
   switch (row) {
     case VibeSettingsRow_Notifications: {
-      data->toggled_vibes_mask |= VibePatternFeature_Notifications;
       client = VibeClient_Notifications;
       break;
     }
     case VibeSettingsRow_PhoneCalls: {
-      data->toggled_vibes_mask |= VibePatternFeature_PhoneCalls;
       client = VibeClient_PhoneCalls;
       break;
     }
     case VibeSettingsRow_Alarms: {
-      data->toggled_vibes_mask |= VibePatternFeature_Alarms;
       client = VibeClient_Alarms;
       break;
     }

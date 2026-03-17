@@ -295,7 +295,6 @@ void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t* msg_da
   s_get_bytes_in_progress = true;
   prv_put_status_event(DebugInfoStateStarted);
   state->start_ticks = rtc_get_ticks();
-  bt_driver_analytics_get_conn_event_stats(&state->conn_event_stats);
 
   prv_protocol_send_next_chunk(state);
 }

@@ -34,32 +34,6 @@ static const uint32_t FLASH_DATA_REGISTER_ADDR = (uint32_t)&(SPI1->DR);
 static DMA_Stream_TypeDef* FLASH_TX_DMA_STREAM = DMA2_Stream3;
 static const uint32_t FLASH_TX_DMA_CHANNEL = DMA_Channel_3;
 
-static uint32_t analytics_read_count;
-static uint32_t analytics_read_bytes_count;
-static uint32_t analytics_write_bytes_count;
-
-void analytics_external_collect_system_flash_statistics(void) {
-  // TODO: Add support back to tintin
-}
-
-void analytics_external_collect_app_flash_read_stats(void) {
-  analytics_set(ANALYTICS_APP_METRIC_FLASH_READ_COUNT, analytics_read_count, AnalyticsClient_App);
-  analytics_set(ANALYTICS_APP_METRIC_FLASH_READ_BYTES_COUNT, analytics_read_bytes_count, AnalyticsClient_App);
-  analytics_set(ANALYTICS_APP_METRIC_FLASH_WRITE_BYTES_COUNT, analytics_write_bytes_count, AnalyticsClient_App);
-
-  // The overhead cost of tracking whether each flash read was due to the foreground
-  // or background app is large, so the best we can do is to attribute to both of them
-  if (worker_manager_get_current_worker_md() != NULL) {
-    analytics_set(ANALYTICS_APP_METRIC_FLASH_READ_COUNT, analytics_read_count, AnalyticsClient_Worker);
-    analytics_set(ANALYTICS_APP_METRIC_FLASH_READ_BYTES_COUNT, analytics_read_bytes_count, AnalyticsClient_Worker);
-    analytics_set(ANALYTICS_APP_METRIC_FLASH_WRITE_BYTES_COUNT, analytics_write_bytes_count, AnalyticsClient_Worker);
-  }
-
-  analytics_read_count = 0;
-  analytics_read_bytes_count = 0;
-  analytics_write_bytes_count = 0;
-}
-
 struct FlashState {
   bool enabled;
   bool sleep_when_idle;
@@ -452,7 +426,6 @@ void flash_erase_subsector_blocking(uint32_t subsector_addr) {
     return;
   }
 
-  analytics_inc(ANALYTICS_APP_METRIC_FLASH_SUBSECTOR_ERASE_COUNT, AnalyticsClient_CurrentTask);
   power_tracking_start(PowerSystemFlashErase);
 
   enable_flash_spi_clock();

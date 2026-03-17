@@ -594,15 +594,3 @@ done:
     event_put(&pref_event);
   }
 }
-
-void analytics_external_collect_alerts_preferences(void) {
-  uint8_t alerts_dnd_prefs_bitmask = 0;
-  alerts_dnd_prefs_bitmask |= (alerts_preferences_dnd_is_manually_enabled() << 0);
-  alerts_dnd_prefs_bitmask |= (alerts_preferences_dnd_is_smart_enabled() << 1);
-  alerts_dnd_prefs_bitmask |= (alerts_preferences_dnd_is_schedule_enabled(WeekdaySchedule) << 2);
-  alerts_dnd_prefs_bitmask |= (alerts_preferences_dnd_is_schedule_enabled(WeekendSchedule) << 3);
-  analytics_set(ANALYTICS_DEVICE_METRIC_ALERTS_DND_PREFS_BITMASK,
-                alerts_dnd_prefs_bitmask, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_ALERTS_MASK,
-                (uint8_t) alerts_preferences_get_alert_mask(), AnalyticsClient_System);
-}

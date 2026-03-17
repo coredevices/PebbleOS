@@ -14,7 +14,6 @@
 #include "popups/ble_hrm/ble_hrm_sharing_popup.h"
 #include "process_management/app_manager.h"
 #include "services/common/analytics/analytics.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/hrm/hrm_manager_private.h"
 #include "services/common/regular_timer.h"
 #include "services/normal/activity/activity.h"
@@ -203,7 +202,6 @@ static void prv_start_hrm_kernel_main(void *unused) {
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1 /*update_interval_s*/,
                                           0 /*expire_s*/, HRMFeature_BPM, NULL, NULL);
 
-  analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_BLE_HRM_SHARING_TIME, AnalyticsClient_System);
 }
 
 static void prv_stop_hrm_kernel_main(void *unused) {
@@ -211,7 +209,6 @@ static void prv_stop_hrm_kernel_main(void *unused) {
   sys_hrm_manager_unsubscribe(s_ble_hrm_session.manager_session);
   event_service_client_unsubscribe(&s_ble_hrm_session.service_info);
 
-  analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BLE_HRM_SHARING_TIME);
 }
 
 static void prv_execute_on_kernel_main(CallbackEventCallback cb) {
@@ -262,7 +259,6 @@ static void prv_push_reminder_popup_kernel_main_cb(void *unused) {
 
   ble_hrm_push_reminder_popup();
 
-  analytics_event_ble_hrm(BleHrmEventSubtype_SharingTimeoutPopupPresented);
   PBL_LOG_INFO("BLE HRM sharing timeout fired!");
 }
 
@@ -340,7 +336,6 @@ void ble_hrm_revoke_sharing_permission_for_connection(GAPLEConnection *connectio
   }
   bt_unlock();
 
-  analytics_event_ble_hrm(BleHrmEventSubtype_SharingRevoked);
 }
 
 static void prv_revoke_gap_le_connection_for_each_cb(GAPLEConnection *connection, void *unused) {
@@ -354,7 +349,6 @@ void ble_hrm_revoke_all(void) {
   bt_unlock();
 
   // Counting as one -- it's one user action.
-  analytics_event_ble_hrm(BleHrmEventSubtype_SharingRevoked);
   PBL_LOG_INFO("BLE HRM sharing: all revoked");
 }
 
@@ -415,8 +409,6 @@ void ble_hrm_handle_sharing_request_response(bool is_granted,
 
   kernel_free(sharing_request);
 
-  analytics_event_ble_hrm(is_granted ?
-                          BleHrmEventSubtype_SharingAccepted : BleHrmEventSubtype_SharingDeclined);
 }
 
 void bt_driver_cb_hrm_service_update_subscription(const BTDeviceInternal *device,

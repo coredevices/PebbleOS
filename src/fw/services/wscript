@@ -17,8 +17,11 @@ def build(bld):
 
         if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
             use.append('nrf_fuel_gauge')
+
         if bld.env.memfault:
             use.append('memfault_includes')
+            bld.env.DEFINES.append('ANALYTICS_IMPL_MEMFAULT')
+
         bld.stlib(source=sources,
                   target='fw_services',
                   use=use)
@@ -60,6 +63,10 @@ def build(bld):
 
             if not bld.capability('HAS_MICROPHONE'):
                 excludes.append('normal/voice/**')
+
+            # Others
+            if bld.env.memfault:
+                excludes.append('common/analytics/null/**')
 
             return excludes
 

@@ -232,11 +232,7 @@ DEFINE_SYSCALL(int, sys_accel_manager_peek, AccelData *accel_data) {
     syscall_assert_userspace_buffer(accel_data, sizeof(*accel_data));
   }
 
-  analytics_inc(ANALYTICS_DEVICE_METRIC_ACCEL_PEEK_COUNT, AnalyticsClient_System);
-  PebbleTask task = pebble_task_get_current();
-  if (task == PebbleTask_Worker || task == PebbleTask_App) {
-    analytics_inc(ANALYTICS_APP_METRIC_ACCEL_PEEK_COUNT, AnalyticsClient_CurrentTask);
-  }
+  PBL_ANALYTICS_ADD(accel_peek_count, 1);
 
   if (!accel_running()) {
     return (-1);
@@ -359,8 +355,6 @@ void accel_manager_dispatch_data(void) {
         }
 
         state->num_samples += num_samples;
-        analytics_add(ANALYTICS_DEVICE_METRIC_ACCEL_SAMPLE_COUNT, num_samples,
-                      AnalyticsClient_System);
         PBL_ASSERTN(state->num_samples <= state->raw_buffer_size);
       }
 

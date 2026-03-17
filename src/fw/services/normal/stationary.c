@@ -14,7 +14,6 @@
 #include "resource/resource_ids.auto.h"
 #include "services/common/accel_manager.h"
 #include "services/common/analytics/analytics.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/i18n/i18n.h"
 #include "services/common/regular_timer.h"
 #include "services/common/system_task.h"
@@ -101,9 +100,7 @@ static void prv_update_stationary_enabled(void *data) {
 void stationary_handle_battery_connection_change_event(void) {
   PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary mode battery state change event received");
   if (battery_is_usb_connected()) {
-    analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsEnterCharging);
   } else {
-    analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsExitCharging);
   }
   prv_update_stationary_enabled(NULL);
 }
@@ -125,7 +122,7 @@ static void prv_watch_is_motionless(void) {
     PBL_LOG_D_DBG(DEBUG_STATIONARY, "Countdown to stationary: %d", s_stationary_count_down);
     s_stationary_count_down--;
   } else {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_STATIONARY_TIME_MINUTES, AnalyticsClient_System);
+    PBL_ANALYTICS_TIMER_START(stationary_time_ms);
     prv_handle_action(StationaryActionGoToSleep);
   }
 }
@@ -135,6 +132,7 @@ static void prv_watch_is_motionless(void) {
 //! stationary counter
 static void prv_watch_is_in_motion(void) {
   prv_handle_action(StationaryActionWakeUp);
+  PBL_ANALYTICS_TIMER_STOP(stationary_time_ms);
 }
 
 static void prv_stationary_check_launcher_task_cb(void *unused_data) {
@@ -163,11 +161,7 @@ void stationary_set_enabled(bool enabled) {
   shell_prefs_set_stationary_enabled(enabled);
 
   if (enabled) {
-    analytics_event_stationary_state_change(rtc_get_time(),
-                                            StationaryAnalyticsEnableStationaryMode);
   } else {
-    analytics_event_stationary_state_change(rtc_get_time(),
-                                            StationaryAnalyticsDisableStationaryMode);
   }
 
   launcher_task_add_callback(prv_update_stationary_enabled, NULL);
@@ -199,7 +193,6 @@ static void prv_reset_stationary_counter(void) {
 
 static void prv_enter_awake_state(void) {
   PBL_LOG_INFO("Exiting stationary: Setting run level to normal");
-  analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsExitNormally);
   prv_reset_stationary_counter();
   s_current_state = StationaryStateAwake;
 }
@@ -209,9 +202,7 @@ static void prv_enter_awake_state(void) {
 static void prv_enter_stationary_state(void) {
   PBL_LOG_INFO("Entering stationary: Changing run level");
   if (s_current_state == StationaryStatePeeking) {
-    analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsEnterFromPeek);
   } else if (s_current_state == StationaryStateAwake) {
-    analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsEnterNormally);
   }
   services_set_runlevel(RunLevel_Stationary);
   accel_enable_high_sensitivity(true);
@@ -224,7 +215,6 @@ static void prv_exit_stationary(void) {
 }
 
 static void prv_enter_peek_state(void) {
-  analytics_event_stationary_state_change(rtc_get_time(), StationaryAnalyticsExitToPeek);
   //! When exiting out of stationary, we aren't certain that this wasn't caused by noise yet
   //! we set the counter to a small value in case there is no motion right after
   s_stationary_count_down = STATIONARY_PEEKING_TIME_MINS;

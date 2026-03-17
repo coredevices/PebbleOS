@@ -49,10 +49,3 @@ void ancs_destroy(void) {
 
 void ancs_handle_ios9_or_newer_detected(void) {
 }
-
-// -------------------------------------------------------------------------------------------------
-// Analytics
-
-void analytics_external_collect_ancs_info(void) {
-  return;
-}

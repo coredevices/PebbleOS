@@ -27,7 +27,6 @@
 // Stubs
 #include "stubs_accel_service.h"
 #include "stubs_analytics.h"
-#include "stubs_analytics_external.h"
 #include "stubs_animation_service.h"
 #include "stubs_app_state.h"
 #include "stubs_applib_resource.h"
@@ -54,7 +53,6 @@
 #include "stubs_task.h"
 #include "stubs_tick.h"
 #include "stubs_timeline_peek.h"
-#include "stubs_watchface_metrics.h"
 #include "stubs_worker_manager.h"
 
 // Fake "Apps"

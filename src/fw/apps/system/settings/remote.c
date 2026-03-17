@@ -67,13 +67,11 @@ static void prv_show_dialog(void *i18n_owner) {
 static void prv_forget_bt_classic_remote(BTDeviceAddress* address) {
   bt_persistent_storage_delete_bt_classic_pairing_by_addr(address);
   bt_driver_classic_disconnect(address);
-  analytics_inc(ANALYTICS_DEVICE_METRIC_BT_PAIRING_FORGET_COUNT, AnalyticsClient_System);
 }
 
 static void prv_forget_ble_remote(int id) {
   bt_persistent_storage_delete_ble_pairing_by_id(id);
 
-  analytics_inc(ANALYTICS_DEVICE_METRIC_BLE_PAIRING_FORGET_COUNT, AnalyticsClient_System);
 }
 
 static void prv_remote_menu_cleanup(ActionMenu *action_menu,

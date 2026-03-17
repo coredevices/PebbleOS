@@ -381,7 +381,6 @@ static void NOINLINE prv_init_view(NotificationLayout *layout) {
       prv_destroy_view(layout);
       layout->view_node = prv_create_view(layout, false /* use_body_icon */);
     } else {
-      analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_JUMBOJI_COUNT, AnalyticsClient_System);
     }
   }
 }

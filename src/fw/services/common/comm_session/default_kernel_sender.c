@@ -247,9 +247,6 @@ SendBuffer * comm_session_send_buffer_begin_write(CommSession *session, uint16_t
     }
 
     if (is_timeout) {
-      analytics_inc(ANALYTICS_DEVICE_METRIC_BT_COMM_SESSION_SEND_DATA_FAIL_COUNT,
-                    AnalyticsClient_System);
-
       PBL_LOG_WRN("Failed to get send buffer (bytes=%"PRIu32", endpoint_id=%"PRIu16", to=%"PRIu32")",
               (uint32_t)required_payload_length, endpoint_id, (uint32_t)is_timeout);
       return NULL;

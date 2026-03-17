@@ -108,7 +108,7 @@ static bool prv_can_hangup(void) {
 static void prv_call_end_common(void) {
   s_call_in_progress = false;
   prv_cancel_call_watchdog();
-  analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_PHONE_CALL_TIME);
+  PBL_ANALYTICS_TIMER_STOP(phone_call_time_ms);
 }
 
 static void prv_handle_incoming_call(const PebblePhoneEvent *event) {
@@ -134,15 +134,14 @@ static void prv_handle_incoming_call(const PebblePhoneEvent *event) {
 
   phone_ui_handle_incoming_call(event->caller, prv_can_answer(), prv_should_show_ongoing_call_ui(),
                                 s_call_source);
-  analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_INCOMING_COUNT, AnalyticsClient_System);
-  analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_PHONE_CALL_TIME, AnalyticsClient_System);
+  PBL_ANALYTICS_ADD(phone_call_incoming_count, 1);
+  PBL_ANALYTICS_TIMER_START(phone_call_time_ms);
 }
 
 static void prv_handle_outgoing_call(PebblePhoneEvent *event) {
   // Only 1 call at a time is supported
   if (!s_call_in_progress && s_mobile_app_is_connected) {
     phone_ui_handle_outgoing_call(event->caller);
-    analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_OUTGOING_COUNT, AnalyticsClient_System);
   } else {
     // PBL_LOG_DBG("Ignoring outgoing call. A call is already in progress: %d, "
     //     "the mobile app is connected: %d", s_call_in_progress, s_mobile_app_is_connected);
@@ -153,7 +152,7 @@ static void prv_handle_missed_call(PebblePhoneEvent *event) {
   if (s_call_in_progress) {
     prv_call_end_common();
     phone_ui_handle_missed_call();
-    analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_INCOMING_COUNT, AnalyticsClient_System);
+    PBL_ANALYTICS_ADD(phone_call_incoming_count, 1);
   } else {
     // PBL_LOG_DBG("Ignoring missed call. A call is not in progress");
   }
@@ -169,7 +168,6 @@ static void prv_handle_call_start(void) {
     } else {
       phone_ui_handle_call_start(prv_can_hangup());
     }
-    analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_START_COUNT, AnalyticsClient_System);
   } else {
     PBL_LOG_INFO("Ignoring start call. A call is not in progress");
   }
@@ -189,14 +187,9 @@ static void prv_handle_call_hide(PebblePhoneEvent *event) {
 
   prv_call_end_common();
   phone_ui_handle_call_hide();
-  analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_END_COUNT, AnalyticsClient_System);
 }
 
 static void prv_handle_call_end(bool disconnected) {
-  if (!disconnected) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_END_COUNT, AnalyticsClient_System);
-  }
-
   if (s_call_in_progress) {
     prv_call_end_common();
     phone_ui_handle_call_end(false /*call accepted*/, disconnected);
@@ -311,7 +304,6 @@ void phone_call_service_init() {
 }
 
 void phone_call_answer(void) {
-  analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_ANSWER_COUNT, AnalyticsClient_System);
   PBL_LOG_INFO("Call accepted");
 
   if (prv_call_is_ancs()) {
@@ -326,7 +318,6 @@ void phone_call_answer(void) {
 }
 
 void phone_call_decline(void) {
-  analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_DECLINE_COUNT, AnalyticsClient_System);
   PBL_LOG_INFO("Call declined");
 
   if (prv_call_is_ancs()) {
@@ -339,6 +330,6 @@ void phone_call_decline(void) {
 
   if (s_call_in_progress) {
     s_call_in_progress = false;
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_PHONE_CALL_TIME);
+    PBL_ANALYTICS_TIMER_STOP(phone_call_time_ms);
   }
 }

@@ -161,8 +161,6 @@ static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
       if (UNLIKELY(did_stall)) {
         PBL_LOG_DBG("GATT notification stalled for %d ms...",
                 (int)(timeout_ms - ticks_to_milliseconds(timeout_end_ticks - rtc_get_ticks())));
-        analytics_inc(ANALYTICS_DEVICE_METRIC_BLE_GATT_STALLED_NOTIFICATIONS_COUNT,
-                      AnalyticsClient_System);
       }
       return true;
     }
@@ -239,8 +237,6 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
     if (!consumed) {
       PBL_LOG_ERR("Subscription buffer full. Dropping GATT notification of %u bytes (bt_lock held: %s)",
               length, bt_lock_is_held() ? "yes" : "no");
-      analytics_inc(ANALYTICS_DEVICE_METRIC_BLE_GATT_DROPPED_NOTIFICATIONS_COUNT,
-                    AnalyticsClient_System);
       continue;
     }
     prv_lock();

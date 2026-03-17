@@ -772,7 +772,6 @@ static void prv_mute_notification(const ActionMenuItem *action_menu_item,
       timeline_invoke_action(item, dismiss, NULL);
     }
     prv_push_muted_dialog();
-    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_MUTED_COUNT, AnalyticsClient_System);
   } else {
     // This is a very unlikely case. We store some default prefs which includes the mute
     // attribute when we receive the notification so either someone deleted the entry
@@ -827,7 +826,6 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, 
       timeline_invoke_action(item, dismiss, NULL);
     }
     prv_push_muted_dialog();
-    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_MUTED_COUNT, AnalyticsClient_System);
   } else {
     PBL_LOG_WRN("Could not mute notification. No prefs or mute attribute");
   }
@@ -1048,9 +1046,6 @@ static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *d
 
 static void prv_back_button_single_click_handler(ClickRecognizerRef recognizer, void *data) {
   NotificationWindowData *window_data = data;
-  if (window_data->is_modal) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_CLOSED_COUNT, AnalyticsClient_System);
-  }
   prv_pop_notification_window(window_data);
 }
 

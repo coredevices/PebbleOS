@@ -390,7 +390,6 @@ static void prv_move_timeline_layer_stopped(Animation *animation, bool finished,
   TimelineIterState *state = timeline_model_get_current_state();
   Uuid app_uuid;
   timeline_get_originator_id(&state->pin, &app_uuid);
-  analytics_event_pin_open(state->pin.header.timestamp, &app_uuid);
 }
 
 static Animation *prv_animate_to_pin_window(TimelineAppData *data) {
@@ -668,9 +667,7 @@ static void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *conte
 
 done:
   if (data->timeline_model.direction == TimelineIterDirectionPast) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_TIMELINE_PAST_NAVIGATION_COUNT, AnalyticsClient_System);
   } else {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_TIMELINE_FUTURE_NAVIGATION_COUNT, AnalyticsClient_System);
   }
 }
 

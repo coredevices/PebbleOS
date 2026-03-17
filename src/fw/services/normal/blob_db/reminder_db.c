@@ -227,8 +227,6 @@ void reminder_db_deinit(void) {
 }
 
 status_t reminder_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
-  analytics_inc(ANALYTICS_DEVICE_METRIC_REMINDER_RECEIVED_COUNT, AnalyticsClient_System);
-
   // Records inserted from the phone are synced
   const bool mark_synced = true;
   return prv_insert_reminder(key, key_len, val, val_len, mark_synced);

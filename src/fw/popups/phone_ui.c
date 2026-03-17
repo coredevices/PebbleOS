@@ -689,7 +689,6 @@ static void prv_sms_reply_click_handler(ClickRecognizerRef recognizer, void *unu
 }
 
 static void prv_pop_click_handler(ClickRecognizerRef recognizer, void *unused) {
-  analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_CALL_POP_COUNT, AnalyticsClient_System);
   prv_stop_ringing();
   prv_window_pop();
 }

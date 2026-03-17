@@ -507,7 +507,7 @@ void bt_driver_handle_le_disconnection_complete_event(const BleDisconnectionComp
       bluetooth_analytics_handle_disconnect(local_is_master);
 
       bluetooth_analytics_handle_connection_disconnection_event(
-          AnalyticsEvent_BtLeDisconnect, event->reason, &connection->remote_version_info);
+          event->reason, &connection->remote_version_info);
 
       if (!local_is_master) {
         s_is_connected_as_slave = false;

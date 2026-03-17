@@ -32,7 +32,7 @@ static int64_t prv_get_ms_since_last_notification_vibe(void) {
 
 void alerts_incoming_alert_analytics() {
   if (do_not_disturb_is_active()) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_RECEIVED_DND_COUNT, AnalyticsClient_System);
+    PBL_ANALYTICS_ADD(notification_received_dnd_count, 1);
   }
 }
 

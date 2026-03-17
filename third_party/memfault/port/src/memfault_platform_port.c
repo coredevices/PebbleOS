@@ -112,14 +112,25 @@ void memfault_platform_reboot_tracking_boot(void) {
 }
 
 static PebbleRecursiveMutex *s_memfault_lock;
+static bool s_boot_in_progress;
 
 void memfault_lock(void) {
+  // During boot initialization, skip locking to avoid deadlock when
+  // metrics iteration is called from boot context (e.g., during
+  // size computation in memfault_metrics_boot)
+  if (s_boot_in_progress || !s_memfault_lock) {
+    return;
+  }
+
   register uint32_t LR __asm ("lr");
   uint32_t myLR = LR;
   mutex_lock_recursive_with_timeout_and_lr(s_memfault_lock, portMAX_DELAY, myLR);
 }
 
 void memfault_unlock(void) {
+  if (s_boot_in_progress || !s_memfault_lock) {
+    return;
+  }
   mutex_unlock_recursive(s_memfault_lock);
 }
 
@@ -132,6 +143,9 @@ void memfault_platform_boot_early(void) {
 }
 
 int memfault_platform_boot(void) {
+  // Set boot flag to disable locking during initialization
+  s_boot_in_progress = true;
+
   // Tracing requires being able to read flash, so don't do that in early boot!
   static uint8_t s_event_storage[1024];
   const sMemfaultEventStorageImpl *evt_storage =
@@ -160,6 +174,9 @@ int memfault_platform_boot(void) {
 
   init_memfault_chunk_collection();
   MEMFAULT_LOG_INFO("Memfault Initialized!");
+
+  // Clear boot flag - locking is now enabled
+  s_boot_in_progress = false;
 
   return 0;
 }

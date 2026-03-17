@@ -70,7 +70,7 @@ void notifications_handle_notification_added(Uuid *notification_id) {
     }
   };
   event_put(&launcher_event);
-  analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_RECEIVED_COUNT, AnalyticsClient_System);
+  PBL_ANALYTICS_ADD(notification_received_count, 1);
 }
 
 void notifications_handle_notification_acted_upon(Uuid *notification_id) {
