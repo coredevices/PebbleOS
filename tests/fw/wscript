@@ -40,6 +40,10 @@ def build(ctx):
         test_sources_ant_glob = "test_utf8_iterator.c")
 
     clar(ctx,
+        sources_ant_glob = "src/fw/applib/fonts/codepoint.c",
+        test_sources_ant_glob = "test_codepoint.c")
+
+    clar(ctx,
         sources_ant_glob = "src/fw/applib/graphics/utf8.c" \
             " src/fw/applib/graphics/framebuffer.c" \
             " src/fw/applib/graphics/gtypes.c" \
