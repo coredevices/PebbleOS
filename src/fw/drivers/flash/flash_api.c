@@ -16,7 +16,6 @@
 #include "os/mutex.h"
 #include "os/tick.h"
 #include "process_management/worker_manager.h"
-#include "services/common/analytics/analytics.h"
 #include "services/common/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -44,51 +43,6 @@ static struct FlashEraseContext {
 
 static TimerID s_erase_poll_timer;
 static TimerID s_erase_suspend_timer;
-
-static uint32_t s_analytics_read_count;
-static uint32_t s_analytics_read_bytes_count;
-static uint32_t s_analytics_write_bytes_count;
-
-static uint32_t s_system_analytics_read_bytes_count = 0;
-static uint32_t s_system_analytics_write_bytes_count = 0;
-static uint8_t s_system_analytics_erase_count = 0;
-
-void analytics_external_collect_system_flash_statistics(void) {
-  analytics_set(ANALYTICS_DEVICE_METRIC_FLASH_READ_BYTES_COUNT,
-                s_system_analytics_read_bytes_count, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_FLASH_WRITE_BYTES_COUNT,
-                s_system_analytics_write_bytes_count, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_FLASH_ERASE_COUNT,
-                s_system_analytics_erase_count, AnalyticsClient_System);
-
-  s_system_analytics_read_bytes_count = 0;
-  s_system_analytics_write_bytes_count = 0;
-  s_system_analytics_erase_count = 0;
-}
-
-void analytics_external_collect_app_flash_read_stats(void) {
-  analytics_set(ANALYTICS_APP_METRIC_FLASH_READ_COUNT,
-                s_analytics_read_count, AnalyticsClient_App);
-  analytics_set(ANALYTICS_APP_METRIC_FLASH_READ_BYTES_COUNT,
-                s_analytics_read_bytes_count, AnalyticsClient_App);
-  analytics_set(ANALYTICS_APP_METRIC_FLASH_WRITE_BYTES_COUNT,
-                s_analytics_write_bytes_count, AnalyticsClient_App);
-
-  // The overhead cost of tracking whether each flash read was due to the foreground
-  // or background app is large, so the best we can do is to attribute to both of them
-  if (worker_manager_get_current_worker_md() != NULL) {
-    analytics_set(ANALYTICS_APP_METRIC_FLASH_READ_COUNT,
-                  s_analytics_read_count, AnalyticsClient_Worker);
-    analytics_set(ANALYTICS_APP_METRIC_FLASH_READ_BYTES_COUNT,
-                  s_analytics_read_bytes_count, AnalyticsClient_Worker);
-    analytics_set(ANALYTICS_APP_METRIC_FLASH_WRITE_BYTES_COUNT,
-                  s_analytics_write_bytes_count, AnalyticsClient_Worker);
-  }
-
-  s_analytics_read_count = 0;
-  s_analytics_read_bytes_count = 0;
-  s_analytics_write_bytes_count = 0;
-}
 
 //! Assumes that s_flash_lock is held.
 static status_t prv_try_restart_interrupted_erase(bool is_subsector,
@@ -171,9 +125,6 @@ static void prv_erase_suspend_timer_cb(void *unused) {
 void flash_read_bytes(uint8_t* buffer, uint32_t start_addr,
                       uint32_t buffer_size) {
   mutex_lock(s_flash_lock);
-  s_analytics_read_count++;
-  s_analytics_read_bytes_count += buffer_size;
-  s_system_analytics_read_bytes_count += buffer_size;
   // TODO: use DMA when possible
   // TODO: be smarter about pausing erases. Some flash chips allow concurrent
   // reads while an erase is in progress, as long as the read is to another bank
@@ -199,8 +150,6 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
                        uint32_t buffer_size) {
   mutex_lock(s_flash_lock);
   stop_mode_disable(InhibitorFlash);  // FIXME: PBL-18028
-  s_analytics_write_bytes_count += buffer_size;
-  s_system_analytics_write_bytes_count += buffer_size;
   prv_erase_pause();
   if (s_erase.suspended) {
     new_timer_start(s_erase_suspend_timer, 50, prv_erase_suspend_timer_cb, NULL, 0);
@@ -287,9 +236,6 @@ static uint32_t prv_flash_erase_start(uint32_t addr,
     return 0;
   }
 
-  analytics_inc(ANALYTICS_APP_METRIC_FLASH_SUBSECTOR_ERASE_COUNT,
-                AnalyticsClient_CurrentTask);
-  s_system_analytics_erase_count++;
   status = is_subsector? flash_impl_erase_subsector_begin(addr)
                        : flash_impl_erase_sector_begin(addr);
 

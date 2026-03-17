@@ -218,7 +218,6 @@ static void prv_terminate_transfer(void *data) {
   disable_display_dma();
   display_spi_end_transaction();
 
-  analytics_stopwatch_stop(ANALYTICS_APP_METRIC_DISPLAY_WRITE_TIME);
 
   s_update_in_progress = false;
   s_terminate_pending = false;
@@ -364,9 +363,6 @@ static void prv_do_display_update(void) {
     mutex_unlock(s_display_update_mutex);
     return;
   }
-
-  analytics_stopwatch_start(ANALYTICS_APP_METRIC_DISPLAY_WRITE_TIME, PebbleTask_App);
-  analytics_inc(ANALYTICS_DEVICE_METRIC_DISPLAY_UPDATES_PER_HOUR, AnalyticsClient_System);
 
   // Communicating with the display, need intn.
   exti_enable(ICE40LP->busy_exti);
@@ -575,9 +571,4 @@ void display_set_offset(GPoint offset) {
 
 GPoint display_get_offset(void) {
   return s_disp_offset;
-}
-
-void analytics_external_collect_display_offset(void) {
-  analytics_set(ANALYTICS_DEVICE_METRIC_DISPLAY_OFFSET_X, s_disp_offset.x, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_DISPLAY_OFFSET_Y, s_disp_offset.y, AnalyticsClient_System);
 }

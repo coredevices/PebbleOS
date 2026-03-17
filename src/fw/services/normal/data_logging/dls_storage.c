@@ -451,9 +451,6 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
   bool success;
   uint8_t *tmp_buf = NULL;
 
-  // Record in metrics
-  analytics_inc(ANALYTICS_DEVICE_METRIC_DATA_LOGGING_REALLOC_COUNT, AnalyticsClient_System);
-
   // Must be called with the file closed
   PBL_ASSERTN(session->storage.fd == DLS_INVALID_FILE);
 
@@ -972,11 +969,4 @@ static bool prv_max_numbytes_cb(DataLoggingSession* session, void *data) {
   uint32_t *max_bytes = (uint32_t *)data;
   *max_bytes = MAX(*max_bytes, session->storage.num_bytes);
   return true;
-}
-
-void analytics_external_collect_dls_stats(void) {
-  uint32_t max_bytes = 0;
-  dls_list_for_each_session(prv_max_numbytes_cb, &max_bytes);
-  analytics_set(ANALYTICS_DEVICE_METRIC_DATA_LOGGING_MAX_SPOOLED_BYTES, max_bytes,
-                AnalyticsClient_System);
 }

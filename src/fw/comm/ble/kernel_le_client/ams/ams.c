@@ -16,7 +16,6 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 
-#include "services/common/analytics/analytics_event.h"
 #include "services/normal/music_internal.h"
 
 #include "system/logging.h"
@@ -156,10 +155,6 @@ static const MusicServerImplementation s_ams_music_implementation = {
 // -------------------------------------------------------------------------------------------------
 // Internal helpers
 
-static void prv_analytics_log_event_with_info(AMSAnalyticsEvent event, int32_t aux_info) {
-  analytics_event_ams(event, aux_info);
-}
-
 static void prv_perform_on_kernel_main_task(void (*callback)(void *), void *data) {
   const bool is_kernel_main = (pebble_task_get_current() == PebbleTask_KernelMain);
   if (is_kernel_main) {
@@ -263,7 +258,6 @@ static void prv_register_next_entity(void *unused) {
       // Most likely the LE connection got busted, don't think retrying will help.
       PBL_LOG_ERR("Write failed %i", e);
     }
-    prv_analytics_log_event_with_info(AMSAnalyticsEventErrorRegisterEntityWrite, e);
   }
 }
 
@@ -276,7 +270,6 @@ static bool prv_set_connected(bool connected) {
   if (has_error) {
     s_ams_client->connected = false;
     PBL_LOG_ERR("AMS could not (dis)connect to music service (%u)", connected);
-    prv_analytics_log_event_with_info(AMSAnalyticsEventErrorMusicServiceConnect, connected ? 1 : 2);
   }
   return !has_error;
 }
@@ -318,7 +311,6 @@ static bool prv_handle_player_playback_info_value(const char *value, uint32_t va
   if (value_length && !ams_util_float_string_parse(value, value_length,
                                                    multiplier[idx], &value_out)) {
     PBL_LOG_ERR("AMS playback info value failed to parse: %s", value);
-    prv_analytics_log_event_with_info(AMSAnalyticsEventErrorPlayerPlaybackInfoFloatParse, idx);
     return false /* should_continue */;
   }
 
@@ -356,7 +348,6 @@ static void prv_handle_player_playback_info_update(const AMSEntityUpdateNotifica
   } else {
     PBL_LOG_ERR("Expected CSV with 3 values:");
     PBL_HEXDUMP(LOG_LEVEL_ERROR, (const uint8_t *) update->value_str, value_length);
-    prv_analytics_log_event_with_info(AMSAnalyticsEventErrorPlayerPlaybackInfoUpdate, num_results);
   }
 }
 
@@ -377,8 +368,6 @@ static void prv_handle_player_volume_update(const AMSEntityUpdateNotification *u
   const bool success = prv_float_string_parse(update->value_str, value_length, 100, &value_out);
   if (success) {
     music_update_player_volume_percent(value_out);
-  } else {
-    prv_analytics_log_event_with_info(AMSAnalyticsEventErrorPlayerVolumeUpdate, value_length);
   }
 }
 
@@ -447,7 +436,6 @@ static void prv_handle_track_duration_update(const AMSEntityUpdateNotification *
     music_update_track_duration(duration_ms);
   } else {
     PBL_LOG_ERR("AMS duration failed to parse");
-    prv_analytics_log_event_with_info(AMSAnalyticsEventErrorTrackDurationUpdate, value_length);
   }
 }
 
@@ -598,7 +586,6 @@ void ams_handle_subscribe(BLECharacteristic subscribed_characteristic,
   }
 
   if (error != BLEGATTErrorSuccess) {
-    prv_analytics_log_event_with_info(AMSAnalyticsEventErrorSubscribe, error);
     PBL_LOG_ERR("Failed to subscribe AMS");
     return;
   }
@@ -618,12 +605,6 @@ void ams_handle_write_response(BLECharacteristic characteristic, BLEGATTError er
       (characteristic == s_ams_client->characteristics[AMSCharacteristicEntityUpdate]);
 
   const bool has_error = (error != BLEGATTErrorSuccess);
-  if (has_error) {
-    const AMSAnalyticsEvent event = is_entity_update_characteristic ?
-                                    AMSAnalyticsEventErrorRegisterEntityWriteResponse :
-                                    AMSAnalyticsEventErrorOtherWriteResponse;
-    prv_analytics_log_event_with_info(event, error);
-  }
 
   if (!is_entity_update_characteristic) {
     // We only need to act upon getting a write response of the Entity Update characteristic.
@@ -675,7 +656,6 @@ static void prv_send_command_kernel_main_task_cb(void *data) {
   const bool has_error = (error != BTErrnoOK);
   if (has_error) {
     PBL_LOG_ERR("Couldn't write command: %d", error);
-    prv_analytics_log_event_with_info(AMSAnalyticsEventErrorSendRemoteCommand, error);
   }
 }
 

@@ -63,7 +63,6 @@ static void prv_send_ping_kernel_bg_cb(void *unused) {
                                           COMM_SESSION_DEFAULT_TIMEOUT);
     if (success) {
       s_last_send_time = rtc_get_time();
-      analytics_inc(ANALYTICS_DEVICE_METRIC_PING_SENT_COUNT, AnalyticsClient_System);
     }
     PBL_LOG_DBG("Sent ping idle=%d, success=%d", (int)idle, (int)success);
   }
@@ -136,7 +135,6 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t* data, size_
 
     PongMsg *pong = (PongMsg *)data;
     PBL_LOG_DBG("Pong c=%"PRIu32, ntohl(pong->hdr.cookie));
-    analytics_inc(ANALYTICS_DEVICE_METRIC_PONG_RECEIVED_COUNT, AnalyticsClient_System);
     break;
 
   default:

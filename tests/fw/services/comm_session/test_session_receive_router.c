@@ -35,9 +35,6 @@ bool bt_driver_comm_is_current_task_send_next_task(void) {
   return false;
 }
 
-void comm_session_analytics_inc_bytes_received(CommSession *session, uint16_t length) {
-}
-
 void comm_session_analytics_open_session(CommSession *session) {
 }
 

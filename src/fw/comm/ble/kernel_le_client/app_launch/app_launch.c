@@ -5,7 +5,6 @@
 
 #include "comm/ble/gatt_client_operations.h"
 #include "services/common/analytics/analytics.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/comm_session/session.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -56,10 +55,7 @@ void app_launch_handle_read_or_notification(BLECharacteristic characteristic, co
   // If error is BLEGATTErrorSuccess, it means the Pebble app responded.
   PBL_LOG_INFO("App relaunch result: %u", error);
   if (error == BLEGATTErrorSuccess) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_BT_PEBBLE_APP_LAUNCH_SUCCESS_COUNT,
-                  AnalyticsClient_System);
   } else {
-    analytics_event_bt_app_launch_error(error);
   }
 }
 

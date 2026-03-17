@@ -8,10 +8,8 @@
 #include "process_management/worker_manager.h"
 
 #include "applib/app_logging.h"
-#include "applib/app_heap_analytics.h"
 #include "kernel/memory_layout.h"
 #include "mcu/privilege.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/system_task.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
@@ -103,10 +101,6 @@ static void prv_log_app_lr_and_pc_system_task(void *data) {
   PBL_LOG_ERR("%s fault! %s", process_string, buffer);
   PBL_LOG_ERR(" --> PC: %s LR: %s", pc_str, lr_str);
 
-  analytics_event_app_crash(&crash_info->app_uuid,
-                            (crash_info->pc_known) ? crash_info->pc : 0,
-                            (crash_info->lr_known) ? crash_info->lr : 0,
-                            crash_info->build_id);
 }
 
 //! Converts an address from an absolute address in our memory space to one that's relative to the start
@@ -171,7 +165,6 @@ NORETURN trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
       reboot_reason_set(&reason);
       reset_due_to_software_failure();
   } else {
-    app_heap_analytics_log_native_heap_oom_fault(bytes, heap_ptr);
     sys_app_fault(lr);
   }
 }

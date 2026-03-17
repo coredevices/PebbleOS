@@ -13,7 +13,6 @@
 #include "popups/health_tracking_ui.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/battery/battery_state.h"
 #include "services/common/hrm/hrm_manager_private.h"
 #include "services/common/system_task.h"

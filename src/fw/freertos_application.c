@@ -34,11 +34,8 @@
 #include "task.h"
 #include "freertos_application.h"
 
-static uint64_t s_analytics_device_sleep_cpu_cycles = 0;
-static RtcTicks s_analytics_device_stop_ticks = 0;
-
-static uint64_t s_analytics_app_sleep_cpu_cycles = 0;
-static RtcTicks s_analytics_app_stop_ticks = 0;
+static uint64_t s_analytics_sleep_cpu_cycles = 0;
+static RtcTicks s_analytics_stop_ticks = 0;
 
 static uint32_t s_last_ticks_elapsed_in_stop = 0;
 static uint32_t s_last_ticks_commanded_in_stop = 0;
@@ -157,8 +154,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       }
 #endif
 
-      s_analytics_device_sleep_cpu_cycles += cycles_elapsed;
-      s_analytics_app_sleep_cpu_cycles += cycles_elapsed;
+      s_analytics_sleep_cpu_cycles += cycles_elapsed;
     } else {
       const RtcTicks stop_duration = MIN(xExpectedIdleTime - EARLY_WAKEUP_TICKS, MAX_STOP_TICKS);
 
@@ -178,8 +174,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       // incremented
       task_watchdog_step_elapsed_time_ms((ticks_elapsed * 1000) / RTC_TICKS_HZ);
 
-      s_analytics_device_stop_ticks += ticks_elapsed;
-      s_analytics_app_stop_ticks += ticks_elapsed;
+      s_analytics_stop_ticks += ticks_elapsed;
     }
   }
 
@@ -302,8 +297,8 @@ static uint32_t s_last_ticks = 0;
 
 #if !defined(MICRO_FAMILY_SF32LB52)
 void dump_current_runtime_stats(void) {
-  uint32_t stop_ms = ticks_to_milliseconds(s_analytics_device_stop_ticks);
-  uint32_t sleep_ms = mcu_cycles_to_milliseconds(s_analytics_device_sleep_cpu_cycles);
+  uint32_t stop_ms = ticks_to_milliseconds(s_analytics_stop_ticks);
+  uint32_t sleep_ms = mcu_cycles_to_milliseconds(s_analytics_sleep_cpu_cycles);
 
   uint32_t now_ticks = rtc_get_ticks();
   uint32_t running_ms =
@@ -330,49 +325,35 @@ void dump_current_runtime_stats(void) {
                              rtc_ticks, rtos_ticks, s_ticks_corrected, s_last_ticks_elapsed_in_stop, s_last_ticks_commanded_in_stop);
   prompt_send_response(buf);
 }
-#endif
 
 void analytics_external_collect_cpu_stats(void) {
-  uint32_t stop_ms = ticks_to_milliseconds(s_analytics_device_stop_ticks);
-  uint32_t sleep_ms = mcu_cycles_to_milliseconds(s_analytics_device_sleep_cpu_cycles);
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_CPU_STOP_TIME, stop_ms, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_CPU_SLEEP_TIME, sleep_ms, AnalyticsClient_System);
+  uint32_t stop_ms = ticks_to_milliseconds(s_analytics_stop_ticks);
+  uint32_t sleep_ms = mcu_cycles_to_milliseconds(s_analytics_sleep_cpu_cycles);
 
   uint32_t now_ticks = rtc_get_ticks();
   uint32_t ms_running =
       ticks_to_milliseconds(now_ticks - s_last_ticks) - stop_ms - sleep_ms;
-  analytics_set(ANALYTICS_DEVICE_METRIC_CPU_RUNNING_TIME, ms_running, AnalyticsClient_System);
 
-  s_last_ticks = now_ticks;
-  s_analytics_device_sleep_cpu_cycles = 0;
-  s_analytics_device_stop_ticks = 0;
-}
+  // Calculate total time and percentages
+  uint32_t total_ms = ms_running + stop_ms + sleep_ms;
+  uint32_t running_pct = 0;
+  uint32_t stop_pct = 0;
+  uint32_t sleep_pct = 0;
 
-void analytics_external_collect_app_cpu_stats(void) {
-  static uint32_t s_last_ticks = 0;
-
-  uint32_t sleep_ms = mcu_cycles_to_milliseconds(s_analytics_app_sleep_cpu_cycles);
-
-  uint32_t now_ticks = rtc_get_ticks();
-  uint32_t stop_ms = ticks_to_milliseconds(s_analytics_app_stop_ticks);
-  uint32_t awake_ms = ticks_to_milliseconds(now_ticks - s_last_ticks) - stop_ms - sleep_ms;
-
-  analytics_set(ANALYTICS_APP_METRIC_CPU_RUNNING_TIME, awake_ms, AnalyticsClient_App);
-  analytics_set(ANALYTICS_APP_METRIC_CPU_SLEEP_TIME,
-                mcu_cycles_to_milliseconds(s_analytics_app_sleep_cpu_cycles),
-                AnalyticsClient_App);
-  analytics_set(ANALYTICS_APP_METRIC_CPU_STOP_TIME, stop_ms, AnalyticsClient_App);
-
-  // NOTE: When we are running, we can't really tell how much of the time was spent in each task, so
-  // the best we can do as attribute the elapsed running time to both the foreground and background worker
-  if (worker_manager_get_current_worker_md() != NULL) {
-    analytics_set(ANALYTICS_APP_METRIC_BG_CPU_RUNNING_TIME, awake_ms, AnalyticsClient_Worker);
-    analytics_set(ANALYTICS_APP_METRIC_BG_CPU_SLEEP_TIME, sleep_ms, AnalyticsClient_Worker);
-    analytics_set(ANALYTICS_APP_METRIC_BG_CPU_STOP_TIME, stop_ms, AnalyticsClient_Worker);
+  if (total_ms > 0) {
+    running_pct = (ms_running * 100) / total_ms;
+    stop_pct = (stop_ms * 100) / total_ms;
+    sleep_pct = (sleep_ms * 100) / total_ms;
   }
 
+  // STM32/NRF5: sleep0 = light sleep (WFI), sleep1 = stop mode, sleep2 = unused
+  PBL_ANALYTICS_SET_UNSIGNED(cpu_running_pct, running_pct);
+  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep0_pct, sleep_pct);
+  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep1_pct, stop_pct);
+  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep2_pct, 0);
+
   s_last_ticks = now_ticks;
-  s_analytics_app_sleep_cpu_cycles = 0;
-  s_analytics_app_stop_ticks = 0;
+  s_analytics_sleep_cpu_cycles = 0;
+  s_analytics_stop_ticks = 0;
 }
+#endif

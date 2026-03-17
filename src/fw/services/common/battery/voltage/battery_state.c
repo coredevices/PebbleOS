@@ -75,16 +75,16 @@ static void prv_update_plugged_change(void) {
 
   bool is_charging = battery_charge_controller_thinks_we_are_charging();
   if (is_charging) {
-    analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_BATTERY_CHARGE_TIME, AnalyticsClient_System);
+    PBL_ANALYTICS_TIMER_START(battery_charge_time_ms);
   } else {
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BATTERY_CHARGE_TIME);
+    PBL_ANALYTICS_TIMER_STOP(battery_charge_time_ms);
   }
 
   bool is_plugged = battery_is_usb_connected();
   if (is_plugged) {
-    analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_BATTERY_PLUGGED_TIME, AnalyticsClient_System);
+    PBL_ANALYTICS_TIMER_START(battery_plugged_time_ms);
   } else {
-    analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_BATTERY_PLUGGED_TIME);
+    PBL_ANALYTICS_TIMER_STOP(battery_plugged_time_ms);
   }
 }
 
@@ -165,8 +165,6 @@ static void prv_update_state(void *force_update) {
   }
 
   if (s_last_battery_state.skip_count == MAX_SAMPLE_SKIPS) {
-    analytics_inc(ANALYTICS_DEVICE_METRIC_BATTERY_SAMPLE_SKIP_COUNT_EXCEEDED,
-        AnalyticsClient_System);
   }
   s_last_battery_state.skip_count = 0;
 
@@ -340,25 +338,12 @@ void analytics_external_collect_battery(void) {
   // This should not be called for an hour after bootup
 
   int battery_mv = s_last_battery_state.voltage;
+  PBL_ANALYTICS_SET_UNSIGNED(battery_voltage, battery_mv);
 
   int d_mv = battery_mv - s_analytics_previous_mv;
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_VOLTAGE, battery_mv, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_VOLTAGE_DELTA, d_mv, AnalyticsClient_System);
-
-  int scaling_factor = INT32_MAX / 100; // we want to cover -100 to 100 percent
-  // Note: we assume that the watch was not charging during the hour.
-  int32_t start_percent = battery_curve_lookup_percent_with_scaling_factor(s_analytics_previous_mv,
-                                                                           false, scaling_factor);
-  int32_t curr_percent = battery_curve_lookup_percent_with_scaling_factor(battery_mv, false,
-                                                                          scaling_factor);
-  int32_t d_percent = curr_percent - start_percent;
+  PBL_ANALYTICS_SET_SIGNED(battery_voltage_delta, d_mv);
 
   s_analytics_previous_mv = battery_mv;
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT_DELTA, d_percent, AnalyticsClient_System);
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_BATTERY_PERCENT,
-                ratio32_to_percent(s_last_battery_state.percent),
-                AnalyticsClient_System);
 }
 
 static void prv_set_forced_charge_state(bool is_charging) {

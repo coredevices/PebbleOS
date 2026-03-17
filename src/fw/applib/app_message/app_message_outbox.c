@@ -260,8 +260,6 @@ AppMessageResult app_message_outbox_send(void) {
                   sizeof(AppMessageAppOutboxData) + transmission_size,
                   app_message_outbox_handle_app_outbox_message_sent, NULL);
 
-  sys_app_pp_app_message_analytics_count_sent();
-
   return APP_MSG_OK;
 }
 
@@ -303,5 +301,5 @@ AppTimer *app_message_outbox_get_ack_nack_timer(void) {
 }
 
 uint32_t app_message_outbox_get_sent_count(void) {
-  return sys_app_pp_app_message_get_sent_count();
+  return 0;
 }

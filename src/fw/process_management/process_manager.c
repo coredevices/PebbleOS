@@ -31,9 +31,6 @@
 #include "services/normal/persist.h"
 #include "services/normal/voice/voice.h"
 #include "shell/normal/watchface.h"
-#if !RECOVERY_FW
-#include "shell/normal/watchface_metrics.h"
-#endif
 
 #include "syscall/syscall.h"
 #include "system/logging.h"
@@ -360,33 +357,6 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 }
 
 // ---------------------------------------------------------------------------------------------
-extern void analytics_external_collect_app_cpu_stats(void);
-extern void analytics_external_collect_app_flash_read_stats(void);
-static void prv_handle_app_stop_analytics(const ProcessContext *const context,
-                                          PebbleTask task, bool gracefully) {
-  if (!gracefully) {
-    if (task == PebbleTask_App) {
-      analytics_inc(ANALYTICS_APP_METRIC_CRASHED_COUNT, AnalyticsClient_App);
-    } else if (task == PebbleTask_Worker) {
-      analytics_inc(ANALYTICS_APP_METRIC_BG_CRASHED_COUNT, AnalyticsClient_Worker);
-    }
-    analytics_inc(ANALYTICS_DEVICE_METRIC_APP_CRASHED_COUNT, AnalyticsClient_System);
-  }
-  if (task == PebbleTask_App) {
-    analytics_stopwatch_stop(ANALYTICS_APP_METRIC_FRONT_MOST_TIME);
-#if !RECOVERY_FW && !SHELL_SDK
-    // Stop per-watchface time tracking if this was a watchface
-    if (context->app_md->process_type == ProcessTypeWatchface) {
-      watchface_metrics_stop();
-    }
-#endif
-  }
-  analytics_external_collect_app_cpu_stats();
-  analytics_external_collect_app_flash_read_stats();
-}
-
-
-// ---------------------------------------------------------------------------------------------
 //! This method returns true if the process is safe to kill (it has exited out of it's main function). If the
 //! the process is not already safe to kill, it will "prod" it to exit, set a timer, and return false.
 //!
@@ -413,7 +383,13 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 
   // If already safe to kill, we're done
   if (context->safe_to_kill) {
-    prv_handle_app_stop_analytics(context, task, gracefully);
+#if !RECOVERY_FW && !SHELL_SDK
+    // Stop per-watchface time tracking if this was a watchface
+    if (context->app_md->process_type == ProcessTypeWatchface) {
+      PBL_ANALYTICS_TIMER_STOP(watchface_time_ms);
+    }
+#endif
+
     return true;
   }
 
@@ -446,7 +422,14 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 
     if (prv_force_stop_task_if_unprivileged(context)) {
       PBL_LOG_DBG("Got it");
-      prv_handle_app_stop_analytics(context, task, gracefully);
+
+#if !RECOVERY_FW && !SHELL_SDK
+      // Stop per-watchface time tracking if this was a watchface
+      if (context->app_md->process_type == ProcessTypeWatchface) {
+        PBL_ANALYTICS_TIMER_STOP(watchface_time_ms);
+      }
+#endif
+
       return true;
     }
 

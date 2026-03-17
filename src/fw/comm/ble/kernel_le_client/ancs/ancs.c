@@ -53,9 +53,6 @@ static void prv_perform_action(uint32_t notification_uid, ActionId action_id);
 //
 // All accesses to these variables should happen from the KernelMain task,
 // therefore no concurrent accesses can happen and no lock is needed.
-// The only exception is the s_ns_flags_used_bitset, which gets read/set in
-// analytics_external_collect_ancs_info from KernelBG. Since it's only one byte
-// it should be fine.
 
 #define INVALID_NOTIFICATION_UID 0xFFFFFFFF
 
@@ -102,9 +99,6 @@ typedef struct ANCSClient {
 } ANCSClient;
 
 static ANCSClient *s_ancs_client;
-
-// Keeps track of used NS flags for analytics purposes:
-static uint8_t s_ns_flags_used_bitset;
 
 // -----------------------------------------------------------------------------
 // State Machine
@@ -280,8 +274,6 @@ static void prv_reset_and_flush(void) {
 }
 
 static void prv_reset_due_to_parse_error(void) {
-  analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_PARSE_ERROR_COUNT,
-                AnalyticsClient_System);
   prv_reset_and_next();
 }
 
@@ -327,8 +319,6 @@ static void prv_ancs_is_alive_start_tracking(void) {
     prv_ancs_is_alive_stop_timer();
   } else {
     // Not scheduled, so analytics stopwatch would have been stopped
-    analytics_stopwatch_start(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_CONNECT_TIME,
-                              AnalyticsClient_System);
   }
   prv_ancs_is_alive_schedule_next_check();
 }
@@ -386,7 +376,6 @@ static void prv_is_ancs_alive_response_timeout_launcher_task_cb(void *data) {
 
 static void prv_is_ancs_alive_response_timeout(void *data) {
   PBL_LOG_DBG("ANCS isn't alive");
-  analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_CONNECT_TIME);
 
   launcher_task_add_callback(prv_is_ancs_alive_response_timeout_launcher_task_cb, data);
 }
@@ -515,9 +504,6 @@ static bool prv_reassembly_is_complete(const uint8_t* data, const size_t length,
 }
 
 static void prv_reassembly_handle_complete_response(const uint8_t* data, const size_t length) {
-
-  analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_COUNT, AnalyticsClient_System);
-
   switch (prv_current_command_id(data)) {
     case CommandIDGetNotificationAttributes:
       prv_handle_notification_attributes_response(data, length);
@@ -795,22 +781,7 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
     WTF;
   }
 
-  static const AnalyticsMetric metric_matrix[2][2] = {
-    [ANCSCharacteristicNotification] = {
-      [0] = ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_NS_SUBSCRIBE_COUNT,
-      [1] = ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_NS_SUBSCRIBE_FAIL_COUNT,
-    },
-    [ANCSCharacteristicData] = {
-      [0] = ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_DS_SUBSCRIBE_COUNT,
-      [1] = ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_DS_SUBSCRIBE_FAIL_COUNT,
-    }
-  };
-
-  const bool no_error = (error == BLEGATTErrorSuccess);
-  AnalyticsMetric metric = metric_matrix[characteristic_id][no_error ? 0 : 1];
-  analytics_inc(metric, AnalyticsClient_System);
-
-  if (no_error) {
+  if (error == BLEGATTErrorSuccess) {
     PBL_LOG_INFO("Hurray! ANCS subscribed: %u", characteristic_id);
 
     if (characteristic_id == ANCSCharacteristicData) {
@@ -839,7 +810,6 @@ void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num
 void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
   BLE_LOG_DEBUG("In ANCS service discovery CB");
   PBL_ASSERTN(characteristics); // should only be called if we found something!
-  analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_DISCOVERED_COUNT, AnalyticsClient_System);
 
   // Pause while re-subscribing, it will be resumed when re-subscribed:
   prv_ancs_is_alive_stop_timer();
@@ -879,9 +849,6 @@ bool ancs_can_handle_characteristic(BLECharacteristic characteristic) {
 
 static void prv_handle_ns_notification(uint32_t length, const uint8_t *notification) {
   PBL_ASSERTN(notification != NULL);
-
-  analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_NS_COUNT, AnalyticsClient_System);
-  analytics_add(ANALYTICS_DEVICE_METRIC_NOTIFICATION_BYTE_IN_COUNT, length, AnalyticsClient_System);
 
   if (length != sizeof(NSNotification)) {
     PBL_LOG_ERR("Received invalid ANCS NS Notification length=<%"PRIu32">", length);
@@ -932,9 +899,6 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
         prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       }
 
-      // See analytics_external_collect_ancs_info()
-      s_ns_flags_used_bitset |= nsnotification->event_flags;
-
       break;
     case EventIDNotificationModified:
       BLE_LOG_DEBUG("Modified ANCS notification!");
@@ -950,14 +914,11 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
 static void prv_handle_ds_notification(uint32_t length, const uint8_t *data) {
   PBL_ASSERTN(data != NULL);
 
-  analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_DS_COUNT, AnalyticsClient_System);
 
   if (length < 1) {
     PBL_LOG_ERR("Received ANCS DS notification of length 0");
     return;
   }
-
-  analytics_add(ANALYTICS_DEVICE_METRIC_NOTIFICATION_BYTE_IN_COUNT, length, AnalyticsClient_System);
 
   if (s_ancs_client->state == ANCSClientStateRequestedApp) {
     prv_handle_app_attributes_response(data, length);
@@ -1109,7 +1070,6 @@ void ancs_destroy(void) {
   if (!s_ancs_client) {
     return;
   }
-  analytics_stopwatch_stop(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_CONNECT_TIME);
   prv_ancs_is_alive_stop_timer();
 
   ancs_app_name_storage_deinit();
@@ -1118,15 +1078,4 @@ void ancs_destroy(void) {
   kernel_free(s_ancs_client);
   s_ancs_client = NULL;
   prv_put_ancs_disconnected_event();
-}
-
-// -------------------------------------------------------------------------------------------------
-// Analytics
-
-void analytics_external_collect_ancs_info(void) {
-  // Keep track of bits that are used by this version of ANCS, we log this to analytics so we get
-  // an indication of upcoming extensions to ANCS early on:
-  analytics_set(ANALYTICS_DEVICE_METRIC_NOTIFICATION_ANCS_NS_FLAGS_BITSET,
-                s_ns_flags_used_bitset, AnalyticsClient_System);
-  s_ns_flags_used_bitset = 0;
 }

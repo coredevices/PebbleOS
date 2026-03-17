@@ -137,11 +137,9 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   if (is_up) {
     PBL_LOG_DBG("Launching timeline in past mode.");
     s_timeline_args.direction = TimelineIterDirectionPast;
-    analytics_inc(ANALYTICS_DEVICE_METRIC_TIMELINE_PAST_LAUNCH_COUNT, AnalyticsClient_System);
   } else {
     PBL_LOG_DBG("Launching timeline in future mode.");
     s_timeline_args.direction = TimelineIterDirectionFuture;
-    analytics_inc(ANALYTICS_DEVICE_METRIC_TIMELINE_FUTURE_LAUNCH_COUNT, AnalyticsClient_System);
   }
   s_timeline_args.launch_into_pin = true;
   s_timeline_args.stay_in_list_view = true;

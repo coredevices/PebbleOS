@@ -35,7 +35,6 @@
 #include "shell/normal/display_calibration_prompt.h"
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
-#include "shell/normal/watchface_metrics.h"
 #include "shell/prefs.h"
 #include "system/logging.h"
 
@@ -55,7 +54,6 @@ void shell_event_loop_init(void) {
   app_outbox_service_init();
   app_message_sender_init();
   watchface_init();
-  watchface_metrics_init();
   timeline_peek_init();
 #if CAPABILITY_HAS_HEALTH_TRACKING
   // Start activity tracking if enabled
@@ -84,7 +82,6 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
       return;
 
     case PEBBLE_ALARM_CLOCK_EVENT:
-      analytics_inc(ANALYTICS_DEVICE_METRIC_ALARM_SOUNDED_COUNT, AnalyticsClient_System);
       PBL_LOG_INFO("Alarm event in the shell event loop");
       stationary_wake_up();
       alarm_popup_push_window(&e->alarm_clock);
@@ -147,7 +144,6 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
     // Sent by the comm layer once we get a response from the mobile app to a phone version request
     case PEBBLE_REMOTE_APP_INFO_EVENT:
       music_endpoint_handle_mobile_app_info_event(&e->bluetooth.app_info_event);
-      analytics_inc(ANALYTICS_DEVICE_METRIC_PHONE_APP_INFO_COUNT, AnalyticsClient_System);
       return;
 
     case PEBBLE_MEDIA_EVENT:

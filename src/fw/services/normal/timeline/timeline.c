@@ -775,8 +775,6 @@ static void prv_perform_health_response_action(const TimelineItem *item,
                                                     AttributeIdHealthActivityType,
                                                     ActivitySessionType_None);
   const time_t start_utc = attribute_get_uint32(&item->attr_list, AttributeIdTimestamp, 0);
-  analytics_event_health_insight_response(start_utc ?: item->header.timestamp, insight_type,
-                                          activity_type, action->id);
 
   // TODO: PBL-23915
   // We leak this i18n'd string because not leaking it is really hard.
@@ -879,14 +877,11 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
     case TimelineItemActionTypeAncsNegative:
     case TimelineItemActionTypeAncsDelete:
     {
-      analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_DISMISSED_COUNT, AnalyticsClient_System);
       prv_perform_ancs_negative_action(item, action);
       notification_storage_set_status(&item->header.id, TimelineItemStatusDismissed);
       break;
     }
     case TimelineItemActionTypeDismiss:
-      analytics_inc(ANALYTICS_DEVICE_METRIC_NOTIFICATION_DISMISSED_COUNT, AnalyticsClient_System);
-
       // This is a notification that was sourced from timeline. The mobile phone does not care
       // about dismissing it. We just confirm and dismiss locally.
       if (item->header.from_watch ||
@@ -974,67 +969,4 @@ const char *timeline_get_private_data_source(Uuid *parent_id) {
     }
   }
   return NULL;
-}
-
-/////////////////
-// Analytics
-
-typedef struct {
-  unsigned int calendar;
-  unsigned int other;
-} PinCount;
-
-typedef struct {
-  time_t timestamp;
-  PinCount visible_count;
-  PinCount hourly_count;
-} PinAnalyticsInfo;
-
-static bool prv_count_each(SettingsFile *file, SettingsRecordInfo *info, void *context) {
-  static const Uuid uuid_calendar_data_source = UUID_CALENDAR_DATA_SOURCE;
-
-  // check entry is valid
-  if (info->key_len != UUID_SIZE || info->val_len == 0) {
-    return true; // continue iteration
-  }
-
-  CommonTimelineItemHeader header;
-  info->get_val(file, (uint8_t *)&header, sizeof(CommonTimelineItemHeader));
-  // Flags & Status are stored inverted.
-  header.flags = ~header.flags;
-  header.status = ~header.status;
-
-  // Count up the calendar pins and other (non-system) pins that are currently visible on timeline
-  PinAnalyticsInfo *analytics_info = context;
-  if (prv_is_in_window(header.timestamp, header.duration, analytics_info->timestamp)) {
-    bool within_hour = WITHIN(header.timestamp, analytics_info->timestamp,
-                              analytics_info->timestamp + SECONDS_PER_HOUR);
-    if (uuid_equal(&header.parent_id, &uuid_calendar_data_source)) {
-      analytics_info->visible_count.calendar++;
-      analytics_info->hourly_count.calendar += within_hour;
-    } else if (!timeline_get_private_data_source(&header.parent_id) &&
-               !uuid_is_system(&header.parent_id) &&
-               app_get_install_id_for_uuid_from_registry(&header.parent_id) == INSTALL_ID_INVALID) {
-      analytics_info->visible_count.other++;
-      analytics_info->hourly_count.other += within_hour;
-    }
-  }
-
-  return true; // continue iteration
-}
-
-void analytics_external_collect_timeline_pin_stats(void) {
-  PinAnalyticsInfo analytics_info = {
-    .timestamp = rtc_get_time()
-  };
-  pin_db_each(prv_count_each, &analytics_info);
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_TIMELINE_PINS_VISIBLE_CALENDAR_COUNT,
-                analytics_info.visible_count.calendar, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_TIMELINE_PINS_VISIBLE_OTHER_COUNT,
-                analytics_info.visible_count.other, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_TIMELINE_PINS_HOURLY_CALENDAR_COUNT,
-                analytics_info.hourly_count.calendar, AnalyticsClient_System);
-  analytics_set(ANALYTICS_DEVICE_METRIC_TIMELINE_PINS_HOURLY_OTHER_COUNT,
-                analytics_info.hourly_count.other, AnalyticsClient_System);
 }

@@ -39,12 +39,6 @@ bool bt_driver_supports_bt_classic(void) {
   return true;
 }
 
-void analytics_event_bt_error(AnalyticsEvent type, uint32_t error) {
-}
-
-void analytics_inc(AnalyticsMetric metric, AnalyticsClient client) {
-}
-
 typedef bool (*BondingSyncFilterCb)(const BleBonding *bonding, void *ctx);
 const BleBonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {
   return NULL;

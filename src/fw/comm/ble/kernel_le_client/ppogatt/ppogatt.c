@@ -525,7 +525,6 @@ static void prv_start_reset(PPoGATTClient *client) {
     PBL_LOG_ERR("Disconnecting because max resets reached...");
 
     // Record the time of this disconnect request
-    analytics_event_PPoGATT_disconnect(rtc_get_time(), false);
 
     bt_lock();
     const BLECharacteristic characteristic = client->characteristics.meta;
@@ -571,7 +570,6 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
 
   // Possibly successful disconnect?
   if (s_disconnect_counter) {
-    analytics_event_PPoGATT_disconnect(rtc_get_time(), true);
   }
   ppogatt_reset_disconnect_counter();
   client->resets_counter = 0;

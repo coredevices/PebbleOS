@@ -3,7 +3,6 @@
 
 #include "app.h"
 
-#include "applib/app_heap_analytics.h"
 #include "applib/graphics/graphics_private.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window_stack.h"
@@ -106,8 +105,6 @@ static void prv_app_button_down_handler(PebbleEvent *e, void *context) {
   if (window_stack_is_animating(app_window_stack)) {
     return;
   }
-
-  sys_analytics_inc(ANALYTICS_APP_METRIC_BUTTONS_PRESSED_COUNT, AnalyticsClient_App);
 
   if (e->button.button_id == BUTTON_ID_BACK &&
       !app_window_stack_get_top_window()->overrides_back_button) {
@@ -267,5 +264,4 @@ void app_event_loop_common(void) {
 
 void app_event_loop(void) {
   app_event_loop_common();
-  app_heap_analytics_log_stats_to_app_heartbeat();
 }

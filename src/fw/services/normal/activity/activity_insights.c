@@ -12,7 +12,6 @@
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/timeline_resource_ids.auto.h"
-#include "services/common/analytics/analytics_event.h"
 #include "services/common/clock.h"
 #include "services/common/i18n/i18n.h"
 #include "services/common/system_task.h"
@@ -629,7 +628,6 @@ static bool prv_push_summary_pin(time_t pin_time_utc, time_t now_utc, Uuid *exis
 static void prv_push_reward(time_t now_utc, const RewardNotifConfig *notif_config) {
   prv_push_reward_notification(now_utc, notif_config);
   notif_config->state->last_triggered_utc = time_util_get_midnight_of(now_utc);
-  analytics_event_health_insight_created(now_utc, notif_config->insight_type, 0);
 
   // Save out the trigger time
   prv_save_state(notif_config->settings_key,
@@ -1359,7 +1357,6 @@ static void prv_push_activity_summary_notification(
       .health_card_type = HealthCardType_Activity,
     },
   };
-  analytics_event_health_insight_created(notif_time, ActivityInsightType_ActivitySummary, tier);
   prv_create_and_push_notification(&config);
   kernel_free(body);
 }
@@ -1463,7 +1460,6 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
     },
   };
 
-  analytics_event_health_insight_created(notif_time, ActivityInsightType_SleepSummary, tier);
   prv_create_and_push_notification(&config);
   kernel_free(body);
 }
@@ -1802,7 +1798,6 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
     },
   };
 
-  analytics_event_health_insight_created(notif_time, type, 0);
   prv_create_and_push_notification(&config);
 
 cleanup:

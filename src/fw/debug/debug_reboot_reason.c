@@ -17,12 +17,6 @@
 #include "system/logging.h"
 #include "system/reboot_reason.h"
 
-static void log_reboot_reason_cb(void *reason) {
-  AnalyticsEventCrash *crash_report = (AnalyticsEventCrash *)reason;
-  analytics_event_crash(crash_report->crash_code, crash_report->link_register);
-  kernel_free(crash_report);
-}
-
 static RebootReasonCode s_last_reboot_reason_code = RebootReasonCode_Unknown;
 RebootReasonCode reboot_reason_get_last_reboot_reason(void) {
   return s_last_reboot_reason_code;
@@ -42,9 +36,6 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     restarted_safely_string = "Dangerously";
   }
 
-  // Keep hourly logging to keep track of hours without crashes.
-  analytics_set(ANALYTICS_DEVICE_METRIC_SYSTEM_CRASH_CODE,
-                0xDEAD0000 | reason.code, AnalyticsClient_System);
   uint32_t lr = reason.extra.value;
 
   // Leave this NULL to do your own printing.
@@ -158,16 +149,6 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     pbl_log(LOG_LEVEL_WARNING, __FILE__, __LINE__, restarted_safely_string,
             rebooted_due_to, reason.extra.value);
   }
-
-  analytics_set(ANALYTICS_DEVICE_METRIC_SYSTEM_CRASH_LR, lr, AnalyticsClient_System);
-
-  // We need to wait for the logging service to initialize.
-  AnalyticsEventCrash *crash_report = kernel_malloc_check(sizeof(AnalyticsEventCrash));
-  *crash_report = (AnalyticsEventCrash) {
-    .crash_code = reason.code,
-    .link_register = lr
-  };
-  launcher_task_add_callback(log_reboot_reason_cb, crash_report);
 
   if (is_unread_coredump_available()) {
     PBL_LOG_INFO("Unread coredump file is present!");

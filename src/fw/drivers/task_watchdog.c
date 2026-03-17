@@ -10,7 +10,6 @@
 #include "kernel/pebble_tasks.h"
 #include "os/mutex.h"
 #include "process_management/app_manager.h"
-#include "services/common/analytics/analytics.h"
 #include "services/common/new_timer/new_timer.h"
 #include "services/common/system_task.h"
 #include "system/bootbits.h"
@@ -182,7 +181,6 @@ static void prv_app_task_throttle_start(void) {
     PBL_LOG_DBG("Starting App Throttling for %s", curr_task);
   }
 
-  analytics_inc(ANALYTICS_DEVICE_METRIC_APP_THROTTLED_COUNT, AnalyticsClient_System);
   vTaskPrioritySet(pebble_task_get_handle_for_task(PebbleTask_App),
       tskIDLE_PRIORITY | portPRIVILEGE_BIT);
 }

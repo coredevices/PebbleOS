@@ -36,10 +36,6 @@ static void prv_do_handle(PebbleEvent *e, void *context) {
        state->handlers.pebblekit_connection_handler);
 
   if (handler) {
-    if (!connected) {
-      sys_analytics_inc(ANALYTICS_DEVICE_METRIC_APP_NOTIFIED_DISCONNECTED_COUNT,
-                      AnalyticsClient_System);
-    }
     handler(connected);
   }
 }

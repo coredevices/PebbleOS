@@ -86,7 +86,6 @@ void app_message_inbox_receive(CommSession *session, AppMessagePush *push_messag
   // Verify UUID for app-bound messages:
   if (!prv_is_app_with_uuid_running(&push_message->uuid)) {
     app_message_inbox_send_ack_nack_reply(session, transaction_id, CMD_NACK);
-    sys_app_pp_app_message_analytics_count_drop();
     return;
   }
 
@@ -104,10 +103,4 @@ void app_message_inbox_receive(CommSession *session, AppMessagePush *push_messag
 
   // ... only then send the ACK:
   app_message_inbox_send_ack_nack_reply(session, transaction_id, CMD_ACK);
-
-  sys_app_pp_app_message_analytics_count_received();
-}
-
-uint32_t app_message_inbox_get_received_count(void) {
-  return sys_app_pp_app_message_get_received_count();
 }
