@@ -1,0 +1,1 @@
+test_kickstart__render_obstructed_area.pbi
