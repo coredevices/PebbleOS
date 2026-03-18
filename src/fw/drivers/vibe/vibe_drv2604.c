@@ -16,10 +16,8 @@
 #include "system/passert.h"
 #include "util/math.h"
 
-#include "services/common/analytics/analytics.h"
 #include "services/common/battery/battery_monitor.h"
 #include "services/common/battery/battery_state.h"
-#include "services/common/analytics/analytics.h"
 
 #include <string.h>
 
