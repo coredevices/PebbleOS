@@ -202,6 +202,7 @@ def build(bld):
         'moddable/modules/commodetto/gif',
         'moddable/modules/commodetto',
         'moddable/modules/io/common',
+        'moddable/modules/io/display',
         'moddable/modules/piu/All',
         'moddable/modules/piu/MC',
         'moddable/build/tmp/pebble/release/host',
