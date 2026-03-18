@@ -74,6 +74,7 @@ typedef struct {
   uint32_t    last_used;            // The region with the highest last_used count was the most recently used.
   // This value is always >= 1
   uint8_t     unread;               // non-zero if this core dump has not been read out yet
+  uint8_t     memfault_exported;    // 0xFF = not exported, 0x00 = exported to Memfault
 } CoreDumpFlashRegionHeader;
 
 // The first item in a core dump image is a CoreDumpImageHeader. That is followed by one or more
