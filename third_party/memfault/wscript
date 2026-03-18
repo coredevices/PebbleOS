@@ -45,6 +45,13 @@ def build(bld):
             "memfault-firmware-sdk/components/util/src/*.c",
             # todo, figure out memfault support for FreeRTOS V8.2.1
             # "memfault-firmware-sdk/ports/freertos/src/*.c",
+            # Panics/coredump support - we include the coredump serialization and
+            # architecture region collection, but NOT the fault handlers (PebbleOS
+            # has its own NMI-based crash handler).
+            "memfault-firmware-sdk/components/panics/src/memfault_coredump.c",
+            "memfault-firmware-sdk/components/panics/src/memfault_coredump_regions_armv7.c",
+            "memfault-firmware-sdk/components/panics/src/memfault_coredump_sdk_regions.c",
+            "memfault-firmware-sdk/components/panics/src/memfault_coredump_utils.c",
         ]
     )
 
