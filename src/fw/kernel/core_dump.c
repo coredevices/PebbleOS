@@ -330,6 +330,7 @@ static uint32_t prv_flash_start_address(bool new) {
     .magic = CORE_DUMP_FLASH_HDR_MAGIC,
     .last_used = max_last_used + 1,
     .unread = true,
+    .memfault_exported = 0xFF,  // Not yet exported; can be cleared to 0x00 without erase
   };
   prv_flash_write_bytes(&region_hdr, base_address, sizeof(region_hdr));
 
