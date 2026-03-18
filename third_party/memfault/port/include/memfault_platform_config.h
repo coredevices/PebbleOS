@@ -8,7 +8,6 @@
 #pragma once
 
 #define MEMFAULT_USE_GNU_BUILD_ID 1
-#define MEMFAULT_PLATFORM_COREDUMP_STORAGE_RAM_SIZE 8192
 #define MEMFAULT_COREDUMP_COLLECT_LOG_REGIONS 0
 #define MEMFAULT_COREDUMP_COLLECT_HEAP_STATS 1
 #define MEMFAULT_FREERTOS_PORT_HEAP_STATS_ENABLE 1
@@ -18,7 +17,17 @@
 
 #define MEMFAULT_COLLECT_MPU_STATE 1
 
-#define MEMFAULT_COREDUMP_COMPUTE_THREAD_STACK_USAGE 1
+// We provide our own RAM-backed coredump storage (not in .noinit, since noinit
+// doesn't survive HAL_PMU_Reboot on SF32LB52). The Memfault coredump is
+// reconstructed from the PebbleOS flash coredump after reboot.
+#define MEMFAULT_PLATFORM_COREDUMP_STORAGE_USE_RAM 0
+#define MEMFAULT_PLATFORM_COREDUMP_STORAGE_USE_FLASH 0
+#define MEMFAULT_PLATFORM_COREDUMP_STORAGE_REGIONS_CUSTOM 1
+#define MEMFAULT_PLATFORM_COREDUMP_STORAGE_RAM_SIZE 32768
+
+// We don't want Memfault's FreeRTOS task tracking; we reconstruct thread info
+// from the PebbleOS coredump instead.
+#define MEMFAULT_COREDUMP_COMPUTE_THREAD_STACK_USAGE 0
 
 // Todo, we will hook more deeply into the Pebble logging system
 #define MEMFAULT_PLATFORM_HAS_LOG_CONFIG 0
