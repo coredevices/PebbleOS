@@ -51,7 +51,7 @@ static bool prv_app_filter_callback(struct AppMenuDataSource *source, AppInstall
 
 static uint16_t prv_transform_index(AppMenuDataSource *data_source, uint16_t original_index,
                                     void *context) {
-#if (SHELL_SDK && CAPABILITY_HAS_SDK_SHELL4)
+#if SHELL_SDK
   // We want the newest installed developer app to appear at the top
   // This works at the moment because there is only one system watchface, TicToc
   return app_menu_data_source_get_count(data_source) - 1 - original_index;
