@@ -57,11 +57,6 @@ void services_common_init(void) {
 #if CAPABILITY_HAS_BUILTIN_HRM
   hrm_manager_init();
 #endif
-
-  // We only use the factory registry on tintins and biancas
-#ifdef MICRO_FAMILY_STM32F2
-  factory_registry_init();
-#endif
 }
 
 static struct ServiceRunLevelSetting s_runlevel_settings[] = {
