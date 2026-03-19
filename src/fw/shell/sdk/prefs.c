@@ -137,7 +137,6 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   return false;
 }
 
-#if CAPABILITY_HAS_SDK_SHELL4
 void watchface_set_default_install_id(AppInstallId app_id) {
   mutex_lock(s_mutex);
   Uuid uuid;
@@ -169,14 +168,6 @@ AppInstallId watchface_get_default_install_id(void) {
   }
   return app_id;
 }
-#else
-AppInstallId watchface_get_default_install_id(void) {
-  return APP_ID_SDK;
-}
-
-void watchface_set_default_install_id(AppInstallId id) {
-}
-#endif
 
 void system_theme_set_content_size(PreferredContentSize content_size) {
   mutex_lock(s_mutex);

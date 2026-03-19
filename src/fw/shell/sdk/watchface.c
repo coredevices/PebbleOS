@@ -40,7 +40,6 @@ static void prv_launch_app_via_button(AppLaunchEventConfig *config,
   app_manager_put_launch_app_event(config);
 }
 
-#if CAPABILITY_HAS_SDK_SHELL4
 static void prv_launch_launcher(ClickRecognizerRef recognizer, void *data) {
   static const LauncherMenuArgs s_launcher_args = { .reset_scroll = true };
   prv_launch_app_via_button(&(AppLaunchEventConfig) {
@@ -81,18 +80,14 @@ static void prv_watchface_configure_click_handlers(void) {
   prv_configure_click(BUTTON_ID_DOWN, prv_launch_timeline);
   prv_configure_click(BUTTON_ID_UP, prv_launch_timeline);
 }
-#endif
 
 void watchface_init(void) {
-#if CAPABILITY_HAS_SDK_SHELL4
   WatchfaceData *data = &s_watchface_data;
   click_manager_init(&data->click_manager);
   prv_watchface_configure_click_handlers();
-#endif
 }
 
 void watchface_handle_button_event(PebbleEvent *e) {
-#if CAPABILITY_HAS_SDK_SHELL4
   // Only handle button press if app state indicates that the app is still running
   // which is not in the process of closing
   WatchfaceData *data = &s_watchface_data;
@@ -110,15 +105,6 @@ void watchface_handle_button_event(PebbleEvent *e) {
       break;
     }
   }
-#else
-  if ((e->button.button_id == BUTTON_ID_SELECT) && (e->type == PEBBLE_BUTTON_DOWN_EVENT)) {
-    app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-      .id = system_app_state_machine_get_last_registered_app(),
-      .common.reason = APP_LAUNCH_USER,
-      .common.button = e->button.button_id,
-    });
-  }
-#endif
 }
 
 void watchface_reset_click_manager(void) {

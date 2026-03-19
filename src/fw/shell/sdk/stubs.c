@@ -62,15 +62,6 @@ AppInstallId worker_preferences_get_default_worker(void) {
   return INSTALL_ID_INVALID;
 }
 
-#if !CAPABILITY_HAS_SDK_SHELL4
-const char *app_custom_get_title(AppInstallId id) {
-  return NULL;
-}
-
-void customizable_app_protocol_msg_callback(void *session, const uint8_t* data,
-                                            size_t length) {
-}
-#endif
 
 // Used by the alarm service to add alarm pins to the timeline
 const PebbleProcessMd* alarms_app_get_info(void) {
@@ -85,13 +76,6 @@ const PebbleProcessMd* alarms_app_get_info(void) {
   };
   return (const PebbleProcessMd*) &s_alarms_app_info;
 }
-
-#if !CAPABILITY_HAS_SDK_SHELL4
-#include "apps/system/launcher/launcher.h"
-const LauncherDrawState *launcher_app_get_draw_state(void) {
-  return NULL;
-}
-#endif
 
 void analytics_external_update(void) {
 }

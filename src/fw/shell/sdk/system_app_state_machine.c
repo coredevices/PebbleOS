@@ -21,17 +21,14 @@ const PebbleProcessMd *system_app_state_machine_system_start(void) {
     return panic_app_get_app_info();
   }
 
-#if CAPABILITY_HAS_SDK_SHELL4
   const AppInstallId watchface_app_id = watchface_get_default_install_id();
   if (watchface_app_id != INSTALL_ID_INVALID) {
     return app_install_get_md(watchface_app_id, false /* worker */);
   }
-#endif
 
   return sdk_app_get_info();
 }
 
-#if CAPABILITY_HAS_SDK_SHELL4
 //! @return True if the currently running app is an installed watchface
 static bool prv_current_app_is_watchface(void) {
   return app_install_is_watchface(app_manager_get_current_app_id());
@@ -52,29 +49,17 @@ const PebbleProcessMd* system_app_state_machine_get_default_app(void) {
   return launcher_menu_app_get_app_info();
 }
 
-#else
-AppInstallId system_app_state_machine_get_last_registered_app(void) {
-  return APP_ID_SDK;
-}
-
-const PebbleProcessMd* system_app_state_machine_get_default_app(void) {
-  return sdk_app_get_info();
-}
-#endif
-
 void system_app_state_machine_register_app_launch(AppInstallId app_id) {
   if (app_install_id_from_app_db(app_id)) {
     shell_sdk_set_last_installed_app(app_id);
   }
 
-#if CAPABILITY_HAS_SDK_SHELL4
   if (app_id == APP_ID_LAUNCHER_MENU) {
     s_rooted_in_watchface = false;
   } else if (app_install_is_watchface(app_id)) {
     s_rooted_in_watchface = true;
   }
   // Other app launches don't modify our root so just ignore them.
-#endif
 }
 
 void system_app_state_machine_panic(void) {

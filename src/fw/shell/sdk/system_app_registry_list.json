@@ -36,14 +36,12 @@
     {
       "id": -3,
       "enum": "LAUNCHER_MENU",
-      "md_fn": "launcher_menu_app_get_app_info",
-      "ifdefs": ["CAPABILITY_HAS_SDK_SHELL4=1"]
+      "md_fn": "launcher_menu_app_get_app_info"
     },
     {
       "id": -4,
       "enum": "WATCHFACES",
       "md_fn": "watchfaces_get_app_info",
-      "ifdefs": ["CAPABILITY_HAS_SDK_SHELL4=1"],
       "color_argb8": "GColorJazzberryJamARGB8"
     }
   ],

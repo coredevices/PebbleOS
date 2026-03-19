@@ -643,11 +643,7 @@ def _build_normal(bld):
     if bld.env.NORMAL_SHELL == 'sdk':
         source_dirs.append('apps/sdk/**')
         source_dirs.append('apps/system/timeline')
-        if bld.capability('HAS_SDK_SHELL4'):
-            source_dirs.append('apps/system/launcher/default/**')
-        else:
-            excludes.append('process_management/app_custom_icon.c')
-            excludes.append('process_management/app_menu_data_source.c')
+        source_dirs.append('apps/system/launcher/default/**')
     else:
         source_dirs.extend(('apps/%s/**' % d for d in ('system', 'watch')))
         if bld.is_spalding() and bld.env.BOARD != 'spalding_gabbro':
@@ -683,8 +679,7 @@ def _build_normal(bld):
 
     if bld.env.NORMAL_SHELL == 'sdk':
         sources.append('apps/system/app_fetch_ui.c')
-        if bld.capability('HAS_SDK_SHELL4'):
-            sources.append('apps/system/watchfaces.c')
+        sources.append('apps/system/watchfaces.c')
 
     gettexts = []
     gettexts.extend(sources)
