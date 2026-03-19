@@ -204,7 +204,7 @@ static void prv_handle_modal_to_app_transition_hidden_and_unfocused(void) {
 }
 
 static void prv_handle_app_to_modal_transition_focus(void) {
-#if !RECOVERY_FW && (!SHELL_SDK || CAPABILITY_HAS_SDK_SHELL4)
+#if !RECOVERY_FW && !SHELL_SDK
   watchface_reset_click_manager();
 #endif
 
