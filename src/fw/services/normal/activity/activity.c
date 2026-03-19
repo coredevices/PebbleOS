@@ -82,19 +82,28 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 
   const uint32_t last_toggled_ts = s_activity_state.hr.toggled_sampling_at_ts;
 
+  // Check if the watch is face up or face down (flat = likely off wrist)
+  const uint8_t z_axis = s_activity_state.last_orientation >> 4;
+  const bool watch_is_flat = z_axis == 0 || z_axis == 8;
+
   bool should_toggle = false;
   if (s_activity_state.hr.currently_sampling) {
     // If we are currently sampling, turn off when:
     // - We reach the end of our maximum time on, ACTIVITY_DEFAULT_HR_ON_TIME_SEC
     // - We get ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT good quality samples
     // - We get ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT excellent quality samples
+    // - The watch is flat (likely off wrist, no point wasting battery)
     const uint32_t turn_off_at = last_toggled_ts + ACTIVITY_DEFAULT_HR_ON_TIME_SEC;
     const bool good_samples_req_met =
         (s_activity_state.hr.num_good_quality_samples >= ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT);
     const bool excellent_samples_req_met =
         (s_activity_state.hr.num_excellent_samples >= ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT);
-    if ((turn_off_at <= now_ts) || good_samples_req_met || excellent_samples_req_met) {
+    if ((turn_off_at <= now_ts) || good_samples_req_met || excellent_samples_req_met ||
+        watch_is_flat) {
       should_toggle = true;
+      if (watch_is_flat) {
+        PBL_LOG_INFO("Stopping HRM sampling: watch is flat(ish)");
+      }
     }
   } else {
     // If we are not currently sampling, turn on after ACTIVITY_DEFAULT_HR_PERIOD_SEC
@@ -105,11 +114,6 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
   }
 
   if (should_toggle) {
-    // Check to see if the watch is face up or face down. If it is assume the watch is off wrist
-    // The z-axis is encoded in the 4 most significant bits of the orientation
-    const uint8_t z_axis = s_activity_state.last_orientation >> 4;
-    const bool watch_is_flat = z_axis == 0 || z_axis == 8;
-
     const bool should_be_sampling = !s_activity_state.hr.currently_sampling && !watch_is_flat;
     if (!s_activity_state.hr.currently_sampling && watch_is_flat) {
       PBL_LOG_INFO("Not subscribing to HRM: watch is flat(ish)");
@@ -146,9 +150,9 @@ T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) 
                        (int8_t) hrm_event->bpm.quality);
 
     // Perform a basic validity check so we only proceed with reasonable data
-    // TODO: Use quality to filter out some readings,
-    // TODO PBL-40784: Use HRMQuality_OffWrist as a special case to slow down the HRM subscription
+    // TODO: Use quality to filter out some readings
     bool valid_hr_reading = true;
+
     if (hrm_event->bpm.bpm < ACTIVITY_DEFAULT_MIN_HR ||
         hrm_event->bpm.bpm > ACTIVITY_DEFAULT_MAX_HR) {
       valid_hr_reading = false;

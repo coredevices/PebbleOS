@@ -2387,6 +2387,29 @@ void test_activity__hrm_sampling_period(void) {
 
 
 // ---------------------------------------------------------------------------------------
+// Test that HRM sampling stops mid-window when the watch goes flat
+void test_activity__hrm_stops_when_flat(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+  s_test_alg_state.orientation = 0x11; // Not flat
+
+  // Advance to the first sampling window
+  prv_advance_time_hr(ACTIVITY_DEFAULT_HR_PERIOD_SEC, 100 /*bpm*/, HRMQuality_Good,
+                      false /*force_continuous*/);
+  cl_assert_equal_i(s_hrm_manager_update_interval, 1);
+
+  // Simulate a few seconds of sampling, then watch goes flat mid-window
+  prv_advance_time_hr(5, 100 /*bpm*/, HRMQuality_Acceptable, false /*force_continuous*/);
+  cl_assert_equal_i(s_hrm_manager_update_interval, 1); // Still sampling
+
+  s_test_alg_state.orientation = 0x00; // Watch goes flat
+  prv_advance_time_hr(1, 100 /*bpm*/, HRMQuality_Acceptable, false /*force_continuous*/);
+  // Should have stopped sampling because watch is flat
+  cl_assert(s_hrm_manager_update_interval > SECONDS_PER_HOUR);
+}
+
+
+// ---------------------------------------------------------------------------------------
 // Test that average heart rate is reported correctly
 void test_activity__hrm_median(void) {
   int32_t median, total_weight;
