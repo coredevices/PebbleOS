@@ -42,10 +42,19 @@ class CoredumpAnalyzer:
 
     def create_gdb_script(self):
         """Create a GDB script with commands to extract relevant information."""
-        commands = [
+        # GDB --batch aborts on errors in sourced command files (e.g. if a
+        # thread's stack is inaccessible).  Wrap each command so that errors
+        # are printed but execution continues.
+        gdb_commands = [
             # Load the files
             f"file {self.elf_file}",
             f"core-file {self.coredump_file}",
+            "",
+            # Safety limits: corrupted coredumps can cause GDB to chase
+            # garbage frame pointers or print huge data structures forever.
+            "set backtrace limit 50",
+            "set print elements 256",
+            "set print repeats 10",
             "",
             # Basic info
             "echo \\n=== BASIC INFORMATION ===\\n",
@@ -110,7 +119,28 @@ class CoredumpAnalyzer:
             "quit",
         ]
 
-        return "\n".join(commands)
+        # Wrap each non-trivial command in a python try/except so that GDB
+        # --batch does not abort the entire script on the first error.
+        lines = []
+        for cmd in gdb_commands:
+            if (
+                not cmd
+                or cmd.startswith("echo ")
+                or cmd.startswith("set ")
+                or cmd.startswith("file ")
+                or cmd.startswith("core-file ")
+                or cmd == "quit"
+            ):
+                lines.append(cmd)
+            else:
+                lines.append(
+                    "python"
+                    f"\ntry:\n    gdb.execute({cmd!r})"
+                    f"\nexcept gdb.error as e:\n    print('Error: %s' % e)"
+                    "\nend"
+                )
+
+        return "\n".join(lines)
 
     def analyze(self):
         """Run GDB with the script and capture output."""
@@ -135,6 +165,7 @@ class CoredumpAnalyzer:
                 capture_output=True,
                 text=True,
                 check=False,
+                timeout=60,
             )
 
             # Clean up temporary file
@@ -182,6 +213,13 @@ class CoredumpAnalyzer:
 
             return result.returncode == 0
 
+        except subprocess.TimeoutExpired:
+            os.unlink(script_path)
+            print(
+                "Error: GDB timed out after 1 minute. "
+                "The coredump may contain corrupted data structures."
+            )
+            return False
         except FileNotFoundError:
             print(
                 f"Error: {self.gdb_executable} not found. "
