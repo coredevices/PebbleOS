@@ -26,6 +26,8 @@
 
 #include <inttypes.h>
 
+#include "drivers/rtc.h"
+
 //! See https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=22511665
 //! for detailed information regarding the PPoGATT protocol state machine.
 
@@ -127,6 +129,9 @@ typedef struct PPoGATTClient {
   //! @note Each PPoGATT client (transport) is responsible for managing the CommSession's lifecycle,
   //! by calling comm_session_open / comm_session_close at the appropriate times.
   CommSession *session;
+
+  //! Tick count when this client was created, for measuring handshake duration
+  RtcTicks created_ticks;
 } PPoGATTClient;
 
 // -------------------------------------------------------------------------------------------------
@@ -357,6 +362,7 @@ static PPoGATTClient *prv_create_client(TimerID timer) {
   *client = (PPoGATTClient){};
   client->app_uuid = UUID_INVALID;
   client->rx_ack_timer = timer;
+  client->created_ticks = rtc_get_ticks();
   s_ppogatt_head = (PPoGATTClient *) list_prepend((ListNode *)s_ppogatt_head, &client->node);
   if (!regular_timer_is_scheduled(&s_ack_timer)) {
     s_ack_timer.cb = prv_timer_callback;
@@ -368,6 +374,9 @@ static PPoGATTClient *prv_create_client(TimerID timer) {
 // -------------------------------------------------------------------------------------------------
 
 static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, DeleteReason reason) {
+  const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+  PBL_LOG_INFO("PPoGATT client deleted: state=%u reason=%u disconnected=%u after %"PRIu32"ms",
+          client->state, reason, is_disconnected, elapsed_ms);
   // Unsubscribe from Data characteristic:
   if (client->state > StateDisconnectedSubscribingData && !is_disconnected) {
     BLECharacteristic data_char = client->characteristics.data;
@@ -602,8 +611,12 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
     }
   }
 
-  PBL_LOG_DBG("Hurray! PPoGATT Session is opened (Vers: %d TXW: %d RXW: %d)!",
-          client->version, client->out.tx_window_size, client->out.rx_window_size);
+  {
+    const uint32_t elapsed_ms =
+        (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+    PBL_LOG_INFO("Hurray! PPoGATT Session is opened (Vers: %d TXW: %d RXW: %d) after %"PRIu32"ms!",
+            client->version, client->out.tx_window_size, client->out.rx_window_size, elapsed_ms);
+  }
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -754,11 +767,15 @@ static void prv_meta_read_retry_timer_cb(void *data) {
 
 static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value,
                                  size_t value_length, BLEGATTError error) {
+  const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
   PBL_ASSERTN(client->state == StateDisconnectedReadingMeta);
   if (error != BLEGATTErrorSuccess) {
+    PBL_LOG_ERR("PPoGATT meta read failed: err=0x%x after %"PRIu32"ms (retry %u/%u)",
+            error, elapsed_ms, client->meta_read_retries, PPOGATT_META_READ_RETRY_COUNT_MAX);
     // GATT read failed - this is retriable since the mobile app may not be ready yet
     goto handle_retriable_error;
   }
+  PBL_LOG_INFO("PPoGATT meta read success after %"PRIu32"ms, len=%zu", elapsed_ms, value_length);
   if (value_length < sizeof(PPoGATTMetaV0)) {
     goto handle_error;
   }
@@ -935,6 +952,8 @@ void ppogatt_invalidate_all_references(void) {
 }
 
 void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
+  PBL_LOG_INFO("PPoGATT service discovered, starting handshake");
+
   // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
   // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
   // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
@@ -954,6 +973,8 @@ void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
     client->characteristics.meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.data = characteristics[PPoGATTCharacteristicData];
 
+    PBL_LOG_DBG("PPoGATT reading meta characteristic");
+
     // Release bt_lock before calling gatt_client_op_read to avoid recursive lock deadlock.
     // gatt_client_op_read manages bt_lock internally.
     bt_unlock();
@@ -964,6 +985,7 @@ void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
     bt_lock();
 
     if (result != BTErrnoOK) {
+      PBL_LOG_ERR("PPoGATT meta read initiation failed: err=0x%x", result);
       // Read failed, probably disconnected or insufficient resources
       prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataReadFailure);
     }
@@ -999,13 +1021,21 @@ void ppogatt_handle_subscribe(BLECharacteristic characteristic,
     }
     PBL_ASSERTN(client->state == StateDisconnectedSubscribingData);
     if (error) {
-      PBL_LOG_ERR("PPoGATT Client failed to subscribe to Data");
+      const uint32_t elapsed_ms =
+          (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+      PBL_LOG_ERR("PPoGATT subscribe failed: err=0x%x after %"PRIu32"ms", error, elapsed_ms);
       prv_delete_client(client, false /* is_disconnected */, DeleteReason_SubscribeFailure);
       goto unlock;
     }
     if (!is_subscribed) {
       // Unsubscribed due to removed client
       goto unlock;
+    }
+    {
+      const uint32_t elapsed_ms =
+          (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+      PBL_LOG_INFO("PPoGATT subscribed to Data after %"PRIu32"ms, sending ResetRequest",
+              elapsed_ms);
     }
     prv_start_reset(client);
   }
