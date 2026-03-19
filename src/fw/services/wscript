@@ -32,15 +32,12 @@ def build(bld):
 
             # Platform based excludes
             if bld.is_asterix():
-                excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/default/compositor_modal_transitions.*')
                 excludes.append('common/battery/voltage/**')
             elif bld.is_obelix() or bld.is_getafix():
-                excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
                 excludes.append('common/battery/voltage/**')
             else:
-                excludes.append('common/legacy/*registry*.c')
                 excludes.append('common/battery/nrf_fuel_gauge/**')
 
                 if bld.is_silk():
