@@ -23,6 +23,7 @@
 #include "stubs_print.h"
 #include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
+#include "stubs_rtc.h"
 #include "stubs_serial.h"
 
 // Fakes
