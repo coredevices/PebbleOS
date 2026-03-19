@@ -231,19 +231,25 @@ static int prv_nimble_store_write_sec(const int obj_type,
 static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_sec *key_sec) {
   BTDeviceInternal device;
   BleStoreValueSec *s;
+  ListNode **sec_list = prv_find_sec_list_for_obj_type(obj_type);
 
   bt_lock();
   s = prv_nimble_store_find_sec(obj_type, key_sec);
-  bt_unlock();
-
   if (s == NULL) {
+    bt_unlock();
     return BLE_HS_ENOENT;
   }
 
-  // NOTE: deletion will wipe both PEER and OUR sec data, regardless of which
-  // object type was passed in this call as they are stored together. This is
-  // handled by bt_driver_handle_host_removed_bonding(), called internally by
-  // bt_persistent_storage_delete_ble_pairing_by_addr().
+  // Remove from in-memory list before calling into persistent storage,
+  // so that NimBLE's ble_store_util_delete_all() loop terminates correctly.
+  // Previously we relied on bt_driver_handle_host_removed_bonding() to remove
+  // the entry as a side-effect, but that reads the identity from SPRF which
+  // may already be erased by a prior iteration, causing an infinite loop.
+  list_remove((ListNode *)s, sec_list, NULL);
+  bt_unlock();
+
+  kernel_free(s);
+
   nimble_addr_to_pebble_device(&key_sec->peer_addr, &device);
   bt_persistent_storage_delete_ble_pairing_by_addr(&device);
 
