@@ -1373,6 +1373,7 @@ void ppogatt_destroy(void) {
     }
   }
   bt_unlock();
+  ppogatt_reset_disconnect_counter();
 }
 
 // -------------------------------------------------------------------------------------------------
