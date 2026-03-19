@@ -660,6 +660,11 @@ void activity_algorithm_minute_handler(time_t utc_sec, AlgMinuteRecord *record_o
   record_out->data.base.orientation = s_test_alg_state.orientation;
 }
 
+bool activity_algorithm_get_orientation(uint8_t *orientation) {
+  *orientation = s_test_alg_state.orientation;
+  return true;
+}
+
 bool activity_algorithm_dump_minute_data_to_log(void) {
   return false;
 }

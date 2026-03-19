@@ -1011,6 +1011,17 @@ bool activity_algorithm_get_steps(uint16_t *steps) {
 
 
 // ------------------------------------------------------------------------------------
+bool activity_algorithm_get_orientation(uint8_t *orientation) {
+  if (!prv_lock()) {
+    return false;
+  }
+  kalg_get_orientation(s_alg_state->k_state, orientation);
+  prv_unlock();
+  return true;
+}
+
+
+// ------------------------------------------------------------------------------------
 bool activity_algorithm_get_step_rate(uint16_t *steps, uint32_t *elapsed_ms, time_t *end_sec) {
   if (!prv_lock()) {
     return false;

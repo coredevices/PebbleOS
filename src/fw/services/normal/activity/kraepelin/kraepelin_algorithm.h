@@ -112,6 +112,12 @@ uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *samples, uint32_t 
 // @param[out] still true if no movement above noise threshold was detected
 void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bool *still);
 
+// Return the current orientation estimate based on accumulated accel data since the last
+// minute stats reset. Unlike kalg_minute_stats, this does not reset the accumulators.
+// @param[in] state the state structure passed into kalg_init
+// @param[out] orientation the orientation value is returned here
+void kalg_get_orientation(KAlgState *state, uint8_t *orientation);
+
 // Used by unit tests - run the partial epoch that hasn't been processed yet by
 // kalg_analyze_samples()
 // @param[in] state the state structure passed into kalg_init

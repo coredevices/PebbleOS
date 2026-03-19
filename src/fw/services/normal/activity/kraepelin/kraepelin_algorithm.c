@@ -1359,6 +1359,18 @@ void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bo
 
 
 // ------------------------------------------------------------------------------------
+void kalg_get_orientation(KAlgState *state, uint8_t *orientation) {
+  PBL_ASSERTN(state != NULL);
+  uint8_t theta = prv_get_angle_encoding(state->summary_mean[0], state->summary_mean[1],
+                                         KALG_NUM_ANGLES);
+  int16_t xy_vm = prv_isqrt(state->summary_mean[0] * state->summary_mean[0]
+                            + state->summary_mean[1] * state->summary_mean[1]);
+  uint8_t phi_i = prv_get_angle_encoding(state->summary_mean[2], xy_vm, KALG_NUM_ANGLES);
+  *orientation = KALG_NUM_ANGLES * phi_i + theta;
+}
+
+
+// ------------------------------------------------------------------------------------
 uint32_t kalg_analyze_finish_epoch(KAlgState *state) {
   PBL_ASSERTN(state != NULL);
   uint32_t new_steps = 0;

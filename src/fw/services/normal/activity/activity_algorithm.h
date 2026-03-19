@@ -169,6 +169,12 @@ void activity_algorithm_minute_handler(time_t utc_sec, AlgMinuteRecord *record_o
 //! @return true if success
 bool activity_algorithm_get_steps(uint16_t *steps);
 
+//! Return the current orientation estimate based on accumulated accel data since the last
+//! minute handler call.
+//! @param[out] orientation the orientation value is returned here
+//! @return true if success
+bool activity_algorithm_get_orientation(uint8_t *orientation);
+
 //! Tells the activity algorithm whether or not it should automatically track activities
 //! @param enable true to start tracking, false to stop tracking
 void activity_algorithm_enable_activity_tracking(bool enable);

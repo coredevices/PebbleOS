@@ -83,7 +83,11 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
   const uint32_t last_toggled_ts = s_activity_state.hr.toggled_sampling_at_ts;
 
   // Check if the watch is face up or face down (flat = likely off wrist)
-  const uint8_t z_axis = s_activity_state.last_orientation >> 4;
+  // Use the real-time orientation from the algorithm when available, otherwise fall back to the
+  // cached value from the last minute handler call.
+  uint8_t orientation = s_activity_state.last_orientation;
+  activity_algorithm_get_orientation(&orientation);
+  const uint8_t z_axis = orientation >> 4;
   const bool watch_is_flat = z_axis == 0 || z_axis == 8;
 
   bool should_toggle = false;
