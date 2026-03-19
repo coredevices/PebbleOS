@@ -15,10 +15,13 @@
 #include "kernel/pbl_malloc.h"
 #include "gatt_client_accessors.h"
 #include "system/logging.h"
+#include "drivers/rtc.h"
 
 #include <bluetooth/gatt.h>
 #include <bluetooth/gatt_discovery.h>
 #include <btutil/bt_device.h>
+
+#include <inttypes.h>
 
 // TODO: virtualize the gatt_client_discovery_discover_all() call
 
@@ -405,6 +408,9 @@ bool bt_driver_cb_gatt_client_discovery_complete(GAPLEConnection *connection, BT
     }
 
     if (errno == BTErrnoOK) {
+      const uint32_t discovery_ms =
+          (rtc_get_ticks() - connection->ticks_since_connection) * 1000 / RTC_TICKS_HZ;
+      PBL_LOG_INFO("GATT service discovery completed in %"PRIu32"ms", discovery_ms);
       // Completion of service discovery implies we are about to have more BLE
       // traffic (for example, ANCS notifications, PPoG communication). Keep the
       // channel at a high throughput speed for a little bit longer to handle these bursts.
