@@ -21,11 +21,6 @@ uint32_t battery_curve_get_hours_remaining(uint32_t percent_remaining) {
   return ((BOARD_CONFIG_POWER.battery_capacity_hours * percent_remaining) / 100);
 }
 
-#if CAPABILITY_HAS_LED
-// TODO: Probably can go away
-void battery_curve_set_compensation(BatteryCurveVoltageCompensationKey key, int mv) {
-}
-#endif
 
 // Stubs for tests (need fixing/test adjustments)
 int32_t battery_curve_lookup_percent_with_scaling_factor(
