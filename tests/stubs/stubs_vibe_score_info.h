@@ -8,3 +8,7 @@
 bool vibe_score_info_is_valid(VibeScoreId id) {
   return true;
 }
+
+const char *vibe_score_info_get_name(VibeScoreId id) {
+  return "test";
+}

@@ -56,26 +56,40 @@ uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
   return 0;
 }
 
-uint8_t activity_prefs_heart_get_resting_hr(void) {
+uint8_t WEAK activity_prefs_heart_get_resting_hr(void) {
   return 70;
 }
 
-uint8_t activity_prefs_heart_get_elevated_hr(void) {
+uint8_t WEAK activity_prefs_heart_get_elevated_hr(void) {
   return 100;
 }
 
-uint8_t activity_prefs_heart_get_max_hr(void) {
+uint8_t WEAK activity_prefs_heart_get_max_hr(void) {
   return 190;
 }
 
-uint8_t activity_prefs_heart_get_zone1_threshold(void) {
+uint8_t WEAK activity_prefs_heart_get_zone1_threshold(void) {
   return 130;
 }
 
-uint8_t activity_prefs_heart_get_zone2_threshold(void) {
+uint8_t WEAK activity_prefs_heart_get_zone2_threshold(void) {
   return 154;
 }
 
-uint8_t activity_prefs_heart_get_zone3_threshold(void) {
+uint8_t WEAK activity_prefs_heart_get_zone3_threshold(void) {
   return 172;
+}
+
+bool WEAK activity_is_initialized(void) {
+  return true;
+}
+
+void WEAK activity_set_enabled(bool enabled) {}
+
+bool WEAK activity_start_tracking(bool test_mode) {
+  return true;
+}
+
+bool WEAK activity_stop_tracking(void) {
+  return true;
 }

@@ -34,6 +34,7 @@
 #include "stubs_system_theme.h"
 #include "stubs_task_watchdog.h"
 #include "stubs_ambient_light.h"
+#include "stubs_activity.h"
 
 void prefs_sync_init(void) {
 }
