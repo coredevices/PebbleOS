@@ -8,7 +8,6 @@
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
 #include "applib/ui/dialogs/confirmation_dialog.h"
-#include "apps/prf/mfg_hrm.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"
@@ -30,12 +29,6 @@ static void prv_launch_app_and_return_cb(void *data) {
   s_relaunch_menu = true;
   app_manager_launch_new_app(&(AppLaunchConfig) { .md = data });
 }
-
-#ifdef CONFIG_HRM
-static void prv_select_hrm(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_hrm_app_get_info());
-}
-#endif
 
 #ifdef MANUFACTURING_FW
 static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context) {
@@ -79,9 +72,6 @@ static void prv_window_load(Window *window) {
   GRect bounds = window_layer->bounds;
 
   const SimpleMenuItem menu_items[] = {
-#ifdef CONFIG_HRM
-    { .title = "Test HRM",          .callback = prv_select_hrm },
-#endif
 #ifdef MANUFACTURING_FW
     { .title = "Load PRF",          .callback = prv_select_load_prf },
 #endif
