@@ -14,9 +14,7 @@
 typedef enum {
   SettingsMenuItemBluetooth = 0,
   SettingsMenuItemNotifications,
-#if CAPABILITY_HAS_VIBE_SCORES
   SettingsMenuItemVibrations,
-#endif
   SettingsMenuItemQuietTime,
 #if CAPABILITY_HAS_TIMELINE_PEEK
   SettingsMenuItemTimeline,

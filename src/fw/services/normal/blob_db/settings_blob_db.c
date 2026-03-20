@@ -117,11 +117,9 @@ static const char *s_syncable_notif_prefs[] = {
   "dndInterruptionsMask",
   "dndShowNotifications",
   "vibeIntensity",
-#if CAPABILITY_HAS_VIBE_SCORES
   "vibeScoreNotifications",
   "vibeScoreIncomingCalls",
   "vibeScoreAlarms",
-#endif
   "dndManuallyEnabled",
   "dndSmartEnabled",
   "dndWeekdaySchedule",

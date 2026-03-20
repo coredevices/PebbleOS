@@ -58,10 +58,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#if CAPABILITY_HAS_VIBE_SCORES
 #include "services/normal/vibes/vibe_client.h"
 #include "services/normal/vibes/vibe_score.h"
-#endif
 
 #define NOTIFICATION_PRIORITY (ModalPriorityNotification)
 
@@ -1428,7 +1426,6 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
     vibes_enqueue_custom_pattern(patt);
     did_vibrate = true;
   } else {
-#if CAPABILITY_HAS_VIBE_SCORES
     VibeScore *score = vibe_client_get_score(VibeClient_Notifications);
     if (score) {
       VibeScoreId id = alerts_preferences_get_vibe_score_for_client(VibeClient_Notifications);
@@ -1439,11 +1436,6 @@ static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
       vibe_score_destroy(score);
       did_vibrate = true;
     }
-#else
-    PBL_LOG_INFO("Notification vibe: short pulse");
-    vibes_short_pulse();
-    did_vibrate = true;
-#endif
   }
   // Timestamp set after call to vibrate since if something fails,
   // its better to have no vibe blocking then vibe blocking and no vibrations.
