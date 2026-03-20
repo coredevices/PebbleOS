@@ -41,7 +41,6 @@ static void prv_send_ack_nack(bool ok) {
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 #include "services/normal/activity/activity_algorithm.h"
 
 static void prv_sync_health_system_task_cb(void *unused) {
@@ -67,10 +66,7 @@ static void prv_handle_sync(const uint8_t *msg, size_t len) {
   system_task_add_callback(prv_sync_health_system_task_cb, NULL);
 }
 
-#endif
-
 void health_sync_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t len) {
-#if CAPABILITY_HAS_HEALTH_TRACKING
   if (len < 1) {
     PBL_LOG_ERR("Invalid message received, length: %u", len);
   }
@@ -85,7 +81,4 @@ void health_sync_protocol_msg_callback(CommSession *session, const uint8_t *msg,
       PBL_LOG_WRN("Unexpected command received, 0x%x", cmd);
       return;
   }
-#else
-  prv_send_ack_nack(false /*ok*/);
-#endif
 }

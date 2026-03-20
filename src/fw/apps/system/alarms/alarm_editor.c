@@ -436,9 +436,6 @@ static void prv_setup_custom_day_picker_window(AlarmEditorData *data) {
 static void prv_time_picker_window_unload(Window *window) {
   AlarmEditorData *data = (AlarmEditorData *)window_get_user_data(window);
   if (data->creating_alarm) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-    prv_call_complete_cancelled_if_no_alarm(data);
-#endif
     return;
   }
 
@@ -527,13 +524,11 @@ static void prv_type_menu_select(OptionMenu *option_menu, int selection, void *c
   AlarmEditorData *data = settings_option_menu_get_context(context);
   data->alarm_type = selection;
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   if (selection == AlarmType_Smart && !activity_prefs_tracking_is_enabled()) {
     // Notify about Health and keep the menu open
     health_tracking_ui_feature_show_disabled();
     return;
   }
-#endif
 
   if (data->creating_alarm) {
     app_window_stack_push(&data->time_picker_window.window, true);
@@ -577,12 +572,8 @@ Window* alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callb
   // Setup the windows
   prv_setup_time_picker_window(data);
   prv_setup_day_picker_window(data);
-#if CAPABILITY_HAS_HEALTH_TRACKING
   prv_setup_type_menu_window(data);
   return &data->alarm_type_menu->window;
-#else
-  return &data->time_picker_window.window;
-#endif
 }
 
 void alarm_editor_update_alarm_time(AlarmId alarm_id, AlarmType alarm_type,
