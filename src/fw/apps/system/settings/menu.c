@@ -15,9 +15,7 @@
 #if CAPABILITY_HAS_THEMING
 #include "themes.h"
 #endif
-#if CAPABILITY_HAS_HEALTH_TRACKING
 #include "health.h"
-#endif
 #include "vibe_patterns.h"
 
 #include "applib/ui/app_window_stack.h"
@@ -33,9 +31,7 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
 #if CAPABILITY_HAS_TIMELINE_PEEK
   [SettingsMenuItemTimeline]      = settings_timeline_get_info,
 #endif
-#if CAPABILITY_HAS_HEALTH_TRACKING
-  [SettingsMenuItemHealth]    = settings_health_get_info,
-#endif
+  [SettingsMenuItemHealth]        = settings_health_get_info,
 #if !TINTIN_FORCE_FIT
   [SettingsMenuItemActivity]      = settings_activity_tracker_get_info,
   [SettingsMenuItemQuickLaunch]   = settings_quick_launch_get_info,

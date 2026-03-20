@@ -92,14 +92,12 @@ static const char *s_syncable_settings[] = {
 #endif
 
   // Activity preferences
-#if CAPABILITY_HAS_HEALTH_TRACKING
   "activityPreferences",
   "activityHealthAppOpened",
   "activityWorkoutAppOpened",
   "alarmsAppOpened",
   "hrmPreferences",
   "heartRatePreferences",
-#endif
 
   // Menu wrap around preferences
   "menuScrollWrapAround",

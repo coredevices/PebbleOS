@@ -50,9 +50,7 @@ typedef struct AlarmsAppData {
   StatusBarLayer status_layer;
 
   GBitmap plus_icon;
-#if CAPABILITY_HAS_HEALTH_TRACKING
   GBitmap smart_alarm_icon;
-#endif
 
   AlarmNode *alarm_list_head;
   MenuIndex selected_index;
@@ -291,13 +289,11 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
   MenuCellLayerConfig config = {
     .title = alarm_time_text,
     .value = enabled,
-#if CAPABILITY_HAS_HEALTH_TRACKING
     .icon = &data->smart_alarm_icon,
     .icon_align = MenuCellLayerIconAlign_TopLeft,
     .icon_box_model = &(GBoxModel) { .offset = { 0, 5 }, .margin = { 6, 0 } },
     .icon_form_fit = true,
     .horizontal_inset = PBL_IF_ROUND_ELSE(-6, 0),
-#endif
     .overflow_mode = GTextOverflowModeTrailingEllipsis,
   };
   if (node->info.kind != ALARM_KIND_CUSTOM) {
@@ -337,7 +333,6 @@ static void prv_alarm_list_selection_changed_callback(MenuLayer *menu_layer, Men
   }
 }
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Smart Alarm first use dialog
 
@@ -371,7 +366,6 @@ static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
   // Show immediately since this is the first window and there is already a compositor animation
   app_window_stack_push(&expandable_dialog->dialog.window, false /* animated */);
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! App boilerplate
@@ -414,9 +408,7 @@ static void prv_handle_init(void) {
   status_bar_layer_set_separator_mode(&data->status_layer, StatusBarLayerSeparatorModeNone);
   layer_add_child(&data->window.layer, status_bar_layer_get_layer(&data->status_layer));
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   gbitmap_init_with_resource(&data->smart_alarm_icon, RESOURCE_ID_SMART_ALARM_ICON_BLACK);
-#endif
   gbitmap_init_with_resource(&data->plus_icon, RESOURCE_ID_PLUS_ICON_BLACK);
   data->current_plus_icon_resource_id = RESOURCE_ID_PLUS_ICON_BLACK;
 
@@ -448,13 +440,11 @@ static void prv_handle_init(void) {
     app_window_stack_insert_next(&data->window);
   }
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   uint32_t version = alarm_prefs_get_alarms_app_opened();
   if (version == 0) {
     prv_push_alarms_app_opened_dialog(data);
   }
   alarm_prefs_set_alarms_app_opened(CURRENT_ALARMS_APP_VERSION);
-#endif
 }
 
 static void prv_handle_deinit(void) {

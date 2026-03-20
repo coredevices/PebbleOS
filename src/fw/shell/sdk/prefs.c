@@ -187,14 +187,9 @@ PreferredContentSize system_theme_get_content_size(void) {
 }
 
 bool activity_prefs_tracking_is_enabled(void) {
-#if CAPABILITY_HAS_HEALTH_TRACKING
   return true;
-#else
-  return false;
-#endif
 }
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 void activity_prefs_tracking_set_enabled(bool enable) {
 }
 
@@ -274,8 +269,6 @@ time_t activity_prefs_get_activation_time(void) {
 UnitsDistance shell_prefs_get_units_distance(void) {
   return UnitsDistance_Miles;
 }
-
-#endif
 
 GColor shell_prefs_get_theme_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);

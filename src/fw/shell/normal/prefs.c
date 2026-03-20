@@ -36,10 +36,8 @@
 #include "util/size.h"
 #include "util/uuid.h"
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 #include "services/normal/activity/activity.h"
 #include "services/normal/activity/activity_insights.h"
-#endif
 
 #include <stdbool.h>
 
@@ -172,7 +170,6 @@ static Uuid s_default_watchface = UUID_INVALID_INIT;
 #define PREF_KEY_WELCOME_VERSION "welcomeVersion"
 static uint8_t s_welcome_version = 0;
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 #define PREF_KEY_ACTIVITY_PREFERENCES "activityPreferences"
 static ActivitySettings s_activity_preferences = ACTIVITY_DEFAULT_PREFERENCES;
 
@@ -196,7 +193,6 @@ static ActivityHRMSettings s_activity_hrm_preferences = ACTIVITY_HRM_DEFAULT_PRE
 
 #define PREF_KEY_ACTIVITY_HEART_RATE_PREFERENCES "heartRatePreferences"
 static HeartRatePreferences s_activity_hr_preferences = ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES;
-#endif // CAPABILITY_HAS_HEALTH_TRACKING
 
 #if PLATFORM_SPALDING
 #define PREF_KEY_DISPLAY_USER_OFFSET "displayUserOffset"
@@ -461,7 +457,6 @@ static bool prv_set_s_welcome_version(uint8_t *version) {
   return true;
 }
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 static bool prv_set_s_activity_preferences(ActivitySettings *new_settings) {
   bool invalid_data = false;
 
@@ -560,7 +555,6 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
 #endif // BLE_HRM_SERVICE
   return true;
 }
-#endif /* CAPABILITY_HAS_HEALTH_TRACKING */
 
 
 #if PLATFORM_SPALDING
@@ -1415,7 +1409,6 @@ void shell_prefs_toggle_language_english(void) {
   shell_prefs_set_language_english(!shell_prefs_get_language_english());
 }
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 static void prv_activity_pref_set(void) {
   prv_pref_set(PREF_KEY_ACTIVITY_PREFERENCES, &s_activity_preferences,
                sizeof(s_activity_preferences));
@@ -1568,7 +1561,6 @@ void alarm_prefs_set_alarms_app_opened(uint8_t version) {
 uint8_t alarm_prefs_get_alarms_app_opened(void) {
   return s_alarms_app_opened;
 }
-#endif /* CAPABILITY_HAS_HEALTH_TRACKING */
 
 #if PLATFORM_SPALDING
 void shell_prefs_set_display_offset(GPoint offset) {

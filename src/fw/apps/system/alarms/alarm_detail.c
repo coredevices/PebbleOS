@@ -25,9 +25,7 @@ typedef enum DetailMenuItemIndex {
   DetailMenuItemIndexDelete,
   DetailMenuItemIndexChangeTime,
   DetailMenuItemIndexChangeDays,
-#if CAPABILITY_HAS_HEALTH_TRACKING
   DetailMenuItemIndexConvertSmart,
-#endif
   DetailMenuItemIndexSnooze,
   DetailMenuItemIndexNum,
 } DetailMenuItemIndex;
@@ -78,13 +76,11 @@ static void prv_toggle_smart_alarm_handler(ActionMenu *action_menu, const Action
                                            void *context) {
   AlarmDetailData *data = context;
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   if (!data->alarm_info.is_smart && !activity_prefs_tracking_is_enabled()) {
     // Notify about Health and keep the menu open
     health_tracking_ui_feature_show_disabled();
     return;
   }
-#endif
 
   alarm_set_smart(data->alarm_id, !data->alarm_info.is_smart);
   if (data->alarm_editor_callback) {
@@ -194,14 +190,12 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     .perform_action = prv_edit_day_handler,
     .action_data = data,
   };
-#if CAPABILITY_HAS_HEALTH_TRACKING
   main_menu->items[DetailMenuItemIndexConvertSmart] = (ActionMenuItem) {
     .label = data->alarm_info.is_smart ? i18n_get("Convert to Basic Alarm", data) :
                                          i18n_get("Convert to Smart Alarm", data),
     .perform_action = prv_toggle_smart_alarm_handler,
     .action_data = data,
   };
-#endif
   main_menu->items[DetailMenuItemIndexSnooze] = (ActionMenuItem) {
     .label = i18n_get("Snooze Delay", data),
     .is_leaf = 0,

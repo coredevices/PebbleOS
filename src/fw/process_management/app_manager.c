@@ -366,7 +366,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   }
 #endif
 
-#if CAPABILITY_HAS_HEALTH_TRACKING && !defined(RECOVERY_FW)
+#if !defined(RECOVERY_FW)
   health_tracking_ui_register_app_launch(s_app_task_context.install_id);
 #endif
 

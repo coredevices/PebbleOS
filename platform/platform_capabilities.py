@@ -19,7 +19,6 @@ master_capability_set = {
     "HAS_DEFECTIVE_FW_CRC",
     "HAS_GLYPH_BITMAP_CACHING",
     "HAS_HARDWARE_PANIC_SCREEN",
-    "HAS_HEALTH_TRACKING",
     "HAS_LED",
     "HAS_MAGNETOMETER",
     "HAS_MAPPABLE_FLASH",
@@ -56,7 +55,6 @@ board_capability_dicts = [
             "COMPOSITOR_USES_DMA",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_HEALTH_TRACKING",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
@@ -73,7 +71,6 @@ board_capability_dicts = [
             "COMPOSITOR_USES_DMA",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_HEALTH_TRACKING",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
@@ -94,7 +91,6 @@ board_capability_dicts = [
             "COMPOSITOR_USES_DMA",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_HEALTH_TRACKING",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
@@ -110,7 +106,6 @@ board_capability_dicts = [
             "COMPOSITOR_USES_DMA",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_HEALTH_TRACKING",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
@@ -126,7 +121,6 @@ board_capability_dicts = [
             "COMPOSITOR_USES_DMA",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_HEALTH_TRACKING",
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
@@ -144,7 +138,6 @@ board_capability_dicts = [
         "boards": ["silk_bb2", "silk"],
         "capabilities": {
             "HAS_BUILTIN_HRM",
-            "HAS_HEALTH_TRACKING",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
@@ -157,7 +150,6 @@ board_capability_dicts = [
     {
         "boards": ["silk_flint"],
         "capabilities": {
-            "HAS_HEALTH_TRACKING",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
@@ -174,7 +166,6 @@ board_capability_dicts = [
         "boards": ["asterix"],
         "capabilities": {
             "HAS_ALS_OPT3001",
-            "HAS_HEALTH_TRACKING",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
@@ -193,7 +184,6 @@ board_capability_dicts = [
     {
         "boards": ["obelix_dvt", "obelix_pvt", "obelix_bb2"],
         "capabilities": {
-            "HAS_HEALTH_TRACKING",
             "HAS_PMIC",
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
@@ -218,7 +208,6 @@ board_capability_dicts = [
     {
         "boards": ["getafix_evt", "getafix_dvt"],
         "capabilities": {
-            "HAS_HEALTH_TRACKING",
             "HAS_PMIC",
             "HAS_SPRF_V3",
             "HAS_PUTBYTES_PREACKING",
