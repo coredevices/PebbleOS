@@ -85,6 +85,10 @@ static uint8_t s_buffer_storage[200 * sizeof(AccelManagerBufferData)];
 
 static uint64_t s_last_empty_timestamp_ms = 0;
 
+//! Whether the accel manager is enabled. When disabled (e.g. during factory reset via
+//! RunLevel_BareMinimum), the accelerometer hardware is powered down and callbacks are ignored.
+static bool s_enabled = true;
+
 // Accel Idle
 #define ACCEL_MAX_IDLE_DELTA 100
 static bool s_is_idle = false;
@@ -608,7 +612,26 @@ DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples,
  * TODO: APIs that still need to be implemented
  */
 
-void accel_manager_enable(bool on) { }
+void accel_manager_enable(bool on) {
+  mutex_lock_recursive(s_accel_manager_mutex);
+  bool prev = s_enabled;
+  s_enabled = on;
+  if (on && !prev) {
+    prv_update_driver_config();
+    if (s_shake_subscribers_count > 0) {
+      accel_enable_shake_detection(true);
+    }
+    if (s_double_tap_subscribers_count > 0) {
+      accel_enable_double_tap_detection(true);
+    }
+  } else if (!on && prev) {
+    accel_set_num_samples(0);
+    accel_set_sampling_interval(0);
+    accel_enable_shake_detection(false);
+    accel_enable_double_tap_detection(false);
+  }
+  mutex_unlock_recursive(s_accel_manager_mutex);
+}
 
 void accel_manager_exit_low_power_mode(void) { }
 
@@ -654,6 +677,10 @@ static bool prv_shared_buffer_empty(void) {
 }
 
 void accel_cb_new_sample(AccelDriverSample const *data) {
+  if (!s_enabled) {
+    return;
+  }
+
   prv_update_last_accel_data(data);
 
   PBL_ANALYTICS_ADD(accel_sample_count, 1);
@@ -692,6 +719,10 @@ void accel_cb_new_sample(AccelDriverSample const *data) {
 }
 
 void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
+  if (!s_enabled) {
+    return;
+  }
+
   PebbleEvent e = {
     .type = PEBBLE_ACCEL_SHAKE_EVENT,
     .accel_tap = {
@@ -706,6 +737,10 @@ void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
 }
 
 void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t direction) {
+  if (!s_enabled) {
+    return;
+  }
+
   PebbleEvent e = {
     .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
     .accel_tap = {
@@ -780,6 +815,7 @@ void test_accel_manager_reset(void) {
   s_data_subscribers = NULL;
   s_shake_subscribers_count = 0;
   s_double_tap_subscribers_count = 0;
+  s_enabled = true;
 }
 
 #endif
