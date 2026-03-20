@@ -73,23 +73,6 @@ void health_tracking_ui_show_message(uint32_t res_id, const char *text, bool sho
 }
 
 // ---------------------------------------------------------------------------
-void health_tracking_ui_app_show_disabled(void) {
-  // Show at most once per app launch
-  AppInstallId app_id = app_manager_get_current_app_id();
-  if (app_id == s_last_app_id) {
-    return;
-  }
-  s_last_app_id = app_id;
-
-  /// Health disabled dialog
-  static const char *msg =
-      i18n_noop("This app requires Pebble Health to work. Enable Health in the Pebble"
-                " mobile app to continue.");
-
-  health_tracking_ui_show_message(RESOURCE_ID_GENERIC_WARNING_TINY, msg, false);
-}
-
-// ---------------------------------------------------------------------------
 void health_tracking_ui_feature_show_disabled(void) {
   /// Feature requires health dialog
   static const char *msg =
