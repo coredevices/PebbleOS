@@ -18,10 +18,7 @@
 #if CAPABILITY_HAS_HEALTH_TRACKING
 #include "health.h"
 #endif
-
-#if CAPABILITY_HAS_VIBE_SCORES
 #include "vibe_patterns.h"
-#endif
 
 #include "applib/ui/app_window_stack.h"
 #include "services/common/i18n/i18n.h"
@@ -31,9 +28,7 @@
 static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemBluetooth]     = settings_bluetooth_get_info,
   [SettingsMenuItemNotifications] = settings_notifications_get_info,
-#if CAPABILITY_HAS_VIBE_SCORES
   [SettingsMenuItemVibrations]    = settings_vibe_patterns_get_info,
-#endif
   [SettingsMenuItemQuietTime]     = settings_quiet_time_get_info,
 #if CAPABILITY_HAS_TIMELINE_PEEK
   [SettingsMenuItemTimeline]      = settings_timeline_get_info,

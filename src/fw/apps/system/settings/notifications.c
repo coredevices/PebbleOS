@@ -39,9 +39,6 @@ typedef struct {
 
 enum NotificationsItem {
   NotificationsItemFilter,
-#if !CAPABILITY_HAS_VIBE_SCORES
-  NotificationsItemVibration,
-#endif
   NotificationsItemTextSize,
   NotificationsItemWindowTimeout,
 #if PBL_BW
@@ -106,49 +103,6 @@ static void prv_filter_menu_push(SettingsNotificationsData *data) {
       title, OptionMenuContentType_DoubleLine, index, &callbacks, cycle_len,
       true /* icons_enabled */, s_alert_mode_labels, data);
 }
-
-// Vibe Settings (If vibes scores disabled for this model)
-//////////////////////////
-#if !CAPABILITY_HAS_VIBE_SCORES
-static const char *strings_for_vibe_intensities[] = {
-  i18n_ctx_noop("NotifVibe", "Disabled"),
-  i18n_ctx_noop("NotifVibe", "Low"),
-  i18n_ctx_noop("NotifVibe", "Medium"),
-  i18n_ctx_noop("NotifVibe", "High")
-};
-
-static void prv_vibe_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  const bool enable_vibration = (selection != 0);
-  const VibeIntensity new_vibe_intensity = enable_vibration ? (selection - INTENSITY_ROW_OFFSET) :
-                                           DEFAULT_VIBE_INTENSITY;
-
-  alerts_set_vibrate(enable_vibration);
-  alerts_preferences_set_vibe_intensity(new_vibe_intensity);
-  vibe_intensity_set(new_vibe_intensity);
-
-  if (enable_vibration) {
-    vibes_short_pulse();
-  }
-
-  app_window_stack_remove(&option_menu->window, true /* animated */);
-}
-
-static void prv_vibe_menu_push(SettingsNotificationsData *data) {
-  const OptionMenuCallbacks callbacks = {
-    .select = prv_vibe_menu_select,
-  };
-  /// The option in the Settings app for choosing a vibration intensity for notifications.
-  const char *title = i18n_noop("Vibration");
-  uint32_t selected = vibe_intensity_get() + INTENSITY_ROW_OFFSET;
-  if (!alerts_get_vibrate()) {
-    selected = 0;
-  }
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, selected, &callbacks,
-      ARRAY_LENGTH(strings_for_vibe_intensities), true /* icons_enabled */,
-      strings_for_vibe_intensities, data);
-}
-#endif  /* !CAPABILITY_HAS_VIBE_SCORES */
 
 // Text Size
 ////////////////////////
@@ -325,18 +279,6 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Filter");
       subtitle = prv_alert_mask_to_label(alerts_get_mask());
       break;
-#if !CAPABILITY_HAS_VIBE_SCORES
-    case NotificationsItemVibration:
-      title = i18n_noop("Vibration");
-      if (battery_is_usb_connected()) {
-        subtitle = i18n_noop("Disabled (Plugged In)");
-      } else if (alerts_get_vibrate()) {
-        subtitle = strings_for_vibe_intensities[vibe_intensity_get() + INTENSITY_ROW_OFFSET];
-      } else {
-        subtitle = strings_for_vibe_intensities[0];
-      }
-      break;
-#endif  /* !CAPABILITY_HAS_VIBE_SCORES */
     case NotificationsItemTextSize: {
       /// String within Settings->Notifications that describes the text font size
       title = i18n_noop("Text Size");
@@ -392,14 +334,6 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case NotificationsItemFilter:
       prv_filter_menu_push(data);
       break;
-#if !CAPABILITY_HAS_VIBE_SCORES
-    case NotificationsItemVibration:
-      if (battery_is_usb_connected()) {
-        return;
-      }
-      prv_vibe_menu_push(data);
-      break;
-#endif  /* !CAPABILITY_HAS_VIBE_SCORES */
     case NotificationsItemTextSize:
       prv_text_size_menu_push(data);
       break;

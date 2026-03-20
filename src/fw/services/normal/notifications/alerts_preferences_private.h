@@ -9,11 +9,8 @@
 #include "services/normal/notifications/notification_types.h"
 #include "services/normal/vibes/vibe_intensity.h"
 #include "util/time/time.h"
-
-#if CAPABILITY_HAS_VIBE_SCORES
 #include "services/normal/vibes/vibe_client.h"
 #include "services/normal/vibes/vibe_score_info.h"
-#endif
 
 #define NOTIF_WINDOW_TIMEOUT_INFINITE ((uint32_t)~0)
 #define NOTIF_WINDOW_TIMEOUT_DEFAULT (3 * MS_PER_MINUTE)
@@ -52,11 +49,9 @@ VibeIntensity alerts_preferences_get_vibe_intensity(void);
 
 void alerts_preferences_set_vibe_intensity(VibeIntensity intensity);
 
-#if CAPABILITY_HAS_VIBE_SCORES
 VibeScoreId alerts_preferences_get_vibe_score_for_client(VibeClient client);
 
 void alerts_preferences_set_vibe_score_for_client(VibeClient client, VibeScoreId id);
-#endif
 
 bool alerts_preferences_dnd_is_manually_enabled(void);
 
