@@ -11,7 +11,7 @@
 #include "applib/ui/path_layer.h"
 #include "applib/ui/text_layer.h"
 #include "kernel/pbl_malloc.h"
-#include "mfg/mfg_info.h"
+#include "apps/prf/mfg_test_result.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
 #include "util/bitset.h"
@@ -54,11 +54,11 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   if (data->seconds_remaining == 0 || test_passed) {
     data->test_complete = true;
 
+    mfg_test_result_report(MfgTestId_Buttons, test_passed, data->buttons_pressed);
+
     if (test_passed) {
-      // pass
       sniprintf(data->status_string, sizeof(data->status_string), "PASS!");
     } else {
-      // fail
       sniprintf(data->status_string, sizeof(data->status_string), "FAIL!");
     }
     data->seconds_remaining = WINDOW_POP_TIME_S;
