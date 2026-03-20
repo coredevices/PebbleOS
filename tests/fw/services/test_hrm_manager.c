@@ -107,6 +107,7 @@ bool battery_is_usb_connected(void) {
 #define TO_SESSION_REF(x) ((HRMSessionRef)(long)(x))
 
 static const HRMData s_hrm_event_data = {
+  .features = HRMFeature_BPM,
   .hrm_bpm = 82,
   .hrm_quality = HRMQuality_Excellent,
 };
@@ -406,8 +407,8 @@ void test_hrm_manager__multiple_feature_callbacks(void) {
 
   prv_fake_send_new_data();
 
-  // Two events for each app subscriber
-  cl_assert_equal_i(s_event_count, num_refs * 2);
+  // One BPM event for each app subscriber
+  cl_assert_equal_i(s_event_count, num_refs);
 
   for (int i = 0; i < num_refs; ++i) {
     sys_hrm_manager_unsubscribe(session_refs[i]);
@@ -721,5 +722,90 @@ void test_hrm_manager__can_turn_sensor_on(void) {
   cl_assert(prv_can_turn_sensor_on());
   fake_system_task_callbacks_invoke_pending();
   cl_assert(hrm_is_enabled(HRM));
+}
+
+// Test that erroneous Excellent+BPM=0 startup readings are converted to NoSignal quality
+void test_hrm_manager__quality_fixup_startup(void) {
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  s_num_cb_events_1 = 0;
+
+  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  HRMSessionRef session_ref = hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1,
+                                                                  expire_s, HRMFeature_BPM,
+                                                                  prv_fake_hrm_1_cb, NULL);
+  fake_system_task_callbacks_invoke_pending();
+
+  // Send erroneous startup data: Excellent quality but BPM=0
+  HRMData startup_data = {
+    .features = HRMFeature_BPM,
+    .hrm_bpm = 0,
+    .hrm_quality = HRMQuality_Excellent,
+  };
+  hrm_manager_new_data_cb(&startup_data);
+  fake_system_task_callbacks_invoke_pending();
+
+  // Should receive the event, but with quality fixed up to NoSignal
+  cl_assert_equal_i(s_num_cb_events_1, 1);
+  cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
+  cl_assert_equal_i(s_cb_events_1[0].bpm.bpm, 0);
+  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, HRMQuality_NoSignal);
+
+  sys_hrm_manager_unsubscribe(session_ref);
+}
+
+// Test that OffWrist quality is delivered immediately without delay
+void test_hrm_manager__immediate_off_wrist(void) {
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  s_num_cb_events_1 = 0;
+
+  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  HRMSessionRef session_ref = hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1,
+                                                                  expire_s, HRMFeature_BPM,
+                                                                  prv_fake_hrm_1_cb, NULL);
+  fake_system_task_callbacks_invoke_pending();
+
+  // Send OffWrist data immediately (no prior good readings)
+  HRMData off_wrist_data = {
+    .features = HRMFeature_BPM,
+    .hrm_bpm = 0,
+    .hrm_quality = HRMQuality_OffWrist,
+  };
+  hrm_manager_new_data_cb(&off_wrist_data);
+  fake_system_task_callbacks_invoke_pending();
+
+  // OffWrist should be delivered immediately
+  cl_assert_equal_i(s_num_cb_events_1, 1);
+  cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
+  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, HRMQuality_OffWrist);
+
+  sys_hrm_manager_unsubscribe(session_ref);
+}
+
+// Test that NoSignal quality events reach subscribers (previously suppressed by stable state machine)
+void test_hrm_manager__no_signal_delivery(void) {
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  s_num_cb_events_1 = 0;
+
+  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  HRMSessionRef session_ref = hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1,
+                                                                  expire_s, HRMFeature_BPM,
+                                                                  prv_fake_hrm_1_cb, NULL);
+  fake_system_task_callbacks_invoke_pending();
+
+  // Send NoSignal data
+  HRMData no_signal_data = {
+    .features = HRMFeature_BPM,
+    .hrm_bpm = 0,
+    .hrm_quality = HRMQuality_NoSignal,
+  };
+  hrm_manager_new_data_cb(&no_signal_data);
+  fake_system_task_callbacks_invoke_pending();
+
+  // NoSignal should be delivered to subscribers
+  cl_assert_equal_i(s_num_cb_events_1, 1);
+  cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
+  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, HRMQuality_NoSignal);
+
+  sys_hrm_manager_unsubscribe(session_ref);
 }
 
