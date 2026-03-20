@@ -69,16 +69,11 @@ typedef struct {
   bool is_bitmap_loaded;
 
   union {
-#if CAPABILITY_HAS_GLYPH_BITMAP_CACHING
     //! Glyph data including bitmap
     struct __attribute__((__packed__)) {
       GlyphHeaderData header_data;
       uint8_t data[CACHE_GLYPH_SIZE];
     };
-#else
-    //! Glyph data without a bitmap
-    GlyphHeaderData header_data;
-#endif
     GlyphData glyph_data;
   };
 } LineCacheData;
@@ -106,13 +101,6 @@ typedef struct FontCache {
   //! some scratch space so we don't need to create a LineCacheData on the stack
   LineCacheData cache_data_scratch;
 
-  // Since we don't have bitmap caching, we need to have somewhere to store the bitmap data.
-#if !CAPABILITY_HAS_GLYPH_BITMAP_CACHING
-  //! cache_key for the last used glyph
-  uint32_t glyph_buffer_key;
-  //! data for the last used glyph
-  uint8_t glyph_buffer[sizeof(LineCacheData) + CACHE_GLYPH_SIZE];
-#endif
   KeyedCircularCache line_cache;
   const FontResource *cached_font;
 } FontCache;
