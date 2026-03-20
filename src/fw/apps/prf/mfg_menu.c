@@ -108,12 +108,6 @@ static void prv_window_load(Window *window) {
 
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
-#ifdef PLATFORM_SPALDING
-  bounds.origin.x += 25;
-  bounds.origin.y += 25;
-  bounds.size.w -= 50;
-  bounds.size.h -= 25;
-#endif
 
   SimpleMenuItem* menu_items;
   size_t num_items = prv_create_menu_items(&menu_items);
