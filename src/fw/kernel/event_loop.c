@@ -58,7 +58,6 @@
 #include "services/common/light.h"
 #include "services/common/new_timer/new_timer.h"
 #include "services/common/put_bytes/put_bytes.h"
-#include "services/common/status_led.h"
 #include "services/common/system_task.h"
 #include "services/common/vibe_pattern.h"
 #include "services/normal/alarms/alarm.h"

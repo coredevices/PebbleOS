@@ -18,7 +18,6 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "services/runlevel.h"
-#include "services/common/status_led.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/reboot_reason.h"
@@ -95,16 +94,6 @@ static void prv_battery_state_handler(BatteryChargeState charge) {
         dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_CHARGING_LARGE_INVERTED);
         break;
     }
-  }
-
-  if (charge.is_plugged) {
-    if (charge.is_charging) {
-      status_led_set(StatusLedState_Charging);
-    } else {
-      status_led_set(StatusLedState_FullyCharged);
-    }
-  } else {
-    status_led_set(StatusLedState_Off);
   }
 
   data->was_plugged = charge.is_plugged;
