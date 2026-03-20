@@ -87,7 +87,6 @@ const int s_exp_full_day_resting_kcalories = 1455;
 
 // Stub for health tracking disabled UI
 void health_tracking_ui_feature_show_disabled(void) { }
-void health_tracking_ui_app_show_disabled(void) { }
 
 // These are declared as T_STATIC in activity.c
 void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
