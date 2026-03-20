@@ -45,10 +45,6 @@
 #include "system/reset.h"
 #include "util/size.h"
 
-#if PBL_ROUND
-#include "apps/prf/mfg_display_calibration.h"
-#endif
-
 #include <string.h>
 
 typedef struct {
@@ -84,12 +80,6 @@ static void prv_select_bt_device_name(int index, void *context) {
 static void prv_select_info_qr(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_info_qr_app_get_info());
 }
-
-#if PBL_ROUND && !PLATFORM_GETAFIX
-static void prv_select_calibrate_display(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_display_calibration_app_get_info());
-}
-#endif
 
 static void prv_select_button(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_button_app_get_info());
@@ -329,10 +319,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Device Info",       .callback = prv_select_info_qr },
     { .icon = prv_get_icon_for_test(MfgTest_Buttons),
       .title = "Test Buttons",      .callback = prv_select_button },
-#if PBL_ROUND && !PLATFORM_GETAFIX
-    { .title = "Calibrate Display", .callback = prv_select_calibrate_display },
-#endif
-      { .icon = prv_get_icon_for_test(MfgTest_Display),
+    { .icon = prv_get_icon_for_test(MfgTest_Display),
       .title = "Test Display",      .callback = prv_select_display },
 #ifdef CONFIG_TOUCH
     { .title = "Test Touch",        .callback = prv_select_touch },
