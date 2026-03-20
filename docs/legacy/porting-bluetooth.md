@@ -163,7 +163,6 @@ Implemented both by classic and BLE.  Used for factory test.  Probably
 needs to exist for production test in the future, but 
 
 * bt_driver_test_selftest -- implemented
-* bt_driver_test_mfi_chip_selftest -- not implemented on LE-only
 * hc_endpoint_logging_set_level -- not implemented on TI
 * hc_endpoint_logging_get_level -- not implemented on TI
 * bt_driver_core_dump -- not implemented on TI

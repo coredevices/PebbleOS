@@ -26,9 +26,5 @@ bool bt_driver_test_selftest(void) {
   return true;
 }
 
-bool bt_driver_test_mfi_chip_selftest(void) {
-  return false;
-}
-
 void bt_driver_core_dump(BtleCoreDump type) {
 }

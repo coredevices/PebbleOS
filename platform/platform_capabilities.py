@@ -15,7 +15,6 @@ master_capability_set = {
     "COMPOSITOR_USES_DMA",
     "HAS_ALS_OPT3001",
     "HAS_ALS_W1160",
-    "HAS_APPLE_MFI",
     "HAS_APP_GLANCES",
     "HAS_BUILTIN_HRM",
     "HAS_DEFECTIVE_FW_CRC",
@@ -60,7 +59,6 @@ board_capability_dicts = [
         "boards": ["snowy_bb2", "snowy_dvt"],
         "capabilities": {
             "COMPOSITOR_USES_DMA",
-            "HAS_APPLE_MFI",
             "HAS_APP_GLANCES",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
@@ -83,7 +81,6 @@ board_capability_dicts = [
         "boards": ["snowy_emery"],
         "capabilities": {
             "COMPOSITOR_USES_DMA",
-            "HAS_APPLE_MFI",
             "HAS_APP_GLANCES",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",

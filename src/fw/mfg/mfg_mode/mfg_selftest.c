@@ -46,9 +46,6 @@ static const struct SelfTestCase s_test_cases[] = {
 #if !PLATFORM_SILK
   { "MAG3110 Comm", mag3110_check_whoami },
 #endif
-#if CAPABILITY_HAS_APPLE_MFI
-  { "Apple ACP I2C", bt_driver_test_mfi_chip_selftest },
-#endif
   { "BT Module", bt_driver_test_selftest },
   { "Flash Comm", flash_check_whoami },
   { "Mic", mic_selftest },
