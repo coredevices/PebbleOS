@@ -76,16 +76,12 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .flush = notif_db_flush,
   },
   [BlobDBIdWeather] = {
-#if CAPABILITY_HAS_WEATHER
     .init = weather_db_init,
     .insert = weather_db_insert,
     .get_len = weather_db_get_len,
     .read = weather_db_read,
     .del = weather_db_delete,
     .flush = weather_db_flush,
-#else
-    .disabled = true,
-#endif
   },
   [BlobDBIdiOSNotifPref] = {
     .init = ios_notif_pref_db_init,
