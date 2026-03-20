@@ -120,9 +120,7 @@ void services_normal_init(void) {
   send_text_service_init();
   protobuf_log_init();
 
-#if CAPABILITY_HAS_WEATHER
   weather_service_init();
-#endif
 
 #if CAPABILITY_HAS_MICROPHONE
   voice_init();
