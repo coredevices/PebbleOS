@@ -193,7 +193,7 @@ if bld.is_obelix():
         ],
     )
 
-if bld.capability('HAS_ALS_OPT3001'):
+if bld.is_asterix():
     bld.objects(
         name='driver_ambient_light',
         source=[
@@ -205,7 +205,7 @@ if bld.capability('HAS_ALS_OPT3001'):
             'pbl_includes',
         ],
     )
-elif bld.capability('HAS_ALS_W1160'):
+elif bld.is_obelix() or bld.is_getafix():
     bld.objects(
         name='driver_ambient_light',
         source=[
@@ -1525,7 +1525,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if bld.capability('HAS_VIBE_DRV2604'):
+if bld.is_asterix():
     bld.objects(
         name='driver_vibe',
         source=[
@@ -1539,7 +1539,7 @@ if bld.capability('HAS_VIBE_DRV2604'):
             'pbl_includes',
         ],
     )
-if bld.capability('HAS_VIBE_AW86225'):
+if bld.is_obelix():
     bld.objects(
         name='driver_vibe',
         source=[
@@ -1551,7 +1551,7 @@ if bld.capability('HAS_VIBE_AW86225'):
             'driver_gpio',
         ],
     )
-if bld.capability('HAS_VIBE_AW8623X'):
+if bld.is_getafix():
     bld.objects(
         name='driver_vibe',
         source=[
