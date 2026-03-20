@@ -201,9 +201,7 @@ const PebbleProcessMd *settings_get_app_info() {
                0x9d, 0x42, 0x35, 0xbf, 0x47, 0xca, 0xad, 0xfe},
     },
     .name = i18n_noop("Settings"),
-#if CAPABILITY_HAS_APP_GLANCES
     .icon_resource_id = RESOURCE_ID_SETTINGS_TINY,
-#endif
   };
   return (const PebbleProcessMd*) &s_settings_app;
 }

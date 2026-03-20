@@ -15,7 +15,6 @@ master_capability_set = {
     "COMPOSITOR_USES_DMA",
     "HAS_ALS_OPT3001",
     "HAS_ALS_W1160",
-    "HAS_APP_GLANCES",
     "HAS_BUILTIN_HRM",
     "HAS_DEFECTIVE_FW_CRC",
     "HAS_GLYPH_BITMAP_CACHING",
@@ -58,7 +57,6 @@ board_capability_dicts = [
         "boards": ["snowy_bb2", "snowy_dvt"],
         "capabilities": {
             "COMPOSITOR_USES_DMA",
-            "HAS_APP_GLANCES",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
@@ -79,7 +77,6 @@ board_capability_dicts = [
         "boards": ["snowy_emery"],
         "capabilities": {
             "COMPOSITOR_USES_DMA",
-            "HAS_APP_GLANCES",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
@@ -104,7 +101,6 @@ board_capability_dicts = [
         "boards": ["spalding_bb2"],
         "capabilities": {
             "COMPOSITOR_USES_DMA",
-            "HAS_APP_GLANCES",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
@@ -124,7 +120,6 @@ board_capability_dicts = [
         "boards": ["spalding"],
         "capabilities": {
             "COMPOSITOR_USES_DMA",
-            "HAS_APP_GLANCES",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
@@ -144,7 +139,6 @@ board_capability_dicts = [
         "boards": ["spalding_gabbro"],
         "capabilities": {
             "COMPOSITOR_USES_DMA",
-            "HAS_APP_GLANCES",
             "HAS_DEFECTIVE_FW_CRC",
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_HEALTH_TRACKING",
@@ -167,7 +161,6 @@ board_capability_dicts = [
     {
         "boards": ["silk_bb2", "silk"],
         "capabilities": {
-            "HAS_APP_GLANCES",
             "HAS_BUILTIN_HRM",
             "HAS_HEALTH_TRACKING",
             "HAS_LAUNCHER4",
@@ -185,7 +178,6 @@ board_capability_dicts = [
     {
         "boards": ["silk_flint"],
         "capabilities": {
-            "HAS_APP_GLANCES",
             "HAS_HEALTH_TRACKING",
             "HAS_LAUNCHER4",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
@@ -206,7 +198,6 @@ board_capability_dicts = [
         "boards": ["asterix"],
         "capabilities": {
             "HAS_ALS_OPT3001",
-            "HAS_APP_GLANCES",
             "HAS_HEALTH_TRACKING",
             "HAS_LAUNCHER4",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
@@ -229,7 +220,6 @@ board_capability_dicts = [
     {
         "boards": ["obelix_dvt", "obelix_pvt", "obelix_bb2"],
         "capabilities": {
-            "HAS_APP_GLANCES",
             "HAS_HEALTH_TRACKING",
             "HAS_LAUNCHER4",
             "HAS_PMIC",
@@ -258,7 +248,6 @@ board_capability_dicts = [
     {
         "boards": ["getafix_evt", "getafix_dvt"],
         "capabilities": {
-            "HAS_APP_GLANCES",
             "HAS_HEALTH_TRACKING",
             "HAS_LAUNCHER4",
             "HAS_PMIC",

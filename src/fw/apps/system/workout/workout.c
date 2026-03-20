@@ -259,9 +259,7 @@ const PebbleProcessMd *workout_app_get_info(void) {
                0x88, 0xde, 0x35, 0xa3, 0xfc, 0x18, 0xd4, 0x3f},
     },
     .name = i18n_noop("Workout"),
-#if CAPABILITY_HAS_APP_GLANCES
     .icon_resource_id = RESOURCE_ID_ACTIVITY_TINY,
-#endif
   };
   return (const PebbleProcessMd*) &s_workout_app_info;
 }

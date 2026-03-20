@@ -212,9 +212,7 @@ const PebbleProcessMd* weather_app_get_info() {
       .uuid = UUID_WEATHER_DATA_SOURCE,
     },
     .name = i18n_noop("Weather"),
-#if CAPABILITY_HAS_APP_GLANCES
     .icon_resource_id = RESOURCE_ID_GENERIC_WEATHER_TINY,
-#endif
   };
 
   return is_visible_in_launcher ? (const PebbleProcessMd *)&s_weather_app_info : NULL;
