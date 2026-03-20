@@ -71,7 +71,7 @@
 #define W1160_ADC2LUX_COEF          (3U)
 
 #define W1160_ALS_POLL_DELAY_MS     (5)    /* ms between data-ready polls */
-#define W1160_ALS_POLL_TIMEOUT_MS   (1000) /* max wait for ALS data-ready */
+#define W1160_ALS_POLL_TIMEOUT_MS   (200)  /* max wait for ALS data-ready */
 
 static bool s_initialized;
 static uint32_t s_sensor_light_dark_threshold;
