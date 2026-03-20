@@ -620,7 +620,6 @@ def _build_normal(bld):
 
     source_dirs = ['process_management',
                    'process_state/**',
-                   'bt_test',
                    'console',
                    'debug',
                    'flash_region',

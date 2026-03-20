@@ -104,7 +104,6 @@ extern void command_timers(void);
 extern void command_bt_airplane_mode(const char*);
 extern void command_bt_prefs_wipe(void);
 extern void command_bt_print_mac(void);
-extern void command_bt_set_addr(const char *bd_addr);
 extern void command_bt_set_name(const char *bt_name);
 
 extern void command_bt_status(void);
@@ -135,12 +134,6 @@ extern void command_legacy2_animations_info(void);
 extern void command_sim_panic(const char*);
 
 extern void command_alarm(void);
-
-extern void command_bt_test_start(void);
-extern void command_bt_test_stop(void);
-
-extern void command_bt_test_hci_passthrough();
-extern void command_bt_test_bt_sig_rf_mode();
 
 extern void command_watch(void);
 
@@ -247,7 +240,6 @@ extern void command_ble_send_service_changed_indication(void);
 extern void command_ble_rediscover(void);
 extern void command_ble_logging_set_level(const char *level);
 extern void command_ble_logging_get_level(void);
-extern void command_ble_core_dump(const char *command);
 
 extern void command_low_power_debug(char *enable_arg);
 
@@ -324,7 +316,6 @@ static const Command s_prompt_commands[] = {
   { "bt airplane mode", command_bt_airplane_mode, 1 },
   { "bt prefs wipe", command_bt_prefs_wipe, 0 },
   { "bt mac", command_bt_print_mac, 0 },
-  { "bt set addr", command_bt_set_addr, 1 },
   { "bt set name", command_bt_set_name, 1 },
   { "bt cp set", command_bt_conn_param_set, 4 },
   { "bt disc start", command_bt_disc_start, 2 },
@@ -397,11 +388,6 @@ static const Command s_prompt_commands[] = {
   { "scheduler resume normal", command_scheduler_resume_normal, 0 },
 
   { "bt status", command_bt_status, 0 },
-  { "bt test start", command_bt_test_start, 0 },
-  { "bt test stop", command_bt_test_stop, 0 },
-  { "bt test hcipass", command_bt_test_hci_passthrough, 0 },
-
-  { "bt test bt_sig_rf", command_bt_test_bt_sig_rf_mode, 0},
 
   { "backlight", command_backlight_ctl, 1 },
 
@@ -490,7 +476,6 @@ static const Command s_prompt_commands[] = {
   { "ble rediscover", command_ble_rediscover, 0 },
   { "ble set log level", command_ble_logging_set_level, 1},
   { "ble get log level", command_ble_logging_get_level, 0},
-  { "ble core dump", command_ble_core_dump, 1 },
 
   /*
   { "stats dump now", command_stats_dump_now, 0 },

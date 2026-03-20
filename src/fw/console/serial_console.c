@@ -17,8 +17,6 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-#include <bluetooth/bt_test.h>
-
 SerialConsoleState s_serial_console_state = SERIAL_CONSOLE_STATE_LOGGING;
 static bool s_serial_console_initialized;
 
@@ -118,10 +116,6 @@ void serial_console_set_state(SerialConsoleState new_state) {
       dbgserial_set_rx_dma_enabled(false);
       break;
 #endif
-    case SERIAL_CONSOLE_STATE_HCI_PASSTHROUGH:
-      dbgserial_register_character_callback(bt_driver_test_handle_hci_passthrough_character);
-      dbgserial_set_rx_dma_enabled(false);
-      break;
     case SERIAL_CONSOLE_STATE_PULSE:
       dbgserial_register_character_callback(pulse_handle_character);
       dbgserial_set_rx_dma_enabled(true);

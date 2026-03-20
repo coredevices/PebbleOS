@@ -7,14 +7,12 @@
 #include "console/prompt.h"
 #include "services/common/bluetooth/bluetooth_ctl.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/bluetooth/bt_compliance_tests.h"
 #include "services/common/bluetooth/local_id.h"
 #include "services/common/bluetooth/pairability.h"
 #include "services/common/shared_prf_storage/shared_prf_storage.h"
 #include "util/string.h"
 
 #include <bluetooth/bluetooth_types.h>
-#include <bluetooth/bt_test.h>
 #include <bluetooth/classic_connect.h>
 #include <bluetooth/id.h>
 
@@ -26,48 +24,10 @@ void command_bt_print_mac(void) {
   prompt_send_response(addr_hex_str);
 }
 
-//! Overrides the BD ADDR of the Bluetooth controller for test automation purposes
-//! @param bd_addr String of 12 hex characters (6 bytes) of the Bluetooth device address
-//! @note To undo the change, call this with all zeroes.
-//! @note The change will take effect when the Bluetooth is (re)enabled.
-void command_bt_set_addr(const char *bd_addr_str) {
-  char buffer[32];
-  BTDeviceAddress bd_addr;
-  if (convert_bt_addr_hex_str_to_bd_addr(bd_addr_str, (uint8_t *) &bd_addr, sizeof(bd_addr))) {
-    bt_driver_test_set_spoof_address(&bd_addr);
-    prompt_send_response_fmt(buffer, 32, BT_DEVICE_ADDRESS_FMT, BT_DEVICE_ADDRESS_XPLODE(bd_addr));
-  } else {
-    prompt_send_response("?");
-  }
-}
 
 //! @param bt_name A custom Bluetooth device name.
 void command_bt_set_name(const char *bt_name) {
   bt_local_id_set_device_name(bt_name);
-}
-
-// BT FCC tests
-void command_bt_test_start(void) {
-  // take down the BT stack and put the OS in a mode where it will not
-  // interfere with the BT testing.
-  bt_test_start();
-}
-
-void command_bt_test_stop(void) {
-  // restore the watch to normal operation
-  bt_test_stop();
-}
-
-void command_bt_test_hci_passthrough(void) {
-  bt_test_enter_hci_passthrough();
-}
-
-void command_bt_test_bt_sig_rf_mode(void) {
-  if (bt_test_bt_sig_rf_test_mode()) {
-    prompt_send_response("BT SIG RF Test Mode Enabled");
-  } else {
-    prompt_send_response("Failed to enter BT SIG RF Test Mode");
-  }
 }
 
 void command_bt_prefs_wipe(void) {

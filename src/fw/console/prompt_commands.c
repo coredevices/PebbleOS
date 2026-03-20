@@ -44,7 +44,6 @@
 #define CMSIS_COMPATIBLE
 #include <mcu.h>
 
-#include <bluetooth/bt_test.h>
 #include <bluetooth/responsiveness.h>
 #include <bluetooth/gatt_discovery.h>
 
@@ -1267,19 +1266,6 @@ void command_ble_logging_get_level(void) {
   } else {
     prompt_send_response_fmt(buffer, 32, "Ble Log level: %d", log_level);
   }
-}
-// ARG:
-// 0 - Request BLE firmware to coredump
-// 1 - Force BLE firmware to hard fault
-// 2 - Force the BLE chip to watchdog (by wedging a task)
-void command_ble_core_dump(const char *command) {
-  int option = atoi(command);
-  if ((option < 0) || (option >= BtleCoreDumpCount)) {
-    prompt_send_response("Invalid BLE core command");
-    return;
-  }
-
-  bt_driver_core_dump(option);
 }
 
 #if MEMFAULT
