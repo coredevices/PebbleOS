@@ -13,7 +13,6 @@
 #include "kernel/util/standby.h"
 #include "process_management/app_manager.h"
 #include "services/common/battery/battery_curve.h"
-#include "services/common/status_led.h"
 #include "shell/normal/battery_ui.h"
 #include "util/ratio.h"
 
@@ -131,11 +130,6 @@ static PreciseBatteryChargeState prv_make_state(uint8_t percent, bool is_chargin
   return state;
 }
 
-static StatusLedState s_led_state;
-void status_led_set(StatusLedState state) {
-  s_led_state = state;
-}
-
 bool s_is_charging;
 BatteryChargeState battery_get_charge_state(void) {
   // Don't bother setting other fields, they're not used.
@@ -156,7 +150,6 @@ void test_battery_ui_fsm__initialize(void) {
   s_low_power = false;
   s_critical = false;
   s_shutdown_charging = false;
-  s_led_state = StatusLedState_Off;
   s_is_charging = false;
 
   battery_ui_reset_fsm_for_tests();
@@ -188,57 +181,47 @@ void test_battery_ui_fsm__transitions(void) {
   // Good - shouldn't do anything
   prv_change_state(nop);
   cl_assert(!s_modal_onscreen && !s_low_power && !s_critical);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   // Charging - should open charging modal
   prv_change_state(charging);
   cl_assert(s_modal_onscreen && s_modal_charging);
-  cl_assert_equal_i(s_led_state, StatusLedState_Charging);
 
   // Fully charged - should trigger another event, opening fully charged modal
   prv_change_state(fully_charged);
   cl_assert(s_modal_onscreen && !s_modal_charging);
-  cl_assert_equal_i(s_led_state, StatusLedState_FullyCharged);
 
   // Back to good - modal should have closed
   prv_change_state(nop);
   cl_assert(!s_modal_onscreen);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   // Warning - Should trigger various modals
   prv_change_state(warning_18h);
   cl_assert(s_modal_onscreen && s_modal_percent == battery_curve_get_percent_remaining(18));
   prv_change_state(warning_12h);
   cl_assert(s_modal_onscreen && s_modal_percent == battery_curve_get_percent_remaining(12));
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   // Low Power - should enter low power watchface, modal should have closed
   prv_set_state(PowerLow);
   prv_change_state(nop);
   cl_assert(!s_modal_onscreen && s_low_power);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   // Critical - should enter critical app, low power should have closed
   prv_set_state(PowerCritical);
   prv_change_state(nop);
   cl_assert(!s_low_power && s_critical);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   // Charging - critical should disable, modal should appear
   prv_set_state(PowerGood);
   prv_change_state(charging);
   cl_assert(!s_critical && s_modal_onscreen);
-  cl_assert_equal_i(s_led_state, StatusLedState_Charging);
 
   // Enter shutdown charging - modal should close, shutdown charging app should launch
   battery_ui_handle_shut_down();
   cl_assert(!s_modal_onscreen && s_shutdown_charging);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   // Shouldn't be able to transition out
   prv_change_state(warning_18h);
   cl_assert(!s_modal_onscreen && s_shutdown_charging);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 }
 
 void test_battery_ui_fsm__shutdown(void) {
@@ -270,16 +253,13 @@ void test_battery_ui_fsm__warning(void) {
   cl_assert(s_modal_onscreen);
   cl_assert_equal_i(s_modal_percent, battery_curve_get_percent_remaining(12));
   cl_assert_equal_i(s_vibe_count, 1);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   // But we can jump around as long as we switch first
   prv_change_state(nop);
   cl_assert(!s_modal_onscreen);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   prv_change_state(warning_12h);
   cl_assert(s_modal_onscreen && s_modal_percent == battery_curve_get_percent_remaining(12));
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 }
 
 void test_battery_ui_fsm__honor_dnd(void) {
@@ -290,58 +270,47 @@ void test_battery_ui_fsm__honor_dnd(void) {
   prv_change_state(charging);
   cl_assert(s_modal_onscreen && s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 0);
-  cl_assert_equal_i(s_led_state, StatusLedState_Charging);
 
   // With DND off, another charging event shouldn't vibe since we didn't update
   s_dnd_on = false;
   prv_change_state(charging);
   cl_assert_equal_i(s_vibe_count, 0);
-  cl_assert_equal_i(s_led_state, StatusLedState_Charging);
 
   // Now we should vibe
   prv_change_state(nop);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   prv_change_state(charging);
   cl_assert(s_modal_onscreen && s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 1);
-  cl_assert_equal_i(s_led_state, StatusLedState_Charging);
 
   // Same for warnings
   s_dnd_on = true;
   prv_change_state(warning);
   cl_assert(s_modal_onscreen && s_modal_percent);
   cl_assert_equal_i(s_vibe_count, 1);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   s_dnd_on = false;
   prv_change_state(warning);
   cl_assert_equal_i(s_vibe_count, 1);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 
   prv_change_state(nop);
   prv_change_state(warning);
   cl_assert(s_modal_onscreen && s_modal_percent);
   cl_assert_equal_i(s_vibe_count, 2);
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
 }
 
 void test_battery_ui_fsm__no_vibe_complete(void) {
   PreciseBatteryChargeState charging = prv_make_state(50, true, true),
                             fully_charged = prv_make_state(100, false, true);
 
-  cl_assert_equal_i(s_led_state, StatusLedState_Off);
-
   s_dnd_on = false;
   // Charging starts
   prv_change_state(charging);
   cl_assert(s_modal_onscreen && s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 1);
-  cl_assert_equal_i(s_led_state, StatusLedState_Charging);
 
   // Charging completes
   prv_change_state(fully_charged);
   cl_assert(s_modal_onscreen && !s_modal_charging);
   cl_assert_equal_i(s_vibe_count, 1);
-  cl_assert_equal_i(s_led_state, StatusLedState_FullyCharged);
 }

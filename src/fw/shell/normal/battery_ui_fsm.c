@@ -13,7 +13,6 @@
 #include "kernel/util/standby.h"
 #include "process_management/app_manager.h"
 #include "services/common/battery/battery_curve.h"
-#include "services/common/status_led.h"
 #include "services/common/vibe_pattern.h"
 #include "services/normal/notifications/do_not_disturb.h"
 #include "services/normal/vibes/vibe_intensity.h"
@@ -176,25 +175,18 @@ static void prv_display_plugged(void *data) {
     vibes_short_pulse();
   }
   battery_ui_display_plugged();
-
-  status_led_set(StatusLedState_Charging);
 }
 
 static void prv_dismiss_plugged(void) {
   battery_ui_dismiss_modal();
-
-  status_led_set(StatusLedState_Off);
 }
 
 static void prv_display_fully_charged(void *data) {
   battery_ui_display_fully_charged();
-  status_led_set(StatusLedState_FullyCharged);
 }
 
 static void prv_dismiss_fully_charged(void) {
   battery_ui_dismiss_modal();
-
-  status_led_set(StatusLedState_Off);
 }
 
 // TODO PBL-39883: Replace w/ QUIRK_RESET_ON_SHUTDOWN_WHILE_CHARGING once arbitrary prefixes land
