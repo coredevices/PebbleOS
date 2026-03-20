@@ -16,7 +16,6 @@ master_capability_set = {
     "HAS_BUILTIN_HRM",
     "HAS_DEFECTIVE_FW_CRC",
     "HAS_HARDWARE_PANIC_SCREEN",
-    "HAS_LED",
     "HAS_MAGNETOMETER",
     "HAS_MAPPABLE_FLASH",
     "HAS_MASKING",

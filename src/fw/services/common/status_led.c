@@ -8,41 +8,6 @@
 #include "board/board.h"
 #include "system/passert.h"
 
-#if CAPABILITY_HAS_LED
-
-static uint32_t s_led_color = LED_BLACK;
-
-void status_led_set(StatusLedState state) {
-  PBL_ASSERTN(state < StatusLedStateCount);
-
-  static const uint32_t STATE_COLOR_MAPPING[] = {
-    [StatusLedState_Off] = LED_BLACK,
-    [StatusLedState_Charging] = LED_DIM_ORANGE,
-    [StatusLedState_FullyCharged] = LED_DIM_GREEN
-  };
-
-  const uint32_t new_color = STATE_COLOR_MAPPING[state];
-
-  if (new_color == s_led_color) {
-    return;
-  }
-
-  s_led_color = new_color;
-
-  // Tell the battery curve service to account for the updated LED state.
-  int compenstation_mv = 0;
-  if (s_led_color != LED_BLACK) {
-    compenstation_mv = BOARD_CONFIG_POWER.charging_status_led_voltage_compensation;
-  }
-  battery_curve_set_compensation(BATTERY_CURVE_COMPENSATE_STATUS_LED, compenstation_mv);
-
-  led_controller_rgb_set_color(s_led_color);
-}
-
-#else
-
 void status_led_set(StatusLedState state) {
   // No LED present, do nothing!
 }
-
-#endif // CAPABILITY_HAS_LED
