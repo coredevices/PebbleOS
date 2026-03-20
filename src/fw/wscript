@@ -87,9 +87,6 @@ def configure(conf):
     conf.recurse('applib')
     conf.recurse('soc')
 
-    if conf.is_silk():
-        conf.env.append_value('DEFINES', ['MFG_INFO_RECORDS_TEST_RESULTS'])
-
     if conf.options.sdkshell:
         conf.env.NORMAL_SHELL = 'sdk'
         conf.env.append_value('DEFINES', ['SHELL_SDK'])
@@ -566,9 +563,6 @@ def _build_recovery(bld):
     excludes = ['process_management/app_custom_icon.c',
                 'process_management/app_menu_data_source.c',
                 'resource/resource_storage_file.c']
-
-    if 'MFG_INFO_RECORDS_TEST_RESULTS' not in bld.env.DEFINES:
-        excludes.extend('mfg/results_ui.c')
 
     if not bld.is_asterix():
         excludes.extend([

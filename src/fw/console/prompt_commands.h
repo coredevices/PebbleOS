@@ -267,10 +267,6 @@ extern void command_btle_unmod_tx_stop(void);
 extern void command_hrm_read(void);
 #endif
 
-#if MFG_INFO_RECORDS_TEST_RESULTS
-extern void command_mfg_info_test_results(void);
-#endif
-
 extern void command_perftest_line(const char *, const char *);
 extern void command_perftest_line_all(void);
 extern void command_perftest_text(const char *, const char *, const char *);
@@ -432,9 +428,6 @@ static const Command s_prompt_commands[] = {
 #if MANUFACTURING_FW
   { "disp", command_display_set, 1},
 #endif
-#if MFG_INFO_RECORDS_TEST_RESULTS
-  { "mfg ui test results", command_mfg_info_test_results, 0 },
-#endif // MFG_INFO_RECORDS_TEST_RESULTS
 #endif // RECOVERY_FW
 
 #ifdef CONFIG_HRM

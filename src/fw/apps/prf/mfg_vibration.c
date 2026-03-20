@@ -10,7 +10,6 @@
 #include "drivers/vibe.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
-#include "mfg/results_ui.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 
@@ -30,10 +29,6 @@ typedef struct {
   //! How many times we've vibrated
   int wait;
   VibeTestState state;
-
-#if MFG_INFO_RECORDS_TEST_RESULTS
-  MfgResultsUI results_ui;
-#endif
 } AppData;
 
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {

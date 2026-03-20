@@ -13,7 +13,6 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_mode/mfg_factory_mode.h"
-#include "mfg/results_ui.h"
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
@@ -41,11 +40,6 @@ typedef struct {
   Window window;
 
   TestPattern test_pattern;
-
-#if MFG_INFO_RECORDS_TEST_RESULTS
-  Window results_window;
-  MfgResultsUI results_ui;
-#endif
 } AppData;
 
 static void prv_draw_solid(Layer *layer, GContext *ctx, GColor color) {
@@ -201,12 +195,6 @@ static void prv_handle_init(void) {
   layer_set_update_proc(layer, prv_update_proc);
 
   app_window_stack_push(window, true /* Animated */);
-
-#if MFG_INFO_RECORDS_TEST_RESULTS
-  window_init(&data->results_window, "");
-  window_set_fullscreen(&data->results_window, true);
-  mfg_results_ui_init(&data->results_ui, MfgTest_Display, &data->results_window);
-#endif
 }
 
 static void s_main(void) {
