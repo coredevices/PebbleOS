@@ -135,16 +135,12 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
 #endif
   },
   [BlobDBIdAppGlance] = {
-#if CAPABILITY_HAS_APP_GLANCES
     .init = app_glance_db_init,
     .insert = app_glance_db_insert,
     .get_len = app_glance_db_get_len,
     .read = app_glance_db_read,
     .del = app_glance_db_delete,
     .flush = app_glance_db_flush,
-#else
-    .disabled = true,
-#endif
   },
   [BlobDBIdSettings] = {
     .init = settings_blob_db_init,

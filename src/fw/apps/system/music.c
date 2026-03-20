@@ -1000,9 +1000,7 @@ const PebbleProcessMd* music_app_get_info(void) {
                0xb9, 0x60, 0xf2, 0xb0, 0x2a, 0x6d, 0xd7, 0x57},
     },
     .name = i18n_noop("Music"),
-#if CAPABILITY_HAS_APP_GLANCES
     .icon_resource_id = RESOURCE_ID_AUDIO_CASSETTE_TINY,
-#endif
   };
   return (const PebbleProcessMd*) &s_app_info;
 }

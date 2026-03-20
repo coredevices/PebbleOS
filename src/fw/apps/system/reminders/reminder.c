@@ -294,9 +294,7 @@ const PebbleProcessMd* reminder_app_get_info(void) {
       .uuid = UUID_REMINDERS_DATA_SOURCE,
     },
     .name = i18n_noop("Reminder"),
-#if CAPABILITY_HAS_APP_GLANCES
     .icon_resource_id = RESOURCE_ID_GENERIC_REMINDER_TINY,
-#endif
   };
 
   return is_visible_in_launcher ? (const PebbleProcessMd *)&s_reminder_app_info : NULL;
