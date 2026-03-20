@@ -40,89 +40,95 @@ typedef struct {
 } MfgTestMenuAppData;
 
 static bool s_relaunch_menu = false;
+static int16_t s_last_selected = -1;
 
-//! Callback to launch app and return to tests menu
-static void prv_launch_app_and_return_cb(void *data) {
-  s_relaunch_menu = true;
+//! Callback to run from the kernel main task
+static void prv_launch_app_cb(void *data) {
   app_manager_launch_new_app(&(AppLaunchConfig) { .md = data });
 }
 
+static void prv_launch_test(int index, const PebbleProcessMd *md) {
+  s_relaunch_menu = true;
+  s_last_selected = index;
+  launcher_task_add_callback(prv_launch_app_cb, (void*) md);
+}
+
 static void prv_select_button(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_button_app_get_info());
+  prv_launch_test(index, mfg_button_app_get_info());
 }
 
 static void prv_select_display(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_display_app_get_info());
+  prv_launch_test(index, mfg_display_app_get_info());
 }
 
 #if PLATFORM_OBELIX
 static void prv_select_backlight(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_backlight_app_get_info());
+  prv_launch_test(index, mfg_backlight_app_get_info());
 }
 #endif
 
 static void prv_select_accel(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_accel_app_get_info());
+  prv_launch_test(index, mfg_accel_app_get_info());
 }
 
 #ifdef CONFIG_MAG
 static void prv_select_mag(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_mag_app_get_info());
+  prv_launch_test(index, mfg_mag_app_get_info());
 }
 #endif
 
 static void prv_select_vibration(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_vibration_app_get_info());
+  prv_launch_test(index, mfg_vibration_app_get_info());
 }
 
 static void prv_select_als(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_als_app_get_info());
+  prv_launch_test(index, mfg_als_app_get_info());
 }
 
 static void prv_select_speaker(int index, void *context) {
 #if PLATFORM_ASTERIX
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_speaker_asterix_app_get_info());
+  prv_launch_test(index, mfg_speaker_asterix_app_get_info());
 #elif PLATFORM_OBELIX
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_speaker_obelix_app_get_info());
+  prv_launch_test(index, mfg_speaker_obelix_app_get_info());
 #endif
 }
 
 static void prv_select_mic(int index, void *context) {
 #if PLATFORM_ASTERIX
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_mic_asterix_app_get_info());
+  prv_launch_test(index, mfg_mic_asterix_app_get_info());
 #elif PLATFORM_OBELIX
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_mic_obelix_app_get_info());
+  prv_launch_test(index, mfg_mic_obelix_app_get_info());
 #elif PLATFORM_GETAFIX
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_mic_getafix_app_get_info());
+  prv_launch_test(index, mfg_mic_getafix_app_get_info());
 #endif
 }
 
 #if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
 static void prv_select_hrm_ctr_leakage_obelix(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_hrm_ctr_leakage_obelix_app_get_info());
+  prv_launch_test(index, mfg_hrm_ctr_leakage_obelix_app_get_info());
 }
 #endif
 
 #ifdef CONFIG_TOUCH
 static void prv_select_touch(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_touch_app_get_info());
+  prv_launch_test(index, mfg_touch_app_get_info());
 }
 #endif
 
 static void prv_select_program_color(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_program_color_app_get_info());
+  prv_launch_test(index, mfg_program_color_app_get_info());
 }
 
 static void prv_select_test_aging(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_test_aging_app_get_info());
+  prv_launch_test(index, mfg_test_aging_app_get_info());
 }
 
 static void prv_select_charge(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_charge_app_get_info());
+  prv_launch_test(index, mfg_charge_app_get_info());
 }
 
 static void prv_select_discharge(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_discharge_app_get_info());
+  prv_launch_test(index, mfg_discharge_app_get_info());
 }
 
 static const char * prv_get_status_prefix(MfgTestId test) {
@@ -196,6 +202,13 @@ static void prv_window_load(Window *window) {
   };
 
   data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
+
+  // Select next entry after returning from a test, first entry otherwise
+  int16_t next = s_last_selected + 1;
+  if (next > 0 && (size_t)next < num_items) {
+    simple_menu_layer_set_selected_index(data->menu_layer, next, false);
+  }
+
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
 }
 
