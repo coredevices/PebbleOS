@@ -9,7 +9,6 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_mode/mfg_factory_mode.h"
-#include "mfg/results_ui.h"
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
