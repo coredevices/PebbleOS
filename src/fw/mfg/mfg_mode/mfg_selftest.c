@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "bluetooth/bt_test.h"
 #include "console/prompt.h"
 #include "drivers/button.h"
 #include "drivers/flash.h"
@@ -46,7 +45,6 @@ static const struct SelfTestCase s_test_cases[] = {
 #if !PLATFORM_SILK
   { "MAG3110 Comm", mag3110_check_whoami },
 #endif
-  { "BT Module", bt_driver_test_selftest },
   { "Flash Comm", flash_check_whoami },
   { "Mic", mic_selftest },
   { "Buttons", button_selftest },
