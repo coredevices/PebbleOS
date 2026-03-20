@@ -4,18 +4,22 @@
 
 #include "applib/app.h"
 #include "applib/graphics/graphics.h"
+#include "applib/graphics/text.h"
+#include "applib/tick_timer_service.h"
 #include "applib/ui/app_window_stack.h"
+#include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
+#include "apps/prf/mfg_test_result.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "mfg/mfg_mode/mfg_factory_mode.h"
-#include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 #include "applib/touch_service.h"
 #include "pbl/services/common/light.h"
 #include "pbl/services/common/touch/touch.h"
 #include "util/trig.h"
+
+#include <stdio.h>
 
 #if PBL_ROUND
 #define CIRCLE_ROWS (5)
@@ -26,6 +30,9 @@
 #endif
 
 #define TOUCH_SUPPORT_DEBUG    0
+
+#define TEST_TIMEOUT_S (10)
+#define WINDOW_POP_TIME_S (3)
 
 typedef struct {
   Window window;
@@ -39,7 +46,49 @@ typedef struct {
   uint16_t rectr_radius;
   uint16_t rectr_corners_index;
 #endif
+  TextLayer status;
+  char status_string[35];
+  uint32_t seconds_remaining;
+  bool test_complete;
 } AppData;
+
+static uint32_t prv_all_touched_mask(const AppData *data) {
+#if PBL_ROUND
+  return (1u << data->num_circles) - 1;
+#else
+  return (1u << (RECTR_ROW * RECTR_COL)) - 1;
+#endif
+}
+
+static void prv_complete_test(AppData *data, bool passed) {
+  data->test_complete = true;
+  data->seconds_remaining = WINDOW_POP_TIME_S;
+
+  mfg_test_result_report(MfgTestId_Touch, passed, data->touch_mark);
+
+  sniprintf(data->status_string, sizeof(data->status_string), "%s", passed ? "PASS!" : "FAIL!");
+  text_layer_set_text(&data->status, data->status_string);
+}
+
+static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+  AppData *data = app_state_get_user_data();
+
+  if (data->test_complete) {
+    if (--data->seconds_remaining == 0) {
+      app_window_stack_pop(true);
+    }
+    return;
+  }
+
+  if (data->seconds_remaining == 0) {
+    prv_complete_test(data, false);
+  } else {
+    sniprintf(data->status_string, sizeof(data->status_string),
+              "TIME: %" PRIu32 "s", data->seconds_remaining);
+    text_layer_set_text(&data->status, data->status_string);
+    data->seconds_remaining--;
+  }
+}
 
 static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   AppData *data = app_state_get_user_data();
@@ -94,10 +143,17 @@ static void prv_touch_event_handler(const TouchEvent *event, void *context) {
   PBL_LOG_INFO("x:%d y:%d id:%d", touch_x, touch_y, touch_id);
 #endif
   layer_mark_dirty(&data->window.layer);
+
+  if (!data->test_complete && data->touch_mark == prv_all_touched_mask(data)) {
+    prv_complete_test(data, true);
+  }
 }
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
+  *data = (AppData) {
+    .seconds_remaining = TEST_TIMEOUT_S,
+  };
 
   app_state_set_user_data(data);
 
@@ -178,7 +234,17 @@ static void prv_handle_init(void) {
 #endif
   layer_mark_dirty(&data->window.layer);
 
+  TextLayer *status = &data->status;
+  text_layer_init(status,
+                  &GRect(5, PBL_DISPLAY_HEIGHT - 40, PBL_DISPLAY_WIDTH - 10, 40));
+  text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_text_alignment(status, GTextAlignmentCenter);
+  text_layer_set_background_color(status, GColorWhite);
+  layer_add_child(&window->layer, &status->layer);
+
   touch_service_subscribe(prv_touch_event_handler, NULL);
+
+  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
 }
 
 static void s_main(void) {
