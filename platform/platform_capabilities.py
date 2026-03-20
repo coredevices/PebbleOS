@@ -13,8 +13,6 @@
 
 master_capability_set = {
     "COMPOSITOR_USES_DMA",
-    "HAS_ALS_OPT3001",
-    "HAS_ALS_W1160",
     "HAS_BUILTIN_HRM",
     "HAS_DEFECTIVE_FW_CRC",
     "HAS_HARDWARE_PANIC_SCREEN",
@@ -29,12 +27,9 @@ master_capability_set = {
     "HAS_THEMING",
     "HAS_TIMELINE_PEEK",
     "HAS_TOUCHSCREEN",
-    "HAS_VIBE_DRV2604",
     "USE_PARALLEL_FLASH",
     "HAS_PUTBYTES_PREACKING",
     "HAS_FLASH_OTP",
-    "HAS_VIBE_AW86225",
-    "HAS_VIBE_AW8623X",
     "HAS_PBLBOOT",
     "HAS_DYNAMIC_BACKLIGHT",
     "HAS_COLOR_BACKLIGHT",
@@ -164,7 +159,6 @@ board_capability_dicts = [
     {
         "boards": ["asterix"],
         "capabilities": {
-            "HAS_ALS_OPT3001",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
@@ -172,7 +166,6 @@ board_capability_dicts = [
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
             "HAS_MAGNETOMETER",
-            "HAS_VIBE_DRV2604",
             "HAS_PMIC",
             "HAS_FLASH_OTP",
             "HAS_ACCEL_SENSITIVITY",
@@ -187,12 +180,10 @@ board_capability_dicts = [
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
-            "HAS_VIBE_AW86225",
             "HAS_FLASH_OTP",
             "HAS_MICROPHONE",
             "HAS_TOUCHSCREEN",
             "HAS_BUILTIN_HRM",
-            "HAS_ALS_W1160",
             "HAS_MAGNETOMETER",
             "HAS_PBLBOOT",
             "HAS_DYNAMIC_BACKLIGHT",
@@ -210,11 +201,9 @@ board_capability_dicts = [
             "HAS_PMIC",
             "HAS_SPRF_V3",
             "HAS_PUTBYTES_PREACKING",
-            "HAS_VIBE_AW8623X",
             "HAS_FLASH_OTP",
             "HAS_MICROPHONE",
             "HAS_TOUCHSCREEN",
-            "HAS_ALS_W1160",
             "HAS_MAGNETOMETER",
             "HAS_PBLBOOT",
             "HAS_ACCEL_SENSITIVITY",
