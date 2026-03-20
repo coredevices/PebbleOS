@@ -5,9 +5,7 @@
 #include <string.h>
 
 #include "applib/app.h"
-#include "applib/graphics/bitblt.h"
 #include "applib/ui/ui.h"
-#include "applib/ui/window_private.h"
 #include "apps/prf/mfg_accel.h"
 #ifdef CONFIG_MAG
 #include "apps/prf/mfg_mag.h"
@@ -27,13 +25,12 @@
 #include "apps/prf/mfg_speaker_obelix.h"
 #include "apps/prf/mfg_test_aging.h"
 #include "apps/prf/mfg_touch.h"
+#include "apps/prf/mfg_test_result.h"
 #include "apps/prf/mfg_vibration.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "mfg/mfg_info.h"
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
 #include "util/size.h"
 
 typedef struct {
@@ -41,12 +38,6 @@ typedef struct {
   SimpleMenuLayer *menu_layer;
   SimpleMenuSection menu_section;
 } MfgTestMenuAppData;
-
-#if MFG_INFO_RECORDS_TEST_RESULTS
-static GBitmap *s_menu_icons[2];
-#define ICON_IDX_CHECK 0
-#define ICON_IDX_X     1
-#endif
 
 static bool s_relaunch_menu = false;
 
@@ -134,41 +125,19 @@ static void prv_select_discharge(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_and_return_cb, (void*) mfg_discharge_app_get_info());
 }
 
-static GBitmap * prv_get_icon_for_test(MfgTest test) {
-#if MFG_INFO_RECORDS_TEST_RESULTS
-  const bool passed = mfg_info_get_test_result(test);
-  if (passed) {
-    return s_menu_icons[ICON_IDX_CHECK];
+static const char * prv_get_status_prefix(MfgTestId test) {
+  const MfgTestResult *result = mfg_test_result_get(test);
+  if (!result || !result->ran) {
+    return "[ ]";
   }
-  return s_menu_icons[ICON_IDX_X];
-#else
-  return NULL;
-#endif
+  return result->passed ? "[P]" : "[F]";
 }
 
-static void prv_load_icons(void) {
-#if MFG_INFO_RECORDS_TEST_RESULTS
-  // The icons in resources are black boxes with either a white checkmark or X.
-  // In order to make them look correct in the way we are using them, we want to
-  // invert the icons so that they are black icon on a white background.
-  //
-  // To do this, load each resource temporarily and then create two new bitmaps.
-  // Then bitblt the original resource into the new bitmap using GCompOpAssignInverted.
-
-  const uint32_t icon_id[] = { RESOURCE_ID_ACTION_BAR_ICON_CHECK, RESOURCE_ID_ACTION_BAR_ICON_X };
-
-  for (unsigned i = 0; i < ARRAY_LENGTH(icon_id); ++i) {
-    GBitmap tmp;
-    gbitmap_init_with_resource(&tmp, icon_id[i]);
-
-    GBitmap *icon = gbitmap_create_blank(tmp.bounds.size, tmp.info.format);
-    bitblt_bitmap_into_bitmap(icon, &tmp, GPointZero, GCompOpAssignInverted, GColorBlack);
-
-    s_menu_icons[i] = icon;
-    gbitmap_deinit(&tmp);
-  }
-#endif
-}
+typedef struct {
+  const char *title;
+  SimpleMenuLayerSelectCallback callback;
+  MfgTestId test_id;
+} MfgTestMenuEntry;
 
 static void prv_window_load(Window *window) {
   MfgTestMenuAppData *data = app_state_get_user_data();
@@ -176,54 +145,49 @@ static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
 
-  prv_load_icons();
-
-  const SimpleMenuItem menu_items[] = {
-    { .icon = prv_get_icon_for_test(MfgTest_Buttons),
-      .title = "Test Buttons",      .callback = prv_select_button },
-    { .icon = prv_get_icon_for_test(MfgTest_Display),
-      .title = "Test Display",      .callback = prv_select_display },
+  const MfgTestMenuEntry entries[] = {
+    { "Buttons",       prv_select_button,      MfgTestId_Buttons },
+    { "Display",       prv_select_display,      MfgTestId_Display },
 #ifdef CONFIG_TOUCH
-    { .title = "Test Touch",        .callback = prv_select_touch },
+    { "Touch",         prv_select_touch,        MfgTestId_Touch },
 #endif
 #if PLATFORM_OBELIX
-    { .title = "Test Backlight",    .callback = prv_select_backlight },
+    { "Backlight",     prv_select_backlight,    MfgTestId_Backlight },
 #endif
-    { .title = "Test Accelerometer", .callback = prv_select_accel },
+    { "Accelerometer", prv_select_accel,        MfgTestId_Accel },
 #ifdef CONFIG_MAG
-    { .title = "Test Magnetometer", .callback = prv_select_mag },
+    { "Magnetometer",  prv_select_mag,          MfgTestId_Mag },
 #endif
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
-    { .title = "Test Speaker",      .callback = prv_select_speaker },
+    { "Speaker",       prv_select_speaker,      MfgTestId_Speaker },
 #endif
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
-    { .title = "Test Microphone",   .callback = prv_select_mic },
+    { "Microphone",    prv_select_mic,          MfgTestId_Mic },
 #endif
-    { .icon = prv_get_icon_for_test(MfgTest_ALS),
-      .title = "Test ALS",          .callback = prv_select_als },
-    { .icon = prv_get_icon_for_test(MfgTest_Vibe),
-      .title = "Test Vibration",    .callback = prv_select_vibration },
+    { "ALS",           prv_select_als,          MfgTestId_ALS },
+    { "Vibration",     prv_select_vibration,    MfgTestId_Vibration },
 #if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
-    { .title = "Test HRM CTR/L",    .callback = prv_select_hrm_ctr_leakage_obelix },
+    { "HRM CTR/L",     prv_select_hrm_ctr_leakage_obelix, MfgTestId_HrmCtrLeakage },
 #endif
-    { .title = "Program Color",     .callback = prv_select_program_color },
-    { .title = "Test Aging",        .callback = prv_select_test_aging },
-    { .title = "Test Charge",       .callback = prv_select_charge },
-    { .title = "Test Discharge",    .callback = prv_select_discharge },
+    { "Program Color", prv_select_program_color, MfgTestId_ProgramColor },
+    { "Aging",         prv_select_test_aging,   MfgTestId_Aging },
+    { "Charge",        prv_select_charge,       MfgTestId_Charge },
+    { "Discharge",     prv_select_discharge,    MfgTestId_Discharge },
   };
 
-  SimpleMenuItem *items = app_malloc(sizeof(menu_items));
-  memcpy(items, menu_items, sizeof(menu_items));
+  size_t num_items = ARRAY_LENGTH(entries);
+  SimpleMenuItem *items = app_malloc(num_items * sizeof(SimpleMenuItem));
 
-  size_t num_items = ARRAY_LENGTH(menu_items);
-
-  // Add index numbers to each menu entry
   for (size_t i = 0; i < num_items; i++) {
-    const char *original_title = items[i].title;
-    size_t new_title_len = snprintf(NULL, 0, "%zu. %s", i + 1, original_title) + 1;
-    char *new_title = app_malloc(new_title_len);
-    snprintf(new_title, new_title_len, "%zu. %s", i + 1, original_title);
-    items[i].title = new_title;
+    const char *prefix = prv_get_status_prefix(entries[i].test_id);
+    size_t len = snprintf(NULL, 0, "%zu. %s %s", i + 1, prefix, entries[i].title) + 1;
+    char *title = app_malloc(len);
+    snprintf(title, len, "%zu. %s %s", i + 1, prefix, entries[i].title);
+
+    items[i] = (SimpleMenuItem) {
+      .title = title,
+      .callback = entries[i].callback,
+    };
   }
 
   data->menu_section = (SimpleMenuSection) {
