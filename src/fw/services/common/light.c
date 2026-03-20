@@ -385,6 +385,9 @@ void light_enable_interaction(void) {
 
   if (prv_light_allowed()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
+  } else {
+    PBL_LOG_INFO("Backlight rejected: allowed=%d, brightness=%ld, is_light=%d",
+                 s_backlight_allowed, s_current_brightness, ambient_light_is_light());
   }
 
   mutex_unlock(s_mutex);
