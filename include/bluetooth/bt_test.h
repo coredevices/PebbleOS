@@ -22,8 +22,6 @@ void bt_driver_test_stop(void);
 
 bool bt_driver_test_selftest(void);
 
-bool bt_driver_test_mfi_chip_selftest(void);
-
 void bt_driver_le_transmitter_test(
     uint8_t tx_channel, uint8_t tx_packet_length, uint8_t packet_payload);
 void bt_driver_le_test_end(void);
