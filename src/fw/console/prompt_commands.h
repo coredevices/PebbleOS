@@ -348,9 +348,7 @@ static const Command s_prompt_commands[] = {
   { "erase flash", command_erase_flash, 2 },
   { "crc flash", command_crc_flash, 2 },
 #ifndef RECOVERY_FW
-#if CAPABILITY_HAS_TEMPERATURE
   { "temp read",  command_temperature_read, 0 },
-#endif
   { "als read", command_als_read, 0},
 #ifndef RELEASE
   { "litter pfs", command_litter_filesystem, 2 },

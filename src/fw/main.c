@@ -310,9 +310,7 @@ static void init_drivers(void) {
   backlight_init();
   ambient_light_init();
 
-#if CAPABILITY_HAS_TEMPERATURE
   temperature_init();
-#endif
 
   rtc_init_timers();
   rtc_alarm_init();
