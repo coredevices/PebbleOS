@@ -81,9 +81,7 @@ typedef struct {
   TimerID vibe_timer;
   int max_vibes;
   int vibe_count;
-#if CAPABILITY_HAS_VIBE_SCORES
   VibeScore *vibe_score;
-#endif
 } AlarmPopupData;
 
 AlarmPopupData *s_alarm_popup_data = NULL;
@@ -101,12 +99,10 @@ static void prv_stop_vibes(void) {
     new_timer_stop(s_alarm_popup_data->vibe_timer);
     new_timer_delete(s_alarm_popup_data->vibe_timer);
     s_alarm_popup_data->vibe_timer = TIMER_INVALID_ID;
-#if CAPABILITY_HAS_VIBE_SCORES
     if (s_alarm_popup_data->vibe_score) {
       vibe_score_destroy(s_alarm_popup_data->vibe_score);
       s_alarm_popup_data->vibe_score = NULL;
     }
-#endif
   }
   vibes_cancel();
 }
@@ -121,20 +117,7 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
   if (s_alarm_popup_data) {
     if (s_alarm_popup_data->vibe_count < s_alarm_popup_data->max_vibes) {
       s_alarm_popup_data->vibe_count++;
-#if CAPABILITY_HAS_VIBE_SCORES
       vibe_score_do_vibe(s_alarm_popup_data->vibe_score);
-#else
-      if (low_power_is_active()) {
-        // Only vibe 10 seconds every minute in low_power_mode
-        _Static_assert(TINTIN_VIBE_REPEAT_INTERVAL_MS == MS_PER_SECOND,
-                       "LPM Vibes timing incorrect");
-        if (s_alarm_popup_data->vibe_count % SECONDS_PER_MINUTE < TINTIN_LPM_VIBES_PER_MINUTE) {
-          vibes_long_pulse();
-        }
-      } else {
-        vibes_long_pulse();
-      }
-#endif
     }
     else {
       prv_stop_vibes();
@@ -155,7 +138,6 @@ static void prv_vibe(void *unused) {
 static void prv_start_vibes(void) {
   s_alarm_popup_data->vibe_count = 0;
   unsigned int vibe_repeat_interval_ms = TINTIN_VIBE_REPEAT_INTERVAL_MS;
-#if CAPABILITY_HAS_VIBE_SCORES
   if (low_power_is_active()) {
     s_alarm_popup_data->vibe_score = vibe_client_get_score(VibeClient_AlarmsLPM);
   } else {
@@ -167,9 +149,6 @@ static void prv_start_vibes(void) {
   vibe_repeat_interval_ms = vibe_score_get_duration_ms(s_alarm_popup_data->vibe_score) +
       vibe_score_get_repeat_delay_ms(s_alarm_popup_data->vibe_score);
   s_alarm_popup_data->max_vibes = DIVIDE_CEIL(VIBE_DURATION, vibe_repeat_interval_ms);
-#else
-  s_alarm_popup_data->max_vibes = TINTIN_MAX_VIBES;
-#endif
   s_alarm_popup_data->vibe_timer = new_timer_create();
   prv_vibe(NULL);
   new_timer_start(s_alarm_popup_data->vibe_timer, vibe_repeat_interval_ms, prv_vibe,

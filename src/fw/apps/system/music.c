@@ -256,9 +256,7 @@ typedef struct {
 
   MusicNoMusicWindow *no_music_window;
 
-#if CAPABILITY_HAS_VIBE_SCORES
   VibeScore *score;
-#endif
 } MusicAppData;
 
 static void prv_set_action_bar_state(MusicAppData *data, enum ActionBarState state);
@@ -267,9 +265,7 @@ static void prv_trigger_cassette_icon_switch(GBitmap *bitmap, bool animated);
 static void prv_update_cassette_icon(MusicAppData *data, bool animated);
 
 static void prv_do_haptic_feedback_vibe(MusicAppData *data) {
-#if CAPABILITY_HAS_VIBE_SCORES
   vibe_score_do_vibe(data->score);
-#endif
 }
 
 static void prv_handle_volume_icon_timer(void *context) {
@@ -894,9 +890,7 @@ static void prv_init_ui(Window *window) {
 
   music_get_pos(&data->track_pos, &data->track_length);
 
-#if CAPABILITY_HAS_VIBE_SCORES
   data->score = vibe_score_create_with_resource(RESOURCE_ID_VIBE_SCORE_HAPTIC_FEEDBACK);
-#endif
 
   prv_update_now_playing(data);
   prv_update_layout(data);

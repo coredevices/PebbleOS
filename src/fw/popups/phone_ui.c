@@ -44,10 +44,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#if CAPABILITY_HAS_VIBE_SCORES
 #include "services/normal/vibes/vibe_client.h"
 #include "services/normal/vibes/vibe_score.h"
-#endif
 
 #define DECLINE_DELAY_MS 2000
 #define SMS_REPLY_DELAY_MS 1200
@@ -161,9 +159,7 @@ typedef struct {
   EventedTimerID call_duration_timer;
   EventedTimerID window_pop_timer;
   time_t call_start_time;
-#if CAPABILITY_HAS_VIBE_SCORES
   VibeScore *vibe_score;
-#endif
   RegularTimerInfo ring_timer;
   bool show_ongoing_call_ui;
 
@@ -437,7 +433,6 @@ static void prv_window_update_proc(Layer *layer, GContext *ctx) {
 static void prv_ring(void *unused) {
   PBL_LOG_DBG("RING");
   if (alerts_should_vibrate_for_type(AlertPhoneCall)) {
-#if CAPABILITY_HAS_VIBE_SCORES
     if (!s_phone_ui_data || !s_phone_ui_data->vibe_score) {
       // There is a mutex-related issue that can appear where the timer callback will execute after
       // phone_ui cancels the timer and frees the vibe_score / s_phone_ui_data. Thus, bail early
@@ -446,9 +441,6 @@ static void prv_ring(void *unused) {
       return;
     }
     vibe_score_do_vibe(s_phone_ui_data->vibe_score);
-#else
-    vibes_long_pulse();
-#endif
   }
   if (alerts_should_enable_backlight_for_type(AlertPhoneCall)) {
     light_enable_interaction();
@@ -461,7 +453,6 @@ static void prv_start_ringing(void) {
     .cb = prv_ring,
   };
   unsigned int vibe_repeat_interval_sec;
-#if CAPABILITY_HAS_VIBE_SCORES
   s_phone_ui_data->vibe_score = vibe_client_get_score(VibeClient_PhoneCalls);
   if (!s_phone_ui_data->vibe_score) {
     return;
@@ -469,21 +460,16 @@ static void prv_start_ringing(void) {
   unsigned int vibe_interval_ms = vibe_score_get_duration_ms(s_phone_ui_data->vibe_score) +
       vibe_score_get_repeat_delay_ms(s_phone_ui_data->vibe_score);
   vibe_repeat_interval_sec = DIVIDE_CEIL(vibe_interval_ms, MS_PER_SECOND);
-#else
-  vibe_repeat_interval_sec = 2;
-#endif
   prv_ring(NULL);
   regular_timer_add_multisecond_callback(&s_phone_ui_data->ring_timer, vibe_repeat_interval_sec);
 }
 
 static void prv_stop_ringing(void) {
   regular_timer_remove_callback(&s_phone_ui_data->ring_timer);
-#if CAPABILITY_HAS_VIBE_SCORES
   if (s_phone_ui_data->vibe_score) {
     vibe_score_destroy(s_phone_ui_data->vibe_score);
     s_phone_ui_data->vibe_score = NULL;
   }
-#endif
   vibes_cancel();
 }
 

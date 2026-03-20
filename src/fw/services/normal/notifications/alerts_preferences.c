@@ -43,7 +43,6 @@ static bool s_vibe_on_notification = true;
 #define PREF_KEY_VIBE_INTENSITY "vibeIntensity"
 static VibeIntensity s_vibe_intensity = DEFAULT_VIBE_INTENSITY;
 
-#if CAPABILITY_HAS_VIBE_SCORES
 #define PREF_KEY_VIBE_SCORE_NOTIFICATIONS ("vibeScoreNotifications")
 static VibeScoreId s_vibe_score_notifications = DEFAULT_VIBE_SCORE_NOTIFS;
 
@@ -52,7 +51,6 @@ static VibeScoreId s_vibe_score_incoming_calls = DEFAULT_VIBE_SCORE_INCOMING_CAL
 
 #define PREF_KEY_VIBE_SCORE_ALARMS ("vibeScoreAlarms")
 static VibeScoreId s_vibe_score_alarms = DEFAULT_VIBE_SCORE_ALARMS;
-#endif
 
 #define PREF_KEY_DND_MANUALLY_ENABLED "dndManuallyEnabled"
 static bool s_do_not_disturb_manually_enabled = false;
@@ -175,7 +173,6 @@ static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
 #undef RESTORE_AND_DELETE_PREF
 }
 
-#if CAPABILITY_HAS_VIBE_SCORES
 static void prv_save_all_vibe_scores_to_file(SettingsFile *file) {
 #define SET_PREF_ALREADY_OPEN(key, value) \
     settings_file_set(file, key, strlen(key), &value, sizeof(value));
@@ -243,7 +240,6 @@ static void prv_migrate_vibe_intensity_to_vibe_scores(SettingsFile *file) {
     settings_file_delete(file, PREF_KEY_VIBE, strlen(PREF_KEY_VIBE));
   }
 }
-#endif
 
 void alerts_preferences_init(void) {
   s_mutex = mutex_create();
@@ -265,11 +261,9 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_MASK, s_mask);
   RESTORE_PREF(PREF_KEY_VIBE, s_vibe_on_notification);
   RESTORE_PREF(PREF_KEY_VIBE_INTENSITY, s_vibe_intensity);
-#if CAPABILITY_HAS_VIBE_SCORES
   RESTORE_PREF(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications);
   RESTORE_PREF(PREF_KEY_VIBE_SCORE_INCOMING_CALLS, s_vibe_score_incoming_calls);
   RESTORE_PREF(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms);
-#endif
   RESTORE_PREF(PREF_KEY_DND_MANUALLY_ENABLED, s_do_not_disturb_manually_enabled);
   RESTORE_PREF(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
   RESTORE_PREF(PREF_KEY_DND_INTERRUPTIONS_MASK, s_dnd_interruptions_mask);
@@ -295,11 +289,9 @@ void alerts_preferences_init(void) {
   prv_migrate_legacy_dnd_schedule(&file);
 
   prv_migrate_legacy_first_use_settings(&file);
-#if CAPABILITY_HAS_VIBE_SCORES
   prv_migrate_vibe_intensity_to_vibe_scores(&file);
   prv_ensure_valid_vibe_scores();
   prv_save_all_vibe_scores_to_file(&file);
-#endif
 
   settings_file_close(&file);
 }
@@ -391,7 +383,6 @@ void alerts_preferences_set_vibe_intensity(VibeIntensity intensity) {
   SET_PREF(PREF_KEY_VIBE_INTENSITY, s_vibe_intensity);
 }
 
-#if CAPABILITY_HAS_VIBE_SCORES
 VibeScoreId alerts_preferences_get_vibe_score_for_client(VibeClient client) {
   switch (client) {
     case VibeClient_Notifications:
@@ -429,7 +420,6 @@ void alerts_preferences_set_vibe_score_for_client(VibeClient client, VibeScoreId
   }
   SET_PREF(key, id);
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! DND
@@ -556,11 +546,9 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_DND_INTERRUPTIONS_MASK, s_dnd_interruptions_mask);
   RELOAD_IF_MATCH(PREF_KEY_DND_SHOW_NOTIFICATIONS, s_dnd_show_notifications);
   RELOAD_IF_MATCH(PREF_KEY_VIBE_INTENSITY, s_vibe_intensity);
-#if CAPABILITY_HAS_VIBE_SCORES
   RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications);
   RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_INCOMING_CALLS, s_vibe_score_incoming_calls);
   RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms);
-#endif
   RELOAD_IF_MATCH(PREF_KEY_DND_MANUALLY_ENABLED, s_do_not_disturb_manually_enabled);
   RELOAD_IF_MATCH(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
   RELOAD_IF_MATCH(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
