@@ -17,7 +17,6 @@ master_capability_set = {
     "HAS_ALS_W1160",
     "HAS_BUILTIN_HRM",
     "HAS_DEFECTIVE_FW_CRC",
-    "HAS_GLYPH_BITMAP_CACHING",
     "HAS_HARDWARE_PANIC_SCREEN",
     "HAS_LED",
     "HAS_MAGNETOMETER",
