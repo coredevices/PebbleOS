@@ -6,7 +6,6 @@
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "mfg/mfg_apps/mfg_display_burnin.h"
 #include "apps/prf/mfg_button.h"
-#include "mfg/mfg_apps/mfg_bt_test_app.h"
 #include "apps/prf/mfg_display.h"
 #include "apps/prf/mfg_charge.h"
 #include "mfg/mfg_apps/mfg_func_test.h"
@@ -17,7 +16,6 @@ static const MfgInitFuncType INIT_MFG_FUNCTIONS[] = {
   &mfg_app_button_test_get_info,
   &mfg_app_runin_get_info,
   &mfg_display_burnin_get_app_info,
-  &mfg_app_bt_test_get_info,
   &mfg_app_lcd_test_black_get_info,
   &mfg_app_lcd_test_white_get_info,
   &mfg_app_lcd_test_black_white_border_get_info,
