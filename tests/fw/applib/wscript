@@ -136,7 +136,6 @@ def build(ctx):
              " tests/fakes/fake_settings_file.c"
          ),
          test_sources_ant_glob="test_app_glance.c",
-         defines=["CAPABILITY_HAS_APP_GLANCES=1"],
          override_includes=['dummy_board'])
 
     clar(ctx,

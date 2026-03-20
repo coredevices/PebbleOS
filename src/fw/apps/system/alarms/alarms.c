@@ -482,9 +482,7 @@ const PebbleProcessMd* alarms_app_get_info() {
       .uuid = UUID_ALARMS_DATA_SOURCE,
     },
     .name = i18n_noop("Alarms"),
-#if CAPABILITY_HAS_APP_GLANCES
     .icon_resource_id = RESOURCE_ID_ALARM_CLOCK_TINY,
-#endif
   };
   return (const PebbleProcessMd*) &s_alarms_app_info;
 }

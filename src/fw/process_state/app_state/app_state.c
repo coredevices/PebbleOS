@@ -104,9 +104,7 @@ typedef struct {
 
   JsMemoryAPIContext *js_memory_api_context;
 
-#if CAPABILITY_HAS_APP_GLANCES
   AppGlance glance;
-#endif
 
   TextRenderState text_render_state;
 
@@ -213,7 +211,7 @@ NOINLINE void app_state_init(void) {
   unobstructed_area_service_init(app_state_get_unobstructed_area_state(),
                                  s_app_state_ptr->initial_obstruction_origin_y);
 
-#if CAPABILITY_HAS_APP_GLANCES && !RECOVERY_FW
+#if !RECOVERY_FW
   app_glance_service_init_glance(app_state_get_glance());
 #endif
 
@@ -351,11 +349,9 @@ UnobstructedAreaState *app_state_get_unobstructed_area_state(void) {
   return &s_app_state_ptr->unobstructed_area_service_state;
 }
 
-#if CAPABILITY_HAS_APP_GLANCES
 AppGlance *app_state_get_glance(void) {
   return &s_app_state_ptr->glance;
 }
-#endif
 
 WakeupHandler app_state_get_wakeup_handler(void) {
   return s_app_state_ptr->wakeup_handler;

@@ -128,9 +128,7 @@ void services_normal_init(void) {
   voice_init();
 #endif
 
-#if CAPABILITY_HAS_APP_GLANCES
   app_glance_service_init();
-#endif
 }
 
 static struct ServiceRunLevelSetting s_runlevel_settings[] = {

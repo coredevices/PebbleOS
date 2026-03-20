@@ -15,9 +15,6 @@
 #include "util/uuid.h"
 
 AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceSlice slice) {
-  #if !CAPABILITY_HAS_APP_GLANCES
-    return APP_GLANCE_RESULT_INVALID_SESSION;
-  #endif
   AppGlanceResult result = APP_GLANCE_RESULT_SUCCESS;
 
   AppGlance *glance = app_state_get_glance();
@@ -100,10 +97,6 @@ AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceS
 }
 
 void app_glance_reload(AppGlanceReloadCallback callback, void *context) {
-  #if !CAPABILITY_HAS_APP_GLANCES
-    return;
-  #endif
-
   AppGlance *glance = app_state_get_glance();
 
   Uuid current_app_uuid;
