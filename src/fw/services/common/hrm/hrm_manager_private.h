@@ -87,11 +87,6 @@ struct HRMManagerState {
                                    // Normal, etc.) allows the sensor to be turned on
   bool enabled_charging_state;     // Ture if we aren't plugged in / charging
 
-  // These variables used to keep track of the sensor reading validity.
-  bool sensor_bpm_stable;   // True after we receive the first good BPM reading after power-on or off-wrist
-  bool off_wrist_when_stable;   // true if sensor said off-wrist when first stablized
-  RtcTicks sensor_bpm_start_ticks;  // tick count last time sensor was powered on, or last
-                                    // off-wrist. 0 if still off-wrist or off.
 };
 
 //! Subscription for KernelBG or KernelMain clients.

@@ -159,86 +159,6 @@ static void prv_handle_accel_data(void * data) {
   sys_accel_manager_consume_samples(s_manager_state.accel_state, num_new_samples);
 }
 
-// Return true if this is a stable BPM reading. This is called each time we power the sensor off
-// or receive a new HRMData update from the sensor driver. It returns true if we should trust the
-// BPMData hrm_bpm and hrm_quality fields or not.
-//
-// In the current rev of the sensor FW, we need to take the following approach to filter out
-// good readings:
-// 1.) After first turning on the sensor, wait until the quality is "Good" or better, but wait
-//     no more than HRM_SENSOR_SPIN_UP_SEC seconds.
-// 2.) During sensor startup, the sensor will occasionally send erroneous "Excellent" readings.
-//     We can tell they are erroneous because the BPM will be 0. These erroneous readings need to
-//     be ignored. We ignore any reading where the BPM is below HRM_SENSOR_MIN_VALID_BPM_READING.
-// 3.) Once the quality is "Good", we have to ignore all other quality readings (except off-wrist)
-//     because they don't mean anything in this version of the sensor FW.
-// 4.) If we suddently go "off-wrist", wait for another "Good" or better.
-//
-// So, for the first 0 to HRM_SENSOR_SPIN_UP_SEC seconds after turning the sensor on or first
-// contacting the wrist after being off-wrist, the readings can be unstable and this method will
-// return false during that time.
-//
-// @param[in] data pointer to last received HRMdata or NULL if sensor powered off
-// @return true if sensor is stable
-static bool prv_is_sensor_bpm_stable(const HRMData *data) {
-  // Passing a NULL data pointer means reset our state
-  if (!data) {
-    s_manager_state.sensor_bpm_stable = false;
-    s_manager_state.sensor_bpm_start_ticks = 0;
-    return false;
-  }
-
-  // Ignore the "no accel" quality reading samples. We seem to get these occasionally
-  // and don't want them to mess up our state.
-  if (data->hrm_quality == HRMQuality_NoAccel) {
-    return s_manager_state.sensor_bpm_stable;
-  }
-
-  // If we were stable before, just make sure we are still stable
-  if (s_manager_state.sensor_bpm_stable) {
-    // If we just went on-wrist or off-wrist, reset the stable state
-    bool off_wrist_now = (data->hrm_quality == HRMQuality_OffWrist);
-    if (off_wrist_now != s_manager_state.off_wrist_when_stable) {
-      s_manager_state.sensor_bpm_stable = false;
-      s_manager_state.sensor_bpm_start_ticks = 0;
-      return false;
-    }
-    return true;
-  }
-
-  // Start the tick counter if this is the first reading since power-on or off-wrist
-  if (s_manager_state.sensor_bpm_start_ticks == 0) {
-    s_manager_state.sensor_bpm_start_ticks = rtc_get_ticks();
-  }
-
-  // When first powering up, we can get "Excellent" quality readings the first few seconds, even
-  // though the BPM is 0. Let's fix the quality if the BPM is too low to be valid
-  HRMQuality quality = data->hrm_quality;
-  if ((data->hrm_bpm < HRM_SENSOR_MIN_VALID_BPM_READING)
-      && (data->hrm_quality > HRMQuality_NoSignal)) {
-    quality = HRMQuality_NoSignal;
-  }
-
-  // Update our state
-  if (quality >= HRMQuality_Good) {
-    // Once we receive at least one good reading, we are stable
-    s_manager_state.sensor_bpm_stable = true;
-    s_manager_state.off_wrist_when_stable = false;
-  } else {
-    // We haven't yet received a good reading yet. Wait for a timeout...
-    RtcTicks elapased_ticks = rtc_get_ticks() - s_manager_state.sensor_bpm_start_ticks;
-    RtcTicks max_startup_time = milliseconds_to_ticks(HRM_SENSOR_SPIN_UP_SEC * MS_PER_SECOND);
-    if (elapased_ticks >= max_startup_time) {
-      // If it's been past the tolerable startup time, we have a valid reading - even though it
-      // may indicate off-wrist.
-      s_manager_state.sensor_bpm_stable = true;
-      s_manager_state.off_wrist_when_stable = (quality == HRMQuality_OffWrist);
-    }
-  }
-
-  return s_manager_state.sensor_bpm_stable;
-}
-
 T_STATIC bool prv_can_turn_sensor_on(void) {
 #if IS_BIGBOARD || RECOVERY_FW
   return true;
@@ -346,8 +266,6 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
 
       sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
       s_manager_state.accel_state = NULL;
-
-      prv_is_sensor_bpm_stable(NULL);  // inform state machine that sensor got powered off
 
       // If we need the sensor on again later, turn on a timer to re-enable the HRM in enough time
       // to get a good reading for the next subscriber that needs one
@@ -562,19 +480,23 @@ void hrm_manager_new_data_cb(const HRMData *data) {
   RtcTicks cur_ticks = rtc_get_ticks();
   HRMFeature kernel_bg_features_sent = 0;
 
-  // See if the sensor BPM signal is stable or not
-  bool stable_bpm_sensor = false;
-  if (data->features & HRMFeature_BPM) {
-    stable_bpm_sensor = prv_is_sensor_bpm_stable(data);
+  // Fix up erroneous quality readings. During startup, the sensor FW may report
+  // "Excellent" quality with BPM=0. Convert these to NoSignal.
+  HRMQuality effective_bpm_quality = data->hrm_quality;
+  if ((data->features & HRMFeature_BPM) &&
+      (data->hrm_bpm < HRM_SENSOR_MIN_VALID_BPM_READING) &&
+      (data->hrm_quality > HRMQuality_NoSignal)) {
+    effective_bpm_quality = HRMQuality_NoSignal;
   }
 
   HRMSubscriberState *state = (HRMSubscriberState *)s_manager_state.subscribers;
   while (state) {
     HRMSubscriberState *expired_state = NULL;
 
-    // Update the time stamp for when this subscriber last received an update if the sensor
-    // is currently stable
-    if (stable_bpm_sensor && (data->features & HRMFeature_BPM)) {
+    // Only count Good+ or OffWrist as "served" for sensor power cycling
+    if ((data->features & HRMFeature_BPM) &&
+        (effective_bpm_quality >= HRMQuality_Good ||
+         effective_bpm_quality == HRMQuality_OffWrist)) {
       state->last_valid_bpm_ticks = cur_ticks;
     }
 
@@ -582,10 +504,6 @@ void hrm_manager_new_data_cb(const HRMData *data) {
     for (uint8_t i = 0; i < HRMFeatureShiftMax; ++i) {
       HRMFeature feature = (1 << i);
       if (!(state->features & feature) || !(data->features & feature)) {
-        continue;
-      }
-      // Only send BPM and HRV events if the sensor is stable
-      if (!stable_bpm_sensor && (feature == HRMFeature_BPM || feature == HRMFeature_HRV)) {
         continue;
       }
       if (state->callback_handler) {
@@ -598,6 +516,10 @@ void hrm_manager_new_data_cb(const HRMData *data) {
         kernel_bg_features_sent |= feature;
       }
       prv_populate_hrm_event(&hrm_event, feature, data);
+      // Apply quality fixup for erroneous startup readings
+      if (feature == HRMFeature_BPM && effective_bpm_quality != data->hrm_quality) {
+        hrm_event.bpm.quality = effective_bpm_quality;
+      }
       PBL_ASSERTN(prv_event_put(state, &hrm_event));
     }
 
