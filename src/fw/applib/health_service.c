@@ -514,9 +514,6 @@ T_STATIC void prv_adjust_value_boundaries(HealthValue *values, size_t num_values
 static HealthValue prv_compute_aggregate_using_daily_totals(
   HealthServiceState *state, HealthMetric metric, time_t time_start, time_t time_end,
   HealthAggregation aggregation) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return 0;
-#else
   HealthServiceTimeRange time_range = {};
   HealthServiceDailyHistory daily_history = {};
 
@@ -561,7 +558,6 @@ static HealthValue prv_compute_aggregate_using_daily_totals(
       break;
   }
   return result;
-#endif
 }
 
 
@@ -849,9 +845,6 @@ static void prv_sessions_sort(ActivitySession *sessions, const uint32_t num_sess
 
 // ----------------------------------------------------------------------------------------------
 static MeasurementSystem prv_get_shell_prefs_metric_for_distance(void) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return MeasurementSystemUnknown;
-#else
   switch (sys_shell_prefs_get_units_distance()) {
     case UnitsDistance_Miles:
       return MeasurementSystemImperial;
@@ -860,7 +853,6 @@ static MeasurementSystem prv_get_shell_prefs_metric_for_distance(void) {
     default:
       return MeasurementSystemUnknown;
   }
-#endif
 }
 
 
@@ -893,15 +885,11 @@ bool health_service_private_weekly_filter(int index, int32_t value, void *tm_wee
 // ----------------------------------------------------------------------------------------------
 bool health_service_private_get_metric_history(HealthMetric metric, uint32_t history_len,
                                                int32_t *history) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return false;
-#else
   // Look up which activity metric maps to the given health metric. We separate the two because
   // in the future, the health APIs may need to go other services besides just the Activity service
   // to get information.
   ActivityMetric act_metric = prv_get_activity_metric(metric);
   return sys_activity_get_metric(act_metric, history_len, history);
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -930,9 +918,6 @@ HealthServiceAccessibilityMask health_service_metric_averaged_accessible(
 HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessible(
   HealthMetric metric, time_t time_start, time_t time_end, HealthAggregation aggregation,
   HealthServiceTimeScope scope) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return HealthServiceAccessibilityMaskNotSupported;
-#else
   if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
@@ -964,22 +949,17 @@ HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessib
   }
 
   return HealthServiceAccessibilityMaskNotAvailable;
-#endif
 }
 
 
 // ----------------------------------------------------------------------------------------------
 HealthValue health_service_sum_today(HealthMetric metric) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return 0;
-#else
   if (!sys_activity_is_initialized()) {
     return 0;
   }
   const time_t today_midnight = sys_time_start_of_today();
   const time_t tomorrow_midnight = today_midnight + SECONDS_PER_DAY;
   return health_service_sum(metric, today_midnight, tomorrow_midnight);
-#endif
 }
 
 
@@ -1060,9 +1040,6 @@ static HealthValue prv_hr_aggregate_averaged(HealthServiceState *state, HealthMe
 HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_start,
                                               time_t time_end, HealthAggregation aggregation,
                                               HealthServiceTimeScope scope) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return 0;
-#else
   if (!sys_activity_is_initialized()) {
     return 0;
   }
@@ -1130,14 +1107,10 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
                                                              aggregation, scope);
   }
 
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
 bool health_service_events_subscribe(HealthEventHandler handler, void *context) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return false;
-#else
   HealthServiceState *state = prv_get_state(true);
   if (!state) {
     return false;
@@ -1159,28 +1132,20 @@ bool health_service_events_subscribe(HealthEventHandler handler, void *context) 
   sys_send_pebble_event_to_kernel(&event);
 
   return true;
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
 bool health_service_events_unsubscribe(void) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return false;
-#else
   HealthServiceState *state = prv_get_state(false);
   event_service_client_unsubscribe(&state->health_event_service_info);
   state->event_handler = NULL;
   prv_health_service_deinit_cache(state);
   return true;
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
 HealthMetricAlert *health_service_register_metric_alert(HealthMetric metric,
                                                         HealthValue threshold) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return NULL;
-#else
   if (prv_is_heart_rate_metric(metric) && !sys_activity_prefs_heart_rate_is_enabled()) {
     return NULL;
   }
@@ -1204,14 +1169,10 @@ HealthMetricAlert *health_service_register_metric_alert(HealthMetric metric,
     default:
       return NULL;
   }
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
 bool health_service_cancel_metric_alert(HealthMetricAlert *alert) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return false;
-#else
   HealthServiceState *state = prv_get_state(true);
   if (!state->cache) {
     return NULL;
@@ -1229,7 +1190,6 @@ bool health_service_cancel_metric_alert(HealthMetricAlert *alert) {
     default:
       return false;
   }
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1299,9 +1259,6 @@ uint16_t health_service_get_heart_rate_sample_period_expiration_sec(void) {
 // ----------------------------------------------------------------------------------------------
 uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32_t max_records,
                                            time_t *time_start, time_t *time_end) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return false;
-#else
   if (!sys_activity_is_initialized()) {
     return 0;
   }
@@ -1332,15 +1289,11 @@ uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32
     *time_end = *time_start + SECONDS_PER_MINUTE * num_records;
   }
   return num_records;
-#endif
 }
 
 
 // ----------------------------------------------------------------------------------------------
 HealthActivityMask health_service_peek_current_activities(void) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return HealthActivityNone;
-#else
   if (!sys_activity_is_initialized()) {
     return HealthActivityNone;
   }
@@ -1372,7 +1325,6 @@ HealthActivityMask health_service_peek_current_activities(void) {
   }
 
   return result;
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1385,9 +1337,6 @@ void health_service_activities_iterate(HealthActivityMask activity_mask,
                                        time_t time_start, time_t time_end,
                                        HealthIterationDirection direction,
                                        HealthActivityIteratorCB callback, void *context) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return;
-#else
   if (!sys_activity_is_initialized()) {
     return;
   }
@@ -1444,7 +1393,6 @@ void health_service_activities_iterate(HealthActivityMask activity_mask,
       }
     }
   }
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1461,9 +1409,6 @@ bool health_service_private_get_yesterdays_sleep_activity(HealthValue *enter_sec
 HealthServiceAccessibilityMask health_service_any_activity_accessible(
   HealthActivityMask activity_mask,
   time_t start_time, time_t end_time) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return HealthServiceAccessibilityMaskNotSupported;
-#else
   // TODO: PBL-31628 permission system to reply with HealthServiceAccessibilityMaskNoPermission
 
   if (activity_mask == HealthActivityNone) {
@@ -1482,21 +1427,16 @@ HealthServiceAccessibilityMask health_service_any_activity_accessible(
   }
 
   return HealthServiceAccessibilityMaskAvailable;
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
 MeasurementSystem health_service_get_measurement_system_for_display(HealthMetric metric) {
-#if !CAPABILITY_HAS_HEALTH_TRACKING
-  return MeasurementSystemUnknown;
-#else
   switch (metric) {
     case HealthMetricWalkedDistanceMeters:
       return prv_get_shell_prefs_metric_for_distance();
     default:
       return MeasurementSystemUnknown;
   }
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------

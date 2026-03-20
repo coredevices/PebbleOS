@@ -118,9 +118,7 @@ static void prv_send_watch_versions(CommSession *session) {
   versions_msg.capabilities.extended_notification_service = 1;
   versions_msg.capabilities.lang_pack_support = 1;
   versions_msg.capabilities.app_message_8k_support = 1;
-#if CAPABILITY_HAS_HEALTH_TRACKING
   versions_msg.capabilities.activity_insights_support = 1;
-#endif
   versions_msg.capabilities.voice_api_support = 1;
   versions_msg.capabilities.unread_coredump_support = 1;
   // FIXME: PBL-31627 In PRF, APP_ID_SEND_TEXT isn't defined - requiring the #ifdef and ternary op.
@@ -148,7 +146,7 @@ static void prv_send_watch_versions(CommSession *session) {
   resource_version_to_network_endian(&versions_msg.system_resources_version);
 
   versions_msg.is_unfaithful = bt_persistent_storage_is_unfaithful();
-#if CAPABILITY_HAS_HEALTH_TRACKING && !RECOVERY_FW
+#if !RECOVERY_FW
   versions_msg.activity_insights_version = hton16(activity_insights_settings_get_version());
 #endif
 

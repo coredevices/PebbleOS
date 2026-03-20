@@ -75,9 +75,7 @@ typedef struct {
 
   ConnectionServiceState connection_service_state;
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   HealthServiceState health_service_state;
-#endif
 
   LocaleInfo locale_info;
 
@@ -200,9 +198,7 @@ NOINLINE void app_state_init(void) {
 
   tick_timer_service_state_init(app_state_get_tick_timer_service_state());
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   health_service_state_init(app_state_get_health_service_state());
-#endif
 
   locale_init_app_locale(app_state_get_locale_info());
 
@@ -220,9 +216,7 @@ NOINLINE void app_state_init(void) {
 
 NOINLINE void app_state_deinit(void) {
   animation_private_state_deinit(&s_app_state_ptr->animation_state);
-#if CAPABILITY_HAS_HEALTH_TRACKING
   health_service_state_deinit(app_state_get_health_service_state());
-#endif
   unobstructed_area_service_deinit(app_state_get_unobstructed_area_state());
 }
 
@@ -319,11 +313,9 @@ ConnectionServiceState *app_state_get_connection_service_state(void) {
   return &s_app_state_ptr->connection_service_state;
 }
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 HealthServiceState *app_state_get_health_service_state(void) {
   return &s_app_state_ptr->health_service_state;
 }
-#endif
 
 ContentIndicatorsBuffer *app_state_get_content_indicators_buffer(void) {
   return &s_app_state_ptr->content_indicators_buffer;

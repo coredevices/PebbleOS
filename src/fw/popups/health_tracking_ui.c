@@ -15,9 +15,6 @@
 
 #include <stdio.h>
 
-
-#if CAPABILITY_HAS_HEALTH_TRACKING
-
 typedef struct HealthTrackingUIData {
   uint32_t res_id;
   const char *text;
@@ -106,6 +103,3 @@ void health_tracking_ui_feature_show_disabled(void) {
 void health_tracking_ui_register_app_launch(AppInstallId app_id) {
   s_last_app_id = 0;
 }
-
-
-#endif  // CAPABILITY_HAS_HEALTH_TRACKING

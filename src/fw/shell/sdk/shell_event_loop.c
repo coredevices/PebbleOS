@@ -26,12 +26,10 @@ void shell_event_loop_init(void) {
   app_message_sender_init();
   watchface_init();
   timeline_peek_init();
-#if CAPABILITY_HAS_HEALTH_TRACKING
   // Start activity tracking if enabled
   if (activity_prefs_tracking_is_enabled()) {
     activity_start_tracking(false /*test_mode*/);
   }
-#endif
 }
 
 void shell_event_loop_handle_event(PebbleEvent *e) {

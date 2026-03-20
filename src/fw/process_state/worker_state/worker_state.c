@@ -35,9 +35,7 @@ typedef struct {
 
   ConnectionServiceState connection_service_state;
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   HealthServiceState health_service_state;
-#endif
 } WorkerState;
 
 KERNEL_READONLY_DATA static WorkerState *s_worker_state_ptr;
@@ -61,15 +59,11 @@ void worker_state_init(void) {
 
   tick_timer_service_state_init(worker_state_get_tick_timer_service_state());
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   health_service_state_init(worker_state_get_health_service_state());
-#endif
 }
 
 void worker_state_deinit(void) {
-#if CAPABILITY_HAS_HEALTH_TRACKING
   health_service_state_deinit(worker_state_get_health_service_state());
-#endif
 }
 
 Heap *worker_state_get_heap(void) {
@@ -121,11 +115,9 @@ ConnectionServiceState *worker_state_get_connection_service_state(void) {
   return &s_worker_state_ptr->connection_service_state;
 }
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 HealthServiceState *worker_state_get_health_service_state(void) {
   return &s_worker_state_ptr->health_service_state;
 }
-#endif
 
 
 

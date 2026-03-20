@@ -950,12 +950,10 @@ static const PrivateDataSourceInfo s_data_sources[] = {
     .id = UUID_ALARMS_DATA_SOURCE,
     .name = i18n_noop("Alarms"),
   },
-#if CAPABILITY_HAS_HEALTH_TRACKING
   {
     .id = UUID_HEALTH_DATA_SOURCE,
     .name = i18n_noop("Health"),
   },
-#endif
   {
     .id = UUID_INTERCOM_DATA_SOURCE,
     .name = i18n_noop("Intercom"),

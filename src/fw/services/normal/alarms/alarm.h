@@ -156,10 +156,8 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps);
 //! have a minimum of 28 bytes allocated
 void alarm_get_string_for_custom(bool scheduled_days[DAYS_PER_WEEK], char *alarm_day_text);
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
 //! Set the alarms app version opened
 void alarm_prefs_set_alarms_app_opened(uint8_t version);
 
 //! Get the alarms app version opened
 uint8_t alarm_prefs_get_alarms_app_opened(void);
-#endif

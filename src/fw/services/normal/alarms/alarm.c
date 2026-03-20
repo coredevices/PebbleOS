@@ -143,24 +143,16 @@ static void prv_file_close_and_unlock(SettingsFile *file) {
 
 // ----------------------------------------------------------------------------------------------
 static ActivitySleepState prv_get_sleep_state(void) {
-#if CAPABILITY_HAS_HEALTH_TRACKING
   int32_t sleep_state;
   const bool rv = activity_get_metric(ActivityMetricSleepState, 1, &sleep_state);
   return rv ? sleep_state : ActivitySleepStateUnknown;
-#else
-  return ActivitySleepStateUnknown;
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
 static int32_t prv_get_vmc(void) {
-#if CAPABILITY_HAS_HEALTH_TRACKING
   int32_t vmc;
   const bool rv = activity_get_metric(ActivityMetricLastVMC, 1, &vmc);
   return rv ? vmc : 0;
-#else
-  return 0;
-#endif
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -365,8 +357,7 @@ static void prv_put_alarm_event(void) {
 
   AlarmConfig *config = s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config :
                                                                      NULL;
-  const bool is_smart = (config && config->is_smart && CAPABILITY_HAS_HEALTH_TRACKING &&
-                         activity_tracking_on());
+  const bool is_smart = (config && config->is_smart && activity_tracking_on());
   PebbleEvent e = (PebbleEvent) {
     .type = PEBBLE_ALARM_CLOCK_EVENT,
     .alarm_clock = {
@@ -448,9 +439,7 @@ T_STATIC void prv_timer_kernel_bg_callback(void *data) {
 
   rv = prv_alarm_get_config(file, id, config);
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   s_smart_snooze_counter = 0;
-#endif
 
   // If this is a just once alarm, then disable it.
   if (rv && config->kind == ALARM_KIND_JUST_ONCE) {

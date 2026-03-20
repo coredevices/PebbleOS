@@ -119,16 +119,12 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .flush = watch_app_prefs_db_flush,
   },
   [BlobDBIdHealth] = {
-#if CAPABILITY_HAS_HEALTH_TRACKING
     .init = health_db_init,
     .insert = health_db_insert,
     .get_len = health_db_get_len,
     .read = health_db_read,
     .del = health_db_delete,
     .flush = health_db_flush,
-#else
-    .disabled = true,
-#endif
   },
   [BlobDBIdAppGlance] = {
     .init = app_glance_db_init,

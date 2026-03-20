@@ -98,14 +98,13 @@ void services_normal_init(void) {
 
   app_order_storage_init();
 
-#if CAPABILITY_HAS_HEALTH_TRACKING
   // Check if time is valid before initializing activity
   if (prv_is_time_valid_for_activity_init()) {
     activity_init();
   } else {
     // Defer activity initialization until time is set properly
     s_activity_init_deferred = true;
-    
+
     // Subscribe to time set events
     s_time_event_info = (EventServiceInfo) {
       .type = PEBBLE_SET_TIME_EVENT,
@@ -113,7 +112,6 @@ void services_normal_init(void) {
     };
     event_service_client_subscribe(&s_time_event_info);
   }
-#endif
 
   notifications_init();
   alerts_init();
@@ -138,12 +136,10 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = alarm_service_enable_alarms,
     .enable_mask = R_LowPower | R_Stationary | R_Normal,
   },
-#if CAPABILITY_HAS_HEALTH_TRACKING
   {
     .set_enable_fn = activity_set_enabled,
     .enable_mask = R_Stationary | R_Normal,
   },
-#endif
   {
     .set_enable_fn = stationary_run_level_enable,
     .enable_mask = R_Stationary | R_Normal,

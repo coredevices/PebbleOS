@@ -411,7 +411,6 @@ def build(ctx):
             " src/fw/util/legacy_checksum.c" \
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c",
-        defines=['CAPABILITY_HAS_HEALTH_TRACKING=1'],
         test_sources_ant_glob = "test_do_not_disturb.c",
         override_includes=['dummy_board'])
 
@@ -468,8 +467,7 @@ def build(ctx):
             "tests/fakes/fake_rtc.c " \
             "tests/fakes/fake_accel_service.c ",
         test_sources_ant_glob = "test_hrm_manager.c",
-        override_includes=['dummy_board'],
-        defines=["CAPABILITY_HAS_BUILTIN_HRM=1"])
+        override_includes=['dummy_board'])
 
     clar(ctx,
          sources_ant_glob=(
