@@ -51,6 +51,7 @@ static PebbleMutex *s_i2c_lock;
 
 static void prv_exti_cb(bool *should_context_switch);
 static void cst816_hw_reset(void);
+void touch_sensor_set_enabled(bool enabled);
 
 static bool prv_read_data(uint16_t register_address, uint8_t *result, uint16_t size, bool is_work_mode) {
   mutex_lock(s_i2c_lock);
@@ -251,14 +252,17 @@ void touch_sensor_init(void) {
 static void prv_process_pending_messages(void* context) {
   s_callback_scheduled = false;
 
+  const uint64_t current_time_ms = ticks_to_milliseconds(rtc_get_ticks());
   uint8_t data[CST816_TOUCH_DATA_SIZE] = {0};
   bool rv = prv_read_data(CST816_TOUCH_DATA_REG, data, CST816_TOUCH_DATA_SIZE, 1);
   if (!rv) {
-    PBL_LOG_ERR("Failed to read touch data, dropping event");
+    PBL_LOG_ERR("Failed to read touch data, trying to recover");
+    touch_handle_update(0, TouchState_FingerUp, NULL, 0, current_time_ms);
+    exti_disable(CST816->int_exti);
+    touch_sensor_set_enabled(true);
     return;
   }
 
-  const uint64_t current_time_ms = ticks_to_milliseconds(rtc_get_ticks());
   uint8_t press = data[0] & 0x0F;
   GPoint point = {
     .x = (((uint16_t)(data[1] & 0x0F)) << 8) | data[2],
