@@ -27,7 +27,6 @@
 #include "services/common/bluetooth/local_id.h"
 #include "services/common/i18n/i18n.h"
 #include "services/common/light.h"
-#include "services/common/status_led.h"
 #include "services/common/system_task.h"
 #include "services/normal/stationary.h"
 #include "shell/normal/battery_ui.h"
