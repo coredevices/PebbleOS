@@ -1551,6 +1551,25 @@ bool activity_prefs_heart_rate_is_enabled(void) {
   return s_activity_hrm_preferences.enabled;
 }
 
+#if CAPABILITY_HAS_BUILTIN_HRM
+HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
+  uint8_t interval = s_activity_hrm_preferences.measurement_interval;
+  if (interval >= HRMonitoringIntervalCount) {
+    return HRMonitoringInterval_10Min;
+  }
+  return (HRMonitoringInterval)interval;
+}
+
+void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval) {
+  if (s_activity_hrm_preferences.measurement_interval != (uint8_t)interval) {
+    s_activity_hrm_preferences.measurement_interval = (uint8_t)interval;
+    prv_pref_set(PREF_KEY_ACTIVITY_HRM_PREFERENCES, &s_activity_hrm_preferences,
+                 sizeof(s_activity_hrm_preferences));
+    hrm_manager_handle_prefs_changed();
+  }
+}
+#endif
+
 void alarm_prefs_set_alarms_app_opened(uint8_t version) {
   if (s_alarms_app_opened != version) {
     s_alarms_app_opened = version;
