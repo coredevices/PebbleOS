@@ -51,11 +51,7 @@ typedef uint16_t ActivityScalarStore;
 // part of the next day's sleep
 #define ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY  (21 * MINUTES_PER_HOUR)
 
-// Default HeartRate sampling period (Must take a sample every X seconds by default)
-#define ACTIVITY_DEFAULT_HR_PERIOD_SEC (10 * SECONDS_PER_MINUTE)
-
-// Default HeartRate sampling ON time (Stays on for X seconds every
-// ACTIVITY_DEFAULT_HR_PERIOD_SEC seconds)
+// Default HeartRate sampling ON time
 #define ACTIVITY_DEFAULT_HR_ON_TIME_SEC (60)
 
 // Turn off the HR device after we've received X good quality samples

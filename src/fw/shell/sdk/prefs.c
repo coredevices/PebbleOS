@@ -243,6 +243,15 @@ bool activity_prefs_heart_rate_is_enabled(void) {
   return true;
 }
 
+#if CAPABILITY_HAS_BUILTIN_HRM
+HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
+  return HRMonitoringInterval_10Min;
+}
+
+void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval) {
+}
+#endif
+
 ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {
   static ActivityInsightSettings s_settings = { 0 };
   return &s_settings;

@@ -5,10 +5,14 @@
 #include "option_menu.h"
 #include "window.h"
 
+#include "applib/ui/option_menu_window.h"
 #include "kernel/pbl_malloc.h"
+#include "process_state/app_state/app_state.h"
 #include "services/common/i18n/i18n.h"
+#include "services/normal/activity/activity.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
+#include "util/size.h"
 
 #include <string.h>
 
@@ -21,10 +25,47 @@ static const char *s_units_distance_labels[] = {
     i18n_noop("Miles"),
 };
 
+#if CAPABILITY_HAS_BUILTIN_HRM
+static const char *s_hrm_interval_labels[] = {
+    i18n_noop("10 Minutes"),
+    i18n_noop("30 Minutes"),
+    i18n_noop("1 Hour"),
+    i18n_noop("Disabled"),
+};
+#endif
+
 enum SettingsHealthItem {
     SettingsHealthUnitDistance,
+#if CAPABILITY_HAS_BUILTIN_HRM
+    SettingsHealthHRMonitoringInterval,
+#endif
     NumSettingsHealthItems
 };
+
+#if CAPABILITY_HAS_BUILTIN_HRM
+// HRM Interval option menu
+/////////////////////////////
+
+static void prv_hrm_interval_menu_select(OptionMenu *option_menu, int selection, void *context) {
+    activity_prefs_set_hrm_measurement_interval((HRMonitoringInterval)selection);
+    app_window_stack_remove(&option_menu->window, true /*animated*/);
+}
+
+static void prv_hrm_interval_menu_push(SettingsHealthData *data) {
+    const int index = (int)activity_prefs_get_hrm_measurement_interval();
+    const OptionMenuCallbacks callbacks = {
+        .select = prv_hrm_interval_menu_select,
+    };
+    const char *title = i18n_noop("HR Monitoring");
+    settings_option_menu_push(
+        title, OptionMenuContentType_SingleLine, index, &callbacks,
+        ARRAY_LENGTH(s_hrm_interval_labels), true /* icons_enabled */,
+        s_hrm_interval_labels, data);
+}
+#endif
+
+// Menu Callbacks
+/////////////////////////////
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
     SettingsHealthData *data = (SettingsHealthData*)context;
@@ -41,7 +82,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     const char *subtitle = NULL;
 
     switch (row) {
-        case SettingsHealthUnitDistance:
+        case SettingsHealthUnitDistance: {
             title = i18n_noop("Distance Unit");
             UnitsDistance unit = shell_prefs_get_units_distance();
             if (unit >= UnitsDistanceCount) {
@@ -50,20 +91,39 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                 subtitle = s_units_distance_labels[unit];
             }
             break;
+        }
+#if CAPABILITY_HAS_BUILTIN_HRM
+        case SettingsHealthHRMonitoringInterval: {
+            title = i18n_noop("HR Monitoring");
+            HRMonitoringInterval interval = activity_prefs_get_hrm_measurement_interval();
+            if (interval >= HRMonitoringIntervalCount) {
+                subtitle = i18n_noop("Unknown");
+            } else {
+                subtitle = s_hrm_interval_labels[interval];
+            }
+            break;
+        }
+#endif
         default:
             WTF;
     }
-    menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
+    menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     SettingsHealthData *data = (SettingsHealthData*)context;
     switch (row) {
-        case SettingsHealthUnitDistance:
+        case SettingsHealthUnitDistance: {
             UnitsDistance unit = shell_prefs_get_units_distance();
             unit = (unit + 1) % UnitsDistanceCount;
             shell_prefs_set_units_distance(unit);
             break;
+        }
+#if CAPABILITY_HAS_BUILTIN_HRM
+        case SettingsHealthHRMonitoringInterval:
+            prv_hrm_interval_menu_push(data);
+            break;
+#endif
         default:
             WTF;
     }
