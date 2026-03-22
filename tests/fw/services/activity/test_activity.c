@@ -2338,7 +2338,7 @@ void test_activity__hrm_sampling_period(void) {
   fake_system_task_callbacks_invoke_pending();
   s_test_alg_state.orientation = 0x11; // Not flat
 
-  prv_advance_time_hr(ACTIVITY_DEFAULT_HR_PERIOD_SEC, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
+  prv_advance_time_hr((10 * SECONDS_PER_MINUTE), 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
 
   // Should be 1 second sampling when we start up
   cl_assert_equal_i(s_hrm_manager_update_interval, 1);
@@ -2368,14 +2368,14 @@ void test_activity__hrm_sampling_period(void) {
 
   // Advance to our next sampling period, but the watch is flat so we shouldn't start sampling
   s_test_alg_state.orientation = 0x00; // Flat
-  prv_advance_time_hr(ACTIVITY_DEFAULT_HR_PERIOD_SEC, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
+  prv_advance_time_hr((10 * SECONDS_PER_MINUTE), 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
   cl_assert(s_hrm_manager_update_interval > SECONDS_PER_HOUR);
 
   // Advance to our next sampling period, the watch is no longer flat so we should be sampling.
   // The period has already expired during the flat advance above, so just advance until
   // the next minute boundary triggers the subscription update and starts sampling.
   s_test_alg_state.orientation = 0x22; // Not flat
-  for (uint32_t i = 0; i < ACTIVITY_DEFAULT_HR_PERIOD_SEC; i++) {
+  for (uint32_t i = 0; i < (10 * SECONDS_PER_MINUTE); i++) {
     prv_advance_time_hr(1, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
     if (s_hrm_manager_update_interval == 1) {
       break;

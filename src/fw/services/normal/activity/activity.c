@@ -72,11 +72,40 @@ static bool prv_activity_allowed_to_be_enabled(void) {
 
 
 // ------------------------------------------------------------------------------------------------
+#if CAPABILITY_HAS_BUILTIN_HRM
+// Get the HRM measurement period in seconds based on the user's setting
+static uint32_t prv_get_hrm_period_sec(void) {
+  switch (activity_prefs_get_hrm_measurement_interval()) {
+    case HRMonitoringInterval_30Min:
+      return 30 * SECONDS_PER_MINUTE;
+    case HRMonitoringInterval_1Hour:
+      return SECONDS_PER_HOUR;
+    case HRMonitoringInterval_10Min:
+    default:
+      return 10 * SECONDS_PER_MINUTE;
+  }
+}
+#endif
+
+// ------------------------------------------------------------------------------------------------
 // If necessary, change the sampling period of our heart rate subscription
 // @param[in] now_ts number of seconds the system has been running (from time_get_uptime_seconds())
 static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 #if CAPABILITY_HAS_BUILTIN_HRM
   if (!s_hrm_present) {
+    return;
+  }
+
+  // If measurement interval is disabled, ensure we're not sampling and skip
+  if (activity_prefs_get_hrm_measurement_interval() == HRMonitoringInterval_Disabled) {
+    if (s_activity_state.hr.currently_sampling) {
+      bool success = sys_hrm_manager_set_update_interval(s_activity_state.hr.hrm_session,
+                                                         ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC,
+                                                         0 /*expire_sec*/);
+      PBL_ASSERTN(success);
+      s_activity_state.hr.currently_sampling = false;
+      s_activity_state.hr.toggled_sampling_at_ts = now_ts;
+    }
     return;
   }
 
@@ -97,8 +126,8 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
       should_toggle = true;
     }
   } else {
-    // If we are not currently sampling, turn on after ACTIVITY_DEFAULT_HR_PERIOD_SEC
-    const uint32_t turn_on_at = last_toggled_ts + ACTIVITY_DEFAULT_HR_PERIOD_SEC;
+    // If we are not currently sampling, turn on after the configured period
+    const uint32_t turn_on_at = last_toggled_ts + prv_get_hrm_period_sec();
     if (turn_on_at <= now_ts) {
       should_toggle = true;
     }

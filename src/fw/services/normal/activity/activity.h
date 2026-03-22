@@ -50,9 +50,19 @@ typedef struct PACKED HeartRatePreferences {
   uint8_t zone3_threshold;
 } HeartRatePreferences;
 
+// HRM measurement interval options
+typedef enum {
+  HRMonitoringInterval_10Min = 0,
+  HRMonitoringInterval_30Min,
+  HRMonitoringInterval_1Hour,
+  HRMonitoringInterval_Disabled,
+  HRMonitoringIntervalCount,
+} HRMonitoringInterval;
+
 // Activity HRM Settings Struct, for storing to prefs
 typedef struct PACKED ActivityHRMSettings {
   bool enabled;
+  uint8_t measurement_interval; // HRMonitoringInterval value
 } ActivityHRMSettings;
 
 // Default values, taken from http://www.cdc.gov/nchs/fastats/body-measurements.htm
@@ -83,6 +93,7 @@ typedef struct PACKED ActivityHRMSettings {
 
 #define ACTIVITY_HRM_DEFAULT_PREFERENCES { \
   .enabled = true, \
+  .measurement_interval = HRMonitoringInterval_10Min, \
 }
 
 // We consider values outside of this range to be invalid
@@ -396,6 +407,16 @@ uint8_t activity_prefs_heart_get_zone3_threshold(void);
 
 //! Return true if the HRM is enabled, false if not
 bool activity_prefs_heart_rate_is_enabled(void);
+
+#if CAPABILITY_HAS_BUILTIN_HRM
+//! Get the HRM measurement interval setting
+//! @return the current HRMonitoringInterval value
+HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void);
+
+//! Set the HRM measurement interval
+//! @param interval the desired HRMonitoringInterval value
+void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval);
+#endif
 
 //! Get the current and (optionally) historical values for a given metric. The caller passes
 //! in a pointer to an array that will be filled in with the results (current value for today at
