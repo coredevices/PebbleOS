@@ -8,6 +8,7 @@
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
 #include "applib/ui/dialogs/confirmation_dialog.h"
+#include "apps/prf/mfg_test_aging.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"
@@ -65,6 +66,12 @@ static void prv_select_load_prf(int index, void *context) {
 }
 #endif
 
+static void prv_select_test_aging(int index, void *context) {
+  s_relaunch_menu = true;
+  launcher_task_add_callback(prv_launch_app_and_return_cb,
+                             (void *)mfg_test_aging_app_get_info());
+}
+
 static void prv_window_load(Window *window) {
   MfgExtrasMenuAppData *data = app_state_get_user_data();
 
@@ -72,6 +79,7 @@ static void prv_window_load(Window *window) {
   GRect bounds = window_layer->bounds;
 
   const SimpleMenuItem menu_items[] = {
+    { .title = "Aging",             .callback = prv_select_test_aging },
 #ifdef MANUFACTURING_FW
     { .title = "Load PRF",          .callback = prv_select_load_prf },
 #endif
