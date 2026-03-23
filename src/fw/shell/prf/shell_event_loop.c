@@ -40,9 +40,8 @@ if (s_paused_reconnect_because_repairing) {
 }
 
 void shell_event_loop_init(void) {
-#ifndef MANUFACTURING_FW
+  prf_idle_watchdog_init();
   prf_idle_watchdog_start();
-#endif
 }
 
 void shell_event_loop_handle_event(PebbleEvent *e) {
