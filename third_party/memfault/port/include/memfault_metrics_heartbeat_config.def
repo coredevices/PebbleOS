@@ -1,7 +1,7 @@
 #include "ports/freertos/config/memfault_metrics_heartbeat_freertos_config.def"
 
 // OS
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(memory_pct_max, kMemfaultMetricType_Unsigned, 100)
+MEMFAULT_METRICS_KEY_DEFINE(memory_pct_max, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(stack_free_kernel_main_bytes, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(stack_free_kernel_background_bytes, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(stack_free_newtimers_bytes, kMemfaultMetricType_Unsigned)
@@ -14,9 +14,9 @@ MEMFAULT_METRICS_KEY_DEFINE(battery_plugged_time_ms, kMemfaultMetricType_Timer)
 
 // Hardware I/O
 MEMFAULT_METRICS_KEY_DEFINE(backlight_on_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(backlight_avg_intensity_pct, kMemfaultMetricType_Unsigned, 100)
+MEMFAULT_METRICS_KEY_DEFINE(backlight_avg_intensity_pct, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(vibrator_on_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(vibrator_avg_strength_pct, kMemfaultMetricType_Unsigned, 100)
+MEMFAULT_METRICS_KEY_DEFINE(vibrator_avg_strength_pct, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(hrm_on_time_ms, kMemfaultMetricType_Timer)
 MEMFAULT_METRICS_KEY_DEFINE(button_pressed_count, kMemfaultMetricType_Unsigned)
 
