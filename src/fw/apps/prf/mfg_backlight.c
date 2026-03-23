@@ -4,9 +4,12 @@
 #include "applib/app.h"
 #include "applib/graphics/graphics.h"
 #include "applib/ui/app_window_stack.h"
+#include "applib/ui/dialogs/confirmation_dialog.h"
 #include "applib/ui/window.h"
+#include "apps/prf/mfg_test_result.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
+#include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/common/light.h"
 #include "drivers/led_controller.h"
@@ -59,10 +62,44 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   }
 }
 
+static void prv_result_confirmed(ClickRecognizerRef recognizer, void *context) {
+  ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
+  confirmation_dialog_pop(confirmation_dialog);
+
+  bool passed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  mfg_test_result_report(MfgTestId_Backlight, passed, 0);
+  app_window_stack_pop(false);
+}
+
+static void prv_result_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_result_confirmed);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_result_confirmed);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_result_confirmed);
+}
+
+static void prv_show_result_dialog(void) {
+  ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Backlight Result");
+  Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
+
+  dialog_set_text(dialog, "Backlight OK?");
+
+  confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_result_click_config);
+
+  ActionBarLayer *action_bar = confirmation_dialog_get_action_bar(confirmation_dialog);
+  action_bar_layer_set_context(action_bar, confirmation_dialog);
+
+  app_confirmation_dialog_push(confirmation_dialog);
+}
+
 static void prv_button_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  app_data->test_pattern = (app_data->test_pattern + 1) % NumTestPatterns;
+  app_data->test_pattern++;
+
+  if (app_data->test_pattern >= NumTestPatterns) {
+    prv_show_result_dialog();
+    return;
+  }
 
   layer_mark_dirty(&app_data->window.layer);
 }
