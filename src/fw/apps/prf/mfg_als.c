@@ -8,6 +8,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window_private.h"
+#include "apps/prf/mfg_test_result.h"
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_md.h"
@@ -34,6 +35,7 @@
 // Test parameters
 #define COUNTDOWN_MS 5000
 #define SAMPLE_DURATION_MS 5000
+#define RESULT_DISPLAY_MS 3000
 #define SAMPLE_INTERVAL_MS 100
 
 typedef enum {
@@ -104,11 +106,14 @@ static void prv_update_display(void *context) {
         PBL_LOG_INFO("ALS test complete - Average: %"PRIu32" (samples: %"PRIu32")",
                      data->als_average, data->als_sample_count);
 
-        if (
+        bool passed = (
 #if ALS_MIN_VALUE > 0
-            data->als_average >= ALS_MIN_VALUE &&
+          data->als_average >= ALS_MIN_VALUE &&
 #endif
-            data->als_average <= ALS_MAX_VALUE) {
+          data->als_average <= ALS_MAX_VALUE);
+        mfg_test_result_report(MfgTestId_ALS, passed, data->als_average);
+
+        if (passed) {
           data->test_state = ALSStatePass;
           PBL_LOG_INFO("ALS test PASSED");
         } else {
@@ -116,19 +121,19 @@ static void prv_update_display(void *context) {
           PBL_LOG_ERR("ALS test FAILED - Average %"PRIu32" outside range %d-%d",
                       data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
         }
+        data->state_start_time = rtc_get_ticks();
       }
       break;
     }
 
     case ALSStatePass:
-      snprintf(data->status_text, AMBIENT_READING_STR_LEN, "PASS");
-      snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN,
-               "Average: %"PRIu32"\nRange: %d-%d",
-               data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
-      break;
-
     case ALSStateFail:
-      snprintf(data->status_text, AMBIENT_READING_STR_LEN, "FAIL");
+      if (elapsed >= RESULT_DISPLAY_MS) {
+        app_window_stack_pop(false);
+        return;
+      }
+      snprintf(data->status_text, AMBIENT_READING_STR_LEN,
+               data->test_state == ALSStatePass ? "PASS" : "FAIL");
       snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN,
                "Average: %"PRIu32"\nRange: %d-%d",
                data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
@@ -152,9 +157,6 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
     data->state_start_time = rtc_get_ticks();
 
     PBL_LOG_INFO("ALS test started - countdown %d ms", COUNTDOWN_MS);
-  } else if (data->test_state == ALSStatePass || data->test_state == ALSStateFail) {
-    // Exit app on second press
-    app_window_stack_pop(true);
   }
 }
 
