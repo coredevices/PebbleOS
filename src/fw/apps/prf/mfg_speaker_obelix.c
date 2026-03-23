@@ -3,8 +3,10 @@
 
 #include "applib/app.h"
 #include "applib/ui/app_window_stack.h"
+#include "applib/ui/dialogs/confirmation_dialog.h"
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
+#include "apps/prf/mfg_test_result.h"
 #include "kernel/pbl_malloc.h"
 #include "board/board.h"
 #include "drivers/pmic/npm1300.h"
@@ -36,6 +38,40 @@ static void prv_play_audio(void) {
   audio_set_volume(AUDIO, 100);
 }
 
+static void prv_result_confirmed(ClickRecognizerRef recognizer, void *context) {
+  ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
+  confirmation_dialog_pop(confirmation_dialog);
+
+  bool passed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  mfg_test_result_report(MfgTestId_Speaker, passed, 0);
+  app_window_stack_pop(false);
+}
+
+static void prv_result_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_result_confirmed);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_result_confirmed);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_result_confirmed);
+}
+
+static void prv_show_result_dialog(void) {
+  ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Speaker Result");
+  Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
+
+  dialog_set_text(dialog, "Speaker OK?");
+
+  confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_result_click_config);
+
+  ActionBarLayer *action_bar = confirmation_dialog_get_action_bar(confirmation_dialog);
+  action_bar_layer_set_context(action_bar, confirmation_dialog);
+
+  app_confirmation_dialog_push(confirmation_dialog);
+}
+
+static void prv_timer_callback(void *cb_data) {
+  audio_stop(AUDIO);
+  prv_show_result_dialog();
+}
+
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
 
@@ -56,13 +92,14 @@ static void prv_handle_init(void) {
 }
 
 static void s_main(void) {
-    // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
+  // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
   (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
   prv_handle_init();
   prv_play_audio();
+  app_timer_register(5000, prv_timer_callback, NULL);
   app_event_loop();
   audio_stop(AUDIO);
-    // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
+  // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
   (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
 }
 
