@@ -3,21 +3,18 @@
 
 #include "applib/app.h"
 #include "applib/tick_timer_service.h"
-#include "util/trig.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
-#include "applib/ui/path_layer.h"
 #include "applib/ui/text_layer.h"
+#include "apps/prf/mfg_test_result.h"
 #include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
 #include "drivers/accel.h"
 #include "drivers/rtc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/common/evented_timer.h"
-#include "util/bitset.h"
-#include "util/size.h"
+#include "system/logging.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -25,23 +22,16 @@
 
 #define STATUS_STRING_LEN 200
 
-#define RANGE_MIN -1070
-#define RANGE_MAX -930
-#define PREPARE_TIME_MS 3000
-#define SAMPLE_TIME_MS 5000
+// Minimum variation required on each axis (in mG)
+#define MIN_VARIATION_MG 500
+
+#define TEST_DURATION_MS 5000
 #define SAMPLE_INTERVAL_MS 100
 
 typedef enum {
   STATE_IDLE,
-  STATE_PREPARE_FLAT,
-  STATE_MEASURE_FLAT,
-  STATE_RESULT_FLAT,
-  STATE_PREPARE_LEFT,
-  STATE_MEASURE_LEFT,
-  STATE_RESULT_LEFT,
-  STATE_PREPARE_FRONT,
-  STATE_MEASURE_FRONT,
-  STATE_RESULT_FRONT,
+  STATE_TESTING,
+  STATE_RESULT,
 } TestState;
 
 static EventedTimerID s_timer;
@@ -55,13 +45,21 @@ typedef struct {
 
   TestState state;
   RtcTicks state_start_time;
-  int32_t sum;
-  int32_t avg;
-  uint8_t cnt;
-  bool pass;
-} AppData;
 
-static void prv_start_test(AppData *data);
+  // Track min/max per axis
+  int16_t min_x, max_x;
+  int16_t min_y, max_y;
+  int16_t min_z, max_z;
+
+  uint32_t sample_count;
+
+  // Variation per axis
+  int16_t variation_x;
+  int16_t variation_y;
+  int16_t variation_z;
+
+  bool test_passed;
+} AppData;
 
 static void prv_update_display(void *context) {
   AppData *data = context;
@@ -76,108 +74,72 @@ static void prv_update_display(void *context) {
     return;
   }
 
+  PBL_LOG_DBG("Accel (mG): X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
+              sample.x, sample.y, sample.z);
+
   uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->state_start_time);
 
   switch (data->state) {
-    case STATE_IDLE:
+    case STATE_IDLE: {
       sniprintf(data->status_string, sizeof(data->status_string),
-                "X: %"PRIi16"\nY: %"PRIi16"\nZ: %"PRIi16"\n\nPress SEL to start test",
+                "X: %" PRIi16 " mG\nY: %" PRIi16 " mG\nZ: %" PRIi16 " mG\n\nPress SEL",
                 sample.x, sample.y, sample.z);
       break;
+    }
 
-    case STATE_PREPARE_FLAT:
+    case STATE_TESTING: {
+      // Track min/max for each axis
+      if (data->sample_count == 0) {
+        data->min_x = data->max_x = sample.x;
+        data->min_y = data->max_y = sample.y;
+        data->min_z = data->max_z = sample.z;
+      } else {
+        if (sample.x < data->min_x) data->min_x = sample.x;
+        if (sample.x > data->max_x) data->max_x = sample.x;
+        if (sample.y < data->min_y) data->min_y = sample.y;
+        if (sample.y > data->max_y) data->max_y = sample.y;
+        if (sample.z < data->min_z) data->min_z = sample.z;
+        if (sample.z > data->max_z) data->max_z = sample.z;
+      }
+      data->sample_count++;
+
+      // Calculate current variations
+      int16_t curr_var_x = data->max_x - data->min_x;
+      int16_t curr_var_y = data->max_y - data->min_y;
+      int16_t curr_var_z = data->max_z - data->min_z;
+
       sniprintf(data->status_string, sizeof(data->status_string),
-                "Place FLAT\n\nStarting in %"PRIu32" sec",
-                (PREPARE_TIME_MS - elapsed) / 1000 + 1);
-      if (elapsed >= PREPARE_TIME_MS) {
-        data->state = STATE_MEASURE_FLAT;
+                "Testing...\nRotate device\n\nX: %" PRId16 " mG\nY: %" PRId16
+                " mG\nZ: %" PRId16 " mG\n\n%" PRIu32 " sec remaining",
+                curr_var_x, curr_var_y, curr_var_z,
+                (TEST_DURATION_MS - elapsed) / 1000 + 1);
+
+      if (elapsed >= TEST_DURATION_MS) {
+        // Store final variations
+        data->variation_x = curr_var_x;
+        data->variation_y = curr_var_y;
+        data->variation_z = curr_var_z;
+
+        // Test passes if all axes vary by at least the minimum threshold
+        data->test_passed =
+            (data->variation_x >= MIN_VARIATION_MG &&
+             data->variation_y >= MIN_VARIATION_MG &&
+             data->variation_z >= MIN_VARIATION_MG);
+
+        mfg_test_result_report(MfgTestId_Accel, data->test_passed, 0);
+
+        data->state = STATE_RESULT;
         data->state_start_time = rtc_get_ticks();
-        data->sum = 0;
-        data->cnt = 0;
       }
-      break;
-
-    case STATE_MEASURE_FLAT:
-      data->sum += sample.z;
-      data->cnt++;
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "Measuring FLAT\n\nZ: %"PRIi16"\n%"PRIu32" sec remaining",
-                sample.z, (SAMPLE_TIME_MS - elapsed) / 1000 + 1);
-      if (elapsed >= SAMPLE_TIME_MS) {
-        data->avg = data->sum / (int32_t)data->cnt;
-        data->pass = (data->avg >= RANGE_MIN && data->avg <= RANGE_MAX);
-        data->state = STATE_RESULT_FLAT;
-      }
-      break;
-
-    case STATE_RESULT_FLAT: {
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "FLAT: %s\n\nZ avg: %"PRId32"\nExpected: %d to %d\n\nPress SEL",
-                data->pass ? "PASS" : "FAIL", data->avg, RANGE_MIN, RANGE_MAX);
       break;
     }
 
-    case STATE_PREPARE_LEFT:
+    case STATE_RESULT: {
       sniprintf(data->status_string, sizeof(data->status_string),
-                "Turn LEFT\n\nStarting in %"PRIu32" sec",
-                (PREPARE_TIME_MS - elapsed) / 1000 + 1);
-      if (elapsed >= PREPARE_TIME_MS) {
-        data->state = STATE_MEASURE_LEFT;
-        data->state_start_time = rtc_get_ticks();
-        data->sum = 0;
-        data->cnt = 0;
-      }
-      break;
-
-    case STATE_MEASURE_LEFT:
-      data->sum += sample.x;
-      data->cnt++;
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "Measuring LEFT\n\nX: %"PRIi16"\n%"PRIu32" sec remaining",
-                sample.x, (SAMPLE_TIME_MS - elapsed) / 1000 + 1);
-      if (elapsed >= SAMPLE_TIME_MS) {
-        data->avg = data->sum / (int32_t)data->cnt;
-        data->pass = (data->avg >= RANGE_MIN && data->avg <= RANGE_MAX);
-        data->state = STATE_RESULT_LEFT;
-      }
-      break;
-
-    case STATE_RESULT_LEFT: {
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "LEFT: %s\n\nX avg: %"PRId32"\nExpected: %d to %d\n\nPress SEL",
-                data->pass ? "PASS" : "FAIL", data->avg, RANGE_MIN, RANGE_MAX);
-      break;
-    }
-
-    case STATE_PREPARE_FRONT:
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "Turn FRONT\n\nStarting in %"PRIu32" sec",
-                (PREPARE_TIME_MS - elapsed) / 1000 + 1);
-      if (elapsed >= PREPARE_TIME_MS) {
-        data->state = STATE_MEASURE_FRONT;
-        data->state_start_time = rtc_get_ticks();
-        data->sum = 0;
-        data->cnt = 0;
-      }
-      break;
-
-    case STATE_MEASURE_FRONT:
-      data->sum += sample.y;
-      data->cnt++;
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "Measuring FRONT\n\nY: %"PRIi16"\n%"PRIu32" sec remaining",
-                sample.y, (SAMPLE_TIME_MS - elapsed) / 1000 + 1);
-      if (elapsed >= SAMPLE_TIME_MS) {
-        data->avg = data->sum / (int32_t)data->cnt;
-        data->pass = (data->avg >= RANGE_MIN && data->avg <= RANGE_MAX);
-        data->state = STATE_RESULT_FRONT;
-      }
-      break;
-
-    case STATE_RESULT_FRONT: {
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "FRONT: %s\n\nY avg: %"PRId32"\nExpected: %d to %d\n\nPress SEL",
-                data->pass ? "PASS" : "FAIL", data->avg, RANGE_MIN, RANGE_MAX);
+                "ACCEL: %s\n\nX: %" PRId16 " mG\nY: %" PRId16
+                " mG\nZ: %" PRId16 " mG\n\nPress SEL",
+                data->test_passed ? "PASS" : "FAIL",
+                data->variation_x, data->variation_y, data->variation_z);
       break;
     }
   }
@@ -190,22 +152,14 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
 
   switch (data->state) {
     case STATE_IDLE:
-      prv_start_test(data);
+      // Start test
+      data->state = STATE_TESTING;
+      data->state_start_time = rtc_get_ticks();
+      data->sample_count = 0;
       break;
 
-    case STATE_RESULT_FLAT:
-      data->state = STATE_PREPARE_LEFT;
-      data->state_start_time = rtc_get_ticks();
-      break;
-
-    case STATE_RESULT_LEFT:
-      data->state = STATE_PREPARE_FRONT;
-      data->state_start_time = rtc_get_ticks();
-      break;
-
-    case STATE_RESULT_FRONT:
-      data->state = STATE_IDLE;
-      data->state_start_time = rtc_get_ticks();
+    case STATE_RESULT:
+      app_window_stack_pop(false);
       break;
 
     default:
@@ -215,11 +169,6 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
 
 static void prv_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
-}
-
-static void prv_start_test(AppData *data) {
-  data->state = STATE_PREPARE_FLAT;
-  data->state_start_time = rtc_get_ticks();
 }
 
 static void prv_handle_init(void) {
