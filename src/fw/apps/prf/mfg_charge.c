@@ -7,6 +7,7 @@
 #include "applib/tick_timer_service.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
+#include "apps/prf/mfg_test_result.h"
 #include "drivers/battery.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
@@ -194,23 +195,17 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
   if (!app_data->countdown_running &&
       (app_data->test_state == ChargeStateStart ||
        app_data->test_state == ChargeStatePlugCharger)) {
-
     // if the test has not yet started, it is ok to push the back button to leave.
     app_window_stack_pop(true);
-  }
-}
-
-static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
-  AppData *app_data = app_state_get_user_data();
-
-  if (app_data->test_state == ChargeStateFail || app_data->test_state == ChargeStatePass) {
-    // we've finished the charge test - long-press to close the app
+  } else if (app_data->test_state == ChargeStatePass ||
+             app_data->test_state == ChargeStateFail) {
+    bool passed = (app_data->test_state == ChargeStatePass);
+    mfg_test_result_report(MfgTestId_Charge, passed, 0);
     app_window_stack_pop(true);
   }
 }
 
 static void prv_config_provider(void *data) {
-  window_long_click_subscribe(BUTTON_ID_SELECT, 3000, NULL, prv_select_click_handler);
   window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
 }
 
