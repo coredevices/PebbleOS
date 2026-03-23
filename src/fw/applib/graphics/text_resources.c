@@ -359,12 +359,30 @@ static const GlyphData *prv_get_glyph_metadata_from_spi(Codepoint codepoint,
   // If we don't have bitmap caching, we have a single glyph_buffer that contains the last used
   // glyph. If this matches the glyph we're looking for right now, that's what we want to use.
   // Potentially this also has the bitmap loaded already.
+#if !CAPABILITY_HAS_GLYPH_BITMAP_CACHING
+  if (font_cache->glyph_buffer_key == cache_key) {
+    cached = (LineCacheData *)(font_cache->glyph_buffer);
+  }
+#endif
   PBL_LOG_D_DBG(LOG_DOMAIN_TEXT, "looking up cp: %"PRIx32", key:%"PRIx32,
             codepoint, cache_key);
 
-  // Check the keyed_circular_cache for this glyph.
+  // If the glyph_buffer doesn't match this glyph, or we have bitmap caching, check the
+  // keyed_circular_cache for this glyph.
   if (!cached) {
     cached = keyed_circular_cache_get(&font_cache->line_cache, cache_key);
+#if !CAPABILITY_HAS_GLYPH_BITMAP_CACHING
+    // If we don't have bitmap caching, the keyed_circular_cache entry cannot store the bitmap.
+    // Therefore, we need to copy the matched entry into `glyph_buffer` which does have the space
+    // to store the bitmap.
+    if (cached) {
+      memcpy(font_cache->glyph_buffer, cached, sizeof(LineCacheData));
+      font_cache->glyph_buffer_key = cache_key;
+      // Point `cached` at the glyph buffer.
+      cached = (LineCacheData *)(font_cache->glyph_buffer);
+      cached->is_bitmap_loaded = false;
+    }
+#endif
   }
 
   if (cached) {
@@ -423,7 +441,19 @@ static const GlyphData *prv_get_glyph_metadata_from_spi(Codepoint codepoint,
     return NULL;
   }
 
-  LineCacheData *final_data = data;
+  LineCacheData *final_data;
+#if !CAPABILITY_HAS_GLYPH_BITMAP_CACHING
+  // Copy the info into the glyph_buffer.
+  // This must be done _before_ loading the bitmap, otherwise loading the bitmap may modify the
+  // metadata! We will use `glyph_buffer` as the final data, and leave `data` as the uncooked
+  // version, that way we can push `data` into the circular cache.
+  memcpy(font_cache->glyph_buffer, data, sizeof(LineCacheData));
+  font_cache->glyph_buffer_key = cache_key;
+
+  final_data = (LineCacheData *)(font_cache->glyph_buffer);
+#else
+  final_data = data;
+#endif
 
   if (need_bitmap &&
       !prv_load_glyph_bitmap(codepoint, font_res, final_data)) {
