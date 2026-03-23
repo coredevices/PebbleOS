@@ -18,12 +18,8 @@
 // Convert HRMQuality to the internal protobuf representation.
 T_STATIC uint32_t prv_hr_quality_int(HRMQuality quality) {
   switch (quality) {
-    case HRMQuality_NoAccel:
-      return pebble_pipeline_MeasurementSet_HeartRateQuality_NoAccel;
     case HRMQuality_OffWrist:
       return pebble_pipeline_MeasurementSet_HeartRateQuality_OffWrist;
-    case HRMQuality_NoSignal:
-      return pebble_pipeline_MeasurementSet_HeartRateQuality_NoSignal;
     case HRMQuality_Worst:
       return pebble_pipeline_MeasurementSet_HeartRateQuality_Worst;
     case HRMQuality_Poor:
