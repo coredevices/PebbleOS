@@ -11,6 +11,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "services/common/battery/battery_curve.h"
+#include "services/prf/idle_watchdog.h"
 #include "system/logging.h"
 
 #include <stdio.h>
@@ -258,7 +259,9 @@ static void app_init(void) {
 static void s_main(void) {
   app_init();
 
+  prf_idle_watchdog_stop();
   app_event_loop();
+  prf_idle_watchdog_start();
 }
 
 const PebbleProcessMd* mfg_charge_app_get_info(void) {
