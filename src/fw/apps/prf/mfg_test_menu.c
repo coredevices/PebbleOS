@@ -22,6 +22,7 @@
 #include "apps/prf/mfg_mic_getafix.h"
 #include "apps/prf/mfg_mic_obelix.h"
 #include "apps/prf/mfg_program_color.h"
+#include "apps/prf/mfg_qr_results.h"
 #include "apps/prf/mfg_speaker_asterix.h"
 #include "apps/prf/mfg_speaker_obelix.h"
 #include "apps/prf/mfg_touch.h"
@@ -131,6 +132,10 @@ static void prv_select_adv(int index, void *context) {
   prv_launch_test(index, mfg_adv_app_get_info());
 }
 
+static void prv_select_results(int index, void *context) {
+  prv_launch_test(index, mfg_qr_results_app_get_info());
+}
+
 static const char * prv_get_status_prefix(MfgTestId test) {
   const MfgTestResult *result = mfg_test_result_get(test);
   if (!result || !result->ran) {
@@ -181,10 +186,11 @@ static void prv_window_load(Window *window) {
     { "Discharge",     prv_select_discharge,    MfgTestId_Discharge },
   };
 
-  size_t num_items = ARRAY_LENGTH(entries);
+  size_t num_entries = ARRAY_LENGTH(entries);
+  size_t num_items = num_entries + 1;  // +1 for RESULTS
   SimpleMenuItem *items = app_malloc(num_items * sizeof(SimpleMenuItem));
 
-  for (size_t i = 0; i < num_items; i++) {
+  for (size_t i = 0; i < num_entries; i++) {
     const char *prefix = prv_get_status_prefix(entries[i].test_id);
     size_t len = snprintf(NULL, 0, "%zu. %s %s", i + 1, prefix, entries[i].title) + 1;
     char *title = app_malloc(len);
@@ -195,6 +201,11 @@ static void prv_window_load(Window *window) {
       .callback = entries[i].callback,
     };
   }
+
+  items[num_entries] = (SimpleMenuItem) {
+    .title = "RESULTS",
+    .callback = prv_select_results,
+  };
 
   data->menu_section = (SimpleMenuSection) {
     .num_items = num_items,
