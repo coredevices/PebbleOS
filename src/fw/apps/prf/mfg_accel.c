@@ -26,6 +26,7 @@
 #define MIN_VARIATION_MG 500
 
 #define TEST_DURATION_MS 5000
+#define RESULT_DISPLAY_MS 3000
 #define SAMPLE_INTERVAL_MS 100
 
 typedef enum {
@@ -135,9 +136,13 @@ static void prv_update_display(void *context) {
     }
 
     case STATE_RESULT: {
+      if (elapsed >= RESULT_DISPLAY_MS) {
+        app_window_stack_pop(false);
+        return;
+      }
       sniprintf(data->status_string, sizeof(data->status_string),
                 "ACCEL: %s\n\nX: %" PRId16 " mG\nY: %" PRId16
-                " mG\nZ: %" PRId16 " mG\n\nPress SEL",
+                " mG\nZ: %" PRId16 " mG",
                 data->test_passed ? "PASS" : "FAIL",
                 data->variation_x, data->variation_y, data->variation_z);
       break;
@@ -156,10 +161,6 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
       data->state = STATE_TESTING;
       data->state_start_time = rtc_get_ticks();
       data->sample_count = 0;
-      break;
-
-    case STATE_RESULT:
-      app_window_stack_pop(false);
       break;
 
     default:
