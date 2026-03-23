@@ -442,10 +442,10 @@ void hrm_init(HRMDevice *dev) {
     PBL_LOG_ERR("GH3X2X failed to initialize");
     return;
   }
-#else
+#endif
+
   gh3026_reset_pin_ctrl(0);
   gpio_input_init_pull_up_down(&dev->int_input, GPIO_PuPd_DOWN);
-#endif
 
   dev->state->is_wear = false;
   dev->state->initialized = true;
