@@ -12,12 +12,14 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
+#include "apps/prf/mfg_test_result.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 #include "board/board.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 #include "drivers/mic.h"
+#include "drivers/rtc.h"
 #include "mfg/mfg_info.h"
 #include "flash_region/flash_region.h"
 #include "drivers/flash.h"
@@ -54,6 +56,8 @@
 // Minimum peak magnitude threshold (to reject noise)
 #define MIN_PEAK_MAGNITUDE       1000
 
+#define RESULT_DISPLAY_MS        3000
+
 #define STATUS_STR_LEN           128
 
 typedef enum {
@@ -78,6 +82,7 @@ typedef struct {
   uint32_t flash_addr;
 
   TestState state;
+  uint32_t result_display_start;
   bool mic1_passed;
   bool mic2_passed;
   int mic1_peak_freq;
@@ -233,8 +238,12 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
     // Perform FFT analysis from flash
     prv_analyze_dual_mic(data);
 
+    bool passed = data->mic1_passed && data->mic2_passed;
+    mfg_test_result_report(MfgTestId_Mic, passed, 0);
+
     data->state = TestState_Complete;
-    snprintf(data->status_text, STATUS_STR_LEN, "Test Complete");
+    snprintf(data->status_text, STATUS_STR_LEN, passed ? "PASS" : "FAIL");
+    data->result_display_start = rtc_get_ticks();
 
     return;
   }
@@ -271,8 +280,10 @@ static void prv_start_test(void) {
 
   if (!mic_start(MIC, prv_mic_data_handler, NULL, data->pcm, PCM_BUFFER_SIZE)) {
     PBL_LOG_ERR("Failed to start microphone");
+    mfg_test_result_report(MfgTestId_Mic, false, 0);
     data->state = TestState_Failed;
     snprintf(data->status_text, STATUS_STR_LEN, "Mic start failed");
+    data->result_display_start = rtc_get_ticks();
   }
 }
 
@@ -296,10 +307,16 @@ static void prv_timer_callback(void *cb_data) {
   // Mark layer dirty to trigger redraw
   layer_mark_dirty(window_get_root_layer(&data->window));
 
-  // Re-register timer if test is still running or waiting to start
-  if (data->state != TestState_Complete && data->state != TestState_Failed) {
-    app_timer_register(100, prv_timer_callback, NULL);
+  // Auto-close after result display timeout
+  if (data->state == TestState_Complete || data->state == TestState_Failed) {
+    uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->result_display_start);
+    if (elapsed >= RESULT_DISPLAY_MS) {
+      app_window_stack_pop(false);
+      return;
+    }
   }
+
+  app_timer_register(100, prv_timer_callback, NULL);
 }
 
 // Initialize the app
