@@ -3,35 +3,31 @@
 
 #include "applib/app.h"
 #include "applib/tick_timer_service.h"
-#include "util/trig.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
-#include "applib/ui/path_layer.h"
 #include "applib/ui/text_layer.h"
+#include "apps/prf/mfg_test_result.h"
 #include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
 #include "drivers/mag.h"
 #include "drivers/rtc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/common/evented_timer.h"
 #include "system/logging.h"
-#include "util/bitset.h"
-#include "util/size.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <math.h>
 
 #define STATUS_STRING_LEN 200
 
 // Minimum variation required on each axis (in mG)
 #define MIN_VARIATION_MG 100  // Each axis must vary by at least this much
 
-#define TEST_DURATION_MS 5000   // 5 seconds of testing
-#define SAMPLE_INTERVAL_MS 100  // Sample every 100ms
+#define TEST_DURATION_MS 5000
+#define RESULT_DISPLAY_MS 3000
+#define SAMPLE_INTERVAL_MS 100
 
 typedef enum {
   STATE_IDLE,
@@ -128,6 +124,8 @@ static void prv_update_display(void *context) {
             (data->variation_x >= MIN_VARIATION_MG && data->variation_y >= MIN_VARIATION_MG &&
              data->variation_z >= MIN_VARIATION_MG);
 
+        mfg_test_result_report(MfgTestId_Mag, data->test_passed, 0);
+
         data->state = STATE_RESULT;
         data->state_start_time = rtc_get_ticks();
       }
@@ -135,8 +133,12 @@ static void prv_update_display(void *context) {
     }
 
     case STATE_RESULT: {
+      if (elapsed >= RESULT_DISPLAY_MS) {
+        app_window_stack_pop(false);
+        return;
+      }
       sniprintf(data->status_string, sizeof(data->status_string),
-                "MAG: %s\n\nX: %" PRId16 " mG\nY: %" PRId16 " mG\nZ: %" PRId16 " mG\n\nPress SEL",
+                "MAG: %s\n\nX: %" PRId16 " mG\nY: %" PRId16 " mG\nZ: %" PRId16 " mG",
                 data->test_passed ? "PASS" : "FAIL", data->variation_x, data->variation_y,
                 data->variation_z);
       break;
@@ -155,11 +157,6 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
       data->state = STATE_TESTING;
       data->state_start_time = rtc_get_ticks();
       data->sample_count = 0;
-      break;
-
-    case STATE_RESULT:
-      data->state = STATE_IDLE;
-      data->state_start_time = rtc_get_ticks();
       break;
 
     default:
