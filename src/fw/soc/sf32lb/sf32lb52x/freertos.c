@@ -319,14 +319,13 @@ void SysTick_Handler(void) {
 void dump_current_runtime_stats(void) {}
 
 void analytics_external_collect_cpu_stats(void) {
-  uint32_t wfi_ms = ticks_to_milliseconds(s_analytics_wfi_ticks);
-  uint32_t deepwfi_ms = ticks_to_milliseconds(s_analytics_deepwfi_ticks);
-  uint32_t deepsleep_ms = ticks_to_milliseconds(s_analytics_deepsleep_ticks);
+  uint32_t wfi_ticks = s_analytics_wfi_ticks;
+  uint32_t deepwfi_ticks = s_analytics_deepwfi_ticks;
+  uint32_t deepsleep_ticks = s_analytics_deepsleep_ticks;
 
   uint32_t now_ticks = rtc_get_ticks();
   uint32_t total_ticks = now_ticks - s_last_ticks;
-  uint32_t total_ms = ticks_to_milliseconds(total_ticks);
-  uint32_t ms_running = total_ms - wfi_ms - deepwfi_ms - deepsleep_ms;
+  uint32_t running_ticks = total_ticks - wfi_ticks - deepwfi_ticks - deepsleep_ticks;
 
   // Calculate percentages
   uint32_t running_pct = 0;
@@ -334,11 +333,11 @@ void analytics_external_collect_cpu_stats(void) {
   uint32_t deepwfi_pct = 0;
   uint32_t deepsleep_pct = 0;
 
-  if (total_ms > 0) {
-    running_pct = (ms_running * 100) / total_ms;
-    wfi_pct = (wfi_ms * 100) / total_ms;
-    deepwfi_pct = (deepwfi_ms * 100) / total_ms;
-    deepsleep_pct = (deepsleep_ms * 100) / total_ms;
+  if (total_ticks > 0) {
+    running_pct = (running_ticks * 10000) / total_ticks;
+    wfi_pct = (wfi_ticks * 10000) / total_ticks;
+    deepwfi_pct = (deepwfi_ticks * 10000) / total_ticks;
+    deepsleep_pct = (deepsleep_ticks * 10000) / total_ticks;
   }
 
   // SF32LB52: sleep0 = WFI, sleep1 = Deep WFI, sleep2 = Deep sleep
