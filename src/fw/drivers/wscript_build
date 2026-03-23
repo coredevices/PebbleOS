@@ -607,6 +607,7 @@ if bld.is_silk():
             'fw_includes',
             'pbl_includes',
             'stm32_stdlib',
+            'fw_services',
         ],
     )
 elif bld.is_snowy_compatible():
@@ -628,6 +629,7 @@ elif bld.is_snowy_compatible():
             'fw_includes',
             'pbl_includes',
             'stm32_stdlib',
+            'fw_services',
         ],
     )
 elif bld.is_asterix():
@@ -645,6 +647,7 @@ elif bld.is_asterix():
             'freertos',
             'fw_includes',
             'pbl_includes',
+            'fw_services',
         ],
     )
 elif bld.is_obelix() or bld.is_getafix():
@@ -662,6 +665,7 @@ elif bld.is_obelix() or bld.is_getafix():
             'freertos',
             'fw_includes',
             'pbl_includes',
+            'fw_services',
         ],
     )
 
