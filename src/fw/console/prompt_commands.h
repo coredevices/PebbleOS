@@ -266,8 +266,6 @@ extern void command_btle_unmod_tx_stop(void);
 
 #if CAPABILITY_HAS_BUILTIN_HRM
 extern void command_hrm_read(void);
-extern void command_hrm_wipe(void);
-extern void command_hrm_freeze(void);
 #endif
 
 #if MFG_INFO_RECORDS_TEST_RESULTS
@@ -435,10 +433,6 @@ static const Command s_prompt_commands[] = {
 
 #if CAPABILITY_HAS_BUILTIN_HRM
   { "hrm read", command_hrm_read, 0},
-#if PLATFORM_SILK
-  { "hrm wipe", command_hrm_wipe, 0},
-  { "hrm freeze", command_hrm_freeze, 0},
-#endif // PLATFORM_SILK
 #endif
 
 #if CAPABILITY_HAS_PMIC
