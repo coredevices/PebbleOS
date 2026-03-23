@@ -24,7 +24,6 @@
 #include "apps/prf/mfg_program_color.h"
 #include "apps/prf/mfg_speaker_asterix.h"
 #include "apps/prf/mfg_speaker_obelix.h"
-#include "apps/prf/mfg_test_aging.h"
 #include "apps/prf/mfg_touch.h"
 #include "apps/prf/mfg_test_result.h"
 #include "apps/prf/mfg_vibration.h"
@@ -120,10 +119,6 @@ static void prv_select_program_color(int index, void *context) {
   prv_launch_test(index, mfg_program_color_app_get_info());
 }
 
-static void prv_select_test_aging(int index, void *context) {
-  prv_launch_test(index, mfg_test_aging_app_get_info());
-}
-
 static void prv_select_charge(int index, void *context) {
   prv_launch_test(index, mfg_charge_app_get_info());
 }
@@ -182,7 +177,6 @@ static void prv_window_load(Window *window) {
 #endif
     { "Program Color", prv_select_program_color, MfgTestId_ProgramColor },
     { "BLE Adv",       prv_select_adv,          MfgTestId_Adv },
-    { "Aging",         prv_select_test_aging,   MfgTestId_Aging },
     { "Charge",        prv_select_charge,       MfgTestId_Charge },
     { "Discharge",     prv_select_discharge,    MfgTestId_Discharge },
   };
