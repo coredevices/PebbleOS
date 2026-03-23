@@ -5,8 +5,10 @@
 
 #include "applib/app.h"
 #include "applib/ui/app_window_stack.h"
+#include "applib/ui/dialogs/confirmation_dialog.h"
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
+#include "apps/prf/mfg_test_result.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 #include "board/board.h"
@@ -46,6 +48,7 @@ typedef struct {
   bool in_testing;
   bool audio_playing;
   bool mic_recording;
+  bool show_result_pending;
 } AppData;
 
 static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame_count) {
@@ -85,11 +88,8 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
     if(++mic_id >= MIC_MAX) {
       audio_stop(AUDIO);
       app_data->audio_playing = false;
-      app_data->in_testing = false;
       mic_id = MIC1;
-      // Re-enable back button when playback finishes
-      window_set_overrides_back_button(&app_data->window, false);
-      snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Press Sel to start");
+      app_data->show_result_pending = true;
       return;
     }
 
@@ -148,10 +148,45 @@ static void prv_config_provider(void *data) {
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
 }
 
+static void prv_result_confirmed(ClickRecognizerRef recognizer, void *context) {
+  ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
+  confirmation_dialog_pop(confirmation_dialog);
+
+  bool passed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  mfg_test_result_report(MfgTestId_Mic, passed, 0);
+  app_window_stack_pop(false);
+}
+
+static void prv_result_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_result_confirmed);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_result_confirmed);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_result_confirmed);
+}
+
+static void prv_show_result_dialog(void) {
+  ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Microphone Result");
+  Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
+
+  dialog_set_text(dialog, "Microphone OK?");
+
+  confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_result_click_config);
+
+  ActionBarLayer *action_bar = confirmation_dialog_get_action_bar(confirmation_dialog);
+  action_bar_layer_set_context(action_bar, confirmation_dialog);
+
+  app_confirmation_dialog_push(confirmation_dialog);
+}
+
 static void prv_timer_callback(void *cb_data) {
   AppData *data = app_state_get_user_data();
 
   layer_mark_dirty(window_get_root_layer(&data->window));
+
+  if (data->show_result_pending) {
+    data->show_result_pending = false;
+    prv_show_result_dialog();
+    return;
+  }
 
   app_timer_register(500, prv_timer_callback, NULL);
 }
