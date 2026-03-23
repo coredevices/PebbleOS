@@ -10,6 +10,7 @@
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
 #include "applib/tick_timer_service.h"
+#include "apps/prf/mfg_test_result.h"
 #include "console/console_internal.h"
 #include "drivers/battery.h"
 #include "kernel/pbl_malloc.h"
@@ -19,14 +20,22 @@
 #include "pbl/services/prf/idle_watchdog.h"
 #include "system/logging.h"
 
+#define MAX_DURATION_S (2 * 3600)  // 2 hours
+#define MAX_PERCENT_DROP 1         // pass if drop <= 1%
+#define UPDATE_INTERVAL_S 60       // update display every minute
+
 typedef enum {
   DischargeStateWaitUnplug = 0,
   DischargeStateDischarging,
+  DischargeStatePass,
+  DischargeStateFail,
 } DischargeTestState;
 
 static const char *status_text[] = {
     [DischargeStateWaitUnplug] = "Unplug Watch",
     [DischargeStateDischarging] = "Discharging",
+    [DischargeStatePass] = "PASS",
+    [DischargeStateFail] = "FAIL",
 };
 
 typedef struct {
@@ -48,7 +57,43 @@ typedef struct {
   uint32_t elapsed_seconds;
 } AppData;
 
-static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_update_display(AppData *data, BatteryConstants *battery_const,
+                                BatteryChargeState *charge_state) {
+  int hours = data->elapsed_seconds / 3600;
+  int mins = (data->elapsed_seconds % 3600) / 60;
+
+  int32_t voltage_delta = battery_const->v_mv - data->initial_voltage_mv;
+  int8_t percent_delta = (int8_t)charge_state->charge_percent - (int8_t)data->initial_percent;
+
+  sniprintf(data->details_string, sizeof(data->details_string),
+            "Elapsed: %02d:%02d\n\n"
+            "Current:\n"
+            "%" PRId32 "mV %" PRIu8 "%%\n"
+            "Delta:\n"
+            "%" PRId32 "mV  %" PRId8 "%%",
+            hours, mins,
+            battery_const->v_mv, charge_state->charge_percent,
+            voltage_delta, percent_delta);
+
+  sniprintf(data->status_string, sizeof(data->status_string), "DISCHARGE\n%s",
+            status_text[data->test_state]);
+  text_layer_set_text(&data->status, data->status_string);
+  text_layer_set_text(&data->details, data->details_string);
+}
+
+static void prv_finish_test(AppData *data, BatteryConstants *battery_const,
+                            BatteryChargeState *charge_state) {
+  int8_t percent_drop = (int8_t)data->initial_percent - (int8_t)charge_state->charge_percent;
+  bool passed = (percent_drop <= MAX_PERCENT_DROP);
+
+  data->test_state = passed ? DischargeStatePass : DischargeStateFail;
+  mfg_test_result_report(MfgTestId_Discharge, passed, (uint32_t)percent_drop);
+
+  prv_update_display(data, battery_const, charge_state);
+  tick_timer_service_unsubscribe();
+}
+
+static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
   // Get battery state
@@ -61,53 +106,61 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   switch (data->test_state) {
     case DischargeStateWaitUnplug:
       if (!charge_state.is_plugged) {
-        // Disable sources of power consumption to minimize impact on discharge test results
+        // Disable sources of power consumption
         light_enable(false);
         serial_console_set_rx_enabled(false);
         bt_ctl_set_enabled(false);
 
         data->test_state = DischargeStateDischarging;
+        data->initial_voltage_mv = battery_const.v_mv;
+        data->initial_percent = charge_state.charge_percent;
         data->elapsed_seconds = 0;
       } else {
-        sniprintf(data->details_string, sizeof(data->details_string), "Unplug charger\nto begin test");
+        sniprintf(data->details_string, sizeof(data->details_string),
+                  "Unplug charger\nto begin test");
       }
       break;
 
     case DischargeStateDischarging: {
-      if (data->elapsed_seconds == 0) {
-        data->initial_voltage_mv = battery_const.v_mv;
-        data->initial_percent = charge_state.charge_percent;
-      }
-
       data->elapsed_seconds++;
 
-      int hours = data->elapsed_seconds / 3600;
-      int mins = (data->elapsed_seconds % 3600) / 60;
-      int secs = data->elapsed_seconds % 60;
+      if (data->elapsed_seconds >= MAX_DURATION_S) {
+        prv_finish_test(data, &battery_const, &charge_state);
+        return;
+      }
 
-      int32_t voltage_delta = battery_const.v_mv - data->initial_voltage_mv;
-      int8_t percent_delta = (int8_t)charge_state.charge_percent - (int8_t)data->initial_percent;
+      // Only update display and log every minute
+      if ((data->elapsed_seconds % UPDATE_INTERVAL_S) != 0) {
+        return;
+      }
 
-      sniprintf(data->details_string, sizeof(data->details_string),
-                "Elapsed: %02d:%02d:%02d\n\n"
-                "Current:\n"
-                "%" PRId32 "mV %" PRIu8 "%%\n"
-                "Delta:\n"
-                "%" PRId32 "mV  %" PRId8 "%%",
-                hours, mins, secs,
-                battery_const.v_mv, charge_state.charge_percent,
-                voltage_delta, percent_delta);
+      PBL_LOG_INFO("Discharge - V:%" PRId32 "mV pct:%" PRIu8 " elapsed:%" PRIu32 "s",
+                   battery_const.v_mv, charge_state.charge_percent,
+                   data->elapsed_seconds);
     } break;
+
+    case DischargeStatePass:
+    case DischargeStateFail:
+      return;
   }
 
   // Update status display
-  sniprintf(data->status_string, sizeof(data->status_string), "DISCHARGE\n%s",
-            status_text[data->test_state]);
-  text_layer_set_text(&data->status, data->status_string);
-  text_layer_set_text(&data->details, data->details_string);
+  prv_update_display(data, &battery_const, &charge_state);
 }
 
 static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
+  AppData *app_data = app_state_get_user_data();
+
+  // If test is still running, finish it now
+  if (app_data->test_state == DischargeStateDischarging) {
+    BatteryConstants battery_const;
+    BatteryChargeState charge_state;
+    battery_get_constants(&battery_const);
+    charge_state = battery_get_charge_state();
+    prv_finish_test(app_data, &battery_const, &charge_state);
+    return;
+  }
+
   serial_console_set_rx_enabled(true);
   bt_ctl_set_enabled(true);
 
@@ -150,7 +203,7 @@ static void app_init(void) {
   window_set_click_config_provider(window, prv_config_provider);
   window_set_fullscreen(window, true);
 
-  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
+  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_tick);
 
   app_window_stack_push(window, true /* Animated */);
 }
