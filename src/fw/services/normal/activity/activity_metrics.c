@@ -529,9 +529,7 @@ static uint8_t prv_get_hr_quality_weight(HRMQuality quality) {
     HRMQuality quality;
     uint8_t weight_x100;
   } s_hr_quality_weights_x100[] = {
-    {HRMQuality_NoAccel, 0 },
     {HRMQuality_OffWrist, 0 },
-    {HRMQuality_NoSignal, 0 },
     {HRMQuality_Worst, 1 },
     {HRMQuality_Poor, 1 },
     {HRMQuality_Acceptable, 60 },

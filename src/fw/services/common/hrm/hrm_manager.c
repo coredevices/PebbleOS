@@ -480,23 +480,14 @@ void hrm_manager_new_data_cb(const HRMData *data) {
   RtcTicks cur_ticks = rtc_get_ticks();
   HRMFeature kernel_bg_features_sent = 0;
 
-  // Fix up erroneous quality readings. During startup, the sensor FW may report
-  // "Excellent" quality with BPM=0. Convert these to NoSignal.
-  HRMQuality effective_bpm_quality = data->hrm_quality;
-  if ((data->features & HRMFeature_BPM) &&
-      (data->hrm_bpm < HRM_SENSOR_MIN_VALID_BPM_READING) &&
-      (data->hrm_quality > HRMQuality_NoSignal)) {
-    effective_bpm_quality = HRMQuality_NoSignal;
-  }
-
   HRMSubscriberState *state = (HRMSubscriberState *)s_manager_state.subscribers;
   while (state) {
     HRMSubscriberState *expired_state = NULL;
 
     // Only count Good+ or OffWrist as "served" for sensor power cycling
     if ((data->features & HRMFeature_BPM) &&
-        (effective_bpm_quality >= HRMQuality_Good ||
-         effective_bpm_quality == HRMQuality_OffWrist)) {
+        (data->hrm_quality >= HRMQuality_Good ||
+         data->hrm_quality == HRMQuality_OffWrist)) {
       state->last_valid_bpm_ticks = cur_ticks;
     }
 
@@ -516,10 +507,6 @@ void hrm_manager_new_data_cb(const HRMData *data) {
         kernel_bg_features_sent |= feature;
       }
       prv_populate_hrm_event(&hrm_event, feature, data);
-      // Apply quality fixup for erroneous startup readings
-      if (feature == HRMFeature_BPM && effective_bpm_quality != data->hrm_quality) {
-        hrm_event.bpm.quality = effective_bpm_quality;
-      }
       PBL_ASSERTN(prv_event_put(state, &hrm_event));
     }
 
