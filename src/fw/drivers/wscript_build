@@ -1615,20 +1615,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if bld.get_hrm() == 'AS7000':
-    bld.objects(
-        name='driver_hrm',
-        source=[
-            'hrm/as7000/as7000.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_i2c',
-            'fw_includes',
-            'stm32_stlib'
-        ],
-    )
-elif bld.get_hrm() == 'GH3X2X':
+if bld.get_hrm() == 'GH3X2X':
     includes = ['fw_includes']
     if bld.variant != 'prf' or bld.env.IS_MFG:
         bld.env.DEFINES.append('HRM_USE_GH3X2X')

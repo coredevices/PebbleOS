@@ -5,7 +5,7 @@
 
 #include "drivers/exti.h"
 #include "drivers/flash/qspi_flash_definitions.h"
-#include "drivers/hrm/as7000/as7000.h"
+#include "drivers/stubs/hrm.h"
 #include "drivers/i2c_definitions.h"
 #include "drivers/mic/stm32/dfsdm_definitions.h"
 #include "drivers/qspi_definitions.h"
@@ -196,13 +196,7 @@ static const I2CSlavePort I2C_SLAVE_AS3701B = {
   .address = 0x80
 };
 
-static const I2CSlavePort I2C_SLAVE_AS7000 = {
-  .bus = &I2C_PMIC_HRM_BUS,
-  .address = 0x60
-};
-
 I2CSlavePort * const I2C_AS3701B = &I2C_SLAVE_AS3701B;
-I2CSlavePort * const I2C_AS7000 = &I2C_SLAVE_AS7000;
 
 IRQ_MAP(I2C3_EV, i2c_hal_event_irq_handler, &I2C_PMIC_HRM_BUS);
 IRQ_MAP(I2C3_ER, i2c_hal_error_irq_handler, &I2C_PMIC_HRM_BUS);
@@ -264,20 +258,10 @@ AnalogTemperatureSensor * const TEMPERATURE_SENSOR = &TEMPERATURE_SENSOR_DEVICE;
 
 
 // HRM DEVICE
+// AS7000 driver has been removed; silk uses the stub HRM driver.
 static HRMDeviceState s_hrm_state;
 static HRMDevice HRM_DEVICE = {
   .state = &s_hrm_state,
-  .handshake_int = { EXTI_PortSourceGPIOA, 15 },
-  .int_gpio = {
-    .gpio = GPIOA,
-    .gpio_pin = GPIO_Pin_15
-  },
-  .en_gpio = {
-    .gpio = GPIOC,
-    .gpio_pin = GPIO_Pin_1,
-    .active_high = false,
-  },
-  .i2c_slave = &I2C_SLAVE_AS7000,
 };
 HRMDevice * const HRM = &HRM_DEVICE;
 

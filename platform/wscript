@@ -139,10 +139,10 @@ def has_touch(ctx):
 
 @conf
 def get_hrm(ctx):
-    if is_silk(ctx):
-        return "AS7000"
-    elif is_obelix(ctx):
+    if is_obelix(ctx):
         return "GH3X2X"
+    elif is_silk(ctx):
+        return "STUB"
     else:
         return None
 
