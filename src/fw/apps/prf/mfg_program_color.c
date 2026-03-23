@@ -10,6 +10,7 @@
 #include "applib/ui/path_layer.h"
 #include "applib/ui/text_layer.h"
 #include "applib/graphics/graphics.h"
+#include "apps/prf/mfg_test_result.h"
 #include "drivers/display/display.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
@@ -259,6 +260,10 @@ static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
 #endif
 }
 
+static void prv_close_timer_callback(void *cb_data) {
+  app_window_stack_pop(false);
+}
+
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
   char model[MFG_INFO_MODEL_STRING_LENGTH];
@@ -266,14 +271,16 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
   if (ARRAY_LENGTH(s_color_table) == 0 || app_data->selected_color_index == -1) {
     return;
   }
-  
+
   snprintf(model, sizeof(model), "%s-%s",
            s_model, s_color_table[app_data->selected_color_index].short_name);
 
   mfg_info_set_model(model);
   mfg_info_set_watch_color(s_color_table[app_data->selected_color_index].color);
 
+  mfg_test_result_report(MfgTestId_ProgramColor, true, 0);
   text_layer_set_text(&app_data->status, "PROGRAMMED!");
+  app_timer_register(3000, prv_close_timer_callback, NULL);
 }
 
 static void prv_config_provider(void *data) {
