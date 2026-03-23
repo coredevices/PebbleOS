@@ -23,6 +23,7 @@
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 #include "services/common/light.h"
+#include "services/prf/idle_watchdog.h"
 
 #include <stdio.h>
 
@@ -690,7 +691,9 @@ static void prv_handle_deinit(void) {
 static void s_main(void) {
   prv_handle_init();
 
+  prf_idle_watchdog_stop();
   app_event_loop();
+  prf_idle_watchdog_start();
 
   prv_handle_deinit();
 }
