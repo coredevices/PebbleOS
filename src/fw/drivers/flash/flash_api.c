@@ -17,6 +17,7 @@
 #include "os/tick.h"
 #include "process_management/worker_manager.h"
 #include "services/common/new_timer/new_timer.h"
+#include "services/common/analytics/analytics.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
@@ -154,6 +155,9 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr,
   if (s_erase.suspended) {
     new_timer_start(s_erase_suspend_timer, 50, prv_erase_suspend_timer_cb, NULL, 0);
   }
+
+  PBL_ANALYTICS_ADD(flash_spi_write_bytes, buffer_size);
+
   while (buffer_size) {
     int written = flash_impl_write_page_begin(buffer, start_addr, buffer_size);
     PBL_ASSERT(
@@ -293,6 +297,10 @@ static uint32_t prv_flash_erase_poll(void) {
         saved_ctx.address, saved_ctx.on_complete_cb, saved_ctx.cb_context,
         saved_ctx.is_subsector, saved_ctx.retries + 1);
   } else {
+    if (status == S_SUCCESS) {
+      PBL_ANALYTICS_ADD(flash_spi_erase_bytes,
+                        saved_ctx.is_subsector ? SUBSECTOR_SIZE_BYTES : SECTOR_SIZE_BYTES);
+    }
     // Only run the callback with no locks held so that the callback won't
     // deadlock if it kicks off another sector erase.
     saved_ctx.on_complete_cb(saved_ctx.cb_context, status);
