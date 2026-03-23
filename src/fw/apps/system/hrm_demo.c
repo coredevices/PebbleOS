@@ -58,12 +58,8 @@ typedef struct {
 
 static char *prv_get_quality_string(HRMQuality quality) {
   switch (quality) {
-    case HRMQuality_NoAccel:
-      return "No Accel Data";
     case HRMQuality_OffWrist:
       return "Off Wrist";
-    case HRMQuality_NoSignal:
-      return "No Signal";
     case HRMQuality_Worst:
       return "Worst";
     case HRMQuality_Poor:

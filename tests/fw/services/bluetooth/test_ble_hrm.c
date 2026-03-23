@@ -466,12 +466,6 @@ void test_ble_hrm__handle_hrm_event(void) {
   cl_assert_equal_i(1, s_last_num_permitted_devices);
   cl_assert_equal_m(&s_last_permitted_devices[0], s_device_a, sizeof(*s_device_a));
 
-  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_NoSignal,
-                               true /* expect bt driver cb */, false /* expected_is_on_wrist */);
-
-  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_NoAccel,
-                               true /* expect bt driver cb */, false /* expected_is_on_wrist */);
-
   prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_OffWrist,
                                true /* expect bt driver cb */, false /* expected_is_on_wrist */);
 

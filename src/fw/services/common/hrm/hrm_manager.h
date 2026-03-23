@@ -12,11 +12,8 @@
 #include <kernel/pebble_tasks.h>
 
 typedef enum {
-  HRMQuality_NoAccel = -2,
   HRMQuality_OffWrist = -1,
-
-  HRMQuality_NoSignal = 0,
-  HRMQuality_Worst,
+  HRMQuality_Worst = 0,
   HRMQuality_Poor,
   HRMQuality_Acceptable,
   HRMQuality_Good,

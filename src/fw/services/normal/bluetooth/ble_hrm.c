@@ -182,7 +182,7 @@ static void prv_ble_hrm_handle_hrm_data(PebbleEvent *e, void *context) {
   }
   const BleHrmServiceMeasurement measurement = {
     .bpm = hrm_event->bpm.bpm,
-    .is_on_wrist = (hrm_event->bpm.quality > HRMQuality_NoSignal),
+    .is_on_wrist = (hrm_event->bpm.quality >= HRMQuality_Worst),
   };
 
   BTDeviceInternal sharing_to_devices[4];

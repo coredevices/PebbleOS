@@ -23,9 +23,6 @@ typedef void (*HRMSubscriberCallback)(PebbleHRMEvent *event, void *context);
 // right after turning it on
 #define HRM_SENSOR_SPIN_UP_SEC 20
 
-// We should never get a BPM reading lower than this
-#define HRM_SENSOR_MIN_VALID_BPM_READING 20
-
 typedef struct AccelServiceState AccelServiceState;
 
 typedef struct HRMSubscriberState {
