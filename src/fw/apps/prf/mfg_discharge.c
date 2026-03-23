@@ -16,6 +16,7 @@
 #include "process_state/app_state/app_state.h"
 #include "services/common/bluetooth/bluetooth_ctl.h"
 #include "services/common/light.h"
+#include "services/prf/idle_watchdog.h"
 #include "system/logging.h"
 
 typedef enum {
@@ -157,7 +158,9 @@ static void app_init(void) {
 static void s_main(void) {
   app_init();
 
+  prf_idle_watchdog_stop();
   app_event_loop();
+  prf_idle_watchdog_start();
 }
 
 const PebbleProcessMd *mfg_discharge_app_get_info(void) {
