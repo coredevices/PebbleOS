@@ -45,6 +45,45 @@ static const int MAX_FROM_KERNEL_MAIN_EVENTS = 14;
 
 uint32_t s_current_event;
 
+// Breakdown of kernel event queue entries by callback function pointer.
+// Visible in coredumps to diagnose EventQueueFull reboots.
+#define CALLBACK_TRACKER_MAX_ENTRIES 16
+typedef struct {
+  uintptr_t callback;
+  uint8_t count;
+} CallbackTrackerEntry;
+static CallbackTrackerEntry s_callback_tracker[CALLBACK_TRACKER_MAX_ENTRIES];
+
+static void prv_callback_tracker_push(uintptr_t cb) {
+  // Try to find existing entry or an empty slot
+  int empty_slot = -1;
+  for (int i = 0; i < CALLBACK_TRACKER_MAX_ENTRIES; i++) {
+    if (s_callback_tracker[i].callback == cb) {
+      s_callback_tracker[i].count++;
+      return;
+    }
+    if (empty_slot < 0 && s_callback_tracker[i].count == 0) {
+      empty_slot = i;
+    }
+  }
+  if (empty_slot >= 0) {
+    s_callback_tracker[empty_slot].callback = cb;
+    s_callback_tracker[empty_slot].count = 1;
+  }
+  // If full, silently drop — the per-type count is still accurate
+}
+
+static void prv_callback_tracker_pop(uintptr_t cb) {
+  for (int i = 0; i < CALLBACK_TRACKER_MAX_ENTRIES; i++) {
+    if (s_callback_tracker[i].callback == cb) {
+      if (--s_callback_tracker[i].count == 0) {
+        s_callback_tracker[i].callback = 0;
+      }
+      return;
+    }
+  }
+}
+
 #define EVENT_DEBUG 0
 
 #if EVENT_DEBUG
@@ -113,8 +152,18 @@ static uint32_t prv_get_fancy_type_from_event(const PebbleEvent *event) {
   return event->type;
 }
 
+static void prv_log_kernel_queue_contents(void) {
+  for (int i = 0; i < CALLBACK_TRACKER_MAX_ENTRIES; i++) {
+    if (s_callback_tracker[i].count > 0) {
+      PBL_LOG_ERR("  callback %p: %d", (void *)s_callback_tracker[i].callback,
+                  s_callback_tracker[i].count);
+    }
+  }
+}
+
 static void prv_log_event_put_failure(const char *queue_name, uintptr_t saved_lr, const PebbleEvent *event) {
   PBL_LOG_ERR("Error, %s queue full. Type %u", queue_name, event->type);
+  prv_log_kernel_queue_contents();
 
   RebootReason reason = {
     .code = RebootReasonCode_EventQueueFull,
@@ -143,12 +192,20 @@ static bool prv_event_put_isr(QueueHandle_t queue, const char* queue_type, uintp
     reset_due_to_software_failure();
   }
 
+  if (queue == s_kernel_event_queue && event->type == PEBBLE_CALLBACK_EVENT) {
+    prv_callback_tracker_push((uintptr_t)event->callback.callback);
+  }
+
   return should_context_switch;
 }
 
 static bool prv_try_event_put(QueueHandle_t queue, PebbleEvent *event) {
   PBL_ASSERTN(queue);
-  return (xQueueSendToBack(queue, event, milliseconds_to_ticks(3000)) == pdTRUE);
+  bool success = (xQueueSendToBack(queue, event, milliseconds_to_ticks(3000)) == pdTRUE);
+  if (success && queue == s_kernel_event_queue && event->type == PEBBLE_CALLBACK_EVENT) {
+    prv_callback_tracker_push((uintptr_t)event->callback.callback);
+  }
+  return success;
 }
 
 static void prv_event_put(QueueHandle_t queue,
@@ -170,6 +227,10 @@ static void prv_event_put(QueueHandle_t queue,
 #endif
 
     reset_due_to_software_failure();
+  }
+
+  if (queue == s_kernel_event_queue && event->type == PEBBLE_CALLBACK_EVENT) {
+    prv_callback_tracker_push((uintptr_t)event->callback.callback);
   }
 }
 
@@ -237,7 +298,11 @@ bool event_take_timeout(PebbleEvent* event, int timeout_ms) {
 
   // Always service the kernel queue first. This prevents a misbehaving app from starving us.
   // If we're a little lazy servicing the app, the app will just block itself when the queue gets full.
-  if (xQueueReceive(s_kernel_event_queue, event, 0) == pdFALSE) {
+  if (xQueueReceive(s_kernel_event_queue, event, 0) != pdFALSE) {
+    if (event->type == PEBBLE_CALLBACK_EVENT) {
+      prv_callback_tracker_pop((uintptr_t)event->callback.callback);
+    }
+  } else {
     // Process the activated queue. This insures that events are handled in FIFO order from the app and worker
     // tasks. Note that sometimes the activated_queue can be the s_kernel_event_queue, even though
     // the above xQueueReceive returned no event
