@@ -34,7 +34,7 @@
 #include "task.h"
 #include "freertos_application.h"
 
-static uint64_t s_analytics_sleep_cpu_cycles = 0;
+static RtcTicks s_analytics_sleep_ticks = 0;
 static RtcTicks s_analytics_stop_ticks = 0;
 
 static uint32_t s_last_ticks_elapsed_in_stop = 0;
@@ -99,37 +99,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
   if (eTaskConfirmSleepModeStatus() != eAbortSleep) {
     if (xExpectedIdleTime < MIN_STOP_TICKS || !stop_mode_is_allowed()) {
-#if defined(MICRO_FAMILY_NRF5)
-      // We'd like to count how long we were asleep for, but on nRF5,
-      // systick is suppressed in sleep mode so that the 64MHz core clock
-      // doesn't have to be running.  We can't use the PebbleOS system RTC
-      // to measure how long we were asleep for because it is not
-      // sufficiently granular -- it's running at the system tick rate, so
-      // all we will learn is either 'we slept until the tick timer went
-      // off', or 'we got interrupted before the end of the tick'.
-      //
-      // It would be nice to get a higher resolution timer of how long we
-      // were asleep for, though.  Luckily, when NimBLE is active, it's
-      // using RTC0 in 32 kHz mode, and we can use that to measure how long
-      // we were asleep for!  This is, of course, kind of a hack -- it works
-      // only while NimBLE is running.  But we don't have any dramtically
-      // better options, and this is definitely better than nothing.
-      //
-      // This is used *only* here, and is used *only* for statistics, so
-      // it's OK if this is brittle (and, it is!).  If NimBLE is not running
-      // (and RTC0 is shut down), then we just end up measuring 0 here -- no
-      // harm, no foul.
-      uint32_t rtc_start = NRF_RTC0->COUNTER;
-#else
-      // We assume that a WFI to trigger sleep mode will not last longer than 1
-      // SysTick. (The SysTick INT doesn't automatically get suppressed) Thus,
-      // we use the SysTick timer to get a better estimate of our sleep time
-      //
-      // TODO: It would be nice if there was a clean way to actually 'suppress
-      // ticks' while in sleep mode. If we figure that out, we would likely
-      // need to update how this calculation works
-      uint32_t systick_start = SysTick->VAL;
-#endif
+      RtcTicks sleep_start_ticks = rtc_get_ticks();
 
       power_tracking_start(PowerSystemMcuCoreSleep);
       __DSB();  // Drain any pending memory writes before entering sleep.
@@ -137,24 +107,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
       __ISB();  // Let the pipeline catch up (force the WFI to activate before moving on).
       power_tracking_stop(PowerSystemMcuCoreSleep);
 
-#if defined(MICRO_FAMILY_NRF5)
-      uint32_t rtc_end = NRF_RTC0->COUNTER;
-      
-      if (rtc_end < rtc_start) /* NimBLE uses RTC0 (24 bits), 32 kiHz */
-        rtc_end += 0x1000000;
-      uint32_t rtc_elapsed = rtc_end - rtc_start;
-      uint32_t cycles_elapsed = rtc_elapsed * SystemCoreClock / 32768;
-#else
-      uint32_t systick_stop = SysTick->VAL;
-      uint32_t cycles_elapsed;
-      if (systick_stop < systick_start) {
-        cycles_elapsed = systick_start - systick_stop;
-      } else {
-        cycles_elapsed = (SysTick->LOAD - systick_stop) + systick_start;
-      }
-#endif
-
-      s_analytics_sleep_cpu_cycles += cycles_elapsed;
+      s_analytics_sleep_ticks += rtc_get_ticks() - sleep_start_ticks;
     } else {
       const RtcTicks stop_duration = MIN(xExpectedIdleTime - EARLY_WAKEUP_TICKS, MAX_STOP_TICKS);
 
@@ -297,28 +250,26 @@ static uint32_t s_last_ticks = 0;
 
 #if !defined(MICRO_FAMILY_SF32LB52)
 void dump_current_runtime_stats(void) {
-  uint32_t stop_ms = ticks_to_milliseconds(s_analytics_stop_ticks);
-  uint32_t sleep_ms = mcu_cycles_to_milliseconds(s_analytics_sleep_cpu_cycles);
+  uint32_t stop_ticks = s_analytics_stop_ticks;
+  uint32_t sleep_ticks = s_analytics_sleep_ticks;
 
   uint32_t now_ticks = rtc_get_ticks();
-  uint32_t running_ms =
-      ticks_to_milliseconds(now_ticks - s_last_ticks) - stop_ms - sleep_ms;
-
-  uint32_t tot_time = running_ms + sleep_ms + stop_ms;
+  uint32_t total_ticks = now_ticks - s_last_ticks;
+  uint32_t running_ticks = total_ticks - stop_ticks - sleep_ticks;
 
   char buf[160];
-  snprintf(buf, sizeof(buf), "Run:   %"PRIu32" ms (%"PRIu32" %%)",
-           running_ms, (running_ms * 100) / tot_time);
+  snprintf(buf, sizeof(buf), "Run:   %"PRIu32" ticks (%"PRIu32" %%)",
+           running_ticks, (running_ticks * 100) / total_ticks);
   prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Sleep: %"PRIu32" ms (%"PRIu32" %%)",
-           sleep_ms, (sleep_ms * 100) / tot_time);
+  snprintf(buf, sizeof(buf), "Sleep: %"PRIu32" ticks (%"PRIu32" %%)",
+           sleep_ticks, (sleep_ticks * 100) / total_ticks);
   prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Stop:  %"PRIu32" ms (%"PRIu32" %%)",
-           stop_ms, (stop_ms * 100) / tot_time);
+  snprintf(buf, sizeof(buf), "Stop:  %"PRIu32" ticks (%"PRIu32" %%)",
+           stop_ticks, (stop_ticks * 100) / total_ticks);
   prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Tot:   %"PRIu32" ms", tot_time);
+  snprintf(buf, sizeof(buf), "Tot:   %"PRIu32" ticks", total_ticks);
   prompt_send_response(buf);
-  
+
   uint32_t rtc_ticks = rtc_get_ticks();
   uint32_t rtos_ticks = xTaskGetTickCount();
   snprintf(buf, sizeof(buf), "RTC ticks: %"PRIu32", RTOS ticks: %"PRIu32 ", ticks corrected: %"PRIu32 ", last ticks stopped: %"PRIu32 " / %"PRIu32,
@@ -327,23 +278,22 @@ void dump_current_runtime_stats(void) {
 }
 
 void analytics_external_collect_cpu_stats(void) {
-  uint32_t stop_ms = ticks_to_milliseconds(s_analytics_stop_ticks);
-  uint32_t sleep_ms = mcu_cycles_to_milliseconds(s_analytics_sleep_cpu_cycles);
+  uint32_t stop_ticks = s_analytics_stop_ticks;
+  uint32_t sleep_ticks = s_analytics_sleep_ticks;
 
   uint32_t now_ticks = rtc_get_ticks();
-  uint32_t ms_running =
-      ticks_to_milliseconds(now_ticks - s_last_ticks) - stop_ms - sleep_ms;
+  uint32_t total_ticks = now_ticks - s_last_ticks;
+  uint32_t running_ticks = total_ticks - stop_ticks - sleep_ticks;
 
-  // Calculate total time and percentages
-  uint32_t total_ms = ms_running + stop_ms + sleep_ms;
+  // Calculate percentages
   uint32_t running_pct = 0;
   uint32_t stop_pct = 0;
   uint32_t sleep_pct = 0;
 
-  if (total_ms > 0) {
-    running_pct = (ms_running * 100) / total_ms;
-    stop_pct = (stop_ms * 100) / total_ms;
-    sleep_pct = (sleep_ms * 100) / total_ms;
+  if (total_ticks > 0) {
+    running_pct = (running_ticks * 10000) / total_ticks;
+    stop_pct = (stop_ticks * 10000) / total_ticks;
+    sleep_pct = (sleep_ticks * 10000) / total_ticks;
   }
 
   // STM32/NRF5: sleep0 = light sleep (WFI), sleep1 = stop mode, sleep2 = unused
@@ -353,7 +303,7 @@ void analytics_external_collect_cpu_stats(void) {
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep2_pct, 0);
 
   s_last_ticks = now_ticks;
-  s_analytics_sleep_cpu_cycles = 0;
+  s_analytics_sleep_ticks = 0;
   s_analytics_stop_ticks = 0;
 }
 #endif
