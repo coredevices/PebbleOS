@@ -9,9 +9,6 @@
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
 #include "apps/system_app_ids.h"
-#if PLATFORM_SILK
-#include "drivers/hrm/as7000/as7000.h"
-#endif
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
@@ -124,25 +121,6 @@ static void prv_send_status_and_version(void) {
   }
 
   dict_write_uint8(app_data->out_iter, AppMessageKey_Status, AppStatus_Enabled_1HZ);
-
-#if CAPABILITY_HAS_BUILTIN_HRM && PLATFORM_SILK
-  if (mfg_info_is_hrm_present()) {
-    AS7000InfoRecord hrm_info = {};
-    as7000_get_version_info(HRM, &hrm_info);
-    dict_write_uint8(app_data->out_iter, AppMessageKey_HRMProtocolVersionMajor,
-                     hrm_info.protocol_version_major);
-    dict_write_uint8(app_data->out_iter, AppMessageKey_HRMProtocolVersionMinor,
-                     hrm_info.protocol_version_minor);
-    dict_write_uint8(app_data->out_iter, AppMessageKey_HRMSoftwareVersionMajor,
-                     hrm_info.sw_version_major);
-    dict_write_uint8(app_data->out_iter, AppMessageKey_HRMSoftwareVersionMinor,
-                     hrm_info.sw_version_minor);
-    dict_write_uint8(app_data->out_iter, AppMessageKey_HRMApplicationID,
-                     hrm_info.application_id);
-    dict_write_uint8(app_data->out_iter, AppMessageKey_HRMHardwareRevision,
-                     hrm_info.hw_revision);
-  }
-#endif
 
   char serial_number_buffer[MFG_SERIAL_NUMBER_SIZE + 1];
   mfg_info_get_serialnumber(serial_number_buffer, sizeof(serial_number_buffer));
