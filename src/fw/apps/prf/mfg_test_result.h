@@ -48,3 +48,8 @@ void mfg_test_result_report(MfgTestId test, bool passed, uint32_t value);
 
 //! Get the result of a test. Returns NULL if the test has not been run.
 const MfgTestResult *mfg_test_result_get(MfgTestId test);
+
+//! Check if a result was reported since the last call to this function.
+//! Returns true once, then resets. Used by the test menu to detect test
+//! completion vs user backing out.
+bool mfg_test_result_was_reported(void);
