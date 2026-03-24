@@ -240,6 +240,10 @@ def build(bld):
     # This is different than our internal header (font_resource_keys.auto.h) as it excludes
     # some fonts that we don't want to export
     def _generate_pebble_fonts_h(task):
+        from pebble_sdk_platform import pebble_platforms
+        frozen_revision = pebble_platforms[bld.env.PLATFORM_NAME].get(
+            "FROZEN_AT_REVISION")
+
         with open(task.outputs[0].abspath(), 'w') as f_out:
             f_out.write('#pragma once\n')
             f_out.write('\n')
@@ -247,8 +251,16 @@ def build(bld):
             with open(task.inputs[0].abspath(), 'r') as f_in:
                 font_list = json.load(f_in)["fonts"]
 
-            for font in font_list:
-                f_out.write('#define FONT_KEY_{0} "RESOURCE_ID_{0}"\n'.format(font))
+            for entry in font_list:
+                if isinstance(entry, dict):
+                    name = entry["name"]
+                    added = entry.get("addedRevision")
+                    if (frozen_revision is not None and added is not None
+                            and added > frozen_revision):
+                        continue
+                else:
+                    name = entry
+                f_out.write('#define FONT_KEY_{0} "RESOURCE_ID_{0}"\n'.format(name))
 
     # Copy any font keys over to the SDK
     bld(rule=_generate_pebble_fonts_h,
