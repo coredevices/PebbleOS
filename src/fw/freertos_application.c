@@ -281,19 +281,19 @@ void analytics_external_collect_cpu_stats(void) {
   uint32_t stop_ticks = s_analytics_stop_ticks;
   uint32_t sleep_ticks = s_analytics_sleep_ticks;
 
-  uint32_t now_ticks = rtc_get_ticks();
-  uint32_t total_ticks = now_ticks - s_last_ticks;
+  RtcTicks now_ticks = rtc_get_ticks();
+  uint32_t total_ticks = (uint32_t)(now_ticks - s_last_ticks);
   uint32_t running_ticks = total_ticks - stop_ticks - sleep_ticks;
 
   // Calculate percentages
-  uint32_t running_pct = 0;
-  uint32_t stop_pct = 0;
-  uint32_t sleep_pct = 0;
+  uint16_t running_pct = 0;
+  uint16_t stop_pct = 0;
+  uint16_t sleep_pct = 0;
 
   if (total_ticks > 0) {
-    running_pct = (running_ticks * 10000) / total_ticks;
-    stop_pct = (stop_ticks * 10000) / total_ticks;
-    sleep_pct = (sleep_ticks * 10000) / total_ticks;
+    running_pct = (uint16_t)((running_ticks * 10000ULL) / total_ticks);
+    stop_pct = (uint16_t)((stop_ticks * 10000ULL) / total_ticks);
+    sleep_pct = (uint16_t)((sleep_ticks * 10000ULL) / total_ticks);
   }
 
   // STM32/NRF5: sleep0 = light sleep (WFI), sleep1 = stop mode, sleep2 = unused
