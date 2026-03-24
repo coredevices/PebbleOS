@@ -122,6 +122,9 @@ typedef enum {
   PmicRegisters_BUCK_BUCK2NORMVOUT = 0x040A,
   PmicRegisters_BUCK_BUCKSWCTRLSEL = 0x040F,
   PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL = 0x01,
+  PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK2SWCTRLSEL_SWCTRL = 0x02,
+  PmicRegisters_BUCK_BUCK1VOUTSTATUS = 0x0410,
+  PmicRegisters_BUCK_BUCK2VOUTSTATUS = 0x0411,
   PmicRegisters_BUCK_BUCKSTATUS = 0x0434,
   PmicRegisters_LDSW_TASKLDSW1SET = 0x0800,
   PmicRegisters_LDSW_TASKLDSW1CLR = 0x0801,
@@ -184,6 +187,36 @@ static bool prv_write_register(uint16_t register_address, uint8_t datum) {
   return rv;
 }
 
+// Anomaly 27 workaround: when switching BUCKn to SW control, if BUCKnNORMVOUT
+// equals the VSET pin value (BUCKnVOUTSTATUS), quiescent current increases by
+// 1mA. To avoid this, first set BUCKnNORMVOUT to a different value, switch to
+// SW control, then set the desired voltage.
+static bool prv_buck_set_sw_ctrl(uint16_t normvout_reg, uint16_t voutstatus_reg,
+                                 uint8_t swctrlsel_bit, uint8_t desired_vout) {
+  uint8_t voutstatus;
+  if (!prv_read_register(voutstatus_reg, &voutstatus)) {
+    return false;
+  }
+
+  // Ensure NORMVOUT differs from VOUTSTATUS before enabling SW control
+  uint8_t initial_vout = (desired_vout != voutstatus) ? desired_vout : (desired_vout ^ 1);
+  bool ok = prv_write_register(normvout_reg, initial_vout);
+
+  // Read current SWCTRLSEL and set our bit
+  uint8_t swctrlsel;
+  if (!prv_read_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, &swctrlsel)) {
+    return false;
+  }
+  ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, swctrlsel | swctrlsel_bit);
+
+  // Now set the actual desired voltage
+  if (initial_vout != desired_vout) {
+    ok &= prv_write_register(normvout_reg, desired_vout);
+  }
+
+  return ok;
+}
+
 static void prv_handle_charge_state_change(void *null) {
   const bool is_charging = pmic_is_charging();
   const bool is_connected = pmic_is_usb_connected();
@@ -239,20 +272,15 @@ bool pmic_init(void) {
 
   // TODO(NPM1300): This needs to be configurable at board level
 #if PLATFORM_ASTERIX
-  uint8_t buck_out;
-  if (!prv_read_register(PmicRegisters_BUCK_BUCK1NORMVOUT, &buck_out)) {
-    PBL_LOG_ERR("failed to read BUCK1NORMVOUT");
-    return false;
-  }
-  PBL_LOG_DBG("found the nPM1300, BUCK1NORMVOUT = 0x%x", buck_out);
-  
-  // work around erratum 27 for nPM1300 rev1, which we tripped in the bootloader (oops)
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, 9 /* 1.9V */);
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCK2NORMVOUT, 21 /* 3.1V */);
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, 3 /* both of them, load */);
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, 8 /* 1.8V */);
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCK2NORMVOUT, 20 /* 3.0V */);
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, 3 /* both of them, load */);
+  // Anomaly 27: set BUCK1/BUCK2 to SW control with workaround
+  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
+                              PmicRegisters_BUCK_BUCK1VOUTSTATUS,
+                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL,
+                              8 /* 1.8V */);
+  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK2NORMVOUT,
+                              PmicRegisters_BUCK_BUCK2VOUTSTATUS,
+                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK2SWCTRLSEL_SWCTRL,
+                              20 /* 3.0V */);
   
   if (!prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &val)) {
     PBL_LOG_ERR("failed to read LDSWSTATUS");
@@ -271,10 +299,11 @@ bool pmic_init(void) {
 
 // FIXME(OBELIX,GETAFIX): Needs to be configurable at board level
 #if PLATFORM_OBELIX || PLATFORM_GETAFIX
-  // Disable BUCK1 (1.8V)
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL,
-                           PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL);
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, 8 /* 1.8V */);
+  // Anomaly 27: set BUCK1 to SW control with workaround, then disable it
+  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
+                              PmicRegisters_BUCK_BUCK1VOUTSTATUS,
+                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL,
+                              8 /* 1.8V */);
   ok &= prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
   //enable 1.8V@LDO1
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);  //LDO
