@@ -205,8 +205,20 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
   }
 }
 
+static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
+  AppData *app_data = app_state_get_user_data();
+
+  if (app_data->test_state == ChargeStatePass ||
+      app_data->test_state == ChargeStateFail) {
+    bool passed = (app_data->test_state == ChargeStatePass);
+    mfg_test_result_report(MfgTestId_Charge, passed, 0);
+    app_window_stack_pop(true);
+  }
+}
+
 static void prv_config_provider(void *data) {
   window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
 }
 
 static void app_init(void) {
