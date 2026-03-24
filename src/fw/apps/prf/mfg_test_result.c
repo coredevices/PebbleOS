@@ -4,6 +4,7 @@
 #include "apps/prf/mfg_test_result.h"
 
 static MfgTestResult s_results[MfgTestIdCount];
+static bool s_result_reported;
 
 void mfg_test_result_report(MfgTestId test, bool passed, uint32_t value) {
   if (test >= MfgTestIdCount) {
@@ -15,6 +16,7 @@ void mfg_test_result_report(MfgTestId test, bool passed, uint32_t value) {
     .passed = passed,
     .value = value,
   };
+  s_result_reported = true;
 }
 
 const MfgTestResult *mfg_test_result_get(MfgTestId test) {
@@ -23,4 +25,10 @@ const MfgTestResult *mfg_test_result_get(MfgTestId test) {
   }
 
   return &s_results[test];
+}
+
+bool mfg_test_result_was_reported(void) {
+  bool reported = s_result_reported;
+  s_result_reported = false;
+  return reported;
 }
