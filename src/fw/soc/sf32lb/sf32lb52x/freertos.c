@@ -42,8 +42,8 @@ static RtcTicks s_last_ticks = 0;
 static const uint32_t EARLY_WAKEUP_TICKS = 4;
 //! Minimum ticks to enter deep sleep
 static const uint32_t MIN_DEEPSLEEP_TICKS = RTC_TICKS_HZ / 20;
-// Maximum ticks allowed for deep sleep (1 second, for regular timer)
-static const uint32_t MAX_DEEPSLEEP_TICKS = RTC_TICKS_HZ;
+//! Maximum LPTIM counter value (24-bit)
+static const uint32_t MAX_LPTIM_CNT = 0xFFFFFFUL;
 
 static uint32_t s_iser_bak[16];
 
@@ -204,8 +204,9 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
         SCB->ICSR = SCB_ICSR_PENDSTCLR_Msk;
 
         // configure LPTIM to wake us up after expected idle time
-        sleep_ticks = MIN(xExpectedIdleTime - EARLY_WAKEUP_TICKS, MAX_DEEPSLEEP_TICKS);
-        lptim_ticks = sleep_ticks * rc10k_get_freq_hz() / RTC_TICKS_HZ;
+        sleep_ticks = xExpectedIdleTime - EARLY_WAKEUP_TICKS;
+        lptim_ticks = MIN(sleep_ticks * rc10k_get_freq_hz() / RTC_TICKS_HZ,
+                          MAX_LPTIM_CNT);
         HAL_LPTIM_Counter_Start_IT(&s_lptim, lptim_ticks);
 
         gtimer_start = HAL_GTIMER_READ();
