@@ -69,20 +69,17 @@
 //! Try 3 times before giving up.
 #define MAX_UPDATE_REQUEST_ATTEMPTS (3)
 
-// TODO: Check slave_latency_events values. We currently observe some connection
-// drops that *may* be related to the slave latency being "too high". Let's just
-// remove slave latency for now, and see if that helps.
 static const GAPLEConnectRequestParams s_default_connection_params_table[NumResponseTimeState] = {
   [ResponseTimeMax] = {
-    .slave_latency_events = 0,
-    .connection_interval_min_1_25ms = 120, // 150ms
-    .connection_interval_max_1_25ms = 144, // 180ms
+    .slave_latency_events = 4,
+    .connection_interval_min_1_25ms = 144, // 180ms
+    .connection_interval_max_1_25ms = 192, // 240ms
     .supervision_timeout_10ms = 600, // 6s
   },
   [ResponseTimeMiddle] = {
-    .slave_latency_events = 0,
-    .connection_interval_min_1_25ms = 120, // 150ms
-    .connection_interval_max_1_25ms = 144, // 180ms
+    .slave_latency_events = 2,
+    .connection_interval_min_1_25ms = 36, // 45ms
+    .connection_interval_max_1_25ms = 60, // 75ms
     .supervision_timeout_10ms = 600, // 6s
   },
   [ResponseTimeMin] = {
