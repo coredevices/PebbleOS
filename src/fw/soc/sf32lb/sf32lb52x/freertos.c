@@ -41,7 +41,7 @@ static RtcTicks s_last_ticks = 0;
 //! Early wake-up ticks (to avoid over-sleeping due to wake-up latency)
 static const uint32_t EARLY_WAKEUP_TICKS = 4;
 //! Minimum ticks to enter deep sleep
-static const uint32_t MIN_DEEPSLEEP_TICKS = RTC_TICKS_HZ / 10;
+static const uint32_t MIN_DEEPSLEEP_TICKS = RTC_TICKS_HZ / 20;
 // Maximum ticks allowed for deep sleep (1 second, for regular timer)
 static const uint32_t MAX_DEEPSLEEP_TICKS = RTC_TICKS_HZ;
 
