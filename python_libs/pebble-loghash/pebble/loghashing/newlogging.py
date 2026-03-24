@@ -213,7 +213,7 @@ def parse_message(msg, log_dict):
     # Use "printf" to generate the reconstructed string. Make sure the arguments are correct
     try:
         output_msg = safe_output_msg % tuple(arg_list)
-    except (TypeError, UnicodeDecodeError) as e:
+    except (TypeError, ValueError, UnicodeDecodeError) as e:
         output_msg = msg + " ----> ERROR: " + str(e)
 
     # Add the formatted msg to the copy of our line dict
