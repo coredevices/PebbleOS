@@ -53,9 +53,34 @@ class FunctionExport(FullExport):
         return super(FunctionExport, self).complete()
 
 
+class StubbedFunctionExport(Export):
+    def __init__(self, v, app_only, worker_only, deprecated):
+        super(StubbedFunctionExport, self).__init__(
+            v, app_only, worker_only, deprecated
+        )
+
+        self.stub_return = v.get("stubReturn", "0")
+        self.stub_definition = v.get("stubDefinition", None)
+        self.added_revision = int(v["addedRevision"])
+        self.removed = v.get("removed", False)
+        self.skip_definition = v.get("skipDefinition", False)
+        self.sort_name = v.get("sortName", self.name)
+        self.api_exists = v.get("apiExists", False)
+
+    def complete(self):
+        return True
+
+
 class Group(object):
     def __init__(
-        self, export, parent_group, app_only, worker_only, current_revision, deprecated
+        self,
+        export,
+        parent_group,
+        app_only,
+        worker_only,
+        current_revision,
+        deprecated,
+        frozen_revision=None,
     ):
         self.name = export["name"]
         self.parent_group = parent_group
@@ -69,6 +94,7 @@ class Group(object):
             self.app_only,
             self.worker_only,
             self.deprecated,
+            frozen_revision=frozen_revision,
         )
         self.comment = None
         self.display_name = None
@@ -94,6 +120,7 @@ def parse_exports_list(
     app_only=False,
     worker_only=False,
     deprecated=False,
+    frozen_revision=None,
 ):
     exports = []
 
@@ -117,16 +144,33 @@ def parse_exports_list(
                 )
                 continue
 
+        should_stub = (
+            frozen_revision is not None
+            and "addedRevision" in e
+            and int(e["addedRevision"]) > frozen_revision
+        )
+
         if e["type"] == "group":
             exports.append(
                 Group(
-                    e, parent_group, app_only, worker_only, current_revision, deprecated
+                    e,
+                    parent_group,
+                    app_only,
+                    worker_only,
+                    current_revision,
+                    deprecated,
+                    frozen_revision=frozen_revision,
                 )
             )
         elif e["type"] == "forward_struct":
             exports.append(Export(e, app_only, worker_only, deprecated))
         elif e["type"] == "function":
-            exports.append(FunctionExport(e, app_only, worker_only, deprecated))
+            if should_stub:
+                exports.append(
+                    StubbedFunctionExport(e, app_only, worker_only, deprecated)
+                )
+            else:
+                exports.append(FunctionExport(e, app_only, worker_only, deprecated))
         elif e["type"] == "type" or e["type"] == "define":
             exports.append(FullExport(e, app_only, worker_only, deprecated))
         else:
@@ -135,7 +179,7 @@ def parse_exports_list(
     return exports
 
 
-def parse_export_file(filename, internal_sdk_build):
+def parse_export_file(filename, internal_sdk_build, frozen_revision=None):
     with open(filename, "r") as f:
         shim_defs = json.load(f)
         file_revision = int(shim_defs["revision"])
@@ -147,7 +191,11 @@ def parse_export_file(filename, internal_sdk_build):
             )
 
         current_revision = INTERNAL_REVISION if internal_sdk_build else file_revision
-        exports = parse_exports_list(shim_defs["exports"], current_revision)
+        exports = parse_exports_list(
+            shim_defs["exports"],
+            current_revision,
+            frozen_revision=frozen_revision,
+        )
 
     return shim_defs["files"], exports
 

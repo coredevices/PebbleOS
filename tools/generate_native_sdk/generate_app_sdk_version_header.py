@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
+from exports import StubbedFunctionExport
+
 DEFINE_PREFIX = "_PBL_API_EXISTS_"
 MACRO_NAME = "PBL_API_EXISTS"
 
@@ -19,6 +21,8 @@ def generate_app_sdk_version_header(out_file_path, functions):
         out_file.write("\n")
 
         for func in functions:
+            if isinstance(func, StubbedFunctionExport) and not func.api_exists:
+                continue
             if not func.removed and not func.skip_definition and not func.deprecated:
                 out_file.write("#define {}{}\n".format(DEFINE_PREFIX, func.name))
 

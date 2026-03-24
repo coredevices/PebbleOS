@@ -105,6 +105,17 @@ def make_app_header(exports_tree, output_filename, header_type, inject_text):
                 writeline(f, "struct " + e.name + ";")
                 writeline(f, "typedef struct " + e.name + " " + e.name + ";")
                 writeline(f)
+            elif isinstance(e, exports.StubbedFunctionExport):
+                if skip:
+                    return
+                if not e.removed and not e.skip_definition and not e.deprecated:
+                    if e.stub_definition is not None:
+                        writeline(f, e.stub_definition)
+                    elif e.stub_return == "void":
+                        writeline(f, "#define %s(...) do {} while(0)" % e.name)
+                    else:
+                        writeline(f, "#define %s(...) (%s)" % (e.name, e.stub_return))
+                    writeline(f)
             elif e.type == "function":
                 if skip:
                     return
