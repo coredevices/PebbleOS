@@ -34,6 +34,48 @@
 #include "process_state/app_state/app_state.h"
 #include "util/size.h"
 
+typedef const PebbleProcessMd *(*MfgTestGetInfoFn)(void);
+
+typedef struct {
+  const char *title;
+  MfgTestId test_id;
+  MfgTestGetInfoFn get_info;
+} MfgTestMenuEntry;
+
+static const MfgTestMenuEntry s_entries[] = {
+  { "Buttons",       MfgTestId_Buttons,       mfg_button_app_get_info },
+  { "Display",       MfgTestId_Display,        mfg_display_app_get_info },
+#ifdef CONFIG_TOUCH
+  { "Touch",         MfgTestId_Touch,          mfg_touch_app_get_info },
+#endif
+  { "Backlight",     MfgTestId_Backlight,      mfg_backlight_app_get_info },
+  { "Accelerometer", MfgTestId_Accel,          mfg_accel_app_get_info },
+#ifdef CONFIG_MAG
+  { "Magnetometer",  MfgTestId_Mag,            mfg_mag_app_get_info },
+#endif
+#if PLATFORM_ASTERIX
+  { "Speaker",       MfgTestId_Speaker,        mfg_speaker_asterix_app_get_info },
+#elif PLATFORM_OBELIX
+  { "Speaker",       MfgTestId_Speaker,        mfg_speaker_obelix_app_get_info },
+#endif
+#if PLATFORM_ASTERIX
+  { "Microphone",    MfgTestId_Mic,            mfg_mic_asterix_app_get_info },
+#elif PLATFORM_OBELIX
+  { "Microphone",    MfgTestId_Mic,            mfg_mic_obelix_app_get_info },
+#elif PLATFORM_GETAFIX
+  { "Microphone",    MfgTestId_Mic,            mfg_mic_getafix_app_get_info },
+#endif
+  { "ALS",           MfgTestId_ALS,            mfg_als_app_get_info },
+  { "Vibration",     MfgTestId_Vibration,      mfg_vibration_app_get_info },
+#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
+  { "HRM CTR/L",     MfgTestId_HrmCtrLeakage,  mfg_hrm_ctr_leakage_obelix_app_get_info },
+#endif
+  { "Program Color", MfgTestId_ProgramColor,   mfg_program_color_app_get_info },
+  { "BLE Adv",       MfgTestId_Adv,            mfg_adv_app_get_info },
+  { "Charge",        MfgTestId_Charge,         mfg_charge_app_get_info },
+  { "Discharge",     MfgTestId_Discharge,      mfg_discharge_app_get_info },
+};
+
 typedef struct {
   Window *window;
   SimpleMenuLayer *menu_layer;
@@ -54,80 +96,10 @@ static void prv_launch_test(int index, const PebbleProcessMd *md) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) md);
 }
 
-static void prv_select_button(int index, void *context) {
-  prv_launch_test(index, mfg_button_app_get_info());
-}
-
-static void prv_select_display(int index, void *context) {
-  prv_launch_test(index, mfg_display_app_get_info());
-}
-
-static void prv_select_backlight(int index, void *context) {
-  prv_launch_test(index, mfg_backlight_app_get_info());
-}
-
-static void prv_select_accel(int index, void *context) {
-  prv_launch_test(index, mfg_accel_app_get_info());
-}
-
-#ifdef CONFIG_MAG
-static void prv_select_mag(int index, void *context) {
-  prv_launch_test(index, mfg_mag_app_get_info());
-}
-#endif
-
-static void prv_select_vibration(int index, void *context) {
-  prv_launch_test(index, mfg_vibration_app_get_info());
-}
-
-static void prv_select_als(int index, void *context) {
-  prv_launch_test(index, mfg_als_app_get_info());
-}
-
-static void prv_select_speaker(int index, void *context) {
-#if PLATFORM_ASTERIX
-  prv_launch_test(index, mfg_speaker_asterix_app_get_info());
-#elif PLATFORM_OBELIX
-  prv_launch_test(index, mfg_speaker_obelix_app_get_info());
-#endif
-}
-
-static void prv_select_mic(int index, void *context) {
-#if PLATFORM_ASTERIX
-  prv_launch_test(index, mfg_mic_asterix_app_get_info());
-#elif PLATFORM_OBELIX
-  prv_launch_test(index, mfg_mic_obelix_app_get_info());
-#elif PLATFORM_GETAFIX
-  prv_launch_test(index, mfg_mic_getafix_app_get_info());
-#endif
-}
-
-#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
-static void prv_select_hrm_ctr_leakage_obelix(int index, void *context) {
-  prv_launch_test(index, mfg_hrm_ctr_leakage_obelix_app_get_info());
-}
-#endif
-
-#ifdef CONFIG_TOUCH
-static void prv_select_touch(int index, void *context) {
-  prv_launch_test(index, mfg_touch_app_get_info());
-}
-#endif
-
-static void prv_select_program_color(int index, void *context) {
-  prv_launch_test(index, mfg_program_color_app_get_info());
-}
-
-static void prv_select_charge(int index, void *context) {
-  prv_launch_test(index, mfg_charge_app_get_info());
-}
-
-static void prv_select_discharge(int index, void *context) {
-  prv_launch_test(index, mfg_discharge_app_get_info());
-}
-
-static void prv_select_adv(int index, void *context) {
-  prv_launch_test(index, mfg_adv_app_get_info());
+static void prv_select_test(int index, void *context) {
+  if ((size_t)index < ARRAY_LENGTH(s_entries)) {
+    prv_launch_test(index, s_entries[index].get_info());
+  }
 }
 
 static void prv_select_results(int index, void *context) {
@@ -142,59 +114,25 @@ static const char * prv_get_status_prefix(MfgTestId test) {
   return result->passed ? "[P]" : "[F]";
 }
 
-typedef struct {
-  const char *title;
-  SimpleMenuLayerSelectCallback callback;
-  MfgTestId test_id;
-} MfgTestMenuEntry;
-
 static void prv_window_load(Window *window) {
   MfgTestMenuAppData *data = app_state_get_user_data();
 
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
 
-  const MfgTestMenuEntry entries[] = {
-    { "Buttons",       prv_select_button,      MfgTestId_Buttons },
-    { "Display",       prv_select_display,      MfgTestId_Display },
-#ifdef CONFIG_TOUCH
-    { "Touch",         prv_select_touch,        MfgTestId_Touch },
-#endif
-    { "Backlight",     prv_select_backlight,    MfgTestId_Backlight },
-    { "Accelerometer", prv_select_accel,        MfgTestId_Accel },
-#ifdef CONFIG_MAG
-    { "Magnetometer",  prv_select_mag,          MfgTestId_Mag },
-#endif
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
-    { "Speaker",       prv_select_speaker,      MfgTestId_Speaker },
-#endif
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
-    { "Microphone",    prv_select_mic,          MfgTestId_Mic },
-#endif
-    { "ALS",           prv_select_als,          MfgTestId_ALS },
-    { "Vibration",     prv_select_vibration,    MfgTestId_Vibration },
-#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
-    { "HRM CTR/L",     prv_select_hrm_ctr_leakage_obelix, MfgTestId_HrmCtrLeakage },
-#endif
-    { "Program Color", prv_select_program_color, MfgTestId_ProgramColor },
-    { "BLE Adv",       prv_select_adv,          MfgTestId_Adv },
-    { "Charge",        prv_select_charge,       MfgTestId_Charge },
-    { "Discharge",     prv_select_discharge,    MfgTestId_Discharge },
-  };
-
-  size_t num_entries = ARRAY_LENGTH(entries);
+  size_t num_entries = ARRAY_LENGTH(s_entries);
   size_t num_items = num_entries + 1;  // +1 for RESULTS
   SimpleMenuItem *items = app_malloc(num_items * sizeof(SimpleMenuItem));
 
   for (size_t i = 0; i < num_entries; i++) {
-    const char *prefix = prv_get_status_prefix(entries[i].test_id);
-    size_t len = snprintf(NULL, 0, "%zu. %s %s", i + 1, prefix, entries[i].title) + 1;
+    const char *prefix = prv_get_status_prefix(s_entries[i].test_id);
+    size_t len = snprintf(NULL, 0, "%zu. %s %s", i + 1, prefix, s_entries[i].title) + 1;
     char *title = app_malloc(len);
-    snprintf(title, len, "%zu. %s %s", i + 1, prefix, entries[i].title);
+    snprintf(title, len, "%zu. %s %s", i + 1, prefix, s_entries[i].title);
 
     items[i] = (SimpleMenuItem) {
       .title = title,
-      .callback = entries[i].callback,
+      .callback = prv_select_test,
     };
   }
 
@@ -210,10 +148,22 @@ static void prv_window_load(Window *window) {
 
   data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
 
-  // Select next entry after returning from a test, first entry otherwise
-  int16_t next = s_last_selected + 1;
-  if (next > 0 && (size_t)next < num_items) {
-    simple_menu_layer_set_selected_index(data->menu_layer, next, false);
+  if (s_last_selected >= 0) {
+    if (mfg_test_result_was_reported()) {
+      // Test completed: auto-advance to next test
+      int16_t next = s_last_selected + 1;
+      if ((size_t)next < num_entries) {
+        simple_menu_layer_set_selected_index(data->menu_layer, next, false);
+        prv_launch_test(next, s_entries[next].get_info());
+      } else {
+        // Reached end of test list, launch RESULTS
+        simple_menu_layer_set_selected_index(data->menu_layer, num_entries, false);
+        prv_launch_test(num_entries, mfg_qr_results_app_get_info());
+      }
+    } else {
+      // User backed out: select the test they came from
+      simple_menu_layer_set_selected_index(data->menu_layer, s_last_selected, false);
+    }
   }
 
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
