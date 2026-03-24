@@ -64,7 +64,7 @@ typedef enum PlatformType {
   ((PLAT) == PlatformTypeDiorite) ? (DIORITE) : \
   ((PLAT) == PlatformTypeChalk) ? (CHALK) : \
   ((PLAT) == PlatformTypeBasalt) ? (BASALT) : \
-  ((PLAT) == PlatformTypeBasalt) ? (APLITE) : \
+  ((PLAT) == PlatformTypeAplite) ? (APLITE) : \
   ((PLAT) == PlatformTypeGabbro) ? (GABBRO) : \
   (DEFAULT) \
 )
