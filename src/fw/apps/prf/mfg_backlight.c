@@ -22,10 +22,12 @@
 
 typedef enum {
   TestPattern_White,
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
   TestPattern_Red,
   TestPattern_Green,
   TestPattern_Blue,
   TestPattern_Black,
+#endif
   NumTestPatterns
 } TestPattern;
 
@@ -36,9 +38,11 @@ typedef struct {
 
 
 static void prv_update_proc(struct Layer *layer, GContext* ctx) {
-  AppData *app_data = app_state_get_user_data();
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &layer->bounds);
+
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+  AppData *app_data = app_state_get_user_data();
 
   PBL_LOG_INFO("backlight id:%d", app_data->test_pattern);
   switch (app_data->test_pattern) {
@@ -60,6 +64,7 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   default:
     break;
   }
+#endif
 }
 
 static void prv_result_confirmed(ClickRecognizerRef recognizer, void *context) {
@@ -134,7 +139,10 @@ static void s_main(void) {
 
   app_event_loop();
 
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
   led_controller_rgb_set_color(LED_WARM_WHITE);
+#endif
+
   light_enable(false);
 }
 
