@@ -629,7 +629,8 @@
             }, {
               "type": "function",
               "name": "health_service_metric_aggregate_averaged_accessible",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "HealthServiceAccessibilityMaskNotSupported"
             }, {
               "type": "function",
               "name": "health_service_any_activity_accessible",
@@ -651,7 +652,8 @@
             }, {
               "type": "function",
               "name": "health_service_set_heart_rate_sample_period",
-              "addedRevision": "86"
+              "addedRevision": "86",
+              "stubReturn": "false"
             }, {
               "type": "function",
               "name": "health_service_get_heart_rate_sample_period_expiration_sec",
@@ -659,11 +661,13 @@
             }, {
               "type": "function",
               "name": "health_service_register_metric_alert",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "NULL"
             }, {
               "type": "function",
               "name": "health_service_cancel_metric_alert",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "false"
             }, {
               "type": "type",
               "name": "AmbientLightLevel"
@@ -1624,7 +1628,8 @@
             }, {
               "type": "function",
               "name": "memory_cache_flush",
-              "addedRevision": "84"
+              "addedRevision": "84",
+              "stubReturn": "void"
             }
           ]
         }, {
@@ -1782,7 +1787,8 @@
               "type": "function",
               "name": "exit_reason_set",
               "implName": "app_exit_reason_set",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "void"
             }
           ]
         },
@@ -1819,7 +1825,8 @@
             }, {
               "type": "function",
               "name": "app_glance_add_slice",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "APP_GLANCE_RESULT_INVALID_SESSION"
             }, {
               "type": "type",
               "name": "AppGlanceReloadCallback",
@@ -1827,7 +1834,8 @@
             }, {
               "type": "function",
               "name": "app_glance_reload",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "void"
             }
           ]
         }
@@ -1859,7 +1867,9 @@
             }, {
               "type": "function",
               "name": "gcolor_equal",
-              "addedRevision": "82"
+              "addedRevision": "82",
+              "stubDefinition": "bool gcolor_equal(GColor8 x, GColor8 y);",
+              "apiExists": true
             }, {
               "type": "function",
               "name": "gcolor_legible_over",
@@ -2786,7 +2796,8 @@
               "type": "function",
               "name": "layer_get_unobstructed_bounds",
               "implName": "layer_get_unobstructed_bounds_by_value",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubDefinition": "#define layer_get_unobstructed_bounds(layer) layer_get_bounds(layer)"
             }, {
               "type": "function",
               "name": "layer_convert_point_to_screen",
@@ -3442,12 +3453,14 @@
               "type": "function",
               "name": "unobstructed_area_service_subscribe",
               "implName": "app_unobstructed_area_service_subscribe",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "void"
             }, {
               "type": "function",
               "name": "unobstructed_area_service_unsubscribe",
               "implName": "app_unobstructed_area_service_unsubscribe",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "void"
             }
           ]
         }, {
@@ -4462,7 +4475,8 @@
             {
               "type": "function",
               "name": "preferred_result_display_duration",
-              "addedRevision": "83"
+              "addedRevision": "83",
+              "stubReturn": "1000"
             }, {
               "type": "type",
               "name": "PreferredContentSize",
@@ -4470,11 +4484,13 @@
             }, {
               "type": "function",
               "name": "preferred_content_size",
-              "addedRevision": "88"
+              "addedRevision": "88",
+              "stubReturn": "PreferredContentSizeMedium"
             }, {
               "type": "function",
               "name": "quiet_time_is_active",
               "implName": "sys_do_not_disturb_is_active",
+              "stubReturn": "false",
               "addedRevision": "89"
             }
           ]
@@ -4751,8 +4767,8 @@
     "LECO_38_BOLD_NUMBERS",
     "LECO_42_NUMBERS",
     "LECO_28_LIGHT_NUMBERS",
-    "LECO_60_NUMBERS_AM_PM",
-    "LECO_60_BOLD_NUMBERS_AM_PM",
+    {"name": "LECO_60_NUMBERS_AM_PM", "addedRevision": 91},
+    {"name": "LECO_60_BOLD_NUMBERS_AM_PM", "addedRevision": 91},
     "FONT_FALLBACK"
   ]
 }

@@ -58,6 +58,7 @@ def generate_shim_files(
     sdk_lib_dir,
     platform_name,
     internal_sdk_build=False,
+    build_shim_lib=True,
 ):
     if internal_sdk_build:
         try:
@@ -70,7 +71,12 @@ def generate_shim_files(
     except KeyError:
         raise Exception("Unsupported platform: %s" % platform_name)
 
-    files, exports_tree = exports.parse_export_file(shim_def_path, internal_sdk_build)
+    frozen_revision = platform_info.get("FROZEN_AT_REVISION")
+    files, exports_tree = exports.parse_export_file(
+        shim_def_path,
+        internal_sdk_build,
+        frozen_revision=frozen_revision,
+    )
     root_dir = os.path.dirname(pbl_src_dir)
     files = [
         os.path.join(pbl_src_dir, f)
@@ -80,9 +86,16 @@ def generate_shim_files(
     ]
 
     functions = []
-    exports.walk_tree(
-        exports_tree, lambda e: functions.append(e) if e.type == "function" else None
-    )
+    stubbed_functions = []
+
+    def collect_functions(e):
+        if isinstance(e, exports.StubbedFunctionExport):
+            stubbed_functions.append(e)
+        elif e.type == "function":
+            functions.append(e)
+
+    exports.walk_tree(exports_tree, collect_functions)
+    all_functions = functions + stubbed_functions
     types = []
     exports.walk_tree(
         exports_tree, lambda e: types.append(e) if e.type == "type" else None
@@ -159,7 +172,8 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
     sorted_functions = sorted(functions, key=cmp_to_key(function_export_compare_func))
 
     # Build libpebble.a for our apps to compile against
-    make_app_shim_lib(sorted_functions, sdk_lib_dir)
+    if build_shim_lib:
+        make_app_shim_lib(sorted_functions, sdk_lib_dir)
 
     # Build pebble.auto.c to build into our firmware
     make_fw_shims(sorted_functions, pbl_output_src_dir)
@@ -167,11 +181,14 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
     # Build .json API description, used as input for static analysis tools:
     make_json_api_description(sorted_functions, pbl_output_src_dir)
 
-    for filename, functions in (
-        ("pebble_sdk_version.h", (f for f in functions if not f.worker_only)),
-        ("pebble_worker_sdk_version.h", (f for f in functions if not f.app_only)),
+    for filename, version_functions in (
+        ("pebble_sdk_version.h", (f for f in all_functions if not f.worker_only)),
+        ("pebble_worker_sdk_version.h", (f for f in all_functions if not f.app_only)),
     ):
-        generate_app_sdk_version_header(path.join(sdk_include_dir, filename), functions)
+        generate_app_sdk_version_header(
+            path.join(sdk_include_dir, filename),
+            version_functions,
+        )
 
 
 if __name__ == "__main__":
