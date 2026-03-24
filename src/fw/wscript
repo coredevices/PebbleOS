@@ -592,6 +592,11 @@ def _build_recovery(bld):
             'apps/prf/mfg_mag.c',
         ])
 
+    if not bld.env.CONFIG_TOUCH:
+        excludes.extend([
+            'apps/prf/mfg_touch.c',
+        ])
+
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
 
