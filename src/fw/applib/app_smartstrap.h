@@ -20,9 +20,18 @@
 //! The attribute_id to specify in order to read/write raw data to the smartstrap.
 #define SMARTSTRAP_RAW_DATA_ATTRIBUTE_ID 0
 
+#if defined(PBL_SMARTSTRAP)
+
+//! Convenience macro to switch between two expressions depending on smartstrap support.
+//! On platforms with a smartstrap the first expression will be chosen, the second otherwise.
+#define PBL_IF_SMARTSTRAP_ELSE(if_true, if_false) (if_true)
+
+#else
+
 //! Convenience macro to switch between two expressions depending on smartstrap support.
 //! On platforms with a smartstrap the first expression will be chosen, the second otherwise.
 #define PBL_IF_SMARTSTRAP_ELSE(if_true, if_false) (if_false)
+#endif
 
 //! Error values which may be returned from the smartstrap APIs.
 typedef enum {
