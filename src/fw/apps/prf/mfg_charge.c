@@ -192,17 +192,13 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  if (!app_data->countdown_running &&
-      (app_data->test_state == ChargeStateStart ||
-       app_data->test_state == ChargeStatePlugCharger)) {
-    // if the test has not yet started, it is ok to push the back button to leave.
-    app_window_stack_pop(true);
-  } else if (app_data->test_state == ChargeStatePass ||
-             app_data->test_state == ChargeStateFail) {
+  if (app_data->test_state == ChargeStatePass ||
+      app_data->test_state == ChargeStateFail) {
     bool passed = (app_data->test_state == ChargeStatePass);
     mfg_test_result_report(MfgTestId_Charge, passed, 0);
-    app_window_stack_pop(true);
   }
+
+  app_window_stack_pop(true);
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
