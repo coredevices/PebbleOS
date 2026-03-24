@@ -30,6 +30,7 @@ typedef enum {
   MfgTestId_HrmCtrLeakage,
 #endif
   MfgTestId_ProgramColor,
+  MfgTestId_Adv,
   MfgTestId_Aging,
   MfgTestId_Charge,
   MfgTestId_Discharge,

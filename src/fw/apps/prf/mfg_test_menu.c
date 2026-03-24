@@ -7,6 +7,7 @@
 #include "applib/app.h"
 #include "applib/ui/ui.h"
 #include "apps/prf/mfg_accel.h"
+#include "apps/prf/mfg_adv.h"
 #ifdef CONFIG_MAG
 #include "apps/prf/mfg_mag.h"
 #endif
@@ -131,6 +132,10 @@ static void prv_select_discharge(int index, void *context) {
   prv_launch_test(index, mfg_discharge_app_get_info());
 }
 
+static void prv_select_adv(int index, void *context) {
+  prv_launch_test(index, mfg_adv_app_get_info());
+}
+
 static const char * prv_get_status_prefix(MfgTestId test) {
   const MfgTestResult *result = mfg_test_result_get(test);
   if (!result || !result->ran) {
@@ -176,6 +181,7 @@ static void prv_window_load(Window *window) {
     { "HRM CTR/L",     prv_select_hrm_ctr_leakage_obelix, MfgTestId_HrmCtrLeakage },
 #endif
     { "Program Color", prv_select_program_color, MfgTestId_ProgramColor },
+    { "BLE Adv",       prv_select_adv,          MfgTestId_Adv },
     { "Aging",         prv_select_test_aging,   MfgTestId_Aging },
     { "Charge",        prv_select_charge,       MfgTestId_Charge },
     { "Discharge",     prv_select_discharge,    MfgTestId_Discharge },
