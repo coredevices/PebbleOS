@@ -108,7 +108,10 @@ void events_init(void) {
                  "You made the PebbleEvent bigger! It should be no more than 12");
 
 
-  s_system_event_queue_set = xQueueCreateSet(MAX_KERNEL_EVENTS + MAX_FROM_APP_EVENTS);
+  // Queue sets must be sized to hold the sum of member queue lengths, otherwise
+  // sends can fail while member queues still have room.
+  s_system_event_queue_set = xQueueCreateSet(MAX_KERNEL_EVENTS + MAX_FROM_APP_EVENTS +
+                                             MAX_FROM_WORKER_EVENTS);
 
   s_kernel_event_queue = xQueueCreate(MAX_KERNEL_EVENTS, sizeof(PebbleEvent));
   PBL_ASSERTN(s_kernel_event_queue != NULL);
