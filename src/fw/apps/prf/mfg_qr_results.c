@@ -55,11 +55,9 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
     snprintf(entry, sizeof(entry), "TCH:%c", rc);
     break;
 #endif
-#if PLATFORM_OBELIX
   case MfgTestId_Backlight:
     snprintf(entry, sizeof(entry), "BKL:%c", rc);
     break;
-#endif
   case MfgTestId_Accel:
     snprintf(entry, sizeof(entry), "ACC:%c", rc);
     break;

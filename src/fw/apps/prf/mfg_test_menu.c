@@ -62,11 +62,9 @@ static void prv_select_display(int index, void *context) {
   prv_launch_test(index, mfg_display_app_get_info());
 }
 
-#if PLATFORM_OBELIX
 static void prv_select_backlight(int index, void *context) {
   prv_launch_test(index, mfg_backlight_app_get_info());
 }
-#endif
 
 static void prv_select_accel(int index, void *context) {
   prv_launch_test(index, mfg_accel_app_get_info());
@@ -162,9 +160,7 @@ static void prv_window_load(Window *window) {
 #ifdef CONFIG_TOUCH
     { "Touch",         prv_select_touch,        MfgTestId_Touch },
 #endif
-#if PLATFORM_OBELIX
     { "Backlight",     prv_select_backlight,    MfgTestId_Backlight },
-#endif
     { "Accelerometer", prv_select_accel,        MfgTestId_Accel },
 #ifdef CONFIG_MAG
     { "Magnetometer",  prv_select_mag,          MfgTestId_Mag },
