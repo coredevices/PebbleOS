@@ -1641,3 +1641,29 @@ void command_perftest_text_all(void) {
   }
 }
 #endif
+
+static TimerID s_console_disable_rx_timer = TIMER_INVALID_ID;
+
+static void prv_console_disable_rx_timer_cb(void *data) {
+  serial_console_set_rx_enabled(true);
+}
+
+void command_console_disable_rx(const char *seconds_str) {
+  int seconds = atoi(seconds_str);
+  if (seconds <= 0) {
+    prompt_send_response("Invalid seconds value");
+    return;
+  }
+
+  if (s_console_disable_rx_timer == TIMER_INVALID_ID) {
+    s_console_disable_rx_timer = new_timer_create();
+  }
+
+  serial_console_set_rx_enabled(false);
+
+  char buf[64];
+  prompt_send_response_fmt(buf, sizeof(buf), "Console RX disabled for %d seconds", seconds);
+
+  new_timer_start(s_console_disable_rx_timer, seconds * 1000,
+                  prv_console_disable_rx_timer_cb, NULL, 0 /*flags*/);
+}
