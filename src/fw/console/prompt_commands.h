@@ -389,8 +389,6 @@ static const Command s_prompt_commands[] = {
 
   { "bt status", command_bt_status, 0 },
 
-  { "backlight", command_backlight_ctl, 1 },
-
   { "button read", command_button_read, 1 },
 
 #if CAPABILITY_HAS_MAGNETOMETER
@@ -512,6 +510,7 @@ static const Command s_prompt_commands[] = {
   { "layer nudge", command_layer_nudge, 1 },
 #endif
 
+  { "backlight", command_backlight_ctl, 1 },
 
 #if PLATFORM_OBELIX
   // Drivers
