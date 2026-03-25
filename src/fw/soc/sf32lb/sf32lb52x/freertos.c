@@ -44,6 +44,7 @@ static RtcTicks s_analytics_wfi_ticks;
 static RtcTicks s_analytics_deepwfi_ticks;
 static RtcTicks s_analytics_deepsleep_ticks;
 static RtcTicks s_last_ticks;
+static bool s_force_deepwfi;
 
 //! Early wake-up ticks (to avoid over-sleeping due to wake-up latency)
 static const uint32_t EARLY_WAKEUP_TICKS = 4;
@@ -191,7 +192,7 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
     if (!stop_mode_is_allowed()) {
       prv_enter_wfi();
     } else {
-      if (xExpectedIdleTime < MIN_DEEPSLEEP_TICKS) {
+      if (xExpectedIdleTime < MIN_DEEPSLEEP_TICKS || s_force_deepwfi) {
         prv_enter_deepwfi();
       } else {
         uint32_t gtimer_start;
@@ -351,6 +352,16 @@ void dump_current_runtime_stats(void) {
   prompt_send_response(buf);
   snprintf(buf, sizeof(buf), "Tot:       %"PRIu32" ticks", total_ticks);
   prompt_send_response(buf);
+}
+
+void command_force_deepwfi(const char *arg) {
+  if (arg[0] == '1') {
+    s_force_deepwfi = true;
+    prompt_send_response("Deep WFI forced ON (deep sleep disabled)");
+  } else {
+    s_force_deepwfi = false;
+    prompt_send_response("Deep WFI forced OFF (deep sleep allowed)");
+  }
 }
 
 void analytics_external_collect_cpu_stats(void) {
