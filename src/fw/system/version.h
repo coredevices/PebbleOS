@@ -61,3 +61,7 @@ void version_copy_build_id_hex_string(char *buffer, size_t buffer_bytes_left,
 //! read-only
 void version_get_major_minor_patch(unsigned int *major, unsigned int *minor,
                                    char const **patch_ptr);
+
+//! Checks if the running firmware was built from a release tag (vX.Y.Z).
+//! @return true if the version tag matches a release pattern, false otherwise.
+bool version_is_release_build(void);

@@ -10,6 +10,7 @@
 #include "util/build_id.h"
 #include "util/string.h"
 
+#include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -153,4 +154,29 @@ void version_get_major_minor_patch(unsigned int *major, unsigned int *minor,
   *major = GIT_MAJOR_VERSION;
   *minor = GIT_MINOR_VERSION;
   *patch_ptr = GIT_PATCH_VERBOSE_STRING;
+}
+
+bool version_is_release_build(void) {
+  const char *tag = GIT_TAG;
+
+  if (*tag++ != 'v') {
+    return false;
+  }
+
+  // Expect: digits, '.', digits, '.', digits, '\0'
+  for (int i = 0; i < 3; i++) {
+    if (!isdigit((unsigned char)*tag)) {
+      return false;
+    }
+    while (isdigit((unsigned char)*tag)) {
+      tag++;
+    }
+    if (i < 2) {
+      if (*tag++ != '.') {
+        return false;
+      }
+    }
+  }
+
+  return *tag == '\0';
 }
