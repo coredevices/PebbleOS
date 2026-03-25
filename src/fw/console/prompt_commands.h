@@ -289,6 +289,10 @@ extern void command_mflt_device_info(void);
 
 extern void command_console_disable_rx(const char *seconds_str);
 
+#if MICRO_FAMILY_SF32LB52
+extern void command_force_deepwfi(const char *arg);
+#endif
+
 #define KEEP_NON_ESSENTIAL_COMMANDS 1
 static const Command s_prompt_commands[] = {
   // PULSE entry point, needed for anything PULSE-related to work
@@ -641,6 +645,9 @@ static const Command s_prompt_commands[] = {
 #endif // PLATFORM_SILK
   { "vibe", command_vibe_ctl, 1 },
   { "console disable rx", command_console_disable_rx, 1 },
+#if MICRO_FAMILY_SF32LB52
+  { "force deepwfi", command_force_deepwfi, 1 },
+#endif
 
 #if MEMFAULT
   { "mflt export", command_mflt_export, 0 },
