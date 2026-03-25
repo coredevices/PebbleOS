@@ -1496,7 +1496,14 @@
               "type": "function",
               "name": "app_event_loop",
               "addedRevision": "0"
-            }, {
+            }
+          ]
+        }, {
+          "type": "group",
+          "name": "Alloy",
+          "appOnly": true,
+          "exports": [
+            {
               "type": "define",
               "name": "kModdableCreationFlagLogInstrumentation",
               "addedRevision": "92"
