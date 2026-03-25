@@ -21,21 +21,26 @@
 #include "memfault_pebble_coredump.h"
 
 #include "kernel/pbl_malloc.h"
+#include "util/math.h"
 
-#define COREDUMP_STORAGE_SIZE MEMFAULT_PLATFORM_COREDUMP_STORAGE_RAM_SIZE
 #define COREDUMP_SECTOR_SIZE 4096
 
 // Dynamically allocated coredump storage buffer.
 static uint8_t *s_coredump_storage;
 static size_t s_coredump_storage_size;
 
-void memfault_coredump_storage_alloc(void) {
+void memfault_coredump_storage_alloc(size_t size) {
   if (s_coredump_storage != NULL) {
     return;  // Already allocated
   }
-  s_coredump_storage = kernel_zalloc(COREDUMP_STORAGE_SIZE);
+  // Round up to sector size for the SDK's erase operation
+  size = ROUND_TO_MOD_CEIL(size, COREDUMP_SECTOR_SIZE);
+  s_coredump_storage = kernel_zalloc(size);
   if (s_coredump_storage != NULL) {
-    s_coredump_storage_size = COREDUMP_STORAGE_SIZE;
+    s_coredump_storage_size = size;
+  } else {
+    MEMFAULT_LOG_ERROR("Failed to allocate %u bytes for coredump storage",
+                       (unsigned)size);
   }
 }
 

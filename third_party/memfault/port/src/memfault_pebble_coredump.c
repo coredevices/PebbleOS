@@ -512,9 +512,6 @@ void memfault_pebble_coredump_reconstruct(void) {
   reboot_reason_get(&reason);
   eMemfaultRebootReason mflt_reason = prv_pbl_to_mflt_reason(reason.code);
 
-  // Allocate the coredump storage buffer before saving
-  memfault_coredump_storage_alloc();
-
   // Save the Memfault coredump to RAM-backed storage
   sMemfaultCoredumpSaveInfo save_info = {
     .regs = &s_core_regs,
@@ -523,6 +520,17 @@ void memfault_pebble_coredump_reconstruct(void) {
     .regions = regions,
     .num_regions = num_regions,
   };
+
+  // Compute the exact serialized size and allocate only what's needed,
+  // rather than a fixed 32KB buffer that may fail on low-memory devices.
+  size_t save_size = memfault_coredump_get_save_size(&save_info);
+  if (save_size == 0) {
+    MEMFAULT_LOG_ERROR("Failed to compute coredump save size");
+    kernel_free(stack_data);
+    kernel_free(regions);
+    return;
+  }
+  memfault_coredump_storage_alloc(save_size);
 
   bool saved = memfault_coredump_save(&save_info);
 

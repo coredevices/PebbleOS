@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stddef.h>
+
 //! Reconstruct a Memfault coredump from the PebbleOS flash-based coredump.
 //!
 //! This should be called during boot after the flash driver is initialized.
@@ -24,7 +26,10 @@ void memfault_pebble_coredump_mark_exported(void);
 
 //! Allocate the RAM-backed coredump storage buffer.
 //!
+//! @param size The number of bytes to allocate. Use
+//!   memfault_coredump_get_save_size() to compute the exact size needed.
+//!
 //! Called before memfault_coredump_save(). The buffer is freed when
 //! memfault_platform_coredump_storage_clear() is called after all chunks
 //! have been read by the packetizer.
-void memfault_coredump_storage_alloc(void);
+void memfault_coredump_storage_alloc(size_t size);
