@@ -505,7 +505,7 @@ void test_clock__cross_dst(void) {
     .tm_mon = 9, // Oct
     .tm_year = 2015 - 1900,
     .tm_isdst = 1,
-    .tm_gmtoff = -5 * SECONDS_PER_HOUR,
+    .tm_gmtoff = -4 * SECONDS_PER_HOUR,
   };
 
   struct tm nov_7 = {
@@ -539,7 +539,7 @@ void test_clock__today(void) {
     .tm_mon = 4, // May
     .tm_year = 2016 - 1900,
     .tm_isdst = 1,
-    .tm_gmtoff = -5 * SECONDS_PER_HOUR,
+    .tm_gmtoff = -4 * SECONDS_PER_HOUR,
   };
 
   struct tm may_31 = {
@@ -550,7 +550,7 @@ void test_clock__today(void) {
     .tm_mon = 4, // May
     .tm_year = 2016 - 1900,
     .tm_isdst = 1,
-    .tm_gmtoff = -5 * SECONDS_PER_HOUR,
+    .tm_gmtoff = -4 * SECONDS_PER_HOUR,
   };
 
   // DST info for US/Canada 2016

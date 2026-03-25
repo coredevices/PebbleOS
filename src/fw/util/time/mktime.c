@@ -169,7 +169,6 @@ time_t mktime(struct tm *tb) {
          */
 
   tmptm1 -= tb->tm_gmtoff;
-  tmptm1 -= tb->tm_isdst * 60 * 60;
 
   /*
    * Convert this second count back into a time block structure.
