@@ -143,6 +143,14 @@ void memfault_platform_boot_early(void) {
 }
 
 int memfault_platform_boot(void) {
+#ifndef MEMFAULT_FORCE
+  if (!version_is_release_build()) {
+    MEMFAULT_LOG_INFO("Memfault disabled for non-release build (%s)",
+                      TINTIN_METADATA.version_tag);
+    return 0;
+  }
+#endif
+
   // Set boot flag to disable locking during initialization
   s_boot_in_progress = true;
 
