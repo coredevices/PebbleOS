@@ -33,10 +33,17 @@ static LPTIM_HandleTypeDef s_lptim = {
 };
 
 // CPU analytics tracking
-static RtcTicks s_analytics_wfi_ticks = 0;        // WFI (light sleep)
-static RtcTicks s_analytics_deepwfi_ticks = 0;    // Deep WFI (stop mode)
-static RtcTicks s_analytics_deepsleep_ticks = 0;  // Deep sleep
-static RtcTicks s_last_ticks = 0;
+typedef enum {
+  SleepTypeNone = 0,
+  SleepTypeWfi,
+  SleepTypeDeepWfi,
+} SleepType;
+
+static volatile SleepType s_last_sleep_type;
+static RtcTicks s_analytics_wfi_ticks;
+static RtcTicks s_analytics_deepwfi_ticks;
+static RtcTicks s_analytics_deepsleep_ticks;
+static RtcTicks s_last_ticks;
 
 //! Early wake-up ticks (to avoid over-sleeping due to wake-up latency)
 static const uint32_t EARLY_WAKEUP_TICKS = 4;
@@ -77,14 +84,12 @@ static void prv_restore_iser(void) {
 }
 
 static inline void prv_enter_wfi(void) {
-  RtcTicks start_ticks = rtc_get_ticks();
+  s_last_sleep_type = SleepTypeWfi;
   __WFI();
-  RtcTicks end_ticks = rtc_get_ticks();
-  s_analytics_wfi_ticks += (end_ticks - start_ticks);
 }
 
 static void prv_enter_deepwfi(void) {
-  RtcTicks start_ticks = rtc_get_ticks();
+  s_last_sleep_type = SleepTypeDeepWfi;
 
   flash_power_down_for_stop_mode();
 
@@ -94,9 +99,6 @@ static void prv_enter_deepwfi(void) {
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
   __WFI();
   SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
-
-  RtcTicks end_ticks = rtc_get_ticks();
-  s_analytics_deepwfi_ticks += (end_ticks - start_ticks);
 }
 
 static void prv_enter_deepslep(void) {
@@ -312,12 +314,44 @@ void SysTick_Handler(void) {
 
   prv_wdt_feed(1U);
 
+  if (s_last_sleep_type == SleepTypeWfi) {
+    s_analytics_wfi_ticks++;
+  } else if (s_last_sleep_type == SleepTypeDeepWfi) {
+    s_analytics_deepwfi_ticks++;
+  }
+
+  s_last_sleep_type = SleepTypeNone;
+
   // TODO(SF32LB52): we may need to handle tick loss compensation when using
   // SysTick due to flash erase times (runs with IRQs disabled to not interfere
   // with XIP, and can easily span multiple ticks)
 }
 
-void dump_current_runtime_stats(void) {}
+void dump_current_runtime_stats(void) {
+  uint32_t wfi_ticks = s_analytics_wfi_ticks;
+  uint32_t deepwfi_ticks = s_analytics_deepwfi_ticks;
+  uint32_t deepsleep_ticks = s_analytics_deepsleep_ticks;
+
+  RtcTicks now_ticks = rtc_get_ticks();
+  uint32_t total_ticks = (uint32_t)(now_ticks - s_last_ticks);
+  uint32_t running_ticks = total_ticks - wfi_ticks - deepwfi_ticks - deepsleep_ticks;
+
+  char buf[160];
+  snprintf(buf, sizeof(buf), "Run:       %"PRIu32" ticks (%"PRIu32" %%)",
+           running_ticks, (running_ticks * 100) / total_ticks);
+  prompt_send_response(buf);
+  snprintf(buf, sizeof(buf), "WFI:       %"PRIu32" ticks (%"PRIu32" %%)",
+           wfi_ticks, (wfi_ticks * 100) / total_ticks);
+  prompt_send_response(buf);
+  snprintf(buf, sizeof(buf), "Deep WFI:  %"PRIu32" ticks (%"PRIu32" %%)",
+           deepwfi_ticks, (deepwfi_ticks * 100) / total_ticks);
+  prompt_send_response(buf);
+  snprintf(buf, sizeof(buf), "Deepsleep: %"PRIu32" ticks (%"PRIu32" %%)",
+           deepsleep_ticks, (deepsleep_ticks * 100) / total_ticks);
+  prompt_send_response(buf);
+  snprintf(buf, sizeof(buf), "Tot:       %"PRIu32" ticks", total_ticks);
+  prompt_send_response(buf);
+}
 
 void analytics_external_collect_cpu_stats(void) {
   uint32_t wfi_ticks = s_analytics_wfi_ticks;
