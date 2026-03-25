@@ -287,6 +287,8 @@ extern void command_mflt_metrics_dump(void);
 extern void command_mflt_device_info(void);
 #endif
 
+extern void command_console_disable_rx(const char *seconds_str);
+
 #define KEEP_NON_ESSENTIAL_COMMANDS 1
 static const Command s_prompt_commands[] = {
   // PULSE entry point, needed for anything PULSE-related to work
@@ -638,6 +640,7 @@ static const Command s_prompt_commands[] = {
   { "accel reset", command_accel_softreset, 0 },
 #endif // PLATFORM_SILK
   { "vibe", command_vibe_ctl, 1 },
+  { "console disable rx", command_console_disable_rx, 1 },
 
 #if MEMFAULT
   { "mflt export", command_mflt_export, 0 },
