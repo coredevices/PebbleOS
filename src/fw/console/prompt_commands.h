@@ -384,8 +384,6 @@ static const Command s_prompt_commands[] = {
   { "rtcfreq write", command_rtcfreq_write, 1 },
   { "model write", command_model_write, 1 },
 #endif // MANUFACTURING_FW
-  { "scheduler force active", command_scheduler_force_active, 0 },
-  { "scheduler resume normal", command_scheduler_resume_normal, 0 },
 
   { "bt status", command_bt_status, 0 },
 
@@ -456,6 +454,9 @@ static const Command s_prompt_commands[] = {
   // Meta
   { "help", command_help, 0 },
   { "lowpowerdebug", command_low_power_debug, 1 },
+
+  { "scheduler force active", command_scheduler_force_active, 0 },
+  { "scheduler resume normal", command_scheduler_resume_normal, 0 },
 
   { "log level set", command_log_level_set, 1 },
   { "log level get", command_log_level_get, 0 },
