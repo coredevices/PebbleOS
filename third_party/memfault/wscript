@@ -4,6 +4,12 @@ def options(opt):
         choices=["0", "1"],
         help="Enable Memfault integration. Enabled by default for Asterix and Obelix boards",
     )
+    opt.add_option(
+        "--memfault-force",
+        action="store_true",
+        default=False,
+        help="Force Memfault data collection even on non-release builds",
+    )
 
 
 def configure(conf):
@@ -20,6 +26,9 @@ def configure(conf):
     # Set MEMFAULT define for all builds
     MEMFAULT = conf.env.memfault
     conf.env.append_value("DEFINES", [f"MEMFAULT={MEMFAULT}"])
+
+    if conf.options.memfault_force:
+        conf.env.append_value("DEFINES", "MEMFAULT_FORCE")
 
 
 def build(bld):
