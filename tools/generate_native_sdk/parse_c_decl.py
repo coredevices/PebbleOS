@@ -138,7 +138,7 @@ def get_comment_string_for_decl(node):
     if comment_string is None:
         return None
 
-    if "@addtogroup" in comment_string:
+    if "@addtogroup" in comment_string or re.search(r"@[{}]", comment_string):
         # This is actually a block comment, not a comment specifically for this type. Ignore it.
         return None
 
