@@ -49,6 +49,8 @@ def configure(cnf):
 def build(bld):
     if bld.env.JS_ENGINE != 'moddable':
         return
+    if bld.options.onlysdk:
+        return
     libxs_sources = [
         'moddable/build/devices/esp/lib/bsearch/bsearch.c',
         'moddable/build/devices/pebble/lib/qsort/qsort.c',
