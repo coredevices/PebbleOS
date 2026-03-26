@@ -160,6 +160,12 @@ int memfault_platform_boot(void) {
     memfault_events_storage_boot(s_event_storage, sizeof(s_event_storage));
   memfault_trace_event_boot(evt_storage);
 
+  // Reconstruct a Memfault coredump from the PebbleOS flash coredump if one
+  // exists. This must happen before collect_reset_info() so that the reboot
+  // event includes coredump_saved=true, allowing the Memfault cloud to
+  // associate the coredump with this reboot.
+  memfault_pebble_coredump_reconstruct();
+
   memfault_reboot_tracking_collect_reset_info(evt_storage);
 
   sMemfaultMetricBootInfo boot_info = {
@@ -173,12 +179,6 @@ int memfault_platform_boot(void) {
 
   memfault_build_info_dump();
   memfault_device_info_dump();
-
-  // Reconstruct a Memfault coredump from the PebbleOS flash coredump if one
-  // exists. This reads the crash registers and per-thread stack data from the
-  // PebbleOS coredump in SPI flash and saves a Memfault-format coredump to
-  // our RAM-backed storage.
-  memfault_pebble_coredump_reconstruct();
 
   init_memfault_chunk_collection();
   MEMFAULT_LOG_INFO("Memfault Initialized!");

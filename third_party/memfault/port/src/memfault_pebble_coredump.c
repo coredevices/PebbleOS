@@ -532,6 +532,11 @@ void memfault_pebble_coredump_reconstruct(void) {
   if (saved) {
     MEMFAULT_LOG_INFO("Memfault coredump saved successfully");
 
+    // Tell the reboot tracking that a coredump was saved so the cloud
+    // associates the coredump data with this reboot event. This must be
+    // called before memfault_reboot_tracking_collect_reset_info().
+    memfault_reboot_tracking_mark_coredump_saved();
+
     // Don't mark as exported yet — the coredump is in RAM and could be lost
     // if the watch reboots before the chunks are fully read. The export flag
     // is set later in memfault_pebble_coredump_mark_exported(), which is
