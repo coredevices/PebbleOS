@@ -551,44 +551,101 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
 
 #if CAPABILITY_HAS_APP_SCALING && !RECOVERY_FW
   // Check if we should use scaling mode for legacy apps
-  if (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) {
-    // Scale legacy apps to fill the display using nearest-neighbor scaling
+  const LegacyAppRenderMode render_mode = shell_prefs_get_legacy_app_render_mode();
+  if (render_mode >= LegacyAppRenderMode_ScalingNearest) {
+    const bool bilinear = (render_mode == LegacyAppRenderMode_ScalingBilinear);
 
     // Calculate scaling factors using fixed-point arithmetic (16.16 format)
     // This gives us sub-pixel precision for better scaling
     const uint32_t scale_x = ((uint32_t)app_width << 16) / disp_width;
     const uint32_t scale_y = ((uint32_t)app_height << 16) / disp_height;
 
-    // Perform nearest-neighbor scaling
     for (int16_t dst_y = 0; dst_y < update_rect.size.h; dst_y++) {
       const int16_t dst_y_offset = dst_y + update_rect.origin.y + offset_y;
-      const int16_t src_y = prv_scale_coordinate(scale_y, copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y);
-
-      // Ensure we don't go out of bounds
-      if (src_y < 0 || src_y >= app_height) continue;
       if (dst_y_offset < 0 || dst_y_offset >= disp_height) continue;
+
+      const uint16_t dst_y_coord = copy_relative_to_origin ?
+          CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
+      const uint32_t src_y_fixed = (uint32_t)dst_y_coord * scale_y;
+      const int16_t src_y = src_y_fixed >> 16;
+
+      if (src_y < 0 || src_y >= app_height) continue;
 
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, dst_y_offset);
       GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, src_y);
+
+      // For bilinear, also get the next row (clamped to bounds)
+      const int16_t src_y1 = MIN(src_y + 1, app_height - 1);
+      GBitmapDataRowInfo src_row_info_next;
+      if (bilinear && src_y1 != src_y) {
+        src_row_info_next = gbitmap_get_data_row_info(&src_bitmap, src_y1);
+      } else {
+        src_row_info_next = src_row_info;
+      }
+
+      // Fractional Y weight for bilinear (0-16 range, using 4 bits from fixed-point)
+      const uint8_t fy = (src_y_fixed >> 12) & 0xF;
+
       uint8_t *dst_line = dst_row_info.data;
-      uint8_t *src_line = src_row_info.data;
 
       for (int16_t dst_x = 0; dst_x < update_rect.size.w; dst_x++) {
-        int16_t dst_x_offset = dst_x + update_rect.origin.x;
-        const int16_t src_x = prv_scale_coordinate(scale_x, copy_relative_to_origin ? CLIP(dst_x_offset, 0, disp_width - 1) : dst_x);
-
-        // Check if the source pixel is within valid range
-        if (src_x < src_row_info.min_x || src_x > src_row_info.max_x) {
-          // Source pixel is outside circular mask, leave destination black
-          continue;
-        }
-
+        const int16_t dst_x_offset = dst_x + update_rect.origin.x;
         if (dst_x_offset < dst_row_info.min_x || dst_x_offset > dst_row_info.max_x) {
           continue;
         }
 
-        // Copy the pixel from source to destination
-        dst_line[dst_x_offset] = src_line[src_x];
+        const uint16_t dst_x_coord = copy_relative_to_origin ?
+            CLIP(dst_x_offset, 0, disp_width - 1) : dst_x;
+        const uint32_t src_x_fixed = (uint32_t)dst_x_coord * scale_x;
+        const int16_t src_x = src_x_fixed >> 16;
+
+        if (src_x < src_row_info.min_x || src_x > src_row_info.max_x) {
+          continue;
+        }
+
+        if (!bilinear) {
+          // Nearest-neighbor: copy pixel directly
+          dst_line[dst_x_offset] = src_row_info.data[src_x];
+        } else {
+          // Bilinear interpolation on ARGB2222 pixels
+          const int16_t src_x1 = MIN(src_x + 1, app_width - 1);
+
+          // Sample 2x2 neighborhood
+          const uint8_t p00 = src_row_info.data[src_x];
+          const uint8_t p10 = (src_x1 <= src_row_info.max_x) ?
+              src_row_info.data[src_x1] : p00;
+          const uint8_t p01 = (src_y1 != src_y && src_x >= src_row_info_next.min_x &&
+                               src_x <= src_row_info_next.max_x) ?
+              src_row_info_next.data[src_x] : p00;
+          const uint8_t p11 = (src_y1 != src_y && src_x1 >= src_row_info_next.min_x &&
+                               src_x1 <= src_row_info_next.max_x) ?
+              src_row_info_next.data[src_x1] : p10;
+
+          // Fractional X weight (0-16 range, using 4 bits from fixed-point)
+          const uint8_t fx = (src_x_fixed >> 12) & 0xF;
+
+          // Interpolate each 2-bit channel (b, g, r) using 16-bit intermediates
+          // Channel layout: [b1:b0 g1:g0 r1:r0 a1:a0]
+          // Using 4-bit fractional weights so we can divide by shift (16*16=256)
+          uint8_t result = 0xC0; // Alpha = 3 (fully opaque)
+          for (int shift = 0; shift < 6; shift += 2) {
+            const uint16_t c00 = (p00 >> shift) & 0x3;
+            const uint16_t c10 = (p10 >> shift) & 0x3;
+            const uint16_t c01 = (p01 >> shift) & 0x3;
+            const uint16_t c11 = (p11 >> shift) & 0x3;
+
+            // Bilinear: lerp in X for both rows, then lerp in Y
+            const uint16_t top = c00 * (16 - fx) + c10 * fx;    // 0..48
+            const uint16_t bot = c01 * (16 - fx) + c11 * fx;    // 0..48
+            const uint16_t val = top * (16 - fy) + bot * fy;    // 0..768
+
+            // Scale back to 2-bit: divide by 256 with rounding
+            const uint8_t channel = (val + 128) >> 8;
+            result |= (channel & 0x3) << shift;
+          }
+
+          dst_line[dst_x_offset] = result;
+        }
       }
     }
   } else

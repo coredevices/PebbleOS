@@ -134,7 +134,8 @@ void shell_prefs_set_coredump_on_request(bool enabled);
 // Legacy app rendering mode - whether to use bezel or scaling for legacy apps
 typedef enum LegacyAppRenderMode {
   LegacyAppRenderMode_Bezel = 0,    // Center with black bezel (original behavior)
-  LegacyAppRenderMode_Scaling = 1,  // Scale to fill screen
+  LegacyAppRenderMode_ScalingNearest = 1,  // Scale to fill screen (nearest-neighbor)
+  LegacyAppRenderMode_ScalingBilinear = 2,  // Scale to fill screen (bilinear)
   LegacyAppRenderModeCount
 } LegacyAppRenderMode;
 
