@@ -8,7 +8,7 @@
 
 // Use display height to determine launcher cell height: larger displays use taller cells
 #if PBL_DISPLAY_HEIGHT >= 200
-#define LAUNCHER_MENU_LAYER_CELL_RECT_CELL_HEIGHT (53)
+#define LAUNCHER_MENU_LAYER_CELL_RECT_CELL_HEIGHT (50)
 #else
 #define LAUNCHER_MENU_LAYER_CELL_RECT_CELL_HEIGHT (42)
 #endif
