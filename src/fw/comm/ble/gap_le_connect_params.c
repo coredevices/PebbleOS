@@ -11,6 +11,7 @@
 #include "comm/bt_lock.h"
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
+#include "services/common/analytics/analytics.h"
 #include "services/common/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "util/time/time.h"
@@ -97,6 +98,48 @@ extern void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
                                                   ResponseTimeState granted_state);
 
 static void prv_watchdog_timer_callback(void *ctx);
+
+// -----------------------------------------------------------------------------
+//! Analytics helpers for tracking connection interval time.
+
+static void prv_analytics_stop_conn_interval_timers(void) {
+  PBL_ANALYTICS_TIMER_STOP(ble_conn_itvl_min_time_ms);
+  PBL_ANALYTICS_TIMER_STOP(ble_conn_itvl_mid_time_ms);
+  PBL_ANALYTICS_TIMER_STOP(ble_conn_itvl_max_time_ms);
+}
+
+//! Classify the actual connection interval into a ResponseTimeState based on
+//! the default connection params table ranges.
+static ResponseTimeState prv_classify_conn_interval(uint16_t conn_interval_1_25ms) {
+  // Check from fastest (Min) to slowest (Max) so we pick the tightest match
+  for (int state = ResponseTimeMin; state >= ResponseTimeMax; --state) {
+    const GAPLEConnectRequestParams *params = &s_default_connection_params_table[state];
+    if (conn_interval_1_25ms >= params->connection_interval_min_1_25ms &&
+        conn_interval_1_25ms <= params->connection_interval_max_1_25ms) {
+      return (ResponseTimeState)state;
+    }
+  }
+  // Outside all known ranges, assume Max (slowest)
+  return ResponseTimeMax;
+}
+
+static void prv_analytics_update_conn_interval(uint16_t conn_interval_1_25ms) {
+  prv_analytics_stop_conn_interval_timers();
+
+  switch (prv_classify_conn_interval(conn_interval_1_25ms)) {
+    case ResponseTimeMin:
+      PBL_ANALYTICS_TIMER_START(ble_conn_itvl_min_time_ms);
+      break;
+    case ResponseTimeMiddle:
+      PBL_ANALYTICS_TIMER_START(ble_conn_itvl_mid_time_ms);
+      break;
+    case ResponseTimeMax:
+      PBL_ANALYTICS_TIMER_START(ble_conn_itvl_max_time_ms);
+      break;
+    default:
+      break;
+  }
+}
 
 static const GAPLEConnectRequestParams *prv_params_for_state(const GAPLEConnection *connection,
                                                              ResponseTimeState state) {
@@ -216,6 +259,7 @@ void gap_le_connect_params_setup_connection(GAPLEConnection *connection, TimerID
 
 void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {
   new_timer_delete(connection->param_update_info.watchdog_timer);
+  prv_analytics_stop_conn_interval_timers();
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -283,6 +327,7 @@ void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompl
   const bool local_is_master = connection->local_is_master;
   if (!local_is_master) {
      bluetooth_analytics_handle_connection_params_update(params);
+     prv_analytics_update_conn_interval(params->conn_interval_1_25ms);
   }
 
   prv_evaluate(connection, desired_state);
