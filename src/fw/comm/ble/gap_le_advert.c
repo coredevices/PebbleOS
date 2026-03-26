@@ -9,6 +9,7 @@
 #include "comm/ble/ble_log.h"
 #include "comm/bt_lock.h"
 #include "kernel/pbl_malloc.h"
+#include "services/common/analytics/analytics.h"
 #include "services/common/regular_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -105,6 +106,25 @@ static int8_t s_tx_power_cached = 12;
 //! Prototypes
 
 static void prv_perform_next_job(bool force_refresh);
+
+// -----------------------------------------------------------------------------
+//! Analytics helpers for tracking advertising interval time.
+
+static void prv_analytics_stop_timers(void) {
+  PBL_ANALYTICS_TIMER_STOP(ble_adv_short_intvl_time_ms);
+  PBL_ANALYTICS_TIMER_STOP(ble_adv_long_intvl_time_ms);
+}
+
+static void prv_analytics_start_timer(GAPLEAdvertisingInterval interval) {
+  switch (interval) {
+    case GAPLEAdvertisingInterval_Short:
+      PBL_ANALYTICS_TIMER_START(ble_adv_short_intvl_time_ms);
+      break;
+    case GAPLEAdvertisingInterval_Long:
+      PBL_ANALYTICS_TIMER_START(ble_adv_long_intvl_time_ms);
+      break;
+  }
+}
 
 // -----------------------------------------------------------------------------
 
@@ -302,6 +322,7 @@ static void prv_perform_next_job(bool force_refresh) {
       // Controller needs to stop advertising before we can start a new job:
       PBL_LOG_DBG("Disable last Ad job");
       bt_driver_advert_advertising_disable();
+      prv_analytics_stop_timers();
       s_is_advertising = false;
     }
   }
@@ -328,6 +349,7 @@ static void prv_perform_next_job(bool force_refresh) {
     bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms);
     if (result) {
       s_is_advertising = true;
+      prv_analytics_start_timer(interval);
       PBL_LOG_DBG("Airing advertising job: %s ", prv_string_for_debug_tag(next->tag));
     }
   }
@@ -561,6 +583,7 @@ void gap_le_advert_handle_connect_as_slave(void) {
     // handler (kernel_le_client.c) will unschedule jobs accordingly and we
     // want to avoid unnecessary refreshes of the advertising state
     s_is_advertising = false;
+    prv_analytics_stop_timers();
 
     s_is_connected = true;
   }
