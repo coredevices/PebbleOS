@@ -4,6 +4,7 @@
 #include "fake_GAPAPI.h"
 
 #include "bluetopia_interface.h"
+#include <bluetooth/bt_driver_advert.h>
 
 #include <string.h>
 
@@ -14,21 +15,21 @@ static bool s_is_le_advertising_enabled;
 static GAP_LE_Event_Callback_t s_le_adv_connection_event_callback;
 static unsigned long s_le_adv_connection_callback_param;
 
-static uint16_t s_min_advertising_interval_slots;
-static uint16_t s_max_advertising_interval_slots;
+static uint32_t s_min_advertising_interval_ms;
+static uint32_t s_max_advertising_interval_ms;
 
 void gap_le_set_advertising_disabled(void) {
   s_is_le_advertising_enabled = false;
-  s_min_advertising_interval_slots = 0;
-  s_max_advertising_interval_slots = 0;
+  s_min_advertising_interval_ms = 0;
+  s_max_advertising_interval_ms = 0;
 }
 
 int GAP_LE_Advertising_Disable(unsigned int BluetoothStackID) {
   s_is_le_advertising_enabled = false;
   s_le_adv_connection_event_callback = NULL;
   s_le_adv_connection_callback_param = 0;
-  s_min_advertising_interval_slots = 0;
-  s_max_advertising_interval_slots = 0;
+  s_min_advertising_interval_ms = 0;
+  s_max_advertising_interval_ms = 0;
   return 0;
 }
 
@@ -41,22 +42,33 @@ int GAP_LE_Advertising_Enable(unsigned int BluetoothStackID,
   s_is_le_advertising_enabled = true;
   s_le_adv_connection_event_callback = GAP_LE_Event_Callback;
   s_le_adv_connection_callback_param = CallbackParameter;
-  if (GAP_LE_Advertising_Parameters) {
-    // Convert from ms to slots:
-    s_min_advertising_interval_slots =
-    (GAP_LE_Advertising_Parameters->Advertising_Interval_Min * 16) / 10;
-    s_max_advertising_interval_slots =
-    (GAP_LE_Advertising_Parameters->Advertising_Interval_Max * 16) / 10;
-  } else {
-    s_min_advertising_interval_slots = 0;
-    s_max_advertising_interval_slots = 0;
-  }
   return 0;
 }
 
-void gap_le_assert_advertising_interval(uint16_t expected_min_slots, uint16_t expected_max_slots) {
-  cl_assert_equal_i(s_min_advertising_interval_slots, expected_min_slots);
-  cl_assert_equal_i(s_max_advertising_interval_slots, expected_max_slots);
+// bt_driver_advert fakes used by gap_le_advert.c
+bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
+  s_is_le_advertising_enabled = true;
+  s_min_advertising_interval_ms = min_interval_ms;
+  s_max_advertising_interval_ms = max_interval_ms;
+  return true;
+}
+
+void bt_driver_advert_advertising_disable(void) {
+  s_is_le_advertising_enabled = false;
+  s_min_advertising_interval_ms = 0;
+  s_max_advertising_interval_ms = 0;
+}
+
+// Expected ms values for each interval preset
+static const uint32_t s_expected_interval_ms[] = {
+  [GAPLEAdvertisingInterval_Short] = 20,
+  [GAPLEAdvertisingInterval_Long]  = 1022,
+};
+
+void gap_le_assert_advertising_interval(GAPLEAdvertisingInterval expected) {
+  uint32_t expected_ms = s_expected_interval_ms[expected];
+  cl_assert_equal_i(s_min_advertising_interval_ms, expected_ms);
+  cl_assert_equal_i(s_max_advertising_interval_ms, expected_ms);
 }
 
 bool gap_le_is_advertising_enabled(void) {
@@ -93,6 +105,20 @@ int GAP_LE_Set_Scan_Response_Data(unsigned int BluetoothStackID,
 unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_out) {
   *scan_resp_data_out = s_scan_resp_data;
   return s_scan_resp_data_length;
+}
+
+void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
+  if (ad_data) {
+    memcpy(&s_ad_data, ad_data->data, ad_data->ad_data_length);
+    s_ad_data_length = ad_data->ad_data_length;
+    memcpy(&s_scan_resp_data, ad_data->data + ad_data->ad_data_length,
+           ad_data->scan_resp_data_length);
+    s_scan_resp_data_length = ad_data->scan_resp_data_length;
+  }
+}
+
+bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+  return false;
 }
 
 static GAP_LE_Event_Callback_t s_le_create_connection_event_callback;
@@ -341,6 +367,8 @@ void fake_GAPAPI_init(void) {
   s_is_le_advertising_enabled = false;
   s_le_adv_connection_event_callback = NULL;
   s_le_adv_connection_callback_param = 0;
+  s_min_advertising_interval_ms = 0;
+  s_max_advertising_interval_ms = 0;
   memset(&s_ad_data, 0, sizeof(s_ad_data));
   s_ad_data_length = 0;
   s_le_create_connection_event_callback = NULL;
