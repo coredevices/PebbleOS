@@ -52,3 +52,7 @@ MEMFAULT_METRICS_KEY_DEFINE(pfs_space_free_kb, kMemfaultMetricType_Unsigned)
 // NOR Flash
 MEMFAULT_METRICS_KEY_DEFINE(flash_spi_write_bytes, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(flash_spi_erase_bytes, kMemfaultMetricType_Unsigned)
+
+// BLE
+MEMFAULT_METRICS_KEY_DEFINE(ble_adv_short_intvl_time_ms, kMemfaultMetricType_Timer)
+MEMFAULT_METRICS_KEY_DEFINE(ble_adv_long_intvl_time_ms, kMemfaultMetricType_Timer)
