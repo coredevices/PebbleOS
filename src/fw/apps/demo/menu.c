@@ -41,7 +41,7 @@ typedef struct {
 
   Window detail_window;
   TextLayer detail_text;
-  char detail_text_buffer[50];
+  char detail_text_buffer[64];
 } AppData;
 
 static uint16_t get_num_sections_callback(struct MenuLayer *menu_layer, AppData *data) {
@@ -124,7 +124,7 @@ static void detail_window_load(Window *window) {
 }
 
 static void push_detail_window(AppData *data, MenuIndex *index, bool is_long_click) {
-  sniprintf(data->detail_text_buffer, 50, "SELECTION:\n\nSection %i, Row %i\nLong click: %c", index->section, index->row, is_long_click ? 'Y' : 'N');
+  sniprintf(data->detail_text_buffer, sizeof(data->detail_text_buffer), "SELECTION:\n\nSection %i, Row %i\nLong click: %c", index->section, index->row, is_long_click ? 'Y' : 'N');
 
   Window *detail_window = &data->detail_window;
   window_init(detail_window, WINDOW_NAME("Demo Menu Detail"));

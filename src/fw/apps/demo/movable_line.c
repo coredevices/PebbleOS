@@ -185,7 +185,7 @@ static void canvas_update_proc(Layer *layer, GContext* ctx) {
                   data->pixel_bit == PIXEL_BIT_LSB,
                   data->selection == ATTRIBUTE_PIXEL_BIT);
 
-  char text[6];
+  char text[10];
   snprintf(text, sizeof(text), "x=%"PRId16, data->intersection.x);
   draw_ui_element(ctx, GRect(30, 120, 40, 20), text,
                   data->selection == ATTRIBUTE_X,

@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 
+#if !CAPABILITY_HAS_HARDWARE_PANIC_SCREEN
 static const uint8_t sad_watch[] = {
   0x04, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x20, 0x00, 0xff, 0xff, 0xff, 0xff, /* bytes 0 - 16 */
   0xff, 0x0f, 0xf8, 0xff, 0xff, 0x57, 0xf5, 0xff, 0xff, 0xa7, 0xf2, 0xff, 0xff, 0x57, 0xf5, 0xff, /* bytes 16 - 32 */
@@ -31,12 +32,14 @@ static const uint8_t sad_watch[] = {
   0xff, 0xa9, 0xca, 0xff, 0xff, 0x57, 0xf5, 0xff, 0xff, 0xa7, 0xf2, 0xff, 0xff, 0x57, 0xf5, 0xff, /* bytes 112 - 128 */
   0xff, 0x0f, 0xf8, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 };
+#endif
 
 typedef struct PanicWindowAppData {
   Window window;
   Layer layer;
 } PanicWindowAppData;
 
+#if !CAPABILITY_HAS_HARDWARE_PANIC_SCREEN
 static void prv_update_proc(Layer* layer, GContext* ctx) {
   graphics_context_set_compositing_mode(ctx, GCompOpAssignInverted);
 
@@ -55,6 +58,7 @@ static void prv_update_proc(Layer* layer, GContext* ctx) {
   graphics_draw_text(ctx, text_buffer, error_code_face,
       text_dest_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
+#endif
 
 static void prv_panic_reset_callback(void* data) {
   RebootReason reason = {
