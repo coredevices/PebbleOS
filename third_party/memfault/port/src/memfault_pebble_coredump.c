@@ -82,9 +82,8 @@ static uint32_t prv_find_unexported_coredump_flash_base(void) {
     uint32_t base_address = core_dump_get_slot_address(i);
     flash_read_bytes((uint8_t *)&region_hdr, base_address, sizeof(region_hdr));
 
-    // Skip coredumps that have already been exported to Memfault.
-    // memfault_exported is 0xFF (erased) when not yet exported, 0x00 when exported.
-    if (region_hdr.memfault_exported == 0x00) {
+    // Skip coredumps that have already been read.
+    if (!region_hdr.unread) {
       continue;
     }
 
@@ -99,14 +98,6 @@ static uint32_t prv_find_unexported_coredump_flash_base(void) {
   }
 
   return core_dump_get_slot_address(last_used_idx);
-}
-
-// Mark a coredump slot as exported to Memfault by clearing the
-// memfault_exported byte from 0xFF to 0x00 (NOR flash bit-clear, no erase needed).
-static void prv_mark_coredump_exported(uint32_t flash_base) {
-  uint8_t exported = 0x00;
-  uint32_t offset = flash_base + offsetof(CoreDumpFlashRegionHeader, memfault_exported);
-  flash_write_bytes(&exported, offset, sizeof(exported));
 }
 
 // -----------------------------------------------------------------------
@@ -557,8 +548,8 @@ void memfault_pebble_coredump_mark_exported(void) {
     return;
   }
 
-  // Mark the PebbleOS coredump as exported to Memfault so we don't
+  // Mark the PebbleOS coredump as read so we don't
   // reconstruct it again on the next reboot.
-  prv_mark_coredump_exported(s_exported_coredump_flash_base);
+  core_dump_mark_read(s_exported_coredump_flash_base);
   s_exported_coredump_flash_base = CORE_DUMP_FLASH_INVALID_ADDR;
 }
