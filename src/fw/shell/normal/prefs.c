@@ -1568,6 +1568,19 @@ void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval) 
     hrm_manager_handle_prefs_changed();
   }
 }
+
+bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
+  return s_activity_hrm_preferences.activity_tracking_enabled;
+}
+
+void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
+  if (s_activity_hrm_preferences.activity_tracking_enabled != enabled) {
+    s_activity_hrm_preferences.activity_tracking_enabled = enabled;
+    prv_pref_set(PREF_KEY_ACTIVITY_HRM_PREFERENCES, &s_activity_hrm_preferences,
+                 sizeof(s_activity_hrm_preferences));
+    hrm_manager_handle_prefs_changed();
+  }
+}
 #endif
 
 void alarm_prefs_set_alarms_app_opened(uint8_t version) {

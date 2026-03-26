@@ -250,6 +250,13 @@ HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
 
 void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval) {
 }
+
+bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
+  return true;
+}
+
+void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
+}
 #endif
 
 ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {

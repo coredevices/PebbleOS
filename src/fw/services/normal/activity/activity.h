@@ -63,6 +63,7 @@ typedef enum {
 typedef struct PACKED ActivityHRMSettings {
   bool enabled;
   uint8_t measurement_interval; // HRMonitoringInterval value
+  bool activity_tracking_enabled; // HR tracking during detected activities (walk/run)
 } ActivityHRMSettings;
 
 // Default values, taken from http://www.cdc.gov/nchs/fastats/body-measurements.htm
@@ -94,6 +95,7 @@ typedef struct PACKED ActivityHRMSettings {
 #define ACTIVITY_HRM_DEFAULT_PREFERENCES { \
   .enabled = true, \
   .measurement_interval = HRMonitoringInterval_10Min, \
+  .activity_tracking_enabled = true, \
 }
 
 // We consider values outside of this range to be invalid
@@ -416,6 +418,12 @@ HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void);
 //! Set the HRM measurement interval
 //! @param interval the desired HRMonitoringInterval value
 void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval);
+
+//! Return true if HR tracking during detected activities (walk/run) is enabled
+bool activity_prefs_hrm_activity_tracking_is_enabled(void);
+
+//! Enable or disable HR tracking during detected activities (walk/run)
+void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled);
 #endif
 
 //! Get the current and (optionally) historical values for a given metric. The caller passes
