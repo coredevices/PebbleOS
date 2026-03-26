@@ -13,17 +13,17 @@
     {
       "type": "pdc",
       "name": "MODAL_CONTRACT_TO_MODAL_SEQUENCE",
-      "file": "normal/snowy/images/modal_contract_to_modal"
+      "file": "normal/obelix/images/modal_contract_to_modal"
     },
     {
       "type": "pdc",
       "name": "MODAL_CONTRACT_FROM_MODAL_SEQUENCE",
-      "file": "normal/snowy/images/modal_contract_from_modal"
+      "file": "normal/obelix/images/modal_contract_from_modal"
     },
     {
       "type": "pdc",
       "name": "MODAL_EXPAND_TO_APP_SEQUENCE",
-      "file": "normal/snowy/images/modal_expand_to_app"
+      "file": "normal/obelix/images/modal_expand_to_app"
     },
     {
       "type": "raw",
