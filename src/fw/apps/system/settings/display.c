@@ -164,7 +164,8 @@ static void prv_timeout_menu_push(SettingsDisplayData *data) {
 #if CAPABILITY_HAS_APP_SCALING
 static const char *s_legacy_app_mode_labels[] = {
     i18n_noop("Centered"),
-    i18n_noop("Scaled")
+    i18n_noop("Scaled (Nearest)"),
+    i18n_noop("Scaled (Bilinear)")
 };
 
 static void prv_legacy_app_mode_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -365,7 +366,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 #if CAPABILITY_HAS_APP_SCALING
     case SettingsDisplayLegacyAppMode:
       title = i18n_noop("Legacy Apps");
-      subtitle = (shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling) ?
+      subtitle = (shell_prefs_get_legacy_app_render_mode() >= LegacyAppRenderMode_ScalingNearest) ?
                  i18n_noop("Scaled") : i18n_noop("Centered");
       break;
 #endif

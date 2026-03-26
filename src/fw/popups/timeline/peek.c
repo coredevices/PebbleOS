@@ -168,7 +168,7 @@ static bool prv_is_upscaled_app(void) {
   }
 #if CAPABILITY_HAS_APP_SCALING && !RECOVERY_FW
   // On platforms that support scaling mode, check the preference
-  return shell_prefs_get_legacy_app_render_mode() == LegacyAppRenderMode_Scaling;
+  return shell_prefs_get_legacy_app_render_mode() >= LegacyAppRenderMode_ScalingNearest;
 #else
   return false;  // Other platforms use bezel mode only
 #endif
