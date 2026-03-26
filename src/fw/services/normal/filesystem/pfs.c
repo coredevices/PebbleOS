@@ -1414,8 +1414,7 @@ status_t pfs_close(int fd) {
 
   File *f = &PFS_FD(fd).file;
   if (f->is_tmp) {
-    // Note: file_found_in_cache() now prevents opening a non-temp file while a
-    // temp file with the same name is in use, so pfs_remove() here is safe.
+    // TODO: For safety, could disallow this op if user has orig file hdl open
     pfs_remove(f->name);
     // Note: if we reboot before updating the tmp state flag to done, the tmp &
     // original file will be deleted. This is an extremely small window, but
@@ -1716,17 +1715,6 @@ static NOINLINE bool file_found_in_cache(const char *name, uint8_t op_flags, int
   } else if (res == FDBusy) {
     res = E_BUSY; // the file is already open
     goto cleanup;
-  }
-
-  // When opening a non-temp file, check if a temp file with the same name is in use.
-  // If so, block the open to prevent crashes when the temp file is later closed
-  // (pfs_close for temp files calls pfs_remove on the original filename).
-  if (!is_tmp) {
-    int tmp_fd;
-    if (get_avail_fd(name, &tmp_fd, true) == FDBusy) {
-      res = E_BUSY;
-      goto cleanup;
-    }
   }
 
   File *file = &PFS_FD(fd).file;
