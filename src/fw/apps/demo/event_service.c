@@ -20,14 +20,14 @@ typedef struct {
   Window window;
   TextLayer count_layer;
   TextLayer connected_layer;
-  char count_str[10];
+  char count_str[12];
   int count;
 } EventServiceAppData;
 
 static void handle_tap(AccelAxisType axis, int32_t sign) {
   EventServiceAppData *data = app_state_get_user_data();
   ++data->count;
-  snprintf(data->count_str, 10, "%d", data->count);
+  snprintf(data->count_str, sizeof(data->count_str), "%d", data->count);
   text_layer_set_text(&data->count_layer, data->count_str);
 }
 

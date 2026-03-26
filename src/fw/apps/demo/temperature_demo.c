@@ -87,7 +87,7 @@ static void cur_temp_update_text(TemperatureDemoAppData *data) {
 // -------------------------------------------------------------------------------
 static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
   int32_t reading = temperature_read();
-  memcpy(s_temp_readings, s_temp_readings + 1, (READ_HISTORY_ENTRIES - 1) * sizeof(int32_t));
+  memmove(s_temp_readings, s_temp_readings + 1, (READ_HISTORY_ENTRIES - 1) * sizeof(int32_t));
   s_temp_readings[READ_HISTORY_ENTRIES - 1] = reading;
   cur_temp_update_text(s_data);
 }
