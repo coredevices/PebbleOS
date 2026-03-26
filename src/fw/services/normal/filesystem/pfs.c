@@ -1414,7 +1414,17 @@ status_t pfs_close(int fd) {
 
   File *f = &PFS_FD(fd).file;
   if (f->is_tmp) {
-    // TODO: For safety, could disallow this op if user has orig file hdl open
+    // If the original file is still open, force-evict it before removing.
+    // This prevents pfs_remove() from CROAKing on the in-use original fd.
+    // Callers should close the original before the temp, but if they don't,
+    // we handle it gracefully here rather than crashing.
+    int orig_fd;
+    if (get_avail_fd(f->name, &orig_fd, false) == FDBusy) {
+      PBL_LOG_ERR("Original file %s still open when closing temp, force-evicting",
+                  f->name);
+      PFS_FD(orig_fd).fd_status = FD_STATUS_UNREFERENCED;
+      PFS_FD(orig_fd).time_closed = time_closed_counter++;
+    }
     pfs_remove(f->name);
     // Note: if we reboot before updating the tmp state flag to done, the tmp &
     // original file will be deleted. This is an extremely small window, but
