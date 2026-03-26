@@ -38,6 +38,7 @@ enum SettingsHealthItem {
     SettingsHealthUnitDistance,
 #if CAPABILITY_HAS_BUILTIN_HRM
     SettingsHealthHRMonitoringInterval,
+    SettingsHealthHRActivityTracking,
 #endif
     NumSettingsHealthItems
 };
@@ -103,6 +104,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
             }
             break;
         }
+        case SettingsHealthHRActivityTracking: {
+            title = i18n_noop("HR During Activity");
+            subtitle = activity_prefs_hrm_activity_tracking_is_enabled()
+                ? i18n_noop("On") : i18n_noop("Off");
+            break;
+        }
 #endif
         default:
             WTF;
@@ -122,6 +129,10 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
 #if CAPABILITY_HAS_BUILTIN_HRM
         case SettingsHealthHRMonitoringInterval:
             prv_hrm_interval_menu_push(data);
+            break;
+        case SettingsHealthHRActivityTracking:
+            activity_prefs_set_hrm_activity_tracking_enabled(
+                !activity_prefs_hrm_activity_tracking_is_enabled());
             break;
 #endif
         default:

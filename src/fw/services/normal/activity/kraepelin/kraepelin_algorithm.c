@@ -33,6 +33,7 @@ Pebble App roject.
 #include "applib/accel_service.h"
 #include "util/trig.h"
 #include "services/common/hrm/hrm_manager_private.h"
+#include "services/normal/activity/activity.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/math.h"
@@ -2018,7 +2019,8 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
 #if CAPABILITY_HAS_BUILTIN_HRM
     // Make sure we have a couple active minutes in a row before enabling the HRM to save battery
     const unsigned min_duration_for_hrm = 3 * SECONDS_PER_MINUTE;
-    if (duration_secs >= min_duration_for_hrm && state->hrm_session == HRM_INVALID_SESSION_REF) {
+    if (duration_secs >= min_duration_for_hrm && state->hrm_session == HRM_INVALID_SESSION_REF &&
+        activity_prefs_hrm_activity_tracking_is_enabled()) {
       state->hrm_session = hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID,
           1 /* update interval */, 0 /*expire_s*/, HRMFeature_BPM, prv_hrm_subscription_cb, NULL);
     }
