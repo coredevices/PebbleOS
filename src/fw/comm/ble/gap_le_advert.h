@@ -10,6 +10,14 @@ typedef enum {
   GAPLEAdvertisingJobTagReconnection,
 } GAPLEAdvertisingJobTag;
 
+//! Advertising interval preset, compliant with Apple Accessory Design Guidelines.
+typedef enum {
+  //! 20ms interval (Apple ADG fast advertising)
+  GAPLEAdvertisingInterval_Short,
+  //! 1022.5ms interval (Apple ADG slow advertising)
+  GAPLEAdvertisingInterval_Long,
+} GAPLEAdvertisingInterval;
+
 struct GAPLEAdvertisingJob;
 
 //! Opaque reference to an advertising job.
@@ -24,13 +32,8 @@ typedef struct GAPLEAdvertisingJobTerm {
   uint16_t duration_secs;
 
   union {
-    struct {
-      //! Advertising interval range in slots:
-      //! @note Use GAPLE_ADVERTISING_INFINITE_INTERVAL_SLOTS to indicate
-      //! the term should be "silent".
-      uint16_t min_interval_slots;
-      uint16_t max_interval_slots;
-    };
+    //! Advertising interval preset.
+    GAPLEAdvertisingInterval interval;
     //! The index to loop back to.
     //! @note only valid when duration_secs is GAPLE_ADVERTISING_DURATION_LOOP_AROUND.
     uint16_t loop_around_index;
@@ -72,13 +75,10 @@ typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job
 //! @param payload The payload with the advertising and scan response data to
 //! be scheduled for air-time. @see ble_ad_parse.h for functions to build the
 //! payload.
-//! @param terms A combination of minimum advertisement interval, maximum advertisement
-//! interval and duration. Each term is run in the order that they appear in the terms array.
-//! The minimum advertisement interval for each term must be at minumum 32 slots (20ms), or
-//! 160 slots (100ms) when there is a scan response. The maximum advertisement interval must
-//! be larger than or equal to its corresponding min_interval_slots. The duration is the
-//! minimum number of seconds that the term will be active. The sum of all the durations is
-//! the minimum number of seconds that the advertisement payload has to be on-air.
+//! @param terms A combination of advertisement interval preset and duration. Each term is run
+//! in the order that they appear in the terms array. The duration is the minimum number of
+//! seconds that the term will be active. The sum of all the durations is the minimum number
+//! of seconds that the advertisement payload has to be on-air.
 //! The job is not guaranteed to get a consecutive period of air-time nor is it guaranteed that
 //! it will get air-time immediately after returning from this function.
 //! @param callback Pointer to a function that should be called when the job

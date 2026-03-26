@@ -6,6 +6,7 @@
 #include "GAPAPI.h"
 
 #include <bluetooth/bluetooth_types.h>
+#include "comm/ble/gap_le_advert.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,7 +16,7 @@ void gap_le_set_advertising_disabled(void);
 
 bool gap_le_is_advertising_enabled(void);
 
-void gap_le_assert_advertising_interval(uint16_t expected_min_slots, uint16_t expected_max_slots);
+void gap_le_assert_advertising_interval(GAPLEAdvertisingInterval expected);
 
 unsigned int gap_le_get_advertising_data(Advertising_Data_t *ad_data_out);
 unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_out);

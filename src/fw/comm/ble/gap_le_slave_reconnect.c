@@ -110,18 +110,15 @@ static void prv_evaluate(ReconnectType prev_type) {
       ad = &payload;
     }
 
-    // Values chosen according to:
-    // "Accessory Design Guidelies for Apple Devices" 55.4 Advertising Data
+    // Values chosen according to Apple Accessory Design Guidelines
     const GAPLEAdvertisingJobTerm advert_terms[] = {
         {
             .duration_secs = 30,
-            .min_interval_slots = 32, // 20ms
-            .max_interval_slots = 32, // 20ms
+            .interval = GAPLEAdvertisingInterval_Short,
         },
         {
             .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
-            .min_interval_slots = 1636, // 1022.5ms
-            .max_interval_slots = 1636, // 1022.5ms
+            .interval = GAPLEAdvertisingInterval_Long,
         },
     };
 
