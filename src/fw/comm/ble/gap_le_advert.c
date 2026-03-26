@@ -44,6 +44,13 @@
 //! - ble_discoverability/pairability.c
 //! - Use private addresses for privacy / harder tracebility.
 
+// Advertising interval parameters in ms, indexed by GAPLEAdvertisingInterval.
+// Values comply with Apple Accessory Design Guidelines.
+static const uint32_t s_interval_ms[] = {
+  [GAPLEAdvertisingInterval_Short] = 20,     // 20ms
+  [GAPLEAdvertisingInterval_Long]  = 1022,   // 1022.5ms (truncated to ms)
+};
+
 typedef struct GAPLEAdvertisingJob {
   ListNode node;
 
@@ -313,9 +320,9 @@ static void prv_perform_next_job(bool force_refresh) {
       s_current_ad_data = &next->payload;
     }
 
-    // One slot is 625us:
-    const uint32_t min_interval_ms = ((next->terms[next->cur_term].min_interval_slots * 5) / 8);
-    const uint32_t max_interval_ms = ((next->terms[next->cur_term].max_interval_slots * 5) / 8);
+    const GAPLEAdvertisingInterval interval = next->terms[next->cur_term].interval;
+    const uint32_t min_interval_ms = s_interval_ms[interval];
+    const uint32_t max_interval_ms = s_interval_ms[interval];
 
     PBL_LOG_DBG("Enable Ad job %s",  prv_string_for_debug_tag(next->tag));
     bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms);

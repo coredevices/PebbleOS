@@ -122,20 +122,17 @@ static void prv_schedule_ad_job(void) {
                                        (const uint8_t *) &mfg_data,
                                        sizeof(struct ManufacturerSpecificData));
 
-  // Values chosen according to:
-  // "Accessory Design Guidelies for Apple Devices" 55.4 Advertising Data
+  // Values chosen according to Apple Accessory Design Guidelines.
   const GAPLEAdvertisingJobTerm advert_terms[] = {
       {
           // Extend this term from recommended 30s to 5min so user has e.g. time
           // to download or open mobile app.
           .duration_secs = 5 * 60,
-          .min_interval_slots = 32, // 20ms
-          .max_interval_slots = 32, // 20ms
+          .interval = GAPLEAdvertisingInterval_Short,
       },
       {
           .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
-          .min_interval_slots = 1636, // 1022.5ms
-          .max_interval_slots = 1636, // 1022.5ms
+          .interval = GAPLEAdvertisingInterval_Long,
       },
   };
 

@@ -142,8 +142,7 @@ void test_gap_le_advert__single_job(void) {
   BLEAdData *ad = create_ad(ad_data, scan_resp_data);
 
   GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 160,
-    .max_interval_slots = 241,
+    .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job;
@@ -195,13 +194,11 @@ void test_gap_le_advert__single_job_multiple_terms_silence_and_loop_around(void)
   GAPLEAdvertisingJobTerm advert_terms[] =
   {
     {
-      .min_interval_slots = 160,
-      .max_interval_slots = 240,
+      .interval = GAPLEAdvertisingInterval_Short,
       .duration_secs = 1,
     },
     {
-      .min_interval_slots = 320,
-      .max_interval_slots = 480,
+      .interval = GAPLEAdvertisingInterval_Long,
       .duration_secs = 1,
     },
     {
@@ -219,24 +216,21 @@ void test_gap_le_advert__single_job_multiple_terms_silence_and_loop_around(void)
   // First term:
   cl_assert(gap_le_is_advertising_enabled());
   assert_ad_data("yo");
-  gap_le_assert_advertising_interval(advert_terms[0].min_interval_slots,
-                                     advert_terms[0].max_interval_slots);
+  gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Short);
 
   regular_timer_fire_seconds(1);
 
   // Second term:
   cl_assert(gap_le_is_advertising_enabled());
   assert_ad_data("yo");
-  gap_le_assert_advertising_interval(advert_terms[1].min_interval_slots,
-                                     advert_terms[1].max_interval_slots);
+  gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Long);
 
   regular_timer_fire_seconds(1);
 
   // Looped around to second term (index==1):
   cl_assert(gap_le_is_advertising_enabled());
   assert_ad_data("yo");
-  gap_le_assert_advertising_interval(advert_terms[1].min_interval_slots,
-                                     advert_terms[1].max_interval_slots);
+  gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Long);
 
   cl_assert_equal_i(s_unscheduled_cb_count, 0);
 }
@@ -246,21 +240,14 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
   const char scan_resp_data[] = "scan resp data";
   BLEAdData *ad = create_ad(ad_data, scan_resp_data);
 
-  GAPLEAdvertisingJobTerm advert_terms[3] =
+  GAPLEAdvertisingJobTerm advert_terms[2] =
   {
     {
-      .min_interval_slots = 160,
-      .max_interval_slots = 240,
+      .interval = GAPLEAdvertisingInterval_Short,
       .duration_secs = 4,
     },
     {
-      .min_interval_slots = 320,
-      .max_interval_slots = 400,
-      .duration_secs = 4,
-    },
-    {
-      .min_interval_slots = 640,
-      .max_interval_slots = 800,
+      .interval = GAPLEAdvertisingInterval_Long,
       .duration_secs = 4,
     },
   };
@@ -292,14 +279,17 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
   // Unschedule callback should not have been called:
   cl_assert_equal_i(s_unscheduled_cb_count, 0);
 
-  // Make sure the all the terms in the job are run:
+  // Make sure all the terms in the job are run:
+  GAPLEAdvertisingInterval expected_intervals[] = {
+    GAPLEAdvertisingInterval_Short,
+    GAPLEAdvertisingInterval_Long,
+  };
 
   for (int term = 0; term < ARRAY_LENGTH(advert_terms); ++term) {
     for (int second_tick = 0; second_tick < 4; ++second_tick) {
       cl_assert_equal_i(s_unscheduled_cb_count, 0);
       assert_ad_data("ad data");
-      gap_le_assert_advertising_interval(advert_terms[term].min_interval_slots,
-                                         advert_terms[term].max_interval_slots);
+      gap_le_assert_advertising_interval(expected_intervals[term]);
       regular_timer_fire_seconds(1);
     }
   }
@@ -316,8 +306,7 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
 
 void test_gap_le_advert__job_round_robin(void) {
   GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 160,
-    .max_interval_slots = 320,
+    .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
   };
 
@@ -455,13 +444,11 @@ void test_gap_le_advert__job_round_robin_multiple_terms(void) {
   GAPLEAdvertisingJobTerm advert_terms[2] =
   {
     {
-      .min_interval_slots = 160,
-      .max_interval_slots = 320,
+      .interval = GAPLEAdvertisingInterval_Short,
       .duration_secs = 5,
     },
     {
-      .min_interval_slots = 480,
-      .max_interval_slots = 620,
+      .interval = GAPLEAdvertisingInterval_Long,
       .duration_secs = 5,
     },
   };
@@ -517,8 +504,7 @@ void test_gap_le_advert__expiring_job(void) {
   // Test that a job is expired correctly after the set duration:
   uint16_t seconds_left = 5;
   GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 160,
-    .max_interval_slots = 320,
+    .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = seconds_left,
   };
 
@@ -554,49 +540,16 @@ void test_gap_le_advert__invalid_params(void) {
   BLEAdData *ad = create_ad(NULL, NULL);
 
   GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 31,
-    .max_interval_slots = 31,
+    .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 1,
   };
 
-  // Minimum interval boundary (no scan resp):
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                               unscheduled_callback, s_unscheduled_cb_data, 0);
-  cl_assert_equal_p(job, NULL);
-
-  advert_term.min_interval_slots = 32;
-  advert_term.max_interval_slots = 32;
+  // Valid term should succeed:
   job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job);
-
-  // Minimum interval boundary (with scan resp):
-  char scan_resp_data[] = "scan resp data";
-  BLEAdData *ad_scannable = create_ad(NULL, scan_resp_data);
-  advert_term.min_interval_slots = 159;
-  advert_term.max_interval_slots = 159;
-  job = gap_le_advert_schedule(ad_scannable,
-                               &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                               unscheduled_callback, s_unscheduled_cb_data, 0);
-  cl_assert_equal_p(job, NULL);
-
-  advert_term.min_interval_slots = 160;
-  advert_term.max_interval_slots = 160;
-  job = gap_le_advert_schedule(ad_scannable,
-                               &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                               unscheduled_callback, s_unscheduled_cb_data, 0);
-  cl_assert(job);
-
-  // Max < Min:
-  advert_term.min_interval_slots = 200;
-  advert_term.max_interval_slots = 32;
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                               unscheduled_callback, s_unscheduled_cb_data, 0);
-  cl_assert_equal_p(job, NULL);
 
   // Loop-around in the first term:
-  advert_term.min_interval_slots = 200;
-  advert_term.max_interval_slots = 200;
   advert_term.duration_secs = GAPLE_ADVERTISING_DURATION_LOOP_AROUND;
   job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
@@ -608,8 +561,6 @@ void test_gap_le_advert__invalid_params(void) {
   cl_assert_equal_p(job, NULL);
 
   // No ad data:
-  advert_term.min_interval_slots = 200;
-  advert_term.max_interval_slots = 200;
   advert_term.duration_secs = 1;
   job = gap_le_advert_schedule(NULL, &advert_term,
                                sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
@@ -617,7 +568,6 @@ void test_gap_le_advert__invalid_params(void) {
   cl_assert_equal_p(job, NULL);
 
   free(ad);
-  free(ad_scannable);
 }
 
 void test_gap_le_advert__unschedule_non_existent(void) {
@@ -632,8 +582,7 @@ void test_gap_le_advert__deinit_unschedules(void) {
   BLEAdData *ad = create_ad(NULL, NULL);
 
   GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 160,
-    .max_interval_slots = 320,
+    .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job;
@@ -652,8 +601,7 @@ void test_gap_le_advert__cant_schedule_after_deinit(void) {
   gap_le_advert_deinit();
   BLEAdData *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 160,
-    .max_interval_slots = 320,
+    .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job;
@@ -666,8 +614,7 @@ void test_gap_le_advert__cant_schedule_after_deinit(void) {
 void test_gap_le_advert__continue_after_slave_connection(void) {
   BLEAdData *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 160,
-    .max_interval_slots = 320,
+    .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job;
@@ -695,8 +642,7 @@ void test_gap_le_advert__continue_after_slave_connection(void) {
 void test_gap_le_advert__unschedule_job_types(void) {
   BLEAdData *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
-    .min_interval_slots = 160,
-    .max_interval_slots = 320,
+    .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job_a;
