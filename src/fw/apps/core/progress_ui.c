@@ -183,10 +183,11 @@ static void prv_window_load_handler(Window* window) {
   dialog_set_destroy_on_pop(&data->finished_dialog.dialog, false);
 
   const int16_t load_bar_length = 108;
+  const int16_t load_bar_height = 8;
   const int16_t x_offset = (window->layer.bounds.size.w - load_bar_length) / 2;
-  const int16_t y_offset_progress = PBL_IF_RECT_ELSE(93, 99);
-  const int16_t y_offset_text = PBL_IF_RECT_ELSE(55, 62);
-  const GRect progress_bounds = GRect(x_offset, y_offset_progress, load_bar_length, 8);
+  const int16_t y_offset_progress = (window->layer.bounds.size.h - load_bar_height) / 2;
+  const int16_t y_offset_text = y_offset_progress - 38;
+  const GRect progress_bounds = GRect(x_offset, y_offset_progress, load_bar_length, load_bar_height);
   ProgressLayer *progress_layer = &data->progress_layer;
   progress_layer_init(progress_layer, &progress_bounds);
   progress_layer_set_corner_radius(progress_layer, 3);
