@@ -7,6 +7,7 @@
 
 #if MEMFAULT
 #include "memfault/metrics/connectivity.h"
+#include "memfault_chunk_collector.h"
 #endif
 #include "services/common/comm_session/session_internal.h"
 #include "services/common/analytics/analytics.h"
@@ -23,6 +24,11 @@ void comm_session_analytics_open_session(CommSession *session) {
 #if MEMFAULT
     memfault_metrics_connectivity_connected_state_change(
       kMemfaultMetricsConnectivityState_Connected);
+    // Trigger a delayed Memfault chunk collection so any pending coredump data
+    // gets pushed into datalogging shortly after the phone connects, rather than
+    // waiting for the 15-minute periodic timer. The delay gives the phone time
+    // to complete the datalogging Report handshake.
+    memfault_chunk_collect_after_delay();
 #endif
   }
   session->open_ticks = rtc_get_ticks();

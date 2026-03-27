@@ -14,6 +14,7 @@
 
 static DataLoggingSessionRef s_chunks_session;
 static TimerID s_memfault_chunks_timer;
+static TimerID s_memfault_collect_soon_timer;
 
 // Datalogging packet sizes are fixed, so we need a wrapper to include the (variable) chunk size.
 typedef struct PACKED {
@@ -49,6 +50,7 @@ static void prv_memfault_gather_chunks() {
   ChunkWrapper wrapper;
   bool data_available = true;
   size_t buf_len;
+  int num_chunks = 0;
 
   while (data_available) {
     // always reset buf_len to the size of the output buffer before calling
@@ -60,9 +62,15 @@ static void prv_memfault_gather_chunks() {
     if (data_available) {
       bool res = dls_log(s_chunks_session, &wrapper, 1);
       if (res != DATA_LOGGING_SUCCESS) {
+        PBL_LOG_ERR("Memfault chunk dls_log failed: %d", res);
         break;
       }
+      num_chunks++;
     }
+  }
+
+  if (num_chunks > 0) {
+    dls_send_all_sessions();
   }
 }
 
@@ -74,8 +82,27 @@ void memfault_chunk_collect(void) {
   prv_memfault_gather_chunks_cb();
 }
 
+// Delay before collecting chunks after phone connects, giving the phone time
+// to complete the datalogging Report handshake.
+#define MEMFAULT_COLLECT_SOON_DELAY_MS (10 * 1000)
+
+static void prv_memfault_collect_soon_cb(void *data) {
+  if (memfault_packetizer_data_available()) {
+    prv_memfault_gather_chunks_cb();
+  }
+}
+
+void memfault_chunk_collect_after_delay(void) {
+  if (!s_memfault_collect_soon_timer) {
+    return;
+  }
+  new_timer_start(s_memfault_collect_soon_timer, MEMFAULT_COLLECT_SOON_DELAY_MS,
+                  prv_memfault_collect_soon_cb, NULL, 0 /*flags*/);
+}
+
 void init_memfault_chunk_collection() {
     s_memfault_chunks_timer = new_timer_create();
-    new_timer_start(s_memfault_chunks_timer, MEMFAULT_CHUNK_COLLECTION_INTERVAL_SECS * 1000, 
+    s_memfault_collect_soon_timer = new_timer_create();
+    new_timer_start(s_memfault_chunks_timer, MEMFAULT_CHUNK_COLLECTION_INTERVAL_SECS * 1000,
         prv_memfault_gather_chunks_cb, (void *) NULL, TIMER_START_FLAG_REPEATING);
 }
