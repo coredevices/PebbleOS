@@ -15,6 +15,7 @@ typedef enum {
   VoiceEndpointSessionTypeDictation = 0x01,
   VoiceEndpointSessionTypeCommand = 0x02,   // Not used yet
   VoiceEndpointSessionTypeNLP = 0x03,
+  VoiceEndpointSessionTypeRawAudio = 0x04,  // Raw Speex audio stream, no STT
 
   VoiceEndpointSessionTypeCount,
 } VoiceEndpointSessionType;

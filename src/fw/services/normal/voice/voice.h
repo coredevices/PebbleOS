@@ -105,11 +105,29 @@ void voice_handle_nlp_result(VoiceEndpointResult result, AudioEndpointSessionId 
                              char *reminder, time_t timestamp);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+// Raw audio session (mic → Speex → phone, no STT)
+
+//! Start a raw audio session. The voice service will stream Speex-encoded audio to the phone
+//! without running speech-to-text. Use VoiceEventTypeSessionSetup to detect when streaming begins
+//! and VoiceEventTypeSessionResult when it ends.
+//! @return session ID, or VOICE_SESSION_ID_INVALID if a session is already in progress
+VoiceSessionId voice_start_raw_audio(void);
+
+//! Stop an in-progress raw audio session and flush the audio endpoint.
+void voice_stop_raw_audio(VoiceSessionId session_id);
+
+//! Cancel a raw audio session at any stage without waiting for endpoint flush.
+void voice_cancel_raw_audio(VoiceSessionId session_id);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 // Syscalls
 
 VoiceSessionId sys_voice_start_dictation(VoiceEndpointSessionType session_type);
 void sys_voice_stop_dictation(VoiceSessionId session_id);
 void sys_voice_cancel_dictation(VoiceSessionId session_id);
+
+VoiceSessionId sys_microphone_subscribe(void);
+void sys_microphone_unsubscribe(VoiceSessionId session_id);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Process cleanup

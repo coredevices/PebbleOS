@@ -62,6 +62,7 @@ static uint32_t s_session_generation = 0;      // Monotonic session counter
 static uint32_t s_timeout_generation = 0;      // Generation tied to currently scheduled timeout
 static bool s_teardown_in_progress = false;    // Debounce concurrent teardown paths
 static bool s_delayed_speex_cleanup = false;   // Flag to defer Speex cleanup during cancellation
+static bool s_is_raw_audio = false;            // True when session is raw audio (no STT)
 
 static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data);
@@ -177,6 +178,7 @@ static void prv_reset(void) {
   
   s_state = SessionState_Idle;
   s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
+  s_is_raw_audio = false;
 
 }
 
@@ -469,9 +471,16 @@ void voice_stop_dictation(VoiceSessionId session_id) {
     return;
   }
 
-  s_state = SessionState_WaitForSessionResult;
-  prv_stop_recording();
-  prv_start_result_timeout();
+  if (s_is_raw_audio) {
+    // Raw audio: no transcription expected from phone — stop cleanly and reset immediately.
+    prv_stop_recording();
+    prv_send_event(VoiceEventTypeSessionResult, VoiceStatusSuccess, NULL);
+    prv_reset();
+  } else {
+    s_state = SessionState_WaitForSessionResult;
+    prv_stop_recording();
+    prv_start_result_timeout();
+  }
 
 unlock:
   mutex_unlock(s_lock);
@@ -763,6 +772,30 @@ DEFINE_SYSCALL(void, sys_voice_stop_dictation, VoiceSessionId session_id) {
 
 DEFINE_SYSCALL(void, sys_voice_cancel_dictation, VoiceSessionId session_id) {
   voice_cancel_dictation(session_id);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Raw audio session
+
+VoiceSessionId voice_start_raw_audio(void) {
+  s_is_raw_audio = true;
+  return voice_start_dictation(VoiceEndpointSessionTypeRawAudio);
+}
+
+void voice_stop_raw_audio(VoiceSessionId session_id) {
+  voice_stop_dictation(session_id);
+}
+
+void voice_cancel_raw_audio(VoiceSessionId session_id) {
+  voice_cancel_dictation(session_id);
+}
+
+DEFINE_SYSCALL(VoiceSessionId, sys_microphone_subscribe) {
+  return voice_start_raw_audio();
+}
+
+DEFINE_SYSCALL(void, sys_microphone_unsubscribe, VoiceSessionId session_id) {
+  voice_stop_raw_audio(session_id);
 }
 
 void voice_kill_app_session(PebbleTask task) {
