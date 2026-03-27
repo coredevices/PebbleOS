@@ -525,6 +525,13 @@ def configure(conf):
                         '-fdata-sections',
                         '-ffunction-sections' ]
 
+    # Apple's ARM64 linker uses chained fixups which require pointer-aligned
+    # relocations. Packed structs with pointer members fail to link because the
+    # packed layout can place pointers at non-aligned offsets. Disable chained
+    # fixups to use classic relocations instead.
+    if sys.platform == 'darwin':
+        conf.env.append_value('LINKFLAGS', '-Wl,-no_fixup_chains')
+
     conf.env.append_value('DEFINES', 'CLAR_FIXTURE_PATH="' +
                                      conf.path.make_node('tests/fixtures/').abspath() + '"')
 

@@ -186,7 +186,11 @@
 /*
  * Number of bytes per virtual-memory page, as returned by Page_Size().
  */
+#if defined(__APPLE__) && defined(__aarch64__)
+#define DUMA_PAGE_SIZE 16384
+#else
 #define DUMA_PAGE_SIZE 4096
+#endif
 
 /*
  * Minimum required alignment by CPU.
