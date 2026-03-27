@@ -39,7 +39,7 @@ jobs:
   build-test:
     needs: changes-test
     if: needs.changes-test.outputs.should-test == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux]
     container:
       image: ghcr.io/coredevices/pebbleos-docker:v3
     steps:

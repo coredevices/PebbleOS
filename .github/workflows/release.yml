@@ -10,7 +10,7 @@ env:
 
 jobs:
   build-prf:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux]
 
     container:
       image: ghcr.io/coredevices/pebbleos-docker:v3
@@ -97,7 +97,7 @@ jobs:
           path: artifacts
 
   build-firmware:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux]
 
     container:
       image: ghcr.io/coredevices/pebbleos-docker:v3

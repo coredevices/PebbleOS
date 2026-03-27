@@ -33,7 +33,7 @@ jobs:
   build-prf:
     needs: changes-prf
     if: needs.changes-prf.outputs.should-build == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux]
 
     container:
       image: ghcr.io/coredevices/pebbleos-docker:v3
