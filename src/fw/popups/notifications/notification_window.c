@@ -1186,7 +1186,9 @@ static void prv_set_dnd_icon_visible(bool is_visible) {
   layer_set_frame(&data->status_layer.layer, &new_status_frame);
 #endif
   const uint16_t icon_layer_x_offset = PBL_IF_ROUND_ELSE(new_icon_layer_x_offset, 6);
-  const uint16_t icon_layer_y_offset = PBL_IF_ROUND_ELSE(10, 2);
+  const GRect status_frame = data->status_layer.layer.frame;
+  const int16_t icon_layer_y_offset = status_frame.origin.y +
+      MAX((status_frame.size.h - icon_rect.size.h) / 2, 0);
   const GRect dnd_frame = (GRect) {
     .origin = GPoint(icon_layer_x_offset, icon_layer_y_offset),
     .size = icon_rect.size,
