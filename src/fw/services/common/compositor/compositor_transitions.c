@@ -35,11 +35,11 @@ static void prv_compositor_replace_colors_processor(GDrawCommandProcessor *proce
                                                     const GDrawCommandList* list,
                                                     const GDrawCommand *command) {
   CompositorColorReplacementProcessor *p = (CompositorColorReplacementProcessor *)processor;
+  const GColor8 key_stroke_color = GColorRed;
 
   // fill with app framebuffer (only if a app_fb_key_color != clear was passed)
   if (!gcolor_is_invisible(p->app_fb_key_color) &&
       gcolor_equal(gdraw_command_get_fill_color(processed_command), p->app_fb_key_color)) {
-    gdraw_command_set_hidden(processed_command, true);
     const uint16_t num_points = gdraw_command_get_num_points(processed_command);
     GPoint points[num_points];
     if (sizeof(points) == gdraw_command_copy_points(processed_command, points, sizeof(points))) {
@@ -51,9 +51,12 @@ static void prv_compositor_replace_colors_processor(GDrawCommandProcessor *proce
                                 compositor_app_framebuffer_fill_callback,
                                 &p->framebuffer_offset);
     }
+
+    // Preserve any stroke by leaving the command visible and clearing only its fill.
+    gdraw_command_set_fill_color(processed_command, GColorClear);
+    gdraw_command_replace_color(processed_command, key_stroke_color, p->stroke_color);
   } else {
     // Original SVGs use Red for the stroke, replace it here
-    const GColor8 key_stroke_color = GColorRed;
     gdraw_command_replace_color(processed_command, key_stroke_color, p->stroke_color);
     // replace surrounding color
     gdraw_command_replace_color(processed_command, p->key_color, p->overdraw_color);
