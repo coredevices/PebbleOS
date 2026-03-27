@@ -121,11 +121,16 @@ void compositor_app_framebuffer_fill_callback(GContext *ctx, int16_t y,
                                               Fixed_S16_3 delta_begin, Fixed_S16_3 delta_end,
                                               void *user_data) {
   const GPoint *offset = user_data ?: &GPointZero; // User data has left the building
+  GBitmap app_framebuffer = compositor_get_app_framebuffer_as_bitmap();
+  const int16_t fb_width = app_framebuffer.bounds.size.w;
+  const int16_t fb_height = app_framebuffer.bounds.size.h;
+
+  const int16_t x1 = CLIP(x_range_begin.integer - offset->x, 0, fb_width);
+  const int16_t clipped_y = CLIP(y - offset->y, 0, fb_height);
+  const int16_t x2 = CLIP(x_range_end.integer - offset->x, 0, fb_width);
+
   compositor_scaled_app_fb_copy(
-    GRect(
-      x_range_begin.integer - offset->x, y - offset->y,
-      x_range_end.integer - x_range_begin.integer, 1
-    ),
+    GRect(x1, clipped_y, x2 - x1, 1),
     true /* copy_relative_to_origin */
   );
 }
