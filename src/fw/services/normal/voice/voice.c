@@ -217,7 +217,7 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
   mutex_unlock(s_lock);
 }
 
-static void prv_start_recording(void) {
+static bool prv_start_recording(void) {
   VOICE_LOG("prv_start_recording called");
 #if !defined(TARGET_QEMU)
   // Start microphone with Speex frame buffer
@@ -228,15 +228,20 @@ static void prv_start_recording(void) {
   
   if (frame_buffer && frame_size_samples > 0) {
     VOICE_LOG("Starting microphone with frame buffer");
-    PBL_ASSERTN(mic_start(MIC, &prv_audio_data_handler, NULL, frame_buffer, frame_size_samples));
+    if (!mic_start(MIC, &prv_audio_data_handler, NULL, frame_buffer, frame_size_samples)) {
+      PBL_LOG_ERR("Failed to start microphone for voice session");
+      return false;
+    }
     VOICE_LOG("Microphone started successfully");
   } else {
     PBL_LOG_ERR("Invalid Speex frame buffer");
-    return;
+    return false;
   }
 #else
   VOICE_LOG("Running on QEMU - skipping microphone start");
 #endif
+
+  return true;
 }
 
 static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
@@ -279,12 +284,17 @@ static void prv_handle_subsystem_started(SessionState transition_to_state) {
 
     new_timer_stop(s_timeout);
 
+    VOICE_LOG("Starting recording now that both subsystems are ready");
+    if (!prv_start_recording()) {
+      PBL_LOG_ERR("Voice session setup failed while starting recording");
+      prv_cancel_session();
+      prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusErrorGeneric, NULL);
+      return;
+    }
+
     // Indicate to the UI that we have started recording
     PBL_LOG_INFO("Session setup successfully");
     prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusSuccess, NULL);
-
-    VOICE_LOG("Starting recording now that both subsystems are ready");
-    prv_start_recording();
   }
 }
 
