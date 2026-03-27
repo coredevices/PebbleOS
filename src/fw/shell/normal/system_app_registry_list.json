@@ -230,6 +230,12 @@
       "ifdefs": ["ENABLE_TEST_APPS"]
     },
     {
+      "id": -39,
+      "enum": "FW_UPDATE_PROGRESS_SIM",
+      "md_fn": "fw_update_progress_sim_app_get_info",
+      "ifdefs": ["ENABLE_TEST_APPS"]
+    },
+    {
       "id": -41,
       "enum": "EVENT_SERVICE",
       "md_fn": "event_service_app_get_info",
