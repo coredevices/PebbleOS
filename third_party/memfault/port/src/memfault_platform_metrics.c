@@ -7,7 +7,6 @@
 #include "services/common/battery/battery_state.h"
 #include "util/heap.h"
 #include "services/common/analytics/analytics.h"
-#include "applib/app_message/app_message_internal.h"
 #include "shell/normal/watchface.h"
 #include "process_management/app_install_manager.h"
 

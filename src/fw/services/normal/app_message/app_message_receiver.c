@@ -153,6 +153,7 @@ static void prv_app_message_receiver_finish(Receiver *receiver) {
     if (app_inbox_service_end(AppInboxServiceTagAppMessageReceiver)) {
       // The write was successful, cancel processing the header for nacking:
       kernel_receiver_finally_cb = g_default_kernel_receiver_implementation.cleanup;
+      PBL_ANALYTICS_ADD(app_message_received_count, 1);
     }
   }
 

@@ -130,6 +130,7 @@ static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
   if (is_completed) {
     const AppInstallId app_id = app_manager_get_current_app_id();
     app_install_mark_prioritized(app_id, true /* can_expire */);
+    PBL_ANALYTICS_ADD(app_message_sent_count, 1);
   }
   // The outbox_message is owned by app_outbox_service, calling consume will free it as well:
   const AppOutboxStatus status =
