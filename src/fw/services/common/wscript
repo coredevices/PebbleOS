@@ -59,6 +59,10 @@ def build(bld):
     )
     bld.env.SERVICES.append('services_common_clock')
 
+    target = bld.path.find_or_declare('services_common_clock.pot')
+    bld.gettext(source=['clock.c'], target=target)
+    bld.env.SERVICES_TEXT.append(target)
+
     bld.stlib(
         use=['fw_includes'],
         source=['cron.c'],
