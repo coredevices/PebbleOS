@@ -300,6 +300,3 @@ AppTimer *app_message_outbox_get_ack_nack_timer(void) {
   return outbox ? outbox->ack_nack_timer : NULL;
 }
 
-uint32_t app_message_outbox_get_sent_count(void) {
-  return 0;
-}
