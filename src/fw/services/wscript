@@ -11,81 +11,16 @@ def build(bld):
     else:
         bld.recurse('normal')
 
-    def _build_services(bld, sources):
-        bld.gettext(source=sources, target='services.pot')
-        use = [
-            'fw_includes',
-            'freertos_includes',
-            'bt_driver',
-            'pbl_includes',
-        ]
+    use = ['fw_includes']
+    use.extend(bld.env.SERVICES)
 
-        use.extend(bld.env.SERVICES)
+    sources = ['services.c']
 
-        bld.stlib(source=sources,
-                  target='fw_services',
-                  use=use)
+    bld.stlib(source=sources,
+                target='fw_services',
+                use=use)
 
-    def _build_normal_recovery_services(bld):
-        def _get_excludes(bld):
-            excludes = []
-
-            # Migrated services
-            excludes.append('common/analytics/**')
-            excludes.append('common/battery/**')
-            excludes.append('common/bluetooth/**')
-            excludes.append('common/comm_session/**')
-            excludes.append('common/compositor/**')
-            excludes.append('common/get_bytes/**')
-            excludes.append('common/hrm/**')
-            excludes.append('common/i18n/**')
-            excludes.append('common/new_timer/**')
-            excludes.append('common/put_bytes/**')
-            excludes.append('common/shared_prf_storage/**')
-            excludes.append('common/touch/**')
-            excludes.append('normal/activity/**')
-            excludes.append('normal/alarms/**')
-            excludes.append('normal/app_glances/**')
-            excludes.append('normal/app_message/**')
-            excludes.append('normal/blob_db/**')
-            excludes.append('normal/bluetooth/**')
-            excludes.append('normal/comm_session/**')
-            excludes.append('normal/contacts/**')
-            excludes.append('normal/data_logging/**')
-            excludes.append('normal/filesystem/**')
-            excludes.append('normal/legacy/**')
-            excludes.append('normal/notifications/**')
-            excludes.append('normal/process_management/**')
-            excludes.append('normal/protobuf_log/**')
-            excludes.append('normal/settings/**')
-            excludes.append('normal/timeline/**')
-            excludes.append('normal/vibes/**')
-            excludes.append('normal/voice/**')
-            excludes.append('normal/weather/**')
-            excludes.append('prf/bluetooth/**')
-            excludes.append('prf/comm_session/**')
-            excludes.append('common/*.c')
-            excludes.append('normal/*.c')
-            excludes.append('prf/*.c')
-
-            return excludes
-
-        excludes = _get_excludes(bld)
-
-        # get common services
-        sources = []
-        sources.extend(bld.path.ant_glob('common/**/*.c', excl=excludes))
-
-        if bld.variant == 'prf':
-            # get recovery services
-            sources.extend(bld.path.ant_glob('prf/**/*.c', excl=excludes))
-        else:
-            # get normal services
-            sources.extend(bld.path.ant_glob('normal/**/*.c', excl=excludes))
-
-        sources.extend(bld.path.ant_glob('*.c', excl=excludes))
-
-        _build_services(bld, sources)
+    bld.gettext(source=sources, target='services.pot')
 
     if bld.env.VOICE_CODEC_TESTS:
         voice_sample_target = bld.path.get_bld().make_node('normal/voice/voice_test_sample.auto.h')
@@ -93,8 +28,5 @@ def build(bld):
             source='normal/voice/sample.pcm',
             target=voice_sample_target,
             array_name='s_voice_test_sample')
-
-    _build_normal_recovery_services(bld)
-
 
 # vim:filetype=python
