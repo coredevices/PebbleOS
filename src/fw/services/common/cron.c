@@ -395,7 +395,7 @@ order field, this is guaranteed to put the result ahead of the local epoch.
   cron_tm.tm_mday += 1;
 
   // Decide the DSTny (Adjust for DST transitions)
-  cron_tm.tm_gmtoff = current_tm.tm_gmtoff; // We're using the current time's GMT offset
+  cron_tm.tm_gmtoff = time_get_gmtoffset();
   cron_tm.tm_isdst = 0; // We'll do the DST adjust ourselves
   time_t t = mktime(&cron_tm);
 

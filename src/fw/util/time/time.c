@@ -114,10 +114,10 @@ struct tm *time_to_tm(const time_t * tim_p, struct tm *res, bool utc_mode) {
     res->tm_zone[TZ_LEN - 1] = '\0';
     local_time = utc_time;
   } else {
-    res->tm_gmtoff = time_get_gmtoffset();
     res->tm_isdst = time_get_isdst(utc_time);
+    res->tm_gmtoff = time_get_gmtoffset() + (res->tm_isdst ? s_dst_adjust : 0);
     time_get_timezone_abbr(res->tm_zone, utc_time);
-    local_time = utc_time + res->tm_gmtoff + (res->tm_isdst ? s_dst_adjust : 0);
+    local_time = utc_time + res->tm_gmtoff;
   }
 
   int32_t days = local_time / SECONDS_PER_DAY;
