@@ -1,0 +1,24 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+def configure(conf):
+    pass
+
+
+def build(bld):
+    if not bld.capability('HAS_MICROPHONE'):
+        return
+
+    sources = [
+        'transcription.c',
+        'voice.c',
+        'voice_speex.c',
+    ]
+
+    bld.stlib(
+        use=['fw_includes', 'speex_includes'],
+        source=sources,
+        target='services_normal_voice',
+    )
+
+    bld.env.SERVICES.append('services_normal_voice')
