@@ -4,6 +4,7 @@
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/app_logging.h"
 #include "applib/applib_malloc.auto.h"
+#include "drivers/rtc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
 #include "syscall/syscall.h"
@@ -82,11 +83,55 @@ time_t pbl_override_time_legacy(time_t *tloc) {
   return (legacy_time);
 }
 
+static bool prv_tm_matches_local_time(const struct tm *requested, const struct tm *actual) {
+  return (requested->tm_sec == actual->tm_sec) &&
+         (requested->tm_min == actual->tm_min) &&
+         (requested->tm_hour == actual->tm_hour) &&
+         (requested->tm_mday == actual->tm_mday) &&
+         (requested->tm_mon == actual->tm_mon) &&
+         (requested->tm_year == actual->tm_year);
+}
+
+static void prv_fill_localtime_result(time_t t, struct tm *tb) {
+  sys_localtime_r(&t, tb);
+  sys_copy_timezone_abbr(tb->tm_zone, t);
+}
+
+static time_t prv_mktime_with_normalized_gmtoff(const struct tm *tb, int isdst) {
+  TimezoneInfo tz_info = { 0 };
+  rtc_get_timezone(&tz_info);
+
+  struct tm normalized = *tb;
+  normalized.tm_gmtoff = tz_info.tm_gmtoff;
+  normalized.tm_isdst = isdst;
+  return mktime(&normalized);
+}
+
 DEFINE_SYSCALL(time_t, pbl_override_mktime, struct tm *tb) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(tb, sizeof(struct tm));
   }
-  return mktime(tb);
+
+  const int requested_isdst = tb->tm_isdst;
+  time_t t;
+  if (requested_isdst >= 0) {
+    t = prv_mktime_with_normalized_gmtoff(tb, requested_isdst);
+  } else {
+    struct tm actual;
+    t = prv_mktime_with_normalized_gmtoff(tb, 0);
+    time_t dst_t = prv_mktime_with_normalized_gmtoff(tb, 1);
+
+    prv_fill_localtime_result(t, &actual);
+    if (!prv_tm_matches_local_time(tb, &actual)) {
+      prv_fill_localtime_result(dst_t, &actual);
+      if (prv_tm_matches_local_time(tb, &actual)) {
+        t = dst_t;
+      }
+    }
+  }
+
+  prv_fill_localtime_result(t, tb);
+  return t;
 }
 
 uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
@@ -293,4 +338,3 @@ int pbl_snprintf(char * str, size_t n, const char * format, ...) {
 
   return ret;
 }
-
