@@ -326,6 +326,11 @@ static void prv_update_state(void *force_update) {
                                           NULL);
     PBL_ASSERTN(ret == 0);
     s_last_battery_charge_state.is_plugged = is_plugged;
+    if (is_plugged) {
+      PBL_ANALYTICS_TIMER_START(battery_plugged_time_ms);
+    } else {
+      PBL_ANALYTICS_TIMER_STOP(battery_plugged_time_ms);
+    }
     update = true;
   }
 
@@ -344,6 +349,11 @@ static void prv_update_state(void *force_update) {
                                 chg_status == BatteryChargeStatusUnknown);
   if (is_charging != s_last_battery_charge_state.is_charging) {
     s_last_battery_charge_state.is_charging = is_charging;
+    if (is_charging) {
+      PBL_ANALYTICS_TIMER_START(battery_charge_time_ms);
+    } else {
+      PBL_ANALYTICS_TIMER_STOP(battery_charge_time_ms);
+    }
     update = true;
   }
 
