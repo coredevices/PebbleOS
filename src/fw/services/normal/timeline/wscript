@@ -42,3 +42,7 @@ def build(bld):
     )
 
     bld.env.SERVICES.append('services_normal_timeline')
+
+    target = bld.path.find_or_declare('services_normal_timeline.pot')
+    bld.gettext(source=sources, target=target)
+    bld.env.SERVICES_TEXT.append(target)
