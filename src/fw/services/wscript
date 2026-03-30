@@ -5,9 +5,6 @@ def build(bld):
     bld.env.SERVICES = []
     bld.recurse('common')
 
-    # Generate Pebble Protocol endpoints table:
-    bld.recurse('common/comm_session')
-
     def _build_services(bld, sources):
         bld.gettext(source=sources, target='services.pot')
         use = [
@@ -17,9 +14,6 @@ def build(bld):
             'pbl_includes',
             'speex_includes',
         ]
-
-        if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
-            use.append('nrf_fuel_gauge')
 
         use.extend(bld.env.SERVICES)
 
@@ -33,30 +27,19 @@ def build(bld):
 
             # Migrated services
             excludes.append('common/analytics/**')
-
-            # Platform based excludes
-            if bld.is_asterix():
-                excludes.append('common/compositor/default/compositor_modal_transitions.*')
-                excludes.append('common/battery/voltage/**')
-            elif bld.is_obelix() or bld.is_getafix():
-                excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
-                excludes.append('common/battery/voltage/**')
-            else:
-                excludes.append('common/battery/nrf_fuel_gauge/**')
-
-                if bld.is_silk():
-                    excludes.append('common/compositor/default/compositor_modal_transitions.*')
-                else:
-                    excludes.append('common/compositor/legacy/compositor_modal_slide_transitions.*')
-
-            # Capability based excludes
-            if bld.capability('HAS_SPRF_V3'):
-                excludes.append('common/shared_prf_storage/v2_sprf/**')
-            else:
-                excludes.append('common/shared_prf_storage/v3_sprf/**')
+            excludes.append('common/battery/**')
+            excludes.append('common/bluetooth/**')
+            excludes.append('common/comm_session/**')
+            excludes.append('common/compositor/**')
+            excludes.append('common/get_bytes/**')
+            excludes.append('common/hrm/**')
+            excludes.append('common/i18n/**')
+            excludes.append('common/new_timer/**')
+            excludes.append('common/put_bytes/**')
+            excludes.append('common/shared_prf_storage/**')
+            excludes.append('common/touch/**')
 
             if not bld.capability('HAS_BUILTIN_HRM'):
-                excludes.append('common/hrm/**')
                 excludes.append('normal/bluetooth/ble_hrm.c')
 
             if not bld.capability('HAS_MAGNETOMETER'):
@@ -64,10 +47,6 @@ def build(bld):
 
             if not bld.capability('HAS_MICROPHONE'):
                 excludes.append('normal/voice/**')
-
-            # Others
-            if bld.env.memfault:
-                excludes.append('common/analytics/null/**')
 
             return excludes
 

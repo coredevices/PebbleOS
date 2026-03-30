@@ -1,0 +1,22 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+def configure(conf):
+    pass
+
+
+def build(bld):
+    sources = [
+        'put_bytes.c',
+        'put_bytes_storage.c',
+        'put_bytes_storage_file.c',
+        'put_bytes_storage_raw.c',
+    ]
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=sources,
+        target='services_common_put_bytes',
+    )
+
+    bld.env.SERVICES.append('services_common_put_bytes')

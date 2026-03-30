@@ -95,3 +95,22 @@ def build(bld):
     bld(rule=generate_endpoints_table,
         source=[in_node],
         target=out_node)
+
+    sources = [
+        'default_kernel_receiver.c',
+        'default_kernel_sender.c',
+        'meta_endpoint.c',
+        'session.c',
+        'session_analytics.c',
+        'session_receive_router.c',
+        'session_remote_version.c',
+        'session_send_queue.c',
+    ]
+
+    bld.stlib(
+        use=['fw_includes', 'services_common_analytics'],
+        source=sources,
+        target='services_common_comm_session',
+    )
+
+    bld.env.SERVICES.append('services_common_comm_session')
