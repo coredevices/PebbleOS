@@ -107,7 +107,7 @@ unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_
   return s_scan_resp_data_length;
 }
 
-void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
   if (ad_data) {
     memcpy(&s_ad_data, ad_data->data, ad_data->ad_data_length);
     s_ad_data_length = ad_data->ad_data_length;
@@ -115,6 +115,8 @@ void bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
            ad_data->scan_resp_data_length);
     s_scan_resp_data_length = ad_data->scan_resp_data_length;
   }
+
+  return true;
 }
 
 bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {

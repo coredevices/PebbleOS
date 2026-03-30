@@ -337,8 +337,10 @@ static void prv_perform_next_job(bool force_refresh) {
 
     if (s_current_ad_data != &next->payload) {
       // Give the advertisement data to the BT controller:
-      bt_driver_advert_set_advertising_data(&next->payload);
-      s_current_ad_data = &next->payload;
+      bool result = bt_driver_advert_set_advertising_data(&next->payload);
+      if (result) {
+        s_current_ad_data = &next->payload;
+      }
     }
 
     const GAPLEAdvertisingInterval interval = next->terms[next->cur_term].interval;
