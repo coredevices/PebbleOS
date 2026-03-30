@@ -1,0 +1,9 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+def configure(conf):
+    conf.recurse('analytics')
+
+
+def build(bld):
+    bld.recurse('analytics')

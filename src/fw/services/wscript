@@ -1,7 +1,10 @@
 def configure(conf):
-    pass
+    conf.recurse('common')
 
 def build(bld):
+    bld.env.SERVICES = []
+    bld.recurse('common')
+
     # Generate Pebble Protocol endpoints table:
     bld.recurse('common/comm_session')
 
@@ -18,9 +21,7 @@ def build(bld):
         if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
             use.append('nrf_fuel_gauge')
 
-        if bld.env.memfault:
-            use.append('memfault_includes')
-            bld.env.DEFINES.append('ANALYTICS_IMPL_MEMFAULT')
+        use.extend(bld.env.SERVICES)
 
         bld.stlib(source=sources,
                   target='fw_services',
@@ -29,6 +30,9 @@ def build(bld):
     def _build_normal_recovery_services(bld):
         def _get_excludes(bld):
             excludes = []
+
+            # Migrated services
+            excludes.append('common/analytics/**')
 
             # Platform based excludes
             if bld.is_asterix():
