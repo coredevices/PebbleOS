@@ -47,10 +47,12 @@ static void prv_memfault_gather_chunks() {
     return;
   }
 
+  // Check for a pending coredump before gathering, since packetizing consumes it.
+  bool had_coredump = memfault_coredump_has_valid_coredump(NULL);
+
   ChunkWrapper wrapper;
   bool data_available = true;
   size_t buf_len;
-  int num_chunks = 0;
 
   while (data_available) {
     // always reset buf_len to the size of the output buffer before calling
@@ -65,11 +67,10 @@ static void prv_memfault_gather_chunks() {
         PBL_LOG_ERR("Memfault chunk dls_log failed: %d", res);
         break;
       }
-      num_chunks++;
     }
   }
 
-  if (num_chunks > 0) {
+  if (had_coredump) {
     dls_send_all_sessions();
   }
 }
