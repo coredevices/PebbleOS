@@ -1,0 +1,18 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+def configure(conf):
+    pass
+
+
+def build(bld):
+    if not bld.capability('HAS_BUILTIN_HRM'):
+        return
+
+    bld.stlib(
+        use=['fw_includes', 'services_common_analytics'],
+        source=['hrm_manager.c'],
+        target='services_common_hrm',
+    )
+
+    bld.env.SERVICES.append('services_common_hrm')
