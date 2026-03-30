@@ -22,11 +22,4 @@ def build(bld):
 
     bld.gettext(source=sources, target='services.pot')
 
-    if bld.env.VOICE_CODEC_TESTS:
-        voice_sample_target = bld.path.get_bld().make_node('normal/voice/voice_test_sample.auto.h')
-        bld(features='binary_header',
-            source='normal/voice/sample.pcm',
-            target=voice_sample_target,
-            array_name='s_voice_test_sample')
-
 # vim:filetype=python
