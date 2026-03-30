@@ -1,11 +1,14 @@
 def configure(conf):
     conf.recurse('common')
     conf.recurse('normal')
+    conf.recurse('prf')
 
 def build(bld):
     bld.env.SERVICES = []
     bld.recurse('common')
-    if bld.variant != 'prf':
+    if bld.variant == 'prf':
+        bld.recurse('prf')
+    else:
         bld.recurse('normal')
 
     def _build_services(bld, sources):
@@ -59,6 +62,8 @@ def build(bld):
             excludes.append('normal/vibes/**')
             excludes.append('normal/voice/**')
             excludes.append('normal/weather/**')
+            excludes.append('prf/bluetooth/**')
+            excludes.append('prf/comm_session/**')
 
             if not bld.capability('HAS_MAGNETOMETER'):
                 excludes.append('common/ecompass.c')
