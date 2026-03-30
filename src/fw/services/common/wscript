@@ -30,3 +30,151 @@ def build(bld):
     bld.recurse('shared_prf_storage')
     if bld.capability('HAS_TOUCHSCREEN'):
         bld.recurse('touch')
+
+    bld.stlib(
+        use=['fw_includes', 'services_common_analytics'],
+        source=['accel_manager.c'],
+        target='services_common_accel_manager',
+    )
+    bld.env.SERVICES.append('services_common_accel_manager')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['animation_service.c'],
+        target='services_common_animation_service',
+    )
+    bld.env.SERVICES.append('services_common_animation_service')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['boot_splash.c'],
+        target='services_common_boot_splash',
+    )
+    bld.env.SERVICES.append('services_common_boot_splash')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['clock.c'],
+        target='services_common_clock',
+    )
+    bld.env.SERVICES.append('services_common_clock')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['cron.c'],
+        target='services_common_cron',
+    )
+    bld.env.SERVICES.append('services_common_cron')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['debounced_connection_service.c'],
+        target='services_common_debounced_connection_service',
+    )
+    bld.env.SERVICES.append('services_common_debounced_connection_service')
+
+    if bld.capability('HAS_MAGNETOMETER'):
+        bld.stlib(
+            use=['fw_includes'],
+            source=['ecompass.c', 'ecompass_correction.c'],
+            target='services_common_ecompass',
+        )
+        bld.env.SERVICES.append('services_common_ecompass')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['evented_timer.c'],
+        target='services_common_evented_timer',
+    )
+    bld.env.SERVICES.append('services_common_evented_timer')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['event_service.c'],
+        target='services_common_event_service',
+    )
+    bld.env.SERVICES.append('services_common_event_service')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['firmware_update.c'],
+        target='services_common_firmware_update',
+    )
+    bld.env.SERVICES.append('services_common_firmware_update')
+
+    bld.stlib(
+        use=['fw_includes', 'services_common_analytics'],
+        source=['light.c'],
+        target='services_common_light',
+    )
+    bld.env.SERVICES.append('services_common_light')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['phone_pp.c'],
+        target='services_common_phone_pp',
+    )
+    bld.env.SERVICES.append('services_common_phone_pp')
+
+    bld.stlib(
+        use=['fw_includes', 'services_common_analytics'],
+        source=['ping.c'],
+        target='services_common_ping',
+    )
+    bld.env.SERVICES.append('services_common_ping')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['poll_remote.c'],
+        target='services_common_poll_remote',
+    )
+    bld.env.SERVICES.append('services_common_poll_remote')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['prf_update.c'],
+        target='services_common_prf_update',
+    )
+    bld.env.SERVICES.append('services_common_prf_update')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['registry_endpoint.c'],
+        target='services_common_registry_endpoint',
+    )
+    bld.env.SERVICES.append('services_common_registry_endpoint')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['regular_timer.c'],
+        target='services_common_regular_timer',
+    )
+    bld.env.SERVICES.append('services_common_regular_timer')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['services_common.c'],
+        target='services_common_services_common',
+    )
+    bld.env.SERVICES.append('services_common_services_common')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['system_task.c'],
+        target='services_common_system_task',
+    )
+    bld.env.SERVICES.append('services_common_system_task')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['tick_timer.c'],
+        target='services_common_tick_timer',
+    )
+    bld.env.SERVICES.append('services_common_tick_timer')
+
+    bld.stlib(
+        use=['fw_includes', 'services_common_analytics'],
+        source=['vibe_pattern.c'],
+        target='services_common_vibe_pattern',
+    )
+    bld.env.SERVICES.append('services_common_vibe_pattern')
