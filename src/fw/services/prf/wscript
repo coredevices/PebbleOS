@@ -1,0 +1,11 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+def configure(conf):
+    conf.recurse('bluetooth')
+    conf.recurse('comm_session')
+
+
+def build(bld):
+    bld.recurse('bluetooth')
+    bld.recurse('comm_session')
