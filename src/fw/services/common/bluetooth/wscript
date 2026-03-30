@@ -1,0 +1,29 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+def configure(conf):
+    pass
+
+
+def build(bld):
+    sources = [
+        'ble_bas.c',
+        'bluetooth_ctl.c',
+        'bluetooth_persistent_storage_debug.c',
+        'bluetooth_prompt.c',
+        'bonding.c',
+        'dis.c',
+        'local_addr.c',
+        'local_id.c',
+        'pairability.c',
+        'pebble_pairing_service.c',
+        'pp_ble_control.c',
+    ]
+
+    bld.stlib(
+        use=['fw_includes', 'services_common_analytics'],
+        source=sources,
+        target='services_common_bluetooth',
+    )
+
+    bld.env.SERVICES.append('services_common_bluetooth')
