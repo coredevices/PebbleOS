@@ -230,8 +230,12 @@ static void prv_hci_task_main(void *unused) {
           int consumed_bytes;
 
           consumed_bytes = hci_h4_sm_rx(&s_hci_h4sm, pbuf, len);
-          if (consumed_bytes <= 0) {
-            PBL_LOG_D_ERR(LOG_DOMAIN_BT_STACK, "hci_h4_sm_rx rc=%d", consumed_bytes);
+          if (consumed_bytes < 0) {
+            PBL_LOG_D_WRN(LOG_DOMAIN_BT_STACK, "hci_h4_sm_rx OOM, retrying");
+            vTaskDelay(1);
+            continue;
+          } else if (consumed_bytes == 0) {
+            PBL_LOG_D_ERR(LOG_DOMAIN_BT_STACK, "hci_h4_sm_rx consumed 0 bytes");
             break;
           }
           len -= consumed_bytes;
