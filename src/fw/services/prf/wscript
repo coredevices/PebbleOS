@@ -9,3 +9,10 @@ def configure(conf):
 def build(bld):
     bld.recurse('bluetooth')
     bld.recurse('comm_session')
+
+    bld.stlib(
+        use=['fw_includes'],
+        source=['idle_watchdog.c'],
+        target='services_prf_idle_watchdog',
+    )
+    bld.env.SERVICES.append('services_prf_idle_watchdog')
