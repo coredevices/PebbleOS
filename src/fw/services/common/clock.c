@@ -632,8 +632,19 @@ time_t clock_to_timestamp(WeekDay day, int hour, int minute) {
 
   cal.tm_hour = hour;
   cal.tm_min = minute;
+  cal.tm_sec = 0;
+  cal.tm_gmtoff = time_get_gmtoffset();
+  cal.tm_isdst = 0;
 
-  return mktime(&cal);
+  t = mktime(&cal);
+  if (time_get_isdst(t)) {
+    t -= time_get_dstoffset();
+    if (!time_get_isdst(t)) {
+      t = time_get_dst_start();
+    }
+  }
+
+  return t;
 }
 
 void command_timezone_clear(void) {
