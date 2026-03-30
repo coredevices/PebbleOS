@@ -70,6 +70,20 @@ typedef struct ImmutableAnimation ImmutableAnimation;
 //! 1000ms / 30 Hz
 #define ANIMATION_TARGET_FRAME_INTERVAL_MS 33
 
+//! @internal
+//! Target interval between rendered frames for the frame rate control loop.
+//! This is separate from ANIMATION_TARGET_FRAME_INTERVAL_MS so that the render
+//! rate can be adjusted independently from animation duration calculations.
+//! Platforms with lower CPU frequencies can increase this to reduce rendering
+//! load and improve frame timing consistency.
+#ifndef ANIMATION_FRAME_RENDER_INTERVAL_MS
+#if defined(MICRO_FAMILY_SF32LB52)
+#define ANIMATION_FRAME_RENDER_INTERVAL_MS 50  // 20 Hz
+#else
+#define ANIMATION_FRAME_RENDER_INTERVAL_MS ANIMATION_TARGET_FRAME_INTERVAL_MS
+#endif
+#endif
+
 
 //! The type used to represent how far an animation has progressed. This is passed to the
 //! animation's update handler
