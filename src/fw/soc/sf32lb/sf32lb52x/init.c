@@ -6,7 +6,7 @@
 
 #include <bf0_hal.h>
 
-#define HCPU_FREQ_MHZ 240
+#define HCPU_FREQ_MHZ 144
 #define PWRKEY_RESET_CNT (32000 * 15)
 
 void soc_early_init(void) {
