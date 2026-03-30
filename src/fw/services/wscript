@@ -5,6 +5,7 @@ def configure(conf):
 
 def build(bld):
     bld.env.SERVICES = []
+    bld.env.SERVICES_TEXT = []
     bld.recurse('common')
     if bld.variant == 'prf':
         bld.recurse('prf')
@@ -20,6 +21,7 @@ def build(bld):
                 target='fw_services',
                 use=use)
 
-    bld.gettext(source=sources, target='services.pot')
+    if bld.env.SERVICES_TEXT:
+        bld.msgcat(source=bld.env.SERVICES_TEXT, target='services.pot')
 
 # vim:filetype=python
