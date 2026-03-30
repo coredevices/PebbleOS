@@ -1,9 +1,12 @@
 def configure(conf):
     conf.recurse('common')
+    conf.recurse('normal')
 
 def build(bld):
     bld.env.SERVICES = []
     bld.recurse('common')
+    if bld.variant != 'prf':
+        bld.recurse('normal')
 
     def _build_services(bld, sources):
         bld.gettext(source=sources, target='services.pot')
@@ -12,7 +15,6 @@ def build(bld):
             'freertos_includes',
             'bt_driver',
             'pbl_includes',
-            'speex_includes',
         ]
 
         use.extend(bld.env.SERVICES)
@@ -38,15 +40,28 @@ def build(bld):
             excludes.append('common/put_bytes/**')
             excludes.append('common/shared_prf_storage/**')
             excludes.append('common/touch/**')
-
-            if not bld.capability('HAS_BUILTIN_HRM'):
-                excludes.append('normal/bluetooth/ble_hrm.c')
+            excludes.append('normal/activity/**')
+            excludes.append('normal/alarms/**')
+            excludes.append('normal/app_glances/**')
+            excludes.append('normal/app_message/**')
+            excludes.append('normal/blob_db/**')
+            excludes.append('normal/bluetooth/**')
+            excludes.append('normal/comm_session/**')
+            excludes.append('normal/contacts/**')
+            excludes.append('normal/data_logging/**')
+            excludes.append('normal/filesystem/**')
+            excludes.append('normal/legacy/**')
+            excludes.append('normal/notifications/**')
+            excludes.append('normal/process_management/**')
+            excludes.append('normal/protobuf_log/**')
+            excludes.append('normal/settings/**')
+            excludes.append('normal/timeline/**')
+            excludes.append('normal/vibes/**')
+            excludes.append('normal/voice/**')
+            excludes.append('normal/weather/**')
 
             if not bld.capability('HAS_MAGNETOMETER'):
                 excludes.append('common/ecompass.c')
-
-            if not bld.capability('HAS_MICROPHONE'):
-                excludes.append('normal/voice/**')
 
             return excludes
 
