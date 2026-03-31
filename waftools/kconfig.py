@@ -23,17 +23,17 @@ def load_kconfig(ctx, config_path):
     with open(config_path) as f:
         for line in f:
             line = line.strip()
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
-            m = re.match(r'^(CONFIG_\w+)=(.*)$', line)
+            m = re.match(r"^(CONFIG_\w+)=(.*)$", line)
             if m:
                 key = m.group(1)
                 val = m.group(2)
-                if val in ('y', 'n'):
-                    val = val == 'y'
+                if val in ("y", "n"):
+                    val = val == "y"
                 elif val.startswith('"') and val.endswith('"'):
                     val = val[1:-1]
-                elif val.startswith('0x') or val.startswith('0X'):
+                elif val.startswith("0x") or val.startswith("0X"):
                     val = int(val, 16)
                 else:
                     try:
@@ -51,12 +51,12 @@ def configure(conf):
     srcdir = conf.srcnode.abspath()
     blddir = conf.bldnode.abspath()
 
-    defconfig = os.path.join(srcdir, 'boards', board, 'defconfig')
+    defconfig = os.path.join(srcdir, "boards", board, "defconfig")
     if not os.path.exists(defconfig):
-        conf.fatal(f'Board defconfig not found: {defconfig}')
+        conf.fatal(f"Board defconfig not found: {defconfig}")
 
-    os.environ['srctree'] = srcdir
-    kconf = kconfiglib.Kconfig(os.path.join(srcdir, 'Kconfig'))
+    os.environ["srctree"] = srcdir
+    kconf = kconfiglib.Kconfig(os.path.join(srcdir, "Kconfig"))
     kconf.warn_assign_override = True
     kconf.warn_assign_redun = True
     kconf.warn_assign_undef = True
@@ -76,42 +76,44 @@ def configure(conf):
         if user_str != sym.str_value:
             deps = kconfiglib.split_expr(sym.direct_dep, kconfiglib.AND)
             if sym.type in (kconfiglib.BOOL, kconfiglib.TRISTATE):
-                mdeps = [d for d in deps
-                         if kconfiglib.expr_value(d) < sym.user_value]
+                mdeps = [d for d in deps if kconfiglib.expr_value(d) < sym.user_value]
             else:
-                mdeps = [d for d in deps
-                         if kconfiglib.expr_value(d) == 0]
-            dep_strs = [f'{kconfiglib.expr_str(d)} '
-                        f'(={kconfiglib.TRI_TO_STR[kconfiglib.expr_value(d)]})'
-                        for d in mdeps]
+                mdeps = [d for d in deps if kconfiglib.expr_value(d) == 0]
+            dep_strs = [
+                f"{kconfiglib.expr_str(d)} "
+                f"(={kconfiglib.TRI_TO_STR[kconfiglib.expr_value(d)]})"
+                for d in mdeps
+            ]
             kconf.warnings.append(
-                f'CONFIG_{sym.name}={user_str} was resolved to '
-                f'{sym.str_value}. '
-                f'Check these unsatisfied dependencies: '
-                f'{", ".join(dep_strs)}')
+                f"CONFIG_{sym.name}={user_str} was resolved to "
+                f"{sym.str_value}. "
+                f"Check these unsatisfied dependencies: "
+                f"{', '.join(dep_strs)}"
+            )
 
     if kconf.warnings:
         for warning in kconf.warnings:
-            Logs.warn(f'Kconfig: {warning}')
-        conf.fatal('Kconfig warnings found, aborting')
+            Logs.warn(f"Kconfig: {warning}")
+        conf.fatal("Kconfig warnings found, aborting")
 
-    config_path = os.path.join(blddir, '.config')
+    config_path = os.path.join(blddir, ".config")
     kconf.write_config(config_path)
 
-    autoconf_path = os.path.join(blddir, 'autoconf.h')
+    autoconf_path = os.path.join(blddir, "autoconf.h")
     kconf.write_autoconf(autoconf_path)
 
     kconfig = conf.load_kconfig(config_path)
     for key, val in kconfig.items():
         conf.env[key] = val
-    conf.env.append_unique('CFLAGS', ['-include', autoconf_path])
-    conf.env.append_unique('cfg_files', [config_path])
-    conf.msg('Kconfig', f'{len(kconfig)} symbols loaded from {board}')
+    conf.env.append_unique("CFLAGS", ["-include", autoconf_path])
+    conf.env.append_unique("cfg_files", [config_path])
+    conf.msg("Kconfig", f"{len(kconfig)} symbols loaded from {board}")
 
 
 class menuconfig(BuildContext):
     """launch menuconfig to interactively configure the firmware"""
-    cmd = 'menuconfig'
+
+    cmd = "menuconfig"
 
     def execute(self):
         self.restore()
@@ -119,11 +121,10 @@ class menuconfig(BuildContext):
         blddir = self.bldnode.abspath()
 
         env = os.environ.copy()
-        env['srctree'] = srcdir
-        env['KCONFIG_CONFIG'] = os.path.join(blddir, '.config')
+        env["srctree"] = srcdir
+        env["KCONFIG_CONFIG"] = os.path.join(blddir, ".config")
 
         subprocess.run(
-            [sys.executable, '-m', 'menuconfig',
-             os.path.join(srcdir, 'Kconfig')],
+            [sys.executable, "-m", "menuconfig", os.path.join(srcdir, "Kconfig")],
             env=env,
         )
