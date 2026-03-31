@@ -840,23 +840,7 @@ if bld.env.QEMU:
         )
 
 
-if bld.env.BOARD == "v2_0":
-    bld.objects(
-        name='driver_led_controller',
-        source=[
-            'led_controller/is31fl3196.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_i2c',
-            'driver_periph_config',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_obelix():
+if bld.is_obelix():
     bld.objects(
         name='driver_led_controller',
         source=[
