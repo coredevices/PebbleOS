@@ -34,7 +34,7 @@
 #define STATUS_STRING_LEN 32
 #define CTR_STRING_LEN 128
 #define LEAKAGE_STRING_LEN 128
-#define RESULT_DISPLAY_MS 3000
+#define RESULT_DISPLAY_MS 1000
 
 #define PPG_GR_CTR_THS0         (423.0f)
 #define PPG_GR_CTR_THS1         (441.0f)
