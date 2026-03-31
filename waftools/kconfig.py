@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 
+from waflib import Logs
 from waflib.Build import BuildContext
 from waflib.Configure import conf
 
@@ -56,7 +57,43 @@ def configure(conf):
 
     os.environ['srctree'] = srcdir
     kconf = kconfiglib.Kconfig(os.path.join(srcdir, 'Kconfig'))
+    kconf.warn_assign_override = True
+    kconf.warn_assign_redun = True
+    kconf.warn_assign_undef = True
     kconf.load_config(defconfig)
+
+    # Check for assigned values overridden by unsatisfied dependencies
+    # (same pattern as Zephyr's check_assigned_sym_values)
+    for sym in kconf.unique_defined_syms:
+        if sym.choice or sym.user_value is None:
+            continue
+
+        if sym.type in (kconfiglib.BOOL, kconfiglib.TRISTATE):
+            user_str = kconfiglib.TRI_TO_STR[sym.user_value]
+        else:
+            user_str = sym.user_value
+
+        if user_str != sym.str_value:
+            deps = kconfiglib.split_expr(sym.direct_dep, kconfiglib.AND)
+            if sym.type in (kconfiglib.BOOL, kconfiglib.TRISTATE):
+                mdeps = [d for d in deps
+                         if kconfiglib.expr_value(d) < sym.user_value]
+            else:
+                mdeps = [d for d in deps
+                         if kconfiglib.expr_value(d) == 0]
+            dep_strs = [f'{kconfiglib.expr_str(d)} '
+                        f'(={kconfiglib.TRI_TO_STR[kconfiglib.expr_value(d)]})'
+                        for d in mdeps]
+            kconf.warnings.append(
+                f'CONFIG_{sym.name}={user_str} was resolved to '
+                f'{sym.str_value}. '
+                f'Check these unsatisfied dependencies: '
+                f'{", ".join(dep_strs)}')
+
+    if kconf.warnings:
+        for warning in kconf.warnings:
+            Logs.warn(f'Kconfig: {warning}')
+        conf.fatal('Kconfig warnings found, aborting')
 
     config_path = os.path.join(blddir, '.config')
     kconf.write_config(config_path)
