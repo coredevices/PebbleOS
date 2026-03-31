@@ -1108,6 +1108,8 @@ static void prv_window_unload(Window *window) {
     return;
   }
 
+  PBL_LOG_INFO("Notification vibe: window_unload, cancelling vibes (pending_vibe=%d)",
+               data->pending_vibe);
   vibes_cancel();
   data->pending_vibe = false;
   prv_cleanup_timers(data);
@@ -1405,6 +1407,7 @@ static void prv_handle_notification_acted_upon(Uuid *id) {
 }
 
 static void prv_do_notification_vibe(NotificationWindowData *data, Uuid *id) {
+  PBL_LOG_INFO("Notification vibe: do_vibe called");
   TimelineItem *item = prv_get_current_notification(data);
   // Check if the current notification is the one we want to vibe for - if not then reload to make
   // sure it is, before reading the attributes.

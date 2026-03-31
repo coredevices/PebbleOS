@@ -265,6 +265,7 @@ static void prv_timer_callback(void* data) {
   } else {
     // I'm done with the active pattern
     // make sure it's off
+    PBL_LOG_INFO("vibe_pattern: pattern complete");
     prv_vibes_set_vibe_strength(VIBE_STRENGTH_OFF);
     s_pattern_in_progress = false;
   }
@@ -292,7 +293,6 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
   mutex_lock(s_vibe_pattern_mutex);
 
   if (s_pattern_in_progress) {
-    PBL_LOG_DBG("Pattern is in progress");
     mutex_unlock(s_vibe_pattern_mutex);
     return false;
   }
@@ -346,6 +346,7 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
 
 DEFINE_SYSCALL(void, sys_vibe_pattern_clear, void) {
   mutex_lock(s_vibe_pattern_mutex);
+  PBL_LOG_INFO("vibe_pattern: clear (was_in_progress=%d)", s_pattern_in_progress);
   new_timer_stop(s_pattern_timer);
   while (s_vibe_queue_head) {
     VibePatternStep *removed_node = s_vibe_queue_head;
