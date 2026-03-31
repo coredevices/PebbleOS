@@ -68,6 +68,7 @@ def configure(conf):
     for key, val in kconfig.items():
         conf.env[key] = val
     conf.env.append_unique('CFLAGS', ['-include', autoconf_path])
+    conf.env.append_unique('cfg_files', [config_path])
     conf.msg('Kconfig', f'{len(kconfig)} symbols loaded from {board}')
 
 
