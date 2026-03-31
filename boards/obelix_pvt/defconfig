@@ -1,1 +1,4 @@
 # obelix_pvt board configuration
+
+CONFIG_LED_CONTROLLER=y
+CONFIG_LED_CONTROLLER_AW2016=y
