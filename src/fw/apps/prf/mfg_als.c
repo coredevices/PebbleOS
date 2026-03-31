@@ -35,7 +35,7 @@
 // Test parameters
 #define COUNTDOWN_MS 5000
 #define SAMPLE_DURATION_MS 5000
-#define RESULT_DISPLAY_MS 3000
+#define RESULT_DISPLAY_MS 1000
 #define SAMPLE_INTERVAL_MS 100
 
 typedef enum {
