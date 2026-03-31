@@ -1,1 +1,4 @@
 # getafix_evt board configuration
+
+CONFIG_LED_CONTROLLER=y
+CONFIG_LED_CONTROLLER_AW9364E=y
