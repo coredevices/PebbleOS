@@ -7,6 +7,7 @@
 #include "syscall/syscall.h"
 
 #include "system/passert.h"
+#include "system/logging.h"
 #include "drivers/vibe.h"
 #include "applib/applib_malloc.auto.h"
 #include "util/net.h"
@@ -198,8 +199,10 @@ void vibe_score_do_vibe(VibeScore *score) {
   VibeNoteIndex *pattern_list = prv_vibe_score_get_pattern_list(pattern_attribute);
   unsigned int pattern_length = prv_vibe_score_get_pattern_length(pattern_attribute);
 
+  unsigned int total_duration_ms = 0;
   for (unsigned int i = 0; i < pattern_length; i++) {
     VibeNote *note = &note_list[pattern_list[i]];
+    total_duration_ms += note->vibe_duration_ms + note->brake_duration_ms;
     if (note->vibe_duration_ms > 0) {
       sys_vibe_pattern_enqueue_step_raw(note->vibe_duration_ms, note->strength);
     }
@@ -207,6 +210,9 @@ void vibe_score_do_vibe(VibeScore *score) {
       sys_vibe_pattern_enqueue_step_raw(note->brake_duration_ms, vibe_get_braking_strength());
     }
   }
+  unsigned int repeat_delay = vibe_score_get_repeat_delay_ms(score);
+  PBL_LOG_INFO("vibe_score: do_vibe, %u notes, %ums total, repeat_delay=%ums",
+               pattern_length, total_duration_ms, repeat_delay);
   sys_vibe_pattern_trigger_start();
 }
 
