@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig LED_CONTROLLER
+    bool "LED Controller"
+    help
+      LED Controller Drivers
+
+if LED_CONTROLLER
+
+config LED_CONTROLLER_AW2016
+    bool "AW2016"
+    help
+      Support for the AW2016 LED controller.
+
+config LED_CONTROLLER_AW9364E
+    bool "AW9364E"
+    help
+      Support for the AW9364E LED controller.
+
+endif # LED_CONTROLLER
