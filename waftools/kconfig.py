@@ -3,7 +3,10 @@
 
 import os
 import re
+import subprocess
+import sys
 
+from waflib.Build import BuildContext
 from waflib.Configure import conf
 
 
@@ -66,3 +69,23 @@ def configure(conf):
         conf.env[key] = val
     conf.env.append_unique('CFLAGS', ['-include', autoconf_path])
     conf.msg('Kconfig', f'{len(kconfig)} symbols loaded from {board}')
+
+
+class menuconfig(BuildContext):
+    """launch menuconfig to interactively configure the firmware"""
+    cmd = 'menuconfig'
+
+    def execute(self):
+        self.restore()
+        srcdir = self.srcnode.abspath()
+        blddir = self.bldnode.abspath()
+
+        env = os.environ.copy()
+        env['srctree'] = srcdir
+        env['KCONFIG_CONFIG'] = os.path.join(blddir, '.config')
+
+        subprocess.run(
+            [sys.executable, '-m', 'menuconfig',
+             os.path.join(srcdir, 'Kconfig')],
+            env=env,
+        )
