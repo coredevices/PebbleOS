@@ -24,6 +24,7 @@ intelhex>=2.1,<3
 protobuf
 grpcio-tools
 nanopb
+kconfiglib
 certifi
 libclang
 packaging

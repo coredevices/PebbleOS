@@ -349,6 +349,8 @@ def configure(conf):
 
     conf.recurse('platform')
 
+    conf.load('kconfig', tooldir='waftools')
+
     conf.env.QEMU = conf.options.qemu
 
     # Auto-detect JS engine from board capabilities if not explicitly specified
