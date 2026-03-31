@@ -73,6 +73,7 @@ def run_arm_gdb(ctx, elf_node, cmd_str="", target_server_port=3333):
 def options(opt):
     opt.load('pebble_arm_gcc', tooldir='waftools')
     opt.load('show_configure', tooldir='waftools')
+    opt.load('kconfig', tooldir='waftools')
     opt.recurse('applib-targets')
     opt.recurse('tests')
     opt.recurse('src/bluetooth-fw')
