@@ -17,6 +17,29 @@ typedef enum {
   NPM1300_LDO2_MODE_LDO = 1,
 } Npm1300Ldo2Mode_t;
 
+//! Termination current as a percentage of charge current
+typedef enum {
+  NPM1300_TERM_CURRENT_10_PERCENT = 10U,
+  NPM1300_TERM_CURRENT_20_PERCENT = 20U,
+} Npm1300TermCurrentPct_t;
+
+//! Voltage selector values used by current board configurations
+typedef enum {
+  NPM1300_VOLTAGE_SEL_DISABLED = 0U,
+  NPM1300_VOLTAGE_SEL_1V8 = 8U,
+  NPM1300_VOLTAGE_SEL_3V0 = 20U,
+  NPM1300_VOLTAGE_SEL_3V3 = 23U,
+} Npm1300VoltageSel_t;
+
+//! Buck software-control selector bits
+typedef enum {
+  NPM1300_BUCK_SW_CTRL_SEL_NONE = 0U,
+  NPM1300_BUCK_SW_CTRL_SEL_BUCK1 = 0x01U,
+  NPM1300_BUCK_SW_CTRL_SEL_BUCK2 = 0x02U,
+  NPM1300_BUCK_SW_CTRL_SEL_BUCK1_BUCK2 =
+      NPM1300_BUCK_SW_CTRL_SEL_BUCK1 | NPM1300_BUCK_SW_CTRL_SEL_BUCK2,
+} Npm1300BuckSwCtrlSel_t;
+
 
 //! nPM1300 configuration
 typedef struct {

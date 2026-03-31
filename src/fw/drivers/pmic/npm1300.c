@@ -274,27 +274,25 @@ bool pmic_init(void) {
   PBL_LOG_DBG("found the nPM1300, BUCK1NORMVOUT = 0x%x", val);
 
   if (NPM1300_CONFIG.apply_erratum_27_workaround) {
-    if ((NPM1300_CONFIG.buck_sw_ctrl_sel &
-         PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL) != 0 &&
-        NPM1300_CONFIG.buck1_voltage_sel != 0) {
+    if ((NPM1300_CONFIG.buck_sw_ctrl_sel & NPM1300_BUCK_SW_CTRL_SEL_BUCK1) != 0 &&
+        NPM1300_CONFIG.buck1_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED) {
       ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
                                  PmicRegisters_BUCK_BUCK1VOUTSTATUS,
-                                 PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL,
+                                 NPM1300_BUCK_SW_CTRL_SEL_BUCK1,
                                  NPM1300_CONFIG.buck1_voltage_sel);
     }
 
-    if ((NPM1300_CONFIG.buck_sw_ctrl_sel &
-         PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK2SWCTRLSEL_SWCTRL) != 0 &&
-        NPM1300_CONFIG.buck2_voltage_sel != 0) {
+    if ((NPM1300_CONFIG.buck_sw_ctrl_sel & NPM1300_BUCK_SW_CTRL_SEL_BUCK2) != 0 &&
+        NPM1300_CONFIG.buck2_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED) {
       ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK2NORMVOUT,
                                  PmicRegisters_BUCK_BUCK2VOUTSTATUS,
-                                 PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK2SWCTRLSEL_SWCTRL,
+                                 NPM1300_BUCK_SW_CTRL_SEL_BUCK2,
                                  NPM1300_CONFIG.buck2_voltage_sel);
     }
   }
 
   // Configure Bucks
-  if (NPM1300_CONFIG.buck1_voltage_sel != 0) {
+  if (NPM1300_CONFIG.buck1_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED) {
     ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, NPM1300_CONFIG.buck1_voltage_sel);
   }
 
@@ -303,7 +301,8 @@ bool pmic_init(void) {
     ok &= prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
   }
 
-  if (NPM1300_CONFIG.buck2_voltage_sel != 0 && NPM1300_CONFIG.buck2_enable) {
+  if (NPM1300_CONFIG.buck2_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED &&
+      NPM1300_CONFIG.buck2_enable) {
     ok &= prv_write_register(PmicRegisters_BUCK_BUCK2NORMVOUT, NPM1300_CONFIG.buck2_voltage_sel);
   }
 
@@ -324,7 +323,10 @@ bool pmic_init(void) {
   if (NPM1300_CONFIG.ldsw2_enable) {
     // Asterix logic checks if already powered up to avoid glitching/resetting if already on
     uint8_t status = 0;
-    prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &status);
+    if (!prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &status)) {
+      PBL_LOG_ERR("failed to read LDSWSTATUS");
+      return false;
+    }
     if ((status & PmicRegisters_LDSW_LDSWSTATUS__LDSW2PWRUPLDO) == 0) {
       // Not powered up, perform full setup
       ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
@@ -337,7 +339,7 @@ bool pmic_init(void) {
     }
   } else {
     ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, NPM1300_CONFIG.ldsw2_mode);
-    if (NPM1300_CONFIG.ldsw2_voltage_sel != 0) {
+    if (NPM1300_CONFIG.ldsw2_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED) {
       ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, NPM1300_CONFIG.ldsw2_voltage_sel);
     }
     ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
@@ -386,10 +388,10 @@ bool pmic_init(void) {
       NPM1300_CONFIG.vbus_current_startup/NPM1300_VBUS_CURRENT_DIVISOR);
   }
 
-  if (NPM1300_CONFIG.term_current_pct == 10U) {
+  if (NPM1300_CONFIG.term_current_pct == NPM1300_TERM_CURRENT_10_PERCENT) {
     ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
                              PmicRegisters_BCHARGER_BCHGITERMSEL__SEL10);
-  } else if(NPM1300_CONFIG.term_current_pct == 20U) {
+  } else if (NPM1300_CONFIG.term_current_pct == NPM1300_TERM_CURRENT_20_PERCENT) {
     ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
                              PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20);
   } else {
