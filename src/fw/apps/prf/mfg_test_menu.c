@@ -150,15 +150,24 @@ static void prv_window_load(Window *window) {
 
   if (s_last_selected >= 0) {
     if (mfg_test_result_was_reported()) {
-      // Test completed: auto-advance to next test
-      int16_t next = s_last_selected + 1;
-      if ((size_t)next < num_entries) {
-        simple_menu_layer_set_selected_index(data->menu_layer, next, false);
-        prv_launch_test(next, s_entries[next].get_info());
+      const MfgTestResult *result = ((size_t)s_last_selected < num_entries)
+          ? mfg_test_result_get(s_entries[s_last_selected].test_id)
+          : NULL;
+
+      if (result && result->passed) {
+        // Test passed: auto-advance to next test
+        int16_t next = s_last_selected + 1;
+        if ((size_t)next < num_entries) {
+          simple_menu_layer_set_selected_index(data->menu_layer, next, false);
+          prv_launch_test(next, s_entries[next].get_info());
+        } else {
+          // Reached end of test list, launch RESULTS
+          simple_menu_layer_set_selected_index(data->menu_layer, num_entries, false);
+          prv_launch_test(num_entries, mfg_qr_results_app_get_info());
+        }
       } else {
-        // Reached end of test list, launch RESULTS
-        simple_menu_layer_set_selected_index(data->menu_layer, num_entries, false);
-        prv_launch_test(num_entries, mfg_qr_results_app_get_info());
+        // Test failed: stay on same test so operator can retry
+        simple_menu_layer_set_selected_index(data->menu_layer, s_last_selected, false);
       }
     } else {
       // User backed out: select the test they came from
