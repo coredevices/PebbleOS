@@ -26,7 +26,7 @@
 #define MIN_VARIATION_MG 100  // Each axis must vary by at least this much
 
 #define TEST_DURATION_MS 5000
-#define RESULT_DISPLAY_MS 3000
+#define RESULT_DISPLAY_MS 1000
 #define SAMPLE_INTERVAL_MS 100
 
 typedef enum {

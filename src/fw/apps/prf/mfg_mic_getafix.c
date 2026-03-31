@@ -56,7 +56,7 @@
 // Minimum peak magnitude threshold (to reject noise)
 #define MIN_PEAK_MAGNITUDE       1000
 
-#define RESULT_DISPLAY_MS        3000
+#define RESULT_DISPLAY_MS        1000
 
 #define STATUS_STR_LEN           128
 

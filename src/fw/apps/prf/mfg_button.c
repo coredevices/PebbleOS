@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 // How long after test pass / fail to wait before popping the window
-#define WINDOW_POP_TIME_S (3)
+#define WINDOW_POP_TIME_S (1)
 
 typedef struct {
   Window window;
