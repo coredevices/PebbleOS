@@ -10,7 +10,6 @@
 #include "drivers/nrf5/i2c_hal_definitions.h"
 #include "drivers/nrf5/spi_definitions.h"
 #include "drivers/nrf5/uart_definitions.h"
-#include "drivers/pmic/npm1300.h"
 #include "drivers/pwm.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/rtc.h"
@@ -207,12 +206,39 @@ IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
 
 IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
 
+enum {
+  ASTERIX_NPM1300_CHARGE_CURRENT_MA = 128,
+  ASTERIX_NPM1300_DISCHARGE_LIMIT_MA = 200,
+  ASTERIX_NPM1300_THERMISTOR_BETA = 3380,
+};
+
 const Npm1300Config NPM1300_CONFIG = {
-  // 128mA = ~1C (rapid charge)
-  .chg_current_ma = 128,
-  .dischg_limit_ma = 200,
-  .term_current_pct = 10,
-  .thermistor_beta = 3380,
+    .chg_current_ma = ASTERIX_NPM1300_CHARGE_CURRENT_MA,   // ~1C rapid charge
+    .dischg_limit_ma = ASTERIX_NPM1300_DISCHARGE_LIMIT_MA, // ~1.6C burst, HW protection floor
+    .term_current_pct = NPM1300_TERM_CURRENT_10_PERCENT,   // 12.8mA
+    .thermistor_beta = ASTERIX_NPM1300_THERMISTOR_BETA,    // 10kΩ
+    .vterm_setting = NPM1300_VTERM_4V20,
+
+    // Buck1 (1.8V)
+    .buck1_enable = true,
+    .buck1_voltage_sel = NPM1300_VOLTAGE_SEL_1V8,
+
+    // Buck2 (3.0V)
+    .buck2_enable = true,
+    .buck2_voltage_sel = NPM1300_VOLTAGE_SEL_3V0,
+    .buck_sw_ctrl_sel = NPM1300_BUCK_SW_CTRL_SEL_BUCK1_BUCK2,
+    .configure_buck_sw_ctrl = false, // Already configured by Erratum 27 workaround
+
+    // LDSW1 disabled (not used)
+    .ldsw1_enable = false,
+    .ldsw1_voltage_sel = NPM1300_VOLTAGE_SEL_DISABLED,
+
+    // LDSW2 (1.8V LDO)
+    .ldsw2_enable = true,
+    .ldsw2_mode = NPM1300_LDO2_MODE_LDO,
+    .ldsw2_voltage_sel = NPM1300_VOLTAGE_SEL_1V8,
+
+    .apply_erratum_27_workaround = true,
 };
 
 void board_early_init(void) {

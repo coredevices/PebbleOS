@@ -270,46 +270,80 @@ bool pmic_init(void) {
 
   s_debounce_charger_timer = new_timer_create();
 
-  // TODO(NPM1300): This needs to be configurable at board level
-#if PLATFORM_ASTERIX
-  // Anomaly 27: set BUCK1/BUCK2 to SW control with workaround
-  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
-                              PmicRegisters_BUCK_BUCK1VOUTSTATUS,
-                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL,
-                              8 /* 1.8V */);
-  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK2NORMVOUT,
-                              PmicRegisters_BUCK_BUCK2VOUTSTATUS,
-                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK2SWCTRLSEL_SWCTRL,
-                              20 /* 3.0V */);
-  
-  if (!prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &val)) {
-    PBL_LOG_ERR("failed to read LDSWSTATUS");
-    return false;
+  prv_read_register(PmicRegisters_BUCK_BUCK1NORMVOUT, &val);
+  PBL_LOG_DBG("found the nPM1300, BUCK1NORMVOUT = 0x%x", val);
+
+  if (NPM1300_CONFIG.apply_erratum_27_workaround) {
+    if ((NPM1300_CONFIG.buck_sw_ctrl_sel & NPM1300_BUCK_SW_CTRL_SEL_BUCK1) != 0 &&
+        NPM1300_CONFIG.buck1_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED) {
+      ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
+                                 PmicRegisters_BUCK_BUCK1VOUTSTATUS,
+                                 NPM1300_BUCK_SW_CTRL_SEL_BUCK1,
+                                 NPM1300_CONFIG.buck1_voltage_sel);
+    }
+
+    if ((NPM1300_CONFIG.buck_sw_ctrl_sel & NPM1300_BUCK_SW_CTRL_SEL_BUCK2) != 0 &&
+        NPM1300_CONFIG.buck2_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED) {
+      ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK2NORMVOUT,
+                                 PmicRegisters_BUCK_BUCK2VOUTSTATUS,
+                                 NPM1300_BUCK_SW_CTRL_SEL_BUCK2,
+                                 NPM1300_CONFIG.buck2_voltage_sel);
+    }
   }
 
-  if ((val & PmicRegisters_LDSW_LDSWSTATUS__LDSW2PWRUPLDO) == 0U) {
-    ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 0x01);
-    ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, 8 /* 1.8V */);
-    ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, 1 /* LDO */);
-    ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 0x01);
+  // Configure Bucks
+  if (NPM1300_CONFIG.buck1_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED) {
+    ok &= prv_write_register(PmicRegisters_BUCK_BUCK1NORMVOUT, NPM1300_CONFIG.buck1_voltage_sel);
+  }
+
+  if (!NPM1300_CONFIG.buck1_enable) {
+    // Disable if not enabled (matching original Obelix behavior)
+    ok &= prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
+  }
+
+  if (NPM1300_CONFIG.buck2_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED &&
+      NPM1300_CONFIG.buck2_enable) {
+    ok &= prv_write_register(PmicRegisters_BUCK_BUCK2NORMVOUT, NPM1300_CONFIG.buck2_voltage_sel);
+  }
+
+  if (NPM1300_CONFIG.configure_buck_sw_ctrl) {
+    ok &= prv_write_register(PmicRegisters_BUCK_BUCKSWCTRLSEL, NPM1300_CONFIG.buck_sw_ctrl_sel);
+  }
+
+  // Configure LDSW1
+  if (NPM1300_CONFIG.ldsw1_enable) {
+    ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, NPM1300_CONFIG.ldsw1_mode);
+    ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, NPM1300_CONFIG.ldsw1_voltage_sel);
+    ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW1SET, 1);
   } else {
-    ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, 8 /* 1.8V */);
+    ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW1CLR, 1);
   }
-#endif
 
-// FIXME(OBELIX,GETAFIX): Needs to be configurable at board level
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
-  // Anomaly 27: set BUCK1 to SW control with workaround, then disable it
-  ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
-                              PmicRegisters_BUCK_BUCK1VOUTSTATUS,
-                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL,
-                              8 /* 1.8V */);
-  ok &= prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
-  //enable 1.8V@LDO1
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);  //LDO
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8);  //1.8V
-  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW1SET, 1); //enable
-#endif
+  // Configure LDSW2
+  if (NPM1300_CONFIG.ldsw2_enable) {
+    // Asterix logic checks if already powered up to avoid glitching/resetting if already on
+    uint8_t status = 0;
+    if (!prv_read_register(PmicRegisters_LDSW_LDSWSTATUS, &status)) {
+      PBL_LOG_ERR("failed to read LDSWSTATUS");
+      return false;
+    }
+    if ((status & PmicRegisters_LDSW_LDSWSTATUS__LDSW2PWRUPLDO) == 0) {
+      // Not powered up, perform full setup
+      ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
+      ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, NPM1300_CONFIG.ldsw2_mode);
+      ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, NPM1300_CONFIG.ldsw2_voltage_sel);
+      ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2SET, 1);
+    } else {
+      // Already powered up, just update voltage
+      ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, NPM1300_CONFIG.ldsw2_voltage_sel);
+    }
+  } else {
+    ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, NPM1300_CONFIG.ldsw2_mode);
+    if (NPM1300_CONFIG.ldsw2_voltage_sel != NPM1300_VOLTAGE_SEL_DISABLED) {
+      ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, NPM1300_CONFIG.ldsw2_voltage_sel);
+    }
+    ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
+  }
 
   ok &= prv_write_register(PmicRegisters_MAIN_EVENTSBCHARGER1CLR, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
   ok &= prv_write_register(PmicRegisters_MAIN_INTENEVENTSBCHARGER1SET, PmicRegisters_MAIN_EVENTSBCHARGER1__EVENTCHGCOMPLETED);
@@ -335,35 +369,12 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_BCHARGER_TASKCLEARCHGERR, 1);
   ok &= prv_write_register(PmicRegisters_BCHARGER_TASKRELEASEERROR, 1);
 
-  // FIXME: this needs to be configurable at board level
-#if PLATFORM_OBELIX
+
   ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
 
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V35);
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
-#elif PLATFORM_GETAFIX
-  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
-
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V45);
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
-#elif PLATFORM_ASTERIX
-  ok &= prv_write_register(PmicRegisters_ADC_ADCNTCRSEL, PmicRegisters_ADC_ADCNTCRSEL__ADCNTCRSEL_10K);
-
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, PmicRegisters_BCHARGER_BCHGVTERM__BCHGVTERMNORM_4V20);
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR, PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
-#endif
-
-  // FIXME: this needs to be configurable at board level
-#if PLATFORM_OBELIX
-  //3.3V @ LDO2
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDO_MODE);
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2VOUTSEL, PmicRegisters_LDSW_LDSW2VOUTSEL__3V3);
-  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
-#elif PLATFORM_GETAFIX
-  // LDSW2 (3.3V for PDM)
-  ok &= prv_write_register(PmicRegisters_LDSW_LDSW2LDOSEL, PmicRegisters_LDSW_LDSW2LDOSEL__LDSW_MODE);
-  ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
-#endif
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERM, NPM1300_CONFIG.vterm_setting);
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGVTERMR,
+                           PmicRegisters_BCHARGER_BCHGVTERMR__BCHGVTERMREDUCED_4V00);
 
   val = (uint8_t)(NPM1300_CONFIG.chg_current_ma / 4U);
   ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETMSB, val);
@@ -377,10 +388,10 @@ bool pmic_init(void) {
       NPM1300_CONFIG.vbus_current_startup/NPM1300_VBUS_CURRENT_DIVISOR);
   }
 
-  if (NPM1300_CONFIG.term_current_pct == 10U) {
+  if (NPM1300_CONFIG.term_current_pct == NPM1300_TERM_CURRENT_10_PERCENT) {
     ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
                              PmicRegisters_BCHARGER_BCHGITERMSEL__SEL10);
-  } else if(NPM1300_CONFIG.term_current_pct == 20U) {
+  } else if (NPM1300_CONFIG.term_current_pct == NPM1300_TERM_CURRENT_20_PERCENT) {
     ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGITERMSEL,
                              PmicRegisters_BCHARGER_BCHGITERMSEL__SEL20);
   } else {

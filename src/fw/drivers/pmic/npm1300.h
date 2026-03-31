@@ -3,8 +3,50 @@
 
 #pragma once
 
+//! Vterm setting
+typedef enum {
+  NPM1300_VTERM_4V00 = 0x4U,
+  NPM1300_VTERM_4V20 = 0x8U,
+  NPM1300_VTERM_4V35 = 0xBU,
+  NPM1300_VTERM_4V45 = 0xDU,
+} Npm1300Vterm_t;
+
+//! LDO2 mode
+typedef enum {
+  NPM1300_LDO2_MODE_LDSW = 0,
+  NPM1300_LDO2_MODE_LDO = 1,
+} Npm1300Ldo2Mode_t;
+
+//! Termination current as a percentage of charge current
+typedef enum {
+  NPM1300_TERM_CURRENT_10_PERCENT = 10U,
+  NPM1300_TERM_CURRENT_20_PERCENT = 20U,
+} Npm1300TermCurrentPct_t;
+
+//! Voltage selector values used by current board configurations
+typedef enum {
+  NPM1300_VOLTAGE_SEL_DISABLED = 0U,
+  NPM1300_VOLTAGE_SEL_1V8 = 8U,
+  NPM1300_VOLTAGE_SEL_3V0 = 20U,
+  NPM1300_VOLTAGE_SEL_3V3 = 23U,
+} Npm1300VoltageSel_t;
+
+//! Buck software-control selector bits
+typedef enum {
+  NPM1300_BUCK_SW_CTRL_SEL_NONE = 0U,
+  NPM1300_BUCK_SW_CTRL_SEL_BUCK1 = 0x01U,
+  NPM1300_BUCK_SW_CTRL_SEL_BUCK2 = 0x02U,
+  NPM1300_BUCK_SW_CTRL_SEL_BUCK1_BUCK2 =
+      NPM1300_BUCK_SW_CTRL_SEL_BUCK1 | NPM1300_BUCK_SW_CTRL_SEL_BUCK2,
+} Npm1300BuckSwCtrlSel_t;
+
+
 //! nPM1300 configuration
 typedef struct {
+  
+  //! Vterm setting
+  Npm1300Vterm_t vterm_setting;
+
   //! Charge current (32-800mA, 2mA steps)
   uint16_t chg_current_ma;
   //! Discharge limit (200mA or 1000mA)
@@ -17,6 +59,37 @@ typedef struct {
   uint16_t vbus_current_lim0;
   //! Vbus current limite startup
   uint16_t vbus_current_startup;
+
+  //! Buck1 voltage (0 = disabled)
+  uint8_t buck1_voltage_sel;
+  //! Buck2 voltage (0 = disabled)
+  uint8_t buck2_voltage_sel;
+  //! Buck SW control selection
+  uint8_t buck_sw_ctrl_sel;
+  //! Configure Buck SW control (even if 0)
+  bool configure_buck_sw_ctrl;
+  //! Enable Buck1
+  bool buck1_enable;
+  //! Enable Buck2
+  bool buck2_enable;
+
+  //! Apply Erratum 27 workaround
+  //: I assume this is a specific sequence on startup
+  bool apply_erratum_27_workaround;
+
+  //! LDSW1 mode (LDO or Load Switch)
+  Npm1300Ldo2Mode_t ldsw1_mode;
+  //! LDSW1 voltage selection
+  uint8_t ldsw1_voltage_sel;
+  //! Enable LDSW1
+  bool ldsw1_enable;
+
+  //! LDSW2 mode (LDO or Load Switch)
+  Npm1300Ldo2Mode_t ldsw2_mode;
+  //! LDSW2 voltage selection
+  uint8_t ldsw2_voltage_sel;
+  //! Enable LDSW2
+  bool ldsw2_enable;
 } Npm1300Config;
 
 typedef enum {

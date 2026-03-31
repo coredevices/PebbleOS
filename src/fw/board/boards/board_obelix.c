@@ -580,15 +580,45 @@ const BoardConfigActuator BOARD_CONFIG_VIBE = {
     .ctl = {hwp_gpio1, 1, false},
 };
 
+enum {
+  OBELIX_NPM1300_CHARGE_CURRENT_MA = 190,
+  OBELIX_NPM1300_DISCHARGE_LIMIT_MA = 200,
+  OBELIX_NPM1300_THERMISTOR_BETA = 3380,
+  OBELIX_NPM1300_VBUS_CURRENT_LIMIT_MA = 500,
+  OBELIX_NPM1300_VBUS_STARTUP_CURRENT_MA = OBELIX_NPM1300_VBUS_CURRENT_LIMIT_MA,
+};
+
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {
-  // 190mA = 1C (rapid charge, max limit from datasheet)
-  .chg_current_ma = 190,
-  .dischg_limit_ma = 200,
-  .term_current_pct = 10,
-  .thermistor_beta = 3380,
-  .vbus_current_lim0 = 500,
-  .vbus_current_startup = 500,
+    .chg_current_ma = OBELIX_NPM1300_CHARGE_CURRENT_MA,      // 1C rapid charge, max per datasheet
+    .dischg_limit_ma = OBELIX_NPM1300_DISCHARGE_LIMIT_MA,    // ~1.05C burst, HW protection floor
+    .term_current_pct = NPM1300_TERM_CURRENT_10_PERCENT,     // 19mA
+    .thermistor_beta = OBELIX_NPM1300_THERMISTOR_BETA,       // 10kΩ
+    .vbus_current_lim0 = OBELIX_NPM1300_VBUS_CURRENT_LIMIT_MA,      // USB 2.0 max
+    .vbus_current_startup = OBELIX_NPM1300_VBUS_STARTUP_CURRENT_MA, // Match steady-state
+    .vterm_setting = NPM1300_VTERM_4V35,
+
+    // Buck1 disabled after switching to SW control via Erratum 27 workaround
+    .buck1_enable = false,
+    .buck1_voltage_sel = NPM1300_VOLTAGE_SEL_1V8, // 1.8V (don't-care, disabled)
+    // Buck2 disabled (unused?)
+    .buck2_enable = false,
+    .buck2_voltage_sel = NPM1300_VOLTAGE_SEL_DISABLED,
+    .buck_sw_ctrl_sel = NPM1300_BUCK_SW_CTRL_SEL_BUCK1,
+
+    .configure_buck_sw_ctrl = false, // Already configured by Erratum 27 workaround
+
+    // LDSW1 enabled: 1.8V LDO
+    .ldsw1_enable = true,
+    .ldsw1_mode = NPM1300_LDO2_MODE_LDO,
+    .ldsw1_voltage_sel = NPM1300_VOLTAGE_SEL_1V8,
+    
+    // LDSW2 disabled: 3.3V LDO configured but disabled
+    .ldsw2_enable = false,
+    .ldsw2_mode = NPM1300_LDO2_MODE_LDO,
+    .ldsw2_voltage_sel = NPM1300_VOLTAGE_SEL_3V3,
+
+    .apply_erratum_27_workaround = true,
 };
 
 static const I2CSlavePort s_i2c_w1160 = {
