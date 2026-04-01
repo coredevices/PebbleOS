@@ -23,6 +23,7 @@
 #include "memfault/panics/coredump.h"
 #include "memfault/panics/coredump_impl.h"
 #include "memfault/panics/platform/coredump.h"
+#include "memfault/core/log_impl.h"
 
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
@@ -47,7 +48,8 @@
 // Total budget for cached memory data (stack + TCB per thread + kernel state).
 // Each thread needs: stack (768) + TCB (96) + 2x cached block header (12 bytes each) = 888.
 // Plus kernel state: ~540 bytes. For 20 threads: 20*888 + 540 ~+ 18.3KB.
-#define STACK_DATA_BUFFER_SIZE (MAX_THREADS * (STACK_BYTES_PER_THREAD + TCB_SIZE + 24) + 1024)
+#define STACK_DATA_BUFFER_SIZE \
+  (MAX_THREADS * (STACK_BYTES_PER_THREAD + TCB_SIZE + 24) + 1024 + 2200)
 
 // SRAM base address (same across all platforms we support)
 #define SRAM_BASE_ADDR 0x20000000
@@ -359,7 +361,7 @@ void memfault_pebble_coredump_reconstruct(void) {
   // data is read from our buffer.
 
   #define CACHED_BLOCK_OVERHEAD sizeof(sMfltCachedBlock)
-  #define MAX_REGIONS (MAX_THREADS * 2 + 2)
+  #define MAX_REGIONS (MAX_THREADS * 2 + 2 + MEMFAULT_LOG_NUM_RAM_REGIONS)
 
   // Dynamically allocate the staging buffer for cached memory blocks.
   // This is freed after memfault_coredump_save() serializes it all to storage.
@@ -490,6 +492,22 @@ void memfault_pebble_coredump_reconstruct(void) {
       }
 
       ADD_CACHED_REGION(top_of_stack, to_read);
+    }
+  }
+
+  // Include Memfault log buffer regions so crash-time logs appear in the
+  // coredump. The log buffer and logger state are static variables at fixed
+  // linker-determined addresses. Even though current RAM is re-initialized
+  // after reboot, ADD_CACHED_REGION reads the crash-time contents from the
+  // SPI flash RAM dump (via prv_read_ram_from_coredump), not from current RAM.
+  sMemfaultLogRegions log_regions = { 0 };
+  if (memfault_log_get_regions(&log_regions)) {
+    for (size_t i = 0; i < MEMFAULT_LOG_NUM_RAM_REGIONS; i++) {
+      if (log_regions.region[i].region_size > 0) {
+        ADD_CACHED_REGION(
+          (uint32_t)(uintptr_t)log_regions.region[i].region_start,
+          log_regions.region[i].region_size);
+      }
     }
   }
 

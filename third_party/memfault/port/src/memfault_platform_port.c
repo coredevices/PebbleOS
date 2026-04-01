@@ -26,7 +26,7 @@ MEMFAULT_PUT_IN_SECTION(".noinit.mflt_reboot_info")
 static uint8_t s_reboot_tracking[MEMFAULT_REBOOT_TRACKING_REGION_SIZE];
 
 // Memfault logging storage
-static uint8_t s_log_buf_storage[512];
+static uint8_t s_log_buf_storage[2048];
 
 // Use Memfault logging level to filter messages
 static eMemfaultPlatformLogLevel s_min_log_level = MEMFAULT_RAM_LOGGER_DEFAULT_MIN_LOG_LEVEL;
@@ -160,6 +160,10 @@ int memfault_platform_boot(void) {
     memfault_events_storage_boot(s_event_storage, sizeof(s_event_storage));
   memfault_trace_event_boot(evt_storage);
 
+  // Initialize log buffer early so reconstruction can find the log region
+  // addresses via memfault_log_get_regions().
+  memfault_log_boot(s_log_buf_storage, MEMFAULT_ARRAY_SIZE(s_log_buf_storage));
+
   // Reconstruct a Memfault coredump from the PebbleOS flash coredump if one
   // exists. This must happen before collect_reset_info() so that the reboot
   // event includes coredump_saved=true, allowing the Memfault cloud to
@@ -172,8 +176,6 @@ int memfault_platform_boot(void) {
     .unexpected_reboot_count = memfault_reboot_tracking_get_crash_count(),
   };
   memfault_metrics_boot(evt_storage, &boot_info);
-
-  memfault_log_boot(s_log_buf_storage, MEMFAULT_ARRAY_SIZE(s_log_buf_storage));
 
   memfault_metrics_battery_boot();
 
