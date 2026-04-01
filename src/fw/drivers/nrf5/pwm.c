@@ -1,3 +1,6 @@
+/* SPDX-FileCopyrightText: 2025 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
 #include "drivers/gpio.h"
 #include "drivers/periph_config.h"
 #include "drivers/pwm.h"

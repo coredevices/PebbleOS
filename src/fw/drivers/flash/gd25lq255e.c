@@ -1,3 +1,6 @@
+/* SPDX-FileCopyrightText: 2025 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
 #include "board/board.h"
 #include "drivers/flash/flash_impl.h"
 #include "drivers/flash/qspi_flash.h"

@@ -1,3 +1,6 @@
+/* SPDX-FileCopyrightText: 2025 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
 #include "drivers/rtc.h"
 #include "drivers/rtc_private.h"
 #include "drivers/stm32f2/rtc_calibration.h"
