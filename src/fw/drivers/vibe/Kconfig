@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig VIBE
+    bool "Vibration Motor"
+    help
+      Vibration Motor Drivers
+
+if VIBE
+
+config VIBE_AW86225
+    bool "Awinic AW86225"
+    help
+      Support for the Awinic AW86225 haptic driver.
+
+config VIBE_AW8623X
+    bool "Awinic AW8623X"
+    help
+      Support for the Awinic AW8623X haptic driver.
+
+config VIBE_DRV2604
+    bool "TI DRV2604"
+    help
+      Support for the TI DRV2604 haptic driver.
+
+config VIBE_PWM
+    bool "PWM-based vibration"
+    help
+      Support for PWM-based vibration motor control.
+
+endif # VIBE
