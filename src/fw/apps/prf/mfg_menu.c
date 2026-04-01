@@ -6,7 +6,6 @@
 #include "applib/app.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
-#include "apps/prf/mfg_bt_device_name.h"
 #include "apps/prf/mfg_extras_menu.h"
 #include "apps/prf/mfg_test_aging.h"
 #include "apps/prf/mfg_info_qr.h"
@@ -18,7 +17,6 @@
 #include "mfg/mfg_serials.h"
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/bluetooth/local_id.h"
 #include "pbl/services/common/bluetooth/pairability.h"
 #include "system/reset.h"
 #include "util/size.h"
@@ -36,10 +34,6 @@ static uint16_t s_menu_position = 0;
 //! Callback to run from the kernel main task
 static void prv_launch_app_cb(void *data) {
   app_manager_launch_new_app(&(AppLaunchConfig) { .md = data });
-}
-
-static void prv_select_bt_device_name(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_device_name_app_get_info());
 }
 
 static void prv_select_info_qr(int index, void *context) {
@@ -71,7 +65,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 
   // Define a const blueprint on the stack.
   const SimpleMenuItem s_menu_items[] = {
-    { .title = "BT Device Name",    .callback = prv_select_bt_device_name },
     { .title = "Device Info",       .callback = prv_select_info_qr },
     { .title = "Tests",             .callback = prv_select_tests },
     { .title = "Aging",             .callback = prv_select_aging },
@@ -86,25 +79,12 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 
   size_t num_items = ARRAY_LENGTH(s_menu_items);
 
-  // Now we're going to modify the first two elements in the menu to include data available only
-  // at runtime. If it was available at compile time we could have just shoved it in the
-  // s_menu_items array but it's not. Note that we allocate a few buffers here that we never
-  // bother freeing for simplicity. It's all on the app heap so it will automatically get cleaned
-  // up on app exit.
-
-  // Poke in the bluetooth name
-  int buffer_size = BT_DEVICE_NAME_BUFFER_SIZE;
-  char *bt_dev_name = app_malloc(buffer_size);
-  bt_local_id_copy_device_name(bt_dev_name, false);
-
-  (*out_menu_items)[0].subtitle = bt_dev_name;
-
-  // Poke in the serial number
-  buffer_size = MFG_SERIAL_NUMBER_SIZE + 1;
+  // Poke in the serial number as subtitle for "Device Info"
+  int buffer_size = MFG_SERIAL_NUMBER_SIZE + 1;
   char *device_serial = app_malloc(buffer_size);
   mfg_info_get_serialnumber(device_serial, buffer_size);
 
-  (*out_menu_items)[1].subtitle = device_serial;
+  (*out_menu_items)[0].subtitle = device_serial;
 
   return num_items;
 }
