@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+sources = []
+use = ['fw_includes', 'pbl_includes']
+
+if bld.env.CONFIG_PMIC_AS3701B:
+    sources.append('as3701b.c')
+    use.append('driver_gpio')
+elif bld.env.CONFIG_PMIC_MAX14690:
+    sources.append('max14690_pmic.c')
+    use.extend([
+        'driver_exti',
+        'driver_gpio',
+        'driver_periph_config',
+        'freertos',
+        'stm32_stdlib',
+    ])
+elif bld.env.CONFIG_PMIC_NPM1300:
+    sources.append('npm1300.c')
+
+bld.objects(
+    name='driver_pmic',
+    source=sources,
+    use=use,
+)
+
+bld.env.DRIVERS.append('driver_pmic')

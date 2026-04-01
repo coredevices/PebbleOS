@@ -24,7 +24,6 @@ if bld.is_silk():
         'driver_mic',
         'driver_mpu',
         'driver_otp',
-        'driver_pmic',
         'driver_pwr',
         'driver_rng',
         'driver_rtc',
@@ -51,7 +50,6 @@ elif bld.is_snowy_compatible():
         'driver_mic',
         'driver_mpu',
         'driver_otp',
-        'driver_pmic',
         'driver_pwr',
         'driver_rng',
         'driver_rtc',
@@ -79,7 +77,6 @@ elif bld.is_asterix():
         'driver_nrf5_hfxo',
         'driver_otp',
         'driver_periph_config',
-        'driver_pmic',
         'driver_pressure',
         'driver_pwr',
         'driver_rng',
@@ -105,7 +102,6 @@ elif bld.is_obelix():
         'driver_mpu',
         'driver_otp',
         'driver_periph_config',
-        'driver_pmic',
         'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
@@ -136,7 +132,6 @@ elif bld.is_getafix():
         'driver_mpu',
         'driver_otp',
         'driver_periph_config',
-        'driver_pmic',
         'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
@@ -955,45 +950,8 @@ elif mcu_family in ('NRF52840', 'SF32LB52'):
         ],
     )
 
-if bld.is_snowy_compatible():
-    bld.objects(
-        name='driver_pmic',
-        source=[
-            'pmic/max14690_pmic.c',
-        ],
-        use=[
-            'driver_exti',
-            'driver_gpio',
-            'driver_periph_config',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_silk():
-    bld.objects(
-        name='driver_pmic',
-        source=[
-            'pmic/as3701b.c',
-        ],
-        use=[
-            'driver_gpio',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
-    bld.objects(
-        name='driver_pmic',
-        source=[
-            'pmic/npm1300.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
+if bld.env.CONFIG_PMIC:
+    bld.recurse('pmic')
 
 if bld.env.QEMU:
     bld.objects(
