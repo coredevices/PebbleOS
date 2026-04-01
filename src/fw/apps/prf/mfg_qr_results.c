@@ -6,6 +6,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/qr_code.h"
 #include "applib/ui/window.h"
+#include "apps/prf/mfg_test_menu.h"
 #include "apps/prf/mfg_test_result.h"
 #include "bluetooth/bluetooth_types.h"
 #include "kernel/pbl_malloc.h"
@@ -45,6 +46,10 @@ typedef struct {
 } AppData;
 
 static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
+  if (!mfg_test_menu_is_test_available(test)) {
+    return;
+  }
+
   const MfgTestResult *r = mfg_test_result_get(test);
   if (!r) {
     return;

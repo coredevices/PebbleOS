@@ -37,6 +37,7 @@ typedef struct {
 } MfgMenuAppData;
 
 static uint16_t s_menu_position = 0;
+static const PebbleProcessMd *s_last_test_menu = NULL;
 
 //! Callback to run from the kernel main task
 static void prv_launch_app_cb(void *data) {
@@ -47,8 +48,14 @@ static void prv_select_info_qr(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_info_qr_app_get_info());
 }
 
-static void prv_select_tests(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_menu_app_get_info());
+static void prv_select_tests_sf(int index, void *context) {
+  s_last_test_menu = mfg_test_menu_semi_finished_app_get_info();
+  launcher_task_add_callback(prv_launch_app_cb, (void*) s_last_test_menu);
+}
+
+static void prv_select_tests_fi(int index, void *context) {
+  s_last_test_menu = mfg_test_menu_finished_app_get_info();
+  launcher_task_add_callback(prv_launch_app_cb, (void*) s_last_test_menu);
 }
 
 static void prv_select_aging(int index, void *context) {
@@ -121,7 +128,8 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   // Define a const blueprint on the stack.
   const SimpleMenuItem s_menu_items[] = {
     { .title = "Device Info",       .callback = prv_select_info_qr },
-    { .title = "Tests",             .callback = prv_select_tests },
+    { .title = "Semi-finished Tests", .callback = prv_select_tests_sf },
+    { .title = "Finished Tests",   .callback = prv_select_tests_fi },
     { .title = "Aging Test",        .callback = prv_select_aging },
     { .title = "BLE Advertising",   .callback = prv_select_ble_adv },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
@@ -170,8 +178,8 @@ static void prv_window_load(Window *window) {
 
 static void s_main(void) {
   // If returning from a submenu item, relaunch the appropriate submenu
-  if (mfg_test_menu_should_relaunch()) {
-    launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_menu_app_get_info());
+  if (mfg_test_menu_should_relaunch() && s_last_test_menu) {
+    launcher_task_add_callback(prv_launch_app_cb, (void*) s_last_test_menu);
   }
 
   bt_pairability_use();
