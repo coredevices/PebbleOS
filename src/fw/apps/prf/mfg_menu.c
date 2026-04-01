@@ -7,7 +7,7 @@
 #include "applib/battery_state_service.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
-#include "apps/prf/mfg_extras_menu.h"
+#include "applib/ui/dialogs/confirmation_dialog.h"
 #include "apps/prf/mfg_test_aging.h"
 #include "apps/prf/mfg_info_qr.h"
 #include "apps/prf/mfg_test_menu.h"
@@ -19,6 +19,7 @@
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/common/bluetooth/pairability.h"
+#include "system/bootbits.h"
 #include "system/reset.h"
 #include "util/size.h"
 
@@ -49,10 +50,6 @@ static void prv_select_tests(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_menu_app_get_info());
 }
 
-static void prv_select_extras(int index, void *context) {
-  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_extras_menu_app_get_info());
-}
-
 static void prv_select_aging(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_aging_app_get_info());
 }
@@ -64,6 +61,41 @@ static void prv_select_reset(int index, void *context) {
 static void prv_select_shutdown(int index, void *context) {
   enter_standby(RebootReasonCode_ShutdownMenuItem);
 }
+
+#ifdef MANUFACTURING_FW
+static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context) {
+  ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
+  confirmation_dialog_pop(confirmation_dialog);
+
+  bool confirmed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  if (confirmed) {
+    boot_bit_set(BOOT_BIT_FORCE_PRF);
+    system_reset();
+  }
+}
+
+static void prv_load_prf_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_load_prf_confirmed);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_load_prf_confirmed);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_load_prf_confirmed);
+}
+
+static void prv_select_load_prf(int index, void *context) {
+  ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Load PRF");
+  Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
+
+  dialog_set_text(dialog, "Load PRF?\n\nThis action cannot be undone!");
+  dialog_set_background_color(dialog, GColorOrange);
+  dialog_set_text_color(dialog, GColorWhite);
+
+  confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_load_prf_click_config);
+
+  ActionBarLayer *action_bar = confirmation_dialog_get_action_bar(confirmation_dialog);
+  action_bar_layer_set_context(action_bar, confirmation_dialog);
+
+  app_confirmation_dialog_push(confirmation_dialog);
+}
+#endif
 
 static void prv_update_device_info_subtitle(MfgMenuAppData *data, uint8_t charge_percent) {
   char serial[MFG_SERIAL_NUMBER_SIZE + 1];
@@ -88,7 +120,9 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Aging",             .callback = prv_select_aging },
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
-    { .title = "Extras",            .callback = prv_select_extras },
+#ifdef MANUFACTURING_FW
+    { .title = "Load PRF",          .callback = prv_select_load_prf },
+#endif
   };
 
   // Copy it into the heap so we can modify it.
@@ -132,8 +166,6 @@ static void s_main(void) {
   // If returning from a submenu item, relaunch the appropriate submenu
   if (mfg_test_menu_should_relaunch()) {
     launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_menu_app_get_info());
-  } else if (mfg_extras_menu_should_relaunch()) {
-    launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_extras_menu_app_get_info());
   }
 
   bt_pairability_use();
