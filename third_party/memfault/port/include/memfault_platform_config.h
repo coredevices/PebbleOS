@@ -13,7 +13,7 @@
 #define MEMFAULT_FREERTOS_PORT_HEAP_STATS_ENABLE 1
 #define MEMFAULT_COREDUMP_HEAP_STATS_LOCK_ENABLE 0
 #define MEMFAULT_METRICS_HEARTBEAT_INTERVAL_SECS (60 * 60)
-#define MEMFAULT_COMPACT_LOG_ENABLE 0
+#define MEMFAULT_COMPACT_LOG_ENABLE 1
 
 #define MEMFAULT_COLLECT_MPU_STATE 1
 
@@ -29,7 +29,7 @@
 // from the PebbleOS coredump instead.
 #define MEMFAULT_COREDUMP_COMPUTE_THREAD_STACK_USAGE 0
 
-// Todo, we will hook more deeply into the Pebble logging system
+// PBL_LOG emits compact log entries via MEMFAULT_COMPACT_LOG_SAVE (see logging.h)
 #define MEMFAULT_PLATFORM_HAS_LOG_CONFIG 0
 
 // base64-encoded chunks can overflow the maximum serial output length, so use a
