@@ -18,34 +18,28 @@
 #include <stdio.h>
 
 typedef enum {
-  ChargeStateStart = 0,
-  ChargeStatePlugCharger,
-  ChargeStateRunning,
+  ChargeStateWaitPlug = 0,
+  ChargeStateWaitCharge,
   ChargeStatePass,
   ChargeStateFail,
 } ChargeTestState;
 
 static const char* status_text[] = {
-  [ChargeStateStart] =       "Start",
-  [ChargeStatePlugCharger] = "Plug Charger",
-  [ChargeStateRunning] =     "Running...",
-  [ChargeStatePass] =        "Pass",
-  [ChargeStateFail] =        "Fail",
+  [ChargeStateWaitPlug] =    "Plug Charger",
+  [ChargeStateWaitCharge] =  "Wait Charge...",
+  [ChargeStatePass] =        "PASS - Unplug",
+  [ChargeStateFail] =        "FAIL - Unplug",
 };
 
 #if defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX) || defined(PLATFORM_GETAFIX)
-static const int SLOW_THRESHOLD_PERCENTAGE = 0;
-static const int BATTERY_PASS_PERCENTAGE = 70;
-
 static const int TEMP_MIN_MC = 15000; // 15.0C
 static const int TEMP_MAX_MC = 35000; // 35.0C
 #else
-static const int SLOW_THRESHOLD_PERCENTAGE = 0; // Always go "slow" on snowy
-static const int BATTERY_PASS_PERCENTAGE = 60; // ~4190mv
-
 static const int TEMP_MIN_MC = 0;
 static const int TEMP_MAX_MC = 0;
 #endif
+
+static const int WAIT_CHARGE_TIMEOUT_S = 5;
 
 typedef struct {
   Window window;
@@ -58,21 +52,15 @@ typedef struct {
 
   ChargeTestState test_state;
   uint32_t seconds_remaining;
-  bool countdown_running;
-  bool fastcharge_enabled;
-
-  int pass_count;
-  int batt_temp_fail_count;
 } AppData;
 
 static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
-  int ret;
 
   ChargeTestState next_state = data->test_state;
 
   BatteryConstants battery_const;
-  ret = battery_get_constants(&battery_const);
+  int ret = battery_get_constants(&battery_const);
   if (ret < 0) {
     PBL_LOG_ERR("Skipping bad constants reading");
     return;
@@ -83,90 +71,43 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   const BatteryChargeState charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
-    case ChargeStateStart:
-      if (charge_state.charge_percent > BATTERY_PASS_PERCENTAGE) {
-        next_state = ChargeStateFail;
-        data->countdown_running = false;
-        battery_set_charge_enable(false);
-        break;
-      }
-      if (charge_state.is_plugged && charge_state.is_charging) {
-        next_state = ChargeStateRunning;
-      } else {
-        next_state = ChargeStatePlugCharger;
+    case ChargeStateWaitPlug:
+      if (charge_state.is_plugged) {
+        next_state = ChargeStateWaitCharge;
+        data->seconds_remaining = WAIT_CHARGE_TIMEOUT_S;
       }
       break;
-    case ChargeStatePlugCharger:
-      if (charge_state.is_plugged && charge_state.is_charging) {
-        next_state = ChargeStateRunning;
-      }
-      break;
-    case ChargeStateRunning:
-      if (!data->countdown_running) {
-        data->countdown_running = true;
-      }
-      if (!charge_state.is_plugged || !charge_state.is_charging) {
-        data->pass_count = 0;
-        next_state = ChargeStatePlugCharger;
+    case ChargeStateWaitCharge:
+      if (!charge_state.is_plugged) {
+        next_state = ChargeStateWaitPlug;
         break;
       }
-
-      // Log battery state every second during charging
-      {
-        int32_t current_ma = battery_const.i_ua / 1000;
-        PBL_LOG_INFO("Charging - V:%"PRId32"mV I:%"PRId32"mA T:%"PRId32"mC pct:%"PRIu8" Time:%"PRIu32"s",
-                battery_const.v_mv, current_ma, battery_const.t_mc, charge_state.charge_percent,
-                data->seconds_remaining);
-      }
-
-      if (temp_mc < TEMP_MIN_MC || temp_mc > TEMP_MAX_MC) {
-        data->batt_temp_fail_count++;
-        if (data->batt_temp_fail_count >= 5) {
-          next_state = ChargeStateFail;
-          data->countdown_running = false;
-          battery_set_charge_enable(false);
-          break;
-        }
-      } else {
-        data->batt_temp_fail_count = 0;
-      }
-
-      if (charge_state.charge_percent > SLOW_THRESHOLD_PERCENTAGE && data->fastcharge_enabled) {
-        // go slow for a bit
-        battery_set_fast_charge(false);
-        data->fastcharge_enabled = false;
-      } else if (charge_state.charge_percent >= BATTERY_PASS_PERCENTAGE) {
-        // The reading can be a bit shaky in the short term (i.e. a flaky USB connection), or we
-        // just started charging. Make sure we have settled before transitioning into the
-        // ChargeStatePass state
-        if (data->pass_count > 5) {
+      if (charge_state.is_charging) {
+        if (temp_mc >= TEMP_MIN_MC && temp_mc <= TEMP_MAX_MC) {
           next_state = ChargeStatePass;
-
-          data->countdown_running = false;
-          // disable the charger so that we don't overcharge the battery
-          battery_set_charge_enable(false);
+        } else {
+          PBL_LOG_ERR("Temperature out of range: %" PRId32 "mC", temp_mc);
+          next_state = ChargeStateFail;
         }
-        data->pass_count++;
       } else {
-        data->pass_count = 0;
+        --data->seconds_remaining;
+        if (data->seconds_remaining == 0) {
+          PBL_LOG_ERR("Timed out waiting for charge to start");
+          next_state = ChargeStateFail;
+        }
       }
       break;
     case ChargeStatePass:
-      // Keep charging disabled after test passes
-      break;
     case ChargeStateFail:
+      if (!charge_state.is_plugged) {
+        bool passed = (data->test_state == ChargeStatePass);
+        mfg_test_result_report(MfgTestId_Charge, passed, 0);
+        app_window_stack_pop(true);
+        return;
+      }
+      break;
     default:
       break;
-  }
-
-  if (data->countdown_running) {
-    --data->seconds_remaining;
-    if (data->seconds_remaining == 0) {
-      // Time's up!
-      next_state = ChargeStateFail;
-      data->countdown_running = false;
-      PBL_LOG_ERR("Failed charge testing");
-    }
   }
 
   data->test_state = next_state;
@@ -175,46 +116,15 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
             "CHARGE\n%s", status_text[data->test_state]);
   text_layer_set_text(&data->status, data->status_string);
 
-  int mins_remaining = data->seconds_remaining / 60;
-  int secs_remaining = data->seconds_remaining % 60;
   int8_t temp_c = (int8_t)(temp_mc / 1000);
   uint8_t temp_c_frac = ((temp_mc > 0 ? temp_mc : -temp_mc) % 1000) / 10;
   sniprintf(data->details_string, sizeof(data->details_string),
-            "Time:%02u:%02u\r\n%umV %" PRId8 ".%02" PRIu8 "C (%"PRIu8"%%)\r\nUSB: %s\r\nCharging: %s",
-            mins_remaining, secs_remaining, charge_mv,
+            "%umV %" PRId8 ".%02" PRIu8 "C\r\nUSB: %s\r\nCharging: %s",
+            charge_mv,
             temp_c, temp_c_frac,
-            charge_state.charge_percent,
             charge_state.is_plugged ? "yes" : "no",
             charge_state.is_charging ? "yes" : "no");
   text_layer_set_text(&data->details, data->details_string);
-}
-
-static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
-  AppData *app_data = app_state_get_user_data();
-
-  if (app_data->test_state == ChargeStatePass ||
-      app_data->test_state == ChargeStateFail) {
-    bool passed = (app_data->test_state == ChargeStatePass);
-    mfg_test_result_report(MfgTestId_Charge, passed, 0);
-  }
-
-  app_window_stack_pop(true);
-}
-
-static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
-  AppData *app_data = app_state_get_user_data();
-
-  if (app_data->test_state == ChargeStatePass ||
-      app_data->test_state == ChargeStateFail) {
-    bool passed = (app_data->test_state == ChargeStatePass);
-    mfg_test_result_report(MfgTestId_Charge, passed, 0);
-    app_window_stack_pop(true);
-  }
-}
-
-static void prv_config_provider(void *data) {
-  window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
 }
 
 static void app_init(void) {
@@ -223,16 +133,9 @@ static void app_init(void) {
   app_state_set_user_data(data);
 
   *data = (AppData) {
-    .test_state = ChargeStateStart,
-    .countdown_running = false,
-    .seconds_remaining = 5400, //1.5h
-    .fastcharge_enabled = true,
-    .pass_count = 0,
-    .batt_temp_fail_count = 0,
+    .test_state = ChargeStateWaitPlug,
+    .seconds_remaining = WAIT_CHARGE_TIMEOUT_S,
   };
-
-  battery_set_fast_charge(true);
-  battery_set_charge_enable(true);
 
   Window *window = &data->window;
   window_init(window, "Charge Test");
@@ -251,7 +154,6 @@ static void app_init(void) {
   text_layer_set_text_alignment(details, GTextAlignmentCenter);
   layer_add_child(&window->layer, &details->layer);
 
-  window_set_click_config_provider(window, prv_config_provider);
   window_set_fullscreen(window, true);
 
   tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
@@ -262,9 +164,7 @@ static void app_init(void) {
 static void s_main(void) {
   app_init();
 
-  prf_idle_watchdog_stop();
   app_event_loop();
-  prf_idle_watchdog_start();
 }
 
 const PebbleProcessMd* mfg_charge_app_get_info(void) {
@@ -278,4 +178,3 @@ const PebbleProcessMd* mfg_charge_app_get_info(void) {
 
   return (PebbleProcessMd*) &s_app_info;
 }
-
