@@ -54,48 +54,6 @@ UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
 IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
 IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
 
-static PwmState s_pwm1_ch1_state = {
-    .handle = {
-        .Instance = hwp_gptim1,
-        .Init = {
-             .CounterMode = GPT_COUNTERMODE_UP,
-        },
-
-    },
-    .clock_config = {
-        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
-    },
-    .channel = 1,
-};
-
-static PwmState s_pwm1_ch2_state = {
-    .handle = {
-        .Instance = hwp_gptim1,
-        .Init = {
-             .CounterMode = GPT_COUNTERMODE_UP,
-        },
-
-    },
-    .clock_config = {
-        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
-    },
-    .channel = 2,
-};
-
-static PwmState s_pwm1_ch3_state = {
-    .handle = {
-        .Instance = hwp_gptim1,
-        .Init = {
-             .CounterMode = GPT_COUNTERMODE_UP,
-        },
-
-    },
-    .clock_config = {
-        .ClockSource = GPT_CLOCKSOURCE_INTERNAL,
-    },
-    .channel = 3,
-};
-
 static DisplayJDIState s_display_state = {
     .hlcdc = {
         .Instance = LCDC1,

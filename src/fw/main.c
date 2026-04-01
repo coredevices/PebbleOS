@@ -33,7 +33,6 @@
 #include "drivers/pressure.h"
 #include "drivers/pwr.h"
 #include "drivers/spi.h"
-#include "drivers/system_flash.h"
 #include "drivers/task_watchdog.h"
 #include "drivers/temperature.h"
 #include "drivers/touch/touch_sensor.h"
