@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "IMU"
+
+choice ACCEL
+    prompt "Accelerometer"
+    optional
+
+config ACCEL_BMA255
+    bool "Bosch BMA255"
+    help
+      Support for the Bosch BMA255 accelerometer.
+
+config ACCEL_BMI160
+    bool "Bosch BMI160"
+    help
+      Support for the Bosch BMI160 accelerometer/gyroscope.
+
+config ACCEL_LIS2DW12
+    bool "ST LIS2DW12"
+    help
+      Support for the ST LIS2DW12 accelerometer.
+
+config ACCEL_LSM6DSO
+    bool "ST LSM6DSO"
+    help
+      Support for the ST LSM6DSO accelerometer/gyroscope.
+
+endchoice
+
+choice MAG
+    prompt "Magnetometer"
+    optional
+
+config MAG_MAG3110
+    bool "Freescale MAG3110"
+    help
+      Support for the Freescale MAG3110 magnetometer.
+
+config MAG_MMC5603NJ
+    bool "MEMSIC MMC5603NJ"
+    help
+      Support for the MEMSIC MMC5603NJ magnetometer.
+
+endchoice
+
+endmenu
