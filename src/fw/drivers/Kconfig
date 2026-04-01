@@ -8,6 +8,7 @@ rsource "i2c/Kconfig"
 rsource "led_controller/Kconfig"
 rsource "mic/Kconfig"
 rsource "pmic/Kconfig"
+rsource "temperature/Kconfig"
 rsource "uart/Kconfig"
 rsource "vibe/Kconfig"
 
