@@ -36,7 +36,13 @@
 
 #define WEATHER_APP_LAYOUT_ARROW_LAYER_HEIGHT (18)
 #define WEATHER_APP_LAYOUT_TOP_PADDING PBL_IF_RECT_ELSE(0, 15)
-#define WEATHER_APP_LAYOUT_TIMELINE_ICON_RESOURCE_SIZE (TimelineResourceSizeTiny)
+#if PBL_DISPLAY_HEIGHT >= 200
+#define WEATHER_APP_LAYOUT_TODAY_ICON_SIZE (TimelineResourceSizeSmall)
+#define WEATHER_APP_LAYOUT_TOMORROW_ICON_SIZE (TimelineResourceSizeTiny)
+#else
+#define WEATHER_APP_LAYOUT_TODAY_ICON_SIZE (TimelineResourceSizeTiny)
+#define WEATHER_APP_LAYOUT_TOMORROW_ICON_SIZE (TimelineResourceSizeTiny)
+#endif
 #define WEATHER_APP_LAYOUT_CONTENT_LAYER_HORIZONTAL_INSET PBL_IF_RECT_ELSE(3, 23)
 
 static int prv_draw_text(GPoint offset, int max_width, GContext *context,
@@ -137,8 +143,11 @@ static GTextNode *prv_create_location_name_area_node(const WeatherLocationForeca
   if (forecast->is_current_location) {
     GTextNodeCustom *arrow_node = graphics_text_node_create_custom(prv_draw_gps_arrow_node_callback,
                                                                    NULL);
+    const int cap_offset = fonts_get_font_cap_offset(location_font);
+    const int visible_center = cap_offset +
+        (fonts_get_font_height(location_font) - cap_offset) / 2;
     arrow_node->node.offset =
-        GPoint(0, (int16_t)(fonts_get_font_cap_offset(location_font) / 2));
+        GPoint(0, (int16_t)(visible_center - GPS_ARROW_HEIGHT / 2));
     graphics_text_node_container_add_child(&horizontal_node->container, &arrow_node->node);
   }
 
@@ -178,7 +187,11 @@ static void prv_draw_top_half_text(const WeatherAppLayout *layout, GPoint *curre
   current_offset->y += prv_draw_location_name_area(*current_offset, content_width, context,
                                                    layout->location_font, forecast).h;
 
+#if PBL_DISPLAY_HEIGHT >= 200
+  const int location_and_today_temperature_vertical_spacing = 10;
+#else
   const int location_and_today_temperature_vertical_spacing = 7;
+#endif
   current_offset->y += location_and_today_temperature_vertical_spacing;
 
   char text_buffer[15] = {0};
@@ -228,26 +241,28 @@ static void prv_draw_bottom_half_text(const WeatherAppLayout *layout, GPoint *cu
                 GColorBlack, GTextAlignmentLeft);
 }
 
+static GRect prv_get_icon_bg_circle_rect(const KinoLayer *icon_layer) {
+  const GSize icon_size = icon_layer->layer.bounds.size;
+  const unsigned int circle_diam = integer_sqrt(2 * icon_size.w * icon_size.h);
+  const GRect icon_frame = icon_layer->layer.frame;
+  return (GRect) {
+    .origin = GPoint(
+      icon_frame.origin.x + (int)icon_size.w / 2 - (int)circle_diam / 2,
+      icon_frame.origin.y + (int)icon_size.h / 2 - (int)circle_diam / 2),
+    .size = GSize(circle_diam, circle_diam),
+  };
+}
+
 static void prv_draw_weather_icon_backgrounds(const WeatherAppLayout *layout,
                                               const GRect *content_bounds, GContext *context) {
   const WeatherLocationForecast *forecast = layout->forecast;
-  // assume that both current and tomorrow weather icons are the same size
-  const GSize icon_size = layout->current_weather_icon_layer.layer.bounds.size;
-  const unsigned int weather_icon_bg_circle_diam = integer_sqrt(2 * icon_size.w * icon_size.h);
 
-  const int today_weather_bg_circle_top_margin = 28;
-  GRect bg_circle_bounding_box = GRect(grect_get_max_x(content_bounds) -
-                                       weather_icon_bg_circle_diam,
-                                       today_weather_bg_circle_top_margin,
-                                       weather_icon_bg_circle_diam, weather_icon_bg_circle_diam);
-
-  prv_draw_weather_background(&bg_circle_bounding_box, context,
+  GRect bg_circle = prv_get_icon_bg_circle_rect(&layout->current_weather_icon_layer);
+  prv_draw_weather_background(&bg_circle, context,
                               weather_type_get_bg_color(forecast->current_weather_type));
 
-  const int weather_bg_circle_vertical_spacing = 40;
-  bg_circle_bounding_box.origin.y += weather_icon_bg_circle_diam +
-                                     weather_bg_circle_vertical_spacing;
-  prv_draw_weather_background(&bg_circle_bounding_box, context,
+  bg_circle = prv_get_icon_bg_circle_rect(&layout->tomorrow_weather_icon_layer);
+  prv_draw_weather_background(&bg_circle, context,
                               weather_type_get_bg_color(forecast->tomorrow_weather_type));
 }
 
@@ -274,8 +289,17 @@ static void prv_render_layout(Layer *layer, GContext *context) {
   prv_draw_top_half_text(layout, offset, content_width, context);
 
   // dotted separator
+#if PBL_DISPLAY_HEIGHT >= 200
+  // Anchor the separator + tomorrow block to the bottom of the content area
+  const int separator_tomorrow_spacing = 6;
+  const int bottom_block_height = separator_tomorrow_spacing +
+                                  fonts_get_font_height(layout->tomorrow_font) +
+                                  fonts_get_font_height(layout->high_low_phrase_font) * 2;
+  current_offset.y = layer->bounds.size.h - bottom_block_height;
+#else
   const int phrase_separator_vertical_spacing = 10;
   current_offset.y += phrase_separator_vertical_spacing;
+#endif
 
   const GPoint separator_start = GPoint(0, current_offset.y);
   graphics_context_set_stroke_width(context, 5);
@@ -295,15 +319,22 @@ static void prv_content_indicator_setup_direction(ContentIndicator *content_indi
   content_indicator_configure_direction(content_indicator, direction, &(ContentIndicatorConfig) {
     .layer = indicator_layer,
     .colors.foreground = GColorBlack,
-    .colors.background = GColorLightGray,
+    .colors.background = GColorWhite,
   });
 }
 
 void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
+#if PBL_DISPLAY_HEIGHT >= 200
+  layout->location_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+  layout->temperature_font = fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS);
+  layout->high_low_phrase_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+  layout->tomorrow_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+#else
   layout->location_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
   layout->temperature_font = fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
   layout->high_low_phrase_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
   layout->tomorrow_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
+#endif
 
   Layer *root_layer = &layout->root_layer;
   layer_init(root_layer, frame);
@@ -331,39 +362,64 @@ void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
   prv_content_indicator_setup_direction(content_indicator, down_arrow_layer,
                                         ContentIndicatorDirectionDown);
 
-  const GSize icon_size =
-      timeline_resources_get_gsize(WEATHER_APP_LAYOUT_TIMELINE_ICON_RESOURCE_SIZE);
+  const GSize today_icon_size =
+      timeline_resources_get_gsize(WEATHER_APP_LAYOUT_TODAY_ICON_SIZE);
+  const GSize tomorrow_icon_size =
+      timeline_resources_get_gsize(WEATHER_APP_LAYOUT_TOMORROW_ICON_SIZE);
 
-  const int icon_layer_margin_top = PBL_IF_RECT_ELSE(33, 18);
-  const int icon_layer_right_margin = 5;
-  GRect icon_layer_frame = (GRect) {
-    {
-      content_layer_frame.size.w - icon_size.w - WEATHER_APP_LAYOUT_CONTENT_LAYER_HORIZONTAL_INSET -
-      icon_layer_right_margin,
-      content_layer_frame.origin.y + icon_layer_margin_top
-    },
-    icon_size
-  };
+#if PBL_DISPLAY_HEIGHT >= 200
+  // Today icon: align top of background circle with temperature line cap
+  const unsigned int today_circle_diam = integer_sqrt(2 * today_icon_size.w * today_icon_size.h);
+  const int today_circle_inset = (int)(today_circle_diam - today_icon_size.w) / 2;
+  const int today_icon_x = content_layer_frame.size.w - today_icon_size.w -
+                           WEATHER_APP_LAYOUT_CONTENT_LAYER_HORIZONTAL_INSET - today_circle_inset;
+  const int temp_line_y = 1 + fonts_get_font_height(layout->location_font) + 10;
+  const int top_icon_y = temp_line_y + fonts_get_font_cap_offset(layout->temperature_font) +
+                         today_circle_inset;
 
-  KinoLayer *current_weather_icon_layer  = &layout->current_weather_icon_layer;
-  kino_layer_init(current_weather_icon_layer, &icon_layer_frame);
+  // Tomorrow icon: anchor to bottom of content area, aligned with "TOMORROW" text cap
+  const unsigned int tomorrow_circle_diam =
+      integer_sqrt(2 * tomorrow_icon_size.w * tomorrow_icon_size.h);
+  const int tomorrow_circle_inset = (int)(tomorrow_circle_diam - tomorrow_icon_size.w) / 2;
+  const int tomorrow_icon_x = content_layer_frame.size.w - tomorrow_icon_size.w -
+                              WEATHER_APP_LAYOUT_CONTENT_LAYER_HORIZONTAL_INSET -
+                              tomorrow_circle_inset;
+  const int separator_tomorrow_spacing = 6;
+  const int bottom_block_height = separator_tomorrow_spacing +
+                                  fonts_get_font_height(layout->tomorrow_font) +
+                                  fonts_get_font_height(layout->high_low_phrase_font) * 2;
+  const int tomorrow_line_y = content_layer_frame.size.h - bottom_block_height +
+                              separator_tomorrow_spacing;
+  const int bottom_icon_y = tomorrow_line_y + fonts_get_font_cap_offset(layout->tomorrow_font) +
+                            tomorrow_circle_inset;
+#else
+  const unsigned int today_circle_diam = integer_sqrt(2 * today_icon_size.w * today_icon_size.h);
+  const int today_circle_inset = (int)(today_circle_diam - today_icon_size.w) / 2;
+  const int today_icon_x = content_layer_frame.size.w - today_icon_size.w -
+                           WEATHER_APP_LAYOUT_CONTENT_LAYER_HORIZONTAL_INSET - today_circle_inset;
+  const int tomorrow_icon_x = today_icon_x;
+  const int top_icon_y = content_layer_frame.origin.y + PBL_IF_RECT_ELSE(33, 18);
+  const int bottom_icon_y = top_icon_y + today_icon_size.h + 50;
+#endif
+
+  GRect today_icon_frame = (GRect) { { today_icon_x, top_icon_y }, today_icon_size };
+  KinoLayer *current_weather_icon_layer = &layout->current_weather_icon_layer;
+  kino_layer_init(current_weather_icon_layer, &today_icon_frame);
   layer_add_child(content_layer, kino_layer_get_layer(current_weather_icon_layer));
 
-  const int icon_layer_spacing = 50;
-  icon_layer_frame.origin.y += icon_size.h + icon_layer_spacing;
-
-  KinoLayer *tomorrow_weather_icon_layer  = &layout->tomorrow_weather_icon_layer;
-  kino_layer_init(tomorrow_weather_icon_layer, &icon_layer_frame);
+  GRect tomorrow_icon_frame = (GRect) { { tomorrow_icon_x, bottom_icon_y }, tomorrow_icon_size };
+  KinoLayer *tomorrow_weather_icon_layer = &layout->tomorrow_weather_icon_layer;
+  kino_layer_init(tomorrow_weather_icon_layer, &tomorrow_icon_frame);
   layer_add_child(content_layer, kino_layer_get_layer(tomorrow_weather_icon_layer));
 }
 
-static uint32_t prv_get_resource_id_for_weather_type(WeatherType type) {
+static uint32_t prv_get_resource_id_for_weather_type(WeatherType type,
+                                                     TimelineResourceSize size) {
   const TimelineResourceInfo timeline_res = {
     .res_id = weather_type_get_timeline_resource_id(type),
   };
   AppResourceInfo icon_res_info;
-  timeline_resources_get_id(&timeline_res, WEATHER_APP_LAYOUT_TIMELINE_ICON_RESOURCE_SIZE,
-                            &icon_res_info);
+  timeline_resources_get_id(&timeline_res, size, &icon_res_info);
   return icon_res_info.res_id;
 }
 
@@ -372,9 +428,13 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
   layout->forecast = forecast;
 
   const uint32_t current_weather_res_id = forecast ?
-      prv_get_resource_id_for_weather_type(forecast->current_weather_type) : RESOURCE_ID_INVALID;
+      prv_get_resource_id_for_weather_type(forecast->current_weather_type,
+                                           WEATHER_APP_LAYOUT_TODAY_ICON_SIZE) :
+      RESOURCE_ID_INVALID;
   const uint32_t tomorrow_weather_res_id = forecast ?
-      prv_get_resource_id_for_weather_type(forecast->tomorrow_weather_type) : RESOURCE_ID_INVALID;
+      prv_get_resource_id_for_weather_type(forecast->tomorrow_weather_type,
+                                           WEATHER_APP_LAYOUT_TOMORROW_ICON_SIZE) :
+      RESOURCE_ID_INVALID;
 
   kino_layer_set_reel_with_resource(&layout->current_weather_icon_layer, current_weather_res_id);
   kino_layer_set_reel_with_resource(&layout->tomorrow_weather_icon_layer, tomorrow_weather_res_id);
@@ -501,11 +561,12 @@ static const AnimationHandlers s_animation_handlers = {
 };
 
 static void prv_morph_weather_icons(KinoLayer *icon_layer, WeatherType from, WeatherType to,
-                                    uint32_t duration) {
+                                    TimelineResourceSize size, uint32_t duration) {
   uint32_t from_image_res_id =
-      prv_get_resource_id_for_weather_type(from);
+      prv_get_resource_id_for_weather_type(from, size);
   KinoReel *from_reel = kino_reel_create_with_resource(from_image_res_id);
-  KinoReel *to_reel = kino_reel_create_with_resource(prv_get_resource_id_for_weather_type(to));
+  KinoReel *to_reel = kino_reel_create_with_resource(
+      prv_get_resource_id_for_weather_type(to, size));
 
   KinoReel *icon_reel = kino_reel_morph_square_create(from_reel, true);
   kino_reel_transform_set_to_reel(icon_reel, to_reel, true);
@@ -535,9 +596,11 @@ void weather_app_layout_animate(WeatherAppLayout *layout, WeatherLocationForecas
 
   prv_morph_weather_icons(&layout->current_weather_icon_layer,
                           layout->forecast->current_weather_type,
-                          new_forecast->current_weather_type, anim_duration);
+                          new_forecast->current_weather_type,
+                          WEATHER_APP_LAYOUT_TODAY_ICON_SIZE, anim_duration);
 
   prv_morph_weather_icons(&layout->tomorrow_weather_icon_layer,
                           layout->forecast->tomorrow_weather_type,
-                          new_forecast->tomorrow_weather_type, anim_duration);
+                          new_forecast->tomorrow_weather_type,
+                          WEATHER_APP_LAYOUT_TOMORROW_ICON_SIZE, anim_duration);
 }
