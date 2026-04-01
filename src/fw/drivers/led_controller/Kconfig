@@ -10,6 +10,7 @@ if LED_CONTROLLER
 
 config LED_CONTROLLER_AW2016
     bool "AW2016"
+    depends on I2C
     help
       Support for the AW2016 LED controller.
 
