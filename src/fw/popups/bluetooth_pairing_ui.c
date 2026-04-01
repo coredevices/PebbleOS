@@ -609,7 +609,7 @@ void bluetooth_pairing_ui_handle_event(PebbleBluetoothPairEvent *event) {
         prv_handle_pairing_complete(event->success);
       } else {
         PBL_LOG_ERR("Got complete event for unknown process %p vs %p",
-                event->ctx, s_data_ptr ? s_data_ptr->ctx : NULL);
+                (void *)event->ctx, s_data_ptr ? (void *)s_data_ptr->ctx : NULL);
       }
       break;
 
