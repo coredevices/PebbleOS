@@ -6,8 +6,7 @@
 #include "mcu/interrupts.h"
 #include "services/common/analytics/analytics.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 static Heap s_kernel_heap;
 static bool s_interrupts_disabled_by_heap;

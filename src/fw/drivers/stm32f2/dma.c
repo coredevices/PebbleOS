@@ -9,8 +9,7 @@
 #include "mcu/cache.h"
 #include "system/passert.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #include "FreeRTOS.h"
 

@@ -1,7 +1,6 @@
 #include "drivers/mcu.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 StatusCode mcu_get_serial(void *buf, size_t *buf_sz) {
   return E_DOES_NOT_EXIST;

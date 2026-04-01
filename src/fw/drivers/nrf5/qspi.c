@@ -15,9 +15,6 @@
 #include "system/passert.h"
 #include "util/math.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
-
 #include <hal/nrf_qspi.h>
 #include <nrfx.h>
 

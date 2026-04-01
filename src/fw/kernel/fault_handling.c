@@ -19,8 +19,7 @@
 
 #include <util/heap.h>
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 #include "FreeRTOS.h"
 #include "portmacro.h"

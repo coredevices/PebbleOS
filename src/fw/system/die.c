@@ -10,8 +10,7 @@
 #include "system/reboot_reason.h"
 #include "system/reset.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 #if defined(NO_WATCHDOG)
 #include "FreeRTOS.h"

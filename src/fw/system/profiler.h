@@ -22,8 +22,7 @@
 #include "util/list.h"
 
 #if PROFILER
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 #endif
 
 typedef struct {
