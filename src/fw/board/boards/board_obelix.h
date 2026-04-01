@@ -4,7 +4,6 @@
 #pragma once
 
 #include "drivers/imu/lis2dw12/lis2dw12.h"
-#include "drivers/led_controller/pwm.h"
 #include "drivers/pmic/npm1300.h"
 #include "drivers/touch/cst816/touch_sensor_definitions.h"
 #include "services/imu/units.h"
