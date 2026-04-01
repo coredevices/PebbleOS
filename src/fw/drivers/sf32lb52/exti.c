@@ -151,13 +151,3 @@ void GPIO1_IRQHandler(void) {
   HAL_GPIO_IRQHandler(hwp_gpio1);
   portEND_SWITCHING_ISR(s_should_context_switch);
 }
-
-void exti_configure_other(ExtiLineOther exti_line, ExtiTrigger trigger) {}
-
-void exti_enable_other(ExtiLineOther exti_line) {}
-
-void exti_disable_other(ExtiLineOther exti_line) {}
-
-void exti_set_pending(ExtiConfig cfg) {}
-
-void exti_clear_pending_other(ExtiLineOther exti_line) {}
