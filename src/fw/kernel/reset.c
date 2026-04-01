@@ -3,10 +3,6 @@
 
 #include "system/reset.h"
 
-#define CMSIS_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
-
 #include "board/board.h"
 #include "drivers/pmic.h"
 #include "system/bootbits.h"
@@ -16,6 +12,12 @@
 
 #include "drivers/flash.h"
 #include "system/reboot_reason.h"
+
+#include <cmsis_core.h>
+
+#ifdef MICRO_FAMILY_SF32LB52
+#include <bf0_hal.h>
+#endif
 
 #include "FreeRTOS.h"
 #include "task.h"

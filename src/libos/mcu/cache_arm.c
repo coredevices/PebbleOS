@@ -4,8 +4,7 @@
 #include "mcu/cache.h"
 #include "util/attributes.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 // I-Cache definition doesn't always exist
 #ifndef __ICACHE_PRESENT

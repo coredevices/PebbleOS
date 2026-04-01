@@ -70,8 +70,7 @@
 
 #include "drivers/rtc.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 extern uint32_t SystemCoreClock;
 

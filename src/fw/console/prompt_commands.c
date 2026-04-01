@@ -41,8 +41,7 @@
 #include "util/net.h"
 #include "util/string.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 #include <bluetooth/responsiveness.h>
 #include <bluetooth/gatt_discovery.h>

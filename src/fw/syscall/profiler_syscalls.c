@@ -6,8 +6,7 @@
 #include "syscall/syscall_internal.h"
 #include "system/profiler.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 
 // ------------------------------------------------------------------------------------
