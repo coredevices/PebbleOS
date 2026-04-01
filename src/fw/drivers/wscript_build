@@ -13,7 +13,7 @@ if bld.is_silk():
         'driver_button',
         'driver_clocksource',
         'driver_crc',
-        'driver_display',
+
         'driver_flash',
         'driver_gpio_defaults',
         'driver_hci_passthrough',
@@ -39,7 +39,7 @@ elif bld.is_snowy_compatible():
         'driver_battery',
         'driver_button',
         'driver_clocksource',
-        'driver_display',
+
         'driver_flash',
         'driver_gpio_defaults',
         'driver_hci_passthrough',
@@ -64,7 +64,7 @@ elif bld.is_asterix():
         'driver_backlight',
         'driver_battery',
         'driver_button',
-        'driver_display',
+
         'driver_flash',
         'driver_gpio_defaults',
         'driver_accel',
@@ -88,7 +88,7 @@ elif bld.is_obelix():
         'driver_backlight',
         'driver_battery',
         'driver_button',
-        'driver_display',
+
         'driver_gpio',
         'driver_flash',
         'driver_gpio_defaults',
@@ -118,7 +118,7 @@ elif bld.is_getafix():
         'driver_backlight',
         'driver_battery',
         'driver_button',
-        'driver_display',
+
         'driver_gpio',
         'driver_flash',
         'driver_gpio_defaults',
@@ -362,70 +362,8 @@ if mcu_family == 'STM32F4':
         ],
     )
 
-if bld.is_silk():
-    bld.objects(
-        name='driver_display',
-        source=[
-            'display/sharp_ls013b7dh01/sharp_ls013b7dh01.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_spi',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_snowy_compatible():
-    bld.objects(
-        name='driver_display',
-        source=[
-            'display/ice40lp/ice40lp.c',
-            'display/ice40lp/ice40lp_internal.c',
-            'display/ice40lp/snowy_boot.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_exti',
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_pmic',
-            'driver_spi',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_asterix():
-    # FIXME: driver should use platform agnostic SPI interface
-    bld.objects(
-        name='driver_display',
-        source=[
-            'display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c',
-        ],
-        use=[
-            'driver_gpio',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'hal_nordic',
-        ],
-    )
-elif bld.is_obelix() or bld.is_getafix():
-    bld.objects(
-        name='driver_display',
-        source=[
-            'sf32lb52/display_jdi.c',
-        ],
-        use=[
-            'fw_includes',
-            'freertos',
-            'hal_sifli',
-        ],
-    )
+if bld.env.CONFIG_DISPLAY:
+    bld.recurse('display')
 
 if mcu_family == 'STM32F4':
     bld.objects(

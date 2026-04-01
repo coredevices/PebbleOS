@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig DISPLAY
+    bool "Display"
+    help
+      Display Drivers
+
+if DISPLAY
+
+config DISPLAY_ICE40LP
+    bool "Lattice iCE40LP"
+    help
+      Support for the Lattice iCE40LP FPGA display controller.
+
+config DISPLAY_JDI_SF32LB
+    bool "JDI (SiFli SF32LB)"
+    help
+      Support for JDI display via SiFli SF32LB.
+
+config DISPLAY_SHARP_LS013B7DH01
+    bool "Sharp LS013B7DH01 (STM32 SPI)"
+    help
+      Support for the Sharp LS013B7DH01 display via STM32 SPI.
+
+config DISPLAY_SHARP_LS013B7DH01_NRF5
+    bool "Sharp LS013B7DH01 (nRF5)"
+    help
+      Support for the Sharp LS013B7DH01 display via nRF5.
+
+endif # DISPLAY
