@@ -23,10 +23,7 @@
 #include "services/common/system_task.h"
 #include "services/common/new_timer/new_timer.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #include <stdint.h>
 

@@ -5,8 +5,7 @@
 
 #include "drivers/periph_config.h"
 
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 void pwr_enable_wakeup(bool enable) {
 #if PLATFORM_SILK

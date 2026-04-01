@@ -5,20 +5,18 @@
 #include "util/attributes.h"
 #include "util/units.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF5_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
+#if MICRO_FAMILY_NRF5
+#include <drivers/nrfx_common.h>
+#include <soc/nrfx_coredep.h>
+#elif MICRO_FAMILY_SF32LB52
+#include <bf0_hal.h>
+#elif MICRO_FAMILY_STM32F4
+#include <stm32f4xx.h>
+#endif
 
 #include <inttypes.h>
 
 #if MICRO_FAMILY_NRF5
-
-#include <drivers/nrfx_common.h>
-#include <soc/nrfx_coredep.h>
-
 void NOINLINE delay_us(uint32_t us) {
   nrfx_coredep_delay_us(us);
 }

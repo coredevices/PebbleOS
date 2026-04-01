@@ -16,9 +16,7 @@
 #include "system/passert.h"
 #include "util/math.h"
 
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #include "FreeRTOS.h"
 #include "semphr.h"

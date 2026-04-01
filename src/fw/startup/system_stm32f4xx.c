@@ -117,8 +117,7 @@
   * @{
   */
 
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 /**
   * @}

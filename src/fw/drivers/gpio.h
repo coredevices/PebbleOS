@@ -5,13 +5,6 @@
 
 #include <stdbool.h>
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF5_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
-
 #include "board/board.h"
 
 #ifdef MICRO_FAMILY_NRF5

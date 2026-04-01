@@ -4,10 +4,7 @@
 #include "drivers/mcu.h"
 #include <string.h>
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #if MICRO_FAMILY_STM32F7
 static const uint8_t STM32_UNIQUE_DEVICE_ID_ADDR[] = {0x1f, 0xf0, 0xf4, 0x20};

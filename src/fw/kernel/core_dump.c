@@ -47,12 +47,14 @@
 #include "util/size.h"
 #include "util/string.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF5_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
+
+#ifdef MICRO_FAMILY_STM32F4
+#include <stm32f4xx.h>
+#endif
+#if MICRO_FAMILY_NRF52840
+#include <nrf52840.h>
+#endif
 
 #include "FreeRTOS.h"       /* FreeRTOS Kernal Prototypes/Constants.          */
 #include "task.h"           /* FreeRTOS Task Prototypes/Constants.            */

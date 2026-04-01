@@ -19,10 +19,6 @@
 #include "util/math.h"
 #include "util/units.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
-
 #define BMA255_DEBUG 0
 
 #if BMA255_DEBUG

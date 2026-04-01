@@ -3,13 +3,6 @@
 
 #pragma once
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF52840_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
-
 #if defined(MICRO_FAMILY_STM32F2)
 # include "board_stm32.h"
 #elif defined(MICRO_FAMILY_STM32F4)

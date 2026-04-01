@@ -5,10 +5,7 @@
 #include "drivers/button_id.h"
 #include "debug/power_tracking.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -9,9 +9,7 @@
 #include "drivers/periph_config.h"
 #include "FreeRTOS.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #define I2C_IRQ_PRIORITY (0xc)
 #define I2C_NORMAL_MODE_CLOCK_SPEED_MAX   (100000)

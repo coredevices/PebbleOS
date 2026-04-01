@@ -23,8 +23,7 @@
 #include "util/net.h"
 #include "util/size.h"
 
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #include "OpenPDMFilter.h"
 

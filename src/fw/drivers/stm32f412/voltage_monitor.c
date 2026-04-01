@@ -8,9 +8,7 @@
 #include "os/mutex.h"
 #include "system/passert.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 static PebbleMutex *s_adc_mutex;
 
