@@ -21,7 +21,6 @@ if bld.is_silk():
         'driver_accel',
         'driver_mag',
         'driver_mcu',
-        'driver_mic',
         'driver_mpu',
         'driver_otp',
         'driver_pwr',
@@ -47,7 +46,6 @@ elif bld.is_snowy_compatible():
         'driver_accel',
         'driver_mag',
         'driver_mcu',
-        'driver_mic',
         'driver_mpu',
         'driver_otp',
         'driver_pwr',
@@ -72,7 +70,6 @@ elif bld.is_asterix():
         'driver_accel',
         'driver_mag',
         'driver_mcu',
-        'driver_mic',
         'driver_mpu',
         'driver_nrf5_hfxo',
         'driver_otp',
@@ -111,7 +108,6 @@ elif bld.is_obelix():
         'driver_temperature',
         'driver_touch',
         'driver_pwm',
-        'driver_mic',
         'driver_touch',
         'driver_audio',
     ])
@@ -140,7 +136,6 @@ elif bld.is_getafix():
         'driver_task_watchdog',
         'driver_temperature',
         'driver_touch',
-        'driver_mic',
         'driver_touch',
     ])
 ## ----------
@@ -792,66 +787,8 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if bld.is_snowy_compatible():
-    bld.objects(
-        name='driver_mic',
-        source=[
-            'mic/stm32/pdm.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_pmic',
-            'fw_includes',
-            'pbl_includes',
-            'freertos',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_silk():
-    bld.objects(
-        name='driver_mic',
-        source=[
-            'mic/stm32/dfsdm.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_pmic',
-            'fw_includes',
-            'pbl_includes',
-            'freertos',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_asterix():
-    bld.objects(
-        name='driver_mic',
-        source=[
-            'mic/nrf5/pdm.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'freertos',
-            'hal_nordic',
-        ],
-    )
-elif bld.is_obelix() or bld.is_getafix():
-    bld.objects(
-        name='driver_mic',
-        source=[
-            'mic/sf32lb52/pdm.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'hal_sifli',
-        ],
-    )
-
+if bld.env.CONFIG_MIC:
+    bld.recurse('mic')
 
 # FIXME: make generic to Cortex-M
 if mcu_family in ('STM32F4', 'NRF52840', 'SF32LB52'):
