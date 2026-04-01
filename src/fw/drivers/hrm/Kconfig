@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig HRM
+    bool "Heart Rate Monitor"
+    help
+      Heart Rate Monitor Drivers
+
+if HRM
+
+config HRM_GH3X2X
+    bool "Goodix GH3X2X"
+    help
+      Support for the Goodix GH3X2X heart rate sensor.
+
+config HRM_STUB
+    bool "Stub"
+    help
+      Stub heart rate monitor implementation.
+
+endif # HRM

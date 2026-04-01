@@ -15,7 +15,7 @@ if bld.is_silk():
         'driver_crc',
         'driver_gpio_defaults',
         'driver_hci_passthrough',
-        'driver_hrm',
+
         'driver_accel',
         'driver_mag',
         'driver_mcu',
@@ -85,7 +85,7 @@ elif bld.is_obelix():
 
         'driver_gpio',
         'driver_gpio_defaults',
-        'driver_hrm',
+
         'driver_accel',
         'driver_mag',
         'driver_mcu',
@@ -976,29 +976,8 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if bld.get_hrm() == 'GH3X2X':
-    includes = ['fw_includes']
-    if bld.variant != 'prf' or bld.env.IS_MFG:
-        bld.env.DEFINES.append('HRM_USE_GH3X2X')
-        includes += ['gh3x2x']
-
-    bld.objects(
-        name='driver_hrm',
-        source=[
-            'hrm/gh3x2x/gh3x2x.c',
-        ],
-        use=includes
-    )
-elif bld.get_hrm() == 'STUB':
-    bld.objects(
-        name='driver_hrm',
-        source=[
-            'stubs/hrm.c',
-        ],
-        use=[
-            'fw_includes',
-        ],
-    )
+if bld.env.CONFIG_HRM:
+    bld.recurse('hrm')
 
 if mcu_family == 'NRF52840':
     bld.objects(
