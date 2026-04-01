@@ -107,18 +107,13 @@ typedef struct {
 
 // Memory regions to dump
 static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
-#if MICRO_FAMILY_STM32F2
-  { .start = (void *)SRAM_BASE, .length = COREDUMP_RAM_SIZE },
-#elif MICRO_FAMILY_NRF52840 || MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_NRF52840 || MICRO_FAMILY_SF32LB52
   { .start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE },
 #else
   { .start = (void *)SRAM1_BASE, .length = COREDUMP_RAM_SIZE },
 #endif
 #if PLATFORM_SNOWY || PLATFORM_SPALDING
   { .start = (void *)CCMDATARAM_BASE, .length = (uint32_t)__CCM_RAM_size__ },
-#endif
-#if MICRO_FAMILY_STM32F7
-  { .start = (void *)RAMDTCM_BASE, .length = (uint32_t)__DTCM_RAM_size__ },
 #endif
 #if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
   { .start = (void *)RCC, .length = sizeof(*RCC) },

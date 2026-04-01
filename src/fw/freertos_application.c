@@ -41,12 +41,7 @@ static uint32_t s_ticks_corrected = 0;
 // use the "retina rtc" and a RTC Alarm peripheral. On stm32f4 we do have a millisecond register
 // so use the RTC running at normal speed and a RTC Wakeup peripheral. These have different
 // accuracies when going into and out of stop mode.
-#if defined(MICRO_FAMILY_STM32F2)
-//! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks EARLY_WAKEUP_TICKS = 2;
-// slightly larger than the 2 permitted by FreeRTOS in tasks.c
-static const RtcTicks MIN_STOP_TICKS = 5;
-#elif defined(MICRO_FAMILY_STM32F4) || defined(MICRO_FAMILY_STM32F7)
+#if defined(MICRO_FAMILY_STM32F4)
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks EARLY_WAKEUP_TICKS = 4;
 //! Stop mode until this number of ticks before the next scheduled task

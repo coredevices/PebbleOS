@@ -327,16 +327,6 @@ static void uptime_callback(void* data) {
 
 static void prv_low_power_debug_config_callback(void* data) {
   new_timer_delete(s_lowpower_timer);
-
-  // Turn off sleep and stop mode debugging if it is not explicitly enabled
-  // 4 cases:
-  // STM32F2/STM32F7, low power debug off: we need to disable it after the first 10 seconds
-  // STM32F2/STM32F7, low power debug on: we want to leave it on
-  // STM32F4, low power debug off: we never turned it on in the first place
-  // STM32F4, low power debug on: we want to leave it on
-#if (defined(MICRO_FAMILY_STM32F2) || defined(MICRO_FAMILY_STM32F7)) && !defined(LOW_POWER_DEBUG)
-  disable_mcu_debugging();
-#endif
 }
 
 #ifdef TEST_SJLJ

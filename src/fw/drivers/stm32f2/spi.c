@@ -67,23 +67,11 @@ static bool prv_spi_receive_is_ready(const SPIBus *bus) {
 }
 
 void prv_spi_send_data(const SPIBus *bus, uint16_t Data) {
-#if MICRO_FAMILY_STM32F7
-  // STM32F7 needs to access as 8 bits in order to actually do 8 bits.
-  // This _does_ work on F4, but QEMU doesn't agree, so let's just do it safely.
-  *(volatile uint8_t*)&bus->spi->DR = Data;
-#else
   bus->spi->DR = Data;
-#endif
 }
 
 uint16_t prv_spi_receive_data(const SPIBus *bus) {
-#if MICRO_FAMILY_STM32F7
-  // STM32F7 needs to access as 8 bits in order to actually do 8 bits.
-  // This _does_ work on F4, but QEMU doesn't agree, so let's just do it safely.
-  return *(volatile uint8_t*)&bus->spi->DR;
-#else
   return bus->spi->DR;
-#endif
 }
 
 void prv_spi_enable_peripheral_clock(const SPIBus *bus) {
@@ -237,14 +225,6 @@ static void prv_spi_slave_init(const SPISlavePort *slave) {
     prescaler | slave->spi_first_bit);
   // Write result back to CR1
   bus->spi->CR1 = tmpreg;
-
-#if MICRO_FAMILY_STM32F7
-  // On STM32F7 we need to set FRXTH in order to do 8-bit transfers.
-  // If we don't, the MCU always tries to read 16-bits even though we
-  // specified that the data is 8-bits.
-  // Why clear isn't 8-bit is beyond me, but ok.
-  bus->spi->CR2 |= SPI_CR2_FRXTH;
-#endif
 
   // Activate the SPI mode (Reset I2SMOD bit in I2SCFGR register)
   bus->spi->I2SCFGR &= (uint16_t)~((uint16_t)SPI_I2SCFGR_I2SMOD);

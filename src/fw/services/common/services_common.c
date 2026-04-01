@@ -11,9 +11,6 @@
 
 #include "mfg/mfg_info.h"
 
-#ifdef MICRO_FAMILY_STM32F2
-#include "services/common/legacy/factory_registry.h"
-#endif
 #include "services/common/accel_manager.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/comm_session/app_session_capabilities.h"

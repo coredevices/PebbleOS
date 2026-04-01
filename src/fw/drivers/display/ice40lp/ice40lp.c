@@ -62,7 +62,7 @@ typedef void (*PopulateLineCB)(
     int column, uint8_t * restrict line_buffer, const void *cb_data);
 
 //! 2 buffers to hold line data being transferred.
-static uint8_t DMA_READ_BSS s_line_buffer[2][DISP_PIXELS];
+static uint8_t s_line_buffer[2][DISP_PIXELS];
 //! buffer index keeps track of which line buffer is in use
 static uint32_t s_buffer_idx;
 //! line index is the line of the display currently being updated

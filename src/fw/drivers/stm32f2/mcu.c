@@ -6,11 +6,7 @@
 
 #include <stm32f4xx.h>
 
-#if MICRO_FAMILY_STM32F7
-static const uint8_t STM32_UNIQUE_DEVICE_ID_ADDR[] = {0x1f, 0xf0, 0xf4, 0x20};
-#else
 static const uint8_t STM32_UNIQUE_DEVICE_ID_ADDR[] = {0x1f, 0xff, 0x7a, 0x10};
-#endif
 
 StatusCode mcu_get_serial(void *buf, size_t *buf_sz) {
   if (*buf_sz < sizeof(STM32_UNIQUE_DEVICE_ID_ADDR)) {

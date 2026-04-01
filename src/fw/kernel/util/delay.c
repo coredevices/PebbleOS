@@ -35,13 +35,7 @@ void delay_init(void) {
 
 #else
 
-#if MICRO_FAMILY_STM32F7
-# define INSTRUCTIONS_PER_LOOP   (1)
-#elif MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4
-# define INSTRUCTIONS_PER_LOOP   (3)
-#else
-# error "Unexpected micro family"
-#endif
+#define INSTRUCTIONS_PER_LOOP   (3)
 
 static uint32_t s_loops_per_us = 0;
 

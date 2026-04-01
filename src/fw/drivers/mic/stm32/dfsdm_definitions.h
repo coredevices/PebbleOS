@@ -14,7 +14,6 @@
 #define DFSDM_BUFFER_LENGTH  (256)  // Each buffer fills up 64 times per second
 #define DFSDM_CIRC_BUFFER_SIZE  (DFSDM_BUFFER_LENGTH * sizeof(uint16_t) * 2)
 
-// Note: If the MCU has cache, this needs to be placed in DMA_BSS.
 typedef struct MicState {
   int32_t in_buffer[2][DFSDM_BUFFER_LENGTH];      // 2k
   uint8_t circ_buf_store[DFSDM_CIRC_BUFFER_SIZE];  // 1k

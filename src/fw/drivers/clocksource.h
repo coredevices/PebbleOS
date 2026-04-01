@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
+#if MICRO_FAMILY_STM32F4
 
 //! Configure and start the 32 kHz LSE clock.
 void clocksource_lse_configure(void);

@@ -94,7 +94,6 @@ IRQ_DEF(80, HASH_RNG)             // Hash and Rng
 #else
 IRQ_DEF(80, RNG)                  // Rng
 #endif
-#if !defined(STM32F2XX) // STM32F2 IRQs end here
 IRQ_DEF(81, FPU)                  // FPU
 #if !defined(STM32F412xG)
 IRQ_DEF(82, UART7)                // UART7
@@ -113,4 +112,3 @@ IRQ_DEF(92, QUADSPI)              // QUADSPI
 IRQ_DEF(95, FMPI2C1_EV)           // FMPI2C1 Event
 IRQ_DEF(96, FMPI2C1_ER)           // FMPI2C1 Error
 #endif
-#endif // !defined(STM32F2XX)
