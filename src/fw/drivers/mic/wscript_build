@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+sources = []
+use = ['freertos', 'fw_includes', 'pbl_includes']
+
+if bld.env.CONFIG_MIC_NRF5:
+    sources.append('nrf5/pdm.c')
+    use.append('hal_nordic')
+elif bld.env.CONFIG_MIC_SF32LB:
+    sources.append('sf32lb52/pdm.c')
+    use.append('hal_sifli')
+elif bld.env.CONFIG_MIC_STM32F4_DFSDM:
+    sources.append('stm32/dfsdm.c')
+    use.extend([
+        'driver_dma',
+        'driver_gpio',
+        'driver_periph_config',
+        'driver_pmic',
+        'stm32_stdlib',
+    ])
+elif bld.env.CONFIG_MIC_STM32F4_PDM:
+    sources.append('stm32/pdm.c')
+    use.extend([
+        'driver_dma',
+        'driver_gpio',
+        'driver_periph_config',
+        'driver_pmic',
+        'stm32_stdlib',
+    ])
+
+bld.objects(
+    name='driver_mic',
+    source=sources,
+    use=use,
+)
+
+bld.env.DRIVERS.append('driver_mic')
