@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig FLASH
+    bool "Flash"
+    help
+      Flash Drivers
+
+if FLASH
+
+config FLASH_GD25LQ255E
+    bool "GigaDevice GD25LQ255E"
+    help
+      Support for the GigaDevice GD25LQ255E NOR flash.
+
+config FLASH_GD25Q256E
+    bool "GigaDevice GD25Q256E"
+    help
+      Support for the GigaDevice GD25Q256E NOR flash.
+
+config FLASH_MX25U
+    bool "Macronix MX25U"
+    help
+      Support for the Macronix MX25U NOR flash.
+
+config FLASH_SPANSION_S29VS
+    bool "Spansion S29VS"
+    help
+      Support for the Spansion S29VS NOR flash.
+
+endif # FLASH

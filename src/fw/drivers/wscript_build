@@ -13,8 +13,6 @@ if bld.is_silk():
         'driver_button',
         'driver_clocksource',
         'driver_crc',
-
-        'driver_flash',
         'driver_gpio_defaults',
         'driver_hci_passthrough',
         'driver_hrm',
@@ -39,8 +37,6 @@ elif bld.is_snowy_compatible():
         'driver_battery',
         'driver_button',
         'driver_clocksource',
-
-        'driver_flash',
         'driver_gpio_defaults',
         'driver_hci_passthrough',
         'driver_accel',
@@ -64,8 +60,6 @@ elif bld.is_asterix():
         'driver_backlight',
         'driver_battery',
         'driver_button',
-
-        'driver_flash',
         'driver_gpio_defaults',
         'driver_accel',
         'driver_mag',
@@ -90,7 +84,6 @@ elif bld.is_obelix():
         'driver_button',
 
         'driver_gpio',
-        'driver_flash',
         'driver_gpio_defaults',
         'driver_hrm',
         'driver_accel',
@@ -120,7 +113,6 @@ elif bld.is_getafix():
         'driver_button',
 
         'driver_gpio',
-        'driver_flash',
         'driver_gpio_defaults',
         'driver_accel',
         'driver_mag',
@@ -414,88 +406,8 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if bld.is_silk():
-    bld.objects(
-        name='driver_flash',
-        source=[
-            'flash/cd_flash_driver.c',
-            'flash/flash_api.c',
-            'flash/flash_crc.c',
-            'flash/flash_erase.c',
-            'flash/mx25u.c',
-            'flash/qspi_flash.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_qspi',
-            'driver_task_watchdog',
-            'driver_watchdog',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-            'fw_services',
-        ],
-    )
-elif bld.is_snowy_compatible():
-    bld.objects(
-        name='driver_flash',
-        source=[
-            'flash/cd_flash_driver.c',
-            'flash/flash_api.c',
-            'flash/flash_crc.c',
-            'flash/flash_erase.c',
-            'flash/spansion_s29vs.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_task_watchdog',
-            'driver_watchdog',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-            'fw_services',
-        ],
-    )
-elif bld.is_asterix():
-    bld.objects(
-        name='driver_flash',
-        source=[
-            'flash/flash_api.c',
-            'flash/flash_crc.c',
-            'flash/flash_erase.c',
-            'flash/cd_flash_driver.c',
-            'flash/gd25lq255e.c',
-        ],
-        use=[
-            'driver_qspi',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'fw_services',
-        ],
-    )
-elif bld.is_obelix() or bld.is_getafix():
-    bld.objects(
-        name='driver_flash',
-        source=[
-            'flash/flash_api.c',
-            'flash/flash_crc.c',
-            'flash/flash_erase.c',
-            'flash/cd_flash_driver.c',
-            'flash/gd25q256e.c',
-        ],
-        use=[
-            'driver_qspi',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'fw_services',
-        ],
-    )
+if bld.env.CONFIG_FLASH:
+    bld.recurse('flash')
 
 if mcu_family == 'STM32F4':
     bld.objects(

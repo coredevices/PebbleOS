@@ -5,6 +5,7 @@ menu "Drivers"
 
 rsource "ambient/Kconfig"
 rsource "display/Kconfig"
+rsource "flash/Kconfig"
 rsource "i2c/Kconfig"
 rsource "led_controller/Kconfig"
 rsource "mic/Kconfig"
