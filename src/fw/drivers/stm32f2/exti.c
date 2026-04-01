@@ -13,6 +13,11 @@
 
 #include <stdbool.h>
 
+//! For simplicity we just configure all our EXTI-related interrupts to the same priority. This
+//! way we don't have to worry about different lines wanting differing priorities when they share
+//! the same NVIC channel (and therefore the same priority)
+#define EXTI_PRIORITY (0x0e)
+
 //! Tracks whether we've disabled interrupts as part of locking out other people from our EXTI
 //! registers.
 static bool s_exti_locked = false;
