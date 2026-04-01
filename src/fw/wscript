@@ -393,6 +393,11 @@ def _link_firmware(bld, sources):
 
     ldscript = _generate_memory_layout(bld)
 
+    ldscripts = [ldscript, 'fw_common.ld']
+    if bld.env.memfault:
+        ldscripts.append(bld.srcnode.find_node(
+            'third_party/memfault/port/memfault_compact_log.ld'))
+
     if bld.env.NO_LINK:
         # Only build the object files
         bld.objects(source=sources,
@@ -407,7 +412,7 @@ def _link_firmware(bld, sources):
                     lib=['gcc'],
                     target=elf_node,
                     includes='fonts',
-                    ldscript=[ldscript, 'fw_common.ld'],
+                    ldscript=ldscripts,
                     linkflags=fw_linkflags)
 
         x.env.append_value('LINKFLAGS', fw_linkflags)
