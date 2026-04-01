@@ -8,7 +8,7 @@
 #include "drivers/stm32f2/dma_definitions.h"
 #include "drivers/i2c/stm32f4.h"
 #include "drivers/stm32f2/spi_definitions.h"
-#include "drivers/stm32f2/uart_definitions.h"
+#include "drivers/uart/stm32f4.h"
 #include "drivers/temperature/analog.h"
 #include "drivers/voltage_monitor.h"
 #include "util/units.h"

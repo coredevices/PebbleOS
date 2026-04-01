@@ -1370,46 +1370,8 @@ if bld.capability('HAS_TOUCHSCREEN'):
         )
 
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_uart',
-        source=[
-            'stm32f2/uart.c',
-        ],
-        use=[
-            'driver_gpio',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family == 'NRF52840':
-    bld.objects(
-        name='driver_uart',
-        source=[
-            'nrf5/uart.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'hal_nordic',
-        ],
-    )
-elif mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_uart',
-        source=[
-            'sf32lb52/uart.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'hal_sifli',
-        ],
-    )
+if bld.env.CONFIG_UART:
+    bld.recurse('uart')
 
 if bld.is_asterix():
     bld.objects(
