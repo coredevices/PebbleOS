@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "board/board.h"
-#include "drivers/i2c_definitions.h"
+#include "definitions.h"
 
 typedef struct I2CBusHalState {
   I2C_HandleTypeDef hdl;

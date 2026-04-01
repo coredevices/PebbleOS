@@ -1,1 +1,4 @@
 # spalding_bb2 board configuration
+
+CONFIG_I2C=y
+CONFIG_I2C_STM32F4=y

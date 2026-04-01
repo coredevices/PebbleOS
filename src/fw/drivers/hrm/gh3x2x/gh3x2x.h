@@ -6,7 +6,6 @@
 #include "drivers/exti.h"
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
-#include "drivers/i2c_definitions.h"
 #include "applib/app_timer.h"
 
 #if PLATFORM_OBELIX
