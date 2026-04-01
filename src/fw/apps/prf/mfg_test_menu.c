@@ -14,7 +14,6 @@
 #include "apps/prf/mfg_backlight.h"
 #include "apps/prf/mfg_button.h"
 #include "apps/prf/mfg_charge.h"
-#include "apps/prf/mfg_discharge.h"
 #include "apps/prf/mfg_display.h"
 #include "apps/prf/mfg_hrm_ctr_leakage_obelix.h"
 #include "apps/prf/mfg_mic_asterix.h"
@@ -70,7 +69,6 @@ static const MfgTestMenuEntry s_entries[] = {
   { "HRM CTR/L",     MfgTestId_HrmCtrLeakage,  mfg_hrm_ctr_leakage_obelix_app_get_info },
 #endif
   { "Charge",        MfgTestId_Charge,         mfg_charge_app_get_info },
-  { "Discharge",     MfgTestId_Discharge,      mfg_discharge_app_get_info },
   { "Program Color", MfgTestId_ProgramColor,   mfg_program_color_app_get_info },
 };
 
