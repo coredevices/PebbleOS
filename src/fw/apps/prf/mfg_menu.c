@@ -8,6 +8,7 @@
 #include "applib/ui/window_private.h"
 #include "apps/prf/mfg_bt_device_name.h"
 #include "apps/prf/mfg_extras_menu.h"
+#include "apps/prf/mfg_test_aging.h"
 #include "apps/prf/mfg_info_qr.h"
 #include "apps/prf/mfg_test_menu.h"
 #include "kernel/event_loop.h"
@@ -53,6 +54,10 @@ static void prv_select_extras(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_extras_menu_app_get_info());
 }
 
+static void prv_select_aging(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_aging_app_get_info());
+}
+
 static void prv_select_reset(int index, void *context) {
   system_reset();
 }
@@ -69,6 +74,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "BT Device Name",    .callback = prv_select_bt_device_name },
     { .title = "Device Info",       .callback = prv_select_info_qr },
     { .title = "Tests",             .callback = prv_select_tests },
+    { .title = "Aging",             .callback = prv_select_aging },
     { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
     { .title = "Extras",            .callback = prv_select_extras },
