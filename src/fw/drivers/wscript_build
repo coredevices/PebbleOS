@@ -9,7 +9,7 @@ if bld.is_silk():
     bld.env.DRIVERS.extend([
 
         'driver_backlight',
-        'driver_battery',
+
         'driver_button',
         'driver_clocksource',
         'driver_crc',
@@ -34,7 +34,7 @@ elif bld.is_snowy_compatible():
     bld.env.DRIVERS.extend([
 
         'driver_backlight',
-        'driver_battery',
+
         'driver_button',
         'driver_clocksource',
         'driver_gpio_defaults',
@@ -58,7 +58,7 @@ elif bld.is_asterix():
     bld.env.DRIVERS.extend([
 
         'driver_backlight',
-        'driver_battery',
+
         'driver_button',
         'driver_gpio_defaults',
         'driver_accel',
@@ -80,7 +80,7 @@ elif bld.is_obelix():
     bld.env.DRIVERS.extend([
 
         'driver_backlight',
-        'driver_battery',
+
         'driver_button',
 
         'driver_gpio',
@@ -109,7 +109,7 @@ elif bld.is_getafix():
     bld.env.DRIVERS.extend([
 
         'driver_backlight',
-        'driver_battery',
+
         'driver_button',
 
         'driver_gpio',
@@ -191,53 +191,8 @@ elif bld.is_obelix() or bld.is_getafix():
         ],
     )
 
-if bld.env.QEMU:
-    bld.objects(
-        name='driver_battery',
-        source=[
-            'battery/battery_adc_conversion.c',
-            'battery/battery_common.c',
-            'battery/battery_voltage_monitor.c',
-            'qemu/qemu_battery.c',
-        ],
-        use=[
-            'driver_qemu_serial',
-            'driver_qemu_settings',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
-    bld.objects(
-        name='driver_battery',
-        source=[
-            'battery/battery_common.c',
-            # PMIC provides this implementation
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-else:
-    bld.objects(
-        name='driver_battery',
-        source=[
-            'battery/battery_adc_conversion.c',
-            'battery/battery_common.c',
-            'battery/battery_pmic.c',
-            'battery/battery_voltage_monitor.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_pmic',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
+if bld.env.CONFIG_BATTERY:
+    bld.recurse('battery')
 
 if bld.is_snowy_compatible() and not bld.env.QEMU:
     bld.objects(
