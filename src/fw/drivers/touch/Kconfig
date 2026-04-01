@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig TOUCH
+    bool "Touchscreen"
+    help
+      Touchscreen Drivers
+
+if TOUCH
+
+config TOUCH_CST816
+    bool "Hynitron CST816"
+    help
+      Support for the Hynitron CST816 touch controller.
+
+endif # TOUCH
