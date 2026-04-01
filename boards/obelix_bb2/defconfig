@@ -1,4 +1,7 @@
 # obelix_bb2 board configuration
 
+CONFIG_I2C=y
+CONFIG_I2C_SF32LB=y
+
 CONFIG_LED_CONTROLLER=y
 CONFIG_LED_CONTROLLER_AW2016=y

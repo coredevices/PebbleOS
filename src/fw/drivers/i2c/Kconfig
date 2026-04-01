@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig I2C
+    bool "I2C"
+    help
+      I2C Drivers
+
+if I2C
+
+config I2C_NRF5
+    bool "Nordic nRF5 I2C Controller"
+    help
+      Support for the Nordic nRF5 I2C controller.
+
+config I2C_SF32LB
+    bool "SiFli SF32LB I2C Controller"
+    help
+      Support for the SiFli SF32LB I2C controller.
+
+config I2C_STM32F4
+    bool "ST STM32F4 I2C Controller"
+    help
+      Support for the ST STM32F4 I2C controller.
+
+endif # I2C

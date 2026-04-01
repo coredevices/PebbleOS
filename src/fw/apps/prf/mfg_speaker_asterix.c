@@ -8,8 +8,6 @@
 #include "applib/ui/window.h"
 #include "board/board.h"
 #include "drivers/i2c.h"
-#include "drivers/i2c_definitions.h"
-#include "drivers/i2c_hal.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "process_management/pebble_process_md.h"

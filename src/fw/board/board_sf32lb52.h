@@ -222,8 +222,8 @@ typedef const struct QSPIFlash QSPIFlash;
 typedef const struct DisplayJDIDevice DisplayJDIDevice;
 typedef const struct AudioDevice AudioDevice;
 
-#include "drivers/i2c_definitions.h"
-#include "drivers/sf32lb52/i2c_hal_definitions.h"
+#include "drivers/i2c/definitions.h"
+#include "drivers/i2c/sf32lb.h"
 
 void board_early_init(void);
 void board_init(void);

@@ -744,51 +744,8 @@ elif mcu_family in ('NRF52840', 'SF32LB52'):
         ],
     )
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_i2c',
-        source=[
-            'i2c.c',
-            'stm32f2/i2c_hal.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_rtc',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-
-elif mcu_family == 'NRF52840':
-    bld.objects(
-        name='driver_i2c',
-        source=[
-            'i2c.c',
-            'nrf5/i2c_hal.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'hal_nordic',
-        ],
-    )
-elif mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_i2c',
-        source=[
-            'i2c.c',
-            'sf32lb52/i2c_hal.c',
-        ],
-        use=[
-            'fw_includes',
-            'freertos',
-            'hal_sifli',
-        ],
-    )
+if bld.env.CONFIG_I2C:
+    bld.recurse('i2c')
 
 if bld.env.QEMU:
     bld.objects(

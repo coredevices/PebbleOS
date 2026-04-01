@@ -9,8 +9,6 @@
 #include "applib/ui/window.h"
 #include "board/board.h"
 #include "drivers/i2c.h"
-#include "drivers/i2c_definitions.h"
-#include "drivers/i2c_hal.h"
 #include "drivers/flash.h"
 #include "drivers/clocksource.h"
 #include "flash_region/flash_region.h"
