@@ -278,7 +278,8 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
   mfg_info_set_model(model);
   mfg_info_set_watch_color(s_color_table[app_data->selected_color_index].color);
 
-  mfg_test_result_report(MfgTestId_ProgramColor, true, 0);
+  mfg_test_result_report(MfgTestId_ProgramColor, true,
+                         s_color_table[app_data->selected_color_index].color);
   text_layer_set_text(&app_data->status, "PROGRAMMED!");
   app_timer_register(3000, prv_close_timer_callback, NULL);
 }
