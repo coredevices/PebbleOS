@@ -27,6 +27,11 @@ def configure(conf):
     MEMFAULT = conf.env.memfault
     conf.env.append_value("DEFINES", [f"MEMFAULT={MEMFAULT}"])
 
+    # Memfault compact logs require GNU ##__VA_ARGS__ comma-elision, which
+    # is only available in -std=gnu* modes. pebble_arm_gcc.py checks this
+    # flag and uses -std=gnu11 instead of -std=c11.
+    conf.env.memfault_needs_gnu_extensions = bool(MEMFAULT)
+
     if conf.options.memfault_force:
         conf.env.append_value("DEFINES", "MEMFAULT_FORCE")
 
