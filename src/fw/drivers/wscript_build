@@ -3,177 +3,156 @@ if mcu_family not in ('STM32F4', 'NRF52840', 'SF32LB52'):
     bld.fatal('src/fw/drivers/wscript: '
               'Unknown MICRO_FAMILY {}'.format(mcu_family))
 
+bld.env.DRIVERS = []
+
 if bld.is_silk():
-    bld(
-        name='drivers',
-        use=[
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_clocksource',
-            'driver_crc',
-            'driver_display',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_hci_passthrough',
-            'driver_hrm',
-            'driver_accel',
-            'driver_mag',
-            'driver_led_controller',
-            'driver_mcu',
-            'driver_mic',
-            'driver_mpu',
-            'driver_otp',
-            'driver_pmic',
-            'driver_pwr',
-            'driver_rng',
-            'driver_rtc',
-            'driver_task_watchdog',
-            'driver_temperature',
-            'driver_uart',
-            'driver_vibe',
-            'driver_voltage_monitor',
-            'driver_watchdog',
-        ],
-    )
+    bld.env.DRIVERS.extend([
+        'driver_ambient_light',
+        'driver_backlight',
+        'driver_battery',
+        'driver_button',
+        'driver_clocksource',
+        'driver_crc',
+        'driver_display',
+        'driver_flash',
+        'driver_gpio_defaults',
+        'driver_hci_passthrough',
+        'driver_hrm',
+        'driver_accel',
+        'driver_mag',
+        'driver_mcu',
+        'driver_mic',
+        'driver_mpu',
+        'driver_otp',
+        'driver_pmic',
+        'driver_pwr',
+        'driver_rng',
+        'driver_rtc',
+        'driver_task_watchdog',
+        'driver_temperature',
+        'driver_vibe',
+        'driver_voltage_monitor',
+        'driver_watchdog',
+    ])
 
 elif bld.is_snowy_compatible():
-    bld(
-        name='drivers',
-        use=[
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_clocksource',
-            'driver_display',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_hci_passthrough',
-            'driver_accel',
-            'driver_mag',
-            'driver_led_controller',
-            'driver_mcu',
-            'driver_mic',
-            'driver_mpu',
-            'driver_otp',
-            'driver_pmic',
-            'driver_pwr',
-            'driver_rng',
-            'driver_rtc',
-            'driver_task_watchdog',
-            'driver_temperature',
-            'driver_touch',
-            'driver_uart',
-            'driver_vibe',
-            'driver_voltage_monitor',
-            'driver_watchdog',
-        ],
-    )
+    bld.env.DRIVERS.extend([
+        'driver_ambient_light',
+        'driver_backlight',
+        'driver_battery',
+        'driver_button',
+        'driver_clocksource',
+        'driver_display',
+        'driver_flash',
+        'driver_gpio_defaults',
+        'driver_hci_passthrough',
+        'driver_accel',
+        'driver_mag',
+        'driver_mcu',
+        'driver_mic',
+        'driver_mpu',
+        'driver_otp',
+        'driver_pmic',
+        'driver_pwr',
+        'driver_rng',
+        'driver_rtc',
+        'driver_task_watchdog',
+        'driver_temperature',
+        'driver_touch',
+        'driver_vibe',
+        'driver_voltage_monitor',
+        'driver_watchdog',
+    ])
 
 elif bld.is_asterix():
-    bld(
-        name='drivers',
-        use=[
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_display',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_accel',
-            'driver_mag',
-            'driver_mcu',
-            'driver_mic',
-            'driver_mpu',
-            'driver_nrf5_hfxo',
-            'driver_otp',
-            'driver_periph_config',
-            'driver_pmic',
-            'driver_pressure',
-            'driver_pwr',
-            'driver_rng',
-            'driver_rtc',
-            'driver_task_watchdog',
-            'driver_temperature',
-            'driver_uart',
-            'driver_vibe',
-        ],
-    )
+    bld.env.DRIVERS.extend([
+        'driver_ambient_light',
+        'driver_backlight',
+        'driver_battery',
+        'driver_button',
+        'driver_display',
+        'driver_flash',
+        'driver_gpio_defaults',
+        'driver_accel',
+        'driver_mag',
+        'driver_mcu',
+        'driver_mic',
+        'driver_mpu',
+        'driver_nrf5_hfxo',
+        'driver_otp',
+        'driver_periph_config',
+        'driver_pmic',
+        'driver_pressure',
+        'driver_pwr',
+        'driver_rng',
+        'driver_rtc',
+        'driver_task_watchdog',
+        'driver_temperature',
+        'driver_vibe',
+    ])
 
 elif bld.is_obelix():
-    bld(
-        name='drivers',
-        use=[
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_display',
-            'driver_gpio',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_hrm',
-            'driver_i2c',
-            'driver_accel',
-            'driver_mag',
-            'driver_mcu',
-            'driver_mpu',
-            'driver_otp',
-            'driver_periph_config',
-            'driver_pmic',
-            'driver_pwr',
-            'driver_qspi',
-            'driver_rc10k',
-            'driver_rng',
-            'driver_rtc',
-            'driver_task_watchdog',
-            'driver_temperature',
-            'driver_touch',
-            'driver_uart',
-            'driver_vibe',
-            'driver_pwm',
-            'driver_mic',
-            'driver_touch',
-            'driver_audio',
-        ],
-    )
+    bld.env.DRIVERS.extend([
+        'driver_ambient_light',
+        'driver_backlight',
+        'driver_battery',
+        'driver_button',
+        'driver_display',
+        'driver_gpio',
+        'driver_flash',
+        'driver_gpio_defaults',
+        'driver_hrm',
+        'driver_accel',
+        'driver_mag',
+        'driver_mcu',
+        'driver_mpu',
+        'driver_otp',
+        'driver_periph_config',
+        'driver_pmic',
+        'driver_pwr',
+        'driver_qspi',
+        'driver_rc10k',
+        'driver_rng',
+        'driver_rtc',
+        'driver_task_watchdog',
+        'driver_temperature',
+        'driver_touch',
+        'driver_vibe',
+        'driver_pwm',
+        'driver_mic',
+        'driver_touch',
+        'driver_audio',
+    ])
 
 elif bld.is_getafix():
-    bld(
-        name='drivers',
-        use=[
-            'driver_ambient_light',
-            'driver_backlight',
-            'driver_battery',
-            'driver_button',
-            'driver_display',
-            'driver_gpio',
-            'driver_flash',
-            'driver_gpio_defaults',
-            'driver_accel',
-            'driver_mag',
-            'driver_mcu',
-            'driver_mpu',
-            'driver_otp',
-            'driver_periph_config',
-            'driver_pmic',
-            'driver_pwr',
-            'driver_qspi',
-            'driver_rc10k',
-            'driver_rng',
-            'driver_rtc',
-            'driver_task_watchdog',
-            'driver_temperature',
-            'driver_touch',
-            'driver_uart',
-            'driver_vibe',
-            'driver_mic',
-            'driver_touch',
-        ],
-    )
+    bld.env.DRIVERS.extend([
+        'driver_ambient_light',
+        'driver_backlight',
+        'driver_battery',
+        'driver_button',
+        'driver_display',
+        'driver_gpio',
+        'driver_flash',
+        'driver_gpio_defaults',
+        'driver_accel',
+        'driver_mag',
+        'driver_mcu',
+        'driver_mpu',
+        'driver_otp',
+        'driver_periph_config',
+        'driver_pmic',
+        'driver_pwr',
+        'driver_qspi',
+        'driver_rc10k',
+        'driver_rng',
+        'driver_rtc',
+        'driver_task_watchdog',
+        'driver_temperature',
+        'driver_touch',
+        'driver_vibe',
+        'driver_mic',
+        'driver_touch',
+    ])
 ## ----------
 
 if bld.is_obelix():
@@ -198,7 +177,6 @@ if bld.is_asterix():
             'ambient/ambient_light_opt3001.c',
         ],
         use=[
-            'driver_i2c',
             'fw_includes',
             'pbl_includes',
         ],
@@ -210,7 +188,6 @@ elif bld.is_obelix() or bld.is_getafix():
             'ambient/ambient_light_w1160.c',
         ],
         use=[
-            'driver_i2c',
             'fw_includes',
             'pbl_includes',
         ],
@@ -266,7 +243,6 @@ elif mcu_family in ('SF32LB52'):
         ],
     )
 
-# FIXME: break dependency on driver_led_controller when not needed
 if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_backlight',
@@ -276,7 +252,6 @@ if mcu_family == 'STM32F4':
         use=[
             'driver_pwm',
             'driver_gpio',
-            'driver_led_controller',
             'fw_includes',
             'pbl_includes',
         ],
@@ -303,7 +278,6 @@ elif bld.is_obelix() or bld.is_getafix():
         use=[
             'fw_includes',
             'pbl_includes',
-            'driver_led_controller',
         ],
     )
 
@@ -799,7 +773,6 @@ if bld.is_snowy_compatible() or bld.env.BOARD == 'silk_flint':
         use=[
             'driver_exti',
             'driver_gpio',
-            'driver_i2c',
             'driver_periph_config',
             'fw_includes',
             'pbl_includes',
@@ -814,7 +787,6 @@ if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
             'imu/mmc5603nj/mmc5603nj.c',
         ],
         use=[
-            'driver_i2c',
             'fw_includes',
             'pbl_includes',
         ],
@@ -827,7 +799,6 @@ if bld.is_asterix():
             'pressure/bmp390.c',
         ],
         use=[
-            'driver_i2c',
             'fw_includes',
         ],
     )
@@ -998,7 +969,6 @@ if bld.is_snowy_compatible():
         use=[
             'driver_exti',
             'driver_gpio',
-            'driver_i2c',
             'driver_periph_config',
             'freertos',
             'fw_includes',
@@ -1014,7 +984,6 @@ elif bld.is_silk():
         ],
         use=[
             'driver_gpio',
-            'driver_i2c',
             'fw_includes',
             'pbl_includes',
         ],
@@ -1026,7 +995,6 @@ elif bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
             'pmic/npm1300.c',
         ],
         use=[
-            'driver_i2c',
             'fw_includes',
             'pbl_includes',
         ],
@@ -1351,7 +1319,6 @@ if bld.capability('HAS_TOUCHSCREEN'):
                 'freertos',
                 'fw_includes',
                 'pbl_includes',
-                'driver_i2c',
                 'driver_gpio',
             ],
         )
@@ -1369,7 +1336,6 @@ if bld.is_asterix():
         use=[
             'driver_gpio',
             'driver_periph_config',
-            'driver_i2c'
             'fw_includes',
             'pbl_includes',
         ],
@@ -1382,7 +1348,6 @@ if bld.is_obelix():
         ],
         use=[
             'fw_includes',
-            'driver_i2c',
             'driver_gpio',
         ],
     )
@@ -1394,7 +1359,6 @@ if bld.is_getafix():
         ],
         use=[
             'fw_includes',
-            'driver_i2c',
             'driver_gpio',
         ],
     )
@@ -1498,4 +1462,10 @@ if mcu_family == 'SF32LB52':
             'hal_sifli',
         ],
     )
+
+bld(
+    name='drivers',
+    use=bld.env.DRIVERS,
+)
+
 # vim:filetype=python

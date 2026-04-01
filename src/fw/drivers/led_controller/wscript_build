@@ -14,3 +14,5 @@ bld.objects(
     source=sources,
     use=use,
 )
+
+bld.env.DRIVERS.append('driver_led_controller')
