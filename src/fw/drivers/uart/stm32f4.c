@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "uart_definitions.h"
+#include "stm32f4.h"
 #include "drivers/uart.h"
 
 #include "drivers/dma.h"

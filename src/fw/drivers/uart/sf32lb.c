@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "uart_definitions.h"
+#include "sf32lb.h"
 
 #include "drivers/uart.h"
 #include "kernel/util/stop.h"
