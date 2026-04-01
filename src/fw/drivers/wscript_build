@@ -49,7 +49,7 @@ elif bld.is_snowy_compatible():
         'driver_rtc',
         'driver_task_watchdog',
 
-        'driver_touch',
+
         'driver_voltage_monitor',
         'driver_watchdog',
     ])
@@ -99,9 +99,9 @@ elif bld.is_obelix():
         'driver_rtc',
         'driver_task_watchdog',
 
-        'driver_touch',
+
         'driver_pwm',
-        'driver_touch',
+
         'driver_audio',
     ])
 
@@ -127,8 +127,8 @@ elif bld.is_getafix():
         'driver_rtc',
         'driver_task_watchdog',
 
-        'driver_touch',
-        'driver_touch',
+
+
     ])
 ## ----------
 
@@ -930,26 +930,8 @@ if mcu_family == 'STM32F4':
         ],
     )
 
-if bld.capability('HAS_TOUCHSCREEN'):
-    if bld.env.QEMU:
-        bld.objects(
-            name='driver_touch',
-            source=[
-                'stubs/touch.c',
-            ],
-        )
-    elif bld.is_obelix() or bld.is_getafix():
-        bld.objects(
-            name='driver_touch',
-            source=['touch/cst816/cst816.c'],
-            use=[
-                'cst816_fw',
-                'freertos',
-                'fw_includes',
-                'pbl_includes',
-                'driver_gpio',
-            ],
-        )
+if bld.env.CONFIG_TOUCH:
+    bld.recurse('touch')
 
 
 if bld.env.CONFIG_UART:
