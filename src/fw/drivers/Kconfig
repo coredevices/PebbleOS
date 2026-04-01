@@ -6,5 +6,6 @@ menu "Drivers"
 rsource "i2c/Kconfig"
 rsource "led_controller/Kconfig"
 rsource "uart/Kconfig"
+rsource "vibe/Kconfig"
 
 endmenu
