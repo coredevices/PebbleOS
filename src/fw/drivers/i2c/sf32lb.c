@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "i2c_hal_definitions.h"
+#include "sf32lb.h"
+#include "definitions.h"
+#include "hal.h"
 
-#include "drivers/i2c_definitions.h"
-#include "drivers/i2c_hal.h"
 #include "system/passert.h"
 
 #include "FreeRTOS.h"

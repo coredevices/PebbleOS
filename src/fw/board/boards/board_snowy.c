@@ -4,9 +4,9 @@
 #include "board/board.h"
 
 #include "drivers/display/ice40lp/ice40lp_definitions.h"
-#include "drivers/i2c_definitions.h"
+#include "drivers/i2c/definitions.h"
 #include "drivers/stm32f2/dma_definitions.h"
-#include "drivers/stm32f2/i2c_hal_definitions.h"
+#include "drivers/i2c/stm32f4.h"
 #include "drivers/stm32f2/spi_definitions.h"
 #include "drivers/stm32f2/uart_definitions.h"
 #include "drivers/temperature/analog.h"

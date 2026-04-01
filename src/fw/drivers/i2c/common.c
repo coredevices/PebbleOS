@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "i2c.h"
-#include "i2c_definitions.h"
-#include "i2c_hal.h"
+#include "drivers/i2c.h"
+#include "definitions.h"
+#include "hal.h"
 
 #include "board/board.h"
 #include "debug/power_tracking.h"
