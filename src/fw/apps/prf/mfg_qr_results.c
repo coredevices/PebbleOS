@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/app.h"
+#include "applib/app_watch_info.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/qr_code.h"
 #include "applib/ui/window.h"
@@ -16,6 +17,26 @@
 
 #include <stdio.h>
 #include <string.h>
+
+static const char *prv_color_short_name(WatchInfoColor color) {
+  switch (color) {
+#if PLATFORM_ASTERIX
+  case WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK: return "BK";
+  case WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE: return "WH";
+#elif PLATFORM_OBELIX
+  case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY: return "BG";
+  case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED: return "BR";
+  case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE: return "SB";
+  case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY: return "SG";
+#elif PLATFORM_GETAFIX
+  case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20: return "BK20";
+  case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14: return "SV14";
+  case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20: return "SV20";
+  case WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14: return "GD14";
+#endif
+  default: return "??";
+  }
+}
 
 typedef struct {
   Window window;
@@ -87,14 +108,15 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
     snprintf(entry, sizeof(entry), "HRM:%c", rc);
     break;
 #endif
-  case MfgTestId_ProgramColor:
-    snprintf(entry, sizeof(entry), "CLR:%c", rc);
-    break;
   case MfgTestId_Charge:
     snprintf(entry, sizeof(entry), "CHG:%c", rc);
     break;
   case MfgTestId_Discharge:
     snprintf(entry, sizeof(entry), "DCH:%c,%lu", rc, (unsigned long)r->value);
+    break;
+  case MfgTestId_ProgramColor:
+    snprintf(entry, sizeof(entry), "CLR:%c,%s", rc,
+             prv_color_short_name((WatchInfoColor)r->value));
     break;
   default:
     return;
