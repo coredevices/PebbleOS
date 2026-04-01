@@ -68,7 +68,6 @@ elif bld.is_asterix():
         'driver_nrf5_hfxo',
         'driver_otp',
         'driver_periph_config',
-        'driver_pressure',
         'driver_pwr',
         'driver_rng',
         'driver_rtc',
@@ -515,16 +514,8 @@ if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
         ],
     )
 
-if bld.is_asterix():
-    bld.objects(
-        name='driver_pressure',
-        source=[
-            'pressure/bmp390.c',
-        ],
-        use=[
-            'fw_includes',
-        ],
-    )
+if bld.env.CONFIG_PRESSURE:
+    bld.recurse('pressure')
 
 if mcu_family == 'STM32F4':
     bld.objects(
