@@ -3,37 +3,24 @@
 
 #include "applib/app.h"
 #include "applib/ui/app_window_stack.h"
-#include "applib/ui/dialogs/confirmation_dialog.h"
+#include "applib/ui/qr_code.h"
+#include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
-#include "apps/prf/mfg_test_result.h"
+#include "applib/ui/window_private.h"
 #include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
+#include "process_state/app_state/app_state.h"
 #include "services/common/bluetooth/bluetooth_ctl.h"
 #include "services/common/bluetooth/local_id.h"
 
-#include <stdio.h>
 #include <string.h>
 
 typedef struct {
   Window window;
-  char dialog_text[128];
+  QRCode qr_code;
+  TextLayer mac_label;
+  char mac_buffer[BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE];
 } AppData;
-
-static void prv_result_confirmed(ClickRecognizerRef recognizer, void *context) {
-  ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
-  confirmation_dialog_pop(confirmation_dialog);
-
-  bool passed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
-  mfg_test_result_report(MfgTestId_Adv, passed, 0);
-  app_window_stack_pop(false);
-}
-
-static void prv_result_click_config(void *context) {
-  window_single_click_subscribe(BUTTON_ID_UP, prv_result_confirmed);
-  window_single_click_subscribe(BUTTON_ID_DOWN, prv_result_confirmed);
-  window_single_click_subscribe(BUTTON_ID_BACK, prv_result_confirmed);
-}
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
@@ -44,22 +31,33 @@ static void prv_handle_init(void) {
   window_init(window, "BLE Adv");
   window_set_fullscreen(window, true);
 
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
-  bt_local_id_copy_device_name(name, false);
-  snprintf(data->dialog_text, sizeof(data->dialog_text),
-           "BLE adv OK?\n\n%s", name);
+  bt_local_id_copy_address_mac_string(data->mac_buffer);
 
-  ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("BLE Adv");
-  Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
-  dialog_set_text(dialog, data->dialog_text);
+  QRCode *qr_code = &data->qr_code;
+  qr_code_init_with_parameters(qr_code,
+#if PBL_ROUND
+#define QR_CODE_SIZE ((window->layer.bounds.size.w * 10) / 14)
+                               &GRect((window->layer.bounds.size.w - QR_CODE_SIZE) / 2,
+                                      (window->layer.bounds.size.h - QR_CODE_SIZE) / 2,
+                                      QR_CODE_SIZE, QR_CODE_SIZE),
+#else
+                               &GRect(10, 10, window->layer.bounds.size.w - 20,
+                                      window->layer.bounds.size.h - 30),
+#endif
+                               data->mac_buffer, strlen(data->mac_buffer), QRCodeECCMedium,
+                               GColorBlack, GColorWhite);
+  layer_add_child(&window->layer, &qr_code->layer);
 
-  confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_result_click_config);
-
-  ActionBarLayer *action_bar = confirmation_dialog_get_action_bar(confirmation_dialog);
-  action_bar_layer_set_context(action_bar, confirmation_dialog);
+  TextLayer *mac_label = &data->mac_label;
+  text_layer_init_with_parameters(mac_label,
+                                  &GRect(0, window->layer.bounds.size.h - PBL_IF_RECT_ELSE(20, 40),
+                                         window->layer.bounds.size.w, 20),
+                                  data->mac_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+                                  GColorBlack, GColorWhite, GTextAlignmentCenter,
+                                  GTextOverflowModeTrailingEllipsis);
+  layer_add_child(&window->layer, &mac_label->layer);
 
   app_window_stack_push(window, true);
-  app_confirmation_dialog_push(confirmation_dialog);
 }
 
 static void s_main(void) {
