@@ -7,7 +7,7 @@ bld.env.DRIVERS = []
 
 if bld.is_silk():
     bld.env.DRIVERS.extend([
-        'driver_ambient_light',
+
         'driver_backlight',
         'driver_battery',
         'driver_button',
@@ -35,7 +35,7 @@ if bld.is_silk():
 
 elif bld.is_snowy_compatible():
     bld.env.DRIVERS.extend([
-        'driver_ambient_light',
+
         'driver_backlight',
         'driver_battery',
         'driver_button',
@@ -62,7 +62,7 @@ elif bld.is_snowy_compatible():
 
 elif bld.is_asterix():
     bld.env.DRIVERS.extend([
-        'driver_ambient_light',
+
         'driver_backlight',
         'driver_battery',
         'driver_button',
@@ -87,7 +87,7 @@ elif bld.is_asterix():
 
 elif bld.is_obelix():
     bld.env.DRIVERS.extend([
-        'driver_ambient_light',
+
         'driver_backlight',
         'driver_battery',
         'driver_button',
@@ -118,7 +118,7 @@ elif bld.is_obelix():
 
 elif bld.is_getafix():
     bld.env.DRIVERS.extend([
-        'driver_ambient_light',
+
         'driver_backlight',
         'driver_battery',
         'driver_button',
@@ -160,42 +160,8 @@ if bld.is_obelix():
         ],
     )
 
-if bld.is_asterix():
-    bld.objects(
-        name='driver_ambient_light',
-        source=[
-            'ambient/ambient_light_opt3001.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif bld.is_obelix() or bld.is_getafix():
-    bld.objects(
-        name='driver_ambient_light',
-        source=[
-            'ambient/ambient_light_w1160.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_ambient_light',
-        source=[
-            'ambient/ambient_light.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
+if bld.env.CONFIG_AMBIENT_LIGHT:
+    bld.recurse('ambient')
 
 if mcu_family in ('STM32F4',):
     bld.objects(
