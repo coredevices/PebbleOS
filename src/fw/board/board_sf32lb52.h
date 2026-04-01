@@ -205,7 +205,7 @@ typedef enum {
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/qspi_definitions.h"
 #include "drivers/uart/sf32lb.h"
-#include "drivers/sf32lb52/display_jdi.h"
+#include "drivers/display/sf32lb/display_jdi.h"
 #include "drivers/mic/sf32lb52/pdm_definitions.h"
 #include "drivers/sf32lb52/audio/audio_definitions.h"
 
