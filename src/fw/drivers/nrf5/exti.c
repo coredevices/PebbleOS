@@ -54,26 +54,6 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
   nrfx_gpiote_trigger_disable(&cfg.peripheral, cfg.gpio_pin);
 }
 
-void exti_configure_other(ExtiLineOther exti_line, ExtiTrigger trigger) {
-  WTF;
-}
-
-void exti_enable_other(ExtiLineOther exti_line) {
-  WTF;
-}
-
-void exti_disable_other(ExtiLineOther exti_line) {
-  WTF;
-}
-
-void exti_set_pending(ExtiConfig cfg) {
-  WTF;
-}
-
-void exti_clear_pending_other(ExtiLineOther exti_line) {
-  WTF;
-}
-
 void exti_enable(ExtiConfig cfg) {
   nrfx_gpiote_trigger_enable(&cfg.peripheral, cfg.gpio_pin, true /* int_enable */);
 }
