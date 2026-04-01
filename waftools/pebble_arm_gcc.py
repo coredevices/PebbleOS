@@ -150,10 +150,17 @@ def configure(conf):
     conf.load("gcc")
     conf.load("asm")
 
+    # Memfault compact logs require GNU ##__VA_ARGS__ comma-elision;
+    # use -std=gnu11 when Memfault is enabled, otherwise -std=c11.
+    c_std = (
+        "-std=gnu11"
+        if getattr(conf.env, "memfault_needs_gnu_extensions", False)
+        else "-std=c11"
+    )
     conf.env.append_value(
         "CFLAGS",
         [
-            "-std=c11",
+            c_std,
         ],
     )
 
