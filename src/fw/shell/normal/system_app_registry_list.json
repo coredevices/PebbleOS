@@ -182,12 +182,6 @@
       "ifdefs": ["ENABLE_TEST_APPS"]
     },
     {
-      "id": -30,
-      "enum": "GRENADE_LAUNCHER",
-      "md_fn": "grenade_launcher_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
-    },
-    {
       "id": -31,
       "enum": "TEXT_LAYOUT",
       "md_fn": "text_layout_get_info",
