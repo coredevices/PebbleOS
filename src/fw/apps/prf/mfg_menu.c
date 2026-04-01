@@ -118,8 +118,8 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Device Info",       .callback = prv_select_info_qr },
     { .title = "Tests",             .callback = prv_select_tests },
     { .title = "Aging",             .callback = prv_select_aging },
-    { .title = "Reset",             .callback = prv_select_reset },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
+    { .title = "Reset",             .callback = prv_select_reset },
 #ifdef MANUFACTURING_FW
     { .title = "Load PRF",          .callback = prv_select_load_prf },
 #endif
