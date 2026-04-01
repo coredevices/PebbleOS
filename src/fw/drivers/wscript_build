@@ -29,7 +29,6 @@ if bld.is_silk():
             'driver_pwr',
             'driver_rng',
             'driver_rtc',
-            'driver_system_flash',
             'driver_task_watchdog',
             'driver_temperature',
             'driver_uart',
@@ -63,7 +62,6 @@ elif bld.is_snowy_compatible():
             'driver_pwr',
             'driver_rng',
             'driver_rtc',
-            'driver_system_flash',
             'driver_task_watchdog',
             'driver_temperature',
             'driver_touch',
@@ -1332,19 +1330,6 @@ if mcu_family == 'NRF52840':
         use=[
             'fw_includes',
             'hal_nordic',
-        ],
-    )
-
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_system_flash',
-        source=[
-            'stm32f2/system_flash.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
         ],
     )
 
