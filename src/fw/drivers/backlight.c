@@ -52,10 +52,6 @@ static bool s_initialized = false;
 
 static bool s_backlight_pwm_enabled = false;
 
-//! Bitmask of who wants to hold the LED enable on.
-//! see \ref led_enable, \ref led_disable, \ref LEDEnabler
-static uint32_t s_led_enable;
-
 static void prv_backlight_pwm_enable(bool on) {
   pwm_enable(&BOARD_CONFIG_BACKLIGHT.pwm, on);
 
@@ -74,8 +70,6 @@ void backlight_init(void) {
   if (s_initialized) {
     return;
   }
-
-  s_led_enable = 0;
 
   if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Ctl) {
     periph_config_acquire_lock();
@@ -100,28 +94,12 @@ void backlight_init(void) {
   }
 }
 
-// TODO: PBL-36077 Move to a generic 4v5 enable
-void led_enable(LEDEnabler enabler) {
-  if (s_led_enable == 0) {
-    gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, true);
-  }
-  s_led_enable |= enabler;
-}
-
-// TODO: PBL-36077 Move to a generic 4v5 disable
-void led_disable(LEDEnabler enabler) {
-  s_led_enable &= ~enabler;
-  if (s_led_enable == 0) {
-    gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, false);
-  }
-}
-
 void backlight_set_brightness(uint16_t brightness) {
   if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Ctl) {
     if (brightness == 0) {
-      led_disable(LEDEnablerBacklight);
+      gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, false);
     } else {
-      led_enable(LEDEnablerBacklight);
+      gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, true);
     }
   }
 
