@@ -90,9 +90,6 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
   case MfgTestId_ProgramColor:
     snprintf(entry, sizeof(entry), "CLR:%c", rc);
     break;
-  case MfgTestId_Adv:
-    snprintf(entry, sizeof(entry), "ADV:%c", rc);
-    break;
   case MfgTestId_Charge:
     snprintf(entry, sizeof(entry), "CHG:%c", rc);
     break;

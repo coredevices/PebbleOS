@@ -7,7 +7,6 @@
 #include "applib/app.h"
 #include "applib/ui/ui.h"
 #include "apps/prf/mfg_accel.h"
-#include "apps/prf/mfg_adv.h"
 #ifdef CONFIG_MAG
 #include "apps/prf/mfg_mag.h"
 #endif
@@ -71,7 +70,6 @@ static const MfgTestMenuEntry s_entries[] = {
   { "HRM CTR/L",     MfgTestId_HrmCtrLeakage,  mfg_hrm_ctr_leakage_obelix_app_get_info },
 #endif
   { "Program Color", MfgTestId_ProgramColor,   mfg_program_color_app_get_info },
-  { "BLE Adv",       MfgTestId_Adv,            mfg_adv_app_get_info },
   { "Charge",        MfgTestId_Charge,         mfg_charge_app_get_info },
   { "Discharge",     MfgTestId_Discharge,      mfg_discharge_app_get_info },
 };

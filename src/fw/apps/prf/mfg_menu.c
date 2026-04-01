@@ -8,6 +8,7 @@
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
 #include "applib/ui/dialogs/confirmation_dialog.h"
+#include "apps/prf/mfg_adv.h"
 #include "apps/prf/mfg_test_aging.h"
 #include "apps/prf/mfg_info_qr.h"
 #include "apps/prf/mfg_test_menu.h"
@@ -52,6 +53,10 @@ static void prv_select_tests(int index, void *context) {
 
 static void prv_select_aging(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_test_aging_app_get_info());
+}
+
+static void prv_select_ble_adv(int index, void *context) {
+  launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_adv_app_get_info());
 }
 
 static void prv_select_reset(int index, void *context) {
@@ -118,6 +123,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Device Info",       .callback = prv_select_info_qr },
     { .title = "Tests",             .callback = prv_select_tests },
     { .title = "Aging",             .callback = prv_select_aging },
+    { .title = "BLE Advertising",   .callback = prv_select_ble_adv },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
     { .title = "Reset",             .callback = prv_select_reset },
 #ifdef MANUFACTURING_FW
