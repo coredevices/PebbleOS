@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig PRESSURE
+    bool "Pressure Sensor"
+    help
+      Pressure Sensor Drivers
+
+if PRESSURE
+
+config PRESSURE_BMP390
+    bool "Bosch BMP390"
+    help
+      Support for the Bosch BMP390 barometric pressure sensor.
+
+endif # PRESSURE
