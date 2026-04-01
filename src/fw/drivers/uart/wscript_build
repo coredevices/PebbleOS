@@ -22,3 +22,5 @@ bld.objects(
     source=sources,
     use=use,
 )
+
+bld.env.DRIVERS.append('driver_uart')
