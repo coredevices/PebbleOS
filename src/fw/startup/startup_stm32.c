@@ -21,11 +21,6 @@ extern uint8_t __bss_start[];
 extern uint8_t __bss_end[];
 extern uint8_t _estack[];
 
-#if MICRO_FAMILY_STM32F7
-extern uint8_t __dtcm_bss_start[];
-extern uint8_t __dtcm_bss_end[];
-#endif
-
 //! Firmware main function, ResetHandler calls this
 extern int main(void);
 
@@ -42,11 +37,6 @@ NORETURN Reset_Handler(void) {
 
   // Clear the bss section, assumes .bss goes directly after .data
   memset(__bss_start, 0, __bss_end - __bss_start);
-
-#if MICRO_FAMILY_STM32F7
-  // Clear the DTCM bss section
-  memset(__dtcm_bss_start, 0, __dtcm_bss_end - __dtcm_bss_start);
-#endif
 
   SystemInit();
 

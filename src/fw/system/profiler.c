@@ -83,9 +83,6 @@ void profiler_init(void) {
 
 void profiler_start(void) {
   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-#ifdef MICRO_FAMILY_STM32F7
-  DWT->LAR = 0xC5ACCE55;
-#endif
   DWT->CYCCNT = 0;
   DWT->CTRL |= 0x01;
   g_profiler.start = DWT->CYCCNT;

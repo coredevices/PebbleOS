@@ -13,17 +13,10 @@
 #include <string.h>
 #include <stdbool.h>
 
-#if defined(MICRO_FAMILY_STM32F7)
-// See page 83 of STM Reference Manual RM0410:
-# define OTP_SLOTS_BASE_ADDR (0x1FF0F000)
-# define OTP_LOCKS_BASE_ADDR (0x1FF0F400)
-# define OTP_SLOT_SIZE_BYTES (64)
-#else
 // See page 53 of STM Reference Manual RM0033:
 # define OTP_SLOTS_BASE_ADDR (0x1FFF7800)
 # define OTP_LOCKS_BASE_ADDR (0x1FFF7A00)
 # define OTP_SLOT_SIZE_BYTES (32)
-#endif
 
 char * otp_get_slot(const uint8_t index) {
   PBL_ASSERTN(index < NUM_OTP_SLOTS);

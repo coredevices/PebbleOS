@@ -57,7 +57,7 @@ void enter_stop_mode(void) {
 
   dbgserial_enable_rx_dma_after_stop();
 }
-#elif MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
+#elif MICRO_FAMILY_STM32F4
 void enter_stop_mode(void) {
   // enable the interrupt on the debug RX line so that we can use the serial
   // console even when we are in stop mode.
@@ -88,12 +88,6 @@ void enter_stop_mode(void) {
 
   // Configure the PWR peripheral to put us in low-power STOP mode when
   // the processor enters deepsleep.
-#if defined(MICRO_FAMILY_STM32F7)
-  uint32_t temp = PWR->CR1;
-  temp &= ~PWR_CR1_PDDS;
-  temp |= PWR_CR1_LPDS;
-  PWR->CR1 = temp;
-#else
   uint32_t temp = PWR->CR;
   temp &= ~PWR_CR_PDDS;
   temp |= PWR_CR_LPDS;
@@ -102,7 +96,6 @@ void enter_stop_mode(void) {
   temp |= PWR_CR_LPLVDS;
 #endif
   PWR->CR = temp;
-#endif
 
   // Configure the processor core to enter deepsleep mode when we
   // execute a WFI or WFE instruction.

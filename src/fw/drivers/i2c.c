@@ -77,7 +77,7 @@ void i2c_rail_ctl_pmic(I2CBus *bus, bool enable) {
 }
 #endif
 
-#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
+#if MICRO_FAMILY_STM32F4
 void i2c_rail_ctl_pin(I2CBus *bus, bool enable) {
   gpio_output_set(&bus->rail_gpio, enable);
 }
@@ -176,7 +176,7 @@ static void prv_bus_rail_power_up(I2CBus *bus) {
 //! Configure the bus pins, enable the peripheral clock and initialize the I2C peripheral.
 //! Always lock the bus and peripheral config access before enabling it
 static void prv_bus_enable(I2CBus *bus) {
-#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
+#if MICRO_FAMILY_STM32F4
   // Don't power up rail if the bus is already in use (enable can be called to reset bus)
   if (bus->state->user_count ==  0) {
     prv_bus_rail_power_up(bus);
@@ -192,7 +192,7 @@ static void prv_bus_enable(I2CBus *bus) {
 //! Always lock the bus and peripheral config access before disabling it
 static void prv_bus_disable(I2CBus *bus) {
   i2c_hal_disable(bus);
-#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
+#if MICRO_FAMILY_STM32F4
   // Do not de-power rail if there are still devices using bus (just reset peripheral and pin
   // configuration during a bus reset)
   if (bus->state->user_count == 0) {
@@ -225,7 +225,7 @@ void i2c_init(I2CBus *bus) {
 
   i2c_hal_init(bus);
 
-#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
+#if MICRO_FAMILY_STM32F4
   if (bus->rail_gpio.gpio) {
     gpio_output_init(&bus->rail_gpio, GPIO_OType_PP, GPIO_Speed_2MHz);
   }
@@ -291,7 +291,7 @@ void i2c_reset(I2CSlavePort *slave) {
   mutex_unlock(slave->bus->state->bus_mutex);
 }
 
-#if MICRO_FAMILY_STM32F2 || MICRO_FAMILY_STM32F4 || MICRO_FAMILY_STM32F7
+#if MICRO_FAMILY_STM32F4
 bool i2c_bitbang_recovery(I2CSlavePort *slave) {
   PBL_ASSERTN(slave);
 

@@ -36,7 +36,7 @@ static const uint32_t s_rounded_corner_width[6] = { 6, 4, 3, 2, 1, 1 };
 #endif
 
 //! This is our root framebuffer that everything gets composited into.
-static FrameBuffer DMA_BSS s_framebuffer;
+static FrameBuffer s_framebuffer;
 
 typedef enum {
   //! Render the app with no transparent modals straight through

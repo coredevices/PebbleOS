@@ -44,23 +44,6 @@
 # define SECTION(SEC)
 #endif
 
-// Only present on STM32F7
-#define DTCM_BSS   SECTION(".dtcm_bss")
-
-// DMA_BSS: Section attribute for DMA buffers
-#if MICRO_FAMILY_STM32F7
-# define DMA_BSS    DTCM_BSS
-// There is an erratum present in STM32F7xx which causes DMA reads from DTCM
-// (but not writes to DTCM) to be corrupted if the MCU enters sleep mode during
-// the transfer. Source DMA buffers must be placed in SRAM on these platforms.
-// The DMA driver enforces this. Also, alignment to the start of a cache line
-// seems to be required, though it's unclear why.
-# define DMA_READ_BSS ALIGN(32)
-#else
-# define DMA_BSS
-# define DMA_READ_BSS
-#endif
-
 // Use this macro to allow overriding of private functions in order to test them within unit tests.
 #if !UNITTEST
 # define T_STATIC static

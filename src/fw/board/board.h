@@ -3,11 +3,7 @@
 
 #pragma once
 
-#if defined(MICRO_FAMILY_STM32F2)
-# include "board_stm32.h"
-#elif defined(MICRO_FAMILY_STM32F4)
-# include "board_stm32.h"
-#elif defined(MICRO_FAMILY_STM32F7)
+#if defined(MICRO_FAMILY_STM32F4)
 # include "board_stm32.h"
 #elif defined(MICRO_FAMILY_NRF52840)
 # include "board_nrf5.h"

@@ -1,5 +1,5 @@
 mcu_family = bld.env.MICRO_FAMILY
-if mcu_family not in ('STM32F2', 'STM32F4', 'NRF52840', 'SF32LB52'):
+if mcu_family not in ('STM32F4', 'NRF52840', 'SF32LB52'):
     bld.fatal('src/fw/drivers/wscript: '
               'Unknown MICRO_FAMILY {}'.format(mcu_family))
 
@@ -217,7 +217,7 @@ elif bld.is_obelix() or bld.is_getafix():
             'pbl_includes',
         ],
     )
-elif mcu_family in ('STM32F2', 'STM32F4'):
+elif mcu_family == 'STM32F4':
     bld.objects(
         name='driver_ambient_light',
         source=[
@@ -269,7 +269,7 @@ elif mcu_family in ('SF32LB52'):
     )
 
 # FIXME: break dependency on driver_led_controller when not needed
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_backlight',
         source=[
@@ -409,7 +409,7 @@ if bld.is_obelix() or bld.is_getafix():
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_button',
         source=[
@@ -458,7 +458,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_clocksource',
         source=[
@@ -537,7 +537,7 @@ elif bld.is_obelix() or bld.is_getafix():
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_dma',
         source=[
@@ -548,7 +548,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_exti',
         source=[
@@ -669,7 +669,7 @@ elif bld.is_obelix() or bld.is_getafix():
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_gpio',
         source=[
@@ -716,17 +716,6 @@ if mcu_family == 'STM32F4':
             'pbl_includes',
         ],
     )
-elif mcu_family == 'STM32F2':
-    bld.objects(
-        name='driver_pwr',
-        source=[
-            'stm32f2/pwr.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
 elif mcu_family in ('NRF52840', 'SF32LB52'):
     bld.objects(
         name='driver_pwr',
@@ -739,17 +728,7 @@ elif mcu_family in ('NRF52840', 'SF32LB52'):
     )
 
 # FIXME: More of a board config than driver
-if mcu_family == 'STM32F2':
-    bld.objects(
-        name='driver_gpio_defaults',
-        source=[
-            'stm32f2/gpio_defaults.c',
-        ],
-        use=[
-            'driver_gpio',
-        ],
-    )
-elif mcu_family in ('STM32F4',):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_gpio_defaults',
         source=[
@@ -767,7 +746,7 @@ elif mcu_family in ('NRF52840', 'SF32LB52'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_i2c',
         source=[
@@ -911,7 +890,7 @@ if bld.is_asterix():
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_mcu',
         source=[
@@ -1006,7 +985,7 @@ elif bld.is_obelix() or bld.is_getafix():
 
 
 # FIXME: make generic to Cortex-M
-if mcu_family in ('STM32F2', 'STM32F4', 'NRF52840', 'SF32LB52'):
+if mcu_family in ('STM32F4', 'NRF52840', 'SF32LB52'):
     bld.objects(
         name='driver_mpu',
         source=[
@@ -1020,7 +999,7 @@ if mcu_family in ('STM32F2', 'STM32F4', 'NRF52840', 'SF32LB52'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_otp',
         source=[
@@ -1044,7 +1023,7 @@ elif bld.capability('HAS_FLASH_OTP'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_periph_config',
         source=[
@@ -1141,7 +1120,7 @@ if bld.env.QEMU:
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_pwm',
         source=[
@@ -1235,7 +1214,7 @@ if 'STM32F412xG' in bld.env.DEFINES:
             'stm32_stdlib',
         ]
     )
-elif mcu_family in ('STM32F2', 'STM32F4'):
+elif mcu_family == 'STM32F4':
     bld.env.DEFINES.append('HAS_DRIVER_VOLTAGE_MONITOR')
     bld.objects(
         name='driver_voltage_monitor',
@@ -1252,7 +1231,7 @@ elif mcu_family in ('STM32F2', 'STM32F4'):
     )
 
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_rng',
         source=[
@@ -1288,25 +1267,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family == 'STM32F2':
-    bld.objects(
-        name='driver_rtc',
-        source=[
-            'rtc_common.c',
-            'stm32f2/rtc.c',
-            'stm32f2/rtc_calibration.c',
-        ],
-        use=[
-            'driver_clocksource',
-            'driver_gpio',
-            'driver_pwr',
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family in ('STM32F4',):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_rtc',
         source=[
@@ -1348,7 +1309,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_spi',
         source=[
@@ -1374,7 +1335,7 @@ if mcu_family == 'NRF52840':
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_system_flash',
         source=[
@@ -1388,7 +1349,7 @@ if mcu_family in ('STM32F2', 'STM32F4'):
     )
 
 # FIXME: not really a driver
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_task_watchdog',
         source=[
@@ -1431,7 +1392,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_timer',
         source=[
@@ -1467,7 +1428,7 @@ if bld.capability('HAS_TOUCHSCREEN'):
         )
 
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_uart',
         source=[
@@ -1546,7 +1507,7 @@ if bld.is_getafix():
             'driver_gpio',
         ],
     )
-elif mcu_family in ('STM32F2', 'STM32F4'):
+elif mcu_family == 'STM32F4':
     bld.objects(
         name='driver_vibe',
         source=[
@@ -1562,7 +1523,7 @@ elif mcu_family in ('STM32F2', 'STM32F4'):
         ],
     )
 
-if mcu_family in ('STM32F2', 'STM32F4'):
+if mcu_family == 'STM32F4':
     bld.objects(
         name='driver_watchdog',
         source=[

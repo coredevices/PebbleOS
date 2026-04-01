@@ -89,9 +89,6 @@ typedef struct {
 typedef struct {
   union {
     TIM_TypeDef* const peripheral; ///< A TIMx peripheral
-#if MICRO_FAMILY_STM32F7
-    LPTIM_TypeDef* const lp_peripheral; ///< A LPTIMx peripheral
-#endif
   };
   const uint32_t config_clock;   ///< One of RCC_APB1Periph_TIMx. For example, RCC_APB1Periph_TIM3.
   void (* const init)(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct); ///< One of TIM_OCxInit
