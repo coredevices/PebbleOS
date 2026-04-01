@@ -69,9 +69,9 @@ static const MfgTestMenuEntry s_entries[] = {
 #if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
   { "HRM CTR/L",     MfgTestId_HrmCtrLeakage,  mfg_hrm_ctr_leakage_obelix_app_get_info },
 #endif
-  { "Program Color", MfgTestId_ProgramColor,   mfg_program_color_app_get_info },
   { "Charge",        MfgTestId_Charge,         mfg_charge_app_get_info },
   { "Discharge",     MfgTestId_Discharge,      mfg_discharge_app_get_info },
+  { "Program Color", MfgTestId_ProgramColor,   mfg_program_color_app_get_info },
 };
 
 typedef struct {
