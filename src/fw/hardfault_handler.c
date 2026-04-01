@@ -10,8 +10,7 @@
 #include "util/size.h"
 #include "util/string.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 #include <inttypes.h>
 #include <stdarg.h>

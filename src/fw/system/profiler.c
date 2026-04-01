@@ -6,9 +6,7 @@
 #include "system/passert.h"
 #include "util/size.h"
 
-#define CMSIS_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 #include <inttypes.h>
 #include <stdarg.h>
@@ -18,6 +16,10 @@
 #ifdef MICRO_FAMILY_NRF5
 #include <drivers/nrfx_common.h>
 #include <soc/nrfx_coredep.h>
+#endif
+
+#ifdef MICRO_FAMILY_SF32LB52
+#include <bf0_hal.h>
 #endif
 
 #if PULSE_EVERYWHERE

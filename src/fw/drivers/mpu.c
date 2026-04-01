@@ -13,8 +13,7 @@
 #include "task.h"
 #include "portmacro.h"
 
-#define CMSIS_COMPATIBLE
-#include <mcu.h>
+#include <cmsis_core.h>
 
 extern const uint32_t __SRAM_size__[];
 #if !defined(SRAM_BASE)
