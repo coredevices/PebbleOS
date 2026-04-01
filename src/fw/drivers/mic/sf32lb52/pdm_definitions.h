@@ -11,7 +11,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// Note: If the MCU has cache, this needs to be placed in DMA_BSS.
 typedef struct MicState {
   uint8_t *circ_buffer_storage; 
   CircularBuffer circ_buffer;
