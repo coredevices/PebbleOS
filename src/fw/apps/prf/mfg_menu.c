@@ -122,7 +122,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
   const SimpleMenuItem s_menu_items[] = {
     { .title = "Device Info",       .callback = prv_select_info_qr },
     { .title = "Tests",             .callback = prv_select_tests },
-    { .title = "Aging",             .callback = prv_select_aging },
+    { .title = "Aging Test",        .callback = prv_select_aging },
     { .title = "BLE Advertising",   .callback = prv_select_ble_adv },
     { .title = "Shutdown",          .callback = prv_select_shutdown },
     { .title = "Reset",             .callback = prv_select_reset },

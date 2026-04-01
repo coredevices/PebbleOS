@@ -11,6 +11,7 @@
 #include "applib/ui/vibes.h"
 #include "applib/ui/window.h"
 #include "board/board.h"
+#include "console/console_internal.h"
 #include "drivers/accel.h"
 #include "drivers/ambient_light.h"
 #include "drivers/audio.h"
@@ -22,14 +23,32 @@
 #include "kernel/util/sleep.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
+#include "pbl/services/common/bluetooth/bluetooth_ctl.h"
 #include "pbl/services/common/light.h"
 #include "pbl/services/prf/idle_watchdog.h"
+#include "system/logging.h"
 
 #include <stdio.h>
 
-#define STATUS_STRING_LEN 128
-#define TEST_DURATION_SEC 10
+#define STATUS_STRING_LEN 200
+#define COMPONENT_TEST_DURATION_SEC 10
+#define COMPONENT_BACKLIGHT_DURATION_SEC 2
+#define COMPONENT_VIBE_DURATION_SEC 1
 
+// Charging phase parameters
+#define CHARGE_TARGET_PERCENT 100
+#define CHARGE_TIMEOUT_SEC (90 * 60)  // 90 minutes
+#define TEMP_MIN_MC 15000             // 15.0C
+#define TEMP_MAX_MC 35000             // 35.0C
+
+// Discharge phase parameters
+#define DISCHARGE_TARGET_PERCENT 75
+
+// Cycling phase parameters
+#define CYCLING_DURATION_SEC (4 * 3600)  // 4 hours
+
+// Pass/fail criteria
+#define MAX_PERCENT_DROP 10
 
 #if CAPABILITY_HAS_SPEAKER
 static const int16_t sine_wave_4k[] = {
@@ -39,57 +58,56 @@ static const int16_t sine_wave_4k[] = {
 #endif
 
 typedef enum {
-  Duration_2Hours = 0,
-  Duration_4Hours,
-  Duration_Unlimited,
-  NumDurations
-} TestDuration;
+  AgingStateWaitPlug = 0,
+  AgingStateCharging,
+  AgingStateWaitUnplug,
+  AgingStateDischarging,
+  AgingStateCycling,
+  AgingStatePass,
+  AgingStateFail,
+} AgingState;
 
+// Component sub-states for cycling
 typedef enum {
-  TestState_Menu = 0,
-  TestState_PlugCharger,
-  TestState_Accel,
+  ComponentAccel = 0,
 #ifdef CONFIG_MAG
-  TestState_Mag,
+  ComponentMag,
 #endif
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
-  TestState_BacklightWhite,
-  TestState_BacklightRed,
-  TestState_BacklightGreen,
-  TestState_BacklightBlue,
+  ComponentBacklightWhite,
+  ComponentBacklightRed,
+  ComponentBacklightGreen,
+  ComponentBacklightBlue,
 #else
-  TestState_Backlight,
+  ComponentBacklight,
 #endif
 #if CAPABILITY_HAS_SPEAKER
-  TestState_Audio,
+  ComponentAudio,
 #endif
-  TestState_ALS,
-  TestState_Vibe,
-  TestState_Battery,
-  NumTestStates
-} TestState;
+  ComponentALS,
+  ComponentVibe,
+  NumComponents,
+} ComponentState;
 
 typedef struct {
   Window window;
 
-  TextLayer menu_text;
   TextLayer title;
   TextLayer status;
   char status_string[STATUS_STRING_LEN];
 
-  TestState current_test;
-  TestDuration duration;
-  TestDuration selected_duration;
+  AgingState state;
+  ComponentState component;
+  uint32_t component_elapsed_sec;
 
-  uint32_t test_elapsed_sec;
-  uint32_t total_elapsed_sec;
-  uint32_t max_duration_sec;
-
+  uint32_t phase_elapsed_sec;
   uint32_t cycle_count;
 
-  bool running;
-  bool menu_active;
-  bool test_failed;
+  // Battery state at start of cycling phase
+  uint8_t initial_percent;
+
+  char fail_reason[64];
+
 #if CAPABILITY_HAS_SPEAKER
   bool audio_playing;
 #endif
@@ -98,399 +116,36 @@ typedef struct {
 #endif
 } AppData;
 
-static void prv_stop_test(void);
-static void prv_start_tests(TestDuration duration);
-static void prv_update_menu_display(AppData *data);
-
 #if CAPABILITY_HAS_SPEAKER
-// Audio transmission handler
 static void prv_audio_trans_handler(uint32_t *free_size) {
   uint32_t available_size = *free_size;
   while (available_size > sizeof(sine_wave_4k)) {
-    available_size = audio_write(AUDIO, (void*)&sine_wave_4k[0], sizeof(sine_wave_4k));
+    available_size = audio_write(AUDIO, (void *)&sine_wave_4k[0], sizeof(sine_wave_4k));
   }
 }
 #endif
 
-// Helper to format time as HH:MM:SS
 static void prv_format_time(char *buffer, size_t size, uint32_t seconds) {
   uint32_t hours = seconds / 3600;
   uint32_t minutes = (seconds % 3600) / 60;
   uint32_t secs = seconds % 60;
-  sniprintf(buffer, size, "%02"PRIu32":%02"PRIu32":%02"PRIu32, hours, minutes, secs);
+  sniprintf(buffer, size, "%02" PRIu32 ":%02" PRIu32 ":%02" PRIu32, hours, minutes, secs);
 }
 
-// Test implementations
-static void prv_test_plug_charger(AppData *data) {
-  const BatteryChargeState charge_state = battery_get_charge_state();
-
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  sniprintf(data->status_string, sizeof(data->status_string),
-            "PLUG CHARGER\n\nPlease plug in\nthe watch to\nstart testing\n\nPlugged: %s",
-            charge_state.is_plugged ? "YES" : "NO");
-  text_layer_set_text(&data->status, data->status_string);
-}
-
-static void prv_test_accel(AppData *data) {
-  AccelDriverSample sample;
-  int ret = accel_peek(&sample);
-
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  if (ret == 0) {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "ACCEL TEST\nCycle: %"PRIu32"\nTime: %s\n\nX: %"PRIi16"\nY: %"PRIi16"\nZ: %"PRIi16,
-              data->cycle_count, time_str, sample.x, sample.y, sample.z);
-  } else {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "ACCEL TEST\nCycle: %"PRIu32"\nTime: %s\n\nERROR: %d",
-              data->cycle_count, time_str, ret);
-  }
-  text_layer_set_text(&data->status, data->status_string);
-}
-
+static void prv_cleanup_component(AppData *data) {
 #ifdef CONFIG_MAG
-static void prv_test_mag(AppData *data) {
-  MagData mag_sample;
-  MagReadStatus status = mag_read_data(&mag_sample);
-
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  if (status == MagReadSuccess) {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "MAG TEST\nCycle: %"PRIu32"\nTime: %s\n\nX: %"PRIi16"\nY: %"PRIi16"\nZ: %"PRIi16,
-              data->cycle_count, time_str, mag_sample.x, mag_sample.y, mag_sample.z);
-  } else {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "MAG TEST\nCycle: %"PRIu32"\nTime: %s\n\nERROR: %d",
-              data->cycle_count, time_str, status);
-  }
-  text_layer_set_text(&data->status, data->status_string);
-}
-#endif
-
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-static void prv_test_backlight(AppData *data, const char *color_name, uint32_t color) {
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  led_controller_rgb_set_color(color);
-
-  sniprintf(data->status_string, sizeof(data->status_string),
-            "BACKLIGHT TEST\nCycle: %"PRIu32"\nTime: %s\n\nColor: %s",
-            data->cycle_count, time_str, color_name);
-  text_layer_set_text(&data->status, data->status_string);
-}
-#else
-static void prv_test_backlight(AppData *data) {
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  sniprintf(data->status_string, sizeof(data->status_string),
-            "BACKLIGHT TEST\nCycle: %"PRIu32"\nTime: %s",
-            data->cycle_count, time_str);
-  text_layer_set_text(&data->status, data->status_string);
-}
-#endif
-
-#if CAPABILITY_HAS_SPEAKER
-static void prv_test_audio(AppData *data) {
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  sniprintf(data->status_string, sizeof(data->status_string),
-            "AUDIO TEST\nCycle: %"PRIu32"\nTime: %s\n\nPlaying...",
-            data->cycle_count, time_str);
-  text_layer_set_text(&data->status, data->status_string);
-
-  // Start audio playback if not already playing
-  if (!data->audio_playing) {
-    audio_start(AUDIO, prv_audio_trans_handler);
-    audio_set_volume(AUDIO, 100);
-    data->audio_playing = true;
-  }
-}
-#endif
-
-static void prv_test_als(AppData *data) {
-  uint32_t level = ambient_light_get_light_level();
-
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  sniprintf(data->status_string, sizeof(data->status_string),
-            "ALS TEST\nCycle: %"PRIu32"\nTime: %s\n\nLevel: %"PRIu32,
-            data->cycle_count, time_str, level);
-  text_layer_set_text(&data->status, data->status_string);
-}
-
-static void prv_test_vibe(AppData *data) {
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  sniprintf(data->status_string, sizeof(data->status_string),
-            "VIBE TEST\nCycle: %"PRIu32"\nTime: %s\n\nVibrating...",
-            data->cycle_count, time_str);
-  text_layer_set_text(&data->status, data->status_string);
-
-  vibes_long_pulse();
-}
-
-static void prv_test_battery(AppData *data) {
-  BatteryConstants battery_const;
-  battery_get_constants(&battery_const);
-  const BatteryChargeState charge_state = battery_get_charge_state();
-
-  char time_str[16];
-  prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-
-  int8_t temp_c = (int8_t)(battery_const.t_mc / 1000);
-  uint8_t temp_c_frac = ((battery_const.t_mc > 0 ? battery_const.t_mc : -battery_const.t_mc) % 1000) / 10;
-  int32_t current_ma = battery_const.i_ua / 1000;
-
-  sniprintf(data->status_string, sizeof(data->status_string),
-            "BATTERY TEST\nCycle: %"PRIu32"\nTime: %s\n\n%"PRId32"mV %"PRId32"mA\n%" PRId8 ".%02" PRIu8 "C (%"PRIu8"%%)\nUSB:%s Charging:%s",
-            data->cycle_count, time_str, battery_const.v_mv, current_ma,
-            temp_c, temp_c_frac, charge_state.charge_percent,
-            charge_state.is_plugged ? "Y" : "N",
-            charge_state.is_charging ? "Y" : "N");
-  text_layer_set_text(&data->status, data->status_string);
-}
-
-static void prv_advance_test(AppData *data) {
-  data->test_elapsed_sec = 0;
-
-  // Move to next test
-  if (data->current_test == TestState_Menu) {
-    data->current_test = TestState_PlugCharger;
-  } else if (data->current_test == TestState_PlugCharger) {
-    data->current_test = TestState_Accel;
-  } else {
-    data->current_test++;
-  }
-
-  // If we've completed all tests, start a new cycle
-  if (data->current_test >= NumTestStates) {
-    data->current_test = TestState_Accel;
-    data->cycle_count++;
-  }
-
-  // Check if we've reached max duration
-  if (data->duration != Duration_Unlimited &&
-      data->total_elapsed_sec >= data->max_duration_sec) {
-    // Clean up current test before showing finished
-#ifdef CONFIG_MAG
-    if (data->current_test == TestState_Mag) {
-      mag_release();
-    }
-#endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-    if (data->current_test >= TestState_BacklightWhite &&
-        data->current_test <= TestState_BacklightBlue) {
-      led_controller_rgb_set_color(data->saved_backlight_color);
-      light_enable(false);
-    }
-#else
-    if (data->current_test == TestState_Backlight) {
-      light_enable(false);
-    }
-#endif
-#if CAPABILITY_HAS_SPEAKER
-    if (data->audio_playing) {
-      audio_stop(AUDIO);
-      data->audio_playing = false;
-    }
-#endif
-
-    data->running = false;
-
-    tick_timer_service_unsubscribe();
-
-    return;
-  }
-
-  // Start magnetometer if needed
-#ifdef CONFIG_MAG
-  if (data->current_test == TestState_Mag) {
-    mag_start_sampling();
-  }
-#endif
-
-  // Enable backlight for backlight tests
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-  if (data->current_test >= TestState_BacklightWhite &&
-      data->current_test <= TestState_BacklightBlue) {
-    light_enable(true);
-  }
-#else
-  if (data->current_test == TestState_Backlight) {
-    light_enable(true);
-  }
-#endif
-}
-
-static void prv_update_display(AppData *data) {
-  if (!data->running) {
-    if (data->test_failed) {
-      // Display failure message
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "TEST FAIL\n\nWatch unplugged\nduring test");
-    } else {
-      // Display the finished message
-      char time_str[16];
-      prv_format_time(time_str, sizeof(time_str), data->total_elapsed_sec);
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "FINISHED\n\nTotal Time: %s\nCycles: %"PRIu32,
-                time_str, data->cycle_count);
-    }
-    text_layer_set_text(&data->status, data->status_string);
-    return;
-  }
-
-  switch (data->current_test) {
-    case TestState_Menu:
-      break;
-    case TestState_PlugCharger:
-      prv_test_plug_charger(data);
-      break;
-    case TestState_Accel:
-      prv_test_accel(data);
-      break;
-#ifdef CONFIG_MAG
-    case TestState_Mag:
-      prv_test_mag(data);
-      break;
-#endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-    case TestState_BacklightWhite:
-      prv_test_backlight(data, "WHITE", 0xD0D0D0);
-      break;
-    case TestState_BacklightRed:
-      prv_test_backlight(data, "RED", 0xFF0000);
-      break;
-    case TestState_BacklightGreen:
-      prv_test_backlight(data, "GREEN", 0x00FF00);
-      break;
-    case TestState_BacklightBlue:
-      prv_test_backlight(data, "BLUE", 0x0000FF);
-      break;
-#else
-    case TestState_Backlight:
-      prv_test_backlight(data);
-      break;
-#endif
-#if CAPABILITY_HAS_SPEAKER
-    case TestState_Audio:
-      prv_test_audio(data);
-      break;
-#endif
-    case TestState_ALS:
-      prv_test_als(data);
-      break;
-    case TestState_Vibe:
-      prv_test_vibe(data);
-      break;
-    case TestState_Battery:
-      prv_test_battery(data);
-      break;
-    default:
-      break;
-  }
-}
-
-static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-  AppData *data = app_state_get_user_data();
-
-  if (!data->running) {
-    return;
-  }
-
-  // Check if watch is plugged (only after plug charger state)
-  if (data->current_test != TestState_PlugCharger) {
-    const BatteryChargeState charge_state = battery_get_charge_state();
-    if (!charge_state.is_plugged) {
-      data->test_failed = true;
-      data->running = false;
-      tick_timer_service_unsubscribe();
-      prv_update_display(data);
-      return;
-    }
-  }
-
-  // Handle plug charger state - wait for watch to be plugged
-  if (data->current_test == TestState_PlugCharger) {
-    const BatteryChargeState charge_state = battery_get_charge_state();
-    if (charge_state.is_plugged) {
-      // Watch is plugged, advance to first real test
-      prv_advance_test(data);
-      prv_update_display(data);
-    } else {
-      // Still waiting for plug, just update display
-      prv_update_display(data);
-    }
-    return;
-  }
-
-  data->test_elapsed_sec++;
-  data->total_elapsed_sec++;
-
-  // Update display
-  prv_update_display(data);
-
-  // Check if current test duration has elapsed
-  if (data->test_elapsed_sec >= TEST_DURATION_SEC) {
-    // Clean up current test
-#ifdef CONFIG_MAG
-    if (data->current_test == TestState_Mag) {
-      mag_release();
-    }
-#endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-    if (data->current_test >= TestState_BacklightWhite &&
-        data->current_test <= TestState_BacklightBlue) {
-      led_controller_rgb_set_color(data->saved_backlight_color);
-      light_enable(false);
-    }
-#else
-    if (data->current_test == TestState_Backlight) {
-      light_enable(false);
-    }
-#endif
-#if CAPABILITY_HAS_SPEAKER
-    if (data->current_test == TestState_Audio && data->audio_playing) {
-      audio_stop(AUDIO);
-      data->audio_playing = false;
-    }
-#endif
-
-    prv_advance_test(data);
-    prv_update_display(data);
-  }
-}
-
-static void prv_stop_test(void) {
-  AppData *data = app_state_get_user_data();
-
-  data->running = false;
-
-  // Clean up any active tests
-#ifdef CONFIG_MAG
-  if (data->current_test == TestState_Mag) {
+  if (data->component == ComponentMag) {
     mag_release();
   }
 #endif
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
-  if (data->current_test >= TestState_BacklightWhite &&
-      data->current_test <= TestState_BacklightBlue) {
+  if (data->component >= ComponentBacklightWhite &&
+      data->component <= ComponentBacklightBlue) {
     led_controller_rgb_set_color(data->saved_backlight_color);
     light_enable(false);
   }
 #else
-  if (data->current_test == TestState_Backlight) {
+  if (data->component == ComponentBacklight) {
     light_enable(false);
   }
 #endif
@@ -500,144 +155,414 @@ static void prv_stop_test(void) {
     data->audio_playing = false;
   }
 #endif
-
-  tick_timer_service_unsubscribe();
 }
 
-static void prv_update_menu_display(AppData *data) {
-  const char *duration_text;
-  switch (data->selected_duration) {
-    case Duration_2Hours:
-      duration_text = "2 Hours";
+static void prv_start_component(AppData *data) {
+#ifdef CONFIG_MAG
+  if (data->component == ComponentMag) {
+    mag_start_sampling();
+  }
+#endif
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+  if (data->component >= ComponentBacklightWhite &&
+      data->component <= ComponentBacklightBlue) {
+    light_enable(true);
+  }
+#else
+  if (data->component == ComponentBacklight) {
+    light_enable(true);
+  }
+#endif
+}
+
+static uint32_t prv_component_duration(ComponentState comp) {
+  switch (comp) {
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+    case ComponentBacklightWhite:
+    case ComponentBacklightRed:
+    case ComponentBacklightGreen:
+    case ComponentBacklightBlue:
+#else
+    case ComponentBacklight:
+#endif
+      return COMPONENT_BACKLIGHT_DURATION_SEC;
+    case ComponentVibe:
+      return COMPONENT_VIBE_DURATION_SEC;
+    default:
+      return COMPONENT_TEST_DURATION_SEC;
+  }
+}
+
+static void prv_advance_component(AppData *data) {
+  prv_cleanup_component(data);
+
+  data->component_elapsed_sec = 0;
+  data->component++;
+
+  if (data->component >= NumComponents) {
+    data->component = ComponentAccel;
+    data->cycle_count++;
+  }
+
+  prv_start_component(data);
+}
+
+static void prv_enter_fail(AppData *data, const char *reason) {
+  prv_cleanup_component(data);
+  data->state = AgingStateFail;
+  sniprintf(data->fail_reason, sizeof(data->fail_reason), "%s", reason);
+  PBL_LOG_ERR("Aging test FAIL: %s", reason);
+}
+
+static void prv_run_component_display(AppData *data) {
+  char time_str[16];
+  prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
+
+  uint32_t remaining = CYCLING_DURATION_SEC - data->phase_elapsed_sec;
+  char rem_str[16];
+  prv_format_time(rem_str, sizeof(rem_str), remaining);
+
+  const char *comp_name = "?";
+  char comp_detail[48] = "";
+  switch (data->component) {
+    case ComponentAccel: {
+      AccelDriverSample sample;
+      accel_peek(&sample);
+      comp_name = "Accel";
+      sniprintf(comp_detail, sizeof(comp_detail),
+                "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
+                sample.x, sample.y, sample.z);
       break;
-    case Duration_4Hours:
-      duration_text = "4 Hours";
+    }
+#ifdef CONFIG_MAG
+    case ComponentMag: {
+      MagData mag_sample;
+      mag_read_data(&mag_sample);
+      comp_name = "Mag";
+      sniprintf(comp_detail, sizeof(comp_detail),
+                "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
+                mag_sample.x, mag_sample.y, mag_sample.z);
       break;
-    case Duration_Unlimited:
-      duration_text = "Unlimited";
+    }
+#endif
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+    case ComponentBacklightWhite:
+      led_controller_rgb_set_color(0xD0D0D0);
+      comp_name = "BL White";
+      break;
+    case ComponentBacklightRed:
+      led_controller_rgb_set_color(0xFF0000);
+      comp_name = "BL Red";
+      break;
+    case ComponentBacklightGreen:
+      led_controller_rgb_set_color(0x00FF00);
+      comp_name = "BL Green";
+      break;
+    case ComponentBacklightBlue:
+      led_controller_rgb_set_color(0x0000FF);
+      comp_name = "BL Blue";
+      break;
+#else
+    case ComponentBacklight:
+      comp_name = "Backlight";
+      break;
+#endif
+#if CAPABILITY_HAS_SPEAKER
+    case ComponentAudio:
+      comp_name = "Audio";
+      if (!data->audio_playing) {
+        audio_start(AUDIO, prv_audio_trans_handler);
+        audio_set_volume(AUDIO, 100);
+        data->audio_playing = true;
+      }
+      break;
+#endif
+    case ComponentALS: {
+      uint32_t level = ambient_light_get_light_level();
+      comp_name = "ALS";
+      sniprintf(comp_detail, sizeof(comp_detail), "Level: %" PRIu32, level);
+      break;
+    }
+    case ComponentVibe:
+      // Only pulse once at the start of the vibe phase
+      if (data->component_elapsed_sec <= 1) {
+        vibes_short_pulse();
+      }
+      comp_name = "Vibe";
       break;
     default:
-      duration_text = "2 Hours";
       break;
   }
 
+  BatteryConstants bc;
+  battery_get_constants(&bc);
+  BatteryChargeState cs = battery_get_charge_state();
+
+  int8_t temp_c = (int8_t)(bc.t_mc / 1000);
+  uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
+
   sniprintf(data->status_string, sizeof(data->status_string),
-            "Test Duration:\n\n%s\n\nUP/DOWN: Change\nSELECT: Start\nBACK: Exit",
-            duration_text);
-  text_layer_set_text(&data->menu_text, data->status_string);
+            "CYCLING [%s]\n"
+            "Cycle: %" PRIu32 "\n"
+            "Elapsed: %s\n"
+            "Remain: %s\n"
+            "%" PRId32 "mV %" PRIu8 "%% "
+            "%" PRId8 ".%02" PRIu8 "C\n"
+            "%s",
+            comp_name, data->cycle_count,
+            time_str, rem_str,
+            bc.v_mv, cs.charge_percent,
+            temp_c, temp_c_frac,
+            comp_detail);
 }
 
-static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
-  if (data->menu_active) {
-    if (data->selected_duration > Duration_2Hours) {
-      data->selected_duration--;
-    } else {
-      data->selected_duration = Duration_Unlimited;
+  switch (data->state) {
+    case AgingStateWaitPlug: {
+      BatteryChargeState cs = battery_get_charge_state();
+      if (cs.is_plugged) {
+        data->state = AgingStateCharging;
+        data->phase_elapsed_sec = 0;
+        sniprintf(data->status_string, sizeof(data->status_string), "CHARGING\nStarting...");
+      } else {
+        sniprintf(data->status_string, sizeof(data->status_string),
+                  "PLUG CHARGER\n\nPlug the watch\nto start");
+      }
+      break;
     }
-    prv_update_menu_display(data);
-  }
-}
 
-static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  AppData *data = app_state_get_user_data();
+    case AgingStateCharging: {
+      data->phase_elapsed_sec++;
 
-  if (data->menu_active) {
-    if (data->selected_duration < Duration_Unlimited) {
-      data->selected_duration++;
-    } else {
-      data->selected_duration = Duration_2Hours;
+      BatteryConstants bc;
+      battery_get_constants(&bc);
+      BatteryChargeState cs = battery_get_charge_state();
+
+      if (!cs.is_plugged) {
+        prv_enter_fail(data, "Unplugged while\ncharging");
+        break;
+      }
+
+      // Temperature check
+      if (bc.t_mc < TEMP_MIN_MC || bc.t_mc > TEMP_MAX_MC) {
+        prv_enter_fail(data, "Temperature out\nof range");
+        break;
+      }
+
+      // Timeout check
+      if (data->phase_elapsed_sec >= CHARGE_TIMEOUT_SEC) {
+        prv_enter_fail(data, "Charge timeout\n(90min)");
+        break;
+      }
+
+      // Target reached
+      if (cs.charge_percent >= CHARGE_TARGET_PERCENT) {
+        battery_set_charge_enable(false);
+        data->state = AgingStateWaitUnplug;
+        sniprintf(data->status_string, sizeof(data->status_string),
+                  "UNPLUG WATCH\n\nCharged to %" PRIu8 "%%\n"
+                  "Unplug to start\ndischarge",
+                  cs.charge_percent);
+        break;
+      }
+
+      // Display charging progress
+      char time_str[16];
+      prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
+
+      int8_t temp_c = (int8_t)(bc.t_mc / 1000);
+      uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
+
+      bool usb = battery_is_usb_connected();
+      BatteryChargeStatus charge_status;
+      battery_charge_status_get(&charge_status);
+      const char *charge_status_str;
+      if (!cs.is_charging) {
+        charge_status_str = "Idle";
+      } else {
+        switch (charge_status) {
+          case BatteryChargeStatusComplete: charge_status_str = "Complete"; break;
+          case BatteryChargeStatusTrickle:  charge_status_str = "Trickle"; break;
+          case BatteryChargeStatusCC:       charge_status_str = "CC"; break;
+          case BatteryChargeStatusCV:       charge_status_str = "CV"; break;
+          default:                          charge_status_str = "Unknown"; break;
+        }
+      }
+
+      sniprintf(data->status_string, sizeof(data->status_string),
+                "CHARGING\nTime: %s\n\n"
+                "%" PRId32 "mV %" PRIu8 "%%\n"
+                "%" PRId8 ".%02" PRIu8 "C\n"
+                "USB:%s Chg:%s\n\n"
+                "Target: %d%%",
+                time_str, bc.v_mv, cs.charge_percent,
+                temp_c, temp_c_frac,
+                usb ? "Y" : "N", charge_status_str,
+                CHARGE_TARGET_PERCENT);
+      break;
     }
-    prv_update_menu_display(data);
-  }
-}
 
-static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  AppData *data = app_state_get_user_data();
+    case AgingStateWaitUnplug: {
+      BatteryChargeState cs = battery_get_charge_state();
+      if (!cs.is_plugged) {
+        // Start discharging with backlight at max brightness
+        data->state = AgingStateDischarging;
+        data->phase_elapsed_sec = 0;
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+        data->saved_backlight_color = led_controller_rgb_get_color();
+        led_controller_rgb_set_color(0xFFFFFF);
+#endif
+        light_enable(true);
+        sniprintf(data->status_string, sizeof(data->status_string),
+                  "DISCHARGING\nStarting...");
+      }
+      break;
+    }
 
-  if (data->menu_active) {
-    prv_start_tests(data->selected_duration);
+    case AgingStateDischarging: {
+      data->phase_elapsed_sec++;
+
+      BatteryConstants bc;
+      battery_get_constants(&bc);
+      BatteryChargeState cs = battery_get_charge_state();
+
+      if (cs.is_plugged) {
+        light_enable(false);
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+        led_controller_rgb_set_color(data->saved_backlight_color);
+#endif
+        prv_enter_fail(data, "Plugged while\ndischarging");
+        break;
+      }
+
+      // Target reached — turn off backlight and start cycling
+      if (cs.charge_percent <= DISCHARGE_TARGET_PERCENT) {
+        light_enable(false);
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+        led_controller_rgb_set_color(data->saved_backlight_color);
+#endif
+        data->initial_percent = cs.charge_percent;
+        data->state = AgingStateCycling;
+        data->phase_elapsed_sec = 0;
+        data->component = ComponentAccel;
+        data->component_elapsed_sec = 0;
+        data->cycle_count = 1;
+        prv_start_component(data);
+        break;
+      }
+
+      // Display discharge progress
+      char time_str[16];
+      prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
+
+      int8_t temp_c = (int8_t)(bc.t_mc / 1000);
+      uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
+
+      sniprintf(data->status_string, sizeof(data->status_string),
+                "DISCHARGING\nTime: %s\n\n"
+                "%" PRId32 "mV %" PRIu8 "%%\n"
+                "%" PRId8 ".%02" PRIu8 "C\n\n"
+                "Target: %d%%",
+                time_str, bc.v_mv, cs.charge_percent,
+                temp_c, temp_c_frac,
+                DISCHARGE_TARGET_PERCENT);
+      break;
+    }
+
+    case AgingStateCycling: {
+      data->phase_elapsed_sec++;
+      data->component_elapsed_sec++;
+
+      // Check if cycling is done
+      if (data->phase_elapsed_sec >= CYCLING_DURATION_SEC) {
+        prv_cleanup_component(data);
+
+        BatteryChargeState cs = battery_get_charge_state();
+        int8_t drop = (int8_t)data->initial_percent - (int8_t)cs.charge_percent;
+
+        if (drop <= MAX_PERCENT_DROP) {
+          data->state = AgingStatePass;
+          sniprintf(data->status_string, sizeof(data->status_string),
+                    "PASS\n\nStart: %" PRIu8 "%%\n"
+                    "End: %" PRIu8 "%%\n"
+                    "Drop: %" PRId8 "%%",
+                    data->initial_percent, cs.charge_percent, drop);
+        } else {
+          char reason[64];
+          sniprintf(reason, sizeof(reason),
+                    "Drop %" PRId8 "%% > %d%%",
+                    drop, MAX_PERCENT_DROP);
+          prv_enter_fail(data, reason);
+        }
+
+        tick_timer_service_unsubscribe();
+        break;
+      }
+
+      // Advance component if needed
+      if (data->component_elapsed_sec >= prv_component_duration(data->component)) {
+        prv_advance_component(data);
+      }
+
+      prv_run_component_display(data);
+      break;
+    }
+
+    case AgingStatePass:
+    case AgingStateFail:
+      return;
   }
+
+  if (data->state == AgingStateFail) {
+    sniprintf(data->status_string, sizeof(data->status_string),
+              "FAIL\n\n%s", data->fail_reason);
+  }
+
+  text_layer_set_text(&data->status, data->status_string);
 }
 
 static void prv_back_click_handler(ClickRecognizerRef recognizer, void *context) {
   AppData *data = app_state_get_user_data();
 
-  if (data->running) {
-    prv_stop_test();
+  if (data->state == AgingStateDischarging) {
+    light_enable(false);
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+    led_controller_rgb_set_color(data->saved_backlight_color);
+#endif
+  } else if (data->state == AgingStateCycling) {
+    prv_cleanup_component(data);
   }
+
+  tick_timer_service_unsubscribe();
+
+  serial_console_set_rx_enabled(true);
+  bt_ctl_set_enabled(true);
+  prf_idle_watchdog_start();
 
   app_window_stack_pop(true);
 }
 
 static void prv_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_UP, prv_up_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, prv_down_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
   window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
-}
-
-static void prv_start_tests(TestDuration duration) {
-  AppData *data = app_state_get_user_data();
-
-  data->duration = duration;
-  data->current_test = TestState_Menu;
-  data->test_elapsed_sec = 0;
-  data->total_elapsed_sec = 0;
-  data->cycle_count = 1;
-  data->running = true;
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-  data->saved_backlight_color = led_controller_rgb_get_color();
-#endif
-
-  // Disable charging during the test
-  battery_set_charge_enable(false);
-
-  switch (duration) {
-    case Duration_2Hours:
-      data->max_duration_sec = 2 * 3600;
-      break;
-    case Duration_4Hours:
-      data->max_duration_sec = 4 * 3600;
-      break;
-    case Duration_Unlimited:
-      data->max_duration_sec = UINT32_MAX;
-      break;
-    default:
-      data->max_duration_sec = UINT32_MAX;
-      break;
-  }
-
-  // Hide menu and mark as inactive
-  layer_set_hidden(&data->menu_text.layer, true);
-  data->menu_active = false;
-
-  // Show test display
-  layer_set_hidden(&data->title.layer, false);
-  layer_set_hidden(&data->status.layer, false);
-
-  // Start first test
-  prv_advance_test(data);
-  prv_update_display(data);
-
-  // Subscribe to tick timer
-  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
 }
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData) {
-    .running = false,
-    .menu_active = true,
-    .test_failed = false,
+  *data = (AppData){
+    .state = AgingStateWaitPlug,
 #if CAPABILITY_HAS_SPEAKER
     .audio_playing = false,
 #endif
-    .selected_duration = Duration_2Hours,
   };
 
   app_state_set_user_data(data);
+
+  // Disable power consumers and idle watchdog for the entire test
+  serial_console_set_rx_enabled(false);
+  bt_ctl_set_enabled(false);
+  prf_idle_watchdog_stop();
 
   Window *window = &data->window;
   window_init(window, "");
@@ -647,22 +572,13 @@ static void prv_handle_init(void) {
   Layer *window_layer = &window->layer;
   GRect bounds = window_layer->bounds;
 
-  // Setup menu text layer
-  TextLayer *menu_text = &data->menu_text;
-  text_layer_init(menu_text, &bounds);
-  text_layer_set_font(menu_text, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-  text_layer_set_text_alignment(menu_text, GTextAlignmentCenter);
-  layer_add_child(window_layer, &menu_text->layer);
-
-  // Setup title and status layers (hidden initially)
   TextLayer *title = &data->title;
   const int16_t title_y = PBL_IF_ROUND_ELSE(10, 0);
   text_layer_init(title, &GRect(0, title_y, bounds.size.w, 24));
   text_layer_set_font(title, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(title, GTextAlignmentCenter);
-  text_layer_set_text(title, "TEST AGING");
+  text_layer_set_text(title, "AGING TEST");
   layer_add_child(window_layer, &title->layer);
-  layer_set_hidden(&title->layer, true);
 
   TextLayer *status = &data->status;
   const int16_t status_y = PBL_IF_ROUND_ELSE(40, 25);
@@ -673,32 +589,19 @@ static void prv_handle_init(void) {
   text_layer_set_text_alignment(status, PBL_IF_ROUND_ELSE(GTextAlignmentCenter,
                                                            GTextAlignmentLeft));
   layer_add_child(window_layer, &status->layer);
-  layer_set_hidden(&status->layer, true);
 
-  prv_update_menu_display(data);
+  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
 
   app_window_stack_push(window, true);
-}
-
-static void prv_handle_deinit(void) {
-  AppData *data = app_state_get_user_data();
-
-  if (data->running) {
-    tick_timer_service_unsubscribe();
-  }
 }
 
 static void s_main(void) {
   prv_handle_init();
 
-  prf_idle_watchdog_stop();
   app_event_loop();
-  prf_idle_watchdog_start();
-
-  prv_handle_deinit();
 }
 
-const PebbleProcessMd* mfg_test_aging_app_get_info(void) {
+const PebbleProcessMd *mfg_test_aging_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
     .common.main_func = &s_main,
     // UUID: 12345678-ABCD-EF01-2345-6789ABCDEF01
@@ -706,5 +609,5 @@ const PebbleProcessMd* mfg_test_aging_app_get_info(void) {
                      0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01 },
     .name = "MfgTestAging",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }
