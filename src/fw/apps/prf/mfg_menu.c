@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "applib/app.h"
+#include "applib/battery_state_service.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
 #include "apps/prf/mfg_extras_menu.h"
@@ -23,10 +24,14 @@
 
 #include <string.h>
 
+// "XXXXXX - 100%"
+#define DEVICE_INFO_SUBTITLE_SIZE (MFG_SERIAL_NUMBER_SIZE + 8)
+
 typedef struct {
   Window *window;
   SimpleMenuLayer *menu_layer;
   SimpleMenuSection menu_section;
+  char device_info_subtitle[DEVICE_INFO_SUBTITLE_SIZE];
 } MfgMenuAppData;
 
 static uint16_t s_menu_position = 0;
@@ -60,6 +65,19 @@ static void prv_select_shutdown(int index, void *context) {
   enter_standby(RebootReasonCode_ShutdownMenuItem);
 }
 
+static void prv_update_device_info_subtitle(MfgMenuAppData *data, uint8_t charge_percent) {
+  char serial[MFG_SERIAL_NUMBER_SIZE + 1];
+  mfg_info_get_serialnumber(serial, sizeof(serial));
+  sniprintf(data->device_info_subtitle, sizeof(data->device_info_subtitle),
+            "%s - %"PRIu8"%%", serial, charge_percent);
+}
+
+static void prv_battery_state_handler(BatteryChargeState charge) {
+  MfgMenuAppData *data = app_state_get_user_data();
+  prv_update_device_info_subtitle(data, charge.charge_percent);
+  layer_mark_dirty(simple_menu_layer_get_layer(data->menu_layer));
+}
+
 //! @param[out] out_items
 static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 
@@ -79,13 +97,6 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 
   size_t num_items = ARRAY_LENGTH(s_menu_items);
 
-  // Poke in the serial number as subtitle for "Device Info"
-  int buffer_size = MFG_SERIAL_NUMBER_SIZE + 1;
-  char *device_serial = app_malloc(buffer_size);
-  mfg_info_get_serialnumber(device_serial, buffer_size);
-
-  (*out_menu_items)[0].subtitle = device_serial;
-
   return num_items;
 }
 
@@ -98,6 +109,11 @@ static void prv_window_load(Window *window) {
   SimpleMenuItem* menu_items;
   size_t num_items = prv_create_menu_items(&menu_items);
 
+  // Set initial subtitle with serial and battery %
+  BatteryChargeState charge = battery_state_service_peek();
+  prv_update_device_info_subtitle(data, charge.charge_percent);
+  menu_items[0].subtitle = data->device_info_subtitle;
+
   data->menu_section = (SimpleMenuSection) {
     .num_items = num_items,
     .items = menu_items
@@ -108,6 +124,8 @@ static void prv_window_load(Window *window) {
 
   // Set the menu layer back to it's previous highlight position
   simple_menu_layer_set_selected_index(data->menu_layer, s_menu_position, false);
+
+  battery_state_service_subscribe(prv_battery_state_handler);
 }
 
 static void s_main(void) {
