@@ -60,6 +60,29 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
   #include <logging/log_hashing.h>
 #endif
 
+#if MEMFAULT && defined(PBL_LOGS_HASHED) && __has_include("memfault/core/log.h")
+  #include "memfault/core/log.h"
+
+  #define PBL_TO_MFLT_LOG_LEVEL(level) \
+    ((level) <= LOG_LEVEL_ERROR ? kMemfaultPlatformLogLevel_Error : \
+     (level) <= LOG_LEVEL_WARNING ? kMemfaultPlatformLogLevel_Warning : \
+     (level) <= LOG_LEVEL_INFO ? kMemfaultPlatformLogLevel_Info : \
+     kMemfaultPlatformLogLevel_Debug)
+
+  // Memfault compact_log_helpers.h uses (arg)+0 in _Generic which triggers
+  // -Wpointer-arith when log arguments include function pointers. Suppress
+  // this warning around the SDK macro expansion.
+  #define PBL_MFLT_LOG_SAVE(level, fmt, ...) \
+    do { \
+      _Pragma("GCC diagnostic push") \
+      _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"") \
+      MEMFAULT_COMPACT_LOG_SAVE(PBL_TO_MFLT_LOG_LEVEL(level), fmt, ## __VA_ARGS__); \
+      _Pragma("GCC diagnostic pop") \
+    } while (0)
+#else
+  #define PBL_MFLT_LOG_SAVE(level, fmt, ...) ((void)0)
+#endif
+
 #define LOG_COLOR_BLACK          "BLACK"        // Not so useful in general
 #define LOG_COLOR_RED            "RED"
 #define LOG_COLOR_GREEN          "GREEN"
@@ -156,6 +179,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
         if (PBL_SHOULD_LOG(level)) { \
           if (domain) { \
             NEW_LOG_HASH(pbl_log_hashed_async, level, color, fmt, ## __VA_ARGS__); \
+            PBL_MFLT_LOG_SAVE(level, fmt, ## __VA_ARGS__); \
           } \
         } \
       } while (0)
