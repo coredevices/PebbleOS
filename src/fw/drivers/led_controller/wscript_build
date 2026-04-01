@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+sources = []
+use = ['fw_includes']
+
+if bld.env.CONFIG_LED_CONTROLLER_AW2016:
+    sources.append('aw2016.c')
+elif bld.env.CONFIG_LED_CONTROLLER_AW9364E:
+    sources.append('aw9364e.c')
+
+bld.objects(
+    name='driver_led_controller',
+    source=sources,
+    use=use,
+)
