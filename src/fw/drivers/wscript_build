@@ -775,20 +775,7 @@ if bld.env.QEMU:
 
 
 if bld.env.CONFIG_LED_CONTROLLER:
-    if bld.env.CONFIG_LED_CONTROLLER_AW2016:
-        sources = ['led_controller/aw2016.c']
-    elif bld.env.CONFIG_LED_CONTROLLER_AW9364E:
-        sources = ['led_controller/aw9364e.c']
-    else:
-        bld.fatal('Unknown LED controller configured')
-
-    bld.objects(
-        name='driver_led_controller',
-        source=sources,
-        use=[
-            'driver_i2c',
-        ],
-    )
+    bld.recurse('led_controller')
 
 if bld.env.QEMU:
     bld.objects(
