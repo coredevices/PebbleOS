@@ -24,6 +24,7 @@
 #include "apps/prf/mfg_speaker_asterix.h"
 #include "apps/prf/mfg_speaker_obelix.h"
 #include "apps/prf/mfg_touch.h"
+#include "apps/prf/mfg_test_menu.h"
 #include "apps/prf/mfg_test_result.h"
 #include "apps/prf/mfg_vibration.h"
 #include "kernel/event_loop.h"
@@ -38,39 +39,52 @@ typedef struct {
   const char *title;
   MfgTestId test_id;
   MfgTestGetInfoFn get_info;
+  uint8_t modes;
 } MfgTestMenuEntry;
 
-static const MfgTestMenuEntry s_entries[] = {
-  { "Buttons",       MfgTestId_Buttons,       mfg_button_app_get_info },
-  { "Display",       MfgTestId_Display,        mfg_display_app_get_info },
+#define SF MFG_TEST_MODE_SEMI_FINISHED
+#define FI MFG_TEST_MODE_FINISHED
+
+static const MfgTestMenuEntry s_all_entries[] = {
+  { "Buttons",       MfgTestId_Buttons,       mfg_button_app_get_info,    SF | FI },
+  { "Display",       MfgTestId_Display,       mfg_display_app_get_info,   SF | FI },
 #ifdef CONFIG_TOUCH
-  { "Touch",         MfgTestId_Touch,          mfg_touch_app_get_info },
+  { "Touch",         MfgTestId_Touch,         mfg_touch_app_get_info,     SF | FI },
 #endif
-  { "Backlight",     MfgTestId_Backlight,      mfg_backlight_app_get_info },
-  { "Accelerometer", MfgTestId_Accel,          mfg_accel_app_get_info },
+  { "Backlight",     MfgTestId_Backlight,     mfg_backlight_app_get_info, SF | FI },
+  { "Accelerometer", MfgTestId_Accel,         mfg_accel_app_get_info,     SF | FI },
 #ifdef CONFIG_MAG
-  { "Magnetometer",  MfgTestId_Mag,            mfg_mag_app_get_info },
+  { "Magnetometer",  MfgTestId_Mag,           mfg_mag_app_get_info,       SF | FI },
 #endif
 #if PLATFORM_ASTERIX
-  { "Speaker",       MfgTestId_Speaker,        mfg_speaker_asterix_app_get_info },
+  { "Speaker",       MfgTestId_Speaker,       mfg_speaker_asterix_app_get_info, SF | FI },
 #elif PLATFORM_OBELIX
-  { "Speaker",       MfgTestId_Speaker,        mfg_speaker_obelix_app_get_info },
+  { "Speaker",       MfgTestId_Speaker,       mfg_speaker_obelix_app_get_info,  SF | FI },
 #endif
 #if PLATFORM_ASTERIX
-  { "Microphone",    MfgTestId_Mic,            mfg_mic_asterix_app_get_info },
+  { "Microphone",    MfgTestId_Mic,           mfg_mic_asterix_app_get_info, SF | FI },
 #elif PLATFORM_OBELIX
-  { "Microphone",    MfgTestId_Mic,            mfg_mic_obelix_app_get_info },
+  { "Microphone",    MfgTestId_Mic,           mfg_mic_obelix_app_get_info,  SF | FI },
 #elif PLATFORM_GETAFIX
-  { "Microphone",    MfgTestId_Mic,            mfg_mic_getafix_app_get_info },
+  { "Microphone",    MfgTestId_Mic,           mfg_mic_getafix_app_get_info, SF | FI },
 #endif
-  { "ALS",           MfgTestId_ALS,            mfg_als_app_get_info },
-  { "Vibration",     MfgTestId_Vibration,      mfg_vibration_app_get_info },
+  { "ALS",           MfgTestId_ALS,           mfg_als_app_get_info,       SF | FI },
+  { "Vibration",     MfgTestId_Vibration,     mfg_vibration_app_get_info, SF | FI },
 #if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
-  { "HRM CTR/L",     MfgTestId_HrmCtrLeakage,  mfg_hrm_ctr_leakage_obelix_app_get_info },
+  { "HRM CTR/L",     MfgTestId_HrmCtrLeakage, mfg_hrm_ctr_leakage_obelix_app_get_info, SF | FI },
 #endif
-  { "Charge",        MfgTestId_Charge,         mfg_charge_app_get_info },
-  { "Program Color", MfgTestId_ProgramColor,   mfg_program_color_app_get_info },
+  { "Charge",        MfgTestId_Charge,        mfg_charge_app_get_info,         SF | FI },
+  { "Program Color", MfgTestId_ProgramColor,  mfg_program_color_app_get_info,  FI },
 };
+
+#undef SF
+#undef FI
+
+// Filtered entries for the active mode (built at startup)
+static const MfgTestMenuEntry *s_entries[ARRAY_LENGTH(s_all_entries)];
+static size_t s_num_entries;
+
+static uint8_t s_active_mode;
 
 typedef struct {
   Window *window;
@@ -93,8 +107,8 @@ static void prv_launch_test(int index, const PebbleProcessMd *md) {
 }
 
 static void prv_select_test(int index, void *context) {
-  if ((size_t)index < ARRAY_LENGTH(s_entries)) {
-    prv_launch_test(index, s_entries[index].get_info());
+  if ((size_t)index < s_num_entries) {
+    prv_launch_test(index, s_entries[index]->get_info());
   }
 }
 
@@ -110,21 +124,29 @@ static const char * prv_get_status_prefix(MfgTestId test) {
   return result->passed ? "[P]" : "[F]";
 }
 
+static void prv_build_filtered_entries(uint8_t mode) {
+  s_num_entries = 0;
+  for (size_t i = 0; i < ARRAY_LENGTH(s_all_entries); i++) {
+    if (s_all_entries[i].modes & mode) {
+      s_entries[s_num_entries++] = &s_all_entries[i];
+    }
+  }
+}
+
 static void prv_window_load(Window *window) {
   MfgTestMenuAppData *data = app_state_get_user_data();
 
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
 
-  size_t num_entries = ARRAY_LENGTH(s_entries);
-  size_t num_items = num_entries + 1;  // +1 for RESULTS
+  size_t num_items = s_num_entries + 1;  // +1 for RESULTS
   SimpleMenuItem *items = app_malloc(num_items * sizeof(SimpleMenuItem));
 
-  for (size_t i = 0; i < num_entries; i++) {
-    const char *prefix = prv_get_status_prefix(s_entries[i].test_id);
-    size_t len = snprintf(NULL, 0, "%zu. %s %s", i + 1, prefix, s_entries[i].title) + 1;
+  for (size_t i = 0; i < s_num_entries; i++) {
+    const char *prefix = prv_get_status_prefix(s_entries[i]->test_id);
+    size_t len = snprintf(NULL, 0, "%zu. %s %s", i + 1, prefix, s_entries[i]->title) + 1;
     char *title = app_malloc(len);
-    snprintf(title, len, "%zu. %s %s", i + 1, prefix, s_entries[i].title);
+    snprintf(title, len, "%zu. %s %s", i + 1, prefix, s_entries[i]->title);
 
     items[i] = (SimpleMenuItem) {
       .title = title,
@@ -132,7 +154,7 @@ static void prv_window_load(Window *window) {
     };
   }
 
-  items[num_entries] = (SimpleMenuItem) {
+  items[s_num_entries] = (SimpleMenuItem) {
     .title = "RESULTS",
     .callback = prv_select_results,
   };
@@ -146,20 +168,20 @@ static void prv_window_load(Window *window) {
 
   if (s_last_selected >= 0) {
     if (mfg_test_result_was_reported()) {
-      const MfgTestResult *result = ((size_t)s_last_selected < num_entries)
-          ? mfg_test_result_get(s_entries[s_last_selected].test_id)
+      const MfgTestResult *result = ((size_t)s_last_selected < s_num_entries)
+          ? mfg_test_result_get(s_entries[s_last_selected]->test_id)
           : NULL;
 
       if (result && result->passed) {
         // Test passed: auto-advance to next test
         int16_t next = s_last_selected + 1;
-        if ((size_t)next < num_entries) {
+        if ((size_t)next < s_num_entries) {
           simple_menu_layer_set_selected_index(data->menu_layer, next, false);
-          prv_launch_test(next, s_entries[next].get_info());
+          prv_launch_test(next, s_entries[next]->get_info());
         } else {
           // Reached end of test list, launch RESULTS
-          simple_menu_layer_set_selected_index(data->menu_layer, num_entries, false);
-          prv_launch_test(num_entries, mfg_qr_results_app_get_info());
+          simple_menu_layer_set_selected_index(data->menu_layer, s_num_entries, false);
+          prv_launch_test(s_num_entries, mfg_qr_results_app_get_info());
         }
       } else {
         // Test failed: stay on same test so operator can retry
@@ -182,7 +204,19 @@ bool mfg_test_menu_should_relaunch(void) {
   return false;
 }
 
-static void s_main(void) {
+bool mfg_test_menu_is_test_available(MfgTestId test_id) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_all_entries); i++) {
+    if (s_all_entries[i].test_id == test_id) {
+      return (s_all_entries[i].modes & s_active_mode) != 0;
+    }
+  }
+  return false;
+}
+
+static void prv_run_menu(uint8_t mode) {
+  s_active_mode = mode;
+  prv_build_filtered_entries(mode);
+
   MfgTestMenuAppData *data = app_malloc_check(sizeof(MfgTestMenuAppData));
   *data = (MfgTestMenuAppData){};
 
@@ -199,13 +233,32 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_test_menu_app_get_info(void) {
+static void s_main_semi_finished(void) {
+  prv_run_menu(MFG_TEST_MODE_SEMI_FINISHED);
+}
+
+static void s_main_finished(void) {
+  prv_run_menu(MFG_TEST_MODE_FINISHED);
+}
+
+const PebbleProcessMd* mfg_test_menu_semi_finished_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
+    .common.main_func = &s_main_semi_finished,
     // UUID: 8a3f6c1e-9b2d-4f5a-a7c3-1d4e6b8f9a2c
     .common.uuid = { 0x8a, 0x3f, 0x6c, 0x1e, 0x9b, 0x2d, 0x4f, 0x5a,
                      0xa7, 0xc3, 0x1d, 0x4e, 0x6b, 0x8f, 0x9a, 0x2c },
-    .name = "MfgTestMenu",
+    .name = "MfgTestMenuSF",
+  };
+  return (const PebbleProcessMd*) &s_app_info;
+}
+
+const PebbleProcessMd* mfg_test_menu_finished_app_get_info(void) {
+  static const PebbleProcessMdSystem s_app_info = {
+    .common.main_func = &s_main_finished,
+    // UUID: 8a3f6c1e-9b2d-4f5a-a7c3-1d4e6b8f9a2d
+    .common.uuid = { 0x8a, 0x3f, 0x6c, 0x1e, 0x9b, 0x2d, 0x4f, 0x5a,
+                     0xa7, 0xc3, 0x1d, 0x4e, 0x6b, 0x8f, 0x9a, 0x2d },
+    .name = "MfgTestMenuFI",
   };
   return (const PebbleProcessMd*) &s_app_info;
 }

@@ -3,9 +3,22 @@
 
 #pragma once
 
+#include "apps/prf/mfg_test_result.h"
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* mfg_test_menu_app_get_info(void);
+#include <stdbool.h>
+#include <stdint.h>
+
+// Test mode bitmask
+#define MFG_TEST_MODE_SEMI_FINISHED (1 << 0)
+#define MFG_TEST_MODE_FINISHED      (1 << 1)
+#define MFG_TEST_MODE_ALL           (MFG_TEST_MODE_SEMI_FINISHED | MFG_TEST_MODE_FINISHED)
+
+const PebbleProcessMd* mfg_test_menu_semi_finished_app_get_info(void);
+const PebbleProcessMd* mfg_test_menu_finished_app_get_info(void);
 
 //! Check and clear the relaunch flag (set when returning from a test)
 bool mfg_test_menu_should_relaunch(void);
+
+//! Check if a test is available in the current mode
+bool mfg_test_menu_is_test_available(MfgTestId test_id);
