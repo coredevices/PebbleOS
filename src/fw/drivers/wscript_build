@@ -27,7 +27,7 @@ if bld.is_silk():
         'driver_rng',
         'driver_rtc',
         'driver_task_watchdog',
-        'driver_temperature',
+
         'driver_voltage_monitor',
         'driver_watchdog',
     ])
@@ -52,7 +52,7 @@ elif bld.is_snowy_compatible():
         'driver_rng',
         'driver_rtc',
         'driver_task_watchdog',
-        'driver_temperature',
+
         'driver_touch',
         'driver_voltage_monitor',
         'driver_watchdog',
@@ -79,7 +79,7 @@ elif bld.is_asterix():
         'driver_rng',
         'driver_rtc',
         'driver_task_watchdog',
-        'driver_temperature',
+
     ])
 
 elif bld.is_obelix():
@@ -105,7 +105,7 @@ elif bld.is_obelix():
         'driver_rng',
         'driver_rtc',
         'driver_task_watchdog',
-        'driver_temperature',
+
         'driver_touch',
         'driver_pwm',
         'driver_touch',
@@ -134,7 +134,7 @@ elif bld.is_getafix():
         'driver_rng',
         'driver_rtc',
         'driver_task_watchdog',
-        'driver_temperature',
+
         'driver_touch',
         'driver_touch',
     ])
@@ -158,41 +158,8 @@ if bld.is_obelix():
 if bld.env.CONFIG_AMBIENT_LIGHT:
     bld.recurse('ambient')
 
-if mcu_family in ('STM32F4',):
-    bld.objects(
-        name='driver_temperature',
-        source=[
-            'stm32f4/temperature.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family in ('NRF52840'):
-    # FIXME(NRF52840): provide working implementation
-    bld.objects(
-        name='driver_temperature',
-        source=[
-            'stubs/temperature.c',
-        ],
-        use=[
-            'fw_includes',
-        ],
-    )
-elif mcu_family in ('SF32LB52'):
-    bld.objects(
-        name='driver_temperature',
-        source=[
-            'sf32lb52/temperature.c',
-        ],
-        use=[
-            'fw_includes',
-        ],
-    )
+if bld.env.CONFIG_TEMPERATURE:
+    bld.recurse('temperature')
 
 if mcu_family == 'STM32F4':
     bld.objects(
