@@ -4,6 +4,7 @@
 menu "Drivers"
 
 rsource "ambient/Kconfig"
+rsource "battery/Kconfig"
 rsource "display/Kconfig"
 rsource "flash/Kconfig"
 rsource "i2c/Kconfig"

@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig BATTERY
+    bool "Battery"
+    help
+      Battery Drivers
+
+if BATTERY
+
+config BATTERY_PMIC
+    bool "PMIC-based"
+    help
+      Battery management via external PMIC. Used on platforms where the
+      PMIC handles battery monitoring (asterix, obelix, getafix).
+
+config BATTERY_STM32F4
+    bool "STM32F4 ADC-based"
+    help
+      Battery monitoring via STM32F4 ADC and PMIC.
+
+endif # BATTERY
