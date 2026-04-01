@@ -5,9 +5,6 @@
 #include "drivers/button_id.h"
 #include "debug/power_tracking.h"
 
-#define NRF52840_COMPATIBLE
-#include <mcu.h>
-
 #include <stdint.h>
 #include <stdbool.h>
 

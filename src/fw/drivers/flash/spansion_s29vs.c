@@ -15,8 +15,7 @@
 #include "util/size.h"
 #include "util/units.h"
 
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 //! This is the memory mapped region that's mapped to the parallel flash.
 static const uintptr_t FMC_BANK_1_BASE_ADDRESS = 0x60000000;

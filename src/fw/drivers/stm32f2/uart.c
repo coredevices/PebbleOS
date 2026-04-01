@@ -11,9 +11,7 @@
 
 #include "FreeRTOS.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 #include <mcu/interrupts.h>
 
 // The STM32F2 standard peripheral library uses a precision of 100 which is plenty, so we'll do the

@@ -6,8 +6,7 @@
 #include "mcu/interrupts.h"
 #include "system/passert.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
+#include <nrfx.h>
 
 #include <stdbool.h>
 

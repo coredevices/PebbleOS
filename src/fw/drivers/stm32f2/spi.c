@@ -12,10 +12,7 @@
 #include "util/math.h"
 #include "util/units.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 //! Deduced by looking at the prescalers in stm32f2xx_spi.h
 #define SPI_FREQ_LOG_TO_PRESCALER(LG) (((LG) - 1) * 0x8)

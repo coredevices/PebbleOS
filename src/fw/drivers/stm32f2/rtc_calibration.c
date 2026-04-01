@@ -6,9 +6,7 @@
 #include "system/logging.h"
 #include "util/math.h"
 
-#define STM32F2_COMPATIBLE
-#include <mcu.h>
-
+#include <stm32f2xx.h>
 
 RTCCalibConfig rtc_calibration_get_config(uint32_t frequency, uint32_t target) {
   if (frequency == 0) {

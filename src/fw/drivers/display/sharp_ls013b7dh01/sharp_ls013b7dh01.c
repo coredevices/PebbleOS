@@ -21,10 +21,7 @@
 #include "util/reverse.h"
 #include "util/units.h"
 
-
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #include "misc.h"
 

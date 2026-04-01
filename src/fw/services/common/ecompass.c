@@ -20,12 +20,10 @@
 #include "kernel/util/sleep.h"
 
 #include "system/rtc_registers.h"
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF5_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
+
+#if MICRO_FAMILY_STM32F4
+#include <stm32f4xx.h>
+#endif
 
 // Duration (in minutes) to run high-frequency sampling during compass calibration.
 // Defaults to 2 minutes, but some platforms (e.g., Asterix) require longer.

@@ -19,9 +19,7 @@
 #include "kernel/util/sleep.h"
 #include "util/units.h"
 
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #include <string.h>
 

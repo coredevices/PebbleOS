@@ -9,10 +9,7 @@
 #include "kernel/util/sleep.h"
 #include "util/units.h"
 
-
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #include "bma255_private.h"
 #include "bma255_regs.h"

@@ -46,9 +46,7 @@
 #include "util/reverse.h"
 #include "util/size.h"
 
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #if DISPLAY_ORIENTATION_ROW_MAJOR || DISPLAY_ORIENTATION_ROW_MAJOR_INVERTED
 #define DISP_LINES DISP_ROWS

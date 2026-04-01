@@ -9,8 +9,7 @@
 #include "util/math.h"
 #include "util/units.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
+#include <nrfx.h>
 
 /* XXX: this really needs to be refactored to allow mutual exclusion between two SPISlavePorts on a single SPIBus (and other things) */
 
