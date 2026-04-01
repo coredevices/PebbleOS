@@ -18,13 +18,6 @@
 #include "system/passert.h"
 #include "util/size.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF5_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
-
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -38,6 +31,14 @@
 
 #if MICRO_FAMILY_NRF5
 #include <hal/nrf_rtc.h>
+#endif
+
+#if MICRO_FAMILY_SF32LB52
+#include <bf0_hal.h>
+#endif
+
+#if MICRO_FAMILY_STM32F4
+#include <stm32f4xx.h>
 #endif
 
 #define APP_THROTTLE_TIME_MS 300

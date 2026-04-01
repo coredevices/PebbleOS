@@ -17,8 +17,7 @@
 #include "services/common/analytics/analytics.h"
 #include "util/math.h"
 
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
+#include <bf0_hal.h>
 
 #include <ipc_queue.h>
 

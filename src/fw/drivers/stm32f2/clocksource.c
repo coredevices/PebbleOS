@@ -16,10 +16,7 @@
 
 #include "FreeRTOS.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 //! How long to wait for the LSE to start. Empirically about 4 seconds.
 //! STM32 datasheet says typical max is 2.

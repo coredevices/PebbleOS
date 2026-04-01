@@ -7,10 +7,6 @@
 #include "drivers/periph_config.h"
 #include "drivers/spi.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
-
 bool bma255_selftest(void);
 
 void bma255_gpio_init(void);

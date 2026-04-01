@@ -23,8 +23,6 @@
 
 #include "FreeRTOS.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
 #include <hal/nrf_rtc.h>
 
 #include <inttypes.h>

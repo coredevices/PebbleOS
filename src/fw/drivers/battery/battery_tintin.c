@@ -10,8 +10,7 @@
 #include "drivers/periph_config.h"
 #include "system/logging.h"
 
-#define STM32F2_COMPATIBLE
-#include <mcu.h>
+#include <stm32f2xx.h>
 
 #include <stdlib.h>
 #include <string.h>

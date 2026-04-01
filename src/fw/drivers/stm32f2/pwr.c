@@ -5,8 +5,7 @@
 
 #include "drivers/periph_config.h"
 
-#define STM32F2_COMPATIBLE
-#include <mcu.h>
+#include <stm32f2xx.h>
 
 void pwr_enable_wakeup(bool enable) {
   PWR_WakeUpPinCmd(enable ? ENABLE : DISABLE);

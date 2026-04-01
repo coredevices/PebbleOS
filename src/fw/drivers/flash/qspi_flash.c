@@ -17,9 +17,7 @@
 #include "system/status_codes.h"
 #include "util/math.h"
 
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 #define FLASH_RESET_WORD_VALUE (0xffffffff)
 

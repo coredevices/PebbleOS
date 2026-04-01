@@ -8,8 +8,6 @@
 
 #include "FreeRTOS.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
 #include <mcu/interrupts.h>
 
 #include <nrfx_uarte.h>

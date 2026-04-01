@@ -3,9 +3,6 @@
 #include "util/bitset.h"
 #include "system/logging.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
-
 #include <nrfx.h>
 #include <helpers/nrfx_reset_reason.h>
 #include <hal/nrf_wdt.h>

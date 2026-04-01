@@ -5,10 +5,7 @@
 
 #include "system/passert.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 static uint32_t prv_adjust_frequency(TIM_TypeDef *stm32_timer) {
 #ifdef MICRO_FAMILY_STM32F4

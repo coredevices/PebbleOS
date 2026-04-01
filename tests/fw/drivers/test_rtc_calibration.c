@@ -7,7 +7,6 @@
 
 // Stubs and stuff
 #include "stubs_logging.h"
-#include "mcu.h"
 
 #define TARGET_FREQUENCY_mHZ (32768 * 1000)
 #define ALTERNATE_FREQUENCY_mHZ (1000000 * 1000)

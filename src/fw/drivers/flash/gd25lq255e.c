@@ -8,9 +8,6 @@
 #include "util/math.h"
 #include "util/size.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
-
 static bool s_protected;
 static FlashAddress s_protected_start;
 static FlashAddress s_protected_end;

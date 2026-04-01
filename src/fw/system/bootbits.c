@@ -10,12 +10,13 @@
 #include "system/version.h"
 #include "util/crc32.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF5_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
+#ifdef MICRO_FAMILY_SF32LB52
+#include <bf0_hal.h>
+#endif
+
+#if MICRO_FAMILY_STM32F4
+#include <stm32f4xx.h>
+#endif
 
 #include <inttypes.h>
 #include <stdint.h>

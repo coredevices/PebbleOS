@@ -8,10 +8,7 @@
 #include "os/mutex.h"
 #include "system/passert.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 // All boards use ADC1 solely for Vref, so we should never be using it for anything else.
 #define VREF_ADC ADC1

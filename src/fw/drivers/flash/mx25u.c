@@ -11,10 +11,6 @@
 #include "system/version.h"
 #include "util/math.h"
 
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
-
 static QSPIFlashPart QSPI_FLASH_PART = {
     .instructions =
         {

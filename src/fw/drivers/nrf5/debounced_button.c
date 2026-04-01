@@ -13,8 +13,7 @@
 #include "util/bitset.h"
 #include "kernel/util/sleep.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
+#include <nrfx.h>
 
 #include "projdefs.h"
 

@@ -4,8 +4,7 @@
 #include "drivers/timer.h"
 #include "system/passert.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
+#include <nrfx.h>
 
 void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
   nrfx_pwm_config_t config = NRFX_PWM_DEFAULT_CONFIG(

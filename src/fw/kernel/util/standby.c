@@ -12,15 +12,13 @@
 #include "system/reset.h"
 #include "system/passert.h"
 
-#ifdef TARGET_QEMU
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#if defined(MICRO_FAMILY_STM32F4) && defined(TARGET_QEMU)
+#include <stm32f4xx.h>
 #endif
 
 #if CAPABILITY_HAS_PMIC
 static NORETURN prv_enter_standby(void) {
-#ifdef TARGET_QEMU
+#if defined(MICRO_FAMILY_STM32F4) && defined(TARGET_QEMU)
   periph_config_enable(PWR, RCC_APB1Periph_PWR);
   pwr_enable_wakeup(true);
   PWR_EnterSTANDBYMode();

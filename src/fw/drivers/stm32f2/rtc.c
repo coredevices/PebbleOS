@@ -23,8 +23,7 @@
 
 #include "util/time/time.h"
 
-#define STM32F2_COMPATIBLE
-#include <mcu.h>
+#include <stm32f2xx.h>
 
 #include <inttypes.h>
 #include <stdio.h>

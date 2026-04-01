@@ -6,9 +6,7 @@
 #include "drivers/pwm.h"
 #include "drivers/timer.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
   periph_config_enable(pwm->timer.peripheral, pwm->timer.config_clock);

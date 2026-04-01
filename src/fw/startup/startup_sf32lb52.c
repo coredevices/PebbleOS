@@ -6,8 +6,8 @@
 #include "system/passert.h"
 #include "util/attributes.h"
 
-#define SF32LB52_COMPATIBLE
-#include "mcu.h"
+#include <cmsis_core.h>
+#include <bf0_hal.h>
 
 //! These symbols are defined in the linker script for use in initializing
 //! the data sections. uint8_t since we do arithmetic with section lengths.

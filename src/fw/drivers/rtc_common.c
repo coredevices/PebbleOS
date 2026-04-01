@@ -12,10 +12,7 @@
 
 #include <stdio.h>
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
+#include <stm32f4xx.h>
 
 bool rtc_sanitize_struct_tm(struct tm *t) {
   // These values come from time_t (which suffers from the 2038 problem) and our hardware which

@@ -7,12 +7,9 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF5_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
+#ifdef MICRO_FAMILY_STM32F4
+#include <stm32f4xx.h>
+#endif
 
 void enable_mcu_debugging(void) {
 #if !defined(RELEASE) && !defined(MICRO_FAMILY_NRF52840) && !defined(MICRO_FAMILY_SF32LB52)

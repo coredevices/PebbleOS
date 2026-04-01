@@ -7,9 +7,6 @@
 #include "system/status_codes.h"
 #include "util/math.h"
 
-#define NRF5_COMPATIBLE
-#include <mcu.h>
-
 static QSPIFlashPart QSPI_FLASH_PART = {
     .instructions =
         {

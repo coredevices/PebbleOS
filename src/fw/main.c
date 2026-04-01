@@ -90,13 +90,6 @@
 #include "debug/debug.h"
 #include "debug/setup.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#define NRF5_COMPATIBLE
-#define SF32LB52_COMPATIBLE
-#include <mcu.h>
-
 #include "FreeRTOS.h"
 #include "task.h"
 

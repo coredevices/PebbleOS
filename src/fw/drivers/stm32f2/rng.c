@@ -7,11 +7,7 @@
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 
-#define STM32F2_COMPATIBLE
-#define STM32F4_COMPATIBLE
-#define STM32F7_COMPATIBLE
-#include <mcu.h>
-
+#include <stm32f4xx.h>
 
 bool rng_rand(uint32_t *rand_out) {
 #ifdef TARGET_QEMU
