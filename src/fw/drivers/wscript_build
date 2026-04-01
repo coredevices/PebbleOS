@@ -30,7 +30,6 @@ if bld.is_silk():
         'driver_rtc',
         'driver_task_watchdog',
         'driver_temperature',
-        'driver_vibe',
         'driver_voltage_monitor',
         'driver_watchdog',
     ])
@@ -59,7 +58,6 @@ elif bld.is_snowy_compatible():
         'driver_task_watchdog',
         'driver_temperature',
         'driver_touch',
-        'driver_vibe',
         'driver_voltage_monitor',
         'driver_watchdog',
     ])
@@ -88,7 +86,6 @@ elif bld.is_asterix():
         'driver_rtc',
         'driver_task_watchdog',
         'driver_temperature',
-        'driver_vibe',
     ])
 
 elif bld.is_obelix():
@@ -117,7 +114,6 @@ elif bld.is_obelix():
         'driver_task_watchdog',
         'driver_temperature',
         'driver_touch',
-        'driver_vibe',
         'driver_pwm',
         'driver_mic',
         'driver_touch',
@@ -149,7 +145,6 @@ elif bld.is_getafix():
         'driver_task_watchdog',
         'driver_temperature',
         'driver_touch',
-        'driver_vibe',
         'driver_mic',
         'driver_touch',
     ])
@@ -1327,56 +1322,8 @@ if bld.capability('HAS_TOUCHSCREEN'):
 if bld.env.CONFIG_UART:
     bld.recurse('uart')
 
-if bld.is_asterix():
-    bld.objects(
-        name='driver_vibe',
-        source=[
-            'vibe/vibe_drv2604.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-if bld.is_obelix():
-    bld.objects(
-        name='driver_vibe',
-        source=[
-            'vibe/vibe_aw86225.c',
-        ],
-        use=[
-            'fw_includes',
-            'driver_gpio',
-        ],
-    )
-if bld.is_getafix():
-    bld.objects(
-        name='driver_vibe',
-        source=[
-            'vibe/vibe_aw8623x.c',
-        ],
-        use=[
-            'fw_includes',
-            'driver_gpio',
-        ],
-    )
-elif mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_vibe',
-        source=[
-            'vibe/vibe.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_pwm'
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
+if bld.env.CONFIG_VIBE:
+    bld.recurse('vibe')
 
 if mcu_family == 'STM32F4':
     bld.objects(
