@@ -441,7 +441,7 @@ static const Command s_prompt_commands[] = {
   {"pmic regs", command_pmic_read_registers, 0},
 #endif
 
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   { "mic start", command_mic_start, 4},
   { "mic read",  command_mic_read, 0},
 

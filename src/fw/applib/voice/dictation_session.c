@@ -14,7 +14,7 @@
 
 #include <string.h>
 
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
 
 static void prv_handle_transcription_result(PebbleEvent *e, void *context) {
   PBL_ASSERTN(context);
@@ -54,7 +54,7 @@ static void prv_stop_session(DictationSession *session) {
 
 DictationSession *dictation_session_create(uint32_t buffer_size,
                                            DictationSessionStatusCallback callback, void *context) {
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   if (!callback) {
     return NULL;
   }
@@ -119,7 +119,7 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
 }
 
 void dictation_session_destroy(DictationSession *session) {
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   if (!session) {
     return;
   }
@@ -138,7 +138,7 @@ void dictation_session_destroy(DictationSession *session) {
 }
 
 void dictation_session_enable_confirmation(DictationSession *session, bool is_enabled) {
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   if (!session || session->in_progress) {
     return;
   }
@@ -147,7 +147,7 @@ void dictation_session_enable_confirmation(DictationSession *session, bool is_en
 }
 
 void dictation_session_enable_error_dialogs(DictationSession *session, bool is_enabled) {
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   if (!session || session->in_progress) {
     return;
   }
@@ -156,7 +156,7 @@ void dictation_session_enable_error_dialogs(DictationSession *session, bool is_e
 }
 
 DictationSessionStatus dictation_session_start(DictationSession *session) {
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   if (!session || session->in_progress) {
     return DictationSessionStatusFailureInternalError;
   }
@@ -178,7 +178,7 @@ DictationSessionStatus dictation_session_start(DictationSession *session) {
 }
 
 DictationSessionStatus dictation_session_stop(DictationSession *session) {
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   if (!session || !session->in_progress) {
     return DictationSessionStatusFailureInternalError;
   }

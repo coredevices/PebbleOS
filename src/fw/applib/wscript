@@ -55,7 +55,7 @@ def build(bld):
     if not bld.is_spalding() and not bld.is_getafix():
         excludes.append('ui/window_stack_animation_round*')
 
-    if not bld.capability('HAS_MICROPHONE'):
+    if not bld.env.CONFIG_MIC:
         excludes.append('voice/voice_window.c')
 
     if bld.capability('HAS_MAGNETOMETER'):

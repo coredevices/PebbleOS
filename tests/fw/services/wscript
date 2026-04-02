@@ -262,7 +262,7 @@ def build(ctx):
             " src/fw/services/normal/voice_endpoint.c " \
             " tests/fakes/fake_session.c " \
             ]),
-        defines=["PLATFORM_SNOWY", "CAPABILITY_HAS_MICROPHONE=1"],
+        defines=["PLATFORM_SNOWY", "CONFIG_MIC"],
         test_sources_ant_glob = "test_voice_endpoint.c",
         override_includes=['dummy_board'])
 

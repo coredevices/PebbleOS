@@ -48,7 +48,7 @@ typedef struct {
   void *action_data;
   void *context;
   ActionMenu *action_menu;
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   VoiceWindow *voice_window;
 #endif
   EventServiceInfo event_service_info;
@@ -113,7 +113,7 @@ static WindowStack *prv_get_window_stack(ActionResultData *data) {
 
 static void prv_cleanup_voice_data(VoiceResponseData *data) {
   event_service_client_unsubscribe(&data->event_service_info);
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   voice_window_destroy(data->voice_window);
 #endif
   // Free the copied TimelineItem that was created in prv_start_voice_reply()
@@ -759,7 +759,7 @@ static void prv_action_menu_cb(ActionMenu *action_menu, const ActionMenuItem *it
   prv_invoke_action(action_menu, action, pin, item->label);
 }
 
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
 static void prv_invoke_voice_response(VoiceResponseData *voice_data, char *transcription) {
   // This is a bit of a hack, but we need all the behaviour of timeline_actions_invoke_action and
   // this allows voice responses to be used for other types of responses (i.e. ANCS in the future)
@@ -844,7 +844,7 @@ static ActionMenuLevel *prv_create_emoji_level_from_action(ActionMenuLevel *pare
   return emoji_level;
 }
 
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
 static void prv_handle_voice_transcription_result(PebbleEvent *e, void *context) {
   DictationSessionStatus status = e->dictation.result;
   char *transcription = e->dictation.text;
@@ -860,7 +860,7 @@ static void prv_handle_voice_transcription_result(PebbleEvent *e, void *context)
 }
 #endif
 
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
 static void prv_start_voice_reply(ActionMenu *action_menu,
                                   const ActionMenuItem *item,
                                   void *context) {
@@ -904,7 +904,7 @@ typedef enum ReplyOption {
 static bool prv_is_reply_option_supported(ReplyOption option, TimelineItemAction *action) {
   switch (option) {
     case ReplyOption_Voice:
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
       return true;
 #else
       return false;
@@ -938,7 +938,7 @@ static ActionMenuLevel *prv_create_responses_level(TimelineItemAction *action,
   }
 
   ActionMenuItem reply_options[ReplyOptionCount] = {
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
     {
       .label = (reply_prefix ? i18n_get("Reply with Voice", root_level) :
                                i18n_get("Voice", root_level)),
