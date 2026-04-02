@@ -194,8 +194,6 @@ def configure(conf):
 
     else:
         # These warnings only exist in GCC
-        c_warnings.append("-Wno-packed-bitfield-compat")
-
         # compatibility with the future; at some point we should take this out
         c_warnings.append("-Wno-address-of-packed-member")
         c_warnings.append("-Wno-enum-int-mismatch")
