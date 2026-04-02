@@ -783,6 +783,7 @@ static Animation *prv_create_intro_animation(TimelineAppData *data, uint32_t dur
   return animation_spawn_create(peek_out, sidebar_slide, speed_lines, NULL);
 }
 
+#if ANIMATION_SLIDE
 static void prv_play_peek_in(TimelineAppData *data) {
   // Skip the first frame since the icon is offscreen
   const int num_frames_skip = 1;
@@ -796,6 +797,7 @@ static void prv_play_peek_in(TimelineAppData *data) {
   animation_schedule(animation);
   animation_set_elapsed(animation, num_frames_skip * ANIMATION_TARGET_FRAME_INTERVAL_MS);
 }
+#endif
 
 static void prv_scale_peek_to_first_pin_icon(TimelineAppData *data, uint32_t duration,
                                              bool was_mini_peek) {

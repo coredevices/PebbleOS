@@ -33,6 +33,7 @@
 #define CARD_MARGIN_BOTTOM PBL_IF_RECT_ELSE(7, 0)
 #define CARD_LINE_DELTA -2
 
+#if PBL_RECT
 static void prv_horizontal_rule_node_callback(GContext *ctx, const GRect *box,
                                               const GTextNodeDrawConfig *config,
                                               bool render, GSize *size_out, void *user_data) {
@@ -70,6 +71,7 @@ static GTextNode *prv_horizontal_rule_constructor(const LayoutLayer *layout_ref,
     return NULL;
   }
 }
+#endif // PBL_RECT
 
 static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   static const LayoutNodeExtentConfig s_icon_config = {
@@ -88,10 +90,6 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.style_font = TextStyleFont_Header,
     .text.alignment = PBL_IF_RECT_ELSE(LayoutTextAlignment_Right, LayoutTextAlignment_Center),
     .text.extent.margin.h = PBL_IF_RECT_ELSE(0, -2), // time margin height
-  };
-  static const LayoutNodeConstructorConfig s_horizontal_rule_config = {
-    .extent.node.type = LayoutNodeType_Constructor,
-    .constructor = prv_horizontal_rule_constructor,
   };
   static const LayoutNodeTextAttributeConfig s_title_config = {
     .attr_id = AttributeIdTitle,
@@ -121,6 +119,10 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
 
 #if PBL_RECT
+  static const LayoutNodeConstructorConfig s_horizontal_rule_config = {
+    .extent.node.type = LayoutNodeType_Constructor,
+    .constructor = prv_horizontal_rule_constructor,
+  };
   static const LayoutNodeConfig * const s_icon_vertical_config_nodes[] = {
     &s_icon_config.node,
   };

@@ -74,9 +74,11 @@ int16_t menu_cell_basic_horizontal_inset(void) {
   return prv_get_dimensions_for_runtime_platform_default_size()->horizontal_inset;
 }
 
+#if PBL_RECT
 static int16_t prv_title_subtitle_left_margin(void) {
   return prv_get_dimensions_for_runtime_platform_default_size()->title_subtitle_left_margin;
 }
+#endif
 
 static ALWAYS_INLINE GFont prv_get_cell_title_font(const MenuCellLayerConfig *config) {
   return config->title_font ?: system_theme_get_font_for_default_size(TextStyleFont_MenuCellTitle);
@@ -105,6 +107,7 @@ static ALWAYS_INLINE void prv_draw_icon(GContext *ctx, GBitmap *icon, const GRec
   graphics_draw_bitmap_in_rect(ctx, icon, icon_frame);
 }
 
+#if PBL_RECT
 static void prv_menu_cell_basic_draw_custom_rect(
     GContext *ctx, const Layer *cell_layer, const MenuCellLayerConfig *config) {
   const GRect *bounds = &cell_layer->bounds;
@@ -208,6 +211,7 @@ static void prv_menu_cell_basic_draw_custom_rect(
                        config->overflow_mode, GTextAlignmentLeft, NULL);
   }
 }
+#endif // PBL_RECT
 
 // This function duplicates `grect_inset()` but helps us save some stack space by using pointer
 // arguments and always inlining the function

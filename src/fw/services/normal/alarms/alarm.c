@@ -97,7 +97,6 @@ static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig* co
 static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig* config);
 static void prv_cron_callback(CronJob *job, void* data);
 static void prv_snooze_alarm(int snooze_delay_s);
-static bool prv_analytics_op(AlarmId id, AlarmConfig *config, void *context);
 static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context);
 static bool prv_set_alarm_custom_op(AlarmId id, AlarmConfig *config, void *context);
 
@@ -948,18 +947,6 @@ void alarm_set_snooze_delay(uint16_t delay_m) {
   prv_file_close_and_unlock(&file);
 }
 
-// ----------------------------------------------------------------------------------------------
-static bool prv_analytics_op(AlarmId id, AlarmConfig *config, void *context) {
-  const AlarmInfo info = {
-    .hour = config->hour,
-    .minute = config->minute,
-    .kind = config->kind,
-    .is_smart = config->is_smart,
-    .scheduled_days = &config->scheduled_days,
-  };
-
-  return false;
-}
 
 void alarm_dismiss_alarm(void) {
   prv_clear_snooze_timer();

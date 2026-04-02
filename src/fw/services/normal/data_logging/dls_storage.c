@@ -961,12 +961,3 @@ bad_session:
   // No longer in initialization. From now on, only KernelBG can use the session storage calls.
   s_initializing_storage = false;
 }
-
-
-// -------------------------------------------------------------------------------------------------
-// Analytics
-static bool prv_max_numbytes_cb(DataLoggingSession* session, void *data) {
-  uint32_t *max_bytes = (uint32_t *)data;
-  *max_bytes = MAX(*max_bytes, session->storage.num_bytes);
-  return true;
-}

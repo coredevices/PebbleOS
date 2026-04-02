@@ -105,13 +105,6 @@ void accel_init(void) {
     PBL_LOG_ERR("Failed to query BMA255");
     return;
   }
-  const bool pass = bma255_selftest();
-  if (pass) {
-    PBL_LOG_DBG("BMA255 self test pass, all 3 axis");
-  } else {
-    PBL_LOG_ERR("BMA255 self test failed one or more axis");
-  }
-
   // Workaround to fix FIFO Frame Leakage: Disable temperature sensor (we're not using it anyways)
   // See Section 2.2.1 of https://drive.google.com/a/pebble.com/file/d/0B9tTN3OlYns3bEZaczdoZUU3UEk/view
   bma255_write_register(BMA255Register_EXTENDED_MEMORY_MAP, BMA255_EXTENDED_MEMORY_MAP_OPEN);
@@ -711,108 +704,16 @@ bool accel_get_shake_detection_enabled(void) {
   return s_shake_detection_enabled;
 }
 
+void accel_enable_double_tap_detection(bool on) {
+}
+
 ////////////////////////////////////////////////////////////////////////////////
-// Selftest Support
+// Reset
 ////////////////////////////////////////////////////////////////////////////////
 
 static void prv_soft_reset(void) {
   bma255_write_register(BMA255Register_BGW_SOFTRESET, BMA255_SOFT_RESET_VALUE);
   psleep(4);
-}
-
-// Minimum thresholds for axis delta in mgs at 4G scale
-static const uint16_t SELFTEST_THRESHOLDS[] = {
-  [BMA255Axis_X] = 800,
-  [BMA255Axis_Y] = 800,
-  [BMA255Axis_Z] = 400,
-};
-
-static const char AXIS_NAMES[] = {
-  [BMA255Axis_X] = 'X',
-  [BMA255Axis_Y] = 'Y',
-  [BMA255Axis_Z] = 'Z',
-};
-
-static const uint8_t AXIS_REGISTERS[] = {
-  [BMA255Axis_X] = BMA255Register_ACCD_X_LSB,
-  [BMA255Axis_Y] = BMA255Register_ACCD_Y_LSB,
-  [BMA255Axis_Z] = BMA255Register_ACCD_Z_LSB,
-};
-
-static int16_t prv_read_axis(BMA255Axis axis, uint8_t *new_data) {
-  uint8_t raw_buf[2];
-  bma255_burst_read(AXIS_REGISTERS[axis], raw_buf, sizeof(raw_buf));
-  int16_t reading = prv_conv_raw_to_12bit(raw_buf);
-  if (new_data) {
-    *new_data = raw_buf[0] & 0x01;
-  }
-  return reading;
-}
-
-static bool prv_selftest_axis(BMA255Axis axis) {
-  uint8_t axis_bits;
-  switch (axis) {
-    case BMA255Axis_X:
-      axis_bits = 0x01;
-      break;
-    case BMA255Axis_Y:
-      axis_bits = 0x02;
-      break;
-    case BMA255Axis_Z:
-      axis_bits = 0x03;
-      break;
-    default:
-      WTF;
-  }
-
-
-  // g-range should be 4g for self-test
-  bma255_set_scale(BMA255Scale_4G);
-
-  psleep(2); // wait for a new sample
-
-  uint8_t new_data;
-  int16_t before = prv_read_axis(axis, &new_data);
-  before = prv_raw_to_mgs(before);
-
-  // Positive axis
-  bma255_write_register(BMA255Register_PMU_SELFTEST, axis_bits | SELFTEST_SIGN_POSITIVE);
-  psleep(50);
-  uint8_t new_positive;
-  int16_t positive = prv_read_axis(axis, &new_positive);
-  positive = prv_raw_to_mgs(positive);
-
-  prv_soft_reset();
-  bma255_set_scale(BMA255Scale_4G);
-
-  // Negative axis
-  bma255_write_register(BMA255Register_PMU_SELFTEST, axis_bits | SELFTEST_SIGN_NEGATIVE);
-  psleep(50);
-  uint8_t new_negative;
-  int16_t negative = prv_read_axis(axis, &new_negative);
-  negative = prv_raw_to_mgs(negative);
-
-  prv_soft_reset();
-
-  int delta = positive - negative;
-  delta = abs(delta);
-
-  PBL_LOG_DBG("Self test axis %c: %d Pos: %d Neg: %d Delta: %d (required %d)",
-          AXIS_NAMES[axis], before, positive,
-          negative, delta, SELFTEST_THRESHOLDS[axis]);
-
-  if (delta < SELFTEST_THRESHOLDS[axis]) {
-    PBL_LOG_ERR("Self test failed for axis %c: %d < %d",
-            AXIS_NAMES[axis], delta, SELFTEST_THRESHOLDS[axis]);
-    return false;
-  }
-
-  if ((new_data + new_negative + new_positive) != 3) {
-    PBL_LOG_ERR("Self test problem? Not logging data? %d %d %d",
-            new_data, new_positive, new_negative);
-  }
-
-  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

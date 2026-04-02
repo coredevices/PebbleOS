@@ -30,10 +30,6 @@
 
 // The number of pixels for a given row which get set to black to round the corner. These numbers
 // are for the top-left corner, but can easily be translated to the other corners. This is used by
-// bezel mode to replicate the behavior of the FPGA.
-#if PBL_COLOR
-static const uint32_t s_rounded_corner_width[6] = { 6, 4, 3, 2, 1, 1 };
-#endif
 
 //! This is our root framebuffer that everything gets composited into.
 static FrameBuffer s_framebuffer;
@@ -135,19 +131,6 @@ void compositor_app_framebuffer_fill_callback(GContext *ctx, int16_t y,
   );
 }
 
-#if PBL_COLOR
-static int prv_get_rounded_corner_width(int row_index, int num_rows) {
-  if (row_index >= num_rows) {
-    return 0;
-  }
-  if (row_index < (int)ARRAY_LENGTH(s_rounded_corner_width)) {
-    return s_rounded_corner_width[row_index];
-  } else if (num_rows - row_index - 1 < (int)ARRAY_LENGTH(s_rounded_corner_width)) {
-    return s_rounded_corner_width[num_rows - row_index - 1];
-  }
-  return 0;
-}
-#endif
 
 void compositor_set_modal_transition_offset(GPoint modal_offset) {
   s_animation_state.modal_offset = modal_offset;
