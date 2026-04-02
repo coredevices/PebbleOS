@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 
 #define STATUS_STRING_LEN 32
 #define BPM_STRING_LEN 32
@@ -158,4 +158,4 @@ const PebbleProcessMd* mfg_hrm_app_get_info(void) {
   return (const PebbleProcessMd*) &s_app_info;
 }
 
-#endif // CAPABILITY_HAS_BUILTIN_HRM
+#endif // CONFIG_HRM

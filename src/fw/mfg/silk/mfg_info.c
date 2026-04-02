@@ -101,7 +101,7 @@ void mfg_info_update_constant_data(void) {
   // Not implemented
 }
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 bool mfg_info_is_hrm_present(void) {
 #if defined(TARGET_QEMU) || defined(IS_BIGBOARD)
   return true;

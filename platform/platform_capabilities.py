@@ -13,7 +13,6 @@
 
 master_capability_set = {
     "COMPOSITOR_USES_DMA",
-    "HAS_BUILTIN_HRM",
     "HAS_DEFECTIVE_FW_CRC",
     "HAS_HARDWARE_PANIC_SCREEN",
     "HAS_MAGNETOMETER",
@@ -130,7 +129,6 @@ board_capability_dicts = [
     {
         "boards": ["silk_bb2", "silk"],
         "capabilities": {
-            "HAS_BUILTIN_HRM",
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
@@ -182,7 +180,6 @@ board_capability_dicts = [
             "HAS_FLASH_OTP",
             "HAS_MICROPHONE",
             "HAS_TOUCHSCREEN",
-            "HAS_BUILTIN_HRM",
             "HAS_MAGNETOMETER",
             "HAS_PBLBOOT",
             "HAS_DYNAMIC_BACKLIGHT",
