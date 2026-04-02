@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/rtc.h"
-#include "drivers/rtc_private.h"
+#include "rtc_private.h"
 
 #include "drivers/clocksource.h"
 #include "drivers/exti.h"
