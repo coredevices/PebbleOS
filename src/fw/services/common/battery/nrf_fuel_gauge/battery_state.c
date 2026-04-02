@@ -28,7 +28,11 @@
 
 #include "nrf_fuel_gauge.h"
 
-#define FUEL_GAUGE_STATEFUL (!defined(RECOVERY_FW) || defined(MANUFACTURING_FW))
+#if !defined(RECOVERY_FW) || defined(MANUFACTURING_FW)
+#define FUEL_GAUGE_STATEFUL 1
+#else
+#define FUEL_GAUGE_STATEFUL 0
+#endif
 
 #define ALWAYS_UPDATE_PCT 10.0f
 #define RECONNECTION_DELAY_MS (1 * 1000)
