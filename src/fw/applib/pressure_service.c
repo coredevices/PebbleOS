@@ -6,6 +6,7 @@
 
 #include "drivers/pressure.h"
 #include "process_state/app_state/app_state.h"
+#include "syscall/syscall_internal.h"
 #include "system/logging.h"
 
 #include <stddef.h>
@@ -41,6 +42,19 @@ static void prv_compute_altitude(PressureServiceState *state, PressureData *data
   }
 }
 
+// Syscall wrapper for hardware access from the timer callback, which runs in
+// unprivileged app context.
+DEFINE_SYSCALL(bool, sys_pressure_read_and_compute, PressureData *data) {
+  PressureServiceState *state = prv_get_state();
+
+  if (!pressure_read(&data->pressure_pa, &data->temperature_centideg)) {
+    return false;
+  }
+
+  prv_compute_altitude(state, data);
+  return true;
+}
+
 static void prv_timer_callback(void *context) {
   PressureServiceState *state = prv_get_state();
   if (!state->handler) {
@@ -48,15 +62,18 @@ static void prv_timer_callback(void *context) {
   }
 
   PressureData data = { 0 };
-  if (!pressure_read(&data.pressure_pa, &data.temperature_centideg)) {
+  if (!sys_pressure_read_and_compute(&data)) {
     return;
   }
 
-  prv_compute_altitude(state, &data);
   state->handler(&data);
 }
 
-void pressure_service_subscribe(PressureDataHandler handler, PressureODR odr) {
+// All exported functions use DEFINE_SYSCALL to escalate privileges, since they
+// are called from unprivileged app code via the SDK jump table but need to
+// access hardware drivers (pressure_read, pressure_set_odr).
+
+DEFINE_SYSCALL(void, pressure_service_subscribe, PressureDataHandler handler, PressureODR odr) {
   PressureServiceState *state = prv_get_state();
 
   // Clean up any existing subscription
@@ -82,7 +99,7 @@ void pressure_service_subscribe(PressureDataHandler handler, PressureODR odr) {
                                                      true /* repeating */);
 }
 
-void pressure_service_unsubscribe(void) {
+DEFINE_SYSCALL(void, pressure_service_unsubscribe, void) {
   PressureServiceState *state = prv_get_state();
 
   if (state->poll_timer) {
@@ -95,7 +112,7 @@ void pressure_service_unsubscribe(void) {
   pressure_set_odr(PRESSURE_ODR_1HZ);
 }
 
-bool pressure_service_set_data_rate(PressureODR odr) {
+DEFINE_SYSCALL(bool, pressure_service_set_data_rate, PressureODR odr) {
   PressureServiceState *state = prv_get_state();
 
   if (!state->handler || !state->poll_timer) {
@@ -112,7 +129,7 @@ bool pressure_service_set_data_rate(PressureODR odr) {
   return true;
 }
 
-bool pressure_service_set_reference(void) {
+DEFINE_SYSCALL(bool, pressure_service_set_reference, void) {
   PressureServiceState *state = prv_get_state();
 
   int32_t pressure_pa;
@@ -124,17 +141,17 @@ bool pressure_service_set_reference(void) {
   return true;
 }
 
-void pressure_service_set_reference_pressure(int32_t ref_pressure_pa) {
+DEFINE_SYSCALL(void, pressure_service_set_reference_pressure, int32_t ref_pressure_pa) {
   PressureServiceState *state = prv_get_state();
   state->ref_pressure_pa = ref_pressure_pa;
 }
 
-void pressure_service_use_full_formula(bool enable) {
+DEFINE_SYSCALL(void, pressure_service_use_full_formula, bool enable) {
   PressureServiceState *state = prv_get_state();
   state->use_full_formula = enable;
 }
 
-bool pressure_service_peek(PressureData *data) {
+DEFINE_SYSCALL(bool, pressure_service_peek, PressureData *data) {
   if (!data) {
     return false;
   }
@@ -149,7 +166,8 @@ bool pressure_service_peek(PressureData *data) {
   return true;
 }
 
-int32_t pressure_service_get_altitude_cm(int32_t pressure_pa, int32_t ref_pressure_pa) {
+DEFINE_SYSCALL(int32_t, pressure_service_get_altitude_cm, int32_t pressure_pa,
+               int32_t ref_pressure_pa) {
   PressureServiceState *state = prv_get_state();
   if (state->use_full_formula) {
     return pressure_get_altitude_full_cm(pressure_pa, ref_pressure_pa);
