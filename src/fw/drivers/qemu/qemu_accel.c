@@ -47,7 +47,6 @@
 #include "drivers/qemu/qemu_serial.h"
 #include "drivers/rtc.h"
 #include "os/mutex.h"
-#include "pebble_errors.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/math.h"

@@ -17,7 +17,6 @@
 #include "memfault/metrics/connectivity.h"
 #endif
 #include "os/mutex.h"
-#include "pebble_errors.h"
 #include "services/common/analytics/analytics.h"
 #include "services/common/bluetooth/ble_bas.h"
 #include "services/common/bluetooth/bluetooth_persistent_storage.h"
