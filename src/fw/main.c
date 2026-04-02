@@ -278,7 +278,7 @@ static void init_drivers(void) {
   flash_enable_write_protection();
   flash_prf_set_protection(true);
 
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   mic_init(MIC);
 #endif
 

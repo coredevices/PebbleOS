@@ -18,7 +18,6 @@ master_capability_set = {
     "HAS_MAGNETOMETER",
     "HAS_MAPPABLE_FLASH",
     "HAS_MASKING",
-    "HAS_MICROPHONE",
     "HAS_SETTINGS_ICONS",
     "HAS_SPRF_V3",
     "HAS_THEMING",
@@ -47,7 +46,6 @@ board_capability_dicts = [
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
-            "HAS_MICROPHONE",
             "HAS_TIMELINE_PEEK",
             "USE_PARALLEL_FLASH",
             "HAS_FPGA_DISPLAY",
@@ -62,7 +60,6 @@ board_capability_dicts = [
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
-            "HAS_MICROPHONE",
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
             "USE_PARALLEL_FLASH",
@@ -81,7 +78,6 @@ board_capability_dicts = [
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
-            "HAS_MICROPHONE",
             "USE_PARALLEL_FLASH",
             "HAS_FPGA_DISPLAY",
         },
@@ -95,7 +91,6 @@ board_capability_dicts = [
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
-            "HAS_MICROPHONE",
             "USE_PARALLEL_FLASH",
             "HAS_FPGA_DISPLAY",
         },
@@ -109,7 +104,6 @@ board_capability_dicts = [
             "HAS_MAGNETOMETER",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
-            "HAS_MICROPHONE",
             "HAS_SPRF_V3",
             "USE_PARALLEL_FLASH",
             "HAS_PUTBYTES_PREACKING",
@@ -122,7 +116,6 @@ board_capability_dicts = [
         "boards": ["silk_bb2", "silk"],
         "capabilities": {
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
-            "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
@@ -133,7 +126,6 @@ board_capability_dicts = [
         "boards": ["silk_flint"],
         "capabilities": {
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
-            "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
@@ -147,7 +139,6 @@ board_capability_dicts = [
         "boards": ["asterix"],
         "capabilities": {
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
-            "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
@@ -165,7 +156,6 @@ board_capability_dicts = [
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
             "HAS_FLASH_OTP",
-            "HAS_MICROPHONE",
             "HAS_MAGNETOMETER",
             "HAS_PBLBOOT",
             "HAS_DYNAMIC_BACKLIGHT",
@@ -183,7 +173,6 @@ board_capability_dicts = [
             "HAS_SPRF_V3",
             "HAS_PUTBYTES_PREACKING",
             "HAS_FLASH_OTP",
-            "HAS_MICROPHONE",
             "HAS_MAGNETOMETER",
             "HAS_PBLBOOT",
             "HAS_ACCEL_SENSITIVITY",
