@@ -24,7 +24,7 @@
 _Static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a funny size");
 
 void reboot_reason_set(RebootReason *reason) {
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
   uint32_t *raw = (uint32_t*)reason;
 
   if (retained_read(REBOOT_REASON_REGISTER_1)) {
@@ -80,7 +80,7 @@ void reboot_reason_set_restarted_safely(void) {
   reboot_reason_get(&reason);
   reason.restarted_safely = true;
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
   uint32_t* raw = (uint32_t *)&reason;
   retained_write(REBOOT_REASON_REGISTER_1, *raw);
 #elif defined MICRO_FAMILY_SF32LB52
@@ -93,7 +93,7 @@ void reboot_reason_set_restarted_safely(void) {
 }
 
 void reboot_reason_get(RebootReason *reason) {
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
   uint32_t *raw = (uint32_t *)reason;
   raw[0] = retained_read(REBOOT_REASON_REGISTER_1);
   raw[1] = retained_read(REBOOT_REASON_STUCK_TASK_PC);
@@ -115,7 +115,7 @@ void reboot_reason_get(RebootReason *reason) {
 }
 
 void reboot_reason_clear(void) {
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
   retained_write(REBOOT_REASON_REGISTER_1, 0);
   retained_write(REBOOT_REASON_STUCK_TASK_PC, 0);
   retained_write(REBOOT_REASON_STUCK_TASK_LR, 0);
@@ -134,7 +134,7 @@ void reboot_reason_clear(void) {
 }
 
 uint32_t reboot_get_slot_of_last_launched_app(void) {
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
   return retained_read(SLOT_OF_LAST_LAUNCHED_APP);
 #elif defined MICRO_FAMILY_SF32LB52
   return HAL_Get_backup(SLOT_OF_LAST_LAUNCHED_APP);
@@ -144,7 +144,7 @@ uint32_t reboot_get_slot_of_last_launched_app(void) {
 }
 
 void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
   retained_write(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #elif defined MICRO_FAMILY_SF32LB52
   HAL_Set_backup(SLOT_OF_LAST_LAUNCHED_APP, app_slot);

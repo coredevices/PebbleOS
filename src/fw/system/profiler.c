@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef MICRO_FAMILY_NRF5
+#ifdef MICRO_FAMILY_NRF52
 #include <drivers/nrfx_common.h>
 #include <soc/nrfx_coredep.h>
 #endif
@@ -110,7 +110,7 @@ void profiler_node_stop(ProfilerNode *node, uint32_t dwt_cyc_cnt) {
 }
 
 uint32_t profiler_cycles_to_us(uint32_t cycles) {
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF52)
   uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
 #elif defined(MICRO_FAMILY_SF32LB52)
   uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
@@ -139,7 +139,7 @@ uint32_t profiler_get_total_duration(bool in_us) {
   }
 
   if (in_us) {
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF52)
     uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
 #elif defined(MICRO_FAMILY_SF32LB52)
     uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
@@ -158,7 +158,7 @@ void profiler_print_stats(void) {
   PROFILER_STOP; // Make sure the profiler has been stopped.
   uint32_t total = profiler_get_total_duration(false);
 
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF52)
   uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
   char buf[80];
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);

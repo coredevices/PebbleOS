@@ -21,7 +21,7 @@ void clocksource_MCO1_enable(bool on);
 
 #endif
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
 
 /** @brief Request HFXO clock (reference counted). */
 void clocksource_hfxo_request(void);
