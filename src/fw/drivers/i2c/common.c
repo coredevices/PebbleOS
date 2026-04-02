@@ -35,15 +35,10 @@
 // 223-224 NACKs, but sometimes for unknown reasons it can take much longer.
 #define I2C_NACK_COUNT_MAX    (1000)
 
-typedef enum {
-  Read,
-  Write
-} TransferDirection;
-
-typedef enum {
-  SendRegisterAddress,      // Send a register address, followed by a repeat start for reads
-  NoRegisterAddress         // Do not send a register address
-} TransferType;
+#define Read I2CTransferDirection_Read
+#define Write I2CTransferDirection_Write
+#define SendRegisterAddress I2CTransferType_SendRegisterAddress
+#define NoRegisterAddress I2CTransferType_NoRegisterAddress
 
 /*----------------SEMAPHORE/LOCKING FUNCTIONS--------------------------*/
 
@@ -111,7 +106,7 @@ static void prv_bus_rail_power_down(I2CBus *bus) {
     .gpio_pin = bus->scl_gpio.gpio_pin,
     .active_high = true
   };
-  gpio_output_init(&out_scl, GPIO_PuPd_NOPULL, GPIO_Speed_2MHz);
+  gpio_output_init(&out_scl, GPIO_OType_OD, GPIO_Speed_2MHz);
   gpio_output_set(&out_scl, false);
 
   OutputConfig out_sda = {
@@ -119,7 +114,7 @@ static void prv_bus_rail_power_down(I2CBus *bus) {
     .gpio_pin = bus->sda_gpio.gpio_pin,
     .active_high = true
   };
-  gpio_output_init(&out_sda, GPIO_PuPd_NOPULL, GPIO_Speed_2MHz);
+  gpio_output_init(&out_sda, GPIO_OType_OD, GPIO_Speed_2MHz);
   gpio_output_set(&out_sda, false);
 
   bus->state->last_rail_stop_ticks = rtc_get_ticks();
@@ -318,7 +313,7 @@ bool i2c_bitbang_recovery(I2CSlavePort *slave) {
     .gpio_pin = slave->bus->scl_gpio.gpio_pin,
     .active_high = true
   };
-  gpio_output_init(&out_scl, GPIO_PuPd_NOPULL, GPIO_Speed_2MHz);
+  gpio_output_init(&out_scl, GPIO_OType_OD, GPIO_Speed_2MHz);
   gpio_output_set(&out_scl, true);
 
   bool recovered = false;
@@ -373,9 +368,9 @@ static bool prv_wait_for_not_busy(I2CBus *bus) {
 //! Set up and start a transfer to a bus, wait for it to finish and clean up after the transfer
 //! has completed
 //! Caller must hold bus mutex
-static bool prv_do_transfer_locked(I2CBus *bus, TransferDirection direction, uint16_t device_address,
+static bool prv_do_transfer_locked(I2CBus *bus, I2CTransferDirection direction, uint16_t device_address,
                                    uint8_t register_address, uint32_t size, uint8_t *data,
-                                   TransferType type) {
+                                   I2CTransferType type) {
   if (bus->state->user_count == 0) {
     PBL_LOG_ERR("Attempted access to disabled bus %s", bus->name);
     return false;
@@ -471,9 +466,9 @@ static bool prv_do_transfer_locked(I2CBus *bus, TransferDirection direction, uin
 }
 
 //! Wrapper that manages locking for prv_do_transfer_locked
-static bool prv_do_transfer(I2CBus *bus, TransferDirection direction, uint16_t device_address,
+static bool prv_do_transfer(I2CBus *bus, I2CTransferDirection direction, uint16_t device_address,
                             uint8_t register_address, uint32_t size, uint8_t *data,
-                            TransferType type) {
+                            I2CTransferType type) {
   mutex_lock(bus->state->bus_mutex);
   stop_mode_disable(bus->stop_mode_inhibitor);
 

@@ -124,7 +124,7 @@ static void prv_send_status_and_version(void) {
                   (uint8_t*) serial_number_buffer, sizeof(serial_number_buffer));
 
 #if IS_BIGBOARD
-  WatchInfoColor watch_color = WATCH_INFO_MODEL_UNKNOWN;
+  WatchInfoColor watch_color = WATCH_INFO_COLOR_UNKNOWN;
 #else
   WatchInfoColor watch_color = mfg_info_get_watch_color();
 #endif // IS_BIGBOARD
