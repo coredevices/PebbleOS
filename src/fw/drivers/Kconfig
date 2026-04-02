@@ -18,5 +18,6 @@ rsource "temperature/Kconfig"
 rsource "touch/Kconfig"
 rsource "uart/Kconfig"
 rsource "vibe/Kconfig"
+rsource "watchdog/Kconfig"
 
 endmenu
