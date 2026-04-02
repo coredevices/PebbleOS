@@ -11,7 +11,7 @@
 #include "applib/ui/window_private.h"
 #include "drivers/accel.h"
 #include "drivers/hrm.h"
-#include "drivers/hrm/gh3x2x/gh3x2x.h"
+#include "drivers/hrm/gh3x2x.h"
 #include "gh_demo.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
