@@ -22,7 +22,7 @@ if bld.is_silk():
         'driver_mpu',
         'driver_otp',
         'driver_pwr',
-        'driver_rng',
+
 
         'driver_task_watchdog',
 
@@ -45,7 +45,7 @@ elif bld.is_snowy_compatible():
         'driver_mpu',
         'driver_otp',
         'driver_pwr',
-        'driver_rng',
+
 
         'driver_task_watchdog',
 
@@ -69,7 +69,7 @@ elif bld.is_asterix():
         'driver_otp',
         'driver_periph_config',
         'driver_pwr',
-        'driver_rng',
+
 
         'driver_task_watchdog',
 
@@ -89,7 +89,7 @@ elif bld.is_obelix():
         'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
-        'driver_rng',
+
 
         'driver_task_watchdog',
         'driver_audio',
@@ -109,7 +109,7 @@ elif bld.is_getafix():
         'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
-        'driver_rng',
+
 
         'driver_task_watchdog',
 
@@ -540,41 +540,8 @@ elif mcu_family == 'STM32F4':
     )
 
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_rng',
-        source=[
-            'stm32f2/rng.c',
-        ],
-        use=[
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family == 'NRF52840':
-    # FIXME: provide working implementation
-    bld.objects(
-        name='driver_rng',
-        source=[
-            'stubs/rng.c',
-        ],
-        use=[
-            'fw_includes',
-        ],
-    )
-elif mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_rng',
-        source=[
-            'sf32lb52/rng.c',
-        ],
-        use=[
-            'fw_includes',
-            'hal_sifli',
-        ],
-    )
+if bld.env.CONFIG_RNG:
+    bld.recurse('rng')
 
 if bld.env.CONFIG_RTC:
     bld.recurse('rtc')
