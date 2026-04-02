@@ -437,7 +437,7 @@ static const Command s_prompt_commands[] = {
   { "hrm read", command_hrm_read, 0},
 #endif
 
-#if CAPABILITY_HAS_PMIC
+#ifdef CONFIG_PMIC
   {"pmic regs", command_pmic_read_registers, 0},
 #endif
 

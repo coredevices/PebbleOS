@@ -16,7 +16,7 @@
 #include <stm32f4xx.h>
 #endif
 
-#if CAPABILITY_HAS_PMIC
+#ifdef CONFIG_PMIC
 static NORETURN prv_enter_standby(void) {
 #if defined(MICRO_FAMILY_STM32F4) && defined(TARGET_QEMU)
   periph_config_enable(PWR, RCC_APB1Periph_PWR);
