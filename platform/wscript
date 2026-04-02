@@ -114,25 +114,6 @@ def get_qemu_extflash_device_type(ctx):
     else:
         return None
 
-
-@conf
-def has_touch(ctx):
-    if is_snowy(ctx):
-        return False
-    elif is_spalding(ctx):
-        return False
-    elif is_silk(ctx):
-        return False
-    elif is_asterix(ctx):
-        return False
-    elif is_obelix(ctx):
-        return True
-    elif is_getafix(ctx):
-        return True
-    else:
-        return None
-
-
 @conf
 def capabilities_dict(ctx):
     board = ctx.get_board()
