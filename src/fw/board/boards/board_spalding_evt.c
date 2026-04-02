@@ -88,16 +88,7 @@ static DMARequest ICE40LP_SPI_TX_DMA_REQUEST = {
   .data_size = DMARequestDataSize_Byte,
 };
 
-static DMARequestState s_bluetooth_uart_rx_dma_request_state;
-static DMARequest BLUETOOTH_UART_RX_DMA_REQUEST = {
-  .state = &s_bluetooth_uart_rx_dma_request_state,
-  .stream = &DMA2_STREAM2_DEVICE,
-  .channel = 4,
-  .irq_priority = 0x0e,
-  .priority = DMARequestPriority_High,
-  .type = DMARequestType_PeripheralToMemory,
-  .data_size = DMARequestDataSize_Byte,
-};
+// TODO: RX DMA not yet wired up, see .rx_dma below
 
 // UART DEVICES
 
