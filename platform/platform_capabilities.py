@@ -35,7 +35,6 @@ master_capability_set = {
     "HAS_APP_SCALING",
     "HAS_FPGA_DISPLAY",
     "HAS_ORIENTATION_MANAGER",
-    "HAS_PRESSURE_SENSOR",
     "HAS_MODDABLE_XS",
 }
 
@@ -166,7 +165,6 @@ board_capability_dicts = [
             "HAS_FLASH_OTP",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_ORIENTATION_MANAGER",
-            "HAS_PRESSURE_SENSOR",
         },
     },
     {

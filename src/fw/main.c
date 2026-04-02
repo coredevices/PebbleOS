@@ -295,7 +295,7 @@ static void init_drivers(void) {
 #if CAPABILITY_HAS_MAGNETOMETER
   mag_init();
 #endif
-#if CAPABILITY_HAS_PRESSURE_SENSOR
+#ifdef CONFIG_PRESSURE
   pressure_init();
 #endif
 
