@@ -282,7 +282,7 @@ static void init_drivers(void) {
   mic_init(MIC);
 #endif
 
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   touch_sensor_init();
 #if !defined(RECOVERY_FW)
   // Only keep touch enabled on recovery (and so manufacturing as well)
