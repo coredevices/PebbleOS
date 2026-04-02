@@ -23,7 +23,7 @@ if bld.is_silk():
         'driver_otp',
         'driver_pwr',
         'driver_rng',
-        'driver_rtc',
+
         'driver_task_watchdog',
 
         'driver_voltage_monitor',
@@ -46,7 +46,7 @@ elif bld.is_snowy_compatible():
         'driver_otp',
         'driver_pwr',
         'driver_rng',
-        'driver_rtc',
+
         'driver_task_watchdog',
 
 
@@ -70,7 +70,7 @@ elif bld.is_asterix():
         'driver_periph_config',
         'driver_pwr',
         'driver_rng',
-        'driver_rtc',
+
         'driver_task_watchdog',
 
     ])
@@ -90,7 +90,7 @@ elif bld.is_obelix():
         'driver_qspi',
         'driver_rc10k',
         'driver_rng',
-        'driver_rtc',
+
         'driver_task_watchdog',
         'driver_audio',
     ])
@@ -110,7 +110,7 @@ elif bld.is_getafix():
         'driver_qspi',
         'driver_rc10k',
         'driver_rng',
-        'driver_rtc',
+
         'driver_task_watchdog',
 
 
@@ -576,47 +576,8 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_rtc',
-        source=[
-            'rtc_common.c',
-            'stm32f4/rtc.c',
-        ],
-        use=[
-            'driver_pwr',
-            'driver_clocksource',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family == 'NRF52840':
-    bld.objects(
-        name='driver_rtc',
-        source=[
-            'nrf5/rtc.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_rtc',
-        source=[
-            'sf32lb52/rtc.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'hal_sifli',
-        ],
-    )
+if bld.env.CONFIG_RTC:
+    bld.recurse('rtc')
 
 if mcu_family == 'STM32F4':
     bld.objects(
