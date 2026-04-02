@@ -382,7 +382,7 @@ static const char* prv_log_time(KAlgState *alg_state, time_t utc) {
 
 // ----------------------------------------------------------------------------------------
 static void prv_reset_step_activity_state(KAlgStepActivityState *state) {
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
   if (state->hrm_session != HRM_INVALID_SESSION_REF) {
     sys_hrm_manager_unsubscribe(state->hrm_session);
   }
@@ -1970,7 +1970,7 @@ static const KAlgActivityAttributes *prv_get_step_activity_attributes(KAlgActivi
   return &k_attributes[activity];
 }
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 // ------------------------------------------------------------------------------------------
 static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   // The algorithm doesn't care about these events. It only subscribed so the activity service
@@ -2016,7 +2016,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
     PBL_ASSERTN(state->start_time < utc_now);
     uint32_t duration_secs = utc_now - state->start_time;
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
     // Make sure we have a couple active minutes in a row before enabling the HRM to save battery
     const unsigned min_duration_for_hrm = 3 * SECONDS_PER_MINUTE;
     if (duration_secs >= min_duration_for_hrm && state->hrm_session == HRM_INVALID_SESSION_REF &&

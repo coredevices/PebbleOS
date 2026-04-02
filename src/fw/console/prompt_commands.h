@@ -264,7 +264,7 @@ extern void command_btle_pa_set(char *option);
 extern void command_btle_unmod_tx_start(char *tx_channel);
 extern void command_btle_unmod_tx_stop(void);
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 extern void command_hrm_read(void);
 #endif
 
@@ -433,7 +433,7 @@ static const Command s_prompt_commands[] = {
 #endif // MFG_INFO_RECORDS_TEST_RESULTS
 #endif // RECOVERY_FW
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
   { "hrm read", command_hrm_read, 0},
 #endif
 

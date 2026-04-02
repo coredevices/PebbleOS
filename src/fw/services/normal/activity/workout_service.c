@@ -286,7 +286,7 @@ void workout_service_frontend_opened(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();
   {
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
     s_workout_data.hrm_session =
         sys_hrm_manager_app_subscribe(app_get_app_id(), 1, 0, HRMFeature_BPM);
 #endif // CONFIG_HRM
@@ -303,7 +303,7 @@ void workout_service_frontend_closed(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();
   {
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
     int32_t hr_time_left;
 
     if (workout_service_is_workout_ongoing()) {

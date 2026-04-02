@@ -62,7 +62,7 @@ static void prv_schedule_ad_job(void) {
   Uuid service_uuids[2];
   size_t num_uuids = 0;
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
   // NOTE: The HRM service has to be first in the list because otherwise the Pebble won't
   // show up as an HRM device in Strava for Android...
   if (ble_hrm_is_supported_and_enabled()) {
