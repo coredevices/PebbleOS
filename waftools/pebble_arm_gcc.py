@@ -173,7 +173,6 @@ def configure(conf):
         "-Wno-missing-field-initializers",
         "-Wno-error=unused-variable",
         "-Wno-error=unused-parameter",
-        "-Wno-error=unused-const-variable",
     ]
 
     if conf.using_clang_compiler():
