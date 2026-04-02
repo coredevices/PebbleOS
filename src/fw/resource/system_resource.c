@@ -22,12 +22,11 @@
 #include "resource/resource_version.auto.h"
 #include "font_resource_table.auto.h"
 
-static const uint32_t ERROR_BAD_RESOURCES = 0xfe504505;
-
 void system_resource_init(void) {
   if (!resource_init_app(SYSTEM_APP, &SYSTEM_RESOURCE_VERSION)) {
     // System resources are missing!
 #if defined(IS_BIGBOARD)
+    static const uint32_t ERROR_BAD_RESOURCES = 0xfe504505;
     pbl_log(LOG_LEVEL_ERROR, __FILE_NAME__, __LINE__,
         "System resources are missing or corrupt, time to sad watch");
     launcher_panic(ERROR_BAD_RESOURCES);
