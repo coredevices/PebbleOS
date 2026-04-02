@@ -37,7 +37,6 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/factory_reset.h"
 #include "mcu/fpu.h"
-#include "pebble_errors.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
 #include "process_management/app_run_state.h"

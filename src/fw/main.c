@@ -95,8 +95,6 @@
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 
-#include "pebble_errors.h"
-
 #include <bluetooth/init.h>
 
 #include <string.h>

@@ -10,7 +10,6 @@
 #include "kernel/panic.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/fw_reset.h"
-#include "pebble_errors.h"
 #include "resource/resource.h"
 #include "resource/resource_storage.h"
 #include "syscall/syscall_internal.h"
@@ -22,6 +21,8 @@
 #include "resource/resource_ids.auto.h"
 #include "resource/resource_version.auto.h"
 #include "font_resource_table.auto.h"
+
+static const uint32_t ERROR_BAD_RESOURCES = 0xfe504505;
 
 void system_resource_init(void) {
   if (!resource_init_app(SYSTEM_APP, &SYSTEM_RESOURCE_VERSION)) {
