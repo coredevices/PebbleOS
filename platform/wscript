@@ -171,8 +171,7 @@ def add_platform_defines(ctx, env):
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 
     env.append_value(
-        'DEFINES', ['USE_STDPERIPH_DRIVER=1',
-                    'BOARD_{}=1'.format(ctx.options.board.upper()),
+        'DEFINES', ['BOARD_{}=1'.format(ctx.options.board.upper()),
                     'PLATFORM_{}=1'.format(platform),
                     'MICRO_FAMILY_{}=1'.format(env.MICRO_FAMILY),
                     'SCREEN_COLOR_DEPTH_BITS={}'.format(bit_depth),
