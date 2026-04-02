@@ -77,6 +77,8 @@ typedef struct {
 
   HealthServiceState health_service_state;
 
+  PressureServiceState pressure_service_state;
+
   LocaleInfo locale_info;
 
   ContentIndicatorsBuffer content_indicators_buffer;
@@ -200,6 +202,8 @@ NOINLINE void app_state_init(void) {
 
   health_service_state_init(app_state_get_health_service_state());
 
+  pressure_service_state_init(app_state_get_pressure_state());
+
   locale_init_app_locale(app_state_get_locale_info());
 
   content_indicator_init_buffer(app_state_get_content_indicators_buffer());
@@ -217,6 +221,7 @@ NOINLINE void app_state_init(void) {
 NOINLINE void app_state_deinit(void) {
   animation_private_state_deinit(&s_app_state_ptr->animation_state);
   health_service_state_deinit(app_state_get_health_service_state());
+  pressure_service_state_deinit(app_state_get_pressure_state());
   unobstructed_area_service_deinit(app_state_get_unobstructed_area_state());
 }
 
@@ -315,6 +320,10 @@ ConnectionServiceState *app_state_get_connection_service_state(void) {
 
 HealthServiceState *app_state_get_health_service_state(void) {
   return &s_app_state_ptr->health_service_state;
+}
+
+PressureServiceState *app_state_get_pressure_state(void) {
+  return &s_app_state_ptr->pressure_service_state;
 }
 
 ContentIndicatorsBuffer *app_state_get_content_indicators_buffer(void) {
