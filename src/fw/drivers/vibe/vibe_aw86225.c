@@ -167,7 +167,7 @@ void vibe_init(void) {
   ret &= prv_write_register(AW862XX_REG_CONTCFG3, AW862XX_CONTCFG3_DRV_WIDTH);
   ret &= prv_write_register(AW862XX_REG_CONTCFG7, AW862XX_CONTCFG7_FULL_SCALE);
   
-  prv_modify_reg(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_TRACK_MASK, AW862XX_CONTCFG6_TRACK_EN);
+  prv_write_register(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_TRACK_EN | AW862XX_CONTCFG7_FULL_SCALE);
   prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK, AW862XX_BIT_PLAYCFG3_BRK_ENABLE);
   prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK, AW862XX_BIT_PLAYCFG3_PLAY_MODE_CONT);
   prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_VBAT_MODE_MASK, AW862XX_SYSCTRL1_VBAT_MODE_EN);
@@ -187,7 +187,12 @@ void vibe_set_strength(int8_t strength) {
     return;
   }
 
-  uint32_t scale = strength * AW862XX_CONTCFG7_FULL_SCALE / 100UL;
+  // Blend linear and quadratic curves to spread out the perceptual range
+  // while keeping low settings still usable.
+  uint32_t linear = (uint32_t)strength * AW862XX_CONTCFG7_FULL_SCALE / 100UL;
+  uint32_t quadratic = (uint32_t)strength * strength * AW862XX_CONTCFG7_FULL_SCALE / 10000UL;
+  uint32_t scale = (linear + quadratic) / 2;
+  prv_modify_reg(AW862XX_REG_CONTCFG6, ~AW862XX_CONTCFG7_FULL_SCALE, (uint8_t)scale);
   prv_write_register(AW862XX_REG_CONTCFG7, (uint8_t)scale);
 }
 
@@ -203,8 +208,10 @@ void vibe_ctl(bool on) {
       vibe_init();
       vibe_set_strength(s_target_strength);
     }
-    prv_write_register(AW862XX_REG_CONTCFG8, 0xFF);
-    prv_write_register(AW862XX_REG_CONTCFG9, 0xFF);
+    // Scale drive durations with strength so lower settings produce shorter pulses
+    uint8_t duration = 0x80 + (uint8_t)(s_target_strength * (0xFF - 0x80) / 100);
+    prv_write_register(AW862XX_REG_CONTCFG8, duration);
+    prv_write_register(AW862XX_REG_CONTCFG9, duration);
     prv_aw862xx_play_go(true);
   } else {
     prv_aw862xx_play_go(false);
