@@ -112,7 +112,7 @@ static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
 #else
   { .start = (void *)SRAM1_BASE, .length = COREDUMP_RAM_SIZE },
 #endif
-#if PLATFORM_SNOWY || PLATFORM_SPALDING
+#if PLATFORM_SNOWY || PLATFORM_SPALDING || PLATFORM_SNOWY_EMERY || PLATFORM_SPALDING_GABBRO
   { .start = (void *)CCMDATARAM_BASE, .length = (uint32_t)__CCM_RAM_size__ },
 #endif
 #if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52

@@ -27,7 +27,13 @@ def _autogen_applib_sources(bld):
 
 def _get_bit_depth_excludes(bld):
     bit_depths = [1, 8]
-    if bld.is_snowy_compatible() or bld.is_obelix() or bld.is_getafix():
+    if (
+        bld.is_snowy_compatible() or
+        bld.is_obelix() or
+        bld.is_getafix() or
+        bld.is_snowy_emery() or
+        bld.is_spalding_gabbro()
+    ):
         depth = 8
     else:
         depth = 1
@@ -52,7 +58,7 @@ def build(bld):
                      'ui/time_range_selection_window.c',
                      'voice/*']
 
-    if not bld.is_spalding() and not bld.is_getafix():
+    if not bld.is_spalding() and not bld.is_spalding_gabbro() and not bld.is_getafix():
         excludes.append('ui/window_stack_animation_round*')
 
     if not bld.env.CONFIG_MIC:
