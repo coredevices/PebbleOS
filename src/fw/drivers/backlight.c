@@ -11,7 +11,6 @@
 #include "console/prompt.h"
 #include "drivers/gpio.h"
 #include "drivers/led_controller.h"
-#include "drivers/periph_config.h"
 #include "drivers/pwm.h"
 #include "drivers/timer.h"
 #include "kernel/util/stop.h"
@@ -72,19 +71,15 @@ void backlight_init(void) {
   }
 
   if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Ctl) {
-    periph_config_acquire_lock();
     gpio_output_init(&BOARD_CONFIG_BACKLIGHT.ctl, GPIO_OType_PP, GPIO_Speed_2MHz);
     gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, false);
-    periph_config_release_lock();
     s_initialized = true;
   }
 
   if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Pwm) {
-    periph_config_acquire_lock();
     pwm_init(&BOARD_CONFIG_BACKLIGHT.pwm,
              TIMER_PERIOD_RESOLUTION,
              TIMER_PERIOD_RESOLUTION * PWM_OUTPUT_FREQUENCY_HZ);
-    periph_config_release_lock();
     s_initialized = true;
   }
 
