@@ -74,7 +74,7 @@ static void prv_extcomin_init(void) {
       nrf_gpiote_task_address_get(extcomin->gpiote, nrf_gpiote_set_task_get(extcomin->gpiote_ch));
   nrfx_gppi_channel_endpoints_setup(ppi_ch[0], evt_addr, task_addr);
 
-  task_addr = nrf_rtc_event_address_get(extcomin->rtc, NRF_RTC_TASK_CLEAR);
+  task_addr = nrf_rtc_task_address_get(extcomin->rtc, NRF_RTC_TASK_CLEAR);
   nrfx_gppi_fork_endpoint_setup(ppi_ch[0], task_addr);
 
   // Pulse end (CC1) clears GPIO
@@ -150,7 +150,7 @@ void display_init(void) {
 
   gpio_output_init(&BOARD_CONFIG_DISPLAY.cs, GPIO_OType_PP, GPIO_Speed_50MHz);
 
-  gpio_output_init(&BOARD_CONFIG_DISPLAY.on_ctrl, BOARD_CONFIG_DISPLAY.on_ctrl_otype,
+  gpio_output_init(&BOARD_CONFIG_DISPLAY.on_ctrl, (GPIOOType_TypeDef)BOARD_CONFIG_DISPLAY.on_ctrl_otype,
                    GPIO_Speed_50MHz);
   gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, true);
 
