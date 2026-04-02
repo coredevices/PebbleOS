@@ -292,7 +292,7 @@ static void init_drivers(void) {
 #endif
 
   accel_init();
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
   mag_init();
 #endif
 #ifdef CONFIG_PRESSURE

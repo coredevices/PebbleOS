@@ -561,7 +561,7 @@ def _build_recovery(bld):
         ])
 
     # Exclude magnetometer test for platforms without magnetometer
-    if not bld.capability('HAS_MAGNETOMETER'):
+    if not bld.env.CONFIG_MAG:
         excludes.extend([
             'apps/prf/mfg_mag.c',
         ])

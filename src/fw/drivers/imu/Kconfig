@@ -29,9 +29,15 @@ config ACCEL_LSM6DSO
 
 endchoice
 
-choice MAG
-    prompt "Magnetometer"
-    optional
+menuconfig MAG
+    bool "Magnetometer"
+    help
+      Magnetometer Drivers
+
+if MAG
+
+choice MAG_DRIVER
+    prompt "Magnetometer Driver"
 
 config MAG_MAG3110
     bool "Freescale MAG3110"
@@ -44,5 +50,7 @@ config MAG_MMC5603NJ
       Support for the MEMSIC MMC5603NJ magnetometer.
 
 endchoice
+
+endif # MAG
 
 endmenu
