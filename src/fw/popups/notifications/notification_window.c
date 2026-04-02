@@ -1151,6 +1151,7 @@ static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *la
   kino_layer_play(&((NotificationLayout *)layout)->icon_layer);
 }
 
+#if PBL_COLOR
 static void prv_update_colors_handler(SwapLayer *swap_layer, GColor bg_color,
                                       bool status_bar_filled, void *context) {
   NotificationWindowData *data = context;
@@ -1159,6 +1160,7 @@ static void prv_update_colors_handler(SwapLayer *swap_layer, GColor bg_color,
   status_bar_layer_set_colors(&data->status_layer, PBL_IF_ROUND_ELSE(GColorClear, status_color),
                               gcolor_legible_over(status_color));
 }
+#endif // PBL_COLOR
 
 static void prv_interaction_handler(SwapLayer *swap_layer, void *context) {
   NotificationWindowData *data = context;

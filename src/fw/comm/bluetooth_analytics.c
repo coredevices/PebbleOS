@@ -113,10 +113,6 @@ void bluetooth_analytics_ble_mic_error(uint32_t num_sequential_mic_errors) {
   PBL_LOG_INFO("MIC Error detected ... %"PRIu32" packets", num_sequential_mic_errors);
 }
 
-static uint32_t prv_calc_other_errors(const SlaveConnEventStats *stats) {
-  return (stats->num_type_errors + stats->num_len_errors + stats->num_crc_errors +
-          stats->num_mic_errors);
-}
 
 static bool prv_calc_stats_and_print(const SlaveConnEventStats *orig_stats,
                                            SlaveConnEventStats *stats_buf, bool is_putbytes) {

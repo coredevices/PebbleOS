@@ -38,6 +38,7 @@ static CompositorTransitionDirection prv_flip_transition_direction(
   }
 }
 
+#if PBL_RECT
 //! linear interpolation between two GPoints, supports delay and clamping
 //! @param delay value to postpone interpolation (in range 0..ANIMATION_NORMALIZED_MAX)
 static GPoint prv_gpoint_interpolate(int32_t delay, int32_t normalized,
@@ -54,7 +55,6 @@ static GPoint prv_gpoint_interpolate(int32_t delay, int32_t normalized,
 static GPoint prv_gpoint_mid(const GPoint a, const GPoint b) {
   return GPoint((a.x + b.x) / 2, (a.y + b.y) / 2);
 }
-
 //! Draw the "collapse" portion of the animation. This function can either work by drawing
 //! an outer ring using the fill_cb, or by drawing and expanding inner portion using the fill_cb.
 //! This behaviour is configured by the inner bool.
@@ -139,6 +139,7 @@ static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y,
                                 x_range_end.integer - x_range_begin.integer - 1, 1);
   graphics_fill_rect(ctx, &fill_rect);
 }
+#endif // PBL_RECT
 
 //! Draw a dumb dot at the supplied position with the supplied color
 static void prv_draw_dot(GContext *ctx, GPoint pos, GColor color) {
@@ -168,6 +169,7 @@ typedef struct PACKED {
 
 _Static_assert(sizeof(DotTransitionAnimationConfiguration) == sizeof(void *), "");
 
+#if PBL_RECT
 static void prv_collapse_animation_update_rect(GContext *ctx,
                                                DotTransitionAnimationConfiguration config,
                                                uint32_t distance_normalized) {
@@ -198,6 +200,7 @@ static void prv_collapse_animation_update_rect(GContext *ctx,
 
   prv_collapse_animation(ctx, distance_normalized, inner, draw_filled_cb);
 }
+#endif
 
 void compositor_dot_transitions_collapsing_ring_animation_update(GContext *ctx,
                                                                  uint32_t distance_normalized,

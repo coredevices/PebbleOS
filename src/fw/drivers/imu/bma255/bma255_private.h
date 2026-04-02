@@ -7,8 +7,6 @@
 #include "drivers/periph_config.h"
 #include "drivers/spi.h"
 
-bool bma255_selftest(void);
-
 void bma255_gpio_init(void);
 
 void bma255_enable_spi_clock(void);

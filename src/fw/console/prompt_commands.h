@@ -61,7 +61,6 @@ extern void command_compass_peek(void);
 extern void command_accel_peek(void);
 extern void command_accel_num_samples(char *num_samples);
 extern void command_accel_status(void);
-extern void command_accel_selftest(void);
 extern void command_accel_softreset(void);
 
 extern void command_dump_flash(const char*, const char*);
@@ -640,7 +639,6 @@ static const Command s_prompt_commands[] = {
 #if PLATFORM_SILK && !TARGET_QEMU
   { "accel samp", command_accel_num_samples, 1 },
   { "accel status", command_accel_status, 0 },
-  { "accel selftest", command_accel_selftest, 0 },
   { "accel reset", command_accel_softreset, 0 },
 #endif // PLATFORM_SILK
   { "vibe", command_vibe_ctl, 1 },

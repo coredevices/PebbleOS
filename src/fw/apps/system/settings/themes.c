@@ -46,6 +46,7 @@ typedef struct SettingsThemesData {
 static const char* color_names[ARRAY_LENGTH(s_color_definitions)];
 static bool color_names_initialized = false;
 
+#if CAPABILITY_HAS_THEMING
 static const char** prv_get_color_names(bool short_list) {
   if (!color_names_initialized) {
     for (size_t i = 0; i < ARRAY_LENGTH(s_color_definitions); i++) {
@@ -137,6 +138,7 @@ static OptionMenu *prv_push_color_menu(void) {
 
   return option_menu;
 }
+#endif // CAPABILITY_HAS_THEMING
 
 static Window *prv_create_color_menu(void) {
 #if CAPABILITY_HAS_THEMING

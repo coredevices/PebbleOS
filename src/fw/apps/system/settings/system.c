@@ -759,6 +759,7 @@ static int16_t prv_draw_generic_mark(GContext *ctx, GBitmap *mark, GPoint origin
 
 #define MARK_PADDING 10
 
+#if PBL_RECT
 static void prv_draw_rt_cell_rect(GContext *ctx, const Layer *cell_layer, GBitmap *mark,
                                   const char *text, PBL_UNUSED bool is_selected) {
   int16_t x = (MARK_PADDING / 2);
@@ -774,6 +775,7 @@ static void prv_draw_rt_cell_rect(GContext *ctx, const Layer *cell_layer, GBitma
   const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
   graphics_draw_text(ctx, text, font, box, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 }
+#endif
 
 #if PBL_ROUND
 static void prv_draw_rt_cell_round(GContext *ctx, const Layer *cell_layer, GBitmap *mark,

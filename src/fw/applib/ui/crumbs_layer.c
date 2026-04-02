@@ -56,12 +56,13 @@ int crumbs_layer_width(void) {
   return prv_crumb_config()->layer_width;
 }
 
-static int prv_crumb_x_position(void) {
-  return prv_crumb_config()->layer_width / 2;
-}
-
 static int prv_crumb_radius(void) {
   return prv_crumb_config()->crumb_radius;
+}
+
+#if PBL_RECT
+static int prv_crumb_x_position(void) {
+  return prv_crumb_config()->layer_width / 2;
 }
 
 static int prv_crumb_spacing(void) {
@@ -71,6 +72,7 @@ static int prv_crumb_spacing(void) {
 static int prv_crumb_space_from_top(void) {
   return prv_crumb_config()->crumb_space_from_top;
 }
+#endif
 
 static int prv_crumb_maximum_count(void) {
   // NOTE: Was originally:
@@ -82,6 +84,7 @@ static int prv_crumb_maximum_count(void) {
   return 16;
 }
 
+#if PBL_RECT
 static void prv_crumbs_layer_update_proc_rect(Layer *layer, GContext *ctx) {
   const int crumb_radius = prv_crumb_radius();
   const int crumb_spacing = prv_crumb_spacing();
@@ -99,6 +102,7 @@ static void prv_crumbs_layer_update_proc_rect(Layer *layer, GContext *ctx) {
     p.y += crumb_spacing;
   }
 }
+#endif
 
 #if PBL_ROUND
 static void prv_crumbs_layer_update_proc_round(Layer *layer, GContext *ctx) {

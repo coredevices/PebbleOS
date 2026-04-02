@@ -82,6 +82,7 @@ int printf(const char *template, ...) {
 }
 #endif
 
+#if !defined(TARGET_QEMU)
 static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *context) {
   if (!voice_speex_is_initialized()) {
     VOICE_LOG("Speex not initialized, dropping audio data");
@@ -116,6 +117,7 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
     VOICE_LOG("Failed to encode audio frame");
   }
 }
+#endif // !defined(TARGET_QEMU)
 
 static void prv_teardown_session(void) {
 #if !defined(TARGET_QEMU)

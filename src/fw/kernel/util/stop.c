@@ -172,13 +172,6 @@ bool sleep_mode_is_allowed(void) {
   return s_sleep_mode_allowed;
 }
 
-static RtcTicks prv_get_nostop_ticks(StopModeInhibitor inhibitor, RtcTicks now_ticks) {
-    RtcTicks total_ticks = s_inhibitor_profile[inhibitor].total_ticks_while_disabled;
-    if (s_inhibitor_profile[inhibitor].active_count != 0) {
-        total_ticks += (now_ticks - s_inhibitor_profile[inhibitor].ticks_when_stop_mode_disabled);
-    }
-    return total_ticks;
-}
 
 void command_scheduler_force_active(void) {
   sleep_mode_enable(false);

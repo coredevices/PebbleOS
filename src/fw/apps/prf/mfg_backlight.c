@@ -67,14 +67,6 @@ static void prv_button_click_handler(ClickRecognizerRef recognizer, void *data) 
   layer_mark_dirty(&app_data->window.layer);
 }
 
-static void prv_change_pattern(void *data) {
-  AppData *app_data = app_state_get_user_data();
-
-  app_data->test_pattern = (TestPattern) data;
-
-  layer_mark_dirty(&app_data->window.layer);
-}
-
 static void prv_config_provider(void *data) {
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_button_click_handler);
 }

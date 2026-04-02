@@ -41,6 +41,7 @@ static ALWAYS_INLINE void prv_set_color(const GContext *ctx, GColor *dst_color,
 #endif // CAPABILITY_HAS_MASKING
 }
 
+#if !PBL_COLOR
 // Plots row at given starting position and width, dithers grayscale colors
 static void prv_assign_row_with_pattern_1bit(GBitmap *framebuffer, int16_t y, int16_t x,
                                              int32_t width, GColor color) {
@@ -74,6 +75,7 @@ static void prv_assign_row_with_pattern_1bit(GBitmap *framebuffer, int16_t y, in
     }
   }
 }
+#endif // !PBL_COLOR
 
 // ## Line blending functions:
 

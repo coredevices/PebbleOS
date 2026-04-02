@@ -118,6 +118,7 @@ static void prv_sample_als_multiple_times(void) {
   }
 }
 
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !defined(RECOVERY_FW)
 // Check if all samples in buffer are below or equal to threshold (for Zone 1 detection)
 static bool prv_all_samples_below_or_equal(uint32_t threshold) {
   if (s_als_sample_count == 0) {
@@ -145,6 +146,7 @@ static uint32_t prv_get_als_average(void) {
 
   return sum / s_als_sample_count;
 }
+#endif // CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !RECOVERY_FW
 
 static uint16_t prv_backlight_get_intensity(void) {
   // low_power_mode backlight intensity (25% of max brightness)

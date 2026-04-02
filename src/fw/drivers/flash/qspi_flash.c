@@ -301,6 +301,7 @@ static bool prv_blank_check_poll(QSPIFlash *dev, uint32_t addr, bool is_subsecto
 }
 #endif
 
+#if !TARGET_QEMU
 static bool prv_blank_check_mmap(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
   const uint32_t size_bytes = is_subsector ? SUBSECTOR_SIZE_BYTES : SECTOR_SIZE_BYTES;
   bool result = true;
@@ -324,6 +325,7 @@ static bool prv_blank_check_mmap(QSPIFlash *dev, uint32_t addr, bool is_subsecto
   qspi_mmap_stop(dev->qspi);
   return result;
 }
+#endif // !TARGET_QEMU
 status_t qspi_flash_blank_check(QSPIFlash *dev, uint32_t addr, bool is_subsector) {
   qspi_use(dev->qspi);
 #if TARGET_QEMU

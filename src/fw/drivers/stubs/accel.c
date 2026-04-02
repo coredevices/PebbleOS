@@ -45,8 +45,5 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
 void command_accel_status(void) {
 }
 
-void command_accel_selftest(void) {
-}
-
 void command_accel_softreset(void) {
 }

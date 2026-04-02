@@ -594,6 +594,7 @@ void bmi160_set_accel_power_mode(BMI160AccelPowerMode mode) {
  * accel.h driver interface exposed to higher level code
  */
 
+#ifdef BMI160_DEBUG
 static uint32_t prv_get_sampling_interval_from_hw(void) {
   uint8_t acc_cfg = bmi160_read_reg(BMI160_REG_ACC_CONF);
   acc_cfg = (acc_cfg >> BMI160_ACC_CONF_ACC_ODR_SHIFT) &
@@ -610,6 +611,7 @@ static uint32_t prv_get_sampling_interval_from_hw(void) {
 
   return interval;
 }
+#endif
 
 static BMI160AccODR prv_get_odr(BMI160SampleRate sample_rate) {
   // sample rate = 100 / 2^(8- val(acc_odr))

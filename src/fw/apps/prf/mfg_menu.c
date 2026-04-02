@@ -77,12 +77,6 @@ static void prv_launch_app_cb(void *data) {
   app_manager_launch_new_app(&(AppLaunchConfig) { .md = data });
 }
 
-//! Callback to launch app and return to extras menu
-static void prv_launch_app_from_extras_cb(void *data) {
-  s_show_extras_on_launch = true;
-  app_manager_launch_new_app(&(AppLaunchConfig) { .md = data });
-}
-
 static void prv_select_bt_device_name(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_bt_device_name_app_get_info());
 }
@@ -133,6 +127,7 @@ static void prv_select_als(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_als_app_get_info());
 }
 
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX
 static void prv_select_speaker(int index, void *context) {
 #if PLATFORM_ASTERIX
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_speaker_asterix_app_get_info());
@@ -140,7 +135,9 @@ static void prv_select_speaker(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_speaker_obelix_app_get_info());
 #endif
 }
+#endif
 
+#if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
 static void prv_select_mic(int index, void *context) {
 #if PLATFORM_ASTERIX
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mic_asterix_app_get_info());
@@ -150,6 +147,7 @@ static void prv_select_mic(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mic_getafix_app_get_info());
 #endif
 }
+#endif // PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
 
 #ifdef CONFIG_HRM
 static void prv_select_hrm(int index, void *context) {

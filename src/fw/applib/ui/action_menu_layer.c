@@ -24,7 +24,9 @@
 #define INDICATOR "»"
 
 static const int VERTICAL_PADDING = PBL_IF_COLOR_ELSE(2, 4);
+#if SCREEN_COLOR_DEPTH_BITS == 1
 static const int EXTRA_PADDING_1_BIT = 2;
+#endif
 static const int SHORT_COL_COUNT = 3;
 static const int MAX_NUM_VISIBLE_LINES = 2;
 #if PBL_ROUND
@@ -127,14 +129,11 @@ static int16_t prv_get_item_line_height(ActionMenuLayer *aml, int idx) {
   // Tintin has a rounded rectangle highlight
   box = grect_inset_internal(box, PBL_IF_COLOR_ELSE(inset, 2 * inset), 0);
 
-  // We offset the text 5 pixels from the left of the cell.  If the indicator is
-  // present, the indicator also will be offset, so we add 5 pixels more spacing
-  // between the text and the indicator. This extra padding isn't needed for round.
-  const int nudge = PBL_IF_ROUND_ELSE(0, menu_cell_basic_horizontal_inset());
   GContext *ctx = graphics_context_get_current_context();
   // On rectangular displays, if the indicator is present, the indicator also will be offset,
   // so we add another nudge between the text and the indicator.
 #if PBL_RECT
+  const int nudge = menu_cell_basic_horizontal_inset();
   if (!item->is_leaf) {
     const GSize indicator_size = graphics_text_layout_get_max_used_size(ctx, INDICATOR,
                                                                         font, box,
@@ -269,6 +268,7 @@ static bool prv_should_center(ActionMenuLayer *aml) {
   return false;
 }
 
+#if PBL_RECT
 static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_layer,
                                             const ActionMenuLayer *aml, const ActionMenuItem *item,
                                             bool selected, GRect *content_box) {
@@ -321,6 +321,7 @@ static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_lay
   // Restore the cell layer's bounds
   mutable_cell_layer->bounds = saved_bounds;
 }
+#endif
 
 #if PBL_ROUND
 static void prv_cell_item_content_draw_round(GContext *ctx, const Layer *cell_layer,
@@ -585,11 +586,10 @@ static void prv_draw_separator_cb(GContext *ctx, const Layer *cell_layer,
     // If this index is the seperator index, we want to draw the separator line
     // in the vertical center of the separator
     const int16_t nudge_down = PBL_IF_RECT_ELSE(3, 0);
-    const int16_t nudge_right = menu_cell_basic_horizontal_inset() + 1;
 
     const int16_t separator_width = config->separator.w;
     const GRect *cell_layer_bounds = &cell_layer->bounds;
-    const int16_t offset_x = PBL_IF_RECT_ELSE(nudge_right,
+    const int16_t offset_x = PBL_IF_RECT_ELSE(menu_cell_basic_horizontal_inset() + 1,
                                               (cell_layer->bounds.size.w - separator_width) / 2);
     const int16_t offset_y = (cell_layer_bounds->size.h / 2) + nudge_down;
     GPoint separator_start_point = gpoint_add(cell_layer_bounds->origin,

@@ -145,9 +145,11 @@ static GPoint prv_get_button_press_offset(ActionBarLayer *action_bar, uint8_t bu
   return offset[action_bar->animation[button_index]];
 }
 
+#if PBL_RECT
 static void prv_draw_background_rect(ActionBarLayer *action_bar, GContext *ctx, GColor bg_color) {
   graphics_fill_rect(ctx, &action_bar->layer.bounds);
 }
+#endif
 
 void prv_draw_background_round(ActionBarLayer *action_bar, GContext *ctx, GColor bg_color) {
   const uint32_t action_bar_circle_diameter = DISP_ROWS * 19 / 9;
