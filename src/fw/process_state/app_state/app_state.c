@@ -93,7 +93,7 @@ typedef struct {
 
   EventServiceInfo wakeup_event_info;
 
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   RecognizerList recognizer_list;
 #endif
 
@@ -362,7 +362,7 @@ GBitmap* app_state_legacy2_get_2bit_framebuffer(void) {
   return s_app_state_ptr->legacy2_framebuffer;
 }
 
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
 RecognizerList *app_state_get_recognizer_list(void) {
   return &s_app_state_ptr->recognizer_list;
 }

@@ -7,7 +7,7 @@ def build(ctx):
                            "tests/fakes/fake_gbitmap_png.c "
                            "src/fw/applib/ui/layer.c ",
         test_sources_ant_glob="test_layer.c",
-        defines=['CAPABILITY_HAS_TOUCHSCREEN'])
+        defines=['CONFIG_TOUCH'])
 
     clar(ctx,
         sources_ant_glob = "src/fw/applib/graphics/graphics_private_raw.c "
