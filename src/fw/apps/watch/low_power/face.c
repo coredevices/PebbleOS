@@ -70,8 +70,8 @@ static void init(void) {
   const unsigned int font_height = fonts_get_font_height(text_font);
   const GTextOverflowMode text_overflow_mode = GTextOverflowModeTrailingEllipsis;
   const GSize text_size = app_graphics_text_layout_get_content_size("00:00", text_font,
-                            s_low_power_data->low_power_window.layer.bounds, text_alignment,
-                            text_overflow_mode);
+                            s_low_power_data->low_power_window.layer.bounds, text_overflow_mode,
+                            text_alignment);
   const int text_pos_y_adjust = -9;  // small vertical adjustment to match design specification
   const int text_pos_y = (DISP_ROWS / 2) - (font_height / 2) + text_pos_y_adjust;
   const GRect text_container_rect = GRect(0, text_pos_y, DISP_COLS, font_height);
