@@ -393,9 +393,9 @@ static const Command s_prompt_commands[] = {
 
   { "button read", command_button_read, 1 },
 
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
   { "compass peek", command_compass_peek, 0 },
-#endif // CAPABILITY_HAS_MAGNETOMETER
+#endif
   { "accel read", command_accel_peek, 0 },
 
   { "als read", command_als_read, 0},

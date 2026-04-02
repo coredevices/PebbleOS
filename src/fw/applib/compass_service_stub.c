@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
 #error "Use fw/applib/compass_service.c instead if we don't have a magnetometer"
 #endif
 

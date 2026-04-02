@@ -78,7 +78,7 @@ def build(bld):
     )
     bld.env.SERVICES.append('services_common_debounced_connection_service')
 
-    if bld.capability('HAS_MAGNETOMETER'):
+    if bld.env.CONFIG_MAG:
         bld.stlib(
             use=['fw_includes'],
             source=['ecompass.c', 'ecompass_correction.c'],

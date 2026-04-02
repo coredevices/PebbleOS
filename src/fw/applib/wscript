@@ -58,7 +58,7 @@ def build(bld):
     if not bld.env.CONFIG_MIC:
         excludes.append('voice/voice_window.c')
 
-    if bld.capability('HAS_MAGNETOMETER'):
+    if bld.env.CONFIG_MAG:
         excludes.append('compass_service_stub.c')
     else:
         excludes.append('compass_service.c')

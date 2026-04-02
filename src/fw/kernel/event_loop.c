@@ -272,7 +272,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
 
     case PEBBLE_BATTERY_STATE_CHANGE_EVENT:
       battery_monitor_handle_state_change_event(e->battery_state.new_state);
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
       ecompass_handle_battery_state_change_event(e->battery_state.new_state);
 #endif
       return;
@@ -366,7 +366,7 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent* e) {
       return;
 
     case PEBBLE_ECOMPASS_SERVICE_EVENT:
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
       ecompass_service_handle();
 #endif
       return;
@@ -464,7 +464,7 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
   vibes_init();
   battery_monitor_init();
   evented_timer_init();
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
   ecompass_service_init();
 #endif
   tick_timer_service_init();

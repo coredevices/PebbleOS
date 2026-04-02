@@ -49,7 +49,7 @@ typedef enum {
   TestState_Menu = 0,
   TestState_PlugCharger,
   TestState_Accel,
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
   TestState_Mag,
 #endif
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
@@ -152,7 +152,7 @@ static void prv_test_accel(AppData *data) {
   text_layer_set_text(&data->status, data->status_string);
 }
 
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
 static void prv_test_mag(AppData *data) {
   MagData mag_sample;
   MagReadStatus status = mag_read_data(&mag_sample);
@@ -283,7 +283,7 @@ static void prv_advance_test(AppData *data) {
   if (data->duration != Duration_Unlimited &&
       data->total_elapsed_sec >= data->max_duration_sec) {
     // Clean up current test before showing finished
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
     if (data->current_test == TestState_Mag) {
       mag_release();
     }
@@ -314,7 +314,7 @@ static void prv_advance_test(AppData *data) {
   }
 
   // Start magnetometer if needed
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
   if (data->current_test == TestState_Mag) {
     mag_start_sampling();
   }
@@ -360,7 +360,7 @@ static void prv_update_display(AppData *data) {
     case TestState_Accel:
       prv_test_accel(data);
       break;
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
     case TestState_Mag:
       prv_test_mag(data);
       break;
@@ -444,7 +444,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   // Check if current test duration has elapsed
   if (data->test_elapsed_sec >= TEST_DURATION_SEC) {
     // Clean up current test
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
     if (data->current_test == TestState_Mag) {
       mag_release();
     }
@@ -478,7 +478,7 @@ static void prv_stop_test(void) {
   data->running = false;
 
   // Clean up any active tests
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
   if (data->current_test == TestState_Mag) {
     mag_release();
   }

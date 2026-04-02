@@ -9,7 +9,7 @@
 #include "applib/ui/window_private.h"
 #include "applib/ui/dialogs/confirmation_dialog.h"
 #include "apps/prf/mfg_accel.h"
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
 #include "apps/prf/mfg_mag.h"
 #endif
 #include "apps/prf/mfg_als.h"
@@ -115,7 +115,7 @@ static void prv_select_accel(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_accel_app_get_info());
 }
 
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
 static void prv_select_mag(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_mag_app_get_info());
 }
@@ -343,7 +343,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
     { .title = "Test Backlight",    .callback = prv_select_backlight },
 #endif
     { .title = "Test Accelerometer", .callback = prv_select_accel },
-#if CAPABILITY_HAS_MAGNETOMETER
+#ifdef CONFIG_MAG
     { .title = "Test Magnetometer", .callback = prv_select_mag },
 #endif
 #if PLATFORM_ASTERIX || PLATFORM_OBELIX
