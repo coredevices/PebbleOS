@@ -19,7 +19,7 @@ if bld.is_silk():
         'driver_voltage_monitor',
     ])
 
-elif bld.is_snowy_compatible():
+elif bld.is_snowy_compatible() or bld.is_snowy_emery() or bld.is_spalding_gabbro():
     bld.env.DRIVERS.extend([
         'driver_backlight',
         'driver_button',
