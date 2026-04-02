@@ -7,81 +7,49 @@ bld.env.DRIVERS = []
 
 if bld.is_silk():
     bld.env.DRIVERS.extend([
-
         'driver_backlight',
-
         'driver_button',
         'driver_clocksource',
-        'driver_crc',
         'driver_gpio_defaults',
-        'driver_hci_passthrough',
-
-
-
         'driver_mcu',
         'driver_mpu',
         'driver_otp',
         'driver_pwr',
-
-
         'driver_task_watchdog',
-
         'driver_voltage_monitor',
-
     ])
 
 elif bld.is_snowy_compatible():
     bld.env.DRIVERS.extend([
-
         'driver_backlight',
-
         'driver_button',
         'driver_clocksource',
         'driver_gpio_defaults',
-        'driver_hci_passthrough',
-
-
         'driver_mcu',
         'driver_mpu',
         'driver_otp',
         'driver_pwr',
-
-
         'driver_task_watchdog',
-
-
         'driver_voltage_monitor',
-
     ])
 
 elif bld.is_asterix():
     bld.env.DRIVERS.extend([
-
         'driver_backlight',
-
         'driver_button',
-        'driver_gpio_defaults',
-
-
         'driver_mcu',
         'driver_mpu',
         'driver_nrf5_hfxo',
         'driver_otp',
         'driver_periph_config',
         'driver_pwr',
-
-
         'driver_task_watchdog',
-
     ])
 
 elif bld.is_obelix():
     bld.env.DRIVERS.extend([
-
         'driver_backlight',
-
         'driver_button',
-        'driver_gpio_defaults',
         'driver_mcu',
         'driver_mpu',
         'driver_otp',
@@ -89,19 +57,14 @@ elif bld.is_obelix():
         'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
-
-
         'driver_task_watchdog',
         'driver_audio',
     ])
 
 elif bld.is_getafix():
     bld.env.DRIVERS.extend([
-
         'driver_backlight',
-
         'driver_button',
-        'driver_gpio_defaults',
         'driver_mcu',
         'driver_mpu',
         'driver_otp',
@@ -109,12 +72,7 @@ elif bld.is_getafix():
         'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
-
-
         'driver_task_watchdog',
-
-
-
     ])
 ## ----------
 
@@ -301,13 +259,6 @@ if mcu_family == 'STM32F4':
             'driver_gpio',
         ],
     )
-elif mcu_family in ('NRF52840', 'SF32LB52'):
-    bld.objects(
-        name='driver_gpio_defaults',
-        source=[
-            'stubs/gpio_defaults.c',
-        ],
-    )
 
 if bld.env.CONFIG_I2C:
     bld.recurse('i2c')
@@ -418,16 +369,6 @@ if mcu_family == 'STM32F4':
             'fw_includes',
             'pbl_includes',
             'stm32_stdlib',
-        ],
-    )
-elif mcu_family in ('NRF52840', 'SF32LB52'):
-    bld.objects(
-        name='driver_periph_config',
-        source=[
-            'stubs/periph_config.c',
-        ],
-        use=[
-            'fw_includes',
         ],
     )
 

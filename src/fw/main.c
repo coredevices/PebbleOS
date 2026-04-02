@@ -165,7 +165,9 @@ static void dump_gpio_configuration_state(void) {
 int main(void) {
   soc_early_init();
 
+#if defined(MICRO_FAMILY_STM32F4)
   gpio_init_all();
+#endif
 
 #if defined(MICRO_FAMILY_STM32F4) && !defined(LOW_POWER_DEBUG)
   // If we're on a snowy board using the stm32f4, we experience random hardfaults after leaving a
@@ -190,7 +192,9 @@ int main(void) {
 
   mbuf_init();
   delay_init();
+#if defined(MICRO_FAMILY_STM32F4)
   periph_config_init();
+#endif
   dbgserial_init();
   pulse_early_init();
   print_splash_screen();
@@ -223,11 +227,11 @@ int main(void) {
   stop_mode_disable(InhibitorMain);
 
   // Turn off power to internal flash when in stop mode
-#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_STM32F4
   periph_config_enable(PWR, RCC_APB1Periph_PWR);
 #endif
   pwr_flash_power_down_stop_mode(true /* power_down */);
-#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_STM32F4
   periph_config_disable(PWR, RCC_APB1Periph_PWR);
 #endif
 
