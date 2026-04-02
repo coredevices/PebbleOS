@@ -10,7 +10,6 @@
 #include "util/string.h"
 
 #include <bluetooth/bluetooth_types.h>
-#include <bluetooth/features.h>
 #include <bluetooth/sm_types.h>
 #include <btutil/bt_device.h>
 #include <btutil/sm_util.h>

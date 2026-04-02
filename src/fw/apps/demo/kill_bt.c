@@ -3,8 +3,6 @@
 
 #include "progress.h"
 
-#include <bluetooth/reconnect.h>
-
 #include "applib/app.h"
 #include "applib/fonts/fonts.h"
 #include "applib/tick_timer_service.h"

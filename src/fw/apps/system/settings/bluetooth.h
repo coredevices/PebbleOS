@@ -11,17 +11,6 @@
 
 typedef struct GAPLEConnection GAPLEConnection;
 
-typedef enum StoredRemoteType {
-  StoredRemoteTypeBTClassic,
-  StoredRemoteTypeBLE,
-  StoredRemoteTypeBTDual,
-} StoredRemoteType;
-
-typedef struct StoredRemoteClassic {
-  bool connected;
-  BTDeviceAddress bd_addr;
-} StoredRemoteClassic;
-
 typedef struct StoredRemoteBLE {
   BTBondingID bonding;
   GAPLEConnection *connection;
@@ -30,20 +19,10 @@ typedef struct StoredRemoteBLE {
 #endif
 } StoredRemoteBLE;
 
-typedef struct StoredRemoteDual {
-  StoredRemoteClassic classic;
-  StoredRemoteBLE ble;
-} StoredRemoteDual;
-
 typedef struct StoredRemote {
   ListNode list_node;
   char name[BT_DEVICE_NAME_BUFFER_SIZE];
-  StoredRemoteType type;
-  union {
-    StoredRemoteClassic classic;
-    StoredRemoteBLE ble;
-    StoredRemoteDual dual;
-  };
+  StoredRemoteBLE ble;
 } StoredRemote;
 
 struct SettingsBluetoothData;

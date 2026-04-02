@@ -32,9 +32,7 @@
 #include "comm/ble/gatt_client_operations.h"
 #include "comm/ble/gatt_client_subscriptions.h"
 
-#include <bluetooth/classic_connect.h>
 #include <bluetooth/pebble_bt.h>
-#include <bluetooth/reconnect.h>
 
 #define MAX_SERVICE_INSTANCES (8)
 
@@ -169,33 +167,6 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
 #endif // UNITTEST
 };
 
-#if 0  // TODO: PBL-21864 - Disconnect BT Classic when PPoGATT is used
-// Disconnect BT Classic (for iAP) if connected and make this LE device the active gateway,
-// to prevent that iAP gets reconnected in the future:
-static void prv_set_active_gateway_and_disconn_bt_classic(const BTDeviceInternal *gateway_device) {
-  BTBondingID bonding_id = BT_BONDING_ID_INVALID;
-  bt_lock();
-  // Find the Bonding ID for the LE connection that supports PPoGATT:
-  GAPLEConnection *connection = gap_le_connection_by_device(gateway_device);
-  // It's possible the connection is gone in the mean time; this runs on KernelMain.
-  if (connection) {
-    bonding_id = connection->bonding_id;
-  }
-  bt_unlock();
-
-  // don't hold bt_lock while calling bt_persistent_storage_... because it accesses flash
-  if (bonding_id != BT_BONDING_ID_INVALID) {
-    bt_persistent_storage_set_active_gateway(bonding_id);
-  } else {
-    PBL_LOG_ERR("Not bonded or disconnected (%p)", connection);
-  }
-
-  bt_lock();
-  bt_driver_classic_disconnect(NULL);
-  bt_unlock();
-}
-#endif
-
 static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *services_removed) {
   PebbleBLEGATTClientServiceHandles *service_remove_info = &services_removed->handles[0];
   for (int s = 0; s < services_removed->num_services_removed; s++) {
@@ -258,11 +229,6 @@ static void prv_handle_services_added(
         continue;
       }
 
-#if 0  // TODO: PBL-21864 - Disconnect BT Classic when PPoGATT is used
-      if (c == KernelLEClientPPoGATT) {
-        prv_set_active_gateway_and_disconn_bt_classic(&device);
-      }
-#endif
 #if !UNITTEST
       ATTHandleRange range = { };
       gatt_client_service_get_handle_range(added_services->services[s], &range);
@@ -477,13 +443,6 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     gap_le_slave_reconnect_stop();
     gatt_client_discovery_discover_all(&device);
 
-    const bool gateway_is_classic_paired = true;  // TODO
-    if (gateway_is_classic_paired) {
-      // [MT] Kick reconnection for BT Classic when BLE comes up.
-      // If BLE is able to reconnect, chances are BT Classic is able too, so try
-      // immediately instead of waiting for reconnect.c's timer to fire.
-      bt_driver_reconnect_try_now(false /*ignore_paused*/);
-    }
   } else {
     PBL_LOG_DBG("Disconnected from Gateway!");
     ppogatt_destroy();

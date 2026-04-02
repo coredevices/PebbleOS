@@ -24,8 +24,6 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
-#include <bluetooth/classic_connect.h>
-
 #include <stdio.h>
 #include <string.h>
 
@@ -64,14 +62,8 @@ static void prv_show_dialog(void *i18n_owner) {
   app_expandable_dialog_push(e_dialog);
 }
 
-static void prv_forget_bt_classic_remote(BTDeviceAddress* address) {
-  bt_persistent_storage_delete_bt_classic_pairing_by_addr(address);
-  bt_driver_classic_disconnect(address);
-}
-
 static void prv_forget_ble_remote(int id) {
   bt_persistent_storage_delete_ble_pairing_by_id(id);
-
 }
 
 static void prv_remote_menu_cleanup(ActionMenu *action_menu,
@@ -89,44 +81,21 @@ static void prv_forget_item(ActionMenu *action_menu,
                             void *context) {
   SettingsRemoteData* remote_data = (SettingsRemoteData*) context;
   StoredRemote* remote = &remote_data->remote;
-  switch (remote->type) {
-    case StoredRemoteTypeBTClassic:
-      prv_forget_bt_classic_remote(&remote->classic.bd_addr);
-      break;
-    case StoredRemoteTypeBLE:
-      prv_forget_ble_remote(remote->ble.bonding);
-      break;
-    case StoredRemoteTypeBTDual:
-      prv_forget_bt_classic_remote(&remote->dual.classic.bd_addr);
-      prv_forget_ble_remote(remote->dual.ble.bonding);
-      break;
-    default:
-      WTF;
-  }
-  PBL_LOG_INFO("User Forgot BT Pairing (%u)", remote->type);
+  prv_forget_ble_remote(remote->ble.bonding);
+  PBL_LOG_INFO("User Forgot BT Pairing");
   PBL_LOG_DBG("Name: %s", remote->name);
   settings_bluetooth_update_remotes(remote_data->bt_data);
   prv_show_dialog(context);
 }
 
 #ifdef CONFIG_HRM
-static GAPLEConnection *prv_le_connection_for_stored_remote(const StoredRemote *const remote) {
-  switch (remote->type) {
-    case StoredRemoteTypeBLE: return remote->ble.connection;
-    case StoredRemoteTypeBTDual: return remote->dual.ble.connection;
-    default:
-      return NULL;
-  }
-}
-
 static void prv_stop_sharing_heart_rate(ActionMenu *action_menu,
                                         const ActionMenuItem *item,
                                         void *context) {
   SettingsRemoteData *remote_data = (SettingsRemoteData*) context;
   StoredRemote *remote = &remote_data->remote;
 
-  GAPLEConnection *const connection = prv_le_connection_for_stored_remote(remote);
-  ble_hrm_revoke_sharing_permission_for_connection(connection);
+  ble_hrm_revoke_sharing_permission_for_connection(remote->ble.connection);
 
   app_simple_dialog_push(ble_hrm_stop_sharing_popup_create());
 }

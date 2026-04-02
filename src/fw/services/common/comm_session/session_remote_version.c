@@ -18,7 +18,6 @@
 #include "system/logging.h"
 #include "system/hexdump.h"
 
-#include <bluetooth/reconnect.h>
 
 extern bool comm_session_is_valid(const CommSession *session);
 
@@ -130,7 +129,6 @@ static void prv_handle_phone_versions_response(CommSession *session,
 
   comm_session_set_capabilities(session, capability_flags);
   const uint32_t platform_bits = ntohl(response->platform_bitfield);
-  bt_driver_reconnect_notify_platform_bitfield(platform_bits);
 
   const bool is_system = comm_session_is_system(session);
   PBL_LOG_INFO("Phone app: is_system=%u, plf=0x%"PRIx32", capabilities=0x%"PRIx32,

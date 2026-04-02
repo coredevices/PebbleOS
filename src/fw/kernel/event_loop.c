@@ -82,8 +82,6 @@
 #include "util/struct.h"
 #include "system/version.h"
 
-#include <bluetooth/reconnect.h>
-
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -259,12 +257,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       if (is_connected) {
         light_enable_interaction();
       } else {
-        // Chances are the Pebble of our dear customer has been charging away
-        // from the phone and is disconnected because of that. Try reconnecting
-        // immediately upon disconnecting the charger:
-        bt_driver_reconnect_reset_interval();
-        bt_driver_reconnect_try_now(false /*ignore_paused*/);
-      }
+        }
 #if STATIONARY_MODE
       stationary_handle_battery_connection_change_event();
 #endif

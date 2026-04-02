@@ -33,8 +33,6 @@
 #include "util/string.h"
 
 #include <bluetooth/bluetooth_types.h>
-#include <bluetooth/classic_connect.h>
-#include <bluetooth/reconnect.h>
 #include <bluetooth/sm_types.h>
 #include <btutil/bt_device.h>
 
@@ -92,13 +90,6 @@ typedef struct SettingsBluetoothData {
 // BT stack interaction stuff
 ///////////////////////////
 
-static void settings_bluetooth_reconnect_once(void) {
-  // After the user toggles BT back on, immediately attempt to reconnect once:
-  if (bt_ctl_is_airplane_mode_on() == false) {
-    bt_driver_reconnect_try_now(true /*ignore_paused*/);
-  }
-}
-
 static void settings_bluetooth_toggle_airplane_mode(SettingsBluetoothData* data) {
   const bool airplane_mode = bt_ctl_is_airplane_mode_on();
   bt_ctl_set_airplane_mode_async(!airplane_mode);
@@ -108,17 +99,7 @@ static void settings_bluetooth_toggle_airplane_mode(SettingsBluetoothData* data)
 }
 
 bool is_remote_connected(StoredRemote* remote) {
-  switch (remote->type) {
-    case StoredRemoteTypeBTClassic:
-      return remote->classic.connected;
-    case StoredRemoteTypeBLE:
-      return (remote->ble.connection != NULL);
-    case StoredRemoteTypeBTDual:
-      return remote->dual.classic.connected || (remote->dual.ble.connection != NULL);
-    default:
-      WTF;
-  }
-  return false;
+  return (remote->ble.connection != NULL);
 }
 
 static int remote_comparator(StoredRemote* remote, StoredRemote* other) {
@@ -149,103 +130,38 @@ static void prv_copy_device_name_with_fallback(StoredRemote *remote, const char 
   }
 }
 
-static void prv_add_bt_classic_remote(BTDeviceAddress *addr, SM128BitKey *link_key,
-                                      const char *name, uint8_t *platform_bits, void *context) {
+static void prv_add_ble_remote(BTDeviceInternal *device, SMIdentityResolvingKey *irk,
+                               const char *name, BTBondingID *id, void *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData*) context;
   if (!data) {
     return;
   }
 
-  // Determine the address of our active remote, if we have one.
-  BTDeviceAddress active_addr = {};
-  const bool is_connected = bt_driver_classic_copy_connected_address(&active_addr);
-
-  // Create the new remote
-  StoredRemote *remote = stored_remote_create();
-  remote->classic.bd_addr = *addr;
+  StoredRemote* remote = stored_remote_create();
+  remote->ble.bonding = *id;
   prv_copy_device_name_with_fallback(remote, name);
-
-  if (is_connected && (0 == memcmp(addr, &active_addr, sizeof(*addr)))) {
-    remote->classic.connected = true;
-  } else {
-    remote->classic.connected = false;
-  }
-
   add_remote(data, remote);
 }
 
-
-static void prv_add_bt_classic_remotes(SettingsBluetoothData *data) {
-  bt_persistent_storage_for_each_bt_classic_pairing(prv_add_bt_classic_remote, data);
-}
-
-static bool dual_remote_filter(ListNode *node, void *data) {
-  StoredRemote *classic_remote = (StoredRemote *) node;
-  BTDeviceInternal *device = (BTDeviceInternal *) data;
-  BTDeviceInternal le_device_with_classic_address = (const BTDeviceInternal) {
-    .address = classic_remote->classic.bd_addr,
-    .is_random_address = false,
-  };
-  return bt_device_equal(&le_device_with_classic_address.opaque, &device->opaque);
-}
-
-static void prv_add_and_merge_ble_remote(BTDeviceInternal *device, SMIdentityResolvingKey *irk,
-                                         const char *name, BTBondingID *id, void *context) {
-  SettingsBluetoothData *data = (SettingsBluetoothData*) context;
-  if (!data) {
-    return;
-  }
-
-  StoredRemote* remote = (StoredRemote*) list_find_next(data->remote_list_head,
-                                                        dual_remote_filter, true, device);
-  if (remote) {
-    // The remote is also a ble device, promote to a dual remote
-    const bool classic_connected = remote->classic.connected;
-    remote->type = StoredRemoteTypeBTDual;
-    remote->dual.classic.connected = classic_connected;
-    // Note: We update remote->dual.ble.connected outside this cb
-    remote->dual.ble.bonding = *id;
-  } else {
-    // Remote for which we only have a BLE key, add it in the menu as well, so it is accessible
-    // and can be removed by the user:
-    StoredRemote* remote = stored_remote_create();
-    remote->type = StoredRemoteTypeBLE;
-    // Note: We update remote->ble.connection outside this cb
-    remote->ble.bonding = *id;
-    prv_copy_device_name_with_fallback(remote, name);
-    add_remote(data, remote);
-  }
-}
-
-//! This must be called after updating classic remotes for remote consolidation
-static void prv_add_and_merge_ble_remotes(SettingsBluetoothData *data) {
-  bt_persistent_storage_for_each_ble_pairing(prv_add_and_merge_ble_remote, data);
+static void prv_add_ble_remotes(SettingsBluetoothData *data) {
+  bt_persistent_storage_for_each_ble_pairing(prv_add_ble_remote, data);
 
   StoredRemote *remote = (StoredRemote *)data->remote_list_head;
   while (remote) {
-    StoredRemoteBLE *ble_rem = NULL;
-    if (remote->type == StoredRemoteTypeBLE) {
-      ble_rem = &remote->ble;
-    } else if (remote->type == StoredRemoteTypeBTDual) {
-      ble_rem = &remote->dual.ble;
-    }
+    SMIdentityResolvingKey irk;
+    BTDeviceInternal device;
 
-    if (ble_rem) {
-      SMIdentityResolvingKey irk;
-      BTDeviceInternal device;
-
-      if (bt_persistent_storage_get_ble_pairing_by_id(ble_rem->bonding, &irk, &device, NULL)) {
-        bt_lock();
-        GAPLEConnection *connection = gap_le_connection_find_by_irk(&irk);
-        if (!connection) {
-          connection = gap_le_connection_by_device(&device);
-        }
-        ble_rem->connection = connection;
-#ifdef CONFIG_HRM
-        ble_rem->is_sharing_heart_rate = ble_hrm_is_sharing_to_connection(connection);
-#endif
-        bt_unlock();
+    if (bt_persistent_storage_get_ble_pairing_by_id(remote->ble.bonding, &irk, &device, NULL)) {
+      bt_lock();
+      GAPLEConnection *connection = gap_le_connection_find_by_irk(&irk);
+      if (!connection) {
+        connection = gap_le_connection_by_device(&device);
       }
+      remote->ble.connection = connection;
+#ifdef CONFIG_HRM
+      remote->ble.is_sharing_heart_rate = ble_hrm_is_sharing_to_connection(connection);
+#endif
+      bt_unlock();
     }
     remote = (StoredRemote *)remote->list_node.next;
   }
@@ -261,8 +177,7 @@ static void prv_clear_remote_list(SettingsBluetoothData* data) {
 
 static void prv_reload_remote_list(SettingsBluetoothData* data) {
   prv_clear_remote_list(data);
-  prv_add_bt_classic_remotes(data);
-  prv_add_and_merge_ble_remotes(data);
+  prv_add_ble_remotes(data);
 }
 
 static void settings_bluetooth_update_remotes_private(SettingsBluetoothData* data) {
@@ -331,7 +246,6 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
     }
 
     case PEBBLE_BT_STATE_EVENT: {
-      settings_bluetooth_reconnect_once();
       settings_data->toggle_state = ToggleStateIdle;
       settings_menu_mark_dirty(SettingsMenuItemBluetooth);
       break;
@@ -396,12 +310,7 @@ static void prv_draw_stored_remote_item_rect(GContext *ctx, const Layer *cell_la
 
 bool settings_bluetooth_is_sharing_heart_rate_for_stored_remote(StoredRemote* remote) {
 #ifdef CONFIG_HRM
-  switch (remote->type) {
-    case StoredRemoteTypeBLE: return remote->ble.is_sharing_heart_rate;
-    case StoredRemoteTypeBTDual: return remote->dual.ble.is_sharing_heart_rate;
-    default:
-      return false;
-  }
+  return remote->ble.is_sharing_heart_rate;
 #else
   return false;
 #endif  // CONFIG_HRM
@@ -428,11 +337,6 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer,
   bool connected = is_remote_connected(remote);
 
   const char *le_string = NULL;
-  if (remote->type == StoredRemoteTypeBTDual
-      && remote->dual.classic.connected != (remote->dual.ble.connection != NULL)) {
-    le_string = remote->dual.classic.connected
-        ? i18n_get("No LE", data) : i18n_get("LE Only", data);
-  }
 
   const char *connected_string = connected ? i18n_get("Connected", data) :
                                  PBL_IF_RECT_ELSE("", NULL);
@@ -629,7 +533,6 @@ static void prv_expand_cb(SettingsCallbacks *context) {
     data->did_enable_pairability = true;
   }
   
-  bt_driver_reconnect_pause();
   // Reload & redraw after pairing popup
   app_focus_service_subscribe_handlers((AppFocusHandlers) { .did_focus = prv_focus_handler });
 }
@@ -645,10 +548,6 @@ static void prv_hide_cb(SettingsCallbacks *context) {
     bt_pairability_release();
   }
   
-  bt_driver_reconnect_resume();
-  bt_driver_reconnect_reset_interval();
-  bt_driver_reconnect_try_now(false /*ignore_paused*/);
-
 #ifdef CONFIG_HRM
   event_service_client_unsubscribe(&data->ble_hrm_sharing_event_info);
 #endif

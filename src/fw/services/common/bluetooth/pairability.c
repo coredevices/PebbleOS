@@ -13,13 +13,10 @@
 #include "services/common/regular_timer.h"
 #include "services/common/system_task.h"
 
-#include <bluetooth/connectability.h>
-#include <bluetooth/features.h>
 #include <bluetooth/pairability.h>
 
 static void prv_pairability_timer_cb(void *unused);
 
-static int s_allow_bt_pairing_refcount = 0;
 static int s_allow_ble_pairing_refcount = 0;
 static bool s_last_ble_discoverable_state = false;
 
@@ -34,8 +31,7 @@ static void evaluate_pairing_refcount(void *data) {
     return;
   }
 
-  PBL_LOG_DBG("Pairabilty state: LE=%u, Classic=%u",
-          s_allow_ble_pairing_refcount, s_allow_bt_pairing_refcount);
+  PBL_LOG_DBG("Pairabilty state: LE=%u", s_allow_ble_pairing_refcount);
 
   bool is_ble_pairable_and_discoverable = (s_allow_ble_pairing_refcount > 0);
 
@@ -49,11 +45,6 @@ static void evaluate_pairing_refcount(void *data) {
     gap_le_slave_set_discoverable(is_ble_pairable_and_discoverable);
     s_last_ble_discoverable_state = is_ble_pairable_and_discoverable;
   }
-
-  if (bt_driver_supports_bt_classic()) {
-    bt_driver_classic_pairability_set_enabled((s_allow_bt_pairing_refcount > 0));
-    bt_driver_classic_update_connectability();
-  }
 }
 
 static void prv_schedule_evaluation(void) {
@@ -65,13 +56,7 @@ static void prv_schedule_evaluation(void) {
 }
 
 void bt_pairability_use(void) {
-  ++s_allow_bt_pairing_refcount;
   ++s_allow_ble_pairing_refcount;
-  prv_schedule_evaluation();
-}
-
-void bt_pairability_use_bt(void) {
-  ++s_allow_bt_pairing_refcount;
   prv_schedule_evaluation();
 }
 
@@ -97,15 +82,8 @@ void bt_pairability_use_ble_for_period(uint16_t duration_secs) {
 }
 
 void bt_pairability_release(void) {
-  PBL_ASSERT(s_allow_bt_pairing_refcount != 0 && s_allow_ble_pairing_refcount != 0, "");
-  --s_allow_bt_pairing_refcount;
+  PBL_ASSERT(s_allow_ble_pairing_refcount != 0, "");
   --s_allow_ble_pairing_refcount;
-  prv_schedule_evaluation();
-}
-
-void bt_pairability_release_bt(void) {
-  PBL_ASSERT(s_allow_bt_pairing_refcount != 0, "");
-  --s_allow_bt_pairing_refcount;
   prv_schedule_evaluation();
 }
 
@@ -118,12 +96,8 @@ void bt_pairability_release_ble(void) {
 //! Call this whenever we modify the number of saved bondings we have.
 void bt_pairability_update_due_to_bonding_change(void) {
   static bool s_pairable_due_to_no_gateway_bondings = false;
-  const bool has_classic_bonding =
-      (bt_driver_supports_bt_classic() &&
-       bt_persistent_storage_has_active_bt_classic_gateway_bonding());
 
-  if (!has_classic_bonding &&
-      !bt_persistent_storage_has_active_ble_gateway_bonding() &&
+  if (!bt_persistent_storage_has_active_ble_gateway_bonding() &&
       !bt_persistent_storage_has_ble_ancs_bonding()) {
     if (!s_pairable_due_to_no_gateway_bondings) {
       bt_pairability_use();

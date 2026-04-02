@@ -13,7 +13,6 @@
 #include "util/string.h"
 
 #include <bluetooth/bluetooth_types.h>
-#include <bluetooth/classic_connect.h>
 #include <bluetooth/id.h>
 
 #include <stdlib.h>
@@ -31,7 +30,6 @@ void command_bt_set_name(const char *bt_name) {
 }
 
 void command_bt_prefs_wipe(void) {
-  bt_driver_classic_disconnect(NULL);
   bt_persistent_storage_delete_all_pairings();
 }
 
@@ -60,16 +58,13 @@ void command_bt_status(void) {
 
   char name[BT_DEVICE_NAME_BUFFER_SIZE];
   bt_lock();
-  bool connected = bt_driver_classic_copy_connected_device_name(name);
-  if (!connected) {
-    // Try LE:
-    GAPLEConnection *connection = gap_le_connection_any();
-    if (connection) {
-      const char *device_name = connection->device_name ?: "<Unknown>";
-      strncpy(name, device_name, BT_DEVICE_NAME_BUFFER_SIZE);
-      name[BT_DEVICE_NAME_BUFFER_SIZE - 1] = '\0';
-      connected = true;
-    }
+  bool connected = false;
+  GAPLEConnection *connection = gap_le_connection_any();
+  if (connection) {
+    const char *device_name = connection->device_name ?: "<Unknown>";
+    strncpy(name, device_name, BT_DEVICE_NAME_BUFFER_SIZE);
+    name[BT_DEVICE_NAME_BUFFER_SIZE - 1] = '\0';
+    connected = true;
   }
   bt_unlock();
 

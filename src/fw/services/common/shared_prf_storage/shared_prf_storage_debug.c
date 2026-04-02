@@ -12,7 +12,6 @@
 
 
 #include <bluetooth/bluetooth_types.h>
-#include <bluetooth/features.h>
 #include <bluetooth/sm_types.h>
 #include <btutil/bt_device.h>
 #include <btutil/sm_util.h>
@@ -49,19 +48,6 @@ void shared_prf_storage_dump_contents(void) {
   if (shared_prf_storage_get_ble_pinned_address(&addr)) {
     prompt_send_response_fmt(buf, DISPLAY_BUF_LEN, "\nPinned address: "BT_DEVICE_ADDRESS_FMT,
                              BT_DEVICE_ADDRESS_XPLODE_PTR(&addr));
-  }
-
-  SM128BitKey link_key;
-  uint8_t platform_bits;
-
-  if (bt_driver_supports_bt_classic()) {
-    if (shared_prf_storage_get_bt_classic_pairing_data(&addr, &name[0],
-                                                       &link_key, &platform_bits)) {
-      bluetooth_persistent_storage_debug_dump_classic_pairing_info(
-          &buf[0], &addr, &name[0], &link_key, platform_bits);
-    } else {
-      prompt_send_response("No BT classic data");
-    }
   }
 
   if (shared_prf_storage_get_local_device_name(name, BT_DEVICE_NAME_BUFFER_SIZE)) {

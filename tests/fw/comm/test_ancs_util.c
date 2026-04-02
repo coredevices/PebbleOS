@@ -26,7 +26,6 @@
 #include "stubs_system_reset.h"
 #include "stubs_task_watchdog.h"
 #include "stubs_pbl_malloc.h"
-#include "stubs_reconnect.h"
 
 // Test data
 ///////////////////////////////////////////////////////////

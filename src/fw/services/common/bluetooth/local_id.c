@@ -10,8 +10,6 @@
 #include "util/size.h"
 #include "util/string.h"
 
-#include <bluetooth/features.h>
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -70,9 +68,7 @@ void bt_local_id_set_device_name(const char *device_name) {
 }
 
 void bt_local_id_copy_device_name(char name_out[BT_DEVICE_NAME_BUFFER_SIZE], bool is_le) {
-  char *name = (is_le && bt_driver_supports_bt_classic()) ? s_local_le_device_name :
-      s_local_device_name;
-  strncpy(name_out, name, BT_DEVICE_NAME_BUFFER_SIZE);
+  strncpy(name_out, s_local_device_name, BT_DEVICE_NAME_BUFFER_SIZE);
 }
 
 void bt_local_id_copy_address(BTDeviceAddress *addr_out) {
