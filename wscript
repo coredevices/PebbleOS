@@ -1222,7 +1222,7 @@ def qemu_launch(ctx):
                         '-pflash', qemu_micro_flash.path_from(ctx.path),
                         qemu_spi_type, qemu_spi_flash.path_from(ctx.path)]
 
-    if ctx.has_touch():
+    if ctx.env.CONFIG_TOUCH:
         machine_dep_args.append('-show-cursor')
 
     qemu_bin = os.getenv("PEBBLE_QEMU_BIN")
