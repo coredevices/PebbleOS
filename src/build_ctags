@@ -1,9 +1,0 @@
-#!/bin/bash
-
-rm -f cscope.out
-
-# Generate file list. Exclude most freertos ports other than the ones we're using
-find . -name \*.c -o -name \*.h > cscope.files
-find ../tests/ -name \*.c -o -name \*.h >> cscope.files
-
-cscope -b -R -q -k
