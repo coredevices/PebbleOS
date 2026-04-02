@@ -541,7 +541,7 @@ void process_manager_process_cleanup(PebbleTask task) {
   evented_timer_clear_process_timers(task);
   event_service_clear_process_subscriptions(task);
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   hrm_manager_process_cleanup(task, context->install_id);
 #endif
 

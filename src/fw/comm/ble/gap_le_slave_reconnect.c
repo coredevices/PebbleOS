@@ -72,7 +72,7 @@ static void prv_evaluate(ReconnectType prev_type) {
   if (cur_type != ReconnectType_None) {
     prv_unschedule_adv_if_needed();
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
     const bool use_hrm_payload = (cur_type == ReconnectType_BleHrm);
 #else
     const bool use_hrm_payload = false;
@@ -178,7 +178,7 @@ unlock:
   bt_unlock();
 }
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 
 #define RECONNECT_HRM_TIMEOUT_SECS (60)
 

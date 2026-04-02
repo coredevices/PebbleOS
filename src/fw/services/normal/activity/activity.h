@@ -410,7 +410,7 @@ uint8_t activity_prefs_heart_get_zone3_threshold(void);
 //! Return true if the HRM is enabled, false if not
 bool activity_prefs_heart_rate_is_enabled(void);
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 //! Get the HRM measurement interval setting
 //! @return the current HRMonitoringInterval value
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void);

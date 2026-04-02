@@ -566,7 +566,7 @@
       "id": -89,
       "enum": "HRM_DEMO",
       "md_fn": "hrm_demo_get_app_info",
-      "ifdefs": ["SHOW_ACTIVITY_DEMO", "CAPABILITY_HAS_BUILTIN_HRM=1"]
+      "ifdefs": ["SHOW_ACTIVITY_DEMO", "CONFIG_HRM"]
     },
     {
       "id": -90,

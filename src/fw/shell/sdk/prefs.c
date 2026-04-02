@@ -243,7 +243,7 @@ bool activity_prefs_heart_rate_is_enabled(void) {
   return true;
 }
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
   return HRMonitoringInterval_10Min;
 }
