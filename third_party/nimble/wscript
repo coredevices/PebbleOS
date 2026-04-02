@@ -76,17 +76,7 @@ def build(bld):
         'freertos',
     ]
 
-    if bld.env.bt_controller == 'cc2564x':
-        nimble_sources += [
-            'transport/hci_uart_transport.c',
-            'transport/chipset/cc2564.c',
-        ]
-
-        nimble_includes = [
-            'port/include/cc2564x',
-        ] + nimble_includes
-
-    elif bld.env.bt_controller == 'nrf52':
+    if bld.env.bt_controller == 'nrf52':
         nimble_sources += bld.path.ant_glob([
             'mynewt-nimble/nimble/controller/src/*.c',
             'mynewt-nimble/nimble/drivers/nrf5x/src/*.c',

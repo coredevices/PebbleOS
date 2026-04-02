@@ -1,8 +1,0 @@
-# SPDX-FileCopyrightText: 2025 Core Devices LLC
-# SPDX-License-Identifier: Apache-2.0
-
-pkg.name: "targets/cc2564x"
-pkg.type: "target"
-pkg.description:
-pkg.author:
-pkg.homepage:

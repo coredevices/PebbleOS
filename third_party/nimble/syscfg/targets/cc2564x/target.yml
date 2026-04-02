@@ -1,6 +1,0 @@
-# SPDX-FileCopyrightText: 2025 Core Devices LLC
-# SPDX-License-Identifier: Apache-2.0
-
-target.app: "app"
-target.bsp: "@apache-mynewt-core/hw/bsp/native"
-target.build_profile: "debug"

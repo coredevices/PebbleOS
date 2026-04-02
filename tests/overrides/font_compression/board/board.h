@@ -7,17 +7,11 @@
 
 #define PLATFORM_TINTIN 1
 
-typedef enum {
-  CC2564A = 0,
-  CC2564B,
-} BluetoothController;
-
 typedef struct {
   const uint8_t backlight_on_percent; // percent of max possible brightness
 } BoardConfig;
 
 typedef struct {
-  const BluetoothController controller;
 } BoardConfigBTCommon;
 
 typedef struct {
@@ -29,7 +23,6 @@ static const BoardConfig BOARD_CONFIG = {
 };
 
 static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
-  .controller = CC2564A,
 };
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {

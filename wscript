@@ -467,8 +467,7 @@ def configure(conf):
         conf.env.bt_controller = 'qemu'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
     elif conf.is_snowy() or conf.is_spalding():
-        conf.env.bt_controller = 'cc2564x'
-        conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
+        conf.env.bt_controller = 'stub'
     elif conf.is_asterix():
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
