@@ -47,7 +47,7 @@ void services_common_init(void) {
 
   bt_ctl_init();
 
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   touch_init();
 #endif
 
@@ -73,7 +73,7 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = bt_ctl_set_enabled,
     .enable_mask = R_FirmwareUpdate | R_Normal,
   },
-#if CAPABILITY_HAS_TOUCHSCREEN && defined(RECOVERY_FW)
+#if defined(CONFIG_TOUCH) && defined(RECOVERY_FW)
   // Only keep touch enabled on recovery (and so manufacturing as well)
   // Once supported in main firmware, this should be removed.
   {

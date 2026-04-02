@@ -48,7 +48,7 @@ Layer* layer_create_with_data(GRect frame, size_t data_size) {
   return layer;
 }
 
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
 static bool prv_destroy_recognizer(Recognizer *recognizer, void *context) {
   Layer *layer = context;
   layer_detach_recognizer(layer, recognizer);
@@ -63,7 +63,7 @@ void layer_deinit(Layer *layer) {
   }
   layer_remove_from_parent(layer);
 
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   // Destroy all attached recognizers
   recognizer_list_iterate(&layer->recognizer_list, prv_destroy_recognizer, layer);
 #endif
@@ -515,7 +515,7 @@ bool layer_contains_point(const Layer *layer, const GPoint *point) {
   if (!layer || !point) {
     return false;
   }
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   if (layer->contains_point_override) {
     return layer->contains_point_override(layer, point);
   }
@@ -527,7 +527,7 @@ void layer_set_contains_point_override(Layer *layer, LayerContainsPointOverride 
   if (!layer) {
     return;
   }
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   layer->contains_point_override = override;
 #endif
 }
@@ -576,7 +576,7 @@ MOCKABLE Layer *layer_find_layer_containing_point(const Layer *node, const GPoin
 }
 
 void layer_attach_recognizer(Layer *layer, Recognizer *recognizer) {
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   if (!layer || !recognizer) {
     return;
   }
@@ -587,7 +587,7 @@ void layer_attach_recognizer(Layer *layer, Recognizer *recognizer) {
 }
 
 void layer_detach_recognizer(Layer *layer, Recognizer *recognizer) {
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   if (!layer || !recognizer) {
     return;
   }
@@ -598,7 +598,7 @@ void layer_detach_recognizer(Layer *layer, Recognizer *recognizer) {
 }
 
 RecognizerList *layer_get_recognizer_list(const Layer *layer) {
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
   if (!layer) {
     return NULL;
   }

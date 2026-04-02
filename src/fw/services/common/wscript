@@ -29,7 +29,7 @@ def build(bld):
     bld.recurse('new_timer')
     bld.recurse('put_bytes')
     bld.recurse('shared_prf_storage')
-    if bld.capability('HAS_TOUCHSCREEN'):
+    if bld.env.CONFIG_TOUCH:
         bld.recurse('touch')
 
     bld.stlib(

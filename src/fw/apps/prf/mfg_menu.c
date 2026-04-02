@@ -163,7 +163,7 @@ static void prv_select_hrm_ctr_leakage_obelix(int index, void *context) {
 }
 #endif
 
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
 static void prv_select_touch(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_touch_app_get_info());
 }
@@ -336,7 +336,7 @@ static size_t prv_create_menu_items(SimpleMenuItem** out_menu_items) {
 #endif
       { .icon = prv_get_icon_for_test(MfgTest_Display),
       .title = "Test Display",      .callback = prv_select_display },
-#if CAPABILITY_HAS_TOUCHSCREEN
+#ifdef CONFIG_TOUCH
     { .title = "Test Touch",        .callback = prv_select_touch },
 #endif
 #if PLATFORM_OBELIX
