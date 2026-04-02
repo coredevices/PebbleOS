@@ -171,14 +171,7 @@ static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
   },
 };
 
-#define BOARD_BT_USART_IRQ_HANDLER USART1_IRQHandler
 static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
-  .controller = CC2564B,
-  .shutdown = { GPIOB, GPIO_Pin_12, false },
-  .wakeup = {
-    .int_gpio = { GPIOA, GPIO_Pin_11 },
-    .int_exti = { EXTI_PortSourceGPIOA, 11 },
-  },
 };
 
 static const BoardConfigMCO1 BOARD_CONFIG_MCO1 = {

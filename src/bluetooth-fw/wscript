@@ -5,7 +5,7 @@ import waflib.Logs
 
 
 def _recurse(ctx):
-    if ctx.env.bt_controller in ('cc2564x', 'nrf52', 'sf32lb52'):
+    if ctx.env.bt_controller in ('nrf52', 'sf32lb52'):
         ctx.recurse('nimble')
     elif ctx.env.bt_controller == 'stub':
         ctx.recurse('stub')
@@ -19,7 +19,6 @@ def options(opt):
     opt.add_option('--bt_controller', action='store', default=None,
                    help='Override Bluetooth controller to build for',
                    choices=[
-                       'cc2564x',
                        'qemu',
                        'nrf52',
                        'sf32lb52',

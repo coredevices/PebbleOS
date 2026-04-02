@@ -168,11 +168,6 @@ typedef enum {
   BacklightOptions_LedController = 1 << 2, ///< LED Controller
 } BacklightOptions;
 
-typedef enum {
-  CC2564A = 0,
-  CC2564B,
-} BluetoothController;
-
 typedef struct {
   // Audio Configuration
   /////////////////////////////////////////////////////////////////////////////
@@ -293,8 +288,6 @@ typedef struct {
 } BoardConfigBacklight;
 
 typedef struct {
-  const BluetoothController controller;
-
   union {
     const OutputConfig shutdown;
     const OutputConfig reset;

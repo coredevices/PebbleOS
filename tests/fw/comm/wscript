@@ -15,8 +15,6 @@ def build(bld):
         sources_ant_glob = "src/fw/comm/ble/kernel_le_client/ams/ams_util.c",
         test_sources_ant_glob = "test_ams_util.c")
 
-    # TODO: the bt_driver calls here should really be a fake and not rely on
-    # the cc2564 module
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/gap_le_advert.c "
                            "src/fw/comm/ble/gap_le_connection.c "
