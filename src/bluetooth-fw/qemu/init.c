@@ -5,7 +5,6 @@
 #include "drivers/qemu/qemu_serial.h"
 #include "drivers/qemu/qemu_settings.h"
 #include "kernel/event_loop.h"
-#include "pebble_errors.h"
 #include "system/logging.h"
 
 #include <bluetooth/init.h>

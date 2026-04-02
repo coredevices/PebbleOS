@@ -3,7 +3,6 @@
 
 #include "comm/bt_lock.h"
 #include "kernel/event_loop.h"
-#include "pebble_errors.h"
 #include "system/logging.h"
 
 #include <bluetooth/init.h>
