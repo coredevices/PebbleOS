@@ -5,7 +5,7 @@
 #include "board/display.h"
 #include "board/splash.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
-#include "drivers/hrm/gh3x2x/gh3x2x.h"
+#include "drivers/hrm/gh3x2x.h"
 #include "system/passert.h"
 
 #include "bf0_hal.h"
