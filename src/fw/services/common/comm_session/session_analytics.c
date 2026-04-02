@@ -43,8 +43,4 @@ void comm_session_analytics_close_session(CommSession *session, CommSessionClose
 #endif
   }
 
-  const RtcTicks duration_ticks = (rtc_get_ticks() - session->open_ticks);
-  const uint16_t duration_mins = ((duration_ticks / RTC_TICKS_HZ) / SECONDS_PER_MINUTE);
-  const Uuid *optional_app_uuid = comm_session_get_uuid(session);
-
 }

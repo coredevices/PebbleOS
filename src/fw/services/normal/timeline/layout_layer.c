@@ -44,6 +44,7 @@ static const LayoutColors s_default_colors = {
   .bg_color = { .argb = PBL_IF_COLOR_ELSE(GColorLightGrayARGB8, GColorWhiteARGB8) },
 };
 
+#if !PBL_COLOR
 static const LayoutColors s_default_notification_colors_alternative = {
     .primary_color = {.argb = GColorWhiteARGB8},
     .secondary_color = {.argb = GColorBlackARGB8},
@@ -55,6 +56,7 @@ static const LayoutColors s_default_notification_colors_standard = {
     .secondary_color = {.argb = GColorBlackARGB8},
     .bg_color = {.argb = GColorLightGrayARGB8},
 };
+#endif
 
 LayoutLayer *layout_create(LayoutId id, const LayoutLayerConfig *config) {
   // pretend tests are generics for testing

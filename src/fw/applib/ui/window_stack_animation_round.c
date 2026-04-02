@@ -30,8 +30,6 @@ static uint16_t prv_window_distance_from_screen_bounds(const Window *window) {
 }
 
 static void prv_window_transition_render(WindowTransitioningContext *context, GContext *ctx) {
-  const WindowTransitionRoundImplementation *implementation =
-    (WindowTransitionRoundImplementation *)context->implementation;
   Window *window_to = context->window_to;
   if (window_to) {
     // move framebuffer by amount of pixels the window_to moves

@@ -107,8 +107,6 @@ static void prv_touch_envent_handler(const TouchEvent *event, void *context) {
 }
 
 static void prv_handle_touch_event(PebbleEvent *e, void *context) {
-  AppData *data = app_state_get_user_data();
-
   if (e->type == PEBBLE_TOUCH_EVENT) {
     PebbleTouchEvent *touch = &e->touch;
     touch_dispatch_touch_events(touch->touch_idx, prv_touch_envent_handler, context);

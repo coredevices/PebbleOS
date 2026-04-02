@@ -323,7 +323,6 @@ static int16_t prv_get_lfsr(int16_t prev) {
 
 static bool prv_dma_handler(DMARequest *request, void *context, bool is_complete) {
   MicDevice *this = context;
-  bool should_context_switch = false;
 
   PROFILER_NODE_START(mic);
 

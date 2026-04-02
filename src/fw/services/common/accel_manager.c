@@ -91,7 +91,6 @@ static bool s_enabled = true;
 
 // Accel Idle
 #define ACCEL_MAX_IDLE_DELTA 100
-static bool s_is_idle = false;
 static AccelData s_last_analytics_position;
 static AccelData s_last_accel_data;
 

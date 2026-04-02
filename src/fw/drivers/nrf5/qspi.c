@@ -751,7 +751,6 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
 
 #ifdef RECOVERY_FW
 status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
-  QSPIFlashPart *part = dev->state->part;
   uint8_t sr[2];
   status_t res;
 
