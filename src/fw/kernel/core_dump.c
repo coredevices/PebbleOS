@@ -52,7 +52,7 @@
 #ifdef MICRO_FAMILY_STM32F4
 #include <stm32f4xx.h>
 #endif
-#if MICRO_FAMILY_NRF52840
+#if MICRO_FAMILY_NRF52
 #include <nrf52840.h>
 #endif
 
@@ -107,7 +107,7 @@ typedef struct {
 
 // Memory regions to dump
 static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
-#if MICRO_FAMILY_NRF52840 || MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_NRF52 || MICRO_FAMILY_SF32LB52
   { .start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE },
 #else
   { .start = (void *)SRAM1_BASE, .length = COREDUMP_RAM_SIZE },
@@ -115,13 +115,13 @@ static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
 #if PLATFORM_SNOWY || PLATFORM_SPALDING || PLATFORM_SNOWY_EMERY || PLATFORM_SPALDING_GABBRO
   { .start = (void *)CCMDATARAM_BASE, .length = (uint32_t)__CCM_RAM_size__ },
 #endif
-#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
   { .start = (void *)RCC, .length = sizeof(*RCC) },
 #endif
   { .start = (void *)&NVIC->ISER, .length = sizeof(NVIC->ISER) },  // Enabled interrupts
   { .start = (void *)&NVIC->ISPR, .length = sizeof(NVIC->ISPR) },  // Pending interrupts
   { .start = (void *)&NVIC->IABR, .length = sizeof(NVIC->IABR) },  // Active interrupts
-#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
   { .start = (void *)&NVIC->IP, .length = sizeof(NVIC->IP) },  // Interrupt priorities
   { .start = (void *)RTC, .length = sizeof(*RTC) },
   { .start = (void*)DMA1_BASE, .length = 0xD0, .word_reads_only = true },
@@ -129,7 +129,7 @@ static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
 #endif
 };
 
-#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
 static struct {
   RCC_TypeDef rcc;
   SPI_TypeDef spi1;
@@ -240,7 +240,7 @@ void coredump_assert(int line) {
 // Stash the flash status registers and peripheral clock state before the flash
 // driver messes with them.
 static void prv_stash_regions(void) {
-#if !MICRO_FAMILY_NRF5 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
   memcpy(&s_stash_data.rcc, RCC, sizeof(RCC_TypeDef));
   memcpy(&s_stash_data.spi1, SPI1, sizeof(SPI_TypeDef));
 #endif

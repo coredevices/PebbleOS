@@ -38,7 +38,7 @@ typedef struct {
 // they are read and modified by multiple threads
 static InhibitorTickProfile s_inhibitor_profile[InhibitorNumItems];
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
 void enter_stop_mode(void) {
   dbgserial_enable_rx_exti();
   dbgserial_disable_rx_dma_before_stop();

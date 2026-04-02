@@ -7,7 +7,7 @@
 
 #include "board/board.h"
 
-#ifdef MICRO_FAMILY_NRF5
+#ifdef MICRO_FAMILY_NRF52
 #include <hal/nrf_gpio.h>
 
 typedef enum {
@@ -29,7 +29,7 @@ typedef enum {
 
 #endif
 
-#ifdef MICRO_FAMILY_NRF5
+#ifdef MICRO_FAMILY_NRF52
 
 void gpio_use(uint32_t pin);
 void gpio_release(uint32_t pin);
@@ -57,7 +57,7 @@ void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype,
 //! is true, and drives it low if pin_config.active_high is false.
 void gpio_output_set(const OutputConfig *pin_config, bool asserted);
 
-#ifndef MICRO_FAMILY_NRF5
+#ifndef MICRO_FAMILY_NRF52
 
 //! Configure a GPIO alternate function.
 //!

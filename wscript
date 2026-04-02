@@ -423,7 +423,7 @@ def configure(conf):
     if conf.is_snowy_compatible() or conf.is_silk() or conf.is_snowy_emery() or conf.is_spalding_gabbro():
         conf.env.MICRO_FAMILY = 'STM32F4'
     elif conf.is_asterix():
-        conf.env.MICRO_FAMILY = 'NRF52840'
+        conf.env.MICRO_FAMILY = 'NRF52'
     elif conf.is_obelix() or conf.is_getafix():
         conf.env.MICRO_FAMILY = 'SF32LB52'
     else:
@@ -770,7 +770,7 @@ def size_resources(ctx):
 
     if ctx.env.MICRO_FAMILY == 'STM32F4':
         max_size = 512 * 1024
-    elif ctx.env.MICRO_FAMILY == 'NRF52840':
+    elif ctx.env.MICRO_FAMILY == 'NRF52':
         max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'SF32LB52':
         max_size = 2048 * 1024
@@ -1458,7 +1458,7 @@ def _check_firmware_image_size(ctx, path):
         else:
             # 1024k of flash and 16k bootloader
             max_firmware_size = (1024 - 16) * BYTES_PER_K
-    elif ctx.env.MICRO_FAMILY == 'NRF52840':
+    elif ctx.env.MICRO_FAMILY == 'NRF52':
         if ctx.variant == 'prf' and not ctx.env.IS_MFG:
             max_firmware_size = 512 * BYTES_PER_K
         else:
