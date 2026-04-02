@@ -72,7 +72,7 @@ static bool prv_activity_allowed_to_be_enabled(void) {
 
 
 // ------------------------------------------------------------------------------------------------
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 // Get the HRM measurement period in seconds based on the user's setting
 static uint32_t prv_get_hrm_period_sec(void) {
   switch (activity_prefs_get_hrm_measurement_interval()) {
@@ -91,7 +91,7 @@ static uint32_t prv_get_hrm_period_sec(void) {
 // If necessary, change the sampling period of our heart rate subscription
 // @param[in] now_ts number of seconds the system has been running (from time_get_uptime_seconds())
 static void prv_heart_rate_subscription_update(uint32_t now_ts) {
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   if (!s_hrm_present) {
     return;
   }
@@ -157,13 +157,13 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
     s_activity_state.hr.toggled_sampling_at_ts = now_ts;
     PBL_LOG_DBG("Changed HR sampling period to %"PRIu32" sec", desired_interval_sec);
   }
-#endif // CAPABILITY_HAS_BUILTIN_HRM
+#endif // CONFIG_HRM
 }
 
 
 // ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new data arrives
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   if (!s_hrm_present) {
     return;
@@ -222,13 +222,13 @@ T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) 
     prv_heart_rate_subscription_update(now_uptime_ts);
   }
 }
-#endif // CAPABILITY_HAS_BUILTIN_HRM
+#endif // CONFIG_HRM
 
 
 // ---------------------------------------------------------------------------------------
 // Init heart rate support
 static void prv_heart_rate_init(void) {
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   s_hrm_present = mfg_info_is_hrm_present();
   if (!s_hrm_present) {
     return;
@@ -244,14 +244,14 @@ static void prv_heart_rate_init(void) {
 
   s_activity_state.hr.log_session = protobuf_log_hr_create(NULL);
   PBL_ASSERTN(s_activity_state.hr.log_session != NULL);
-#endif // CAPABILITY_HAS_BUILTIN_HRM
+#endif // CONFIG_HRM
 }
 
 
 // ---------------------------------------------------------------------------------------
 // De-init heart rate support
 static void prv_heart_rate_deinit(void) {
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   if (!s_hrm_present) {
     return;
   }
@@ -259,7 +259,7 @@ static void prv_heart_rate_deinit(void) {
   sys_hrm_manager_unsubscribe(s_activity_state.hr.hrm_session);
   protobuf_log_session_delete(s_activity_state.hr.log_session);
   activity_metrics_prv_reset_hr_stats();
-#endif // CAPABILITY_HAS_BUILTIN_HRM
+#endif // CONFIG_HRM
 }
 
 

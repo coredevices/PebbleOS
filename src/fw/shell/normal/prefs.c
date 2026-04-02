@@ -547,9 +547,9 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
   // for the setting
   s_activity_hrm_preferences = *new_settings;
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   hrm_manager_handle_prefs_changed();
-#endif // CAPABILITY_HAS_BUILTIN_HRM
+#endif // CONFIG_HRM
 #if BLE_HRM_SERVICE
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(new_settings->enabled);
 #endif // BLE_HRM_SERVICE
@@ -1551,7 +1551,7 @@ bool activity_prefs_heart_rate_is_enabled(void) {
   return s_activity_hrm_preferences.enabled;
 }
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
   uint8_t interval = s_activity_hrm_preferences.measurement_interval;
   if (interval >= HRMonitoringIntervalCount) {

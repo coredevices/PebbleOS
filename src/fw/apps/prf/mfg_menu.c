@@ -151,7 +151,7 @@ static void prv_select_mic(int index, void *context) {
 #endif
 }
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 static void prv_select_hrm(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_hrm_app_get_info());
 }
@@ -223,7 +223,7 @@ static void prv_extras_window_load(Window *window) {
   GRect bounds = window_layer->bounds;
 
   const SimpleMenuItem extras_menu_items[] = {
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
     { .title = "Test HRM",          .callback = prv_select_hrm },
 #endif
 #ifdef MANUFACTURING_FW

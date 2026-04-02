@@ -286,10 +286,10 @@ void workout_service_frontend_opened(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();
   {
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
     s_workout_data.hrm_session =
         sys_hrm_manager_app_subscribe(app_get_app_id(), 1, 0, HRMFeature_BPM);
-#endif // CAPABILITY_HAS_BUILTIN_HRM
+#endif // CONFIG_HRM
     s_workout_data.frontend_last_opened_ts = time_get_uptime_seconds();
     prv_put_event(PebbleWorkoutEvent_FrontendOpened);
   }
@@ -303,7 +303,7 @@ void workout_service_frontend_closed(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();
   {
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
     int32_t hr_time_left;
 
     if (workout_service_is_workout_ongoing()) {
@@ -333,7 +333,7 @@ void workout_service_frontend_closed(void) {
       // No time left. Kill the subscription
       sys_hrm_manager_unsubscribe(s_workout_data.hrm_session);
     }
-#endif // CAPABILITY_HAS_BUILTIN_HRM
+#endif // CONFIG_HRM
 
     prv_put_event(PebbleWorkoutEvent_FrontendClosed);
   }

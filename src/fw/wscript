@@ -672,7 +672,7 @@ def _build_normal(bld):
 
     excludes.extend(_get_launcher_globs_to_exclude(bld))
 
-    if not bld.capability('HAS_BUILTIN_HRM'):
+    if not bld.env.CONFIG_HRM:
         excludes.append('popups/ble_hrm/**')
 
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])

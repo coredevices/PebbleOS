@@ -33,7 +33,7 @@ def build(bld):
           "tests/fakes/fake_events.c "
          ),
          test_sources_ant_glob="test_ble_hrm.c",
-         defines=['CAPABILITY_HAS_BUILTIN_HRM=1'])
+         defines=['CONFIG_HRM=1'])
 
     clar(bld,
          sources_ant_glob=(

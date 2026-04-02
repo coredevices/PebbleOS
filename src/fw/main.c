@@ -434,7 +434,7 @@ static NOINLINE void prv_main_task_init(void) {
 
   system_resource_init();
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#ifdef CONFIG_HRM
   if (mfg_info_is_hrm_present()) {
     hrm_init(HRM);
   }

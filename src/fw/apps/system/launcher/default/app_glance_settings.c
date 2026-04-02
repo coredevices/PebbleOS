@@ -35,7 +35,7 @@ typedef struct LauncherAppGlanceSettingsState {
   bool is_pebble_app_connected;
   bool is_airplane_mode_enabled;
   bool is_quiet_time_enabled;
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   bool is_sharing_hrm;
 #endif
 } LauncherAppGlanceSettingsState;
@@ -52,7 +52,7 @@ typedef struct LauncherAppGlanceSettings {
   EventServiceInfo pebble_app_event_info;
   EventServiceInfo airplane_mode_event_info;
   EventServiceInfo quiet_time_event_info;
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   EventServiceInfo hrm_sharing_event_info;
 #endif
 } LauncherAppGlanceSettings;
@@ -246,7 +246,7 @@ static void prv_destructor(LauncherAppGlanceStructured *structured_glance) {
     event_service_client_unsubscribe(&settings_glance->pebble_app_event_info);
     event_service_client_unsubscribe(&settings_glance->airplane_mode_event_info);
     event_service_client_unsubscribe(&settings_glance->quiet_time_event_info);
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
     event_service_client_unsubscribe(&settings_glance->hrm_sharing_event_info);
 #endif
     kino_reel_destroy(settings_glance->icon);
@@ -277,7 +277,7 @@ static bool prv_mute_notifications_allow_calls_only(void) {
 
 static uint32_t prv_get_resource_id_for_connectivity_status(
     LauncherAppGlanceSettings *settings_glance) {
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   if (settings_glance->glance_state.is_sharing_hrm) {
     return RESOURCE_ID_CONNECTIVITY_SHARING_HRM;
   }
@@ -337,7 +337,7 @@ static void prv_event_handler(PebbleEvent *event, void *context) {
     case PEBBLE_DO_NOT_DISTURB_EVENT:
       settings_glance->glance_state.is_quiet_time_enabled = do_not_disturb_is_active();
       break;
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
     case PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT: {
       const bool prev_is_sharing = settings_glance->glance_state.is_sharing_hrm;
       const bool is_sharing = (event->bluetooth.le.hrm_sharing_state.subscription_count > 0);
@@ -411,7 +411,7 @@ LauncherAppGlance *launcher_app_glance_settings_create(const AppMenuNode *node) 
     .is_pebble_app_connected = prv_is_pebble_app_connected(),
     .is_airplane_mode_enabled = bt_ctl_is_airplane_mode_on(),
     .is_quiet_time_enabled = do_not_disturb_is_active(),
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
     .is_sharing_hrm = ble_hrm_is_sharing(),
 #endif
   };
@@ -428,7 +428,7 @@ LauncherAppGlance *launcher_app_glance_settings_create(const AppMenuNode *node) 
                          structured_glance);
   prv_subscribe_to_event(&settings_glance->quiet_time_event_info, PEBBLE_DO_NOT_DISTURB_EVENT,
                          structured_glance);
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   prv_subscribe_to_event(&settings_glance->hrm_sharing_event_info,
                          PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT,
                          structured_glance);

@@ -6,9 +6,6 @@ def configure(conf):
 
 
 def build(bld):
-    if not bld.capability('HAS_BUILTIN_HRM'):
-        return
-
     bld.stlib(
         use=['fw_includes', 'services_common_analytics'],
         source=['hrm_manager.c'],

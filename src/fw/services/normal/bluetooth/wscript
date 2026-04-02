@@ -8,7 +8,7 @@ def configure(conf):
 def build(bld):
     sources = ['bluetooth_persistent_storage.c']
 
-    if bld.capability('HAS_BUILTIN_HRM'):
+    if bld.env.CONFIG_HRM:
         sources.append('ble_hrm.c')
 
     bld.stlib(

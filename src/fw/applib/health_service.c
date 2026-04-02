@@ -1194,7 +1194,7 @@ bool health_service_cancel_metric_alert(HealthMetricAlert *alert) {
 
 // ----------------------------------------------------------------------------------------------
 bool health_service_set_heart_rate_sample_period(uint16_t interval_sec) {
-#if !CAPABILITY_HAS_BUILTIN_HRM
+#ifndef CONFIG_HRM
   return false;
 #else
   if (!sys_activity_is_initialized()) {
@@ -1233,7 +1233,7 @@ bool health_service_set_heart_rate_sample_period(uint16_t interval_sec) {
 
 // ----------------------------------------------------------------------------------------------
 uint16_t health_service_get_heart_rate_sample_period_expiration_sec(void) {
-#if !CAPABILITY_HAS_BUILTIN_HRM
+#ifndef CONFIG_HRM
   return 0;
 #else
   if (!sys_activity_prefs_heart_rate_is_enabled()) {

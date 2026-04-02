@@ -31,7 +31,7 @@
 
 enum {
   RemoteMenuForget = 0,
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   RemoteMenuStopSharingHeartRate,
 #endif
   RemoteMenu_Count
@@ -109,7 +109,7 @@ static void prv_forget_item(ActionMenu *action_menu,
   prv_show_dialog(context);
 }
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
 static GAPLEConnection *prv_le_connection_for_stored_remote(const StoredRemote *const remote) {
   switch (remote->type) {
     case StoredRemoteTypeBLE: return remote->ble.connection;
@@ -130,7 +130,7 @@ static void prv_stop_sharing_heart_rate(ActionMenu *action_menu,
 
   app_simple_dialog_push(ble_hrm_stop_sharing_popup_create());
 }
-#endif  // CAPABILITY_HAS_BUILTIN_HRM
+#endif  // CONFIG_HRM
 
 void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemote *stored_remote) {
   SettingsRemoteData *data = app_malloc_check(sizeof(SettingsRemoteData));
@@ -146,7 +146,7 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
     .did_close = prv_remote_menu_cleanup,
   };
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   const bool is_sharing_hr =
       settings_bluetooth_is_sharing_heart_rate_for_stored_remote(stored_remote);
   const size_t num_items = RemoteMenu_Count - (is_sharing_hr ? 0 : 1);
@@ -166,7 +166,7 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
     .action_data = data,
   };
 
-#if CAPABILITY_HAS_BUILTIN_HRM
+#if CONFIG_HRM
   if (is_sharing_hr) {
     level->items[RemoteMenuStopSharingHeartRate] = (ActionMenuItem) {
       .label = i18n_get("Stop Sharing Heart Rate", data),
