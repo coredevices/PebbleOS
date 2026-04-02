@@ -109,8 +109,6 @@ board_capability_dicts = [
     {
         "boards": ["silk_bb2", "silk"],
         "capabilities": {
-            # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
-            # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
@@ -119,8 +117,6 @@ board_capability_dicts = [
     {
         "boards": ["silk_flint"],
         "capabilities": {
-            # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
-            # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
@@ -131,8 +127,6 @@ board_capability_dicts = [
     {
         "boards": ["asterix"],
         "capabilities": {
-            # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
-            # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
