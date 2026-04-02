@@ -128,6 +128,7 @@ static const char *s_syncable_notif_prefs[] = {
   "notifDesignStyle",
   "notifVibeDelay",
   "notifBacklight",
+  "dndMotionBacklight",
 };
 
 static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
