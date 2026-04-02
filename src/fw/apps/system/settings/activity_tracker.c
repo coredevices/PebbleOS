@@ -120,6 +120,7 @@ static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
   }
 }
 
+#if PBL_RECT
 static void prv_draw_no_activities_cell_rect(GContext *ctx, const Layer *cell_layer,
                                              const char *no_activities_string) {
   const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
@@ -139,6 +140,7 @@ static void prv_draw_no_activities_cell_rect(GContext *ctx, const Layer *cell_la
 
   graphics_draw_text(ctx, no_activities_string, font, box, overflow, alignment, NULL);
 }
+#endif
 
 #if PBL_ROUND
 static void prv_draw_no_activities_cell_round(GContext *ctx, const Layer *cell_layer,

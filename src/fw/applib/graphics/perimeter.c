@@ -57,12 +57,14 @@ T_STATIC GRangeHorizontal perimeter_for_display_round(const GPerimeter *perimete
 }
 #endif
 
+#if PBL_RECT
 T_STATIC GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perimeter,
                                                      const GSize *ctx_size,
                                                      GRangeVertical vertical_range,
                                                      uint16_t inset) {
   return (GRangeHorizontal){.origin_x = inset, .size_w = MAX(0, ctx_size->w - 2 * inset)};
 }
+#endif
 
 const GPerimeter * const g_perimeter_for_display = &(const GPerimeter) {
   .callback = PBL_IF_RECT_ELSE(perimeter_for_display_rect, perimeter_for_display_round),

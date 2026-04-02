@@ -55,6 +55,7 @@ void display_start() {
   periph_config_release_lock();
 }
 
+#if !defined(TARGET_QEMU)
 static bool prv_spin_until_creset_is(bool level) {
   int timeout_us = 500 * 1000;
   InputConfig creset_input = {
@@ -68,6 +69,7 @@ static bool prv_spin_until_creset_is(bool level) {
   }
   return false;
 }
+#endif // !defined(TARGET_QEMU)
 
 static bool prv_wait_programmed(void) {
   // The datasheet lists the typical NVCM configuration time as 56 ms.

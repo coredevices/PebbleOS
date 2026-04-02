@@ -100,6 +100,7 @@ static void prv_timeline_peek_update_proc(Layer *layer, GContext *ctx) {
   prv_draw_background(ctx, &peek->layout_layer.frame, num_concurrent);
 }
 
+#if CAPABILITY_HAS_TIMELINE_PEEK
 static void prv_redraw(void *PBL_UNUSED data) {
   TimelinePeek *peek = &s_peek;
   layer_mark_dirty(&peek->layout_layer);
@@ -117,6 +118,7 @@ static CronJob s_timeline_peek_job = {
   .month = CRON_MONTH_ANY,
   .cb = prv_cron_callback,
 };
+#endif
 
 static void prv_destroy_layout(void) {
   TimelinePeek *peek = &s_peek;
@@ -198,6 +200,7 @@ static int16_t prv_scale_y_to_framebuffer(int16_t display_y) {
   return (display_y * app_framebuffer_size.h) / DISP_ROWS;
 }
 
+#if CAPABILITY_HAS_TIMELINE_PEEK
 static void prv_peek_frame_setup(Animation *animation) {
   PropertyAnimation *prop_anim = (PropertyAnimation *)animation;
   TimelinePeek *peek;
@@ -274,11 +277,15 @@ static void prv_peek_anim_stopped(Animation *animation, bool finished, void *con
   }
   peek->removing_concurrent = false;
 }
+#endif // CAPABILITY_HAS_TIMELINE_PEEK
 
 static const AnimationHandlers s_peek_anim_handlers = {
+#if CAPABILITY_HAS_TIMELINE_PEEK
   .stopped = prv_peek_anim_stopped,
+#endif
 };
 
+#if CAPABILITY_HAS_TIMELINE_PEEK
 static void prv_transition_frame(TimelinePeek *peek, bool visible, bool animated) {
   prv_unschedule_animation(peek);
 
@@ -306,6 +313,7 @@ static void prv_transition_frame(TimelinePeek *peek, bool visible, bool animated
   peek->animation = animation;
   animation_schedule(animation);
 }
+#endif
 
 #define EXTENDED_BOUNCE_BACK (2 * INTERPOLATE_MOOOK_BOUNCE_BACK)
 

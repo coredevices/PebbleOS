@@ -341,6 +341,7 @@ static void prv_load_bt_classic_pairing_data(
   strncpy(data->name, device_name, BT_DEVICE_NAME_BUFFER_SIZE);
 }
 
+#ifdef RECOVERY_FW
 static void prv_shared_prf_storage_store_bt_classic_pairing_data(
     BTDeviceAddress *addr, const char *device_name, SM128BitKey *link_key,
     uint8_t platform_bits) {
@@ -358,6 +359,7 @@ static void prv_shared_prf_storage_store_bt_classic_pairing_data(
                 offsetof(SharedPRFData, bt_classic_data) + offsetof(BTClassicPairingData, name));
   }
 }
+#endif
 
 void shared_prf_storage_store_bt_classic_pairing_data(
     BTDeviceAddress *addr, const char *device_name, SM128BitKey *link_key, uint8_t platform_bits) {

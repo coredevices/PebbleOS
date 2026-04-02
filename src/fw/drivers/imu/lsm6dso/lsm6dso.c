@@ -1193,17 +1193,6 @@ static uint32_t prv_compute_age_ms(uint64_t now_ms, uint64_t then_ms) {
   return (uint32_t)delta;
 }
 
-// Helper to grab one raw sample set (blocking) and convert to mg (board axis adjusted)
-static int prv_get_sample_mg(int16_t out_mg[3]) {
-  int16_t raw[3];
-  if (lsm6dso_acceleration_raw_get(&lsm6dso_ctx, raw) != 0) {
-    return -1;
-  }
-  out_mg[0] = prv_get_axis_projection_mg(X_AXIS, raw);
-  out_mg[1] = prv_get_axis_projection_mg(Y_AXIS, raw);
-  out_mg[2] = prv_get_axis_projection_mg(Z_AXIS, raw);
-  return 0;
-}
 
 void lsm6dso_get_diagnostics(Lsm6dsoDiagnostics *diagnostics) {
   if (!diagnostics) {

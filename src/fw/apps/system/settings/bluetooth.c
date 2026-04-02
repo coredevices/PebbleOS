@@ -355,6 +355,7 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
 //|  Device Name
 //
 
+#if PBL_RECT
 static void prv_draw_stored_remote_item_rect(GContext *ctx, const Layer *cell_layer,
                                              const char *remote_name, const char *connected_string,
                                              const char *le_string,
@@ -391,6 +392,7 @@ static void prv_draw_stored_remote_item_rect(GContext *ctx, const Layer *cell_la
     ((Layer *)cell_layer)->bounds.size.h += SHARING_HEART_RATE_EXTRA_HEIGHT_PX;
   }
 }
+#endif
 
 bool settings_bluetooth_is_sharing_heart_rate_for_stored_remote(StoredRemote* remote) {
 #ifdef CONFIG_HRM

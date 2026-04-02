@@ -295,6 +295,7 @@ static void prv_settings_clear_history_window_push(NotificationsData *data) {
   data->actionable_dialog = actionable_dialog;
 }
 
+#if PBL_BW
 static GColor prv_invert_bw_color(GColor color) {
   if (gcolor_equal(color, GColorBlack)) {
     return GColorWhite;
@@ -321,10 +322,12 @@ static void prv_draw_pdc_bw_inverted(GContext *ctx, GDrawCommandImage *image, GP
   };
   gdraw_command_image_draw_processed(ctx, image, offset, &processor);
 }
+#endif // PBL_BW
 
 //////////////
 // MenuLayer callbacks
 
+#if PBL_RECT
 static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_layer,
                                             const char *title, const char *subtitle,
                                             GDrawCommandImage *icon) {
@@ -367,6 +370,7 @@ static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_lay
   // Restore the cell layer's bounds
   mutable_cell_layer->bounds = cell_layer_bounds;
 }
+#endif
 
 //! outer_box is passed as a pointer to save stack space
 static int16_t prv_draw_centered_text_line_in(GContext *ctx, GFont font, const GRect *outer_box,

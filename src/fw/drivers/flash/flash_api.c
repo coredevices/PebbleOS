@@ -45,27 +45,6 @@ static struct FlashEraseContext {
 static TimerID s_erase_poll_timer;
 static TimerID s_erase_suspend_timer;
 
-//! Assumes that s_flash_lock is held.
-static status_t prv_try_restart_interrupted_erase(bool is_subsector,
-                                                  uint32_t addr) {
-  status_t status = is_subsector? flash_impl_erase_subsector_begin(addr)
-                                : flash_impl_erase_sector_begin(addr);
-  if (FAILED(status)) {
-    PBL_LOG_ERR("Got error trying to reissue interrupted erase: "
-            "%"PRIi32, status);
-    return status;
-  }
-
-  // Hopefully the task watchdog isn't enabled; this could take a while.
-  while (1) {
-    psleep(10);
-    status = flash_impl_get_erase_status();
-    if (status != E_BUSY && status != E_AGAIN) {
-      // Success or failure
-      return status;
-    }
-  }
-}
 
 void flash_init(void) {
   flash_impl_init(false /* coredump_mode */);

@@ -531,39 +531,6 @@ static void prv_call_common_bonding_change_handlers(BTBondingID bonding, BtPersi
   bt_pairability_update_due_to_bonding_change();
 }
 
-typedef struct {
-  unsigned int count;
-  BtPersistBondingType type;
-} PairingCountItrData;
-
-static bool prv_get_num_pairings_by_type_itr(SettingsFile *file,
-                                             SettingsRecordInfo *info, void *context) {
-  // check entry is valid
-  if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
-    return true; // continue iterating
-  }
-
-  PairingCountItrData *itr_data = (PairingCountItrData *)context;
-
-  BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
-
-  if (stored_data.type == itr_data->type) {
-    itr_data->count++;
-  }
-
-  return true;
-}
-
-static unsigned int prv_get_num_pairings_by_type(BtPersistBondingType type) {
-  PairingCountItrData itr_data = {
-    .count = 0,
-    .type = type,
-  };
-
-  prv_file_each(prv_get_num_pairings_by_type_itr, &itr_data);
-  return itr_data.count;
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Info

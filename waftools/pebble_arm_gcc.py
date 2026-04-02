@@ -171,7 +171,6 @@ def configure(conf):
         "-Wpointer-arith",
         "-Wno-unused-parameter",
         "-Wno-missing-field-initializers",
-        "-Wno-error=unused-function",
         "-Wno-error=unused-variable",
         "-Wno-error=unused-parameter",
         "-Wno-error=unused-const-variable",

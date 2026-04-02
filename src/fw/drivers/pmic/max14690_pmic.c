@@ -105,7 +105,6 @@ static volatile int s_interrupt_bounce_count;
 /* Private Function Definitions */
 static bool prv_is_alive(void);
 static bool prv_set_pin_config(void);
-static void prv_register_dump(int start_reg, int stop_reg);
 static void prv_initialize_interrupts(void);
 
 //! Request that the rail be used or released. Internally refcounted per rail so you don't have
