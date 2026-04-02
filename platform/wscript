@@ -17,11 +17,11 @@ def is_bigboard(ctx):
 
 @conf
 def is_snowy(ctx):
-    return ctx.get_board().startswith('snowy')
+    return ctx.get_board().startswith('snowy') and ctx.get_board() != 'snowy_emery'
 
 @conf
 def is_spalding(ctx):
-    return ctx.get_board().startswith('spalding')
+    return ctx.get_board().startswith('spalding') and ctx.get_board() != 'spalding_gabbro'
 
 @conf
 def is_silk(ctx):
@@ -40,12 +40,16 @@ def is_getafix(ctx):
     return ctx.get_board().startswith('getafix')
 
 @conf
+def is_snowy_emery(ctx):
+    return ctx.get_board() == 'snowy_emery'
+
+@conf
+def is_spalding_gabbro(ctx):
+    return ctx.get_board() == 'spalding_gabbro'
+
+@conf
 def get_platform_name(ctx):
-    if ctx.get_board() == 'snowy_emery':
-        return "snowy_emery"
-    elif ctx.get_board() == 'spalding_gabbro':
-        return "spalding_gabbro"
-    elif is_snowy(ctx):
+    if is_snowy(ctx):
         return "snowy"
     elif is_spalding(ctx):
         return "spalding"
@@ -57,6 +61,10 @@ def get_platform_name(ctx):
         return "obelix"
     elif is_getafix(ctx):
         return "getafix"
+    elif is_snowy_emery(ctx):
+        return "snowy_emery"
+    elif is_spalding_gabbro(ctx):
+        return "spalding_gabbro"
     else:
         return "unknown"
 
@@ -71,16 +79,16 @@ def is_snowy_compatible(ctx):
 
 @conf
 def get_qemu_machine(ctx):
-    if ctx.get_board() == 'snowy_emery':
-        return 'pebble-snowy-emery-bb'
-    elif ctx.get_board() == 'spalding_gabbro':
-        return 'pebble-spalding-gabbro-bb'
-    elif is_snowy(ctx):
+    if is_snowy(ctx):
         return 'pebble-snowy-bb'
     elif is_spalding(ctx):
         return 'pebble-s4-bb'
     elif is_silk(ctx):
         return 'pebble-silk-bb'
+    elif is_snowy_emery(ctx):
+        return 'pebble-snowy-emery-bb'
+    elif is_spalding_gabbro(ctx):
+        return 'pebble-spalding-gabbro-bb'
     else:
         return 'unknown'
 
@@ -95,10 +103,10 @@ def get_qemu_cpu(ctx):
         return 'cortex-m4'
     elif is_asterix(ctx):
         return 'cortex-m4'
-    elif is_obelix(ctx):
-        return 'cortex-star-mc1'
-    elif is_getafix(ctx):
-        return 'cortex-star-mc1'
+    elif is_snowy_emery(ctx):
+        return 'cortex-m4'
+    elif is_spalding_gabbro(ctx):
+        return 'cortex-m4'
     else:
         return 'unknown'
 
@@ -148,6 +156,12 @@ def add_platform_defines(ctx, env):
     elif ctx.is_getafix():
         bit_depth = 8
         platform = 'GETAFIX'
+    elif ctx.is_snowy_emery():
+        bit_depth = 8
+        platform = 'SNOWY_EMERY'
+    elif ctx.is_spalding_gabbro():
+        bit_depth = 8
+        platform = 'SPALDING_GABBRO'
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 
@@ -159,11 +173,6 @@ def add_platform_defines(ctx, env):
                     'MIN_SDK_VERSION={}'.format(env.MIN_SDK_VERSION)])
     if 'NRF5' in env.MICRO_FAMILY:
         env.append_value('DEFINES', 'MICRO_FAMILY_NRF5=1')
-    # Add additional platform defines for variant boards to allow display-specific overrides
-    if ctx.get_board() == 'snowy_emery':
-        env.append_value('DEFINES', 'PLATFORM_SNOWY_EMERY=1')
-    if ctx.get_board() == 'spalding_gabbro':
-        env.append_value('DEFINES', 'PLATFORM_SPALDING_GABBRO=1')
 
     for cap, val in ctx.capabilities_dict().items():
         env.append_value('DEFINES', "CAPABILITY_%s=%s" % (cap, int(val)))

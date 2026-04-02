@@ -396,13 +396,7 @@ def configure(conf):
     conf.env.FLASH_ITCM = False
 
     # Set platform used for building the SDK
-    if conf.options.board == 'snowy_emery':
-        conf.env.PLATFORM_NAME = 'emery'
-        conf.env.MIN_SDK_VERSION = 3
-    elif conf.options.board == 'spalding_gabbro':
-        conf.env.PLATFORM_NAME = 'gabbro'
-        conf.env.MIN_SDK_VERSION = 4
-    elif conf.is_spalding():
+    if conf.is_spalding():
         conf.env.PLATFORM_NAME = 'chalk'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.is_snowy_compatible():
@@ -411,13 +405,13 @@ def configure(conf):
     elif conf.is_silk() and conf.options.board != 'silk_flint':
         conf.env.PLATFORM_NAME = 'diorite'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_obelix():
+    elif conf.is_obelix() or conf.is_snowy_emery():
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.is_asterix() or conf.options.board == 'silk_flint':
         conf.env.PLATFORM_NAME = 'flint'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_getafix():
+    elif conf.is_getafix() or conf.is_spalding_gabbro():
         conf.env.PLATFORM_NAME = 'gabbro'
         conf.env.MIN_SDK_VERSION = 4
     else:
@@ -426,7 +420,7 @@ def configure(conf):
     # Save this for later
     conf.env.BOARD = conf.options.board
 
-    if conf.is_snowy_compatible() or conf.is_silk():
+    if conf.is_snowy_compatible() or conf.is_silk() or conf.is_snowy_emery() or conf.is_spalding_gabbro():
         conf.env.MICRO_FAMILY = 'STM32F4'
     elif conf.is_asterix():
         conf.env.MICRO_FAMILY = 'NRF52840'

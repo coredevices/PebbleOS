@@ -16,7 +16,7 @@ typedef struct VoltagePoint {
 
 // TODO: Move these curves somewhere else. Related: PBL-21049
 
-#if PLATFORM_SNOWY
+#if PLATFORM_SNOWY || PLATFORM_SNOWY_EMERY
 // When the voltage drops below these (mV), the watch will start heading for standby (after delay)
 #define BATTERY_CRITICAL_VOLTAGE_CHARGING 3500
 #define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3300
@@ -47,7 +47,7 @@ static const VoltagePoint charge_curve[] = {
   {60,  4190},
   {70,  4250},
 };
-#elif PLATFORM_SPALDING
+#elif PLATFORM_SPALDING || PLATFORM_SPALDING_GABBRO
 // When the voltage drops below these (mV), the watch will start heading for standby (after delay)
 #define BATTERY_CRITICAL_VOLTAGE_CHARGING 3700
 #define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3300
