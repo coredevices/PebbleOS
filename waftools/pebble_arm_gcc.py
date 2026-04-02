@@ -197,7 +197,6 @@ def configure(conf):
         # compatibility with the future; at some point we should take this out
         c_warnings.append("-Wno-address-of-packed-member")
         c_warnings.append("-Wno-enum-int-mismatch")
-        c_warnings.append("-Wno-expansion-to-defined")
 
         if not ("13", "0") <= conf.env.CC_VERSION <= ("14", "2", "1"):
             # Verify the toolchain we're using is allowed. This is to prevent us from accidentally
