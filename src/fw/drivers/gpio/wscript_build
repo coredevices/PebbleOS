@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+sources = []
+use = ['fw_includes', 'pbl_includes']
+
+if bld.env.CONFIG_GPIO_NRF5:
+    sources.append('nrf5.c')
+    use.append('hal_nordic')
+elif bld.env.CONFIG_GPIO_SF32LB:
+    sources.append('sf32lb.c')
+elif bld.env.CONFIG_GPIO_STM32F4:
+    sources.append('stm32f4.c')
+    use.extend([
+        'freertos',
+        'stm32_stdlib',
+    ])
+
+bld.objects(
+    name='driver_gpio',
+    source=sources,
+    use=use,
+)
+
+bld.env.DRIVERS.append('driver_gpio')
