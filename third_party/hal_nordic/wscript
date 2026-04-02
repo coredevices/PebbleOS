@@ -45,7 +45,7 @@ def build(bld):
 
         bld.stlib(source=micro_sources,
                   target='hal_nordic',
-                  cflags=['-Wno-error=unused-variable'],
+                  cflags=['-Wno-unused-variable'],
                   use=['cmsis_core', 'pblibc'],
                   includes=micro_includes,
                   export_includes=micro_includes)

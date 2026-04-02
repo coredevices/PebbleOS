@@ -228,10 +228,11 @@ def build(bld):
         '-mthumb-interwork',
         '-mtp=soft',
         '-munaligned-access',
-        '-Wno-error=clobbered',
-        '-Wno-error=sign-compare',
-        '-Wno-error=strict-aliasing',
-        '-Wno-error=unused-function',
+        '-Wno-clobbered',
+        '-Wno-sign-compare',
+        '-Wno-strict-aliasing',
+        '-Wno-unused-function',
+        '-Wno-unused-variable',
         '-Wno-misleading-indentation']
 
     bld(export_includes=libxs_includes, name='libxs_includes')
