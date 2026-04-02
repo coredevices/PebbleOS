@@ -27,7 +27,7 @@ if bld.is_silk():
         'driver_task_watchdog',
 
         'driver_voltage_monitor',
-        'driver_watchdog',
+
     ])
 
 elif bld.is_snowy_compatible():
@@ -51,7 +51,7 @@ elif bld.is_snowy_compatible():
 
 
         'driver_voltage_monitor',
-        'driver_watchdog',
+
     ])
 
 elif bld.is_asterix():
@@ -769,7 +769,7 @@ if mcu_family == 'STM32F4':
         ],
         use=[
             'driver_periph_config',
-            'driver_watchdog',
+    
             'freertos',
             'fw_includes',
             'pbl_includes',
@@ -783,7 +783,7 @@ elif mcu_family == 'NRF52840':
             'task_watchdog.c',
         ],
         use=[
-            'driver_watchdog',
+    
             'freertos',
             'fw_includes',
             'pbl_includes',
@@ -797,7 +797,7 @@ elif mcu_family == 'SF32LB52':
             'task_watchdog.c',
         ],
         use=[
-            'driver_watchdog',
+    
             'freertos',
             'fw_includes',
             'pbl_includes',
@@ -827,41 +827,8 @@ if bld.env.CONFIG_UART:
 if bld.env.CONFIG_VIBE:
     bld.recurse('vibe')
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_watchdog',
-        source=[
-            'stm32f2/watchdog.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family == 'NRF52840':
-    bld.objects(
-        name='driver_watchdog',
-        source=[
-            'nrf5/watchdog.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'hal_nordic',
-        ],
-    )
-elif mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_watchdog',
-        source=[
-            'sf32lb52/watchdog.c',
-        ],
-        use=[
-            'fw_includes',
-            'hal_sifli',
-        ],
-    )
+if bld.env.CONFIG_WATCHDOG:
+    bld.recurse('watchdog')
 
 if bld.env.CONFIG_HRM:
     bld.recurse('hrm')
