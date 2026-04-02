@@ -5,7 +5,7 @@
 
 #include "drivers/exti.h"
 #include "drivers/flash/qspi_flash_definitions.h"
-#include "drivers/stubs/hrm.h"
+#include "drivers/hrm/stub.h"
 #include "drivers/i2c/definitions.h"
 #include "drivers/mic/stm32/dfsdm_definitions.h"
 #include "drivers/qspi_definitions.h"
