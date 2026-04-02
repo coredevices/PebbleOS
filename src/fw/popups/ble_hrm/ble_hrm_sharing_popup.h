@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 
 typedef struct BLEHRMSharingRequest BLEHRMSharingRequest;
 

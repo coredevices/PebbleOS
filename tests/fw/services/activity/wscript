@@ -30,7 +30,7 @@ def build(ctx):
         test_sources_ant_glob = "test_activity.c",
         override_includes=['dummy_board'],
         defines=["DUMA_DISABLED", "CAPABILITY_HAS_HEALTH_TRACKING=1",
-                 "CONFIG_HRM=1"])
+                 "CONFIG_HRM"])
 
    clar(ctx,
         sources_ant_glob = \
@@ -110,7 +110,7 @@ def build(ctx):
             " tests/fakes/fake_events.c" \
             " tests/fakes/fake_rtc.c",
         test_sources_ant_glob = "test_workout_service.c",
-        defines=["CONFIG_HRM=1"],
+        defines=["CONFIG_HRM"],
         override_includes=['dummy_board'])
 
    clar(ctx,

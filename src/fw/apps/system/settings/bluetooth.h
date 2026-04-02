@@ -25,7 +25,7 @@ typedef struct StoredRemoteClassic {
 typedef struct StoredRemoteBLE {
   BTBondingID bonding;
   GAPLEConnection *connection;
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
   bool is_sharing_heart_rate;
 #endif
 } StoredRemoteBLE;
