@@ -121,7 +121,6 @@ static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_ro
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   vibes_cancel();
 
-  SettingsVibePatternsData *data = (SettingsVibePatternsData *)context;
   VibeClient client;
   switch (row) {
     case VibeSettingsRow_Notifications: {

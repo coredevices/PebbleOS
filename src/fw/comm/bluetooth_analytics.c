@@ -50,8 +50,6 @@ void bluetooth_analytics_handle_param_update_failed(void) {
 void bluetooth_analytics_handle_connection_params_update(const BleConnectionParams *params) {
   // When connected as a slave device, the 'Slave Latency' connection parameter allows
   // the controller to skip the connection sync for that number of connection events.
-  uint32_t effective_interval = params->conn_interval_1_25ms * (1 + params->slave_latency_events);
-
   prv_update_conn_params(params->slave_latency_events, params->supervision_timeout_10ms);
 }
 

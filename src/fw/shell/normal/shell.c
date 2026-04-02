@@ -41,9 +41,12 @@ const CompositorTransition *shell_get_watchface_compositor_animation(
 
 static const CompositorTransition *prv_app_launcher_transition_animation(
     CompositorTransitionDirection direction) {
+#if PBL_RECT
   const bool app_is_destination = (direction == CompositorTransitionDirectionRight);
-  return PBL_IF_RECT_ELSE(compositor_launcher_app_transition_get(app_is_destination),
-                          compositor_port_hole_transition_app_get(direction));
+  return compositor_launcher_app_transition_get(app_is_destination);
+#else
+  return compositor_port_hole_transition_app_get(direction);
+#endif
 }
 
 const CompositorTransition *shell_get_close_compositor_animation(AppInstallId current_app_id,

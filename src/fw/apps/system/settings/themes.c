@@ -17,6 +17,8 @@
 #include "system/passert.h"
 #include "util/size.h"
 
+#if CAPABILITY_HAS_THEMING
+
 #define DEFAULT_THEME_HIGHLIGHT_COLOR GColorVividCerulean
 
 typedef struct ColorDefinition {
@@ -37,16 +39,9 @@ static const ColorDefinition s_color_definitions[11] = {
   {"Magenta", GColorMagenta},
   {"Pink", GColorBrilliantRose},
 };
-
-/* Per-window data for this settings module. */
-typedef struct SettingsThemesData {
-  SettingsCallbacks callbacks;
-} SettingsThemesData;
-
 static const char* color_names[ARRAY_LENGTH(s_color_definitions)];
 static bool color_names_initialized = false;
 
-#if CAPABILITY_HAS_THEMING
 static const char** prv_get_color_names(bool short_list) {
   if (!color_names_initialized) {
     for (size_t i = 0; i < ARRAY_LENGTH(s_color_definitions); i++) {

@@ -90,10 +90,12 @@
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
 static int s_back_hold_timer = TIMER_INVALID_ID;
 
+#ifndef SHELL_SDK
 static const uint32_t BACK_QUICKPRESS_INTERVAL_TICKS = 300;
 static const int BACK_QUICKPRESS_COREDUMP_PRESSES = 10;
 static RtcTicks s_back_quickpress_last = 0;
 static int s_back_quickpress_count = 0;
+#endif
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   PebbleEvent event = {

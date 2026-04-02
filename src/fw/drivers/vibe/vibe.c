@@ -124,7 +124,7 @@ static void prv_vibe_raw_ctl(bool on) {
   if (BOARD_CONFIG_VIBE.options & ActuatorOptions_Pwm) {
     const uint32_t duty_cycle = (on) ? s_vibe_duty_cycle : PWM_DUTY_CYCLE_OFF;
     prv_vibe_pwm_enable(on);
-    pwm_set_duty_cycle(&BOARD_CONFIG_VIBE.pwm, s_vibe_duty_cycle);
+    pwm_set_duty_cycle(&BOARD_CONFIG_VIBE.pwm, duty_cycle);
   }
 
   if (BOARD_CONFIG_VIBE.options & ActuatorOptions_Ctl) {
