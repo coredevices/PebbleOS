@@ -61,7 +61,6 @@ static uint64_t prv_ref_time;
 static int32_t s_last_voltage_mv;
 static int32_t s_last_temp_mc;
 static int32_t s_analytics_last_voltage_mv;
-static uint8_t s_analytics_last_pct;
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;

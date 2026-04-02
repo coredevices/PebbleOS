@@ -769,13 +769,6 @@ static void prv_get_pin_and_push_pin_window(void *data) {
 
 static void prv_perform_health_response_action(const TimelineItem *item,
                                                const TimelineItemAction *action) {
-  const uint8_t insight_type = attribute_get_uint8(&item->attr_list, AttributeIdHealthInsightType,
-                                                   ActivityInsightType_Unknown);
-  const uint8_t activity_type = attribute_get_uint8(&item->attr_list,
-                                                    AttributeIdHealthActivityType,
-                                                    ActivitySessionType_None);
-  const time_t start_utc = attribute_get_uint32(&item->attr_list, AttributeIdTimestamp, 0);
-
   // TODO: PBL-23915
   // We leak this i18n'd string because not leaking it is really hard.
   // We make sure we only ever allocate it once though, so it's not the end of the world.

@@ -290,7 +290,6 @@ void ancs_notifications_handle_message(uint32_t uid,
   }
 
   const ANCSAttribute *title = notif_attributes[FetchedNotifAttributeIndexTitle];
-  const ANCSAttribute *subtitle = notif_attributes[FetchedNotifAttributeIndexSubtitle];
   const ANCSAttribute *display_name = app_attributes[FetchedAppAttributeIndexDisplayName];
   const ANCSAttribute *date = notif_attributes[FetchedNotifAttributeIndexDate];
   const ANCSAttribute *message = notif_attributes[FetchedNotifAttributeIndexMessage];

@@ -118,7 +118,6 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-    SettingsHealthData *data = (SettingsHealthData*)context;
     switch (row) {
         case SettingsHealthUnitDistance: {
             UnitsDistance unit = shell_prefs_get_units_distance();
@@ -128,7 +127,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
         }
 #ifdef CONFIG_HRM
         case SettingsHealthHRMonitoringInterval:
-            prv_hrm_interval_menu_push(data);
+            prv_hrm_interval_menu_push((SettingsHealthData*)context);
             break;
         case SettingsHealthHRActivityTracking:
             activity_prefs_set_hrm_activity_tracking_enabled(
@@ -149,11 +148,9 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
 }
 
 static void prv_appear_cb(SettingsCallbacks *context) {
-    SettingsHealthData *data = (SettingsHealthData*)context;
 }
 
 static void prv_hide_cb(SettingsCallbacks *context) {
-    SettingsHealthData *data = (SettingsHealthData*)context;
 }
 
 static Window *prv_init(void) {

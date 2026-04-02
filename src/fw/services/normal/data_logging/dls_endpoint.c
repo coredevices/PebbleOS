@@ -310,7 +310,6 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
 
   mutex_unlock(s_endpoint_data.mutex);
 
-  unsigned int data_buffer_length = sizeof(DataLoggingSendDataMessage) + num_bytes;
   return true;
 }
 

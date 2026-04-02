@@ -143,9 +143,6 @@ static void prv_expandable_dialog_load(Window *window) {
   scroll_layer_init(scroll_layer, &GRect(x, y, w, h));
   layer_add_child(&window->layer, &scroll_layer->layer);
 
-#if PBL_ROUND
-  uint16_t page_height = scroll_layer->layer.bounds.size.h;
-#endif
 
   // Set up the header if this dialog is set to have one.
   GTextAlignment alignment = PBL_IF_RECT_ELSE(GTextAlignmentLeft,

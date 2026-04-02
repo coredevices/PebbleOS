@@ -171,8 +171,6 @@ def configure(conf):
         "-Wpointer-arith",
         "-Wno-unused-parameter",
         "-Wno-missing-field-initializers",
-        "-Wno-error=unused-variable",
-        "-Wno-error=unused-parameter",
     ]
 
     if conf.using_clang_compiler():
