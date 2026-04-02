@@ -1,4 +1,5 @@
 def configure(conf):
+    conf.env.append_unique('DEFINES', 'USE_STDPERIPH_DRIVER=1')
     if conf.is_silk():
         conf.env.append_unique('DEFINES', 'STM32F412xG')
     elif conf.env.MICRO_FAMILY == 'STM32F4':
