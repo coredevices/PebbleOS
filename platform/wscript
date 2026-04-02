@@ -16,10 +16,6 @@ def is_bigboard(ctx):
 # Platform specific predicates
 
 @conf
-def is_tintin(ctx):
-    return False
-
-@conf
 def is_snowy(ctx):
     return ctx.get_board().startswith('snowy')
 
@@ -133,16 +129,6 @@ def has_touch(ctx):
         return True
     elif is_getafix(ctx):
         return True
-    else:
-        return None
-
-
-@conf
-def get_hrm(ctx):
-    if is_obelix(ctx):
-        return "GH3X2X"
-    elif is_silk(ctx):
-        return "STUB"
     else:
         return None
 
