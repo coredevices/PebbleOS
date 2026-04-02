@@ -92,7 +92,6 @@ elif bld.is_obelix():
         'driver_rng',
         'driver_rtc',
         'driver_task_watchdog',
-        'driver_pwm',
         'driver_audio',
     ])
 
@@ -465,43 +464,8 @@ if bld.env.QEMU:
         ],
     )
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_pwm',
-        source=[
-            'stm32f2/pwm.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ]
-    )
-elif mcu_family == 'NRF52840':
-    bld.objects(
-        name='driver_pwm',
-        source=[
-            'nrf5/pwm.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'hal_nordic',
-        ]
-    )
-elif mcu_family == 'SF32LB52':
-    bld.objects(
-        name='driver_pwm',
-        source=[
-            'sf32lb52/pwm.c',
-        ],
-        use=[
-            'fw_includes',
-            'hal_sifli',
-         ]
-    )
+if bld.env.CONFIG_PWM:
+    bld.recurse('pwm')
 
 if 'STM32F412xG' in bld.env.DEFINES:
     bld.objects(
