@@ -47,8 +47,6 @@
 
 #include "git_version.auto.h"
 
-#include <bluetooth/classic_connect.h>
-
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -234,9 +232,6 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
     size_t len = MIN(strlen(GIT_TAG), sizeof(data->name_text_buffer) - 1);
     memcpy(data->name_text_buffer, GIT_TAG, len);
     data->name_text_buffer[len] = '\0';
-  } else if (bt_driver_classic_is_connected()) {
-    // If BT Classic connected, show the name of the connected device
-    bt_driver_classic_copy_connected_device_name(data->name_text_buffer);
   } else if ((comm_session_get_system_session() != NULL) && (gap_conn != NULL)) {
     // If we have connected to a device and we have a connection to the mobile app, show the device
     // name (we are required to have a connection to mobile app to get the name).

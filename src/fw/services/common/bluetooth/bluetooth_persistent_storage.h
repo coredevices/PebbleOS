@@ -36,8 +36,6 @@ typedef void (*BtPersistBondingChangeHandler)(BTBondingID affected_bonding,
 typedef void (*BtPersistBondingDBEachBLE)(BTDeviceInternal *device, SMIdentityResolvingKey *irk,
                                     const char *name, BTBondingID *id, void *context);
 
-typedef void (*BtPersistBondingDBEachBTClassic)(BTDeviceAddress *addr, SM128BitKey *link_key,
-                                          const char *name, uint8_t *platform_bits, void *context);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Info
 
@@ -92,36 +90,6 @@ void bt_persistent_storage_register_existing_ble_bondings(void);
 BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd);
 
 bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t chr_val_handle);
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! BT Classic Pairing Info
-
-BTBondingID bt_persistent_storage_store_bt_classic_pairing(BTDeviceAddress *address,
-                                                           SM128BitKey *key, char *name,
-                                                           uint8_t *platform_bits);
-
-void bt_persistent_storage_delete_bt_classic_pairing_by_id(BTBondingID bonding);
-
-void bt_persistent_storage_delete_bt_classic_pairing_by_addr(const BTDeviceAddress *bd_addr);
-
-bool bt_persistent_storage_get_bt_classic_pairing_by_id(BTBondingID bonding,
-                                                        BTDeviceAddress *address_out,
-                                                        SM128BitKey *link_key_out,
-                                                        char *name_out,
-                                                        uint8_t *platform_bits_out);
-
-BTBondingID bt_persistent_storage_get_bt_classic_pairing_by_addr(BTDeviceAddress *addr_in,
-                                                                 SM128BitKey *link_key_out,
-                                                                 char *name_out,
-                                                                 uint8_t *platform_bits_out);
-
-//! Returns true if the active gateway uses BT Classic
-bool bt_persistent_storage_has_active_bt_classic_gateway_bonding(void);
-
-//! Runs the callback for each BT Classic pairing
-//! The callback is NOT allowed to aquire the bt_lock() (or we could deadlock).
-void bt_persistent_storage_for_each_bt_classic_pairing(BtPersistBondingDBEachBTClassic cb,
-                                                       void *context);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Local Device Info
