@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig WATCHDOG
+    bool "Watchdog"
+    help
+      Watchdog Drivers
+
+if WATCHDOG
+
+config WATCHDOG_NRF5
+    bool "Nordic nRF5"
+    help
+      Support for the Nordic nRF5 watchdog.
+
+config WATCHDOG_SF32LB
+    bool "SiFli SF32LB"
+    help
+      Support for the SiFli SF32LB watchdog.
+
+config WATCHDOG_STM32F4
+    bool "ST STM32F4"
+    help
+      Support for the ST STM32F4 watchdog.
+
+endif # WATCHDOG
