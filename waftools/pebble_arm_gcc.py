@@ -196,7 +196,6 @@ def configure(conf):
 
     else:
         # These warnings only exist in GCC
-        c_warnings.append("-Wno-error=unused-but-set-variable")
         c_warnings.append("-Wno-packed-bitfield-compat")
 
         # compatibility with the future; at some point we should take this out

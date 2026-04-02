@@ -139,18 +139,10 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
   if (e->type == PEBBLE_HRM_EVENT) {
     PebbleHRMEvent *hrm = &e->hrm;
 
-    // Save HRMEventBPM data and send when we get the current into.
-    static uint8_t bpm = 0;
-    static uint8_t bpm_quality = 0;
-    static uint16_t led_current = 0;
-
     if (hrm->event_type == HRMEvent_BPM) {
       snprintf(app_data->bpm_string, sizeof(app_data->bpm_string), "%"PRIu8" BPM", hrm->bpm.bpm);
       text_layer_set_text(&app_data->quality_text_layer, prv_get_quality_string(hrm->bpm.quality));
       layer_mark_dirty(&app_data->window.layer);
-
-      bpm = hrm->bpm.bpm;
-      bpm_quality = hrm->bpm.quality;
     } else if (hrm->event_type == HRMEvent_SubscriptionExpiring) {
       PBL_LOG_INFO("Got subscription expiring event");
       // Subscribe again if our subscription is expiring

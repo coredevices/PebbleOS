@@ -62,7 +62,9 @@ def build(bld):
     # Compiler flags to handle warnings
     speex_cflags = [
         '-Wno-implicit-function-declaration',
-        '-Wno-builtin-declaration-mismatch'
+        '-Wno-builtin-declaration-mismatch',
+        '-Wno-error=unused-but-set-variable',
+        '-Wno-error=unused-variable',
     ]
 
     bld(export_includes=speex_includes, name='speex_includes')

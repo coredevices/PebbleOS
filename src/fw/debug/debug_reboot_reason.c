@@ -25,7 +25,6 @@ RebootReasonCode reboot_reason_get_last_reboot_reason(void) {
 void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   RebootReason reason;
   reboot_reason_get(&reason);
-  bool show_reset_alert = !reason.restarted_safely;
   s_last_reboot_reason_code = reason.code;
 
   // We're out of flash space, scrape a few bytes back!
@@ -36,15 +35,12 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     restarted_safely_string = "Dangerously";
   }
 
-  uint32_t lr = reason.extra.value;
-
   // Leave this NULL to do your own printing.
   const char *reason_string = NULL;
   switch (reason.code) {
   // Normal stuff
   case RebootReasonCode_Unknown:
     reason_string = "We don't know why we %s rebooted.";
-    lr = mcu_reboot_reason.reset_mask;
     break;
   case RebootReasonCode_LowBattery:
     reason_string = "%s%sLowBattery";
@@ -55,7 +51,6 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     break;
   case RebootReasonCode_ResetButtonsHeld:
     // Since we forced the reset, it isn't unexpected
-    show_reset_alert = false;
     reason_string = "%s%sResetButtonsHeld";
     break;
   case RebootReasonCode_ShutdownMenuItem:
@@ -84,30 +79,24 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     break;
   // Error occurred
   case RebootReasonCode_Assert:
-    show_reset_alert = true;
     reason_string = "%s%sAssert: LR %#"PRIxPTR;
     break;
   case RebootReasonCode_HardFault:
-    show_reset_alert = true;
     reason_string = "%s%sHardFault: LR %#"PRIxPTR;
     break;
   case RebootReasonCode_LauncherPanic:
-    show_reset_alert = true;
     reason_string = "%s%sLauncherPanic: code 0x%"PRIx32;
     break;
   case RebootReasonCode_ClockFailure:
     reason_string = "%s%sClock Failure";
     break;
   case RebootReasonCode_WorkerHardFault:
-    show_reset_alert = true;
     reason_string = "%s%sWorker HardFault";
     break;
   case RebootReasonCode_OutOfMemory:
-    show_reset_alert = true;
     reason_string = "%s%sOOM";
     break;
   case RebootReasonCode_BtCoredump:
-    show_reset_alert = true;
     reason_string = "%s%sBT Coredump";
     break;
   default:
@@ -115,7 +104,6 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     break;
   // Error occurred
   case RebootReasonCode_Watchdog:
-    show_reset_alert = true;
     PBL_LOG_WRN("%s%sWatchdog: Bits 0x%" PRIx8 ", Mask 0x%" PRIx8,
               restarted_safely_string, rebooted_due_to, reason.data8[0], reason.data8[1]);
 
@@ -130,13 +118,11 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     }
     break;
   case RebootReasonCode_StackOverflow:
-    show_reset_alert = true;
     PebbleTask task = (PebbleTask) reason.data8[0];
     PBL_LOG_WRN("%s%sStackOverflow: Task #%d", restarted_safely_string,
               rebooted_due_to, task);
     break;
   case RebootReasonCode_EventQueueFull:
-    show_reset_alert = true;
     PBL_LOG_WRN("%s%sEvent Queue Full", restarted_safely_string, rebooted_due_to);
     PBL_LOG_WRN("LR: 0x%"PRIx32" Current: 0x%"PRIx32" Dropped: 0x%"PRIx32,
               reason.event_queue.push_lr,
