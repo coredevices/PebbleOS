@@ -7,6 +7,7 @@
 #include "workout.h"
 
 #include "applib/app.h"
+#include "board/display.h"
 #include "applib/ui/action_menu_hierarchy.h"
 #include "applib/ui/action_menu_window.h"
 #include "applib/ui/kino/kino_layer.h"
@@ -199,8 +200,13 @@ static GColor prv_get_bg_color_for_metric(WorkoutMetricType metric_type,
 }
 
 static GFont prv_get_number_font(bool prefer_larger_font) {
+#if PBL_DISPLAY_HEIGHT >= 200
+  return prefer_larger_font ? fonts_get_system_font(FONT_KEY_LECO_60_NUMBERS_AM_PM)
+                            : fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS);
+#else
   return prefer_larger_font ? fonts_get_system_font(FONT_KEY_LECO_38_BOLD_NUMBERS)
                             : fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM);
+#endif
 }
 
 static GTextNode* prv_create_text_node(WorkoutActiveWindow *active_window,
@@ -819,7 +825,11 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window,
   } else if (active_window->layout == WorkoutLayout_StaticAndScrollable) {
     // Two metrics. 1 big static metric above a smaller scrollable metric
     GRect top_metric_bounds = base_layer_bounds;
+#if PBL_DISPLAY_HEIGHT >= 200
+    top_metric_bounds.size.h = PBL_IF_RECT_ELSE(105, 115);
+#else
     top_metric_bounds.size.h = PBL_IF_RECT_ELSE(90, 77);
+#endif
     layer_init(&active_window->top_metric_layer, &top_metric_bounds);
     layer_set_update_proc(&active_window->top_metric_layer, prv_static_layer_update_proc);
     layer_add_child(&active_window->base_layer, &active_window->top_metric_layer);
@@ -834,7 +844,11 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window,
     layer_add_child(&active_window->base_layer, &active_window->scrollable_metric_layer);
   } else if (active_window->layout == WorkoutLayout_TwoStaticAndScrollable) {
     // Three metrics. Two static metrics above a scrollable metric
+#if PBL_DISPLAY_HEIGHT >= 200
+    const int layer_height = 68;
+#else
     const int layer_height = 51;
+#endif
     GRect top_metric_bounds = base_layer_bounds;
     top_metric_bounds.size.h = layer_height;
     layer_init(&active_window->top_metric_layer, &top_metric_bounds);
