@@ -1,7 +1,6 @@
 def configure(conf):
-    if conf.env.MICRO_FAMILY == 'NRF52840':
-        conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
     if conf.is_asterix():
+        conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
         conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
         conf.env.append_unique('DEFINES', 'CONFIG_GPIO_AS_PINRESET')
         conf.env.append_unique('DEFINES', 'NRFX_I2S_ENABLED=1')
@@ -25,7 +24,7 @@ def configure(conf):
 
 
 def build(bld):
-    if bld.env.MICRO_FAMILY == 'NRF52840':
+    if bld.env.MICRO_FAMILY == 'NRF52':
         micro_sources = bld.path.ant_glob('nrfx/**/*.c', excl = ['**/system_nrf*.c', '**/startup_nrf_common.c', '**/nrfx_twi_twim.c'])
 
         micro_includes = [

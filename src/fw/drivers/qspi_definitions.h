@@ -18,7 +18,7 @@
 #define QSPI_NUM_DATA_PINS (4)
 
 typedef struct QSPIPortState {
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
   SemaphoreHandle_t sem;
   bool initialized;
 #elif MICRO_FAMILY_SF32LB52
@@ -37,7 +37,7 @@ typedef struct QSPIPortState {
 
 typedef const struct QSPIPort {
   QSPIPortState *state;
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
   uint32_t clk_freq_hz;
   uint32_t cs_gpio;
   uint32_t clk_gpio;

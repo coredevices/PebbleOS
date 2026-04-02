@@ -5,5 +5,5 @@ def configure(conf):
     pass
 
 def build(bld):
-    if bld.env.MICRO_FAMILY == "NRF52840":
+    if bld.env.MICRO_FAMILY == "NRF52":
         bld.recurse("nrf52")

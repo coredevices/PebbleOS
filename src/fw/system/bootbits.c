@@ -21,7 +21,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
 
 static uint32_t __attribute__((section(".retained"))) retained[256 / 4];
 

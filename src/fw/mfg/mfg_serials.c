@@ -212,7 +212,7 @@ static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t inde
 #include "drivers/rtc.h"
 #include "system/logging.h"
 
-#if !MICRO_FAMILY_NRF5
+#if !MICRO_FAMILY_NRF52
 static void prv_get_not_so_unique_serial(char *serial_number) {
   // Contains 96 bits (12 bytes) that uniquely identify the STM32F2/F4 MCUs:
   const uint8_t *DEVICE_ID_REGISTER = (const uint8_t *) 0x1FFF7A10;
@@ -241,7 +241,7 @@ void mfg_write_bigboard_serial_number(void) {
   serial_number[2] = 0;
 
   // Check whether the previous not-so-unique SN or the no SN ("XXXXXXXXXXXX") has been written:
-#if !MICRO_FAMILY_NRF5
+#if !MICRO_FAMILY_NRF52
   prv_get_not_so_unique_serial(serial_number);
 #endif
   const char *current_serial_number = mfg_get_serial_number();

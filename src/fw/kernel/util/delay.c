@@ -5,7 +5,7 @@
 #include "util/attributes.h"
 #include "util/units.h"
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
 #include <drivers/nrfx_common.h>
 #include <soc/nrfx_coredep.h>
 #elif MICRO_FAMILY_SF32LB52
@@ -16,7 +16,7 @@
 
 #include <inttypes.h>
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
 void NOINLINE delay_us(uint32_t us) {
   nrfx_coredep_delay_us(us);
 }

@@ -23,7 +23,7 @@ void dbgserial_set_rx_dma_enabled(bool enabled);
 
 void dbgserial_set_input_enabled(bool enabled);
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
 void dbgserial_disable_rx_dma_before_stop();
 void dbgserial_enable_rx_dma_after_stop();
 #endif

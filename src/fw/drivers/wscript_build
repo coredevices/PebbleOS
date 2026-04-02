@@ -1,5 +1,5 @@
 mcu_family = bld.env.MICRO_FAMILY
-if mcu_family not in ('STM32F4', 'NRF52840', 'SF32LB52'):
+if mcu_family not in ('STM32F4', 'NRF52', 'SF32LB52'):
     bld.fatal('src/fw/drivers/wscript: '
               'Unknown MICRO_FAMILY {}'.format(mcu_family))
 
@@ -110,7 +110,7 @@ if mcu_family == 'STM32F4':
             'pbl_includes',
         ],
     )
-elif mcu_family == 'NRF52840':
+elif mcu_family == 'NRF52':
     bld.objects(
         name='driver_backlight',
         source=[
@@ -158,7 +158,7 @@ if mcu_family == 'STM32F4':
             'stm32_stdlib',
         ],
     )
-elif mcu_family == 'NRF52840':
+elif mcu_family == 'NRF52':
     bld.objects(
         name='driver_button',
         source=[
@@ -237,7 +237,7 @@ if mcu_family == 'STM32F4':
             'pbl_includes',
         ],
     )
-elif mcu_family in ('NRF52840', 'SF32LB52'):
+elif mcu_family in ('NRF52', 'SF32LB52'):
     bld.objects(
         name='driver_pwr',
         source=[
@@ -293,7 +293,7 @@ if mcu_family == 'STM32F4':
             'freertos',
         ],
     )
-elif mcu_family == 'NRF52840':
+elif mcu_family == 'NRF52':
     # FIXME: provide working implementation
     bld.objects(
         name='driver_mcu',
@@ -320,7 +320,7 @@ if bld.env.CONFIG_MIC:
     bld.recurse('mic')
 
 # FIXME: make generic to Cortex-M
-if mcu_family in ('STM32F4', 'NRF52840', 'SF32LB52'):
+if mcu_family in ('STM32F4', 'NRF52', 'SF32LB52'):
     bld.objects(
         name='driver_mpu',
         source=[
@@ -423,7 +423,7 @@ if 'STM32F412xG' in bld.env.DEFINES:
             'stm32_stdlib',
         ],
     )
-elif mcu_family == 'NRF52840':
+elif mcu_family == 'NRF52':
     bld.objects(
         name='driver_qspi',
         source=[
@@ -517,7 +517,7 @@ if mcu_family == 'STM32F4':
             'stm32_stdlib',
         ],
     )
-elif mcu_family == 'NRF52840':
+elif mcu_family == 'NRF52':
     bld.objects(
         name='driver_task_watchdog',
         source=[
@@ -574,7 +574,7 @@ if bld.env.CONFIG_WATCHDOG:
 if bld.env.CONFIG_HRM:
     bld.recurse('hrm')
 
-if mcu_family == 'NRF52840':
+if mcu_family == 'NRF52':
     bld.objects(
         name='driver_nrf5_hfxo',
         source=[

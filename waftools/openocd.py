@@ -93,7 +93,7 @@ def run_command(
         fail_handling = " || true " if ignore_fail else ""
         if shutdown:
             # append 'shutdown' to make openocd exit
-            if getattr(ctx, "env", None) and ctx.env.MICRO_FAMILY == "NRF52840":
+            if getattr(ctx, "env", None) and ctx.env.MICRO_FAMILY == "NRF52":
                 # on nRF5, shut down the tracing modules in DEMCR, take the
                 # core out of debug in DHCSR, and then shut down the AP to
                 # get us back down to baseline power.  note that 'env' might
@@ -175,7 +175,7 @@ def _get_reset_conf(conf, should_connect_assert_srst):
 
 
 def _get_adapter_speed(conf):
-    if conf.env.OPENOCD_JTAG == "swd_cmsisdap" and conf.env.MICRO_FAMILY == "NRF52840":
+    if conf.env.OPENOCD_JTAG == "swd_cmsisdap" and conf.env.MICRO_FAMILY == "NRF52":
         return 10000
 
     return None
@@ -195,7 +195,7 @@ def write_cfg(conf):
         target = "stm32f2x.cfg"
     elif conf.env.MICRO_FAMILY == "STM32F4":
         target = "stm32f4x.cfg"
-    elif conf.env.MICRO_FAMILY == "NRF52840":
+    elif conf.env.MICRO_FAMILY == "NRF52":
         target = "nrf52.cfg"
 
     is_pebble_flavor = get_flavor(conf)

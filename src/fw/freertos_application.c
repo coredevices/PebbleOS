@@ -21,7 +21,7 @@
 
 #include <cmsis_core.h>
 
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF52)
 #include <hal/nrf_nvmc.h>
 #endif
 
@@ -46,7 +46,7 @@ static uint32_t s_ticks_corrected = 0;
 static const RtcTicks EARLY_WAKEUP_TICKS = 4;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 8;
-#elif defined(MICRO_FAMILY_NRF5)
+#elif defined(MICRO_FAMILY_NRF52)
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
@@ -77,7 +77,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   // See: http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABGGICD.html#BGBHDHAI
   __disable_irq();
 
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF52)
   // We're going to sleep, so turn off the caches (they consume quiescent
   // power).  It's more efficient to have them on when we're awake, but for
   // now, they gotta go.  This holds true even if we're not going to sleep
@@ -123,7 +123,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
   power_tracking_start(PowerSystemMcuCoreRun);
 
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF52)
   NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 #endif
 
@@ -224,7 +224,7 @@ bool vPortCorrectTicks(void) {
 
 #if !defined(MICRO_FAMILY_SF32LB52)
 bool vPortEnableTimer() {
-#if defined(MICRO_FAMILY_NRF5)
+#if defined(MICRO_FAMILY_NRF52)
   rtc_enable_synthetic_systick();
   return true;
 #else

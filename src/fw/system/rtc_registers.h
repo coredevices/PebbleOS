@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if MICRO_FAMILY_NRF5
+#if MICRO_FAMILY_NRF52
 
 #define RTC_BKP_BOOTBIT_DR                      0
 #define STUCK_BUTTON_REGISTER                   1
