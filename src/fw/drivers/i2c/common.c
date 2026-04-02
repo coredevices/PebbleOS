@@ -21,7 +21,7 @@
 #include "system/passert.h"
 #include "util/size.h"
 
-#if CAPABILITY_HAS_PMIC
+#ifdef CONFIG_PMIC
 #include "drivers/pmic.h"
 #endif
 
@@ -71,7 +71,7 @@ static portBASE_TYPE prv_semaphore_give_from_isr(I2CBusState *bus) {
 // FIXME: These rail control functions should be moved to board-specific implementations
 // https://pebbletechnology.atlassian.net/browse/PBL-32232
 
-#if CAPABILITY_HAS_PMIC
+#ifdef CONFIG_PMIC
 void i2c_rail_ctl_pmic(I2CBus *bus, bool enable) {
   set_ldo3_power_state(enable);
 }

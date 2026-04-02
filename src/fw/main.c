@@ -269,9 +269,9 @@ static void init_drivers(void) {
   battery_init();
   vibe_init();
 
-#if CAPABILITY_HAS_PMIC
+#ifdef CONFIG_PMIC
   pmic_init();
-#endif // CAPABILITY_HAS_PMIC
+#endif
 
   flash_init();
   flash_sleep_when_idle(true);
