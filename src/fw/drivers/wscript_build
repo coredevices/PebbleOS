@@ -501,18 +501,6 @@ if mcu_family == 'STM32F4':
         ],
     )
 
-if mcu_family == 'NRF52840':
-    bld.objects(
-        name='driver_spi',
-        source=[
-            'nrf5/spi.c',
-        ],
-        use=[
-            'fw_includes',
-            'hal_nordic',
-        ],
-    )
-
 # FIXME: not really a driver
 if mcu_family == 'STM32F4':
     bld.objects(
