@@ -27,11 +27,7 @@ void bluetooth_analytics_handle_no_intent_for_connection(void);
 
 void bluetooth_analytics_handle_ble_pairing_request(void);
 
-void bluetooth_analytics_handle_bt_classic_pairing_request(void);
-
 void bluetooth_analytics_handle_ble_pairing_error(uint32_t error);
-
-void bluetooth_analytics_handle_bt_classic_pairing_error(uint32_t error);
 
 void bluetooth_analytics_handle_connection_disconnection_event(
     uint8_t reason, const BleRemoteVersionInfo *vers_info);

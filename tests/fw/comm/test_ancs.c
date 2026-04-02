@@ -34,7 +34,6 @@
 #include "stubs_timeline.h"
 #include "stubs_queue.h"
 #include "stubs_rand_ptr.h"
-#include "stubs_reconnect.h"
 #include "stubs_reminder_db.h"
 #include "stubs_reminders.h"
 #include "stubs_serial.h"

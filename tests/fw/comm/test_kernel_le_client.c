@@ -98,9 +98,6 @@ void ppogatt_destroy(void) {
 void ppogatt_handle_buffer_empty(void) {
 }
 
-void bt_driver_reconnect_try_now(bool ignore_paused) {
-}
-
 void gatt_client_op_cleanup(GAPLEClient client) {
 }
 

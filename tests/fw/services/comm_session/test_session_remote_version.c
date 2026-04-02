@@ -27,8 +27,6 @@ extern void session_remote_version_protocol_msg_callback(CommSession *session,
 #include "stubs_passert.h"
 #include "stubs_rtc.h"
 
-void bt_driver_reconnect_notify_platform_bitfield(uint32_t p) {}
-
 static bool s_session_is_system;
 bool comm_session_is_system(CommSession *session) {
   return s_session_is_system;
@@ -54,11 +52,6 @@ CommSessionCapability s_capability_flags;
 void comm_session_set_capabilities(CommSession *session, CommSessionCapability capability_flags) {
   cl_assert_equal_p(session, &s_session);
   s_capability_flags = capability_flags;
-}
-
-BTBondingID bt_persistent_storage_store_bt_classic_pairing(BTDeviceAddress *address, SM128BitKey *link_key,
-                                                    char *name, uint8_t *platform_bits) {
-  return 1;
 }
 
 // Helpers

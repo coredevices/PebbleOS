@@ -19,7 +19,6 @@
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/bonding_sync.h>
-#include <bluetooth/features.h>
 #include <btutil/bt_device.h>
 #include <btutil/sm_util.h>
 
@@ -29,7 +28,6 @@
 
 //! These don't matter at all
 #define BLE_BONDING_ID (0)
-#define BT_CLASSIC_BONDING_ID (1)
 
 #define BT_CCCD_ID_MIN 0x80U
 
@@ -218,102 +216,6 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//! BT Classic Pairing Info
-
-
-static void prv_call_bt_classic_bonding_change_handlers(BTBondingID bonding,
-                                                        BtPersistBondingOp op) {
-  bt_pairability_update_due_to_bonding_change();
-}
-
-BTBondingID bt_persistent_storage_store_bt_classic_pairing(BTDeviceAddress *address,
-                                                           SM128BitKey *key,
-                                                           char *name, uint8_t *platform_bits) {
-  if (address) {
-    if (key) {
-      // We should really collect all of the classic info and store once its complete
-      // However, since platform bits are going to be the last piece collected its ok
-      // to 0 it out here
-      uint8_t platform_bits_val = platform_bits ? *platform_bits : 0x00;
-      shared_prf_storage_store_bt_classic_pairing_data(address, name, key, platform_bits_val);
-    }
-    if (platform_bits) {
-      shared_prf_storage_store_platform_bits(*platform_bits);
-    }
-    prv_call_bt_classic_bonding_change_handlers(BT_CLASSIC_BONDING_ID, BtPersistBondingOpDidChange);
-    return BT_CLASSIC_BONDING_ID;
-  }
-
-  return BT_BONDING_ID_INVALID;
-}
-
-void bt_persistent_storage_delete_bt_classic_pairing_by_id(BTBondingID bonding) {
-  shared_prf_storage_erase_bt_classic_pairing_data();
-  prv_call_bt_classic_bonding_change_handlers(bonding, BtPersistBondingOpWillDelete);
-  bt_pairability_update_due_to_bonding_change();
-}
-
-void bt_persistent_storage_delete_bt_classic_pairing_by_addr(const BTDeviceAddress *bd_addr) {
-  if (!bd_addr) {
-    return;
-  }
-
-  bt_persistent_storage_delete_bt_classic_pairing_by_id(BT_CLASSIC_BONDING_ID);
-}
-
-bool bt_persistent_storage_get_bt_classic_pairing_by_id(BTBondingID bonding,
-                                                 BTDeviceAddress *address_out,
-                                                 SM128BitKey *link_key_out,
-                                                 char *name_out,
-                                                 uint8_t *platform_bits_out) {
-  BTDeviceAddress addr;
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
-  SM128BitKey link_key;
-  uint8_t platform_bits;
-  if (!shared_prf_storage_get_bt_classic_pairing_data(&addr, name, &link_key, &platform_bits)) {
-    return false;
-  }
-
-  if (address_out) {
-    *address_out = addr;
-  }
-  if (link_key_out) {
-    *link_key_out = link_key;
-  }
-  if (name_out) {
-    strncpy(name_out, name, BT_DEVICE_NAME_BUFFER_SIZE);
-    name_out[BT_DEVICE_NAME_BUFFER_SIZE - 1] = 0;
-  }
-  if (platform_bits_out) {
-    *platform_bits_out = platform_bits;
-  }
-
-  return true;
-}
-
-BTBondingID bt_persistent_storage_get_bt_classic_pairing_by_addr(BTDeviceAddress* addr_in,
-                                                          SM128BitKey *link_key_out,
-                                                          char *name_out,
-                                                          uint8_t *platform_bits_out) {
-  if (bt_persistent_storage_get_bt_classic_pairing_by_id(BT_CLASSIC_BONDING_ID, NULL, link_key_out,
-                                              name_out, platform_bits_out)) {
-    return BT_CLASSIC_BONDING_ID;
-  }
-
-  return BT_BONDING_ID_INVALID;
-}
-
-bool bt_persistent_storage_has_active_bt_classic_gateway_bonding(void) {
-  return bt_persistent_storage_get_bt_classic_pairing_by_id(BT_CLASSIC_BONDING_ID,
-                                                            NULL, NULL, NULL, NULL);
-}
-
-void bt_persistent_storage_for_each_bt_classic_pairing(BtPersistBondingDBEachBTClassic cb,
-                                                       void *context) {
-  return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Local Device Info
 
 void bt_persistent_storage_set_active_gateway(BTBondingID bonding) {
@@ -322,14 +224,7 @@ void bt_persistent_storage_set_active_gateway(BTBondingID bonding) {
 
 bool bt_persistent_storage_get_active_gateway(BTBondingID *bonding_out,
                                               BtPersistBondingType *type_out) {
-  if (bt_persistent_storage_get_bt_classic_pairing_by_id(BT_CLASSIC_BONDING_ID,
-                                                         NULL, NULL, NULL, NULL)) {
-    *bonding_out = BT_CLASSIC_BONDING_ID;
-    *type_out = BtPersistBondingTypeBTClassic;
-    return true;
-  } else {
-    return false;
-  }
+  return false;
 }
 
 bool bt_persistent_storage_is_unfaithful(void) {
@@ -378,7 +273,4 @@ void bt_persistent_storage_delete_all(void) {
 
 void bt_persistent_storage_delete_all_pairings(void) {
   bt_persistent_storage_delete_ble_pairing_by_id(BLE_BONDING_ID);
-  if (bt_driver_supports_bt_classic()) {
-    bt_persistent_storage_delete_bt_classic_pairing_by_id(BT_CLASSIC_BONDING_ID);
-  }
 }

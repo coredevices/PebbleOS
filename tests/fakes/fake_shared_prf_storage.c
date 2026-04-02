@@ -8,9 +8,6 @@
 
 static int s_prf_storage_ble_store_count;
 static int s_prf_storage_ble_delete_count;
-static int s_prf_storage_bt_classic_store_count;
-static int s_prf_storage_bt_classic_platform_bits_count;
-static int s_prf_storage_bt_classic_delete_count;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Test functions
@@ -18,9 +15,6 @@ static int s_prf_storage_bt_classic_delete_count;
 void fake_shared_prf_storage_reset_counts(void) {
   s_prf_storage_ble_store_count = 0;
   s_prf_storage_ble_delete_count = 0;
-  s_prf_storage_bt_classic_store_count = 0;
-  s_prf_storage_bt_classic_platform_bits_count = 0;
-  s_prf_storage_bt_classic_delete_count = 0;
 }
 
 int fake_shared_prf_storage_get_ble_store_count(void) {
@@ -29,18 +23,6 @@ int fake_shared_prf_storage_get_ble_store_count(void) {
 
 int fake_shared_prf_storage_get_ble_delete_count(void) {
   return s_prf_storage_ble_delete_count;
-}
-
-int fake_shared_prf_storage_get_bt_classic_store_count(void) {
-  return s_prf_storage_bt_classic_store_count;
-}
-
-int fake_shared_prf_storage_get_bt_classic_platform_bits_count(void) {
-  return s_prf_storage_bt_classic_platform_bits_count;
-}
-
-int fake_shared_prf_storage_get_bt_classic_delete_count(void) {
-  return s_prf_storage_bt_classic_delete_count;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,16 +82,12 @@ void shared_prf_storage_store_bt_classic_pairing_data(BTDeviceAddress *addr,
                                                       char *device_name,
                                                       SM128BitKey *link_key,
                                                       uint8_t platform_bits) {
-  s_prf_storage_bt_classic_delete_count++;
-  s_prf_storage_bt_classic_store_count++;
 }
 
 void shared_prf_storage_store_platform_bits(uint8_t platform_bits) {
-  s_prf_storage_bt_classic_platform_bits_count++;
 }
 
 void shared_prf_storage_erase_bt_classic_pairing_data(void) {
-  s_prf_storage_bt_classic_delete_count++;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

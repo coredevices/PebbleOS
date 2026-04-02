@@ -10,7 +10,6 @@
 #include "services/common/system_task.h"
 #include "system/reboot_reason.h"
 #include "kernel/util/standby.h"
-#include <bluetooth/classic_connect.h>
 
 #define PRF_IDLE_TIMEOUT_MINUTES 10
 static RegularTimerInfo s_is_idle_timer;
@@ -22,7 +21,7 @@ static bool s_running;
 static void prv_handle_watchdog_timeout_cb(void *not_used) {
   GAPLEConnection *le_connection = gap_le_connection_any();
 
-  if (le_connection || bt_driver_classic_is_connected()) {
+  if (le_connection) {
     // We are still connected, don't shut down
     return;
   }
