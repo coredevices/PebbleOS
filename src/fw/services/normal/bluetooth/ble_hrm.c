@@ -27,7 +27,7 @@
 #include <util/list.h>
 #include <util/size.h>
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 
 #define BLE_HRM_UPDATE_INTERVAL_SEC (1)
 

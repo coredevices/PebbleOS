@@ -24,7 +24,7 @@ void gap_le_slave_reconnect_stop(void);
 //! - When Bluetooth is turned on
 void gap_le_slave_reconnect_start(void);
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 
 //! Start advertising for reconnection using a payload containing the Heart Rate Service UUID.
 //! It will automatically stop after 60 seconds, in case gap_le_slave_reconnect_hrm_stop() is not

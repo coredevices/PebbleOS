@@ -633,7 +633,7 @@ static void prv_do_action_analytics(const TimelineItem *pin, const ActionMenuIte
   }
 }
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 static void prv_invoke_ble_hrm_stop_sharing_action(ActionMenu *action_menu,
                                                    const TimelineItem *item) {
   ble_hrm_revoke_all();
@@ -677,7 +677,7 @@ T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
     case TimelineItemActionTypeEmpty:
     case TimelineItemActionTypeUnknown:
       break;
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
     case TimelineItemActionTypeBLEHRMStopSharing:
       prv_invoke_ble_hrm_stop_sharing_action(action_menu, pin);
       return NULL;

@@ -493,7 +493,7 @@ void bt_driver_handle_le_disconnection_complete_event(const BleDisconnectionComp
     case HciStatusCode_Success: {
       // Disconnection! Update our records:
       GAPLEConnection *connection = gap_le_connection_by_device(&event->peer_address);
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
       ble_hrm_handle_disconnection(connection);
 #endif
       const bool local_is_master = connection->local_is_master;

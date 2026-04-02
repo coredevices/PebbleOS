@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 
 #define STATUS_STRING_LEN 32
 #define BPM_STRING_LEN 32

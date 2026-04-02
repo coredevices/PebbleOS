@@ -72,7 +72,7 @@ static bool prv_activity_allowed_to_be_enabled(void) {
 
 
 // ------------------------------------------------------------------------------------------------
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 // Get the HRM measurement period in seconds based on the user's setting
 static uint32_t prv_get_hrm_period_sec(void) {
   switch (activity_prefs_get_hrm_measurement_interval()) {
@@ -91,7 +91,7 @@ static uint32_t prv_get_hrm_period_sec(void) {
 // If necessary, change the sampling period of our heart rate subscription
 // @param[in] now_ts number of seconds the system has been running (from time_get_uptime_seconds())
 static void prv_heart_rate_subscription_update(uint32_t now_ts) {
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
   if (!s_hrm_present) {
     return;
   }
@@ -163,7 +163,7 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 
 // ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new data arrives
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
 T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   if (!s_hrm_present) {
     return;
@@ -228,7 +228,7 @@ T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) 
 // ---------------------------------------------------------------------------------------
 // Init heart rate support
 static void prv_heart_rate_init(void) {
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
   s_hrm_present = mfg_info_is_hrm_present();
   if (!s_hrm_present) {
     return;
@@ -251,7 +251,7 @@ static void prv_heart_rate_init(void) {
 // ---------------------------------------------------------------------------------------
 // De-init heart rate support
 static void prv_heart_rate_deinit(void) {
-#if CONFIG_HRM
+#ifdef CONFIG_HRM
   if (!s_hrm_present) {
     return;
   }
