@@ -19,7 +19,6 @@ master_capability_set = {
     "HAS_MAPPABLE_FLASH",
     "HAS_MASKING",
     "HAS_MICROPHONE",
-    "HAS_PMIC",
     "HAS_SETTINGS_ICONS",
     "HAS_SPRF_V3",
     "HAS_THEMING",
@@ -49,7 +48,6 @@ board_capability_dicts = [
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
             "HAS_MICROPHONE",
-            "HAS_PMIC",
             "HAS_TIMELINE_PEEK",
             "USE_PARALLEL_FLASH",
             "HAS_FPGA_DISPLAY",
@@ -65,7 +63,6 @@ board_capability_dicts = [
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
             "HAS_MICROPHONE",
-            "HAS_PMIC",
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
             "USE_PARALLEL_FLASH",
@@ -85,7 +82,6 @@ board_capability_dicts = [
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
             "HAS_MICROPHONE",
-            "HAS_PMIC",
             "USE_PARALLEL_FLASH",
             "HAS_FPGA_DISPLAY",
         },
@@ -100,7 +96,6 @@ board_capability_dicts = [
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
             "HAS_MICROPHONE",
-            "HAS_PMIC",
             "USE_PARALLEL_FLASH",
             "HAS_FPGA_DISPLAY",
         },
@@ -115,7 +110,6 @@ board_capability_dicts = [
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
             "HAS_MICROPHONE",
-            "HAS_PMIC",
             "HAS_SPRF_V3",
             "USE_PARALLEL_FLASH",
             "HAS_PUTBYTES_PREACKING",
@@ -130,7 +124,6 @@ board_capability_dicts = [
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
             "HAS_MICROPHONE",
             # 'USE_PARALLEL_FLASH' -- FIXME hack to get the "modern" flash layout. Fix when we add support for new flash
-            "HAS_PMIC",
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
@@ -146,7 +139,6 @@ board_capability_dicts = [
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
             "HAS_MAGNETOMETER",
-            "HAS_PMIC",
             "HAS_FLASH_OTP",
             "HAS_MODDABLE_XS",
         },
@@ -161,7 +153,6 @@ board_capability_dicts = [
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
             "HAS_MAGNETOMETER",
-            "HAS_PMIC",
             "HAS_FLASH_OTP",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_ORIENTATION_MANAGER",
@@ -170,7 +161,6 @@ board_capability_dicts = [
     {
         "boards": ["obelix_dvt", "obelix_pvt", "obelix_bb2"],
         "capabilities": {
-            "HAS_PMIC",
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
@@ -190,7 +180,6 @@ board_capability_dicts = [
     {
         "boards": ["getafix_evt", "getafix_dvt"],
         "capabilities": {
-            "HAS_PMIC",
             "HAS_SPRF_V3",
             "HAS_PUTBYTES_PREACKING",
             "HAS_FLASH_OTP",
