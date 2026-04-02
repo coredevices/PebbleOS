@@ -6,7 +6,7 @@ def configure(conf):
 
 
 def build(bld):
-    if not bld.capability('HAS_MICROPHONE'):
+    if not bld.env.CONFIG_MIC:
         return
 
     sources = [

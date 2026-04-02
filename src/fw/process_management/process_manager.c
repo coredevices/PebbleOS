@@ -546,7 +546,7 @@ void process_manager_process_cleanup(PebbleTask task) {
 #endif
 
 #ifndef RECOVERY_FW
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   voice_kill_app_session(task);
 #endif
   dls_inactivate_sessions(task);

@@ -120,7 +120,7 @@ void services_normal_init(void) {
 
   weather_service_init();
 
-#if CAPABILITY_HAS_MICROPHONE
+#ifdef CONFIG_MIC
   voice_init();
 #endif
 
