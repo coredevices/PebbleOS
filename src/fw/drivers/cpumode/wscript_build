@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+sources = []
+use = ['fw_includes']
+
+if bld.env.CONFIG_CPUMODE_SF32LB:
+    sources.append('sf32lb.c')
+    use.append('hal_sifli')
+elif bld.env.CONFIG_CPUMODE_STUB:
+    sources.append('stub.c')
+
+bld.objects(
+    name='driver_cpumode',
+    source=sources,
+    use=use,
+)
+
+bld.env.DRIVERS.append('driver_cpumode')

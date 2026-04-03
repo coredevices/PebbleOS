@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CPUMODE
+    bool "CPU Mode"
+    help
+      CPU performance mode
+
+if CPUMODE
+
+config CPUMODE_SF32LB
+    bool "SF32LB"
+    help
+      CPU performance mode for SF32LB platforms.
+
+config CPUMODE_STUB
+    bool "Stub"
+    help
+      Stub CPU performance mode.
+
+endif # CPUMODE
