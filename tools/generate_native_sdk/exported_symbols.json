@@ -708,6 +708,10 @@
                 "name": "PressureDataHandler",
                 "addedRevision": "93"
               }, {
+                "type": "type",
+                "name": "PressureFilterMode",
+                "addedRevision": "93"
+              }, {
                 "type": "function",
                 "name": "pressure_service_subscribe",
                 "addedRevision": "93"
@@ -738,6 +742,10 @@
               }, {
                 "type": "function",
                 "name": "pressure_service_get_altitude_cm",
+                "addedRevision": "93"
+              }, {
+                "type": "function",
+                "name": "pressure_service_set_filter_mode",
                 "addedRevision": "93"
               }
             ]

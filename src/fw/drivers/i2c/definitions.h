@@ -65,6 +65,14 @@ typedef struct I2CBusState {
 #if MICRO_FAMILY_STM32F4
   RtcTicks last_rail_stop_ticks;
 #endif
+#if MICRO_FAMILY_NRF5
+  // Per-bus write buffer for nRF52840 TWIM errata #219 workaround.
+  // DMA reads from this buffer during the transfer, so it must outlive the call
+  // to nrfx_twim_xfer(). Currently safe because transfers are synchronous.
+  // Will NOT work if transfers become async without additional lifetime guarantees.
+#define I2C_WRITE_BUF_MAX 32
+  uint8_t write_buf[I2C_WRITE_BUF_MAX];
+#endif
   SemaphoreHandle_t event_semaphore;
   PebbleMutex *bus_mutex;
 } I2CBusState;

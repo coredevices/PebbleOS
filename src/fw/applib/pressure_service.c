@@ -166,6 +166,10 @@ DEFINE_SYSCALL(bool, pressure_service_peek, PressureData *data) {
   return true;
 }
 
+DEFINE_SYSCALL(bool, pressure_service_set_filter_mode, PressureFilterMode mode) {
+  return pressure_set_filter_mode(mode);
+}
+
 DEFINE_SYSCALL(int32_t, pressure_service_get_altitude_cm, int32_t pressure_pa,
                int32_t ref_pressure_pa) {
   PressureServiceState *state = prv_get_state();

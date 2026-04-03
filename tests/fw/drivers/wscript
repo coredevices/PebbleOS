@@ -24,4 +24,10 @@ def build(ctx):
          override_includes=['dummy_board'],
          platforms=['silk'])
 
+    clar(ctx,
+         sources_ant_glob='src/fw/drivers/pressure/bmp390.c'
+             ' tests/fakes/fake_i2c.c',
+         test_sources_ant_glob='test_pressure_bmp390.c',
+         override_includes=['dummy_board'])
+
 # vim:filetype=python

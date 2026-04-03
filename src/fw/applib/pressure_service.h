@@ -92,6 +92,13 @@ bool pressure_service_peek(PressureData *data);
 //! @return altitude in centimeters relative to the reference pressure
 int32_t pressure_service_get_altitude_cm(int32_t pressure_pa, int32_t ref_pressure_pa);
 
+//! Set the hardware IIR filter mode on the pressure sensor.
+//! Use PRESSURE_FILTER_NONE for fastest response (e.g. skydiving altimeters).
+//! Use PRESSURE_FILTER_SMOOTH for smoother readings (e.g. weather monitoring).
+//! @param mode The desired filter mode
+//! @return true if the mode was set successfully
+bool pressure_service_set_filter_mode(PressureFilterMode mode);
+
 //!     @} // end addtogroup PressureService
 //!   @} // end addtogroup EventService
 //! @} // end addtogroup Foundation

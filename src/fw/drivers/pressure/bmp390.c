@@ -5,6 +5,7 @@
 #include "drivers/pressure.h"
 #include "drivers/i2c.h"
 #include "console/prompt.h"
+#include "os/mutex.h"
 #include "system/logging.h"
 
 #include "kernel/util/delay.h"
@@ -44,7 +45,10 @@
 // IIR filter coefficients (for CONFIG register, bits [3:1])
 #define BMP390_IIR_COEFF_0       (0x00 << 1)  // Off
 #define BMP390_IIR_COEFF_1       (0x01 << 1)
-#define BMP390_IIR_COEFF_4       (0x02 << 1)
+#define BMP390_IIR_COEFF_3       (0x02 << 1)
+#define BMP390_IIR_COEFF_7       (0x03 << 1)
+#define BMP390_IIR_COEFF_15      (0x04 << 1)
+#define BMP390_IIR_COEFF_31      (0x05 << 1)
 
 // ODR register values (from BMP390 datasheet Table 22)
 #define BMP390_ODR_200HZ         0x00
@@ -82,6 +86,8 @@ typedef struct {
 
 static BMP390CalibData s_calib;
 static bool s_initialized;
+static PebbleMutex *s_mutex;
+static PressureFilterMode s_filter_mode;
 
 // I2C helpers using the PebbleOS I2C API
 static bool prv_read_register(uint8_t reg, uint8_t *result) {
@@ -174,6 +180,11 @@ static uint64_t prv_compensate_pressure(uint32_t uncomp_press) {
 void pressure_init(void) {
   uint8_t chip_id;
   s_initialized = false;
+  s_filter_mode = PRESSURE_FILTER_NONE;
+
+  if (!s_mutex) {
+    s_mutex = mutex_create();
+  }
 
   if (!prv_read_register(BMP390_REG_CHIP_ID, &chip_id) ||
       chip_id != BMP390_CHIP_ID_VALUE) {
@@ -206,9 +217,9 @@ void pressure_init(void) {
   }
   prv_parse_calib_data(calib_raw);
 
-  // Configure: 8x pressure oversampling, 1x temperature, IIR filter coeff 4
+  // Configure: 8x pressure oversampling, 1x temperature, IIR off by default
   prv_write_register(BMP390_REG_OSR, BMP390_OSR_P_8X | BMP390_OSR_T_1X);
-  prv_write_register(BMP390_REG_CONFIG, 0x02 << 1);  // IIR filter coeff = 4
+  prv_write_register(BMP390_REG_CONFIG, BMP390_IIR_COEFF_0);
 
   // Enable pressure + temperature sensors (stay in sleep — reads trigger forced mode)
   prv_write_register(BMP390_REG_PWR_CTRL, BMP390_PRESS_EN | BMP390_TEMP_EN);
@@ -240,14 +251,18 @@ bool pressure_read(int32_t *pressure_pa, int32_t *temperature_centideg) {
     return false;
   }
 
+  mutex_lock(s_mutex);
+
   // Trigger forced-mode measurement and wait for completion
   if (!prv_trigger_measurement()) {
+    mutex_unlock(s_mutex);
     return false;
   }
 
   // Read 6 bytes of sensor data: pressure[0:2], temperature[0:2]
   uint8_t data[BMP390_DATA_LEN];
   if (!prv_read_register_block(BMP390_REG_DATA, BMP390_DATA_LEN, data)) {
+    mutex_unlock(s_mutex);
     return false;
   }
 
@@ -257,6 +272,8 @@ bool pressure_read(int32_t *pressure_pa, int32_t *temperature_centideg) {
   // Temperature must be compensated first — it sets t_lin used by pressure compensation
   int64_t temp = prv_compensate_temperature(uncomp_temp);
   uint64_t press = prv_compensate_pressure(uncomp_press);
+
+  mutex_unlock(s_mutex);
 
   // temp is in 0.01 degC, press is in Pa * 100
   if (temperature_centideg) {
@@ -359,45 +376,58 @@ int32_t pressure_get_altitude_full_cm(int32_t pressure_pa, int32_t ref_pressure_
   return negative ? -altitude : altitude;
 }
 
+// IIR coefficients for each ODR when filtering is enabled
+static uint8_t prv_iir_for_odr(PressureODR odr) {
+  switch (odr) {
+    case PRESSURE_ODR_1HZ:  return BMP390_IIR_COEFF_7;
+    case PRESSURE_ODR_5HZ:  return BMP390_IIR_COEFF_7;
+    case PRESSURE_ODR_10HZ: return BMP390_IIR_COEFF_7;
+    case PRESSURE_ODR_25HZ: return BMP390_IIR_COEFF_15;
+    case PRESSURE_ODR_50HZ: return BMP390_IIR_COEFF_31;
+    default:                return BMP390_IIR_COEFF_0;
+  }
+}
+
 bool pressure_set_odr(PressureODR odr) {
   if (!s_initialized) {
     return false;
   }
 
+  mutex_lock(s_mutex);
+
   // Each ODR preset configures: ODR register, oversampling, and IIR filter.
   // Higher rates need lower oversampling to keep up with the output data rate.
-  uint8_t odr_reg, osr_reg, config_reg;
+  uint8_t odr_reg, osr_reg;
   switch (odr) {
     case PRESSURE_ODR_1HZ:
       odr_reg = BMP390_ODR_1P5625HZ;
       osr_reg = BMP390_OSR_P_8X | BMP390_OSR_T_1X;
-      config_reg = BMP390_IIR_COEFF_4;
       break;
     case PRESSURE_ODR_5HZ:
       odr_reg = BMP390_ODR_6P25HZ;
       osr_reg = BMP390_OSR_P_8X | BMP390_OSR_T_1X;
-      config_reg = BMP390_IIR_COEFF_4;
       break;
     case PRESSURE_ODR_10HZ:
       odr_reg = BMP390_ODR_12P5HZ;
       osr_reg = BMP390_OSR_P_4X | BMP390_OSR_T_1X;
-      config_reg = BMP390_IIR_COEFF_1;
       break;
     case PRESSURE_ODR_25HZ:
       odr_reg = BMP390_ODR_25HZ;
       osr_reg = BMP390_OSR_P_2X | BMP390_OSR_T_1X;
-      config_reg = BMP390_IIR_COEFF_0;
       break;
     case PRESSURE_ODR_50HZ:
       odr_reg = BMP390_ODR_50HZ;
       osr_reg = BMP390_OSR_P_1X | BMP390_OSR_T_1X;
-      config_reg = BMP390_IIR_COEFF_0;
       break;
     default:
+      mutex_unlock(s_mutex);
       return false;
   }
 
-  // Switch to forced mode briefly to apply config cleanly, then back to normal
+  uint8_t config_reg = (s_filter_mode == PRESSURE_FILTER_SMOOTH)
+                        ? prv_iir_for_odr(odr) : BMP390_IIR_COEFF_0;
+
+  // Switch to sleep to apply config cleanly, then back to normal
   prv_write_register(BMP390_REG_PWR_CTRL, BMP390_PRESS_EN | BMP390_TEMP_EN);
   prv_write_register(BMP390_REG_ODR, odr_reg);
   prv_write_register(BMP390_REG_OSR, osr_reg);
@@ -405,6 +435,24 @@ bool pressure_set_odr(PressureODR odr) {
   prv_write_register(BMP390_REG_PWR_CTRL,
                      BMP390_PRESS_EN | BMP390_TEMP_EN | BMP390_MODE_NORMAL);
 
+  mutex_unlock(s_mutex);
+  return true;
+}
+
+bool pressure_set_filter_mode(PressureFilterMode mode) {
+  if (!s_initialized) {
+    return false;
+  }
+
+  mutex_lock(s_mutex);
+  s_filter_mode = mode;
+
+  // Apply immediately: update the CONFIG register
+  uint8_t config_reg = (mode == PRESSURE_FILTER_SMOOTH)
+                        ? BMP390_IIR_COEFF_7 : BMP390_IIR_COEFF_0;
+  prv_write_register(BMP390_REG_CONFIG, config_reg);
+
+  mutex_unlock(s_mutex);
   return true;
 }
 

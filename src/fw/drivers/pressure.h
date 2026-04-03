@@ -43,3 +43,16 @@ typedef enum {
 //! @param odr The desired output data rate
 //! @return true if configuration succeeded
 bool pressure_set_odr(PressureODR odr);
+
+//! IIR filter modes for the pressure sensor
+typedef enum {
+  PRESSURE_FILTER_NONE = 0,   //!< No IIR filtering — fastest response
+  PRESSURE_FILTER_SMOOTH,     //!< IIR filtering — smoother readings, adds latency
+} PressureFilterMode;
+
+//! Set the hardware IIR filter mode. Takes effect on the next
+//! pressure_set_odr() call or immediately if already in normal mode.
+//! Defaults to PRESSURE_FILTER_NONE.
+//! @param mode The desired filter mode
+//! @return true if the mode was set successfully
+bool pressure_set_filter_mode(PressureFilterMode mode);
