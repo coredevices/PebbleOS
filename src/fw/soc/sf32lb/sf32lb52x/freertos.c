@@ -103,7 +103,7 @@ static void prv_enter_deepwfi(void) {
 
 static void prv_enter_deepslep(void) {
   QSPIPortState *flash_state;
-  uint32_t dll1_freq;
+  uint32_t dll1_freq = 0UL;
   int clk_src;
 
   flash_state = QSPI_FLASH->qspi->state;
@@ -117,10 +117,11 @@ static void prv_enter_deepslep(void) {
   NVIC_EnableIRQ(AON_IRQn);
 
   clk_src = HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS);
-  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
-  dll1_freq = HAL_RCC_HCPU_GetDLL1Freq();
-
-  HAL_RCC_HCPU_DisableDLL1();
+  if (clk_src == RCC_SYSCLK_DLL1) {
+    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
+    dll1_freq = HAL_RCC_HCPU_GetDLL1Freq();
+    HAL_RCC_HCPU_DisableDLL1();
+  }
 
   HAL_HPAON_DISABLE_PAD();
   HAL_HPAON_DISABLE_VHP();
@@ -147,16 +148,17 @@ static void prv_enter_deepslep(void) {
   HAL_HPAON_CLEAR_POWER_MODE();
 
   // Wait for HXT48 to be ready
-  if (dll1_freq != 0) {
+  if (dll1_freq != 0UL) {
     while (0 == (hwp_hpsys_aon->ACR & HPSYS_AON_ACR_HXT48_RDY)) {
       __NOP();
     }
   }
 
-  // Switch back to original clock source
-  HAL_RCC_HCPU_EnableDLL1(dll1_freq);
-  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
-  HAL_Delay_us(0);
+  if (clk_src == RCC_SYSCLK_DLL1) {
+    HAL_RCC_HCPU_EnableDLL1(dll1_freq);
+    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_DLL1);
+    HAL_Delay_us(0);
+  }
 
   HAL_FLASH_RELEASE_DPD(&flash_state->ctx.handle);
   HAL_Delay_us(flash_state->t_exit_deep_us);
@@ -263,9 +265,9 @@ bool vPortEnableTimer() {
   //
   // HXT48│\                        ┌────────────────┐
   //  ────┼ \                       │         SYSTICK│
-  //      │  │  ┌───────┐  TICK_CLK ││\              │
-  //   ...│  ├──│TICKDIV├───────────┼┤ │   ┌──────┐  │
-  //      │  │  └───────┘.         ┌┼┤ ├───│RELOAD├──┤
+  // HRC48│  │  ┌───────┐  TICK_CLK ││\              │
+  //  ────┼  ├──│TICKDIV├───────────┼┤ │   ┌──────┐  │
+  //   ...│  │  └───────┘.         ┌┼┤ ├───│RELOAD├──┤
   //      │ /                      │││/    └──────┘  │
   //      │/                       ││                │
   //           HCLK                ││                │
