@@ -5,6 +5,7 @@ menu "Drivers"
 
 rsource "ambient/Kconfig"
 rsource "battery/Kconfig"
+rsource "cpumode/Kconfig"
 rsource "display/Kconfig"
 rsource "exti/Kconfig"
 rsource "flash/Kconfig"
