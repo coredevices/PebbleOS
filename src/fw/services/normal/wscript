@@ -53,6 +53,13 @@ def build(bld):
 
     bld.stlib(
         use=['fw_includes'],
+        source=['powermode_service.c'],
+        target='services_normal_powermode_service',
+    )
+    bld.env.SERVICES.append('services_normal_powermode_service')
+
+    bld.stlib(
+        use=['fw_includes'],
         source=['app_fetch_endpoint.c'],
         target='services_normal_app_fetch_endpoint',
     )
