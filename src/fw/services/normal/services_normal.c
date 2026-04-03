@@ -27,6 +27,7 @@
 #include "services/normal/persist.h"
 #include "services/normal/phone_call.h"
 #include "services/normal/process_management/app_order_storage.h"
+#include "services/normal/powermode_service.h"
 #include "services/normal/send_text_service.h"
 #include "services/normal/stationary.h"
 #include "services/normal/timeline/event.h"
@@ -125,6 +126,8 @@ void services_normal_init(void) {
 #endif
 
   app_glance_service_init();
+
+  powermode_service_init();
 }
 
 static struct ServiceRunLevelSetting s_runlevel_settings[] = {
