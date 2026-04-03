@@ -63,13 +63,13 @@ void soc_early_init(void) {
 
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
 
+  ret = HAL_RCC_CalibrateRC48();
+  PBL_ASSERTN(ret == HAL_OK);
+
   HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
 
   // Reset sysclk used by HAL_Delay_us
   HAL_Delay_us(0);
-
-  ret = HAL_RCC_CalibrateRC48();
-  PBL_ASSERTN(ret == HAL_OK);
 
   HAL_RCC_Init();
   HAL_PMU_Init();
