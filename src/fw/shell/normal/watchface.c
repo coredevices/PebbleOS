@@ -9,6 +9,7 @@
 #include "apps/system/settings/quick_launch_app_menu.h"
 #include "apps/system/settings/quick_launch_setup_menu.h"
 #include "apps/system/timeline/timeline.h"
+#include "apps/system/two_clicks_launcher.h"
 #include "apps/watch/low_power/face.h"
 #include "kernel/event_loop.h"
 #include "kernel/low_power.h"
@@ -104,6 +105,20 @@ static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) 
     return;
   }
   AppInstallId app_id = quick_launch_get_app(button);
+  //check if quick launch app is 2-clicks
+  if (app_id == APP_ID_TWO_CLICKS) {
+    static TwoClicksArgs s_twoclicks_args = {
+      .is_tap = false,
+      .vibe_on_start = true
+    };
+    s_twoclicks_args.first_button = button;
+    prv_launch_app_via_button(&(AppLaunchEventConfig) {
+      .id = APP_ID_TWO_CLICKS,
+      .common.reason = APP_LAUNCH_QUICK_LAUNCH,
+      .common.args = &s_twoclicks_args,
+    }, recognizer);
+    return;
+  }
   if (app_id == INSTALL_ID_INVALID) {
     app_id = app_install_get_id_for_uuid(&quick_launch_setup_get_app_info()->uuid);
   }
@@ -122,6 +137,21 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   }
   
   if (!quick_launch_single_click_is_enabled(button)) return;
+  
+  //check if quick launch app is 2-clicks
+  if (quick_launch_single_click_get_app(button) == APP_ID_TWO_CLICKS) {
+    static TwoClicksArgs s_twoclicks_args = {
+      .is_tap = true,
+      .vibe_on_start = false,
+    };
+    s_twoclicks_args.first_button = button;
+    prv_launch_app_via_button(&(AppLaunchEventConfig) {
+      .id = APP_ID_TWO_CLICKS,
+      .common.reason = APP_LAUNCH_QUICK_LAUNCH,
+      .common.args = &s_twoclicks_args,
+    }, recognizer);
+    return;
+  }
   //check if quick launch app is not timeline
   if (quick_launch_single_click_get_app(button) != APP_ID_TIMELINE) {
     //launch other quick launch apps
@@ -133,7 +163,7 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   }
 
   static TimelineArgs s_timeline_args;
-  const bool is_up = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  const bool is_up = (button == BUTTON_ID_UP);
   if (is_up) {
     PBL_LOG_DBG("Launching timeline in past mode.");
     s_timeline_args.direction = TimelineIterDirectionPast;
