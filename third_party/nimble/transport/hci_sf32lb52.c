@@ -54,6 +54,7 @@ static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
 #endif
 
 extern void lcpu_power_on(void);
+extern void lcpu_power_off(void);
 extern void lcpu_custom_nvds_config(void);
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
@@ -214,6 +215,15 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   return -1;
 }
 
+// Maximum OOM retries before giving up on the current IPC read buffer.
+// At 10ms per retry, 100 retries = ~1 second. If NimBLE can't free buffers
+// in that time, something is fundamentally broken. Breaking out will cause
+// H4 stream desync (since ipc_queue_read is destructive), but the BLE
+// recovery mechanism in gap_le_advert.c will detect the resulting advertising
+// failures and trigger a full LCPU power cycle via bt_ctl_reset_bluetooth().
+#define HCI_OOM_MAX_RETRIES 100
+#define HCI_OOM_RETRY_DELAY_TICKS 10
+
 static void prv_hci_task_main(void *unused) {
   uint8_t buf[64];
 
@@ -226,18 +236,25 @@ static void prv_hci_task_main(void *unused) {
       len = ipc_queue_read(s_ipc_port, buf, sizeof(buf));
       if (len > 0U) {
         uint8_t *pbuf = buf;
+        int oom_retries = 0;
         while (len > 0U) {
           int consumed_bytes;
 
           consumed_bytes = hci_h4_sm_rx(&s_hci_h4sm, pbuf, len);
           if (consumed_bytes < 0) {
+            if (++oom_retries > HCI_OOM_MAX_RETRIES) {
+              PBL_LOG_ERR("hci_h4_sm_rx OOM, giving up after %d retries",
+                          oom_retries);
+              break;
+            }
             PBL_LOG_D_WRN(LOG_DOMAIN_BT_STACK, "hci_h4_sm_rx OOM, retrying");
-            vTaskDelay(1);
+            vTaskDelay(HCI_OOM_RETRY_DELAY_TICKS);
             continue;
           } else if (consumed_bytes == 0) {
             PBL_LOG_D_ERR(LOG_DOMAIN_BT_STACK, "hci_h4_sm_rx consumed 0 bytes");
             break;
           }
+          oom_retries = 0;
           len -= consumed_bytes;
           pbuf += consumed_bytes;
         }
@@ -272,6 +289,24 @@ void ble_transport_ll_init(void) {
   PBL_ASSERTN(s_hci_task_handle);
 
   ret = prv_config_ipc();
+  PBL_ASSERTN(ret == 0);
+
+  lcpu_custom_nvds_config();
+  lcpu_power_on();
+}
+
+void ble_transport_ll_deinit(void) {
+  NVIC_DisableIRQ(LCPU2HCPU_IRQn);
+  ipc_queue_close(s_ipc_port);
+  ipc_queue_deinit(s_ipc_port);
+  s_ipc_port = IPC_QUEUE_INVALID_HANDLE;
+  lcpu_power_off();
+}
+
+void ble_transport_ll_reinit(void) {
+  hci_h4_sm_init(&s_hci_h4sm, &hci_h4_allocs_from_ll, prv_hci_frame_cb);
+
+  int ret = prv_config_ipc();
   PBL_ASSERTN(ret == 0);
 
   lcpu_custom_nvds_config();

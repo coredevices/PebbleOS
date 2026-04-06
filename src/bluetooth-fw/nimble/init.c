@@ -27,6 +27,10 @@ static const uint32_t s_bt_stack_start_stop_timeout_ms = 3000;
 
 extern void pebble_pairing_service_init(void);
 extern void nimble_discover_init(void);
+#ifdef BT_CONTROLLER_SF32LB52
+extern void ble_transport_ll_deinit(void);
+extern void ble_transport_ll_reinit(void);
+#endif
 
 #if NIMBLE_CFG_CONTROLLER
 static TaskHandle_t s_ll_task_handle;
@@ -115,6 +119,10 @@ bool bt_driver_start(BTDriverConfig *config) {
   gh3x2x_tuning_service_init();
 #endif
 
+#ifdef BT_CONTROLLER_SF32LB52
+  ble_transport_ll_reinit();
+#endif
+
   ble_hs_sched_start();
   f_rc = xSemaphoreTake(s_host_started, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
@@ -141,6 +149,10 @@ void bt_driver_stop(void) {
   ble_gatts_reset();
 
   nimble_store_unload();
+
+#ifdef BT_CONTROLLER_SF32LB52
+  ble_transport_ll_deinit();
+#endif
 }
 
 void bt_driver_power_down_controller_on_boot(void) {}
