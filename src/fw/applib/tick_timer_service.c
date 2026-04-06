@@ -44,7 +44,9 @@ static void do_handle(PebbleEvent *e, void *context) {
   struct tm currtime;
   sys_localtime_r(&e->clock_tick.tick_time, &currtime);
 
-  if (!state->first_tick) {
+  bool is_first = state->first_tick;
+
+  if (!is_first) {
     if (state->last_time.tm_sec != currtime.tm_sec) {
       units_changed |= SECOND_UNIT;
     }
@@ -67,7 +69,13 @@ static void do_handle(PebbleEvent *e, void *context) {
   state->last_time = currtime;
   state->first_tick = false;
 
-  if ((state->tick_units & units_changed) || (units_changed == 0)) {
+  if (is_first) {
+    // Always fire on first tick after subscribe so apps get initial state
+    state->handler(&currtime, units_changed);
+  } else if ((state->tick_units & units_changed) != 0) {
+    // Only fire when a subscribed unit actually changed — avoids spurious
+    // handler calls when the underlying timer double-fires within the same
+    // second (e.g. due to FreeRTOS timer skew or RTC adjustment)
     state->handler(&currtime, units_changed);
   }
 }
