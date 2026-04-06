@@ -7,6 +7,7 @@
 #include <bluetooth/bt_driver_advert.h>
 
 #include "comm/ble/ble_log.h"
+#include "services/common/bluetooth/bluetooth_ctl.h"
 #include "comm/bt_lock.h"
 #include "kernel/pbl_malloc.h"
 #include "services/common/analytics/analytics.h"
@@ -14,6 +15,10 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/list.h"
+
+//! Maximum consecutive advertising enable failures before triggering a full BLE
+//! reset to recover from an unresponsive controller.
+#define ADVERT_MAX_CONSECUTIVE_FAILURES 10
 
 //! CC2564 / HCI Advertising Limitation:
 //! ------------------------------
@@ -96,6 +101,8 @@ static RegularTimerInfo s_cycle_regular_timer;
 static bool s_is_advertising;
 
 static bool s_is_connected;
+
+static uint8_t s_consecutive_enable_failures;
 
 //! Cache of the last advertising transmission power in dBm. A cache is kept in
 //! case the API call fails, for example because Bluetooth is disabled.
@@ -351,8 +358,19 @@ static void prv_perform_next_job(bool force_refresh) {
     bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms);
     if (result) {
       s_is_advertising = true;
+      s_consecutive_enable_failures = 0;
       prv_analytics_start_timer(interval);
       PBL_LOG_DBG("Airing advertising job: %s ", prv_string_for_debug_tag(next->tag));
+    } else {
+      if (s_consecutive_enable_failures < ADVERT_MAX_CONSECUTIVE_FAILURES) {
+        ++s_consecutive_enable_failures;
+      }
+      if (s_consecutive_enable_failures >= ADVERT_MAX_CONSECUTIVE_FAILURES) {
+        PBL_LOG_ERR("Advertising enable failed %d times, resetting BLE",
+                    ADVERT_MAX_CONSECUTIVE_FAILURES);
+        prv_timer_stop();
+        bt_ctl_reset_bluetooth();
+      }
     }
   }
 
@@ -547,6 +565,7 @@ void gap_le_advert_init(void) {
     };
 
     s_is_advertising = false;
+    s_consecutive_enable_failures = 0;
     s_gap_le_advert_is_initialized = true;
   }
 unlock:

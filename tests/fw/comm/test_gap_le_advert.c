@@ -61,6 +61,12 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
+static uint32_t s_bt_ctl_reset_count;
+
+void bt_ctl_reset_bluetooth(void) {
+  ++s_bt_ctl_reset_count;
+}
+
 static uint32_t s_unscheduled_cb_count;
 static void * s_unscheduled_cb_data = "Callback Data";
 static GAPLEAdvertisingJobRef s_unscheduled_job;
@@ -81,6 +87,7 @@ void test_gap_le_advert__initialize(void) {
   s_unscheduled_cb_count = 0;
   s_unscheduled_job = NULL;
   s_unscheduled_completed = false;
+  s_bt_ctl_reset_count = 0;
 
   // This bypasses the work-around for the CC2564 advertising bug, that pauses the round-robinning
   // through scheduled advertisment jobs:
@@ -690,6 +697,42 @@ void test_gap_le_advert__unschedule_job_types(void) {
   gap_le_advert_unschedule_job_types(&tag, 1);
   cl_assert_equal_i(s_unscheduled_cb_count, 4);
   cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
+
+  free(ad);
+}
+
+void test_gap_le_advert__enable_failure_triggers_reset(void) {
+  BLEAdData *ad = create_ad("test", NULL);
+
+  GAPLEAdvertisingJobTerm advert_term = {
+    .interval = GAPLEAdvertisingInterval_Short,
+    .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
+  };
+  GAPLEAdvertisingJobRef job;
+  job = gap_le_advert_schedule(ad, &advert_term, 1,
+                               unscheduled_callback, s_unscheduled_cb_data, 0);
+  cl_assert(job);
+  cl_assert(gap_le_is_advertising_enabled());
+  cl_assert_equal_i(regular_timer_seconds_count(), 1);
+
+  // Simulate a disconnect so s_is_advertising becomes false
+  gap_le_set_advertising_disabled();
+  gap_le_advert_handle_connect_as_slave();
+
+  // Make advertising enable fail from now on
+  fake_GAPAPI_set_advert_enable_fails(true);
+
+  // Fire timer — should not trigger reset yet (under threshold)
+  for (int i = 0; i < 9; i++) {
+    regular_timer_fire_seconds(1);
+  }
+  cl_assert_equal_i(s_bt_ctl_reset_count, 0);
+  cl_assert_equal_i(regular_timer_seconds_count(), 1);
+
+  // 10th failure should trigger BLE reset and stop the timer
+  regular_timer_fire_seconds(1);
+  cl_assert_equal_i(s_bt_ctl_reset_count, 1);
+  cl_assert_equal_i(regular_timer_seconds_count(), 0);
 
   free(ad);
 }

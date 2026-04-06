@@ -11,6 +11,7 @@
 #include "clar_asserts.h"
 
 static bool s_is_le_advertising_enabled;
+static bool s_advert_enable_should_fail;
 
 static GAP_LE_Event_Callback_t s_le_adv_connection_event_callback;
 static unsigned long s_le_adv_connection_callback_param;
@@ -45,8 +46,15 @@ int GAP_LE_Advertising_Enable(unsigned int BluetoothStackID,
   return 0;
 }
 
+void fake_GAPAPI_set_advert_enable_fails(bool should_fail) {
+  s_advert_enable_should_fail = should_fail;
+}
+
 // bt_driver_advert fakes used by gap_le_advert.c
 bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
+  if (s_advert_enable_should_fail) {
+    return false;
+  }
   s_is_le_advertising_enabled = true;
   s_min_advertising_interval_ms = min_interval_ms;
   s_max_advertising_interval_ms = max_interval_ms;
@@ -367,6 +375,7 @@ Boolean_t GAP_LE_Resolve_Address(unsigned int BluetoothStackID, Encryption_Key_t
 void fake_GAPAPI_init(void) {
   memset(&s_encrypted_device, 0, sizeof(s_encrypted_device));
   s_is_le_advertising_enabled = false;
+  s_advert_enable_should_fail = false;
   s_le_adv_connection_event_callback = NULL;
   s_le_adv_connection_callback_param = 0;
   s_min_advertising_interval_ms = 0;

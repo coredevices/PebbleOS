@@ -43,4 +43,6 @@ const BD_ADDR_t *fake_GAPAPI_get_bd_addr_resolving_to_fake_irk(void);
 
 const BTDeviceInternal *fake_GAPAPI_get_device_resolving_to_fake_irk(void);
 
+void fake_GAPAPI_set_advert_enable_fails(bool should_fail);
+
 void fake_GAPAPI_init(void);
