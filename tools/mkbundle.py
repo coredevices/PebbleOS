@@ -10,7 +10,6 @@ import argparse
 import json
 import time
 import stm32_crc
-import socket
 import pprint
 
 MANIFEST_VERSION = 2
@@ -45,7 +44,7 @@ class PebbleBundle(object):
         self.bundle_manifest = {
             "manifestVersion": MANIFEST_VERSION,
             "generatedAt": self.generated_at,
-            "generatedBy": socket.gethostname(),
+            "generatedBy": "",
             "debug": {},
         }
         self.bundle_files = []
