@@ -4,7 +4,7 @@
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/app_logging.h"
 #include "applib/applib_malloc.auto.h"
-#include "drivers/rtc.h"
+#include "util/time/time.h"
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
 #include "syscall/syscall.h"
@@ -98,12 +98,8 @@ static void prv_fill_localtime_result(time_t t, struct tm *tb) {
 }
 
 static time_t prv_mktime_with_normalized_gmtoff(const struct tm *tb, int isdst) {
-  TimezoneInfo tz_info = { 0 };
-  rtc_get_timezone(&tz_info);
-
   struct tm normalized = *tb;
-  normalized.tm_gmtoff = tz_info.tm_gmtoff;
-  normalized.tm_isdst = isdst;
+  normalized.tm_gmtoff = time_get_gmtoffset() + (isdst ? time_get_dstoffset() : 0);
   return mktime(&normalized);
 }
 
@@ -112,11 +108,13 @@ DEFINE_SYSCALL(time_t, pbl_override_mktime, struct tm *tb) {
     syscall_assert_userspace_buffer(tb, sizeof(struct tm));
   }
 
-  const int requested_isdst = tb->tm_isdst;
   time_t t;
-  if (requested_isdst >= 0) {
-    t = prv_mktime_with_normalized_gmtoff(tb, requested_isdst);
+  if (tb->tm_isdst >= 0) {
+    // Caller knows the DST state — trust their tm_gmtoff and pass through.
+    t = mktime(tb);
   } else {
+    // tm_isdst < 0: caller doesn't know if DST is active. Try both
+    // interpretations and keep the one that matches the requested wall time.
     struct tm actual;
     t = prv_mktime_with_normalized_gmtoff(tb, 0);
     time_t dst_t = prv_mktime_with_normalized_gmtoff(tb, 1);

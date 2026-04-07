@@ -79,9 +79,9 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
 
   // We have to assume that the timezone of the phone matches the timezone of the watch
   time_t sys_time = rtc_get_time();
-  time_tm.tm_gmtoff = time_get_gmtoffset();
-  time_get_timezone_abbr(time_tm.tm_zone, sys_time);
   time_tm.tm_isdst = time_get_isdst(sys_time);
+  time_tm.tm_gmtoff = time_get_gmtoffset() + (time_tm.tm_isdst ? time_get_dstoffset() : 0);
+  time_get_timezone_abbr(time_tm.tm_zone, sys_time);
 
   return mktime(&time_tm);
 }
