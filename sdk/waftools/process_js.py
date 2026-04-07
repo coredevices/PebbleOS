@@ -197,3 +197,29 @@ class merge_js(Task.Task):
         else:
             if self.env.VERBOSE > 0:
                 Logs.pprint("WHITE", out)
+
+            # Strip local filesystem paths from the sourcemap to avoid
+            # leaking private info (username, directory structure) in .pbw
+            if len(self.outputs) > 1:
+                target_map = self.outputs[1]
+                map_path = target_map.abspath()
+                if os.path.exists(map_path):
+                    with open(map_path, "r") as f:
+                        map_content = json.load(f)
+
+                    project_path = bld.path.abspath()
+
+                    def _clean_path(path):
+                        if not os.path.isabs(path):
+                            return path
+                        if path.startswith(project_path):
+                            return os.path.relpath(path, project_path)
+                        return os.path.basename(path)
+
+                    if "sources" in map_content:
+                        map_content["sources"] = [
+                            _clean_path(s) for s in map_content["sources"]
+                        ]
+
+                    with open(map_path, "w") as f:
+                        json.dump(map_content, f, separators=(",", ":"))
