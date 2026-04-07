@@ -41,6 +41,9 @@ const char *get_timezone_abbr(void) {
   return s_timezone_abbr;
 }
 
+int32_t time_get_gmtoffset(void) { return 0; }
+int32_t time_get_dstoffset(void) { return 0; }
+
 void sys_copy_timezone_abbr(char* timezone_abbr, time_t time) {
   const char* sys_tz = get_timezone_abbr();
   strncpy(timezone_abbr, sys_tz, TZ_LEN);
