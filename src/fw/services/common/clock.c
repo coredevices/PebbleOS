@@ -22,6 +22,7 @@
 #include "util/net.h"
 #include "util/size.h"
 #include "util/string.h"
+#include "services/common/analytics/analytics.h"
 
 #include <stdio.h>
 
@@ -293,6 +294,8 @@ T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *t
 
   int new_gmt_offset = time_get_gmtoffset();
   int new_utc_time = rtc_get_time();
+
+  PBL_ANALYTICS_SET_SIGNED(utc_offset_s, new_gmt_offset);
 
   PebbleEvent e = {
     .type = PEBBLE_SET_TIME_EVENT,

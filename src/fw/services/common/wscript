@@ -54,7 +54,7 @@ def build(bld):
     bld.env.SERVICES.append('services_common_boot_splash')
 
     bld.stlib(
-        use=['fw_includes'],
+        use=['fw_includes', 'services_common_analytics'],
         source=['clock.c'],
         target='services_common_clock',
     )
