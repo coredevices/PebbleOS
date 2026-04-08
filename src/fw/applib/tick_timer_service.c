@@ -64,12 +64,13 @@ static void do_handle(PebbleEvent *e, void *context) {
       units_changed |= YEAR_UNIT;
     }
   }
-  state->last_time = currtime;
-  state->first_tick = false;
 
-  if ((state->tick_units & units_changed) || (units_changed == 0)) {
+  if (((state->tick_units & units_changed) != 0) || state->first_tick) {
     state->handler(&currtime, units_changed);
   }
+
+  state->last_time = currtime;
+  state->first_tick = false;
 }
 
 void tick_timer_service_init(void) {
