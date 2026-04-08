@@ -35,6 +35,7 @@ static const char *s_hrm_interval_labels[] = {
 #endif
 
 enum SettingsHealthItem {
+    SettingsHealthTrackingEnabled,
     SettingsHealthUnitDistance,
 #ifdef CONFIG_HRM
     SettingsHealthHRMonitoringInterval,
@@ -83,6 +84,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     const char *subtitle = NULL;
 
     switch (row) {
+        case SettingsHealthTrackingEnabled: {
+            title = i18n_noop("Health Tracking");
+            subtitle = activity_prefs_tracking_is_enabled()
+                ? i18n_noop("On") : i18n_noop("Off");
+            break;
+        }
         case SettingsHealthUnitDistance: {
             title = i18n_noop("Distance Unit");
             UnitsDistance unit = shell_prefs_get_units_distance();
@@ -119,6 +126,16 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     switch (row) {
+        case SettingsHealthTrackingEnabled: {
+            bool new_value = !activity_prefs_tracking_is_enabled();
+            activity_prefs_tracking_set_enabled(new_value);
+            if (new_value) {
+                activity_start_tracking(false);
+            } else {
+                activity_stop_tracking();
+            }
+            break;
+        }
         case SettingsHealthUnitDistance: {
             UnitsDistance unit = shell_prefs_get_units_distance();
             unit = (unit + 1) % UnitsDistanceCount;
@@ -142,9 +159,10 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
-    uint16_t rows = NumSettingsHealthItems;
-
-    return rows;
+    if (!activity_prefs_tracking_is_enabled()) {
+        return 1; // Only show the Health Tracking toggle
+    }
+    return NumSettingsHealthItems;
 }
 
 static void prv_appear_cb(SettingsCallbacks *context) {
