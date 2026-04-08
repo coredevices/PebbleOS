@@ -29,6 +29,7 @@
 #include "services/normal/process_management/app_order_storage.h"
 #include "services/normal/powermode_service.h"
 #include "services/normal/send_text_service.h"
+#include "shell/prefs.h"
 #include "services/normal/stationary.h"
 #include "services/normal/timeline/event.h"
 #include "services/normal/wakeup.h"
@@ -128,6 +129,9 @@ void services_normal_init(void) {
   app_glance_service_init();
 
   powermode_service_init();
+#if !SHELL_SDK
+  powermode_service_set_enabled(shell_prefs_get_power_mode() == PowerMode_LowPower);
+#endif
 }
 
 static struct ServiceRunLevelSetting s_runlevel_settings[] = {

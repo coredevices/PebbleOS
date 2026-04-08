@@ -11,13 +11,22 @@
 
 static uint32_t s_refcount;
 static PebbleMutex *s_mutex;
+static bool s_enabled;
 
 void powermode_service_init(void) {
   s_refcount = 0;
   s_mutex = mutex_create();
 }
 
+void powermode_service_set_enabled(bool enabled) {
+  s_enabled = enabled;
+}
+
 void powermode_service_request_hp(void) {
+  if (!s_enabled) {
+    return;
+  }
+
   mutex_lock(s_mutex);
 
   if (s_refcount == 0) {
@@ -30,9 +39,16 @@ void powermode_service_request_hp(void) {
 }
 
 void powermode_service_release_hp(void) {
+  if (!s_enabled) {
+    return;
+  }
+
   mutex_lock(s_mutex);
 
-  PBL_ASSERTN(s_refcount > 0);
+  if (s_refcount == 0) {
+    mutex_unlock(s_mutex);
+    return;
+  }
 
   s_refcount--;
 

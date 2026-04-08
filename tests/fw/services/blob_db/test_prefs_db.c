@@ -28,6 +28,7 @@
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
 #include "stubs_pbl_malloc.h"
+#include "stubs_powermode_service.h"
 #include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_sleep.h"
