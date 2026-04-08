@@ -78,13 +78,6 @@ static bool get_call_info_from_msg(const uint8_t* msg, unsigned int length,
   return true;
 }
 
-// MJZ: This has been left here for future debugging
-static void print_call_info(PebbleCallInfo* i) {
-  // PBL_LOG_DBG("Call Cookie: 0x%"PRIx32, i->cookie);
-  // PBL_LOG_DBG("Caller Number: %s", i->caller_number);
-  // PBL_LOG_DBG("Caller Name: %s", i->caller_name);
-}
-
 static void prv_put_call_disconnect_event(void) {
   PebbleEvent e = {
     .type = PEBBLE_PHONE_EVENT,
@@ -170,10 +163,6 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length,
         PBL_LOG_ERR("Failed to read caller information from 'Incoming' phone event");
         return false;
       }
-
-#ifndef RELEASE
-      print_call_info(&call_info);
-#endif
 
       type = PhoneEventType_Incoming;
       caller = phone_call_util_create_caller(call_info.caller_number, call_info.caller_name);
