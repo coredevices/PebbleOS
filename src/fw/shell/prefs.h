@@ -127,6 +127,15 @@ bool timeline_peek_prefs_get_enabled(void);
 void timeline_peek_prefs_set_before_time(uint16_t before_time_m);
 uint16_t timeline_peek_prefs_get_before_time(void);
 
+typedef enum PowerMode {
+  PowerMode_HighPerformance = 0,
+  PowerMode_LowPower = 1,
+  PowerModeCount
+} PowerMode;
+
+PowerMode shell_prefs_get_power_mode(void);
+void shell_prefs_set_power_mode(PowerMode mode);
+
 bool shell_prefs_can_coredump_on_request(void);
 void shell_prefs_set_coredump_on_request(bool enabled);
 

@@ -3,8 +3,14 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 //! Initialize the power mode service.
 void powermode_service_init(void);
+
+//! Enable or disable the power mode service. When disabled, request and
+//! release calls are no-ops.
+void powermode_service_set_enabled(bool enabled);
 
 //! Request high-performance CPU mode. Must be paired with a
 //! powermode_service_release_hp() call.
