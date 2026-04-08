@@ -391,6 +391,9 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   if (app_md->process_type == ProcessTypeWatchface) {
     PBL_ANALYTICS_TIMER_START(watchface_time_ms);
     PBL_ANALYTICS_SET_STRING(watchface_name, process_metadata_get_name(app_md));
+    char uuid_str[UUID_STRING_BUFFER_LENGTH];
+    uuid_to_string(&app_md->uuid, uuid_str);
+    PBL_ANALYTICS_SET_STRING(watchface_uuid, uuid_str);
   }
 #endif
 

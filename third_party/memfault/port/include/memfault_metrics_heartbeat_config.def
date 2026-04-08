@@ -45,6 +45,7 @@ MEMFAULT_METRICS_KEY_DEFINE(stationary_time_ms, kMemfaultMetricType_Timer)
 // Watchface
 MEMFAULT_METRICS_KEY_DEFINE(watchface_time_ms, kMemfaultMetricType_Timer)
 MEMFAULT_METRICS_STRING_KEY_DEFINE(watchface_name, 32)
+MEMFAULT_METRICS_STRING_KEY_DEFINE(watchface_uuid, 39)
 
 // File system
 MEMFAULT_METRICS_KEY_DEFINE(pfs_space_free_kb, kMemfaultMetricType_Unsigned)
