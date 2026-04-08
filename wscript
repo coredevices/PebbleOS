@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -1205,37 +1206,55 @@ def qemu_launch(ctx):
     """Starts up the emulator (qemu) """
     ctx.recurse('platform', mandatory=False)
 
+    qemu_bin = os.getenv("PEBBLE_QEMU_BIN")
+    if not qemu_bin or not (os.path.isfile(qemu_bin) and os.access(qemu_bin, os.X_OK)):
+        qemu_bin = 'qemu-system-arm'
+
+    # Detect QEMU major version — several command-line options changed in 7.0+.
+    try:
+        ver_output = subprocess.check_output([qemu_bin, '--version'],
+                                             stderr=subprocess.STDOUT).decode()
+        ver_match = re.search(r'version\s+(\d+)\.', ver_output)
+        qemu_major = int(ver_match.group(1)) if ver_match else 7
+    except Exception:
+        qemu_major = 7
+
     qemu_machine = ctx.get_qemu_machine()
     if not qemu_machine or qemu_machine == 'unknown':
         raise Exception("Board type '{}' not supported by QEMU".format(ctx.env.BOARD))
 
     qemu_micro_flash = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
     qemu_spi_flash = ctx.path.get_bld().make_node('qemu_spi_flash.bin')
-    qemu_spi_type = ctx.get_qemu_extflash_device_type()
-    if not qemu_spi_type:
+    spi_flash_args = ctx.get_qemu_spi_flash_args(qemu_spi_flash.path_from(ctx.path),
+                                                  qemu_major)
+    if not spi_flash_args:
         raise Exception("External flash type for '{}' not specified".format(ctx.env.BOARD))
+
+    # QEMU 7.0+ loads firmware via -kernel; older versions use -pflash.
+    micro_flash_flag = '-kernel' if qemu_major >= 7 else '-pflash'
 
     machine_dep_args = ['-machine', qemu_machine,
                         '-cpu', ctx.get_qemu_cpu(),
-                        '-pflash', qemu_micro_flash.path_from(ctx.path),
-                        qemu_spi_type, qemu_spi_flash.path_from(ctx.path)]
+                        micro_flash_flag, qemu_micro_flash.path_from(ctx.path)] + spi_flash_args
 
     if ctx.env.CONFIG_TOUCH:
         machine_dep_args.append('-show-cursor')
 
-    qemu_bin = os.getenv("PEBBLE_QEMU_BIN")
-    if not qemu_bin or not (os.path.isfile(qemu_bin) and os.access(qemu_bin, os.X_OK)):
-        qemu_bin = 'qemu-system-arm'
-        
+    # QEMU 7.0+ changed serial TCP chardev syntax.
+    if qemu_major >= 7:
+        serial_tcp_args = 'server=on,wait=off'
+    else:
+        serial_tcp_args = 'server,nowait'
+
     cmd_line = (
         shlex.quote(qemu_bin) + " "
         "-rtc base=localtime "
         "-monitor stdio "
         "-s "
         "-serial file:uart1.log "
-        "-serial tcp::12344,server,nowait "   # Used for bluetooth data
-        "-serial tcp::12345,server,nowait "   # Used for console
-        ) + ' '.join(machine_dep_args)
+        "-serial tcp::12344,{serial} "   # Used for bluetooth data
+        "-serial tcp::12345,{serial} "   # Used for console
+        ).format(serial=serial_tcp_args) + ' '.join(machine_dep_args)
     os.system(cmd_line)
 
 

@@ -112,17 +112,15 @@ def get_qemu_cpu(ctx):
 
 
 @conf
-def get_qemu_extflash_device_type(ctx):
-    if is_snowy(ctx):
-        return '-pflash'
-    elif is_snowy_emery(ctx):
-        return '-pflash'
-    elif is_spalding(ctx):
-        return '-pflash'
-    elif is_spalding_gabbro(ctx):
-        return '-pflash'
+def get_qemu_spi_flash_args(ctx, spi_flash_path, qemu_major):
+    if is_snowy(ctx) or is_spalding(ctx) or is_snowy_emery(ctx) or is_spalding_gabbro(ctx):
+        # QEMU 7.0+ uses a named block device; older versions use -pflash.
+        if qemu_major >= 7:
+            return ['-drive', 'if=none,id=spi-flash,file={},format=raw'.format(spi_flash_path)]
+        else:
+            return ['-pflash', spi_flash_path]
     elif is_silk(ctx):
-        return '-mtdblock'
+        return ['-mtdblock', spi_flash_path]
     else:
         return None
 
