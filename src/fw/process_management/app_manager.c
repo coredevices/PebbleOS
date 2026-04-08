@@ -38,6 +38,9 @@
 #include "services/common/i18n/i18n.h"
 #include "services/common/light.h"
 #include "services/normal/app_cache.h"
+#ifndef RECOVERY_FW
+#include "services/normal/powermode_service.h"
+#endif
 #include "services/normal/app_inbox_service.h"
 #include "services/normal/app_outbox_service.h"
 #include "shell/normal/app_idle_timeout.h"
@@ -95,12 +98,21 @@ typedef struct {
 } AppCrashInfo;
 
 static NextApp s_next_app;
+#ifndef RECOVERY_FW
+static bool s_powermode_hp_requested;
+#endif
 
 // ---------------------------------------------------------------------------------------------
 void app_manager_init(void) {
   s_to_app_event_queue = xQueueCreate(MAX_TO_APP_EVENTS, sizeof(PebbleEvent));
 
   s_app_task_context = (ProcessContext) { 0 };
+
+#ifndef RECOVERY_FW
+  // Start in high-performance mode; released when a watchface is loaded
+  powermode_service_request_hp();
+  s_powermode_hp_requested = true;
+#endif
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -368,6 +380,20 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
 
 #if !defined(RECOVERY_FW)
   health_tracking_ui_register_app_launch(s_app_task_context.install_id);
+#endif
+
+#ifndef RECOVERY_FW
+  if (app_md->process_type == ProcessTypeWatchface) {
+    if (s_powermode_hp_requested) {
+      powermode_service_release_hp();
+      s_powermode_hp_requested = false;
+    }
+  } else {
+    if (!s_powermode_hp_requested) {
+      powermode_service_request_hp();
+      s_powermode_hp_requested = true;
+    }
+  }
 #endif
 
   return true;
