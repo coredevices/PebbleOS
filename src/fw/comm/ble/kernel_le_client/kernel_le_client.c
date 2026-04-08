@@ -170,11 +170,15 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
 static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *services_removed) {
   PebbleBLEGATTClientServiceHandles *service_remove_info = &services_removed->handles[0];
   for (int s = 0; s < services_removed->num_services_removed; s++) {
+#if !RELEASE
     bool removed = false;
+#endif
     for (int c = 0; c < KernelLEClientNum; c++) {
       const KernelLEClient * const client = &s_clients[c];
       if (uuid_equal(&service_remove_info->uuid, client->service_uuid)) {
+#if !RELEASE
         removed = true;
+#endif
         client->handle_service_removed(
             (BLECharacteristic *)&service_remove_info->char_and_desc_handles[0],
                                        service_remove_info->num_characteristics);
