@@ -19,6 +19,8 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "services/common/compositor/compositor_transitions.h"
+#include "services/common/new_timer/new_timer.h"
+#include "services/normal/powermode_service.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/watchface.h"
 #include "system/passert.h"
@@ -54,6 +56,13 @@ static ModalProperty s_current_modal_properties = ModalPropertyDefault;
 
 // Used to decide the compositor transition after a modal is already removed from the stack
 static ModalPriority s_last_highest_modal_priority = ModalPriorityInvalid;
+
+#if !RECOVERY_FW
+static bool s_powermode_hp_requested;
+static TimerID s_powermode_release_timer;
+
+#define POWERMODE_MODAL_RELEASE_DELAY_MS 5000
+#endif
 
 // Private API
 ////////////////////
@@ -107,6 +116,10 @@ void modal_manager_init(void) {
   // honour that setting.
 
   click_manager_init(&s_modal_window_click_manager);
+
+#if !RECOVERY_FW
+  s_powermode_release_timer = new_timer_create();
+#endif
 }
 
 void modal_manager_set_min_priority(ModalPriority priority) {
@@ -181,6 +194,35 @@ static const CompositorTransition *prv_get_compositor_transition(bool modal_is_d
   return is_top_discreet ? NULL : compositor_modal_transition_to_modal_get(modal_is_destination);
 }
 
+#if !RECOVERY_FW
+static void prv_powermode_release_cb(void *data) {
+  (void)data;
+  if (s_powermode_hp_requested) {
+    powermode_service_release_hp();
+    s_powermode_hp_requested = false;
+  }
+}
+#endif
+
+static void prv_handle_app_to_modal_transition_powermode(void) {
+#if !RECOVERY_FW
+  new_timer_stop(s_powermode_release_timer);
+  if (!s_powermode_hp_requested) {
+    powermode_service_request_hp();
+    s_powermode_hp_requested = true;
+  }
+#endif
+}
+
+static void prv_handle_modal_to_app_transition_powermode(void) {
+#if !RECOVERY_FW
+  if (s_powermode_hp_requested) {
+    new_timer_start(s_powermode_release_timer, POWERMODE_MODAL_RELEASE_DELAY_MS,
+                    prv_powermode_release_cb, NULL, 0);
+  }
+#endif
+}
+
 static void prv_handle_app_to_modal_transition_visible(void) {
   // The last event resulted in a modal window being pushed where we didn't have any before.
   // Start the animation!
@@ -235,9 +277,11 @@ void modal_manager_event_loop_upkeep(void) {
   if (!was_modal_transitionable && is_modal_transitionable) {
     // We now have a window visible when we didn't have one before, start the transition.
     prv_handle_app_to_modal_transition_visible();
+    prv_handle_app_to_modal_transition_powermode();
   } else if (was_modal_transitionable && !is_modal_transitionable) {
     // This event resulted in our last visible modal window being popped, let's transition away.
     prv_handle_modal_to_app_transition_visible();
+    prv_handle_modal_to_app_transition_powermode();
   }
 
   const bool is_modal_unfocused = (update.properties & ModalProperty_Unfocused);
