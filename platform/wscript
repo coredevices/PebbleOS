@@ -115,7 +115,11 @@ def get_qemu_cpu(ctx):
 def get_qemu_extflash_device_type(ctx):
     if is_snowy(ctx):
         return '-pflash'
+    elif is_snowy_emery(ctx):
+        return '-pflash'
     elif is_spalding(ctx):
+        return '-pflash'
+    elif is_spalding_gabbro(ctx):
         return '-pflash'
     elif is_silk(ctx):
         return '-mtdblock'
