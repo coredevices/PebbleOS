@@ -40,6 +40,8 @@
 #include "services/normal/activity/activity.h"
 #include "services/normal/activity/activity_insights.h"
 
+#include "services/common/analytics/analytics.h"
+
 #include <stdbool.h>
 
 static PebbleMutex *s_mutex;
@@ -1717,4 +1719,17 @@ PowerMode shell_prefs_get_power_mode(void) {
 void shell_prefs_set_power_mode(PowerMode mode) {
   uint8_t val = (uint8_t)mode;
   prv_pref_set(PREF_KEY_POWER_MODE, &val, sizeof(val));
+}
+
+void analytics_external_collect_settings(void) {
+  PBL_ANALYTICS_SET_UNSIGNED(settings_health_tracking_enabled,
+                             activity_prefs_tracking_is_enabled());
+#ifdef CONFIG_HRM
+  PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_enabled,
+                             activity_prefs_heart_rate_is_enabled());
+  PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_measurement_interval,
+                             activity_prefs_get_hrm_measurement_interval());
+  PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_activity_tracking_enabled,
+                             activity_prefs_hrm_activity_tracking_is_enabled());
+#endif
 }
