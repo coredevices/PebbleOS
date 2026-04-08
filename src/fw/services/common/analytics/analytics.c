@@ -8,6 +8,7 @@ extern void analytics_external_collect_pfs_stats(void);
 extern void analytics_external_collect_kernel_heap_stats(void);
 extern void analytics_external_collect_backlight_stats(void);
 extern void analytics_external_collect_vibe_stats(void);
+extern void analytics_external_collect_settings(void);
 
 void analytics_external_update(void) {
   analytics_external_collect_battery();
@@ -17,4 +18,5 @@ void analytics_external_update(void) {
   analytics_external_collect_kernel_heap_stats();
   analytics_external_collect_backlight_stats();
   analytics_external_collect_vibe_stats();
+  analytics_external_collect_settings();
 }
