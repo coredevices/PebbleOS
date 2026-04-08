@@ -5,6 +5,7 @@ MEMFAULT_METRICS_KEY_DEFINE(memory_pct_max, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(stack_free_kernel_main_bytes, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(stack_free_kernel_background_bytes, kMemfaultMetricType_Unsigned)
 MEMFAULT_METRICS_KEY_DEFINE(stack_free_newtimers_bytes, kMemfaultMetricType_Unsigned)
+MEMFAULT_METRICS_KEY_DEFINE(utc_offset_s, kMemfaultMetricType_Signed)
 
 // Battery & Power
 MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(battery_voltage, kMemfaultMetricType_Unsigned, 1000)
