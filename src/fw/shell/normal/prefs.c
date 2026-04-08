@@ -21,6 +21,7 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
 #include "services/common/accel_manager.h"
+#include "services/normal/powermode_service.h"
 #include "services/common/hrm/hrm_manager.h"
 #include "services/common/i18n/i18n.h"
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
@@ -213,10 +214,12 @@ static uint16_t s_timeline_peek_before_time_m =
     (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
 #endif
 
+#define PREF_KEY_POWER_MODE "powerMode"
 #define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
 #if CAPABILITY_HAS_APP_SCALING
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
 #endif
+static uint8_t s_power_mode = PowerMode_HighPerformance;
 static bool s_coredump_on_request_enabled = false;
 #if CAPABILITY_HAS_APP_SCALING
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
@@ -593,6 +596,15 @@ static bool prv_set_s_timeline_peek_before_time_m(uint16_t *before_time_m) {
   return true;
 }
 #endif
+
+static bool prv_set_s_power_mode(uint8_t *mode) {
+  if (*mode >= PowerModeCount) {
+    return false;
+  }
+  s_power_mode = *mode;
+  powermode_service_set_enabled(*mode == PowerMode_LowPower);
+  return true;
+}
 
 static bool prv_set_s_coredump_on_request_enabled(bool *enabled) {
   s_coredump_on_request_enabled = *enabled;
@@ -1696,4 +1708,13 @@ MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
 
 void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
   prv_pref_set(PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR, &behavior, sizeof(MenuScrollVibeBehavior));
+}
+
+PowerMode shell_prefs_get_power_mode(void) {
+  return (PowerMode)s_power_mode;
+}
+
+void shell_prefs_set_power_mode(PowerMode mode) {
+  uint8_t val = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_POWER_MODE, &val, sizeof(val));
 }
