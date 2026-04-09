@@ -64,6 +64,10 @@ void rot_bitmap_layer_destroy(RotBitmapLayer *rot_bitmap_layer) {
   applib_free(rot_bitmap_layer);
 }
 
+Layer* rot_bitmap_layer_get_layer(const RotBitmapLayer *rot_bitmap_layer) {
+  return &((RotBitmapLayer *)rot_bitmap_layer)->layer;
+}
+
 void rot_bitmap_layer_set_corner_clip_color(RotBitmapLayer *image, GColor color) {
   if (gcolor_equal(color, image->corner_clip_color)) {
     return;
