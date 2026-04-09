@@ -81,6 +81,17 @@ static RTC_HandleTypeDef RTC_Handler = {
 
 static bool s_initialized = false;
 
+static RtcSecondTickCallback s_second_tick_callback = NULL;
+static void *s_second_tick_callback_ctx = NULL;
+
+void RTC_IRQHandler(void) {
+  HAL_RTC_IRQHandler(&RTC_Handler);
+}
+
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
+  s_second_tick_callback(s_second_tick_callback_ctx);
+}
+
 #ifndef SF32LB52_USE_LXT
 static uint32_t prv_rtc_get_lpcycle() {
   uint32_t value;
@@ -203,6 +214,9 @@ void rtc_init(void) {
 #else
   prv_rtc_reconfig();
 #endif
+
+  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_RTC, AON_PIN_MODE_HIGH);
+  HAL_NVIC_SetPriority(RTC_IRQn, 5, 0);
 
   s_initialized = true;
 }
@@ -476,4 +490,28 @@ void rtc_calibrate_frequency(uint32_t frequency) {
                                  TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(success);
 #endif
+}
+
+void rtc_second_tick_subscribe(RtcSecondTickCallback callback, void *ctx) {
+  PBL_ASSERTN(s_second_tick_callback == NULL);
+
+  s_second_tick_callback = callback;
+  s_second_tick_callback_ctx = ctx;
+
+  RTC_AlarmTypeDef alarm = {
+    // Mask all fields, and subsecond mask to 8-bit (covers DIV_B=256)
+    .AlarmMask = RTC_ALRMDR_MSKWD | RTC_ALRMDR_MSKM | RTC_ALRMDR_MSKD |
+                 RTC_ALRMDR_MSKH | RTC_ALRMDR_MSKMN | RTC_ALRMDR_MSKS |
+                 (8U << RTC_ALRMDR_MSKSS_Pos),
+    .AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL,
+  };
+  HAL_RTC_SetAlarm(&RTC_Handler, &alarm, RTC_FORMAT_BIN);
+}
+
+void rtc_second_tick_unsubscribe(void) {
+  PBL_ASSERTN(s_second_tick_callback != NULL);
+
+  HAL_RTC_DeactivateAlarm(&RTC_Handler);
+
+  s_second_tick_callback = NULL;
 }
