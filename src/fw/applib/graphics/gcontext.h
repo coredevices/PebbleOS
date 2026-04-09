@@ -152,6 +152,7 @@ void graphics_context_set_text_color_2bit(GContext* ctx, GColor2 color);
 void graphics_context_set_tint_color(GContext *ctx, GColor color);
 
 //! Sets the current bitmap compositing mode of the graphics context.
+//! The default mode is GCompOpAssign i.e. bitmap transparency disabled.
 //! @param ctx The graphics context onto which to set the compositing mode
 //! @param mode The new compositing mode
 //! @see \ref GCompOp
