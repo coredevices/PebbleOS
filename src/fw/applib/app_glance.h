@@ -65,19 +65,22 @@ typedef uint32_t PublishedId;
 //! icon.
 #define APP_GLANCE_SLICE_DEFAULT_ICON ((PublishedId)0)
 
-//! An app's glance can change over time as defined by zero or more app glance slices that each
-//! describe the state of the app glance at a particular point in time. Slices are displayed in the
-//! order they are added, and they are removed at the specified expiration time.
-typedef struct AppGlanceSlice {
-  //! Describes how the slice should be visualized in the app's glance in the launcher.
-  struct {
+//! Describes how the slice should be visualized in the app's glance in the launcher.
+typedef struct AppGlanceSliceLayout {
     //! The published resource ID of the bitmap icon to display in the app's glance. Use \ref
     //! APP_GLANCE_SLICE_DEFAULT_ICON to use the app's default bitmap icon.
     PublishedId icon;
     //! A template string to visualize in the app's glance. The string will be copied, so it is safe
     //! to destroy after adding the slice to the glance. Use NULL if no string should be displayed.
     const char *subtitle_template_string;
-  } layout;
+} AppGlanceSliceLayout;
+
+//! An app's glance can change over time as defined by zero or more app glance slices that each
+//! describe the state of the app glance at a particular point in time. Slices are displayed in the
+//! order they are added, and they are removed at the specified expiration time.
+typedef struct AppGlanceSlice {
+  //! Describes how the slice should be visualized in the app's glance in the launcher.
+  AppGlanceSliceLayout layout;
   //! The UTC time after which this slice should no longer be shown in the app's glance. Use \ref
   //! APP_GLANCE_SLICE_NO_EXPIRATION if the slice should never expire.
   time_t expiration_time;
