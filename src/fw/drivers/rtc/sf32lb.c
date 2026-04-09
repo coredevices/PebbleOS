@@ -79,6 +79,8 @@ static RTC_HandleTypeDef RTC_Handler = {
         },
 };
 
+static bool s_initialized = false;
+
 #ifndef SF32LB52_USE_LXT
 static uint32_t prv_rtc_get_lpcycle() {
   uint32_t value;
@@ -201,6 +203,8 @@ void rtc_init(void) {
 #else
   prv_rtc_reconfig();
 #endif
+
+  s_initialized = true;
 }
 
 void rtc_init_timers(void) {}
@@ -287,6 +291,10 @@ void rtc_set_time(time_t time) {
 void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
   RTC_DateTypeDef rtc_date;
   RTC_TimeTypeDef rtc_time;
+
+  if (s_initialized) {
+    HAL_RTC_WaitForSynchro(&RTC_Handler);
+  }
 
   HAL_RTC_GetTime(&RTC_Handler, &rtc_time, RTC_FORMAT_BIN);
   while (HAL_RTC_GetDate(&RTC_Handler, &rtc_date, RTC_FORMAT_BIN) == HAL_ERROR) {
