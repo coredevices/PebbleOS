@@ -123,6 +123,7 @@ void bitmap_layer_set_alignment(BitmapLayer *bitmap_layer, GAlign alignment);
 //! The bitmap layer is automatically marked dirty after this operation.
 //! @param bitmap_layer The BitmapLayer for which to set the background color
 //! @param color The new \ref GColor to set the background to
+//! @see \ref bitmap_layer_set_compositing_mode for enabling transparency
 void bitmap_layer_set_background_color(BitmapLayer *bitmap_layer, GColor color);
 void bitmap_layer_set_background_color_2bit(BitmapLayer *bitmap_layer, GColor2 color);
 
@@ -133,11 +134,11 @@ void bitmap_layer_set_background_color_2bit(BitmapLayer *bitmap_layer, GColor2 c
 //! The compositing mode only affects the drawing of the bitmap and not the
 //! drawing of the background color.
 //!
-//! For Aplite, there is no notion of "transparency" in the graphics system. However, the effect of
-//! transparency can be created by masking and using compositing modes.
+//! For black&white platforms, there is no notion of "transparency" in the graphics system.
+//! However, the effect of transparency can be created by masking and using compositing modes.
 //!
-//! For Basalt, when drawing \ref GBitmap images, \ref GCompOpSet will be required to apply any
-//! transparency.
+//! For color platforms, when drawing \ref GBitmap images, \ref GCompOpSet is
+//! required to apply any transparency.
 //!
 //! The bitmap layer is automatically marked dirty after this operation.
 //! @param bitmap_layer The BitmapLayer for which to set the compositing mode

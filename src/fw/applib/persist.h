@@ -128,6 +128,7 @@ int persist_write_string(const uint32_t key, const char *cstring);
 
 //! Deletes the value of a key from persistent storage.
 //! @param key The key of the field to delete from.
+//! @return S_TRUE if successful, E_DOES_NOT_EXIST if a value was not set, or another error value from \ref StatusCode.
 status_t persist_delete(const uint32_t key);
 
 //!   @} // end addtogroup Storage

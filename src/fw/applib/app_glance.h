@@ -11,7 +11,47 @@
 //! @addtogroup Foundation
 //! @{
 //!   @addtogroup AppGlance App Glance
-//!   \brief API for the application to modify its glance.
+//!   \brief API for the application to modify its "glance" i.e. app menu subtitle.
+//!
+//!   Apps have the ability to show a temporary icon and subtitle in the app selection menu;
+//!   this is known as a "glance".
+//!   For example, the app might use it to display a preview of its current state
+//!   such as the currently playing song or the number of pending notifications.
+//!
+//!   The glance is loaded with a stack of \ref AppGlanceSlice structs; only the latest slice is shown,
+//!   and they are set to expire at a certain time to show the next slice in the stack.
+//!
+//!   To update the glance with a stack of slices, you must define an
+//!   \ref AppGlanceReloadCallback and give it to \ref app_glance_reload.
+//!   The implementation of your \ref AppGlanceReloadCallback should call
+//!   \ref app_glance_add_slice to add slices to the glance.
+//!
+//!   The main window's unload handler is usually a good place to call \ref app_glance_reload.
+//!
+//!   @warning \ref PBL_PLATFORM_APLITE does not support App Glance.
+//!
+//!   Example code:
+//!   \code{.c}
+//!   #if !PBL_PLATFORM_APLITE
+//!   static void glance_reload_callback(AppGlanceReloadSession *session, size_t limit, void *context) {
+//!     AppGlanceSlice slice = {
+//!       .expiration_time = APP_GLANCE_SLICE_NO_EXPIRATION,
+//!       .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
+//!       .layout.subtitle_template_string = "hello!",
+//!     };
+//!     AppGlanceResult result = app_glance_add_slice(session, slice);
+//!     if (result != APP_GLANCE_RESULT_SUCCESS){
+//!       APP_LOG(APP_LOG_LEVEL_ERROR, "app_glance_add_slice() returned %d", result);
+//!     }
+//!   }
+//!   #endif // !PBL_PLATFORM_APLITE
+//!
+//!   static void main_window_unload(Window *window) {
+//!   #if !PBL_PLATFORM_APLITE
+//!     app_glance_reload(glance_reload_callback, NULL);
+//!   #endif // !PBL_PLATFORM_APLITE
+//!   }
+//!   \endcode
 //!
 //!   @{
 

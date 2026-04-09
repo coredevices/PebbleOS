@@ -23,6 +23,8 @@
 typedef void (*WakeupHandler)(WakeupId wakeup_id, int32_t cookie);
 
 //! Registers a WakeupHandler to be called when wakeup events occur.
+//! @note The handler is only called for wakeup events which occur while the app is already running;
+//!       use \ref launch_reason() === \ref APP_LAUNCH_WAKEUP to detect when the app was launched by a wakeup event.
 //! @param handler The callback that gets called when the wakeup event occurs
 void app_wakeup_service_subscribe(WakeupHandler handler);
 

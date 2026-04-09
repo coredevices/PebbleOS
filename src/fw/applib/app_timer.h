@@ -43,6 +43,7 @@ AppTimer* app_timer_register_repeatable(uint32_t timeout_ms,
 void *app_timer_get_data(AppTimer *timer);
 
 //! Reschedules an already running timer for some point in the future.
+//! Elapsed timers cannot be rescheduled.
 //! @param timer_handle The timer to reschedule
 //! @param new_timeout_ms The new expiry time in milliseconds from the current time
 //! @return true if the timer was rescheduled, false if the timer has already elapsed
@@ -50,6 +51,7 @@ bool app_timer_reschedule(AppTimer *timer_handle, uint32_t new_timeout_ms);
 
 //! Cancels an already registered timer.
 //! Once cancelled the handle may no longer be used for any purpose.
+//! Elapsed timers do not need to be cancelled.
 void app_timer_cancel(AppTimer *timer_handle);
 
 //!   @} // group Timer
