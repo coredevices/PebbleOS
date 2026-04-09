@@ -82,6 +82,14 @@ void rot_bitmap_layer_deinit(RotBitmapLayer *bitmap);
 //! @param bitmap The RotBitmapLayer to destroy.
 void rot_bitmap_layer_destroy(RotBitmapLayer *bitmap);
 
+//! Gets the "root" Layer of the RotBitmapLayer, which is the parent for the sub-
+//! layers used for its implementation.
+//! @param rot_bitmap_layer Pointer to the RotBitmapLayer for which to get the "root" Layer
+//! @return The "root" Layer of the RotBitmapLayer.
+//! @internal
+//! @note The result is always equal to `(Layer *) rot_bitmap_layer`.
+Layer* rot_bitmap_layer_get_layer(const RotBitmapLayer *rot_bitmap_layer);
+
 //! Defines what color to use in areas that are not covered by the source bitmap.
 //! By default this is \ref GColorClear.
 //! @param bitmap The RotBitmapLayer on which to change the corner clip color
@@ -113,7 +121,7 @@ void rot_bitmap_set_src_ic(RotBitmapLayer *bitmap, GPoint ic);
 
 //! Sets the compositing mode of how the bitmap image is composited onto what has been drawn beneath the
 //! RotBitmapLayer.
-//! By default this is \ref GCompOpAssign.
+//! By default this is \ref GCompOpAssign, i.e. transparency disabled.
 //! The RotBitmapLayer is automatically marked dirty after this operation.
 //! @param bitmap The RotBitmapLayer on which to change the rotation
 //! @param mode The compositing mode to set

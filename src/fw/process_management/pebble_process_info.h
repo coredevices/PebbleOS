@@ -155,9 +155,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x57 -- Add moddable_createMachine (rev 90)
 // sdk.major:0x5 .minor:0x58 -- Add size 60 LECO font (rev 91)
 // sdk.major:0x5 .minor:0x59 -- Add flags to ModdableCreationRecord (rev 92)
+// sdk.major:0x5 .minor:0x5a -- Add rot_bitmap_layer_get_layer() and AppGlanceSliceLayout (rev 93)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x59
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x5a
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
