@@ -287,6 +287,7 @@ void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {
 void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms, ClickHandler handler) {
   prv_check_is_in_click_config_provider(window_manager_get_top_window(), "subscribe");
   if (button_id == BUTTON_ID_BACK) {
+    PBL_LOG_ERR("Cannot register BUTTON_ID_BACK repeating click handler");
     return;
   }
   ClickManager *mgr = prv_get_current_click_manager();
@@ -322,6 +323,7 @@ void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHan
     // long-pressing the back button a normal interaction method, and users may
     // unintentionally hold the button too long and force-quit the app.
     if (app_install_id_from_app_db(sys_process_manager_get_current_process_id())) {
+      PBL_LOG_ERR("Cannot register BUTTON_ID_BACK long click handler");
       return;
     } else {
       Window *window = window_manager_get_top_window();
@@ -339,7 +341,7 @@ void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHan
 void window_raw_click_subscribe(ButtonId button_id, ClickHandler down_handler, ClickHandler up_handler, void *context) {
   prv_check_is_in_click_config_provider(window_manager_get_top_window(), "subscribe");
   if (button_id == BUTTON_ID_BACK) {
-    PBL_LOG_DBG("Cannot register BUTTON_ID_BACK raw handler");
+    PBL_LOG_ERR("Cannot register BUTTON_ID_BACK raw handler");
     return;
   }
   ClickManager *mgr = prv_get_current_click_manager();
