@@ -28,7 +28,7 @@
  Example code:
  \code{.c}
  // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
-static const uint32_t const segments[] = { 200, 100, 400 };
+static const uint32_t segments[] = { 200, 100, 400 };
 VibePattern pat = {
   .durations = segments,
   .num_segments = ARRAY_LENGTH(segments),
@@ -56,8 +56,8 @@ typedef struct {
  Example code:
  \code{.c}
  // Ramp-down pattern: 100% for 200ms, 50% for 200ms, 25% for 200ms:
- static const uint32_t const segments[] = { 200, 200, 200 };
- static const uint32_t const amplitudes[] = { 100, 50, 25 };
+ static const uint32_t segments[] = { 200, 200, 200 };
+ static const uint32_t amplitudes[] = { 100, 50, 25 };
  VibePatternWithAmplitudes pat = {
    .durations = segments,
    .amplitudes = amplitudes,

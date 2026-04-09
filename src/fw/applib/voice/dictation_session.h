@@ -86,7 +86,7 @@ typedef void (*DictationSessionStatusCallback)(DictationSession *session,
 
 //! Create a dictation session. The session object can be used more than once to get a
 //! transcription. When a transcription is received a buffer will be allocated to store the text in
-//! with a maximum size specified by \ref buffer_size. When a transcription and accepted by the user
+//! with a maximum size specified by \ref buffer_size. When a transcription is accepted by the user
 //! or a failure of some sort occurs, the callback specified will be called with the status and the
 //! transcription if one was accepted.
 //! @param buffer_size       size of buffer to allocate for the transcription text; text will be
