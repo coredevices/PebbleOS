@@ -707,6 +707,14 @@
       "uuid": "cf1e816a-9db0-4511-bbb8-f60c48ca8fac",
       "bin_resource_id": "RESOURCE_ID_STORED_APP_GOLF",
       "icon_resource_id": "DEFAULT_MENU_ICON"
+    },
+    {
+      "id": -100,
+      "enum": "ALTIMETER",
+      "name": "Altimeter",
+      "uuid": "a1e0e4c3-7b2d-4f8a-9c01-d3f5a6b7e8f9",
+      "bin_resource_id": "RESOURCE_ID_STORED_APP_ALTIMETER",
+      "icon_resource_id": "DEFAULT_MENU_ICON"
     }
   ]
 }

@@ -8,6 +8,8 @@
 #include "system/passert.h"
 
 #include "drivers/periph_config.h"
+
+#include <string.h>
 #include "FreeRTOS.h"
 
 #include <nrfx.h>
@@ -63,19 +65,27 @@ void i2c_hal_init_transfer(I2CBus *bus) {
 
 void i2c_hal_start_transfer(I2CBus *bus) {
   nrfx_twim_xfer_desc_t desc;
-  
+
   desc.address = bus->state->transfer.device_address >> 1;
   if (bus->state->transfer.type == I2CTransferType_SendRegisterAddress) {
     if (bus->state->transfer.direction == I2CTransferDirection_Read) {
       desc.type = NRFX_TWIM_XFER_TXRX;
+      desc.primary_length = 1;
+      desc.p_primary_buf = &bus->state->transfer.register_address;
+      desc.secondary_length = bus->state->transfer.size;
+      desc.p_secondary_buf = bus->state->transfer.data;
     } else {
-      desc.type = NRFX_TWIM_XFER_TXTX;
+      // Combine register address + data into one TX (nRF52840 TWIM errata #219)
+      PBL_ASSERTN(bus->state->transfer.size + 1 <= I2C_WRITE_BUF_MAX);
+      bus->state->write_buf[0] = bus->state->transfer.register_address;
+      memcpy(&bus->state->write_buf[1], bus->state->transfer.data,
+             bus->state->transfer.size);
+      desc.type = NRFX_TWIM_XFER_TX;
+      desc.primary_length = bus->state->transfer.size + 1;
+      desc.p_primary_buf = bus->state->write_buf;
+      desc.secondary_length = 0;
+      desc.p_secondary_buf = NULL;
     }
-    desc.primary_length = 1;
-    desc.p_primary_buf = &bus->state->transfer.register_address;
-    
-    desc.secondary_length = bus->state->transfer.size;
-    desc.p_secondary_buf = bus->state->transfer.data;
   } else {
     if (bus->state->transfer.direction == I2CTransferDirection_Read) {
       desc.type = NRFX_TWIM_XFER_RX;
@@ -85,8 +95,9 @@ void i2c_hal_start_transfer(I2CBus *bus) {
     desc.primary_length = bus->state->transfer.size;
     desc.p_primary_buf = bus->state->transfer.data;
     desc.secondary_length = 0;
+    desc.p_secondary_buf = NULL;
   }
-  
+
   nrfx_err_t rv = nrfx_twim_xfer(&bus->hal->twim, &desc, 0);
   PBL_ASSERTN(rv == NRFX_SUCCESS);
 }

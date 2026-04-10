@@ -1,0 +1,18 @@
+{
+  "uuid": "a1e0e4c3-7b2d-4f8a-9c01-d3f5a6b7e8f9",
+  "shortName": "Altimeter",
+  "longName": "Altimeter",
+  "companyName": "PebbleOS",
+  "versionCode": 1.0,
+  "versionLabel": "1.0",
+  "watchapp": {
+    "watchface": false,
+    "onlyShownOnCommunication": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}

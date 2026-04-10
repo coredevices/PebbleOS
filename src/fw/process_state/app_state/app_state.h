@@ -18,6 +18,7 @@
 #include "applib/graphics/text_render.h"
 #include "applib/health_service.h"
 #include "applib/health_service_private.h"
+#include "applib/pressure_service_private.h"
 #include "applib/pbl_std/locale.h"
 #include "applib/plugin_service_private.h"
 #include "applib/tick_timer_service.h"
@@ -122,6 +123,8 @@ LocaleInfo *app_state_get_locale_info(void);
 ContentIndicatorsBuffer *app_state_get_content_indicators_buffer(void);
 
 HealthServiceState *app_state_get_health_service_state(void);
+
+PressureServiceState *app_state_get_pressure_state(void);
 
 RecognizerList *app_state_get_recognizer_list(void);
 

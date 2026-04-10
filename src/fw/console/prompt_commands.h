@@ -63,6 +63,10 @@ extern void command_accel_num_samples(char *num_samples);
 extern void command_accel_status(void);
 extern void command_accel_softreset(void);
 
+extern void command_pressure_read(void);
+extern void command_pressure_debug(void);
+extern void command_pressure_reinit(void);
+
 extern void command_dump_flash(const char*, const char*);
 extern void command_crc_flash(const char*, const char*);
 extern void command_format_flash(void);
@@ -296,6 +300,9 @@ extern void command_force_deepwfi(const char *arg);
 static const Command s_prompt_commands[] = {
   // PULSE entry point, needed for anything PULSE-related to work
   { "PULSEv1", pulse_start, 0 },
+  { "baroreinit", command_pressure_reinit, 0 },
+  { "barodbg", command_pressure_debug, 0 },
+  { "baro", command_pressure_read, 0 },
 #if KEEP_NON_ESSENTIAL_COMMANDS == 1
   // ====================================================================================
   // NOTE: The following commands are used by test automation.
