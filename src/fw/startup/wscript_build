@@ -7,6 +7,8 @@ elif bld.is_asterix():
     sources.append(bld.path.make_node("startup_stm32.c")) # good enough
 elif bld.is_obelix() or bld.is_getafix():
     sources.append(bld.path.make_node("startup_sf32lb52.c"))
+elif bld.is_qemu():
+    sources.append(bld.path.make_node("startup_qemu.c"))
 else:
     bld.fatal("No clock configuration file specified for this platform")
     

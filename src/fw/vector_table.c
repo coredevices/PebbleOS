@@ -36,6 +36,8 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 # include "irq_nrf52.def"
 #elif defined(MICRO_FAMILY_SF32LB52)
 # include "irq_sf32lb52.def"
+#elif defined(MICRO_FAMILY_QEMU)
+# include "irq_qemu.def"
 #else
 # include "irq_stm32.def"
 #endif
@@ -54,6 +56,8 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 # include "irq_nrf52.def"
 #elif defined(MICRO_FAMILY_SF32LB52)
 # include "irq_sf32lb52.def"
+#elif defined(MICRO_FAMILY_QEMU)
+# include "irq_qemu.def"
 #else
 # include "irq_stm32.def"
 #endif
@@ -89,6 +93,8 @@ EXTERNALLY_VISIBLE SECTION(".isr_vector") const void * const vector_table[] = {
 # include "irq_nrf52.def"
 #elif defined(MICRO_FAMILY_SF32LB52)
 # include "irq_sf32lb52.def"
+#elif defined(MICRO_FAMILY_QEMU)
+# include "irq_qemu.def"
 #else
 # include "irq_stm32.def"
 #endif
