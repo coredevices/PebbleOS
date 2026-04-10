@@ -167,6 +167,34 @@ board_capability_dicts = [
             "HAS_MODDABLE_XS",
         },
     },
+    {
+        "boards": ["qemu_emery"],
+        "capabilities": {
+            "HAS_SPRF_V3",
+            "HAS_TIMELINE_PEEK",
+            "HAS_PUTBYTES_PREACKING",
+            "HAS_APP_SCALING",
+            "HAS_MODDABLE_XS",
+        },
+    },
+    {
+        "boards": ["qemu_flint"],
+        "capabilities": {
+            "HAS_SPRF_V3",
+            "HAS_TIMELINE_PEEK",
+            "HAS_PUTBYTES_PREACKING",
+            "HAS_MODDABLE_XS",
+        },
+    },
+    {
+        "boards": ["qemu_gabbro"],
+        "capabilities": {
+            "HAS_SPRF_V3",
+            "HAS_PUTBYTES_PREACKING",
+            "HAS_APP_SCALING",
+            "HAS_MODDABLE_XS",
+        },
+    },
 ]
 
 # Run through again and make sure all sets include only valid keys defined in

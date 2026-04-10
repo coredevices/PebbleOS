@@ -98,6 +98,9 @@ def options(opt):
                              'obelix_bb2',
                              'getafix_evt',
                              'getafix_dvt',
+                             'qemu_emery',
+                             'qemu_flint',
+                             'qemu_gabbro',
                             ],
                    help='Which board we are targeting '
                         'snowy_dvt, spalding, silk...')
@@ -290,7 +293,7 @@ def handle_configure_options(conf):
 
     if not conf.options.nolog:
         conf.env.append_value('DEFINES', 'PBL_LOG_ENABLED')
-        if not conf.options.nohash:
+        if not conf.options.nohash and not conf.is_qemu():
             conf.env.append_value('DEFINES', 'PBL_LOGS_HASHED')
 
     if conf.options.profile_interrupts:
@@ -353,7 +356,9 @@ def configure(conf):
 
     conf.load('kconfig', tooldir='waftools')
 
-    conf.env.QEMU = conf.options.qemu
+    conf.env.QEMU = conf.options.qemu or conf.is_qemu()
+    if conf.is_qemu():
+        conf.env.QEMU_CPU = conf.get_qemu_cpu()
 
     # Auto-detect JS engine from board capabilities if not explicitly specified
     if conf.options.js_engine is not None:
@@ -397,7 +402,16 @@ def configure(conf):
     conf.env.FLASH_ITCM = False
 
     # Set platform used for building the SDK
-    if conf.is_spalding():
+    if conf.is_qemu_emery():
+        conf.env.PLATFORM_NAME = 'emery'
+        conf.env.MIN_SDK_VERSION = 3
+    elif conf.is_qemu_flint():
+        conf.env.PLATFORM_NAME = 'flint'
+        conf.env.MIN_SDK_VERSION = 2
+    elif conf.is_qemu_gabbro():
+        conf.env.PLATFORM_NAME = 'gabbro'
+        conf.env.MIN_SDK_VERSION = 4
+    elif conf.is_spalding():
         conf.env.PLATFORM_NAME = 'chalk'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.is_snowy_compatible():
@@ -421,7 +435,13 @@ def configure(conf):
     # Save this for later
     conf.env.BOARD = conf.options.board
 
-    if conf.is_snowy_compatible() or conf.is_silk() or conf.is_snowy_emery() or conf.is_spalding_gabbro():
+    if conf.is_qemu():
+        qemu_cpu = conf.get_qemu_cpu()
+        if qemu_cpu == 'cortex-m4':
+            conf.env.MICRO_FAMILY = 'QEMU_PEBBLE_ARMCM4'
+        else:
+            conf.env.MICRO_FAMILY = 'QEMU_PEBBLE_ARMCM33'
+    elif conf.is_snowy_compatible() or conf.is_silk() or conf.is_snowy_emery() or conf.is_spalding_gabbro():
         conf.env.MICRO_FAMILY = 'STM32F4'
     elif conf.is_asterix():
         conf.env.MICRO_FAMILY = 'NRF52'
@@ -464,7 +484,7 @@ def configure(conf):
     if bt_board is None:
         bt_board = conf.get_board()
     # Select BT controller based on configuration:
-    if conf.env.QEMU:
+    if conf.env.QEMU or conf.is_qemu():
         conf.env.bt_controller = 'qemu'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
     elif conf.is_snowy() or conf.is_spalding():
@@ -779,6 +799,8 @@ def size_resources(ctx):
         max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'SF32LB52':
         max_size = 2048 * 1024
+    elif ctx.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+        max_size = 2048 * 1024
     else:
         max_size = 256 * 1024
 
@@ -1026,22 +1048,26 @@ def _create_qemu_image_micro(ctx, path_to_firmware_hex):
     """creates the micro-flash image for qemu"""
     from intelhex import IntelHex
 
-    if not ctx.env.BOOTLOADER_HEX:
-        ctx.fatal('Board "{}" does not have a bootloader binary available'
-                  .format(ctx.env.BOARD))
-
     micro_flash_node = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
     micro_flash_path = micro_flash_node.path_from(ctx.path)
     waflib.Logs.pprint('CYAN', 'Writing micro flash image to {}'.format(micro_flash_path))
 
-    img = IntelHex(ctx.env.BOOTLOADER_HEX)
-    img.merge(IntelHex(path_to_firmware_hex), overlap='replace')
-
-    # Write firwmare image and pad up to next 512 byte multiple. This is because QEMU
-    # assumes all block devices are multiples of 512 byte sectors
-    img.padding = 0xff
-    flash_end = ((img.maxaddr() + 511) // 512) * 512
-    img.tobinfile(micro_flash_path, start=0x08000000, end=flash_end-1)
+    if ctx.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+        # QEMU generic boards: firmware runs directly from flash at 0x00000000, no bootloader
+        img = IntelHex(path_to_firmware_hex)
+        img.padding = 0xff
+        flash_end = ((img.maxaddr() + 511) // 512) * 512
+        img.tobinfile(micro_flash_path, start=0x00000000, end=flash_end-1)
+    else:
+        # STM32 QEMU boards: merge bootloader + firmware
+        if not ctx.env.BOOTLOADER_HEX:
+            ctx.fatal('Board "{}" does not have a bootloader binary available'
+                      .format(ctx.env.BOARD))
+        img = IntelHex(ctx.env.BOOTLOADER_HEX)
+        img.merge(IntelHex(path_to_firmware_hex), overlap='replace')
+        img.padding = 0xff
+        flash_end = ((img.maxaddr() + 511) // 512) * 512
+        img.tobinfile(micro_flash_path, start=0x08000000, end=flash_end-1)
 
 
 def _create_spi_flash_image(ctx, name):
@@ -1052,7 +1078,11 @@ def _create_spi_flash_image(ctx, name):
 
 def qemu_image_spi(ctx):
     """creates a SPI flash image for qemu"""
-    if ctx.env.BOARD.startswith('silk'):
+    if ctx.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+        # QEMU generic boards: resources at offset 0x620000 in 32MB flash
+        resources_begin = 0x620000
+        image_size = 0x2000000
+    elif ctx.env.BOARD.startswith('silk'):
         resources_begin = 0x100000
         image_size = 0x800000
     elif ctx.env.MICRO_FAMILY == 'STM32F4':
@@ -1233,11 +1263,25 @@ def qemu_launch(ctx):
     # QEMU 7.0+ loads firmware via -kernel; older versions use -pflash.
     micro_flash_flag = '-kernel' if qemu_major >= 7 else '-pflash'
 
-    machine_dep_args = ['-machine', qemu_machine,
-                        '-cpu', ctx.get_qemu_cpu(),
-                        micro_flash_flag, qemu_micro_flash.path_from(ctx.path)] + spi_flash_args
+    if ctx.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+        # Generic QEMU machines: load firmware as kernel (ELF for proper vector table handling)
+        fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
+        has_audio = ctx.is_qemu_emery() or ctx.is_qemu_flint()
+        if has_audio:
+            import platform
+            audio_driver = 'coreaudio' if platform.system() == 'Darwin' else 'sdl'
+            machine_dep_args = ['-machine', '%s,audiodev=snd0' % qemu_machine,
+                                '-audiodev', '%s,id=snd0' % audio_driver,
+                                '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
+        else:
+            machine_dep_args = ['-machine', qemu_machine,
+                                '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
+    else:
+        machine_dep_args = ['-machine', qemu_machine,
+                            '-cpu', ctx.get_qemu_cpu(),
+                            micro_flash_flag, qemu_micro_flash.path_from(ctx.path)] + spi_flash_args
 
-    if ctx.env.CONFIG_TOUCH:
+    if ctx.env.CONFIG_TOUCH and qemu_major < 10:
         machine_dep_args.append('-show-cursor')
 
     # QEMU 7.0+ changed serial TCP chardev syntax.
@@ -1255,6 +1299,7 @@ def qemu_launch(ctx):
         "-serial tcp::12344,{serial} "   # Used for bluetooth data
         "-serial tcp::12345,{serial} "   # Used for console
         ).format(serial=serial_tcp_args) + ' '.join(machine_dep_args)
+    waflib.Logs.pprint('CYAN', 'QEMU command: {}'.format(cmd_line))
     os.system(cmd_line)
 
 
@@ -1493,11 +1538,13 @@ def _check_firmware_image_size(ctx, path):
         else:
             # 3072k of flash
             max_firmware_size = 3072 * BYTES_PER_K
+    elif ctx.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+        max_firmware_size = 4096 * BYTES_PER_K
     else:
         ctx.fatal('Cannot check firmware size against unknown micro family "{}"'
                   .format(ctx.env.MICRO_FAMILY))
 
-    if ctx.env.QEMU:
+    if ctx.env.QEMU and not ctx.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
         max_firmware_size = (4096 - 16) * BYTES_PER_K
 
     if firmware_size > max_firmware_size:
