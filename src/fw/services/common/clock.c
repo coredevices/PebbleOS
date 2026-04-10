@@ -617,7 +617,7 @@ void clock_request_time_from_phone(void) {
                          sizeof(request), COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-time_t clock_to_timestamp(WeekDay day, int hour, int minute) {
+DEFINE_SYSCALL(time_t, clock_to_timestamp, WeekDay day, int hour, int minute) {
   time_t t = sys_get_time();
   struct tm cal;
   sys_localtime_r(&t, &cal);

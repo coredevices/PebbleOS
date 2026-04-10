@@ -147,8 +147,6 @@ void clock_set_time(time_t utc_time);
 //! Always returns a timestamp for the next occurring instance,
 //! example: specifying TODAY@14:30 when it is 14:40 will return a timestamp for 7 days from
 //! now at 14:30
-//! @note This function does not support Daylight Saving Time (DST) changes, events scheduled
-//! during a DST change will be off by an hour.
 //! @param day WeekDay day of week including support for specifying TODAY
 //! @param hour hour specified in 24-hour format [0-23]
 //! @param minute minute [0-59]
