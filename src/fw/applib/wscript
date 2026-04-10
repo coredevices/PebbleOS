@@ -32,7 +32,9 @@ def _get_bit_depth_excludes(bld):
         bld.is_obelix() or
         bld.is_getafix() or
         bld.is_snowy_emery() or
-        bld.is_spalding_gabbro()
+        bld.is_spalding_gabbro() or
+        bld.is_qemu_emery() or
+        bld.is_qemu_gabbro()
     ):
         depth = 8
     else:
@@ -58,7 +60,7 @@ def build(bld):
                      'ui/time_range_selection_window.c',
                      'voice/*']
 
-    if not bld.is_spalding() and not bld.is_spalding_gabbro() and not bld.is_getafix():
+    if not bld.is_spalding() and not bld.is_spalding_gabbro() and not bld.is_getafix() and not bld.is_qemu_gabbro():
         excludes.append('ui/window_stack_animation_round*')
 
     if not bld.env.CONFIG_MIC:
