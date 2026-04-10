@@ -28,6 +28,12 @@
 #include "boards/board_obelix.h"
 #elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
 #include "boards/board_getafix.h"
+#elif BOARD_QEMU_EMERY
+#include "boards/board_qemu_emery.h"
+#elif BOARD_QEMU_FLINT
+#include "boards/board_qemu_flint.h"
+#elif BOARD_QEMU_GABBRO
+#include "boards/board_qemu_gabbro.h"
 #else
 #error "Unknown board definition"
 #endif
