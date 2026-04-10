@@ -51,6 +51,9 @@ static const RtcTicks MIN_STOP_TICKS = 8;
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 5;
+#elif defined(MICRO_FAMILY_QEMU) || defined(MICRO_FAMILY_SF32LB52)
+static const RtcTicks EARLY_WAKEUP_TICKS = 2;
+static const RtcTicks MIN_STOP_TICKS = 5;
 #endif
 
 // 1 second ticks so that we only wake up once every regular timer interval.

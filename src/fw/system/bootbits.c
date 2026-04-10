@@ -18,6 +18,12 @@
 #include <stm32f4xx.h>
 #endif
 
+#if MICRO_FAMILY_QEMU
+// Provided by the QEMU RTC driver
+extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
+extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
+#endif
+
 #include <inttypes.h>
 #include <stdint.h>
 

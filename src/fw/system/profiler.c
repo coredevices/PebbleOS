@@ -40,7 +40,11 @@ Profiler g_profiler;
 #undef PROFILER_NODE
 #if PROFILE_INTERRUPTS
 #define IRQ_DEF(idx, irq) ProfilerNode g_profiler_node_##irq##_IRQ = {.module_name = #irq"_IRQ"};
+#if defined(MICRO_FAMILY_QEMU)
+#include "irq_qemu.def"
+#else
 #include "irq_stm32.def"
+#endif
 #undef IRQ_DEF
 #endif
 
@@ -50,7 +54,11 @@ static ProfilerNode *s_profiler_nodes[] = {
 #undef PROFILER_NODE
 #if PROFILE_INTERRUPTS
 #define IRQ_DEF(idx, irq) &g_profiler_node_##irq##_IRQ,
+#if defined(MICRO_FAMILY_QEMU)
+#include "irq_qemu.def"
+#else
 #include "irq_stm32.def"
+#endif
 #undef IRQ_DEF
 #endif
 };
@@ -114,6 +122,8 @@ uint32_t profiler_cycles_to_us(uint32_t cycles) {
   uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
 #elif defined(MICRO_FAMILY_SF32LB52)
   uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
+#elif defined(MICRO_FAMILY_QEMU)
+  uint32_t mhz = SystemCoreClock / 1000000;
 #else
   RCC_ClocksTypeDef clocks;
   RCC_GetClocksFreq(&clocks);
@@ -143,6 +153,8 @@ uint32_t profiler_get_total_duration(bool in_us) {
     uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
 #elif defined(MICRO_FAMILY_SF32LB52)
     uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
+#elif defined(MICRO_FAMILY_QEMU)
+    uint32_t mhz = SystemCoreClock / 1000000;
 #else
     RCC_ClocksTypeDef clocks;
     RCC_GetClocksFreq(&clocks);
@@ -164,6 +176,10 @@ void profiler_print_stats(void) {
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);
 #elif defined(MICRO_FAMILY_SF32LB52)
   uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
+  char buf[80];
+  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);
+#elif defined(MICRO_FAMILY_QEMU)
+  uint32_t mhz = SystemCoreClock / 1000000;
   char buf[80];
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);
 #else
