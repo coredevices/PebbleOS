@@ -13,4 +13,9 @@ config TOUCH_CST816
     help
       Support for the Hynitron CST816 touch controller.
 
+config TOUCH_QEMU
+    bool "QEMU Touchscreen"
+    help
+      Support for the QEMU touchscreen peripheral.
+
 endif # TOUCH

@@ -4,7 +4,9 @@
 sources = []
 use = ['freertos', 'fw_includes', 'pbl_includes']
 
-if bld.env.CONFIG_DISPLAY_ICE40LP:
+if bld.env.CONFIG_DISPLAY_QEMU:
+    sources.append('../qemu/qemu_display_hal.c')
+elif bld.env.CONFIG_DISPLAY_ICE40LP:
     sources.extend([
         'ice40lp/ice40lp.c',
         'ice40lp/ice40lp_internal.c',

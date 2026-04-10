@@ -23,4 +23,9 @@ config EXTI_STM32F4
     help
       Support for the ST STM32F4 external interrupt controller.
 
+config EXTI_QEMU
+    bool "QEMU External Interrupt"
+    help
+      Support for the QEMU external interrupt peripheral.
+
 endif # EXTI

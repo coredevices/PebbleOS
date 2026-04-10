@@ -19,4 +19,9 @@ config BATTERY_STM32F4
     help
       Battery monitoring via STM32F4 ADC and PMIC.
 
+config BATTERY_QEMU
+    bool "QEMU Battery"
+    help
+      Stub battery driver for QEMU (fixed values).
+
 endif # BATTERY

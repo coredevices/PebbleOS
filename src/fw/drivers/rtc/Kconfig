@@ -23,4 +23,9 @@ config RTC_STM32F4
     help
       Support for the ST STM32F4 RTC.
 
+config RTC_QEMU
+    bool "QEMU RTC"
+    help
+      Support for the QEMU RTC peripheral.
+
 endif # RTC

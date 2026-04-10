@@ -23,4 +23,9 @@ config GPIO_STM32F4
     help
       Support for the ST STM32F4 GPIO controller.
 
+config GPIO_QEMU
+    bool "QEMU GPIO"
+    help
+      Support for the QEMU GPIO peripheral.
+
 endif # GPIO
