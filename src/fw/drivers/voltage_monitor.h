@@ -19,9 +19,8 @@ typedef const struct VoltageMonitorDevice {
   const nrf_saadc_input_t input;
 } VoltageMonitorDevice;
 
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(MICRO_FAMILY_SF32LB52) || defined(MICRO_FAMILY_QEMU)
 
-// TODO(SF32LB52): Add implementation
 typedef const struct VoltageMonitorDevice {
 } VoltageMonitorDevice;
 

@@ -4,7 +4,15 @@
 sources = ['battery_common.c']
 use = ['fw_includes', 'pbl_includes']
 
-if bld.env.QEMU:
+if bld.env.CONFIG_BATTERY_QEMU:
+    sources.extend([
+        '../qemu/qemu_battery.c',
+    ])
+    use.extend([
+        'driver_qemu_serial',
+        'driver_qemu_settings',
+    ])
+elif bld.env.QEMU:
     sources.extend([
         'battery_adc_conversion.c',
         'battery_voltage_monitor.c',

@@ -23,4 +23,9 @@ config PWM_STM32F4
     help
       Support for the ST STM32F4 PWM controller.
 
+config PWM_QEMU
+    bool "QEMU PWM"
+    help
+      Support for the QEMU PWM peripheral.
+
 endif # PWM
