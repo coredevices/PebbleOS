@@ -54,11 +54,11 @@ typedef enum FirmwareMetadataPlatform {
   FirmwareMetadataPlatformPebbleRobertBigboard = 0xf9,
   FirmwareMetadataPlatformPebbleSilkBigboard2 = 0xf8,
   FirmwareMetadataPlatformPebbleRobertBigboard2 = 0xf7,
-  FirmwareMetadataPlatformPebbleSilkFlint = 0xf6,
-  FirmwareMetadataPlatformPebbleSnowyEmery = 0xf5,
+  FirmwareMetadataPlatformPebbleFlintEmu = 0xf6,
+  FirmwareMetadataPlatformPebbleEmeryEmu = 0xf5,
   FirmwareMetadataPlatformPebbleObelixBigboard = 0xf4,
   FirmwareMetadataPlatformPebbleObelixBigboard2 = 0xf3,
-  FirmwareMetadataPlatformPebbleSpaldingGabbro = 0xf2,
+  FirmwareMetadataPlatformPebbleGabbroEmu = 0xf2,
 } FirmwareMetadataPlatform;
 
 // WARNING: changes in this struct must be reflected in:
@@ -114,15 +114,21 @@ _Static_assert(sizeof(struct FirmwareMetadata) == (sizeof(uint32_t) +
 #elif BOARD_OBELIX_BB2
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixBigboard2)
 #elif BOARD_SILK_FLINT
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSilkFlint)
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleFlintEmu)
 #elif BOARD_SNOWY_EMERY
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSnowyEmery)
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleEmeryEmu)
 #elif BOARD_SPALDING_GABBRO
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleSpaldingGabbro)
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGabbroEmu)
 #elif BOARD_GETAFIX_EVT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixEVT)
 #elif BOARD_GETAFIX_DVT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT)
+#elif BOARD_QEMU_EMERY
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleEmeryEmu)
+#elif BOARD_QEMU_FLINT
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleFlintEmu)
+#elif BOARD_QEMU_GABBRO
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGabbroEmu)
 #else
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformUnknown)
 #endif
