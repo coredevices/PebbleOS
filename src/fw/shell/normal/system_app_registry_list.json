@@ -319,34 +319,13 @@
       "id": -59,
       "enum": "WEATHER",
       "md_fn": "weather_app_get_info",
-      "color_argb8": "GColorBlueMoonARGB8",
-      "target_platforms":[
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "color_argb8": "GColorBlueMoonARGB8"
     },
     {
       "id": -95,
       "enum": "WORKOUT",
       "md_fn": "workout_app_get_info",
-      "color_argb8": "GColorYellowARGB8",
-      "target_platforms": [
-        "silk",
-        "snowy",
-        "spalding",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "color_argb8": "GColorYellowARGB8"
     },
     {
       "id": -60,
@@ -494,34 +473,12 @@
       "id": -82,
       "enum": "HEALTH_APP",
       "md_fn": "health_app_get_info",
-      "color_argb8": "GColorSunsetOrangeARGB8",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "color_argb8": "GColorSunsetOrangeARGB8"
     },
     {
       "id": -83,
       "enum": "SEND_TEXT",
-      "md_fn": "send_text_app_get_info",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "md_fn": "send_text_app_get_info"
     },
     {
       "id": -84,
@@ -600,82 +557,27 @@
     {
       "id": -92,
       "enum": "QUIET_TIME_TOGGLE",
-      "md_fn": "quiet_time_toggle_get_app_info",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "md_fn": "quiet_time_toggle_get_app_info"
     },
     {
       "id": -99,
       "enum": "BACKLIGHT_STATE_TOGGLE_UUID",
-      "md_fn": "backlight_state_toggle_get_app_info",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "md_fn": "backlight_state_toggle_get_app_info"
     },
     {
       "id": -94,
       "enum": "MOTION_BACKLIGHT_TOGGLE",
-      "md_fn": "motion_backlight_toggle_get_app_info",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "md_fn": "motion_backlight_toggle_get_app_info"
     },
     {
       "id": -93,
       "enum": "AIRPLANE_MODE_TOGGLE",
-      "md_fn": "airplane_mode_toggle_get_app_info",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "md_fn": "airplane_mode_toggle_get_app_info"
     },
     {
       "id": -96,
       "enum": "TIMELINE_PAST",
-      "md_fn": "timeline_past_get_app_info",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "md_fn": "timeline_past_get_app_info"
     },
     {
       "id": -97,
@@ -685,18 +587,7 @@
     {
       "id": -32,
       "enum": "TIMELINE_FULL",
-      "md_fn": "timeline_full_get_app_info",
-      "target_platforms": [
-        "snowy",
-        "spalding",
-        "silk",
-        "robert",
-        "asterix",
-        "obelix",
-        "snowy_emery",
-        "getafix",
-        "spalding_gabbro"
-      ]
+      "md_fn": "timeline_full_get_app_info"
     }
   ],
   "resource_apps": [
