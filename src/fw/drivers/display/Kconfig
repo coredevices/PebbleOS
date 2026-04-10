@@ -28,4 +28,9 @@ config DISPLAY_SHARP_LS013B7DH01_NRF5
     help
       Support for the Sharp LS013B7DH01 display via nRF5.
 
+config DISPLAY_QEMU
+    bool "QEMU Framebuffer Display"
+    help
+      Support for the QEMU framebuffer display peripheral.
+
 endif # DISPLAY

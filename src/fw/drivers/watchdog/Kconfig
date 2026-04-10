@@ -23,4 +23,9 @@ config WATCHDOG_STM32F4
     help
       Support for the ST STM32F4 watchdog.
 
+config WATCHDOG_QEMU
+    bool "QEMU Watchdog"
+    help
+      Support for the QEMU watchdog (no-op).
+
 endif # WATCHDOG

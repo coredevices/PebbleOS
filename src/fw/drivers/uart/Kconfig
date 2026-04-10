@@ -23,4 +23,9 @@ config UART_STM32F4
     help
       Support for the ST STM32F4 UART controller.
 
+config UART_QEMU
+    bool "QEMU Simple UART"
+    help
+      Support for the QEMU simple UART peripheral.
+
 endif # UART

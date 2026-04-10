@@ -28,4 +28,9 @@ config FLASH_SPANSION_S29VS
     help
       Support for the Spansion S29VS NOR flash.
 
+config FLASH_QEMU
+    bool "QEMU External Flash"
+    help
+      Support for the QEMU external flash peripheral.
+
 endif # FLASH

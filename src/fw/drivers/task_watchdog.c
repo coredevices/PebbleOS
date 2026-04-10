@@ -59,7 +59,7 @@ static TimerID s_throttle_timer_id = TIMER_INVALID_ID;
 // How often we want the interrupt to fire
 #define TIMER_INTERRUPT_HZ  (1000 / TASK_WATCHDOG_FEED_PERIOD_MS)
 // The frequency to run the peripheral at
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
 #define TIMER_CLOCK_HZ 32000
 // The number of timer ticks that should elapse before the timer interrupt fires
 #define TIME_PERIOD  (TIMER_CLOCK_HZ / TIMER_INTERRUPT_HZ)
@@ -78,6 +78,9 @@ static uint32_t s_pause_ticks_remaining = 0;
 #elif MICRO_FAMILY_SF32LB52
 #define WATCHDOG_FREERTOS_IRQn        USART5_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  USART5_IRQHandler
+#elif MICRO_FAMILY_QEMU
+#define WATCHDOG_FREERTOS_IRQn        WATCHDOG_IRQn
+#define WATCHDOG_FREERTOS_IRQHandler  WATCHDOG_IRQHandler
 #else
 #define WATCHDOG_FREERTOS_IRQn        CAN2_SCE_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  CAN2_SCE_IRQHandler
@@ -154,7 +157,7 @@ static void prv_log_failed_message(RebootReason *reboot_reason) {
 // -------------------------------------------------------------------------------------------------
 // The Timer ISR. This runs at super high priority (higher than configMAX_SYSCALL_INTERRUPT_PRIORITY), so
 // it is not safe to call ANY FreeRTOS functions from here.
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
 void TIM2_IRQHandler(void) {
   // Workaround M3 bug that causes interrupt to fire twice:
   // https://my.st.com/public/Faq/Lists/faqlst/DispForm.aspx?ID=143
@@ -253,7 +256,7 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
 // Setup a very high priority interrupt to fire periodically. This ISR will call task_watchdog_feed()
 // which resets the watchdog timer if it detects that none of our watchable tasks are stuck.
 void task_watchdog_init(void) {
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
   // The timer is on ABP1 which is clocked by PCLK1
   RCC_ClocksTypeDef clocks;
   RCC_GetClocksFreq(&clocks);
@@ -300,7 +303,7 @@ void task_watchdog_init(void) {
   // Setup another unused interrupt vector to handle our low priority interrupts. When we need to do higher
   // level functions (like PBL_LOG), we trigger this lower-priority interrupt to fire. Since it runs at
   // configMAX_SYSCALL_INTERRUPT_PRIORITY or lower, it can at least call FreeRTOS ISR functions.
-#if MICRO_FAMILY_NRF52 || MICRO_FAMILY_SF32LB52
+#if MICRO_FAMILY_NRF52 || MICRO_FAMILY_SF32LB52 || MICRO_FAMILY_QEMU
   NVIC_SetPriority(WATCHDOG_FREERTOS_IRQn, configMAX_SYSCALL_INTERRUPT_PRIORITY);
   NVIC_EnableIRQ(WATCHDOG_FREERTOS_IRQn);
 #else
@@ -322,7 +325,7 @@ void task_watchdog_feed(void) {
 }
 
 static void task_watchdog_disable_interrupt() {
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
   NVIC_DisableIRQ(TIM2_IRQn);
 #endif
   taskENTER_CRITICAL();
@@ -330,7 +333,7 @@ static void task_watchdog_disable_interrupt() {
 
 static void task_watchdog_enable_interrupt() {
   taskEXIT_CRITICAL();
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
   NVIC_EnableIRQ(TIM2_IRQn);
 #endif
 }
@@ -380,7 +383,7 @@ void task_watchdog_resume(void) {
 
 void task_watchdog_step_elapsed_time_ms(uint32_t elapsed_ms) {
   // nRF5 has the RTC running during sleep, and needs no help here
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
+#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
   uint32_t timer_ticks = (elapsed_ms * TIMER_CLOCK_HZ) / 1000;
   timer_ticks += TIM2->CNT;
 

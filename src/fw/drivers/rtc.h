@@ -10,11 +10,14 @@
 
 typedef uint64_t RtcTicks;
 
-#if !defined(MICRO_FAMILY_SF32LB52)
-#define RTC_TICKS_HZ (1024u)
-#else
+#if defined(MICRO_FAMILY_QEMU)
+// QEMU RTC provides a 1000Hz tick counter.
+#define RTC_TICKS_HZ (1000u)
+#elif defined(MICRO_FAMILY_SF32LB52)
 // SF32lb52 lptim using RC10K.
 #define RTC_TICKS_HZ (1000u)
+#else
+#define RTC_TICKS_HZ (1024u)
 #endif
 
 //! Initialize the RTC driver at startup. Note that this runs very early in the startup process
