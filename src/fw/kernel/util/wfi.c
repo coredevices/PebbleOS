@@ -6,6 +6,14 @@
 #include "wfi.h"
 
 void NOINLINE NAKED_FUNC do_wfi(void) {
+#if MICRO_FAMILY_QEMU
+  // QEMU Cortex-M33 doesn't properly wake from WFI when PRIMASK=1.
+  // Use WFE which yields to QEMU's scheduler and wakes on events.
+  __asm volatile (
+      "wfe      \n"
+      "bx lr    \n"
+      );
+#else
   // Work around a very strange bug in the STM32F where, upon waking from
   // STOP or SLEEP mode, the processor begins acting strangely depending on the
   // contents of the bytes following the "bx lr" instruction.
@@ -20,4 +28,5 @@ void NOINLINE NAKED_FUNC do_wfi(void) {
       "nop      \n"
       "nop      \n"
       );
+#endif
 }

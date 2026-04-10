@@ -209,6 +209,12 @@ static const MpuRegion s_kernel_bg_stack_guard_region = {
 };
 
 void memory_layout_setup_mpu(void) {
+#ifdef MICRO_FAMILY_QEMU_PEBBLE_ARMCM33
+  // QEMU CM33: skip MPU configuration. The ARMv8-M MPU uses RBAR/RLAR
+  // registers instead of the ARMv7-M RBAR/RASR used here.
+  return;
+#endif
+
   // Flash parts...
   // Read only for executing code and loading data out of.
 
