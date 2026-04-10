@@ -3,7 +3,11 @@
 
 #pragma once
 
-#if defined(MICRO_FAMILY_STM32F4)
+#if defined(MICRO_FAMILY_QEMU_PEBBLE_ARMCM4)
+#include "pebble/qemu_cm4.h"
+#elif defined(MICRO_FAMILY_QEMU_PEBBLE_ARMCM33)
+#include "pebble/qemu_cm33.h"
+#elif defined(MICRO_FAMILY_STM32F4)
 #include <stm32f4xx.h>
 #elif defined(MICRO_FAMILY_NRF52)
 #pragma GCC diagnostic push

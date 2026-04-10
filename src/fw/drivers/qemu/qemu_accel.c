@@ -269,3 +269,8 @@ bool accel_get_double_tap_detection_enabled(void) {
 
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {
 }
+
+
+void accel_set_shake_sensitivity_percent(uint8_t percent) {
+  (void)percent;
+}
