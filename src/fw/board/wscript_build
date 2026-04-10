@@ -68,6 +68,42 @@ elif board in ('getafix_evt', "getafix_dvt"):
             'drivers',
         ],
     )
+elif board in ('qemu_emery'):
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_qemu_emery.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'drivers',
+        ],
+    )
+elif board in ('qemu_flint'):
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_qemu_flint.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'drivers',
+        ],
+    )
+elif board in ('qemu_gabbro'):
+    bld.objects(
+        name='board',
+        source=[
+            'boards/board_qemu_gabbro.c',
+        ],
+        use=[
+            'fw_includes',
+            'freertos',
+            'drivers',
+        ],
+    )
 else:
     bld.fatal('src/fw/board/wscript_build: '
               'Unknown board {}'.format(board))

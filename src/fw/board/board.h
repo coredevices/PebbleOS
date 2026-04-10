@@ -3,7 +3,9 @@
 
 #pragma once
 
-#if defined(MICRO_FAMILY_STM32F4)
+#if defined(MICRO_FAMILY_QEMU)
+# include "board_qemu.h"
+#elif defined(MICRO_FAMILY_STM32F4)
 # include "board_stm32.h"
 #elif defined(MICRO_FAMILY_NRF52)
 # include "board_nrf5.h"

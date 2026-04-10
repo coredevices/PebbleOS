@@ -7,6 +7,12 @@
 #include "splash/splash_obelix.xbm"
 #elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
 #include "splash/splash_getafix.xbm"
+#elif BOARD_QEMU_EMERY
+#include "splash/splash_obelix.xbm"
+#elif BOARD_QEMU_FLINT
+#include "splash/splash_obelix.xbm"
+#elif BOARD_QEMU_GABBRO
+#include "splash/splash_obelix.xbm"
 #else
 #error "Unknown splash definition for board"
 #endif // BOARD_*

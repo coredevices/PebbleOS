@@ -46,6 +46,12 @@ typedef struct {
 #include "displays/display_obelix.h"
 #elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
 #include "displays/display_getafix.h"
+#elif BOARD_QEMU_EMERY
+#include "displays/display_qemu_emery.h"
+#elif BOARD_QEMU_FLINT
+#include "displays/display_qemu_flint.h"
+#elif BOARD_QEMU_GABBRO
+#include "displays/display_qemu_gabbro.h"
 #else
 #error "Unknown display definition for board"
 #endif // BOARD_*
