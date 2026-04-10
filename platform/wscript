@@ -48,8 +48,30 @@ def is_spalding_gabbro(ctx):
     return ctx.get_board() == 'spalding_gabbro'
 
 @conf
+def is_qemu_emery(ctx):
+    return ctx.get_board() == 'qemu_emery'
+
+@conf
+def is_qemu_flint(ctx):
+    return ctx.get_board() == 'qemu_flint'
+
+@conf
+def is_qemu_gabbro(ctx):
+    return ctx.get_board() == 'qemu_gabbro'
+
+@conf
+def is_qemu(ctx):
+    return ctx.get_board().startswith('qemu_')
+
+@conf
 def get_platform_name(ctx):
-    if is_snowy(ctx):
+    if is_qemu_emery(ctx):
+        return "qemu_emery"
+    elif is_qemu_flint(ctx):
+        return "qemu_flint"
+    elif is_qemu_gabbro(ctx):
+        return "qemu_gabbro"
+    elif is_snowy(ctx):
         return "snowy"
     elif is_spalding(ctx):
         return "spalding"
@@ -79,7 +101,13 @@ def is_snowy_compatible(ctx):
 
 @conf
 def get_qemu_machine(ctx):
-    if is_snowy(ctx):
+    if is_qemu_emery(ctx):
+        return 'pebble-emery'
+    elif is_qemu_flint(ctx):
+        return 'pebble-flint'
+    elif is_qemu_gabbro(ctx):
+        return 'pebble-gabbro'
+    elif is_snowy(ctx):
         return 'pebble-snowy-bb'
     elif is_spalding(ctx):
         return 'pebble-s4-bb'
@@ -95,7 +123,13 @@ def get_qemu_machine(ctx):
 
 @conf
 def get_qemu_cpu(ctx):
-    if is_snowy(ctx):
+    if is_qemu_emery(ctx):
+        return 'cortex-m33'
+    elif is_qemu_flint(ctx):
+        return 'cortex-m4'
+    elif is_qemu_gabbro(ctx):
+        return 'cortex-m33'
+    elif is_snowy(ctx):
         return 'cortex-m4'
     elif is_spalding(ctx):
         return 'cortex-m4'
@@ -113,7 +147,9 @@ def get_qemu_cpu(ctx):
 
 @conf
 def get_qemu_spi_flash_args(ctx, spi_flash_path, qemu_major):
-    if is_snowy(ctx) or is_spalding(ctx) or is_snowy_emery(ctx) or is_spalding_gabbro(ctx):
+    if is_qemu(ctx):
+        return ['-drive', 'if=mtd,format=raw,file={}'.format(spi_flash_path)]
+    elif is_snowy(ctx) or is_spalding(ctx) or is_snowy_emery(ctx) or is_spalding_gabbro(ctx):
         # QEMU 7.0+ uses a named block device; older versions use -pflash.
         if qemu_major >= 7:
             return ['-drive', 'if=none,id=spi-flash,file={},format=raw'.format(spi_flash_path)]
@@ -140,7 +176,16 @@ def capability(ctx, capability_str):
 
 @conf
 def add_platform_defines(ctx, env):
-    if ctx.is_snowy():
+    if ctx.is_qemu_emery():
+        bit_depth = 8
+        platform = 'QEMU_EMERY'
+    elif ctx.is_qemu_flint():
+        bit_depth = 1
+        platform = 'QEMU_FLINT'
+    elif ctx.is_qemu_gabbro():
+        bit_depth = 8
+        platform = 'QEMU_GABBRO'
+    elif ctx.is_snowy():
         bit_depth = 8
         platform = 'SNOWY'
     elif ctx.is_spalding():
@@ -167,12 +212,15 @@ def add_platform_defines(ctx, env):
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 
-    env.append_value(
-        'DEFINES', ['BOARD_{}=1'.format(ctx.options.board.upper()),
-                    'PLATFORM_{}=1'.format(platform),
-                    'MICRO_FAMILY_{}=1'.format(env.MICRO_FAMILY),
-                    'SCREEN_COLOR_DEPTH_BITS={}'.format(bit_depth),
-                    'MIN_SDK_VERSION={}'.format(env.MIN_SDK_VERSION)])
+    defines = ['BOARD_{}=1'.format(ctx.options.board.upper()),
+               'PLATFORM_{}=1'.format(platform),
+               'MICRO_FAMILY_{}=1'.format(env.MICRO_FAMILY),
+               'SCREEN_COLOR_DEPTH_BITS={}'.format(bit_depth),
+               'MIN_SDK_VERSION={}'.format(env.MIN_SDK_VERSION)]
+    # Add umbrella MICRO_FAMILY_QEMU define for all QEMU boards
+    if env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+        defines.append('MICRO_FAMILY_QEMU=1')
+    env.append_value('DEFINES', defines)
 
     for cap, val in ctx.capabilities_dict().items():
         env.append_value('DEFINES', "CAPABILITY_%s=%s" % (cap, int(val)))

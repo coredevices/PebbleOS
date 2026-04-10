@@ -282,6 +282,14 @@ Or re-configure with the --relax_toolchain_restrictions option. """
     elif conf.env.MICRO_FAMILY == "SF32LB52":
         args += ["-mcpu=star-mc1"]
         cpu_fpu = "fpv5-sp-d16"
+    elif conf.env.MICRO_FAMILY == "QEMU_PEBBLE_ARMCM4":
+        args += ["-mcpu=cortex-m4"]
+        args += ["-Dsniprintf=snprintf"]
+        args += ["-D_USE_LONG_TIME_T"]
+    elif conf.env.MICRO_FAMILY == "QEMU_PEBBLE_ARMCM33":
+        args += ["-mcpu=cortex-m33+nofp+nodsp"]
+        args += ["-Dsniprintf=snprintf"]
+        args += ["-D_USE_LONG_TIME_T"]
     # QEMU does not have FPU
     if conf.env.QEMU:
         cpu_fpu = None
