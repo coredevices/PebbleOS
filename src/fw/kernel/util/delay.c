@@ -33,6 +33,24 @@ void NOINLINE delay_us(uint32_t us) {
 void delay_init(void) {
 }
 
+#elif MICRO_FAMILY_QEMU
+
+#include <cmsis_core.h>
+
+void NOINLINE delay_us(uint32_t us) {
+  // Use DWT cycle counter for accurate delays
+  uint32_t cycles = us * (SystemCoreClock / 1000000);
+  uint32_t start = DWT->CYCCNT;
+  while ((DWT->CYCCNT - start) < cycles) {}
+}
+
+void delay_init(void) {
+  // Enable DWT cycle counter
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
+
 #else
 
 #define INSTRUCTIONS_PER_LOOP   (3)
