@@ -3,7 +3,7 @@
 
 #include "pbl/services/common/boot_splash.h"
 
-#if CAPABILITY_HAS_PBLBOOT
+#if CAPABILITY_HAS_PBLBOOT || MICRO_FAMILY_QEMU
 
 #include "board/display.h"
 #include "board/splash.h"
@@ -15,6 +15,24 @@
 #include "task.h"
 
 #include <string.h>
+
+// Platform-specific colors: PebbleOS uses ARGB2222 (GColor8), not raw RGB332
+#if MICRO_FAMILY_QEMU
+// QEMU display natively renders ARGB2222
+#define SPLASH_COLOR_WHITE  0xFF  // A=3, R=3, G=3, B=3
+#define SPLASH_COLOR_BLACK  0xC0  // A=3, R=0, G=0, B=0
+#define SPLASH_COLOR_LGRAY  0xEA  // A=3, R=2, G=2, B=2
+// QEMU boot splash always uses 8bpp framebuffer regardless of platform bit depth
+#define BOOT_SPLASH_FB_BYTES (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT)
+#else
+// Hardware displays: the compositor handles GColor8 → native conversion,
+// but boot_splash writes raw pixels before the compositor is initialized.
+// On obelix/getafix the LCDC accepts RGB332 directly.
+#define SPLASH_COLOR_WHITE  0xFF
+#define SPLASH_COLOR_BLACK  0x00
+#define SPLASH_COLOR_LGRAY  0xB6
+#define BOOT_SPLASH_FB_BYTES DISPLAY_FRAMEBUFFER_BYTES
+#endif
 
 // Progress bar configuration
 #define PROGRESS_BAR_WIDTH      80
@@ -45,8 +63,8 @@ static void prv_draw_filled_rect(uint8_t *fb, int16_t x0, int16_t y0,
 // Draw progress bar with animated indicator
 static void prv_draw_progress_bar(uint8_t *fb, int16_t center_x, int16_t center_y,
                                   uint16_t frame) {
-  const uint8_t COLOR_TRACK = 0xB6;      // Light gray in RGB332
-  const uint8_t COLOR_INDICATOR = 0x00;  // Black
+  const uint8_t COLOR_TRACK = SPLASH_COLOR_LGRAY;
+  const uint8_t COLOR_INDICATOR = SPLASH_COLOR_BLACK;
 
   int16_t bar_x0 = center_x - PROGRESS_BAR_WIDTH / 2;
   int16_t bar_y0 = center_y - PROGRESS_BAR_HEIGHT / 2;
@@ -94,13 +112,13 @@ static void prv_boot_splash_task(void *param) {
   // Animation loop - runs until s_boot_splash_running is cleared
   while (s_boot_splash_running) {
     // Clear framebuffer to white
-    memset(fb, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+    memset(fb, SPLASH_COLOR_WHITE, BOOT_SPLASH_FB_BYTES);
 
     // Draw logo
     for (uint16_t y = 0U; y < logo_height; y++) {
       for (uint16_t x = 0U; x < logo_width; x++) {
         if (logo_data[y * (logo_width / 8) + x / 8] & (0x1U << (x & 7))) {
-          fb[(y + logo_y0) * PBL_DISPLAY_WIDTH + (x + logo_x0)] = 0x00;
+          fb[(y + logo_y0) * PBL_DISPLAY_WIDTH + (x + logo_x0)] = SPLASH_COLOR_BLACK;
         }
       }
     }
@@ -131,7 +149,7 @@ void boot_splash_start(void) {
   display_init();
 
   // Allocate framebuffer for boot splash
-  s_boot_splash_fb = kernel_malloc(DISPLAY_FRAMEBUFFER_BYTES);
+  s_boot_splash_fb = kernel_malloc(BOOT_SPLASH_FB_BYTES);
   if (!s_boot_splash_fb) {
     return;
   }
@@ -155,9 +173,9 @@ void boot_splash_stop(void) {
     }
 
     // Draw final frame with logo only (no progress bar)
-    uint8_t *fb = kernel_malloc(DISPLAY_FRAMEBUFFER_BYTES);
+    uint8_t *fb = kernel_malloc(BOOT_SPLASH_FB_BYTES);
     if (fb) {
-      memset(fb, 0xFF, DISPLAY_FRAMEBUFFER_BYTES);
+      memset(fb, SPLASH_COLOR_WHITE, BOOT_SPLASH_FB_BYTES);
 
       // Get splash logo dimensions
       const uint16_t logo_width = splash_width;
@@ -172,7 +190,7 @@ void boot_splash_stop(void) {
       for (uint16_t y = 0U; y < logo_height; y++) {
         for (uint16_t x = 0U; x < logo_width; x++) {
           if (logo_data[y * (logo_width / 8) + x / 8] & (0x1U << (x & 7))) {
-            fb[(y + logo_y0) * PBL_DISPLAY_WIDTH + (x + logo_x0)] = 0x00;
+            fb[(y + logo_y0) * PBL_DISPLAY_WIDTH + (x + logo_x0)] = SPLASH_COLOR_BLACK;
           }
         }
       }
