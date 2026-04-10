@@ -80,7 +80,7 @@ static const VoltagePoint charge_curve[] = {
 };
 
 // TODO(ASTERIX,OBELIX): Needs customization for Asterix/Obelix
-#elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX
+#elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_QEMU_EMERY || PLATFORM_QEMU_FLINT || PLATFORM_QEMU_GABBRO
 // When the voltage drops below these (mV), the watch will start heading for standby (after delay)
 #define BATTERY_CRITICAL_VOLTAGE_CHARGING 3550
 #define BATTERY_CRITICAL_VOLTAGE_DISCHARGING 3300

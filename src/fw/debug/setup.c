@@ -12,7 +12,7 @@
 #endif
 
 void enable_mcu_debugging(void) {
-#if !defined(RELEASE) && !defined(MICRO_FAMILY_NRF52) && !defined(MICRO_FAMILY_SF32LB52)
+#if !defined(RELEASE) && !defined(MICRO_FAMILY_NRF52) && !defined(MICRO_FAMILY_SF32LB52) && !defined(MICRO_FAMILY_QEMU)
   DBGMCU_Config(DBGMCU_SLEEP | DBGMCU_STOP, ENABLE);
   // Stop RTC, IWDG & TIM2 during debugging
   // Note: TIM2 is used by the task watchdog
@@ -22,7 +22,7 @@ void enable_mcu_debugging(void) {
 }
 
 void disable_mcu_debugging(void) {
-#if !defined(RELEASE) && !defined(MICRO_FAMILY_NRF52) && !defined(MICRO_FAMILY_SF32LB52)
+#if !defined(RELEASE) && !defined(MICRO_FAMILY_NRF52) && !defined(MICRO_FAMILY_SF32LB52) && !defined(MICRO_FAMILY_QEMU)
   DBGMCU->CR = 0;
   DBGMCU->APB1FZ = 0;
   DBGMCU->APB2FZ = 0;
