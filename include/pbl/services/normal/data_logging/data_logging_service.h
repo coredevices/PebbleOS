@@ -26,9 +26,8 @@ typedef enum {
   DlsSystemTagActivityAccelSamples = 82,
   DlsSystemTagActivitySession = 84,
   DlsSystemTagProtobufLogSession = 85,
-#ifdef MEMFAULT
   DlsSystemTagMemfaultChunksSession = 86,
-#endif
+  DlsSystemTagAnalyticsNativeHeartbeat = 87,
 } DlsSystemTag;
 
 //! Init the data logging service. Called by the system at boot time.
