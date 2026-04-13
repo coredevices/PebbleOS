@@ -398,7 +398,7 @@ static NOINLINE void prv_main_task_init(void) {
   task_watchdog_init();
   task_watchdog_pause(30);
 
-  analytics_init();
+  pbl_analytics_init();
   register_system_timers();
   system_task_timer_init();
 

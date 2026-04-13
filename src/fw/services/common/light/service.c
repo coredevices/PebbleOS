@@ -516,7 +516,7 @@ uint8_t light_get_current_brightness_percent(void) {
   return percent;
 }
 
-void analytics_external_collect_backlight_stats(void) {
+void pbl_analytics_external_collect_backlight_stats(void) {
   mutex_lock(s_mutex);
 
   // Capture one final sample to account for time since last brightness change

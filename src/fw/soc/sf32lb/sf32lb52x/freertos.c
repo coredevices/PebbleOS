@@ -368,7 +368,7 @@ void command_force_deepwfi(const char *arg) {
   }
 }
 
-void analytics_external_collect_cpu_stats(void) {
+void pbl_analytics_external_collect_cpu_stats(void) {
   uint32_t wfi_ticks = s_analytics_wfi_ticks;
   uint32_t deepwfi_ticks = s_analytics_deepwfi_ticks;
   uint32_t deepsleep_ticks = s_analytics_deepsleep_ticks;

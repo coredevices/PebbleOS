@@ -481,9 +481,9 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
 }
 
 
-void test_bluetooth_persistent_storage__analytics_external_collect_ble_pairing_info(void) {
+void test_bluetooth_persistent_storage__pbl_analytics_external_collect_ble_pairing_info(void) {
   // No pairings yet
-  analytics_external_collect_ble_pairing_info();
+  pbl_analytics_external_collect_ble_pairing_info();
   cl_assert_equal_i(s_analytics_ble_pairings_count, 0);
 
   // Store a pairing
@@ -516,7 +516,7 @@ void test_bluetooth_persistent_storage__analytics_external_collect_ble_pairing_i
   cl_assert(id != BT_BONDING_ID_INVALID);
 
   // We should now be at 1
-  analytics_external_collect_ble_pairing_info();
+  pbl_analytics_external_collect_ble_pairing_info();
   cl_assert_equal_i(s_analytics_ble_pairings_count, 1);
 
   // Delete the Pairing
@@ -524,7 +524,7 @@ void test_bluetooth_persistent_storage__analytics_external_collect_ble_pairing_i
   cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
 
   // We should now be at 0
-  analytics_external_collect_ble_pairing_info();
+  pbl_analytics_external_collect_ble_pairing_info();
   cl_assert_equal_i(s_analytics_ble_pairings_count, 0);
 }
 

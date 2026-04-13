@@ -2200,7 +2200,7 @@ uint32_t pfs_crc_calculate_file(int fd, uint32_t offset, uint32_t num_bytes) {
   return (crc);
 }
 
-void analytics_external_collect_pfs_stats(void) {
+void pbl_analytics_external_collect_pfs_stats(void) {
   uint16_t avail_kilobytes = (uint16_t)(get_available_pfs_space() / 1024);
   PBL_ANALYTICS_SET_UNSIGNED(pfs_space_free_kb, avail_kilobytes);
 }

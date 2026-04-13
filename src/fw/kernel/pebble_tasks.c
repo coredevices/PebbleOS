@@ -101,7 +101,7 @@ void pebble_task_suspend(PebbleTask task) {
   vTaskSuspend(g_task_handles[task]);
 }
 
-void analytics_external_collect_stack_free(void) {
+void pbl_analytics_external_collect_stack_free(void) {
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_main_bytes, prv_task_get_stack_free(PebbleTask_KernelMain));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_background_bytes, prv_task_get_stack_free(PebbleTask_KernelBackground));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_newtimers_bytes, prv_task_get_stack_free(PebbleTask_NewTimers));
