@@ -322,6 +322,15 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
 
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
+    HAL_NVIC_DisableIRQ(this->pdm_dma_irq);
+    HAL_NVIC_DisableIRQ(this->pdm_irq);
+    HAL_PDM_DMAStop(hpdm);
+    HAL_PDM_DeInit(hpdm);
+    HAL_RCC_DisableModule(RCC_MOD_PDM1);
+
+    kernel_free(hpdm->pRxBuffPtr);
+    hpdm->pRxBuffPtr = NULL;
+
     stop_mode_enable(InhibitorMic);
     state->is_running = false;  // Reset on failure
 #if PDM_POWER_NPM1300_LDO2
