@@ -44,6 +44,29 @@ static SemaphoreHandle_t s_ipc_data_ready;
 static struct hci_h4_sm s_hci_h4sm;
 static ipc_queue_handle_t s_ipc_port;
 
+static struct os_mbuf *prv_alloc_acl_from_ll(void) {
+  struct os_mbuf *om = ble_transport_alloc_acl_from_ll();
+  if (!om) {
+    PBL_LOG_ERR("ACL alloc failed");
+  }
+
+  return om;
+}
+
+static void *prv_alloc_evt(int discardable) {
+  void *buf = ble_transport_alloc_evt(discardable);
+  if (!buf) {
+    PBL_LOG_ERR("EVT alloc failed (discardable=%d)", discardable);
+  }
+
+  return buf;
+}
+
+static const struct hci_h4_allocators s_hci_h4_allocs_from_ll = {
+  .acl = prv_alloc_acl_from_ll,
+  .evt = prv_alloc_evt,
+};
+
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
 static uint16_t s_hci_trace_seq;
 #endif
@@ -252,7 +275,7 @@ void ble_transport_ll_init(void) {
   uart_set_baud_rate(HCI_TRACE_UART, 1000000);
 #endif
 
-  hci_h4_sm_init(&s_hci_h4sm, &hci_h4_allocs_from_ll, prv_hci_frame_cb);
+  hci_h4_sm_init(&s_hci_h4sm, &s_hci_h4_allocs_from_ll, prv_hci_frame_cb);
 
   s_ipc_data_ready = xSemaphoreCreateBinary();
 
