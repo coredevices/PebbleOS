@@ -19,6 +19,13 @@ extern void pbl_analytics_external_collect_backlight_stats(void);
 extern void pbl_analytics_external_collect_vibe_stats(void);
 extern void pbl_analytics_external_collect_settings(void);
 
+#ifdef ANALYTICS_NATIVE
+extern void pbl_analytics__native_init(void);
+extern void pbl_analytics__native_heartbeat(void);
+
+extern const struct pbl_analytics_backend_ops pbl_analytics__native_ops;
+#endif
+
 #ifdef ANALYTICS_MEMFAULT
 extern void pbl_analytics__memfault_init(void);
 extern void pbl_analytics__memfault_heartbeat(void);
@@ -29,18 +36,27 @@ extern const struct pbl_analytics_backend_ops pbl_analytics__memfault_ops;
 static TimerID s_heartbeat_timer;
 
 static void (*const s_init[])(void) = {
+#ifdef ANALYTICS_NATIVE
+    pbl_analytics__native_init,
+#endif
 #ifdef ANALYTICS_MEMFAULT
     pbl_analytics__memfault_init,
 #endif
 };
 
 static void (*const s_heartbeat[])(void) = {
+#ifdef ANALYTICS_NATIVE
+    pbl_analytics__native_heartbeat,
+#endif
 #ifdef ANALYTICS_MEMFAULT
     pbl_analytics__memfault_heartbeat,
 #endif
 };
 
 static const struct pbl_analytics_backend_ops *s_backend_ops[] = {
+#ifdef ANALYTICS_NATIVE
+    &pbl_analytics__native_ops,
+#endif
 #ifdef ANALYTICS_MEMFAULT
     &pbl_analytics__memfault_ops,
 #endif
