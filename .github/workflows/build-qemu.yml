@@ -42,7 +42,7 @@ jobs:
 
     strategy:
       matrix:
-        board: ["snowy_dvt", "spalding", "silk", "silk_flint", "snowy_emery", "spalding_gabbro"]
+        board: ["snowy_dvt", "spalding", "silk", "qemu_flint", "qemu_emery", "qemu_gabbro"]
 
     steps:
       - name: Mark Github workspace as safe
