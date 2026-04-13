@@ -11,6 +11,9 @@
 #endif
 #include "services/common/comm_session/session_internal.h"
 #include "services/common/analytics/analytics.h"
+#if defined(ANALYTICS_DIRECT_HEARTBEAT)
+#include "services/common/analytics/direct/heartbeat_v70.h"
+#endif
 #include "services/common/ping.h"
 #include "util/time/time.h"
 
@@ -30,6 +33,9 @@ void comm_session_analytics_open_session(CommSession *session) {
     // to complete the datalogging Report handshake.
     memfault_chunk_collect_after_delay();
 #endif
+#if defined(ANALYTICS_DIRECT_HEARTBEAT)
+    v70_shadow_timer_start(V70_METRIC_connectivity_connected_time_ms);
+#endif
   }
   session->open_ticks = rtc_get_ticks();
 }
@@ -40,6 +46,9 @@ void comm_session_analytics_close_session(CommSession *session, CommSessionClose
 #if MEMFAULT
     memfault_metrics_connectivity_connected_state_change(
       kMemfaultMetricsConnectivityState_ConnectionLost);
+#endif
+#if defined(ANALYTICS_DIRECT_HEARTBEAT)
+    v70_shadow_timer_stop(V70_METRIC_connectivity_connected_time_ms);
 #endif
   }
 

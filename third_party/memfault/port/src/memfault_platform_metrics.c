@@ -7,6 +7,9 @@
 #include "services/common/battery/battery_state.h"
 #include "util/heap.h"
 #include "services/common/analytics/analytics.h"
+#if defined(ANALYTICS_DIRECT_HEARTBEAT)
+#include "services/common/analytics/direct/heartbeat_v70.h"
+#endif
 #include "shell/normal/watchface.h"
 #include "process_management/app_install_manager.h"
 
@@ -23,4 +26,7 @@ int memfault_platform_get_stateofcharge(sMfltPlatformBatterySoc *soc) {
 
 void memfault_metrics_heartbeat_collect_data(void) {
   analytics_external_update();
+#if defined(ANALYTICS_DIRECT_HEARTBEAT)
+  v70_heartbeat_send();
+#endif
 }
