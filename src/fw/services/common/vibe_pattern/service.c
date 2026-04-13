@@ -358,7 +358,7 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_clear, void) {
   mutex_unlock(s_vibe_pattern_mutex);
 }
 
-void analytics_external_collect_vibe_stats(void) {
+void pbl_analytics_external_collect_vibe_stats(void) {
   mutex_lock(s_vibe_pattern_mutex);
 
   // Capture one final sample to account for time since last strength change

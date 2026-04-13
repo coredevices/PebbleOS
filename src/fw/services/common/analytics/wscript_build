@@ -1,13 +1,13 @@
 # SPDX-Copyright-Text: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-use = []
+use = ['fw_includes']
 sources = ['analytics.c']
 
 if bld.env.memfault:
     use.append('memfault_includes')
-    sources.append('memfault/analytics_impl.c')
-    bld.env.DEFINES.append('ANALYTICS_IMPL_MEMFAULT')
+    sources.append('memfault.c')
+    bld.env.DEFINES.append('ANALYTICS_MEMFAULT')
 
 bld.stlib(
     source=sources,

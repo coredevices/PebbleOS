@@ -267,7 +267,7 @@ void dump_current_runtime_stats(void) {
   prompt_send_response(buf);
 }
 
-void analytics_external_collect_cpu_stats(void) {
+void pbl_analytics_external_collect_cpu_stats(void) {
   uint32_t stop_ticks = s_analytics_stop_ticks;
   uint32_t sleep_ticks = s_analytics_sleep_ticks;
 

@@ -77,8 +77,6 @@ const PebbleProcessMd* alarms_app_get_info(void) {
   return (const PebbleProcessMd*) &s_alarms_app_info;
 }
 
-void analytics_external_update(void) {
-}
 
 bool shell_prefs_get_stationary_enabled(void) {
   return false;
@@ -130,4 +128,7 @@ uint8_t activity_prefs_heart_get_zone2_threshold(void) {
 
 uint8_t activity_prefs_heart_get_zone3_threshold(void) {
   return 172;
+}
+
+void pbl_analytics_external_collect_settings(void) {
 }

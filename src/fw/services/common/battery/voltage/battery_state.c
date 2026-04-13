@@ -335,7 +335,7 @@ void command_print_battery_status(void) {
 // Analytics
 
 // Note that this is run on a different thread than battery_state!
-void analytics_external_collect_battery(void) {
+void pbl_analytics_external_collect_battery(void) {
   // This should not be called for an hour after bootup
 
   int battery_mv = s_last_battery_state.voltage;

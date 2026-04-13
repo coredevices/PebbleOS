@@ -3,5 +3,34 @@
 
 #pragma once
 
-#define ANALYTICS_IMPL_NULL
 #include "pbl/services/common/analytics/analytics.h"
+
+void pbl_analytics_init(void) {}
+
+void pbl_analytics_set_signed(enum pbl_analytics_key key, int32_t signed_value) {
+  (void)key;
+  (void)signed_value;
+}
+
+void pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {
+  (void)key;
+  (void)unsigned_value;
+}
+
+void pbl_analytics_set_string(enum pbl_analytics_key key, const char *value) {
+  (void)key;
+  (void)value;
+}
+
+void pbl_analytics_timer_start(enum pbl_analytics_key key) {
+  (void)key;
+}
+
+void pbl_analytics_timer_stop(enum pbl_analytics_key key) {
+  (void)key;
+}
+
+void pbl_analytics_add(enum pbl_analytics_key key, int32_t amount) {
+  (void)key;
+  (void)amount;
+}

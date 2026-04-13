@@ -214,17 +214,14 @@ uint64_t memfault_platform_get_time_since_boot_ms(void) {
   return (s_elapsed_ticks * 1000) / configTICK_RATE_HZ;
 }
 
-static TimerID s_memfault_heartbeat_timer;
-
-static void prv_memfault_metrics_timer_cb(void *data) {
-  MemfaultPlatformTimerCallback *callback = (MemfaultPlatformTimerCallback *)data;
-  callback();
-}
+static MemfaultPlatformTimerCallback *s_memfault_heartbeat_callback;
 
 bool memfault_platform_metrics_timer_boot(uint32_t period_sec,
                                           MemfaultPlatformTimerCallback callback) {
-  s_memfault_heartbeat_timer = new_timer_create();
-  new_timer_start(s_memfault_heartbeat_timer, period_sec * 1000, prv_memfault_metrics_timer_cb,
-                  (void *)callback, TIMER_START_FLAG_REPEATING);
+  s_memfault_heartbeat_callback = callback;
   return true;
+}
+
+void memfault_platform_heartbeat(void) {
+  s_memfault_heartbeat_callback();
 }

@@ -1735,7 +1735,7 @@ void shell_prefs_set_power_mode(PowerMode mode) {
   prv_pref_set(PREF_KEY_POWER_MODE, &val, sizeof(val));
 }
 
-void analytics_external_collect_settings(void) {
+void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_tracking_enabled,
                              activity_prefs_tracking_is_enabled());
 #ifdef CONFIG_HRM
