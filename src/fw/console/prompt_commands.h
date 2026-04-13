@@ -286,6 +286,11 @@ extern void command_mflt_metrics_dump(void);
 extern void command_mflt_device_info(void);
 #endif
 
+#ifdef ANALYTICS_NATIVE
+extern void command_analytics_native_metrics_dump(void);
+extern void command_analytics_native_heartbeat(void);
+#endif
+
 extern void command_console_disable_rx(const char *seconds_str);
 
 #if MICRO_FAMILY_SF32LB52
@@ -654,6 +659,11 @@ static const Command s_prompt_commands[] = {
   { "mflt metrics_dump", command_mflt_metrics_dump, 0 },
   { "mflt device_info", command_mflt_device_info, 0 },
 #endif  // MEMFAULT
+
+#if ANALYTICS_NATIVE
+  { "analytics native metrics_dump", command_analytics_native_metrics_dump, 0 },
+  { "analytics native heartbeat", command_analytics_native_heartbeat, 0 },
+#endif
 };
 
 #define NUM_PROMPT_COMMANDS ARRAY_LENGTH(s_prompt_commands)
