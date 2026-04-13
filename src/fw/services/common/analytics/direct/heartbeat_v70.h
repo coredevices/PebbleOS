@@ -70,6 +70,10 @@ void v70_shadow_timer_start(V70MetricId id);
 void v70_shadow_timer_stop(V70MetricId id);
 void v70_shadow_set_string(V70MetricId id, const char *value);
 
+// Connectivity refcount — handles overlapping system sessions
+void v70_connectivity_connected(void);
+void v70_connectivity_disconnected(void);
+
 // Lifecycle
 void v70_heartbeat_init(void);
 void v70_heartbeat_send(void);

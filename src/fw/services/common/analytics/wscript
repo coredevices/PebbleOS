@@ -15,6 +15,8 @@ def build(bld):
         bld.env.DEFINES.append('ANALYTICS_IMPL_MEMFAULT')
 
     if getattr(bld.env, 'analytics_direct_heartbeat', False):
+        if not bld.env.memfault:
+            bld.fatal('analytics_direct_heartbeat requires memfault to be enabled')
         sources.append('direct/heartbeat_v70.c')
         bld.env.DEFINES.append('ANALYTICS_DIRECT_HEARTBEAT')
 

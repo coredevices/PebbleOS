@@ -34,7 +34,7 @@ void comm_session_analytics_open_session(CommSession *session) {
     memfault_chunk_collect_after_delay();
 #endif
 #if defined(ANALYTICS_DIRECT_HEARTBEAT)
-    v70_shadow_timer_start(V70_METRIC_connectivity_connected_time_ms);
+    v70_connectivity_connected();
 #endif
   }
   session->open_ticks = rtc_get_ticks();
@@ -48,7 +48,7 @@ void comm_session_analytics_close_session(CommSession *session, CommSessionClose
       kMemfaultMetricsConnectivityState_ConnectionLost);
 #endif
 #if defined(ANALYTICS_DIRECT_HEARTBEAT)
-    v70_shadow_timer_stop(V70_METRIC_connectivity_connected_time_ms);
+    v70_connectivity_disconnected();
 #endif
   }
 

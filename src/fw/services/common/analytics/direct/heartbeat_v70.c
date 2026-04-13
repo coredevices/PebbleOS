@@ -89,6 +89,10 @@ _Static_assert(sizeof(V70BlobHeader) == 3,
 
 // ---------------------------------------------------------------------------
 // Shadow store
+//
+// Two categories of metrics:
+//   "accumulator" — counters (ADD) and timers: reset to zero after each send
+//   "snapshot"    — SET values: persist across sends until next SET call
 // ---------------------------------------------------------------------------
 
 static int64_t  s_shadow[V70_METRIC_COUNT];
@@ -96,21 +100,27 @@ static RtcTicks s_timer_start[V70_METRIC_COUNT];
 static char     s_watchface_name[32];
 static char     s_watchface_uuid[39];
 
+// Track which metrics were set via SET (not ADD/TIMER) so we preserve them
+static bool s_is_snapshot[V70_METRIC_COUNT];
+
 void v70_shadow_set_unsigned(V70MetricId id, uint64_t value) {
   if (id < V70_METRIC_COUNT) {
     s_shadow[id] = (int64_t)value;
+    s_is_snapshot[id] = true;
   }
 }
 
 void v70_shadow_set_signed(V70MetricId id, int64_t value) {
   if (id < V70_METRIC_COUNT) {
     s_shadow[id] = value;
+    s_is_snapshot[id] = true;
   }
 }
 
 void v70_shadow_add(V70MetricId id, int64_t amount) {
   if (id < V70_METRIC_COUNT) {
     s_shadow[id] += amount;
+    // ADD metrics are accumulators — not marked as snapshot
   }
 }
 
@@ -140,14 +150,46 @@ void v70_shadow_set_string(V70MetricId id, const char *value) {
 }
 
 // ---------------------------------------------------------------------------
+// Connectivity refcount — tracks overlapping system sessions
+// ---------------------------------------------------------------------------
+
+static int s_connectivity_refcount;
+
+void v70_connectivity_connected(void) {
+  if (s_connectivity_refcount++ == 0) {
+    v70_shadow_timer_start(V70_METRIC_connectivity_connected_time_ms);
+  }
+}
+
+void v70_connectivity_disconnected(void) {
+  if (s_connectivity_refcount > 0 && --s_connectivity_refcount == 0) {
+    v70_shadow_timer_stop(V70_METRIC_connectivity_connected_time_ms);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // DLS session & timing
 // ---------------------------------------------------------------------------
 
 static DataLoggingSession *s_dls_session;
+static bool s_dls_initialized;
 static RtcTicks s_last_send_ticks;
 static uint8_t s_last_battery_pct;
 
 void v70_heartbeat_init(void) {
+  // Don't create DLS session here — DLS may not be initialized yet at boot.
+  // Defer to first v70_heartbeat_send() call.
+  s_last_send_ticks = rtc_get_ticks();
+  s_last_battery_pct = battery_get_charge_state().charge_percent;
+}
+
+static void prv_ensure_dls_session(void) {
+  if (s_dls_initialized) {
+    return;
+  }
+  if (!dls_initialized()) {
+    return;
+  }
   s_dls_session = dls_create(
       DlsSystemTagAnalyticsDeviceHeartbeat,
       DATA_LOGGING_BYTE_ARRAY,
@@ -156,8 +198,7 @@ void v70_heartbeat_init(void) {
       false,  // don't resume
       NULL    // system UUID
   );
-  s_last_send_ticks = rtc_get_ticks();
-  s_last_battery_pct = battery_get_charge_state().charge_percent;
+  s_dls_initialized = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -193,19 +234,21 @@ static void prv_collect_old_metrics(V70DeviceHeartbeat *hb) {
 #define SHADOW_I16(metric) ((int16_t)s_shadow[V70_METRIC_##metric])
 
 void v70_heartbeat_send(void) {
+  // Lazily create DLS session on first send (fix #1: DLS not ready at boot)
+  prv_ensure_dls_session();
   if (!s_dls_session) {
     return;
   }
 
-  // Stop any running timers to capture their elapsed time
-  // (they'll be restarted by the next PBL_ANALYTICS_TIMER_START call)
+  // Snapshot running timers: capture elapsed time without stopping them
   for (int i = 0; i < V70_METRIC_COUNT; i++) {
     if (s_timer_start[i] != 0) {
-      RtcTicks elapsed = rtc_get_ticks() - s_timer_start[i];
+      RtcTicks now = rtc_get_ticks();
+      RtcTicks elapsed = now - s_timer_start[i];
       uint32_t elapsed_ms = (uint32_t)((elapsed * 1000) / RTC_TICKS_HZ);
       s_shadow[i] += elapsed_ms;
       // Restart the timer for the next period
-      s_timer_start[i] = rtc_get_ticks();
+      s_timer_start[i] = now;
     }
   }
 
@@ -273,7 +316,7 @@ void v70_heartbeat_send(void) {
   hb->app_message_received_count = SHADOW_U32(app_message_received_count);
   hb->utc_offset_s              = SHADOW_I32(utc_offset_s);
 
-  // Strings
+  // Strings (these persist — not cleared after send)
   memcpy(hb->watchface_name, s_watchface_name, sizeof(hb->watchface_name));
   memcpy(hb->watchface_uuid, s_watchface_uuid, sizeof(hb->watchface_uuid));
 
@@ -283,9 +326,13 @@ void v70_heartbeat_send(void) {
   // Send via data logging
   dls_log(s_dls_session, buf, 1);
 
-  // Reset shadow store for next period
-  memset(s_shadow, 0, sizeof(s_shadow));
-  memset(s_watchface_name, 0, sizeof(s_watchface_name));
-  memset(s_watchface_uuid, 0, sizeof(s_watchface_uuid));
+  // Reset only accumulator metrics (ADD and TIMER), preserve snapshot (SET) values
+  // Fix #2: snapshot metrics like utc_offset_s, watchface strings persist
+  for (int i = 0; i < V70_METRIC_COUNT; i++) {
+    if (!s_is_snapshot[i]) {
+      s_shadow[i] = 0;
+    }
+  }
+  // Note: s_watchface_name/uuid are NOT cleared — they persist until next SET_STRING
   // Note: s_timer_start is NOT reset — running timers continue accumulating
 }
