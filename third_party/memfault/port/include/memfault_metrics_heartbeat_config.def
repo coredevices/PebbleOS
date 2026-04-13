@@ -1,73 +1,14 @@
-#include "ports/freertos/config/memfault_metrics_heartbeat_freertos_config.def"
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) \
+    MEMFAULT_METRICS_KEY_DEFINE(key, kMemfaultMetricType_Unsigned)
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) \
+    MEMFAULT_METRICS_KEY_DEFINE(key, kMemfaultMetricType_Signed)
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) \
+    MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(key, kMemfaultMetricType_Unsigned, scale)
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) \
+    MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(key, kMemfaultMetricType_Signed, scale)
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) \
+    MEMFAULT_METRICS_KEY_DEFINE(key, kMemfaultMetricType_Timer)
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) \
+    MEMFAULT_METRICS_STRING_KEY_DEFINE(key, len)
 
-// OS
-MEMFAULT_METRICS_KEY_DEFINE(memory_pct_max, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(stack_free_kernel_main_bytes, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(stack_free_kernel_background_bytes, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(stack_free_newtimers_bytes, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(utc_offset_s, kMemfaultMetricType_Signed)
-
-// Battery & Power
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(battery_voltage, kMemfaultMetricType_Unsigned, 1000)
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(battery_voltage_delta, kMemfaultMetricType_Signed, 1000)
-MEMFAULT_METRICS_KEY_DEFINE(battery_charge_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(battery_plugged_time_ms, kMemfaultMetricType_Timer)
-
-// Hardware I/O
-MEMFAULT_METRICS_KEY_DEFINE(backlight_on_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(backlight_avg_intensity_pct, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(vibrator_on_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(vibrator_avg_strength_pct, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(hrm_on_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(button_pressed_count, kMemfaultMetricType_Unsigned)
-
-// CPU usage
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(cpu_running_pct, kMemfaultMetricType_Unsigned, 100)
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(cpu_sleep0_pct, kMemfaultMetricType_Unsigned, 100)
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(cpu_sleep1_pct, kMemfaultMetricType_Unsigned, 100)
-MEMFAULT_METRICS_KEY_DEFINE_WITH_SCALE_VALUE(cpu_sleep2_pct, kMemfaultMetricType_Unsigned, 100)
-
-// Accelerometer
-MEMFAULT_METRICS_KEY_DEFINE(accel_sample_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_shake_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_double_tap_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(accel_peek_count, kMemfaultMetricType_Unsigned)
-
-// Notifications, phone calls, etc.
-MEMFAULT_METRICS_KEY_DEFINE(notification_received_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(notification_received_dnd_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(phone_call_incoming_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(phone_call_time_ms, kMemfaultMetricType_Timer)
-
-// Modes
-MEMFAULT_METRICS_KEY_DEFINE(low_power_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(stationary_time_ms, kMemfaultMetricType_Timer)
-
-// Watchface
-MEMFAULT_METRICS_KEY_DEFINE(watchface_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_STRING_KEY_DEFINE(watchface_name, 32)
-MEMFAULT_METRICS_STRING_KEY_DEFINE(watchface_uuid, 39)
-
-// File system
-MEMFAULT_METRICS_KEY_DEFINE(pfs_space_free_kb, kMemfaultMetricType_Unsigned)
-
-// NOR Flash
-MEMFAULT_METRICS_KEY_DEFINE(flash_spi_write_bytes, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(flash_spi_erase_bytes, kMemfaultMetricType_Unsigned)
-
-// BLE
-MEMFAULT_METRICS_KEY_DEFINE(ble_adv_short_intvl_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(ble_adv_long_intvl_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(ble_conn_itvl_min_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(ble_conn_itvl_mid_time_ms, kMemfaultMetricType_Timer)
-MEMFAULT_METRICS_KEY_DEFINE(ble_conn_itvl_max_time_ms, kMemfaultMetricType_Timer)
-
-// Settings
-MEMFAULT_METRICS_KEY_DEFINE(settings_health_tracking_enabled, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(settings_health_hrm_enabled, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(settings_health_hrm_measurement_interval, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(settings_health_hrm_activity_tracking_enabled, kMemfaultMetricType_Unsigned)
-
-// Application
-MEMFAULT_METRICS_KEY_DEFINE(app_message_sent_count, kMemfaultMetricType_Unsigned)
-MEMFAULT_METRICS_KEY_DEFINE(app_message_received_count, kMemfaultMetricType_Unsigned)
+#include "services/common/analytics/analytics.def"
