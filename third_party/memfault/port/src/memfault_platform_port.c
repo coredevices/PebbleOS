@@ -17,6 +17,9 @@
 #include "system/logging.h"
 #include "system/version.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 // Buffer used to store formatted string for output
 #define MEMFAULT_DEBUG_LOG_BUFFER_SIZE_BYTES \
   (sizeof("2024-11-27T14:19:29Z|123456780 I ") + MEMFAULT_DATA_EXPORT_BASE64_CHUNK_MAX_LEN)
@@ -190,8 +193,6 @@ int memfault_platform_boot(void) {
 
   return 0;
 }
-
-#include "FreeRTOS.h"
 
 // [MJ] FIXME: We shouldinstead use the Memfault FreeRTOS port, but it requires
 // a newer version of FreeRTOS + assumes FreeRTOS timers are available.
