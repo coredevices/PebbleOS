@@ -1141,30 +1141,30 @@
 
 /* Overridden by targets/sf32lb52 (defined by @apache-mynewt-nimble/nimble/transport) */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_ACL_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_ACL_COUNT (30)
+#define MYNEWT_VAL_BLE_TRANSPORT_ACL_COUNT (40)
 #endif
 
 /* Value copied from BLE_TRANSPORT_ACL_COUNT */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_HS_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_HS_COUNT (30)
+#define MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_HS_COUNT (40)
 #endif
 
 /* Value copied from BLE_TRANSPORT_ACL_COUNT */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_LL_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_LL_COUNT (30)
+#define MYNEWT_VAL_BLE_TRANSPORT_ACL_FROM_LL_COUNT (40)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_ACL_SIZE
 #define MYNEWT_VAL_BLE_TRANSPORT_ACL_SIZE (251)
 #endif
 
+/* Overridden by targets/sf32lb52 (defined by @apache-mynewt-nimble/nimble/transport) */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_EVT_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_EVT_COUNT (4)
+#define MYNEWT_VAL_BLE_TRANSPORT_EVT_COUNT (8)
 #endif
 
-/* Overridden by targets/sf32lb52 (defined by @apache-mynewt-nimble/nimble/transport) */
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_EVT_DISCARDABLE_COUNT
-#define MYNEWT_VAL_BLE_TRANSPORT_EVT_DISCARDABLE_COUNT (32)
+#define MYNEWT_VAL_BLE_TRANSPORT_EVT_DISCARDABLE_COUNT (16)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_EVT_SIZE
