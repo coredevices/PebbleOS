@@ -2,7 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 def configure(conf):
-    pass
+    # Enable v70 direct heartbeat when Memfault is enabled
+    memfault_val = getattr(conf.env, 'memfault', 0)
+    conf.env.analytics_direct_heartbeat = bool(int(memfault_val)) if memfault_val else False
+    if conf.env.analytics_direct_heartbeat:
+        conf.msg('v70 direct heartbeat', 'enabled')
 
 
 def build(bld):
@@ -18,6 +22,7 @@ def build(bld):
         if not bld.env.memfault:
             bld.fatal('analytics_direct_heartbeat requires memfault to be enabled')
         sources.append('direct/heartbeat_v70.c')
+        use.append('fw_includes')
         bld.env.DEFINES.append('ANALYTICS_DIRECT_HEARTBEAT')
 
     bld.stlib(
