@@ -1,0 +1,74 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+// OS
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(memory_pct_max)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_kernel_main_bytes)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_kernel_background_bytes)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_newtimers_bytes)
+PBL_ANALYTICS_METRIC_DEFINE_SIGNED(utc_offset_s)
+
+// Battery & Power
+PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(battery_voltage, 1000)
+PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(battery_voltage_delta, 1000)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(battery_charge_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(battery_plugged_time_ms)
+
+// Hardware I/O
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(backlight_on_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(backlight_avg_intensity_pct)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(vibrator_on_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(vibrator_avg_strength_pct)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(hrm_on_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(button_pressed_count)
+
+// CPU usage
+PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(cpu_running_pct, 100)
+PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(cpu_sleep0_pct, 100)
+PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(cpu_sleep1_pct, 100)
+PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(cpu_sleep2_pct, 100)
+
+// Accelerometer
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(accel_sample_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(accel_shake_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(accel_double_tap_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(accel_peek_count)
+
+// Notifications, phone calls, etc.
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(notification_received_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(notification_received_dnd_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(phone_call_incoming_count)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(phone_call_time_ms)
+
+// Modes
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(low_power_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(stationary_time_ms)
+
+// Watchface
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(watchface_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_STRING(watchface_name, 32)
+PBL_ANALYTICS_METRIC_DEFINE_STRING(watchface_uuid, 39)
+
+// File system
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(pfs_space_free_kb)
+
+// NOR Flash
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(flash_spi_write_bytes)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(flash_spi_erase_bytes)
+
+// BLE
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_adv_short_intvl_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_adv_long_intvl_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_conn_itvl_min_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_conn_itvl_mid_time_ms)
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_conn_itvl_max_time_ms)
+
+// Settings
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_health_tracking_enabled)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_health_hrm_enabled)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_health_hrm_measurement_interval)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_health_hrm_activity_tracking_enabled)
+
+// Application
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(app_message_sent_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(app_message_received_count)
