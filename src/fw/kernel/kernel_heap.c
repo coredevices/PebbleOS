@@ -44,7 +44,7 @@ void kernel_heap_init(void) {
   });
 }
 
-void analytics_external_collect_kernel_heap_stats(void) {
+void pbl_analytics_external_collect_kernel_heap_stats(void) {
   uint32_t headroom = heap_get_minimum_headroom(&s_kernel_heap);
   size_t total_size = heap_size(&s_kernel_heap);
   uint32_t headroom_pct = (total_size > 0) ? (headroom * 100) / total_size : 0;
