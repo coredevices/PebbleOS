@@ -84,6 +84,14 @@ jobs:
             if $skip; then continue; fi
 
             if ! head -10 "$file" | grep -q "SPDX-License-Identifier: Apache-2.0"; then
+              # If the file existed before and its license line was not touched
+              # in this PR, skip it (pre-existing non-Apache-2.0 file).
+              if git cat-file -e "$base":"$file" 2>/dev/null; then
+                if ! git diff "$base"...HEAD -- "$file" | grep -qE '^\+.*SPDX-License-Identifier:|^-.*SPDX-License-Identifier:'; then
+                  echo "::notice file=$file::Skipping: pre-existing non-Apache-2.0 license (unchanged)"
+                  continue
+                fi
+              fi
               echo "::error file=$file::Missing 'SPDX-License-Identifier: Apache-2.0' header"
               failed_files+=("$file")
             fi
