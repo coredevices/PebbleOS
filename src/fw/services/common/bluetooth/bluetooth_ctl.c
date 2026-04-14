@@ -13,9 +13,6 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/stop.h"
-#if MEMFAULT
-#include "memfault/metrics/connectivity.h"
-#endif
 #include "os/mutex.h"
 #include "pbl/services/common/analytics/analytics.h"
 #include "pbl/services/common/bluetooth/ble_bas.h"
@@ -137,15 +134,12 @@ static void prv_send_state_change_event(void) {
           },
   };
   event_put(&event);
-#if MEMFAULT
   if (s_comm_airplane_mode_on) {
-    memfault_metrics_connectivity_connected_state_change(
-      kMemfaultMetricsConnectivityState_Stopped);
+    PBL_ANALYTICS_TIMER_STOP(connectivity_connected_time_ms);
+    PBL_ANALYTICS_TIMER_STOP(connectivity_expected_time_ms);
   } else {
-    memfault_metrics_connectivity_connected_state_change(
-      kMemfaultMetricsConnectivityState_Started);
+    PBL_ANALYTICS_TIMER_START(connectivity_expected_time_ms);
   }
-#endif
 }
 
 static void prv_comm_state_change(void *context) {
