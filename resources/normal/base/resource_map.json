@@ -1177,6 +1177,11 @@
     },
     {
       "type": "pdc",
+      "name": "TIMELINE_EMPTY_CALENDAR_LARGE",
+      "file": "normal/base/images/Pebble_66x66_Empty_calendar.svg"
+    },
+    {
+      "type": "pdc",
       "name": "CAR_RENTAL_LARGE",
       "file": "normal/base/images/Pebble_80x80_Car_rental.svg"
     },
@@ -3288,7 +3293,7 @@
       "sizes": {
         "tiny": "RESOURCE_ID_TIMELINE_CALENDAR_TINY",
         "small": "RESOURCE_ID_TIMELINE_EMPTY_CALENDAR_SMALL",
-        "large": "RESOURCE_ID_TIMELINE_CALENDAR_LARGE"
+        "large": "RESOURCE_ID_TIMELINE_EMPTY_CALENDAR_LARGE"
       }
     },
     {
