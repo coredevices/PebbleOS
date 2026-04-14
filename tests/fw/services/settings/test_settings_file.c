@@ -611,6 +611,139 @@ void test_settings_file__reallocate_larger(void) {
   verify(&file, key, key_len, val, val_len);
 }
 
+// Test that a growable file automatically grows when writes exceed the initial allocation
+// but stay within the enforcement cap.
+void test_settings_file__growable_auto_growth(void) {
+  printf("\nTesting growable file auto-growth...\n");
+
+  // PFS allocates in 4096-byte pages, so the initial_alloc must span at least
+  // one page. Use an initial_alloc that results in one PFS page and a max_cap
+  // that allows multiple pages. Write enough large records to exceed one page.
+  const int initial_alloc = 2048;
+  const int max_cap = 32768;
+  SettingsFile file;
+  cl_must_pass(settings_file_open_growable(&file, "tg", max_cap, initial_alloc));
+
+  int initial_file_size = pfs_get_file_size(file.iter.fd);
+  printf("Initial file size: %d, max_space_total: %d\n",
+         initial_file_size, file.max_space_total);
+
+  // Write large records to fill and exceed the initial allocation.
+  // Each record: 8 (header) + 4 (key) + 128 (val) = 140 bytes.
+  // One PFS page holds ~4000 usable bytes, so ~28 records fills it.
+  uint8_t key[5];
+  int key_len = 4;
+  uint8_t val[128];
+  int val_len = sizeof(val);
+  memset(val, 0xAB, val_len);
+  // 8114 / 140 ≈ 57 records to fill the initial allocation. Write 65 to force growth.
+  int num_records = 65;
+  for (int i = 0; i < num_records; i++) {
+    snprintf((char *)key, sizeof(key), "k%03d", i);
+    val[0] = (uint8_t)i; // Make each value unique
+    cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
+  }
+
+  int grown_file_size = pfs_get_file_size(file.iter.fd);
+  printf("Grown file size: %d\n", grown_file_size);
+  cl_assert(grown_file_size > initial_file_size);
+
+  // Verify all data survived the growth
+  for (int i = 0; i < num_records; i++) {
+    snprintf((char *)key, sizeof(key), "k%03d", i);
+    val[0] = (uint8_t)i;
+    verify(&file, key, key_len, val, val_len);
+  }
+
+  settings_file_close(&file);
+}
+
+// Test that a growable file returns E_OUT_OF_STORAGE when the enforcement cap is hit.
+void test_settings_file__growable_enforces_cap(void) {
+  printf("\nTesting growable file cap enforcement...\n");
+
+  // Use a cap of 4096 (one PFS page worth) and initial_alloc of 2048.
+  // Write large records to hit the cap.
+  const int initial_alloc = 2048;
+  const int max_cap = 4096;
+  SettingsFile file;
+  cl_must_pass(settings_file_open_growable(&file, "tc", max_cap, initial_alloc));
+
+  uint8_t key[5];
+  int key_len = 4;
+  uint8_t val[128];
+  int val_len = sizeof(val);
+  memset(val, 0xCD, val_len);
+  // Each record = 8 + 4 + 128 = 140 bytes. max_cap of 4096 holds ~28 records.
+  int i;
+  for (i = 0; i < 100; i++) {
+    snprintf((char *)key, sizeof(key), "k%03d", i);
+    val[0] = (uint8_t)i;
+    status_t status = settings_file_set(&file, key, key_len, val, val_len);
+    if (status == E_OUT_OF_STORAGE) {
+      printf("Hit storage cap at record %d\n", i);
+      break;
+    }
+    cl_must_pass(status);
+  }
+
+  // We should have hit the cap before writing 100 records
+  cl_assert(i < 100);
+
+  // Verify the records that were written are still readable
+  for (int j = 0; j < i; j++) {
+    snprintf((char *)key, sizeof(key), "k%03d", j);
+    val[0] = (uint8_t)j;
+    verify(&file, key, key_len, val, val_len);
+  }
+
+  settings_file_close(&file);
+}
+
+// Test that closing and reopening a grown file preserves its size and data.
+void test_settings_file__growable_reopen(void) {
+  printf("\nTesting growable file reopen after growth...\n");
+
+  const int initial_alloc = 2048;
+  const int max_cap = 32768;
+  SettingsFile file;
+  cl_must_pass(settings_file_open_growable(&file, "tr", max_cap, initial_alloc));
+
+  // Write enough large records to force growth past the initial page
+  uint8_t key[5];
+  int key_len = 4;
+  uint8_t val[128];
+  int val_len = sizeof(val);
+  memset(val, 0xEF, val_len);
+  int num_records = 65;
+  for (int i = 0; i < num_records; i++) {
+    snprintf((char *)key, sizeof(key), "k%03d", i);
+    val[0] = (uint8_t)i;
+    cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
+  }
+
+  int grown_file_size = pfs_get_file_size(file.iter.fd);
+  printf("Grown file size: %d\n", grown_file_size);
+  settings_file_close(&file);
+
+  // Reopen with the same growable parameters
+  cl_must_pass(settings_file_open_growable(&file, "tr", max_cap, initial_alloc));
+
+  int reopened_file_size = pfs_get_file_size(file.iter.fd);
+  printf("Reopened file size: %d\n", reopened_file_size);
+  // The file should not have shrunk
+  cl_assert(reopened_file_size >= grown_file_size);
+
+  // Verify all data survived the close/reopen
+  for (int i = 0; i < num_records; i++) {
+    snprintf((char *)key, sizeof(key), "k%03d", i);
+    val[0] = (uint8_t)i;
+    verify(&file, key, key_len, val, val_len);
+  }
+
+  settings_file_close(&file);
+}
+
 // Test that we can start searching beginning at the record we previously found in a recent
 // call into settings file. This makes sure we don't start searching at the beginning of a file
 // each API call.
