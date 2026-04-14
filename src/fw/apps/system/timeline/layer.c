@@ -91,7 +91,7 @@ static const TimelineLayerStyle s_style_medium = {
 static const TimelineLayerStyle s_style_large = {
   .sidebar_arrow_size.w = PBL_IF_RECT_ELSE(14, 10),
   .sidebar_arrow_size.h = PBL_IF_RECT_ELSE(28, 40),
-  .sidebar_width = PBL_IF_RECT_ELSE(34, 42),
+  .sidebar_width = PBL_IF_RECT_ELSE(34, 51),
   .fin_offset_x = 4,
   .future_fin_offset_y = 37,
   .past_top_margin = PBL_IF_RECT_ELSE(7, 18),
@@ -100,7 +100,7 @@ static const TimelineLayerStyle s_style_large = {
   .left_margin = 9,
   .right_margin = 14,
   .icon_offset_y = 3,
-  .icon_right_margin = 6,
+  .icon_right_margin = PBL_IF_RECT_ELSE(6, 12),
   .fat_pin_height = 131,
   // PBL-42540: This property is dependent on the screen size.
   .thin_pin_height = 88,
