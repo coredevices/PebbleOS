@@ -8,12 +8,9 @@
 
 #include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/normal/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
-
 #include "pbl/services/normal/settings/settings_file.h"
 #include "pbl/services/normal/filesystem/pfs.h"
 #include "pbl/services/common/event_service.h"
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/common/analytics/analytics_external.h"
 #include "flash_region/flash_region.h"
 
 // Stubs
@@ -34,7 +31,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include "stubs_bluetooth_persistent_storage_debug.h"
 #include "stubs_bt_lock.h"
 #include "stubs_gap_le_advert.h"
-#include "stubs_bluetooth_analytics.h"
 #include "stubs_gatt_client_discovery.h"
 #include "stubs_gatt_client_subscriptions.h"
 #include "stubs_logging.h"
@@ -52,8 +48,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 static int s_ble_bonding_change_add_count;
 static int s_ble_bonding_change_update_count;
 static int s_ble_bonding_change_delete_count;
-
-static int s_analytics_ble_pairings_count;
 
 typedef bool (*BondingSyncFilterCb)(const BleBonding *bonding, void *ctx);
 const BleBonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {
@@ -112,12 +106,6 @@ void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondin
   return;
 }
 
-void analytics_set(AnalyticsMetric metric, int64_t val, AnalyticsClient client) {
-  if (metric == ANALYTICS_DEVICE_METRIC_BLE_PAIRING_RECORDS_COUNT) {
-    s_analytics_ble_pairings_count = val;
-  }
-}
-
 uint16_t gaps_get_starting_att_handle(void) {
   return 4;
 }
@@ -140,7 +128,6 @@ void test_bluetooth_persistent_storage__initialize(void) {
   s_ble_bonding_change_add_count = 0;
   s_ble_bonding_change_update_count = 0;
   s_ble_bonding_change_delete_count = 0;
-  s_analytics_ble_pairings_count = 0;
 
   fake_shared_prf_storage_reset_counts();
 
@@ -478,54 +465,6 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
   // Try to read it back
   ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, NULL);
   cl_assert(!ret);
-}
-
-
-void test_bluetooth_persistent_storage__pbl_analytics_external_collect_ble_pairing_info(void) {
-  // No pairings yet
-  pbl_analytics_external_collect_ble_pairing_info();
-  cl_assert_equal_i(s_analytics_ble_pairings_count, 0);
-
-  // Store a pairing
-  SMPairingInfo pairing = (SMPairingInfo) {
-    .irk = (SMIdentityResolvingKey) {
-      .data = {
-        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00,
-      },
-    },
-    .identity = (BTDeviceInternal) {
-      .address = (BTDeviceAddress) {
-        .octets = {
-          0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-        },
-      },
-      .is_classic = false,
-      .is_random_address = false,
-    },
-    .is_remote_identity_info_valid = true,
-  };
-  BleBonding ble_bonding = (BleBonding) {
-    .is_gateway = true,
-    .pairing_info = pairing,
-  };
-  bonding_sync_add_bonding(&ble_bonding);
-  BTBondingID id = bt_persistent_storage_store_ble_pairing(&pairing, true /* is_gateway */, NULL,
-                                                           false /* requires_address_pinning */,
-                                                           false /* auto_accept_re_pairing */);
-  cl_assert(id != BT_BONDING_ID_INVALID);
-
-  // We should now be at 1
-  pbl_analytics_external_collect_ble_pairing_info();
-  cl_assert_equal_i(s_analytics_ble_pairings_count, 1);
-
-  // Delete the Pairing
-  bt_persistent_storage_delete_ble_pairing_by_id(id);
-  cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
-
-  // We should now be at 0
-  pbl_analytics_external_collect_ble_pairing_info();
-  cl_assert_equal_i(s_analytics_ble_pairings_count, 0);
 }
 
 void test_bluetooth_persistent_storage__ble_ancs_bonding(void) {
