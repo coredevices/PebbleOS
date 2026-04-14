@@ -6,7 +6,6 @@
 #include "drivers/rtc.h"
 
 #if MEMFAULT
-#include "memfault/metrics/connectivity.h"
 #include "memfault_chunk_collector.h"
 #endif
 #include "pbl/services/common/comm_session/session_internal.h"
@@ -21,9 +20,9 @@ CommSessionTransportType comm_session_analytics_get_transport_type(CommSession *
 void comm_session_analytics_open_session(CommSession *session) {
   const bool is_system = (session->destination != TransportDestinationApp);
   if (is_system) {
+    PBL_ANALYTICS_TIMER_START(connectivity_expected_time_ms);
+    PBL_ANALYTICS_TIMER_START(connectivity_connected_time_ms);
 #if MEMFAULT
-    memfault_metrics_connectivity_connected_state_change(
-      kMemfaultMetricsConnectivityState_Connected);
     // Trigger a delayed Memfault chunk collection so any pending coredump data
     // gets pushed into datalogging shortly after the phone connects, rather than
     // waiting for the 15-minute periodic timer. The delay gives the phone time
@@ -37,10 +36,8 @@ void comm_session_analytics_open_session(CommSession *session) {
 void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason) {
   const bool is_system = (session->destination != TransportDestinationApp);
   if (is_system) {
-#if MEMFAULT
-    memfault_metrics_connectivity_connected_state_change(
-      kMemfaultMetricsConnectivityState_ConnectionLost);
-#endif
+    PBL_ANALYTICS_TIMER_START(connectivity_expected_time_ms);
+    PBL_ANALYTICS_TIMER_STOP(connectivity_connected_time_ms);
   }
 
 }

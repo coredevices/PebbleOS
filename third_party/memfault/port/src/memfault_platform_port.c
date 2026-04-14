@@ -180,8 +180,6 @@ int memfault_platform_boot(void) {
   };
   memfault_metrics_boot(evt_storage, &boot_info);
 
-  memfault_metrics_battery_boot();
-
   memfault_build_info_dump();
   memfault_device_info_dump();
 
