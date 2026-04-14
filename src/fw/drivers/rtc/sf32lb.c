@@ -293,7 +293,9 @@ void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
   RTC_TimeTypeDef rtc_time;
 
   if (s_initialized) {
-    HAL_RTC_WaitForSynchro(&RTC_Handler);
+    while((RTC_Handler.Instance->ISR & RTC_ISR_RSF) == (uint32_t)RESET) {
+      // Wait for RTC registers to synchronize
+    }
   }
 
   HAL_RTC_GetTime(&RTC_Handler, &rtc_time, RTC_FORMAT_BIN);
