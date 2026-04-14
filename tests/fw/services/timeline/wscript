@@ -114,7 +114,7 @@ def build(ctx):
       test_sources_ant_glob = "test_alarm_layout.c",
       defines=["CAPABILITY_HAS_HEALTH_TRACKING=0"],
       override_includes=['dummy_board'],
-      platforms=['snowy', 'spalding'])
+      platforms=['snowy', 'spalding', 'obelix'])
 
     rendering_sources = \
         " src/fw/applib/fonts/codepoint.c" \
