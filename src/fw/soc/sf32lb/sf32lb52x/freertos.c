@@ -238,6 +238,9 @@ void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
 
         prv_wdt_feed(elapsed_ticks);
 
+        // Force RTC synchronization of shadow registers
+        hwp_rtc->ISR &= RTC_RSF_MASK;
+
         // Track deep sleep time for analytics
         s_analytics_deepsleep_ticks += elapsed_ticks;
 
