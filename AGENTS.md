@@ -18,6 +18,7 @@ PebbleOS is the operating system running on Pebble smartwatches.
 ## Code style
 
 - clang-format for C code
+- ruff for Python code
 
 ## Firmware development
 
