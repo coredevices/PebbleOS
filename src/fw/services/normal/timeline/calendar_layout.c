@@ -9,6 +9,7 @@
 #include "applib/graphics/gdraw_command_transforms.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/text.h"
+#include "applib/preferred_content_size.h"
 #include "applib/ui/ui.h"
 #include "board/display.h"
 #include "kernel/pbl_malloc.h"
@@ -29,8 +30,17 @@
 //////////////////////////////////////////
 
 #if PBL_RECT
-#define CARD_ICON_OFFSET { 0, 6 }
-#define CARD_ICON_MARGIN { 3, 2 }
+#define CARD_ICON_OFFSET_Y                                           \
+    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,       \
+      /* small */ 6, /* medium */ 6, /* large */ -3, /* extralarge */ -3)
+#define CARD_ICON_MARGIN_W                                           \
+    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,       \
+      /* small */ 3, /* medium */ 3, /* large */ 5, /* extralarge */ 5)
+#define CARD_ICON_OFFSET { 0, CARD_ICON_OFFSET_Y }
+#define CARD_ICON_MARGIN_H                                           \
+    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,       \
+      /* small */ 2, /* medium */ 2, /* large */ 0, /* extralarge */ 0)
+#define CARD_ICON_MARGIN { CARD_ICON_MARGIN_W, CARD_ICON_MARGIN_H }
 #else
 #define CARD_ICON_OFFSET { 0, 9 }
 #define CARD_ICON_MARGIN { 0, 6 }
@@ -39,7 +49,12 @@
 //! This offset only applies for TIMELINE_RESOURCE_TIMELINE_CALENDAR and variants
 #define CARD_ICON_CALENDAR_OFFSET_X PBL_IF_RECT_ELSE(-5, 0)
 
-#define CARD_MARGIN_TOP -1
+#define CARD_MARGIN_TOP                                              \
+    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,       \
+      /* small */ -1,                                                \
+      /* medium */ -1,                                               \
+      /* large */ 6,                                                 \
+      /* extralarge */ 6)
 #define CARD_MARGIN_BOTTOM PBL_IF_RECT_ELSE(7, 0)
 #define CARD_NUM_TIME_DATE_SPACES 2
 #define CARD_LINE_DELTA -2
@@ -94,7 +109,10 @@ static void prv_day_node_callback(GContext *ctx, const GRect *box,
                                   GSize *size_out, void *user_data) {
   CalendarLayout *layout = user_data;
   const GRect *icon_frame = &layout->timeline_layout.icon_layer.layer.frame;
-  const GPoint date_offset = { 1, 16 };
+  const GPoint date_offset = {
+    1, PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+      /* small */ 16, /* medium */ 16, /* large */ 16, /* extralarge */ 16)
+  };
   layer_set_frame((Layer *)&layout->date_layer,
                   &(GRect) { gpoint_add(icon_frame->origin, date_offset), icon_frame->size });
   clock_get_day_date(layout->day_date_buffer, sizeof(layout->day_date_buffer),
@@ -111,7 +129,12 @@ static GTextNode *prv_day_node_constructor(
   }
   const LayoutColors *colors = &layout->timeline_layout.impl->default_colors;
   text_layer_init_with_parameters(&layout->date_layer, &GRectZero, layout->day_date_buffer,
-                                  fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
+                                  fonts_get_system_font(PREFERRED_CONTENT_SIZE_SWITCH(
+                                      PreferredContentSizeDefault,
+                                      /* small */ FONT_KEY_LECO_20_BOLD_NUMBERS,
+                                      /* medium */ FONT_KEY_LECO_20_BOLD_NUMBERS,
+                                      /* large */ FONT_KEY_LECO_32_BOLD_NUMBERS,
+                                      /* extralarge */ FONT_KEY_LECO_32_BOLD_NUMBERS)),
                                   colors->primary_color, GColorClear, GTextAlignmentCenter,
                                   GTextOverflowModeWordWrap);
   layer_add_child((Layer *)layout, (Layer *)&layout->date_layer);
@@ -232,6 +255,23 @@ static GTextNode *prv_construct_if_recurring(
   return NULL;
 }
 
+static void prv_not_recurring_spacer_callback(GContext *ctx, const GRect *box,
+                                              const GTextNodeDrawConfig *config, bool render,
+                                              GSize *size_out, void *user_data) {
+  if (size_out) {
+    *size_out = (GSize) { 0, PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+        /* small */ 0, /* medium */ 0, /* large */ 3, /* extralarge */ 3) };
+  }
+}
+
+static GTextNode *prv_construct_if_not_recurring(
+    const LayoutLayer *layout, const LayoutNodeConstructorConfig *config) {
+  if (prv_should_draw_recurring((const TimelineLayout *)layout)) {
+    return NULL;
+  }
+  return &graphics_text_node_create_custom(prv_not_recurring_spacer_callback, NULL)->node;
+}
+
 typedef struct {
   GDrawCommandImage *image;
   CalendarLayoutBufferCallback callback;
@@ -248,7 +288,8 @@ static GTextNode *prv_create_icon_label_node_rect(
   const LayoutNodeTextBufferConfig time_config = {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = buffer,
-    .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Header,
     .text.extent.margin.h = time_margin_h,
   };
   GTextNode *node =
@@ -259,7 +300,8 @@ static GTextNode *prv_create_icon_label_node_rect(
   }
   GTextNodeHorizontal *horizontal_node = graphics_text_node_create_horizontal(2);
   GTextNodeCustom *image_node = prv_create_image_node(ctx->image);
-  image_node->node.offset.y = 8;
+  image_node->node.offset.y = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+      /* small */ 8, /* medium */ 8, /* large */ 11, /* extralarge */ 11);
   image_node->node.margin.w = 6;
   graphics_text_node_container_add_child(&horizontal_node->container, &image_node->node);
   graphics_text_node_container_add_child(&horizontal_node->container, node);
@@ -273,7 +315,8 @@ static GTextNode *prv_construct_all_day_or_node(
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("All Day"),
     .use_i18n = true,
-    .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Header,
   };
   return layout_create_text_node_from_config(
       layout_ref, layout->info->all_day ? &s_all_day_config.text.extent.node : config->context);
@@ -314,7 +357,11 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("Recurring"),
     .use_i18n = true,
-    .text.font_key = PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD),
+    .text.font_key = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+      /* small */ PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD),
+      /* medium */ PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD),
+      /* large */ FONT_KEY_GOTHIC_18_BOLD,
+      /* extralarge */ FONT_KEY_GOTHIC_18_BOLD),
     .text.extent.offset.y = PBL_IF_RECT_ELSE(4, 1), // recurring offset y
     .text.extent.margin.h = PBL_IF_RECT_ELSE(4, 1), // recurring margin height
   };
@@ -323,16 +370,22 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .constructor = prv_construct_if_recurring,
     .context = (void *)&s_recurring_config,
   };
+  PBL_UNUSED static const LayoutNodeConstructorConfig s_if_not_recurring_spacer_config = {
+    .extent.node.type = LayoutNodeType_Constructor,
+    .constructor = prv_construct_if_not_recurring,
+  };
   static const LayoutNodeTextAttributeConfig s_glance_title_config = {
     .attr_id = AttributeIdTitle,
-    .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Title,
     .text.fixed_lines = PBL_IF_RECT_ELSE(2, 1), // glance title fixed lines
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = PBL_IF_RECT_ELSE(6, 4), // glance title margin height
   };
   static const LayoutNodeTextAttributeConfig s_glance_location_config = {
     .attr_id = AttributeIdLocationName,
-    .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Header,
     .text.fixed_lines = 1, // glance location fixed lines
   };
   static const LayoutNodeConstructorConfig s_digit_config = {
@@ -344,13 +397,15 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_title_config = {
     .attr_id = AttributeIdTitle,
-    .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Title,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = 7, // title margin height
   };
   static const LayoutNodeTextAttributeConfig s_location_config = {
     .attr_id = AttributeIdLocationName,
-    .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Header,
     .text.extent.margin.h = 15, // location margin height
   };
   static const IconLabelContext s_start_icon_label_context = {
@@ -376,26 +431,33 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_body_config = {
     .attr_id = AttributeIdBody,
-    .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Body,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = 17, // body margin height
   };
   static const LayoutNodeTextAttributeConfig s_sender_config = {
     .attr_id = AttributeIdSender,
-    .text.font_key = FONT_KEY_GOTHIC_24,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_PinSubtitle,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = 17, // sender margin height
   };
 
 #if PBL_RECT
   static const LayoutNodeConfig * const s_metadata_config_nodes[] = {
+    &s_if_not_recurring_spacer_config.extent.node,
     &s_glance_start_time_or_all_day_config.extent.node,
     &s_glance_end_time_with_icon_config.extent.node,
     &s_if_recurring_config.extent.node,
   };
   static const LayoutNodeVerticalConfig s_metadata_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .vertical_alignment = LayoutVerticalAlignment_Center,
+    .vertical_alignment = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+      /* small */ LayoutVerticalAlignment_Center,
+      /* medium */ LayoutVerticalAlignment_Center,
+      /* large */ LayoutVerticalAlignment_Left,
+      /* extralarge */ LayoutVerticalAlignment_Left),
     .container.num_nodes = ARRAY_LENGTH(s_metadata_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_metadata_config_nodes,
   };
@@ -467,7 +529,11 @@ LayoutLayer *calendar_layout_create(const LayoutLayerConfig *config) {
                         { .argb = GColorSunsetOrangeARGB8 } },
     .default_icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
     .card_icon_align = PBL_IF_RECT_ELSE(GAlignLeft, GAlignCenter),
-    .card_icon_size = TimelineResourceSizeSmall,
+    .card_icon_size = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+      /* small */ TimelineResourceSizeSmall,
+      /* medium */ TimelineResourceSizeSmall,
+      /* large */ TimelineResourceSizeLarge,
+      /* extralarge */ TimelineResourceSizeLarge),
     .card_view_constructor = prv_card_view_constructor,
   };
 
