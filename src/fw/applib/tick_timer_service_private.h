@@ -11,6 +11,7 @@ typedef struct __attribute__((packed)) TickTimerServiceState {
   TimeUnits tick_units;
   struct tm last_time;
   bool first_tick;
+  bool last_is_24h;
 
   EventServiceInfo tick_service_info;
 } TickTimerServiceState;
