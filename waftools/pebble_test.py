@@ -275,7 +275,7 @@ def add_clar_test(
         if not re.match(bld.options.regex, filename):
             return
 
-    platform_set = set(["default", "snowy", "spalding", "silk"])
+    platform_set = set(["default", "snowy", "spalding", "silk", "obelix"])
 
     # validate platforms specified
     if platform not in platform_set:
@@ -347,7 +347,7 @@ def add_clar_test(
     ]
 
     # Use Snowy's resource headers as a fallback if we don't override it here
-    resource_override_dir_name = platform if platform in ("silk",) else "snowy"
+    resource_override_dir_name = platform if platform in ("silk", "obelix") else "snowy"
     src_includes.append(
         "tests/overrides/default/resources/{}".format(resource_override_dir_name)
     )
