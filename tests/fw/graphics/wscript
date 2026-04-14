@@ -183,7 +183,7 @@ def build(ctx):
         sources_ant_glob = \
             " src/fw/applib/graphics/gtypes.c",
         test_sources_ant_glob = "test_gtypes.c",
-        platforms=["snowy", "spalding", "silk"])
+        platforms=["snowy", "spalding", "silk", "obelix"])
 
     clar(ctx,
         sources_ant_glob = \
@@ -213,7 +213,7 @@ def build(ctx):
             " tests/fakes/fake_resource_syscalls.c" \
             " src/fw/applib/graphics/gbitmap.c",
         test_sources_ant_glob = "test_gbitmap_formats.c",
-        platforms=["snowy", "spalding", "silk"])
+        platforms=["snowy", "spalding", "silk", "obelix"])
 
     clar(ctx,
          sources_ant_glob = \
@@ -435,7 +435,7 @@ def build(ctx):
         test_sources_ant_glob="test_perimeter.c",
         test_libs=['m'],
         defines=defines,
-        platforms=['snowy', 'spalding'])
+        platforms=['snowy', 'spalding', 'obelix'])
 
     clar(ctx,
         sources_ant_glob =
@@ -456,7 +456,7 @@ def build(ctx):
         test_sources_ant_glob="test_graphics_draw_line.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=['silk', 'snowy'])
+        platforms=['silk', 'snowy', 'obelix'])
 
     clar(ctx,
         sources_ant_glob =
@@ -500,7 +500,7 @@ def build(ctx):
           " src/fw/board/displays/display_spalding.c",
         test_sources_ant_glob="test_framebuffer_duma.c",
         defines=ctx.env.test_image_defines,
-        platforms=['snowy', 'spalding'])
+        platforms=['snowy', 'spalding', 'obelix'])
 
     clar(ctx,
         sources_ant_glob =
@@ -666,7 +666,7 @@ def build(ctx):
         test_sources_ant_glob="test_graphics_draw_rotated_bitmap.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=["silk", "snowy"])
+        platforms=["silk", "snowy", "obelix"])
 
     ###############################
     # 8-bit specific bitblt tests #
