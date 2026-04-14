@@ -100,6 +100,22 @@ RtcTicks rtc_alarm_get_elapsed_ticks(void);
 //!     us from going into stop mode before we're ready to wake up from it.
 bool rtc_alarm_is_initialized(void);
 
+// RTC Wake-up
+///////////////////////////////////////////////////////////////////////////////
+
+//! RTC second tick callback.
+typedef void (*RtcSecondTickCallback)(void *ctx);
+
+//! Configures the RTC to fire the given callback on every second tick.
+//!
+//! @note Callback happens in ISR context.
+//!
+//! @param callback Callback to call every time RTC increases 1 second.
+//! @param ctx Context to pass to the callback when called.
+void rtc_second_tick_subscribe(RtcSecondTickCallback callback, void *ctx);
+
+//! Unsubscribes from the RTC second tick.
+void rtc_second_tick_unsubscribe(void);
 
 // Utility Functions
 ///////////////////////////////////////////////////////////////////////////////
