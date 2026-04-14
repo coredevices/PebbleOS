@@ -184,6 +184,9 @@ void test_gbitmap_formats__display_framebuffer_bytes(void) {
 #ifdef PLATFORM_SNOWY
   const size_t expected = 144 * 168;
 #endif
+#ifdef PLATFORM_OBELIX
+  const size_t expected = 200 * 228;
+#endif
 #ifdef PLATFORM_SPALDING
   // all pixels + 2*76
   const size_t expected = 25944;
