@@ -155,8 +155,8 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   }
   // Generic reason string
   if (reason_string) {
-    pbl_log(LOG_LEVEL_WARNING, __FILE__, __LINE__, restarted_safely_string,
-            rebooted_due_to, reason.extra.value);
+    pbl_log(LOG_LEVEL_WARNING, __FILE__, __LINE__, reason_string,
+            restarted_safely_string, rebooted_due_to, reason.extra.value);
   }
 
   analytics_set(ANALYTICS_DEVICE_METRIC_SYSTEM_CRASH_LR, lr, AnalyticsClient_System);
