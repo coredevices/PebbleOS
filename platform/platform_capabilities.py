@@ -98,6 +98,7 @@ board_capability_dicts = [
             "HAS_HARDWARE_PANIC_SCREEN",
             "HAS_MAPPABLE_FLASH",
             "HAS_MASKING",
+            "HAS_TIMELINE_PEEK",
             "HAS_SPRF_V3",
             "USE_PARALLEL_FLASH",
             "HAS_PUTBYTES_PREACKING",
@@ -156,6 +157,7 @@ board_capability_dicts = [
         "boards": ["getafix_evt", "getafix_dvt"],
         "capabilities": {
             "HAS_SPRF_V3",
+            "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
             "HAS_FLASH_OTP",
             "HAS_PBLBOOT",
