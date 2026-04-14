@@ -261,7 +261,17 @@ static bool s_music_show_progress_bar = true;
 // programmatically via the PREFS_MACRO macro defined below:
 //   static bool prv_set_<static_var_name>(<static_var_type> new_value)
 static bool prv_set_s_clock_24h(bool *new_value) {
-  s_clock_24h = *new_value;
+  if (s_clock_24h != *new_value) {
+    s_clock_24h = *new_value;
+    // Fire a tick event so watchfaces re-render with the new time format
+    PebbleEvent e = {
+      .type = PEBBLE_TICK_EVENT,
+      .clock_tick.tick_time = rtc_get_time(),
+    };
+    event_put(&e);
+  } else {
+    s_clock_24h = *new_value;
+  }
   return true;
 }
 

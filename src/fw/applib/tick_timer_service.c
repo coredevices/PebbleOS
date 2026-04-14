@@ -7,6 +7,7 @@
 #include "event_service_client.h"
 #include "process_management/app_manager.h"
 
+#include "pbl/services/common/clock.h"
 #include "pbl/services/common/event_service.h"
 #include "pbl/services/common/tick_timer.h"
 #include "kernel/events.h"
@@ -65,7 +66,11 @@ static void do_handle(PebbleEvent *e, void *context) {
     }
   }
 
-  if (((state->tick_units & units_changed) != 0) || state->first_tick) {
+  bool is_24h = clock_is_24h_style();
+  bool format_changed = (is_24h != state->last_is_24h);
+  state->last_is_24h = is_24h;
+
+  if (((state->tick_units & units_changed) != 0) || state->first_tick || format_changed) {
     state->handler(&currtime, units_changed);
   }
 
