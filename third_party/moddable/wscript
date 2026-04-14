@@ -185,6 +185,7 @@ def build(bld):
         'moddable/build/devices/pebble/modules/accelerometer/pebble-accelerometer.c',
         'moddable/build/devices/pebble/modules/battery/pebble-battery.c',
         'moddable/build/devices/pebble/modules/compass/pebble-compass.c',
+        'moddable/build/devices/pebble/modules/touch/pebble-touch.c',
         'moddable/modules/io/files/pebble/files-pebble.c',
         'moddable/build/tmp/pebble/release/host/mc.xs.c',
         'moddable/build/tmp/pebble/release/host/mc.resources.c',
