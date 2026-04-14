@@ -10,5 +10,4 @@ syscfg.vals:
     BLE_SM_LVL: 4
     # Increased to prevent ACL mbuf allocation failures during high-throughput
     # operations (e.g. FW upgrade over BLE on iOS).
-    BLE_TRANSPORT_ACL_COUNT: 40
-    BLE_TRANSPORT_EVT_COUNT: 8
+    BLE_TRANSPORT_ACL_COUNT: 50
