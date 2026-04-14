@@ -537,13 +537,9 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     if (is_peek) {
       if (!has_secondary) {
         num_primary_lines = 2;
-#if PLATFORM_OBELIX
-        primary_node->node.offset.y -= 1;
-#else
         const int primary_only_offset_y = -2;
         primary_node->node.offset.y += primary_only_offset_y;
         primary_node->line_spacing_delta = -5;
-#endif
       }
       gpoint_add_eq(&primary_node->node.offset, peek_text_offset);
       primary_node->max_size.w = peek_text_width;
