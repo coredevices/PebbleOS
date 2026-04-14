@@ -24,13 +24,25 @@
       /* This is the same as Medium until Small is designed */     \
       /* small */ PBL_IF_RECT_ELSE(30, 51),                        \
       /* medium */ PBL_IF_RECT_ELSE(30, 51),                       \
-      /* large */ 34,                                              \
+      /* large */ PBL_IF_RECT_ELSE(34, 51),                        \
       /* This is the same as Large until ExtraLarge is designed */ \
-      /* x-large */ 34                                             \
+      /* x-large */ PBL_IF_RECT_ELSE(34, 51)                       \
     )
 
 #define TIMELINE_PEEK_MARGIN (5)
-#define TIMELINE_PEEK_ORIGIN_Y_VISIBLE PBL_IF_RECT_ELSE(DISP_ROWS - TIMELINE_PEEK_HEIGHT, 112)
+
+// On round displays the peek is drawn at full width and the round display
+// mask clips the corners that fall outside the circle. Spalding's original
+// origin of 112 was chosen for an 180-tall display; scale it to the current
+// display height so taller round panels (e.g. 260-tall getafix) sit in the
+// equivalent lower portion of the circle rather than bottom-flush, which
+// would put the peek deep in the narrow bottom curve of the circle.
+#if PBL_ROUND
+#define TIMELINE_PEEK_ORIGIN_Y_VISIBLE ((DISP_ROWS * 112) / 180)
+#else
+#define TIMELINE_PEEK_ORIGIN_Y_VISIBLE (DISP_ROWS - TIMELINE_PEEK_HEIGHT)
+#endif
+
 #define TIMELINE_PEEK_FRAME_VISIBLE GRect(0, TIMELINE_PEEK_ORIGIN_Y_VISIBLE, DISP_COLS, \
                                           TIMELINE_PEEK_HEIGHT)
 
