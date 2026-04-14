@@ -43,6 +43,23 @@ void fake_spi_flash_init(uint32_t offset, uint32_t length) {
   // Clients are not required to cleanup due to prior code, so do so here.
   fake_spi_flash_cleanup();
 
+  // Tests historically pass (0, 0x1000000) — sized for snowy's flash layout where the filesystem
+  // sits inside the first 16 MB. On platforms with a non-zero FLASH_REGION_BASE_ADDRESS (e.g.
+  // obelix, whose flash addresses are absolute and start at 0x12000000), translate offset 0 to the
+  // base address so the fake window doesn't span the huge unused gap below it, and then expand the
+  // window if it still doesn't reach FLASH_REGION_FILESYSTEM_END. Without this, obelix tests would
+  // allocate ~319 MB per test and trip DUMA's protect-free OOM guard.
+#if defined(FLASH_REGION_BASE_ADDRESS) && (FLASH_REGION_BASE_ADDRESS > 0)
+  if (offset == 0) {
+    offset = FLASH_REGION_BASE_ADDRESS;
+  }
+#endif
+#ifdef FLASH_REGION_FILESYSTEM_END
+  if (offset + length < FLASH_REGION_FILESYSTEM_END) {
+    length = FLASH_REGION_FILESYSTEM_END - offset;
+  }
+#endif
+
   s_state.offset = offset;
   s_state.length = length;
   s_state.storage = malloc(length);
