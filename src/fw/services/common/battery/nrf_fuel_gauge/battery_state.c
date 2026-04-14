@@ -65,6 +65,7 @@ static uint64_t prv_ref_time;
 static int32_t s_last_voltage_mv;
 static int32_t s_last_temp_mc;
 static int32_t s_analytics_last_voltage_mv;
+static uint8_t s_analytics_last_pct;
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;
@@ -330,9 +331,9 @@ static void prv_update_state(void *force_update) {
     PBL_ASSERTN(ret == 0);
     s_last_battery_charge_state.is_plugged = is_plugged;
     if (is_plugged) {
-      PBL_ANALYTICS_TIMER_START(battery_plugged_time_ms);
+      PBL_ANALYTICS_TIMER_STOP(battery_discharge_duration_ms);
     } else {
-      PBL_ANALYTICS_TIMER_STOP(battery_plugged_time_ms);
+      PBL_ANALYTICS_TIMER_START(battery_discharge_duration_ms);
     }
     update = true;
   }
@@ -491,6 +492,12 @@ void battery_state_init(void) {
                                             !(s_last_chg_status == BatteryChargeStatusComplete ||
                                               s_last_chg_status == BatteryChargeStatusUnknown);
 
+  if (s_last_battery_charge_state.is_charging) {
+    PBL_ANALYTICS_TIMER_START(battery_charge_time_ms);
+  } else if (!s_last_battery_charge_state.is_plugged) {
+    PBL_ANALYTICS_TIMER_START(battery_discharge_duration_ms);
+  }
+
   s_periodic_timer_id = new_timer_create();
 
   battery_state_force_update();
@@ -499,6 +506,9 @@ void battery_state_init(void) {
     .cb = prv_callback_from_regular_timer
   };
   regular_timer_add_multisecond_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_S);
+
+  s_analytics_last_voltage_mv = s_last_voltage_mv;
+  s_analytics_last_pct = s_last_battery_charge_state.pct;
 }
 
 void battery_state_handle_connection_event(bool is_connected) {
@@ -555,13 +565,20 @@ void command_print_battery_status(void) {
 
 // Note that this is run on a different thread than battery_state!
 void pbl_analytics_external_collect_battery(void) {
-  // This should not be called for an hour after bootup
+  int32_t battery_mv = s_last_voltage_mv;
+  uint8_t battery_soc = s_last_battery_charge_state.pct;
   int32_t d_mv;
+  uint8_t d_soc;
 
-  d_mv = s_last_voltage_mv - s_analytics_last_voltage_mv;
-  PBL_ANALYTICS_SET_UNSIGNED(battery_voltage, s_last_voltage_mv);
+  d_mv = battery_mv - s_analytics_last_voltage_mv;
+  PBL_ANALYTICS_SET_UNSIGNED(battery_voltage, battery_mv);
   PBL_ANALYTICS_SET_SIGNED(battery_voltage_delta, d_mv);
-  s_analytics_last_voltage_mv = s_last_voltage_mv;
+  s_analytics_last_voltage_mv = battery_mv;
+
+  d_soc = MAX((int8_t)battery_soc - (int8_t)s_analytics_last_pct, 0);
+  PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct, battery_soc);
+  PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc);
+  s_analytics_last_pct = battery_soc;
 }
 
 static void prv_set_forced_charge_state(bool is_charging) {
