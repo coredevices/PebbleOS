@@ -33,6 +33,7 @@ typedef struct ExpandableDialog {
   GBitmap *down_icon;
 
   GFont header_font;
+  GFont body_font;
   char header[DIALOG_MAX_HEADER_LEN + 1];
 
   TextLayer header_layer;
@@ -107,6 +108,11 @@ void expandable_dialog_set_header(ExpandableDialog *expandable_dialog, const cha
 //! @param expandable_dialog Pointer to the \ref ExpandableDialog on which to set the header
 //! @param header_font The font to use for the header text
 void expandable_dialog_set_header_font(ExpandableDialog *expandable_dialog, GFont header_font);
+
+//! Sets the body text font
+//! @param expandable_dialog Pointer to the \ref ExpandableDialog on which to set the body font
+//! @param body_font The font to use for the body text
+void expandable_dialog_set_body_font(ExpandableDialog *expandable_dialog, GFont body_font);
 
 //! Sets the icon and ClickHandler of the SELECT button on the action bar.
 //! @param expandable_dialog Pointer to the \ref ExpandableDialog for which to set

@@ -188,7 +188,7 @@ static void prv_expandable_dialog_load(Window *window) {
   w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset
       - right_aligned_box_reduction;
   h = INT16_MAX;  // height is clamped to content size
-  GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+  GFont font = expandable_dialog->body_font;
 
   TextLayer *text_layer = &dialog->text_layer;
   text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h), dialog->buffer, font,
@@ -326,6 +326,7 @@ void expandable_dialog_init(ExpandableDialog *expandable_dialog, const char *dia
   PBL_ASSERTN(expandable_dialog);
   *expandable_dialog = (ExpandableDialog) {
     .header_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
+    .body_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
   };
 
   dialog_init(&expandable_dialog->dialog, dialog_name);
@@ -398,6 +399,10 @@ void expandable_dialog_set_header(ExpandableDialog *expandable_dialog, const cha
 
 void expandable_dialog_set_header_font(ExpandableDialog *expandable_dialog, GFont header_font) {
   expandable_dialog->header_font = header_font;
+}
+
+void expandable_dialog_set_body_font(ExpandableDialog *expandable_dialog, GFont body_font) {
+  expandable_dialog->body_font = body_font;
 }
 
 void expandable_dialog_set_select_action(ExpandableDialog *expandable_dialog,
