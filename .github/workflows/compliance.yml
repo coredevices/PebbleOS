@@ -84,11 +84,20 @@ jobs:
             if $skip; then continue; fi
 
             if ! head -10 "$file" | grep -q "SPDX-License-Identifier: Apache-2.0"; then
-              # If the file existed before and its license line was not touched
-              # in this PR, skip it (pre-existing non-Apache-2.0 file).
-              if git cat-file -e "$base":"$file" 2>/dev/null; then
-                if ! git diff "$base"...HEAD -- "$file" | grep -qE '^\+.*SPDX-License-Identifier:|^-.*SPDX-License-Identifier:'; then
-                  echo "::notice file=$file::Skipping: pre-existing non-Apache-2.0 license (unchanged)"
+              # Resolve the file's pre-PR identity: either same path or
+              # the source of a rename.
+              origin="$file"
+              if ! git cat-file -e "$base":"$origin" 2>/dev/null; then
+                origin=$(git diff --find-renames --diff-filter=R --name-status \
+                  "$base"...HEAD | awk -v f="$file" '$3 == f {print $2}')
+              fi
+
+              # If the file (or its rename source) existed before this PR and
+              # already lacked Apache-2.0, skip it as pre-existing.
+              if [ -n "$origin" ] && git cat-file -e "$base":"$origin" 2>/dev/null; then
+                if ! git show "$base":"$origin" | head -10 \
+                    | grep -q "SPDX-License-Identifier: Apache-2.0"; then
+                  echo "::notice file=$file::Skipping: pre-existing non-Apache-2.0 license"
                   continue
                 fi
               fi
