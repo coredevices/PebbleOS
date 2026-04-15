@@ -68,7 +68,7 @@ def build(ctx):
             "tests/fakes/fake_events.c "
             "tests/fakes/fake_rtc.c "
             "tests/fakes/fake_gbitmap_png.c "
-            "src/fw/services/common/animation_service.c",
+            "src/fw/services/common/animation_service/service.c",
         defines=['DUMA_DISABLED'],  # PBL-18358 Invalid memory read access
         test_sources_ant_glob = "test_animation.c")
 

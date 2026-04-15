@@ -32,7 +32,7 @@ def build(ctx):
             " src/fw/services/normal/timeline/attributes_actions.c" \
             " src/fw/services/normal/timeline/attribute_group.c" \
             " src/fw/services/normal/timeline/item.c" \
-            " src/fw/services/normal/phone_call_util.c" \
+            " src/fw/services/normal/phone_call/util.c" \
             " src/fw/applib/fonts/codepoint.c" \
             " src/fw/applib/graphics/utf8.c" \
             " src/fw/util/pstring.c" \

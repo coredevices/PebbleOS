@@ -10,7 +10,7 @@ def build(ctx):
             " src/fw/util/stats.c" \
             " src/fw/util/time/time.c" \
             " src/fw/util/time/mktime.c" \
-            " src/fw/services/common/regular_timer.c " \
+            " src/fw/services/common/regular_timer/service.c " \
             " src/fw/services/normal/activity/activity.c" \
             " src/fw/services/normal/activity/activity_metrics.c" \
             " src/fw/services/normal/activity/activity_sessions.c" \
@@ -74,7 +74,7 @@ def build(ctx):
             " src/fw/util/shared_circular_buffer.c" \
             " src/fw/util/time/time.c" \
             " src/fw/util/time/mktime.c" \
-            " src/fw/services/common/regular_timer.c " \
+            " src/fw/services/common/regular_timer/service.c " \
             " src/fw/services/normal/activity/kraepelin/activity_algorithm_kraepelin.c" \
             " src/fw/services/normal/filesystem/flash_translation.c" \
             " src/fw/services/normal/filesystem/pfs.c" \

@@ -93,7 +93,7 @@ def build(ctx):
             " src/fw/util/time/mktime.c" \
             " src/fw/util/rand/rand.c" \
             " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
-            " src/fw/services/common/cron.c" \
+            " src/fw/services/common/cron/service.c" \
             " src/fw/services/normal/filesystem/flash_translation.c" \
             " src/fw/services/normal/filesystem/pfs.c" \
             " src/fw/services/normal/blob_db/timeline_item_storage.c" \
@@ -118,7 +118,7 @@ def build(ctx):
             " src/fw/util/time/time.c" \
             " src/fw/util/time/mktime.c" \
             " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
-            " src/fw/services/common/cron.c" \
+            " src/fw/services/common/cron/service.c" \
             " src/fw/services/normal/filesystem/flash_translation.c" \
             " src/fw/services/normal/filesystem/pfs.c" \
             " src/fw/services/normal/blob_db/timeline_item_storage.c" \
@@ -197,7 +197,7 @@ def build(ctx):
              " src/fw/services/normal/data_logging/dls_storage.c" \
              " src/fw/services/normal/data_logging/dls_endpoint.c" \
              " src/fw/services/normal/data_logging/dls_syscalls.c" \
-             " src/fw/services/common/regular_timer.c" \
+             " src/fw/services/common/regular_timer/service.c" \
              " src/fw/util/shared_circular_buffer.c" \
              " tests/fakes/fake_spi_flash.c" \
              " src/fw/util/crc8.c" \
