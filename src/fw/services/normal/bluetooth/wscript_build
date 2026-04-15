@@ -1,0 +1,15 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+sources = ['bluetooth_persistent_storage.c']
+
+if bld.env.CONFIG_HRM:
+    sources.append('ble_hrm.c')
+
+bld.stlib(
+    use=['fw_includes', 'services_common_analytics'],
+    source=sources,
+    target='services_normal_bluetooth',
+)
+
+bld.env.SERVICES.append('services_normal_bluetooth')

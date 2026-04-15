@@ -1,0 +1,20 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+bld.env.SERVICES = []
+bld.env.SERVICES_TEXT = []
+bld.recurse('common')
+if bld.variant == 'prf':
+    bld.recurse('prf')
+else:
+    bld.recurse('normal')
+
+use = ['fw_includes']
+use.extend(bld.env.SERVICES)
+
+bld.stlib(source=['services.c'], target='fw_services', use=use)
+
+if bld.env.SERVICES_TEXT:
+    bld.msgcat(source=bld.env.SERVICES_TEXT, target='services.pot')
+
+# vim:filetype=python

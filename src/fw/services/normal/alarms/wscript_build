@@ -1,0 +1,19 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+sources = [
+    'alarm.c',
+    'alarm_pin.c',
+]
+
+bld.stlib(
+    use=['fw_includes', 'services_common_analytics'],
+    source=sources,
+    target='services_normal_alarms',
+)
+
+bld.env.SERVICES.append('services_normal_alarms')
+
+target = bld.path.find_or_declare('services_normal_alarms.pot')
+bld.gettext(source=sources, target=target)
+bld.env.SERVICES_TEXT.append(target)
