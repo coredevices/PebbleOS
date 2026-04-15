@@ -69,6 +69,7 @@ enum {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   DebuggingItemDynamicBacklightMinThreshold,
 #endif
+  DebuggingItemAccelShakeLogInfo,
   DebuggingItem_Count,
 };
 
@@ -588,6 +589,7 @@ static const char* s_debugging_titles[DebuggingItem_Count] = {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   [DebuggingItemDynamicBacklightMinThreshold] = i18n_noop("Dyn BL Min Threshold"),
 #endif
+  [DebuggingItemAccelShakeLogInfo] = i18n_noop("Shake Log Info"),
 };
 
 static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_layer,
@@ -629,6 +631,10 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
     subtitle_text = data->dyn_bl_min_threshold_buffer;
   }
 #endif
+  else if (cell_index->row == DebuggingItemAccelShakeLogInfo) {
+    subtitle_text = shell_prefs_get_accel_shake_log_info_enabled() ?
+                        i18n_get("Enabled", data) : i18n_get("Disabled", data);
+  }
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, NULL);
 }
 
@@ -673,6 +679,10 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
       prv_dyn_bl_min_threshold_menu_push(data);
       break;
 #endif
+    case DebuggingItemAccelShakeLogInfo:
+      shell_prefs_set_accel_shake_log_info_enabled(
+          !shell_prefs_get_accel_shake_log_info_enabled());
+      break;
     default:
       WTF;
   }
