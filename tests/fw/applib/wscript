@@ -13,14 +13,14 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob=(" src/fw/applib/app_inbox.c"
-                           " src/fw/services/normal/app_inbox_service.c"
+                           " src/fw/services/normal/app_inbox_service/service.c"
                            ),
          test_sources_ant_glob="test_app_inbox.c",
          override_includes=['dummy_board'])
 
     clar(ctx,
          sources_ant_glob=(" src/fw/applib/app_outbox.c"
-                           " src/fw/services/normal/app_outbox_service.c"
+                           " src/fw/services/normal/app_outbox_service/service.c"
                            ),
          test_sources_ant_glob="test_app_outbox.c",
          override_includes=['dummy_board'])
@@ -45,7 +45,7 @@ def build(ctx):
             " src/fw/services/normal/filesystem/flash_translation.c"
             " src/fw/services/normal/filesystem/pfs.c"
             " src/fw/services/normal/legacy/persist_map.c"
-            " src/fw/services/normal/persist.c"
+            " src/fw/services/normal/persist/service.c"
             " src/fw/services/normal/settings/settings_file.c"
             " src/fw/services/normal/settings/settings_raw_iter.c"
             " src/fw/util/crc8.c"

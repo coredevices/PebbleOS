@@ -99,7 +99,7 @@ def build(ctx):
         "src/fw/apps/system/timeline/model.c "
         "src/fw/apps/system/timeline/relbar.c "
         "src/fw/popups/timeline/timeline_item_layer.c "
-        "src/fw/services/common/clock.c "
+        "src/fw/services/common/clock/service.c "
         "src/fw/services/normal/blob_db/pin_db.c "
         "src/fw/services/normal/blob_db/timeline_item_storage.c "
         "src/fw/services/normal/timeline/attribute.c "
