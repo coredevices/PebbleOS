@@ -15,6 +15,13 @@ sources = [
     'pp_ble_control.c',
 ]
 
+if bld.variant != 'prf':
+    sources.append('bluetooth_persistent_storage_normal.c')
+    if bld.env.CONFIG_HRM:
+        sources.append('ble_hrm.c')
+else:
+    sources.append('bluetooth_persistent_storage_prf.c')
+
 bld.stlib(
     use=['fw_includes', 'services_common_analytics'],
     source=sources,

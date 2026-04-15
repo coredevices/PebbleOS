@@ -1,5 +1,4 @@
 # SPDX-Copyright-Text: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-bld.recurse('bluetooth')
 bld.recurse('idle_watchdog')
