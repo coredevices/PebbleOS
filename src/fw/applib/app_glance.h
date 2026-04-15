@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/app_glances/app_glance_service.h"
+#include "pbl/services/normal/app_glances/app_glance_service.h"
 #include "util/time/time.h"
 
 #include <stdint.h>

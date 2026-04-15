@@ -10,7 +10,7 @@
 #include "applib/ui/window_stack_animation_round.h"
 #include "applib/ui/layer.h"
 #include "board/displays/display_spalding.h"
-#include "services/common/compositor/compositor_transitions.h"
+#include "pbl/services/common/compositor/compositor_transitions.h"
 #include "util/trig.h"
 
 #include "clar.h"

@@ -8,8 +8,8 @@
 #include "applib/ui/layer.h"
 #include "applib/ui/property_animation_private.h"
 #include "kernel/events.h"
-#include "services/normal/timeline/item.h"
-#include "services/normal/timeline/timeline_layout.h"
+#include "pbl/services/normal/timeline/item.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
 
 //! The timeline item layer is a mock UI used to display timeline items
 //! until actual layouts are implemented. It is somewhat related to the

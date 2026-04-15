@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "session_analytics.h"
+#include "pbl/services/common/comm_session/session_analytics.h"
 
 #include "drivers/rtc.h"
 
@@ -9,9 +9,9 @@
 #include "memfault/metrics/connectivity.h"
 #include "memfault_chunk_collector.h"
 #endif
-#include "services/common/comm_session/session_internal.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/ping.h"
+#include "pbl/services/common/comm_session/session_internal.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/ping.h"
 #include "util/time/time.h"
 
 CommSessionTransportType comm_session_analytics_get_transport_type(CommSession *session) {

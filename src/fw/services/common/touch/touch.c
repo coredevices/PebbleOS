@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "touch.h"
-#include "touch_event.h"
-#include "touch_client.h"
+#include "pbl/services/common/touch/touch.h"
+#include "pbl/services/common/touch/touch_event.h"
+#include "pbl/services/common/touch/touch_client.h"
 
 #include "kernel/events.h"
 #include "system/logging.h"

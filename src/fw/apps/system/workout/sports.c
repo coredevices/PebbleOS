@@ -7,9 +7,9 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "services/normal/activity/activity_algorithm.h"
-#include "services/normal/activity/activity_private.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/normal/activity/activity_algorithm.h"
+#include "pbl/services/normal/activity/activity_private.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "system/logging.h"
 #include "util/size.h"
 

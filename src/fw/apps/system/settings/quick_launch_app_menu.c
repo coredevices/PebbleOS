@@ -17,7 +17,7 @@
 #include "applib/ui/option_menu_window.h"
 #include "applib/ui/window_stack.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "process_management/app_install_manager.h"
 #include "apps/system/timeline/timeline.h"
 #include "process_management/app_menu_data_source.h"

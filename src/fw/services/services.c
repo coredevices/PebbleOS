@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services.h"
-#include "runlevel.h"
+#include "pbl/services/services.h"
+#include "pbl/services/runlevel.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "console/prompt.h"
-#include "services/common/services_common.h"
-#include "services/normal/services_normal.h"
+#include "pbl/services/common/services_common.h"
+#include "pbl/services/normal/services_normal.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/size.h"

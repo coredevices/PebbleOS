@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "stationary.h"
+#include "pbl/services/normal/stationary.h"
 
 #include "applib/accel_service_private.h"
 #include "applib/battery_state_service.h"
@@ -12,12 +12,12 @@
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/accel_manager.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/i18n/i18n.h"
-#include "services/common/regular_timer.h"
-#include "services/common/system_task.h"
-#include "services/runlevel.h"
+#include "pbl/services/common/accel_manager.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/runlevel.h"
 #include "shell/prefs.h"
 #include "system/logging.h"
 #include "system/passert.h"

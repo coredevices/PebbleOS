@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "prefs_db.h"
+#include "pbl/services/normal/blob_db/prefs_db.h"
 
 #include "process_management/app_install_manager.h"
 #include "shell/prefs_private.h"

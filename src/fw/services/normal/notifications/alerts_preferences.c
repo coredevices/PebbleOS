@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/normal/notifications/alerts_preferences.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/notifications/alerts_preferences.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
 
 #include "drivers/rtc.h"
 #include "popups/notifications/notification_window.h"
-#include "services/common/analytics/analytics.h"
-#include "services/normal/notifications/do_not_disturb.h"
-#include "services/normal/settings/settings_file.h"
-#include "services/normal/vibes/vibe_intensity.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/normal/notifications/do_not_disturb.h"
+#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/normal/vibes/vibe_intensity.h"
 #include "system/passert.h"
 #include "os/mutex.h"
 #include "util/bitset.h"

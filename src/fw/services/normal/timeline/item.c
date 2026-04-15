@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "item.h"
-#include "attributes_actions.h"
+#include "pbl/services/normal/timeline/item.h"
+#include "pbl/services/normal/timeline/attributes_actions.h"
 
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"

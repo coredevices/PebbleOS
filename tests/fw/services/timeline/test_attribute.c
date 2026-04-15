@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "services/normal/timeline/attribute.h"
+#include "pbl/services/normal/timeline/attribute.h"
 #include "util/size.h"
 
 #include <stdint.h>

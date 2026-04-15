@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "evented_timer.h"
+#include "pbl/services/common/evented_timer.h"
 
 #include "kernel/events.h"
 #include "os/tick.h"
 #include "os/mutex.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "system/passert.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"

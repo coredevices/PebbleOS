@@ -6,8 +6,8 @@
 #include "drivers/qemu/qemu_settings.h"
 
 #include "system/passert.h"
-#include "services/common/battery/battery_state.h"
-#include "services/common/battery/battery_curve.h"
+#include "pbl/services/common/battery/battery_state.h"
+#include "pbl/services/common/battery/battery_curve.h"
 #include "system/logging.h"
 
 #include "util/math.h"

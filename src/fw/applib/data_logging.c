@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "data_logging.h"
-#include "services/normal/data_logging/dls_private.h"
+#include "pbl/services/normal/data_logging/dls_private.h"
 
 #include "applib/app_logging.h"
 #include "applib/applib_malloc.auto.h"

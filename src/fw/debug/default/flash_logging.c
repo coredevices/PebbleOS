@@ -6,7 +6,7 @@
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"

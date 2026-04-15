@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include "drivers/mag.h"
-#include "services/common/ecompass.h"
+#include "pbl/services/common/ecompass.h"
 
 //! @addtogroup Foundation
 //! @{

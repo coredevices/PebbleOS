@@ -3,7 +3,7 @@
 
 #include "protobuf_log_test_helpers.h"
 
-#include "services/normal/protobuf_log/protobuf_log_private.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log_private.h"
 
 #include <stdint.h>
 #include <stdio.h>

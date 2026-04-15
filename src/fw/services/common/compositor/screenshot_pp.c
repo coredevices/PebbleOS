@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "screenshot_pp.h"
+#include "pbl/services/common/compositor/screenshot_pp.h"
 
-#include "compositor.h"
+#include "pbl/services/common/compositor/compositor.h"
 
 #include "applib/graphics/framebuffer.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/comm_session/session_send_buffer.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "util/attributes.h"
 #include "util/net.h"

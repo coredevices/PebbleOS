@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "session_receive_router.h"
+#include "pbl/services/common/comm_session/session_receive_router.h"
 
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/slist.h"

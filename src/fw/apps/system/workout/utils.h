@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity.h"
 
 void workout_utils_send_abandoned_workout_notification(void);
 

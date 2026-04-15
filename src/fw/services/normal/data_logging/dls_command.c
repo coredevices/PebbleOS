@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "data_logging_service.h"
-#include "dls_list.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/normal/data_logging/dls_list.h"
 
 #include "console/prompt.h"
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/normal/timeline/item.h"
+#include "pbl/services/normal/timeline/item.h"
 
 static TimelineItem s_last_stored_notification = {};
 static int s_notification_store_count = 0;

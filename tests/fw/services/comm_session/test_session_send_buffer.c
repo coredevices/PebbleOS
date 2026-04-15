@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/comm_session/default_kernel_sender.h"
-#include "services/common/comm_session/session_send_buffer.h"
-#include "services/common/comm_session/session_transport.h"
-#include "services/common/comm_session/session_internal.h"
-#include "services/common/comm_session/session_send_queue.h"
-#include "services/common/comm_session/protocol.h"
+#include "pbl/services/common/comm_session/default_kernel_sender.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/comm_session/session_transport.h"
+#include "pbl/services/common/comm_session/session_internal.h"
+#include "pbl/services/common/comm_session/session_send_queue.h"
+#include "pbl/services/common/comm_session/protocol.h"
 
 #include "util/net.h"
 #include "util/size.h"

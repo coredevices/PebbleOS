@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "timeline_resources.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 
 #include "applib/graphics/gdraw_command_private.h"
 #include "applib/ui/kino/kino_reel.h"

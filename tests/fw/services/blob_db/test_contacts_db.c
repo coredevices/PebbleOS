@@ -3,9 +3,9 @@
 
 #include "clar.h"
 
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/blob_db/contacts_db.h"
-#include "services/normal/contacts/contacts.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/blob_db/contacts_db.h"
+#include "pbl/services/normal/contacts/contacts.h"
 #include "util/uuid.h"
 
 // Fixture

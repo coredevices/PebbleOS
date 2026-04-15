@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "services/normal/voice/transcription.h"
+#include "pbl/services/normal/voice/transcription.h"
 
 #include "test_transcription_example.h"
 

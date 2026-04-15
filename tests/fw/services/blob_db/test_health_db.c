@@ -3,8 +3,8 @@
 
 #include "clar.h"
 
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/blob_db/health_db.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/blob_db/health_db.h"
 #include "util/size.h"
 
 #include <limits.h>

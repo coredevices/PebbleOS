@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "app_inbox_service.h"
+#include "pbl/services/normal/app_inbox_service.h"
 
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"

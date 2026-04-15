@@ -4,9 +4,9 @@
 #include "kernel/kernel_heap.h"
 #include "memfault/components.h"
 #include "drivers/imu/lsm6dso/lsm6dso.h"
-#include "services/common/battery/battery_state.h"
+#include "pbl/services/common/battery/battery_state.h"
 #include "util/heap.h"
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/analytics/analytics.h"
 #include "shell/normal/watchface.h"
 #include "process_management/app_install_manager.h"
 

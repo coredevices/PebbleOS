@@ -12,7 +12,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/stop.h"
 #include "mfg/mfg_mode/mfg_factory_mode.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "os/mutex.h"
 #include "system/passert.h"

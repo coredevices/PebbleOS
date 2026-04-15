@@ -10,7 +10,7 @@
 #include "kernel/logging_private.h"
 #include "kernel/memory_layout.h"
 #include "kernel/util/stack_info.h"
-#include "services/common/comm_session/session.h"
+#include "pbl/services/common/comm_session/session.h"
 #include "syscall/syscall_internal.h"
 
 static const uint16_t APP_LOGGING_ENDPOINT = 2006;

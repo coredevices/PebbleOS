@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "compositor_dot_transitions.h"
+#include "pbl/services/common/compositor/default/compositor_dot_transitions.h"
 
-#include "services/common/compositor/compositor_private.h"
-#include "services/common/compositor/compositor_transitions.h"
+#include "pbl/services/common/compositor/compositor_private.h"
+#include "pbl/services/common/compositor/compositor_transitions.h"
 
 #include "apps/system/launcher/launcher.h"
 #include "apps/system/timeline/common.h"

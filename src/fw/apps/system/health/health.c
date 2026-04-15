@@ -12,9 +12,9 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "popups/health_tracking_ui.h"
 #include "process_state/app_state/app_state.h"
-#include "services/normal/activity/activity.h"
-#include "services/normal/activity/activity_private.h"
-#include "services/normal/timeline/timeline.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity_private.h"
+#include "pbl/services/normal/timeline/timeline.h"
 #include "resource/resource_ids.auto.h"
 #include "system/logging.h"
 

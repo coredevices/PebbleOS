@@ -7,7 +7,7 @@
 #include <stdbool.h>
 
 #include "test_db.h"
-#include "services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/api.h"
 
 static BlobDBId s_blobdb_id = BlobDBIdTest;
 

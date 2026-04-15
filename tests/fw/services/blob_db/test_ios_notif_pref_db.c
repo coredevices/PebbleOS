@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "services/normal/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
 #include "util/size.h"
 
 // Fixture

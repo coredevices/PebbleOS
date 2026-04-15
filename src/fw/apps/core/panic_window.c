@@ -13,8 +13,8 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/i18n/i18n.h"
-#include "services/runlevel.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/runlevel.h"
 #include "system/passert.h"
 #include "system/reset.h"
 

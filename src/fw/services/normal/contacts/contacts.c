@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "contacts.h"
+#include "pbl/services/normal/contacts/contacts.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/normal/blob_db/contacts_db.h"
-#include "services/normal/timeline/attributes_actions.h"
+#include "pbl/services/normal/blob_db/contacts_db.h"
+#include "pbl/services/normal/timeline/attributes_actions.h"
 #include "system/logging.h"
 
 static Contact* prv_deserialize_contact(SerializedContact *serialized_contact,

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "kernel/events.h"
-#include "services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/api.h"
 #include "util/attributes.h"
 
 status_t WEAK blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {

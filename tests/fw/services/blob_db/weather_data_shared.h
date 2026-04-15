@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/blob_db/weather_db.h"
+#include "pbl/services/normal/blob_db/weather_db.h"
 
 #define WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES (5)
 #define WEATHER_DATA_SHARED_NUM_VALID_TIMESTAMP_ENTRIES \

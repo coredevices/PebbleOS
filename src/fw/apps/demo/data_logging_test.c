@@ -4,9 +4,9 @@
 #include "data_logging_test.h"
 
 #include "system/logging.h"
-#include "services/common/comm_session/session.h"
-#include "services/normal/data_logging/data_logging_service.h"
-#include "services/normal/data_logging/dls_private.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/normal/data_logging/dls_private.h"
 #include "applib/app.h"
 #include "applib/data_logging.h"
 #include "applib/ui/app_window_stack.h"

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/imu/units.h"
+#include "pbl/services/imu/units.h"
 
 #include <inttypes.h>
 #include <stdbool.h>

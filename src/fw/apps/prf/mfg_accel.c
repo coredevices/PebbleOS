@@ -15,7 +15,7 @@
 #include "drivers/rtc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
-#include "services/common/evented_timer.h"
+#include "pbl/services/common/evented_timer.h"
 #include "util/bitset.h"
 #include "util/size.h"
 

@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/cron.h"
+#include "pbl/services/common/cron.h"
 #include <pebbleos/cron.h>
 
 #include "os/mutex.h"
 #include "system/passert.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/regular_timer.h"
 #include "system/logging.h"
 #include "util/math.h"
 

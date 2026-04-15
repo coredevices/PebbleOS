@@ -9,7 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "services/normal/music.h"
+#include "pbl/services/normal/music.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/string.h"

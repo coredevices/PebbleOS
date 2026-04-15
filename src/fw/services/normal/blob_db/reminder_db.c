@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "reminder_db.h"
-#include "sync.h"
-#include "sync_util.h"
-#include "timeline_item_storage.h"
+#include "pbl/services/normal/blob_db/reminder_db.h"
+#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/normal/blob_db/sync_util.h"
+#include "pbl/services/normal/blob_db/timeline_item_storage.h"
 
 #include "util/uuid.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/analytics/analytics.h"
-#include "services/normal/timeline/reminders.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/normal/timeline/reminders.h"
 #include "system/passert.h"
 #include "system/logging.h"
 #include "util/units.h"

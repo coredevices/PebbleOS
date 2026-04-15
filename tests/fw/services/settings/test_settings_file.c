@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/normal/settings/settings_file.h"
-#include "services/normal/settings/settings_raw_iter.h"
+#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/normal/settings/settings_raw_iter.h"
 #include "system/hexdump.h"
 
 #include "clar.h"
 
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "flash_region/flash_region.h"
 
 #include <stdio.h>

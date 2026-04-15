@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "phone_pp.h"
+#include "pbl/services/common/phone_pp.h"
 
 #include "kernel/events.h"
-#include "services/common/comm_session/session.h"
-#include "services/normal/phone_call.h"
-#include "services/normal/phone_call_util.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/normal/phone_call.h"
+#include "pbl/services/normal/phone_call_util.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"

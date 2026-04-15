@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/pmic/npm1300.h"
-#include "services/imu/units.h"
+#include "pbl/services/imu/units.h"
 #include "util/size.h"
 
 #define BT_VENDOR_ID 0x0EEA

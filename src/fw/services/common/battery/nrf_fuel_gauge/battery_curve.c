@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "board/board.h"
-#include "services/common/battery/battery_curve.h"
+#include "pbl/services/common/battery/battery_curve.h"
 
 uint32_t battery_curve_get_percent_remaining(uint32_t hours) {
   return ((hours * 100) / BOARD_CONFIG_POWER.battery_capacity_hours) +

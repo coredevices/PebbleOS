@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/common/battery/battery_monitor.h"
+#include "pbl/services/common/battery/battery_monitor.h"
 
 //! @addtogroup Foundation
 //! @{

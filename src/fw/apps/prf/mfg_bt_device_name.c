@@ -10,7 +10,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
-#include "services/common/bluetooth/local_id.h"
+#include "pbl/services/common/bluetooth/local_id.h"
 #include "util/bitset.h"
 #include "util/size.h"
 

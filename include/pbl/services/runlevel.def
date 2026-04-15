@@ -1,0 +1,11 @@
+// Run Level definitions
+//
+// To add a new runlevel definition, add a new line with RUNLEVEL(number, name).
+
+RUNLEVEL(0, BareMinimum)
+RUNLEVEL(1, LowPower)
+RUNLEVEL(2, Stationary)
+RUNLEVEL(3, FirmwareUpdate)
+RUNLEVEL(4, Normal)
+
+// vim:filetype=c

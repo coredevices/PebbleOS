@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "boot_splash.h"
+#include "pbl/services/common/boot_splash.h"
 
 #if CAPABILITY_HAS_PBLBOOT
 

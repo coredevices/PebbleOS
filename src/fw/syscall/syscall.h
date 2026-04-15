@@ -24,11 +24,11 @@
 
 #include "kernel/events.h"
 #include "kernel/logging_private.h"
-#include "services/normal/wakeup.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/evented_timer.h"
-#include "services/normal/activity/activity.h"
-#include "services/normal/app_glances/app_glance_service.h"
+#include "pbl/services/normal/wakeup.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/app_glances/app_glance_service.h"
 
 #include "process_management/pebble_process_info.h"
 

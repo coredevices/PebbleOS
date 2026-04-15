@@ -622,7 +622,8 @@ def build(bld):
     bld.pbl_build_start_time = datetime.datetime.utcnow()
     bld.add_post_fun(stop_build_timer)
 
-    bld(export_includes=['include'], name='pbl_includes')
+    # FIXME: remove include/pbl once all modules use prefix
+    bld(export_includes=['include', 'include/pbl'], name='pbl_includes')
 
     if bld.variant in ('test', 'applib'):
         bld.set_env(bld.all_envs['local'])

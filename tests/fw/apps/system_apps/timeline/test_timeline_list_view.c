@@ -4,7 +4,7 @@
 #include "apps/system/timeline/timeline.h"
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 
 #include "test_timeline_app_includes.h"
 

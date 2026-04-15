@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ancs_filtering.h"
+#include "pbl/services/normal/notifications/ancs/ancs_filtering.h"
 
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
-#include "services/normal/notifications/alerts_preferences.h"
-#include "services/normal/timeline/attributes_actions.h"
+#include "pbl/services/normal/notifications/alerts_preferences.h"
+#include "pbl/services/normal/timeline/attributes_actions.h"
 #include "system/logging.h"
 #include "util/pstring.h"
 

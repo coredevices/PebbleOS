@@ -3,10 +3,10 @@
 
 #include "flash_region/flash_region.h"
 #include "syscall/syscall.h"
-#include "services/normal/wakeup.h"
-#include "services/common/event_service.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/wakeup.h"
+#include "pbl/services/common/event_service.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "process_management/app_install_manager.h"
 #include "util/attributes.h"
 

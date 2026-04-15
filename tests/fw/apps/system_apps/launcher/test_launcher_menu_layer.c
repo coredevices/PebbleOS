@@ -6,8 +6,8 @@
 #include "applib/ui/window_private.h"
 #include "apps/system/launcher/default/launcher_menu_layer.h"
 #include "resource/resource_ids.auto.h"
-#include "services/normal/app_glances/app_glance_service.h"
-#include "services/normal/blob_db/app_glance_db.h"
+#include "pbl/services/normal/app_glances/app_glance_service.h"
+#include "pbl/services/normal/blob_db/app_glance_db.h"
 #include "util/size.h"
 
 static GContext s_ctx;
@@ -19,7 +19,7 @@ static GContext s_ctx;
 #include "fake_settings_file.h"
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
 #define TIMELINE_RESOURCE_TEST_FAKE_PNG (9999 | 0x80000000)

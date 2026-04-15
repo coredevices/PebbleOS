@@ -3,8 +3,8 @@
 
 #include "comm/ble/kernel_le_client/ppogatt/ppogatt.h"
 #include "comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h"
-#include "services/common/comm_session/session_transport.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/comm_session/session_transport.h"
+#include "pbl/services/common/regular_timer.h"
 
 #include <util/size.h>
 

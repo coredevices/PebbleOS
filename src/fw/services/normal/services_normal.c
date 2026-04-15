@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services_normal.h"
+#include "pbl/services/normal/services_normal.h"
 
 #include <string.h>
 
@@ -10,38 +10,38 @@
 #include "kernel/events.h"
 #include "process_management/app_install_manager.h" // FIXME: This should really be in services/
 #include "process_management/launcher_app_message.h" // FIXME: This should really be in services/
-#include "services/normal/activity/activity.h"
-#include "services/normal/alarms/alarm.h"
-#include "services/normal/app_cache.h"
-#include "services/normal/app_fetch_endpoint.h"
-#include "services/normal/app_glances/app_glance_service.h"
-#include "services/normal/blob_db/api.h"
-#include "services/normal/blob_db/endpoint_private.h"
-#include "services/normal/data_logging/data_logging_service.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/protobuf_log/protobuf_log.h"
-#include "services/normal/music_endpoint.h"
-#include "services/normal/music_internal.h"
-#include "services/normal/notifications/alerts_private.h"
-#include "services/normal/notifications/notifications.h"
-#include "services/normal/persist.h"
-#include "services/normal/phone_call.h"
-#include "services/normal/process_management/app_order_storage.h"
-#include "services/normal/powermode_service.h"
-#include "services/normal/send_text_service.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/alarms/alarm.h"
+#include "pbl/services/normal/app_cache.h"
+#include "pbl/services/normal/app_fetch_endpoint.h"
+#include "pbl/services/normal/app_glances/app_glance_service.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/endpoint_private.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log.h"
+#include "pbl/services/normal/music_endpoint.h"
+#include "pbl/services/normal/music_internal.h"
+#include "pbl/services/normal/notifications/alerts_private.h"
+#include "pbl/services/normal/notifications/notifications.h"
+#include "pbl/services/normal/persist.h"
+#include "pbl/services/normal/phone_call.h"
+#include "pbl/services/normal/process_management/app_order_storage.h"
+#include "pbl/services/normal/powermode_service.h"
+#include "pbl/services/normal/send_text_service.h"
 #include "shell/prefs.h"
-#include "services/normal/stationary.h"
-#include "services/normal/timeline/event.h"
-#include "services/normal/wakeup.h"
-#include "services/normal/weather/weather_service.h"
-#include "services/runlevel_impl.h"
+#include "pbl/services/normal/stationary.h"
+#include "pbl/services/normal/timeline/event.h"
+#include "pbl/services/normal/wakeup.h"
+#include "pbl/services/normal/weather/weather_service.h"
+#include "pbl/services/runlevel_impl.h"
 
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
-#include "services/normal/orientation_manager.h"
+#include "pbl/services/normal/orientation_manager.h"
 #endif
 
-#include "services/normal/activity/activity.h"
-#include "services/normal/voice/voice.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/voice/voice.h"
 
 #include "util/size.h"
 

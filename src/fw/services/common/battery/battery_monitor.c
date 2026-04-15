@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/battery/battery_monitor.h"
+#include "pbl/services/common/battery/battery_monitor.h"
 
 #include "board/board.h"
 #include "kernel/low_power.h"
 #include "kernel/util/standby.h"
-#include "services/common/firmware_update.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/firmware_update.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "util/ratio.h"
 

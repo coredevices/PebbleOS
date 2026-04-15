@@ -3,7 +3,7 @@
 
 #include "crashed_ui.h"
 
-#include "services/common/light.h"
+#include "pbl/services/common/light.h"
 
 #include "applib/ui/dialogs/dialog.h"
 #include "applib/ui/dialogs/actionable_dialog.h"
@@ -16,7 +16,7 @@
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 
 #include <stdio.h>
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "phone_call.h"
+#include "pbl/services/normal/phone_call.h"
 
 #include "applib/event_service_client.h"
 #include "applib/ui/vibes.h"
@@ -9,12 +9,12 @@
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 #include "kernel/pbl_malloc.h"
 #include "popups/phone_ui.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/phone_pp.h"
-#include "services/common/system_task.h"
-#include "services/normal/notifications/alerts.h"
-#include "services/normal/notifications/ancs/ancs_phone_call.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/phone_pp.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/notifications/alerts.h"
+#include "pbl/services/normal/notifications/ancs/ancs_phone_call.h"
 #include "system/logging.h"
 
 //! This service is a little confusing, but generally here is how the phone calls work:

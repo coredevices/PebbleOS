@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ancs_notifications_util.h"
+#include "pbl/services/normal/notifications/ancs/ancs_notifications_util.h"
 
 #include "drivers/rtc.h"
 #include "resource/timeline_resource_ids.auto.h"
@@ -21,7 +21,7 @@ const ANCSAppMetadata* ancs_notifications_util_get_app_metadata(const ANCSAttrib
   };
 
   static const struct ANCSAppMetadata map[] = {
-#include "ancs_known_apps.h"
+#include "pbl/services/normal/notifications/ancs/ancs_known_apps.h"
   };
 
   for (unsigned int index = 0; index < ARRAY_LENGTH(map); ++index) {

@@ -7,9 +7,9 @@
 
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
-#include "services/common/comm_session/protocol.h"
-#include "services/common/comm_session/session_send_buffer.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/comm_session/protocol.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/system_task.h"
 #include "util/circular_buffer.h"
 #include "system/hexdump.h"
 

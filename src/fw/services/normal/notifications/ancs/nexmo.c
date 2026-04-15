@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "nexmo.h"
-#include "ancs_notifications_util.h"
+#include "pbl/services/normal/notifications/ancs/nexmo.h"
+#include "pbl/services/normal/notifications/ancs/ancs_notifications_util.h"
 
 #include "comm/ble/kernel_le_client/ancs/ancs.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"

@@ -5,7 +5,7 @@
 
 #include "console/pulse_internal.h"
 #include "kernel/core_dump.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
 #include "system/passert.h"

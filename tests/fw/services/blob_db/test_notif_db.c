@@ -4,9 +4,9 @@
 #include "clar.h"
 
 #include "util/uuid.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/blob_db/notif_db.h"
-#include "services/normal/notifications/notification_storage.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/blob_db/notif_db.h"
+#include "pbl/services/normal/notifications/notification_storage.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

@@ -7,26 +7,26 @@
 //! I'll slowly move initialization routines into here as we continue to refactor services.
 //! For now this will just be woefully incomplete.
 
-#include "services_common.h"
+#include "pbl/services/common/services_common.h"
 
 #include "mfg/mfg_info.h"
 
-#include "services/common/accel_manager.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/comm_session/app_session_capabilities.h"
-#include "services/common/comm_session/default_kernel_sender.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/cron.h"
-#include "services/common/firmware_update.h"
-#include "services/common/hrm/hrm_manager.h"
-#include "services/common/light.h"
-#include "services/common/poll_remote.h"
-#include "services/common/put_bytes/put_bytes.h"
-#include "services/common/shared_prf_storage/shared_prf_storage.h"
-#include "services/common/touch/touch.h"
+#include "pbl/services/common/accel_manager.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/comm_session/app_session_capabilities.h"
+#include "pbl/services/common/comm_session/default_kernel_sender.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/cron.h"
+#include "pbl/services/common/firmware_update.h"
+#include "pbl/services/common/hrm/hrm_manager.h"
+#include "pbl/services/common/light.h"
+#include "pbl/services/common/poll_remote.h"
+#include "pbl/services/common/put_bytes/put_bytes.h"
+#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/common/touch/touch.h"
 #include "drivers/touch/touch_sensor.h"
-#include "services/common/vibe_pattern.h"
-#include "services/runlevel_impl.h"
+#include "pbl/services/common/vibe_pattern.h"
+#include "pbl/services/runlevel_impl.h"
 #include "util/size.h"
 
 void services_common_init(void) {

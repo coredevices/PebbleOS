@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "dls_private.h"
-#include "dls_endpoint.h"
-#include "dls_list.h"
-#include "dls_storage.h"
+#include "pbl/services/normal/data_logging/dls_private.h"
+#include "pbl/services/normal/data_logging/dls_endpoint.h"
+#include "pbl/services/normal/data_logging/dls_list.h"
+#include "pbl/services/normal/data_logging/dls_storage.h"
 
-#include "services/common/analytics/analytics.h"
-#include "services/common/comm_session/protocol.h"
-#include "services/common/comm_session/session_send_buffer.h"
-#include "services/common/system_task.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/comm_session/protocol.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 #include "system/passert.h"

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/comm_session/session.h"
+#include "pbl/services/common/comm_session/session.h"
 #include "mfg/mfg_info.h"
 
 #include <string.h>

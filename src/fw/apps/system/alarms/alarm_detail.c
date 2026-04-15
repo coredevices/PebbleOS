@@ -11,9 +11,9 @@
 #include "kernel/pbl_malloc.h"
 #include "popups/health_tracking_ui.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/activity/activity.h"
-#include "services/normal/alarms/alarm.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/alarms/alarm.h"
 #include "system/logging.h"
 
 #include <stdio.h>

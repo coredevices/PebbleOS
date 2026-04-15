@@ -3,7 +3,7 @@
 
 #include "applib/app_outbox.h"
 #include "applib/event_service_client.h"
-#include "services/normal/app_outbox_service.h"
+#include "pbl/services/normal/app_outbox_service.h"
 #include "clar.h"
 
 extern void app_outbox_service_deinit(void);

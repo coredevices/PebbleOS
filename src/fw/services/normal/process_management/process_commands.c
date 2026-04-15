@@ -4,9 +4,9 @@
 #include "console/prompt.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
-#include "services/normal/app_cache.h"
-#include "services/normal/blob_db/app_db.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/app_cache.h"
+#include "pbl/services/normal/blob_db/app_db.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 
 //! @file process_commands.c
 //!
