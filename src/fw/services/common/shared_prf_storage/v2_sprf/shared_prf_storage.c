@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/shared_prf_storage/shared_prf_storage.h"
-#include "shared_prf_storage_private.h"
+#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/common/shared_prf_storage/v2_sprf/shared_prf_storage_private.h"
 
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/regular_timer.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "util/size.h"
 

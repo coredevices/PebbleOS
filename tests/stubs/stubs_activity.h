@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/activity/activity_private.h"
+#include "pbl/services/normal/activity/activity_private.h"
 #include "util/attributes.h"
 
 bool WEAK activity_tracking_on(void) {

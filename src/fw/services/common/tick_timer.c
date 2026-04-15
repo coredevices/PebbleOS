@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "tick_timer.h"
+#include "pbl/services/common/tick_timer.h"
 
 #include "kernel/events.h"
 #include "drivers/rtc.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/regular_timer.h"
 #include "process_management/app_manager.h"
 #include "system/logging.h"
 #include "system/passert.h"

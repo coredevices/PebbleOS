@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "vibe_intensity.h"
+#include "pbl/services/normal/vibes/vibe_intensity.h"
 
-#include "services/common/i18n/i18n.h"
-#include "services/common/vibe_pattern.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/common/vibe_pattern.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
 
 uint8_t get_strength_for_intensity(VibeIntensity intensity) {
   switch (intensity) {

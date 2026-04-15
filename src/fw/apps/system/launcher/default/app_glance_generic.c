@@ -13,7 +13,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_info.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 #include "system/passert.h"
 #include "util/string.h"
 #include "util/struct.h"

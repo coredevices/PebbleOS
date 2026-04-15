@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ble_hrm.h"
+#include "pbl/services/normal/bluetooth/ble_hrm.h"
 
 #include "applib/event_service_client.h"
 #include "comm/ble/gap_le_connection.h"
@@ -13,10 +13,10 @@
 #include "popups/ble_hrm/ble_hrm_reminder_popup.h"
 #include "popups/ble_hrm/ble_hrm_sharing_popup.h"
 #include "process_management/app_manager.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/hrm/hrm_manager_private.h"
-#include "services/common/regular_timer.h"
-#include "services/normal/activity/activity.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/hrm/hrm_manager_private.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/normal/activity/activity.h"
 #include "shell/system_app_ids.auto.h"
 #include "system/logging.h"
 #include "system/passert.h"

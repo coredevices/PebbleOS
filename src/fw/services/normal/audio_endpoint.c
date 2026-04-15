@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "audio_endpoint.h"
-#include "audio_endpoint_private.h"
+#include "pbl/services/normal/audio_endpoint.h"
+#include "pbl/services/normal/audio_endpoint_private.h"
 
 #include "comm/bt_lock.h"
-#include "services/common/comm_session/session_send_buffer.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/circular_buffer.h"

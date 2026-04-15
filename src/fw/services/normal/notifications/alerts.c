@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "alerts.h"
-#include "alerts_private.h"
+#include "pbl/services/normal/notifications/alerts.h"
+#include "pbl/services/normal/notifications/alerts_private.h"
 
 #include "drivers/battery.h"
 #include "drivers/rtc.h"
 #include "kernel/low_power.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/firmware_update.h"
-#include "services/normal/notifications/do_not_disturb.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/firmware_update.h"
+#include "pbl/services/normal/notifications/do_not_disturb.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
 
 static const int NOTIFICATION_VIBE_HOLDOFF_MS = 3000;
 static RtcTicks s_notification_vibe_tick_timestamp = 0;

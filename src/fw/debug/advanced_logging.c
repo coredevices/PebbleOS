@@ -9,7 +9,7 @@
 #include "system/passert.h"
 #include "util/shared_circular_buffer.h"
 
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 
 static SharedCircularBuffer s_buffer;
 static SharedCircularBufferClient s_buffer_client;

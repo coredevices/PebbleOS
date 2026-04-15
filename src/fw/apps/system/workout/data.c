@@ -3,8 +3,8 @@
 
 #include "data.h"
 
-#include "services/normal/activity/health_util.h"
-#include "services/normal/activity/workout_service.h"
+#include "pbl/services/normal/activity/health_util.h"
+#include "pbl/services/normal/activity/workout_service.h"
 
 #include <stdio.h>
 

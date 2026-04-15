@@ -7,9 +7,9 @@
 
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
-#include "services/normal/blob_db/watch_app_prefs_db.h"
-#include "services/normal/blob_db/weather_db.h"
-#include "services/normal/weather/weather_service_private.h"
+#include "pbl/services/normal/blob_db/watch_app_prefs_db.h"
+#include "pbl/services/normal/blob_db/weather_db.h"
+#include "pbl/services/normal/weather/weather_service_private.h"
 
 #define WEATHER_PREFS_DATA_SIZE (sizeof(SerializedWeatherAppPrefs) + \
                                 (sizeof(Uuid) * WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES))

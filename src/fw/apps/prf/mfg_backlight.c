@@ -8,7 +8,7 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/light.h"
+#include "pbl/services/common/light.h"
 #include "drivers/led_controller.h"
 
 #define BACKLIGHT_COLOR_WHITE       0xFFFFFF

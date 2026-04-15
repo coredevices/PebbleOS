@@ -13,8 +13,8 @@
 #include "comm/bt_lock.h"
 
 #include "kernel/event_loop.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/regular_timer.h"
 #include "util/size.h"
 
 #include <btutil/bt_uuid.h>

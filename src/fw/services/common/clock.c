@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/clock.h"
+#include "pbl/services/common/clock.h"
 
 #include "console/prompt.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/i18n/i18n.h"
-#include "services/common/regular_timer.h"
-#include "services/normal/alarms/alarm.h"
-#include "services/normal/timezone_database.h"
-#include "services/normal/wakeup.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/normal/alarms/alarm.h"
+#include "pbl/services/normal/timezone_database.h"
+#include "pbl/services/normal/wakeup.h"
 #include "shell/prefs.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
@@ -22,7 +22,7 @@
 #include "util/net.h"
 #include "util/size.h"
 #include "util/string.h"
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/analytics/analytics.h"
 
 #include <stdio.h>
 

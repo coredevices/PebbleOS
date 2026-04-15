@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "app_cache.h"
+#include "pbl/services/normal/app_cache.h"
 
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "process_management/app_install_manager.h"
-#include "process_management/app_storage.h"
-#include "services/common/system_task.h"
-#include "services/normal/blob_db/pin_db.h"
-#include "services/normal/filesystem/app_file.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/process_management/app_storage.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/filesystem/app_file.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
 #include "shell/prefs.h"

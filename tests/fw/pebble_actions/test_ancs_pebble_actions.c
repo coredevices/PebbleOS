@@ -3,9 +3,9 @@
 
 #include "clar.h"
 
-#include "services/normal/notifications/ancs/ancs_notifications.h"
-#include "services/normal/notifications/ancs/ancs_notifications_util.h"
-#include "services/normal/notifications/ancs/ancs_item.h"
+#include "pbl/services/normal/notifications/ancs/ancs_notifications.h"
+#include "pbl/services/normal/notifications/ancs/ancs_notifications_util.h"
+#include "pbl/services/normal/notifications/ancs/ancs_item.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_util.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 

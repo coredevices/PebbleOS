@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 
 #include <inttypes.h>
 #include <stddef.h>
@@ -19,8 +19,8 @@
 #include "kernel/pebble_tasks.h"
 #include "kernel/util/sleep.h"
 #include "os/mutex.h"
-#include "services/common/analytics/analytics.h"
-#include "services/normal/filesystem/flash_translation.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/normal/filesystem/flash_translation.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"

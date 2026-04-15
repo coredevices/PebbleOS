@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "workout_service.h"
+#include "pbl/services/normal/activity/workout_service.h"
 
-#include "activity_algorithm.h"
-#include "activity_calculators.h"
-#include "activity_insights.h"
-#include "activity_private.h"
-#include "hr_util.h"
+#include "pbl/services/normal/activity/activity_algorithm.h"
+#include "pbl/services/normal/activity/activity_calculators.h"
+#include "pbl/services/normal/activity/activity_insights.h"
+#include "pbl/services/normal/activity/activity_private.h"
+#include "pbl/services/normal/activity/hr_util.h"
 
 #include "apps/system/workout/utils.h"
 #include "applib/app.h"
 #include "applib/health_service.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/evented_timer.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/common/regular_timer.h"
 #include "system/passert.h"
 #include "util/time/time.h"
 #include "util/units.h"

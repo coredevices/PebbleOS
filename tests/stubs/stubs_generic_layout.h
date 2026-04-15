@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/timeline/generic_layout.h"
+#include "pbl/services/normal/timeline/generic_layout.h"
 #include "util/attributes.h"
 
 LayoutLayer * WEAK generic_layout_create(const LayoutLayerConfig *config) {

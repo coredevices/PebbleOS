@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "contacts_db.h"
+#include "pbl/services/normal/blob_db/contacts_db.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
-#include "services/normal/contacts/attributes_address.h"
-#include "services/normal/contacts/contacts.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/normal/contacts/attributes_address.h"
+#include "pbl/services/normal/contacts/contacts.h"
 #include "os/mutex.h"
 #include "system/passert.h"
 #include "system/status_codes.h"

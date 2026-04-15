@@ -3,11 +3,11 @@
 
 #include "clar.h"
 
-#include "services/common/comm_session/session.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/normal/blob_db/api.h"
-#include "services/normal/blob_db/endpoint.h"
-#include "services/normal/blob_db/sync.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/endpoint.h"
+#include "pbl/services/normal/blob_db/sync.h"
 
 #include <stdio.h>
 

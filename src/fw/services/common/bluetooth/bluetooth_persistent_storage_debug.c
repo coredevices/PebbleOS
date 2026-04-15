@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "bluetooth_persistent_storage_debug.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage_debug.h"
 
 #include "console/prompt.h"
-#include "services/common/shared_prf_storage/shared_prf_storage_debug.h"
+#include "pbl/services/common/shared_prf_storage/shared_prf_storage_debug.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "util/string.h"

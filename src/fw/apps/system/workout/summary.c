@@ -13,10 +13,10 @@
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/clock.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/activity/health_util.h"
-#include "services/normal/activity/workout_service.h"
+#include "pbl/services/common/clock.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/activity/health_util.h"
+#include "pbl/services/normal/activity/workout_service.h"
 #include "system/logging.h"
 
 #include <stdio.h>

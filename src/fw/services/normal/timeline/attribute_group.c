@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "attribute_group.h"
+#include "pbl/services/normal/timeline/attribute_group.h"
 
-#include "services/normal/contacts/attributes_address.h"
+#include "pbl/services/normal/contacts/attributes_address.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 

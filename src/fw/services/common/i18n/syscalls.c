@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 
 #include "kernel/memory_layout.h"
 #include "kernel/pebble_tasks.h"

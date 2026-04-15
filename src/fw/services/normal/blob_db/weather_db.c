@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "weather_db.h"
+#include "pbl/services/normal/blob_db/weather_db.h"
 
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
-#include "services/normal/weather/weather_service.h"
-#include "services/normal/weather/weather_types.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/normal/weather/weather_service.h"
+#include "pbl/services/normal/weather/weather_types.h"
 #include "system/passert.h"
 #include "util/units.h"
 

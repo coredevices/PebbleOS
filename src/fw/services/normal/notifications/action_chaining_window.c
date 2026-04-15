@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "action_chaining_window.h"
+#include "pbl/services/normal/notifications/action_chaining_window.h"
 
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"

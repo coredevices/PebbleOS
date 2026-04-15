@@ -7,8 +7,8 @@
 #include "event_service_client.h"
 #include "process_management/app_manager.h"
 
-#include "services/common/event_service.h"
-#include "services/common/tick_timer.h"
+#include "pbl/services/common/event_service.h"
+#include "pbl/services/common/tick_timer.h"
 #include "kernel/events.h"
 #include "kernel/kernel_applib_state.h"
 

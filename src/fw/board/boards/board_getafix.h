@@ -7,7 +7,7 @@
 #include "drivers/led_controller/aw9364e.h"
 #include "drivers/pmic/npm1300.h"
 #include "drivers/touch/cst816/touch_sensor_definitions.h"
-#include "services/imu/units.h"
+#include "pbl/services/imu/units.h"
 
 #define BT_VENDOR_ID 0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"

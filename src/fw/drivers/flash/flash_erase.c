@@ -5,7 +5,7 @@
 #include "drivers/flash/flash_internal.h"
 
 #include "flash_region/flash_region.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/math.h"

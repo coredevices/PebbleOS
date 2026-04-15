@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "notification_storage.h"
-#include "notification_storage_private.h"
+#include "pbl/services/normal/notifications/notification_storage.h"
+#include "pbl/services/normal/notifications/notification_storage_private.h"
 
 #include "util/uuid.h"
 #include "kernel/pbl_malloc.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/common/system_task.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "system/logging.h"
 #include "os/mutex.h"

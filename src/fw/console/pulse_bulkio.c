@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 #include "kernel/pbl_malloc.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/crc32.h"

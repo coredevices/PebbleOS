@@ -11,9 +11,9 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
-#include "services/common/accel_manager.h"
-#include "services/common/system_task.h"
-#include "services/common/vibe_pattern.h"
+#include "pbl/services/common/accel_manager.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/common/vibe_pattern.h"
 #include "syscall/syscall.h"
 #include "system/passert.h"
 

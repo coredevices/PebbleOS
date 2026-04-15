@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "api.h"
-#include "pin_db.h"
-#include "reminder_db.h"
-#include "sync.h"
-#include "sync_util.h"
-#include "timeline_item_storage.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/blob_db/reminder_db.h"
+#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/normal/blob_db/sync_util.h"
+#include "pbl/services/normal/blob_db/timeline_item_storage.h"
 
 #include <string.h>
 
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
-#include "services/normal/app_cache.h"
-#include "services/normal/timeline/calendar.h"
-#include "services/normal/timeline/timeline.h"
+#include "pbl/services/normal/app_cache.h"
+#include "pbl/services/normal/timeline/calendar.h"
+#include "pbl/services/normal/timeline/timeline.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/units.h"

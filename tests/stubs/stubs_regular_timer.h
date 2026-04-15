@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/regular_timer.h"
 
 void regular_timer_init(void) { }
 

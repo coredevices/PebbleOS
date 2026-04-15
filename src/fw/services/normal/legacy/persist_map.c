@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "persist_map.h"
+#include "pbl/services/normal/legacy/persist_map.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "kernel/pbl_malloc.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/testinfra.h"

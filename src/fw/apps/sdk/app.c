@@ -15,7 +15,7 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/clock.h"
+#include "pbl/services/common/clock.h"
 #include "shell/sdk/shell_sdk.h"
 #include "shell/sdk/watchface.h"
 #include "system/logging.h"

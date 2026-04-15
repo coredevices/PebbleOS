@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "get_bytes_private.h"
+#include "pbl/services/common/get_bytes/get_bytes_private.h"
 
 #include "comm/bluetooth_analytics.h"
 #include "drivers/flash.h"
@@ -9,10 +9,10 @@
 #include "flash_region/flash_region.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/comm_session/session_send_buffer.h"
-#include "services/common/get_bytes/get_bytes_storage.h"
-#include "services/common/system_task.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/get_bytes/get_bytes_storage.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "util/math.h"

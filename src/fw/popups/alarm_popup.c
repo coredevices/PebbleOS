@@ -13,18 +13,18 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/clock.h"
-#include "services/common/i18n/i18n.h"
-#include "services/common/light.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/normal/alarms/alarm.h"
+#include "pbl/services/common/clock.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/common/light.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/normal/alarms/alarm.h"
 #include "util/time/time.h"
 
 #include <stdio.h>
 #include <string.h>
 
-#include "services/normal/vibes/vibe_client.h"
-#include "services/normal/vibes/vibe_score.h"
+#include "pbl/services/normal/vibes/vibe_client.h"
+#include "pbl/services/normal/vibes/vibe_score.h"
 
 #if !TINTIN_FORCE_FIT
 #define DIALOG_TIMEOUT_SNOOZE 2000

@@ -11,7 +11,7 @@
 #include "applib/ui/content_indicator.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
 #include "util/attributes.h"

@@ -32,7 +32,7 @@
 #include "mfg/mfg_serials.h"
 
 #include "pebbleos/chip_id.h"
-#include "services/common/comm_session/session.h"
+#include "pbl/services/common/comm_session/session.h"
 
 #include "system/bootbits.h"
 #include "system/passert.h"

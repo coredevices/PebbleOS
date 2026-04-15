@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "services/normal/blob_db/reminder_db.h"
+#include "pbl/services/normal/blob_db/reminder_db.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

@@ -8,7 +8,7 @@
 
 #include "kernel/pbl_malloc.h"
 
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "system/passert.h"
 #include "system/logging.h"
 

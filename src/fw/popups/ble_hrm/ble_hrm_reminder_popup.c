@@ -4,10 +4,10 @@
 #include "ble_hrm_reminder_popup.h"
 
 #include "drivers/rtc.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/notifications/notifications.h"
-#include "services/normal/timeline/timeline.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/notifications/notifications.h"
+#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 
 #include <util/size.h>
 

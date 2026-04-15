@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "process_management/app_install_manager_private.h"
-#include "process_management/app_order_storage.h"
-#include "services/common/comm_session/session.h"
+#include "pbl/services/normal/process_management/app_order_storage.h"
+#include "pbl/services/common/comm_session/session.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"

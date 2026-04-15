@@ -7,7 +7,7 @@
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
 #include "os/tick.h"
-#include "services/normal/alarms/alarm.h"
+#include "pbl/services/normal/alarms/alarm.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
@@ -15,10 +15,10 @@
 
 #include <pebbleos/cron.h>
 
-#include "activity.h"
-#include "activity_algorithm.h"
-#include "activity_insights.h"
-#include "activity_private.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity_algorithm.h"
+#include "pbl/services/normal/activity/activity_insights.h"
+#include "pbl/services/normal/activity/activity_private.h"
 
 
 // ------------------------------------------------------------------------------------

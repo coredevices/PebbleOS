@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
-#include "services/normal/orientation_manager.h"
+#include "pbl/services/normal/orientation_manager.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
 #include "drivers/display/display.h"

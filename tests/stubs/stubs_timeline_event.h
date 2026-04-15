@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/timeline/event.h"
+#include "pbl/services/normal/timeline/event.h"
 #include "util/attributes.h"
 
 void WEAK timeline_event_refresh(void) {}

@@ -5,7 +5,7 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 
-#include "services/common/comm_session/session_transport.h"
+#include "pbl/services/common/comm_session/session_transport.h"
 
 #include "system/passert.h"
 #include "system/logging.h"

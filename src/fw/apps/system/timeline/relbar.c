@@ -6,7 +6,7 @@
 #include "relbar.h"
 
 #include "applib/graphics/graphics.h"
-#include "services/normal/timeline/timeline_layout.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
 #include "system/logging.h"
 
 #include <stdint.h>

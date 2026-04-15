@@ -5,7 +5,7 @@
 
 #include "window_stack_animation.h"
 
-#include "services/common/compositor/compositor.h"
+#include "pbl/services/common/compositor/compositor.h"
 
 typedef struct {
   WindowTransitionImplementation implementation;

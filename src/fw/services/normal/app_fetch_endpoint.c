@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "app_fetch_endpoint.h"
+#include "pbl/services/normal/app_fetch_endpoint.h"
 
 #include <string.h>
 #include <stdbool.h>
 
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_info.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/put_bytes/put_bytes.h"
-#include "services/common/system_task.h"
-#include "services/normal/app_cache.h"
-#include "services/normal/blob_db/app_db.h"
-#include "services/normal/process_management/app_storage.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/put_bytes/put_bytes.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/app_cache.h"
+#include "pbl/services/normal/blob_db/app_db.h"
+#include "pbl/services/normal/process_management/app_storage.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/attributes.h"

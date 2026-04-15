@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "reminders.h"
+#include "pbl/services/normal/timeline/reminders.h"
 
 #include "drivers/rtc.h"
 #include "kernel/event_loop.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
-#include "services/common/system_task.h"
-#include "services/normal/blob_db/pin_db.h"
-#include "services/normal/blob_db/reminder_db.h"
-#include "services/normal/timeline/item.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/blob_db/reminder_db.h"
+#include "pbl/services/normal/timeline/item.h"
 #include "system/logging.h"
 
 #include <inttypes.h>

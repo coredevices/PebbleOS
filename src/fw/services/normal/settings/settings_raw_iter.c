@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "settings_raw_iter.h"
+#include "pbl/services/normal/settings/settings_raw_iter.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/math.h"

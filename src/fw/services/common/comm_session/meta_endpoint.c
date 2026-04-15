@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "meta_endpoint.h"
+#include "pbl/services/common/comm_session/meta_endpoint.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "util/net.h"
 

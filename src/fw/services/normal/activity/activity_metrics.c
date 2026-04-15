@@ -7,7 +7,7 @@
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
 #include "os/tick.h"
-#include "services/normal/protobuf_log/protobuf_log.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/hexdump.h"
@@ -19,11 +19,11 @@
 #include "util/stats.h"
 #include "util/units.h"
 
-#include "activity.h"
-#include "activity_algorithm.h"
-#include "activity_calculators.h"
-#include "activity_insights.h"
-#include "activity_private.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity_algorithm.h"
+#include "pbl/services/normal/activity/activity_calculators.h"
+#include "pbl/services/normal/activity/activity_insights.h"
+#include "pbl/services/normal/activity/activity_private.h"
 
 
 // ---------------------------------------------------------------------------------------

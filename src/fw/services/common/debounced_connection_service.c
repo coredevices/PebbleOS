@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "debounced_connection_service.h"
+#include "pbl/services/common/debounced_connection_service.h"
 
-#include "services/common/comm_session/session.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/regular_timer.h"
 #include "syscall/syscall_internal.h"
 
 //! This module is responsible for propagating debounced connection events.

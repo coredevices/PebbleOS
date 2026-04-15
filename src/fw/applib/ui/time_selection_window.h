@@ -9,7 +9,7 @@
 #include "applib/ui/status_bar_layer.h"
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
-#include "services/common/clock.h"
+#include "pbl/services/common/clock.h"
 
 #include <time.h>
 

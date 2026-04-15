@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "layout_layer.h"
+#include "pbl/services/normal/timeline/layout_layer.h"
 
 // layout implementations
-#include "alarm_layout.h"
-#include "calendar_layout.h"
-#include "generic_layout.h"
-#include "health_layout.h"
-#include "notification_layout.h"
-#include "sports_layout.h"
-#include "weather_layout.h"
+#include "pbl/services/normal/timeline/alarm_layout.h"
+#include "pbl/services/normal/timeline/calendar_layout.h"
+#include "pbl/services/normal/timeline/generic_layout.h"
+#include "pbl/services/normal/timeline/health_layout.h"
+#include "pbl/services/normal/timeline/notification_layout.h"
+#include "pbl/services/normal/timeline/sports_layout.h"
+#include "pbl/services/normal/timeline/weather_layout.h"
 
-#include "services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
 #include "system/passert.h"
 #include "applib/ui/status_bar_layer.h"
 

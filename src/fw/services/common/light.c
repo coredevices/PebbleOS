@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/light.h"
+#include "pbl/services/common/light.h"
 
 #include "board/board.h"
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
 #include "drivers/rtc.h"
 #include "kernel/low_power.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/battery/battery_monitor.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/battery/battery_monitor.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "os/mutex.h"

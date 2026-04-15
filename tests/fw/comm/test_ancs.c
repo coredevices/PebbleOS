@@ -8,9 +8,9 @@
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gap_le_task.h"
 
-#include "services/common/evented_timer.h"
-#include "services/common/regular_timer.h"
-#include "services/normal/notifications/ancs/ancs_notifications.h"
+#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/normal/notifications/ancs/ancs_notifications.h"
 #include "util/size.h"
 
 #include "clar.h"

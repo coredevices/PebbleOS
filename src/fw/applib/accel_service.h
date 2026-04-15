@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "services/common/accel_manager.h"
-#include "services/imu/units.h"
+#include "pbl/services/common/accel_manager.h"
+#include "pbl/services/imu/units.h"
 #include "kernel/pebble_tasks.h"
 
 #include <inttypes.h>

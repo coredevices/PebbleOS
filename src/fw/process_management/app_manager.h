@@ -9,7 +9,7 @@
 #include "kernel/events.h"
 #include "kernel/pebble_tasks.h"
 #include "resource/resource.h"
-#include "services/common/compositor/compositor.h"
+#include "pbl/services/common/compositor/compositor.h"
 
 #include <stdbool.h>
 

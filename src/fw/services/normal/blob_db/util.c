@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "util.h"
+#include "pbl/services/normal/blob_db/util.h"
 
 #include "kernel/pbl_malloc.h"
 

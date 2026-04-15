@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "vibe_pattern.h"
+#include "pbl/services/common/vibe_pattern.h"
 
 #include "drivers/vibe.h"
 #include "drivers/battery.h"
@@ -12,9 +12,9 @@
 
 #include "os/mutex.h"
 
-#include "services/common/analytics/analytics.h"
-#include "services/common/accel_manager.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/accel_manager.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "kernel/events.h"
 
 #include "kernel/pbl_malloc.h"

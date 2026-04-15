@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "do_not_disturb.h"
-#include "do_not_disturb_toggle.h"
+#include "pbl/services/normal/notifications/do_not_disturb.h"
+#include "pbl/services/normal/notifications/do_not_disturb_toggle.h"
 
 #include "applib/app_exit_reason.h"
 #include "applib/ui/action_toggle.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "system/logging.h"
 
 static bool prv_get_state(void *context) {

@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "wakeup.h"
+#include "pbl/services/normal/wakeup.h"
 
 #include "popups/wakeup_ui.h"
 
 #include "os/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
-#include "process_management/app_storage.h"
-#include "services/common/clock.h"
-#include "services/common/event_service.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/common/system_task.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/process_management/app_storage.h"
+#include "pbl/services/common/clock.h"
+#include "pbl/services/common/event_service.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"

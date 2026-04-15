@@ -7,7 +7,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_management/app_manager.h"
 #include "syscall/syscall.h"
-#include "services/normal/wakeup.h"
+#include "pbl/services/normal/wakeup.h"
 #include "kernel/events.h"
 
 static void do_handle(PebbleEvent *e, void *context) {

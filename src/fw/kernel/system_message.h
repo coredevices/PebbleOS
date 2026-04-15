@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#include "services/common/firmware_update.h"
+#include "pbl/services/common/firmware_update.h"
 
 #include <util/attributes.h>
 

@@ -16,7 +16,7 @@ class generate_timeline_table(Task.Task):
 //
 
 #include "resource/resource_ids.auto.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 
 #include <stdint.h>
 

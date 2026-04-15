@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "flash_translation.h"
+#include "pbl/services/normal/filesystem/flash_translation.h"
 
 #include "drivers/flash.h"
 #include "drivers/task_watchdog.h"
 #include "flash_region/filesystem_regions.h"
 #include "flash_region/flash_region.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/math.h"

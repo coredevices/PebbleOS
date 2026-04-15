@@ -29,12 +29,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "i18n.h"
-#include "mo.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/mo.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "shell/normal/language_ui.h"
 #include "shell/prefs.h"
 #include "system/logging.h"

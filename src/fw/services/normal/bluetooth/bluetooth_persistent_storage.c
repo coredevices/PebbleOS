@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage_debug.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage_debug.h"
 
 #include "comm/ble/gap_le_connect.h"
 #include "comm/ble/gap_le_connection.h"
@@ -13,12 +13,12 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/bluetooth/pairability.h"
-#include "services/common/bluetooth/local_addr.h"
-#include "services/common/shared_prf_storage/shared_prf_storage.h"
-#include "services/common/system_task.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/bluetooth/pairability.h"
+#include "pbl/services/common/bluetooth/local_addr.h"
+#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -32,9 +32,9 @@
 
 #ifdef UNITTEST
 // Let the unittest define this using a header override:
-#  include "services/normal/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
+#  include "pbl/services/normal/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
 #else
-#  include "services/normal/bluetooth/bluetooth_persistent_storage_v2_impl.h"
+#  include "pbl/services/normal/bluetooth/bluetooth_persistent_storage_v2_impl.h"
 #endif
 
 //! The BtPersistBonding*Data structs can never shrink, only grow

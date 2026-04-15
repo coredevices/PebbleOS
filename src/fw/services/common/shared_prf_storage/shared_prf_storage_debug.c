@@ -7,8 +7,8 @@
 #include "system/logging.h"
 #include "util/string.h"
 
-#include "services/common/shared_prf_storage/shared_prf_storage.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage_debug.h"
+#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage_debug.h"
 
 
 #include <bluetooth/bluetooth_types.h>

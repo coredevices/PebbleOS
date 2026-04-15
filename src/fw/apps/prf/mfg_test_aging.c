@@ -22,8 +22,8 @@
 #include "kernel/util/sleep.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/light.h"
-#include "services/prf/idle_watchdog.h"
+#include "pbl/services/common/light.h"
+#include "pbl/services/prf/idle_watchdog.h"
 
 #include <stdio.h>
 

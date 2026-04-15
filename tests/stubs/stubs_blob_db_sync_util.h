@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "services/normal/blob_db/api.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/settings/settings_file.h"
 
 bool sync_util_is_dirty_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   return false;

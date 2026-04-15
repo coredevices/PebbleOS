@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/imu/units.h"
+#include "pbl/services/imu/units.h"
 #include "util/size.h"
 
 #define BT_VENDOR_ID 0x0154

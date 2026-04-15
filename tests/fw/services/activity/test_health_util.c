@@ -9,7 +9,7 @@
 #include "stubs_text_node.h"
 
 #include "shell/prefs.h"
-#include "services/normal/activity/health_util.h"
+#include "pbl/services/normal/activity/health_util.h"
 
 UnitsDistance shell_prefs_get_units_distance(void) {
   return UnitsDistance_Miles;

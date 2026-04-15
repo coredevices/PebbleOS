@@ -13,8 +13,8 @@
 #include "mfg/mfg_serials.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
-#include "services/common/battery/battery_state.h"
-#include "services/common/bluetooth/local_id.h"
+#include "pbl/services/common/battery/battery_state.h"
+#include "pbl/services/common/bluetooth/local_id.h"
 #include "util/bitset.h"
 #include "util/size.h"
 

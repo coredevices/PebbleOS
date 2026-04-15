@@ -9,11 +9,11 @@
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/timeline_resource_ids.auto.h"
-#include "services/normal/app_glances/app_glance_service.h"
-#include "services/normal/blob_db/app_glance_db.h"
-#include "services/normal/blob_db/app_glance_db_private.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/app_glances/app_glance_service.h"
+#include "pbl/services/normal/blob_db/app_glance_db.h"
+#include "pbl/services/normal/blob_db/app_glance_db_private.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 #include "util/uuid.h"
 
 #define APP_GLANCE_TEST_UUID \

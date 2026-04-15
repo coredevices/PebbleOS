@@ -13,8 +13,8 @@
 #include "applib/ui/content_indicator.h"
 #include "applib/ui/content_indicator_private.h"
 #include "kernel/pbl_malloc.h"
-#include "services/normal/activity/activity_private.h"
-#include "services/normal/timeline/health_layout.h"
+#include "pbl/services/normal/activity/activity_private.h"
+#include "pbl/services/normal/timeline/health_layout.h"
 #include "system/logging.h"
 #include "util/time/time.h"
 

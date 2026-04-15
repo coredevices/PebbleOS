@@ -16,7 +16,7 @@
 #include "mfg/spalding/spalding_boot.fpga.auto.h"
 
 // Stubs for fake_crc.c
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 int pfs_read(int fd, void *buf, size_t size) { return 0; }
 int pfs_seek(int fd, int offset, FSeekType seek_type) { return 0; }
 

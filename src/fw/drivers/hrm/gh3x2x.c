@@ -11,8 +11,8 @@
 #include "math.h"
 #include "kernel/util/delay.h"
 #include "kernel/events.h"
-#include "services/common/system_task.h"
-#include "services/common/hrm/hrm_manager.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/common/hrm/hrm_manager.h"
 #include "system/logging.h"
 
 #include "gh_demo.h"

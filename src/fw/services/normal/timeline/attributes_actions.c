@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "attributes_actions.h"
+#include "pbl/services/normal/timeline/attributes_actions.h"
 
-#include "services/normal/timeline/attribute_group.h"
+#include "pbl/services/normal/timeline/attribute_group.h"
 
 #include "system/logging.h"
 

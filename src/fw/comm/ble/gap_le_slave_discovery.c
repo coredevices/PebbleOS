@@ -17,8 +17,8 @@
 
 #include "mfg/mfg_serials.h"
 
-#include "services/common/bluetooth/local_id.h"
-#include "services/normal/bluetooth/ble_hrm.h"
+#include "pbl/services/common/bluetooth/local_id.h"
+#include "pbl/services/normal/bluetooth/ble_hrm.h"
 
 #include "system/passert.h"
 #include "system/version.h"

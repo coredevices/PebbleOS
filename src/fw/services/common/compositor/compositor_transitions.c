@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "compositor_transitions.h"
-#include "compositor_private.h"
+#include "pbl/services/common/compositor/compositor_transitions.h"
+#include "pbl/services/common/compositor/compositor_private.h"
 
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/gdraw_command_transforms.h"

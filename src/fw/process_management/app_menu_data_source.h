@@ -15,7 +15,7 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_info.h"
 #include "process_management/pebble_process_md.h"
-#include "services/normal/process_management/app_order_storage.h"
+#include "pbl/services/normal/process_management/app_order_storage.h"
 #include "util/attributes.h"
 #include "util/list.h"
 

@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "services/normal/vibes/vibe_intensity.h"
+#include "pbl/services/normal/vibes/vibe_intensity.h"
 
 // Stubs
 /////////

@@ -14,7 +14,7 @@
 #include "stubs_passert.h"
 #include "stubs_analytics.h"
 
-#include "services/common/vibe_pattern.h"
+#include "pbl/services/common/vibe_pattern.h"
 #include "applib/ui/vibes.h"
 #include "util/size.h"
 

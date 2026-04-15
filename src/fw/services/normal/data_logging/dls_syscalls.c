@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "data_logging_service.h"
-#include "dls_private.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/normal/data_logging/dls_private.h"
 
 #include "kernel/memory_layout.h"
 #include "syscall/syscall_internal.h"

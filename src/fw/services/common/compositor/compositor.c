@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "compositor.h"
-#include "compositor_dma.h"
-#include "compositor_display.h"
+#include "pbl/services/common/compositor/compositor.h"
+#include "pbl/services/common/compositor/compositor_dma.h"
+#include "pbl/services/common/compositor/compositor_display.h"
 
 #include "applib/graphics/bitblt.h"
 #include "applib/graphics/framebuffer.h"

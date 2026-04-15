@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "weather_layout.h"
-#include "timeline_layout.h"
+#include "pbl/services/normal/timeline/weather_layout.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
 
 #include "applib/fonts/fonts.h"
 #include "applib/graphics/gtypes.h"
@@ -14,8 +14,8 @@
 #include "font_resource_keys.auto.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/clock.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/clock.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "system/logging.h"
 #include "system/hexdump.h"
 #include "util/size.h"

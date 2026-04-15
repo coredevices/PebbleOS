@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "settings_blob_db.h"
-#include "sync.h"
-#include "api.h"
+#include "pbl/services/normal/blob_db/settings_blob_db.h"
+#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/normal/blob_db/api.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/comm_session/session.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "shell/prefs_private.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 #include "util/list.h"
 #include "util/size.h"
 

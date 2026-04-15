@@ -1,0 +1,15 @@
+// Any modifications to entries or attributes to WeatherType must only be done here.
+
+//                (id,            numeric_id,   bg_color,                  text_color,        timeline_resource_id)
+WEATHER_TYPE_TUPLE(PartlyCloudy,  0,            GColorChromeYellowARGB8,   GColorBlackARGB8,  TIMELINE_RESOURCE_PARTLY_CLOUDY)
+WEATHER_TYPE_TUPLE(CloudyDay,     1,            GColorLightGrayARGB8,      GColorBlackARGB8,  TIMELINE_RESOURCE_CLOUDY_DAY)
+WEATHER_TYPE_TUPLE(LightSnow,     2,            GColorElectricBlueARGB8,   GColorBlackARGB8,  TIMELINE_RESOURCE_LIGHT_SNOW)
+WEATHER_TYPE_TUPLE(LightRain,     3,            GColorPictonBlueARGB8,     GColorBlackARGB8,  TIMELINE_RESOURCE_LIGHT_RAIN)
+WEATHER_TYPE_TUPLE(HeavyRain,     4,            GColorBlueMoonARGB8,       GColorWhiteARGB8,  TIMELINE_RESOURCE_HEAVY_RAIN)
+WEATHER_TYPE_TUPLE(HeavySnow,     5,            GColorTiffanyBlueARGB8,    GColorBlackARGB8,  TIMELINE_RESOURCE_HEAVY_SNOW)
+WEATHER_TYPE_TUPLE(Generic,       6,            GColorLightGrayARGB8,      GColorBlackARGB8,  TIMELINE_RESOURCE_TIMELINE_WEATHER)
+WEATHER_TYPE_TUPLE(Sun,           7,            GColorOrangeARGB8,         GColorWhiteARGB8,  TIMELINE_RESOURCE_TIMELINE_SUN)
+WEATHER_TYPE_TUPLE(RainAndSnow,   8,            GColorMidnightGreenARGB8,  GColorWhiteARGB8,  TIMELINE_RESOURCE_RAINING_AND_SNOWING)
+WEATHER_TYPE_TUPLE(Unknown,       255,          GColorLightGrayARGB8,      GColorWhiteARGB8,  TIMELINE_RESOURCE_TIMELINE_WEATHER)
+
+#undef WEATHER_TYPE_TUPLE

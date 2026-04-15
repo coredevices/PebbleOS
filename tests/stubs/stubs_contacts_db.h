@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/blob_db/contacts_db.h"
+#include "pbl/services/normal/blob_db/contacts_db.h"
 
 int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **contact_out) {
   return 0;

@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2025 Joshua Jun */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "voice_speex.h"
+#include "pbl/services/normal/voice/voice_speex.h"
 
 #include "board/board.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
-#include "services/normal/audio_endpoint.h"
+#include "pbl/services/normal/audio_endpoint.h"
 #include "drivers/mic.h"
 
 #include "speex/speex.h"

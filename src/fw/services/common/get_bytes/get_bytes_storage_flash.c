@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "get_bytes_storage.h"
+#include "pbl/services/common/get_bytes/get_bytes_storage.h"
 #include "drivers/flash.h"
 #include "kernel/pbl_malloc.h"
 #include "flash_region/flash_region.h"

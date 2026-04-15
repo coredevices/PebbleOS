@@ -4,8 +4,8 @@
 #include "clar.h"
 
 #include "applib/app_watch_info.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/system_task.h"
 
 #include <string.h>
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "vibe_score.h"
+#include "pbl/services/normal/vibes/vibe_score.h"
 
 #include "process_management/app_manager.h"
 #include "syscall/syscall.h"

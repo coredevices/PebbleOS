@@ -6,7 +6,7 @@
 #include "clar_asserts.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/common/put_bytes/put_bytes_storage_internal.h"
+#include "pbl/services/common/put_bytes/put_bytes_storage_internal.h"
 #include "system/passert.h"
 
 #define FAKE_STORAGE_MAX_SIZE (512 * 1024)

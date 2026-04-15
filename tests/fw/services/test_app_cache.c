@@ -3,15 +3,15 @@
 
 #include "clar.h"
 
-#include "services/normal/app_cache.h"
+#include "pbl/services/normal/app_cache.h"
 
 #include "process_management/app_install_manager.h"
 #include "resource/resource_storage.h"
 #include "process_management/app_install_types.h"
-#include "services/normal/filesystem/app_file.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/process_management/app_storage.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/filesystem/app_file.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/process_management/app_storage.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "shell/normal/quick_launch.h"
 #include <util/size.h>
 #include "system/logging.h"

@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "health_layout.h"
-#include "timeline_layout.h"
+#include "pbl/services/normal/timeline/health_layout.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
 
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/activity/activity_insights.h"
-#include "services/normal/activity/health_util.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/activity/activity_insights.h"
+#include "pbl/services/normal/activity/health_util.h"
 #include "util/size.h"
 
 #include <stdio.h>
