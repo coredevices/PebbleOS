@@ -190,6 +190,13 @@ static void compute_stats(SettingsFile *file) {
 
 status_t settings_file_rewrite_filtered(
     SettingsFile *file, SettingsFileRewriteFilterCallback filter_cb, void *context) {
+  // FIRM-1649: instrumentation. Compaction holds the per-storage mutex for the
+  // entire rewrite under flash erases that can take seconds; suspected cause of
+  // multi-second KernelMain stalls. Log start/end + elapsed.
+  const RtcTicks rewrite_start_ticks = rtc_get_ticks();
+  PBL_LOG_INFO("FIRM-1649: settings_file_rewrite_filtered start file=%s",
+               file->name);
+
   SettingsFile new_file;
   status_t status = prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ,
                              file->max_used_space);
@@ -249,6 +256,14 @@ status_t settings_file_rewrite_filtered(
   settings_file_close(&new_file);
   status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, file->max_used_space);
   kernel_free(name);
+
+  // FIRM-1649: instrumentation. See note at the top of this function.
+  const uint32_t rewrite_elapsed_ms =
+      (uint32_t)(((rtc_get_ticks() - rewrite_start_ticks) * 1000) / RTC_TICKS_HZ);
+  PBL_LOG_INFO(
+      "FIRM-1649: settings_file_rewrite_filtered end file=%s elapsed=%"PRIu32"ms status=%"PRIi32,
+      file->name, rewrite_elapsed_ms, status);
+
   return status;
 }
 

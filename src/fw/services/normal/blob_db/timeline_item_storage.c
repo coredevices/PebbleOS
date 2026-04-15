@@ -3,12 +3,42 @@
 
 #include "pbl/services/normal/blob_db/timeline_item_storage.h"
 
+#include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/normal/filesystem/pfs.h"
 #include "pbl/services/normal/settings/settings_raw_iter.h"
 #include "system/logging.h"
 
 #define MAX_CHILDREN_PER_PIN 3
+
+// FIRM-1649: temporary instrumentation to catch long mutex hold/wait on the
+// timeline item storage mutex. Suspected root cause of multi-second KernelMain
+// stalls during QuickView/alarm-save flows is settings_file compaction running
+// under this mutex on KernelBackground.
+#define FIRM_1649_MUTEX_WARN_MS 100
+
+static RtcTicks prv_storage_lock(TimelineItemStorage *storage, const char *op) {
+  RtcTicks before = rtc_get_ticks();
+  mutex_lock(storage->mutex);
+  RtcTicks after = rtc_get_ticks();
+  uint32_t wait_ms = (uint32_t)(((after - before) * 1000) / RTC_TICKS_HZ);
+  if (wait_ms >= FIRM_1649_MUTEX_WARN_MS) {
+    PBL_LOG_WRN("FIRM-1649: %s waited %"PRIu32"ms for %s mutex",
+                op, wait_ms, storage->name);
+  }
+  return after;
+}
+
+static void prv_storage_unlock(TimelineItemStorage *storage, RtcTicks lock_ticks,
+                               const char *op) {
+  uint32_t hold_ms =
+      (uint32_t)(((rtc_get_ticks() - lock_ticks) * 1000) / RTC_TICKS_HZ);
+  mutex_unlock(storage->mutex);
+  if (hold_ms >= FIRM_1649_MUTEX_WARN_MS) {
+    PBL_LOG_WRN("FIRM-1649: %s held %s mutex for %"PRIu32"ms",
+                op, storage->name, hold_ms);
+  }
+}
 
 typedef struct {
   Uuid parent_id;
@@ -116,7 +146,7 @@ static bool prv_each_find_children(SettingsFile *file, SettingsRecordInfo *info,
 bool timeline_item_storage_is_empty(TimelineItemStorage *storage) {
   bool rv = true;
 
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   AnyInfo any_info = { .empty = true };
   status_t status = settings_file_each(&storage->file, prv_each_any_item, &any_info);
@@ -127,13 +157,13 @@ bool timeline_item_storage_is_empty(TimelineItemStorage *storage) {
   rv = any_info.empty;
 
 cleanup:
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
 status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_out,
     TimelineItemStorageFilterCallback filter_cb) {
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   NextInfo next_info = {0};
   next_info.current = rtc_get_time();
@@ -154,13 +184,13 @@ status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_
   rv = S_SUCCESS;
 
 cleanup:
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
 
 bool timeline_item_storage_exists_with_parent(TimelineItemStorage *storage, const Uuid *parent_id) {
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   FindChildrenInfo info = {
     .parent_id = *parent_id,
@@ -179,7 +209,7 @@ bool timeline_item_storage_exists_with_parent(TimelineItemStorage *storage, cons
   }
 
 cleanup:
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv == S_SUCCESS;
 }
 
@@ -187,7 +217,7 @@ status_t timeline_item_storage_delete_with_parent(
     TimelineItemStorage *storage,
     const Uuid *parent_id,
     TimelineItemStorageChildDeleteCallback child_delete_cb) {
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   FindChildrenInfo info = {
     .parent_id = *parent_id,
@@ -213,16 +243,16 @@ status_t timeline_item_storage_delete_with_parent(
   }
 
 cleanup:
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
 //! Caution: CommonTimelineItemHeader .flags & .status are stored inverted and not auto-restored
 status_t timeline_item_storage_each(TimelineItemStorage *storage,
     TimelineItemStorageEachCallback each, void *data) {
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
   status_t rv = settings_file_each(&storage->file, each, data);
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
@@ -275,7 +305,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage,
   hdr->common.flags = ~hdr->common.flags;
   hdr->common.status = ~hdr->common.status;
 
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
   status_t rv = settings_file_set(&storage->file, key, key_len, val, val_len);
 
   // Restore flags & status
@@ -286,17 +316,17 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage,
     settings_file_mark_synced(&storage->file, key, key_len);
   }
 
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
 int timeline_item_storage_get_len(TimelineItemStorage *storage,
     const uint8_t *key, int key_len) {
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   status_t rv = settings_file_get_len(&storage->file, key, key_len);
 
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
@@ -306,7 +336,7 @@ status_t timeline_item_storage_read(TimelineItemStorage *storage,
     return E_INVALID_ARGUMENT;
   }
 
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   status_t rv = settings_file_get(&storage->file, key, key_len, val_out, val_len);
 
@@ -315,7 +345,7 @@ status_t timeline_item_storage_read(TimelineItemStorage *storage,
   hdr->common.flags = ~hdr->common.flags;
   hdr->common.status = ~hdr->common.status;
 
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
@@ -342,14 +372,14 @@ status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage,
     return E_INVALID_ARGUMENT;
   }
 
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   int offset = offsetof(SerializedTimelineItemHeader, common.status);
   // Invert status to store on flash
   status = ~status;
   status_t rv = settings_file_set_byte(&storage->file, key, key_len, offset, status);
 
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
@@ -359,11 +389,11 @@ status_t timeline_item_storage_delete(TimelineItemStorage *storage,
     return E_INVALID_ARGUMENT;
   }
 
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   status_t rv = settings_file_delete(&storage->file, key, key_len);
 
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
@@ -373,11 +403,11 @@ status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage,
     return E_INVALID_ARGUMENT;
   }
 
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   status_t rv = settings_file_mark_synced(&storage->file, key, key_len);
 
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
@@ -415,8 +445,8 @@ static void prv_flush_rewrite_cb(SettingsFile *old,
 }
 
 status_t timeline_item_storage_flush(TimelineItemStorage *storage) {
-  mutex_lock(storage->mutex);
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
   status_t rv = settings_file_rewrite(&storage->file, prv_flush_rewrite_cb, NULL);
-  mutex_unlock(storage->mutex);
+  prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
