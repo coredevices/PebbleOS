@@ -722,6 +722,17 @@ void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
     return;
   }
 
+#if !defined(RECOVERY_FW)
+  extern bool shell_prefs_get_accel_shake_log_info_enabled(void);
+  if (shell_prefs_get_accel_shake_log_info_enabled()) {
+    PBL_LOG_INFO("Shake detected; axis=%d, direction=%" PRId32, axis, direction);
+  } else {
+    PBL_LOG_DBG("Shake detected; axis=%d, direction=%" PRId32, axis, direction);
+  }
+#else
+  PBL_LOG_DBG("Shake detected; axis=%d, direction=%" PRId32, axis, direction);
+#endif
+
   PebbleEvent e = {
     .type = PEBBLE_ACCEL_SHAKE_EVENT,
     .accel_tap = {

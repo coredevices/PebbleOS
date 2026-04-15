@@ -51,6 +51,7 @@
 #endif
   PREFS_MACRO(PREF_KEY_POWER_MODE, s_power_mode)
   PREFS_MACRO(PREF_KEY_COREDUMP_ON_REQUEST, s_coredump_on_request_enabled)
+  PREFS_MACRO(PREF_KEY_ACCEL_SHAKE_LOG_INFO, s_accel_shake_log_info_enabled)
 #if CAPABILITY_HAS_APP_SCALING
   PREFS_MACRO(PREF_KEY_LEGACY_APP_RENDER_MODE, s_legacy_app_render_mode)
 #endif
