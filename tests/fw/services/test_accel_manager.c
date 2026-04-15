@@ -46,6 +46,9 @@ int32_t sys_vibe_get_vibe_strength(void) {
 }
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
 void accel_set_shake_sensitivity_percent(uint8_t percent) {}
+bool shell_prefs_get_accel_shake_log_info_enabled(void) {
+  return false;
+}
 QueueHandle_t pebble_task_get_to_queue(PebbleTask task) {
   return NULL;
 }
