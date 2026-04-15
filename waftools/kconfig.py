@@ -62,6 +62,10 @@ def configure(conf):
     kconf.warn_assign_undef = True
     kconf.load_config(defconfig)
 
+    prj_conf = os.path.join(srcdir, "src", "fw", "prj.conf")
+    if os.path.exists(prj_conf):
+        kconf.load_config(prj_conf, replace=False)
+
     # Check for assigned values overridden by unsatisfied dependencies
     # (same pattern as Zephyr's check_assigned_sym_values)
     for sym in kconf.unique_defined_syms:
@@ -107,7 +111,10 @@ def configure(conf):
         conf.env[key] = val
     conf.env.append_unique("CFLAGS", ["-include", autoconf_path])
     conf.env.append_unique("cfg_files", [config_path])
-    conf.msg("Kconfig", f"{len(kconfig)} symbols loaded from {board}")
+    msg = f"{len(kconfig)} symbols loaded from {board}"
+    if os.path.exists(prj_conf):
+        msg += " + prj.conf"
+    conf.msg("Kconfig", msg)
 
 
 class menuconfig(BuildContext):
