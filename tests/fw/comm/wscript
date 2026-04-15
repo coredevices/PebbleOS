@@ -4,7 +4,7 @@ def build(bld):
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/kernel_le_client/ams/ams_util.c "
                            "src/fw/comm/ble/kernel_le_client/ams/ams.c "
-                           "src/fw/services/normal/music.c "
+                           "src/fw/services/normal/music/service.c "
                            "tests/fakes/fake_events.c "
                            "tests/fakes/fake_gatt_client_operations.c "
                            "tests/fakes/fake_gatt_client_subscriptions.c "
@@ -18,7 +18,7 @@ def build(bld):
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/gap_le_advert.c "
                            "src/fw/comm/ble/gap_le_connection.c "
-                           "src/fw/services/common/regular_timer.c "
+                           "src/fw/services/common/regular_timer/service.c "
                            "src/fw/comm/internals/bt_conn_mgr.c "
                            "tests/fakes/fake_GAPAPI.c "
                            "tests/fakes/fake_rtc.c "
@@ -29,7 +29,7 @@ def build(bld):
 
     clar(bld,
         sources_ant_glob = "src/fw/comm/internals/bt_conn_mgr.c "
-                           "src/fw/services/common/regular_timer.c "
+                           "src/fw/services/common/regular_timer/service.c "
                            "tests/fakes/fake_gap_le_connect_params.c "
                            "tests/fakes/fake_rtc.c ",
         test_sources_ant_glob = "test_bt_conn_mgr.c")
@@ -137,7 +137,7 @@ def build(bld):
         "src/fw/comm/ble/kernel_le_client/ancs/ancs_util.c " \
         "src/fw/comm/ble/kernel_le_client/ancs/ancs.c " \
         "src/fw/comm/ble/kernel_le_client/ancs/ancs_app_name_storage.c " \
-        "src/fw/services/common/regular_timer.c " \
+        "src/fw/services/common/regular_timer/service.c " \
         "src/fw/util/rand/rand.c " \
         "third_party/tinymt/TinyMT/tinymt/tinymt32.c " \
         "tests/fakes/fake_events.c " \
@@ -165,7 +165,7 @@ def build(bld):
         clar(bld,
              sources_ant_glob = "src/fw/system/hexdump.c " \
                            "src/fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c " \
-                           "src/fw/services/common/regular_timer.c " \
+                           "src/fw/services/common/regular_timer/service.c " \
                            "src/fw/util/rand/rand.c "
                            "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                            "tests/fakes/fake_gatt_client_operations.c " \

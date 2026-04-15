@@ -7,7 +7,7 @@ def build(bld):
             "src/fw/applib/app_inbox.c "
             "src/fw/applib/app_message/app_message_receiver.c "
             "src/fw/services/normal/app_message/app_message_receiver.c "
-            "src/fw/services/normal/app_inbox_service.c "
+            "src/fw/services/normal/app_inbox_service/service.c "
          ),
          test_sources_ant_glob="test_app_message_receiver.c",
          override_includes=['applib_malloc'])

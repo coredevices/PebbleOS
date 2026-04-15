@@ -6,7 +6,7 @@ def _test_bluetooth_persistent_storage(bld, version=1):
     version_override_include = 'bluetooth_persistent_storage_v%u' % version
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/normal/bluetooth/bluetooth_persistent_storage.c "
+            "src/fw/services/common/bluetooth/bluetooth_persistent_storage_normal.c "
            "src/fw/services/normal/settings/settings_file.c "
            "src/fw/services/normal/settings/settings_raw_iter.c "
            "src/fw/services/normal/filesystem/pfs.c "
@@ -29,7 +29,7 @@ def _test_bluetooth_persistent_storage(bld, version=1):
 def build(bld):
     clar(bld,
          sources_ant_glob=(
-          "src/fw/services/normal/bluetooth/ble_hrm.c "
+          "src/fw/services/common/bluetooth/ble_hrm.c "
           "tests/fakes/fake_events.c "
          ),
          test_sources_ant_glob="test_ble_hrm.c",
@@ -43,7 +43,7 @@ def build(bld):
 
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/prf/bluetooth/bluetooth_persistent_storage.c "
+            "src/fw/services/common/bluetooth/bluetooth_persistent_storage_prf.c "
             "src/fw/services/common/shared_prf_storage/v2_sprf/shared_prf_storage.c "
             "tests/fakes/fake_spi_flash.c "
             "tests/fakes/fake_events.c "
