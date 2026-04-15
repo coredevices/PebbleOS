@@ -85,7 +85,6 @@ def options(opt):
 def configure(conf):
     conf.load('binary_header')
     conf.recurse('applib')
-    conf.recurse('services')
     conf.recurse('soc')
 
     if conf.is_silk():
