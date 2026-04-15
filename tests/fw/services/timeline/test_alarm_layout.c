@@ -28,6 +28,7 @@
 #include "stubs_rtc.h"
 #include "stubs_settings_file.h"
 #include "stubs_system_task.h"
+#include "stubs_text_node.h"
 #include "stubs_timeline_event.h"
 #include "stubs_timeline_layout.h"
 
