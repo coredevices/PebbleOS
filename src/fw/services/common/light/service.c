@@ -486,6 +486,17 @@ void light_toggle_ambient_sensor_enabled(void) {
   mutex_unlock(s_mutex);
 }
 
+void light_toggle_dynamic_intensity_enabled(void) {
+#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+  mutex_lock(s_mutex);
+  backlight_set_dynamic_intensity_enabled(!backlight_is_dynamic_intensity_enabled());
+  if (prv_light_allowed()) {
+    prv_change_state(LIGHT_STATE_ON_TIMED);
+  }
+  mutex_unlock(s_mutex);
+#endif
+}
+
 void light_allow(bool allowed) {
   if (s_backlight_allowed && !allowed) {
     prv_change_state(LIGHT_STATE_OFF);
