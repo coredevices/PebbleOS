@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include "applib/fonts/fonts.h"
-#include "services/normal/notifications/notifications.h"
+#include "pbl/services/normal/notifications/notifications.h"
 #include "kernel/events.h"
 
 void notification_window_service_init(void);

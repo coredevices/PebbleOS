@@ -7,7 +7,7 @@
 
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/analytics/analytics.h"
 #include "system/passert.h"
 #include "util/size.h"
 

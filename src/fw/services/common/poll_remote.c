@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "poll_remote.h"
-#include "services/common/comm_session/protocol.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/poll_remote.h"
+#include "pbl/services/common/comm_session/protocol.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/attributes.h"

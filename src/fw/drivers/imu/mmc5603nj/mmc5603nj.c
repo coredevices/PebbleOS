@@ -9,7 +9,7 @@
 #include "os/mutex.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "util/math.h"
 
 #include "mmc5603nj.h"

@@ -5,9 +5,9 @@
 
 #include "applib/graphics/gtypes.h"
 #include "kernel/events.h"
-#include "services/common/touch/touch.h"
-#include "services/common/touch/touch_event.h"
-#include "services/common/touch/touch_client.h"
+#include "pbl/services/common/touch/touch.h"
+#include "pbl/services/common/touch/touch_event.h"
+#include "pbl/services/common/touch/touch_client.h"
 #include "util/size.h"
 
 #include <stddef.h>

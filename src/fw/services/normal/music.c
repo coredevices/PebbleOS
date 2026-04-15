@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "music_internal.h"
+#include "pbl/services/normal/music_internal.h"
 
 #include "apps/system/music.h"
 #include "drivers/rtc.h"

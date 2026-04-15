@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 
 #include "system/logging.h"
 
@@ -10,7 +10,7 @@
 #include "kernel/util/task_init.h"
 #include "mcu/fpu.h"
 #include "os/tick.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/regular_timer.h"
 #include "system/passert.h"
 
 #include "FreeRTOS.h"

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "notification_jumboji_table.h"
-#include "notification_layout.h"
-#include "timeline_layout.h"
+#include "pbl/services/normal/timeline/notification_jumboji_table.h"
+#include "pbl/services/normal/timeline/notification_layout.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
 
 #include "applib/fonts/fonts.h"
 #include "applib/graphics/gtypes.h"
@@ -14,13 +14,13 @@
 #include "kernel/ui/kernel_ui.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/timeline_resource_ids.auto.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/clock.h"
-#include "services/common/clock.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/blob_db/pin_db.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/clock.h"
+#include "pbl/services/common/clock.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
 #include "system/hexdump.h"
 #include "system/logging.h"

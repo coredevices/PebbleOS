@@ -18,9 +18,9 @@
 
 // FW Includes
 ///////////////
-#include "services/normal/blob_db/api.h"
-#include "services/normal/blob_db/util.h"
-#include "services/normal/blob_db/sync.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/util.h"
+#include "pbl/services/normal/blob_db/sync.h"
 #include "util/size.h"
 
 

@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "music_endpoint.h"
-#include "music_endpoint_types.h"
+#include "pbl/services/normal/music_endpoint.h"
+#include "pbl/services/normal/music_endpoint_types.h"
 
-#include "services/common/comm_session/session.h"
-#include "services/common/comm_session/session_remote_os.h"
-#include "services/normal/music_internal.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/comm_session/session_remote_os.h"
+#include "pbl/services/normal/music_internal.h"
 #include "system/logging.h"
 #include "util/math.h"
 

@@ -5,7 +5,7 @@
 #include <comm/bt_lock.h>
 #include <host/ble_gatt.h>
 #include <host/ble_uuid.h>
-#include <services/common/system_task.h>
+#include <pbl/services/common/system_task.h>
 
 #include "nimble_type_conversions.h"
 

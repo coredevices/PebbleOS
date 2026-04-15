@@ -12,7 +12,7 @@
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_serials.h"
 #include "mfg/mfg_info.h"
-#include "services/common/light.h"
+#include "pbl/services/common/light.h"
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"

@@ -3,8 +3,8 @@
 
 #include "clar.h"
 
-#include "services/common/comm_session/session_internal.h"
-#include "services/common/comm_session/session_send_queue.h"
+#include "pbl/services/common/comm_session/session_internal.h"
+#include "pbl/services/common/comm_session/session_send_queue.h"
 #include "util/math.h"
 
 extern void comm_session_send_queue_cleanup(CommSession *session);

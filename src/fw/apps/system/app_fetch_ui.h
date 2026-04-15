@@ -6,8 +6,8 @@
 #include "process_management/app_install_types.h"
 #include "process_management/launch_config.h"
 #include "process_management/pebble_process_md.h"
-#include "services/common/compositor/compositor.h"
-#include "services/normal/wakeup.h"
+#include "pbl/services/common/compositor/compositor.h"
+#include "pbl/services/normal/wakeup.h"
 
 #include <stdbool.h>
 

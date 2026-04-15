@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "hrm_manager.h"
-#include "hrm_manager_private.h"
+#include "pbl/services/common/hrm/hrm_manager.h"
+#include "pbl/services/common/hrm/hrm_manager_private.h"
 
 #include "console/prompt.h"
 #include "drivers/hrm.h"
@@ -11,9 +11,9 @@
 #include "os/tick.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/system_task.h"
-#include "services/normal/activity/activity.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/activity/activity.h"
 #include "syscall/syscall_internal.h"
 #include "system/hexdump.h"
 #include "system/passert.h"

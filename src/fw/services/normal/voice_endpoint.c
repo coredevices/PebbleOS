@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "voice_endpoint.h"
+#include "pbl/services/normal/voice_endpoint.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/common/comm_session/session.h"
-#include "services/normal/audio_endpoint.h"
-#include "services/normal/voice/voice.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/normal/audio_endpoint.h"
+#include "pbl/services/normal/voice/voice.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/generic_attribute.h"
@@ -14,7 +14,7 @@
 
 #include <sys/types.h>
 
-#include "voice_endpoint_private.h"
+#include "pbl/services/normal/voice_endpoint_private.h"
 
 #define VOICE_CONTROL_ENDPOINT (11000)
 

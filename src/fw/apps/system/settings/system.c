@@ -24,11 +24,11 @@
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/bluetooth/local_id.h"
-#include "services/common/i18n/i18n.h"
-#include "services/common/light.h"
-#include "services/common/system_task.h"
-#include "services/normal/stationary.h"
+#include "pbl/services/common/bluetooth/local_id.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/common/light.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/stationary.h"
 #include "shell/normal/battery_ui.h"
 #include "shell/prefs.h"
 #include "system/bootbits.h"
@@ -38,7 +38,7 @@
 #include "util/time/time.h"
 #include "system/version.h"
 
-#include "services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity.h"
 
 #include <stdio.h>
 #include <string.h>

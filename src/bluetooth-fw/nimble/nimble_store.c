@@ -8,7 +8,7 @@
 #include <host/ble_hs.h>
 #include <host/ble_hs_hci.h>
 #include <host/ble_store.h>
-#include <services/common/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/common/bluetooth/bluetooth_persistent_storage.h>
 #include <string.h>
 #include <system/logging.h>
 #include <system/passert.h>

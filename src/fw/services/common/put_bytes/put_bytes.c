@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/put_bytes/put_bytes.h"
-#include "services/common/put_bytes/put_bytes_storage.h"
+#include "pbl/services/common/put_bytes/put_bytes.h"
+#include "pbl/services/common/put_bytes/put_bytes_storage.h"
 
 #include "comm/bluetooth_analytics.h"
 #include "kernel/events.h"
@@ -10,12 +10,12 @@
 #include "kernel/system_message.h"
 #include "os/tick.h"
 #include "resource/resource_storage_file.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/comm_session/session_receive_router.h"
-#include "services/common/firmware_update.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/common/system_task.h"
-#include "services/normal/process_management/app_storage.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/comm_session/session_receive_router.h"
+#include "pbl/services/common/firmware_update.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/process_management/app_storage.h"
 #include "system/bootbits.h"
 #include "system/firmware_storage.h"
 #include "system/logging.h"

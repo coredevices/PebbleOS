@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pp_ble_control.h"
-#include "services/common/bluetooth/pairability.h"
+#include "pbl/services/common/bluetooth/pp_ble_control.h"
+#include "pbl/services/common/bluetooth/pairability.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/attributes.h"

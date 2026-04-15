@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "powermode_service.h"
+#include "pbl/services/normal/powermode_service.h"
 
 #include "drivers/cpumode.h"
 #include "os/mutex.h"

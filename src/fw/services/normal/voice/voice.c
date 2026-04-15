@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "voice.h"
+#include "pbl/services/normal/voice/voice.h"
 
 #include "bluetooth/responsiveness.h"
 #include "board/board.h"
@@ -11,12 +11,12 @@
 #include "os/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/normal/audio_endpoint.h"
-#include "services/normal/voice/transcription.h"
-#include "services/normal/voice/voice_speex.h"
-#include "services/normal/voice_endpoint.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/normal/audio_endpoint.h"
+#include "pbl/services/normal/voice/transcription.h"
+#include "pbl/services/normal/voice/voice_speex.h"
+#include "pbl/services/normal/voice_endpoint.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"

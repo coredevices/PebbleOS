@@ -6,7 +6,7 @@
 #include "applib/fonts/fonts.h"
 #include "apps/system/settings/notifications_private.h"
 #include "process_management/process_manager.h"
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/analytics/analytics.h"
 #include "shell/prefs.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"

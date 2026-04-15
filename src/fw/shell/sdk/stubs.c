@@ -3,8 +3,8 @@
 
 #include "drivers/backlight.h"
 #include "process_management/pebble_process_md.h"
-#include "services/normal/activity/activity.h"
-#include "services/normal/timeline/peek.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/timeline/peek.h"
 #include "shell/prefs.h"
 #include "util/uuid.h"
 

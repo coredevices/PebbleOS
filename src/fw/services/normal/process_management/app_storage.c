@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "app_storage.h"
+#include "pbl/services/normal/process_management/app_storage.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -12,8 +12,8 @@
 #include "flash_region/flash_region.h"
 #include "process_management/pebble_process_info.h"
 #include "resource/resource_storage.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/filesystem/app_file.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/app_file.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/hexdump.h"

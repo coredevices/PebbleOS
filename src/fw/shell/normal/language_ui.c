@@ -9,7 +9,7 @@
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "shell/normal/watchface.h"
 
 static void prv_push_language_changed_dialog(void *data) {

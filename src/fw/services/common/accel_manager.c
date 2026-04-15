@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "accel_manager.h"
+#include "pbl/services/common/accel_manager.h"
 
 #include "console/prompt.h"
 #include "drivers/accel.h"
@@ -10,10 +10,10 @@
 #include "kernel/pbl_malloc.h"
 #include "mcu/interrupts.h"
 #include "os/mutex.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/event_service.h"
-#include "services/common/system_task.h"
-#include "services/imu/units.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/event_service.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/imu/units.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"

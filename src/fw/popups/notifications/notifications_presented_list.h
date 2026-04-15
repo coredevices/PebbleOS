@@ -4,7 +4,7 @@
 #pragma once
 
 #include "util/uuid.h"
-#include "services/normal/notifications/notification_types.h"
+#include "pbl/services/normal/notifications/notification_types.h"
 
 #include <inttypes.h>
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
 
 #include <stdbool.h>
 

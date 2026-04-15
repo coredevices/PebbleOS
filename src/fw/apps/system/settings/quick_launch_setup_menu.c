@@ -20,7 +20,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_menu_data_source.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

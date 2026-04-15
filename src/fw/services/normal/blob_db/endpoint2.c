@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "api.h"
-#include "sync.h"
-#include "endpoint_private.h"
-#include "settings_blob_db.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/normal/blob_db/endpoint_private.h"
+#include "pbl/services/normal/blob_db/settings_blob_db.h"
 
 #include "kernel/pebble_tasks.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/comm_session/session_send_buffer.h"
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/analytics/analytics.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/status_codes.h"

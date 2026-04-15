@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "metricgroup.h"
+#include "pbl/services/normal/timeline/metricgroup.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/timeline/attribute.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/timeline/attribute.h"
 
 MetricGroup *metric_group_create(int max_num_items, size_t max_item_string_size) {
   const size_t max_list_size = StringListSize(max_num_items, max_item_string_size);

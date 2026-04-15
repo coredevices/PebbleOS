@@ -27,9 +27,9 @@
 #include "process_management/worker_manager.h"
 #include "prompt.h"
 #include "resource/resource_storage_flash.h"
-#include "services/common/compositor/compositor.h"
-#include "services/common/system_task.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/common/compositor/compositor.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "syscall/syscall.h"
 #include "system/bootbits.h"
 #include "system/hexdump.h"
@@ -690,7 +690,7 @@ void stuck_timer_cb(void* data) {
   while(1);
 }
 
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 void command_stuck_timer(void) {
   TimerID timer = new_timer_create();
   new_timer_start(timer, 10, stuck_timer_cb, NULL, 0 /*flags*/);

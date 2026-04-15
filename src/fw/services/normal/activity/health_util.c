@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "health_util.h"
+#include "pbl/services/normal/activity/health_util.h"
 
-#include "services/common/i18n/i18n.h"
-#include "services/normal/activity/activity.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/activity/activity.h"
 #include "shell/prefs.h"
 #include "util/time/time.h"
 #include "util/units.h"

@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "comm/bt_lock.h"
-#include "services/common/comm_session/session_analytics.h"
-#include "services/common/comm_session/session_internal.h"
-#include "services/common/comm_session/session_send_queue.h"
+#include "pbl/services/common/comm_session/session_analytics.h"
+#include "pbl/services/common/comm_session/session_internal.h"
+#include "pbl/services/common/comm_session/session_send_queue.h"
 #include "system/passert.h"
 #include "util/math.h"
 

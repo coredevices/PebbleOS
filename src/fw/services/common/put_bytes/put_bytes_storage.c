@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "put_bytes_storage_internal.h"
+#include "pbl/services/common/put_bytes/put_bytes_storage_internal.h"
 
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
@@ -13,7 +13,7 @@
 extern const PutBytesStorageImplementation s_raw_implementation;
 extern const PutBytesStorageImplementation s_file_implementation;
 #else  // #ifdef UNITTEST
-#include "put_bytes_storage_raw.h"
+#include "pbl/services/common/put_bytes/put_bytes_storage_raw.h"
 
 static const PutBytesStorageImplementation s_raw_implementation = {
   .init = pb_storage_raw_init,
@@ -24,7 +24,7 @@ static const PutBytesStorageImplementation s_raw_implementation = {
 };
 
 #ifndef RECOVERY_FW
-#include "put_bytes_storage_file.h"
+#include "pbl/services/common/put_bytes/put_bytes_storage_file.h"
 
 static const PutBytesStorageImplementation s_file_implementation = {
   .init = pb_storage_file_init,

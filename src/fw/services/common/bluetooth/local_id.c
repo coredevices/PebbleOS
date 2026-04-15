@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "local_id.h"
+#include "pbl/services/common/bluetooth/local_id.h"
 
 #include "mfg/mfg_serials.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "util/attributes.h"
 #include "util/hash.h"
 #include "util/size.h"

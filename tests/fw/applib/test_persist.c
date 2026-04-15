@@ -10,8 +10,8 @@
 #include "flash_region/flash_region.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_md.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/persist.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/persist.h"
 #include "system/logging.h"
 
 // Stubs

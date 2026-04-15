@@ -10,7 +10,7 @@
 #include "drivers/periph_config.h"
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/regular_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

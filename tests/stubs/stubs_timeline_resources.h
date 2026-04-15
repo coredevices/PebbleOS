@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 
 bool timeline_resources_get_id_system(TimelineResourceId timeline_id, TimelineResourceSize size,
                                       ResAppNum res_app_num, AppResourceInfo *res_info_out) {

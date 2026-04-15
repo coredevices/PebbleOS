@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "app_glance_service.h"
+#include "pbl/services/normal/app_glances/app_glance_service.h"
 
 #include "applib/app_glance.h"
 #include "applib/event_service_client.h"
@@ -10,8 +10,8 @@
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
 #include "process_management/app_install_manager.h"
-#include "services/normal/app_cache.h"
-#include "services/normal/blob_db/app_glance_db.h"
+#include "pbl/services/normal/app_cache.h"
+#include "pbl/services/normal/blob_db/app_glance_db.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
 #include "system/status_codes.h"

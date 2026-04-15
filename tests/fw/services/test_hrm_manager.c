@@ -5,8 +5,8 @@
 
 #include "drivers/hrm.h"
 #include "os/tick.h"
-#include "services/common/hrm/hrm_manager.h"
-#include "services/common/hrm/hrm_manager_private.h"
+#include "pbl/services/common/hrm/hrm_manager.h"
+#include "pbl/services/common/hrm/hrm_manager_private.h"
 #include "util/size.h"
 
 #include "fake_app_manager.h"

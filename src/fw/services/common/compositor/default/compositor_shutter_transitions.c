@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "compositor_shutter_transitions.h"
+#include "pbl/services/common/compositor/default/compositor_shutter_transitions.h"
 
-#include "services/common/compositor/compositor_transitions.h"
+#include "pbl/services/common/compositor/compositor_transitions.h"
 
 #include "applib/graphics/bitblt.h"
 #include "applib/graphics/framebuffer.h"

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "get_bytes_storage_file.h"
+#include "pbl/services/common/get_bytes/get_bytes_storage_file.h"
 
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 
 bool gb_storage_file_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
                             GetBytesStorageInfo *info) {

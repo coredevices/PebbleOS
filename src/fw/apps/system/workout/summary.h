@@ -5,7 +5,7 @@
 
 #include "selection.h"
 
-#include "services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity.h"
 
 typedef void (*StartWorkoutCallback)(ActivitySessionType type);
 

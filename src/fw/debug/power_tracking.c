@@ -4,7 +4,7 @@
 #include "debug/power_tracking.h"
 
 #include "drivers/rtc.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/regular_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

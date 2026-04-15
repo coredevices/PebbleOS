@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "calendar.h"
+#include "pbl/services/normal/timeline/calendar.h"
 
 #include "drivers/rtc.h"
 #include "kernel/event_loop.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
-#include "services/common/system_task.h"
-#include "services/normal/blob_db/pin_db.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
 #include "system/logging.h"
 #include "system/status_codes.h"
 #include "util/time/time.h"

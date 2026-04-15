@@ -14,7 +14,7 @@
 #include "process_management/app_install_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 
 typedef void (*EachCb)(AppInstallEntry *entry, void *data);
 

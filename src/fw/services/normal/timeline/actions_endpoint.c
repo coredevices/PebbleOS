@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "actions_endpoint.h"
-#include "attributes_actions.h"
+#include "pbl/services/normal/timeline/actions_endpoint.h"
+#include "pbl/services/normal/timeline/attributes_actions.h"
 
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/system_task.h"
-#include "services/normal/notifications/notification_storage.h"
-#include "services/normal/notifications/notifications.h"
-#include "services/normal/timeline/timeline_actions.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/notifications/notification_storage.h"
+#include "pbl/services/normal/notifications/notifications.h"
+#include "pbl/services/normal/timeline/timeline_actions.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"

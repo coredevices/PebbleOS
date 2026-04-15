@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/timeline/timeline_layout.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
 #include "util/attributes.h"
 
 void WEAK timeline_layout_init(TimelineLayout *layout, const LayoutLayerConfig *config,

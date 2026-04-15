@@ -5,8 +5,8 @@
 
 #include "comm/bt_conn_mgr.h"
 
-#include "services/normal/music.h"
-#include "services/normal/music_internal.h"
+#include "pbl/services/normal/music.h"
+#include "pbl/services/normal/music_internal.h"
 
 #include "clar.h"
 

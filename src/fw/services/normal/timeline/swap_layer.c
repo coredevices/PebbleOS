@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "swap_layer.h"
+#include "pbl/services/normal/timeline/swap_layer.h"
 
 #include "applib/applib_malloc.auto.h"
 #include "applib/graphics/graphics.h"
@@ -11,9 +11,9 @@
 #include "applib/ui/shadows.h"
 #include "applib/ui/window.h"
 #include "resource/resource_ids.auto.h"
-#include "services/normal/timeline/layout_layer.h"
-#include "services/normal/timeline/notification_layout.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/timeline/layout_layer.h"
+#include "pbl/services/normal/timeline/notification_layout.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
 #include "kernel/ui/kernel_ui.h"
 #include "process_state/app_state/app_state.h"
 #include "system/logging.h"

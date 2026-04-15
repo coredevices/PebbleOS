@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "attribute.h"
+#include "pbl/services/normal/timeline/attribute.h"
 
-#include "attribute_private.h"
+#include "pbl/services/normal/timeline/attribute_private.h"
 
 #include "system/passert.h"
 #include "kernel/pbl_malloc.h"

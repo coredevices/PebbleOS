@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "endpoint_private.h"
+#include "pbl/services/normal/blob_db/endpoint_private.h"
 
 #include <stdbool.h>
 

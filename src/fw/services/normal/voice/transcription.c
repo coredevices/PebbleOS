@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "transcription.h"
+#include "pbl/services/normal/voice/transcription.h"
 
 #include "system/passert.h"
 

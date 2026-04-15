@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/weather/weather_service.h"
+#include "pbl/services/normal/weather/weather_service.h"
 #include "util/attributes.h"
 
 WeatherLocationForecast * WEAK weather_service_create_default_forecast(void) {

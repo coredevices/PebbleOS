@@ -20,16 +20,16 @@
 #include "popups/timeline/peek.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
-#include "services/common/accel_manager.h"
-#include "services/normal/powermode_service.h"
-#include "services/common/hrm/hrm_manager.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/accel_manager.h"
+#include "pbl/services/normal/powermode_service.h"
+#include "pbl/services/common/hrm/hrm_manager.h"
+#include "pbl/services/common/i18n/i18n.h"
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
-#include "services/normal/orientation_manager.h"
+#include "pbl/services/normal/orientation_manager.h"
 #endif
-#include "services/normal/bluetooth/ble_hrm.h"
-#include "services/normal/settings/settings_file.h"
-#include "services/normal/timeline/peek.h"
+#include "pbl/services/normal/bluetooth/ble_hrm.h"
+#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/normal/timeline/peek.h"
 #include "kernel/events.h"
 #include "kernel/event_loop.h"
 #include "system/logging.h"
@@ -37,10 +37,10 @@
 #include "util/size.h"
 #include "util/uuid.h"
 
-#include "services/normal/activity/activity.h"
-#include "services/normal/activity/activity_insights.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity_insights.h"
 
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/analytics/analytics.h"
 
 #include <stdbool.h>
 

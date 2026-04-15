@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "compositor_port_hole_transitions.h"
+#include "pbl/services/common/compositor/default/compositor_port_hole_transitions.h"
 
 #include "applib/graphics/bitblt.h"
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/graphics_private.h"
 #include "util/trig.h"
-#include "services/common/compositor/compositor_transitions.h"
+#include "pbl/services/common/compositor/compositor_transitions.h"
 
 #include "resource/resource_ids.auto.h"
 #include "system/logging.h"

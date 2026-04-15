@@ -5,16 +5,16 @@
 
 #include "protobuf_log_test_helpers.h"
 
-#include "services/normal/protobuf_log/protobuf_log.h"
-#include "services/normal/protobuf_log/protobuf_log_private.h"
-#include "services/normal/protobuf_log/protobuf_log_test.h"
-#include "services/normal/protobuf_log/protobuf_log_hr.h"
-#include "services/normal/protobuf_log/protobuf_log_activity_sessions.h"
-#include "services/normal/activity/activity.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log_private.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log_test.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log_hr.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log_activity_sessions.h"
+#include "pbl/services/normal/activity/activity.h"
 
 #include "applib/data_logging.h"
 #include "drivers/rtc.h"
-#include "services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
 #include "system/logging.h"
 #include "util/attributes.h"
 #include "util/size.h"

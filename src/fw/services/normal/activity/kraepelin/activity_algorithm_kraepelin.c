@@ -6,13 +6,13 @@
 #include "util/uuid.h"
 #include "drivers/ambient_light.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/battery/battery_state.h"
-#include "services/common/system_task.h"
-#include "services/normal/activity/activity_algorithm.h"
-#include "services/normal/activity/activity_private.h"
-#include "services/normal/data_logging/data_logging_service.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/common/battery/battery_state.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/activity/activity_algorithm.h"
+#include "pbl/services/normal/activity/activity_private.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -23,8 +23,8 @@
 #include "util/time/time.h"
 #include "util/units.h"
 
-#include "activity_algorithm_kraepelin.h"
-#include "kraepelin_algorithm.h"
+#include "pbl/services/normal/activity/kraepelin/activity_algorithm_kraepelin.h"
+#include "pbl/services/normal/activity/kraepelin/kraepelin_algorithm.h"
 
 // NOTE: This file is called "activity_sleep" for legacy reasons. A better name now would be
 // something like "activity_minute_data", but we want to maintain compatibility with prior

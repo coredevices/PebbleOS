@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/put_bytes/put_bytes.h"
+#include "pbl/services/common/put_bytes/put_bytes.h"
 
-#include "services/common/comm_session/session_receive_router.h"
+#include "pbl/services/common/comm_session/session_receive_router.h"
 #include "os/tick.h"
 #include "system/bootbits.h"
 #include "system/firmware_storage.h"

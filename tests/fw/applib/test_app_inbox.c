@@ -5,7 +5,7 @@
 
 #include "applib/app_inbox.h"
 #include "kernel/events.h"
-#include "services/normal/app_inbox_service.h"
+#include "pbl/services/normal/app_inbox_service.h"
 #include "util/list.h"
 
 extern bool app_inbox_service_has_inbox_for_tag(AppInboxServiceTag tag);

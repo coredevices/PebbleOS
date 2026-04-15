@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "notif_db.h"
+#include "pbl/services/normal/blob_db/notif_db.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/normal/notifications/notification_storage.h"
+#include "pbl/services/normal/notifications/notification_storage.h"
 #include "system/logging.h"
 
 void notif_db_init(void) {

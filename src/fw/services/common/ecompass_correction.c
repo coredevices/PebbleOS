@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ecompass.h"
+#include "pbl/services/common/ecompass.h"
 
 #include "util/trig.h"
 #include "kernel/pbl_malloc.h"

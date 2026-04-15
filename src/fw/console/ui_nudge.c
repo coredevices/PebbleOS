@@ -14,7 +14,7 @@
 
 #include "kernel/events.h"
 
-#include "services/common/compositor/compositor.h"
+#include "pbl/services/common/compositor/compositor.h"
 #include "util/string.h"
 
 static Layer *s_nudge_layer = NULL;

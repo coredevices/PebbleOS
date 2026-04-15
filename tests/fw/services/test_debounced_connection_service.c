@@ -3,8 +3,8 @@
 
 #include "clar.h"
 
-#include "services/common/debounced_connection_service.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/debounced_connection_service.h"
+#include "pbl/services/common/regular_timer.h"
 #include "syscall/syscall.h"
 
 #include "fake_new_timer.h"

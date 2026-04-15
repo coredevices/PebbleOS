@@ -5,7 +5,7 @@
 
 #include "console/prompt.h"
 #include "console/pulse_internal.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "system/logging.h"
 #include "util/size.h"
 

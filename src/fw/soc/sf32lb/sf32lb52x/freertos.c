@@ -14,7 +14,7 @@
 #include "kernel/util/stop.h"
 #include "kernel/util/wfi.h"
 #include "os/tick.h"
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/analytics/analytics.h"
 #include "util/math.h"
 
 #include <bf0_hal.h>

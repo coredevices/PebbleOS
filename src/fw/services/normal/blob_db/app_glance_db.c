@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "app_glance_db.h"
+#include "pbl/services/normal/blob_db/app_glance_db.h"
 
-#include "app_glance_db_private.h"
+#include "pbl/services/normal/blob_db/app_glance_db_private.h"
 
 #include "applib/app_glance.h"
 #include "drivers/rtc.h"
@@ -12,9 +12,9 @@
 #include "os/mutex.h"
 #include "resource/resource_ids.auto.h"
 #include "process_management/app_install_manager.h"
-#include "services/normal/app_cache.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/app_cache.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/math.h"

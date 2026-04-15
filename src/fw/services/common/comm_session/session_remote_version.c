@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "session_remote_version.h"
+#include "pbl/services/common/comm_session/session_remote_version.h"
 
 #include "comm/bt_lock.h"
 
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/comm_session/session_internal.h"
-#include "services/common/comm_session/session_remote_os.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/comm_session/session_internal.h"
+#include "pbl/services/common/comm_session/session_remote_os.h"
 #include "kernel/event_loop.h"
 
 #include "util/attributes.h"

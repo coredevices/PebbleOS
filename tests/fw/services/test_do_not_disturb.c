@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/normal/notifications/do_not_disturb.h"
+#include "pbl/services/normal/notifications/do_not_disturb.h"
 
 #include "applib/ui/action_toggle.h"
 #include "kernel/events.h"
 #include "resource/resource.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/common/system_task.h"
-#include "services/common/system_task.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/settings/settings_file.h"
 
 #include <stdint.h>
 #include <string.h>

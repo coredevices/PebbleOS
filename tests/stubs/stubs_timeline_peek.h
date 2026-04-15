@@ -4,7 +4,7 @@
 #pragma once
 
 #include "popups/timeline/peek.h"
-#include "services/normal/timeline/peek.h"
+#include "pbl/services/normal/timeline/peek.h"
 #include "util/attributes.h"
 
 unsigned int WEAK timeline_peek_get_concurrent_height(unsigned int num_concurrent) {

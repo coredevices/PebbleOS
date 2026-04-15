@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "activity_calculators.h"
+#include "pbl/services/normal/activity/activity_calculators.h"
 
-#include "services/normal/activity/activity.h"
-#include "services/normal/activity/activity_private.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity_private.h"
 #include "util/units.h"
 
 #include <util/math.h>

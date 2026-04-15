@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "attributes_address.h"
+#include "pbl/services/normal/contacts/attributes_address.h"
 
-#include "services/normal/timeline/attribute_group.h"
+#include "pbl/services/normal/timeline/attribute_group.h"
 
 
 #define GROUP_TYPE AttributeGroupType_Address

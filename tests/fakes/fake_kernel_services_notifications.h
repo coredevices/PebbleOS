@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "services/normal/timeline/item.h"
+#include "pbl/services/normal/timeline/item.h"
 
 void notifications_handle_ancs_message(TimelineItem *notification);
 

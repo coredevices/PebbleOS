@@ -12,7 +12,7 @@
 #include "kernel/pbl_malloc.h"
 #include "os/tick.h"
 
-#include "services/normal/app_outbox_service.h"
+#include "pbl/services/normal/app_outbox_service.h"
 #include "syscall/syscall.h"
 
 #include "FreeRTOS.h"

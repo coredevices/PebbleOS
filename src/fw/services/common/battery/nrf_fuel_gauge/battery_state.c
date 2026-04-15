@@ -8,17 +8,17 @@
 #include "drivers/pmic.h"
 #include "drivers/rtc.h"
 #include "kernel/events.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/battery/battery_state.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/battery/battery_state.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/common/system_task.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/ratio.h"
 
 #ifndef RECOVERY_FW
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #endif
 
 #ifdef MANUFACTURING_FW

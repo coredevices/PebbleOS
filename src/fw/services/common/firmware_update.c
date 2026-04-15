@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/firmware_update.h"
+#include "pbl/services/common/firmware_update.h"
 
 #include "apps/core/progress_ui.h"
 #include "flash_region/flash_region.h"
@@ -10,12 +10,12 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_management/app_manager.h"
 #include "process_management/app_manager.h"
-#include "services/common/battery/battery_monitor.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/battery/battery_monitor.h"
+#include "pbl/services/common/system_task.h"
 #ifndef RECOVERY_FW
-#include "services/normal/powermode_service.h"
+#include "pbl/services/normal/powermode_service.h"
 #endif
-#include "services/runlevel.h"
+#include "pbl/services/runlevel.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
 #include "system/passert.h"

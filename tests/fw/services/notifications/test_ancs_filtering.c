@@ -3,10 +3,10 @@
 
 #include "clar.h"
 
-#include "services/normal/notifications/alerts_preferences.h"
-#include "services/normal/notifications/ancs/ancs_filtering.h"
-#include "services/normal/blob_db/ios_notif_pref_db.h"
-#include "services/normal/timeline/attributes_actions.h"
+#include "pbl/services/normal/notifications/alerts_preferences.h"
+#include "pbl/services/normal/notifications/ancs/ancs_filtering.h"
+#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/normal/timeline/attributes_actions.h"
 
 
 // Stubs

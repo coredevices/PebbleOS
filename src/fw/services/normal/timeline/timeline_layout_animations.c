@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "timeline_layout_animations.h"
+#include "pbl/services/normal/timeline/timeline_layout_animations.h"
 
 #include "applib/graphics/graphics.h"
 #include "applib/ui/animation_interpolate.h"
@@ -14,7 +14,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/app_install_manager.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 #include "system/logging.h"
 
 #define CARD_TRANSITION_ICON_EXPAND 5

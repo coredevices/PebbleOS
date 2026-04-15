@@ -3,10 +3,10 @@
 
 #include "clar.h"
 
-#include "services/common/clock.h"
-#include "services/normal/alarms/alarm.h"
-#include "services/normal/timeline/alarm_layout.h"
-#include "services/normal/timeline/attribute.h"
+#include "pbl/services/common/clock.h"
+#include "pbl/services/normal/alarms/alarm.h"
+#include "pbl/services/normal/timeline/alarm_layout.h"
+#include "pbl/services/normal/timeline/attribute.h"
 
 // Stubs
 ////////////////////////////////////////////////////////////////

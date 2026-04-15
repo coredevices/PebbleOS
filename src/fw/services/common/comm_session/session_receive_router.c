@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "session_receive_router.h"
+#include "pbl/services/common/comm_session/session_receive_router.h"
 
-#include "services/common/comm_session/meta_endpoint.h"
-#include "services/common/comm_session/session_analytics.h"
-#include "services/common/comm_session/session_internal.h"
+#include "pbl/services/common/comm_session/meta_endpoint.h"
+#include "pbl/services/common/comm_session/session_analytics.h"
+#include "pbl/services/common/comm_session/session_internal.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "util/math.h"

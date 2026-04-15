@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/normal/timeline/notification_jumboji_table.h"
-#include "services/normal/timeline/notification_layout.h"
+#include "pbl/services/normal/timeline/notification_jumboji_table.h"
+#include "pbl/services/normal/timeline/notification_layout.h"
 #include "util/size.h"
 
 #include "clar.h"

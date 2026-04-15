@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "local_addr.h"
+#include "pbl/services/common/bluetooth/local_addr.h"
 
 #include "comm/bt_lock.h"
 #include "system/logging.h"

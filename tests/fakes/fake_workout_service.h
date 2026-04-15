@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "services/normal/activity/activity.h"
-#include "services/normal/activity/hr_util.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/hr_util.h"
 
 #include <stdint.h>
 #include <stdbool.h>

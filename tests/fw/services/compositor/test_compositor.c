@@ -7,7 +7,7 @@
 #include "applib/graphics/gtypes.h"
 #include "kernel/events.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "services/common/compositor/compositor.h"
+#include "pbl/services/common/compositor/compositor.h"
 
 // Stubs
 ///////////////////////////////////////////////////////////

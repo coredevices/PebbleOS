@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ecompass.h"
+#include "pbl/services/common/ecompass.h"
 
 #include "applib/accel_service.h"
 #include "applib/compass_service.h"
@@ -10,9 +10,9 @@
 #include "drivers/mag.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/battery/battery_monitor.h"
-#include "services/common/event_service.h"
-#include "services/common/regular_timer.h"
+#include "pbl/services/common/battery/battery_monitor.h"
+#include "pbl/services/common/event_service.h"
+#include "pbl/services/common/regular_timer.h"
 #include "syscall/syscall_internal.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"

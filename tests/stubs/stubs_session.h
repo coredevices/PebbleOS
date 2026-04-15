@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/common/comm_session/session.h"
+#include "pbl/services/common/comm_session/session.h"
 
 bool comm_session_has_capability(CommSession *session, CommSessionCapability capability){
   return true;

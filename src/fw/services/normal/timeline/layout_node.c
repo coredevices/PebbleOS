@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "layout_node.h"
+#include "pbl/services/normal/timeline/layout_node.h"
 
-#include "timeline_layout.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "system/passert.h"
 #include "util/size.h"
 #include "util/string.h"

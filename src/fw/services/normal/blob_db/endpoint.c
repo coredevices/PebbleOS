@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "sync.h"
-#include "endpoint_private.h"
-#include "settings_blob_db.h"
+#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/normal/blob_db/endpoint_private.h"
+#include "pbl/services/normal/blob_db/settings_blob_db.h"
 
 #include "kernel/pebble_tasks.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/analytics/analytics.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/status_codes.h"

@@ -8,8 +8,8 @@
 #include "console/pulse_protocol_impl.h"
 #include "drivers/display/display.h"
 #include "kernel/event_loop.h"
-#include "services/common/compositor/compositor.h"
-#include "services/common/compositor/compositor_display.h"
+#include "pbl/services/common/compositor/compositor.h"
+#include "pbl/services/common/compositor/compositor_display.h"
 #include "system/status_codes.h"
 #include "util/attributes.h"
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "app_file.h"
+#include "pbl/services/normal/filesystem/app_file.h"
 
 #include <string.h>
 

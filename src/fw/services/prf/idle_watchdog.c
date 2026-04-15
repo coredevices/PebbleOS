@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "idle_watchdog.h"
+#include "pbl/services/prf/idle_watchdog.h"
 
 #include "applib/event_service_client.h"
 #include "comm/ble/gap_le_connection.h"
-#include "services/common/battery/battery_monitor.h"
-#include "services/common/regular_timer.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/battery/battery_monitor.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/common/system_task.h"
 #include "system/reboot_reason.h"
 #include "kernel/util/standby.h"
 

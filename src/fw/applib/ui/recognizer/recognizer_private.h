@@ -7,7 +7,7 @@
 #include "recognizer_impl.h"
 #include "recognizer_manager.h"
 
-#include "services/common/touch/touch_event.h"
+#include "pbl/services/common/touch/touch_event.h"
 #include "util/list.h"
 
 #include <stdbool.h>

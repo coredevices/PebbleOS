@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "api.h"
+#include "pbl/services/normal/blob_db/api.h"
 
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "app_db.h"
-#include "app_glance_db.h"
-#include "contacts_db.h"
-#include "health_db.h"
-#include "ios_notif_pref_db.h"
-#include "notif_db.h"
-#include "pin_db.h"
-#include "prefs_db.h"
-#include "reminder_db.h"
-#include "settings_blob_db.h"
-#include "watch_app_prefs_db.h"
-#include "weather_db.h"
+#include "pbl/services/normal/blob_db/app_db.h"
+#include "pbl/services/normal/blob_db/app_glance_db.h"
+#include "pbl/services/normal/blob_db/contacts_db.h"
+#include "pbl/services/normal/blob_db/health_db.h"
+#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/normal/blob_db/notif_db.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/blob_db/prefs_db.h"
+#include "pbl/services/normal/blob_db/reminder_db.h"
+#include "pbl/services/normal/blob_db/settings_blob_db.h"
+#include "pbl/services/normal/blob_db/watch_app_prefs_db.h"
+#include "pbl/services/normal/blob_db/weather_db.h"
 
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"

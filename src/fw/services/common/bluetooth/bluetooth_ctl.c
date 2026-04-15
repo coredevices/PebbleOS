@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/bluetooth/bluetooth_ctl.h"
+#include "pbl/services/common/bluetooth/bluetooth_ctl.h"
 
 #include <bluetooth/init.h>
 #include <string.h>
@@ -17,16 +17,16 @@
 #include "memfault/metrics/connectivity.h"
 #endif
 #include "os/mutex.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/bluetooth/ble_bas.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/bluetooth/dis.h"
-#include "services/common/bluetooth/local_addr.h"
-#include "services/common/bluetooth/local_id.h"
-#include "services/common/bluetooth/pairability.h"
-#include "services/common/regular_timer.h"
-#include "services/common/system_task.h"
-#include "services/normal/bluetooth/ble_hrm.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/bluetooth/ble_bas.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/bluetooth/dis.h"
+#include "pbl/services/common/bluetooth/local_addr.h"
+#include "pbl/services/common/bluetooth/local_id.h"
+#include "pbl/services/common/bluetooth/pairability.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/bluetooth/ble_hrm.h"
 #include "system/logging.h"
 
 static bool s_comm_initialized = false;

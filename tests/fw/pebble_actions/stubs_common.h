@@ -8,13 +8,13 @@
 // a large portion of action logic, which will hopefully be fixed eventually
 
 #include "applib/ui/action_menu_window_private.h"
-#include "services/normal/blob_db/ios_notif_pref_db.h"
-#include "services/normal/blob_db/sync.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/phone_call_util.h"
-#include "services/normal/timeline/actions_endpoint.h"
-#include "services/normal/timeline/timeline.h"
-#include "services/normal/timeline/timeline_actions.h"
+#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/phone_call_util.h"
+#include "pbl/services/normal/timeline/actions_endpoint.h"
+#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/normal/timeline/timeline_actions.h"
 #include "util/size.h"
 
 #include "stubs_action_chaining_window.h"

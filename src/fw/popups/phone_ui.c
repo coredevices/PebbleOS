@@ -23,18 +23,18 @@
 #include "kernel/pbl_malloc.h"
 #include "popups/notifications/notifications_presented_list.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/i18n/i18n.h"
-#include "services/common/evented_timer.h"
-#include "services/common/regular_timer.h"
-#include "services/common/light.h"
-#include "services/normal/blob_db/ios_notif_pref_db.h"
-#include "services/normal/notifications/alerts.h"
-#include "services/normal/notifications/notification_constants.h"
-#include "services/normal/phone_call.h"
-#include "services/normal/timeline/timeline.h"
-#include "services/normal/timeline/timeline_actions.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/common/light.h"
+#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/normal/notifications/alerts.h"
+#include "pbl/services/normal/notifications/notification_constants.h"
+#include "pbl/services/normal/phone_call.h"
+#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/normal/timeline/timeline_actions.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -44,8 +44,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "services/normal/vibes/vibe_client.h"
-#include "services/normal/vibes/vibe_score.h"
+#include "pbl/services/normal/vibes/vibe_client.h"
+#include "pbl/services/normal/vibes/vibe_score.h"
 
 #define DECLINE_DELAY_MS 2000
 #define SMS_REPLY_DELAY_MS 1200

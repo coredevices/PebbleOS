@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
 #include "util/attributes.h"
 
 VibeScoreId WEAK alerts_preferences_get_vibe_score_for_client(VibeClient client) {

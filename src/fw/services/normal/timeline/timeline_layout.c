@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "timeline_layout.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
 
 #include "applib/graphics/graphics.h"
 #include "applib/preferred_content_size.h"
@@ -14,8 +14,8 @@
 #include "process_management/app_install_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/timeline_resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
 #include "system/logging.h"
 #include "util/size.h"

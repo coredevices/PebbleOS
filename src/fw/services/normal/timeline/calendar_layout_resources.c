@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "calendar_layout_resources.h"
+#include "pbl/services/normal/timeline/calendar_layout_resources.h"
 
 #include "applib/graphics/gdraw_command_image.h"
 #include "applib/graphics/gdraw_command_private.h"

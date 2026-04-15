@@ -7,8 +7,8 @@
 #include "board/display.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/activity/health_util.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/activity/health_util.h"
 #include "shell/prefs.h"
 #include "util/size.h"
 

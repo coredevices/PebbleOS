@@ -9,8 +9,8 @@
 
 #include "kernel/pbl_malloc.h"
 
-#include "services/common/new_timer/new_timer.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 
 #include "util/net.h"

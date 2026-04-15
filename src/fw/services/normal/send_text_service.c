@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "send_text_service.h"
+#include "pbl/services/normal/send_text_service.h"
 
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/normal/blob_db/ios_notif_pref_db.h"
-#include "services/normal/notifications/notification_constants.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/normal/notifications/notification_constants.h"
 
 
 static bool s_has_send_text_reply_action = false;

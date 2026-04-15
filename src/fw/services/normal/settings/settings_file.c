@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "settings_file.h"
-#include "settings_raw_iter.h"
+#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/normal/settings/settings_raw_iter.h"
 
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/crc8.h"

@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/normal/activity/activity.h"
-#include "services/normal/activity/activity_insights.h"
-#include "services/normal/activity/activity_private.h"
-#include "services/normal/activity/insights_settings.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/activity_insights.h"
+#include "pbl/services/normal/activity/activity_private.h"
+#include "pbl/services/normal/activity/insights_settings.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "util/attributes.h"
 
 #include <stdint.h>

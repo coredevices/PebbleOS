@@ -8,7 +8,7 @@
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "shell/prefs.h"
 #include "system/logging.h"
 

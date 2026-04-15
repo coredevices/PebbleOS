@@ -5,7 +5,7 @@
 
 #include "applib/app_message/app_message.h"
 #include "applib/app_timer.h"
-#include "services/normal/app_message/app_message_sender.h"
+#include "pbl/services/normal/app_message/app_message_sender.h"
 #include "util/attributes.h"
 #include "util/uuid.h"
 

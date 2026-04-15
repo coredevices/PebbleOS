@@ -16,7 +16,7 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/analytics/analytics.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

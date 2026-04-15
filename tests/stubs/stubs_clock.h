@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/common/clock.h"
+#include "pbl/services/common/clock.h"
 #include "util/attributes.h"
 
 void WEAK clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {}

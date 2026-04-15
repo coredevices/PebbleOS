@@ -18,17 +18,17 @@
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/app_fetch_endpoint.h"
-#include "services/normal/timeline/timeline_resources.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/app_fetch_endpoint.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
 #include "apps/system/timeline/peek_layer.h"
 #include "shell/normal/watchface.h"
 #include "shell/shell.h"
 #include "shell/system_app_state_machine.h"
-#include "services/common/compositor/compositor_transitions.h"
+#include "pbl/services/common/compositor/compositor_transitions.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#include "services/common/evented_timer.h"
+#include "pbl/services/common/evented_timer.h"
 
 #define FAIL_PAUSE_MS 1000
 #define SCROLL_OUT_MS 250

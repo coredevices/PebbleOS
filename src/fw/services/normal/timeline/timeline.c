@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "timeline.h"
+#include "pbl/services/normal/timeline/timeline.h"
 
 #include "util/uuid.h"
 #include "applib/ui/status_bar_layer.h"
@@ -16,15 +16,15 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/i18n/i18n.h"
-#include "services/normal/activity/activity_insights.h"
-#include "services/normal/blob_db/api.h"
-#include "services/normal/blob_db/pin_db.h"
-#include "services/normal/blob_db/reminder_db.h"
-#include "services/normal/notifications/notification_storage.h"
-#include "services/normal/phone_call_util.h"
-#include "services/normal/timeline/actions_endpoint.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/normal/activity/activity_insights.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/blob_db/reminder_db.h"
+#include "pbl/services/normal/notifications/notification_storage.h"
+#include "pbl/services/normal/phone_call_util.h"
+#include "pbl/services/normal/timeline/actions_endpoint.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/list.h"

@@ -3,8 +3,8 @@
 
 #include "process_management/app_install_types.h"
 #include "process_management/app_manager.h"
-#include "services/common/comm_session/app_session_capabilities.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/common/comm_session/app_session_capabilities.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "os/mutex.h"
 #include "system/logging.h"
 #include "system/passert.h"

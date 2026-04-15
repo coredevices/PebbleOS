@@ -18,7 +18,7 @@
 
 #include "mfg/mfg_apps/mfg_flash_test.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 
 #include "kernel/pbl_malloc.h"

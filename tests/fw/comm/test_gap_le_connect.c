@@ -7,7 +7,7 @@
 #include "comm/ble/gap_le_task.h"
 
 #include "kernel/events.h"
-#include "services/common/analytics/analytics.h"
+#include "pbl/services/common/analytics/analytics.h"
 
 #include "clar.h"
 

@@ -8,8 +8,8 @@
 
 #include "apps/system_app_ids.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "system/logging.h"
 #include "util/attributes.h"
 #include "util/math.h"

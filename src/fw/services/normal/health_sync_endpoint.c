@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "health_sync_endpoint.h"
+#include "pbl/services/normal/health_sync_endpoint.h"
 
-#include "services/common/comm_session/session.h"
-#include "services/common/system_task.h"
-#include "services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
 #include "system/logging.h"
 #include "util/attributes.h"
 
@@ -41,7 +41,7 @@ static void prv_send_ack_nack(bool ok) {
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-#include "services/normal/activity/activity_algorithm.h"
+#include "pbl/services/normal/activity/activity_algorithm.h"
 
 static void prv_sync_health_system_task_cb(void *unused) {
   if (activity_tracking_on()) {

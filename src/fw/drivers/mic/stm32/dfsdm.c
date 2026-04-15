@@ -15,7 +15,7 @@
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
 #include "os/tick.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/profiler.h"

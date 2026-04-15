@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "do_not_disturb.h"
-#include "do_not_disturb_toggle.h"
+#include "pbl/services/normal/notifications/do_not_disturb.h"
+#include "pbl/services/normal/notifications/do_not_disturb_toggle.h"
 
 #include "applib/ui/action_toggle.h"
 #include "applib/ui/app_window_stack.h"
@@ -18,14 +18,14 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/i18n/i18n.h"
-#include "services/common/new_timer/new_timer.h"
-#include "services/common/system_task.h"
-#include "services/normal/activity/activity.h"
-#include "services/normal/notifications/alerts_preferences.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
-#include "services/normal/timeline/calendar.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/notifications/alerts_preferences.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/timeline/calendar.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "system/passert.h"

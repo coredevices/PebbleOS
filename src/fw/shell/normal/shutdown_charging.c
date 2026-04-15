@@ -17,7 +17,7 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
-#include "services/runlevel.h"
+#include "pbl/services/runlevel.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "system/reboot_reason.h"

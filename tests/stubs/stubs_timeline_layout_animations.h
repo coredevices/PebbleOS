@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/timeline/timeline_layout_animations.h"
+#include "pbl/services/normal/timeline/timeline_layout_animations.h"
 #include "util/attributes.h"
 
 void WEAK timeline_layout_transition_pin_to_card(TimelineLayout *pin_timeline_layout,

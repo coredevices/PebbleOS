@@ -14,9 +14,9 @@
 #include "drivers/battery.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/bluetooth/bluetooth_ctl.h"
-#include "services/common/light.h"
-#include "services/prf/idle_watchdog.h"
+#include "pbl/services/common/bluetooth/bluetooth_ctl.h"
+#include "pbl/services/common/light.h"
+#include "pbl/services/prf/idle_watchdog.h"
 #include "system/logging.h"
 
 typedef enum {

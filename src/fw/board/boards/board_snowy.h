@@ -11,7 +11,7 @@
 // minor quirks, all of the boards using this file are electrically identical.
 
 #include "drivers/imu/bmi160/bmi160.h"
-#include "services/imu/units.h"
+#include "pbl/services/imu/units.h"
 #include "util/size.h"
 
 #define BT_VENDOR_ID 0x0154

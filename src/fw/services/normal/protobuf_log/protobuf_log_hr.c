@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "protobuf_log_hr.h"
-#include "protobuf_log.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log_hr.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log.h"
 
-#include "services/common/hrm/hrm_manager.h"
+#include "pbl/services/common/hrm/hrm_manager.h"
 
 #include "nanopb/measurements.pb.h"
 #include "system/passert.h"

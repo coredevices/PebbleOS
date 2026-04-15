@@ -10,8 +10,8 @@
 #include "applib/fonts/fonts.h"
 #include "applib/ui/ui.h"
 #include "drivers/battery.h"
-#include "services/common/battery/battery_monitor.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/battery/battery_monitor.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 
 #include <stdio.h>
 

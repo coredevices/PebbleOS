@@ -13,10 +13,10 @@
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/light.h"
-#include "services/common/touch/touch.h"
-#include "services/common/touch/touch_event.h"
-#include "services/common/touch/touch_client.h"
+#include "pbl/services/common/light.h"
+#include "pbl/services/common/touch/touch.h"
+#include "pbl/services/common/touch/touch_event.h"
+#include "pbl/services/common/touch/touch_client.h"
 #include "util/trig.h"
 
 #if PBL_ROUND

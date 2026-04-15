@@ -7,7 +7,7 @@
 #include "drivers/flash.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_version.auto.h"
-#include "services/normal/process_management/app_storage.h"
+#include "pbl/services/normal/process_management/app_storage.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
 #include "util/size.h"

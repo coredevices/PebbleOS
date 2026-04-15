@@ -12,7 +12,7 @@
 #include "kernel/low_power.h"
 #include "kernel/panic.h"
 #include "resource/resource.h"
-#include "services/common/battery/battery_monitor.h"
+#include "pbl/services/common/battery/battery_monitor.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
 #include "process_management/app_manager.h"

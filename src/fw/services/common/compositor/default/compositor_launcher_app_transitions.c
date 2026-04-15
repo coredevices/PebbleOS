@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "compositor_launcher_app_transitions.h"
+#include "pbl/services/common/compositor/default/compositor_launcher_app_transitions.h"
 
 #include "applib/graphics/bitblt.h"
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/graphics_private.h"
 #include "apps/system/launcher/default/launcher.h"
-#include "services/common/compositor/compositor_transitions.h"
+#include "pbl/services/common/compositor/compositor_transitions.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/math.h"

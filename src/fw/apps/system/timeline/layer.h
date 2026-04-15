@@ -9,11 +9,11 @@
 #include "applib/graphics/text.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/layer.h"
-#include "services/common/evented_timer.h"
-#include "services/normal/blob_db/pin_db.h"
-#include "services/normal/timeline/item.h"
-#include "services/normal/timeline/timeline_layout.h"
-#include "services/normal/timeline/timeline_layout_animations.h"
+#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/timeline/item.h"
+#include "pbl/services/normal/timeline/timeline_layout.h"
+#include "pbl/services/normal/timeline/timeline_layout_animations.h"
 
 #include <stdbool.h>
 

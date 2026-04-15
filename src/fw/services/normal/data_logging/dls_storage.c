@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "data_logging_service.h"
-#include "dls_storage.h"
-#include "dls_list.h"
+#include "pbl/services/normal/data_logging/data_logging_service.h"
+#include "pbl/services/normal/data_logging/dls_storage.h"
+#include "pbl/services/normal/data_logging/dls_list.h"
 
 #include "drivers/flash.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "kernel/util/sleep.h"
-#include "services/common/analytics/analytics.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/attributes.h"

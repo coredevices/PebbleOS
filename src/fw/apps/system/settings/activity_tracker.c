@@ -19,7 +19,7 @@
 #include "process_management/worker_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "shell/normal/watchface.h"
 #include "system/passert.h"
 

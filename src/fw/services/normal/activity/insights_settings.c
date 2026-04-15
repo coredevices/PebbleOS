@@ -4,11 +4,11 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include "activity.h"
-#include "insights_settings.h"
+#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/normal/activity/insights_settings.h"
 #include "os/mutex.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "system/logging.h"
 #include "util/size.h"
 

@@ -11,8 +11,8 @@
 #include "comm/bt_lock.h"
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
-#include "services/common/analytics/analytics.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "util/time/time.h"
 

@@ -5,10 +5,10 @@
 #include <string.h>
 
 #include "applib/accel_service.h"
-#include "services/common/hrm/hrm_manager_private.h"
-#include "services/normal/activity/activity_algorithm.h"
-#include "services/normal/activity/kraepelin/activity_algorithm_kraepelin.h"
-#include "services/normal/activity/kraepelin/kraepelin_algorithm.h"
+#include "pbl/services/common/hrm/hrm_manager_private.h"
+#include "pbl/services/normal/activity/activity_algorithm.h"
+#include "pbl/services/normal/activity/kraepelin/activity_algorithm_kraepelin.h"
+#include "pbl/services/normal/activity/kraepelin/kraepelin_algorithm.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/list.h"

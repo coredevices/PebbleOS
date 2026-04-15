@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/normal/notifications/notification_storage.h"
-#include "services/normal/notifications/notification_storage_private.h"
+#include "pbl/services/normal/notifications/notification_storage.h"
+#include "pbl/services/normal/notifications/notification_storage_private.h"
 
 #include "flash_region/flash_region.h"
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "util/size.h"
 
 #include "clar.h"

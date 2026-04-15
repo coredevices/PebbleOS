@@ -5,11 +5,11 @@
 #include "comm/bt_lock.h"
 
 #include "console/prompt.h"
-#include "services/common/bluetooth/bluetooth_ctl.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/bluetooth/local_id.h"
-#include "services/common/bluetooth/pairability.h"
-#include "services/common/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/common/bluetooth/bluetooth_ctl.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/bluetooth/local_id.h"
+#include "pbl/services/common/bluetooth/pairability.h"
+#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
 #include "util/string.h"
 
 #include <bluetooth/bluetooth_types.h>

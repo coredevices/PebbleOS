@@ -5,8 +5,8 @@
 #include "comm/ble/gap_le_device_name.h"
 #include "comm/bt_lock.h"
 
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/bluetooth/local_addr.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/bluetooth/local_addr.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"

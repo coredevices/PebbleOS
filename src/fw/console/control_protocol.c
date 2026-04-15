@@ -7,7 +7,7 @@
 #include "console/pulse2_transport_impl.h"
 #include "kernel/events.h"
 #include "kernel/util/sleep.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include <util/attributes.h>

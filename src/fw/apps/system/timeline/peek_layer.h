@@ -7,9 +7,9 @@
 #include "applib/ui/layer.h"
 #include "applib/ui/kino/kino_layer.h"
 #include "applib/ui/text_layer.h"
-#include "services/common/evented_timer.h"
-#include "services/normal/timeline/timeline_resources.h"
-#include "services/normal/timeline/item.h"
+#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/normal/timeline/timeline_resources.h"
+#include "pbl/services/normal/timeline/item.h"
 
 #define PEEK_LAYER_UNFOLD_DURATION 500
 #define PEEK_LAYER_SCALE_DURATION 300

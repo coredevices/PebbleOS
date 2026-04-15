@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "app_order_storage.h"
+#include "pbl/services/normal/process_management/app_order_storage.h"
 
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/common/system_task.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/flash.h"
-#include "services/common/new_timer/new_timer.h"
+#include "pbl/services/common/new_timer/new_timer.h"
 
 #include "clar.h"
 

@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "sync.h"
-#include "endpoint.h"
-#include "util.h"
+#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/normal/blob_db/endpoint.h"
+#include "pbl/services/normal/blob_db/util.h"
 
 #include "kernel/pbl_malloc.h"
-#include "services/common/comm_session/session.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/system_task.h"
 #include "system/logging.h"
 #include "util/list.h"
 

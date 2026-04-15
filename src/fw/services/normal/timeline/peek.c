@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "peek.h"
+#include "pbl/services/normal/timeline/peek.h"
 
 #include "drivers/rtc.h"
 #include "kernel/event_loop.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
-#include "services/common/system_task.h"
-#include "services/normal/blob_db/pin_db.h"
-#include "services/normal/timeline/timeline.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/timeline/timeline.h"
 #include "shell/prefs.h"
 #include "system/logging.h"
 #include "system/status_codes.h"

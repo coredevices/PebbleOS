@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/normal/app_fetch_endpoint.h"
+#include "pbl/services/normal/app_fetch_endpoint.h"
 #include "util/attributes.h"
 
 bool WEAK app_fetch_in_progress(void) {

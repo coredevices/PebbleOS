@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "persist.h"
+#include "pbl/services/normal/persist.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,10 +10,10 @@
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
 #include "process_management/app_install_manager.h"
-#include "services/normal/filesystem/app_file.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/legacy/persist_map.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/filesystem/app_file.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/legacy/persist_map.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/list.h"

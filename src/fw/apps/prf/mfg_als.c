@@ -12,8 +12,8 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "services/common/evented_timer.h"
-#include "services/common/light.h"
+#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/common/light.h"
 #include "system/logging.h"
 
 #include <stdint.h>

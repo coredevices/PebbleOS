@@ -3,26 +3,26 @@
 
 #include <bluetooth/bt_driver_comm.h>
 
-#include "services/common/comm_session/session.h"
-#include "session_analytics.h"
-#include "session_internal.h"
-#include "session_transport.h"
+#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/common/comm_session/session_analytics.h"
+#include "pbl/services/common/comm_session/session_internal.h"
+#include "pbl/services/common/comm_session/session_transport.h"
 
 #include "applib/app_comm.h"
 #include "comm/ble/kernel_le_client/app_launch/app_launch.h"
 #include "comm/bt_lock.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/comm_session/protocol.h"
-#include "services/common/comm_session/session_remote_version.h"
-#include "services/common/comm_session/session_send_buffer.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/comm_session/protocol.h"
+#include "pbl/services/common/comm_session/session_remote_version.h"
+#include "pbl/services/common/comm_session/session_send_buffer.h"
 
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 
 #include "process_management/app_manager.h"
 
-#include "services/common/system_task.h"
-#include "services/normal/data_logging/dls_private.h"
+#include "pbl/services/common/system_task.h"
+#include "pbl/services/normal/data_logging/dls_private.h"
 
 #include "system/logging.h"
 #include "system/passert.h"

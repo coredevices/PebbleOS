@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
 
 void fake_bt_persistent_storage_reset(void);
 

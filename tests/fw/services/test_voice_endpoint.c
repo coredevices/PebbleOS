@@ -3,11 +3,11 @@
 
 #include "clar.h"
 
-#include "services/normal/voice/transcription.h"
-#include "services/normal/voice_endpoint.h"
-#include "services/normal/audio_endpoint.h"
+#include "pbl/services/normal/voice/transcription.h"
+#include "pbl/services/normal/voice_endpoint.h"
+#include "pbl/services/normal/audio_endpoint.h"
 
-#include "services/normal/voice_endpoint_private.h"
+#include "pbl/services/normal/voice_endpoint_private.h"
 
 #include "fake_session.h"
 #include "fake_system_task.h"

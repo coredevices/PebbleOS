@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "compositor.h"
+#include "pbl/services/common/compositor/compositor.h"
 
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/gcolor_definitions.h"

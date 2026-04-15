@@ -32,15 +32,15 @@ Pebble App roject.
 
 #include "applib/accel_service.h"
 #include "util/trig.h"
-#include "services/common/hrm/hrm_manager_private.h"
-#include "services/normal/activity/activity.h"
+#include "pbl/services/common/hrm/hrm_manager_private.h"
+#include "pbl/services/normal/activity/activity.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/math.h"
 #include "util/math_fixed.h"
 #include "util/size.h"
 
-#include "kraepelin_algorithm.h"
+#include "pbl/services/normal/activity/kraepelin/kraepelin_algorithm.h"
 
 #define KALG_LOG_DEBUG(fmt, args...) \
         PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY, fmt, ## args)

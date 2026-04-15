@@ -7,7 +7,7 @@
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
-#include "services/normal/vibes/vibe_score.h"
+#include "pbl/services/normal/vibes/vibe_score.h"
 #include "util/size.h"
 
 #include <stdint.h>

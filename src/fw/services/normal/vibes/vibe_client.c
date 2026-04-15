@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "vibe_client.h"
+#include "pbl/services/normal/vibes/vibe_client.h"
 
 #include "applib/ui/vibes.h"
-#include "services/normal/notifications/alerts_preferences_private.h"
-#include "services/normal/vibes/vibe_score.h"
-#include "services/normal/vibes/vibe_score_info.h"
+#include "pbl/services/normal/notifications/alerts_preferences_private.h"
+#include "pbl/services/normal/vibes/vibe_score.h"
+#include "pbl/services/normal/vibes/vibe_score_info.h"
 #include "system/logging.h"
 
 static VibeScoreId prv_get_resource_for_client(VibeClient client) {

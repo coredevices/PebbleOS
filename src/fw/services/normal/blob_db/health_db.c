@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "health_db.h"
+#include "pbl/services/normal/blob_db/health_db.h"
 
 #include "console/prompt.h"
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
-#include "services/normal/activity/activity_private.h"
-#include "services/normal/activity/hr_util.h"
-#include "services/normal/blob_db/api.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
+#include "pbl/services/normal/activity/activity_private.h"
+#include "pbl/services/normal/activity/hr_util.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"

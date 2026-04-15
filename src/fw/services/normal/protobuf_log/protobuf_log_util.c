@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "protobuf_log.h"
-#include "protobuf_log_util.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log.h"
+#include "pbl/services/normal/protobuf_log/protobuf_log_util.h"
 
 #include "pb_encode.h"
 

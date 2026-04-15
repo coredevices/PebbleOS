@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "compositor_modal_slide_transitions.h"
+#include "pbl/services/common/compositor/legacy/compositor_modal_slide_transitions.h"
 
-#include "services/common/compositor/compositor_private.h"
+#include "pbl/services/common/compositor/compositor_private.h"
 
 #include "applib/graphics/bitblt.h"
 #include "applib/graphics/framebuffer.h"

@@ -5,10 +5,10 @@
 
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
-#include "services/common/debounced_connection_service.h"
-#include "services/normal/blob_db/api.h"
-#include "services/normal/blob_db/settings_blob_db.h"
-#include "services/normal/blob_db/sync.h"
+#include "pbl/services/common/debounced_connection_service.h"
+#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/normal/blob_db/settings_blob_db.h"
+#include "pbl/services/normal/blob_db/sync.h"
 #include "system/logging.h"
 
 //! Prefs Sync using BlobDB

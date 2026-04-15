@@ -4,7 +4,7 @@
 #include "template_string.h"
 #include "template_string_private.h"
 
-#include "services/common/i18n/i18n.h"
+#include "pbl/services/common/i18n/i18n.h"
 #include "syscall/syscall.h"
 #include "system/passert.h"
 #include "util/attributes.h"

@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ios_notif_pref_db.h"
+#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
 
-#include "sync.h"
-#include "sync_util.h"
+#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/normal/blob_db/sync_util.h"
 
 #include "console/prompt.h"
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/settings/settings_file.h"
-#include "services/normal/timeline/attributes_actions.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/normal/timeline/attributes_actions.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/attributes.h"

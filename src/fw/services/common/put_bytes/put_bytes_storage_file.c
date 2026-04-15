@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "put_bytes_storage_file.h"
+#include "pbl/services/common/put_bytes/put_bytes_storage_file.h"
 
-#include "services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/filesystem/pfs.h"
 #include "system/passert.h"
 
 bool pb_storage_file_init(PutBytesStorage *storage, PutBytesObjectType object_type,

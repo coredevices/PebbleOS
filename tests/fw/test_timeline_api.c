@@ -4,11 +4,11 @@
 #include "clar.h"
 
 #include "util/uuid.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/normal/blob_db/pin_db.h"
-#include "services/normal/timeline/attribute.h"
-#include "services/normal/timeline/item.h"
-#include "services/normal/timeline/timeline.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/timeline/attribute.h"
+#include "pbl/services/normal/timeline/item.h"
+#include "pbl/services/normal/timeline/timeline.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

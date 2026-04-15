@@ -6,12 +6,12 @@
 
 #include "comm/ble/gap_le_slave_discovery.h"
 #include "kernel/pebble_tasks.h"
-#include "services/common/bluetooth/bluetooth_ctl.h"
-#include "services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "services/common/bluetooth/local_addr.h"
-#include "services/common/bluetooth/pairability.h"
-#include "services/common/regular_timer.h"
-#include "services/common/system_task.h"
+#include "pbl/services/common/bluetooth/bluetooth_ctl.h"
+#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/common/bluetooth/local_addr.h"
+#include "pbl/services/common/bluetooth/pairability.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/common/system_task.h"
 
 #include <bluetooth/pairability.h>
 

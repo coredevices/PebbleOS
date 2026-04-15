@@ -4,10 +4,10 @@
 #include "clar.h"
 
 #include "util/uuid.h"
-#include "services/normal/filesystem/pfs.h"
-#include "services/common/regular_timer.h"
-#include "services/normal/blob_db/pin_db.h"
-#include "services/normal/timeline/timeline.h"
+#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/normal/timeline/timeline.h"
 
 #include "util/list.h"
 #include "util/size.h"

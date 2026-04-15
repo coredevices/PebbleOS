@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/common/comm_session/meta_endpoint.h"
+#include "pbl/services/common/comm_session/meta_endpoint.h"
 
 #include "clar.h"
 
