@@ -42,7 +42,9 @@ void services_common_init(void) {
   bt_persistent_storage_init();
 
   comm_default_kernel_sender_init();
+#if !defined(RECOVERY_FW)
   comm_session_app_session_capabilities_init();
+#endif
   comm_session_init();
 
   bt_ctl_init();
