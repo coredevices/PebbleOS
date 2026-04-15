@@ -249,7 +249,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
     case SettingsDisplayDynamicIntensity:
-      backlight_set_dynamic_intensity_enabled(!backlight_is_dynamic_intensity_enabled());
+      light_toggle_dynamic_intensity_enabled();
       break;
 #endif
     case SettingsDisplayBacklightIntensity:

@@ -52,6 +52,9 @@ void light_toggle_enabled(void);
 //! @internal
 void light_toggle_ambient_sensor_enabled(void);
 
+//! @internal
+void light_toggle_dynamic_intensity_enabled(void);
+
 //! Switches for temporary disabling backlight (ie: low power mode)
 void light_allow(bool allowed);
 
