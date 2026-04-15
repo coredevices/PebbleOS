@@ -242,7 +242,7 @@
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"
     }, {
         "name": "ExpandableDialog",
-        "size_3x_padding": 44,
+        "size_3x_padding": 36,
         "size_3x": 1280,
         "dependencies": ["Dialog", "TextLayer", "ScrollLayer", "ActionBarLayer", "Layer"],
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"

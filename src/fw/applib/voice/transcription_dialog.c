@@ -14,6 +14,7 @@
 #include "applib/ui/scroll_layer.h"
 #include "kernel/ui/kernel_ui.h"
 #include "resource/resource_ids.auto.h"
+#include "shell/system_theme.h"
 #include "system/passert.h"
 
 #include <stdlib.h>
@@ -249,6 +250,8 @@ void transcription_dialog_init(TranscriptionDialog *transcription_dialog) {
   *transcription_dialog = (TranscriptionDialog){};
 
   expandable_dialog_init((ExpandableDialog *)transcription_dialog, "Transcription Dialog");
+  expandable_dialog_set_body_font((ExpandableDialog *)transcription_dialog,
+                                  system_theme_get_font(TextStyleFont_Body));
   expandable_dialog_set_select_action((ExpandableDialog *)transcription_dialog,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_transcription_dialog_select_handler);
 
