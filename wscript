@@ -521,6 +521,10 @@ def configure(conf):
                         '-fdata-sections',
                         '-ffunction-sections' ]
 
+    # Reset LINKFLAGS so firmware-specific flags (e.g. --undefined=HAL_GetTick)
+    # don't leak into the host test environment.
+    conf.env.LINKFLAGS = []
+
     # Apple's ARM64 linker uses chained fixups which require pointer-aligned
     # relocations. Packed structs with pointer members fail to link because the
     # packed layout can place pointers at non-aligned offsets. Disable chained
