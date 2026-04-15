@@ -1,0 +1,25 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+use = ['fw_includes', 'services_common_analytics']
+sources = ['battery_monitor.c']
+
+if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
+    use.append('nrf_fuel_gauge')
+    sources.extend([
+        'nrf_fuel_gauge/battery_curve.c',
+        'nrf_fuel_gauge/battery_state.c',
+    ])
+else:
+    sources.extend([
+        'voltage/battery_curve.c',
+        'voltage/battery_state.c',
+    ])
+
+bld.stlib(
+    source=sources,
+    target='services_common_battery',
+    use=use
+)
+
+bld.env.SERVICES.append('services_common_battery')

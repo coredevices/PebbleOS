@@ -1,0 +1,12 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+bld.recurse('bluetooth')
+bld.recurse('comm_session')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['idle_watchdog.c'],
+    target='services_prf_idle_watchdog',
+)
+bld.env.SERVICES.append('services_prf_idle_watchdog')

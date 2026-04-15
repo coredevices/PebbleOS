@@ -1,0 +1,153 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+bld.recurse('activity')
+bld.recurse('alarms')
+bld.recurse('app_glances')
+bld.recurse('app_message')
+bld.recurse('blob_db')
+bld.recurse('bluetooth')
+bld.recurse('comm_session')
+bld.recurse('contacts')
+bld.recurse('data_logging')
+bld.recurse('filesystem')
+bld.recurse('legacy')
+bld.recurse('notifications')
+bld.recurse('process_management')
+bld.recurse('protobuf_log')
+bld.recurse('settings')
+bld.recurse('timeline')
+bld.recurse('vibes')
+if bld.env.CONFIG_MIC:
+    bld.recurse('voice')
+bld.recurse('weather')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['app_cache.c'],
+    target='services_normal_app_cache',
+)
+bld.env.SERVICES.append('services_normal_app_cache')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['powermode_service.c'],
+    target='services_normal_powermode_service',
+)
+bld.env.SERVICES.append('services_normal_powermode_service')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['app_fetch_endpoint.c'],
+    target='services_normal_app_fetch_endpoint',
+)
+bld.env.SERVICES.append('services_normal_app_fetch_endpoint')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['app_inbox_service.c'],
+    target='services_normal_app_inbox_service',
+)
+bld.env.SERVICES.append('services_normal_app_inbox_service')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['app_order_endpoint.c'],
+    target='services_normal_app_order_endpoint',
+)
+bld.env.SERVICES.append('services_normal_app_order_endpoint')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['app_outbox_service.c'],
+    target='services_normal_app_outbox_service',
+)
+bld.env.SERVICES.append('services_normal_app_outbox_service')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['audio_endpoint.c'],
+    target='services_normal_audio_endpoint',
+)
+bld.env.SERVICES.append('services_normal_audio_endpoint')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['health_sync_endpoint.c'],
+    target='services_normal_health_sync_endpoint',
+)
+bld.env.SERVICES.append('services_normal_health_sync_endpoint')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['music.c', 'music_endpoint.c'],
+    target='services_normal_music',
+)
+bld.env.SERVICES.append('services_normal_music')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['orientation_manager.c'],
+    target='services_normal_orientation_manager',
+)
+bld.env.SERVICES.append('services_normal_orientation_manager')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['persist.c'],
+    target='services_normal_persist',
+)
+bld.env.SERVICES.append('services_normal_persist')
+
+bld.stlib(
+    use=['fw_includes', 'services_common_analytics'],
+    source=['phone_call.c', 'phone_call_util.c'],
+    target='services_normal_phone_call',
+)
+bld.env.SERVICES.append('services_normal_phone_call')
+
+target = bld.path.find_or_declare('services_normal_phone_call.pot')
+bld.gettext(source=['phone_call.c', 'phone_call_util.c'], target=target)
+bld.env.SERVICES_TEXT.append(target)
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['send_text_service.c'],
+    target='services_normal_send_text_service',
+)
+bld.env.SERVICES.append('services_normal_send_text_service')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['services_normal.c'],
+    target='services_normal_services_normal',
+)
+bld.env.SERVICES.append('services_normal_services_normal')
+
+bld.stlib(
+    use=['fw_includes', 'services_common_analytics'],
+    source=['stationary.c'],
+    target='services_normal_stationary',
+)
+bld.env.SERVICES.append('services_normal_stationary')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['timezone_database.c'],
+    target='services_normal_timezone_database',
+)
+bld.env.SERVICES.append('services_normal_timezone_database')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['voice_endpoint.c'],
+    target='services_normal_voice_endpoint',
+)
+bld.env.SERVICES.append('services_normal_voice_endpoint')
+
+bld.stlib(
+    use=['fw_includes'],
+    source=['wakeup.c'],
+    target='services_normal_wakeup',
+)
+bld.env.SERVICES.append('services_normal_wakeup')
