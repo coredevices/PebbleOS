@@ -2,5 +2,4 @@
 # SPDX-License-Identifier: Apache-2.0
 
 bld.recurse('bluetooth')
-bld.recurse('comm_session')
 bld.recurse('idle_watchdog')
