@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <time.h>
 
 //! The maximum number of text nodes needed in a text node container
 #define MAX_TEXT_NODES 5
