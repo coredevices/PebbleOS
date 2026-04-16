@@ -332,6 +332,7 @@ static bool prv_set_s_backlight_intensity(uint16_t *intensity) {
 
 static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   s_backlight_motion_enabled = *enabled;
+  accel_manager_set_motion_backlight_enabled(*enabled);
   return true;
 }
 
@@ -814,6 +815,9 @@ void shell_prefs_init(void) {
 #if CAPABILITY_HAS_ACCEL_SENSITIVITY
   accel_manager_update_sensitivity(s_motion_sensitivity);
 #endif
+
+  // Subscribe to shake events for motion backlight only if the setting is enabled
+  accel_manager_set_motion_backlight_enabled(s_backlight_motion_enabled);
 }
 
 

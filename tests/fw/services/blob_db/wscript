@@ -216,6 +216,7 @@ def build(ctx):
             " src/fw/shell/normal/prefs.c" \
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
+            " tests/fakes/fake_accel_service.c" \
             " tests/fakes/fake_spi_flash.c" \
             " tests/fakes/fake_rtc.c",
         test_sources_ant_glob = "test_prefs_db.c",
