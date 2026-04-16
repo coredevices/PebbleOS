@@ -4,12 +4,20 @@
 #include "drivers/qemu/qemu_settings.h"
 #include "system/passert.h"
 
-#include <stm32f4xx.h>
-
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+#if defined(MICRO_FAMILY_QEMU)
+#include "board/board.h"
+
+// QEMU RTC backup registers at RTC_BASE + 0x40
+#define QEMU_RTC_BACKUP_BASE (QEMU_RTC_BASE + 0x40)
+#define QEMU_BACKUP_REG(n) (*(volatile uint32_t *)(QEMU_RTC_BACKUP_BASE + (n) * 4))
+
+#else
+#include <stm32f4xx.h>
+#endif
 
 // QEMU backup registers and bit indices. These are also defined in the qemu project in
 // hw/arm/pebble.c
@@ -20,6 +28,9 @@
 // -------------------------------------------------------------------------------------
 // Read a QEMU specific register from the RTC backup register area
 static uint32_t prv_rtc_read_qemu_register(uint32_t qemu_register) {
+#if defined(MICRO_FAMILY_QEMU)
+  return QEMU_BACKUP_REG(qemu_register);
+#else
   __IO uint32_t tmp = 0;
 
   // The first qemu_register (0) starts 1 past the implemented registers in the STM
@@ -30,6 +41,7 @@ static uint32_t prv_rtc_read_qemu_register(uint32_t qemu_register) {
 
   // Read the specified register
   return (*(__IO uint32_t *)tmp);
+#endif
 }
 
 
