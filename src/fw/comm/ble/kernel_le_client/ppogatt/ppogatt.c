@@ -1393,17 +1393,25 @@ unlock:
 // -------------------------------------------------------------------------------------------------
 
 void ppogatt_destroy(void) {
+  bool self_initiated_disconnect = false;
   bt_lock();
   {
     PPoGATTClient *client = s_ppogatt_head;
     while (client) {
       PPoGATTClient *next = (PPoGATTClient *) client->node.next;
+      self_initiated_disconnect = self_initiated_disconnect || client->disconnect_requested;
       prv_delete_client(client, true /* is_disconnected */, DeleteReason_DestroyCalled);
       client = next;
     }
   }
   bt_unlock();
-  ppogatt_reset_disconnect_counter();
+
+  // Only reset the disconnect counter if this was an external disconnect (e.g. RF interference,
+  // phone out of range). If we initiated the disconnect ourselves due to max resets, keep the
+  // counter so the stall protection can kick in after repeated failures.
+  if (!self_initiated_disconnect) {
+    ppogatt_reset_disconnect_counter();
+  }
 }
 
 // -------------------------------------------------------------------------------------------------
