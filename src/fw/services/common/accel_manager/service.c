@@ -89,6 +89,9 @@ static uint64_t s_last_empty_timestamp_ms = 0;
 //! RunLevel_BareMinimum), the accelerometer hardware is powered down and callbacks are ignored.
 static bool s_enabled = true;
 
+//! Whether the kernel is subscribed to shake events for the motion backlight feature.
+static bool s_motion_backlight_subscribed = false;
+
 // Accel Idle
 #define ACCEL_MAX_IDLE_DELTA 100
 static AccelData s_last_analytics_position;
@@ -363,6 +366,18 @@ static uint32_t prv_compute_delta_pos(AccelData *cur_pos, AccelData *last_pos) {
  * Exported APIs
  */
 
+void accel_manager_set_motion_backlight_enabled(bool enabled) {
+  mutex_lock_recursive(s_accel_manager_mutex);
+  if (enabled && !s_motion_backlight_subscribed) {
+    prv_shake_add_subscriber_cb(PebbleTask_KernelMain);
+    s_motion_backlight_subscribed = true;
+  } else if (!enabled && s_motion_backlight_subscribed) {
+    prv_shake_remove_subscriber_cb(PebbleTask_KernelMain);
+    s_motion_backlight_subscribed = false;
+  }
+  mutex_unlock_recursive(s_accel_manager_mutex);
+}
+
 // Update the motion sensitivity based on user preference (0-100%)
 // This is called by the preferences system when the user changes the setting
 void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
@@ -396,10 +411,6 @@ void accel_manager_init(void) {
   event_service_init(PEBBLE_ACCEL_DOUBLE_TAP_EVENT, &prv_double_tap_add_subscriber_cb,
       &prv_double_tap_remove_subscriber_cb);
 
-  // we always listen for motion events to decide whether or not to enable the backlight
-  // TODO: KernelMain could probably subscribe to the motion service to accomplish this?
-  prv_shake_add_subscriber_cb(PebbleTask_KernelMain);
-  
   // Apply saved motion sensitivity preference for Asterix/Obelix
   // Only available in normal shell (not PRF)
   #if CAPABILITY_HAS_ACCEL_SENSITIVITY && !defined(RECOVERY_FW)
@@ -825,6 +836,7 @@ void test_accel_manager_reset(void) {
   s_data_subscribers = NULL;
   s_shake_subscribers_count = 0;
   s_double_tap_subscribers_count = 0;
+  s_motion_backlight_subscribed = false;
   s_enabled = true;
 }
 
