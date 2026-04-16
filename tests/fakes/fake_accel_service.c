@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "applib/accel_service_private.h"
+#include "pbl/services/common/accel_manager.h"
 #include "system/passert.h"
 
 static AccelDataHandler s_handler;
@@ -91,6 +92,10 @@ int accel_session_set_samples_per_update(AccelServiceState *session, uint32_t sa
   PBL_ASSERTN(session == ACCEL_SESSION_REF);
   s_samples_per_update = samples_per_update;
   return 0;
+}
+
+
+void accel_manager_set_motion_backlight_enabled(bool enabled) {
 }
 
 

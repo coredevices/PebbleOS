@@ -29,6 +29,10 @@ static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 25;
 void accel_manager_init(void);
 void accel_manager_enable(bool on);
 
+// Enable or disable the kernel's shake subscription used for the motion backlight feature.
+// When disabled, the accelerometer shake detection is only active if apps have subscribed.
+void accel_manager_set_motion_backlight_enabled(bool enabled);
+
 // Peek interface
 ///////////////////////////////////////////////////////////
 
