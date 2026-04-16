@@ -58,7 +58,7 @@ typedef struct BatteryState {
 static BatteryState s_last_battery_state;
 static TimerID s_periodic_timer_id = TIMER_INVALID_ID;
 static int s_analytics_previous_mv = 0;
-static uint8_t s_analytics_last_pct = 0;
+static uint32_t s_analytics_last_pct = 0;
 
 static void prv_schedule_update(uint32_t delay, bool force_update);
 PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state);
@@ -258,7 +258,7 @@ void battery_state_init(void) {
   battery_state_force_update();
 
   s_analytics_previous_mv = s_last_battery_state.voltage;
-  s_analytics_last_pct = ratio32_to_percent(s_last_battery_state.percent);
+  s_analytics_last_pct = (s_last_battery_state.percent * 10000U) / RATIO32_MAX;
 }
 
 void battery_state_handle_connection_event(bool is_connected) {
@@ -341,16 +341,16 @@ void command_print_battery_status(void) {
 // Note that this is run on a different thread than battery_state!
 void pbl_analytics_external_collect_battery(void) {
   int32_t battery_mv = s_last_battery_state.voltage;
-  uint8_t battery_soc = ratio32_to_percent(s_last_battery_state.percent);
+  uint32_t battery_soc = (s_last_battery_state.percent * 10000U) / RATIO32_MAX;
   int32_t d_mv;
-  uint8_t d_soc;
+  uint32_t d_soc;
 
   d_mv = battery_mv - s_analytics_previous_mv;
   PBL_ANALYTICS_SET_UNSIGNED(battery_voltage, battery_mv);
   PBL_ANALYTICS_SET_SIGNED(battery_voltage_delta, d_mv);
   s_analytics_previous_mv = battery_mv;
 
-  d_soc = MAX((int8_t)battery_soc - (int8_t)s_analytics_last_pct, 0);
+  d_soc = MAX((int32_t)battery_soc - (int32_t)s_analytics_last_pct, 0);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct, battery_soc);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc);
   s_analytics_last_pct = battery_soc;

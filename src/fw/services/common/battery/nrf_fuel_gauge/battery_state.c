@@ -64,8 +64,9 @@ static BatteryChargeStatus s_last_chg_status;
 static uint64_t prv_ref_time;
 static int32_t s_last_voltage_mv;
 static int32_t s_last_temp_mc;
+static uint32_t s_last_soc_cpct;
 static int32_t s_analytics_last_voltage_mv;
-static uint8_t s_analytics_last_pct;
+static uint32_t s_analytics_last_pct;
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;
@@ -372,6 +373,7 @@ static void prv_update_state(void *force_update) {
                                (float)constants.t_mc / 1000.0f, (float)delta, NULL);
 
   pct_int = (uint8_t)ceilf(pct);
+  s_last_soc_cpct = (uint32_t)(pct * 100.0f);
   if (pct_int != s_last_battery_charge_state.pct) {
     s_last_battery_charge_state.pct = pct_int;
     s_last_battery_charge_state.charge_percent = (uint32_t)(pct * RATIO32_MAX) / 100U;
@@ -508,7 +510,7 @@ void battery_state_init(void) {
   regular_timer_add_multisecond_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_S);
 
   s_analytics_last_voltage_mv = s_last_voltage_mv;
-  s_analytics_last_pct = s_last_battery_charge_state.pct;
+  s_analytics_last_pct = s_last_soc_cpct;
 }
 
 void battery_state_handle_connection_event(bool is_connected) {
@@ -566,16 +568,16 @@ void command_print_battery_status(void) {
 // Note that this is run on a different thread than battery_state!
 void pbl_analytics_external_collect_battery(void) {
   int32_t battery_mv = s_last_voltage_mv;
-  uint8_t battery_soc = s_last_battery_charge_state.pct;
+  uint32_t battery_soc = s_last_soc_cpct;
   int32_t d_mv;
-  uint8_t d_soc;
+  uint32_t d_soc;
 
   d_mv = battery_mv - s_analytics_last_voltage_mv;
   PBL_ANALYTICS_SET_UNSIGNED(battery_voltage, battery_mv);
   PBL_ANALYTICS_SET_SIGNED(battery_voltage_delta, d_mv);
   s_analytics_last_voltage_mv = battery_mv;
 
-  d_soc = MAX((int8_t)battery_soc - (int8_t)s_analytics_last_pct, 0);
+  d_soc = MAX((int32_t)battery_soc - (int32_t)s_analytics_last_pct, 0);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct, battery_soc);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc);
   s_analytics_last_pct = battery_soc;
