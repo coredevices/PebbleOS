@@ -1,8 +1,10 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import re
 import sh
+import shutil
 import subprocess
 import sys
 from packaging import version
@@ -29,19 +31,24 @@ def tool_check():
         check_requirement(req, pip_installed_dict)
 
     if sys.platform.startswith("darwin"):
-        Logs.pprint("CYAN", "Checking %s" % REQUIREMENTS_BREW)
+        if not shutil.which("brew") and os.environ.get("IN_NIX_SHELL"):
+            Logs.pprint("CYAN", "Skipping %s (in nix shell)" % REQUIREMENTS_BREW)
+        elif not shutil.which("brew"):
+            Logs.pprint("RED", "brew not found! Install Homebrew or use nix develop.")
+        else:
+            Logs.pprint("CYAN", "Checking %s" % REQUIREMENTS_BREW)
 
-        with open(REQUIREMENTS_BREW) as file:
-            brew_req_text = file.read()
-            brew_req_list = text_to_req_list(brew_req_text)
+            with open(REQUIREMENTS_BREW) as file:
+                brew_req_text = file.read()
+                brew_req_list = text_to_req_list(brew_req_text)
 
-        brew_installed_text = subprocess.check_output(["brew", "list"])
-        brew_installed_dict = installed_list_to_dict(
-            text_to_req_list(brew_installed_text.decode("utf8"))
-        )
+            brew_installed_text = subprocess.check_output(["brew", "list"])
+            brew_installed_dict = installed_list_to_dict(
+                text_to_req_list(brew_installed_text.decode("utf8"))
+            )
 
-        for req in brew_req_list:
-            check_requirement(req, brew_installed_dict)
+            for req in brew_req_list:
+                check_requirement(req, brew_installed_dict)
 
 
 def installed_list_to_dict(list):
