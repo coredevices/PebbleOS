@@ -54,6 +54,10 @@ bool backlight_is_motion_enabled(void) {
   return false;
 }
 
+bool backlight_is_touch_enabled(void) {
+  return false;
+}
+
 #include "process_management/app_install_types.h"
 void worker_preferences_set_default_worker(AppInstallId id) {
 }

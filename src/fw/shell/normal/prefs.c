@@ -21,6 +21,7 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/common/accel_manager.h"
+#include "pbl/services/common/touch/touch.h"
 #include "pbl/services/normal/powermode_service.h"
 #include "pbl/services/common/hrm/hrm_manager.h"
 #include "pbl/services/common/i18n/i18n.h"
@@ -74,6 +75,9 @@ static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in s
 
 #define PREF_KEY_BACKLIGHT_MOTION "lightMotion"
 static bool s_backlight_motion_enabled = true;
+
+#define PREF_KEY_BACKLIGHT_TOUCH "lightTouch"
+static bool s_backlight_touch_enabled = false;
 
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
 static uint8_t s_motion_sensitivity = 55; // Default to Medium
@@ -333,6 +337,14 @@ static bool prv_set_s_backlight_intensity(uint16_t *intensity) {
 static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   s_backlight_motion_enabled = *enabled;
   accel_manager_set_motion_backlight_enabled(*enabled);
+  return true;
+}
+
+static bool prv_set_s_backlight_touch_enabled(bool *enabled) {
+  s_backlight_touch_enabled = *enabled;
+#ifdef CONFIG_TOUCH
+  touch_set_backlight_enabled(*enabled);
+#endif
   return true;
 }
 
@@ -818,6 +830,11 @@ void shell_prefs_init(void) {
 
   // Subscribe to shake events for motion backlight only if the setting is enabled
   accel_manager_set_motion_backlight_enabled(s_backlight_motion_enabled);
+
+  // Enable touch sensor for touch backlight only if the setting is enabled
+#ifdef CONFIG_TOUCH
+  touch_set_backlight_enabled(s_backlight_touch_enabled);
+#endif
 }
 
 
@@ -1102,6 +1119,14 @@ bool backlight_is_motion_enabled(void) {
 
 void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
+}
+
+bool backlight_is_touch_enabled(void) {
+  return s_backlight_touch_enabled;
+}
+
+void backlight_set_touch_enabled(bool enable) {
+  prv_pref_set(PREF_KEY_BACKLIGHT_TOUCH, &enable, sizeof(enable));
 }
 
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT

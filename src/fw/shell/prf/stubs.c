@@ -205,6 +205,10 @@ bool backlight_is_motion_enabled(void) {
   return false;
 }
 
+bool backlight_is_touch_enabled(void) {
+  return false;
+}
+
 bool bt_persistent_storage_get_airplane_mode_enabled(void) {
   return false;
 }

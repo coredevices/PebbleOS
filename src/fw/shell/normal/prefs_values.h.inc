@@ -9,6 +9,7 @@
   PREFS_MACRO(PREF_KEY_BACKLIGHT_TIMEOUT_MS, s_backlight_timeout_ms)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_INTENSITY, s_backlight_intensity)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_MOTION, s_backlight_motion_enabled)
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_TOUCH, s_backlight_touch_enabled)
   PREFS_MACRO(PREF_KEY_MOTION_SENSITIVITY, s_motion_sensitivity)
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   PREFS_MACRO(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY, s_backlight_dynamic_intensity_enabled)
