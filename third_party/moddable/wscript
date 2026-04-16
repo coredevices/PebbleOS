@@ -194,11 +194,6 @@ def build(bld):
         'moddable/build/devices/pebble/host/main-appinfo.c',
     ]
 
-    if not bld.env.CONFIG_TOUCH:
-        # Upstream moddable's pebble-touch.c leaves touch_sensor_set_enabled
-        # as an unresolved declaration in its !CONFIG_TOUCH branch.
-        libxs_sources.append('touch_stub.c')
-
     libxs_includes = [
         'moddable/xs/includes',
         'moddable/xs/sources',
