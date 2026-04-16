@@ -81,6 +81,10 @@ void backlight_set_intensity_percent(uint8_t intensity_percent);
 bool backlight_is_motion_enabled(void);
 void backlight_set_motion_enabled(bool enable);
 
+// The backlight touch enabled setting is used by the kernel event loop.
+bool backlight_is_touch_enabled(void);
+void backlight_set_touch_enabled(bool enable);
+
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
 // Dynamic backlight intensity based on ambient light sensor
 bool backlight_is_dynamic_intensity_enabled(void);

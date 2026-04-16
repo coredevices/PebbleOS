@@ -60,6 +60,7 @@ static const char *s_syncable_settings[] = {
   "lightTimeoutMs",
   "lightIntensity",
   "lightMotion",
+  "lightTouch",
   "lightAmbientThreshold",
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   "lightDynamicIntensity",

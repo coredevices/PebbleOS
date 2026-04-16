@@ -196,6 +196,9 @@ enum SettingsDisplayItem {
 #endif
   SettingsDisplayBacklightMode,
   SettingsDisplayMotionSensor,
+#ifdef CONFIG_TOUCH
+  SettingsDisplayTouchSensor,
+#endif
   SettingsDisplayAmbientSensor,
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   SettingsDisplayDynamicIntensity,
@@ -244,6 +247,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case SettingsDisplayMotionSensor:
       backlight_set_motion_enabled(!backlight_is_motion_enabled());
       break;
+#ifdef CONFIG_TOUCH
+    case SettingsDisplayTouchSensor:
+      backlight_set_touch_enabled(!backlight_is_touch_enabled());
+      break;
+#endif
     case SettingsDisplayAmbientSensor:
       light_toggle_ambient_sensor_enabled();
       break;
@@ -320,6 +328,16 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
         subtitle = i18n_noop("Off");
       }
       break;
+#ifdef CONFIG_TOUCH
+    case SettingsDisplayTouchSensor:
+      title = i18n_noop("Touch Enabled");
+      if (backlight_is_touch_enabled()) {
+        subtitle = i18n_noop("On");
+      } else {
+        subtitle = i18n_noop("Off");
+      }
+      break;
+#endif
     case SettingsDisplayAmbientSensor:
       title = i18n_noop("Ambient Sensor");
       if (backlight_is_ambient_sensor_enabled()) {

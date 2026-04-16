@@ -288,6 +288,20 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       }
       return;
 
+    case PEBBLE_TOUCH_EVENT:
+      if (backlight_is_touch_enabled() &&
+          e->touch.event.type == TouchEvent_Touchdown) {
+#ifndef RECOVERY_FW
+        const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
+                                             !alerts_preferences_dnd_get_motion_backlight();
+        if (!dnd_suppresses_backlight)
+#endif
+        {
+          light_enable_interaction();
+        }
+      }
+      return;
+
     case PEBBLE_PANIC_EVENT:
       launcher_panic(e->panic.error_code);
       break;
