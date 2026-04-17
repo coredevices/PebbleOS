@@ -4,7 +4,7 @@
 bld.env.SERVICES = []
 bld.env.SERVICES_TEXT = []
 bld.recurse('common')
-if bld.variant == 'prf':
+if bld.env.VARIANT == 'prf':
     bld.recurse('prf')
 else:
     bld.recurse('normal')

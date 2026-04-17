@@ -49,7 +49,7 @@ def build(bld):
     bld.recurse('vendor/tinflate')
     bld.recurse('vendor/uPNG')
 
-    if bld.variant == 'prf':
+    if bld.env.VARIANT == 'prf':
         excludes += ['ui/dialogs/bt_conn_dialog.c',
                      'ui/dialogs/expandable_dialog.c',
                      'ui/option_menu_window.c',

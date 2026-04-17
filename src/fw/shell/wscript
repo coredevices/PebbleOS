@@ -191,7 +191,7 @@ def generate_apps_table(task):
 
 
 def build(bld):
-    if bld.variant == 'prf':
+    if bld.env.VARIANT == 'prf':
         shell_name = 'prf'
     else:
         shell_name = bld.env.NORMAL_SHELL

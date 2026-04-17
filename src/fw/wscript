@@ -56,11 +56,6 @@ def get_tintin_fw_node(ctx, subdir=None):
 
 
 @conf
-def get_tintin_fw_node_prf(ctx):
-    return ctx.get_tintin_fw_node('prf')
-
-
-@conf
 def get_tintin_boot_node(ctx):
     return ctx.path.get_bld().make_node('src/boot/tintin_boot.bin')
 
@@ -123,7 +118,7 @@ def _generate_memory_layout(bld):
         flash_size = 1024 * 1024
         # Bootloader
         offset_size = 16 * 1024
-        if bld.is_silk() and bld.variant == 'prf':
+        if bld.is_silk() and bld.env.VARIANT == 'prf':
             # silk PRF is limited to 512k to save on SPI flash space
             fw_max_size = flash_size // 2
         else:
@@ -141,7 +136,7 @@ def _generate_memory_layout(bld):
         slot_size = 3072 * 1024
         resources_size = 2048 * 1024
         prf_size = 576 * 1024
-        if bld.variant == 'prf' and not (bld.env.IS_MFG or bld.env.PRF_AS_FIRMWARE):
+        if bld.env.VARIANT == 'prf' and not (bld.env.IS_MFG or bld.env.PRF_AS_FIRMWARE):
             offset_size = ptable_size + bootloader_size + 2 * slot_size + 2 * resources_size
             fw_max_size = prf_size
         else:
@@ -155,7 +150,7 @@ def _generate_memory_layout(bld):
         # Bootloader
         offset_size = 32 * 1024
         flash_size = 1024 * 1024
-        if bld.is_asterix() and bld.variant == 'prf' and not bld.env.IS_MFG:
+        if bld.is_asterix() and bld.env.VARIANT == 'prf' and not bld.env.IS_MFG:
             fw_max_size = flash_size // 2
         else:
             fw_max_size = flash_size
@@ -812,7 +807,7 @@ def build(bld):
     if bld.is_silk():
         bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
 
-    if bld.variant == 'prf':
+    if bld.env.VARIANT == 'prf':
         _build_recovery(bld)
     else:
         _build_normal(bld)
