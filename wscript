@@ -188,6 +188,9 @@ def options(opt):
                    help='Enables malloc instrumentation')
     opt.add_option('--infinite_backlight', action='store_true',
                    help='Makes the backlight never time-out.')
+    opt.add_option('--variant', action='store', default='normal',
+                   choices=['normal', 'prf'],
+                   help='Build variant: normal (default) or prf (recovery firmware)')
     opt.add_option('--mfg', action='store_true', help='Enable specific MFG-only options in the PRF build')
     opt.add_option('--no-pulse-everywhere',
                    action='store_true',
@@ -450,6 +453,11 @@ def configure(conf):
     else:
         conf.fatal('No micro family specified for {}!'.format(conf.options.board))
 
+    conf.env.VARIANT = conf.options.variant
+    if conf.env.VARIANT == 'prf':
+        conf.env.append_value('DEFINES', ['RECOVERY_FW'])
+        conf.env.JS_ENGINE = 'none'
+
     if conf.options.mfg:
         # Note that for the most part PRF and MFG firmwares are the same, so for MFG PRF builds
         # both MANUFACTURING_FW and RECOVERY_FW will be defined.
@@ -505,10 +513,6 @@ def configure(conf):
     Logs.pprint('CYAN', 'Configuring arm_firmware environment')
     conf.setenv('', base_env)
     conf.load('pebble_arm_gcc', tooldir='waftools')
-
-    conf.setenv('arm_prf_mode', env=conf.env)
-    conf.env.append_value('DEFINES', ['RECOVERY_FW'])
-    conf.env.JS_ENGINE = 'none' #Disable JS engine for PRF builds to save space, as PRF doesn't support JS anyway
 
     Logs.pprint('CYAN', 'Configuring unit test environment')
     conf.setenv('local', unit_test_env)
@@ -670,14 +674,11 @@ def build(bld):
         bld.recurse('tools')
         return
 
-    if bld.variant == 'prf':
-        bld.set_env(bld.all_envs['arm_prf_mode'])
-
-    if bld.variant in ('', 'applib', 'prf'):
+    if bld.variant in ('', 'applib'):
         # Dependency for SDK
         bld.recurse('third_party/moddable')
 
-    if bld.variant == '':
+    if bld.variant == '' and bld.env.VARIANT != 'prf':
         # sdk generation
         bld.recurse('sdk')
 
@@ -694,7 +695,7 @@ def build(bld):
         return
 
     # Do not enable stationary mode in PRF or release firmware
-    if (bld.variant != 'prf' and not bld.env.QEMU and bld.env.NORMAL_SHELL != 'sdk'):
+    if (bld.env.VARIANT != 'prf' and not bld.env.QEMU and bld.env.NORMAL_SHELL != 'sdk'):
         bld.env.append_value('DEFINES', 'STATIONARY_MODE')
 
     if bld.variant == 'test':
@@ -706,7 +707,7 @@ def build(bld):
         bld.recurse('tools')
         return
 
-    if bld.variant == '':
+    if bld.variant == '' and bld.env.VARIANT != 'prf':
         bld.recurse('stored_apps')
 
     bld.recurse('third_party')
@@ -727,12 +728,6 @@ def build(bld):
         bld.add_post_fun(size_resources)
         if 'PBL_LOGS_HASHED' in bld.env.DEFINES:
             bld.add_post_fun(merge_loghash_dicts)
-
-
-class build_prf(BuildContext):
-    """executes the recovery firmware build"""
-    cmd = 'build_prf'
-    variant = 'prf'
 
 
 class build_applib(BuildContext):
@@ -786,7 +781,7 @@ class SizeResources(BuildContext):
 def size_resources(ctx):
     """prints size information of resources"""
 
-    if ctx.variant == 'prf':
+    if ctx.env.VARIANT == 'prf':
         return
 
     pbpack_path = ctx.path.get_bld().find_node('system_resources.pbpack')
@@ -818,12 +813,6 @@ def size_resources(ctx):
 def size(ctx):
     from waflib import Options
     Options.commands = ['size_fw', 'size_resources'] + Options.commands
-
-
-class size_prf(BuildContext):
-    """checks the size of PRF"""
-    cmd = 'size_prf'
-    variant = 'prf'
 
 
 class test(BuildContext):
@@ -931,48 +920,11 @@ def bundle(ctx):
 
     if ctx.env.QEMU:
         bundle_qemu(ctx)
+    elif ctx.env.VARIANT == 'prf':
+        _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path), fw_type='recovery')
     else:
         _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path),
                      resource_path=ctx.get_pbpack_node().path_from(ctx.path))
-
-
-class bundle_prf(BuildContext):
-    """bundles a recovery firmware"""
-    cmd = 'bundle_prf'
-    variant = 'prf'
-
-    def execute_build(ctx):
-        _make_bundle(ctx, ctx.get_tintin_fw_node().path_from(ctx.path), fw_type='recovery')
-
-
-def _bundle_resourceless_fw(ctx, fw_path, fw_type):
-    # We need to create a dummy pbpack and bundle it in. Some FW images don't use
-    # resources, but the firmware will refuse to upgrade to a firmware if a resource
-    # file isn't sent over, regardless of it's validity.
-    import tempfile
-
-    # We need to actually write some content in here or else the phone app won't think the
-    # resources are valid, and put_bytes will refuse to update to any firmware image if it doesn't
-    # come with a corresponding resource pack. No one will ever read these though so who cares
-    # what the content is.
-    with tempfile.NamedTemporaryFile(delete=False) as dummy_pbpack:
-        dummy_pbpack.write('DUMMY')
-        pbpack_path = dummy_pbpack.name
-
-    try:
-        _make_bundle(ctx, fw_path, fw_type=fw_type, resource_path=pbpack_path)
-    finally:
-        os.remove(pbpack_path)
-
-
-class bundle_recovery(BuildContext):
-    """bundles a recovery firmware as normal firmware"""
-    cmd = 'bundle_recovery'
-    variant = 'prf'
-
-    def execute_build(ctx):
-        _bundle_resourceless_fw(ctx, ctx.get_tintin_fw_node().path_from(ctx.path),
-                                fw_type='recovery')
 
 
 class BundleQEMUCommand(BuildContext):
@@ -1019,11 +971,6 @@ class QemuImageMicroCommand(BuildContext):
     fun = 'qemu_image_micro'
 
 
-class QemuImageMicroPrfCommand(BuildContext):
-    cmd = 'qemu_image_prf_micro'
-    fun = 'qemu_image_prf_micro'
-
-
 class QemuImageSpiCommand(BuildContext):
     cmd = 'qemu_image_spi'
     fun = 'qemu_image_spi'
@@ -1036,11 +983,6 @@ class MfgImageSpiCommand(BuildContext):
 
 def qemu_image_micro(ctx):
     fw_hex = ctx.get_tintin_fw_node().change_ext('.hex')
-    _create_qemu_image_micro(ctx, fw_hex.path_from(ctx.path))
-
-
-def qemu_image_prf_micro(ctx):
-    fw_hex = ctx.get_tintin_fw_node_prf().change_ext('.hex')
     _create_qemu_image_micro(ctx, fw_hex.path_from(ctx.path))
 
 
@@ -1124,7 +1066,7 @@ def mfg_image_spi(ctx):
     # Pad the first section before PRF storage
     mfg_spi_img_file.write("\xff" * prf_begin)
 
-    prf_path = ctx.get_tintin_fw_node_prf().path_from(ctx.path)
+    prf_path = ctx.options.file or ctx.get_tintin_fw_node().path_from(ctx.path)
     prf_image = insert_firmware_descr.insert_firmware_description_struct(prf_path)
     mfg_spi_img_file.write(prf_image)
 
@@ -1157,15 +1099,6 @@ def console(ctx):
         # opened. There may be a glitch on RTS when rts is set differently from
         # their default value.
         os.system("python ./tools/log_hashing/miniterm_co.py %s %d --rts 0" % (tty, baudrate))
-
-
-class ConsoleCommand(BuildContext):
-    cmd = 'console_prf'
-    fun = 'console_prf'
-
-def console_prf(ctx):
-    os.putenv("PBL_CONSOLE_DICT_PATH", "build/prf/src/fw/loghash_dict.json")
-    console(ctx)
 
 
 class BleConsoleCommand(BuildContext):
@@ -1203,28 +1136,11 @@ def ble_console(ctx):
     os.system("python ./tools/log_hashing/miniterm_co.py %s %d" % (tty, baudrate))
 
 
-class BleConsolePrfCommand(BuildContext):
-    cmd = 'ble_console_prf'
-    fun = 'ble_console_prf'
-
-
-def ble_console_prf(ctx):
-    os.putenv("PBL_CONSOLE_DICT_PATH", "build/prf/src/fw/loghash_dict.json")
-    ble_console(ctx)
-
-
 def qemu(ctx):
     # Make sure the micro-flash image is up to date. By default, we don't rebuild the
     # SPI flash image in case you want to continue with the stored apps, etc. you had before.
     from waflib import Options
     Options.commands = ['qemu_image_micro', 'qemu_launch'] + Options.commands
-
-
-def qemu_prf(ctx):
-    # Make sure the micro-flash image is up to date. By default, we don't rebuild the
-    # SPI flash image in case you want to continue with the stored apps, etc. you had before.
-    from waflib import Options
-    Options.commands = ['qemu_image_prf_micro', 'qemu_launch'] + Options.commands
 
 
 class QemuLaunchCommand(BuildContext):
@@ -1380,14 +1296,6 @@ def gdb(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
         run_arm_gdb(ctx, fw_elf, cmd_str='--init-command=".gdbinit"')
 
 
-class gdb_prf(BuildContext):
-    """same as `gdb`, but loading the PRF elf instead"""
-    cmd = 'gdb_prf'
-
-    def execute_build(ctx):
-        gdb(ctx, ctx.get_tintin_fw_node_prf().change_ext('.elf'))
-
-
 def openocd(ctx):
     """ Starts openocd and leaves it running. It will reset the board to
         increase the chances of attaching succesfully. """
@@ -1506,7 +1414,7 @@ def image_recovery(ctx):
         return
 
     tool_name = _get_pulse_flash_tool(ctx)
-    recovery_bin_path = ctx.options.file or ctx.get_tintin_fw_node_prf().path_from(ctx.path)
+    recovery_bin_path = ctx.options.file or ctx.get_tintin_fw_node().path_from(ctx.path)
     waflib.Logs.pprint('CYAN', 'Writing recovery bin "%s" to tty %s' % (recovery_bin_path, tty))
 
     ret = os.system("python ./tools/%s.py -t %s -p firmware %s" % (tool_name, tty, recovery_bin_path))
@@ -1526,20 +1434,20 @@ def _check_firmware_image_size(ctx, path):
     firmware_size = os.path.getsize(path)
     # Determine flash and bootloader size so we can calculate the max firmware size
     if ctx.env.MICRO_FAMILY == 'STM32F4':
-        if ctx.env.BOARD.startswith('silk') and ctx.variant == 'prf':
+        if ctx.env.BOARD.startswith('silk') and ctx.env.VARIANT == 'prf':
             # silk PRF is limited to 512k to save on SPI flash space
             max_firmware_size = 512 * BYTES_PER_K
         else:
             # 1024k of flash and 16k bootloader
             max_firmware_size = (1024 - 16) * BYTES_PER_K
     elif ctx.env.MICRO_FAMILY == 'NRF52':
-        if ctx.variant == 'prf' and not ctx.env.IS_MFG:
+        if ctx.env.VARIANT == 'prf' and not ctx.env.IS_MFG:
             max_firmware_size = 512 * BYTES_PER_K
         else:
             # 1024k of flash and 32k bootloader
             max_firmware_size = (1024 - 32) * BYTES_PER_K
     elif ctx.env.MICRO_FAMILY == 'SF32LB52':
-        if ctx.variant == 'prf' and not ctx.env.IS_MFG:
+        if ctx.env.VARIANT == 'prf' and not ctx.env.IS_MFG:
             max_firmware_size = 576 * BYTES_PER_K
         else:
             # 3072k of flash
@@ -1569,16 +1477,6 @@ class FlashCommand(BuildContext):
 
 def flash(ctx):
     flash_everything(ctx, ctx.get_tintin_fw_node())
-
-
-class FlashPrfCommand(BuildContext):
-    """flashes recovery firmware as normal firmware"""
-    cmd = 'flash_prf'
-    fun = 'flash_prf'
-
-
-def flash_prf(ctx):
-    flash_fw(ctx, ctx.get_tintin_fw_node_prf())
 
 
 class FlashFirmware(BuildContext):

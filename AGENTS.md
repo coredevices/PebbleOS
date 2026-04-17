@@ -28,9 +28,9 @@ PebbleOS is the operating system running on Pebble smartwatches.
   - `--release` enables release mode
   - `--mfg` enables manufacturing mode
   - `--qemu` enables QEMU mode
+  - `--variant=normal|prf` selects build variant (default: normal)
 
-- Build main firmware: `./waf build`
-- Build recovery firmware (PRF): `./waf build_prf`
+- Build firmware: `./waf build`
 - Run tests: `./waf test`
 
 ## Git rules

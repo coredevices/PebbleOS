@@ -18,7 +18,7 @@ def _set_prf_required_media_options(bld, resources_dict):
         In case the build variant is PRF, it will also set PRF-required
         options like '"builtin": true'.
     """
-    if bld.variant != 'prf':
+    if bld.env.VARIANT != 'prf':
         return
 
     for media_item_dict in resources_dict["media"]:
@@ -46,7 +46,7 @@ def _get_resources_dict(bld):
     common_platform_path = 'common/' + bld.get_platform_name() + '/resource_map.json'
 
     # handle prf or normal
-    is_recovery = (bld.variant == 'prf')
+    is_recovery = (bld.env.VARIANT == 'prf')
     specific_path = 'prf/base/resource_map.json' if is_recovery else 'normal/base/resource_map.json'
     specific_node = bld.path.find_node(specific_path)
     specific_dict = _get_map_dict(bld, specific_node)
@@ -130,7 +130,7 @@ def build(bld):
         resource_dependencies=resource_dependencies,
         resource_ball=resource_ball)
 
-    if bld.variant != 'prf':
+    if bld.env.VARIANT != 'prf':
         pbpack = fw_bld_node.make_node("system_resources.pbpack")
         bld(features='generate_pbpack',
             resource_ball=resource_ball,
@@ -160,7 +160,7 @@ def build(bld):
         font_key_table=fw_bld_node.make_node('src/fw/font_resource_table.auto.h'),
         resource_definition_files=resource_definition_sources)
 
-    if bld.variant == '':
+    if bld.env.VARIANT != 'prf':
         # Build timeline files
         bld(features='generate_timeline',
             name='generate_timeline',

@@ -5,10 +5,16 @@ It allows connecting from a phone to, for example, flash a new firmware image ev
 
 ## Building
 
-Once a project is configured, PRF image can be built by running:
+Configure the project with the `prf` variant:
 
 ```shell
-./waf build_prf
+./waf configure --board <board> --variant prf
+```
+
+Then build as usual:
+
+```shell
+./waf build
 ```
 
 ## Flashing
@@ -16,7 +22,7 @@ Once a project is configured, PRF image can be built by running:
 The PRF image can be flashed directly into the application area by running:
 
 ```shell
-./waf flash_prf
+./waf flash
 ```
 
 This is useful when developing PRF features because the watch will boot directly to PRF.
@@ -36,5 +42,5 @@ booting, or holding {kbd}`BACK` for 7-10s while in the main application.
 You can interact with PRF console by running:
 
 ```shell
-./waf console_prf
+./waf console
 ```
