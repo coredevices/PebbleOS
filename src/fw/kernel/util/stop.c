@@ -57,6 +57,9 @@ void enter_stop_mode(void) {
 
   dbgserial_enable_rx_dma_after_stop();
 }
+#elif defined(MICRO_FAMILY_QEMU)
+void enter_stop_mode(void) {
+}
 #elif MICRO_FAMILY_STM32F4
 void enter_stop_mode(void) {
   // enable the interrupt on the debug RX line so that we can use the serial
