@@ -65,3 +65,5 @@ docs/_build
 artifacts/
 
 .claude/settings.local.json
+.envrc
+.direnv
