@@ -95,7 +95,7 @@ typedef struct PACKED ActivityHRMSettings {
 #define ACTIVITY_HRM_DEFAULT_PREFERENCES { \
   .enabled = true, \
   .measurement_interval = HRMonitoringInterval_10Min, \
-  .activity_tracking_enabled = true, \
+  .activity_tracking_enabled = false, \
 }
 
 // We consider values outside of this range to be invalid
