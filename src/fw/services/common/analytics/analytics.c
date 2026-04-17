@@ -6,6 +6,7 @@
 #include "pbl/services/common/analytics/analytics.h"
 #include "pbl/services/common/analytics/backend.h"
 #include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/common/system_task.h"
 #include "util/size.h"
 
 #define HEARTBEAT_PERIOD_SEC 3600
@@ -62,7 +63,7 @@ static const struct pbl_analytics_backend_ops *s_backend_ops[] = {
 #endif
 };
 
-static void prv_heartbeat_timer_cb(void *data) {
+static void prv_heartbeat_system_task_cb(void *data) {
   pbl_analytics_external_collect_battery();
   pbl_analytics_external_collect_cpu_stats();
   pbl_analytics_external_collect_stack_free();
@@ -75,6 +76,10 @@ static void prv_heartbeat_timer_cb(void *data) {
   for (size_t i = 0U; i < ARRAY_LENGTH(s_heartbeat); i++) {
     s_heartbeat[i]();
   }
+}
+
+static void prv_heartbeat_timer_cb(void *data) {
+  system_task_add_callback(prv_heartbeat_system_task_cb, NULL);
 }
 
 void pbl_analytics_init(void) {
