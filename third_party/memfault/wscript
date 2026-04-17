@@ -40,7 +40,7 @@ def build(bld):
     if not bld.env.memfault:
         return
 
-    if bld.variant == "prf":
+    if bld.env.VARIANT == "prf":
         bld.env.DEFINES = [d for d in bld.env.DEFINES if not d.startswith('MEMFAULT')]
         bld.env.append_value('DEFINES', 'MEMFAULT=0')
         bld.env.memfault = 0

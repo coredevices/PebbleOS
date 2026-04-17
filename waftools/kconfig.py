@@ -66,6 +66,11 @@ def configure(conf):
     if os.path.exists(prj_conf):
         kconf.load_config(prj_conf, replace=False)
 
+    variant = conf.options.variant
+    variant_conf = os.path.join(srcdir, "src", "fw", f"prj_{variant}.conf")
+    if os.path.exists(variant_conf):
+        kconf.load_config(variant_conf, replace=False)
+
     # Check for assigned values overridden by unsatisfied dependencies
     # (same pattern as Zephyr's check_assigned_sym_values)
     for sym in kconf.unique_defined_syms:
@@ -114,6 +119,8 @@ def configure(conf):
     msg = f"{len(kconfig)} symbols loaded from {board}"
     if os.path.exists(prj_conf):
         msg += " + prj.conf"
+    if os.path.exists(variant_conf):
+        msg += f" + prj_{variant}.conf"
     conf.msg("Kconfig", msg)
 
 

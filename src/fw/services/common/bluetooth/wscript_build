@@ -15,7 +15,7 @@ sources = [
     'pp_ble_control.c',
 ]
 
-if bld.variant != 'prf':
+if bld.env.VARIANT != 'prf':
     sources.append('bluetooth_persistent_storage_normal.c')
     if bld.env.CONFIG_HRM:
         sources.append('ble_hrm.c')

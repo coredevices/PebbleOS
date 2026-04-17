@@ -12,7 +12,7 @@ def generate_endpoints_table(task):
         definition.update(json.load(f_in))
 
     endpoints.extend(definition['prf_and_normal_fw'])
-    if bld.variant != 'prf':
+    if bld.env.VARIANT != 'prf':
         endpoints.extend(definition['normal_fw_only'])
     endpoints.sort()
 

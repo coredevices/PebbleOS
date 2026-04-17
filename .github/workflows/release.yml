@@ -44,27 +44,27 @@ jobs:
           pip install -r requirements.txt
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --release
+        run: ./waf configure --board ${{ matrix.board }} --variant=prf --release
 
       - name: Build PRF
-        run: ./waf build_prf
+        run: ./waf build
 
       - name: Bundle PRF
-        run: ./waf bundle_prf
+        run: ./waf bundle
 
       - name: Copy PRF artifacts
         run: |
           mkdir -p artifacts
-          cp build/prf/src/fw/tintin_fw.hex artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.hex
-          cp build/prf/src/fw/tintin_fw.bin artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.bin
-          cp build/prf/src/fw/tintin_fw.elf artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.elf
-          cp build/prf/*.pbz artifacts
-          cp build/prf/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ matrix.board }}_${{github.ref_name}}_loghash_dict.json
+          cp build/src/fw/tintin_fw.hex artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.hex
+          cp build/src/fw/tintin_fw.bin artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.bin
+          cp build/src/fw/tintin_fw.elf artifacts/prf_${{ matrix.board }}_${{github.ref_name}}.elf
+          cp build/*.pbz artifacts
+          cp build/src/fw/tintin_fw_loghash_dict.json artifacts/prf_${{ matrix.board }}_${{github.ref_name}}_loghash_dict.json
 
       - name: Get PRF Build ID
         id: prf_build_id
         run: |
-          echo "BUILD_ID=$(arm-none-eabi-readelf -n build/prf/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
+          echo "BUILD_ID=$(arm-none-eabi-readelf -n build/src/fw/tintin_fw.elf | sed -n -e 's/^.*Build ID: //p')" >> "$GITHUB_OUTPUT"
 
       - name: Upload PRF log hash dictionary
         uses: Noelware/s3-action@2.3.1
@@ -74,21 +74,21 @@ jobs:
           endpoint: ${{ vars.LOG_HASH_BUCKET_ENDPOINT }}
           bucket: ${{ vars.LOG_HASH_BUCKET_NAME }}
           files: |
-            build/prf/src/fw/tintin_fw_loghash_dict.json
+            build/src/fw/tintin_fw_loghash_dict.json
           path-format: ${{ steps.prf_build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
 
       - name: Configure PRF MFG
-        run: ./waf configure --board ${{ matrix.board }} --mfg --nohash --release
+        run: ./waf configure --board ${{ matrix.board }} --variant=prf --mfg --nohash --release
 
       - name: Build MFG PRF
-        run: ./waf build_prf
+        run: ./waf build
 
       - name: Copy MFG PRF artifacts
         run: |
           mkdir -p artifacts
-          cp build/prf/src/fw/tintin_fw.hex artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.hex
-          cp build/prf/src/fw/tintin_fw.bin artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.bin
-          cp build/prf/src/fw/tintin_fw.elf artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.elf
+          cp build/src/fw/tintin_fw.hex artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.hex
+          cp build/src/fw/tintin_fw.bin artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.bin
+          cp build/src/fw/tintin_fw.elf artifacts/prf_mfg_${{ matrix.board }}_${{github.ref_name}}.elf
 
       - name: Store
         uses: actions/upload-artifact@v4
