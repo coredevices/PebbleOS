@@ -270,6 +270,9 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
 #elif SPALDING_SCREEN_RES
   icon_bounds.origin.x = (bounds.size.w / 2) - (icon_bounds.size.w / 2);
   icon_bounds.origin.y += 27; // icon top offset
+#elif GETAFIX_SCREEN_RES
+  icon_bounds.origin.x = (bounds.size.w / 2) - (icon_bounds.size.w / 2);
+  icon_bounds.origin.y += 39; // icon top offset
 #endif
 
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
@@ -283,9 +286,12 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
 #elif SNOWY_SCREEN_RES
   const GTextAlignment alignment = screen_is_obstructed ? GTextAlignmentRight: GTextAlignmentCenter;
   bounds.origin.y += screen_is_obstructed ? 65 : 108; // steps text top offset
-#elif SPALDING_SCREEN_RES || GETAFIX_SCREEN_RES
+#elif SPALDING_SCREEN_RES
   const GTextAlignment alignment = GTextAlignmentCenter;
   bounds.origin.y += 113; // steps text top offset
+#elif GETAFIX_SCREEN_RES
+  const GTextAlignment alignment = GTextAlignmentCenter;
+  bounds.origin.y += 163; // steps text top offset
 #endif
 
   graphics_context_set_text_color(ctx, color);
@@ -324,6 +330,8 @@ static void prv_draw_time(GContext *ctx, GFont time_font, GFont am_pm_font, GRec
   bounds.origin.y = screen_is_obstructed ? 4 : 47;
 #elif SPALDING_SCREEN_RES
   bounds.origin.y = 50;
+#elif GETAFIX_SCREEN_RES
+  bounds.origin.y = 72;
 #endif
 
   graphics_text_node_draw(&container->node, ctx, &bounds, NULL, NULL);
@@ -385,8 +393,10 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
   const int16_t fill_thickness = screen_is_obstructed ? 10 : 11;
 #elif EMERY_SCREEN_RES
   const int16_t fill_thickness = screen_is_obstructed ? 5 : 13;
-#elif SPALDING_SCREEN_RES || GETAFIX_SCREEN_RES
+#elif SPALDING_SCREEN_RES
   const int16_t fill_thickness = (bounds.size.h - grect_inset(bounds, GEdgeInsets(15)).size.h) / 2;
+#elif GETAFIX_SCREEN_RES
+  const int16_t fill_thickness = (bounds.size.h - grect_inset(bounds, GEdgeInsets(20)).size.h) / 2;
 #endif
 
 #if PBL_COLOR
