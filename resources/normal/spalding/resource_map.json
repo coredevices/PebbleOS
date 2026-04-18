@@ -128,6 +128,11 @@
     },
     {
       "type": "png",
+      "name": "MULTIWATCH_TIMEZONE_20MM_BLACK",
+      "file": "normal/spalding/images/multiwatch_tz_20_black.png"
+    },
+    {
+      "type": "png",
       "name": "MULTIWATCH_BACKGROUND_20MM_SILVER_BROWN",
       "file": "normal/spalding/images/multiwatch_bg_20_silver_brown.png"
     },
