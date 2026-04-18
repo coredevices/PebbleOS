@@ -682,7 +682,7 @@ def _build_normal(bld):
         source_dirs.append('apps/system/launcher/default/**')
     else:
         source_dirs.extend(('apps/%s/**' % d for d in ('system', 'watch')))
-        if bld.is_spalding():
+        if bld.is_spalding() or bld.is_getafix():
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/bw')
         elif bld.is_silk() or bld.is_asterix() or bld.is_qemu_flint():
