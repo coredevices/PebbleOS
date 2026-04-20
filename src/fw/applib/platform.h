@@ -41,6 +41,8 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
   #elif PLATFORM_GETAFIX
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
+  #elif PLATFORM_GABBRO
+    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
   #else
     #error "PBL_PLATFORM_TYPE_CURRENT couldn't be determined: No PLATFORM_* defined!"
   #endif
