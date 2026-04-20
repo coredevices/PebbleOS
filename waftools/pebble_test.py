@@ -247,7 +247,7 @@ def build_product_source_files(
 
 
 def get_bitdepth_for_platform(bld, platform):
-    if platform in ("snowy", "spalding", "obelix"):
+    if platform in ("obelix", "gabbro"):
         return 8
     elif platform in ("silk",):
         return 1
@@ -275,7 +275,7 @@ def add_clar_test(
         if not re.match(bld.options.regex, filename):
             return
 
-    platform_set = set(["default", "snowy", "spalding", "silk", "obelix"])
+    platform_set = set(["default", "silk", "obelix", "gabbro"])
 
     # validate platforms specified
     if platform not in platform_set:
@@ -292,7 +292,7 @@ def add_clar_test(
     if platform == "default":
         test_dir = bld.path.get_bld().make_node(test_name)
         test_bin = test_dir.make_node("runme")
-        platform = "snowy"
+        platform = "obelix"
         # add a default platform define so file selection can use non-platform pbi/png files
         platform_defines.append("PLATFORM_DEFAULT=1")
     else:
@@ -346,8 +346,10 @@ def add_clar_test(
         "third_party/tinymt/TinyMT/tinymt",
     ]
 
-    # Use Snowy's resource headers as a fallback if we don't override it here
-    resource_override_dir_name = platform if platform in ("silk", "obelix") else "snowy"
+    # All current platforms have their own resource headers; default to obelix as the fallback
+    resource_override_dir_name = (
+        platform if platform in ("silk", "obelix", "gabbro") else "obelix"
+    )
     src_includes.append(
         "tests/overrides/default/resources/{}".format(resource_override_dir_name)
     )
@@ -390,9 +392,11 @@ def add_clar_test(
 
     bitdepth = get_bitdepth_for_platform(bld, platform)
 
+    # Test platforms cover multiple boards; map each to the canonical display header.
+    display_header = {"gabbro": "qemu_gabbro"}.get(platform, platform)
     cflags_force_include = ["-Wno-unused-command-line-argument"]
     cflags_force_include.append(
-        "-include" + board_path + "/displays/display_" + platform + ".h"
+        "-include" + board_path + "/displays/display_" + display_header + ".h"
     )
     platform_defines += [
         "PLATFORM_" + platform.upper(),
