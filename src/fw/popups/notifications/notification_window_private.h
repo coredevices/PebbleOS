@@ -53,4 +53,8 @@ typedef struct NotificationWindowData {
   bool pending_vibe;
   Uuid pending_vibe_id;
   bool pending_backlight;
+
+  // Set once we've pushed a modal color preempt for this notification's
+  // backlight pulse, so window_unload knows to balance it with a pop.
+  bool color_preempted;
 } NotificationWindowData;

@@ -46,6 +46,26 @@ void light_enable_interaction(void);
 //! Reset the state if an app overrode the usual state machine using light_enable()
 void light_reset_user_controlled(void);
 
+//! @copydoc app_light_set_color
+//! Argb is a GColor8-packed byte (2 bits per channel, alpha ignored).
+//! No-op on platforms without a color backlight.
+void light_set_color(uint8_t argb);
+
+//! @copydoc app_light_set_system_color
+//! No-op on platforms without a color backlight.
+void light_set_system_color(void);
+
+//! Request that the system color take precedence over any app override.
+//! While the refcount is non-zero, the LED is forced to the user default
+//! color even if an app has set an override. Used by notifications and
+//! other modals so they display in neutral white without permanently
+//! clearing the underlying app's color.
+void light_system_color_request(void);
+
+//! Release a system color request. When the refcount returns to zero, any
+//! app override is re-applied.
+void light_system_color_release(void);
+
 //! @internal
 void light_toggle_enabled(void);
 
