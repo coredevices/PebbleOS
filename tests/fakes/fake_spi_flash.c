@@ -59,6 +59,14 @@ void fake_spi_flash_init(uint32_t offset, uint32_t length) {
     length = FLASH_REGION_FILESYSTEM_END - offset;
   }
 #endif
+#ifdef FLASH_REGION_SHARED_PRF_STORAGE_END
+  // On platforms with regions beyond the filesystem (TZINFO, MFG_INFO,
+  // SHARED_PRF_STORAGE — present on gd25q256e/obelix layouts), grow far enough
+  // to cover them so flash_read_bytes doesn't trip the bounds check.
+  if (offset + length < FLASH_REGION_SHARED_PRF_STORAGE_END) {
+    length = FLASH_REGION_SHARED_PRF_STORAGE_END - offset;
+  }
+#endif
 
   s_state.offset = offset;
   s_state.length = length;
