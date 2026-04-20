@@ -8,6 +8,7 @@
 #include "kernel/events.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/services/common/event_service.h"
+#include "pbl/services/common/analytics/analytics.h"
 #include "system/logging.h"
 #include "os/mutex.h"
 #include "system/passert.h"
@@ -87,6 +88,7 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
     mutex_unlock(s_touch_mutex);
 
     if (touch_state == TouchState_FingerDown) {
+      PBL_ANALYTICS_ADD(touch_event_count, 1);
       TOUCH_DEBUG("Touch: Touchdown @ (%" PRId16 ", %" PRId16 ")", x, y);
       prv_put_touch_event(TouchEvent_Touchdown, x, y);
     } else {
