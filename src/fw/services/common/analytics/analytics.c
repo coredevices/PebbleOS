@@ -15,6 +15,7 @@
 
 extern void pbl_analytics_external_collect_battery(void);
 extern void pbl_analytics_external_collect_cpu_stats(void);
+extern void pbl_analytics_external_collect_task_cpu_stats(void);
 extern void pbl_analytics_external_collect_stack_free(void);
 extern void pbl_analytics_external_collect_pfs_stats(void);
 extern void pbl_analytics_external_collect_kernel_heap_stats(void);
@@ -71,6 +72,7 @@ static void prv_heartbeat_system_task_cb(void *data) {
 
   pbl_analytics_external_collect_battery();
   pbl_analytics_external_collect_cpu_stats();
+  pbl_analytics_external_collect_task_cpu_stats();
   pbl_analytics_external_collect_stack_free();
   pbl_analytics_external_collect_pfs_stats();
   pbl_analytics_external_collect_kernel_heap_stats();

@@ -4,6 +4,7 @@
 #include "pebble_tasks.h"
 
 #include "kernel/memory_layout.h"
+#include "kernel/pbl_malloc.h"
 
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
@@ -105,6 +106,65 @@ void pbl_analytics_external_collect_stack_free(void) {
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_main_bytes, prv_task_get_stack_free(PebbleTask_KernelMain));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_background_bytes, prv_task_get_stack_free(PebbleTask_KernelBackground));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_newtimers_bytes, prv_task_get_stack_free(PebbleTask_NewTimers));
+}
+
+static const enum pbl_analytics_key s_task_cpu_pct_keys[NumPebbleTask] = {
+    [PebbleTask_KernelMain] = PBL_ANALYTICS_KEY(task_cpu_kernel_main_pct),
+    [PebbleTask_KernelBackground] = PBL_ANALYTICS_KEY(task_cpu_kernel_background_pct),
+    [PebbleTask_Worker] = PBL_ANALYTICS_KEY(task_cpu_worker_pct),
+    [PebbleTask_App] = PBL_ANALYTICS_KEY(task_cpu_app_pct),
+    [PebbleTask_BTHost] = PBL_ANALYTICS_KEY(task_cpu_bt_host_pct),
+    [PebbleTask_BTController] = PBL_ANALYTICS_KEY(task_cpu_bt_controller_pct),
+    [PebbleTask_BTHCI] = PBL_ANALYTICS_KEY(task_cpu_bt_hci_pct),
+    [PebbleTask_NewTimers] = PBL_ANALYTICS_KEY(task_cpu_new_timers_pct),
+    [PebbleTask_PULSE] = PBL_ANALYTICS_KEY(task_cpu_pulse_pct),
+};
+
+void pbl_analytics_external_collect_task_cpu_stats(void) {
+  static uint32_t s_prev_task_run_time[NumPebbleTask];
+  static uint32_t s_prev_idle_run_time;
+  static uint32_t s_prev_total_run_time;
+
+  UBaseType_t num_tasks = uxTaskGetNumberOfTasks();
+  TaskStatus_t *statuses = kernel_malloc(num_tasks * sizeof(TaskStatus_t));
+  if (!statuses) {
+    return;
+  }
+
+  uint32_t total_run_time;
+  UBaseType_t count = uxTaskGetSystemState(statuses, num_tasks, &total_run_time);
+
+  uint32_t delta_total = total_run_time - s_prev_total_run_time;
+  s_prev_total_run_time = total_run_time;
+
+  TaskHandle_t idle_handle = xTaskGetIdleTaskHandle();
+  uint32_t curr_task_run_time[NumPebbleTask] = {0};
+  uint32_t curr_idle_run_time = 0;
+  for (UBaseType_t i = 0; i < count; i++) {
+    if (statuses[i].xHandle == idle_handle) {
+      curr_idle_run_time = statuses[i].ulRunTimeCounter;
+      continue;
+    }
+    PebbleTask task = pebble_task_get_task_for_handle(statuses[i].xHandle);
+    if (task < NumPebbleTask) {
+      curr_task_run_time[task] = statuses[i].ulRunTimeCounter;
+    }
+  }
+
+  kernel_free(statuses);
+
+  for (int task = 0; task < NumPebbleTask; task++) {
+    uint32_t delta = curr_task_run_time[task] - s_prev_task_run_time[task];
+    s_prev_task_run_time[task] = curr_task_run_time[task];
+    uint32_t pct = delta_total ? (uint32_t)(((uint64_t)delta * 10000U) / delta_total) : 0;
+    pbl_analytics_set_unsigned(s_task_cpu_pct_keys[task], pct);
+  }
+
+  uint32_t idle_delta = curr_idle_run_time - s_prev_idle_run_time;
+  s_prev_idle_run_time = curr_idle_run_time;
+  uint32_t idle_pct =
+      delta_total ? (uint32_t)(((uint64_t)idle_delta * 10000U) / delta_total) : 0;
+  PBL_ANALYTICS_SET_UNSIGNED(task_cpu_idle_pct, idle_pct);
 }
 
 QueueHandle_t pebble_task_get_to_queue(PebbleTask task) {
