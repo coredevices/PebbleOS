@@ -73,6 +73,11 @@ static uint32_t s_backlight_timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS;
 #define PREF_KEY_BACKLIGHT_INTENSITY "lightIntensity"
 static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in shell_prefs_init()
 
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#define PREF_KEY_BACKLIGHT_COLOR "lightColor"
+static uint32_t s_backlight_color; // default pulled from BOARD_CONFIG in shell_prefs_init()
+#endif
+
 #define PREF_KEY_BACKLIGHT_MOTION "lightMotion"
 static bool s_backlight_motion_enabled = true;
 
@@ -333,6 +338,14 @@ static bool prv_set_s_backlight_intensity(uint16_t *intensity) {
     prv_convert_backlight_percent_to_intensity(BOARD_CONFIG.backlight_on_percent);
   return false;
 }
+
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+static bool prv_set_s_backlight_color(uint32_t *rgb_color) {
+  // Mask to packed 0x00RRGGBB; ignore any junk in the top byte.
+  s_backlight_color = *rgb_color & 0x00FFFFFFU;
+  return true;
+}
+#endif
 
 static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   s_backlight_motion_enabled = *enabled;
@@ -791,6 +804,9 @@ void shell_prefs_init(void) {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
 #endif
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+  s_backlight_color = BOARD_CONFIG.backlight_default_color;
+#endif
   // Use board-specific default motion sensitivity if provided (non-zero)
   if (BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity != 0) {
     s_motion_sensitivity = BOARD_CONFIG_ACCEL.accel_config.default_motion_sensitivity;
@@ -1112,6 +1128,18 @@ void backlight_set_intensity_percent(uint8_t percent_intensity) {
   PBL_ASSERTN(intensity > BACKLIGHT_BRIGHTNESS_OFF);
   prv_pref_set(PREF_KEY_BACKLIGHT_INTENSITY, &intensity, sizeof(intensity));
 }
+
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+uint32_t backlight_get_color(void) {
+  return s_backlight_color;
+}
+
+void backlight_set_color(uint32_t rgb_color) {
+  // Clamp to 24-bit packed RGB; upper byte is unused.
+  rgb_color &= 0x00FFFFFFU;
+  prv_pref_set(PREF_KEY_BACKLIGHT_COLOR, &rgb_color, sizeof(rgb_color));
+}
+#endif
 
 bool backlight_is_motion_enabled(void) {
   return s_backlight_motion_enabled;

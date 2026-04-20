@@ -77,6 +77,12 @@ uint16_t backlight_get_intensity(void);
 uint8_t backlight_get_intensity_percent(void);
 void backlight_set_intensity_percent(uint8_t intensity_percent);
 
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+// Packed 0x00RRGGBB. Matches the LED_* constants in drivers/led_controller.h.
+uint32_t backlight_get_color(void);
+void backlight_set_color(uint32_t rgb_color);
+#endif
+
 // The backlight motion enabled setting is used by the kernel event loop.
 bool backlight_is_motion_enabled(void);
 void backlight_set_motion_enabled(bool enable);

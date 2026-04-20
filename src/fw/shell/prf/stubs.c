@@ -8,6 +8,7 @@
 //! use something that only exists in normal, but we're not quite there yet.
 
 #include "util/uuid.h"
+#include "board/board.h"
 #include "drivers/backlight.h"
 #include "kernel/events.h"
 #include "popups/crashed_ui.h"
@@ -226,6 +227,15 @@ uint16_t backlight_get_intensity(void) {
 uint8_t backlight_get_intensity_percent(void) {
   return (backlight_get_intensity() * 100) / BACKLIGHT_BRIGHTNESS_MAX;
 }
+
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+uint32_t backlight_get_color(void) {
+  return BOARD_CONFIG.backlight_default_color;
+}
+
+void backlight_set_color(uint32_t rgb_color) {
+}
+#endif
 
 bool shell_prefs_get_language_english(void) {
   return true;
