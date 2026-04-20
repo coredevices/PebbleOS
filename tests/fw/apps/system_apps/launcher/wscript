@@ -87,7 +87,7 @@ def build(ctx):
             " src/fw/apps/system/launcher/default/app_glance_workout.c"
             " src/fw/apps/system/launcher/default/menu_layer.c"
             " src/fw/apps/system/timeline/text_node.c"
-            " src/fw/board/displays/display_spalding.c"
+            " src/fw/board/displays/display_getafix.c"
             " src/fw/services/normal/app_glances/app_glance_service.c"
             " src/fw/services/normal/blob_db/app_glance_db.c"
             " src/fw/services/normal/filesystem/app_file.c"
@@ -106,6 +106,6 @@ def build(ctx):
         defines=ctx.env.test_image_defines,
         runtime_deps=(ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos),
         override_includes=["dummy_board"],
-        platforms=["silk", "snowy", "spalding"])
+        platforms=["silk", "obelix", "gabbro"])
 
 # vim:filetype=python

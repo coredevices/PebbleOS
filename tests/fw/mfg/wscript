@@ -6,20 +6,5 @@ def build(ctx):
          test_sources_ant_glob = "test_mfg_serials.c",
          override_includes=['dummy_board', 'silk'])
 
-    clar(ctx,
-         sources_ant_glob="src/fw/mfg/snowy/mfg_info.c",
-         test_sources_ant_glob="test_snowy_mfg_info.c",
-         override_includes=['dummy_board', 'snowy_mfg_board'],
-         platforms=['snowy'])
-
-    clar(ctx,
-         sources_ant_glob="src/fw/mfg/spalding/mfg_info.c "
-                          "src/fw/mfg/spalding/boot_fpga.c "
-                          "src/fw/util/legacy_checksum.c "
-                          "src/fw/drivers/flash/flash_crc.c",
-         test_sources_ant_glob="test_spalding_mfg_info.c",
-         override_includes=['dummy_board', 'snowy_mfg_board'],
-         platforms=['spalding'])
-
 # vim:filetype=python
 

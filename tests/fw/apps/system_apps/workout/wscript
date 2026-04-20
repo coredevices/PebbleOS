@@ -43,7 +43,7 @@ def build(ctx):
         " src/fw/applib/ui/menu_layer_system_cells.c" \
         " src/fw/applib/vendor/tinflate/tinflate.c" \
         " src/fw/applib/vendor/uPNG/upng.c" \
-        " src/fw/board/displays/display_spalding.c" \
+        " src/fw/board/displays/display_getafix.c" \
         " src/fw/drivers/flash/flash_crc.c" \
         " src/fw/flash_region/filesystem_regions.c" \
         " src/fw/flash_region/flash_region.c" \
@@ -110,7 +110,7 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk'])
+         platforms=['silk', 'obelix', 'gabbro'])
 
     clar(ctx,
          sources_ant_glob = rendering_sources + \
@@ -123,7 +123,7 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk'])
+         platforms=['silk', 'obelix', 'gabbro'])
 
     clar(ctx,
          sources_ant_glob = rendering_sources + \
@@ -135,7 +135,7 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk'])
+         platforms=['silk', 'obelix', 'gabbro'])
 
     clar(ctx,
          sources_ant_glob = rendering_sources + \
@@ -147,7 +147,7 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk'])
+         platforms=['silk', 'obelix', 'gabbro'])
 
     clar(ctx,
          sources_ant_glob = " src/fw/apps/system/workout/utils.c",
