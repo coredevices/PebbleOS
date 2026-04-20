@@ -10,11 +10,6 @@ def build(ctx):
                            " src/fw/services/common/battery/voltage/battery_curve.c",
         test_sources_ant_glob = 'test_battery_ui_fsm.c',
         override_includes=['dummy_board'],
-        platforms = ['snowy'])
+        platforms = ['obelix'])
 
-    clar(ctx,
-        sources_ant_glob = " src/fw/shell/normal/display_calibration_prompt.c",
-        test_sources_ant_glob = 'test_display_calibration_prompt.c',
-        override_includes=['dummy_board'],
-        platforms = ['spalding'])
 # vim:filetype=python

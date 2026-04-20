@@ -179,7 +179,7 @@ def build(ctx):
              " src/fw/applib/app_heap_util.c",
         test_sources_ant_glob = "test_heap.c")
 
-    for platform in ['silk', 'snowy']:
+    for platform in ['silk']:
         clar(ctx,
              sources_ant_glob =
              " src/fw/debug/default/flash_logging.c"
@@ -249,7 +249,7 @@ def build(ctx):
             " src/fw/process_management/pebble_process_info.c"
             " src/fw/process_management/pebble_process_md.c",
         test_sources_ant_glob = "test_pebble_process_md.c",
-        platforms=['snowy', 'spalding', 'silk', 'obelix'])
+        platforms=['silk', 'obelix', 'gabbro'])
 
     clar(ctx,
         sources_ant_glob = "src/fw/applib/graphics/utf8.c" \
@@ -304,7 +304,9 @@ def build(ctx):
                            "  tests/fixtures/resources/builtin_resources.auto.c" \
                            "  tests/fixtures/resources/pfs_resource_table.c",
         test_sources_ant_glob = "test_resource.c",
-        defines=["CAPABILITY_HAS_MAPPABLE_FLASH=1"],
+        defines=["CAPABILITY_HAS_MAPPABLE_FLASH=1",
+                 "FLASH_MEMORY_MAPPABLE_ADDRESS=0x60000000",
+                 "FLASH_MEMORY_MAPPABLE_SIZE=0x1000000"],
         override_includes=['dummy_board'])
 
     clar(ctx,
@@ -337,7 +339,7 @@ def build(ctx):
         " src/fw/applib/graphics/graphics_circle.c" \
         " src/fw/applib/graphics/graphics_line.c"
 
-    for platform in ['silk', 'snowy']:
+    for platform in ['silk', 'obelix']:
         bit_depth = 1 if platform == 'silk' else 8
         depth_dir = '{}_bit'.format(bit_depth)
         sources_ant_glob = templated_sources_ant_glob.format(depth_dir=depth_dir)

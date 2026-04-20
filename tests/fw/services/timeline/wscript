@@ -114,7 +114,7 @@ def build(ctx):
       test_sources_ant_glob = "test_alarm_layout.c",
       defines=["CAPABILITY_HAS_HEALTH_TRACKING=0"],
       override_includes=['dummy_board'],
-      platforms=['snowy', 'spalding', 'obelix'])
+      platforms=['obelix', 'gabbro'])
 
     rendering_sources = \
         " src/fw/applib/fonts/codepoint.c" \
@@ -172,7 +172,7 @@ def build(ctx):
         " src/fw/applib/vendor/tinflate/tinflate.c" \
         " src/fw/applib/vendor/uPNG/upng.c" \
         " src/fw/apps/system/timeline/text_node.c" \
-        " src/fw/board/displays/display_spalding.c" \
+        " src/fw/board/displays/display_getafix.c" \
         " src/fw/drivers/flash/flash_crc.c" \
         " src/fw/flash_region/filesystem_regions.c" \
         " src/fw/flash_region/flash_region.c" \
@@ -223,6 +223,6 @@ def build(ctx):
          defines=ctx.env.test_image_defines + ["USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1"],
          runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis + ctx.env.test_pfos,
          override_includes=['dummy_board'],
-         platforms=['snowy', 'spalding', 'silk'])
+         platforms=['silk', 'obelix', 'gabbro'])
 
 # vim:filetype=python
