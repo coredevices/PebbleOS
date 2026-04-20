@@ -194,6 +194,8 @@ void sys_light_enable_interaction(void);
 void sys_light_enable(bool enable);
 void sys_light_enable_respect_settings(bool enable);
 void sys_light_reset_to_timed_mode(void);
+void sys_light_set_color(uint8_t argb);
+void sys_light_set_system_color(void);
 
 bool sys_mobile_app_is_connected_debounced(void);
 bool sys_pebblekit_is_connected_debounced(void);

@@ -624,6 +624,14 @@ DEFINE_SYSCALL(void, sys_light_reset_to_timed_mode, void) {
   prv_light_reset_to_timed_mode();
 }
 
+DEFINE_SYSCALL(void, sys_light_set_color, uint8_t argb) {
+  light_set_color(argb);
+}
+
+DEFINE_SYSCALL(void, sys_light_set_system_color, void) {
+  light_set_system_color();
+}
+
 extern BacklightBehaviour backlight_get_behaviour(void);
 
 uint8_t light_get_current_brightness_percent(void) {
