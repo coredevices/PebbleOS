@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  TEST_BOARD: 'snowy_bb2'
+  TEST_BOARD: 'qemu_gabbro'
 
 jobs:
   changes-test:
