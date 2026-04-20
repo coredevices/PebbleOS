@@ -132,6 +132,11 @@ typedef struct {
   //dynamic backlight thresholds
   uint32_t dynamic_backlight_min_threshold;
 #endif
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+  // Default RGB backlight color (packed 0x00RRGGBB), applied when no app
+  // override is set. User-preference overrides this via backlight_set_color().
+  uint32_t backlight_default_color;
+#endif
 } BoardConfig;
 
 typedef struct {
