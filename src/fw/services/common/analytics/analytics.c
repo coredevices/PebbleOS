@@ -7,6 +7,7 @@
 #include "pbl/services/common/analytics/backend.h"
 #include "pbl/services/common/new_timer/new_timer.h"
 #include "pbl/services/common/system_task.h"
+#include "system/version.h"
 #include "util/size.h"
 
 #define HEARTBEAT_PERIOD_SEC 3600
@@ -64,6 +65,8 @@ static const struct pbl_analytics_backend_ops *s_backend_ops[] = {
 };
 
 static void prv_heartbeat_system_task_cb(void *data) {
+  PBL_ANALYTICS_SET_STRING(fw_version, TINTIN_METADATA.version_tag);
+
   pbl_analytics_external_collect_battery();
   pbl_analytics_external_collect_cpu_stats();
   pbl_analytics_external_collect_stack_free();
