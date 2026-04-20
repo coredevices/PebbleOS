@@ -4,8 +4,11 @@
 sources = []
 use = ['fw_includes', 'pbl_includes']
 
-if bld.env.QEMU:
-    sources.append('../stubs/touch.c')
+if bld.env.CONFIG_TOUCH_QEMU:
+    sources.append('../qemu/qemu_touch.c')
+    use.extend([
+        'freertos',
+    ])
 elif bld.env.CONFIG_TOUCH_CST816:
     sources.append('cst816/cst816.c')
     use.extend([
