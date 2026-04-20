@@ -33,7 +33,7 @@ def build(ctx):
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c",
         test_sources_ant_glob = "test_put_bytes.c",
-        platforms=['snowy','silk','obelix'],
+        platforms=['silk', 'obelix', 'gabbro'],
         override_includes=['dummy_board'])
 
     clar(ctx,
