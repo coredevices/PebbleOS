@@ -211,7 +211,8 @@ def build(ctx):
             " src/fw/applib/graphics/gtypes.c" \
             " tests/fakes/fake_gbitmap_png.c" \
             " tests/fakes/fake_resource_syscalls.c" \
-            " src/fw/applib/graphics/gbitmap.c",
+            " src/fw/applib/graphics/gbitmap.c" \
+            " src/fw/board/displays/display_getafix.c",
         test_sources_ant_glob = "test_gbitmap_formats.c",
         platforms=["silk", "obelix", "gabbro"])
 
