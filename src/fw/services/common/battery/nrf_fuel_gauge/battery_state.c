@@ -66,7 +66,7 @@ static int32_t s_last_voltage_mv;
 static int32_t s_last_temp_mc;
 static uint32_t s_last_soc_cpct;
 static int32_t s_analytics_last_voltage_mv;
-static uint32_t s_analytics_last_pct;
+static uint32_t s_analytics_last_cpct;
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;
@@ -510,7 +510,7 @@ void battery_state_init(void) {
   regular_timer_add_multisecond_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_S);
 
   s_analytics_last_voltage_mv = s_last_voltage_mv;
-  s_analytics_last_pct = s_last_soc_cpct;
+  s_analytics_last_cpct = s_last_soc_cpct;
 }
 
 void battery_state_handle_connection_event(bool is_connected) {
@@ -568,19 +568,19 @@ void command_print_battery_status(void) {
 // Note that this is run on a different thread than battery_state!
 void pbl_analytics_external_collect_battery(void) {
   int32_t battery_mv = s_last_voltage_mv;
-  uint32_t battery_soc = s_last_soc_cpct;
+  uint32_t battery_soc_cpct = s_last_soc_cpct;
   int32_t d_mv;
-  uint32_t d_soc;
+  uint32_t d_soc_cpct;
 
   d_mv = battery_mv - s_analytics_last_voltage_mv;
   PBL_ANALYTICS_SET_UNSIGNED(battery_voltage, battery_mv);
   PBL_ANALYTICS_SET_SIGNED(battery_voltage_delta, d_mv);
   s_analytics_last_voltage_mv = battery_mv;
 
-  d_soc = MAX((int32_t)battery_soc - (int32_t)s_analytics_last_pct, 0);
-  PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct, battery_soc);
-  PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc);
-  s_analytics_last_pct = battery_soc;
+  d_soc_cpct = MAX((int32_t)s_analytics_last_cpct - (int32_t)battery_soc_cpct, 0);
+  PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct, battery_soc_cpct);
+  PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc_cpct);
+  s_analytics_last_cpct = battery_soc_cpct;
 }
 
 static void prv_set_forced_charge_state(bool is_charging) {
