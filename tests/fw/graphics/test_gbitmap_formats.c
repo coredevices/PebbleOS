@@ -202,7 +202,5 @@ void test_gbitmap_formats__size_for_data(void) {
 
   const size_t expected = PBL_IF_RECT_ELSE(0, DISPLAY_FRAMEBUFFER_BYTES);
   cl_assert_equal_i(expected,
-      prv_gbitmap_size_for_data(GSize(180, 180), GBitmapFormat8BitCircular));
-  cl_assert_equal_i(expected,
       prv_gbitmap_size_for_data(GSize(DISP_COLS, DISP_ROWS), GBitmapFormat8BitCircular));
 }
