@@ -276,9 +276,9 @@ static void prv_process_pending_messages(void* context) {
   }
 
   if (press == 0x01) {
-    touch_handle_update(0, TouchState_FingerDown, &point, 0, current_time_ms);
+    touch_handle_update(TouchState_FingerDown, point.x, point.y);
   } else {
-    touch_handle_update(0, TouchState_FingerUp, NULL, 0, current_time_ms);
+    touch_handle_update(TouchState_FingerUp, point.x, point.y);
   }
 }
 
