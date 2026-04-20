@@ -1800,6 +1800,7 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_activity_tracking_enabled,
                              activity_prefs_hrm_activity_tracking_is_enabled());
 #endif
+  PBL_ANALYTICS_SET_UNSIGNED(settings_power_mode, shell_prefs_get_power_mode());
 }
 
 bool shell_prefs_get_music_show_volume_controls(void) {
