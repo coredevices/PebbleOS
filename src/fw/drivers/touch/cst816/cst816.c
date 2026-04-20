@@ -5,6 +5,7 @@
 #include "drivers/exti.h"
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
+#include "drivers/touch/touch_sensor.h"
 #include "kernel/events.h"
 #include "kernel/util/sleep.h"
 #include "os/tick.h"
@@ -245,7 +246,8 @@ void touch_sensor_init(void) {
 
   // initialize exti
   exti_configure_pin(CST816->int_exti, ExtiTrigger_Falling, prv_exti_cb);
-  exti_enable(CST816->int_exti);
+
+  touch_sensor_set_enabled(false);
 }
 
 static void prv_process_pending_messages(void* context) {
