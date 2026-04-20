@@ -281,15 +281,15 @@ extern void command_bt_sleep_check(const char *iters);
 #if MEMFAULT
 extern void command_mflt_export(void);
 extern void command_mflt_collect(void);
-extern void command_mflt_heartbeat(void);
 extern void command_mflt_metrics_dump(void);
 extern void command_mflt_device_info(void);
 #endif
 
 #ifdef ANALYTICS_NATIVE
 extern void command_analytics_native_metrics_dump(void);
-extern void command_analytics_native_heartbeat(void);
 #endif
+
+extern void command_analytics_heartbeat(void);
 
 extern void command_console_disable_rx(const char *seconds_str);
 
@@ -655,15 +655,15 @@ static const Command s_prompt_commands[] = {
 #if MEMFAULT
   { "mflt export", command_mflt_export, 0 },
   { "mflt collect", command_mflt_collect, 0 },
-  { "mflt heartbeat", command_mflt_heartbeat, 0 },
   { "mflt metrics_dump", command_mflt_metrics_dump, 0 },
   { "mflt device_info", command_mflt_device_info, 0 },
 #endif  // MEMFAULT
 
 #if ANALYTICS_NATIVE
   { "analytics native metrics_dump", command_analytics_native_metrics_dump, 0 },
-  { "analytics native heartbeat", command_analytics_native_heartbeat, 0 },
 #endif
+
+  { "analytics heartbeat", command_analytics_heartbeat, 0 },
 };
 
 #define NUM_PROMPT_COMMANDS ARRAY_LENGTH(s_prompt_commands)
