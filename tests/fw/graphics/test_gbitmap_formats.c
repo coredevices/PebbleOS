@@ -178,18 +178,14 @@ void test_gbitmap_formats__create_blank_with_palette(void) {
 }
 
 void test_gbitmap_formats__display_framebuffer_bytes(void) {
-#if defined(PLATFORM_TINTIN) || defined(PLATFORM_SILK)
+#ifdef PLATFORM_SILK
   const size_t expected = 20 * 168; // 20 * 8 == 144px + 2 bytes padding per scanline
-#endif
-#ifdef PLATFORM_SNOWY
-  const size_t expected = 144 * 168;
 #endif
 #ifdef PLATFORM_OBELIX
   const size_t expected = 200 * 228;
 #endif
-#ifdef PLATFORM_SPALDING
-  // all pixels + 2*76
-  const size_t expected = 25944;
+#ifdef PLATFORM_GABBRO
+  const size_t expected = 260 * 260;
 #endif
   cl_assert_equal_i(expected, DISPLAY_FRAMEBUFFER_BYTES);
 }
