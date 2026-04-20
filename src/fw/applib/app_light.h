@@ -5,6 +5,8 @@
 
 #include <stdbool.h>
 
+#include "applib/graphics/gtypes.h"
+
 //! @file light.h
 //! @addtogroup UI
 //! @{
@@ -26,6 +28,18 @@ void app_light_enable_interaction(void);
 //! will rapidly deplete the battery.
 //! @param enable Turn the backlight on if `true`, otherwise `false` to put it back into automatic control.
 void app_light_enable(bool enable);
+
+//! Tint the backlight LED to the given color. The color persists while the
+//! app is foregrounded and is automatically reset to the user's default
+//! (white) when the app exits or is preempted by a system notification.
+//! On platforms without a color backlight this is a no-op.
+//! @param color The color to tint the backlight to.
+void app_light_set_color(GColor color);
+
+//! Restore the backlight to the user's default color. Rarely needed — the
+//! system resets automatically on app exit. No-op on platforms without a
+//! color backlight.
+void app_light_set_system_color(void);
 
 //!   @} // group Light
 //! @} // group UI
