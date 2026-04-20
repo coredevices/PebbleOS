@@ -43,7 +43,6 @@
             ];
             buildInputs = with pkgs; [
               emscripten
-              gcc
               gcc-arm-embedded-14_2r1
               gettext
               git
@@ -54,6 +53,7 @@
               python313
             ] ++ lib.optionals stdenv.isLinux [
               clang_multi
+              gcc
               # Required for Moddable build
               dash
               glib
