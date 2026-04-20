@@ -6,3 +6,5 @@
 #include "util/attributes.h"
 
 void WEAK light_enable_interaction(void) {}
+void WEAK light_system_color_request(void) {}
+void WEAK light_system_color_release(void) {}

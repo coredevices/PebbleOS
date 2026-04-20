@@ -442,6 +442,7 @@ static void prv_app_cleanup(void) {
   app_outbox_service_cleanup_all_pending_messages();
 #endif
   light_reset_user_controlled();
+  light_set_system_color();
   sys_vibe_history_stop_collecting();
   sys_vibe_pattern_clear();
   ble_app_cleanup();
