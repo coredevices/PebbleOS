@@ -20,12 +20,7 @@
 #define FRENCH_FIXTURE_NAME "fr_FR.pbpack"
 #define CHINESE_FIXTURE_NAME "zh_CN.pbpack"
 
-// We used to implicitly use the snowy pbpack for tintin and spalding unit tests; now it's explicit
-#if PLATFORM_TINTIN || PLATFORM_SPALDING
-#define SYSTEM_RESOURCES_FIXTURE_NAME "system_resources_snowy.pbpack"
-#else
 #define SYSTEM_RESOURCES_FIXTURE_NAME "system_resources_"PLATFORM_NAME".pbpack"
-#endif
 
 void load_resource_fixture_in_flash(const char *fixture_path, const char *name, bool is_next) {
   char res_path[strlen(CLAR_FIXTURE_PATH) + strlen(fixture_path) + strlen(name) + 3];

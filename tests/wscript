@@ -55,7 +55,7 @@ def convert_png_to_pbi(task):
     dest_pbi = task.outputs[0].srcpath()
     bitdepth = None
 
-    if any(word in dest_pbi for word in ['.8bit.', '~snowy', '~spalding']):
+    if any(word in dest_pbi for word in ['.8bit.', '~obelix', '~gabbro']):
         img_fmt = 'color_raw'
     elif any(word in dest_pbi for word in ['.1bit.', '~silk']):
         img_fmt = 'bw'
@@ -83,7 +83,7 @@ def convert_png_to_pblpng(task):
 
         if bit_suffix:
             bitdepth = int(bit_suffix.group(1))
-        elif any(word in dest_png for word in ['~snowy', '~spalding']):
+        elif any(word in dest_png for word in ['~obelix', '~gabbro']):
             bitdepth = 8
         elif any(word in dest_png for word in ['~silk']):
             bitdepth = 1
@@ -101,7 +101,10 @@ def generate_test_pbis(ctx):
 
     bitmapgen_path = ctx.path.find_node('../tools/bitmapgen.py').abspath()
 
-    for png_file in ctx.path.find_node('test_images').ant_glob("*.png"):
+    test_images_node = ctx.path.find_node('test_images')
+    available_pngs = {n.name for n in test_images_node.ant_glob("*.png")}
+
+    for png_file in test_images_node.ant_glob("*.png"):
         dest_pbi = png_file.get_bld().change_ext('.pbi')
 
         # if the image contains Xbit in the name, then generate both 1bit and 8bit PBI images
@@ -111,10 +114,16 @@ def generate_test_pbis(ctx):
                 bmp_script=bitmapgen_path)
             test_image_pbis.append(dest_pbi)
 
-            dest_pbi = png_file.get_bld().change_ext('.8bit.pbi', '.Xbit.png')
-            ctx(name='png_to_pbi', rule=convert_png_to_pbi, source=png_file, target=dest_pbi,
-                bmp_script=bitmapgen_path)
-            test_image_pbis.append(dest_pbi)
+            # Only emit the 8bit.pbi from the Xbit.png if there is no platform-
+            # specific .8bit.png baseline alongside it. The latter takes
+            # precedence (e.g. when obelix's 200x228 framebuffer needs different
+            # baseline dimensions than a 1bit silk render).
+            sibling_8bit = png_file.name.replace(".Xbit.", ".8bit.")
+            if sibling_8bit not in available_pngs:
+                dest_pbi = png_file.get_bld().change_ext('.8bit.pbi', '.Xbit.png')
+                ctx(name='png_to_pbi', rule=convert_png_to_pbi, source=png_file, target=dest_pbi,
+                    bmp_script=bitmapgen_path)
+                test_image_pbis.append(dest_pbi)
         else:
             ctx(name='png_to_pbi', rule=convert_png_to_pbi, source=png_file, target=dest_pbi,
                 bmp_script=bitmapgen_path)
