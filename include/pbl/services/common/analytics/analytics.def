@@ -7,6 +7,7 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_kernel_main_bytes)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_kernel_background_bytes)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_newtimers_bytes)
 PBL_ANALYTICS_METRIC_DEFINE_SIGNED(utc_offset_s)
+PBL_ANALYTICS_METRIC_DEFINE_STRING(fw_version, 32)
 
 // Battery & Power
 PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(battery_soc_pct, 100)
