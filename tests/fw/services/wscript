@@ -157,7 +157,7 @@ def build(ctx):
             " src/fw/services/normal/timezone_database/service.c" \
             " src/fw/services/common/clock/service.c",
         test_sources_ant_glob = "test_clock.c",
-        override_includes=['test_timezone', 'dummy_board'])
+        override_includes=['dummy_board'])
 
 
     olson_txt = ctx.srcnode.make_node('resources/normal/base/tzdata/timezones_olson.txt')
