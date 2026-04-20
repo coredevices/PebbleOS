@@ -5,6 +5,9 @@
 
 #include "board/board.h"
 #include "console/prompt.h"
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#include "drivers/led_controller.h"
+#endif
 
 #include <stdlib.h>
 
@@ -15,16 +18,21 @@
 #define DISP_BRIGHTNESS  0x018
 #define CTRL_UPDATE      (1 << 1)
 
-// Brightness levels for QEMU display
+// Brightness levels for QEMU display grayscale path
 #define BACKLIGHT_OFF_LEVEL  180
 #define BACKLIGHT_ON_LEVEL   255
 
 static bool s_initialized;
 
 void backlight_init(void) {
-  // Start with dim (backlight off) state
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+  // RGB LED is the sole light source — grayscale BRIGHTNESS reg stays at
+  // 0xFF identity so only the RGB channels modulate light output.
+  led_controller_init();
+#else
   REG32(QEMU_DISPLAY_BASE + DISP_BRIGHTNESS) = BACKLIGHT_OFF_LEVEL;
   REG32(QEMU_DISPLAY_BASE + DISP_CTRL) |= CTRL_UPDATE;
+#endif
   s_initialized = true;
 }
 
@@ -33,7 +41,10 @@ void backlight_set_brightness(uint16_t brightness) {
     return;
   }
 
-  // Map PebbleOS brightness (0..BACKLIGHT_BRIGHTNESS_MAX=65535) to display level
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+  led_controller_backlight_set_brightness(
+      (uint32_t)brightness * 100U / BACKLIGHT_BRIGHTNESS_MAX);
+#else
   uint32_t level;
   if (brightness == 0) {
     level = BACKLIGHT_OFF_LEVEL;
@@ -47,6 +58,7 @@ void backlight_set_brightness(uint16_t brightness) {
 
   REG32(QEMU_DISPLAY_BASE + DISP_BRIGHTNESS) = level;
   REG32(QEMU_DISPLAY_BASE + DISP_CTRL) |= CTRL_UPDATE;
+#endif
 }
 
 void command_backlight_ctl(const char *arg) {

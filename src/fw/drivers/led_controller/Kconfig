@@ -19,4 +19,10 @@ config LED_CONTROLLER_AW9364E
     help
       Support for the AW9364E LED controller.
 
+config LED_CONTROLLER_QEMU
+    bool "QEMU"
+    help
+      Emulated RGB backlight controller that writes to the QEMU
+      pebble-display MMIO registers.
+
 endif # LED_CONTROLLER

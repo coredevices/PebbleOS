@@ -175,6 +175,7 @@ board_capability_dicts = [
             "HAS_PUTBYTES_PREACKING",
             "HAS_APP_SCALING",
             "HAS_MODDABLE_XS",
+            "HAS_COLOR_BACKLIGHT",
         },
     },
     {
