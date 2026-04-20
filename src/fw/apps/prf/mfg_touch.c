@@ -13,10 +13,9 @@
 #include "process_management/app_manager.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
+#include "applib/touch_service.h"
 #include "pbl/services/common/light.h"
 #include "pbl/services/common/touch/touch.h"
-#include "pbl/services/common/touch/touch_event.h"
-#include "pbl/services/common/touch/touch_client.h"
 #include "util/trig.h"
 
 #if PBL_ROUND
@@ -32,7 +31,6 @@
 typedef struct {
   Window window;
   uint32_t touch_mark;
-  EventServiceInfo event_info;
 #if PBL_ROUND
   GPoint circle_centers[CIRCLE_ROWS * CIRCLE_COLS];
   uint16_t circle_radius;
@@ -64,20 +62,14 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
 #endif
 }
 
-static void prv_touch_envent_handler(const TouchEvent *event, void *context) {
+static void prv_touch_event_handler(const TouchEvent *event, void *context) {
   AppData *data = app_state_get_user_data();
-  uint16_t x = event->start_pos.x;
-  uint16_t y = event->start_pos.y;
-
-  int16_t offset_x = event->diff_pos.x;
-  int16_t offset_y = event->diff_pos.y;
+  int16_t touch_x = event->x;
+  int16_t touch_y = event->y;
 
   uint8_t touch_id;
 
 #if PBL_ROUND
-  // Find the closest circle to the touch point
-  int16_t touch_x = x + offset_x;
-  int16_t touch_y = y + offset_y;
   uint32_t min_dist_sq = 0xFFFFFFFF;
   touch_id = 0;
 
@@ -91,26 +83,18 @@ static void prv_touch_envent_handler(const TouchEvent *event, void *context) {
     }
   }
 #else
-  uint8_t ind_x = (x+offset_x)/data->rectr[0].size.w;
-  if (ind_x > RECTR_COL-1) ind_x = RECTR_COL-1;
-  uint8_t ind_y = (y+offset_y)/data->rectr[0].size.h;
-  if (ind_y > RECTR_ROW-1) ind_y = RECTR_ROW-1;
+  uint8_t ind_x = touch_x / data->rectr[0].size.w;
+  if (ind_x > RECTR_COL - 1) ind_x = RECTR_COL - 1;
+  uint8_t ind_y = touch_y / data->rectr[0].size.h;
+  if (ind_y > RECTR_ROW - 1) ind_y = RECTR_ROW - 1;
   touch_id = ind_x * RECTR_ROW + ind_y;
 #endif
 
-  data->touch_mark |= 1<<touch_id;
+  data->touch_mark |= 1 << touch_id;
 #if TOUCH_SUPPORT_DEBUG
-  PBL_LOG_INFO("start_x:%d start_y:%d off_x:%d off_y:%d", x, y, offset_x, offset_y);
-  PBL_LOG_INFO("x:%d y:%d id:%d", (x+offset_x), (y+offset_y), touch_id);
+  PBL_LOG_INFO("x:%d y:%d id:%d", touch_x, touch_y, touch_id);
 #endif
   layer_mark_dirty(&data->window.layer);
-}
-
-static void prv_handle_touch_event(PebbleEvent *e, void *context) {
-  if (e->type == PEBBLE_TOUCH_EVENT) {
-    PebbleTouchEvent *touch = &e->touch;
-    touch_dispatch_touch_events(touch->touch_idx, prv_touch_envent_handler, context);
-  }
 }
 
 static void prv_handle_init(void) {
@@ -195,12 +179,7 @@ static void prv_handle_init(void) {
 #endif
   layer_mark_dirty(&data->window.layer);
 
-  data->event_info = (EventServiceInfo) {
-    .type = PEBBLE_TOUCH_EVENT,
-    .handler = prv_handle_touch_event,
-  };
-  touch_reset();
-  event_service_client_subscribe(&data->event_info);
+  touch_service_subscribe(prv_touch_event_handler, NULL);
 }
 
 static void s_main(void) {
@@ -210,6 +189,7 @@ static void s_main(void) {
 
   app_event_loop();
 
+  touch_service_unsubscribe();
   light_enable(false);
 }
 
