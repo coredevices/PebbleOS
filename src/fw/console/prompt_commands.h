@@ -521,7 +521,7 @@ static const Command s_prompt_commands[] = {
 
   { "backlight", command_backlight_ctl, 1 },
 
-#if PLATFORM_OBELIX
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
   // Drivers
   { "rgb", command_rgb_set_color, 1 },
 #endif
