@@ -3,6 +3,7 @@
 
 #include "mfg/mfg_serials.h"
 #include "console/prompt_commands.h"
+#include "drivers/otp.h"
 
 #include "clar.h"
 
@@ -132,7 +133,7 @@ void test_mfg_serials__serial_numbers(void) {
   const char *first_sn = "ABCDEFGHIJKL";
   r = mfg_write_serial_number(first_sn, strlen(first_sn), &index);
   sn = mfg_get_serial_number();
-  cl_assert_equal_i(index, 0);
+  cl_assert_equal_i(index, OTP_SERIAL1);
   cl_assert_equal_i(r, MfgSerialsResultSuccess);
   cl_assert_equal_s(sn, first_sn);
 
@@ -140,7 +141,7 @@ void test_mfg_serials__serial_numbers(void) {
   const char *second_sn = "012345678901";
   r = mfg_write_serial_number(second_sn, strlen(second_sn), &index);
   sn = mfg_get_serial_number();
-  cl_assert_equal_i(index, 3); // SERIAL2 lives at index 3
+  cl_assert_equal_i(index, OTP_SERIAL2);
   cl_assert_equal_i(r, MfgSerialsResultSuccess);
   cl_assert_equal_s(sn, second_sn);
 
@@ -150,7 +151,7 @@ void test_mfg_serials__serial_numbers(void) {
   sn = mfg_get_serial_number();
   cl_assert_equal_i(r, MfgSerialsResultSuccess);
   cl_assert_equal_s(sn, third_sn);
-  cl_assert_equal_i(index, 4); // SERIAL3 lives at index 4
+  cl_assert_equal_i(index, OTP_SERIAL3);
 
   // Fourth time:
   const char *fourth_sn = "mnbvcxzlkjhg";
@@ -158,7 +159,7 @@ void test_mfg_serials__serial_numbers(void) {
   sn = mfg_get_serial_number();
   cl_assert_equal_i(r, MfgSerialsResultSuccess);
   cl_assert_equal_s(sn, fourth_sn);
-  cl_assert_equal_i(index, 5); // SERIAL4 lives at index 5
+  cl_assert_equal_i(index, OTP_SERIAL4);
 
   // Fifth time:
   const char *fifth_sn = "7ujn8ikm9olm";
@@ -166,7 +167,7 @@ void test_mfg_serials__serial_numbers(void) {
   sn = mfg_get_serial_number();
   cl_assert_equal_i(r, MfgSerialsResultSuccess);
   cl_assert_equal_s(sn, fifth_sn);
-  cl_assert_equal_i(index, 6); // SERIAL5 lives at index 6
+  cl_assert_equal_i(index, OTP_SERIAL5);
 
   // No more space:
   const char *sixth_sn = "XXXXXXXXXXXX";
