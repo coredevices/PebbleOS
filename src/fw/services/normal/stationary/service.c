@@ -122,7 +122,6 @@ static void prv_watch_is_motionless(void) {
     PBL_LOG_D_DBG(DEBUG_STATIONARY, "Countdown to stationary: %d", s_stationary_count_down);
     s_stationary_count_down--;
   } else {
-    PBL_ANALYTICS_TIMER_START(stationary_time_ms);
     prv_handle_action(StationaryActionGoToSleep);
   }
 }
@@ -132,7 +131,6 @@ static void prv_watch_is_motionless(void) {
 //! stationary counter
 static void prv_watch_is_in_motion(void) {
   prv_handle_action(StationaryActionWakeUp);
-  PBL_ANALYTICS_TIMER_STOP(stationary_time_ms);
 }
 
 static void prv_stationary_check_launcher_task_cb(void *unused_data) {
@@ -192,7 +190,6 @@ static void prv_reset_stationary_counter(void) {
 }
 
 static void prv_enter_awake_state(void) {
-  PBL_LOG_INFO("Exiting stationary: Setting run level to normal");
   prv_reset_stationary_counter();
   s_current_state = StationaryStateAwake;
 }
@@ -200,18 +197,29 @@ static void prv_enter_awake_state(void) {
 //! The accelerometer tap threshold will be set very low, so a small motion will wake
 //! the watch back up
 static void prv_enter_stationary_state(void) {
-  PBL_LOG_INFO("Entering stationary: Changing run level");
-  if (s_current_state == StationaryStatePeeking) {
-  } else if (s_current_state == StationaryStateAwake) {
-  }
+  PBL_ANALYTICS_TIMER_START(stationary_time_ms);
+
+  PBL_LOG_INFO("Entering stationary");
   services_set_runlevel(RunLevel_Stationary);
+
+  s_accel_session = accel_session_create();
+  accel_session_shake_subscribe(s_accel_session, prv_accel_tap_handler);
+
   accel_enable_high_sensitivity(true);
+
   s_current_state = StationaryStateStationary;
 }
 
 static void prv_exit_stationary(void) {
   accel_enable_high_sensitivity(false);
+
+  accel_session_shake_unsubscribe(s_accel_session);
+  accel_session_delete(s_accel_session);
+
+  PBL_LOG_INFO("Exiting stationary");
   services_set_runlevel(RunLevel_Normal);
+
+  PBL_ANALYTICS_TIMER_STOP(stationary_time_ms);
 }
 
 static void prv_enter_peek_state(void) {
@@ -223,11 +231,6 @@ static void prv_enter_peek_state(void) {
 }
 
 static void prv_enter_disabled_state(void) {
-  PBL_ASSERTN(s_accel_session);
-  accel_session_shake_unsubscribe(s_accel_session);
-  accel_session_delete(s_accel_session);
-  s_accel_session = NULL;
-
   event_service_client_unsubscribe(&s_button_event_info);
   regular_timer_remove_callback(&s_accel_stationary_timer_info);
   s_current_state = StationaryStateDisabled;
@@ -235,9 +238,6 @@ static void prv_enter_disabled_state(void) {
 
 static void prv_exit_disabled_state(void) {
   s_stationary_count_down = STATIONARY_WAIT_BEFORE_ENGAGING_TIME_MINS;
-  PBL_ASSERTN(s_accel_session == NULL);
-  s_accel_session = accel_session_create();
-  accel_session_shake_subscribe(s_accel_session, prv_accel_tap_handler);
   event_service_client_subscribe(&s_button_event_info);
 
 #if DEBUG_STATIONARY
