@@ -4,7 +4,11 @@ def build(ctx):
     clar(ctx,
          sources_ant_glob = "src/fw/mfg/mfg_serials.c tests/fakes/fake_otp.c",
          test_sources_ant_glob = "test_mfg_serials.c",
-         override_includes=['dummy_board', 'silk'])
+         override_includes=['dummy_board'],
+         # The test exercises three PCBA serial OTP slots; that layout exists
+         # on silk (and the legacy snowy/spalding boards), but obelix/gabbro
+         # collapse to a single OTP_PCBA_SERIAL slot.
+         platforms=['silk'])
 
 # vim:filetype=python
 
