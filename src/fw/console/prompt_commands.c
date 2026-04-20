@@ -1277,10 +1277,6 @@ void command_mflt_collect(void) {
   memfault_chunk_collect();
 }
 
-void command_mflt_heartbeat(void) {
-  memfault_metrics_heartbeat_debug_trigger();
-}
-
 void command_mflt_metrics_dump(void) {
   memfault_metrics_heartbeat_debug_print();
 }

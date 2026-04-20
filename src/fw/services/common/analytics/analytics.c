@@ -134,3 +134,7 @@ void pbl_analytics_add(enum pbl_analytics_key key, int32_t amount) {
     s_backend_ops[i]->add(key, amount);
   }
 }
+
+void command_analytics_heartbeat(void) {
+  system_task_add_callback(prv_heartbeat_system_task_cb, NULL);
+}
