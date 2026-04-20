@@ -86,7 +86,7 @@ extern uint32_t SystemCoreClock;
 #define configMINIMAL_STACK_SIZE ((unsigned short)196)
 #define configTOTAL_HEAP_SIZE    ((size_t)(30 * 1024))
 #define configMAX_TASK_NAME_LEN  (16)
-#define configUSE_TRACE_FACILITY 0
+#define configUSE_TRACE_FACILITY 1
 #define configUSE_16_BIT_TICKS   0
 #define configIDLE_SHOULD_YIELD  1
 #define configUSE_TICKLESS_IDLE  2   // Use STOP mode
@@ -114,7 +114,7 @@ extern uint32_t SystemCoreClock;
 #define configCHECK_FOR_STACK_OVERFLOW	2
 #define configUSE_RECURSIVE_MUTEXES		0
 #define configQUEUE_REGISTRY_SIZE		0
-#define configGENERATE_RUN_TIME_STATS	0
+#define configGENERATE_RUN_TIME_STATS	1
 #define configUSE_NEWLIB_REENTRANT      0
 #define configUSE_QUEUE_SETS            1
 #define configUSE_LIGHT_MUTEXES         1
@@ -177,12 +177,13 @@ NVIC value of 255. */
 /*-----------------------------------------------------------
  * Macros required to setup the timer for the run time stats.
  *-----------------------------------------------------------*/
-/* The run time stats time base just uses the existing high frequency timer
-test clock.  All these macros do is clear and return the high frequency
-interrupt count respectively. */
-//extern unsigned long ulRunTimeStatsClock;
-//#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ulRunTimeStatsClock = 0
-//#define portGET_RUN_TIME_COUNTER_VALUE() ulRunTimeStatsClock
+/* Use the FreeRTOS tick counter as the run-time stats clock. It runs at
+ * 1024 Hz and wraps every ~48.5 days on a 32-bit platform, so the task
+ * accumulators never wrap within a heartbeat period. Sleep time is
+ * accounted for by tickless idle, so the idle task's counter reflects
+ * real sleep + idle-loop time. */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
+#define portGET_RUN_TIME_COUNTER_VALUE() xTaskGetTickCount()
 
 #include "system/passert.h"
 #define configASSERT( x ) \
