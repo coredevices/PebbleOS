@@ -35,6 +35,17 @@ uint8_t backlight_get_intensity_percent(void) {
   return (backlight_get_intensity() * 100) / BACKLIGHT_BRIGHTNESS_MAX;
 }
 
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#include "board/board.h"
+
+uint32_t backlight_get_color(void) {
+  return BOARD_CONFIG.backlight_default_color;
+}
+
+void backlight_set_color(uint32_t rgb_color) {
+}
+#endif
+
 void backlight_set_timeout_ms(uint32_t timeout_ms) {
 }
 

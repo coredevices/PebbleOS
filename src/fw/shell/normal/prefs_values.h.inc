@@ -8,6 +8,9 @@
   PREFS_MACRO(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED, s_backlight_ambient_sensor_enabled)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_TIMEOUT_MS, s_backlight_timeout_ms)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_INTENSITY, s_backlight_intensity)
+#if CAPABILITY_HAS_COLOR_BACKLIGHT
+  PREFS_MACRO(PREF_KEY_BACKLIGHT_COLOR, s_backlight_color)
+#endif
   PREFS_MACRO(PREF_KEY_BACKLIGHT_MOTION, s_backlight_motion_enabled)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_TOUCH, s_backlight_touch_enabled)
   PREFS_MACRO(PREF_KEY_MOTION_SENSITIVITY, s_motion_sensitivity)
