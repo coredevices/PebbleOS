@@ -572,15 +572,8 @@ typedef struct PACKED { // 9 bytes
   bool dst_changed;
 } PebbleSetTimeEvent;
 
-typedef enum PebbleTouchEventType {
-  PebbleTouchEvent_TouchesAvailable,
-  PebbleTouchEvent_TouchesCancelled,
-  PebbleTouchEvent_PalmDetected
-} PebbleTouchEventType;
-
-typedef struct PACKED { // 2 bytes
-  PebbleTouchEventType type:8;
-  TouchIdx touch_idx;
+typedef struct PACKED { // 5 bytes
+  TouchEvent event;
 } PebbleTouchEvent;
 
 typedef struct PACKED { // 8 bytes
