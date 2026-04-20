@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "93",
+  "revision" : "94",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -4479,6 +4479,16 @@
               "name": "light_enable",
               "implName": "app_light_enable",
               "addedRevision": "0"
+            }, {
+              "type": "function",
+              "name": "light_set_color",
+              "implName": "app_light_set_color",
+              "addedRevision": "94"
+            }, {
+              "type": "function",
+              "name": "light_set_system_color",
+              "implName": "app_light_set_system_color",
+              "addedRevision": "94"
             }
           ]
         }, {
