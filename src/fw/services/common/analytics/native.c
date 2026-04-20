@@ -7,6 +7,7 @@
 #include "drivers/rtc.h"
 #include "os/mutex.h"
 #include "pbl/services/common/analytics/backend.h"
+#include "pbl/services/common/system_task.h"
 #include "pbl/services/normal/data_logging/data_logging_service.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -401,8 +402,4 @@ void command_analytics_native_metrics_dump(void) {
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_TIMER
 #undef PBL_ANALYTICS_METRIC_DEFINE_STRING
-}
-
-void command_analytics_native_heartbeat(void) {
-  pbl_analytics__native_heartbeat();
 }
