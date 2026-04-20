@@ -471,27 +471,3 @@ void setup_test_aa_sw(GContext *ctx, FrameBuffer *fb, GRect clip_box, GRect draw
                      &draw_state, NULL);
 }
 
-#if PLATFORM_SPALDING
-bool gbitmap_8bit_to_8bit_circular(GBitmap *bitmap) {
-  // Only allow conversion of 8Bit 180x180 rectangular bitmaps to circular
-  if (!bitmap || (gbitmap_get_format(bitmap) != GBitmapFormat8Bit) ||
-      (bitmap->bounds.size.w != DISP_COLS) || (bitmap->bounds.size.h != DISP_COLS)) {
-    return false;
-  }
-  // Using realloc or copying to a new buffer has high memory overhead
-  // attempt to shuffle bytes in place to allow 3rd party watchapps use
-  uint8_t *data = gbitmap_get_data(bitmap);
-  
-  // Convert format and link to data_row_infos table
-  bitmap->info.format = GBitmapFormat8BitCircular;
-  bitmap->data_row_infos = g_gbitmap_spalding_data_row_infos;
-
-  for (uint32_t y = 0; y < DISP_ROWS; y++) {
-    GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, y);
-    // copy (using memmove for overlapping region) valid bytes between min_x and max_x
-    memmove(&row_info.data[row_info.min_x], &data[y * DISP_COLS + row_info.min_x],
-            row_info.max_x - row_info.min_x + 1);
-  }
-  return true;
-}
-#endif
