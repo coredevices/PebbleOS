@@ -577,8 +577,9 @@ void test_graphics_context_mask__apply_blend_vertical_line_raw(void) {
 
 static void prv_verify_mask_pixel_values(const GContext *ctx, const GDrawMask *mask,
                                          uint8_t expected_value) {
-  // Assumes rectangular framebuffer
-  cl_assert(ctx->dest_bitmap.info.format == GBitmapFormat8Bit);
+  // 8Bit (rect platforms) or 8BitCircular (round platforms like gabbro)
+  cl_assert(ctx->dest_bitmap.info.format == GBitmapFormat8Bit ||
+            ctx->dest_bitmap.info.format == GBitmapFormat8BitCircular);
 
   const GSize framebuffer_size = ctx->dest_bitmap.bounds.size;
 
