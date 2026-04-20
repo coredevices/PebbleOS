@@ -309,6 +309,10 @@ static void prv_peek_anim_stopped(Animation *animation, bool finished, void *con
   }
   if (data->pending_backlight) {
     data->pending_backlight = false;
+    if (!data->color_preempted) {
+      data->color_preempted = true;
+      light_system_color_request();
+    }
     light_enable_interaction();
   }
 }
@@ -324,6 +328,10 @@ static void prv_hide_peek_layer(void *context) {
   }
   if (data->pending_backlight) {
     data->pending_backlight = false;
+    if (!data->color_preempted) {
+      data->color_preempted = true;
+      light_system_color_request();
+    }
     light_enable_interaction();
   }
 
@@ -1112,6 +1120,10 @@ static void prv_window_unload(Window *window) {
                data->pending_vibe);
   vibes_cancel();
   data->pending_vibe = false;
+  if (data->color_preempted) {
+    data->color_preempted = false;
+    light_system_color_release();
+  }
   prv_cleanup_timers(data);
 
   // clean up peek layer
@@ -1513,6 +1525,10 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
     if (alerts_preferences_get_notification_vibe_delay() && data->peek_layer) {
       data->pending_backlight = true;
     } else {
+      if (!data->color_preempted) {
+        data->color_preempted = true;
+        light_system_color_request();
+      }
       light_enable_interaction();
     }
   }

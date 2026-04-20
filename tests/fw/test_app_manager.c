@@ -238,6 +238,9 @@ void launcher_cancel_force_quit(void) {
 void light_reset_user_controlled(void) {
 }
 
+void light_set_system_color(void) {
+}
+
 void mpu_set_task_configurable_regions(MemoryRegion_t *task_params, const MpuRegion **region_ptrs) {
 }
 
