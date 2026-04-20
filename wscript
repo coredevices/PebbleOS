@@ -1281,8 +1281,14 @@ def qemu_launch(ctx):
                             '-cpu', ctx.get_qemu_cpu(),
                             micro_flash_flag, qemu_micro_flash.path_from(ctx.path)] + spi_flash_args
 
-    if ctx.env.CONFIG_TOUCH and qemu_major < 10:
+    # Always keep the host cursor visible over the emulator window. QEMU 10+
+    # removed the global -show-cursor flag in favor of a per-display option.
+    if qemu_major < 10:
         machine_dep_args.append('-show-cursor')
+    else:
+        import platform
+        display_type = 'cocoa' if platform.system() == 'Darwin' else 'gtk'
+        machine_dep_args.extend(['-display', '%s,show-cursor=on' % display_type])
 
     # QEMU 7.0+ changed serial TCP chardev syntax.
     if qemu_major >= 7:
