@@ -42,6 +42,14 @@ typedef struct SettingsData {
 
   SettingsMenuItem current_category; //!< SettingsMenuItem_Invalid if not currently in a category.
 
+  //! Optional explicit title (used by nested submenus). When NULL, the title
+  //! falls back to the category's status name.
+  const char *title_override;
+
+  //! Previous app-state user_data value stashed at window creation; restored
+  //! on unload so nested settings windows don't leak pointers to freed data.
+  void *prev_app_user_data;
+
   const char *title;
   SettingsCallbacks *callbacks;
 
@@ -171,7 +179,9 @@ static void prv_settings_window_load(Window *window) {
 
   StatusBarLayer *status_layer = &data->status_layer;
   status_bar_layer_init(status_layer);
-  const char *title = settings_menu_get_status_name(data->current_category);
+  const char *title = data->title_override
+      ? data->title_override
+      : settings_menu_get_status_name(data->current_category);
   status_bar_layer_set_title(status_layer, i18n_get(title, data), false, false);
   status_bar_layer_set_colors(status_layer, GColorWhite, GColorBlack);
   status_bar_layer_set_separator_mode(status_layer, OPTION_MENU_STATUS_SEPARATOR_MODE);
@@ -247,15 +257,21 @@ static void prv_settings_window_unload(Window *window) {
   settings_window_destroy(window);
 }
 
-Window *settings_window_create(SettingsMenuItem category, SettingsCallbacks *callbacks) {
+static Window *prv_create(SettingsMenuItem category, const char *title_override,
+                          SettingsCallbacks *callbacks) {
   PBL_ASSERTN(callbacks && (category < SettingsMenuItem_Count));
 
   SettingsData *data = app_zalloc_check(sizeof(*data));
 
   data->current_category = category;
   data->title = settings_menu_get_submodule_info(category)->name;
+  data->title_override = title_override;
   data->callbacks = callbacks;
 
+  // Stash the previously-active settings data so we can restore it on unload
+  // and not leave app-state user_data pointing at freed memory after a nested
+  // submenu is popped.
+  data->prev_app_user_data = app_state_get_user_data();
   app_state_set_user_data(data);
 
   window_init(&data->window, WINDOW_NAME("Settings Window"));
@@ -269,6 +285,15 @@ Window *settings_window_create(SettingsMenuItem category, SettingsCallbacks *cal
   return &data->window;
 }
 
+Window *settings_window_create(SettingsMenuItem category, SettingsCallbacks *callbacks) {
+  return prv_create(category, NULL, callbacks);
+}
+
+Window *settings_window_create_with_title(SettingsMenuItem category, const char *title,
+                                          SettingsCallbacks *callbacks) {
+  return prv_create(category, title, callbacks);
+}
+
 void settings_window_destroy(Window *window) {
   SettingsData *data = window_get_user_data(window);
 
@@ -276,6 +301,9 @@ void settings_window_destroy(Window *window) {
   if (callbacks->deinit) {
     callbacks->deinit(data->callbacks);
   }
+
+  // Restore whatever was in app-state user_data before we took over.
+  app_state_set_user_data(data->prev_app_user_data);
 
   i18n_free_all(data);
   app_free(data);

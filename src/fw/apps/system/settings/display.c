@@ -28,12 +28,19 @@
 #include <string.h>
 #include <inttypes.h>
 
+// Forward decl so the parent menu can push the Backlight submenu.
+static void prv_backlight_submenu_push(void);
+
 typedef struct SettingsDisplayData {
+  SettingsCallbacks callbacks;
+} SettingsDisplayData;
+
+typedef struct SettingsBacklightData {
   SettingsCallbacks callbacks;
   char als_value_buffer[16];  // Buffer for ALS value display
   char backlight_percent_buffer[16];  // Buffer for backlight percentage display
   AppTimer *update_timer;  // Timer for live updating debug values
-} SettingsDisplayData;
+} SettingsBacklightData;
 
 // Intensity Settings
 /////////////////////////////
@@ -74,7 +81,7 @@ static void prv_intensity_menu_select(OptionMenu *option_menu, int selection, vo
   app_window_stack_remove(&option_menu->window, true /*animated*/);
 }
 
-static void prv_intensity_menu_push(SettingsDisplayData *data) {
+static void prv_intensity_menu_push(SettingsBacklightData *data) {
   const int index = prv_intensity_get_selection_index();
   const OptionMenuCallbacks callbacks = {
     .select = prv_intensity_menu_select,
@@ -148,7 +155,7 @@ static void prv_timeout_menu_select(OptionMenu *option_menu, int selection, void
   app_window_stack_remove(&option_menu->window, true /* animated */);
 }
 
-static void prv_timeout_menu_push(SettingsDisplayData *data) {
+static void prv_timeout_menu_push(SettingsBacklightData *data) {
   int index = prv_timeout_get_selection_index();
   const OptionMenuCallbacks callbacks = {
     .select = prv_timeout_menu_select,
@@ -186,96 +193,80 @@ static void prv_legacy_app_mode_menu_push(SettingsDisplayData *data) {
 }
 #endif
 
-// Menu Callbacks
-////////////////////////////
+// Backlight submenu
+//////////////////////////////////////////////////////////////////////////////
 
-enum SettingsDisplayItem {
-  SettingsDisplayLanguage,
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
-  SettingsDisplayOrientation,
-#endif
-  SettingsDisplayBacklightMode,
-  SettingsDisplayMotionSensor,
+enum SettingsBacklightItem {
+  SettingsBacklightMode,
+  SettingsBacklightMotionWake,
 #ifdef CONFIG_TOUCH
-  SettingsDisplayTouchSensor,
+  SettingsBacklightTouchWake,
 #endif
-  SettingsDisplayAmbientSensor,
+  SettingsBacklightAmbientSensor,
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
-  SettingsDisplayDynamicIntensity,
+  SettingsBacklightDynamicIntensity,
 #endif
-  SettingsDisplayBacklightIntensity,
-  SettingsDisplayBacklightTimeout,
-#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
-  SettingsDisplayAdjustAlignment,
-#endif
-#if CAPABILITY_HAS_APP_SCALING
-  SettingsDisplayLegacyAppMode,
-#endif
-  NumSettingsDisplayItems
+  SettingsBacklightIntensity,
+  SettingsBacklightTimeout,
+  NumSettingsBacklightItems
 };
 
-// number of items under SettingsDisplayBacklightMode which are hidden when backlight is disabled
-static const int NUM_BACKLIGHT_SUB_ITEMS = CLIP(SettingsDisplayBacklightTimeout -
-                                           SettingsDisplayBacklightMode - 1, 0, NumSettingsDisplayItems);
+// Number of items after the Mode row that are hidden when the backlight is off.
+static const int NUM_BACKLIGHT_SUB_ITEMS = CLIP(SettingsBacklightTimeout -
+                                           SettingsBacklightMode - 1, 0, NumSettingsBacklightItems);
 
-static bool prv_should_show_backlight_sub_items() {
+static bool prv_should_show_backlight_sub_items(void) {
   return backlight_is_enabled();
 }
 
-uint16_t prv_get_item_from_row(uint16_t row) {  
-  if (!prv_should_show_backlight_sub_items() && (row > SettingsDisplayBacklightMode)) {
-    row += NUM_BACKLIGHT_SUB_ITEMS;
-  }
+#ifdef CONFIG_TOUCH
+// The wake-on-touch row is only relevant when global touch is enabled.
+// It gets hidden dynamically (not just gated at compile time) so users don't
+// see a dangling backlight option that can't do anything.
+static bool prv_should_show_touch_wake(void) {
+  return touch_is_globally_enabled();
+}
+#endif
 
+static uint16_t prv_backlight_item_from_row(uint16_t row) {
+  if (!prv_should_show_backlight_sub_items() && (row > SettingsBacklightMode)) {
+    row += NUM_BACKLIGHT_SUB_ITEMS;
+#ifdef CONFIG_TOUCH
+  } else if (!prv_should_show_touch_wake() && (row >= SettingsBacklightTouchWake)) {
+    row += 1;
+#endif
+  }
   return row;
 }
 
-static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-  SettingsDisplayData *data = (SettingsDisplayData*)context;
-  switch (prv_get_item_from_row(row)) {
-    case SettingsDisplayLanguage:
-      shell_prefs_toggle_language_english();
-      break;
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
-    case SettingsDisplayOrientation:
-      prv_display_orientation_menu_push(data);
-      break;
-#endif
-    case SettingsDisplayBacklightMode:
+static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t row) {
+  SettingsBacklightData *data = (SettingsBacklightData*)context;
+  switch (prv_backlight_item_from_row(row)) {
+    case SettingsBacklightMode:
       light_toggle_enabled();
       break;
-    case SettingsDisplayMotionSensor:
+    case SettingsBacklightMotionWake:
       backlight_set_motion_enabled(!backlight_is_motion_enabled());
       break;
 #ifdef CONFIG_TOUCH
-    case SettingsDisplayTouchSensor:
+    case SettingsBacklightTouchWake:
       backlight_set_touch_enabled(!backlight_is_touch_enabled());
       break;
 #endif
-    case SettingsDisplayAmbientSensor:
+    case SettingsBacklightAmbientSensor:
       light_toggle_ambient_sensor_enabled();
       break;
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
-    case SettingsDisplayDynamicIntensity:
+    case SettingsBacklightDynamicIntensity:
       light_toggle_dynamic_intensity_enabled();
       break;
 #endif
-    case SettingsDisplayBacklightIntensity:
+    case SettingsBacklightIntensity:
       prv_intensity_menu_push(data);
       break;
-    case SettingsDisplayBacklightTimeout:
+    case SettingsBacklightTimeout:
       prv_timeout_menu_push(data);
       break;
-#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
-    case SettingsDisplayAdjustAlignment:
-      settings_display_calibration_push(app_state_get_window_stack());
-      break;
-#endif
-#if CAPABILITY_HAS_APP_SCALING
-    case SettingsDisplayLegacyAppMode:
-      prv_legacy_app_mode_menu_push(data);
-      break;
-#endif
     default:
       WTF;
   }
@@ -283,28 +274,16 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   settings_menu_mark_dirty(SettingsMenuItemDisplay);
 }
 
-static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
-                            const Layer *cell_layer, uint16_t row, bool selected) {
-  SettingsDisplayData *data = (SettingsDisplayData*) context;
-  
+static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
+                                      const Layer *cell_layer, uint16_t row, bool selected) {
+  SettingsBacklightData *data = (SettingsBacklightData*) context;
   const char *title = NULL;
   const char *subtitle = NULL;
-  switch (prv_get_item_from_row(row)) {
-    case SettingsDisplayLanguage:
-      title = i18n_noop("Language");
-      subtitle = i18n_get_lang_name();
-      break;
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
-    case SettingsDisplayOrientation:
-      title = i18n_noop("Orientation");
-      subtitle = s_display_orientation_labels[prv_display_orientation_get_selection_index()];
-      break;
-#endif
-    case SettingsDisplayBacklightMode:
+  switch (prv_backlight_item_from_row(row)) {
+    case SettingsBacklightMode:
       title = i18n_noop("Backlight");
       if (backlight_is_enabled()) {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
-        // Show current backlight percentage when dynamic backlight is enabled
         if (backlight_is_dynamic_intensity_enabled()) {
           uint8_t current_percent = light_get_current_brightness_percent();
           snprintf(data->backlight_percent_buffer, sizeof(data->backlight_percent_buffer),
@@ -320,30 +299,21 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
         subtitle = i18n_noop("Off");
       }
       break;
-    case SettingsDisplayMotionSensor:
-      title = i18n_noop("Motion Enabled");
-      if (backlight_is_motion_enabled()) {
-        subtitle = i18n_noop("On");
-      } else {
-        subtitle = i18n_noop("Off");
-      }
+    case SettingsBacklightMotionWake:
+      title = i18n_noop("Wake on motion");
+      subtitle = backlight_is_motion_enabled() ? i18n_noop("On") : i18n_noop("Off");
       break;
 #ifdef CONFIG_TOUCH
-    case SettingsDisplayTouchSensor:
-      title = i18n_noop("Touch Enabled");
-      if (backlight_is_touch_enabled()) {
-        subtitle = i18n_noop("On");
-      } else {
-        subtitle = i18n_noop("Off");
-      }
+    case SettingsBacklightTouchWake:
+      title = i18n_noop("Wake on touch");
+      subtitle = backlight_is_touch_enabled() ? i18n_noop("On") : i18n_noop("Off");
       break;
 #endif
-    case SettingsDisplayAmbientSensor:
+    case SettingsBacklightAmbientSensor:
       title = i18n_noop("Ambient Sensor");
       if (backlight_is_ambient_sensor_enabled()) {
-        // Display ALS value when ambient sensor is enabled
         uint32_t als_value = ambient_light_get_light_level();
-        snprintf(data->als_value_buffer, sizeof(data->als_value_buffer), 
+        snprintf(data->als_value_buffer, sizeof(data->als_value_buffer),
                  "On (%"PRIu32")", als_value);
         subtitle = data->als_value_buffer;
       } else {
@@ -351,30 +321,177 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       }
       break;
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
-    case SettingsDisplayDynamicIntensity:
+    case SettingsBacklightDynamicIntensity:
       title = i18n_noop("Dynamic Backlight");
-      if (backlight_is_dynamic_intensity_enabled()) {
-        subtitle = i18n_noop("On");
-      } else {
-        subtitle = i18n_noop("Off");
-      }
+      subtitle = backlight_is_dynamic_intensity_enabled() ? i18n_noop("On") : i18n_noop("Off");
       break;
 #endif
-    case SettingsDisplayBacklightIntensity:
+    case SettingsBacklightIntensity:
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
-      if (backlight_is_dynamic_intensity_enabled()) {
-        title = i18n_noop("Max Intensity");
-      } else {
-        title = i18n_noop("Intensity");
-      }
+      title = backlight_is_dynamic_intensity_enabled() ? i18n_noop("Max Intensity")
+                                                       : i18n_noop("Intensity");
 #else
       title = i18n_noop("Intensity");
 #endif
       subtitle = s_intensity_labels[prv_intensity_get_selection_index()];
       break;
-    case SettingsDisplayBacklightTimeout:
+    case SettingsBacklightTimeout:
       title = i18n_noop("Timeout");
       subtitle = s_timeout_labels[prv_timeout_get_selection_index()];
+      break;
+    default:
+      WTF;
+  }
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
+}
+
+static uint16_t prv_backlight_num_rows_cb(SettingsCallbacks *context) {
+  uint16_t rows = NumSettingsBacklightItems;
+  if (!prv_should_show_backlight_sub_items()) {
+    rows -= NUM_BACKLIGHT_SUB_ITEMS;
+#ifdef CONFIG_TOUCH
+  } else if (!prv_should_show_touch_wake()) {
+    // Only deduct when the sub-items are otherwise visible; when the backlight
+    // itself is off the touch-wake row is already covered by the bulk collapse.
+    rows -= 1;
+#endif
+  }
+  return rows;
+}
+
+// Timer refresh while the Backlight submenu is visible — lets us live-update
+// the ALS reading and the dynamic-backlight percentage subtitle.
+#define UPDATE_INTERVAL_MS 500
+static void prv_backlight_update_timer_cb(void *context) {
+  SettingsBacklightData *data = (SettingsBacklightData*)context;
+  settings_menu_mark_dirty(SettingsMenuItemDisplay);
+  data->update_timer = app_timer_register(UPDATE_INTERVAL_MS, prv_backlight_update_timer_cb, data);
+}
+
+static void prv_backlight_appear_cb(SettingsCallbacks *context) {
+  SettingsBacklightData *data = (SettingsBacklightData*)context;
+  if (!data->update_timer) {
+    data->update_timer = app_timer_register(UPDATE_INTERVAL_MS,
+                                            prv_backlight_update_timer_cb, data);
+  }
+}
+
+static void prv_backlight_hide_cb(SettingsCallbacks *context) {
+  SettingsBacklightData *data = (SettingsBacklightData*)context;
+  if (data->update_timer) {
+    app_timer_cancel(data->update_timer);
+    data->update_timer = NULL;
+  }
+}
+
+static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
+  SettingsBacklightData *data = (SettingsBacklightData*) context;
+  if (data->update_timer) {
+    app_timer_cancel(data->update_timer);
+    data->update_timer = NULL;
+  }
+  i18n_free_all(data);
+  app_free(data);
+}
+
+static void prv_backlight_submenu_push(void) {
+  SettingsBacklightData *data = app_malloc_check(sizeof(*data));
+  *data = (SettingsBacklightData){};
+
+  data->callbacks = (SettingsCallbacks) {
+    .deinit = prv_backlight_deinit_cb,
+    .draw_row = prv_backlight_draw_row_cb,
+    .select_click = prv_backlight_select_click_cb,
+    .num_rows = prv_backlight_num_rows_cb,
+    .appear = prv_backlight_appear_cb,
+    .hide = prv_backlight_hide_cb,
+  };
+
+  Window *window = settings_window_create_with_title(SettingsMenuItemDisplay,
+                                                     i18n_noop("Backlight"), &data->callbacks);
+  app_window_stack_push(window, true /* animated */);
+}
+
+// Display top-level menu
+//////////////////////////////////////////////////////////////////////////////
+
+enum SettingsDisplayItem {
+  SettingsDisplayLanguage,
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
+  SettingsDisplayOrientation,
+#endif
+#ifdef CONFIG_TOUCH
+  SettingsDisplayTouch,
+#endif
+  SettingsDisplayBacklight,
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
+  SettingsDisplayAdjustAlignment,
+#endif
+#if CAPABILITY_HAS_APP_SCALING
+  SettingsDisplayLegacyAppMode,
+#endif
+  NumSettingsDisplayItems
+};
+
+static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row) {
+  switch (row) {
+    case SettingsDisplayLanguage:
+      shell_prefs_toggle_language_english();
+      break;
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
+    case SettingsDisplayOrientation:
+      prv_display_orientation_menu_push((SettingsDisplayData*)context);
+      break;
+#endif
+#ifdef CONFIG_TOUCH
+    case SettingsDisplayTouch:
+      touch_set_globally_enabled(!touch_is_globally_enabled());
+      break;
+#endif
+    case SettingsDisplayBacklight:
+      prv_backlight_submenu_push();
+      break;
+#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
+    case SettingsDisplayAdjustAlignment:
+      settings_display_calibration_push(app_state_get_window_stack());
+      break;
+#endif
+#if CAPABILITY_HAS_APP_SCALING
+    case SettingsDisplayLegacyAppMode:
+      prv_legacy_app_mode_menu_push((SettingsDisplayData*)context);
+      break;
+#endif
+    default:
+      WTF;
+  }
+  settings_menu_reload_data(SettingsMenuItemDisplay);
+  settings_menu_mark_dirty(SettingsMenuItemDisplay);
+}
+
+static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
+                                    const Layer *cell_layer, uint16_t row, bool selected) {
+  SettingsDisplayData *data = (SettingsDisplayData*) context;
+  const char *title = NULL;
+  const char *subtitle = NULL;
+  switch (row) {
+    case SettingsDisplayLanguage:
+      title = i18n_noop("Language");
+      subtitle = i18n_get_lang_name();
+      break;
+#if CAPABILITY_HAS_ORIENTATION_MANAGER
+    case SettingsDisplayOrientation:
+      title = i18n_noop("Orientation");
+      subtitle = s_display_orientation_labels[prv_display_orientation_get_selection_index()];
+      break;
+#endif
+#ifdef CONFIG_TOUCH
+    case SettingsDisplayTouch:
+      title = i18n_noop("Touch");
+      subtitle = touch_is_globally_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      break;
+#endif
+    case SettingsDisplayBacklight:
+      title = i18n_noop("Backlight");
       break;
 #if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
     case SettingsDisplayAdjustAlignment:
@@ -394,51 +511,14 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
 }
 
-static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
-  uint16_t rows = NumSettingsDisplayItems;
-  
-  if (!prv_should_show_backlight_sub_items()) {
-    rows -= NUM_BACKLIGHT_SUB_ITEMS;
-  }
-  
-  return rows;
+static uint16_t prv_display_num_rows_cb(SettingsCallbacks *context) {
+  return NumSettingsDisplayItems;
 }
 
-static void prv_deinit_cb(SettingsCallbacks *context) {
+static void prv_display_deinit_cb(SettingsCallbacks *context) {
   SettingsDisplayData *data = (SettingsDisplayData*) context;
-  if (data->update_timer) {
-    app_timer_cancel(data->update_timer);
-    data->update_timer = NULL;
-  }
   i18n_free_all(data);
   app_free(data);
-}
-
-// Timer callback to update debug values
-#define UPDATE_INTERVAL_MS 500  // Update twice per second
-static void prv_update_timer_cb(void *context) {
-  SettingsDisplayData *data = (SettingsDisplayData*)context;
-  
-  // Mark the menu as dirty to trigger a redraw
-  settings_menu_mark_dirty(SettingsMenuItemDisplay);
-  
-  // Reschedule the timer
-  data->update_timer = app_timer_register(UPDATE_INTERVAL_MS, prv_update_timer_cb, data);
-}
-
-static void prv_appear_cb(SettingsCallbacks *context) {
-  SettingsDisplayData *data = (SettingsDisplayData*)context;
-  if (!data->update_timer) {
-    data->update_timer = app_timer_register(UPDATE_INTERVAL_MS, prv_update_timer_cb, data);
-  }
-}
-
-static void prv_hide_cb(SettingsCallbacks *context) {
-  SettingsDisplayData *data = (SettingsDisplayData*)context;
-  if (data->update_timer) {
-    app_timer_cancel(data->update_timer);
-    data->update_timer = NULL;
-  }
 }
 
 static Window *prv_init(void) {
@@ -446,12 +526,10 @@ static Window *prv_init(void) {
   *data = (SettingsDisplayData){};
 
   data->callbacks = (SettingsCallbacks) {
-    .deinit = prv_deinit_cb,
-    .draw_row = prv_draw_row_cb,
-    .select_click = prv_select_click_cb,
-    .num_rows = prv_num_rows_cb,
-    .appear = prv_appear_cb,
-    .hide = prv_hide_cb,
+    .deinit = prv_display_deinit_cb,
+    .draw_row = prv_display_draw_row_cb,
+    .select_click = prv_display_select_click_cb,
+    .num_rows = prv_display_num_rows_cb,
   };
 
   return settings_window_create(SettingsMenuItemDisplay, &data->callbacks);
