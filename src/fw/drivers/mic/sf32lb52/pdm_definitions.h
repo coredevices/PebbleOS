@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 typedef struct MicState {
+  uint8_t *circ_buffer_storage; 
   CircularBuffer circ_buffer;
   DMA_HandleTypeDef hdma;
 
