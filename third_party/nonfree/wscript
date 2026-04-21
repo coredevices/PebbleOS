@@ -79,13 +79,6 @@ def build(bld):
             'pebbleos-nonfree/gh3x2x/demo_code/**/*.c',
         ])
 
-        bld.env.append_unique(
-            'CFLAGS',
-            [
-                '-Wno-sign-compare',
-            ],
-        )
-
         if bld.env.IS_MFG:
             bld.env.append_unique(
                 'DEFINES',
@@ -108,4 +101,5 @@ def build(bld):
                 'star-mc1_arm-gcc14.2.1_softfp+Os_spo2',
                 'arm-none-eabi-gcc-softfp-Os-gh_common',
             ],
+            cflags=['-Wno-sign-compare'],
         )
