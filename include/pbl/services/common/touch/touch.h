@@ -21,6 +21,18 @@ void touch_set_backlight_enabled(bool enabled);
 //! @return true if at least one subscriber is currently registered for touch events.
 bool touch_has_app_subscribers(void);
 
+//! Globally enable or disable touch. When disabled:
+//! - The sensor is powered down, even if subscribers exist.
+//! - touch_handle_update() drops incoming events at the source.
+//! - touch_service_is_enabled() returns false to apps.
+//! Subscribers remain subscribed and resume receiving events when re-enabled.
+//! Intended to back a user-facing setting (e.g. "water mode") — the shell
+//! pref system persists the value and calls this on boot.
+void touch_service_set_globally_enabled(bool enabled);
+
+//! @return the current value of the global touch-enabled flag.
+bool touch_service_is_globally_enabled(void);
+
 //! Pass a touch update to the service (called by the touch driver)
 //! @param touch_state whether or not the screen is touched
 //! @param x x position of touch
