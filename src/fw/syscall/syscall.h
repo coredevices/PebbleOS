@@ -190,6 +190,7 @@ bool sys_activity_is_initialized(void);
 void sys_app_comm_set_responsiveness(SniffInterval interval);
 SniffInterval sys_app_comm_get_sniff_interval(void);
 
+bool sys_light_is_on(void);
 void sys_light_enable_interaction(void);
 void sys_light_enable(bool enable);
 void sys_light_enable_respect_settings(bool enable);
