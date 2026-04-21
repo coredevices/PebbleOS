@@ -5,6 +5,9 @@
 
 #include "pbl/services/common/touch/touch_event.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 //! Callback for touch events.
 //! @param event The touch event data
 //! @param context User-provided context
@@ -17,3 +20,9 @@ void touch_service_subscribe(TouchServiceHandler handler, void *context);
 
 //! Unsubscribe from touch events. The touch sensor is disabled if no other subscribers remain.
 void touch_service_unsubscribe(void);
+
+//! @return true if touch input is currently being delivered to apps.
+//! Returns false on platforms without a touchscreen, or when touch has been
+//! disabled system-wide (future feature). Apps can poll this (for example on
+//! window appear) to avoid looking broken when touch is unavailable.
+bool touch_service_is_enabled(void);

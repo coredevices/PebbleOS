@@ -73,6 +73,8 @@ typedef struct {
 
   TickTimerServiceState tick_timer_service_state;
 
+  TouchServiceState touch_service_state;
+
   ConnectionServiceState connection_service_state;
 
   HealthServiceState health_service_state;
@@ -198,6 +200,8 @@ NOINLINE void app_state_init(void) {
 
   tick_timer_service_state_init(app_state_get_tick_timer_service_state());
 
+  touch_service_state_init(app_state_get_touch_service_state());
+
   health_service_state_init(app_state_get_health_service_state());
 
   locale_init_app_locale(app_state_get_locale_info());
@@ -307,6 +311,10 @@ BatteryStateServiceState *app_state_get_battery_state_service_state(void) {
 
 TickTimerServiceState *app_state_get_tick_timer_service_state(void) {
   return &s_app_state_ptr->tick_timer_service_state;
+}
+
+TouchServiceState *app_state_get_touch_service_state(void) {
+  return &s_app_state_ptr->touch_service_state;
 }
 
 ConnectionServiceState *app_state_get_connection_service_state(void) {

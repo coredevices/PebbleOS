@@ -133,6 +133,12 @@ TickTimerServiceState* kernel_applib_get_tick_timer_service_state(void) {
   return &s_tick_timer_service_state;
 }
 
+// --------------------------------------------------------------------------------------------
+TouchServiceState* kernel_applib_get_touch_service_state(void) {
+  static TouchServiceState s_touch_service_state;
+  return &s_touch_service_state;
+}
+
 // -----------------------------------------------------------------------------------------------------------
 ConnectionServiceState* kernel_applib_get_connection_service_state(void) {
   static ConnectionServiceState s_connection_service_state;
