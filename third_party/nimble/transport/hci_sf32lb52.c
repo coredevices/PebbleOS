@@ -206,7 +206,6 @@ static int prv_config_ipc(void) {
 static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   struct ble_hci_ev *ev;
   struct ble_hci_ev_command_complete *cmd_complete;
-  struct os_mbuf *om;
 
   switch (pkt_type) {
   case HCI_H4_EVT:
@@ -225,9 +224,8 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
 
     return ble_transport_to_hs_evt(data);
   case HCI_H4_ACL:
-    om = (struct os_mbuf *)data;
-
-    prv_hci_trace(pkt_type, OS_MBUF_DATA(om, uint8_t *), OS_MBUF_PKTLEN(om), H4TL_PACKET_CTRL);
+    prv_hci_trace(pkt_type, OS_MBUF_DATA((struct os_mbuf *)data, uint8_t *),
+                  OS_MBUF_PKTLEN((struct os_mbuf *)data), H4TL_PACKET_CTRL);
 
     return ble_transport_to_hs_acl(data);
   default:
