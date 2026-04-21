@@ -22,6 +22,7 @@
 #include "applib/plugin_service_private.h"
 #include "applib/tick_timer_service.h"
 #include "applib/tick_timer_service_private.h"
+#include "applib/touch_service_private.h"
 #include "applib/ui/animation_private.h"
 #include "applib/ui/click_internal.h"
 #include "applib/ui/content_indicator_private.h"
@@ -114,6 +115,8 @@ LogState *app_state_get_log_state(void);
 BatteryStateServiceState *app_state_get_battery_state_service_state(void);
 
 TickTimerServiceState *app_state_get_tick_timer_service_state(void);
+
+TouchServiceState *app_state_get_touch_service_state(void);
 
 ConnectionServiceState *app_state_get_connection_service_state(void);
 
