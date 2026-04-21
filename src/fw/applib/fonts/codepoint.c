@@ -15,7 +15,7 @@
 #define MIN_SOFTBANK_EMOJI_CODEPOINT 0xE000
 #define MAX_SOFTBANK_EMOJI_CODEPOINT 0xE537
 #define MIN_UNIFIED_EMOJI_CODEPOINT 0x1F300
-#define MAX_UNIFIED_EMOJI_CODEPOINT 0x1F6FF
+#define MAX_UNIFIED_EMOJI_CODEPOINT 0x1FAFF
 #define MIN_SYMBOLS_CODEPOINT 0x2000
 #define MAX_SYMBOLS_CODEPOINT 0x2BFF
 #define MIN_IDEOGRAPH_CODEPOINT 0x2e80
@@ -27,15 +27,24 @@
 // Note: Please keep these sorted
 static const Codepoint NONSTANDARD_EMOJI_CODEPOINTS[] = {
     0x2192, // rightwards_arrow
+    0x231A, // watch
     0x25BA, // black_right_pointing_pointer
     0x2605, // black_star
     0x260E, // black_telephone
     0x261D, // white_up_pointing_index
+    0x2620, // skull_and_crossbones
     0x263A, // white_smiling_face
+    0x26A7, // transgender_symbol
+    0x2705, // check_mark_button
     0x270A, // raised_fist
     0x270B, // raised_hand
     0x270C, // victory_hand
+    0x2728, // sparkles
+    0x274E, // cross_mark_button
+    0x2757, // red_exclamation_mark
+    0x2763, // heavy_heart_exclamation_mark_ornament
     0x2764, // heavy_black_heart
+    0x2B50, // star
 };
 
 // Note: Please keep these sorted
