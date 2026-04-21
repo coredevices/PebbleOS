@@ -85,7 +85,7 @@ static void prv_select_info_qr(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_info_qr_app_get_info());
 }
 
-#if PBL_ROUND
+#if PBL_ROUND && !PLATFORM_GETAFIX
 static void prv_select_calibrate_display(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_display_calibration_app_get_info());
 }

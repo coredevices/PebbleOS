@@ -104,7 +104,11 @@ static void prv_update_display(void *context) {
         PBL_LOG_INFO("ALS test complete - Average: %"PRIu32" (samples: %"PRIu32")",
                      data->als_average, data->als_sample_count);
 
-        if (data->als_average >= ALS_MIN_VALUE && data->als_average <= ALS_MAX_VALUE) {
+        if (
+#if ALS_MIN_VALUE > 0
+            data->als_average >= ALS_MIN_VALUE &&
+#endif
+            data->als_average <= ALS_MAX_VALUE) {
           data->test_state = ALSStatePass;
           PBL_LOG_INFO("ALS test PASSED");
         } else {
