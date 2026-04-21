@@ -29,12 +29,14 @@
 #include "task.h"
 #include "freertos_application.h"
 
+#if !defined(MICRO_FAMILY_SF32LB52)
 static RtcTicks s_analytics_sleep_ticks = 0;
 static RtcTicks s_analytics_stop_ticks = 0;
 
 static uint32_t s_last_ticks_elapsed_in_stop = 0;
 static uint32_t s_last_ticks_commanded_in_stop = 0;
 static uint32_t s_ticks_corrected = 0;
+#endif
 
 // We need different timings for our different platforms since we use different mechanisms to keep
 // time and to wake us up out of stop mode. On stm32f2 we don't have a millisecond register so we
@@ -51,13 +53,15 @@ static const RtcTicks MIN_STOP_TICKS = 8;
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 5;
-#elif defined(MICRO_FAMILY_QEMU) || defined(MICRO_FAMILY_SF32LB52)
+#elif defined(MICRO_FAMILY_QEMU)
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 static const RtcTicks MIN_STOP_TICKS = 5;
 #endif
 
+#if !defined(MICRO_FAMILY_SF32LB52)
 // 1 second ticks so that we only wake up once every regular timer interval.
 static const RtcTicks MAX_STOP_TICKS = RTC_TICKS_HZ;
+#endif
 
 #if !defined(MICRO_FAMILY_SF32LB52)
 extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
@@ -239,9 +243,9 @@ bool vPortEnableTimer() {
 // CPU analytics
 ///////////////////////////////////////////////////////////
 
+#if !defined(MICRO_FAMILY_SF32LB52)
 static uint32_t s_last_ticks = 0;
 
-#if !defined(MICRO_FAMILY_SF32LB52)
 void dump_current_runtime_stats(void) {
   uint32_t stop_ticks = s_analytics_stop_ticks;
   uint32_t sleep_ticks = s_analytics_sleep_ticks;
