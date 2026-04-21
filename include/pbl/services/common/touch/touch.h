@@ -18,6 +18,9 @@ void touch_init(void);
 //! When disabled, the touch sensor is only active if apps have subscribed to touch events.
 void touch_set_backlight_enabled(bool enabled);
 
+//! @return true if at least one subscriber is currently registered for touch events.
+bool touch_has_app_subscribers(void);
+
 //! Pass a touch update to the service (called by the touch driver)
 //! @param touch_state whether or not the screen is touched
 //! @param x x position of touch
