@@ -425,10 +425,6 @@ void gh3x2x_set_work_mode(int32_t mode) {
 }
 #endif // MANUFACTURING_FW
 
-#else
-static void gh3026_int_irq_callback(bool *should_context_switch) {
-  *should_context_switch = false;
-}
 #endif // HRM_USE_GH3X2X
 
 // HRM interface
