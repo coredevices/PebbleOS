@@ -48,6 +48,13 @@ void touch_init(void) {
       &prv_remove_subscriber_cb);
 }
 
+bool touch_has_app_subscribers(void) {
+  mutex_lock(s_touch_mutex);
+  const bool has_apps = s_subscriber_count > 0;
+  mutex_unlock(s_touch_mutex);
+  return has_apps;
+}
+
 void touch_set_backlight_enabled(bool enabled) {
   mutex_lock(s_touch_mutex);
   if (enabled && !s_backlight_subscribed) {
