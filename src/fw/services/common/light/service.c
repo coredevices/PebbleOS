@@ -608,6 +608,10 @@ void light_allow(bool allowed) {
   s_backlight_allowed = allowed;
 }
 
+DEFINE_SYSCALL(bool, sys_light_is_on, void) {
+  return light_is_on();
+}
+
 DEFINE_SYSCALL(void, sys_light_enable_interaction, void) {
   light_enable_interaction();
 }
@@ -637,6 +641,10 @@ extern BacklightBehaviour backlight_get_behaviour(void);
 uint8_t light_get_current_brightness_percent(void) {
   uint8_t percent = (s_current_brightness * 100) / BACKLIGHT_BRIGHTNESS_MAX;
   return percent;
+}
+
+bool light_is_on(void) {
+  return s_light_state != LIGHT_STATE_OFF;
 }
 
 void pbl_analytics_external_collect_backlight_stats(void) {

@@ -157,9 +157,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x59 -- Add flags to ModdableCreationRecord (rev 92)
 // sdk.major:0x5 .minor:0x5a -- Add rot_bitmap_layer_get_layer() and AppGlanceSliceLayout (rev 93)
 // sdk.major:0x5 .minor:0x5b -- Add app_light_set_color() and app_light_set_system_color() (rev 94)
+// sdk.major:0x5 .minor:0x5c -- Add light_is_on() (rev 95)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x5b
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x5c
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4

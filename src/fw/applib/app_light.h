@@ -19,6 +19,13 @@
 //! method of interacting with the backlight.
 //!   @{
 
+//! @return true if the backlight is currently on in any form (on, timed,
+//! or fading out). Returns false only when the backlight is fully off.
+//! Useful for apps that want to behave differently depending on whether
+//! the screen is currently lit — e.g. skipping an animation or queuing a
+//! visual cue for when the screen wakes.
+bool app_light_is_on(void);
+
 //! Trigger the backlight and schedule a timer to automatically disable the backlight
 //! after a short delay. This is the preferred method of interacting with the backlight.
 void app_light_enable_interaction(void);
