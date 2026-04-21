@@ -55,6 +55,9 @@ void test_touch__initialize(void) {
   s_touch_sensor_enabled = false;
   touch_init();
   touch_reset();
+  // Make sure the global kill switch is reset between tests — it's a module
+  // static in touch.c and a failed test could otherwise leak its state.
+  touch_service_set_globally_enabled(true);
 }
 
 void test_touch__cleanup(void) {
@@ -194,4 +197,55 @@ void test_touch__has_app_subscribers_backlight(void) {
 
   touch_set_backlight_enabled(false);
   cl_assert(!touch_has_app_subscribers());
+}
+
+void test_touch__globally_enabled_default_true(void) {
+  // Default state after init is enabled; no setter call required.
+  cl_assert(touch_service_is_globally_enabled());
+}
+
+void test_touch__global_disable_drops_events(void) {
+  touch_service_set_globally_enabled(false);
+  touch_handle_update(TouchState_FingerDown, 10, 20);
+  cl_assert_equal_i(fake_event_get_count(), 0);
+
+  touch_handle_update(TouchState_FingerUp, 10, 20);
+  cl_assert_equal_i(fake_event_get_count(), 0);
+
+  touch_service_set_globally_enabled(true);
+}
+
+void test_touch__global_disable_powers_down_sensor(void) {
+  // Subscriber brings the sensor up.
+  s_add_subscriber_cb(PebbleTask_App);
+  cl_assert(s_touch_sensor_enabled);
+  cl_assert_equal_i(s_touch_sensor_enable_count, 1);
+
+  // Disabling globally powers the sensor down even though a subscriber remains.
+  touch_service_set_globally_enabled(false);
+  cl_assert(!s_touch_sensor_enabled);
+  cl_assert_equal_i(s_touch_sensor_disable_count, 1);
+
+  // Re-enabling brings it back up for the existing subscriber.
+  touch_service_set_globally_enabled(true);
+  cl_assert(s_touch_sensor_enabled);
+  cl_assert_equal_i(s_touch_sensor_enable_count, 2);
+
+  s_remove_subscriber_cb(PebbleTask_App);
+}
+
+void test_touch__subscribe_while_disabled_keeps_sensor_off(void) {
+  touch_service_set_globally_enabled(false);
+
+  // Subscribing while disabled must not power the sensor up.
+  s_add_subscriber_cb(PebbleTask_App);
+  cl_assert(!s_touch_sensor_enabled);
+  cl_assert_equal_i(s_touch_sensor_enable_count, 0);
+
+  // Re-enabling globally powers it up for the pre-existing subscriber.
+  touch_service_set_globally_enabled(true);
+  cl_assert(s_touch_sensor_enabled);
+  cl_assert_equal_i(s_touch_sensor_enable_count, 1);
+
+  s_remove_subscriber_cb(PebbleTask_App);
 }

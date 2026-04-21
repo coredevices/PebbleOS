@@ -10,7 +10,10 @@
 #include "kernel/pebble_tasks.h"
 #include "pbl/services/common/touch/touch.h"
 #include "process_state/app_state/app_state.h"
+#include "syscall/syscall.h"
 #include "system/passert.h"
+
+bool sys_touch_service_is_enabled(void);
 
 //! @return the per-task touch service state, or NULL if the current task is
 //! not permitted to use the touch service (e.g. background workers). Callers
@@ -70,10 +73,7 @@ void touch_service_unsubscribe(void) {
 }
 
 bool touch_service_is_enabled(void) {
-  // No runtime global touch-disable yet. On touch-capable platforms the API
-  // is always live; future features (water-lock, settings toggle) will gate
-  // this check.
-  return true;
+  return sys_touch_service_is_enabled();
 }
 
 void touch_service_state_init(TouchServiceState *state) {

@@ -9,6 +9,8 @@
 #include "kernel/pebble_tasks.h"
 #include "pbl/services/common/event_service.h"
 #include "pbl/services/common/analytics/analytics.h"
+#include "syscall/syscall.h"
+#include "syscall/syscall_internal.h"
 #include "system/logging.h"
 #include "os/mutex.h"
 #include "system/passert.h"
@@ -23,10 +25,13 @@ static PebbleMutex *s_touch_mutex;
 
 static uint8_t s_subscriber_count = 0;
 static bool s_backlight_subscribed = false;
+static bool s_globally_enabled = true;
 
 static void prv_add_subscriber_cb(PebbleTask task) {
   mutex_lock(s_touch_mutex);
-  if (++s_subscriber_count == 1) {
+  // Honor the global kill switch: when touch is globally disabled, track the
+  // subscriber count but don't power up the sensor.
+  if (++s_subscriber_count == 1 && s_globally_enabled) {
     touch_sensor_set_enabled(true);
   }
   mutex_unlock(s_touch_mutex);
@@ -35,7 +40,7 @@ static void prv_add_subscriber_cb(PebbleTask task) {
 static void prv_remove_subscriber_cb(PebbleTask task) {
   mutex_lock(s_touch_mutex);
   PBL_ASSERTN(s_subscriber_count > 0);
-  if (--s_subscriber_count == 0) {
+  if (--s_subscriber_count == 0 && s_globally_enabled) {
     touch_sensor_set_enabled(false);
   }
   mutex_unlock(s_touch_mutex);
@@ -53,6 +58,36 @@ bool touch_has_app_subscribers(void) {
   const bool has_apps = s_subscriber_count > 0;
   mutex_unlock(s_touch_mutex);
   return has_apps;
+}
+
+void touch_service_set_globally_enabled(bool enabled) {
+  mutex_lock(s_touch_mutex);
+  if (s_globally_enabled == enabled) {
+    mutex_unlock(s_touch_mutex);
+    return;
+  }
+  s_globally_enabled = enabled;
+  const bool has_subscribers = s_subscriber_count > 0;
+  mutex_unlock(s_touch_mutex);
+
+  if (has_subscribers) {
+    touch_sensor_set_enabled(enabled);
+  }
+  if (!enabled) {
+    // Avoid delivering stale position on re-enable.
+    touch_reset();
+  }
+}
+
+bool touch_service_is_globally_enabled(void) {
+  mutex_lock(s_touch_mutex);
+  const bool enabled = s_globally_enabled;
+  mutex_unlock(s_touch_mutex);
+  return enabled;
+}
+
+DEFINE_SYSCALL(bool, sys_touch_service_is_enabled, void) {
+  return touch_service_is_globally_enabled();
 }
 
 void touch_set_backlight_enabled(bool enabled) {
@@ -87,6 +122,11 @@ static void prv_put_touch_event(TouchEventType type, int16_t x, int16_t y) {
 
 void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
   mutex_lock(s_touch_mutex);
+
+  if (!s_globally_enabled) {
+    mutex_unlock(s_touch_mutex);
+    return;
+  }
 
   if (s_touch_state != touch_state) {
     s_touch_state = touch_state;
