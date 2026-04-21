@@ -52,6 +52,7 @@ static void prv_check_free_list(void) {
   }
 }
 
+#if UNITTEST
 MBuf *mbuf_get(void *data, uint32_t length, MBufPool pool) {
   PBL_ASSERTN(pool < NumMBufPools);
   MBuf *m;
@@ -77,6 +78,7 @@ MBuf *mbuf_get(void *data, uint32_t length, MBufPool pool) {
   mbuf_set_data(m, data, length);
   return m;
 }
+#endif
 
 void mbuf_free(MBuf *m) {
   if (!m) {
