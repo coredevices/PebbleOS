@@ -210,6 +210,13 @@ bool backlight_is_touch_enabled(void) {
   return false;
 }
 
+bool touch_is_globally_enabled(void) {
+  return true;
+}
+
+void touch_set_globally_enabled(bool enable) {
+}
+
 bool bt_persistent_storage_get_airplane_mode_enabled(void) {
   return false;
 }

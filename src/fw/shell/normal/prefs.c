@@ -84,6 +84,9 @@ static bool s_backlight_motion_enabled = true;
 #define PREF_KEY_BACKLIGHT_TOUCH "lightTouch"
 static bool s_backlight_touch_enabled = false;
 
+#define PREF_KEY_TOUCH_ENABLED "touchEnabled"
+static bool s_touch_enabled = true;
+
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
 static uint8_t s_motion_sensitivity = 55; // Default to Medium
 
@@ -357,6 +360,14 @@ static bool prv_set_s_backlight_touch_enabled(bool *enabled) {
   s_backlight_touch_enabled = *enabled;
 #ifdef CONFIG_TOUCH
   touch_set_backlight_enabled(*enabled);
+#endif
+  return true;
+}
+
+static bool prv_set_s_touch_enabled(bool *enabled) {
+  s_touch_enabled = *enabled;
+#ifdef CONFIG_TOUCH
+  touch_service_set_globally_enabled(*enabled);
 #endif
   return true;
 }
@@ -850,6 +861,7 @@ void shell_prefs_init(void) {
   // Enable touch sensor for touch backlight only if the setting is enabled
 #ifdef CONFIG_TOUCH
   touch_set_backlight_enabled(s_backlight_touch_enabled);
+  touch_service_set_globally_enabled(s_touch_enabled);
 #endif
 }
 
@@ -1155,6 +1167,14 @@ bool backlight_is_touch_enabled(void) {
 
 void backlight_set_touch_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_TOUCH, &enable, sizeof(enable));
+}
+
+bool touch_is_globally_enabled(void) {
+  return s_touch_enabled;
+}
+
+void touch_set_globally_enabled(bool enable) {
+  prv_pref_set(PREF_KEY_TOUCH_ENABLED, &enable, sizeof(enable));
 }
 
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
