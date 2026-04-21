@@ -27,6 +27,10 @@ static const uint32_t s_bt_stack_start_stop_timeout_ms = 3000;
 
 extern void pebble_pairing_service_init(void);
 extern void nimble_discover_init(void);
+#ifdef BT_CONTROLLER_SF32LB52
+extern void ble_transport_ll_deinit(void);
+extern void ble_transport_ll_reinit(void);
+#endif
 
 #if NIMBLE_CFG_CONTROLLER
 static TaskHandle_t s_ll_task_handle;
@@ -43,7 +47,11 @@ static void prv_sync_cb(void) {
 }
 
 static void prv_reset_cb(int reason) {
-  PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE reset (reason: %d)", reason);
+  PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE host reset (reason: 0x%04x)", (uint16_t)reason);
+#ifdef BT_CONTROLLER_SF32LB52
+  ble_transport_ll_deinit();
+  ble_transport_ll_reinit();
+#endif
 }
 
 static void prv_host_task_main(void *unused) {
