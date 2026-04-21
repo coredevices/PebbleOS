@@ -59,7 +59,7 @@ void display_clear(void) {
   uint16_t height = DISPLAY->height;
 
 #if PBL_BW
-  uint32_t fb_size = ROUND_TO_MOD_CEIL(width, 32) / 8 * height;
+  uint32_t fb_size = ROUND_TO_MOD_CEIL_U(width, 32) / 8 * height;
 #else
   uint32_t fb_size = width * height;
 #endif
@@ -103,7 +103,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
   // Iterate through rows provided by the compositor
 #if PBL_BW
-  uint16_t row_bytes = ROUND_TO_MOD_CEIL(width, 32) / 8;
+  uint16_t row_bytes = ROUND_TO_MOD_CEIL_U(width, 32) / 8;
 #endif
   while (nrcb(&row)) {
 #if PBL_BW
@@ -137,7 +137,7 @@ void display_update_boot_frame(uint8_t *framebuffer) {
 
 #if PBL_BW
   // Boot splash provides 8bpp data; convert to 1bpp packed for QEMU
-  uint16_t row_bytes = ROUND_TO_MOD_CEIL(width, 32) / 8;
+  uint16_t row_bytes = ROUND_TO_MOD_CEIL_U(width, 32) / 8;
   volatile uint8_t *dst = (volatile uint8_t *)fb_addr;
   memset((void *)dst, 0, row_bytes * height);
   for (uint16_t y = 0; y < height; y++) {

@@ -28,9 +28,14 @@
 // ex. val = 152 mod = 32 : returns 160
 // val = -32 mod = 90 : returns -90
 #define ROUND_TO_MOD_CEIL(val, mod) \
-  ((val >= 0) ? \
+  (((val) >= 0) ? \
   ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)) : \
   -((((-val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)))
+
+// Round unsigned value up to the next increment of modulus
+// ex. val = 152 mod = 32 : returns 160
+#define ROUND_TO_MOD_CEIL_U(val, mod) \
+  ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod))
 
 int32_t sign_extend(uint32_t a, int bits);
 
