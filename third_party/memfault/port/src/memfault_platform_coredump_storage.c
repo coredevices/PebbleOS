@@ -34,7 +34,7 @@ void memfault_coredump_storage_alloc(size_t size) {
     return;  // Already allocated
   }
   // Round up to sector size for the SDK's erase operation
-  size = ROUND_TO_MOD_CEIL(size, COREDUMP_SECTOR_SIZE);
+  size = ROUND_TO_MOD_CEIL_U(size, COREDUMP_SECTOR_SIZE);
   s_coredump_storage = kernel_zalloc(size);
   if (s_coredump_storage != NULL) {
     s_coredump_storage_size = size;
