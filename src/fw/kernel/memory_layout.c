@@ -109,6 +109,7 @@ static const MpuRegion s_readonly_bss_region = {
   .user_write = false
 };
 
+#ifndef MICRO_FAMILY_SF32LB52
 // ISR stack guard
 static const MpuRegion s_isr_stack_guard_region = {
   .region_num = MemoryRegion_IsrStackGuard,
@@ -121,6 +122,7 @@ static const MpuRegion s_isr_stack_guard_region = {
   .user_read = false,
   .user_write = false
 };
+#endif
 
 static const MpuRegion s_app_stack_guard_region = {
   .region_num = MemoryRegion_TaskStackGuard,
