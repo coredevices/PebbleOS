@@ -175,3 +175,23 @@ void test_touch__backlight_and_app_share_sensor(void) {
   cl_assert_equal_i(s_touch_sensor_disable_count, 1);
   cl_assert(!s_touch_sensor_enabled);
 }
+
+void test_touch__has_app_subscribers_app(void) {
+  cl_assert(!touch_has_app_subscribers());
+
+  s_add_subscriber_cb(PebbleTask_App);
+  cl_assert(touch_has_app_subscribers());
+
+  s_remove_subscriber_cb(PebbleTask_App);
+  cl_assert(!touch_has_app_subscribers());
+}
+
+void test_touch__has_app_subscribers_backlight(void) {
+  cl_assert(!touch_has_app_subscribers());
+
+  touch_set_backlight_enabled(true);
+  cl_assert(touch_has_app_subscribers());
+
+  touch_set_backlight_enabled(false);
+  cl_assert(!touch_has_app_subscribers());
+}
