@@ -49,16 +49,6 @@ def build(bld):
             'SiFli-SDK/middleware/ipc_queue/porting/sf32lb52x/hcpu',
         ]
 
-    bld.env.append_unique(
-        'CFLAGS',
-        [
-            '-Wno-unused-value',
-            '-Wno-unused-variable',
-            '-Wno-unused-function',
-            '-Wno-unused-but-set-variable',
-        ],
-    )
-
     # FIXME(SF32LB52): board-specific settings should not be here
     micro_defines = []
     if bld.is_obelix() or bld.is_getafix():
@@ -71,4 +61,12 @@ def build(bld):
         includes=micro_includes,
         export_includes=micro_includes,
         defines=micro_defines,
+        cflags=[
+            '-Wno-unused-value',
+            '-Wno-unused-variable',
+            '-Wno-unused-function',
+            '-Wno-unused-but-set-variable',
+            '-Wno-sign-compare',
+            '-Wno-type-limits',
+        ],
     )
