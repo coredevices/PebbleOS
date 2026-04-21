@@ -77,6 +77,7 @@ static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
 #endif
 
 extern void lcpu_power_on(void);
+extern uint8_t lcpu_power_off(void);
 extern void lcpu_custom_nvds_config(void);
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
@@ -267,15 +268,25 @@ static void prv_hci_task_main(void *unused) {
   }
 }
 
-void ble_transport_ll_init(void) {
+void ble_transport_ll_reinit(void) {
   int ret;
 
+  hci_h4_sm_init(&s_hci_h4sm, &s_hci_h4_allocs_from_ll, prv_hci_frame_cb);
+
+  ret = prv_config_ipc();
+  PBL_ASSERTN(ret == 0);
+
+  lcpu_custom_nvds_config();
+  lcpu_power_on();
+}
+
+void ble_transport_ll_init(void) {
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
   uart_init_tx_only(HCI_TRACE_UART);
   uart_set_baud_rate(HCI_TRACE_UART, 1000000);
 #endif
 
-  hci_h4_sm_init(&s_hci_h4sm, &s_hci_h4_allocs_from_ll, prv_hci_frame_cb);
+  ble_transport_ll_reinit();
 
   s_ipc_data_ready = xSemaphoreCreateBinary();
 
@@ -289,12 +300,14 @@ void ble_transport_ll_init(void) {
 
   pebble_task_create(PebbleTask_BTHCI, &task_params, &s_hci_task_handle);
   PBL_ASSERTN(s_hci_task_handle);
+}
 
-  ret = prv_config_ipc();
-  PBL_ASSERTN(ret == 0);
-
-  lcpu_custom_nvds_config();
-  lcpu_power_on();
+void ble_transport_ll_deinit(void) {
+  NVIC_DisableIRQ(LCPU2HCPU_IRQn);
+  ipc_queue_close(s_ipc_port);
+  ipc_queue_deinit(s_ipc_port);
+  s_ipc_port = IPC_QUEUE_INVALID_HANDLE;
+  lcpu_power_off();
 }
 
 /* APIs to be implemented by HS/LL side of transports */
