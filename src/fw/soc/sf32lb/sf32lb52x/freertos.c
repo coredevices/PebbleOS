@@ -279,10 +279,9 @@ bool vPortEnableTimer() {
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_TICK, RCC_CLK_TICK_HXT48);
   // delay to avoid systick config failure (undocumented silicon issue)
   HAL_Delay_us(200);
-  MODIFY_REG(hwp_hpsys_rcc->CFGR, HPSYS_RCC_CFGR_TICKDIV_Msk,
-             MAKE_REG_VAL(25, HPSYS_RCC_CFGR_TICKDIV_Msk, HPSYS_RCC_CFGR_TICKDIV_Pos));
+  HAL_RCC_HCPU_SetTickDiv(25);
   HAL_SYSTICK_Config(1920000 / RTC_TICKS_HZ);
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK_DIV8);
+  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_TICK_CLK);
 
   SysTick->CTRL |= (SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk);
 
