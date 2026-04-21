@@ -7,6 +7,7 @@
 #include "kernel/logging_private.h"
 #include "applib/accel_service_private.h"
 #include "applib/tick_timer_service_private.h"
+#include "applib/touch_service_private.h"
 #include "applib/compass_service_private.h"
 #include "applib/battery_state_service.h"
 #include "applib/battery_state_service_private.h"
@@ -26,6 +27,8 @@ CompassServiceConfig **kernel_applib_get_compass_config(void);
 EventServiceInfo* kernel_applib_get_event_service_state(void);
 
 TickTimerServiceState *kernel_applib_get_tick_timer_service_state(void);
+
+TouchServiceState *kernel_applib_get_touch_service_state(void);
 
 ConnectionServiceState* kernel_applib_get_connection_service_state(void);
 
