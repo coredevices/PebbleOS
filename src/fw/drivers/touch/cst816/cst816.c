@@ -260,7 +260,6 @@ static void prv_process_pending_messages(void* context) {
     return;
   }
 
-  const uint64_t current_time_ms = ticks_to_milliseconds(rtc_get_ticks());
   uint8_t press = data[0] & 0x0F;
   GPoint point = {
     .x = (((uint16_t)(data[1] & 0x0F)) << 8) | data[2],
@@ -297,7 +296,7 @@ void touch_sensor_set_enabled(bool enabled) {
     exti_enable(CST816->int_exti);
   } else {
     uint8_t data = CST816_POWER_MODE_SLEEP;
-    bool rv = prv_write_data(CST816_POWER_MODE_REG, &data, 1, 1);
+    prv_write_data(CST816_POWER_MODE_REG, &data, 1, 1);
     exti_disable(CST816->int_exti);
   }
 }

@@ -192,9 +192,9 @@ static void prv_rtc_cal_timer_cb(void* data) {
 #endif
 
 void rtc_init(void) {
+#ifdef SF32LB52_USE_LXT
   HAL_StatusTypeDef ret;
 
-#ifdef SF32LB52_USE_LXT
   ret = HAL_PMU_LXTReady();
   PBL_ASSERTN(ret == HAL_OK);
 

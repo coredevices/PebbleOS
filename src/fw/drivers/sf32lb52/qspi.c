@@ -305,7 +305,6 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
 status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t addr, bool *locked) {
   FLASH_HandleTypeDef *hflash = &dev->qspi->state->ctx.handle;
   uint8_t opt_val = 0;
-  int ret;
 
   /* OPT operation are synchronous, one match means all matched. */
   portENTER_CRITICAL();

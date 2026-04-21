@@ -57,23 +57,6 @@ static void prv_insert_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin, ExtiHandle
   s_exti_gpio1_handler_configs[index].callback = cb;
 }
 
-static void prv_delete_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin) {
-  // Find the handler index for this pin
-  uint8_t index = 0;
-  while (index < EXTI_MAX_GPIO1_PIN_NUM &&
-         s_exti_gpio1_handler_configs[index].callback != NULL &&
-         s_exti_gpio1_handler_configs[index].gpio_pin != gpio_pin) {
-    index++;
-  }
-  if (index >= EXTI_MAX_GPIO1_PIN_NUM) {
-    // Handler not found
-    return;
-  }
-  // Clear the callback and index
-  s_exti_gpio1_handler_configs[index].callback = NULL;
-  s_exti_gpio1_handler_configs[index].gpio_pin = 0;
-}
-
 void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback cb) {
   GPIO_InitTypeDef init;
   int flags;
@@ -130,8 +113,6 @@ void exti_disable(ExtiConfig cfg) {
 }
 
 void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
-  ExtiHandlerCallback cb = NULL;
-
   for (uint8_t index = 0; index < EXTI_MAX_GPIO1_PIN_NUM; index++) {
     if (s_exti_gpio1_handler_configs[index].callback != NULL &&
         s_exti_gpio1_handler_configs[index].gpio_pin == GPIO_Pin) {

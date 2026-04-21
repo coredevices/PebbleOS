@@ -724,7 +724,6 @@ end:
 
 void accel_enable_shake_detection(bool on) {
   bool ret;
-  uint8_t val;
 
   if (!LIS2DW12->state->initialized) {
     return;

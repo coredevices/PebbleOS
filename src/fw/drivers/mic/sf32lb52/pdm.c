@@ -87,7 +87,6 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
   PBL_ASSERTN(this->state);
   
   MicDeviceState *state = this->state;
-  PDM_HandleTypeDef* hpdm = state->hpdm;
   if (state->is_running) {
     PBL_LOG_WRN("Cannot set volume while microphone is running");
     return;
