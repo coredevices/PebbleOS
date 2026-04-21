@@ -23,7 +23,9 @@
 
 #define INDICATOR "»"
 
+#if !PBL_ROUND || (!defined(RECOVERY_FW) && SCREEN_COLOR_DEPTH_BITS == 8)
 static const int VERTICAL_PADDING = PBL_IF_COLOR_ELSE(2, 4);
+#endif
 #if SCREEN_COLOR_DEPTH_BITS == 1
 static const int EXTRA_PADDING_1_BIT = 2;
 #endif

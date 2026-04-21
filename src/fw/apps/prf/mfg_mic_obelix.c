@@ -53,8 +53,6 @@ static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame
       return;
   }
 
-  size_t total_samples = frame_count * 2;
-  
   for (size_t i = 1; i < frame_count; i++) {
       int16_t temp = audio_data[2 * i];
       for (size_t j = 2 * i; j > i; j--) {
