@@ -69,6 +69,13 @@ bool backlight_is_touch_enabled(void) {
   return false;
 }
 
+bool touch_is_globally_enabled(void) {
+  return true;
+}
+
+void touch_set_globally_enabled(bool enable) {
+}
+
 #include "process_management/app_install_types.h"
 void worker_preferences_set_default_worker(AppInstallId id) {
 }

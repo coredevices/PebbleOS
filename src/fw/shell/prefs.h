@@ -91,6 +91,12 @@ void backlight_set_motion_enabled(bool enable);
 bool backlight_is_touch_enabled(void);
 void backlight_set_touch_enabled(bool enable);
 
+// Global touch input kill-switch. When false, the kernel touch service
+// drops events at the source, powers the sensor down, and the applib
+// touch_service_is_enabled() query returns false to apps.
+bool touch_is_globally_enabled(void);
+void touch_set_globally_enabled(bool enable);
+
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
 // Dynamic backlight intensity based on ambient light sensor
 bool backlight_is_dynamic_intensity_enabled(void);
