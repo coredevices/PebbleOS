@@ -58,6 +58,9 @@
 #include "pbl/services/common/new_timer/new_timer.h"
 #include "pbl/services/common/put_bytes/put_bytes.h"
 #include "pbl/services/common/system_task.h"
+#ifdef CONFIG_TOUCH
+#include "pbl/services/common/touch/touch.h"
+#endif
 #include "pbl/services/common/vibe_pattern.h"
 #include "pbl/services/normal/alarms/alarm.h"
 #include "pbl/services/normal/app_fetch_endpoint.h"
@@ -288,8 +291,12 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       }
       return;
 
-    case PEBBLE_TOUCH_EVENT:
-      if (backlight_is_touch_enabled() &&
+    case PEBBLE_TOUCH_EVENT: {
+      bool force_backlight = false;
+#ifdef CONFIG_TOUCH
+      force_backlight = touch_has_app_subscribers();
+#endif
+      if ((backlight_is_touch_enabled() || force_backlight) &&
           e->touch.event.type == TouchEvent_Touchdown) {
 #ifndef RECOVERY_FW
         const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
@@ -301,6 +308,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
         }
       }
       return;
+    }
 
     case PEBBLE_PANIC_EVENT:
       launcher_panic(e->panic.error_code);
