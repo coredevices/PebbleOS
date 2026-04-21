@@ -4,11 +4,13 @@
 #include "drivers/mic.h"
 #include "drivers/pmic/npm1300.h"
 #include "board/board.h"
+#include "kernel/kernel_heap.h"
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 #include "os/mutex.h"
 #include "system/passert.h"
 #include "util/circular_buffer.h"
+#include "util/heap.h"
 #include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
 #include "pdm_definitions.h"
@@ -32,6 +34,17 @@
 #define PDM_CIRCULAR_BUF_SIZE_MS           (320)
 #define PDM_CIRCULAR_BUF_SIZE_SAMPLES      ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_SIZE_MS) / 1000)
 #define PDM_CIRCULAR_BUF_SIZE_BYTES        (PDM_CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t) * PDM_CH_COUNT)
+
+// Minimum fallback size
+// If it is any smaller than this, the transcription wont work well
+#define PDM_CIRCULAR_BUF_MIN_SIZE_MS       (128)
+#define PDM_CIRCULAR_BUF_MIN_SIZE_SAMPLES  ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_MIN_SIZE_MS) / 1000)
+#define PDM_CIRCULAR_BUF_MIN_SIZE_BYTES    (PDM_CIRCULAR_BUF_MIN_SIZE_SAMPLES * sizeof(int16_t) * PDM_CH_COUNT)
+
+// Fallback step. 32 ms shrink per retry gives us ~7 attempts between 320 ms and 128 ms
+#define PDM_CIRCULAR_BUF_STEP_MS           (32)
+#define PDM_CIRCULAR_BUF_STEP_SAMPLES      ((MIC_SAMPLE_RATE * PDM_CIRCULAR_BUF_STEP_MS) / 1000)
+#define PDM_CIRCULAR_BUF_STEP_BYTES        (PDM_CIRCULAR_BUF_STEP_SAMPLES * sizeof(int16_t) * PDM_CH_COUNT)
 
 static PDM_HandleTypeDef s_hpdm;
 static MicDeviceState* s_state;
@@ -90,16 +103,37 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
 }
 
 static bool prv_allocate_buffers(MicDeviceState *state) {
-  // Allocate circular buffer storage
-  state->circ_buffer_storage = kernel_malloc(PDM_CIRCULAR_BUF_SIZE_BYTES);
-  if (!state->circ_buffer_storage) {
-    PBL_LOG_ERR("Failed to allocate circular buffer storage");
+  // The kernel heap fragments over time, so a single 20 KB contiguous alloc can
+  // fail even when plenty of memory is free. Shrink the request in 32 ms steps
+  // until it fits or we hit the 128 ms floor.
+  size_t try_size = PDM_CIRCULAR_BUF_SIZE_BYTES;
+  uint8_t *storage = NULL;
+
+  while (try_size >= PDM_CIRCULAR_BUF_MIN_SIZE_BYTES) {
+    storage = kernel_malloc(try_size);
+    if (storage) {
+      break;
+    }
+    try_size -= PDM_CIRCULAR_BUF_STEP_BYTES;
+  }
+
+  if (!storage) {
+    unsigned int used, free_bytes, max_free;
+    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)",
+                (unsigned)PDM_CIRCULAR_BUF_MIN_SIZE_BYTES, max_free);
     return false;
   }
-  
-  // Initialize circular buffer with allocated storage
-  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, PDM_CIRCULAR_BUF_SIZE_BYTES);
-  
+
+  if (try_size < PDM_CIRCULAR_BUF_SIZE_BYTES) {
+    unsigned int used, free_bytes, max_free;
+    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    PBL_LOG_WRN("PDM circular buffer fell back to %u B (requested %u, max_free %u)",
+                (unsigned)try_size, (unsigned)PDM_CIRCULAR_BUF_SIZE_BYTES, max_free);
+  }
+
+  state->circ_buffer_storage = storage;
+  circular_buffer_init(&state->circ_buffer, storage, (uint16_t)try_size);
   return true;
 }
 
@@ -302,8 +336,6 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   hpdm->pRxBuffPtr = kernel_malloc(hpdm->RxXferSize);
   PBL_ASSERT(hpdm->pRxBuffPtr, "Can not allocate buffer");
 
-  // Reset state
-  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, PDM_CIRCULAR_BUF_SIZE_BYTES);
   state->data_handler = data_handler;
   state->handler_context = context;
   state->audio_buffer = audio_buffer;
