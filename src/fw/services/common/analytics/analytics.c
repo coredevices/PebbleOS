@@ -23,6 +23,8 @@ extern void pbl_analytics_external_collect_backlight_stats(void);
 extern void pbl_analytics_external_collect_vibe_stats(void);
 extern void pbl_analytics_external_collect_settings(void);
 
+#if defined(ANALYTICS_NATIVE) || defined(ANALYTICS_MEMFAULT)
+
 #ifdef ANALYTICS_NATIVE
 extern void pbl_analytics__native_init(void);
 extern void pbl_analytics__native_heartbeat(void);
@@ -138,3 +140,16 @@ void pbl_analytics_add(enum pbl_analytics_key key, int32_t amount) {
 void command_analytics_heartbeat(void) {
   system_task_add_callback(prv_heartbeat_system_task_cb, NULL);
 }
+
+#else  // No analytics backend: provide no-op stubs.
+
+void pbl_analytics_init(void) {}
+void pbl_analytics_set_signed(enum pbl_analytics_key key, int32_t signed_value) {}
+void pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {}
+void pbl_analytics_set_string(enum pbl_analytics_key key, const char *value) {}
+void pbl_analytics_timer_start(enum pbl_analytics_key key) {}
+void pbl_analytics_timer_stop(enum pbl_analytics_key key) {}
+void pbl_analytics_add(enum pbl_analytics_key key, int32_t amount) {}
+void command_analytics_heartbeat(void) {}
+
+#endif
