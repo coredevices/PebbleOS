@@ -83,5 +83,9 @@ void light_allow(bool allowed);
 //! configured brightness when dynamic backlight is enabled.
 uint8_t light_get_current_brightness_percent(void);
 
+//! @return true if the backlight is currently on in any form (on, timed, or
+//! fading out). Returns false only when the backlight is fully off.
+bool light_is_on(void);
+
 //!   @} // group Light
 //! @} // group UI

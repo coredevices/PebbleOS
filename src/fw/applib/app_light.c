@@ -5,6 +5,10 @@
 
 #include "syscall/syscall.h"
 
+bool app_light_is_on(void) {
+  return sys_light_is_on();
+}
+
 void app_light_enable_interaction(void) {
   sys_light_enable_interaction();
 }
