@@ -4,6 +4,7 @@
 #include "drivers/mic.h"
 #include "drivers/pmic/npm1300.h"
 #include "board/board.h"
+#include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 #include "os/mutex.h"
 #include "system/passert.h"
@@ -34,15 +35,6 @@
 
 static PDM_HandleTypeDef s_hpdm;
 static MicDeviceState* s_state;
-
-// Static backing storage for the PDM buffers. Previously these were allocated
-// from the kernel heap on every mic_start, which could fail once the heap
-// became fragmented. The buffers are a fixed size, exist once per device, and
-// are only live while the mic is running, so .bss is fine.
-static uint8_t s_circ_buffer_storage[PDM_CIRCULAR_BUF_SIZE_BYTES]
-    __attribute__((aligned(4)));
-static int16_t s_pdm_rx_buffer[PDM_CH_COUNT * PDM_AUDIO_RECORD_PIPE_SIZE]
-    __attribute__((aligned(4)));
 
 void mic_init(const MicDevice *this) {
   PBL_ASSERTN(this);
@@ -97,6 +89,28 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
   state->volume = volume;
 }
 
+static bool prv_allocate_buffers(MicDeviceState *state) {
+  // Allocate circular buffer storage
+  state->circ_buffer_storage = kernel_malloc(PDM_CIRCULAR_BUF_SIZE_BYTES);
+  if (!state->circ_buffer_storage) {
+    PBL_LOG_ERR("Failed to allocate circular buffer storage");
+    return false;
+  }
+  
+  // Initialize circular buffer with allocated storage
+  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, PDM_CIRCULAR_BUF_SIZE_BYTES);
+  
+  return true;
+}
+
+static void prv_free_buffers(MicDeviceState *state) {
+  // Free circular buffer storage
+  if (state->circ_buffer_storage) {
+    kernel_free(state->circ_buffer_storage);
+    state->circ_buffer_storage = NULL;
+  }
+}
+
 // Process at most this many frames per system task callback to allow
 // other tasks (especially Bluetooth) to run and prevent send buffer overflow
 #define MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK 5
@@ -110,7 +124,7 @@ static void prv_dispatch_samples_system_task(void *data) {
   mutex_lock_recursive(s_state->mutex);
 
   // Process a limited number of frames to provide backpressure
-  if (s_state->is_running && s_state->data_handler && s_state->audio_buffer) {
+  if (s_state->is_running && s_state->data_handler && s_state->audio_buffer && s_state->circ_buffer_storage) {
     
     size_t frame_size_bytes = s_state->audio_buffer_len * sizeof(int16_t);
     int frames_processed = 0;
@@ -171,6 +185,12 @@ static void prv_dma_data_processing(uint8_t* data, uint16_t size)
     return;
   }
 
+   // Ensure circular buffer storage is allocated
+   if (!s_state->circ_buffer_storage) {
+    PBL_LOG_ERR("No circular buffer storage, ignoring data");
+    return;
+  }
+  
   // Ensure we have valid audio buffer info
   if (!s_state->audio_buffer || s_state->audio_buffer_len == 0) {
     PBL_LOG_ERR("No audio buffer configured, ignoring data");
@@ -272,11 +292,18 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     mutex_unlock_recursive(state->mutex);
     return false;
   }
+  // Allocate buffers dynamically
+  if (!prv_allocate_buffers(state)) {
+    mutex_unlock_recursive(state->mutex);
+    return false;
+  }
+
   hpdm->RxXferSize = this->channels * PDM_AUDIO_RECORD_PIPE_SIZE * sizeof(int16_t);
-  hpdm->pRxBuffPtr = (uint8_t *)s_pdm_rx_buffer;
+  hpdm->pRxBuffPtr = kernel_malloc(hpdm->RxXferSize);
+  PBL_ASSERT(hpdm->pRxBuffPtr, "Can not allocate buffer");
 
   // Reset state
-  circular_buffer_init(&state->circ_buffer, s_circ_buffer_storage, PDM_CIRCULAR_BUF_SIZE_BYTES);
+  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, PDM_CIRCULAR_BUF_SIZE_BYTES);
   state->data_handler = data_handler;
   state->handler_context = context;
   state->audio_buffer = audio_buffer;
@@ -300,6 +327,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     HAL_PDM_DeInit(hpdm);
     HAL_RCC_DisableModule(RCC_MOD_PDM1);
 
+    kernel_free(hpdm->pRxBuffPtr);
     hpdm->pRxBuffPtr = NULL;
 
     stop_mode_enable(InhibitorMic);
@@ -307,6 +335,7 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
 #if PDM_POWER_NPM1300_LDO2
   (void)NPM1300_OPS.ldo2_set_enabled(false);
 #endif
+    prv_free_buffers(state);
     mutex_unlock_recursive(state->mutex);
     return false;
   }
@@ -336,7 +365,10 @@ void mic_stop(const MicDevice *this) {
   HAL_NVIC_DisableIRQ(this->pdm_irq);
   HAL_PDM_DMAStop(hpdm);
   HAL_PDM_DeInit(hpdm);
+  // Free dynamically allocated buffers
+  prv_free_buffers(state);
 
+  kernel_free(hpdm->pRxBuffPtr);
   hpdm->pRxBuffPtr = NULL;
   
   // Clear state
