@@ -62,7 +62,6 @@ static void prv_bf0_disable_pll(AudioDeviceState* state)
 static int prv_bf0_pll_calibration()
 {
     uint32_t pll_cnt;
-    uint32_t xtal_cnt;
     uint32_t fc_vco;
     uint32_t fc_vco_min;
     uint32_t fc_vco_max;
@@ -98,7 +97,6 @@ static int prv_bf0_pll_calibration()
             hwp_audcodec->PLL_CAL_CFG |= AUDCODEC_PLL_CAL_CFG_EN;
             while (!(hwp_audcodec->PLL_CAL_CFG & AUDCODEC_PLL_CAL_CFG_DONE_Msk));
             pll_cnt = (hwp_audcodec->PLL_CAL_RESULT >> AUDCODEC_PLL_CAL_RESULT_PLL_CNT_Pos);
-            xtal_cnt = (hwp_audcodec->PLL_CAL_RESULT & AUDCODEC_PLL_CAL_RESULT_XTAL_CNT_Msk);
             hwp_audcodec->PLL_CAL_CFG &= ~AUDCODEC_PLL_CAL_CFG_EN;
             if (pll_cnt < target_cnt)
             {

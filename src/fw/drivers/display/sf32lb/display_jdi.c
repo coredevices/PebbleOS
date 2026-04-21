@@ -240,7 +240,6 @@ void display_set_rotated(bool rotated) {
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  DisplayJDIState *state = DISPLAY->state;
   DisplayRow row;
   bool first_row = true;
 
