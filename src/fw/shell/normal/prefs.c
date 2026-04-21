@@ -1206,9 +1206,6 @@ void backlight_set_dynamic_min_threshold(uint32_t threshold) {
   if (threshold > AMBIENT_LIGHT_LEVEL_MAX) {
     threshold = AMBIENT_LIGHT_LEVEL_MAX;
   }
-  if (threshold < 0) {
-    threshold = 0;
-  }
   // Note: Min threshold should be much smaller than ambient_light_dark_threshold (Zone 2 upper bound)
   // Typically min_threshold is 0-5, while ambient_light_dark_threshold is ~150
   prv_pref_set(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD, &threshold, sizeof(threshold));
