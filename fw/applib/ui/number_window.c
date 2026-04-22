@@ -13,6 +13,7 @@
 #include <applib/graphics/graphics.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/system_icons.h>
+#include <shell/system_theme.h>
 
 #if defined(CONFIG_RECOVERY_FW) || defined(CONFIG_MFG)
 #define NUMBER_FONT_KEY FONT_KEY_GOTHIC_24_BOLD
@@ -96,7 +97,7 @@ void prv_update_proc(Layer *layer, GContext *ctx) {
   _Static_assert(offsetof(NumberWindow, window) == 0, "");
   NumberWindow *nw = (NumberWindow *)layer;
 
-  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, system_theme_get_fg_color());
 
   GRect frame = prv_get_text_frame(layer);
   frame.size.h = 54;

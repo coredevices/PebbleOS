@@ -18,6 +18,7 @@
 #include <kernel/ui/kernel_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
+#include <shell/system_theme.h>
 #include <system/passert.h>
 
 typedef struct StatusBarTextFormat {
@@ -150,8 +151,8 @@ void status_bar_layer_init(StatusBarLayer *status_bar_layer) {
   event_service_client_subscribe(&(status_bar_layer->tick_event));
 
   status_bar_layer->config = (StatusBarLayerConfig){
-    .foreground_color = GColorWhite,
-    .background_color = GColorBlack,
+    .foreground_color = system_theme_get_fg_color(),
+    .background_color = system_theme_get_bg_color(),
     .separator.mode = StatusBarLayerSeparatorModeNone,
   };
 
