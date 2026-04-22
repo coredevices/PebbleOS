@@ -15,6 +15,7 @@
 #include "system/passert.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/prefs.h"
+#include "shell/system_theme.h"
 #include "pbl/util/size.h"
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
@@ -153,10 +154,6 @@ static void prv_window_load(Window *window) {
                              .select_click = prv_select_callback,
                              .get_separator_height = prv_get_separator_height_callback
                            });
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_normal_colors(menu_layer, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite),
-                               PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -172,6 +169,15 @@ static void prv_window_load(Window *window) {
     .context = data,
   };
   event_service_client_subscribe(&data->pref_change_event_info);
+}
+
+static void prv_window_appear(Window *window) {
+  SettingsAppData *data = window_get_user_data(window);
+  // Refresh background and menu colors in case dark mode changed while away
+  window_set_background_color(window, system_theme_get_bg_color());
+  menu_layer_set_normal_colors(&data->menu_layer, system_theme_get_bg_color(),
+                               system_theme_get_fg_color());
+  layer_mark_dirty(menu_layer_get_layer(&data->menu_layer));
 }
 
 static void prv_window_unload(Window *window) {
@@ -200,9 +206,10 @@ static void handle_init(void) {
   window_set_user_data(window, data);
   window_set_window_handlers(window, &(WindowHandlers){
                                        .load = prv_window_load,
+                                       .appear = prv_window_appear,
                                        .unload = prv_window_unload,
                                      });
-  window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+  window_set_background_color(window, system_theme_get_bg_color());
   app_window_stack_push(window, true);
 }
 
