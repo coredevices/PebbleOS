@@ -724,8 +724,9 @@ static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, 
   [[maybe_unused]] const bool paging = PBL_IF_ROUND_ELSE((is_card || is_peek), false);
   GRect box;
   (is_card ? prv_get_card_view_bounds : prv_get_pin_view_bounds)(layout, &box);
-  graphics_context_set_text_color(
-      ctx, (is_card ? layout_get_colors((LayoutLayer *)layout)->primary_color : GColorBlack));
+  graphics_context_set_text_color(ctx,
+                                  (is_card ? layout_get_colors((LayoutLayer *)layout)->primary_color
+                                           : system_theme_get_fg_color()));
   static const GRect page_frame_on_screen = {
     {0, STATUS_BAR_LAYER_HEIGHT},
     {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT}
