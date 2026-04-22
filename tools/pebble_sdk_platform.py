@@ -148,6 +148,7 @@ emery_platform = {
         "PBL_COMPASS",
         "PBL_TOUCH",
         "PBL_RGB_BACKLIGHT",
+        "PBL_SPEAKER",
         "PBL_DISPLAY_WIDTH=200",
         "PBL_DISPLAY_HEIGHT=228",
     ],
@@ -165,6 +166,7 @@ emery_platform = {
         "strappower",
         "compass",
         "touch",
+        "speaker",
         "200w",
         "228h",
     ],
@@ -184,6 +186,7 @@ flint_platform = {
         "PBL_MICROPHONE",
         "PBL_HEALTH",
         "PBL_COMPASS",
+        "PBL_SPEAKER",
         "PBL_DISPLAY_WIDTH=144",
         "PBL_DISPLAY_HEIGHT=168",
     ],
@@ -191,7 +194,17 @@ flint_platform = {
     "BUNDLE_BIN_DIR": "flint",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
     "MAX_FONT_GLYPH_SIZE": 256,
-    "TAGS": ["flint", "bw", "rect", "mic", "health", "compass", "144w", "168h"],
+    "TAGS": [
+        "flint",
+        "bw",
+        "rect",
+        "mic",
+        "health",
+        "compass",
+        "speaker",
+        "144w",
+        "168h",
+    ],
 }
 
 gabbro_platform = {
