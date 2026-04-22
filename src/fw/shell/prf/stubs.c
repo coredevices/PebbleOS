@@ -222,8 +222,9 @@ uint32_t backlight_get_timeout_ms(void) {
 }
 
 uint16_t backlight_get_intensity(void) {
-  return BACKLIGHT_BRIGHTNESS_MAX;
+  return (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)BOARD_CONFIG.backlight_on_percent) / 100;
 }
+
 uint8_t backlight_get_intensity_percent(void) {
   return (backlight_get_intensity() * 100) / BACKLIGHT_BRIGHTNESS_MAX;
 }
