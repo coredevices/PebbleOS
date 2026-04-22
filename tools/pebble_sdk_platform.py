@@ -147,6 +147,7 @@ emery_platform = {
         "PBL_SMARTSTRAP_POWER",
         "PBL_COMPASS",
         "PBL_TOUCH",
+        "PBL_RGB_BACKLIGHT",
         "PBL_DISPLAY_WIDTH=200",
         "PBL_DISPLAY_HEIGHT=228",
     ],
