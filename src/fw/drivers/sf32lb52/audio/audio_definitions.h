@@ -51,6 +51,7 @@ typedef const struct AudioDevice {
   uint32_t audec_dma_request;
   IRQn_Type audec_dma_irq;
   OutputConfig pa_ctrl;
+  const BoardPowerOps *power_ops;
   uint8_t data_format;
   uint8_t data_mode;
   uint32_t samplerate;

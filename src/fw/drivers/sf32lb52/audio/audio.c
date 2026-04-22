@@ -17,6 +17,10 @@ void audio_init(AudioDevice* audio_device) {
 }
 
 void audio_start(AudioDevice* audio_device, AudioTransCB cb) {
+    if (audio_device->power_ops && audio_device->power_ops->power_up) {
+        audio_device->power_ops->power_up();
+    }
+
     gpio_output_set(&audio_device->pa_ctrl, true);
     delay_us(PA_POWER_DELAY_TIME);
     gpio_output_set(&audio_device->pa_ctrl, false);
@@ -36,4 +40,8 @@ void audio_set_volume(AudioDevice* audio_device, int volume) {
 void audio_stop(AudioDevice* audio_device) {
     audec_stop(audio_device);
     gpio_output_set(&audio_device->pa_ctrl, false);
+
+    if (audio_device->power_ops && audio_device->power_ops->power_down) {
+        audio_device->power_ops->power_down();
+    }
 }
