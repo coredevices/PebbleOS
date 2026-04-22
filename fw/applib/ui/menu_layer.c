@@ -24,7 +24,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 #ifdef CONFIG_TOUCH
 #include <pbl/drivers/rtc.h>
