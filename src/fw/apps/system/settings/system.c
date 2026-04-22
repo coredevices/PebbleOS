@@ -70,6 +70,7 @@ enum {
   DebuggingItemDynamicBacklightMinThreshold,
 #endif
   DebuggingItemAccelShakeLogInfo,
+  DebuggingItemVibeLogInfo,
   DebuggingItem_Count,
 };
 
@@ -590,6 +591,7 @@ static const char* s_debugging_titles[DebuggingItem_Count] = {
   [DebuggingItemDynamicBacklightMinThreshold] = i18n_noop("Dyn BL Min Threshold"),
 #endif
   [DebuggingItemAccelShakeLogInfo] = i18n_noop("Shake Log Info"),
+  [DebuggingItemVibeLogInfo] = i18n_noop("Vibe Log Info"),
 };
 
 static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_layer,
@@ -633,6 +635,10 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
 #endif
   else if (cell_index->row == DebuggingItemAccelShakeLogInfo) {
     subtitle_text = shell_prefs_get_accel_shake_log_info_enabled() ?
+                        i18n_get("Enabled", data) : i18n_get("Disabled", data);
+  }
+  else if (cell_index->row == DebuggingItemVibeLogInfo) {
+    subtitle_text = shell_prefs_get_vibe_log_info_enabled() ?
                         i18n_get("Enabled", data) : i18n_get("Disabled", data);
   }
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, NULL);
@@ -682,6 +688,10 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
     case DebuggingItemAccelShakeLogInfo:
       shell_prefs_set_accel_shake_log_info_enabled(
           !shell_prefs_get_accel_shake_log_info_enabled());
+      break;
+    case DebuggingItemVibeLogInfo:
+      shell_prefs_set_vibe_log_info_enabled(
+          !shell_prefs_get_vibe_log_info_enabled());
       break;
     default:
       WTF;

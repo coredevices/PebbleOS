@@ -326,3 +326,11 @@ MenuScrollVibeBehavior shell_prefs_get_menu_scroll_vibe_behavior(void) {
 void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
   // Not used in SDK shell
 }
+
+bool shell_prefs_get_vibe_log_info_enabled(void) {
+  return false;
+}
+
+void shell_prefs_set_vibe_log_info_enabled(bool enabled) {
+  // Not used in SDK shell
+}
