@@ -95,6 +95,10 @@ typedef struct {
 
   EventServiceInfo wakeup_event_info;
 
+  SpeakerFinishedCallback speaker_finish_handler;
+  void *speaker_finish_ctx;
+  EventServiceInfo speaker_finish_event_info;
+
 #ifdef CONFIG_TOUCH
   RecognizerList recognizer_list;
 #endif
@@ -363,6 +367,26 @@ void app_state_set_wakeup_handler(WakeupHandler handler) {
 
 EventServiceInfo *app_state_get_wakeup_event_info(void) {
   return &s_app_state_ptr->wakeup_event_info;
+}
+
+SpeakerFinishedCallback app_state_get_speaker_finish_handler(void) {
+  return s_app_state_ptr->speaker_finish_handler;
+}
+
+void app_state_set_speaker_finish_handler(SpeakerFinishedCallback handler) {
+  s_app_state_ptr->speaker_finish_handler = handler;
+}
+
+void *app_state_get_speaker_finish_ctx(void) {
+  return s_app_state_ptr->speaker_finish_ctx;
+}
+
+void app_state_set_speaker_finish_ctx(void *ctx) {
+  s_app_state_ptr->speaker_finish_ctx = ctx;
+}
+
+EventServiceInfo *app_state_get_speaker_finish_event_info(void) {
+  return &s_app_state_ptr->speaker_finish_event_info;
 }
 
 GBitmap* app_state_legacy2_get_2bit_framebuffer(void) {

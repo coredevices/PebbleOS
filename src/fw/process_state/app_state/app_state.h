@@ -27,6 +27,7 @@
 #include "applib/ui/click_internal.h"
 #include "applib/ui/content_indicator_private.h"
 #include "applib/ui/recognizer/recognizer.h"
+#include "applib/ui/speaker.h"
 #include "applib/ui/window_stack_private.h"
 #include "applib/unobstructed_area_service_private.h"
 #include "kernel/logging_private.h"
@@ -159,6 +160,12 @@ WakeupHandler app_state_get_wakeup_handler(void);
 void app_state_set_wakeup_handler(WakeupHandler handler);
 
 EventServiceInfo *app_state_get_wakeup_event_info(void);
+
+SpeakerFinishedCallback app_state_get_speaker_finish_handler(void);
+void app_state_set_speaker_finish_handler(SpeakerFinishedCallback handler);
+void *app_state_get_speaker_finish_ctx(void);
+void app_state_set_speaker_finish_ctx(void *ctx);
+EventServiceInfo *app_state_get_speaker_finish_event_info(void);
 
 //! Retrieve a preallocated full screen 2bit framebuffer for use with 2.x apps that want to use the
 //! capture_frame_buffer API. Note this memory is only valid when used with 2.x apps.
