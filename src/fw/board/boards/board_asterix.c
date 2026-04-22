@@ -4,12 +4,14 @@
 #include <nrfx_i2s.h>
 
 #include "board/board.h"
+#include "drivers/audio.h"
 #include "drivers/flash/qspi_flash_definitions.h"
 #include "drivers/gpio.h"
 #include "drivers/i2c.h"
 #include "drivers/i2c/definitions.h"
 #include "drivers/mic.h"
 #include "drivers/mic/nrf5/pdm_definitions.h"
+#include "drivers/nrf5/audio/audio_definitions.h"
 #include "drivers/i2c/nrf5.h"
 #include "drivers/uart/nrf5.h"
 #include "drivers/pmic/npm1300.h"
@@ -199,6 +201,33 @@ static MicDevice s_mic_device = {
   .channels = 1,
 };
 MicDevice * const MIC = &s_mic_device;
+
+/* Speaker / audio output (DA7212 codec over I2S) */
+static AudioDeviceState s_audio_state_storage;
+static void prv_audio_power_up(void) {
+  NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
+}
+static void prv_audio_power_down(void) {
+  NPM1300_OPS.dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
+}
+static const BoardPowerOps s_audio_power_ops = {
+  .power_up = prv_audio_power_up,
+  .power_down = prv_audio_power_down,
+};
+static const AudioDevice s_audio_device = {
+  .state = &s_audio_state_storage,
+  .i2s_instance = NRFX_I2S_INSTANCE(0),
+  .sck_pin = NRF_GPIO_PIN_MAP(0, 12),   // P0.12 - I2S SCK  -> DA7212 BCLK
+  .lrck_pin = NRF_GPIO_PIN_MAP(0, 7),   // P0.07 - I2S LRCK -> DA7212 WCLK
+  .mck_pin = NRF_GPIO_PIN_MAP(1, 9),    // P1.09 - I2S MCK  -> DA7212 MCLK
+  .sdout_pin = NRF_GPIO_PIN_MAP(0, 13), // P0.13 - I2S SDOUT -> DA7212 DATA_IN
+  .sdin_pin = NRF_I2S_PIN_NOT_CONNECTED, // codec DATA_OUT unused for playback
+  .irq_priority = 5,
+  .codec = &I2C_SLAVE_DA7212,
+  .power_ops = &s_audio_power_ops,
+  .samplerate = 16000,
+};
+AudioDevice * const AUDIO = (AudioDevice *)&s_audio_device;
 
 /* sensor SPI bus */
 

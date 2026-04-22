@@ -69,6 +69,7 @@ elif bld.is_snowy_compatible() or bld.is_snowy_emery() or bld.is_spalding_gabbro
 
 elif bld.is_asterix():
     bld.env.DRIVERS.extend([
+        'driver_audio',
         'driver_backlight',
         'driver_button',
         'driver_mcu',
@@ -134,6 +135,21 @@ elif bld.is_obelix():
             'pbl_includes',
             'driver_gpio',
             'hal_sifli',
+        ],
+    )
+elif bld.is_asterix():
+    bld.objects(
+        name='driver_audio',
+        source=[
+            'nrf5/audio/audio.c',
+        ],
+        use=[
+            'fw_includes',
+            'pbl_includes',
+            'driver_i2c',
+            'driver_nrf5_hfxo',
+            'freertos',
+            'hal_nordic',
         ],
     )
 

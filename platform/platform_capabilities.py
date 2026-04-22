@@ -134,6 +134,7 @@ board_capability_dicts = [
             "HAS_FLASH_OTP",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_ORIENTATION_MANAGER",
+            "HAS_SPEAKER",
         },
     },
     {
