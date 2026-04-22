@@ -9,11 +9,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// Test mode bitmask
-#define MFG_TEST_MODE_SEMI_FINISHED (1 << 0)
-#define MFG_TEST_MODE_FINISHED      (1 << 1)
-#define MFG_TEST_MODE_ALL           (MFG_TEST_MODE_SEMI_FINISHED | MFG_TEST_MODE_FINISHED)
-
 const PebbleProcessMd* mfg_test_menu_semi_finished_app_get_info(void);
 const PebbleProcessMd* mfg_test_menu_finished_app_get_info(void);
 
