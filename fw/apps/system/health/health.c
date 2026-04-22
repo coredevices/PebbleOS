@@ -15,6 +15,7 @@
 #include <popups/health_tracking_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
 
 // Health app versions
 // 0: Invalid (app was never opened)
@@ -78,7 +79,7 @@ static void prv_show_insights_onboarding_dialog(void) {
       "Psst! Want smart tips about your activity and sleep? "
       "You can enable Insights in the mobile app.");
   ExpandableDialog *dialog = expandable_dialog_create_with_params(
-      "Insights Onboarding", RESOURCE_ID_HEALTH_ICON_MOON, text, GColorBlack, GColorWhite, NULL,
+      "Insights Onboarding", RESOURCE_ID_HEALTH_ICON_MOON, text, system_theme_get_fg_color(), system_theme_get_bg_color(), NULL,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK, expandable_dialog_close_cb);
   app_expandable_dialog_push(dialog);
 }
