@@ -9,8 +9,9 @@
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
 #include <shell/system_shell.h>
+#include <shell/system_theme.h>
 
-#define WATCHFACE_SHUTTER_COLOR GColorWhite
+#define WATCHFACE_SHUTTER_COLOR system_theme_get_bg_color()
 #define HEALTH_SHUTTER_COLOR    PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite)
 #define ACTION_SHUTTER_COLOR    PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite)
 
