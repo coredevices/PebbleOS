@@ -89,6 +89,20 @@ void sys_vibe_history_stop_collecting(void);
 bool sys_vibe_history_was_vibrating(uint64_t time_search);
 int32_t sys_vibe_get_vibe_strength(void);
 
+// Speaker syscalls
+#include "pbl/services/normal/speaker/note_sequence.h"
+#include "pbl/services/normal/speaker/track.h"
+bool sys_speaker_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
+                               uint8_t priority, uint8_t volume);
+bool sys_speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks,
+                             uint8_t priority, uint8_t volume);
+bool sys_speaker_stream_open(uint8_t priority, uint8_t volume, uint8_t format);
+uint32_t sys_speaker_stream_write(const void *data, uint32_t num_bytes);
+void sys_speaker_stream_close(void);
+void sys_speaker_stop(void);
+void sys_speaker_set_volume(uint8_t volume);
+uint8_t sys_speaker_get_state(void);
+void sys_speaker_register_finish(void);
 
 void sys_get_app_uuid(Uuid *uuid);
 bool sys_app_is_watchface(void);
