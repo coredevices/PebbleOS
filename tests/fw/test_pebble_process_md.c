@@ -3,6 +3,7 @@
 
 #include <clar.h>
 #include <process_management/pebble_process_md.h>
+#include <util/attributes.h>
 
 void test_pebble_process_md__uninitialized(void) {
   PebbleProcessMdFlash md = {};
