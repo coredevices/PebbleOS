@@ -11,11 +11,11 @@
 #include <applib/ui/window_stack_private.h>
 #include <clar.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <stubs_system_theme.h>
 
 // Stubs
 ////////////////////////////////////
 
+#include <shell/system_theme.h>
 #include <stubs_app_state.h>
 
 // Fakes
