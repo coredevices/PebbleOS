@@ -20,7 +20,6 @@
 #include <process_state/app_state/app_state.h>
 #include <shell/system_theme.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 typedef struct StatusBarTextFormat {
   GTextOverflowMode overflow_mode;
