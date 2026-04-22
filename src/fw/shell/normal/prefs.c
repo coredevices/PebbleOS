@@ -101,7 +101,7 @@ static uint32_t s_dynamic_backlight_min_threshold = 0; // default set from board
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
 #define PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED "displayOrientationLeftHanded"
 static bool s_display_orientation_left = false;
-#endif 
+#endif
 
 #define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
 static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
@@ -249,11 +249,13 @@ static GColor s_theme_highlight_color = GColorVividCerulean;
 #define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR "menuScrollVibeBehavior"
 #define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS "musicShowVolumeControls"
 #define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR "musicShowProgressBar"
+#define PREF_KEY_DARK_MODE "darkMode"
 
 static bool s_menu_scroll_wrap_around = false;
 static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
 static bool s_music_show_volume_controls = true;
 static bool s_music_show_progress_bar = true;
+static uint8_t s_dark_mode = DarkModeOff;
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -391,13 +393,13 @@ static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
     return false;
   }
   s_motion_sensitivity = *sensitivity;
-  
+
   // Update accelerometer sensitivity in accel_manager
   // This applies the setting to the hardware
   #if CAPABILITY_HAS_ACCEL_SENSITIVITY
   accel_manager_update_sensitivity(*sensitivity);
   #endif
-  
+
   return true;
 }
 
@@ -745,7 +747,16 @@ static bool prv_set_s_music_show_progress_bar(bool *enabled) {
   s_music_show_progress_bar = *enabled;
   return true;
 }
-  
+
+static bool prv_set_s_dark_mode(uint8_t *mode) {
+  if (*mode >= DarkModeCount) {
+    s_dark_mode = DarkModeOn;
+    return false;
+  }
+  s_dark_mode = *mode;
+  return true;
+}
+
 // ------------------------------------------------------------------------------------
 // Table of all prefs
 typedef bool (*PrefSetHandler)(const void *value, size_t val_len);
@@ -830,10 +841,10 @@ void shell_prefs_init(void) {
   }
 
   settings_file_close(&file);
-  
+
   // Update the ambient light driver with the loaded threshold value
   ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
-  
+
   // Initialize prefs sync (must be after prefs are loaded)
   prefs_sync_init();
 
@@ -1853,4 +1864,13 @@ bool shell_prefs_get_music_show_progress_bar(void) {
 
 void shell_prefs_set_music_show_progress_bar(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_PROGRESS_BAR, &enable, sizeof(enable));
+}
+
+DarkMode shell_prefs_get_dark_mode(void) {
+  return (DarkMode)s_dark_mode;
+}
+
+void shell_prefs_set_dark_mode(DarkMode mode) {
+  uint8_t val = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_DARK_MODE, &val, sizeof(val));
 }

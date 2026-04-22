@@ -209,3 +209,15 @@ void shell_prefs_set_music_show_volume_controls(bool enable);
 
 bool shell_prefs_get_music_show_progress_bar(void);
 void shell_prefs_set_music_show_progress_bar(bool enable);
+
+typedef enum DarkMode {
+  DarkModeOff = 0,
+  DarkModeOn = 1,
+#if CAPABILITY_HAS_AMBIENT_LIGHT_SENSOR
+  DarkModeAuto = 2,  // Follows the ambient light sensor; dark mode when ambient light is low
+#endif
+  DarkModeCount
+} DarkMode;
+
+DarkMode shell_prefs_get_dark_mode(void);
+void shell_prefs_set_dark_mode(DarkMode mode);
