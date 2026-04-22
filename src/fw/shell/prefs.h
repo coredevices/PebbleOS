@@ -159,6 +159,10 @@ void shell_prefs_set_coredump_on_request(bool enabled);
 bool shell_prefs_get_accel_shake_log_info_enabled(void);
 void shell_prefs_set_accel_shake_log_info_enabled(bool enabled);
 
+// When enabled, vibration pattern logs are emitted at INFO level instead of DEBUG.
+bool shell_prefs_get_vibe_log_info_enabled(void);
+void shell_prefs_set_vibe_log_info_enabled(bool enabled);
+
 #if CAPABILITY_HAS_APP_SCALING
 // Legacy app rendering mode - whether to use bezel or scaling for legacy apps
 typedef enum LegacyAppRenderMode {

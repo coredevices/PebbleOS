@@ -23,6 +23,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 
+#include <inttypes.h>
 #include <stddef.h>
 
 typedef struct {
@@ -335,6 +336,29 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
     mutex_unlock(s_vibe_pattern_mutex);
     return;
   }
+
+#if !defined(RECOVERY_FW)
+  {
+    unsigned int step_count = 0;
+    uint32_t total_duration_ms = 0;
+    VibePatternStep *step = s_vibe_queue_head;
+    while (step) {
+      step_count++;
+      total_duration_ms += step->duration_ms;
+      step = (VibePatternStep *)list_get_next((ListNode *)step);
+    }
+    extern bool shell_prefs_get_vibe_log_info_enabled(void);
+    if (shell_prefs_get_vibe_log_info_enabled()) {
+      PBL_LOG_INFO("vibe_pattern: trigger_start, %u steps, %" PRIu32
+                   "ms total, strength=%" PRId32,
+                   step_count, total_duration_ms, s_vibe_queue_head->strength);
+    } else {
+      PBL_LOG_DBG("vibe_pattern: trigger_start, %u steps, %" PRIu32
+                  "ms total, strength=%" PRId32,
+                  step_count, total_duration_ms, s_vibe_queue_head->strength);
+    }
+  }
+#endif
 
   prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
   s_pattern_in_progress = true;
