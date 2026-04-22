@@ -9,7 +9,6 @@
 #include <applib/ui/window_manager.h>
 #include <applib/ui/window_stack.h>
 #include <applib/ui/window_stack_private.h>
-#include <stubs_system_theme.h>
 #include <clar.h>
 #include <kernel/ui/modals/modal_manager.h>
 
@@ -17,6 +16,7 @@
 ////////////////////////////////////
 
 #include <stubs_app_state.h>
+#include <stubs_system_theme.h>
 
 // Fakes
 ////////////////////////////////////
