@@ -146,6 +146,7 @@ emery_platform = {
         "PBL_HEALTH",
         "PBL_SMARTSTRAP_POWER",
         "PBL_COMPASS",
+        "PBL_TOUCH",
         "PBL_DISPLAY_WIDTH=200",
         "PBL_DISPLAY_HEIGHT=228",
     ],
@@ -162,6 +163,7 @@ emery_platform = {
         "health",
         "strappower",
         "compass",
+        "touch",
         "200w",
         "228h",
     ],
@@ -205,6 +207,7 @@ gabbro_platform = {
         "PBL_MICROPHONE",
         "PBL_HEALTH",
         "PBL_COMPASS",
+        "PBL_TOUCH",
         "PBL_DISPLAY_WIDTH=260",
         "PBL_DISPLAY_HEIGHT=260",
     ],
@@ -212,7 +215,17 @@ gabbro_platform = {
     "BUNDLE_BIN_DIR": "gabbro",
     "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
     "MAX_FONT_GLYPH_SIZE": 512,
-    "TAGS": ["gabbro", "color", "round", "mic", "health", "compass", "260w", "260h"],
+    "TAGS": [
+        "gabbro",
+        "color",
+        "round",
+        "mic",
+        "health",
+        "compass",
+        "touch",
+        "260w",
+        "260h",
+    ],
 }
 
 pebble_platforms = {
