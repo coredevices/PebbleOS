@@ -300,6 +300,9 @@ void sys_vibe_history_stop_collecting(void) {
 void sys_vibe_pattern_clear(void) {
 }
 
+void speaker_service_stop_for_task(PebbleTask task) {
+}
+
 Heap *worker_state_get_heap(void) {
   return NULL;
 }

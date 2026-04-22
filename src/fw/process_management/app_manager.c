@@ -44,6 +44,9 @@
 #endif
 #include "pbl/services/normal/app_inbox_service.h"
 #include "pbl/services/normal/app_outbox_service.h"
+#ifndef RECOVERY_FW
+#include "pbl/services/normal/speaker/speaker_service.h"
+#endif
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/watchface.h"
 #include "shell/shell.h"
@@ -445,6 +448,9 @@ static void prv_app_cleanup(void) {
   light_set_system_color();
   sys_vibe_history_stop_collecting();
   sys_vibe_pattern_clear();
+#ifndef RECOVERY_FW
+  speaker_service_stop_for_task(PebbleTask_App);
+#endif
   ble_app_cleanup();
 #if CAPABILITY_HAS_MAPPABLE_FLASH
   resource_mapped_release_all(PebbleTask_App);
