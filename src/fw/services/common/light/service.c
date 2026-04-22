@@ -231,18 +231,6 @@ static void prv_update_intensity_analytics(uint8_t new_intensity_pct) {
 }
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
-//! Expand a GColor8 argb byte (2 bits per channel) into a packed RGB888
-//! uint32 by bit-replicating each 2-bit component across 8 bits.
-static uint32_t prv_argb_to_rgb888(uint8_t argb) {
-  const uint8_t r2 = (argb >> 4) & 0x3;
-  const uint8_t g2 = (argb >> 2) & 0x3;
-  const uint8_t b2 = argb & 0x3;
-  const uint8_t r = (uint8_t)((r2 << 6) | (r2 << 4) | (r2 << 2) | r2);
-  const uint8_t g = (uint8_t)((g2 << 6) | (g2 << 4) | (g2 << 2) | g2);
-  const uint8_t b = (uint8_t)((b2 << 6) | (b2 << 4) | (b2 << 2) | b2);
-  return ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
-}
-
 //! LED color to drive when no app has set an override. Backed by the
 //! user's stored backlight-color preference, defaulting to LED_WARM_WHITE.
 static uint32_t prv_default_rgb_color(void) {
@@ -498,17 +486,17 @@ void light_reset_user_controlled(void) {
   mutex_unlock(s_mutex);
 }
 
-void light_set_color(uint8_t argb) {
+void light_set_color_rgb888(uint32_t rgb) {
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
   mutex_lock(s_mutex);
-  s_app_rgb_override = prv_argb_to_rgb888(argb);
+  s_app_rgb_override = rgb & 0x00FFFFFF;
   s_app_rgb_override_valid = true;
   if (s_light_state != LIGHT_STATE_OFF) {
     prv_apply_rgb_color();
   }
   mutex_unlock(s_mutex);
 #else
-  (void)argb;
+  (void)rgb;
 #endif
 }
 
@@ -628,8 +616,8 @@ DEFINE_SYSCALL(void, sys_light_reset_to_timed_mode, void) {
   prv_light_reset_to_timed_mode();
 }
 
-DEFINE_SYSCALL(void, sys_light_set_color, uint8_t argb) {
-  light_set_color(argb);
+DEFINE_SYSCALL(void, sys_light_set_color_rgb888, uint32_t rgb) {
+  light_set_color_rgb888(rgb);
 }
 
 DEFINE_SYSCALL(void, sys_light_set_system_color, void) {
