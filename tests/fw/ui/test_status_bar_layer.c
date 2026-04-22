@@ -7,7 +7,6 @@
 #include <clar.h>
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
-#include <stubs_system_theme.h>
 
 // Fakes
 ////////////////////////////////////
@@ -15,6 +14,7 @@
 
 // Stubs
 ////////////////////////////////////
+#include <stubs_system_theme.h>
 
 // Stubs
 ////////////////////////////////////
