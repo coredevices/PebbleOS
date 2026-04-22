@@ -42,4 +42,4 @@
 	url = https://github.com/pebble-dev/iconography
 [submodule "third_party/moddable/moddable"]
 	path = third_party/moddable/moddable
-	url = https://github.com/coredevices/moddable.git
+	url = https://github.com/Moddable-OpenSource/moddable.git
