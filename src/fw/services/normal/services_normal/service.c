@@ -30,6 +30,7 @@
 #include "pbl/services/normal/powermode_service.h"
 #include "pbl/services/normal/send_text_service.h"
 #include "shell/prefs.h"
+#include "pbl/services/normal/speaker/speaker_service.h"
 #include "pbl/services/normal/stationary.h"
 #include "pbl/services/normal/timeline/event.h"
 #include "pbl/services/normal/wakeup.h"
@@ -121,6 +122,8 @@ void services_normal_init(void) {
   protobuf_log_init();
 
   weather_service_init();
+
+  speaker_service_init();
 
 #ifdef CONFIG_MIC
   voice_init();
