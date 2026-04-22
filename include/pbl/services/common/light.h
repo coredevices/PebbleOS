@@ -46,10 +46,10 @@ void light_enable_interaction(void);
 //! Reset the state if an app overrode the usual state machine using light_enable()
 void light_reset_user_controlled(void);
 
-//! @copydoc app_light_set_color
-//! Argb is a GColor8-packed byte (2 bits per channel, alpha ignored).
-//! No-op on platforms without a color backlight.
-void light_set_color(uint8_t argb);
+//! @copydoc app_light_set_color_rgb888
+//! rgb is a packed 0x00RRGGBB value (8 bits per channel). No-op on
+//! platforms without a color backlight.
+void light_set_color_rgb888(uint32_t rgb);
 
 //! @copydoc app_light_set_system_color
 //! No-op on platforms without a color backlight.
