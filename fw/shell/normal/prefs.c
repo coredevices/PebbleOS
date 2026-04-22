@@ -349,6 +349,13 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 
 static GColor s_theme_highlight_color = GColorVividCerulean;
 
+#define PREF_KEY_DARK_MODE          "darkMode"
+#define PREF_KEY_DARK_MODE_SCHEDULE "darkModeSchedule"
+
+static uint8_t s_dark_mode = DarkModeOff;
+#define DEFAULT_DARK_MODE_SCHEDULE {.from_hour = 19, .from_minute = 0, .to_hour = 7, .to_minute = 0}
+static DarkModeSchedule s_dark_mode_schedule = DEFAULT_DARK_MODE_SCHEDULE;
+
 #define PREF_KEY_MENU_SCROLL_WRAP_AROUND    "menuScrollWrapAround"
 #define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR  "menuScrollVibeBehavior"
 #define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS "musicShowVolumeControls"
@@ -997,6 +1004,25 @@ static bool prv_set_s_music_show_progress_bar(bool *enabled) {
 
 static bool prv_set_s_music_show_album_art(bool *enabled) {
   s_music_show_album_art = *enabled;
+  return true;
+}
+
+static bool prv_set_s_dark_mode(uint8_t *mode) {
+  if (*mode >= DarkModeCount) {
+    s_dark_mode = DarkModeOff;
+    return false;
+  }
+  s_dark_mode = *mode;
+  return true;
+}
+
+static bool prv_set_s_dark_mode_schedule(DarkModeSchedule *schedule) {
+  if (schedule->from_hour >= 24 || schedule->from_minute >= 60 || schedule->to_hour >= 24 ||
+      schedule->to_minute >= 60) {
+    s_dark_mode_schedule = (DarkModeSchedule)DEFAULT_DARK_MODE_SCHEDULE;
+    return false;
+  }
+  s_dark_mode_schedule = *schedule;
   return true;
 }
 
@@ -2424,4 +2450,25 @@ bool shell_prefs_get_music_show_album_art(void) {
 
 void shell_prefs_set_music_show_album_art(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_ALBUM_ART, &enable, sizeof(enable));
+}
+
+DarkMode shell_prefs_get_dark_mode(void) {
+  return (DarkMode)s_dark_mode;
+}
+
+void shell_prefs_set_dark_mode(DarkMode mode) {
+  uint8_t val = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_DARK_MODE, &val, sizeof(val));
+}
+
+void shell_prefs_get_dark_mode_schedule(DarkModeSchedule *schedule_out) {
+  if (schedule_out) {
+    *schedule_out = s_dark_mode_schedule;
+  }
+}
+
+void shell_prefs_set_dark_mode_schedule(const DarkModeSchedule *schedule) {
+  if (schedule) {
+    prv_pref_set(PREF_KEY_DARK_MODE_SCHEDULE, schedule, sizeof(*schedule));
+  }
 }
