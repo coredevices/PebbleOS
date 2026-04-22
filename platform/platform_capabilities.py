@@ -177,6 +177,7 @@ board_capability_dicts = [
             "HAS_APP_SCALING",
             "HAS_MODDABLE_XS",
             "HAS_COLOR_BACKLIGHT",
+            "HAS_SPEAKER",
         },
     },
     {
@@ -186,6 +187,7 @@ board_capability_dicts = [
             "HAS_TIMELINE_PEEK",
             "HAS_PUTBYTES_PREACKING",
             "HAS_MODDABLE_XS",
+            "HAS_SPEAKER",
         },
     },
     {
