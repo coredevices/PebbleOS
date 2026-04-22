@@ -95,6 +95,10 @@ static RtcTicks s_back_quickpress_last = 0;
 static int s_back_quickpress_count = 0;
 #endif
 
+static const uint32_t TOUCH_DOUBLE_TAP_INTERVAL_TICKS = 400;
+static RtcTicks s_touch_last = 0;
+static int s_touch_count = 0;
+
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   PebbleEvent event = {
     .type = PEBBLE_CALLBACK_EVENT,
@@ -291,13 +295,22 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
     case PEBBLE_TOUCH_EVENT:
       if (backlight_is_touch_enabled() &&
           e->touch.event.type == TouchEvent_Touchdown) {
+        RtcTicks now = rtc_get_ticks();
+        if ((now - s_touch_last) > TOUCH_DOUBLE_TAP_INTERVAL_TICKS) {
+          s_touch_count = 0;
+        }
+        s_touch_last = now;
+        s_touch_count++;
+        if (s_touch_count >= 2) {
 #ifndef RECOVERY_FW
-        const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
-                                             !alerts_preferences_dnd_get_motion_backlight();
-        if (!dnd_suppresses_backlight)
+          const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
+                                               !alerts_preferences_dnd_get_motion_backlight();
+          if (!dnd_suppresses_backlight)
 #endif
-        {
-          light_enable_interaction();
+          {
+            light_enable_interaction();
+          }
+          s_touch_count = 0;
         }
       }
       return;
