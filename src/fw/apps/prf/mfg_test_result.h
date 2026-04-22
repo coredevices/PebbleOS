@@ -7,6 +7,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// Test mode bitmask
+#define MFG_TEST_MODE_SEMI_FINISHED (1 << 0)
+#define MFG_TEST_MODE_FINISHED      (1 << 1)
+#define MFG_TEST_MODE_ALL           (MFG_TEST_MODE_SEMI_FINISHED | MFG_TEST_MODE_FINISHED)
+
 typedef enum {
   MfgTestId_Buttons,
   MfgTestId_Display,
@@ -40,6 +45,10 @@ typedef struct {
   bool passed;
   uint32_t value;
 } MfgTestResult;
+
+//! Set the active test mode (MFG_TEST_MODE_SEMI_FINISHED or
+//! MFG_TEST_MODE_FINISHED). Results are stored separately per mode.
+void mfg_test_result_set_mode(uint8_t mode);
 
 //! Report the result of a test. Can be called from any test app.
 void mfg_test_result_report(MfgTestId test, bool passed, uint32_t value);

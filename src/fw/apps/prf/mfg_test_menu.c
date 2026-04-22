@@ -214,7 +214,11 @@ bool mfg_test_menu_is_test_available(MfgTestId test_id) {
 }
 
 static void prv_run_menu(uint8_t mode) {
+  if (s_active_mode != mode) {
+    s_last_selected = -1;
+  }
   s_active_mode = mode;
+  mfg_test_result_set_mode(mode);
   prv_build_filtered_entries(mode);
 
   MfgTestMenuAppData *data = app_malloc_check(sizeof(MfgTestMenuAppData));
