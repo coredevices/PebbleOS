@@ -19,6 +19,7 @@
 #include <applib/ui/ui.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/system_icons.h>
+#include <shell/system_theme.h>
 
 #define VOLUME_STEP               5
 #define BUTTON_REPEAT_INTERVAL_MS 100
@@ -41,9 +42,9 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   static_assert(offsetof(SpeakerVolumeWindowData, window) == 0, "");
   SpeakerVolumeWindowData *data = (SpeakerVolumeWindowData *)layer;
 
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
   graphics_fill_rect(ctx, &layer->bounds);
-  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, system_theme_get_fg_color());
 
   const int16_t x_margin = 5;
   const GRect content =
