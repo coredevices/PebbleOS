@@ -262,10 +262,34 @@ void test_battery_ui_fsm__warning(void) {
   cl_assert(s_modal_onscreen && s_modal_percent == battery_curve_get_percent_remaining(12));
 }
 
+void test_battery_ui_fsm__skip_first_warning_when_next_is_close(void) {
+  // If the first warning would fire at a battery level already within
+  // BATTERY_WARNING_MIN_HOURS_HEADROOM (3h) of the next threshold, the
+  // gray warning is skipped so the user doesn't get contradictory daypart
+  // messages (e.g. "Powered 'til tomorrow" followed by "Powered 'til tonight").
+  PreciseBatteryChargeState nop = prv_make_state(50, false, false);
+  // 14h remaining is within 3h of the 12h red threshold -> gray should be skipped.
+  PreciseBatteryChargeState warning_14h =
+      prv_make_state(battery_curve_get_percent_remaining(14), false, false);
+  PreciseBatteryChargeState warning_12h =
+      prv_make_state(battery_curve_get_percent_remaining(12), false, false);
+
+  prv_change_state(warning_14h);
+  cl_assert(!s_modal_onscreen);
+  cl_assert_equal_i(s_vibe_count, 0);
+
+  // Dropping below the red threshold should fire red normally.
+  prv_change_state(warning_12h);
+  cl_assert(s_modal_onscreen);
+  cl_assert_equal_i(s_modal_percent, battery_curve_get_percent_remaining(12));
+  cl_assert_equal_i(s_vibe_count, 1);
+}
+
 void test_battery_ui_fsm__honor_dnd(void) {
   PreciseBatteryChargeState nop = prv_make_state(50, false, false),
                             charging = prv_make_state(50, true, true),
-                            warning = prv_make_state(15, false, false);
+                            warning = prv_make_state(
+                                battery_curve_get_percent_remaining(18), false, false);
   s_dnd_on = true;
   prv_change_state(charging);
   cl_assert(s_modal_onscreen && s_modal_charging);

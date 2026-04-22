@@ -103,6 +103,13 @@ static const uint8_t s_warning_points[] = { 12, 6 };
 static const uint8_t s_warning_points[] = { 18, 12 };
 #endif
 
+// Minimum hours of headroom above the next warning threshold required to show
+// the current warning. If battery crosses a warning point already close to the
+// next one (e.g. a fast drop or a level-estimate correction), skip the earlier
+// warning so the user does not see contradictory daypart messaging like
+// "Powered 'til tomorrow" followed shortly by "Powered 'til tonight".
+#define BATTERY_WARNING_MIN_HOURS_HEADROOM 3
+
 // State functions
 
 static void prv_display_warning(void *data) {
@@ -114,6 +121,14 @@ static void prv_display_warning(void *data) {
          battery_curve_get_percent_remaining(s_warning_points[s_warning_points_index + 1]))) {
     s_warning_points_index++;
     new_warning = true;
+  }
+
+  if (new_warning && s_warning_points_index < num_points) {
+    const uint32_t hours_remaining = battery_curve_get_hours_remaining(percent);
+    const uint32_t next_point_hours = s_warning_points[s_warning_points_index + 1];
+    if (hours_remaining < next_point_hours + BATTERY_WARNING_MIN_HOURS_HEADROOM) {
+      new_warning = false;
+    }
   }
 
   if (new_warning) {
