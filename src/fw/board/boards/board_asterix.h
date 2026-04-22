@@ -143,6 +143,7 @@ extern QSPIPort * const QSPI;
 extern QSPIFlash * const QSPI_FLASH;
 
 extern MicDevice * const MIC;
+extern AudioDevice * const AUDIO;
 
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort * const I2C_DRV2604;
