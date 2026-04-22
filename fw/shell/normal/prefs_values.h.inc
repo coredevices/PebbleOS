@@ -72,6 +72,8 @@
 #endif
 
   PREFS_MACRO(PREF_KEY_THEME_HIGHLIGHT_COLOR, s_theme_highlight_color)
+  PREFS_MACRO(PREF_KEY_DARK_MODE, s_dark_mode)
+  PREFS_MACRO(PREF_KEY_DARK_MODE_SCHEDULE, s_dark_mode_schedule)
 
   PREFS_MACRO(PREF_KEY_MENU_SCROLL_WRAP_AROUND, s_menu_scroll_wrap_around)
   PREFS_MACRO(PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR, s_menu_scroll_vibe_behavior)
