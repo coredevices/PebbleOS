@@ -6,10 +6,25 @@
 #include "shell/system_theme.h"
 #include "pbl/kernel/compiler.h"
 
+#include "stubs_ambient_light.h"
+#include "stubs_pebble_process_md.h"
+
 #include <stdlib.h>
 
 const char *PBL_WEAK system_theme_get_font_key(TextStyleFont font) {
   return NULL;
+}
+
+GColor WEAK system_theme_get_bg_color(void) {
+  return GColorWhite;
+}
+
+GColor WEAK system_theme_get_fg_color(void) {
+  return GColorBlack;
+}
+
+bool WEAK system_theme_is_dark_mode(void) {
+  return false;
 }
 
 const char *PBL_WEAK system_theme_get_font_key_for_size(PreferredContentSize size,
