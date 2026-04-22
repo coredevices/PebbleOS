@@ -22,7 +22,8 @@
 #include <applib/ui/menu_text_scroll.h>
 #include <applib/ui/window.h>
 #include <process_management/process_manager.h>
-#include <shell/prefs.h>
+#include <shell/prefs_syscalls.h>
+#include <shell/system_theme.h>
 
 #ifdef CONFIG_TOUCH
 #include <pbl/drivers/rtc.h>
@@ -980,7 +981,7 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
 
   menu_layer_set_normal_colors(menu_layer, system_theme_get_bg_color(),
                                system_theme_get_fg_color());
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+  GColor highlight_bg = system_theme_get_highlight_color();
   menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
 
   InverterLayer *inverter = &menu_layer->inverter;

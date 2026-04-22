@@ -423,13 +423,13 @@ static void prv_draw_hint(GContext *ctx, SettingsBluetoothData *data, const GRec
                           int16_t hint_height, GFont font) {
   const GRect hint_bounds = GRect(cell_bounds->origin.x, cell_bounds->size.h - hint_height,
                                   cell_bounds->size.w, hint_height);
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
   graphics_fill_rect(ctx, &hint_bounds);
 
   GRect box = prv_get_hint_box();
   box.origin.y += hint_bounds.origin.y;
   box.size.h = hint_height;
-  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, system_theme_get_fg_color());
   graphics_draw_text(ctx, prv_get_hint(data), font, box, GTextOverflowModeWordWrap,
                      GTextAlignmentCenter, nullptr);
 }
