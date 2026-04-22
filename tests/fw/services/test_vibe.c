@@ -43,6 +43,10 @@ void vibe_set_strength(int8_t strength) {
   s_strength_set_count++;
 }
 
+bool shell_prefs_get_vibe_log_info_enabled(void) {
+  return false;
+}
+
 //helpers
 static uint64_t prv_get_current_time() {
   time_t s;
