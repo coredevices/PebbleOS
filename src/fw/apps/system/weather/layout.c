@@ -27,6 +27,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/services/weather/weather_types.h"
+#include "shell/system_theme.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/size.h"
@@ -318,8 +319,8 @@ static void prv_content_indicator_setup_direction(ContentIndicator *content_indi
                                                   ContentIndicatorDirection direction) {
   content_indicator_configure_direction(content_indicator, direction, &(ContentIndicatorConfig) {
     .layer = indicator_layer,
-    .colors.foreground = GColorBlack,
-    .colors.background = GColorWhite,
+    .colors.foreground = system_theme_get_fg_color(),
+    .colors.background = system_theme_get_bg_color(),
   });
 }
 
