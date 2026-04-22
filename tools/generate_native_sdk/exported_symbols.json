@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "96",
+  "revision" : "97",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -111,6 +111,11 @@
     "fw/applib/ui/text_layer.h",
     "fw/applib/ui/ui.h",
     "fw/applib/ui/vibes.h",
+    "fw/applib/ui/speaker.h",
+    "include/pbl/services/normal/speaker/note_sequence.h",
+    "include/pbl/services/normal/speaker/speaker_finish_reason.h",
+    "include/pbl/services/normal/speaker/speaker_pcm_format.h",
+    "include/pbl/services/normal/speaker/track.h",
     "fw/applib/ui/window.h",
     "fw/applib/ui/app_window_stack.h",
     "fw/applib/legacy2/ui/animation_legacy2.h",
@@ -4495,6 +4500,77 @@
               "type": "function",
               "name": "vibes_enqueue_custom_pattern",
               "addedRevision": "0"
+            }
+          ]
+        }, {
+          "type": "group",
+          "name": "Speaker",
+          "appOnly": true,
+          "exports": [
+            {
+              "type": "type",
+              "name": "SpeakerWaveform"
+            }, {
+              "type": "type",
+              "name": "SpeakerNote"
+            }, {
+              "type": "type",
+              "name": "SpeakerPcmFormat"
+            }, {
+              "type": "type",
+              "name": "SpeakerStatus"
+            }, {
+              "type": "type",
+              "name": "SpeakerFinishReason"
+            }, {
+              "type": "type",
+              "name": "SpeakerFinishedCallback"
+            }, {
+              "type": "type",
+              "name": "SpeakerSample"
+            }, {
+              "type": "type",
+              "name": "SpeakerTrack"
+            }, {
+              "type": "function",
+              "name": "speaker_play_notes",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_play_tracks",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_play_tone",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_stream_open",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_stream_write",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_stream_close",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_stop",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_set_volume",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_get_status",
+              "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_set_finish_callback",
+              "addedRevision": "97"
             }
           ]
         }, {
