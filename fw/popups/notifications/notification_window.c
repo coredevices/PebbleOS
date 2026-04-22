@@ -53,6 +53,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
+#include "shell/system_theme.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -1212,7 +1213,7 @@ static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *la
 static void prv_update_colors_handler(SwapLayer *swap_layer, GColor bg_color,
                                       bool status_bar_filled, void *context) {
   NotificationWindowData *data = context;
-  GColor status_color = (status_bar_filled) ? bg_color : GColorWhite;
+  GColor status_color = (status_bar_filled) ? bg_color : system_theme_get_bg_color();
   // Status bar is clear on round, because the banner is rendered under it
   status_bar_layer_set_colors(&data->status_layer, PBL_IF_ROUND_ELSE(GColorClear, status_color),
                               gcolor_legible_over(status_color));
