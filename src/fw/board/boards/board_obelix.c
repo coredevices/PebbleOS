@@ -5,6 +5,7 @@
 #include "board/display.h"
 #include "board/splash.h"
 #include "drivers/led_controller.h"
+#include "drivers/pmic/npm1300.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
 #include "drivers/hrm/gh3x2x.h"
 #include "system/passert.h"
@@ -619,6 +620,19 @@ const MicDevice* MIC = &mic_device;
 IRQ_MAP(PDM1, pdm1_data_handler, MIC);
 IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
 
+static void prv_audio_power_up(void) {
+  NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
+}
+
+static void prv_audio_power_down(void) {
+  NPM1300_OPS.dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
+}
+
+static const BoardPowerOps prv_audio_power_ops = {
+    .power_up = prv_audio_power_up,
+    .power_down = prv_audio_power_down,
+};
+
 static AudioDeviceState audio_state;
 static const AudioDevice audio_device = {
     .state = &audio_state,
@@ -635,6 +649,7 @@ static const AudioDevice audio_device = {
         .gpio_pin = 0,
         .active_high =true,
     },
+    .power_ops = &prv_audio_power_ops,
 };
 const AudioDevice* AUDIO = &audio_device;
 IRQ_MAP(DMAC1_CH4, audec_dac0_dma_irq_handler, AUDIO);
