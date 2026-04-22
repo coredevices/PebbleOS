@@ -436,7 +436,6 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   SettingsBacklightData *data = (SettingsBacklightData *)context;
   const char *title = nullptr;
   const char *subtitle = nullptr;
-  char time_buf[32];
   switch (prv_backlight_item_from_row(row)) {
     case SettingsBacklightMode:
       title = i18n_noop("Backlight");
@@ -764,6 +763,7 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   SettingsDisplayData *data = (SettingsDisplayData *)context;
   const char *title = nullptr;
   const char *subtitle = nullptr;
+  char time_buf[32];
   switch (prv_display_item_from_row(row)) {
     case SettingsDisplayBacklight:
       title = i18n_noop("Backlight");
