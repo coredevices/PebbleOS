@@ -13,10 +13,13 @@
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/touch_nav.h>
 #include <applib/ui/scroll_layer_private.h>
+#include <applib/ui/window_private.h>
 #include <clar.h>
 #include <fake_app_timer.h>
 #include <fake_rtc.h>
 #include <pebble_asserts.h>
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
 #include <stubs_app_state.h>
 #include <stubs_compiled_with_legacy2_sdk.h>
 
