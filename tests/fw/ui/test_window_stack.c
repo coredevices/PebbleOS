@@ -11,6 +11,7 @@
 #include <applib/ui/window_stack_private.h>
 #include <clar.h>
 #include <kernel/ui/modals/modal_manager.h>
+#include <stubs_system_theme.h>
 
 // Stubs
 ////////////////////////////////////
