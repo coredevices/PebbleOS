@@ -63,6 +63,7 @@
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
 
 PBL_LOG_MODULE_DECLARE(service_alerts, CONFIG_SERVICE_ALERTS_LOG_LEVEL);
 
@@ -1219,7 +1220,7 @@ static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *la
 static void prv_update_colors_handler(SwapLayer *swap_layer, GColor bg_color,
                                       bool status_bar_filled, void *context) {
   NotificationWindowData *data = context;
-  GColor status_color = (status_bar_filled) ? bg_color : GColorWhite;
+  GColor status_color = (status_bar_filled) ? bg_color : system_theme_get_bg_color();
   // Status bar is clear on round, because the banner is rendered under it
   status_bar_layer_set_colors(&data->status_layer, PBL_IF_ROUND_ELSE(GColorClear, status_color),
                               gcolor_legible_over(status_color));
