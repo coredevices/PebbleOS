@@ -13,6 +13,7 @@
 #include "applib/legacy2/ui/menu_layer_legacy2.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/process_manager.h"
+#include "shell/prefs.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
@@ -974,8 +975,9 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
   scroll_layer_set_shadow_hidden(scroll_layer, true);
   scroll_layer_set_context(scroll_layer, menu_layer);
 
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(menu_layer, GColorBlack, GColorWhite);
+  menu_layer_set_normal_colors(menu_layer, system_theme_get_bg_color(), system_theme_get_fg_color());
+  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
 
   InverterLayer *inverter = &menu_layer->inverter;
   inverter_layer_init(inverter, &GRectZero);
