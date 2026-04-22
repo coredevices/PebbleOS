@@ -5,6 +5,7 @@
 
 #include "system_theme_style.h"
 
+#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/syscall.h>
@@ -13,7 +14,10 @@
 #include <pbl/util/testing.h>
 
 #include <applib/fonts/fonts.h>
+#include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
+#include <shell/prefs.h>
+#include <syscall/syscall.h>
 
 ////////////////////
 // Helpers
@@ -67,6 +71,74 @@ GFont system_theme_get_font_for_size(PreferredContentSize size, TextStyleFont fo
 GFont system_theme_get_font_for_default_size(TextStyleFont font) {
   return fonts_get_system_font(
       system_theme_get_font_key_for_size(PreferredContentSizeDefault, font));
+}
+
+//! Returns true if the current (system) app context should render in dark mode.
+static bool prv_is_system_app(void) {
+  const PebbleTask task = pebble_task_get_current();
+  if (task != PebbleTask_App && task != PebbleTask_Worker) {
+    // Kernel / other tasks are always treated as system
+    return true;
+  }
+  const ProcessAppSDKType sdk_type =
+      process_metadata_get_app_sdk_type(sys_process_manager_get_current_process_md());
+  return sdk_type == ProcessAppSDKType_System;
+}
+
+PBL_SYSCALL(bool, system_theme_is_dark_mode) {
+  // Dark mode is only supported on color platforms, so treat all non-color platforms as light mode
+  if (PBL_IF_COLOR_ELSE(false, true)) {
+    return false;
+  }
+  if (!prv_is_system_app()) {
+    return false;
+  }
+  switch (shell_prefs_get_dark_mode()) {
+    case DarkModeOff:
+      return false;
+    case DarkModeOn:
+      return true;
+    case DarkModeScheduled: {
+      DarkModeSchedule schedule;
+      shell_prefs_get_dark_mode_schedule(&schedule);
+      struct pbl_tm time_now;
+      rtc_get_time_tm(&time_now);
+      const int now_min = time_now.tm_hour * 60 + time_now.tm_min;
+      const int start_min = schedule.from_hour * 60 + schedule.from_minute;
+      const int end_min = schedule.to_hour * 60 + schedule.to_minute;
+      if (start_min == end_min) {
+        return false;
+      }
+      if (start_min < end_min) {
+        return (now_min >= start_min && now_min < end_min);
+      } else {
+        return (now_min >= start_min || now_min < end_min);
+      }
+    }
+    default:
+      return false;
+  }
+}
+
+GColor system_theme_get_bg_color(void) {
+  if (!prv_is_system_app()) {
+    return GColorWhite;
+  }
+  return system_theme_is_dark_mode() ? GColorBlack : GColorWhite;
+}
+
+GColor system_theme_get_fg_color(void) {
+  if (!prv_is_system_app()) {
+    return GColorBlack;
+  }
+  return system_theme_is_dark_mode() ? GColorWhite : GColorBlack;
+}
+
+PBL_SYSCALL(GColor, system_theme_get_highlight_color) {
+  if (!prv_is_system_app()) {
+    return GColorBlack;
+  }
+  return shell_prefs_get_theme_highlight_color();
 }
 
 static const PreferredContentSize s_platform_default_content_sizes[] = {

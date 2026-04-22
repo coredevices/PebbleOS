@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/compiler.h>
 
+#include <process_management/pebble_process_md.h>
 #include <shell/system_theme.h>
 
 const char *PBL_WEAK system_theme_get_font_key(TextStyleFont font) {
@@ -26,6 +27,22 @@ GFont PBL_WEAK system_theme_get_font_for_size(PreferredContentSize size, TextSty
 
 GFont PBL_WEAK system_theme_get_font_for_default_size(TextStyleFont font) {
   return nullptr;
+}
+
+GColor PBL_WEAK system_theme_get_bg_color(void) {
+  return GColorWhite;
+}
+
+GColor PBL_WEAK system_theme_get_fg_color(void) {
+  return GColorBlack;
+}
+
+bool PBL_WEAK system_theme_is_dark_mode(void) {
+  return false;
+}
+
+GColor PBL_WEAK system_theme_get_highlight_color(void) {
+  return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
 }
 
 PreferredContentSize PBL_WEAK system_theme_get_default_content_size_for_runtime_platform(void) {
