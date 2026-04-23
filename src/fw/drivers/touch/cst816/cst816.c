@@ -30,6 +30,15 @@
 #define CST816_FW_VERSION_REG         0xA9
 #define CST816_TOUCH_DATA_REG         0x02
 #define CST816_TOUCH_DATA_SIZE        5
+#define CST816_GESTURE_ID             0x01
+#define CST816_GESTURE_NONE           0x00
+#define CST816_GESTURE_RIGHT          0x01
+#define CST816_GESTURE_LEFT           0x02
+#define CST816_GESTURE_DOWN           0x03
+#define CST816_GESTURE_UP             0x04
+#define CST816_GESTURE_CLICK          0x05
+#define CST816_GESTURE_DOUBLE_CLICK   0x0B
+#define CST816_GESTURE_LONG_PRESS     0x0C
 
 #define CST816_BOOT_MODE_REG          0xA001
 #define CST816_BOOT_MODE_CMD          0xAB
@@ -251,10 +260,18 @@ void touch_sensor_init(void) {
 }
 
 static void prv_process_pending_messages(void* context) {
+  bool rv;
   s_callback_scheduled = false;
 
+  uint8_t id;
+  rv = prv_read_data(CST816_GESTURE_ID, &id, 1, 1);
+  if (!rv) {
+    PBL_LOG_ERR("Failed to read gesture ID, dropping event");
+    return;
+  }
+
   uint8_t data[CST816_TOUCH_DATA_SIZE] = {0};
-  bool rv = prv_read_data(CST816_TOUCH_DATA_REG, data, CST816_TOUCH_DATA_SIZE, 1);
+  rv = prv_read_data(CST816_TOUCH_DATA_REG, data, CST816_TOUCH_DATA_SIZE, 1);
   if (!rv) {
     PBL_LOG_ERR("Failed to read touch data, dropping event");
     return;
@@ -272,6 +289,17 @@ static void prv_process_pending_messages(void* context) {
 
   if (CST816->invert_y_axis) {
     point.y = CST816->max_y - point.y;
+  }
+
+  switch (id) {
+    case CST816_GESTURE_CLICK:
+      touch_handle_gesture(TouchGesture_Tap, point.x, point.y);
+      break;
+    case CST816_GESTURE_DOUBLE_CLICK:
+      touch_handle_gesture(TouchGesture_DoubleTap, point.x, point.y);
+      break;
+    default:
+      break;
   }
 
   if (press == 0x01) {
