@@ -63,8 +63,11 @@ bool backlight_is_motion_enabled(void) {
   return false;
 }
 
-bool backlight_is_touch_enabled(void) {
-  return false;
+BacklightTouchWake backlight_get_touch_wake(void) {
+  return BacklightTouchWake_Off;
+}
+
+void backlight_set_touch_wake(BacklightTouchWake wake) {
 }
 
 bool touch_is_globally_enabled(void) {

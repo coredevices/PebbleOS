@@ -87,9 +87,17 @@ void backlight_set_color(uint32_t rgb_color);
 bool backlight_is_motion_enabled(void);
 void backlight_set_motion_enabled(bool enable);
 
-// The backlight touch enabled setting is used by the kernel event loop.
-bool backlight_is_touch_enabled(void);
-void backlight_set_touch_enabled(bool enable);
+// The backlight touch wake setting is used by the kernel event loop to decide
+// whether touch gestures wake the backlight, and if so which gesture (single
+// tap or double tap).
+typedef enum BacklightTouchWake {
+  BacklightTouchWake_Off = 0,
+  BacklightTouchWake_DoubleTap = 1,
+  BacklightTouchWake_Tap = 2,
+} BacklightTouchWake;
+
+BacklightTouchWake backlight_get_touch_wake(void);
+void backlight_set_touch_wake(BacklightTouchWake wake);
 
 // Global touch input kill-switch. When false, the kernel touch service
 // drops events at the source, powers the sensor down, and the applib
