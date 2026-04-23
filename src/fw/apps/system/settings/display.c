@@ -166,6 +166,32 @@ static void prv_timeout_menu_push(SettingsBacklightData *data) {
       true /* icons_enabled */, s_timeout_labels, data);
 }
 
+// Touch Wake Settings
+/////////////////////////////
+#ifdef CONFIG_TOUCH
+static const char *s_touch_wake_labels[] = {
+    [BacklightTouchWake_Off] = i18n_noop("Off"),
+    [BacklightTouchWake_DoubleTap] = i18n_noop("Double Tap"),
+    [BacklightTouchWake_Tap] = i18n_noop("Tap"),
+};
+
+static void prv_touch_wake_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  backlight_set_touch_wake((BacklightTouchWake)selection);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_touch_wake_menu_push(SettingsBacklightData *data) {
+  const int index = (int)backlight_get_touch_wake();
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_touch_wake_menu_select,
+  };
+  const char *title = PBL_IF_RECT_ELSE(i18n_noop("WAKE ON TOUCH"), i18n_noop("Wake on touch"));
+  settings_option_menu_push(
+      title, OptionMenuContentType_SingleLine, index, &callbacks,
+      ARRAY_LENGTH(s_touch_wake_labels), true /* icons_enabled */, s_touch_wake_labels, data);
+}
+#endif
+
 // Legacy App Mode Settings (Obelix only)
 /////////////////////////////
 #if CAPABILITY_HAS_APP_SCALING
@@ -250,7 +276,7 @@ static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t r
       break;
 #ifdef CONFIG_TOUCH
     case SettingsBacklightTouchWake:
-      backlight_set_touch_enabled(!backlight_is_touch_enabled());
+      prv_touch_wake_menu_push(data);
       break;
 #endif
     case SettingsBacklightAmbientSensor:
@@ -306,7 +332,7 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 #ifdef CONFIG_TOUCH
     case SettingsBacklightTouchWake:
       title = i18n_noop("Wake on touch");
-      subtitle = backlight_is_touch_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      subtitle = s_touch_wake_labels[backlight_get_touch_wake()];
       break;
 #endif
     case SettingsBacklightAmbientSensor:
