@@ -107,11 +107,7 @@ static bool s_display_orientation_left = false;
 static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
 
 #define PREF_KEY_STATIONARY "stationaryMode"
-#if RELEASE && !PLATFORM_SPALDING
-static bool s_stationary_mode_enabled = false;
-#else
 static bool s_stationary_mode_enabled = true;
-#endif
 
 #define PREF_KEY_DEFAULT_WORKER "workerId"
 static Uuid s_default_worker = UUID_INVALID_INIT;
