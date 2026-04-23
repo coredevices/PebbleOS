@@ -24,6 +24,7 @@
 #include "pbl/services/common/hrm/hrm_manager.h"
 #include "pbl/services/common/put_bytes/put_bytes.h"
 #include "pbl/services/common/touch/touch_event.h"
+#include "pbl/services/common/touch/gesture_event.h"
 #include "pbl/services/imu/units.h"
 #include "pbl/services/normal/blob_db/api.h"
 #include "pbl/services/normal/music.h"
@@ -113,6 +114,7 @@ typedef enum {
   PEBBLE_APP_OUTBOX_MSG_EVENT,
   PEBBLE_HEALTH_SERVICE_EVENT,
   PEBBLE_TOUCH_EVENT,
+  PEBBLE_GESTURE_EVENT,
   PEBBLE_CAPABILITIES_CHANGED_EVENT,
   // Emitted when ANCS disconnects or is invalidated
   PEBBLE_ANCS_DISCONNECTED_EVENT,
@@ -586,6 +588,10 @@ typedef struct PACKED { // 5 bytes
   TouchEvent event;
 } PebbleTouchEvent;
 
+typedef struct PACKED { // 5 bytes
+  GestureEvent event;
+} PebbleGestureEvent;
+
 typedef struct PACKED { // 8 bytes
   PebbleProtocolCapabilities flags_diff;
 } PebbleCapabilitiesChangedEvent;
@@ -787,6 +793,7 @@ typedef struct PACKED {
     PebbleCalendarEvent calendar;
     PebbleHealthEvent health_event;
     PebbleTouchEvent touch;
+    PebbleGestureEvent gesture;
     PebbleCapabilitiesChangedEvent capabilities;
     PebbleWeatherEvent weather;
     PebbleHRMEvent hrm;
