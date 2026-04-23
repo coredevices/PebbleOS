@@ -359,8 +359,10 @@ uint32_t audec_write(AudioDevice* audio_device, void *writeBuf, uint32_t size) {
     AudioDeviceState* state = audio_device->state;
     if (state->circ_buffer_storage) {
         uint32_t free_size = circular_buffer_get_write_space_remaining(&state->circ_buffer);
-        PBL_ASSERT(size<=free_size, "circ buf over");
-        circular_buffer_write(&state->circ_buffer, writeBuf, size);
+        uint16_t to_write = (size > free_size) ? (uint16_t)free_size : (uint16_t)size;
+        if (to_write > 0) {
+            circular_buffer_write(&state->circ_buffer, writeBuf, to_write);
+        }
         return circular_buffer_get_write_space_remaining(&state->circ_buffer);
     }
 
