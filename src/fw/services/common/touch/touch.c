@@ -51,6 +51,8 @@ void touch_init(void) {
 
   event_service_init(PEBBLE_TOUCH_EVENT, &prv_add_subscriber_cb,
       &prv_remove_subscriber_cb);
+  event_service_init(PEBBLE_GESTURE_EVENT, &prv_add_subscriber_cb,
+      &prv_remove_subscriber_cb);
 }
 
 bool touch_has_app_subscribers(void) {
@@ -120,6 +122,20 @@ static void prv_put_touch_event(TouchEventType type, int16_t x, int16_t y) {
   event_put(&e);
 }
 
+static void prv_put_gesture_event(GestureEventType gesture, int16_t x, int16_t y) {
+  PebbleEvent e = {
+    .type = PEBBLE_GESTURE_EVENT,
+    .gesture = {
+      .event = {
+        .type = gesture,
+        .x = x,
+        .y = y,
+      },
+    },
+  };
+  event_put(&e);
+}
+
 void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
   mutex_lock(s_touch_mutex);
 
@@ -153,6 +169,25 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
     TOUCH_DEBUG("Touch: Position Update @ (%" PRId16 ", %" PRId16 ")", x, y);
     prv_put_touch_event(TouchEvent_PositionUpdate, x, y);
     return;
+  }
+
+  mutex_unlock(s_touch_mutex);
+}
+
+void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
+  TOUCH_DEBUG("Gesture: %d @ (%" PRId16 ", %" PRId16 ")", gesture, x, y);
+
+  mutex_lock(s_touch_mutex);
+
+  switch (gesture) {
+    case TouchGesture_Tap:
+      prv_put_gesture_event(GestureEvent_Tap, x, y);
+      break;
+    case TouchGesture_DoubleTap:
+      prv_put_gesture_event(GestureEvent_DoubleTap, x, y);
+      break;
+    default:
+      break;
   }
 
   mutex_unlock(s_touch_mutex);

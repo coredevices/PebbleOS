@@ -27,7 +27,7 @@ static EventServiceRemoveSubscriberCallback s_remove_subscriber_cb;
 
 void event_service_init(PebbleEventType type, EventServiceAddSubscriberCallback add_cb,
                         EventServiceRemoveSubscriberCallback remove_cb) {
-  cl_assert_equal_i(type, PEBBLE_TOUCH_EVENT);
+  cl_assert(type == PEBBLE_TOUCH_EVENT || type == PEBBLE_GESTURE_EVENT);
   s_add_subscriber_cb = add_cb;
   s_remove_subscriber_cb = remove_cb;
 }
