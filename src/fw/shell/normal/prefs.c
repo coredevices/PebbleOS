@@ -82,7 +82,7 @@ static uint32_t s_backlight_color; // default pulled from BOARD_CONFIG in shell_
 static bool s_backlight_motion_enabled = true;
 
 #define PREF_KEY_BACKLIGHT_TOUCH "lightTouch"
-static bool s_backlight_touch_enabled = false;
+static uint8_t s_backlight_touch_wake = BacklightTouchWake_Off;
 
 #define PREF_KEY_TOUCH_ENABLED "touchEnabled"
 static bool s_touch_enabled = true;
@@ -354,10 +354,14 @@ static bool prv_set_s_backlight_motion_enabled(bool *enabled) {
   return true;
 }
 
-static bool prv_set_s_backlight_touch_enabled(bool *enabled) {
-  s_backlight_touch_enabled = *enabled;
+static bool prv_set_s_backlight_touch_wake(uint8_t *wake) {
+  if (*wake != BacklightTouchWake_Off && *wake != BacklightTouchWake_DoubleTap &&
+      *wake != BacklightTouchWake_Tap) {
+    return false;
+  }
+  s_backlight_touch_wake = *wake;
 #ifdef CONFIG_TOUCH
-  touch_set_backlight_enabled(*enabled);
+  touch_set_backlight_enabled(*wake != BacklightTouchWake_Off);
 #endif
   return true;
 }
@@ -861,9 +865,9 @@ void shell_prefs_init(void) {
   // Subscribe to shake events for motion backlight only if the setting is enabled
   accel_manager_set_motion_backlight_enabled(s_backlight_motion_enabled);
 
-  // Enable touch sensor for touch backlight only if the setting is enabled
+  // Enable touch sensor for touch backlight only if the setting is not Off
 #ifdef CONFIG_TOUCH
-  touch_set_backlight_enabled(s_backlight_touch_enabled);
+  touch_set_backlight_enabled(s_backlight_touch_wake != BacklightTouchWake_Off);
   touch_service_set_globally_enabled(s_touch_enabled);
 #endif
 }
@@ -1164,12 +1168,13 @@ void backlight_set_motion_enabled(bool enable) {
   prv_pref_set(PREF_KEY_BACKLIGHT_MOTION, &enable, sizeof(enable));
 }
 
-bool backlight_is_touch_enabled(void) {
-  return s_backlight_touch_enabled;
+BacklightTouchWake backlight_get_touch_wake(void) {
+  return (BacklightTouchWake)s_backlight_touch_wake;
 }
 
-void backlight_set_touch_enabled(bool enable) {
-  prv_pref_set(PREF_KEY_BACKLIGHT_TOUCH, &enable, sizeof(enable));
+void backlight_set_touch_wake(BacklightTouchWake wake) {
+  uint8_t value = (uint8_t)wake;
+  prv_pref_set(PREF_KEY_BACKLIGHT_TOUCH, &value, sizeof(value));
 }
 
 bool touch_is_globally_enabled(void) {

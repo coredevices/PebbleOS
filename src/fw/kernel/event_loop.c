@@ -296,8 +296,19 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
 #ifdef CONFIG_TOUCH
       force_backlight = touch_has_app_subscribers();
 #endif
-      if ((backlight_is_touch_enabled() || force_backlight) &&
-          e->gesture.event.type == GestureEvent_Tap) {
+      bool wake_on_gesture = false;
+      switch (backlight_get_touch_wake()) {
+        case BacklightTouchWake_Tap:
+          wake_on_gesture = (e->gesture.event.type == GestureEvent_Tap);
+          break;
+        case BacklightTouchWake_DoubleTap:
+          wake_on_gesture = (e->gesture.event.type == GestureEvent_DoubleTap);
+          break;
+        case BacklightTouchWake_Off:
+        default:
+          break;
+      }
+      if (wake_on_gesture || force_backlight) {
 #ifndef RECOVERY_FW
         const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
                                              !alerts_preferences_dnd_get_motion_backlight();
