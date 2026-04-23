@@ -291,13 +291,13 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       }
       return;
 
-    case PEBBLE_TOUCH_EVENT: {
+    case PEBBLE_GESTURE_EVENT: {
       bool force_backlight = false;
 #ifdef CONFIG_TOUCH
       force_backlight = touch_has_app_subscribers();
 #endif
       if ((backlight_is_touch_enabled() || force_backlight) &&
-          e->touch.event.type == TouchEvent_Touchdown) {
+          e->gesture.event.type == GestureEvent_Tap) {
 #ifndef RECOVERY_FW
         const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
                                              !alerts_preferences_dnd_get_motion_backlight();
