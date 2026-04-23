@@ -184,9 +184,11 @@ void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
 
   switch (gesture) {
     case TouchGesture_Tap:
+      PBL_ANALYTICS_ADD(gesture_tap_count, 1);
       prv_put_gesture_event(GestureEvent_Tap, x, y);
       break;
     case TouchGesture_DoubleTap:
+      PBL_ANALYTICS_ADD(gesture_double_tap_count, 1);
       prv_put_gesture_event(GestureEvent_DoubleTap, x, y);
       break;
     default:
