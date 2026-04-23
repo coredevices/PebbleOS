@@ -127,7 +127,7 @@ static void prv_codec_prepare(AudioDevice *dev) {
   // amp + mix enable, softmix off (softmix slow-ramps each routing change).
   prv_codec_write(dev, DA7212_MIXOUT_R_CTRL, 0x90);
 
-  prv_codec_write(dev, DA7212_LINE_GAIN, 0x3a);
+  prv_codec_write(dev, DA7212_LINE_GAIN, 0x30);
   prv_codec_write(dev, DA7212_LINE_CTRL, 0x80);
 
   prv_codec_write(dev, DA7212_SYSTEM_MODES_OUTPUT, 0x89);
