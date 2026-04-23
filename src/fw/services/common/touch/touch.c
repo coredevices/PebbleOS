@@ -57,7 +57,10 @@ void touch_init(void) {
 
 bool touch_has_app_subscribers(void) {
   mutex_lock(s_touch_mutex);
-  const bool has_apps = s_subscriber_count > 0;
+  // The backlight gesture subscription is tracked in s_subscriber_count as
+  // well; exclude it so this only reflects real app subscribers.
+  const uint8_t backlight_count = s_backlight_subscribed ? 1 : 0;
+  const bool has_apps = s_subscriber_count > backlight_count;
   mutex_unlock(s_touch_mutex);
   return has_apps;
 }

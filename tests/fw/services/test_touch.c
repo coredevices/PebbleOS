@@ -190,12 +190,24 @@ void test_touch__has_app_subscribers_app(void) {
 }
 
 void test_touch__has_app_subscribers_backlight(void) {
+  // The backlight subscription must not register as an app subscriber: the
+  // event loop uses touch_has_app_subscribers() as an override that fires the
+  // backlight on any gesture, so counting the backlight's own subscription
+  // would defeat the wake-gesture filter.
   cl_assert(!touch_has_app_subscribers());
 
   touch_set_backlight_enabled(true);
+  cl_assert(!touch_has_app_subscribers());
+
+  // With an app also subscribed, the call reflects the app, regardless of the
+  // backlight subscription state.
+  s_add_subscriber_cb(PebbleTask_App);
   cl_assert(touch_has_app_subscribers());
 
   touch_set_backlight_enabled(false);
+  cl_assert(touch_has_app_subscribers());
+
+  s_remove_subscriber_cb(PebbleTask_App);
   cl_assert(!touch_has_app_subscribers());
 }
 
