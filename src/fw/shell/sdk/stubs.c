@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "board/board.h"
 #include "drivers/backlight.h"
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/normal/activity/activity.h"
@@ -26,18 +27,15 @@ uint32_t backlight_get_timeout_ms(void) {
   return DEFAULT_BACKLIGHT_TIMEOUT_MS;
 }
 
-#define SDKSHELL_BACKLIGHT_ON_PERCENT 25 // Same as snowy bb2
-
 uint16_t backlight_get_intensity(void) {
-  return (BACKLIGHT_BRIGHTNESS_MAX * SDKSHELL_BACKLIGHT_ON_PERCENT / 100);
+  return (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)BOARD_CONFIG.backlight_on_percent) / 100;
 }
+
 uint8_t backlight_get_intensity_percent(void) {
   return (backlight_get_intensity() * 100) / BACKLIGHT_BRIGHTNESS_MAX;
 }
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
-#include "board/board.h"
-
 uint32_t backlight_get_color(void) {
   return BOARD_CONFIG.backlight_default_color;
 }
