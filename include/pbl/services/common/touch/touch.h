@@ -4,6 +4,7 @@
 #pragma once
 
 #include "touch_event.h"
+#include "gesture_event.h"
 
 #include <stdbool.h>
 
@@ -11,6 +12,11 @@ typedef enum TouchState {
   TouchState_FingerUp,
   TouchState_FingerDown,
 } TouchState;
+
+typedef enum TouchGesture {
+  TouchGesture_Tap,
+  TouchGesture_DoubleTap,
+} TouchGesture;
 
 void touch_init(void);
 
@@ -38,6 +44,12 @@ bool touch_service_is_globally_enabled(void);
 //! @param x x position of touch
 //! @param y y position of touch
 void touch_handle_update(TouchState touch_state, int16_t x, int16_t y);
+
+//! Handle a gesture update (called by the touch driver)
+//! @param gesture gesture that was detected
+//! @param x x position of gesture (if applicable)
+//! @param y y position of gesture
+void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y);
 
 //! Reset the touch service.
 void touch_reset(void);
