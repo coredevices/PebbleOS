@@ -797,7 +797,7 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 
 // ------------------------------------------------------------------------------------
 void shell_prefs_init(void) {
-  s_backlight_intensity = BOARD_CONFIG.backlight_on_percent;
+  s_backlight_intensity = 25U; // Medium
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;

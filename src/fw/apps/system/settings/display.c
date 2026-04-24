@@ -45,7 +45,7 @@ typedef struct SettingsBacklightData {
 // Intensity Settings
 /////////////////////////////
 
-static const uint32_t s_intensity_values[] = { 5, 25, 45, 70 };
+static const uint32_t s_intensity_values[] = { 10, 25, 50, 100 };
 
 static const char *s_intensity_labels[] = {
     i18n_noop("Low"),
