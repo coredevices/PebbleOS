@@ -43,7 +43,7 @@ extern const uint32_t LIGHT_FADE_STEPS;
 
 static TimerID s_light_timer;
 
-static uint16_t s_backlight_brightness;
+static uint8_t s_backlight_brightness;
 
 BacklightBehaviour backlight_get_behaviour(void) {
   return BacklightBehaviour_On;
@@ -63,7 +63,7 @@ void backlight_set_enabled(bool enabled) {
 void backlight_set_ambient_sensor_enabled(bool enabled) {
 }
 
-void backlight_set_brightness(uint16_t brightness) {
+void backlight_set_brightness(uint8_t brightness) {
   s_backlight_brightness = brightness;
 }
 
@@ -83,25 +83,21 @@ void backlight_set_timeout_ms(uint32_t timeout_ms) {
 
 uint16_t s_backlight_intensity;
 
-uint16_t backlight_get_intensity(void) {
+uint8_t backlight_get_intensity(void) {
   return s_backlight_intensity;
 }
 
-uint8_t backlight_get_intensity_percent(void) {
-  return (backlight_get_intensity() * 100) / BACKLIGHT_BRIGHTNESS_MAX;
-}
-
-void backlight_set_intensity_percent(uint8_t percent_intensity) {
+void backlight_set_intensity(uint8_t percent_intensity) {
   PBL_ASSERTN(percent_intensity > 0 && percent_intensity <= 100);
-  s_backlight_intensity = (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)percent_intensity) / 100;
+  s_backlight_intensity = percent_intensity;
 }
 
 
 // Helper functions
 ///////////////////////////////////////////////////////////
 
-static uint16_t get_expected_brightness() {
-  return ((BACKLIGHT_BRIGHTNESS_MAX * backlight_get_intensity_percent()) / 100);
+static uint8_t get_expected_brightness() {
+  return backlight_get_intensity();
 }
 
 static void check_on(void) {
@@ -120,7 +116,7 @@ static void check_on_timed_and_consume_partial(void) {
 
   stub_new_timer_fire(s_light_timer);
 
-  cl_assert_equal_i(s_backlight_brightness, BACKLIGHT_BRIGHTNESS_MAX - (BACKLIGHT_BRIGHTNESS_MAX / LIGHT_FADE_STEPS));
+  cl_assert_equal_i(s_backlight_brightness, 100 - (100 / LIGHT_FADE_STEPS));
   cl_assert(stub_new_timer_is_scheduled(s_light_timer));
 }
 
@@ -137,7 +133,7 @@ static void check_on_timed_and_consume(void) {
 }
 
 static void check_off(void) {
-  cl_assert_equal_i(s_backlight_brightness, BACKLIGHT_BRIGHTNESS_OFF);
+  cl_assert_equal_i(s_backlight_brightness, 0);
   cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
 }
 
@@ -149,7 +145,7 @@ void test_light__initialize(void) {
   light_init();
   light_allow(true);
   s_light_timer = ((StubTimer*) s_idle_timers)->id;
-  backlight_set_intensity_percent(BOARD_CONFIG.backlight_on_percent);
+  backlight_set_intensity(BOARD_CONFIG.backlight_on_percent);
 }
 
 void test_light__cleanup(void) {

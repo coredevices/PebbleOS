@@ -12,7 +12,7 @@
 
 static void selected_pwm_percentage(NumberWindow *nw, void *ctx) {
   uint8_t val = number_window_get_value(nw);
-  backlight_set_intensity_percent(val);
+  backlight_set_intensity(val);
 }
 
 static void handle_init(void) {
@@ -22,7 +22,7 @@ static void handle_init(void) {
   app_state_set_user_data(light_num_window);
 
   uint8_t scale_granularity = 5; // 5 percent at a time
-  uint8_t curr_percent = scale_granularity * ((backlight_get_intensity_percent() +
+  uint8_t curr_percent = scale_granularity * ((backlight_get_intensity() +
       scale_granularity - 1) / scale_granularity);
 
   number_window_set_value(light_num_window, curr_percent);

@@ -72,10 +72,9 @@ void backlight_set_ambient_sensor_enabled(bool enabled);
 uint32_t backlight_get_timeout_ms(void);
 void backlight_set_timeout_ms(uint32_t timeout_ms);
 
-uint16_t backlight_get_intensity(void);
+uint8_t backlight_get_intensity(void);
 
-uint8_t backlight_get_intensity_percent(void);
-void backlight_set_intensity_percent(uint8_t intensity_percent);
+void backlight_set_intensity(uint8_t intensity);
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
 // Packed 0x00RRGGBB. Matches the LED_* constants in drivers/led_controller.h.
