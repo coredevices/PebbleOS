@@ -11,7 +11,7 @@
 #include "kernel/util/stop.h"
 #include "kernel/util/wfi.h"
 #include "mcu/interrupts.h"
-#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/analytics/analytics.h"
 #include "system/passert.h"
 #include "console/dbgserial_input.h"
 

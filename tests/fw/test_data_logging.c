@@ -6,20 +6,20 @@
 
 #include "process_management/pebble_process_md.h"
 
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/filesystem/flash_translation.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/filesystem/flash_translation.h"
 
-#include "pbl/services/common/comm_session/protocol.h"
-#include "pbl/services/common/comm_session/session.h"
-#include "pbl/services/common/comm_session/session_send_buffer.h"
-#include "pbl/services/common/comm_session/session_transport.h"
+#include "pbl/services/comm_session/protocol.h"
+#include "pbl/services/comm_session/session.h"
+#include "pbl/services/comm_session/session_send_buffer.h"
+#include "pbl/services/comm_session/session_transport.h"
 
-#include "pbl/services/normal/data_logging/data_logging_service.h"
-#include "pbl/services/normal/data_logging/dls_private.h"
-#include "pbl/services/normal/data_logging/dls_list.h"
-#include "pbl/services/normal/data_logging/dls_storage.h"
+#include "pbl/services/data_logging/data_logging_service.h"
+#include "pbl/services/data_logging/dls_private.h"
+#include "pbl/services/data_logging/dls_list.h"
+#include "pbl/services/data_logging/dls_storage.h"
 
-#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/regular_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

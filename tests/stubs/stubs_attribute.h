@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/attribute.h"
+#include "pbl/services/timeline/attribute.h"
 
 const char *attribute_get_string(const AttributeList *attr_list, AttributeId id,
                                  char *default_value) {

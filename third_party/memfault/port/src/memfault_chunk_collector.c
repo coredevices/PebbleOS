@@ -4,9 +4,9 @@
 // Logging Memfault chunks to datalogging can only happen in normal FW
 #include "memfault/components.h"
 
-#include "pbl/services/common/system_task.h"
-#include "pbl/services/normal/data_logging/data_logging_service.h"
-#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/system_task.h"
+#include "pbl/services/data_logging/data_logging_service.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 
 #define MAX_CHUNK_SIZE 250

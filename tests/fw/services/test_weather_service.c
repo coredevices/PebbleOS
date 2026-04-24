@@ -7,12 +7,12 @@
 
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
-#include "pbl/services/common/comm_session/session_remote_version.h"
-#include "pbl/services/normal/blob_db/weather_db.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/weather/weather_service.h"
-#include "pbl/services/normal/weather/weather_service_private.h"
-#include "pbl/services/normal/weather/weather_types.h"
+#include "pbl/services/comm_session/session_remote_version.h"
+#include "pbl/services/blob_db/weather_db.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/weather/weather_service.h"
+#include "pbl/services/weather/weather_service_private.h"
+#include "pbl/services/weather/weather_types.h"
 #include "util/pstring.h"
 
 // Fixture

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/blob_db/api.h"
 
 void settings_blob_db_init(void) {
 }

@@ -10,7 +10,7 @@
 #include "popups/timeline/peek_private.h"
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/normal/timeline/timeline_resources.h"
+#include "pbl/services/timeline/timeline_resources.h"
 #include "util/buffer.h"
 #include "util/graphics.h"
 #include "util/hash.h"

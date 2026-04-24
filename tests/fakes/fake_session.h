@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/comm_session/session_transport.h"
+#include "pbl/services/comm_session/session_transport.h"
 
 //
 // Usage hints:

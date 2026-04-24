@@ -14,7 +14,7 @@
 #include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
 #include "pdm_definitions.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "FreeRTOS.h"
 
 // HACK alert, we need proper regulator abstraction

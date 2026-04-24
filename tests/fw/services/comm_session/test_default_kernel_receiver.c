@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/common/comm_session/session_receive_router.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/comm_session/session_receive_router.h"
+#include "pbl/services/system_task.h"
 
 #include "clar.h"
 

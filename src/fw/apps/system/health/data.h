@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/activity/activity.h"
 
 typedef struct {
   int32_t sum;

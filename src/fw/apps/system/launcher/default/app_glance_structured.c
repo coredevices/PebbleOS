@@ -11,7 +11,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/normal/timeline/attribute.h"
+#include "pbl/services/timeline/attribute.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
 #include "util/attributes.h"

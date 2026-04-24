@@ -6,7 +6,7 @@
 #include "applib/app_message/app_message_internal.h"
 #include "process_management/app_run_state.h"
 #include "process_management/launcher_app_message.h"
-#include "pbl/services/common/comm_session/session_internal.h"
+#include "pbl/services/comm_session/session_internal.h"
 #include "system/passert.h"
 #include "util/dict.h"
 #include "util/uuid.h"

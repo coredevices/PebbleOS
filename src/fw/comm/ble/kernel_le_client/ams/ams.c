@@ -16,7 +16,7 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 
-#include "pbl/services/normal/music_internal.h"
+#include "pbl/services/music_internal.h"
 
 #include "system/logging.h"
 #include "system/hexdump.h"

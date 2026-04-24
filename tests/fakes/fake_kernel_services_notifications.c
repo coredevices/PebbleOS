@@ -3,7 +3,7 @@
 
 #include "fake_kernel_services_notifications.h"
 
-#include "pbl/services/normal/notifications/notification_storage.h"
+#include "pbl/services/notifications/notification_storage.h"
 
 static uint32_t s_ancs_count = 0;
 static uint32_t s_acted_upon_count = 0;

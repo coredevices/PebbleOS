@@ -13,8 +13,8 @@
 #include "popups/timeline/timeline_item_layer.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/evented_timer.h"
-#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/evented_timer.h"
+#include "pbl/services/timeline/timeline.h"
 
 typedef enum {
   TimelineAppStateNone = 0,

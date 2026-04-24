@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/item.h"
+#include "pbl/services/timeline/item.h"
 #include "apps/system/timeline/timeline.h"
 #include "util/attributes.h"
 

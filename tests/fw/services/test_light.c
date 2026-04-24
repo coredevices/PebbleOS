@@ -5,7 +5,7 @@
 
 #include "board/board.h"
 #include "drivers/backlight.h"
-#include "pbl/services/common/light.h"
+#include "pbl/services/light.h"
 #include "system/passert.h"
 
 #include "fake_new_timer.h"

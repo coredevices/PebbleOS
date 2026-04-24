@@ -9,7 +9,7 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
 #include "process_management/process_manager.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "util/attributes.h"
 

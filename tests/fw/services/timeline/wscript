@@ -10,32 +10,32 @@ def build(ctx):
          " src/fw/flash_region/flash_region.c" \
          " src/fw/util/time/time.c" \
          " src/fw/flash_region/filesystem_regions.c" \
-         " src/fw/services/normal/blob_db/timeline_item_storage.c" \
-         " src/fw/services/normal/settings/settings_file.c" \
-         " src/fw/services/normal/settings/settings_raw_iter.c" \
-         " src/fw/services/normal/filesystem/flash_translation.c" \
-         " src/fw/services/normal/filesystem/pfs.c" \
-         " src/fw/services/normal/blob_db/reminder_db.c" \
-         " src/fw/services/normal/timeline/attribute.c" \
-         " src/fw/services/normal/timeline/item.c" \
-         " src/fw/services/normal/timeline/attributes_actions.c" \
-         " src/fw/services/normal/timeline/attribute_group.c" \
-         " src/fw/services/normal/timeline/reminders.c",
+         " src/fw/services/blob_db/timeline_item_storage.c" \
+         " src/fw/services/settings/settings_file.c" \
+         " src/fw/services/settings/settings_raw_iter.c" \
+         " src/fw/services/filesystem/flash_translation.c" \
+         " src/fw/services/filesystem/pfs.c" \
+         " src/fw/services/blob_db/reminder_db.c" \
+         " src/fw/services/timeline/attribute.c" \
+         " src/fw/services/timeline/item.c" \
+         " src/fw/services/timeline/attributes_actions.c" \
+         " src/fw/services/timeline/attribute_group.c" \
+         " src/fw/services/timeline/reminders.c",
       test_sources_ant_glob = "test_reminders.c",
       override_includes=['dummy_board'])
 
 def build(ctx):
     clar(ctx,
          sources_ant_glob=(
-             "src/fw/services/normal/blob_db/pin_db.c "
-             "src/fw/services/normal/blob_db/timeline_item_storage.c "
-             "src/fw/services/normal/timeline/attribute.c "
-             "src/fw/services/normal/timeline/attribute_group.c "
-             "src/fw/services/normal/timeline/attributes_actions.c "
-             "src/fw/services/normal/timeline/calendar.c "
-             "src/fw/services/normal/timeline/event.c "
-             "src/fw/services/normal/timeline/item.c "
-             "src/fw/services/normal/timeline/timeline.c "
+             "src/fw/services/blob_db/pin_db.c "
+             "src/fw/services/blob_db/timeline_item_storage.c "
+             "src/fw/services/timeline/attribute.c "
+             "src/fw/services/timeline/attribute_group.c "
+             "src/fw/services/timeline/attributes_actions.c "
+             "src/fw/services/timeline/calendar.c "
+             "src/fw/services/timeline/event.c "
+             "src/fw/services/timeline/item.c "
+             "src/fw/services/timeline/timeline.c "
              "src/fw/util/crc8.c "
              "src/fw/util/time/time.c "
              "tests/fakes/fake_events.c "
@@ -47,15 +47,15 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob=(
-             "src/fw/services/normal/blob_db/pin_db.c "
-             "src/fw/services/normal/blob_db/timeline_item_storage.c "
-             "src/fw/services/normal/timeline/attribute.c "
-             "src/fw/services/normal/timeline/attribute_group.c "
-             "src/fw/services/normal/timeline/attributes_actions.c "
-             "src/fw/services/normal/timeline/event.c "
-             "src/fw/services/normal/timeline/item.c "
-             "src/fw/services/normal/timeline/peek.c "
-             "src/fw/services/normal/timeline/timeline.c "
+             "src/fw/services/blob_db/pin_db.c "
+             "src/fw/services/blob_db/timeline_item_storage.c "
+             "src/fw/services/timeline/attribute.c "
+             "src/fw/services/timeline/attribute_group.c "
+             "src/fw/services/timeline/attributes_actions.c "
+             "src/fw/services/timeline/event.c "
+             "src/fw/services/timeline/item.c "
+             "src/fw/services/timeline/peek.c "
+             "src/fw/services/timeline/timeline.c "
              "src/fw/util/crc8.c "
              "src/fw/util/time/time.c "
              "tests/fakes/fake_events.c "
@@ -67,7 +67,7 @@ def build(ctx):
 
     clar(ctx,
       sources_ant_glob = \
-         " src/fw/services/normal/timeline/attribute.c",
+         " src/fw/services/timeline/attribute.c",
       test_sources_ant_glob = "test_attribute.c")
 
     clar(ctx,
@@ -82,17 +82,17 @@ def build(ctx):
          " tests/fakes/fake_rtc.c" \
          " src/fw/flash_region/filesystem_regions.c" \
          " src/fw/flash_region/flash_region.c" \
-         " src/fw/services/normal/blob_db/timeline_item_storage.c" \
-         " src/fw/services/normal/settings/settings_file.c" \
-         " src/fw/services/normal/settings/settings_raw_iter.c" \
-         " src/fw/services/normal/filesystem/flash_translation.c" \
-         " src/fw/services/normal/filesystem/pfs.c" \
-         " src/fw/services/normal/timeline/attribute.c" \
-         " src/fw/services/normal/timeline/item.c" \
-         " src/fw/services/normal/timeline/attributes_actions.c" \
-         " src/fw/services/normal/timeline/attribute_group.c" \
-         " src/fw/services/normal/timeline/timeline.c" \
-         " src/fw/services/normal/blob_db/pin_db.c" \
+         " src/fw/services/blob_db/timeline_item_storage.c" \
+         " src/fw/services/settings/settings_file.c" \
+         " src/fw/services/settings/settings_raw_iter.c" \
+         " src/fw/services/filesystem/flash_translation.c" \
+         " src/fw/services/filesystem/pfs.c" \
+         " src/fw/services/timeline/attribute.c" \
+         " src/fw/services/timeline/item.c" \
+         " src/fw/services/timeline/attributes_actions.c" \
+         " src/fw/services/timeline/attribute_group.c" \
+         " src/fw/services/timeline/timeline.c" \
+         " src/fw/services/blob_db/pin_db.c" \
          " src/fw/apps/system/timeline/model.c",
       test_sources_ant_glob = "test_timeline_model.c",
       override_includes=['dummy_board'])
@@ -100,7 +100,7 @@ def build(ctx):
     clar(ctx,
       sources_ant_glob=(
          " src/fw/process_management/pebble_process_info.c"
-         " src/fw/services/normal/timeline/timeline_resources.c"
+         " src/fw/services/timeline/timeline_resources.c"
          " tests/fixtures/resources/timeline_resource_table.auto.c"
       ),
       test_sources_ant_glob = "test_timeline_resources.c",
@@ -108,9 +108,9 @@ def build(ctx):
 
     clar(ctx,
       sources_ant_glob = \
-         " src/fw/services/normal/alarms/alarm.c" \
-         " src/fw/services/normal/timeline/alarm_layout.c" \
-         " src/fw/services/normal/timeline/attribute.c",
+         " src/fw/services/alarms/alarm.c" \
+         " src/fw/services/timeline/alarm_layout.c" \
+         " src/fw/services/timeline/attribute.c",
       test_sources_ant_glob = "test_alarm_layout.c",
       defines=["CAPABILITY_HAS_HEALTH_TRACKING=0"],
       override_includes=['dummy_board'],
@@ -181,9 +181,9 @@ def build(ctx):
         " src/fw/resource/resource_storage_builtin.c" \
         " src/fw/resource/resource_storage_file.c" \
         " src/fw/resource/resource_storage_flash.c" \
-        " src/fw/services/normal/filesystem/app_file.c" \
-        " src/fw/services/normal/filesystem/flash_translation.c" \
-        " src/fw/services/normal/filesystem/pfs.c" \
+        " src/fw/services/filesystem/app_file.c" \
+        " src/fw/services/filesystem/flash_translation.c" \
+        " src/fw/services/filesystem/pfs.c" \
         " src/fw/system/hexdump.c" \
         " src/fw/util/buffer.c" \
         " src/fw/util/crc8.c" \
@@ -207,14 +207,14 @@ def build(ctx):
              rendering_sources +
              " src/fw/apps/system/timeline/pin_window.c"
              " src/fw/popups/timeline/timeline_item_layer.c"
-             " src/fw/services/normal/timeline/attribute.c"
-             " src/fw/services/normal/timeline/generic_layout.c"
-             " src/fw/services/normal/timeline/layout_layer.c"
-             " src/fw/services/normal/timeline/layout_node.c"
-             " src/fw/services/normal/timeline/timeline_layout.c"
-             " src/fw/services/normal/timeline/timeline_resources.c"
-             " src/fw/services/normal/timeline/weather_layout.c"
-             " src/fw/services/normal/weather/weather_types.c"
+             " src/fw/services/timeline/attribute.c"
+             " src/fw/services/timeline/generic_layout.c"
+             " src/fw/services/timeline/layout_layer.c"
+             " src/fw/services/timeline/layout_node.c"
+             " src/fw/services/timeline/timeline_layout.c"
+             " src/fw/services/timeline/timeline_resources.c"
+             " src/fw/services/timeline/weather_layout.c"
+             " src/fw/services/weather/weather_types.c"
              " src/fw/shell/system_theme.c"
              " tests/stubs/stubs_clock.c"
              " tests/stubs/stubs_timeline_layout.c"

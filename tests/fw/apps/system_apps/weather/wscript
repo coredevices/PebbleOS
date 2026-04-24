@@ -48,9 +48,9 @@ def build(ctx):
         " src/fw/resource/resource_storage_builtin.c" \
         " src/fw/resource/resource_storage_file.c" \
         " src/fw/resource/resource_storage_flash.c" \
-        " src/fw/services/normal/filesystem/app_file.c" \
-        " src/fw/services/normal/filesystem/flash_translation.c" \
-        " src/fw/services/normal/filesystem/pfs.c" \
+        " src/fw/services/filesystem/app_file.c" \
+        " src/fw/services/filesystem/flash_translation.c" \
+        " src/fw/services/filesystem/pfs.c" \
         " src/fw/system/hexdump.c" \
         " src/fw/util/crc8.c" \
         " src/fw/util/legacy_checksum.c" \
@@ -81,8 +81,8 @@ def build(ctx):
                             " tests/fakes/fake_fonts.c" \
                             " src/fw/applib/ui/shadows.c" \
                             " src/fw/apps/system/weather/layout.c" \
-                            " src/fw/services/normal/timeline/timeline_resources.c" \
-                            " src/fw/services/normal/weather/weather_types.c" \
+                            " src/fw/services/timeline/timeline_resources.c" \
+                            " src/fw/services/weather/weather_types.c" \
                             " src/fw/util/buffer.c" \
                             " tests/fixtures/resources/timeline_resource_table.auto.c",
          test_sources_ant_glob = "test_weather_app_layout.c",

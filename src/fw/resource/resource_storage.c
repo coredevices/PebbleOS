@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pbl/services/normal/filesystem/app_file.h"
+#include "pbl/services/filesystem/app_file.h"
 #include "system/hexdump.h"
 #include "system/logging.h"
 #include "system/passert.h"

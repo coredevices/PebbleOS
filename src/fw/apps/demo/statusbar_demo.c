@@ -3,7 +3,7 @@
 
 #include "statusbar_demo.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 #include "applib/app.h"
 #include "applib/ui/ui.h"
 #include "util/size.h"

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/notifications/do_not_disturb.h"
+#include "pbl/services/notifications/do_not_disturb.h"
 #include "util/attributes.h"
 
 bool WEAK do_not_disturb_is_active(void) {

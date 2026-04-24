@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/sports_layout.h"
+#include "pbl/services/timeline/sports_layout.h"
 #include "util/attributes.h"
 
 LayoutLayer * WEAK sports_layout_create(const LayoutLayerConfig *config) {

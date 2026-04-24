@@ -5,8 +5,8 @@
 
 #include "kernel/memory_layout.h"
 #include "process_management/process_manager.h"
-#include "pbl/services/normal/persist.h"
-#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/persist.h"
+#include "pbl/services/settings/settings_file.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "util/math.h"

@@ -3,12 +3,12 @@
 
 #include <time.h>
 
-#include "pbl/services/normal/wakeup.h"
+#include "pbl/services/wakeup.h"
 #include "syscall/syscall.h"
 #include "flash_region/flash_region.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/settings/settings_file.h"
-#include "pbl/services/common/event_service.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/settings/settings_file.h"
+#include "pbl/services/event_service.h"
 #include "process_management/app_install_manager.h"
 
 #include "clar.h"

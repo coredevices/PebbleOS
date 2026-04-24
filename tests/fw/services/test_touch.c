@@ -5,9 +5,9 @@
 
 #include "kernel/events.h"
 #include "kernel/pebble_tasks.h"
-#include "pbl/services/common/event_service.h"
-#include "pbl/services/common/touch/touch.h"
-#include "pbl/services/common/touch/touch_event.h"
+#include "pbl/services/event_service.h"
+#include "pbl/services/touch/touch.h"
+#include "pbl/services/touch/touch_event.h"
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -14,7 +14,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/clock.h"
+#include "pbl/services/clock.h"
 #include "util/time/time.h"
 
 typedef struct {

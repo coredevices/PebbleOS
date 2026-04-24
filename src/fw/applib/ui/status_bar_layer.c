@@ -14,7 +14,7 @@
 #include "applib/ui/window_stack.h"
 #include "kernel/ui/kernel_ui.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/clock.h"
+#include "pbl/services/clock.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"

@@ -3,8 +3,8 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/blob_db/pin_db.h"
-#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/blob_db/pin_db.h"
+#include "pbl/services/timeline/timeline.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

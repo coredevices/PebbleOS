@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/analytics/analytics.h"
 
 void pbl_analytics_init(void) {}
 

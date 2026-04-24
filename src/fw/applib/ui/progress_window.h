@@ -8,7 +8,7 @@
 #include "applib/ui/window.h"
 #include "applib/ui/window_stack.h"
 #include "apps/system/timeline/peek_layer.h"
-#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/evented_timer.h"
 
 //! @file progress_window.h
 //!

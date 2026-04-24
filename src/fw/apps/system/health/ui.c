@@ -5,7 +5,7 @@
 
 #include "applib/pbl_std/pbl_std.h"
 #include "board/display.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 #include "util/string.h"
 
 // Compile-time display offset calculations

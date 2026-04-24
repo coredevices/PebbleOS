@@ -17,7 +17,7 @@
 #include "kernel/kernel_applib_state.h"
 #include "kernel/memory_layout.h"
 
-#include "pbl/services/common/animation_service.h"
+#include "pbl/services/animation_service.h"
 
 #include "system/passert.h"
 #include "util/math.h"

@@ -4,7 +4,7 @@
 #include "drivers/task_watchdog.h"
 #include "kernel_heap.h"
 #include "mcu/interrupts.h"
-#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/analytics/analytics.h"
 
 #include <cmsis_core.h>
 

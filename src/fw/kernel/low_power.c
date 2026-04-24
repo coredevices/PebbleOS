@@ -11,8 +11,8 @@
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/analytics/analytics.h"
+#include "pbl/services/system_task.h"
 #include "pbl/services/runlevel.h"
 
 #include <stdbool.h>

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/notifications/notifications.h"
+#include "pbl/services/notifications/notifications.h"
 
 void notifications_init(void) {}
 

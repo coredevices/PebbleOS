@@ -4,8 +4,8 @@
 #include "clar.h"
 
 #include "util/uuid.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/blob_db/prefs_db.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/blob_db/prefs_db.h"
 #include "shell/prefs.h"
 #include "shell/prefs_private.h"
 

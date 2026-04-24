@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/common/bluetooth/local_addr.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/bluetooth/local_addr.h"
 
 #include <bluetooth/bluetooth_types.h>
 

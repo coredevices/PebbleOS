@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/touch/touch_event.h"
+#include "pbl/services/touch/touch_event.h"
 
 #include <stdbool.h>
 #include <stdint.h>

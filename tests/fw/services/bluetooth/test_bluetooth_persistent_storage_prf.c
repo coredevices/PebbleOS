@@ -6,11 +6,11 @@
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/gap_le_connect.h>
 
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/analytics/analytics.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "flash_region/flash_region_s29vs.h"
 #include "util/size.h"
 

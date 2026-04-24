@@ -6,7 +6,7 @@
 #include "applib/graphics/gdraw_command_image.h"
 #include "applib/ui/content_indicator_private.h"
 #include "applib/ui/kino/kino_layer.h"
-#include "pbl/services/normal/weather/weather_service.h"
+#include "pbl/services/weather/weather_service.h"
 
 typedef struct WeatherAppLayout {
   Layer root_layer;

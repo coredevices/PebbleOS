@@ -12,7 +12,7 @@
 
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
-#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/filesystem/pfs.h"
 #include "util/math.h"
 
 #include "stubs_analytics.h"

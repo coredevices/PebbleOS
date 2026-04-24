@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/notifications/alerts_private.h"
+#include "pbl/services/notifications/alerts_private.h"
 #include "util/attributes.h"
 
 AlertMask s_alert_mask;

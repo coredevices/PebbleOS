@@ -20,21 +20,21 @@
 #include "util/uuid.h"
 
 
-// The clock 12h/24h setting is required by services/common/clock.c.
+// The clock 12h/24h setting is required by services/clock.c.
 bool shell_prefs_get_clock_24h_style(void);
 void shell_prefs_set_clock_24h_style(bool is24h);
 
-// The timezone source setting is required by services/common/clock.c.
+// The timezone source setting is required by services/clock.c.
 // When the source is manual, we don't override our timezone with the phone's timezone info
 bool shell_prefs_is_timezone_source_manual(void);
 void shell_prefs_set_timezone_source_manual(bool manual);
 
-// The time source setting is required by services/common/clock.c.
+// The time source setting is required by services/clock.c.
 // When the source is manual, we don't override our time with the phone's time info
 bool shell_prefs_is_time_source_manual(void);
 void shell_prefs_set_time_source_manual(bool manual);
 
-// The timezone id setting is required by services/common/clock.c.
+// The timezone id setting is required by services/clock.c.
 // The automatic timezone id is what we get from the phone
 int16_t shell_prefs_get_automatic_timezone_id(void);
 void shell_prefs_set_automatic_timezone_id(int16_t timezone_id);

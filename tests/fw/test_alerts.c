@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/notifications/alerts.h"
-#include "pbl/services/normal/notifications/alerts_private.h"
+#include "pbl/services/notifications/alerts.h"
+#include "pbl/services/notifications/alerts_private.h"
 
 #include "clar.h"
 

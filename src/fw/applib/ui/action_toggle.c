@@ -14,7 +14,7 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 #include "system/passert.h"
 
 typedef struct ActionToggleDialogConfig {

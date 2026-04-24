@@ -4,8 +4,8 @@
 #include "board/board.h"
 #include "drivers/backlight.h"
 #include "process_management/pebble_process_md.h"
-#include "pbl/services/normal/activity/activity.h"
-#include "pbl/services/normal/timeline/peek.h"
+#include "pbl/services/activity/activity.h"
+#include "pbl/services/timeline/peek.h"
 #include "shell/prefs.h"
 #include "util/uuid.h"
 

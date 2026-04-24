@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "clar.h"
-#include "pbl/services/common/comm_session/app_session_capabilities.h"
-#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/comm_session/app_session_capabilities.h"
+#include "pbl/services/comm_session/session.h"
 #include "process_management/pebble_process_md.h"
-#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/settings/settings_file.h"
 #include "system/status_codes.h"
 
 #include "stubs_logging.h"

@@ -6,23 +6,23 @@ def build(bld):
          sources_ant_glob=(
             "src/fw/applib/app_inbox.c "
             "src/fw/applib/app_message/app_message_receiver.c "
-            "src/fw/services/normal/app_message/app_message_receiver.c "
-            "src/fw/services/normal/app_inbox_service/service.c "
+            "src/fw/services/app_message/app_message_receiver.c "
+            "src/fw/services/app_inbox_service/service.c "
          ),
          test_sources_ant_glob="test_app_message_receiver.c",
          override_includes=['applib_malloc'])
 
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/normal/app_message/app_message_sender.c "
-            "src/fw/services/common/comm_session/session_send_queue.c "
+            "src/fw/services/app_message/app_message_sender.c "
+            "src/fw/services/comm_session/session_send_queue.c "
          ),
          test_sources_ant_glob="test_app_message_sender.c",
          override_includes=[])
 
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/normal/comm_session/app_session_capabilities.c "
+            "src/fw/services/comm_session/app_session_capabilities.c "
          ),
          test_sources_ant_glob="test_app_session_capabilities.c",
          override_includes=[])

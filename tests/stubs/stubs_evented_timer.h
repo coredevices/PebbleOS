@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/evented_timer.h"
 #include "util/attributes.h"
 
 void WEAK evented_timer_init(void) {}

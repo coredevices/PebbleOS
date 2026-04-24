@@ -5,7 +5,7 @@
 
 #include "applib/ui/dialogs/simple_dialog.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 #include "util/time/time.h"
 
 #define BLE_HRM_CONFIRMATION_TIMEOUT_MS (2 * MS_PER_SECOND)

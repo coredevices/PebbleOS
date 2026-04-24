@@ -5,7 +5,7 @@
 
 #include "ancs_types.h"
 
-#include "pbl/services/normal/notifications/notifications.h"
+#include "pbl/services/notifications/notifications.h"
 
 #include <stdbool.h>
 

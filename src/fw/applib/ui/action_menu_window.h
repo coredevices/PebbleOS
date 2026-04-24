@@ -5,7 +5,7 @@
 
 #include "applib/ui/window.h"
 #include "applib/ui/window_stack.h"
-#include "pbl/services/normal/timeline/item.h"
+#include "pbl/services/timeline/item.h"
 
 //! @file action_menu_window.h
 //! @addtogroup UI

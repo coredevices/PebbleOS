@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/voice_endpoint_private.h"
+#include "pbl/services/voice_endpoint_private.h"
 
 #include "fake_pebble_tasks.h"
 

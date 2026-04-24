@@ -3,10 +3,10 @@
 
 #include "clar.h"
 
-#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/common/comm_session/session_internal.h"
-#include "pbl/services/common/comm_session/session_remote_os.h"
-#include "pbl/services/common/comm_session/session_remote_version.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/comm_session/session_internal.h"
+#include "pbl/services/comm_session/session_remote_os.h"
+#include "pbl/services/comm_session/session_remote_version.h"
 #include "util/net.h"
 
 static CommSession s_session;

@@ -14,9 +14,9 @@
 
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/common/i18n/i18n.h"
-#include "pbl/services/common/light.h"
+#include "pbl/services/analytics/analytics.h"
+#include "pbl/services/i18n/i18n.h"
+#include "pbl/services/light.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
 #include "util/math.h"
