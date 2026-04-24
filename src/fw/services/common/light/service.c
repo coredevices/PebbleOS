@@ -35,7 +35,7 @@ typedef enum {
 // the time duration of the fade out
 const uint32_t LIGHT_FADE_TIME_MS = 500;
 // number of fade-out steps
-const uint32_t LIGHT_FADE_STEPS = 20;
+const uint8_t LIGHT_FADE_STEPS = 20;
 
 /*
  *              ^
@@ -62,8 +62,8 @@ const uint32_t LIGHT_FADE_STEPS = 20;
 //! The current state of the backlight (example: ON/ON_TIMED/ON_FADING).
 static BacklightState s_light_state;
 
-//! The brightness of the display in a range between BACKLIGHT_BRIGHTNESS_OFF and BACKLIGHT_BRIGHTNESS_ON
-static int32_t s_current_brightness;
+//! The brightness of the display in a range between 0 and 100
+static uint8_t s_current_brightness;
 
 //! Timer to count down from the LIGHT_STATE_ON_TIMED state.
 static TimerID s_timer_id;
@@ -96,10 +96,10 @@ static uint8_t s_color_preempt_refcount;
 static bool s_backlight_allowed = false;
 
 //! Starting intensity for fade-out (captured when fade begins)
-static uint16_t s_fade_start_intensity = 0;
+static uint8_t s_fade_start_intensity = 0;
 
 //! Fade step size (calculated once at start of fade to avoid rounding jitter)
-static uint16_t s_fade_step_size = 0;
+static uint8_t s_fade_step_size = 0;
 
 //! Mutex to guard all the above state. We have a pattern of taking the lock in the public functions and assuming
 //! it's already taken in the prv_ functions.
@@ -164,9 +164,9 @@ static uint32_t prv_get_als_average(void) {
 }
 #endif // CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !RECOVERY_FW
 
-static uint16_t prv_backlight_get_intensity(void) {
+static uint8_t prv_backlight_get_intensity(void) {
   // low_power_mode backlight intensity (25% of max brightness)
-  const uint16_t backlight_low_power_intensity = (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)25) / 100;
+  const uint8_t backlight_low_power_intensity = 25;
   
   if (low_power_is_active()) {
     return backlight_low_power_intensity;
@@ -175,10 +175,10 @@ static uint16_t prv_backlight_get_intensity(void) {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !defined(RECOVERY_FW)
   // Dynamic backlight: 3-zone algorithm based on ambient light sensor
   if (backlight_is_dynamic_intensity_enabled()) {
-    uint16_t user_max_intensity = backlight_get_intensity();
+    uint8_t user_max_intensity = backlight_get_intensity();
 
     // Define intensity levels
-    const uint16_t dim_intensity = (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)10) / 100;  // 10% for darkness
+    const uint8_t dim_intensity = 10;  // 10% for darkness
 
     // Get configurable thresholds from preferences
     const uint32_t zone1_upper_bound = backlight_get_dynamic_min_threshold();  // Upper bound of Zone 1 (utter darkness)
@@ -246,12 +246,12 @@ static void prv_apply_rgb_color(void) {
 }
 #endif
 
-static void prv_change_brightness(int32_t new_brightness) {
+static void prv_change_brightness(uint8_t new_brightness) {
   // Use fade start intensity during fading, otherwise get current intensity
-  uint16_t reference_intensity = (s_light_state == LIGHT_STATE_ON_FADING && s_fade_start_intensity > 0)
+  uint8_t reference_intensity = (s_light_state == LIGHT_STATE_ON_FADING && s_fade_start_intensity > 0)
                                   ? s_fade_start_intensity
                                   : prv_backlight_get_intensity();
-  const uint16_t HALF_BRIGHTNESS = (reference_intensity - BACKLIGHT_BRIGHTNESS_OFF) / 2;
+  const uint8_t HALF_BRIGHTNESS = reference_intensity / 2;
 
   // update the debug stats
   if (new_brightness > HALF_BRIGHTNESS && s_current_brightness <= HALF_BRIGHTNESS) {
@@ -264,9 +264,7 @@ static void prv_change_brightness(int32_t new_brightness) {
     PBL_ANALYTICS_TIMER_STOP(backlight_on_time_ms);
   }
 
-  // Track intensity for analytics (convert to percentage)
-  uint8_t new_intensity_pct = (new_brightness * 100) / BACKLIGHT_BRIGHTNESS_MAX;
-  prv_update_intensity_analytics(new_intensity_pct);
+  prv_update_intensity_analytics((uint8_t)new_brightness);
 
   backlight_set_brightness(new_brightness);
   s_current_brightness = new_brightness;
@@ -287,12 +285,12 @@ static void prv_change_state(BacklightState new_state) {
   // This prevents feedback from the backlight illuminating the sensor
   // and provides robust readings to detect utter darkness (Zone 1)
   if ((new_state == LIGHT_STATE_ON || new_state == LIGHT_STATE_ON_TIMED) &&
-      s_current_brightness == BACKLIGHT_BRIGHTNESS_OFF) {
+      s_current_brightness == 0) {
     prv_sample_als_multiple_times();
   }
 
   // Calculate the new brightness and reset any timers based on our state.
-  int32_t new_brightness = 0;
+  uint8_t new_brightness = 0;
   
   switch (new_state) {
     case LIGHT_STATE_ON:
@@ -311,22 +309,23 @@ static void prv_change_state(BacklightState new_state) {
       if (old_state != LIGHT_STATE_ON_FADING) {
         s_fade_start_intensity = s_current_brightness;
         s_fade_step_size = s_fade_start_intensity / LIGHT_FADE_STEPS;
+        if (s_fade_step_size == 0) {
+          s_fade_step_size = 1;
+        }
       }
-      new_brightness = s_current_brightness - s_fade_step_size;
 
-      if (new_brightness <= BACKLIGHT_BRIGHTNESS_OFF) {
-        // Done fading!
-        new_brightness = BACKLIGHT_BRIGHTNESS_OFF;
+      if (s_fade_step_size >= s_current_brightness) {
+        new_brightness = 0;
         s_light_state = LIGHT_STATE_OFF;
-
-        // Don't need to cancel the timer, we can only get here from the just-expired timer.
       } else {
+        new_brightness = s_current_brightness - s_fade_step_size;
+
         // Reschedule the timer so we step down the brightness again.
         new_timer_start(s_timer_id, LIGHT_FADE_TIME_MS / LIGHT_FADE_STEPS, light_timer_callback, NULL, 0 /* flags */);
       }
       break;
     case LIGHT_STATE_OFF:
-      new_brightness = BACKLIGHT_BRIGHTNESS_OFF;
+      new_brightness = 0;
       new_timer_stop(s_timer_id);
       break;
   }
@@ -358,7 +357,7 @@ static bool prv_light_allowed(void) {
 
 void light_init(void) {
   s_light_state = LIGHT_STATE_OFF;
-  s_current_brightness = BACKLIGHT_BRIGHTNESS_OFF;
+  s_current_brightness = 0;
   s_timer_id = new_timer_create();
   s_num_buttons_down = 0;
   s_user_controlled_state = false;
@@ -427,7 +426,7 @@ void light_enable_interaction(void) {
   if (prv_light_allowed()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
   } else {
-    PBL_LOG_INFO("Backlight rejected: allowed=%d, brightness=%ld, is_light=%d",
+    PBL_LOG_INFO("Backlight rejected: allowed=%d, brightness=%" PRIu8 ", is_light=%d",
                  s_backlight_allowed, s_current_brightness, ambient_light_is_light());
   }
 
@@ -627,8 +626,7 @@ DEFINE_SYSCALL(void, sys_light_set_system_color, void) {
 extern BacklightBehaviour backlight_get_behaviour(void);
 
 uint8_t light_get_current_brightness_percent(void) {
-  uint8_t percent = (s_current_brightness * 100) / BACKLIGHT_BRIGHTNESS_MAX;
-  return percent;
+  return s_current_brightness;
 }
 
 bool light_is_on(void) {
@@ -639,8 +637,7 @@ void pbl_analytics_external_collect_backlight_stats(void) {
   mutex_lock(s_mutex);
 
   // Capture one final sample to account for time since last brightness change
-  uint8_t current_intensity_pct = (s_current_brightness * 100) / BACKLIGHT_BRIGHTNESS_MAX;
-  prv_update_intensity_analytics(current_intensity_pct);
+  prv_update_intensity_analytics(s_current_brightness);
 
   // Calculate time-weighted average intensity using internally tracked on-time
   uint32_t avg_intensity_pct = 0;

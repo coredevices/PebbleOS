@@ -71,7 +71,7 @@ static bool s_backlight_ambient_sensor_enabled = true;
 #define PREF_KEY_BACKLIGHT_TIMEOUT_MS "lightTimeoutMs"
 static uint32_t s_backlight_timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS;
 #define PREF_KEY_BACKLIGHT_INTENSITY "lightIntensity"
-static uint16_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in shell_prefs_init()
+static uint8_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in shell_prefs_init()
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_COLOR "lightColor"
@@ -328,16 +328,9 @@ static bool prv_set_s_backlight_timeout_ms(uint32_t *timeout_ms) {
   return false;
 }
 
-static uint16_t prv_convert_backlight_percent_to_intensity(uint32_t percent_intensity);
-
-static bool prv_set_s_backlight_intensity(uint16_t *intensity) {
-  if (*intensity > BACKLIGHT_BRIGHTNESS_OFF) {
-    s_backlight_intensity = *intensity;
-    return true;
-  }
-  s_backlight_intensity =
-    prv_convert_backlight_percent_to_intensity(BOARD_CONFIG.backlight_on_percent);
-  return false;
+static bool prv_set_s_backlight_intensity(uint8_t *intensity) {
+  s_backlight_intensity = *intensity;
+  return true;
 }
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
@@ -780,18 +773,6 @@ static const PrefsTableEntry s_prefs_table[] = {
 };
 #undef PREFS_MACRO
 
-
-
-// ------------------------------------------------------------------------------------
-// FIXME PBL-22272. We back convert this value in
-// settings_display.c:prv_get_scaled_brightness() We should really just store
-// the percent intensity or a setting level name and leave it up to the light
-// module to do the conversion
-static uint16_t prv_convert_backlight_percent_to_intensity(uint32_t percent_intensity) {
-  return (BACKLIGHT_BRIGHTNESS_MAX * (uint32_t)percent_intensity) / 100;
-}
-
-
 // ------------------------------------------------------------------------------------
 static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
   // if present, convert deprecated BACKLIGHT_BEHAVIOUR key to the two new separate keys
@@ -816,8 +797,7 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 
 // ------------------------------------------------------------------------------------
 void shell_prefs_init(void) {
-  s_backlight_intensity =
-      prv_convert_backlight_percent_to_intensity(BOARD_CONFIG.backlight_on_percent);
+  s_backlight_intensity = BOARD_CONFIG.backlight_on_percent;
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
@@ -1133,19 +1113,13 @@ void backlight_set_timeout_ms(uint32_t timeout_ms) {
   prv_pref_set(PREF_KEY_BACKLIGHT_TIMEOUT_MS, &timeout_ms, sizeof(timeout_ms));
 }
 
-uint16_t backlight_get_intensity(void) {
+uint8_t backlight_get_intensity(void) {
   return s_backlight_intensity;
 }
 
-uint8_t backlight_get_intensity_percent(void) {
-  return (backlight_get_intensity() * 100) / BACKLIGHT_BRIGHTNESS_MAX;
-}
-
-void backlight_set_intensity_percent(uint8_t percent_intensity) {
+void backlight_set_intensity(uint8_t percent_intensity) {
   PBL_ASSERTN(percent_intensity > 0 && percent_intensity <= 100);
-  uint16_t intensity = prv_convert_backlight_percent_to_intensity(percent_intensity);
-  PBL_ASSERTN(intensity > BACKLIGHT_BRIGHTNESS_OFF);
-  prv_pref_set(PREF_KEY_BACKLIGHT_INTENSITY, &intensity, sizeof(intensity));
+  prv_pref_set(PREF_KEY_BACKLIGHT_INTENSITY, &percent_intensity, sizeof(percent_intensity));
 }
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
