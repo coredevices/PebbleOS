@@ -145,7 +145,7 @@ void test_light__initialize(void) {
   light_init();
   light_allow(true);
   s_light_timer = ((StubTimer*) s_idle_timers)->id;
-  backlight_set_intensity(BOARD_CONFIG.backlight_on_percent);
+  backlight_set_intensity(100);
 }
 
 void test_light__cleanup(void) {
