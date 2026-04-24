@@ -89,7 +89,7 @@ void backlight_init(void) {
   }
 }
 
-void backlight_set_brightness(uint16_t brightness) {
+void backlight_set_brightness(uint8_t brightness) {
   if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_Ctl) {
     if (brightness == 0) {
       gpio_output_set(&BOARD_CONFIG_BACKLIGHT.ctl, false);
@@ -112,13 +112,12 @@ void backlight_set_brightness(uint16_t brightness) {
       // By setting higher values in the TIM_Pulse register, we're causing the output waveform
       // to be low for a longer period of time, which causes the backlight to be brighter.
       //
-      // The brightness value has a range of 0 to 0x3fff which is 2^15. The period of the timer
+      // The brightness value has a range of 0 to 100. The period of the timer
       // counter is 2^10. We want to rescale the brightness range into a subset of the timer
       // counter range. Different boards will have a different duty cycle that represent the
       // "fully on" state.
-      const uint32_t pwm_scaling_factor = BACKLIGHT_BRIGHTNESS_MAX / TIMER_PERIOD_RESOLUTION;
       const uint32_t desired_duty_cycle = brightness * BOARD_CONFIG.backlight_max_duty_cycle_percent
-                                          / pwm_scaling_factor / 100;
+                                          * TIMER_PERIOD_RESOLUTION / 10000;
       pwm_set_duty_cycle(&BOARD_CONFIG_BACKLIGHT.pwm, desired_duty_cycle);
       PWR_TRACK_BACKLIGHT("ON", PWM_OUTPUT_FREQUENCY_HZ,
                           (desired_duty_cycle * 100) / TIMER_PERIOD_RESOLUTION);
@@ -126,7 +125,7 @@ void backlight_set_brightness(uint16_t brightness) {
   }
 
   if (BOARD_CONFIG_BACKLIGHT.options & BacklightOptions_LedController) {
-    led_controller_backlight_set_brightness(brightness * 100 / BACKLIGHT_BRIGHTNESS_MAX);
+    led_controller_backlight_set_brightness(brightness);
   }
 }
 
@@ -136,6 +135,6 @@ void command_backlight_ctl(const char *arg) {
     prompt_send_response("Invalid Brightness");
     return;
   }
-  backlight_set_brightness((BACKLIGHT_BRIGHTNESS_MAX * bright_percent) / 100);
+  backlight_set_brightness(bright_percent);
   prompt_send_response("OK");
 }

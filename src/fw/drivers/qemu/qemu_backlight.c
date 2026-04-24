@@ -36,21 +36,20 @@ void backlight_init(void) {
   s_initialized = true;
 }
 
-void backlight_set_brightness(uint16_t brightness) {
+void backlight_set_brightness(uint8_t brightness) {
   if (!s_initialized) {
     return;
   }
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
-  led_controller_backlight_set_brightness(
-      (uint32_t)brightness * 100U / BACKLIGHT_BRIGHTNESS_MAX);
+  led_controller_backlight_set_brightness(brightness);
 #else
   uint32_t level;
   if (brightness == 0) {
     level = BACKLIGHT_OFF_LEVEL;
   } else {
     uint32_t range = BACKLIGHT_ON_LEVEL - BACKLIGHT_OFF_LEVEL;
-    level = BACKLIGHT_OFF_LEVEL + ((uint32_t)brightness * range) / BACKLIGHT_BRIGHTNESS_MAX;
+    level = BACKLIGHT_OFF_LEVEL + ((uint32_t)brightness * range) / 100;
     if (level > BACKLIGHT_ON_LEVEL) {
       level = BACKLIGHT_ON_LEVEL;
     }
@@ -67,6 +66,6 @@ void command_backlight_ctl(const char *arg) {
     prompt_send_response("Invalid Brightness");
     return;
   }
-  backlight_set_brightness((BACKLIGHT_BRIGHTNESS_MAX * bright_percent) / 100);
+  backlight_set_brightness(bright_percent);
   prompt_send_response("OK");
 }
