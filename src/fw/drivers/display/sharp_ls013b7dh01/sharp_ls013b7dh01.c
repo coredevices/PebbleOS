@@ -13,7 +13,7 @@
 #include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
 #include "os/tick.h"
-#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/analytics/analytics.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/bitset.h"

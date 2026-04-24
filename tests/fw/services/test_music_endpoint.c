@@ -3,12 +3,12 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/music.h"
-#include "pbl/services/normal/music_endpoint.h"
-#include "pbl/services/normal/music_internal.h"
+#include "pbl/services/music.h"
+#include "pbl/services/music_endpoint.h"
+#include "pbl/services/music_internal.h"
 
-#include "pbl/services/common/comm_session/session.h"
-#include "pbl/services/common/comm_session/session_remote_os.h"
+#include "pbl/services/comm_session/session.h"
+#include "pbl/services/comm_session/session_remote_os.h"
 
 #include "kernel/events.h"
 

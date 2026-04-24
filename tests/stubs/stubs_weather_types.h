@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/timeline_resources.h"
+#include "pbl/services/timeline/timeline_resources.h"
 #include "util/attributes.h"
 
 TimelineResourceId WEAK weather_type_get_timeline_resource_id(WeatherType weather_type) {

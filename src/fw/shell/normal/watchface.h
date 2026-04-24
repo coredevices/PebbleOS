@@ -5,7 +5,7 @@
 
 #include "kernel/events.h"
 #include "process_management/app_install_manager.h"
-#include "pbl/services/common/compositor/compositor.h"
+#include "pbl/services/compositor/compositor.h"
 
 void watchface_init(void);
 

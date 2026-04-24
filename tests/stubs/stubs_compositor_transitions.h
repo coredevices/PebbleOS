@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/compositor/compositor_transitions.h"
+#include "pbl/services/compositor/compositor_transitions.h"
 #include "util/attributes.h"
 
 const CompositorTransition *WEAK compositor_slide_transition_timeline_get(

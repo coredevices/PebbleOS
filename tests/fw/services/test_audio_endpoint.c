@@ -3,8 +3,8 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/audio_endpoint.h"
-#include "pbl/services/normal/audio_endpoint_private.h"
+#include "pbl/services/audio_endpoint.h"
+#include "pbl/services/audio_endpoint_private.h"
 
 #include "util/circular_buffer.h"
 #include "util/list.h"

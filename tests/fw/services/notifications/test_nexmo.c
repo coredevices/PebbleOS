@@ -3,9 +3,9 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/notifications/ancs/nexmo.h"
-#include "pbl/services/normal/notifications/ancs/ancs_notifications_util.h"
-#include "pbl/services/normal/timeline/attributes_actions.h"
+#include "pbl/services/notifications/ancs/nexmo.h"
+#include "pbl/services/notifications/ancs/ancs_notifications_util.h"
+#include "pbl/services/timeline/attributes_actions.h"
 
 // Stubs
 ////////////////////////////////////////////////////////////////

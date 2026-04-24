@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/layout_node.h"
+#include "pbl/services/timeline/layout_node.h"
 
 GTextNode *layout_create_text_node_from_config(const LayoutLayer *layout,
                                                const LayoutNodeConfig *config) {

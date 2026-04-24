@@ -5,7 +5,7 @@
 
 #include "metrics.h"
 
-#include "pbl/services/normal/activity/hr_util.h"
+#include "pbl/services/activity/hr_util.h"
 
 #include <stdbool.h>
 #include <stddef.h>

@@ -9,9 +9,9 @@
 #include "kernel/event_loop.h"
 #include "kernel/util/standby.h"
 #include "process_management/worker_manager.h"
-#include "pbl/services/common/event_service.h"
-#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/event_service.h"
+#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/system_task.h"
 #include "pbl/services/runlevel.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "system/bootbits.h"
@@ -22,10 +22,10 @@
 #include "kernel/util/sleep.h"
 
 #if !RECOVERY_FW
-#include "pbl/services/normal/blob_db/pin_db.h"
-#include "pbl/services/normal/blob_db/reminder_db.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/timeline/event.h"
+#include "pbl/services/blob_db/pin_db.h"
+#include "pbl/services/blob_db/reminder_db.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/timeline/event.h"
 #endif
 
 static bool s_in_factory_reset = false;

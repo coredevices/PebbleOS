@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/evented_timer.h"
 
 typedef struct {
   uint32_t timeout_ms;

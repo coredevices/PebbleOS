@@ -8,8 +8,8 @@
 #include <string.h>
 
 #include "console/prompt.h"
-#include "pbl/services/common/services_common.h"
-#include "pbl/services/normal/services_normal.h"
+#include "pbl/services/services_common.h"
+#include "pbl/services/services_normal.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/size.h"

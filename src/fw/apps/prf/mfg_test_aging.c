@@ -23,9 +23,9 @@
 #include "kernel/util/sleep.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/bluetooth/bluetooth_ctl.h"
-#include "pbl/services/common/light.h"
-#include "pbl/services/prf/idle_watchdog.h"
+#include "pbl/services/bluetooth/bluetooth_ctl.h"
+#include "pbl/services/light.h"
+#include "pbl/services/idle_watchdog.h"
 #include "system/logging.h"
 
 #include <stdio.h>

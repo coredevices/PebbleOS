@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "pbl/services/normal/activity/activity_algorithm.h"
+#include "pbl/services/activity/activity_algorithm.h"
 #include "util/size.h"
 
 

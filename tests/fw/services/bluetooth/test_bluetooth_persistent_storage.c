@@ -6,11 +6,11 @@
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/gap_le_connect.h>
 
-#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/normal/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
-#include "pbl/services/normal/settings/settings_file.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/common/event_service.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
+#include "pbl/services/settings/settings_file.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/event_service.h"
 #include "flash_region/flash_region.h"
 
 // Stubs

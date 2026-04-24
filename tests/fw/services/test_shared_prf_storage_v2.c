@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/system_task.h"
 #include "flash_region/flash_region_s29vs.h"
 
 #include <bluetooth/sm_types.h>

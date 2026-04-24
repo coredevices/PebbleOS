@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/common/battery/battery_monitor.h"
-#include "pbl/services/common/battery/battery_state.h"
-#include "pbl/services/common/battery/battery_curve.h"
+#include "pbl/services/battery/battery_monitor.h"
+#include "pbl/services/battery/battery_state.h"
+#include "pbl/services/battery/battery_curve.h"
 
 #include "clar.h"
 

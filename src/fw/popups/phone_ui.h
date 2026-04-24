@@ -4,7 +4,7 @@
 #pragma once
 
 #include "kernel/events.h"
-#include "pbl/services/normal/phone_call_util.h"
+#include "pbl/services/phone_call_util.h"
 
 #include <stdbool.h>
 

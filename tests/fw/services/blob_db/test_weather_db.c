@@ -6,9 +6,9 @@
 #include "util/attributes.h"
 #include "util/pstring.h"
 
-#include "pbl/services/normal/blob_db/weather_db.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/weather/weather_types.h"
+#include "pbl/services/blob_db/weather_db.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/weather/weather_types.h"
 #include "weather_data_shared.h"
 
 // Fixture

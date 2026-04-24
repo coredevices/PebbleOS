@@ -12,7 +12,7 @@
 #include "system/profiler.h"
 
 #include "kernel/util/sleep.h"
-#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/new_timer/new_timer.h"
 
 static Window *window;
 static PebbleMutex *s_mutex;

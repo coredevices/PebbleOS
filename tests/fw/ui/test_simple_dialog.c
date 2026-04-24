@@ -11,7 +11,7 @@
 #include "applib/ui/window_private.h"
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/normal/timeline/timeline_resources.h"
+#include "pbl/services/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
 #include "util/graphics.h"

@@ -11,8 +11,8 @@
 #include "comm/bt_lock.h"
 #include "drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/analytics/analytics.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "util/time/time.h"
 
@@ -290,7 +290,7 @@ static void prv_evaluate(GAPLEConnection *connection, ResponseTimeState desired_
 }
 
 // -------------------------------------------------------------------------------------------------
-//! Extern'd for and used by services/common/bluetooth/pebble_pairing_service.c
+//! Extern'd for and used by services/bluetooth/pebble_pairing_service.c
 //! bt_lock is assumed to be taken before calling this function.
 //! Forces the module to re-evaluate whether the current parameters match the desired ones.
 //! This is used when the set of desired request params are changed through Pebble Pairing Service.

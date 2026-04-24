@@ -10,7 +10,7 @@
 #include "applib/app_logging.h"
 #include "kernel/memory_layout.h"
 #include "mcu/privilege.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/logging.h"

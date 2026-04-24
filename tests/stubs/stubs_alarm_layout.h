@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/alarm_layout.h"
+#include "pbl/services/timeline/alarm_layout.h"
 #include "util/attributes.h"
 
 LayoutLayer * WEAK alarm_layout_create(const LayoutLayerConfig *config) {

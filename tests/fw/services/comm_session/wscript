@@ -4,7 +4,7 @@ from waftools.pebble_test import clar
 def build(bld):
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/common/comm_session/meta_endpoint.c "
+            "src/fw/services/comm_session/meta_endpoint.c "
             "tests/fakes/fake_session.c "
          ),
          test_sources_ant_glob="test_meta_endpoint.c")
@@ -13,7 +13,7 @@ def build(bld):
          sources_ant_glob=(
             "src/fw/util/rand/rand.c "
             "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
-            "src/fw/services/common/comm_session/session.c "
+            "src/fw/services/comm_session/session.c "
             "tests/fakes/fake_session_send_buffer.c"
          ),
          test_sources_ant_glob="test_session.c",
@@ -21,8 +21,8 @@ def build(bld):
 
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/common/comm_session/default_kernel_sender.c "
-            "src/fw/services/common/comm_session/session_send_queue.c "
+            "src/fw/services/comm_session/default_kernel_sender.c "
+            "src/fw/services/comm_session/session_send_queue.c "
             "tests/fakes/fake_queue.c "
             "tests/fakes/fake_rtc.c"
          ),
@@ -30,7 +30,7 @@ def build(bld):
 
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/common/comm_session/session_send_queue.c "
+            "src/fw/services/comm_session/session_send_queue.c "
          ),
          test_sources_ant_glob="test_session_send_queue.c")
 
@@ -38,8 +38,8 @@ def build(bld):
          sources_ant_glob=(
             "src/fw/util/rand/rand.c "
             "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
-            "src/fw/services/common/comm_session/session.c "
-            "src/fw/services/common/comm_session/session_receive_router.c "
+            "src/fw/services/comm_session/session.c "
+            "src/fw/services/comm_session/session_receive_router.c "
             "tests/fakes/fake_session_send_buffer.c "
          ),
          test_sources_ant_glob="test_session_receive_router.c",
@@ -47,7 +47,7 @@ def build(bld):
 
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/common/comm_session/session_remote_version.c "
+            "src/fw/services/comm_session/session_remote_version.c "
             "tests/fakes/fake_events.c "
          ),
          test_sources_ant_glob="test_session_remote_version.c",
@@ -55,7 +55,7 @@ def build(bld):
 
     clar(bld,
          sources_ant_glob=(
-            "src/fw/services/common/comm_session/default_kernel_receiver.c "
+            "src/fw/services/comm_session/default_kernel_receiver.c "
          ),
          test_sources_ant_glob="test_default_kernel_receiver.c",
          override_includes=['dummy_board'])

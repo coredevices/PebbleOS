@@ -4,10 +4,10 @@
 #include "BSCAPI.h"
 #include "clar.h"
 #include "bluetooth/bt_driver_comm.h"
-#include "pbl/services/common/comm_session/session.h"
-#include "pbl/services/common/comm_session/session_remote_version.h"
-#include "pbl/services/common/comm_session/session_send_buffer.h"
-#include "pbl/services/common/comm_session/session_transport.h"
+#include "pbl/services/comm_session/session.h"
+#include "pbl/services/comm_session/session_remote_version.h"
+#include "pbl/services/comm_session/session_send_buffer.h"
+#include "pbl/services/comm_session/session_transport.h"
 #include "kernel/events.h"
 
 extern void comm_session_set_capabilities(CommSession *session,

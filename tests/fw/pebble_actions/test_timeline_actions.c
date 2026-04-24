@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/timeline/timeline_actions.h"
+#include "pbl/services/timeline/timeline_actions.h"
 
 // Test Data
 ///////////////////////////////////////////////////////////

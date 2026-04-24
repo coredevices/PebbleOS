@@ -7,7 +7,7 @@
 #include "applib/app_message/app_message_internal.h"
 #include "applib/app_message/app_message_receiver.h"
 #include "comm/bt_conn_mgr.h"
-#include "pbl/services/common/comm_session/session_receive_router.h"
+#include "pbl/services/comm_session/session_receive_router.h"
 #include "kernel/events.h"
 #include "process_management/app_install_types.h"
 

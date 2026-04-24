@@ -11,7 +11,7 @@
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
-#include "pbl/services/normal/process_management/app_storage.h"
+#include "pbl/services/process_management/app_storage.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

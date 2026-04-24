@@ -12,7 +12,7 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/standby.h"
 #include "process_management/app_manager.h"
-#include "pbl/services/common/battery/battery_curve.h"
+#include "pbl/services/battery/battery_curve.h"
 #include "shell/normal/battery_ui.h"
 #include "util/ratio.h"
 

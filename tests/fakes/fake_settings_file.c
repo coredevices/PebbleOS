@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/settings/settings_file.h"
 #include "system/status_codes.h"
 #include "util/crc8.h"
 

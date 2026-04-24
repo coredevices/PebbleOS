@@ -5,8 +5,8 @@
 
 #include "popups/bluetooth_pairing_ui.h"
 
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/prf/idle_watchdog.h"
+#include "pbl/services/analytics/analytics.h"
+#include "pbl/services/idle_watchdog.h"
 
 void shell_event_loop_init(void) {
   prf_idle_watchdog_init();

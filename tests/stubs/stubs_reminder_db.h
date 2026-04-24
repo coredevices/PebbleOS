@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/normal/blob_db/timeline_item_storage.h"
-#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/blob_db/timeline_item_storage.h"
+#include "pbl/services/settings/settings_file.h"
 
 void reminder_db_init(void) {
   return;

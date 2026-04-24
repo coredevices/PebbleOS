@@ -9,7 +9,7 @@
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/timeline/timeline.h"
 
 #include <stdint.h>
 

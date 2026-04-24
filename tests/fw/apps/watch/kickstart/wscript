@@ -45,9 +45,9 @@ def build(ctx):
         " src/fw/resource/resource_storage_builtin.c" \
         " src/fw/resource/resource_storage_file.c" \
         " src/fw/resource/resource_storage_flash.c" \
-        " src/fw/services/normal/filesystem/app_file.c" \
-        " src/fw/services/normal/filesystem/flash_translation.c" \
-        " src/fw/services/normal/filesystem/pfs.c" \
+        " src/fw/services/filesystem/app_file.c" \
+        " src/fw/services/filesystem/flash_translation.c" \
+        " src/fw/services/filesystem/pfs.c" \
         " src/fw/system/hexdump.c" \
         " src/fw/util/crc8.c" \
         " src/fw/util/legacy_checksum.c" \
@@ -68,7 +68,7 @@ def build(ctx):
         " src/fw/applib/ui/text_layer.c" \
         " src/fw/applib/ui/window.c" \
         " src/fw/apps/system/timeline/text_node.c" \
-        " src/fw/services/normal/activity/health_util.c" \
+        " src/fw/services/activity/health_util.c" \
         " src/fw/util/buffer.c" \
         " src/fw/util/stats.c" \
         " src/fw/util/time/mktime.c" \

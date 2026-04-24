@@ -9,8 +9,8 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
-#include "pbl/services/normal/process_management/app_order_storage.h"
+#include "pbl/services/i18n/i18n.h"
+#include "pbl/services/process_management/app_order_storage.h"
 #include "system/passert.h"
 #include "util/size.h"
 

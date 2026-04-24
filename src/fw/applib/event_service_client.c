@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "util/list.h"
-#include "pbl/services/common/event_service.h"
+#include "pbl/services/event_service.h"
 #include "kernel/kernel_applib_state.h"
 
 #include "event_service_client.h"

@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/regular_timer.h"
 
 static ListNode s_seconds_callbacks;
 static ListNode s_minutes_callbacks;

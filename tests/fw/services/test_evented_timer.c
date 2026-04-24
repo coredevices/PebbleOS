@@ -4,7 +4,7 @@
 #include "clar.h"
 
 #include "kernel/events.h"
-#include "pbl/services/common/evented_timer.h"
+#include "pbl/services/evented_timer.h"
 #include "kernel/pebble_tasks.h"
 
 #include "stubs_events.h"

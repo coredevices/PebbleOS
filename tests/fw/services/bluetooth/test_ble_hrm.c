@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/bluetooth/ble_hrm.h"
+#include "pbl/services/bluetooth/ble_hrm.h"
 
 #include "comm/ble/gap_le_connection.h"
-#include "pbl/services/common/hrm/hrm_manager_private.h"
+#include "pbl/services/hrm/hrm_manager_private.h"
 
 #include <bluetooth/hrm_service.h>
 #include <btutil/bt_device.h>

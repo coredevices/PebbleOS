@@ -10,7 +10,7 @@
 #include "flash_region/flash_region.h"
 #include "kernel/util/sleep.h"
 #include "resource/resource_storage_flash.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "system/bootbits.h"
 #include "util/attributes.h"
 #include "util/math.h"

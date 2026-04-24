@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/notifications/ancs/ancs_notifications.h"
+#include "pbl/services/notifications/ancs/ancs_notifications.h"
 
 void ancs_notifications_enable_bulk_action_mode(bool enable) { }
 

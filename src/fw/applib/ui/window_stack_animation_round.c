@@ -14,7 +14,7 @@
 #include "applib/graphics/gtypes.h"
 #include "board/display.h"
 #include "kernel/ui/kernel_ui.h"
-#include "pbl/services/common/compositor/compositor_transitions.h"
+#include "pbl/services/compositor/compositor_transitions.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/math.h"

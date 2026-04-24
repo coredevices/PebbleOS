@@ -13,7 +13,7 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "popups/crashed_ui.h"
-#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/analytics/analytics.h"
 #include "system/logging.h"
 #include "system/reboot_reason.h"
 

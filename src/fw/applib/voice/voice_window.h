@@ -5,7 +5,7 @@
 
 #include "util/uuid.h"
 #include "applib/voice/dictation_session.h"
-#include "pbl/services/normal/voice_endpoint.h"
+#include "pbl/services/voice_endpoint.h"
 
 #include <stddef.h>
 #include <stdint.h>

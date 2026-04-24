@@ -7,7 +7,7 @@
 
 #include "applib/ui/animation.h"
 #include "applib/ui/window.h"
-#include "pbl/services/normal/timeline/timeline_layout.h"
+#include "pbl/services/timeline/timeline_layout.h"
 
 typedef struct PeekLayout {
   TimelineLayoutInfo info;

@@ -6,7 +6,7 @@
 #include "app_glance_service.h"
 
 #include "applib/ui/kino/kino_reel.h"
-#include "pbl/services/normal/app_glances/app_glance_service.h"
+#include "pbl/services/app_glances/app_glance_service.h"
 #include "util/uuid.h"
 
 //! Forward declaration

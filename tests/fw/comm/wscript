@@ -4,7 +4,7 @@ def build(bld):
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/kernel_le_client/ams/ams_util.c "
                            "src/fw/comm/ble/kernel_le_client/ams/ams.c "
-                           "src/fw/services/normal/music/service.c "
+                           "src/fw/services/music/service.c "
                            "tests/fakes/fake_events.c "
                            "tests/fakes/fake_gatt_client_operations.c "
                            "tests/fakes/fake_gatt_client_subscriptions.c "
@@ -18,7 +18,7 @@ def build(bld):
     clar(bld,
         sources_ant_glob = "src/fw/comm/ble/gap_le_advert.c "
                            "src/fw/comm/ble/gap_le_connection.c "
-                           "src/fw/services/common/regular_timer/service.c "
+                           "src/fw/services/regular_timer/service.c "
                            "src/fw/comm/internals/bt_conn_mgr.c "
                            "tests/fakes/fake_GAPAPI.c "
                            "tests/fakes/fake_rtc.c "
@@ -29,7 +29,7 @@ def build(bld):
 
     clar(bld,
         sources_ant_glob = "src/fw/comm/internals/bt_conn_mgr.c "
-                           "src/fw/services/common/regular_timer/service.c "
+                           "src/fw/services/regular_timer/service.c "
                            "tests/fakes/fake_gap_le_connect_params.c "
                            "tests/fakes/fake_rtc.c ",
         test_sources_ant_glob = "test_bt_conn_mgr.c")
@@ -137,22 +137,22 @@ def build(bld):
         "src/fw/comm/ble/kernel_le_client/ancs/ancs_util.c " \
         "src/fw/comm/ble/kernel_le_client/ancs/ancs.c " \
         "src/fw/comm/ble/kernel_le_client/ancs/ancs_app_name_storage.c " \
-        "src/fw/services/common/regular_timer/service.c " \
+        "src/fw/services/regular_timer/service.c " \
         "src/fw/util/rand/rand.c " \
         "third_party/tinymt/TinyMT/tinymt/tinymt32.c " \
         "tests/fakes/fake_events.c " \
         "tests/fakes/fake_kernel_services_notifications.c " \
         "tests/fakes/fake_gatt_client_subscriptions.c " \
         "tests/fakes/fake_rtc.c " \
-        "src/fw/services/normal/notifications/ancs/ancs_notifications.c " \
-        " src/fw/services/normal/notifications/ancs/ancs_notifications_util.c " \
-        "src/fw/services/normal/notifications/ancs/ancs_item.c " \
-        "src/fw/services/normal/notifications/ancs/ancs_filtering.c " \
-        "src/fw/services/normal/notifications/ancs/ancs_phone_call.c " \
-        "src/fw/services/normal/timeline/item.c " \
-        "src/fw/services/normal/timeline/attributes_actions.c " \
-        "src/fw/services/normal/timeline/attribute_group.c " \
-        "src/fw/services/normal/timeline/attribute.c",
+        "src/fw/services/notifications/ancs/ancs_notifications.c " \
+        " src/fw/services/notifications/ancs/ancs_notifications_util.c " \
+        "src/fw/services/notifications/ancs/ancs_item.c " \
+        "src/fw/services/notifications/ancs/ancs_filtering.c " \
+        "src/fw/services/notifications/ancs/ancs_phone_call.c " \
+        "src/fw/services/timeline/item.c " \
+        "src/fw/services/timeline/attributes_actions.c " \
+        "src/fw/services/timeline/attribute_group.c " \
+        "src/fw/services/timeline/attribute.c",
         test_sources_ant_glob = "test_ancs.c")
 
     clar(bld,
@@ -165,7 +165,7 @@ def build(bld):
         clar(bld,
              sources_ant_glob = "src/fw/system/hexdump.c " \
                            "src/fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c " \
-                           "src/fw/services/common/regular_timer/service.c " \
+                           "src/fw/services/regular_timer/service.c " \
                            "src/fw/util/rand/rand.c "
                            "third_party/tinymt/TinyMT/tinymt/tinymt32.c "
                            "tests/fakes/fake_gatt_client_operations.c " \

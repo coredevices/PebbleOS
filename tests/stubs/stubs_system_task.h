@@ -3,7 +3,7 @@
 
 #include <unistd.h>
 
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   cb(data);

@@ -5,7 +5,7 @@
 #include "applib/app_message/app_message_internal.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/comm_session/protocol.h"
+#include "pbl/services/comm_session/protocol.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
 

@@ -17,10 +17,10 @@
 #include "process_management/pebble_process_md.h"
 #include "resource/resource_storage.h"
 #include "resource/resource_storage_file.h"
-#include "pbl/services/common/light.h"
-#include "pbl/services/normal/notifications/do_not_disturb.h"
-#include "pbl/services/normal/notifications/alerts_private.h"
-#include "pbl/services/normal/persist.h"
+#include "pbl/services/light.h"
+#include "pbl/services/notifications/do_not_disturb.h"
+#include "pbl/services/notifications/alerts_private.h"
+#include "pbl/services/persist.h"
 #include "shell/prefs.h"
 
 void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) {
@@ -84,11 +84,11 @@ bool phone_call_is_using_ANCS(void) {
   return true;
 }
 
-#include "pbl/services/normal/notifications/alerts.h"
+#include "pbl/services/notifications/alerts.h"
 
-#include "pbl/services/normal/blob_db/app_db.h"
-#include "pbl/services/normal/app_cache.h"
-#include "pbl/services/normal/blob_db/pin_db.h"
+#include "pbl/services/blob_db/app_db.h"
+#include "pbl/services/app_cache.h"
+#include "pbl/services/blob_db/pin_db.h"
 
 status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
   return E_INVALID_OPERATION;
@@ -142,7 +142,7 @@ void * process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
   return app_md->main_func;
 }
 
-#include "pbl/services/normal/process_management/app_storage.h"
+#include "pbl/services/process_management/app_storage.h"
 AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_info,
                                                         uint8_t *build_id_out,
                                                         AppInstallId app_id,

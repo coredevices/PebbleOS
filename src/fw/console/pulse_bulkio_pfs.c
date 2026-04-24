@@ -5,7 +5,7 @@
 
 #include "console/pulse_protocol_impl.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/filesystem/pfs.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "util/attributes.h"

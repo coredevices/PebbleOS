@@ -5,7 +5,7 @@
 
 #include "syscall/syscall.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 
 const char *app_get_system_locale(void) {
   LocaleInfo *info = app_state_get_locale_info();

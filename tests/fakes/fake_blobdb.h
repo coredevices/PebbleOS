@@ -3,6 +3,6 @@
 
 #pragma once
 
-#include "pbl/services/normal/blob_db/api.h"
+#include "pbl/services/blob_db/api.h"
 
 void fake_blob_db_set_id(BlobDBId id);

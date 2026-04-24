@@ -6,8 +6,8 @@
 #include "applib/app.h"
 #include "applib/ui/action_toggle.h"
 #include "process_management/app_manager.h"
-#include "pbl/services/common/bluetooth/bluetooth_ctl.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/bluetooth/bluetooth_ctl.h"
+#include "pbl/services/i18n/i18n.h"
 
 static bool prv_get_state(void *context) {
   return bt_ctl_is_airplane_mode_on();

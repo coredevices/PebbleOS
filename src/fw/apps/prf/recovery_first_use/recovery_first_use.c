@@ -40,10 +40,10 @@
 
 #include "apps/system/settings/time.h"
 
-#include "pbl/services/common/bluetooth/local_id.h"
-#include "pbl/services/common/bluetooth/pairability.h"
-#include "pbl/services/common/comm_session/session.h"
-#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/bluetooth/local_id.h"
+#include "pbl/services/bluetooth/pairability.h"
+#include "pbl/services/comm_session/session.h"
+#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 
 #include "git_version.auto.h"
 

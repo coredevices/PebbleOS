@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/blob_db/watch_app_prefs_db.h"
+#include "pbl/services/blob_db/watch_app_prefs_db.h"
 
 SerializedSendTextPrefs *watch_app_prefs_get_send_text(void);
 

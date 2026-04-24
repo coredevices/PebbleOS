@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "apps/system/timeline/pin_window.h"
-#include "pbl/services/normal/timeline/weather_layout.h"
+#include "pbl/services/timeline/weather_layout.h"
 
 #include "clar.h"
 

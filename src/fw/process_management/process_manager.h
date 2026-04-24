@@ -10,8 +10,8 @@
 #include "kernel/events.h"
 #include "process_management/app_install_types.h"
 #include "process_management/pebble_process_md.h"
-#include "pbl/services/common/accel_manager.h"
-#include "pbl/services/common/compositor/compositor.h"
+#include "pbl/services/accel_manager.h"
+#include "pbl/services/compositor/compositor.h"
 
 #include <stdbool.h>
 

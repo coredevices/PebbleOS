@@ -5,7 +5,7 @@
 
 //#include "comm/remote.h"
 #include "process_management/app_run_state.h"
-#include "pbl/services/common/comm_session/protocol.h"
+#include "pbl/services/comm_session/protocol.h"
 #include "system/passert.h"
 
 #include "util/attributes.h"

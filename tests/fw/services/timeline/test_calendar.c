@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "kernel/events.h"
-#include "pbl/services/normal/blob_db/pin_db.h"
-#include "pbl/services/normal/timeline/calendar.h"
-#include "pbl/services/normal/timeline/event.h"
-#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/blob_db/pin_db.h"
+#include "pbl/services/timeline/calendar.h"
+#include "pbl/services/timeline/event.h"
+#include "pbl/services/timeline/timeline.h"
 #include "system/logging.h"
 
 #include "clar.h"

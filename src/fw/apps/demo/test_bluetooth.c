@@ -8,9 +8,9 @@
 #include "process_management/pebble_process_md.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/comm_session/session.h"
-#include "pbl/services/common/comm_session/session_send_buffer.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/comm_session/session.h"
+#include "pbl/services/comm_session/session_send_buffer.h"
+#include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

@@ -8,7 +8,7 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/app_install_types.h"
 #include "process_management/app_manager.h"
-#include "pbl/services/common/compositor/compositor_transitions.h"
+#include "pbl/services/compositor/compositor_transitions.h"
 
 #define WATCHFACE_SHUTTER_COLOR GColorWhite
 #define HEALTH_SHUTTER_COLOR PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite)

@@ -4,9 +4,9 @@
 #include "clar.h"
 #include "fixtures/load_test_resources.h"
 
-#include "pbl/services/common/i18n/i18n.h"
-#include "pbl/services/common/i18n/mo.h"
-#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/i18n/i18n.h"
+#include "pbl/services/i18n/mo.h"
+#include "pbl/services/filesystem/pfs.h"
 #include "resource/resource_ids.auto.h"
 #include "flash_region/flash_region.h"
 

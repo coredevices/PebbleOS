@@ -5,7 +5,7 @@
 
 #include "kernel/event_loop.h"
 #include "os/tick.h"
-#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "shell/normal/watchface.h"
 #include "shell/shell.h"
 #include "system/logging.h"

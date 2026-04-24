@@ -5,24 +5,24 @@
 #include "applib/data_logging.h"
 #include "drivers/ambient_light.h"
 #include "drivers/rtc.h"
-#include "pbl/services/common/regular_timer.h"
-#include "pbl/services/common/battery/battery_state.h"
-#include "pbl/services/normal/activity/activity.h"
-#include "pbl/services/normal/activity/activity_private.h"
-#include "pbl/services/normal/activity/activity_algorithm.h"
-#include "pbl/services/normal/activity/kraepelin/activity_algorithm_kraepelin.h"
-#include "pbl/services/normal/activity/kraepelin/kraepelin_algorithm.h"
-#include "pbl/services/normal/data_logging/data_logging_service.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/settings/settings_file.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/regular_timer.h"
+#include "pbl/services/battery/battery_state.h"
+#include "pbl/services/activity/activity.h"
+#include "pbl/services/activity/activity_private.h"
+#include "pbl/services/activity/activity_algorithm.h"
+#include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
+#include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
+#include "pbl/services/data_logging/data_logging_service.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/settings/settings_file.h"
+#include "pbl/services/system_task.h"
 #include "util/math.h"
 #include "util/size.h"
 
 #include <stdint.h>
 #include <string.h>
 #include <applib/health_service.h>
-#include <services/normal/activity/kraepelin/activity_algorithm_kraepelin.h>
+#include <services/activity/kraepelin/activity_algorithm_kraepelin.h>
 
 #include "clar.h"
 

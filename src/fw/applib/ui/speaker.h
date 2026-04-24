@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "pbl/services/normal/speaker/note_sequence.h"
-#include "pbl/services/normal/speaker/speaker_finish_reason.h"
-#include "pbl/services/normal/speaker/speaker_pcm_format.h"
-#include "pbl/services/normal/speaker/track.h"
+#include "pbl/services/speaker/note_sequence.h"
+#include "pbl/services/speaker/speaker_finish_reason.h"
+#include "pbl/services/speaker/speaker_pcm_format.h"
+#include "pbl/services/speaker/track.h"
 
 #include <stdbool.h>
 #include <stdint.h>

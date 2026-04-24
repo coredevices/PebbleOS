@@ -8,10 +8,10 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/normal/app_glances/app_glance_service.h"
-#include "pbl/services/normal/blob_db/app_glance_db.h"
-#include "pbl/services/normal/blob_db/app_glance_db_private.h"
-#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/app_glances/app_glance_service.h"
+#include "pbl/services/blob_db/app_glance_db.h"
+#include "pbl/services/blob_db/app_glance_db_private.h"
+#include "pbl/services/filesystem/pfs.h"
 #include "util/uuid.h"
 
 // Fakes

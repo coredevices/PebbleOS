@@ -5,10 +5,10 @@
 
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
-#include "pbl/services/common/debounced_connection_service.h"
-#include "pbl/services/normal/blob_db/api.h"
-#include "pbl/services/normal/blob_db/settings_blob_db.h"
-#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/debounced_connection_service.h"
+#include "pbl/services/blob_db/api.h"
+#include "pbl/services/blob_db/settings_blob_db.h"
+#include "pbl/services/blob_db/sync.h"
 #include "system/logging.h"
 
 //! Prefs Sync using BlobDB
@@ -16,7 +16,7 @@
 //! Settings are now synced via BlobDB with database ID 0x0F (BlobDBIdSettings).
 //! 
 //! The whitelist filtering and sync logic are implemented in:
-//!   services/normal/blob_db/settings_blob_db.c
+//!   services/blob_db/settings_blob_db.c
 //!
 //! This module simply triggers BlobDB sync when the phone connects.
 

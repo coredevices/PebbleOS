@@ -15,8 +15,8 @@
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 #include "applib/touch_service.h"
-#include "pbl/services/common/light.h"
-#include "pbl/services/common/touch/touch.h"
+#include "pbl/services/light.h"
+#include "pbl/services/touch/touch.h"
 #include "util/trig.h"
 
 #include <stdio.h>

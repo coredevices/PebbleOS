@@ -6,8 +6,8 @@
 #include "applib/app.h"
 #include "applib/ui/action_toggle.h"
 #include "process_management/app_manager.h"
-#include "pbl/services/common/i18n/i18n.h"
-#include "pbl/services/normal/notifications/do_not_disturb_toggle.h"
+#include "pbl/services/i18n/i18n.h"
+#include "pbl/services/notifications/do_not_disturb_toggle.h"
 
 static void prv_main(void) {
   do_not_disturb_toggle_push(ActionTogglePrompt_Auto, true /* set_exit_reason */);

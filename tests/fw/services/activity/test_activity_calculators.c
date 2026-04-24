@@ -3,9 +3,9 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/activity/activity.h"
-#include "pbl/services/normal/activity/activity_private.h"
-#include "pbl/services/normal/activity/activity_calculators.h"
+#include "pbl/services/activity/activity.h"
+#include "pbl/services/activity/activity_private.h"
+#include "pbl/services/activity/activity_calculators.h"
 
 #include "util/units.h"
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/weather_layout.h"
+#include "pbl/services/timeline/weather_layout.h"
 #include "util/attributes.h"
 
 LayoutLayer * WEAK weather_layout_create(const LayoutLayerConfig *config) {

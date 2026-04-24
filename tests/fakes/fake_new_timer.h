@@ -5,7 +5,7 @@
 
 #include "fake_pbl_malloc.h"
 
-#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "util/list.h"
 #include "drivers/rtc.h"
 #include "system/passert.h"

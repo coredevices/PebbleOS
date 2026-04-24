@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 #include <locale.h>
 
 typedef struct {

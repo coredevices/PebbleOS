@@ -11,7 +11,7 @@
 #include "drivers/i2c.h"
 #include "drivers/periph_config.h"
 #include "kernel/events.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

@@ -17,7 +17,7 @@
 #include "shell/normal/watchface.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
 

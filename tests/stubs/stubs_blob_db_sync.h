@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/blob_db/sync.h"
+#include "pbl/services/blob_db/sync.h"
 
 status_t blob_db_sync_db(BlobDBId db_id) {
   return S_SUCCESS;

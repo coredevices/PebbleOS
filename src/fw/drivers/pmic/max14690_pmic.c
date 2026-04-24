@@ -20,8 +20,8 @@
 #include "kernel/util/sleep.h"
 
 #include "kernel/events.h"
-#include "pbl/services/common/system_task.h"
-#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/system_task.h"
+#include "pbl/services/new_timer/new_timer.h"
 
 #include <stm32f4xx.h>
 

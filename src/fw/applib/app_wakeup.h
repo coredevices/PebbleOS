@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include "util/time/time.h"
-#include "pbl/services/normal/wakeup.h"
+#include "pbl/services/wakeup.h"
 
 //! @addtogroup Foundation
 //! @{

@@ -9,7 +9,7 @@
 // FIXME PBL-1629: move needed declarations into applib
 #include "syscall/syscall.h"
 #include "process_management/app_manager.h"
-#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/comm_session/session.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/bluetooth/ble_hrm.h"
+#include "pbl/services/bluetooth/ble_hrm.h"
 
 #include "applib/graphics/gcolor_definitions.h"
 #include "applib/ui/dialogs/actionable_dialog.h"
@@ -10,7 +10,7 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "applib/ui/vibes.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 
 #include <util/size.h>
 

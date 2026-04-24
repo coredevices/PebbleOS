@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/notifications/ancs/ancs_notifications_util.h"
+#include "pbl/services/notifications/ancs/ancs_notifications_util.h"
 
 // Stubs
 ////////////////////////////////////////////////////////////////

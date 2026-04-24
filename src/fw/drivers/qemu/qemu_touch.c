@@ -3,8 +3,8 @@
 
 #include "board/board.h"
 #include "drivers/touch/touch_sensor.h"
-#include "pbl/services/common/system_task.h"
-#include "pbl/services/common/touch/touch.h"
+#include "pbl/services/system_task.h"
+#include "pbl/services/touch/touch.h"
 
 #include "FreeRTOS.h"
 

@@ -14,8 +14,8 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "shell/normal/app_idle_timeout.h"
-#include "pbl/services/normal/notifications/do_not_disturb.h"
-#include "pbl/services/normal/notifications/alerts_private.h"
+#include "pbl/services/notifications/do_not_disturb.h"
+#include "pbl/services/notifications/alerts_private.h"
 #include "applib/ui/kino/kino_layer.h"
 #include "system/passert.h"
 

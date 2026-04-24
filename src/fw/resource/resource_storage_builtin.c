@@ -6,7 +6,7 @@
 
 #include "kernel/memory_layout.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/normal/process_management/app_storage.h"
+#include "pbl/services/process_management/app_storage.h"
 
 #include <string.h>
 

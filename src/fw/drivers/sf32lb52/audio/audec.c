@@ -6,7 +6,7 @@
 #include "system/passert.h"
 #include "system/logging.h"
 #include "util/misc.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "kernel/util/stop.h"
 
 //AVDD 3V3 for obelix

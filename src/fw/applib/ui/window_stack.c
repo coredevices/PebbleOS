@@ -17,7 +17,7 @@
 #include "kernel/ui/kernel_ui.h"
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/compositor/compositor.h"
+#include "pbl/services/compositor/compositor.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"

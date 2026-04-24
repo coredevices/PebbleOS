@@ -5,7 +5,7 @@
 
 #include "event_service_client.h"
 #include "kernel/events.h"
-#include "pbl/services/common/event_service.h"
+#include "pbl/services/event_service.h"
 #include "syscall/syscall.h"
 #include "system/passert.h"
 

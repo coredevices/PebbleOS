@@ -5,7 +5,7 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/activity/activity.h"
 
 // ---------------------------------------------------------------------------------------
 #include "stubs_attribute.h"

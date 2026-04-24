@@ -15,8 +15,8 @@
 #include "kernel/ui/system_icons.h"
 #include "kernel/util/factory_reset.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/i18n/i18n.h"
+#include "pbl/services/system_task.h"
 #include "bluetooth.h"
 #include "system/logging.h"
 

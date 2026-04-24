@@ -6,7 +6,7 @@
 #include "apps/system/workout/data.h"
 #include "apps/system/workout/dialog.h"
 
-#include "pbl/services/normal/activity/health_util.h"
+#include "pbl/services/activity/health_util.h"
 
 #include "test_workout_app_includes.h"
 

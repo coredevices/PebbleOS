@@ -3,10 +3,10 @@
 
 #include "clar.h"
 
-#include "pbl/services/common/phone_pp.h"
-#include "pbl/services/normal/phone_call_util.h"
+#include "pbl/services/phone_pp.h"
+#include "pbl/services/phone_call_util.h"
 
-#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/comm_session/session.h"
 #include "kernel/events.h"
 
 #include "fake_events.h"

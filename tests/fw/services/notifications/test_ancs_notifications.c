@@ -3,9 +3,9 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/notifications/alerts_preferences.h"
-#include "pbl/services/normal/notifications/ancs/ancs_notifications.h"
-#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/notifications/alerts_preferences.h"
+#include "pbl/services/notifications/ancs/ancs_notifications.h"
+#include "pbl/services/blob_db/ios_notif_pref_db.h"
 
 
 // Stubs

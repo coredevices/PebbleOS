@@ -13,7 +13,7 @@
 #include "system/passert.h"
 #include "util/likely.h"
 
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 
 #include <string.h>
 #include <stdbool.h>

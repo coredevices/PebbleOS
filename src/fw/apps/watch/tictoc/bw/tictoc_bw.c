@@ -7,8 +7,8 @@
 #include "applib/unobstructed_area_service.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/clock.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/clock.h"
+#include "pbl/services/i18n/i18n.h"
 #include "util/time/time.h"
 
 #include <locale.h>

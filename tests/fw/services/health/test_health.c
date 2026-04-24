@@ -4,7 +4,7 @@
 #include "clar.h"
 
 #include "applib/health_service_private.h"
-#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/activity/activity.h"
 #include "shell/prefs_syscalls.h"
 #include "util/size.h"
 

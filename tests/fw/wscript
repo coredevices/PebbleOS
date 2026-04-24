@@ -13,7 +13,7 @@ def build(ctx):
         test_sources_ant_glob = "test_utf8.c")
 
     clar(ctx,
-        sources_ant_glob = "src/fw/services/common/i18n/i18n.c" \
+        sources_ant_glob = "src/fw/services/i18n/i18n.c" \
             "  src/fw/flash_region/flash_region.c" \
             "  src/fw/flash_region/filesystem_regions.c" \
             "  src/fw/resource/resource.c" \
@@ -21,9 +21,9 @@ def build(ctx):
             "  src/fw/resource/resource_storage_builtin.c" \
             "  src/fw/resource/resource_storage_file.c" \
             "  src/fw/resource/resource_storage_flash.c" \
-            "  src/fw/services/normal/filesystem/flash_translation.c" \
-            "  src/fw/services/normal/filesystem/pfs.c" \
-            "  src/fw/services/normal/filesystem/app_file.c" \
+            "  src/fw/services/filesystem/flash_translation.c" \
+            "  src/fw/services/filesystem/pfs.c" \
+            "  src/fw/services/filesystem/app_file.c" \
             "  tests/fakes/fake_bootbits.c" \
             "  src/fw/util/crc8.c" \
             "  src/fw/util/legacy_checksum.c" \
@@ -85,24 +85,24 @@ def build(ctx):
         test_sources_ant_glob = "test_line_layout.c")
 
     clar(ctx,
-        sources_ant_glob = "src/fw/services/normal/alarms/alarm.c" \
-            " src/fw/services/normal/alarms/alarm_pin.c" \
+        sources_ant_glob = "src/fw/services/alarms/alarm.c" \
+            " src/fw/services/alarms/alarm_pin.c" \
             " src/fw/flash_region/flash_region.c" \
             " src/fw/flash_region/filesystem_regions.c" \
             " src/fw/util/time/time.c" \
             " src/fw/util/time/mktime.c" \
             " src/fw/util/rand/rand.c" \
             " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
-            " src/fw/services/common/cron/service.c" \
-            " src/fw/services/normal/filesystem/flash_translation.c" \
-            " src/fw/services/normal/filesystem/pfs.c" \
-            " src/fw/services/normal/blob_db/timeline_item_storage.c" \
-            " src/fw/services/normal/settings/settings_file.c" \
-            " src/fw/services/normal/settings/settings_raw_iter.c" \
-            " src/fw/services/normal/timeline/attribute.c" \
-            " src/fw/services/normal/timeline/item.c" \
-            " src/fw/services/normal/timeline/attributes_actions.c" \
-            " src/fw/services/normal/timeline/attribute_group.c" \
+            " src/fw/services/cron/service.c" \
+            " src/fw/services/filesystem/flash_translation.c" \
+            " src/fw/services/filesystem/pfs.c" \
+            " src/fw/services/blob_db/timeline_item_storage.c" \
+            " src/fw/services/settings/settings_file.c" \
+            " src/fw/services/settings/settings_raw_iter.c" \
+            " src/fw/services/timeline/attribute.c" \
+            " src/fw/services/timeline/item.c" \
+            " src/fw/services/timeline/attributes_actions.c" \
+            " src/fw/services/timeline/attribute_group.c" \
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
             " tests/fakes/fake_spi_flash.c",
@@ -111,23 +111,23 @@ def build(ctx):
         override_includes=['dummy_board'])
 
     clar(ctx,
-        sources_ant_glob = "src/fw/services/normal/alarms/alarm.c" \
-            " src/fw/services/normal/alarms/alarm_pin.c" \
+        sources_ant_glob = "src/fw/services/alarms/alarm.c" \
+            " src/fw/services/alarms/alarm_pin.c" \
             " src/fw/flash_region/flash_region.c" \
             " src/fw/flash_region/filesystem_regions.c" \
             " src/fw/util/time/time.c" \
             " src/fw/util/time/mktime.c" \
             " third_party/tinymt/TinyMT/tinymt/tinymt32.c" \
-            " src/fw/services/common/cron/service.c" \
-            " src/fw/services/normal/filesystem/flash_translation.c" \
-            " src/fw/services/normal/filesystem/pfs.c" \
-            " src/fw/services/normal/blob_db/timeline_item_storage.c" \
-            " src/fw/services/normal/settings/settings_file.c" \
-            " src/fw/services/normal/settings/settings_raw_iter.c" \
-            " src/fw/services/normal/timeline/attribute.c" \
-            " src/fw/services/normal/timeline/item.c" \
-            " src/fw/services/normal/timeline/attributes_actions.c" \
-            " src/fw/services/normal/timeline/attribute_group.c" \
+            " src/fw/services/cron/service.c" \
+            " src/fw/services/filesystem/flash_translation.c" \
+            " src/fw/services/filesystem/pfs.c" \
+            " src/fw/services/blob_db/timeline_item_storage.c" \
+            " src/fw/services/settings/settings_file.c" \
+            " src/fw/services/settings/settings_raw_iter.c" \
+            " src/fw/services/timeline/attribute.c" \
+            " src/fw/services/timeline/item.c" \
+            " src/fw/services/timeline/attributes_actions.c" \
+            " src/fw/services/timeline/attribute_group.c" \
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
             " tests/fakes/fake_clock.c" \
@@ -139,9 +139,9 @@ def build(ctx):
 
     clar(ctx,
          sources_ant_glob = \
-         " src/fw/services/common/battery/voltage/battery_state.c " \
-         " src/fw/services/common/battery/voltage/battery_curve.c " \
-         " src/fw/services/common/battery/battery_monitor.c " \
+         " src/fw/services/battery/voltage/battery_state.c " \
+         " src/fw/services/battery/voltage/battery_curve.c " \
+         " src/fw/services/battery/battery_monitor.c " \
          " tests/fakes/fake_battery.c " \
          " tests/fakes/fake_rtc.c ",
          test_sources_ant_glob = "test_battery_monitor.c",
@@ -157,12 +157,12 @@ def build(ctx):
         sources_ant_glob = \
             " src/fw/flash_region/flash_region.c" \
             " src/fw/flash_region/filesystem_regions.c" \
-            " src/fw/services/normal/filesystem/flash_translation.c" \
-            " src/fw/services/normal/filesystem/pfs.c" \
-            " src/fw/services/normal/notifications/alerts_preferences.c" \
-            " src/fw/services/normal/notifications/alerts.c" \
-            " src/fw/services/normal/settings/settings_file.c" \
-            " src/fw/services/normal/settings/settings_raw_iter.c" \
+            " src/fw/services/filesystem/flash_translation.c" \
+            " src/fw/services/filesystem/pfs.c" \
+            " src/fw/services/notifications/alerts_preferences.c" \
+            " src/fw/services/notifications/alerts.c" \
+            " src/fw/services/settings/settings_file.c" \
+            " src/fw/services/settings/settings_raw_iter.c" \
             " tests/fakes/fake_battery.c" \
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
@@ -192,20 +192,20 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = \
-             " src/fw/services/normal/data_logging/dls_main.c" \
-             " src/fw/services/normal/data_logging/dls_list.c" \
-             " src/fw/services/normal/data_logging/dls_storage.c" \
-             " src/fw/services/normal/data_logging/dls_endpoint.c" \
-             " src/fw/services/normal/data_logging/dls_syscalls.c" \
-             " src/fw/services/common/regular_timer/service.c" \
+             " src/fw/services/data_logging/dls_main.c" \
+             " src/fw/services/data_logging/dls_list.c" \
+             " src/fw/services/data_logging/dls_storage.c" \
+             " src/fw/services/data_logging/dls_endpoint.c" \
+             " src/fw/services/data_logging/dls_syscalls.c" \
+             " src/fw/services/regular_timer/service.c" \
              " src/fw/util/shared_circular_buffer.c" \
              " tests/fakes/fake_spi_flash.c" \
              " src/fw/util/crc8.c" \
              " src/fw/util/legacy_checksum.c" \
              " src/fw/flash_region/flash_region.c" \
              " src/fw/flash_region/filesystem_regions.c" \
-             " src/fw/services/normal/filesystem/pfs.c" \
-             " src/fw/services/normal/filesystem/flash_translation.c" \
+             " src/fw/services/filesystem/pfs.c" \
+             " src/fw/services/filesystem/flash_translation.c" \
              " tests/fakes/fake_session.c" \
              " tests/fakes/fake_rtc.c" \
              " src/fw/applib/data_logging.c" \
@@ -260,17 +260,17 @@ def build(ctx):
          sources_ant_glob=(
              "src/fw/flash_region/filesystem_regions.c "
              "src/fw/flash_region/flash_region.c "
-             "src/fw/services/normal/blob_db/pin_db.c "
-             "src/fw/services/normal/blob_db/timeline_item_storage.c "
-             "src/fw/services/normal/filesystem/flash_translation.c "
-             "src/fw/services/normal/filesystem/pfs.c "
-             "src/fw/services/normal/settings/settings_file.c "
-             "src/fw/services/normal/settings/settings_raw_iter.c "
-             "src/fw/services/normal/timeline/attribute.c "
-             "src/fw/services/normal/timeline/attribute_group.c "
-             "src/fw/services/normal/timeline/attributes_actions.c "
-             "src/fw/services/normal/timeline/item.c "
-             "src/fw/services/normal/timeline/timeline.c "
+             "src/fw/services/blob_db/pin_db.c "
+             "src/fw/services/blob_db/timeline_item_storage.c "
+             "src/fw/services/filesystem/flash_translation.c "
+             "src/fw/services/filesystem/pfs.c "
+             "src/fw/services/settings/settings_file.c "
+             "src/fw/services/settings/settings_raw_iter.c "
+             "src/fw/services/timeline/attribute.c "
+             "src/fw/services/timeline/attribute_group.c "
+             "src/fw/services/timeline/attributes_actions.c "
+             "src/fw/services/timeline/item.c "
+             "src/fw/services/timeline/timeline.c "
              "src/fw/util/crc8.c "
              "src/fw/util/legacy_checksum.c "
              "src/fw/util/rand/rand.c "
@@ -292,9 +292,9 @@ def build(ctx):
                            "  src/fw/resource/resource_storage_builtin.c" \
                            "  src/fw/resource/resource_storage_file.c" \
                            "  src/fw/resource/resource_storage_flash.c" \
-                           "  src/fw/services/normal/filesystem/flash_translation.c" \
-                           "  src/fw/services/normal/filesystem/pfs.c" \
-                           "  src/fw/services/normal/filesystem/app_file.c" \
+                           "  src/fw/services/filesystem/flash_translation.c" \
+                           "  src/fw/services/filesystem/pfs.c" \
+                           "  src/fw/services/filesystem/app_file.c" \
                            "  tests/fakes/fake_bootbits.c" \
                            "  src/fw/util/crc8.c" \
                            "  src/fw/util/legacy_checksum.c" \

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/item.h"
+#include "pbl/services/timeline/item.h"
 
 void WEAK timeline_item_destroy(TimelineItem* item) {}
 

@@ -6,11 +6,11 @@ import generate_timezone_data
 def build(ctx):
     clar(ctx,
         sources_ant_glob = (
-            " src/fw/services/normal/protobuf_log/protobuf_log.c"
-            " src/fw/services/normal/protobuf_log/protobuf_log_hr.c"
-            " src/fw/services/normal/protobuf_log/protobuf_log_activity_sessions.c"
-            " src/fw/services/normal/protobuf_log/protobuf_log_test.c"
-            " src/fw/services/normal/protobuf_log/protobuf_log_util.c"
+            " src/fw/services/protobuf_log/protobuf_log.c"
+            " src/fw/services/protobuf_log/protobuf_log_hr.c"
+            " src/fw/services/protobuf_log/protobuf_log_activity_sessions.c"
+            " src/fw/services/protobuf_log/protobuf_log_test.c"
+            " src/fw/services/protobuf_log/protobuf_log_util.c"
             " src/fw/util/time/mktime.c"
             " src/fw/util/time/time.c"
             " tests/fakes/fake_rtc.c"

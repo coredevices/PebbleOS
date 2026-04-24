@@ -5,10 +5,10 @@
 #include "syscall/syscall_internal.h"
 
 #include "kernel/pebble_tasks.h"
-#include "pbl/services/normal/speaker/speaker_pcm_format.h"
-#include "pbl/services/normal/speaker/speaker_service.h"
-#include "pbl/services/normal/speaker/note_sequence.h"
-#include "pbl/services/normal/speaker/track.h"
+#include "pbl/services/speaker/speaker_pcm_format.h"
+#include "pbl/services/speaker/speaker_service.h"
+#include "pbl/services/speaker/note_sequence.h"
+#include "pbl/services/speaker/track.h"
 #include "system/passert.h"
 
 #define SPEAKER_MAX_NOTES 256

@@ -7,7 +7,7 @@
 
 #include "applib/ui/kino/kino_reel.h"
 #include "process_management/app_menu_data_source.h"
-#include "pbl/services/normal/timeline/timeline_resources.h"
+#include "pbl/services/timeline/timeline_resources.h"
 
 #define LAUNCHER_APP_GLANCE_GENERIC_ICON_SIZE_TYPE (TimelineResourceSizeTiny)
 
