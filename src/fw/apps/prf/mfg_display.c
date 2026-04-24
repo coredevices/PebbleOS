@@ -20,7 +20,7 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "resource/system_resource.h"
-#include "pbl/services/common/light.h"
+#include "pbl/services/light.h"
 #include "util/size.h"
 
 typedef enum {

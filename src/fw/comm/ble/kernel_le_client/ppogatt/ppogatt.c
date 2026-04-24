@@ -11,11 +11,11 @@
 #include <bluetooth/gatt.h>
 
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/common/comm_session/session_transport.h"
-#include "pbl/services/common/new_timer/new_timer.h"
-#include "pbl/services/common/regular_timer.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/analytics/analytics.h"
+#include "pbl/services/comm_session/session_transport.h"
+#include "pbl/services/new_timer/new_timer.h"
+#include "pbl/services/regular_timer.h"
+#include "pbl/services/system_task.h"
 
 #include "system/hexdump.h"
 #include "system/logging.h"

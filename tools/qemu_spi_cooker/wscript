@@ -7,8 +7,8 @@ def build(bld):
     qemu_spi_cooker_env = bld.all_envs['local'].derive().detach()
     output = bld.path.get_bld().parent.parent.make_node('qemu_spi_cooker')
 
-    sources = ["../../src/fw/services/normal/filesystem/flash_translation.c",
-               "../../src/fw/services/normal/filesystem/pfs.c",
+    sources = ["../../src/fw/services/filesystem/flash_translation.c",
+               "../../src/fw/services/filesystem/pfs.c",
                "../../src/fw/flash_region/filesystem_regions.c",
                "../../tests/fakes/fake_rtc.c",
                "../../tests/fakes/fake_spi_flash.c",

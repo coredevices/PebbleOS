@@ -24,11 +24,11 @@
 
 #include "kernel/events.h"
 #include "kernel/logging_private.h"
-#include "pbl/services/normal/wakeup.h"
-#include "pbl/services/common/comm_session/session.h"
-#include "pbl/services/common/evented_timer.h"
-#include "pbl/services/normal/activity/activity.h"
-#include "pbl/services/normal/app_glances/app_glance_service.h"
+#include "pbl/services/wakeup.h"
+#include "pbl/services/comm_session/session.h"
+#include "pbl/services/evented_timer.h"
+#include "pbl/services/activity/activity.h"
+#include "pbl/services/app_glances/app_glance_service.h"
 
 #include "process_management/pebble_process_info.h"
 
@@ -90,8 +90,8 @@ bool sys_vibe_history_was_vibrating(uint64_t time_search);
 int32_t sys_vibe_get_vibe_strength(void);
 
 // Speaker syscalls
-#include "pbl/services/normal/speaker/note_sequence.h"
-#include "pbl/services/normal/speaker/track.h"
+#include "pbl/services/speaker/note_sequence.h"
+#include "pbl/services/speaker/track.h"
 bool sys_speaker_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
                                uint8_t priority, uint8_t volume);
 bool sys_speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks,

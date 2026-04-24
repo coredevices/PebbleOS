@@ -13,7 +13,7 @@
 #include "console/pulse_control_message_protocol.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "system/passert.h"
 #include <util/attributes.h>
 #include <util/net.h>

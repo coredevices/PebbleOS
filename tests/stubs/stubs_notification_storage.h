@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/notifications/notification_storage.h"
+#include "pbl/services/notifications/notification_storage.h"
 #include "util/attributes.h"
 
 void WEAK notification_storage_init(void) {

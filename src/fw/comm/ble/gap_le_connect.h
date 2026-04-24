@@ -6,7 +6,7 @@
 #include <bluetooth/bluetooth_types.h>
 
 #include "gap_le_task.h"
-#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 
 #define GAP_LE_CONNECT_MASTER_MAX_CONNECTION_INTENTS (5)
 

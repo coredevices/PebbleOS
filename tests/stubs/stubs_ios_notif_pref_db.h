@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/services/normal/blob_db/api.h"
-#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
-#include "pbl/services/normal/timeline/item.h"
+#include "pbl/services/blob_db/api.h"
+#include "pbl/services/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/timeline/item.h"
 
 iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int length) {
   return NULL;

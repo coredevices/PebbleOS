@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/normal/blob_db/ios_notif_pref_db.h"
-#include "pbl/services/normal/notifications/alerts_preferences.h"
+#include "pbl/services/blob_db/ios_notif_pref_db.h"
+#include "pbl/services/notifications/alerts_preferences.h"
 #include "util/attributes.h"
 
 uint8_t WEAK ancs_filtering_get_mute_type(const iOSNotifPrefs *app_notif_prefs) {

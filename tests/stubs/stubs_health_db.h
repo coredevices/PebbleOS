@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/blob_db/health_db.h"
+#include "pbl/services/blob_db/health_db.h"
 
 bool health_db_get_typical_value(ActivityMetric metric,
                                  DayInWeek day,

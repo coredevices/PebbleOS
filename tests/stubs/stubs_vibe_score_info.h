@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/vibes/vibe_score_info.h"
+#include "pbl/services/vibes/vibe_score_info.h"
 
 bool vibe_score_info_is_valid(VibeScoreId id) {
   return true;

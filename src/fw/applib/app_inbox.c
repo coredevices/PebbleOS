@@ -4,7 +4,7 @@
 #include "app_inbox.h"
 
 #include "applib/applib_malloc.auto.h"
-#include "pbl/services/normal/app_inbox_service.h"
+#include "pbl/services/app_inbox_service.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"

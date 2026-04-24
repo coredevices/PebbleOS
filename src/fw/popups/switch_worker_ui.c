@@ -14,8 +14,8 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
 #include "process_management/worker_manager.h"
-#include "pbl/services/common/i18n/i18n.h"
-#include "pbl/services/normal/app_cache.h"
+#include "pbl/services/i18n/i18n.h"
+#include "pbl/services/app_cache.h"
 
 typedef struct {
   AppInstallId new_worker_id;

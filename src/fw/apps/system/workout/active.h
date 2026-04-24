@@ -6,7 +6,7 @@
 #include "controller.h"
 #include "metrics.h"
 
-#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/activity/activity.h"
 
 typedef struct WorkoutActiveWindow WorkoutActiveWindow;
 

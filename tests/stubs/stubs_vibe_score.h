@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/vibes/vibe_score.h"
+#include "pbl/services/vibes/vibe_score.h"
 
 void vibe_score_do_vibe(VibeScore *score) {}
 

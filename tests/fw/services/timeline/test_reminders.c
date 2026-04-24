@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/timeline/reminders.h"
+#include "pbl/services/timeline/reminders.h"
 
 #include "kernel/events.h"
-#include "pbl/services/normal/filesystem/pfs.h"
+#include "pbl/services/filesystem/pfs.h"
 
 #include "clar.h"
 

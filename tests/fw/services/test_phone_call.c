@@ -4,10 +4,10 @@
 #include "clar.h"
 
 #include "kernel/events.h"
-#include "pbl/services/common/comm_session/session.h"
-#include "pbl/services/normal/notifications/alerts.h"
-#include "pbl/services/normal/phone_call.h"
-#include "pbl/services/normal/phone_call_util.h"
+#include "pbl/services/comm_session/session.h"
+#include "pbl/services/notifications/alerts.h"
+#include "pbl/services/phone_call.h"
+#include "pbl/services/phone_call_util.h"
 
 extern T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context);
 extern T_STATIC void prv_handle_mobile_app_event(PebbleEvent *e, void *context);

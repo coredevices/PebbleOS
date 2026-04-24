@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/settings/settings_file.h"
+#include "pbl/services/settings/settings_file.h"
 
 status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
   return S_SUCCESS;

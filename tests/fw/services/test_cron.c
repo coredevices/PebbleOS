@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "pbl/services/common/cron.h"
+#include "pbl/services/cron.h"
 #include "util/size.h"
 
 #include <pebbleos/cron.h>

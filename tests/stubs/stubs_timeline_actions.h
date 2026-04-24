@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/normal/timeline/item.h"
-#include "pbl/services/normal/timeline/timeline_actions.h"
+#include "pbl/services/timeline/item.h"
+#include "pbl/services/timeline/timeline_actions.h"
 #include "util/attributes.h"
 
 void WEAK timeline_actions_add_action_to_root_level(TimelineItemAction *action,

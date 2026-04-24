@@ -3,7 +3,7 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/activity/hr_util.h"
+#include "pbl/services/activity/hr_util.h"
 
 #include "stubs_activity.h"
 

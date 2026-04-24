@@ -3,10 +3,10 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/activity/activity.h"
-#include "pbl/services/normal/activity/activity_calculators.h"
-#include "pbl/services/normal/activity/workout_service.h"
-#include "pbl/services/common/hrm/hrm_manager.h"
+#include "pbl/services/activity/activity.h"
+#include "pbl/services/activity/activity_calculators.h"
+#include "pbl/services/activity/workout_service.h"
+#include "pbl/services/hrm/hrm_manager.h"
 #include "process_management/app_install_types.h"
 #include "util/time/time.h"
 #include "util/units.h"

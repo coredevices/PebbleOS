@@ -3,9 +3,9 @@
 
 #include "clar.h"
 
-#include "pbl/services/normal/blob_db/watch_app_prefs_db.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/weather/weather_service_private.h"
+#include "pbl/services/blob_db/watch_app_prefs_db.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/weather/weather_service_private.h"
 #include "util/uuid.h"
 
 // Fixture

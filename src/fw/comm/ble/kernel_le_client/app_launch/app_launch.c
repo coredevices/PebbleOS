@@ -4,8 +4,8 @@
 #include "app_launch.h"
 
 #include "comm/ble/gatt_client_operations.h"
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/analytics/analytics.h"
+#include "pbl/services/comm_session/session.h"
 #include "system/logging.h"
 #include "system/passert.h"
 

@@ -15,7 +15,7 @@
 #include "kernel/util/stop.h"
 #include "mcu/interrupts.h"
 
-#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/regular_timer.h"
 
 #include "system/bootbits.h"
 #include "system/logging.h"

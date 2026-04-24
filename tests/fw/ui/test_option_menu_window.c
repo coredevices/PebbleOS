@@ -4,7 +4,7 @@
 #include "applib/ui/option_menu_window.h"
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/normal/timeline/timeline_resources.h"
+#include "pbl/services/timeline/timeline_resources.h"
 
 #include "clar.h"
 

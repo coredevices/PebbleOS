@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/comm_session/session_remote_version.h"
+#include "pbl/services/comm_session/session_remote_version.h"
 #include "util/attributes.h"
 
 void WEAK bt_persistent_storage_get_cached_system_capabilities(

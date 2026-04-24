@@ -15,7 +15,7 @@
 #include "kernel/util/stop.h"
 #include "kernel/util/wfi.h"
 #include "process_management/worker_manager.h"
-#include "pbl/services/common/analytics/analytics.h"
+#include "pbl/services/analytics/analytics.h"
 #include "system/logging.h"
 #include "util/math.h"
 

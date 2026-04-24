@@ -10,7 +10,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "os/mutex.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/circular_buffer.h"

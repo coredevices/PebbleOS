@@ -5,7 +5,7 @@
 
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/normal/timeline/timeline_resources.h"
+#include "pbl/services/timeline/timeline_resources.h"
 #include "system/passert.h"
 #include "util/struct.h"
 

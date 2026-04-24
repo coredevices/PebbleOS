@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/blob_db/app_glance_db.h"
+#include "pbl/services/blob_db/app_glance_db.h"
 
 void app_glance_db_init(void) {}
 

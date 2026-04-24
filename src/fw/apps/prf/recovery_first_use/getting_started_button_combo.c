@@ -10,7 +10,7 @@
 #include "kernel/util/factory_reset.h"
 #include "mfg/mfg_mode/mfg_factory_mode.h"
 #include "process_management/process_manager.h"
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "util/size.h"
 

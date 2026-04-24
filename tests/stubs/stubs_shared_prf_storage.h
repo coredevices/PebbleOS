@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/shared_prf_storage/shared_prf_storage.h"
+#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 
 void shared_prf_storage_erase_ble_pairing_data(void) {
 }

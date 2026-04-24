@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/normal/vibes/vibe_score_info.h"
+#include "pbl/services/vibes/vibe_score_info.h"
 
 #include "clar.h"
 #include "resource/resource_ids.auto.h"

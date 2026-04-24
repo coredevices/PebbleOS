@@ -19,7 +19,7 @@
 #include "mfg/mfg_serials.h"
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/bluetooth/pairability.h"
+#include "pbl/services/bluetooth/pairability.h"
 #include "system/bootbits.h"
 #include "system/reset.h"
 #include "util/size.h"

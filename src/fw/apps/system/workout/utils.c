@@ -6,10 +6,10 @@
 
 #include "kernel/pbl_malloc.h"
 #include "resource/timeline_resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
-#include "pbl/services/normal/activity/activity.h"
-#include "pbl/services/normal/activity/workout_service.h"
-#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/i18n/i18n.h"
+#include "pbl/services/activity/activity.h"
+#include "pbl/services/activity/workout_service.h"
+#include "pbl/services/timeline/timeline.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 

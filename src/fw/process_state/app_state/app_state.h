@@ -31,8 +31,8 @@
 #include "applib/ui/window_stack_private.h"
 #include "applib/unobstructed_area_service_private.h"
 #include "kernel/logging_private.h"
-#include "pbl/services/normal/app_glances/app_glance_service.h"
-#include "pbl/services/normal/timeline/timeline_actions.h"
+#include "pbl/services/app_glances/app_glance_service.h"
+#include "pbl/services/timeline/timeline_actions.h"
 #include "util/heap.h"
 #include "util/list.h"
 

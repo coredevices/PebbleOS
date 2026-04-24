@@ -9,9 +9,9 @@
 #include "applib/ui/kino/kino_reel/unfold.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
-#include "pbl/services/common/evented_timer.h"
-#include "pbl/services/normal/timeline/notification_layout.h"
-#include "pbl/services/normal/timeline/timeline_resources.h"
+#include "pbl/services/evented_timer.h"
+#include "pbl/services/timeline/notification_layout.h"
+#include "pbl/services/timeline/timeline_resources.h"
 #include "system/logging.h"
 #include "util/math.h"
 

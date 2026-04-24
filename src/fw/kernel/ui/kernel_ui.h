@@ -5,7 +5,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/content_indicator_private.h"
-#include "pbl/services/normal/timeline/timeline_actions.h"
+#include "pbl/services/timeline/timeline_actions.h"
 
 void kernel_ui_init(void);
 

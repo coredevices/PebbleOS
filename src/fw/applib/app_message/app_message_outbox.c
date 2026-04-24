@@ -6,7 +6,7 @@
 #include "applib/app_outbox.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/comm_session/session.h"
+#include "pbl/services/comm_session/session.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "system/passert.h"

@@ -5,6 +5,6 @@
 
 #include "summary.h"
 
-#include "pbl/services/normal/activity/activity.h"
+#include "pbl/services/activity/activity.h"
 
 void workout_countdown_start(ActivitySessionType type, StartWorkoutCallback start_workout_cb);

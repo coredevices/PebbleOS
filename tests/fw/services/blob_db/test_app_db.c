@@ -6,8 +6,8 @@
 #include "process_management/app_install_types.h"
 #include "process_management/pebble_process_info.h"
 #include "process_management/pebble_process_md.h"
-#include "pbl/services/normal/filesystem/pfs.h"
-#include "pbl/services/normal/blob_db/app_db.h"
+#include "pbl/services/filesystem/pfs.h"
+#include "pbl/services/blob_db/app_db.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

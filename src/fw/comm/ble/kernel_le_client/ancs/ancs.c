@@ -15,11 +15,11 @@
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 
-#include "pbl/services/common/analytics/analytics.h"
-#include "pbl/services/common/evented_timer.h"
-#include "pbl/services/normal/notifications/ancs/ancs_notifications.h"
-#include "pbl/services/common/regular_timer.h"
-#include "pbl/services/normal/timeline/timeline.h"
+#include "pbl/services/analytics/analytics.h"
+#include "pbl/services/evented_timer.h"
+#include "pbl/services/notifications/ancs/ancs_notifications.h"
+#include "pbl/services/regular_timer.h"
+#include "pbl/services/timeline/timeline.h"
 
 #include "system/hexdump.h"
 #include "system/passert.h"

@@ -24,7 +24,7 @@
 #include "stubs_worker_manager.h"
 
 #include "drivers/accel.h"
-#include "pbl/services/common/event_service.h"
+#include "pbl/services/event_service.h"
 #include "util/math.h"
 #include "util/size.h"
 

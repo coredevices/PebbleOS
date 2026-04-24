@@ -12,8 +12,8 @@
 
 #include "mfg/mfg_serials.h"
 #include "os/mutex.h"
-#include "pbl/services/common/clock.h"
-#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/clock.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/version.h"
 

@@ -12,8 +12,8 @@
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
-#include "pbl/services/common/new_timer/new_timer.h"
+#include "pbl/services/i18n/i18n.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "shell/prefs.h"
 #include "util/size.h"
 

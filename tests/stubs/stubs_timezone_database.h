@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/timezone_database.h"
+#include "pbl/services/timezone_database.h"
 #include "util/attributes.h"
 
 int WEAK timezone_database_get_region_count(void) {

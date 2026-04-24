@@ -19,7 +19,7 @@
 #include "kernel/pebble_tasks.h"
 #include "mcu/interrupts.h"
 #include "os/mutex.h"
-#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/regular_timer.h"
 #include "system/passert.h"
 #include "util/attributes.h"
 #include "util/crc32.h"

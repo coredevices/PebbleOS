@@ -11,8 +11,8 @@
 #include "drivers/battery.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/services/common/battery/battery_curve.h"
-#include "pbl/services/prf/idle_watchdog.h"
+#include "pbl/services/battery/battery_curve.h"
+#include "pbl/services/idle_watchdog.h"
 #include "system/logging.h"
 
 #include <stdio.h>

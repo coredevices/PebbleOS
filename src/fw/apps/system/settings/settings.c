@@ -10,7 +10,7 @@
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
 #include "util/size.h"

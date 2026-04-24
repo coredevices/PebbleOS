@@ -6,7 +6,7 @@
 #include "comm/ble/gap_le_connection.h"
 #include "comm/bt_conn_mgr.h"
 #include "comm/bt_conn_mgr_impl.h"
-#include "pbl/services/common/regular_timer.h"
+#include "pbl/services/regular_timer.h"
 
 // Fakes
 #include "fake_gap_le_connect_params.h"

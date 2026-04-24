@@ -7,7 +7,7 @@
 #include "comm/bt_lock.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/common/bluetooth/bluetooth_persistent_storage.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 
 BTBondingID prv_get_bonding_id_and_name_from_address_safe(void *ctx, char* device_name) {
   BTBondingID bonding_id = BT_BONDING_ID_INVALID;

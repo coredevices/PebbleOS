@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/normal/music.h"
+#include "pbl/services/music.h"
 #include "util/attributes.h"
 
 void WEAK music_get_now_playing(char* title, char* artist, char* album) {}

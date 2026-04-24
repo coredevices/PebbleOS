@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/common/system_task.h"
+#include "pbl/services/system_task.h"
 #include "fake_pebble_tasks.h"
 
 #include "util/list.h"

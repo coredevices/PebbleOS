@@ -24,7 +24,7 @@
 #include "local.h"
 #include "timelocal.h"
 #include "applib/i18n.h"
-#include "pbl/services/common/i18n/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
 #include "util/math.h"
