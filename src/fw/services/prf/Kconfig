@@ -1,5 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-rsource "drivers/Kconfig"
-rsource "services/Kconfig"
+menu "PRF"
+
+rsource "idle_watchdog/Kconfig"
+
+endmenu

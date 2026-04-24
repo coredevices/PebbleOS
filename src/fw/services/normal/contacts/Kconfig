@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-rsource "drivers/Kconfig"
-rsource "services/Kconfig"
+config SERVICE_CONTACTS
+    bool "Contacts"
+    help
+      Contacts service.

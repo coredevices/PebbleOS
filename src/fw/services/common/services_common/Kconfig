@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_SERVICES_COMMON
+    bool "Common services glue"
+    help
+      Common services init/runlevel glue. Required when any other common
+      service is enabled.

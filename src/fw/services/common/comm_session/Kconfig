@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_COMM_SESSION
+    bool "Comm session"
+    help
+      Pebble Protocol communication session management.

@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_APP_ORDER_ENDPOINT
+    bool "App order endpoint"
+    help
+      Endpoint used to order installed apps in the launcher.

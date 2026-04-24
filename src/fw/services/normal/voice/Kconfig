@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_VOICE
+    bool "Voice"
+    default y if MIC
+    help
+      Voice (dictation) service. Requires a microphone driver (CONFIG_MIC).

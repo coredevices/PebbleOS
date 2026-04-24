@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_BATTERY
+    bool "Battery"
+    help
+      Battery monitor and state-of-charge estimation.

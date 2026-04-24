@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Services"
+
+rsource "common/Kconfig"
+rsource "normal/Kconfig"
+rsource "prf/Kconfig"
+
+endmenu
