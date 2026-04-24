@@ -291,10 +291,38 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       }
       return;
 
-    case PEBBLE_GESTURE_EVENT: {
-      bool force_backlight = false;
 #ifdef CONFIG_TOUCH
-      force_backlight = touch_has_app_subscribers();
+    case PEBBLE_TOUCH_EVENT: {
+      // When an app subscribes to touch events we ignore the global
+      // wake-on-touch preference and instead tie the backlight to the touch
+      // itself: forced on while a finger is down, then timed out after liftoff.
+      if (!touch_has_app_subscribers()) {
+        return;
+      }
+#ifndef RECOVERY_FW
+      const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
+                                           !alerts_preferences_dnd_get_motion_backlight();
+      if (dnd_suppresses_backlight) {
+        return;
+      }
+#endif
+      if (e->touch.event.type == TouchEvent_Touchdown) {
+        light_button_pressed();
+      } else if (e->touch.event.type == TouchEvent_Liftoff) {
+        light_button_released();
+      }
+      return;
+    }
+#endif
+
+    case PEBBLE_GESTURE_EVENT: {
+#ifdef CONFIG_TOUCH
+      // While an app is subscribed the touch event handler drives the
+      // backlight, so skip gesture-based wake to avoid a redundant trigger
+      // (and to keep double-tap from waking when only single-tap is wanted).
+      if (touch_has_app_subscribers()) {
+        return;
+      }
 #endif
       bool wake_on_gesture = false;
       switch (backlight_get_touch_wake()) {
@@ -308,7 +336,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
         default:
           break;
       }
-      if (wake_on_gesture || force_backlight) {
+      if (wake_on_gesture) {
 #ifndef RECOVERY_FW
         const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
                                              !alerts_preferences_dnd_get_motion_backlight();
