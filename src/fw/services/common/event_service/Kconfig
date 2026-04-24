@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_EVENT_SERVICE
+    bool "Event service"
+    help
+      Generic event subscription/delivery service.

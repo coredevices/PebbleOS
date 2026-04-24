@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_ACTIVITY
+    bool "Activity"
+    help
+      Activity (step/sleep/workout) tracking service.

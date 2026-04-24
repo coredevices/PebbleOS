@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_DATA_LOGGING
+    bool "Data logging"
+    help
+      Data logging (DLS) service.

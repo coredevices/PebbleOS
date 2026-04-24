@@ -1,38 +1,69 @@
 # SPDX-Copyright-Text: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-bld.recurse('accel_manager')
-bld.recurse('analytics')
-bld.recurse('animation_service')
-bld.recurse('battery')
-bld.recurse('bluetooth')
-bld.recurse('boot_splash')
-bld.recurse('clock')
-bld.recurse('comm_session')
-bld.recurse('compositor')
-bld.recurse('cron')
-bld.recurse('debounced_connection_service')
-bld.recurse('ecompass')
-bld.recurse('event_service')
-bld.recurse('evented_timer')
-bld.recurse('firmware_update')
-bld.recurse('get_bytes')
-if bld.env.CONFIG_HRM:
+if bld.env.CONFIG_SERVICE_ACCEL_MANAGER:
+    bld.recurse('accel_manager')
+if bld.env.CONFIG_SERVICE_ANALYTICS:
+    bld.recurse('analytics')
+if bld.env.CONFIG_SERVICE_ANIMATION_SERVICE:
+    bld.recurse('animation_service')
+if bld.env.CONFIG_SERVICE_BATTERY:
+    bld.recurse('battery')
+if bld.env.CONFIG_SERVICE_BLUETOOTH:
+    bld.recurse('bluetooth')
+if bld.env.CONFIG_SERVICE_BOOT_SPLASH:
+    bld.recurse('boot_splash')
+if bld.env.CONFIG_SERVICE_CLOCK:
+    bld.recurse('clock')
+if bld.env.CONFIG_SERVICE_COMM_SESSION:
+    bld.recurse('comm_session')
+if bld.env.CONFIG_SERVICE_COMPOSITOR:
+    bld.recurse('compositor')
+if bld.env.CONFIG_SERVICE_CRON:
+    bld.recurse('cron')
+if bld.env.CONFIG_SERVICE_DEBOUNCED_CONNECTION_SERVICE:
+    bld.recurse('debounced_connection_service')
+if bld.env.CONFIG_SERVICE_ECOMPASS:
+    bld.recurse('ecompass')
+if bld.env.CONFIG_SERVICE_EVENT_SERVICE:
+    bld.recurse('event_service')
+if bld.env.CONFIG_SERVICE_EVENTED_TIMER:
+    bld.recurse('evented_timer')
+if bld.env.CONFIG_SERVICE_FIRMWARE_UPDATE:
+    bld.recurse('firmware_update')
+if bld.env.CONFIG_SERVICE_GET_BYTES:
+    bld.recurse('get_bytes')
+if bld.env.CONFIG_SERVICE_HRM:
     bld.recurse('hrm')
-bld.recurse('i18n')
-bld.recurse('light')
-bld.recurse('new_timer')
-bld.recurse('phone_pp')
-bld.recurse('ping')
-bld.recurse('poll_remote')
-bld.recurse('prf_update')
-bld.recurse('put_bytes')
-bld.recurse('registry_endpoint')
-bld.recurse('regular_timer')
-bld.recurse('services_common')
-bld.recurse('shared_prf_storage')
-bld.recurse('system_task')
-bld.recurse('tick_timer')
-if bld.env.CONFIG_TOUCH:
+if bld.env.CONFIG_SERVICE_I18N:
+    bld.recurse('i18n')
+if bld.env.CONFIG_SERVICE_LIGHT:
+    bld.recurse('light')
+if bld.env.CONFIG_SERVICE_NEW_TIMER:
+    bld.recurse('new_timer')
+if bld.env.CONFIG_SERVICE_PHONE_PP:
+    bld.recurse('phone_pp')
+if bld.env.CONFIG_SERVICE_PING:
+    bld.recurse('ping')
+if bld.env.CONFIG_SERVICE_POLL_REMOTE:
+    bld.recurse('poll_remote')
+if bld.env.CONFIG_SERVICE_PRF_UPDATE:
+    bld.recurse('prf_update')
+if bld.env.CONFIG_SERVICE_PUT_BYTES:
+    bld.recurse('put_bytes')
+if bld.env.CONFIG_SERVICE_REGISTRY_ENDPOINT:
+    bld.recurse('registry_endpoint')
+if bld.env.CONFIG_SERVICE_REGULAR_TIMER:
+    bld.recurse('regular_timer')
+if bld.env.CONFIG_SERVICE_SERVICES_COMMON:
+    bld.recurse('services_common')
+if bld.env.CONFIG_SERVICE_SHARED_PRF_STORAGE:
+    bld.recurse('shared_prf_storage')
+if bld.env.CONFIG_SERVICE_SYSTEM_TASK:
+    bld.recurse('system_task')
+if bld.env.CONFIG_SERVICE_TICK_TIMER:
+    bld.recurse('tick_timer')
+if bld.env.CONFIG_SERVICE_TOUCH:
     bld.recurse('touch')
-bld.recurse('vibe_pattern')
+if bld.env.CONFIG_SERVICE_VIBE_PATTERN:
+    bld.recurse('vibe_pattern')

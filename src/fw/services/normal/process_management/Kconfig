@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_PROCESS_MANAGEMENT
+    bool "Process management"
+    help
+      App/process management and app storage.

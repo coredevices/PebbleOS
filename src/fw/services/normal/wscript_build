@@ -1,41 +1,77 @@
 # SPDX-Copyright-Text: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-bld.recurse('activity')
-bld.recurse('alarms')
-bld.recurse('app_cache')
-bld.recurse('app_fetch_endpoint')
-bld.recurse('app_glances')
-bld.recurse('app_inbox_service')
-bld.recurse('app_message')
-bld.recurse('app_order_endpoint')
-bld.recurse('app_outbox_service')
-bld.recurse('audio_endpoint')
-bld.recurse('blob_db')
-bld.recurse('comm_session')
-bld.recurse('contacts')
-bld.recurse('data_logging')
-bld.recurse('filesystem')
-bld.recurse('health_sync_endpoint')
-bld.recurse('legacy')
-bld.recurse('music')
-bld.recurse('notifications')
-bld.recurse('orientation_manager')
-bld.recurse('persist')
-bld.recurse('phone_call')
-bld.recurse('powermode_service')
-bld.recurse('process_management')
-bld.recurse('protobuf_log')
-bld.recurse('send_text_service')
-bld.recurse('services_normal')
-bld.recurse('speaker')
-bld.recurse('settings')
-bld.recurse('stationary')
-bld.recurse('timeline')
-bld.recurse('timezone_database')
-bld.recurse('vibes')
-if bld.env.CONFIG_MIC:
+if bld.env.CONFIG_SERVICE_ACTIVITY:
+    bld.recurse('activity')
+if bld.env.CONFIG_SERVICE_ALARMS:
+    bld.recurse('alarms')
+if bld.env.CONFIG_SERVICE_APP_CACHE:
+    bld.recurse('app_cache')
+if bld.env.CONFIG_SERVICE_APP_FETCH_ENDPOINT:
+    bld.recurse('app_fetch_endpoint')
+if bld.env.CONFIG_SERVICE_APP_GLANCES:
+    bld.recurse('app_glances')
+if bld.env.CONFIG_SERVICE_APP_INBOX_SERVICE:
+    bld.recurse('app_inbox_service')
+if bld.env.CONFIG_SERVICE_APP_MESSAGE:
+    bld.recurse('app_message')
+if bld.env.CONFIG_SERVICE_APP_ORDER_ENDPOINT:
+    bld.recurse('app_order_endpoint')
+if bld.env.CONFIG_SERVICE_APP_OUTBOX_SERVICE:
+    bld.recurse('app_outbox_service')
+if bld.env.CONFIG_SERVICE_AUDIO_ENDPOINT:
+    bld.recurse('audio_endpoint')
+if bld.env.CONFIG_SERVICE_BLOB_DB:
+    bld.recurse('blob_db')
+if bld.env.CONFIG_SERVICE_COMM_SESSION_NORMAL:
+    bld.recurse('comm_session')
+if bld.env.CONFIG_SERVICE_CONTACTS:
+    bld.recurse('contacts')
+if bld.env.CONFIG_SERVICE_DATA_LOGGING:
+    bld.recurse('data_logging')
+if bld.env.CONFIG_SERVICE_FILESYSTEM:
+    bld.recurse('filesystem')
+if bld.env.CONFIG_SERVICE_HEALTH_SYNC_ENDPOINT:
+    bld.recurse('health_sync_endpoint')
+if bld.env.CONFIG_SERVICE_LEGACY:
+    bld.recurse('legacy')
+if bld.env.CONFIG_SERVICE_MUSIC:
+    bld.recurse('music')
+if bld.env.CONFIG_SERVICE_NOTIFICATIONS:
+    bld.recurse('notifications')
+if bld.env.CONFIG_SERVICE_ORIENTATION_MANAGER:
+    bld.recurse('orientation_manager')
+if bld.env.CONFIG_SERVICE_PERSIST:
+    bld.recurse('persist')
+if bld.env.CONFIG_SERVICE_PHONE_CALL:
+    bld.recurse('phone_call')
+if bld.env.CONFIG_SERVICE_POWERMODE_SERVICE:
+    bld.recurse('powermode_service')
+if bld.env.CONFIG_SERVICE_PROCESS_MANAGEMENT:
+    bld.recurse('process_management')
+if bld.env.CONFIG_SERVICE_PROTOBUF_LOG:
+    bld.recurse('protobuf_log')
+if bld.env.CONFIG_SERVICE_SEND_TEXT_SERVICE:
+    bld.recurse('send_text_service')
+if bld.env.CONFIG_SERVICE_SERVICES_NORMAL:
+    bld.recurse('services_normal')
+if bld.env.CONFIG_SERVICE_SETTINGS:
+    bld.recurse('settings')
+if bld.env.CONFIG_SERVICE_SPEAKER:
+    bld.recurse('speaker')
+if bld.env.CONFIG_SERVICE_STATIONARY:
+    bld.recurse('stationary')
+if bld.env.CONFIG_SERVICE_TIMELINE:
+    bld.recurse('timeline')
+if bld.env.CONFIG_SERVICE_TIMEZONE_DATABASE:
+    bld.recurse('timezone_database')
+if bld.env.CONFIG_SERVICE_VIBES:
+    bld.recurse('vibes')
+if bld.env.CONFIG_SERVICE_VOICE:
     bld.recurse('voice')
-bld.recurse('voice_endpoint')
-bld.recurse('wakeup')
-bld.recurse('weather')
+if bld.env.CONFIG_SERVICE_VOICE_ENDPOINT:
+    bld.recurse('voice_endpoint')
+if bld.env.CONFIG_SERVICE_WAKEUP:
+    bld.recurse('wakeup')
+if bld.env.CONFIG_SERVICE_WEATHER:
+    bld.recurse('weather')

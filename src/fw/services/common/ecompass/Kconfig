@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_ECOMPASS
+    bool "E-compass"
+    default y if MAG
+    help
+      Electronic compass service. Requires a magnetometer driver (CONFIG_MAG).

@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_REGULAR_TIMER
+    bool "Regular timer"
+    help
+      Periodic timer service (seconds/minutes ticks).

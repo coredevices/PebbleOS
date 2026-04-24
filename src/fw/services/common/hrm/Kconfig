@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_HRM
+    bool "Heart rate monitor"
+    default y if HRM
+    help
+      Heart rate monitor manager service. Requires an HRM driver (CONFIG_HRM).

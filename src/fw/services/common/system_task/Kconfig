@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_SYSTEM_TASK
+    bool "System task"
+    help
+      Background system task runner.
