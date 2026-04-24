@@ -114,9 +114,7 @@ def make_app_header(exports_tree, output_filename, header_type, inject_text):
                     elif e.stub_return == "void":
                         writeline(f, "#define %s(...) do {} while(0)" % e.name)
                     else:
-                        writeline(
-                            f, "#define %s(...) ((void)(%s))" % (e.name, e.stub_return)
-                        )
+                        writeline(f, "#define %s(...) (%s)" % (e.name, e.stub_return))
                     writeline(f)
             elif e.type == "function":
                 if skip:
