@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_TOUCH
+    bool "Touch"
+    default y if TOUCH
+    help
+      Touch event service. Requires a touch driver (CONFIG_TOUCH).

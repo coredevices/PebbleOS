@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_PROTOBUF_LOG
+    bool "Protobuf log"
+    help
+      Protobuf-encoded log/data upload service.
