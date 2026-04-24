@@ -49,6 +49,7 @@ def configure(conf):
         "-Wno-error=expansion-to-defined",
         "-Wno-error=zero-length-bounds",
         "-Wno-error=cast-function-type",
+        "-Wno-error=unused-value",
     ]
 
     if (conf.env.SDK_VERSION_MAJOR == 5) and (conf.env.SDK_VERSION_MINOR > 19):
