@@ -28,7 +28,7 @@ uint32_t backlight_get_timeout_ms(void) {
 }
 
 uint8_t backlight_get_intensity(void) {
-  return BOARD_CONFIG.backlight_on_percent;
+  return 100U;
 }
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT

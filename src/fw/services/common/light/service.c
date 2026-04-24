@@ -247,26 +247,18 @@ static void prv_apply_rgb_color(void) {
 #endif
 
 static void prv_change_brightness(uint8_t new_brightness) {
-  // Use fade start intensity during fading, otherwise get current intensity
-  uint8_t reference_intensity = (s_light_state == LIGHT_STATE_ON_FADING && s_fade_start_intensity > 0)
-                                  ? s_fade_start_intensity
-                                  : prv_backlight_get_intensity();
-  const uint8_t HALF_BRIGHTNESS = reference_intensity / 2;
+  // Scale the 0-100% to the maximum value allowed in hardware
+  uint8_t scaled_brightness = (new_brightness * (uint16_t)BOARD_CONFIG.backlight_on_percent) / 100U;
 
-  // update the debug stats
-  if (new_brightness > HALF_BRIGHTNESS && s_current_brightness <= HALF_BRIGHTNESS) {
-    // getting brighter and have now transitioned past half brightness
+  if (new_brightness == 0U) {
+    PBL_ANALYTICS_TIMER_STOP(backlight_on_time_ms);
+  } else {
     PBL_ANALYTICS_TIMER_START(backlight_on_time_ms);
   }
 
-  if (new_brightness <= HALF_BRIGHTNESS && s_current_brightness > HALF_BRIGHTNESS) {
-    // getting dimmer and have now transitioned past half brightness
-    PBL_ANALYTICS_TIMER_STOP(backlight_on_time_ms);
-  }
+  prv_update_intensity_analytics(scaled_brightness);
 
-  prv_update_intensity_analytics((uint8_t)new_brightness);
-
-  backlight_set_brightness(new_brightness);
+  backlight_set_brightness(scaled_brightness);
   s_current_brightness = new_brightness;
 
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
