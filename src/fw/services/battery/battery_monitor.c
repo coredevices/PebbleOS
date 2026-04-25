@@ -4,6 +4,7 @@
 #include "pbl/services/battery/battery_monitor.h"
 
 #include "board/board.h"
+#include "pbl/services/battery/battery_charge_limit.h"
 #include "kernel/low_power.h"
 #include "kernel/util/standby.h"
 #include "pbl/services/firmware_update.h"
@@ -208,6 +209,8 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
 
   prv_log_battery_state(state);
 
+  battery_charge_limit_evaluate(state);
+
   s_first_run = false;
 }
 
@@ -219,6 +222,8 @@ void battery_monitor_init(void) {
 
   // Initialize driver interface
   battery_state_init();
+
+  battery_charge_limit_init();
 }
 
 bool battery_monitor_critical_lockout(void) {
