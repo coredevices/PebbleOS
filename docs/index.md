@@ -51,7 +51,6 @@ Get started
 :::{grid-item-card}
 :link: development/getting_started
 :link-type: doc
-:class-header: bg-light
 
 🚀 Prerequisites
 ^^^
@@ -61,7 +60,6 @@ Set up your environment to build PebbleOS from source!
 
 :::{grid-item-card}
 :link: https://github.com/coredevices/pebbleos
-:class-header: bg-light
 
 ⌚ Browse the sources
 ^^^
@@ -72,7 +70,6 @@ Browse the PebbleOS sources!
 :::{grid-item-card}
 :link: reference/external
 :link-type: doc
-:class-header: bg-light
 
 📖 Reference
 ^^^
