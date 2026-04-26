@@ -203,7 +203,7 @@ typedef struct __attribute__((__packed__)) {
   char header[8];                   //!< Sentinal value, should always be 'PBLAPP'
   Version struct_version;           //!< version of this structure's format
   Version sdk_version;              //!< version of the SDK used to build this process
-  Version process_version;          //!< version of the process
+  Version process_version;          //!< version of the process. Note this omits any semver "patch" version.
   uint16_t load_size;               //!< size of the binary in flash, including this metadata but not the reloc table
   uint32_t offset;                  //!< The entry point of this executable
   uint32_t crc;                     //!< CRC of the data only, ie, not including this struct or the reloc table at the end

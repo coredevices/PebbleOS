@@ -118,8 +118,8 @@ def _write_appinfo_json_file(task):
 
 def _validate_version(ctx, original_version):
     """
-    Validates the format of the version field in an app's project info, and strips off a
-    zero-valued patch version number, if it exists, to be compatible with the Pebble FW
+    Validates the format of the version field in an app's project info
+    to be compatible with the Pebble FW.
     :param ctx: the ConfigureContext object
     :param version: the version provided in project info (package.json/appinfo.json)
     :return: a MAJOR.MINOR version that is acceptable for Pebble FW
@@ -127,9 +127,9 @@ def _validate_version(ctx, original_version):
     version = original_version.split(".")
     if len(version) > 3:
         ctx.fatal(
-            "App versions must be of the format MAJOR or MAJOR.MINOR or MAJOR.MINOR.0. An "
-            "invalid version of {} was specified for the app. Try {}.{}.0 instead".format(
-                original_version, version[0], version[1]
+            "App versions must be of the format MAJOR or MAJOR.MINOR or MAJOR.MINOR.PATCH. "
+            "An invalid version of {} was specified for the app. Try {}.{}.{} instead".format(
+                original_version, version[0], version[1], version[2]
             )
         )
     elif not (0 <= int(version[0]) <= 255):
@@ -142,13 +142,12 @@ def _validate_version(ctx, original_version):
             "An invalid or out of range value of {} was specified for the minor version of "
             "the app. The valid range is 0-255.".format(version[1])
         )
-    elif len(version) > 2 and not (int(version[2]) == 0):
-        ctx.fatal(
-            "The patch version of an app must be 0, but {} was specified ({}). Try {}.{}.0 "
-            "instead.".format(version[2], original_version, version[0], version[1])
-        )
+    # note: version[2] does not reach the Pebble FW (it is stripped off by generate_appinfo)
+    # so has no upper limit. Just make sure it's an int.
+    if len(version) == 3:
+        int(version[2])
 
-    return version[0] + "." + version[1]
+    return ".".join(version[:3])
 
 
 def options(opt):
