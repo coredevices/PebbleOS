@@ -44,7 +44,8 @@
 //! list, for example "jump to next track" in a Music app.
 //!
 //! <h3>Geometry</h3>
-//! * The action bar is 30 pixels wide. Use the \ref ACTION_BAR_WIDTH define.
+//! * The action bar's width varies per platform. 30px on most displays, 34px on Emery and
+//! Gabbro, and 40px on Chalk. Use the \ref ACTION_BAR_WIDTH define.
 //! * Icons should not be wider than 28 pixels, or taller than 18 pixels.
 //! It is recommended to use a size of around 15 x 15 pixels for the "visual core" of the icon,
 //! and extending or contracting where needed.
