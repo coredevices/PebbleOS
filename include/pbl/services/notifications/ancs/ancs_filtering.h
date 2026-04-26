@@ -27,3 +27,11 @@ bool ancs_filtering_is_muted(const iOSNotifPrefs *app_notif_prefs);
 //! @param app_notif_prefs Prefs for the given app loaded from the notif pref db
 //! @return MuteBitfield which is the mute type of the app
 uint8_t ancs_filtering_get_mute_type(const iOSNotifPrefs *app_notif_prefs);
+
+//! Returns true when the app's rules say to filter a notification.
+//! @param app_notif_prefs Prefs for the given app loaded from the notif pref db
+//! @param title Notification title
+//! @param body Notification body/message
+bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
+                                  const ANCSAttribute *title,
+                                  const ANCSAttribute *body);

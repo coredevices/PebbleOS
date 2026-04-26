@@ -115,6 +115,8 @@ typedef enum {
   AttributeIdVibrationPattern = 49,
   //! (uint32_t) Timestamp when the mute should expire.
   AttributeIdMuteExpiration = 50,
+  //! (StringList) Notification filtering rules encoded as a byte array.
+  AttributeIdNotificationFilteringRules = 51,
   NumAttributeIds,
 } AttributeId;
 

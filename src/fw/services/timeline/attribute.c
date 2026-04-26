@@ -87,6 +87,7 @@ static AttributeType prv_attribute_type(AttributeId id) {
     case AttributeIdParagraphs:
     case AttributeIdMetricNames:
     case AttributeIdMetricValues:
+    case AttributeIdNotificationFilteringRules:
       return AttributeTypeStringList;
     case AttributeIdMetricIcons:
     case AttributeIdVibrationPattern:

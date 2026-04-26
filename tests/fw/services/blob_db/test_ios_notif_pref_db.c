@@ -96,11 +96,23 @@ void test_ios_notif_pref_db__read_flags(void) {
 
 void test_ios_notif_pref_db__store_prefs(void) {
   // Create an attribute list and action group
+  struct {
+    StringList list;
+    char data[9];
+  } filtering_rules = {
+    .list = {
+      .serialized_byte_length = 9,
+    },
+    .data = { 0x01, 0x00, 0x00, 0x00, 's', 'p', 'a', 'm', '\0' },
+  };
+
   AttributeList attr_list;
   attribute_list_init_list(0, &attr_list);
   attribute_list_add_cstring(&attr_list, AttributeIdShortTitle, "Title");
   attribute_list_add_uint8(&attr_list, AttributeIdMuteDayOfWeek, 0x1F);
   attribute_list_add_cstring(&attr_list, AttributeIdAppName, "GMail");
+  attribute_list_add_string_list(&attr_list, AttributeIdNotificationFilteringRules,
+                                 &filtering_rules.list);
   TimelineItemActionGroup action_group = {
     .num_actions = 0,
   };
@@ -122,6 +134,11 @@ void test_ios_notif_pref_db__store_prefs(void) {
   Attribute *name = attribute_find(&notif_prefs->attr_list, AttributeIdAppName);
   cl_assert(name);
   cl_assert_equal_s(name->cstring, "GMail");
+  StringList *rules = attribute_get_string_list(&notif_prefs->attr_list,
+                                                AttributeIdNotificationFilteringRules);
+  cl_assert(rules);
+  cl_assert_equal_i(rules->serialized_byte_length, filtering_rules.list.serialized_byte_length);
+  cl_assert_equal_m(rules->data, filtering_rules.data, filtering_rules.list.serialized_byte_length);
 
 
   // Update the current entry with a new attribute
@@ -142,6 +159,11 @@ void test_ios_notif_pref_db__store_prefs(void) {
   name = attribute_find(&notif_prefs->attr_list, AttributeIdAppName);
   cl_assert(name);
   cl_assert_equal_s(name->cstring, "GMail");
+  rules = attribute_get_string_list(&notif_prefs->attr_list,
+                                    AttributeIdNotificationFilteringRules);
+  cl_assert(rules);
+  cl_assert_equal_i(rules->serialized_byte_length, filtering_rules.list.serialized_byte_length);
+  cl_assert_equal_m(rules->data, filtering_rules.data, filtering_rules.list.serialized_byte_length);
   Attribute *updated = attribute_find(&notif_prefs->attr_list, AttributeIdLastUpdated);
   cl_assert(updated);
   cl_assert_equal_i(updated->uint32, 123456);
