@@ -245,6 +245,14 @@ static bool prv_should_ignore_notification(uint32_t uid,
     return true;
   }
 
+  if (ancs_filtering_matches_rules(app_notif_prefs, title, message)) {
+    char app_id_buffer[app_id->length + 1];
+    pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
+
+    PBL_LOG_INFO("Ignoring notification from <%s>: Matched filtering rule", app_id_buffer);
+    return true;
+  }
+
   // filter out mail buggy mail messages
   if (prv_should_ignore_because_apple_mail_dot_app_bug(app_id, message)) {
     PBL_LOG_ERR("Ignoring ANCS notification because Mail.app bug");
