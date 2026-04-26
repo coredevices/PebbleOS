@@ -32,13 +32,19 @@ void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
   return;
 }
 
-void ancs_filtering_record_app(iOSNotifPrefs *app_notif_prefs,
+void ancs_filtering_record_app(iOSNotifPrefs **app_notif_prefs,
                                const ANCSAttribute *app_id,
                                const ANCSAttribute *display_name,
                                const ANCSAttribute *title) {
 }
 
 bool ancs_filtering_is_muted(const iOSNotifPrefs *app_notif_prefs) {
+  return false;
+}
+
+bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
+                                  const ANCSAttribute *title,
+                                  const ANCSAttribute *body) {
   return false;
 }
 
