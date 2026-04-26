@@ -818,11 +818,11 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, 
 
   const int app_id_len = strlen(app_id);
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)app_id, app_id_len);
-  if (notif_prefs && attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration)) {
+  Attribute *expiration_attr = notif_prefs ?
+      attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration) : NULL;
+  if (notif_prefs && expiration_attr) {
     const uint32_t expiration_time = rtc_get_time() + duration_seconds;
-    
-    Attribute *existing_attr = attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration);
-    existing_attr->uint32 = expiration_time;
+    expiration_attr->uint32 = expiration_time;
 
     ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len,
                                   &notif_prefs->attr_list, &notif_prefs->action_group);
@@ -833,7 +833,7 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item, 
     }
     prv_push_muted_dialog();
   } else {
-    PBL_LOG_WRN("Could not mute notification. No prefs or mute attribute");
+    PBL_LOG_WRN("Could not mute notification. No prefs or mute expiration attribute");
   }
 
   ios_notif_pref_db_free_prefs(notif_prefs);
