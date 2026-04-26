@@ -50,10 +50,10 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
             version_label_major = version_label_list[0]
         if len(version_label_list) >= 2:
             version_label_minor = version_label_list[1]
-        if len(version_label_list) > 2:
-            raise Exception(
-                'appinfo.json versionLabel format for app revision must be "Major" or "Major.Minor"'
-            )
+        # Note app versions are encouraged to contain a third semver patch
+        # version number which is discarded here, causing the C-side
+        # PebbleProcessInfo.process_version to mismatch the version presented
+        # in the .pbw and appstore.
 
         # validate versionLabel range [0-255] and int-characters
         try:
