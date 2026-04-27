@@ -36,6 +36,7 @@ typedef enum {
 #endif
   MfgTestId_ProgramColor,
   MfgTestId_Charge,
+  MfgTestId_Aging,
 
   MfgTestIdCount
 } MfgTestId;
