@@ -10,9 +10,11 @@
 #include "track_player.h"
 
 #include "drivers/audio.h"
+#include "drivers/rtc.h"
 #include "board/board.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
+#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -65,9 +67,32 @@ typedef struct {
 
 static SpeakerServiceState s_state;
 
+//! Analytics: time-weighted average volume, reset on heartbeat.
+static uint64_t s_volume_time_product_sum;     // Sum of (volume_pct × time_ms)
+static RtcTicks s_last_volume_sample_ticks;    // Timestamp of last sample
+static uint8_t s_last_sampled_volume_pct;      // Last volume percentage sampled
+static uint32_t s_total_speaker_on_time_ms;    // Total speaker on-time tracked
+
 static void prv_stop_internal(SpeakerFinishReason reason);
 static void prv_audio_trans_cb(uint32_t *free_size);
 static void prv_refill_bg(void *data);
+
+static void prv_update_volume_analytics(uint8_t new_volume_pct) {
+  RtcTicks now_ticks = rtc_get_ticks();
+
+  if (s_last_volume_sample_ticks > 0) {
+    uint32_t time_delta_ms = ((now_ticks - s_last_volume_sample_ticks) * 1000) / RTC_TICKS_HZ;
+
+    s_volume_time_product_sum += (uint64_t)s_last_sampled_volume_pct * time_delta_ms;
+
+    if (s_last_sampled_volume_pct > 0) {
+      s_total_speaker_on_time_ms += time_delta_ms;
+    }
+  }
+
+  s_last_volume_sample_ticks = now_ticks;
+  s_last_sampled_volume_pct = new_volume_pct;
+}
 
 void speaker_service_init(void) {
   memset(&s_state, 0, sizeof(s_state));
@@ -75,15 +100,27 @@ void speaker_service_init(void) {
   s_state.source_type = SpeakerSourceNone;
   s_state.owner_task = PebbleTask_Unknown;
   s_state.initialized = true;
+
+  s_volume_time_product_sum = 0;
+  s_last_volume_sample_ticks = 0;
+  s_last_sampled_volume_pct = 0;
+  s_total_speaker_on_time_ms = 0;
 }
 
 static void prv_start_audio(uint8_t vol) {
+  PBL_ANALYTICS_TIMER_START(speaker_on_time_ms);
+  PBL_ANALYTICS_ADD(speaker_play_count, 1);
+  prv_update_volume_analytics(vol);
+
   audio_init((AudioDevice *)AUDIO);
   audio_set_volume((AudioDevice *)AUDIO, vol);
   audio_start((AudioDevice *)AUDIO, prv_audio_trans_cb);
 }
 
 static void prv_stop_audio(void) {
+  PBL_ANALYTICS_TIMER_STOP(speaker_on_time_ms);
+  prv_update_volume_analytics(0);
+
   audio_stop((AudioDevice *)AUDIO);
 }
 
@@ -119,6 +156,10 @@ static void prv_post_finish_event(SpeakerFinishReason reason) {
 static void prv_stop_internal(SpeakerFinishReason reason) {
   if (s_state.state == SpeakerStateIdle) {
     return;
+  }
+
+  if (reason == SpeakerFinishReasonPreempted) {
+    PBL_ANALYTICS_ADD(speaker_preempted_count, 1);
   }
 
   prv_stop_audio();
@@ -285,6 +326,7 @@ static void prv_refill_bg(void *data) {
     }
     // If no data but not done, write silence to keep DMA fed
     if (samples_generated == 0) {
+      PBL_ANALYTICS_ADD(speaker_stream_underrun_count, 1);
       memset(s_state.refill_buf, 0, SPEAKER_REFILL_SAMPLES * sizeof(int16_t));
       samples_generated = SPEAKER_REFILL_SAMPLES;
     }
@@ -514,6 +556,7 @@ void speaker_service_stop(void) {
 void speaker_service_set_volume(uint8_t vol) {
   s_state.volume = vol;
   if (s_state.state != SpeakerStateIdle) {
+    prv_update_volume_analytics(vol);
     audio_set_volume((AudioDevice *)AUDIO, vol);
   }
 }
@@ -541,6 +584,22 @@ void speaker_service_set_owner_task(PebbleTask task) {
 void speaker_service_register_finish(PebbleTask task) {
   s_state.finish_enabled = true;
   s_state.finish_task = task;
+}
+
+void pbl_analytics_external_collect_speaker_stats(void) {
+  // Capture one final sample to account for time since last volume change.
+  prv_update_volume_analytics(s_last_sampled_volume_pct);
+
+  uint32_t avg_volume_pct = 0;
+  if (s_total_speaker_on_time_ms > 0) {
+    avg_volume_pct = s_volume_time_product_sum / s_total_speaker_on_time_ms;
+  }
+
+  PBL_ANALYTICS_SET_UNSIGNED(speaker_avg_volume_pct, avg_volume_pct);
+
+  s_volume_time_product_sum = 0;
+  s_total_speaker_on_time_ms = 0;
+  s_last_volume_sample_ticks = rtc_get_ticks();
 }
 
 #else // !CAPABILITY_HAS_SPEAKER
@@ -576,5 +635,6 @@ SpeakerState speaker_service_get_state(void) {
 void speaker_service_stop_for_task(PebbleTask task) {}
 void speaker_service_set_owner_task(PebbleTask task) {}
 void speaker_service_register_finish(PebbleTask task) {}
+void pbl_analytics_external_collect_speaker_stats(void) {}
 
 #endif // CAPABILITY_HAS_SPEAKER
