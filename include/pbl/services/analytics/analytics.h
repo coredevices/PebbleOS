@@ -32,32 +32,32 @@ enum pbl_analytics_key {
 
 void pbl_analytics_init(void);
 
-void pbl_analytics_set_signed(enum pbl_analytics_key key, int32_t signed_value);
+void sys_pbl_analytics_set_signed(enum pbl_analytics_key key, int32_t signed_value);
 
-void pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value);
+void sys_pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value);
 
-void pbl_analytics_set_string(enum pbl_analytics_key key, const char *value);
+void sys_pbl_analytics_set_string(enum pbl_analytics_key key, const char *value);
 
-void pbl_analytics_timer_start(enum pbl_analytics_key key);
+void sys_pbl_analytics_timer_start(enum pbl_analytics_key key);
 
-void pbl_analytics_timer_stop(enum pbl_analytics_key key);
+void sys_pbl_analytics_timer_stop(enum pbl_analytics_key key);
 
-void pbl_analytics_add(enum pbl_analytics_key key, int32_t amount);
+void sys_pbl_analytics_add(enum pbl_analytics_key key, int32_t amount);
 
 #define PBL_ANALYTICS_SET_SIGNED(key_name, signed_value) \
-  pbl_analytics_set_signed(PBL_ANALYTICS_KEY(key_name), signed_value)
+  sys_pbl_analytics_set_signed(PBL_ANALYTICS_KEY(key_name), signed_value)
 
 #define PBL_ANALYTICS_SET_UNSIGNED(key_name, unsigned_value) \
-  pbl_analytics_set_unsigned(PBL_ANALYTICS_KEY(key_name), unsigned_value)
+  sys_pbl_analytics_set_unsigned(PBL_ANALYTICS_KEY(key_name), unsigned_value)
 
 #define PBL_ANALYTICS_SET_STRING(key_name, value) \
-  pbl_analytics_set_string(PBL_ANALYTICS_KEY(key_name), value)
+  sys_pbl_analytics_set_string(PBL_ANALYTICS_KEY(key_name), value)
 
 #define PBL_ANALYTICS_TIMER_START(key_name) \
-  pbl_analytics_timer_start(PBL_ANALYTICS_KEY(key_name))
+  sys_pbl_analytics_timer_start(PBL_ANALYTICS_KEY(key_name))
 
 #define PBL_ANALYTICS_TIMER_STOP(key_name) \
-  pbl_analytics_timer_stop(PBL_ANALYTICS_KEY(key_name))
+  sys_pbl_analytics_timer_stop(PBL_ANALYTICS_KEY(key_name))
 
 #define PBL_ANALYTICS_ADD(key_name, amount) \
-  pbl_analytics_add(PBL_ANALYTICS_KEY(key_name), amount)
+  sys_pbl_analytics_add(PBL_ANALYTICS_KEY(key_name), amount)

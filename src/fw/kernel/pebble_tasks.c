@@ -200,7 +200,7 @@ void pbl_analytics_external_collect_task_cpu_stats(void) {
     uint32_t delta = total - s_prev_total_task_cycles[task];
     s_prev_total_task_cycles[task] = total;
     uint32_t pct = delta_total ? (uint32_t)(((uint64_t)delta * 10000U) / delta_total) : 0;
-    pbl_analytics_set_unsigned(s_task_cpu_pct_keys[task], pct);
+    sys_pbl_analytics_set_unsigned(s_task_cpu_pct_keys[task], pct);
   }
 
   uint32_t idle_delta = curr_idle_run_time - s_prev_idle_run_time;
