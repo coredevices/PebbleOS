@@ -7,11 +7,14 @@
 #include "pbl/services/analytics/backend.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
+#include "kernel/memory_layout.h"
+#include "syscall/syscall_internal.h"
 #include "system/reboot_reason.h"
 #include "system/version.h"
 #include "util/size.h"
 
 #define HEARTBEAT_PERIOD_SEC 3600
+#define ANALYTICS_STRING_MAX_LEN 64
 
 extern void pbl_analytics_external_collect_battery(void);
 extern void pbl_analytics_external_collect_cpu_stats(void);
@@ -102,36 +105,47 @@ void pbl_analytics_init(void) {
                   TIMER_START_FLAG_REPEATING);
 }
 
-void pbl_analytics_set_signed(enum pbl_analytics_key key, int32_t signed_value) {
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
+               int32_t signed_value) {
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->set_signed(key, signed_value);
   }
 }
 
-void pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
+               uint32_t unsigned_value) {
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->set_unsigned(key, unsigned_value);
   }
 }
 
-void pbl_analytics_set_string(enum pbl_analytics_key key, const char *value) {
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key,
+               const char *value) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    if (!memory_layout_is_cstring_in_region(
+          memory_layout_get_app_region(), value, ANALYTICS_STRING_MAX_LEN)) {
+      syscall_failed();
+    }
+  }
+
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->set_string(key, value);
   }
 }
 
-void pbl_analytics_timer_start(enum pbl_analytics_key key) {
+DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->timer_start(key);
   }
 }
-void pbl_analytics_timer_stop(enum pbl_analytics_key key) {
+
+DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->timer_stop(key);
   }
 }
 
-void pbl_analytics_add(enum pbl_analytics_key key, int32_t amount) {
+DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->add(key, amount);
   }
@@ -144,12 +158,15 @@ void command_analytics_heartbeat(void) {
 #else  // No analytics backend: provide no-op stubs.
 
 void pbl_analytics_init(void) {}
-void pbl_analytics_set_signed(enum pbl_analytics_key key, int32_t signed_value) {}
-void pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {}
-void pbl_analytics_set_string(enum pbl_analytics_key key, const char *value) {}
-void pbl_analytics_timer_start(enum pbl_analytics_key key) {}
-void pbl_analytics_timer_stop(enum pbl_analytics_key key) {}
-void pbl_analytics_add(enum pbl_analytics_key key, int32_t amount) {}
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
+               int32_t signed_value) {}
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
+               uint32_t unsigned_value) {}
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key,
+               const char *value) {}
+DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {}
+DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {}
+DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {}
 void command_analytics_heartbeat(void) {}
 
 #endif
