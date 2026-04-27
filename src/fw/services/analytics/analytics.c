@@ -21,6 +21,7 @@ extern void pbl_analytics_external_collect_pfs_stats(void);
 extern void pbl_analytics_external_collect_kernel_heap_stats(void);
 extern void pbl_analytics_external_collect_backlight_stats(void);
 extern void pbl_analytics_external_collect_vibe_stats(void);
+extern void pbl_analytics_external_collect_speaker_stats(void);
 extern void pbl_analytics_external_collect_settings(void);
 
 #if defined(ANALYTICS_NATIVE) || defined(ANALYTICS_MEMFAULT)
@@ -80,6 +81,7 @@ static void prv_heartbeat_system_task_cb(void *data) {
   pbl_analytics_external_collect_kernel_heap_stats();
   pbl_analytics_external_collect_backlight_stats();
   pbl_analytics_external_collect_vibe_stats();
+  pbl_analytics_external_collect_speaker_stats();
   pbl_analytics_external_collect_settings();
 
   for (size_t i = 0U; i < ARRAY_LENGTH(s_heartbeat); i++) {
