@@ -46,12 +46,21 @@ typedef struct {
 } AppData;
 
 static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
-  if (!mfg_test_menu_is_test_available(test)) {
+  // Aging is launched from the top-level mfg menu, not from the per-mode
+  // test menu, so it isn't registered in the menu's availability table.
+  if (test != MfgTestId_Aging && !mfg_test_menu_is_test_available(test)) {
     return;
   }
 
   const MfgTestResult *r = mfg_test_result_get(test);
   if (!r) {
+    return;
+  }
+
+  // Aging only appears when it has actually been reported (i.e. in the
+  // finished bucket); skip the entry in any mode where it wasn't run so
+  // the semi-finished QR doesn't pick up a misleading AGE:N.
+  if (test == MfgTestId_Aging && !r->ran) {
     return;
   }
 
@@ -119,6 +128,9 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
   case MfgTestId_ProgramColor:
     snprintf(entry, sizeof(entry), "CLR:%c,%s", rc,
              prv_color_short_name((WatchInfoColor)r->value));
+    break;
+  case MfgTestId_Aging:
+    snprintf(entry, sizeof(entry), "AGE:%c", rc);
     break;
   default:
     return;

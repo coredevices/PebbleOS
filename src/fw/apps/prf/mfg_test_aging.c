@@ -3,6 +3,7 @@
 
 #include "mfg_test_aging.h"
 
+#include "apps/prf/mfg_test_result.h"
 #include "applib/app.h"
 #include "applib/graphics/graphics.h"
 #include "applib/tick_timer_service.h"
@@ -211,6 +212,14 @@ static void prv_advance_component(AppData *data) {
   prv_start_component(data);
 }
 
+static void prv_report_result(bool passed) {
+  // Always report into the FINISHED bucket: aging is launched outside the
+  // per-mode test menu, so we can't rely on whatever mode happened to be
+  // active last.
+  mfg_test_result_set_mode(MFG_TEST_MODE_FINISHED);
+  mfg_test_result_report(MfgTestId_Aging, passed, 0);
+}
+
 static void prv_enter_fail(AppData *data, const char *reason) {
   prv_cleanup_component(data);
   // Restore charging in case we disabled it during the charge+cycle phase,
@@ -219,6 +228,7 @@ static void prv_enter_fail(AppData *data, const char *reason) {
   data->state = AgingStateFail;
   sniprintf(data->fail_reason, sizeof(data->fail_reason), "%s", reason);
   PBL_LOG_ERR("Aging test FAIL: %s", reason);
+  prv_report_result(false);
 }
 
 static void prv_run_component_display(AppData *data) {
@@ -528,6 +538,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         sniprintf(data->status_string, sizeof(data->status_string),
                   "PASS\n\nDischarged to\n%" PRIu8 "%%",
                   cs.charge_percent);
+        prv_report_result(true);
         tick_timer_service_unsubscribe();
         break;
       }
