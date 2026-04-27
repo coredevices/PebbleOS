@@ -93,6 +93,7 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_motion_sensitivity)
 // Application
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(app_message_sent_count)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(app_message_received_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(app_tick_timer_second_subscribed)
 
 // Connectivity
 PBL_ANALYTICS_METRIC_DEFINE_TIMER(connectivity_connected_time_ms)
