@@ -7,6 +7,7 @@
 #include "event_service_client.h"
 #include "process_management/app_manager.h"
 
+#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/event_service.h"
 #include "pbl/services/tick_timer.h"
@@ -90,6 +91,10 @@ void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
   state->tick_units = tick_units;
   state->first_tick = true;
   event_service_client_subscribe(&state->tick_service_info);
+  if (pebble_task_get_current() == PebbleTask_App) {
+    PBL_ANALYTICS_SET_UNSIGNED(app_tick_timer_second_subscribed,
+                               (tick_units & SECOND_UNIT) ? 1 : 0);
+  }
   // TODO: make an effort to get this closer to the "actual" second tick
 }
 
@@ -97,6 +102,9 @@ void tick_timer_service_unsubscribe(void) {
   TickTimerServiceState *state = prv_get_state(PebbleTask_Unknown);
   event_service_client_unsubscribe(&state->tick_service_info);
   state->handler = NULL;
+  if (pebble_task_get_current() == PebbleTask_App) {
+    PBL_ANALYTICS_SET_UNSIGNED(app_tick_timer_second_subscribed, 0);
+  }
 }
 
 
