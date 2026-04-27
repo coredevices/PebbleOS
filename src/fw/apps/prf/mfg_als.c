@@ -149,9 +149,6 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
   AmbientLightAppData *data = app_state_get_user_data();
 
   if (data->test_state == ALSStateWaitForStart) {
-    // Turn off backlight before starting test
-    light_enable(false);
-
     // Start countdown
     data->test_state = ALSStateCountdown;
     data->state_start_time = rtc_get_ticks();
@@ -171,6 +168,10 @@ static void prv_config_provider(void *context) {
 
 static void prv_handle_init(void) {
   AmbientLightAppData *data = task_zalloc_check(sizeof(AmbientLightAppData));
+
+  // Force backlight off for the duration of the test to avoid interfering
+  // with ALS readings (e.g. when pressing CENTER to start sampling).
+  light_allow(false);
 
   data->window = window_create();
   window_set_fullscreen(data->window, true);
@@ -219,6 +220,8 @@ static void prv_handle_deinit(void) {
   text_layer_destroy(data->reading_text_layer);
   window_destroy(data->window);
   task_free(data);
+
+  light_allow(true);
 }
 
 static void prv_main(void) {
