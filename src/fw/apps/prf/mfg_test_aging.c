@@ -35,20 +35,21 @@
 #define COMPONENT_BACKLIGHT_DURATION_SEC 2
 #define COMPONENT_VIBE_DURATION_SEC 1
 
-// Charging phase parameters
+// Charge + cycling phase parameters
+#define CHARGE_AND_CYCLE_DURATION_SEC (4 * 3600)  // 4 hours total
+#define CHARGE_TIMEOUT_SEC (90 * 60)              // Charge must reach target within 90min
 #define CHARGE_TARGET_PERCENT 100
-#define CHARGE_TIMEOUT_SEC (90 * 60)  // 90 minutes
-#define TEMP_MIN_MC 15000             // 15.0C
-#define TEMP_MAX_MC 35000             // 35.0C
+#define CHARGE_HOLD_MIN_PERCENT 99                // Tolerance for ADC noise after 100% reached
+#define TEMP_MIN_MC 15000                         // 15.0C
+#define TEMP_MAX_MC 35000                         // 35.0C
 
-// Discharge phase parameters
-#define DISCHARGE_TARGET_PERCENT 75
+// Idle phase parameters
+#define IDLE_DURATION_SEC (10 * 3600)  // 10 hours
+#define IDLE_MAX_DROP_PERCENT 6        // Fail if battery drops more than this during idle
 
-// Cycling phase parameters
-#define CYCLING_DURATION_SEC (4 * 3600)  // 4 hours
-
-// Pass/fail criteria
-#define MAX_PERCENT_DROP 10
+// Discharge phase parameters — bring battery down to a safe shipping level.
+// Adjust here if the target ever changes.
+#define DISCHARGE_TARGET_PERCENT 65
 
 #if CAPABILITY_HAS_SPEAKER
 static const int16_t sine_wave_4k[] = {
@@ -59,10 +60,10 @@ static const int16_t sine_wave_4k[] = {
 
 typedef enum {
   AgingStateWaitPlug = 0,
-  AgingStateCharging,
+  AgingStateChargingAndCycling,
   AgingStateWaitUnplug,
+  AgingStateIdle,
   AgingStateDischarging,
-  AgingStateCycling,
   AgingStatePass,
   AgingStateFail,
 } AgingState;
@@ -103,7 +104,10 @@ typedef struct {
   uint32_t phase_elapsed_sec;
   uint32_t cycle_count;
 
-  // Battery state at start of cycling phase
+  // Set once battery first reaches CHARGE_TARGET_PERCENT during charge+cycle phase
+  bool charge_complete;
+
+  // Battery state at start of idle phase, used for the 6% drop check
   uint8_t initial_percent;
 
   char fail_reason[64];
@@ -209,6 +213,9 @@ static void prv_advance_component(AppData *data) {
 
 static void prv_enter_fail(AppData *data, const char *reason) {
   prv_cleanup_component(data);
+  // Restore charging in case we disabled it during the charge+cycle phase,
+  // so the device is left in a normal state on exit.
+  battery_set_charge_enable(true);
   data->state = AgingStateFail;
   sniprintf(data->fail_reason, sizeof(data->fail_reason), "%s", reason);
   PBL_LOG_ERR("Aging test FAIL: %s", reason);
@@ -218,7 +225,7 @@ static void prv_run_component_display(AppData *data) {
   char time_str[16];
   prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
 
-  uint32_t remaining = CYCLING_DURATION_SEC - data->phase_elapsed_sec;
+  uint32_t remaining = CHARGE_AND_CYCLE_DURATION_SEC - data->phase_elapsed_sec;
   char rem_str[16];
   prv_format_time(rem_str, sizeof(rem_str), remaining);
 
@@ -301,17 +308,32 @@ static void prv_run_component_display(AppData *data) {
   int8_t temp_c = (int8_t)(bc.t_mc / 1000);
   uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
 
+  BatteryChargeStatus charge_status;
+  battery_charge_status_get(&charge_status);
+  const char *chg_str;
+  if (!cs.is_charging) {
+    chg_str = "Idle";
+  } else {
+    switch (charge_status) {
+      case BatteryChargeStatusComplete: chg_str = "Cmpl"; break;
+      case BatteryChargeStatusTrickle:  chg_str = "Trk";  break;
+      case BatteryChargeStatusCC:       chg_str = "CC";   break;
+      case BatteryChargeStatusCV:       chg_str = "CV";   break;
+      default:                          chg_str = "?";    break;
+    }
+  }
+
   sniprintf(data->status_string, sizeof(data->status_string),
-            "CYCLING [%s]\n"
+            "CHG+CYC [%s]\n"
             "Cycle: %" PRIu32 "\n"
             "Elapsed: %s\n"
             "Remain: %s\n"
-            "%" PRId32 "mV %" PRIu8 "%% "
+            "%" PRId32 "mV %" PRIu8 "%% %s\n"
             "%" PRId8 ".%02" PRIu8 "C\n"
             "%s",
             comp_name, data->cycle_count,
             time_str, rem_str,
-            bc.v_mv, cs.charge_percent,
+            bc.v_mv, cs.charge_percent, chg_str,
             temp_c, temp_c_frac,
             comp_detail);
 }
@@ -323,9 +345,20 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
     case AgingStateWaitPlug: {
       BatteryChargeState cs = battery_get_charge_state();
       if (cs.is_plugged) {
-        data->state = AgingStateCharging;
+        data->state = AgingStateChargingAndCycling;
         data->phase_elapsed_sec = 0;
-        sniprintf(data->status_string, sizeof(data->status_string), "CHARGING\nStarting...");
+        data->charge_complete = (cs.charge_percent >= CHARGE_TARGET_PERCENT);
+        if (data->charge_complete) {
+          // Battery was already full at plug-in: stop active charging now
+          // so the cell isn't held at 100% by continuous BMS top-off.
+          battery_set_charge_enable(false);
+        }
+        data->component = ComponentAccel;
+        data->component_elapsed_sec = 0;
+        data->cycle_count = 1;
+        prv_start_component(data);
+        sniprintf(data->status_string, sizeof(data->status_string),
+                  "CHG+CYC\nStarting...");
       } else {
         sniprintf(data->status_string, sizeof(data->status_string),
                   "PLUG CHARGER\n\nPlug the watch\nto start");
@@ -333,81 +366,111 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       break;
     }
 
-    case AgingStateCharging: {
+    case AgingStateChargingAndCycling: {
       data->phase_elapsed_sec++;
+      data->component_elapsed_sec++;
 
       BatteryConstants bc;
       battery_get_constants(&bc);
       BatteryChargeState cs = battery_get_charge_state();
 
       if (!cs.is_plugged) {
-        prv_enter_fail(data, "Unplugged while\ncharging");
+        prv_cleanup_component(data);
+        prv_enter_fail(data, "Unplugged during\ncharge+cycle");
         break;
       }
 
-      // Temperature check
       if (bc.t_mc < TEMP_MIN_MC || bc.t_mc > TEMP_MAX_MC) {
+        prv_cleanup_component(data);
         prv_enter_fail(data, "Temperature out\nof range");
         break;
       }
 
-      // Timeout check
-      if (data->phase_elapsed_sec >= CHARGE_TIMEOUT_SEC) {
-        prv_enter_fail(data, "Charge timeout\n(90min)");
-        break;
-      }
-
-      // Target reached
-      if (cs.charge_percent >= CHARGE_TARGET_PERCENT) {
-        battery_set_charge_enable(false);
-        data->state = AgingStateWaitUnplug;
-        sniprintf(data->status_string, sizeof(data->status_string),
-                  "UNPLUG WATCH\n\nCharged to %" PRIu8 "%%\n"
-                  "Unplug to start\ndischarge",
-                  cs.charge_percent);
-        break;
-      }
-
-      // Display charging progress
-      char time_str[16];
-      prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
-
-      int8_t temp_c = (int8_t)(bc.t_mc / 1000);
-      uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
-
-      bool usb = battery_is_usb_connected();
-      BatteryChargeStatus charge_status;
-      battery_charge_status_get(&charge_status);
-      const char *charge_status_str;
-      if (!cs.is_charging) {
-        charge_status_str = "Idle";
-      } else {
-        switch (charge_status) {
-          case BatteryChargeStatusComplete: charge_status_str = "Complete"; break;
-          case BatteryChargeStatusTrickle:  charge_status_str = "Trickle"; break;
-          case BatteryChargeStatusCC:       charge_status_str = "CC"; break;
-          case BatteryChargeStatusCV:       charge_status_str = "CV"; break;
-          default:                          charge_status_str = "Unknown"; break;
+      // Charge progress / completion tracking
+      if (!data->charge_complete) {
+        if (cs.charge_percent >= CHARGE_TARGET_PERCENT) {
+          data->charge_complete = true;
+          // Stop active charging now that we're full. The system keeps
+          // running off USB power, so the battery just holds at 100%
+          // for the rest of the cycling phase instead of being held
+          // there by continuous top-off, which is gentler on the cell.
+          battery_set_charge_enable(false);
+        } else if (data->phase_elapsed_sec >= CHARGE_TIMEOUT_SEC) {
+          prv_cleanup_component(data);
+          prv_enter_fail(data, "Charge timeout\n(90min)");
+          break;
         }
+      } else if (cs.charge_percent < CHARGE_HOLD_MIN_PERCENT) {
+        prv_cleanup_component(data);
+        prv_enter_fail(data, "Battery dropped\nafter charge");
+        break;
       }
 
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "CHARGING\nTime: %s\n\n"
-                "%" PRId32 "mV %" PRIu8 "%%\n"
-                "%" PRId8 ".%02" PRIu8 "C\n"
-                "USB:%s Chg:%s\n\n"
-                "Target: %d%%",
-                time_str, bc.v_mv, cs.charge_percent,
-                temp_c, temp_c_frac,
-                usb ? "Y" : "N", charge_status_str,
-                CHARGE_TARGET_PERCENT);
+      // Phase done?
+      if (data->phase_elapsed_sec >= CHARGE_AND_CYCLE_DURATION_SEC) {
+        prv_cleanup_component(data);
+        if (!data->charge_complete) {
+          prv_enter_fail(data, "Charge incomplete\nat phase end");
+          break;
+        }
+        battery_set_charge_enable(true);
+        data->state = AgingStateWaitUnplug;
+        break;
+      }
+
+      // Advance component if needed
+      if (data->component_elapsed_sec >= prv_component_duration(data->component)) {
+        prv_advance_component(data);
+      }
+
+      prv_run_component_display(data);
       break;
     }
 
     case AgingStateWaitUnplug: {
       BatteryChargeState cs = battery_get_charge_state();
       if (!cs.is_plugged) {
-        // Start discharging with backlight at max brightness
+        data->state = AgingStateIdle;
+        data->phase_elapsed_sec = 0;
+        data->initial_percent = cs.charge_percent;
+        sniprintf(data->status_string, sizeof(data->status_string), "IDLE\nStarting...");
+      } else {
+        sniprintf(data->status_string, sizeof(data->status_string),
+                  "UNPLUG WATCH\n\nCharged to %" PRIu8 "%%\n"
+                  "Unplug to begin\nidle test",
+                  cs.charge_percent);
+      }
+      break;
+    }
+
+    case AgingStateIdle: {
+      data->phase_elapsed_sec++;
+
+      BatteryConstants bc;
+      battery_get_constants(&bc);
+      BatteryChargeState cs = battery_get_charge_state();
+
+      if (cs.is_plugged) {
+        prv_enter_fail(data, "Plugged during\nidle test");
+        break;
+      }
+
+      int8_t drop = (int8_t)data->initial_percent - (int8_t)cs.charge_percent;
+      if (drop < 0) {
+        drop = 0;
+      }
+
+      // Phase done?
+      if (data->phase_elapsed_sec >= IDLE_DURATION_SEC) {
+        if (drop > IDLE_MAX_DROP_PERCENT) {
+          char reason[64];
+          sniprintf(reason, sizeof(reason),
+                    "Idle drop %" PRId8 "%%\n> %d%%",
+                    drop, IDLE_MAX_DROP_PERCENT);
+          prv_enter_fail(data, reason);
+          break;
+        }
+        // Idle passed — discharge to safe shipping level with backlight on
         data->state = AgingStateDischarging;
         data->phase_elapsed_sec = 0;
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
@@ -415,9 +478,28 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         led_controller_rgb_set_color(0xFFFFFF);
 #endif
         light_enable(true);
-        sniprintf(data->status_string, sizeof(data->status_string),
-                  "DISCHARGING\nStarting...");
+        break;
       }
+
+      char time_str[16], rem_str[16];
+      prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
+      prv_format_time(rem_str, sizeof(rem_str),
+                      IDLE_DURATION_SEC - data->phase_elapsed_sec);
+
+      int8_t temp_c = (int8_t)(bc.t_mc / 1000);
+      uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
+
+      sniprintf(data->status_string, sizeof(data->status_string),
+                "IDLE\n"
+                "Elapsed: %s\n"
+                "Remain: %s\n"
+                "%" PRId32 "mV %" PRIu8 "%%\n"
+                "%" PRId8 ".%02" PRIu8 "C\n"
+                "Start:%" PRIu8 "%% Drop:%" PRId8 "/%d%%",
+                time_str, rem_str,
+                bc.v_mv, cs.charge_percent,
+                temp_c, temp_c_frac,
+                data->initial_percent, drop, IDLE_MAX_DROP_PERCENT);
       break;
     }
 
@@ -437,23 +519,19 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         break;
       }
 
-      // Target reached — turn off backlight and start cycling
       if (cs.charge_percent <= DISCHARGE_TARGET_PERCENT) {
         light_enable(false);
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
         led_controller_rgb_set_color(data->saved_backlight_color);
 #endif
-        data->initial_percent = cs.charge_percent;
-        data->state = AgingStateCycling;
-        data->phase_elapsed_sec = 0;
-        data->component = ComponentAccel;
-        data->component_elapsed_sec = 0;
-        data->cycle_count = 1;
-        prv_start_component(data);
+        data->state = AgingStatePass;
+        sniprintf(data->status_string, sizeof(data->status_string),
+                  "PASS\n\nDischarged to\n%" PRIu8 "%%",
+                  cs.charge_percent);
+        tick_timer_service_unsubscribe();
         break;
       }
 
-      // Display discharge progress
       char time_str[16];
       prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
 
@@ -468,45 +546,6 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
                 time_str, bc.v_mv, cs.charge_percent,
                 temp_c, temp_c_frac,
                 DISCHARGE_TARGET_PERCENT);
-      break;
-    }
-
-    case AgingStateCycling: {
-      data->phase_elapsed_sec++;
-      data->component_elapsed_sec++;
-
-      // Check if cycling is done
-      if (data->phase_elapsed_sec >= CYCLING_DURATION_SEC) {
-        prv_cleanup_component(data);
-
-        BatteryChargeState cs = battery_get_charge_state();
-        int8_t drop = (int8_t)data->initial_percent - (int8_t)cs.charge_percent;
-
-        if (drop <= MAX_PERCENT_DROP) {
-          data->state = AgingStatePass;
-          sniprintf(data->status_string, sizeof(data->status_string),
-                    "PASS\n\nStart: %" PRIu8 "%%\n"
-                    "End: %" PRIu8 "%%\n"
-                    "Drop: %" PRId8 "%%",
-                    data->initial_percent, cs.charge_percent, drop);
-        } else {
-          char reason[64];
-          sniprintf(reason, sizeof(reason),
-                    "Drop %" PRId8 "%% > %d%%",
-                    drop, MAX_PERCENT_DROP);
-          prv_enter_fail(data, reason);
-        }
-
-        tick_timer_service_unsubscribe();
-        break;
-      }
-
-      // Advance component if needed
-      if (data->component_elapsed_sec >= prv_component_duration(data->component)) {
-        prv_advance_component(data);
-      }
-
-      prv_run_component_display(data);
       break;
     }
 
@@ -531,8 +570,9 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *context)
 #if CAPABILITY_HAS_COLOR_BACKLIGHT
     led_controller_rgb_set_color(data->saved_backlight_color);
 #endif
-  } else if (data->state == AgingStateCycling) {
+  } else if (data->state == AgingStateChargingAndCycling) {
     prv_cleanup_component(data);
+    battery_set_charge_enable(true);
   }
 
   tick_timer_service_unsubscribe();
@@ -563,6 +603,10 @@ static void prv_handle_init(void) {
   serial_console_set_rx_enabled(false);
   bt_ctl_set_enabled(false);
   prf_idle_watchdog_stop();
+
+  // Make sure charging is enabled at start of test in case a previous run
+  // left it disabled.
+  battery_set_charge_enable(true);
 
   Window *window = &data->window;
   window_init(window, "");
