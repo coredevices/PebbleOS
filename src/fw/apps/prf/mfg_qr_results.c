@@ -3,6 +3,7 @@
 
 #include "applib/app.h"
 #include "applib/app_watch_info.h"
+#include "applib/battery_state_service.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/qr_code.h"
 #include "applib/ui/window.h"
@@ -148,11 +149,14 @@ static void prv_handle_init(void) {
   window_init(window, "");
   window_set_fullscreen(window, true);
 
-  // Start with serial number, Bluetooth MAC address, and firmware version
+  // Start with serial number, Bluetooth MAC address, firmware version,
+  // and current battery percentage.
   char mac[BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE];
   bt_local_id_copy_address_mac_string(mac);
-  snprintf(data->qr_buffer, sizeof(data->qr_buffer), "%s;%s;%s",
-           mfg_get_serial_number(), mac, TINTIN_METADATA.version_tag);
+  BatteryChargeState charge = battery_state_service_peek();
+  snprintf(data->qr_buffer, sizeof(data->qr_buffer), "%s;%s;%s;%" PRIu8,
+           mfg_get_serial_number(), mac, TINTIN_METADATA.version_tag,
+           charge.charge_percent);
 
   for (MfgTestId id = 0; id < MfgTestIdCount; id++) {
     prv_append_result(data->qr_buffer, sizeof(data->qr_buffer), id);
