@@ -71,7 +71,7 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
 
   switch (test) {
   case MfgTestId_Buttons:
-    snprintf(entry, sizeof(entry), "BTN:%c,%X", rc, (unsigned)(r->value & 0xF));
+    snprintf(entry, sizeof(entry), "BTN:%c", rc);
     break;
   case MfgTestId_Display:
     snprintf(entry, sizeof(entry), "DSP:%c", rc);

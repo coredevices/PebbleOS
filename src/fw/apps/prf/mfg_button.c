@@ -54,7 +54,7 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
   if (data->seconds_remaining == 0 || test_passed) {
     data->test_complete = true;
 
-    mfg_test_result_report(MfgTestId_Buttons, test_passed, data->buttons_pressed);
+    mfg_test_result_report(MfgTestId_Buttons, test_passed, 0);
 
     if (test_passed) {
       sniprintf(data->status_string, sizeof(data->status_string), "PASS!");
