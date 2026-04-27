@@ -18,12 +18,44 @@
 
 TaskHandle_t g_task_handles[NumPebbleTask] KERNEL_READONLY_DATA = { 0 };
 
+// Cycles consumed by tasks that have already been destroyed in each slot.
+// Captured at unregister time so the analytics heartbeat can keep accounting
+// for App/Worker activity across short-lived task instances.
+static uint32_t s_dead_task_cycles[NumPebbleTask];
+
 static void prv_task_register(PebbleTask task, TaskHandle_t task_handle) {
   g_task_handles[task] = task_handle;
 }
 
+static uint32_t prv_read_task_run_time(TaskHandle_t handle) {
+  UBaseType_t num_tasks = uxTaskGetNumberOfTasks();
+  TaskStatus_t *statuses = kernel_malloc(num_tasks * sizeof(TaskStatus_t));
+  if (!statuses) {
+    return 0;
+  }
+  UBaseType_t count = uxTaskGetSystemState(statuses, num_tasks, NULL);
+  uint32_t cycles = 0;
+  for (UBaseType_t i = 0; i < count; i++) {
+    if (statuses[i].xHandle == handle) {
+      cycles = statuses[i].ulRunTimeCounter;
+      break;
+    }
+  }
+  kernel_free(statuses);
+  return cycles;
+}
+
 void pebble_task_unregister(PebbleTask task) {
+  TaskHandle_t handle = g_task_handles[task];
+  if (handle == NULL) {
+    return;
+  }
+  uint32_t cycles = prv_read_task_run_time(handle);
+  // Clear the handle before crediting the cycles: the collector reads
+  // s_dead_task_cycles before walking the task list, so this ordering
+  // ensures cycles are never seen in both buckets simultaneously.
   g_task_handles[task] = NULL;
+  s_dead_task_cycles[task] += cycles;
 }
 
 const char* pebble_task_get_name(PebbleTask task) {
@@ -121,9 +153,19 @@ static const enum pbl_analytics_key s_task_cpu_pct_keys[NumPebbleTask] = {
 };
 
 void pbl_analytics_external_collect_task_cpu_stats(void) {
-  static uint32_t s_prev_task_run_time[NumPebbleTask];
+  static uint32_t s_prev_total_task_cycles[NumPebbleTask];
   static uint32_t s_prev_idle_run_time;
   static uint32_t s_prev_total_run_time;
+
+  // Snapshot dead-task cycles before walking the live task list. Combined with
+  // the (clear-handle, then update-accumulator) ordering in
+  // pebble_task_unregister(), this guarantees that cycles from a task dying
+  // mid-collection are never double-counted; in the worst case they show up
+  // one heartbeat late.
+  uint32_t dead_cycles[NumPebbleTask];
+  for (int task = 0; task < NumPebbleTask; task++) {
+    dead_cycles[task] = s_dead_task_cycles[task];
+  }
 
   UBaseType_t num_tasks = uxTaskGetNumberOfTasks();
   TaskStatus_t *statuses = kernel_malloc(num_tasks * sizeof(TaskStatus_t));
@@ -154,8 +196,9 @@ void pbl_analytics_external_collect_task_cpu_stats(void) {
   kernel_free(statuses);
 
   for (int task = 0; task < NumPebbleTask; task++) {
-    uint32_t delta = curr_task_run_time[task] - s_prev_task_run_time[task];
-    s_prev_task_run_time[task] = curr_task_run_time[task];
+    uint32_t total = dead_cycles[task] + curr_task_run_time[task];
+    uint32_t delta = total - s_prev_total_task_cycles[task];
+    s_prev_total_task_cycles[task] = total;
     uint32_t pct = delta_total ? (uint32_t)(((uint64_t)delta * 10000U) / delta_total) : 0;
     pbl_analytics_set_unsigned(s_task_cpu_pct_keys[task], pct);
   }
