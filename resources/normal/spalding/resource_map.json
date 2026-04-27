@@ -476,6 +476,26 @@
       "name": "AGENCY_FB_60_THIN_NUMBERS_AM_PM",
       "file": "normal/base/pbf/AGENCY_FB_60_THIN_NUMBERS_AM_PM.pbf",
       "characterRegex": "[ 0-9:/.,°APMHIK\\+\\-\\%]"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_14_EMOJI",
+      "file": "normal/snowy/pbf/EMOJI_14_LEGACY.pbf"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_18_EMOJI",
+      "file": "normal/snowy/pbf/EMOJI_18_LEGACY.pbf"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_24_EMOJI",
+      "file": "normal/snowy/pbf/EMOJI_24_LEGACY.pbf"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_28_EMOJI",
+      "file": "normal/snowy/pbf/EMOJI_28_LEGACY.pbf"
     }
   ]
 }
