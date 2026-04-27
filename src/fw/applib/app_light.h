@@ -42,13 +42,13 @@ void app_light_enable(bool enable);
 //! (white) when the app exits or is preempted by a system notification.
 //! On platforms without a color backlight this is a no-op.
 //! @note GColor carries only 2 bits per channel (64 distinct tints). Use
-//! app_light_set_color_rgb888() if you need the full 8-bit-per-channel range
+//! light_set_color_rgb888() if you need the full 8-bit-per-channel range
 //! that the LED hardware supports.
 //! @param color The color to tint the backlight to.
 void app_light_set_color(GColor color);
 
 //! Tint the backlight LED to a packed 24-bit RGB value (0x00RRGGBB).
-//! Same persistence semantics as app_light_set_color(): the override lasts
+//! Same persistence semantics as light_set_color(): the override lasts
 //! while the app is foregrounded and is reset on app exit or system preempt.
 //! No-op on platforms without a color backlight.
 //! @param rgb Packed 0x00RRGGBB value; 8 bits per channel. High byte ignored.
