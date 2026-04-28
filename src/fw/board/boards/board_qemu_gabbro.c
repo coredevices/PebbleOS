@@ -5,6 +5,7 @@
 
 // UART device for debug serial
 #include "drivers/uart/qemu.h"
+#include "drivers/mic/qemu/mic_definitions.h"
 
 static UARTDeviceState s_dbg_uart_state = {};
 
@@ -67,6 +68,14 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .timer = NULL,
   .timer_irqn = TIMER0_IRQn,
 };
+
+// Microphone (QEMU stub — feeds silence on a timer)
+static MicDeviceState s_mic_state;
+static MicDevice MIC_DEVICE = {
+  .state = &s_mic_state,
+  .channels = 1,
+};
+MicDevice * const MIC = &MIC_DEVICE;
 
 // IRQ handler trampolines
 IRQ_MAP(UART2, uart_irq_handler, DBG_UART);

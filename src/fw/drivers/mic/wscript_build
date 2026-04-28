@@ -28,6 +28,8 @@ elif bld.env.CONFIG_MIC_STM32F4_PDM:
         'driver_pmic',
         'stm32_stdlib',
     ])
+elif bld.env.CONFIG_MIC_QEMU:
+    sources.append('qemu/mic.c')
 
 bld.objects(
     name='driver_mic',
