@@ -385,13 +385,11 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
       BatteryChargeState cs = battery_get_charge_state();
 
       if (!cs.is_plugged) {
-        prv_cleanup_component(data);
         prv_enter_fail(data, "Unplugged during\ncharge+cycle");
         break;
       }
 
       if (bc.t_mc < TEMP_MIN_MC || bc.t_mc > TEMP_MAX_MC) {
-        prv_cleanup_component(data);
         prv_enter_fail(data, "Temperature out\nof range");
         break;
       }
@@ -406,23 +404,21 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
           // there by continuous top-off, which is gentler on the cell.
           battery_set_charge_enable(false);
         } else if (data->phase_elapsed_sec >= CHARGE_TIMEOUT_SEC) {
-          prv_cleanup_component(data);
           prv_enter_fail(data, "Charge timeout\n(90min)");
           break;
         }
       } else if (cs.charge_percent < CHARGE_HOLD_MIN_PERCENT) {
-        prv_cleanup_component(data);
         prv_enter_fail(data, "Battery dropped\nafter charge");
         break;
       }
 
       // Phase done?
       if (data->phase_elapsed_sec >= CHARGE_AND_CYCLE_DURATION_SEC) {
-        prv_cleanup_component(data);
         if (!data->charge_complete) {
           prv_enter_fail(data, "Charge incomplete\nat phase end");
           break;
         }
+        prv_cleanup_component(data);
         battery_set_charge_enable(true);
         data->state = AgingStateWaitUnplug;
         break;
