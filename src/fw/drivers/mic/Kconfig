@@ -28,4 +28,12 @@ config MIC_STM32F4_PDM
     help
       Support for the ST STM32F4 PDM microphone interface.
 
+config MIC_QEMU
+    bool "QEMU stub"
+    help
+      Software-only microphone stub for QEMU. Delivers silence at
+      MIC_SAMPLE_RATE so the voice service can run end-to-end against
+      `pebble transcribe`, which ignores audio frames and replies with
+      a canned transcription on a timer.
+
 endif # MIC
