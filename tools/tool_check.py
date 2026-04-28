@@ -24,7 +24,7 @@ def tool_check():
     with open(REQUIREMENTS) as file:
         req_list = text_to_req_list(file.read())
 
-    pip_installed_text = sh.pip("freeze")
+    pip_installed_text = subprocess.check_output(["pip", "freeze"]).decode("utf8")
     pip_installed_dict = installed_list_to_dict(text_to_req_list(pip_installed_text))
 
     for req in req_list:
