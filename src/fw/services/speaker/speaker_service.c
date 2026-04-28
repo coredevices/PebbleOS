@@ -35,6 +35,13 @@ typedef struct {
   NoteSequenceState note_seq;
   SpeakerNote *note_buf;  // kernel_malloc'd copy of notes
 
+  // Single tone source (raw frequency, no MIDI quantization)
+  uint32_t tone_samples_remaining;
+  uint32_t tone_phase_acc;   // 16.16 fixed-point
+  uint32_t tone_phase_inc;   // per-sample phase increment
+  uint8_t tone_waveform;
+  uint8_t tone_velocity;
+
   // PCM stream source
   PcmStreamState pcm_stream;
   SpeakerPcmFormat pcm_format;
@@ -174,6 +181,9 @@ static void prv_stop_internal(SpeakerFinishReason reason) {
     pcm_stream_deinit(&s_state.pcm_stream);
   } else if (s_state.source_type == SpeakerSourceTracks) {
     prv_free_tracks();
+  } else if (s_state.source_type == SpeakerSourceTone) {
+    s_state.tone_samples_remaining = 0;
+    s_state.tone_phase_inc = 0;
   }
 
   s_state.state = SpeakerStateIdle;
@@ -330,6 +340,27 @@ static void prv_refill_bg(void *data) {
       memset(s_state.refill_buf, 0, SPEAKER_REFILL_SAMPLES * sizeof(int16_t));
       samples_generated = SPEAKER_REFILL_SAMPLES;
     }
+  } else if (s_state.source_type == SpeakerSourceTone) {
+    uint32_t to_gen = s_state.tone_samples_remaining;
+    if (to_gen > SPEAKER_REFILL_SAMPLES) {
+      to_gen = SPEAKER_REFILL_SAMPLES;
+    }
+    if (to_gen == 0) {
+      prv_stop_internal(SpeakerFinishReasonDone);
+      return;
+    }
+    if (s_state.tone_phase_inc == 0) {
+      memset(s_state.refill_buf, 0, to_gen * sizeof(int16_t));
+    } else {
+      for (uint32_t i = 0; i < to_gen; i++) {
+        s_state.refill_buf[i] = note_synth_sample(s_state.tone_waveform,
+                                                  s_state.tone_phase_acc,
+                                                  s_state.tone_velocity);
+        s_state.tone_phase_acc += s_state.tone_phase_inc;
+      }
+    }
+    s_state.tone_samples_remaining -= to_gen;
+    samples_generated = to_gen;
   } else if (s_state.source_type == SpeakerSourceTracks) {
     memset(s_state.mix_buf, 0, sizeof(int32_t) * SPEAKER_REFILL_SAMPLES);
     uint32_t max_generated = 0;
@@ -396,6 +427,41 @@ bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
   prv_start_audio(vol);
 
   // Prime the audio buffer with initial data
+  prv_refill_bg(NULL);
+
+  return true;
+}
+
+bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms,
+                               uint8_t waveform, uint8_t velocity,
+                               SpeakerPriority pri, uint8_t vol) {
+  if (!s_state.initialized || duration_ms == 0) {
+    return false;
+  }
+
+  if (!prv_can_preempt(pri)) {
+    return false;
+  }
+
+  if (s_state.state != SpeakerStateIdle) {
+    prv_stop_internal(SpeakerFinishReasonPreempted);
+  }
+
+  s_state.tone_samples_remaining =
+      ((uint32_t)duration_ms * SPEAKER_SAMPLE_RATE) / 1000;
+  s_state.tone_phase_acc = 0;
+  // phase_inc = freq_hz * 65536 / sample_rate (16.16 fixed-point per sample)
+  s_state.tone_phase_inc = (freq_hz != 0)
+      ? ((uint32_t)freq_hz * 65536u) / SPEAKER_SAMPLE_RATE : 0;
+  s_state.tone_waveform = waveform;
+  s_state.tone_velocity = velocity;
+
+  s_state.state = SpeakerStatePlaying;
+  s_state.source_type = SpeakerSourceTone;
+  s_state.priority = pri;
+  s_state.volume = vol;
+
+  prv_start_audio(vol);
   prv_refill_bg(NULL);
 
   return true;
@@ -608,6 +674,12 @@ void speaker_service_init(void) {}
 
 bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
                                    SpeakerPriority pri, uint8_t vol) {
+  return false;
+}
+
+bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms,
+                               uint8_t waveform, uint8_t velocity,
+                               SpeakerPriority pri, uint8_t vol) {
   return false;
 }
 

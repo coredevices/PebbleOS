@@ -94,6 +94,9 @@ int32_t sys_vibe_get_vibe_strength(void);
 #include "pbl/services/speaker/track.h"
 bool sys_speaker_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
                                uint8_t priority, uint8_t volume);
+bool sys_speaker_play_tone(uint16_t freq_hz, uint16_t duration_ms,
+                           uint8_t waveform, uint8_t velocity,
+                           uint8_t priority, uint8_t volume);
 bool sys_speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks,
                              uint8_t priority, uint8_t volume);
 bool sys_speaker_stream_open(uint8_t priority, uint8_t volume, uint8_t format);
