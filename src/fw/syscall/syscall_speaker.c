@@ -35,6 +35,28 @@ DEFINE_SYSCALL(bool, sys_speaker_play_note_seq, const SpeakerNote *notes,
                                        (SpeakerPriority)priority, volume);
 }
 
+DEFINE_SYSCALL(bool, sys_speaker_play_tone, uint16_t freq_hz,
+               uint16_t duration_ms, uint8_t waveform, uint8_t velocity,
+               uint8_t priority, uint8_t volume) {
+  if (priority > SpeakerPriorityCritical) {
+    priority = SpeakerPriorityApp;
+  }
+
+  if (waveform >= SpeakerWaveformCount) {
+    syscall_failed();
+  }
+
+  if (velocity > 127) {
+    syscall_failed();
+  }
+
+  PebbleTask task = pebble_task_get_current();
+  speaker_service_set_owner_task(task);
+
+  return speaker_service_play_tone(freq_hz, duration_ms, waveform, velocity,
+                                   (SpeakerPriority)priority, volume);
+}
+
 DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks,
                uint32_t num_tracks, uint8_t priority, uint8_t volume) {
   if (PRIVILEGE_WAS_ELEVATED) {

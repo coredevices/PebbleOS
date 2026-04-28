@@ -29,6 +29,7 @@ typedef enum {
   SpeakerSourceNoteSeq,
   SpeakerSourceStream,
   SpeakerSourceTracks,
+  SpeakerSourceTone,
 } SpeakerSourceType;
 
 //! Initialize the speaker service. Called once at boot.
@@ -42,6 +43,18 @@ void speaker_service_init(void);
 //! @return true if playback started, false if preempted by higher priority
 bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
                                    SpeakerPriority pri, uint8_t vol);
+
+//! Play a single tone at an exact frequency on the speaker.
+//! @param freq_hz Tone frequency in Hz (0 = silence/rest)
+//! @param duration_ms Tone duration in milliseconds (max 10000)
+//! @param waveform Waveform to use (SpeakerWaveform value)
+//! @param velocity Per-note amplitude scale 0-127 (0 = use master volume)
+//! @param pri Priority level
+//! @param vol Volume (0-100)
+//! @return true if playback started, false if preempted by higher priority
+bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms,
+                               uint8_t waveform, uint8_t velocity,
+                               SpeakerPriority pri, uint8_t vol);
 
 //! Play N monophonic tracks in parallel, mixed together.
 //! Track arrays and any sample data are copied into kernel memory.
