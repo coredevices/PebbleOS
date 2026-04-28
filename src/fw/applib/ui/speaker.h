@@ -52,8 +52,14 @@ bool speaker_play_notes(const SpeakerNote *notes, uint32_t num_notes, uint8_t vo
 //! @return true if playback started successfully.
 bool speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks, uint8_t volume);
 
-//! Play a single tone on the speaker (convenience wrapper).
-//! @param frequency_hz Tone frequency in Hz
+//! Play a single tone on the speaker (convenience wrapper around the note
+//! sequencer).
+//!
+//! The underlying engine is MIDI-based and only knows about semitones, so
+//! @p frequency_hz is rounded to the nearest semitone before playback (e.g.
+//! 400 Hz plays as G4 / 392 Hz). For exact-frequency tones, use
+//! speaker_stream_open() and synthesize the waveform yourself.
+//! @param frequency_hz Tone frequency in Hz (quantized to the nearest semitone)
 //! @param duration_ms Tone duration in milliseconds (max 10000)
 //! @param volume Playback volume (0-100)
 //! @param waveform Waveform to use
