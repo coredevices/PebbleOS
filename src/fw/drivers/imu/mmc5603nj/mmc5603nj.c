@@ -75,8 +75,9 @@ void mag_start_sampling(void) {
 }
 
 void mag_release(void) {
-  PBL_ASSERTN(s_initialized && s_use_refcount != 0);
+  PBL_ASSERTN(s_initialized);
   mutex_lock(s_mag_mutex);
+  PBL_ASSERTN(s_use_refcount != 0);
   --s_use_refcount;
   if (s_use_refcount == 0) {
     if (!prv_mmc5603nj_set_sample_rate_hz(0)) {
