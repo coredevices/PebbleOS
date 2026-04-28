@@ -9,6 +9,7 @@
 extern UARTDevice * const DBG_UART;
 extern UARTDevice * const QEMU_UART;
 extern DisplayDevice *const DISPLAY;
+extern MicDevice * const MIC;
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
