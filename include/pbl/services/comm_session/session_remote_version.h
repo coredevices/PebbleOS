@@ -36,6 +36,8 @@ typedef struct PACKED {
       bool continue_fw_install_across_disconnect_support: 1;
       bool blob_db_version_support: 1;
       bool settings_sync_support: 1;  // Phone supports Settings BlobDB sync
+      bool hrm_activity_tracking_support: 1;  // Watch's ActivityHRMSettings struct includes
+                                              // measurement_interval and activity_tracking_enabled
     };
     uint64_t flags;
   };
