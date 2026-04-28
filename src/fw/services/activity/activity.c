@@ -885,9 +885,14 @@ cleanup:
 }
 
 static void prv_handle_activity_enabled_change(void) {
-  if (activity_tracking_on() && !prv_activity_allowed_to_be_enabled()) {
+  // Hold the activity mutex across the started/allowed check and prv_stop_tracking_early so we
+  // can't race with prv_set_enable_cb on KernelBG, which can call activity_algorithm_deinit() and
+  // free s_alg_state out from under an in-flight activity_algorithm_early_deinit().
+  mutex_lock_recursive(s_activity_state.mutex);
+  if (s_activity_state.started && !prv_activity_allowed_to_be_enabled()) {
     prv_stop_tracking_early();
   }
+  mutex_unlock_recursive(s_activity_state.mutex);
 
   system_task_add_callback(prv_set_enable_cb, NULL);
 }
