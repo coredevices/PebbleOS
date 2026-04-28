@@ -327,7 +327,8 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       bool wake_on_gesture = false;
       switch (backlight_get_touch_wake()) {
         case BacklightTouchWake_Tap:
-          wake_on_gesture = (e->gesture.event.type == GestureEvent_Tap);
+          wake_on_gesture = (e->gesture.event.type == GestureEvent_Tap ||
+                             e->gesture.event.type == GestureEvent_DoubleTap);
           break;
         case BacklightTouchWake_DoubleTap:
           wake_on_gesture = (e->gesture.event.type == GestureEvent_DoubleTap);
