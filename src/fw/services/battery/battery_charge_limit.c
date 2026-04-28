@@ -4,20 +4,16 @@
 #include "pbl/services/battery/battery_charge_limit.h"
 
 #include "drivers/battery.h"
-#include "drivers/rtc.h"
 #include "pbl/services/regular_timer.h"
 #include "shell/prefs.h"
 #include "system/logging.h"
 
 #define CHARGE_LIMIT_PCT 80
-#define CHARGE_RESUME_PCT 77
-#define MIN_TOGGLE_INTERVAL_S 60
 #define PERIODIC_CHECK_INTERVAL_S 60
 
 ////////////////////////
 // State
 T_STATIC bool s_limit_active;
-T_STATIC RtcTicks s_last_toggle_ticks;
 static RegularTimerInfo s_periodic_timer;
 
 static void prv_periodic_timer_cb(void *data) {
@@ -50,24 +46,13 @@ void battery_charge_limit_evaluate(PreciseBatteryChargeState state) {
     return;
   }
 
-  // Rate limit: don't toggle more than once per MIN_TOGGLE_INTERVAL_S
-  if (s_last_toggle_ticks != 0) {
-    RtcTicks now = rtc_get_ticks();
-    RtcTicks elapsed = (now - s_last_toggle_ticks) / RTC_TICKS_HZ;
-    if (elapsed < MIN_TOGGLE_INTERVAL_S) {
-      return;
-    }
-  }
-
   if (state.pct >= CHARGE_LIMIT_PCT && !s_limit_active) {
     battery_set_charge_enable(false);
     s_limit_active = true;
-    s_last_toggle_ticks = rtc_get_ticks();
     PBL_LOG_INFO("Charge limit: disabling charging at %d pct", state.pct);
-  } else if (state.pct <= CHARGE_RESUME_PCT && s_limit_active) {
+  } else if (state.pct < CHARGE_LIMIT_PCT && s_limit_active) {
     battery_set_charge_enable(true);
     s_limit_active = false;
-    s_last_toggle_ticks = rtc_get_ticks();
     PBL_LOG_INFO("Charge limit: resuming charging at %d pct", state.pct);
   }
 }

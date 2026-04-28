@@ -154,7 +154,6 @@ typedef enum {
   SystemMenuItemInformation,
   SystemMenuItemCertification,
   SystemMenuItemStationaryToggle,
-  SystemMenuItemChargeLimitToggle,
   SystemMenuItemDebugging,
   SystemMenuItemShutDown,
   SystemMenuItemFactoryReset,
@@ -165,7 +164,6 @@ static const char *s_item_titles[SystemMenuItem_Count] = {
   [SystemMenuItemInformation]   = i18n_noop("Information"),
   [SystemMenuItemCertification] = i18n_noop("Certification"),
   [SystemMenuItemStationaryToggle] = i18n_noop("Stand-By Mode"),
-  [SystemMenuItemChargeLimitToggle] = i18n_noop("Charge Limit (80%)"),
   [SystemMenuItemDebugging]     = i18n_noop("Debugging"),
   [SystemMenuItemShutDown]      = i18n_noop("Shut Down"),
   [SystemMenuItemFactoryReset]  = i18n_noop("Factory Reset"),
@@ -1406,10 +1404,6 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case SystemMenuItemStationaryToggle:
       subtitle = stationary_get_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
-    case SystemMenuItemChargeLimitToggle:
-      subtitle = shell_prefs_get_charge_limit_enabled() ? i18n_get("On", data)
-                                                        : i18n_get("Off", data);
-      break;
     case SystemMenuItemShutDown:
     case SystemMenuItemInformation:
     case SystemMenuItemCertification:
@@ -1439,9 +1433,6 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case SystemMenuItemStationaryToggle:
       stationary_set_enabled(!stationary_get_enabled());
-      break;
-    case SystemMenuItemChargeLimitToggle:
-      shell_prefs_set_charge_limit_enabled(!shell_prefs_get_charge_limit_enabled());
       break;
     case SystemMenuItemShutDown:
       launcher_task_add_callback(prv_shutdown_cb, 0);
