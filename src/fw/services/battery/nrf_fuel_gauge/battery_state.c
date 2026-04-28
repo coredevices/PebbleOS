@@ -581,6 +581,8 @@ void pbl_analytics_external_collect_battery(void) {
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct, battery_soc_cpct);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc_cpct);
   s_analytics_last_cpct = battery_soc_cpct;
+
+  PBL_ANALYTICS_SET_UNSIGNED(battery_tte_s, s_last_tte);
 }
 
 static void prv_set_forced_charge_state(bool is_charging) {
