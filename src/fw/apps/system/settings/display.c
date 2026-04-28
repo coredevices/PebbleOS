@@ -170,9 +170,9 @@ static void prv_timeout_menu_push(SettingsBacklightData *data) {
 /////////////////////////////
 #ifdef CONFIG_TOUCH
 static const char *s_touch_wake_labels[] = {
-    [BacklightTouchWake_Off] = i18n_noop("Off"),
     [BacklightTouchWake_DoubleTap] = i18n_noop("Double Tap"),
     [BacklightTouchWake_Tap] = i18n_noop("Tap"),
+    [BacklightTouchWake_Off] = i18n_noop("Off"),
 };
 
 static void prv_touch_wake_menu_select(OptionMenu *option_menu, int selection, void *context) {

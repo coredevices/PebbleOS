@@ -82,7 +82,7 @@ static uint32_t s_backlight_color; // default pulled from BOARD_CONFIG in shell_
 static bool s_backlight_motion_enabled = true;
 
 #define PREF_KEY_BACKLIGHT_TOUCH "lightTouch"
-static uint8_t s_backlight_touch_wake = BacklightTouchWake_Off;
+static uint8_t s_backlight_touch_wake = BacklightTouchWake_DoubleTap;
 
 #define PREF_KEY_TOUCH_ENABLED "touchEnabled"
 static bool s_touch_enabled = true;

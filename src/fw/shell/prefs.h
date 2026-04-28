@@ -90,9 +90,9 @@ void backlight_set_motion_enabled(bool enable);
 // whether touch gestures wake the backlight, and if so which gesture (single
 // tap or double tap).
 typedef enum BacklightTouchWake {
-  BacklightTouchWake_Off = 0,
-  BacklightTouchWake_DoubleTap = 1,
-  BacklightTouchWake_Tap = 2,
+  BacklightTouchWake_DoubleTap = 0,
+  BacklightTouchWake_Tap = 1,
+  BacklightTouchWake_Off = 2,
 } BacklightTouchWake;
 
 BacklightTouchWake backlight_get_touch_wake(void);
