@@ -3,12 +3,15 @@
 
 #include "kernel/util/fw_reset.h"
 
+#include "apps/core/progress_ui.h"
 #include "console/pulse_internal.h"
 #include "kernel/core_dump.h"
+#include "kernel/event_loop.h"
 #include "kernel/util/factory_reset.h"
 #include "pbl/services/comm_session/session.h"
-#include "pbl/services/system_task.h"
 #include "pbl/services/runlevel.h"
+#include "pbl/services/system_task.h"
+#include "process_management/app_manager.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -35,6 +38,17 @@ typedef enum {
   ResetCmdIntoRecovery = 0xff,
 } ResetCmd;
 
+static void prv_launch_factory_reset_app(void *unused) {
+  static const ProgressUIAppArgs s_factory_reset_args = {
+    .progress_source = PROGRESS_UI_SOURCE_FACTORY_RESET,
+  };
+  app_manager_launch_new_app(&(AppLaunchConfig) {
+    .md = progress_ui_app_get_info(),
+    .common.args = &s_factory_reset_args,
+    .restart = true,
+  });
+}
+
 void reset_protocol_msg_callback(CommSession *session, const uint8_t* data, unsigned int length) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 
@@ -57,6 +71,7 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
       break;
 
     case ResetCmdFactoryReset:
+      launcher_task_add_callback(prv_launch_factory_reset_app, NULL);
       factory_reset(false /* should_shutdown */);
       break;
 
