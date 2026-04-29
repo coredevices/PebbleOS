@@ -456,6 +456,9 @@ enum SettingsDisplayItem {
 #if CAPABILITY_HAS_APP_SCALING
   SettingsDisplayLegacyAppMode,
 #endif
+#if !CAPABILITY_HAS_THEMING
+  SettingsDisplayDarkMode,
+#endif
   NumSettingsDisplayItems
 };
 
@@ -485,6 +488,11 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
 #if CAPABILITY_HAS_APP_SCALING
     case SettingsDisplayLegacyAppMode:
       prv_legacy_app_mode_menu_push((SettingsDisplayData*)context);
+      break;
+#endif
+#if !CAPABILITY_HAS_THEMING
+    case SettingsDisplayDarkMode:
+      shell_prefs_set_dark_mode((shell_prefs_get_dark_mode() + 1) % DarkModeCount);
       break;
 #endif
     default:
@@ -530,6 +538,20 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = (shell_prefs_get_legacy_app_render_mode() >= LegacyAppRenderMode_ScalingNearest) ?
                  i18n_noop("Scaled") : i18n_noop("Centered");
       break;
+#endif
+#if !CAPABILITY_HAS_THEMING
+    case SettingsDisplayDarkMode: {
+      title = i18n_noop("Dark Mode");
+      static const char * const s_dark_mode_labels[] = {
+        [DarkModeOff] = i18n_noop("Off"),
+        [DarkModeOn] = i18n_noop("On"),
+        #if CAPABILITY_HAS_AMBIENT_LIGHT_SENSOR
+        [DarkModeAuto] = i18n_noop("Auto"),
+        #endif
+      };
+      subtitle = s_dark_mode_labels[shell_prefs_get_dark_mode()];
+      break;
+    }
 #endif
     default:
       WTF;

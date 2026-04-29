@@ -16,6 +16,7 @@
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/timeline/timeline.h"
 #include "resource/resource_ids.auto.h"
+#include "shell/system_theme.h"
 #include "system/logging.h"
 
 // Health app versions
@@ -84,8 +85,8 @@ static void prv_show_insights_onboarding_dialog(void) {
       "Insights Onboarding",
       RESOURCE_ID_HEALTH_ICON_MOON,
       text,
-      GColorBlack,
-      GColorWhite,
+      system_theme_get_fg_color(),
+      system_theme_get_bg_color(),
       NULL,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK,
       expandable_dialog_close_cb);

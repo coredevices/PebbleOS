@@ -5,12 +5,18 @@
 
 #include "applib/fonts/fonts.h"
 #include "apps/system/settings/notifications_private.h"
+#include "process_management/pebble_process_md.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/analytics/analytics.h"
 #include "shell/prefs.h"
+#include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
 #include "util/size.h"
+
+#if CAPABILITIES_HAS_AMBIENT_LIGHT
+#include "drivers/ambient_light.h"
+#endif
 
 #include <string.h>
 
@@ -168,6 +174,48 @@ GFont system_theme_get_font_for_size(PreferredContentSize size, TextStyleFont fo
 GFont system_theme_get_font_for_default_size(TextStyleFont font) {
   return fonts_get_system_font(system_theme_get_font_key_for_size(PreferredContentSizeDefault,
                                                                   font));
+}
+
+//! Returns true if the current (system) app context should render in dark mode.
+static bool prv_is_system_app(void) {
+  const PebbleTask task = pebble_task_get_current();
+  if (task != PebbleTask_App && task != PebbleTask_Worker) {
+    // Kernel / other tasks are always treated as system
+    return true;
+  }
+  const ProcessAppSDKType sdk_type =
+      process_metadata_get_app_sdk_type(sys_process_manager_get_current_process_md());
+  return sdk_type == ProcessAppSDKType_System;
+}
+
+bool system_theme_is_dark_mode(void) {
+  // Dark mode is only supported on color platforms, so treat all non-color platforms as light mode
+  if (PBL_IF_COLOR_ELSE(false, true)) {
+    return false;
+  }
+  if (!prv_is_system_app()) {
+    return false;
+  }
+  switch (shell_prefs_get_dark_mode()) {
+    case DarkModeOff:
+      return false;
+    case DarkModeOn:
+      return true;
+  #if CAPABILITY_HAS_AMBIENT_LIGHT_SENSOR
+    case DarkModeAuto:
+      return !ambient_light_is_light();
+  #endif
+    default:
+      return false;
+  }
+}
+
+GColor system_theme_get_bg_color(void) {
+  return system_theme_is_dark_mode() ? GColorBlack : GColorWhite;
+}
+
+GColor system_theme_get_fg_color(void) {
+  return system_theme_is_dark_mode() ? GColorWhite : GColorBlack;
 }
 
 static const PreferredContentSize s_platform_default_content_sizes[] = {

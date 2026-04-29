@@ -47,7 +47,7 @@ static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
   // Fill all the way to the bottom of the screen
   frame.size.h = DISP_ROWS - frame.origin.y;
 #endif
-  const GColor background_color = GColorWhite;
+  const GColor background_color = system_theme_get_bg_color();
   graphics_context_set_fill_color(ctx, background_color);
   graphics_fill_rect(ctx, &frame);
 
@@ -59,7 +59,7 @@ static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
 
   // Draw the top border and concurrent event indicators
   frame = *frame_orig;
-  const GColor border_color = GColorBlack;
+  const GColor border_color = system_theme_is_dark_mode() ? GColorDarkGray : GColorBlack;
   for (unsigned int i = 0; i <= num_concurrent; i++) {
     const bool has_content = (i < num_concurrent);
     for (unsigned int type = 0; type < (has_content ? 2 : 1); type++) {
@@ -421,7 +421,7 @@ static void prv_push_timeline_peek(void *unused) {
 void timeline_peek_init(void) {
   TimelinePeek *peek = &s_peek;
   *peek = (TimelinePeek) {
-#if CAPABILITY_HAS_TIMELINE_PEEK && !SHELL_SDK && !TARGET_QEMU
+#if CAPABILITY_HAS_TIMELINE_PEEK && !SHELL_SDK
     .enabled = timeline_peek_prefs_get_enabled(),
 #endif
   };
@@ -458,7 +458,7 @@ static bool prv_can_animate(void) {
 
 void timeline_peek_set_visible(bool visible, bool animated) {
   TimelinePeek *peek = &s_peek;
-#if !SHELL_SDK && !TARGET_QEMU
+#if !SHELL_SDK
   if (!peek->exists) {
     visible = false;
   }
