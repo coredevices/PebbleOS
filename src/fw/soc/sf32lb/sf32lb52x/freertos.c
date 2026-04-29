@@ -43,6 +43,7 @@ static RtcTicks s_analytics_wfi_ticks;
 static RtcTicks s_analytics_deepwfi_ticks;
 static RtcTicks s_analytics_deepsleep_ticks;
 static RtcTicks s_last_ticks;
+static uint32_t s_analytics_ipc_not_idle_count;
 static bool s_force_deepwfi;
 
 //! Early wake-up ticks (to avoid over-sleeping due to wake-up latency)
@@ -183,7 +184,12 @@ static uint32_t prv_calc_elapsed_ticks(uint32_t gtimer_cyc) {
 }
 
 void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime) {
-  if (!sleep_mode_is_allowed() || !ipc_queue_check_idle()) {
+  if (!sleep_mode_is_allowed()) {
+    return;
+  }
+
+  if (!ipc_queue_check_idle()) {
+    s_analytics_ipc_not_idle_count++;
     return;
   }
 
@@ -394,9 +400,11 @@ void pbl_analytics_external_collect_cpu_stats(void) {
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep0_pct, wfi_pct);
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep1_pct, deepwfi_pct);
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep2_pct, deepsleep_pct);
+  PBL_ANALYTICS_SET_UNSIGNED(sifli_ipc_not_idle_count, s_analytics_ipc_not_idle_count);
 
   s_last_ticks = now_ticks;
   s_analytics_wfi_ticks = 0;
   s_analytics_deepwfi_ticks = 0;
   s_analytics_deepsleep_ticks = 0;
+  s_analytics_ipc_not_idle_count = 0;
 }
