@@ -83,9 +83,10 @@ void test_vibe_score_info__cycle_next_alarms(void) {
     VibeScoreId_Jackhammer,
     VibeScoreId_Reveille,
     VibeScoreId_Mario,
+    VibeScoreId_Gentle,
   };
 
-  prv_test_cycle_next(VibeClient_Alarms, alarm_scores, 7, VibeScoreId_NudgeNudge, 3);
+  prv_test_cycle_next(VibeClient_Alarms, alarm_scores, 8, VibeScoreId_NudgeNudge, 3);
 }
 
 void test_vibe_score_info__is_valid_true_for_valid_score(void) {
