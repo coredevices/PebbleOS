@@ -43,6 +43,10 @@ static SemaphoreHandle_t s_sem;
 static TimerID s_watchdog_timer = TIMER_INVALID_ID;
 static uint32_t s_watchdog_fires;
 
+#ifndef RELEASE
+static volatile bool s_test_drop_next_complete;
+#endif
+
 #if DISPLAY_ORIENTATION_ROTATED_180
 static bool s_rotated_180 = true;
 #else
@@ -220,6 +224,16 @@ void display_jdi_irq_handler(DisplayJDIDevice *disp) {
 
 void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
   portBASE_TYPE woken = pdFALSE;
+
+#ifndef RELEASE
+  if (s_test_drop_next_complete && s_updating) {
+    s_test_drop_next_complete = false;
+    // Simulate a lost completion event: DMA finished in hardware but the
+    // firmware never dispatches the terminate path. The watchdog should fire.
+    portEND_SWITCHING_ISR(woken);
+    return;
+  }
+#endif
 
   if (s_updating) {
     PebbleEvent e = {
@@ -405,3 +419,9 @@ uint32_t display_baud_rate_change(uint32_t new_frequency_hz) { return 0U; }
 void display_set_offset(GPoint offset) {}
 
 GPoint display_get_offset(void) { return GPointZero; }
+
+#ifndef RELEASE
+void display_jdi_test_drop_next_complete(void) {
+  s_test_drop_next_complete = true;
+}
+#endif
