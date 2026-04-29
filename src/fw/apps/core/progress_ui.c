@@ -114,6 +114,9 @@ static void prv_update_progress(ProgressUIData *data) {
     case PROGRESS_UI_SOURCE_LOGS: {
       break;
     }
+    case PROGRESS_UI_SOURCE_FACTORY_RESET: {
+      return;
+    }
     case PROGRESS_UI_SOURCE_FW_UPDATE: {
       if (firmware_update_current_status() == FirmwareUpdateFailed) {
         prv_handle_finished(data, false /* success */);
@@ -165,9 +168,24 @@ static void prv_window_unload_handler(Window* window) {
   ProgressUIData *data = window_get_user_data(window);
   if (data) {
     i18n_free_all(data);
-    app_timer_cancel(data->timer);
+    if (data->timer) {
+      app_timer_cancel(data->timer);
+    }
     app_free(data);
   }
+}
+
+static void prv_push_factory_reset_dialog(ProgressUIData *data) {
+  simple_dialog_init(&data->finished_dialog, "Factory Reset");
+  Dialog *dialog = simple_dialog_get_dialog(&data->finished_dialog);
+  dialog_set_text(dialog, i18n_get("Resetting...", data));
+  dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_LARGE);
+  dialog_set_timeout(dialog, DIALOG_TIMEOUT_INFINITE);
+  dialog_set_destroy_on_pop(dialog, false);
+  simple_dialog_set_buttons_enabled(&data->finished_dialog, false);
+  simple_dialog_set_icon_animated(&data->finished_dialog, false);
+
+  simple_dialog_push(&data->finished_dialog, app_state_get_window_stack());
 }
 
 static void prv_window_load_handler(Window* window) {
@@ -175,6 +193,11 @@ static void prv_window_load_handler(Window* window) {
 
   const ProgressUIAppArgs* app_args = app_manager_get_task_context()->args;
   data->progress_source = app_args->progress_source;
+
+  if (data->progress_source == PROGRESS_UI_SOURCE_FACTORY_RESET) {
+    prv_push_factory_reset_dialog(data);
+    return;
+  }
 
   simple_dialog_init(&data->finished_dialog, "Update Completed Dialog");
   dialog_set_callbacks(&data->finished_dialog.dialog, &(DialogCallbacks) {
