@@ -50,3 +50,12 @@ typedef const struct DisplayJDIDevice {
 } DisplayJDIDevice;
 
 void display_jdi_irq_handler(DisplayJDIDevice *disp);
+
+#ifndef RELEASE
+//! Test hook: arm a one-shot drop of the next LCDC transfer-complete callback.
+//! When armed, the next time the DMA finishes the firmware will *not* dispatch
+//! the completion event, simulating the silent-DMA failure mode (e.g. ICB
+//! overflow). The display update watchdog should fire ~200ms later, log a
+//! timeout, and recover. Intended for verifying the watchdog on hardware.
+void display_jdi_test_drop_next_complete(void);
+#endif

@@ -293,6 +293,10 @@ extern void command_console_disable_rx(const char *seconds_str);
 extern void command_force_deepwfi(const char *arg);
 #endif
 
+#if !defined(RELEASE) && (PLATFORM_OBELIX || PLATFORM_GETAFIX)
+extern void command_display_drop_complete(void);
+#endif
+
 #define KEEP_NON_ESSENTIAL_COMMANDS 1
 static const Command s_prompt_commands[] = {
   // PULSE entry point, needed for anything PULSE-related to work
@@ -643,6 +647,9 @@ static const Command s_prompt_commands[] = {
   { "console disable rx", command_console_disable_rx, 1 },
 #if MICRO_FAMILY_SF32LB52
   { "force deepwfi", command_force_deepwfi, 1 },
+#endif
+#if !defined(RELEASE) && (PLATFORM_OBELIX || PLATFORM_GETAFIX)
+  { "display drop_complete", command_display_drop_complete, 0 },
 #endif
 
 #if MEMFAULT

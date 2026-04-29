@@ -1129,6 +1129,18 @@ void command_audit_delay_us(void) {
   __enable_irq();
 }
 
+#if !defined(RELEASE) && (PLATFORM_OBELIX || PLATFORM_GETAFIX)
+#include "drivers/display/sf32lb/display_jdi.h"
+
+// Arms the JDI display driver to drop the next LCDC transfer-complete callback,
+// simulating the silent-DMA failure mode (e.g. ICB overflow). The display
+// update watchdog should fire ~200ms later and recover.
+void command_display_drop_complete(void) {
+  display_jdi_test_drop_next_complete();
+  prompt_send_response("display: armed drop of next LCDC complete; watch for watchdog log");
+}
+#endif
+
 #if !MICRO_FAMILY_SF32LB52
 // Simply parks the chip permanently in stop mode in whatever state it's currently in. This can be
 // pretty handy when trying to profile power of the chip under certains states
