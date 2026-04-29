@@ -300,13 +300,21 @@ static void prv_run_component_display(AppData *data) {
       sniprintf(comp_detail, sizeof(comp_detail), "Level: %" PRIu32, level);
       break;
     }
-    case ComponentVibe:
+    case ComponentVibe: {
       // Only pulse once at the start of the vibe phase
       if (data->component_elapsed_sec <= 1) {
-        vibes_short_pulse();
+        static const uint32_t vibe_durations[] = { 250 };
+        static const uint32_t vibe_amplitudes[] = { 50 };
+        VibePatternWithAmplitudes pat = {
+          .durations = vibe_durations,
+          .amplitudes = vibe_amplitudes,
+          .num_segments = 1,
+        };
+        vibes_enqueue_custom_pattern_with_amplitudes(pat);
       }
       comp_name = "Vibe";
       break;
+    }
     default:
       break;
   }
