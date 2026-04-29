@@ -282,17 +282,13 @@ def _generate_memory_layout(bld):
         app_ram_size_3x = APP_RAM_SIZES['basalt']
         app_ram_size_4x = APP_RAM_SIZES['emery']
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
-        # FIXME(SF32LB52): due to MPU find_subregions_for_region assuming
-        # ARMv7 subregion limitations, we need to reserve 32K!
-        total_ram = (0x20000000, (512 - 32) * 1024)
+        total_ram = (0x20000000, (512 - 1) * 1024)
     elif bld.is_getafix():
         app_ram_size_2x = APP_UNSUPPORTED
         app_ram_size_3x = APP_RAM_SIZES['chalk']
         app_ram_size_4x = APP_RAM_SIZES['gabbro']
         # We have 512K of SRAM, last 1K reserved for LCPU IPC
-        # FIXME(SF32LB52): due to MPU find_subregions_for_region assuming
-        # ARMv7 subregion limitations, we need to reserve 32K!
-        total_ram = (0x20000000, (512 - 32) * 1024)
+        total_ram = (0x20000000, (512 - 1) * 1024)
     else:
         bld.fatal("No set of supported SDK platforms defined for this board")
 
@@ -338,18 +334,26 @@ def _generate_memory_layout(bld):
         FLASH_SIZE=flash_size,
         BOOTLOADER_SYMBOLS=bootloader_symbol_definitions)
 
-    app_mpu_region = tools.mpu_calc.find_subregions_for_region(app_ram[0], app_ram[1])
-    worker_mpu_region = tools.mpu_calc.find_subregions_for_region(worker_ram[0], worker_ram[1])
+    if bld.env.MICRO_FAMILY == 'SF32LB52':
+        app_mpu_region = tools.mpu_calc.find_region_for_armv8(app_ram[0], app_ram[1])
+        worker_mpu_region = tools.mpu_calc.find_region_for_armv8(worker_ram[0], worker_ram[1])
+        app_disabled_sub = "0"
+        worker_disabled_sub = "0"
+    else:
+        app_mpu_region = tools.mpu_calc.find_subregions_for_region(app_ram[0], app_ram[1])
+        worker_mpu_region = tools.mpu_calc.find_subregions_for_region(worker_ram[0], worker_ram[1])
+        app_disabled_sub = "0b{:08b}".format(app_mpu_region.disabled_subregion)
+        worker_disabled_sub = " 0b{:08b}".format(worker_mpu_region.disabled_subregion)
 
     bld(features='subst',
         source=bld.path.find_node('kernel/mpu_regions.template.h'),
         target=bld.path.get_bld().make_node('kernel/mpu_regions.auto.h'),
         APP_BASE_ADDRESS="0x{:x}".format(app_mpu_region.address),
         APP_SIZE="0x{:x}".format(app_mpu_region.size),
-        APP_DISABLED_SUBREGIONS="0b{:08b}".format(app_mpu_region.disabled_subregion),
+        APP_DISABLED_SUBREGIONS=app_disabled_sub,
         WORKER_BASE_ADDRESS="0x{:x}".format(worker_mpu_region.address),
         WORKER_SIZE="0x{:x}".format(worker_mpu_region.size),
-        WORKER_DISABLED_SUBREGIONS=" 0b{:08b}".format(worker_mpu_region.disabled_subregion))
+        WORKER_DISABLED_SUBREGIONS=worker_disabled_sub)
 
     bld(features='subst',
         source=bld.path.find_node('process_management/sdk_memory_limits.template.h'),

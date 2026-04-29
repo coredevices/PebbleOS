@@ -13,6 +13,7 @@
 #include "util/size.h"
 
 #include "FreeRTOS.h"
+#include "portmacro.h"
 #include "task.h"
 #include "queue.h"
 
@@ -290,14 +291,22 @@ void pebble_task_create(PebbleTask pebble_task, TaskParameters_t *task_params,
   }
 #endif
 
+  app_region.region_num = portFIRST_CONFIGURABLE_REGION;
+  worker_region.region_num = portFIRST_CONFIGURABLE_REGION + 1;
+
+  MpuRegion stack_guard_copy;
+  const MpuRegion *stack_guard_ptr = NULL;
+  if (stack_guard_region != NULL) {
+    stack_guard_copy = *stack_guard_region;
+    stack_guard_copy.region_num = portFIRST_CONFIGURABLE_REGION + 2;
+    stack_guard_ptr = &stack_guard_copy;
+  }
+
   const MpuRegion *region_ptrs[portNUM_CONFIGURABLE_REGIONS] = {
-    // FIXME(SF32LB52): Not supported on ARMv8 MPU yet
-#ifndef MICRO_FAMILY_SF32LB52
     &app_region,
     &worker_region,
-    stack_guard_region,
+    stack_guard_ptr,
     NULL
-#endif
   };
   mpu_set_task_configurable_regions(task_params->xRegions, region_ptrs);
 
@@ -325,6 +334,8 @@ void pebble_task_configure_idle_task(void) {
                               false /* allow_user_access */);
   mpu_init_region_from_region(&worker_region, memory_layout_get_worker_region(),
                               false /* allow_user_access */);
+  app_region.region_num = portFIRST_CONFIGURABLE_REGION;
+  worker_region.region_num = portFIRST_CONFIGURABLE_REGION + 1;
   const MpuRegion *region_ptrs[portNUM_CONFIGURABLE_REGIONS] = {
     &app_region,
     &worker_region,
