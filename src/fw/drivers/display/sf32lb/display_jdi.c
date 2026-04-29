@@ -12,6 +12,7 @@
 #include "kernel/util/delay.h"
 #include "kernel/util/stop.h"
 #include "os/mutex.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
@@ -26,6 +27,11 @@
 #define POWER_SEQ_DELAY_TIME_US  11000
 #define POWER_RESET_CYCLE_DELAY_TIME_US 500000
 
+// Watchdog timeout for a single LCDC DMA. A normal full-frame transfer takes
+// well under 20ms; 200ms gives plenty of slack for system load while still
+// recovering well before the user notices a freeze.
+#define DISPLAY_UPDATE_TIMEOUT_MS 200
+
 // Pointer to the compositor's framebuffer - we convert in-place to save 44KB RAM
 static uint8_t *s_framebuffer;
 static uint16_t s_update_y0;
@@ -34,6 +40,8 @@ static bool s_initialized;
 static bool s_updating;
 static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
+static TimerID s_watchdog_timer = TIMER_INVALID_ID;
+static uint32_t s_watchdog_fires;
 
 #if DISPLAY_ORIENTATION_ROTATED_180
 static bool s_rotated_180 = true;
@@ -116,7 +124,21 @@ static void prv_display_update_start(void) {
   HAL_LCDC_SendLayerData_IT(&state->hlcdc);
 }
 
-static void prv_display_update_terminate(void *data) {
+// Atomically claim the right to finalize an in-flight update. Returns true to
+// the first of the IRQ-driven completion path and the watchdog timeout path
+// that gets here; the loser sees s_updating already cleared and bails. This is
+// what prevents a double-call of s_uccb() / stop_mode_enable() when an IRQ
+// completion races a watchdog fire.
+static bool prv_claim_finalize(void) {
+  bool claimed;
+  portENTER_CRITICAL();
+  claimed = s_updating;
+  s_updating = false;
+  portEXIT_CRITICAL();
+  return claimed;
+}
+
+static void prv_finish_update(void) {
   // Convert the updated region back from 332 to 222 format
   for (uint16_t y = s_update_y0; y <= s_update_y1; y++) {
     uint8_t *row = &s_framebuffer[y * PBL_DISPLAY_WIDTH];
@@ -142,9 +164,53 @@ static void prv_display_update_terminate(void *data) {
     }
   }
 
-  s_updating = false;
   s_uccb();
   stop_mode_enable(InhibitorDisplay);
+}
+
+// PEBBLE_CALLBACK_EVENT handler — runs on KernelMain, where the compositor's
+// update-complete handler expects to be called.
+static void prv_finalize_on_kernel_main(void *data) {
+  prv_finish_update();
+}
+
+static void prv_display_update_terminate(void *data) {
+  if (!prv_claim_finalize()) {
+    // Watchdog already finalized this update.
+    return;
+  }
+  new_timer_stop(s_watchdog_timer);
+  prv_finish_update();
+}
+
+// Runs on PebbleTask_NewTimers if the LCDC DMA fails to deliver a
+// transfer-complete callback within DISPLAY_UPDATE_TIMEOUT_MS. The known
+// trigger is the SiFli HAL's ICB-overflow path (bf0_hal_lcdc.c
+// HAL_LCDC_IRQHandler) which sets HAL_LCDC_ERROR_OVERFLOW without invoking
+// XferCpltCallback — without this watchdog, s_updating stays true forever and
+// the compositor silently stops rendering (compositor.c prv_should_render).
+static void prv_display_update_watchdog(void *data) {
+  if (!prv_claim_finalize()) {
+    // IRQ-driven completion got here first; nothing to do.
+    return;
+  }
+
+  DisplayJDIState *state = DISPLAY->state;
+  s_watchdog_fires++;
+  PBL_LOG_ERR(
+      "display_jdi: update timed out after %ums (ErrorCode=0x%lx, y=%u..%u, fires=%lu)",
+      (unsigned)DISPLAY_UPDATE_TIMEOUT_MS, (unsigned long)state->hlcdc.ErrorCode,
+      (unsigned)s_update_y0, (unsigned)s_update_y1, (unsigned long)s_watchdog_fires);
+
+  // Clear any latched HAL error so the next update isn't immediately rejected.
+  state->hlcdc.ErrorCode = 0;
+
+  // Compositor state is single-threaded on KernelMain; defer the rest there.
+  PebbleEvent e = {
+      .type = PEBBLE_CALLBACK_EVENT,
+      .callback = {.callback = prv_finalize_on_kernel_main},
+  };
+  event_put(&e);
 }
 
 void display_jdi_irq_handler(DisplayJDIDevice *disp) {
@@ -287,10 +353,20 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   // Adjust framebuffer pointer to start of buffer (row 0)
   s_framebuffer = s_framebuffer - (s_update_y0 * PBL_DISPLAY_WIDTH);
 
+  // Lazy-create the watchdog timer. display_init() can run via boot_splash_start
+  // (main.c) before new_timer_service_init(), so creating the timer in
+  // display_init() would silently fail. The compositor doesn't reach this path
+  // until well after new_timer_service_init() has run.
+  if (s_watchdog_timer == TIMER_INVALID_ID) {
+    s_watchdog_timer = new_timer_create();
+  }
+
   s_uccb = uccb;
   s_updating = true;
 
   stop_mode_disable(InhibitorDisplay);
+  new_timer_start(s_watchdog_timer, DISPLAY_UPDATE_TIMEOUT_MS, prv_display_update_watchdog, NULL,
+                  0);
   prv_display_update_start();
 }
 
