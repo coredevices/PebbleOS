@@ -356,6 +356,11 @@
       "file": "normal/snowy/vibes/alarm_lpm.json"
     },
     {
+      "type": "vibe",
+      "name": "VIBE_SCORE_GENTLE",
+      "file": "normal/snowy/vibes/gentle.json"
+    },
+    {
       "type": "png",
       "name": "SMART_ALARM_ICON_BLACK",
       "file": "normal/snowy/images/sa_list_icon_black.png"

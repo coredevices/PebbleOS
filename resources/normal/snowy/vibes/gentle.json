@@ -1,0 +1,76 @@
+{
+  "comments": "Gentle",
+  "notes": [
+    {
+      "id": "gentle_pulse",
+      "vibe_duration_ms": 100,
+      "brake_duration_ms": 20,
+      "strength": 33
+    },
+    {
+      "id": "medium_pulse",
+      "vibe_duration_ms": 200,
+      "brake_duration_ms": 20,
+      "strength": 66
+    },
+    {
+      "id": "strong_pulse",
+      "vibe_duration_ms": 300,
+      "brake_duration_ms": 20,
+      "strength": 100
+    },
+    {
+      "id": "long_delay",
+      "vibe_duration_ms": 4000,
+      "brake_duration_ms": 0,
+      "strength": 0
+    },
+    {
+      "id": "medium_delay",
+      "vibe_duration_ms": 2000,
+      "brake_duration_ms": 0,
+      "strength": 0
+    },
+    {
+      "id": "short_delay",
+      "vibe_duration_ms": 1000,
+      "brake_duration_ms": 0,
+      "strength": 0
+    }
+  ],
+  "pattern": ["gentle_pulse", "long_delay", "gentle_pulse", "long_delay",
+              "gentle_pulse", "long_delay", "gentle_pulse", "long_delay",
+              "gentle_pulse", "long_delay", "gentle_pulse", "long_delay",
+              "long_delay", "medium_delay",
+
+              "gentle_pulse", "gentle_pulse", "long_delay", "gentle_pulse", "gentle_pulse", "long_delay",
+              "gentle_pulse", "gentle_pulse", "long_delay", "gentle_pulse", "gentle_pulse", "long_delay",
+              "gentle_pulse", "gentle_pulse", "long_delay", "gentle_pulse", "gentle_pulse", "long_delay",
+              "long_delay",
+
+              "gentle_pulse", "medium_pulse", "short_delay", "gentle_pulse", "medium_pulse", "long_delay",
+              "gentle_pulse", "medium_pulse", "short_delay", "gentle_pulse", "medium_pulse", "long_delay",
+              "gentle_pulse", "medium_pulse", "short_delay", "gentle_pulse", "medium_pulse", "long_delay",
+              "gentle_pulse", "medium_pulse", "short_delay", "gentle_pulse", "medium_pulse", "long_delay",
+              "long_delay",
+
+              "gentle_pulse", "medium_pulse", "short_delay", "gentle_pulse", "medium_pulse", "long_delay",
+              "gentle_pulse", "medium_pulse", "short_delay", "gentle_pulse", "medium_pulse", "long_delay",
+              "gentle_pulse", "medium_pulse", "short_delay", "gentle_pulse", "medium_pulse", "long_delay",
+              "gentle_pulse", "medium_pulse", "short_delay", "gentle_pulse", "medium_pulse", "long_delay",
+              "long_delay",
+
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "medium_delay",
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "medium_delay",
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "medium_delay",
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "medium_delay",
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "medium_delay",
+              "long_delay",
+
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "short_delay",
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "short_delay",
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "short_delay",
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "short_delay",
+              "medium_pulse", "strong_pulse", "short_delay", "medium_pulse", "strong_pulse", "short_delay"],
+  "repeat_delay_ms": 4000
+}

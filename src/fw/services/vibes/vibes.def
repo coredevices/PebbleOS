@@ -14,3 +14,4 @@ VIBE_DEF(11, Reveille, "Reveille", AlertType_Alarms, RESOURCE_ID_VIBE_SCORE_REVE
 VIBE_DEF(12, Mario, "Mario", AlertType_All, RESOURCE_ID_VIBE_SCORE_MARIO)
 #endif
 VIBE_DEF(13, AlarmsLPM, "ALARMS LPM", AlertType_AlarmsLPM, RESOURCE_ID_VIBE_SCORE_ALARM_LPM)
+VIBE_DEF(14, Gentle, i18n_noop("Gentle"), AlertType_Alarms, RESOURCE_ID_VIBE_SCORE_GENTLE)
