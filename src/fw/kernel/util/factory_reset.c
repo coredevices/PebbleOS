@@ -73,10 +73,11 @@ void factory_reset(bool should_shutdown) {
 
   prv_factory_reset_non_pfs_data();
 
-  // TODO: wipe the registry on tintin?
-  filesystem_regions_erase_all();
-
 #if !defined(RECOVERY_FW)
+  // pfs_format() holds the PFS mutex across the erase, blocking concurrent
+  // writes from the App task that would otherwise survive into a freshly-erased region.
+  pfs_format(false /* write_erase_headers */);
+
   // "First use" is part of the PRF image for Snowy
   boot_bit_set(BOOT_BIT_FORCE_PRF);
 #if CAPABILITY_HAS_PBLBOOT
@@ -84,6 +85,8 @@ void factory_reset(bool should_shutdown) {
   firmware_storage_invalidate_firmware_slot(0);
   firmware_storage_invalidate_firmware_slot(1);
 #endif
+#else
+  filesystem_regions_erase_all();
 #endif
 
   prv_factory_reset_post(should_shutdown);
