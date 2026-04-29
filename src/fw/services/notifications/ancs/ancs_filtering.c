@@ -10,6 +10,155 @@
 #include "system/logging.h"
 #include "util/pstring.h"
 
+#include <string.h>
+
+typedef enum {
+  FilteringMatchTypeText = 0,
+  FilteringMatchTypeRegex = 1,
+} FilteringMatchType;
+
+typedef enum {
+  FilteringMatchFieldAny = 0,
+  FilteringMatchFieldTitle = 1,
+  FilteringMatchFieldBody = 2,
+} FilteringMatchField;
+
+typedef struct PACKED {
+  uint8_t count;
+  uint8_t data[];
+} FilteringRulesSerialized;
+
+typedef struct PACKED {
+  uint8_t match_type;
+  uint8_t match_field;
+  uint8_t case_sensitive;
+  char pattern[];
+} FilteringRuleSerialized;
+
+static char prv_ascii_to_lower(char c) {
+  if ((c >= 'A') && (c <= 'Z')) {
+    return (char)(c + ('a' - 'A'));
+  }
+  return c;
+}
+
+static bool prv_match_contains(const char *haystack, size_t haystack_len, const char *needle,
+                               size_t needle_len, bool case_sensitive) {
+  if (needle_len == 0) {
+    return true;
+  }
+  if (haystack_len < needle_len) {
+    return false;
+  }
+
+  for (size_t i = 0; i <= (haystack_len - needle_len); i++) {
+    bool matched = true;
+    for (size_t j = 0; j < needle_len; j++) {
+      char h = haystack[i + j];
+      char n = needle[j];
+      if (!case_sensitive) {
+        h = prv_ascii_to_lower(h);
+        n = prv_ascii_to_lower(n);
+      }
+      if (h != n) {
+        matched = false;
+        break;
+      }
+    }
+    if (matched) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool prv_match_rule(uint8_t match_type, uint8_t match_field, bool case_sensitive,
+                           const char *pattern, size_t pattern_len, const char *title,
+                           size_t title_len, const char *body, size_t body_len) {
+  if (match_type == FilteringMatchTypeRegex) {
+    // Regex support is not available in firmware at the moment.
+    return false;
+  }
+
+  const bool match_title =
+      ((match_field == FilteringMatchFieldTitle) || (match_field == FilteringMatchFieldAny));
+  const bool match_body =
+      ((match_field == FilteringMatchFieldBody) || (match_field == FilteringMatchFieldAny));
+
+  return ((match_title && prv_match_contains(title, title_len, pattern, pattern_len, case_sensitive))
+      || (match_body && prv_match_contains(body, body_len, pattern, pattern_len, case_sensitive)));
+}
+
+bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
+                                  const ANCSAttribute *title_attr,
+                                  const ANCSAttribute *body_attr) {
+  if (!app_notif_prefs) {
+    return false;
+  }
+
+  StringList *rules = attribute_get_string_list(&app_notif_prefs->attr_list,
+                                                AttributeIdNotificationFilteringRules);
+  if (!rules || (rules->serialized_byte_length == 0)) {
+    return false;
+  }
+
+  const char *title = "";
+  size_t title_len = 0;
+  char *allocated_title = NULL;
+  if (title_attr && (title_attr->length > 0)) {
+    allocated_title = kernel_zalloc_check(title_attr->length + 1);
+    pstring_pstring16_to_string(&title_attr->pstr, allocated_title);
+    title = allocated_title;
+    title_len = strlen(title);
+  }
+
+  const char *body = "";
+  size_t body_len = 0;
+  char *allocated_body = NULL;
+  if (body_attr && (body_attr->length > 0)) {
+    allocated_body = kernel_zalloc_check(body_attr->length + 1);
+    pstring_pstring16_to_string(&body_attr->pstr, allocated_body);
+    body = allocated_body;
+    body_len = strlen(body);
+  }
+
+  const FilteringRulesSerialized *serialized_rules = (const FilteringRulesSerialized *)rules->data;
+  size_t remaining = rules->serialized_byte_length - 1;
+  const uint8_t *cursor = serialized_rules->data;
+
+  bool matched = false;
+  for (uint8_t i = 0; i < serialized_rules->count; i++) {
+    if (remaining < sizeof(FilteringRuleSerialized)) {
+      break;
+    }
+
+    const FilteringRuleSerialized *rule = (const FilteringRuleSerialized *)cursor;
+    cursor += sizeof(FilteringRuleSerialized);
+    remaining -= sizeof(FilteringRuleSerialized);
+
+    const char *pattern = (const char *)cursor;
+    const char *terminator = memchr(cursor, '\0', remaining);
+    if (!terminator) {
+      break;
+    }
+
+    const size_t pattern_len = (size_t)(terminator - pattern);
+    matched = prv_match_rule(rule->match_type, rule->match_field, (rule->case_sensitive != 0),
+                             pattern, pattern_len, title, title_len, body, body_len);
+
+    cursor = (const uint8_t *)(terminator + 1);
+    remaining -= (pattern_len + 1);
+
+    if (matched) {
+      break;
+    }
+  }
+
+  kernel_free(allocated_body);
+  kernel_free(allocated_title);
+  return matched;
+}
+
 void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
                                const ANCSAttribute *app_id,
                                const ANCSAttribute *display_name,
@@ -83,6 +232,21 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
     list_dirty = true;
   }
 
+  StringList *rules_attr = NULL;
+  if (app_notif_prefs) {
+    rules_attr = attribute_get_string_list(&app_notif_prefs->attr_list,
+                                           AttributeIdNotificationFilteringRules);
+  }
+  StringList *default_rules = NULL;
+  if (!rules_attr) {
+    default_rules = kernel_zalloc_check(sizeof(StringList) + sizeof(uint8_t));
+    default_rules->serialized_byte_length = sizeof(uint8_t);
+    default_rules->data[0] = 0; // zero filtering rules by default
+    attribute_list_add_string_list(&new_attr_list, AttributeIdNotificationFilteringRules,
+                                   default_rules);
+    list_dirty = true;
+  }
+
   // Add / update the "last seen" timestamp
   Attribute *last_updated = NULL;
   if (app_notif_prefs) {
@@ -119,6 +283,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
 
 
   kernel_free(app_name_buff);
+  kernel_free(default_rules);
   attribute_list_destroy_list(&new_attr_list);
 }
 
