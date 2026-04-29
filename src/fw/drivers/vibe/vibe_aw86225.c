@@ -80,15 +80,17 @@ static bool prv_write_register(uint8_t register_address, uint8_t datum) {
 	return rv;
 }
 
-void prv_modify_reg(uint8_t reg_addr, uint32_t mask, uint8_t reg_data)
+bool prv_modify_reg(uint8_t reg_addr, uint32_t mask, uint8_t reg_data)
 {
 	uint8_t reg_val = 0;
 	uint8_t reg_mask = (uint8_t)mask;
 
-	prv_read_register(reg_addr, &reg_val);
+	if (!prv_read_register(reg_addr, &reg_val)) {
+		return false;
+	}
 	reg_val &= reg_mask;
 	reg_val |= (reg_data & (~reg_mask));
-	prv_write_register(reg_addr, reg_val);
+	return prv_write_register(reg_addr, reg_val);
 }
 
 static void prv_aw862xx_play_go(bool flag)
@@ -158,22 +160,21 @@ void vibe_init(void) {
   uint8_t chip_id;
   bool ret = prv_read_register(AW862XX_REG_CHIPID, &chip_id);
   if (!ret) {
-    PBL_LOG_ERR("Failed to read AW86225 chip ID");
+    PBL_LOG_ERR("AW86225: chip ID read failed (I2C error)");
     return;
   }
 
-  ret &= prv_write_register(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EDGE_FREQ  |AW862XX_CONTCFG1_WAVE_MODE | AW862XX_CONTCFG1_EN_F0_DET);
+  ret &= prv_write_register(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EDGE_FREQ | AW862XX_CONTCFG1_WAVE_MODE | AW862XX_CONTCFG1_EN_F0_DET);
   ret &= prv_write_register(AW862XX_REG_CONTCFG2, AW862XX_CONTCFG2_CONF_F0);
   ret &= prv_write_register(AW862XX_REG_CONTCFG3, AW862XX_CONTCFG3_DRV_WIDTH);
   ret &= prv_write_register(AW862XX_REG_CONTCFG7, AW862XX_CONTCFG7_FULL_SCALE);
-  
-  prv_write_register(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_TRACK_EN | AW862XX_CONTCFG7_FULL_SCALE);
-  prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK, AW862XX_BIT_PLAYCFG3_BRK_ENABLE);
-  prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK, AW862XX_BIT_PLAYCFG3_PLAY_MODE_CONT);
-  prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_VBAT_MODE_MASK, AW862XX_SYSCTRL1_VBAT_MODE_EN);
+  ret &= prv_write_register(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_TRACK_EN | AW862XX_CONTCFG7_FULL_SCALE);
+  ret &= prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK, AW862XX_BIT_PLAYCFG3_BRK_ENABLE);
+  ret &= prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK, AW862XX_BIT_PLAYCFG3_PLAY_MODE_CONT);
+  ret &= prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_VBAT_MODE_MASK, AW862XX_SYSCTRL1_VBAT_MODE_EN);
 
   if (!ret) {
-    PBL_LOG_ERR("Failed to initialize AW86225");
+    PBL_LOG_ERR("AW86225: register configuration failed");
     return;
   }
 
@@ -204,7 +205,16 @@ void vibe_ctl(bool on) {
   if (on) {
     uint8_t val = 0;
     bool ret = prv_read_register(AW862XX_REG_CONTCFG2, &val);
-    if (!ret || val != AW862XX_CONTCFG2_CONF_F0) {
+    bool needs_reinit = false;
+    if (!ret) {
+      PBL_LOG_ERR("AW86225: CONTCFG2 readback I2C failure, re-initializing");
+      needs_reinit = true;
+    } else if (val != AW862XX_CONTCFG2_CONF_F0) {
+      PBL_LOG_ERR("AW86225: CONTCFG2=0x%02x (expected 0x%02x), re-initializing",
+                  val, AW862XX_CONTCFG2_CONF_F0);
+      needs_reinit = true;
+    }
+    if (needs_reinit) {
       vibe_init();
       vibe_set_strength(s_target_strength);
     }
