@@ -58,13 +58,6 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
     return;
   }
 
-  // Aging only appears when it has actually been reported (i.e. in the
-  // finished bucket); skip the entry in any mode where it wasn't run so
-  // the semi-finished QR doesn't pick up a misleading AGE:N.
-  if (test == MfgTestId_Aging && !r->ran) {
-    return;
-  }
-
   size_t pos = strlen(buf);
   if (pos > 0 && pos < bufsz - 1) {
     buf[pos++] = ';';
