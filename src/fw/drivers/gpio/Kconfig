@@ -18,11 +18,6 @@ config GPIO_SF32LB
     help
       Support for the SiFli SF32LB GPIO controller.
 
-config GPIO_STM32F4
-    bool "ST STM32F4"
-    help
-      Support for the ST STM32F4 GPIO controller.
-
 config GPIO_QEMU
     bool "QEMU GPIO"
     help

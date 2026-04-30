@@ -10,24 +10,6 @@ if bld.env.CONFIG_MIC_NRF5:
 elif bld.env.CONFIG_MIC_SF32LB:
     sources.append('sf32lb52/pdm.c')
     use.append('hal_sifli')
-elif bld.env.CONFIG_MIC_STM32F4_DFSDM:
-    sources.append('stm32/dfsdm.c')
-    use.extend([
-        'driver_dma',
-        'driver_gpio',
-        'driver_periph_config',
-        'driver_pmic',
-        'stm32_stdlib',
-    ])
-elif bld.env.CONFIG_MIC_STM32F4_PDM:
-    sources.append('stm32/pdm.c')
-    use.extend([
-        'driver_dma',
-        'driver_gpio',
-        'driver_periph_config',
-        'driver_pmic',
-        'stm32_stdlib',
-    ])
 elif bld.env.CONFIG_MIC_QEMU:
     sources.append('qemu/mic.c')
 

@@ -217,12 +217,6 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'VOICE_CODEC_TESTS')
         conf.options.profiler = True
 
-    if conf.env.MICRO_FAMILY == 'STM32F4':
-        if conf.options.lowpowerdebug and not conf.options.nosleep:
-            Logs.warn('On STM32F4 --lowpowerdebug can only be used with --nosleep. Forcing --nosleep on!\n'
-                      'See PBL-10174.')
-            conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
-
     if 'bb' in conf.options.board:
         conf.env.append_value('DEFINES', 'IS_BIGBOARD')
 
@@ -752,9 +746,7 @@ def size_resources(ctx):
     if pbpack_path is None:
         ctx.fatal('No resource pbpack found')
 
-    if ctx.env.MICRO_FAMILY == 'STM32F4':
-        max_size = 512 * 1024
-    elif ctx.env.MICRO_FAMILY == 'NRF52':
+    if ctx.env.MICRO_FAMILY == 'NRF52':
         max_size = 1024 * 1024
     elif ctx.env.MICRO_FAMILY == 'SF32LB52':
         max_size = 2048 * 1024

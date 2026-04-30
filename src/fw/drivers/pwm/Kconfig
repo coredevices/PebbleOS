@@ -18,11 +18,6 @@ config PWM_SF32LB
     help
       Support for the SiFli SF32LB PWM controller.
 
-config PWM_STM32F4
-    bool "ST STM32F4"
-    help
-      Support for the ST STM32F4 PWM controller.
-
 config PWM_QEMU
     bool "QEMU PWM"
     help

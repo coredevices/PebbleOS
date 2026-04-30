@@ -8,13 +8,6 @@ if bld.env.CONFIG_AMBIENT_LIGHT_OPT3001:
     sources.append('ambient_light_opt3001.c')
 elif bld.env.CONFIG_AMBIENT_LIGHT_W1160:
     sources.append('ambient_light_w1160.c')
-elif bld.env.CONFIG_AMBIENT_LIGHT_STM32F4:
-    sources.append('ambient_light.c')
-    use.extend([
-        'driver_gpio',
-        'driver_periph_config',
-        'stm32_stdlib',
-    ])
 
 bld.objects(
     name='driver_ambient_light',

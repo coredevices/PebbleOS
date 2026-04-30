@@ -18,11 +18,6 @@ config UART_SF32LB
     help
       Support for the SiFli SF32LB UART controller.
 
-config UART_STM32F4
-    bool "ST STM32F4 UART Controller"
-    help
-      Support for the ST STM32F4 UART controller.
-
 config UART_QEMU
     bool "QEMU Simple UART"
     help

@@ -1,6 +1,6 @@
 mcu_family = bld.env.MICRO_FAMILY
 is_qemu_family = mcu_family.startswith('QEMU_PEBBLE')
-if not (mcu_family in ('STM32F4', 'NRF52', 'SF32LB52') or is_qemu_family):
+if not (mcu_family in ('NRF52', 'SF32LB52') or is_qemu_family):
     bld.fatal('src/fw/drivers/wscript: '
               'Unknown MICRO_FAMILY {}'.format(mcu_family))
 
@@ -142,19 +142,6 @@ if is_qemu_family:
             'pbl_includes',
         ],
     )
-elif mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_backlight',
-        source=[
-            'backlight.c',
-        ],
-        use=[
-            'driver_pwm',
-            'driver_gpio',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
 elif mcu_family == 'NRF52':
     bld.objects(
         name='driver_backlight',
@@ -197,24 +184,6 @@ if is_qemu_family:
             'pbl_includes',
         ],
     )
-elif mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_button',
-        source=[
-            'button.c',
-            'debounced_button.c',
-        ],
-        use=[
-            'driver_exti',
-            'driver_gpio',
-            'driver_periph_config',
-            'driver_timer',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
 elif mcu_family == 'NRF52':
     bld.objects(
         name='driver_button',
@@ -246,33 +215,8 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_clocksource',
-        source=[
-            'stm32f2/clocksource.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-
 if bld.env.CONFIG_DISPLAY:
     bld.recurse('display')
-
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_dma',
-        source=[
-            'stm32f2/dma.c',
-        ],
-        use=[
-            'driver_periph_config',
-        ],
-    )
 
 if bld.env.CONFIG_EXTI:
     bld.recurse('exti')
@@ -283,39 +227,15 @@ if bld.env.CONFIG_FLASH:
 if bld.env.CONFIG_GPIO:
     bld.recurse('gpio')
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_pwr',
-        source=[
-            'stm32f4/pwr.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif mcu_family in ('NRF52', 'SF32LB52') or is_qemu_family:
-    bld.objects(
-        name='driver_pwr',
-        source=[
-            'stubs/pwr.c',
-        ],
-        use=[
-            'fw_includes',
-        ],
-    )
-
-# FIXME: More of a board config than driver
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_gpio_defaults',
-        source=[
-            'stm32f4/gpio_defaults.c',
-        ],
-        use=[
-            'driver_gpio',
-        ],
-    )
+bld.objects(
+    name='driver_pwr',
+    source=[
+        'stubs/pwr.c',
+    ],
+    use=[
+        'fw_includes',
+    ],
+)
 
 if bld.env.CONFIG_I2C:
     bld.recurse('i2c')
@@ -350,16 +270,6 @@ if is_qemu_family:
             'fw_includes',
         ],
     )
-elif mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_mcu',
-        source=[
-            'stm32f2/mcu.c',
-        ],
-        use=[
-            'freertos',
-        ],
-    )
 elif mcu_family == 'NRF52':
     # FIXME: provide working implementation
     bld.objects(
@@ -387,7 +297,7 @@ if bld.env.CONFIG_MIC:
     bld.recurse('mic')
 
 # FIXME: make generic to Cortex-M
-if mcu_family in ('STM32F4', 'NRF52', 'SF32LB52') or is_qemu_family:
+if mcu_family in ('NRF52', 'SF32LB52') or is_qemu_family:
     bld.objects(
         name='driver_mpu',
         source=[
@@ -397,23 +307,10 @@ if mcu_family in ('STM32F4', 'NRF52', 'SF32LB52') or is_qemu_family:
             'freertos',
             'fw_includes',
             'pbl_includes',
-            'stm32_stdlib',
         ],
     )
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_otp',
-        source=[
-            'stm32f2/otp.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.capability('HAS_FLASH_OTP'):
+if bld.capability('HAS_FLASH_OTP'):
     bld.objects(
         name='driver_otp',
         source=[
@@ -425,40 +322,10 @@ elif bld.capability('HAS_FLASH_OTP'):
         ],
     )
 
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_periph_config',
-        source=[
-            'stm32f2/periph_config.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-
 if bld.env.CONFIG_PMIC:
     bld.recurse('pmic')
 
-if bld.env.QEMU and not is_qemu_family:
-    bld.objects(
-        name='driver_qemu_serial',
-        source=[
-            'qemu/qemu_serial.c',
-            'qemu/qemu_serial_util.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-            'pbl_includes',
-        ],
-    )
-elif bld.env.QEMU and is_qemu_family:
+if bld.env.QEMU and is_qemu_family:
     bld.objects(
         name='driver_qemu_serial',
         source=[
@@ -473,19 +340,7 @@ elif bld.env.QEMU and is_qemu_family:
         ],
     )
 
-if bld.env.QEMU and not is_qemu_family:
-    bld.objects(
-        name='driver_qemu_settings',
-        source=[
-            'qemu/qemu_settings.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif bld.env.QEMU and is_qemu_family:
+if bld.env.QEMU and is_qemu_family:
     bld.objects(
         name='driver_qemu_settings',
         source=[
@@ -526,67 +381,20 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if mcu_family == 'STM32F4':
-    bld.env.DEFINES.append('HAS_DRIVER_VOLTAGE_MONITOR')
-    bld.objects(
-        name='driver_voltage_monitor',
-        source=[
-            'stm32f2/voltage_monitor.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ]
-    )
-
-
 if bld.env.CONFIG_RNG:
     bld.recurse('rng')
 
 if bld.env.CONFIG_RTC:
     bld.recurse('rtc')
 
-if mcu_family == 'STM32F4':
+if mcu_family == 'NRF52':
     bld.objects(
-        name='driver_spi',
+        name='driver_task_watchdog',
         source=[
-            'stm32f2/spi.c',
-            'stm32f2/spi_legacy.c'
+            'task_watchdog.c',
         ],
         use=[
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
 
-# FIXME: not really a driver
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_task_watchdog',
-        source=[
-            'task_watchdog.c',
-        ],
-        use=[
-            'driver_periph_config',
-    
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family == 'NRF52':
-    bld.objects(
-        name='driver_task_watchdog',
-        source=[
-            'task_watchdog.c',
-        ],
-        use=[
-    
             'freertos',
             'fw_includes',
             'pbl_includes',
@@ -617,19 +425,6 @@ elif is_qemu_family:
             'freertos',
             'fw_includes',
             'pbl_includes',
-        ],
-    )
-
-if mcu_family == 'STM32F4':
-    bld.objects(
-        name='driver_timer',
-        source=[
-            'stm32f2/timer.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
         ],
     )
 

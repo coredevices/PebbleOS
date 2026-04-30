@@ -14,11 +14,6 @@ config BATTERY_PMIC
       Battery management via external PMIC. Used on platforms where the
       PMIC handles battery monitoring (asterix, obelix, getafix).
 
-config BATTERY_STM32F4
-    bool "STM32F4 ADC-based"
-    help
-      Battery monitoring via STM32F4 ADC and PMIC.
-
 config BATTERY_QEMU
     bool "QEMU Battery"
     help

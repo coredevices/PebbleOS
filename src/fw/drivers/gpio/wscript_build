@@ -11,12 +11,6 @@ elif bld.env.CONFIG_GPIO_NRF5:
     use.append('hal_nordic')
 elif bld.env.CONFIG_GPIO_SF32LB:
     sources.append('sf32lb.c')
-elif bld.env.CONFIG_GPIO_STM32F4:
-    sources.append('stm32f4.c')
-    use.extend([
-        'freertos',
-        'stm32_stdlib',
-    ])
 
 bld.objects(
     name='driver_gpio',

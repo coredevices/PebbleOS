@@ -24,7 +24,7 @@ extern uint8_t _estack[];
 //! Firmware main function, ResetHandler calls this
 extern int main(void);
 
-//! STM32 system initialization function, defined in the standard peripheral library
+//! SoC-specific system initialization (e.g. nRF52 system_nrf52840.c)
 extern void SystemInit(void);
 
 //! This function is what gets called when the processor first

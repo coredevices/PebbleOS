@@ -18,16 +18,6 @@ config MIC_SF32LB
     help
       Support for the SiFli SF32LB PDM microphone interface.
 
-config MIC_STM32F4_DFSDM
-    bool "ST STM32F4 DFSDM"
-    help
-      Support for the ST STM32F4 DFSDM microphone interface.
-
-config MIC_STM32F4_PDM
-    bool "ST STM32F4 PDM"
-    help
-      Support for the ST STM32F4 PDM microphone interface.
-
 config MIC_QEMU
     bool "QEMU stub"
     help

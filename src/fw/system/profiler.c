@@ -42,8 +42,12 @@ Profiler g_profiler;
 #define IRQ_DEF(idx, irq) ProfilerNode g_profiler_node_##irq##_IRQ = {.module_name = #irq"_IRQ"};
 #if defined(MICRO_FAMILY_QEMU)
 #include "irq_qemu.def"
+#elif defined(MICRO_FAMILY_NRF52)
+#include "irq_nrf52.def"
+#elif defined(MICRO_FAMILY_SF32LB52)
+#include "irq_sf32lb52.def"
 #else
-#include "irq_stm32.def"
+#error "No IRQ definition for this MICRO_FAMILY"
 #endif
 #undef IRQ_DEF
 #endif
@@ -56,8 +60,12 @@ static ProfilerNode *s_profiler_nodes[] = {
 #define IRQ_DEF(idx, irq) &g_profiler_node_##irq##_IRQ,
 #if defined(MICRO_FAMILY_QEMU)
 #include "irq_qemu.def"
+#elif defined(MICRO_FAMILY_NRF52)
+#include "irq_nrf52.def"
+#elif defined(MICRO_FAMILY_SF32LB52)
+#include "irq_sf32lb52.def"
 #else
-#include "irq_stm32.def"
+#error "No IRQ definition for this MICRO_FAMILY"
 #endif
 #undef IRQ_DEF
 #endif

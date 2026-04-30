@@ -163,21 +163,10 @@ static void dump_gpio_configuration_state(void) {
 int main(void) {
   soc_early_init();
 
-#if defined(MICRO_FAMILY_STM32F4)
-  gpio_init_all();
-#endif
-
-#if defined(MICRO_FAMILY_STM32F4) && !defined(LOW_POWER_DEBUG)
-  // If we're on a snowy board using the stm32f4, we experience random hardfaults after leaving a
-  // wfi instruction if we have mcu debugging enabled. For now, just turn off mcu debugging
-  // entirely unless we explicitly want it. See PBL-10174
-  disable_mcu_debugging();
-#else
   // Turn on MCU debugging at boot. This consumes some power so we'll turn it off after a short
   // time has passed (see prv_low_power_debug_config_callback) to allow us to connect after a
   // reset but not passively consume power after we've been running for a bit.
   enable_mcu_debugging();
-#endif
 
   extern void * __ISR_VECTOR_TABLE__;  // Defined in linker script
   SCB->VTOR = (uint32_t)&__ISR_VECTOR_TABLE__;
@@ -190,9 +179,6 @@ int main(void) {
 
   mbuf_init();
   delay_init();
-#if defined(MICRO_FAMILY_STM32F4)
-  periph_config_init();
-#endif
   dbgserial_init();
   pulse_early_init();
   print_splash_screen();
@@ -225,13 +211,7 @@ int main(void) {
   stop_mode_disable(InhibitorMain);
 
   // Turn off power to internal flash when in stop mode
-#if MICRO_FAMILY_STM32F4
-  periph_config_enable(PWR, RCC_APB1Periph_PWR);
-#endif
   pwr_flash_power_down_stop_mode(true /* power_down */);
-#if MICRO_FAMILY_STM32F4
-  periph_config_disable(PWR, RCC_APB1Periph_PWR);
-#endif
 
   vTaskStartScheduler();
   for(;;);

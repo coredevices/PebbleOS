@@ -640,9 +640,7 @@ def build(bld):
     if bld.options.memfault:
         fw_includes_use.append('memfault_includes')
 
-    if bld.env.MICRO_FAMILY.startswith('STM32'):
-        fw_includes_use.append('stm32_stdlib')
-    elif bld.env.MICRO_FAMILY.startswith('NRF'):
+    if bld.env.MICRO_FAMILY.startswith('NRF'):
         fw_includes_use.append('hal_nordic')
     elif bld.env.MICRO_FAMILY.startswith('SF32LB'):
         fw_includes_use.append('hal_sifli')

@@ -12,31 +12,8 @@ if bld.env.CONFIG_BATTERY_QEMU:
         'driver_qemu_serial',
         'driver_qemu_settings',
     ])
-elif bld.env.QEMU:
-    sources.extend([
-        'battery_adc_conversion.c',
-        'battery_voltage_monitor.c',
-        '../qemu/qemu_battery.c',
-    ])
-    use.extend([
-        'driver_qemu_serial',
-        'driver_qemu_settings',
-        'stm32_stdlib',
-    ])
 elif bld.env.CONFIG_BATTERY_PMIC:
     pass
-elif bld.env.CONFIG_BATTERY_STM32F4:
-    sources.extend([
-        'battery_adc_conversion.c',
-        'battery_pmic.c',
-        'battery_voltage_monitor.c',
-    ])
-    use.extend([
-        'driver_gpio',
-        'driver_periph_config',
-        'driver_pmic',
-        'stm32_stdlib',
-    ])
 
 bld.objects(
     name='driver_battery',

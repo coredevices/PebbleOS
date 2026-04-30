@@ -18,11 +18,6 @@ config WATCHDOG_SF32LB
     help
       Support for the SiFli SF32LB watchdog.
 
-config WATCHDOG_STM32F4
-    bool "ST STM32F4"
-    help
-      Support for the ST STM32F4 watchdog.
-
 config WATCHDOG_QEMU
     bool "QEMU Watchdog"
     help

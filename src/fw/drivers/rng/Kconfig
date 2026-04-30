@@ -13,11 +13,6 @@ config RNG_SF32LB
     help
       Support for the SiFli SF32LB RNG.
 
-config RNG_STM32F4
-    bool "ST STM32F4"
-    help
-      Support for the ST STM32F4 RNG.
-
 config RNG_STUB
     bool "Stub"
     help

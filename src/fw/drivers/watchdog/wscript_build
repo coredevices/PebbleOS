@@ -12,9 +12,6 @@ elif bld.env.CONFIG_WATCHDOG_NRF5:
 elif bld.env.CONFIG_WATCHDOG_SF32LB:
     sources.append('sf32lb.c')
     use.append('hal_sifli')
-elif bld.env.CONFIG_WATCHDOG_STM32F4:
-    sources.append('stm32f4.c')
-    use.append('stm32_stdlib')
 
 bld.objects(
     name='driver_watchdog',
