@@ -104,10 +104,6 @@ void button_set_rotated(bool rotated) {
   (void)rotated;
 }
 
-bool button_selftest(void) {
-  return true;
-}
-
 void command_button_read(const char *button_id_str) {
   int button = atoi(button_id_str);
   if (button < 0 || button >= NUM_BUTTONS) {

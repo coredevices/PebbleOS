@@ -93,8 +93,6 @@ static status_t prv_flash_check_protected(FlashAddress addr) {
   return E_INVALID_OPERATION;
 }
 
-bool flash_check_whoami(void) { return qspi_flash_check_whoami(QSPI_FLASH); }
-
 FlashAddress flash_impl_get_sector_base_address(FlashAddress addr) {
   return (addr & SECTOR_ADDR_MASK);
 }
