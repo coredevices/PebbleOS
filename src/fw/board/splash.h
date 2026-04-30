@@ -5,7 +5,7 @@
 
 #if BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
 #include "splash/splash_obelix.xbm"
-#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
+#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT || BOARD_GETAFIX_DVT2
 #include "splash/splash_getafix.xbm"
 #elif BOARD_QEMU_EMERY
 #include "splash/splash_obelix.xbm"

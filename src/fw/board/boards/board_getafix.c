@@ -449,12 +449,21 @@ static const I2CSlavePort s_i2c_w1160 = {
 
 I2CSlavePort *const I2C_W1160 = &s_i2c_w1160;
 
+#if BOARD_GETAFIX_DVT2
+static const I2CSlavePort s_i2c_aw86225 = {
+    .bus = &s_i2c_bus_3,
+    .address = 0x58,
+};
+  
+I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
+#else
 static const I2CSlavePort s_i2c_aw8623x = {
     .bus = &s_i2c_bus_3,
     .address = 0x5a,
 };
 
 I2CSlavePort *const I2C_AW8623X = &s_i2c_aw8623x;
+#endif
 
 const BoardConfigActuator BOARD_CONFIG_VIBE = {
     .ctl = {hwp_gpio1, 20, false},

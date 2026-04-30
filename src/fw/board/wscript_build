@@ -56,7 +56,7 @@ elif board in ('obelix_dvt', 'obelix_pvt', 'obelix_bb2'):
             'drivers',
         ],
     )
-elif board in ('getafix_evt', "getafix_dvt"):
+elif board in ('getafix_evt', 'getafix_dvt', 'getafix_dvt2'):
     bld.objects(
         name='board',
         source=[

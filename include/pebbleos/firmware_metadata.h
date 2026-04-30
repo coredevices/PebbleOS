@@ -44,6 +44,7 @@ typedef enum FirmwareMetadataPlatform {
   FirmwareMetadataPlatformPebbleObelixPVT = 18,
   FirmwareMetadataPlatformPebbleGetafixEVT = 19,
   FirmwareMetadataPlatformPebbleGetafixDVT = 20,
+  FirmwareMetadataPlatformPebbleGetafixDVT2 = 21,
 
   FirmwareMetadataPlatformPebbleOneBigboard = 0xff,
   FirmwareMetadataPlatformPebbleOneBigboard2 = 0xfe,
@@ -123,6 +124,8 @@ _Static_assert(sizeof(struct FirmwareMetadata) == (sizeof(uint32_t) +
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixEVT)
 #elif BOARD_GETAFIX_DVT
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT)
+#elif BOARD_GETAFIX_DVT2
+  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT2)
 #elif BOARD_QEMU_EMERY
   #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleEmeryEmu)
 #elif BOARD_QEMU_FLINT

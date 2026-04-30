@@ -44,7 +44,7 @@ typedef struct {
 #include "displays/display_silk.h"
 #elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
 #include "displays/display_obelix.h"
-#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
+#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT || BOARD_GETAFIX_DVT2
 #include "displays/display_getafix.h"
 #elif BOARD_QEMU_EMERY
 #include "displays/display_qemu_emery.h"
