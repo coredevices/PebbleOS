@@ -134,7 +134,7 @@ static ClockModel prv_clock_model_default(struct tm *tick_time) {
   const WatchInfoColor watch_color = sys_watch_info_get_color();
 
   switch (watch_color) {
-#if PLATFORM_GETAFIX || PLATFORM_SPALDING_GABBRO
+#if PLATFORM_GETAFIX
     case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20:
       model.num_non_local_clocks = 2;
       model.local_clock.hour_hand.thickness = 14;

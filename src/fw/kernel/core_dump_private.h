@@ -23,8 +23,6 @@
 #define COREDUMP_RAM_SIZE (276 * 1024)
 #elif PLATFORM_SILK || PLATFORM_ASTERIX
 #define COREDUMP_RAM_SIZE (256 * 1024)
-#elif PLATFORM_SPALDING || PLATFORM_SPALDING_GABBRO
-#define COREDUMP_RAM_SIZE (192 * 1024)
 #endif
 
 // Max number of core dump images we can fit in our allocated space

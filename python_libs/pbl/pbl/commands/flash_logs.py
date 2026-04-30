@@ -39,11 +39,6 @@ class FlashLogsCommand(PebbleCommand):
             # Legacy Platforms
             "aplite": (0x3E0000, 0x20000),
             "tintin": (0x3E0000, 0x20000),
-            # Snowy / Spalding (Bottom Boot)
-            "basalt": (0x000000, 0x20000),
-            "snowy": (0x000000, 0x20000),
-            "chalk": (0x000000, 0x20000),
-            "spalding": (0x000000, 0x20000),
             # Silk / Diorite
             "diorite": (0x280000, 0x20000),
             "silk": (0x280000, 0x20000),

@@ -16,10 +16,6 @@ def is_bigboard(ctx):
 # Platform specific predicates
 
 @conf
-def is_spalding(ctx):
-    return ctx.get_board().startswith('spalding') and ctx.get_board() != 'spalding_gabbro'
-
-@conf
 def is_silk(ctx):
     return ctx.get_board().startswith('silk')
 
@@ -34,10 +30,6 @@ def is_obelix(ctx):
 @conf
 def is_getafix(ctx):
     return ctx.get_board().startswith('getafix')
-
-@conf
-def is_spalding_gabbro(ctx):
-    return ctx.get_board() == 'spalding_gabbro'
 
 @conf
 def is_qemu_emery(ctx):
@@ -63,8 +55,6 @@ def get_platform_name(ctx):
         return "qemu_flint"
     elif is_qemu_gabbro(ctx):
         return "qemu_gabbro"
-    elif is_spalding(ctx):
-        return "spalding"
     elif is_silk(ctx):
         return "silk"
     elif is_asterix(ctx):
@@ -73,8 +63,6 @@ def get_platform_name(ctx):
         return "obelix"
     elif is_getafix(ctx):
         return "getafix"
-    elif is_spalding_gabbro(ctx):
-        return "spalding_gabbro"
     else:
         return "unknown"
 
@@ -89,12 +77,8 @@ def get_qemu_machine(ctx):
         return 'pebble-flint'
     elif is_qemu_gabbro(ctx):
         return 'pebble-gabbro'
-    elif is_spalding(ctx):
-        return 'pebble-s4-bb'
     elif is_silk(ctx):
         return 'pebble-silk-bb'
-    elif is_spalding_gabbro(ctx):
-        return 'pebble-spalding-gabbro-bb'
     else:
         return 'unknown'
 
@@ -107,13 +91,9 @@ def get_qemu_cpu(ctx):
         return 'cortex-m4'
     elif is_qemu_gabbro(ctx):
         return 'cortex-m33'
-    elif is_spalding(ctx):
-        return 'cortex-m4'
     elif is_silk(ctx):
         return 'cortex-m4'
     elif is_asterix(ctx):
-        return 'cortex-m4'
-    elif is_spalding_gabbro(ctx):
         return 'cortex-m4'
     else:
         return 'unknown'
@@ -123,12 +103,6 @@ def get_qemu_cpu(ctx):
 def get_qemu_spi_flash_args(ctx, spi_flash_path, qemu_major):
     if is_qemu(ctx):
         return ['-drive', 'if=mtd,format=raw,file={}'.format(spi_flash_path)]
-    elif is_spalding(ctx) or is_spalding_gabbro(ctx):
-        # QEMU 7.0+ uses a named block device; older versions use -pflash.
-        if qemu_major >= 7:
-            return ['-drive', 'if=none,id=spi-flash,file={},format=raw'.format(spi_flash_path)]
-        else:
-            return ['-pflash', spi_flash_path]
     elif is_silk(ctx):
         return ['-mtdblock', spi_flash_path]
     else:
@@ -159,9 +133,6 @@ def add_platform_defines(ctx, env):
     elif ctx.is_qemu_gabbro():
         bit_depth = 8
         platform = 'QEMU_GABBRO'
-    elif ctx.is_spalding():
-        bit_depth = 8
-        platform = 'SPALDING'
     elif ctx.is_silk():
         bit_depth = 1
         platform = 'SILK'
@@ -174,9 +145,6 @@ def add_platform_defines(ctx, env):
     elif ctx.is_getafix():
         bit_depth = 8
         platform = 'GETAFIX'
-    elif ctx.is_spalding_gabbro():
-        bit_depth = 8
-        platform = 'SPALDING_GABBRO'
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 
