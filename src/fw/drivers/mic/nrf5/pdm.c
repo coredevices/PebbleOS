@@ -7,6 +7,7 @@
 #include "board/board.h"
 #include "drivers/clocksource.h"
 #include "kernel/events.h"
+#include "kernel/kernel_heap.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
 #include "os/mutex.h"
@@ -14,6 +15,7 @@
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/circular_buffer.h"
+#include "util/heap.h"
 #include "util/math.h"
 #include "util/size.h"
 #include "util/time/time.h"
@@ -36,12 +38,37 @@ static bool prv_is_valid_buffer(MicDeviceState *state, int16_t *buffer) {
 }
 
 static bool prv_allocate_buffers(MicDeviceState *state) {
-  // Allocate circular buffer storage
-  state->circ_buffer_storage = kernel_malloc(CIRCULAR_BUF_SIZE_BYTES);
-  if (!state->circ_buffer_storage) {
-    PBL_LOG_ERR("Failed to allocate circular buffer storage");
+  // The kernel heap fragments over time, so a single 10 KB contiguous alloc
+  // can fail even when plenty of memory is free. Shrink the request in 32 ms
+  // steps until it fits or we hit the 128 ms floor.
+  uint16_t try_size = CIRCULAR_BUF_SIZE_BYTES;
+  uint8_t *storage = NULL;
+
+  while (try_size >= CIRCULAR_BUF_MIN_SIZE_BYTES) {
+    storage = kernel_malloc(try_size);
+    if (storage) {
+      break;
+    }
+    try_size -= CIRCULAR_BUF_STEP_BYTES;
+  }
+
+  if (!storage) {
+    unsigned int used, free_bytes, max_free;
+    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)",
+                (unsigned)CIRCULAR_BUF_MIN_SIZE_BYTES, max_free);
     return false;
   }
+
+  if (try_size < CIRCULAR_BUF_SIZE_BYTES) {
+    unsigned int used, free_bytes, max_free;
+    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    PBL_LOG_WRN("PDM circular buffer fell back to %u B (requested %u, max_free %u)",
+                (unsigned)try_size, (unsigned)CIRCULAR_BUF_SIZE_BYTES, max_free);
+  }
+
+  state->circ_buffer_storage = storage;
+  state->circ_buffer_size = try_size;
 
   // Allocate PDM buffers
   for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
@@ -58,7 +85,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
   }
   
   // Initialize circular buffer with allocated storage
-  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, CIRCULAR_BUF_SIZE_BYTES);
+  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, try_size);
   
   return true;
 }
@@ -69,6 +96,7 @@ static void prv_free_buffers(MicDeviceState *state) {
     kernel_free(state->circ_buffer_storage);
     state->circ_buffer_storage = NULL;
   }
+  state->circ_buffer_size = 0;
   
   // Free PDM buffers
   for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
@@ -116,9 +144,9 @@ static void prv_process_pdm_buffer(MicDeviceState *state, int16_t *pdm_data) {
 
   // Monitor buffer utilization
   uint16_t buffer_free = circular_buffer_get_write_space_remaining(&state->circ_buffer);
-  uint16_t buffer_total = CIRCULAR_BUF_SIZE_BYTES;
+  uint16_t buffer_total = state->circ_buffer_size;
   uint16_t buffer_used = buffer_total - buffer_free;
-  uint16_t buffer_utilization = (buffer_used * 100) / buffer_total;
+  uint16_t buffer_utilization = buffer_total ? (buffer_used * 100) / buffer_total : 0;
 
   // Log dropout statistics periodically
   static uint32_t log_counter = 0;
@@ -366,15 +394,14 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     return false;
   }
   
-  // Allocate buffers dynamically
+  // Allocate buffers dynamically. prv_allocate_buffers also initializes the
+  // circular buffer with the actual (possibly shrunk) size.
   if (!prv_allocate_buffers(state)) {
     PBL_LOG_ERR("Failed to allocate microphone buffers");
     mutex_unlock_recursive(state->mutex);
     return false;
   }
   
-  // Reset state
-  circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, CIRCULAR_BUF_SIZE_BYTES);
   state->data_handler = data_handler;
   state->handler_context = context;
   state->audio_buffer = audio_buffer;
