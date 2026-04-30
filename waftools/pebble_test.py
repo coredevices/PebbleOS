@@ -249,7 +249,7 @@ def build_product_source_files(
 def get_bitdepth_for_platform(bld, platform):
     if platform in ("obelix", "gabbro"):
         return 8
-    elif platform in ("silk",):
+    elif platform in ("asterix",):
         return 1
     else:
         bld.fatal("Unknown platform {}".format(platform))
@@ -275,7 +275,7 @@ def add_clar_test(
         if not re.match(bld.options.regex, filename):
             return
 
-    platform_set = set(["default", "silk", "obelix", "gabbro"])
+    platform_set = set(["default", "asterix", "obelix", "gabbro"])
 
     # validate platforms specified
     if platform not in platform_set:
@@ -300,7 +300,7 @@ def add_clar_test(
         test_bin = test_dir.make_node("runme_" + platform)
         platform_defines.append("PLATFORM_DEFAULT=0")
 
-    if platform == "silk":
+    if platform == "asterix":
         platform_defines.append("CAPABILITY_HAS_PUTBYTES_PREACKING=1")
 
     def _generate_clar_harness(task):
@@ -348,7 +348,7 @@ def add_clar_test(
 
     # All current platforms have their own resource headers; default to obelix as the fallback
     resource_override_dir_name = (
-        platform if platform in ("silk", "obelix", "gabbro") else "obelix"
+        platform if platform in ("asterix", "obelix", "gabbro") else "obelix"
     )
     src_includes.append(
         "tests/overrides/default/resources/{}".format(resource_override_dir_name)

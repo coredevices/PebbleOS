@@ -307,7 +307,8 @@ void flash_logging_init(void) {
   bool multiple_gens_found = false;
 
   for (uint32_t offset = 0; offset < LOG_REGION_SIZE; offset += LOG_PAGE_SIZE) {
-    uint32_t flash_addr = prv_get_page_addr(first_used_region, offset);
+    uint32_t flash_addr =
+        prv_get_page_addr(FLASH_REGION_DEBUG_DB_BEGIN + first_used_region, offset);
 
     FlashLoggingHeader hdr;
     flash_read_bytes((uint8_t *)&hdr, flash_addr, sizeof(hdr));

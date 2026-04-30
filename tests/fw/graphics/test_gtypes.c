@@ -117,7 +117,7 @@ void test_gtypes__grect_crop_asserts_for_large_insets(void) {
 }
 
 void test_gtypes__pbl_if_rect_else(void) {
-#if defined(PLATFORM_SILK) || defined(PLATFORM_OBELIX)
+#if defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX)
   cl_assert_equal_i(1, PBL_IF_RECT_ELSE(1,2));
 #elif defined(PLATFORM_GABBRO)
   cl_assert_equal_i(2, PBL_IF_RECT_ELSE(1,2));
@@ -127,7 +127,7 @@ void test_gtypes__pbl_if_rect_else(void) {
 }
 
 void test_gtypes__pbl_if_round_else(void) {
-#if defined(PLATFORM_SILK) || defined(PLATFORM_OBELIX)
+#if defined(PLATFORM_ASTERIX) || defined(PLATFORM_OBELIX)
   cl_assert_equal_i(2, PBL_IF_ROUND_ELSE(1,2));
 #elif defined(PLATFORM_GABBRO)
   cl_assert_equal_i(1, PBL_IF_ROUND_ELSE(1,2));
@@ -137,7 +137,7 @@ void test_gtypes__pbl_if_round_else(void) {
 }
 
 void test_gtypes__pbl_if_bw_else(void) {
-#if defined(PLATFORM_SILK)
+#if defined(PLATFORM_ASTERIX)
   cl_assert_equal_i(1, PBL_IF_BW_ELSE(1,2));
 #elif defined(PLATFORM_OBELIX) || defined(PLATFORM_GABBRO)
   cl_assert_equal_i(2, PBL_IF_BW_ELSE(1,2));
@@ -147,7 +147,7 @@ void test_gtypes__pbl_if_bw_else(void) {
 }
 
 void test_gtypes__pbl_if_color_else(void) {
-#if defined(PLATFORM_SILK)
+#if defined(PLATFORM_ASTERIX)
   cl_assert_equal_i(2, PBL_IF_COLOR_ELSE(1,2));
 #elif defined(PLATFORM_OBELIX) || defined(PLATFORM_GABBRO)
   cl_assert_equal_i(1, PBL_IF_COLOR_ELSE(1,2));
@@ -157,7 +157,7 @@ void test_gtypes__pbl_if_color_else(void) {
 }
 
 void test_gtypes__color_fallback(void) {
-#if defined(PLATFORM_SILK)
+#if defined(PLATFORM_ASTERIX)
   cl_assert_equal_i(2, COLOR_FALLBACK(1,2));
 #elif defined(PLATFORM_OBELIX) || defined(PLATFORM_GABBRO)
   cl_assert_equal_i(1, COLOR_FALLBACK(1,2));

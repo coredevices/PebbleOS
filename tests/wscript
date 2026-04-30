@@ -57,7 +57,7 @@ def convert_png_to_pbi(task):
 
     if any(word in dest_pbi for word in ['.8bit.', '~obelix', '~gabbro']):
         img_fmt = 'color_raw'
-    elif any(word in dest_pbi for word in ['.1bit.', '~silk']):
+    elif any(word in dest_pbi for word in ['.1bit.', '~asterix']):
         img_fmt = 'bw'
     else:
         img_fmt = 'color'  # raw and palettized color images
@@ -85,7 +85,7 @@ def convert_png_to_pblpng(task):
             bitdepth = int(bit_suffix.group(1))
         elif any(word in dest_png for word in ['~obelix', '~gabbro']):
             bitdepth = 8
-        elif any(word in dest_png for word in ['~silk']):
+        elif any(word in dest_png for word in ['~asterix']):
             bitdepth = 1
             palette_name = 'pebble2'
 
@@ -117,7 +117,7 @@ def generate_test_pbis(ctx):
             # Only emit the 8bit.pbi from the Xbit.png if there is no platform-
             # specific .8bit.png baseline alongside it. The latter takes
             # precedence (e.g. when obelix's 200x228 framebuffer needs different
-            # baseline dimensions than a 1bit silk render).
+            # baseline dimensions than a 1bit asterix render).
             sibling_8bit = png_file.name.replace(".Xbit.", ".8bit.")
             if sibling_8bit not in available_pngs:
                 dest_pbi = png_file.get_bld().change_ext('.8bit.pbi', '.Xbit.png')

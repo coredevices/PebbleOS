@@ -69,7 +69,7 @@ def build(bld):
                          # TODO: PBL-21014 Support arbitrary display sizes
                          'DISP_COLS=144', 'DISP_ROWS=168',
                          'DISPLAY_FRAMEBUFFER_BYTES=%d' % (144 * 168),
-                         'PBL_COLOR', 'PBL_RECT', 'PLATFORM_SNOWY=1',
+                         'PBL_COLOR', 'PBL_RECT', 'PLATFORM_OBELIX=1',
                          'PBI2PNG_EXE="../../tools/pbi2png.py"'],
                 env=pdc2png_env)
 

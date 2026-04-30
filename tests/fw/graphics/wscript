@@ -479,7 +479,7 @@ def build(ctx):
         test_sources_ant_glob="test_bitblt_palette_1bit.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=['obelix'])
+        platforms=['asterix'])
 
     clar(ctx,
         sources_ant_glob =

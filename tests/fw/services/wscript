@@ -385,14 +385,6 @@ def build(ctx):
         override_includes=['shared_prf_storage_v3'])
 
     clar(ctx,
-         sources_ant_glob = " ".join([
-             " src/fw/services/shared_prf_storage/v2_sprf/shared_prf_storage.c " \
-             " tests/fakes/fake_spi_flash.c" \
-             ]),
-         test_sources_ant_glob = "test_shared_prf_storage_v2.c",
-         override_includes=['snowy_mfg_board'])
-
-    clar(ctx,
         sources_ant_glob = 'src/fw/services/filesystem/app_file.c',
         test_sources_ant_glob = 'test_app_file.c')
 
