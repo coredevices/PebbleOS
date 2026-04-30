@@ -32,9 +32,10 @@ T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
 
 static status_t prv_lock_mutex_and_open_file(void) {
   mutex_lock_recursive(s_watch_app_prefs_db.mutex);
-  status_t rv = settings_file_open(&s_watch_app_prefs_db.settings_file,
-                                   SETTINGS_FILE_NAME,
-                                   SETTINGS_FILE_SIZE);
+  status_t rv = settings_file_open_growable(&s_watch_app_prefs_db.settings_file,
+                                            SETTINGS_FILE_NAME,
+                                            SETTINGS_FILE_SIZE,
+                                            KiBYTES(4));
   if (rv != S_SUCCESS) {
     mutex_unlock_recursive(s_watch_app_prefs_db.mutex);
   }
