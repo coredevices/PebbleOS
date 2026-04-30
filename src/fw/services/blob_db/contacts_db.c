@@ -28,9 +28,10 @@ static struct {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   mutex_lock(s_contacts_db.mutex);
-  status_t rv = settings_file_open(&s_contacts_db.settings_file,
-                                   SETTINGS_FILE_NAME,
-                                   SETTINGS_FILE_SIZE);
+  status_t rv = settings_file_open_growable(&s_contacts_db.settings_file,
+                                            SETTINGS_FILE_NAME,
+                                            SETTINGS_FILE_SIZE,
+                                            KiBYTES(4));
   if (rv != S_SUCCESS) {
     mutex_unlock(s_contacts_db.mutex);
   }
