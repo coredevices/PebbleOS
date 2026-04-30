@@ -173,14 +173,28 @@ static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
 #undef RESTORE_AND_DELETE_PREF
 }
 
-static void prv_save_all_vibe_scores_to_file(SettingsFile *file) {
-#define SET_PREF_ALREADY_OPEN(key, value) \
-    settings_file_set(file, key, strlen(key), &value, sizeof(value));
+// Persist any vibe score values that were modified by migration. Skipping
+// unchanged keys avoids bumping their settings_file timestamps on every boot,
+// which would otherwise make the watch win every sync conflict against the
+// phone and leave settings_blob_db's INSERT_WITH_TIMESTAMP path permanently
+// rejecting the user's chosen value.
+static void prv_save_changed_vibe_scores_to_file(SettingsFile *file,
+                                                 VibeScoreId orig_notifications,
+                                                 VibeScoreId orig_incoming_calls,
+                                                 VibeScoreId orig_alarms) {
+#define SET_PREF_IF_CHANGED(key, value, orig) \
+  do { \
+    if ((value) != (orig)) { \
+      settings_file_set(file, key, strlen(key), &(value), sizeof(value)); \
+    } \
+  } while (0)
 
-  SET_PREF_ALREADY_OPEN(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications);
-  SET_PREF_ALREADY_OPEN(PREF_KEY_VIBE_SCORE_INCOMING_CALLS, s_vibe_score_incoming_calls);
-  SET_PREF_ALREADY_OPEN(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms);
-#undef SET_PREF_ALREADY_OPEN
+  SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications,
+                      orig_notifications);
+  SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_INCOMING_CALLS, s_vibe_score_incoming_calls,
+                      orig_incoming_calls);
+  SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms, orig_alarms);
+#undef SET_PREF_IF_CHANGED
 }
 
 static VibeScoreId prv_return_default_if_invalid(VibeScoreId id, VibeScoreId default_id) {
@@ -288,10 +302,16 @@ void alerts_preferences_init(void) {
 
   prv_migrate_legacy_dnd_schedule(&file);
 
+  const VibeScoreId orig_vibe_score_notifications = s_vibe_score_notifications;
+  const VibeScoreId orig_vibe_score_incoming_calls = s_vibe_score_incoming_calls;
+  const VibeScoreId orig_vibe_score_alarms = s_vibe_score_alarms;
+
   prv_migrate_legacy_first_use_settings(&file);
   prv_migrate_vibe_intensity_to_vibe_scores(&file);
   prv_ensure_valid_vibe_scores();
-  prv_save_all_vibe_scores_to_file(&file);
+  prv_save_changed_vibe_scores_to_file(&file, orig_vibe_score_notifications,
+                                       orig_vibe_score_incoming_calls,
+                                       orig_vibe_score_alarms);
 
   settings_file_close(&file);
 }
