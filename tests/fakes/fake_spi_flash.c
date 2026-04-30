@@ -171,12 +171,6 @@ static void erase_block(uint32_t block_addr, uint32_t block_size) {
 }
 
 void flash_erase_sector_blocking(uint32_t sector_addr) {
-#if PLATFORM_SNOWY
-  if (sector_addr <= BOTTOM_BOOT_REGION_END) {
-    erase_block(sector_addr, BOTTOM_BOOT_SECTOR_SIZE);
-    return;
-  }
-#endif
   erase_block(sector_addr, SECTOR_SIZE_BYTES);
 }
 
@@ -189,12 +183,6 @@ void flash_erase_subsector_blocking(uint32_t subsector_addr) {
 }
 
 uint32_t flash_get_sector_base_address(uint32_t flash_addr) {
-#if PLATFORM_SNOWY
-  if (flash_addr <= BOTTOM_BOOT_REGION_END) {
-    return (flash_addr & ~(BOTTOM_BOOT_SECTOR_SIZE - 1));
-  }
-#endif
-
   return (flash_addr & ~(SECTOR_SIZE_BYTES - 1));
 }
 

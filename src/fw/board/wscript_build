@@ -1,16 +1,5 @@
 board = bld.get_board()
-if board in ('snowy_bb2','snowy_dvt','snowy_emery'):
-    bld.objects(
-        name='board',
-        source=[
-            'boards/board_snowy.c',
-        ],
-        use=[
-            'fw_includes',
-            'drivers',
-        ],
-    )
-elif board in ('spalding', 'spalding_bb2', 'spalding_gabbro'):
+if board in ('spalding', 'spalding_bb2', 'spalding_gabbro'):
     bld.objects(
         name='board',
         source=[

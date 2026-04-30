@@ -1,5 +1,5 @@
 sources = []
-if bld.is_snowy_compatible() or bld.is_silk() or bld.is_snowy_emery() or bld.is_spalding_gabbro():
+if bld.is_spalding() or bld.is_silk() or bld.is_spalding_gabbro():
     sources.append(bld.path.make_node("startup_stm32.c"))
     sources.append(bld.path.make_node("system_stm32f4xx.c"))
 elif bld.is_asterix():

@@ -6,7 +6,6 @@
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
 #include "mfg/mfg_serials.h"
-#include "mfg/snowy/mfg_private.h"
 #include "system/logging.h"
 
 //! Used to version this struct if we have to add additional fields in the future.

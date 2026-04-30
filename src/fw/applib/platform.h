@@ -23,14 +23,10 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
   #elif PLATFORM_QEMU_GABBRO
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
-  #elif PLATFORM_SNOWY_EMERY
-    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
   #elif PLATFORM_SPALDING_GABBRO
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
   #elif PLATFORM_TINTIN
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeAplite
-  #elif PLATFORM_SNOWY
-    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeBasalt
   #elif PLATFORM_SPALDING
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeChalk
   #elif PLATFORM_SILK
