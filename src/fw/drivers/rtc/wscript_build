@@ -11,16 +11,6 @@ elif bld.env.CONFIG_RTC_NRF5:
 elif bld.env.CONFIG_RTC_SF32LB:
     sources.append('sf32lb.c')
     use.append('hal_sifli')
-elif bld.env.CONFIG_RTC_STM32F4:
-    sources.extend([
-        'common.c',
-        'stm32f4.c',
-    ])
-    use.extend([
-        'driver_pwr',
-        'driver_clocksource',
-        'stm32_stdlib',
-    ])
 
 bld.objects(
     name='driver_rtc',

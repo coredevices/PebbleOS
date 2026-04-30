@@ -1,9 +1,0 @@
-# SPDX-FileCopyrightText: 2026 Core Devices LLC
-# SPDX-License-Identifier: Apache-2.0
-
-def configure(conf):
-    pass
-
-def build(bld):
-    if bld.env.MICRO_FAMILY == "STM32F4":
-        bld.recurse("stm32f4")

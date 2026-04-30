@@ -11,12 +11,6 @@ elif bld.env.CONFIG_EXTI_NRF5:
     use.append('hal_nordic')
 elif bld.env.CONFIG_EXTI_SF32LB:
     sources.append('sf32lb.c')
-elif bld.env.CONFIG_EXTI_STM32F4:
-    sources.append('stm32f4.c')
-    use.extend([
-        'driver_periph_config',
-        'stm32_stdlib',
-    ])
 
 bld.objects(
     name='driver_exti',

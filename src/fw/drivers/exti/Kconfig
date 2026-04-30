@@ -18,11 +18,6 @@ config EXTI_SF32LB
     help
       Support for the SiFli SF32LB external interrupt controller.
 
-config EXTI_STM32F4
-    bool "ST STM32F4"
-    help
-      Support for the ST STM32F4 external interrupt controller.
-
 config EXTI_QEMU
     bool "QEMU External Interrupt"
     help

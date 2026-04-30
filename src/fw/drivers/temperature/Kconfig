@@ -13,11 +13,6 @@ config TEMPERATURE_SF32LB
     help
       Support for the SiFli SF32LB temperature sensor.
 
-config TEMPERATURE_STM32F4
-    bool "ST STM32F4"
-    help
-      Support for the ST STM32F4 temperature sensor.
-
 config TEMPERATURE_STUB
     bool "Stub"
     help

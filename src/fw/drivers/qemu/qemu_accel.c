@@ -42,7 +42,6 @@
 //! without speeding up or slowing down the signal during replay.
 
 #include "drivers/accel.h"
-#include "drivers/imu/bmi160/bmi160.h"
 
 #include "drivers/qemu/qemu_serial.h"
 #include "drivers/rtc.h"
