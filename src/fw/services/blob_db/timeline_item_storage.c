@@ -8,6 +8,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_raw_iter.h"
 #include "system/logging.h"
+#include "util/units.h"
 
 #define MAX_CHILDREN_PER_PIN 3
 
@@ -264,7 +265,8 @@ void timeline_item_storage_init(TimelineItemStorage *storage,
     .max_item_age = max_age,
     .mutex = mutex_create(),
   };
-  status_t rv = settings_file_open(&storage->file, storage->name, storage->max_size);
+  status_t rv = settings_file_open_growable(&storage->file, storage->name,
+                                            storage->max_size, KiBYTES(8));
   if (FAILED(rv)) {
     PBL_LOG_ERR("Unable to create settings file %s, rv = %"PRId32 "!",
             filename, rv);
