@@ -16,10 +16,6 @@ def is_bigboard(ctx):
 # Platform specific predicates
 
 @conf
-def is_silk(ctx):
-    return ctx.get_board().startswith('silk')
-
-@conf
 def is_asterix(ctx):
     return ctx.get_board().startswith('asterix')
 
@@ -55,8 +51,6 @@ def get_platform_name(ctx):
         return "qemu_flint"
     elif is_qemu_gabbro(ctx):
         return "qemu_gabbro"
-    elif is_silk(ctx):
-        return "silk"
     elif is_asterix(ctx):
         return "asterix"
     elif is_obelix(ctx):
@@ -77,8 +71,6 @@ def get_qemu_machine(ctx):
         return 'pebble-flint'
     elif is_qemu_gabbro(ctx):
         return 'pebble-gabbro'
-    elif is_silk(ctx):
-        return 'pebble-silk-bb'
     else:
         return 'unknown'
 
@@ -91,8 +83,6 @@ def get_qemu_cpu(ctx):
         return 'cortex-m4'
     elif is_qemu_gabbro(ctx):
         return 'cortex-m33'
-    elif is_silk(ctx):
-        return 'cortex-m4'
     elif is_asterix(ctx):
         return 'cortex-m4'
     else:
@@ -103,8 +93,6 @@ def get_qemu_cpu(ctx):
 def get_qemu_spi_flash_args(ctx, spi_flash_path, qemu_major):
     if is_qemu(ctx):
         return ['-drive', 'if=mtd,format=raw,file={}'.format(spi_flash_path)]
-    elif is_silk(ctx):
-        return ['-mtdblock', spi_flash_path]
     else:
         return None
 
@@ -133,9 +121,6 @@ def add_platform_defines(ctx, env):
     elif ctx.is_qemu_gabbro():
         bit_depth = 8
         platform = 'QEMU_GABBRO'
-    elif ctx.is_silk():
-        bit_depth = 1
-        platform = 'SILK'
     elif ctx.is_asterix():
         bit_depth = 1
         platform = 'ASTERIX'

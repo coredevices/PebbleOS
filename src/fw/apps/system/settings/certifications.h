@@ -83,35 +83,6 @@ static const CertificationIds s_certification_ids_fallback = {
 };
 
 
-static const RegulatoryFlags s_regulatory_flags_silk = {
-  .has_australia_rcm = true,
-  .has_canada_ic = true,
-  .has_china_cmiit = true,
-  .has_eu_ce = true,
-  .has_eu_weee = true,
-  .has_japan_telec_r = true,
-  .has_mexico_nom_nyce = true,
-  .has_usa_fcc = true,
-};
-
-static const CertificationIds s_certification_ids_silk = {
-  .company_name = "Pebble Technology Corp.",
-  .canada_ic_id = "10805A-1001",
-  .china_cmiit_id = "2016DJ4469",
-  .usa_fcc_id = "RGQ-1001",
-  .japan_telec_r_id = "201-160535",
-  .mexico_ifetel_id = "RCPPE1016-1161"
-};
-
-static const CertificationIds s_certification_ids_silk_hr = {
-  .company_name = "Pebble Technology Corp.",
-  .canada_ic_id = "10805A-1002",
-  .china_cmiit_id = "2016DJ4931",
-  .usa_fcc_id = "RGQ-1002",
-  .japan_telec_r_id = "201-160558",
-  .mexico_ifetel_id = "RCPPE1016-1238"
-};
-
 static const RegulatoryFlags s_regulatory_flags_obelix = {
   .has_canada_ised = true,
   .has_eu_ce = true,
@@ -134,9 +105,7 @@ static const CertificationIds s_certification_ids_obelix = {
 };
 
 static const RegulatoryFlags * prv_get_regulatory_flags(void) {
-#if PLATFORM_SILK
-  return &s_regulatory_flags_silk;
-#elif PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX
   // TODO: add applicable flags
   return &s_regulatory_flags_fallback;
 #elif PLATFORM_OBELIX
@@ -148,13 +117,7 @@ static const RegulatoryFlags * prv_get_regulatory_flags(void) {
 
 //! Don't call this function directly. Use the prv_get_*_id functions instead.
 static const CertificationIds * prv_get_certification_ids(void) {
-#if PLATFORM_SILK && !defined(BOARD_SILK_FLINT)
-  if (mfg_info_is_hrm_present()) {
-    return &s_certification_ids_silk_hr;
-  } else {
-    return &s_certification_ids_silk;
-  }
-#elif PLATFORM_ASTERIX
+#if PLATFORM_ASTERIX
   // TODO: add real certification ids
   return &s_certification_ids_fallback;
 #elif PLATFORM_OBELIX
