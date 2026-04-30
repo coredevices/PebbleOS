@@ -41,6 +41,16 @@ typedef struct SettingsFile {
   //! fail.
   int max_used_space;
 
+  //! The current allocation budget for physical file size. For growable files,
+  //! this starts at a small initial value and grows toward max_used_space on
+  //! demand. For non-growable files, this equals max_used_space.
+  int alloc_used_space;
+
+  //! The floor for alloc_used_space. Compact will not shrink below this. For
+  //! growable files this is the initial_alloc_size requested at open time;
+  //! for non-growable files this equals max_used_space (no shrink).
+  int min_alloc_used_space;
+
   //! Amount of space in the settings_file that is currently dead, i.e.
   //! has been written to with some data, but that data is no longer valid.
   //! (overwritten records get added to this)
@@ -69,6 +79,8 @@ typedef struct SettingsFile {
 //! ignored. We could change this if the need arises.
 status_t settings_file_open(SettingsFile *file, const char *name,
                             int max_used_space);
+status_t settings_file_open_growable(SettingsFile *file, const char *name,
+                                     int max_used_space, int initial_alloc_size);
 void settings_file_close(SettingsFile *file);
 
 bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len);
