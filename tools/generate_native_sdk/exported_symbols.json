@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "98",
+  "revision" : "99",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -1687,6 +1687,10 @@
             }, {
               "type": "define",
               "name": "PERSIST_STRING_MAX_LENGTH"
+            }, {
+              "type": "define",
+              "name": "PERSIST_STORAGE_MAX_SIZE",
+              "addedRevision": "99"
             }, {
               "type": "type",
               "name": "StatusCode"

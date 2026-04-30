@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "applib/persist.h"
 #include "kernel/pbl_malloc.h"
 #include "os/mutex.h"
 #include "process_management/app_install_manager.h"
@@ -19,7 +20,6 @@
 #include "util/list.h"
 #include "util/units.h"
 
-#define PERSIST_STORAGE_MAX_SPACE MiBYTES(1)
 #define PERSIST_STORAGE_INITIAL_ALLOC KiBYTES(4)
 
 typedef struct PersistStore {
@@ -126,7 +126,7 @@ SettingsFile * persist_service_lock_and_get_store(const Uuid *uuid) {
     char filename[PERSIST_FILE_NAME_MAX_LENGTH];
     PBL_ASSERTN(PASSED(prv_get_file_name(filename, sizeof(filename), uuid)));
     PBL_ASSERTN(PASSED(settings_file_open_growable(&store->file, filename,
-                                                   PERSIST_STORAGE_MAX_SPACE,
+                                                   PERSIST_STORAGE_MAX_SIZE,
                                                    PERSIST_STORAGE_INITIAL_ALLOC)));
     store->file_open = true;
   }

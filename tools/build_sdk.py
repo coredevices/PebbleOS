@@ -76,6 +76,29 @@ def _patch_process_info_version(dest_path, frozen_revision):
         f.write(text)
 
 
+# Defines whose value depends on the target firmware. Frozen platforms predate
+# the firmware change and must use the legacy value. Each entry maps a define
+# name to its legacy value.
+_FROZEN_DEFINE_OVERRIDES = {
+    "PERSIST_STORAGE_MAX_SIZE": "4096",
+}
+
+
+def _patch_frozen_define_overrides(header_path):
+    """Rewrite firmware-capability-dependent defines in a generated SDK header
+    to their legacy values for frozen platforms."""
+    with open(header_path) as f:
+        text = f.read()
+    for name, legacy_value in _FROZEN_DEFINE_OVERRIDES.items():
+        text = re.sub(
+            r"(#define\s+{}\s+).*".format(re.escape(name)),
+            r"\g<1>{}".format(legacy_value),
+            text,
+        )
+    with open(header_path, "w") as f:
+        f.write(text)
+
+
 def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build):
     if platform_name not in pebble_platforms:
         raise SystemExit(
@@ -145,6 +168,10 @@ def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build):
     )
 
     if is_frozen:
+        for header in ("pebble.h", "pebble_worker.h"):
+            header_path = path.join(sdk_include_dir, header)
+            if path.isfile(header_path):
+                _patch_frozen_define_overrides(header_path)
         print("    Skipped libpebble.a (frozen SDK, use pre-built library)")
 
     print("    Output: {}".format(platform_dir))
