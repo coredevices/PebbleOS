@@ -28,10 +28,9 @@ def _autogen_applib_sources(bld):
 def _get_bit_depth_excludes(bld):
     bit_depths = [1, 8]
     if (
-        bld.is_snowy_compatible() or
+        bld.is_spalding() or
         bld.is_obelix() or
         bld.is_getafix() or
-        bld.is_snowy_emery() or
         bld.is_spalding_gabbro() or
         bld.is_qemu_emery() or
         bld.is_qemu_gabbro()

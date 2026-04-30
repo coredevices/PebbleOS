@@ -16,10 +16,6 @@ def is_bigboard(ctx):
 # Platform specific predicates
 
 @conf
-def is_snowy(ctx):
-    return ctx.get_board().startswith('snowy') and ctx.get_board() != 'snowy_emery'
-
-@conf
 def is_spalding(ctx):
     return ctx.get_board().startswith('spalding') and ctx.get_board() != 'spalding_gabbro'
 
@@ -38,10 +34,6 @@ def is_obelix(ctx):
 @conf
 def is_getafix(ctx):
     return ctx.get_board().startswith('getafix')
-
-@conf
-def is_snowy_emery(ctx):
-    return ctx.get_board() == 'snowy_emery'
 
 @conf
 def is_spalding_gabbro(ctx):
@@ -71,8 +63,6 @@ def get_platform_name(ctx):
         return "qemu_flint"
     elif is_qemu_gabbro(ctx):
         return "qemu_gabbro"
-    elif is_snowy(ctx):
-        return "snowy"
     elif is_spalding(ctx):
         return "spalding"
     elif is_silk(ctx):
@@ -83,18 +73,10 @@ def get_platform_name(ctx):
         return "obelix"
     elif is_getafix(ctx):
         return "getafix"
-    elif is_snowy_emery(ctx):
-        return "snowy_emery"
     elif is_spalding_gabbro(ctx):
         return "spalding_gabbro"
     else:
         return "unknown"
-
-# Composite platform predicates
-
-@conf
-def is_snowy_compatible(ctx):
-    return (ctx.is_snowy() or ctx.is_spalding())
 
 
 # Platform features
@@ -107,14 +89,10 @@ def get_qemu_machine(ctx):
         return 'pebble-flint'
     elif is_qemu_gabbro(ctx):
         return 'pebble-gabbro'
-    elif is_snowy(ctx):
-        return 'pebble-snowy-bb'
     elif is_spalding(ctx):
         return 'pebble-s4-bb'
     elif is_silk(ctx):
         return 'pebble-silk-bb'
-    elif is_snowy_emery(ctx):
-        return 'pebble-snowy-emery-bb'
     elif is_spalding_gabbro(ctx):
         return 'pebble-spalding-gabbro-bb'
     else:
@@ -129,15 +107,11 @@ def get_qemu_cpu(ctx):
         return 'cortex-m4'
     elif is_qemu_gabbro(ctx):
         return 'cortex-m33'
-    elif is_snowy(ctx):
-        return 'cortex-m4'
     elif is_spalding(ctx):
         return 'cortex-m4'
     elif is_silk(ctx):
         return 'cortex-m4'
     elif is_asterix(ctx):
-        return 'cortex-m4'
-    elif is_snowy_emery(ctx):
         return 'cortex-m4'
     elif is_spalding_gabbro(ctx):
         return 'cortex-m4'
@@ -149,7 +123,7 @@ def get_qemu_cpu(ctx):
 def get_qemu_spi_flash_args(ctx, spi_flash_path, qemu_major):
     if is_qemu(ctx):
         return ['-drive', 'if=mtd,format=raw,file={}'.format(spi_flash_path)]
-    elif is_snowy(ctx) or is_spalding(ctx) or is_snowy_emery(ctx) or is_spalding_gabbro(ctx):
+    elif is_spalding(ctx) or is_spalding_gabbro(ctx):
         # QEMU 7.0+ uses a named block device; older versions use -pflash.
         if qemu_major >= 7:
             return ['-drive', 'if=none,id=spi-flash,file={},format=raw'.format(spi_flash_path)]
@@ -185,9 +159,6 @@ def add_platform_defines(ctx, env):
     elif ctx.is_qemu_gabbro():
         bit_depth = 8
         platform = 'QEMU_GABBRO'
-    elif ctx.is_snowy():
-        bit_depth = 8
-        platform = 'SNOWY'
     elif ctx.is_spalding():
         bit_depth = 8
         platform = 'SPALDING'
@@ -203,9 +174,6 @@ def add_platform_defines(ctx, env):
     elif ctx.is_getafix():
         bit_depth = 8
         platform = 'GETAFIX'
-    elif ctx.is_snowy_emery():
-        bit_depth = 8
-        platform = 'SNOWY_EMERY'
     elif ctx.is_spalding_gabbro():
         bit_depth = 8
         platform = 'SPALDING_GABBRO'

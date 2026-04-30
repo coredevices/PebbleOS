@@ -37,7 +37,7 @@
 #define FLASH_REGION_SHARED_PRF_STORAGE_BEGIN 0x0C0000
 #define FLASH_REGION_SHARED_PRF_STORAGE_END   0x0E0000
 
-// 1 128kb sector for storing mfg info, see fw/mfg/snowy/mfg_info.c
+// 1 128kb sector for storing mfg info, see fw/mfg/spalding/mfg_info.c
 #define FLASH_REGION_MFG_INFO_BEGIN 0x0E0000
 #define FLASH_REGION_MFG_INFO_END   0x100000
 
