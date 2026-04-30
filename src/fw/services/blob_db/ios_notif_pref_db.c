@@ -35,7 +35,8 @@ static PebbleMutex *s_mutex;
 static status_t prv_file_open_and_lock(SettingsFile *file) {
   mutex_lock(s_mutex);
 
-  status_t rv = settings_file_open(file, iOS_NOTIF_PREF_DB_FILE_NAME, iOS_NOTIF_PREF_MAX_SIZE);
+  status_t rv = settings_file_open_growable(file, iOS_NOTIF_PREF_DB_FILE_NAME,
+                                            iOS_NOTIF_PREF_MAX_SIZE, KiBYTES(4));
   if (rv != S_SUCCESS) {
     mutex_unlock(s_mutex);
   }
