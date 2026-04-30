@@ -37,36 +37,6 @@ master_capability_set = {
 
 board_capability_dicts = [
     {
-        "boards": ["snowy_bb2", "snowy_dvt"],
-        "capabilities": {
-            "COMPOSITOR_USES_DMA",
-            "HAS_DEFECTIVE_FW_CRC",
-            "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_MAPPABLE_FLASH",
-            "HAS_MASKING",
-            "HAS_TIMELINE_PEEK",
-            "USE_PARALLEL_FLASH",
-            "HAS_FPGA_DISPLAY",
-        },
-    },
-    {
-        "boards": ["snowy_emery"],
-        "capabilities": {
-            "COMPOSITOR_USES_DMA",
-            "HAS_DEFECTIVE_FW_CRC",
-            "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_MAPPABLE_FLASH",
-            "HAS_MASKING",
-            "HAS_SPRF_V3",
-            "HAS_TIMELINE_PEEK",
-            "USE_PARALLEL_FLASH",
-            "HAS_PUTBYTES_PREACKING",
-            "HAS_FPGA_DISPLAY",
-            "HAS_APP_SCALING",
-            "HAS_MODDABLE_XS",
-        },
-    },
-    {
         "boards": ["spalding_bb2"],
         "capabilities": {
             "COMPOSITOR_USES_DMA",

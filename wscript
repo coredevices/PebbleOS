@@ -29,9 +29,6 @@ import waftools.nrfutil
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
 
 RUNNERS = {
-    'snowy_bb2': ['openocd'],
-    'snowy_dvt': ['openocd'],
-    'snowy_emery': ['openocd'],
     'spalding_gabbro': ['openocd'],
     'spalding_bb2': ['openocd'],
     'spalding': ['openocd'],
@@ -84,11 +81,8 @@ def options(opt):
     opt.recurse('sdk')
     opt.recurse('third_party')
     opt.add_option('--board', action='store',
-                   choices=[ 'snowy_bb2',  # alias for snowy_dvt, but with #define IS_BIGBOARD
-                             'snowy_dvt',
-                             'snowy_emery',  # snowy with robert screen and resources
-                             'spalding_gabbro',  # spalding with getafix screen and resources
-                             'spalding_bb2',  # snowy_bb2 with s4 display
+                   choices=[ 'spalding_gabbro',  # spalding with getafix screen and resources
+                             'spalding_bb2',  # bigboard variant of spalding
                              'spalding',
                              'silk',
                              'silk_bb2',
@@ -105,7 +99,7 @@ def options(opt):
                              'qemu_gabbro',
                             ],
                    help='Which board we are targeting '
-                        'snowy_dvt, spalding, silk...')
+                        'spalding, silk, asterix...')
     opt.add_option('--runner', default=None, choices=['openocd', 'sftool', 'nrfutil'],
                    help='Which runner we are using')
     opt.add_option('--openocd-jtag', action='store', default=None, dest='openocd_jtag',  # default is bb2 (below)
@@ -237,7 +231,7 @@ def handle_configure_options(conf):
 
     if conf.env.MICRO_FAMILY == 'STM32F4':
         if conf.options.lowpowerdebug and not conf.options.nosleep:
-            Logs.warn('On snowy --lowpowerdebug can only be used with --nosleep. Forcing --nosleep on!\n'
+            Logs.warn('On STM32F4 --lowpowerdebug can only be used with --nosleep. Forcing --nosleep on!\n'
                       'See PBL-10174.')
             conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
 
@@ -333,7 +327,7 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'TINTIN_FORCE_FIT')
         print("Functionality is secondary to usability")
 
-    if (conf.is_snowy_compatible() and not conf.options.no_lto and not conf.options.qemu) or conf.options.lto:
+    if (conf.is_spalding() and not conf.options.no_lto and not conf.options.qemu) or conf.options.lto:
         conf.options.lto = True
         print("Turning on LTO.")
 
@@ -394,7 +388,7 @@ def configure(conf):
     if conf.env.RUNNER == 'openocd':
         if conf.options.openocd_jtag:
             conf.env.OPENOCD_JTAG = conf.options.openocd_jtag
-        elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
+        elif conf.options.board in ('spalding_bb2',):
             conf.env.OPENOCD_JTAG = 'jtag_ftdi'
         elif conf.options.board in ('silk_bb2', 'silk'):
             conf.env.OPENOCD_JTAG = 'swd_ftdi'
@@ -419,13 +413,13 @@ def configure(conf):
     elif conf.is_spalding():
         conf.env.PLATFORM_NAME = 'chalk'
         conf.env.MIN_SDK_VERSION = 3
-    elif conf.is_snowy_compatible():
+    elif conf.is_spalding():
         conf.env.PLATFORM_NAME = 'basalt'
         conf.env.MIN_SDK_VERSION = 2
     elif conf.is_silk() and conf.options.board != 'silk_flint':
         conf.env.PLATFORM_NAME = 'diorite'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_obelix() or conf.is_snowy_emery():
+    elif conf.is_obelix():
         conf.env.PLATFORM_NAME = 'emery'
         conf.env.MIN_SDK_VERSION = 3
     elif conf.is_asterix() or conf.options.board == 'silk_flint':
@@ -446,7 +440,7 @@ def configure(conf):
             conf.env.MICRO_FAMILY = 'QEMU_PEBBLE_ARMCM4'
         else:
             conf.env.MICRO_FAMILY = 'QEMU_PEBBLE_ARMCM33'
-    elif conf.is_snowy_compatible() or conf.is_silk() or conf.is_snowy_emery() or conf.is_spalding_gabbro():
+    elif conf.is_spalding() or conf.is_silk() or conf.is_spalding_gabbro():
         conf.env.MICRO_FAMILY = 'STM32F4'
     elif conf.is_asterix():
         conf.env.MICRO_FAMILY = 'NRF52'
@@ -497,7 +491,7 @@ def configure(conf):
     if conf.env.QEMU or conf.is_qemu():
         conf.env.bt_controller = 'qemu'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
-    elif conf.is_snowy() or conf.is_spalding():
+    elif conf.is_spalding():
         conf.env.bt_controller = 'stub'
     elif conf.is_asterix():
         conf.env.bt_controller = 'nrf52'

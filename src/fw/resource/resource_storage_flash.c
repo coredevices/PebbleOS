@@ -91,7 +91,7 @@ extern uint8_t pbl_28517_flash_impl_get_status_register(uint32_t sector_addr);
 
 static uint32_t resource_storage_system_bank_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                                      uint32_t entry_offset) {
-#if (PLATFORM_SNOWY || PLATFORM_SPALDING || PLATFORM_SNOWY_EMERY || PLATFORM_SPALDING_GABBRO) && !RELEASE && !UNITTEST
+#if (PLATFORM_SPALDING || PLATFORM_SPALDING_GABBRO) && !RELEASE && !UNITTEST
   // PBL-28517 investigation
   if (entry_offset == 0) {
     // We're calculating the CRC of the whole bank. Before we do this, let's save the status

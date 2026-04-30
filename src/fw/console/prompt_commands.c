@@ -1409,10 +1409,6 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
       [TestStringFont_Gothic18] = 204,
       [TestStringFont_Gothic24B] = 144,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
-#elif PLATFORM_SNOWY
-      [TestStringFont_Gothic18] = 109,
-      [TestStringFont_Gothic24B] = 78,
-      [TestStringFont_Other] = STRING_LENGTH_MAX,
 #endif
     },
   },
@@ -1432,10 +1428,6 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
       [TestStringFont_Gothic18] = 579,
       [TestStringFont_Gothic24B] = 291,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
-#elif PLATFORM_SNOWY
-      [TestStringFont_Gothic18] = 256,
-      [TestStringFont_Gothic24B] = 113,
-      [TestStringFont_Other] = STRING_LENGTH_MAX,
 #endif
     },
   },
@@ -1449,10 +1441,6 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
 #if PLATFORM_OBELIX || PLATFORM_GETAFIX
       [TestStringFont_Gothic18] = 134,
       [TestStringFont_Gothic24B] = 134,
-      [TestStringFont_Other] = STRING_LENGTH_MAX,
-#elif PLATFORM_SNOWY
-      [TestStringFont_Gothic18] = 134,
-      [TestStringFont_Gothic24B] = 112,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
 #endif
     },

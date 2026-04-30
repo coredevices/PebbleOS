@@ -32,7 +32,6 @@ bool bmi160_query_whoami(void) WEAK;
 bool bma255_query_whoami(void) WEAK;
 bool flash_check_whoami(void) WEAK;
 bool mag3110_check_whoami(void) WEAK;
-bool snowy_mag3110_query_whoami(void) WEAK;
 bool mic_selftest(void) WEAK;
 
 // NULL function pointer means test is not implemented

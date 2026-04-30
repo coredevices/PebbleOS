@@ -5,9 +5,8 @@
 
 //! @file mfg_info.c
 //!
-//! This file implements mfg_info functions where the storage is the same for both tintin and
-//! snowy, mostly for things that are stored in OTP. See the tintin/mfg_info.c and
-//! snowy/mfg_info.c for the board specific implementations.
+//! This file implements mfg_info functions where the storage is in OTP. See the per-board
+//! mfg_info.c files for the board specific implementations.
 
 void mfg_info_get_serialnumber(char *serial_number, size_t serial_number_size) {
   strncpy(serial_number, mfg_get_serial_number(), serial_number_size);
