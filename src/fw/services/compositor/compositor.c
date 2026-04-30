@@ -456,9 +456,15 @@ void compositor_transition(const CompositorTransition *compositor_animation) {
     }
 
   } else {
-    // App to App
+    // App to App (also handles Transitioning->App when the previous animation was cancelled)
 
-    // We have to wait for the app to populate its framebuffer
+    // We can't say for sure whether or not the app framebuffer is in a reasonable state, as the
+    // app could be redrawing itself right now. Since we can't query this, instead trigger the
+    // app to redraw itself. This way we will cause an PEBBLE_RENDER_READY_EVENT in the very near
+    // future, regardless of the app's state.
+    prv_send_app_render_request();
+
+    // Now wait for the ready event.
     s_state = CompositorState_AppTransitionPending;
   }
 }
