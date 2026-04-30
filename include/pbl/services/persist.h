@@ -28,6 +28,9 @@ typedef struct SettingsFile SettingsFile;
 //! Initialize the persist service.
 void persist_service_init(void);
 
+//! Get the per-app persistent storage capacity in bytes.
+size_t persist_service_get_max_size(void);
+
 //! Lock and get the persist store for the given app.
 SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid);
 

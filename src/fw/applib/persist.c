@@ -31,6 +31,10 @@ static void prv_unlock(SettingsFile **store) {
       = prv_lock_and_get_store()
 
 
+DEFINE_SYSCALL(size_t, persist_get_max_size, void) {
+  return persist_service_get_max_size();
+}
+
 DEFINE_SYSCALL(bool, persist_exists, const uint32_t key) {
   LOCK_AND_GET_STORE(store);
   return settings_file_exists(store, &key, sizeof(key));

@@ -35,7 +35,8 @@
 //! retrieve values from the phone, it provides you with a much faster way to restore state.
 //! In addition, it draws less power from the battery.
 //!
-//! Note that the size of all persisted values cannot exceed 1MB per app.
+//! The total size of an app's persisted values is capped; call
+//! \ref persist_get_max_size to query the limit at runtime.
 //!   @{
 
 //! The maximum size of a persist value in bytes
@@ -45,6 +46,12 @@
 #define PERSIST_STRING_MAX_LENGTH PERSIST_DATA_MAX_LENGTH
 
 struct PersistStore;
+
+//! Gets the maximum total size in bytes of all persisted values for the
+//! current app on this firmware. Apps targeting older SDKs that don't have
+//! this function should assume a 4 KB limit.
+//! @return The per-app persistent storage capacity in bytes.
+size_t persist_get_max_size(void);
 
 //! Checks whether a value has been set for a given key in persistent storage.
 //! @param key The key of the field to check.
