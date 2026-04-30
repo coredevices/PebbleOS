@@ -5,6 +5,7 @@
 #include "pbl/services/settings/settings_raw_iter.h"
 
 #include "drivers/rtc.h"
+#include "drivers/task_watchdog.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "system/logging.h"
@@ -214,6 +215,10 @@ status_t settings_file_rewrite_filtered(
   PBL_LOG_INFO("FIRM-1649: settings_file_rewrite_filtered start file=%s",
                file->name);
 
+  // A 1 MiB grow can take many seconds of pure flash erase + write time. Pause
+  // the task watchdog rather than letting it trip and kick App Throttling.
+  task_watchdog_pause(60);
+
   SettingsFile new_file;
   status_t status = prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ,
                              file->max_used_space, file->alloc_used_space,
@@ -221,10 +226,16 @@ status_t settings_file_rewrite_filtered(
   if (status < 0) {
     PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %"PRIi32".",
             status);
+    task_watchdog_resume();
     return status;
   }
 
   settings_raw_iter_begin(&new_file.iter);
+
+  // One reusable buffer for key+val per record; sized for the worst case.
+  // Avoids two malloc/free pairs per record over what can be thousands of
+  // records on a large persist file.
+  uint8_t *kv_buf = kernel_malloc(SETTINGS_KEY_MAX_LEN + SETTINGS_VAL_MAX_LEN);
 
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
       settings_raw_iter_next(&file->iter)) {
@@ -249,22 +260,19 @@ status_t settings_file_rewrite_filtered(
       clear_flag(hdr, SETTINGS_FLAG_OVERWRITE_STARTED);
     }
 
-    // Get the old key and value
-    uint8_t *key = kernel_malloc(hdr->key_len);
-    settings_raw_iter_read_key(&file->iter, key);
-    uint8_t *val = kernel_malloc(hdr->val_len);
-    settings_raw_iter_read_val(&file->iter, val, hdr->val_len);
+    // Read key+val in a single PFS call; key occupies the first key_len bytes.
+    settings_raw_iter_read_key_val(&file->iter, kv_buf);
+    uint8_t *key = kv_buf;
+    uint8_t *val = kv_buf + hdr->key_len;
 
     // Include in re-written file if it passes the filter
     if (!filter_cb || filter_cb(key, hdr->key_len, val, hdr->val_len, context)) {
       settings_raw_iter_write_header(&new_file.iter, hdr);
-      settings_raw_iter_write_key(&new_file.iter, key);
-      settings_raw_iter_write_val(&new_file.iter, val);
+      settings_raw_iter_write_key_val(&new_file.iter, kv_buf);
       settings_raw_iter_next(&new_file.iter);
     }
-    kernel_free(key);
-    kernel_free(val);
   }
+  kernel_free(kv_buf);
   settings_file_close(file);
   // We have to close and reopen the new_file so that it's temp flag is cleared.
   // Before the close succeeds, if we reboot, we will just end up reading the
@@ -277,6 +285,8 @@ status_t settings_file_rewrite_filtered(
   status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE,
                     file->max_used_space, alloc_used_space, min_alloc_used_space);
   kernel_free(name);
+
+  task_watchdog_resume();
 
   // FIRM-1649: instrumentation. See note at the top of this function.
   const uint32_t rewrite_elapsed_ms =

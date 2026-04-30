@@ -186,6 +186,13 @@ void settings_raw_iter_read_val(SettingsRawIter *iter, uint8_t *val_out, int val
   sfs_read(iter, val_out, val_len);
 }
 
+void settings_raw_iter_read_key_val(SettingsRawIter *iter, uint8_t *key_val_out) {
+  const int kv_len = iter->hdr.key_len + iter->hdr.val_len;
+  if (kv_len == 0) return;
+  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), FSeekSet);
+  sfs_read(iter, key_val_out, kv_len);
+}
+
 void settings_raw_iter_write_header(SettingsRawIter *iter, SettingsRecordHeader *hdr) {
   PBL_ASSERTN(hdr->key_len <= SETTINGS_KEY_MAX_LEN);
   PBL_ASSERTN(hdr->val_len <= SETTINGS_VAL_MAX_LEN);
@@ -202,6 +209,13 @@ void settings_raw_iter_write_val(SettingsRawIter *iter, const uint8_t *val) {
   if (iter->hdr.val_len == 0) return;
   sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader) + iter->hdr.key_len, FSeekSet);
   sfs_write(iter, val, iter->hdr.val_len);
+}
+
+void settings_raw_iter_write_key_val(SettingsRawIter *iter, const uint8_t *key_val) {
+  const int kv_len = iter->hdr.key_len + iter->hdr.val_len;
+  if (kv_len == 0) return;
+  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), FSeekSet);
+  sfs_write(iter, key_val, kv_len);
 }
 void settings_raw_iter_write_byte(SettingsRawIter *iter, int offset, uint8_t byte) {
   sfs_seek(iter, iter->hdr_pos +

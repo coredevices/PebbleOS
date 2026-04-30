@@ -18,3 +18,9 @@ void task_watchdog_feed(void) {
 
 void task_watchdog_bit_set(PebbleTask task) {
 }
+
+void task_watchdog_pause(unsigned int seconds) {
+}
+
+void task_watchdog_resume(void) {
+}
