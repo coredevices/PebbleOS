@@ -1,16 +1,5 @@
 board = bld.get_board()
-if board in ('spalding', 'spalding_bb2', 'spalding_gabbro'):
-    bld.objects(
-        name='board',
-        source=[
-            'boards/board_spalding_evt.c',
-        ],
-        use=[
-            'fw_includes',
-            'drivers',
-        ],
-    )
-elif board in ('silk_bb2', 'silk', 'silk_flint'):
+if board in ('silk_bb2', 'silk', 'silk_flint'):
     bld.objects(
         name='board',
         source=[

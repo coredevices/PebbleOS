@@ -130,10 +130,7 @@ def gather_analytic_crash_stats(fw_version, error_code, error_code_name, use_eve
 
     elf_dict = dict()
 
-    symbol_name_to_hw_model_lookup = {
-        "snowy_dvt": ["snowy21", "snowy22", "snowy23"],
-        "spalding": ["spauld13"],
-    }
+    symbol_name_to_hw_model_lookup = {}
     # Download the .elf associated with the core dump:
     for elf_name in symbol_name_to_hw_model_lookup.iterkeys():
         try:

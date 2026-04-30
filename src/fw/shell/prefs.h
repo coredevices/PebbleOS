@@ -136,13 +136,6 @@ bool shell_prefs_get_language_english(void);
 void shell_prefs_set_language_english(bool english);
 void shell_prefs_toggle_language_english(void);
 
-// Manage display offset
-void shell_prefs_set_display_offset(GPoint offset);
-GPoint shell_prefs_get_display_offset(void);
-void shell_prefs_display_offset_init(void);
-bool shell_prefs_should_prompt_display_calibration(void);
-void shell_prefs_set_should_prompt_display_calibration(bool should_prompt);
-
 uint8_t timeline_prefs_get_settings_opened(void);
 void timeline_prefs_set_settings_opened(uint8_t version);
 void timeline_peek_prefs_set_enabled(bool enabled);

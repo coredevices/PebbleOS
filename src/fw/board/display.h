@@ -22,13 +22,7 @@ typedef struct {
 // used by waftools/pebble_test.py to define these includes per test
 #else
 
-#if BOARD_SPALDING_GABBRO
-#include "displays/display_getafix.h"
-#elif BOARD_SPALDING_BB2
-#include "displays/display_spalding.h"
-#elif BOARD_SPALDING
-#include "displays/display_spalding.h"
-#elif BOARD_SILK_BB2
+#if BOARD_SILK_BB2
 #include "displays/display_silk.h"
 #elif BOARD_SILK
 #include "displays/display_silk.h"

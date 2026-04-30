@@ -294,7 +294,7 @@ BatteryChargeState battery_get_charge_state(void) {
   int32_t percent_normalized = MAX((percent - BOARD_CONFIG_POWER.low_power_threshold
                   + percent / (100 / BOARD_CONFIG_POWER.low_power_threshold)), 0);
 
-#if defined(PLATFORM_SPALDING_GABBRO) || defined(BOARD_SILK_FLINT)
+#if defined(BOARD_SILK_FLINT)
   // These QEMU platforms can set exact battery percentages via QEMU controls, so use 1% steps
   uint8_t charge_percent = MIN(percent, 100);
 #else

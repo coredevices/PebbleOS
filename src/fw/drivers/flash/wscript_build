@@ -35,14 +35,6 @@ elif bld.env.CONFIG_FLASH_MX25U:
         'driver_qspi',
         'stm32_stdlib',
     ])
-elif bld.env.CONFIG_FLASH_SPANSION_S29VS:
-    sources.append('spansion_s29vs.c')
-    use.extend([
-        'driver_gpio',
-        'driver_periph_config',
-        'stm32_stdlib',
-    ])
-
 bld.objects(
     name='driver_flash',
     source=sources,

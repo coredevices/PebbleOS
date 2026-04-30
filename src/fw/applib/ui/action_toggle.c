@@ -158,13 +158,7 @@ static void prv_push_prompt_dialog(ActionToggleContext *ctx) {
 static bool prv_should_prompt(const ActionToggleConfig *config) {
   switch (config->prompt) {
     case ActionTogglePrompt_Auto:
-#if PLATFORM_SPALDING
-      return ((pebble_task_get_current() == PebbleTask_App) &&
-              (app_launch_reason() == APP_LAUNCH_QUICK_LAUNCH) &&
-              (app_launch_button() == BUTTON_ID_BACK));
-#else
       return false;
-#endif
     case ActionTogglePrompt_NoPrompt:
       return false;
     case ActionTogglePrompt_Prompt:

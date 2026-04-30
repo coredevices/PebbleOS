@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "display.h"
-#include "display_calibration.h"
 #include "menu.h"
 #include "option_menu.h"
 #include "window.h"
@@ -450,9 +449,6 @@ enum SettingsDisplayItem {
   SettingsDisplayTouch,
 #endif
   SettingsDisplayBacklight,
-#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
-  SettingsDisplayAdjustAlignment,
-#endif
 #if CAPABILITY_HAS_APP_SCALING
   SettingsDisplayLegacyAppMode,
 #endif
@@ -477,11 +473,6 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
     case SettingsDisplayBacklight:
       prv_backlight_submenu_push();
       break;
-#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
-    case SettingsDisplayAdjustAlignment:
-      settings_display_calibration_push(app_state_get_window_stack());
-      break;
-#endif
 #if CAPABILITY_HAS_APP_SCALING
     case SettingsDisplayLegacyAppMode:
       prv_legacy_app_mode_menu_push((SettingsDisplayData*)context);
@@ -519,11 +510,6 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case SettingsDisplayBacklight:
       title = i18n_noop("Backlight");
       break;
-#if PLATFORM_SPALDING && !PLATFORM_SPALDING_GABBRO
-    case SettingsDisplayAdjustAlignment:
-      title = i18n_noop("Screen Alignment");
-      break;
-#endif
 #if CAPABILITY_HAS_APP_SCALING
     case SettingsDisplayLegacyAppMode:
       title = i18n_noop("Legacy Apps");

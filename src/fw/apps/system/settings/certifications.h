@@ -83,19 +83,6 @@ static const CertificationIds s_certification_ids_fallback = {
 };
 
 
-static const RegulatoryFlags s_regulatory_flags_spalding = {
-  .has_canada_ic = true,
-  .has_eu_ce = true,
-  .has_eu_weee = true,
-  .has_usa_fcc = true,
-};
-
-static const CertificationIds s_certification_ids_spalding = {
-  .company_name = "Pebble Technology Corp.",
-  .canada_ic_id = "10805A-601",
-  .usa_fcc_id = "RGQ-601",
-};
-
 static const RegulatoryFlags s_regulatory_flags_silk = {
   .has_australia_rcm = true,
   .has_canada_ic = true,
@@ -147,9 +134,7 @@ static const CertificationIds s_certification_ids_obelix = {
 };
 
 static const RegulatoryFlags * prv_get_regulatory_flags(void) {
-#if PLATFORM_SPALDING
-  return &s_regulatory_flags_spalding;
-#elif PLATFORM_SILK
+#if PLATFORM_SILK
   return &s_regulatory_flags_silk;
 #elif PLATFORM_ASTERIX
   // TODO: add applicable flags
@@ -163,9 +148,7 @@ static const RegulatoryFlags * prv_get_regulatory_flags(void) {
 
 //! Don't call this function directly. Use the prv_get_*_id functions instead.
 static const CertificationIds * prv_get_certification_ids(void) {
-#if defined(BOARD_SPALDING)
-  return &s_certification_ids_spalding;
-#elif PLATFORM_SILK && !defined(BOARD_SILK_FLINT)
+#if PLATFORM_SILK && !defined(BOARD_SILK_FLINT)
   if (mfg_info_is_hrm_present()) {
     return &s_certification_ids_silk_hr;
   } else {

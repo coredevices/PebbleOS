@@ -95,13 +95,8 @@ static const BatteryUIState ui_states[] = {
 static BatteryUIStateID s_state = BatteryGood;
 static BatteryUIWarningLevel s_warning_points_index = -1;
 
-#if PLATFORM_SPALDING
-/* first warning for S4 is at 12 hours remaining, second at 6 hours remaining */
-static const uint8_t s_warning_points[] = { 12, 6 };
-#else
 /* first warning is at 18 hours remaining, second at 12 hours remaining */
 static const uint8_t s_warning_points[] = { 18, 12 };
-#endif
 
 // Minimum hours of headroom above the next warning threshold required to show
 // the current warning. If battery crosses a warning point already close to the

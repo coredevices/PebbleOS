@@ -23,11 +23,6 @@ config FLASH_MX25U
     help
       Support for the Macronix MX25U NOR flash.
 
-config FLASH_SPANSION_S29VS
-    bool "Spansion S29VS"
-    help
-      Support for the Spansion S29VS NOR flash.
-
 config FLASH_QEMU
     bool "QEMU External Flash"
     help

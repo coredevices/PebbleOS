@@ -8,11 +8,6 @@ menuconfig DISPLAY
 
 if DISPLAY
 
-config DISPLAY_ICE40LP
-    bool "Lattice iCE40LP"
-    help
-      Support for the Lattice iCE40LP FPGA display controller.
-
 config DISPLAY_JDI_SF32LB
     bool "JDI (SiFli SF32LB)"
     help

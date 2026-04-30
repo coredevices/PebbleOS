@@ -6,23 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if PLATFORM_SPALDING || PLATFORM_SPALDING_GABBRO
-enum {
-  // ML/FL / 1.0 and later:
-  OTP_SERIAL1 = 0,
-  OTP_HWVER1 = 1,
-  OTP_PCBA_SERIAL1 = 2,
-  // Quanta / HW 1.3 and later:
-  OTP_SERIAL2 = 3,
-  OTP_SERIAL3 = 4,
-  OTP_SERIAL4 = 5,
-  OTP_SERIAL5 = 6,
-  OTP_PCBA_SERIAL2 = 7,
-  OTP_PCBA_SERIAL3 = 8,
-
-  NUM_OTP_SLOTS = 16,
-};
-#elif PLATFORM_SILK
+#if PLATFORM_SILK
 enum {
   OTP_HWVER1 = 0,
   OTP_HWVER2 = 1,

@@ -86,29 +86,8 @@ static uint32_t resource_storage_system_bank_metadata_size(ResourceStoreEntry *e
   return SYSTEM_STORE_METADATA_BYTES;
 }
 
-// PBL-28517 investigation
-extern uint8_t pbl_28517_flash_impl_get_status_register(uint32_t sector_addr);
-
 static uint32_t resource_storage_system_bank_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                                      uint32_t entry_offset) {
-#if (PLATFORM_SPALDING || PLATFORM_SPALDING_GABBRO) && !RELEASE && !UNITTEST
-  // PBL-28517 investigation
-  if (entry_offset == 0) {
-    // We're calculating the CRC of the whole bank. Before we do this, let's save the status
-    // register for each sector so we can see if the flash is in a funny state.
-
-    for (int i = 0; (i * SECTOR_SIZE_BYTES) < (int) num_bytes; ++i) {
-      const uint32_t addr = (BANK.begin + (i * SECTOR_SIZE_BYTES)) & SECTOR_ADDR_MASK;
-
-      uint8_t status_reg = pbl_28517_flash_impl_get_status_register(addr);
-      uint32_t crc = flash_calculate_legacy_defective_checksum(addr, SECTOR_SIZE_BYTES);
-
-      PBL_LOG_DBG("PBL-28517 Sector 0x%"PRIx32" Status 0x%"PRIx8" CRC 0x%"PRIx32,
-              addr, status_reg, crc);
-    }
-  }
-#endif
-
   uint32_t start_offset = resource_store_get_metadata_size(entry) + entry_offset;
   return flash_calculate_legacy_defective_checksum(
       BANK.begin + start_offset, num_bytes);

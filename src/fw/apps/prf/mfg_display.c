@@ -53,9 +53,7 @@ static void prv_draw_solid(Layer *layer, GContext *ctx, GColor color) {
 
 static void prv_draw_round_border(Layer *layer, GContext *ctx, uint8_t radial_padding_size) {
   for (int i = 0; i < layer->bounds.size.h / 2 - radial_padding_size; ++i) {
-#if PLATFORM_SPALDING
-    const GBitmapDataRowInfoInternal *data_row_infos = g_gbitmap_spalding_data_row_infos;
-#elif PLATFORM_GETAFIX
+#if PLATFORM_GETAFIX
     const GBitmapDataRowInfoInternal *data_row_infos = g_gbitmap_getafix_data_row_infos;
 #endif
     const uint8_t mask = data_row_infos[i].min_x + radial_padding_size;
