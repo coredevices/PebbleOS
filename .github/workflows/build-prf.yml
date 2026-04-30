@@ -46,6 +46,7 @@ jobs:
           - obelix_pvt
           - getafix_evt
           - getafix_dvt
+          - getafix_dvt2
         mode:
           - normal
           - mfg
