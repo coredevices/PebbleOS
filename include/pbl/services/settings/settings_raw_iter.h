@@ -112,10 +112,19 @@ int settings_raw_iter_get_resumed_record_pos(SettingsRawIter *iter);
 void settings_raw_iter_read_key(SettingsRawIter *iter, uint8_t *key);
 void settings_raw_iter_read_val(SettingsRawIter *iter, uint8_t *val, int val_len);
 
+//! Read key and value into a single contiguous buffer in one PFS call.
+//! key_val_out must be at least key_len + val_len bytes. Key occupies the first
+//! key_len bytes, val the next val_len bytes.
+void settings_raw_iter_read_key_val(SettingsRawIter *iter, uint8_t *key_val_out);
+
 //! Write (over top of) the header/key/val for the current record.
 void settings_raw_iter_write_header(SettingsRawIter *iter, SettingsRecordHeader *hdr);
 void settings_raw_iter_write_key(SettingsRawIter *iter, const uint8_t *key);
 void settings_raw_iter_write_val(SettingsRawIter *iter, const uint8_t *val);
+
+//! Write key and value from a single contiguous buffer in one PFS call.
+//! Layout matches settings_raw_iter_read_key_val.
+void settings_raw_iter_write_key_val(SettingsRawIter *iter, const uint8_t *key_val);
 
 //! Write a byte in place for the current record
 void settings_raw_iter_write_byte(SettingsRawIter *iter, int offset, uint8_t byte);
