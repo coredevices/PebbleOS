@@ -179,7 +179,7 @@ def build(ctx):
              " src/fw/applib/app_heap_util.c",
         test_sources_ant_glob = "test_heap.c")
 
-    for platform in ['silk']:
+    for platform in ['obelix']:
         clar(ctx,
              sources_ant_glob =
              " src/fw/debug/default/flash_logging.c"
@@ -249,7 +249,7 @@ def build(ctx):
             " src/fw/process_management/pebble_process_info.c"
             " src/fw/process_management/pebble_process_md.c",
         test_sources_ant_glob = "test_pebble_process_md.c",
-        platforms=['silk', 'obelix', 'gabbro'])
+        platforms=['obelix', 'gabbro'])
 
     clar(ctx,
         sources_ant_glob = "src/fw/applib/graphics/utf8.c" \
@@ -339,8 +339,8 @@ def build(ctx):
         " src/fw/applib/graphics/graphics_circle.c" \
         " src/fw/applib/graphics/graphics_line.c"
 
-    for platform in ['silk', 'obelix']:
-        bit_depth = 1 if platform == 'silk' else 8
+    for platform in ['obelix']:
+        bit_depth = 8
         depth_dir = '{}_bit'.format(bit_depth)
         sources_ant_glob = templated_sources_ant_glob.format(depth_dir=depth_dir)
         clar(ctx,

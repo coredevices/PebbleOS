@@ -18,11 +18,6 @@ config FLASH_GD25Q256E
     help
       Support for the GigaDevice GD25Q256E NOR flash.
 
-config FLASH_MX25U
-    bool "Macronix MX25U"
-    help
-      Support for the Macronix MX25U NOR flash.
-
 config FLASH_QEMU
     bool "QEMU External Flash"
     help

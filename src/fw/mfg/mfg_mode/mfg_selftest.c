@@ -29,21 +29,14 @@ struct SelfTestCase {
 // considers a null function pointer to mean not-implemented, which is
 // exactly the outcome we want!
 bool bmi160_query_whoami(void) WEAK;
-bool bma255_query_whoami(void) WEAK;
 bool flash_check_whoami(void) WEAK;
 bool mag3110_check_whoami(void) WEAK;
 bool mic_selftest(void) WEAK;
 
 // NULL function pointer means test is not implemented
 static const struct SelfTestCase s_test_cases[] = {
-#if PLATFORM_SILK
-  { "Accel Comm", bma255_query_whoami },
-#else
   { "IMU Comm", bmi160_query_whoami },
-#endif
-#if !PLATFORM_SILK
   { "MAG3110 Comm", mag3110_check_whoami },
-#endif
   { "Flash Comm", flash_check_whoami },
   { "Mic", mic_selftest },
   { "Buttons", button_selftest },

@@ -17,7 +17,7 @@ sources = [
     'legacy/compositor_app_slide_transitions.c',
 ]
 
-if bld.is_asterix() or bld.is_silk() or bld.is_qemu_flint():
+if bld.is_asterix() or bld.is_qemu_flint():
     sources.append('legacy/compositor_modal_slide_transitions.c')
 else:
     sources.append('default/compositor_modal_transitions.c')

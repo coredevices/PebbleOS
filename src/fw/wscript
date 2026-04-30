@@ -102,25 +102,13 @@ def _generate_memory_layout(bld):
 
     if bld.is_qemu():
         ldscript_template = bld.path.find_node('qemu_flash_fw.ld.template')
-    elif bld.is_silk():
-        ldscript_template = bld.path.find_node('stm32f412_flash_fw.ld.template')
     elif bld.is_asterix():
         ldscript_template = bld.path.find_node('nrf52840_flash_fw.ld.template')
     elif bld.is_obelix() or bld.is_getafix():
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
-    if bld.env.MICRO_FAMILY == 'STM32F4':
-        flash_size = 1024 * 1024
-        # Bootloader
-        offset_size = 16 * 1024
-        if bld.is_silk() and bld.env.VARIANT == 'prf':
-            # silk PRF is limited to 512k to save on SPI flash space
-            fw_max_size = flash_size // 2
-        else:
-            fw_max_size = flash_size
-
-    elif bld.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+    if bld.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
         flash_size = 4 * 1024 * 1024
         offset_size = 0
         fw_max_size = flash_size
@@ -214,13 +202,7 @@ def _generate_memory_layout(bld):
     # hardware capabilities watch model itself - i.e. chalk vs basalt). We want to define
     # APP_RAM_*X_SIZE macros for each app execution environment supported by the model so we
     # don't need to hard-code these in the FW itself.
-    if bld.is_silk():
-        app_ram_size_2x = APP_RAM_SIZES['aplite']
-        app_ram_size_3x = APP_RAM_SIZES['aplite']
-        app_ram_size_4x = APP_RAM_SIZES['diorite']
-        # We have a 256k continuous block of RAM.
-        total_ram = (0x20000000, 256 * 1024)
-    elif bld.is_asterix():
+    if bld.is_asterix():
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['aplite']
         app_ram_size_4x = APP_RAM_SIZES['flint']
@@ -434,8 +416,6 @@ def _get_mfg_paths(bld):
 
     if bld.is_qemu():
         return ('mfg/qemu',)
-    elif bld.is_silk():
-        return ('mfg/silk',)
     elif bld.is_asterix():
         return ('mfg/asterix',)
     elif bld.is_obelix():
@@ -524,9 +504,6 @@ def _build_recovery(bld):
             'apps/prf/mfg_touch.c',
         ])
 
-    if bld.is_silk():
-        bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
-
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
     sources.extend(_get_comm_sources(bld, True))
     sources.extend(bld.path.ant_glob('*.c'))
@@ -598,7 +575,7 @@ def _build_normal(bld):
         if bld.is_getafix():
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/bw')
-        elif bld.is_silk() or bld.is_asterix() or bld.is_qemu_flint():
+        elif bld.is_asterix() or bld.is_qemu_flint():
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/round')
         else:
@@ -610,8 +587,6 @@ def _build_normal(bld):
 
     if bld.env.BUILD_TEST_APPS:
         source_dirs.append('apps/demo/**')
-        if bld.is_silk():
-            excludes.append('apps/demo/vibe_score_demo.c')
     elif bld.env.PERFORMANCE_TESTS:
         source_dirs.append('apps/demo/gfx_tests')
 
@@ -708,10 +683,6 @@ def build(bld):
     bld.recurse('services')
     bld.recurse('applib')
     bld.recurse('soc')
-
-    # We can't use DMA until we root cause PBL-37278
-    if bld.is_silk():
-        bld.env.append_value('DEFINES', ['QSPI_DMA_DISABLE=1'])
 
     if bld.env.VARIANT == 'prf':
         _build_recovery(bld)

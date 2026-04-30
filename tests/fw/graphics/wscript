@@ -64,7 +64,7 @@ def build(ctx):
         "test_graphics_draw_stroke_precise.template.c"
     ]
 
-    for platform in ['silk', 'obelix']:
+    for platform in ['obelix']:
         bit_depth = get_bitdepth_for_platform(ctx, platform)
         defines = ctx.env.test_image_defines
         for test in graphics_test_sources:
@@ -97,7 +97,7 @@ def build(ctx):
                           " src/fw/applib/vendor/uPNG/upng.c",
          test_sources_ant_glob='test_graphics_draw_bitmap.c',
          defines=ctx.env.test_image_defines,
-         platforms=['silk', 'obelix'])
+         platforms=['obelix'])
 
     templated_graphics_draw_text_sources_ant_glob = \
         " src/fw/applib/graphics/{depth_dir}/framebuffer.c" \
@@ -149,8 +149,8 @@ def build(ctx):
         "test_graphics_draw_text.template.c"
     ]
 
-    for platform in ['silk', 'obelix']:
-        bit_depth = 1 if platform == 'silk' else 8
+    for platform in ['obelix']:
+        bit_depth = 8
         depth_dir = '{}_bit'.format(bit_depth)
         graphics_sources_ant_glob = templated_graphics_draw_text_sources_ant_glob.format(depth_dir=depth_dir)
 
@@ -183,7 +183,7 @@ def build(ctx):
         sources_ant_glob = \
             " src/fw/applib/graphics/gtypes.c",
         test_sources_ant_glob = "test_gtypes.c",
-        platforms=["silk", "obelix", "gabbro"])
+        platforms=["obelix", "gabbro"])
 
     clar(ctx,
         sources_ant_glob = \
@@ -214,7 +214,7 @@ def build(ctx):
             " src/fw/applib/graphics/gbitmap.c" \
             " src/fw/board/displays/display_getafix.c",
         test_sources_ant_glob = "test_gbitmap_formats.c",
-        platforms=["silk", "obelix", "gabbro"])
+        platforms=["obelix", "gabbro"])
 
     clar(ctx,
          sources_ant_glob = \
@@ -376,7 +376,7 @@ def build(ctx):
         test_sources_ant_glob="test_gbitmap_sequence.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=['silk', 'gabbro'])
+        platforms=['gabbro'])
 
     clar(ctx,
         sources_ant_glob =
@@ -457,7 +457,7 @@ def build(ctx):
         test_sources_ant_glob="test_graphics_draw_line.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=['silk', 'obelix', 'gabbro'])
+        platforms=['obelix', 'gabbro'])
 
     clar(ctx,
         sources_ant_glob =
@@ -479,7 +479,7 @@ def build(ctx):
         test_sources_ant_glob="test_bitblt_palette_1bit.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=['silk'])
+        platforms=['obelix'])
 
     clar(ctx,
         sources_ant_glob =
@@ -592,7 +592,7 @@ def build(ctx):
         test_sources_ant_glob="test_graphics_draw_rotated_bitmap.c",
         defines=ctx.env.test_image_defines,
         runtime_deps=ctx.env.test_pngs + ctx.env.test_pbis,
-        platforms=["silk", "obelix", "gabbro"])
+        platforms=["obelix", "gabbro"])
 
     ###############################
     # 8-bit specific bitblt tests #

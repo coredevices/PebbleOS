@@ -8,8 +8,6 @@
 
 #if PLATFORM_QEMU_EMERY || PLATFORM_QEMU_FLINT || PLATFORM_QEMU_GABBRO
 #include "flash_region_qemu.h"
-#elif PLATFORM_SILK
-#include "flash_region_mx25u.h"
 #elif PLATFORM_ASTERIX
 #include "flash_region_gd25lq255e.h"
 #elif PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_GABBRO
