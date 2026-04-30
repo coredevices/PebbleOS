@@ -138,7 +138,6 @@ extern void command_watch(void);
 
 extern void command_print_now_playing(void);
 
-extern void command_selftest(void);
 extern void command_enter_mfg(void);
 extern void command_enter_standby(void);
 extern void command_enter_consumer_mode(void);
@@ -399,8 +398,6 @@ static const Command s_prompt_commands[] = {
   { "accel read", command_accel_peek, 0 },
 
   { "als read", command_als_read, 0},
-
-  { "selftest", command_selftest, 0 },
 
   { "flash read", command_flash_read, 2},
   { "flash switchmode", command_flash_switch_mode, 1},
