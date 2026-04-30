@@ -25,8 +25,6 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
   #elif PLATFORM_TINTIN
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeAplite
-  #elif PLATFORM_SILK
-    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeDiorite
   #elif PLATFORM_OBELIX
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
   #elif PLATFORM_ASTERIX

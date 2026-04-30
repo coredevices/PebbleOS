@@ -3,7 +3,6 @@
 
 #include "drivers/rtc.h"
 #include "rtc_private.h"
-#include "drivers/stm32f2/rtc_calibration.h"
 
 #include "console/dbgserial.h"
 

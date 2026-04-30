@@ -22,14 +22,8 @@ typedef struct {
 // used by waftools/pebble_test.py to define these includes per test
 #else
 
-#if BOARD_SILK_BB2
-#include "displays/display_silk.h"
-#elif BOARD_SILK
-#include "displays/display_silk.h"
-#elif BOARD_SILK_FLINT
-#include "displays/display_silk.h"
-#elif BOARD_ASTERIX
-#include "displays/display_silk.h"
+#if BOARD_ASTERIX
+#include "displays/display_asterix.h"
 #elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
 #include "displays/display_obelix.h"
 #elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT || BOARD_GETAFIX_DVT2

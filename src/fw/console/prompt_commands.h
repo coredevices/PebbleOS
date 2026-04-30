@@ -410,11 +410,6 @@ static const Command s_prompt_commands[] = {
 #endif
   { "flash validate", command_flash_validate, 0},
   { "flash erased_sectors", command_flash_show_erased_sectors, 1},
-#if !RELEASE && PLATFORM_SILK
-  { "flash apicheck", command_flash_apicheck, 1},
-  //{ "flash signal test init", command_flash_signal_test_init, 0 },
-  //{ "flash signal test run", command_flash_signal_test_run, 0 },
-#endif
 #if CAPABILITY_HAS_FLASH_OTP
   { "flash sec read", command_flash_sec_read, 1},
   { "flash sec write", command_flash_sec_write, 2},
@@ -634,11 +629,6 @@ static const Command s_prompt_commands[] = {
 #endif
 #endif // KEEP_NON_ESSENTIAL_COMMANDS
 
-#if PLATFORM_SILK && !TARGET_QEMU
-  { "accel samp", command_accel_num_samples, 1 },
-  { "accel status", command_accel_status, 0 },
-  { "accel reset", command_accel_softreset, 0 },
-#endif // PLATFORM_SILK
   { "vibe", command_vibe_ctl, 1 },
   { "console disable rx", command_console_disable_rx, 1 },
 #if MICRO_FAMILY_SF32LB52

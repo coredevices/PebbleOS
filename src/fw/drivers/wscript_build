@@ -39,20 +39,6 @@ if bld.is_qemu():
         use=['fw_includes'],
     )
 
-elif bld.is_silk():
-    bld.env.DRIVERS.extend([
-        'driver_backlight',
-        'driver_button',
-        'driver_clocksource',
-        'driver_gpio_defaults',
-        'driver_mcu',
-        'driver_mpu',
-        'driver_otp',
-        'driver_pwr',
-        'driver_task_watchdog',
-        'driver_voltage_monitor',
-    ])
-
 elif bld.is_asterix():
     bld.env.DRIVERS.extend([
         'driver_audio',
@@ -514,22 +500,7 @@ elif bld.env.QEMU and is_qemu_family:
 if bld.env.CONFIG_PWM:
     bld.recurse('pwm')
 
-if 'STM32F412xG' in bld.env.DEFINES:
-    bld.objects(
-        name='driver_qspi',
-        source=[
-            'stm32f412/qspi.c',
-        ],
-        use=[
-            'driver_dma',
-            'driver_periph_config',
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ],
-    )
-elif mcu_family == 'NRF52':
+if mcu_family == 'NRF52':
     bld.objects(
         name='driver_qspi',
         source=[
@@ -555,22 +526,7 @@ elif mcu_family == 'SF32LB52':
         ],
     )
 
-if 'STM32F412xG' in bld.env.DEFINES:
-    bld.env.DEFINES.append('HAS_DRIVER_VOLTAGE_MONITOR')
-    bld.objects(
-        name='driver_voltage_monitor',
-        source=[
-            'stm32f412/voltage_monitor.c',
-        ],
-        use=[
-            'driver_gpio',
-            'driver_periph_config',
-            'fw_includes',
-            'pbl_includes',
-            'stm32_stdlib',
-        ]
-    )
-elif mcu_family == 'STM32F4':
+if mcu_family == 'STM32F4':
     bld.env.DEFINES.append('HAS_DRIVER_VOLTAGE_MONITOR')
     bld.objects(
         name='driver_voltage_monitor',

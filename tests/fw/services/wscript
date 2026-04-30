@@ -18,7 +18,7 @@ def build(ctx):
         test_sources_ant_glob = "test_pfs.c",
         defines=['DUMA_DISABLED'],  # PBL-18355 Invalid memory read access
         override_includes=['dummy_board'],
-        platforms=['silk'])
+        platforms=['obelix'])
 
     clar(ctx,
         sources_ant_glob = \
@@ -33,7 +33,7 @@ def build(ctx):
             " tests/fakes/fake_rtc.c" \
             " tests/fakes/fake_spi_flash.c",
         test_sources_ant_glob = "test_put_bytes.c",
-        platforms=['silk', 'obelix', 'gabbro'],
+        platforms=['obelix', 'gabbro'],
         override_includes=['dummy_board'])
 
     clar(ctx,
@@ -381,7 +381,7 @@ def build(ctx):
             " tests/fakes/fake_spi_flash.c" \
             ]),
         test_sources_ant_glob = "test_shared_prf_storage_v3.c",
-        platforms=['silk'],
+        platforms=['obelix'],
         override_includes=['shared_prf_storage_v3'])
 
     clar(ctx,

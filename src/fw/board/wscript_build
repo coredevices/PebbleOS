@@ -1,16 +1,5 @@
 board = bld.get_board()
-if board in ('silk_bb2', 'silk', 'silk_flint'):
-    bld.objects(
-        name='board',
-        source=[
-            'boards/board_silk.c',
-        ],
-        use=[
-            'fw_includes',
-            'drivers',
-        ],
-    )
-elif board in ('asterix'):
+if board in ('asterix'):
     bld.objects(
         name='board',
         source=[

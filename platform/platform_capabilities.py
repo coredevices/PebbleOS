@@ -37,24 +37,6 @@ master_capability_set = {
 
 board_capability_dicts = [
     {
-        "boards": ["silk_bb2", "silk"],
-        "capabilities": {
-            "HAS_SPRF_V3",
-            "HAS_TIMELINE_PEEK",
-            "HAS_PUTBYTES_PREACKING",
-        },
-    },
-    {
-        "boards": ["silk_flint"],
-        "capabilities": {
-            "HAS_SPRF_V3",
-            "HAS_TIMELINE_PEEK",
-            "HAS_PUTBYTES_PREACKING",
-            "HAS_FLASH_OTP",
-            "HAS_MODDABLE_XS",
-        },
-    },
-    {
         "boards": ["asterix"],
         "capabilities": {
             "HAS_SPRF_V3",

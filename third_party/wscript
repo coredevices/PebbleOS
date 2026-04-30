@@ -6,7 +6,6 @@ def options(opt):
 def configure(conf):
     conf.recurse('hal_nordic')
     conf.recurse('hal_sifli')
-    conf.recurse('hal_stm32')
     conf.recurse('memfault')
     conf.recurse('nimble')
 
@@ -25,9 +24,7 @@ def build(bld):
     if bld.capability('HAS_MODDABLE_XS'):
         bld.recurse('moddable')
 
-    if bld.env.MICRO_FAMILY.startswith('STM32'):
-        bld.recurse('hal_stm32')
-    elif bld.env.MICRO_FAMILY.startswith('NRF'):
+    if bld.env.MICRO_FAMILY.startswith('NRF'):
         bld.recurse('hal_nordic')
     elif bld.env.MICRO_FAMILY.startswith('SF32'):
         bld.recurse('hal_sifli')

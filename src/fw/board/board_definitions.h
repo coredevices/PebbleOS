@@ -4,13 +4,7 @@
 #pragma once
 
 // FIXME: PBL-21049 Fix platform abstraction and board definition scheme
-#if BOARD_SILK_BB2
-#include "boards/board_silk.h"
-#elif BOARD_SILK
-#include "boards/board_silk.h"
-#elif BOARD_SILK_FLINT
-#include "boards/board_silk.h"
-#elif BOARD_ASTERIX
+#if BOARD_ASTERIX
 #include "boards/board_asterix.h"
 #elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
 #include "boards/board_obelix.h"

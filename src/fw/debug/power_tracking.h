@@ -54,11 +54,7 @@ typedef enum {
   PowerSystemMcuI2C1,      // Main I2C
   PowerSystemMcuI2C2,      // 2V5 I2C
   PowerSystemMcuSpi1,      // FLASH
-#if PLATFORM_SILK
-  PowerSystemMcuSpi2,      // LCD
-#else
   PowerSystemMcuSpi6,      // LCD
-#endif
   PowerSystemMcuAdc1,      // Voltage monitoring & ambient light sensing
   PowerSystemMcuAdc2,      // Voltage monitoring & ambient light sensing
   PowerSystemFlashRead,

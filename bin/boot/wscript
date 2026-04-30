@@ -3,12 +3,7 @@ def configure(cfg):
     if cfg.options.nowatchdog:
         variant = 'nowatchdog_'
 
-    if cfg.is_silk():
-        bootloader_board = 'silk'
-    else:
-        bootloader_board = cfg.options.board
-
-    boot_file_pattern = '%sboot_%s@*.hex' % (variant, bootloader_board)
+    boot_file_pattern = '%sboot_%s@*.hex' % (variant, cfg.options.board)
     boot_node = cfg.path.ant_glob(boot_file_pattern)
 
     if not boot_node:
