@@ -155,7 +155,7 @@ board_capability_dicts = [
         },
     },
     {
-        "boards": ["getafix_evt", "getafix_dvt"],
+        "boards": ["getafix_evt", "getafix_dvt", "getafix_dvt2"],
         "capabilities": {
             "HAS_SPRF_V3",
             "HAS_TIMELINE_PEEK",
