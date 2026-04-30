@@ -53,20 +53,6 @@ elif bld.is_silk():
         'driver_voltage_monitor',
     ])
 
-elif bld.is_spalding() or bld.is_spalding_gabbro():
-    bld.env.DRIVERS.extend([
-        'driver_backlight',
-        'driver_button',
-        'driver_clocksource',
-        'driver_gpio_defaults',
-        'driver_mcu',
-        'driver_mpu',
-        'driver_otp',
-        'driver_pwr',
-        'driver_task_watchdog',
-        'driver_voltage_monitor',
-    ])
-
 elif bld.is_asterix():
     bld.env.DRIVERS.extend([
         'driver_audio',

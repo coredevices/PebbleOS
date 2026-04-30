@@ -12,8 +12,6 @@
 #include "flash_region_mx25u.h"
 #elif PLATFORM_ASTERIX
 #include "flash_region_gd25lq255e.h"
-#elif PLATFORM_SPALDING || PLATFORM_SPALDING_GABBRO
-#include "flash_region_s29vs.h"
 #elif PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_GABBRO
 #include "flash_region_gd25q256e.h"
 #endif

@@ -26,13 +26,8 @@ static void prv_populate_name(char name[BT_DEVICE_NAME_BUFFER_SIZE], const char 
 }
 
 static void prv_set_default_device_name(void) {
-#if PLATFORM_SPALDING
-  const char *s_local_default_device_name_format = "Pebble Time %02X%02X";
-  const char *s_local_default_le_device_name_format = "Pebble Time LE %02X%02X";
-#else
   const char *s_local_default_device_name_format = "Pebble %02X%02X";
   const char *s_local_default_le_device_name_format = "Pebble-LE %02X%02X";
-#endif
 
   // Pebble + hex last 2 bytes of the device address:
   prv_populate_name(s_local_device_name, s_local_default_device_name_format);

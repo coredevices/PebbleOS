@@ -121,12 +121,6 @@ static void clear_stuck_button(ButtonId button_id) {
 void debounced_button_init(void) {
   button_init();
 
-#if defined(BOARD_SPALDING_BB2)
-  // Spalding BB2 has a capacitor that results in a really slow rise time (~0.4ms). Sleep for
-  // at least 1 ms to prevent fake button events
-  psleep(2);
-#endif
-
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     const ExtiConfig config = BOARD_CONFIG_BUTTON.buttons[i].exti;
     exti_configure_pin(config, ExtiTrigger_RisingFalling, prv_button_interrupt_handler);

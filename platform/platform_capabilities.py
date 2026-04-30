@@ -37,47 +37,6 @@ master_capability_set = {
 
 board_capability_dicts = [
     {
-        "boards": ["spalding_bb2"],
-        "capabilities": {
-            "COMPOSITOR_USES_DMA",
-            "HAS_DEFECTIVE_FW_CRC",
-            "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_MAPPABLE_FLASH",
-            "HAS_MASKING",
-            "USE_PARALLEL_FLASH",
-            "HAS_FPGA_DISPLAY",
-        },
-    },
-    {
-        "boards": ["spalding"],
-        "capabilities": {
-            "COMPOSITOR_USES_DMA",
-            "HAS_DEFECTIVE_FW_CRC",
-            "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_MAPPABLE_FLASH",
-            "HAS_MASKING",
-            "USE_PARALLEL_FLASH",
-            "HAS_FPGA_DISPLAY",
-        },
-    },
-    {
-        "boards": ["spalding_gabbro"],
-        "capabilities": {
-            "COMPOSITOR_USES_DMA",
-            "HAS_DEFECTIVE_FW_CRC",
-            "HAS_HARDWARE_PANIC_SCREEN",
-            "HAS_MAPPABLE_FLASH",
-            "HAS_MASKING",
-            "HAS_TIMELINE_PEEK",
-            "HAS_SPRF_V3",
-            "USE_PARALLEL_FLASH",
-            "HAS_PUTBYTES_PREACKING",
-            "HAS_FPGA_DISPLAY",
-            "HAS_APP_SCALING",
-            "HAS_MODDABLE_XS",
-        },
-    },
-    {
         "boards": ["silk_bb2", "silk"],
         "capabilities": {
             "HAS_SPRF_V3",

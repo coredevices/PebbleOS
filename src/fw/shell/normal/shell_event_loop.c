@@ -32,7 +32,6 @@
 #include "pbl/services/timeline/event.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/battery_ui.h"
-#include "shell/normal/display_calibration_prompt.h"
 #include "shell/normal/quick_launch.h"
 #include "shell/normal/watchface.h"
 #include "shell/prefs.h"
@@ -43,12 +42,6 @@ extern void shell_prefs_init(void);
 
 void shell_event_loop_init(void) {
   shell_prefs_init();
-#if PLATFORM_SPALDING
-  shell_prefs_display_offset_init();
-#if !PLATFORM_SPALDING_GABBRO
-  display_calibration_prompt_show_if_needed();
-#endif
-#endif
   notification_window_service_init();
   app_inbox_service_init();
   app_outbox_service_init();

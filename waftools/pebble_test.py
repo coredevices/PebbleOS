@@ -405,9 +405,9 @@ def add_clar_test(
 
     # Production code (e.g. framebuffer.c, gbitmap.c) selects round-display
     # behaviour from the board-level PLATFORM_<BOARD> defines (PLATFORM_GETAFIX,
-    # PLATFORM_QEMU_GABBRO, PLATFORM_SPALDING_GABBRO). Tests run under the
-    # SDK-level PLATFORM_GABBRO; alias one of those board defines so the
-    # round-display code paths fire identically.
+    # PLATFORM_QEMU_GABBRO). Tests run under the SDK-level PLATFORM_GABBRO;
+    # alias one of those board defines so the round-display code paths fire
+    # identically.
     if platform == "gabbro":
         platform_defines.append("PLATFORM_GETAFIX=1")
 

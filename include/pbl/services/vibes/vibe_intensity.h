@@ -12,11 +12,7 @@ typedef enum VibeIntensity {
   VibeIntensityNum,
 } VibeIntensity;
 
-#if PLATFORM_SPALDING
-#define DEFAULT_VIBE_INTENSITY VibeIntensityMedium
-#else
 #define DEFAULT_VIBE_INTENSITY VibeIntensityHigh
-#endif
 
 void vibe_intensity_init(void);
 
