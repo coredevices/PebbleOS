@@ -161,9 +161,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x5d -- Add app_light_set_color_rgb888() for 8-bit-per-channel backlight tint (rev 96)
 // sdk.major:0x5 .minor:0x5e -- Add Speaker API (rev 97)
 // sdk.major:0x5 .minor:0x5f -- speaker_play_tone() now plays the exact frequency (rev 98)
+// sdk.major:0x5 .minor:0x60 -- Add persist_get_max_size() for runtime persist storage capacity (rev 99)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x5f
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x60
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
