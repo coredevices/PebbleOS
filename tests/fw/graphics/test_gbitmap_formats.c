@@ -18,44 +18,14 @@
 
 /////////////////////////////
 
-const void * const g_gbitmap_spalding_data_row_infos = &g_gbitmap_spalding_data_row_infos;
-
 void test_gbitmap_formats__create_blank(void) {
   const GSize s10 = GSize(10, 10);
-  const GSize s180 = GSize(180, 180);
+  const GSize s_full = GSize(DISP_COLS, DISP_ROWS);
   GBitmap *bmp = NULL;
 
   cl_assert((void*)&bmp->palette == (void*)&bmp->data_row_infos); // union with .palette
-  cl_assert(NULL != g_gbitmap_spalding_data_row_infos); // make sure unit-test fixture is ok
 
-
-#ifdef PLATFORM_TINTIN
-  cl_assert(!process_manager_compiled_with_legacy2_sdk());
-  bmp = gbitmap_create_blank(s10, GBitmapFormat1Bit);
-  cl_assert(NULL != bmp);
-  cl_assert(NULL == bmp->data_row_infos);
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat8Bit);
-  cl_assert(NULL == bmp);
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat1BitPalette);
-  cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos != bmp->data_row_infos); // union with .palette
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat2BitPalette);
-  cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos != bmp->data_row_infos); // union with .palette
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat4BitPalette);
-  cl_assert(NULL == bmp);
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat8BitCircular);
-  cl_assert(NULL == bmp);
-
-  bmp = gbitmap_create_blank(s180, GBitmapFormat8BitCircular);
-  cl_assert(NULL == bmp);
-#endif
-#ifdef PLATFORM_SNOWY
+#ifdef PLATFORM_GABBRO
   bmp = gbitmap_create_blank(s10, GBitmapFormat1Bit);
   cl_assert(NULL != bmp);
   cl_assert(NULL == bmp->data_row_infos);
@@ -66,78 +36,32 @@ void test_gbitmap_formats__create_blank(void) {
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat1BitPalette);
   cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(g_gbitmap_getafix_data_row_infos != bmp->data_row_infos); // union with .palette
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat2BitPalette);
   cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(g_gbitmap_getafix_data_row_infos != bmp->data_row_infos); // union with .palette
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat4BitPalette);
   cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(g_gbitmap_getafix_data_row_infos != bmp->data_row_infos); // union with .palette
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat8BitCircular);
   cl_assert(NULL == bmp);
 
-  bmp = gbitmap_create_blank(s180, GBitmapFormat8BitCircular);
-  cl_assert(NULL == bmp);
-#endif
-#ifdef PLATFORM_SPALDING
-  bmp = gbitmap_create_blank(s10, GBitmapFormat1Bit);
+  bmp = gbitmap_create_blank(s_full, GBitmapFormat8BitCircular);
   cl_assert(NULL != bmp);
-  cl_assert(NULL == bmp->data_row_infos);
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat8Bit);
-  cl_assert(NULL != bmp);
-  cl_assert(NULL == bmp->data_row_infos);
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat1BitPalette);
-  cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos != bmp->data_row_infos); // union with .palette
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat2BitPalette);
-  cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos != bmp->data_row_infos); // union with .palette
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat4BitPalette);
-  cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos != bmp->data_row_infos); // union with .palette
-
-  bmp = gbitmap_create_blank(s10, GBitmapFormat8BitCircular);
-  cl_assert(NULL == bmp);
-
-  bmp = gbitmap_create_blank(s180, GBitmapFormat8BitCircular);
-  cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_spalding_data_row_infos == bmp->data_row_infos);
+  cl_assert(g_gbitmap_getafix_data_row_infos == bmp->data_row_infos);
 #endif
 }
 
 void test_gbitmap_formats__create_blank_with_palette(void) {
   const GSize s10 = GSize(10, 10);
-  const GSize s180 = GSize(180, 180);
+  const GSize s_full = GSize(DISP_COLS, DISP_ROWS);
   GBitmap *bmp;
   GColor8 *p = (GColor8 *)&p; // some value to test against
 
-#ifdef PLATFORM_TINTIN
-  cl_assert(!process_manager_compiled_with_legacy2_sdk());
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat1Bit, p, true));
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat8Bit, p, true));
-
-  bmp = gbitmap_create_blank_with_palette(s10, GBitmapFormat1BitPalette, p, true);
-  cl_assert(NULL != bmp);
-  cl_assert(p == gbitmap_get_palette(bmp));
-
-  bmp = gbitmap_create_blank_with_palette(s10, GBitmapFormat2BitPalette, p, true);
-  cl_assert(NULL != bmp);
-  cl_assert(p == gbitmap_get_palette(bmp));
-
-  bmp = gbitmap_create_blank_with_palette(s10, GBitmapFormat4BitPalette, p, true);
-  cl_assert(NULL == bmp);
-
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat8BitCircular, p, true));
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s180, GBitmapFormat8BitCircular, p, true));
-#endif
-#ifdef PLATFORM_SNOWY
+#ifdef PLATFORM_GABBRO
   cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat1Bit, p, true));
   cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat8Bit, p, true));
 
@@ -154,31 +78,12 @@ void test_gbitmap_formats__create_blank_with_palette(void) {
   cl_assert(p == gbitmap_get_palette(bmp));
 
   cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat8BitCircular, p, true));
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s180, GBitmapFormat8BitCircular, p, true));
-#endif
-#ifdef PLATFORM_SPALDING
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat1Bit, p, true));
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat8Bit, p, true));
-
-  bmp = gbitmap_create_blank_with_palette(s10, GBitmapFormat1BitPalette, p, true);
-  cl_assert(NULL != bmp);
-  cl_assert(p == gbitmap_get_palette(bmp));
-
-  bmp = gbitmap_create_blank_with_palette(s10, GBitmapFormat2BitPalette, p, true);
-  cl_assert(NULL != bmp);
-  cl_assert(p == gbitmap_get_palette(bmp));
-
-  bmp = gbitmap_create_blank_with_palette(s10, GBitmapFormat4BitPalette, p, true);
-  cl_assert(NULL != bmp);
-  cl_assert(p == gbitmap_get_palette(bmp));
-
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat8BitCircular, p, true));
-  cl_assert(NULL == gbitmap_create_blank_with_palette(s180, GBitmapFormat8BitCircular, p, true));
+  cl_assert(NULL == gbitmap_create_blank_with_palette(s_full, GBitmapFormat8BitCircular, p, true));
 #endif
 }
 
 void test_gbitmap_formats__display_framebuffer_bytes(void) {
-#ifdef PLATFORM_SILK
+#ifdef PLATFORM_ASTERIX
   const size_t expected = 20 * 168; // 20 * 8 == 144px + 2 bytes padding per scanline
 #endif
 #ifdef PLATFORM_OBELIX

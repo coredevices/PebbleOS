@@ -48,8 +48,7 @@ def build(bld):
             "tests/fakes/fake_spi_flash.c "
             "tests/fakes/fake_events.c "
          ),
-         test_sources_ant_glob="test_bluetooth_persistent_storage_prf.c",
-         override_includes=['snowy_mfg_board'])
+         test_sources_ant_glob="test_bluetooth_persistent_storage_prf.c")
 
     # Run the bluetooth_persistent_storage.c unit tests
     # for the v1 and v2 serialization formats:

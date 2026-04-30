@@ -7,7 +7,6 @@
 #include "pbl/services/timezone_database.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "resource/resource_ids.auto.h"
-#include "flash_region/flash_region_s29vs.h"
 #include "resource/resource.h"
 #include "resource/resource_version.auto.h"
 
