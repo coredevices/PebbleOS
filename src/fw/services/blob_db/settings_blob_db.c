@@ -182,6 +182,23 @@ static bool prv_is_syncable(const uint8_t *key, int key_len) {
   return prv_is_shell_pref(key, key_len) || prv_is_notif_pref(key, key_len);
 }
 
+//! Normalize key_len for notif-pref writes by stripping a trailing null.
+//!
+//! alerts_preferences (the local owner of the notif-prefs file) uses strlen()
+//! without a trailing null when reading and writing. The phone-side BlobDB
+//! protocol historically sends keys with a trailing null (key_len = strlen+1).
+//! Settings file records are matched on exact key_len, so a phone write
+//! creates a record that alerts_preferences_init's RESTORE_PREF cannot find,
+//! causing it to fall back to the static default at boot. Normalizing the
+//! incoming key_len makes phone-originated writes land at the same canonical
+//! key length the local readers use.
+static int prv_canonical_notif_key_len(const uint8_t *key, int key_len) {
+  if (key_len > 0 && key[key_len - 1] == '\0') {
+    return key_len - 1;
+  }
+  return key_len;
+}
+
 //! Lock the appropriate mutex for file access
 static void prv_lock_for_file(bool is_notif) {
   if (is_notif) {
@@ -277,6 +294,7 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
   if (is_notif_pref) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
+    key_len = prv_canonical_notif_key_len(key, key_len);
   } else if (prv_is_shell_pref(key, key_len)) {
     file_name = SHELL_PREFS_FILE_NAME;
     file_len = SHELL_PREFS_FILE_LEN;
@@ -345,6 +363,7 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
   if (is_notif) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
+    key_len = prv_canonical_notif_key_len(key, key_len);
   } else {
     file_name = SHELL_PREFS_FILE_NAME;
     file_len = SHELL_PREFS_FILE_LEN;
@@ -379,6 +398,7 @@ status_t settings_blob_db_read(const uint8_t *key, int key_len,
   if (is_notif) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
+    key_len = prv_canonical_notif_key_len(key, key_len);
   } else {
     file_name = SHELL_PREFS_FILE_NAME;
     file_len = SHELL_PREFS_FILE_LEN;
@@ -412,6 +432,7 @@ status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
   if (is_notif) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
+    key_len = prv_canonical_notif_key_len(key, key_len);
   } else if (prv_is_shell_pref(key, key_len)) {
     file_name = SHELL_PREFS_FILE_NAME;
     file_len = SHELL_PREFS_FILE_LEN;
@@ -691,6 +712,7 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   if (is_notif_pref) {
     file_name = NOTIF_PREFS_FILE_NAME;
     file_len = NOTIF_PREFS_FILE_LEN;
+    key_len = prv_canonical_notif_key_len(key, key_len);
   } else if (prv_is_shell_pref(key, key_len)) {
     file_name = SHELL_PREFS_FILE_NAME;
     file_len = SHELL_PREFS_FILE_LEN;

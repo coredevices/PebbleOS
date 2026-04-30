@@ -263,11 +263,18 @@ void alerts_preferences_init(void) {
     return;
   }
 
+  // The notif-prefs file may contain records keyed with strlen() (local writes)
+  // or strlen()+1 (legacy phone-pushed records from before settings_blob_db
+  // canonicalised the key length). Settings file lookups match key_len exactly,
+  // so probe both lengths to remain backwards compatible with records written
+  // by older firmware.
 #define RESTORE_PREF(key, var) \
   do { \
     __typeof__(var) _tmp; \
     if (settings_file_get( \
-        &file, key, strlen(key), &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
+            &file, key, strlen(key), &_tmp, sizeof(_tmp)) == S_SUCCESS || \
+        settings_file_get( \
+            &file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
       var = _tmp; \
     } \
   } while (0)
