@@ -91,7 +91,8 @@ _Static_assert(sizeof(HeartRateZoneData) % sizeof(uint32_t) == 0,
 static status_t prv_file_open_and_lock(SettingsFile *file) {
   mutex_lock(s_mutex);
 
-  status_t rv = settings_file_open(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE);
+  status_t rv = settings_file_open_growable(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE,
+                                            KiBYTES(8));
   if (rv != S_SUCCESS) {
     PBL_LOG_ERR("Failed to open settings file");
     mutex_unlock(s_mutex);
