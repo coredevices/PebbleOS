@@ -602,8 +602,9 @@ status_t app_glance_db_delete_glance(const Uuid *uuid) {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   mutex_lock(s_app_glance_db.mutex);
-  const status_t rv = settings_file_open(&s_app_glance_db.settings_file, SETTINGS_FILE_NAME,
-                                         SETTINGS_FILE_SIZE);
+  const status_t rv = settings_file_open_growable(&s_app_glance_db.settings_file,
+                                                  SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE,
+                                                  KiBYTES(4));
   if (rv != S_SUCCESS) {
     mutex_unlock(s_app_glance_db.mutex);
   }
