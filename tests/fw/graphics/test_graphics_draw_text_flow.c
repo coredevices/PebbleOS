@@ -296,9 +296,9 @@ GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perimeter,
                                             GRangeVertical vertical_range,
                                             uint16_t inset);
 
-// easiest way to make these dimensions identical to spalding although the tests take
-// defaults from basalt's screen resolution. The original `perimeter_for_display_round`
-// uses the platform-specific `DISP_FRAME`
+// easiest way to make these dimensions identical to a 180x180 round display although the
+// tests take defaults from basalt's screen resolution. The original
+// `perimeter_for_display_round` uses the platform-specific `DISP_FRAME`
 static GRangeHorizontal prv_perimeter_for_display_round(const GPerimeter *perimeter,
                                                         const GSize *ctx_size,
                                                         GRangeVertical vertical_range,

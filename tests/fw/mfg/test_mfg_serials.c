@@ -69,29 +69,18 @@ void test_mfg_serials__pcba_serial_number(void) {
   pcba_serial = mfg_get_pcba_serial_number();
   cl_assert_equal_s(written_pcba_serial1, pcba_serial);
 
-  // Write second time, but too long
-  const char* written_pcba_serial2_long = "abcdefghijkxyz";
-  command_pcba_serial_write(written_pcba_serial2_long);
+  // Reject overly long writes; original preserved.
+  const char* written_pcba_serial_long = "abcdefghijkxyz";
+  command_pcba_serial_write(written_pcba_serial_long);
   pcba_serial = mfg_get_pcba_serial_number();
   cl_assert_equal_s(written_pcba_serial1, pcba_serial);
 
-  // Write second time
+  // OTP_PCBA_SERIAL only has one slot, so subsequent valid writes also fail
+  // and the original value is preserved.
   const char* written_pcba_serial2 = "abcdefghijkx";
   command_pcba_serial_write(written_pcba_serial2);
   pcba_serial = mfg_get_pcba_serial_number();
-  cl_assert_equal_s(written_pcba_serial2, pcba_serial);
-
-  // Write third time
-  const char* written_pcba_serial3 = "asdfghjklq";
-  command_pcba_serial_write(written_pcba_serial3);
-  pcba_serial = mfg_get_pcba_serial_number();
-  cl_assert_equal_s(written_pcba_serial3, pcba_serial);
-
-  // No more space: Reading should return the last successfully written value.
-  const char *pcba_serial4 = "XXXXXXXXXXXX";
-  command_pcba_serial_write(pcba_serial4);
-  pcba_serial = mfg_get_pcba_serial_number();
-  cl_assert_equal_s(written_pcba_serial3, pcba_serial);
+  cl_assert_equal_s(written_pcba_serial1, pcba_serial);
 }
 
 void test_mfg_serials__serial_number_fails(void) {
@@ -133,44 +122,15 @@ void test_mfg_serials__serial_numbers(void) {
   const char *first_sn = "ABCDEFGHIJKL";
   r = mfg_write_serial_number(first_sn, strlen(first_sn), &index);
   sn = mfg_get_serial_number();
-  cl_assert_equal_i(index, OTP_SERIAL1);
+  cl_assert_equal_i(index, OTP_SERIAL);
   cl_assert_equal_i(r, MfgSerialsResultSuccess);
   cl_assert_equal_s(sn, first_sn);
 
-  // Second time:
+  // OTP_SERIAL only has one slot, so subsequent writes fail and the original
+  // value is preserved.
   const char *second_sn = "012345678901";
   r = mfg_write_serial_number(second_sn, strlen(second_sn), &index);
+  cl_assert_equal_i(r, MfgSerialsResultFailNoMoreSpace);
   sn = mfg_get_serial_number();
-  cl_assert_equal_i(index, OTP_SERIAL2);
-  cl_assert_equal_i(r, MfgSerialsResultSuccess);
-  cl_assert_equal_s(sn, second_sn);
-
-  // Third time:
-  const char *third_sn = "!@#$%^&*()-=";
-  r = mfg_write_serial_number(third_sn, strlen(third_sn), &index);
-  sn = mfg_get_serial_number();
-  cl_assert_equal_i(r, MfgSerialsResultSuccess);
-  cl_assert_equal_s(sn, third_sn);
-  cl_assert_equal_i(index, OTP_SERIAL3);
-
-  // Fourth time:
-  const char *fourth_sn = "mnbvcxzlkjhg";
-  r = mfg_write_serial_number(fourth_sn, strlen(fourth_sn), &index);
-  sn = mfg_get_serial_number();
-  cl_assert_equal_i(r, MfgSerialsResultSuccess);
-  cl_assert_equal_s(sn, fourth_sn);
-  cl_assert_equal_i(index, OTP_SERIAL4);
-
-  // Fifth time:
-  const char *fifth_sn = "7ujn8ikm9olm";
-  r = mfg_write_serial_number(fifth_sn, strlen(fifth_sn), &index);
-  sn = mfg_get_serial_number();
-  cl_assert_equal_i(r, MfgSerialsResultSuccess);
-  cl_assert_equal_s(sn, fifth_sn);
-  cl_assert_equal_i(index, OTP_SERIAL5);
-
-  // No more space:
-  const char *sixth_sn = "XXXXXXXXXXXX";
-  r = mfg_write_serial_number(sixth_sn, strlen(sixth_sn), &index);
-  cl_assert(r == MfgSerialsResultFailNoMoreSpace);
+  cl_assert_equal_s(sn, first_sn);
 }

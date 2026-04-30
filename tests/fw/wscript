@@ -179,7 +179,7 @@ def build(ctx):
              " src/fw/applib/app_heap_util.c",
         test_sources_ant_glob = "test_heap.c")
 
-    for platform in ['obelix']:
+    for platform in ['asterix']:
         clar(ctx,
              sources_ant_glob =
              " src/fw/debug/default/flash_logging.c"
