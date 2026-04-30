@@ -86,6 +86,10 @@ static bool prv_bad_persist_file_filter(const char *filename) {
          strcmp(filename + APP_FILE_NAME_PREFIX_LENGTH, "persist") == 0;
 }
 
+size_t persist_service_get_max_size(void) {
+  return PERSIST_STORAGE_MAX_SPACE;
+}
+
 // Designed to be called once during reset
 void persist_service_init(void) {
   persist_map_init();
