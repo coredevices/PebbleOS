@@ -44,6 +44,7 @@ RUNNERS = {
     'obelix_bb2': ['sftool'],
     'getafix_evt': ['sftool'],
     'getafix_dvt': ['sftool'],
+    'getafix_dvt2': ['sftool'],
 }
 
 def truncate(msg):
@@ -98,6 +99,7 @@ def options(opt):
                              'obelix_bb2',
                              'getafix_evt',
                              'getafix_dvt',
+                             'getafix_dvt2',
                              'qemu_emery',
                              'qemu_flint',
                              'qemu_gabbro',

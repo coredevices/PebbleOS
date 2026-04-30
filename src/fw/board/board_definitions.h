@@ -26,7 +26,7 @@
 #include "boards/board_asterix.h"
 #elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
 #include "boards/board_obelix.h"
-#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT
+#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT || BOARD_GETAFIX_DVT2
 #include "boards/board_getafix.h"
 #elif BOARD_QEMU_EMERY
 #include "boards/board_qemu_emery.h"
