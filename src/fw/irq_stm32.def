@@ -1,5 +1,0 @@
-#if MICRO_FAMILY_STM32F4
-#include "irq_stm32f2_f4.def"
-#else
-#error "Unrecognized or no microcontroller family configured"
-#endif

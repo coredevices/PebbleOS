@@ -8,16 +8,6 @@ menuconfig PMIC
 
 if PMIC
 
-config PMIC_AS3701B
-    bool "AMS AS3701B"
-    help
-      Support for the AMS AS3701B PMIC.
-
-config PMIC_MAX14690
-    bool "Maxim MAX14690"
-    help
-      Support for the Maxim MAX14690 PMIC.
-
 config PMIC_NPM1300
     bool "Nordic nPM1300"
     help

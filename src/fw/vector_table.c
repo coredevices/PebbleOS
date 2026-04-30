@@ -39,7 +39,7 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 #elif defined(MICRO_FAMILY_QEMU)
 # include "irq_qemu.def"
 #else
-# include "irq_stm32.def"
+# error "No IRQ definition for this MICRO_FAMILY"
 #endif
 #undef IRQ_DEF
 
@@ -59,7 +59,7 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 #elif defined(MICRO_FAMILY_QEMU)
 # include "irq_qemu.def"
 #else
-# include "irq_stm32.def"
+# error "No IRQ definition for this MICRO_FAMILY"
 #endif
 #undef IRQ_DEF
 #endif // PROFILE_INTERRUPTS
@@ -96,7 +96,7 @@ EXTERNALLY_VISIBLE SECTION(".isr_vector") const void * const vector_table[] = {
 #elif defined(MICRO_FAMILY_QEMU)
 # include "irq_qemu.def"
 #else
-# include "irq_stm32.def"
+# error "No IRQ definition for this MICRO_FAMILY"
 #endif
 #undef IRQ_DEF
 };

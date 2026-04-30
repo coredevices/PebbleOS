@@ -18,9 +18,4 @@ config AMBIENT_LIGHT_W1160
     help
       Support for the W1160 ambient light sensor.
 
-config AMBIENT_LIGHT_STM32F4
-    bool "STM32F4 ADC-based"
-    help
-      Support for STM32F4 ADC-based ambient light sensing.
-
 endif # AMBIENT_LIGHT

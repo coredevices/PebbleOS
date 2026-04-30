@@ -161,12 +161,7 @@ def get_flavor(conf):
 
 
 def _get_reset_conf(conf, should_connect_assert_srst):
-    if conf.env.MICRO_FAMILY.startswith("STM32"):
-        options = ["trst_and_srst", "srst_nogate"]
-        if should_connect_assert_srst:
-            options.append("connect_assert_srst")
-        return " ".join(options)
-    elif conf.env.MICRO_FAMILY.startswith("NRF52"):
+    if conf.env.MICRO_FAMILY.startswith("NRF52"):
         return "none"
     else:
         raise Exception(
@@ -191,11 +186,7 @@ def write_cfg(conf):
                 " back to legacy ft2232 driver."
             )
 
-    if conf.env.MICRO_FAMILY == "STM32F2":
-        target = "stm32f2x.cfg"
-    elif conf.env.MICRO_FAMILY == "STM32F4":
-        target = "stm32f4x.cfg"
-    elif conf.env.MICRO_FAMILY == "NRF52":
+    if conf.env.MICRO_FAMILY == "NRF52":
         target = "nrf52.cfg"
 
     is_pebble_flavor = get_flavor(conf)
