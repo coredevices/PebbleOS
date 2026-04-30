@@ -15,11 +15,7 @@ void button_init(void) {
 }
 
 void button_set_rotated(bool rotated) {
-  
-}
 
-bool button_selftest(void) {
-  return true;
 }
 
 void command_button_read(const char* button_id_str) {

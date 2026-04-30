@@ -44,10 +44,6 @@ void button_init(void) {
   }
 }
 
-bool button_selftest(void) {
-  return button_get_state_bits() == 0;
-}
-
 void command_button_read(const char* button_id_str) {
   int button = atoi(button_id_str);
 
