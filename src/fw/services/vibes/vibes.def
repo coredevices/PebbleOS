@@ -1,10 +1,10 @@
 // IDs must be monotonically increasing, i.e. they must never be reused
 // ID 0 is reserved for "Invalid". Do not use!
 
-VIBE_DEF(1, Disabled, i18n_ctx_noop("NotifVibe", "Disabled"), (AlertType_Notifications | AlertType_Calls), RESOURCE_ID_INVALID)
-VIBE_DEF(2, StandardShortPulseLow, i18n_noop("Standard - Low"), AlertType_Notifications, RESOURCE_ID_VIBE_SCORE_STANDARD_SHORT_LOW)
+VIBE_DEF(1, Disabled, i18n_ctx_noop("NotifVibe", "Disabled"), (AlertType_Notifications | AlertType_Calls | AlertType_Hourly| AlertType_OnDisconnect), RESOURCE_ID_INVALID)
+VIBE_DEF(2, StandardShortPulseLow, i18n_noop("Standard - Low"), (AlertType_Notifications | AlertType_Hourly | AlertType_OnDisconnect), RESOURCE_ID_VIBE_SCORE_STANDARD_SHORT_LOW)
 VIBE_DEF(3, StandardLongPulseLow, i18n_noop("Standard - Low"), (AlertType_Calls | AlertType_Alarms), RESOURCE_ID_VIBE_SCORE_STANDARD_LONG_LOW)
-VIBE_DEF(4, StandardShortPulseHigh, i18n_noop("Standard - High"), AlertType_Notifications, RESOURCE_ID_VIBE_SCORE_STANDARD_SHORT_HIGH)
+VIBE_DEF(4, StandardShortPulseHigh, i18n_noop("Standard - High"), (AlertType_Notifications | AlertType_Hourly | AlertType_OnDisconnect), RESOURCE_ID_VIBE_SCORE_STANDARD_SHORT_HIGH)
 VIBE_DEF(5, StandardLongPulseHigh, i18n_noop("Standard - High"), (AlertType_Calls | AlertType_Alarms), RESOURCE_ID_VIBE_SCORE_STANDARD_LONG_HIGH)
 VIBE_DEF(8, Pulse, i18n_noop("Pulse"), AlertType_All, RESOURCE_ID_VIBE_SCORE_PULSE)
 VIBE_DEF(9, NudgeNudge, i18n_noop("Nudge Nudge"), AlertType_All, RESOURCE_ID_VIBE_SCORE_NUDGE_NUDGE)

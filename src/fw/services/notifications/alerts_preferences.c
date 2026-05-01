@@ -52,6 +52,12 @@ static VibeScoreId s_vibe_score_incoming_calls = DEFAULT_VIBE_SCORE_INCOMING_CAL
 #define PREF_KEY_VIBE_SCORE_ALARMS ("vibeScoreAlarms")
 static VibeScoreId s_vibe_score_alarms = DEFAULT_VIBE_SCORE_ALARMS;
 
+#define PREF_KEY_VIBE_SCORE_HOURLY ("vibeScoreHourly")
+static VibeScoreId s_vibe_score_hourly = DEFAULT_VIBE_SCORE_HOURLY;
+
+#define PREF_KEY_VIBE_SCORE_ON_DISCONNECT ("vibeScoreOnDisconnect")
+static VibeScoreId s_vibe_score_on_disconnect = DEFAULT_VIBE_SCORE_ON_DISCONNECT;
+
 #define PREF_KEY_DND_MANUALLY_ENABLED "dndManuallyEnabled"
 static bool s_do_not_disturb_manually_enabled = false;
 
@@ -181,7 +187,9 @@ static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
 static void prv_save_changed_vibe_scores_to_file(SettingsFile *file,
                                                  VibeScoreId orig_notifications,
                                                  VibeScoreId orig_incoming_calls,
-                                                 VibeScoreId orig_alarms) {
+                                                 VibeScoreId orig_alarms,
+                                                 VibeScoreId orig_hourly,
+                                                 VibeScoreId orig_on_disconnect) {
 #define SET_PREF_IF_CHANGED(key, value, orig) \
   do { \
     if ((value) != (orig)) { \
@@ -194,6 +202,9 @@ static void prv_save_changed_vibe_scores_to_file(SettingsFile *file,
   SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_INCOMING_CALLS, s_vibe_score_incoming_calls,
                       orig_incoming_calls);
   SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms, orig_alarms);
+  SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_HOURLY, s_vibe_score_hourly, orig_hourly);
+  SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_ON_DISCONNECT, s_vibe_score_on_disconnect, 
+                      orig_on_disconnect);
 #undef SET_PREF_IF_CHANGED
 }
 
@@ -209,6 +220,10 @@ static void prv_ensure_valid_vibe_scores(void) {
                                                               DEFAULT_VIBE_SCORE_INCOMING_CALLS);
   s_vibe_score_alarms = prv_return_default_if_invalid(s_vibe_score_alarms,
                                                       DEFAULT_VIBE_SCORE_ALARMS);
+  s_vibe_score_hourly = prv_return_default_if_invalid(s_vibe_score_hourly,
+                                                      DEFAULT_VIBE_SCORE_HOURLY);
+  s_vibe_score_on_disconnect = prv_return_default_if_invalid(s_vibe_score_on_disconnect,
+                                                            DEFAULT_VIBE_SCORE_ON_DISCONNECT);
 }
 
 static void prv_set_vibe_scores_based_on_legacy_intensity(VibeIntensity intensity) {
@@ -285,6 +300,8 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications);
   RESTORE_PREF(PREF_KEY_VIBE_SCORE_INCOMING_CALLS, s_vibe_score_incoming_calls);
   RESTORE_PREF(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms);
+  RESTORE_PREF(PREF_KEY_VIBE_SCORE_HOURLY, s_vibe_score_hourly);
+  RESTORE_PREF(PREF_KEY_VIBE_SCORE_ON_DISCONNECT, s_vibe_score_on_disconnect);
   RESTORE_PREF(PREF_KEY_DND_MANUALLY_ENABLED, s_do_not_disturb_manually_enabled);
   RESTORE_PREF(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
   RESTORE_PREF(PREF_KEY_DND_INTERRUPTIONS_MASK, s_dnd_interruptions_mask);
@@ -312,13 +329,17 @@ void alerts_preferences_init(void) {
   const VibeScoreId orig_vibe_score_notifications = s_vibe_score_notifications;
   const VibeScoreId orig_vibe_score_incoming_calls = s_vibe_score_incoming_calls;
   const VibeScoreId orig_vibe_score_alarms = s_vibe_score_alarms;
+  const VibeScoreId orig_vibe_score_hourly = s_vibe_score_hourly;
+  const VibeScoreId orig_vibe_score_on_disconnect = s_vibe_score_on_disconnect;
 
   prv_migrate_legacy_first_use_settings(&file);
   prv_migrate_vibe_intensity_to_vibe_scores(&file);
   prv_ensure_valid_vibe_scores();
   prv_save_changed_vibe_scores_to_file(&file, orig_vibe_score_notifications,
                                        orig_vibe_score_incoming_calls,
-                                       orig_vibe_score_alarms);
+                                       orig_vibe_score_alarms,
+                                       orig_vibe_score_hourly,
+                                       orig_vibe_score_on_disconnect);
 
   settings_file_close(&file);
 }
@@ -418,6 +439,10 @@ VibeScoreId alerts_preferences_get_vibe_score_for_client(VibeClient client) {
       return s_vibe_score_incoming_calls;
     case VibeClient_Alarms:
       return s_vibe_score_alarms;
+    case VibeClient_Hourly:
+      return s_vibe_score_hourly;
+    case VibeClient_OnDisconnect:
+      return s_vibe_score_on_disconnect;
     default:
       WTF;
   }
@@ -439,6 +464,16 @@ void alerts_preferences_set_vibe_score_for_client(VibeClient client, VibeScoreId
     case VibeClient_Alarms: {
       s_vibe_score_alarms = id;
       key = PREF_KEY_VIBE_SCORE_ALARMS;
+      break;
+    }
+    case VibeClient_Hourly: {
+      s_vibe_score_hourly = id;
+      key = PREF_KEY_VIBE_SCORE_HOURLY;
+      break;
+    }
+    case VibeClient_OnDisconnect: {
+      s_vibe_score_on_disconnect = id;
+      key = PREF_KEY_VIBE_SCORE_ON_DISCONNECT;
       break;
     }
     default: {

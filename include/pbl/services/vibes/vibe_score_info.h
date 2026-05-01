@@ -20,14 +20,20 @@ typedef enum VibeScoreId {
 #define DEFAULT_VIBE_SCORE_NOTIFS (VibeScoreId_Pulse)
 #define DEFAULT_VIBE_SCORE_INCOMING_CALLS (VibeScoreId_Pulse)
 #define DEFAULT_VIBE_SCORE_ALARMS (VibeScoreId_Pulse)
+#define DEFAULT_VIBE_SCORE_HOURLY (VibeScoreId_Disabled)
+#define DEFAULT_VIBE_SCORE_ON_DISCONNECT (VibeScoreId_Disabled)
 #elif PLATFORM_ASTERIX
 #define DEFAULT_VIBE_SCORE_NOTIFS (VibeScoreId_StandardShortPulseHigh)
 #define DEFAULT_VIBE_SCORE_INCOMING_CALLS (VibeScoreId_Pulse)
 #define DEFAULT_VIBE_SCORE_ALARMS (VibeScoreId_Reveille)
+#define DEFAULT_VIBE_SCORE_HOURLY (VibeScoreId_Disabled)
+#define DEFAULT_VIBE_SCORE_ON_DISCONNECT (VibeScoreId_Disabled)
 #else
 #define DEFAULT_VIBE_SCORE_NOTIFS (VibeScoreId_NudgeNudge)
 #define DEFAULT_VIBE_SCORE_INCOMING_CALLS (VibeScoreId_Pulse)
 #define DEFAULT_VIBE_SCORE_ALARMS (VibeScoreId_Reveille)
+#define DEFAULT_VIBE_SCORE_HOURLY (VibeScoreId_Disabled)
+#define DEFAULT_VIBE_SCORE_ON_DISCONNECT (VibeScoreId_Disabled)
 #endif
 
 // Returns the ResourceId for the VibeScore represented by this id.
