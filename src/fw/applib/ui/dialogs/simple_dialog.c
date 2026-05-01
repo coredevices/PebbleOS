@@ -58,9 +58,12 @@ static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int win
 #endif
   const uint16_t frame_height_claimed = icon_height + TEXT_MAX_HEIGHT_PX + status_layer_offset;
   const uint16_t icon_top_adjusted_margin_px = MAX(window_height - frame_height_claimed, 0);
-  // Try and use the default value if possible.
-  return (icon_top_adjusted_margin_px < icon_top_default_margin_px) ? icon_top_adjusted_margin_px :
-                                                                      icon_top_default_margin_px;
+  if (icon_top_adjusted_margin_px < icon_top_default_margin_px) {
+    return icon_top_adjusted_margin_px;
+  }
+  // When the window is taller than the default layout assumes, vertically center the content
+  // by splitting the leftover space evenly above and below.
+  return MAX(icon_top_default_margin_px, icon_top_adjusted_margin_px / 2);
 }
 
 static void prv_get_text_box(GSize frame_size, GSize icon_size,
