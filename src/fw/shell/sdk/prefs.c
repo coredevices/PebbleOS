@@ -294,6 +294,14 @@ void shell_prefs_set_theme_highlight_color(GColor color) {
   // Not used in SDK shell
 }
 
+DarkMode shell_prefs_get_dark_mode(void) {
+  return DarkModeOff;
+}
+
+void shell_prefs_set_dark_mode(DarkMode mode) {
+  // Not used in SDK shell
+}
+
 #if CAPABILITY_HAS_APP_SCALING
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
   return (LegacyAppRenderMode)s_legacy_app_render_mode;

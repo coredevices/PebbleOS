@@ -117,7 +117,7 @@ static OptionMenu *prv_push_color_menu(void) {
     PBL_LOG_WRN("Invalid menu color, using default");
     selected = 0;
   }
-  OptionMenu * const option_menu = settings_option_menu_create(
+  OptionMenu * const option_menu = settings_option_menu_push(
       title, OptionMenuContentType_SingleLine, selected, &callbacks,
       ARRAY_LENGTH(s_color_definitions), true /* icons_enabled */, color_names, NULL);
 
@@ -133,12 +133,52 @@ static OptionMenu *prv_push_color_menu(void) {
 
   return option_menu;
 }
+
+static const char * const s_dark_mode_labels[] = {
+  i18n_noop("Off"), i18n_noop("On"), i18n_noop("Auto"),
+};
+
+static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
+  if (row == 0) shell_prefs_set_dark_mode((shell_prefs_get_dark_mode() + 1) % DarkModeCount);
+  else prv_push_color_menu();
+  settings_menu_reload_data(SettingsMenuItemThemes);
+  settings_menu_mark_dirty(SettingsMenuItemThemes);
+}
+
+static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
+                             const Layer *cell_layer, uint16_t row, bool selected) {
+  const char *title, *subtitle;
+  if (row == 0) {
+    title = i18n_noop("Dark Mode");
+    subtitle = s_dark_mode_labels[shell_prefs_get_dark_mode()];
+  } else {
+    int idx = prv_color_to_index(shell_prefs_get_theme_highlight_color(),
+                                  DEFAULT_THEME_HIGHLIGHT_COLOR);
+    title = i18n_noop("Accent Color");
+    subtitle = s_color_definitions[idx < 0 ? 0 : idx].name;
+  }
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, context),
+                       i18n_get(subtitle, context), NULL);
+}
+
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) { return 2; }
+static void prv_deinit_cb(SettingsCallbacks *context) {
+  i18n_free_all(context);
+  app_free(context);
+}
+
 #endif // CAPABILITY_HAS_THEMING
 
 static Window *prv_create_color_menu(void) {
 #if CAPABILITY_HAS_THEMING
-  OptionMenu *option_menu = prv_push_color_menu();
-  return option_menu ? &option_menu->window : NULL;
+  SettingsCallbacks *callbacks = app_malloc_check(sizeof(*callbacks));
+  *callbacks = (SettingsCallbacks){
+    .deinit = prv_deinit_cb,
+    .draw_row = prv_draw_row_cb,
+    .select_click = prv_select_click_cb,
+    .num_rows = prv_num_rows_cb,
+  };
+  return settings_window_create(SettingsMenuItemThemes, callbacks);
 #else
   WTF;
   return NULL;

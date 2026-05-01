@@ -252,6 +252,17 @@ void shell_prefs_set_language_english(bool english) {
 void shell_prefs_toggle_language_english(void) {
 }
 
+GColor shell_prefs_get_theme_highlight_color(void) {
+  return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+}
+
+DarkMode shell_prefs_get_dark_mode(void) {
+  return DarkModeOff;
+}
+
+void shell_prefs_set_dark_mode(DarkMode mode) {
+}
+
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
   return NULL;
 }

@@ -3,18 +3,20 @@
 
 #pragma once
 
-void ambient_light_init(void) {
+#include "util/attributes.h"
+
+void WEAK ambient_light_init(void) {
 }
-uint32_t ambient_light_get_light_level(void) {
+uint32_t WEAK ambient_light_get_light_level(void) {
 	return 0;
 }
-void command_als_read(void) {
+void WEAK command_als_read(void) {
 }
-uint32_t ambient_light_get_dark_threshold(void) {
+uint32_t WEAK ambient_light_get_dark_threshold(void) {
 	return 0;
 }
-void ambient_light_set_dark_threshold(uint32_t new_threshold) {
+void WEAK ambient_light_set_dark_threshold(uint32_t new_threshold) {
 }
-bool ambient_light_is_light(void) {
+bool WEAK ambient_light_is_light(void) {
 	return false;
 }
