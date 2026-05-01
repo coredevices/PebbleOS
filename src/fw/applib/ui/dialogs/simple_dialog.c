@@ -61,9 +61,13 @@ static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int win
   if (icon_top_adjusted_margin_px < icon_top_default_margin_px) {
     return icon_top_adjusted_margin_px;
   }
-  // When the window is taller than the default layout assumes, vertically center the content
-  // by splitting the leftover space evenly above and below.
-  return MAX(icon_top_default_margin_px, icon_top_adjusted_margin_px / 2);
+  // For icon+text dialogs, vertically center the icon+text block when the window is taller
+  // than the default layout assumes, by splitting the leftover space evenly above and below.
+  // Text-only dialogs keep the default top margin so layouts tuned for them aren't disturbed.
+  if (icon_height > 0) {
+    return MAX(icon_top_default_margin_px, icon_top_adjusted_margin_px / 2);
+  }
+  return icon_top_default_margin_px;
 }
 
 static void prv_get_text_box(GSize frame_size, GSize icon_size,
