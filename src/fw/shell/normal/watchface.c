@@ -28,10 +28,12 @@
 #define BIT_SET (1)
 #define BIT_CLEAR (0)
 #define COMBO_BACK_UP_BUTTONS ((BIT_SET << BUTTON_ID_BACK) | (BIT_SET << BUTTON_ID_UP))
+#define COMBO_UP_DOWN_BUTTONS ((BIT_SET << BUTTON_ID_UP) | (BIT_SET << BUTTON_ID_DOWN))
 
 static ClickManager s_click_manager;
 static uint8_t s_buttons_pressed = BIT_CLEAR;
-static AppTimer *s_combo_back_up_timer = NULL;
+static AppTimer *s_combo_back_hold_timer = NULL;
+static uint8_t s_active_combo_buttons = BIT_CLEAR;
 
 static bool prv_should_ignore_button_click(void) {
   if (app_manager_get_task_context()->closing_state != ProcessRunState_Running) {
@@ -51,43 +53,89 @@ static void prv_launch_app_via_button(AppLaunchEventConfig *config,
   app_manager_put_launch_app_event(config);
 }
 
-static void prv_combo_back_up_timer_callback(void *data) {
-  s_combo_back_up_timer = NULL;
-  // Double-check that both buttons are still pressed before executing combo
-  if ((s_buttons_pressed & COMBO_BACK_UP_BUTTONS) == COMBO_BACK_UP_BUTTONS) {
-    if (quick_launch_combo_back_up_is_enabled()) {
-      AppInstallId app_id = quick_launch_combo_back_up_get_app();
-      if (app_id != INSTALL_ID_INVALID) {
-        // Reset all button states before launching app to prevent state corruption
-        s_buttons_pressed = BIT_CLEAR;  // Reset our own tracking
-        app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-          .id = app_id,
-          .common.reason = APP_LAUNCH_QUICK_LAUNCH,
-          .common.button = BUTTON_ID_BACK,
-        });
-        return;
-      }
-    }
+static bool prv_is_combo_pressed(uint8_t combo_buttons) {
+  return (s_buttons_pressed & combo_buttons) == combo_buttons;
+}
+
+static bool prv_combo_is_enabled(uint8_t combo_buttons) {
+  if (combo_buttons == COMBO_BACK_UP_BUTTONS) {
+    return quick_launch_combo_back_up_is_enabled();
+  } else if (combo_buttons == COMBO_UP_DOWN_BUTTONS) {
+    return quick_launch_combo_up_down_is_enabled();
+  }
+  return false;
+}
+
+static AppInstallId prv_combo_get_app(uint8_t combo_buttons) {
+  if (combo_buttons == COMBO_BACK_UP_BUTTONS) {
+    return quick_launch_combo_back_up_get_app();
+  } else if (combo_buttons == COMBO_UP_DOWN_BUTTONS) {
+    return quick_launch_combo_up_down_get_app();
+  }
+  return INSTALL_ID_INVALID;
+}
+
+static bool prv_is_any_combo_active(void) {
+  return (s_combo_back_hold_timer != NULL) ||
+         prv_is_combo_pressed(COMBO_BACK_UP_BUTTONS) ||
+         prv_is_combo_pressed(COMBO_UP_DOWN_BUTTONS);
+}
+
+static void prv_combo_back_timer_callback(void *data) {
+  s_combo_back_hold_timer = NULL;
+  if (!prv_is_combo_pressed(s_active_combo_buttons)) {
+    s_active_combo_buttons = BIT_CLEAR;
+    return;
+  }
+
+  if (!prv_combo_is_enabled(s_active_combo_buttons)) {
+    s_active_combo_buttons = BIT_CLEAR;
+    return;
+  }
+
+  AppInstallId app_id = prv_combo_get_app(s_active_combo_buttons);
+  const ButtonId source_button =
+      (s_active_combo_buttons == COMBO_BACK_UP_BUTTONS) ? BUTTON_ID_BACK : BUTTON_ID_UP;
+  s_active_combo_buttons = BIT_CLEAR;
+  if (app_id != INSTALL_ID_INVALID) {
+    // Reset all button states before launching app to prevent state corruption.
+    s_buttons_pressed = BIT_CLEAR;
+    app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
+      .id = app_id,
+      .common.reason = APP_LAUNCH_QUICK_LAUNCH,
+      .common.button = source_button,
+    });
   }
 }
 
-static void prv_check_combo_back_up(void) {
-  bool back_pressed = (s_buttons_pressed & (BIT_SET << BUTTON_ID_BACK)) != BIT_CLEAR;
-  bool up_pressed = (s_buttons_pressed & (BIT_SET << BUTTON_ID_UP)) != BIT_CLEAR;
-  bool both_pressed = back_pressed && up_pressed;
-  
-  if (both_pressed) {
-    if (s_combo_back_up_timer == NULL) {
-      // Cancel individual button timers to prevent them from firing
-      // This ensures only the combo executes, not individual hold handlers
-      click_recognizer_reset(&s_click_manager.recognizers[BUTTON_ID_BACK]);
-      click_recognizer_reset(&s_click_manager.recognizers[BUTTON_ID_UP]);
-      s_combo_back_up_timer = app_timer_register(QUICK_LAUNCH_HOLD_MS, prv_combo_back_up_timer_callback, NULL);
+static void prv_check_combo_back_hold(void) {
+  uint8_t combo_buttons = BIT_CLEAR;
+  if (prv_is_combo_pressed(COMBO_BACK_UP_BUTTONS)) {
+    combo_buttons = COMBO_BACK_UP_BUTTONS;
+  } else if (prv_is_combo_pressed(COMBO_UP_DOWN_BUTTONS)) {
+    combo_buttons = COMBO_UP_DOWN_BUTTONS;
+  }
+
+  if (combo_buttons != BIT_CLEAR) {
+    if (s_combo_back_hold_timer == NULL) {
+      s_active_combo_buttons = combo_buttons;
+      // Cancel individual button timers to prevent them from firing.
+      // This ensures only the combo executes, not individual hold handlers.
+      if (combo_buttons == COMBO_BACK_UP_BUTTONS) {
+        click_recognizer_reset(&s_click_manager.recognizers[BUTTON_ID_BACK]);
+        click_recognizer_reset(&s_click_manager.recognizers[BUTTON_ID_UP]);
+      } else {
+        click_recognizer_reset(&s_click_manager.recognizers[BUTTON_ID_UP]);
+        click_recognizer_reset(&s_click_manager.recognizers[BUTTON_ID_DOWN]);
+      }
+      s_combo_back_hold_timer =
+          app_timer_register(QUICK_LAUNCH_HOLD_MS, prv_combo_back_timer_callback, NULL);
     }
   } else {
-    if (s_combo_back_up_timer != NULL) {
-      app_timer_cancel(s_combo_back_up_timer);
-      s_combo_back_up_timer = NULL;
+    if (s_combo_back_hold_timer != NULL) {
+      app_timer_cancel(s_combo_back_hold_timer);
+      s_combo_back_hold_timer = NULL;
+      s_active_combo_buttons = BIT_CLEAR;
     }
   }
 }
@@ -95,8 +143,7 @@ static void prv_check_combo_back_up(void) {
 static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) {
   ButtonId button = click_recognizer_get_button_id(recognizer);
 
-  if (s_combo_back_up_timer != NULL || 
-      (s_buttons_pressed & COMBO_BACK_UP_BUTTONS) == COMBO_BACK_UP_BUTTONS) {
+  if (prv_is_any_combo_active()) {
     return;
   }
   
@@ -117,7 +164,7 @@ static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) 
 static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   ButtonId button = click_recognizer_get_button_id(recognizer);
   
-  if ((s_buttons_pressed & COMBO_BACK_UP_BUTTONS) == COMBO_BACK_UP_BUTTONS) {
+  if (prv_is_any_combo_active()) {
     return;
   }
   
@@ -179,7 +226,7 @@ static void prv_launch_launcher_app(ClickRecognizerRef recognizer, void *data) {
 }
 
 static void prv_dismiss_timeline_peek(ClickRecognizerRef recognizer, void *data) {
-  if ((s_buttons_pressed & COMBO_BACK_UP_BUTTONS) == COMBO_BACK_UP_BUTTONS) {
+  if (prv_is_any_combo_active()) {
     return;
   }
   timeline_peek_dismiss();
@@ -205,11 +252,11 @@ void watchface_handle_button_event(PebbleEvent *e) {
     case PEBBLE_BUTTON_DOWN_EVENT:
       s_buttons_pressed |= (BIT_SET << e->button.button_id);
       click_recognizer_handle_button_down(&s_click_manager.recognizers[e->button.button_id]);
-      prv_check_combo_back_up();
+      prv_check_combo_back_hold();
       break;
     case PEBBLE_BUTTON_UP_EVENT:
       s_buttons_pressed &= ~(BIT_SET << e->button.button_id);
-      prv_check_combo_back_up();
+      prv_check_combo_back_hold();
       click_recognizer_handle_button_up(&s_click_manager.recognizers[e->button.button_id]);
       break;
     default:
