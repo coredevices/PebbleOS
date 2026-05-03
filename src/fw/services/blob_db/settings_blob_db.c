@@ -83,6 +83,7 @@ static const char *s_syncable_settings[] = {
   "qlSingleClickUp",
   "qlSingleClickDown",
   "qlComboBackUp",
+  "qlComboUpDown",
 
   // UI theming
   "settingsMenuHighlightColor",
