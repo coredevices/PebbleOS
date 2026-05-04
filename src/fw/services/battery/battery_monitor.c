@@ -67,11 +67,9 @@ static void prv_transition(PowerStateID next_state) {
 }
 
 static void prv_enter_lpm(void) {
-#ifndef BATTERY_DEBUG
   if (!firmware_update_is_in_progress()) {
     low_power_enter();
   }
-#endif
   PBL_LOG_INFO("Battery low: enter low power mode");
 }
 

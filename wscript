@@ -158,8 +158,6 @@ def options(opt):
                    help='Enable all voice logging.')
     opt.add_option('--voice_codec_tests', action='store_true',
                    help='Enable voice codec tests. Enables the profiler')
-    opt.add_option('--battery_debug', action='store_true',
-                   help='Set the PMIC\'s max charging voltage to 4.3V.')
     opt.add_option('--no_sandbox', action='store_true',
                    help='Disable the MPU for 3rd party apps.')
     opt.add_option('--malloc_instrumentation', action='store_true',
@@ -282,10 +280,6 @@ def handle_configure_options(conf):
 
     if conf.options.voice_debug:
         conf.env.append_value('DEFINES', 'VOICE_DEBUG')
-
-    if conf.options.battery_debug:
-        conf.env.append_value('DEFINES', 'BATTERY_DEBUG')
-        print("Enabling higher battery charge voltage.")
 
     conf.env.INTERNAL_SDK_BUILD = bool(conf.options.internal_sdk_build)
     if conf.env.INTERNAL_SDK_BUILD:
