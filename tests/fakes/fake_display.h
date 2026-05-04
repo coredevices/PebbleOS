@@ -37,5 +37,3 @@ void display_clear(void);
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb);
 
 void display_enter_static(void);
-
-void display_pulse_vcom(void);
