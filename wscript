@@ -96,8 +96,6 @@ def options(opt):
                         '(bb2 (default), olimex, ev2, etc)')
     opt.add_option('--internal_sdk_build', action='store_true',
                    help='Build the internal version of the SDK')
-    opt.add_option('--future_ux', action='store_true',
-                   help='Build future UX features and APIs. Implies --internal_sdk_build.')
     opt.add_option('--nosleep', action='store_true',
                    help='Disable sleep and stop mode (to use JTAG+GDB)')
     opt.add_option('--nostop', action='store_true',
@@ -294,10 +292,6 @@ def handle_configure_options(conf):
     if conf.options.battery_debug:
         conf.env.append_value('DEFINES', 'BATTERY_DEBUG')
         print("Enabling higher battery charge voltage.")
-
-    if conf.options.future_ux:
-        print("Future UX features enabled.")
-        conf.env.FUTURE_UX = True
 
     conf.env.INTERNAL_SDK_BUILD = bool(conf.options.internal_sdk_build)
     if conf.env.INTERNAL_SDK_BUILD:
