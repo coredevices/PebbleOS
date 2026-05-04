@@ -517,7 +517,8 @@ static bool prv_should_fit_watchface_for_timeline_peek(void) {
   }
 
   UnobstructedAreaState *unobstructed_state = app_state_get_unobstructed_area_state();
-  if (unobstructed_area_service_is_subscribed(unobstructed_state)) {
+  if (unobstructed_area_service_is_subscribed(unobstructed_state) ||
+      unobstructed_area_service_has_requested_area(unobstructed_state)) {
     return false;
   }
 
