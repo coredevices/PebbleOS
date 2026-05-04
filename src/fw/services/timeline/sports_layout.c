@@ -28,7 +28,6 @@ _Static_assert(AttributeIdRecordAway + 1 == AttributeIdRecordHome,
 _Static_assert(AttributeIdScoreAway + 1 == AttributeIdScoreHome,
                "Sports layout requires that all Home attributes are directly after Away");
 
-#if !TINTIN_FORCE_FIT
 //////////////////////////////////////////
 //  Card Mode
 //////////////////////////////////////////
@@ -274,8 +273,3 @@ LayoutLayer *sports_layout_create(const LayoutLayerConfig *config) {
 
   return (LayoutLayer *)layout;
 }
-#else
-LayoutLayer *sports_layout_create(const LayoutLayerConfig *config) { return NULL; }
-
-bool sports_layout_verify(bool existing_attributes[]) { return false; }
-#endif

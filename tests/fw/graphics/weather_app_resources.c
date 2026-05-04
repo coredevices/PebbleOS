@@ -9,8 +9,6 @@
 
 #include <string.h>
 
-#if !TINTIN_FORCE_FIT
-
 #if defined(UNITTEST)
 #include <stdio.h>
 #endif
@@ -183,4 +181,3 @@ GDrawCommandImage *weather_app_resource_create_sun_25px(void) {
   COPY_POINTS(gdraw_command_list_get_command(&result->command_list, 4)->points, c4_points)
   return result;
 }
-#endif

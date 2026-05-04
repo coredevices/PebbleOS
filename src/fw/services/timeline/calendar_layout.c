@@ -24,7 +24,6 @@
 
 #include <stdio.h>
 
-#if !TINTIN_FORCE_FIT
 //////////////////////////////////////////
 //  Card Mode
 //////////////////////////////////////////
@@ -545,8 +544,3 @@ LayoutLayer *calendar_layout_create(const LayoutLayerConfig *config) {
 
   return (LayoutLayer *)layout;
 }
-#else
-LayoutLayer *calendar_layout_create(const LayoutLayerConfig *config) { return NULL; }
-
-bool calendar_layout_verify(bool existing_attributes[]) { return false; }
-#endif

@@ -147,8 +147,6 @@ def options(opt):
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--qemu_host', default='localhost:12345',
         help='host:port for the emulator console connection')
-    opt.add_option('--force-fit-tintin', action='store_true',
-                   help='Force fit for Tintin')
     opt.add_option('--no-link', action='store_true',
                    help='Do not link the final firmware binary. This is used for static analysis')
     opt.add_option('--noprompt', action='store_true',
@@ -304,10 +302,6 @@ def handle_configure_options(conf):
     conf.env.INTERNAL_SDK_BUILD = bool(conf.options.internal_sdk_build)
     if conf.env.INTERNAL_SDK_BUILD:
         print("Internal SDK enabled")
-
-    if conf.options.force_fit_tintin:
-        conf.env.append_value('DEFINES', 'TINTIN_FORCE_FIT')
-        print("Functionality is secondary to usability")
 
     if conf.options.lto:
         print("Turning on LTO.")
