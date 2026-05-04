@@ -144,17 +144,13 @@ static void prv_create_and_render_title_and_subtitle(bool past, uint16_t first_d
 }
 
 void test_timeline_list_view__title_and_subtitle_overlap_future(void) {
-#if !PLATFORM_SPALDING
   prv_create_and_render_title_and_subtitle(false /* past */, MINUTES_PER_HOUR);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-#endif
 }
 
 void test_timeline_list_view__title_and_subtitle_back_to_back_future(void) {
-#if !PLATFORM_SPALDING
   prv_create_and_render_title_and_subtitle(false /* past */, MINUTES_PER_HOUR / 2);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-#endif
 }
 
 void test_timeline_list_view__title_and_subtitle_free_time_future(void) {

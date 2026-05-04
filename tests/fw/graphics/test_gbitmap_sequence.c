@@ -116,7 +116,7 @@ void test_gbitmap_sequence__color_2bit_bouncing_ball(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_fight(void) {
-#if PLATFORM_SPALDING
+#if PLATFORM_QEMU_GABBRO
   bool status = false;
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
@@ -162,7 +162,7 @@ void test_gbitmap_sequence__color_8bit_fight(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_coin(void) {
-#if PLATFORM_SPALDING
+#if PLATFORM_QEMU_GABBRO
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
 
@@ -198,7 +198,7 @@ void test_gbitmap_sequence__color_8bit_coin(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_coin_round(void) {
-#if PLATFORM_SPALDING
+#if PLATFORM_QEMU_GABBRO
   uint32_t resource_id = sys_resource_load_file_as_resource(
       TEST_IMAGES_PATH, "test_gbitmap_sequence__color_8bit_coin.apng");
   cl_assert(resource_id != UINT32_MAX);
@@ -232,7 +232,7 @@ void test_gbitmap_sequence__color_8bit_coin_round(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_bounds(void) {
-#if PLATFORM_SPALDING
+#if PLATFORM_QEMU_GABBRO
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
 
@@ -282,7 +282,7 @@ void test_gbitmap_sequence__color_8bit_bounds(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_yoshi(void) {
-#if PLATFORM_SPALDING
+#if PLATFORM_QEMU_GABBRO
   bool status = false;
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
