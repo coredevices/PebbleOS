@@ -35,6 +35,11 @@ void unobstructed_area_service_deinit(UnobstructedAreaState *state);
 void unobstructed_area_service_get_area(UnobstructedAreaState *state, GRect *area);
 
 //! @internal
+//! Returns whether the app subscribed to unobstructed area changes.
+//! @param state Unobstructed area state belonging to the consuming task
+bool unobstructed_area_service_is_subscribed(UnobstructedAreaState *state);
+
+//! @internal
 //! Subscribe to be notified when the app's unobstructed area changes.
 //! @param state Unobstructed area state belonging to the consuming task
 //! @param handlers The handlers that should be called when the unobstructed area changes.
