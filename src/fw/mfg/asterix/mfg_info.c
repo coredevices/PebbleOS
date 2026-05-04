@@ -66,15 +66,6 @@ void mfg_info_set_rtc_freq(uint32_t rtc_freq) {
   // Not implemented.
 }
 
-GPoint mfg_info_get_disp_offsets(void) {
-  // Not implemented. Can just assume no offset
-  return (GPoint) {};
-}
-
-void mfg_info_set_disp_offsets(GPoint p) {
-  // Not implemented.
-}
-
 void mfg_info_update_constant_data(void) {
   // Not implemented
 }

@@ -147,7 +147,6 @@ extern void command_serial_read(void);
 extern void command_hwver_read(void);
 extern void command_pcba_serial_read(void);
 extern void command_color_read(void);
-extern void command_disp_offset_read(void);
 extern void command_rtcfreq_read(void);
 extern void command_model_read(void);
 
@@ -155,7 +154,6 @@ extern void command_serial_write(const char*);
 extern void command_hwver_write(const char*);
 extern void command_pcba_serial_write(const char*);
 extern void command_color_write(const char*);
-extern void command_disp_offset_write(const char*);
 extern void command_rtcfreq_write(const char*);
 extern void command_model_write(const char*);
 extern void command_version_info(void);
@@ -366,9 +364,6 @@ static const Command s_prompt_commands[] = {
   { "hwver read", command_hwver_read, 0 },
   { "pcbaserial read", command_pcba_serial_read, 0 },
   { "color read", command_color_read, 0 },
-#if PBL_ROUND
-  { "disp offset read", command_disp_offset_read, 0 },
-#endif
   { "rtcfreq read", command_rtcfreq_read, 0 },
   { "model read", command_model_read, 0 },
 
@@ -381,9 +376,6 @@ static const Command s_prompt_commands[] = {
   { "pcbaserial write", command_pcba_serial_write, 1 },
 #if MANUFACTURING_FW
   { "color write", command_color_write, 1 },
-#if PBL_ROUND
-  { "disp offset write", command_disp_offset_write, 2 },
-#endif
   { "rtcfreq write", command_rtcfreq_write, 1 },
   { "model write", command_model_write, 1 },
 #endif // MANUFACTURING_FW

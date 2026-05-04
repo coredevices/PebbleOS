@@ -161,11 +161,3 @@ void display_show_panic_screen(uint32_t error_code) {
   // For now, just clear and request update
   display_clear();
 }
-
-void display_set_offset(GPoint offset) {
-  (void)offset;
-}
-
-GPoint display_get_offset(void) {
-  return GPointZero;
-}

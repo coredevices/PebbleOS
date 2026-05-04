@@ -237,9 +237,3 @@ uint32_t display_baud_rate_change(uint32_t new_frequency_hz) {
 void display_pulse_vcom(void) {}
 
 void display_update_boot_frame(uint8_t *framebuffer) {}
-
-void display_set_offset(GPoint offset) {}
-
-GPoint display_get_offset(void) {
-  return GPointZero;
-}

@@ -39,30 +39,6 @@ void command_color_write(const char* color_num) {
   }
 }
 
-void command_disp_offset_read(void) {
-  char buffer[16];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "X: %"PRId16" Y: %"PRId16,
-                           mfg_info_get_disp_offsets().x,
-                           mfg_info_get_disp_offsets().y);
-}
-
-void command_disp_offset_write(const char* offset_x_str, const char* offset_y_str) {
-  char *nonnumeric_x, *nonnumeric_y;
-  int8_t offset_x = strtol(offset_x_str, &nonnumeric_x, 10);
-  if (*nonnumeric_x) {
-    prompt_send_response("Invalid x offset");
-  }
-
-  int8_t offset_y = strtol(offset_y_str, &nonnumeric_y, 10);
-  if (*nonnumeric_y) {
-    prompt_send_response("Invalid y offset");
-  }
-
-  if (!*nonnumeric_x && !*nonnumeric_y) {
-    mfg_info_set_disp_offsets((GPoint) {offset_x, offset_y});
-  }
-}
-
 void command_rtcfreq_read(void) {
   char buffer[10];
   prompt_send_response_fmt(buffer, sizeof(buffer), "%"PRIu32, mfg_info_get_rtc_freq());

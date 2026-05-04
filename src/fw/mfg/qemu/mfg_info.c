@@ -69,13 +69,5 @@ void mfg_info_set_rtc_freq(uint32_t rtc_freq) {
   (void)rtc_freq;
 }
 
-GPoint mfg_info_get_disp_offsets(void) {
-  return (GPoint) {};
-}
-
-void mfg_info_set_disp_offsets(GPoint p) {
-  (void)p;
-}
-
 void mfg_info_update_constant_data(void) {
 }

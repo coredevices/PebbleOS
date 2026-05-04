@@ -41,11 +41,6 @@ uint32_t mfg_info_get_rtc_freq(void);
 
 void mfg_info_set_rtc_freq(uint32_t rtc_freq);
 
-// x offset +/- for display
-GPoint mfg_info_get_disp_offsets(void);
-
-void mfg_info_set_disp_offsets(GPoint p);
-
 //! The number of bytes in our model name, including the null-terminator.
 #define MFG_INFO_MODEL_STRING_LENGTH 16
 
