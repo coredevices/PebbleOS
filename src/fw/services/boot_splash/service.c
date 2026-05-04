@@ -201,21 +201,6 @@ void boot_splash_stop(void) {
   }
 }
 
-#elif CAPABILITY_HAS_FPGA_DISPLAY
-#include "drivers/display/ice40lp/ice40lp_internal.h"
-#include "drivers/display/ice40lp/snowy_boot.h"
-
-// On platforms with FPGA display, we rely on the bootloader to show the splash screen.
-void boot_splash_start(void) {
-  display_start();
-  display_spi_configure_default();
-  boot_display_show_boot_splash();
-}
-
-void boot_splash_stop(void) {
-  // No-op; the display driver handles stopping the splash as needed
-}
-
 #else // Everything else
 
 void boot_splash_start(void) {
