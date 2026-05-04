@@ -376,7 +376,7 @@ def build(ctx):
 
     clar(ctx,
         sources_ant_glob = " ".join([
-            " src/fw/services/shared_prf_storage/v3_sprf/shared_prf_storage.c " \
+            " src/fw/services/shared_prf_storage/shared_prf_storage.c " \
             " tests/fakes/fake_flash_region.c" \
             " tests/fakes/fake_spi_flash.c" \
             ]),
