@@ -206,7 +206,7 @@ static GColor* prv_allocate_palette(GBitmapFormat format) {
   ((format) == GBitmapFormat8BitCircular && (size).w == DISP_COLS && (size).h == DISP_ROWS)
 
 T_STATIC size_t prv_gbitmap_size_for_data(GSize size, GBitmapFormat format) {
-#if PLATFORM_GETAFIX || PLATFORM_QEMU_GABBRO
+#if PBL_ROUND
   if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
     return DISPLAY_FRAMEBUFFER_BYTES;
   }
@@ -243,9 +243,9 @@ static GBitmap* prv_gbitmap_create_blank(GSize size, GBitmapFormat format) {
       return NULL;
     }
 
-#if PLATFORM_GETAFIX || PLATFORM_QEMU_GABBRO
+#if PBL_ROUND
     if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
-      bitmap->data_row_infos = g_gbitmap_getafix_data_row_infos;
+      bitmap->data_row_infos = g_gbitmap_data_row_infos;
     }
 #endif
   }

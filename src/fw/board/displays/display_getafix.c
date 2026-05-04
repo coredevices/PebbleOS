@@ -18,7 +18,7 @@
 
 #include "board/display.h"
 
-// g_gbitmap_getafix_data_row_infos was generated with this script:
+// g_gbitmap_data_row_infos was generated with this script:
 //
 // #!/bin/env python
 // # See LS013B7DD02 datasheet Table 6-6-2
@@ -50,7 +50,7 @@
 //
 // print("Rectangular Framebuffer has %d bytes" % (260 * 260))
 
-const void *const g_gbitmap_getafix_data_row_infos = (const GBitmapDataRowInfoInternal[]){
+const void *const g_gbitmap_data_row_infos = (const GBitmapDataRowInfoInternal[]){
     /* y =   0 */ {.offset =     0, .min_x = 113, .max_x = 146},
     /* y =   1 */ {.offset =   260, .min_x = 107, .max_x = 152},
     /* y =   2 */ {.offset =   520, .min_x = 102, .max_x = 157},
@@ -313,7 +313,7 @@ const void *const g_gbitmap_getafix_data_row_infos = (const GBitmapDataRowInfoIn
     /* y = 259 */ {.offset = 67340, .min_x = 113, .max_x = 146},
 };
 
-// g_gbitmap_getafix_legacy_3x_data_row_infos was generated with this script:
+// g_gbitmap_legacy_3x_data_row_infos was generated with this script:
 //
 // #!/bin/env python
 // # Using RECTANGULAR offsets (y * 180) instead of packed circular offsets
@@ -342,7 +342,7 @@ const void *const g_gbitmap_getafix_data_row_infos = (const GBitmapDataRowInfoIn
 //
 // print("Rectangular Framebuffer has %d bytes" % (180 * 180))
 
-const void * const g_gbitmap_getafix_legacy_3x_data_row_infos = (const GBitmapDataRowInfoInternal[]) {
+const void * const g_gbitmap_legacy_3x_data_row_infos = (const GBitmapDataRowInfoInternal[]) {
   /* y =   0 */ {.offset =     0, .min_x =  76, .max_x = 103},
   /* y =   1 */ {.offset =   180, .min_x =  71, .max_x = 108},
   /* y =   2 */ {.offset =   360, .min_x =  66, .max_x = 113},
