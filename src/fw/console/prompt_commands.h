@@ -236,8 +236,6 @@ extern void command_ble_rediscover(void);
 extern void command_ble_logging_set_level(const char *level);
 extern void command_ble_logging_get_level(void);
 
-extern void command_low_power_debug(char *enable_arg);
-
 extern void command_audit_delay_us(void);
 extern void command_enter_stop(void);
 
@@ -434,7 +432,6 @@ static const Command s_prompt_commands[] = {
 
   // Meta
   { "help", command_help, 0 },
-  { "lowpowerdebug", command_low_power_debug, 1 },
 
   { "scheduler force active", command_scheduler_force_active, 0 },
   { "scheduler resume normal", command_scheduler_resume_normal, 0 },

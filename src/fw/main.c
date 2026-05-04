@@ -87,7 +87,6 @@
 #include "syscall/syscall_internal.h"
 
 #include "debug/debug.h"
-#include "debug/setup.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -162,11 +161,6 @@ static void dump_gpio_configuration_state(void) {
 
 int main(void) {
   soc_early_init();
-
-  // Turn on MCU debugging at boot. This consumes some power so we'll turn it off after a short
-  // time has passed (see prv_low_power_debug_config_callback) to allow us to connect after a
-  // reset but not passively consume power after we've been running for a bit.
-  enable_mcu_debugging();
 
   extern void * __ISR_VECTOR_TABLE__;  // Defined in linker script
   SCB->VTOR = (uint32_t)&__ISR_VECTOR_TABLE__;
