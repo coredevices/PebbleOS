@@ -42,7 +42,6 @@
               pkg-config
             ];
             buildInputs = with pkgs; [
-              emscripten
               gcc-arm-embedded-14_2r1
               gettext
               git

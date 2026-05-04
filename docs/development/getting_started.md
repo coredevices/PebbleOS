@@ -62,36 +62,6 @@ brew link python@3
 
 :::::
 
-If building with Javascript support enabled (default), install Emscripten:
-
-:::::{tab-set}
-:sync-group: os
-
-::::{tab-item} Ubuntu 24.04 LTS
-:sync: ubuntu
-
-1. Install Emscripten SDK as detailed [here](https://emscripten.org/docs/getting_started/downloads.html).
-   Pick version `4.0.7` instead of `latest` when running `./emsdk install` or `./emsdk activate`.
-   To conveniently access Emscripten SDK tools, the activate command will offer some suggestions.
-   It is recommended to follow them.
-::::
-
-::::{tab-item} macOS
-:sync: macos
-
-1. Install Emscripten using `brew`:
-
-```shell
-brew install emscripten
-```
-
-Note that `brew` does not seem to offer all Emscripten versions.
-Versions 4.0.x should work fine.
-If `brew` versions cause issues, consider using [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) instead.
-
-::::
-:::::
-
 ## Get the source code
 
 You can clone the PebbleOS repository by running:
