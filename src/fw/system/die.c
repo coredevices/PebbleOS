@@ -14,7 +14,6 @@
 
 #if defined(NO_WATCHDOG)
 #include "FreeRTOS.h"
-#include "debug/setup.h"
 #endif
 
 void prepare_for_software_failure(void) {
@@ -33,7 +32,6 @@ NORETURN reset_due_to_software_failure(void) {
 #if defined(NO_WATCHDOG)
   // Don't reset right away, leave it in a state we can inspect
 
-  enable_mcu_debugging();
   __disable_irq();
   while (1) {
     continue;

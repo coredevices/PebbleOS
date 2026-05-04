@@ -25,10 +25,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#ifdef NO_WATCHDOG
-#include "debug/setup.h"
-#endif
-
 #if MICRO_FAMILY_NRF52
 #include <hal/nrf_rtc.h>
 #endif
@@ -235,10 +231,7 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
     // If getting reset by the watchdog timer is imminent (it will reset the
     // CPU if not fed at least once every 7 seconds), then just coredump now
     if (s_ticks_since_successful_feed >= (6 * TIMER_INTERRUPT_HZ)) {
-#if defined(NO_WATCHDOG)
-      PBL_LOG_DBG("Would have coredumped if built with watchdogs ... enabling lowpowerdebug!");
-      enable_mcu_debugging();
-#else
+#if !defined(NO_WATCHDOG)
       reset_due_to_software_failure();
 #endif
     }
@@ -474,10 +467,7 @@ static void prv_task_watchdog_feed(void) {
     // after s_last_successful_feed_time), it likely means that we are stuck in
     // an ISR or low priority interrupts are disabled, so coredump now
     if (s_ticks_since_successful_feed >= WATCHDOG_COREDUMP_TICK_CNT) {
-#if defined(NO_WATCHDOG)
-      dbgserial_putstr("Would have coredumped if built with watchdogs ... enabling lowpowerdebug!");
-      enable_mcu_debugging();
-#else
+#if !defined(NO_WATCHDOG)
       reset_due_to_software_failure();
 #endif
     }

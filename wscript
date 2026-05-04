@@ -100,8 +100,6 @@ def options(opt):
                    help='Disable sleep and stop mode (to use JTAG+GDB)')
     opt.add_option('--nostop', action='store_true',
                    help='Disable stop mode (to use JTAG+GDB)')
-    opt.add_option('--lowpowerdebug', action='store_true',
-                   help='Lowpowerdebug can be toggled from the CLI but is off by default. This just turns it on by default')
     opt.add_option('--nowatch', action='store_true',
                    help='Disable the watchface idle timeout')
     opt.add_option('--nowatchdog', action='store_true',
@@ -217,10 +215,6 @@ def handle_configure_options(conf):
     if conf.options.nostop:
         conf.env.append_value('DEFINES', 'PBL_NOSTOP')
         print("Stop mode disabled")
-
-    if conf.options.lowpowerdebug:
-        conf.env.append_value('DEFINES', 'LOW_POWER_DEBUG')
-        print("Sleep and Stop mode debugging enabled")
 
     if conf.options.nowatch:
         conf.env.append_value('DEFINES', 'NO_WATCH_TIMEOUT')
