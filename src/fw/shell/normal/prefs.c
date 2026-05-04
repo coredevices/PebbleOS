@@ -223,7 +223,7 @@ static uint16_t s_timeline_peek_before_time_m =
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 #define PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT "timelineQuickViewWatchfaceFit"
-static bool s_timeline_peek_watchface_fit_enabled = true;
+static bool s_timeline_peek_watchface_fit_enabled = false;
 #endif
 
 #define PREF_KEY_POWER_MODE "powerMode"

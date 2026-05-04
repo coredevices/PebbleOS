@@ -123,7 +123,7 @@ uint16_t timeline_peek_prefs_get_before_time(void) {
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 void timeline_peek_prefs_set_watchface_fit_enabled(bool enabled) {}
 bool timeline_peek_prefs_get_watchface_fit_enabled(void) {
-  return true;
+  return false;
 }
 #endif
 
