@@ -14,7 +14,6 @@
 master_capability_set = {
     "COMPOSITOR_USES_DMA",
     "HAS_DEFECTIVE_FW_CRC",
-    "HAS_HARDWARE_PANIC_SCREEN",
     "HAS_MAPPABLE_FLASH",
     "HAS_MASKING",
     "HAS_SETTINGS_ICONS",
