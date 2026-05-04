@@ -22,7 +22,6 @@
 #include "kernel/util/factory_reset.h"
 #include "kernel/util/sleep.h"
 #include "kernel/util/stop.h"
-#include "mfg/mfg_apps/mfg_flash_test.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "prompt.h"
@@ -247,29 +246,6 @@ void command_flash_fill (const char* address_str, const char* length_str, const 
     flash_write_bytes(page, address, bytes_to_write);
     bytes_remaining -= bytes_to_write;
     address += bytes_to_write;
-  }
-}
-
-// Pass in test case number and number of iterations to run
-//   Currently iterations only applies to FLASH_TEST_CASE_RUN_STRESS_ADDR_TEST
-//   All other tests run once
-void command_flash_test(const char* test_case_num_str, const char* iterations_str) {
-  int32_t test_case_num = atoi(test_case_num_str);
-  int32_t iterations = atoi(iterations_str);
-
-  int32_t status = FLASH_TEST_ERR_OTHER;
-  if (!((test_case_num == FLASH_TEST_CASE_RUN_STRESS_ADDR_TEST) && (iterations <= 0))) {
-    // Check to make sure stress test has at least 1 iteration or its another test case
-    status = run_flash_test_case(test_case_num, iterations);
-  }
-
-  char buffer[80];
-  if (status == 0) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "PASS: TEST CASE %"PRId32, test_case_num);
-  } else {
-    prompt_send_response_fmt(buffer, sizeof(buffer),
-                             ">FAIL: TEST CASE %"PRId32", Status: %"PRId32,
-                             test_case_num, status);
   }
 }
 

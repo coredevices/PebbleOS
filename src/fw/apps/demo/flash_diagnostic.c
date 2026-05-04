@@ -117,7 +117,6 @@ static bool check_region_write(struct Region region, bool use_rand,
 // reads as 0.  Then uses 8 subsector erases to erase the second half of the
 // sector. Then re-reads the first half to see if any bits have flipped
 static bool check_subsector_bitflip(struct Region region) {
-#if !CAPABILITY_USE_PARALLEL_FLASH
   bool success = true;
 
   if (((region.end - region.begin) % (64 * 1024)) != 0) {
@@ -159,10 +158,6 @@ static bool check_subsector_bitflip(struct Region region) {
   }
 
   return (success);
-#else
-  PBL_LOG_SYNC_INFO("Test not supported for parallel flash");
-  return (false);
-#endif
 }
 
 static void menu_select_callback(int index, void *data) {
