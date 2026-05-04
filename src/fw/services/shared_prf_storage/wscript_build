@@ -1,12 +1,7 @@
 # SPDX-Copyright-Text: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-sources = ['shared_prf_storage_debug.c']
-
-if bld.capability('HAS_SPRF_V3'):
-    sources.append('v3_sprf/shared_prf_storage.c')
-else:
-    sources.append('v2_sprf/shared_prf_storage.c')
+sources = ['shared_prf_storage_debug.c', 'shared_prf_storage.c']
 
 bld.stlib(
     use=['fw_includes'],
