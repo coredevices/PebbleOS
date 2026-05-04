@@ -68,11 +68,6 @@ static uint8_t s_current_brightness;
 //! Timer to count down from the LIGHT_STATE_ON_TIMED state.
 static TimerID s_timer_id;
 
-//! Buffer for ALS samples taken right before backlight turns on
-#define ALS_SAMPLE_BUFFER_SIZE 5
-static uint32_t s_als_sample_buffer[ALS_SAMPLE_BUFFER_SIZE];
-static uint8_t s_als_sample_count = 0;
-
 //! Refcount of the number of buttons that are currently pushed
 static int s_num_buttons_down;
 
@@ -111,58 +106,34 @@ static RtcTicks s_last_intensity_sample_ticks; // Timestamp of last sample
 static uint8_t s_last_sampled_intensity_pct; // Last intensity percentage sampled
 static uint32_t s_total_on_time_ms; // Total backlight on time tracked internally
 
+//! Short-lived cache so back-to-back ALS consumers in the same wake path
+//! (prv_light_allowed → prv_backlight_get_intensity, plus a button release
+//! that follows the press within the TTL) skip the ~200 ms I2C poll.
+static uint32_t s_als_cached_level;
+static RtcTicks s_als_cached_ticks;  // 0 = invalid
+#define ALS_CACHE_TTL_TICKS (RTC_TICKS_HZ)  // 1 second
+
 static void prv_change_state(BacklightState new_state);
+
+static uint32_t prv_get_als_level(void) {
+  RtcTicks now = rtc_get_ticks();
+  if (s_als_cached_ticks != 0 && (now - s_als_cached_ticks) < ALS_CACHE_TTL_TICKS) {
+    return s_als_cached_level;
+  }
+  s_als_cached_level = ambient_light_get_light_level();
+  s_als_cached_ticks = now;
+  return s_als_cached_level;
+}
+
+static bool prv_als_is_light(void) {
+  return prv_get_als_level() > ambient_light_get_dark_threshold();
+}
 
 static void light_timer_callback(void *data) {
   mutex_lock(s_mutex);
   prv_change_state(LIGHT_STATE_ON_FADING);
   mutex_unlock(s_mutex);
 }
-
-// Take multiple ALS samples right before turning on backlight (avoids backlight interference)
-static void prv_sample_als_multiple_times(void) {
-  s_als_sample_count = 0;
-
-  for (uint8_t i = 0; i < ALS_SAMPLE_BUFFER_SIZE; i++) {
-    s_als_sample_buffer[i] = ambient_light_get_light_level();
-    s_als_sample_count++;
-
-    // Small delay between samples (10ms) to get slightly different readings
-    if (i < ALS_SAMPLE_BUFFER_SIZE - 1) {
-      vTaskDelay(pdMS_TO_TICKS(10));
-    }
-  }
-}
-
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !defined(RECOVERY_FW)
-// Check if all samples in buffer are below or equal to threshold (for Zone 1 detection)
-static bool prv_all_samples_below_or_equal(uint32_t threshold) {
-  if (s_als_sample_count == 0) {
-    return false;  // No samples yet
-  }
-
-  for (uint8_t i = 0; i < s_als_sample_count; i++) {
-    if (s_als_sample_buffer[i] > threshold) {
-      return false;  // At least one sample is above threshold
-    }
-  }
-  return true;  // All samples are at or below threshold
-}
-
-// Calculate average of samples in buffer (for Zone 2/3 decision)
-static uint32_t prv_get_als_average(void) {
-  if (s_als_sample_count == 0) {
-    return 0;
-  }
-
-  uint32_t sum = 0;
-  for (uint8_t i = 0; i < s_als_sample_count; i++) {
-    sum += s_als_sample_buffer[i];
-  }
-
-  return sum / s_als_sample_count;
-}
-#endif // CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !RECOVERY_FW
 
 static uint8_t prv_backlight_get_intensity(void) {
   // low_power_mode backlight intensity (25% of max brightness)
@@ -173,35 +144,15 @@ static uint8_t prv_backlight_get_intensity(void) {
   }
   
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !defined(RECOVERY_FW)
-  // Dynamic backlight: 3-zone algorithm based on ambient light sensor
+  // Dynamic backlight: dim in utter darkness, otherwise user max. The
+  // bright-outdoor case is already filtered upstream by prv_light_allowed()
+  // for ambient-sensor-enabled wakes; the few paths that bypass that gate
+  // (app-driven force-on, ambient-sensor pref off) sensibly land at max here.
   if (backlight_is_dynamic_intensity_enabled()) {
-    uint8_t user_max_intensity = backlight_get_intensity();
-
-    // Define intensity levels
-    const uint8_t dim_intensity = 10;  // 10% for darkness
-
-    // Get configurable thresholds from preferences
-    const uint32_t zone1_upper_bound = backlight_get_dynamic_min_threshold();  // Upper bound of Zone 1 (utter darkness)
-    const uint32_t zone2_upper_bound = ambient_light_get_dark_threshold();     // Upper bound of Zone 2 (reuses existing dark threshold)
-
-    // 3-Zone Algorithm using multiple samples:
-    // Zone 1: ALL samples <= zone1_upper_bound (utter darkness) -> 10% brightness (dim but readable)
-    // Only use low intensity if ALL samples confirm we're in the dark (robust against noise)
-    if (prv_all_samples_below_or_equal(zone1_upper_bound)) {
+    const uint8_t dim_intensity = 10;
+    if (prv_get_als_level() <= backlight_get_dynamic_min_threshold()) {
       return dim_intensity;
     }
-
-    // For Zone 2/3 decision, use average of samples
-    uint32_t als_average = prv_get_als_average();
-
-    // Zone 2: ALS average (zone1_upper_bound+1) to zone2_upper_bound (dim/indoor light) -> user max brightness
-    if (als_average <= zone2_upper_bound) {
-      return user_max_intensity;
-    }
-
-    // Zone 3: ALS average > zone2_upper_bound (bright outdoor) -> OFF (handled in prv_light_allowed)
-    // Fallback return if somehow we get here (prv_light_allowed should prevent this)
-    return user_max_intensity;
   }
 #endif
   
@@ -273,17 +224,9 @@ static void prv_change_state(BacklightState new_state) {
   BacklightState old_state = s_light_state;
   s_light_state = new_state;
 
-  // Take multiple ALS samples when transitioning from OFF to ON states
-  // This prevents feedback from the backlight illuminating the sensor
-  // and provides robust readings to detect utter darkness (Zone 1)
-  if ((new_state == LIGHT_STATE_ON || new_state == LIGHT_STATE_ON_TIMED) &&
-      s_current_brightness == 0) {
-    prv_sample_als_multiple_times();
-  }
-
   // Calculate the new brightness and reset any timers based on our state.
   uint8_t new_brightness = 0;
-  
+
   switch (new_state) {
     case LIGHT_STATE_ON:
       new_brightness = prv_backlight_get_intensity();
@@ -337,7 +280,7 @@ static bool prv_light_allowed(void) {
       // If the light is off and it's bright outside, don't allow the light to turn on
       // (we don't need it!). Grab the mutex here so that the timer state machine doesn't change
       // the light brightness while we're checking the ambient light levels.
-      bool allowed = !((s_current_brightness == 0) && ambient_light_is_light());
+      bool allowed = !((s_current_brightness == 0) && prv_als_is_light());
       return allowed;
     } else {
       return true;
@@ -357,17 +300,14 @@ void light_init(void) {
   s_fade_step_size = 0;
   s_mutex = mutex_create();
 
-  // Initialize ALS sample buffer
-  s_als_sample_count = 0;
-  for (uint8_t i = 0; i < ALS_SAMPLE_BUFFER_SIZE; i++) {
-    s_als_sample_buffer[i] = 0;
-  }
-
   // Initialize intensity analytics tracking
   s_intensity_time_product_sum = 0;
   s_last_intensity_sample_ticks = 0;
   s_last_sampled_intensity_pct = 0;
   s_total_on_time_ms = 0;
+
+  s_als_cached_level = 0;
+  s_als_cached_ticks = 0;
 }
 
 void light_button_pressed(void) {
@@ -419,7 +359,7 @@ void light_enable_interaction(void) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
   } else {
     PBL_LOG_INFO("Backlight rejected: allowed=%d, brightness=%" PRIu8 ", is_light=%d",
-                 s_backlight_allowed, s_current_brightness, ambient_light_is_light());
+                 s_backlight_allowed, s_current_brightness, prv_als_is_light());
   }
 
   mutex_unlock(s_mutex);
@@ -558,7 +498,7 @@ void light_toggle_enabled(void) {
 void light_toggle_ambient_sensor_enabled(void) {
   mutex_lock(s_mutex);
   backlight_set_ambient_sensor_enabled(!backlight_is_ambient_sensor_enabled());
-  if (prv_light_allowed() && !ambient_light_is_light()) {
+  if (prv_light_allowed() && !prv_als_is_light()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
   } else {
     prv_change_state(LIGHT_STATE_OFF);
