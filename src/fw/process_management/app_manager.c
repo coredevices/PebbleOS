@@ -487,6 +487,8 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   PBL_ASSERTN(install_id != INSTALL_ID_INVALID);
   if (crash_info.install_id != install_id ||
       (crash_info.crash_ticks + RETURN_CRASH_TIMEOUT_TICKS) < rtc_get_ticks()) {
+    PBL_LOG_ERR("Watchface crashed (id=%"PRId32"); relaunching", install_id);
+    PBL_ANALYTICS_ADD(watchface_crash_count, 1);
     crash_info = (AppCrashInfo) {
       .install_id = install_id,
       .crash_ticks = rtc_get_ticks()
@@ -534,7 +536,13 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 
   i18n_free_all(crash_dialog);
 
-  PBL_LOG_DBG("Watchface crashed, launching default.");
+  const uint32_t elapsed_ms =
+      (rtc_get_ticks() - crash_info.crash_ticks) * 1000 / RTC_TICKS_HZ;
+  PBL_LOG_WRN("Watchface crashed twice in %"PRIu32"ms (id=%"PRId32"); "
+                  "reverting to default",
+                  elapsed_ms, install_id);
+  PBL_ANALYTICS_ADD(watchface_crash_count, 1);
+  PBL_ANALYTICS_ADD(watchface_crash_revert_count, 1);
 
   crash_info = (AppCrashInfo) { 0 };
 
