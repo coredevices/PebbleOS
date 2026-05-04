@@ -145,12 +145,12 @@ uint32_t ambient_light_get_light_level(void) {
     rv = prv_read_register(W1160_FLAG1_REG, &result[0]);
     if (!rv) {
       PBL_LOG_ERR("Could not read W1160 FLAG1");
-      return 0UL;
+      goto disable_and_fail;
     }
     if ((result[0] & W1160_FLG_ALS_DR) == 0U) {
       if (elapsed >= W1160_ALS_POLL_TIMEOUT_MS) {
         PBL_LOG_ERR("W1160 ALS data-ready timeout");
-        return 0UL;
+        goto disable_and_fail;
       }
       psleep(W1160_ALS_POLL_DELAY_MS);
       elapsed += W1160_ALS_POLL_DELAY_MS;
@@ -161,7 +161,7 @@ uint32_t ambient_light_get_light_level(void) {
   rv &= prv_read_register(W1160_DATA2_ALS_REG, &result[0]);
   if (!rv) {
     PBL_LOG_ERR("Could not obtain W1160 data");
-    return 0UL;
+    goto disable_and_fail;
   }
 
   rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS);
@@ -173,6 +173,10 @@ uint32_t ambient_light_get_light_level(void) {
   als = (((uint16_t)(result[1])) << 8) | result[0];
 
   return als;
+
+disable_and_fail:
+  (void)prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS);
+  return 0UL;
 }
 
 void command_als_read(void) {
