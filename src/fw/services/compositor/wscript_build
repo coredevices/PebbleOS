@@ -4,7 +4,6 @@
 sources = [
     'compositor.c',
     'compositor_display.c',
-    'compositor_dma.c',
     'compositor_transitions.c',
     'screenshot_pp.c',
     'default/compositor_dot_transitions.c',

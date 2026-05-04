@@ -13,7 +13,6 @@
 ///////////////////////////////////////////////////////////
 
 #include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_compositor_dma.h"
 #include "stubs_framebuffer.h"
 #include "stubs_gbitmap.h"
 #include "stubs_logging.h"
