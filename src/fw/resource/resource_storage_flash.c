@@ -99,22 +99,6 @@ static uint32_t resource_storage_system_bank_read(ResourceStoreEntry *entry, uin
   return num_bytes;
 }
 
-#if CAPABILITY_HAS_MAPPABLE_FLASH
-bool resource_storage_flash_bytes_are_readonly(const void *bytes) {
-  return (bytes > (void *)FLASH_MEMORY_MAPPABLE_ADDRESS) &&
-         (bytes < (void *)(FLASH_MEMORY_MAPPABLE_ADDRESS + FLASH_MEMORY_MAPPABLE_SIZE));
-}
-
-static const uint8_t *resource_storage_system_bank_readonly_bytes(ResourceStoreEntry *entry,
-                                                                  bool has_privileged_access) {
-  if (!has_privileged_access) {
-    return NULL;
-  }
-  return (uint8_t *)(uintptr_t)(FLASH_MEMORY_MAPPABLE_ADDRESS + BANK.begin + entry->offset);
-}
-
-#else
-
 bool resource_storage_flash_bytes_are_readonly(const void *bytes) {
   return false;
 }
@@ -123,8 +107,6 @@ static const uint8_t *resource_storage_system_bank_readonly_bytes(ResourceStoreE
                                                                   bool has_privileged_access) {
   return NULL;
 }
-
-#endif // CAPABILITY_HAS_MAPPABLE_FLASH
 
 static void resource_storage_system_bank_clear(ResourceStoreEntry *entry) {
   uint8_t buffer[MANIFEST_SIZE] = {0};
