@@ -12,7 +12,6 @@
 # Once added, add the capability to ALL capability dictionaries with the appropriate value.
 
 master_capability_set = {
-    "HAS_MASKING",
     "HAS_SETTINGS_ICONS",
     "HAS_SPRF_V3",
     "HAS_THEMING",
