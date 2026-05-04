@@ -16,7 +16,6 @@ master_capability_set = {
     "HAS_SPRF_V3",
     "HAS_THEMING",
     "HAS_TIMELINE_PEEK",
-    "USE_PARALLEL_FLASH",
     "HAS_PUTBYTES_PREACKING",
     "HAS_FLASH_OTP",
     "HAS_PBLBOOT",
