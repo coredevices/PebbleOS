@@ -1070,9 +1070,6 @@ void backlight_set_enabled(bool enabled) {
 }
 
 bool backlight_is_ambient_sensor_enabled(void) {
-#if INFINITE_BACKLIGHT
-  return false;
-#endif
   return s_backlight_ambient_sensor_enabled;
 }
 
@@ -1081,9 +1078,6 @@ void backlight_set_ambient_sensor_enabled(bool enabled) {
 }
 
 uint32_t backlight_get_timeout_ms(void) {
-#if INFINITE_BACKLIGHT
-  return UINT32_MAX;
-#endif
   return s_backlight_timeout_ms;
 }
 
