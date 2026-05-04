@@ -28,7 +28,3 @@ const char* mfg_get_hw_version(void) {
 WatchInfoColor mfg_info_get_watch_color(void) {
   return WATCH_INFO_COLOR_PINK;
 }
-
-GPoint mfg_info_get_disp_offsets(void) {
-  return GPointZero;
-}

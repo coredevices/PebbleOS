@@ -43,9 +43,3 @@ void display_pulse_vcom(void);
 //!
 //! This function is only defined if the display hardware and driver support it.
 void display_show_panic_screen(uint32_t error_code);
-
-typedef struct GPoint GPoint;
-
-void display_set_offset(GPoint offset);
-
-GPoint display_get_offset(void);

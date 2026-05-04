@@ -46,9 +46,6 @@ void event_put(PebbleEvent *event) {
 void i18n_enable(bool enable) {
 }
 
-void display_set_offset(GPoint offset) {
-}
-
 void test_prefs_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
