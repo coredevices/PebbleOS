@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/rtc.h"
-#include "rtc_private.h"
 
 #include "console/dbgserial.h"
 

@@ -691,7 +691,7 @@ EXCLUDE_SYMLINKS       = YES
 # against the file with absolute path, so to exclude all test directories
 # for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = */src/fw/vendor/* */src/core/vendor/* */src/boot/vendor/* */src/core/system/system_stm32f2xx.c */src/boot/stm32f2xx_it.c *_private* *_internal*
+EXCLUDE_PATTERNS       = */src/fw/vendor/* */src/core/vendor/* */src/boot/vendor/* *_private* *_internal*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

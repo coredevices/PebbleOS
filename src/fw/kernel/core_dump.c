@@ -49,9 +49,6 @@
 
 #include <cmsis_core.h>
 
-#ifdef MICRO_FAMILY_STM32F4
-#include <stm32f4xx.h>
-#endif
 #if MICRO_FAMILY_NRF52
 #include <nrf52840.h>
 #endif
@@ -109,29 +106,11 @@ typedef struct {
 static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
 #if MICRO_FAMILY_NRF52 || MICRO_FAMILY_SF32LB52 || MICRO_FAMILY_QEMU
   { .start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE },
-#else
-  { .start = (void *)SRAM1_BASE, .length = COREDUMP_RAM_SIZE },
-#endif
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
-  { .start = (void *)RCC, .length = sizeof(*RCC) },
 #endif
   { .start = (void *)&NVIC->ISER, .length = sizeof(NVIC->ISER) },  // Enabled interrupts
   { .start = (void *)&NVIC->ISPR, .length = sizeof(NVIC->ISPR) },  // Pending interrupts
   { .start = (void *)&NVIC->IABR, .length = sizeof(NVIC->IABR) },  // Active interrupts
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
-  { .start = (void *)&NVIC->IP, .length = sizeof(NVIC->IP) },  // Interrupt priorities
-  { .start = (void *)RTC, .length = sizeof(*RTC) },
-  { .start = (void*)DMA1_BASE, .length = 0xD0, .word_reads_only = true },
-  { .start = (void*)DMA2_BASE, .length = 0xD0, .word_reads_only = true },
-#endif
 };
-
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
-static struct {
-  RCC_TypeDef rcc;
-  SPI_TypeDef spi1;
-} s_stash_data;
-#endif
 
 // -------------------------------------------------------------------------------------------------
 // Flash driver dual-API.
@@ -231,16 +210,6 @@ void coredump_assert(int line) {
   prv_debug_str_int("CD: assert - line ", line, 10);
   boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
   prv_reset();
-}
-
-// -------------------------------------------------------------------------------------------------
-// Stash the flash status registers and peripheral clock state before the flash
-// driver messes with them.
-static void prv_stash_regions(void) {
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52 && !MICRO_FAMILY_QEMU
-  memcpy(&s_stash_data.rcc, RCC, sizeof(RCC_TypeDef));
-  memcpy(&s_stash_data.spi1, SPI1, sizeof(SPI_TypeDef));
-#endif
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -590,8 +559,6 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
 
   // Feed the watchdog so that we don't get watchdog reset in the middle of dumping the core
   watchdog_feed();
-
-  prv_stash_regions();
 
   // Init the flash and SPI bus
   s_use_cd_flash_driver = true;

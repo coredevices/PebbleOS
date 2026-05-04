@@ -31,10 +31,10 @@ Keep in mind that some targets may not currently compile as-is.
   Disable watchdog
 
 :`--nostop`:
-  Disable STOP mode (STM32 specific)
+  Disable STOP mode
 
 :`--nosleep`:
-  Disable sleep mode (STM32 specific)
+  Disable sleep mode
 
 ## Flashing
 

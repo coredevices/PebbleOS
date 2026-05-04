@@ -5,22 +5,6 @@
 
 #include <stdbool.h>
 
-#if MICRO_FAMILY_STM32F4
-
-//! Configure and start the 32 kHz LSE clock.
-void clocksource_lse_configure(void);
-
-//! Returns true iff LSE is running.
-bool clocksource_is_lse_started(void);
-
-//! Enable or disable 32 kHz clock output on pin MCO1.
-//!
-//! Prerequisite: clocksource_lse_configure() must be called beforehand to
-//! enable the 32 kHz clock.
-void clocksource_MCO1_enable(bool on);
-
-#endif
-
 #if MICRO_FAMILY_NRF52
 
 /** @brief Request HFXO clock (reference counted). */

@@ -39,16 +39,8 @@ static uint32_t s_ticks_corrected = 0;
 #endif
 
 // We need different timings for our different platforms since we use different mechanisms to keep
-// time and to wake us up out of stop mode. On stm32f2 we don't have a millisecond register so we
-// use the "retina rtc" and a RTC Alarm peripheral. On stm32f4 we do have a millisecond register
-// so use the RTC running at normal speed and a RTC Wakeup peripheral. These have different
-// accuracies when going into and out of stop mode.
-#if defined(MICRO_FAMILY_STM32F4)
-//! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks EARLY_WAKEUP_TICKS = 4;
-//! Stop mode until this number of ticks before the next scheduled task
-static const RtcTicks MIN_STOP_TICKS = 8;
-#elif defined(MICRO_FAMILY_NRF52)
+// time and to wake us up out of stop mode.
+#if defined(MICRO_FAMILY_NRF52)
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
@@ -293,7 +285,7 @@ void pbl_analytics_external_collect_cpu_stats(void) {
     sleep_pct = (uint16_t)((sleep_ticks * 10000ULL) / total_ticks);
   }
 
-  // STM32/NRF5: sleep0 = light sleep (WFI), sleep1 = stop mode, sleep2 = unused
+  // NRF5: sleep0 = light sleep (WFI), sleep1 = stop mode, sleep2 = unused
   PBL_ANALYTICS_SET_UNSIGNED(cpu_running_pct, running_pct);
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep0_pct, sleep_pct);
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep1_pct, stop_pct);
