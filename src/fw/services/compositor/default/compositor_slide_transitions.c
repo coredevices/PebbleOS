@@ -107,7 +107,6 @@ static void prv_slide_transition_animation_update(GContext *ctx, Animation *anim
     prv_shift_framebuffer_rows(&dest_bitmap, shift_start_row, shift_end_row, shift_amount);
   }
   if (s_data.timeline_is_destination) {
-#if CAPABILITY_HAS_TIMELINE_PEEK
     if (!s_data.timeline_is_empty) {
       graphics_context_set_fill_color(ctx, GColorWhite);
       const int content_width = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
@@ -115,9 +114,7 @@ static void prv_slide_transition_animation_update(GContext *ctx, Animation *anim
       graphics_context_set_fill_color(ctx, s_data.fill_color);
       graphics_fill_rect(ctx, &GRect(content_width, fill_offset_y, TIMELINE_PEEK_ICON_BOX_WIDTH,
                                     fill_height));
-    } else
-#endif
-    {
+    } else {
       graphics_context_set_fill_color(ctx, s_data.fill_color);
       graphics_fill_rect(ctx, &GRect(0, fill_offset_y, DISP_COLS, fill_height));
     }

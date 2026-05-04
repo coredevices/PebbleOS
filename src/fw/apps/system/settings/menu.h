@@ -16,9 +16,7 @@ typedef enum {
   SettingsMenuItemNotifications,
   SettingsMenuItemVibrations,
   SettingsMenuItemQuietTime,
-#if CAPABILITY_HAS_TIMELINE_PEEK
   SettingsMenuItemTimeline,
-#endif
   SettingsMenuItemQuickLaunch,
   SettingsMenuItemDateTime,
   SettingsMenuItemDisplay,

@@ -22,6 +22,7 @@
 ////////////////////////////////////////////////////////////////
 #include "stubs_analytics.h"
 #include "stubs_app_install_manager.h"
+#include "stubs_event_loop.h"
 #include "stubs_hexdump.h"
 #include "stubs_logging.h"
 #include "stubs_mfg_info.h"
@@ -34,6 +35,7 @@
 #include "stubs_sleep.h"
 #include "stubs_system_theme.h"
 #include "stubs_task_watchdog.h"
+#include "stubs_timeline_peek.h"
 #include "stubs_ambient_light.h"
 #include "stubs_activity.h"
 
