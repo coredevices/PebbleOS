@@ -321,6 +321,4 @@ void display_clear(void) {}
 
 void display_pulse_vcom(void) {}
 
-void display_show_panic_screen(uint32_t error_code) {}
-
 uint32_t display_baud_rate_change(uint32_t new_frequency_hz) { return 0U; }

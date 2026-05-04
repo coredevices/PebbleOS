@@ -155,9 +155,3 @@ void display_update_boot_frame(uint8_t *framebuffer) {
   // Request display refresh
   REG32(DISPLAY->base_addr + DISP_CTRL) |= CTRL_UPDATE_REQUEST;
 }
-
-void display_show_panic_screen(uint32_t error_code) {
-  // For QEMU, we could write a simple pattern to the framebuffer
-  // For now, just clear and request update
-  display_clear();
-}

@@ -30,7 +30,3 @@ void display_pulse_vcom(void) {
 void display_update_boot_frame(void) {
   // The bootloader has already drawn the splash screen for us; nothing to do!
 }
-
-void display_show_panic_screen(uint32_t error_code)
-{
-}
