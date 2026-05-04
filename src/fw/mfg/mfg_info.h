@@ -57,9 +57,6 @@ void mfg_info_set_model(const char* model);
 //! time but which is not customized to the individual unit.
 void mfg_info_update_constant_data(void);
 
-//! @internal
-bool mfg_info_is_hrm_present(void);
-
 typedef enum {
   MfgTest_Vibe,
   MfgTest_Display,
