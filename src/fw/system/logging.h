@@ -268,42 +268,17 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 #define PBL_LOG_SYNC_VERBOSE(fmt, ...) \
   PBL_LOG_D_SYNC_VERBOSE(DEFAULT_LOG_DOMAIN, fmt, ## __VA_ARGS__)
 
-// Verbose logging (conditional on VERBOSE_LOGGING)
 #ifdef PBL_LOG_ENABLED
-  #ifdef VERBOSE_LOGGING
-    #define RETURN_STATUS_D(d, st) \
-      do { \
-        if (PASSED(st)) \
-          PBL_LOG_D_INFO(d, "%d", (int)(st)); \
-        else \
-          PBL_LOG_D_WRN(d, "%d", (int)(st)); \
-        return st; \
-      } while (0)
-
-    #define RETURN_STATUS_UP_D(d, st) \
-      do { \
-        if ((st) == E_INVALID_ARGUMENT) { \
-          PBL_LOG_D_ERR(d, "%d", (int)(st)); \
-          return E_INTERNAL; \
-        } \
-        else { \
-          return (st); \
-        } \
-      } while (0)
-
-  #else // VERBOSE_LOGGING
-    #define RETURN_STATUS_D(d, st) \
-      do { \
-        if (FAILED(st)) { \
-          PBL_LOG_D_WRN(d, "%d", (int)(st)); \
-        } \
-        return st; \
-      } while (0)
+  #define RETURN_STATUS_D(d, st) \
+    do { \
+      if (FAILED(st)) { \
+        PBL_LOG_D_WRN(d, "%d", (int)(st)); \
+      } \
+      return st; \
+    } while (0)
 
     #define RETURN_STATUS_UP_D(d, st) \
       return ((st) != E_INVALID_ARGUMENT ? (st) : E_INTERNAL)
-  #endif // VERBOSE_LOGGING
-
 #else // PBL_LOG_ENABLED
   #define RETURN_STATUS_D(d, st) return (st)
   #define RETURN_STATUS_UP_D(d, st) \
