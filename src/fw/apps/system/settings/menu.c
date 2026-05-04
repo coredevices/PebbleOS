@@ -30,15 +30,9 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemQuietTime]     = settings_quiet_time_get_info,
   [SettingsMenuItemTimeline]      = settings_timeline_get_info,
   [SettingsMenuItemHealth]        = settings_health_get_info,
-#if !TINTIN_FORCE_FIT
   [SettingsMenuItemActivity]      = settings_activity_tracker_get_info,
   [SettingsMenuItemQuickLaunch]   = settings_quick_launch_get_info,
   [SettingsMenuItemDateTime]      = settings_time_get_info,
-#else
-  [SettingsMenuItemActivity]      = settings_system_get_info,
-  [SettingsMenuItemQuickLaunch]   = settings_system_get_info,
-  [SettingsMenuItemDateTime]      = settings_system_get_info,
-#endif
   [SettingsMenuItemDisplay]       = settings_display_get_info,
 #if CAPABILITY_HAS_THEMING
   [SettingsMenuItemThemes]        = settings_themes_get_info,

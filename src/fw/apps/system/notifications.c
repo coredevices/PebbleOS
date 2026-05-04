@@ -35,7 +35,6 @@
 #include "util/list.h"
 #include "util/string.h"
 
-#if !TINTIN_FORCE_FIT
 typedef struct LoadedNotificationNode {
   ListNode node;
   TimelineItem notification;
@@ -803,9 +802,6 @@ static void prv_s_main(void) {
 
   prv_handle_deinit();
 }
-#else
-static void prv_s_main(void) {}
-#endif
 
 
 const PebbleProcessMd* notifications_app_get_info() {

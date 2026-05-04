@@ -22,7 +22,6 @@
 #include "util/size.h"
 #include "util/string.h"
 
-#if !TINTIN_FORCE_FIT
 //////////////////////////////////////////
 //  Card Mode
 //////////////////////////////////////////
@@ -216,8 +215,3 @@ LayoutLayer *alarm_layout_create(const LayoutLayerConfig *config) {
 
   return (LayoutLayer *)layout;
 }
-#else
-LayoutLayer *alarm_layout_create(const LayoutLayerConfig *config) { return NULL; }
-
-bool alarm_layout_verify(bool existing_attributes[]) { return false; }
-#endif

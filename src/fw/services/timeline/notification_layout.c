@@ -30,8 +30,6 @@
 #include "util/string.h"
 #include "util/trig.h"
 
-#if !TINTIN_FORCE_FIT
-
 // NOTIFICATION
 // Title -> Sender/App
 // Subtitle -> Subject (Emails)
@@ -645,11 +643,6 @@ static void prv_layout_init(NotificationLayout *layout, const LayoutLayerConfig 
 
   layer_mark_dirty(&(layout->layout.layer));
 }
-#else
-LayoutLayer *notification_layout_create(const LayoutLayerConfig *config) { return NULL; }
-
-bool notification_layout_verify(bool existing_attributes[]) { return false; }
-#endif
 
 TimelineResourceId notification_layout_get_fallback_icon_id(TimelineItemType item_type) {
   return (item_type == TimelineItemTypeNotification) ? NOTIF_FALLBACK_ICON :

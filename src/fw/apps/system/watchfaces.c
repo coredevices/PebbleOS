@@ -25,7 +25,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#if !TINTIN_FORCE_FIT
 typedef struct SettingsWatchfacesData {
   Window window;
   MenuLayer menu_layer;
@@ -195,9 +194,6 @@ static void s_main(void) {
 
   app_event_loop();
 }
-#else
-static void s_main(void) {}
-#endif // !TINTIN_FORCE_FIT
 
 const PebbleProcessMd* watchfaces_get_app_info() {
   static const PebbleProcessMdSystem s_app_md = {
