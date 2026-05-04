@@ -93,10 +93,6 @@ void health_tracking_ui_feature_show_disabled(void) { }
 void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
 void prv_minute_system_task_cb(void *data);
 
-bool mfg_info_is_hrm_present(void) {
-  return true;
-}
-
 void hrm_manager_handle_prefs_changed(void) { }
 
 #define ASSERT_EQUAL_I(i1,i2,file,line) \

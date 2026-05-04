@@ -88,9 +88,6 @@ QueueHandle_t pebble_task_get_to_queue(PebbleTask task) {
 // -----------------------------------------------------------------------------
 // Fakes
 // -----------------------------------------------------------------------------
-bool mfg_info_is_hrm_present(void) {
-  return true;
-}
 
 static bool s_activity_prefs_heart_rate_is_enabled = true;
 bool activity_prefs_heart_rate_is_enabled(void) {

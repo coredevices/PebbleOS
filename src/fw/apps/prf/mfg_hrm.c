@@ -66,8 +66,6 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
 }
 
 static void prv_handle_init(void) {
-  const bool has_hrm = mfg_info_is_hrm_present();
-
   AppData *data = task_zalloc(sizeof(*data));
   app_state_set_user_data(data);
 
@@ -82,11 +80,7 @@ static void prv_handle_init(void) {
   text_layer_set_text(title, "HRM TEST");
   layer_add_child(&window->layer, &title->layer);
 
-  if (has_hrm) {
-    sniprintf(data->status_string, STATUS_STRING_LEN, "Starting...");
-  } else {
-    sniprintf(data->status_string, STATUS_STRING_LEN, "Not an HRM device");
-  }
+  sniprintf(data->status_string, STATUS_STRING_LEN, "Starting...");
 
   snprintf(data->bpm_string, BPM_STRING_LEN, "HR:--");
   snprintf(data->spo2_string, SPO2_STRING_LEN, "SpO2:--");
@@ -115,18 +109,16 @@ static void prv_handle_init(void) {
   text_layer_set_text(spo2, data->spo2_string);
   layer_add_child(&window->layer, &spo2->layer);
 
-  if (has_hrm) {
-    data->hrm_event_info = (EventServiceInfo){
-      .type = PEBBLE_HRM_EVENT,
-      .handler = prv_handle_hrm_data,
-    };
-    event_service_client_subscribe(&data->hrm_event_info);
+  data->hrm_event_info = (EventServiceInfo){
+    .type = PEBBLE_HRM_EVENT,
+    .handler = prv_handle_hrm_data,
+  };
+  event_service_client_subscribe(&data->hrm_event_info);
 
-    // Use app data as session ref
-    AppInstallId  app_id = 1;
-    data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
-                                                      HRMFeature_BPM | HRMFeature_SpO2);
-  }
+  // Use app data as session ref
+  AppInstallId  app_id = 1;
+  data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
+                                                    HRMFeature_BPM | HRMFeature_SpO2);
 
   app_window_stack_push(window, true);
 }
@@ -134,9 +126,7 @@ static void prv_handle_init(void) {
 static void prv_handle_deinit(void) {
   AppData *data = app_state_get_user_data();
   event_service_client_unsubscribe(&data->hrm_event_info);
-  if (mfg_info_is_hrm_present()) {
-    sys_hrm_manager_unsubscribe(data->hrm_session);
-  }
+  sys_hrm_manager_unsubscribe(data->hrm_session);
 
   text_layer_deinit(&data->title_text_layer);
   text_layer_deinit(&data->status_text_layer);
