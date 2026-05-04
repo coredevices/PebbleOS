@@ -372,9 +372,7 @@ static NOINLINE void prv_main_task_init(void) {
   system_resource_init();
 
 #ifdef CONFIG_HRM
-  if (mfg_info_is_hrm_present()) {
-    hrm_init(HRM);
-  }
+  hrm_init(HRM);
 #endif
 
   // The display has to be initialized before bluetooth because on Snowy the

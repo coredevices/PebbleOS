@@ -43,7 +43,6 @@
 #endif
 
 static struct HRMManagerState s_manager_state;
-static bool s_hrm_present = false;
 
 // Forward declarations
 static void prv_update_enable_timer_cb(void *context);
@@ -550,7 +549,6 @@ void hrm_manager_handle_prefs_changed(void) {
 }
 
 void hrm_manager_init(void) {
-  s_hrm_present = mfg_info_is_hrm_present();
   s_manager_state = (struct HRMManagerState) {
     .lock = mutex_create_recursive(),
     .accel_data_lock = mutex_create(),
@@ -570,10 +568,6 @@ void hrm_manager_init(void) {
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
                                                   HRMSubscriberCallback callback, void *context) {
-  if (!s_hrm_present) {
-    return HRM_INVALID_SESSION_REF;
-  }
-
   const PebbleTask current_task = pebble_task_get_current();
   bool is_app_subscription = false;
   if (current_task == PebbleTask_KernelBackground) {
@@ -718,10 +712,6 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_set_update_interval, HRMSessionRef session,
   system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
   mutex_unlock_recursive(s_manager_state.lock);
   return success;
-}
-
-DEFINE_SYSCALL(bool, sys_hrm_manager_is_hrm_present) {
-  return s_hrm_present;
 }
 
 void hrm_manager_enable(bool on) {

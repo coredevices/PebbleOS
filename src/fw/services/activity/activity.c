@@ -46,7 +46,6 @@
 
 // Our globals
 static ActivityState s_activity_state;
-static bool s_hrm_present = false;
 static bool s_activity_initialized = false;
 
 // ------------------------------------------------------------------------------------------------
@@ -60,10 +59,14 @@ ActivityState *activity_private_state(void) {
 
 // ------------------------------------------------------------------------------------------------
 bool activity_is_hrm_present(void) {
+#ifdef CONFIG_HRM
   if (!s_activity_initialized) {
     return false;
   }
-  return s_hrm_present;
+  return true;
+#else
+  return false;
+#endif
 }
 
 static bool prv_activity_allowed_to_be_enabled(void) {
@@ -92,10 +95,6 @@ static uint32_t prv_get_hrm_period_sec(void) {
 // @param[in] now_ts number of seconds the system has been running (from time_get_uptime_seconds())
 static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 #ifdef CONFIG_HRM
-  if (!s_hrm_present) {
-    return;
-  }
-
   // If measurement interval is disabled, ensure we're not sampling and skip
   if (activity_prefs_get_hrm_measurement_interval() == HRMonitoringInterval_Disabled) {
     if (s_activity_state.hr.currently_sampling) {
@@ -165,10 +164,6 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 // Kernel BG callback called by the Heart Rate Manager when new data arrives
 #ifdef CONFIG_HRM
 T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
-  if (!s_hrm_present) {
-    return;
-  }
-
   ACTIVITY_LOG_DEBUG("Got HR event: %d", (int) hrm_event->event_type);
   if (hrm_event->event_type == HRMEvent_BPM) {
     ACTIVITY_LOG_DEBUG("HR bpm: %"PRIu8", qual: %"PRId8" ", hrm_event->bpm.bpm,
@@ -229,11 +224,6 @@ T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) 
 // Init heart rate support
 static void prv_heart_rate_init(void) {
 #ifdef CONFIG_HRM
-  s_hrm_present = mfg_info_is_hrm_present();
-  if (!s_hrm_present) {
-    return;
-  }
-
   // Subscribe to HRM data
   s_activity_state.hr.currently_sampling = false;
   s_activity_state.hr.toggled_sampling_at_ts = time_get_uptime_seconds();
@@ -252,10 +242,6 @@ static void prv_heart_rate_init(void) {
 // De-init heart rate support
 static void prv_heart_rate_deinit(void) {
 #ifdef CONFIG_HRM
-  if (!s_hrm_present) {
-    return;
-  }
-
   sys_hrm_manager_unsubscribe(s_activity_state.hr.hrm_session);
   protobuf_log_session_delete(s_activity_state.hr.log_session);
   activity_metrics_prv_reset_hr_stats();
