@@ -1112,10 +1112,6 @@ void command_audit_delay_us(void) {
 void command_enter_stop(void) {
   dbgserial_putstr("Entering stop mode indefinitely ... reboot your board to get out!!");
   __disable_irq();
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_QEMU
-  RTC_ITConfig(RTC_IT_WUT, DISABLE);
-  RTC_WakeUpCmd(DISABLE);
-#endif
   // disable all IRQn_Type >= 0 interrupts
   for (size_t i = 0; i < ARRAY_LENGTH(NVIC->ISER); i++) {
     NVIC->ICER[i] = NVIC->ISER[i];

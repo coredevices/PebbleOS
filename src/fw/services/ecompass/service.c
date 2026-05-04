@@ -21,10 +21,6 @@
 
 #include "system/rtc_registers.h"
 
-#if MICRO_FAMILY_STM32F4
-#include <stm32f4xx.h>
-#endif
-
 // Duration (in minutes) to run high-frequency sampling during compass calibration.
 // Defaults to 2 minutes, but some platforms (e.g., Asterix) require longer.
 #if PLATFORM_ASTERIX
@@ -76,55 +72,6 @@ static AccelRawData s_accel_data = { 0 };
 
 //////////////////////////////////////////////////////////////////////////////////
 // Private calibration handlers
-
-static void prv_reset_saved_sample(void) {
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
-  RTC_WriteBackupRegister(MAG_Z_CORRECTION_VAL, 0x0);
-#endif
-  s_saved_corr_present = false;
-}
-
-static void prv_save_calibration_values(int16_t *corr) {
-#if !MICRO_FAMILY_NRF52 && !MICRO_FAMILY_SF32LB52
-  // first zero out the valid marker
-  prv_reset_saved_sample();
-
-  uint32_t valxy = (((uint32_t)corr[1]) << BITS_PER_CORRECTION_VAL) |
-      (corr[0] & CORRECTION_VAL_MASK);
-  uint32_t valz = (((uint32_t)VALID_CORR_MARKER) << BITS_PER_CORRECTION_VAL) |
-      (corr[2] & CORRECTION_VAL_MASK);
-
-  RTC_WriteBackupRegister(MAG_XY_CORRECTION_VALS, valxy);
-  RTC_WriteBackupRegister(MAG_Z_CORRECTION_VAL, valz);
-
-  for (int i = 0; i < 3; i++) {
-    s_saved_corr[i] = corr[i];
-  }
-  s_saved_corr_present = true;
-#endif
-}
-
-// Loads the calibration values.  Returns true if loads successfully,
-// otherwise false.
-static bool prv_load_calibration_values(void) {
-#if MICRO_FAMILY_NRF52 || MICRO_FAMILY_SF32LB52
-  return false;
-#else
-  uint32_t valxy = RTC_ReadBackupRegister(MAG_XY_CORRECTION_VALS);
-  uint32_t valz = RTC_ReadBackupRegister(MAG_Z_CORRECTION_VAL);
-
-  bool is_valid = ((valz >> BITS_PER_CORRECTION_VAL) & CORRECTION_VAL_MASK) ==
-      VALID_CORR_MARKER;
-
-  if (is_valid) {
-    s_saved_corr[0] = valxy & CORRECTION_VAL_MASK;
-    s_saved_corr[1] = (valxy >> BITS_PER_CORRECTION_VAL) & CORRECTION_VAL_MASK;
-    s_saved_corr[2] = valz & CORRECTION_VAL_MASK;
-  }
-
-  return (is_valid);
-#endif
-}
 
 static void prv_get_roll_and_pitch(AccelRawData *d, int32_t *rollp,
     int32_t *pitchp) {
@@ -281,7 +228,7 @@ void ecompass_handle_battery_state_change_event(PreciseBatteryChargeState new_st
     s_charger_plugged = true;
     s_current_cal_status = CompassStatusDataInvalid;
     memset(s_active_corr, 0x00, sizeof(s_active_corr));
-    prv_reset_saved_sample();
+    s_saved_corr_present = false;
   } else if (s_charger_plugged) {
     // we have unplugged the charger, initiate recalibration
     s_charger_plugged = false;
@@ -291,16 +238,7 @@ void ecompass_handle_battery_state_change_event(PreciseBatteryChargeState new_st
 }
 
 void ecompass_service_init(void) {
-  if (!s_service_init) {
-    s_saved_corr_present = prv_load_calibration_values();
-    if (s_saved_corr_present) {
-      s_current_cal_status = CompassStatusCalibrating;
-      for (int i = 0; i < 3; i++) {
-        s_active_corr[i] = s_saved_corr[i];
-      }
-    }
-    s_service_init = true;
-  }
+  s_service_init = true;
 
   event_service_init(PEBBLE_COMPASS_DATA_EVENT, &prv_compass_data_service_start,
      &prv_compass_data_service_stop);
@@ -392,8 +330,11 @@ void ecompass_service_handle(void) {
       if (s_high_freq_calib_active) {
         prv_calibration_time_expired_cb(NULL);
       }
-      prv_save_calibration_values(s_active_corr);
       s_current_cal_status = CompassStatusCalibrated;
+      for (int i = 0; i < 3; i++) { 
+        s_active_corr[i] = new_corr[i];
+      }
+      s_saved_corr_present = true;
     }
   }
 

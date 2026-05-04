@@ -47,14 +47,6 @@ void voltage_monitor_init(void);
 void voltage_monitor_device_init(const VoltageMonitorDevice *device);
 
 //! Get a voltage reading from the given ADC.
-//! Implementation is hardware specific, since Vref is only available on ADC1.
-//!
-//! On the STM32F412xG, which only has a single ADC:
-//!   - ADC1 is configured in scan mode, and will scan the ADC channel given in \ref adc, and Vref.
-//!
-//! On all other F2 and F4 platforms, which have multiple ADCs:
-//!   - ADC1 is configured only to pull Vref.
-//!   - The given adc must not be ADC1
 //!
 //! @param device Pointer to the Voltage Monitor Device to be used.
 //! @param reading_out Pointer to a VoltageReading struct which the results will be returned in.

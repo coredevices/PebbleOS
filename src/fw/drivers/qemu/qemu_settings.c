@@ -8,16 +8,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#if defined(MICRO_FAMILY_QEMU)
 #include "board/board.h"
 
 // QEMU RTC backup registers at RTC_BASE + 0x40
 #define QEMU_RTC_BACKUP_BASE (QEMU_RTC_BASE + 0x40)
 #define QEMU_BACKUP_REG(n) (*(volatile uint32_t *)(QEMU_RTC_BACKUP_BASE + (n) * 4))
-
-#else
-#include <stm32f4xx.h>
-#endif
 
 // QEMU backup registers and bit indices. These are also defined in the qemu project in
 // hw/arm/pebble.c

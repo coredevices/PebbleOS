@@ -21,7 +21,7 @@
 #include "git_version.auto.h"
 
 //! This symbol and its contents are provided by the linker script, see the
-//! .note.gnu.build-id section in src/fw/stm32f2xx_flash_fw.ld
+//! .note.gnu.build-id section in src/fw/fw_common.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
 
 const FirmwareMetadata TINTIN_METADATA SECTION(".pbl_fw_version") = {

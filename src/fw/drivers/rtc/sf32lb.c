@@ -6,7 +6,6 @@
 #include "board/board.h"
 #include "drivers/flash.h"
 #include "drivers/rtc.h"
-#include "rtc_private.h"
 #include "flash_region/flash_region.h"
 #include "kernel/events.h"
 #include "mcu/interrupts.h"
