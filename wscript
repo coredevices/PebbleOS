@@ -110,8 +110,6 @@ def options(opt):
                    help='Specify AppInstallId\'s of the test apps to be compiled with the firmware')
     opt.add_option('--performance_tests', action='store_true',
                    help='Enables instrumentation + apps for performance testing (off by default)')
-    opt.add_option('--verbose_logs', action='store_true',
-                   help='Enables verbose logs (off by default)')
     opt.add_option('--ui_debug', action='store_true',
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
     opt.add_option('--qemu', action='store_true',
@@ -234,10 +232,6 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'PERFORMANCE_TESTS')
         conf.options.profiler = True
         print("Instrumentation and apps for performance measurement enabled (enables profiler)")
-
-    if conf.options.verbose_logs:
-        conf.env.append_value('DEFINES', 'VERBOSE_LOGGING')
-        print("Verbose logging enabled")
 
     print(f"Log level: {conf.options.log_level.upper()}")
     conf.env.append_value('DEFINES', f'DEFAULT_LOG_LEVEL=LOG_LEVEL_{conf.options.log_level.upper()}')
