@@ -32,7 +32,6 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
-#include "resource/resource_mapped.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/compositor/compositor_transitions.h"
 #include "pbl/services/i18n/i18n.h"
@@ -452,9 +451,6 @@ static void prv_app_cleanup(void) {
   speaker_service_stop_for_task(PebbleTask_App);
 #endif
   ble_app_cleanup();
-#if CAPABILITY_HAS_MAPPABLE_FLASH
-  resource_mapped_release_all(PebbleTask_App);
-#endif
 
   app_comm_set_sniff_interval(SNIFF_INTERVAL_NORMAL);
 

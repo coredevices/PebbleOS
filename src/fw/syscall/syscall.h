@@ -63,15 +63,10 @@ NORETURN sys_app_fault(uint32_t stashed_lr);
 bool sys_resource_is_valid(ResAppNum app_num, uint32_t resource_id);
 size_t sys_resource_size(ResAppNum app_num, uint32_t handle);
 size_t sys_resource_load_range(ResAppNum app_num, uint32_t h, uint32_t start_bytes, uint8_t *buffer, size_t num_bytes);
-void sys_resource_mapped_use(void);
-void sys_resource_mapped_release(void);
 
 bool sys_resource_bytes_are_readonly(void *bytes);
 const uint8_t * sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
                                              size_t *num_bytes_out);
-
-void sys_resource_mapped_use(void);
-void sys_resource_mapped_release_many(uint32_t num);
 
 uint32_t sys_resource_get_and_cache(ResAppNum app_num, uint32_t resource_id);
 

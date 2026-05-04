@@ -69,40 +69,6 @@ void applib_resource_munmap_or_free(void *bytes) {
 }
 
 
-#if CAPABILITY_HAS_MAPPABLE_FLASH
-bool applib_resource_track_mmapped(const void *bytes) {
-  if (resource_storage_builtin_bytes_are_readonly(bytes)) {
-    return true;
-  }
-
-  if (resource_storage_flash_bytes_are_readonly(bytes)) {
-    sys_resource_mapped_use();
-    return true;
-  }
-
-  return false;
-}
-
-bool applib_resource_is_mmapped(const void *bytes) {
-  return resource_storage_builtin_bytes_are_readonly(bytes) ||
-         resource_storage_flash_bytes_are_readonly(bytes);
-}
-
-bool applib_resource_munmap(const void *bytes) {
-  if (resource_storage_builtin_bytes_are_readonly(bytes)) {
-    return true;
-  }
-
-  if (resource_storage_flash_bytes_are_readonly(bytes)) {
-    sys_resource_mapped_release();
-    return true;
-  }
-
-  return false;
-}
-
-#else
-
 bool applib_resource_track_mmapped(const void *bytes) {
   return resource_storage_builtin_bytes_are_readonly(bytes);
 }
@@ -114,4 +80,3 @@ bool applib_resource_is_mmapped(const void *bytes) {
 bool applib_resource_munmap(const void *bytes) {
   return resource_storage_builtin_bytes_are_readonly(bytes);
 }
-#endif // CAPABILITY_HAS_MAPPABLE_FLASH
