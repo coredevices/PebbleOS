@@ -4,5 +4,4 @@ llvm
 cmake
 lcov
 node
-emscripten
 librsvg

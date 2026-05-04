@@ -484,7 +484,6 @@ def configure(conf):
             source = conf.path.get_bld().make_node(filename)
             os.symlink(source.path_from(conf.path), filename)
 
-    # Note: this will modify the 'local' conf when targeting emscripten:
     conf.recurse('applib-targets')
 
     Logs.pprint('CYAN', 'Configuring stored apps environment')

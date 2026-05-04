@@ -76,34 +76,6 @@ cl_fs_cleanup(void)
 
 #else
 
-#ifdef EMSCRIPTEN
-#include <emscripten/emscripten.h>
-// fork() is not supported by Emscripten, so try to use Node's child_process.execSync
-static int
-shell_out(char * const argv[])
-{
-  return EM_ASM_INT({
-    var child_process = require('child_process');
-    try {
-      var args = [];
-      for (var i = 0;; i++) {
-        var argStrPtr = getValue($0 + i*4, '*');
-        if (argStrPtr === 0) {
-          break;
-        }
-        var arg = Pointer_stringify(argStrPtr);
-        args.push(arg);
-      }
-      // FIXME: need to escape args?
-      var out = child_process.execSync(args.join(' '));
-      return 0;
-    } catch (e) {
-      console.error(e);
-      return -1;
-    }
-  }, argv);
-}
-#else  // #ifdef EMSCRIPTEN
 static int
 shell_out(char * const argv[])
 {
@@ -125,7 +97,6 @@ shell_out(char * const argv[])
 	waitpid(pid, &status, 0);
 	return WEXITSTATUS(status);
 }
-#endif
 
 #include <string.h>
 
