@@ -104,11 +104,7 @@ typedef enum {
   NumResponseCodes
 } ResponseCode;
 
-#if !CAPABILITY_HAS_PUTBYTES_PREACKING
-#define MAX_BATCHED_PB_PUT_OPS 1
-#else
 #define MAX_BATCHED_PB_PUT_OPS 3
-#endif
 
 typedef struct {
   uint8_t *buffer;
@@ -287,11 +283,7 @@ static bool prv_init_put_job_queue_if_necessary(void) {
     return true;
   }
 
-#if !CAPABILITY_HAS_PUTBYTES_PREACKING
-  put_jobs->enable_preack = false;
-#else
   put_jobs->enable_preack = true;
-#endif
 
   int i;
   for (i = 0; i < MAX_BATCHED_PB_PUT_OPS; i++) {

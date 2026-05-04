@@ -14,7 +14,6 @@
 master_capability_set = {
     "HAS_SETTINGS_ICONS",
     "HAS_THEMING",
-    "HAS_PUTBYTES_PREACKING",
     "HAS_FLASH_OTP",
     "HAS_PBLBOOT",
     "HAS_DYNAMIC_BACKLIGHT",
@@ -30,7 +29,6 @@ board_capability_dicts = [
     {
         "boards": ["asterix"],
         "capabilities": {
-            "HAS_PUTBYTES_PREACKING",
             "HAS_FLASH_OTP",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_ORIENTATION_MANAGER",
@@ -40,7 +38,6 @@ board_capability_dicts = [
     {
         "boards": ["obelix_dvt", "obelix_pvt", "obelix_bb2"],
         "capabilities": {
-            "HAS_PUTBYTES_PREACKING",
             "HAS_FLASH_OTP",
             "HAS_PBLBOOT",
             "HAS_DYNAMIC_BACKLIGHT",
@@ -55,7 +52,6 @@ board_capability_dicts = [
     {
         "boards": ["getafix_evt", "getafix_dvt", "getafix_dvt2"],
         "capabilities": {
-            "HAS_PUTBYTES_PREACKING",
             "HAS_FLASH_OTP",
             "HAS_PBLBOOT",
             "HAS_ACCEL_SENSITIVITY",
@@ -67,7 +63,6 @@ board_capability_dicts = [
     {
         "boards": ["qemu_emery"],
         "capabilities": {
-            "HAS_PUTBYTES_PREACKING",
             "HAS_APP_SCALING",
             "HAS_MODDABLE_XS",
             "HAS_COLOR_BACKLIGHT",
@@ -77,7 +72,6 @@ board_capability_dicts = [
     {
         "boards": ["qemu_flint"],
         "capabilities": {
-            "HAS_PUTBYTES_PREACKING",
             "HAS_MODDABLE_XS",
             "HAS_SPEAKER",
         },
@@ -85,7 +79,6 @@ board_capability_dicts = [
     {
         "boards": ["qemu_gabbro"],
         "capabilities": {
-            "HAS_PUTBYTES_PREACKING",
             "HAS_APP_SCALING",
             "HAS_MODDABLE_XS",
         },

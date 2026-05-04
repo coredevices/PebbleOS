@@ -300,9 +300,6 @@ def add_clar_test(
         test_bin = test_dir.make_node("runme_" + platform)
         platform_defines.append("PLATFORM_DEFAULT=0")
 
-    if platform == "asterix":
-        platform_defines.append("CAPABILITY_HAS_PUTBYTES_PREACKING=1")
-
     def _generate_clar_harness(task):
         bld = task.generator.bld
         clar_dir = task.generator.env.CLAR_DIR
