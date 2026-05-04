@@ -25,6 +25,8 @@ void WEAK timeline_peek_handle_process_kill(void) {}
 
 void WEAK timeline_peek_set_show_before_time(unsigned int before_time_s) {};
 
+void WEAK timeline_peek_set_enabled(bool enabled) {}
+
 bool WEAK timeline_peek_prefs_get_enabled() {
   return true;
 }

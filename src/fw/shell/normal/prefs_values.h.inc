@@ -46,11 +46,9 @@
   PREFS_MACRO(PREF_KEY_ALARMS_APP_OPENED, s_alarms_app_opened)
   PREFS_MACRO(PREF_KEY_ACTIVITY_HRM_PREFERENCES, s_activity_hrm_preferences)
   PREFS_MACRO(PREF_KEY_ACTIVITY_HEART_RATE_PREFERENCES, s_activity_hr_preferences)
-#if CAPABILITY_HAS_TIMELINE_PEEK
   PREFS_MACRO(PREF_KEY_TIMELINE_SETTINGS_OPENED, s_timeline_settings_opened)
   PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_ENABLED, s_timeline_peek_enabled)
   PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_BEFORE_TIME_M, s_timeline_peek_before_time_m)
-#endif
   PREFS_MACRO(PREF_KEY_POWER_MODE, s_power_mode)
   PREFS_MACRO(PREF_KEY_COREDUMP_ON_REQUEST, s_coredump_on_request_enabled)
   PREFS_MACRO(PREF_KEY_ACCEL_SHAKE_LOG_INFO, s_accel_shake_log_info_enabled)

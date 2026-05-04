@@ -100,7 +100,6 @@ static void prv_timeline_peek_update_proc(Layer *layer, GContext *ctx) {
   prv_draw_background(ctx, &peek->layout_layer.frame, num_concurrent);
 }
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
 static void prv_redraw(void *PBL_UNUSED data) {
   TimelinePeek *peek = &s_peek;
   layer_mark_dirty(&peek->layout_layer);
@@ -118,7 +117,6 @@ static CronJob s_timeline_peek_job = {
   .month = CRON_MONTH_ANY,
   .cb = prv_cron_callback,
 };
-#endif
 
 static void prv_destroy_layout(void) {
   TimelinePeek *peek = &s_peek;
@@ -200,7 +198,6 @@ static int16_t prv_scale_y_to_framebuffer(int16_t display_y) {
   return (display_y * app_framebuffer_size.h) / DISP_ROWS;
 }
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
 static void prv_peek_frame_setup(Animation *animation) {
   PropertyAnimation *prop_anim = (PropertyAnimation *)animation;
   TimelinePeek *peek;
@@ -277,15 +274,11 @@ static void prv_peek_anim_stopped(Animation *animation, bool finished, void *con
   }
   peek->removing_concurrent = false;
 }
-#endif // CAPABILITY_HAS_TIMELINE_PEEK
 
 static const AnimationHandlers s_peek_anim_handlers = {
-#if CAPABILITY_HAS_TIMELINE_PEEK
   .stopped = prv_peek_anim_stopped,
-#endif
 };
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
 static void prv_transition_frame(TimelinePeek *peek, bool visible, bool animated) {
   prv_unschedule_animation(peek);
 
@@ -313,7 +306,6 @@ static void prv_transition_frame(TimelinePeek *peek, bool visible, bool animated
   peek->animation = animation;
   animation_schedule(animation);
 }
-#endif
 
 #define EXTENDED_BOUNCE_BACK (2 * INTERPOLATE_MOOOK_BOUNCE_BACK)
 
@@ -421,7 +413,7 @@ static void prv_push_timeline_peek(void *unused) {
 void timeline_peek_init(void) {
   TimelinePeek *peek = &s_peek;
   *peek = (TimelinePeek) {
-#if CAPABILITY_HAS_TIMELINE_PEEK && !SHELL_SDK && !TARGET_QEMU
+#if !SHELL_SDK && !TARGET_QEMU
     .enabled = timeline_peek_prefs_get_enabled(),
 #endif
   };
@@ -432,16 +424,13 @@ void timeline_peek_init(void) {
   layer_init(&peek->layout_layer, &TIMELINE_PEEK_FRAME_HIDDEN);
   layer_add_child(&peek->window.layer, &peek->layout_layer);
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
   timeline_peek_set_show_before_time(timeline_peek_prefs_get_before_time() * SECONDS_PER_MINUTE);
-#endif
 
   // Wait one event loop to show the timeline peek
   launcher_task_add_callback(prv_push_timeline_peek, NULL);
 }
 
 static void prv_set_visible(bool visible, bool animated) {
-#if CAPABILITY_HAS_TIMELINE_PEEK
   TimelinePeek *peek = &s_peek;
   if (!peek->started && visible) {
     cron_job_schedule(&s_timeline_peek_job);
@@ -449,7 +438,6 @@ static void prv_set_visible(bool visible, bool animated) {
     cron_job_unschedule(&s_timeline_peek_job);
   }
   prv_transition_frame(peek, visible, animated);
-#endif
 }
 
 static bool prv_can_animate(void) {
@@ -556,7 +544,6 @@ void timeline_peek_set_enabled(bool enabled) {
 }
 
 void timeline_peek_handle_peek_event(PebbleTimelinePeekEvent *event) {
-#if CAPABILITY_HAS_TIMELINE_PEEK
   TimelinePeek *peek = &s_peek;
   peek->future_empty = event->is_future_empty;
   bool show = false;
@@ -591,19 +578,14 @@ void timeline_peek_handle_peek_event(PebbleTimelinePeekEvent *event) {
                            false /* is_first_event */, true /* animated */);
   }
   timeline_item_free_allocated_buffer(&item);
-#endif
 }
 
 void timeline_peek_handle_process_start(void) {
-#if CAPABILITY_HAS_TIMELINE_PEEK
   timeline_peek_set_visible(true, false /* animated */);
-#endif
 }
 
 void timeline_peek_handle_process_kill(void) {
-#if CAPABILITY_HAS_TIMELINE_PEEK
   timeline_peek_set_visible(false, false /* animated */);
-#endif
 }
 
 #if UNITTEST

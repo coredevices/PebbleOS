@@ -15,9 +15,7 @@
 # include "default/compositor_port_hole_transitions.h"
 # include "default/compositor_round_flip_transitions.h"
 #endif
-#if CAPABILITY_HAS_TIMELINE_PEEK
 #include "default/compositor_peek_transitions.h"
-#endif
 
 #include "applib/graphics/gdraw_command_sequence.h"
 

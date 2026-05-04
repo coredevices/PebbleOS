@@ -742,11 +742,7 @@ static void prv_intro_anim_stopped(Animation *anim, bool finished, void *context
 #endif
     prv_set_day_sep_timer(data);
   } else {
-#if CAPABILITY_HAS_TIMELINE_PEEK
     GPoint direction = GPoint(0, -1);
-#else
-    GPoint direction = GPoint(1, 0);
-#endif
     Animation *layer_bounce = timeline_layer_create_bounce_back_animation(&data->timeline_layer,
                                                                           direction);
     data->current_animation = layer_bounce;
@@ -981,15 +977,6 @@ static void NOINLINE prv_setup_peek(TimelineAppData *data) {
     layer_set_hidden((Layer *)&data->peek_layer, false);
     prv_setup_no_events_peek(data);
     focus_handler = prv_peek_did_focus_handler;
-#if !CAPABILITY_HAS_TIMELINE_PEEK
-  } else if (first_pin && (first_pin->header.timestamp + SECONDS_PER_MINUTE *
-              first_pin->header.duration >= now) &&
-             (first_pin->header.timestamp - SECONDS_PER_HOUR <= now) &&
-             prv_set_state(data, TimelineAppStatePeek)) {
-    // ongoing or within the hour
-    prv_setup_first_pin_peek(data);
-    focus_handler = prv_peek_did_focus_handler;
-#endif
   } else if (state && ((state->current_day != time_util_get_midnight_of(now)) || (data->force_display_day_sep == true)) &&
              prv_set_state(data, TimelineAppStateFarDayHidePeek)) {
     // entering into a day that isn't today, setup the day separator
@@ -1261,12 +1248,10 @@ T_STATIC void NOINLINE prv_init(void) {
     prv_push_pin_window(s_app_data, timeline_model_get_current_state(), false /* animated */);
   }
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
   if (!timeline_model_is_empty()) {
     timeline_layer_set_sidebar_width(&s_app_data->timeline_layer,
                                      timeline_layer_get_ideal_sidebar_width());
   }
-#endif
 }
 
 static void NOINLINE prv_deinit(void) {

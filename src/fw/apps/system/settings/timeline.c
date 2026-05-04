@@ -15,7 +15,6 @@
 #include "system/passert.h"
 #include "util/size.h"
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
 typedef enum TimelineSettingsVersion {
   //! Initial version or never opened
   TimelineSettingsVersion_InitialVersion = 0,
@@ -220,4 +219,3 @@ const SettingsModuleMetadata *settings_timeline_get_info(void) {
 
   return &s_module_info;
 }
-#endif // CAPABILITY_HAS_TIMELINE_PEEK

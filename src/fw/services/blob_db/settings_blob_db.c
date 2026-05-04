@@ -90,11 +90,9 @@ static const char *s_syncable_settings[] = {
   "appsMenuHighlightColor",
 
   // Timeline preferences
-#if CAPABILITY_HAS_TIMELINE_PEEK
   "timelineQuickViewEnabled",
   "timelineQuickViewBeforeTimeMin",
   "timelineSettingsOpened",
-#endif
 
   // Activity preferences
   "activityPreferences",
