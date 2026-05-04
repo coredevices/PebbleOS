@@ -463,16 +463,7 @@ static void prv_commit_object(uint32_t crc) {
       .checksum = crc
     };
 
-#if !CAPABILITY_HAS_DEFECTIVE_FW_CRC
-    // Note: We are trying to move away from using the STM32 legacy defective
-    // checksum in our code. However, this implementation is baked into the
-    // mobile apps and it uses it to validate that the firmware image it has
-    // pulled from cohorts is correct. Thus, for now, we still use the legacy
-    // checksum in put_bytes() after pieces are transferred, but when we store
-    // the CRC for the bootloader to check, we use the real CRC32
-    // implementation
     fw_descr.checksum = pb_storage_calculate_crc(&s_pb_state.storage, PutBytesCrcType_CRC32);
-#endif
     pb_storage_write(&s_pb_state.storage, 0, (uint8_t *)&fw_descr, sizeof(FirmwareDescription));
   }
 #endif

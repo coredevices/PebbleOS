@@ -30,12 +30,7 @@ bool firmware_storage_check_valid_firmware_description(
   PBL_LOG_DBG("CRCing recovery...");
 
   start_address += sizeof(FirmwareDescription);
-#if CAPABILITY_HAS_DEFECTIVE_FW_CRC
-  const uint32_t calculated_crc = flash_calculate_legacy_defective_checksum(
-      start_address, firmware_description->firmware_length);
-#else
   const uint32_t calculated_crc = flash_crc32(start_address, firmware_description->firmware_length);
-#endif
 
   PBL_LOG_DBG("CRCing recovery... done");
 
