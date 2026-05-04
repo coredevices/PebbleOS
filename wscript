@@ -393,8 +393,6 @@ def configure(conf):
     conf.recurse('src/fw')
     conf.recurse('sdk')
 
-    conf.recurse('bin/boot')
-
     if conf.env.RUNNER == 'openocd':
         waftools.openocd.write_cfg(conf)
 
@@ -908,23 +906,10 @@ def _create_qemu_image_micro(ctx, path_to_firmware_hex):
     micro_flash_path = micro_flash_node.path_from(ctx.path)
     waflib.Logs.pprint('CYAN', 'Writing micro flash image to {}'.format(micro_flash_path))
 
-    if ctx.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
-        # QEMU generic boards: firmware runs directly from flash at 0x00000000, no bootloader
-        img = IntelHex(path_to_firmware_hex)
-        img.padding = 0xff
-        flash_end = ((img.maxaddr() + 511) // 512) * 512
-        img.tobinfile(micro_flash_path, start=0x00000000, end=flash_end-1)
-    else:
-        # STM32 QEMU boards: merge bootloader + firmware
-        if not ctx.env.BOOTLOADER_HEX:
-            ctx.fatal('Board "{}" does not have a bootloader binary available'
-                      .format(ctx.env.BOARD))
-        img = IntelHex(ctx.env.BOOTLOADER_HEX)
-        img.merge(IntelHex(path_to_firmware_hex), overlap='replace')
-        img.padding = 0xff
-        flash_end = ((img.maxaddr() + 511) // 512) * 512
-        img.tobinfile(micro_flash_path, start=0x08000000, end=flash_end-1)
-
+    img = IntelHex(path_to_firmware_hex)
+    img.padding = 0xff
+    flash_end = ((img.maxaddr() + 511) // 512) * 512
+    img.tobinfile(micro_flash_path, start=0x00000000, end=flash_end-1)
 
 def _create_spi_flash_image(ctx, name):
     spi_flash_node = ctx.path.get_bld().make_node(name)
