@@ -508,18 +508,44 @@ uint16_t prv_scale_coordinate(const uint32_t scale_factor, uint16_t val) {
   return val_fixed >> 16;  // Get integer part
 }
 
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !RECOVERY_FW
+static bool prv_should_fit_watchface_for_timeline_peek(void) {
+  const PebbleProcessMd *app_md = app_manager_get_current_app_md();
+  if (!timeline_peek_prefs_get_watchface_fit_enabled() || !app_md ||
+      app_md->process_type != ProcessTypeWatchface) {
+    return false;
+  }
+
+  UnobstructedAreaState *unobstructed_state = app_state_get_unobstructed_area_state();
+  if (unobstructed_area_service_is_subscribed(unobstructed_state)) {
+    return false;
+  }
+
+  const int16_t obstruction_y = timeline_peek_get_origin_y();
+  return (obstruction_y > 0) && (obstruction_y < DISP_ROWS);
+}
+#endif
+
 void compositor_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_to_origin) {
   compositor_scaled_app_fb_copy_offset(update_rect, copy_relative_to_origin, 0 /* offset_y */);
 }
 
-void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_relative_to_origin, int16_t offset_y) {
+void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_relative_to_origin,
+                                          int16_t offset_y) {
   GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
   GBitmap dst_bitmap = compositor_get_framebuffer_as_bitmap();
 
-  if (prv_app_framebuffer_matches_display()) {
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !RECOVERY_FW
+  const bool fit_watchface_for_peek = prv_should_fit_watchface_for_timeline_peek();
+#else
+  const bool fit_watchface_for_peek = false;
+#endif
+
+  if (prv_app_framebuffer_matches_display() && !fit_watchface_for_peek) {
     GBitmap sub_bitmap;
     gbitmap_init_as_sub_bitmap(&sub_bitmap, &src_bitmap, update_rect);
-    bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, update_rect.origin, GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, update_rect.origin, GCompOpAssign,
+                              GColorWhite);
     return;
   }
 
@@ -532,20 +558,29 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
   const int16_t disp_height = dst_bitmap.bounds.size.h;
   // Check if we should use scaling mode for legacy apps
   const LegacyAppRenderMode render_mode = shell_prefs_get_legacy_app_render_mode();
-  if (render_mode >= LegacyAppRenderMode_ScalingNearest) {
+  if (fit_watchface_for_peek || (render_mode >= LegacyAppRenderMode_ScalingNearest)) {
     const bool bilinear = (render_mode == LegacyAppRenderMode_ScalingBilinear);
+    const GRect scale_to = fit_watchface_for_peek
+        ? GRect(0, 0, disp_width, timeline_peek_get_origin_y())
+        : GRect(0, 0, disp_width, disp_height);
 
     // Calculate scaling factors using fixed-point arithmetic (16.16 format)
     // This gives us sub-pixel precision for better scaling
-    const uint32_t scale_x = ((uint32_t)app_width << 16) / disp_width;
-    const uint32_t scale_y = ((uint32_t)app_height << 16) / disp_height;
+    const uint32_t scale_x = ((uint32_t)app_width << 16) / scale_to.size.w;
+    const uint32_t scale_y = ((uint32_t)app_height << 16) / scale_to.size.h;
 
     for (int16_t dst_y = 0; dst_y < update_rect.size.h; dst_y++) {
       const int16_t dst_y_offset = dst_y + update_rect.origin.y + offset_y;
       if (dst_y_offset < 0 || dst_y_offset >= disp_height) continue;
+      if (fit_watchface_for_peek &&
+          (dst_y_offset < scale_to.origin.y ||
+           dst_y_offset >= scale_to.origin.y + scale_to.size.h)) {
+        continue;
+      }
 
-      const uint16_t dst_y_coord = copy_relative_to_origin ?
-          CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
+      const uint16_t dst_y_coord = fit_watchface_for_peek
+          ? (dst_y_offset - scale_to.origin.y)
+          : copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
       const uint32_t src_y_fixed = (uint32_t)dst_y_coord * scale_y;
       const int16_t src_y = src_y_fixed >> 16;
 
@@ -573,9 +608,15 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
         if (dst_x_offset < dst_row_info.min_x || dst_x_offset > dst_row_info.max_x) {
           continue;
         }
+        if (fit_watchface_for_peek &&
+            (dst_x_offset < scale_to.origin.x ||
+             dst_x_offset >= scale_to.origin.x + scale_to.size.w)) {
+          continue;
+        }
 
-        const uint16_t dst_x_coord = copy_relative_to_origin ?
-            CLIP(dst_x_offset, 0, disp_width - 1) : dst_x;
+        const uint16_t dst_x_coord = fit_watchface_for_peek
+            ? (dst_x_offset - scale_to.origin.x)
+            : copy_relative_to_origin ? CLIP(dst_x_offset, 0, disp_width - 1) : dst_x;
         const uint32_t src_x_fixed = (uint32_t)dst_x_coord * scale_x;
         const int16_t src_x = src_x_fixed >> 16;
 
