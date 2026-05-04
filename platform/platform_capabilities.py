@@ -26,7 +26,6 @@ master_capability_set = {
     "HAS_SPEAKER",
     "HAS_ACCEL_SENSITIVITY",
     "HAS_APP_SCALING",
-    "HAS_FPGA_DISPLAY",
     "HAS_ORIENTATION_MANAGER",
     "HAS_MODDABLE_XS",
 }
