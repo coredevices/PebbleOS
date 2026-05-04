@@ -221,6 +221,11 @@ static bool s_timeline_peek_enabled = true;
 static uint16_t s_timeline_peek_before_time_m =
     (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
 
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+#define PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT "timelineQuickViewWatchfaceFit"
+static bool s_timeline_peek_watchface_fit_enabled = true;
+#endif
+
 #define PREF_KEY_POWER_MODE "powerMode"
 #define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
 #define PREF_KEY_ACCEL_SHAKE_LOG_INFO "accelShakeLogInfo"
@@ -636,6 +641,13 @@ static bool prv_set_s_timeline_peek_before_time_m(uint16_t *before_time_m) {
   timeline_peek_set_show_before_time(*before_time_m * SECONDS_PER_MINUTE);
   return true;
 }
+
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+static bool prv_set_s_timeline_peek_watchface_fit_enabled(bool *enabled) {
+  s_timeline_peek_watchface_fit_enabled = *enabled;
+  return true;
+}
+#endif
 
 static bool prv_set_s_power_mode(uint8_t *mode) {
   if (*mode >= PowerModeCount) {
@@ -1724,6 +1736,16 @@ void timeline_peek_prefs_set_before_time(uint16_t before_time_m) {
 uint16_t timeline_peek_prefs_get_before_time(void) {
   return s_timeline_peek_before_time_m;
 }
+
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+void timeline_peek_prefs_set_watchface_fit_enabled(bool enabled) {
+  prv_pref_set(PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT, &enabled, sizeof(enabled));
+}
+
+bool timeline_peek_prefs_get_watchface_fit_enabled(void) {
+  return s_timeline_peek_watchface_fit_enabled;
+}
+#endif
 
 bool shell_prefs_can_coredump_on_request(void) {
   return s_coredump_on_request_enabled;

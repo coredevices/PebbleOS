@@ -34,6 +34,9 @@ typedef struct SettingsTimelinePeekData {
 
 typedef enum TimelinePeekMenuIndex {
   TimelinePeekMenuIndex_Toggle,
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+  TimelinePeekMenuIndex_SquishFaces,
+#endif
   TimelinePeekMenuIndex_Timing,
 
   TimelinePeekMenuIndexCount,
@@ -133,6 +136,15 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = s_before_time_strings[
           prv_before_time_min_to_index(timeline_peek_prefs_get_before_time())];
       break;
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+    case TimelinePeekMenuIndex_SquishFaces:
+      /// Shows up in the Timeline settings as the title for squishing unsupported watchfaces.
+      title = i18n_noop("Squish Faces");
+      /// Shows up in the Timeline settings as the status under the "Squish Faces" toggle.
+      subtitle = timeline_peek_prefs_get_watchface_fit_enabled() ? i18n_noop("On")
+                                                                 : i18n_noop("Off");
+      break;
+#endif
     case TimelinePeekMenuIndexCount:
       break;
   }
@@ -150,6 +162,12 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case TimelinePeekMenuIndex_Timing:
       prv_push_before_time_menu(data);
       goto done;
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+    case TimelinePeekMenuIndex_SquishFaces:
+      timeline_peek_prefs_set_watchface_fit_enabled(
+          !timeline_peek_prefs_get_watchface_fit_enabled());
+      goto done;
+#endif
     case TimelinePeekMenuIndexCount:
       break;
   }

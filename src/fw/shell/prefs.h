@@ -19,6 +19,12 @@
 #include "shell/system_theme.h"
 #include "util/uuid.h"
 
+#if CAPABILITY_HAS_APP_SCALING && (PLATFORM_OBELIX || BOARD_QEMU_EMERY)
+#define TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED 1
+#else
+#define TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED 0
+#endif
+
 
 // The clock 12h/24h setting is required by services/clock.c.
 bool shell_prefs_get_clock_24h_style(void);
@@ -142,6 +148,10 @@ void timeline_peek_prefs_set_enabled(bool enabled);
 bool timeline_peek_prefs_get_enabled(void);
 void timeline_peek_prefs_set_before_time(uint16_t before_time_m);
 uint16_t timeline_peek_prefs_get_before_time(void);
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+void timeline_peek_prefs_set_watchface_fit_enabled(bool enabled);
+bool timeline_peek_prefs_get_watchface_fit_enabled(void);
+#endif
 
 typedef enum PowerMode {
   PowerMode_HighPerformance = 0,

@@ -120,6 +120,12 @@ void timeline_peek_prefs_set_before_time(uint16_t before_time_m) {}
 uint16_t timeline_peek_prefs_get_before_time(void) {
   return (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
 }
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+void timeline_peek_prefs_set_watchface_fit_enabled(bool enabled) {}
+bool timeline_peek_prefs_get_watchface_fit_enabled(void) {
+  return true;
+}
+#endif
 
 bool workout_utils_find_ongoing_activity_session(ActivitySession *session_out) {
   return false;
