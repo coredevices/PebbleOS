@@ -183,23 +183,10 @@ GColor8Component gcolor_component_multiply(GColor8Component a, GColor8Component 
 #warning "Unknown screen shape"
 #endif
 
-// Convenience macros to distinguish mask support
-// TODO: PBL-21978 remove redundant comments as a workaround around for SDK generator
-#if CAPABILITY_HAS_MASKING
-
-//! Convenience macro to switch between two expressions depending on the platform's support of
-//! masking.
-//! On platforms that support masking, the first expression will be chosen, the second otherwise.
-#define PBL_IF_MASK_ELSE(if_true, if_false) (if_true)
-
-#else
-
 //! Convenience macro to switch between two expressions depending on the platform's support of
 //! masking.
 //! On platforms that support masking, the first expression will be chosen, the second otherwise.
 #define PBL_IF_MASK_ELSE(if_true, if_false) (if_false)
-
-#endif
 
 // convenient macros to distinguish between bw and color
 // TODO: PBL-21978 remove redundant comments as a workaround around for SDK generator
@@ -1332,12 +1319,6 @@ typedef struct PACKED {
   uint8_t stroke_width;
   //! Struct of raw drawing function pointers; default value is g_default_draw_implementation
   const GDrawRawImplementation *draw_implementation;
-#if CAPABILITY_HAS_MASKING
-  //! Optional draw mask
-  //! Depending on the mask mode, (ignore, recording, use) the .draw_implementation will be
-  //! set accordingly
-  GDrawMask *draw_mask;
-#endif // CAPABILITY_HAS_MASKING
 } GDrawState;
 
 //! @internal

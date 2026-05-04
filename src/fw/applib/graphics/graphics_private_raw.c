@@ -5,7 +5,6 @@
 #include "graphics.h"
 #include "graphics_private.h"
 #include "graphics_private_raw.h"
-#include "graphics_private_raw_mask.h"
 #include "gtypes.h"
 #include "system/passert.h"
 #include "util/bitset.h"
@@ -20,25 +19,14 @@ ALWAYS_INLINE void graphics_private_raw_blend_color_factor(const GContext *ctx, 
   src_color.a = (uint8_t)(factor * 3 / (FIXED_S16_3_ONE.raw_value - 1));
 
   const GColor blended_color = gcolor_alpha_blend(src_color, *dst_color);
-#if CAPABILITY_HAS_MASKING
-  const GDrawMask *mask = ctx->draw_state.draw_mask;
-  graphics_private_raw_mask_apply(dst_color, mask, data_offset, x, 1, blended_color);
-#else
   *dst_color = blended_color;
-#endif // CAPABILITY_HAS_MASKING
-
 #endif // (SCREEN_COLOR_DEPTH_BITS == 8)
 }
 
 static ALWAYS_INLINE void prv_set_color(const GContext *ctx, GColor *dst_color,
                                         unsigned int data_row_offset, int x, int width,
                                         GColor src_color) {
-#if CAPABILITY_HAS_MASKING
-  const GDrawMask *mask = ctx->draw_state.draw_mask;
-  graphics_private_raw_mask_apply(dst_color, mask, data_row_offset, x, width, src_color);
-#else
   memset(dst_color, src_color.argb, (size_t)width);
-#endif // CAPABILITY_HAS_MASKING
 }
 
 #if !PBL_COLOR

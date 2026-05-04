@@ -8,7 +8,6 @@
 #include "applib/graphics/gdraw_command_transforms.h"
 #include "applib/graphics/gpath.h"
 #include "applib/graphics/graphics_private_raw.h"
-#include "applib/graphics/graphics_private_raw_mask.h"
 #include "applib/ui/animation_interpolate.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "system/passert.h"
@@ -149,18 +148,9 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
   // Middle pixels
   const int16_t width = x2.integer - x1.integer + 1;
   if (width > 0) {
-#if CAPABILITY_HAS_MASKING
-    const GDrawMask *mask = ctx->draw_state.draw_mask;
-    for (int x = x1.integer; x < x1.integer + width; x++) {
-      graphics_private_raw_mask_apply(output, mask, data_row_offset, x, 1, *input);
-      input++;
-      output++;
-    }
-#else
     memcpy((uint8_t *)output, (uint8_t *)input, width);
     input += width;
     output += width;
-#endif
   }
 
   // Last pixel with blending (don't render first AND last pixel if line length is 1)
@@ -220,12 +210,7 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
   while (y1.integer <= y2.integer) {
     // Only draw the pixel if its within the bitmap data row range
     if (WITHIN(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {
-#if CAPABILITY_HAS_MASKING
-      const GDrawMask *mask = ctx->draw_state.draw_mask;
-      graphics_private_raw_mask_apply(output, mask, data_row_offset, x, 1, *input);
-#else
       *output = *input;
-#endif
     }
     y1.integer++;
     source_data_row_info = gbitmap_get_data_row_info(&app_framebuffer, y1.integer);
