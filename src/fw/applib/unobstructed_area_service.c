@@ -160,12 +160,17 @@ void unobstructed_area_service_unsubscribe(UnobstructedAreaState *state) {
 
 void unobstructed_area_service_get_area(UnobstructedAreaState *state, GRect *area_out) {
   if (state && area_out) {
+    state->has_requested_area = true;
     *area_out = state->area;
   }
 }
 
 bool unobstructed_area_service_is_subscribed(UnobstructedAreaState *state) {
   return state ? state->is_subscribed : false;
+}
+
+bool unobstructed_area_service_has_requested_area(UnobstructedAreaState *state) {
+  return state ? state->has_requested_area : false;
 }
 
 void app_unobstructed_area_service_subscribe(UnobstructedAreaHandlers handlers, void *context) {
