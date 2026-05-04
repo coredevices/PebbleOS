@@ -124,7 +124,6 @@ typedef struct {
 typedef struct {
   uint8_t backlight_on_percent;
   uint8_t backlight_max_duty_cycle_percent;
-  OutputConfig lcd_com;
   //ambient light config
   uint32_t ambient_light_dark_threshold;
   uint32_t ambient_k_delta_threshold;

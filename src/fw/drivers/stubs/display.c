@@ -24,9 +24,6 @@ bool display_update_in_progress(void) {
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 }
 
-void display_pulse_vcom(void) {
-}
-
 void display_update_boot_frame(void) {
   // The bootloader has already drawn the splash screen for us; nothing to do!
 }

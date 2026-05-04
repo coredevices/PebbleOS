@@ -203,10 +203,6 @@ typedef struct {
   const GpioteConfig dbgserial_int;
   const InputConfig dbgserial_int_gpio;
 
-  // Display Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const OutputConfig lcd_com; //!< This needs to be pulsed regularly to keep the sharp display fresh.
-
   const uint8_t backlight_on_percent; // percent of max possible brightness
   const uint8_t backlight_max_duty_cycle_percent; // Calibrated such that the preceived brightness
                     // of "backlight_on_percent = 100" (and all other values, to a reasonable

@@ -221,18 +221,9 @@ static void watchdog_timer_callback(void* data) {
   task_watchdog_bit_set(PebbleTask_NewTimers);
 }
 
-static void vcom_timer_callback(void* data) {
-  display_pulse_vcom();
-}
-
 static void register_system_timers(void) {
   static RegularTimerInfo watchdog_timer = { .list_node = { 0, 0 }, .cb = watchdog_timer_callback };
   regular_timer_add_seconds_callback(&watchdog_timer);
-
-  if (BOARD_CONFIG.lcd_com.gpio != 0) {
-    static RegularTimerInfo vcom_timer = { .list_node = { 0, 0 }, .cb = vcom_timer_callback };
-    regular_timer_add_seconds_callback(&vcom_timer);
-  }
 }
 
 static void init_drivers(void) {

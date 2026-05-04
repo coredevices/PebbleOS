@@ -126,10 +126,6 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   uccb();
 }
 
-void display_pulse_vcom(void) {
-  // No VCOM pulsing needed for QEMU display
-}
-
 void display_update_boot_frame(uint8_t *framebuffer) {
   uint32_t fb_addr = DISPLAY->fb_addr;
   uint16_t width = DISPLAY->width;
