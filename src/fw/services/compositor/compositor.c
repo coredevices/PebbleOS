@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/services/compositor/compositor.h"
-#include "pbl/services/compositor/compositor_dma.h"
 #include "pbl/services/compositor/compositor_display.h"
 
 #include "applib/graphics/bitblt.h"
@@ -89,10 +88,6 @@ static void prv_animation_update(Animation *animation, const AnimationProgress d
 static void prv_finish_transition(void);
 
 void compositor_init(void) {
-#if CAPABILITY_COMPOSITOR_USES_DMA && !TARGET_QEMU && !UNITTEST
-  compositor_dma_init();
-#endif
-
   const GSize fb_size = GSize(DISP_COLS, DISP_ROWS);
   framebuffer_init(&s_framebuffer, &fb_size);
   framebuffer_clear(&s_framebuffer);
@@ -146,20 +141,11 @@ void compositor_render_app(void) {
   app_manager_get_framebuffer_size(&app_framebuffer_size);
 
 
-#if CAPABILITY_COMPOSITOR_USES_DMA && !TARGET_QEMU && !UNITTEST
-  if (gsize_equal(&app_framebuffer_size, &s_framebuffer.size)) {
-    const FrameBuffer *app_framebuffer = app_state_get_framebuffer();
-    compositor_dma_run(s_framebuffer.buffer, app_framebuffer->buffer, FRAMEBUFFER_SIZE_BYTES);
-  } else {
-#endif
-    // Fill entire framebuffer with black first to avoid artifacts
-    GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
-    memset(dest_bitmap.addr, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
+  // Fill entire framebuffer with black first to avoid artifacts
+  GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
+  memset(dest_bitmap.addr, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
 
-    compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
-#if CAPABILITY_COMPOSITOR_USES_DMA && !TARGET_QEMU && !UNITTEST
-  }
-#endif
+  compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
 
   if (s_state == CompositorState_AppAndModal) {
     compositor_render_modal();

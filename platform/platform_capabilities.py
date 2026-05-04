@@ -12,7 +12,6 @@
 # Once added, add the capability to ALL capability dictionaries with the appropriate value.
 
 master_capability_set = {
-    "COMPOSITOR_USES_DMA",
     "HAS_DEFECTIVE_FW_CRC",
     "HAS_MAPPABLE_FLASH",
     "HAS_MASKING",
