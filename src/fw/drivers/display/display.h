@@ -38,8 +38,3 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb);
 bool display_update_in_progress(void);
 
 void display_pulse_vcom(void);
-
-//! Show the panic screen.
-//!
-//! This function is only defined if the display hardware and driver support it.
-void display_show_panic_screen(uint32_t error_code);
