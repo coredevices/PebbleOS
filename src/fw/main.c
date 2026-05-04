@@ -296,37 +296,6 @@ static void prv_low_power_debug_config_callback(void* data) {
   new_timer_delete(s_lowpower_timer);
 }
 
-#ifdef TEST_SJLJ
-static jmp_buf s_sjlj_jmpbuf;
-static volatile int s_sjlj_num;
-static void prv_sjlj_second(int r) {
-  PBL_ASSERT(s_sjlj_num == 1, "SJLJ TRACK INCORRECT @ SECOND");
-  s_sjlj_num++;
-  longjmp(s_sjlj_jmpbuf, 0);
-}
-static void prv_sjlj_first(int r) {
-  PBL_ASSERT(s_sjlj_num == 0, "SJLJ TRACK INCORRECT @ FIRST");
-  s_sjlj_num++;
-  prv_sjlj_second(r);
-  PBL_ASSERT(1, "SJLJ IS BROKEN (longjmp didn't occur)");
-}
-static void prv_sjlj_main(int r) {
-  PBL_ASSERT(s_sjlj_num == 2, "SJLJ TRACK INCORRECT @ MAIN");
-  s_sjlj_num++;
-  PBL_ASSERT(r == 1, "SETJMP IS BROKEN (longjmp value wasn't correct)");
-}
-static void prv_test_sjlj(void) {
-  int r;
-  s_sjlj_num = 0;
-  if (!(r = setjmp(s_sjlj_jmpbuf)))
-    prv_sjlj_first(r);
-  else
-    prv_sjlj_main(r);
-  PBL_ASSERT(s_sjlj_num == 3, "SJLJ TRACK INCORRECT @ END");
-  PBL_LOG_ALWAYS("sjlj works \\o/");
-}
-#endif
-
 static NOINLINE void prv_main_task_init(void) {
   // The Snowy bootloader does not clear the watchdog flag itself. Clear the
   // flag ourselves so that a future safe reset does not look like a watchdog
@@ -458,11 +427,6 @@ static NOINLINE void prv_main_task_init(void) {
 #ifdef DUMP_GPIO_CFG_STATE
   // at this point everything should be configured!
   dump_gpio_configuration_state();
-#endif
-
-#ifdef TEST_SJLJ
-  // Test setjmp/longjmp
-  prv_test_sjlj();
 #endif
 
   task_watchdog_resume();
