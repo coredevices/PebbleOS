@@ -74,7 +74,6 @@ static const char *s_syncable_settings[] = {
   "langEnglish",
 
   // App preferences
-  "watchface",
   "qlUp",
   "qlDown",
   "qlSelect",
