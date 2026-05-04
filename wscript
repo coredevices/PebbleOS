@@ -162,8 +162,6 @@ def options(opt):
                    help='Disable the MPU for 3rd party apps.')
     opt.add_option('--malloc_instrumentation', action='store_true',
                    help='Enables malloc instrumentation')
-    opt.add_option('--infinite_backlight', action='store_true',
-                   help='Makes the backlight never time-out.')
     opt.add_option('--variant', action='store', default='normal',
                    choices=['normal', 'prf'],
                    help='Build variant: normal (default) or prf (recovery firmware)')
@@ -291,10 +289,6 @@ def handle_configure_options(conf):
     if conf.options.no_link:
         conf.env.NO_LINK = True
         print("Not linking firmware")
-
-    if conf.options.infinite_backlight and 'bb' in conf.options.board:
-        conf.env.append_value('DEFINES', 'INFINITE_BACKLIGHT')
-        print("Enabling infinite backlight.")
 
     if not conf.options.no_pulse_everywhere and (not conf.options.release or conf.options.mfg):
         conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
