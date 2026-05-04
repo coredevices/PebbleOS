@@ -7,7 +7,6 @@
 #include "console/pulse_protocol_impl.h"
 #include "console_internal.h"
 #include "prompt.h"
-#include "ui_nudge.h"
 
 #include "console/pulse_internal.h"
 #include "drivers/mic.h"
@@ -110,12 +109,6 @@ void serial_console_set_state(SerialConsoleState new_state) {
       dbgserial_register_character_callback(logging_handle_character);
       dbgserial_set_rx_dma_enabled(false);
       break;
-#ifdef UI_DEBUG
-    case SERIAL_CONSOLE_STATE_LAYER_NUDGING:
-      dbgserial_register_character_callback(layer_debug_nudging_handle_character);
-      dbgserial_set_rx_dma_enabled(false);
-      break;
-#endif
     case SERIAL_CONSOLE_STATE_PULSE:
       dbgserial_register_character_callback(pulse_handle_character);
       dbgserial_set_rx_dma_enabled(true);
