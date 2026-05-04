@@ -36,22 +36,22 @@ void test_gbitmap_formats__create_blank(void) {
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat1BitPalette);
   cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_getafix_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(g_gbitmap_data_row_infos != bmp->data_row_infos); // union with .palette
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat2BitPalette);
   cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_getafix_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(g_gbitmap_data_row_infos != bmp->data_row_infos); // union with .palette
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat4BitPalette);
   cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_getafix_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(g_gbitmap_data_row_infos != bmp->data_row_infos); // union with .palette
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat8BitCircular);
   cl_assert(NULL == bmp);
 
   bmp = gbitmap_create_blank(s_full, GBitmapFormat8BitCircular);
   cl_assert(NULL != bmp);
-  cl_assert(g_gbitmap_getafix_data_row_infos == bmp->data_row_infos);
+  cl_assert(g_gbitmap_data_row_infos == bmp->data_row_infos);
 #endif
 }
 

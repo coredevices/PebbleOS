@@ -36,7 +36,7 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
 
   // PBL-24228 Support Circular PBIs
   uint16_t info_flags = bmp->info_flags;
-#if PLATFORM_SPALDING || PLATFORM_GETAFIX || PLATFORM_QEMU_GABBRO || PLATFORM_SPALDING_GABBRO
+#if PBL_ROUND
   if(bmp->info.format == GBitmapFormat8BitCircular) {
     // Have to force output format to 8Bit;
     ((BitmapInfo*)&info_flags)->format = GBitmapFormat8Bit;
@@ -52,7 +52,7 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
   fwrite(&info_flags, 2, 1, file);
   fwrite(&entire_bounds, sizeof(GRect), 1, file);
 
-#if PLATFORM_SPALDING || PLATFORM_GETAFIX || PLATFORM_QEMU_GABBRO || PLATFORM_SPALDING_GABBRO
+#if PBL_ROUND
   if(bmp->info.format == GBitmapFormat8BitCircular) {
     for (int y = 0; y < entire_bounds.size.h; ++y) {
       // 8-Bit circular buffer is centered in padded rows, so just grab row and write DISP_COLS
@@ -81,7 +81,7 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
 #endif
     size_t data_size = bmp->row_size_bytes * (entire_bounds.size.h);
     fwrite(bmp->addr, 1, data_size, file);
-#if PLATFORM_SPALDING || PLATFORM_GETAFIX || PLATFORM_QEMU_GABBRO || PLATFORM_SPALDING_GABBRO
+#if PBL_ROUND
   }
 #endif
 
