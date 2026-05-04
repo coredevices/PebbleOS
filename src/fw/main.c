@@ -423,12 +423,6 @@ static NOINLINE void prv_main_task_init(void) {
   // clock from reaching the bluetooth module and initialization fails.
   display_init();
 
-  // Use the MFG calibrated display offset to adjust the display
-  GPoint mfg_offset = mfg_info_get_disp_offsets();
-  display_set_offset(mfg_offset);
-  // Log display offsets for use in contact support logs
-  PBL_LOG_INFO("MFG Display Offsets (%"PRIi16",%"PRIi16").", mfg_offset.x, mfg_offset.y);
-  
   // Stop boot splash before initializing compositor
   boot_splash_stop();
   // Can't use the compositor framebuffer until the compositor is initialized

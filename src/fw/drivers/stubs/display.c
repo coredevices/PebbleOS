@@ -34,8 +34,3 @@ void display_update_boot_frame(void) {
 void display_show_panic_screen(uint32_t error_code)
 {
 }
-
-// Stubs for display offset
-void display_set_offset(GPoint offset) {}
-
-GPoint display_get_offset(void) { return GPointZero; }
