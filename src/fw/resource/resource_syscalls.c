@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "resource.h"
-#include "resource_mapped.h"
 
 #include "process_management/app_manager.h"
 #include "kernel/memory_layout.h"
@@ -67,14 +66,4 @@ DEFINE_SYSCALL(bool, sys_resource_is_valid, ResAppNum app_num, uint32_t resource
 
 DEFINE_SYSCALL(uint32_t, sys_resource_get_and_cache, ResAppNum app_num, uint32_t resource_id) {
   return resource_get_and_cache(app_num, resource_id);
-}
-
-DEFINE_SYSCALL(void, sys_resource_mapped_use) {
-  PebbleTask task = pebble_task_get_current();
-  resource_mapped_use(task);
-}
-
-DEFINE_SYSCALL(void, sys_resource_mapped_release) {
-  PebbleTask task = pebble_task_get_current();
-  resource_mapped_release(task);
 }
