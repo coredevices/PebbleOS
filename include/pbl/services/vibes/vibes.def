@@ -8,10 +8,8 @@ VIBE_DEF(4, StandardShortPulseHigh, i18n_noop("Standard - High"), AlertType_Noti
 VIBE_DEF(5, StandardLongPulseHigh, i18n_noop("Standard - High"), (AlertType_Calls | AlertType_Alarms), RESOURCE_ID_VIBE_SCORE_STANDARD_LONG_HIGH)
 VIBE_DEF(8, Pulse, i18n_noop("Pulse"), AlertType_All, RESOURCE_ID_VIBE_SCORE_PULSE)
 VIBE_DEF(9, NudgeNudge, i18n_noop("Nudge Nudge"), AlertType_All, RESOURCE_ID_VIBE_SCORE_NUDGE_NUDGE)
-#if !PLATFORM_SPALDING
 VIBE_DEF(10, Jackhammer, i18n_noop("Jackhammer"), AlertType_All, RESOURCE_ID_VIBE_SCORE_JACKHAMMER)
 VIBE_DEF(11, Reveille, "Reveille", AlertType_Alarms, RESOURCE_ID_VIBE_SCORE_REVEILLE)
 VIBE_DEF(12, Mario, "Mario", AlertType_All, RESOURCE_ID_VIBE_SCORE_MARIO)
-#endif
 VIBE_DEF(13, AlarmsLPM, "ALARMS LPM", AlertType_AlarmsLPM, RESOURCE_ID_VIBE_SCORE_ALARM_LPM)
 VIBE_DEF(14, Gentle, i18n_noop("Gentle"), AlertType_Alarms, RESOURCE_ID_VIBE_SCORE_GENTLE)
