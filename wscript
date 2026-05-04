@@ -151,8 +151,6 @@ def options(opt):
                    help='Disable the serial console to save space')
     opt.add_option('--build_test_apps', action='store_true',
                    help='Turns on building of test apps')
-    opt.add_option('--bb_large_spi', action='store_true',
-                   help='Sets a flag to use all 8MB of BigBoard flash')
     opt.add_option('--profiler', action='store_true', help='Enable the profiler.')
     opt.add_option('--profile_interrupts', action='store_true',
                    help='Enable profiling of all interrupts.')
@@ -263,10 +261,6 @@ def handle_configure_options(conf):
         print("Sandbox disabled")
     else:
         conf.env.append_value('DEFINES', 'APP_SANDBOX')
-
-    if conf.options.bb_large_spi:
-        conf.env.append_value('DEFINES', 'LARGE_SPI_FLASH')
-        print("Enabling 8MB BigBoard flash")
 
     if not conf.options.nolog:
         conf.env.append_value('DEFINES', 'PBL_LOG_ENABLED')
