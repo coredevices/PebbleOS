@@ -1,9 +1,5 @@
 #include "drivers/display/display.h"
 
-uint32_t display_baud_rate_change(uint32_t new_frequency_hz) {
-  return new_frequency_hz;
-}
-
 void display_init(void) {
 }
 

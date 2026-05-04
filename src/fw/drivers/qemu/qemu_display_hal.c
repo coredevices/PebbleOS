@@ -49,10 +49,6 @@ void display_init(void) {
   s_updating = false;
 }
 
-uint32_t display_baud_rate_change(uint32_t new_frequency_hz) {
-  return new_frequency_hz;
-}
-
 void display_clear(void) {
   uint32_t fb_addr = DISPLAY->fb_addr;
   uint16_t width = DISPLAY->width;
