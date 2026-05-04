@@ -127,7 +127,7 @@ static void prv_timeline_peek_msg_callback(const uint8_t *data, uint32_t len) {
   }
 
   PBL_LOG_DBG("Got timeline peek msg: enabled: %d", hdr->enabled);
-#if !RECOVERY_FW && CAPABILITY_HAS_TIMELINE_PEEK
+#if !RECOVERY_FW
   timeline_peek_set_enabled(hdr->enabled);
 #endif
 }

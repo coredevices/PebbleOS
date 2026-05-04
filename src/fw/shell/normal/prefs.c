@@ -205,7 +205,6 @@ static ActivityHRMSettings s_activity_hrm_preferences = ACTIVITY_HRM_DEFAULT_PRE
 #define PREF_KEY_ACTIVITY_HEART_RATE_PREFERENCES "heartRatePreferences"
 static HeartRatePreferences s_activity_hr_preferences = ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES;
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
 #define PREF_KEY_TIMELINE_SETTINGS_OPENED "timelineSettingsOpened"
 static uint8_t s_timeline_settings_opened = 0;
 
@@ -215,7 +214,6 @@ static bool s_timeline_peek_enabled = true;
 #define PREF_KEY_TIMELINE_PEEK_BEFORE_TIME_M "timelineQuickViewBeforeTimeMin"
 static uint16_t s_timeline_peek_before_time_m =
     (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
-#endif
 
 #define PREF_KEY_POWER_MODE "powerMode"
 #define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
@@ -603,7 +601,6 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
 }
 
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
 static uint8_t prv_set_s_timeline_settings_opened(uint8_t *version) {
   s_timeline_settings_opened = *version;
   return true;
@@ -627,7 +624,6 @@ static bool prv_set_s_timeline_peek_before_time_m(uint16_t *before_time_m) {
   timeline_peek_set_show_before_time(*before_time_m * SECONDS_PER_MINUTE);
   return true;
 }
-#endif
 
 static bool prv_set_s_power_mode(uint8_t *mode) {
   if (*mode >= PowerModeCount) {
@@ -1677,7 +1673,6 @@ uint8_t alarm_prefs_get_alarms_app_opened(void) {
   return s_alarms_app_opened;
 }
 
-#if CAPABILITY_HAS_TIMELINE_PEEK
 void timeline_prefs_set_settings_opened(uint8_t version) {
   prv_pref_set(PREF_KEY_TIMELINE_SETTINGS_OPENED, &version, sizeof(version));
 }
@@ -1701,11 +1696,6 @@ void timeline_peek_prefs_set_before_time(uint16_t before_time_m) {
 uint16_t timeline_peek_prefs_get_before_time(void) {
   return s_timeline_peek_before_time_m;
 }
-#else
-uint16_t timeline_peek_prefs_get_before_time(void) {
-  return TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S;
-}
-#endif
 
 bool shell_prefs_can_coredump_on_request(void) {
   return s_coredump_on_request_enabled;
