@@ -12,19 +12,9 @@
 #include "system/reset.h"
 #include "system/passert.h"
 
-#if defined(MICRO_FAMILY_STM32F4) && defined(TARGET_QEMU)
-#include <stm32f4xx.h>
-#endif
-
 #ifdef CONFIG_PMIC
 static NORETURN prv_enter_standby(void) {
-#if defined(MICRO_FAMILY_STM32F4) && defined(TARGET_QEMU)
-  periph_config_enable(PWR, RCC_APB1Periph_PWR);
-  pwr_enable_wakeup(true);
-  PWR_EnterSTANDBYMode();
-#else
   pmic_power_off();
-#endif
 
   PBL_CROAK("We were not shut down!");
 }

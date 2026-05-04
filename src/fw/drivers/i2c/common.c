@@ -72,113 +72,9 @@ void i2c_rail_ctl_pmic(I2CBus *bus, bool enable) {
 }
 #endif
 
-#if MICRO_FAMILY_STM32F4
-void i2c_rail_ctl_pin(I2CBus *bus, bool enable) {
-  gpio_output_set(&bus->rail_gpio, enable);
-}
-
-static void prv_rail_ctl(I2CBus *bus, bool enable) {
-  bus->rail_ctl_fn(bus, enable);
-  if (enable) {
-    // FIXME: The power tracking data is going to be bogus for any board with more than one bus
-    // with controllable power.
-    // https://pebbletechnology.atlassian.net/browse/PBL-32232 should address this
-    power_tracking_start(PowerSystem2v5Reg);
-    // wait for the bus supply to stabilize and the peripherals to start up.
-    // the MFI chip requires its reset pin to be stable for at least 10ms from startup.
-    psleep(20);
-  } else {
-    power_tracking_stop(PowerSystem2v5Reg);
-  }
-}
-
-//! Power down I2C bus power supply
-//! Always lock bus and peripheral config access before use
-static void prv_bus_rail_power_down(I2CBus *bus) {
-  if (!bus->rail_ctl_fn) {
-    return;
-  }
-  prv_rail_ctl(bus, false);
-
-  // Drain through pull-ups
-  OutputConfig out_scl = {
-    .gpio = bus->scl_gpio.gpio,
-    .gpio_pin = bus->scl_gpio.gpio_pin,
-    .active_high = true
-  };
-  gpio_output_init(&out_scl, GPIO_OType_OD, GPIO_Speed_2MHz);
-  gpio_output_set(&out_scl, false);
-
-  OutputConfig out_sda = {
-    .gpio = bus->sda_gpio.gpio,
-    .gpio_pin = bus->sda_gpio.gpio_pin,
-    .active_high = true
-  };
-  gpio_output_init(&out_sda, GPIO_OType_OD, GPIO_Speed_2MHz);
-  gpio_output_set(&out_sda, false);
-
-  bus->state->last_rail_stop_ticks = rtc_get_ticks();
-}
-
-//! Configure bus pins for use by I2C peripheral
-//! Lock bus and peripheral config access before configuring pins
-static void prv_bus_pins_cfg_i2c(I2CBus *bus) {
-  gpio_af_init(&bus->scl_gpio, GPIO_OType_OD, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
-  gpio_af_init(&bus->sda_gpio, GPIO_OType_OD, GPIO_Speed_50MHz, GPIO_PuPd_NOPULL);
-}
-
-static void prv_bus_pins_cfg_input(I2CBus *bus) {
-  InputConfig in_scl = {
-    .gpio = bus->scl_gpio.gpio,
-    .gpio_pin = bus->scl_gpio.gpio_pin,
-  };
-  gpio_input_init(&in_scl);
-
-  InputConfig in_sda = {
-    .gpio = bus->sda_gpio.gpio,
-    .gpio_pin = bus->sda_gpio.gpio_pin,
-  };
-  gpio_input_init(&in_sda);
-}
-
-//! Power up I2C bus power supply
-//! Always lock bus and peripheral config access before use
-static void prv_bus_rail_power_up(I2CBus *bus) {
-  if (!bus->rail_ctl_fn) {
-    return;
-  }
-
-  static const uint32_t MIN_STOP_TIME_MS = 10;
-
-  // check that at least enough time has elapsed since the last turn-off
-  RtcTicks time_stopped_ms =
-      ((rtc_get_ticks() - bus->state->last_rail_stop_ticks) * RTC_TICKS_HZ) / 1000;
-  I2C_DEBUG("Bus %s rail start after a delay of %"PRIu32"ms", bus->name,
-                  (uint32_t)time_stopped_ms);
-
-  if (time_stopped_ms < MIN_STOP_TIME_MS) {
-    I2C_DEBUG("Waiting %"PRIu32"ms before enabling I2C bus %s rail.",
-              (uint32_t)(MIN_STOP_TIME_MS - time_stopped_ms), bus->name);
-    psleep(MIN_STOP_TIME_MS - time_stopped_ms);
-  }
-
-  prv_bus_pins_cfg_input(bus);
-
-  prv_rail_ctl(bus, true);
-}
-#endif
-
 //! Configure the bus pins, enable the peripheral clock and initialize the I2C peripheral.
 //! Always lock the bus and peripheral config access before enabling it
 static void prv_bus_enable(I2CBus *bus) {
-#if MICRO_FAMILY_STM32F4
-  // Don't power up rail if the bus is already in use (enable can be called to reset bus)
-  if (bus->state->user_count ==  0) {
-    prv_bus_rail_power_up(bus);
-  }
-
-  prv_bus_pins_cfg_i2c(bus);
-#endif
   i2c_hal_enable(bus);
 }
 
@@ -187,15 +83,6 @@ static void prv_bus_enable(I2CBus *bus) {
 //! Always lock the bus and peripheral config access before disabling it
 static void prv_bus_disable(I2CBus *bus) {
   i2c_hal_disable(bus);
-#if MICRO_FAMILY_STM32F4
-  // Do not de-power rail if there are still devices using bus (just reset peripheral and pin
-  // configuration during a bus reset)
-  if (bus->state->user_count == 0) {
-    prv_bus_rail_power_down(bus);
-  } else {
-    prv_bus_pins_cfg_input(bus);
-  }
-#endif
 }
 
 //! Perform a soft reset of the bus
@@ -219,13 +106,6 @@ void i2c_init(I2CBus *bus) {
   xSemaphoreGive(bus->state->event_semaphore);
 
   i2c_hal_init(bus);
-
-#if MICRO_FAMILY_STM32F4
-  if (bus->rail_gpio.gpio) {
-    gpio_output_init(&bus->rail_gpio, GPIO_OType_PP, GPIO_Speed_2MHz);
-  }
-  prv_bus_rail_power_down(bus);
-#endif
 }
 
 void i2c_use(I2CSlavePort *slave) {
@@ -286,67 +166,10 @@ void i2c_reset(I2CSlavePort *slave) {
   mutex_unlock(slave->bus->state->bus_mutex);
 }
 
-#if MICRO_FAMILY_STM32F4
-bool i2c_bitbang_recovery(I2CSlavePort *slave) {
-  PBL_ASSERTN(slave);
-
-  static const int MAX_TOGGLE_COUNT = 10;
-  static const int TOGGLE_DELAY = 10;
-
-  // Protect access to bus
-  mutex_lock(slave->bus->state->bus_mutex);
-
-  if (slave->bus->state->user_count == 0) {
-    PBL_LOG_ERR("Attempted bitbang recovery on disabled bus %s", slave->bus->name);
-    mutex_unlock(slave->bus->state->bus_mutex);
-    return false;
-  }
-
-  InputConfig in_sda = {
-    .gpio = slave->bus->sda_gpio.gpio,
-    .gpio_pin = slave->bus->sda_gpio.gpio_pin,
-  };
-  gpio_input_init(&in_sda);
-
-  OutputConfig out_scl = {
-    .gpio = slave->bus->scl_gpio.gpio,
-    .gpio_pin = slave->bus->scl_gpio.gpio_pin,
-    .active_high = true
-  };
-  gpio_output_init(&out_scl, GPIO_OType_OD, GPIO_Speed_2MHz);
-  gpio_output_set(&out_scl, true);
-
-  bool recovered = false;
-  for (int i = 0; i < MAX_TOGGLE_COUNT; ++i) {
-    gpio_output_set(&out_scl, false);
-    psleep(TOGGLE_DELAY);
-    gpio_output_set(&out_scl, true);
-    psleep(TOGGLE_DELAY);
-
-    if (gpio_input_read(&in_sda)) {
-      recovered = true;
-      break;
-    }
-  }
-  if (recovered) {
-    PBL_LOG_DBG("I2C Bus %s recovered", slave->bus->name);
-  } else {
-    PBL_LOG_ERR("I2C Bus %s still hung after bitbang reset", slave->bus->name);
-  }
-
-  prv_bus_pins_cfg_i2c(slave->bus);
-  prv_bus_reset(slave->bus);
-
-  mutex_unlock(slave->bus->state->bus_mutex);
-
-  return recovered;
-}
-#else
 bool i2c_bitbang_recovery(I2CSlavePort *slave) {
   PBL_LOG_ERR("I2C bitbang recovery not supported on this platform");
   return false;
 }
-#endif
 
 /*--------------------DATA TRANSFER FUNCTIONS--------------------------*/
 

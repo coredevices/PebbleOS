@@ -62,9 +62,6 @@ typedef struct I2CBusState {
   int transfer_nack_count;
   RtcTicks transfer_start_ticks;
   int user_count;
-#if MICRO_FAMILY_STM32F4
-  RtcTicks last_rail_stop_ticks;
-#endif
   SemaphoreHandle_t event_semaphore;
   PebbleMutex *bus_mutex;
 } I2CBusState;
@@ -72,13 +69,9 @@ typedef struct I2CBusState {
 struct I2CBus {
   I2CBusState *const state;
   const struct I2CBusHal *const hal;
-#if MICRO_FAMILY_STM32F4 || MICRO_FAMILY_NRF52
+#if MICRO_FAMILY_NRF52
   AfConfig scl_gpio;  ///< Alternate Function configuration for SCL pin
   AfConfig sda_gpio;  ///< Alternate Function configuration for SDA pin
-#endif
-#if MICRO_FAMILY_STM32F4
-  OutputConfig rail_gpio;  ///< Control pin for rail
-  void (* const rail_ctl_fn)(I2CBus *device, bool enabled); ///< Control function for this rail.
 #endif
   StopModeInhibitor stop_mode_inhibitor;
   const char *name;  //! Device ID for logging purposes

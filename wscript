@@ -1408,17 +1408,6 @@ def flash_everything(ctx, fw_bin):
         ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
 
 
-def force_flash(ctx):
-    """forces a connected device into a flashing state"""
-    if ctx.env.RUNNER == 'openocd':
-        reset_config = waftools.openocd._get_reset_conf(ctx, True)
-        reset_cmd = "reset_config %s; " % reset_config
-        waftools.openocd.run_command(ctx, reset_cmd + 'init; reset halt;', ignore_fail=True)
-        waftools.openocd.run_command(ctx, reset_cmd + 'init; stm32x unlock 0;', ignore_fail=True)
-    else:
-        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
-
-
 class ResetDevice(BuildContext):
     cmd = 'reset'
     fun = 'reset'

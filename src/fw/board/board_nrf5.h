@@ -53,7 +53,7 @@ enum {
 /*
  * The above static assert checks that the requested IRQ is valid by checking that the enum
  * value (generated above) is declared. The static assert itself will not trip, but you will get
- * a compilation error from that line if the IRQ does not exist within irq_stm32*.def.
+ * a compilation error from that line if the IRQ does not exist within irq_nrf52.def.
  */
 
 // There are a lot of DMA streams and they are very straight-forward to define. Let's use some
