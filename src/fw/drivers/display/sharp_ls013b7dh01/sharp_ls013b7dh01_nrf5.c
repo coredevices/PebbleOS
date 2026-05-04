@@ -230,8 +230,4 @@ bool display_update_in_progress(void) {
 
 /* stubs */
 
-uint32_t display_baud_rate_change(uint32_t new_frequency_hz) {
-  return new_frequency_hz;
-}
-
 void display_update_boot_frame(uint8_t *framebuffer) {}
