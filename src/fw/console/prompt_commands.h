@@ -70,7 +70,6 @@ extern void command_erase_flash(const char*, const char*);
 extern void command_flash_read(const char*, const char*);
 extern void command_flash_switch_mode(const char*);
 extern void command_flash_fill(const char*, const char*, const char*);
-extern void command_flash_test(const char* test_case_num_str, const char* iterations_str);
 extern void command_flash_test_locked_sectors(void);
 extern void command_flash_stress(const char *);
 extern void command_flash_benchmark(void);
@@ -394,9 +393,6 @@ static const Command s_prompt_commands[] = {
   { "flash read", command_flash_read, 2},
   { "flash switchmode", command_flash_switch_mode, 1},
   { "flash fill", command_flash_fill, 3},
-#if CAPABILITY_USE_PARALLEL_FLASH
-  { "flash test", command_flash_test, 2},
-#endif
   { "flash validate", command_flash_validate, 0},
   { "flash erased_sectors", command_flash_show_erased_sectors, 1},
 #if CAPABILITY_HAS_FLASH_OTP

@@ -5,8 +5,6 @@
 
 #include <stdint.h>
 
-#define CAPABILITY_USE_PARALLEL_FLASH 1
-
 typedef struct {
   const uint8_t backlight_on_percent; // percent of max possible brightness
 } BoardConfig;
