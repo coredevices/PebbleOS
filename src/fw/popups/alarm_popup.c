@@ -26,7 +26,6 @@
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score.h"
 
-#if !TINTIN_FORCE_FIT
 #define DIALOG_TIMEOUT_SNOOZE 2000
 #define DIALOG_TIMEOUT_DISMISS DIALOG_TIMEOUT_SNOOZE
 
@@ -204,9 +203,7 @@ static void prv_cleanup_alarm_popup(void *callback_context) {
 
 // ----------------------------------------------------------------------------------------------
 //! API
-#endif
 void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
-#if !TINTIN_FORCE_FIT
   if (s_alarm_popup_data) {
     // The window is already visible, don't show another one
     return;
@@ -243,7 +240,4 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   prv_start_vibes();
 
   light_enable_interaction();
-#else
-  return;
-#endif
 }

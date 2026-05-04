@@ -25,7 +25,6 @@
 
 #define WEATHER_CARD_TITLE_LENGTH 30 // We're limited to one line for this layout
 
-#if !TINTIN_FORCE_FIT
 //////////////////////////////////////////
 //  Card Mode
 //////////////////////////////////////////
@@ -219,8 +218,3 @@ LayoutLayer *weather_layout_create(const LayoutLayerConfig *config) {
 
   return (LayoutLayer *)layout;
 }
-#else
-LayoutLayer *weather_layout_create(const LayoutLayerConfig *config) { return NULL; }
-
-bool weather_layout_verify(bool existing_attributes[]) { return false; }
-#endif
