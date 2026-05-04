@@ -12,15 +12,8 @@ from waflib import Logs
 
 
 JTAG_OPTIONS = {
-    "olimex": "source [find interface/ftdi/olimex-arm-usb-ocd-h.cfg]",
-    "fixture": "source [find interface/flossjtag-noeeprom.cfg]",
-    "bb2": "source waftools/openocd_bb2_ftdi.cfg",
-    "bb2-legacy": "source waftools/openocd_bb2_ft2232.cfg",
-    "jtag_ftdi": "source waftools/openocd_jtag_ftdi.cfg",
-    "swd_ftdi": "source waftools/openocd_swd_ftdi.cfg",
     "swd_jlink": "source waftools/openocd_swd_jlink.cfg",
     "swd_tigard": "source waftools/openocd_swd_tigard.cfg",
-    "swd_stlink": "source [find interface/stlink-v2.cfg]",
     "swd_cmsisdap": "source waftools/openocd_swd_cmsisdap.cfg",
 }
 
@@ -178,13 +171,6 @@ def _get_adapter_speed(conf):
 
 def write_cfg(conf):
     jtag = conf.env.OPENOCD_JTAG
-    if jtag == "bb2":
-        if "ftdi" not in _get_supported_interfaces(conf):
-            jtag = "bb2-legacy"
-            Logs.warn(
-                "OpenOCD is not compiled with --enable-ftdi, falling"
-                " back to legacy ft2232 driver."
-            )
 
     if conf.env.MICRO_FAMILY == "NRF52":
         target = "nrf52.cfg"
