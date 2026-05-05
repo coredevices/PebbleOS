@@ -40,6 +40,21 @@ void alerts_preferences_dnd_set_motion_backlight(bool enable);
 //! @return Whether motion backlight is enabled when DND is active
 bool alerts_preferences_dnd_get_motion_backlight(void);
 
+//! Set whether the speaker should be muted while DND is active.
+//! @param enable true to mute the speaker during DND, false to allow audio
+void alerts_preferences_dnd_set_mute_speaker(bool enable);
+
+//! @return Whether the speaker is muted while DND is active
+bool alerts_preferences_dnd_get_mute_speaker(void);
+
+//! Set the always-on speaker mute. When set, the speaker is silenced
+//! regardless of DND state.
+//! @param muted true to mute the speaker, false to allow audio
+void alerts_preferences_set_speaker_muted(bool muted);
+
+//! @return Whether the speaker is always-on muted
+bool alerts_preferences_get_speaker_muted(void);
+
 //! Checks whether a given "first use" dialog has been shown and sets it as complete
 //! @param source The "first use" bit to check
 //! @return true if the dialog has already been shown, false otherwise
