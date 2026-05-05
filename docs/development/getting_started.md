@@ -5,18 +5,16 @@ Follow this guide to:
 - Set up a command-line PebbleOS development environment
 - Get the source code
 
-## ARM toolchain + system-level dependencies
+## PebbleOS SDK
 
-First, download the Arm GNU toolchain `arm-none-eabi` 14.2.Rel1 from [here](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads).
-Make sure to make it available on your path `PATH` and then check GCC version is reported correctly:
+Install the [PebbleOS SDK](https://github.com/coredevices/PebbleOS-SDK), which
+bundles the ARM GNU toolchain, Pebble QEMU, and other tools:
 
 ```shell
-$ arm-none-eabi-gcc --version
-arm-none-eabi-gcc (Arm GNU Toolchain 14.2.Rel1 (Build arm-14.52)) 14.2.1 20241119
-Copyright (C) 2024 Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+curl -LsSf https://github.com/coredevices/PebbleOS-SDK/releases/latest/download/pebbleos-sdk-installer.sh | sh
 ```
+
+## System-level dependencies
 
 A series of system-level dependencies are required.
 Follow the next steps to install them.
