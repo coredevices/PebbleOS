@@ -569,29 +569,58 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
   const int16_t disp_height = dst_bitmap.bounds.size.h;
   // Check if we should use scaling mode for legacy apps
   const LegacyAppRenderMode render_mode = shell_prefs_get_legacy_app_render_mode();
-  if (squish_watchface_for_peek || (render_mode >= LegacyAppRenderMode_ScalingNearest)) {
+  const bool should_scale_app =
+      (render_mode >= LegacyAppRenderMode_ScalingNearest) || squish_watchface_for_peek ||
+      (shift_watchface_for_peek && prv_app_framebuffer_matches_display());
+  if (should_scale_app) {
     const bool bilinear = (render_mode == LegacyAppRenderMode_ScalingBilinear);
+    const bool shift_scaled_watchface_for_peek =
+        shift_watchface_for_peek && !squish_watchface_for_peek;
     const GRect scale_to = squish_watchface_for_peek
         ? GRect(0, 0, disp_width, timeline_peek_get_origin_y())
         : GRect(0, 0, disp_width, disp_height);
+
+    if (shift_scaled_watchface_for_peek) {
+      int16_t first_row = CLIP(update_rect.origin.y, 0, DISP_ROWS - 1);
+      int16_t last_row = CLIP(update_rect.origin.y + update_rect.size.h, first_row, DISP_ROWS);
+      for (int16_t y = first_row; y < last_row; y++) {
+        GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
+        const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
+        const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w,
+                                  dst_row_info.max_x + 1);
+        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      }
+    }
 
     // Calculate scaling factors using fixed-point arithmetic (16.16 format)
     // This gives us sub-pixel precision for better scaling
     const uint32_t scale_x = ((uint32_t)app_width << 16) / scale_to.size.w;
     const uint32_t scale_y = ((uint32_t)app_height << 16) / scale_to.size.h;
+    const int16_t app_shift_y = timeline_peek_get_origin_y() - scale_to.size.h;
 
     for (int16_t dst_y = 0; dst_y < update_rect.size.h; dst_y++) {
       const int16_t dst_y_offset = dst_y + update_rect.origin.y + offset_y;
       if (dst_y_offset < 0 || dst_y_offset >= disp_height) continue;
-      if (squish_watchface_for_peek &&
-          (dst_y_offset < scale_to.origin.y ||
-           dst_y_offset >= scale_to.origin.y + scale_to.size.h)) {
+      if ((squish_watchface_for_peek &&
+           (dst_y_offset < scale_to.origin.y ||
+            dst_y_offset >= scale_to.origin.y + scale_to.size.h)) ||
+          (shift_scaled_watchface_for_peek &&
+           (dst_y_offset >= timeline_peek_get_origin_y()))) {
         continue;
       }
 
-      const uint16_t dst_y_coord = squish_watchface_for_peek
-          ? (dst_y_offset - scale_to.origin.y)
-          : copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
+      uint16_t dst_y_coord;
+      if (squish_watchface_for_peek) {
+        dst_y_coord = dst_y_offset - scale_to.origin.y;
+      } else if (shift_scaled_watchface_for_peek) {
+        const int16_t shifted_y = dst_y_offset - app_shift_y;
+        if (shifted_y < 0 || shifted_y >= scale_to.size.h) {
+          continue;
+        }
+        dst_y_coord = shifted_y;
+      } else {
+        dst_y_coord = copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
+      }
       const uint32_t src_y_fixed = (uint32_t)dst_y_coord * scale_y;
       const int16_t src_y = src_y_fixed >> 16;
 
