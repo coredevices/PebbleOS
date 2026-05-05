@@ -6,6 +6,7 @@
   #include <drivers/uart.h>
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
+#include <bf0_hal.h>
 #include <kernel/pebble_tasks.h>
 #include <system/hexdump.h>
 #include <system/logging.h>
@@ -305,7 +306,12 @@ void ble_transport_ll_deinit(void) {
   ipc_queue_close(s_ipc_port);
   ipc_queue_deinit(s_ipc_port);
   s_ipc_port = IPC_QUEUE_INVALID_HANDLE;
+  // lcpu_power_off() touches LPSYS_AON registers, which are only reachable while
+  // the HP→LP wake request is held. Without this the second invocation faults
+  // because the LP system is asleep after the prior power-on cancelled its request.
+  HAL_HPAON_WakeCore(CORE_ID_LCPU);
   lcpu_power_off();
+  HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
 }
 
 /* APIs to be implemented by HS/LL side of transports */
