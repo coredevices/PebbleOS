@@ -23,6 +23,18 @@ typedef enum {
 //! @return true if the codepoint is a shapeable Arabic letter
 bool arabic_is_shapeable(Codepoint cp);
 
+//! Shape a single Arabic codepoint based on its neighbors.
+//!
+//! Returns the contextual presentation form for `curr_cp` given the
+//! previous and next codepoints. Pass 0 for `prev_cp` / `next_cp` when
+//! the letter is at a string or segment boundary. Non-Arabic codepoints
+//! are returned unchanged, so this helper is safe to call for any
+//! codepoint and acts as a no-op outside the shapeable range.
+//!
+//! Used by both the renderer and the layout/measurement path so that
+//! width computation matches what is actually drawn.
+Codepoint arabic_shape_codepoint(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp);
+
 //! Shape Arabic text by converting basic Arabic letters to their
 //! contextual presentation forms based on position in words.
 //!
