@@ -37,6 +37,12 @@ static DndNotificationMode s_dnd_show_notifications = DndNotificationModeShow;
 #define PREF_KEY_DND_MOTION_BACKLIGHT "dndMotionBacklight"
 static bool s_dnd_motion_backlight = true;
 
+#define PREF_KEY_DND_MUTE_SPEAKER "dndMuteSpeaker"
+static bool s_dnd_mute_speaker = false;
+
+#define PREF_KEY_SPEAKER_MUTED "speakerMuted"
+static bool s_speaker_muted = false;
+
 #define PREF_KEY_VIBE "vibe"
 static bool s_vibe_on_notification = true;
 
@@ -290,6 +296,8 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_DND_INTERRUPTIONS_MASK, s_dnd_interruptions_mask);
   RESTORE_PREF(PREF_KEY_DND_SHOW_NOTIFICATIONS, s_dnd_show_notifications);
   RESTORE_PREF(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
+  RESTORE_PREF(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
+  RESTORE_PREF(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
   RESTORE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE, s_legacy_dnd_schedule);
   RESTORE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE_ENABLED, s_legacy_dnd_schedule_enabled);
   RESTORE_PREF(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
@@ -389,6 +397,15 @@ void alerts_preferences_set_notification_backlight(bool enable) {
   SET_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
 }
 
+bool alerts_preferences_get_speaker_muted(void) {
+  return s_speaker_muted;
+}
+
+void alerts_preferences_set_speaker_muted(bool muted) {
+  s_speaker_muted = muted;
+  SET_PREF(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Vibes
 
@@ -476,6 +493,15 @@ void alerts_preferences_dnd_set_motion_backlight(bool enable) {
 
 bool alerts_preferences_dnd_get_motion_backlight(void) {
   return s_dnd_motion_backlight;
+}
+
+void alerts_preferences_dnd_set_mute_speaker(bool enable) {
+  s_dnd_mute_speaker = enable;
+  SET_PREF(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
+}
+
+bool alerts_preferences_dnd_get_mute_speaker(void) {
+  return s_dnd_mute_speaker;
 }
 
 bool alerts_preferences_dnd_is_manually_enabled(void) {
@@ -591,6 +617,8 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
   RELOAD_IF_MATCH(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
+  RELOAD_IF_MATCH(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
+  RELOAD_IF_MATCH(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
 
 #undef RELOAD_IF_MATCH
 
