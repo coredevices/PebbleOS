@@ -5,6 +5,7 @@
 #include "gap_le_connect.h"
 
 #include <bluetooth/bt_driver_advert.h>
+#include <bluetooth/init.h>
 
 #include "comm/ble/ble_log.h"
 #include "comm/bt_lock.h"
@@ -606,6 +607,28 @@ void gap_le_advert_handle_disconnect_as_slave(void) {
     // Call prv_perform_next_job() to trigger refreshing the configuration of
     // the controller: it can advertise connectable packets again.
     prv_perform_next_job(true /* force refresh, connectability mode changed */);
+  }
+unlock:
+  bt_unlock();
+}
+
+// -----------------------------------------------------------------------------
+void bt_driver_handle_host_resynced(void) {
+  bt_lock();
+  {
+    if (!s_gap_le_advert_is_initialized) {
+      goto unlock;
+    }
+
+    // The controller's advertising state was wiped by the host re-sync, so any
+    // cached pointer to ad data we already pushed is stale and any prior
+    // adv-enable failed mid-flight.
+    s_current_ad_data = NULL;
+    s_is_advertising = false;
+
+    if (s_current && !s_is_connected) {
+      prv_perform_next_job(true /* force refresh */);
+    }
   }
 unlock:
   bt_unlock();

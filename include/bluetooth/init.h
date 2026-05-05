@@ -31,3 +31,8 @@ void bt_driver_stop(void);
 
 //! Powers down the BT controller if has yet to be used
 void bt_driver_power_down_controller_on_boot(void);
+
+//! Invoked by the BT driver each time the host (re-)synchronizes with the controller.
+//! Consumers can use this to refresh controller state that gets wiped on a host reset
+//! (e.g. advertising data and parameters).
+extern void bt_driver_handle_host_resynced(void);
