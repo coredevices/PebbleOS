@@ -85,7 +85,7 @@ static uint16_t s_before_time_values[PeekBeforeTimingMenuIndexCount] = {
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 static const char *s_unsupported_faces_strings[UnsupportedFacesMenuIndexCount] = {
   /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
-  i18n_noop("Nothing"),
+  i18n_noop("Overlay"),
   /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
   i18n_noop("Shift up"),
   /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
