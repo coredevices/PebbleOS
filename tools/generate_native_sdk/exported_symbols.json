@@ -4576,6 +4576,10 @@
               "type": "function",
               "name": "speaker_set_finish_callback",
               "addedRevision": "97"
+            }, {
+              "type": "function",
+              "name": "speaker_is_muted",
+              "addedRevision": "100"
             }
           ]
         }, {
