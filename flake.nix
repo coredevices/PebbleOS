@@ -8,32 +8,74 @@
   outputs =
     { self, nixpkgs }:
     let
-      forSupportedSystems = nixpkgs.lib.genAttrs [
-        "x86_64-linux"
-        "aarch64-linux"
-        "aarch64-darwin"
-      ];
+      sdkVersion = "0.1.0";
+      sdkBundles = {
+        aarch64-darwin = {
+          osArch = "darwin-aarch64";
+          sha256 = "3ed0f1b387f53bdcab8715fc7563ff3ffef6fd13b211d982a530494f605b42b3";
+        };
+        aarch64-linux = {
+          osArch = "linux-aarch64";
+          sha256 = "eeecb84898d5564ed482169f9eec6d8e05dcc00a206ffa6ef4ad980d8f020a59";
+        };
+        x86_64-linux = {
+          osArch = "linux-x86_64";
+          sha256 = "3893a17daa7d0aa54bd18b2b88e0a9a2d92f5ef34275f55c911c323c46cb31db";
+        };
+      };
+      forSupportedSystems = nixpkgs.lib.genAttrs (builtins.attrNames sdkBundles);
     in
     {
       devShells = forSupportedSystems (
         system:
         let
           pkgs = import nixpkgs { inherit system; };
-          gcc-arm-embedded-14_2r1 = pkgs.gcc-arm-embedded.overrideAttrs (old: rec {
-            version = "14.2.rel1";
+          bundle = sdkBundles.${system};
+          pebbleos-sdk = pkgs.stdenv.mkDerivation {
+            pname = "pebbleos-sdk";
+            version = sdkVersion;
             src = pkgs.fetchurl {
-              url = "https://developer.arm.com/-/media/Files/downloads/gnu/${version}/binrel/arm-gnu-toolchain-${version}-${old.platform}-arm-none-eabi.tar.xz";
-              # hashes obtained from location ${url}.sha256asc
-              sha256 =
-                {
-                  aarch64-darwin = "c7c78ffab9bebfce91d99d3c24da6bf4b81c01e16cf551eb2ff9f25b9e0a3818";
-                  aarch64-linux = "87330bab085dd8749d4ed0ad633674b9dc48b237b61069e3b481abd364d0a684";
-                  x86_64-linux = "62a63b981fe391a9cbad7ef51b17e49aeaa3e7b0d029b36ca1e9c3b2a9b78823";
-                }
-                .${pkgs.stdenv.hostPlatform.system}
-                  or (throw "Unsupported system: ${pkgs.stdenv.hostPlatform.system}");
+              url = "https://github.com/coredevices/PebbleOS-SDK/releases/download/v${sdkVersion}/pebbleos-sdk-${sdkVersion}-${bundle.osArch}.tar.gz";
+              sha256 = bundle.sha256;
             };
-          });
+
+            nativeBuildInputs = pkgs.lib.optionals pkgs.stdenv.isLinux [
+              pkgs.autoPatchelfHook
+            ];
+            buildInputs = pkgs.lib.optionals pkgs.stdenv.isLinux (with pkgs; [
+              # arm-none-eabi host binaries (matches nixpkgs gcc-arm-embedded)
+              ncurses6
+              libxcrypt-legacy
+              xz
+              zstd
+              # qemu-pebble host binaries
+              glib
+              pixman
+              zlib
+              stdenv.cc.cc.lib
+            ]);
+
+            dontConfigure = true;
+            dontBuild = true;
+            dontStrip = true;
+
+            installPhase = ''
+              runHook preInstall
+              bash install.sh --prefix "$out" --defaults --force
+              # gdb-py variants need a Python 3.8 not packaged in nixpkgs.
+              rm -f "$out"/arm-none-eabi/bin/arm-none-eabi-gdb-py \
+                    "$out"/arm-none-eabi/bin/arm-none-eabi-gdb-add-index-py
+              # Surface every SDK binary under $out/bin so PATH inclusion picks them up.
+              mkdir -p "$out/bin"
+              for d in arm-none-eabi/bin qemu/bin sftool; do
+                [ -d "$out/$d" ] || continue
+                for f in "$out/$d"/*; do
+                  [ -f "$f" ] && [ -x "$f" ] && ln -sf "$f" "$out/bin/$(basename "$f")"
+                done
+              done
+              runHook postInstall
+            '';
+          };
         in
         {
           default = pkgs.mkShellNoCC {
@@ -42,7 +84,7 @@
               pkg-config
             ];
             buildInputs = with pkgs; [
-              gcc-arm-embedded-14_2r1
+              pebbleos-sdk
               gettext
               git
               librsvg
