@@ -50,7 +50,7 @@
   PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_ENABLED, s_timeline_peek_enabled)
   PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_BEFORE_TIME_M, s_timeline_peek_before_time_m)
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
-  PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT, s_timeline_peek_watchface_fit_enabled)
+  PREFS_MACRO(PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT, s_timeline_peek_unsupported_face_mode)
 #endif
   PREFS_MACRO(PREF_KEY_POWER_MODE, s_power_mode)
   PREFS_MACRO(PREF_KEY_COREDUMP_ON_REQUEST, s_coredump_on_request_enabled)

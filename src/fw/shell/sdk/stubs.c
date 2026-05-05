@@ -121,9 +121,9 @@ uint16_t timeline_peek_prefs_get_before_time(void) {
   return (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
 }
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
-void timeline_peek_prefs_set_watchface_fit_enabled(bool enabled) {}
-bool timeline_peek_prefs_get_watchface_fit_enabled(void) {
-  return false;
+void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMode mode) {}
+TimelinePeekUnsupportedFaceMode timeline_peek_prefs_get_unsupported_face_mode(void) {
+  return TimelinePeekUnsupportedFaceMode_None;
 }
 #endif
 

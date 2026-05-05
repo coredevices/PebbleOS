@@ -223,7 +223,7 @@ static uint16_t s_timeline_peek_before_time_m =
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 #define PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT "timelineQuickViewWatchfaceFit"
-static bool s_timeline_peek_watchface_fit_enabled = false;
+static uint8_t s_timeline_peek_unsupported_face_mode = TimelinePeekUnsupportedFaceMode_None;
 #endif
 
 #define PREF_KEY_POWER_MODE "powerMode"
@@ -643,8 +643,11 @@ static bool prv_set_s_timeline_peek_before_time_m(uint16_t *before_time_m) {
 }
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
-static bool prv_set_s_timeline_peek_watchface_fit_enabled(bool *enabled) {
-  s_timeline_peek_watchface_fit_enabled = *enabled;
+static bool prv_set_s_timeline_peek_unsupported_face_mode(uint8_t *mode) {
+  if (*mode >= TimelinePeekUnsupportedFaceModeCount) {
+    return false;
+  }
+  s_timeline_peek_unsupported_face_mode = *mode;
   return true;
 }
 #endif
@@ -1738,12 +1741,13 @@ uint16_t timeline_peek_prefs_get_before_time(void) {
 }
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
-void timeline_peek_prefs_set_watchface_fit_enabled(bool enabled) {
-  prv_pref_set(PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT, &enabled, sizeof(enabled));
+void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMode mode) {
+  uint8_t mode_value = mode;
+  prv_pref_set(PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT, &mode_value, sizeof(mode_value));
 }
 
-bool timeline_peek_prefs_get_watchface_fit_enabled(void) {
-  return s_timeline_peek_watchface_fit_enabled;
+TimelinePeekUnsupportedFaceMode timeline_peek_prefs_get_unsupported_face_mode(void) {
+  return (TimelinePeekUnsupportedFaceMode)s_timeline_peek_unsupported_face_mode;
 }
 #endif
 

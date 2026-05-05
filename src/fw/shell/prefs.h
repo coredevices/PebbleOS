@@ -149,8 +149,15 @@ bool timeline_peek_prefs_get_enabled(void);
 void timeline_peek_prefs_set_before_time(uint16_t before_time_m);
 uint16_t timeline_peek_prefs_get_before_time(void);
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
-void timeline_peek_prefs_set_watchface_fit_enabled(bool enabled);
-bool timeline_peek_prefs_get_watchface_fit_enabled(void);
+typedef enum TimelinePeekUnsupportedFaceMode {
+  TimelinePeekUnsupportedFaceMode_None = 0,
+  TimelinePeekUnsupportedFaceMode_SquishUp = 1,
+  TimelinePeekUnsupportedFaceMode_ShiftUp = 2,
+  TimelinePeekUnsupportedFaceModeCount,
+} TimelinePeekUnsupportedFaceMode;
+
+void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMode mode);
+TimelinePeekUnsupportedFaceMode timeline_peek_prefs_get_unsupported_face_mode(void);
 #endif
 
 typedef enum PowerMode {
