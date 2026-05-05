@@ -70,14 +70,6 @@ jobs:
         shell: bash
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
-      - name: Node modules cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('third_party/jerryscript/jerryscript/js_tooling/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Configure
         run: ./waf configure --board ${{ matrix.board }}
 
