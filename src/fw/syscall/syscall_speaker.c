@@ -146,3 +146,7 @@ DEFINE_SYSCALL(uint8_t, sys_speaker_get_state, void) {
 DEFINE_SYSCALL(void, sys_speaker_register_finish, void) {
   speaker_service_register_finish(pebble_task_get_current());
 }
+
+DEFINE_SYSCALL(bool, sys_speaker_is_muted, void) {
+  return speaker_service_is_muted();
+}

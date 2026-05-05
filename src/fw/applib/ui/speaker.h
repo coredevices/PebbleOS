@@ -87,6 +87,14 @@ void speaker_set_volume(uint8_t volume);
 //! @return Current SpeakerStatus
 SpeakerStatus speaker_get_status(void);
 
+//! Check whether the speaker is currently muted system-wide. The watch can
+//! mute the speaker either always-on (Settings → Sounds & Haptics) or for
+//! the duration of Quiet Time (Settings → Quiet Time). Apps cannot
+//! override the mute, but they can use this to adapt UI or skip long
+//! sounds the user won't hear.
+//! @return true if the speaker is currently muted
+bool speaker_is_muted(void);
+
 //! Register a callback invoked when speaker playback ends.
 //! The callback runs on the app task.
 //! @param cb Callback to invoke, or NULL to unregister.
