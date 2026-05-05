@@ -25,6 +25,11 @@ import waftools.ldscript
 import waftools.openocd
 import waftools.sftool
 import waftools.nrfutil
+from waftools.pebble_sdk_locator import activate_sdk
+
+# Prefer an installed PebbleOS SDK's binaries (toolchain, QEMU, sftool) when
+# present. Done at import time so it applies to every waf invocation.
+activate_sdk(waflib.Context.run_dir or os.getcwd())
 
 LOGHASH_OUT_PATH = 'src/fw/loghash_dict.json'
 
@@ -1039,7 +1044,7 @@ def qemu_launch(ctx):
 
     qemu_bin = os.getenv("PEBBLE_QEMU_BIN")
     if not qemu_bin or not (os.path.isfile(qemu_bin) and os.access(qemu_bin, os.X_OK)):
-        qemu_bin = 'qemu-system-arm'
+        qemu_bin = 'qemu-pebble'
 
     # Detect QEMU major version — several command-line options changed in 7.0+.
     try:
