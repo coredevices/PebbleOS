@@ -103,12 +103,6 @@ typedef enum {
   ActuatorOptions_HBridge = 1 << 3, //< PWM actuates an H-Bridge, requires ActuatorOptions_PWM
 } ActuatorOptions;
 
-typedef enum {
-  BacklightOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable
-  BacklightOptions_Pwm = 1 << 1, ///< PWM control
-  BacklightOptions_LedController = 1 << 2, ///< LED Controller
-} BacklightOptions;
-
 typedef struct {
   const ActuatorOptions options;
   const OutputConfig ctl;
@@ -116,14 +110,7 @@ typedef struct {
 } BoardConfigActuator;
 
 typedef struct {
-  const BacklightOptions options;
-  const OutputConfig ctl;
-  const PwmConfig pwm;
-} BoardConfigBacklight;
-
-typedef struct {
   uint8_t backlight_on_percent;
-  uint8_t backlight_max_duty_cycle_percent;
   //ambient light config
   uint32_t ambient_light_dark_threshold;
   uint32_t ambient_k_delta_threshold;
@@ -131,7 +118,7 @@ typedef struct {
   //dynamic backlight thresholds
   uint32_t dynamic_backlight_min_threshold;
 #endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   // Default RGB backlight color (packed 0x00RRGGBB), applied when no app
   // override is set. User-preference overrides this via backlight_set_color().
   uint32_t backlight_default_color;

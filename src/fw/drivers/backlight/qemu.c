@@ -5,8 +5,8 @@
 
 #include "board/board.h"
 #include "console/prompt.h"
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-#include "drivers/led_controller.h"
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+#include "drivers/backlight.h"
 #endif
 
 #include <stdlib.h>
@@ -16,6 +16,9 @@
 // Display register offsets (must match QEMU pebble-display)
 #define DISP_CTRL        0x000
 #define DISP_BRIGHTNESS  0x018
+#define DISP_BL_RED      0x024
+#define DISP_BL_GREEN    0x028
+#define DISP_BL_BLUE     0x02C
 #define CTRL_UPDATE      (1 << 1)
 
 // Brightness levels for QEMU display grayscale path
@@ -24,11 +27,22 @@
 
 static bool s_initialized;
 
+#ifdef CONFIG_BACKLIGHT_QEMU_COLOR
+static uint8_t s_brightness = 100U;
+static uint32_t s_rgb_current_color = BACKLIGHT_COLOR_WHITE;
+#endif
+
+#ifdef CONFIG_BACKLIGHT_QEMU_COLOR
+static void prv_write_channels(uint8_t r, uint8_t g, uint8_t b) {
+  REG32(QEMU_DISPLAY_BASE + DISP_BL_RED) = r;
+  REG32(QEMU_DISPLAY_BASE + DISP_BL_GREEN) = g;
+  REG32(QEMU_DISPLAY_BASE + DISP_BL_BLUE) = b;
+}
+#endif
+
 void backlight_init(void) {
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-  // RGB LED is the sole light source — grayscale BRIGHTNESS reg stays at
-  // 0xFF identity so only the RGB channels modulate light output.
-  led_controller_init();
+#ifdef CONFIG_BACKLIGHT_QEMU_COLOR
+  prv_write_channels(0xFFU, 0xFFU, 0xFFU);
 #else
   REG32(QEMU_DISPLAY_BASE + DISP_BRIGHTNESS) = BACKLIGHT_OFF_LEVEL;
   REG32(QEMU_DISPLAY_BASE + DISP_CTRL) |= CTRL_UPDATE;
@@ -41,8 +55,13 @@ void backlight_set_brightness(uint8_t brightness) {
     return;
   }
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-  led_controller_backlight_set_brightness(brightness);
+  if (brightness > 100U) {
+    brightness = 100U;
+  }
+
+#ifdef CONFIG_BACKLIGHT_QEMU_COLOR
+  s_brightness = brightness;
+  backlight_set_color(s_rgb_current_color);
 #else
   uint32_t level;
   if (brightness == 0) {
@@ -60,12 +79,17 @@ void backlight_set_brightness(uint8_t brightness) {
 #endif
 }
 
-void command_backlight_ctl(const char *arg) {
-  const int bright_percent = atoi(arg);
-  if (bright_percent < 0 || bright_percent > 100) {
-    prompt_send_response("Invalid Brightness");
-    return;
-  }
-  backlight_set_brightness(bright_percent);
-  prompt_send_response("OK");
+#ifdef CONFIG_BACKLIGHT_QEMU_COLOR
+void backlight_set_color(uint32_t rgb_color) {
+  uint8_t r = ((rgb_color >> 16) & 0xFFU) * s_brightness / 100U;
+  uint8_t g = ((rgb_color >> 8) & 0xFFU) * s_brightness / 100U;
+  uint8_t b = (rgb_color & 0xFFU) * s_brightness / 100U;
+
+  prv_write_channels(r, g, b);
+  s_rgb_current_color = rgb_color;
 }
+
+uint32_t backlight_get_color(void) {
+  return s_rgb_current_color;
+}
+#endif

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/led_controller.h"
+#include "drivers/backlight.h"
 
 #include "board/board.h"
 #include "drivers/i2c.h"
@@ -41,7 +41,7 @@
 #define AW2016_REG_PWM3 0x36U
 
 static uint8_t s_brightness;
-static uint32_t s_rgb_current_color = LED_WARM_WHITE;
+static uint32_t s_rgb_current_color = BACKLIGHT_COLOR_WARM_WHITE;
 
 static bool prv_read_register(uint8_t register_address, uint8_t *value) {
   bool ret;
@@ -74,7 +74,7 @@ static bool prv_configure_registers(void) {
   return ret;
 }
 
-void led_controller_init(void) {
+void backlight_init(void) {
   uint8_t value;
   bool ret;
 
@@ -88,7 +88,7 @@ void led_controller_init(void) {
   PBL_ASSERTN(ret);
 }
 
-void led_controller_backlight_set_brightness(uint8_t brightness) {
+void backlight_set_brightness(uint8_t brightness) {
   bool ret;
 
   if (brightness > 100U) {
@@ -114,11 +114,11 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
       PBL_ASSERTN(ret);
     }
 
-    led_controller_rgb_set_color(s_rgb_current_color);
+    backlight_set_color(s_rgb_current_color);
   }
 }
 
-void led_controller_rgb_set_color(uint32_t rgb_color) {
+void backlight_set_color(uint32_t rgb_color) {
   bool ret;
   uint8_t red, green, blue;
 
@@ -135,12 +135,6 @@ void led_controller_rgb_set_color(uint32_t rgb_color) {
   s_rgb_current_color = rgb_color;
 }
 
-uint32_t led_controller_rgb_get_color(void) {
+uint32_t backlight_get_color(void) {
   return s_rgb_current_color;
-}
-
-void command_rgb_set_color(const char *color) {
-  uint32_t color_val = strtol(color, NULL, 16);
-
-  led_controller_rgb_set_color(color_val);
 }

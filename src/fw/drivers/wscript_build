@@ -9,7 +9,6 @@ bld.env.DRIVERS = []
 if bld.is_qemu():
     bld.env.DRIVERS.extend([
         'driver_audio',
-        'driver_backlight',
         'driver_button',
         'driver_mcu',
         'driver_mpu',
@@ -42,7 +41,6 @@ if bld.is_qemu():
 elif bld.is_asterix():
     bld.env.DRIVERS.extend([
         'driver_audio',
-        'driver_backlight',
         'driver_button',
         'driver_mcu',
         'driver_mpu',
@@ -55,7 +53,6 @@ elif bld.is_asterix():
 
 elif bld.is_obelix():
     bld.env.DRIVERS.extend([
-        'driver_backlight',
         'driver_button',
         'driver_mcu',
         'driver_mpu',
@@ -70,7 +67,6 @@ elif bld.is_obelix():
 
 elif bld.is_getafix():
     bld.env.DRIVERS.extend([
-        'driver_backlight',
         'driver_button',
         'driver_mcu',
         'driver_mpu',
@@ -130,42 +126,6 @@ if bld.env.CONFIG_AMBIENT_LIGHT:
 
 if bld.env.CONFIG_TEMPERATURE:
     bld.recurse('temperature')
-
-if is_qemu_family:
-    bld.objects(
-        name='driver_backlight',
-        source=[
-            'qemu/qemu_backlight.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif mcu_family == 'NRF52':
-    bld.objects(
-        name='driver_backlight',
-        source=[
-            'backlight.c',
-        ],
-        use=[
-            'driver_pwm',
-            'driver_gpio',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif bld.is_obelix() or bld.is_getafix():
-    bld.objects(
-        name='driver_backlight',
-        source=[
-            'backlight.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
 
 if bld.env.CONFIG_BATTERY:
     bld.recurse('battery')
@@ -254,8 +214,8 @@ if bld.env.QEMU:
             ],
         )
 
-if bld.env.CONFIG_LED_CONTROLLER:
-    bld.recurse('led_controller')
+if bld.env.CONFIG_BACKLIGHT:
+    bld.recurse('backlight')
 
 if bld.env.CONFIG_PRESSURE:
     bld.recurse('pressure')

@@ -31,12 +31,12 @@ uint8_t backlight_get_intensity(void) {
   return 100U;
 }
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-uint32_t backlight_get_color(void) {
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+uint32_t backlight_get_default_color(void) {
   return BOARD_CONFIG.backlight_default_color;
 }
 
-void backlight_set_color(uint32_t rgb_color) {
+void backlight_set_default_color(uint32_t rgb_color) {
 }
 #endif
 

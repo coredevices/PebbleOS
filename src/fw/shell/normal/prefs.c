@@ -73,7 +73,7 @@ static uint32_t s_backlight_timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS;
 #define PREF_KEY_BACKLIGHT_INTENSITY "lightIntensity"
 static uint8_t s_backlight_intensity; // default pulled from BOARD_CONFIGs in shell_prefs_init()
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
 #define PREF_KEY_BACKLIGHT_COLOR "lightColor"
 static uint32_t s_backlight_color; // default pulled from BOARD_CONFIG in shell_prefs_init()
 #endif
@@ -330,7 +330,7 @@ static bool prv_set_s_backlight_intensity(uint8_t *intensity) {
   return true;
 }
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
 static bool prv_set_s_backlight_color(uint32_t *rgb_color) {
   // Mask to packed 0x00RRGGBB; ignore any junk in the top byte.
   s_backlight_color = *rgb_color & 0x00FFFFFFU;
@@ -792,7 +792,7 @@ void shell_prefs_init(void) {
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
 #endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   s_backlight_color = BOARD_CONFIG.backlight_default_color;
 #endif
   // Use board-specific default motion sensitivity if provided (non-zero)
@@ -1106,12 +1106,12 @@ void backlight_set_intensity(uint8_t percent_intensity) {
   prv_pref_set(PREF_KEY_BACKLIGHT_INTENSITY, &percent_intensity, sizeof(percent_intensity));
 }
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-uint32_t backlight_get_color(void) {
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+uint32_t backlight_get_default_color(void) {
   return s_backlight_color;
 }
 
-void backlight_set_color(uint32_t rgb_color) {
+void backlight_set_default_color(uint32_t rgb_color) {
   // Clamp to 24-bit packed RGB; upper byte is unused.
   rgb_color &= 0x00FFFFFFU;
   prv_pref_set(PREF_KEY_BACKLIGHT_COLOR, &rgb_color, sizeof(rgb_color));

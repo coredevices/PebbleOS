@@ -25,7 +25,6 @@
 #include "drivers/display/display.h"
 #include "drivers/gpio.h"
 #include "drivers/hrm.h"
-#include "drivers/led_controller.h"
 #include "drivers/mag.h"
 #include "drivers/mic.h"
 #include "drivers/otp.h"

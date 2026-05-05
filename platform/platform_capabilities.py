@@ -17,7 +17,6 @@ master_capability_set = {
     "HAS_FLASH_OTP",
     "HAS_PBLBOOT",
     "HAS_DYNAMIC_BACKLIGHT",
-    "HAS_COLOR_BACKLIGHT",
     "HAS_SPEAKER",
     "HAS_ACCEL_SENSITIVITY",
     "HAS_APP_SCALING",
@@ -41,7 +40,6 @@ board_capability_dicts = [
             "HAS_FLASH_OTP",
             "HAS_PBLBOOT",
             "HAS_DYNAMIC_BACKLIGHT",
-            "HAS_COLOR_BACKLIGHT",
             "HAS_SPEAKER",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_APP_SCALING",
@@ -65,7 +63,6 @@ board_capability_dicts = [
         "capabilities": {
             "HAS_APP_SCALING",
             "HAS_MODDABLE_XS",
-            "HAS_COLOR_BACKLIGHT",
             "HAS_SPEAKER",
         },
     },

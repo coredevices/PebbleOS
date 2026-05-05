@@ -6,8 +6,8 @@
 #include "board/board.h"
 #include "drivers/ambient_light.h"
 #include "drivers/backlight.h"
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-#include "drivers/led_controller.h"
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+#include "drivers/backlight.h"
 #endif
 #include "drivers/rtc.h"
 #include "kernel/low_power.h"
@@ -74,7 +74,7 @@ static int s_num_buttons_down;
 //! The current app is forcing the light on and off, don't muck with it.
 static bool s_user_controlled_state;
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
 //! The app's requested backlight tint. Valid only when s_app_rgb_override_valid
 //! is true; otherwise the LED uses the user default (white).
 static uint32_t s_app_rgb_override;
@@ -184,19 +184,15 @@ static void prv_update_intensity_analytics(uint8_t new_intensity_pct) {
   s_last_sampled_intensity_pct = new_intensity_pct;
 }
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
 //! LED color to drive when no app has set an override. Backed by the
-//! user's stored backlight-color preference, defaulting to LED_WARM_WHITE.
-static uint32_t prv_default_rgb_color(void) {
-  return backlight_get_color();
-}
-
+//! user's stored backlight-color preference, defaulting to BACKLIGHT_COLOR_WARM_WHITE.
 static void prv_apply_rgb_color(void) {
   const bool preempted = (s_color_preempt_refcount > 0);
   const uint32_t color = (preempted || !s_app_rgb_override_valid)
-                             ? prv_default_rgb_color()
+                             ? backlight_get_default_color()
                              : s_app_rgb_override;
-  led_controller_rgb_set_color(color);
+  backlight_set_color(color);
 }
 #endif
 
@@ -215,7 +211,7 @@ static void prv_change_brightness(uint8_t new_brightness) {
   backlight_set_brightness(scaled_brightness);
   s_current_brightness = new_brightness;
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   // backlight_set_brightness re-applies the last RGB color at the new
   // intensity; follow up with the app override (or default white) so the
   // LED reflects the current color request for this state change.
@@ -421,7 +417,7 @@ void light_reset_user_controlled(void) {
 }
 
 void light_set_color_rgb888(uint32_t rgb) {
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   mutex_lock(s_mutex);
   s_app_rgb_override = rgb & 0x00FFFFFF;
   s_app_rgb_override_valid = true;
@@ -435,7 +431,7 @@ void light_set_color_rgb888(uint32_t rgb) {
 }
 
 void light_set_system_color(void) {
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   mutex_lock(s_mutex);
   if (s_app_rgb_override_valid) {
     s_app_rgb_override_valid = false;
@@ -448,7 +444,7 @@ void light_set_system_color(void) {
 }
 
 void light_system_color_request(void) {
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   mutex_lock(s_mutex);
   if (s_color_preempt_refcount < UINT8_MAX) {
     s_color_preempt_refcount++;
@@ -461,7 +457,7 @@ void light_system_color_request(void) {
 }
 
 void light_system_color_release(void) {
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   mutex_lock(s_mutex);
   if (s_color_preempt_refcount > 0) {
     s_color_preempt_refcount--;

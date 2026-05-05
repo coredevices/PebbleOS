@@ -3,7 +3,7 @@
 
 #include "board/board.h"
 #include "drivers/gpio.h"
-#include "drivers/led_controller.h"
+#include "drivers/backlight.h"
 #include "kernel/util/delay.h"
 #include "system/logging.h"
 #include "util/math.h"
@@ -21,11 +21,11 @@
 #define AW9364E_MAX_PULSES 16U
 #define AW9364E_OFF_TIME_US 2600U
 
-void led_controller_init(void) {
+void backlight_init(void) {
   gpio_output_init(&AW9364E.gpio, GPIO_OType_PP, GPIO_Speed_2MHz);
 }
 
-void led_controller_backlight_set_brightness(uint8_t brightness) {
+void backlight_set_brightness(uint8_t brightness) {
   uint8_t pulse_count;
 
   if (brightness > 100) {
@@ -47,16 +47,4 @@ void led_controller_backlight_set_brightness(uint8_t brightness) {
     gpio_output_set(&AW9364E.gpio, true);
     delay_us(i == 0U ? AW9364E_TON_US : AW9364E_THI_US);
   }
-}
-
-void led_controller_rgb_set_color(uint32_t rgb_color) {}
-
-uint32_t led_controller_rgb_get_color(void) {
-  return 0UL;
-}
-
-void command_rgb_set_color(const char *color) {
-  uint32_t color_val = strtol(color, NULL, 16);
-
-  led_controller_rgb_set_color(color_val);
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "drivers/backlight/pwm.h"
 #include "drivers/pmic/npm1300.h"
 #include "pbl/services/imu/units.h"
 #include "util/size.h"
@@ -18,7 +19,6 @@ static const BoardConfig BOARD_CONFIG = {
   .als_always_on = true,
 
   .backlight_on_percent = 25,
-  .backlight_max_duty_cycle_percent = 67,
   
   .dbgserial_int = {
     .peripheral = NRFX_GPIOTE_INSTANCE(0), 
@@ -109,14 +109,14 @@ static const BoardConfigMag BOARD_CONFIG_MAG = {
 extern UARTDevice * const DBG_UART;
 
 extern PwmState BACKLIGHT_PWM_STATE;
-static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
-  .options = ActuatorOptions_Pwm | ActuatorOptions_Ctl,
+static const BacklightPwmConfig BACKLIGHT_PWM = {
   .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true },
   .pwm = {
     .state = &BACKLIGHT_PWM_STATE,
     .output = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true },
     .peripheral = NRFX_PWM_INSTANCE(0)
   },
+  .max_duty_cycle_percent = 67,
 };
 
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {

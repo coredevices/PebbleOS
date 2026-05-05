@@ -15,10 +15,6 @@ extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
 
-static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
-  .options = 0,  // QEMU handles backlight in its own backlight driver
-};
-
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
     .default_motion_sensitivity = 85U,
