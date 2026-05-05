@@ -4,6 +4,7 @@
 #include "pbl/services/touch/touch.h"
 #include "pbl/services/touch/touch_event.h"
 
+#include "drivers/display/display.h"
 #include "drivers/touch/touch_sensor.h"
 #include "kernel/events.h"
 #include "kernel/pebble_tasks.h"
@@ -26,6 +27,14 @@ static PebbleMutex *s_touch_mutex;
 static uint8_t s_subscriber_count = 0;
 static bool s_backlight_subscribed = false;
 static bool s_globally_enabled = true;
+static bool s_rotated = false;
+
+static void prv_apply_rotation(int16_t *x, int16_t *y) {
+  if (s_rotated) {
+    *x = (DISP_COLS - 1) - *x;
+    *y = (DISP_ROWS - 1) - *y;
+  }
+}
 
 static void prv_add_subscriber_cb(PebbleTask task) {
   mutex_lock(s_touch_mutex);
@@ -147,6 +156,8 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
     return;
   }
 
+  prv_apply_rotation(&x, &y);
+
   if (s_touch_state != touch_state) {
     s_touch_state = touch_state;
     s_last_x = x;
@@ -178,9 +189,11 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y) {
 }
 
 void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
-  TOUCH_DEBUG("Gesture: %d @ (%" PRId16 ", %" PRId16 ")", gesture, x, y);
-
   mutex_lock(s_touch_mutex);
+
+  prv_apply_rotation(&x, &y);
+
+  TOUCH_DEBUG("Gesture: %d @ (%" PRId16 ", %" PRId16 ")", gesture, x, y);
 
   switch (gesture) {
     case TouchGesture_Tap:
@@ -203,5 +216,11 @@ void touch_reset(void) {
   s_touch_state = TouchState_FingerUp;
   s_last_x = 0;
   s_last_y = 0;
+  mutex_unlock(s_touch_mutex);
+}
+
+void touch_set_rotated(bool rotated) {
+  mutex_lock(s_touch_mutex);
+  s_rotated = rotated;
   mutex_unlock(s_touch_mutex);
 }
