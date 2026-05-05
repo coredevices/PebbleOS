@@ -109,3 +109,12 @@ void speaker_service_stop_for_task(PebbleTask task);
 
 //! Set the task that owns the current playback session.
 void speaker_service_set_owner_task(PebbleTask task);
+
+//! @return true if the speaker is currently muted (always-on mute, or
+//!         the DND-scoped mute while DND is active).
+bool speaker_service_is_muted(void);
+
+//! Notify the speaker service that the mute prefs have changed. If a
+//! source is currently playing, the audio output volume is re-applied
+//! immediately so toggling mute silences (or restores) live playback.
+void speaker_service_handle_mute_state_changed(void);

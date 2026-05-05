@@ -15,6 +15,8 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/analytics/analytics.h"
+#include "pbl/services/notifications/alerts_preferences.h"
+#include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -84,6 +86,20 @@ static void prv_stop_internal(SpeakerFinishReason reason);
 static void prv_audio_trans_cb(uint32_t *free_size);
 static void prv_refill_bg(void *data);
 
+static bool prv_is_speaker_muted(void) {
+  if (alerts_preferences_get_speaker_muted()) {
+    return true;
+  }
+  if (alerts_preferences_dnd_get_mute_speaker() && do_not_disturb_is_active()) {
+    return true;
+  }
+  return false;
+}
+
+static uint8_t prv_effective_volume(uint8_t vol) {
+  return prv_is_speaker_muted() ? 0 : vol;
+}
+
 static void prv_update_volume_analytics(uint8_t new_volume_pct) {
   RtcTicks now_ticks = rtc_get_ticks();
 
@@ -115,12 +131,14 @@ void speaker_service_init(void) {
 }
 
 static void prv_start_audio(uint8_t vol) {
+  const uint8_t effective_vol = prv_effective_volume(vol);
+
   PBL_ANALYTICS_TIMER_START(speaker_on_time_ms);
   PBL_ANALYTICS_ADD(speaker_play_count, 1);
-  prv_update_volume_analytics(vol);
+  prv_update_volume_analytics(effective_vol);
 
   audio_init((AudioDevice *)AUDIO);
-  audio_set_volume((AudioDevice *)AUDIO, vol);
+  audio_set_volume((AudioDevice *)AUDIO, effective_vol);
   audio_start((AudioDevice *)AUDIO, prv_audio_trans_cb);
 }
 
@@ -622,9 +640,23 @@ void speaker_service_stop(void) {
 void speaker_service_set_volume(uint8_t vol) {
   s_state.volume = vol;
   if (s_state.state != SpeakerStateIdle) {
-    prv_update_volume_analytics(vol);
-    audio_set_volume((AudioDevice *)AUDIO, vol);
+    const uint8_t effective_vol = prv_effective_volume(vol);
+    prv_update_volume_analytics(effective_vol);
+    audio_set_volume((AudioDevice *)AUDIO, effective_vol);
   }
+}
+
+bool speaker_service_is_muted(void) {
+  return prv_is_speaker_muted();
+}
+
+void speaker_service_handle_mute_state_changed(void) {
+  if (s_state.state == SpeakerStateIdle) {
+    return;
+  }
+  const uint8_t effective_vol = prv_effective_volume(s_state.volume);
+  prv_update_volume_analytics(effective_vol);
+  audio_set_volume((AudioDevice *)AUDIO, effective_vol);
 }
 
 SpeakerState speaker_service_get_state(void) {
@@ -708,5 +740,8 @@ void speaker_service_stop_for_task(PebbleTask task) {}
 void speaker_service_set_owner_task(PebbleTask task) {}
 void speaker_service_register_finish(PebbleTask task) {}
 void pbl_analytics_external_collect_speaker_stats(void) {}
+
+bool speaker_service_is_muted(void) { return false; }
+void speaker_service_handle_mute_state_changed(void) {}
 
 #endif // CAPABILITY_HAS_SPEAKER
