@@ -6,7 +6,7 @@
 // UART device for debug serial
 #include "drivers/uart/qemu.h"
 #include "drivers/qemu/qemu_audio.h"
-#include "drivers/led_controller.h"
+#include "drivers/backlight.h"
 #include "drivers/mic/qemu/mic_definitions.h"
 
 static UARTDeviceState s_dbg_uart_state = {};
@@ -58,7 +58,7 @@ const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 100,
   .ambient_light_dark_threshold = 150,
   .ambient_k_delta_threshold = 25,
-  .backlight_default_color = LED_WHITE,
+  .backlight_default_color = BACKLIGHT_COLOR_WHITE,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {

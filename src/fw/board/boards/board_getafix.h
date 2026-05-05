@@ -4,7 +4,7 @@
 #pragma once
 
 #include "drivers/imu/lis2dw12/lis2dw12.h"
-#include "drivers/led_controller/aw9364e.h"
+#include "drivers/backlight/aw9364e.h"
 #include "drivers/pmic/npm1300.h"
 #include "drivers/touch/cst816/touch_sensor_definitions.h"
 #include "pbl/services/imu/units.h"
@@ -40,10 +40,6 @@ extern const TouchSensor *CST816;
 extern const LedControllerAW9364E AW9364E;
 
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
-
-static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
-  .options = BacklightOptions_LedController,
-};
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {

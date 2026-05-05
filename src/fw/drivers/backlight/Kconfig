@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig BACKLIGHT
+    bool "Backlight"
+    help
+      Backlight Drivers
+
+if BACKLIGHT
+
+config BACKLIGHT_HAS_COLOR
+    bool
+    help
+      Backlight drivers that support color should select this Kconfig symbol.
+
+config BACKLIGHT_AW2016
+    bool "AW2016"
+    depends on I2C
+    select BACKLIGHT_HAS_COLOR
+    help
+      Support for the AW2016 LED controller.
+
+config BACKLIGHT_AW9364E
+    bool "AW9364E"
+    help
+      Support for the AW9364E LED controller.
+
+config BACKLIGHT_PWM
+    bool "PWM"
+    help
+      Support for a backlight driven by a PWM peripheral.
+
+config BACKLIGHT_QEMU
+    bool "QEMU"
+    help
+      Emulated backlight controller that writes to the QEMU
+      pebble-display MMIO registers.
+
+config BACKLIGHT_QEMU_COLOR
+    bool "QEMU Color"
+    depends on BACKLIGHT_QEMU
+    select BACKLIGHT_HAS_COLOR
+    help
+      Enable support for RGB backlight colors in the QEMU backlight driver.
+  
+endif # BACKLIGHT

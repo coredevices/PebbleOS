@@ -7,22 +7,16 @@
 #include "applib/ui/dialogs/confirmation_dialog.h"
 #include "applib/ui/window.h"
 #include "apps/prf/mfg_test_result.h"
+#include "drivers/backlight.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/light.h"
-#include "drivers/led_controller.h"
-
-#define BACKLIGHT_COLOR_WHITE       0xFFFFFF
-#define BACKLIGHT_COLOR_RED         0xFF0000
-#define BACKLIGHT_COLOR_GREEN       0x00FF00
-#define BACKLIGHT_COLOR_BLUE        0x0000FF
-#define BACKLIGHT_COLOR_BLACK       0x000000
 
 typedef enum {
   TestPattern_White,
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   TestPattern_Red,
   TestPattern_Green,
   TestPattern_Blue,
@@ -41,25 +35,25 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &layer->bounds);
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   AppData *app_data = app_state_get_user_data();
 
   PBL_LOG_INFO("backlight id:%d", app_data->test_pattern);
   switch (app_data->test_pattern) {
   case TestPattern_White:
-    led_controller_rgb_set_color(BACKLIGHT_COLOR_WHITE);
+    backlight_set_color(BACKLIGHT_COLOR_WHITE);
     break;
   case TestPattern_Red:
-    led_controller_rgb_set_color(BACKLIGHT_COLOR_RED);
+    backlight_set_color(BACKLIGHT_COLOR_RED);
     break;
   case TestPattern_Green:
-    led_controller_rgb_set_color(BACKLIGHT_COLOR_GREEN);
+    backlight_set_color(BACKLIGHT_COLOR_GREEN);
     break;
   case TestPattern_Blue:
-    led_controller_rgb_set_color(BACKLIGHT_COLOR_BLUE);
+    backlight_set_color(BACKLIGHT_COLOR_BLUE);
     break;
   case TestPattern_Black:
-    led_controller_rgb_set_color(BACKLIGHT_COLOR_BLACK);
+    backlight_set_color(BACKLIGHT_COLOR_BLACK);
     break;
   default:
     break;
@@ -139,8 +133,8 @@ static void s_main(void) {
 
   app_event_loop();
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-  led_controller_rgb_set_color(LED_WARM_WHITE);
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+  backlight_set_color(BACKLIGHT_COLOR_WARM_WHITE);
 #endif
 
   light_enable(false);
