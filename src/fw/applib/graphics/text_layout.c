@@ -253,19 +253,30 @@ bool word_init(GContext* ctx, Word* word, const TextBoxParams* const text_box_pa
     return false;
   }
 
-  // Init the word & state 
+  // Init the word & state
   word->start = utf8_iter_state->current;
+  // Track previous and current codepoints so we can resolve Arabic
+  // contextual presentation forms while measuring. The renderer shapes
+  // letters before drawing (see walk_line()), so unshaped widths would
+  // over- or under-estimate the word and cause spurious wraps.
+  Codepoint prev_cp = 0;
+  Codepoint curr_cp = utf8_iter_state->codepoint;
   WordState state = WordStateStart;
-  state = word_state_update(state, utf8_iter_state->codepoint);
+  state = word_state_update(state, curr_cp);
 
   do {
+    iter_next(&char_iter);
+    Codepoint next_cp = utf8_iter_state->codepoint;
+
     if (state == WordStateGrowing || state == WordStateIdeograph) {
+      Codepoint width_cp = arabic_shape_codepoint(prev_cp, curr_cp, next_cp);
       word->width_px += prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-          text_box_params->font, utf8_iter_state->codepoint);
+          text_box_params->font, width_cp);
     }
 
-    iter_next(&char_iter);
-    state = word_state_update(state, utf8_iter_state->codepoint);
+    prev_cp = curr_cp;
+    curr_cp = next_cp;
+    state = word_state_update(state, curr_cp);
   } while (state != WordStateEnd);
 
   word->end = utf8_iter_state->current;
@@ -649,6 +660,12 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
       // Collect segment (until we hit opposite script type or end)
       utf8_t *segment_end = ptr;
       int segment_width_px = 0;
+      // Track previous codepoint within the segment so Arabic letters are
+      // measured using their contextual presentation form. Without this,
+      // segment width here disagrees with the shaped width used by the
+      // layout (word_init) and by the actual draw pass below — letters at
+      // the line edge get truncated and a gap appears.
+      Codepoint prev_seg_cp = 0;
       while (segment_end < line_end && *segment_end != '\0' && *segment_end != '\n') {
         utf8_t *seg_next = NULL;
         Codepoint seg_cp = utf8_peek_codepoint(segment_end, &seg_next);
@@ -687,12 +704,19 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
           }
         }
 
+        Codepoint next_seg_cp = 0;
+        if (seg_next < line_end && *seg_next != '\0' && *seg_next != '\n') {
+          utf8_t *peek_next = NULL;
+          next_seg_cp = utf8_peek_codepoint(seg_next, &peek_next);
+        }
+        Codepoint width_cp = arabic_shape_codepoint(prev_seg_cp, seg_cp, next_seg_cp);
         int glyph_width = prv_codepoint_get_horizontal_advance(&ctx->font_cache,
-            text_box_params->font, seg_cp);
+            text_box_params->font, width_cp);
         if (total_width_px + segment_width_px + glyph_width + suffix_width_px > available_horiz_px) {
           break;
         }
 
+        prev_seg_cp = seg_cp;
         segment_width_px += glyph_width;
         segment_end = seg_next;
       }

@@ -220,6 +220,35 @@ static Codepoint prv_get_shaped_codepoint(const ArabicShapingEntry *entry, Arabi
   }
 }
 
+Codepoint arabic_shape_codepoint(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp) {
+  const ArabicShapingEntry *entry = prv_find_shaping_entry(curr_cp);
+  if (entry == NULL) {
+    return curr_cp;
+  }
+
+  const ArabicShapingEntry *prev_entry = prv_find_shaping_entry(prev_cp);
+  const ArabicShapingEntry *next_entry = prv_find_shaping_entry(next_cp);
+
+  bool prev_connects = (prev_entry != NULL) && prv_connects_left(prev_entry);
+  bool next_connects = (next_entry != NULL) && prv_connects_right(next_entry);
+
+  bool can_connect_right = prv_connects_right(entry);
+  bool can_connect_left = prv_connects_left(entry);
+
+  ArabicForm form;
+  if (prev_connects && can_connect_right && next_connects && can_connect_left) {
+    form = ARABIC_FORM_MEDIAL;
+  } else if (prev_connects && can_connect_right) {
+    form = ARABIC_FORM_FINAL;
+  } else if (next_connects && can_connect_left) {
+    form = ARABIC_FORM_INITIAL;
+  } else {
+    form = ARABIC_FORM_ISOLATED;
+  }
+
+  return prv_get_shaped_codepoint(entry, form);
+}
+
 size_t arabic_shape_text(const utf8_t *src, size_t src_len,
                          utf8_t *dest, size_t dest_size) {
   if (src == NULL || dest == NULL || src_len == 0 || dest_size == 0) {
@@ -251,45 +280,9 @@ size_t arabic_shape_text(const utf8_t *src, size_t src_len,
   size_t dest_offset = 0;
 
   for (size_t i = 0; i < num_codepoints; i++) {
-    Codepoint cp = codepoints[i];
-    Codepoint shaped_cp = cp;
-
-    // Check if this is a shapeable Arabic letter
-    const ArabicShapingEntry *entry = prv_find_shaping_entry(cp);
-    if (entry != NULL) {
-      // Determine context: check previous and next letters
-      const ArabicShapingEntry *prev_entry = NULL;
-      const ArabicShapingEntry *next_entry = NULL;
-
-      if (i > 0) {
-        prev_entry = prv_find_shaping_entry(codepoints[i - 1]);
-      }
-      if (i + 1 < num_codepoints) {
-        next_entry = prv_find_shaping_entry(codepoints[i + 1]);
-      }
-
-      // Check connectivity
-      bool prev_connects = (prev_entry != NULL) && prv_connects_left(prev_entry);
-      bool next_connects = (next_entry != NULL) && prv_connects_right(next_entry);
-
-      // Also check if current letter can connect in that direction
-      bool can_connect_right = prv_connects_right(entry);
-      bool can_connect_left = prv_connects_left(entry);
-
-      // Determine the form based on connections
-      ArabicForm form;
-      if (prev_connects && can_connect_right && next_connects && can_connect_left) {
-        form = ARABIC_FORM_MEDIAL;
-      } else if (prev_connects && can_connect_right) {
-        form = ARABIC_FORM_FINAL;
-      } else if (next_connects && can_connect_left) {
-        form = ARABIC_FORM_INITIAL;
-      } else {
-        form = ARABIC_FORM_ISOLATED;
-      }
-
-      shaped_cp = prv_get_shaped_codepoint(entry, form);
-    }
+    Codepoint prev_cp = (i > 0) ? codepoints[i - 1] : 0;
+    Codepoint next_cp = (i + 1 < num_codepoints) ? codepoints[i + 1] : 0;
+    Codepoint shaped_cp = arabic_shape_codepoint(prev_cp, codepoints[i], next_cp);
 
     // Encode the shaped codepoint to UTF-8
     // Ensure we have room for at least 4 bytes (max UTF-8 length)
