@@ -57,6 +57,10 @@ SpeakerStatus speaker_get_status(void) {
   return (SpeakerStatus)sys_speaker_get_state();
 }
 
+bool speaker_is_muted(void) {
+  return sys_speaker_is_muted();
+}
+
 bool speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks, uint8_t volume) {
   if (!tracks || num_tracks == 0) {
     PBL_LOG_ERR("tried to play null or empty track list");

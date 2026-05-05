@@ -101,6 +101,7 @@ void sys_speaker_stop(void);
 void sys_speaker_set_volume(uint8_t volume);
 uint8_t sys_speaker_get_state(void);
 void sys_speaker_register_finish(void);
+bool sys_speaker_is_muted(void);
 
 void sys_get_app_uuid(Uuid *uuid);
 bool sys_app_is_watchface(void);
