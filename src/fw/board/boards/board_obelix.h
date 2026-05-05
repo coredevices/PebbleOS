@@ -38,10 +38,6 @@ extern HRMDevice * const HRM;
 extern const TouchSensor *CST816;
 extern const AudioDevice* AUDIO;
 
-static const BoardConfigBacklight BOARD_CONFIG_BACKLIGHT = {
-  .options = BacklightOptions_LedController,
-};
-
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .accel_config = {
     .default_motion_sensitivity = 55U, // Medium

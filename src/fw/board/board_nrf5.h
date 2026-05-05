@@ -179,12 +179,6 @@ typedef enum {
   ActuatorOptions_HBridge = 1 << 3, //< PWM actuates an H-Bridge, requires ActuatorOptions_PWM
 } ActuatorOptions;
 
-typedef enum {
-  BacklightOptions_Ctl = 1 << 0, ///< GPIO is used to enable / disable
-  BacklightOptions_Pwm = 1 << 1, ///< PWM control
-  BacklightOptions_LedController = 1 << 2, ///< LED Controller
-} BacklightOptions;
-
 typedef struct {
   // Audio Configuration
   /////////////////////////////////////////////////////////////////////////////
@@ -204,10 +198,6 @@ typedef struct {
   const InputConfig dbgserial_int_gpio;
 
   const uint8_t backlight_on_percent; // percent of max possible brightness
-  const uint8_t backlight_max_duty_cycle_percent; // Calibrated such that the preceived brightness
-                    // of "backlight_on_percent = 100" (and all other values, to a reasonable
-                    // tolerance) is identical across all platforms. >100% isn't possible, so
-                    // future backlights must be at least as bright as Tintin's.
 } BoardConfig;
 
 // Button Configuration
@@ -257,12 +247,6 @@ typedef struct {
                              //< For example, Silk VBat may droop to 3.3V, so we scale down vibe
                              //< duty cycle so that 100% duty cycle will always be 3.3V RMS.
 } BoardConfigActuator;
-
-typedef struct {
-  const BacklightOptions options;
-  const OutputConfig ctl;
-  const PwmConfig pwm;
-} BoardConfigBacklight;
 
 typedef enum {
   SpiPeriphClockNrf5

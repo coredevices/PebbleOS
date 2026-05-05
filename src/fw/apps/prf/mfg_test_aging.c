@@ -17,7 +17,7 @@
 #include "drivers/ambient_light.h"
 #include "drivers/audio.h"
 #include "drivers/battery.h"
-#include "drivers/led_controller.h"
+#include "drivers/backlight.h"
 #include "drivers/mag.h"
 #include "drivers/vibe.h"
 #include "kernel/pbl_malloc.h"
@@ -75,7 +75,7 @@ typedef enum {
 #ifdef CONFIG_MAG
   ComponentMag,
 #endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   ComponentBacklightWhite,
   ComponentBacklightRed,
   ComponentBacklightGreen,
@@ -116,7 +116,7 @@ typedef struct {
 #if CAPABILITY_HAS_SPEAKER
   bool audio_playing;
 #endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   uint32_t saved_backlight_color;
 #endif
 } AppData;
@@ -143,10 +143,10 @@ static void prv_cleanup_component(AppData *data) {
     mag_release();
   }
 #endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   if (data->component >= ComponentBacklightWhite &&
       data->component <= ComponentBacklightBlue) {
-    led_controller_rgb_set_color(data->saved_backlight_color);
+    backlight_set_color(data->saved_backlight_color);
     light_enable(false);
   }
 #else
@@ -168,7 +168,7 @@ static void prv_start_component(AppData *data) {
     mag_start_sampling();
   }
 #endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   if (data->component >= ComponentBacklightWhite &&
       data->component <= ComponentBacklightBlue) {
     light_enable(true);
@@ -182,7 +182,7 @@ static void prv_start_component(AppData *data) {
 
 static uint32_t prv_component_duration(ComponentState comp) {
   switch (comp) {
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
     case ComponentBacklightWhite:
     case ComponentBacklightRed:
     case ComponentBacklightGreen:
@@ -262,21 +262,21 @@ static void prv_run_component_display(AppData *data) {
       break;
     }
 #endif
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
     case ComponentBacklightWhite:
-      led_controller_rgb_set_color(0xD0D0D0);
+      backlight_set_color(0xD0D0D0);
       comp_name = "BL White";
       break;
     case ComponentBacklightRed:
-      led_controller_rgb_set_color(0xFF0000);
+      backlight_set_color(0xFF0000);
       comp_name = "BL Red";
       break;
     case ComponentBacklightGreen:
-      led_controller_rgb_set_color(0x00FF00);
+      backlight_set_color(0x00FF00);
       comp_name = "BL Green";
       break;
     case ComponentBacklightBlue:
-      led_controller_rgb_set_color(0x0000FF);
+      backlight_set_color(0x0000FF);
       comp_name = "BL Blue";
       break;
 #else
@@ -487,9 +487,9 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
         // Idle passed — discharge to safe shipping level with backlight on
         data->state = AgingStateDischarging;
         data->phase_elapsed_sec = 0;
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-        data->saved_backlight_color = led_controller_rgb_get_color();
-        led_controller_rgb_set_color(0xFFFFFF);
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+        data->saved_backlight_color = backlight_get_color();
+        backlight_set_color(0xFFFFFF);
 #endif
         light_enable(true);
         break;
@@ -526,8 +526,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
       if (cs.is_plugged) {
         light_enable(false);
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-        led_controller_rgb_set_color(data->saved_backlight_color);
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+        backlight_set_color(data->saved_backlight_color);
 #endif
         prv_enter_fail(data, "Plugged while\ndischarging");
         break;
@@ -535,8 +535,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
 
       if (cs.charge_percent <= DISCHARGE_TARGET_PERCENT) {
         light_enable(false);
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-        led_controller_rgb_set_color(data->saved_backlight_color);
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+        backlight_set_color(data->saved_backlight_color);
 #endif
         data->state = AgingStatePass;
         sniprintf(data->status_string, sizeof(data->status_string),
@@ -582,8 +582,8 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *context)
 
   if (data->state == AgingStateDischarging) {
     light_enable(false);
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
-    led_controller_rgb_set_color(data->saved_backlight_color);
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+    backlight_set_color(data->saved_backlight_color);
 #endif
   } else if (data->state == AgingStateChargingAndCycling) {
     prv_cleanup_component(data);

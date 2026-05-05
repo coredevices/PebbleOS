@@ -52,7 +52,7 @@ extern void command_dump_malloc_bt(void);
 extern void command_read_word(const char*);
 
 extern void command_backlight_ctl(const char*);
-extern void command_rgb_set_color(const char*);
+extern void command_backlight_set_color(const char*);
 
 extern void command_battery_charge_option(const char*);
 
@@ -491,11 +491,11 @@ static const Command s_prompt_commands[] = {
   { "layer nudge", command_layer_nudge, 1 },
 #endif
 
-  { "backlight", command_backlight_ctl, 1 },
+  { "backlight level", command_backlight_ctl, 1 },
 
-#if CAPABILITY_HAS_COLOR_BACKLIGHT
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
   // Drivers
-  { "rgb", command_rgb_set_color, 1 },
+  { "backlight color", command_backlight_set_color, 1 },
 #endif
 
 //  { "watch", command_watch, 0 },

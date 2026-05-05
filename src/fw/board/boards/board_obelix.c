@@ -4,7 +4,7 @@
 #include "board/board.h"
 #include "board/display.h"
 #include "board/splash.h"
-#include "drivers/led_controller.h"
+#include "drivers/backlight.h"
 #include "drivers/pmic/npm1300.h"
 #include "drivers/sf32lb52/debounced_button_definitions.h"
 #include "drivers/hrm/gh3x2x.h"
@@ -572,7 +572,7 @@ const BoardConfig BOARD_CONFIG = {
   .ambient_light_dark_threshold = 150,
   .ambient_k_delta_threshold = 25,
   .dynamic_backlight_min_threshold = 5,
-  .backlight_default_color = LED_WARM_WHITE,
+  .backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
