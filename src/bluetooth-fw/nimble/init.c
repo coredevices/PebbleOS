@@ -44,6 +44,7 @@ static struct ble_hs_stop_listener s_listener;
 static void prv_sync_cb(void) {
   PBL_LOG_D_DBG(LOG_DOMAIN_BT, "NimBLE host synchronized");
   xSemaphoreGive(s_host_started);
+  bt_driver_handle_host_resynced();
 }
 
 static void prv_reset_cb(int reason) {
