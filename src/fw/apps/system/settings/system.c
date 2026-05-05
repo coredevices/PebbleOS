@@ -253,33 +253,7 @@ static uint16_t prv_information_get_num_rows_callback(MenuLayer *menu_layer,
   return SystemInformationItem_Count;
 }
 
-#include "drivers/led_controller.h"
 #include "system/rtc_registers.h"
-static void prv_color_led_easter_egg(void) {
-#if CAPABILITY_HAS_LED
-  static int i = 0;
-
-  // Simple test code to exercise each of the LEDs in the RGB cluster.
-  // Start after 3 clicks
-  switch (i) {
-    case 3:
-      led_controller_rgb_set_color(LED_RED);
-      break;
-    case 4: led_controller_rgb_set_color(LED_GREEN); break;
-    case 5: led_controller_rgb_set_color(LED_BLUE); break;
-    case 6: led_controller_rgb_set_color(LED_BLACK); i = 2; break;
-    default: break;
-  }
-
-  i = (i + 1)%7;
-#endif
-}
-
-static void prv_information_select_callback(MenuLayer *menu_layer,
-                                            MenuIndex *cell_index,
-                                            void *context) {
-  prv_color_led_easter_egg();
-}
 
 static void prv_information_window_load(Window *window) {
   SettingsSystemData *data = (SettingsSystemData*) window_get_user_data(window);
@@ -299,7 +273,6 @@ static void prv_information_window_load(Window *window) {
     .get_num_rows = prv_information_get_num_rows_callback,
     .get_cell_height = prv_information_get_cell_height_callback,
     .draw_row = prv_information_draw_row_callback,
-    .select_click = prv_information_select_callback,
   });
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
