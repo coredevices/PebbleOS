@@ -106,14 +106,23 @@ static void prv_display_off() {
   gpio_output_set(&DISPLAY->vlcd, false);
 }
 
-static void prv_display_update_start(void) {
+static HAL_StatusTypeDef prv_display_update_start(void) {
   DisplayJDIState *state = DISPLAY->state;
 
   // Only send the dirty region that was converted to RGB332 format
   HAL_LCDC_SetROIArea(&state->hlcdc, 0, s_update_y0, PBL_DISPLAY_WIDTH - 1, s_update_y1);
   HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer, 0, s_update_y0,
                         PBL_DISPLAY_WIDTH - 1, s_update_y1);
-  HAL_LCDC_SendLayerData_IT(&state->hlcdc);
+  return HAL_LCDC_SendLayerData_IT(&state->hlcdc);
+}
+
+static void prv_handle_send_failure(const char *ctx, HAL_StatusTypeDef status) {
+  DisplayJDIState *state = DISPLAY->state;
+  PBL_LOG_ERR("display: %s SendLayerData_IT=%d State=%d ErrorCode=0x%08lx",
+              ctx, (int)status, (int)state->hlcdc.State,
+              (unsigned long)state->hlcdc.ErrorCode);
+  state->hlcdc.State = HAL_LCDC_STATE_READY;
+  state->hlcdc.ErrorCode = HAL_LCDC_ERROR_NONE;
 }
 
 static void prv_display_update_terminate(void *data) {
@@ -291,7 +300,11 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   s_updating = true;
 
   stop_mode_disable(InhibitorDisplay);
-  prv_display_update_start();
+  HAL_StatusTypeDef status = prv_display_update_start();
+  if (status != HAL_OK) {
+    prv_handle_send_failure("update", status);
+    prv_display_update_terminate(NULL);
+  }
 }
 
 void display_update_boot_frame(uint8_t *framebuffer) {
@@ -312,8 +325,14 @@ void display_update_boot_frame(uint8_t *framebuffer) {
   s_update_y1 = PBL_DISPLAY_HEIGHT - 1;
 
   stop_mode_disable(InhibitorDisplay);
-  prv_display_update_start();
-  xSemaphoreTake(s_sem, portMAX_DELAY);
+  HAL_StatusTypeDef status = prv_display_update_start();
+  if (status == HAL_OK) {
+    xSemaphoreTake(s_sem, portMAX_DELAY);
+  } else {
+    // Without this guard a failed kickoff would block boot forever on s_sem,
+    // since the EOF IRQ that gives the semaphore never fires.
+    prv_handle_send_failure("boot", status);
+  }
   stop_mode_enable(InhibitorDisplay);
 }
 
