@@ -53,3 +53,8 @@ void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y);
 
 //! Reset the touch service.
 void touch_reset(void);
+
+//! Set whether the display is rotated 180° (left-hand mode). When rotated,
+//! incoming touch coordinates are mirrored to match the rotated framebuffer
+//! before being dispatched to subscribers.
+void touch_set_rotated(bool rotated);

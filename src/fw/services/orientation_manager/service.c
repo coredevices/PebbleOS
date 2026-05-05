@@ -11,6 +11,9 @@
 #include "drivers/imu/mmc5603nj/mmc5603nj.h"
 #include "kernel/events.h"
 #include "process_management/process_manager.h"
+#ifdef CONFIG_SERVICE_TOUCH
+#include "pbl/services/touch/touch.h"
+#endif
 
 
 void prv_change_orientation(bool rotated) {
@@ -18,6 +21,9 @@ void prv_change_orientation(bool rotated) {
   button_set_rotated(rotated);
   accel_set_rotated(rotated);
   mag_set_rotated(rotated);
+#ifdef CONFIG_SERVICE_TOUCH
+  touch_set_rotated(rotated);
+#endif
 }
 
 void orientation_handle_prefs_changed(void) {
