@@ -55,11 +55,6 @@ def get_tintin_fw_node(ctx, subdir=None):
     return ctx.path.get_bld().make_node(subpath)
 
 
-@conf
-def get_tintin_boot_node(ctx):
-    return ctx.path.get_bld().make_node('src/boot/tintin_boot.bin')
-
-
 def options(opt):
     opt.add_option(
         "--prf-as-firmware",
