@@ -99,7 +99,8 @@ static int16_t prv_gen_waveform_mode(TrackState *s) {
   if (s->phase_inc == 0) {
     return 0;
   }
-  int16_t v = note_synth_sample(s->current_waveform, s->phase_acc, s->current_velocity);
+  int16_t v = note_synth_sample(s->current_waveform, s->phase_acc, s->phase_inc,
+                                s->current_velocity);
   s->phase_acc += s->phase_inc;
   return v;
 }
