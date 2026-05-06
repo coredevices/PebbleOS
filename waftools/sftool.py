@@ -17,5 +17,5 @@ def erase_flash(ctx):
     run_command(ctx, "erase_flash")
 
 
-def write_flash(ctx, hex_path):
-    run_command(ctx, f"write_flash {hex_path}")
+def write_flash(ctx, *files):
+    run_command(ctx, "write_flash " + " ".join(files))
