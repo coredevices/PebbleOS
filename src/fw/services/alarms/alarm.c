@@ -78,6 +78,15 @@ typedef struct PACKED {
       //! Whether the alarm is a smart alarm or not. Smart alarms attempt to wake the user the
       //! first moment the user is not in deep sleep in the time range T-30min to T every 5 min.
       bool is_smart:1;
+      //! Whether the alarm should play a tone on speaker hardware. Default 0 (off) so legacy
+      //! alarms loaded from older firmware stay silent.
+      bool sound_enabled:1;
+      //! Whether vibration is *disabled* for this alarm. Default 0 (vibration on) so legacy
+      //! alarms loaded from older firmware keep vibrating.
+      bool vibrate_disabled:1;
+      //! Selected tone (AlarmTone enum value). Default 0 (Reveille). Irrelevant when
+      //! sound_enabled is 0.
+      uint8_t tone:3;
     };
     uint8_t flags;
   };
@@ -475,6 +484,9 @@ static void prv_persist_alarm(SettingsFile *fd, Alarm *alarm) {
     .hour = alarm->config.hour,
     .minute = alarm->config.minute,
     .is_smart = alarm->config.is_smart,
+    .sound_enabled = alarm->config.sound_enabled,
+    .vibrate_disabled = alarm->config.vibrate_disabled,
+    .tone = alarm->config.tone,
   };
   memcpy(&config.scheduled_days, alarm->config.scheduled_days, sizeof(config.scheduled_days));
   settings_file_set(fd, &key, sizeof(key), &config, sizeof(config));
@@ -511,6 +523,9 @@ static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig* co
       .is_disabled = config.is_disabled,
       .kind = config.kind,
       .is_smart = config.is_smart,
+      .sound_enabled = config.sound_enabled,
+      .vibrate_disabled = config.vibrate_disabled,
+      .tone = config.tone,
     };
     memcpy(&config_out->scheduled_days, config.scheduled_days, sizeof(config.scheduled_days));
     return true;
@@ -600,6 +615,9 @@ AlarmId alarm_create(const AlarmInfo *info) {
     .kind = info->kind,
     .is_disabled = false,
     .is_smart = info->is_smart,
+    .sound_enabled = info->sound_enabled,
+    .vibrate_disabled = !info->vibrate_enabled,
+    .tone = info->tone,
   };
   if (info->kind == ALARM_KIND_CUSTOM && info->scheduled_days) {
     prv_set_alarm_custom_op(id, &config, (void *)info->scheduled_days);
@@ -671,6 +689,36 @@ static bool prv_set_alarm_smart_op(AlarmId id, AlarmConfig *config, void *contex
 
 void alarm_set_smart(AlarmId id, bool smart) {
   prv_alarm_operation(id, prv_set_alarm_smart_op, (void *)(uintptr_t)smart);
+}
+
+// ----------------------------------------------------------------------------------------------
+static bool prv_set_sound_enabled_op(AlarmId id, AlarmConfig *config, void *context) {
+  config->sound_enabled = (uintptr_t)context;
+  return true;
+}
+
+void alarm_set_sound_enabled(AlarmId id, bool enabled) {
+  prv_alarm_operation(id, prv_set_sound_enabled_op, (void *)(uintptr_t)enabled);
+}
+
+// ----------------------------------------------------------------------------------------------
+static bool prv_set_vibrate_enabled_op(AlarmId id, AlarmConfig *config, void *context) {
+  config->vibrate_disabled = !(uintptr_t)context;
+  return true;
+}
+
+void alarm_set_vibrate_enabled(AlarmId id, bool enabled) {
+  prv_alarm_operation(id, prv_set_vibrate_enabled_op, (void *)(uintptr_t)enabled);
+}
+
+// ----------------------------------------------------------------------------------------------
+static bool prv_set_tone_op(AlarmId id, AlarmConfig *config, void *context) {
+  config->tone = (uintptr_t)context;
+  return true;
+}
+
+void alarm_set_tone(AlarmId id, AlarmTone tone) {
+  prv_alarm_operation(id, prv_set_tone_op, (void *)(uintptr_t)tone);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -913,6 +961,40 @@ cleanup:
   return rv;
 }
 
+// ----------------------------------------------------------------------------------------------
+bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
+  if (!info_out) {
+    return false;
+  }
+
+  SettingsFile file;
+  if (!prv_file_open_and_lock(&file)) {
+    return false;
+  }
+
+  AlarmConfig config;
+  bool rv = prv_alarm_get_config(&file, id, &config);
+  if (!rv) {
+    goto cleanup;
+  }
+
+  *info_out = (AlarmInfo) {
+    .hour = config.hour,
+    .minute = config.minute,
+    .kind = config.kind,
+    .enabled = !config.is_disabled,
+    .is_smart = config.is_smart,
+    .sound_enabled = config.sound_enabled,
+    .vibrate_enabled = !config.vibrate_disabled,
+    .tone = config.tone,
+    .scheduled_days = NULL,
+  };
+
+cleanup:
+  prv_file_close_and_unlock(&file);
+  return rv;
+}
+
 static void prv_snooze_alarm(int snooze_delay_s) {
   prv_clear_snooze_timer();
   PBL_LOG_INFO("Snoozing for %d minutes", snooze_delay_s / SECONDS_PER_MINUTE);
@@ -986,6 +1068,9 @@ static bool alarm_for_each_itr(SettingsFile *file, SettingsRecordInfo *info, voi
     .kind = config.kind,
     .enabled = !config.is_disabled,
     .is_smart = config.is_smart,
+    .sound_enabled = config.sound_enabled,
+    .vibrate_enabled = !config.vibrate_disabled,
+    .tone = config.tone,
     .scheduled_days = &config.scheduled_days,
   };
   itr_data->cb(key.id, &alarm_info, itr_data->cb_data);
