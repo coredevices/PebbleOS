@@ -117,7 +117,10 @@ static void prv_change_state(BacklightState new_state);
 
 static uint32_t prv_get_als_level(void) {
   RtcTicks now = rtc_get_ticks();
-  if (s_als_cached_ticks != 0 && (now - s_als_cached_ticks) < ALS_CACHE_TTL_TICKS) {
+  const bool cache_valid =
+      s_als_cached_ticks != 0 &&
+      (s_current_brightness > 0 || (now - s_als_cached_ticks) < ALS_CACHE_TTL_TICKS);
+  if (cache_valid) {
     return s_als_cached_level;
   }
   s_als_cached_level = ambient_light_get_light_level();
