@@ -158,14 +158,14 @@ static void prv_start_vibes(void) {
 //! Click Handler
 static void prv_dismiss_click_handler(ClickRecognizerRef recognizer, void *data) {
   alarm_dismiss_alarm();
-  prv_show_dismiss_confirm_dialog();
   actionable_dialog_pop(s_alarm_popup_data->alarm_popup);
+  prv_show_dismiss_confirm_dialog();
 }
 
 static void prv_snooze_click_handler(ClickRecognizerRef recognizer, void *data) {
   alarm_set_snooze_alarm();
-  prv_show_snooze_confirm_dialog();
   actionable_dialog_pop(s_alarm_popup_data->alarm_popup);
+  prv_show_snooze_confirm_dialog();
 }
 
 static void prv_click_provider(void *context) {
