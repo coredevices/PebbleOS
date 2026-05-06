@@ -373,6 +373,7 @@ static void prv_refill_bg(void *data) {
       for (uint32_t i = 0; i < to_gen; i++) {
         s_state.refill_buf[i] = note_synth_sample(s_state.tone_waveform,
                                                   s_state.tone_phase_acc,
+                                                  s_state.tone_phase_inc,
                                                   s_state.tone_velocity);
         s_state.tone_phase_acc += s_state.tone_phase_inc;
       }

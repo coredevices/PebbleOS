@@ -87,7 +87,31 @@ uint32_t note_phase_inc(uint8_t midi_note, uint32_t sample_rate) {
   return (s_midi_freq_x256[midi_note] << 8) / sample_rate;
 }
 
-int16_t note_synth_sample(uint8_t waveform, uint32_t phase_acc, uint8_t velocity) {
+//! PolyBLEP correction value at phase t with per-sample phase increment dt.
+//! Both are in 16.0 phase units where one cycle = 65536. Returns a Q15 value
+//! (32768 = 1.0). Caller must ensure dt > 0 and dt < 32768. For phases more
+//! than dt away from any discontinuity the correction is zero.
+static int32_t prv_polyblep_q15(uint32_t t, uint32_t dt) {
+  if (t < dt) {
+    // Trailing side of the discontinuity: tp = t/dt in [0, 1)
+    // Correction = 2*tp - tp^2 - 1, in [-1, 0)
+    uint32_t tp = (t << 15) / dt;  // Q15 in [0, 32768)
+    int32_t tp_s = (int32_t)tp;
+    int32_t tp_sq = (tp_s * tp_s) >> 15;
+    return (tp_s << 1) - tp_sq - 32768;
+  }
+  if (t + dt > 65536) {
+    // Leading side of the next discontinuity: u = (1 - t)/dt in (0, 1]
+    // Correction = (1 - u)^2, in [0, 1)
+    uint32_t u = ((65536u - t) << 15) / dt;  // Q15 in (0, 32768]
+    int32_t one_minus_u = 32768 - (int32_t)u;
+    return (one_minus_u * one_minus_u) >> 15;
+  }
+  return 0;
+}
+
+int16_t note_synth_sample(uint8_t waveform, uint32_t phase_acc, uint32_t phase_inc,
+                          uint8_t velocity) {
   uint8_t phase_idx = (phase_acc >> 8) & 0xFF;
   int32_t sample = 0;
 
@@ -96,9 +120,24 @@ int16_t note_synth_sample(uint8_t waveform, uint32_t phase_acc, uint8_t velocity
       sample = s_sine_lut[phase_idx];
       break;
 
-    case SpeakerWaveformSquare:
-      sample = (phase_idx < 128) ? 32767 : -32767;
+    case SpeakerWaveformSquare: {
+      // Naive square plus PolyBLEP corrections at the rising edge (t=0) and
+      // falling edge (t=0.5) to suppress the aliasing that otherwise mangles
+      // every frequency where the half-period isn't an integer number of
+      // output samples.
+      uint32_t t = phase_acc & 0xFFFFu;
+      uint32_t dt = phase_inc & 0xFFFFu;
+      sample = (t < 32768u) ? 32767 : -32767;
+      // Correction is meaningless at and above Nyquist; skip rather than
+      // generate nonsense when the caller asked for an out-of-range frequency.
+      if (dt > 0 && dt < 32768u) {
+        sample += prv_polyblep_q15(t, dt);
+        sample -= prv_polyblep_q15(t ^ 0x8000u, dt);
+        if (sample > 32767) sample = 32767;
+        else if (sample < -32768) sample = -32768;
+      }
       break;
+    }
 
     case SpeakerWaveformTriangle:
       if (phase_idx < 64) {
@@ -145,7 +184,7 @@ static int16_t prv_generate_sample(NoteSequenceState *s) {
     return 0;
   }
   int16_t sample = note_synth_sample(s->current_waveform, s->phase_acc,
-                                     s->current_velocity);
+                                     s->phase_inc, s->current_velocity);
   s->phase_acc += s->phase_inc;
   return sample;
 }

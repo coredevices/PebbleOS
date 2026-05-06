@@ -68,9 +68,13 @@ void note_seq_deinit(NoteSequenceState *s);
 uint32_t note_phase_inc(uint8_t midi_note, uint32_t sample_rate);
 
 //! Synthesize one 16-bit signed PCM sample for a given waveform at the given
-//! 16.16 phase accumulator value. velocity scales the amplitude (1..127);
-//! velocity 0 means no per-sample scaling (master volume is applied downstream).
-int16_t note_synth_sample(uint8_t waveform, uint32_t phase_acc, uint8_t velocity);
+//! 16.16 phase accumulator value. phase_inc is the per-sample increment for
+//! the same accumulator and is used by the square wave generator to apply
+//! PolyBLEP anti-aliasing at the discontinuities. velocity scales the
+//! amplitude (1..127); velocity 0 means no per-sample scaling (master volume
+//! is applied downstream).
+int16_t note_synth_sample(uint8_t waveform, uint32_t phase_acc, uint32_t phase_inc,
+                          uint8_t velocity);
 
 //! Return the MIDI-note frequency in 16.8 fixed-point Hz (i.e. freq_hz * 256).
 //! Used by track_player to compute sample-playback pitch ratios.
