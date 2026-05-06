@@ -317,7 +317,6 @@ def build(bld):
         'test_kernel_le_client.c',
         'test_ppogatt.c',
         'test_graphics_circle.c',
-        'test_action_menu_window.c',
         'test_activity_insights.c',
         'test_app_menu_data_source.c',
         'test_battery_monitor.c',
@@ -359,7 +358,9 @@ def build(bld):
     # comparison with the expected results.
     fail_dir = test_images_dest_dir.parent.make_node('failed')
     fail_path = fail_dir.abspath().strip()
-    sh.rm('-rf', fail_path)
+    # Use subprocess instead of sh.rm to avoid Python 3.14 compatibility issues
+    import subprocess
+    subprocess.run(['rm', '-rf', fail_path], check=False, capture_output=True)
     fail_dir.mkdir()
 
     bld.env.test_image_defines = [

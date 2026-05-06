@@ -10,7 +10,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/content_indicator.h"
 #include "applib/ui/content_indicator_private.h"
-#include "apps/system/settings/settings_notifications_private.h"
+#include "apps/system/settings/notifications_private.h"
 #include "resource/resource.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
@@ -64,6 +64,7 @@ GContext *graphics_context_get_current_context(void) {
 #include "stubs_syscall_internal.h"
 #include "stubs_syscalls.h"
 #include "stubs_task_watchdog.h"
+#include "stubs_vibes.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 
