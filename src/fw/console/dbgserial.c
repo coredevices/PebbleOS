@@ -18,7 +18,7 @@
 
 
 void dbgserial_init(void) {
-#if !defined(RELEASE) || defined(TARGET_QEMU) || defined(MANUFACTURING_FW)
+#if !defined(RELEASE) || defined(MANUFACTURING_FW)
   uart_init(DBG_UART);
 #else
   uart_init_tx_only(DBG_UART);

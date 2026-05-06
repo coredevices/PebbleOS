@@ -82,7 +82,6 @@ int printf(const char *template, ...) {
 }
 #endif
 
-#if !defined(TARGET_QEMU)
 static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *context) {
   if (!voice_speex_is_initialized()) {
     VOICE_LOG("Speex not initialized, dropping audio data");
@@ -117,16 +116,13 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
     VOICE_LOG("Failed to encode audio frame");
   }
 }
-#endif // !defined(TARGET_QEMU)
 
 static void prv_teardown_session(void) {
-#if !defined(TARGET_QEMU)
   // Reset communication session responsiveness to default after voice session ends
   CommSession *comm_session = comm_session_get_system_session();
   if (comm_session) {
     comm_session_set_responsiveness(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMax, 0);
   }
-#endif
 }
 
 static void prv_stop_recording(void) {
@@ -139,9 +135,7 @@ static void prv_stop_recording(void) {
   // This prevents new frames from being added while the endpoint shuts down
   audio_endpoint_stop_transfer(s_session_id);
 
-#if !defined(TARGET_QEMU)
   mic_stop(MIC);
-#endif
 
   PBL_LOG_INFO("Stop recording audio");
   prv_teardown_session();
@@ -151,9 +145,7 @@ static void prv_stop_recording(void) {
 
 static void prv_cancel_recording(void) {
   VOICE_LOG("prv_cancel_recording called - cancelling mic and audio endpoint transfer");
-#if !defined(TARGET_QEMU)
   mic_stop(MIC);
-#endif
 
   audio_endpoint_cancel_transfer(s_session_id);
   PBL_LOG_INFO("Cancel audio recording");
@@ -221,13 +213,12 @@ static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id
 
 static bool prv_start_recording(void) {
   VOICE_LOG("prv_start_recording called");
-#if !defined(TARGET_QEMU)
   // Start microphone with Speex frame buffer
   int16_t *frame_buffer = voice_speex_get_frame_buffer();
   size_t frame_size_samples = voice_speex_get_frame_size();  // Get frame size in samples
-  
+
   VOICE_LOG("Got Speex frame buffer: %p, frame_size_samples: %zu", frame_buffer, frame_size_samples);
-  
+
   if (frame_buffer && frame_size_samples > 0) {
     VOICE_LOG("Starting microphone with frame buffer");
     if (!mic_start(MIC, &prv_audio_data_handler, NULL, frame_buffer, frame_size_samples)) {
@@ -239,9 +230,6 @@ static bool prv_start_recording(void) {
     PBL_LOG_ERR("Invalid Speex frame buffer");
     return false;
   }
-#else
-  VOICE_LOG("Running on QEMU - skipping microphone start");
-#endif
 
   return true;
 }
@@ -426,14 +414,12 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
     VOICE_LOG("Starting system-initiated voice dictation session");
   }
 
-#if !defined(TARGET_QEMU)
   // Set up communication session responsiveness for voice session
   CommSession *comm_session = comm_session_get_system_session();
   if (comm_session) {
     comm_session_set_responsiveness(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMin,
                                     MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
   }
-#endif
 
   // Get Speex transfer info
   AudioTransferInfoSpeex transfer_info;
