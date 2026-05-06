@@ -15,6 +15,11 @@ using the (`--board`) flag followed by:
 
 Keep in mind that some targets may not currently compile as-is.
 
+## Variant
+
+:`--variant`:
+  Build variant, `normal` (main firmware) or `prf` (recovery firmware).
+
 ## Main features
 
 :`--js-engine`:
