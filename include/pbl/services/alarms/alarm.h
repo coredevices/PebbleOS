@@ -104,6 +104,10 @@ void alarm_set_tone(AlarmId id, AlarmTone tone);
 //! @return True if the alarm exists, False otherwise
 bool alarm_get_info(AlarmId id, AlarmInfo *info_out);
 
+//! @return The id of the most recently fired alarm, or ALARM_INVALID_ID if no alarm has fired
+//! since boot. Used by the alarm popup to look up the firing alarm's settings.
+AlarmId alarm_get_most_recent_id(void);
+
 //! @param id The alarm for which the scheduled_days array should be updated for
 //! @param scheduled_days[DAYS_PER_WEEK] An empty bool array for each weekday (Sunday = index 0)
 //! that is to be updated. Alarms will run on each weekday that is marked as true

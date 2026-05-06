@@ -3,7 +3,7 @@
 
 #include "alarm_tones.h"
 
-#include "applib/i18n.h"
+#include "pbl/services/i18n/i18n.h"
 
 #define ALARM_TONE_COUNT 4
 

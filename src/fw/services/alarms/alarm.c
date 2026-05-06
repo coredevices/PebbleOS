@@ -962,6 +962,11 @@ cleanup:
 }
 
 // ----------------------------------------------------------------------------------------------
+AlarmId alarm_get_most_recent_id(void) {
+  return s_most_recent_alarm_id;
+}
+
+// ----------------------------------------------------------------------------------------------
 bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
   if (!info_out) {
     return false;
