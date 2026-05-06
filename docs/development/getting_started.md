@@ -25,7 +25,7 @@ Follow the next steps to install them.
 ::::{tab-item} Ubuntu 24.04 LTS
 :sync: ubuntu
 
-1. Update package list:
+1. Update first:
 
 ```shell
 sudo apt update
@@ -34,13 +34,54 @@ sudo apt update
 2. Install required dependencies
 
 ```shell
-sudo apt install bison clang flex gcc gcc-multilib gperf git gettext libfreetype6-dev libglib2.0-dev libgtk-3-dev libncurses-dev librsvg2-bin make python3-dev python3-venv iopenocd
+sudo apt install \
+    bison \
+    clang \
+    flex \
+    gcc \
+    gcc-multilib \
+    gettext \
+    git \
+    gperf \
+    libfreetype6-dev \
+    libglib2.0-dev \
+    libgtk-3-dev \
+    libncurses-dev \
+    librsvg2-bin \
+    make \
+    openocd \
+    python3-dev \
+    python3-venv
+```
+
+::::
+
+::::{tab-item} Fedora 44
+
+1. Upgrade first:
+
+```shell
+sudo dnf upgrade --refresh
+```
+
+2. Install required dependencies
+
+```shell
+sudo dnf install \
+    clang \
+    dash \
+    freetype-devel \
+    gcc \
+    glib2-devel \
+    gtk3-devel \
+    librsvg2-tools \
+    nodejs \
+    python-devel  
 ```
 
 ::::
 
 ::::{tab-item} macOS
-:sync: macos
 
 1. Install [brew](https://brew.sh/).
 
