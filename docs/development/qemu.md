@@ -19,12 +19,7 @@ The steps here are similar that of real hardware:
 ```
 
 where `$BOARD` is one of the dedicated QEMU boards (`qemu_emery`,
-`qemu_flint`, `qemu_gabbro`). For boards without a dedicated QEMU
-target, pass `--qemu` to the configure step instead:
-
-```shell
-./waf configure --board=$BOARD --qemu
-```
+`qemu_flint`, `qemu_gabbro`).
 
 ## Run
 
