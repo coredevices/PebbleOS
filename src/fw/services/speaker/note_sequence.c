@@ -158,6 +158,22 @@ int16_t note_synth_sample(uint8_t waveform, uint32_t phase_acc, uint32_t phase_i
       break;
   }
 
+  // Equal-loudness normalization: scale each waveform to roughly the RMS
+  // that triangle and sawtooth naturally produce at peak ±full-scale, so
+  // swapping waveforms at the same velocity produces roughly the same
+  // perceived loudness. Q15 multipliers, 32768 = unity.
+  // Square loses 4.8 dB (1/sqrt(3)); sine loses 3 dB (sqrt(2/3));
+  // triangle and sawtooth are unchanged.
+  static const uint16_t s_loudness_q15[SpeakerWaveformCount] = {
+      [SpeakerWaveformSine]     = 26755,
+      [SpeakerWaveformSquare]   = 18918,
+      [SpeakerWaveformTriangle] = 32768,
+      [SpeakerWaveformSawtooth] = 32768,
+  };
+  if (waveform < SpeakerWaveformCount) {
+    sample = (sample * s_loudness_q15[waveform]) >> 15;
+  }
+
   if (velocity > 0 && velocity < 127) {
     sample = (sample * velocity) / 127;
   }
