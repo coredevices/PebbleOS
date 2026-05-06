@@ -45,6 +45,10 @@ void enable_fault_handlers(void) {
   SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
   SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
   SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk;
+
+  SCB->CCR &= ~SCB_CCR_DIV_0_TRP_Msk;
+  __DSB();
+  __ISB();
 }
 
 
