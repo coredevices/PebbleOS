@@ -140,6 +140,7 @@ def options(opt):
 
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
     opt.add_option('--file', action='store', help='Specify a file to use with the flash command')
+    opt.add_option('--resources', action='store_true', help='Also flash system resources alongside the firmware')
     opt.add_option('--tty',
         help='Selects a tty to use for serial imaging. Must be specified for all image commands')
     opt.add_option('--baudrate', action='store', type=int, help='Optional: specifies the baudrate to run the targetted uart at')
@@ -1338,13 +1339,21 @@ def flash(ctx):
 
     hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
 
+    flash_resources = ctx.options.resources and ctx.env.VARIANT != 'prf'
+    if flash_resources and ctx.env.RUNNER != 'sftool':
+        ctx.fatal("--resources is only supported on the sftool runner")
+
     if ctx.env.RUNNER == 'openocd':
         waftools.openocd.run_command(ctx, 'init; reset halt; '
                                     'program {} reset;'.format(hex_path),
                                     expect=["Programming Finished", "Programming Finished", "shutdown"],
                                     enforce_expect=True)
     elif ctx.env.RUNNER == 'sftool':
-        waftools.sftool.write_flash(ctx, hex_path)
+        files = [hex_path]
+        if flash_resources:
+            pbpack_path = ctx.get_pbpack_node().path_from(ctx.path)
+            files.append('{}@0x12620000'.format(pbpack_path))
+        waftools.sftool.write_flash(ctx, *files)
     elif ctx.env.RUNNER == 'nrfutil':
         waftools.nrfutil.program(ctx, hex_path)
         waftools.nrfutil.reset(ctx)
