@@ -16,9 +16,18 @@
 #include "pbl/services/alarms/alarm.h"
 #include "system/logging.h"
 
+#if CAPABILITY_HAS_SPEAKER
+#include "services/alarms/alarm_tones.h"
+#endif
+
 #include <stdio.h>
 
 #define NUM_SNOOZE_MENU_ITEMS 5
+
+#if CAPABILITY_HAS_SPEAKER
+// Sound submenu: "Off" + one entry per AlarmTone (Reveille, Beacon, Bell, Chime).
+#define NUM_SOUND_MENU_ITEMS 5
+#endif
 
 typedef enum DetailMenuItemIndex {
   DetailMenuItemIndexEnable = 0,
@@ -26,6 +35,10 @@ typedef enum DetailMenuItemIndex {
   DetailMenuItemIndexChangeTime,
   DetailMenuItemIndexChangeDays,
   DetailMenuItemIndexConvertSmart,
+#if CAPABILITY_HAS_SPEAKER
+  DetailMenuItemIndexSound,
+#endif
+  DetailMenuItemIndexVibration,
   DetailMenuItemIndexSnooze,
   DetailMenuItemIndexNum,
 } DetailMenuItemIndex;
@@ -115,6 +128,37 @@ static void prv_delete_alarm_handler(ActionMenu *action_menu,
   }
 }
 
+static void prv_toggle_vibrate_handler(ActionMenu *action_menu, const ActionMenuItem *item,
+                                       void *context) {
+  AlarmDetailData *data = (AlarmDetailData *) context;
+  alarm_set_vibrate_enabled(data->alarm_id, !data->alarm_info.vibrate_enabled);
+  if (data->alarm_editor_callback) {
+    data->alarm_editor_callback(EDITED, data->alarm_id, data->callback_context);
+  }
+}
+
+#if CAPABILITY_HAS_SPEAKER
+static void prv_disable_sound_handler(ActionMenu *action_menu, const ActionMenuItem *item,
+                                      void *context) {
+  AlarmDetailData *data = (AlarmDetailData *) context;
+  alarm_set_sound_enabled(data->alarm_id, false);
+  if (data->alarm_editor_callback) {
+    data->alarm_editor_callback(EDITED, data->alarm_id, data->callback_context);
+  }
+}
+
+static void prv_select_tone_handler(ActionMenu *action_menu, const ActionMenuItem *item,
+                                    void *context) {
+  AlarmDetailData *data = (AlarmDetailData *) context;
+  AlarmTone tone = (AlarmTone)(uintptr_t)item->action_data;
+  alarm_set_tone(data->alarm_id, tone);
+  alarm_set_sound_enabled(data->alarm_id, true);
+  if (data->alarm_editor_callback) {
+    data->alarm_editor_callback(EDITED, data->alarm_id, data->callback_context);
+  }
+}
+#endif
+
 static ActionMenuLevel *prv_create_main_menu(void) {
   ActionMenuLevel *level = task_malloc(sizeof(ActionMenuLevel) +
       DetailMenuItemIndexNum * sizeof(ActionMenuItem));
@@ -139,6 +183,20 @@ static ActionMenuLevel *prv_create_snooze_menu(ActionMenuLevel *parent_level) {
   return level;
 }
 
+#if CAPABILITY_HAS_SPEAKER
+static ActionMenuLevel *prv_create_sound_menu(ActionMenuLevel *parent_level) {
+  ActionMenuLevel *level = task_malloc(sizeof(ActionMenuLevel) +
+      NUM_SOUND_MENU_ITEMS * sizeof(ActionMenuItem));
+  if (!level) return NULL;
+  *level = (ActionMenuLevel) {
+    .num_items = NUM_SOUND_MENU_ITEMS,
+    .parent_level = parent_level,
+    .display_mode = ActionMenuLevelDisplayModeWide,
+  };
+  return level;
+}
+#endif
+
 void prv_cleanup_alarm_detail_menu(ActionMenu *action_menu,
                                    const ActionMenuItem *item,
                                    void *context) {
@@ -146,6 +204,9 @@ void prv_cleanup_alarm_detail_menu(ActionMenu *action_menu,
   AlarmDetailData *data = (AlarmDetailData *) context;
   i18n_free_all(data);
   task_free((void *)root_level->items[DetailMenuItemIndexSnooze].next_level);
+#if CAPABILITY_HAS_SPEAKER
+  task_free((void *)root_level->items[DetailMenuItemIndexSound].next_level);
+#endif
   task_free((void *)root_level);
   task_free(data);
   data = NULL;
@@ -196,6 +257,19 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     .perform_action = prv_toggle_smart_alarm_handler,
     .action_data = data,
   };
+#if CAPABILITY_HAS_SPEAKER
+  main_menu->items[DetailMenuItemIndexSound] = (ActionMenuItem) {
+    .label = i18n_get("Sound", data),
+    .is_leaf = 0,
+    .next_level = prv_create_sound_menu(main_menu),
+  };
+#endif
+  main_menu->items[DetailMenuItemIndexVibration] = (ActionMenuItem) {
+    .label = data->alarm_info.vibrate_enabled ? i18n_get("Vibration: On", data)
+                                              : i18n_get("Vibration: Off", data),
+    .perform_action = prv_toggle_vibrate_handler,
+    .action_data = data,
+  };
   main_menu->items[DetailMenuItemIndexSnooze] = (ActionMenuItem) {
     .label = i18n_get("Snooze Delay", data),
     .is_leaf = 0,
@@ -227,6 +301,28 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
       snooze_level->default_selected_item = i;
     }
   }
+
+#if CAPABILITY_HAS_SPEAKER
+  // Setup sound menu items: Off + one entry per AlarmTone.
+  ActionMenuLevel *sound_level = main_menu->items[DetailMenuItemIndexSound].next_level;
+  static const AlarmTone tone_values[] = {
+    AlarmTone_Reveille, AlarmTone_Beacon, AlarmTone_Bell, AlarmTone_Chime,
+  };
+  sound_level->items[0] = (ActionMenuItem) {
+    .label = i18n_get("Off", data),
+    .perform_action = prv_disable_sound_handler,
+    .action_data = data,
+  };
+  for (int i = 0; i < (int)(sizeof(tone_values) / sizeof(tone_values[0])); i++) {
+    sound_level->items[i + 1] = (ActionMenuItem) {
+      .label = i18n_get(alarm_tones_get_name(tone_values[i]), data),
+      .perform_action = prv_select_tone_handler,
+      .action_data = (void *)(uintptr_t)tone_values[i],
+    };
+  }
+  sound_level->default_selected_item =
+      data->alarm_info.sound_enabled ? (data->alarm_info.tone + 1) : 0;
+#endif
 
   app_action_menu_open(&data->menu_config);
 }
