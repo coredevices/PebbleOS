@@ -16,7 +16,6 @@ The steps here are similar that of real hardware:
 ```shell
 ./waf configure --board=$BOARD
 ./waf build
-./waf qemu_image_spi
 ```
 
 where `$BOARD` is one of the dedicated QEMU boards (`qemu_emery`,
@@ -33,6 +32,12 @@ You can launch QEMU with the built image using:
 
 ```shell
 ./waf qemu
+```
+
+The flash image is built automatically the first time. To force rebuilding it, pass `--new-flash-image`:
+
+```shell
+./waf qemu --new-flash-image
 ```
 
 ## Console
