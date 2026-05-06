@@ -17,7 +17,7 @@
 
 #include "drivers/gpio.h"
 
-#if !defined(RELEASE) || defined(TARGET_QEMU) || defined(MANUFACTURING_FW)
+#if !defined(RELEASE) || defined(MANUFACTURING_FW)
 
 #define STOP_MODE_TIMEOUT_MS (2000)
 
@@ -115,10 +115,6 @@ static void dbgserial_interrupt_handler(bool *should_context_switch) {
 #endif
 
 void dbgserial_set_rx_dma_enabled(bool enabled) {
-#if TARGET_QEMU
-  // we can't use DMA on QEMU
-  enabled = false;
-#endif
   if (enabled == s_dma_enabled) {
     return;
   }

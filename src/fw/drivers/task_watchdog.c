@@ -339,12 +339,6 @@ static void prv_task_watchdog_feed(void) {
 
       s_last_warning_message_tick_time = 0;
     }
-
-#if defined(TARGET_QEMU)
-    // Investigating PBL-29422
-    extern volatile int g_qemu_num_skipped_ticks;
-    g_qemu_num_skipped_ticks = 0;
-#endif // defined(TARGET_QEMU)
   }
 
   // If we haven't fed the watchdog in the last 5 seconds and we haven't

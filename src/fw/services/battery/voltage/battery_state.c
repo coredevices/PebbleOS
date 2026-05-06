@@ -195,8 +195,6 @@ static void prv_update_state(void *force_update) {
 
   uint32_t new_charge_percent =
       battery_curve_sample_ratio32_charge_percent(s_last_battery_state.voltage, charging);
-#ifndef TARGET_QEMU
-  // If QEMU, allow updates to always occur for ease of testing otherwise
   // Allow updates iff:
   // - We are charging
   // - We are discharging and:
@@ -209,7 +207,6 @@ static void prv_update_state(void *force_update) {
     // so we won't catch those.
     return;
   }
-#endif
 
   s_last_battery_state.percent = new_charge_percent;
 
