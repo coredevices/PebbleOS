@@ -503,60 +503,6 @@ def configure(conf):
     tool_check.tool_check()
 
 
-def _run_remote_suite(ctx, suite):
-    # PEBBLESDK_TEST_ROOT must be defined in order to initiate integration tests
-    try:
-        pebblesdk_test_root = os.environ['PEBBLESDK_TEST_ROOT']
-    except KeyError:
-        waflib.Logs.pprint('RED', 'Error: environment variable $PEBBLESDK_TEST_ROOT must be defined')
-        return
-
-    # Check if firmware has been built
-    # Assume we're looking for a "normal" PBZ, as recovery PBZs aren't supported by integration tests
-    fw_bin_path = ctx.get_tintin_fw_node().abspath()
-    fw_bin_exists = os.path.isfile(fw_bin_path)
-
-    if not fw_bin_exists:
-        waflib.Logs.pprint('RED', ('Error: BIN not found at expected location {}, '
-                                   'have you run `waf build` yet?'.format(fw_bin_path)))
-        return
-
-    # Check if firmware has been bundled
-    version_string, version_ts, _ = _get_version_info(ctx)
-    fw_type = 'qemu' if ctx.env.QEMU else 'normal'
-    fw_pbz_path = ctx.get_pbz_node(fw_type, ctx.env.BOARD, version_string).abspath()
-    fw_pbz_exists = os.path.isfile(fw_pbz_path)
-
-    if not fw_pbz_exists:
-        waflib.Logs.pprint('CYAN', ('Warning: PBZ not found at expected location {}, '
-                                    'running `waf bundle`...').format(fw_pbz_path))
-
-    bundle(ctx)
-
-    # Run power tests using remote_runner.py
-    remote_runner_path = os.path.join(pebblesdk_test_root, 'remote_runner.py')
-    if not os.path.isfile(remote_runner_path):
-        waflib.Logs.pprint('RED', ('Error: remote_runner.py not found in {}. '
-                                   'Are you sure that PEBBLESDK_TEST_ROOT is defined correctly?'
-                                   .format(pebblesdk_test_root)))
-        return
-    subprocess.call([remote_runner_path, '--pbz', fw_pbz_path, '[%s]' % suite])
-
-
-class power_test(BuildContext):
-    cmd = 'power_test'
-
-    def execute_build(ctx):
-        _run_remote_suite(ctx, 'power')
-
-
-class integration_test(BuildContext):
-    cmd = 'integration_test'
-
-    def execute_build(ctx):
-        _run_remote_suite(ctx, 'tintin_3x')
-
-
 def stop_build_timer(ctx):
     t = datetime.datetime.utcnow() - ctx.pbl_build_start_time
     node = ctx.path.get_bld().make_node('build_time')
@@ -895,11 +841,6 @@ class QemuImageSpiCommand(BuildContext):
     fun = 'qemu_image_spi'
 
 
-class MfgImageSpiCommand(BuildContext):
-    cmd = 'mfg_image_spi'
-    fun = 'mfg_image_spi'
-
-
 def qemu_image_micro(ctx):
     fw_hex = ctx.get_tintin_fw_node().change_ext('.hex')
     _create_qemu_image_micro(ctx, fw_hex.path_from(ctx.path))
@@ -949,32 +890,6 @@ def qemu_image_spi(ctx):
         qemu_spi_img_file.write(bytes([0xff]) * tail_padding_size)
 
 
-def mfg_image_spi(ctx):
-    """Creates a SPI flash image of PRF for MFG pre-burn. Includes a
-    FirmwareDescription struct"""
-    import insert_firmware_descr
-
-    ctx.fatal("MFG Image not supported for board: {}".format(ctx.env.BOARD))
-
-    spi_flash_path = _create_spi_flash_image(ctx, 'mfg_prf_image.bin')
-    mfg_spi_img_file = open(spi_flash_path, 'wb')
-
-    # Pad the first section before PRF storage
-    mfg_spi_img_file.write("\xff" * prf_begin)
-
-    prf_path = ctx.options.file or ctx.get_tintin_fw_node().path_from(ctx.path)
-    prf_image = insert_firmware_descr.insert_firmware_description_struct(prf_path)
-    mfg_spi_img_file.write(prf_image)
-
-    # Pad with 0xff up to image size
-    tail_padding_size = image_size - prf_begin - len(prf_image)
-    mfg_spi_img_file.write("\xff" * tail_padding_size)
-
-def show_ttys(ctx):
-    """Displays all available ftdi ports connected to computer"""
-    os.system("python ./tools/log_hashing/miniterm_co.py ftdi:///?")
-
-
 class ConsoleCommand(BuildContext):
     cmd = 'console'
     fun = 'console'
@@ -995,38 +910,6 @@ def console(ctx):
         # opened. There may be a glitch on RTS when rts is set differently from
         # their default value.
         os.system("python ./tools/log_hashing/miniterm_co.py %s %d --rts 0" % (tty, baudrate))
-
-
-class BleConsoleCommand(BuildContext):
-    cmd = 'ble_console'
-    fun = 'ble_console'
-
-
-def ble_console(ctx):
-    def _get_ble_tty():
-        import pebble_tty
-        tty = pebble_tty.find_ble_tty()
-
-        if tty is None:
-            return None
-
-        waflib.Logs.pprint('GREEN', 'No --tty argument specified, auto-selecting: %s' % tty)
-        return tty
-
-    """Starts miniterm with the serial console for the BLE chip."""
-    ctx.recurse('platform', mandatory=False)
-
-    # FIXME: We have the ability to progam PIDs into the new round of Big Boards. TTY
-    # path discovery should be able to use that (PBL-31111). For now, just make a best
-    # guess at what the path should be
-
-    waflib.Logs.pprint('CYAN', 'Note: This platform does not have a BLE UART')
-    tty_path = _get_dbgserial_tty()
-
-    tty = ctx.options.tty or tty_path
-    baudrate = ctx.options.baudrate or 230400
-
-    os.system("python ./tools/log_hashing/miniterm_co.py %s %d" % (tty, baudrate))
 
 
 def qemu(ctx):
@@ -1129,17 +1012,6 @@ def qemu_gdb(ctx):
     run_arm_gdb(ctx, fw_elf, target_server_port=1233)
 
 
-class QemuGdbBoot(BuildContext):
-    """ Starts up a gdb instance to talk to the emulator's boot ROM """
-    cmd = 'qemu_gdb_boot'
-    fun = 'qemu_gdb_boot'
-
-
-def qemu_gdb_boot(ctx):
-    boot_elf = ctx.get_tintin_boot_node().change_ext('.elf')
-    run_arm_gdb(ctx, boot_elf, target_server_port=1234)
-
-
 class debug(BuildContext):
     """ Alias for gdb """
     cmd = 'debug'
@@ -1186,58 +1058,6 @@ def _get_dbgserial_tty():
 
     waflib.Logs.pprint('GREEN', 'No --tty argument specified, auto-selecting: %s' % tty)
     return tty
-
-
-class ble_send_hci(BuildContext):
-    """Puts MCU in HCI bypass mode. Sends specified HCI Command and returns result. i.e:
-       ./waf send_hci 0x01 0x03 0x0C 0x00
-    """
-    cmd = 'ble_send_hci'
-    fun = 'ble_send_hci'
-
-
-def ble_send_hci(ctx):
-    import prompt
-    import pebble_tty
-    from serial_port_wrapper import SerialPortWrapper
-    import struct
-    from time import sleep
-    from waflib import Options
-
-    def _dump_hex_array(prefix, hex_array):
-        print(prefix + " [")
-        for i in range(0, len(hex_array)):
-            print("0x%02x " % hex_array[i])
-        print("]")
-
-    hci_bytes = [int(i, 16) for i in Options.commands]
-    _dump_hex_array("Sent HCI CMD:", hci_bytes)
-
-    try:
-        device_tty = pebble_tty.find_dbgserial_tty()
-        serial = SerialPortWrapper(device_tty)
-
-        prompt.go_to_prompt(serial)
-        prompt.issue_command(serial, "bt test hcipass")
-        sleep(0.1)
-
-        serial.write_fast(struct.pack('B'*len(hci_bytes), *hci_bytes))
-
-        response = serial.read()
-        response = struct.unpack('%dB' % len(response), response)
-
-        serial.write(struct.pack('B', 0x04))  # issue ctrl-d
-
-        _dump_hex_array(" Got HCI EVT:", response)
-    finally:
-        # note: random bytes get dropped on subsequent usb ops if you forget to close!
-        serial.close()
-
-    # WAF/optparse does not have native support for adding sub-command options
-    # or variable length options. Reset the options list to prevent innocuous
-    # messaging about unrecognized commands
-    Options.commands = []
-    return None
 
 
 class ImageResources(BuildContext):
