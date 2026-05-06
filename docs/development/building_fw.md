@@ -27,7 +27,7 @@ Before attempting to flash, check the documentation for each {doc}`board <../boa
 You can flash the built firmware (including pre-compiled bootloader) by running:
 
 ```shell
-./waf flash_fw --tty $SERIAL_ADAPTER
+./waf flash --tty $SERIAL_ADAPTER
 ```
 where `$SERIAL_ADAPTER` is the path for your serial adapter, e.g. `/dev/ttyACM0`, `/dev/tty.usbmodem1102`, etc.
 If using a board with a built-in FTDI programmer, the `--tty` argument can be removed.

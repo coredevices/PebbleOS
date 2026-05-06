@@ -139,7 +139,7 @@ def options(opt):
                    help='Which language to package (isocode)')
 
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
-    opt.add_option('--file', action='store', help='Specify a file to use with the flash_fw command')
+    opt.add_option('--file', action='store', help='Specify a file to use with the flash command')
     opt.add_option('--tty',
         help='Selects a tty to use for serial imaging. Must be specified for all image commands')
     opt.add_option('--baudrate', action='store', type=int, help='Optional: specifies the baudrate to run the targetted uart at')
@@ -1327,48 +1327,13 @@ def _check_firmware_image_size(ctx, path):
 
 
 class FlashCommand(BuildContext):
-    """alias for flash_everything"""
+    """flashes firmware"""
     cmd = 'flash'
     fun = 'flash'
 
 
 def flash(ctx):
-    flash_everything(ctx, ctx.get_tintin_fw_node())
-
-
-class FlashFirmware(BuildContext):
-    """flashes a firmware"""
-    cmd = 'flash_fw'
-
-    def execute_build(ctx):
-        flash_fw(ctx, ctx.get_tintin_fw_node())
-
-
-def flash_fw(ctx, fw_bin):
-    _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
-
-    hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
-
-    if ctx.env.RUNNER == 'openocd':
-        waftools.openocd.run_command(ctx, 'init; reset halt; ' +
-                                    'program {} reset;'.format(hex_path),
-                                    expect=["Programming Finished"],
-                                    enforce_expect=True)
-    elif ctx.env.RUNNER == 'sftool':
-        waftools.sftool.write_flash(ctx, hex_path)
-    elif ctx.env.RUNNER == 'nrfutil':
-        waftools.nrfutil.program_and_reset(ctx, hex_path)
-    else:
-        ctx.fatal("Unsupported operation on: {}".format(ctx.env.RUNNER))
-
-
-def flash_everything(ctx, fw_bin):
-    """flashes firmware and any additional resources"""
-    if ctx.env.QEMU:
-        ctx.fatal("I'm sorry Dave, I can't let you do that.\n"
-                  "QEMU firmwares do not work on physical hardware.\n"
-                  "Configure without --qemu and rebuild before trying again.")
-
+    fw_bin = ctx.get_tintin_fw_node()
     _check_firmware_image_size(ctx, fw_bin.path_from(ctx.path))
 
     hex_path = fw_bin.change_ext('.hex').path_from(ctx.path)
