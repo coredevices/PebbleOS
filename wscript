@@ -117,8 +117,6 @@ def options(opt):
                    help='Enables instrumentation + apps for performance testing (off by default)')
     opt.add_option('--ui_debug', action='store_true',
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
-    opt.add_option('--qemu', action='store_true',
-                   help='Build an image for qemu instead of a real board.')
     opt.add_option('--js-engine', action='store', default=None, choices=['moddable', 'none'],
                    help='Specify JavaScript engine (moddable or none). '
                         'Defaults to moddable for boards with HAS_MODDABLE_XS, none otherwise.')
@@ -189,9 +187,6 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'MALLOC_INSTRUMENTATION')
         print("Enabling malloc instrumentation")
 
-    if conf.options.qemu:
-        conf.env.append_value('DEFINES', 'TARGET_QEMU')
-
     if conf.options.test_apps_list:
         conf.options.test_apps = True
         conf.env.test_apps_list = conf.options.test_apps_list.split(",")
@@ -249,7 +244,7 @@ def handle_configure_options(conf):
     if conf.options.ui_debug:
         conf.env.append_value('DEFINES', 'UI_DEBUG')
 
-    if conf.options.no_sandbox or conf.options.qemu:
+    if conf.options.no_sandbox:
         print("Sandbox disabled")
     else:
         conf.env.append_value('DEFINES', 'APP_SANDBOX')
@@ -302,7 +297,7 @@ def configure(conf):
 
     conf.load('kconfig', tooldir='waftools')
 
-    conf.env.QEMU = conf.options.qemu or conf.is_qemu()
+    conf.env.QEMU = conf.is_qemu()
     if conf.is_qemu():
         conf.env.QEMU_CPU = conf.get_qemu_cpu()
 
@@ -418,7 +413,7 @@ def configure(conf):
     if bt_board is None:
         bt_board = conf.get_board()
     # Select BT controller based on configuration:
-    if conf.env.QEMU or conf.is_qemu():
+    if conf.is_qemu():
         conf.env.bt_controller = 'qemu'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
     elif conf.is_asterix():

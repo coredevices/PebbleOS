@@ -65,7 +65,7 @@ jobs:
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --qemu --sdkshell
+        run: ./waf configure --board ${{ matrix.board }} --sdkshell
 
       - name: Build
         run: ./waf build qemu_image_micro qemu_image_spi
