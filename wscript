@@ -141,6 +141,8 @@ def options(opt):
     opt.add_option('--compile_commands', action='store_true', help='Create a clang compile_commands.json')
     opt.add_option('--file', action='store', help='Specify a file to use with the flash command')
     opt.add_option('--resources', action='store_true', help='Also flash system resources alongside the firmware')
+    opt.add_option('--new-flash-image', action='store_true',
+                   help='Rebuild the QEMU SPI flash image before launching qemu')
     opt.add_option('--tty',
         help='Selects a tty to use for serial imaging. Must be specified for all image commands')
     opt.add_option('--baudrate', action='store', type=int, help='Optional: specifies the baudrate to run the targetted uart at')
@@ -1030,8 +1032,13 @@ def ble_console(ctx):
 def qemu(ctx):
     # Make sure the micro-flash image is up to date. By default, we don't rebuild the
     # SPI flash image in case you want to continue with the stored apps, etc. you had before.
-    from waflib import Options
-    Options.commands = ['qemu_image_micro', 'qemu_launch'] + Options.commands
+    # Rebuild it when --new-flash-image is passed or when the image is missing.
+    from waflib import Context, Options
+    spi_flash = os.path.join(Context.out_dir, 'qemu_spi_flash.bin')
+    pre_cmds = ['qemu_image_micro']
+    if ctx.options.new_flash_image or not os.path.isfile(spi_flash):
+        pre_cmds.append('qemu_image_spi')
+    Options.commands = pre_cmds + ['qemu_launch'] + Options.commands
 
 
 class QemuLaunchCommand(BuildContext):
