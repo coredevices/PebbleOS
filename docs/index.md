@@ -86,7 +86,6 @@ Learn more about PebbleOS: podcasts, developer documents and more!
 development/getting_started.md
 development/options.md
 development/building_fw.md
-development/prf.md
 development/qemu.md
 development/moddable.md
 ```
