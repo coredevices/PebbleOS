@@ -1046,61 +1046,35 @@ def qemu_launch(ctx):
     if not qemu_bin or not (os.path.isfile(qemu_bin) and os.access(qemu_bin, os.X_OK)):
         qemu_bin = 'qemu-pebble'
 
-    # Detect QEMU major version — several command-line options changed in 7.0+.
-    try:
-        ver_output = subprocess.check_output([qemu_bin, '--version'],
-                                             stderr=subprocess.STDOUT).decode()
-        ver_match = re.search(r'version\s+(\d+)\.', ver_output)
-        qemu_major = int(ver_match.group(1)) if ver_match else 7
-    except Exception:
-        qemu_major = 7
-
     qemu_machine = ctx.get_qemu_machine()
     if not qemu_machine or qemu_machine == 'unknown':
         raise Exception("Board type '{}' not supported by QEMU".format(ctx.env.BOARD))
 
     qemu_micro_flash = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
     qemu_spi_flash = ctx.path.get_bld().make_node('qemu_spi_flash.bin')
-    spi_flash_args = ctx.get_qemu_spi_flash_args(qemu_spi_flash.path_from(ctx.path),
-                                                  qemu_major)
+    spi_flash_args = ctx.get_qemu_spi_flash_args(qemu_spi_flash.path_from(ctx.path))
     if not spi_flash_args:
         raise Exception("External flash type for '{}' not specified".format(ctx.env.BOARD))
 
-    # QEMU 7.0+ loads firmware via -kernel; older versions use -pflash.
-    micro_flash_flag = '-kernel' if qemu_major >= 7 else '-pflash'
-
-    if ctx.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
-        # Generic QEMU machines: load firmware as kernel (ELF for proper vector table handling)
-        fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
-        has_audio = ctx.is_qemu_emery() or ctx.is_qemu_flint()
-        if has_audio:
-            import platform
-            audio_driver = 'coreaudio' if platform.system() == 'Darwin' else 'sdl'
-            machine_dep_args = ['-machine', '%s,audiodev=snd0' % qemu_machine,
-                                '-audiodev', '%s,id=snd0' % audio_driver,
-                                '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
-        else:
-            machine_dep_args = ['-machine', qemu_machine,
-                                '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
+    # Generic QEMU machines: load firmware as kernel (ELF for proper vector table handling)
+    fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
+    has_audio = ctx.is_qemu_emery() or ctx.is_qemu_flint()
+    if has_audio:
+        import platform
+        audio_driver = 'coreaudio' if platform.system() == 'Darwin' else 'sdl'
+        machine_dep_args = ['-machine', '%s,audiodev=snd0' % qemu_machine,
+                            '-audiodev', '%s,id=snd0' % audio_driver,
+                            '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
     else:
         machine_dep_args = ['-machine', qemu_machine,
-                            '-cpu', ctx.get_qemu_cpu(),
-                            micro_flash_flag, qemu_micro_flash.path_from(ctx.path)] + spi_flash_args
+                            '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
 
-    # Always keep the host cursor visible over the emulator window. QEMU 10+
-    # removed the global -show-cursor flag in favor of a per-display option.
-    if qemu_major < 10:
-        machine_dep_args.append('-show-cursor')
-    else:
-        import platform
-        display_type = 'cocoa' if platform.system() == 'Darwin' else 'gtk'
-        machine_dep_args.extend(['-display', '%s,show-cursor=on' % display_type])
+    # Always keep the host cursor visible over the emulator window.
+    import platform
+    display_type = 'cocoa' if platform.system() == 'Darwin' else 'sdl'
+    machine_dep_args.extend(['-display', '%s,show-cursor=on' % display_type])
 
-    # QEMU 7.0+ changed serial TCP chardev syntax.
-    if qemu_major >= 7:
-        serial_tcp_args = 'server=on,wait=off'
-    else:
-        serial_tcp_args = 'server,nowait'
+    serial_tcp_args = 'server=on,wait=off'
 
     cmd_line = (
         shlex.quote(qemu_bin) + " "
