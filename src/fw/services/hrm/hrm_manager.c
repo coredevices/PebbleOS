@@ -766,7 +766,13 @@ void hrm_manager_process_cleanup(PebbleTask task, AppInstallId app_id) {
     return;
   }
 
-  // Set an expiration time now
+  // Don't lengthen an expiration that's already shorter than ours — the app explicitly chose a
+  // shorter window (e.g. workout post-workout recovery), and overriding it would defeat that.
+  const time_t cleanup_expire_utc = rtc_get_time() + HRM_MANAGER_APP_EXIT_EXPIRATION_SEC;
+  if (state->expire_utc != 0 && state->expire_utc <= cleanup_expire_utc) {
+    return;
+  }
+
   PBL_LOG_DBG("Setting expiration time on session for app_id %d", (int)app_id);
   sys_hrm_manager_set_update_interval(state->session_ref, state->update_interval_s,
                                       HRM_MANAGER_APP_EXIT_EXPIRATION_SEC);

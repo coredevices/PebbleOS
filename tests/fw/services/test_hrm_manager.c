@@ -228,6 +228,31 @@ void test_hrm_manager__app_cleanup(void) {
   sys_hrm_manager_unsubscribe(session_ref);
 }
 
+// If the app set its own expiration shorter than HRM_MANAGER_APP_EXIT_EXPIRATION_SEC (e.g. the
+// workout app's post-workout recovery window), process cleanup must not lengthen it back to the
+// default — that would defeat the app's explicit choice and leave the HR sensor on too long.
+void test_hrm_manager__app_cleanup_preserves_shorter_expiration(void) {
+  stub_pebble_tasks_set_current(PebbleTask_App);
+
+  AppInstallId app_id = 1;
+  const uint32_t update_interval_s = 1;
+  const uint16_t shorter_expire_s = 10 * SECONDS_PER_MINUTE;
+  HRMFeature features = HRMFeature_BPM;
+
+  HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(app_id, update_interval_s,
+                                                            shorter_expire_s, features);
+  uint16_t ret_expire_s;
+  sys_hrm_manager_get_subscription_info(session_ref, NULL, NULL, &ret_expire_s, NULL);
+  cl_assert_equal_i(ret_expire_s, shorter_expire_s);
+
+  hrm_manager_process_cleanup(PebbleTask_App, app_id);
+
+  sys_hrm_manager_get_subscription_info(session_ref, NULL, NULL, &ret_expire_s, NULL);
+  cl_assert_equal_i(ret_expire_s, shorter_expire_s);
+
+  sys_hrm_manager_unsubscribe(session_ref);
+}
+
 
 // Test that app subscriptions expire correctly
 void test_hrm_manager__app_expiration(void) {
