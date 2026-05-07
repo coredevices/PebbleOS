@@ -1000,25 +1000,17 @@ def qemu_gdb(ctx):
     run_arm_gdb(ctx, fw_elf, target_server_port=1233)
 
 
-class debug(BuildContext):
-    """ Alias for gdb """
-    cmd = 'debug'
-
-    def execute_build(ctx):
-        gdb(ctx)
-
-
-class Gdb(BuildContext):
+class Debug(BuildContext):
     """ Starts GDB and openocd (if not already running) and attaches GDB to
         openocd's GDB server. If openocd is already running, it will be used.
     """
-    cmd = 'gdb'
-    fun = 'gdb'
+    cmd = 'debug'
+    fun = 'debug'
 
 
-def gdb(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
+def debug(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
     if ctx.env.RUNNER != 'openocd':
-        ctx.fatal('GDB only supported with openocd runner')
+        ctx.fatal('debug only supported with openocd runner')
 
     if fw_elf is None:
         fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
