@@ -96,6 +96,12 @@ bool sys_hrm_manager_unsubscribe(HRMSessionRef ref) {
   return true;
 }
 
+bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
+                                         uint16_t expire_s) {
+  s_hrm_expiration = expire_s;
+  return true;
+}
+
 uint32_t time_get_uptime_seconds(void) {
   return SECONDS_PER_DAY + rtc_get_time();
 }
@@ -583,6 +589,26 @@ void test_workout_service__app_open_wait_close_valid_workout(void) {
   workout_service_frontend_closed();
   cl_assert_equal_b(s_hrm_subscribed, false);
   cl_assert_equal_i(s_hrm_expiration, 0);
+}
+
+// ---------------------------------------------------------------------------------------
+// Stopping a workout should immediately apply a recovery-window expiration to the active HR
+// subscription so sampling drops back to the user's preferred rate within a bounded time, even
+// if the user lingers on the summary screen or the app exit path is otherwise delayed.
+void test_workout_service__stop_workout_starts_recovery_timer(void) {
+  prv_inc_time(1 * SECONDS_PER_MINUTE);
+
+  workout_service_frontend_opened();
+  cl_assert_equal_b(s_hrm_subscribed, true);
+  cl_assert_equal_i(s_hrm_expiration, 0);
+
+  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
+  prv_inc_time(2 * SECONDS_PER_MINUTE);
+  cl_assert(workout_service_stop_workout());
+
+  // The 1-second subscription should now have a 10-minute expiration so it doesn't run forever.
+  cl_assert_equal_b(s_hrm_subscribed, true);
+  cl_assert_equal_i(s_hrm_expiration, 10 * SECONDS_PER_MINUTE);
 }
 
 // ---------------------------------------------------------------------------------------
