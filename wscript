@@ -973,8 +973,6 @@ def qemu_launch(ctx):
     display_type = 'cocoa' if platform.system() == 'Darwin' else 'sdl'
     machine_dep_args.extend(['-display', '%s,show-cursor=on' % display_type])
 
-    serial_tcp_args = 'server=on,wait=off'
-
     mon_sock = ctx.path.get_bld().make_node('qemu-mon.sock').abspath()
     if os.path.exists(mon_sock):
         os.unlink(mon_sock)
@@ -986,9 +984,9 @@ def qemu_launch(ctx):
         "-monitor unix:{mon_sock},server=on,wait=off "
         "-s "
         "-serial file:uart1.log "
-        "-serial tcp::12344,{serial} "   # Used for bluetooth data
-        "-serial tcp::12345,{serial} "   # Used for console
-        ).format(serial=serial_tcp_args, mon_sock=shlex.quote(mon_sock)) + ' '.join(machine_dep_args)
+        "-serial tcp::12344,server=on,wait=off " # pebble-tool
+        "-serial tcp::12345,server=on,wait=off " # console
+        ).format(mon_sock=shlex.quote(mon_sock)) + ' '.join(machine_dep_args)
     waflib.Logs.pprint('CYAN', 'QEMU command: {}'.format(cmd_line))
     os.system(cmd_line)
 
