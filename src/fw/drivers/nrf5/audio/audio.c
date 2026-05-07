@@ -148,8 +148,11 @@ static void prv_codec_start_dai(AudioDevice *dev) {
   prv_codec_write(dev, DA7212_DAI_CLK_MODE, 0x81);
 }
 
-static void prv_codec_stop(AudioDevice *dev) {
+static void prv_codec_mute(AudioDevice *dev) {
   prv_codec_write(dev, DA7212_DAC_FILTERS5, 0x80);
+}
+
+static void prv_codec_power_down(AudioDevice *dev) {
   prv_codec_write(dev, DA7212_SYSTEM_ACTIVE, 0x00);
 }
 
@@ -428,10 +431,16 @@ void audio_stop(AudioDevice *audio_device) {
 
   state->is_running = false;
 
-  prv_codec_stop(audio_device);
+  // Mute and stop I2S while the codec is still driving BCLK/WCLK as master,
+  // then power the codec down. Dropping SYSTEM_ACTIVE first would yank
+  // clocks mid-frame and leave the slave I2S unable to advance through STOP
+  // cleanly (anomaly 194's resource-release workaround needs some clocking).
+  prv_codec_mute(audio_device);
 
   nrfx_i2s_stop(&audio_device->i2s_instance);
   nrfx_i2s_uninit(&audio_device->i2s_instance);
+
+  prv_codec_power_down(audio_device);
 
   clocksource_hfxo_release();
 
