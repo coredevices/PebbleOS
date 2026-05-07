@@ -8,6 +8,8 @@
 #include "applib/app_inbox.h"
 #include "applib/app_message/app_message_internal.h"
 #include "applib/app_wakeup.h"
+#include "applib/backlight_service.h"
+#include "applib/backlight_service_private.h"
 #include "applib/battery_state_service.h"
 #include "applib/battery_state_service_private.h"
 #include "applib/bluetooth/ble_app_support.h"
@@ -114,6 +116,8 @@ PluginServiceState *app_state_get_plugin_service(void);
 LogState *app_state_get_log_state(void);
 
 BatteryStateServiceState *app_state_get_battery_state_service_state(void);
+
+BacklightServiceState *app_state_get_backlight_service_state(void);
 
 TickTimerServiceState *app_state_get_tick_timer_service_state(void);
 
