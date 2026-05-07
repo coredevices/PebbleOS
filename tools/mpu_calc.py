@@ -91,6 +91,21 @@ def find_subregions_for_region(address, size):
         raise Exception("No solution found")
 
 
+def find_region_for_armv8(address, size):
+    """Find MPU region for ARMv8-M (no subregions, arbitrary 32-byte-aligned size).
+
+    ARMv8-M MPU supports regions of any size aligned to 32 bytes.
+    Returns MpuRegion(address, size, 0) with disabled_subregion=0 (unused on ARMv8).
+    """
+    if address % 32 != 0:
+        raise Exception("Address must be 32-byte aligned for ARMv8-M MPU")
+    if size % 32 != 0:
+        raise Exception("Size must be 32-byte aligned for ARMv8-M MPU")
+    if size < MIN_REGION_SIZE:
+        raise Exception("Size must be at least 32 bytes")
+    return MpuRegion(address=address, size=size, disabled_subregion=0)
+
+
 if __name__ == "__main__":
     import doctest
 
