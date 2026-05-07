@@ -43,7 +43,9 @@ enum QuietTimeItem {
   QuietTimeItemInterruptions,
   QuietTimeItemNotifications,
   QuietTimeItemMotionBacklight,
+#if CAPABILITY_HAS_SPEAKER
   QuietTimeItemMuteSpeaker,
+#endif
   QuietTimeItem_Count,
 };
 
@@ -303,11 +305,13 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       strncpy(subtitle, alerts_preferences_dnd_get_motion_backlight() ?
                   i18n_get("On", data) : i18n_get("Off", data), buffer_length);
       break;
+#if CAPABILITY_HAS_SPEAKER
     case QuietTimeItemMuteSpeaker:
       title = i18n_get("Mute Speaker", data);
       strncpy(subtitle, alerts_preferences_dnd_get_mute_speaker() ?
                   i18n_get("On", data) : i18n_get("Off", data), buffer_length);
       break;
+#endif
     default:
         WTF;
   }
@@ -340,9 +344,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case QuietTimeItemMotionBacklight:
       alerts_preferences_dnd_set_motion_backlight(!alerts_preferences_dnd_get_motion_backlight());
       break;
+#if CAPABILITY_HAS_SPEAKER
     case QuietTimeItemMuteSpeaker:
       alerts_preferences_dnd_set_mute_speaker(!alerts_preferences_dnd_get_mute_speaker());
       break;
+#endif
     default:
         WTF;
   }
