@@ -14,6 +14,7 @@ typedef struct UnobstructedAreaState {
   GRect area;
   void *context;
   bool is_subscribed;
+  bool has_requested_area;
   bool is_changing;
 } UnobstructedAreaState;
 
@@ -33,6 +34,16 @@ void unobstructed_area_service_deinit(UnobstructedAreaState *state);
 //! @param state Unobstructed area state belonging to the consuming task
 //! @param area The GRect to write the unobstructed area to
 void unobstructed_area_service_get_area(UnobstructedAreaState *state, GRect *area);
+
+//! @internal
+//! Returns whether the app subscribed to unobstructed area changes.
+//! @param state Unobstructed area state belonging to the consuming task
+bool unobstructed_area_service_is_subscribed(UnobstructedAreaState *state);
+
+//! @internal
+//! Returns whether the app has queried the unobstructed area.
+//! @param state Unobstructed area state belonging to the consuming task
+bool unobstructed_area_service_has_requested_area(UnobstructedAreaState *state);
 
 //! @internal
 //! Subscribe to be notified when the app's unobstructed area changes.

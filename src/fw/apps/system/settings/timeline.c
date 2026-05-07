@@ -34,6 +34,9 @@ typedef struct SettingsTimelinePeekData {
 
 typedef enum TimelinePeekMenuIndex {
   TimelinePeekMenuIndex_Toggle,
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+  TimelinePeekMenuIndex_UnsupportedFaces,
+#endif
   TimelinePeekMenuIndex_Timing,
 
   TimelinePeekMenuIndexCount,
@@ -52,6 +55,16 @@ typedef enum PeekBeforeTimingMenuIndex {
   PeekBeforeTimingMenuIndexDefault = PeekBeforeTimingMenuIndex_10Min,
 } PeekBeforeTimingMenuIndex;
 
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+typedef enum UnsupportedFacesMenuIndex {
+  UnsupportedFacesMenuIndex_Nothing,
+  UnsupportedFacesMenuIndex_ShiftUp,
+  UnsupportedFacesMenuIndex_SquishUp,
+
+  UnsupportedFacesMenuIndexCount,
+} UnsupportedFacesMenuIndex;
+#endif
+
 static const char *s_before_time_strings[PeekBeforeTimingMenuIndexCount] = {
   /// Shows up in the Timeline settings as a "Timing" subtitle and submenu option.
   i18n_noop("Start Time"),
@@ -68,6 +81,24 @@ static const char *s_before_time_strings[PeekBeforeTimingMenuIndexCount] = {
 static uint16_t s_before_time_values[PeekBeforeTimingMenuIndexCount] = {
   0, 5, 10, 15, 30,
 };
+
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+static const char *s_unsupported_faces_strings[UnsupportedFacesMenuIndexCount] = {
+  /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
+  i18n_noop("Overlay"),
+  /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
+  i18n_noop("Shift up"),
+  /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
+  i18n_noop("Squish up"),
+};
+
+static const TimelinePeekUnsupportedFaceMode
+    s_unsupported_faces_values[UnsupportedFacesMenuIndexCount] = {
+  TimelinePeekUnsupportedFaceMode_None,
+  TimelinePeekUnsupportedFaceMode_ShiftUp,
+  TimelinePeekUnsupportedFaceMode_SquishUp,
+};
+#endif
 
 static PeekBeforeTimingMenuIndex prv_before_time_min_to_index(unsigned int before_time_m) {
   if (before_time_m == 0) {
@@ -101,6 +132,38 @@ static void prv_push_before_time_menu(SettingsTimelinePeekData *data) {
       ARRAY_LENGTH(s_before_time_strings), true /* icons_enabled */, s_before_time_strings, data);
 }
 
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+static UnsupportedFacesMenuIndex prv_unsupported_face_mode_to_index(
+    TimelinePeekUnsupportedFaceMode mode) {
+  for (unsigned int i = 0; i < ARRAY_LENGTH(s_unsupported_faces_values); i++) {
+    if (s_unsupported_faces_values[i] == mode) {
+      return i;
+    }
+  }
+  return UnsupportedFacesMenuIndex_Nothing;
+}
+
+static void prv_unsupported_faces_menu_select(OptionMenu *option_menu, int selection,
+                                              void *context) {
+  timeline_peek_prefs_set_unsupported_face_mode(s_unsupported_faces_values[selection]);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_push_unsupported_faces_menu(SettingsTimelinePeekData *data) {
+  /// Shows up in the Timeline settings as the title for unsupported watchface behavior.
+  const char *title = i18n_noop("Unsupported Faces");
+  const int selected = prv_unsupported_face_mode_to_index(
+      timeline_peek_prefs_get_unsupported_face_mode());
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_unsupported_faces_menu_select,
+  };
+  settings_option_menu_push(
+      title, OptionMenuContentType_SingleLine, selected, &callbacks,
+      ARRAY_LENGTH(s_unsupported_faces_strings), true /* icons_enabled */,
+      s_unsupported_faces_strings, data);
+}
+#endif
+
 static void prv_deinit_cb(SettingsCallbacks *context) {
   i18n_free_all(context);
   app_free(context);
@@ -133,6 +196,14 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = s_before_time_strings[
           prv_before_time_min_to_index(timeline_peek_prefs_get_before_time())];
       break;
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+    case TimelinePeekMenuIndex_UnsupportedFaces:
+      /// Shows up in the Timeline settings for watchfaces that do not support Quick View.
+      title = i18n_noop("Unsupported Faces");
+      subtitle = s_unsupported_faces_strings[prv_unsupported_face_mode_to_index(
+          timeline_peek_prefs_get_unsupported_face_mode())];
+      break;
+#endif
     case TimelinePeekMenuIndexCount:
       break;
   }
@@ -150,6 +221,11 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case TimelinePeekMenuIndex_Timing:
       prv_push_before_time_menu(data);
       goto done;
+#if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
+    case TimelinePeekMenuIndex_UnsupportedFaces:
+      prv_push_unsupported_faces_menu(data);
+      goto done;
+#endif
     case TimelinePeekMenuIndexCount:
       break;
   }
