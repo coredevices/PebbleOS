@@ -985,35 +985,30 @@ def qemu_launch(ctx):
     os.system(cmd_line)
 
 
-class QemuGdb(BuildContext):
-    """Starts up a gdb instance to talk to the emulator """
-    cmd = 'qemu_gdb'
-    fun = 'qemu_gdb'
-
-
-def qemu_gdb(ctx):
-    # First, startup the gdb proxy
-    cmd_line = "python ./tools/qemu/qemu_gdb_proxy.py --port=1233 --target=localhost:1234"
-    proc = pexpect.spawn(cmd_line, logfile=sys.stdout, encoding='utf-8')
-    proc.expect(["Connected to target", pexpect.TIMEOUT], timeout=10)
-    fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
-    run_arm_gdb(ctx, fw_elf, target_server_port=1233)
-
-
 class Debug(BuildContext):
-    """ Starts GDB and openocd (if not already running) and attaches GDB to
-        openocd's GDB server. If openocd is already running, it will be used.
+    """ Starts GDB and attaches to the target. For openocd-based boards, it
+        also starts openocd (if not already running). For QEMU targets, it
+        starts the gdb proxy and connects through it.
     """
     cmd = 'debug'
     fun = 'debug'
 
 
 def debug(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
-    if ctx.env.RUNNER != 'openocd':
-        ctx.fatal('debug only supported with openocd runner')
+    ctx.recurse('platform', mandatory=False)
 
     if fw_elf is None:
         fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
+
+    if ctx.is_qemu():
+        cmd_line = "python ./tools/qemu/qemu_gdb_proxy.py --port=1233 --target=localhost:1234"
+        proc = pexpect.spawn(cmd_line, logfile=sys.stdout, encoding='utf-8')
+        proc.expect(["Connected to target", pexpect.TIMEOUT], timeout=10)
+        run_arm_gdb(ctx, fw_elf, target_server_port=1233)
+        return
+
+    if ctx.env.RUNNER != 'openocd':
+        ctx.fatal('debug only supported with openocd runner')
 
     with waftools.openocd.daemon(ctx, cfg_file,
                                  use_swd=(is_ble or 'swd' in ctx.env.OPENOCD_JTAG)):

@@ -48,5 +48,5 @@ You can launch a console using:
 You can debug with GDB using:
 
 ```shell
-./waf qemu_gdb
+./waf debug
 ```
