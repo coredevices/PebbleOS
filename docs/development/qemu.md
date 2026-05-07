@@ -40,7 +40,7 @@ The flash image is built automatically the first time. To force rebuilding it, p
 You can launch a console using:
 
 ```shell
-./waf qemu_console
+./waf console
 ```
 
 ## Debug

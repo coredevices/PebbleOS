@@ -892,11 +892,18 @@ class ConsoleCommand(BuildContext):
 
 def console(ctx):
     """Starts miniterm with the serial console."""
+    ctx.recurse('platform', mandatory=False)
+
     # miniterm is not made to be used as a python module, so just shell out:
-    tty = ctx.options.tty or _get_dbgserial_tty()
+    if ctx.is_qemu():
+        tty = 'socket://%s' % (ctx.options.qemu_host or 'localhost:12345')
+    else:
+        tty = ctx.options.tty or _get_dbgserial_tty()
 
     if _is_pulse_everywhere(ctx):
         os.system("python ./tools/pulse_console.py -t %s" % tty)
+    elif ctx.is_qemu():
+        os.system("python ./tools/log_hashing/miniterm_co.py %s" % tty)
     else:
         baudrate = ctx.options.baudrate or 230400
         # NOTE: force RTS to be de-asserted, as on some boards (e.g.
@@ -973,23 +980,6 @@ def qemu_launch(ctx):
         ).format(serial=serial_tcp_args) + ' '.join(machine_dep_args)
     waflib.Logs.pprint('CYAN', 'QEMU command: {}'.format(cmd_line))
     os.system(cmd_line)
-
-
-class QEMUConsoleCommand(BuildContext):
-    cmd = 'qemu_console'
-    fun = 'qemu_console'
-
-
-def qemu_console(ctx):
-    """Starts miniterm configured to talk to the emulator (qemu)"""
-    # miniterm is not made to be used as a python module, so just shell out:
-    host_port = ctx.options.qemu_host or 'localhost:12345'
-
-    # A hacky way to pass an argument
-    if _is_pulse_everywhere(ctx):
-        os.system("python ./tools/pulse_console.py -t %s" % ('socket://%s' % (host_port)))
-    else:
-        os.system("python ./tools/log_hashing/miniterm_co.py %s" % ('socket://%s' % (host_port)))
 
 
 class QemuGdb(BuildContext):
