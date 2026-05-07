@@ -215,13 +215,6 @@ if __name__ == "__main__":
             "If the prompt tty is specified, the accessory port tty must be specified "
             "too!"
         )
-    elif not args.tty_prompt and not args.tty_accessory:
-        import pebble_tty
-
-        tty_prompt = pebble_tty.find_dbgserial_tty()
-        tty_accessory = pebble_tty.find_accessory_tty()
-        if not tty_prompt or not tty_accessory:
-            raise Exception("Serial ports could not be resolved!")
     else:
         tty_accessory = args.tty_accessory
         tty_prompt = args.tty_prompt
