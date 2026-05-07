@@ -19,24 +19,7 @@ import stm32_crc
 
 logger = logging.getLogger(__name__)
 
-try:
-    import pyftdi.serialext
-except ImportError:
-    pass
-
 DBGSERIAL_PORT_SETTINGS = dict(baudrate=230400, timeout=0.1, interCharTimeout=0.01)
-
-
-def get_dbgserial_tty():
-    # Local import so that we only depend on this package if we're attempting
-    # to autodetect the TTY. This package isn't always available (e.g., MFG),
-    # so we don't want it to be required.
-    try:
-        import pebble_tty
-
-        return pebble_tty.find_dbgserial_tty()
-    except ImportError:
-        raise exceptions.TTYAutodetectionUnavailable
 
 
 def frame_splitter(istream, size=1024, timeout=1, delimiter="\0"):
@@ -158,7 +141,7 @@ class Connection(object):
     @classmethod
     def open_dbgserial(cls, url=None, infinite_reconnect=False):
         if url is None:
-            url = get_dbgserial_tty()
+            raise exceptions.TTYAutodetectionUnavailable
         if url == "qemu":
             url = "socket://localhost:12345"
         ser = serial.serial_for_url(url, **DBGSERIAL_PORT_SETTINGS)

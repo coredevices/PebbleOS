@@ -12,29 +12,12 @@ from . import exceptions, framing, ppp, transports
 from . import logging as pulse2_logging
 from . import pcap_file
 
-try:
-    import pyftdi.serialext
-except ImportError:
-    pass
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 DBGSERIAL_PORT_SETTINGS = dict(
     baudrate=1000000, timeout=0.1, interCharTimeout=0.0001, rtscts=False
 )
-
-
-def get_dbgserial_tty():
-    # Local import so that we only depend on this package if we're attempting
-    # to autodetect the TTY. This package isn't always available (e.g., MFG),
-    # so we don't want it to be required.
-    try:
-        import pebble_tty
-
-        return pebble_tty.find_dbgserial_tty()
-    except ImportError:
-        raise exceptions.TTYAutodetectionUnavailable
 
 
 class Interface(object):
@@ -81,7 +64,7 @@ class Interface(object):
     @classmethod
     def open_dbgserial(cls, url=None, capture_stream=None):
         if url is None:
-            url = get_dbgserial_tty()
+            raise exceptions.TTYAutodetectionUnavailable
         elif url == "qemu":
             url = "socket://localhost:12345"
         # NOTE: force RTS to be de-asserted, as on some boards (e.g.

@@ -898,7 +898,10 @@ def console(ctx):
     if ctx.is_qemu():
         tty = 'socket://%s' % (ctx.options.qemu_host or 'localhost:12345')
     else:
-        tty = ctx.options.tty or _get_dbgserial_tty()
+        tty = ctx.options.tty
+        if not tty:
+            waflib.Logs.pprint('RED', 'Error: --tty not specified')
+            return
 
     if _is_pulse_everywhere(ctx):
         os.system("python ./tools/pulse_console.py -t %s" % tty)
@@ -1034,17 +1037,6 @@ def openocd(ctx):
 # Image commands
 #################################################
 
-def _get_dbgserial_tty():
-    import pebble_tty
-    tty = pebble_tty.find_dbgserial_tty()
-
-    if tty is None:
-        return None
-
-    waflib.Logs.pprint('GREEN', 'No --tty argument specified, auto-selecting: %s' % tty)
-    return tty
-
-
 class ImageResources(BuildContext):
     """flashes resources"""
     cmd = 'image_resources'
@@ -1064,7 +1056,7 @@ def _get_pulse_flash_tool(ctx):
 
 
 def image_resources(ctx):
-    tty = ctx.options.tty or _get_dbgserial_tty()
+    tty = ctx.options.tty
     if tty is None:
         waflib.Logs.pprint('RED', 'Error: --tty not specified')
         return
@@ -1085,7 +1077,7 @@ class ImageRecovery(BuildContext):
 
 
 def image_recovery(ctx):
-    tty = ctx.options.tty or _get_dbgserial_tty()
+    tty = ctx.options.tty
     if tty is None:
         waflib.Logs.pprint('RED', 'Error: --tty not specified')
         return
