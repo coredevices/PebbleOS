@@ -9,6 +9,8 @@
 #include "drivers/i2c.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
+#include "os/mutex.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -16,6 +18,26 @@
 #include "util/math.h"
 
 #include "nrfx_i2s.h"
+
+// Hold the codec + I2S warm for this long after audio_stop before powering
+// down. Rapid play/pause spamming used to phaser the output until hard power
+// cycle; deferring the SYSTEM_ACTIVE=0 keeps the LINE output continuous
+// across pauses and the analog domain never gets disturbed.
+#define AUDIO_IDLE_SHUTDOWN_MS 1000
+
+typedef enum {
+  AudioPwrCold,
+  AudioPwrWarm,
+  AudioPwrActive,
+} AudioPwrState;
+
+static AudioPwrState s_pwr_state = AudioPwrCold;
+static TimerID s_idle_timer = TIMER_INVALID_ID;
+// Serializes cold/warm/active transitions and their I/O so audio_start,
+// audio_stop, and prv_idle_shutdown can't race across threads.
+static PebbleMutex *s_audio_mutex;
+
+static void prv_idle_shutdown(void *data);
 
 // ---------------------------------------------------------------------------
 // DA7212 codec registers used by the driver.
@@ -300,19 +322,50 @@ void audio_init(AudioDevice *audio_device) {
   PBL_ASSERTN(audio_device);
   AudioDeviceState *state = audio_device->state;
 
-  memset(state, 0, sizeof(*state));
+  if (s_audio_mutex == NULL) {
+    s_audio_mutex = mutex_create();
+    PBL_ASSERTN(s_audio_mutex != INVALID_MUTEX_HANDLE);
+  }
+
+  // Skip the memset on a warm restart — the buffers and live ISR state are
+  // still in use and would be leaked / clobbered.
+  if (s_pwr_state == AudioPwrCold) {
+    memset(state, 0, sizeof(*state));
+  }
 }
 
 void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   PBL_ASSERTN(audio_device);
   AudioDeviceState *state = audio_device->state;
 
+  mutex_lock(s_audio_mutex);
+
   if (state->is_running) {
+    mutex_unlock(s_audio_mutex);
     PBL_LOG_WRN("Audio already running");
     return;
   }
 
+  // Cancel any pending deferred shutdown so we keep the codec up.
+  if (s_idle_timer != TIMER_INVALID_ID) {
+    new_timer_stop(s_idle_timer);
+  }
+
+  if (s_pwr_state == AudioPwrWarm) {
+    // Codec, DAI, and I2S have been running continuously, streaming zeros
+    // from the ISR's auto-fill. Just resume writes and the next refill will
+    // land real audio.
+    state->trans_cb = cb;
+    state->callback_pending = false;
+    state->is_running = true;
+    s_pwr_state = AudioPwrActive;
+    mutex_unlock(s_audio_mutex);
+    PBL_LOG_DBG("Audio started (warm)");
+    return;
+  }
+
   if (!prv_allocate_buffers(state)) {
+    mutex_unlock(s_audio_mutex);
     return;
   }
 
@@ -378,7 +431,10 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   // the nRF begins consuming the silence buffer.
   prv_codec_start_dai(audio_device);
 
-  PBL_LOG_INFO("Audio started");
+  s_pwr_state = AudioPwrActive;
+  mutex_unlock(s_audio_mutex);
+
+  PBL_LOG_DBG("Audio started");
 }
 
 uint32_t audio_write(AudioDevice *audio_device, void *write_buf, uint32_t size) {
@@ -425,16 +481,34 @@ void audio_stop(AudioDevice *audio_device) {
   PBL_ASSERTN(audio_device);
   AudioDeviceState *state = audio_device->state;
 
+  mutex_lock(s_audio_mutex);
+
   if (!state->is_running) {
+    mutex_unlock(s_audio_mutex);
     return;
   }
 
+  // Warm pause: just stop feeding new audio. The ISR's prv_fill_i2s_buffer
+  // sees an empty circular buffer and auto-zero-fills, so the codec keeps
+  // receiving uninterrupted clocks and a continuous silent data stream — no
+  // DAC mute, no I2S teardown, no LINE-output transitions. The actual
+  // teardown happens later on the idle timer.
   state->is_running = false;
+  state->trans_cb = NULL;
+  s_pwr_state = AudioPwrWarm;
 
-  // Mute and stop I2S while the codec is still driving BCLK/WCLK as master,
-  // then power the codec down. Dropping SYSTEM_ACTIVE first would yank
-  // clocks mid-frame and leave the slave I2S unable to advance through STOP
-  // cleanly (anomaly 194's resource-release workaround needs some clocking).
+  if (s_idle_timer == TIMER_INVALID_ID) {
+    s_idle_timer = new_timer_create();
+  }
+  if (s_idle_timer != TIMER_INVALID_ID) {
+    new_timer_start(s_idle_timer, AUDIO_IDLE_SHUTDOWN_MS, prv_idle_shutdown,
+                    (void *)(uintptr_t)audio_device, 0);
+    mutex_unlock(s_audio_mutex);
+    PBL_LOG_DBG("Audio paused (warm)");
+    return;
+  }
+
+  // Couldn't get a timer — fall through to immediate shutdown.
   prv_codec_mute(audio_device);
 
   nrfx_i2s_stop(&audio_device->i2s_instance);
@@ -448,9 +522,46 @@ void audio_stop(AudioDevice *audio_device) {
     audio_device->power_ops->power_down();
   }
 
-  state->trans_cb = NULL;
   s_active_device = NULL;
   prv_free_buffers(state);
 
-  PBL_LOG_INFO("Audio stopped");
+  s_pwr_state = AudioPwrCold;
+  mutex_unlock(s_audio_mutex);
+
+  PBL_LOG_DBG("Audio stopped");
+}
+
+static void prv_idle_shutdown(void *data) {
+  AudioDevice *audio_device = (AudioDevice *)data;
+
+  mutex_lock(s_audio_mutex);
+
+  if (s_pwr_state != AudioPwrWarm) {
+    // audio_start beat us to the mutex, or we're already cold.
+    mutex_unlock(s_audio_mutex);
+    return;
+  }
+
+  AudioDeviceState *state = audio_device->state;
+
+  prv_codec_mute(audio_device);
+
+  nrfx_i2s_stop(&audio_device->i2s_instance);
+  nrfx_i2s_uninit(&audio_device->i2s_instance);
+
+  prv_codec_power_down(audio_device);
+
+  clocksource_hfxo_release();
+
+  if (audio_device->power_ops && audio_device->power_ops->power_down) {
+    audio_device->power_ops->power_down();
+  }
+
+  s_active_device = NULL;
+  prv_free_buffers(state);
+
+  s_pwr_state = AudioPwrCold;
+  mutex_unlock(s_audio_mutex);
+
+  PBL_LOG_DBG("Audio fully stopped");
 }
