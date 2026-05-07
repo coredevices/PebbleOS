@@ -308,7 +308,7 @@ status_t qspi_flash_security_register_is_locked(QSPIFlash *dev, uint32_t addr, b
 
   /* OPT operation are synchronous, one match means all matched. */
   portENTER_CRITICAL();
-  opt_val = HAL_QSPI_GET_OTP_LB(hflash);
+  opt_val = HAL_QSPI_GET_OTP_LB(hflash, addr);
   portEXIT_CRITICAL();
 
   if (opt_val == 0xff) {
