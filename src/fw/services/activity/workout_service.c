@@ -477,6 +477,14 @@ bool workout_service_stop_workout(void) {
     // Re-enable automatic activity tracking
     activity_algorithm_enable_activity_tracking(true /* enable */);
 
+#ifdef CONFIG_HRM
+    // The workout app holds an unbounded 1-second HR subscription while open. Now that the workout
+    // has ended, start the post-workout recovery countdown immediately so HR sampling drops back to
+    // the user's preferred rate within a bounded window, regardless of when the app actually exits.
+    sys_hrm_manager_set_update_interval(s_workout_data.hrm_session, 1,
+                                        WORKOUT_ENDED_HR_SUBSCRIPTION_TS_EXPIRE);
+#endif // CONFIG_HRM
+
     PBL_LOG_INFO("Stopping a workout with type: %d",
             s_workout_data.current_workout->type);
     prv_put_event(PebbleWorkoutEvent_Stopped);
