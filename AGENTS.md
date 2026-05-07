@@ -20,6 +20,16 @@ PebbleOS is the operating system running on Pebble smartwatches.
 - clang-format for C code
 - ruff for Python code
 
+## Logging
+
+- `PBL_LOG_WRN` / `PBL_LOG_ERR` are for warnings and errors — use them as
+  the names suggest.
+- Default to `PBL_LOG_DBG` for routine lifecycle / state-transition logs.
+  Reserve `PBL_LOG_INFO` for events that genuinely warrant attention in a
+  default-level log capture; if a code path can fire repeatedly under
+  normal use (e.g. play/pause spam, frequent state changes), it must not
+  log at INFO.
+
 ## Firmware development
 
 - Configure: `./waf configure --board BOARD_NAME`
