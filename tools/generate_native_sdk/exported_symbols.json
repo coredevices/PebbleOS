@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "99",
+  "revision" : "101",
   "version" : "2.0",
   "files": [
     "fw/drivers/ambient_light.h",
@@ -29,6 +29,7 @@
     "fw/applib/app_sync/app_sync.h",
     "fw/applib/app_watch_info.h",
     "fw/applib/app_worker.h",
+    "fw/applib/backlight_service.h",
     "fw/applib/battery_state_service.h",
     "fw/applib/bluetooth/ble_ad_parse.h",
     "fw/applib/bluetooth/ble_central.h",
@@ -421,6 +422,26 @@
                   "type": "function",
                   "name": "battery_state_service_peek",
                   "addedRevision": "0"
+                }
+              ]
+            }, {
+              "type": "group",
+              "name": "BacklightService",
+              "appOnly": true,
+              "addedRevision": "101",
+              "exports": [
+                {
+                  "type": "type",
+                  "name": "BacklightHandler",
+                  "addedRevision": "101"
+                }, {
+                  "type": "function",
+                  "name": "backlight_service_subscribe",
+                  "addedRevision": "101"
+                }, {
+                  "type": "function",
+                  "name": "backlight_service_unsubscribe",
+                  "addedRevision": "101"
                 }
               ]
             }, {
