@@ -147,6 +147,9 @@ def options(opt):
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--qemu_host', default='localhost:12345',
         help='host:port for the emulator console connection')
+    opt.add_option('--screenshot-output', default=None,
+        help='Output path for `./waf screenshot` (must end in .png). '
+             'Defaults to build/screenshot.png')
     opt.add_option('--no-link', action='store_true',
                    help='Do not link the final firmware binary. This is used for static analysis')
     opt.add_option('--noprompt', action='store_true',
@@ -972,15 +975,20 @@ def qemu_launch(ctx):
 
     serial_tcp_args = 'server=on,wait=off'
 
+    mon_sock = ctx.path.get_bld().make_node('qemu-mon.sock').abspath()
+    if os.path.exists(mon_sock):
+        os.unlink(mon_sock)
+
     cmd_line = (
         shlex.quote(qemu_bin) + " "
         "-rtc base=localtime "
         "-monitor stdio "
+        "-monitor unix:{mon_sock},server=on,wait=off "
         "-s "
         "-serial file:uart1.log "
         "-serial tcp::12344,{serial} "   # Used for bluetooth data
         "-serial tcp::12345,{serial} "   # Used for console
-        ).format(serial=serial_tcp_args) + ' '.join(machine_dep_args)
+        ).format(serial=serial_tcp_args, mon_sock=shlex.quote(mon_sock)) + ' '.join(machine_dep_args)
     waflib.Logs.pprint('CYAN', 'QEMU command: {}'.format(cmd_line))
     os.system(cmd_line)
 
@@ -1013,6 +1021,55 @@ def debug(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
     with waftools.openocd.daemon(ctx, cfg_file,
                                  use_swd=(is_ble or 'swd' in ctx.env.OPENOCD_JTAG)):
         run_arm_gdb(ctx, fw_elf, cmd_str='--init-command=".gdbinit"')
+
+
+class Screenshot(BuildContext):
+    """ Captures a PNG screenshot of the running QEMU display via the QEMU
+        monitor socket. Requires `./waf qemu` to already be running.
+    """
+    cmd = 'screenshot'
+    fun = 'screenshot'
+
+
+def screenshot(ctx):
+    import socket
+
+    sock_path = ctx.path.get_bld().make_node('qemu-mon.sock').abspath()
+    if not os.path.exists(sock_path):
+        ctx.fatal("QEMU monitor socket not found at {} -- is './waf qemu' "
+                  "running?".format(sock_path))
+
+    out_path = ctx.options.screenshot_output
+    if not out_path:
+        out_path = ctx.path.get_bld().make_node('screenshot.png').abspath()
+    if not out_path.lower().endswith('.png'):
+        ctx.fatal('--screenshot-output must end with .png')
+
+    if os.path.exists(out_path):
+        os.unlink(out_path)
+
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+        sock.settimeout(5)
+        sock.connect(sock_path)
+
+        def read_until_prompt():
+            buf = b''
+            while b'(qemu) ' not in buf:
+                chunk = sock.recv(4096)
+                if not chunk:
+                    break
+                buf += chunk
+            return buf
+
+        read_until_prompt()
+        sock.sendall('screendump {} -f png\n'.format(out_path).encode())
+        response = read_until_prompt().decode(errors='replace')
+
+    if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
+        ctx.fatal('QEMU did not write screenshot to {}\nMonitor response:\n{}'
+                  .format(out_path, response))
+
+    waflib.Logs.pprint('CYAN', 'Wrote screenshot to {}'.format(out_path))
 
 
 def openocd(ctx):
