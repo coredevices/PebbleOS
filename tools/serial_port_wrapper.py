@@ -19,8 +19,6 @@ class SerialPortWrapper(threading.Thread):
         threading.Thread.__init__(self)
 
         self.tty = tty
-        if tty.startswith("ftdi://"):
-            pass
 
         self.s = serial.serial_for_url(tty, baud_rate, timeout=SERIAL_READ_TIMEOUT)
         self.read_size = 1

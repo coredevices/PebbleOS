@@ -105,12 +105,3 @@ class PromptCommand(object):
         cookie = cls._cookie
         cls._cookie = (cls._cookie + 1) % 256
         return cookie
-
-
-if __name__ == "__main__":
-    with socket.Connection.open_dbgserial("ftdi://ftdi:4232:1/3") as connection:
-        inputCommand = raw_input(">")
-        while inputCommand:
-            for message in connection.prompt.command_and_response(inputCommand):
-                print(message)
-            inputCommand = raw_input(">")

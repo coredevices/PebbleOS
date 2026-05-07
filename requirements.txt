@@ -29,7 +29,6 @@ certifi
 libclang
 packaging
 libpebble2>=0.0.16
-pyftdi==0.56.0
 pathlib
 
 -e python_libs/pebble-commander

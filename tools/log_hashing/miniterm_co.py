@@ -101,19 +101,6 @@ def dehash_socket_read(self, size):
     return dehash_read(self, size, socket_serial_read)
 
 
-try:
-    from pyftdi.serialext.protocol_ftdi import FtdiSerial
-
-    plain_pyftdi_read = FtdiSerial.read
-
-    def dehash_pyftdi_serial_read(self, size):
-        return dehash_read(self, size, plain_pyftdi_read)
-
-    FtdiSerial.read = dehash_pyftdi_serial_read
-except ImportError:
-    pass
-
-
 def yes_no_to_bool(arg):
     return True if arg == "yes" else False
 
