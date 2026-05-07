@@ -81,3 +81,74 @@ void test_codepoint__end_of_word_existing(void) {
   cl_assert(!codepoint_is_end_of_word('A'));
   cl_assert(!codepoint_is_end_of_word('0'));
 }
+
+void test_codepoint__should_skip_controls(void) {
+  // C0 controls (except newline) should be skipped
+  cl_assert(codepoint_should_skip(NULL_CODEPOINT));
+  cl_assert(codepoint_should_skip(0x01));
+  cl_assert(codepoint_should_skip(0x07));  // bell
+  cl_assert(codepoint_should_skip(0x09));  // tab
+  cl_assert(codepoint_should_skip(0x0D));  // carriage return
+  cl_assert(codepoint_should_skip(0x1F));
+
+  // Newline must NOT be skipped (it's a line break)
+  cl_assert(!codepoint_should_skip(NEWLINE_CODEPOINT));
+
+  // C1 controls (U+0080-U+009F) should be skipped — they have no visible glyphs
+  // and otherwise render as the font's wildcard box.
+  cl_assert(codepoint_should_skip(0x80));
+  cl_assert(codepoint_should_skip(0x85));  // NEL
+  cl_assert(codepoint_should_skip(0x9F));
+
+  // Word-Joiner block (U+2061-U+206F): invisible math operators, BiDi isolates,
+  // deprecated formatting — none have visible glyphs in our fonts.
+  // U+2060 WORD JOINER is excluded — it is needed for CJK word segmentation.
+  cl_assert(!codepoint_should_skip(0x2060));  // word joiner — handled separately
+  cl_assert(codepoint_should_skip(0x2062));  // invisible times
+  cl_assert(codepoint_should_skip(0x2066));  // LRI
+  cl_assert(codepoint_should_skip(0x2069));  // PDI
+  cl_assert(codepoint_should_skip(0x206F));  // nominal digit shapes (deprecated)
+
+  // Interlinear annotation anchors and tag characters
+  cl_assert(codepoint_should_skip(0xFFF9));  // interlinear anchor
+  cl_assert(codepoint_should_skip(0xFFFB));  // interlinear terminator
+  cl_assert(codepoint_should_skip(0xE0001));  // language tag
+  cl_assert(codepoint_should_skip(0xE007F));  // cancel tag
+
+  // Supplementary Private Use Area-B (Apple SF Symbols) should be skipped
+  cl_assert(codepoint_should_skip(0xF0000));
+  cl_assert(codepoint_should_skip(0x100000));  // start of typical SF Symbols range
+  cl_assert(codepoint_should_skip(0x10FFFD));
+
+  // Boundary characters around C1 must NOT be skipped
+  cl_assert(!codepoint_should_skip(0x7F));  // DEL — handled by formatting indicator
+  cl_assert(!codepoint_should_skip(0xA0));  // no-break space — printable
+  cl_assert(!codepoint_should_skip(' '));
+  cl_assert(!codepoint_should_skip('A'));
+
+  // Codepoints just outside the new ranges must NOT be skipped
+  cl_assert(!codepoint_should_skip(0x205F));  // medium math space — printable
+  cl_assert(!codepoint_should_skip(0x2070));  // superscript zero — printable
+  cl_assert(!codepoint_should_skip(0xFFF8));  // unassigned, but not in our skip range
+  cl_assert(!codepoint_should_skip(0xFFFC));  // object replacement — handled by formatting indicator
+  cl_assert(!codepoint_should_skip(0xEFFFF));
+}
+
+void test_codepoint__formatting_indicator_invisibles(void) {
+  // Object replacement character (used by iOS for inline attachments) must be
+  // treated as a formatting indicator so it doesn't render as a tofu box.
+  cl_assert(codepoint_is_formatting_indicator(0xFFFC));
+  // BiDi controls — full U+202A-U+202E block including the previously-missed
+  // RLE (U+202B) and RLO (U+202E)
+  cl_assert(codepoint_is_formatting_indicator(0x202A));
+  cl_assert(codepoint_is_formatting_indicator(0x202B));
+  cl_assert(codepoint_is_formatting_indicator(0x202C));
+  cl_assert(codepoint_is_formatting_indicator(0x202D));
+  cl_assert(codepoint_is_formatting_indicator(0x202E));
+  // Existing entries still recognised
+  cl_assert(codepoint_is_formatting_indicator(0x7F));
+  cl_assert(codepoint_is_formatting_indicator(0xFEFF));
+  // Unrelated codepoints are not
+  cl_assert(!codepoint_is_formatting_indicator('A'));
+  cl_assert(!codepoint_is_formatting_indicator(0xFFFD));  // replacement char
+}

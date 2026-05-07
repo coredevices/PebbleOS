@@ -78,11 +78,14 @@ static const Codepoint FORMATTING_CODEPOINTS[] = {
   0x200E, // left to right
   0x200F, // right to left
   0x202A, // bidirectional - right to left
+  0x202B, // bidirectional - right to left embedding
   0x202C, // bidirectional - pop direction
   0x202D, // left to right override
+  0x202E, // right to left override
   0xFE0E, // variation selector 1
   0xFE0F, // variation selector 2
   0xFEFF, // zero-width-no-break
+  0xFFFC, // object replacement character
 };
 
 // Note: Please keep these sorted
@@ -151,6 +154,11 @@ bool codepoint_is_skin_tone_modifier(const Codepoint codepoint) {
 
 bool codepoint_should_skip(const Codepoint codepoint) {
   return ((codepoint < 0x20 && codepoint != NEWLINE_CODEPOINT) ||
+          (codepoint >= 0x80 && codepoint <= 0x9F) ||
+          (codepoint >= 0x2061 && codepoint <= 0x206F) ||
+          (codepoint >= 0xFFF9 && codepoint <= 0xFFFB) ||
+          (codepoint >= 0xE0000 && codepoint <= 0xE007F) ||
+          (codepoint >= 0xF0000 && codepoint <= 0x10FFFD) ||
           (codepoint_is_skin_tone_modifier(codepoint)));
 }
 
