@@ -183,7 +183,7 @@ class FlashImaging(object):
                 continue
         raise exceptions.CommandTimedOut
 
-    def write(self, address, data, max_retries=5, max_in_flight=5, progress_cb=None):
+    def write(self, address, data, max_retries=10, max_in_flight=5, progress_cb=None):
         mtu = self.socket.mtu - WriteCommand.header_len
         assert mtu > 0
         unsent = collections.deque()
