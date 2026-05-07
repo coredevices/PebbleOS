@@ -128,6 +128,7 @@ typedef enum {
   PEBBLE_WORKOUT_EVENT,
   PEBBLE_PREF_CHANGE_EVENT,
   PEBBLE_SPEAKER_EVENT,
+  PEBBLE_BACKLIGHT_EVENT,
 
   PEBBLE_NUM_EVENTS
 } PebbleEventType;
@@ -496,6 +497,10 @@ typedef struct PACKED { // 2 bytes
   uint8_t finish_reason;  // SpeakerFinishReason
 } PebbleSpeakerEvent;
 
+typedef struct PACKED { // 1 byte
+  bool is_on;
+} PebbleBacklightEvent;
+
 typedef enum {
   VoiceEventTypeSessionSetup,
   VoiceEventTypeSessionResult,
@@ -805,6 +810,7 @@ typedef struct PACKED {
     PebbleWorkoutEvent workout;
     PebblePrefChangeEvent pref_change;
     PebbleSpeakerEvent speaker;
+    PebbleBacklightEvent backlight;
   };
   PebbleTaskBitset task_mask;  // 1 == filter out, 0 == leave in
   // NOTE: we put this 8 bit field at the end so that we can pack this structure and still keep the

@@ -10,6 +10,7 @@
 #include "drivers/backlight.h"
 #endif
 #include "drivers/rtc.h"
+#include "kernel/events.h"
 #include "kernel/low_power.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/battery/battery_monitor.h"
@@ -266,6 +267,20 @@ static void prv_change_state(BacklightState new_state) {
 
   if (s_current_brightness != new_brightness) {
     prv_change_brightness(new_brightness);
+  }
+
+  // Notify subscribers when the backlight transitions between on and off.
+  // Treat any non-OFF state as "on" so apps see a single edge per wake.
+  const bool was_on = (old_state != LIGHT_STATE_OFF);
+  const bool is_on = (s_light_state != LIGHT_STATE_OFF);
+  if (was_on != is_on) {
+    PebbleEvent event = {
+      .type = PEBBLE_BACKLIGHT_EVENT,
+      .backlight = {
+        .is_on = is_on,
+      },
+    };
+    event_put(&event);
   }
 }
 
