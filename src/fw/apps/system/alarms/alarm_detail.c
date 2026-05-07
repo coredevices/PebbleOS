@@ -313,15 +313,22 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     .perform_action = prv_disable_sound_handler,
     .action_data = data,
   };
-  for (int i = 0; i < (int)(sizeof(tone_values) / sizeof(tone_values[0])); i++) {
+  const int num_tones = (int)(sizeof(tone_values) / sizeof(tone_values[0]));
+  for (int i = 0; i < num_tones; i++) {
     sound_level->items[i + 1] = (ActionMenuItem) {
       .label = i18n_get(alarm_tones_get_name(tone_values[i]), data),
       .perform_action = prv_select_tone_handler,
       .action_data = (void *)(uintptr_t)tone_values[i],
     };
   }
-  sound_level->default_selected_item =
-      data->alarm_info.sound_enabled ? (data->alarm_info.tone + 1) : 0;
+  // Bounds-check the stored tone before indexing the menu. The 3-bit storage
+  // field can hold 0..7 but the menu only has num_tones entries; defend
+  // against corrupted storage or future tone-table changes.
+  int selected = 0;
+  if (data->alarm_info.sound_enabled && (int)data->alarm_info.tone < num_tones) {
+    selected = (int)data->alarm_info.tone + 1;
+  }
+  sound_level->default_selected_item = selected;
 #endif
 
   app_action_menu_open(&data->menu_config);
