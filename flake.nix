@@ -110,6 +110,14 @@
                   exit 1
                 fi
                 echo "✓ Apple CLT found: $(/usr/bin/clang --version | head -1)"
+
+                # Moddable's mac/tools.mk generates launcher scripts via
+                # `echo '...\n...'` and depends on `\n` being expanded. macOS
+                # /bin/sh (bash 3.2, XSI-compliant in POSIX mode) does this,
+                # but Nix's bash 5.x — picked up as `sh` via PATH — does not,
+                # producing scripts with a malformed shebang. Pin make's SHELL
+                # to /bin/sh so the recipe runs under the expected shell.
+                export MAKEFLAGS="SHELL=/bin/sh"
               ''}
               # Disable pyenv to avoid conflicts
               export PYENV_VERSION=system
