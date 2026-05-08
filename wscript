@@ -43,6 +43,15 @@ RUNNERS = {
     'getafix_dvt2': ['sftool'],
 }
 
+# QEMU SDL decorations per board. The first entry is used as the default.
+QEMU_DECORATIONS = {
+    'qemu_emery': ['pt2-br', 'pt2-sb'],
+    'qemu_flint': ['p2d-bk', 'p2d-wh'],
+    'qemu_gabbro': ['pr2-bk20', 'pr2-gd14'],
+}
+
+QEMU_DECORATION_CHOICES = sorted({d for ds in QEMU_DECORATIONS.values() for d in ds}) + ['none']
+
 def truncate(msg):
     if msg is None:
         return msg
@@ -147,6 +156,11 @@ def options(opt):
     opt.add_option('--onlysdk', action='store_true', help="only build the sdk")
     opt.add_option('--qemu_host', default='localhost:12345',
         help='host:port for the emulator console connection')
+    opt.add_option('--qemu-decoration', action='store', default=None,
+        choices=QEMU_DECORATION_CHOICES,
+        help='SDL decoration to use for QEMU. Defaults to the per-board '
+             'default (emery: pt2-br, flint: p2d-bk, gabbro: pr2-bk20). '
+             'Pass "none" to disable decorations.')
     opt.add_option('--screenshot-output', default=None,
         help='Output path for `./waf screenshot` (must end in .png). '
              'Defaults to build/screenshot.png')
@@ -970,7 +984,15 @@ def qemu_launch(ctx):
 
     # Always keep the host cursor visible over the emulator window.
     import platform
-    display_type = 'cocoa' if platform.system() == 'Darwin' else 'sdl'
+    decoration = ctx.options.qemu_decoration
+    if decoration is None:
+        decoration = QEMU_DECORATIONS.get(ctx.env.BOARD, [None])[0]
+    if platform.system() == 'Darwin':
+        display_type = 'cocoa'
+    elif decoration and decoration != 'none':
+        display_type = 'sdl,decoration=%s' % decoration
+    else:
+        display_type = 'sdl'
     machine_dep_args.extend(['-display', '%s,show-cursor=on' % display_type])
 
     mon_sock = ctx.path.get_bld().make_node('qemu-mon.sock').abspath()
