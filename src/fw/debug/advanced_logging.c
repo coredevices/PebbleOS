@@ -73,10 +73,30 @@ static void handle_buffer_sync(void *data) {
   mutex_lock(s_flash_write_mutex);
   mutex_lock(s_buffer_mutex);
 
-  while (shared_circular_buffer_get_read_space_remaining(&s_buffer, &s_buffer_client) > 0) {
+  // Bound the drain to what was already pending when this callback ran.  Each
+  // write_message() releases the buffer mutex around the flash write so other
+  // tasks (BT, KernelMain) can keep producing log lines; if we kept the outer
+  // while running on the live "remaining" count, a chatty producer can keep
+  // this callback executing on KernelBackground forever.  That starves every
+  // other system-task callback (PutBytes processing in particular) and the
+  // emulator wedges with no progress and no watchdog reboot.  Drain the
+  // initial backlog and leave any newly-arrived bytes for the next callback;
+  // the s_is_flash_write_scheduled flag below ensures producers re-arm us.
+  size_t budget = shared_circular_buffer_get_read_space_remaining(&s_buffer, &s_buffer_client);
+  while (budget > 0 &&
+         shared_circular_buffer_get_read_space_remaining(&s_buffer, &s_buffer_client) > 0) {
+    size_t before = shared_circular_buffer_get_read_space_remaining(&s_buffer, &s_buffer_client);
     write_message();
     // The above function mucks with the mutex
     mutex_assert_held_by_curr_task(s_buffer_mutex, true /* is_held */);
+    size_t after = shared_circular_buffer_get_read_space_remaining(&s_buffer, &s_buffer_client);
+    if (after >= before) {
+      // write_message() didn't make progress (e.g. partial message not ready);
+      // bail rather than spinning.
+      break;
+    }
+    size_t consumed = before - after;
+    budget = (consumed >= budget) ? 0 : budget - consumed;
   }
 
   if (is_async) {
