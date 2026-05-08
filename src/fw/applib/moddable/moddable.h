@@ -21,6 +21,7 @@ typedef struct {
 	uint32_t		slot;		//!< Slot heap size in bytes (0 for default)
 	uint32_t		chunk;		//!< Chunk heap size in bytes (0 for default)
 	uint32_t		flags;		//!< Combination of kModdableCreationFlag* values
+	void			*fxBuildFFI; //!< Optional pointer to an fxBuildFFI function for custom native bindings
 } ModdableCreationRecord;
 
 //! Create and start a Moddable XS virtual machine for an Alloy app.

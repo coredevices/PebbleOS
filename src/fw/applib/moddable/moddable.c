@@ -41,6 +41,7 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 {
 	xsMachine *the;
 	uint32_t flags = 0;
+	void *fxBuildFFI = NULL;
 
 	if (NULL == cr)
 		the = modCloneMachine(NULL, NULL);
@@ -83,6 +84,9 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 			}
 			the = modCloneMachine(&creation, NULL);
 		}
+
+		if (offsetof(ModdableCreationRecord, fxBuildFFI) < cr->recordSize)
+			fxBuildFFI = cr->fxBuildFFI;
 	}
 
 	if (NULL == the) {
@@ -96,6 +100,7 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 
 	ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
 	state->the = the;
+	state->fxBuildFFI = fxBuildFFI;
 	state->eventedTimer = EVENTED_TIMER_INVALID_ID;
 	state->creationFlags = flags;
 	app_state_set_js_memory_api_context((void *)state);
