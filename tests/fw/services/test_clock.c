@@ -23,7 +23,11 @@
 
 // Stubs
 ////////////////////////////////////
+#include "stubs_alerts.h"
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
+#include "stubs_vibe_score.h"
+#include "stubs_vibe_score_info.h"
 #include "stubs_hexdump.h"
 #include "stubs_language_ui.h"
 #include "stubs_logging.h"
