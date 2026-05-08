@@ -58,6 +58,11 @@ static void prv_perform_action(uint32_t notification_uid, ActionId action_id);
 
 #define ANCS_RETRY_TIME_MS (5 * MS_PER_SECOND)
 
+// Bounds the notification queue so a post-reconnect ANCS burst from many
+// chatty apps cannot grow it without limit. Action ops are not capped — they
+// are user-initiated and rare.
+#define ANCS_NOTIF_QUEUE_MAX_DEPTH 16
+
 typedef struct {
   uint8_t command_id;
   union {
@@ -200,7 +205,11 @@ static void prv_notif_queue_push_common(NotificationQueueNode *node) {
 }
 
 static void prv_notif_queue_push_action(uint32_t uid, ActionId action_id) {
-  NotificationQueueNode *node = kernel_malloc_check(sizeof(NotificationQueueNode));
+  NotificationQueueNode *node = kernel_malloc(sizeof(NotificationQueueNode));
+  if (!node) {
+    PBL_LOG_WRN("ANCS action alloc failed, dropping (uid=%"PRIu32")", uid);
+    return;
+  }
   *node = (NotificationQueueNode) {
     .op = NotificationQueueOpPerformAction,
     .uid = uid,
@@ -211,7 +220,16 @@ static void prv_notif_queue_push_action(uint32_t uid, ActionId action_id) {
 }
 
 static void prv_notif_queue_push_attr_request(uint32_t uid, ANCSProperty properties) {
-  NotificationQueueNode *node = kernel_malloc_check(sizeof(NotificationQueueNode));
+  if (list_count((ListNode *)s_ancs_client->queue) >= ANCS_NOTIF_QUEUE_MAX_DEPTH) {
+    PBL_LOG_WRN("ANCS queue full, dropping notif (uid=%"PRIu32")", uid);
+    return;
+  }
+
+  NotificationQueueNode *node = kernel_malloc(sizeof(NotificationQueueNode));
+  if (!node) {
+    PBL_LOG_WRN("ANCS attr-request alloc failed, dropping (uid=%"PRIu32")", uid);
+    return;
+  }
   *node = (NotificationQueueNode) {
     .op = NotificationQueueOpGetAttributes,
     .uid = uid,
