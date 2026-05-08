@@ -12,3 +12,7 @@ bool vibe_score_info_is_valid(VibeScoreId id) {
 const char *vibe_score_info_get_name(VibeScoreId id) {
   return "test";
 }
+
+uint32_t vibe_score_info_get_resource_id(VibeScoreId id) {
+  return 0;
+}
