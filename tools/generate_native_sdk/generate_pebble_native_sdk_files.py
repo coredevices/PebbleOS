@@ -148,6 +148,8 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
     pebble_app_h_text_to_inject = PEBBLE_APP_H_TEXT + "\n".join(
         platform_info["ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H"]
     )
+    if platform_info.get("HAS_MODDABLE_XS"):
+        pebble_app_h_text_to_inject += '\n#include "xsffi.h"\n'
 
     # Build pebble.h and pebble_worker.h for our apps to include
     for type_name_prefix in [
@@ -159,6 +161,21 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
         make_app_header(
             exports_tree, sdk_header_filename, type_name_prefix[0], type_name_prefix[2]
         )
+
+    # On platforms with Moddable XS support, ship xsffi.h alongside the SDK so
+    # apps that use the FFI bindings can include it directly.
+    if platform_info.get("HAS_MODDABLE_XS"):
+        repo_root = path.dirname(pbl_src_dir)
+        xsffi_src = path.join(
+            repo_root,
+            "third_party",
+            "moddable",
+            "moddable",
+            "xs",
+            "includes",
+            "xsffi.h",
+        )
+        shutil.copy(xsffi_src, path.join(sdk_include_dir, "xsffi.h"))
 
     def function_export_compare_func(x, y):
         def cmp(a, b):
