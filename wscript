@@ -983,13 +983,10 @@ def qemu_launch(ctx):
                             '-kernel', fw_elf.path_from(ctx.path)] + spi_flash_args
 
     # Always keep the host cursor visible over the emulator window.
-    import platform
     decoration = ctx.options.qemu_decoration
     if decoration is None:
         decoration = QEMU_DECORATIONS.get(ctx.env.BOARD, [None])[0]
-    if platform.system() == 'Darwin':
-        display_type = 'cocoa'
-    elif decoration and decoration != 'none':
+    if decoration and decoration != 'none':
         display_type = 'sdl,decoration=%s' % decoration
     else:
         display_type = 'sdl'
