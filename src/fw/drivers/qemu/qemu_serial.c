@@ -209,6 +209,14 @@ static void prv_process_receive_buffer(void *context) {
   uint32_t msg_bytes;
   uint16_t protocol;
 
+  // Clear the pending flag at entry so the next ISR-side trigger (footer
+  // sighting, buffer-full, recv error) can queue another drain callback.
+  // Without this, the flag stays true forever after the first callback,
+  // any later "interesting" ISR event silently drops its callback request,
+  // and once the ISR buffer fills the RX IRQ is disabled — no further drain
+  // happens and the protocol stack wedges mid-transfer.
+  s_qemu_state.callback_pending = false;
+
   // Process ISR receive buffer, see if we have a complete message
   // Prevent our ISR from putting more characters in while we muck with the receive buffer by
   //  disabling UART interrupts while we process it.
