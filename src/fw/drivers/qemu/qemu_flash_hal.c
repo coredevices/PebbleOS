@@ -19,6 +19,18 @@
 #define FLASH_INT_CTRL    0x0C
 #define FLASH_INT_STATUS  0x10
 #define FLASH_SIZE        0x14
+// Range-based persistence handshake with the QEMU pebble-extflash device.
+// The device used to auto-flush its in-RAM XIP storage on SIGTERM, but that
+// captured torn writes (flash_logging journal mid-update, PFS OVERWRITE_STARTED
+// with no matching COMPLETE, etc.) and wedged the next boot.  Now we drive
+// persistence ourselves after each individual page write:
+//   1. write FLASH_SYNC_LEN = bytes_written
+//   2. write FLASH_SYNC     = XIP address of the start of that range
+// QEMU then blk_pwrite()s just that range to the backing file.  Erases are
+// auto-flushed in QEMU (the geometry is implicit in FLASH_ADDR + CMD), so we
+// don't need to SYNC them from here.
+#define FLASH_SYNC_LEN    0x18
+#define FLASH_SYNC        0x1C
 
 // CMD values
 #define CMD_ERASE_SUBSECTOR  1
@@ -110,6 +122,8 @@ int flash_impl_write_page_begin(const void *buffer, FlashAddress addr, size_t le
     dst[i] = src[i];
   }
 
+  REG32(QEMU_EXTFLASH_BASE + FLASH_SYNC_LEN) = (uint32_t)write_len;
+  REG32(QEMU_EXTFLASH_BASE + FLASH_SYNC) = (uint32_t)addr;
   s_last_write_len = write_len;
   return (int)write_len;
 }
