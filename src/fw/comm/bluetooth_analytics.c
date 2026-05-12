@@ -65,6 +65,29 @@ void bluetooth_analytics_handle_connection_disconnection_event(
     last_reset_counter_ticks = rtc_get_ticks();
   }
 
+  // Per-reason counters — see nimble/ble.h ble_error_codes. The NimBLE BLE_HS_HCI_ERR
+  // (0x200) prefix is dropped by the uint8_t narrowing, so the raw HCI status remains.
+  switch (reason) {
+    case 0x08:  // BLE_ERR_CONN_SPVN_TMO
+      PBL_ANALYTICS_ADD(ble_disconnect_conn_spvn_tmo_count, 1);
+      break;
+    case 0x13:  // BLE_ERR_REM_USER_CONN_TERM
+      PBL_ANALYTICS_ADD(ble_disconnect_rem_user_term_count, 1);
+      break;
+    case 0x16:  // BLE_ERR_CONN_TERM_LOCAL
+      PBL_ANALYTICS_ADD(ble_disconnect_conn_term_local_count, 1);
+      break;
+    case 0x22:  // BLE_ERR_LMP_LL_RSP_TMO
+      PBL_ANALYTICS_ADD(ble_disconnect_lmp_ll_rsp_tmo_count, 1);
+      break;
+    case 0x3e:  // BLE_ERR_CONN_ESTABLISHMENT
+      PBL_ANALYTICS_ADD(ble_disconnect_conn_establishment_count, 1);
+      break;
+    default:
+      PBL_ANALYTICS_ADD(ble_disconnect_other_count, 1);
+      break;
+  }
+
   if (num_events_logged > 100) { // don't log a ridiculous amount of tightly looped disconnects
     return;
   }

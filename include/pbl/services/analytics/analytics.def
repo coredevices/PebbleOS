@@ -91,6 +91,13 @@ PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_adv_long_intvl_time_ms)
 PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_conn_itvl_min_time_ms)
 PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_conn_itvl_mid_time_ms)
 PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_conn_itvl_max_time_ms)
+// BLE disconnect reason counters (HCI status code, see nimble/ble.h:ble_error_codes)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_conn_spvn_tmo_count)       // 0x08
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_rem_user_term_count)       // 0x13
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_conn_term_local_count)     // 0x16
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_lmp_ll_rsp_tmo_count)      // 0x22
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_conn_establishment_count)  // 0x3e
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(ble_disconnect_other_count)
 
 // Settings
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(settings_health_tracking_enabled)
