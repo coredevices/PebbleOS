@@ -12,7 +12,6 @@
 
 void notify_system_ready_for_communication(void) {
 #if !UNITTEST
-  pbl_log(LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Ready for communication.");
 #if PULSE_EVERYWHERE
   static bool s_pulse_started = false;
   if (!s_pulse_started) {
@@ -20,6 +19,7 @@ void notify_system_ready_for_communication(void) {
     s_pulse_started = true;
   }
 #endif
+  pbl_log(LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Ready for communication.");
 #endif
 }
 
