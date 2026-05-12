@@ -531,7 +531,7 @@ static const MicDevice mic_device = {
     .pdm_dma_irq = DMAC1_CH5_IRQn,
     .pdm_irq = PDM1_IRQn,
     .pdm_irq_priority = 5, 
-    .channels = 2,
+    .channels = 1,
     .sample_rate = 16000,
     .channel_depth = 16,
 };
