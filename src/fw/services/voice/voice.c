@@ -61,12 +61,10 @@ static TimerID s_timeout = TIMER_INVALID_ID;
 static uint32_t s_session_generation = 0;      // Monotonic session counter
 static uint32_t s_timeout_generation = 0;      // Generation tied to currently scheduled timeout
 static bool s_teardown_in_progress = false;    // Debounce concurrent teardown paths
-static bool s_delayed_speex_cleanup = false;   // Flag to defer Speex cleanup during cancellation
 
 static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data);
 static void prv_session_result_timeout(void * data);
-static void prv_delayed_cleanup_timeout(void *data);
 
 #if defined(VOICE_DEBUG)
 // printf implemented here because the ADT Speex debug library calls printf for logging
@@ -161,17 +159,8 @@ static void prv_cancel_early_session(void) {
 }
 
 static void prv_reset(void) {
-  // Clean up Speex codec safely after recording is completely done
-  // Skip immediate cleanup if delayed cleanup is scheduled to avoid race conditions
-  if (s_delayed_speex_cleanup) {
-    // Speex cleanup will be handled by delayed timer
-  } else {
-    voice_speex_deinit();
-  }
-  
   s_state = SessionState_Idle;
   s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
-
 }
 
 static void prv_cancel_session(void) {
@@ -308,15 +297,6 @@ static void prv_session_result_timeout(void * data) {
   mutex_unlock(s_lock);
 }
 
-static void prv_delayed_cleanup_timeout(void *data) {
-  mutex_lock(s_lock);
-  
-  voice_speex_deinit();
-  s_delayed_speex_cleanup = false;
-  
-  mutex_unlock(s_lock);
-}
-
 static void prv_session_setup_timeout(void * data) {
   mutex_lock(s_lock);
   if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
@@ -387,12 +367,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
     mutex_unlock(s_lock);
     return VOICE_SESSION_ID_INVALID;
   }
-  
-  // Prevent new sessions while delayed cleanup is pending to avoid race conditions
-  if (s_delayed_speex_cleanup) {
-    mutex_unlock(s_lock);
-    return VOICE_SESSION_ID_INVALID;
-  }
+
   // Start new session generation and clear teardown guard
   s_session_generation++;
   if (UNLIKELY(s_session_generation == 0)) { // handle wrap-around (very unlikely)
@@ -494,25 +469,10 @@ void voice_cancel_dictation(VoiceSessionId session_id) {
         s_state == SessionState_VoiceEndpointSetupReceived ||
         s_state == SessionState_AudioEndpointSetupReceived) {
       prv_cancel_early_session();
-      // Use delayed cleanup for early cancellation to avoid race conditions with phone/endpoint
-      s_delayed_speex_cleanup = true;
-      new_timer_start(s_timeout, 100, prv_delayed_cleanup_timeout, NULL, 0);
-      prv_reset();
     } else if (s_state == SessionState_Recording) {
       prv_stop_recording();
-      // Use delayed cleanup to avoid race condition with microphone
-      s_delayed_speex_cleanup = true;
-      new_timer_start(s_timeout, 100, prv_delayed_cleanup_timeout, NULL, 0);
-      prv_reset();
-    } else if (s_state == SessionState_WaitForSessionResult) {
-      // Recording is done but audio endpoint might still be processing
-      s_delayed_speex_cleanup = true;
-      new_timer_start(s_timeout, 100, prv_delayed_cleanup_timeout, NULL, 0);
-      prv_reset();
-    } else {
-      // For any other state, safe to reset immediately
-      prv_reset();
     }
+    prv_reset();
   }
 
 unlock:
