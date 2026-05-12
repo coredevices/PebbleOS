@@ -169,6 +169,9 @@ def options(opt):
         help='SDL decoration to use for QEMU. Defaults to the per-board '
              'default (emery: pt2-br, flint: p2d-bk, gabbro: pr2-bk20). '
              'Pass "none" to disable decorations.')
+    opt.add_option('--reconnect', action='store_true',
+        help='Wrap `console` in a keep-alive driver that waits for the '
+             'transport to come up and reconnects if it drops')
     opt.add_option('--screenshot-output', default=None,
         help='Output path for `./waf screenshot` (must end in .png). '
              'Defaults to build/screenshot.png')
@@ -914,9 +917,9 @@ def console(ctx):
             return
 
     if _is_pulse_everywhere(ctx):
-        os.system("python ./tools/pulse_console.py -t %s" % tty)
+        inner = "python ./tools/pulse_console.py -t %s" % tty
     elif ctx.is_qemu():
-        os.system("python ./tools/log_hashing/miniterm_co.py %s" % tty)
+        inner = "python ./tools/log_hashing/miniterm_co.py %s" % tty
     else:
         baudrate = ctx.options.baudrate or 230400
         # NOTE: force RTS to be de-asserted, as on some boards (e.g.
@@ -924,7 +927,12 @@ def console(ctx):
         # drivers, RTS may activate automatically, as soon as the port is
         # opened. There may be a glitch on RTS when rts is set differently from
         # their default value.
-        os.system("python ./tools/log_hashing/miniterm_co.py %s %d --rts 0" % (tty, baudrate))
+        inner = "python ./tools/log_hashing/miniterm_co.py %s %d --rts 0" % (tty, baudrate)
+
+    if ctx.options.reconnect:
+        os.system("python ./tools/console_keepalive.py -t %s -- %s" % (tty, inner))
+    else:
+        os.system(inner)
 
 
 def qemu(ctx):
