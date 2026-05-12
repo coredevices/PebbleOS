@@ -55,10 +55,14 @@ bool bonding_sync_contains_pairing_info(const SMPairingInfo *pairing_info, bool 
 }
 
 void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
+  // Match the qemu/stub driver behavior: removing a bonding the driver was never told about is a
+  // no-op rather than a fault. Production code may issue a remove even when the driver-side state
+  // was never populated (e.g. cleaning up stale entries at boot).
   BLEBondingNode *found_node = (BLEBondingNode *)list_find((ListNode *)s_ble_bonding_head,
                                                            prv_list_find_cb, (void *)bonding);
-  PBL_ASSERTN(found_node);
-  prv_remove_node(found_node);
+  if (found_node) {
+    prv_remove_node(found_node);
+  }
 }
 
 void bonding_sync_init(void) {

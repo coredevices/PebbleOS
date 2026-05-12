@@ -251,7 +251,8 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_1.identity, sizeof(device_out));
 
-  // Store another pairing
+  // Store a pairing with a different identity. Only one BLE pairing is allowed at a time, so this
+  // must replace the previous one.
   SMPairingInfo pairing_2;
   memset(&pairing_2, 0x00, sizeof(pairing_2));
   pairing_2 = (SMPairingInfo) {
@@ -272,46 +273,41 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
     },
     .is_remote_identity_info_valid = true,
   };
-  BTBondingID id_2 = bt_persistent_storage_store_ble_pairing(&pairing_2, false /* is_gateway */,
+  BTBondingID id_2 = bt_persistent_storage_store_ble_pairing(&pairing_2, true /* is_gateway */,
                                                              NULL,
                                                              false /* requires_address_pinning */,
                                                              false /* auto_accept_re_pairing */);
   cl_assert(id_2 != BT_BONDING_ID_INVALID);
+  cl_assert(id_2 != id_1);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 2);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_store_count(), 1); // This wasn't a gateway
+  // pairing_1 should have been removed automatically.
+  cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
 
-  // Read both pairings back
+  // pairing_1 is gone, pairing_2 remains.
   ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, NULL /* name */);
-  cl_assert(ret);
-  cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
-  cl_assert_equal_m(&device_out, &pairing_1.identity, sizeof(device_out));
+  cl_assert(!ret);
 
   ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, NULL /* name */);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing_2.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_2.identity, sizeof(device_out));
 
-  // Update first pairing (with the same data)
-  BTBondingID id_X = bt_persistent_storage_store_ble_pairing(&pairing_1, true /* is_gateway */,
+  // Re-store the same pairing (same identity): this is an update, not an add, and must not delete
+  // anything.
+  BTBondingID id_X = bt_persistent_storage_store_ble_pairing(&pairing_2, true /* is_gateway */,
                                                              NULL,
                                                              false /* requires_address_pinning */,
                                                              false /* auto_accept_re_pairing */);
-  cl_assert_equal_i(id_1, id_X);
+  cl_assert_equal_i(id_2, id_X);
   cl_assert_equal_i(s_ble_bonding_change_update_count, 1);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_store_count(), 1);
-
-  // Read both pairings back again
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, NULL /* name */);
-  cl_assert(ret);
-  cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
-  cl_assert_equal_m(&device_out, &pairing_1.identity, sizeof(device_out));
+  cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
 
   ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, NULL /* name */);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing_2.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_2.identity, sizeof(device_out));
 
-  // Add a thrid pairing
+  // Store yet another distinct pairing: pairing_2 should be replaced.
   SMPairingInfo pairing_3;
   memset(&pairing_3, 0x00, sizeof(pairing_3));
   pairing_3 = (SMPairingInfo) {
@@ -338,18 +334,15 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
                                                              false /* auto_accept_re_pairing */);
   cl_assert(id_3 != BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 3);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_store_count(), 2);
+  cl_assert_equal_i(s_ble_bonding_change_delete_count, 2);
 
-  // Read all three pairings back
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, NULL /* name */);
-  cl_assert(ret);
-  cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
-  cl_assert_equal_m(&device_out, &pairing_1.identity, sizeof(device_out));
+  // Only pairing_3 should be findable by identity. Bonding slot IDs may be reused after a delete,
+  // so check by address rather than by stale id values.
+  ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing_1.identity, &irk_out, NULL);
+  cl_assert(!ret);
 
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, NULL /* name */);
-  cl_assert(ret);
-  cl_assert_equal_m(&irk_out, &pairing_2.irk, sizeof(irk_out));
-  cl_assert_equal_m(&device_out, &pairing_2.identity, sizeof(device_out));
+  ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing_2.identity, &irk_out, NULL);
+  cl_assert(!ret);
 
   ret = bt_persistent_storage_get_ble_pairing_by_id(id_3, &irk_out, &device_out, NULL /* name */);
   cl_assert(ret);
@@ -357,8 +350,8 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert_equal_m(&device_out, &pairing_3.identity, sizeof(device_out));
 
   bt_persistent_storage_register_existing_ble_bondings();
-  cl_assert_equal_b(bonding_sync_contains_pairing_info(&pairing_1, true), true);
-  cl_assert_equal_b(bonding_sync_contains_pairing_info(&pairing_2, false), true);
+  cl_assert_equal_b(bonding_sync_contains_pairing_info(&pairing_1, true), false);
+  cl_assert_equal_b(bonding_sync_contains_pairing_info(&pairing_2, true), false);
   cl_assert_equal_b(bonding_sync_contains_pairing_info(&pairing_3, true), true);
 }
 

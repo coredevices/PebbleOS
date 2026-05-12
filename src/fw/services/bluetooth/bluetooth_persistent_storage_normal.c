@@ -579,6 +579,116 @@ static BTBondingID prv_get_key_for_sm_pairing_info(const SMPairingInfo *pairing_
   return itr_data.key_out;
 }
 
+static bool prv_delete_ble_pairing_by_id(BTBondingID bonding);
+
+//! Only a single BLE pairing is supported at a time. The buffer below is sized generously to absorb
+//! any legacy state where the bonding DB ended up with multiple entries (e.g. after a PRF pairing
+//! was merged on top of an existing normal-FW pairing).
+#define BT_BONDING_PRUNE_MAX 8
+
+typedef struct {
+  BTBondingID keep_id;
+  BTBondingID ids[BT_BONDING_PRUNE_MAX];
+  uint8_t count;
+} CollectOtherBleItrData;
+
+static bool prv_collect_other_ble_bondings_itr(SettingsFile *file, SettingsRecordInfo *info,
+                                               void *context) {
+  if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
+    return true;
+  }
+
+  CollectOtherBleItrData *itr_data = context;
+
+  BTBondingID key;
+  info->get_key(file, (uint8_t *)&key, info->key_len);
+  if (key == itr_data->keep_id) {
+    return true;
+  }
+
+  BtPersistBondingData stored_data;
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  if (stored_data.type != BtPersistBondingTypeBLE) {
+    return true;
+  }
+
+  if (itr_data->count < BT_BONDING_PRUNE_MAX) {
+    itr_data->ids[itr_data->count++] = key;
+  }
+  return true;
+}
+
+//! Delete every BLE bonding except `keep_id`. We only ever support one BLE pairing at a time, so
+//! any other BLE bonding present is stale and must be removed (e.g. when a new phone pairs and
+//! replaces the previous one).
+//!
+//! Uses the internal delete helper that does not erase shared PRF pairing data, since the kept
+//! entry is the one that should remain reflected in PRF storage.
+static void prv_delete_other_ble_bondings(BTBondingID keep_id) {
+  CollectOtherBleItrData itr_data = {
+    .keep_id = keep_id,
+    .count = 0,
+  };
+  prv_file_each(prv_collect_other_ble_bondings_itr, &itr_data);
+
+  for (uint8_t i = 0; i < itr_data.count; i++) {
+    PBL_LOG_INFO("Removing stale BLE bonding %d (kept %d)", itr_data.ids[i], keep_id);
+    prv_delete_ble_pairing_by_id(itr_data.ids[i]);
+  }
+}
+
+typedef struct {
+  BTBondingID key_out;
+  uint32_t last_modified_out;
+  uint8_t ble_count;
+} MostRecentBleItrData;
+
+static bool prv_find_most_recent_ble_bonding_itr(SettingsFile *file, SettingsRecordInfo *info,
+                                                 void *context) {
+  if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
+    return true;
+  }
+
+  MostRecentBleItrData *itr_data = context;
+
+  BtPersistBondingData stored_data;
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  if (stored_data.type != BtPersistBondingTypeBLE) {
+    return true;
+  }
+
+  BTBondingID key;
+  info->get_key(file, (uint8_t *)&key, info->key_len);
+
+  itr_data->ble_count++;
+  if (itr_data->key_out == BT_BONDING_ID_INVALID ||
+      info->last_modified > itr_data->last_modified_out) {
+    itr_data->key_out = key;
+    itr_data->last_modified_out = info->last_modified;
+  }
+  return true;
+}
+
+//! If the bonding DB contains multiple BLE pairings (e.g. left over from an older firmware that
+//! allowed more than one, or from a PRF pairing merged on top of an existing one), keep the most
+//! recently modified entry and drop the rest.
+static void prv_prune_stale_ble_bondings(void) {
+  MostRecentBleItrData itr_data = {
+    .key_out = BT_BONDING_ID_INVALID,
+    .last_modified_out = 0,
+    .ble_count = 0,
+  };
+  prv_file_each(prv_find_most_recent_ble_bonding_itr, &itr_data);
+
+  if (itr_data.ble_count <= 1 || itr_data.key_out == BT_BONDING_ID_INVALID) {
+    return;
+  }
+
+  PBL_LOG_INFO("Found %u BLE bondings at boot, keeping most recent (id %d)",
+               itr_data.ble_count, itr_data.key_out);
+  prv_delete_other_ble_bondings(itr_data.key_out);
+}
+
 //! For unit testing
 int bt_persistent_storage_get_raw_data(const void *key, size_t key_len,
                                        void *data_out, size_t buf_len) {
@@ -659,6 +769,11 @@ BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *new_pai
   }
 
   prv_call_ble_bonding_change_handlers(key, op);
+
+  // We only support a single BLE pairing at a time. Drop any previous BLE bonding so that
+  // re-pairing with a different phone (or merging a PRF pairing) replaces the old one instead of
+  // leaving it behind and forcing the user to forget it manually.
+  prv_delete_other_ble_bondings(key);
 
   return key;
 }
@@ -753,10 +868,10 @@ cleanup:
   return rv;
 }
 
-void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID bonding) {
+static bool prv_delete_ble_pairing_by_id(BTBondingID bonding) {
   BtPersistBondingData deleted_data;
   if (!prv_delete_pairing_with_type_by_id(bonding, BtPersistBondingTypeBLE, &deleted_data)) {
-    return;
+    return false;
   }
 
   status_t rv;
@@ -766,6 +881,13 @@ void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID bonding) {
   prv_remove_ble_bonding_from_bt_driver(&deleted_data);
 
   prv_call_ble_bonding_change_handlers(bonding, BtPersistBondingOpWillDelete);
+  return true;
+}
+
+void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID bonding) {
+  if (!prv_delete_ble_pairing_by_id(bonding)) {
+    return;
+  }
   // TODO: Make sure this matches what we have stored
   shared_prf_storage_erase_ble_pairing_data();
 }
@@ -1341,6 +1463,10 @@ void bt_persistent_storage_init(void) {
   s_db_mutex = mutex_create();
 
   prv_load_data_from_prf();
+
+  // Clean up any leftover state where the bonding DB ended up with more than one BLE pairing
+  // (e.g. inherited from an older firmware build, or a PRF pairing layered on an existing one).
+  prv_prune_stale_ble_bondings();
 
   // Load cached capability bits from flash
   prv_load_cached_system_capabilities(&s_cached_system_capabilities);
