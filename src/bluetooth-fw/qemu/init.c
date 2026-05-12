@@ -13,11 +13,6 @@
 #include <stdlib.h>
 
 // ----------------------------------------------------------------------------------------
-static void prv_set_connected_cb(void *context) {
-  qemu_transport_set_connected(true);
-}
-
-// ----------------------------------------------------------------------------------------
 void bt_driver_init(void) {
   // We need the QEMU serial driver
   qemu_serial_init();
@@ -25,15 +20,15 @@ void bt_driver_init(void) {
 }
 
 bool bt_driver_start(BTDriverConfig *config) {
-  // The first time the stack starts, use the QemuSetting_DefaultConnected setting.
-  // Subsequent times, always auto-connect when the stack starts.
-  static bool s_should_auto_connect = false;
-
-  // Have KernelMain set us to connected once the event loop starts up, this gives enough time
-  // for the launcher to init its app message callbacks
-  if (s_should_auto_connect || qemu_setting_get(QemuSetting_DefaultConnected)) {
-    launcher_task_add_callback(prv_set_connected_cb, NULL);
-    s_should_auto_connect = true;
+  // For QEMU there's no "disconnected" state — the host process is always
+  // attached.  Used to defer this to a launcher_task callback so app_message
+  // callbacks were registered first, but that opened a race where the host
+  // sent WatchVersionRequest after seeing "Ready for communication" but
+  // before the deferred callback ran, and the request was silently dropped.
+  // Open the session synchronously; the WatchVersionRequest path is at the
+  // comm_session layer and doesn't require app_message to be wired up.
+  if (qemu_setting_get(QemuSetting_DefaultConnected)) {
+    qemu_transport_set_connected(true);
   }
   return true;
 }
