@@ -125,7 +125,10 @@ uint32_t kalg_analyze_finish_epoch(KAlgState *state);
 // @param[in] steps number of steps taken in the last minute
 // @param[in] vmc VMC for the last minute
 // @param[in] orientation average orientation for the last minute
-// @param[in] plugged_in true if watch is plugged into charger
+// @param[in] definitely_not_worn true if the watch is definitely not being worn this minute
+//                       (caller passes "plugged into charger" OR'd with any other definite
+//                       not-worn hints such as a recent HRM off-wrist reading). Treated as a
+//                       hard "not worn" signal for sleep detection.
 // @param[in] resting_calories number of resting calories burned in the last minute
 // @param[in] active_calories number of active calories burned in the last minute
 // @param[in] distance_mm distance covered in millimeters in the last minute
@@ -133,7 +136,8 @@ uint32_t kalg_analyze_finish_epoch(KAlgState *state);
 //            session that it finds.
 // @param[in] context passed to the sessions_cb
 void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, uint16_t vmc,
-                            uint8_t orientation, bool plugged_in, uint32_t resting_calories,
+                            uint8_t orientation, bool definitely_not_worn,
+                            uint32_t resting_calories,
                             uint32_t active_calories, uint32_t distance_mm, bool shutting_down,
                             KAlgActivitySessionCallback sessions_cb, void *context);
 
