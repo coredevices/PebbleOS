@@ -3,6 +3,7 @@
 
 // OS
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(memory_pct_max)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(memory_largest_free_pct)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_kernel_main_bytes)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_kernel_background_bytes)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(stack_free_newtimers_bytes)
