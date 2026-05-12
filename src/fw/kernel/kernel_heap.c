@@ -5,6 +5,7 @@
 #include "kernel_heap.h"
 #include "mcu/interrupts.h"
 #include "pbl/services/analytics/analytics.h"
+#include "util/heap.h"
 
 #include <cmsis_core.h>
 
@@ -49,6 +50,13 @@ void pbl_analytics_external_collect_kernel_heap_stats(void) {
   size_t total_size = heap_size(&s_kernel_heap);
   uint32_t headroom_pct = (total_size > 0) ? (headroom * 100) / total_size : 0;
   PBL_ANALYTICS_SET_UNSIGNED(memory_pct_max, headroom_pct);
+
+  // Report the largest contiguous free block as a fraction of total heap. Peak
+  // usage alone (memory_pct_max above) hides fragmentation
+  unsigned int used, free_bytes, max_free;
+  heap_calc_totals(&s_kernel_heap, &used, &free_bytes, &max_free);
+  uint32_t largest_free_pct = (total_size > 0) ? ((uint32_t)max_free * 100) / total_size : 0;
+  PBL_ANALYTICS_SET_UNSIGNED(memory_largest_free_pct, largest_free_pct);
 
   // Reset the high water mark so we can see if there are certain periods of time
   // where we really tax the heap

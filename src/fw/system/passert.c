@@ -10,6 +10,7 @@
 #include "kernel/pebble_tasks.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
+#include "util/heap.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -138,8 +139,12 @@ void assert_failed(uint8_t* file, uint32_t line) {
 extern void command_dump_malloc_kernel(void);
 
 NORETURN croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
-  PBL_LOG_ALWAYS("CROAK OOM: Failed to alloc %d bytes at LR: 0x%x",
-               bytes, saved_lr);
+  unsigned int used = 0, free_bytes = 0, max_free = 0;
+  if (heap_ptr) {
+    heap_calc_totals(heap_ptr, &used, &free_bytes, &max_free);
+  }
+  PBL_LOG_ALWAYS("CROAK OOM: Failed to alloc %d bytes at LR: 0x%x (used %u, free %u, max_free %u)",
+                 bytes, saved_lr, used, free_bytes, max_free);
 
 #ifdef MALLOC_INSTRUMENTATION
   command_dump_malloc_kernel();
