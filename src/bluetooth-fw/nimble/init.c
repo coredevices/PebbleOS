@@ -41,6 +41,19 @@ static SemaphoreHandle_t s_host_stopped;
 static DisInfo s_dis_info;
 static struct ble_hs_stop_listener s_listener;
 
+typedef enum {
+  DriverStateStopped,
+  DriverStateStarting,
+  DriverStateStarted,
+  DriverStateStopping,
+} DriverState;
+
+// Scheduling ble_hs_sched_start() while the vendor's ble_hs_enabled_state
+// is not OFF trips an assert in ble_hs_event_start_stage2. ble_hs_is_enabled()
+// only catches the ON case, so a leaked STOPPING (error-path ble_hs_stop
+// that times out before its completion callback fires) would slip past.
+static DriverState s_driver_state = DriverStateStopped;
+
 static void prv_sync_cb(void) {
   PBL_LOG_D_DBG(LOG_DOMAIN_BT, "NimBLE host synchronized");
   xSemaphoreGive(s_host_started);
@@ -107,10 +120,46 @@ bool bt_driver_start(BTDriverConfig *config) {
   int rc;
   BaseType_t f_rc;
 
-  if (ble_hs_is_enabled()) {
+  if (s_driver_state == DriverStateStopping) {
+    // A previous stop never completed from our perspective. Wait for
+    // the vendor's stop callback before scheduling a new start, since
+    // ble_hs_event_start_stage2 will assert if state isn't OFF.
+    f_rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
+    if (f_rc == pdTRUE) {
+      s_driver_state = DriverStateStopped;
+    } else {
+      // Probe vendor state: a NULL-listener ble_hs_stop is side-effect-free
+      // when vendor is OFF (returns BLE_HS_EALREADY) or STOPPING (no listener
+      // is registered, returns 0). It can only kick off a real stop from the
+      // ON state, which can't happen here -- we entered Stopping by calling
+      // ble_hs_stop ourselves, and the only vendor transition out is to OFF.
+      rc = ble_hs_stop(NULL, NULL, NULL);
+      if (rc == BLE_HS_EALREADY) {
+        PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE host stop signal lost; vendor is OFF, proceeding");
+        s_driver_state = DriverStateStopped;
+      } else {
+        PBL_LOG_D_ERR(LOG_DOMAIN_BT, "NimBLE host stop never completed; refusing to start");
+        return false;
+      }
+    }
+  }
+
+  if (s_driver_state == DriverStateStarted || ble_hs_is_enabled()) {
     PBL_LOG_D_WRN(LOG_DOMAIN_BT, "NimBLE host already enabled; skipping start");
+    s_driver_state = DriverStateStarted;
     return true;
   }
+
+  if (s_driver_state != DriverStateStopped) {
+    PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Unexpected driver state %u; refusing to start",
+                  (unsigned)s_driver_state);
+    return false;
+  }
+
+  s_driver_state = DriverStateStarting;
+  // Drain a leftover host_started signal (e.g. sync_cb fired after a
+  // previous start timed out) so we wait for *this* start to sync.
+  (void)xSemaphoreTake(s_host_started, 0);
 
   s_dis_info = config->dis_info;
   ble_svc_dis_model_number_set(s_dis_info.model_number);
@@ -142,11 +191,15 @@ bool bt_driver_start(BTDriverConfig *config) {
     goto err;
   }
 
+  s_driver_state = DriverStateStarted;
   return true;
 
 err:
+  s_driver_state = DriverStateStopping;
+  (void)xSemaphoreTake(s_host_stopped, 0);
   rc = ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
   if (rc == BLE_HS_EALREADY) {
+    s_driver_state = DriverStateStopped;
     return false;
   } else if (rc != 0) {
     PBL_LOG_D_ERR(LOG_DOMAIN_BT, "Failed to stop NimBLE host after start failure: 0x%04x", (uint16_t)rc);
@@ -155,10 +208,12 @@ err:
 
   f_rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   if (f_rc != pdTRUE) {
+    // Leave state as STOPPING; the next start attempt will retry the wait.
     PBL_LOG_D_ERR(LOG_DOMAIN_BT, "NimBLE host stop timed out after start failure");
     return false;
   }
 
+  s_driver_state = DriverStateStopped;
   (void)ble_gatts_reset();
 
   return false;
@@ -167,9 +222,12 @@ err:
 void bt_driver_stop(void) {
   BaseType_t f_rc;
 
+  s_driver_state = DriverStateStopping;
+  (void)xSemaphoreTake(s_host_stopped, 0);
   ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
   f_rc = xSemaphoreTake(s_host_stopped, milliseconds_to_ticks(s_bt_stack_start_stop_timeout_ms));
   PBL_ASSERT(f_rc == pdTRUE, "NimBLE host stop timed out");
+  s_driver_state = DriverStateStopped;
 
   ble_gatts_reset();
 
