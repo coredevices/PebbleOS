@@ -6,6 +6,7 @@ from __future__ import print_function
 import argparse
 import os
 import readline
+import signal
 import threading
 import sys
 
@@ -43,6 +44,13 @@ def handle_log_messages(interface, dehasher):
         try:
             msg = logging.receive(block=True)
         except pulse2.exceptions.SocketClosed:
+            erase_current_line()
+            print("--- Connection closed ---", flush=True)
+            # Wake the main thread out of its blocking input() so the
+            # process exits promptly instead of waiting for the user to
+            # hit Enter.  The main loop catches KeyboardInterrupt and
+            # exits cleanly; tools/console_keepalive.py will then reconnect.
+            os.kill(os.getpid(), signal.SIGINT)
             break
         line_dict = dehasher.dehash(msg)
 
