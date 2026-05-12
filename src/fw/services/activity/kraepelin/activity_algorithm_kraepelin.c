@@ -970,14 +970,22 @@ static void prv_activity_update_states(time_t utc_sec, AlgMinuteRecord *record_o
 
   prv_reset_state_minute_handler(m_rec);
 
+  // Treat a recent HRM off-wrist reading as a definite not-worn signal for sleep tracking.
+  // The PPG-based off-wrist detection is far more reliable than the accel-only heuristic in
+  // kraepelin, which can take 30+ minutes to fire and is easily defeated by ambient vibration
+  // (see FIRM-1901, FIRM-1804, FIRM-1533). plugged_in keeps its original "charging" meaning
+  // in the logged record.
+  const bool hrm_offwrist = activity_metrics_prv_is_hrm_offwrist(utc_sec);
+  const bool not_worn = m_rec->base.plugged_in || hrm_offwrist;
+
   ACTIVITY_LOG_DEBUG("minute handler: steps: %"PRIu8", orientation: 0x%"PRIx8", vmc: %"PRIu16", "
-                     "light: %"PRIu8", plugged_in: %d",
+                     "light: %"PRIu8", plugged_in: %d, hrm_offwrist: %d",
                      m_rec->base.steps, m_rec->base.orientation, m_rec->base.vmc,
-                     m_rec->base.light, (int) m_rec->base.plugged_in);
+                     m_rec->base.light, (int) m_rec->base.plugged_in, (int) hrm_offwrist);
 
   // Pass the minute data onto the activity detection logic
   kalg_activities_update(s_alg_state->k_state, utc_sec, m_rec->base.steps, m_rec->base.vmc,
-                         m_rec->base.orientation, m_rec->base.plugged_in, m_rec->resting_calories,
+                         m_rec->base.orientation, not_worn, m_rec->resting_calories,
                          m_rec->active_calories, minute_distance_mm, shutting_down,
                          prv_create_activity_session_cb, NULL);
 }

@@ -1766,7 +1766,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
     for (int i = 0; i < entry->num_samples; i++) {
       const bool shutting_down = (entry->force_shut_down_at == i);
       kalg_activities_update(s_kalg_state, now, entry->samples[i].v5_fields.steps, 0 /*vmc*/,
-                             0 /*orientation*/, false /*plugged_in*/, 0 /*rest_cals*/,
+                             0 /*orientation*/, false /*definitely_not_worn*/, 0 /*rest_cals*/,
                              0 /*active_cals*/, 0 /*distance*/, shutting_down,
                              prv_activity_session_callback, NULL);
       if (shutting_down) {
@@ -1995,7 +1995,7 @@ static void prv_feed_activity_minutes(KAlgTestActivityMinute *samples, int sampl
     // NOTE: We feed in a significant VMC to simulate activity so that the sleep algorithm
     // doesn't think we're sleeping
     kalg_activities_update(s_kalg_state, now, samples[i].steps, 7000 /*vmc*/, 0 /*orientation*/,
-                           true /*plugged_in*/, samples[i].resting_calories,
+                           true /*definitely_not_worn*/, samples[i].resting_calories,
                            samples[i].active_calories, samples[i].distance_mm, false /* shutting_down */,
                            prv_activity_session_callback, NULL);
     now += SECONDS_PER_MINUTE;

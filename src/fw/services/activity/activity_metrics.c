@@ -583,6 +583,33 @@ void activity_metrics_prv_reset_hr_stats(void) {
 }
 
 // --------------------------------------------------------------------------------------------
+void activity_metrics_prv_set_hrm_worn_status(time_t now_utc, bool is_offwrist) {
+  ActivityState *state = activity_private_state();
+  mutex_lock_recursive(state->mutex);
+  {
+    state->hr.last_quality_event_utc = now_utc;
+    state->hr.last_quality_was_offwrist = is_offwrist;
+  }
+  mutex_unlock_recursive(state->mutex);
+}
+
+// --------------------------------------------------------------------------------------------
+bool activity_metrics_prv_is_hrm_offwrist(time_t now_utc) {
+  ActivityState *state = activity_private_state();
+  bool offwrist = false;
+  mutex_lock_recursive(state->mutex);
+  {
+    if (state->hr.last_quality_event_utc != 0 &&
+        state->hr.last_quality_was_offwrist &&
+        (now_utc - state->hr.last_quality_event_utc) <= ACTIVITY_HRM_OFFWRIST_STALE_SEC) {
+      offwrist = true;
+    }
+  }
+  mutex_unlock_recursive(state->mutex);
+  return offwrist;
+}
+
+// --------------------------------------------------------------------------------------------
 void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t now_utc,
                                                time_t now_uptime) {
   ActivityState *state = activity_private_state();

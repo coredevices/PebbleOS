@@ -126,7 +126,7 @@ typedef struct {
 typedef struct {
   uint16_t vmc;
   uint8_t orientation;
-  bool plugged_in;
+  bool definitely_not_worn;
 } KAlgSleepMinute;
 
 // State information for sleep detection
@@ -1378,7 +1378,7 @@ uint32_t kalg_analyze_finish_epoch(KAlgState *state) {
 // Update the not-worn detection state machine. This state machine gets called on every minute
 // update. It returns true if it determines the watch was not worn
 static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
-                                uint8_t orientation, bool plugged_in) {
+                                uint8_t orientation, bool definitely_not_worn) {
   // Handy access to some variables
   const KAlgNotWornParams *params = &KALG_NOT_WORN_PARAMS;
   KAlgNotWornState *state = &alg_state->not_worn_state;
@@ -1401,7 +1401,7 @@ static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t v
   }
 
   // Look for specific VMC values here that indicate definite worn or not-worn status
-  bool definite_not_worn = plugged_in;
+  bool definite_not_worn = definitely_not_worn;
 
   // Update stats
   if (maybe_not_worn || definite_not_worn) {
@@ -1659,7 +1659,7 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
 // called at the beginning of prv_sleep_activity_update().
 // @return true if we have enough data to compute the score for this minute
 static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
-                                            uint8_t orientation, bool plugged_in,
+                                            uint8_t orientation, bool definitely_not_worn,
                                             uint32_t *score_ret, time_t *sample_utc_ret,
                                             bool *is_sleep_minute_ret) {
   // Handy access to some variables
@@ -1676,11 +1676,11 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
   state->minute_history[state->num_history_entries++] = (KAlgSleepMinute) {
     .vmc = vmc,
     .orientation = orientation,
-    .plugged_in = plugged_in,
+    .definitely_not_worn = definitely_not_worn,
   };
 
   // Get the not-worn status
-  bool not_worn = prv_not_worn_update(alg_state, utc_now, vmc, orientation, plugged_in);
+  bool not_worn = prv_not_worn_update(alg_state, utc_now, vmc, orientation, definitely_not_worn);
 
   // We have to have at least a filter's worth of data
   if (state->num_history_entries < history_capacity) {
@@ -1829,7 +1829,8 @@ static void prv_sleep_activity_update_session_state(
 // ------------------------------------------------------------------------------------------
 // Process the minute data for sleep detection
 static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
-                                      uint8_t orientation, bool plugged_in, bool shutting_down,
+                                      uint8_t orientation, bool definitely_not_worn,
+                                      bool shutting_down,
                                       KAlgActivitySessionCallback sessions_cb, void *context) {
   // Handy access to some variables
   const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
@@ -1845,8 +1846,9 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
     // because the sleep algorithm can only be run when we accumulated enough minutes. We
     // essentially run it with old data, but with the added constraint that we are shutting down.
     sample_utc = alg_state->sleep_state.last_sample_utc;
-  } else if (!prv_sleep_activity_update_stats(alg_state, utc_now, vmc, orientation, plugged_in,
-                                              &score, &sample_utc, &is_sleep_minute)) {
+  } else if (!prv_sleep_activity_update_stats(alg_state, utc_now, vmc, orientation,
+                                              definitely_not_worn, &score, &sample_utc,
+                                              &is_sleep_minute)) {
     return;
   }
 
@@ -2082,7 +2084,8 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
 // Feed new minute data into the activity detection state machine. This logic looks for non-sleep
 // activities, like walks, runs, etc.
 void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, uint16_t vmc,
-                            uint8_t orientation, bool plugged_in, uint32_t resting_calories,
+                            uint8_t orientation, bool definitely_not_worn,
+                            uint32_t resting_calories,
                             uint32_t active_calories, uint32_t distance_mm, bool shutting_down,
                             KAlgActivitySessionCallback sessions_cb, void *context) {
   // If we've encountered a significant change in UTC time (connecting to a new phone, factory
@@ -2107,8 +2110,8 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
                              KAlgActivityType_Run);
 
     // Pass onto the sleep detector
-    prv_sleep_activity_update(state, utc_now, vmc, orientation, plugged_in, shutting_down,
-                              sessions_cb, context);
+    prv_sleep_activity_update(state, utc_now, vmc, orientation, definitely_not_worn,
+                              shutting_down, sessions_cb, context);
   }
 }
 

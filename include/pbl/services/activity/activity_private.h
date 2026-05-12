@@ -67,6 +67,13 @@ typedef uint16_t ActivityScalarStore;
 #define ACTIVITY_HRM_SUBSCRIPTION_ON_PERIOD_SEC  (1)
 #define ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC (SECONDS_PER_DAY)
 
+// After this many seconds without an HRM event, the cached worn-status is considered stale and
+// the sleep algorithm falls back to its accel-based not-worn heuristics. Sized to comfortably
+// cover the default HRMonitoringInterval_10Min cycle (~11 min) — at the longer 30/60-min
+// intervals the cache will simply expire between bursts and sleep detection won't lean on a
+// stale on-wrist reading.
+#define ACTIVITY_HRM_OFFWRIST_STALE_SEC (15 * SECONDS_PER_MINUTE)
+
 // Max number of stored HR samples to compute the median
 #define ACTIVITY_MAX_HR_SAMPLES (3 * SECONDS_PER_MINUTE)
 
@@ -308,6 +315,11 @@ typedef struct {
   uint16_t num_excellent_samples;     // number of samples in the past minute with excellent quality
   uint8_t  samples[ACTIVITY_MAX_HR_SAMPLES]; // HR Samples stored
   uint8_t  weights[ACTIVITY_MAX_HR_SAMPLES]; // HR Sample Weights
+
+  // Worn status from the most recent HRM BPM event. last_quality_event_utc is 0 if we've never
+  // received one. Used by sleep tracking to suppress detection while the watch is off-wrist.
+  time_t last_quality_event_utc;
+  bool last_quality_was_offwrist;
 } ActivityHRSupport;
 
 typedef struct {
@@ -505,6 +517,16 @@ void activity_metrics_prv_reset_hr_stats(void);
 //! the value returned by activity_metrics_prv_get_median_hr_bpm().
 void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t now_utc,
                                                time_t now_uptime);
+
+//! Record the worn status reported by the HRM. Called once per BPM event.
+//! @param[in] now_utc current UTC time
+//! @param[in] is_offwrist true if the event's HRMQuality was HRMQuality_OffWrist
+void activity_metrics_prv_set_hrm_worn_status(time_t now_utc, bool is_offwrist);
+
+//! Returns true if the HRM has recently reported the watch is off-wrist. The most recent BPM
+//! event must have been HRMQuality_OffWrist and must have arrived within the last
+//! ACTIVITY_HRM_OFFWRIST_STALE_SEC seconds, otherwise this returns false.
+bool activity_metrics_prv_is_hrm_offwrist(time_t now_utc);
 
 //! Returns the number of steps the user has taken so far today (since midnight)
 uint32_t activity_metrics_prv_get_steps(void);
