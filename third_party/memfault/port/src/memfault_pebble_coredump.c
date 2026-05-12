@@ -521,6 +521,40 @@ void memfault_pebble_coredump_reconstruct(void) {
   reboot_reason_get(&reason);
   eMemfaultRebootReason mflt_reason = prv_pbl_to_mflt_reason(reason.code);
 
+  // The coredump's "running"/ISR thread PC is always NMI_Handler (see
+  // core_dump.c:528). That makes Memfault group every assert/OOM/watchdog
+  // under titles like "Assert at NMI_Handler" or "Out Of Memory at __DSB".
+  // The real crash site is stashed in RebootReason by the kernel before it
+  // pends the NMI — pull it out and use that as the crash PC so Memfault
+  // fingerprints on the actual failing function.
+  uintptr_t real_pc = 0;
+  switch (reason.code) {
+    case RebootReasonCode_Assert:
+    case RebootReasonCode_HardFault:
+    case RebootReasonCode_LauncherPanic:
+    case RebootReasonCode_WorkerHardFault:
+      real_pc = reason.extra.value;
+      break;
+    case RebootReasonCode_OutOfMemory:
+      real_pc = reason.heap_data.heap_alloc_lr;
+      break;
+    case RebootReasonCode_Watchdog:
+      real_pc = reason.watchdog.stuck_task_pc;
+      if (real_pc == 0) {
+        real_pc = reason.watchdog.stuck_task_lr;
+      }
+      break;
+    case RebootReasonCode_EventQueueFull:
+      real_pc = reason.event_queue.push_lr;
+      break;
+    default:
+      break;
+  }
+  if (real_pc != 0) {
+    // Strip the Thumb bit — these are LR values from __builtin_return_address.
+    s_core_regs.pc = (uint32_t)(real_pc & ~1u);
+  }
+
   // Save the Memfault coredump to RAM-backed storage
   sMemfaultCoredumpSaveInfo save_info = {
     .regs = &s_core_regs,
