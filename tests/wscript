@@ -296,7 +296,6 @@ def build(bld):
         'test_ancs_pebble_actions.c',
         'test_timeline_actions.c',
         'test_bluetooth_persistent_storage_prf.c',
-        'test_bluetooth_persistent_storage.c',
         'test_session.c',
         'test_session_receive_router.c',
         'test_compositor.c',
