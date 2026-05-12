@@ -3,6 +3,4 @@
 
 #pragma once
 
-#define UNITTEST_BT_PERSISTENT_STORAGE_VERSION (2)
-
 #include "pbl/services/bluetooth/bluetooth_persistent_storage_v2_impl.h"

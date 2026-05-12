@@ -1,9 +1,7 @@
 from waftools.pebble_test import clar
 
 
-def _test_bluetooth_persistent_storage(bld, version=1):
-    test_name = "test_bluetooth_persistent_storage_v%u" % version
-    version_override_include = 'bluetooth_persistent_storage_v%u' % version
+def _test_bluetooth_persistent_storage(bld):
     clar(bld,
          sources_ant_glob=(
             "src/fw/services/bluetooth/bluetooth_persistent_storage_normal.c "
@@ -22,8 +20,7 @@ def _test_bluetooth_persistent_storage(bld, version=1):
            "tests/fakes/fake_rtc.c "
          ),
          test_sources_ant_glob="test_bluetooth_persistent_storage.c",
-         test_name=test_name,
-         override_includes=['dummy_board', version_override_include])
+         override_includes=['dummy_board', 'bluetooth_persistent_storage_v2'])
 
 
 def build(bld):
@@ -50,10 +47,9 @@ def build(bld):
          ),
          test_sources_ant_glob="test_bluetooth_persistent_storage_prf.c")
 
-    # Run the bluetooth_persistent_storage.c unit tests
-    # for the v1 and v2 serialization formats:
-    _test_bluetooth_persistent_storage(bld, version=1)
-    _test_bluetooth_persistent_storage(bld, version=2)
+    # Run the bluetooth_persistent_storage.c unit tests for the v2 serialization format.
+    # (The v1 format was removed.)
+    _test_bluetooth_persistent_storage(bld)
 
 
 # vim:filetype=python

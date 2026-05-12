@@ -6,6 +6,7 @@
 #include <bluetooth/bonding_sync.h>
 #include <bluetooth/gap_le_connect.h>
 
+#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
 #include "pbl/services/settings/settings_file.h"
@@ -76,10 +77,6 @@ void bt_driver_cb_pairing_confirm_handle_completed(const PairingUserConfirmation
                                                    bool success) {
 }
 
-void cc2564A_bad_le_connection_complete_handle(unsigned int stack_id,
-                                             const GAP_LE_Current_Connection_Parameters_t *params) {
-}
-
 void gap_le_connect_handle_bonding_change(BTBondingID bonding_id, BtPersistBondingOp op) {
 }
 
@@ -115,6 +112,19 @@ void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connecti
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
+}
+
+bool launcher_task_is_current_task(void) {
+  return true;
+}
+
+void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
+}
+
+void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
+}
+
+void sys_pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {
 }
 
 // Tests
@@ -634,36 +644,6 @@ void test_bluetooth_persistent_storage__delete_all(void) {
 
 // Test to make sure we don't accidentally change the serialized data formats.
 void test_bluetooth_persistent_storage__ble_serialized_data(void) {
-#if UNITTEST_BT_PERSISTENT_STORAGE_VERSION == 1
-
-  //0000  01 00 69 50 68 6f 6e 65  20 4d 61 72 74 79 00 00   ..iPhone  Marty..
-  //0010  00 00 00 00 00 00 3f f9  92 8a 00 00 00 00 75 36   ......?. ......u6
-  //0020  9c 6e 1a 1b eb 5f fb 89  db 0b ec a5 95 7a 44 f6   .n..._.. .....zD.
-  //0030  1c 47 90 53 43 18 f3 e7  00 00 00 00 00 00 d1 6d   .G.SC... .......m
-  //0040  89 95 83 aa 5e 7f ff 39  b3 47 36 e4 37 7e 05 1b   ....^..9 .G6.7~..
-  //0050  85 e3 b8 98 00 00 00 00  00 00 00 00 00 00 00 00   ........ ........
-  //0060  00 00 00 00 00 00 07 00  00 00 00 00 00 00         ........ ......
-
-  const uint8_t expected_raw_data[] = {
-    0x01, 0x00, 0x69, 0x50, 0x68, 0x6f, 0x6e, 0x65,
-    0x20, 0x4d, 0x61, 0x72, 0x74, 0x79, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3f, 0xf9,
-    0x92, 0x8a, 0x00, 0x00, 0x00, 0x00, 0x75, 0x36,
-    0x9c, 0x6e, 0x1a, 0x1b, 0xeb, 0x5f, 0xfb, 0x89,
-    0xdb, 0x0b, 0xec, 0xa5, 0x95, 0x7a, 0x44, 0xf6,
-    0x1c, 0x47, 0x90, 0x53, 0x43, 0x18, 0xf3, 0xe7,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd1, 0x6d,
-    0x89, 0x95, 0x83, 0xaa, 0x5e, 0x7f, 0xff, 0x39,
-    0xb3, 0x47, 0x36, 0xe4, 0x37, 0x7e, 0x05, 0x1b,
-    0x85, 0xe3, 0xb8, 0x98, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  };
-  size_t data_size = 110;
-
-#elif UNITTEST_BT_PERSISTENT_STORAGE_VERSION == 2
-
   //0000  01 00 69 50 68 6f 6e 65 20 4d 61 72 74 79 00 00  ..iPhone Marty..
   //0010  00 00 00 00 00 00 90 36 9c 6e 1a 1b eb 5f fb 89  .......6.n..._..
   //0020  db 0b ec a5 95 ab 92 8a aa f6 1c 47 90 53 43 ff  ...........G.SC.
@@ -671,7 +651,7 @@ void test_bluetooth_persistent_storage__ble_serialized_data(void) {
   //0040  f3 e7 44 f6 1c 47 90 53 43 18 d1 6d 89 95 83 aa  ..D..G.SC..m....
   //0050  5e 7f ff 39 b3 47 36 e4 37 7e 05 1b 85 e3 b8 98  ^..9.G6.7~......
   //0060  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  //0070  00 00 17                                         ...                                       ...
+  //0070  00 00 17                                         ...
 
   const uint8_t expected_raw_data[] = {
     0x01, 0x00, 0x69, 0x50, 0x68, 0x6f, 0x6e, 0x65,
@@ -691,10 +671,6 @@ void test_bluetooth_persistent_storage__ble_serialized_data(void) {
     0x00, 0x00, 0x17,
   };
   size_t data_size = 115;
-
-#else
-#  error "Unknown version!"
-#endif
 
   const SMPairingInfo pairing_info = {
     .local_encryption_info = {
