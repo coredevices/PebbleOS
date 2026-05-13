@@ -256,19 +256,22 @@ elif mcu_family == 'SF32LB52':
 if bld.env.CONFIG_MIC:
     bld.recurse('mic')
 
-# FIXME: make generic to Cortex-M
-if mcu_family in ('NRF52', 'SF32LB52') or is_qemu_family:
-    bld.objects(
-        name='driver_mpu',
-        source=[
-            'mpu.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
+if mcu_family in ('SF32LB52', 'QEMU_PEBBLE_ARMCM33'):
+    mpu_arch_source = 'mpu/mpu_armv8m.c'
+else:
+    mpu_arch_source = 'mpu/mpu_armv7m.c'
+bld.objects(
+    name='driver_mpu',
+    source=[
+        'mpu.c',
+        mpu_arch_source,
+    ],
+    use=[
+        'freertos',
+        'fw_includes',
+        'pbl_includes',
+    ],
+)
 
 if bld.capability('HAS_FLASH_OTP'):
     bld.objects(
