@@ -71,3 +71,7 @@ BlobDBDirtyItem* reminder_db_get_dirty_list(void) {
 status_t reminder_db_mark_synced(const uint8_t *key, int key_len) {
   return S_SUCCESS;
 }
+
+status_t reminder_db_compact(void) {
+  return S_SUCCESS;
+}

@@ -632,6 +632,16 @@ status_t app_glance_db_flush(void) {
   return S_SUCCESS;
 }
 
+status_t app_glance_db_compact(void) {
+  status_t rv = prv_lock_mutex_and_open_file();
+  if (rv != S_SUCCESS) {
+    return rv;
+  }
+  rv = settings_file_compact(&s_app_glance_db.settings_file);
+  prv_close_file_and_unlock_mutex();
+  return rv;
+}
+
 static status_t prv_validate_glance(const Uuid *app_uuid,
                              const SerializedAppGlanceHeader *serialized_glance, size_t *len) {
   // Change this block if we support multiple app glance versions in the future

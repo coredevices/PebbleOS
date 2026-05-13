@@ -196,3 +196,8 @@ typedef bool (*SettingsFileRewriteFilterCallback)(void *key, size_t key_len, voi
 //! settings_file_rewrite if all you are doing is excluding specific records from the old file.
 status_t settings_file_rewrite_filtered(SettingsFile *file,
                                         SettingsFileRewriteFilterCallback filter_cb, void *context);
+
+//! Compact the file: rewrite all live records and, for growable files, drop
+//! alloc_used_space toward min_alloc_used_space. Useful for shrinking growable
+//! settings files that grew under load and have since had records removed.
+status_t settings_file_compact(SettingsFile *file);

@@ -45,3 +45,5 @@ status_t health_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int v
 status_t health_db_delete(const uint8_t *key, int key_len);
 
 status_t health_db_flush(void);
+
+status_t health_db_compact(void);

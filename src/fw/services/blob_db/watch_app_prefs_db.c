@@ -216,3 +216,13 @@ status_t watch_app_prefs_db_flush(void) {
   mutex_unlock_recursive(s_watch_app_prefs_db.mutex);
   return rv;
 }
+
+status_t watch_app_prefs_db_compact(void) {
+  status_t rv = prv_lock_mutex_and_open_file();
+  if (rv != S_SUCCESS) {
+    return rv;
+  }
+  rv = settings_file_compact(&s_watch_app_prefs_db.settings_file);
+  prv_close_file_and_unlock_mutex();
+  return rv;
+}

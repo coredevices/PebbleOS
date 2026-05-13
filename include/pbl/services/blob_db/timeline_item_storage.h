@@ -31,6 +31,9 @@ void timeline_item_storage_init(TimelineItemStorage *storage,
 
 void timeline_item_storage_deinit(TimelineItemStorage *storage);
 
+//! Compact and shrink the underlying settings file.
+status_t timeline_item_storage_compact(TimelineItemStorage *storage);
+
 bool timeline_item_storage_exists_with_parent(TimelineItemStorage *storage, const Uuid *parent_id);
 
 status_t timeline_item_storage_flush(TimelineItemStorage *storage);

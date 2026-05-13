@@ -302,7 +302,7 @@ void settings_file_set_change_callback(SettingsFileChangeCallback callback) {
   s_change_callback = callback;
 }
 
-T_STATIC status_t settings_file_compact(SettingsFile *file) {
+status_t settings_file_compact(SettingsFile *file) {
   // For growable files, drop alloc_used_space toward the floor when live data
   // is much smaller than the current allocation. Without this, a file that
   // burst to e.g. 256 KiB and then idled would hold that flash forever even

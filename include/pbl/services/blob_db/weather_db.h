@@ -57,6 +57,8 @@ void weather_db_init(void);
 
 status_t weather_db_flush(void);
 
+status_t weather_db_compact(void);
+
 status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 int weather_db_get_len(const uint8_t *key, int key_len);

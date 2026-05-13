@@ -58,3 +58,7 @@ BlobDBDirtyItem* ios_notif_pref_db_get_dirty_list(void) {
 status_t ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len) {
   return S_SUCCESS;
 }
+
+status_t ios_notif_pref_db_compact(void) {
+  return S_SUCCESS;
+}

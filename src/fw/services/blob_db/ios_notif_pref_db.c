@@ -297,6 +297,17 @@ status_t ios_notif_pref_db_flush(void) {
   return rv;
 }
 
+status_t ios_notif_pref_db_compact(void) {
+  SettingsFile file;
+  status_t rv = prv_file_open_and_lock(&file);
+  if (rv != S_SUCCESS) {
+    return rv;
+  }
+  rv = settings_file_compact(&file);
+  prv_file_close_and_unlock(&file);
+  return rv;
+}
+
 status_t ios_notif_pref_db_is_dirty(bool *is_dirty_out) {
   SettingsFile file;
   status_t rv = prv_file_open_and_lock(&file);

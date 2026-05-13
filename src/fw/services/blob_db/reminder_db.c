@@ -226,6 +226,10 @@ void reminder_db_deinit(void) {
   timeline_item_storage_deinit(&s_storage);
 }
 
+status_t reminder_db_compact(void) {
+  return timeline_item_storage_compact(&s_storage);
+}
+
 status_t reminder_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   // Records inserted from the phone are synced
   const bool mark_synced = true;

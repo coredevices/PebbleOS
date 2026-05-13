@@ -110,6 +110,12 @@ typedef BlobDBDirtyItem *(*BlobDBGetDirtyListImpl)(void);
 //! \returns S_SUCCESS if the item was marked synced, an error code otherwise
 typedef status_t (*BlobDBMarkSyncedImpl)(const uint8_t *key, int key_len);
 
+//! Implements the Compact API. Reclaims unused space in the underlying
+//! settings file. Note that this function should be blocking; only blob DBs
+//! backed by a settings_file need to implement this.
+//! \returns S_SUCCESS on success, an error code otherwise
+typedef status_t (*BlobDBCompactImpl)(void);
+
 //! Emits a Blob DB event.
 //! \param type The type of event to emit
 //! \param db_id the ID of the blob DB
@@ -119,6 +125,12 @@ void blob_db_event_put(BlobDBEventType type, BlobDBId db_id, const uint8_t *key,
 
 //! Call the BlobDBInitImpl for all the databases
 void blob_db_init_dbs(void);
+
+//! Call the BlobDBCompactImpl for every database that implements one. Used to
+//! reclaim space in growable settings_file-backed databases. Must be called
+//! after blob_db_init_dbs(). Safe to call from a system task callback; do not
+//! call from the kernel main loop as compaction performs disk I/O.
+void blob_db_compact_growable_dbs(void);
 
 //! Call the BlobDBIsDirtyImpl for each database, and fill the 'ids' list
 //! with all the dirty DB ids
