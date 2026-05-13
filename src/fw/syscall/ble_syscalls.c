@@ -159,6 +159,13 @@ DEFINE_SYSCALL(bool, sys_ble_client_consume_notification, uintptr_t *object_ref_
 DEFINE_SYSCALL(BTErrno, sys_ble_client_write, BLECharacteristic characteristic,
                                               const uint8_t *value,
                                               size_t value_length) {
+  // gatt_client_op_write hands `value`/`value_length` straight to the BLE
+  // driver, which transmits those bytes to the peer. Without this check an
+  // app can point `value` at any kernel address and use the remote device as
+  // a sink for arbitrary kernel memory.
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(value, value_length);
+  }
   return gatt_client_op_write(characteristic, value, value_length, GAPLEClientApp);
 }
 
@@ -166,6 +173,9 @@ DEFINE_SYSCALL(BTErrno, sys_ble_client_write_without_response,
                         BLECharacteristic characteristic,
                         const uint8_t *value,
                         size_t value_length) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(value, value_length);
+  }
   return gatt_client_op_write_without_response(characteristic,
                                                value, value_length, GAPLEClientApp);
 }
@@ -180,6 +190,9 @@ DEFINE_SYSCALL(BTErrno, sys_ble_client_subscribe, BLECharacteristic characterist
 DEFINE_SYSCALL(BTErrno, sys_ble_client_write_descriptor, BLEDescriptor descriptor,
                                                          const uint8_t *value,
                                                          size_t value_length) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(value, value_length);
+  }
   return gatt_client_op_write_descriptor(descriptor,
                                          value, value_length, GAPLEClientApp);
 }
