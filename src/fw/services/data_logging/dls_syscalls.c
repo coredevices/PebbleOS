@@ -13,6 +13,12 @@
 DEFINE_SYSCALL(DataLoggingSessionRef, sys_data_logging_create, uint32_t tag,
                DataLoggingItemType item_type, uint16_t item_size,
                void *buffer, bool resume) {
+  // Apps allocate the circular buffer themselves in their own heap and hand the
+  // pointer to the kernel via this syscall. Without validation, a malicious app
+  // could point at kernel memory and turn dls_log into an arbitrary kernel write.
+  if (PRIVILEGE_WAS_ELEVATED && buffer != NULL) {
+    syscall_assert_userspace_buffer(buffer, DLS_SESSION_MIN_BUFFER_SIZE);
+  }
   return dls_create_current_process(tag, item_type, item_size, buffer, resume);
 }
 
