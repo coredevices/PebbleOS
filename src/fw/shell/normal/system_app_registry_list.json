@@ -575,6 +575,11 @@
       "md_fn": "airplane_mode_toggle_get_app_info"
     },
     {
+      "id": -100,
+      "enum": "SHUTDOWN_TOGGLE",
+      "md_fn": "shutdown_toggle_get_app_info"
+    },
+    {
       "id": -96,
       "enum": "TIMELINE_PAST",
       "md_fn": "timeline_past_get_app_info"
