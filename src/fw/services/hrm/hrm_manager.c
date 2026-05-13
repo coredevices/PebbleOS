@@ -660,6 +660,24 @@ DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_get_app_subscription, AppInstallId
 DEFINE_SYSCALL(bool, sys_hrm_manager_get_subscription_info, HRMSessionRef session,
                AppInstallId *app_id, uint32_t *update_interval_s, uint16_t *expire_s,
                HRMFeature *features) {
+  // Each of these out-params is optional, but if the caller supplied one it
+  // must point into its own app/worker RAM. The app can otherwise prime
+  // *update_interval_s (via set_update_interval) and then aim the pointer at
+  // any kernel address to land a controlled uint32_t write there.
+  if (PRIVILEGE_WAS_ELEVATED) {
+    if (app_id) {
+      syscall_assert_userspace_buffer(app_id, sizeof(*app_id));
+    }
+    if (update_interval_s) {
+      syscall_assert_userspace_buffer(update_interval_s, sizeof(*update_interval_s));
+    }
+    if (expire_s) {
+      syscall_assert_userspace_buffer(expire_s, sizeof(*expire_s));
+    }
+    if (features) {
+      syscall_assert_userspace_buffer(features, sizeof(*features));
+    }
+  }
   mutex_lock_recursive(s_manager_state.lock);
   HRMSubscriberState *state = prv_get_subscriber_state_from_ref(session);
   if (state) {
