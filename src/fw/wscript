@@ -8,7 +8,6 @@ from waflib.Configure import conf
 from waflib.TaskGen import before_method, feature
 from waflib.Tools.ccroot import link_task
 
-import tools.mpu_calc
 import waftools.compress
 import waftools.generate_log_strings_json
 import waftools.generate_timezone_data
@@ -275,19 +274,6 @@ def _generate_memory_layout(bld):
         FW_FLASH_LENGTH=fw_flash_length,
         FLASH_SIZE=flash_size,
         BOOTLOADER_SYMBOLS=bootloader_symbol_definitions)
-
-    app_mpu_region = tools.mpu_calc.find_subregions_for_region(app_ram[0], app_ram[1])
-    worker_mpu_region = tools.mpu_calc.find_subregions_for_region(worker_ram[0], worker_ram[1])
-
-    bld(features='subst',
-        source=bld.path.find_node('kernel/mpu_regions.template.h'),
-        target=bld.path.get_bld().make_node('kernel/mpu_regions.auto.h'),
-        APP_BASE_ADDRESS="0x{:x}".format(app_mpu_region.address),
-        APP_SIZE="0x{:x}".format(app_mpu_region.size),
-        APP_DISABLED_SUBREGIONS="0b{:08b}".format(app_mpu_region.disabled_subregion),
-        WORKER_BASE_ADDRESS="0x{:x}".format(worker_mpu_region.address),
-        WORKER_SIZE="0x{:x}".format(worker_mpu_region.size),
-        WORKER_DISABLED_SUBREGIONS=" 0b{:08b}".format(worker_mpu_region.disabled_subregion))
 
     bld(features='subst',
         source=bld.path.find_node('process_management/sdk_memory_limits.template.h'),
