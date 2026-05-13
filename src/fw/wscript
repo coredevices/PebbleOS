@@ -571,6 +571,18 @@ def _build_normal(bld):
     elif bld.env.PERFORMANCE_TESTS:
         source_dirs.append('apps/demo/gfx_tests')
 
+    # Always include the MPU access-violation demo app on QEMU. It runs as the
+    # unprivileged App task and deliberately writes to Worker RAM to trigger a
+    # MemManage fault, serving as a runtime check that the MPU is enforcing
+    # access protection. Pulling it in via --test_apps would also require
+    # fixing the rest of apps/demo (currently bit-rotted on QEMU); see
+    # system_app_registry_list.json for the registry entry.
+    mpu_test_sources = []
+    if bld.is_qemu():
+        node = bld.path.find_node('apps/demo/test_mpu_violation.c')
+        if node is not None:
+            mpu_test_sources.append(node)
+
     excludes.extend(_get_launcher_globs_to_exclude(bld))
 
     if not bld.env.CONFIG_HRM:
@@ -581,6 +593,10 @@ def _build_normal(bld):
     sources.extend(_get_comm_sources(bld, False))
     sources.extend(bld.path.ant_glob('*.c'))
     sources.extend(bld.path.ant_glob('*.[sS]'))
+
+    for node in mpu_test_sources:
+        if node not in sources:
+            sources.append(node)
 
     if bld.env.NORMAL_SHELL == 'sdk':
         sources.append('apps/system/app_fetch_ui.c')
