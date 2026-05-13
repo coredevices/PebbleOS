@@ -15,6 +15,7 @@
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
 #include "pbl/services/comm_session/session.h"
+#include "kernel/logging_private.h"
 #include "system/logging.h"
 #include "system/passert.h"
 #include "util/string.h"
@@ -50,6 +51,17 @@ DEFINE_SYSCALL(RtcTicks, sys_get_ticks, void) {
 }
 
 DEFINE_SYSCALL(void, sys_pbl_log, LogBinaryMessage* log_message, bool async) {
+  // log_message points at a struct whose trailing message[] is sized by the
+  // embedded message_length byte. Without a check, an app can hand us any
+  // kernel address: log_level and message_length steer the formatting code,
+  // and kernel_pbl_log_flash() ends up writing `sizeof(*log_message) +
+  // message_length` bytes straight from that address to the flash log channel
+  // — a generic kernel-memory exfiltration primitive.
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(log_message, sizeof(*log_message));
+    syscall_assert_userspace_buffer(log_message,
+                                    sizeof(*log_message) + log_message->message_length);
+  }
   kernel_pbl_log(log_message, async);
 }
 
