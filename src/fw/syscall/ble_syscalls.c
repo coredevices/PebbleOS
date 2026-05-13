@@ -113,14 +113,20 @@ DEFINE_SYSCALL(bool, sys_ble_client_get_notification_value_length,
 DEFINE_SYSCALL(void, sys_ble_client_consume_read, uintptr_t object_ref,
                                                   uint8_t value_out[],
                                                   uint16_t *value_length_in_out) {
+  // Snapshot the user-supplied length once so the buffer-size used for
+  // validation is the same one passed down to gatt_client_consume_read_response.
+  // Re-reading *value_length_in_out a second time would let a racing app thread
+  // grow it after we validated the buffer.
+  uint16_t value_length;
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(value_length_in_out, sizeof(*value_length_in_out));
-    syscall_assert_userspace_buffer(value_out, *value_length_in_out);
+    value_length = *value_length_in_out;
+    syscall_assert_userspace_buffer(value_out, value_length);
+  } else {
+    value_length = *value_length_in_out;
   }
 
-  gatt_client_consume_read_response(object_ref,
-                                    value_out, *value_length_in_out,
-                                    GAPLEClientApp);
+  gatt_client_consume_read_response(object_ref, value_out, value_length, GAPLEClientApp);
 }
 
 DEFINE_SYSCALL(bool, sys_ble_client_consume_notification, uintptr_t *object_ref_out,
@@ -128,16 +134,26 @@ DEFINE_SYSCALL(bool, sys_ble_client_consume_notification, uintptr_t *object_ref_
                                                           uint16_t *value_length_in_out,
                                                           bool *has_more_out) {
 
+  // Same snapshot pattern as sys_ble_client_consume_read: the inner function
+  // dereferences value_length_in_out multiple times and gates its memcpy() on
+  // it, so a racing app could let validation pass on a small value and the
+  // memcpy land past the validated buffer. Use a kernel-local copy, then write
+  // back the result the inner function would have stored through the pointer.
+  uint16_t value_length;
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(object_ref_out, sizeof(*object_ref_out));
     syscall_assert_userspace_buffer(value_length_in_out, sizeof(*value_length_in_out));
-    syscall_assert_userspace_buffer(value_out, *value_length_in_out);
+    value_length = *value_length_in_out;
+    syscall_assert_userspace_buffer(value_out, value_length);
     syscall_assert_userspace_buffer(has_more_out, sizeof(*has_more_out));
+  } else {
+    value_length = *value_length_in_out;
   }
 
-  return gatt_client_subscriptions_consume_notification(object_ref_out,
-                                                        value_out, value_length_in_out,
-                                                        GAPLEClientApp, has_more_out);
+  bool result = gatt_client_subscriptions_consume_notification(
+      object_ref_out, value_out, &value_length, GAPLEClientApp, has_more_out);
+  *value_length_in_out = value_length;
+  return result;
 }
 
 DEFINE_SYSCALL(BTErrno, sys_ble_client_write, BLECharacteristic characteristic,
