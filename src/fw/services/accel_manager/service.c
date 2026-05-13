@@ -462,6 +462,20 @@ DEFINE_SYSCALL(AccelManagerState*, sys_accel_manager_data_subscribe,
                PebbleTask handler_task) {
   AccelManagerState *state;
 
+  // `handler_task` decides where prv_call_data_callback() dispatches the
+  // user-supplied data_cb. For KernelMain/KernelBackground/NewTimers values
+  // the callback ends up invoked directly in kernel mode (either via the
+  // kernel main event loop's PEBBLE_CALLBACK_EVENT handler, system_task_add_callback,
+  // or new_timer_add_work_callback) — handing an unprivileged app arbitrary
+  // kernel-mode code execution. Force unprivileged callers onto their own
+  // task so the dispatch lands in their app/worker event loop instead.
+  if (PRIVILEGE_WAS_ELEVATED) {
+    handler_task = pebble_task_get_current();
+    if (handler_task != PebbleTask_App && handler_task != PebbleTask_Worker) {
+      syscall_failed();
+    }
+  }
+
   mutex_lock_recursive(s_accel_manager_mutex);
   {
     state = kernel_malloc_check(sizeof(AccelManagerState));
