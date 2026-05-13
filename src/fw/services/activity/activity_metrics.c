@@ -784,6 +784,17 @@ unlock:
 DEFINE_SYSCALL(bool, sys_activity_get_metric, ActivityMetric metric,
                uint32_t history_len, int32_t *history) {
   if (PRIVILEGE_WAS_ELEVATED) {
+    // activity_get_metric() unconditionally writes history_len int32_t entries
+    // to `history` before later clamping to ACTIVITY_HISTORY_DAYS. A huge
+    // history_len makes `history_len * sizeof(*history)` wrap to a tiny size
+    // that passes validation while the kernel keeps writing -1 past the end
+    // (effectively an arbitrary-address kernel write).
+    //
+    // We never read more than ACTIVITY_HISTORY_DAYS entries anyway, so clamp
+    // the count here and validate against the clamped value.
+    if (history_len > ACTIVITY_HISTORY_DAYS) {
+      history_len = ACTIVITY_HISTORY_DAYS;
+    }
     if (history) {
       syscall_assert_userspace_buffer(history, history_len * sizeof(*history));
     }
