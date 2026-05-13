@@ -59,6 +59,19 @@ DEFINE_SYSCALL(bool, sys_speaker_play_tone, uint16_t freq_hz,
 
 DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks,
                uint32_t num_tracks, uint8_t priority, uint8_t volume) {
+  // We need to defend against TOCTOU: speaker_service_play_tracks() re-reads
+  // each track's num_notes and sample->num_bytes from user memory (e.g. as the
+  // size argument to kernel_malloc/memcpy that copy the user buffers into
+  // kernel buffers). A racing app could resize them after our validation and
+  // overflow either the kernel allocation or the validated source range.
+  //
+  // Take a kernel-stack copy of the track table (and embedded sample structs)
+  // up front and pass the kernel copy downstream. The notes/data pointers
+  // themselves still aim into user memory, but the sizes are now stable.
+  SpeakerTrack kernel_tracks[SPEAKER_MAX_TRACKS];
+  SpeakerSample kernel_samples[SPEAKER_MAX_TRACKS];
+  const SpeakerTrack *tracks_to_play = tracks;
+
   if (PRIVILEGE_WAS_ELEVATED) {
     if (num_tracks == 0 || num_tracks > SPEAKER_MAX_TRACKS) {
       syscall_failed();
@@ -67,24 +80,27 @@ DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks,
 
     uint32_t total_sample_bytes = 0;
     for (uint32_t i = 0; i < num_tracks; i++) {
-      if (tracks[i].num_notes == 0 || tracks[i].num_notes > SPEAKER_MAX_NOTES) {
+      kernel_tracks[i] = tracks[i];
+      if (kernel_tracks[i].num_notes == 0 || kernel_tracks[i].num_notes > SPEAKER_MAX_NOTES) {
         syscall_failed();
       }
-      syscall_assert_userspace_buffer(tracks[i].notes,
-                                      tracks[i].num_notes * sizeof(SpeakerNote));
-      if (tracks[i].sample) {
-        syscall_assert_userspace_buffer(tracks[i].sample, sizeof(SpeakerSample));
-        uint32_t nb = tracks[i].sample->num_bytes;
-        if (nb == 0) {
+      syscall_assert_userspace_buffer(kernel_tracks[i].notes,
+                                      kernel_tracks[i].num_notes * sizeof(SpeakerNote));
+      if (kernel_tracks[i].sample) {
+        syscall_assert_userspace_buffer(kernel_tracks[i].sample, sizeof(SpeakerSample));
+        kernel_samples[i] = *kernel_tracks[i].sample;
+        if (kernel_samples[i].num_bytes == 0) {
           syscall_failed();
         }
-        total_sample_bytes += nb;
+        total_sample_bytes += kernel_samples[i].num_bytes;
         if (total_sample_bytes > SPEAKER_MAX_SAMPLE_BYTES_TOTAL) {
           syscall_failed();
         }
-        syscall_assert_userspace_buffer(tracks[i].sample->data, nb);
+        syscall_assert_userspace_buffer(kernel_samples[i].data, kernel_samples[i].num_bytes);
+        kernel_tracks[i].sample = &kernel_samples[i];
       }
     }
+    tracks_to_play = kernel_tracks;
   }
 
   if (priority > SpeakerPriorityCritical) {
@@ -94,7 +110,7 @@ DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks,
   PebbleTask task = pebble_task_get_current();
   speaker_service_set_owner_task(task);
 
-  return speaker_service_play_tracks(tracks, num_tracks,
+  return speaker_service_play_tracks(tracks_to_play, num_tracks,
                                      (SpeakerPriority)priority, volume);
 }
 
