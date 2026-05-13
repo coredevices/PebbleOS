@@ -1102,12 +1102,27 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
 DEFINE_SYSCALL(bool, sys_activity_get_sessions, uint32_t *session_entries,
                ActivitySession *sessions) {
   if (PRIVILEGE_WAS_ELEVATED) {
-    if (session_entries) {
-      syscall_assert_userspace_buffer(session_entries, sizeof(*session_entries));
+    if (!session_entries) {
+      // The implementation dereferences session_entries unconditionally.
+      return false;
+    }
+    syscall_assert_userspace_buffer(session_entries, sizeof(*session_entries));
+    // Same pattern as sys_activity_get_minute_history: snapshot *session_entries
+    // so the inner activity_get_sessions can't race us into a larger memcpy than
+    // we validated, and reject sizes whose `requested * sizeof(*sessions)` would
+    // wrap and let a much-smaller validated buffer gate a much-larger write.
+    const uint32_t requested = *session_entries;
+    if (requested > SIZE_MAX / sizeof(*sessions)) {
+      PBL_LOG_ERR("session_entries=%" PRIu32 " would overflow size", requested);
+      syscall_failed();
     }
     if (sessions) {
-      syscall_assert_userspace_buffer(sessions, sizeof(*sessions) * (*session_entries));
+      syscall_assert_userspace_buffer(sessions, requested * sizeof(*sessions));
     }
+    uint32_t entries_inout = requested;
+    bool result = activity_get_sessions(&entries_inout, sessions);
+    *session_entries = entries_inout;
+    return result;
   }
 
   return activity_get_sessions(session_entries, sessions);
