@@ -334,3 +334,11 @@ bool shell_prefs_get_vibe_log_info_enabled(void) {
 void shell_prefs_set_vibe_log_info_enabled(bool enabled) {
   // Not used in SDK shell
 }
+
+bool shell_prefs_get_settings_dbs_compacted_v1(void) {
+  return true;
+}
+
+void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
+  // Not used in SDK shell
+}
