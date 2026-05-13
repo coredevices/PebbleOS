@@ -1176,7 +1176,24 @@ DEFINE_SYSCALL(bool, sys_activity_get_minute_history, HealthMinuteData *minute_d
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(utc_start, sizeof(*utc_start));
     syscall_assert_userspace_buffer(num_records, sizeof(*num_records));
-    syscall_assert_userspace_buffer(minute_data, *num_records * sizeof(HealthMinuteData));
+    // Snapshot the requested count to a kernel-stack local so that:
+    //  - the size computation below can't be tricked by an app racing the
+    //    KernelBG callback to swap *num_records after we validated it (TOCTOU);
+    //  - we can bound the multiplication against SIZE_MAX before performing it
+    //    (otherwise `*num_records * sizeof(HealthMinuteData)` wraps in uint32_t
+    //    and a tiny validated size would gate a much larger kernel write).
+    const uint32_t requested = *num_records;
+    if (requested > SIZE_MAX / sizeof(HealthMinuteData)) {
+      PBL_LOG_ERR("num_records=%" PRIu32 " would overflow size", requested);
+      syscall_failed();
+    }
+    syscall_assert_userspace_buffer(minute_data, requested * sizeof(HealthMinuteData));
+    uint32_t records_inout = requested;
+    time_t start_inout = *utc_start;
+    bool result = activity_get_minute_history(minute_data, &records_inout, &start_inout);
+    *num_records = records_inout;
+    *utc_start = start_inout;
+    return result;
   }
 
   return activity_get_minute_history(minute_data, num_records, utc_start);
