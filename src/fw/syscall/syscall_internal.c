@@ -39,6 +39,58 @@ static void prv_set_syscall_lr(uintptr_t new_lr) {
   vTaskSetThreadLocalStoragePointer(NULL, TLS_SYSCALL_LR_IDX, (void *)new_lr);
 }
 
+//! Public setter used by mcu_call_unprivileged() to restore the TLS LR slot
+//! after the nested SVC inside the trampoline clobbers it.
+USED void syscall_set_outer_lr(uintptr_t new_lr) {
+  prv_set_syscall_lr(new_lr);
+}
+
+//! Run @p fn unprivileged for the duration of one call, then return to the
+//! caller still in privileged thread mode.
+//!
+//! Placed in .syscall_text so the SVC handler's xApplicationIsAllowed-
+//! ToRaisePrivilege() check permits the inner `svc 2` to re-elevate after
+//! @p fn returns. The inner SVC clobbers the per-task TLS LR slot that the
+//! outer syscall's drop-privilege return path reads from, so we snapshot and
+//! restore it across the bracket.
+EXTERNALLY_VISIBLE NAKED_FUNC USED SECTION(".syscall_text.run_unprivileged")
+void mcu_call_unprivileged(void (*fn)(void *), void *ctx) {
+  __asm volatile (
+    "  push {r4-r6, lr}                  \n"
+    "  mov r4, r0                        \n" // r4 = fn
+    "  mov r5, r1                        \n" // r5 = ctx
+
+    // Snapshot outer syscall's TLS LR; the SVC below will overwrite it.
+    "  bl get_syscall_lr                 \n"
+    "  mov r6, r0                        \n" // r6 = outer TLS LR
+
+    // Drop privilege (CONTROL.nPRIV = 1).
+    "  mov r0, #0                        \n"
+    "  bl mcu_state_set_thread_privilege \n"
+
+    // Invoke fn(ctx) unprivileged. MPU-violating accesses fault here.
+    "  mov r0, r5                        \n"
+    "  blx r4                            \n"
+
+    // Re-raise via svc 2. xApplicationIsAllowedToRaisePrivilege accepts this
+    // because we are in the .syscall_text region.
+    "  svc 2                             \n"
+
+    // The SVC handler's vSetupSyscallRegisters() saved a return-into-this-
+    // function address into the TLS LR slot and stamped prv_drop_privilege
+    // onto our stacked LR. Restore the outer syscall's TLS LR so when *that*
+    // syscall eventually unwinds through prv_drop_privilege it returns to the
+    // right place.
+    "  mov r0, r6                        \n"
+    "  bl syscall_set_outer_lr           \n"
+
+    // Pop the real caller's LR (overwriting the prv_drop_privilege value left
+    // in the register by the SVC handler) and return.
+    "  pop {r4-r6, lr}                   \n"
+    "  bx lr                             \n"
+  );
+}
+
 NORETURN syscall_failed(void) {
   register uint32_t lr __asm("lr");
   uint32_t saved_lr = lr;
