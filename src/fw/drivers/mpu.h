@@ -22,6 +22,10 @@ typedef enum MpuCachePolicy {
   MpuCachePolicy_WriteBackNoWriteAllocate,
 } MpuCachePolicy;
 
+// Describes a memory region by its real (base, size). The ARMv7-M backend
+// internally rounds up to a power-of-two block and computes the subregion
+// mask required by the hardware; the ARMv8-M backend programs the limit
+// register directly. Callers never see these implementation details.
 typedef struct MpuRegion {
   uint8_t region_num:4;
   bool enabled:1;
@@ -32,10 +36,6 @@ typedef struct MpuRegion {
   bool priv_write:1;
   bool user_read:1;
   bool user_write:1;
-  // FIXME(SF32LB52): ARMv8 MPU does not support subregions, analyze possible solutions
-#ifndef MPU_TYPE_ARMV8M
-  uint8_t disabled_subregions; // 8 bits, each disables 1/8 of the region.
-#endif
 } MpuRegion;
 
 void mpu_enable(void);
