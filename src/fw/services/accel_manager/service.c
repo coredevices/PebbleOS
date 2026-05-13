@@ -492,7 +492,39 @@ DEFINE_SYSCALL(AccelManagerState*, sys_accel_manager_data_subscribe,
   return state;
 }
 
+// Several syscalls in this file take an AccelManagerState pointer that came from
+// userspace. Without validation, an app can fabricate one and use the embedded
+// fields (timestamp_ms, raw_buffer, list_node, ...) as kernel read/write primitives.
+// Walk the authoritative kernel-side subscriber list to confirm the pointer really
+// is one we handed out. The list is short (one entry per active subscriber) so the
+// walk is cheap. Caller must hold s_accel_manager_mutex.
+static bool prv_state_is_valid_subscriber(const AccelManagerState *state) {
+  if (state == NULL) {
+    return false;
+  }
+  for (ListNode *node = s_data_subscribers; node != NULL; node = node->next) {
+    if ((const AccelManagerState *)node == state) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static void prv_assert_state_from_user(const AccelManagerState *state) {
+  if (!PRIVILEGE_WAS_ELEVATED) {
+    return;
+  }
+  mutex_lock_recursive(s_accel_manager_mutex);
+  bool valid = prv_state_is_valid_subscriber(state);
+  mutex_unlock_recursive(s_accel_manager_mutex);
+  if (!valid) {
+    PBL_LOG_ERR("Rejecting unknown AccelManagerState %p from unprivileged caller", state);
+    syscall_failed();
+  }
+}
+
 DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *state) {
+  prv_assert_state_from_user(state);
   bool event_outstanding;
   mutex_lock_recursive(s_accel_manager_mutex);
   {
@@ -517,6 +549,7 @@ DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *stat
 
 DEFINE_SYSCALL(int, sys_accel_manager_set_sampling_rate,
                AccelManagerState *state, AccelSamplingRate rate) {
+  prv_assert_state_from_user(state);
 
   // Make sure the rate is one of our externally supported fixed rates
   switch (rate) {
@@ -562,6 +595,7 @@ uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
 
 DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer,
                AccelManagerState *state, AccelRawData *buffer, uint32_t samples_per_update) {
+  prv_assert_state_from_user(state);
   if (samples_per_update > ACCEL_MAX_SAMPLES_PER_UPDATE) {
     return -1;
   }
@@ -584,6 +618,10 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer,
 
 DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_num_samples,
                    AccelManagerState *state, uint64_t *timestamp_ms) {
+  prv_assert_state_from_user(state);
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(timestamp_ms, sizeof(*timestamp_ms));
+  }
 
   mutex_lock_recursive(s_accel_manager_mutex);
 
@@ -596,6 +634,7 @@ DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_num_samples,
 
 DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples,
                AccelManagerState *state, uint32_t samples) {
+  prv_assert_state_from_user(state);
   bool success = true;
   mutex_lock_recursive(s_accel_manager_mutex);
 
