@@ -555,6 +555,12 @@
       ]
     },
     {
+      "id": -191,
+      "enum": "MPU_VIOLATION_TEST",
+      "md_fn": "test_mpu_violation_get_info",
+      "ifdefs": ["ENABLE_TEST_APPS"]
+    },
+    {
       "id": -92,
       "enum": "QUIET_TIME_TOGGLE",
       "md_fn": "quiet_time_toggle_get_app_info"
