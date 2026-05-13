@@ -82,6 +82,16 @@ DEFINE_SYSCALL(void, sys_evented_timer_consume, TimerID timer_id, EventedTimerCa
     return;
   }
 
+  // Only allow consuming a timer that belongs to the calling task. Without this
+  // check an unprivileged app could probe TimerIDs to find a system timer and
+  // read back its kernel callback pointer + data (KASLR-defeating info leak),
+  // and additionally cancel that timer (DoS).
+  if (PRIVILEGE_WAS_ELEVATED && timer->target_task != pebble_task_get_current()) {
+    mutex_unlock(s_mutex);
+    *out_cb = 0;
+    return;
+  }
+
   *out_cb = timer->callback;
   *out_cb_data = timer->callback_data;
 
