@@ -31,7 +31,7 @@ typedef struct PermissionMapping {
   bool priv_write:1;
   bool user_read:1;
   bool user_write:1;
-#ifdef MPU_ARMV8
+#ifdef MPU_TYPE_ARMV8M
   uint8_t value:2;
 #else
   uint8_t value:3;
@@ -39,7 +39,7 @@ typedef struct PermissionMapping {
 } PermissionMapping;
 
 static const PermissionMapping s_permission_mappings[] = {
-#ifdef MPU_ARMV8
+#ifdef MPU_TYPE_ARMV8M
   // NOTE(1): we cannot have all accesses disabled, keep RO by privileged code only.
   // NOTE(2): we cannot have different write access for priv/unpriv, allow R/W to any level
   { false, false, false, false, 0x2 }, // AP=0b10: RO by privileged code only (1)
@@ -60,7 +60,7 @@ static const PermissionMapping s_permission_mappings[] = {
 };
 
 static const uint32_t s_cache_settings[] = {
-#ifdef MPU_ARMV8
+#ifdef MPU_TYPE_ARMV8M
   [MpuCachePolicy_NotCacheable] = ARM_MPU_ATTR(ARM_MPU_ATTR_NON_CACHEABLE,
                                                ARM_MPU_ATTR_NON_CACHEABLE),
   [MpuCachePolicy_WriteThrough] = ARM_MPU_ATTR(ARM_MPU_ATTR_MEMORY_(1, 0, 1, 0),
@@ -92,7 +92,7 @@ static uint8_t get_permission_value(const MpuRegion* region) {
   return 0;
 }
 
-#ifndef MPU_ARMV8
+#ifndef MPU_TYPE_ARMV8M
 static uint32_t get_size_field(const MpuRegion* region) {
   unsigned int size = 32;
   int result = 4;
@@ -109,7 +109,7 @@ static uint32_t get_size_field(const MpuRegion* region) {
 #endif
 
 void mpu_enable(void) {
-#ifdef MPU_ARMV8
+#ifdef MPU_TYPE_ARMV8M
   ARM_MPU_SetMemAttr(MpuCachePolicy_NotCacheable,
                      s_cache_settings[MpuCachePolicy_NotCacheable]);
   ARM_MPU_SetMemAttr(MpuCachePolicy_WriteThrough,
@@ -137,7 +137,7 @@ void mpu_get_register_settings(const MpuRegion* region, uint32_t *base_address_r
   PBL_ASSERTN((region->region_num & ~0xf) == 0);
   PBL_ASSERTN((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
 
-#ifdef MPU_ARMV8
+#ifdef MPU_TYPE_ARMV8M
   PBL_ASSERTN((region->size & 0x1f) == 0);
 
   *base_address_reg = ((region->base_address & MPU_RBAR_BASE_Msk) |
@@ -175,7 +175,7 @@ void mpu_set_region(const MpuRegion* region) {
 
   mpu_get_register_settings(region, &base_reg, &attr_reg);
 
-#ifdef MPU_ARMV8
+#ifdef MPU_TYPE_ARMV8M
   ARM_MPU_SetRegion(region->region_num, base_reg, attr_reg);
 #else
   MPU->RBAR = base_reg;
@@ -185,7 +185,7 @@ void mpu_set_region(const MpuRegion* region) {
 
 
 MpuRegion mpu_get_region(int region_num) {
-#ifdef MPU_ARMV8
+#ifdef MPU_TYPE_ARMV8M
   MpuRegion region;
   uint32_t rbar, rlar;
   uint8_t access_permissions;

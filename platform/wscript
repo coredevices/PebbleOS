@@ -141,6 +141,11 @@ def add_platform_defines(ctx, env):
     # Add umbrella MICRO_FAMILY_QEMU define for all QEMU boards
     if env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
         defines.append('MICRO_FAMILY_QEMU=1')
+    # MPU architecture: ARMv8-M for Cortex-M33-based families, ARMv7-M otherwise.
+    if env.MICRO_FAMILY in ('SF32LB52', 'QEMU_PEBBLE_ARMCM33'):
+        defines.append('MPU_TYPE_ARMV8M=1')
+    else:
+        defines.append('MPU_TYPE_ARMV7M=1')
     env.append_value('DEFINES', defines)
 
     for cap, val in ctx.capabilities_dict().items():
