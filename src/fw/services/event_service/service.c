@@ -256,6 +256,15 @@ static bool prv_buffer_find(ListNode *found_node, void *data) {
   return (esb->ptr == data);
 }
 
+bool event_service_is_known_buffer(const void *buf) {
+  if (buf == NULL) {
+    return false;
+  }
+  // Cast away const for list_find's callback signature; prv_buffer_find only compares.
+  return list_find((ListNode *)s_event_service_buffers, prv_buffer_find,
+                   (void *)buf) != NULL;
+}
+
 static EventServiceBuffer* prv_get_esb_for_event(PebbleEvent *e) {
   void **buf_ptr = event_get_buffer(e);
   EventServiceBuffer *esb = NULL;

@@ -42,6 +42,7 @@
 #include "process_management/app_manager.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/comm_session/session.h"
+#include "pbl/services/event_service.h"
 #include "pbl/services/voice/voice.h"
 #include "syscall/syscall.h"
 #include "system/logging.h"
@@ -1432,6 +1433,15 @@ DEFINE_SYSCALL(char *, sys_voice_get_transcription_from_event, PebbleVoiceServic
       syscall_assert_userspace_buffer(buffer, buffer_size);
     }
     syscall_assert_userspace_buffer(sentence_len, sizeof(*sentence_len));
+    // `e->data` is a kernel pointer the event service handed to the app along
+    // with the event. The app can rewrite the field in its copy before calling
+    // us, so confirm it still references a buffer the kernel actually allocated
+    // — otherwise an app could aim it at kernel memory and turn the strlen/memcpy
+    // below into an arbitrary kernel read primitive.
+    if (!event_service_is_known_buffer(e->data)) {
+      PBL_LOG_ERR("Rejecting voice event with unknown data pointer %p", e->data);
+      syscall_failed();
+    }
   }
 
   size_t len;

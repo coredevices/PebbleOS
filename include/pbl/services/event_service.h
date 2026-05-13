@@ -29,3 +29,9 @@ void event_service_clear_process_subscriptions(PebbleTask task);
 void* event_service_claim_buffer(PebbleEvent *e);
 //! This function expects the pointer returned by event_service_claim_buffer
 void event_service_free_claimed_buffer(void *ref);
+
+//! Returns true if `buf` is a kernel-allocated buffer currently tracked by the
+//! event service (i.e. one that was attached to an in-flight PebbleEvent).
+//! Use this from syscalls that dereference an event's embedded data pointer to
+//! make sure the caller didn't fabricate it.
+bool event_service_is_known_buffer(const void *buf);
