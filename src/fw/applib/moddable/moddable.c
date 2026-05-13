@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 #include "applib/app.h"
+#include "applib/app_timer.h"
 #include "kernel/logging_private.h"
 #include "pbl/services/evented_timer.h"
-#include "syscall/syscall_internal.h"
 #include "applib/app_logging.h"
 #include "applib/moddable/moddable.h"
 
@@ -37,7 +37,7 @@ void moddable_cleanup(void)
 // Minimum recordSize for the original struct (without flags field)
 #define kModdableCreationRecordMinSize offsetof(ModdableCreationRecord, flags)
 
-DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
+void moddable_createMachine(ModdableCreationRecord *cr)
 {
 	xsMachine *the;
 	uint32_t flags = 0;
@@ -105,7 +105,7 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 	state->creationFlags = flags;
 	app_state_set_js_memory_api_context((void *)state);
 
-	evented_timer_register(2, false, startMachine, the);
+	app_timer_register(2, startMachine, the);
 
 	app_event_loop();
 
@@ -114,7 +114,7 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 
 #else
 
-DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
+void moddable_createMachine(ModdableCreationRecord *cr)
 {
 	PBL_LOG_ERR("Moddable XS not supported in this build");
 }
