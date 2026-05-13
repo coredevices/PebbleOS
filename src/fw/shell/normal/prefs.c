@@ -225,6 +225,7 @@ static uint16_t s_timeline_peek_before_time_m =
 #define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
 #define PREF_KEY_ACCEL_SHAKE_LOG_INFO "accelShakeLogInfo"
 #define PREF_KEY_VIBE_LOG_INFO "vibeLogInfo"
+#define PREF_KEY_SETTINGS_DBS_COMPACTED_V1 "settingsDbsCompactedV1"
 #if CAPABILITY_HAS_APP_SCALING
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
 #endif
@@ -232,6 +233,7 @@ static uint8_t s_power_mode = PowerMode_HighPerformance;
 static bool s_coredump_on_request_enabled = false;
 static bool s_accel_shake_log_info_enabled = false;
 static bool s_vibe_log_info_enabled = false;
+static bool s_settings_dbs_compacted_v1 = false;
 #if CAPABILITY_HAS_APP_SCALING
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
@@ -658,6 +660,11 @@ static bool prv_set_s_accel_shake_log_info_enabled(bool *enabled) {
 
 static bool prv_set_s_vibe_log_info_enabled(bool *enabled) {
   s_vibe_log_info_enabled = *enabled;
+  return true;
+}
+
+static bool prv_set_s_settings_dbs_compacted_v1(bool *done) {
+  s_settings_dbs_compacted_v1 = *done;
   return true;
 }
 
@@ -1747,6 +1754,14 @@ bool shell_prefs_get_vibe_log_info_enabled(void) {
 
 void shell_prefs_set_vibe_log_info_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_VIBE_LOG_INFO, &enabled, sizeof(enabled));
+}
+
+bool shell_prefs_get_settings_dbs_compacted_v1(void) {
+  return s_settings_dbs_compacted_v1;
+}
+
+void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
+  prv_pref_set(PREF_KEY_SETTINGS_DBS_COMPACTED_V1, &done, sizeof(done));
 }
 
 #if CAPABILITY_HAS_APP_SCALING

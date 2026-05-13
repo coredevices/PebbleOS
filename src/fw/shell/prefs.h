@@ -163,6 +163,13 @@ void shell_prefs_set_accel_shake_log_info_enabled(bool enabled);
 bool shell_prefs_get_vibe_log_info_enabled(void);
 void shell_prefs_set_vibe_log_info_enabled(bool enabled);
 
+// One-time migration flag: set to true once we have force-compacted every
+// growable settings DB at boot. Devices that pre-date the growable-files
+// change still have full-size settings files and only shrink to fit after
+// this migration runs.
+bool shell_prefs_get_settings_dbs_compacted_v1(void);
+void shell_prefs_set_settings_dbs_compacted_v1(bool done);
+
 #if CAPABILITY_HAS_APP_SCALING
 // Legacy app rendering mode - whether to use bezel or scaling for legacy apps
 typedef enum LegacyAppRenderMode {

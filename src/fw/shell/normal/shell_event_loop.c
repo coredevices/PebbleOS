@@ -19,6 +19,7 @@
 #include "process_management/app_manager.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/analytics/analytics.h"
+#include "pbl/services/blob_db/api.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/services/activity/activity.h"
@@ -29,6 +30,7 @@
 #include "pbl/services/music_endpoint.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/stationary.h"
+#include "pbl/services/system_task.h"
 #include "pbl/services/timeline/event.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/battery_ui.h"
@@ -40,8 +42,25 @@
 
 extern void shell_prefs_init(void);
 
+// Force-compact every growable settings DB on first boot after upgrade. 
+// Pre-growable-files devices keep their original full-size settings file allocation forever otherwise, 
+// which on devices with many installed apps shows up as launcher scroll lag.
+static void prv_settings_dbs_compaction_migration_cb(void *data) {
+  blob_db_compact_growable_dbs();
+  shell_prefs_set_settings_dbs_compacted_v1(true);
+}
+
+static void prv_maybe_run_settings_dbs_compaction_migration(void) {
+  if (shell_prefs_get_settings_dbs_compacted_v1()) {
+    return;
+  }
+  PBL_LOG_INFO("settings_dbs_compaction_migration: scheduling");
+  system_task_add_callback(prv_settings_dbs_compaction_migration_cb, NULL);
+}
+
 void shell_event_loop_init(void) {
   shell_prefs_init();
+  prv_maybe_run_settings_dbs_compaction_migration();
   notification_window_service_init();
   app_inbox_service_init();
   app_outbox_service_init();
