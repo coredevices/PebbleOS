@@ -72,6 +72,16 @@ DEFINE_SYSCALL(void, sys_current_process_schedule_callback,
 }
 
 DEFINE_SYSCALL(uint32_t, sys_process_events_waiting, PebbleTask task) {
+  // process_manager_process_events_waiting -> prv_get_context_for_task
+  // PBL_ASSERTN()s for anything other than App or Worker. Without this guard
+  // an unprivileged app can pass any other PebbleTask value and panic the
+  // kernel from a syscall. Pin the caller to its own task instead.
+  if (PRIVILEGE_WAS_ELEVATED) {
+    task = pebble_task_get_current();
+    if (task != PebbleTask_App && task != PebbleTask_Worker) {
+      syscall_failed();
+    }
+  }
   return process_manager_process_events_waiting(task);
 }
 
