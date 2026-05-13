@@ -36,4 +36,8 @@ status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_le
   return S_SUCCESS;
 }
 
+status_t settings_file_compact(SettingsFile *file) {
+  return S_SUCCESS;
+}
+
 void settings_file_close(SettingsFile *file) {}

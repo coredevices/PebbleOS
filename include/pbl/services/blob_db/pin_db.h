@@ -58,6 +58,8 @@ status_t pin_db_delete(const uint8_t *key, int key_len);
 
 status_t pin_db_flush(void);
 
+status_t pin_db_compact(void);
+
 status_t pin_db_is_dirty(bool *is_dirty_out);
 
 BlobDBDirtyItem* pin_db_get_dirty_list(void);

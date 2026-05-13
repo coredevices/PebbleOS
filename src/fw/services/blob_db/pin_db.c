@@ -213,6 +213,10 @@ void pin_db_deinit(void) {
   timeline_item_storage_deinit(&s_pin_db_storage);
 }
 
+status_t pin_db_compact(void) {
+  return timeline_item_storage_compact(&s_pin_db_storage);
+}
+
 bool pin_db_has_entry_expired(time_t pin_end_timestamp) {
   return (pin_end_timestamp < (rtc_get_time() - PIN_DB_MAX_AGE));
 }

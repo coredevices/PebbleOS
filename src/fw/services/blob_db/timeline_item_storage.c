@@ -277,6 +277,13 @@ void timeline_item_storage_deinit(TimelineItemStorage *storage) {
   settings_file_close(&storage->file);
 }
 
+status_t timeline_item_storage_compact(TimelineItemStorage *storage) {
+  RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
+  status_t rv = settings_file_compact(&storage->file);
+  prv_storage_unlock(storage, lock_ticks, __func__);
+  return rv;
+}
+
 status_t timeline_item_storage_insert(TimelineItemStorage *storage,
     const uint8_t *key, int key_len, const uint8_t *val, int val_len, bool mark_as_synced) {
   if (key_len != UUID_SIZE ||

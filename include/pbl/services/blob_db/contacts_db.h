@@ -42,3 +42,5 @@ status_t contacts_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int
 status_t contacts_db_delete(const uint8_t *key, int key_len);
 
 status_t contacts_db_flush(void);
+
+status_t contacts_db_compact(void);

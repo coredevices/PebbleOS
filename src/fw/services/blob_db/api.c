@@ -23,6 +23,8 @@
 #include "kernel/pbl_malloc.h"
 #include "system/logging.h"
 
+#include <inttypes.h>
+
 typedef struct {
   BlobDBInitImpl init;
   BlobDBInsertImpl insert;
@@ -33,6 +35,8 @@ typedef struct {
   BlobDBIsDirtyImpl is_dirty;
   BlobDBGetDirtyListImpl get_dirty_list;
   BlobDBMarkSyncedImpl mark_synced;
+  BlobDBCompactImpl compact;
+  const char *name;
   bool disabled;
 } BlobDB;
 
@@ -47,6 +51,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .is_dirty = pin_db_is_dirty,
     .get_dirty_list = pin_db_get_dirty_list,
     .mark_synced = pin_db_mark_synced,
+    .compact = pin_db_compact,
+    .name = "pin_db",
   },
   [BlobDBIdApps] = {
     .init = app_db_init,
@@ -55,6 +61,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .read = app_db_read,
     .del = app_db_delete,
     .flush = app_db_flush,
+    .compact = app_db_compact,
+    .name = "app_db",
   },
   [BlobDBIdReminders] = {
     .init = reminder_db_init,
@@ -66,6 +74,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .is_dirty = reminder_db_is_dirty,
     .get_dirty_list = reminder_db_get_dirty_list,
     .mark_synced = reminder_db_mark_synced,
+    .compact = reminder_db_compact,
+    .name = "reminder_db",
   },
   [BlobDBIdNotifs] = {
     .init = notif_db_init,
@@ -74,6 +84,7 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .read = notif_db_read,
     .del = notif_db_delete,
     .flush = notif_db_flush,
+    .name = "notif_db",
   },
   [BlobDBIdWeather] = {
     .init = weather_db_init,
@@ -82,6 +93,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .read = weather_db_read,
     .del = weather_db_delete,
     .flush = weather_db_flush,
+    .compact = weather_db_compact,
+    .name = "weather_db",
   },
   [BlobDBIdiOSNotifPref] = {
     .init = ios_notif_pref_db_init,
@@ -93,6 +106,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .is_dirty = ios_notif_pref_db_is_dirty,
     .get_dirty_list = ios_notif_pref_db_get_dirty_list,
     .mark_synced = ios_notif_pref_db_mark_synced,
+    .compact = ios_notif_pref_db_compact,
+    .name = "ios_notif_pref_db",
   },
   [BlobDBIdPrefs] = {
     .init = prefs_db_init,
@@ -101,6 +116,7 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .read = prefs_db_read,
     .del = prefs_db_delete,
     .flush = prefs_db_flush,
+    .name = "prefs_db",
   },
   [BlobDBIdContacts] = {
     .init = contacts_db_init,
@@ -109,6 +125,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .read = contacts_db_read,
     .del = contacts_db_delete,
     .flush = contacts_db_flush,
+    .compact = contacts_db_compact,
+    .name = "contacts_db",
   },
   [BlobDBIdWatchAppPrefs] = {
     .init = watch_app_prefs_db_init,
@@ -117,6 +135,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .read = watch_app_prefs_db_read,
     .del = watch_app_prefs_db_delete,
     .flush = watch_app_prefs_db_flush,
+    .compact = watch_app_prefs_db_compact,
+    .name = "watch_app_prefs_db",
   },
   [BlobDBIdHealth] = {
     .init = health_db_init,
@@ -125,6 +145,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .read = health_db_read,
     .del = health_db_delete,
     .flush = health_db_flush,
+    .compact = health_db_compact,
+    .name = "health_db",
   },
   [BlobDBIdAppGlance] = {
     .init = app_glance_db_init,
@@ -133,6 +155,8 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .read = app_glance_db_read,
     .del = app_glance_db_delete,
     .flush = app_glance_db_flush,
+    .compact = app_glance_db_compact,
+    .name = "app_glance_db",
   },
   [BlobDBIdSettings] = {
     .init = settings_blob_db_init,
@@ -144,6 +168,7 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
     .is_dirty = settings_blob_db_is_dirty,
     .get_dirty_list = settings_blob_db_get_dirty_list,
     .mark_synced = settings_blob_db_mark_synced,
+    .name = "settings_blob_db",
   },
 };
 
@@ -179,6 +204,20 @@ void blob_db_init_dbs(void) {
       db->init();
     }
   }
+}
+
+void blob_db_compact_growable_dbs(void) {
+  PBL_LOG_INFO("blob_db_compact_growable_dbs: start");
+  const BlobDB *db = s_blob_dbs;
+  for (int i = 0; i < NumBlobDBs; ++i, ++db) {
+    if (!db->compact) {
+      continue;
+    }
+    const status_t rv = db->compact();
+    PBL_LOG_INFO("blob_db_compact_growable_dbs: %s -> %"PRIi32,
+                 db->name ? db->name : "?", rv);
+  }
+  PBL_LOG_INFO("blob_db_compact_growable_dbs: done");
 }
 
 void blob_db_get_dirty_dbs(uint8_t *ids, uint8_t *num_ids) {

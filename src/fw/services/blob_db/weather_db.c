@@ -114,6 +114,16 @@ status_t weather_db_flush(void) {
   return S_SUCCESS;
 }
 
+status_t weather_db_compact(void) {
+  status_t rv = prv_lock_mutex_and_open_file();
+  if (rv != S_SUCCESS) {
+    return rv;
+  }
+  rv = settings_file_compact(&s_weather_db.settings_file);
+  prv_close_file_and_unlock_mutex();
+  return rv;
+}
+
 status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!weather_service_supported_by_phone()) {
     return E_RANGE;

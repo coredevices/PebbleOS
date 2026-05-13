@@ -47,3 +47,7 @@ status_t health_db_delete(const uint8_t *key, int key_len) {
 status_t health_db_flush(void) {
   return S_SUCCESS;
 }
+
+status_t health_db_compact(void) {
+  return S_SUCCESS;
+}

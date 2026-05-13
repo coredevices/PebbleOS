@@ -108,6 +108,11 @@ status_t settings_file_open_growable(SettingsFile *file, const char *name,
   return settings_file_open(file, name, max_used_space);
 }
 
+status_t settings_file_compact(SettingsFile *file) {
+  cl_assert(s_settings_file.open);
+  return S_SUCCESS;
+}
+
 void settings_file_close(SettingsFile *file) {
   cl_assert(s_settings_file.open);
   s_settings_file.open = false;

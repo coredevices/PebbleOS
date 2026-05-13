@@ -29,6 +29,11 @@ void app_glance_db_init(void);
 
 status_t app_glance_db_flush(void);
 
+//! Compact and shrink the on-disk settings file. Forces growable files that
+//! grew before the growable change landed (or under heavy load) to drop back
+//! toward the initial allocation.
+status_t app_glance_db_compact(void);
+
 status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 int app_glance_db_get_len(const uint8_t *key, int key_len);

@@ -78,3 +78,7 @@ status_t WEAK pin_db_mark_synced(const uint8_t *key, int key_len) {
 status_t WEAK pin_db_set_status_bits(const TimelineItemId *id, uint8_t status) {
   return S_SUCCESS;
 }
+
+status_t WEAK pin_db_compact(void) {
+  return S_SUCCESS;
+}

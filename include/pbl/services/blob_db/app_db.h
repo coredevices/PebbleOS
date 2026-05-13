@@ -59,5 +59,7 @@ status_t app_db_delete(const uint8_t *key, int key_len);
 
 status_t app_db_flush(void);
 
+status_t app_db_compact(void);
+
 /* TEST */
 AppInstallId app_db_check_next_unique_id(void);
