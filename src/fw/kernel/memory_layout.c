@@ -9,8 +9,6 @@
 #include "util/size.h"
 #include "util/string.h"
 
-#include "kernel/mpu_regions.auto.h"
-
 #include <inttypes.h>
 #include <string.h>
 
@@ -51,14 +49,6 @@ void memory_layout_dump_mpu_regions_to_dbgserial(void) {
         i, MEMORY_REGION_NAMES[i], (void*) region.base_address, region.size,
         region.priv_read ? 'R' : ' ', region.priv_write ? 'W' : ' ',
         region.user_read ? 'R' : ' ', region.user_write ? 'W' : ' ');
-
-#ifndef MPU_TYPE_ARMV8M
-    if (region.disabled_subregions) {
-      PBL_LOG_FROM_FAULT_HANDLER_FMT(
-          buffer, sizeof(buffer),
-          "  Disabled Subregions: %02x", region.disabled_subregions);
-    }
-#endif
   }
 }
 
@@ -71,7 +61,9 @@ static const uint32_t __isr_stack_start__ = 0;
 static const uint32_t __stack_guard_size__ = 0;
 
 static const uint32_t __APP_RAM__ = 0;
+static const uint32_t __APP_RAM_size__ = 0;
 static const uint32_t __WORKER_RAM__ = 0;
+static const uint32_t __WORKER_RAM_size__ = 0;
 
 static const uint32_t __FLASH_start__ = 0;
 static const uint32_t __FLASH_size__ = 0;
@@ -87,7 +79,9 @@ extern const uint32_t __isr_stack_start__[];
 extern const uint32_t __stack_guard_size__[];
 
 extern const uint32_t __APP_RAM__[];
+extern const uint32_t __APP_RAM_size__[];
 extern const uint32_t __WORKER_RAM__[];
+extern const uint32_t __WORKER_RAM_size__[];
 
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __FLASH_size__[];
@@ -151,11 +145,8 @@ static const MpuRegion s_worker_stack_guard_region = {
 static const MpuRegion s_app_region = {
   .region_num = MemoryRegion_AppRAM,
   .enabled = true,
-  .base_address = MPU_REGION_APP_BASE_ADDRESS,
-  .size = MPU_REGION_APP_SIZE,
-#ifndef MPU_TYPE_ARMV8M
-  .disabled_subregions = MPU_REGION_APP_DISABLED_SUBREGIONS,
-#endif
+  .base_address = (uintptr_t) __APP_RAM__,
+  .size = (uint32_t) __APP_RAM_size__,
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
   .priv_read = true,
   .priv_write = true,
@@ -164,11 +155,8 @@ static const MpuRegion s_app_region = {
 static const MpuRegion s_worker_region = {
   .region_num = MemoryRegion_WorkerRAM,
   .enabled = true,
-  .base_address = MPU_REGION_WORKER_BASE_ADDRESS,
-  .size = MPU_REGION_WORKER_SIZE,
-#ifndef MPU_TYPE_ARMV8M
-  .disabled_subregions = MPU_REGION_WORKER_DISABLED_SUBREGIONS,
-#endif
+  .base_address = (uintptr_t) __WORKER_RAM__,
+  .size = (uint32_t) __WORKER_RAM_size__,
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
   .priv_read = true,
   .priv_write = true,
