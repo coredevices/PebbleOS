@@ -8,15 +8,24 @@
 
 #include "freertos_types.h"
 
-typedef enum MpuCachePolicy {
-  // FIXME(SF32LB52): system_bf0_ap.c uses now up to 4 attributes as MPU is not fully implemented.
+// Some SoC SDKs program a fixed set of low MPU regions and cache-attribute
+// indices during firmware startup (before main()) and the rest of the SDK
+// runtime depends on them staying put. The firmware-defined regions and
+// policies are numbered above this reservation so they don't clash.
+// FIXME(SF32LB52): the SF32LB52 vendor SDK's SystemInit() calls
+// prv_mpu_config() in system_bf0_ap.c, which fills regions 0-3 and
+// attribute indices 0-2 (code / RAM / device). pblboot itself clears the
+// MPU before jumping; the reservation is a vendor-SDK artifact, not a
+// bootloader one. Drop the offset once the firmware owns MPU setup
+// end-to-end on SF32LB52.
 #ifdef MICRO_FAMILY_SF32LB52
-  MpuCachePolicy_Reserved0,
-  MpuCachePolicy_Reserved1,
-  MpuCachePolicy_Reserved2,
-  MpuCachePolicy_Reserved3,
+#define MPU_SOC_RESERVED_SLOTS 4u
+#else
+#define MPU_SOC_RESERVED_SLOTS 0u
 #endif
-  MpuCachePolicy_NotCacheable,
+
+typedef enum MpuCachePolicy {
+  MpuCachePolicy_NotCacheable = MPU_SOC_RESERVED_SLOTS,
   MpuCachePolicy_WriteThrough,
   MpuCachePolicy_WriteBackWriteAllocate,
   MpuCachePolicy_WriteBackNoWriteAllocate,

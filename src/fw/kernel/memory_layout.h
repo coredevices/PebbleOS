@@ -10,14 +10,7 @@
 #define KERNEL_READONLY_DATA SECTION(".kernel_unpriv_ro_bss")
 
 enum MemoryRegionAssignments {
-  // FIXME(SF32LB52): system_bf0_ap.c uses now up to 4 regions as MPU is not fully implemented.
-#ifdef MICRO_FAMILY_SF32LB52
-  MemoryRegion_Reserved0,
-  MemoryRegion_Reserved1,
-  MemoryRegion_Reserved2,
-  MemoryRegion_Reserved3,
-#endif
-  MemoryRegion_Flash,
+  MemoryRegion_Flash = MPU_SOC_RESERVED_SLOTS,
   MemoryRegion_ReadOnlyBss,
   MemoryRegion_ReadOnlyData,
   MemoryRegion_IsrStackGuard,
