@@ -52,7 +52,7 @@ void memory_layout_dump_mpu_regions_to_dbgserial(void) {
         region.priv_read ? 'R' : ' ', region.priv_write ? 'W' : ' ',
         region.user_read ? 'R' : ' ', region.user_write ? 'W' : ' ');
 
-#ifndef MPU_ARMV8
+#ifndef MPU_TYPE_ARMV8M
     if (region.disabled_subregions) {
       PBL_LOG_FROM_FAULT_HANDLER_FMT(
           buffer, sizeof(buffer),
@@ -153,7 +153,7 @@ static const MpuRegion s_app_region = {
   .enabled = true,
   .base_address = MPU_REGION_APP_BASE_ADDRESS,
   .size = MPU_REGION_APP_SIZE,
-#ifndef MPU_ARMV8
+#ifndef MPU_TYPE_ARMV8M
   .disabled_subregions = MPU_REGION_APP_DISABLED_SUBREGIONS,
 #endif
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
@@ -166,7 +166,7 @@ static const MpuRegion s_worker_region = {
   .enabled = true,
   .base_address = MPU_REGION_WORKER_BASE_ADDRESS,
   .size = MPU_REGION_WORKER_SIZE,
-#ifndef MPU_ARMV8
+#ifndef MPU_TYPE_ARMV8M
   .disabled_subregions = MPU_REGION_WORKER_DISABLED_SUBREGIONS,
 #endif
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
