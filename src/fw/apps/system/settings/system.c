@@ -39,6 +39,8 @@
 #include "system/version.h"
 
 #include "pbl/services/activity/activity.h"
+#include "pbl/services/blob_db/api.h"
+#include "system/logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -71,6 +73,7 @@ enum {
 #endif
   DebuggingItemAccelShakeLogInfo,
   DebuggingItemVibeLogInfo,
+  DebuggingItemCompactSettingsDbs,
   DebuggingItem_Count,
 };
 
@@ -549,6 +552,17 @@ static void prv_power_mode_menu_push(SettingsSystemData *data) {
       true /* icons_enabled */, s_power_mode_labels, data);
 }
 
+// Compact growable settings DBs
+////////////////////////////////
+
+static void prv_compact_settings_dbs_task_cb(void *data) {
+  blob_db_compact_growable_dbs();
+}
+
+static void prv_compact_settings_dbs(void) {
+  system_task_add_callback(prv_compact_settings_dbs_task_cb, NULL);
+}
+
 // Debug options window
 ///////////////////////
 
@@ -565,6 +579,7 @@ static const char* s_debugging_titles[DebuggingItem_Count] = {
 #endif
   [DebuggingItemAccelShakeLogInfo] = i18n_noop("Shake Log Info"),
   [DebuggingItemVibeLogInfo] = i18n_noop("Vibe Log Info"),
+  [DebuggingItemCompactSettingsDbs] = i18n_noop("Compact Settings DBs"),
 };
 
 static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_layer,
@@ -665,6 +680,9 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
     case DebuggingItemVibeLogInfo:
       shell_prefs_set_vibe_log_info_enabled(
           !shell_prefs_get_vibe_log_info_enabled());
+      break;
+    case DebuggingItemCompactSettingsDbs:
+      prv_compact_settings_dbs();
       break;
     default:
       WTF;
