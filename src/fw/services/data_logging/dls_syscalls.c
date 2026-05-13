@@ -23,12 +23,9 @@ DEFINE_SYSCALL(DataLoggingSessionRef, sys_data_logging_create, uint32_t tag,
 }
 
 DEFINE_SYSCALL(void, sys_data_logging_finish, DataLoggingSessionRef session_ref) {
-  // TODO: It would be nice to verify the session itself, because they could be
-  // passing us any memory address (not necesarilly a valid DataLoggingSession).
-  // An evil developer could potentially use this to confuse the data_logging
-  // logic, and do evil things with kernel rights. However, it's pretty unlikely
-  // (especially since our executable code lives in microflash, and hence can't
-  // just be overwritten by a buffer overrun), so it's probably fine.
+  // dls_is_session_valid() (below) walks the kernel-owned s_logging_sessions
+  // list to confirm the session pointer is one we handed out, so a forged
+  // session_ref simply returns invalid and never reaches dls_finish().
   DataLoggingSession* session = (DataLoggingSession*)session_ref;
 
   if (!dls_is_session_valid(session)) {
