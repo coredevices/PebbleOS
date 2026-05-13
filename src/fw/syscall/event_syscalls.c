@@ -19,9 +19,30 @@ static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
   }
 }
 
+// Event types that an unprivileged app or worker is permitted to post directly via
+// sys_send_pebble_event_to_kernel. Anything else (in particular events that carry a
+// kernel-invoked callback pointer, like PEBBLE_CALLBACK_EVENT) is forbidden — the
+// kernel would otherwise jump to an app-controlled address with kernel privileges.
+static bool prv_event_type_allowed_from_user(PebbleEventType type) {
+  switch (type) {
+    case PEBBLE_PROCESS_KILL_EVENT:
+    case PEBBLE_RENDER_READY_EVENT:
+    case PEBBLE_DICTATION_EVENT:
+    case PEBBLE_HEALTH_SERVICE_EVENT:
+    case PEBBLE_PLUGIN_SERVICE_EVENT:
+      return true;
+    default:
+      return false;
+  }
+}
+
 DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent* event) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(event, sizeof(*event));
+    if (!prv_event_type_allowed_from_user(event->type)) {
+      PBL_LOG_ERR("Rejecting event type %u from unprivileged caller", event->type);
+      syscall_failed();
+    }
   }
 
   PebbleTask task = pebble_task_get_current();
