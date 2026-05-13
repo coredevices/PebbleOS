@@ -29,10 +29,10 @@ You can launch QEMU with the built image using:
 ./waf qemu
 ```
 
-The flash image is built automatically the first time. To force rebuilding it, pass `--new-flash-image`:
+The flash image is rebuilt by default on every launch. To keep the existing flash image (e.g. to preserve stored apps), pass `--keep-flash-image`:
 
 ```shell
-./waf qemu --new-flash-image
+./waf qemu --keep-flash-image
 ```
 
 ## Console
