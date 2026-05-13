@@ -107,8 +107,22 @@ void pbl_analytics_init(void) {
                   TIMER_START_FLAG_REPEATING);
 }
 
+// Apps pass `key` straight through to backends that use it as an unchecked
+// index into fixed-size kernel tables (`s_key_to_integer[]`, `s_pbl_to_memfault[]`,
+// `s_string_ptrs[]`, `s_string_lens[]`, ...). An out-of-range key reads
+// arbitrary kernel bytes; in the set_string path those bytes become a kernel
+// pointer + length that strncpy() then writes the (validated) app string into,
+// turning analytics into an arbitrary kernel write primitive. Bound the key
+// here once and let the backends keep their direct indexing.
+static bool prv_analytics_key_in_range(enum pbl_analytics_key key) {
+  return ((unsigned)key < PBL_ANALYTICS_KEY_COUNT);
+}
+
 DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
                int32_t signed_value) {
+  if (!prv_analytics_key_in_range(key)) {
+    return;
+  }
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->set_signed(key, signed_value);
   }
@@ -116,6 +130,9 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
 
 DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
                uint32_t unsigned_value) {
+  if (!prv_analytics_key_in_range(key)) {
+    return;
+  }
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->set_unsigned(key, unsigned_value);
   }
@@ -123,6 +140,9 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
 
 DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key,
                const char *value) {
+  if (!prv_analytics_key_in_range(key)) {
+    return;
+  }
   if (PRIVILEGE_WAS_ELEVATED) {
     if (!memory_layout_is_cstring_in_region(
           memory_layout_get_app_region(), value, ANALYTICS_STRING_MAX_LEN)) {
@@ -136,18 +156,27 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key,
 }
 
 DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {
+  if (!prv_analytics_key_in_range(key)) {
+    return;
+  }
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->timer_start(key);
   }
 }
 
 DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {
+  if (!prv_analytics_key_in_range(key)) {
+    return;
+  }
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->timer_stop(key);
   }
 }
 
 DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {
+  if (!prv_analytics_key_in_range(key)) {
+    return;
+  }
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
     s_backend_ops[i]->add(key, amount);
   }
