@@ -6,6 +6,7 @@
 #include "ble_app_support.h"
 
 #include "applib/applib_malloc.auto.h"
+#include "pbl/services/event_service.h"
 #include "process_state/app_state/app_state.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
@@ -44,8 +45,18 @@ static void prv_handle_services_added(
 DEFINE_SYSCALL(void, sys_get_service_discovery_info, const PebbleBLEGATTClientServiceEvent *e,
                PebbleBLEGATTClientServiceEventInfo *info) {
   if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(e, sizeof(*e));
     // Note: if we start storing services, we will need to update the size
     syscall_assert_userspace_buffer(info, sizeof(*info));
+    // `e->info` is a kernel pointer the event service attached to the event
+    // when it was posted; the app can rewrite it in its local copy before
+    // calling us. Confirm it still references a kernel-tracked event buffer
+    // — without that, an app could aim it at any kernel address and read
+    // arbitrary kernel bytes back via *info.
+    if (!event_service_is_known_buffer(e->info)) {
+      PBL_LOG_ERR("Rejecting service event with unknown info pointer %p", e->info);
+      syscall_failed();
+    }
   }
 
   *info = (PebbleBLEGATTClientServiceEventInfo) {
