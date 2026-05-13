@@ -108,7 +108,6 @@ static const MpuRegion s_readonly_bss_region = {
   .user_write = false
 };
 
-#ifndef MICRO_FAMILY_SF32LB52
 // ISR stack guard
 static const MpuRegion s_isr_stack_guard_region = {
   .region_num = MemoryRegion_IsrStackGuard,
@@ -121,7 +120,6 @@ static const MpuRegion s_isr_stack_guard_region = {
   .user_read = false,
   .user_write = false
 };
-#endif
 
 static const MpuRegion s_app_stack_guard_region = {
   .region_num = MemoryRegion_TaskStackGuard,
@@ -204,12 +202,6 @@ static const MpuRegion s_kernel_bg_stack_guard_region = {
 };
 
 void memory_layout_setup_mpu(void) {
-  // SF32LB52's vendor SDK SystemInit() (third_party/hal_sifli/sf32lb52/
-  // system_bf0_ap.c) calls prv_mpu_config() before main() and the rest of
-  // the SDK assumes those regions stay programmed, so the firmware skips
-  // its own static-region setup there. NRF52, QEMU CM4 and QEMU CM33 boot
-  // with a clean MPU and we program everything ourselves.
-#ifndef MICRO_FAMILY_SF32LB52
   // Unprivileged flash, by default anyone can read any part of flash.
   mpu_set_region(&s_microflash_region);
 
@@ -219,7 +211,6 @@ void memory_layout_setup_mpu(void) {
 
   mpu_set_region(&s_readonly_bss_region);
   mpu_set_region(&s_isr_stack_guard_region);
-#endif
 
   mpu_enable();
 }

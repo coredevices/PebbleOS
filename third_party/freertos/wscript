@@ -30,15 +30,16 @@ def build(bld):
                            for d in freertos_source_paths], [])
     freertos_defines = []
 
-    # FIXME(SF32LB52): the vendor SDK's SystemInit() in
+    # SF32LB52: the vendor SDK's SystemInit() in
     # third_party/hal_sifli/sf32lb52/system_bf0_ap.c pre-programs MPU
-    # regions 0-3 before main() and the firmware MPU path isn't yet wired
-    # up on SF32LB52, so disable FreeRTOS' per-task region setup
-    # (FREERTOS_FIRST > FREERTOS_LAST -> portNUM_CONFIGURABLE_REGIONS == 0).
+    # regions 0-3 before main() (see MPU_SOC_RESERVED_SLOTS=4). The
+    # firmware programs its own static regions in slots 4-7 (Flash,
+    # RO BSS, ISR stack guard) and FreeRTOS owns 8-11 for the per-task
+    # App/Worker/stack-guard configuration on context switch.
     if bld.env.MICRO_FAMILY == 'SF32LB52':
         freertos_defines += [
             'FREERTOS_FIRST_MPU_REGION=8',
-            'FREERTOS_LAST_MPU_REGION=7',
+            'FREERTOS_LAST_MPU_REGION=11',
         ]
 
     # QEMU CM33 (qemu_emery, qemu_gabbro) boots with a clean MPU: the
