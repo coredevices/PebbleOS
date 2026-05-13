@@ -4,11 +4,13 @@
 #include "applib/pbl_std/pbl_std.h"
 #include "applib/app_logging.h"
 #include "applib/applib_malloc.auto.h"
+#include "kernel/memory_layout.h"
 #include "util/time/time.h"
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
+#include "system/logging.h"
 
 // Time
 time_t pbl_override_time(time_t *tloc) {
@@ -203,12 +205,24 @@ size_t pbl_strftime(char* s, size_t maxsize, const char* format, const struct tm
   return sys_strftime(s, maxsize, format, tim_p, locale);
 }
 
+// Cap on how far we'll scan for the format-string terminator before giving up
+// — well beyond any reasonable strftime format.
+#define SYS_STRFTIME_FORMAT_MAX 256
+
 DEFINE_SYSCALL(size_t, sys_strftime, char* s, size_t maxsize, const char* format,
                                   const struct tm* tim_p, char *locale) {
 
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(s, maxsize);
-    syscall_assert_userspace_buffer(format, strlen(format));
+    // Verify `format` is a null-terminated string entirely within the caller's
+    // app region BEFORE calling strlen() on it; otherwise an app could hand us
+    // a kernel pointer and have strlen() dereference whatever it pleases
+    // (faulting on unmapped memory, or running away on missing terminators).
+    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), format,
+                                            SYS_STRFTIME_FORMAT_MAX)) {
+      PBL_LOG_ERR("strftime format %p not in app region", format);
+      syscall_failed();
+    }
     syscall_assert_userspace_buffer(tim_p, sizeof(struct tm));
   }
 
