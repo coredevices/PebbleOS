@@ -204,15 +204,11 @@ static const MpuRegion s_kernel_bg_stack_guard_region = {
 };
 
 void memory_layout_setup_mpu(void) {
-#ifdef MICRO_FAMILY_QEMU_PEBBLE_ARMCM33
-  // QEMU CM33: skip MPU configuration. The ARMv8-M MPU uses RBAR/RLAR
-  // registers instead of the ARMv7-M RBAR/RASR used here.
-  return;
-#endif
-
-  // Flash parts...
-  // Read only for executing code and loading data out of.
-
+  // SF32LB52's vendor SDK SystemInit() (third_party/hal_sifli/sf32lb52/
+  // system_bf0_ap.c) calls prv_mpu_config() before main() and the rest of
+  // the SDK assumes those regions stay programmed, so the firmware skips
+  // its own static-region setup there. NRF52, QEMU CM4 and QEMU CM33 boot
+  // with a clean MPU and we program everything ourselves.
 #ifndef MICRO_FAMILY_SF32LB52
   // Unprivileged flash, by default anyone can read any part of flash.
   mpu_set_region(&s_microflash_region);
