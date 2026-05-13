@@ -14,6 +14,10 @@ DEFINE_SYSCALL(void, sys_i18n_get_locale, char *buf) {
       // not allowed from workers
       syscall_failed();
     }
+    // strncpy() below unconditionally writes ISO_LOCALE_LENGTH bytes via the
+    // caller-supplied pointer; without this check an app could hand us any
+    // kernel address and have us stamp the locale string into it.
+    syscall_assert_userspace_buffer(buf, ISO_LOCALE_LENGTH);
   }
 
   strncpy(buf, i18n_get_locale(), ISO_LOCALE_LENGTH);
