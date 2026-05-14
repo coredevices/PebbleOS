@@ -7,6 +7,7 @@
 #include "drivers/flash/qspi_flash_part_definitions.h"
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
+#include "mcu/cache.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "util/math.h"
@@ -103,7 +104,15 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
   } else {
     tbuf = buf;
   }
-  
+
+  // The QSPI write path reads `tbuf` over DMA, which bypasses the D-cache.
+  // Push any CPU-dirtied lines back to SRAM first so the flash receives the
+  // freshly-prepared bytes rather than stale memory.
+  uintptr_t flush_addr = (uintptr_t)tbuf;
+  size_t flush_size = size;
+  dcache_align(&flush_addr, &flush_size);
+  dcache_flush((const void *)flush_addr, flush_size);
+
   taddr = addr - hflash->base;
   remain = size;
 
