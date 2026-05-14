@@ -15,11 +15,8 @@ static bool prv_get_state(void *context) {
 }
 
 static void prv_set_state(bool enabled, void *context) {
-  backlight_set_enabled(enabled);
-  if (enabled) {
-    light_enable(true);
-  } else {
-    light_enable(false);
+  if (enabled != backlight_is_enabled()) {
+    light_toggle_enabled();
   }
 }
 
