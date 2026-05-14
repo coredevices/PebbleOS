@@ -78,7 +78,8 @@ void mpu_get_register_settings(const MpuRegion* region, uint32_t *base_address_r
 
   *base_address_reg = ((region->base_address & MPU_RBAR_BASE_Msk) |
                        ((ARM_MPU_SH_INNER << MPU_RBAR_SH_Pos) & MPU_RBAR_SH_Msk) |
-                       ((get_permission_value(region) << MPU_RBAR_AP_Pos) & MPU_RBAR_AP_Msk));
+                       ((get_permission_value(region) << MPU_RBAR_AP_Pos) & MPU_RBAR_AP_Msk) |
+                       ((region->executable ? 0u : 1u) << MPU_RBAR_XN_Pos));
   *attributes_reg = (((region->base_address + region->size - 1U) & MPU_RLAR_LIMIT_Msk) |
                      ((region->cache_policy << MPU_RLAR_AttrIndx_Pos) & MPU_RLAR_AttrIndx_Msk) |
                      ((region->enabled << MPU_RLAR_EN_Pos) & MPU_RLAR_EN_Msk));
@@ -104,6 +105,7 @@ MpuRegion mpu_get_region(int region_num) {
   rlar = MPU->RLAR;
 
   region.base_address = rbar & MPU_RBAR_BASE_Msk;
+  region.executable = ((rbar >> MPU_RBAR_XN_Pos) & 0x1) == 0;
 
   access_permissions = (rbar & MPU_RBAR_AP_Msk) >> MPU_RBAR_AP_Pos;
   region.permissions = decode_permission_value(access_permissions);

@@ -58,9 +58,9 @@ void memory_layout_dump_mpu_regions_to_dbgserial(void) {
 
     PBL_LOG_FROM_FAULT_HANDLER_FMT(
         buffer, sizeof(buffer),
-        "%u < %-22s>: Addr %p Size 0x%08"PRIx32" Perms: %s",
+        "%u < %-22s>: Addr %p Size 0x%08"PRIx32" %s Perms: %s",
         i, MEMORY_REGION_NAMES[i], (void*) region.base_address, region.size,
-        prv_permissions_str(region.permissions));
+        region.executable ? "X" : "-", prv_permissions_str(region.permissions));
   }
 }
 
@@ -145,6 +145,9 @@ static const MpuRegion s_worker_stack_guard_region = {
 static const MpuRegion s_app_region = {
   .region_num = MemoryRegion_AppRAM,
   .enabled = true,
+  // App process .text is relocated into App RAM, so the App task needs
+  // to be able to execute from this region.
+  .executable = true,
   .base_address = (uintptr_t) __APP_RAM__,
   .size = (uint32_t) __APP_RAM_size__,
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
@@ -154,6 +157,8 @@ static const MpuRegion s_app_region = {
 static const MpuRegion s_worker_region = {
   .region_num = MemoryRegion_WorkerRAM,
   .enabled = true,
+  // Worker process .text is relocated into Worker RAM.
+  .executable = true,
   .base_address = (uintptr_t) __WORKER_RAM__,
   .size = (uint32_t) __WORKER_RAM_size__,
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
@@ -163,6 +168,8 @@ static const MpuRegion s_worker_region = {
 static const MpuRegion s_microflash_region = {
   .region_num = MemoryRegion_Flash,
   .enabled = true,
+  // The firmware itself runs from flash.
+  .executable = true,
   .base_address = (uint32_t) __FLASH_start__,
   .size = (uint32_t) __FLASH_size__,
   .cache_policy = MpuCachePolicy_WriteThrough,
