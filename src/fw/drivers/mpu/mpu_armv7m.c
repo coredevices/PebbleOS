@@ -10,22 +10,16 @@
 
 #include <cmsis_core.h>
 
-typedef struct PermissionMapping {
-  bool priv_read:1;
-  bool priv_write:1;
-  bool user_read:1;
-  bool user_write:1;
-  uint8_t value:3;
-} PermissionMapping;
-
-static const PermissionMapping s_permission_mappings[] = {
-  { false, false, false, false, 0x0 },
-  { true,  true,  false, false, 0x1 },
-  { true,  true,  true,  false, 0x2 },
-  { true,  true,  true,  true,  0x3 },
-  { true,  false, false, false, 0x5 },
-  { true,  false, true,  false, 0x6 },
-  { true,  false, true,  false, 0x7 } // Both 0x6 and 0x7 map to the same permissions.
+// ARMv7-M has a 3-bit AP field, so every MpuPermissions value maps to a
+// unique encoding (0x4 is reserved; 0x6/0x7 both decode to "RO any priv",
+// the table picks 0x6 canonically and mpu_get_region() accepts either).
+static const uint8_t s_permission_to_ap[MpuPermissionsCount] = {
+  [MpuPermissions_NoAccess]      = 0x0,
+  [MpuPermissions_PrivRW]        = 0x1,
+  [MpuPermissions_PrivRW_UserRO] = 0x2,
+  [MpuPermissions_PrivRW_UserRW] = 0x3,
+  [MpuPermissions_PrivRO]        = 0x5,
+  [MpuPermissions_PrivRO_UserRO] = 0x6,
 };
 
 static const uint32_t s_cache_settings[] = {
@@ -38,16 +32,22 @@ static const uint32_t s_cache_settings[] = {
 };
 
 static uint8_t get_permission_value(const MpuRegion* region) {
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_permission_mappings); ++i) {
-    if (s_permission_mappings[i].priv_read == region->priv_read &&
-        s_permission_mappings[i].priv_write == region->priv_write &&
-        s_permission_mappings[i].user_read == region->user_read &&
-        s_permission_mappings[i].user_write == region->user_write) {
-      return s_permission_mappings[i].value;
-    }
+  PBL_ASSERTN(region->permissions < MpuPermissionsCount);
+  return s_permission_to_ap[region->permissions];
+}
+
+static MpuPermissions decode_permission_value(uint8_t ap) {
+  // 0x4 is reserved; 0x7 aliases 0x6 (PrivRO_UserRO).
+  switch (ap & 0x7) {
+    case 0x0: return MpuPermissions_NoAccess;
+    case 0x1: return MpuPermissions_PrivRW;
+    case 0x2: return MpuPermissions_PrivRW_UserRO;
+    case 0x3: return MpuPermissions_PrivRW_UserRW;
+    case 0x5: return MpuPermissions_PrivRO;
+    case 0x6:
+    case 0x7: return MpuPermissions_PrivRO_UserRO;
+    default:  return MpuPermissions_NoAccess;
   }
-  WTF;
-  return 0;
 }
 
 // ARMv7-M MPU regions must be power-of-two sized and naturally aligned. To
@@ -188,16 +188,7 @@ MpuRegion mpu_get_region(int region_num) {
     region.size = (end_sub - start_sub) * subregion;
 
     const uint8_t access_permissions = (attributes >> 24) & 0x7;
-
-    for (unsigned int i = 0; i < ARRAY_LENGTH(s_permission_mappings); ++i) {
-      if (s_permission_mappings[i].value == access_permissions) {
-        region.priv_read = s_permission_mappings[i].priv_read;
-        region.priv_write = s_permission_mappings[i].priv_write;
-        region.user_read = s_permission_mappings[i].user_read;
-        region.user_write = s_permission_mappings[i].user_write;
-        break;
-      }
-    }
+    region.permissions = decode_permission_value(access_permissions);
   }
 
   return region;

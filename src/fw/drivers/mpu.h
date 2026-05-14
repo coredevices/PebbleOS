@@ -22,6 +22,24 @@ typedef enum MpuCachePolicy {
   MpuCachePolicy_WriteBackNoWriteAllocate,
 } MpuCachePolicy;
 
+// Symbolic access-permission set. The backends map these to the hardware AP
+// encoding (3 bits on ARMv7-M, 2 bits on ARMv8-M). Two values are degraded
+// on ARMv8-M because the two-bit AP field cannot express them precisely:
+//   - NoAccess: ARMv8-M has no "deny everything" encoding; the closest
+//     match is PrivRO, which still allows privileged reads. Don't rely on
+//     this for thread stack-overflow detection -- use PSPLIM instead.
+//   - PrivRW_UserRO: ARMv8-M cannot split write access by privilege; this
+//     is aliased to PrivRW_UserRW (user gains write access too).
+typedef enum MpuPermissions {
+  MpuPermissions_NoAccess,
+  MpuPermissions_PrivRW,
+  MpuPermissions_PrivRW_UserRO,
+  MpuPermissions_PrivRW_UserRW,
+  MpuPermissions_PrivRO,
+  MpuPermissions_PrivRO_UserRO,
+  MpuPermissionsCount,
+} MpuPermissions;
+
 // Describes a memory region by its real (base, size). The ARMv7-M backend
 // internally rounds up to a power-of-two block and computes the subregion
 // mask required by the hardware; the ARMv8-M backend programs the limit
@@ -32,10 +50,7 @@ typedef struct MpuRegion {
   uintptr_t base_address;
   uint32_t size;
   MpuCachePolicy cache_policy;
-  bool priv_read:1;
-  bool priv_write:1;
-  bool user_read:1;
-  bool user_write:1;
+  MpuPermissions permissions;
 } MpuRegion;
 
 void mpu_enable(void);

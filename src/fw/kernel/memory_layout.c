@@ -32,6 +32,19 @@ static const char* const MEMORY_REGION_NAMES[] = {
 };
 
 
+static const char *prv_permissions_str(MpuPermissions p) {
+  switch (p) {
+    case MpuPermissions_NoAccess:      return "NoAccess";
+    case MpuPermissions_PrivRW:        return "PrivRW";
+    case MpuPermissions_PrivRW_UserRO: return "PrivRW_UserRO";
+    case MpuPermissions_PrivRW_UserRW: return "PrivRW_UserRW";
+    case MpuPermissions_PrivRO:        return "PrivRO";
+    case MpuPermissions_PrivRO_UserRO: return "PrivRO_UserRO";
+    case MpuPermissionsCount:          break;
+  }
+  return "?";
+}
+
 void memory_layout_dump_mpu_regions_to_dbgserial(void) {
   char buffer[90];
 
@@ -45,10 +58,9 @@ void memory_layout_dump_mpu_regions_to_dbgserial(void) {
 
     PBL_LOG_FROM_FAULT_HANDLER_FMT(
         buffer, sizeof(buffer),
-        "%u < %-22s>: Addr %p Size 0x%08"PRIx32" Priv: %c%c User: %c%c",
+        "%u < %-22s>: Addr %p Size 0x%08"PRIx32" Perms: %s",
         i, MEMORY_REGION_NAMES[i], (void*) region.base_address, region.size,
-        region.priv_read ? 'R' : ' ', region.priv_write ? 'W' : ' ',
-        region.user_read ? 'R' : ' ', region.user_write ? 'W' : ' ');
+        prv_permissions_str(region.permissions));
   }
 }
 
@@ -97,10 +109,7 @@ static const MpuRegion s_readonly_bss_region = {
   .base_address = (uint32_t) __unpriv_ro_bss_start__,
   .size = (uint32_t) __unpriv_ro_bss_size__,
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
-  .priv_read = true,
-  .priv_write = true,
-  .user_read = true,
-  .user_write = false
+  .permissions = MpuPermissions_PrivRW_UserRO,
 };
 
 #ifndef MICRO_FAMILY_SF32LB52
@@ -111,10 +120,7 @@ static const MpuRegion s_isr_stack_guard_region = {
   .base_address = (uint32_t) __isr_stack_start__,
   .size = (uint32_t) __stack_guard_size__,
   .cache_policy = MpuCachePolicy_NotCacheable,
-  .priv_read = false,
-  .priv_write = false,
-  .user_read = false,
-  .user_write = false
+  .permissions = MpuPermissions_NoAccess,
 };
 #endif
 
@@ -124,10 +130,7 @@ static const MpuRegion s_app_stack_guard_region = {
   .base_address = (uint32_t) __APP_RAM__,
   .size = (uint32_t) __stack_guard_size__,
   .cache_policy = MpuCachePolicy_NotCacheable,
-  .priv_read = false,
-  .priv_write = false,
-  .user_read = false,
-  .user_write = false
+  .permissions = MpuPermissions_NoAccess,
 };
 
 static const MpuRegion s_worker_stack_guard_region = {
@@ -136,10 +139,7 @@ static const MpuRegion s_worker_stack_guard_region = {
   .base_address = (uint32_t) __WORKER_RAM__,
   .size = (uint32_t) __stack_guard_size__,
   .cache_policy = MpuCachePolicy_NotCacheable,
-  .priv_read = false,
-  .priv_write = false,
-  .user_read = false,
-  .user_write = false
+  .permissions = MpuPermissions_NoAccess,
 };
 
 static const MpuRegion s_app_region = {
@@ -148,8 +148,7 @@ static const MpuRegion s_app_region = {
   .base_address = (uintptr_t) __APP_RAM__,
   .size = (uint32_t) __APP_RAM_size__,
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
-  .priv_read = true,
-  .priv_write = true,
+  .permissions = MpuPermissions_PrivRW,
 };
 
 static const MpuRegion s_worker_region = {
@@ -158,8 +157,7 @@ static const MpuRegion s_worker_region = {
   .base_address = (uintptr_t) __WORKER_RAM__,
   .size = (uint32_t) __WORKER_RAM_size__,
   .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
-  .priv_read = true,
-  .priv_write = true,
+  .permissions = MpuPermissions_PrivRW,
 };
 
 static const MpuRegion s_microflash_region = {
@@ -168,10 +166,7 @@ static const MpuRegion s_microflash_region = {
   .base_address = (uint32_t) __FLASH_start__,
   .size = (uint32_t) __FLASH_size__,
   .cache_policy = MpuCachePolicy_WriteThrough,
-  .priv_read = true,
-  .priv_write = false,
-  .user_read = true,
-  .user_write = false
+  .permissions = MpuPermissions_PrivRO_UserRO,
 };
 
 static const MpuRegion s_kernel_main_stack_guard_region = {
@@ -180,10 +175,7 @@ static const MpuRegion s_kernel_main_stack_guard_region = {
   .base_address = (uint32_t) __kernel_main_stack_start__,
   .size = (uint32_t) __stack_guard_size__,
   .cache_policy = MpuCachePolicy_NotCacheable,
-  .priv_read = false,
-  .priv_write = false,
-  .user_read = false,
-  .user_write = false
+  .permissions = MpuPermissions_NoAccess,
 };
 
 static const MpuRegion s_kernel_bg_stack_guard_region = {
@@ -192,10 +184,7 @@ static const MpuRegion s_kernel_bg_stack_guard_region = {
   .base_address = (uint32_t) __kernel_bg_stack_start__,
   .size = (uint32_t) __stack_guard_size__,
   .cache_policy = MpuCachePolicy_NotCacheable,
-  .priv_read = false,
-  .priv_write = false,
-  .user_read = false,
-  .user_write = false
+  .permissions = MpuPermissions_NoAccess,
 };
 
 void memory_layout_setup_mpu(void) {
