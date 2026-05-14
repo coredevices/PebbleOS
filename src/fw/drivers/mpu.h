@@ -9,14 +9,6 @@
 #include "freertos_types.h"
 
 typedef enum MpuCachePolicy {
-  // FIXME(SF32LB52): system_bf0_ap.c uses now up to 5 attributes as MPU is not fully implemented.
-#ifdef MICRO_FAMILY_SF32LB52
-  MpuCachePolicy_Reserved0,
-  MpuCachePolicy_Reserved1,
-  MpuCachePolicy_Reserved2,
-  MpuCachePolicy_Reserved3,
-  MpuCachePolicy_Reserved4,
-#endif
   MpuCachePolicy_NotCacheable,
   MpuCachePolicy_WriteThrough,
   MpuCachePolicy_WriteBackWriteAllocate,

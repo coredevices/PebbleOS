@@ -42,6 +42,7 @@ void mpu_set_task_configurable_regions(MemoryRegion_t *memory_regions,
     // If not region defined, use unused
     if (mpu_region == NULL) {
       mpu_region = &unused_region;
+      base_reg = 0;
       attr_reg = 0; // Has a 0 in the enable bit, so this region won't be enabled.
     } else {
       // Make sure that the region numbers passed in jive with the configurable region numbers.
@@ -52,8 +53,18 @@ void mpu_set_task_configurable_regions(MemoryRegion_t *memory_regions,
       mpu_get_register_settings(mpu_region, &base_reg, &attr_reg);
     }
 
+    // On ARMv8-M the FreeRTOS port writes pvBaseAddress straight into
+    // MPU_RBAR, which carries the SH/AP/XN bits. On ARMv7-M RBAR is just
+    // (address | region | VALID) and AP lives in RASR/ulParameters, so the
+    // raw base is what's wanted there.
+#ifdef MPU_TYPE_ARMV8M
+    uintptr_t base_address = base_reg;
+#else
+    uintptr_t base_address = mpu_region->base_address;
+#endif
+
     memory_regions[region_idx] = (MemoryRegion_t) {
-      .pvBaseAddress = (void *)mpu_region->base_address,
+      .pvBaseAddress = (void *)base_address,
       .ulLengthInBytes = mpu_region->size,
       .ulParameters = attr_reg,
     };
