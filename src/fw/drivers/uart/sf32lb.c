@@ -279,6 +279,12 @@ void uart_dma_irq_handler(UARTDevice *dev) {
   HAL_DMA_IRQHandler(&dev->state->hdma);
 }
 
+// FIXME(SF32LB52): the IRQ paths above read `rx_dma_buffer[idx]` straight
+// without invalidating D-cache, so the CPU could pick up stale pre-DMA bytes.
+// There is no active SF32LB52 caller today (dbgserial_set_rx_dma_enabled is a
+// no-op for MICRO_FAMILY_SF32LB52), so this hasn't been wired up. Before
+// enabling, the buffer needs to be cache-line aligned/sized and the callbacks
+// must dcache_invalidate the freshly-DMA'd range.
 void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
   dev->state->rx_dma_buffer = buffer;
   dev->state->rx_dma_length = length;
