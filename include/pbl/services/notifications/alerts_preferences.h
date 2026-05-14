@@ -65,11 +65,17 @@ void alerts_preferences_set_speaker_muted(bool muted);
 //! @return Whether the speaker is always-on muted
 bool alerts_preferences_get_speaker_muted(void);
 
+//! Set which watch-state triggers clear notification history.
+//! @param triggers Bitmask of NotificationHistoryWipeTrigger values.
 void alerts_preferences_set_notification_history_wipe_triggers(
     NotificationHistoryWipeTrigger triggers);
 
+//! @return The configured notification history wipe trigger bitmask.
 NotificationHistoryWipeTrigger alerts_preferences_get_notification_history_wipe_triggers(void);
 
+//! Check whether a specific trigger should clear notification history.
+//! @param trigger One NotificationHistoryWipeTrigger flag to test.
+//! @return true if the trigger is enabled in preferences, false otherwise.
 bool alerts_preferences_should_wipe_notification_history(NotificationHistoryWipeTrigger trigger);
 
 //! Checks whether a given "first use" dialog has been shown and sets it as complete
