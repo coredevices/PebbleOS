@@ -206,10 +206,8 @@ def _generate_memory_layout(bld):
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['basalt']
         app_ram_size_4x = APP_RAM_SIZES['emery']
-        # QEMU emery: SRAM is capped at 480KB by the pebble-emery machine
-        # model (0x20000000-0x20077fff); the matching obelix hardware has
-        # 511KB.
-        total_ram = (0x20000000, (512 - 32) * 1024)
+        # Match obelix hardware (511K) to exactly emulate the real platform
+        total_ram = (0x20000000, (512 - 1) * 1024)
     elif bld.is_qemu_flint():
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['aplite']
@@ -220,9 +218,8 @@ def _generate_memory_layout(bld):
         app_ram_size_2x = APP_UNSUPPORTED
         app_ram_size_3x = APP_RAM_SIZES['chalk']
         app_ram_size_4x = APP_RAM_SIZES['gabbro']
-        # QEMU gabbro: SRAM is capped at 480KB by the pebble-gabbro machine
-        # model; the matching getafix hardware has 511KB.
-        total_ram = (0x20000000, (512 - 32) * 1024)
+        # Match getafix hardware (511K) to exactly emulate the real platform
+        total_ram = (0x20000000, (512 - 1) * 1024)
     elif bld.is_obelix():
         app_ram_size_2x = APP_RAM_SIZES['aplite']
         app_ram_size_3x = APP_RAM_SIZES['basalt']
