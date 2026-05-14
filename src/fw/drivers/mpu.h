@@ -47,6 +47,12 @@ typedef enum MpuPermissions {
 typedef struct MpuRegion {
   uint8_t region_num:4;
   bool enabled:1;
+  // Allow instruction fetch from this region. Maps to XN=0 in the
+  // hardware encoding (RASR.XN on ARMv7-M, RBAR.XN on ARMv8-M). The
+  // default (false) sets XN=1 -- safer, since most regions hold data
+  // and shouldn't be executable. Flash, App RAM, Worker RAM and any
+  // text section relocated to RAM need to opt in.
+  bool executable:1;
   uintptr_t base_address;
   uint32_t size;
   MpuCachePolicy cache_policy;

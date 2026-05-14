@@ -141,7 +141,8 @@ void mpu_get_register_settings(const MpuRegion* region, uint32_t *base_address_r
   // | Reserved (2 bits) | TEX (3 bits) | S | C | B |
   // | Subregion Disable Byte |
   // | Reserved (2 bits) | Size Field (5 bits) | Enable Bit |
-  *attributes_reg = (get_permission_value(region) << 24) |
+  *attributes_reg = ((region->executable ? 0u : 1u) << 28) |
+              (get_permission_value(region) << 24) |
               s_cache_settings[region->cache_policy] |
               layout.disabled_subregions << 8 |
               (get_size_field(layout.block_size) << 1) |
@@ -165,6 +166,7 @@ MpuRegion mpu_get_region(int region_num) {
   const uint32_t attributes = MPU->RASR;
 
   region.enabled = attributes & 0x1;
+  region.executable = ((attributes >> 28) & 0x1) == 0;
 
   if (region.enabled) {
     const uint8_t size_field = (attributes >> 1) & 0x1f;
