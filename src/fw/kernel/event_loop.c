@@ -56,6 +56,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/light.h"
 #include "pbl/services/new_timer/new_timer.h"
+#include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/put_bytes/put_bytes.h"
 #include "pbl/services/system_task.h"
 #ifdef CONFIG_TOUCH
@@ -259,6 +260,10 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       battery_state_handle_connection_event(is_connected);
       if (is_connected) {
         light_enable_interaction();
+        if (alerts_preferences_should_wipe_notification_history(
+                NotificationHistoryWipeTriggerChargerConnected)) {
+          notification_storage_reset_and_init();
+        }
       } else {
         }
 #if STATIONARY_MODE

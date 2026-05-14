@@ -85,6 +85,10 @@ static bool s_notification_vibe_delay = true;  // true = vibe at end of animatio
 #define PREF_KEY_NOTIF_BACKLIGHT "notifBacklight"
 static bool s_notification_backlight = true;  // true = enable backlight (default), false = disable backlight
 
+#define PREF_KEY_NOTIF_HISTORY_WIPE_TRIGGERS "notifHistoryWipeTriggers"
+static NotificationHistoryWipeTrigger s_notification_history_wipe_triggers =
+    NotificationHistoryWipeTriggerNone;
+
 ///////////////////////////////////
 //! Legacy preference keys
 ///////////////////////////////////
@@ -330,6 +334,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
   RESTORE_PREF(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RESTORE_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+  RESTORE_PREF(PREF_KEY_NOTIF_HISTORY_WIPE_TRIGGERS, s_notification_history_wipe_triggers);
 #undef RESTORE_PREF
 
   prv_migrate_legacy_dnd_schedule(&file);
@@ -416,6 +421,20 @@ bool alerts_preferences_get_notification_backlight(void) {
 void alerts_preferences_set_notification_backlight(bool enable) {
   s_notification_backlight = enable;
   SET_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+}
+
+void alerts_preferences_set_notification_history_wipe_triggers(
+    NotificationHistoryWipeTrigger triggers) {
+  s_notification_history_wipe_triggers = triggers;
+  SET_PREF(PREF_KEY_NOTIF_HISTORY_WIPE_TRIGGERS, s_notification_history_wipe_triggers);
+}
+
+NotificationHistoryWipeTrigger alerts_preferences_get_notification_history_wipe_triggers(void) {
+  return s_notification_history_wipe_triggers;
+}
+
+bool alerts_preferences_should_wipe_notification_history(NotificationHistoryWipeTrigger trigger) {
+  return (s_notification_history_wipe_triggers & trigger) != 0;
 }
 
 bool alerts_preferences_get_speaker_muted(void) {
@@ -651,6 +670,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+  RELOAD_IF_MATCH(PREF_KEY_NOTIF_HISTORY_WIPE_TRIGGERS, s_notification_history_wipe_triggers);
   RELOAD_IF_MATCH(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
   RELOAD_IF_MATCH(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "kernel/events.h"
+#include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/alerts_private.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/notifications/notification_types.h"
@@ -40,6 +41,13 @@ void alerts_preferences_set_notification_vibe_delay(bool delay);
 bool alerts_preferences_get_notification_backlight(void);
 
 void alerts_preferences_set_notification_backlight(bool enable);
+
+void alerts_preferences_set_notification_history_wipe_triggers(
+    NotificationHistoryWipeTrigger triggers);
+
+NotificationHistoryWipeTrigger alerts_preferences_get_notification_history_wipe_triggers(void);
+
+bool alerts_preferences_should_wipe_notification_history(NotificationHistoryWipeTrigger trigger);
 
 bool alerts_preferences_get_vibrate(void);
 
@@ -82,4 +90,3 @@ void alerts_preferences_unlock(void);
 //! new value that was placed into the backing store.
 //! @param[in] event pointer to the blob DB event
 void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event);
-

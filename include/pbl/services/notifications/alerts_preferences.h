@@ -26,6 +26,16 @@ typedef enum {
   DndNotificationModeShow = 1,
 } DndNotificationMode;
 
+typedef enum {
+  NotificationHistoryWipeTriggerNone = 0,
+  NotificationHistoryWipeTriggerAirplaneMode = 1 << 0,
+  NotificationHistoryWipeTriggerChargerConnected = 1 << 1,
+  NotificationHistoryWipeTriggerStandby = 1 << 2,
+  NotificationHistoryWipeTriggerAll = NotificationHistoryWipeTriggerAirplaneMode |
+                                      NotificationHistoryWipeTriggerChargerConnected |
+                                      NotificationHistoryWipeTriggerStandby,
+} NotificationHistoryWipeTrigger;
+
 //! Set notification display mode when DND is active
 //! @param mode The display mode (Show or Hide)
 void alerts_preferences_dnd_set_show_notifications(DndNotificationMode mode);
@@ -54,6 +64,13 @@ void alerts_preferences_set_speaker_muted(bool muted);
 
 //! @return Whether the speaker is always-on muted
 bool alerts_preferences_get_speaker_muted(void);
+
+void alerts_preferences_set_notification_history_wipe_triggers(
+    NotificationHistoryWipeTrigger triggers);
+
+NotificationHistoryWipeTrigger alerts_preferences_get_notification_history_wipe_triggers(void);
+
+bool alerts_preferences_should_wipe_notification_history(NotificationHistoryWipeTrigger trigger);
 
 //! Checks whether a given "first use" dialog has been shown and sets it as complete
 //! @param source The "first use" bit to check

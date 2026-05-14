@@ -46,6 +46,7 @@ enum NotificationsItem {
 #endif
   NotificationsItemVibeDelay,
   NotificationsItemBacklight,
+  NotificationsItemHistoryWipeMode,
   NotificationsItem_Count,
 };
 
@@ -261,6 +262,54 @@ static void prv_vibe_delay_menu_push(SettingsNotificationsData *data) {
       data);
 }
 
+// Notification History Wipe
+////////////////////////
+
+static const NotificationHistoryWipeTrigger s_history_wipe_values[] = {
+  NotificationHistoryWipeTriggerNone,
+  NotificationHistoryWipeTriggerAirplaneMode,
+  NotificationHistoryWipeTriggerChargerConnected,
+  NotificationHistoryWipeTriggerStandby,
+  NotificationHistoryWipeTriggerAll,
+};
+
+static const char *s_history_wipe_labels[] = {
+  i18n_noop("Off"),
+  i18n_noop("Airplane Mode"),
+  i18n_noop("On Charger"),
+  i18n_noop("Standby"),
+  i18n_noop("All"),
+};
+
+_Static_assert(ARRAY_LENGTH(s_history_wipe_values) == ARRAY_LENGTH(s_history_wipe_labels), "");
+
+static int prv_history_wipe_get_selection_index(void) {
+  const NotificationHistoryWipeTrigger trigger =
+      alerts_preferences_get_notification_history_wipe_triggers();
+  for (size_t i = 0; i < ARRAY_LENGTH(s_history_wipe_values); i++) {
+    if (s_history_wipe_values[i] == trigger) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+static void prv_history_wipe_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  alerts_preferences_set_notification_history_wipe_triggers(s_history_wipe_values[selection]);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_history_wipe_menu_push(SettingsNotificationsData *data) {
+  const int index = prv_history_wipe_get_selection_index();
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_history_wipe_menu_select,
+  };
+  const char *title = i18n_noop("History Auto-Clear");
+  settings_option_menu_push(
+      title, OptionMenuContentType_SingleLine, index, &callbacks,
+      ARRAY_LENGTH(s_history_wipe_labels), true /* icons_enabled */, s_history_wipe_labels, data);
+}
+
 // Menu Layer Callbacks
 ////////////////////////
 
@@ -314,6 +363,11 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                  i18n_noop("On") : i18n_noop("Off");
       break;
     }
+    case NotificationsItemHistoryWipeMode: {
+      title = i18n_noop("History Auto-Clear");
+      subtitle = s_history_wipe_labels[prv_history_wipe_get_selection_index()];
+      break;
+    }
     default:
       WTF;
   }
@@ -352,6 +406,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       // Toggle backlight directly without submenu
       alerts_preferences_set_notification_backlight(
           !alerts_preferences_get_notification_backlight());
+      break;
+    case NotificationsItemHistoryWipeMode:
+      prv_history_wipe_menu_push(data);
       break;
     default:
       WTF;

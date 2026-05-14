@@ -7,6 +7,8 @@
 #include "drivers/pmic.h"
 #include "drivers/pwr.h"
 #include "drivers/periph_config.h"
+#include "pbl/services/notifications/alerts_preferences.h"
+#include "pbl/services/notifications/notification_storage.h"
 #include "system/bootbits.h"
 #include "system/logging.h"
 #include "system/reset.h"
@@ -30,6 +32,11 @@ NORETURN enter_standby(RebootReasonCode reason) {
 
   RebootReason reboot_reason = { reason, 0 };
   reboot_reason_set(&reboot_reason);
+
+  if (alerts_preferences_should_wipe_notification_history(
+          NotificationHistoryWipeTriggerStandby)) {
+    notification_storage_reset_and_init();
+  }
 
   display_clear();
   display_set_enabled(false);

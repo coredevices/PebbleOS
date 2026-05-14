@@ -21,6 +21,8 @@
 #include "pbl/services/bluetooth/local_addr.h"
 #include "pbl/services/bluetooth/local_id.h"
 #include "pbl/services/bluetooth/pairability.h"
+#include "pbl/services/notifications/alerts_preferences.h"
+#include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/bluetooth/ble_hrm.h"
@@ -209,6 +211,11 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
   prv_track_quick_airplane_mode_toggles(!enabled);
   bt_persistent_storage_set_airplane_mode_enabled(enabled);
   s_comm_airplane_mode_on = enabled;
+  if (enabled &&
+      alerts_preferences_should_wipe_notification_history(
+          NotificationHistoryWipeTriggerAirplaneMode)) {
+    notification_storage_reset_and_init();
+  }
   bool should_schedule_eval = false;
   if (!s_comm_state_change_eval_is_scheduled) {
     should_schedule_eval = true;
