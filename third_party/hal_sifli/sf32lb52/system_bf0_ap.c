@@ -13,6 +13,9 @@ uint32_t __Vectors;
 
 uint32_t SystemCoreClock = 48000000UL;
 
+extern uint8_t __ramfunc_start[];
+extern uint8_t __ramfunc_end[];
+
 void SystemCoreClockUpdate(void) {}
 
 enum {
@@ -52,10 +55,12 @@ static void prv_mpu_config(void) {
   rlar = ARM_MPU_RLAR(0x5fffffff, ATTR_DEVICE_IDX);
   ARM_MPU_SetRegion(1U, rbar, rlar);
 
-  // hpsys ram (512K)
+  // hpsys ram, .ramfunc range only: vendor HAL code copied here from flash
+  // must be executable. The rest of HPSYS RAM is reachable for privileged
+  // code via the background map (PRIVDEFENA is set in ARM_MPU_Enable below).
   // Non-shareable, RW, any privilege, executable
-  rbar = ARM_MPU_RBAR(0x20000000, ARM_MPU_SH_NON, 0, 1, 0);
-  rlar = ARM_MPU_RLAR(0x2007ffff, ATTR_RAM_IDX);
+  rbar = ARM_MPU_RBAR((uint32_t)__ramfunc_start, ARM_MPU_SH_NON, 0, 1, 0);
+  rlar = ARM_MPU_RLAR((uint32_t)__ramfunc_end - 1U, ATTR_RAM_IDX);
   ARM_MPU_SetRegion(2U, rbar, rlar);
 
   // lpsys ram
@@ -64,7 +69,7 @@ static void prv_mpu_config(void) {
   rlar = ARM_MPU_RLAR(0x204fffff, ATTR_RAM_IDX);
   ARM_MPU_SetRegion(3U, rbar, rlar);
 
-  ARM_MPU_Enable(MPU_CTRL_HFNMIENA_Msk);
+  ARM_MPU_Enable(MPU_CTRL_HFNMIENA_Msk | MPU_CTRL_PRIVDEFENA_Msk);
 }
 
 int mpu_dcache_invalidate(void *data, uint32_t size) {
