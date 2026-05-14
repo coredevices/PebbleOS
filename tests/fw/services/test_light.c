@@ -44,13 +44,14 @@ extern const uint32_t LIGHT_FADE_STEPS;
 static TimerID s_light_timer;
 
 static uint8_t s_backlight_brightness;
+static bool s_backlight_enabled = true;
 
 BacklightBehaviour backlight_get_behaviour(void) {
   return BacklightBehaviour_On;
 }
 
 bool backlight_is_enabled(void) {
-  return true;
+  return s_backlight_enabled;
 }
 
 bool backlight_is_ambient_sensor_enabled(void) {
@@ -58,6 +59,7 @@ bool backlight_is_ambient_sensor_enabled(void) {
 }
 
 void backlight_set_enabled(bool enabled) {
+  s_backlight_enabled = enabled;
 }
 
 void backlight_set_ambient_sensor_enabled(bool enabled) {
@@ -146,10 +148,12 @@ void test_light__initialize(void) {
   light_allow(true);
   s_light_timer = ((StubTimer*) s_idle_timers)->id;
   backlight_set_intensity(100);
+  s_backlight_enabled = true;
 }
 
 void test_light__cleanup(void) {
   s_backlight_brightness = 0;
+  s_backlight_enabled = true;
   stub_new_timer_delete(s_light_timer);
 }
 
@@ -228,6 +232,18 @@ void test_light__button_press_during_fading(void) {
   check_on_timed_and_consume();
 }
 
+void test_light__toggle_disabled_while_button_pressed_turns_off_immediately(void) {
+  light_button_pressed();
+  check_on();
+
+  light_toggle_enabled();
+  cl_assert(!backlight_is_enabled());
+  check_off();
+
+  light_button_released();
+  check_off();
+}
+
 void test_light__interaction_during_fading(void) {
   light_button_pressed();
   check_on();
@@ -238,4 +254,3 @@ void test_light__interaction_during_fading(void) {
   light_enable_interaction();
   check_on_timed_and_consume();
 }
-
