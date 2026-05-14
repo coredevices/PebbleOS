@@ -69,6 +69,14 @@ static void prv_mpu_config(void) {
   rlar = ARM_MPU_RLAR(0x204fffff, ATTR_RAM_IDX);
   ARM_MPU_SetRegion(3U, rbar, rlar);
 
+  // HCPU<->LCPU mailbox (last 1K of HPSYS SRAM). The BT controller running
+  // on LPSYS reads/writes this window directly, so it must be non-cacheable
+  // on the HCPU side -- otherwise the two cores see incoherent contents.
+  // Non-shareable, RW privileged only, non-executable.
+  rbar = ARM_MPU_RBAR(0x2007fc00, ARM_MPU_SH_NON, 0, 0, 1);
+  rlar = ARM_MPU_RLAR(0x2007ffff, ATTR_RAM_IDX);
+  ARM_MPU_SetRegion(4U, rbar, rlar);
+
   ARM_MPU_Enable(MPU_CTRL_HFNMIENA_Msk | MPU_CTRL_PRIVDEFENA_Msk);
 }
 
