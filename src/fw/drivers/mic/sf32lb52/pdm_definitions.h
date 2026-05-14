@@ -12,9 +12,13 @@
 #include <stdint.h>
 
 typedef struct MicState {
-  uint8_t *circ_buffer_storage; 
+  uint8_t *circ_buffer_storage;
   CircularBuffer circ_buffer;
   DMA_HandleTypeDef hdma;
+  //! Raw (unaligned) pointer returned by kernel_malloc for the PDM DMA buffer.
+  //! hpdm->pRxBuffPtr is bumped up to a cache-line boundary so the CPU can
+  //! invalidate it without clobbering adjacent dirty data.
+  uint8_t *raw_dma_buffer;
 
   // User interface
   MicDataHandlerCB data_handler;

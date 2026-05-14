@@ -6,6 +6,7 @@
 #include "board/board.h"
 #include "kernel/kernel_heap.h"
 #include "kernel/pbl_malloc.h"
+#include "mcu/cache.h"
 #include "system/logging.h"
 #include "os/mutex.h"
 #include "system/passert.h"
@@ -226,13 +227,20 @@ static void prv_dma_data_processing(uint8_t* data, uint16_t size)
     PBL_LOG_ERR("No circular buffer storage, ignoring data");
     return;
   }
-  
+
   // Ensure we have valid audio buffer info
   if (!s_state->audio_buffer || s_state->audio_buffer_len == 0) {
     PBL_LOG_ERR("No audio buffer configured, ignoring data");
     return;
   }
-  
+
+  // PDM DMA writes straight to RAM, bypassing D-cache. Drop any stale lines so
+  // the CPU re-fetches the freshly captured samples instead of pre-DMA contents.
+  // Buffer base is cache-line aligned at allocation time and the half-buffer
+  // stride is a multiple of the cache line size, so this invalidate cannot
+  // straddle neighboring allocations.
+  dcache_invalidate(data, size);
+
   // Write samples directly to circular buffer
   // If buffer is full, drop oldest data to make room for fresh audio
   uint16_t write_space = circular_buffer_get_write_space_remaining(&s_state->circ_buffer);
@@ -335,8 +343,14 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
   }
 
   hpdm->RxXferSize = this->channels * PDM_AUDIO_RECORD_PIPE_SIZE * sizeof(int16_t);
-  hpdm->pRxBuffPtr = kernel_malloc(hpdm->RxXferSize);
-  PBL_ASSERT(hpdm->pRxBuffPtr, "Can not allocate buffer");
+  // Over-allocate by one cache line so the DMA buffer can start on a line
+  // boundary. dcache_invalidate() in the IRQ path would otherwise risk
+  // destroying dirty bytes in lines shared with neighboring allocations.
+  const size_t cache_align = dcache_line_size();
+  state->raw_dma_buffer = kernel_malloc(hpdm->RxXferSize + cache_align - 1U);
+  PBL_ASSERT(state->raw_dma_buffer, "Can not allocate buffer");
+  hpdm->pRxBuffPtr = (uint8_t *)(((uintptr_t)state->raw_dma_buffer + cache_align - 1U) &
+                                 ~(uintptr_t)(cache_align - 1U));
 
   state->data_handler = data_handler;
   state->handler_context = context;
@@ -361,7 +375,8 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     HAL_PDM_DeInit(hpdm);
     HAL_RCC_DisableModule(RCC_MOD_PDM1);
 
-    kernel_free(hpdm->pRxBuffPtr);
+    kernel_free(state->raw_dma_buffer);
+    state->raw_dma_buffer = NULL;
     hpdm->pRxBuffPtr = NULL;
 
     stop_mode_enable(InhibitorMic);
@@ -402,9 +417,10 @@ void mic_stop(const MicDevice *this) {
   // Free dynamically allocated buffers
   prv_free_buffers(state);
 
-  kernel_free(hpdm->pRxBuffPtr);
+  kernel_free(state->raw_dma_buffer);
+  state->raw_dma_buffer = NULL;
   hpdm->pRxBuffPtr = NULL;
-  
+
   // Clear state
   state->data_handler = NULL;
   state->handler_context = NULL;
