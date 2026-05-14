@@ -10,7 +10,14 @@
 #define KERNEL_READONLY_DATA SECTION(".kernel_unpriv_ro_bss")
 
 enum MemoryRegionAssignments {
-  // FIXME(SF32LB52): system_bf0_ap.c uses now up to 4 regions as MPU is not fully implemented.
+  // SF32LB52: SiFli's system_bf0_ap.c programs MPU regions 0..4 in
+  // SystemInit() (flash, peripherals, .ramfunc, LPSYS RAM, HCPU<->LCPU
+  // mailbox). Reserve four slots here so the per-task configurable
+  // regions still land at indices 8..11 -- matching the FreeRTOS port's
+  // FREERTOS_FIRST_MPU_REGION=8. SiFli's fifth region (mailbox at index
+  // 4) shares its slot with the unused-on-SF32LB52 MemoryRegion_Flash
+  // value; Pebble never programs region 4, so SiFli's mailbox config
+  // stays intact.
 #ifdef MICRO_FAMILY_SF32LB52
   MemoryRegion_Reserved0,
   MemoryRegion_Reserved1,
