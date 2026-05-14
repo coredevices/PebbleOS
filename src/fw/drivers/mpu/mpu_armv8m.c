@@ -10,6 +10,20 @@
 
 #include <cmsis_core.h>
 
+// On SF32LB52 the SiFli vendor code (system_bf0_ap.c) programs its own MPU
+// regions in SystemInit() and burns MAIR indices 0..2 (code / ram / device)
+// for those. To avoid clobbering them we shift our own MpuCachePolicy values
+// into MAIR indices MAIR_INDEX_BASE..MAIR_INDEX_BASE+3.
+#ifdef MICRO_FAMILY_SF32LB52
+#define MAIR_INDEX_BASE 4U
+#else
+#define MAIR_INDEX_BASE 0U
+#endif
+
+static inline uint8_t mair_index(uint32_t cache_policy) {
+  return (uint8_t)(cache_policy + MAIR_INDEX_BASE);
+}
+
 // ARMv8-M has a 2-bit AP field, which cannot express two of the
 // MpuPermissions values precisely:
 //   - NoAccess: there is no "deny everything" encoding; we degrade to
@@ -56,16 +70,24 @@ static MpuPermissions decode_permission_value(uint8_t ap) {
 }
 
 void mpu_enable(void) {
-  ARM_MPU_SetMemAttr(MpuCachePolicy_NotCacheable,
+  ARM_MPU_SetMemAttr(mair_index(MpuCachePolicy_NotCacheable),
                      s_cache_settings[MpuCachePolicy_NotCacheable]);
-  ARM_MPU_SetMemAttr(MpuCachePolicy_WriteThrough,
+  ARM_MPU_SetMemAttr(mair_index(MpuCachePolicy_WriteThrough),
                      s_cache_settings[MpuCachePolicy_WriteThrough]);
-  ARM_MPU_SetMemAttr(MpuCachePolicy_WriteBackWriteAllocate,
+  ARM_MPU_SetMemAttr(mair_index(MpuCachePolicy_WriteBackWriteAllocate),
                      s_cache_settings[MpuCachePolicy_WriteBackWriteAllocate]);
-  ARM_MPU_SetMemAttr(MpuCachePolicy_WriteBackNoWriteAllocate,
+  ARM_MPU_SetMemAttr(mair_index(MpuCachePolicy_WriteBackNoWriteAllocate),
                      s_cache_settings[MpuCachePolicy_WriteBackNoWriteAllocate]);
 
-  ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk);
+  // ARM_MPU_Enable() writes MPU_CTRL directly, which would clobber bits set
+  // by another module (e.g. SiFli's SystemInit() turns on HFNMIENA). If the
+  // MPU is already enabled, just OR in PRIVDEFENA so we keep whatever flags
+  // are already there.
+  if (MPU->CTRL & MPU_CTRL_ENABLE_Msk) {
+    MPU->CTRL |= MPU_CTRL_PRIVDEFENA_Msk;
+  } else {
+    ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk);
+  }
 }
 
 void mpu_get_register_settings(const MpuRegion* region, uint32_t *base_address_reg,
@@ -81,7 +103,8 @@ void mpu_get_register_settings(const MpuRegion* region, uint32_t *base_address_r
                        ((get_permission_value(region) << MPU_RBAR_AP_Pos) & MPU_RBAR_AP_Msk) |
                        ((region->executable ? 0u : 1u) << MPU_RBAR_XN_Pos));
   *attributes_reg = (((region->base_address + region->size - 1U) & MPU_RLAR_LIMIT_Msk) |
-                     ((region->cache_policy << MPU_RLAR_AttrIndx_Pos) & MPU_RLAR_AttrIndx_Msk) |
+                     ((mair_index(region->cache_policy) << MPU_RLAR_AttrIndx_Pos) &
+                      MPU_RLAR_AttrIndx_Msk) |
                      ((region->enabled << MPU_RLAR_EN_Pos) & MPU_RLAR_EN_Msk));
 }
 
@@ -112,7 +135,15 @@ MpuRegion mpu_get_region(int region_num) {
 
   region.size = (rlar & MPU_RLAR_LIMIT_Msk) - region.base_address + 0x20;
   region.enabled = (rlar & MPU_RLAR_EN_Msk) != 0;
-  region.cache_policy = (rlar & MPU_RLAR_AttrIndx_Msk) >> MPU_RLAR_AttrIndx_Pos;
+  // Strip the MAIR_INDEX_BASE offset so the returned cache_policy round-trips
+  // through MpuCachePolicy. Regions programmed by another module that use
+  // raw MAIR indices below MAIR_INDEX_BASE will report as MpuCachePolicy 0.
+  uint8_t attr_idx = (uint8_t)((rlar & MPU_RLAR_AttrIndx_Msk) >> MPU_RLAR_AttrIndx_Pos);
+#if MAIR_INDEX_BASE > 0
+  region.cache_policy = (attr_idx >= MAIR_INDEX_BASE) ? (attr_idx - MAIR_INDEX_BASE) : 0;
+#else
+  region.cache_policy = attr_idx;
+#endif
 
   return region;
 }
