@@ -18,9 +18,9 @@ extern uint8_t __data_end[];
 extern uint8_t __bss_start[];
 extern uint8_t __bss_end[];
 
-extern uint8_t __retm_ro_load_start[];
-extern uint8_t __retm_ro_start[];
-extern uint8_t __retm_ro_end[];
+extern uint8_t __ramfunc_load_start[];
+extern uint8_t __ramfunc_start[];
+extern uint8_t __ramfunc_end[];
 
 extern uint8_t __isr_stack_start__[];
 
@@ -37,8 +37,8 @@ NAKED_FUNC NORETURN Reset_Handler(void) {
     __data_start[i] = __data_load_start[i];
   }
 
-  for (int i = 0; i < (__retm_ro_end - __retm_ro_start); i++) {
-    __retm_ro_start[i] = __retm_ro_load_start[i];
+  for (int i = 0; i < (__ramfunc_end - __ramfunc_start); i++) {
+    __ramfunc_start[i] = __ramfunc_load_start[i];
   }
 
   // Clear the bss section, assumes .bss goes directly after .data

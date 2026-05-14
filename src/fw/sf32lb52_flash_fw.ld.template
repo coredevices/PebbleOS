@@ -22,9 +22,9 @@ SECTIONS
         KEEP(*(.isr_vector))            /* Startup code */
     } >FLASH
 
-    .retm_ro : {
+    .ramfunc : {
         . = ALIGN(4);
-        __retm_ro_start = .;
+        __ramfunc_start = .;
         * (.*l1_ret_text_*)
         * (.*l1_ret_rodata_*)
 
@@ -58,7 +58,7 @@ SECTIONS
 
 
         . = ALIGN(4);
-        __retm_ro_end = .;
+        __ramfunc_end = .;
     } >KERNEL_RAM AT>FLASH
-    __retm_ro_load_start = LOADADDR(.retm_ro);
+    __ramfunc_load_start = LOADADDR(.ramfunc);
 }
