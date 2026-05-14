@@ -10,23 +10,21 @@
 
 #include <cmsis_core.h>
 
-typedef struct PermissionMapping {
-  bool priv_read:1;
-  bool priv_write:1;
-  bool user_read:1;
-  bool user_write:1;
-  uint8_t value:2;
-} PermissionMapping;
-
-static const PermissionMapping s_permission_mappings[] = {
-  // NOTE(1): we cannot have all accesses disabled, keep RO by privileged code only.
-  // NOTE(2): we cannot have different write access for priv/unpriv, allow R/W to any level
-  { false, false, false, false, 0x2 }, // AP=0b10: RO by privileged code only (1)
-  { true,  true,  false, false, 0x0 }, // AP=0b00: R/W by privileged code only
-  { true,  true,  true,  false, 0x1 }, // AP=0b01: R/W by any privilege level (2)
-  { true,  true,  true,  true,  0x1 }, // AP=0b01: R/W by any privilege level
-  { true,  false, false, false, 0x2 }, // AP=0b10: RO by privileged code only
-  { true,  false, true,  false, 0x3 }, // AP=0b11: RO by by any privilege level
+// ARMv8-M has a 2-bit AP field, which cannot express two of the
+// MpuPermissions values precisely:
+//   - NoAccess: there is no "deny everything" encoding; we degrade to
+//     AP=0b10 (RO priv only), the same encoding used for PrivRO. Don't
+//     rely on this for thread-stack-overflow detection -- use PSPLIM.
+//   - PrivRW_UserRO: the AP field cannot split write access by privilege.
+//     We pick AP=0b01 (R/W any privilege level), which gives the user
+//     write access too. See the MpuPermissions doc in drivers/mpu.h.
+static const uint8_t s_permission_to_ap[MpuPermissionsCount] = {
+  [MpuPermissions_NoAccess]      = 0x2,
+  [MpuPermissions_PrivRW]        = 0x0,
+  [MpuPermissions_PrivRW_UserRO] = 0x1,
+  [MpuPermissions_PrivRW_UserRW] = 0x1,
+  [MpuPermissions_PrivRO]        = 0x2,
+  [MpuPermissions_PrivRO_UserRO] = 0x3,
 };
 
 static const uint32_t s_cache_settings[] = {
@@ -41,16 +39,20 @@ static const uint32_t s_cache_settings[] = {
 };
 
 static uint8_t get_permission_value(const MpuRegion* region) {
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_permission_mappings); ++i) {
-    if (s_permission_mappings[i].priv_read == region->priv_read &&
-        s_permission_mappings[i].priv_write == region->priv_write &&
-        s_permission_mappings[i].user_read == region->user_read &&
-        s_permission_mappings[i].user_write == region->user_write) {
-      return s_permission_mappings[i].value;
-    }
+  PBL_ASSERTN(region->permissions < MpuPermissionsCount);
+  return s_permission_to_ap[region->permissions];
+}
+
+static MpuPermissions decode_permission_value(uint8_t ap) {
+  // ARMv8-M's two-bit AP loses information: AP=0b10 could have been set
+  // for either NoAccess or PrivRO. Decode to PrivRO canonically.
+  switch (ap & 0x3) {
+    case 0x0: return MpuPermissions_PrivRW;
+    case 0x1: return MpuPermissions_PrivRW_UserRW;
+    case 0x2: return MpuPermissions_PrivRO;
+    case 0x3: return MpuPermissions_PrivRO_UserRO;
+    default:  return MpuPermissions_NoAccess;
   }
-  WTF;
-  return 0;
 }
 
 void mpu_enable(void) {
@@ -104,15 +106,7 @@ MpuRegion mpu_get_region(int region_num) {
   region.base_address = rbar & MPU_RBAR_BASE_Msk;
 
   access_permissions = (rbar & MPU_RBAR_AP_Msk) >> MPU_RBAR_AP_Pos;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_permission_mappings); ++i) {
-    if (s_permission_mappings[i].value == access_permissions) {
-      region.priv_read = s_permission_mappings[i].priv_read;
-      region.priv_write = s_permission_mappings[i].priv_write;
-      region.user_read = s_permission_mappings[i].user_read;
-      region.user_write = s_permission_mappings[i].user_write;
-      break;
-    }
-  }
+  region.permissions = decode_permission_value(access_permissions);
 
   region.size = (rlar & MPU_RLAR_LIMIT_Msk) - region.base_address + 0x20;
   region.enabled = (rlar & MPU_RLAR_EN_Msk) != 0;
