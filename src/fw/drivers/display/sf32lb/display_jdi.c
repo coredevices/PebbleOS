@@ -11,6 +11,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/stop.h"
+#include "mcu/cache.h"
 #include "os/mutex.h"
 #include "system/logging.h"
 #include "system/passert.h"
@@ -108,6 +109,14 @@ static void prv_display_off() {
 
 static HAL_StatusTypeDef prv_display_update_start(void) {
   DisplayJDIState *state = DISPLAY->state;
+
+  // The LCDC reads the framebuffer over DMA, which bypasses the D-cache.
+  // Flush dirty lines for the rows we're about to send so the LCDC sees
+  // the 332-converted pixels instead of stale SRAM.
+  uintptr_t fb_addr = (uintptr_t)&s_framebuffer[s_update_y0 * PBL_DISPLAY_WIDTH];
+  size_t fb_size = (size_t)(s_update_y1 - s_update_y0 + 1) * PBL_DISPLAY_WIDTH;
+  dcache_align(&fb_addr, &fb_size);
+  dcache_flush((const void *)fb_addr, fb_size);
 
   // Only send the dirty region that was converted to RGB332 format
   HAL_LCDC_SetROIArea(&state->hlcdc, 0, s_update_y0, PBL_DISPLAY_WIDTH - 1, s_update_y1);
