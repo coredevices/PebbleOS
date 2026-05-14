@@ -14,13 +14,15 @@
 
 
 static const char* const MEMORY_REGION_NAMES[] = {
-  // FIXME(SF32LB52): system_bf0_ap.c uses now up to 5 regions as MPU is not fully implemented.
+  // Keep the four RESERVED entries in lockstep with MemoryRegion_Reserved*
+  // in memory_layout.h. SiFli's fifth region (mailbox) overlaps with the
+  // "UNPRIV_FLASH" slot at index 4 -- Pebble never programs that index on
+  // SF32LB52, so the cosmetic label is the only casualty.
 #ifdef MICRO_FAMILY_SF32LB52
   "RESERVED0",
   "RESERVED1",
   "RESERVED2",
   "RESERVED3",
-  "RESERVED4",
 #endif
   "UNPRIV_FLASH",
   "UNPRIV_RO_BSS",
@@ -205,15 +207,23 @@ void memory_layout_setup_mpu(void) {
   // Flash parts...
   // Read only for executing code and loading data out of.
 
-#ifndef MICRO_FAMILY_SF32LB52
   // Unprivileged flash, by default anyone can read any part of flash.
+  // On SF32LB52 the SiFli HAL already programs a user-RO executable region
+  // covering 0x10000000..0x1fffffff in SystemInit(), so we skip our own.
+#ifndef MICRO_FAMILY_SF32LB52
   mpu_set_region(&s_microflash_region);
+#endif
 
   // RAM parts
   // The background memory map only allows privileged access. We need to add aditional regions to
   // enable access to unprivileged code.
 
   mpu_set_region(&s_readonly_bss_region);
+  // ARMv8-M tracks per-task stack overflow via PSPLIM in the FreeRTOS CM33
+  // port, so the dedicated ISR stack guard region (no-access) is redundant
+  // and the AP encoding can't even express "no access" precisely. Skip it
+  // on SF32LB52 to reclaim the slot.
+#ifndef MICRO_FAMILY_SF32LB52
   mpu_set_region(&s_isr_stack_guard_region);
 #endif
 
