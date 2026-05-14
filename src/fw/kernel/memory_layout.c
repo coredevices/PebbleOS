@@ -14,12 +14,13 @@
 
 
 static const char* const MEMORY_REGION_NAMES[] = {
-  // FIXME(SF32LB52): system_bf0_ap.c uses now up to 4 regions as MPU is not fully implemented.
+  // FIXME(SF32LB52): system_bf0_ap.c uses now up to 5 regions as MPU is not fully implemented.
 #ifdef MICRO_FAMILY_SF32LB52
   "RESERVED0",
   "RESERVED1",
   "RESERVED2",
   "RESERVED3",
+  "RESERVED4",
 #endif
   "UNPRIV_FLASH",
   "UNPRIV_RO_BSS",
