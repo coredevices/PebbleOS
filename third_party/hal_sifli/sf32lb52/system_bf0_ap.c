@@ -52,10 +52,10 @@ static void prv_mpu_config(void) {
   rlar = ARM_MPU_RLAR(0x5fffffff, ATTR_DEVICE_IDX);
   ARM_MPU_SetRegion(1U, rbar, rlar);
 
-  // hpsys ram
+  // hpsys ram (512K)
   // Non-shareable, RW, any privilege, executable
   rbar = ARM_MPU_RBAR(0x20000000, ARM_MPU_SH_NON, 0, 1, 0);
-  rlar = ARM_MPU_RLAR(0x2027ffff, ATTR_RAM_IDX);
+  rlar = ARM_MPU_RLAR(0x2007ffff, ATTR_RAM_IDX);
   ARM_MPU_SetRegion(2U, rbar, rlar);
 
   // lpsys ram
