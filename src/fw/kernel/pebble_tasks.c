@@ -264,7 +264,6 @@ void pebble_task_create(PebbleTask pebble_task, TaskParameters_t *task_params,
       WTF;
   }
 
-#ifndef MICRO_FAMILY_SF32LB52
   const MpuRegion *stack_guard_region = NULL;
 #ifndef MPU_TYPE_ARMV8M
   // Per-task stack overflow detection: on ARMv7-M we plant a no-access
@@ -297,16 +296,12 @@ void pebble_task_create(PebbleTask pebble_task, TaskParameters_t *task_params,
       WTF;
   }
 #endif
-#endif
 
   const MpuRegion *region_ptrs[portNUM_CONFIGURABLE_REGIONS] = {
-    // FIXME(SF32LB52): Not supported on ARMv8 MPU yet
-#ifndef MICRO_FAMILY_SF32LB52
     &app_region,
     &worker_region,
     stack_guard_region,
     NULL
-#endif
   };
   mpu_set_task_configurable_regions(task_params->xRegions, region_ptrs);
 

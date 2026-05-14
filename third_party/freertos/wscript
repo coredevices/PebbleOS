@@ -30,12 +30,14 @@ def build(bld):
                            for d in freertos_source_paths], [])
     freertos_defines = []
 
-    # FIXME(SF32LB52): Add valid regions once MPU can be used
-    # This currently results in 0 regions!
+    # SF32LB52: SiFli's HAL programs MPU regions 0..4 and Pebble's static
+    # MPU setup uses 5..7, so per-task configurable regions live at 8..11
+    # (four slots: AppRAM, WorkerRAM, plus two NULL placeholders to satisfy
+    # the FreeRTOS port's multiple-of-four invariant).
     if bld.env.MICRO_FAMILY == 'SF32LB52':
         freertos_defines += [
             'FREERTOS_FIRST_MPU_REGION=8',
-            'FREERTOS_LAST_MPU_REGION=7',
+            'FREERTOS_LAST_MPU_REGION=11',
         ]
 
     # QEMU CM33 also needs MPU region defines (MPU not used in QEMU CM33)
