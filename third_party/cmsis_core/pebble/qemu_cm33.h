@@ -53,8 +53,8 @@ typedef enum IRQn {
 
 /* Compatibility: ARMv8-M MPU uses RBAR/RLAR instead of RBAR/RASR.
  * The codebase uses ARMv7-M MPU register names via vendor HAL compat.
- * Provide RASR as an alias for RLAR so mpu.c compiles. MPU configuration
- * is skipped for CM33 QEMU targets (see memory_layout.c). */
+ * Provide RASR as an alias for RLAR for code that still references the
+ * ARMv7-M register name. */
 #ifndef MPU_RASR_TEX_Pos
 #define MPU_RASR_TEX_Pos  MPU_RLAR_AttrIndx_Pos
 #define MPU_RASR_S_Msk    0
