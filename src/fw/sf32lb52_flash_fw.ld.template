@@ -51,11 +51,8 @@ SECTIONS
         *bf0_pin_const.*.o    (.text* .rodata*)
         *.o                 (.text.rt_memset)
         *rt_memclr*.*.o       (.text*)
-        *memset*.*.o          (.text*)      
-        *memcpy*.*.o          (.text*)
 
         *freertos.*.o (.text* .rodata*)
-
 
         . = ALIGN(4);
         __ramfunc_end = .;
