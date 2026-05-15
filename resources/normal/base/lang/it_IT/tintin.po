@@ -1,8 +1,12 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: 21.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-15 10:51+0200\n"
+"PO-Revision-Date: 2026-05-15 00:00+0200\n"
+"Last-Translator: PebbleOS contributors\n"
+"Language-Team: Italian\n"
 "Language: it_IT\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -21,7 +25,7 @@ msgstr "Quest'app richiede una nuova versione del firmware Pebble"
 
 #: ../src/fw/process_management/process_manager.c:334
 msgid "This app uses RockyJS which is no longer supported."
-msgstr ""
+msgstr "Questa app usa RockyJS, che non è più supportato."
 
 #: ../src/fw/popups/alarm_popup.c:44
 #, c-format
@@ -48,13 +52,12 @@ msgstr ""
 "Avvia l'app?"
 
 #: ../src/fw/popups/crashed_ui.c:155
-#, fuzzy
 msgid ""
 "A bug report has been captured. Please finish uploading the bug report using "
 "the Pebble phone app."
 msgstr ""
-"Il tuo Pebble è stato riavviato. Segnalalo con il link \"Supporto\" nell'app "
-"per cell. Pebble."
+"È stato acquisito un report di errore. Completa il caricamento con l’app "
+"Pebble sul telefono."
 
 #: ../src/fw/popups/health_tracking_ui.c:79
 msgid ""
@@ -83,12 +86,11 @@ msgstr "Senza audio %s"
 
 #: ../src/fw/popups/notifications/notification_window.c:967
 msgid "Mute 1 Hour"
-msgstr ""
+msgstr "Silenzia 1 ora"
 
 #: ../src/fw/popups/notifications/notification_window.c:972
-#, fuzzy
 msgid "Mute Today"
-msgstr "Audio off nei feriali"
+msgstr "Silenzia oggi"
 
 #: ../src/fw/popups/notifications/notification_window.c:977
 msgid "Mute Always"
@@ -372,6 +374,8 @@ msgid ""
 "Psst! Want smart tips about your activity and sleep? You can enable Insights "
 "in the mobile app."
 msgstr ""
+"Ehi! Vuoi consigli intelligenti su attività e sonno? Puoi attivare Insights "
+"nell’app mobile."
 
 #. / Health disabled text
 #: ../src/fw/apps/system/health/health.c:116
@@ -384,7 +388,7 @@ msgstr ""
 #. / Health waiting for time sync
 #: ../src/fw/apps/system/health/health.c:124
 msgid "Health requires the time to be synced. Please connect your phone."
-msgstr ""
+msgstr "Health richiede l’ora sincronizzata. Collega il telefono."
 
 #: ../src/fw/apps/system/health/health.c:190
 #: ../src/fw/apps/system/settings/health.c:192
@@ -409,9 +413,8 @@ msgstr "Comportamento"
 
 #. / Resting HR
 #: ../src/fw/apps/system/health/hr_detail_card.c:79
-#, fuzzy
 msgid "TIME IN ZONES"
-msgstr "FUSO OR."
+msgstr "TEMPO IN ZONE"
 
 #: ../src/fw/apps/system/health/hr_summary_card.c:116
 msgid "BPM"
@@ -618,7 +621,7 @@ msgstr "Avvia app Pebble sul cellul. per conn."
 
 #: ../src/fw/apps/system/settings/bluetooth.c:452
 msgid "Forget this device to pair a new device."
-msgstr ""
+msgstr "Dimentica questo dispositivo per associarne uno nuovo."
 
 #: ../src/fw/apps/system/settings/bluetooth.c:596
 msgid "Bluetooth"
@@ -660,13 +663,12 @@ msgstr "Predef."
 
 #: ../src/fw/apps/system/settings/display.c:99
 msgid "Left-Handed"
-msgstr ""
+msgstr "Mancino"
 
 #: ../src/fw/apps/system/settings/display.c:124
 #: ../src/fw/apps/system/settings/display.c:500
-#, fuzzy
 msgid "Orientation"
-msgstr "Vibraz."
+msgstr "Orientamento"
 
 #: ../src/fw/apps/system/settings/display.c:137
 msgid "3 Seconds"
@@ -695,12 +697,11 @@ msgstr "Sosp."
 
 #: ../src/fw/apps/system/settings/display.c:172
 msgid "Double Tap"
-msgstr ""
+msgstr "Doppio tocco"
 
 #: ../src/fw/apps/system/settings/display.c:173
-#, fuzzy
 msgid "Tap"
-msgstr "Sonnellino"
+msgstr "Tocco"
 
 #. / Shows up in the Timeline settings as the status under the "Quick View" toggle.
 #: ../src/fw/apps/system/settings/display.c:174
@@ -723,31 +724,29 @@ msgstr "Off"
 
 #: ../src/fw/apps/system/settings/display.c:187
 msgid "WAKE ON TOUCH"
-msgstr ""
+msgstr "ATTIVA AL TOCCO"
 
 #: ../src/fw/apps/system/settings/display.c:187
 #: ../src/fw/apps/system/settings/display.c:333
-#, fuzzy
 msgid "Wake on touch"
-msgstr "Sveglia"
+msgstr "Attiva al tocco"
 
 #: ../src/fw/apps/system/settings/display.c:198
 #: ../src/fw/apps/system/settings/display.c:517
 msgid "Centered"
-msgstr ""
+msgstr "Centrato"
 
 #: ../src/fw/apps/system/settings/display.c:199
 msgid "Scaled (Nearest)"
-msgstr ""
+msgstr "Scalato (vicino)"
 
 #: ../src/fw/apps/system/settings/display.c:200
 msgid "Scaled (Bilinear)"
-msgstr ""
+msgstr "Scalato (bilineare)"
 
 #: ../src/fw/apps/system/settings/display.c:213
-#, fuzzy
 msgid "Legacy App Display"
-msgstr "Display ora"
+msgstr "Display app legacy"
 
 #. / String within Settings->Notifications that describes backlight setting
 #: ../src/fw/apps/system/settings/display.c:309
@@ -778,21 +777,19 @@ msgstr "On"
 
 #: ../src/fw/apps/system/settings/display.c:328
 msgid "Wake on motion"
-msgstr ""
+msgstr "Attiva con movimento"
 
 #: ../src/fw/apps/system/settings/display.c:338
 msgid "Ambient Sensor"
 msgstr "Sens. ambiente"
 
 #: ../src/fw/apps/system/settings/display.c:350
-#, fuzzy
 msgid "Dynamic Backlight"
-msgstr "Retroill."
+msgstr "Retroilluminazione dinamica"
 
 #: ../src/fw/apps/system/settings/display.c:356
-#, fuzzy
 msgid "Max Intensity"
-msgstr "Intensità"
+msgstr "Intensità massima"
 
 #: ../src/fw/apps/system/settings/display.c:495
 #: ../src/fw/apps/system/settings/system.c:215
@@ -801,16 +798,15 @@ msgstr "Lingua"
 
 #: ../src/fw/apps/system/settings/display.c:506
 msgid "Touch"
-msgstr ""
+msgstr "Tocco"
 
 #: ../src/fw/apps/system/settings/display.c:515
-#, fuzzy
 msgid "Legacy Apps"
-msgstr "Panic App"
+msgstr "App legacy"
 
 #: ../src/fw/apps/system/settings/display.c:517
 msgid "Scaled"
-msgstr ""
+msgstr "Scalato"
 
 #: ../src/fw/apps/system/settings/display.c:552
 msgid "Display"
@@ -821,14 +817,12 @@ msgid "Perform factory reset?"
 msgstr "Ripris. impost. pred.?"
 
 #: ../src/fw/apps/system/settings/health.c:24
-#, fuzzy
 msgid "Kilometers"
-msgstr "kilometer"
+msgstr "Chilometri"
 
 #: ../src/fw/apps/system/settings/health.c:25
-#, fuzzy
 msgid "Miles"
-msgstr " miglia"
+msgstr "Miglia"
 
 #. / 10 Minute Notification Window Timeout
 #: ../src/fw/apps/system/settings/health.c:30
@@ -837,13 +831,12 @@ msgid "10 Minutes"
 msgstr "10 Minuti"
 
 #: ../src/fw/apps/system/settings/health.c:31
-#, fuzzy
 msgid "30 Minutes"
-msgstr "3 Minuti"
+msgstr "30 minuti"
 
 #: ../src/fw/apps/system/settings/health.c:32
 msgid "1 Hour"
-msgstr ""
+msgstr "1 ora"
 
 #. / Shown in Quick Launch Settings when the button is disabled.
 #: ../src/fw/apps/system/settings/health.c:33
@@ -857,21 +850,19 @@ msgstr "Disattivate"
 #: ../src/fw/apps/system/settings/health.c:61
 #: ../src/fw/apps/system/settings/health.c:105
 msgid "HR Monitoring"
-msgstr ""
+msgstr "Monitoraggio FC"
 
 #: ../src/fw/apps/system/settings/health.c:88
 msgid "Health Tracking"
-msgstr ""
+msgstr "Monitoraggio salute"
 
 #: ../src/fw/apps/system/settings/health.c:94
-#, fuzzy
 msgid "Distance Unit"
-msgstr "Distanza"
+msgstr "Unità distanza"
 
 #: ../src/fw/apps/system/settings/health.c:115
-#, fuzzy
 msgid "HR During Activity"
-msgstr "Attività"
+msgstr "FC durante attività"
 
 #: ../src/fw/apps/system/settings/notifications.c:67
 msgid "Allow All Notifications"
@@ -928,26 +919,25 @@ msgstr "3 Minuti"
 
 #. / Standard notification design option (default)
 #: ../src/fw/apps/system/settings/notifications.c:204
-#, fuzzy
 msgid "Classic"
-msgstr "Anal. classico"
+msgstr "Classico"
 
 #. / Alternative notification design option
 #: ../src/fw/apps/system/settings/notifications.c:206
 msgid "Flat Black"
-msgstr ""
+msgstr "Nero piatto"
 
 #. / Status bar title for the Notification Design Style settings screen
 #. / String within Settings->Notifications that describes the notification design style
 #: ../src/fw/apps/system/settings/notifications.c:224
 #: ../src/fw/apps/system/settings/notifications.c:299
 msgid "Banner Style"
-msgstr ""
+msgstr "Stile banner"
 
 #. / Vibrate at the beginning of notification animation (immediate)
 #: ../src/fw/apps/system/settings/notifications.c:237
 msgid "Beginning"
-msgstr ""
+msgstr "Inizio"
 
 #. #-#-#-#-#  fw.pot (PACKAGE VERSION)  #-#-#-#-#
 #. / Vibrate at the end of notification animation (delayed)
@@ -960,40 +950,38 @@ msgstr "Ter"
 #. / String within Settings->Notifications that describes when vibration happens
 #: ../src/fw/apps/system/settings/notifications.c:257
 #: ../src/fw/apps/system/settings/notifications.c:306
-#, fuzzy
 msgid "Vibe Timing"
-msgstr "Quando"
+msgstr "Tempo vibrazione"
 
 #. / Shown in Quick Launch Settings as the title of the tap up button option.
 #: ../src/fw/apps/system/settings/quick_launch.c:46
 msgid "Tap Up"
-msgstr ""
+msgstr "Tocca su"
 
 #. / Shown in Quick Launch Settings as the title of the tap down button option.
 #: ../src/fw/apps/system/settings/quick_launch.c:48
 msgid "Tap Down"
-msgstr ""
+msgstr "Tocca giù"
 
 #. / Shown in Quick Launch Settings as the title of the hold up button quick launch option.
 #: ../src/fw/apps/system/settings/quick_launch.c:50
 msgid "Hold Up"
-msgstr ""
+msgstr "Tieni su"
 
 #. / Shown in Quick Launch Settings as the title of the hold center button quick launch option.
 #: ../src/fw/apps/system/settings/quick_launch.c:52
 msgid "Hold Center"
-msgstr ""
+msgstr "Tieni centro"
 
 #. / Shown in Quick Launch Settings as the title of the hold down button quick launch option.
 #: ../src/fw/apps/system/settings/quick_launch.c:54
 msgid "Hold Down"
-msgstr ""
+msgstr "Tieni giù"
 
 #. / Shown in Quick Launch Settings as the title of the hold back button quick launch option.
 #: ../src/fw/apps/system/settings/quick_launch.c:56
-#, fuzzy
 msgid "Hold Back"
-msgstr "Richiama"
+msgstr "Tieni indietro"
 
 #. / Title of the Quick Launch Settings submenu in Settings
 #. / Title for the Quick Launch first use dialog.
@@ -1021,11 +1009,11 @@ msgstr "Consenti telef."
 
 #: ../src/fw/apps/system/settings/quiet_time.c:109
 msgid "Show"
-msgstr ""
+msgstr "Mostra"
 
 #: ../src/fw/apps/system/settings/quiet_time.c:111
 msgid "Hide"
-msgstr ""
+msgstr "Nascondi"
 
 #: ../src/fw/apps/system/settings/quiet_time.c:233
 msgid "Change Schedule"
@@ -1080,9 +1068,8 @@ msgstr "Movim. Retroilluminazione"
 
 #: ../src/fw/apps/system/settings/quiet_time.c:310
 #: ../src/fw/apps/system/settings/vibe_patterns.c:60
-#, fuzzy
 msgid "Mute Speaker"
-msgstr "Silenzio i fine settimana"
+msgstr "Silenzia altoparlante"
 
 #: ../src/fw/apps/system/settings/quiet_time.c:377
 #: ../src/fw/apps/system/toggle/quiet_time.c:24
@@ -1122,7 +1109,7 @@ msgstr "Mod. stand-by"
 #: ../src/fw/apps/system/settings/system.c:170
 #: ../src/fw/apps/system/settings/system.c:696
 msgid "Debugging"
-msgstr ""
+msgstr "Debug"
 
 #: ../src/fw/apps/system/settings/system.c:171
 msgid "Shut Down"
@@ -1169,76 +1156,70 @@ msgid "Core dump and reboot?"
 msgstr "Fare c.dump e riavv.?"
 
 #: ../src/fw/apps/system/settings/system.c:491
-#, fuzzy
 msgid "Very Low"
-msgstr "Batt. bassa"
+msgstr "Molto basso"
 
 #: ../src/fw/apps/system/settings/system.c:493
-#, fuzzy
 msgid "Medium-Low"
-msgstr "Me."
+msgstr "Medio-basso"
 
 #: ../src/fw/apps/system/settings/system.c:495
-#, fuzzy
 msgid "Medium-High"
-msgstr "Me."
+msgstr "Medio-alto"
 
 #: ../src/fw/apps/system/settings/system.c:497
-#, fuzzy
 msgid "Very High"
-msgstr "Alto"
+msgstr "Molto alto"
 
 #: ../src/fw/apps/system/settings/system.c:522
 #: ../src/fw/apps/system/settings/system.c:575
 msgid "Motion Sensitivity"
-msgstr ""
+msgstr "Sensibilità movimento"
 
 #: ../src/fw/apps/system/settings/system.c:534
-#, fuzzy
 msgid "High performance"
-msgstr "Comportamento"
+msgstr "Prestazioni elevate"
 
 #: ../src/fw/apps/system/settings/system.c:535
 msgid "Low power"
-msgstr ""
+msgstr "Basso consumo"
 
 #: ../src/fw/apps/system/settings/system.c:548
 #: ../src/fw/apps/system/settings/system.c:572
 msgid "Power Mode"
-msgstr ""
+msgstr "Modalità energia"
 
 #: ../src/fw/apps/system/settings/system.c:570
-#, fuzzy
 msgid "CoreDump now"
-msgstr "Fare c.dump e riavv.?"
+msgstr "CoreDump ora"
 
 #: ../src/fw/apps/system/settings/system.c:571
 msgid "CoreDump shortcut"
-msgstr ""
+msgstr "Scorciatoia CoreDump"
 
 #: ../src/fw/apps/system/settings/system.c:573
 msgid "ALS Threshold"
-msgstr ""
+msgstr "Soglia ALS"
 
 #: ../src/fw/apps/system/settings/system.c:578
 msgid "Dyn BL Min Threshold"
-msgstr ""
+msgstr "Soglia min. retroill. din."
 
 #: ../src/fw/apps/system/settings/system.c:580
 msgid "Shake Log Info"
-msgstr ""
+msgstr "Info log scuotimento"
 
 #: ../src/fw/apps/system/settings/system.c:581
 msgid "Vibe Log Info"
-msgstr ""
+msgstr "Info log vibrazione"
 
 #: ../src/fw/apps/system/settings/system.c:582
 msgid "Compact Settings DBs"
-msgstr ""
+msgstr "Compatta DB impostazioni"
 
 #: ../src/fw/apps/system/settings/system.c:601
 msgid "10 back-button presses"
-msgstr ""
+msgstr "10 pressioni tasto indietro"
 
 #: ../src/fw/apps/system/settings/system.c:626
 #: ../src/fw/apps/system/settings/system.c:630
@@ -1247,7 +1228,7 @@ msgstr "Attivate"
 
 #: ../src/fw/apps/system/settings/system.c:769
 msgid "PebbleOS developers only!"
-msgstr ""
+msgstr "Solo sviluppatori PebbleOS!"
 
 #: ../src/fw/apps/system/settings/system.c:1024
 msgid "See details..."
@@ -1265,12 +1246,12 @@ msgstr "Sist."
 
 #: ../src/fw/apps/system/settings/themes.c:107
 msgid "Accent Color"
-msgstr ""
+msgstr "Colore accento"
 
 #. / Title of the Themes Settings submenu in Settings
 #: ../src/fw/apps/system/settings/themes.c:156
 msgid "Themes"
-msgstr ""
+msgstr "Temi"
 
 #. / Title of the menu for changing the watch's timezone.
 #: ../src/fw/apps/system/settings/time.c:163
@@ -1289,9 +1270,8 @@ msgid "Set Date"
 msgstr "Imp data"
 
 #: ../src/fw/apps/system/settings/time.c:357
-#, fuzzy
 msgid "Time Source"
-msgstr "Fonte di fusorario"
+msgstr "Origine ora"
 
 #: ../src/fw/apps/system/settings/time.c:359
 #: ../src/fw/apps/system/settings/time.c:387
@@ -1374,16 +1354,15 @@ msgstr "Chiamate in arrivo"
 
 #: ../src/fw/apps/system/settings/vibe_patterns.c:83
 msgid "Hourly Notice"
-msgstr ""
+msgstr "Avviso orario"
 
 #: ../src/fw/apps/system/settings/vibe_patterns.c:88
-#, fuzzy
 msgid "On Disconnect"
-msgstr "Disconnetti"
+msgstr "Alla disconnessione"
 
 #: ../src/fw/apps/system/settings/vibe_patterns.c:265
 msgid "Sounds & Haptics"
-msgstr ""
+msgstr "Suoni e aptica"
 
 #: ../src/fw/apps/system/settings/vibe_patterns.c:267
 msgid "Vibrations"
@@ -1394,9 +1373,8 @@ msgid "No events"
 msgstr "Ness. ev."
 
 #: ../src/fw/apps/system/timeline/timeline.c:1285
-#, fuzzy
 msgid "Timeline Future"
-msgstr "Cron. conosc."
+msgstr "Timeline futura"
 
 #. / The title of Timeline Past in Quick Launch. If the translation is too long, cut out
 #. / Timeline and only translate "Past".
@@ -1425,24 +1403,20 @@ msgid ""
 msgstr "Modalità Volo Disattive"
 
 #: ../src/fw/apps/system/toggle/backlight_state.c:30
-#, fuzzy
 msgid "Turn On Backlight?"
-msgstr "Attivare la Movim. Retroilluminazione?"
+msgstr "Attivare retroilluminazione?"
 
 #: ../src/fw/apps/system/toggle/backlight_state.c:31
-#, fuzzy
 msgid "Turn Off Backlight?"
-msgstr "Spegnere la Movim. retroilluminazione?"
+msgstr "Disattivare retroilluminazione?"
 
 #: ../src/fw/apps/system/toggle/backlight_state.c:32
-#, fuzzy
 msgid "Backlight On"
-msgstr "Retroill."
+msgstr "Retroilluminazione attiva"
 
 #: ../src/fw/apps/system/toggle/backlight_state.c:33
-#, fuzzy
 msgid "Backlight Off"
-msgstr "Retroill."
+msgstr "Retroilluminazione disattiva"
 
 #: ../src/fw/apps/system/toggle/motion_backlight.c:24
 msgid "Turn On Motion Backlight?"
@@ -1700,7 +1674,7 @@ msgstr ""
 #. / Workouts waiting for time sync
 #: ../src/fw/apps/system/workout/workout.c:190
 msgid "Workout requires the time to be synced. Please connect your phone."
-msgstr ""
+msgstr "Workout richiede l’ora sincronizzata. Collega il telefono."
 
 #. / Health disabled text
 #: ../src/fw/apps/system/workout/workout.c:198
@@ -1775,7 +1749,7 @@ msgstr "Trapano"
 
 #: ../src/fw/services/vibes/vibes.def:15
 msgid "Gentle"
-msgstr ""
+msgstr "Delicata"
 
 #: ../src/fw/services/activity/activity_insights.c:170
 msgid ""
@@ -3213,7 +3187,7 @@ msgstr "Errore. RItenta."
 
 #: ../src/fw/applib/voice/voice_window.c:322
 msgid "Enable voice in the settings page of the Pebble app."
-msgstr ""
+msgstr "Attiva la voce nella pagina impostazioni dell’app Pebble."
 
 #: ../src/fw/applib/voice/voice_window.c:372
 msgid "Missed that. Try again."
