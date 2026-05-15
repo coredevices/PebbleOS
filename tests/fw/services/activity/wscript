@@ -21,6 +21,7 @@ def build(ctx):
             " src/fw/services/settings/settings_file.c" \
             " src/fw/services/settings/settings_raw_iter.c" \
             " src/fw/shell/normal/prefs.c" \
+            " tests/stubs/stubs_i18n.c" \
             " tests/fakes/fake_accel_service.c" \
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \

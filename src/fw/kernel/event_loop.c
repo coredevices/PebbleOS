@@ -546,7 +546,7 @@ static NOINLINE void prv_launcher_main_loop_init(void) {
   light_button_released();
 
 #ifndef RECOVERY_FW
-  i18n_set_resource(RESOURCE_ID_STRINGS);
+  i18n_set_resource(shell_prefs_get_language_resource_id());
 #endif
   app_manager_start_first_app();
 

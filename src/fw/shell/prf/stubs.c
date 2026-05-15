@@ -15,6 +15,7 @@
 #include "popups/notifications/notification_window.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_md.h"
+#include "resource/resource_ids.auto.h"
 #include "resource/resource_storage.h"
 #include "resource/resource_storage_file.h"
 #include "pbl/services/light.h"
@@ -250,6 +251,14 @@ bool shell_prefs_get_language_english(void) {
 void shell_prefs_set_language_english(bool english) {
 }
 void shell_prefs_toggle_language_english(void) {
+}
+ShellLanguage shell_prefs_get_language(void) {
+  return ShellLanguageEnglish;
+}
+uint32_t shell_prefs_get_language_resource_id(void) {
+  return RESOURCE_ID_INVALID;
+}
+void shell_prefs_set_language(ShellLanguage language) {
 }
 
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {

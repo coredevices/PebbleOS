@@ -6,6 +6,7 @@
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/timeline/peek.h"
+#include "resource/resource_ids.auto.h"
 #include "shell/prefs.h"
 #include "util/uuid.h"
 
@@ -107,6 +108,14 @@ bool shell_prefs_get_language_english(void) {
 void shell_prefs_set_language_english(bool english) {
 }
 void shell_prefs_toggle_language_english(void) {
+}
+ShellLanguage shell_prefs_get_language(void) {
+  return ShellLanguageEnglish;
+}
+uint32_t shell_prefs_get_language_resource_id(void) {
+  return RESOURCE_ID_INVALID;
+}
+void shell_prefs_set_language(ShellLanguage language) {
 }
 
 void language_ui_display_changed(const char *lang_name) {
