@@ -41,6 +41,33 @@ typedef struct SettingsBacklightData {
   AppTimer *update_timer;  // Timer for live updating debug values
 } SettingsBacklightData;
 
+static const char *s_language_labels[] = {
+  [ShellLanguageInstalledPack] = i18n_noop("Custom"),
+  [ShellLanguageEnglish] = "English",
+  [ShellLanguageCatalan] = "Català",
+  [ShellLanguageGerman] = "Deutsch",
+  [ShellLanguageSpanish] = "Español",
+  [ShellLanguageFrench] = "Français",
+  [ShellLanguageItalian] = "Italiano",
+  [ShellLanguageDutch] = "Nederlands",
+  [ShellLanguagePortuguese] = "Português",
+};
+
+static void prv_language_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  shell_prefs_set_language((ShellLanguage)selection);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_language_menu_push(SettingsDisplayData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_language_menu_select,
+  };
+  settings_option_menu_push(i18n_noop("Language"), OptionMenuContentType_SingleLine,
+                            shell_prefs_get_language(), &callbacks,
+                            ARRAY_LENGTH(s_language_labels), false /* icons_enabled */,
+                            s_language_labels, data);
+}
+
 // Intensity Settings
 /////////////////////////////
 
@@ -458,7 +485,7 @@ enum SettingsDisplayItem {
 static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   switch (row) {
     case SettingsDisplayLanguage:
-      shell_prefs_toggle_language_english();
+      prv_language_menu_push((SettingsDisplayData *)context);
       break;
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
     case SettingsDisplayOrientation:

@@ -136,6 +136,23 @@ bool shell_prefs_get_language_english(void);
 void shell_prefs_set_language_english(bool english);
 void shell_prefs_toggle_language_english(void);
 
+typedef enum ShellLanguage {
+  ShellLanguageInstalledPack = 0,
+  ShellLanguageEnglish,
+  ShellLanguageCatalan,
+  ShellLanguageGerman,
+  ShellLanguageSpanish,
+  ShellLanguageFrench,
+  ShellLanguageItalian,
+  ShellLanguageDutch,
+  ShellLanguagePortuguese,
+  ShellLanguageCount,
+} ShellLanguage;
+
+ShellLanguage shell_prefs_get_language(void);
+uint32_t shell_prefs_get_language_resource_id(void);
+void shell_prefs_set_language(ShellLanguage language);
+
 uint8_t timeline_prefs_get_settings_opened(void);
 void timeline_prefs_set_settings_opened(uint8_t version);
 void timeline_peek_prefs_set_enabled(bool enabled);

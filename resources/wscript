@@ -9,6 +9,7 @@ import resources.resource_map.resource_generator_pdc
 import resources.resource_map.resource_generator_png
 import resources.resource_map.resource_generator_raw
 import resources.resource_map.resource_generator_vibe
+import resources.resource_map.resource_generator_mo
 
 from resources.types.resource_declaration import ResourceDeclaration
 from resources.types.resource_definition import StorageType

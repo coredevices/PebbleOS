@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-15 10:51+0200\n"
+"POT-Creation-Date: 2026-05-15 12:30+0200\n"
 "PO-Revision-Date: 2026-05-15 00:00+0200\n"
 "Last-Translator: PebbleOS contributors\n"
 "Language-Team: English + Cyrillic\n"
@@ -628,89 +628,103 @@ msgstr "Forget this device to pair a new device."
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
-#: ../src/fw/apps/system/settings/display.c:50
+#. #-#-#-#-#  services.pot (PACKAGE VERSION)  #-#-#-#-#
+#. / A frequency option for alarms, i.e. the alarm would only go off on a custom choice of
+#. / days. Respect capitalization!
+#: ../src/fw/apps/system/settings/display.c:45
+#: ../src/fw/services/alarms/alarm.c:1191
+msgid "Custom"
+msgstr "Custom"
+
+#: ../src/fw/apps/system/settings/display.c:65
+#: ../src/fw/apps/system/settings/display.c:522
+#: ../src/fw/apps/system/settings/system.c:215
+msgid "Language"
+msgstr "Language"
+
+#: ../src/fw/apps/system/settings/display.c:77
 #: ../src/fw/apps/system/settings/system.c:492
 msgid "Low"
 msgstr "Low"
 
-#: ../src/fw/apps/system/settings/display.c:51
+#: ../src/fw/apps/system/settings/display.c:78
 #: ../src/fw/apps/system/settings/system.c:494
 msgid "Medium"
 msgstr "Medium"
 
-#: ../src/fw/apps/system/settings/display.c:52
+#: ../src/fw/apps/system/settings/display.c:79
 #: ../src/fw/apps/system/settings/system.c:496
 msgid "High"
 msgstr "High"
 
-#: ../src/fw/apps/system/settings/display.c:53
+#: ../src/fw/apps/system/settings/display.c:80
 msgid "Blinding"
 msgstr "Blinding"
 
-#: ../src/fw/apps/system/settings/display.c:88
+#: ../src/fw/apps/system/settings/display.c:115
 msgid "INTENSITY"
 msgstr "INTENSITY"
 
-#: ../src/fw/apps/system/settings/display.c:88
-#: ../src/fw/apps/system/settings/display.c:357
-#: ../src/fw/apps/system/settings/display.c:359
+#: ../src/fw/apps/system/settings/display.c:115
+#: ../src/fw/apps/system/settings/display.c:384
+#: ../src/fw/apps/system/settings/display.c:386
 msgid "Intensity"
 msgstr "Intensity"
 
-#: ../src/fw/apps/system/settings/display.c:98
+#: ../src/fw/apps/system/settings/display.c:125
 #: ../src/fw/apps/system/settings/notifications.c:112
 msgid "Default"
 msgstr "Default"
 
-#: ../src/fw/apps/system/settings/display.c:99
+#: ../src/fw/apps/system/settings/display.c:126
 msgid "Left-Handed"
 msgstr "Left-Handed"
 
-#: ../src/fw/apps/system/settings/display.c:124
-#: ../src/fw/apps/system/settings/display.c:500
+#: ../src/fw/apps/system/settings/display.c:151
+#: ../src/fw/apps/system/settings/display.c:527
 msgid "Orientation"
 msgstr "Orientation"
 
-#: ../src/fw/apps/system/settings/display.c:137
+#: ../src/fw/apps/system/settings/display.c:164
 msgid "3 Seconds"
 msgstr "3 Seconds"
 
-#: ../src/fw/apps/system/settings/display.c:138
+#: ../src/fw/apps/system/settings/display.c:165
 msgid "5 Seconds"
 msgstr "5 Seconds"
 
-#: ../src/fw/apps/system/settings/display.c:139
+#: ../src/fw/apps/system/settings/display.c:166
 msgid "8 Seconds"
 msgstr "8 Seconds"
 
-#: ../src/fw/apps/system/settings/display.c:162
+#: ../src/fw/apps/system/settings/display.c:189
 msgid "TIMEOUT"
 msgstr "TIMEOUT"
 
 #. / Status bar title for the Notification Window Timeout settings screen
 #. / String within Settings->Notifications that describes the window timeout setting
-#: ../src/fw/apps/system/settings/display.c:162
-#: ../src/fw/apps/system/settings/display.c:364
+#: ../src/fw/apps/system/settings/display.c:189
+#: ../src/fw/apps/system/settings/display.c:391
 #: ../src/fw/apps/system/settings/notifications.c:191
 #: ../src/fw/apps/system/settings/notifications.c:292
 msgid "Timeout"
 msgstr "Timeout"
 
-#: ../src/fw/apps/system/settings/display.c:172
+#: ../src/fw/apps/system/settings/display.c:199
 msgid "Double Tap"
 msgstr "Double Tap"
 
-#: ../src/fw/apps/system/settings/display.c:173
+#: ../src/fw/apps/system/settings/display.c:200
 msgid "Tap"
 msgstr "Tap"
 
 #. / Shows up in the Timeline settings as the status under the "Quick View" toggle.
-#: ../src/fw/apps/system/settings/display.c:174
-#: ../src/fw/apps/system/settings/display.c:324
-#: ../src/fw/apps/system/settings/display.c:329
-#: ../src/fw/apps/system/settings/display.c:345
+#: ../src/fw/apps/system/settings/display.c:201
 #: ../src/fw/apps/system/settings/display.c:351
-#: ../src/fw/apps/system/settings/display.c:507
+#: ../src/fw/apps/system/settings/display.c:356
+#: ../src/fw/apps/system/settings/display.c:372
+#: ../src/fw/apps/system/settings/display.c:378
+#: ../src/fw/apps/system/settings/display.c:534
 #: ../src/fw/apps/system/settings/health.c:90
 #: ../src/fw/apps/system/settings/health.c:117
 #: ../src/fw/apps/system/settings/notifications.c:314
@@ -723,47 +737,47 @@ msgstr "Tap"
 msgid "Off"
 msgstr "Off"
 
-#: ../src/fw/apps/system/settings/display.c:187
+#: ../src/fw/apps/system/settings/display.c:214
 msgid "WAKE ON TOUCH"
 msgstr "WAKE ON TOUCH"
 
-#: ../src/fw/apps/system/settings/display.c:187
-#: ../src/fw/apps/system/settings/display.c:333
+#: ../src/fw/apps/system/settings/display.c:214
+#: ../src/fw/apps/system/settings/display.c:360
 msgid "Wake on touch"
 msgstr "Wake on touch"
 
-#: ../src/fw/apps/system/settings/display.c:198
-#: ../src/fw/apps/system/settings/display.c:517
+#: ../src/fw/apps/system/settings/display.c:225
+#: ../src/fw/apps/system/settings/display.c:544
 msgid "Centered"
 msgstr "Centered"
 
-#: ../src/fw/apps/system/settings/display.c:199
+#: ../src/fw/apps/system/settings/display.c:226
 msgid "Scaled (Nearest)"
 msgstr "Scaled (Nearest)"
 
-#: ../src/fw/apps/system/settings/display.c:200
+#: ../src/fw/apps/system/settings/display.c:227
 msgid "Scaled (Bilinear)"
 msgstr "Scaled (Bilinear)"
 
-#: ../src/fw/apps/system/settings/display.c:213
+#: ../src/fw/apps/system/settings/display.c:240
 msgid "Legacy App Display"
 msgstr "Legacy App Display"
 
 #. / String within Settings->Notifications that describes backlight setting
-#: ../src/fw/apps/system/settings/display.c:309
-#: ../src/fw/apps/system/settings/display.c:436
-#: ../src/fw/apps/system/settings/display.c:511
+#: ../src/fw/apps/system/settings/display.c:336
+#: ../src/fw/apps/system/settings/display.c:463
+#: ../src/fw/apps/system/settings/display.c:538
 #: ../src/fw/apps/system/settings/notifications.c:312
 #: ../src/fw/apps/system/toggle/backlight_state.c:55
 msgid "Backlight"
 msgstr "Backlight"
 
 #. / Shows up in the Timeline settings as the status under the "Quick View" toggle.
-#: ../src/fw/apps/system/settings/display.c:318
-#: ../src/fw/apps/system/settings/display.c:321
-#: ../src/fw/apps/system/settings/display.c:329
-#: ../src/fw/apps/system/settings/display.c:351
-#: ../src/fw/apps/system/settings/display.c:507
+#: ../src/fw/apps/system/settings/display.c:345
+#: ../src/fw/apps/system/settings/display.c:348
+#: ../src/fw/apps/system/settings/display.c:356
+#: ../src/fw/apps/system/settings/display.c:378
+#: ../src/fw/apps/system/settings/display.c:534
 #: ../src/fw/apps/system/settings/health.c:90
 #: ../src/fw/apps/system/settings/health.c:117
 #: ../src/fw/apps/system/settings/notifications.c:314
@@ -776,40 +790,35 @@ msgstr "Backlight"
 msgid "On"
 msgstr "On"
 
-#: ../src/fw/apps/system/settings/display.c:328
+#: ../src/fw/apps/system/settings/display.c:355
 msgid "Wake on motion"
 msgstr "Wake on motion"
 
-#: ../src/fw/apps/system/settings/display.c:338
+#: ../src/fw/apps/system/settings/display.c:365
 msgid "Ambient Sensor"
 msgstr "Ambient Sensor"
 
-#: ../src/fw/apps/system/settings/display.c:350
+#: ../src/fw/apps/system/settings/display.c:377
 msgid "Dynamic Backlight"
 msgstr "Dynamic Backlight"
 
-#: ../src/fw/apps/system/settings/display.c:356
+#: ../src/fw/apps/system/settings/display.c:383
 msgid "Max Intensity"
 msgstr "Max Intensity"
 
-#: ../src/fw/apps/system/settings/display.c:495
-#: ../src/fw/apps/system/settings/system.c:215
-msgid "Language"
-msgstr "Language"
-
-#: ../src/fw/apps/system/settings/display.c:506
+#: ../src/fw/apps/system/settings/display.c:533
 msgid "Touch"
 msgstr "Touch"
 
-#: ../src/fw/apps/system/settings/display.c:515
+#: ../src/fw/apps/system/settings/display.c:542
 msgid "Legacy Apps"
 msgstr "Legacy Apps"
 
-#: ../src/fw/apps/system/settings/display.c:517
+#: ../src/fw/apps/system/settings/display.c:544
 msgid "Scaled"
 msgstr "Scaled"
 
-#: ../src/fw/apps/system/settings/display.c:552
+#: ../src/fw/apps/system/settings/display.c:579
 msgid "Display"
 msgstr "Display"
 
@@ -2393,12 +2402,6 @@ msgstr "Once"
 #: ../src/fw/services/alarms/alarm.c:1188
 msgid "CUSTOM"
 msgstr "CUSTOM"
-
-#. / A frequency option for alarms, i.e. the alarm would only go off on a custom choice of
-#. / days. Respect capitalization!
-#: ../src/fw/services/alarms/alarm.c:1191
-msgid "Custom"
-msgstr "Custom"
 
 #: ../src/fw/services/alarms/alarm.c:1204
 #: ../src/fw/applib/pbl_std/timelocal.c:48

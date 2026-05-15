@@ -214,6 +214,7 @@ def build(ctx):
             " src/fw/services/settings/settings_raw_iter.c" \
             " src/fw/services/blob_db/prefs_db.c" \
             " src/fw/shell/normal/prefs.c" \
+            " tests/stubs/stubs_i18n.c" \
             " src/fw/util/crc8.c" \
             " src/fw/util/legacy_checksum.c" \
             " tests/fakes/fake_accel_service.c" \

@@ -46,3 +46,5 @@ size_t WEAK sys_i18n_get_length(const char *string) {
 }
 
 void WEAK i18n_enable(bool enable) { }
+
+void WEAK i18n_set_resource(uint32_t resource_id) { }

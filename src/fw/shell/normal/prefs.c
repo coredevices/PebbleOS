@@ -25,6 +25,7 @@
 #include "pbl/services/powermode_service.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/i18n/i18n.h"
+#include "resource/resource_ids.auto.h"
 #if CAPABILITY_HAS_ORIENTATION_MANAGER
 #include "pbl/services/orientation_manager.h"
 #endif
@@ -122,6 +123,9 @@ _Static_assert(sizeof(PreferredContentSize) == sizeof(s_text_style),
 
 #define PREF_KEY_LANG_ENGLISH "langEnglish"
 static bool s_language_english = false;
+
+#define PREF_KEY_LANGUAGE "language"
+static uint8_t s_language = ShellLanguageInstalledPack;
 
 typedef struct QuickLaunchPreference {
   bool enabled;
@@ -442,6 +446,16 @@ static bool prv_set_s_text_style(uint8_t *style) {
 static bool prv_set_s_language_english(bool *english) {
   s_language_english = *english;
   i18n_enable(!s_language_english);
+  return true;
+}
+
+static bool prv_set_s_language(uint8_t *language) {
+  if (*language >= ShellLanguageCount) {
+    s_language = ShellLanguageInstalledPack;
+    return false;
+  }
+
+  s_language = *language;
   return true;
 }
 
@@ -1521,6 +1535,51 @@ void shell_prefs_set_language_english(bool english) {
 
 void shell_prefs_toggle_language_english(void) {
   shell_prefs_set_language_english(!shell_prefs_get_language_english());
+}
+
+ShellLanguage shell_prefs_get_language(void) {
+  if (s_language >= ShellLanguageCount) {
+    return ShellLanguageInstalledPack;
+  }
+
+  return (ShellLanguage)s_language;
+}
+
+uint32_t shell_prefs_get_language_resource_id(void) {
+  switch (shell_prefs_get_language()) {
+    case ShellLanguageCatalan:
+      return RESOURCE_ID_STRINGS_CA_ES;
+    case ShellLanguageGerman:
+      return RESOURCE_ID_STRINGS_DE_DE;
+    case ShellLanguageSpanish:
+      return RESOURCE_ID_STRINGS_ES_ES;
+    case ShellLanguageFrench:
+      return RESOURCE_ID_STRINGS_FR_FR;
+    case ShellLanguageItalian:
+      return RESOURCE_ID_STRINGS_IT_IT;
+    case ShellLanguageDutch:
+      return RESOURCE_ID_STRINGS_NL_NL;
+    case ShellLanguagePortuguese:
+      return RESOURCE_ID_STRINGS_PT_PT;
+    case ShellLanguageEnglish:
+    case ShellLanguageInstalledPack:
+    case ShellLanguageCount:
+      return RESOURCE_ID_STRINGS;
+  }
+
+  return RESOURCE_ID_STRINGS;
+}
+
+void shell_prefs_set_language(ShellLanguage language) {
+  uint8_t language_value = language;
+  if (language >= ShellLanguageCount) {
+    language_value = ShellLanguageInstalledPack;
+  }
+
+  const bool english = (language_value == ShellLanguageEnglish);
+  prv_pref_set(PREF_KEY_LANGUAGE, &language_value, sizeof(language_value));
+  shell_prefs_set_language_english(english);
+  i18n_set_resource(shell_prefs_get_language_resource_id());
 }
 
 static void prv_activity_pref_set(void) {

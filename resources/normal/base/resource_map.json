@@ -2390,6 +2390,41 @@
       "file": "../third_party/resources/iconography/brand-logos/Tapo_80px.svg"
     },
     {
+      "type": "mo",
+      "name": "STRINGS_CA_ES",
+      "file": "normal/base/lang/ca_ES/tintin.po"
+    },
+    {
+      "type": "mo",
+      "name": "STRINGS_DE_DE",
+      "file": "normal/base/lang/de_DE/tintin.po"
+    },
+    {
+      "type": "mo",
+      "name": "STRINGS_ES_ES",
+      "file": "normal/base/lang/es_ES/tintin.po"
+    },
+    {
+      "type": "mo",
+      "name": "STRINGS_FR_FR",
+      "file": "normal/base/lang/fr_FR/tintin.po"
+    },
+    {
+      "type": "mo",
+      "name": "STRINGS_IT_IT",
+      "file": "normal/base/lang/it_IT/tintin.po"
+    },
+    {
+      "type": "mo",
+      "name": "STRINGS_NL_NL",
+      "file": "normal/base/lang/nl_NL/tintin.po"
+    },
+    {
+      "type": "mo",
+      "name": "STRINGS_PT_PT",
+      "file": "normal/base/lang/pt_PT/tintin.po"
+    },
+    {
       "type": "pdc",
       "name": "SMART_ALARM_TINY",
       "file": "normal/snowy/images/Pebble_25x25_Smart_alarm.svg"

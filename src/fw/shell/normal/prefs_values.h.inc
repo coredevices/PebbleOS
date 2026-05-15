@@ -24,6 +24,7 @@
   PREFS_MACRO(PREF_KEY_DEFAULT_WORKER, s_default_worker)
   PREFS_MACRO(PREF_KEY_TEXT_STYLE, s_text_style)
   PREFS_MACRO(PREF_KEY_LANG_ENGLISH, s_language_english)
+  PREFS_MACRO(PREF_KEY_LANGUAGE, s_language)
   PREFS_MACRO(PREF_KEY_QUICK_LAUNCH_UP, s_quick_launch_up)
   PREFS_MACRO(PREF_KEY_QUICK_LAUNCH_DOWN, s_quick_launch_down)
   PREFS_MACRO(PREF_KEY_QUICK_LAUNCH_SELECT, s_quick_launch_select)
