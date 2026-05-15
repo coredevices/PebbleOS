@@ -1008,7 +1008,7 @@ msgstr "Inici ràpid"
 msgid ""
 "Open favorite apps quickly with a long button press from your watchface."
 msgstr ""
-"Obre ràpidament les apps preferides amb una pulsació llarga des de l'esfera."
+"Obre ràpidament les apps preferides amb una pulsació llarga des de la caràtula."
 
 #: ../src/fw/apps/system/settings/quiet_time.c:75
 msgid "Quiet All Notifications"
@@ -1352,7 +1352,7 @@ msgstr "Vista ràpida"
 #. / Help text for the Timeline Quick View first use dialog.
 #: ../src/fw/apps/system/settings/timeline.c:189
 msgid "Appears on your watchface when an event is about to start."
-msgstr "Apareix a l'esfera quan un esdeveniment és a punt de començar."
+msgstr "Apareix a la caràtula quan un esdeveniment és a punt de començar."
 
 #: ../src/fw/apps/system/settings/timeline.c:216
 #: ../src/fw/apps/system/timeline/timeline.c:1311
@@ -1373,7 +1373,7 @@ msgstr "En desconnectar"
 
 #: ../src/fw/apps/system/settings/vibe_patterns.c:265
 msgid "Sounds & Haptics"
-msgstr "Sons i hàptica"
+msgstr "Sons i vibracions"
 
 #: ../src/fw/apps/system/settings/vibe_patterns.c:267
 msgid "Vibrations"
@@ -1463,7 +1463,7 @@ msgstr "Actiu"
 
 #: ../src/fw/apps/system/watchfaces.c:206
 msgid "Watchfaces"
-msgstr "Esferes"
+msgstr "Caràtules"
 
 #. / Shown when neither high nor low temperature is known
 #: ../src/fw/apps/system/weather/layout.c:73
@@ -2845,11 +2845,11 @@ msgstr "Gen"
 
 #: ../src/fw/applib/pbl_std/timelocal.c:38
 msgid "Feb"
-msgstr "Feb"
+msgstr "Febr"
 
 #: ../src/fw/applib/pbl_std/timelocal.c:38
 msgid "Mar"
-msgstr "Mar"
+msgstr "Març"
 
 #: ../src/fw/applib/pbl_std/timelocal.c:38
 msgid "Apr"
@@ -2858,11 +2858,11 @@ msgstr "Abr"
 #: ../src/fw/applib/pbl_std/timelocal.c:38
 #: ../src/fw/applib/pbl_std/timelocal.c:44
 msgid "May"
-msgstr "Mai"
+msgstr "Maig"
 
 #: ../src/fw/applib/pbl_std/timelocal.c:39
 msgid "Jun"
-msgstr "Jun"
+msgstr "Juny"
 
 #: ../src/fw/applib/pbl_std/timelocal.c:39
 msgid "Jul"
@@ -2870,7 +2870,7 @@ msgstr "Jul"
 
 #: ../src/fw/applib/pbl_std/timelocal.c:39
 msgid "Aug"
-msgstr "Ago"
+msgstr "Ag"
 
 #: ../src/fw/applib/pbl_std/timelocal.c:39
 msgid "Sep"
