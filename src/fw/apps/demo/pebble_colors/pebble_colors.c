@@ -21,7 +21,6 @@
 #define ALPHA_66  0x80
 #define ALPHA_100 0xC0
 
-static const int TARGET_FPS = 30;
 static Window *s_window;
 static Layer *s_canvas_layer;
 

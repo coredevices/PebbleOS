@@ -326,6 +326,7 @@ def _link_firmware(bld, sources):
             'startup',
             'tinymt32',
             'upng']
+    uses.extend(bld.env.FW_APPS)
 
     if bld.env.memfault:
         fw_linkflags.append('-Wl,--require-defined=g_memfault_build_id')
@@ -539,7 +540,6 @@ def _build_normal(bld):
                    'shell/%s/**' % bld.env.NORMAL_SHELL,
                    'util/**']
 
-    source_files = []
     excludes = []
 
     source_dirs.append('apps/core/**')
@@ -562,18 +562,12 @@ def _build_normal(bld):
     source_dirs.extend(_get_mfg_paths(bld))
     source_dirs.extend(_get_dbg_paths(bld))
 
-    if bld.env.BUILD_TEST_APPS:
-        source_dirs.append('apps/demo/**')
-    elif bld.env.PERFORMANCE_TESTS:
-        source_dirs.append('apps/demo/gfx_tests')
-
     excludes.extend(_get_launcher_globs_to_exclude(bld))
 
     if not bld.env.CONFIG_HRM:
         excludes.append('popups/ble_hrm/**')
 
     sources = sum([bld.path.ant_glob('%s/*.c' % d, excl=excludes) for d in source_dirs], [])
-    sources.extend(bld.path.make_node(x) for x in source_files)
     sources.extend(_get_comm_sources(bld, False))
     sources.extend(bld.path.ant_glob('*.c'))
     sources.extend(bld.path.ant_glob('*.[sS]'))
@@ -605,6 +599,8 @@ def _build_normal(bld):
     _link_firmware(bld, sources)
 
 def build(bld):
+    bld.env.FW_APPS = []
+
     # FIXME create applib_includes or something like that
     fw_includes_use=['libbtutil_includes',
                      'libos_includes',
@@ -662,6 +658,7 @@ def build(bld):
     if bld.env.VARIANT == 'prf':
         _build_recovery(bld)
     else:
+        bld.recurse('apps')
         _build_normal(bld)
 
 # vim:filetype=python

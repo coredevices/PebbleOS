@@ -130,12 +130,8 @@ def options(opt):
                    help='Disable the watchface idle timeout')
     opt.add_option('--nowatchdog', action='store_true',
                    help='Disable automatic reboots when watchdog fires')
-    opt.add_option('--test_apps', action='store_true',
-                   help='Enables test apps (off by default)')
-    opt.add_option('--test_apps_list', type=str,
-                   help='Specify AppInstallId\'s of the test apps to be compiled with the firmware')
     opt.add_option('--performance_tests', action='store_true',
-                   help='Enables instrumentation + apps for performance testing (off by default)')
+                   help='Enables instrumentation for performance testing (off by default)')
     opt.add_option('--ui_debug', action='store_true',
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
     opt.add_option('--js-engine', action='store', default=None, choices=['moddable', 'none'],
@@ -180,8 +176,6 @@ def options(opt):
                    help='Do not link the final firmware binary. This is used for static analysis')
     opt.add_option('--noprompt', action='store_true',
                    help='Disable the serial console to save space')
-    opt.add_option('--build_test_apps', action='store_true',
-                   help='Turns on building of test apps')
     opt.add_option('--profiler', action='store_true', help='Enable the profiler.')
     opt.add_option('--profile_interrupts', action='store_true',
                    help='Enable profiling of all interrupts.')
@@ -216,14 +210,6 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'MALLOC_INSTRUMENTATION')
         print("Enabling malloc instrumentation")
 
-    if conf.options.test_apps_list:
-        conf.options.test_apps = True
-        conf.env.test_apps_list = conf.options.test_apps_list.split(",")
-        print("Enabling test apps: " + str(conf.options.test_apps_list))
-
-    if conf.options.build_test_apps or conf.options.test_apps:
-        conf.env.BUILD_TEST_APPS = True
-
     if conf.options.performance_tests:
         conf.env.PERFORMANCE_TESTS = True
 
@@ -254,11 +240,6 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'NO_WATCHDOG')
         conf.env.NO_WATCHDOG = True
         print("Watchdog reboot disabled")
-
-
-    if conf.options.test_apps:
-        conf.env.append_value('DEFINES', 'ENABLE_TEST_APPS')
-        print("Im in ur firmware, bloatin ur binz! (Test apps enabled)")
 
     if conf.options.performance_tests:
         conf.env.append_value('DEFINES', 'PERFORMANCE_TESTS')
