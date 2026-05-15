@@ -11,6 +11,21 @@ from waflib.Build import BuildContext
 from waflib.Configure import conf
 
 
+def options(opt):
+    opt.add_option(
+        "--kconfig-override",
+        action="append",
+        default=[],
+        dest="kconfig_overrides",
+        metavar="CONFIG_FOO=value",
+        help=(
+            "Override a Kconfig symbol at configure time. "
+            "May be specified multiple times. The compact form "
+            "-DCONFIG_FOO=y is also accepted."
+        ),
+    )
+
+
 @conf
 def load_kconfig(ctx, config_path):
     """Parse a .config file into a Python dictionary.
@@ -44,6 +59,29 @@ def load_kconfig(ctx, config_path):
     return config
 
 
+def _parse_kconfig_override(conf, override):
+    if "=" not in override:
+        conf.fatal(f"Invalid Kconfig override '{override}': expected CONFIG_FOO=value")
+
+    key, value = override.split("=", 1)
+    if not re.match(r"^CONFIG_\w+$", key):
+        conf.fatal(
+            f"Invalid Kconfig override '{override}': symbol name must look like CONFIG_FOO"
+        )
+
+    return key[len("CONFIG_") :], value
+
+
+def _apply_kconfig_overrides(conf, kconf):
+    for override in conf.options.kconfig_overrides:
+        name, value = _parse_kconfig_override(conf, override)
+        sym = kconf.syms.get(name)
+        if sym is None or not sym.nodes:
+            conf.fatal(f"Undefined Kconfig symbol in override: CONFIG_{name}")
+
+        sym.set_value(value)
+
+
 def configure(conf):
     import kconfiglib
 
@@ -70,6 +108,8 @@ def configure(conf):
     variant_conf = os.path.join(srcdir, "src", "fw", f"prj_{variant}.conf")
     if os.path.exists(variant_conf):
         kconf.load_config(variant_conf, replace=False)
+
+    _apply_kconfig_overrides(conf, kconf)
 
     # Check for assigned values overridden by unsatisfied dependencies
     # (same pattern as Zephyr's check_assigned_sym_values)
@@ -121,6 +161,8 @@ def configure(conf):
         msg += " + prj.conf"
     if os.path.exists(variant_conf):
         msg += f" + prj_{variant}.conf"
+    if conf.options.kconfig_overrides:
+        msg += f" + {len(conf.options.kconfig_overrides)} CLI override(s)"
     conf.msg("Kconfig", msg)
 
 
