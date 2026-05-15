@@ -1105,6 +1105,19 @@ void command_audit_delay_us(void) {
   __enable_irq();
 }
 
+#if !defined(RELEASE) && defined(CONFIG_DISPLAY_JDI_SF32LB)
+#include "drivers/display/sf32lb/display_jdi.h"
+
+// Arms the JDI display driver to drop the next LCDC transfer-complete
+// callback, simulating the silent-loss failure mode (e.g. SiFli HAL ICB
+// overflow). The silent-loss timer should fire ~500ms later and PBL_CROAK,
+// producing a Memfault coredump and a watch reboot.
+void command_display_drop_complete(void) {
+  display_jdi_test_drop_next_complete();
+  prompt_send_response("display: armed drop of next LCDC complete; PBL_CROAK in ~500ms");
+}
+#endif
+
 #if !MICRO_FAMILY_SF32LB52
 // Simply parks the chip permanently in stop mode in whatever state it's currently in. This can be
 // pretty handy when trying to profile power of the chip under certains states
