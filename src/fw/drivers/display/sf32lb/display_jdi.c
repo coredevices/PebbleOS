@@ -11,6 +11,7 @@
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/stop.h"
+#include "kernel/coredump_extra_regions.h"
 #include "mcu/cache.h"
 #include "os/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
@@ -63,6 +64,17 @@ static volatile bool s_eof_observed;
 // volatile because the only consumer is the postmortem coredump tool, not
 // any C code in this image — without it, the compiler eliminates the stores.
 static volatile uint32_t s_lcdc_pre_crash_regs[DISPLAY_LCDC_REG_DUMP_BYTES / sizeof(uint32_t)];
+
+// Called from coredump_extra_regions_init() in main.c boot path so the
+// snapshot buffer rides in Memfault coredumps. The default Memfault
+// reconstruction only forwards thread stacks + log buffers; without this
+// the LCDC register dump captured by prv_silent_loss_handler stays in flash
+// and never reaches Sifli.
+void display_jdi_register_coredump_regions(void) {
+  coredump_extra_regions_register("lcdc_pre_crash_regs",
+                                  (const void *)s_lcdc_pre_crash_regs,
+                                  sizeof(s_lcdc_pre_crash_regs));
+}
 
 #ifndef RELEASE
 // Test hook: arm a one-shot drop of the next LCDC transfer-complete callback,

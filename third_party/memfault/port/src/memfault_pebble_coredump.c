@@ -27,6 +27,7 @@
 
 #include "drivers/flash.h"
 #include "flash_region/flash_region.h"
+#include "kernel/coredump_extra_regions.h"
 #include "kernel/core_dump.h"
 #include "kernel/core_dump_private.h"
 #include "kernel/pbl_malloc.h"
@@ -509,6 +510,15 @@ void memfault_pebble_coredump_reconstruct(void) {
           log_regions.region[i].region_size);
       }
     }
+  }
+
+  // Include driver-registered crash diagnostic regions (e.g. peripheral
+  // register snapshots captured pre-PBL_CROAK). The registry is populated by
+  // coredump_extra_regions_init() in main.c, which runs before this code.
+  size_t extra_count = 0;
+  const CoredumpExtraRegion *extras = coredump_extra_regions_get(&extra_count);
+  for (size_t i = 0; i < extra_count; i++) {
+    ADD_CACHED_REGION((uint32_t)extras[i].addr, extras[i].size);
   }
 
   #undef ADD_CACHED_REGION
