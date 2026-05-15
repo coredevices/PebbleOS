@@ -40,10 +40,11 @@ def build(bld):
             'FREERTOS_LAST_MPU_REGION=11',
         ]
 
-    # QEMU CM33 also needs MPU region defines (MPU not used in QEMU CM33)
+    # QEMU CM33 does not have vendor-reserved MPU regions, so Pebble's
+    # static regions occupy 0..3 and FreeRTOS task regions occupy 4..7.
     if bld.env.MICRO_FAMILY == 'QEMU_PEBBLE_ARMCM33':
         freertos_defines += [
-            'FREERTOS_FIRST_MPU_REGION=8',
+            'FREERTOS_FIRST_MPU_REGION=4',
             'FREERTOS_LAST_MPU_REGION=7',
         ]
 
@@ -61,5 +62,3 @@ def build(bld):
               export_defines='GCC_{}'.format(freertos_port_name))
 
 # vim:filetype=python
-
-
