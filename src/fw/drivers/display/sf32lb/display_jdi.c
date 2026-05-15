@@ -13,6 +13,7 @@
 #include "kernel/util/stop.h"
 #include "mcu/cache.h"
 #include "os/mutex.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "system/logging.h"
 #include "system/passert.h"
 
@@ -27,6 +28,20 @@
 #define POWER_SEQ_DELAY_TIME_US  11000
 #define POWER_RESET_CYCLE_DELAY_TIME_US 500000
 
+// Timeout for detecting the SiFli HAL silent-loss bug: the LCDC kicks off a
+// transfer but never delivers the EOF callback, so the compositor would block
+// forever. A normal full-frame transfer takes well under 20ms; 500ms is a
+// conservative threshold that won't fire on transient stalls but catches a
+// real wedge well before the user perceives the freeze.
+#define DISPLAY_SILENT_LOSS_TIMEOUT_MS 500
+
+// Bytes of the LCDC peripheral register file snapshotted into BSS before
+// crashing. The PebbleOS coredump captures all of HPSYS SRAM but does not
+// capture MMIO; copying registers into SRAM gets them into the coredump that
+// gets shared with Sifli. 2KB covers IRQ/SETTING/COMMAND/CANVAS/LAYER0/JDI_PAR
+// (lcd_if.h struct ends around offset 0x100).
+#define DISPLAY_LCDC_REG_DUMP_BYTES 2048
+
 // Pointer to the compositor's framebuffer - we convert in-place to save 44KB RAM
 static uint8_t *s_framebuffer;
 static uint16_t s_update_y0;
@@ -35,6 +50,26 @@ static bool s_initialized;
 static bool s_updating;
 static UpdateCompleteCallback s_uccb;
 static SemaphoreHandle_t s_sem;
+static TimerID s_silent_loss_timer = TIMER_INVALID_ID;
+// Set from HAL_LCDC_SendLayerDataCpltCbk (ISR). The silent-loss handler checks
+// this to distinguish "EOF truly never fired" (real bug → crash) from "EOF
+// fired but terminate hasn't drained off the KernelMain queue yet" (race
+// against scheduler latency → don't crash).
+static volatile bool s_eof_observed;
+// Captured at silent-loss time so the coredump shipped to Sifli carries the
+// LCDC register state at the moment of the wedge. uint32_t storage (not
+// uint8_t) so the linker word-aligns it — prv_snapshot_lcdc_regs reads MMIO
+// as 32-bit volatiles and would fault on a misaligned destination. Marked
+// volatile because the only consumer is the postmortem coredump tool, not
+// any C code in this image — without it, the compiler eliminates the stores.
+static volatile uint32_t s_lcdc_pre_crash_regs[DISPLAY_LCDC_REG_DUMP_BYTES / sizeof(uint32_t)];
+
+#ifndef RELEASE
+// Test hook: arm a one-shot drop of the next LCDC transfer-complete callback,
+// simulating the silent-loss failure mode. The silent-loss timer should fire
+// ~DISPLAY_SILENT_LOSS_TIMEOUT_MS later and PBL_CROAK.
+static volatile bool s_test_drop_next_complete;
+#endif
 
 #if DISPLAY_ORIENTATION_ROTATED_180
 static bool s_rotated_180 = true;
@@ -134,7 +169,51 @@ static void prv_handle_send_failure(const char *ctx, HAL_StatusTypeDef status) {
   state->hlcdc.ErrorCode = HAL_LCDC_ERROR_NONE;
 }
 
+static void prv_snapshot_lcdc_regs(const LCDC_HandleTypeDef *hlcdc) {
+  // Peripheral MMIO must be read as aligned 32-bit volatile loads; plain
+  // memcpy may emit byte-wise loads on some toolchains and fault.
+  const volatile uint32_t *src = (const volatile uint32_t *)hlcdc->Instance;
+  for (size_t i = 0; i < DISPLAY_LCDC_REG_DUMP_BYTES / sizeof(uint32_t); i++) {
+    s_lcdc_pre_crash_regs[i] = src[i];
+  }
+}
+
+// Runs on PebbleTask_NewTimers if no LCDC EOF callback arrives within
+// DISPLAY_SILENT_LOSS_TIMEOUT_MS of kickoff. Known trigger: SiFli HAL's
+// ICB-overflow path (bf0_hal_lcdc.c HAL_LCDC_IRQHandler) sets
+// HAL_LCDC_ERROR_OVERFLOW without invoking XferCpltCallback / XferErrorCallback,
+// so the firmware silently loses the completion and the compositor wedges.
+// Capture LCDC registers into BSS so they ride in the coredump, then crash —
+// the user sees a reboot instead of a frozen screen, and Memfault captures
+// the state Sifli needs to diagnose the underlying HAL bug.
+static void prv_silent_loss_handler(void *data) {
+  if (s_eof_observed) {
+    // EOF fired between us arming the timer and the timeout — terminate is
+    // queued on KernelMain but hasn't run yet. Don't crash on a scheduler
+    // latency artifact.
+    return;
+  }
+  DisplayJDIState *state = DISPLAY->state;
+  prv_snapshot_lcdc_regs(&state->hlcdc);
+  // HPSYS SRAM is Normal cacheable (since the MPU region shrink in
+  // hal_sifli/sf32lb52 system_bf0_ap.c), so the snapshot stores above land
+  // in D-cache. PebbleOS captures coredump RAM after the crash path may
+  // have already invalidated the cache, so flush the dirty lines back to
+  // physical SRAM before we trip PBL_CROAK.
+  uintptr_t snap_addr = (uintptr_t)s_lcdc_pre_crash_regs;
+  size_t snap_size = sizeof(s_lcdc_pre_crash_regs);
+  dcache_align(&snap_addr, &snap_size);
+  dcache_flush((const void *)snap_addr, snap_size);
+  PBL_CROAK("LCDC silent loss: no EOF in %ums (State=%d Err=0x%lx y=%u..%u)",
+            (unsigned)DISPLAY_SILENT_LOSS_TIMEOUT_MS,
+            (int)state->hlcdc.State,
+            (unsigned long)state->hlcdc.ErrorCode,
+            (unsigned)s_update_y0, (unsigned)s_update_y1);
+}
+
 static void prv_display_update_terminate(void *data) {
+  new_timer_stop(s_silent_loss_timer);
+
   // Convert the updated region back from 332 to 222 format
   for (uint16_t y = s_update_y0; y <= s_update_y1; y++) {
     uint8_t *row = &s_framebuffer[y * PBL_DISPLAY_WIDTH];
@@ -172,6 +251,22 @@ void display_jdi_irq_handler(DisplayJDIDevice *disp) {
 
 void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
   portBASE_TYPE woken = pdFALSE;
+
+#ifndef RELEASE
+  if (s_test_drop_next_complete && s_updating) {
+    s_test_drop_next_complete = false;
+    // Simulate the lost-completion failure mode: leave s_eof_observed false
+    // and don't post the terminate event. The silent-loss timer should fire
+    // ~DISPLAY_SILENT_LOSS_TIMEOUT_MS later and PBL_CROAK.
+    portEND_SWITCHING_ISR(woken);
+    return;
+  }
+#endif
+
+  // Mark EOF before doing anything else so the silent-loss handler's race
+  // check sees it even if the terminate event sits on the KernelMain queue
+  // longer than the timeout.
+  s_eof_observed = true;
 
   if (s_updating) {
     PebbleEvent e = {
@@ -305,10 +400,26 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   // Adjust framebuffer pointer to start of buffer (row 0)
   s_framebuffer = s_framebuffer - (s_update_y0 * PBL_DISPLAY_WIDTH);
 
+  // Lazy-create the silent-loss timer. display_init runs via boot_splash_start
+  // before new_timer_service_init, so creating it in display_init would
+  // silently fail. The compositor doesn't reach this path until well after
+  // the timer service is up.
+  if (s_silent_loss_timer == TIMER_INVALID_ID) {
+    s_silent_loss_timer = new_timer_create();
+  }
+
   s_uccb = uccb;
   s_updating = true;
+  s_eof_observed = false;
 
   stop_mode_disable(InhibitorDisplay);
+  // Arm the timer before kickoff so the EOF IRQ, which can fire as soon as
+  // SendLayerData_IT returns, never races us into a state where the timer
+  // isn't yet armed. prv_display_update_terminate stops it on the normal
+  // completion path; the kickoff-failure path below stops it via the same
+  // terminate call.
+  new_timer_start(s_silent_loss_timer, DISPLAY_SILENT_LOSS_TIMEOUT_MS,
+                  prv_silent_loss_handler, NULL, 0);
   HAL_StatusTypeDef status = prv_display_update_start();
   if (status != HAL_OK) {
     prv_handle_send_failure("update", status);
@@ -346,3 +457,9 @@ void display_update_boot_frame(uint8_t *framebuffer) {
 }
 
 void display_clear(void) {}
+
+#ifndef RELEASE
+void display_jdi_test_drop_next_complete(void) {
+  s_test_drop_next_complete = true;
+}
+#endif
