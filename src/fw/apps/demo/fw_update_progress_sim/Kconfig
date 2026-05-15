@@ -1,0 +1,5 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DEMO_APP_FW_UPDATE_PROGRESS_SIM
+    bool "Fw Update Progress Sim"

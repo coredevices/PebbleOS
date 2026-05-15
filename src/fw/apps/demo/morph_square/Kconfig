@@ -1,0 +1,5 @@
+# SPDX-Copyright-Text: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DEMO_APP_MORPH_SQUARE
+    bool "Morph Square"

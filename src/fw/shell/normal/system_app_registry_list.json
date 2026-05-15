@@ -91,7 +91,9 @@
       "id": -12,
       "enum": "BOUNCING_BOX_DEMO",
       "md_fn": "bouncing_box_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_BOUNCING_BOX_DEMO"
+      ],
       "target_platforms": [
         "snowy",
         "robert"
@@ -101,187 +103,249 @@
       "id": -13,
       "enum": "PEBBLE_COLORS",
       "md_fn": "pebble_colors_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_PEBBLE_COLORS"
+      ]
     },
     {
       "id": -14,
       "enum": "PEBBLE_SHAPES",
       "md_fn": "pebble_shapes_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_PEBBLE_SHAPES"
+      ]
     },
     {
       "id": -17,
       "enum": "MOVABLE_LINE",
       "md_fn": "movable_line_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MOVABLE_LINE"
+      ]
     },
     {
       "id": -18,
       "enum": "GFX_TESTS",
       "md_fn": "gfx_tests_get_app_info",
-      "ifdefs": ["PERFORMANCE_TESTS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_GFX_TESTS"
+      ]
     },
     {
       "id": -19,
       "enum": "TEST_ARGS_RECEIVER",
       "md_fn": "test_args_receiver_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEST_ARGS_RECEIVER"
+      ]
     },
     {
       "id": -20,
       "enum": "TEST_ARGS_SENDER",
       "md_fn": "test_args_sender_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEST_ARGS_SENDER"
+      ]
     },
     {
       "id": -21,
       "enum": "FLASH_DIAGNOSTIC",
       "md_fn": "flash_diagnostic_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_FLASH_DIAGNOSTIC"
+      ]
     },
     {
       "id": -22,
       "enum": "FS_RESOURCES",
       "md_fn": "fs_resources_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_FS_RESOURCES"
+      ]
     },
     {
       "id": -23,
       "enum": "EXIT",
       "md_fn": "exit_app_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_EXIT"
+      ]
     },
     {
       "id": -25,
       "enum": "APP_HEAP_DEMO",
       "md_fn": "app_heap_demo_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_APP_HEAP_DEMO"
+      ]
     },
     {
       "id": -26,
       "enum": "DATA_LOGGING_TEST",
       "md_fn": "data_logging_test_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_DATA_LOGGING_TEST"
+      ]
     },
     {
       "id": -27,
       "enum": "KILL_BT",
       "md_fn": "kill_bt_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_KILL_BT"
+      ]
     },
     {
       "id": -28,
       "enum": "TRIGGER_ALARM",
       "md_fn": "trigger_alarm_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TRIGGER_ALARM"
+      ]
     },
     {
       "id": -29,
       "enum": "ANIMATED_DEMO",
       "md_fn": "animated_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_ANIMATED_DEMO"
+      ]
     },
     {
       "id": -31,
       "enum": "TEXT_LAYOUT",
       "md_fn": "text_layout_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEXT_LAYOUT"
+      ]
     },
     {
       "id": -33,
       "enum": "MENU",
       "md_fn": "menu_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MENU"
+      ]
     },
     {
       "id": -34,
       "enum": "SIMPLE_MENU",
       "md_fn": "simple_menu_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_SIMPLE_MENU"
+      ]
     },
     {
       "id": -35,
       "enum": "SCROLL",
       "md_fn": "scroll_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_SCROLL"
+      ]
     },
     {
       "id": -36,
       "enum": "CLICK",
       "md_fn": "click_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_CLICK"
+      ]
     },
     {
       "id": -37,
       "enum": "PROGRESS",
       "md_fn": "progress_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_PROGRESS"
+      ]
     },
     {
       "id": -38,
       "enum": "NUMBER_FIELD",
       "md_fn": "number_field_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_NUMBER_FIELD"
+      ]
     },
     {
       "id": -39,
       "enum": "FW_UPDATE_PROGRESS_SIM",
       "md_fn": "fw_update_progress_sim_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_FW_UPDATE_PROGRESS_SIM"
+      ]
     },
     {
       "id": -41,
       "enum": "EVENT_SERVICE",
       "md_fn": "event_service_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_EVENT_SERVICE"
+      ]
     },
     {
       "id": -43,
       "enum": "PERSIST",
       "md_fn": "persist_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_PERSIST"
+      ]
     },
     {
       "id": -44,
       "enum": "TIMER",
       "md_fn": "timer_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TIMER"
+      ]
     },
     {
       "id": -45,
       "enum": "TEST_SYS_TIMER",
       "md_fn": "test_sys_timer_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEST_SYS_TIMER"
+      ]
     },
     {
       "id": -46,
       "enum": "TEST_CORE_DUMP",
       "md_fn": "test_core_dump_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEST_CORE_DUMP"
+      ]
     },
     {
       "id": -47,
       "enum": "FLASH_PROF",
       "md_fn": "flash_prof_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_FLASH_PROF"
+      ]
     },
     {
       "id": -48,
       "enum": "TEST_BLUETOOTH",
       "md_fn": "test_bluetooth_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEST_BLUETOOTH"
+      ]
     },
     {
       "id": -50,
       "enum": "VIBE_AND_LOGS",
       "md_fn": "vibe_and_logs_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_VIBE_AND_LOGS"
+      ]
     },
     {
       "id": -51,
       "enum": "MENU_OVERFLOW",
       "md_fn": "menu_overflow_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MENU_OVERFLOW"
+      ]
     },
     {
       "id": -54,
@@ -292,19 +356,25 @@
       "id": -55,
       "enum": "TEXT_CLIPPING",
       "md_fn": "text_clipping_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEXT_CLIPPING"
+      ]
     },
     {
       "id": -56,
       "enum": "LIGHT_CONFIG",
       "md_fn": "light_config_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_LIGHT_CONFIG"
+      ]
     },
     {
       "id": -57,
       "enum": "STROKE_WIDTH",
       "md_fn": "stroke_width_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_STROKE_WIDTH"
+      ],
       "target_platforms": [
         "snowy"
       ]
@@ -313,7 +383,9 @@
       "id": -58,
       "enum": "AMB_LIGHT_READ",
       "md_fn": "ambient_light_reading_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_AMB_LIGHT_READ"
+      ]
     },
     {
       "id": -59,
@@ -341,7 +413,9 @@
       "id": -61,
       "enum": "SWAP_LAYER",
       "md_fn": "swap_layer_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_SWAP_LAYER"
+      ]
     },
     {
       "id": -62,
@@ -352,85 +426,113 @@
       "id": -63,
       "enum": "TEXT_SPACING",
       "md_fn": "text_spacing_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEXT_SPACING"
+      ]
     },
     {
       "id": -64,
       "enum": "KINO_LAYER",
       "md_fn": "kino_layer_demo_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_KINO_LAYER"
+      ]
     },
     {
       "id": -65,
       "enum": "DIALOGS",
       "md_fn": "dialogs_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_DIALOGS"
+      ]
     },
     {
       "id": -66,
       "enum": "STATUSBAR",
       "md_fn": "statusbar_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_STATUSBAR"
+      ]
     },
     {
       "id": -68,
       "enum": "MORPH_SQUARE",
       "md_fn": "morph_square_demo_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MORPH_SQUARE"
+      ]
     },
     {
       "id": -70,
       "enum": "MENU_RIGHT_ICON",
       "md_fn": "menu_layer_right_icon_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MENU_RIGHT_ICON"
+      ]
     },
     {
       "id": -71,
       "enum": "VIBE_STRENGTH",
       "md_fn": "vibe_strength_demo_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_VIBE_STRENGTH"
+      ]
     },
     {
       "id": -72,
       "enum": "ACTION_MENU",
       "md_fn": "action_menu_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_ACTION_MENU"
+      ]
     },
     {
       "id": -73,
       "enum": "OPTION_MENU",
       "md_fn": "option_menu_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_OPTION_MENU"
+      ]
     },
     {
       "id": -74,
       "enum": "PROFILE_MUTEXES",
       "md_fn": "profile_mutexes_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS", "DISABLED"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_PROFILE_MUTEXES"
+      ]
     },
     {
       "id": -75,
       "enum": "DEADLOCK",
       "md_fn": "deadlock_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_DEADLOCK"
+      ]
     },
     {
       "id": -76,
       "enum": "TIMELINE_PINS",
       "md_fn": "timeline_pins_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TIMELINE_PINS"
+      ]
     },
     {
       "id": -77,
       "enum": "TEXT_FLOW",
       "md_fn": "text_flow_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEXT_FLOW"
+      ]
     },
     {
       "id": -78,
       "enum": "MENU_ROUND",
       "md_fn": "menu_round_app_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MENU_ROUND"
+      ],
       "target_platforms": [
         "spalding"
       ]
@@ -439,7 +541,9 @@
       "id": -79,
       "enum": "ACTIVITY_DEMO",
       "md_fn": "activity_demo_get_app_info",
-      "ifdefs": ["SHOW_ACTIVITY_DEMO"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_ACTIVITY_DEMO"
+      ],
       "target_platforms": [
         "snowy",
         "spalding",
@@ -455,7 +559,9 @@
       "id": -80,
       "enum": "ACTIVITY_TEST",
       "md_fn": "activity_test_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_ACTIVITY_TEST"
+      ],
       "target_platforms": [
         "snowy",
         "spalding",
@@ -467,7 +573,9 @@
       "id": -81,
       "enum": "DOUBLE_TAP_TEST",
       "md_fn": "double_tap_test_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_DOUBLE_TAP_TEST"
+      ]
     },
     {
       "id": -82,
@@ -484,7 +592,9 @@
       "id": -84,
       "enum": "VIBE_SCORE",
       "md_fn": "vibe_score_demo_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_VIBE_SCORE"
+      ],
       "target_platforms": [
         "snowy",
         "spalding"
@@ -494,7 +604,9 @@
       "id": -86,
       "enum": "IDL",
       "md_fn": "idl_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_IDL"
+      ],
       "target_platforms": [
         "snowy",
         "spalding"
@@ -504,7 +616,9 @@
       "id": -87,
       "enum": "TEMPERATURE_DEMO",
       "md_fn": "temperature_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_TEMPERATURE_DEMO"
+      ],
       "target_platforms": [
         "snowy"
       ]
@@ -513,7 +627,9 @@
       "id": -88,
       "enum": "GDRAWMASK_DEMO",
       "md_fn": "gdrawmask_demo_get_app_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_GDRAWMASK_DEMO"
+      ],
       "target_platforms": [
         "snowy",
         "spalding"
@@ -523,7 +639,10 @@
       "id": -89,
       "enum": "HRM_DEMO",
       "md_fn": "hrm_demo_get_app_info",
-      "ifdefs": ["SHOW_ACTIVITY_DEMO", "CONFIG_HRM"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_HRM_DEMO",
+        "CONFIG_HRM"
+      ]
     },
     {
       "id": -90,
@@ -546,7 +665,9 @@
       "id": -91,
       "enum": "MPU_TEST",
       "md_fn": "test_mpu_cache_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"],
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MPU_TEST"
+      ],
       "target_platforms": [
         "snowy",
         "spalding",
@@ -558,7 +679,9 @@
       "id": -191,
       "enum": "MPU_VIOLATION_TEST",
       "md_fn": "test_mpu_violation_get_info",
-      "ifdefs": ["ENABLE_TEST_APPS"]
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MPU_VIOLATION_TEST"
+      ]
     },
     {
       "id": -92,

@@ -118,8 +118,12 @@ def generate_apps_table(task):
             write_app_enum(enum=enum, id=0)
 
 
-    def _entry_in_test_apps_list(entry):
-        return str(entry['id']) in task.env.test_apps_list
+    def _ifdef_enabled(define):
+        if define in task.env.DEFINES:
+            return True
+        if define.startswith("CONFIG_") and define in task.env and task.env[define]:
+            return True
+        return False
 
     # If the current build config allows the app with the given list of defines to be added.
     # Disabled entries have no entry in the app registry.
@@ -143,21 +147,7 @@ def generate_apps_table(task):
         if defines:
             # If we have a defines list, run through all of them and see if we should be including
             # this application
-
-            # if test apps are enabled and we have a list
-            test_apps_enabled = "ENABLE_TEST_APPS" in task.env.DEFINES
-            entry_is_test_app = "ENABLE_TEST_APPS" in defines
-            has_test_app_list = len(task.env.test_apps_list) > 0
-            if test_apps_enabled and has_test_app_list:
-                # check if app is allowed. If not, return False
-                desired_test_app = _entry_in_test_apps_list(entry)
-                if entry_is_test_app and not desired_test_app:
-                    return False
-            else:
-                if entry_is_test_app and not test_apps_enabled:
-                    return False
-
-            if all(define in task.env.DEFINES for define in defines):
+            if all(_ifdef_enabled(define) for define in defines):
                 return True
         else:
             # if there are no defines, it means we should include it by default
@@ -170,18 +160,7 @@ def generate_apps_table(task):
             if not entry_enabled(entry):
                 entry['id'] = 0
 
-    def _move_desired_test_apps_to_top():
-        for app_list in [system_apps, resource_apps]:
-            temp_list = []
-            for entry in app_list:
-                if _entry_in_test_apps_list(entry):
-                    temp_list.insert(0, entry)
-                else:
-                    temp_list.append(entry)
-            app_list[:] = temp_list
-
     _set_disabled_app_ids_to_zero()
-    _move_desired_test_apps_to_top()
 
     with open(registry.abspath(), 'w') as f_registry:
         generate_registry(f_registry)
@@ -204,6 +183,6 @@ def build(bld):
     bld(rule=generate_apps_table,
         source=[in_node],
         target=[registry, app_enum],
-        vars=['DEFINES', 'test_apps_list'])
+        vars=['DEFINES'])
 
 # vim:filetype=python

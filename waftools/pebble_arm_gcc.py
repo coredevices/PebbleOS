@@ -304,14 +304,10 @@ Or re-configure with the --relax_toolchain_restrictions option. """
     conf.env.SHLIB_MARKER = None
     conf.env.STLIB_MARKER = None
 
-    # Set whether or not we show the "Your Pebble just reset..." alert
     if conf.options.release and conf.options.beta:
         raise RuntimeError(
             "--beta and --release are mutually exclusive and cannot be used together"
         )
-    if not conf.options.release:
-        if not conf.is_bigboard():
-            conf.env.append_value("DEFINES", ["SHOW_ACTIVITY_DEMO"])
 
     # Set optimization level
     if conf.options.beta:
