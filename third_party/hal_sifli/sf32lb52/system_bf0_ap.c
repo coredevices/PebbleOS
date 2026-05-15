@@ -56,10 +56,12 @@ static void prv_mpu_config(void) {
   ARM_MPU_SetRegion(1U, rbar, rlar);
 
   // hpsys ram, .ramfunc range only: vendor HAL code copied here from flash
-  // must be executable. The rest of HPSYS RAM is reachable for privileged
-  // code via the background map (PRIVDEFENA is set in ARM_MPU_Enable below).
-  // Non-shareable, RW, any privilege, executable
-  rbar = ARM_MPU_RBAR((uint32_t)__ramfunc_start, ARM_MPU_SH_NON, 0, 1, 0);
+  // must be executable. Keep it privileged-only and read-only after startup
+  // has copied the section into RAM. The rest of HPSYS RAM is reachable for
+  // privileged code via the background map (PRIVDEFENA is set in
+  // ARM_MPU_Enable below).
+  // Non-shareable, RO privileged only, executable
+  rbar = ARM_MPU_RBAR((uint32_t)__ramfunc_start, ARM_MPU_SH_NON, 1, 0, 0);
   rlar = ARM_MPU_RLAR((uint32_t)__ramfunc_end - 1U, ATTR_RAM_IDX);
   ARM_MPU_SetRegion(2U, rbar, rlar);
 
