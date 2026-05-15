@@ -14,6 +14,18 @@ from waflib import Node, Logs
 from waflib.Build import BuildContext
 
 
+def _normalize_kconfig_override_args(argv):
+    normalized = []
+    for arg in argv:
+        if arg.startswith('-DCONFIG_') and '=' in arg:
+            normalized.append('--kconfig-override={}'.format(arg[2:]))
+        else:
+            normalized.append(arg)
+    return normalized
+
+
+sys.argv = _normalize_kconfig_override_args(sys.argv)
+
 waf_dir = sys.path[0]
 sys.path.append(os.path.join(waf_dir, 'tools'))
 sys.path.append(os.path.join(waf_dir, 'tools/log_hashing'))
