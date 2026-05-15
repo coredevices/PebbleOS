@@ -33,6 +33,9 @@ extern const uint32_t __WORKER_RAM__[];
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __APP_RAM__[];
 extern const uint32_t __kernel_main_stack_start__[];
+#ifdef MICRO_FAMILY_SF32LB52
+extern const uint32_t __ramfunc_start[];
+#endif
 
 #ifndef MPU_TYPE_ARMV8M
 KERNEL_READONLY_DATA static uint32_t s_ro_bss_probe;
@@ -43,6 +46,10 @@ typedef enum {
   TestKind_WorkerRamRead,
   TestKind_KernelRamWrite,
   TestKind_KernelRamRead,
+#ifdef MICRO_FAMILY_SF32LB52
+  TestKind_RamfuncWrite,
+  TestKind_RamfuncRead,
+#endif
 #ifndef MPU_TYPE_ARMV8M
   TestKind_RoBssWrite,
 #endif
@@ -59,6 +66,10 @@ static const char *const s_test_titles[TestKindCount] = {
     [TestKind_WorkerRamRead] = "Worker RAM R",
     [TestKind_KernelRamWrite] = "Kernel RAM W",
     [TestKind_KernelRamRead] = "Kernel RAM R",
+#ifdef MICRO_FAMILY_SF32LB52
+    [TestKind_RamfuncWrite] = "Ramfunc W",
+    [TestKind_RamfuncRead] = "Ramfunc R",
+#endif
 #ifndef MPU_TYPE_ARMV8M
     [TestKind_RoBssWrite] = "RO BSS W",
 #endif
@@ -119,6 +130,19 @@ static void prv_run_test(TestKind kind) {
       (void)v;
       break;
     }
+#ifdef MICRO_FAMILY_SF32LB52
+    case TestKind_RamfuncWrite: {
+      volatile uint32_t *p = (volatile uint32_t *)__ramfunc_start;
+      *p = 0xDEADBEEF;
+      break;
+    }
+    case TestKind_RamfuncRead: {
+      volatile uint32_t *p = (volatile uint32_t *)__ramfunc_start;
+      volatile uint32_t v = *p;
+      (void)v;
+      break;
+    }
+#endif
 #ifndef MPU_TYPE_ARMV8M
     case TestKind_RoBssWrite: {
       // ARMv7-M maps this as priv RW + user RO, so unprivileged writes fault.
