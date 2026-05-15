@@ -808,7 +808,11 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 
 // ------------------------------------------------------------------------------------
 void shell_prefs_init(void) {
+#if MICRO_FAMILY_QEMU
+  s_backlight_intensity = 100U; // Blinding
+#else
   s_backlight_intensity = 25U; // Medium
+#endif
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 #if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
   s_dynamic_backlight_min_threshold = BOARD_CONFIG.dynamic_backlight_min_threshold;
