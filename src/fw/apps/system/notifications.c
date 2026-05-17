@@ -550,7 +550,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
 #else
     const GFont font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellTitle);
     GRect box = cell_layer->bounds;
-    box.origin.y += 6;
+    box.origin.y += (box.size.h - fonts_get_font_height(font)) / 2 - fonts_get_font_cap_offset(font);
 
     graphics_draw_text(ctx, i18n_get("Clear All", data), font, box,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
