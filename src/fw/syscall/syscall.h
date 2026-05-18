@@ -214,6 +214,9 @@ void sys_light_set_system_color(void);
 bool sys_mobile_app_is_connected_debounced(void);
 bool sys_pebblekit_is_connected_debounced(void);
 
+bool sys_touch_service_is_enabled(void);
+void sys_touch_reset(void);
+
 
 bool sys_app_inbox_service_register(uint8_t *storage, size_t storage_size,
                                     AppInboxMessageHandler message_handler,
