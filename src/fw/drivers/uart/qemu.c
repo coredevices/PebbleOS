@@ -120,14 +120,27 @@ void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_h
 }
 
 void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  dev->state->rx_int_enabled = enabled;
+  // Order matters: the QEMU pebble-simple-uart is level-sensitive on RX, so
+  // as long as CTRL_RX_IE is set and rx_count > 0 the IRQ keeps re-firing.
+  // The ISR uses dev->state->rx_int_enabled to decide whether to drain bytes.
+  //
+  // If we set the flag false BEFORE clearing CTRL_RX_IE, an incoming IRQ
+  // re-enters the handler, sees the flag false, skips the drain, returns —
+  // and immediately re-fires because CTRL_RX_IE is still set and rx_count is
+  // still > 0.  KernelMain only executes one instruction per re-entry cycle
+  // (just enough to crawl forward) and the install effectively wedges.
+  //
+  // For disable: clear hardware first so no more IRQs fire, THEN drop the
+  // flag.  For enable: set the flag first so the handler will drain when the
+  // hardware IRQ asserts.
   uint32_t ctrl = REG32(dev->base_addr + UART_CTRL);
   if (enabled) {
-    ctrl |= CTRL_RX_IE;
+    dev->state->rx_int_enabled = true;
+    REG32(dev->base_addr + UART_CTRL) = ctrl | CTRL_RX_IE;
   } else {
-    ctrl &= ~CTRL_RX_IE;
+    REG32(dev->base_addr + UART_CTRL) = ctrl & ~CTRL_RX_IE;
+    dev->state->rx_int_enabled = false;
   }
-  REG32(dev->base_addr + UART_CTRL) = ctrl;
 }
 
 void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
