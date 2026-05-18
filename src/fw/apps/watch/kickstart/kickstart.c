@@ -26,6 +26,7 @@
 #define SNOWY_SCREEN_RES (PBL_DISPLAY_WIDTH == 144 && PBL_DISPLAY_HEIGHT == 168)
 #define SPALDING_SCREEN_RES (PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180)
 #define GETAFIX_SCREEN_RES (PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260)
+#define STEP_COUNTER_BAR_MAX_STEPS 10000
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // UI Utils
@@ -420,16 +421,19 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
   prv_draw_outer_dots(ctx, bounds);
 #endif
 
+  const int32_t total_progress = STEP_COUNTER_BAR_MAX_STEPS;
+  const int32_t current_progress = MIN(data->current_steps, total_progress);
+
   // draw outer ring
-  prv_draw_outer_ring(ctx, data->current_steps, data->daily_steps_avg,
-                      fill_thickness, bounds, fill_color);
+  prv_draw_outer_ring(ctx, current_progress, total_progress, fill_thickness, bounds, fill_color);
 
   const int goal_line_length = PBL_IF_COLOR_ELSE(fill_thickness + 3, 12);
   const int goal_line_width = 4;
 
   // draw yellow goal line
-  prv_draw_goal_line(ctx, data->typical_steps, MAX(data->daily_steps_avg, data->typical_steps),
-                     goal_line_length, goal_line_width, bounds, GColorYellow);
+  const int32_t goal_progress = MIN(data->typical_steps, total_progress);
+  prv_draw_goal_line(ctx, goal_progress, total_progress, goal_line_length, goal_line_width, bounds,
+                     GColorYellow);
 
   const bool has_bpm = (data->current_bpm > 0);
 
