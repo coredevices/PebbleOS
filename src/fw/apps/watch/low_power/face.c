@@ -22,8 +22,10 @@
 typedef struct {
   Window low_power_window;
   TextLayer low_power_time_layer;
+  TextLayer low_power_date_layer;
   KinoLayer low_power_kino_layer;
   char time_text[6];
+  char date_text[16];
 } LowPowerFaceData;
 
 static LowPowerFaceData *s_low_power_data;
@@ -49,6 +51,12 @@ static void prv_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
                           s_low_power_data->time_text);
   }
 
+  if (units_changed & DAY_UNIT) {
+    clock_get_date_tm(s_low_power_data->date_text, sizeof(s_low_power_data->date_text),
+                      tick_time);
+    text_layer_set_text(&s_low_power_data->low_power_date_layer,
+                        s_low_power_data->date_text);
+  }
 }
 
 static void deinit(void) {
@@ -76,7 +84,11 @@ static void init(void) {
   const GSize text_size = app_graphics_text_layout_get_content_size("00:00", text_font,
                             s_low_power_data->low_power_window.layer.bounds, text_overflow_mode,
                             text_alignment);
-  const int text_pos_y_adjust = -9;  // small vertical adjustment to match design specification
+#if PBL_DISPLAY_HEIGHT >= 200
+  const int text_pos_y_adjust = -9;
+#else
+  const int text_pos_y_adjust = -20;
+#endif
   const int text_pos_y = (DISP_ROWS / 2) - (font_height / 2) + text_pos_y_adjust;
   const GRect text_container_rect = GRect(0, text_pos_y, DISP_COLS, font_height);
   GRect text_frame = (GRect) { .size = text_size };
@@ -99,11 +111,31 @@ static void init(void) {
   layer_add_child(&s_low_power_data->low_power_window.layer,
                     &s_low_power_data->low_power_time_layer.layer);
 
+#if PBL_DISPLAY_HEIGHT >= 200
+  const GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+#else
+  const GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+#endif
+  const unsigned int date_font_height = fonts_get_font_height(date_font);
+  const GRect icon_bounds = kino_layer_get_reel_bounds(&s_low_power_data->low_power_kino_layer);
+  const int icon_top_y =
+      s_low_power_data->low_power_kino_layer.layer.frame.origin.y + icon_bounds.origin.y;
+  const int time_bottom_y = text_frame.origin.y + text_frame.size.h;
+  const GRect date_frame = (GRect) {
+    .origin = { 0, time_bottom_y + (icon_top_y - time_bottom_y - (int)date_font_height) / 2 - 3 },
+    .size   = { DISP_COLS, date_font_height },
+  };
+  text_layer_init_with_parameters(&s_low_power_data->low_power_date_layer,
+                                  &date_frame, NULL, date_font,
+                                  GColorBlack, GColorClear, text_alignment, text_overflow_mode);
+  layer_add_child(&s_low_power_data->low_power_window.layer,
+                  &s_low_power_data->low_power_date_layer.layer);
+
   // Because of the delay before the tick timer service first calls prv_minute_tick,
   // we call it ourselves to update the time right away
   struct tm current_time;
   clock_get_time_tm(&current_time);
-  prv_minute_tick(&current_time, HOUR_UNIT);
+  prv_minute_tick(&current_time, MINUTE_UNIT | HOUR_UNIT | DAY_UNIT);
 
   tick_timer_service_subscribe(MINUTE_UNIT, prv_minute_tick);
 }
