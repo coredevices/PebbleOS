@@ -13,8 +13,6 @@
 #include "syscall/syscall.h"
 #include "system/passert.h"
 
-bool sys_touch_service_is_enabled(void);
-
 //! @return the per-task touch service state, or NULL if the current task is
 //! not permitted to use the touch service (e.g. background workers, or
 //! watchfaces). Callers must no-op when this returns NULL.
@@ -56,7 +54,7 @@ void touch_service_subscribe(TouchServiceHandler handler, void *context) {
     .type = PEBBLE_TOUCH_EVENT,
     .handler = prv_handle_touch_event,
   };
-  touch_reset();
+  sys_touch_reset();
   if (!state->raw_subscribed) {
     event_service_client_subscribe(&state->raw_event_info);
     state->raw_subscribed = true;

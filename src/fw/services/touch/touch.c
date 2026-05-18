@@ -104,6 +104,10 @@ DEFINE_SYSCALL(bool, sys_touch_service_is_enabled, void) {
   return touch_service_is_globally_enabled();
 }
 
+DEFINE_SYSCALL(void, sys_touch_reset, void) {
+  touch_reset();
+}
+
 void touch_set_backlight_enabled(bool enabled) {
   mutex_lock(s_touch_mutex);
   if (enabled && !s_backlight_subscribed) {
