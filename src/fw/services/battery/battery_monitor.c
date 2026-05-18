@@ -170,6 +170,14 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
   //  Similarly, if the battery voltage has rebounded when the timer expires, the shutdown
   //    will not occur.
 
+#if MICRO_FAMILY_QEMU
+  // QEMU has no real battery, so never enter LPM or standby — otherwise
+  // `pebble emu-battery --percent 1` (and any low value) shuts the emulator
+  // down or locks it into the low-power UI.
+  bool critical = false;
+  bool low_power = false;
+  s_low_on_first_run = false;
+#else
   bool critical = (state.charge_percent == 0) && !state.is_charging;
 
 #ifndef RECOVERY_FW
@@ -187,6 +195,7 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
   // We want to keep the LPM UI up until we've hit 10% regardless of charging
   bool low_power = state.charge_percent < PRF_LOW_POWER_THRESHOLD_PERCENT;
   s_low_on_first_run = false;
+#endif
 #endif
 
   PowerStateID new_state;
