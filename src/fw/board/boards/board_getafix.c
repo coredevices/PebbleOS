@@ -456,6 +456,13 @@ static const I2CSlavePort s_i2c_aw86225 = {
 };
   
 I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
+
+static const AW86225Config s_aw86225_config = {
+    .lra_frequency_hz = 240,
+    .lra_frequency_tolerance_hz = 20,
+};
+
+const AW86225Config *const AW86225 = &s_aw86225_config;
 #else
 static const I2CSlavePort s_i2c_aw8623x = {
     .bus = &s_i2c_bus_3,

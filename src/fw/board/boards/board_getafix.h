@@ -6,6 +6,7 @@
 #include "drivers/imu/lis2dw12/lis2dw12.h"
 #include "drivers/backlight/aw9364e.h"
 #include "drivers/pmic/npm1300.h"
+#include "drivers/vibe/vibe_aw86225.h"
 #include "drivers/touch/cst816/touch_sensor_definitions.h"
 #include "pbl/services/imu/units.h"
 
@@ -27,6 +28,7 @@ extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort *const I2C_W1160;
 #if BOARD_GETAFIX_DVT2
 extern I2CSlavePort *const I2C_AW86225;
+extern const AW86225Config *const AW86225;
 #else
 extern I2CSlavePort *const I2C_AW8623X;
 #endif
