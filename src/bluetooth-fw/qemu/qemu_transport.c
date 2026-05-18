@@ -71,7 +71,13 @@ static void prv_granted_kernel_main_cb(void *ctx) {
 static void prv_set_connection_responsiveness(
     Transport *transport, BtConsumer consumer, ResponseTimeState state, uint16_t max_period_secs,
     ResponsivenessGrantedHandler granted_handler) {
-  PBL_LOG_INFO("Consumer %d: requesting change to %d for %" PRIu16 "seconds",
+  // PutBytes calls this every single packet — at INFO it pushes ~76 bytes/packet
+  // into the 1200-byte advanced_logging ring buffer, which fills in ~16 packets
+  // and forces inline flash-logging flushes on KernelMain.  That starves
+  // SystemTask's PutBytes callback (it's competing for s_flash_write_mutex) and
+  // wedges the install with no watchdog reboot.  CLAUDE.md is explicit that
+  // high-frequency paths must not log at INFO; this is one of them.
+  PBL_LOG_DBG("Consumer %d: requesting change to %d for %" PRIu16 "seconds",
           consumer, state, max_period_secs);
 
   // it's qemu, our request to bump the speed is always granted!
