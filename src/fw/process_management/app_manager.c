@@ -633,7 +633,27 @@ static bool prv_app_switch(bool gracefully) {
 // ---------------------------------------------------------------------------------------------
 void app_manager_start_first_app(void) {
   const PebbleProcessMd* app_md = system_app_state_machine_system_start();
+#if SHELL_SDK
+  // SDK shell's system_start returns the default watchface (a flash app) when one is set.
+  // If an install crashed partway through PutBytes, BlobDB has the entry and
+  // watchface_default_install_id already points at it, but the on-flash PBL_APP is
+  // truncated — process_loader_load returns NULL, prv_app_start fails, and the
+  // unconditional PBL_ASSERTN below bootloops the device. Clear the default and retry
+  // with sdk_app (builtin) so the emulator boots into something runnable.
+  // Normal shell can't hit this: its system_start always returns a builtin.
+  if (!prv_app_start(app_md, 0, APP_LAUNCH_SYSTEM)) {
+    PBL_LOG_ERR("Failed to start first app <%s>, clearing default watchface",
+                process_metadata_get_name(app_md));
+    if (app_md->process_storage == ProcessStorageFlash) {
+      watchface_set_default_install_id(INSTALL_ID_INVALID);
+      app_install_release_md(app_md);
+    }
+    const PebbleProcessMd *fallback_md = system_app_state_machine_system_start();
+    PBL_ASSERTN(prv_app_start(fallback_md, 0, APP_LAUNCH_SYSTEM));
+  }
+#else
   PBL_ASSERTN(prv_app_start(app_md, 0, APP_LAUNCH_SYSTEM));
+#endif
   s_first_app_launched = true;
   compositor_transition(NULL);
 }
