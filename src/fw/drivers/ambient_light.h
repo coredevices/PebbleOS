@@ -17,7 +17,12 @@ typedef enum AmbientLightLevel {
 
 #define AMBIENT_LIGHT_LEVEL_ENUM_COUNT (AmbientLightLevelVeryLight + 1)
 
-static const uint32_t AMBIENT_LIGHT_LEVEL_MAX  = 4096;   // max 12 bits
+#ifndef CONFIG_AMBIENT_LIGHT_BITS
+// Fallback for header parsers (e.g. SDK generator) that don't preload autoconf.h.
+#define CONFIG_AMBIENT_LIGHT_BITS 12
+#endif
+
+static const uint32_t AMBIENT_LIGHT_LEVEL_MAX = (1U << CONFIG_AMBIENT_LIGHT_BITS);
 
 /** Initialize the ambient light sensor */
 void ambient_light_init(void);
