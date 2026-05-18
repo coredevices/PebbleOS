@@ -144,6 +144,9 @@ static void s_main(void) {
   prv_handle_init();
 
   app_event_loop();
+
+  tick_timer_service_unsubscribe();
+  vibes_cancel();
 }
 
 const PebbleProcessMd* mfg_vibration_app_get_info(void) {
