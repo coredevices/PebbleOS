@@ -47,8 +47,10 @@ void soc_early_init(void) {
 
   HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
 
+#ifndef NO_WATCHDOG
   watchdog_init();
   watchdog_start();
+#endif
 
   HAL_PMU_EnableDLL(1);
 #ifdef SF32LB52_USE_LXT
