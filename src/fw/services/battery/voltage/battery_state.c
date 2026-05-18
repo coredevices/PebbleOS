@@ -3,6 +3,10 @@
 
 #include "pbl/services/battery/battery_state.h"
 
+#if MICRO_FAMILY_QEMU
+#include "drivers/qemu/qemu_battery.h"
+#endif
+
 #include "board/board.h"
 #include "debug/power_tracking.h"
 #include "drivers/battery.h"
@@ -285,6 +289,14 @@ DEFINE_SYSCALL(BatteryChargeState, sys_battery_get_charge_state, void) {
 BatteryChargeState battery_get_charge_state(void) {
   bool is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged);
 
+#if MICRO_FAMILY_QEMU
+  // Read the exact percent the host set via `pebble emu-battery --percent N`,
+  // skipping the lossy voltage-curve roundtrip and the low-power-reserve remap
+  // so the watch displays exactly what was requested.
+  int32_t percent = MIN((int32_t)qemu_battery_get_percent(), 100);
+  int32_t percent_normalized = percent;
+  uint8_t charge_percent = (uint8_t)percent;
+#else
   int32_t percent = ratio32_to_percent(s_last_battery_state.percent);
 
   // subtract low power reserve, so developer will see 0% when we're approaching low power mode
@@ -295,6 +307,7 @@ BatteryChargeState battery_get_charge_state(void) {
   // higher charge percent bin.
   int32_t rounding_factor = 5 + MAX(((percent - 50) / 10), 0);
   uint8_t charge_percent = MIN(10 * ((percent_normalized + rounding_factor) / 10), 100);
+#endif
   BatteryChargeState state = {
     .charge_percent = charge_percent,
     .is_charging = is_plugged && percent_normalized < 100,
