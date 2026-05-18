@@ -214,6 +214,13 @@ static void prv_change_brightness(uint8_t new_brightness) {
   // Scale the 0-100% to the maximum value allowed in hardware
   uint8_t scaled_brightness = (new_brightness * (uint16_t)BOARD_CONFIG.backlight_on_percent) / 100U;
 
+  // Pause/resume the ALS at the backlight's 0<->on edges so the photodiode
+  // doesn't latch readings while the backlight LED is illuminating it.
+  // While paused the chip preserves the last (clean) DATA_ALS value, which
+  // is also what the service.c cache is pinned to anyway.
+  const bool turning_on = (s_current_brightness == 0U) && (new_brightness > 0U);
+  const bool turning_off = (s_current_brightness > 0U) && (new_brightness == 0U);
+
   if (new_brightness == 0U) {
     PBL_ANALYTICS_TIMER_STOP(backlight_on_time_ms);
   } else {
@@ -222,7 +229,13 @@ static void prv_change_brightness(uint8_t new_brightness) {
 
   prv_update_intensity_analytics(scaled_brightness);
 
+  if (turning_on) {
+    ambient_light_suspend();
+  }
   backlight_set_brightness(scaled_brightness);
+  if (turning_off) {
+    ambient_light_resume();
+  }
   s_current_brightness = new_brightness;
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR

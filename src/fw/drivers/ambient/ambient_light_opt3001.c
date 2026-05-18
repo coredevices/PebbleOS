@@ -75,6 +75,15 @@ void ambient_light_init(void) {
   s_initialized = true;
 }
 
+void ambient_light_suspend(void) {
+  // No-op: OPT3001 is either single-shot per read or always-on; the chip
+  // sits in front of a different display stack on these boards and doesn't
+  // need to gate against backlight LED bleed-through the way the W1160 does.
+}
+
+void ambient_light_resume(void) {
+}
+
 uint32_t ambient_light_get_light_level(void) {
   if (!s_initialized) {
     return BOARD_CONFIG.ambient_light_dark_threshold;

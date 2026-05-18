@@ -62,6 +62,7 @@
 #define W1160_SLOW_ST_CONFIG1       (0x07)   /* 200ms ((0x7CF+1) * 100us) */
 #define W1160_SLOW_ST_CONFIG2       (0xCF)
 #define W1160_SAMPLING_EN           (1<<1)   /* 1:en 0:dis */
+#define W1160_SAMPLING_DIS          (0<<1)   /* 1:en 0:dis */
 #define W1160_CHIP_ID               (0xE5)
 
 #define W1160_RESULT_EXPONENT_SHIFT (12)
@@ -139,6 +140,24 @@ uint32_t ambient_light_get_light_level(void) {
   }
 
   return (((uint16_t)result[1]) << 8) | result[0];
+}
+
+void ambient_light_suspend(void) {
+  if (!s_initialized) {
+    return;
+  }
+  if (!prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS)) {
+    PBL_LOG_ERR("Could not suspend W1160 sampling");
+  }
+}
+
+void ambient_light_resume(void) {
+  if (!s_initialized) {
+    return;
+  }
+  if (!prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN)) {
+    PBL_LOG_ERR("Could not resume W1160 sampling");
+  }
 }
 
 void command_als_read(void) {

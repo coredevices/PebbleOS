@@ -22,6 +22,13 @@ static const uint32_t AMBIENT_LIGHT_LEVEL_MAX  = 4096;   // max 12 bits
 /** Initialize the ambient light sensor */
 void ambient_light_init(void);
 
+//! Pause sampling so the photodiode isn't latching readings while the backlight
+//! LED is illuminating it. Reads keep returning the last latched value.
+void ambient_light_suspend(void);
+
+//! Resume sampling after a suspend.
+void ambient_light_resume(void);
+
 /** get the ambient light level scaled between 0 and AMBIENT_LIGHT_LEVEL_MAX
  */
 uint32_t ambient_light_get_light_level(void);

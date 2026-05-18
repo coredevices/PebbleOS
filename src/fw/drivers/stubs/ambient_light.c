@@ -6,6 +6,12 @@
 void ambient_light_init(void) {
 }
 
+void ambient_light_suspend(void) {
+}
+
+void ambient_light_resume(void) {
+}
+
 uint32_t ambient_light_get_light_level(void) {
   return 0;
 }
