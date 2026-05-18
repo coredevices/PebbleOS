@@ -57,21 +57,16 @@
 #define W1160_ALSCTRL_DATA_FORMAT12 (0<<2)   /* 1:12bit 0:16bit */
 #define W1160_DATA_GC_LVL           (15<<4)  /* gc lelvel 15 */
 #define W1160_SAT_GC_CONFIG         (0x0A)
-#define W1160_SLOW_IT_CONFIG1       (0x00)   /* 16.830ms */
-#define W1160_SLOW_IT_CONFIG2       (0xA9)
-#define W1160_SLOW_ST_CONFIG1       (0x03)   /* 480ms */
-#define W1160_SLOW_ST_CONFIG2       (0xFF)
+#define W1160_SLOW_IT_CONFIG1       (0x03)   /* 99ms ((0x3E7+1) * 99us) */
+#define W1160_SLOW_IT_CONFIG2       (0xE7)
+#define W1160_SLOW_ST_CONFIG1       (0x07)   /* 200ms ((0x7CF+1) * 100us) */
+#define W1160_SLOW_ST_CONFIG2       (0xCF)
 #define W1160_SAMPLING_EN           (1<<1)   /* 1:en 0:dis */
-#define W1160_SAMPLING_DIS          (0<<1)   /* 1:en 0:dis */
 #define W1160_CHIP_ID               (0xE5)
-#define W1160_FLG_ALS_DR            (1<<7)
 
 #define W1160_RESULT_EXPONENT_SHIFT (12)
 #define W1160_RESULT_MANTISSA_MASK  (0x0FFF)
 #define W1160_ADC2LUX_COEF          (3U)
-
-#define W1160_ALS_POLL_DELAY_MS     (5)    /* ms between data-ready polls */
-#define W1160_ALS_POLL_TIMEOUT_MS   (200)  /* max wait for ALS data-ready */
 
 static bool s_initialized;
 static uint32_t s_sensor_light_dark_threshold;
@@ -119,6 +114,9 @@ void ambient_light_init(void) {
   rv &= prv_write_register(W1160_IT_SLOW2_REG, W1160_SLOW_IT_CONFIG2);
   rv &= prv_write_register(W1160_SAMPLE_SLOW1_REG, W1160_SLOW_ST_CONFIG1);
   rv &= prv_write_register(W1160_SAMPLE_SLOW2_REG, W1160_SLOW_ST_CONFIG2);
+  // Continuous slow-mode sampling: the chip autonomously integrates every
+  // SAMPLE_TIME_SLOW and latches DATA_ALS, so callers can just read it.
+  rv &= prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN);
 
   PBL_ASSERT(rv, "Failed to initialize W1160");
 
@@ -127,56 +125,20 @@ void ambient_light_init(void) {
 
 uint32_t ambient_light_get_light_level(void) {
   uint8_t result[2] = {0};
-  uint16_t als;
   bool rv;
 
   if (!s_initialized) {
     return 0UL;
   }
 
-  rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN);
-  if (!rv) {
-    PBL_LOG_ERR("Could not enable W1160 sampling");
-    return 0UL;
-  }
-
-  uint32_t elapsed = 0;
-  do {
-    rv = prv_read_register(W1160_FLAG1_REG, &result[0]);
-    if (!rv) {
-      PBL_LOG_ERR("Could not read W1160 FLAG1");
-      goto disable_and_fail;
-    }
-    if ((result[0] & W1160_FLG_ALS_DR) == 0U) {
-      if (elapsed >= W1160_ALS_POLL_TIMEOUT_MS) {
-        PBL_LOG_ERR("W1160 ALS data-ready timeout");
-        goto disable_and_fail;
-      }
-      psleep(W1160_ALS_POLL_DELAY_MS);
-      elapsed += W1160_ALS_POLL_DELAY_MS;
-    }
-  } while ((result[0] & W1160_FLG_ALS_DR) == 0U);
-
   rv = prv_read_register(W1160_DATA1_ALS_REG, &result[1]);
   rv &= prv_read_register(W1160_DATA2_ALS_REG, &result[0]);
   if (!rv) {
     PBL_LOG_ERR("Could not obtain W1160 data");
-    goto disable_and_fail;
-  }
-
-  rv = prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS);
-  if (!rv) {
-    PBL_LOG_ERR("Could not disable W1160 sampling");
     return 0UL;
   }
 
-  als = (((uint16_t)(result[1])) << 8) | result[0];
-
-  return als;
-
-disable_and_fail:
-  (void)prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS);
-  return 0UL;
+  return (((uint16_t)result[1]) << 8) | result[0];
 }
 
 void command_als_read(void) {
