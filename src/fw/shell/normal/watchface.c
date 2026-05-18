@@ -146,11 +146,9 @@ static void prv_quick_launch_handler(ClickRecognizerRef recognizer, void *data) 
   if (prv_is_any_combo_active()) {
     return;
   }
-  
-  if (!quick_launch_is_enabled(button)) {
-    return;
-  }
-  AppInstallId app_id = quick_launch_get_app(button);
+
+  AppInstallId app_id = quick_launch_is_enabled(button) ? quick_launch_get_app(button)
+                                                        : INSTALL_ID_INVALID;
   if (app_id == INSTALL_ID_INVALID) {
     app_id = app_install_get_id_for_uuid(&quick_launch_setup_get_app_info()->uuid);
   }
