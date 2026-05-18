@@ -501,12 +501,17 @@ void clock_copy_time_string(char *buffer, uint8_t size) {
   clock_copy_time_string_timestamp(buffer, size, t);
 }
 
+static size_t prv_format_time_tm(char *buffer, int buf_size, const char *format,
+                                 const struct tm *time_tm) {
+  const size_t ret_val = strftime(buffer, buf_size, i18n_get(format, buffer), time_tm);
+  i18n_free(format, buffer);
+  return ret_val;
+}
+
 static size_t prv_format_time(char *buffer, int buf_size, const char *format, time_t timestamp) {
   struct tm time_tm;
   localtime_r(&timestamp, &time_tm);
-  const size_t ret_val = strftime(buffer, buf_size, i18n_get(format, buffer), &time_tm);
-  i18n_free(format, buffer);
-  return ret_val;
+  return prv_format_time_tm(buffer, buf_size, format, &time_tm);
 }
 
 size_t clock_get_time_number(char *number_buffer, size_t number_buffer_size, time_t timestamp) {
@@ -966,6 +971,10 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
 
 size_t clock_get_date(char *buffer, int buf_size, time_t timestamp) {
   return prv_format_time(buffer, buf_size, i18n_noop("%m/%d"), timestamp);
+}
+
+size_t clock_get_date_tm(char *buffer, int buf_size, const struct tm *time_tm) {
+  return prv_format_time_tm(buffer, buf_size, i18n_noop("%m/%d"), time_tm);
 }
 
 size_t clock_get_day_date(char *buffer, int buf_size, time_t timestamp) {
