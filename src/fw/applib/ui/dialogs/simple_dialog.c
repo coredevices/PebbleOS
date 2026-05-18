@@ -26,7 +26,11 @@
 // Layout Defines
 #define TEXT_ALIGNMENT (GTextAlignmentCenter)
 #define TEXT_OVERFLOW  (GTextOverflowModeWordWrap)
+#if PBL_DISPLAY_HEIGHT >= 200
+#define TEXT_FONT      (fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD))
+#else
 #define TEXT_FONT      (fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD))
+#endif
 
 #define TEXT_LEFT_MARGIN_PX  (PBL_IF_RECT_ELSE(6, 0))
 #define TEXT_RIGHT_MARGIN_PX (PBL_IF_RECT_ELSE(6, 0))
@@ -72,7 +76,11 @@ static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int win
 
 static void prv_get_text_box(GSize frame_size, GSize icon_size,
                               int icon_top_margin_px, GRect *text_box_out) {
+#if PBL_DISPLAY_HEIGHT >= 200
+  const uint16_t icon_text_spacing_px = PBL_IF_ROUND_ELSE(8, 16);
+#else
   const uint16_t icon_text_spacing_px = PBL_IF_ROUND_ELSE(2, 4);
+#endif
 
   const uint16_t text_x = TEXT_LEFT_MARGIN_PX;
   const uint16_t text_y = icon_top_margin_px + MAX(icon_size.h, 6) + icon_text_spacing_px;

@@ -267,7 +267,8 @@ void test_simple_dialog__does_text_fit(void) {
   msg = "This error is too long for rect displays";
   text_fits = simple_dialog_does_text_fit(msg, DISP_FRAME.size, icon_size, use_status_bar);
 #if PBL_DISPLAY_WIDTH >= 200
-  // The wider obelix display fits this string just like round displays do.
+  // The wider obelix display still fits this string with the larger 28-bold
+  // font, just like the round gabbro display does.
   cl_assert(text_fits);
 #else
   PBL_IF_RECT_ELSE(cl_assert(!text_fits), cl_assert(text_fits));
@@ -276,8 +277,10 @@ void test_simple_dialog__does_text_fit(void) {
   msg = "This error is too long to fit on any display shape :(";
   text_fits = simple_dialog_does_text_fit(msg, DISP_FRAME.size, icon_size, use_status_bar);
 #if PBL_DISPLAY_WIDTH >= 200
-  // Even this longer string still fits on obelix.
-  cl_assert(text_fits);
+  // With the larger 28-bold font, this longer string overflows the obelix
+  // (rect) layout; gabbro's round display still fits it because screen text
+  // flow wraps it within the 2-line cap.
+  PBL_IF_RECT_ELSE(cl_assert(!text_fits), cl_assert(text_fits));
 #else
   cl_assert(!text_fits);
 #endif
