@@ -27,7 +27,7 @@ typedef struct FrameBuffer FrameBuffer;
 //! are documented below.
 //! See \ref GraphicsContext for more information about the graphics context.
 //!
-//! Refer to \htmlinclude UiFramework.html (chapter "Layers" and "Graphics") for a
+//! Refer to \htmlinclude UiFramework.html (chapter "Layers") for a
 //! conceptual overview of the drawing system, Layers and relevant code examples.
 //!
 //! Other drawing functions and related documentation:
