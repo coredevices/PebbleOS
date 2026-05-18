@@ -27,16 +27,18 @@ typedef struct StatusBarTextFormat {
   GFont font;
 } StatusBarTextFormat;
 
-static ALWAYS_INLINE StatusBarTextFormat prv_get_text_format(void) {
+static ALWAYS_INLINE StatusBarTextFormat prv_get_text_format(
+    const StatusBarLayerConfig *config) {
   const PlatformType platform = process_manager_current_platform();
+  const bool bold = config && (config->mode == StatusBarLayerModeClock);
   const char *font_key = PBL_PLATFORM_SWITCH(platform,
-      /*aplite*/ FONT_KEY_GOTHIC_14,
-      /*basalt*/ FONT_KEY_GOTHIC_14,
-      /*chalk*/ FONT_KEY_GOTHIC_14,
-      /*diorite*/ FONT_KEY_GOTHIC_14,
-      /*emery*/ FONT_KEY_GOTHIC_18,
-      /*flint*/ FONT_KEY_GOTHIC_14,
-      /*gabbro*/ FONT_KEY_GOTHIC_18);
+      /*aplite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+      /*basalt*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+      /*chalk*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+      /*diorite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+      /*emery*/ bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18,
+      /*flint*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+      /*gabbro*/ bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18);
   return (StatusBarTextFormat) {
     .overflow_mode = GTextOverflowModeTrailingEllipsis,
     .text_alignment = GTextAlignmentCenter,
@@ -286,12 +288,13 @@ static void prv_tick_timer_handler_cb(PebbleEvent *e, void *cb_data) {
 
 // Calculate position and renders text
 static void prv_status_bar_layer_render_text(GContext *ctx,
+                                             const StatusBarLayerConfig *config,
                                              int16_t min_x,
                                              int16_t max_x,
                                              int16_t min_y,
                                              int16_t max_y,
                                              char *data) {
-  const StatusBarTextFormat text_format = prv_get_text_format();
+  const StatusBarTextFormat text_format = prv_get_text_format(config);
   const GFont font = text_format.font;
   const uint8_t font_height = fonts_get_font_height(font);
   const int16_t center = (max_x + min_x) / 2;
@@ -342,13 +345,13 @@ void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerC
 
   if (config->mode != StatusBarLayerModeCustomText) { // draw center text
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-    prv_status_bar_layer_render_text(ctx, x_offset_l, x_offset_r, y_offset_top, y_offset_bottom,
-                                     config->title_text_buffer);
+    prv_status_bar_layer_render_text(ctx, config, x_offset_l, x_offset_r, y_offset_top,
+                                     y_offset_bottom, config->title_text_buffer);
   } else { // TODO: here goes center text animations
   }
 
   // render info text
-  GFont info_font = prv_get_text_format().font;
+  GFont info_font = prv_get_text_format(config).font;
   // find width of info text
   GSize max_used_size = graphics_text_layout_get_max_used_size(ctx, config->info_text_buffer,
                                          info_font,
@@ -361,6 +364,7 @@ void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerC
                                     STATUS_BAR_LAYER_INFO_PADDING);
   int16_t info_text_right_offset = (int16_t) (x_offset_r - STATUS_BAR_LAYER_INFO_PADDING);
   prv_status_bar_layer_render_text(ctx,
+                                   config,
                                    info_text_left_offset,
                                    info_text_right_offset,
                                    y_offset_top,
@@ -383,7 +387,7 @@ int16_t status_layer_get_title_text_width(StatusBarLayer *status_bar_layer) {
   // other modes not supported
   PBL_ASSERTN(status_bar_layer->config.mode == StatusBarLayerModeClock);
 
-  const StatusBarTextFormat text_format = prv_get_text_format();
+  const StatusBarTextFormat text_format = prv_get_text_format(&status_bar_layer->config);
   char time_text_buffer[TITLE_TEXT_BUFFER_SIZE];
   clock_copy_time_string(time_text_buffer, sizeof(time_text_buffer));
   GContext *ctx = graphics_context_get_current_context();
