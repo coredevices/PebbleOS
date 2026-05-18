@@ -114,7 +114,7 @@ SECTIONS {
         . = ALIGN(8);
     } >FLASH
 
-    .kernel_data : ALIGN(8) {
+    .kernel_data : ALIGN(32) {
         __data_start = .; /* This is used by the startup in order to initialize the .data secion */
 
         *(.data)
