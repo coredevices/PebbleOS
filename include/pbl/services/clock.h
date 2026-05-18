@@ -183,6 +183,11 @@ void clock_get_until_time_without_fulltime(char *buffer, int buf_size, time_t ti
 //! Get the date in MM/DD format
 size_t clock_get_date(char *buffer, int buf_size, time_t timestamp);
 
+//! Same as \ref clock_get_date, but takes a pre-computed `struct tm` instead of
+//! a `time_t`. Useful in tick handlers, where the framework already passes a
+//! `struct tm` and an extra `localtime_r` round-trip would be wasteful.
+size_t clock_get_date_tm(char *buffer, int buf_size, const struct tm *time_tm);
+
 //! Get the day date in DD format
 size_t clock_get_day_date(char *buffer, int buf_size, time_t timestamp);
 
