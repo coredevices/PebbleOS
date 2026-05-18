@@ -15,6 +15,8 @@ uint32_t SystemCoreClock = 48000000UL;
 
 extern uint8_t __ramfunc_start[];
 extern uint8_t __ramfunc_end[];
+extern const uint32_t __FLASH_start__[];
+extern const uint32_t __FLASH_size__[];
 
 void SystemCoreClockUpdate(void) {}
 
@@ -43,15 +45,15 @@ static void prv_mpu_config(void) {
   ARM_MPU_SetMemAttr(ATTR_RAM_IDX, ATTR_RAM);
   ARM_MPU_SetMemAttr(ATTR_DEVICE_IDX, ATTR_DEVICE);
 
-  // PSRAM and FLASH2, region 1
+  // Flash code, region 1
   // Non-shareable, RO, any privilege, executable
-  rbar = ARM_MPU_RBAR(0x10000000, ARM_MPU_SH_NON, 1, 1, 0);
-  rlar = ARM_MPU_RLAR(0x1fffffff, ATTR_CODE_IDX);
+  rbar = ARM_MPU_RBAR((uint32_t)__FLASH_start__, ARM_MPU_SH_NON, 1, 1, 0);
+  rlar = ARM_MPU_RLAR((uint32_t)__FLASH_start__ + (uint32_t)__FLASH_size__ - 1U, ATTR_CODE_IDX);
   ARM_MPU_SetRegion(0U, rbar, rlar);
 
   // Peripheral space
-  // Non-shareable, RW, any privilege, non-executable
-  rbar = ARM_MPU_RBAR(0x40000000, ARM_MPU_SH_NON, 0, 1, 1);
+  // Non-shareable, RW, privileged only, non-executable
+  rbar = ARM_MPU_RBAR(0x40000000, ARM_MPU_SH_NON, 0, 0, 1);
   rlar = ARM_MPU_RLAR(0x5fffffff, ATTR_DEVICE_IDX);
   ARM_MPU_SetRegion(1U, rbar, rlar);
 
@@ -66,8 +68,8 @@ static void prv_mpu_config(void) {
   ARM_MPU_SetRegion(2U, rbar, rlar);
 
   // lpsys ram
-  // Non-shareable, RW, any privilege, executable
-  rbar = ARM_MPU_RBAR(0x203fc000, ARM_MPU_SH_NON, 0, 1, 0);
+  // Non-shareable, RW, privileged only, executable
+  rbar = ARM_MPU_RBAR(0x203fc000, ARM_MPU_SH_NON, 0, 0, 0);
   rlar = ARM_MPU_RLAR(0x204fffff, ATTR_RAM_IDX);
   ARM_MPU_SetRegion(3U, rbar, rlar);
 

@@ -203,7 +203,8 @@ void memory_layout_setup_mpu(void) {
 
   // Unprivileged flash, by default anyone can read any part of flash.
   // On SF32LB52 the SiFli HAL already programs a user-RO executable region
-  // covering 0x10000000..0x1fffffff in SystemInit(), so we skip our own.
+  // covering __FLASH_start__..(__FLASH_start__ + __FLASH_size__ - 1) in
+  // SystemInit(), so we skip our own.
 #ifndef MICRO_FAMILY_SF32LB52
   mpu_set_region(&s_microflash_region);
 #endif
