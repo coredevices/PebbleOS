@@ -1,11 +1,9 @@
 def options(opt):
     opt.recurse('memfault')
-    opt.recurse('nimble')
 
 
 def configure(conf):
     conf.recurse('memfault')
-    conf.recurse('nimble')
 
     if conf.capability('HAS_MODDABLE_XS'):
         conf.recurse('moddable')

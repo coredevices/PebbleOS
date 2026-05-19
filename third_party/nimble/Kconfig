@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "NimBLE BLE stack"
+
+choice
+    prompt "SF32LB52 HCI trace"
+    default NIMBLE_HCI_SF32LB52_TRACE_NONE
+    help
+      Trace mode for the SF32LB52 HCI transport. Ignored on non-SF32LB52
+      boards.
+
+config NIMBLE_HCI_SF32LB52_TRACE_NONE
+    bool "Disabled"
+
+config NIMBLE_HCI_SF32LB52_TRACE_BINARY
+    bool "Binary"
+    help
+      Capture raw HCI traffic in a binary format suitable for offline
+      decoding.
+
+config NIMBLE_HCI_SF32LB52_TRACE_LOG
+    bool "Log"
+    help
+      Emit human-readable HCI trace lines through the standard logger.
+
+endchoice
+
+endmenu
