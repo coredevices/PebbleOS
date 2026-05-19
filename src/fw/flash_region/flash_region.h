@@ -6,11 +6,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if PLATFORM_QEMU_EMERY || PLATFORM_QEMU_FLINT || PLATFORM_QEMU_GABBRO
+#ifdef CONFIG_FLASH_QEMU
 #include "flash_region_qemu.h"
-#elif PLATFORM_ASTERIX
+#elif defined(CONFIG_FLASH_GD25LQ255E)
 #include "flash_region_gd25lq255e.h"
-#elif PLATFORM_OBELIX || PLATFORM_GETAFIX || PLATFORM_GABBRO
+#elif defined(CONFIG_FLASH_GD25Q256E)
 #include "flash_region_gd25q256e.h"
 #endif
 
