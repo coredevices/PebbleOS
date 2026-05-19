@@ -5,10 +5,13 @@ from __future__ import print_function
 
 import argparse
 import os
-import readline
 import signal
 import threading
 import sys
+
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.patch_stdout import patch_stdout
 
 from pebble import pulse2, commander
 from log_hashing.logdehash import LogDehash
@@ -16,13 +19,8 @@ from log_hashing.logdehash import LogDehash
 PROMPT_STRING = "> "
 
 
-def erase_current_line():
-    sys.stdout.write("\r" + " " * (len(readline.get_line_buffer()) + 2) + "\r")
-    sys.stdout.flush()
-
-
-def handle_prompt_command(interface):
-    cmd = input(PROMPT_STRING)
+def handle_prompt_command(interface, session):
+    cmd = session.prompt(PROMPT_STRING)
     if not cmd:
         return
 
@@ -44,20 +42,18 @@ def handle_log_messages(interface, dehasher):
         try:
             msg = logging.receive(block=True)
         except pulse2.exceptions.SocketClosed:
-            erase_current_line()
             print("--- Connection closed ---", flush=True)
-            # Wake the main thread out of its blocking input() so the
+            # Wake the main thread out of its blocking prompt so the
             # process exits promptly instead of waiting for the user to
             # hit Enter.  The main loop catches KeyboardInterrupt and
             # exits cleanly; tools/console_keepalive.py will then reconnect.
             os.kill(os.getpid(), signal.SIGINT)
             break
         line_dict = dehasher.dehash(msg)
-
-        erase_current_line()
+        # patch_stdout() in main() re-routes this print() above the live
+        # prompt; the prompt + in-flight typing is redrawn correctly under
+        # the new log line on every platform (no readline/libedit quirks).
         print(dehasher.commander_format_line(line_dict))
-        sys.stdout.write(PROMPT_STRING + readline.get_line_buffer())
-        sys.stdout.flush()
 
 
 def start_logging_thread(*args):
@@ -126,11 +122,14 @@ def main():
     print("--- PULSE terminal on %s ---" % args.tty)
     print("--- Ctrl-C or Ctrl-D to exit ---")
 
+    session = PromptSession(history=InMemoryHistory())
+
     try:
-        while True:
-            handle_prompt_command(interface)
+        with patch_stdout(raw=True):
+            while True:
+                handle_prompt_command(interface, session)
     except (KeyboardInterrupt, EOFError):
-        erase_current_line()
+        pass
     finally:
         interface.close()
 
