@@ -18,7 +18,7 @@ def build(bld):
         bld(
             name='cst816_fw',
             export_includes=[
-                'pebbleos-nonfree/cst816',
+                'pebbleos-nonfree/cst816/obelix',
             ],
         )
 
