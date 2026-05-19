@@ -23,9 +23,9 @@
 // http://opengameart.org/content/medals-3
 // http://opengameart.org/content/open-pixel-platformer-tiles-sprites
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 #include "applib/graphics/8_bit/framebuffer.c"
-#elif SCREEN_COLOR_DEPTH_BITS == 1
+#elif CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
 #include "applib/graphics/1_bit/framebuffer.c"
 #endif
 

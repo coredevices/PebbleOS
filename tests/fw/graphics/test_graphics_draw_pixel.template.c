@@ -187,7 +187,7 @@ void test_graphics_draw_pixel_${BIT_DEPTH_NAME}__clear(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_pixel_inside_origin_layer.${BIT_DEPTH_NAME}.pbi"));
   layer_set_update_proc(&layer, &clear_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_pixel_clear.8bit.pbi"));
 #else
   cl_check(framebuffer_is_empty("clear_over_black", ctx.parent_framebuffer, GColorWhite));

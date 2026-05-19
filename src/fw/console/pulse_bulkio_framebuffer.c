@@ -46,7 +46,7 @@ static int framebuffer_domain_stat(uint8_t *resp, size_t resp_max_len, void *con
     .length = FRAMEBUFFER_SIZE_BYTES,
     .width = DISP_COLS,
     .height = DISP_ROWS,
-    .bpp = SCREEN_COLOR_DEPTH_BITS
+    .bpp = CONFIG_SCREEN_COLOR_DEPTH_BITS
   };
 
   return sizeof(FramebufferStatResp);

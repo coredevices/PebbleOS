@@ -313,7 +313,7 @@ void action_menu_set_align(ActionMenuConfig *config, ActionMenuAlign align) {
 ActionMenu *action_menu_open(WindowStack *window_stack, ActionMenuConfig *config) {
   ActionMenuData *data = applib_type_zalloc(ActionMenuData);
   data->config = *config;
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // Apply defaults if client didn't assign foreground/background colors
   if (gcolor_is_invisible(data->config.colors.background)) {
     data->config.colors.background = ACTION_MENU_DEFAULT_BACKGROUND_COLOR;

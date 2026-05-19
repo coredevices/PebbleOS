@@ -17,7 +17,7 @@
 ////////////////////////////////////
 #include "test_graphics.h"
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   #include "8bit/test_framebuffer.h"
 #else
   #include "1bit/test_framebuffer.h"
@@ -176,7 +176,7 @@ void test_graphics_draw_line__clear(void) {
 			     TEST_NAMED_PBI_FILE("draw_line_inside_origin_layer")));
   layer_set_update_proc(&layer, &clear_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_clear")));
 #else
   cl_check(framebuffer_is_empty("clear_over_black", ctx.parent_framebuffer, GColorWhite));
@@ -846,7 +846,7 @@ void test_graphics_draw_line__same_point(void) {
   draw_lines_same_point(&ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_same_point")));
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   graphics_context_set_stroke_color(&ctx, GColorRed);
   draw_lines_same_point(&ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_same_point_color")));

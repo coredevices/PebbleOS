@@ -31,7 +31,7 @@
 #include "stubs_syscalls.h"
 #include "stubs_compiled_with_legacy2_sdk.h"
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 #define FONT_LINE_DELTA 2
 #else
 #define FONT_LINE_DELTA 0

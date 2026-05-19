@@ -48,7 +48,7 @@ inline static void prv_inverter_layer_update_proc_bw(GContext *ctx) {
 }
 
 void inverter_layer_update_proc(InverterLayer *inverter, GContext* ctx) {
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   prv_inverter_layer_update_proc_bw(ctx);
 #else
   prv_inverter_layer_update_proc_color(ctx);

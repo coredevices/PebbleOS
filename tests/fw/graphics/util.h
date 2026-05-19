@@ -54,7 +54,7 @@ static const char *namecat(const char* str1, const char* str2){
 
   if (filename_xbit) {
     // Support using ".Xbit" for the native bitdepth
-    filename_xbit[1] = (SCREEN_COLOR_DEPTH_BITS == 8) ? '8' : '1';
+    filename_xbit[1] = (CONFIG_SCREEN_COLOR_DEPTH_BITS == 8) ? '8' : '1';
     printf("filename and filename_xbit %s : %s\n", filename, filename_xbit);
   } else {
 #if !PLATFORM_DEFAULT
@@ -143,7 +143,7 @@ GBitmap *get_gbitmap_from_pbi(const char *filename) {
   // Support using ".Xbit" for the native bitdepth
   char *filename_xbit = strstr(full_path, ".Xbit");
   if (filename_xbit) {
-    filename_xbit[1] = (SCREEN_COLOR_DEPTH_BITS == 8) ? '8' : '1';
+    filename_xbit[1] = (CONFIG_SCREEN_COLOR_DEPTH_BITS == 8) ? '8' : '1';
   }
 
   FILE *file = fopen(full_path, "r");

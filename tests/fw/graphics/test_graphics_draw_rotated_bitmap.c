@@ -18,7 +18,7 @@
 // Helper Functions
 ////////////////////////////////////
 #include "test_graphics.h"
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   #include "1bit/test_framebuffer.h"
 #else
   #include "8bit/test_framebuffer.h"
@@ -39,9 +39,9 @@ static GBitmap *test_image_bw;
 static GBitmap *test_image_color;
 static FrameBuffer *fb = NULL;
 
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
 extern bool get_bitmap_bit(GBitmap *bmp, int x, int y);
-#elif SCREEN_COLOR_DEPTH_BITS == 8
+#elif CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 extern GColor get_bitmap_color(GBitmap *bmp, int x, int y);
 #endif
 
@@ -94,13 +94,13 @@ static void setup_test_rotate_bitmap(GContext *ctx, FrameBuffer *fb,
 // Tests
 ////////////////////////////////////
 void test_graphics_draw_rotated_bitmap__get_color(void) {
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   cl_check(get_bitmap_bit(test_image_bw, 8, 16) == 1);
   cl_check(get_bitmap_bit(test_image_bw, 8, 24) == 0);
   cl_check(get_bitmap_bit(test_image_color, 30, 2) == 0);
   cl_check(get_bitmap_bit(test_image_color, 30, 10) == 0);
   cl_check(get_bitmap_bit(test_image_color, 30, 30) == 1);
-#elif SCREEN_COLOR_DEPTH_BITS == 8
+#elif CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gcolor_equal(get_bitmap_color(test_image_bw, 8, 16), GColorWhite));
   cl_check(gcolor_equal(get_bitmap_color(test_image_bw, 8, 24), GColorBlack));
   cl_check(gcolor_equal(get_bitmap_color(test_image_color, 30, 2), GColorClear));

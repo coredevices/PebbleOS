@@ -28,11 +28,11 @@ void test_framebuffer_${BIT_DEPTH_NAME}__framebuffer_clear(void) {
   framebuffer_clear(&framebuffer);
 
   // check the clearing
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   for (int i = 0; i < ARRAY_LENGTH(framebuffer.buffer); i++) {
     cl_assert(framebuffer.buffer[i] == 0xffffffff);
   }
-#elif SCREEN_COLOR_DEPTH_BITS == 8
+#elif CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   for (int i = 0; i < ARRAY_LENGTH(framebuffer.buffer); i++) {
     cl_assert(framebuffer.buffer[i] == GColorWhite.argb);
   }

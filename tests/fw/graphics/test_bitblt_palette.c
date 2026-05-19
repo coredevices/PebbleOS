@@ -40,7 +40,7 @@ static GBitmap dest_bitmap = {
 
 // Utilities
 ////////////////////////////////////
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 extern GColor get_bitmap_color(GBitmap *bmp, int x, int y);
 #endif
 
@@ -117,7 +117,7 @@ void test_bitblt_palette__1Bit_color(void) {
   }
   memset(dest_bitmap_data, GColorWhite.argb, sizeof(dest_bitmap_data));
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   char print_buf[20];
   for (int y = 0; y < HEIGHT; ++y) {
     for (int x = 0; x < WIDTH; ++x) {
@@ -161,7 +161,7 @@ void test_bitblt_palette__4Bit_assign(void) {
   }
   memset(dest_bitmap_data, GColorWhite.argb, sizeof(dest_bitmap_data));
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   char print_buf[20];
   for (int y = 0; y < HEIGHT; ++y) {
     for (int x = 0; x < WIDTH; ++x) {
@@ -210,7 +210,7 @@ static void prv_opaque_2bit_simple(GCompOp compositing_mode) {
 
   memset(dest_bitmap_data, GColorWhite.argb, sizeof(dest_bitmap_data));
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   char print_buf[20];
   for (int y = 0; y < HEIGHT; ++y) {
     for (int x = 0; x < WIDTH; ++x) {

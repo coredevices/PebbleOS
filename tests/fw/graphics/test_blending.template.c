@@ -47,11 +47,11 @@ void prv_test_plot_horizontal_line(GBitmap *framebuffer, GRect area, GColor colo
   int16_t x_max = MIN(MAX(x0, x1), framebuffer->bounds.origin.x + framebuffer->bounds.size.w);
 
   for (int i=x_min; i < x_max; i++) {
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
     GColor *output = (GColor*)framebuffer->addr + y * framebuffer->row_size_bytes + i;
     //                                     src_col, dest_col
     output->argb = gcolor_alpha_blend(color, (*output)).argb;
-#endif // SCREEN_COLOR_DEPTH_BITS == 8
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   }
 }
 
@@ -67,7 +67,7 @@ void test_blending_${BIT_DEPTH_NAME}__photoshop(void) {
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
   graphics_draw_bitmap_in_rect(&ctx, background_0_100, &ORIGIN_RECT_NO_CLIP);
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // Sanity check
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "blendtest_0_100_backdrop.pbi"));

@@ -205,7 +205,7 @@ void test_graphics_draw_rect_${BIT_DEPTH_NAME}__origin_aa_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rect_origin_aa_sw3_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // AA = true, SW = 4
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 4);
@@ -236,7 +236,7 @@ void test_graphics_draw_rect_${BIT_DEPTH_NAME}__origin_aa_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rect_origin_aa_sw5_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // AA = true, SW = 11
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
@@ -299,7 +299,7 @@ void test_graphics_draw_rect_${BIT_DEPTH_NAME}__origin_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rect_origin_sw3_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // SW = 4
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 4);
@@ -330,7 +330,7 @@ void test_graphics_draw_rect_${BIT_DEPTH_NAME}__origin_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rect_origin_sw5_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // SW = 11
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 11);
@@ -400,7 +400,7 @@ void test_graphics_draw_rect_${BIT_DEPTH_NAME}__offset_aa_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rect_offset_aa_sw3_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // AA = true, SW = 4
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 4);
@@ -431,7 +431,7 @@ void test_graphics_draw_rect_${BIT_DEPTH_NAME}__offset_aa_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rect_offset_aa_sw5_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // AA = true, SW = 11
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 11);
@@ -494,7 +494,7 @@ void test_graphics_draw_rect_${BIT_DEPTH_NAME}__offset_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rect_offset_sw3_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // SW = 4
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, false, 4);
@@ -525,7 +525,7 @@ void test_graphics_draw_rect_${BIT_DEPTH_NAME}__offset_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rect_offset_sw5_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // SW = 11
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, false, 11);
@@ -648,7 +648,7 @@ static void prv_draw_dither_rects(GContext* ctx, GColor8 fill_color) {
 }
 
 void test_graphics_draw_rect_${BIT_DEPTH_NAME}__dithering_gray(void) {
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   GContext ctx;
   prv_draw_dither_rects(&ctx, GColorLightGray);
   prv_draw_dither_rects(&ctx, GColorDarkGray);

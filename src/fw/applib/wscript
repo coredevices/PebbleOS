@@ -27,15 +27,7 @@ def _autogen_applib_sources(bld):
 
 def _get_bit_depth_excludes(bld):
     bit_depths = [1, 8]
-    if (
-        bld.is_obelix() or
-        bld.is_getafix() or
-        bld.is_qemu_emery() or
-        bld.is_qemu_gabbro()
-    ):
-        depth = 8
-    else:
-        depth = 1
+    depth = bld.env.CONFIG_SCREEN_COLOR_DEPTH_BITS
     return ['**/{}_bit/**'.format(x) for x in bit_depths if x != depth]
 
 

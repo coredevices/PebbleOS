@@ -668,7 +668,7 @@ void test_graphics_context_${BIT_DEPTH_NAME}__fill_antialiased(void) {
 
   setup_test(&context, true, 5, GColorBlack, GColorBlack, false);
   graphics_fill_rect(&context, &GRect(10, 20, 40, 10));
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   ASSERT_CALLED(prv_fill_rect_non_aa(&context, &GRect(10, 20, 40, 10), 0, GCornerNone, GColorBlack));
 #else
   ASSERT_CALLED(prv_fill_rect_aa(&context, &GRect(10, 20, 40, 10), 0, GCornerNone, GColorBlack));
@@ -684,7 +684,7 @@ void test_graphics_context_${BIT_DEPTH_NAME}__fill_antialiased(void) {
 
   setup_test(&context, true, 5, GColorBlack, GColorBlack, false);
   graphics_fill_round_rect(&context, &GRect(20, 80, 40, 10), 4, GCornersAll);
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   ASSERT_CALLED(prv_fill_rect_non_aa(&context, &GRect(20, 80, 40, 10), 4, GCornersAll, GColorBlack));
 #else
   ASSERT_CALLED(prv_fill_rect_aa(&context, &GRect(20, 80, 40, 10), 4, GCornersAll, GColorBlack));

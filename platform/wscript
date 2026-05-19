@@ -109,29 +109,22 @@ def capability(ctx, capability_str):
 @conf
 def add_platform_defines(ctx, env):
     if ctx.is_qemu_emery():
-        bit_depth = 8
         platform = 'QEMU_EMERY'
     elif ctx.is_qemu_flint():
-        bit_depth = 1
         platform = 'QEMU_FLINT'
     elif ctx.is_qemu_gabbro():
-        bit_depth = 8
         platform = 'QEMU_GABBRO'
     elif ctx.is_asterix():
-        bit_depth = 1
         platform = 'ASTERIX'
     elif ctx.is_obelix():
-        bit_depth = 8
         platform = 'OBELIX'
     elif ctx.is_getafix():
-        bit_depth = 8
         platform = 'GETAFIX'
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 
     defines = ['BOARD_{}=1'.format(ctx.options.board.upper()),
                'PLATFORM_{}=1'.format(platform),
-               'SCREEN_COLOR_DEPTH_BITS={}'.format(bit_depth),
                'MIN_SDK_VERSION={}'.format(env.MIN_SDK_VERSION)]
     env.append_value('DEFINES', defines)
 

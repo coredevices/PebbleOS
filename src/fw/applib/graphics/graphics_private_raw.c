@@ -15,12 +15,12 @@ ALWAYS_INLINE void graphics_private_raw_blend_color_factor(const GContext *ctx, 
                                                            unsigned int data_offset,
                                                            GColor src_color, int x,
                                                            uint8_t factor) {
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   src_color.a = (uint8_t)(factor * 3 / (FIXED_S16_3_ONE.raw_value - 1));
 
   const GColor blended_color = gcolor_alpha_blend(src_color, *dst_color);
   *dst_color = blended_color;
-#endif // (SCREEN_COLOR_DEPTH_BITS == 8)
+#endif // (CONFIG_SCREEN_COLOR_DEPTH_BITS == 8)
 }
 
 static ALWAYS_INLINE void prv_set_color(const GContext *ctx, GColor *dst_color,
@@ -185,7 +185,7 @@ T_STATIC void prv_blend_horizontal_line_raw(GContext *ctx, int16_t y, int16_t x1
   // TODO: as part of PBL-30849 make this a first-class function
   // also see, prv_assign_horizontal_line_raw
   prv_assign_row_with_pattern_1bit(framebuffer, y, x1, x2 - x1 + 1, color);
-#endif // SCREEN_COLOR_DEPTH_BITS == 8
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 }
 
 // This function draws vertical line with blending, given values have to be clipped and adjusted
@@ -194,7 +194,7 @@ T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t y1, 
                                           GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   for (int i = y1; i < y2; i++) {
     // Skip over pixels outside the bitmap data row's range
     const GBitmapDataRowInfo data_row_info = gbitmap_get_data_row_info(framebuffer, i);
@@ -212,7 +212,7 @@ T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t y1, 
     uint8_t *line = ((uint8_t *)framebuffer->addr) + (framebuffer->row_size_bytes * i);
     bitset8_update(line, x, !black);
   }
-#endif // SCREEN_COLOR_DEPTH_BITS == 8
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 }
 
 // This function will draw a horizontal line with two gradients on side representing AA edges

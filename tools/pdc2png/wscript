@@ -65,7 +65,7 @@ def build(bld):
     bld.program(source=sources,
                 target=output,
                 includes=includes,
-                defines=['UNITTEST', 'SCREEN_COLOR_DEPTH_BITS=8',
+                defines=['UNITTEST', 'CONFIG_SCREEN_COLOR_DEPTH_BITS=8',
                          # TODO: PBL-21014 Support arbitrary display sizes
                          'DISP_COLS=144', 'DISP_ROWS=168',
                          'DISPLAY_FRAMEBUFFER_BYTES=%d' % (144 * 168),

@@ -38,7 +38,7 @@ void progress_layer_update_proc(ProgressLayer* progress_layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, progress_layer->foreground_color);
   graphics_fill_round_rect(ctx, &progress_bar, corner_radius, GCornersAll);
 
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   graphics_context_set_stroke_color(ctx, progress_layer->foreground_color);
   graphics_draw_round_rect(ctx, bounds, corner_radius);
 #endif

@@ -11,7 +11,7 @@ static GPoint bitmap_center = {DISP_COLS / 2, DISP_ROWS / 2};
 static GPoint bitmap_64_center = {64 / 2, 64 / 2};
 
 static void prv_setup(Window *window) {
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   s_gfx_rotated_bitmap_bitmap = gbitmap_create_blank(GSize(DISP_COLS, DISP_ROWS),
                                                      GBitmapFormat1Bit);
   s_gfx_rotated_bitmap_64_bitmap = gbitmap_create_blank(GSize(64, 64), GBitmapFormat1Bit);
@@ -28,7 +28,7 @@ static void prv_setup(Window *window) {
     s_gfx_rotated_bitmap_pixels[index] = (index % 2) ? 0xf0 : 0xcc;
   }
 
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   uint32_t size_64 = (64*64)/8;
 #else
   uint32_t size_64 = (64*64);

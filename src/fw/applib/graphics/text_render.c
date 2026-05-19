@@ -26,7 +26,7 @@ static GRect get_glyph_rect(const GlyphData* glyph) {
   return r;
 }
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 /// This function returns the x coordinate of where to write the contents of a given word (32-bits)
 /// of data from the 1-bit frame buffer into the 8-bit framebuffer
 /// @param dest_bitmap 8-bit destination frame buffer bitmap
@@ -89,7 +89,7 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
   const int right_clip = MIN(glyph_target.size.w,
                              MAX(0, glyph_target.size.w - clipped_glyph_target.size.w - left_clip));
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // Set base address to 0 for 8-bit as this will be later translated to the destination bitmap
   // address - so do all calculations so everything is offset from 0
   uint32_t * base_addr = 0;
@@ -105,14 +105,14 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
     return;
   }
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // NOTE: Since all calculations are based on 1-bit calculation - use the row size from
   // the 1-bit frame buffer
   const int row_size_bytes = 4 * ((dest_bitmap->bounds.size.w / 32) +
                                   ((dest_bitmap->bounds.size.w % 32) ? 1 : 0));
 #else
   const int row_size_bytes = dest_bitmap->row_size_bytes;
-#endif // SCREEN_COLOR_DEPTH_BITS == 8
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // Number of blocks (i.e. 32-bit chunks)
   const int dest_row_length = row_size_bytes / 4;
@@ -199,7 +199,7 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
       const uint8_t number_of_bits = MIN(32 - dest_shift, MIN(glyph_line_bits_left, glyph_block_bits_left));
       const uint32_t mask = (((1 << number_of_bits) - 1) << dest_shift);
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
       // dest_block points to the block if the dest image was a 1-bit buffer
       // translate this to an x coordinate in the 8-bit buffer
       const int32_t block_start_x = prv_convert_1bit_addr_to_8bit_x(dest_bitmap, dest_block,

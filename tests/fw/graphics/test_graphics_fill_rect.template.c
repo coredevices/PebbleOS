@@ -281,7 +281,7 @@ void test_graphics_fill_rect_${BIT_DEPTH_NAME}__origin_radius_aa(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "fill_rect_origin_r2_aa_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
 // TODO: Remove these #ifdefs in PBL-15916 when support for non-antialiased rounded rect
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // TODO: Fix left corners PBL-15915
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
   graphics_fill_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, 3, GCornersAll);
@@ -313,7 +313,7 @@ void test_graphics_fill_rect_${BIT_DEPTH_NAME}__origin_radius_aa(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "fill_rect_origin_r8_aa_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
 // TODO: Remove these #ifdefs in PBL-15916 when support for non-antialiased rounded rect
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
   graphics_fill_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, 9, GCornersAll);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "fill_rect_origin_r9_aa_no_clip.${BIT_DEPTH_NAME}.pbi"));
@@ -338,7 +338,7 @@ void test_graphics_fill_rect_${BIT_DEPTH_NAME}__origin_radius_aa(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "fill_rect_origin_r0_aa_clip_xy.${BIT_DEPTH_NAME}.pbi"));
 
 // TODO: Remove these #ifdefs in PBL-15916 when support for non-antialiased rounded rect
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_XY, ORIGIN_RECT_CLIP_XY, true, 1);
   graphics_fill_round_rect(&ctx, &ORIGIN_DRAW_RECT_CLIP_XY, 1, GCornersAll);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "fill_rect_origin_r1_aa_clip_xy.${BIT_DEPTH_NAME}.pbi"));
@@ -371,7 +371,7 @@ void test_graphics_fill_rect_${BIT_DEPTH_NAME}__origin_radius_aa(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "fill_rect_origin_r0_aa_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
 // TODO: Remove these #ifdefs in PBL-15916 when support for non-antialiased rounded rect
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_NXNY , ORIGIN_RECT_CLIP_NXNY , true, 1);
   graphics_fill_round_rect(&ctx, &ORIGIN_DRAW_RECT_CLIP_NXNY , 1, GCornersAll);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "fill_rect_origin_r1_aa_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
@@ -443,7 +443,7 @@ void test_graphics_fill_rect_${BIT_DEPTH_NAME}__origin_aa_corners(void) {
   test_graphics_context_init(&ctx, fb);
 
 // TODO: Remove these #ifdefs in PBL-15916 when support for non-antialiased rounded rect
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
   graphics_fill_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1, GCornersBottom);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "fill_rect_origin_rmax_aa_bottom.${BIT_DEPTH_NAME}.pbi"));

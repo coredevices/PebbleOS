@@ -101,11 +101,11 @@ void dialog_set_text(Dialog *dialog, const char *text);
 void dialog_set_text_buffer(Dialog *dialog, char *buffer, bool take_ownership);
 
 // Sets the color of the dialog's text.
-// if SCREEN_COLOR_DEPTH_BITS == 1 then the color will always be set to black
+// if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1 then the color will always be set to black
 void dialog_set_text_color(Dialog *dialog, GColor text_color);
 
 // Sets the background color of the dialog window.
-// if SCREEN_COLOR_DEPTH_BITS == 1 then the color will always be set to white
+// if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1 then the color will always be set to white
 void dialog_set_background_color(Dialog *dialog, GColor background_color);
 
 // Sets the icon displayed by the dialog.

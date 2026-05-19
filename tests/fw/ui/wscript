@@ -148,7 +148,7 @@ def build(ctx):
             " tests/fakes/fake_events.c"
             " tests/stubs/stubs_click.c",
         test_sources_ant_glob = "test_window_stack.c",
-        defines=['SCREEN_COLOR_DEPTH_BITS=8'],
+        defines=['CONFIG_SCREEN_COLOR_DEPTH_BITS=8'],
         override_includes=['dummy_board'])
 
     clar(ctx,

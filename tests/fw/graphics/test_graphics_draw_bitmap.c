@@ -17,12 +17,12 @@
 #include "test_graphics.h"
 #include "../graphics/util.h"
 
-#if (SCREEN_COLOR_DEPTH_BITS == 1)
+#if (CONFIG_SCREEN_COLOR_DEPTH_BITS == 1)
 #include "1bit/test_framebuffer.h"
-#elif (SCREEN_COLOR_DEPTH_BITS == 8)
+#elif (CONFIG_SCREEN_COLOR_DEPTH_BITS == 8)
 #include "8bit/test_framebuffer.h"
 #else
-#error "Unrecognized SCREEN_COLOR_DEPTH_BITS"
+#error "Unrecognized CONFIG_SCREEN_COLOR_DEPTH_BITS"
 #endif
 
 

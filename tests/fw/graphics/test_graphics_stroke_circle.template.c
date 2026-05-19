@@ -57,7 +57,7 @@ void test_graphics_stroke_circle_${BIT_DEPTH_NAME}__cleanup(void) {
 
 void test_graphics_stroke_circle_${BIT_DEPTH_NAME}__origin_layer(void) {
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
@@ -118,7 +118,7 @@ void test_graphics_stroke_circle_${BIT_DEPTH_NAME}__origin_layer(void) {
   graphics_draw_circle(&ctx, CENTER_OF_ORIGIN_RECT_NXNY, RADIUS_NONE);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "stroke_circle_origin_aa_r0_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
-#endif // SCREEN_COLOR_DEPTH_BITS == 8
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
 }
 
@@ -130,7 +130,7 @@ void test_graphics_stroke_circle_${BIT_DEPTH_NAME}__origin_layer(void) {
 
 void test_graphics_stroke_circle_${BIT_DEPTH_NAME}__offset_layer_aa(void) {
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
@@ -174,7 +174,7 @@ void test_graphics_stroke_circle_${BIT_DEPTH_NAME}__offset_layer_aa(void) {
   graphics_draw_circle(&ctx, CENTER_OF_OFFSET_RECT_NXNY, RADIUS_SMALL);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "stroke_circle_offset_aa_r1_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
-#endif // SCREEN_COLOR_DEPTH_BITS == 8
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
 }
 
@@ -184,7 +184,7 @@ extern void graphics_circle_quadrant_draw_stroked_non_aa(
 
 void test_graphics_stroke_circle_${BIT_DEPTH_NAME}__quadrants(void) {
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
@@ -221,7 +221,7 @@ void test_graphics_stroke_circle_${BIT_DEPTH_NAME}__quadrants(void) {
   graphics_circle_quadrant_draw_stroked_non_aa(&ctx, CENTER_OF_ORIGIN_RECT, RADIUS_MEDIUM, STROKE_SMALL,GCornersLeft);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "stroke_circle_offset_r8_quads_left.${BIT_DEPTH_NAME}.pbi"));
 
-#endif // SCREEN_COLOR_DEPTH_BITS == 8
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
 }
 
@@ -231,7 +231,7 @@ extern void graphics_circle_quadrant_draw_stroked_aa(
 
 void test_graphics_draw_circle_${BIT_DEPTH_NAME}__quadrants_aa(void) {
 
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
@@ -268,6 +268,6 @@ void test_graphics_draw_circle_${BIT_DEPTH_NAME}__quadrants_aa(void) {
   graphics_circle_quadrant_draw_stroked_aa(&ctx, CENTER_OF_ORIGIN_RECT, RADIUS_MEDIUM, STROKE_SMALL,GCornersLeft);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "stroke_circle_offset_aa_r8_quads_left.${BIT_DEPTH_NAME}.pbi"));
 
-#endif // SCREEN_COLOR_DEPTH_BITS == 8
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
 }

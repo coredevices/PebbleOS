@@ -119,7 +119,7 @@ void test_graphics_draw_stroke_${BIT_DEPTH_NAME}__origin_layer(void) {
   test_graphics_context_init(&ctx, fb);
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, STROKE_WIDTH);
   graphics_draw_line(&ctx, START_ON_ORIGIN_RECT, END_ON_ORIGIN_RECT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_inside_origin_layer.${BIT_DEPTH_NAME}.pbi"));
@@ -147,7 +147,7 @@ void test_graphics_draw_stroke_${BIT_DEPTH_NAME}__offset_layer(void) {
   test_graphics_context_init(&ctx, fb);
 
   // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if SCREEN_COLOR_DEPTH_BITS == 8
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, STROKE_WIDTH);
   graphics_draw_line(&ctx, START_ON_ORIGIN_RECT, END_ON_ORIGIN_RECT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_inside_offset_layer.${BIT_DEPTH_NAME}.pbi"));

@@ -23,10 +23,10 @@
 
 #define INDICATOR "»"
 
-#if !PBL_ROUND || (!defined(RECOVERY_FW) && SCREEN_COLOR_DEPTH_BITS == 8)
+#if !PBL_ROUND || (!defined(RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8)
 static const int VERTICAL_PADDING = PBL_IF_COLOR_ELSE(2, 4);
 #endif
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
 static const int EXTRA_PADDING_1_BIT = 2;
 #endif
 static const int SHORT_COL_COUNT = 3;
@@ -78,7 +78,7 @@ static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
 
     if (sel_idx == i) {
       graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
       // We only want to have a background on non-color platforms, while leaving this in with
       // a PBL_IF_COLOR_ELSE makes this a no-op, we'll save some cycles and code space just
       // skipping it.
@@ -191,7 +191,7 @@ static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool
   const int16_t item_height = aml->layout_cache.item_heights[aml->selected_index];
   const int16_t line_height = fonts_get_font_height(aml->layout_cache.font);
 
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   // We need to force it to scroll a little extra for 1 bit
   label_text_frame->origin.y -= EXTRA_PADDING_1_BIT;
 #endif
@@ -292,7 +292,7 @@ static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_lay
     content_box->size.w -= horizontal_padding;
   }
 
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   // Fill in the background layer.  This effectively does nothing on watches where we have the
   // ability to draw with color, but on others, it will render a background behind the selected
   // cell.
@@ -403,7 +403,7 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
   // layer box.
   if (selected) {
     prv_animate_cell(aml, &label_text_frame, &draw_top_shading, &draw_bottom_shading);
-#if !defined(RECOVERY_FW) && SCREEN_COLOR_DEPTH_BITS == 8
+#if !defined(RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
     // Replace the clip box with a clip box that will render the item in the right place with the
     // right size, without menu layer's selection clipping. Menu layer will responsible for cleaning
     // up the changes made to this clip box.
@@ -429,7 +429,7 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
                    prv_cell_item_content_draw_round)(ctx, cell_layer, aml, item, selected,
                                                      &label_text_frame);
 
-#if !defined(RECOVERY_FW) && SCREEN_COLOR_DEPTH_BITS == 8
+#if !defined(RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   const int16_t fade_height = 10;
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   if (draw_top_shading) {
@@ -519,7 +519,7 @@ static int16_t prv_get_cell_padding(ActionMenuLayer *aml) {
 #if PBL_ROUND
   // when showing columns, set cells further apart
   return prv_aml_is_short(aml) ? default_sep_height : 1;
-#elif SCREEN_COLOR_DEPTH_BITS == 1
+#elif CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   return default_sep_height;
 #else
   const int16_t line_height = fonts_get_font_height(aml->layout_cache.font);

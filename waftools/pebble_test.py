@@ -398,7 +398,7 @@ def add_clar_test(
     platform_defines += [
         "PLATFORM_" + platform.upper(),
         'PLATFORM_NAME="%s"' % platform,
-    ] + ["SCREEN_COLOR_DEPTH_BITS=%d" % bitdepth]
+    ] + ["CONFIG_SCREEN_COLOR_DEPTH_BITS=%d" % bitdepth]
 
     # flash_region.h selects a per-chip header from CONFIG_FLASH_*. Tests
     # don't load a board defconfig, so inject the right one based on which

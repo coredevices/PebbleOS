@@ -81,7 +81,7 @@ static void prv_request_fast_connection(CommSession *session) {
 
 static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
                                            uint32_t max_chunk_bytes, uint8_t *output_buffer) {
-  const uint32_t bytes_per_row = SCREEN_COLOR_DEPTH_BITS * DISP_COLS / 8;
+  const uint32_t bytes_per_row = CONFIG_SCREEN_COLOR_DEPTH_BITS * DISP_COLS / 8;
   const uint32_t cols_per_byte = DISP_COLS / bytes_per_row;
 
   uint32_t remaining_chunk_bytes = max_chunk_bytes;
@@ -168,12 +168,12 @@ void screenshot_send_next_chunk(void* raw_state) {
   } else {
     const ScreenshotHeader header = (const ScreenshotHeader) {
       .response_code = SCREENSHOT_OK,
-#if SCREEN_COLOR_DEPTH_BITS == 1
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
       .version       = htonl(1),
-#elif SCREEN_COLOR_DEPTH_BITS == 8
+#elif CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
       .version       = htonl(2),
 #else
-#warning "Need SCREEN_COLOR_DEPTH_BITS for screenshot version."
+#warning "Need CONFIG_SCREEN_COLOR_DEPTH_BITS for screenshot version."
 #endif
       .width         = htonl(state->framebuffer.width),
       .height        = htonl(state->framebuffer.height),

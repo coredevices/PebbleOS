@@ -377,7 +377,7 @@ T_STATIC void prv_draw_round_rect_aa_stroked(GContext* ctx, const GRect *rect,
   // Assumes AA and stroke_width is set appropriately in ctx
   prv_draw_round_rect(ctx, rect, radius);
 }
-#endif // SCREEN_COLOR_DEPTH_BITS
+#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS
 
 T_STATIC void prv_draw_round_rect_stroked(GContext* ctx, const GRect *rect, uint16_t radius,
                                           uint8_t stroke_width) {
