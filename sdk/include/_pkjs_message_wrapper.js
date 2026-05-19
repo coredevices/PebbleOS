@@ -118,7 +118,8 @@
   ["addEventListener", "removeEventListener", "showSimpleNotificationOnPebble",
    "sendAppMessage", "getTimelineToken", "timelineSubscribe",
    "timelineUnsubscribe", "timelineSubscriptions", "getActiveWatchInfo",
-   "getAccountToken", "getWatchToken", "appGlanceReload"].forEach(
+   "getAccountToken", "getWatchToken", "appGlanceReload",
+   "playSound", "playSoundById", "playDefaultRingtone", "stopSound"].forEach(
       function(elem, idx, arr) {
         if ((elem in Pebble) || ((typeof __Pebble[elem]) !== 'function')) {
           // This function has already been copied over or doesn't actually exist.
