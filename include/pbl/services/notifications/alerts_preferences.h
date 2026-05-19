@@ -40,6 +40,13 @@ void alerts_preferences_dnd_set_motion_backlight(bool enable);
 //! @return Whether motion backlight is enabled when DND is active
 bool alerts_preferences_dnd_get_motion_backlight(void);
 
+//! Set whether tap / double-tap gestures should turn on the backlight when DND is active
+//! @param enable true to allow touch backlight, false to suppress it
+void alerts_preferences_dnd_set_touch_backlight(bool enable);
+
+//! @return Whether touch backlight is enabled when DND is active
+bool alerts_preferences_dnd_get_touch_backlight(void);
+
 //! Set whether the speaker should be muted while DND is active.
 //! @param enable true to mute the speaker during DND, false to allow audio
 void alerts_preferences_dnd_set_mute_speaker(bool enable);

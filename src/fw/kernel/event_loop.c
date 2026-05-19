@@ -301,7 +301,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       }
 #ifndef RECOVERY_FW
       const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
-                                           !alerts_preferences_dnd_get_motion_backlight();
+                                           !alerts_preferences_dnd_get_touch_backlight();
       if (dnd_suppresses_backlight) {
         return;
       }
@@ -340,7 +340,7 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent* e) {
       if (wake_on_gesture) {
 #ifndef RECOVERY_FW
         const bool dnd_suppresses_backlight = do_not_disturb_is_active() &&
-                                             !alerts_preferences_dnd_get_motion_backlight();
+                                             !alerts_preferences_dnd_get_touch_backlight();
         if (!dnd_suppresses_backlight)
 #endif
         {
