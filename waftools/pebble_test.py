@@ -411,6 +411,17 @@ def add_clar_test(
     if platform in test_flash_chip:
         platform_defines.append(test_flash_chip[platform])
 
+    # platform.h derives PBL_PLATFORM_TYPE_CURRENT from CONFIG_PLATFORM_*.
+    # Tests don't load a board defconfig, so map the test platform to the
+    # SDK-level CONFIG_PLATFORM_* the production code expects.
+    test_sdk_platform = {
+        "asterix": "CONFIG_PLATFORM_FLINT=1",
+        "obelix": "CONFIG_PLATFORM_EMERY=1",
+        "gabbro": "CONFIG_PLATFORM_GABBRO=1",
+    }
+    if platform in test_sdk_platform:
+        platform_defines.append(test_sdk_platform[platform])
+
     # Production code (e.g. framebuffer.c, gbitmap.c) selects round-display
     # behaviour from the board-level PLATFORM_<BOARD> defines (PLATFORM_GETAFIX,
     # PLATFORM_QEMU_GABBRO). Tests run under the SDK-level PLATFORM_GABBRO;

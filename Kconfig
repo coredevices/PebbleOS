@@ -8,5 +8,25 @@ config RELEASE
       features like Memfault crash reporting that should only run on
       shipping firmware.
 
+<<<<<<< HEAD
+=======
+config QEMU
+    bool "QEMU emulated board"
+    help
+      Set in QEMU board defconfigs (qemu_emery, qemu_flint,
+      qemu_gabbro). Used to gate features that don't make sense
+      under emulation.
+
+choice
+    prompt "SDK platform"
+config PLATFORM_EMERY
+    bool "Emery"
+config PLATFORM_FLINT
+    bool "Flint"
+config PLATFORM_GABBRO
+    bool "Gabbro"
+endchoice
+
+>>>>>>> 1b30b6ba (treewide: Use CONFIG_PLATFORM_* for platforms)
 rsource "src/Kconfig"
 rsource "third_party/Kconfig"

@@ -17,22 +17,14 @@ typedef enum PlatformType {
 // Therefore, we need to switch on the platform for the platform type.
 #if !defined(SDK)
   // Variant boards should go before their base platforms, as they define the base platform too.
-  #if PLATFORM_QEMU_EMERY
+  #ifdef CONFIG_PLATFORM_EMERY
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
-  #elif PLATFORM_QEMU_FLINT
+  #elif defined(CONFIG_PLATFORM_FLINT)
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
-  #elif PLATFORM_QEMU_GABBRO
+  #elif defined(CONFIG_PLATFORM_GABBRO)
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
   #elif PLATFORM_TINTIN
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeAplite
-  #elif PLATFORM_OBELIX
-    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
-  #elif PLATFORM_ASTERIX
-    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
-  #elif PLATFORM_GETAFIX
-    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
-  #elif PLATFORM_GABBRO
-    #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
   #else
     #error "PBL_PLATFORM_TYPE_CURRENT couldn't be determined: No PLATFORM_* defined!"
   #endif
