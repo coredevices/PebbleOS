@@ -94,7 +94,7 @@ def configure(conf):
 
 def _generate_memory_layout(bld):
 
-    if bld.is_qemu():
+    if bld.env.CONFIG_QEMU:
         ldscript_template = bld.path.find_node('qemu_flash_fw.ld.template')
     elif bld.is_asterix():
         ldscript_template = bld.path.find_node('nrf52840_flash_fw.ld.template')
@@ -133,7 +133,7 @@ def _generate_memory_layout(bld):
         else:
             fw_max_size = flash_size
 
-    if bld.env.QEMU:
+    if bld.env.CONFIG_QEMU:
         flash_size = 4 * 1024 * 1024
         fw_max_size = flash_size
 
@@ -283,7 +283,7 @@ def _generate_memory_layout(bld):
 
 
 def _link_firmware(bld, sources):
-    if bld.is_qemu():
+    if bld.env.CONFIG_QEMU:
         if bld.is_qemu_gabbro():
             # qemu_gabbro needs the getafix round display row info data
             sources += ['board/displays/display_getafix.c']
@@ -392,7 +392,7 @@ def _link_firmware(bld, sources):
 def _get_mfg_paths(bld):
     """Return a list of directories we want to build to support manufacturing on a platform"""
 
-    if bld.is_qemu():
+    if bld.env.CONFIG_QEMU:
         return ('mfg/qemu',)
     elif bld.is_asterix():
         return ('mfg/asterix',)
@@ -410,7 +410,7 @@ def _get_dbg_paths(bld):
 
 def _get_comm_sources(bld, is_recovery):
     excl = []
-    if bld.env.QEMU:
+    if bld.env.CONFIG_QEMU:
         excl.append('comm/internals/profiles/ispp.c')
 
     if is_recovery:

@@ -6,7 +6,7 @@
 accel_sources = []
 accel_use = ['fw_includes', 'pbl_includes']
 
-if bld.env.QEMU:
+if bld.env.CONFIG_QEMU:
     accel_sources.append('../qemu/qemu_accel.c')
     accel_use.append('driver_qemu_serial')
 elif bld.env.CONFIG_ACCEL_LIS2DW12:

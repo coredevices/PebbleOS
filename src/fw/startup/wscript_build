@@ -4,7 +4,7 @@ if bld.is_asterix():
     sources.append(bld.path.make_node("startup_cortex_m.c"))
 elif bld.is_obelix() or bld.is_getafix():
     sources.append(bld.path.make_node("startup_sf32lb52.c"))
-elif bld.is_qemu():
+elif bld.env.CONFIG_QEMU:
     sources.append(bld.path.make_node("startup_qemu.c"))
 else:
     bld.fatal("No clock configuration file specified for this platform")

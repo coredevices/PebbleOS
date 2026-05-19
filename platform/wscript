@@ -40,10 +40,6 @@ def is_qemu_gabbro(ctx):
     return ctx.get_board() == 'qemu_gabbro'
 
 @conf
-def is_qemu(ctx):
-    return ctx.get_board().startswith('qemu_')
-
-@conf
 def get_platform_name(ctx):
     if is_qemu_emery(ctx):
         return "qemu_emery"
@@ -91,7 +87,7 @@ def get_qemu_cpu(ctx):
 
 @conf
 def get_qemu_spi_flash_args(ctx, spi_flash_path):
-    if is_qemu(ctx):
+    if ctx.env.CONFIG_QEMU:
         return ['-drive', 'if=mtd,format=raw,file={}'.format(spi_flash_path)]
     else:
         return None
