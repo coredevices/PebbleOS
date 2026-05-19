@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig HAL_NORDIC
+    bool "Nordic nrfx HAL"
+    help
+      Build the Nordic nrfx HAL.
+
+if HAL_NORDIC
+
+config HAL_NORDIC_NRF52840
+    bool "nRF52840 SoC variant"
+    help
+      Configure the nrfx HAL for the Nordic nRF52840 SoC. This sets
+      the NRF52840_XXAA target define and enables the nrfx drivers
+      used by Pebble (I2S, GPIOTE, PDM, PPI, PWM, SPIM3, TIMER1/2,
+      TWIM0/1, UARTE0). It also disables NFCT pin usage so those pins
+      can be used as GPIOs and enables GPIO-as-pin-reset.
+
+endif # HAL_NORDIC

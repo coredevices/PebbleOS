@@ -1,3 +1,4 @@
 mainmenu "PebbleOS Configuration"
 
 rsource "src/Kconfig"
+rsource "third_party/Kconfig"

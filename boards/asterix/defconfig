@@ -1,5 +1,8 @@
 # asterix board configuration
 
+CONFIG_HAL_NORDIC=y
+CONFIG_HAL_NORDIC_NRF52840=y
+
 CONFIG_I2C=y
 CONFIG_I2C_NRF5=y
 
