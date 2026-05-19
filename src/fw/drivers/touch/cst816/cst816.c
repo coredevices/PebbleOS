@@ -15,9 +15,7 @@
 #include "system/passert.h"
 #include "util/math.h"
 
-#if PLATFORM_OBELIX
 #include "cst816_fw.h"
-#endif
 
 #define CST816_RESET_CYCLE_TIME       10  /* ms */
 #define CST816_POR_DELAY_TIME         110 /* ms */
@@ -100,12 +98,16 @@ static bool prv_write_data(uint16_t register_address, const uint8_t *datum, uint
   return rv;
 }
 
-#if PLATFORM_OBELIX
 static bool cst816_enter_bootmode(void) {
 #if RESET_PIN_CTRLBY_NPM1300
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 0);
   psleep(CST816_RESET_CYCLE_TIME);
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 1);
+  psleep(CST816_RESET_CYCLE_TIME);
+#else
+  gpio_output_set(&CST816->reset, true);
+  psleep(CST816_RESET_CYCLE_TIME);
+  gpio_output_set(&CST816->reset, false);
   psleep(CST816_RESET_CYCLE_TIME);
 #endif
 
@@ -194,7 +196,6 @@ static bool cst816_fw_update(void) {
 
   return false;
 }
-#endif
 
 static void cst816_hw_reset(void) {
 #ifdef RESET_PIN_CTRLBY_NPM1300
@@ -237,7 +238,6 @@ void touch_sensor_init(void) {
 
   PBL_LOG_DBG("CST816 firmware: 0x%02X", fw_version);
 
-#if PLATFORM_OBELIX
   uint8_t target_ver = app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX];
 
   if (target_ver != fw_version) {
@@ -251,7 +251,6 @@ void touch_sensor_init(void) {
       return;
     }
   }
-#endif
 
   // initialize exti
   exti_configure_pin(CST816->int_exti, ExtiTrigger_Falling, prv_exti_cb);
