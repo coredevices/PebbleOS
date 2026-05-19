@@ -76,7 +76,7 @@ void display_jdi_register_coredump_regions(void) {
                                   sizeof(s_lcdc_pre_crash_regs));
 }
 
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
 // Test hook: arm a one-shot drop of the next LCDC transfer-complete callback,
 // simulating the silent-loss failure mode. The silent-loss timer should fire
 // ~DISPLAY_SILENT_LOSS_TIMEOUT_MS later and PBL_CROAK.
@@ -264,7 +264,7 @@ void display_jdi_irq_handler(DisplayJDIDevice *disp) {
 void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
   portBASE_TYPE woken = pdFALSE;
 
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
   if (s_test_drop_next_complete && s_updating) {
     s_test_drop_next_complete = false;
     // Simulate the lost-completion failure mode: leave s_eof_observed false
@@ -470,7 +470,7 @@ void display_update_boot_frame(uint8_t *framebuffer) {
 
 void display_clear(void) {}
 
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
 void display_jdi_test_drop_next_complete(void) {
   s_test_drop_next_complete = true;
 }

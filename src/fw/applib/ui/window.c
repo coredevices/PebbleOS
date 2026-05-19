@@ -173,7 +173,7 @@ void window_init(Window *window, const char* debug_name) {
     return;
   }
   *window = (Window){};
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
   window->debug_name = debug_name;
 #else
   (void)debug_name;
@@ -502,7 +502,7 @@ bool window_is_focusable(Window *window) {
 }
 
 const char* window_get_debug_name(Window *window) {
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
     return window->debug_name;
 #else
     return "?";

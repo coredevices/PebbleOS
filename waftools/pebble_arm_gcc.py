@@ -95,16 +95,6 @@ def options(opt):
         help="Use whatever CC is in the environment as our compiler",
     )
     opt.add_option(
-        "--beta",
-        action="store_true",
-        help="Build in beta mode (--beta and --release are mutually exclusive)",
-    )
-    opt.add_option(
-        "--release",
-        action="store_true",
-        help="Build in release mode (--beta and --release are mutually exclusive)",
-    )
-    opt.add_option(
         "--fat_firmware",
         action="store_true",
         help="build in GDB mode WITH logs; requires 1M of onbaord flash",
@@ -300,16 +290,8 @@ Or re-configure with the --relax_toolchain_restrictions option. """
     conf.env.SHLIB_MARKER = None
     conf.env.STLIB_MARKER = None
 
-    if conf.options.release and conf.options.beta:
-        raise RuntimeError(
-            "--beta and --release are mutually exclusive and cannot be used together"
-        )
-
     # Set optimization level
-    if conf.options.beta:
-        optimize_flags = "-Os"
-        print("Beta mode")
-    elif conf.options.release:
+    if conf.env.CONFIG_RELEASE:
         optimize_flags = "-Os"
         print("Release mode")
     elif conf.options.fat_firmware:

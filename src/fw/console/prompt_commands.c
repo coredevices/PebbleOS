@@ -1077,7 +1077,7 @@ void command_waste_time(const char *count_arg, const char *delay_arg) {
   }
 }
 
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
 #include "system/profiler.h"
 void command_audit_delay_us(void) {
   profiler_init();
@@ -1105,7 +1105,7 @@ void command_audit_delay_us(void) {
   __enable_irq();
 }
 
-#if !defined(RELEASE) && defined(CONFIG_DISPLAY_JDI_SF32LB)
+#if !defined(CONFIG_RELEASE) && defined(CONFIG_DISPLAY_JDI_SF32LB)
 #include "drivers/display/sf32lb/display_jdi.h"
 
 // Arms the JDI display driver to drop the next LCDC transfer-complete

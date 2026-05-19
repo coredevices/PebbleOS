@@ -170,13 +170,13 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
 static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *services_removed) {
   PebbleBLEGATTClientServiceHandles *service_remove_info = &services_removed->handles[0];
   for (int s = 0; s < services_removed->num_services_removed; s++) {
-#if !RELEASE
+#ifndef CONFIG_RELEASE
     bool removed = false;
 #endif
     for (int c = 0; c < KernelLEClientNum; c++) {
       const KernelLEClient * const client = &s_clients[c];
       if (uuid_equal(&service_remove_info->uuid, client->service_uuid)) {
-#if !RELEASE
+#ifndef CONFIG_RELEASE
         removed = true;
 #endif
         client->handle_service_removed(
@@ -185,7 +185,7 @@ static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *serv
       }
     }
 
-#if !RELEASE
+#ifndef CONFIG_RELEASE
     char uuid_string[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&service_remove_info->uuid, uuid_string);
     PBL_LOG_INFO("%s removed: %d", uuid_string, (int)removed);

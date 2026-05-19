@@ -149,7 +149,7 @@ typedef struct Window {
   const char* debug_name;
 } Window;
 
-#ifdef RELEASE
+#ifdef CONFIG_RELEASE
 #define WINDOW_NAME(x) ""
 #else
 #define WINDOW_NAME(x) x
@@ -381,7 +381,7 @@ void window_set_focusable(Window *window, bool focusable);
 bool window_is_focusable(Window *window);
 
 //! @internal
-//! @return A name used to identify the window. If RELEASE is defined will just return "?"
+//! @return A name used to identify the window. If CONFIG_RELEASE is defined will just return "?"
 //! @param window The window for which to get the debug name
 const char* window_get_debug_name(Window *window);
 

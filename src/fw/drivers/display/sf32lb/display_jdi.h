@@ -51,7 +51,7 @@ typedef const struct DisplayJDIDevice {
 
 void display_jdi_irq_handler(DisplayJDIDevice *disp);
 
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
 //! Test hook: arm a one-shot drop of the next LCDC transfer-complete callback,
 //! simulating the silent-loss failure mode (e.g. SiFli HAL ICB overflow). The
 //! silent-loss timer should fire ~500ms later and PBL_CROAK, producing a

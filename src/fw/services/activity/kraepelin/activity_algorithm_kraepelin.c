@@ -85,7 +85,7 @@ static AlgState *s_alg_state = NULL;
 // ----------------------------------------------------------------------------------------------
 static bool prv_lock(void) {
   if (!s_alg_state) {
-#if RELEASE
+#ifdef CONFIG_RELEASE
     PBL_LOG_ERR("Trying to use the activity algorithm but it hasn't been initialized");
     return false;
 #else

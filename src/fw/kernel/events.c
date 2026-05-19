@@ -386,7 +386,7 @@ void **event_get_buffer(PebbleEvent *event) {
 void event_cleanup(PebbleEvent* event) {
   event_deinit(event);
 
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
   // Hopefully this will catch some use after free evil
   *event = (PebbleEvent){};
 #endif

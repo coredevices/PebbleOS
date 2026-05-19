@@ -298,7 +298,7 @@ void heap_free(Heap* const heap, void *ptr, uintptr_t client_pc) {
     /* This will make calculations in this block easier.        */
     heap_info_ptr->is_allocated = false;
 
-#ifndef RELEASE
+#ifndef CONFIG_RELEASE
     if (heap->fuzz_on_free) {
       memset(ptr, 0xBD,
              (heap_info_ptr->Size - HEAP_INFO_BLOCK_SIZE(0)) * ALIGNMENT_SIZE);

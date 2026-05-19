@@ -45,7 +45,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --variant=prf --release
+        run: ./waf configure --board ${{ matrix.board }} --variant=prf -DCONFIG_RELEASE=y
 
       - name: Build PRF
         run: ./waf build
@@ -79,7 +79,7 @@ jobs:
           path-format: ${{ steps.prf_build_id.outputs.BUILD_ID }}-${{ github.sha }}-prf.json
 
       - name: Configure PRF MFG
-        run: ./waf configure --board ${{ matrix.board }} --variant=prf --mfg --nohash --release
+        run: ./waf configure --board ${{ matrix.board }} --variant=prf --mfg --nohash -DCONFIG_RELEASE=y
 
       - name: Build MFG PRF
         run: ./waf build
@@ -156,7 +156,7 @@ jobs:
           fi
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }} --slot ${{ matrix.slot }} --release
+        run: ./waf configure --board ${{ matrix.board }} --slot ${{ matrix.slot }} -DCONFIG_RELEASE=y
 
       - name: Build firmware
         run: ./waf build

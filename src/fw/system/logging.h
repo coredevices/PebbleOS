@@ -130,7 +130,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 #define LOG_DOMAIN_BLOBDB             0
 
 #ifndef LOG_DOMAIN_BT_PAIRING_INFO
-#if !RELEASE
+#ifndef CONFIG_RELEASE
   #define LOG_DOMAIN_BT_PAIRING_INFO  1
 #else
   #define LOG_DOMAIN_BT_PAIRING_INFO  0

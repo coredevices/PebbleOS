@@ -149,7 +149,7 @@ static bool prv_discovery_handle_timeout(GAPLEConnection *connection, BTErrno *e
     }
 
     if (connection->gatt_service_discovery_retries == GATT_CLIENT_DISCOVERY_MAX_RETRY) {
-#if !RELEASE && !UNITTEST
+#if !defined(CONFIG_RELEASE) && !UNITTEST
       core_dump_reset(true /* is_forced */);
 #endif
       // Done retrying, just error out:

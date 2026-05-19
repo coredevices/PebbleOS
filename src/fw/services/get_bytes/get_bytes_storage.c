@@ -33,7 +33,7 @@ static const GetBytesStorageImplementation s_get_bytes_impls[] = {
     .read_next_chunk = gb_storage_coredump_read_next_chunk,
     .cleanup = gb_storage_coredump_cleanup
   },
-#if !defined(RECOVERY_FW) && !defined(RELEASE)
+#if !defined(RECOVERY_FW) && !defined(CONFIG_RELEASE)
   {
     // Filesystem File Storage
     .type = GetBytesStorageTypeFile,
@@ -50,7 +50,7 @@ static const GetBytesStorageImplementation s_get_bytes_impls[] = {
     .read_next_chunk = gb_storage_flash_read_next_chunk,
     .cleanup = gb_storage_flash_cleanup
   },
-#endif /* !defined(RECOVERY_FW) && !defined(RELEASE) */
+#endif /* !defined(RECOVERY_FW) && !defined(CONFIG_RELEASE) */
 };
 
 //! Return the storage type for the object type.

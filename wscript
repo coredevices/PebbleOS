@@ -205,9 +205,6 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'DISABLE_PROMPT')
         conf.env.DISABLE_PROMPT = True
 
-    if conf.options.beta or conf.options.release:
-        conf.env.append_value('DEFINES', 'RELEASE')
-
     if conf.options.malloc_instrumentation:
         conf.env.append_value('DEFINES', 'MALLOC_INSTRUMENTATION')
         print("Enabling malloc instrumentation")
@@ -293,7 +290,7 @@ def handle_configure_options(conf):
         conf.env.NO_LINK = True
         print("Not linking firmware")
 
-    if not conf.options.no_pulse_everywhere and (not conf.options.release or conf.options.mfg):
+    if not conf.options.no_pulse_everywhere and (not conf.env.CONFIG_RELEASE or conf.options.mfg):
         conf.env.append_value('DEFINES', 'PULSE_EVERYWHERE=1')
 
 def configure(conf):
@@ -736,7 +733,7 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
 
     if resource_path is not None:
         b.add_resources(resource_path, version_ts)
-    if 'RELEASE' not in ctx.env.DEFINES and 'PBL_LOGS_HASHED' in ctx.env.DEFINES:
+    if not ctx.env.CONFIG_RELEASE and 'PBL_LOGS_HASHED' in ctx.env.DEFINES:
         loghash_dict = ctx.path.get_bld().make_node(LOGHASH_OUT_PATH).abspath()
         b.add_loghash(loghash_dict)
 

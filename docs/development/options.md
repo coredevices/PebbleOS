@@ -20,6 +20,13 @@ Keep in mind that some targets may not currently compile as-is.
 :`--variant`:
   Build variant, `normal` (main firmware) or `prf` (recovery firmware).
 
+## Release build
+
+:`-DCONFIG_RELEASE=y`:
+  Build a release-mode firmware. Strips debug aids, enables shipping
+  defaults (e.g. Memfault crash reporting), and reduces battery usage
+  compared to a debug build. Pass this to `./waf configure`.
+
 ## Main features
 
 :`--js-engine`:

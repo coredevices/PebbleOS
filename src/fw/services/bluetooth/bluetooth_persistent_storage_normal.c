@@ -378,7 +378,7 @@ static void prv_load_local_data_from_prf(void) {
   SM128BitKey keys[SMRootKeyTypeNum];
   if (shared_prf_storage_get_root_key(SMRootKeyTypeEncryption, &keys[SMRootKeyTypeEncryption]) &&
       shared_prf_storage_get_root_key(SMRootKeyTypeIdentity, &keys[SMRootKeyTypeIdentity])) {
-#if !defined(RELEASE)
+#if !defined(CONFIG_RELEASE)
     PBL_LOG_INFO("Loading Root Keys from PRF storage:");
     PBL_HEXDUMP(LOG_LEVEL_INFO, (const uint8_t *) keys, sizeof(keys));
 #endif
