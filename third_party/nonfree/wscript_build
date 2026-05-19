@@ -1,7 +1,7 @@
-if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
-    if bld.is_asterix():
+if bld.env.CONFIG_NRF_FUEL_GAUGE:
+    if bld.env.CONFIG_CORTEX_M4:
         paths = ['pebbleos-nonfree/npm1300/nrf_fuel_gauge/lib/cortex-m4/soft-float']
-    elif bld.is_obelix() or bld.is_getafix():
+    elif bld.env.CONFIG_CORTEX_M33:
         paths = ['pebbleos-nonfree/npm1300/nrf_fuel_gauge/lib/cortex-m33/soft-float']
     bld.read_stlib(
         'nrf_fuel_gauge',

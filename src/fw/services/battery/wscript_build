@@ -4,7 +4,7 @@
 use = ['fw_includes', 'services_analytics']
 sources = ['battery_monitor.c']
 
-if bld.is_asterix() or bld.is_obelix() or bld.is_getafix():
+if bld.env.CONFIG_NRF_FUEL_GAUGE:
     use.append('nrf_fuel_gauge')
     sources.extend([
         'nrf_fuel_gauge/battery_curve.c',

@@ -5,3 +5,12 @@ config SERVICE_BATTERY
     bool "Battery"
     help
       Battery monitor and state-of-charge estimation.
+
+config NRF_FUEL_GAUGE
+    bool "Nordic nRF Fuel Gauge"
+    depends on PMIC_NPM1300
+    default y if PMIC_NPM1300
+    help
+      Use the Nordic nRF Fuel Gauge library for state-of-charge
+      estimation. Requires the nPM1300 PMIC; selects both the prebuilt
+      nonfree fuel-gauge lib and the matching battery service impl.
