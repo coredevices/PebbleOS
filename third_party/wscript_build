@@ -1,0 +1,23 @@
+bld.recurse('cmsis_core')
+bld.recurse('freertos')
+bld.recurse('nanopb')
+bld.recurse('tinymt')
+bld.recurse('qr_code_generator')
+bld.recurse('speex')
+bld.recurse('nonfree')
+
+if bld.capability('HAS_MODDABLE_XS'):
+    bld.recurse('moddable')
+
+if bld.env.CONFIG_HAL_NORDIC:
+    bld.recurse('hal_nordic')
+if bld.env.CONFIG_HAL_SIFLI:
+    bld.recurse('hal_sifli')
+
+if bld.env.bt_controller in ('nrf52', 'sf32lb52'):
+    bld.recurse('nimble')
+
+if bld.is_asterix():
+    bld.recurse('hal_lsm6dso')
+
+bld.recurse('memfault')
