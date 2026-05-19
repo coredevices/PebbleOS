@@ -365,19 +365,6 @@ def configure(conf):
     # Save this for later
     conf.env.BOARD = conf.options.board
 
-    if conf.env.CONFIG_QEMU:
-        qemu_cpu = conf.get_qemu_cpu()
-        if qemu_cpu == 'cortex-m4':
-            conf.env.MICRO_FAMILY = 'QEMU_PEBBLE_ARMCM4'
-        else:
-            conf.env.MICRO_FAMILY = 'QEMU_PEBBLE_ARMCM33'
-    elif conf.is_asterix():
-        conf.env.MICRO_FAMILY = 'NRF52'
-    elif conf.is_obelix() or conf.is_getafix():
-        conf.env.MICRO_FAMILY = 'SF32LB52'
-    else:
-        conf.fatal('No micro family specified for {}!'.format(conf.options.board))
-
     conf.env.VARIANT = conf.options.variant
     if conf.env.VARIANT == 'prf':
         conf.env.append_value('DEFINES', ['RECOVERY_FW'])

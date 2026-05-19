@@ -5,9 +5,9 @@ def configure(conf):
     pass
 
 def build(bld):
-    if bld.env.MICRO_FAMILY.startswith("QEMU_PEBBLE"):
+    if bld.env.CONFIG_QEMU:
         bld.recurse("qemu")
-    elif bld.env.MICRO_FAMILY.startswith("NRF"):
+    elif bld.env.CONFIG_SOC_NRF52:
         bld.recurse("nrf")
-    elif bld.env.MICRO_FAMILY.startswith("SF32LB"):
+    elif bld.env.CONFIG_SOC_SF32LB52:
         bld.recurse("sf32lb")
