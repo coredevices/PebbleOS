@@ -21,6 +21,13 @@ def build(bld):
                 'pebbleos-nonfree/cst816/obelix',
             ],
         )
+    elif bld.is_getafix():
+        bld(
+            name='cst816_fw',
+            export_includes=[
+                'pebbleos-nonfree/cst816/getafix',
+            ],
+        )
 
     if bld.is_obelix():
         includes = [
