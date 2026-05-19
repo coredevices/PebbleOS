@@ -371,8 +371,14 @@ static const I2CSlavePort s_i2c_cst816 = {
     .address = 0x15,
 };
 
+static const I2CSlavePort s_i2c_cst816_boot = {
+    .bus = &s_i2c_bus_2,
+    .address = 0x6A,
+};
+
 static const TouchSensor s_touch_cst816 = {
     .i2c = &s_i2c_cst816,
+    .i2c_boot = &s_i2c_cst816_boot,
     .int_exti = {
         .peripheral = hwp_gpio1,
         .gpio_pin = 38,
