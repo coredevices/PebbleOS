@@ -74,7 +74,6 @@ def options(opt):
 def configure(conf):
     conf.load('binary_header')
     conf.recurse('applib')
-    conf.recurse('soc')
 
     if conf.options.sdkshell:
         conf.env.NORMAL_SHELL = 'sdk'

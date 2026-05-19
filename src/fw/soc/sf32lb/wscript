@@ -1,9 +1,0 @@
-# SPDX-FileCopyrightText: 2026 Core Devices LLC
-# SPDX-License-Identifier: Apache-2.0
-
-def configure(conf):
-    pass
-
-def build(bld):
-    if bld.env.CONFIG_SOC_SF32LB52:
-        bld.recurse("sf32lb52x")
