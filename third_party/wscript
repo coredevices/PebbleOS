@@ -5,9 +5,6 @@ def options(opt):
 def configure(conf):
     conf.recurse('memfault')
 
-    if conf.capability('HAS_MODDABLE_XS'):
-        conf.recurse('moddable')
-
 def build(bld):
     bld.recurse('cmsis_core')
     bld.recurse('freertos')
