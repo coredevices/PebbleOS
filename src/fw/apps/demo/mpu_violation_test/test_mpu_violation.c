@@ -33,11 +33,11 @@ extern const uint32_t __WORKER_RAM__[];
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __APP_RAM__[];
 extern const uint32_t __kernel_main_stack_start__[];
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
 extern const uint32_t __ramfunc_start[];
 #endif
 
-#ifndef MPU_TYPE_ARMV8M
+#ifndef CONFIG_MPU_TYPE_ARMV8M
 KERNEL_READONLY_DATA static uint32_t s_ro_bss_probe;
 #endif
 
@@ -46,15 +46,15 @@ typedef enum {
   TestKind_WorkerRamRead,
   TestKind_KernelRamWrite,
   TestKind_KernelRamRead,
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
   TestKind_RamfuncWrite,
   TestKind_RamfuncRead,
 #endif
-#ifndef MPU_TYPE_ARMV8M
+#ifndef CONFIG_MPU_TYPE_ARMV8M
   TestKind_RoBssWrite,
 #endif
   TestKind_FlashWrite,
-#ifndef MPU_TYPE_ARMV8M
+#ifndef CONFIG_MPU_TYPE_ARMV8M
   TestKind_StackGuardWrite,
 #endif
   TestKind_StackOverflow,
@@ -66,15 +66,15 @@ static const char *const s_test_titles[TestKindCount] = {
     [TestKind_WorkerRamRead] = "Worker RAM R",
     [TestKind_KernelRamWrite] = "Kernel RAM W",
     [TestKind_KernelRamRead] = "Kernel RAM R",
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
     [TestKind_RamfuncWrite] = "Ramfunc W",
     [TestKind_RamfuncRead] = "Ramfunc R",
 #endif
-#ifndef MPU_TYPE_ARMV8M
+#ifndef CONFIG_MPU_TYPE_ARMV8M
     [TestKind_RoBssWrite] = "RO BSS W",
 #endif
     [TestKind_FlashWrite] = "Flash W",
-#ifndef MPU_TYPE_ARMV8M
+#ifndef CONFIG_MPU_TYPE_ARMV8M
     [TestKind_StackGuardWrite] = "Stack guard W",
 #endif
     [TestKind_StackOverflow] = "Stack overflow",
@@ -130,7 +130,7 @@ static void prv_run_test(TestKind kind) {
       (void)v;
       break;
     }
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
     case TestKind_RamfuncWrite: {
       volatile uint32_t *p = (volatile uint32_t *)__ramfunc_start;
       *p = 0xDEADBEEF;
@@ -143,7 +143,7 @@ static void prv_run_test(TestKind kind) {
       break;
     }
 #endif
-#ifndef MPU_TYPE_ARMV8M
+#ifndef CONFIG_MPU_TYPE_ARMV8M
     case TestKind_RoBssWrite: {
       // ARMv7-M maps this as priv RW + user RO, so unprivileged writes fault.
       volatile uint32_t *p = &s_ro_bss_probe;
@@ -156,7 +156,7 @@ static void prv_run_test(TestKind kind) {
       *p = 0xDEADBEEF;
       break;
     }
-#ifndef MPU_TYPE_ARMV8M
+#ifndef CONFIG_MPU_TYPE_ARMV8M
     case TestKind_StackGuardWrite: {
       // Direct store to the bottom 32 B of App RAM. On ARMv7-M the per-task
       // stack-guard MPU region blocks this; ARMv8-M uses PSPLIM instead, so

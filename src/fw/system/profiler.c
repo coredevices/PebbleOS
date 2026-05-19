@@ -13,12 +13,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 #include <drivers/nrfx_common.h>
 #include <soc/nrfx_coredep.h>
 #endif
 
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
 #endif
 
@@ -40,11 +40,11 @@ Profiler g_profiler;
 #undef PROFILER_NODE
 #if PROFILE_INTERRUPTS
 #define IRQ_DEF(idx, irq) ProfilerNode g_profiler_node_##irq##_IRQ = {.module_name = #irq"_IRQ"};
-#if defined(MICRO_FAMILY_QEMU)
+#if defined(CONFIG_QEMU)
 #include "irq_qemu.def"
-#elif defined(MICRO_FAMILY_NRF52)
+#elif defined(CONFIG_SOC_NRF52)
 #include "irq_nrf52.def"
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
 #include "irq_sf32lb52.def"
 #else
 #error "No IRQ definition for this MICRO_FAMILY"
@@ -58,11 +58,11 @@ static ProfilerNode *s_profiler_nodes[] = {
 #undef PROFILER_NODE
 #if PROFILE_INTERRUPTS
 #define IRQ_DEF(idx, irq) &g_profiler_node_##irq##_IRQ,
-#if defined(MICRO_FAMILY_QEMU)
+#if defined(CONFIG_QEMU)
 #include "irq_qemu.def"
-#elif defined(MICRO_FAMILY_NRF52)
+#elif defined(CONFIG_SOC_NRF52)
 #include "irq_nrf52.def"
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
 #include "irq_sf32lb52.def"
 #else
 #error "No IRQ definition for this MICRO_FAMILY"
@@ -126,11 +126,11 @@ void profiler_node_stop(ProfilerNode *node, uint32_t dwt_cyc_cnt) {
 }
 
 uint32_t profiler_cycles_to_us(uint32_t cycles) {
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
   uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
   uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
-#elif defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_QEMU)
   uint32_t mhz = SystemCoreClock / 1000000;
 #else
   RCC_ClocksTypeDef clocks;
@@ -157,11 +157,11 @@ uint32_t profiler_get_total_duration(bool in_us) {
   }
 
   if (in_us) {
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
     uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
     uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
-#elif defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_QEMU)
     uint32_t mhz = SystemCoreClock / 1000000;
 #else
     RCC_ClocksTypeDef clocks;
@@ -178,15 +178,15 @@ void profiler_print_stats(void) {
   PROFILER_STOP; // Make sure the profiler has been stopped.
   uint32_t total = profiler_get_total_duration(false);
 
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
   uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
   char buf[80];
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
   uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
   char buf[80];
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);
-#elif defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_QEMU)
   uint32_t mhz = SystemCoreClock / 1000000;
   char buf[80];
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);

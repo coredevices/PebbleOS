@@ -49,7 +49,7 @@
 
 #include <cmsis_core.h>
 
-#if MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 #include <nrf52840.h>
 #endif
 
@@ -104,7 +104,7 @@ typedef struct {
 
 // Memory regions to dump
 static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
-#if MICRO_FAMILY_NRF52 || MICRO_FAMILY_SF32LB52 || MICRO_FAMILY_QEMU
+#if CONFIG_SOC_NRF52 || CONFIG_SOC_SF32LB52 || CONFIG_QEMU
   { .start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE },
 #endif
   { .start = (void *)&NVIC->ISER, .length = sizeof(NVIC->ISER) },  // Enabled interrupts

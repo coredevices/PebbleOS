@@ -86,7 +86,7 @@ def run_command(
         fail_handling = " || true " if ignore_fail else ""
         if shutdown:
             # append 'shutdown' to make openocd exit
-            if getattr(ctx, "env", None) and ctx.env.MICRO_FAMILY == "NRF52":
+            if getattr(ctx, "env", None) and ctx.env.CONFIG_SOC_NRF52:
                 # on nRF5, shut down the tracing modules in DEMCR, take the
                 # core out of debug in DHCSR, and then shut down the AP to
                 # get us back down to baseline power.  note that 'env' might
@@ -154,16 +154,14 @@ def get_flavor(conf):
 
 
 def _get_reset_conf(conf, should_connect_assert_srst):
-    if conf.env.MICRO_FAMILY.startswith("NRF52"):
+    if conf.env.CONFIG_SOC_NRF52:
         return "none"
     else:
-        raise Exception(
-            "Unsupported microcontroller family: %s" % conf.env.MICRO_FAMILY
-        )
+        raise Exception("Unsupported microcontroller family for openocd")
 
 
 def _get_adapter_speed(conf):
-    if conf.env.OPENOCD_JTAG == "swd_cmsisdap" and conf.env.MICRO_FAMILY == "NRF52":
+    if conf.env.OPENOCD_JTAG == "swd_cmsisdap" and conf.env.CONFIG_SOC_NRF52:
         return 10000
 
     return None
@@ -172,7 +170,7 @@ def _get_adapter_speed(conf):
 def write_cfg(conf):
     jtag = conf.env.OPENOCD_JTAG
 
-    if conf.env.MICRO_FAMILY == "NRF52":
+    if conf.env.CONFIG_SOC_NRF52:
         target = "nrf52.cfg"
 
     is_pebble_flavor = get_flavor(conf)

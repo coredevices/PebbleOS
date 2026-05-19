@@ -7,7 +7,7 @@ def run_command(ctx, cmd):
         ctx.fatal("Port not specified, use --tty")
 
     ctx.exec_command(
-        f"sftool -c {ctx.env.MICRO_FAMILY} -p {ctx.options.tty} {cmd}",
+        f"sftool -c {ctx.env.CONFIG_SOC} -p {ctx.options.tty} {cmd}",
         stdout=None,
         stderr=None,
     )

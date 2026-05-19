@@ -10,10 +10,10 @@
 
 typedef uint64_t RtcTicks;
 
-#if defined(MICRO_FAMILY_QEMU)
+#if defined(CONFIG_QEMU)
 // QEMU RTC provides a 1000Hz tick counter.
 #define RTC_TICKS_HZ (1000u)
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
 // SF32lb52 lptim using RC10K.
 #define RTC_TICKS_HZ (1000u)
 #else
@@ -110,7 +110,7 @@ bool rtc_alarm_is_initialized(void);
 //! @param buffer Buffer used to write the string into. Must be at least TIME_STRING_BUFFER_SIZE
 const char* time_t_to_string(char* buffer, time_t t);
 
-#if MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 void rtc_irq_handler(void);
 void rtc_enable_synthetic_systick(void);
 void rtc_systick_pause(void);

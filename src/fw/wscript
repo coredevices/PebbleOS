@@ -102,12 +102,12 @@ def _generate_memory_layout(bld):
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
-    if bld.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+    if bld.env.CONFIG_QEMU:
         flash_size = 4 * 1024 * 1024
         offset_size = 0
         fw_max_size = flash_size
 
-    elif bld.env.MICRO_FAMILY == 'SF32LB52':
+    elif bld.env.CONFIG_SOC_SF32LB52:
         flash_size = 32 * 1024 * 1024
         ptable_size = 64 * 1024
         bootloader_size = 64 * 1024
@@ -124,7 +124,7 @@ def _generate_memory_layout(bld):
             offset_size = offset_size
             fw_max_size = slot_size
 
-    elif bld.env.MICRO_FAMILY == 'NRF52':
+    elif bld.env.CONFIG_SOC_NRF52:
         # Bootloader
         offset_size = 32 * 1024
         flash_size = 1024 * 1024
@@ -137,19 +137,19 @@ def _generate_memory_layout(bld):
         flash_size = 4 * 1024 * 1024
         fw_max_size = flash_size
 
-    if bld.env.MICRO_FAMILY.startswith('QEMU_PEBBLE'):
+    if bld.env.CONFIG_QEMU:
         flash_origin = 0x00000000
     elif bld.env.FLASH_ITCM:
         flash_origin = 0x00200000
-    elif bld.env.MICRO_FAMILY == 'NRF52':
+    elif bld.env.CONFIG_SOC_NRF52:
         flash_origin = 0x00000000
-    elif bld.env.MICRO_FAMILY == 'SF32LB52':
+    elif bld.env.CONFIG_SOC_SF32LB52:
         flash_origin = 0x12000000
     else:
         flash_origin = 0x08000000
 
     firmware_offset = 0
-    if bld.env.MICRO_FAMILY == 'SF32LB52':
+    if bld.env.CONFIG_SOC_SF32LB52:
       firmware_offset = 4096
 
     bld.env.FIRMWARE_OFFSET = firmware_offset
@@ -613,9 +613,9 @@ def build(bld):
     if bld.options.memfault:
         fw_includes_use.append('memfault_includes')
 
-    if bld.env.MICRO_FAMILY.startswith('NRF'):
+    if bld.env.CONFIG_SOC_NRF52:
         fw_includes_use.append('hal_nordic')
-    elif bld.env.MICRO_FAMILY.startswith('SF32LB'):
+    elif bld.env.CONFIG_SOC_SF32LB52:
         fw_includes_use.append('hal_sifli')
 
     bld(export_includes=['.',

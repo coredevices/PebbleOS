@@ -38,7 +38,7 @@ typedef struct {
 // they are read and modified by multiple threads
 static InhibitorTickProfile s_inhibitor_profile[InhibitorNumItems];
 
-#if MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 void enter_stop_mode(void) {
   dbgserial_enable_rx_exti();
   dbgserial_disable_rx_dma_before_stop();
@@ -57,7 +57,7 @@ void enter_stop_mode(void) {
 
   dbgserial_enable_rx_dma_after_stop();
 }
-#elif defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_QEMU)
 void enter_stop_mode(void) {
 }
 #endif

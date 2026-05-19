@@ -271,17 +271,17 @@ Or re-configure with the --relax_toolchain_restrictions option. """
             ]
 
     cpu_fpu = None
-    if conf.env.MICRO_FAMILY == "NRF52":
+    if conf.env.CONFIG_SOC_NRF52:
         args += ["-mcpu=cortex-m4"]
         cpu_fpu = "fpv4-sp-d16"
-    elif conf.env.MICRO_FAMILY == "SF32LB52":
+    elif conf.env.CONFIG_SOC_SF32LB52:
         args += ["-mcpu=star-mc1"]
         cpu_fpu = "fpv5-sp-d16"
-    elif conf.env.MICRO_FAMILY == "QEMU_PEBBLE_ARMCM4":
+    elif conf.env.CONFIG_QEMU and conf.env.CONFIG_CORTEX_M4:
         args += ["-mcpu=cortex-m4"]
         args += ["-Dsniprintf=snprintf"]
         args += ["-D_USE_LONG_TIME_T"]
-    elif conf.env.MICRO_FAMILY == "QEMU_PEBBLE_ARMCM33":
+    elif conf.env.CONFIG_QEMU and conf.env.CONFIG_CORTEX_M33:
         args += ["-mcpu=cortex-m33+nofp+nodsp"]
         args += ["-Dsniprintf=snprintf"]
         args += ["-D_USE_LONG_TIME_T"]

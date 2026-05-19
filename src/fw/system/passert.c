@@ -153,7 +153,7 @@ NORETURN croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
   trigger_oom_fault(bytes, saved_lr, heap_ptr);
 }
 
-#if MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 NORETURN app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
   PBL_LOG_ALWAYS("nRF error %ld (pc %ld, info %ld)", id, pc, info);
   trigger_fault(RebootReasonCode_Assert, pc);

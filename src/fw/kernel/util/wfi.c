@@ -6,7 +6,7 @@
 #include "wfi.h"
 
 void NOINLINE NAKED_FUNC do_wfi(void) {
-#if MICRO_FAMILY_QEMU
+#ifdef CONFIG_QEMU
   // QEMU Cortex-M33 doesn't properly wake from WFI when PRIMASK=1.
   // Use WFE which yields to QEMU's scheduler and wakes on events.
   __asm volatile (

@@ -1118,7 +1118,7 @@ void command_display_drop_complete(void) {
 }
 #endif
 
-#if !MICRO_FAMILY_SF32LB52
+#ifndef CONFIG_SOC_SF32LB52
 // Simply parks the chip permanently in stop mode in whatever state it's currently in. This can be
 // pretty handy when trying to profile power of the chip under certains states
 // NOTE: If you did not configure with `--nowatchdog`, the HW watchdog will reboot you in ~8s

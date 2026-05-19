@@ -32,11 +32,11 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 
 // External Interrupts
 #define IRQ_DEF(idx, irq) ALIAS("Default_Handler") void irq##_IRQHandler(void);
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
 # include "irq_nrf52.def"
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
 # include "irq_sf32lb52.def"
-#elif defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_QEMU)
 # include "irq_qemu.def"
 #else
 # error "No IRQ definition for this MICRO_FAMILY"
@@ -52,11 +52,11 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
   irq##_IRQHandler();\
   profiler_node_stop(&g_profiler_node_##irq##_IRQ, DWT->CYCCNT); \
 }
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
 # include "irq_nrf52.def"
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
 # include "irq_sf32lb52.def"
-#elif defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_QEMU)
 # include "irq_qemu.def"
 #else
 # error "No IRQ definition for this MICRO_FAMILY"
@@ -89,11 +89,11 @@ EXTERNALLY_VISIBLE SECTION(".isr_vector") const void * const vector_table[] = {
 #else
 #define IRQ_DEF(idx, irq) [idx + 16] = irq##_IRQHandler,
 #endif
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
 # include "irq_nrf52.def"
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
 # include "irq_sf32lb52.def"
-#elif defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_QEMU)
 # include "irq_qemu.def"
 #else
 # error "No IRQ definition for this MICRO_FAMILY"

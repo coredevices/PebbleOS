@@ -10,7 +10,7 @@
 #include "system/version.h"
 #include "util/crc32.h"
 
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
 #endif
 
@@ -18,7 +18,7 @@
 #include <stm32f4xx.h>
 #endif
 
-#if MICRO_FAMILY_QEMU
+#ifdef CONFIG_QEMU
 // Provided by the QEMU RTC driver
 extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
 extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
@@ -27,8 +27,7 @@ extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
 #include <inttypes.h>
 #include <stdint.h>
 
-#if MICRO_FAMILY_NRF52
-
+#ifdef CONFIG_SOC_NRF52
 static uint32_t __attribute__((section(".retained"))) retained[256 / 4];
 
 void retained_write(uint8_t id, uint32_t value) {
@@ -89,8 +88,7 @@ uint32_t boot_version_read(void) {
   return retained_read(BOOTLOADER_VERSION_REGISTER);
 }
 
-#elif MICRO_FAMILY_SF32LB52
-
+#elif defined(CONFIG_SOC_SF32LB52)
 void boot_bit_init(void) {
   if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
     HAL_Set_backup(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);

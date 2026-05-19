@@ -15,7 +15,7 @@
 
 #include <cmsis_core.h>
 
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
 #endif
 
@@ -61,7 +61,7 @@ NORETURN system_hard_reset(void) {
   // Don't do anything fancy here. We may be in a context where nothing works, not even
   // interrupts. Just reset us.
 
-#if MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
   HAL_PMU_Reboot();
 #else
   NVIC_SystemReset();

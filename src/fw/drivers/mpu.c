@@ -14,10 +14,10 @@
 
 extern const uint32_t __SRAM_size__[];
 #if !defined(SRAM_BASE)
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
 #include <drivers/nrfx_common.h>
 #define SRAM_BASE (0x20000000UL)
-#elif defined(MICRO_FAMILY_SF32LB52)
+#elif defined(CONFIG_SOC_SF32LB52)
 #define SRAM_BASE (0x20000000UL)
 #endif
 #endif
@@ -57,7 +57,7 @@ void mpu_set_task_configurable_regions(MemoryRegion_t *memory_regions,
     // MPU_RBAR, which carries the SH/AP/XN bits. On ARMv7-M the port ORs in
     // VALID and the region number, so pass only the aligned block base from
     // mpu_get_register_settings().
-#ifdef MPU_TYPE_ARMV8M
+#ifdef CONFIG_MPU_TYPE_ARMV8M
     uintptr_t base_address = base_reg;
 #else
     uintptr_t base_address = base_reg & ~(MPU_RBAR_VALID_Msk | MPU_RBAR_REGION_Msk);

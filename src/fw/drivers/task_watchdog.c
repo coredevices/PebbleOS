@@ -25,11 +25,11 @@
 #include <stdint.h>
 #include <string.h>
 
-#if MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 #include <hal/nrf_rtc.h>
 #endif
 
-#if MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
 #endif
 
@@ -58,13 +58,13 @@ static uint8_t s_ticks_since_successful_feed = 0;
 static uint32_t s_pause_ticks_remaining = 0;
 
 // We use this interrupt vector for our lower priority interrupts
-#if MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 #define WATCHDOG_FREERTOS_IRQn        QDEC_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  QDEC_IRQHandler
-#elif MICRO_FAMILY_SF32LB52
+#elif defined(CONFIG_SOC_SF32LB52)
 #define WATCHDOG_FREERTOS_IRQn        USART5_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  USART5_IRQHandler
-#elif MICRO_FAMILY_QEMU
+#elif defined(CONFIG_QEMU)
 #define WATCHDOG_FREERTOS_IRQn        WATCHDOG_IRQn
 #define WATCHDOG_FREERTOS_IRQHandler  WATCHDOG_IRQHandler
 #else

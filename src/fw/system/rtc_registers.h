@@ -3,8 +3,7 @@
 
 #pragma once
 
-#if MICRO_FAMILY_NRF52
-
+#ifdef CONFIG_SOC_NRF52
 #define RTC_BKP_BOOTBIT_DR                      0
 #define STUCK_BUTTON_REGISTER                   1
 #define BOOTLOADER_VERSION_REGISTER             2
@@ -33,7 +32,7 @@
 extern void retained_write(uint8_t id, uint32_t value);
 extern uint32_t retained_read(uint8_t id);
 
-#elif MICRO_FAMILY_SF32LB52
+#elif defined(CONFIG_SOC_SF32LB52)
 /* sf32lb52 rtc backup register 2/5/6/7/8/9 is freely usable */
 #define RTC_BKP_BOOTBIT_DR                      2
 #define REBOOT_REASON_REGISTER_1                5
@@ -42,7 +41,7 @@ extern uint32_t retained_read(uint8_t id);
 #define REBOOT_REASON_STUCK_TASK_CALLBACK       8
 #define SLOT_OF_LAST_LAUNCHED_APP               9
 
-#elif MICRO_FAMILY_QEMU
+#elif defined(CONFIG_QEMU)
 /* QEMU backup registers mapped to MMIO backup region (indices 0..15) */
 #define RTC_BKP_BOOTBIT_DR                      0
 #define STUCK_BUTTON_REGISTER                   1

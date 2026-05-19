@@ -5,8 +5,7 @@
 
 #include <stdbool.h>
 
-#if MICRO_FAMILY_NRF52
-
+#ifdef CONFIG_SOC_NRF52
 /** @brief Request HFXO clock (reference counted). */
 void clocksource_hfxo_request(void);
 

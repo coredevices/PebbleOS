@@ -3,7 +3,7 @@
 
 #include "pbl/services/battery/battery_state.h"
 
-#if MICRO_FAMILY_QEMU
+#ifdef CONFIG_QEMU
 #include "drivers/qemu/qemu_battery.h"
 #endif
 
@@ -289,7 +289,7 @@ DEFINE_SYSCALL(BatteryChargeState, sys_battery_get_charge_state, void) {
 BatteryChargeState battery_get_charge_state(void) {
   bool is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged);
 
-#if MICRO_FAMILY_QEMU
+#ifdef CONFIG_QEMU
   // Read the exact percent the host set via `pebble emu-battery --percent N`,
   // skipping the lossy voltage-curve roundtrip and the low-power-reserve remap
   // so the watch displays exactly what was requested.

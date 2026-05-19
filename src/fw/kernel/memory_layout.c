@@ -18,7 +18,7 @@ static const char* const MEMORY_REGION_NAMES[] = {
   // in memory_layout.h. SiFli's fifth region (mailbox) overlaps with the
   // "UNPRIV_FLASH" slot at index 4 -- Pebble never programs that index on
   // SF32LB52, so the cosmetic label is the only casualty.
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
   "RESERVED0",
   "RESERVED1",
   "RESERVED2",
@@ -115,7 +115,7 @@ static const MpuRegion s_readonly_bss_region = {
   .permissions = MpuPermissions_PrivRW_UserRO,
 };
 
-#ifndef MICRO_FAMILY_SF32LB52
+#ifndef CONFIG_SOC_SF32LB52
 // ISR stack guard
 static const MpuRegion s_isr_stack_guard_region = {
   .region_num = MemoryRegion_IsrStackGuard,
@@ -205,7 +205,7 @@ void memory_layout_setup_mpu(void) {
   // On SF32LB52 the SiFli HAL already programs a user-RO executable region
   // covering __FLASH_start__..(__FLASH_start__ + __FLASH_size__ - 1) in
   // SystemInit(), so we skip our own.
-#ifndef MICRO_FAMILY_SF32LB52
+#ifndef CONFIG_SOC_SF32LB52
   mpu_set_region(&s_microflash_region);
 #endif
 
@@ -218,7 +218,7 @@ void memory_layout_setup_mpu(void) {
   // port, so the dedicated ISR stack guard region (no-access) is redundant
   // and the AP encoding can't even express "no access" precisely. Skip it
   // on SF32LB52 to reclaim the slot.
-#ifndef MICRO_FAMILY_SF32LB52
+#ifndef CONFIG_SOC_SF32LB52
   mpu_set_region(&s_isr_stack_guard_region);
 #endif
 

@@ -808,7 +808,7 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
 
 // ------------------------------------------------------------------------------------
 void shell_prefs_init(void) {
-#if MICRO_FAMILY_QEMU
+#ifdef CONFIG_QEMU
   s_backlight_intensity = 100U; // Blinding
 #else
   s_backlight_intensity = 25U; // Medium

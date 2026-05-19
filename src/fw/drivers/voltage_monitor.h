@@ -10,7 +10,7 @@
 
 #define NUM_CONVERSIONS 40
 
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
 # include <hal/nrf_saadc.h>
 
 typedef const struct VoltageMonitorDevice {
@@ -19,7 +19,7 @@ typedef const struct VoltageMonitorDevice {
   const nrf_saadc_input_t input;
 } VoltageMonitorDevice;
 
-#elif defined(MICRO_FAMILY_SF32LB52) || defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_SOC_SF32LB52) || defined(CONFIG_QEMU)
 
 typedef const struct VoltageMonitorDevice {
 } VoltageMonitorDevice;

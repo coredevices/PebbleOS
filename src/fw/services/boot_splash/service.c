@@ -3,7 +3,7 @@
 
 #include "pbl/services/boot_splash.h"
 
-#if CAPABILITY_HAS_PBLBOOT || MICRO_FAMILY_QEMU
+#if CAPABILITY_HAS_PBLBOOT || CONFIG_QEMU
 
 #include "board/display.h"
 #include "board/splash.h"
@@ -17,7 +17,7 @@
 #include <string.h>
 
 // Platform-specific colors: PebbleOS uses ARGB2222 (GColor8), not raw RGB332
-#if MICRO_FAMILY_QEMU
+#ifdef CONFIG_QEMU
 // QEMU display natively renders ARGB2222
 #define SPLASH_COLOR_WHITE  0xFF  // A=3, R=3, G=3, B=3
 #define SPLASH_COLOR_BLACK  0xC0  // A=3, R=0, G=0, B=0

@@ -18,7 +18,7 @@ enum MemoryRegionAssignments {
   // 4) shares its slot with the unused-on-SF32LB52 MemoryRegion_Flash
   // value; Pebble never programs region 4, so SiFli's mailbox config
   // stays intact.
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
   MemoryRegion_Reserved0,
   MemoryRegion_Reserved1,
   MemoryRegion_Reserved2,

@@ -23,7 +23,7 @@
 // -------------------------------------------------------------------------------------
 // Read a QEMU specific register from the RTC backup register area
 static uint32_t prv_rtc_read_qemu_register(uint32_t qemu_register) {
-#if defined(MICRO_FAMILY_QEMU)
+#if defined(CONFIG_QEMU)
   return QEMU_BACKUP_REG(qemu_register);
 #else
   __IO uint32_t tmp = 0;

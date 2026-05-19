@@ -21,7 +21,7 @@
 
 #include <cmsis_core.h>
 
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
 #include <hal/nrf_nvmc.h>
 #endif
 
@@ -29,7 +29,7 @@
 #include "task.h"
 #include "freertos_application.h"
 
-#if !defined(MICRO_FAMILY_SF32LB52)
+#if !defined(CONFIG_SOC_SF32LB52)
 static RtcTicks s_analytics_sleep_ticks = 0;
 static RtcTicks s_analytics_stop_ticks = 0;
 
@@ -40,22 +40,22 @@ static uint32_t s_ticks_corrected = 0;
 
 // We need different timings for our different platforms since we use different mechanisms to keep
 // time and to wake us up out of stop mode.
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 //! Stop mode until this number of ticks before the next scheduled task
 static const RtcTicks MIN_STOP_TICKS = 5;
-#elif defined(MICRO_FAMILY_QEMU)
+#elif defined(CONFIG_QEMU)
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 static const RtcTicks MIN_STOP_TICKS = 5;
 #endif
 
-#if !defined(MICRO_FAMILY_SF32LB52)
+#if !defined(CONFIG_SOC_SF32LB52)
 // 1 second ticks so that we only wake up once every regular timer interval.
 static const RtcTicks MAX_STOP_TICKS = RTC_TICKS_HZ;
 #endif
 
-#if !defined(MICRO_FAMILY_SF32LB52)
+#if !defined(CONFIG_SOC_SF32LB52)
 extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   if (!rtc_alarm_is_initialized() || !sleep_mode_is_allowed()) {
     // the RTC is not yet initialized to the point where it can wake us from sleep or sleep/stop
@@ -76,7 +76,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
   // See: http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABGGICD.html#BGBHDHAI
   __disable_irq();
 
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
   // We're going to sleep, so turn off the caches (they consume quiescent
   // power).  It's more efficient to have them on when we're awake, but for
   // now, they gotta go.  This holds true even if we're not going to sleep
@@ -122,7 +122,7 @@ extern void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime ) {
 
   power_tracking_start(PowerSystemMcuCoreRun);
 
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
   NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 #endif
 
@@ -177,7 +177,7 @@ void* pvPortMalloc(size_t xSize) {
   return kernel_malloc(xSize);
 }
 
-#if !defined(MICRO_FAMILY_SF32LB52)
+#if !defined(CONFIG_SOC_SF32LB52)
 // Called from the SysTick handler ISR to adjust ticks for situations where the CPU might
 // occasionally fall behind and miss some tick interrupts (like when running under emulation).
 bool vPortCorrectTicks(void) {
@@ -221,9 +221,9 @@ bool vPortCorrectTicks(void) {
 }
 #endif
 
-#if !defined(MICRO_FAMILY_SF32LB52)
+#if !defined(CONFIG_SOC_SF32LB52)
 bool vPortEnableTimer() {
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
   rtc_enable_synthetic_systick();
   return true;
 #else
@@ -235,7 +235,7 @@ bool vPortEnableTimer() {
 // CPU analytics
 ///////////////////////////////////////////////////////////
 
-#if !defined(MICRO_FAMILY_SF32LB52)
+#if !defined(CONFIG_SOC_SF32LB52)
 static uint32_t s_last_ticks = 0;
 
 void dump_current_runtime_stats(void) {

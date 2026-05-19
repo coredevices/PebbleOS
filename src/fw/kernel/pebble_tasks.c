@@ -265,7 +265,7 @@ void pebble_task_create(PebbleTask pebble_task, TaskParameters_t *task_params,
   }
 
   const MpuRegion *stack_guard_region = NULL;
-#ifndef MPU_TYPE_ARMV8M
+#ifndef CONFIG_MPU_TYPE_ARMV8M
   // Per-task stack overflow detection: on ARMv7-M we plant a no-access
   // MPU region at the bottom of each task's stack. On ARMv8-M, the
   // FreeRTOS CM33 port sets PSPLIM to the same address via portSetupTCB(),

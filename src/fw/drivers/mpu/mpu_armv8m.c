@@ -14,7 +14,7 @@
 // regions in SystemInit() and burns MAIR indices 0..2 (code / ram / device)
 // for those. To avoid clobbering them we shift our own MpuCachePolicy values
 // into MAIR indices MAIR_INDEX_BASE..MAIR_INDEX_BASE+3.
-#ifdef MICRO_FAMILY_SF32LB52
+#ifdef CONFIG_SOC_SF32LB52
 #define MAIR_INDEX_BASE 4U
 #else
 #define MAIR_INDEX_BASE 0U

@@ -392,7 +392,7 @@ static NOINLINE void prv_main_task_init(void) {
 
   // The RTC needs be calibrated after the mfg registry service has been initialized so we can
   // load the measured frequency.
-#if defined(MICRO_FAMILY_SF32LB52) && !defined(SF32LB52_USE_LXT)
+#if defined(CONFIG_SOC_SF32LB52) && !defined(SF32LB52_USE_LXT)
   rc10k_init();
 #endif
   rtc_calibrate_frequency(mfg_info_get_rtc_freq());

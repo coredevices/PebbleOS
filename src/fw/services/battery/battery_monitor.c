@@ -170,7 +170,7 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
   //  Similarly, if the battery voltage has rebounded when the timer expires, the shutdown
   //    will not occur.
 
-#if MICRO_FAMILY_QEMU
+#ifdef CONFIG_QEMU
   // QEMU has no real battery, so never enter LPM or standby — otherwise
   // `pebble emu-battery --percent 1` (and any low value) shuts the emulator
   // down or locks it into the low-power UI.

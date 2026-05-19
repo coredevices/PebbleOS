@@ -5,16 +5,16 @@
 #include "util/attributes.h"
 #include "util/units.h"
 
-#if MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 #include <drivers/nrfx_common.h>
 #include <soc/nrfx_coredep.h>
-#elif MICRO_FAMILY_SF32LB52
+#elif defined(CONFIG_SOC_SF32LB52)
 #include <bf0_hal.h>
 #endif
 
 #include <inttypes.h>
 
-#if MICRO_FAMILY_NRF52
+#ifdef CONFIG_SOC_NRF52
 void NOINLINE delay_us(uint32_t us) {
   nrfx_coredep_delay_us(us);
 }
@@ -22,8 +22,7 @@ void NOINLINE delay_us(uint32_t us) {
 void delay_init(void) {
 }
 
-#elif MICRO_FAMILY_SF32LB52
-
+#elif defined(CONFIG_SOC_SF32LB52)
 void NOINLINE delay_us(uint32_t us) {
   HAL_Delay_us(us);
 }
@@ -31,8 +30,7 @@ void NOINLINE delay_us(uint32_t us) {
 void delay_init(void) {
 }
 
-#elif MICRO_FAMILY_QEMU
-
+#elif defined(CONFIG_QEMU)
 #include <cmsis_core.h>
 
 void NOINLINE delay_us(uint32_t us) {

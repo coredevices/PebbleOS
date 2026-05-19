@@ -29,7 +29,7 @@
 // This is generated in order to faciliate the check within the IRQ_MAP macro below
 enum {
 #define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
-#if defined(MICRO_FAMILY_NRF52)
+#if defined(CONFIG_SOC_NRF52)
 #  include "irq_nrf52.def"
 #else
 #  error need IRQ table for new micro family
