@@ -328,14 +328,14 @@ def _link_firmware(bld, sources):
             'upng']
     uses.extend(bld.env.FW_APPS)
 
-    if bld.env.memfault:
+    if bld.env.CONFIG_MEMFAULT:
         fw_linkflags.append('-Wl,--require-defined=g_memfault_build_id')
         uses.append('memfault')
 
     ldscript = _generate_memory_layout(bld)
 
     ldscripts = [ldscript, 'fw_common.ld']
-    if bld.env.memfault:
+    if bld.env.CONFIG_MEMFAULT:
         ldscripts.append(bld.srcnode.find_node(
             'third_party/memfault/port/memfault_compact_log.ld'))
 
@@ -610,7 +610,7 @@ def build(bld):
                      'idl_includes',
                      'nanopb_includes']
 
-    if bld.options.memfault:
+    if bld.env.CONFIG_MEMFAULT:
         fw_includes_use.append('memfault_includes')
 
     if bld.env.CONFIG_SOC_NRF52:

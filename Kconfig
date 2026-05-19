@@ -1,4 +1,12 @@
 mainmenu "PebbleOS Configuration"
 
+config RELEASE
+    bool "Release build"
+    help
+      Whether this is a release build. Pass
+      `-DCONFIG_RELEASE=y` to `./waf configure` to enable. Gates
+      features like Memfault crash reporting that should only run on
+      shipping firmware.
+
 rsource "src/Kconfig"
 rsource "third_party/Kconfig"

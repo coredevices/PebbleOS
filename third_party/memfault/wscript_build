@@ -1,50 +1,13 @@
-def options(opt):
-    opt.add_option(
-        "--memfault",
-        choices=["0", "1"],
-        help="Enable Memfault integration. Enabled by default for Asterix and Obelix boards",
-    )
-    opt.add_option(
-        "--memfault-force",
-        action="store_true",
-        default=False,
-        help="Force Memfault data collection even on non-release builds",
-    )
+# Always emit MEMFAULT=<0|1> — many src/fw sites use `#if MEMFAULT`,
+# so the symbol must be defined to a numeric value (not just defined or
+# undefined) for those preprocessor checks to compile.
+bld.env.append_unique('DEFINES', f'MEMFAULT={1 if bld.env.CONFIG_MEMFAULT else 0}')
 
-
-def configure(conf):
-    conf.env.memfault = conf.options.memfault
-    if not conf.env.memfault:
-        conf.env.memfault = int(
-	    conf.options.release and (
-	        conf.is_asterix() or conf.is_obelix() or conf.is_getafix()
-            )
-        )
-    else:
-        conf.env.memfault = int(conf.env.memfault)
-
-    # Set MEMFAULT define for all builds
-    MEMFAULT = conf.env.memfault
-    conf.env.append_value("DEFINES", [f"MEMFAULT={MEMFAULT}"])
-
-    # Memfault compact logs require GNU ##__VA_ARGS__ comma-elision, which
-    # is only available in -std=gnu* modes. pebble_arm_gcc.py checks this
-    # flag and uses -std=gnu11 instead of -std=c11.
-    conf.env.memfault_needs_gnu_extensions = bool(MEMFAULT)
-
-    if conf.options.memfault_force:
-        conf.env.append_value("DEFINES", "MEMFAULT_FORCE")
-
-
-def build(bld):
-    if not bld.env.memfault:
-        return
-
-    if bld.env.VARIANT == "prf":
-        bld.env.DEFINES = [d for d in bld.env.DEFINES if not d.startswith('MEMFAULT')]
-        bld.env.append_value('DEFINES', 'MEMFAULT=0')
-        bld.env.memfault = 0
-        return
+if not bld.env.CONFIG_MEMFAULT:
+    pass
+else:
+    if bld.env.CONFIG_MEMFAULT_FORCE:
+        bld.env.append_unique('DEFINES', 'MEMFAULT_FORCE')
 
     memfault_includes = [
         "memfault-firmware-sdk/",

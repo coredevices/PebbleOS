@@ -5,6 +5,7 @@ menu "Third-party"
 
 rsource "hal_nordic/Kconfig"
 rsource "hal_sifli/Kconfig"
+rsource "memfault/Kconfig"
 rsource "nimble/Kconfig"
 
 endmenu

@@ -1,9 +1,5 @@
-def options(opt):
-    opt.recurse('memfault')
-
-
 def configure(conf):
-    conf.recurse('memfault')
+    pass
 
 def build(bld):
     bld.recurse('cmsis_core')
