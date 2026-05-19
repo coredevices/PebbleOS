@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig HAL_SIFLI
+    bool "SiFli SDK HAL"
+    help
+      Build the SiFli SDK HAL. This enables the HAL driver
+      umbrella (USE_HAL_DRIVER), selects the high-performance CPU
+      (SOC_BF0_HCPU), sets the HAL tick rate to 1024 Hz, and lets
+      our NMI handler override SiFli's default.
+
+if HAL_SIFLI
+
+config HAL_SIFLI_SF32LB52
+    bool "SF32LB52 SoC variant"
+    help
+      Configure the SiFli HAL for the SF32LB52 SoC. This sets the
+      SF32LB52X target define and adds the SF32LB52-specific cmsis,
+      ipc_queue port, and local glue sources to the build.
+
+endif # HAL_SIFLI

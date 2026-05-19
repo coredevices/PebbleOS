@@ -4,5 +4,6 @@
 menu "Third-party"
 
 rsource "hal_nordic/Kconfig"
+rsource "hal_sifli/Kconfig"
 
 endmenu

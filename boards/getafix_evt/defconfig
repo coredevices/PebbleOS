@@ -1,5 +1,8 @@
 # getafix_evt board configuration
 
+CONFIG_HAL_SIFLI=y
+CONFIG_HAL_SIFLI_SF32LB52=y
+
 CONFIG_I2C=y
 CONFIG_I2C_SF32LB=y
 
