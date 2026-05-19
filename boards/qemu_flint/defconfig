@@ -1,5 +1,8 @@
 # qemu_flint board configuration
 
+CONFIG_SOC_QEMU=y
+CONFIG_CORTEX_M4=y
+
 CONFIG_UART=y
 CONFIG_UART_QEMU=y
 

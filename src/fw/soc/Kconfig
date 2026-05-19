@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+choice
+    prompt "SoC"
+    help
+      SoC family. Real boards pick a vendor SoC; QEMU boards pick
+      SOC_QEMU and then choose a Cortex core explicitly.
+
+config SOC_NRF52
+    bool "Nordic nRF52"
+
+config SOC_SF32LB52
+    bool "SiFli SF32LB52"
+
+config SOC_QEMU
+    bool "QEMU emulated"
+
+endchoice
+
+config SOC
+    string
+    default "NRF52" if SOC_NRF52
+    default "SF32LB52" if SOC_SF32LB52
+    help
+      Stringified SoC name, for places that need the name as a token
+      (e.g. sftool -c). Empty on QEMU boards.
+
+config QEMU
+    bool
+    default y if SOC_QEMU
+    help
+      Derived alias for SOC_QEMU. Gates features that don't make
+      sense under emulation.
+
+choice
+    prompt "ARM Cortex core"
+    default CORTEX_M4 if SOC_NRF52
+    default CORTEX_M33 if SOC_SF32LB52
+
+config CORTEX_M4
+    bool "Cortex-M4"
+
+config CORTEX_M33
+    bool "Cortex-M33"
+
+endchoice
+
+config MPU_TYPE_ARMV8M
+    bool
+    default y if CORTEX_M33
+
+config MPU_TYPE_ARMV7M
+    bool
+    default y if !MPU_TYPE_ARMV8M
