@@ -576,8 +576,14 @@ const BoardConfigPower BOARD_CONFIG_POWER = {
 
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 45,
-  .ambient_light_dark_threshold = 150,
-  .ambient_k_delta_threshold = 25,
+  // W1160 raw ALS counts scale linearly with integration time, and IT was
+  // bumped from 16.83 ms to 99 ms. Empirically the dark threshold lands
+  // around 1400 -- well above the ~9x naive scaling, because typical indoor
+  // light in our test scenes drives counts higher than the closed-PR
+  // prototype suggested. k_delta is held proportional (dark/7) so the
+  // AmbientLightLevel enum buckets keep similar relative width.
+  .ambient_light_dark_threshold = 1400,
+  .ambient_k_delta_threshold = 200,
   .dynamic_backlight_min_threshold = 5,
   .backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE,
 };
