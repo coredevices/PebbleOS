@@ -234,27 +234,25 @@ T_STATIC void prv_workout_timer_cb(void *unused) {
 
 // ---------------------------------------------------------------------------------------
 void workout_service_health_event_handler(PebbleHealthEvent *event) {
-  if (!workout_service_is_workout_ongoing()) {
-    return;
-  }
-
   prv_lock();
   {
+    if (!s_workout_data.current_workout) {
+      goto unlock;
+    }
     if (event->type == HealthEventMovementUpdate) {
       prv_handle_movement_update(&event->data.movement_update);
     } else if (event->type == HealthEventHeartRateUpdate) {
       prv_handle_heart_rate_update(&event->data.heart_rate_update);
     }
   }
+unlock:
   prv_unlock();
 }
 
 // ---------------------------------------------------------------------------------------
 void workout_service_activity_event_handler(PebbleActivityEvent *event) {
-  if (!workout_service_is_workout_ongoing()) {
-    return;
-  }
-
+  // workout_service_pause_workout is a no-op when no workout is ongoing,
+  // so let it do the check under the lock rather than racing it here.
   if (event->type == PebbleActivityEvent_TrackingStopped) {
     workout_service_pause_workout(true);
   }
@@ -262,18 +260,22 @@ void workout_service_activity_event_handler(PebbleActivityEvent *event) {
 
 // ---------------------------------------------------------------------------------------
 void workout_service_workout_event_handler(PebbleWorkoutEvent *event) {
-  if (!workout_service_is_workout_ongoing()) {
-    return;
+  prv_lock();
+  {
+    if (!s_workout_data.current_workout) {
+      goto unlock;
+    }
+    // Handling this with an event because the timer needs to be called from KernelMain
+    if (event->type == PebbleWorkoutEvent_FrontendOpened) {
+      evented_timer_cancel(s_workout_data.current_workout->workout_abandoned_timer);
+    } else if (event->type == PebbleWorkoutEvent_FrontendClosed) {
+      s_workout_data.current_workout->workout_abandoned_timer =
+          evented_timer_register(WORKOUT_ABANDONED_NOTIFICATION_TIMEOUT_MS, false,
+                                 prv_abandoned_notification_timer_callback, NULL);
+    }
   }
-
-  // Handling this with an event because the timer needs to be called from KernelMain
-  if (event->type == PebbleWorkoutEvent_FrontendOpened) {
-    evented_timer_cancel(s_workout_data.current_workout->workout_abandoned_timer);
-  } else if (event->type == PebbleWorkoutEvent_FrontendClosed) {
-    s_workout_data.current_workout->workout_abandoned_timer =
-        evented_timer_register(WORKOUT_ABANDONED_NOTIFICATION_TIMEOUT_MS, false,
-                               prv_abandoned_notification_timer_callback, NULL);
-  }
+unlock:
+  prv_unlock();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -402,21 +404,23 @@ unlock:
 
 // ---------------------------------------------------------------------------------------
 bool workout_service_pause_workout(bool should_be_paused) {
-  if (workout_service_is_paused() == should_be_paused) {
-    // If no change in state, return early and successful
-    return true;
-  }
-
-  if (!workout_service_is_workout_ongoing()) {
-    PBL_LOG_WRN("Workout (un)pause requested but no workout in progress");
-    return false;
-  }
-
+  bool rv = false;
   prv_lock();
   {
+    if (!s_workout_data.current_workout) {
+      PBL_LOG_WRN("Workout (un)pause requested but no workout in progress");
+      goto unlock;
+    }
+
     CurrentWorkoutData *wrkt_data = s_workout_data.current_workout;
 
-    if (workout_service_is_paused()) {
+    if (wrkt_data->paused == should_be_paused) {
+      // If no change in state, return early and successful
+      rv = true;
+      goto unlock;
+    }
+
+    if (wrkt_data->paused) {
       // We are paused and want to unpause. Add the in progress pause time to the total
       wrkt_data->duration_completed_pauses_s += (rtc_get_time() - wrkt_data->last_paused_utc);
     } else {
@@ -424,15 +428,17 @@ bool workout_service_pause_workout(bool should_be_paused) {
       wrkt_data->last_paused_utc = rtc_get_time();
     }
 
-    s_workout_data.current_workout->paused = should_be_paused;
+    wrkt_data->paused = should_be_paused;
 
     // Update the global duration since we have changed the pause state
     prv_update_duration();
     PBL_LOG_INFO("Paused a workout with type: %d", wrkt_data->type);
     prv_put_event(PebbleWorkoutEvent_Paused);
+    rv = true;
   }
+unlock:
   prv_unlock();
-  return true;
+  return rv;
 }
 
 // ---------------------------------------------------------------------------------------
