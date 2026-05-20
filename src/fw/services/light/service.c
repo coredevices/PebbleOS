@@ -518,6 +518,11 @@ static void prv_light_reset_to_timed_mode(void) {
 void light_toggle_enabled(void) {
   mutex_lock(s_mutex);
 
+  // Toggling the setting is the user's only escape hatch if some path left
+  // s_user_controlled_state stuck on. Clear it here so a subsequent button
+  // release will actually start the auto-off timer.
+  s_user_controlled_state = false;
+
   backlight_set_enabled(!backlight_is_enabled());
   if (prv_light_allowed()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
@@ -529,6 +534,7 @@ void light_toggle_enabled(void) {
 
 void light_toggle_ambient_sensor_enabled(void) {
   mutex_lock(s_mutex);
+  s_user_controlled_state = false;
   backlight_set_ambient_sensor_enabled(!backlight_is_ambient_sensor_enabled());
   if (prv_light_allowed() && !prv_als_is_light()) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
