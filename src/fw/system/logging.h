@@ -62,6 +62,7 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
 
 #if MEMFAULT && defined(PBL_LOGS_HASHED) && __has_include("memfault/core/log.h")
   #include "memfault/core/log.h"
+  #include "mcu/privilege.h"
 
   #define PBL_TO_MFLT_LOG_LEVEL(level) \
     ((level) <= LOG_LEVEL_ERROR ? kMemfaultPlatformLogLevel_Error : \
@@ -72,12 +73,18 @@ int pbl_log_get_bin_format(char* buffer, int buffer_len, const uint8_t log_level
   // Memfault compact_log_helpers.h uses (arg)+0 in _Generic which triggers
   // -Wpointer-arith when log arguments include function pointers. Suppress
   // this warning around the SDK macro expansion.
+  //
+  // Memfault's RAM logger state lives in privileged BSS, so saving from
+  // unprivileged thread mode (apps, workers) faults the MPU. Skip the save
+  // in that case — kernel-side logs still reach Memfault.
   #define PBL_MFLT_LOG_SAVE(level, fmt, ...) \
     do { \
-      _Pragma("GCC diagnostic push") \
-      _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"") \
-      MEMFAULT_COMPACT_LOG_SAVE(PBL_TO_MFLT_LOG_LEVEL(level), fmt, ## __VA_ARGS__); \
-      _Pragma("GCC diagnostic pop") \
+      if (mcu_state_is_thread_privileged()) { \
+        _Pragma("GCC diagnostic push") \
+        _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"") \
+        MEMFAULT_COMPACT_LOG_SAVE(PBL_TO_MFLT_LOG_LEVEL(level), fmt, ## __VA_ARGS__); \
+        _Pragma("GCC diagnostic pop") \
+      } \
     } while (0)
 #else
   #define PBL_MFLT_LOG_SAVE(level, fmt, ...) ((void)0)
