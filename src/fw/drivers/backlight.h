@@ -18,6 +18,10 @@ void backlight_init(void);
 //! @param brightness Brightness level (0-100)
 void backlight_set_brightness(uint8_t brightness);
 
+//! Re-apply the cached driver state to the backlight hardware. No-op if the
+//! firmware believes the backlight is already off.
+void backlight_refresh(void);
+
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 void backlight_set_color(uint32_t rgb_color);
 

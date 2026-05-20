@@ -9,5 +9,8 @@ void backlight_init(void) {
 void backlight_set_brightness(uint8_t brightness) {
 }
 
+void backlight_refresh(void) {
+}
+
 void command_backlight_ctl(const char *arg) {
 }

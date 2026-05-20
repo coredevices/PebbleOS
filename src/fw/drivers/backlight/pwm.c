@@ -41,3 +41,6 @@ void backlight_set_brightness(uint8_t brightness) {
     pwm_set_duty_cycle(&BACKLIGHT_PWM.pwm, desired_duty_cycle);
   }
 }
+
+void backlight_refresh(void) {
+}

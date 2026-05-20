@@ -138,3 +138,18 @@ void backlight_set_color(uint32_t rgb_color) {
 uint32_t backlight_get_color(void) {
   return s_rgb_current_color;
 }
+
+void backlight_refresh(void) {
+  bool ret;
+
+  if (s_brightness == 0U) {
+    return;
+  }
+
+  ret = prv_write_register(AW2016_REG_GCR1,
+                           AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+  ret &= prv_configure_registers();
+  PBL_ASSERTN(ret);
+
+  backlight_set_color(s_rgb_current_color);
+}

@@ -79,6 +79,9 @@ void backlight_set_brightness(uint8_t brightness) {
 #endif
 }
 
+void backlight_refresh(void) {
+}
+
 #ifdef CONFIG_BACKLIGHT_QEMU_COLOR
 void backlight_set_color(uint32_t rgb_color) {
   uint8_t r = ((rgb_color >> 16) & 0xFFU) * s_brightness / 100U;
