@@ -91,7 +91,7 @@ void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
   state->tick_units = tick_units;
   state->first_tick = true;
   event_service_client_subscribe(&state->tick_service_info);
-  if (pebble_task_get_current() == PebbleTask_App) {
+  if (pebble_task_get_current() == PebbleTask_App && sys_app_is_watchface()) {
     PBL_ANALYTICS_SET_UNSIGNED(app_tick_timer_second_subscribed,
                                (tick_units & SECOND_UNIT) ? 1 : 0);
   }
@@ -102,7 +102,7 @@ void tick_timer_service_unsubscribe(void) {
   TickTimerServiceState *state = prv_get_state(PebbleTask_Unknown);
   event_service_client_unsubscribe(&state->tick_service_info);
   state->handler = NULL;
-  if (pebble_task_get_current() == PebbleTask_App) {
+  if (pebble_task_get_current() == PebbleTask_App && sys_app_is_watchface()) {
     PBL_ANALYTICS_SET_UNSIGNED(app_tick_timer_second_subscribed, 0);
   }
 }
