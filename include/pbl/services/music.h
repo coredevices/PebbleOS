@@ -62,7 +62,7 @@ void music_get_pos(uint32_t *track_pos_ms, uint32_t *track_length_ms);
 int32_t music_get_playback_rate_percent(void);
 
 //! @return The volume percentage.
-uint8_t music_get_volume_percent(void);
+uint8_t music_service_get_volume_percent(void);
 
 //! Retrieve the current playback state.
 MusicPlayState music_get_playback_state(void);
@@ -76,7 +76,7 @@ bool music_is_playback_state_reporting_supported(void);
 bool music_is_progress_reporting_supported(void);
 
 //! @return True if the service supports reporting of the current volume.
-//! @see music_get_volume_percent
+//! @see music_service_get_volume_percent
 bool music_is_volume_reporting_supported(void);
 
 //! Sends the command to the server. Commands are "unreliable", they are sent at "best effort".

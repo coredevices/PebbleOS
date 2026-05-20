@@ -308,4 +308,8 @@ WatchInfoColor sys_watch_info_get_color(void);
 //! choice and avoid disturbing actions such as vibration if quiet time is active.
 //! @return True, if Quiet Time is currently active.
 bool sys_do_not_disturb_is_active(void);
+// Music control syscalls
+void sys_music_command_send(MusicCommand command);
+uint8_t sys_music_get_volume_percent(void);
+
 //! @} // end addtogroup Preferences
