@@ -7,6 +7,7 @@
 #include "console/pulse_internal.h"
 #include "kernel/core_dump.h"
 #include "kernel/event_loop.h"
+#include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/factory_reset.h"
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/runlevel.h"
@@ -39,6 +40,13 @@ typedef enum {
 } ResetCmd;
 
 static void prv_launch_factory_reset_app(void *unused) {
+  // factory_reset() holds the PFS mutex for the entire erase (~3 min via
+  // pfs_format()). launcher_block_popups() in prv_factory_reset_non_pfs_data
+  // only blocks new popups -- it does not dismiss ones already on screen.
+  // Pop them here so the user can't, say, press Select on an open notification
+  // and block KernelMain in pin_db_get -> pfs_seek on the held PFS mutex.
+  modal_manager_pop_all();
+
   static const ProgressUIAppArgs s_factory_reset_args = {
     .progress_source = PROGRESS_UI_SOURCE_FACTORY_RESET,
   };
