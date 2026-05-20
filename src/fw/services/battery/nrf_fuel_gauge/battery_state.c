@@ -76,7 +76,6 @@ static bool s_charger_enabled;
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
 
 static uint32_t s_save_counter;
-static bool s_first_update_done;
 
 #ifdef MANUFACTURING_FW
 // In manufacturing firmware, use dedicated MFG_STATE flash region
@@ -305,24 +304,6 @@ static void prv_update_state(void *force_update) {
     return;
   }
 
-#if FUEL_GAUGE_STATEFUL
-  // Detect invalid state on first update
-  if (!s_first_update_done) {
-      pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f,
-                                   (float)constants.i_ua / 1000000.0f,
-                                   (float)constants.t_mc / 1000.0f, 0.0f, NULL);
-      pct_int = (uint8_t)ceilf(pct);
-
-      if (pct_int == 0 && constants.v_mv >= BATTERY_MIN_VALID_VOLTAGE_MV) {
-        PBL_LOG_WRN("Invalid state detected, reloading without state");
-        prv_erase_state();
-        (void)prv_fuel_gauge_init_common(&constants, false);
-      }
-
-      s_first_update_done = true;
-  }
-#endif
-
   is_plugged = battery_is_usb_connected_impl();
   if (is_plugged != s_last_battery_charge_state.is_plugged) {
     ret = nrf_fuel_gauge_ext_state_update(is_plugged
@@ -457,8 +438,6 @@ void battery_state_init(void) {
 
   s_last_voltage_mv = constants.v_mv;
 
-  prv_ref_time = rtc_get_ticks();
-
   ret = prv_fuel_gauge_init_common(&constants, true);
   PBL_ASSERTN(ret == 0);
 
@@ -493,6 +472,27 @@ void battery_state_init(void) {
   s_last_battery_charge_state.is_charging = s_last_battery_charge_state.is_plugged &&
                                             !(s_last_chg_status == BatteryChargeStatusComplete ||
                                               s_last_chg_status == BatteryChargeStatusUnknown);
+
+  float pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f,
+                                     (float)constants.i_ua / 1000000.0f,
+                                     (float)constants.t_mc / 1000.0f, 0.0f, NULL);
+#if FUEL_GAUGE_STATEFUL
+  if ((uint8_t)ceilf(pct) == 0 && constants.v_mv >= BATTERY_MIN_VALID_VOLTAGE_MV) {
+    PBL_LOG_WRN("Invalid state detected, reloading without state");
+    prv_erase_state();
+    ret = prv_fuel_gauge_init_common(&constants, false);
+    PBL_ASSERTN(ret == 0);
+    pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f,
+                                 (float)constants.i_ua / 1000000.0f,
+                                 (float)constants.t_mc / 1000.0f, 0.0f, NULL);
+  }
+#endif
+
+  prv_ref_time = rtc_get_ticks();
+
+  s_last_soc_cpct = (uint32_t)(pct * 100.0f);
+  s_last_battery_charge_state.pct = (uint8_t)ceilf(pct);
+  s_last_battery_charge_state.charge_percent = (uint32_t)(pct * RATIO32_MAX) / 100U;
 
   if (s_last_battery_charge_state.is_charging) {
     PBL_ANALYTICS_TIMER_START(battery_charge_time_ms);
