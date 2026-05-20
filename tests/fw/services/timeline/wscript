@@ -24,7 +24,6 @@ def build(ctx):
       test_sources_ant_glob = "test_reminders.c",
       override_includes=['dummy_board'])
 
-def build(ctx):
     clar(ctx,
          sources_ant_glob=(
              "src/fw/services/blob_db/pin_db.c "

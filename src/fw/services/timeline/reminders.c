@@ -8,22 +8,21 @@
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
+#include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/blob_db/reminder_db.h"
 #include "pbl/services/timeline/item.h"
 #include "system/logging.h"
 
-#include <inttypes.h>
-
 #define INVALID_SNOOZE_DELAY 0
 #define HALF_SNOOZE_END_MARK 30 // Seconds
 #define CONSTANT_SNOOZE_DELAY (10 * SECONDS_PER_MINUTE) // Seconds
 #define CONSTANT_SNOOZE_END_MARK (48 * MINUTES_PER_HOUR * SECONDS_PER_MINUTE) // Seconds
 
-static TimerID s_reminder_timer;
-
-// this reminder should stay here so the timer callback has something to refer to
+static RegularTimerInfo s_reminder_timer;
+static bool s_reminder_armed;
+static time_t s_next_reminder_timestamp;
 static ReminderId s_next_reminder_id;
 
 bool reminders_mark_has_reminded(ReminderId *reminder_id);
@@ -65,35 +64,32 @@ static void prv_trigger_reminder_system_task_callback(void *data) {
   reminders_update_timer();
 }
 
-static void prv_new_timer_callback(void *data) {
-  system_task_add_callback(prv_trigger_reminder_system_task_callback, data);
+// Polls once per second against the RTC. Same pattern cron uses internally,
+// avoids FreeRTOS-tick drift relative to wall-clock.
+static void prv_timer_callback(void *data) {
+  if (!s_reminder_armed) {
+    return;
+  }
+  if (s_next_reminder_timestamp > rtc_get_time()) {
+    return;
+  }
+  if (system_task_add_callback(prv_trigger_reminder_system_task_callback,
+                               &s_next_reminder_id)) {
+    s_reminder_armed = false;
+  }
 }
 
 static status_t prv_set_timer(Reminder *item) {
-  time_t now = rtc_get_time();
-  uint32_t timeout_ms;
-  if (item->header.timestamp <= now) {
-    timeout_ms = 0;
-  } else {
-    timeout_ms = 1000 * (item->header.timestamp - now);
-  }
   s_next_reminder_id = item->header.id;
-  if (new_timer_start(s_reminder_timer, timeout_ms, prv_new_timer_callback,
-                      &s_next_reminder_id, 0)) {
-    PBL_LOG_DBG("Set timer for %"PRIu32, timeout_ms);
-    return S_SUCCESS;
-  } else {
-    PBL_LOG_DBG("Could not set timer.");
-    return E_ERROR;
-  }
+  s_next_reminder_timestamp = item->header.timestamp;
+  s_reminder_armed = true;
+  PBL_LOG_DBG("Set reminder for %ld", s_next_reminder_timestamp);
+  return S_SUCCESS;
 }
 
 status_t reminders_update_timer(void) {
   PBL_LOG_DBG("Attempting to update timer.");
-  if (!new_timer_stop(s_reminder_timer)) {
-    PBL_LOG_DBG("Updated timer while callback running.");
-    return S_SUCCESS;
-  }
+  s_reminder_armed = false;
 
   TimelineItem item = {{{0}}};
   status_t rv = reminder_db_next_item_header(&item);
@@ -104,11 +100,7 @@ status_t reminders_update_timer(void) {
     return rv;
   }
 
-  rv = prv_set_timer(&item);
-  if (rv) {
-    return E_ERROR;
-  }
-  return S_SUCCESS;
+  return prv_set_timer(&item);
 }
 
 status_t reminders_insert(Reminder *reminder) {
@@ -117,15 +109,11 @@ status_t reminders_insert(Reminder *reminder) {
 }
 
 status_t reminders_init(void) {
-  if (s_reminder_timer) {
-    new_timer_delete(s_reminder_timer);
+  if (s_reminder_timer.cb == NULL) {
+    s_reminder_timer.cb = prv_timer_callback;
+    regular_timer_add_seconds_callback(&s_reminder_timer);
   }
-  s_reminder_timer = new_timer_create();
-  if (s_reminder_timer == TIMER_INVALID_ID) {
-    return E_ERROR;
-  } else {
-    return reminders_update_timer();
-  }
+  return reminders_update_timer();
 }
 
 status_t reminders_delete(ReminderId *reminder_id) {
@@ -195,8 +183,20 @@ status_t reminders_snooze(Reminder *reminder) {
 }
 
 // only used for tests
-TimerID get_reminder_timer_id(void) {
-  return s_reminder_timer;
+RegularTimerInfo *get_reminder_timer(void) {
+  return &s_reminder_timer;
+}
+
+bool get_reminder_armed(void) {
+  return s_reminder_armed;
+}
+
+time_t get_reminder_timestamp(void) {
+  return s_next_reminder_timestamp;
+}
+
+ReminderId *get_reminder_id(void) {
+  return &s_next_reminder_id;
 }
 
 bool reminders_mark_has_reminded(ReminderId *reminder_id) {
