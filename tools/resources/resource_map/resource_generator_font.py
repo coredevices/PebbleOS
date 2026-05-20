@@ -41,6 +41,7 @@ class FontResourceGenerator(ResourceGenerator):
             d.compress = definition_dict.get("compress")
             d.extended = bool(definition_dict.get("extended"))
             d.tracking_adjust = definition_dict.get("trackingAdjust")
+            d.pixel_height = definition_dict.get("pixelHeight")
 
         return definitions
 
@@ -62,7 +63,9 @@ class FontResourceGenerator(ResourceGenerator):
         # PBL-23964: it turns out that font generation is not thread-safe with freetype
         # 2.4 (and possibly later versions). To avoid running into this, we use a lock.
         with cls.lock:
-            height = FontResourceGenerator._get_font_height_from_name(definition.name)
+            height = getattr(
+                definition, "pixel_height", None
+            ) or FontResourceGenerator._get_font_height_from_name(definition.name)
             is_legacy = definition.compatibility == "2.7"
             max_glyphs = MAX_GLYPHS_EXTENDED if definition.extended else MAX_GLYPHS
 
