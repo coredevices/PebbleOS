@@ -755,9 +755,11 @@ utf8_t* walk_line(GContext* ctx, Line* line, const TextBoxParams* const text_box
       size_t seg_len = seg->end - seg->start;
 
       if (seg->is_rtl) {
-        // RTL segment: shape Arabic if needed, then reverse and render
-        utf8_t shaped_buffer[64];
-        utf8_t rtl_buffer[64];
+        // Shape, reverse, render. Buffers sized to fit any single line on
+        // 200-260 px displays; shaping expands Arabic basic-block (2 UTF-8
+        // bytes) to presentation forms (3 bytes).
+        utf8_t shaped_buffer[128];
+        utf8_t rtl_buffer[128];
         const utf8_t *to_render = seg->start;
         size_t render_len = seg_len;
 
