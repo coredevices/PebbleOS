@@ -1283,6 +1283,10 @@ static void prv_mic_window_unload(Window *window) {
 
 static void prv_mic_window_disappear(Window *window) {
   VoiceUiData *data = window_get_user_data(window);
+  // prv_mic_window_appear pinned the backlight via sys_light_enable_respect_settings(true).
+  // Release it here so the appear/disappear pair is symmetric, even if a later
+  // exit path (prv_exit_and_send_result_event, voice_window_pop) never runs.
+  sys_light_reset_to_timed_mode();
   if (data->state != StateError) {
     // Do not indicate that an error occurred when a session is interrupted by a window transition
     if (data->state != StateFinished) {
