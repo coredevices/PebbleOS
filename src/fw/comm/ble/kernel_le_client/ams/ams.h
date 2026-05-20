@@ -75,6 +75,13 @@ void ams_handle_read_or_notification(BLECharacteristic characteristic, const uin
 //! Must only be called from KernelMain!
 void ams_destroy(void);
 
+//! Disconnect AMS from the music service if currently registered. No-op otherwise.
+//! Some Android phones expose something that looks like an AMS GATT service,
+//! letting AMS grab the music slot before we learn the remote is Android. The PP
+//! music endpoint calls this on Android-detect so it can take over the slot.
+//! Must only be called from KernelMain!
+void ams_music_disconnect(void);
+
 //! This function is exported only for (unit) testing purposes!
 //! OK to call from any task.
 void ams_send_command(AMSRemoteCommandID command_id);

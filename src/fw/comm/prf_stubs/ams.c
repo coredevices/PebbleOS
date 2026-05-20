@@ -33,5 +33,8 @@ void ams_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_
 void ams_destroy(void) {
 }
 
+void ams_music_disconnect(void) {
+}
+
 void ams_send_command(AMSRemoteCommandID command_id) {
 }

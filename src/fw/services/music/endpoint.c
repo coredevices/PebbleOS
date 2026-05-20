@@ -4,6 +4,7 @@
 #include "pbl/services/music_endpoint.h"
 #include "pbl/services/music_endpoint_types.h"
 
+#include "comm/ble/kernel_le_client/ams/ams.h"
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/comm_session/session_remote_os.h"
 #include "pbl/services/music_internal.h"
@@ -292,6 +293,8 @@ void music_endpoint_handle_mobile_app_info_event(const PebbleRemoteAppInfoEvent 
     // Only on Android we use Pebble Protocol for music metadata and control.
     return;
   }
+  
+  ams_music_disconnect();
   prv_set_connected(true);
 }
 

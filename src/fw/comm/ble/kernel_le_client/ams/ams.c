@@ -274,6 +274,12 @@ static bool prv_set_connected(bool connected) {
   return !has_error;
 }
 
+void ams_music_disconnect(void) {
+  if (s_ams_client && s_ams_client->connected) {
+    prv_set_connected(false);
+  }
+}
+
 // -------------------------------------------------------------------------------------------------
 // Player entity update handlers
 
