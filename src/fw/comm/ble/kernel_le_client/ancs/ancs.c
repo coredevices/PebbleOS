@@ -390,6 +390,15 @@ static void prv_is_ancs_alive_response_timeout_launcher_task_cb(void *data) {
   // This handles the case where iOS has dropped the GATT subscription
   // without the watch knowing about it (common during PPoGATT resets)
   prv_resubscribe_to_ancs();
+
+  // Always re-arm the alive-check timer here, even though a successful
+  // resubscribe will also re-arm it from ancs_handle_subscribe(). Recovery is
+  // not guaranteed: characteristics may be invalidated, the CCCD write may
+  // fail synchronously, or iOS may never reply with a CCCD response. Without
+  // this re-arm those paths leave the timer permanently stopped and the watch
+  // stays connected but silent until reboot. The call is idempotent --
+  // prv_ancs_is_alive_start_tracking() cancels and reschedules.
+  prv_ancs_is_alive_schedule_next_check();
 }
 
 static void prv_is_ancs_alive_response_timeout(void *data) {
