@@ -12,6 +12,7 @@
 #include "system/reboot_reason.h"
 #include "system/version.h"
 #include "util/size.h"
+#include "util/time/time.h"
 
 #define HEARTBEAT_PERIOD_SEC 3600
 #define ANALYTICS_STRING_MAX_LEN 64
@@ -75,6 +76,7 @@ static const struct pbl_analytics_backend_ops *s_backend_ops[] = {
 static void prv_heartbeat_system_task_cb(void *data) {
   PBL_ANALYTICS_SET_STRING(fw_version, TINTIN_METADATA.version_tag);
   PBL_ANALYTICS_SET_UNSIGNED(last_reboot_reason, reboot_reason_get_last_reboot_reason());
+  PBL_ANALYTICS_SET_UNSIGNED(uptime_s, time_get_uptime_seconds());
 
   pbl_analytics_external_collect_battery();
   pbl_analytics_external_collect_cpu_stats();
