@@ -5,9 +5,9 @@
 
 #include <string.h>
 
-// Maximum codepoints we can handle in a single shaping operation
-// Keep small for stack safety on embedded systems (16 codepoints * 4 bytes = 64 bytes)
-#define MAX_SHAPE_CODEPOINTS 16
+// Caps codepoints per shaping call. Sized to match walk_line's 128-byte
+// shape buffer (~64 Arabic codepoints at 2 UTF-8 bytes each).
+#define MAX_SHAPE_CODEPOINTS 64
 
 // Connectivity flags for Arabic letters
 #define JOIN_NONE       0x00  // Does not connect (space, punctuation)
