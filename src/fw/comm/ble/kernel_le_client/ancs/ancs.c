@@ -101,6 +101,9 @@ typedef struct ANCSClient {
   NotificationQueueNode *queue;
   bool alive_check_pending;
   ANCSVersion version;
+  // Alive-check intervals with no NS traffic; reset by any NS notification.
+  // Triggers a CCCD re-subscribe at the threshold to recover silent NS.
+  uint8_t alive_checks_without_ns;
 } ANCSClient;
 
 static ANCSClient *s_ancs_client;
@@ -306,6 +309,15 @@ static void prv_reset_due_to_bt_error(void) {
 #define ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES 15 // Check every 15 minutes for faster recovery
 #define ANCS_IS_ALIVE_RESPONSE_WAIT_TIME_SECONDS 5 // 5 seconds
 
+// Force a CCCD refresh after this many consecutive alive-check intervals
+// without any NS traffic. 6 h is short enough to recover the same day for a
+// typical user but long enough that DND / overnight don't trigger spurious
+// refreshes -- iOS handles redundant CCCD writes silently. Derived from the
+// alive-check interval so future tuning of one doesn't desync the other.
+#define ANCS_NO_NS_TIMEOUT_HOURS 6
+#define ANCS_ALIVE_CHECKS_WITHOUT_NS_BEFORE_RESUBSCRIBE \
+    ((ANCS_NO_NS_TIMEOUT_HOURS * 60) / ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES)
+
 
 static void prv_is_ancs_alive_cb(void *data);
 static void prv_is_ancs_alive_response_timeout(void *data);
@@ -420,6 +432,23 @@ T_STATIC void prv_check_ancs_alive(void) {
 
   if (s_ancs_client) {
     s_ancs_client->alive_check_pending = false;
+
+    // If iOS has been silent on NS for too long, the CCCD subscription is
+    // likely wedged on iOS' side even though CP responses look fine. Force a
+    // re-subscribe to nudge iOS into resuming pushes, and skip this round's CP
+    // probe -- the next 15 min alive check will verify recovery.
+    if (++s_ancs_client->alive_checks_without_ns >=
+        ANCS_ALIVE_CHECKS_WITHOUT_NS_BEFORE_RESUBSCRIBE) {
+      PBL_LOG_INFO("ANCS NS silent for %u alive checks; forcing CCCD resubscribe",
+                   s_ancs_client->alive_checks_without_ns);
+      s_ancs_client->alive_checks_without_ns = 0;
+      prv_resubscribe_to_ancs();
+      // ancs_handle_subscribe() will re-arm on success; schedule a backup so
+      // we still tick if the CCCD response never lands.
+      prv_ancs_is_alive_schedule_next_check();
+      return;
+    }
+
     prv_set_state(ANCSClientStateAliveCheck);
     //! Sends an ANCS attribute fetch (to the Control Point). The notification UID is invalid, ANCS
     //! will reply with 0xA2 (invalid param)
@@ -881,6 +910,10 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
     PBL_LOG_ERR("Received invalid ANCS NS Notification length=<%"PRIu32">", length);
     return;
   }
+
+  // Any NS traffic (add/modify/remove) proves the subscription is still
+  // delivering, so the silent-NS resubscribe watchdog can stand down.
+  s_ancs_client->alive_checks_without_ns = 0;
 
   NSNotification* nsnotification = (NSNotification*) notification;
   ANCSProperty properties = ANCSProperty_None;
