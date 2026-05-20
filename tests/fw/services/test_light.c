@@ -69,6 +69,9 @@ void backlight_set_brightness(uint8_t brightness) {
   s_backlight_brightness = brightness;
 }
 
+void backlight_refresh(void) {
+}
+
 bool backlight_is_motion_enabled(void) {
   return false;
 }

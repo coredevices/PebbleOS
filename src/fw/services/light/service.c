@@ -285,6 +285,11 @@ static void prv_change_state(BacklightState new_state) {
 
   if (s_current_brightness != new_brightness) {
     prv_change_brightness(new_brightness);
+  } else if (new_state == LIGHT_STATE_ON || new_state == LIGHT_STATE_ON_TIMED) {
+    // A user-initiated wake with unchanged brightness would otherwise
+    // short-circuit. Re-apply the driver state so the hardware is brought back
+    // in sync if it has drifted from what the firmware believes.
+    backlight_refresh();
   }
 
   // Notify subscribers when the backlight transitions between on and off.
