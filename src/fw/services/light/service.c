@@ -285,6 +285,13 @@ static void prv_change_state(BacklightState new_state) {
 
   if (s_current_brightness != new_brightness) {
     prv_change_brightness(new_brightness);
+  } else if (new_state == LIGHT_STATE_ON || new_state == LIGHT_STATE_ON_TIMED) {
+    // Wake-equivalent transitions normally short-circuit when brightness is
+    // unchanged. The AW2016 backlight driver can be silently power-cycled by a
+    // VBAT dip or I2C SCL watchdog with no reset signal back to the MCU, so
+    // we'd otherwise leave the chip stuck off while the firmware thinks it's
+    // on (FIRM-1929). Re-apply driver state on every user-initiated wake.
+    backlight_refresh();
   }
 
   // Notify subscribers when the backlight transitions between on and off.
