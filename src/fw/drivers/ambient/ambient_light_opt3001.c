@@ -72,7 +72,14 @@ void ambient_light_init(void) {
     prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC | OPT3001_CONFIG_MODE_CONTINUOUS);
   }
 
+  ambient_light_common_init();
   s_initialized = true;
+}
+
+void ambient_light_driver_set_state(bool active, bool sampling) {
+  // OPT3001 is configured at boot per BOARD_CONFIG.als_always_on; no gate needed.
+  (void)active;
+  (void)sampling;
 }
 
 uint32_t ambient_light_get_light_level(void) {
