@@ -148,6 +148,14 @@ static const uint32_t MAX_VIBE_DURATION_MS = 10000;
 
 static int s_pattern_timer = TIMER_INVALID_ID;
 static bool s_pattern_in_progress = false;
+// Reference points for drift-free step scheduling. The pattern's t=0 is anchored
+// to s_pattern_start_ticks; s_pattern_deadline_ms is the (start-relative)
+// completion time of the step the timer is currently waiting on. Each step's
+// timeout is computed against an absolute deadline so per-callback scheduling
+// jitter does not accumulate across long patterns (the Reveille score, for
+// example, expands to ~180 chained steps).
+static RtcTicks s_pattern_start_ticks = 0;
+static uint64_t s_pattern_deadline_ms = 0;
 // s_vibe_strength is the current vibration strength setting of the motor
 static int32_t s_vibe_strength = VIBE_STRENGTH_OFF;
 // s_vibe_strength_default is the vibrations trength of the motor used when one is not specified
@@ -244,6 +252,23 @@ void vibe_service_set_enabled(bool enable) {
   mutex_unlock(s_vibe_pattern_mutex);
 }
 
+//! Extend the pattern's absolute deadline by step_duration_ms and return the
+//! timer duration to schedule for the next step, compensating for any
+//! callback-scheduling latency that has elapsed since the pattern started.
+//! Caller must hold s_vibe_pattern_mutex.
+static uint32_t prv_next_timeout_ms(uint32_t step_duration_ms) {
+  s_pattern_deadline_ms += step_duration_ms;
+  const RtcTicks elapsed_ticks = rtc_get_ticks() - s_pattern_start_ticks;
+  const uint64_t elapsed_ms = (elapsed_ticks * 1000) / RTC_TICKS_HZ;
+  if (s_pattern_deadline_ms <= elapsed_ms) {
+    // Already late — fire as soon as the timer service can. The deadline
+    // accumulator preserves the planned schedule so subsequent steps still
+    // line up against the original anchor.
+    return 1;
+  }
+  return (uint32_t)(s_pattern_deadline_ms - elapsed_ms);
+}
+
 static void prv_timer_callback(void* data) {
   if (s_vibe_queue_head == NULL) {
     PBL_LOG_ERR("Tried to handle a vibe event with a null vibe queue");
@@ -260,7 +285,8 @@ static void prv_timer_callback(void* data) {
   if (s_vibe_queue_head != NULL) {
     // move to the next step
     prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
-    bool success = new_timer_start(s_pattern_timer, s_vibe_queue_head->duration_ms,
+    const uint32_t next_ms = prv_next_timeout_ms(s_vibe_queue_head->duration_ms);
+    bool success = new_timer_start(s_pattern_timer, next_ms,
                                    prv_timer_callback, NULL, 0 /*flags*/);
     PBL_ASSERTN(success);
   } else {
@@ -360,9 +386,12 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
   }
 #endif
 
+  s_pattern_start_ticks = rtc_get_ticks();
+  s_pattern_deadline_ms = 0;
   prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
   s_pattern_in_progress = true;
-  bool success = new_timer_start(s_pattern_timer, s_vibe_queue_head->duration_ms,
+  const uint32_t first_ms = prv_next_timeout_ms(s_vibe_queue_head->duration_ms);
+  bool success = new_timer_start(s_pattern_timer, first_ms,
                                  prv_timer_callback, NULL, 0 /*flags*/);
   PBL_ASSERTN(success);
   mutex_unlock(s_vibe_pattern_mutex);

@@ -26,6 +26,15 @@
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score.h"
 
+#if CAPABILITY_HAS_SPEAKER
+#include "applib/event_service_client.h"
+#include "kernel/events.h"
+#include "pbl/services/notifications/alerts_preferences_private.h"
+#include "pbl/services/speaker/speaker_finish_reason.h"
+#include "pbl/services/speaker/speaker_service.h"
+#include "services/alarms/alarm_tones.h"
+#endif
+
 #define DIALOG_TIMEOUT_SNOOZE 2000
 #define DIALOG_TIMEOUT_DISMISS DIALOG_TIMEOUT_SNOOZE
 
@@ -81,6 +90,19 @@ typedef struct {
   int max_vibes;
   int vibe_count;
   VibeScore *vibe_score;
+
+#if CAPABILITY_HAS_SPEAKER
+  // Speaker playback state. sound_active is the single source of truth: it must
+  // be cleared *before* speaker_service_stop() so any in-flight finish event
+  // bails out instead of re-triggering playback. When sound_driven_by_vibe_timer
+  // is set, replays are issued from the vibe outer timer instead of the speaker
+  // Done event, so audio and vibe stay anchored to the same drift-free clock.
+  bool sound_active;
+  bool sound_driven_by_vibe_timer;
+  const SpeakerNote *sound_notes;
+  uint32_t sound_count;
+  EventServiceInfo speaker_event_info;
+#endif
 } AlarmPopupData;
 
 AlarmPopupData *s_alarm_popup_data = NULL;
@@ -106,6 +128,86 @@ static void prv_stop_vibes(void) {
   vibes_cancel();
 }
 
+#if CAPABILITY_HAS_SPEAKER
+// Volume 60/100 is a moderate first cut; tunable, and a per-user volume
+// preference can be added in a follow-up.
+#define ALARM_SPEAKER_VOLUME 60
+
+static void prv_play_sound_loop_iteration(void) {
+  speaker_service_play_note_seq(s_alarm_popup_data->sound_notes,
+                                s_alarm_popup_data->sound_count,
+                                SpeakerPriorityCritical, ALARM_SPEAKER_VOLUME);
+}
+
+static void prv_handle_speaker_event(PebbleEvent *e, void *context) {
+  if (!s_alarm_popup_data || !s_alarm_popup_data->sound_active) {
+    return;
+  }
+  if (e->speaker.type != SpeakerEventFinished) {
+    return;
+  }
+  if (s_alarm_popup_data->sound_driven_by_vibe_timer) {
+    // Replays are issued from the vibe timer; ignore Done/Preempted here.
+    return;
+  }
+  if ((SpeakerFinishReason)e->speaker.finish_reason == SpeakerFinishReasonDone) {
+    // Sound-only mode: alarm rings continuously until dismiss/snooze/timeout.
+    prv_play_sound_loop_iteration();
+  }
+}
+
+static void prv_start_sound(AlarmId id, bool vibe_driving_loop) {
+  if (low_power_is_active()) {
+    return;  // Skip sound in LPM to conserve battery; vibration still runs.
+  }
+
+  AlarmInfo info;
+  if (!alarm_get_info(id, &info) || !info.sound_enabled) {
+    return;
+  }
+
+  alarm_tones_get(info.tone, &s_alarm_popup_data->sound_notes, &s_alarm_popup_data->sound_count);
+  if (!s_alarm_popup_data->sound_notes || s_alarm_popup_data->sound_count == 0) {
+    return;
+  }
+
+  s_alarm_popup_data->speaker_event_info = (EventServiceInfo) {
+    .type = PEBBLE_SPEAKER_EVENT,
+    .handler = prv_handle_speaker_event,
+  };
+  event_service_client_subscribe(&s_alarm_popup_data->speaker_event_info);
+  speaker_service_register_finish(PebbleTask_KernelMain);
+
+  // Only piggyback on the vibe outer timer when the selected tone has been
+  // laid out beat-for-beat against the user's selected alarm vibe (see the
+  // paired_vibe column in s_tones[]). For any other combination the cycle
+  // lengths and beats won't line up, so each side loops on its own cadence.
+  const VibeScoreId paired = alarm_tones_get_paired_vibe(info.tone);
+  const bool tones_match = vibe_driving_loop &&
+                           paired != VibeScoreId_Invalid &&
+                           paired == alerts_preferences_get_vibe_score_for_client(VibeClient_Alarms);
+  s_alarm_popup_data->sound_active = true;
+  s_alarm_popup_data->sound_driven_by_vibe_timer = tones_match;
+  if (!tones_match) {
+    prv_play_sound_loop_iteration();
+  }
+  // When the vibe timer is driving the loop, the first audio play happens
+  // inside the vibe timer's callback so both subsystems are anchored to the
+  // same clock.
+}
+
+static void prv_stop_sound(void) {
+  if (!s_alarm_popup_data->sound_active) {
+    return;
+  }
+  // Order matters: clear the flag first so any in-flight finish event bails
+  // out before stop() generates one.
+  s_alarm_popup_data->sound_active = false;
+  speaker_service_stop();
+  event_service_client_unsubscribe(&s_alarm_popup_data->speaker_event_info);
+}
+#endif  // CAPABILITY_HAS_SPEAKER
+
 // ----------------------------------------------------------------------------------------------
 //! Vibe Timer
 #define TINTIN_VIBE_REPEAT_INTERVAL_MS (1000)
@@ -117,6 +219,12 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
     if (s_alarm_popup_data->vibe_count < s_alarm_popup_data->max_vibes) {
       s_alarm_popup_data->vibe_count++;
       vibe_score_do_vibe(s_alarm_popup_data->vibe_score);
+#if CAPABILITY_HAS_SPEAKER
+      if (s_alarm_popup_data->sound_active &&
+          s_alarm_popup_data->sound_driven_by_vibe_timer) {
+        prv_play_sound_loop_iteration();
+      }
+#endif
     }
     else {
       prv_stop_vibes();
@@ -193,6 +301,9 @@ static void prv_setup_action_bar(void) {
 static void prv_cleanup_alarm_popup(void *callback_context) {
   if (s_alarm_popup_data) {
     prv_stop_vibes();
+#if CAPABILITY_HAS_SPEAKER
+    prv_stop_sound();
+#endif
     gbitmap_destroy(s_alarm_popup_data->bitmap);
     gbitmap_destroy(s_alarm_popup_data->action_bar_snooze);
     gbitmap_destroy(s_alarm_popup_data->action_bar_dismiss);
@@ -237,7 +348,23 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   dialog_set_callbacks(dialog, &callback, NULL);
   actionable_dialog_push(s_alarm_popup_data->alarm_popup, prv_get_window_stack());
 
-  prv_start_vibes();
+  // The alarm id isn't carried in the event (PebbleEvent must stay <= 12 bytes
+  // — see _Static_assert in events.c). Fall back to the most-recently-fired
+  // alarm tracked in the alarm service. Synthetic events (trigger_alarm demo)
+  // get ALARM_INVALID_ID and skip the per-alarm config lookup.
+  const AlarmId alarm_id = alarm_get_most_recent_id();
+  AlarmInfo info;
+  const bool have_info = (alarm_id != ALARM_INVALID_ID) &&
+                         alarm_get_info(alarm_id, &info);
+  const bool vibe_on = !have_info || info.vibrate_enabled;
+  if (vibe_on) {
+    prv_start_vibes();
+  }
+#if CAPABILITY_HAS_SPEAKER
+  if (have_info) {
+    prv_start_sound(alarm_id, vibe_on);
+  }
+#endif
 
   light_enable_interaction();
 }

@@ -40,6 +40,14 @@ typedef enum AlarmType {
   AlarmTypeCount,
 } AlarmType;
 
+//! Built-in alarm tones, played on speaker hardware when sound is enabled.
+typedef enum AlarmTone {
+  AlarmTone_Reveille = 0,
+  AlarmTone_Beacon,
+  AlarmTone_Bell,
+  AlarmTone_Chime,
+} AlarmTone;
+
 typedef struct AlarmInfo {
   int hour; //<! Range 0-23, where 0 is 12am
   int minute; //<! Range is 0-59
@@ -48,6 +56,9 @@ typedef struct AlarmInfo {
   bool (*scheduled_days)[DAYS_PER_WEEK];
   bool enabled; //<! Whether the alarm to go off at the specified time
   bool is_smart; //<! Whether the alarm is a Smart Alarm
+  bool sound_enabled; //<! Whether the alarm should play a tone on speaker hardware
+  bool vibrate_enabled; //<! Whether the alarm should vibrate
+  AlarmTone tone; //<! Selected tone for this alarm (used when sound_enabled is true)
 } AlarmInfo;
 
 typedef void (*AlarmForEach)(AlarmId id, const AlarmInfo *info, void *context);
@@ -74,6 +85,28 @@ void alarm_set_custom(AlarmId id, const bool scheduled_days[DAYS_PER_WEEK]);
 //! @param id The alarm that should be updated
 //! @param smart Whether the alarm is a smart alarm
 void alarm_set_smart(AlarmId id, bool smart);
+
+//! @param id The alarm that should be updated
+//! @param enabled Whether the alarm should play a tone on speaker hardware
+void alarm_set_sound_enabled(AlarmId id, bool enabled);
+
+//! @param id The alarm that should be updated
+//! @param enabled Whether the alarm should vibrate
+void alarm_set_vibrate_enabled(AlarmId id, bool enabled);
+
+//! @param id The alarm that should be updated
+//! @param tone The tone to play when sound is enabled
+void alarm_set_tone(AlarmId id, AlarmTone tone);
+
+//! @param id The alarm to look up
+//! @param info_out The AlarmInfo struct to fill in. The scheduled_days pointer is set to NULL;
+//! callers needing per-weekday flags should use alarm_get_custom_days() instead.
+//! @return True if the alarm exists, False otherwise
+bool alarm_get_info(AlarmId id, AlarmInfo *info_out);
+
+//! @return The id of the most recently fired alarm, or ALARM_INVALID_ID if no alarm has fired
+//! since boot. Used by the alarm popup to look up the firing alarm's settings.
+AlarmId alarm_get_most_recent_id(void);
 
 //! @param id The alarm for which the scheduled_days array should be updated for
 //! @param scheduled_days[DAYS_PER_WEEK] An empty bool array for each weekday (Sunday = index 0)

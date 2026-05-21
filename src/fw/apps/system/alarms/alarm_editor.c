@@ -162,6 +162,11 @@ static void prv_handle_selection(int index, void *callback_context) {
       .minute = data->alarm_minute,
       .kind = data->alarm_kind,
       .is_smart = (data->alarm_type == AlarmType_Smart),
+      .vibrate_enabled = true,
+#if CAPABILITY_HAS_SPEAKER
+      .sound_enabled = false,
+      .tone = AlarmTone_Reveille,
+#endif
     };
     data->alarm_id = alarm_create(&info);
     data->complete_callback(CREATED, data->alarm_id, data->callback_context);
@@ -370,6 +375,11 @@ static void prv_custom_day_picker_handle_selection(MenuLayer *menu_layer, MenuIn
           .kind = ALARM_KIND_CUSTOM,
           .scheduled_days = &data->scheduled_days,
           .is_smart = (data->alarm_type == AlarmType_Smart),
+          .vibrate_enabled = true,
+#if CAPABILITY_HAS_SPEAKER
+          .sound_enabled = false,
+          .tone = AlarmTone_Reveille,
+#endif
         };
         data->alarm_id = alarm_create(&info);
         data->complete_callback(CREATED, data->alarm_id, data->callback_context);

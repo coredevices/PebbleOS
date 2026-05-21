@@ -4,6 +4,7 @@
 sources = [
     'alarm.c',
     'alarm_pin.c',
+    'alarm_tones.c',
 ]
 
 bld.stlib(
