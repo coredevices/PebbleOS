@@ -5,6 +5,7 @@
 #include "phone_formatting.h"
 
 #include "applib/fonts/fonts.h"
+#include "util/math.h"
 #include "util/trig.h"
 #include "applib/ui/action_bar_layer.h"
 #include "applib/ui/kino/kino_layer.h"
@@ -416,8 +417,10 @@ static void prv_set_caller_id_text(PebblePhoneCaller *caller) {
   } else {
     s_phone_ui_data->caller_id_text_layer.layer.bounds.origin.y = DOUBLE_LINE_BOUND_OFFSET;
   }
-  s_phone_ui_data->caller_id_text_layer.layer.bounds.size.h =
-      lines * fonts_get_font_height(caller_id_font);
+  const int16_t content_height = lines * fonts_get_font_height(caller_id_font);
+  s_phone_ui_data->caller_id_text_layer.layer.bounds.size.h = content_height;
+  s_phone_ui_data->caller_id_text_layer.layer.frame.size.h =
+      MAX(s_phone_ui_data->style->caller_id_height, content_height);
   text_layer_set_text(&s_phone_ui_data->caller_id_text_layer, s_phone_ui_data->caller_id_text_buf);
 }
 
