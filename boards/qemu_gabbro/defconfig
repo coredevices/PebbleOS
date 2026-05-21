@@ -1,5 +1,7 @@
 # qemu_gabbro board configuration
 
+CONFIG_BOARD_QEMU_GABBRO=y
+
 CONFIG_SOC_QEMU=y
 CONFIG_CORTEX_M33=y
 

@@ -1,5 +1,7 @@
 # qemu_emery board configuration
 
+CONFIG_BOARD_QEMU_EMERY=y
+
 CONFIG_SOC_QEMU=y
 CONFIG_CORTEX_M33=y
 

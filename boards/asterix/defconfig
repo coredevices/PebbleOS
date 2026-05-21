@@ -1,5 +1,7 @@
 # asterix board configuration
 
+CONFIG_BOARD_ASTERIX=y
+
 CONFIG_SOC_NRF52=y
 
 CONFIG_HAL_NORDIC=y

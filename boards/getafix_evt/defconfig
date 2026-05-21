@@ -1,5 +1,7 @@
 # getafix_evt board configuration
 
+CONFIG_BOARD_GETAFIX_EVT=y
+
 CONFIG_SOC_SF32LB52=y
 
 CONFIG_HAL_SIFLI=y

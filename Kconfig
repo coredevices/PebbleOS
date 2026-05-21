@@ -24,6 +24,64 @@ config IS_BIGBOARD
       from the shipping board.
 
 choice
+    prompt "Board"
+    help
+      Hardware board variant. Boards are grouped into families
+      (BOARD_FAMILY_*) by SoC and HW design; some boards share a
+      family, while QEMU boards are 1-to-1 with their symbol.
+
+rsource "boards/asterix/Kconfig"
+rsource "boards/obelix_bb2/Kconfig"
+rsource "boards/obelix_dvt/Kconfig"
+rsource "boards/obelix_pvt/Kconfig"
+rsource "boards/getafix_evt/Kconfig"
+rsource "boards/getafix_dvt/Kconfig"
+rsource "boards/getafix_dvt2/Kconfig"
+rsource "boards/qemu_emery/Kconfig"
+rsource "boards/qemu_flint/Kconfig"
+rsource "boards/qemu_gabbro/Kconfig"
+
+endchoice
+
+config BOARD_FAMILY_ASTERIX
+    bool
+    help
+      Hidden symbol selected by boards in the Asterix family.
+
+config BOARD_FAMILY_OBELIX
+    bool
+    help
+      Hidden symbol selected by boards in the Obelix family.
+
+config BOARD_FAMILY_GETAFIX
+    bool
+    help
+      Hidden symbol selected by boards in the Getafix family.
+
+config BOARD_FAMILY_NAME
+    string
+    default "asterix" if BOARD_FAMILY_ASTERIX
+    default "obelix" if BOARD_FAMILY_OBELIX
+    default "getafix" if BOARD_FAMILY_GETAFIX
+    default "qemu_emery" if BOARD_QEMU_EMERY
+    default "qemu_flint" if BOARD_QEMU_FLINT
+    default "qemu_gabbro" if BOARD_QEMU_GABBRO
+    help
+      Lowercase token identifying the board family (or the single
+      board, for QEMU variants). Used for resource path lookups
+      and string outputs.
+
+config QEMU_MACHINE
+    string
+    default "pebble-emery" if BOARD_QEMU_EMERY
+    default "pebble-flint" if BOARD_QEMU_FLINT
+    default "pebble-gabbro" if BOARD_QEMU_GABBRO
+    depends on QEMU
+    help
+      QEMU machine identifier passed to qemu-system-arm via the
+      `-machine` flag.
+
+choice
     prompt "SDK platform"
 config PLATFORM_EMERY
     bool "Emery"

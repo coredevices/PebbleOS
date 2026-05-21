@@ -1,5 +1,7 @@
 # obelix_pvt board configuration
 
+CONFIG_BOARD_OBELIX_PVT=y
+
 CONFIG_SOC_SF32LB52=y
 
 CONFIG_HAL_SIFLI=y
