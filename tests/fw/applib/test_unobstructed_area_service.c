@@ -4,7 +4,7 @@
 #include "clar.h"
 #include "pebble_asserts.h"
 
-#include "applib/unobstructed_area_service.h"
+#include "applib/unobstructed_area_service_private.h"
 
 // Stubs
 /////////////////////
@@ -84,6 +84,8 @@ void test_unobstructed_area_service__cleanup(void) {
 void test_unobstructed_area_service__subscribe(void) {
   // Unsubscribing first should not crash
   app_unobstructed_area_service_unsubscribe();
+  cl_assert(!unobstructed_area_service_is_subscribed(app_state_get_unobstructed_area_state()));
+  cl_assert(!unobstructed_area_service_has_requested_area(app_state_get_unobstructed_area_state()));
   cl_assert(!app_state_get_unobstructed_area_state()->handlers.will_change);
   cl_assert(!app_state_get_unobstructed_area_state()->handlers.change);
   cl_assert(!app_state_get_unobstructed_area_state()->handlers.did_change);
@@ -99,9 +101,11 @@ void test_unobstructed_area_service__subscribe(void) {
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.will_change, prv_will_change);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.change, prv_change);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.did_change, prv_did_change);
+  cl_assert(unobstructed_area_service_is_subscribed(app_state_get_unobstructed_area_state()));
 
   // Unsubscribing after subscription should cancel subscriptions
   app_unobstructed_area_service_unsubscribe();
+  cl_assert(!unobstructed_area_service_is_subscribed(app_state_get_unobstructed_area_state()));
   cl_assert(!app_state_get_unobstructed_area_state()->handlers.will_change);
   cl_assert(!app_state_get_unobstructed_area_state()->handlers.change);
   cl_assert(!app_state_get_unobstructed_area_state()->handlers.did_change);
@@ -264,6 +268,7 @@ void test_unobstructed_area_service__did_change_no_will(void) {
 
 void test_unobstructed_area_service__layer_no_clip(void) {
   app_state_get_unobstructed_area_state()->area = GRect(0, 0, 400, 400);
+  cl_assert(!unobstructed_area_service_has_requested_area(app_state_get_unobstructed_area_state()));
 
   Layer root_layer = {
     .bounds = GRect(100, 100, 200, 200),
@@ -271,6 +276,7 @@ void test_unobstructed_area_service__layer_no_clip(void) {
   GRect unobstructed_bounds;
   layer_get_unobstructed_bounds(&root_layer, &unobstructed_bounds);
   cl_assert_equal_grect(unobstructed_bounds, root_layer.bounds);
+  cl_assert(unobstructed_area_service_has_requested_area(app_state_get_unobstructed_area_state()));
 }
 
 void test_unobstructed_area_service__layer_clip_x_y(void) {
