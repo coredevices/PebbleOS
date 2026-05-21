@@ -42,6 +42,11 @@
 
 static TaskHandle_t s_hci_task_handle;
 static SemaphoreHandle_t s_ipc_data_ready;
+/* Given by prv_acl_put_signal() whenever an LL-direction ACL mbuf is returned
+ * to the transport pool; taken by the HCI RX task when an alloc fails so we
+ * unblock as soon as the host has freed something instead of polling.
+ */
+static SemaphoreHandle_t s_acl_pool_avail;
 static struct hci_h4_sm s_hci_h4sm;
 static ipc_queue_handle_t s_ipc_port;
 
@@ -52,6 +57,14 @@ static struct os_mbuf *prv_alloc_acl_from_ll(void) {
   }
 
   return om;
+}
+
+static os_error_t prv_acl_put_signal(struct os_mempool_ext *mpe, void *data, void *arg) {
+  os_error_t err = os_memblock_put_from_cb(&mpe->mpe_mp, data);
+  if (s_acl_pool_avail != NULL) {
+    (void)xSemaphoreGive(s_acl_pool_avail);
+  }
+  return err;
 }
 
 static void *prv_alloc_evt(int discardable) {
@@ -253,8 +266,19 @@ static void prv_hci_task_main(void *unused) {
           int consumed_bytes;
 
           consumed_bytes = hci_h4_sm_rx(&s_hci_h4sm, pbuf, len);
-          if (consumed_bytes <= 0) {
-            PBL_LOG_D_ERR(LOG_DOMAIN_BT_STACK, "hci_h4_sm_rx rc=%d", consumed_bytes);
+          if (consumed_bytes < 0) {
+            /* Transport ACL pool is empty. Block until the host returns a
+             * buffer to the pool (prv_acl_put_signal()) before retrying
+             * the same input — ipc_queue_read is destructive so dropping
+             * bytes here would desync the H4 stream. The timeout is a
+             * safety net for the case where the freed-buffer signal was
+             * given before we got to wait on it.
+             */
+            (void)xSemaphoreTake(s_acl_pool_avail, pdMS_TO_TICKS(100));
+            continue;
+          }
+          if (consumed_bytes == 0) {
+            PBL_LOG_D_ERR(LOG_DOMAIN_BT_STACK, "hci_h4_sm_rx consumed 0 bytes");
             break;
           }
           len -= consumed_bytes;
@@ -288,6 +312,10 @@ void ble_transport_ll_init(void) {
   ble_transport_ll_reinit();
 
   s_ipc_data_ready = xSemaphoreCreateBinary();
+  s_acl_pool_avail = xSemaphoreCreateBinary();
+  PBL_ASSERTN(s_ipc_data_ready != NULL && s_acl_pool_avail != NULL);
+
+  ble_transport_register_put_acl_from_ll_cb(prv_acl_put_signal);
 
   TaskParameters_t task_params = {
     .pvTaskCode = prv_hci_task_main,
