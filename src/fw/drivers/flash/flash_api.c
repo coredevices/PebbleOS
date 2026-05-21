@@ -341,7 +341,7 @@ static void prv_flash_erase_blocking(uint32_t sector_addr, bool is_subsector) {
     // the watchdog kill us in this case.
     static const uint32_t FLASH_ERASE_BLOCKING_TIMEOUT_MS = 5000;
     if (total_time_spent_waiting_ms < FLASH_ERASE_BLOCKING_TIMEOUT_MS) {
-#if IS_BIGBOARD
+#ifdef CONFIG_IS_BIGBOARD
       // Our bigboards have had a hard life and they have some fairly abused flash chips, and we
       // run into 5+ second erases pretty regularly. We're not holding the flash lock while we're
       // doing this, so other threads are allowed to use flash, but it's pretty common to hold

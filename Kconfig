@@ -16,6 +16,13 @@ config PBLBOOT
       layout with direct XIP. Disable for boards whose SoC bootloader
       consumes a raw image and uses a single firmware slot.
 
+config IS_BIGBOARD
+    bool "Bigboard variant"
+    help
+      Engineering/development PCB variant of a board (`_bb` suffix
+      in the board name). Gates bigboard-only behaviour that differs
+      from the shipping board.
+
 choice
     prompt "SDK platform"
 config PLATFORM_EMERY

@@ -217,9 +217,6 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'VOICE_CODEC_TESTS')
         conf.options.profiler = True
 
-    if 'bb' in conf.options.board:
-        conf.env.append_value('DEFINES', 'IS_BIGBOARD')
-
     if conf.options.nosleep:
         conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
         print("Sleep/stop mode disabled")

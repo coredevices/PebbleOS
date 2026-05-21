@@ -159,7 +159,7 @@ static void prv_handle_accel_data(void * data) {
 }
 
 T_STATIC bool prv_can_turn_sensor_on(void) {
-#if IS_BIGBOARD || RECOVERY_FW
+#if defined(CONFIG_IS_BIGBOARD) || RECOVERY_FW
   return true;
 #endif
 

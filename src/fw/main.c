@@ -340,7 +340,7 @@ static NOINLINE void prv_main_task_init(void) {
 
   clock_init();
 
-#if defined(IS_BIGBOARD)
+#if defined(CONFIG_IS_BIGBOARD)
   // Program a random S/N into the Bigboard in case it's not been done yet:
   mfg_write_bigboard_serial_number();
 #endif
