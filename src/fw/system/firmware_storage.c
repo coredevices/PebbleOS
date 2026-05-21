@@ -8,7 +8,7 @@
 #include "system/logging.h"
 #include "util/math.h"
 
-#if !CAPABILITY_HAS_PBLBOOT
+#ifndef CONFIG_PBLBOOT
 FirmwareDescription firmware_storage_read_firmware_description(uint32_t firmware_start_address) {
   FirmwareDescription firmware_description;
   flash_read_bytes((uint8_t*) &firmware_description, firmware_start_address,

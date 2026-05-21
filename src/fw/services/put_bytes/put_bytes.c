@@ -447,7 +447,7 @@ static void prv_cleanup_and_send_response(ResponseCode code) {
 }
 
 static void prv_commit_object(uint32_t crc) {
-#if !CAPABILITY_HAS_PBLBOOT
+#ifndef CONFIG_PBLBOOT
   if (s_pb_state.type == ObjectFirmware || s_pb_state.type == ObjectRecovery) {
     FirmwareDescription fw_descr = {
       .description_length = sizeof(FirmwareDescription),

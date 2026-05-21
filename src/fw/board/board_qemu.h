@@ -113,7 +113,7 @@ typedef struct {
   uint8_t backlight_on_percent;
   uint32_t ambient_light_dark_threshold;
   uint32_t ambient_k_delta_threshold;
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   uint32_t dynamic_backlight_min_threshold;
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR

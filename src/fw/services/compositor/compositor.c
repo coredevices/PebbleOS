@@ -527,7 +527,7 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
   const int16_t app_width = src_bitmap.bounds.size.w;
   const int16_t app_height = src_bitmap.bounds.size.h;
 
-#if CAPABILITY_HAS_APP_SCALING && !RECOVERY_FW
+#if defined(CONFIG_APP_SCALING) && !defined(RECOVERY_FW)
   const int16_t disp_width = dst_bitmap.bounds.size.w;
   const int16_t disp_height = dst_bitmap.bounds.size.h;
   // Check if we should use scaling mode for legacy apps

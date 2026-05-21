@@ -147,7 +147,7 @@ static uint8_t prv_backlight_get_intensity(void) {
     return backlight_low_power_intensity;
   }
   
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT && !defined(RECOVERY_FW)
+#if defined(CONFIG_DYNAMIC_BACKLIGHT) && !defined(RECOVERY_FW)
   // Dynamic backlight: linear ramp from dim_intensity at dynamic_min_threshold
   // up to 100% at ambient_light_dark_threshold, then clamped to user_max. This
   // keeps the slope independent of the user's brightness preference, so a user
@@ -548,7 +548,7 @@ void light_toggle_ambient_sensor_enabled(void) {
 }
 
 void light_toggle_dynamic_intensity_enabled(void) {
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   mutex_lock(s_mutex);
   backlight_set_dynamic_intensity_enabled(!backlight_is_dynamic_intensity_enabled());
   if (prv_light_allowed()) {

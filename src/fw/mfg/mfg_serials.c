@@ -190,7 +190,7 @@ static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t inde
   }
 }
 
-#if defined(IS_BIGBOARD)
+#if defined(CONFIG_IS_BIGBOARD)
 
 #include <stdio.h>
 #include "drivers/rtc.h"

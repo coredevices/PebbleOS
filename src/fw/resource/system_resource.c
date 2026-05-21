@@ -25,7 +25,7 @@
 void system_resource_init(void) {
   if (!resource_init_app(SYSTEM_APP, &SYSTEM_RESOURCE_VERSION)) {
     // System resources are missing!
-#if defined(IS_BIGBOARD)
+#if defined(CONFIG_IS_BIGBOARD)
     static const uint32_t ERROR_BAD_RESOURCES = 0xfe504505;
     pbl_log(LOG_LEVEL_ERROR, __FILE_NAME__, __LINE__,
         "System resources are missing or corrupt, time to sad watch");

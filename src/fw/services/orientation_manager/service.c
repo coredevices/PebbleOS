@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 #include "pbl/services/orientation_manager.h"
 #include "system/passert.h"
 #include "shell/prefs.h"

@@ -29,10 +29,11 @@ Keep in mind that some targets may not currently compile as-is.
 
 ## Main features
 
-:`--js-engine`:
-  Specify JavaScript engine (moddable, or none). Default is 'moddable' with fallback to none if the board does not support Moddable XS.
-  Use 'moddable' for the Moddable SDK's XS engine (see {doc}`moddable`).
-  Use 'none' to disable JavaScript support.
+:`-DCONFIG_MODDABLE_XS=y` / `-DCONFIG_MODDABLE_XS=n`:
+  Force the Moddable SDK's XS JavaScript engine on or off, overriding
+  the board defconfig. Pass to `./waf configure`. See {doc}`moddable`.
+  PRF (recovery) builds always disable the engine regardless of this
+  value.
 
 ## Debugging
 

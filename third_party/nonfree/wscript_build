@@ -11,21 +11,21 @@ if bld.env.CONFIG_NRF_FUEL_GAUGE:
         ],
         paths=paths
     )
-if bld.is_obelix():
+if bld.env.CONFIG_BOARD_FAMILY_OBELIX:
     bld(
         name='cst816_fw',
         export_includes=[
             'pebbleos-nonfree/cst816/obelix',
         ],
     )
-elif bld.is_getafix():
+elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
     bld(
         name='cst816_fw',
         export_includes=[
             'pebbleos-nonfree/cst816/getafix',
         ],
     )
-if bld.is_obelix():
+if bld.env.CONFIG_BOARD_FAMILY_OBELIX:
     includes = [
         'pebbleos-nonfree/gh3x2x/algo_lib/algo_params/HR/04_EXCLUSIVE',
         'pebbleos-nonfree/gh3x2x/demo_code/demo_algo_code/goodix_algo_application/inc',

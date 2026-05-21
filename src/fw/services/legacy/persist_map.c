@@ -34,7 +34,7 @@ static const uint16_t PERSIST_MAP_VERSION = 1;
 
 static const char *s_map_filename = "pmap";
 
-#if IS_BIGBOARD
+#ifdef CONFIG_IS_BIGBOARD
 #include "system/hexdump.h"
 #include "system/testinfra.h"
 #define NUM_SUCCESSFUL_OPENS_TO_TRACK 2
@@ -45,7 +45,7 @@ static int s_next_pmap_fd_idx = 0;
 
 // TODO: Remove once we figure out PBL-20973
 static void prv_pmap_grab_debug_fd_data(int fd) {
-#if IS_BIGBOARD
+#ifdef CONFIG_IS_BIGBOARD
     extern void pfs_collect_diagnostic_data(int fd, void *diagnostic_buf,
                                             size_t diagnostic_buf_len);
     pfs_collect_diagnostic_data(fd, &s_pmap_fd_diagnostic_data[s_next_pmap_fd_idx],
@@ -59,7 +59,7 @@ static int prv_pmap_open_debug_wrapper(const char *name, uint8_t op_flags, uint8
                                        size_t start_size) {
   int fd = pfs_open(name, op_flags, file_type, start_size);
 
-#if IS_BIGBOARD
+#ifdef CONFIG_IS_BIGBOARD
   if (fd < 0) { // pmap, where'd you go, we miss you so?!
     PBL_HEXDUMP_D(LOG_LEVEL_INFO, LOG_LEVEL_INFO, (uint8_t *)s_pmap_fd_diagnostic_data,
                   sizeof(s_pmap_fd_diagnostic_data));
@@ -68,7 +68,7 @@ static int prv_pmap_open_debug_wrapper(const char *name, uint8_t op_flags, uint8
   } else {
     prv_pmap_grab_debug_fd_data(fd);
   }
-#endif /* IS_BIGBOARD */
+#endif /* CONFIG_IS_BIGBOARD */
 
   return fd;
 }

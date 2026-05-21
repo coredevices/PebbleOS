@@ -136,7 +136,7 @@ def generate_apps_table(task):
         if "DISABLED" in defines:
             return False
 
-        if (platforms) and (task.generator.bld.get_platform_name() not in platforms):
+        if (platforms) and (task.generator.bld.env.CONFIG_BOARD_FAMILY_NAME not in platforms):
             # If we have a platform list and the current platform isn't listed, return false
             return False
 

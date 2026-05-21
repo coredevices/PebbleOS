@@ -17,7 +17,7 @@ static void prv_do_update(void) {
   bool saved_sleep_when_idle = flash_get_sleep_when_idle();
   flash_sleep_when_idle(false);
 
-#if !CAPABILITY_HAS_PBLBOOT
+#ifndef CONFIG_PBLBOOT
   FirmwareDescription description =
       firmware_storage_read_firmware_description(FLASH_REGION_FIRMWARE_DEST_BEGIN);
 

@@ -17,7 +17,7 @@
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
 
-#if CAPABILITY_HAS_SETTINGS_ICONS
+#ifdef CONFIG_SETTINGS_ICONS
 // Icon resource IDs for each settings menu item (RESOURCE_ID_INVALID means no icon)
 static const uint32_t SETTINGS_MENU_ICON_RESOURCES[SettingsMenuItem_Count] = {
   [SettingsMenuItemBluetooth] = RESOURCE_ID_SETTINGS_MENU_ICON_BLUETOOTH,
@@ -29,7 +29,7 @@ static const uint32_t SETTINGS_MENU_ICON_RESOURCES[SettingsMenuItem_Count] = {
   [SettingsMenuItemDateTime] = RESOURCE_ID_SETTINGS_MENU_ICON_DATE_TIME,
   [SettingsMenuItemDisplay] = RESOURCE_ID_SETTINGS_MENU_ICON_DISPLAY,
   [SettingsMenuItemHealth] = RESOURCE_ID_SETTINGS_MENU_ICON_HEALTH,
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
   [SettingsMenuItemThemes] = RESOURCE_ID_SETTINGS_MENU_ICON_THEMES,
 #endif
   [SettingsMenuItemActivity] = RESOURCE_ID_SETTINGS_MENU_ICON_BACKGROUND_APP,
@@ -40,7 +40,7 @@ static const uint32_t SETTINGS_MENU_ICON_RESOURCES[SettingsMenuItem_Count] = {
 typedef struct {
   Window window;
   MenuLayer menu_layer;
-#if CAPABILITY_HAS_SETTINGS_ICONS
+#ifdef CONFIG_SETTINGS_ICONS
   GBitmap *icons[SettingsMenuItem_Count];
 #endif
 } SettingsAppData;
@@ -69,7 +69,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer,
   menu_layer_set_scroll_vibe_on_blocked(&(data->menu_layer),
                                 shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
 
-#if CAPABILITY_HAS_SETTINGS_ICONS
+#ifdef CONFIG_SETTINGS_ICONS
   GBitmap *icon = data->icons[cell_index->row];
 #else
   GBitmap *icon = NULL;
@@ -107,7 +107,7 @@ static int16_t prv_get_separator_height_callback(MenuLayer *menu_layer,
 static void prv_window_load(Window *window) {
   SettingsAppData *data = window_get_user_data(window);
 
-#if CAPABILITY_HAS_SETTINGS_ICONS
+#ifdef CONFIG_SETTINGS_ICONS
   // Load icons
   for (size_t i = 0; i < ARRAY_LENGTH(data->icons); i++) {
     if (SETTINGS_MENU_ICON_RESOURCES[i] != RESOURCE_ID_INVALID) {
@@ -151,7 +151,7 @@ static void prv_window_load(Window *window) {
 static void prv_window_unload(Window *window) {
   SettingsAppData *data = window_get_user_data(window);
 
-#if CAPABILITY_HAS_SETTINGS_ICONS
+#ifdef CONFIG_SETTINGS_ICONS
   // Free icons
   for (size_t i = 0; i < ARRAY_LENGTH(data->icons); i++) {
     if (data->icons[i]) {

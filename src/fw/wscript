@@ -85,7 +85,7 @@ def configure(conf):
     if conf.options.prf_as_firmware:
         conf.env.append_value('DEFINES', 'RECOVERY_FW_AS_FW')
 
-    if conf.capability('HAS_PBLBOOT'):
+    if conf.env.CONFIG_PBLBOOT:
         conf.env.SLOT = conf.options.slot
         conf.env.append_value('DEFINES', f'FIRMWARE_SLOT_{conf.options.slot}')
     else:
@@ -95,9 +95,9 @@ def _generate_memory_layout(bld):
 
     if bld.env.CONFIG_QEMU:
         ldscript_template = bld.path.find_node('qemu_flash_fw.ld.template')
-    elif bld.is_asterix():
+    elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
         ldscript_template = bld.path.find_node('nrf52840_flash_fw.ld.template')
-    elif bld.is_obelix() or bld.is_getafix():
+    elif bld.env.CONFIG_BOARD_FAMILY_OBELIX or bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
         ldscript_template = bld.path.find_node('sf32lb52_flash_fw.ld.template')
 
     # Determine sizes so we can later calculate FLASH_LENGTH_*
@@ -127,7 +127,7 @@ def _generate_memory_layout(bld):
         # Bootloader
         offset_size = 32 * 1024
         flash_size = 1024 * 1024
-        if bld.is_asterix() and bld.env.VARIANT == 'prf' and not bld.env.IS_MFG:
+        if bld.env.CONFIG_BOARD_FAMILY_ASTERIX and bld.env.VARIANT == 'prf' and not bld.env.IS_MFG:
             fw_max_size = flash_size // 2
         else:
             fw_max_size = flash_size
@@ -265,10 +265,10 @@ def _generate_memory_layout(bld):
 
 def _link_firmware(bld, sources):
     if bld.env.CONFIG_QEMU:
-        if bld.is_qemu_gabbro():
+        if bld.env.CONFIG_BOARD_QEMU_GABBRO:
             # qemu_gabbro needs the getafix round display row info data
             sources += ['board/displays/display_getafix.c']
-    elif bld.is_getafix():
+    elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
         sources += ['board/displays/display_getafix.c']
 
     fw_linkflags = ['-Wl,--cref',
@@ -347,7 +347,7 @@ def _link_firmware(bld, sources):
         else:
             extra_args = ''
 
-        if bld.capability('HAS_PBLBOOT'):
+        if bld.env.CONFIG_PBLBOOT:
             nohdr_hex_node = elf_node.change_ext('.nohdr.hex')
             bld(rule=waftools.objcopy.objcopy_hex, source=elf_node, target=nohdr_hex_node, extra_args=extra_args)
             hex_node = elf_node.change_ext('.hex')
@@ -375,11 +375,11 @@ def _get_mfg_paths(bld):
 
     if bld.env.CONFIG_QEMU:
         return ('mfg/qemu',)
-    elif bld.is_asterix():
+    elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
         return ('mfg/asterix',)
-    elif bld.is_obelix():
+    elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
         return ('mfg/obelix',)
-    elif bld.is_getafix():
+    elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
         return ('mfg/getafix',)
     else:
         bld.fatal('No MFG configuration for board %s' % bld.env.BOARD)
@@ -430,24 +430,24 @@ def _build_recovery(bld):
                 'process_management/app_menu_data_source.c',
                 'resource/resource_storage_file.c']
 
-    if not bld.is_asterix():
+    if not bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
         excludes.extend([
             'apps/prf/mfg_speaker_asterix.c',
             'apps/prf/mfg_mic_asterix.c',
         ])
     
-    if not bld.is_obelix():
+    if not bld.env.CONFIG_BOARD_FAMILY_OBELIX:
         excludes.extend([
             'apps/prf/mfg_speaker_obelix.c',
             'apps/prf/mfg_mic_obelix.c',
         ])
 
-    if not bld.is_obelix() or not bld.env.IS_MFG:
+    if not bld.env.CONFIG_BOARD_FAMILY_OBELIX or not bld.env.IS_MFG:
         excludes.extend([
             'apps/prf/mfg_hrm_ctr_leakage_obelix.c',
         ])
 
-    if not bld.is_getafix():
+    if not bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
         excludes.extend([
             'apps/prf/mfg_mic_getafix.c',
         ])
@@ -530,7 +530,7 @@ def _build_normal(bld):
         source_dirs.append('apps/system/launcher/default/**')
     else:
         source_dirs.extend(('apps/%s/**' % d for d in ('system', 'watch')))
-        if bld.is_getafix():
+        if bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
             excludes.append('apps/watch/tictoc/default')
             excludes.append('apps/watch/tictoc/bw')
         elif bld.env.CONFIG_SCREEN_COLOR_DEPTH_BITS == 1:

@@ -1,8 +1,8 @@
 sources = []
-if bld.is_asterix():
+if bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
     sources.append(bld.path.make_node("../../../third_party/hal_nordic/nrfx/mdk/system_nrf52840.c"))
     sources.append(bld.path.make_node("startup_cortex_m.c"))
-elif bld.is_obelix() or bld.is_getafix():
+elif bld.env.CONFIG_BOARD_FAMILY_OBELIX or bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
     sources.append(bld.path.make_node("startup_sf32lb52.c"))
 elif bld.env.CONFIG_QEMU:
     sources.append(bld.path.make_node("startup_qemu.c"))

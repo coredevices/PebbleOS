@@ -133,9 +133,6 @@ def options(opt):
                    help='Enables instrumentation for performance testing (off by default)')
     opt.add_option('--ui_debug', action='store_true',
                    help='Enable window dump & layer nudge CLI cmd (off by default)')
-    opt.add_option('--js-engine', action='store', default=None, choices=['moddable', 'none'],
-                   help='Specify JavaScript engine (moddable or none). '
-                        'Defaults to moddable for boards with HAS_MODDABLE_XS, none otherwise.')
     opt.add_option('--sdkshell', action='store_true',
                    help='Use the sdk shell instead of the normal shell')
     opt.add_option('--nolog', action='store_true',
@@ -220,9 +217,6 @@ def handle_configure_options(conf):
         conf.env.append_value('DEFINES', 'VOICE_CODEC_TESTS')
         conf.options.profiler = True
 
-    if 'bb' in conf.options.board:
-        conf.env.append_value('DEFINES', 'IS_BIGBOARD')
-
     if conf.options.nosleep:
         conf.env.append_value('DEFINES', 'PBL_NOSLEEP')
         print("Sleep/stop mode disabled")
@@ -302,28 +296,14 @@ def configure(conf):
     # module in the standard library.
     conf.load('waftools.gettext')
 
-    conf.recurse('platform')
-
     conf.load('kconfig', tooldir='waftools')
 
-    if conf.env.CONFIG_QEMU:
-        conf.env.QEMU_CPU = conf.get_qemu_cpu()
-
-    # Auto-detect JS engine from board capabilities if not explicitly specified
-    if conf.options.js_engine is not None:
-        conf.env.JS_ENGINE = conf.options.js_engine
+    # JS engine selection is driven entirely by CONFIG_MODDABLE_XS. Override
+    # per-board with `-DCONFIG_MODDABLE_XS=y/n` at configure time.
+    if conf.env.CONFIG_MODDABLE_XS:
+        conf.env.JS_ENGINE = 'moddable'
     else:
-        from platform_capabilities import board_capability_dicts
-        board = conf.options.board
-        board_caps = set()
-        for cap_dict in board_capability_dicts:
-            if board in cap_dict['boards']:
-                board_caps = cap_dict['capabilities']
-                break
-        if 'HAS_MODDABLE_XS' in board_caps:
-            conf.env.JS_ENGINE = 'moddable'
-        else:
-            conf.env.JS_ENGINE = 'none'
+        conf.env.JS_ENGINE = 'none'
 
     bt_board = None
 
@@ -355,7 +335,7 @@ def configure(conf):
         conf.env.MIN_SDK_VERSION = 2
     elif conf.env.CONFIG_PLATFORM_GABBRO:
         conf.env.PLATFORM_NAME = 'gabbro'
-        conf.env.MIN_SDK_VERSION = 4
+        conf.env.MIN_SDK_VERSION = 3
     else:
         conf.fatal('No platform specified for {}!'.format(conf.options.board))
 
@@ -366,6 +346,14 @@ def configure(conf):
     if conf.env.VARIANT == 'prf':
         conf.env.append_value('DEFINES', ['RECOVERY_FW'])
         conf.env.JS_ENGINE = 'none'
+
+    # PRF variant forces JS_ENGINE='none' above. If the board's defconfig had
+    # CONFIG_MODDABLE_XS=y, autoconf.h was already written with the macro
+    # defined — undefine it on the command line so source-level guards match
+    # what we actually link.
+    if conf.env.JS_ENGINE == 'none' and conf.env.CONFIG_MODDABLE_XS:
+        conf.env.append_value('CFLAGS', ['-UCONFIG_MODDABLE_XS'])
+        conf.env.CONFIG_MODDABLE_XS = None
 
     if conf.options.mfg:
         # Note that for the most part PRF and MFG firmwares are the same, so for MFG PRF builds
@@ -396,15 +384,15 @@ def configure(conf):
 
 
     if bt_board is None:
-        bt_board = conf.get_board()
+        bt_board = conf.env.BOARD
     # Select BT controller based on configuration:
     if conf.env.CONFIG_QEMU:
         conf.env.bt_controller = 'qemu'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_QEMU'])
-    elif conf.is_asterix():
+    elif conf.env.CONFIG_BOARD_FAMILY_ASTERIX:
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
-    elif conf.is_obelix() or conf.is_getafix():
+    elif conf.env.CONFIG_BOARD_FAMILY_OBELIX or conf.env.CONFIG_BOARD_FAMILY_GETAFIX:
         conf.env.bt_controller = 'sf32lb52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_SF32LB52'])
     else:
@@ -418,6 +406,13 @@ def configure(conf):
 
     Logs.pprint('CYAN', 'Configuring unit test environment')
     conf.setenv('local', unit_test_env)
+
+    # Strip CONFIG_* DEFINES mirrored from the configure-time board: each test
+    # selects its own simulated platform (asterix / obelix / gabbro) and injects
+    # the matching BOARD_FAMILY/PLATFORM/SCREEN_COLOR_DEPTH_BITS itself, so the
+    # configure board's symbols would just collide with the per-test ones.
+    conf.env.DEFINES = [d for d in conf.env.DEFINES
+                        if not d.split('=', 1)[0].startswith('CONFIG_')]
 
     # if sys.platform.startswith('linux'):
         # libclang_path = subprocess.check_output(['llvm-config', '--libdir']).strip()
@@ -506,7 +501,6 @@ def build(bld):
 
     bld.load('file_name_c_define', tooldir='waftools')
 
-    bld.recurse('platform')
     bld.recurse('third_party/nanopb')
     bld.recurse('src/idl')
 
@@ -740,9 +734,6 @@ def _make_bundle(ctx, fw_bin_path, fw_type='normal', board=None, resource_path=N
     # Add a LICENSE.txt file
     b.add_license('LICENSE')
 
-    # make sure ctx.capability is available
-    ctx.recurse('platform', mandatory=False)
-
     if fw_type == 'normal':
         layouts_node = ctx.path.get_bld().find_node('resources/layouts.json.auto')
         if layouts_node is not None:
@@ -877,8 +868,6 @@ class ConsoleCommand(BuildContext):
 
 def console(ctx):
     """Starts miniterm with the serial console."""
-    ctx.recurse('platform', mandatory=False)
-
     # miniterm is not made to be used as a python module, so just shell out:
     if ctx.env.CONFIG_QEMU:
         tty = 'socket://%s' % (ctx.options.qemu_host or 'localhost:12345')
@@ -926,19 +915,17 @@ class QemuLaunchCommand(BuildContext):
 
 def qemu_launch(ctx):
     """Starts up the emulator (qemu) """
-    ctx.recurse('platform', mandatory=False)
-
     qemu_bin = os.getenv("PEBBLE_QEMU_BIN")
     if not qemu_bin or not (os.path.isfile(qemu_bin) and os.access(qemu_bin, os.X_OK)):
         qemu_bin = 'qemu-pebble'
 
-    qemu_machine = ctx.get_qemu_machine()
+    qemu_machine = ctx.env.CONFIG_QEMU_MACHINE
     if not qemu_machine or qemu_machine == 'unknown':
         raise Exception("Board type '{}' not supported by QEMU".format(ctx.env.BOARD))
 
     qemu_micro_flash = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
     qemu_spi_flash = ctx.path.get_bld().make_node('qemu_spi_flash.bin')
-    spi_flash_args = ctx.get_qemu_spi_flash_args(qemu_spi_flash.path_from(ctx.path))
+    spi_flash_args = ['-drive', 'if=mtd,format=raw,file={}'.format(qemu_spi_flash.path_from(ctx.path))]
     if not spi_flash_args:
         raise Exception("External flash type for '{}' not specified".format(ctx.env.BOARD))
 
@@ -993,8 +980,6 @@ class Debug(BuildContext):
 
 
 def debug(ctx, fw_elf=None, cfg_file='openocd.cfg', is_ble=False):
-    ctx.recurse('platform', mandatory=False)
-
     if fw_elf is None:
         fw_elf = ctx.get_tintin_fw_node().change_ext('.elf')
 

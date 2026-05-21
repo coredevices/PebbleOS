@@ -79,7 +79,7 @@ extern void command_flash_unprotect(void);
 //extern void command_flash_signal_test_init(void);
 //extern void command_flash_signal_test_run(void);
 extern void command_flash_show_erased_sectors(const char *arg);
-#if CAPABILITY_HAS_FLASH_OTP
+#ifdef CONFIG_OTP_FLASH
 extern void command_flash_sec_read(const char *);
 extern void command_flash_sec_write(const char *, const char *);
 extern void command_flash_sec_erase(const char *);
@@ -88,7 +88,7 @@ extern void command_flash_sec_info(void);
 #if defined(RECOVERY_FW)
 extern void command_flash_sec_lock(const char *, const char *);
 #endif // RECOVERY_FW
-#endif // CAPABILITY_HAS_FLASH_OTP
+#endif // CONFIG_OTP_FLASH
 
 extern void command_get_time(void);
 extern void command_set_time(const char *arg);
@@ -369,9 +369,9 @@ static const Command s_prompt_commands[] = {
   { "rtcfreq read", command_rtcfreq_read, 0 },
   { "model read", command_model_read, 0 },
 
-#if CAPABILITY_HAS_FLASH_OTP
+#ifdef CONFIG_OTP_FLASH
   { "flash sec lock", command_flash_sec_lock, 2},
-#endif // CAPABILITY_HAS_FLASH_OTP
+#endif // CONFIG_OTP_FLASH
 
   { "serial write", command_serial_write, 1 },
   { "hwver write", command_hwver_write, 1 },
@@ -398,13 +398,13 @@ static const Command s_prompt_commands[] = {
   { "flash fill", command_flash_fill, 3},
   { "flash validate", command_flash_validate, 0},
   { "flash erased_sectors", command_flash_show_erased_sectors, 1},
-#if CAPABILITY_HAS_FLASH_OTP
+#ifdef CONFIG_OTP_FLASH
   { "flash sec read", command_flash_sec_read, 1},
   { "flash sec write", command_flash_sec_write, 2},
   { "flash sec erase", command_flash_sec_erase, 1},
   { "flash sec wipe", command_flash_sec_wipe, 0},
   { "flash sec info", command_flash_sec_info, 0},
-#endif // CAPABILITY_HAS_FLASH_OTP
+#endif // CONFIG_OTP_FLASH
 
   //{ "pmic rails", command_pmic_rails, 0},
 

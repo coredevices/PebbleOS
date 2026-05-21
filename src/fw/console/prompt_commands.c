@@ -375,7 +375,7 @@ void command_flash_show_erased_sectors(const char *arg) {
   }
 }
 
-#if CAPABILITY_HAS_FLASH_OTP
+#ifdef CONFIG_OTP_FLASH
 void command_flash_sec_read(const char *address_str) {
   uint32_t address = strtoul(address_str, NULL, 0);
   uint8_t val;
@@ -469,7 +469,7 @@ void command_flash_sec_lock(const char *address_str, const char *password) {
   }
 }
 #endif // RECOVERY_FW
-#endif // CAPABILITY_HAS_FLASH_OTP
+#endif // CONFIG_OTP_FLASH
 
 #include "util/rand.h"
 
@@ -1390,7 +1390,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
               "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
     .lengths = {
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
       [TestStringFont_Gothic18] = 204,
       [TestStringFont_Gothic24B] = 144,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
@@ -1409,7 +1409,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "をんアイウエオサシスセソタチツテトナニヌネノ"
               "ハヒフヘホマミムメモヤユヨラリルレロワヲン",
     .lengths = {
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
       [TestStringFont_Gothic18] = 579,
       [TestStringFont_Gothic24B] = 291,
       [TestStringFont_Other] = STRING_LENGTH_MAX,
@@ -1423,7 +1423,7 @@ static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
               "FLASH access on Robe"
               "\xe2\x80\xa6",
     .lengths = {
-#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
       [TestStringFont_Gothic18] = 134,
       [TestStringFont_Gothic24B] = 134,
       [TestStringFont_Other] = STRING_LENGTH_MAX,

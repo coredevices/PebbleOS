@@ -282,7 +282,7 @@ static const LIS2DW12Config s_lis2dw12_config = {
     .state = &s_lis2dw12_state,
     .i2c = {
         .bus = &s_i2c_bus_1,
-#if BOARD_GETAFIX_EVT
+#ifdef CONFIG_BOARD_GETAFIX_EVT
         .address = 0x18,
 #else
         .address = 0x19,
@@ -292,7 +292,7 @@ static const LIS2DW12Config s_lis2dw12_config = {
       .peripheral = hwp_gpio1,
       .gpio_pin = 26,
     },
-#if BOARD_GETAFIX_EVT
+#ifdef CONFIG_BOARD_GETAFIX_EVT
     .disable_addr_pullup = true,
 #endif
     .wk_dur_default = 1U,
@@ -455,7 +455,7 @@ static const I2CSlavePort s_i2c_w1160 = {
 
 I2CSlavePort *const I2C_W1160 = &s_i2c_w1160;
 
-#if BOARD_GETAFIX_DVT2
+#ifdef CONFIG_BOARD_GETAFIX_DVT2
 static const I2CSlavePort s_i2c_aw86225 = {
     .bus = &s_i2c_bus_3,
     .address = 0x58,

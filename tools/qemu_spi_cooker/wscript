@@ -42,9 +42,13 @@ def build(bld):
     # qemu_spi_cooker_env.CFLAGS.append('-Dtime_t=__SYSCALL_SLONG_TYPE')
 
     defines = ['UNITTEST', 'DUMA_DISABLED', 'PBL_COLOR', 'PBL_RECT']
-    defines.append("PLATFORM_%s" % bld.get_platform_name().upper())
-    if bld.capability('HAS_PBLBOOT'):
-        defines.append('CAPABILITY_HAS_PBLBOOT')
+    # qemu_spi_cooker only ever runs on QEMU boards (cooks a SPI flash image
+    # for a QEMU machine). CONFIG_BOARD_FAMILY_NAME is the lowercase board
+    # token (qemu_emery / qemu_flint / qemu_gabbro); set the matching board
+    # symbol so the cooker compiles for the right target.
+    defines.append("CONFIG_BOARD_%s=1" % bld.env.CONFIG_BOARD_FAMILY_NAME.upper())
+    if bld.env.CONFIG_PBLBOOT:
+        defines.append('CONFIG_PBLBOOT')
 
     bld.program(source=sources,
                 target=output,

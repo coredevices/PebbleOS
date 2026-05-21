@@ -2,7 +2,6 @@ bld.env.DRIVERS = []
 
 if bld.env.CONFIG_QEMU:
     bld.env.DRIVERS.extend([
-        'driver_audio',
         'driver_button',
         'driver_mcu',
         'driver_mpu',
@@ -32,9 +31,8 @@ if bld.env.CONFIG_QEMU:
         use=['fw_includes'],
     )
 
-elif bld.is_asterix():
+elif bld.env.CONFIG_BOARD_FAMILY_ASTERIX:
     bld.env.DRIVERS.extend([
-        'driver_audio',
         'driver_button',
         'driver_mcu',
         'driver_mpu',
@@ -45,26 +43,23 @@ elif bld.is_asterix():
         'driver_task_watchdog',
     ])
 
-elif bld.is_obelix():
+elif bld.env.CONFIG_BOARD_FAMILY_OBELIX:
     bld.env.DRIVERS.extend([
         'driver_button',
         'driver_mcu',
         'driver_mpu',
-        'driver_otp',
         'driver_periph_config',
         'driver_pwr',
         'driver_qspi',
         'driver_rc10k',
         'driver_task_watchdog',
-        'driver_audio',
     ])
 
-elif bld.is_getafix():
+elif bld.env.CONFIG_BOARD_FAMILY_GETAFIX:
     bld.env.DRIVERS.extend([
         'driver_button',
         'driver_mcu',
         'driver_mpu',
-        'driver_otp',
         'driver_periph_config',
         'driver_pwr',
         'driver_qspi',
@@ -73,47 +68,8 @@ elif bld.is_getafix():
     ])
 ## ----------
 
-if bld.env.CONFIG_QEMU:
-    bld.objects(
-        name='driver_audio',
-        source=[
-            'qemu/qemu_audio.c',
-        ],
-        use=[
-            'freertos',
-            'fw_includes',
-            'pbl_includes',
-        ],
-    )
-elif bld.is_obelix():
-    bld.objects(
-        name='driver_audio',
-        source=[
-            'sf32lb52/audio/audec.c',
-            'sf32lb52/audio/audio.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'driver_gpio',
-            'hal_sifli',
-        ],
-    )
-elif bld.is_asterix():
-    bld.objects(
-        name='driver_audio',
-        source=[
-            'nrf5/audio/audio.c',
-        ],
-        use=[
-            'fw_includes',
-            'pbl_includes',
-            'driver_i2c',
-            'driver_nrf5_hfxo',
-            'freertos',
-            'hal_nordic',
-        ],
-    )
+if bld.env.CONFIG_SPEAKER:
+    bld.recurse('speaker')
 
 if bld.env.CONFIG_AMBIENT_LIGHT:
     bld.recurse('ambient')
@@ -267,17 +223,8 @@ bld.objects(
     ],
 )
 
-if bld.capability('HAS_FLASH_OTP'):
-    bld.objects(
-        name='driver_otp',
-        source=[
-            'otp_flash.c',
-        ],
-        use=[
-            'fw_includes',
-            'driver_flash',
-        ],
-    )
+if bld.env.CONFIG_OTP:
+    bld.recurse('otp')
 
 if bld.env.CONFIG_PMIC:
     bld.recurse('pmic')

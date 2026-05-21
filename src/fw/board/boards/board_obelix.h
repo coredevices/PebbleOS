@@ -48,7 +48,7 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
   .mag_config = {
-#ifdef IS_BIGBOARD
+#ifdef CONFIG_IS_BIGBOARD
     .axes_offsets[AXIS_X] = 1,
     .axes_offsets[AXIS_Y] = 0,
     .axes_offsets[AXIS_Z] = 2,

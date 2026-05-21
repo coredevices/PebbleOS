@@ -17,9 +17,9 @@ typedef void (*AccelDataReadyCallback)(void *context);
 
 typedef struct AccelManagerState AccelManagerState;
 
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX)
 static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 26 * 2; // wake every 2 seconds -- lsm6dso is 26Hz
-#elif PLATFORM_GETAFIX
+#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
 static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 26 * 2; // wake every 2 seconds -- FIXME(GETAFIX): review
 #else
 static const unsigned int ACCEL_MAX_SAMPLES_PER_UPDATE = 25;
