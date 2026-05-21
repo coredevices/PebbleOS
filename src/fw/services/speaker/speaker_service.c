@@ -3,7 +3,7 @@
 
 #include "pbl/services/speaker/speaker_service.h"
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 
 #include "pbl/services/speaker/note_sequence.h"
 #include "pcm_stream.h"
@@ -766,7 +766,7 @@ void pbl_analytics_external_collect_speaker_stats(void) {
   mutex_unlock(s_lock);
 }
 
-#else // !CAPABILITY_HAS_SPEAKER
+#else // !CONFIG_SPEAKER
 
 void speaker_service_init(void) {}
 
@@ -810,4 +810,4 @@ void pbl_analytics_external_collect_speaker_stats(void) {}
 bool speaker_service_is_muted(void) { return false; }
 void speaker_service_handle_mute_state_changed(void) {}
 
-#endif // CAPABILITY_HAS_SPEAKER
+#endif // CONFIG_SPEAKER

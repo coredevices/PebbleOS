@@ -26,7 +26,7 @@
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score.h"
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
@@ -91,7 +91,7 @@ typedef struct {
   int vibe_count;
   VibeScore *vibe_score;
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   // Speaker playback state. sound_active is the single source of truth: it must
   // be cleared *before* speaker_service_stop() so any in-flight finish event
   // bails out instead of re-triggering playback. When sound_driven_by_vibe_timer
@@ -128,7 +128,7 @@ static void prv_stop_vibes(void) {
   vibes_cancel();
 }
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 // Volume 60/100 is a moderate first cut; tunable, and a per-user volume
 // preference can be added in a follow-up.
 #define ALARM_SPEAKER_VOLUME 60
@@ -206,7 +206,7 @@ static void prv_stop_sound(void) {
   speaker_service_stop();
   event_service_client_unsubscribe(&s_alarm_popup_data->speaker_event_info);
 }
-#endif  // CAPABILITY_HAS_SPEAKER
+#endif  // CONFIG_SPEAKER
 
 // ----------------------------------------------------------------------------------------------
 //! Vibe Timer
@@ -219,7 +219,7 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
     if (s_alarm_popup_data->vibe_count < s_alarm_popup_data->max_vibes) {
       s_alarm_popup_data->vibe_count++;
       vibe_score_do_vibe(s_alarm_popup_data->vibe_score);
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
       if (s_alarm_popup_data->sound_active &&
           s_alarm_popup_data->sound_driven_by_vibe_timer) {
         prv_play_sound_loop_iteration();
@@ -301,7 +301,7 @@ static void prv_setup_action_bar(void) {
 static void prv_cleanup_alarm_popup(void *callback_context) {
   if (s_alarm_popup_data) {
     prv_stop_vibes();
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
     prv_stop_sound();
 #endif
     gbitmap_destroy(s_alarm_popup_data->bitmap);
@@ -360,7 +360,7 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   if (vibe_on) {
     prv_start_vibes();
   }
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   if (have_info) {
     prv_start_sound(alarm_id, vibe_on);
   }

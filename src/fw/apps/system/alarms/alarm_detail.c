@@ -16,7 +16,7 @@
 #include "pbl/services/alarms/alarm.h"
 #include "system/logging.h"
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 #include "services/alarms/alarm_tones.h"
 #endif
 
@@ -24,7 +24,7 @@
 
 #define NUM_SNOOZE_MENU_ITEMS 5
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 // Sound submenu: "Off" + one entry per AlarmTone (Reveille, Beacon, Bell, Chime).
 #define NUM_SOUND_MENU_ITEMS 5
 #endif
@@ -35,7 +35,7 @@ typedef enum DetailMenuItemIndex {
   DetailMenuItemIndexChangeTime,
   DetailMenuItemIndexChangeDays,
   DetailMenuItemIndexConvertSmart,
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   DetailMenuItemIndexSound,
 #endif
   DetailMenuItemIndexVibration,
@@ -137,7 +137,7 @@ static void prv_toggle_vibrate_handler(ActionMenu *action_menu, const ActionMenu
   }
 }
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 static void prv_disable_sound_handler(ActionMenu *action_menu, const ActionMenuItem *item,
                                       void *context) {
   AlarmDetailData *data = (AlarmDetailData *) context;
@@ -183,7 +183,7 @@ static ActionMenuLevel *prv_create_snooze_menu(ActionMenuLevel *parent_level) {
   return level;
 }
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
 static ActionMenuLevel *prv_create_sound_menu(ActionMenuLevel *parent_level) {
   ActionMenuLevel *level = task_malloc(sizeof(ActionMenuLevel) +
       NUM_SOUND_MENU_ITEMS * sizeof(ActionMenuItem));
@@ -204,7 +204,7 @@ void prv_cleanup_alarm_detail_menu(ActionMenu *action_menu,
   AlarmDetailData *data = (AlarmDetailData *) context;
   i18n_free_all(data);
   task_free((void *)root_level->items[DetailMenuItemIndexSnooze].next_level);
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   task_free((void *)root_level->items[DetailMenuItemIndexSound].next_level);
 #endif
   task_free((void *)root_level);
@@ -257,7 +257,7 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     .perform_action = prv_toggle_smart_alarm_handler,
     .action_data = data,
   };
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   main_menu->items[DetailMenuItemIndexSound] = (ActionMenuItem) {
     .label = i18n_get("Sound", data),
     .is_leaf = 0,
@@ -302,7 +302,7 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     }
   }
 
-#if CAPABILITY_HAS_SPEAKER
+#ifdef CONFIG_SPEAKER
   // Setup sound menu items: Off + one entry per AlarmTone.
   ActionMenuLevel *sound_level = main_menu->items[DetailMenuItemIndexSound].next_level;
   static const AlarmTone tone_values[] = {

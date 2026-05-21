@@ -17,7 +17,6 @@ master_capability_set = {
     "HAS_FLASH_OTP",
     "HAS_PBLBOOT",
     "HAS_DYNAMIC_BACKLIGHT",
-    "HAS_SPEAKER",
     "HAS_ACCEL_SENSITIVITY",
     "HAS_APP_SCALING",
     "HAS_ORIENTATION_MANAGER",
@@ -31,7 +30,6 @@ board_capability_dicts = [
             "HAS_FLASH_OTP",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_ORIENTATION_MANAGER",
-            "HAS_SPEAKER",
         },
     },
     {
@@ -40,7 +38,6 @@ board_capability_dicts = [
             "HAS_FLASH_OTP",
             "HAS_PBLBOOT",
             "HAS_DYNAMIC_BACKLIGHT",
-            "HAS_SPEAKER",
             "HAS_ACCEL_SENSITIVITY",
             "HAS_APP_SCALING",
             "HAS_ORIENTATION_MANAGER",
@@ -63,14 +60,12 @@ board_capability_dicts = [
         "capabilities": {
             "HAS_APP_SCALING",
             "HAS_MODDABLE_XS",
-            "HAS_SPEAKER",
         },
     },
     {
         "boards": ["qemu_flint"],
         "capabilities": {
             "HAS_MODDABLE_XS",
-            "HAS_SPEAKER",
         },
     },
     {
