@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/data_logging.h"
+#include "util/list.h"
 #include "util/uuid.h"
 
 #include "pbl/services/data_logging/data_logging_service.h"
@@ -42,17 +43,107 @@ static bool prv_sends_enabled(void) {
   return (s_sends_enabled_run_level && s_sends_enabled_pp);
 }
 
-// ----------------------------------------------------------------------------------------
-//! Wrapper for data_logging_send_session that makes it usable in dls_list_for_each_session
-//! @param empty_all_data A bool that indicates if the session should be force emptied
-static bool prv_send_session(DataLoggingSession *logging_session, void *empty_all_data) {
-  dls_private_send_session(logging_session, (bool) empty_all_data);
+// Snapshot the session list, then chain one send per system task callback.
+// Iterating + sending inline under s_list_mutex can stall KernelBG for
+// ~500ms per session (the comm_session_send_buffer_begin_write timeout),
+// tripping the watchdog once the pool fills.
+typedef struct {
+  ListNode list_node;
+  DataLoggingSession *session;
+  Uuid app_uuid;
+  time_t timestamp;
+  uint32_t tag;
+  bool empty;
+} DataLoggingSendEntry;
+
+typedef struct {
+  DataLoggingSendEntry *head;
+  bool empty;
+} DataLoggingSendBuildCtx;
+
+// Touched only on KernelBG (the system task), so no synchronization needed.
+static bool s_flush_in_progress = false;
+
+static void prv_send_next_session_system_task_cb(void *data);
+
+static bool prv_add_send_entry_cb(DataLoggingSession *session, void *data) {
+  DataLoggingSendBuildCtx *ctx = (DataLoggingSendBuildCtx *)data;
+  DataLoggingSendEntry *entry = kernel_malloc(sizeof(DataLoggingSendEntry));
+  if (!entry) {
+    // OOM: send what we already queued; the next 5-minute tick will retry.
+    PBL_LOG_WRN("OOM building DLS flush list; truncating pass");
+    return false;
+  }
+  *entry = (DataLoggingSendEntry) {
+    .session = session,
+    .app_uuid = session->app_uuid,
+    .timestamp = session->session_created_timestamp,
+    .tag = session->tag,
+    .empty = ctx->empty,
+  };
+  ctx->head = (DataLoggingSendEntry *)list_insert_before((ListNode *)ctx->head,
+                                                         &entry->list_node);
   return true;
+}
+
+static void prv_drain_send_list(DataLoggingSendEntry *head) {
+  while (head) {
+    DataLoggingSendEntry *entry = head;
+    head = (DataLoggingSendEntry *)list_pop_head((ListNode *)head);
+    kernel_free(entry);
+  }
+}
+
+static void prv_send_next_session_system_task_cb(void *data) {
+  DataLoggingSendEntry *entry = (DataLoggingSendEntry *)data;
+  if (!entry) {
+    s_flush_in_progress = false;
+    return;
+  }
+
+  DataLoggingSendEntry *new_head =
+      (DataLoggingSendEntry *)list_pop_head((ListNode *)entry);
+
+  // The session may have been freed between snapshot and now; the identity
+  // tuple guards against the pointer being reused for a different session.
+  if (dls_list_is_session_valid(entry->session) &&
+      uuid_equal(&entry->app_uuid, &entry->session->app_uuid) &&
+      entry->timestamp == entry->session->session_created_timestamp &&
+      entry->tag == entry->session->tag) {
+    dls_private_send_session(entry->session, entry->empty);
+  }
+  kernel_free(entry);
+
+  if (!new_head) {
+    s_flush_in_progress = false;
+    return;
+  }
+
+  if (!system_task_add_callback(prv_send_next_session_system_task_cb, new_head)) {
+    PBL_LOG_WRN("Failed to schedule next DLS flush callback; aborting pass");
+    prv_drain_send_list(new_head);
+    s_flush_in_progress = false;
+  }
 }
 
 //! @param empty_all_data A bool that indicates if the session should be force emptied
 static void prv_send_all_sessions_system_task_cb(void *empty_all_data) {
-  dls_list_for_each_session(prv_send_session, (void*) empty_all_data);
+  if (s_flush_in_progress) {
+    return;
+  }
+
+  DataLoggingSendBuildCtx ctx = {
+    .head = NULL,
+    .empty = (bool)(uintptr_t)empty_all_data,
+  };
+  dls_list_for_each_session(prv_add_send_entry_cb, &ctx);
+
+  if (!ctx.head) {
+    return;
+  }
+
+  s_flush_in_progress = true;
+  prv_send_next_session_system_task_cb(ctx.head);
 }
 
 
