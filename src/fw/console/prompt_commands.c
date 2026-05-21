@@ -375,7 +375,7 @@ void command_flash_show_erased_sectors(const char *arg) {
   }
 }
 
-#if CAPABILITY_HAS_FLASH_OTP
+#ifdef CONFIG_OTP_FLASH
 void command_flash_sec_read(const char *address_str) {
   uint32_t address = strtoul(address_str, NULL, 0);
   uint8_t val;
@@ -469,7 +469,7 @@ void command_flash_sec_lock(const char *address_str, const char *password) {
   }
 }
 #endif // RECOVERY_FW
-#endif // CAPABILITY_HAS_FLASH_OTP
+#endif // CONFIG_OTP_FLASH
 
 #include "util/rand.h"
 
