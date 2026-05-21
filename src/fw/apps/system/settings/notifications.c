@@ -46,6 +46,7 @@ enum NotificationsItem {
 #endif
   NotificationsItemVibeDelay,
   NotificationsItemBacklight,
+  NotificationsItemStatusBarStyle,
   NotificationsItem_Count,
 };
 
@@ -261,6 +262,41 @@ static void prv_vibe_delay_menu_push(SettingsNotificationsData *data) {
       data);
 }
 
+// Status Bar Style
+////////////////////////
+
+static const char *s_status_bar_style_labels[] = {
+  [NotificationStatusBarStyle_Default] = i18n_noop("Default"),
+  [NotificationStatusBarStyle_Bold]    = i18n_noop("Bold"),
+};
+
+_Static_assert(ARRAY_LENGTH(s_status_bar_style_labels) == NotificationStatusBarStyleCount, "");
+
+static int prv_status_bar_style_get_selection_index(void) {
+  const NotificationStatusBarStyle style =
+      alerts_preferences_get_notification_status_bar_style();
+  return (style < NotificationStatusBarStyleCount) ? (int)style : 0;
+}
+
+static void prv_status_bar_style_menu_select(OptionMenu *option_menu, int selection,
+                                             void *context) {
+  alerts_preferences_set_notification_status_bar_style((NotificationStatusBarStyle)selection);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_status_bar_style_menu_push(SettingsNotificationsData *data) {
+  const int index = prv_status_bar_style_get_selection_index();
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_status_bar_style_menu_select,
+  };
+  /// Status bar title for the Notification Status Bar Style settings screen
+  const char *title = i18n_noop("Status Bar");
+  settings_option_menu_push(
+      title, OptionMenuContentType_SingleLine, index, &callbacks,
+      ARRAY_LENGTH(s_status_bar_style_labels), true /* icons_enabled */,
+      s_status_bar_style_labels, data);
+}
+
 // Menu Layer Callbacks
 ////////////////////////
 
@@ -314,6 +350,12 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                  i18n_noop("On") : i18n_noop("Off");
       break;
     }
+    case NotificationsItemStatusBarStyle: {
+      /// String within Settings->Notifications that selects the notification status bar style
+      title = i18n_noop("Status Bar");
+      subtitle = s_status_bar_style_labels[prv_status_bar_style_get_selection_index()];
+      break;
+    }
     default:
       WTF;
   }
@@ -352,6 +394,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       // Toggle backlight directly without submenu
       alerts_preferences_set_notification_backlight(
           !alerts_preferences_get_notification_backlight());
+      break;
+    case NotificationsItemStatusBarStyle:
+      prv_status_bar_style_menu_push(data);
       break;
     default:
       WTF;

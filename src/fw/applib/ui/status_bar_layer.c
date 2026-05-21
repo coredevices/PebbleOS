@@ -27,10 +27,14 @@ typedef struct StatusBarTextFormat {
   GFont font;
 } StatusBarTextFormat;
 
+static ALWAYS_INLINE bool prv_mode_is_clock(StatusBarLayerMode mode) {
+  return mode == StatusBarLayerModeClock || mode == StatusBarLayerModeClockBold;
+}
+
 static ALWAYS_INLINE StatusBarTextFormat prv_get_text_format(
     const StatusBarLayerConfig *config) {
   const PlatformType platform = process_manager_current_platform();
-  const bool bold = config && (config->mode == StatusBarLayerModeClock);
+  const bool bold = config && (config->mode == StatusBarLayerModeClockBold);
   const char *font_key = PBL_PLATFORM_SWITCH(platform,
       /*aplite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
       /*basalt*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
@@ -274,7 +278,7 @@ static void prv_status_bar_layer_update_clock(StatusBarLayer *status_bar_layer) 
 // Callback for updating title text clock's time
 static void prv_tick_timer_handler_cb(PebbleEvent *e, void *cb_data) {
   StatusBarLayer *status_bar_layer = (StatusBarLayer *)cb_data;
-  if (status_bar_layer->config.mode != StatusBarLayerModeClock) {
+  if (!prv_mode_is_clock(status_bar_layer->config.mode)) {
     return;
   }
   struct tm currtime;
@@ -337,8 +341,8 @@ void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerC
   graphics_context_set_text_color(ctx, config->foreground_color);
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
 
-  // update title buffer with time if in StatusBarLayerModeClock
-  if (config->mode == StatusBarLayerModeClock) {
+  // update title buffer with time if in a clock mode
+  if (prv_mode_is_clock(config->mode)) {
     clock_copy_time_string(config->title_text_buffer,
                            sizeof(config->title_text_buffer));
   }
@@ -385,7 +389,7 @@ bool layer_is_status_bar_layer(Layer *layer) {
 
 int16_t status_layer_get_title_text_width(StatusBarLayer *status_bar_layer) {
   // other modes not supported
-  PBL_ASSERTN(status_bar_layer->config.mode == StatusBarLayerModeClock);
+  PBL_ASSERTN(prv_mode_is_clock(status_bar_layer->config.mode));
 
   const StatusBarTextFormat text_format = prv_get_text_format(&status_bar_layer->config);
   char time_text_buffer[TITLE_TEXT_BUFFER_SIZE];

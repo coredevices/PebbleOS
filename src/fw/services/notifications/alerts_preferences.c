@@ -88,6 +88,9 @@ static bool s_notification_vibe_delay = true;  // true = vibe at end of animatio
 #define PREF_KEY_NOTIF_BACKLIGHT "notifBacklight"
 static bool s_notification_backlight = true;  // true = enable backlight (default), false = disable backlight
 
+#define PREF_KEY_NOTIF_STATUS_BAR_STYLE "notifStatusBarStyle"
+static NotificationStatusBarStyle s_notification_status_bar_style = NotificationStatusBarStyle_Default;
+
 ///////////////////////////////////
 //! Legacy preference keys
 ///////////////////////////////////
@@ -334,6 +337,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
   RESTORE_PREF(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RESTORE_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+  RESTORE_PREF(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
 #undef RESTORE_PREF
 
   prv_migrate_legacy_dnd_schedule(&file);
@@ -420,6 +424,15 @@ bool alerts_preferences_get_notification_backlight(void) {
 void alerts_preferences_set_notification_backlight(bool enable) {
   s_notification_backlight = enable;
   SET_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+}
+
+NotificationStatusBarStyle alerts_preferences_get_notification_status_bar_style(void) {
+  return s_notification_status_bar_style;
+}
+
+void alerts_preferences_set_notification_status_bar_style(NotificationStatusBarStyle style) {
+  s_notification_status_bar_style = style;
+  SET_PREF(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
 }
 
 bool alerts_preferences_get_speaker_muted(void) {
@@ -664,6 +677,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+  RELOAD_IF_MATCH(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
   RELOAD_IF_MATCH(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
   RELOAD_IF_MATCH(PREF_KEY_DND_TOUCH_BACKLIGHT, s_dnd_touch_backlight);
   RELOAD_IF_MATCH(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);

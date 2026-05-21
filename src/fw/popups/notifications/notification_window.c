@@ -1288,6 +1288,9 @@ static void prv_init_notification_window(bool is_modal) {
   status_bar_layer_set_colors(status_layer, PBL_IF_RECT_ELSE(GColorBlack, GColorClear),
                               PBL_IF_RECT_ELSE(GColorWhite, GColorBlack));
   status_bar_layer_set_separator_mode(status_layer, StatusBarLayerSeparatorModeNone);
+  if (alerts_preferences_get_notification_status_bar_style() == NotificationStatusBarStyle_Bold) {
+    status_layer->config.mode = StatusBarLayerModeClockBold;
+  }
   layer_add_child(root_layer, (Layer *)status_layer);
 
   // bubble on right for action button
