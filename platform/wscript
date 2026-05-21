@@ -66,20 +66,6 @@ def get_qemu_machine(ctx):
 
 
 @conf
-def get_qemu_cpu(ctx):
-    if is_qemu_emery(ctx):
-        return 'cortex-m33'
-    elif is_qemu_flint(ctx):
-        return 'cortex-m4'
-    elif is_qemu_gabbro(ctx):
-        return 'cortex-m33'
-    elif is_asterix(ctx):
-        return 'cortex-m4'
-    else:
-        return 'unknown'
-
-
-@conf
 def get_qemu_spi_flash_args(ctx, spi_flash_path):
     if ctx.env.CONFIG_QEMU:
         return ['-drive', 'if=mtd,format=raw,file={}'.format(spi_flash_path)]
