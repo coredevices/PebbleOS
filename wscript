@@ -935,7 +935,7 @@ def qemu_launch(ctx):
 
     qemu_micro_flash = ctx.path.get_bld().make_node('qemu_micro_flash.bin')
     qemu_spi_flash = ctx.path.get_bld().make_node('qemu_spi_flash.bin')
-    spi_flash_args = ctx.get_qemu_spi_flash_args(qemu_spi_flash.path_from(ctx.path))
+    spi_flash_args = ['-drive', 'if=mtd,format=raw,file={}'.format(qemu_spi_flash.path_from(ctx.path))]
     if not spi_flash_args:
         raise Exception("External flash type for '{}' not specified".format(ctx.env.BOARD))
 
