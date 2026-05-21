@@ -5,3 +5,48 @@ rsource "soc/Kconfig"
 rsource "apps/Kconfig"
 rsource "drivers/Kconfig"
 rsource "services/Kconfig"
+
+menu "Software Features"
+
+config SETTINGS_ICONS
+    bool "Settings menu icons"
+    help
+      Show icons next to entries in the system Settings menu.
+
+config THEMING
+    bool "Color theming"
+    help
+      Expose the highlight-color theming UI under Settings.
+
+config DYNAMIC_BACKLIGHT
+    bool "Dynamic backlight"
+    help
+      Adjust backlight intensity based on ambient light readings.
+      Requires an ambient light sensor.
+
+config ACCEL_SENSITIVITY
+    bool "Accelerometer sensitivity setting"
+    help
+      Expose the accelerometer tap/shake sensitivity adjustment in
+      Settings.
+
+config APP_SCALING
+    bool "App scaling"
+    help
+      Scale legacy lower-resolution apps to the current display via
+      the compositor.
+
+config ORIENTATION_MANAGER
+    bool "Orientation manager UI"
+    help
+      Expose the device-orientation / rotation prefs in shell and
+      Settings. Independent of CONFIG_SERVICE_ORIENTATION_MANAGER,
+      which controls whether the underlying service is built.
+
+config MODDABLE_XS
+    bool "Moddable XS JavaScript engine"
+    help
+      Build Moddable XS support for running JavaScript apps. PRF
+      variant builds force this off regardless of the board default.
+
+endmenu

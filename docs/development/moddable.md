@@ -5,8 +5,10 @@ The Moddable integration provides a lightweight sandbox for runningJavaScript ap
 
 ## Building with Moddable
 
-Moddable is enabled by default on platforms that support it.
-It can also be explicitly enabled or disabled using the `--js-engine` configure option.
+Moddable is enabled by default on platforms whose board defconfig sets
+`CONFIG_MODDABLE_XS=y`. You can override this at configure time by
+passing `-DCONFIG_MODDABLE_XS=y` or `-DCONFIG_MODDABLE_XS=n` to
+`./waf configure`. PRF (recovery) builds always disable the engine.
 
 ## Installable applications
 

@@ -65,10 +65,10 @@ enum {
   DebuggingItemCoreDumpShortcut,
   DebuggingItemPowerMode,
   DebuggingItemALSThreshold,
-#if CAPABILITY_HAS_ACCEL_SENSITIVITY
+#ifdef CONFIG_ACCEL_SENSITIVITY
   DebuggingItemMotionSensitivity,
 #endif
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   DebuggingItemDynamicBacklightMinThreshold,
 #endif
   DebuggingItemAccelShakeLogInfo,
@@ -147,7 +147,7 @@ typedef struct SettingsSystemData {
   char als_status_buffer[64];     // Buffer for NumberWindow label with status
   bool als_adjustment_active;     // Track if ALS adjustment is active
   
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   // Dynamic backlight threshold data
   char dyn_bl_min_threshold_buffer[16];  // Buffer for formatted min threshold
 #endif
@@ -450,7 +450,7 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
 
 // Dynamic Backlight Min Threshold Settings
 /////////////////////////////
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
 static void prv_dyn_bl_min_threshold_selected(NumberWindow *number_window, void *context) {
   uint32_t new_threshold = (uint32_t)number_window_get_value(number_window);
   backlight_set_dynamic_min_threshold(new_threshold);
@@ -484,7 +484,7 @@ static void prv_dyn_bl_min_threshold_menu_push(SettingsSystemData *data) {
 
 // Motion Sensitivity Settings (Asterix/Obelix only)
 /////////////////////////////
-#if CAPABILITY_HAS_ACCEL_SENSITIVITY
+#ifdef CONFIG_ACCEL_SENSITIVITY
 static const uint8_t s_motion_sensitivity_values[] = { 10, 25, 40, 55, 70, 85, 100 };
 
 static const char *s_motion_sensitivity_labels[] = {
@@ -571,10 +571,10 @@ static const char* s_debugging_titles[DebuggingItem_Count] = {
   [DebuggingItemCoreDumpShortcut] = i18n_noop("CoreDump shortcut"),
   [DebuggingItemPowerMode]          = i18n_noop("Power Mode"),
   [DebuggingItemALSThreshold]     = i18n_noop("ALS Threshold"),
-#if CAPABILITY_HAS_ACCEL_SENSITIVITY
+#ifdef CONFIG_ACCEL_SENSITIVITY
   [DebuggingItemMotionSensitivity] = i18n_noop("Motion Sensitivity"),
 #endif
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   [DebuggingItemDynamicBacklightMinThreshold] = i18n_noop("Dyn BL Min Threshold"),
 #endif
   [DebuggingItemAccelShakeLogInfo] = i18n_noop("Shake Log Info"),
@@ -608,12 +608,12 @@ static void prv_debugging_draw_row_callback(GContext* ctx, const Layer *cell_lay
              "%"PRIu32, current_threshold);
     subtitle_text = data->als_threshold_buffer;
   }
-#if CAPABILITY_HAS_ACCEL_SENSITIVITY
+#ifdef CONFIG_ACCEL_SENSITIVITY
   else if (cell_index->row == DebuggingItemMotionSensitivity) {
     subtitle_text = i18n_get(s_motion_sensitivity_labels[prv_motion_sensitivity_get_selection_index()], data);
   }
 #endif
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
   else if (cell_index->row == DebuggingItemDynamicBacklightMinThreshold) {
     uint32_t min_threshold = backlight_get_dynamic_min_threshold();
     snprintf(data->dyn_bl_min_threshold_buffer, sizeof(data->dyn_bl_min_threshold_buffer),
@@ -663,12 +663,12 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer,
     case DebuggingItemALSThreshold:
       prv_als_threshold_menu_push(data);
       break;
-#if CAPABILITY_HAS_ACCEL_SENSITIVITY
+#ifdef CONFIG_ACCEL_SENSITIVITY
     case DebuggingItemMotionSensitivity:
       prv_motion_sensitivity_menu_push(data);
       break;
 #endif
-#if CAPABILITY_HAS_DYNAMIC_BACKLIGHT
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
     case DebuggingItemDynamicBacklightMinThreshold:
       prv_dyn_bl_min_threshold_menu_push(data);
       break;

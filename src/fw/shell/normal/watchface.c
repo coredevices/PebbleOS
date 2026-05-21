@@ -23,7 +23,7 @@
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "system/logging.h"
 #include "system/passert.h"
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 #include "shell/prefs.h"
 #endif 
 
@@ -32,7 +32,7 @@
 #define BIT_CLEAR (0)
 #define COMBO_BACK_UP_BUTTONS ((BIT_SET << BUTTON_ID_BACK) | (BIT_SET << BUTTON_ID_UP))
 #define COMBO_UP_DOWN_BUTTONS ((BIT_SET << BUTTON_ID_UP) | (BIT_SET << BUTTON_ID_DOWN))
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
 #define COMBO_BACK_UP_FLIPPED_BUTTONS ((BIT_SET << BUTTON_ID_BACK) | (BIT_SET << BUTTON_ID_DOWN))
 #endif
 
@@ -64,7 +64,7 @@ static bool prv_is_combo_pressed(uint8_t combo_buttons) {
 }
 
 static bool prv_combo_is_enabled(uint8_t combo_buttons) {
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
   const bool orientation_flipped = display_orientation_is_left();
   if (orientation_flipped && combo_buttons == COMBO_BACK_UP_FLIPPED_BUTTONS) {
     return quick_launch_combo_back_up_is_enabled();
@@ -84,7 +84,7 @@ static bool prv_combo_is_enabled(uint8_t combo_buttons) {
 }
 
 static AppInstallId prv_combo_get_app(uint8_t combo_buttons) {
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
   if (combo_buttons == COMBO_BACK_UP_FLIPPED_BUTTONS) {
     return quick_launch_combo_back_up_get_app();
   } else if (combo_buttons == COMBO_BACK_UP_BUTTONS) {
@@ -138,7 +138,7 @@ static void prv_combo_back_timer_callback(void *data) {
 static void prv_check_combo_back_hold(void) {
   uint8_t combo_buttons = BIT_CLEAR;
 
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
   const bool orientation_flipped = display_orientation_is_left();
   if (orientation_flipped && prv_is_combo_pressed(COMBO_BACK_UP_FLIPPED_BUTTONS)) {
     combo_buttons = COMBO_BACK_UP_FLIPPED_BUTTONS;
@@ -160,7 +160,7 @@ static void prv_check_combo_back_hold(void) {
       s_active_combo_buttons = combo_buttons;
       // Cancel individual button timers to prevent them from firing.
       // This ensures only the combo executes, not individual hold handlers.
-#if CAPABILITY_HAS_ORIENTATION_MANAGER
+#ifdef CONFIG_ORIENTATION_MANAGER
       if (combo_buttons == COMBO_BACK_UP_FLIPPED_BUTTONS) {
         click_recognizer_reset(&s_click_manager.recognizers[BUTTON_ID_BACK]);
         click_recognizer_reset(&s_click_manager.recognizers[BUTTON_ID_DOWN]);

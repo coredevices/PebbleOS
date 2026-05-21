@@ -12,7 +12,7 @@
 #include "system.h"
 #include "time.h"
 #include "timeline.h"
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
 #include "themes.h"
 #endif
 #include "health.h"
@@ -34,7 +34,7 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemQuickLaunch]   = settings_quick_launch_get_info,
   [SettingsMenuItemDateTime]      = settings_time_get_info,
   [SettingsMenuItemDisplay]       = settings_display_get_info,
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
   [SettingsMenuItemThemes]        = settings_themes_get_info,
 #endif
   [SettingsMenuItemSystem]        = settings_system_get_info,

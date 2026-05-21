@@ -156,6 +156,21 @@ def configure(conf):
         conf.env[key] = val
     conf.env.append_unique("CFLAGS", ["-include", autoconf_path])
     conf.env.append_unique("cfg_files", [config_path])
+
+    # Mirror CONFIG_* symbols into env.DEFINES. The compiler already sees them
+    # via -include autoconf.h, but waf's C preprocessor scanner only consults
+    # DEFINES when evaluating `#if` / `#ifdef` while tracking header deps.
+    # Without this, scanner-skipped branches hide transitive dependencies on
+    # generated headers (e.g. font_resource_keys.auto.h) and waf schedules
+    # compilation before those headers are produced.
+    for key, val in kconfig.items():
+        if isinstance(val, bool):
+            if val:
+                conf.env.append_value("DEFINES", f"{key}=1")
+        elif isinstance(val, int):
+            conf.env.append_value("DEFINES", f"{key}={val}")
+        elif isinstance(val, str):
+            conf.env.append_value("DEFINES", f'{key}="{val}"')
     msg = f"{len(kconfig)} symbols loaded from {board}"
     if os.path.exists(prj_conf):
         msg += " + prj.conf"

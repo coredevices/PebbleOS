@@ -17,7 +17,7 @@
 #include "system/passert.h"
 #include "util/size.h"
 
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
 
 #define DEFAULT_THEME_HIGHLIGHT_COLOR GColorVividCerulean
 
@@ -133,10 +133,10 @@ static OptionMenu *prv_push_color_menu(void) {
 
   return option_menu;
 }
-#endif // CAPABILITY_HAS_THEMING
+#endif // CONFIG_THEMING
 
 static Window *prv_create_color_menu(void) {
-#if CAPABILITY_HAS_THEMING
+#ifdef CONFIG_THEMING
   OptionMenu *option_menu = prv_push_color_menu();
   return option_menu ? &option_menu->window : NULL;
 #else
