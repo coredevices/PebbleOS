@@ -64,14 +64,6 @@ def get_qemu_machine(ctx):
     else:
         return 'unknown'
 
-
-@conf
-def get_qemu_spi_flash_args(ctx, spi_flash_path):
-    if ctx.env.CONFIG_QEMU:
-        return ['-drive', 'if=mtd,format=raw,file={}'.format(spi_flash_path)]
-    else:
-        return None
-
 @conf
 def add_platform_defines(ctx, env):
     if ctx.is_qemu_emery():
