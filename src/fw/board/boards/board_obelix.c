@@ -350,7 +350,7 @@ static const LIS2DW12Config s_lis2dw12_config = {
     .state = &s_lis2dw12_state,
     .i2c = {
         .bus = &s_i2c_bus_2,
-#if BOARD_OBELIX_DVT || BOARD_OBELIX_BB2
+#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
         .address = 0x18,
 #else
         .address = 0x19,
@@ -360,7 +360,7 @@ static const LIS2DW12Config s_lis2dw12_config = {
       .peripheral = hwp_gpio1,
       .gpio_pin = 38,
     },
-#if BOARD_OBELIX_DVT || BOARD_OBELIX_BB2
+#if defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_BB2)
     .disable_addr_pullup = true,
 #endif
     .wk_dur_default = 1U,

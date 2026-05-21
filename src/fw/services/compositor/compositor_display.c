@@ -18,12 +18,12 @@ static uint16_t s_current_flush_line;
 
 static void (*s_update_complete_handler)(void);
 
-#if PLATFORM_ASTERIX
+#ifdef CONFIG_BOARD_FAMILY_ASTERIX
 static const uint8_t s_corner_shape[] = { 3, 1, 1 };
 static uint8_t s_line_buffer[FRAMEBUFFER_BYTES_PER_ROW];
 #endif
 
-#if PLATFORM_OBELIX
+#ifdef CONFIG_BOARD_FAMILY_OBELIX
 // Rounded corner mask for Obelix — radius 3 quarter-circle.
 // Each entry is the number of pixels to mask from the left/right edge.
 // Shape follows a quarter-circle: at row y, mask pixels where x < sqrt(r² - y²)
@@ -48,7 +48,7 @@ static bool prv_flush_get_next_line_cb(DisplayRow* row) {
   if (s_current_flush_line < y_end) {
     row->address = s_current_flush_line;
     void *fb_line = framebuffer_get_line(fb, s_current_flush_line);
-#if PLATFORM_ASTERIX
+#ifdef CONFIG_BOARD_FAMILY_ASTERIX
     // Draw rounded corners onto the screen without modifying the
     // system framebuffer.
     if (s_current_flush_line < ARRAY_LENGTH(s_corner_shape) ||
@@ -66,7 +66,7 @@ static bool prv_flush_get_next_line_cb(DisplayRow* row) {
     } else {
       row->data = fb_line;
     }
-#elif PLATFORM_OBELIX
+#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
     // Draw rounded corners by modifying the framebuffer directly.
     // The display driver does in-place format conversion and expects row.data
     // to point into the compositor's framebuffer. We save and restore corners.
@@ -104,7 +104,7 @@ static bool prv_flush_get_next_line_cb(DisplayRow* row) {
 
 //! display_update complete callback
 static void prv_flush_complete_cb(void) {
-#if PLATFORM_OBELIX
+#ifdef CONFIG_BOARD_FAMILY_OBELIX
   // Restore original corner pixels that we modified before the display update
   FrameBuffer *fb = compositor_get_framebuffer();
   for (uint8_t i = 0; i < CORNER_SAVE_ROWS; ++i) {
@@ -142,11 +142,11 @@ void compositor_display_update(void (*handle_update_complete_cb)(void)) {
   if (!framebuffer_is_dirty(fb)) {
     return;
   }
-#if PLATFORM_GETAFIX
+#ifdef CONFIG_BOARD_FAMILY_GETAFIX
   // Force full screen updates - partial ROI causes animation issues on getafix display
   fb->dirty_rect = (GRect){ GPointZero, fb->size };
 #endif
-#if PLATFORM_OBELIX
+#ifdef CONFIG_BOARD_FAMILY_OBELIX
   // Capture dirty region bounds for corner restoration later
   s_dirty_y0 = fb->dirty_rect.origin.y;
   s_dirty_y1 = fb->dirty_rect.origin.y + fb->dirty_rect.size.h - 1;

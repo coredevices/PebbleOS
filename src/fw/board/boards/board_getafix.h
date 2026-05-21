@@ -26,7 +26,7 @@ extern const LIS2DW12Config *const LIS2DW12;
 extern I2CSlavePort * const I2C_MMC5603NJ;
 extern I2CSlavePort * const I2C_NPM1300;
 extern I2CSlavePort *const I2C_W1160;
-#if BOARD_GETAFIX_DVT2
+#ifdef CONFIG_BOARD_GETAFIX_DVT2
 extern I2CSlavePort *const I2C_AW86225;
 extern const AW86225Config *const AW86225;
 #else

@@ -25,7 +25,7 @@ void test_gbitmap_formats__create_blank(void) {
 
   cl_assert((void*)&bmp->palette == (void*)&bmp->data_row_infos); // union with .palette
 
-#ifdef PLATFORM_GABBRO
+#ifdef CONFIG_PLATFORM_GABBRO
   bmp = gbitmap_create_blank(s10, GBitmapFormat1Bit);
   cl_assert(NULL != bmp);
   cl_assert(NULL == bmp->data_row_infos);
@@ -61,7 +61,7 @@ void test_gbitmap_formats__create_blank_with_palette(void) {
   GBitmap *bmp;
   GColor8 *p = (GColor8 *)&p; // some value to test against
 
-#ifdef PLATFORM_GABBRO
+#ifdef CONFIG_PLATFORM_GABBRO
   cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat1Bit, p, true));
   cl_assert(NULL == gbitmap_create_blank_with_palette(s10, GBitmapFormat8Bit, p, true));
 
@@ -83,13 +83,13 @@ void test_gbitmap_formats__create_blank_with_palette(void) {
 }
 
 void test_gbitmap_formats__display_framebuffer_bytes(void) {
-#ifdef PLATFORM_ASTERIX
+#ifdef CONFIG_BOARD_FAMILY_ASTERIX
   const size_t expected = 20 * 168; // 20 * 8 == 144px + 2 bytes padding per scanline
 #endif
-#ifdef PLATFORM_OBELIX
+#ifdef CONFIG_BOARD_FAMILY_OBELIX
   const size_t expected = 200 * 228;
 #endif
-#ifdef PLATFORM_GABBRO
+#ifdef CONFIG_PLATFORM_GABBRO
   const size_t expected = 260 * 260;
 #endif
   cl_assert_equal_i(expected, DISPLAY_FRAMEBUFFER_BYTES);

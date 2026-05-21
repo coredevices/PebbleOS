@@ -22,15 +22,15 @@
 
 static const char *prv_color_short_name(WatchInfoColor color) {
   switch (color) {
-#if PLATFORM_ASTERIX
+#ifdef CONFIG_BOARD_FAMILY_ASTERIX
   case WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK: return "BK";
   case WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE: return "WH";
-#elif PLATFORM_OBELIX
+#elif defined(CONFIG_BOARD_FAMILY_OBELIX)
   case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY: return "BG";
   case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED: return "BR";
   case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE: return "SB";
   case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY: return "SG";
-#elif PLATFORM_GETAFIX
+#elif defined(CONFIG_BOARD_FAMILY_GETAFIX)
   case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20: return "BK20";
   case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14: return "SV14";
   case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20: return "SV20";
@@ -95,12 +95,12 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
     snprintf(entry, sizeof(entry), "MAG:%c", rc);
     break;
 #endif
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX
+#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX)
   case MfgTestId_Speaker:
     snprintf(entry, sizeof(entry), "SPK:%c", rc);
     break;
 #endif
-#if PLATFORM_ASTERIX || PLATFORM_OBELIX || PLATFORM_GETAFIX
+#if defined(CONFIG_BOARD_FAMILY_ASTERIX) || defined(CONFIG_BOARD_FAMILY_OBELIX) || defined(CONFIG_BOARD_FAMILY_GETAFIX)
   case MfgTestId_Mic:
     snprintf(entry, sizeof(entry), "MIC:%c", rc);
     break;
@@ -111,7 +111,7 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
   case MfgTestId_Vibration:
     snprintf(entry, sizeof(entry), "VIB:%c", rc);
     break;
-#if PLATFORM_OBELIX && defined(MANUFACTURING_FW)
+#if defined(CONFIG_BOARD_FAMILY_OBELIX) && defined(MANUFACTURING_FW)
   case MfgTestId_HrmCtrLeakage:
     snprintf(entry, sizeof(entry), "HRM:%c", rc);
     break;

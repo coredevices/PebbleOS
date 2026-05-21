@@ -22,17 +22,17 @@ typedef struct {
 // used by waftools/pebble_test.py to define these includes per test
 #else
 
-#if BOARD_ASTERIX
+#ifdef CONFIG_BOARD_ASTERIX
 #include "displays/display_asterix.h"
-#elif BOARD_OBELIX_DVT || BOARD_OBELIX_PVT || BOARD_OBELIX_BB2
+#elif defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_PVT) || defined(CONFIG_BOARD_OBELIX_BB2)
 #include "displays/display_obelix.h"
-#elif BOARD_GETAFIX_EVT || BOARD_GETAFIX_DVT || BOARD_GETAFIX_DVT2
+#elif defined(CONFIG_BOARD_GETAFIX_EVT) || defined(CONFIG_BOARD_GETAFIX_DVT) || defined(CONFIG_BOARD_GETAFIX_DVT2)
 #include "displays/display_getafix.h"
-#elif BOARD_QEMU_EMERY
+#elif defined(CONFIG_BOARD_QEMU_EMERY)
 #include "displays/display_qemu_emery.h"
-#elif BOARD_QEMU_FLINT
+#elif defined(CONFIG_BOARD_QEMU_FLINT)
 #include "displays/display_qemu_flint.h"
-#elif BOARD_QEMU_GABBRO
+#elif defined(CONFIG_BOARD_QEMU_GABBRO)
 #include "displays/display_qemu_gabbro.h"
 #else
 #error "Unknown display definition for board"
