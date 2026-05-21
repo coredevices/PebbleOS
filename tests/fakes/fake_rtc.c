@@ -116,6 +116,7 @@ void fake_rtc_init(RtcTicks initial_ticks, time_t initial_time) {
   s_rtc_tick_count = initial_ticks;
   s_time_tick_base = initial_ticks;
   s_time_base = initial_time;
+  s_time_ms_base = 0;
 }
 
 void fake_rtc_increment_time(time_t inc) {

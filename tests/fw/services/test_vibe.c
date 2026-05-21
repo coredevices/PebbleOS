@@ -55,10 +55,22 @@ static uint64_t prv_get_current_time() {
   return ((uint64_t)s * 1000) + ms;
 }
 
+//! Snap the fake RTC's tick counter to the smallest value whose floored
+//! conversion `(ticks * 1000) / RTC_TICKS_HZ` matches the current wall ms.
+//! vibe_pattern's drift-compensating scheduler runs that floor on the elapsed
+//! tick delta; if we leave ticks unaligned, each step's converted elapsed_ms
+//! drifts by ±1 from the wall clock the timer fires against and `prv_confirm_history`
+//! starts mis-attributing segment boundaries.
+static void prv_snap_ticks_to_wall(void) {
+  const uint64_t wall_ms = prv_get_current_time();
+  fake_rtc_set_ticks((wall_ms * RTC_TICKS_HZ + 999) / 1000);
+}
+
 static void prv_run_vibes() {
   TimerID timer = stub_new_timer_get_next();
   while (timer != TIMER_INVALID_ID) {
     fake_rtc_increment_time_ms(stub_new_timer_timeout(timer));
+    prv_snap_ticks_to_wall();
     stub_new_timer_fire(timer);
     timer = stub_new_timer_get_next();
   }
@@ -83,6 +95,7 @@ static bool prv_confirm_history(const VibePattern pattern, int64_t start_time) {
 void test_vibe__initialize(void) {
   vibes_init();
   fake_rtc_init(0, 100);
+  prv_snap_ticks_to_wall();
   s_last_strength_set = 0;
   s_strength_set_count = 0;
   s_vibe_on = false;
