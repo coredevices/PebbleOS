@@ -29,6 +29,7 @@
 #if CAPABILITY_HAS_SPEAKER
 #include "applib/event_service_client.h"
 #include "kernel/events.h"
+#include "pbl/services/notifications/alerts_preferences_private.h"
 #include "pbl/services/speaker/speaker_finish_reason.h"
 #include "pbl/services/speaker/speaker_service.h"
 #include "services/alarms/alarm_tones.h"
@@ -93,8 +94,11 @@ typedef struct {
 #if CAPABILITY_HAS_SPEAKER
   // Speaker playback state. sound_active is the single source of truth: it must
   // be cleared *before* speaker_service_stop() so any in-flight finish event
-  // bails out instead of re-triggering playback.
+  // bails out instead of re-triggering playback. When sound_driven_by_vibe_timer
+  // is set, replays are issued from the vibe outer timer instead of the speaker
+  // Done event, so audio and vibe stay anchored to the same drift-free clock.
   bool sound_active;
+  bool sound_driven_by_vibe_timer;
   const SpeakerNote *sound_notes;
   uint32_t sound_count;
   EventServiceInfo speaker_event_info;
@@ -129,6 +133,12 @@ static void prv_stop_vibes(void) {
 // preference can be added in a follow-up.
 #define ALARM_SPEAKER_VOLUME 60
 
+static void prv_play_sound_loop_iteration(void) {
+  speaker_service_play_note_seq(s_alarm_popup_data->sound_notes,
+                                s_alarm_popup_data->sound_count,
+                                SpeakerPriorityCritical, ALARM_SPEAKER_VOLUME);
+}
+
 static void prv_handle_speaker_event(PebbleEvent *e, void *context) {
   if (!s_alarm_popup_data || !s_alarm_popup_data->sound_active) {
     return;
@@ -136,16 +146,17 @@ static void prv_handle_speaker_event(PebbleEvent *e, void *context) {
   if (e->speaker.type != SpeakerEventFinished) {
     return;
   }
-  if ((SpeakerFinishReason)e->speaker.finish_reason == SpeakerFinishReasonDone) {
-    // Loop the sequence — alarms ring continuously until dismiss/snooze/timeout.
-    speaker_service_play_note_seq(s_alarm_popup_data->sound_notes,
-                                  s_alarm_popup_data->sound_count,
-                                  SpeakerPriorityCritical, ALARM_SPEAKER_VOLUME);
+  if (s_alarm_popup_data->sound_driven_by_vibe_timer) {
+    // Replays are issued from the vibe timer; ignore Done/Preempted here.
+    return;
   }
-  // Preempted / Stopped / Error: stay silent. Vibration continues until popup teardown.
+  if ((SpeakerFinishReason)e->speaker.finish_reason == SpeakerFinishReasonDone) {
+    // Sound-only mode: alarm rings continuously until dismiss/snooze/timeout.
+    prv_play_sound_loop_iteration();
+  }
 }
 
-static void prv_start_sound(AlarmId id) {
+static void prv_start_sound(AlarmId id, bool vibe_driving_loop) {
   if (low_power_is_active()) {
     return;  // Skip sound in LPM to conserve battery; vibration still runs.
   }
@@ -167,10 +178,22 @@ static void prv_start_sound(AlarmId id) {
   event_service_client_subscribe(&s_alarm_popup_data->speaker_event_info);
   speaker_service_register_finish(PebbleTask_KernelMain);
 
+  // Only piggyback on the vibe outer timer when the selected tone has been
+  // laid out beat-for-beat against the user's selected alarm vibe (see the
+  // paired_vibe column in s_tones[]). For any other combination the cycle
+  // lengths and beats won't line up, so each side loops on its own cadence.
+  const VibeScoreId paired = alarm_tones_get_paired_vibe(info.tone);
+  const bool tones_match = vibe_driving_loop &&
+                           paired != VibeScoreId_Invalid &&
+                           paired == alerts_preferences_get_vibe_score_for_client(VibeClient_Alarms);
   s_alarm_popup_data->sound_active = true;
-  speaker_service_play_note_seq(s_alarm_popup_data->sound_notes,
-                                s_alarm_popup_data->sound_count,
-                                SpeakerPriorityCritical, ALARM_SPEAKER_VOLUME);
+  s_alarm_popup_data->sound_driven_by_vibe_timer = tones_match;
+  if (!tones_match) {
+    prv_play_sound_loop_iteration();
+  }
+  // When the vibe timer is driving the loop, the first audio play happens
+  // inside the vibe timer's callback so both subsystems are anchored to the
+  // same clock.
 }
 
 static void prv_stop_sound(void) {
@@ -196,6 +219,12 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
     if (s_alarm_popup_data->vibe_count < s_alarm_popup_data->max_vibes) {
       s_alarm_popup_data->vibe_count++;
       vibe_score_do_vibe(s_alarm_popup_data->vibe_score);
+#if CAPABILITY_HAS_SPEAKER
+      if (s_alarm_popup_data->sound_active &&
+          s_alarm_popup_data->sound_driven_by_vibe_timer) {
+        prv_play_sound_loop_iteration();
+      }
+#endif
     }
     else {
       prv_stop_vibes();
@@ -327,12 +356,13 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   AlarmInfo info;
   const bool have_info = (alarm_id != ALARM_INVALID_ID) &&
                          alarm_get_info(alarm_id, &info);
-  if (!have_info || info.vibrate_enabled) {
+  const bool vibe_on = !have_info || info.vibrate_enabled;
+  if (vibe_on) {
     prv_start_vibes();
   }
 #if CAPABILITY_HAS_SPEAKER
   if (have_info) {
-    prv_start_sound(alarm_id);
+    prv_start_sound(alarm_id, vibe_on);
   }
 #endif
 
