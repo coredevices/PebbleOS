@@ -94,6 +94,9 @@ def configure(conf):
         conf.fatal(f"Board defconfig not found: {defconfig}")
 
     os.environ["srctree"] = srcdir
+    # The board is known from --board; export it so the root Kconfig can
+    # source only the active board's Kconfig via `rsource "boards/$(BOARD)/..."`.
+    os.environ["BOARD"] = board
     kconf = kconfiglib.Kconfig(os.path.join(srcdir, "Kconfig"))
     kconf.warn_assign_override = True
     kconf.warn_assign_redun = True
@@ -193,6 +196,7 @@ class menuconfig(BuildContext):
 
         env = os.environ.copy()
         env["srctree"] = srcdir
+        env["BOARD"] = self.env.BOARD
         env["KCONFIG_CONFIG"] = os.path.join(blddir, ".config")
 
         subprocess.run(

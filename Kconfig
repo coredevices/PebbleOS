@@ -23,6 +23,42 @@ config IS_BIGBOARD
       in the board name). Gates bigboard-only behaviour that differs
       from the shipping board.
 
+# Source the active board's Kconfig and its per-board defaults; kconfig.py
+# exports $(BOARD) from the --board argument.
+rsource "boards/$(BOARD)/Kconfig"
+rsource "boards/$(BOARD)/Kconfig.defconfig"
+
+config BOARD_FAMILY_ASTERIX
+    bool
+    help
+      Hidden symbol selected by boards in the Asterix family.
+
+config BOARD_FAMILY_OBELIX
+    bool
+    help
+      Hidden symbol selected by boards in the Obelix family.
+
+config BOARD_FAMILY_GETAFIX
+    bool
+    help
+      Hidden symbol selected by boards in the Getafix family.
+
+config BOARD_FAMILY_NAME
+    string
+    help
+      Lowercase token identifying the board family (or the single
+      board, for QEMU variants). Used for resource path lookups
+      and string outputs. Set per board in
+      boards/<board>/Kconfig.defconfig.
+
+config QEMU_MACHINE
+    string
+    depends on QEMU
+    help
+      QEMU machine identifier passed to qemu-system-arm via the
+      `-machine` flag. Set per board in
+      boards/<board>/Kconfig.defconfig.
+
 choice
     prompt "SDK platform"
 config PLATFORM_EMERY

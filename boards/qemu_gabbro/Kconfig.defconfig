@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_FAMILY_NAME
+    default "qemu_gabbro"
+
+config QEMU_MACHINE
+    default "pebble-gabbro"
